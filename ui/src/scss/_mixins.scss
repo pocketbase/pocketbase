@@ -1,0 +1,58 @@
+@mixin hide() {
+    opacity: 0;
+    visibility: hidden;
+}
+
+@mixin show() {
+    opacity: 1;
+    visibility: visible;
+}
+
+@mixin shadowize($value...) {
+    box-shadow: 0px 2px 5px 0px var(--shadowColor), $value;
+}
+
+@mixin scrollbar($width: 8px) {
+    $trackColor: transparent;
+
+    @media screen and (min-width: 550px) {
+        // chrome scrollbar styles
+        ::-webkit-scrollbar {
+            width: $width;
+            height: $width;
+            border-radius: var(--baseRadius);
+        }
+        ::-webkit-scrollbar-track {
+            background: $trackColor;
+            border-radius: var(--baseRadius);
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--baseAlt2Color);
+            border-radius: 15px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            &:hover,
+            &:active {
+                background-color: var(--baseAlt3Color);
+            }
+        }
+
+        @if & {
+            // firefox scrollbar
+            scrollbar-color: var(--baseAlt2Color) $trackColor;
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+        } @else {
+            html {
+                // firefox scrollbar
+                scrollbar-color: var(--baseAlt2Color) $trackColor;
+                scrollbar-width: thin;
+                scroll-behavior: smooth;
+
+                * {
+                    scrollbar-width: inherit;
+                }
+            }
+        }
+    }
+}

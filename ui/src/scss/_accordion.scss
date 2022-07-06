@@ -1,0 +1,146 @@
+.accordion {
+    $handlerSize: 25px;
+    $spacing: 20px;
+
+    @extend %block;
+    outline: 0;
+    position: relative;
+    border-radius: var(--baseRadius);
+    background: var(--baseColor);
+    border: 1px solid var(--baseAlt2Color);
+    transition: box-shadow var(--baseAnimationSpeed),
+                margin var(--baseAnimationSpeed);
+
+    // header
+    .accordion-header {
+        outline: 0;
+        position: relative;
+        display: flex;
+        min-height: 52px;
+        align-items: center;
+        row-gap: 10px;
+        column-gap: var(--smSpacing);
+        padding: ($spacing - 8) $spacing ($spacing - 10);
+        width: 100%;
+        user-select: none;
+        color: var(--txtPrimaryColor);
+        border-radius: inherit;
+        transition: background var(--baseAnimationSpeed),
+                    box-shadow var(--baseAnimationSpeed);
+        .icon {
+            width: 18px;
+            text-align: center;
+            i {
+                display: inline-block;
+                vertical-align: top;
+                font-size: 1.1rem;
+            }
+        }
+        &.interactive {
+            padding-right: ($spacing + $handlerSize + 5) ;
+            cursor: pointer;
+            &:after { // expand/collapse indicator
+                content: '\ea4e';
+                position: absolute;
+                right: $spacing - 5;
+                top: 50%;
+                margin-top: -($handlerSize * 0.5);
+                width: $handlerSize;
+                height: $handlerSize;
+                line-height: $handlerSize;
+                color: var(--txtHintColor);
+                font-family: var(--iconFontFamily);
+                font-size: 1.3em;
+                text-align: center;
+                transition: color var(--baseAnimationSpeed);
+            }
+        }
+        &:hover,
+        &:focus-visible {
+            &:after {
+                color: var(--txtPrimaryColor);
+            }
+        }
+        &:active {
+            transition-duration: var(--activeAnimationSpeed);
+        }
+    }
+
+    // content
+    .accordion-content {
+        @extend %block;
+        padding: $spacing;
+    }
+
+    // states
+    &:hover,
+    &:focus-visible,
+    &.active {
+        z-index: 9;
+        .accordion-header.interactive {
+            background: var(--baseAlt1Color);
+        }
+    }
+    &.active {
+        @include shadowize();
+        .accordion-header {
+            color: var(--baseColor);
+            box-shadow: 0px 0px 0px 1px var(--primaryColor);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            background: var(--primaryColor);
+            &.interactive{
+                background: var(--primaryColor);
+                &:after {
+                    color: inherit;
+                    content: '\ea78';
+                }
+            }
+        }
+    }
+    &.disabled {
+        z-index: 0;
+        border-color: var(--baseAlt1Color);
+        .accordion-header {
+            color: var(--txtDisabledColor);
+        }
+    }
+}
+
+// wrapper
+.accordions {
+    .accordion {
+        border-radius: 0;
+        margin: -1px 0 0;
+        &.active {
+            border-radius: var(--baseRadius);
+            margin: var(--smSpacing) 0;
+            + .accordion {
+                border-top-left-radius: var(--baseRadius);
+                border-top-right-radius: var(--baseRadius);
+            }
+        }
+        &:first-child {
+            margin-top: 0;
+            border-top-left-radius: var(--baseRadius);
+            border-top-right-radius: var(--baseRadius);
+        }
+        &:last-child {
+            margin-bottom: 0;
+            border-bottom-left-radius: var(--baseRadius);
+            border-bottom-right-radius: var(--baseRadius);
+        }
+    }
+}
+
+.field-accordion {
+    &.active {
+        .accordion-header {
+            padding-right: var(--smSpacing);
+            &:after {
+                content: none;
+                display: none;
+            }
+        }
+    }
+}

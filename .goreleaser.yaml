@@ -1,0 +1,43 @@
+project_name: pocketbase
+
+dist: .builds
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./examples/base
+    binary: pocketbase
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+release:
+  draft: true
+
+archives:
+  -
+    format: zip
+    files:
+      - LICENSE*
+      - CHANGELOG*
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^examples:'
+      - '^ui:'

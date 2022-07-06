@@ -1,0 +1,16 @@
+/.vscode/
+
+.DS_Store
+
+# goreleaser builds folder
+/.builds/
+
+# examples app directories
+pb_data
+pb_public
+
+# tests coverage
+coverage.out
+
+# plaintask todo files
+*.todo

@@ -1,0 +1,201 @@
+<script>
+    import { createEventDispatcher } from "svelte";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import SortHeader from "@/components/base/SortHeader.svelte";
+    import FormattedDate from "@/components/base/FormattedDate.svelte";
+
+    const dispatch = createEventDispatcher();
+    const labelMethodClass = {
+        get: "label-info",
+        post: "label-success",
+        patch: "label-warning",
+        delete: "label-danger",
+    };
+
+    export let filter = "";
+    export let presets = "";
+    export let sort = "-rowid";
+
+    let items = [];
+    let currentPage = 1;
+    let totalItems = 0;
+    let isLoading = false;
+
+    $: if (typeof sort !== "undefined" || typeof filter !== "undefined" || typeof presets !== "undefined") {
+        clearList();
+        load(1);
+    }
+
+    $: canLoadMore = totalItems > items.length;
+
+    export async function load(page = 1) {
+        isLoading = true;
+
+        return ApiClient.Logs.getRequestsList(page, 40, {
+            sort: sort,
+            filter: [presets, filter].filter(Boolean).join("&&"),
+        })
+            .then((result) => {
+                if (page <= 1) {
+                    clearList();
+                }
+
+                isLoading = false;
+                items = items.concat(result.items);
+                currentPage = result.page;
+                totalItems = result.totalItems;
+
+                dispatch("load", items);
+            })
+            .catch((err) => {
+                if (err !== null) {
+                    isLoading = false;
+                    console.warn(err);
+                    clearList();
+                    ApiClient.errorResponseHandler(err, false);
+                }
+            });
+    }
+
+    function clearList() {
+        items = [];
+        currentPage = 1;
+        totalItems = 0;
+    }
+</script>
+
+<div class="table-wrapper">
+    <table class="table" class:table-loading={isLoading}>
+        <thead>
+            <tr>
+                <SortHeader disable class="col-field-method" name="method" bind:sort>
+                    <div class="col-header-content">
+                        <i class="ri-global-line" />
+                        <span class="txt">method</span>
+                    </div>
+                </SortHeader>
+
+                <SortHeader disable class="col-type-text col-field-url" name="url" bind:sort>
+                    <div class="col-header-content">
+                        <i class={CommonHelper.getFieldTypeIcon("url")} />
+                        <span class="txt">url</span>
+                    </div>
+                </SortHeader>
+
+                <SortHeader disable class="col-type-text col-field-referer" name="referer" bind:sort>
+                    <div class="col-header-content">
+                        <i class={CommonHelper.getFieldTypeIcon("url")} />
+                        <span class="txt">referer</span>
+                    </div>
+                </SortHeader>
+
+                <SortHeader disable class="col-type-number col-field-status" name="status" bind:sort>
+                    <div class="col-header-content">
+                        <i class={CommonHelper.getFieldTypeIcon("number")} />
+                        <span class="txt">status</span>
+                    </div>
+                </SortHeader>
+
+                <SortHeader disable class="col-type-date col-field-created" name="created" bind:sort>
+                    <div class="col-header-content">
+                        <i class={CommonHelper.getFieldTypeIcon("date")} />
+                        <span class="txt">created</span>
+                    </div>
+                </SortHeader>
+                <th class="col-type-action min-width" />
+            </tr>
+        </thead>
+        <tbody>
+            {#each items as item (item.id)}
+                <tr
+                    tabindex="0"
+                    class="row-handle"
+                    on:click={() => dispatch("select", item)}
+                    on:keydown={(e) => {
+                        if (e.code === "Enter") {
+                            e.preventDefault();
+                            dispatch("select", item);
+                        }
+                    }}
+                >
+                    <td class="col-type-text col-field-method min-width">
+                        <span class="label txt-uppercase {labelMethodClass[item.method.toLowerCase()]}">
+                            {item.method?.toUpperCase()}
+                        </span>
+                    </td>
+
+                    <td class="col-type-text col-field-url">
+                        <span class="txt txt-ellipsis" title={item.url}>
+                            {item.url}
+                        </span>
+                        {#if item.meta?.errorMessage || item.meta?.errorData}
+                            <i class="ri-error-warning-line txt-danger m-l-5 m-r-5" title="Error" />
+                        {/if}
+                    </td>
+
+                    <td class="col-type-text col-field-referer">
+                        <span class="txt txt-ellipsis" class:txt-hint={!item.referer} title={item.referer}>
+                            {item.referer || "N/A"}
+                        </span>
+                    </td>
+
+                    <td class="col-type-number col-field-status">
+                        <span class="label" class:label-danger={item.status >= 400}>
+                            {item.status}
+                        </span>
+                    </td>
+
+                    <td class="col-type-date col-field-created">
+                        <FormattedDate date={item.created} />
+                    </td>
+
+                    <td class="col-type-action min-width">
+                        <i class="ri-arrow-right-line" />
+                    </td>
+                </tr>
+            {:else}
+                {#if isLoading}
+                    <tr>
+                        <td colspan="99" class="p-xs">
+                            <span class="skeleton-loader" />
+                        </td>
+                    </tr>
+                {:else}
+                    <tr>
+                        <td colspan="99" class="txt-center txt-hint p-xs">
+                            <h6>No logs found.</h6>
+                            {#if filter?.length}
+                                <button
+                                    type="button"
+                                    class="btn btn-hint btn-expanded m-t-sm"
+                                    on:click={() => (filter = "")}
+                                >
+                                    <span class="txt">Clear filters</span>
+                                </button>
+                            {/if}
+                        </td>
+                    </tr>
+                {/if}
+            {/each}
+        </tbody>
+    </table>
+</div>
+
+{#if items.length}
+    <small class="block txt-hint txt-right m-t-sm">Showing {items.length} of {totalItems}</small>
+{/if}
+
+{#if items.length && canLoadMore}
+    <div class="block txt-center m-t-xs">
+        <button
+            type="button"
+            class="btn btn-lg btn-secondary btn-expanded"
+            class:btn-loading={isLoading}
+            class:btn-disabled={isLoading}
+            on:click={() => load(currentPage + 1)}
+        >
+            <span class="txt">Load more ({totalItems - items.length})</span>
+        </button>
+    </div>
+{/if}
