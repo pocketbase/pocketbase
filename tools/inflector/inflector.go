@@ -93,26 +93,19 @@ func Snakecase(str string) string {
 // Usernamify("John Doe,   hello") // "john.doe.hello"
 // ```
 func Usernamify(str string) string {
-	// split at any non word character
-	words := usernamifySplitRegex.Split(strings.ToLower(str), -1)
-
-	// concatenate any non empty word with a dot
-	var result strings.Builder
-	for _, word := range words {
-		if word == "" {
+	// Skip allows us to skip repeated, non-matching rune output
+	skip := false
+	var out string
+	for _, r := range str {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '_' {
+			if !skip && len(out) > 0 {
+				out += "."
+			}
+			skip = true
 			continue
 		}
-
-		if result.Len() > 0 {
-			result.WriteString(".")
-		}
-
-		result.WriteString(word)
+		skip = false
+		out += strings.ToLower(string(r))
 	}
-
-	if result.Len() == 0 {
-		return "unknown"
-	}
-
-	return result.String()
+	return strings.TrimRight(out, "_.")
 }

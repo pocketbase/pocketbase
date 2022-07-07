@@ -134,20 +134,33 @@ func TestUsernamify(t *testing.T) {
 		val      string
 		expected string
 	}{
-		{"", "unknown"},
-		{"  ", "unknown"},
-		{"!@#$%^", "unknown"},
-		{"...", "unknown"},
-		{"_", "_"}, // underscore is valid word character
+		{"", ""},
+		{"  ", ""},
+		{"!@#$%^", ""},
+		{"...", ""},
+		{"_", ""},
 		{"John Doe", "john.doe"},
 		{"John_Doe", "john_doe"},
 		{".a!b@c#d$e%123. ", "a.b.c.d.e.123"},
 		{"Hello,    world", "hello.world"},
+		{"Hello, 世界", "hello.世界"},
 	}
 
 	for i, scenario := range scenarios {
 		if result := inflector.Usernamify(scenario.val); result != scenario.expected {
 			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
+		}
+	}
+}
+
+func BenchmarkUsernamify(b *testing.B) {
+	input := ".a!b@c#d$e%123 John "
+	want := "a.b.c.d.e.123.john"
+
+	for i := 0; i < b.N; i++ {
+		got := inflector.Usernamify(input)
+		if got != want {
+			b.Fatalf("got: %q, want: %q", got, want)
 		}
 	}
 }
