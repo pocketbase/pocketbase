@@ -13,7 +13,7 @@
 [PocketBase](https://pocketbase.io) is an open source Go backend, consisting of:
 
 - embedded database (_SQLite_) with **realtime subscriptions**
-- backed-in **files and users management**
+- built-in **files and users management**
 - convenient **Admin dashboard UI**
 - and simple **REST-ish API**
 
