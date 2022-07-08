@@ -235,7 +235,7 @@ func promptCreateAdmin(app core.App) error {
 			Prompt: &survey.Password{Message: "Pass (min 10 chars):"},
 			Validate: func(val any) error {
 				if str, ok := val.(string); !ok || len(str) < 10 {
-					return errors.New("The password must be at least 10 characters.")
+					return errors.New("the password must be at least 10 characters")
 				}
 				return nil
 			},
