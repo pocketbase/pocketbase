@@ -22,12 +22,12 @@
 
                 // Subscribe to changes in any record from the collection
                 client.Realtime.subscribe("${collection?.name}", function (e) {
-                    console.log(e.data);
+                    console.log(e.record);
                 });
 
                 // Subscribe to changes in a single record
                 client.Realtime.subscribe("${collection?.name}/RECORD_ID", function (e) {
-                    console.log(e.data);
+                    console.log(e.record);
                 });
 
                 // Unsubscribe

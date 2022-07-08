@@ -157,7 +157,7 @@ func (api *userApi) oauth2Auth(c echo.Context) error {
 
 	user, authData, submitErr := form.Submit()
 	if submitErr != nil {
-		return rest.NewBadRequestError("Failed to authenticated.", submitErr)
+		return rest.NewBadRequestError("Failed to authenticate.", submitErr)
 	}
 
 	return api.authResponse(c, user, authData)
