@@ -112,7 +112,7 @@
                                     }
                                 }}
                             >
-                                Invalidate all previosly issued tokens
+                                Invalidate all previously issued tokens
                             </span>
                         </div>
                     </Field>
