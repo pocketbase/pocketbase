@@ -129,6 +129,7 @@
 // -------------------------------------------------------------------
 
 .page-sidebar {
+    z-index: 0;
     display: flex;
     flex-direction: column;
     width: var(--pageSidebarWidth);
