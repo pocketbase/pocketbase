@@ -51,9 +51,9 @@ type PocketBase struct {
 // New creates a new PocketBase instance.
 //
 // Note that the application will not be initialized/bootstrapped yet,
-// aka. DB connections, migrations, app settings, etc. will not be accessable.
+// aka. DB connections, migrations, app settings, etc. will not be accessible.
 // Everything will be initialized when Start() is executed.
-// If you want initialize the application before calling Start(),
+// If you want to initialize the application before calling Start(),
 // then you'll have to manually call Bootstrap().
 func New() *PocketBase {
 	// try to find the base executable directory and how it was run
