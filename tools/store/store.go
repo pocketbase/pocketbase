@@ -57,7 +57,7 @@ func (s *Store[T]) Set(key string, value T) {
 
 // SetIfLessThanLimit sets (or overwrite if already exist) a new value for key.
 //
-// This is method is similar to Set() but **it will skip adding new elements**
+// This method is similar to Set() but **it will skip adding new elements**
 // to the store if the store length has reached the specified limit.
 // `false` is returned if maxAllowedElements limit is reached.
 func (s *Store[T]) SetIfLessThanLimit(key string, value T, maxAllowedElements int) bool {
