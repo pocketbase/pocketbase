@@ -30,6 +30,8 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	var allowedOrigins []string
 	var httpAddr string
 	var httpsAddr string
+	var adminEmail string
+	var adminPassword string
 
 	command := &cobra.Command{
 		Use:   "serve",
@@ -68,7 +70,12 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 				return
 			}
 			if totalAdmins == 0 {
-				if err := promptCreateAdmin(app); err != nil {
+				if adminEmail != "" && adminPassword != "" {
+					if err := createAdmin(app, adminEmail, adminPassword); err != nil {
+						log.Fatalln(err)
+						return
+					}
+				} else if err := promptCreateAdmin(app); err != nil {
 					log.Fatalln(err)
 					return
 				}
@@ -152,6 +159,20 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 		"api HTTPS server address (auto TLS via Let's Encrypt)\nthe incomming --http address traffic also will be redirected to this address",
 	)
 
+	command.PersistentFlags().StringVar(
+		&adminEmail,
+		"admin.email",
+		"",
+		"admin email to register an admin user",
+	)
+
+	command.PersistentFlags().StringVar(
+		&adminPassword,
+		"admin.password",
+		"",
+		"admin password to register an admin user",
+	)
+
 	return command
 }
 
@@ -167,6 +188,23 @@ func runMigrations(app core.App) error {
 		if _, err := runner.Up(); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func createAdmin(app core.App, email, password string) error {
+	if email == "" || password == "" {
+		return errors.New("email and password are required")
+	}
+
+	form := forms.NewAdminUpsert(app, &models.Admin{})
+	form.Email = email
+	form.Password = password
+	form.PasswordConfirm = password
+
+	if err := form.Submit(); err != nil {
+		return err
 	}
 
 	return nil
@@ -212,12 +250,7 @@ func promptCreateAdmin(app core.App) error {
 		return err
 	}
 
-	form := forms.NewAdminUpsert(app, &models.Admin{})
-	form.Email = result.Email
-	form.Password = result.Password
-	form.PasswordConfirm = result.Password
-
-	if err := form.Submit(); err != nil {
+	if err := createAdmin(app, result.Email, result.Password); err != nil {
 		return err
 	}
 
