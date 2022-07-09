@@ -82,7 +82,7 @@ func TestSanitize(t *testing.T) {
 		{" ", ` `, "", false},
 		{"", `[A-Z]`, "", false},
 		{"abcABC", `[A-Z]`, "abc", false},
-		{"abcABC", `[A-Z`, "", true}, // invlid pattern
+		{"abcABC", `[A-Z`, "", true}, // invalid pattern
 	}
 
 	for i, scenario := range scenarios {

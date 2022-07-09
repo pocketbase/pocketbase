@@ -1,13 +1,14 @@
 package apis_test
 
 import (
-	"github.com/pocketbase/pocketbase/tests"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/pocketbase/pocketbase/tests"
 )
 
 func TestFileDownload(t *testing.T) {

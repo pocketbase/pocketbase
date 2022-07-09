@@ -166,7 +166,6 @@ func TestDeleteCollection(t *testing.T) {
 			t.Errorf("(%d) Expected hasErr %v, got %v", i, scenario.expectError, hasErr)
 		}
 	}
-
 }
 
 func TestSaveCollectionCreate(t *testing.T) {

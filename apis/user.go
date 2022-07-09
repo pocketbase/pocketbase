@@ -152,7 +152,7 @@ func (api *userApi) authMethods(c echo.Context) error {
 func (api *userApi) oauth2Auth(c echo.Context) error {
 	form := forms.NewUserOauth2Login(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", readErr)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", readErr)
 	}
 
 	user, authData, submitErr := form.Submit()
@@ -170,7 +170,7 @@ func (api *userApi) emailAuth(c echo.Context) error {
 
 	form := forms.NewUserEmailLogin(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", readErr)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", readErr)
 	}
 
 	user, submitErr := form.Submit()
@@ -184,11 +184,11 @@ func (api *userApi) emailAuth(c echo.Context) error {
 func (api *userApi) requestPasswordReset(c echo.Context) error {
 	form := forms.NewUserPasswordResetRequest(api.app)
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", err)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", err)
 	}
 
 	if err := form.Validate(); err != nil {
-		return rest.NewBadRequestError("An error occured while validating the form.", err)
+		return rest.NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
 	// run in background because we don't need to show
@@ -205,7 +205,7 @@ func (api *userApi) requestPasswordReset(c echo.Context) error {
 func (api *userApi) confirmPasswordReset(c echo.Context) error {
 	form := forms.NewUserPasswordResetConfirm(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", readErr)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", readErr)
 	}
 
 	user, submitErr := form.Submit()
@@ -224,7 +224,7 @@ func (api *userApi) requestEmailChange(c echo.Context) error {
 
 	form := forms.NewUserEmailChangeRequest(api.app, loggedUser)
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", err)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", err)
 	}
 
 	if err := form.Submit(); err != nil {
@@ -237,7 +237,7 @@ func (api *userApi) requestEmailChange(c echo.Context) error {
 func (api *userApi) confirmEmailChange(c echo.Context) error {
 	form := forms.NewUserEmailChangeConfirm(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", readErr)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", readErr)
 	}
 
 	user, submitErr := form.Submit()
@@ -251,11 +251,11 @@ func (api *userApi) confirmEmailChange(c echo.Context) error {
 func (api *userApi) requestVerification(c echo.Context) error {
 	form := forms.NewUserVerificationRequest(api.app)
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", err)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", err)
 	}
 
 	if err := form.Validate(); err != nil {
-		return rest.NewBadRequestError("An error occured while validating the form.", err)
+		return rest.NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
 	// run in background because we don't need to show
@@ -272,12 +272,12 @@ func (api *userApi) requestVerification(c echo.Context) error {
 func (api *userApi) confirmVerification(c echo.Context) error {
 	form := forms.NewUserVerificationConfirm(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", readErr)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", readErr)
 	}
 
 	user, submitErr := form.Submit()
 	if submitErr != nil {
-		return rest.NewBadRequestError("An error occured while submitting the form.", submitErr)
+		return rest.NewBadRequestError("An error occurred while submitting the form.", submitErr)
 	}
 
 	return api.authResponse(c, user, nil)

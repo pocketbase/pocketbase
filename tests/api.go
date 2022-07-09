@@ -109,7 +109,7 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 	}
 
 	for event, expectedCalls := range scenario.ExpectedEvents {
-		actualCalls, _ := testApp.EventCalls[event]
+		actualCalls := testApp.EventCalls[event]
 		if actualCalls != expectedCalls {
 			t.Errorf("[%s] Expected event %s to be called %d, got %d", prefix, event, expectedCalls, actualCalls)
 		}

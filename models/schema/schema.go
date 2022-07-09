@@ -134,7 +134,7 @@ func (s *Schema) AddField(newField *SchemaField) {
 // checks for invalid renamed fields and field name duplications.
 func (s Schema) Validate() error {
 	return validation.Validate(&s.fields, validation.Required, validation.By(func(value any) error {
-		fields := s.fields // use directly the schema value to avoid unnecesary interface casting
+		fields := s.fields // use directly the schema value to avoid unnecessary interface casting
 
 		if len(fields) == 0 {
 			return validation.NewError("validation_invalid_schema", "Invalid schema format.")

@@ -360,11 +360,11 @@ func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 	}
 
 	if c.ClientId != "" {
-		provider.SetClientId(string(c.ClientId))
+		provider.SetClientId(c.ClientId)
 	}
 
 	if c.ClientSecret != "" {
-		provider.SetClientSecret(string(c.ClientSecret))
+		provider.SetClientSecret(c.ClientSecret)
 	}
 
 	if c.AuthUrl != "" {

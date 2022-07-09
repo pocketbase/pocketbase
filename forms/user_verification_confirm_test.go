@@ -127,7 +127,7 @@ func TestUserVerificationConfirmSubmit(t *testing.T) {
 		}
 
 		claims, _ := security.ParseUnverifiedJWT(form.Token)
-		tokenUserId, _ := claims["id"]
+		tokenUserId := claims["id"]
 
 		if user.Id != tokenUserId {
 			t.Errorf("(%d) Expected user.Id %q, got %q", i, tokenUserId, user.Id)

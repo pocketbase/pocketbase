@@ -163,11 +163,12 @@ func (api *realtimeApi) bindEvents() {
 		modelTable := data.Model.TableName()
 
 		var contextKey string
-		if modelTable == userTable {
+		switch modelTable {
+		case userTable:
 			contextKey = ContextUserKey
-		} else if modelTable == adminTable {
+		case adminTable:
 			contextKey = ContextAdminKey
-		} else {
+		default:
 			return nil
 		}
 
@@ -186,11 +187,12 @@ func (api *realtimeApi) bindEvents() {
 		modelTable := data.Model.TableName()
 
 		var contextKey string
-		if modelTable == userTable {
+		switch modelTable {
+		case userTable:
 			contextKey = ContextUserKey
-		} else if modelTable == adminTable {
+		case adminTable:
 			contextKey = ContextAdminKey
-		} else {
+		default:
 			return nil
 		}
 

@@ -68,7 +68,7 @@ func (form *UserOauth2Login) Submit() (*models.User, *auth.AuthUser, error) {
 		return nil, nil, err
 	}
 
-	config, _ := form.app.Settings().NamedAuthProviderConfigs()[form.Provider]
+	config := form.app.Settings().NamedAuthProviderConfigs()[form.Provider]
 	config.SetupProvider(provider)
 
 	provider.SetRedirectUrl(form.RedirectUrl)
