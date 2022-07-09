@@ -14,10 +14,8 @@ import (
 	"github.com/spf13/cast"
 )
 
-var (
-	_ Model             = (*Record)(nil)
-	_ ColumnValueMapper = (*Record)(nil)
-)
+var _ Model = (*Record)(nil)
+var _ ColumnValueMapper = (*Record)(nil)
 
 type Record struct {
 	BaseModel

@@ -12,7 +12,7 @@ func TestFireAndForget(t *testing.T) {
 
 	fn := func() {
 		called = true
-		// panic("test")
+		panic("test")
 	}
 
 	wg := &sync.WaitGroup{}

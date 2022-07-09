@@ -175,7 +175,7 @@ func (s *System) DeletePrefix(prefix string) []error {
 }
 
 // Serve serves the file at fileKey location to an HTTP response.
-func (s *System) Serve(response http.ResponseWriter, fileKey, name string) error {
+func (s *System) Serve(response http.ResponseWriter, fileKey string, name string) error {
 	r, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
 	if readErr != nil {
 		return readErr
@@ -201,7 +201,7 @@ func (s *System) Serve(response http.ResponseWriter, fileKey, name string) error
 // The new thumb file is stored at thumbKey location.
 //
 // thumbSize is in the format "WxH", eg. "100x50".
-func (s *System) CreateThumb(originalKey, thumbKey, thumbSize string, cropCenter bool) error {
+func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string, cropCenter bool) error {
 	thumbSizeParts := strings.SplitN(thumbSize, "x", 2)
 	if len(thumbSizeParts) != 2 {
 		return errors.New("Thumb size must be in WxH format.")

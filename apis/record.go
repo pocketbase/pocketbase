@@ -69,7 +69,7 @@ func (api *recordApi) list(c echo.Context) error {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
-	rawRecords := []dbx.NullStringMap{}
+	var rawRecords = []dbx.NullStringMap{}
 	result, err := searchProvider.ParseAndExec(queryStr, &rawRecords)
 	if err != nil {
 		return rest.NewBadRequestError("Invalid filter parameters.", err)

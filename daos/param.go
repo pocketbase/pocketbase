@@ -22,6 +22,7 @@ func (dao *Dao) FindParamByKey(key string) (*models.Param, error) {
 		AndWhere(dbx.HashExp{"key": key}).
 		Limit(1).
 		One(param)
+
 	if err != nil {
 		return nil, err
 	}

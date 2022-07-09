@@ -21,6 +21,7 @@ func (dao *Dao) FindRequestById(id string) (*models.Request, error) {
 		AndWhere(dbx.HashExp{"id": id}).
 		Limit(1).
 		One(model)
+
 	if err != nil {
 		return nil, err
 	}

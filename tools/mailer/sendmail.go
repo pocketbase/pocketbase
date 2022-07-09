@@ -16,7 +16,8 @@ var _ Mailer = (*Sendmail)(nil)
 // client that sends emails via the `sendmail` *nix command.
 //
 // This client is usually recommended only for development and testing.
-type Sendmail struct{}
+type Sendmail struct {
+}
 
 // Send implements `mailer.Mailer` interface.
 //

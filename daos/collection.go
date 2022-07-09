@@ -26,6 +26,7 @@ func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, e
 		)).
 		Limit(1).
 		One(model)
+
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +38,7 @@ func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, e
 // with the provided name (case insensitive!).
 //
 // Note: case sensitive check because the name is used also as a table name for the records.
-func (dao *Dao) IsCollectionNameUnique(name, excludeId string) bool {
+func (dao *Dao) IsCollectionNameUnique(name string, excludeId string) bool {
 	if name == "" {
 		return false
 	}

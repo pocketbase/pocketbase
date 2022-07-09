@@ -17,14 +17,14 @@ func TestNewBroker(t *testing.T) {
 func TestClients(t *testing.T) {
 	b := subscriptions.NewBroker()
 
-	if total := b.ClientCount(); total != 0 {
+	if total := len(b.Clients()); total != 0 {
 		t.Fatalf("Expected no clients, got %v", total)
 	}
 
 	b.Register(subscriptions.NewDefaultClient())
 	b.Register(subscriptions.NewDefaultClient())
 
-	if total := b.ClientCount(); total != 2 {
+	if total := len(b.Clients()); total != 2 {
 		t.Fatalf("Expected 2 clients, got %v", total)
 	}
 }

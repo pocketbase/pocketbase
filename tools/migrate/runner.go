@@ -146,7 +146,7 @@ func (r *Runner) Run(args ...string) error {
 			return err
 		}
 
-		if err := os.WriteFile(resultFilePath, []byte(createTemplateContent), 0o644); err != nil {
+		if err := os.WriteFile(resultFilePath, []byte(createTemplateContent), 0644); err != nil {
 			return fmt.Errorf("Failed to save migration file %q\n", resultFilePath)
 		}
 
@@ -183,6 +183,7 @@ func (r *Runner) Up() ([]string, error) {
 
 		return nil
 	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +194,7 @@ func (r *Runner) Up() ([]string, error) {
 //
 // On success returns list with the reverted migrations file names.
 func (r *Runner) Down(toRevertCount int) ([]string, error) {
-	var applied []string
+	applied := []string{}
 
 	err := r.db.Transactional(func(tx *dbx.Tx) error {
 		totalReverted := 0
@@ -224,6 +225,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 
 		return nil
 	})
+
 	if err != nil {
 		return nil, err
 	}

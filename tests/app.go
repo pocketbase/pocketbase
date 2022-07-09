@@ -391,7 +391,7 @@ func NewTempDataDir() (string, error) {
 // Helpers
 // -------------------------------------------------------------------
 
-func copyDir(src, dest string) error {
+func copyDir(src string, dest string) error {
 	if err := os.MkdirAll(dest, os.ModePerm); err != nil {
 		return err
 	}
@@ -426,7 +426,7 @@ func copyDir(src, dest string) error {
 	return nil
 }
 
-func copyFile(src, dest string) error {
+func copyFile(src string, dest string) error {
 	srcFile, err := os.Open(src)
 	if err != nil {
 		return err

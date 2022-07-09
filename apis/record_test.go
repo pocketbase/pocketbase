@@ -374,7 +374,7 @@ func TestRecordView(t *testing.T) {
 }
 
 func TestRecordDelete(t *testing.T) {
-	ensureDeletedFiles := func(app *tests.TestApp, collectionId, recordId string) {
+	ensureDeletedFiles := func(app *tests.TestApp, collectionId string, recordId string) {
 		storageDir := filepath.Join(app.DataDir(), "storage", collectionId, recordId)
 
 		entries, _ := os.ReadDir(storageDir)

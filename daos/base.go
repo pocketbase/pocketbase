@@ -157,6 +157,7 @@ func (dao *Dao) update(m models.Model) error {
 			dataMap,
 			dbx.HashExp{"id": m.GetId()},
 		).Execute()
+
 		if err != nil {
 			return err
 		}
