@@ -107,7 +107,7 @@ func TestAdminPasswordResetConfirmSubmit(t *testing.T) {
 		}
 
 		claims, _ := security.ParseUnverifiedJWT(s.token)
-		tokenAdminId, _ := claims["id"]
+		tokenAdminId := claims["id"]
 
 		if admin.Id != tokenAdminId {
 			t.Errorf("(%d) Expected admin with id %s to be returned, got %v", i, tokenAdminId, admin)

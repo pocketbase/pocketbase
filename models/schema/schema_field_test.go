@@ -493,9 +493,9 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		value      any
 		expectJson string
 	}{
-		{schema.SchemaField{Type: "unkown"}, "test", `"test"`},
-		{schema.SchemaField{Type: "unkown"}, 123, "123"},
-		{schema.SchemaField{Type: "unkown"}, []int{1, 2, 1}, "[1,2,1]"},
+		{schema.SchemaField{Type: "unknown"}, "test", `"test"`},
+		{schema.SchemaField{Type: "unknown"}, 123, "123"},
+		{schema.SchemaField{Type: "unknown"}, []int{1, 2, 1}, "[1,2,1]"},
 
 		// text
 		{schema.SchemaField{Type: schema.FieldTypeText}, nil, `null`},
@@ -1281,7 +1281,6 @@ func TestFileOptionsValidate(t *testing.T) {
 }
 
 func TestRelationOptionsValidate(t *testing.T) {
-
 	scenarios := []fieldOptionsScenario{
 		{
 			"empty",

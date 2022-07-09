@@ -127,7 +127,7 @@ func (s *System) DeletePrefix(prefix string) []error {
 		Prefix: prefix,
 	}
 
-	// delete all files witht the prefix
+	// delete all files with the prefix
 	// ---
 	iter := s.bucket.List(&opts)
 	for {

@@ -41,7 +41,7 @@ func (api *settingsApi) list(c echo.Context) error {
 func (api *settingsApi) set(c echo.Context) error {
 	form := forms.NewSettingsUpsert(api.app)
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("An error occured while reading the submitted data.", err)
+		return rest.NewBadRequestError("An error occurred while reading the submitted data.", err)
 	}
 
 	event := &core.SettingsUpdateEvent{
@@ -52,7 +52,7 @@ func (api *settingsApi) set(c echo.Context) error {
 
 	handlerErr := api.app.OnSettingsBeforeUpdateRequest().Trigger(event, func(e *core.SettingsUpdateEvent) error {
 		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("An error occured while submitting the form.", err)
+			return rest.NewBadRequestError("An error occurred while submitting the form.", err)
 		}
 
 		redactedSettings, err := api.app.Settings().RedactClone()

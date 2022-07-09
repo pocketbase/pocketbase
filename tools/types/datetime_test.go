@@ -1,10 +1,11 @@
 package types_test
 
 import (
-	"github.com/pocketbase/pocketbase/tools/types"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestNowDateTime(t *testing.T) {

@@ -41,11 +41,11 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 			}
 
 			// configure cors
-			router.Use(middleware.CORSWithConfig(middleware.CORSConfig(middleware.CORSConfig{
+			router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 				Skipper:      middleware.DefaultSkipper,
 				AllowOrigins: allowedOrigins,
 				AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
-			})))
+			}))
 
 			// ensure that the latest migrations are applied before starting the server
 			if err := runMigrations(app); err != nil {

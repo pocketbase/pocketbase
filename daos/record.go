@@ -309,7 +309,7 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 		newSchema := newCollection.Schema
 
 		// check for renamed table
-		if strings.ToLower(oldTableName) != strings.ToLower(newTableName) {
+		if !strings.EqualFold(oldTableName, newTableName) {
 			_, err := dao.DB().RenameTable(oldTableName, newTableName).Execute()
 			if err != nil {
 				return err

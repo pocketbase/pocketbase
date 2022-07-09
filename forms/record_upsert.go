@@ -44,7 +44,6 @@ func NewRecordUpsert(app core.App, record *models.Record) *RecordUpsert {
 	form.Data = map[string]any{}
 	for _, field := range record.Collection().Schema.Fields() {
 		form.Data[field.Name] = record.GetDataValue(field.Name)
-
 	}
 
 	return form
@@ -147,7 +146,7 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 
 	for _, field := range form.record.Collection().Schema.Fields() {
 		key := field.Name
-		value, _ := extendedData[key]
+		value := extendedData[key]
 		value = field.PrepareValue(value)
 
 		if field.Type == schema.FieldTypeFile {

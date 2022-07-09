@@ -91,7 +91,7 @@ type App interface {
 	// entry in the DB, allowing you to modify or validate the stored data.
 	OnModelBeforeCreate() *hook.Hook[*ModelEvent]
 
-	// OnModelAfterCreate hook is triggered after successfuly
+	// OnModelAfterCreate hook is triggered after successfully
 	// inserting a new entry in the DB.
 	OnModelAfterCreate() *hook.Hook[*ModelEvent]
 
@@ -99,7 +99,7 @@ type App interface {
 	// entry in the DB, allowing you to modify or validate the stored data.
 	OnModelBeforeUpdate() *hook.Hook[*ModelEvent]
 
-	// OnModelAfterUpdate hook is triggered after successfuly updating
+	// OnModelAfterUpdate hook is triggered after successfully updating
 	// existing entry in the DB.
 	OnModelAfterUpdate() *hook.Hook[*ModelEvent]
 
@@ -107,7 +107,7 @@ type App interface {
 	// existing entry from the DB.
 	OnModelBeforeDelete() *hook.Hook[*ModelEvent]
 
-	// OnModelAfterDelete is triggered after successfuly deleting an
+	// OnModelAfterDelete is triggered after successfully deleting an
 	// existing entry from the DB.
 	OnModelAfterDelete() *hook.Hook[*ModelEvent]
 
@@ -123,7 +123,7 @@ type App interface {
 	OnMailerBeforeAdminResetPasswordSend() *hook.Hook[*MailerAdminEvent]
 
 	// OnMailerAfterAdminResetPasswordSend hook is triggered after
-	// admin password reset email was successfuly sent.
+	// admin password reset email was successfully sent.
 	OnMailerAfterAdminResetPasswordSend() *hook.Hook[*MailerAdminEvent]
 
 	// OnMailerBeforeUserResetPasswordSend hook is triggered right before
@@ -134,7 +134,7 @@ type App interface {
 	OnMailerBeforeUserResetPasswordSend() *hook.Hook[*MailerUserEvent]
 
 	// OnMailerAfterUserResetPasswordSend hook is triggered after
-	// a user password reset email was successfuly sent.
+	// a user password reset email was successfully sent.
 	OnMailerAfterUserResetPasswordSend() *hook.Hook[*MailerUserEvent]
 
 	// OnMailerBeforeUserVerificationSend hook is triggered right before
@@ -145,7 +145,7 @@ type App interface {
 	OnMailerBeforeUserVerificationSend() *hook.Hook[*MailerUserEvent]
 
 	// OnMailerAfterUserVerificationSend hook is triggered after a user
-	// verification email was successfuly sent.
+	// verification email was successfully sent.
 	OnMailerAfterUserVerificationSend() *hook.Hook[*MailerUserEvent]
 
 	// OnMailerBeforeUserChangeEmailSend hook is triggered right before
@@ -156,7 +156,7 @@ type App interface {
 	OnMailerBeforeUserChangeEmailSend() *hook.Hook[*MailerUserEvent]
 
 	// OnMailerAfterUserChangeEmailSend hook is triggered after a user
-	// change address email was successfuly sent.
+	// change address email was successfully sent.
 	OnMailerAfterUserChangeEmailSend() *hook.Hook[*MailerUserEvent]
 
 	// ---------------------------------------------------------------
@@ -180,7 +180,7 @@ type App interface {
 	// Settings API event hooks
 	// ---------------------------------------------------------------
 
-	// OnSettingsListRequest hook is triggered on each successfull
+	// OnSettingsListRequest hook is triggered on each successful
 	// API Settings list request.
 	//
 	// Could be used to validate or modify the response before

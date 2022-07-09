@@ -95,7 +95,7 @@ func (form *CollectionUpsert) checkUniqueName(value any) error {
 		return validation.NewError("validation_collection_name_exists", "Collection name must be unique (case insensitive).")
 	}
 
-	if (form.isCreate || strings.ToLower(v) != strings.ToLower(form.collection.Name)) && form.app.Dao().HasTable(v) {
+	if (form.isCreate || !strings.EqualFold(v, form.collection.Name)) && form.app.Dao().HasTable(v) {
 		return validation.NewError("validation_collection_name_table_exists", "The collection name must be also unique table name.")
 	}
 

@@ -1,4 +1,4 @@
-// Pacakge tests provides common helpers and mocks used in PocketBase application tests.
+// Package tests provides common helpers and mocks used in PocketBase application tests.
 package tests
 
 import (

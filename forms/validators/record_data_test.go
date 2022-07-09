@@ -1189,7 +1189,7 @@ func TestRecordDataValidatorValidateRelation(t *testing.T) {
 			Type: schema.FieldTypeRelation,
 			Options: &schema.RelationOptions{
 				MaxSelect:    3,
-				CollectionId: "", // missing or nonexisting colleciton id
+				CollectionId: "", // missing or non-existing collection id
 			},
 		},
 	)

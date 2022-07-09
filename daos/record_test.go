@@ -396,6 +396,9 @@ func TestSyncRecordTableSchema(t *testing.T) {
 		t.Fatal(err)
 	}
 	updatedCollection, err := app.Dao().FindCollectionByNameOrId("demo")
+	if err != nil {
+		t.Fatal(err)
+	}
 	updatedCollection.Name = "demo_renamed"
 	updatedCollection.Schema.RemoveField(updatedCollection.Schema.GetFieldByName("file").Id)
 	updatedCollection.Schema.AddField(

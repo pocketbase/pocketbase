@@ -9,6 +9,7 @@ import (
 
 func TestRandomString(t *testing.T) {
 	generated := []string{}
+	reg := regexp.MustCompile(`[a-zA-Z0-9]+`)
 
 	for i := 0; i < 30; i++ {
 		length := 5 + i
@@ -18,7 +19,7 @@ func TestRandomString(t *testing.T) {
 			t.Errorf("(%d) Expected the length of the string to be %d, got %d", i, length, len(result))
 		}
 
-		if match, _ := regexp.MatchString("[a-zA-Z0-9]+", result); !match {
+		if match := reg.MatchString(result); !match {
 			t.Errorf("(%d) The generated strings should have only [a-zA-Z0-9]+ characters, got %q", i, result)
 		}
 

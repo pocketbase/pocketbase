@@ -210,7 +210,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		s.perPage = MaxPerPage
 	}
 
-	// normalize page accoring to the total count
+	// normalize page according to the total count
 	if s.page <= 0 || totalCount == 0 {
 		s.page = 1
 	} else if totalPages := int(math.Ceil(float64(totalCount) / float64(s.perPage))); s.page > totalPages {
