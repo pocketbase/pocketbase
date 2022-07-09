@@ -18,7 +18,7 @@
         required={field.required}
         min={field.options?.min}
         max={field.options?.max}
-        step="1"
+        step="any"
         bind:value
     />
 </Field>
