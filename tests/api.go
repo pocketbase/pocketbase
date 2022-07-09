@@ -71,7 +71,7 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 
 	res := recorder.Result()
 
-	var prefix = scenario.Name
+	prefix := scenario.Name
 	if prefix == "" {
 		prefix = fmt.Sprintf("%s:%s", scenario.Method, scenario.Url)
 	}

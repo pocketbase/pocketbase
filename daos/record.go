@@ -87,7 +87,6 @@ func (dao *Dao) FindRecordsByExpr(collection *models.Collection, expr dbx.Expres
 	err := dao.RecordQuery(collection).
 		AndWhere(expr).
 		All(&rows)
-
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +103,6 @@ func (dao *Dao) FindFirstRecordByData(collection *models.Collection, key string,
 		AndWhere(dbx.HashExp{key: value}).
 		Limit(1).
 		One(row)
-
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +268,7 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 // and applies the necessary related record table changes.
 //
 // If `oldCollection` is null, then only `newCollection` is used to create the record table.
-func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldCollection *models.Collection) error {
+func (dao *Dao) SyncRecordTableSchema(newCollection, oldCollection *models.Collection) error {
 	// create
 	if oldCollection == nil {
 		cols := map[string]string{

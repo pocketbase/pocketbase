@@ -247,19 +247,19 @@ func createTestDir(t *testing.T) string {
 		t.Fatal(err)
 	}
 
-	file1, err := os.OpenFile(filepath.Join(dir, "test/sub1.txt"), os.O_WRONLY|os.O_CREATE, 0666)
+	file1, err := os.OpenFile(filepath.Join(dir, "test/sub1.txt"), os.O_WRONLY|os.O_CREATE, 0o666)
 	if err != nil {
 		t.Fatal(err)
 	}
 	file1.Close()
 
-	file2, err := os.OpenFile(filepath.Join(dir, "test/sub2.txt"), os.O_WRONLY|os.O_CREATE, 0666)
+	file2, err := os.OpenFile(filepath.Join(dir, "test/sub2.txt"), os.O_WRONLY|os.O_CREATE, 0o666)
 	if err != nil {
 		t.Fatal(err)
 	}
 	file2.Close()
 
-	file3, err := os.OpenFile(filepath.Join(dir, "file.png"), os.O_WRONLY|os.O_CREATE, 0666)
+	file3, err := os.OpenFile(filepath.Join(dir, "file.png"), os.O_WRONLY|os.O_CREATE, 0o666)
 	if err != nil {
 		t.Fatal(err)
 	}

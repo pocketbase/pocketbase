@@ -6,9 +6,11 @@ import (
 	"unicode"
 )
 
-var columnifyRemoveRegex = regexp.MustCompile(`[^\w\.\*\-\_\@\#]+`)
-var snakecaseSplitRegex = regexp.MustCompile(`[\W_]+`)
-var usernamifySplitRegex = regexp.MustCompile(`\W+`)
+var (
+	columnifyRemoveRegex = regexp.MustCompile(`[^\w\.\*\-\_\@\#]+`)
+	snakecaseSplitRegex  = regexp.MustCompile(`[\W_]+`)
+	usernamifySplitRegex = regexp.MustCompile(`\W+`)
+)
 
 // UcFirst converts the first character of a string into uppercase.
 func UcFirst(str string) string {
@@ -46,7 +48,7 @@ func Sentenize(str string) string {
 
 // Sanitize sanitizes `str` by removing all characters satisfying `removePattern`.
 // Returns an error if the pattern is not valid regex string.
-func Sanitize(str string, removePattern string) (string, error) {
+func Sanitize(str, removePattern string) (string, error) {
 	exp, err := regexp.Compile(removePattern)
 	if err != nil {
 		return "", err

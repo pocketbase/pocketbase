@@ -53,7 +53,7 @@ func (l *MigrationsList) Register(
 		down: down,
 	})
 
-	sort.Slice(l.list, func(i int, j int) bool {
+	sort.Slice(l.list, func(i, j int) bool {
 		return l.list[i].file < l.list[j].file
 	})
 }

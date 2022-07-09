@@ -65,11 +65,11 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			return user, err
 		}
 
-		emails := []struct {
+		var emails []struct {
 			Email    string
 			Verified bool
 			Primary  bool
-		}{}
+		}
 		if err := json.Unmarshal(content, &emails); err != nil {
 			return user, err
 		}

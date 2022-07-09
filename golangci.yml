@@ -12,6 +12,7 @@ linters:
     - exportloopref
     - gocritic
     - gofmt
+    - gofumpt
     - goimports
     - gomodguard
     - goprintffuncname
@@ -28,3 +29,8 @@ linters:
     - unused
     - varcheck
     - whitespace
+
+linters-settings:
+  gofumpt:
+    extra-rules: true
+

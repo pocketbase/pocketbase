@@ -122,7 +122,6 @@ func (api *adminApi) list(c echo.Context) error {
 	result, err := search.NewProvider(fieldResolver).
 		Query(api.app.Dao().AdminQuery()).
 		ParseAndExec(c.QueryString(), &admins)
-
 	if err != nil {
 		return rest.NewBadRequestError("", err)
 	}

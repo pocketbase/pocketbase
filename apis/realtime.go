@@ -172,13 +172,17 @@ func (api *realtimeApi) bindEvents() {
 			return nil
 		}
 
-		for _, client := range api.app.SubscriptionsBroker().Clients() {
+		api.app.SubscriptionsBroker().Clients().Range(func(key, value any) bool {
+			client, ok := value.(subscriptions.Client)
+			if !ok {
+				return true
+			}
 			model, _ := client.Get(contextKey).(models.Model)
 			if model != nil && model.GetId() == data.Model.GetId() {
 				client.Set(contextKey, data.Model)
 			}
-		}
-
+			return true
+		})
 		return nil
 	})
 
@@ -196,13 +200,17 @@ func (api *realtimeApi) bindEvents() {
 			return nil
 		}
 
-		for _, client := range api.app.SubscriptionsBroker().Clients() {
+		api.app.SubscriptionsBroker().Clients().Range(func(key, value any) bool {
+			client, ok := value.(subscriptions.Client)
+			if !ok {
+				return true
+			}
 			model, _ := client.Get(contextKey).(models.Model)
 			if model != nil && model.GetId() == data.Model.GetId() {
 				api.app.SubscriptionsBroker().Unregister(client.Id())
 			}
-		}
-
+			return true
+		})
 		return nil
 	})
 
@@ -281,8 +289,8 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 		return errors.New("Record collection not set.")
 	}
 
-	clients := api.app.SubscriptionsBroker().Clients()
-	if len(clients) == 0 {
+	broker := api.app.SubscriptionsBroker()
+	if broker.ClientCount() == 0 {
 		return nil // no subscribers
 	}
 
@@ -306,7 +314,11 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 		return err
 	}
 
-	for _, client := range clients {
+	broker.Clients().Range(func(key, value any) bool {
+		client, ok := value.(subscriptions.Client)
+		if !ok {
+			return true
+		}
 		for subscription, rule := range subscriptionRuleMap {
 			if !client.HasSubscription(subscription) {
 				continue
@@ -323,7 +335,8 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 
 			client.Channel() <- msg
 		}
-	}
+		return true
+	})
 
 	return nil
 }
