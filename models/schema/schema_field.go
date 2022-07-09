@@ -354,8 +354,7 @@ func (o NumberOptions) Validate() error {
 
 // -------------------------------------------------------------------
 
-type BoolOptions struct {
-}
+type BoolOptions struct{}
 
 func (o BoolOptions) Validate() error {
 	return nil
@@ -414,7 +413,7 @@ func (o DateOptions) Validate() error {
 	)
 }
 
-func (o *DateOptions) checkRange(min types.DateTime, max types.DateTime) validation.RuleFunc {
+func (o *DateOptions) checkRange(min, max types.DateTime) validation.RuleFunc {
 	return func(value any) error {
 		v, _ := value.(types.DateTime)
 
@@ -450,8 +449,7 @@ func (o SelectOptions) Validate() error {
 
 // -------------------------------------------------------------------
 
-type JsonOptions struct {
-}
+type JsonOptions struct{}
 
 func (o JsonOptions) Validate() error {
 	return nil

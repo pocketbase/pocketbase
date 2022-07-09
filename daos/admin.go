@@ -21,7 +21,6 @@ func (dao *Dao) FindAdminById(id string) (*models.Admin, error) {
 		AndWhere(dbx.HashExp{"id": id}).
 		Limit(1).
 		One(model)
-
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +36,6 @@ func (dao *Dao) FindAdminByEmail(email string) (*models.Admin, error) {
 		AndWhere(dbx.HashExp{"email": email}).
 		Limit(1).
 		One(model)
-
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +46,7 @@ func (dao *Dao) FindAdminByEmail(email string) (*models.Admin, error) {
 // FindAdminByEmail finds the admin associated with the provided JWT token.
 //
 // Returns an error if the JWT token is invalid or expired.
-func (dao *Dao) FindAdminByToken(token string, baseTokenKey string) (*models.Admin, error) {
+func (dao *Dao) FindAdminByToken(token, baseTokenKey string) (*models.Admin, error) {
 	unverifiedClaims, err := security.ParseUnverifiedJWT(token)
 	if err != nil {
 		return nil, err
@@ -86,7 +84,7 @@ func (dao *Dao) TotalAdmins() (int, error) {
 
 // IsAdminEmailUnique checks if the provided email address is not
 // already in use by other admins.
-func (dao *Dao) IsAdminEmailUnique(email string, excludeId string) bool {
+func (dao *Dao) IsAdminEmailUnique(email, excludeId string) bool {
 	if email == "" {
 		return false
 	}

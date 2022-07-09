@@ -47,7 +47,7 @@ func Encrypt(data []byte, key string) (string, error) {
 }
 
 // Decrypt decrypts encrypted text with key (must be valid 32 chars aes key).
-func Decrypt(cipherText string, key string) ([]byte, error) {
+func Decrypt(cipherText, key string) ([]byte, error) {
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return nil, err

@@ -23,7 +23,7 @@ func ParseUnverifiedJWT(token string) (jwt.MapClaims, error) {
 }
 
 // ParseJWT verifies and parses JWT token and returns its claims.
-func ParseJWT(token string, verificationKey string) (jwt.MapClaims, error) {
+func ParseJWT(token, verificationKey string) (jwt.MapClaims, error) {
 	parser := &jwt.Parser{
 		ValidMethods: []string{"HS256"},
 	}

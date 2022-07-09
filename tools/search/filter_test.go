@@ -25,7 +25,8 @@ func TestFilterDataBuildExpr(t *testing.T) {
 		// unknown field
 		{"test1 = 'example' && unknown > 1", true, ""},
 		// simple expression
-		{"test1 > 1", false,
+		{
+			"test1 > 1", false,
 			"^" +
 				regexp.QuoteMeta("[[test1]] > {:") +
 				".+" +

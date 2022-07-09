@@ -22,7 +22,7 @@ func (m *TestMailer) Reset() {
 }
 
 // Send implements `mailer.Mailer` interface.
-func (m *TestMailer) Send(fromEmail mail.Address, toEmail mail.Address, subject string, html string, attachments map[string]io.Reader) error {
+func (m *TestMailer) Send(fromEmail, toEmail mail.Address, subject, html string, attachments map[string]io.Reader) error {
 	m.LastHtmlBody = html
 	m.TotalSend++
 	return nil

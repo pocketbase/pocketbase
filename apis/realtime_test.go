@@ -28,8 +28,8 @@ func TestRealtimeConnect(t *testing.T) {
 				"OnRealtimeConnectRequest": 1,
 			},
 			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				if len(app.SubscriptionsBroker().Clients()) != 0 {
-					t.Errorf("Expected the subscribers to be removed after connection close, found %d", len(app.SubscriptionsBroker().Clients()))
+				if app.SubscriptionsBroker().ClientCount() != 0 {
+					t.Errorf("Expected the subscribers to be removed after connection close, found %d", app.SubscriptionsBroker().ClientCount())
 				}
 			},
 		},
@@ -204,8 +204,8 @@ func TestRealtimeUserDeleteEvent(t *testing.T) {
 
 	testApp.OnModelAfterDelete().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: user})
 
-	if len(testApp.SubscriptionsBroker().Clients()) != 0 {
-		t.Fatalf("Expected no subscription clients, found %d", len(testApp.SubscriptionsBroker().Clients()))
+	if testApp.SubscriptionsBroker().ClientCount() != 0 {
+		t.Fatalf("Expected no subscription clients, found %d", testApp.SubscriptionsBroker().ClientCount())
 	}
 }
 
@@ -256,8 +256,8 @@ func TestRealtimeAdminDeleteEvent(t *testing.T) {
 
 	testApp.OnModelAfterDelete().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: admin})
 
-	if len(testApp.SubscriptionsBroker().Clients()) != 0 {
-		t.Fatalf("Expected no subscription clients, found %d", len(testApp.SubscriptionsBroker().Clients()))
+	if testApp.SubscriptionsBroker().ClientCount() != 0 {
+		t.Fatalf("Expected no subscription clients, found %d", testApp.SubscriptionsBroker().ClientCount())
 	}
 }
 

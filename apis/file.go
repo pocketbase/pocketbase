@@ -9,8 +9,10 @@ import (
 	"github.com/pocketbase/pocketbase/tools/rest"
 )
 
-var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg"}
-var defaultThumbSizes = []string{"100x100"}
+var (
+	imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg"}
+	defaultThumbSizes = []string{"100x100"}
+)
 
 // BindFileApi registers the file api endpoints and the corresponding handlers.
 func BindFileApi(app core.App, rg *echo.Group) {

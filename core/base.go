@@ -122,7 +122,7 @@ type BaseApp struct {
 // configured with the provided arguments.
 //
 // To initialize the app, you need to call `app.Bootsrap()`.
-func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
+func NewBaseApp(dataDir, encryptionEnv string, isDebug bool) *BaseApp {
 	return &BaseApp{
 		dataDir:             dataDir,
 		isDebug:             isDebug,

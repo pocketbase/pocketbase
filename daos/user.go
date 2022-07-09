@@ -81,7 +81,6 @@ func (dao *Dao) FindUserById(id string) (*models.User, error) {
 		AndWhere(dbx.HashExp{"id": id}).
 		Limit(1).
 		One(model)
-
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +104,6 @@ func (dao *Dao) FindUserByEmail(email string) (*models.User, error) {
 		AndWhere(dbx.HashExp{"email": email}).
 		Limit(1).
 		One(model)
-
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +121,7 @@ func (dao *Dao) FindUserByEmail(email string) (*models.User, error) {
 //
 // This method also auto loads the related user profile record
 // into the found model.
-func (dao *Dao) FindUserByToken(token string, baseTokenKey string) (*models.User, error) {
+func (dao *Dao) FindUserByToken(token, baseTokenKey string) (*models.User, error) {
 	unverifiedClaims, err := security.ParseUnverifiedJWT(token)
 	if err != nil {
 		return nil, err
@@ -152,7 +150,7 @@ func (dao *Dao) FindUserByToken(token string, baseTokenKey string) (*models.User
 
 // IsUserEmailUnique checks if the provided email address is not
 // already in use by other users.
-func (dao *Dao) IsUserEmailUnique(email string, excludeId string) bool {
+func (dao *Dao) IsUserEmailUnique(email, excludeId string) bool {
 	if email == "" {
 		return false
 	}
