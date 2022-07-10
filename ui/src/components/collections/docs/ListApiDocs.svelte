@@ -84,7 +84,7 @@
                     });
 
                 // alternatively you can also fetch all records at once via getFullList:
-                client.Records.getFullList("${collection?.name}", 200 /* batch size */);
+                client.Records.getFullList("${collection?.name}", 200 /* batch size */)
                     .then(function (records) {
                         // success...
                     }).catch(function (error) {
