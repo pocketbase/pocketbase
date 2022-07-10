@@ -182,14 +182,18 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	}
 	defer r.Close()
 
-	// All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
-	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
-	location, _ := time.LoadLocation("GMT")
-
 	response.Header().Set("Content-Disposition", "attachment; filename="+name)
 	response.Header().Set("Content-Type", r.ContentType())
 	response.Header().Set("Content-Length", strconv.FormatInt(r.Size(), 10))
-	response.Header().Set("Last-Modified", r.ModTime().In(location).Format("Mon, 02 Jan 06 15:04:05 MST"))
+
+	// All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
+	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
+	//
+	// NB! time.LoadLocation may fail on non-Unix systems (see https://github.com/pocketbase/pocketbase/issues/45)
+	location, locationErr := time.LoadLocation("GMT")
+	if locationErr == nil {
+		response.Header().Set("Last-Modified", r.ModTime().In(location).Format("Mon, 02 Jan 06 15:04:05 MST"))
+	}
 
 	// copy from the read range to response.
 	_, err := io.Copy(response, r)
