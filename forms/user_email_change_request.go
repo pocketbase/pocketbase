@@ -8,7 +8,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// UserEmailChangeConfirm defines a user email change request form.
+// UserEmailChangeRequest defines a user email change request form.
 type UserEmailChangeRequest struct {
 	app  core.App
 	user *models.User

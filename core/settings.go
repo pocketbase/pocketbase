@@ -148,12 +148,12 @@ func (s *Settings) Merge(other *Settings) error {
 }
 
 // Clone creates a new deep copy of the current settings.
-func (c *Settings) Clone() (*Settings, error) {
-	new := &Settings{}
-	if err := new.Merge(c); err != nil {
+func (s *Settings) Clone() (*Settings, error) {
+	settings := &Settings{}
+	if err := settings.Merge(s); err != nil {
 		return nil, err
 	}
-	return new, nil
+	return settings, nil
 }
 
 // RedactClone creates a new deep copy of the current settings,

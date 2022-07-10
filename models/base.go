@@ -53,7 +53,7 @@ func (m *BaseModel) GetCreated() types.DateTime {
 	return m.Created
 }
 
-// GetCreated returns the model's Updated datetime.
+// GetUpdated returns the model's Updated datetime.
 func (m *BaseModel) GetUpdated() types.DateTime {
 	return m.Updated
 }
@@ -71,7 +71,7 @@ func (m *BaseModel) RefreshCreated() {
 	m.Created = types.NowDateTime()
 }
 
-// RefreshCreated updates the model's Created field with the current datetime.
+// RefreshUpdated updates the model's Created field with the current datetime.
 func (m *BaseModel) RefreshUpdated() {
 	m.Updated = types.NowDateTime()
 }

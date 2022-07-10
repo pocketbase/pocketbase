@@ -77,12 +77,12 @@ func NewRecordsFromNullStringMaps(collection *Collection, rows []dbx.NullStringM
 	return result
 }
 
-// Returns the table name associated to the current Record model.
+// TableName returns the table name associated to the current Record model.
 func (m *Record) TableName() string {
 	return m.collection.Name
 }
 
-// Returns the Collection model associated to the current Record model.
+// Collection returns the Collection model associated to the current Record model.
 func (m *Record) Collection() *Collection {
 	return m.collection
 }
