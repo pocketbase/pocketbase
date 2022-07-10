@@ -16,10 +16,14 @@
 
     let oldLocation = undefined;
 
+    let showAppSidebar = false;
+
     function handleRouteLoading(e) {
         if (e?.detail?.location === oldLocation) {
             return; // not an actual change
         }
+
+        showAppSidebar = !!e?.detail?.userData?.showAppSidebar;
 
         oldLocation = e?.detail?.location;
 
@@ -30,11 +34,7 @@
     }
 
     function handleRouteFailure() {
-        if (ApiClient.AuthStore.isValid) {
-            replace("/");
-        } else {
-            ApiClient.logout();
-        }
+        replace("/");
     }
 
     function logout() {
@@ -43,7 +43,7 @@
 </script>
 
 <div class="app-layout">
-    {#if $admin?.id}
+    {#if $admin?.id && showAppSidebar}
         <aside class="app-sidebar">
             <a href="/" class="logo logo-sm" use:link>
                 <img

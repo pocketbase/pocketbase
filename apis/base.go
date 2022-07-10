@@ -15,6 +15,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/ui"
+	"github.com/spf13/cast"
 )
 
 // InitApi creates a configured echo instance with registered
@@ -71,13 +72,8 @@ func InitApi(app core.App) (*echo.Echo, error) {
 		}
 	}
 
-	// serves /ui/dist/index.html file
-	// (explicit route is used to avoid conflicts with `RemoveTrailingSlash` middleware)
-	e.FileFS("/_", "index.html", ui.DistIndexHTML, middleware.Gzip())
-
-	// serves static files from the /ui/dist directory
-	// (similar to echo.StaticFS but with gzip middleware enabled)
-	e.GET("/_/*", StaticDirectoryHandler(ui.DistDirFS, false), middleware.Gzip())
+	// admin ui routes
+	bindStaticAdminUI(app, e)
 
 	// default routes
 	api := e.Group("/api")
@@ -127,5 +123,80 @@ func StaticDirectoryHandler(fileSystem fs.FS, disablePathUnescaping bool) echo.H
 		name := filepath.ToSlash(filepath.Clean(strings.TrimPrefix(p, "/")))
 
 		return c.FileFS(name, fileSystem)
+	}
+}
+
+// bindStaticAdminUI registers the endpoints that serves the static admin UI.
+func bindStaticAdminUI(app core.App, e *echo.Echo) error {
+	// serves /ui/dist/index.html file
+	// (explicit route is used to avoid conflicts with `RemoveTrailingSlash` middleware)
+	e.FileFS(
+		"/_",
+		"index.html",
+		ui.DistIndexHTML,
+		middleware.Gzip(),
+		installerRedirect(app),
+	)
+
+	// serves static files from the /ui/dist directory
+	// (similar to echo.StaticFS but with gzip middleware enabled)
+	e.GET(
+		"/_/*",
+		StaticDirectoryHandler(ui.DistDirFS, false),
+		middleware.Gzip(),
+	)
+
+	return nil
+}
+
+const totalAdminsCacheKey = "totalAdmins"
+
+func updateTotalAdminsCache(app core.App) error {
+	total, err := app.Dao().TotalAdmins()
+	if err != nil {
+		return err
+	}
+
+	app.Cache().Set(totalAdminsCacheKey, total)
+
+	return nil
+}
+
+// installerRedirect redirects the user to the installer admin UI page
+// when the application needs some preliminary configurations to be done.
+func installerRedirect(app core.App) echo.MiddlewareFunc {
+	// keep totalAdminsCacheKey value up-to-date
+	app.OnAdminAfterCreateRequest().Add(func(data *core.AdminCreateEvent) error {
+		return updateTotalAdminsCache(app)
+	})
+	app.OnAdminAfterDeleteRequest().Add(func(data *core.AdminDeleteEvent) error {
+		return updateTotalAdminsCache(app)
+	})
+
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			// load into cache (if not already)
+			if !app.Cache().Has(totalAdminsCacheKey) {
+				if err := updateTotalAdminsCache(app); err != nil {
+					return err
+				}
+			}
+
+			totalAdmins := cast.ToInt(app.Cache().Get(totalAdminsCacheKey))
+
+			_, hasInstallerParam := c.Request().URL.Query()["installer"]
+
+			if totalAdmins == 0 && !hasInstallerParam {
+				// redirect to the installer page
+				return c.Redirect(http.StatusTemporaryRedirect, "/_/?installer#")
+			}
+
+			if totalAdmins != 0 && hasInstallerParam {
+				// redirect to the home page
+				return c.Redirect(http.StatusTemporaryRedirect, "/_/#/")
+			}
+
+			return next(c)
+		}
 	}
 }

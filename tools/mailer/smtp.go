@@ -37,8 +37,6 @@ func NewSmtpClient(
 // SmtpClient defines a SMTP mail client structure that implements
 // `mailer.Mailer` interface.
 type SmtpClient struct {
-	mail *mailyak.MailYak
-
 	host     string
 	port     int
 	username string
