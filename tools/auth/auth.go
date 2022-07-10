@@ -29,7 +29,7 @@ type Provider interface {
 	// SetClientId sets the provider client's ID.
 	SetClientId(clientId string)
 
-	// ClientId returns the provider client's app secret.
+	// ClientSecret returns the provider client's app secret.
 	ClientSecret() string
 
 	// SetClientSecret sets the provider client's app secret.

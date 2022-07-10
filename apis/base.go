@@ -38,13 +38,13 @@ func InitApi(app core.App) (*echo.Echo, error) {
 		var apiErr *rest.ApiError
 
 		switch v := err.(type) {
-		case (*echo.HTTPError):
+		case *echo.HTTPError:
 			if v.Internal != nil && app.IsDebug() {
 				log.Println(v.Internal)
 			}
 			msg := fmt.Sprintf("%v", v.Message)
 			apiErr = rest.NewApiError(v.Code, msg, v)
-		case (*rest.ApiError):
+		case *rest.ApiError:
 			if app.IsDebug() && v.RawData() != nil {
 				log.Println(v.RawData())
 			}

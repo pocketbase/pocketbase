@@ -204,11 +204,11 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 
 			if err != nil {
 				switch v := err.(type) {
-				case (*echo.HTTPError):
+				case *echo.HTTPError:
 					status = v.Code
 					meta["errorMessage"] = v.Message
 					meta["errorDetails"] = fmt.Sprint(v.Internal)
-				case (*rest.ApiError):
+				case *rest.ApiError:
 					status = v.Code
 					meta["errorMessage"] = v.Message
 					meta["errorDetails"] = fmt.Sprint(v.RawData())
@@ -259,7 +259,7 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 				// ---
 				now := time.Now()
 				lastLogsDeletedAt := cast.ToTime(app.Cache().Get("lastLogsDeletedAt"))
-				daysDiff := (now.Sub(lastLogsDeletedAt).Hours() * 24)
+				daysDiff := now.Sub(lastLogsDeletedAt).Hours() * 24
 
 				if daysDiff > float64(app.Settings().Logs.MaxDays) {
 					deleteErr := app.LogsDao().DeleteOldRequests(now.AddDate(0, 0, -1*app.Settings().Logs.MaxDays))
