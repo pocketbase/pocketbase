@@ -77,6 +77,28 @@ func RequireAdminAuth() echo.MiddlewareFunc {
 	}
 }
 
+// RequireAdminAuthIfAny middleware requires a request to have
+// a valid admin Authorization header set (aka. `Authorization: Admin ...`)
+// ONLY if the application has at least 1 existing Admin model.
+func RequireAdminAuthOnlyIfAny(app core.App) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			totalAdmins, err := app.Dao().TotalAdmins()
+			if err != nil {
+				return rest.NewBadRequestError("Failed to fetch admins info.", err)
+			}
+
+			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
+
+			if admin != nil || totalAdmins == 0 {
+				return next(c)
+			}
+
+			return rest.NewUnauthorizedError("The request requires admin authorization token to be set.", nil)
+		}
+	}
+}
+
 // RequireAdminOrUserAuth middleware requires a request to have
 // a valid admin or user Authorization header set
 // (aka. `Authorization: Admin ...` or `Authorization: User ...`).

@@ -24,7 +24,7 @@ func BindAdminApi(app core.App, rg *echo.Group) {
 	subGroup.POST("/confirm-password-reset", api.confirmPasswordReset)
 	subGroup.POST("/refresh", api.refresh, RequireAdminAuth())
 	subGroup.GET("", api.list, RequireAdminAuth())
-	subGroup.POST("", api.create, RequireAdminAuth())
+	subGroup.POST("", api.create, RequireAdminAuthOnlyIfAny(app))
 	subGroup.GET("/:id", api.view, RequireAdminAuth())
 	subGroup.PATCH("/:id", api.update, RequireAdminAuth())
 	subGroup.DELETE("/:id", api.delete, RequireAdminAuth())

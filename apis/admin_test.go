@@ -456,11 +456,36 @@ func TestAdminDelete(t *testing.T) {
 func TestAdminCreate(t *testing.T) {
 	scenarios := []tests.ApiScenario{
 		{
-			Name:            "unauthorized",
+			Name:            "unauthorized (while having at least 1 existing admin)",
 			Method:          http.MethodPost,
 			Url:             "/api/admins",
 			ExpectedStatus:  401,
 			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "unauthorized (while having 0 existing admins)",
+			Method: http.MethodPost,
+			Url:    "/api/admins",
+			Body:   strings.NewReader(`{"email":"testnew@example.com","password":"1234567890","passwordConfirm":"1234567890","avatar":3}`),
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				// delete all admins
+				_, err := app.Dao().DB().NewQuery("DELETE FROM {{_admins}}").Execute()
+				if err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":`,
+				`"email":"testnew@example.com"`,
+				`"avatar":3`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeCreate":        1,
+				"OnModelAfterCreate":         1,
+				"OnAdminBeforeCreateRequest": 1,
+				"OnAdminAfterCreateRequest":  1,
+			},
 		},
 		{
 			Name:   "authorized as user",

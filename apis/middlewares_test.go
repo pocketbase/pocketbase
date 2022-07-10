@@ -291,6 +291,125 @@ func TestRequireAdminAuth(t *testing.T) {
 	}
 }
 
+func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "guest (while having at least 1 existing admin)",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminAuthOnlyIfAny(app),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "guest (while having 0 existing admins)",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				// delete all admins
+				_, err := app.Dao().DB().NewQuery("DELETE FROM {{_admins}}").Execute()
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminAuthOnlyIfAny(app),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "expired/invalid token",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
+			},
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminAuthOnlyIfAny(app),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid user token",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+			},
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminAuthOnlyIfAny(app),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid admin token",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminAuthOnlyIfAny(app),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
 func TestRequireAdminOrUserAuth(t *testing.T) {
 	scenarios := []tests.ApiScenario{
 		{
