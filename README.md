@@ -12,10 +12,10 @@
 
 [PocketBase](https://pocketbase.io) is an open source Go backend, consisting of:
 
-- embedded database (_SQLite_) with **realtime subscriptions**
-- built-in **files and users management**
-- convenient **Admin dashboard UI**
-- and simple **REST-ish API**
+- Embedded Database (_SQLite_) with **realtime subscriptions**
+- Built-in **files and users management**
+- Convenient **Admin dashboard UI**
+- Simple **REST-ish API**
 
 **For documentation and examples, please visit https://pocketbase.io/docs.**
 
@@ -85,7 +85,7 @@ func main() {
 }
 ```
 
-### Running and building
+### Running and Building
 
 Running/building the application is the same as for any other Go program, aka. just `go run` and `go build`.
 
@@ -107,7 +107,7 @@ Check also the [Testing guide](http://pocketbase.io/docs/testing) to learn how t
 
 ## Security
 
-If you discover a security vulnerability within PocketBase, please send an e-mail to **support at pocketbase.io**.
+If you discover a security vulnerability within PocketBase, please send an e-mail to **support@pocketbase.io**.
 
 All reports will be promptly addressed and you'll be credited accordingly.
 
