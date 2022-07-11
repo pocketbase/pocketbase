@@ -19,7 +19,7 @@
 
 **For documentation and examples, please visit https://pocketbase.io/docs.**
 
-> ⚠️ Although the web API defintions are considered stable,
+> ⚠️ Although the web API definitions are considered stable,
 > please keep in mind that PocketBase is still under active development
 > and therefore full backward compatibility is not guaranteed before reaching v1.0.0.
 

@@ -3,6 +3,8 @@ package migrations
 
 import (
 	"fmt"
+	"path/filepath"
+	"runtime"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
@@ -20,7 +22,14 @@ func Register(
 	down func(db dbx.Builder) error,
 	optFilename ...string,
 ) {
-	AppMigrations.Register(up, down, optFilename...)
+	var optFiles []string
+	if len(optFilename) > 0 {
+		optFiles = optFilename
+	} else {
+		_, path, _, _ := runtime.Caller(1)
+		optFiles = append(optFiles, filepath.Base(path))
+	}
+	AppMigrations.Register(up, down, optFiles...)
 }
 
 func init() {
