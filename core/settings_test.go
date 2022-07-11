@@ -315,7 +315,19 @@ func TestS3ConfigValidate(t *testing.T) {
 			},
 			true,
 		},
-		// valid data
+		// valid data (url endpoint)
+		{
+			core.S3Config{
+				Enabled:   true,
+				Endpoint:  "https://localhost:8090",
+				Bucket:    "test",
+				Region:    "test",
+				AccessKey: "test",
+				Secret:    "test",
+			},
+			false,
+		},
+		// valid data (hostname endpoint)
 		{
 			core.S3Config{
 				Enabled:   true,
