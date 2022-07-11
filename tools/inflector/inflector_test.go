@@ -128,26 +128,3 @@ func TestSnakecase(t *testing.T) {
 		}
 	}
 }
-
-func TestUsernamify(t *testing.T) {
-	scenarios := []struct {
-		val      string
-		expected string
-	}{
-		{"", "unknown"},
-		{"  ", "unknown"},
-		{"!@#$%^", "unknown"},
-		{"...", "unknown"},
-		{"_", "_"}, // underscore is valid word character
-		{"John Doe", "john.doe"},
-		{"John_Doe", "john_doe"},
-		{".a!b@c#d$e%123. ", "a.b.c.d.e.123"},
-		{"Hello,    world", "hello.world"},
-	}
-
-	for i, scenario := range scenarios {
-		if result := inflector.Usernamify(scenario.val); result != scenario.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
-		}
-	}
-}

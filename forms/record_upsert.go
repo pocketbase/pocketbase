@@ -292,7 +292,7 @@ func (form *RecordUpsert) Submit() error {
 		}
 
 		// delete old files (if any)
-		if err := form.processFilesToDelete(); err != nil {
+		if err := form.processFilesToDelete(); err != nil { //nolint:staticcheck
 			// for now fail silently to avoid reupload when `form.Submit()`
 			// is called manually (aka. not from an api request)...
 		}
