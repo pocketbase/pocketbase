@@ -17,7 +17,7 @@ import (
 var _ core.App = (*PocketBase)(nil)
 
 // Version of PocketBase
-const Version = "0.1.0"
+var Version = "(untracked)"
 
 // appWrapper serves as a private core.App instance wrapper.
 type appWrapper struct {
