@@ -15,7 +15,7 @@ func NewVersionCommand(app core.App, version string) *cobra.Command {
 		Use:   "version",
 		Short: "Prints the current PocketBase app version",
 		Run: func(command *cobra.Command, args []string) {
-			fmt.Printf("PocketBase v%s\n", version)
+			fmt.Printf("PocketBase %s\n", version)
 		},
 	}
 }
