@@ -145,7 +145,8 @@
                 />
                 Supports up to 6-levels depth nested relations expansion. <br />
                 The expanded relations will be appended to the record under the
-                <code>@expand</code> property (eg. <code>{`"@expand": {"rel1": {...}, ...}`}</code>).
+                <code>@expand</code> property (eg. <code>{`"@expand": {"rel1": {...}, ...}`}</code>). Only the
+                relations that the user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
     </tbody>
