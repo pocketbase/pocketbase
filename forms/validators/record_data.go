@@ -75,7 +75,11 @@ func (validator *RecordDataValidator) Validate(data map[string]any) error {
 		value := field.PrepareValue(data[key])
 
 		// check required constraint
-		if field.Required && validation.Required.Validate(value) != nil {
+		// bool values have false value on default
+		// if you need to set false value validation will return error on a required field
+		// because it will check `IsEmpty(false)`
+		// hence we skip this check for bool values
+		if field.Required && field.Type != "bool" && validation.Required.Validate(value) != nil {
 			errs[key] = requiredErr
 			continue
 		}
