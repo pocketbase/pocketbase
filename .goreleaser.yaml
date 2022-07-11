@@ -9,6 +9,8 @@ before:
 builds:
   - main: ./examples/base
     binary: pocketbase
+    ldflags:
+      - -s -w -X github.com/pocketbase/pocketbase.Version={{ .Version }}
     env:
       - CGO_ENABLED=0
     goos:
