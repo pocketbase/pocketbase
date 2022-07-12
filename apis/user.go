@@ -348,7 +348,7 @@ func (api *userApi) create(c echo.Context) error {
 
 	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.UserCreateEvent{
@@ -356,20 +356,24 @@ func (api *userApi) create(c echo.Context) error {
 		User:        user,
 	}
 
-	handlerErr := api.app.OnUserBeforeCreateRequest().Trigger(event, func(e *core.UserCreateEvent) error {
-		// create the user
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("Failed to create user.", err)
-		}
+	// create the user
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnUserBeforeCreateRequest().Trigger(event, func(e *core.UserCreateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to create user.", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, e.User)
+				return e.HttpContext.JSON(http.StatusOK, e.User)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnUserAfterCreateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
 
 func (api *userApi) update(c echo.Context) error {
@@ -387,7 +391,7 @@ func (api *userApi) update(c echo.Context) error {
 
 	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.UserUpdateEvent{
@@ -395,20 +399,24 @@ func (api *userApi) update(c echo.Context) error {
 		User:        user,
 	}
 
-	handlerErr := api.app.OnUserBeforeUpdateRequest().Trigger(event, func(e *core.UserUpdateEvent) error {
-		// update the user
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("Failed to update user.", err)
-		}
+	// update the user
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnUserBeforeUpdateRequest().Trigger(event, func(e *core.UserUpdateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to update user.", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, e.User)
+				return e.HttpContext.JSON(http.StatusOK, e.User)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnUserAfterUpdateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
 
 func (api *userApi) delete(c echo.Context) error {

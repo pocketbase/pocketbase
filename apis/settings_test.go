@@ -139,9 +139,6 @@ func TestSettingsSet(t *testing.T) {
 				`"emailAuth":{"minPasswordLength":{"code":"validation_min_greater_equal_than_required","message":"Must be no less than 5."}}`,
 				`"meta":{"appName":{"code":"validation_required","message":"Cannot be blank."}}`,
 			},
-			ExpectedEvents: map[string]int{
-				"OnSettingsBeforeUpdateRequest": 1,
-			},
 		},
 		{
 			Name:   "authorized as admin submitting valid data",

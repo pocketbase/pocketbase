@@ -2,6 +2,7 @@ package forms_test
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -387,12 +388,29 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			continue
 		}
 
+		interceptorCalls := 0
+		interceptor := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+			return func() error {
+				interceptorCalls++
+				return next()
+			}
+		}
+
 		// parse errors
-		result := form.Submit()
+		result := form.Submit(interceptor)
 		errs, ok := result.(validation.Errors)
 		if !ok && result != nil {
 			t.Errorf("(%d) Failed to parse errors %v", i, result)
 			continue
+		}
+
+		// check interceptor calls
+		expectInterceptorCall := 1
+		if len(s.expectedErrors) > 0 {
+			expectInterceptorCall = 0
+		}
+		if interceptorCalls != expectInterceptorCall {
+			t.Errorf("(%d) Expected interceptor to be called %d, got %d", i, expectInterceptorCall, interceptorCalls)
 		}
 
 		// check errors
@@ -448,5 +466,55 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 		if string(formSchema) != string(collectionSchema) {
 			t.Errorf("(%d) Expected Schema %v, got %v", i, string(collectionSchema), string(formSchema))
 		}
+	}
+}
+
+func TestCollectionUpsertSubmitInterceptors(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.Dao().FindCollectionByNameOrId("demo")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	form := forms.NewCollectionUpsert(app, collection)
+	form.Name = "test_new"
+
+	testErr := errors.New("test_error")
+	interceptorCollectionName := ""
+
+	interceptor1Called := false
+	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptor1Called = true
+			return next()
+		}
+	}
+
+	interceptor2Called := false
+	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptorCollectionName = collection.Name // to check if the record was filled
+			interceptor2Called = true
+			return testErr
+		}
+	}
+
+	submitErr := form.Submit(interceptor1, interceptor2)
+	if submitErr != testErr {
+		t.Fatalf("Expected submitError %v, got %v", testErr, submitErr)
+	}
+
+	if !interceptor1Called {
+		t.Fatalf("Expected interceptor1 to be called")
+	}
+
+	if !interceptor2Called {
+		t.Fatalf("Expected interceptor2 to be called")
+	}
+
+	if interceptorCollectionName != form.Name {
+		t.Fatalf("Expected the form model to be filled before calling the interceptors")
 	}
 }

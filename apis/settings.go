@@ -40,6 +40,8 @@ func (api *settingsApi) list(c echo.Context) error {
 
 func (api *settingsApi) set(c echo.Context) error {
 	form := forms.NewSettingsUpsert(api.app)
+
+	// load request
 	if err := c.Bind(form); err != nil {
 		return rest.NewBadRequestError("An error occurred while reading the submitted data.", err)
 	}
@@ -50,22 +52,27 @@ func (api *settingsApi) set(c echo.Context) error {
 		NewSettings: form.Settings,
 	}
 
-	handlerErr := api.app.OnSettingsBeforeUpdateRequest().Trigger(event, func(e *core.SettingsUpdateEvent) error {
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("An error occurred while submitting the form.", err)
-		}
+	// update the settings
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnSettingsBeforeUpdateRequest().Trigger(event, func(e *core.SettingsUpdateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("An error occurred while submitting the form.", err)
+				}
 
-		redactedSettings, err := api.app.Settings().RedactClone()
-		if err != nil {
-			return rest.NewBadRequestError("", err)
-		}
+				redactedSettings, err := api.app.Settings().RedactClone()
+				if err != nil {
+					return rest.NewBadRequestError("", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, redactedSettings)
+				return e.HttpContext.JSON(http.StatusOK, redactedSettings)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnSettingsAfterUpdateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
