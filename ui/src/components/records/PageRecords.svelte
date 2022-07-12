@@ -85,6 +85,15 @@
             >
                 <i class="ri-settings-4-line" />
             </button>
+            
+            <button
+                type="button"
+                class="btn btn-secondary btn-circle"
+                use:tooltip={{ text: "Refresh collection", position: "right" }}
+                on:click={() => recordsList?.load()}
+            >
+                <i class="ri-refresh-line" />
+            </button>
 
             <div class="btns-group">
                 <button
