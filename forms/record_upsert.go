@@ -3,6 +3,7 @@ package forms
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -292,7 +293,7 @@ func (form *RecordUpsert) Submit() error {
 		}
 
 		// delete old files (if any)
-		if err := form.processFilesToDelete(); err != nil {
+		if err := form.processFilesToDelete(); err != nil { //nolint:staticcheck
 			// for now fail silently to avoid reupload when `form.Submit()`
 			// is called manually (aka. not from an api request)...
 		}
@@ -316,17 +317,22 @@ func (form *RecordUpsert) processFilesToUpload() error {
 	}
 	defer fs.Close()
 
+	var uploadErrors []error
 	for i := len(form.filesToUpload) - 1; i >= 0; i-- {
 		file := form.filesToUpload[i]
 		path := form.record.BaseFilesPath() + "/" + file.Name()
 
 		if err := fs.Upload(file.Bytes(), path); err == nil {
+			// remove the uploaded file from the list
 			form.filesToUpload = append(form.filesToUpload[:i], form.filesToUpload[i+1:]...)
+		} else {
+			// store the upload error
+			uploadErrors = append(uploadErrors, fmt.Errorf("File %d: %v", i, err))
 		}
 	}
 
-	if len(form.filesToUpload) > 0 {
-		return errors.New("Failed to upload all files.")
+	if len(uploadErrors) > 0 {
+		return fmt.Errorf("Failed to upload all files: %v", uploadErrors)
 	}
 
 	return nil
@@ -347,20 +353,25 @@ func (form *RecordUpsert) processFilesToDelete() error {
 	}
 	defer fs.Close()
 
+	var deleteErrors []error
 	for i := len(form.filesToDelete) - 1; i >= 0; i-- {
 		filename := form.filesToDelete[i]
 		path := form.record.BaseFilesPath() + "/" + filename
 
 		if err := fs.Delete(path); err == nil {
+			// remove the deleted file from the list
 			form.filesToDelete = append(form.filesToDelete[:i], form.filesToDelete[i+1:]...)
+		} else {
+			// store the delete error
+			deleteErrors = append(deleteErrors, fmt.Errorf("File %d: %v", i, err))
 		}
 
 		// try to delete the related file thumbs (if any)
 		fs.DeletePrefix(form.record.BaseFilesPath() + "/thumbs_" + filename + "/")
 	}
 
-	if len(form.filesToDelete) > 0 {
-		return errors.New("Failed to delete all files.")
+	if len(deleteErrors) > 0 {
+		return fmt.Errorf("Failed to delete all files: %v", deleteErrors)
 	}
 
 	return nil

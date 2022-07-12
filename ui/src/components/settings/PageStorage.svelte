@@ -12,6 +12,7 @@
     let isLoading = false;
     let isSaving = false;
     let initialHash = "";
+    let initialEnabled = false;
 
     $: hasChanges = initialHash != JSON.stringify(s3);
 
@@ -53,6 +54,7 @@
 
     function init(settings = {}) {
         s3 = settings?.s3 || {};
+        initialEnabled = s3.enabled;
         initialHash = JSON.stringify(s3);
     }
 </script>
@@ -68,7 +70,7 @@
     </header>
 
     <div class="wrapper">
-        <form class="panel" autocomplete="off" on:submit|preventDefault={save}>
+        <form class="panel" autocomplete="off" on:submit|preventDefault={() => save()}>
             <div class="content txt-xl m-b-base">
                 <p>By default PocketBase uses the local file system to store uploaded files.</p>
                 <p>
@@ -83,6 +85,42 @@
                     <input type="checkbox" id={uniqueId} required bind:checked={s3.enabled} />
                     <label for={uniqueId}>Use S3 storage</label>
                 </Field>
+
+                {#if initialEnabled != s3.enabled}
+                    <div transition:slide={{ duration: 150 }}>
+                        <div class="alert alert-warning m-0">
+                            <div class="icon">
+                                <i class="ri-error-warning-line" />
+                            </div>
+                            <div class="content">
+                                If you have existing uploaded files, you'll have to migrate them manually from
+                                the
+                                <strong>{initialEnabled ? "S3 storage" : "local file system"}</strong>
+                                to the
+                                <strong>{s3.enabled ? "S3 storage" : "local file system"}</strong>.
+                                <br />
+                                There are numerous command line tools that can help you, such as:
+                                <a
+                                    href="https://github.com/rclone/rclone"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="txt-bold"
+                                >
+                                    rclone
+                                </a>,
+                                <a
+                                    href="https://github.com/peak/s5cmd"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="txt-bold"
+                                >
+                                    s5cmd
+                                </a>, etc.
+                            </div>
+                        </div>
+                        <div class="clearfix m-t-base" />
+                    </div>
+                {/if}
 
                 {#if s3.enabled}
                     <div class="grid" transition:slide|local={{ duration: 150 }}>

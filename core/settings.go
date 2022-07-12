@@ -255,7 +255,7 @@ type S3Config struct {
 // Validate makes S3Config validatable by implementing [validation.Validatable] interface.
 func (c S3Config) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.Endpoint, is.Host, validation.When(c.Enabled, validation.Required)),
+		validation.Field(&c.Endpoint, is.URL, validation.When(c.Enabled, validation.Required)),
 		validation.Field(&c.Bucket, validation.When(c.Enabled, validation.Required)),
 		validation.Field(&c.Region, validation.When(c.Enabled, validation.Required)),
 		validation.Field(&c.AccessKey, validation.When(c.Enabled, validation.Required)),

@@ -8,7 +8,6 @@ import (
 
 var columnifyRemoveRegex = regexp.MustCompile(`[^\w\.\*\-\_\@\#]+`)
 var snakecaseSplitRegex = regexp.MustCompile(`[\W_]+`)
-var usernamifySplitRegex = regexp.MustCompile(`\W+`)
 
 // UcFirst converts the first character of a string into uppercase.
 func UcFirst(str string) string {
@@ -84,35 +83,4 @@ func Snakecase(str string) string {
 	}
 
 	return strings.ToLower(result.String())
-}
-
-// Usernamify generates a properly formatted username from the provided string.
-// Returns "unknown" if `str` is empty or contains only non word characters.
-//
-// ```go
-// Usernamify("John Doe,   hello") // "john.doe.hello"
-// ```
-func Usernamify(str string) string {
-	// split at any non word character
-	words := usernamifySplitRegex.Split(strings.ToLower(str), -1)
-
-	// concatenate any non empty word with a dot
-	var result strings.Builder
-	for _, word := range words {
-		if word == "" {
-			continue
-		}
-
-		if result.Len() > 0 {
-			result.WriteString(".")
-		}
-
-		result.WriteString(word)
-	}
-
-	if result.Len() == 0 {
-		return "unknown"
-	}
-
-	return result.String()
 }
