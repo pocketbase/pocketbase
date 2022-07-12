@@ -40,10 +40,6 @@ your own custom app specific business logic and still have a single portable exe
 ### Installation
 
 ```sh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/pocketbase/pocketbase/master/install.sh)"
-```
-
-```sh
 # go 1.18+
 go get github.com/pocketbase/pocketbase
 ```
