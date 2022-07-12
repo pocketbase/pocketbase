@@ -57,13 +57,16 @@
         return recordPanel?.hide();
     }
 
+    export function updateInitRecord() {
+        initialFormHash = calculateFormHash(record);
+    }
+
     function load(model) {
         setErrors({}); // reset errors
         original = model || {};
         record = model?.clone ? model.clone() : new Record();
         uploadedFilesMap = {};
         deletedFileIndexesMap = {};
-        initialFormHash = calculateFormHash(record);
     }
 
     function calculateFormHash(m) {
@@ -180,6 +183,7 @@
     }}
     on:hide
     on:show
+    on:updateInitRecord={updateInitRecord}
 >
     <svelte:fragment slot="header">
         <h4>

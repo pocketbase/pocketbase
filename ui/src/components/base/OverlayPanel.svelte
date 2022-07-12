@@ -86,6 +86,8 @@
             oldFocusedElem = document.activeElement;
             wrapper?.focus();
             dispatch("show");
+            await tick();
+            dispatch("updateInitRecord");
         } else {
             clearTimeout(contentScrollThrottle);
             oldFocusedElem?.focus();
