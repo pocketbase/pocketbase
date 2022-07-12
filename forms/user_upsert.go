@@ -98,7 +98,10 @@ func (form *UserUpsert) checkEmailDomain(value any) error {
 }
 
 // Submit validates the form and upserts the form user model.
-func (form *UserUpsert) Submit() error {
+//
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *UserUpsert) Submit(interceptors ...InterceptorFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -114,5 +117,7 @@ func (form *UserUpsert) Submit() error {
 
 	form.user.Email = form.Email
 
-	return form.app.Dao().SaveUser(form.user)
+	return runInterceptors(func() error {
+		return form.app.Dao().SaveUser(form.user)
+	}, interceptors...)
 }

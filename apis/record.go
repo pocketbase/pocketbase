@@ -193,7 +193,7 @@ func (api *recordApi) create(c echo.Context) error {
 		testRecord := models.NewRecord(collection)
 		testForm := forms.NewRecordUpsert(api.app, testRecord)
 		if err := testForm.LoadData(c.Request()); err != nil {
-			return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+			return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 		}
 
 		testErr := testForm.DrySubmit(func(txDao *daos.Dao) error {
@@ -210,7 +210,7 @@ func (api *recordApi) create(c echo.Context) error {
 
 	// load request
 	if err := form.LoadData(c.Request()); err != nil {
-		return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.RecordCreateEvent{
@@ -218,20 +218,24 @@ func (api *recordApi) create(c echo.Context) error {
 		Record:      record,
 	}
 
-	handlerErr := api.app.OnRecordBeforeCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
-		// create the record
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("Failed to create record.", err)
-		}
+	// create the record
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnRecordBeforeCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to create record.", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, e.Record)
+				return e.HttpContext.JSON(http.StatusOK, e.Record)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnRecordAfterCreateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
 
 func (api *recordApi) update(c echo.Context) error {
@@ -276,7 +280,7 @@ func (api *recordApi) update(c echo.Context) error {
 
 	// load request
 	if err := form.LoadData(c.Request()); err != nil {
-		return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.RecordUpdateEvent{
@@ -284,20 +288,24 @@ func (api *recordApi) update(c echo.Context) error {
 		Record:      record,
 	}
 
-	handlerErr := api.app.OnRecordBeforeUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
-		// update the record
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("Failed to update record.", err)
-		}
+	// update the record
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnRecordBeforeUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to update record.", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, e.Record)
+				return e.HttpContext.JSON(http.StatusOK, e.Record)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnRecordAfterUpdateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
 
 func (api *recordApi) delete(c echo.Context) error {
