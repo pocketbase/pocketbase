@@ -3,6 +3,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { admin as loggedAdmin } from "@/stores/admin";
     import Searchbar from "@/components/base/Searchbar.svelte";
+    import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
@@ -31,6 +32,7 @@
 
     export function loadAdmins() {
         isLoading = true;
+
         admins = []; // reset
 
         return ApiClient.Admins.getFullList(100, {
@@ -64,6 +66,8 @@
             <div class="breadcrumb-item">Settings</div>
             <div class="breadcrumb-item">Admins</div>
         </nav>
+
+        <RefreshButton on:refresh={() => loadAdmins()} />
 
         <div class="flex-fill" />
 

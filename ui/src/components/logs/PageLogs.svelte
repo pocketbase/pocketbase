@@ -1,8 +1,8 @@
 <script>
     import CommonHelper from "@/utils/CommonHelper";
-    import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
+    import RefreshButton from "@/components/base/RefreshButton.svelte";
     import LogsList from "@/components/logs/LogsList.svelte";
     import LogsChart from "@/components/logs/LogsChart.svelte";
     import LogViewPanel from "@/components/logs/LogViewPanel.svelte";
@@ -34,14 +34,7 @@
                 <div class="breadcrumb-item">Request logs</div>
             </nav>
 
-            <button
-                type="button"
-                class="btn btn-circle btn-secondary"
-                use:tooltip={{ text: "Refresh", position: "right" }}
-                on:click={refresh}
-            >
-                <i class="ri-refresh-line" />
-            </button>
+            <RefreshButton on:refresh={() => refresh()} />
 
             <div class="flex-fill" />
 
