@@ -33,27 +33,32 @@ func (form *SettingsUpsert) Validate() error {
 // Submit validates the form and upserts the loaded settings.
 //
 // On success the app settings will be refreshed with the form ones.
-func (form *SettingsUpsert) Submit() error {
+//
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
 
 	encryptionKey := os.Getenv(form.app.EncryptionEnv())
 
-	saveErr := form.app.Dao().SaveParam(
-		models.ParamAppSettings,
-		form.Settings,
-		encryptionKey,
-	)
-	if saveErr != nil {
-		return saveErr
-	}
+	return runInterceptors(func() error {
+		saveErr := form.app.Dao().SaveParam(
+			models.ParamAppSettings,
+			form.Settings,
+			encryptionKey,
+		)
+		if saveErr != nil {
+			return saveErr
+		}
 
-	// explicitly trigger old logs deletion
-	form.app.LogsDao().DeleteOldRequests(
-		time.Now().AddDate(0, 0, -1*form.Settings.Logs.MaxDays),
-	)
+		// explicitly trigger old logs deletion
+		form.app.LogsDao().DeleteOldRequests(
+			time.Now().AddDate(0, 0, -1*form.Settings.Logs.MaxDays),
+		)
 
-	// merge the application settings with the form ones
-	return form.app.Settings().Merge(form.Settings)
+		// merge the application settings with the form ones
+		return form.app.Settings().Merge(form.Settings)
+	}, interceptors...)
 }

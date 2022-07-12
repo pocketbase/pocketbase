@@ -76,9 +76,9 @@ func (api *collectionApi) create(c echo.Context) error {
 
 	form := forms.NewCollectionUpsert(api.app, collection)
 
-	// read
+	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.CollectionCreateEvent{
@@ -86,20 +86,24 @@ func (api *collectionApi) create(c echo.Context) error {
 		Collection:  collection,
 	}
 
-	handlerErr := api.app.OnCollectionBeforeCreateRequest().Trigger(event, func(e *core.CollectionCreateEvent) error {
-		// submit
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("Failed to create the collection.", err)
-		}
+	// create the collection
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnCollectionBeforeCreateRequest().Trigger(event, func(e *core.CollectionCreateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to create the collection.", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, e.Collection)
+				return e.HttpContext.JSON(http.StatusOK, e.Collection)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnCollectionAfterCreateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
 
 func (api *collectionApi) update(c echo.Context) error {
@@ -110,9 +114,9 @@ func (api *collectionApi) update(c echo.Context) error {
 
 	form := forms.NewCollectionUpsert(api.app, collection)
 
-	// read
+	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.CollectionUpdateEvent{
@@ -120,20 +124,24 @@ func (api *collectionApi) update(c echo.Context) error {
 		Collection:  collection,
 	}
 
-	handlerErr := api.app.OnCollectionBeforeUpdateRequest().Trigger(event, func(e *core.CollectionUpdateEvent) error {
-		// submit
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("Failed to update the collection.", err)
-		}
+	// update the collection
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnCollectionBeforeUpdateRequest().Trigger(event, func(e *core.CollectionUpdateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to update the collection.", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, e.Collection)
+				return e.HttpContext.JSON(http.StatusOK, e.Collection)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnCollectionAfterUpdateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
 
 func (api *collectionApi) delete(c echo.Context) error {

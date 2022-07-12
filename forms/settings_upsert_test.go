@@ -2,6 +2,7 @@ package forms_test
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"testing"
 
@@ -98,12 +99,29 @@ func TestSettingsUpsertSubmit(t *testing.T) {
 			continue
 		}
 
+		interceptorCalls := 0
+		interceptor := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+			return func() error {
+				interceptorCalls++
+				return next()
+			}
+		}
+
 		// parse errors
-		result := form.Submit()
+		result := form.Submit(interceptor)
 		errs, ok := result.(validation.Errors)
 		if !ok && result != nil {
 			t.Errorf("(%d) Failed to parse errors %v", i, result)
 			continue
+		}
+
+		// check interceptor calls
+		expectInterceptorCall := 1
+		if len(s.expectedErrors) > 0 {
+			expectInterceptorCall = 0
+		}
+		if interceptorCalls != expectInterceptorCall {
+			t.Errorf("(%d) Expected interceptor to be called %d, got %d", i, expectInterceptorCall, interceptorCalls)
 		}
 
 		// check errors
@@ -126,5 +144,44 @@ func TestSettingsUpsertSubmit(t *testing.T) {
 		if string(formSettings) != string(appSettings) {
 			t.Errorf("Expected app settings \n%s, got \n%s", string(appSettings), string(formSettings))
 		}
+	}
+}
+
+func TestSettingsUpsertSubmitInterceptors(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	form := forms.NewSettingsUpsert(app)
+	form.Meta.AppName = "test_new"
+
+	testErr := errors.New("test_error")
+
+	interceptor1Called := false
+	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptor1Called = true
+			return next()
+		}
+	}
+
+	interceptor2Called := false
+	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptor2Called = true
+			return testErr
+		}
+	}
+
+	submitErr := form.Submit(interceptor1, interceptor2)
+	if submitErr != testErr {
+		t.Fatalf("Expected submitError %v, got %v", testErr, submitErr)
+	}
+
+	if !interceptor1Called {
+		t.Fatalf("Expected interceptor1 to be called")
+	}
+
+	if !interceptor2Called {
+		t.Fatalf("Expected interceptor2 to be called")
 	}
 }

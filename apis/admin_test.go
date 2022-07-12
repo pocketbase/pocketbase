@@ -507,9 +507,6 @@ func TestAdminCreate(t *testing.T) {
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{"email":{"code":"validation_required","message":"Cannot be blank."},"password":{"code":"validation_required","message":"Cannot be blank."}}`},
-			ExpectedEvents: map[string]int{
-				"OnAdminBeforeCreateRequest": 1,
-			},
 		},
 		{
 			Name:   "authorized as admin + invalid data format",
@@ -532,9 +529,6 @@ func TestAdminCreate(t *testing.T) {
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{"avatar":{"code":"validation_max_less_equal_than_required","message":"Must be no greater than 9."},"email":{"code":"validation_admin_email_exists","message":"Admin email already exists."},"password":{"code":"validation_length_out_of_range","message":"The length must be between 10 and 100."},"passwordConfirm":{"code":"validation_values_mismatch","message":"Values don't match."}}`},
-			ExpectedEvents: map[string]int{
-				"OnAdminBeforeCreateRequest": 1,
-			},
 		},
 		{
 			Name:   "authorized as admin + valid data",
@@ -647,9 +641,6 @@ func TestAdminUpdate(t *testing.T) {
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{"avatar":{"code":"validation_max_less_equal_than_required","message":"Must be no greater than 9."},"email":{"code":"validation_admin_email_exists","message":"Admin email already exists."},"password":{"code":"validation_length_out_of_range","message":"The length must be between 10 and 100."},"passwordConfirm":{"code":"validation_values_mismatch","message":"Values don't match."}}`},
-			ExpectedEvents: map[string]int{
-				"OnAdminBeforeUpdateRequest": 1,
-			},
 		},
 		{
 			Method: http.MethodPatch,

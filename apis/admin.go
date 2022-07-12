@@ -166,7 +166,7 @@ func (api *adminApi) create(c echo.Context) error {
 
 	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.AdminCreateEvent{
@@ -174,20 +174,24 @@ func (api *adminApi) create(c echo.Context) error {
 		Admin:       admin,
 	}
 
-	handlerErr := api.app.OnAdminBeforeCreateRequest().Trigger(event, func(e *core.AdminCreateEvent) error {
-		// create the admin
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("Failed to create admin.", err)
-		}
+	// create the admin
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnAdminBeforeCreateRequest().Trigger(event, func(e *core.AdminCreateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to create admin.", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, e.Admin)
+				return e.HttpContext.JSON(http.StatusOK, e.Admin)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnAdminAfterCreateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
 
 func (api *adminApi) update(c echo.Context) error {
@@ -205,7 +209,7 @@ func (api *adminApi) update(c echo.Context) error {
 
 	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to read the submitted data due to invalid formatting.", err)
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.AdminUpdateEvent{
@@ -213,20 +217,24 @@ func (api *adminApi) update(c echo.Context) error {
 		Admin:       admin,
 	}
 
-	handlerErr := api.app.OnAdminBeforeUpdateRequest().Trigger(event, func(e *core.AdminUpdateEvent) error {
-		// update the admin
-		if err := form.Submit(); err != nil {
-			return rest.NewBadRequestError("Failed to update admin.", err)
-		}
+	// update the admin
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnAdminBeforeUpdateRequest().Trigger(event, func(e *core.AdminUpdateEvent) error {
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to update admin.", err)
+				}
 
-		return e.HttpContext.JSON(http.StatusOK, e.Admin)
+				return e.HttpContext.JSON(http.StatusOK, e.Admin)
+			})
+		}
 	})
 
-	if handlerErr == nil {
+	if submitErr == nil {
 		api.app.OnAdminAfterUpdateRequest().Trigger(event)
 	}
 
-	return handlerErr
+	return submitErr
 }
 
 func (api *adminApi) delete(c echo.Context) error {
