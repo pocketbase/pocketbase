@@ -8,7 +8,7 @@
     let previewUrl = "";
     let fileType = false;
 
-    if (CommonHelper.hasImageExtension(filename) || CommonHelper.hasVideoExtension(filename)) {
+    if (CommonHelper.canBePreviewed(filename)) {
         previewUrl = ApiClient.Records.getFileUrl(record, filename);
         fileType = CommonHelper.getFileType(filename);
         // Apply thumb size for image preview
