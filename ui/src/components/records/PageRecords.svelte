@@ -8,6 +8,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import Searchbar from "@/components/base/Searchbar.svelte";
+    import RefreshButton from "@/components/base/RefreshButton.svelte";
     import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import CollectionDocsPanel from "@/components/collections/docs/CollectionDocsPanel.svelte";
@@ -85,15 +86,8 @@
             >
                 <i class="ri-settings-4-line" />
             </button>
-            
-            <button
-                type="button"
-                class="btn btn-secondary btn-circle"
-                use:tooltip={{ text: "Refresh collection", position: "right" }}
-                on:click={() => recordsList?.load()}
-            >
-                <i class="ri-refresh-line" />
-            </button>
+
+            <RefreshButton on:refresh={() => recordsList?.load()} />
 
             <div class="btns-group">
                 <button

@@ -43,15 +43,15 @@
 
         isLoading = true;
 
+        if (page <= 1) {
+            clearList();
+        }
+
         return ApiClient.Records.getList(collection.id, page, 50, {
             sort: sort,
             filter: filter,
         })
             .then((result) => {
-                if (page <= 1) {
-                    clearList();
-                }
-
                 isLoading = false;
                 records = records.concat(result.items);
                 currentPage = result.page;

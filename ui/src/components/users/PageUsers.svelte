@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import Searchbar from "@/components/base/Searchbar.svelte";
+    import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
@@ -50,15 +51,15 @@
     export async function loadUsers(page = 1) {
         isLoadingUsers = true;
 
+        if (page <= 1) {
+            clearList();
+        }
+
         return ApiClient.Users.getList(page, 50, {
             sort: sort || "-created",
             filter: filter,
         })
             .then((result) => {
-                if (page <= 1) {
-                    clearList();
-                }
-
                 isLoadingUsers = false;
                 users = users.concat(result.items);
                 currentPage = result.page;
@@ -121,6 +122,8 @@
             >
                 <i class="ri-settings-4-line" />
             </button>
+
+            <RefreshButton on:refresh={() => loadUsers()} />
 
             <div class="flex-fill" />
 
