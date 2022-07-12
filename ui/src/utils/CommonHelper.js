@@ -793,6 +793,42 @@ export default class CommonHelper {
     }
 
     /**
+     * Loosely check if a file is a video based on its filename extension.
+     *
+     * @param  {String} filename
+     * @return {Boolean}
+     */
+    static hasVideoExtension(filename) {
+        return /\.mp4|\.avi|\.3gp|\.mov|\.flv$/.test(filename)
+    }
+
+    /**
+     * Loosely check if a file can be previewed.
+     *
+     * @param  {String} filename
+     * @return {Boolean}
+     */
+    static canBePreviewed(filename) {
+        return this.hasImageExtension(filename) || this.hasVideoExtension(filename)
+    }
+
+    /**
+     * Retrieve the file type from extension
+     *
+     * @param  {String} filename
+     * @return {Boolean|string}
+     */
+    static getFileType(filename) {
+        if(this.hasImageExtension(filename)) {
+            return 'image';
+        } else if(this.hasVideoExtension(filename)) {
+            return 'video';
+        }
+
+        return false;
+    }
+
+    /**
      * Checks if the image url can be loaded.
      *
      * @param  {String} url
@@ -808,6 +844,25 @@ export default class CommonHelper {
                 return reject(err);
             }
             image.src = url;
+        });
+    }
+
+    /**
+     * Checks if the video url can be loaded.
+     *
+     * @param  {String} url
+     * @return {Promise}
+     */
+    static checkVideoUrl(url) {
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.setAttribute("src", url);
+            video.addEventListener("canplay", function() {
+                return resolve(true);
+            });
+            video.addEventListener("error", function(err) {
+                return reject(err);
+            });
         });
     }
 

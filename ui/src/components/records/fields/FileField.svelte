@@ -84,10 +84,10 @@
                 <figute
                     class="thumb"
                     class:fade={deletedFileIndexes.includes(i)}
-                    class:link-fade={CommonHelper.hasImageExtension(filename)}
-                    title={CommonHelper.hasImageExtension(filename) ? "Preview" : ""}
+                    class:link-fade={CommonHelper.canBePreviewed(filename)}
+                    title={CommonHelper.canBePreviewed(filename) ? "Preview" : ""}
                     on:click={() =>
-                        CommonHelper.hasImageExtension(filename)
+                        CommonHelper.canBePreviewed(filename)
                             ? previewPopup?.show(ApiClient.Records.getFileUrl(record, filename))
                             : false}
                 >

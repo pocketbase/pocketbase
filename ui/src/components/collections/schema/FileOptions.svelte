@@ -72,6 +72,21 @@
                             <span class="txt">Images (jpg, png, svg, gif)</span>
                         </div>
                         <div
+                                tabindex="0"
+                                class="dropdown-item closable"
+                                on:click={() => {
+                                    options.mimeTypes = [
+                                        "video/mp4",
+                                        "video/x-ms-wmv",
+                                        "video/x-flv",
+                                        "video/quicktime",
+                                        "video/3gpp",
+                                    ];
+                            }}
+                        >
+                            <span class="txt">Videos (mp4, avi, flv, mov, 3gp)</span>
+                        </div>
+                        <div
                             tabindex="0"
                             class="dropdown-item closable"
                             on:click={() => {
