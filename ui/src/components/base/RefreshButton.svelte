@@ -21,7 +21,7 @@
             clearTimeout(refreshTimeoutId);
             refreshTimeoutId = null;
             tooltipData = oldTooltipData;
-        }, 230);
+        }, 200);
     }
 
     onMount(() => {
