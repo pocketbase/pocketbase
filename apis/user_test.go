@@ -748,9 +748,6 @@ func TestUserCreate(t *testing.T) {
 				`"email":{"code":"validation_required"`,
 				`"password":{"code":"validation_required"`,
 			},
-			ExpectedEvents: map[string]int{
-				"OnUserBeforeCreateRequest": 1,
-			},
 		},
 		{
 			Name:           "invalid data",
@@ -763,9 +760,6 @@ func TestUserCreate(t *testing.T) {
 				`"email":{"code":"validation_user_email_exists"`,
 				`"password":{"code":"validation_length_out_of_range"`,
 				`"passwordConfirm":{"code":"validation_values_mismatch"`,
-			},
-			ExpectedEvents: map[string]int{
-				"OnUserBeforeCreateRequest": 1,
 			},
 		},
 		{
@@ -867,9 +861,6 @@ func TestUserUpdate(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{`,
 				`"email":{"code":"validation_user_email_exists"`,
-			},
-			ExpectedEvents: map[string]int{
-				"OnUserBeforeUpdateRequest": 1,
 			},
 		},
 		{

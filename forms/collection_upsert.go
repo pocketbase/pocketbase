@@ -189,7 +189,10 @@ func (form *CollectionUpsert) checkRule(value any) error {
 // Submit validates the form and upserts the form's Collection model.
 //
 // On success the related record table schema will be auto updated.
-func (form *CollectionUpsert) Submit() error {
+//
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -211,5 +214,7 @@ func (form *CollectionUpsert) Submit() error {
 	form.collection.UpdateRule = form.UpdateRule
 	form.collection.DeleteRule = form.DeleteRule
 
-	return form.app.Dao().SaveCollection(form.collection)
+	return runInterceptors(func() error {
+		return form.app.Dao().SaveCollection(form.collection)
+	}, interceptors...)
 }

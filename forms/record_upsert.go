@@ -271,7 +271,10 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 }
 
 // Submit validates the form and upserts the form Record model.
-func (form *RecordUpsert) Submit() error {
+//
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -281,25 +284,27 @@ func (form *RecordUpsert) Submit() error {
 		return err
 	}
 
-	return form.app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
-		// persist record model
-		if err := txDao.SaveRecord(form.record); err != nil {
-			return err
-		}
+	return runInterceptors(func() error {
+		return form.app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
+			// persist record model
+			if err := txDao.SaveRecord(form.record); err != nil {
+				return err
+			}
 
-		// upload new files (if any)
-		if err := form.processFilesToUpload(); err != nil {
-			return err
-		}
+			// upload new files (if any)
+			if err := form.processFilesToUpload(); err != nil {
+				return err
+			}
 
-		// delete old files (if any)
-		if err := form.processFilesToDelete(); err != nil { //nolint:staticcheck
-			// for now fail silently to avoid reupload when `form.Submit()`
-			// is called manually (aka. not from an api request)...
-		}
+			// delete old files (if any)
+			if err := form.processFilesToDelete(); err != nil { //nolint:staticcheck
+				// for now fail silently to avoid reupload when `form.Submit()`
+				// is called manually (aka. not from an api request)...
+			}
 
-		return nil
-	})
+			return nil
+		})
+	}, interceptors...)
 }
 
 func (form *RecordUpsert) processFilesToUpload() error {

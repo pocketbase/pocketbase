@@ -74,8 +74,11 @@ func (form *AdminUpsert) checkUniqueEmail(value any) error {
 	return validation.NewError("validation_admin_email_exists", "Admin email already exists.")
 }
 
-// Submit validates the form and upserts the form's admin model.
-func (form *AdminUpsert) Submit() error {
+// Submit validates the form and upserts the form admin model.
+//
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *AdminUpsert) Submit(interceptors ...InterceptorFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -87,5 +90,7 @@ func (form *AdminUpsert) Submit() error {
 		form.admin.SetPassword(form.Password)
 	}
 
-	return form.app.Dao().SaveAdmin(form.admin)
+	return runInterceptors(func() error {
+		return form.app.Dao().SaveAdmin(form.admin)
+	}, interceptors...)
 }

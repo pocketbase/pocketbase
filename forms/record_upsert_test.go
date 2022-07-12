@@ -3,6 +3,7 @@ package forms_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -400,11 +401,25 @@ func TestRecordUpsertSubmitFailure(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, mp.FormDataContentType())
 	form.LoadData(req)
 
+	interceptorCalls := 0
+	interceptor := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptorCalls++
+			return next()
+		}
+	}
+
 	// ensure that validate is triggered
 	// ---
-	result := form.Submit()
+	result := form.Submit(interceptor)
 	if result == nil {
 		t.Fatal("Expected error, got nil")
+	}
+
+	// check interceptor calls
+	// ---
+	if interceptorCalls != 0 {
+		t.Fatalf("Expected interceptor to be called 0 times, got %d", interceptorCalls)
 	}
 
 	// ensure that the record changes weren't persisted
@@ -451,9 +466,23 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, mp.FormDataContentType())
 	form.LoadData(req)
 
-	result := form.Submit()
+	interceptorCalls := 0
+	interceptor := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptorCalls++
+			return next()
+		}
+	}
+
+	result := form.Submit(interceptor)
 	if result != nil {
 		t.Fatalf("Expected nil, got error %v", result)
+	}
+
+	// check interceptor calls
+	// ---
+	if interceptorCalls != 1 {
+		t.Fatalf("Expected interceptor to be called 1 time, got %d", interceptorCalls)
 	}
 
 	// ensure that the record changes were persisted
@@ -479,6 +508,57 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 		if !hasRecordFile(app, recordAfter, f) {
 			t.Fatalf("Expected file %q to exist", f)
 		}
+	}
+}
+
+func TestRecordUpsertSubmitInterceptors(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, _ := app.Dao().FindCollectionByNameOrId("demo4")
+	record, err := app.Dao().FindFirstRecordByData(collection, "id", "054f9f24-0a0a-4e09-87b1-bc7ff2b336a2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	form := forms.NewRecordUpsert(app, record)
+	form.Data["title"] = "test_new"
+
+	testErr := errors.New("test_error")
+	interceptorRecordTitle := ""
+
+	interceptor1Called := false
+	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptor1Called = true
+			return next()
+		}
+	}
+
+	interceptor2Called := false
+	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptorRecordTitle = record.GetStringDataValue("title") // to check if the record was filled
+			interceptor2Called = true
+			return testErr
+		}
+	}
+
+	submitErr := form.Submit(interceptor1, interceptor2)
+	if submitErr != testErr {
+		t.Fatalf("Expected submitError %v, got %v", testErr, submitErr)
+	}
+
+	if !interceptor1Called {
+		t.Fatalf("Expected interceptor1 to be called")
+	}
+
+	if !interceptor2Called {
+		t.Fatalf("Expected interceptor2 to be called")
+	}
+
+	if interceptorRecordTitle != form.Data["title"].(string) {
+		t.Fatalf("Expected the form model to be filled before calling the interceptors")
 	}
 }
 

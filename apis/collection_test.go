@@ -297,9 +297,6 @@ func TestCollectionCreate(t *testing.T) {
 				`"name":{"code":"validation_required"`,
 				`"schema":{"code":"validation_required"`,
 			},
-			ExpectedEvents: map[string]int{
-				"OnCollectionBeforeCreateRequest": 1,
-			},
 		},
 		{
 			Name:   "authorized as admin + invalid data (eg. existing name)",
@@ -314,9 +311,6 @@ func TestCollectionCreate(t *testing.T) {
 				`"data":{`,
 				`"name":{"code":"validation_collection_name_exists"`,
 				`"schema":{"0":{"name":{"code":"validation_required"`,
-			},
-			ExpectedEvents: map[string]int{
-				"OnCollectionBeforeCreateRequest": 1,
 			},
 		},
 		{
@@ -398,9 +392,6 @@ func TestCollectionUpdate(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{`,
 				`"name":{"code":"validation_collection_name_exists"`,
-			},
-			ExpectedEvents: map[string]int{
-				"OnCollectionBeforeUpdateRequest": 1,
 			},
 		},
 		{

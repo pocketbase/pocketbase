@@ -2,6 +2,7 @@ package forms_test
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -252,7 +253,14 @@ func TestAdminUpsertSubmit(t *testing.T) {
 			continue
 		}
 
-		err := form.Submit()
+		interceptorCalls := 0
+
+		err := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+			return func() error {
+				interceptorCalls++
+				return next()
+			}
+		})
 
 		hasErr := err != nil
 		if hasErr != s.expectError {
@@ -264,6 +272,14 @@ func TestAdminUpsertSubmit(t *testing.T) {
 		if !s.expectError && isCreate && foundAdmin == nil {
 			t.Errorf("(%d) Expected admin to be created, got nil", i)
 			continue
+		}
+
+		expectInterceptorCall := 1
+		if s.expectError {
+			expectInterceptorCall = 0
+		}
+		if interceptorCalls != expectInterceptorCall {
+			t.Errorf("(%d) Expected interceptor to be called %d, got %d", i, expectInterceptorCall, interceptorCalls)
 		}
 
 		if s.expectError {
@@ -281,5 +297,53 @@ func TestAdminUpsertSubmit(t *testing.T) {
 		if form.Password != "" && initialTokenKey == foundAdmin.TokenKey {
 			t.Errorf("(%d) Expected token key to be renewed when setting a new password", i)
 		}
+	}
+}
+
+func TestAdminUpsertSubmitInterceptors(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	admin := &models.Admin{}
+	form := forms.NewAdminUpsert(app, admin)
+	form.Email = "test_new@example.com"
+	form.Password = "1234567890"
+	form.PasswordConfirm = form.Password
+
+	testErr := errors.New("test_error")
+	interceptorAdminEmail := ""
+
+	interceptor1Called := false
+	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptor1Called = true
+			return next()
+		}
+	}
+
+	interceptor2Called := false
+	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			interceptorAdminEmail = admin.Email // to check if the record was filled
+			interceptor2Called = true
+			return testErr
+		}
+	}
+
+	err := form.Submit(interceptor1, interceptor2)
+	if err != testErr {
+		t.Fatalf("Expected error %v, got %v", testErr, err)
+	}
+
+	if !interceptor1Called {
+		t.Fatalf("Expected interceptor1 to be called")
+	}
+
+	if !interceptor2Called {
+		t.Fatalf("Expected interceptor2 to be called")
+	}
+
+	if interceptorAdminEmail != form.Email {
+		t.Fatalf("Expected the form model to be filled before calling the interceptors")
 	}
 }
