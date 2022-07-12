@@ -38,21 +38,23 @@ func ExistInSliceWithRegex(str string, list []string) bool {
 			if str == field {
 				return true
 			}
-		} else {
-			// check for regex match
-			pattern, ok := cachedPatterns[field]
-			if !ok {
-				var patternErr error
-				pattern, patternErr = regexp.Compile(field)
-				if patternErr != nil {
-					continue
-				}
-				// "cache" the pattern to avoid compiling it every time
-				cachedPatterns[field] = pattern
+			continue
+		}
+
+		// check for regex match
+		pattern, ok := cachedPatterns[field]
+		if !ok {
+			var err error
+			pattern, err = regexp.Compile(field)
+			if err != nil {
+				continue
 			}
-			if pattern != nil && pattern.MatchString(str) {
-				return true
-			}
+			// "cache" the pattern to avoid compiling it every time
+			cachedPatterns[field] = pattern
+		}
+
+		if pattern != nil && pattern.MatchString(str) {
+			return true
 		}
 	}
 
@@ -72,46 +74,45 @@ func ToInterfaceSlice[T any](list []T) []any {
 
 // NonzeroUniques returns only the nonzero unique values from a slice.
 func NonzeroUniques[T comparable](list []T) []T {
-	result := []T{}
-	existMap := map[T]bool{}
+	result := make([]T, 0, len(list))
+	existMap := make(map[T]struct{}, len(list))
 
 	var zeroVal T
 
 	for _, val := range list {
-		if !existMap[val] && val != zeroVal {
-			existMap[val] = true
-			result = append(result, val)
+		if _, ok := existMap[val]; ok || val == zeroVal {
+			continue
 		}
+		existMap[val] = struct{}{}
+		result = append(result, val)
 	}
 
 	return result
 }
 
 // ToUniqueStringSlice casts `value` to a slice of non-zero unique strings.
-func ToUniqueStringSlice(value any) []string {
-	strings := []string{}
-
+func ToUniqueStringSlice(value any) (result []string) {
 	switch val := value.(type) {
 	case nil:
 		// nothing to cast
 	case []string:
-		strings = val
+		result = val
 	case string:
 		if val == "" {
 			break
 		}
 
 		// check if it is a json encoded array of strings
-		if err := json.Unmarshal([]byte(val), &strings); err != nil {
+		if err := json.Unmarshal([]byte(val), &result); err != nil {
 			// not a json array, just add the string as single array element
-			strings = append(strings, val)
+			result = append(result, val)
 		}
 	case json.Marshaler: // eg. JsonArray
 		raw, _ := val.MarshalJSON()
-		json.Unmarshal(raw, &strings)
+		_ = json.Unmarshal(raw, &result)
 	default:
-		strings = cast.ToStringSlice(value)
+		result = cast.ToStringSlice(value)
 	}
 
-	return NonzeroUniques(strings)
+	return NonzeroUniques(result)
 }

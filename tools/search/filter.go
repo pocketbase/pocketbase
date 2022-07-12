@@ -27,21 +27,16 @@ var parsedFilterData = store.New(make(map[string][]fexpr.ExprGroup, 50))
 // BuildExpr parses the current filter data and returns a new db WHERE expression.
 func (f FilterData) BuildExpr(fieldResolver FieldResolver) (dbx.Expression, error) {
 	raw := string(f)
-	var data []fexpr.ExprGroup
-
 	if parsedFilterData.Has(raw) {
-		data = parsedFilterData.Get(raw)
-	} else {
-		var err error
-		data, err = fexpr.Parse(raw)
-		if err != nil {
-			return nil, err
-		}
-		// store in cache
-		// (the limit size is arbitrary and it is there to prevent the cache growing too big)
-		parsedFilterData.SetIfLessThanLimit(raw, data, 500)
+		return f.build(parsedFilterData.Get(raw), fieldResolver)
 	}
-
+	data, err := fexpr.Parse(raw)
+	if err != nil {
+		return nil, err
+	}
+	// store in cache
+	// (the limit size is arbitrary and it is there to prevent the cache growing too big)
+	parsedFilterData.SetIfLessThanLimit(raw, data, 500)
 	return f.build(data, fieldResolver)
 }
 

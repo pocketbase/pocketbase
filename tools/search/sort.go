@@ -34,26 +34,18 @@ func (s *SortField) BuildExpr(fieldResolver FieldResolver) (string, error) {
 //
 // Example:
 //	fields := search.ParseSortFromString("-name,+created")
-func ParseSortFromString(str string) []SortField {
-	result := []SortField{}
-
+func ParseSortFromString(str string) (fields []SortField) {
 	data := strings.Split(str, ",")
 
 	for _, field := range data {
 		// trim whitespaces
 		field = strings.TrimSpace(field)
-
-		var dir string
 		if strings.HasPrefix(field, "-") {
-			dir = SortDesc
-			field = strings.TrimPrefix(field, "-")
+			fields = append(fields, SortField{strings.TrimPrefix(field, "-"), SortDesc})
 		} else {
-			dir = SortAsc
-			field = strings.TrimPrefix(field, "+")
+			fields = append(fields, SortField{strings.TrimPrefix(field, "+"), SortAsc})
 		}
-
-		result = append(result, SortField{field, dir})
 	}
 
-	return result
+	return
 }

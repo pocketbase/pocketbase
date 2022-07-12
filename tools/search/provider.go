@@ -121,8 +121,7 @@ func (s *Provider) Parse(urlQuery string) error {
 		return err
 	}
 
-	rawPage := params.Get(PageQueryParam)
-	if rawPage != "" {
+	if rawPage := params.Get(PageQueryParam); rawPage != "" {
 		page, err := strconv.Atoi(rawPage)
 		if err != nil {
 			return err
@@ -130,8 +129,7 @@ func (s *Provider) Parse(urlQuery string) error {
 		s.Page(page)
 	}
 
-	rawPerPage := params.Get(PerPageQueryParam)
-	if rawPerPage != "" {
+	if rawPerPage := params.Get(PerPageQueryParam); rawPerPage != "" {
 		perPage, err := strconv.Atoi(rawPerPage)
 		if err != nil {
 			return err
@@ -139,15 +137,13 @@ func (s *Provider) Parse(urlQuery string) error {
 		s.PerPage(perPage)
 	}
 
-	rawSort := params.Get(SortQueryParam)
-	if rawSort != "" {
+	if rawSort := params.Get(SortQueryParam); rawSort != "" {
 		for _, sortField := range ParseSortFromString(rawSort) {
 			s.AddSort(sortField)
 		}
 	}
 
-	rawFilter := params.Get(FilterQueryParam)
-	if rawFilter != "" {
+	if rawFilter := params.Get(FilterQueryParam); rawFilter != "" {
 		s.AddFilter(FilterData(rawFilter))
 	}
 
@@ -165,35 +161,30 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	modelsQuery := *s.query
 
 	// apply filters
-	if len(s.filter) > 0 {
-		for _, f := range s.filter {
-			expr, err := f.BuildExpr(s.fieldResolver)
-			if err != nil {
-				return nil, err
-			}
-			if expr != nil {
-				modelsQuery.AndWhere(expr)
-			}
+	for _, f := range s.filter {
+		expr, err := f.BuildExpr(s.fieldResolver)
+		if err != nil {
+			return nil, err
+		}
+		if expr != nil {
+			modelsQuery.AndWhere(expr)
 		}
 	}
 
 	// apply sorting
-	if len(s.sort) > 0 {
-		for _, sortField := range s.sort {
-			expr, err := sortField.BuildExpr(s.fieldResolver)
-			if err != nil {
-				return nil, err
-			}
-			if expr != "" {
-				modelsQuery.AndOrderBy(expr)
-			}
+	for _, sortField := range s.sort {
+		expr, err := sortField.BuildExpr(s.fieldResolver)
+		if err != nil {
+			return nil, err
+		}
+		if expr != "" {
+			modelsQuery.AndOrderBy(expr)
 		}
 	}
 
 	// apply field resolver query modifications (if any)
-	updateQueryErr := s.fieldResolver.UpdateQuery(&modelsQuery)
-	if updateQueryErr != nil {
-		return nil, updateQueryErr
+	if err := s.fieldResolver.UpdateQuery(&modelsQuery); err != nil {
+		return nil, err
 	}
 
 	// count
