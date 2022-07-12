@@ -3,6 +3,7 @@
     import { fly } from "svelte/transition";
     import { Collection } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
+    import { _ } from '@/services/i18n';
 
     const dispatch = createEventDispatcher();
     const uniqueId = "search_" + CommonHelper.randomString(7);
@@ -88,7 +89,7 @@
                     class="btn btn-expanded btn-sm btn-warning"
                     transition:fly={{ duration: 150, x: 5 }}
                 >
-                    <span class="txt">Search</span>
+                    <span class="txt">{$_("app.base.search")}</span>
                 </button>
             {/if}
 
@@ -101,7 +102,7 @@
                     submit();
                 }}
             >
-                <span class="txt">Clear</span>
+                <span class="txt">{$_("app.base.clear")}</span>
             </button>
         {/if}
     </form>

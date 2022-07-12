@@ -6,6 +6,8 @@
     import LogsList from "@/components/logs/LogsList.svelte";
     import LogsChart from "@/components/logs/LogsChart.svelte";
     import LogViewPanel from "@/components/logs/LogViewPanel.svelte";
+    import { _ } from '@/services/i18n';
+import { tooltips } from "@codemirror/view";
 
     const ADMIN_LOGS_LOCAL_STORAGE_KEY = "includeAdminLogs";
 
@@ -24,20 +26,20 @@
         refreshToken++;
     }
 
-    CommonHelper.setDocumentTitle("Request logs");
+    CommonHelper.setDocumentTitle($_("logs.pagetitle"));
 </script>
 
 <main class="page-wrapper">
     <div class="page-header-wrapper m-b-0">
         <header class="page-header">
             <nav class="breadcrumbs">
-                <div class="breadcrumb-item">Request logs</div>
+                <div class="breadcrumb-item">{$_("logs.pagetitle")}</div>
             </nav>
 
             <button
                 type="button"
                 class="btn btn-circle btn-secondary"
-                use:tooltip={{ text: "Refresh", position: "right" }}
+                use:tooltip={{ text: $_("logs.tips.refresh"), position: "right" }}
                 on:click={refresh}
             >
                 <i class="ri-refresh-line" />
@@ -48,14 +50,14 @@
             <div class="inline-flex">
                 <Field class="form-field form-field-toggle m-0" let:uniqueId>
                     <input type="checkbox" id={uniqueId} bind:checked={includeAdminLogs} />
-                    <label for={uniqueId}>Include requests by admins</label>
+                    <label for={uniqueId}>{$_("logs.tips.includeAdminLogs")}</label>
                 </Field>
             </div>
         </header>
 
         <Searchbar
             value={filter}
-            placeholder="Search logs, ex. status > 200"
+            placeholder="{$_("logs.tips.search.placeholder")}"
             extraAutocompleteKeys={["method", "url", "ip", "referer", "status", "auth", "userAgent"]}
             on:submit={(e) => (filter = e.detail)}
         />

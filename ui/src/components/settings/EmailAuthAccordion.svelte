@@ -6,6 +6,7 @@
     import Accordion from "@/components/base/Accordion.svelte";
     import Field from "@/components/base/Field.svelte";
     import MultipleValueInput from "@/components/base/MultipleValueInput.svelte";
+    import { _ } from '@/services/i18n';
 
     export let config = {}; // EmailAuthConfig
 
@@ -30,13 +31,13 @@
     <svelte:fragment slot="header">
         <div class="inline-flex">
             <i class="ri-mail-lock-line" />
-            <span class="txt">Email/Password</span>
+            <span class="txt">{$_("settings.auth.tips.emailPassword")}</span>
         </div>
 
         {#if config.enabled}
-            <span class="label label-success">Enabled</span>
+            <span class="label label-success">{$_("settings.auth.tips.enabled")}</span>
         {:else}
-            <span class="label">Disabled</span>
+            <span class="label">{$_("settings.auth.tips.disabled")}</span>
         {/if}
 
         <div class="flex-fill" />
@@ -45,21 +46,21 @@
             <i
                 class="ri-error-warning-fill txt-danger"
                 transition:scale={{ duration: 150, start: 0.7 }}
-                use:tooltip={{ text: "Has errors", position: "left" }}
+                use:tooltip={{ text: $_("settings.auth.tips.hasErrors"), position: "left" }}
             />
         {/if}
     </svelte:fragment>
 
     <Field class="form-field form-field-toggle m-b-0" name="emailPassword.enabled" let:uniqueId>
         <input type="checkbox" id={uniqueId} bind:checked={config.enabled} />
-        <label for={uniqueId}>Enable</label>
+        <label for={uniqueId}>{$_("settings.auth.tips.enable")}</label>
     </Field>
 
     {#if config.enabled}
         <div class="grid" transition:slide|local={{ duration: 150 }}>
             <div class="col-sm-12 m-t-sm">
                 <Field class="form-field required" name="emailPassword.minPasswordLength" let:uniqueId>
-                    <label for={uniqueId}>Minimum password length</label>
+                    <label for={uniqueId}>{$_("settings.auth.tips.minPasswordLength")}</label>
                     <input
                         type="number"
                         id={uniqueId}
@@ -77,11 +78,11 @@
                     let:uniqueId
                 >
                     <label for={uniqueId}>
-                        <span class="txt">Except domains</span>
+                        <span class="txt">{$_("settings.auth.tips.exceptDomains")}</span>
                         <i
                             class="ri-information-line link-hint"
                             use:tooltip={{
-                                text: 'Email domains that are NOT allowed to sign up. \n This field is disabled if "Only domains" is set.',
+                                text: $_("settings.auth.help.exceptDomains"),
                                 position: "top",
                             }}
                         />
@@ -91,7 +92,7 @@
                         disabled={!CommonHelper.isEmpty(config.onlyDomains)}
                         bind:value={config.exceptDomains}
                     />
-                    <div class="help-block">Use comma as separator.</div>
+                    <div class="help-block">{$_("settings.auth.help.comma")}</div>
                 </Field>
             </div>
             <div class="col-lg-6">
@@ -101,11 +102,11 @@
                     let:uniqueId
                 >
                     <label for="{uniqueId}.config.onlyDomains">
-                        <span class="txt">Only domains</span>
+                        <span class="txt">{$_("settings.auth.tips.onlyDomains")}</span>
                         <i
                             class="ri-information-line link-hint"
                             use:tooltip={{
-                                text: 'Email domains that are ONLY allowed to sign up. \n This field is disabled if "Except domains" is set.',
+                                text: $_("settings.auth.help.onlyDomains"),
                                 position: "top",
                             }}
                         />
@@ -115,7 +116,7 @@
                         disabled={!CommonHelper.isEmpty(config.exceptDomains)}
                         bind:value={config.onlyDomains}
                     />
-                    <div class="help-block">Use comma as separator.</div>
+                    <div class="help-block">{$_("settings.auth.help.comma")}</div>
                 </Field>
             </div>
         </div>

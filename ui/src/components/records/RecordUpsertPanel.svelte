@@ -20,6 +20,7 @@
     import FileField from "@/components/records/fields/FileField.svelte";
     import RelationField from "@/components/records/fields/RelationField.svelte";
     import UserField from "@/components/records/fields/UserField.svelte";
+    import { _ } from '@/services/i18n';
 
     const dispatch = createEventDispatcher();
     const formId = "record_" + CommonHelper.randomString(5);
@@ -89,7 +90,7 @@
         request
             .then(async (result) => {
                 addSuccessToast(
-                    record.isNew ? "Successfully created record." : "Successfully updated record."
+                    record.isNew ? $_("records.tips.created") : $_("records.tips.updated")
                 );
                 confirmClose = false;
                 hide();
@@ -112,7 +113,7 @@
             return ApiClient.Records.delete(original["@collectionId"], original.id)
                 .then(() => {
                     hide();
-                    addSuccessToast("Successfully deleted record.");
+                    addSuccessToast($_("records.tips.deleted"));
                     dispatch("delete", original);
                 })
                 .catch((err) => {
@@ -170,7 +171,7 @@
     class="overlay-panel-lg record-panel"
     beforeHide={() => {
         if (hasChanges && confirmClose) {
-            confirm("You have unsaved changes. Do you really want to close the panel?", () => {
+            confirm($_("app.base.confirm_unsave_close"), () => {
                 confirmClose = false;
                 hide();
             });
@@ -183,8 +184,8 @@
 >
     <svelte:fragment slot="header">
         <h4>
-            {record.isNew ? "New" : "Edit"}
-            {collection.name} record
+            {record.isNew ? $_("app.base.new") : $_("app.base.edit")}
+            {collection.name} {$_("app.base.record")}
         </h4>
 
         {#if !record.isNew && isProfileCollection}
@@ -195,7 +196,7 @@
                     <Toggler class="dropdown dropdown-right m-t-5">
                         <div tabindex="0" class="dropdown-item closable" on:click={() => deleteConfirm()}>
                             <i class="ri-delete-bin-7-line" />
-                            <span class="txt">Delete</span>
+                            <span class="txt">{$_("app.base.delete")}</span>
                         </div>
                     </Toggler>
                 </div>
@@ -247,14 +248,14 @@
             {/if}
         {:else}
             <div class="block txt-center txt-disabled">
-                <h5>No custom fields to be set</h5>
+                <h5>{$_("records.tips.no_custom_fields")}</h5>
             </div>
         {/each}
     </form>
 
     <svelte:fragment slot="footer">
         <button type="button" class="btn btn-secondary" disabled={isSaving} on:click={() => hide()}>
-            <span class="txt">Cancel</span>
+            <span class="txt">{$_("admins.form.cancel")}</span>
         </button>
         <button
             type="submit"
@@ -263,7 +264,7 @@
             class:btn-loading={isSaving}
             disabled={!canSave || isSaving}
         >
-            <span class="txt">{record.isNew ? "Create" : "Save changes"}</span>
+            <span class="txt">{record.isNew ? $_("admins.form.create") : $_("admins.form.save_change")}</span>
         </button>
     </svelte:fragment>
 </OverlayPanel>

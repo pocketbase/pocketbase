@@ -6,6 +6,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import { addErrorToast } from "@/stores/toasts";
+    import { _ } from '@/services/i18n';
 
     const queryParams = CommonHelper.getQueryParams(window.location?.href);
 
@@ -25,7 +26,7 @@
                 replace("/");
             })
             .catch(() => {
-                addErrorToast("Invalid login credentials.");
+                addErrorToast($_("admins.login.invalid"));
             })
             .finally(() => {
                 isLoading = false;
@@ -36,20 +37,20 @@
 <FullPage>
     <form class="block" on:submit|preventDefault={login}>
         <div class="content txt-center m-b-base">
-            <h4>Admin sign in</h4>
+            <h4>{$_("admins.login.title")}</h4>
         </div>
 
         <Field class="form-field required" name="email" let:uniqueId>
-            <label for={uniqueId}>Email</label>
+            <label for={uniqueId}>{$_("admins.login.email")}</label>
             <!-- svelte-ignore a11y-autofocus -->
             <input type="email" id={uniqueId} bind:value={email} required autofocus />
         </Field>
 
         <Field class="form-field required" name="password" let:uniqueId>
-            <label for={uniqueId}>Password</label>
+            <label for={uniqueId}>{$_("admins.login.password")}</label>
             <input type="password" id={uniqueId} bind:value={password} required />
             <div class="help-block">
-                <a href="/request-password-reset" class="link-hint" use:link>Forgotten password?</a>
+                <a href="/request-password-reset" class="link-hint" use:link>{$_("admins.login.forgotten_password")}</a>
             </div>
         </Field>
 
@@ -59,7 +60,7 @@
             class:btn-disabled={isLoading}
             class:btn-loading={isLoading}
         >
-            <span class="txt">Login</span>
+            <span class="txt">{$_("admins.login.login")}</span>
             <i class="ri-arrow-right-line" />
         </button>
     </form>

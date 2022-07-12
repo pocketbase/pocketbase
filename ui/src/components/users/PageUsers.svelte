@@ -11,6 +11,8 @@
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordFieldCell from "@/components/records/RecordFieldCell.svelte";
+    import { _ } from '@/services/i18n';
+import { tooltips } from "@codemirror/view";
 
     const queryParams = CommonHelper.getQueryParams(window.location?.href);
     const excludedProfileFields = ["id", "userId", "created", "updated"];
@@ -43,7 +45,7 @@
         (field) => !excludedProfileFields.includes(field.name)
     );
 
-    CommonHelper.setDocumentTitle("Users");
+    CommonHelper.setDocumentTitle($_("users.pagetitle"));
 
     loadProfilesCollection();
 
@@ -104,19 +106,19 @@
 {#if isLoadingProfileCollection}
     <div class="placeholder-section m-b-base">
         <span class="loader loader-lg" />
-        <h1>Loading users...</h1>
+        <h1>{$_("users.tips.loading_users")}</h1>
     </div>
 {:else}
     <main class="page-wrapper">
         <header class="page-header">
             <nav class="breadcrumbs">
-                <div class="breadcrumb-item">Users</div>
+                <div class="breadcrumb-item">{$_("users.pagetitle")}</div>
             </nav>
 
             <button
                 type="button"
                 class="btn btn-secondary btn-circle"
-                use:tooltip={{ text: "Edit profile collection", position: "right" }}
+                use:tooltip={{ text: $_("users.tips.edit_profile_collection"), position: "right" }}
                 on:click={() => collectionUpsertPanel?.show(profileCollection)}
             >
                 <i class="ri-settings-4-line" />
@@ -126,13 +128,13 @@
 
             <button type="button" class="btn btn-expanded" on:click={() => userUpsertPanel?.show()}>
                 <i class="ri-add-line" />
-                <span class="txt">New user</span>
+                <span class="txt">{$_("users.tips.new_user")}</span>
             </button>
         </header>
 
         <Searchbar
             value={filter}
-            placeholder={"Search filter, eg. verified=1"}
+            placeholder={$_("users.tips.search.placeholder")}
             extraAutocompleteKeys={["verified", "email"]}
             on:submit={(e) => (filter = e.detail)}
         />
@@ -198,7 +200,7 @@
                                         class:label-success={user.verified}
                                         class:label-warning={!user.verified}
                                     >
-                                        {user.verified ? "Verified" : "Unverified"}
+                                        {user.verified ? $_("users.tips.verified") : $_("users.tips.unverified")}
                                     </span>
                                 </div>
                             </td>
@@ -222,7 +224,7 @@
                                     on:click|stopPropagation={() => userUpsertPanel?.show(user)}
                                 >
                                     <i class="ri-user-settings-line" />
-                                    <span class="txt">Edit user</span>
+                                    <span class="txt">{$_("users.tips.edit_user")}</span>
                                 </button>
                                 <button
                                     type="button"
@@ -230,7 +232,7 @@
                                     on:click|stopPropagation={() => recordUpsertPanel?.show(user.profile)}
                                 >
                                     <i class="ri-profile-line" />
-                                    <span class="txt">Edit profile</span>
+                                    <span class="txt">{$_("users.tips.edit_profile")}</span>
                                 </button>
                             </td>
                         </tr>
@@ -244,14 +246,14 @@
                         {:else}
                             <tr>
                                 <td colspan="99" class="txt-center txt-hint p-xs">
-                                    <h6>No users found.</h6>
+                                    <h6>{$_("users.tips.no_users")}</h6>
                                     {#if filter?.length}
                                         <button
                                             type="button"
                                             class="btn btn-hint btn-expanded m-t-sm"
                                             on:click={() => (filter = "")}
                                         >
-                                            <span class="txt">Clear filters</span>
+                                            <span class="txt">>{$_("app.base.clear_filters")}</span>
                                         </button>
                                     {/if}
                                 </td>
@@ -263,7 +265,7 @@
         </div>
 
         {#if users.length}
-            <small class="block txt-hint txt-right m-t-sm">Showing {users.length} of {totalItems}</small>
+            <small class="block txt-hint txt-right m-t-sm">{$_("app.base.showing", { values: { counts: users.length, total: totalItems}} )}</small>
         {/if}
 
         {#if users.length && canLoadMore}
@@ -275,7 +277,7 @@
                     class:btn-disabled={isLoadingUsers}
                     on:click={() => loadUsers(currentPage + 1)}
                 >
-                    <span class="txt">Load more ({totalItems - users.length})</span>
+                    <span class="txt">{$_("app.base.loadmore")} ({totalItems - users.length})</span>
                 </button>
             </div>
         {/if}

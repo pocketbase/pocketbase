@@ -7,6 +7,7 @@
     import Field from "@/components/base/Field.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import { _ } from '@/services/i18n';
 
     let s3 = {};
     let isLoading = false;
@@ -16,7 +17,7 @@
 
     $: hasChanges = initialHash != JSON.stringify(s3);
 
-    CommonHelper.setDocumentTitle("Files storage");
+    CommonHelper.setDocumentTitle($_("settings.storage.pagetitle"));
 
     loadSettings();
 
@@ -44,7 +45,7 @@
             const settings = await ApiClient.Settings.update(CommonHelper.filterRedactedProps({ s3 }));
             init(settings);
             setErrors({});
-            addSuccessToast("Successfully saved Files storage settings.");
+            addSuccessToast($_("settings.storage.tips.saved"));
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
@@ -64,17 +65,17 @@
 <main class="page-wrapper">
     <header class="page-header">
         <nav class="breadcrumbs">
-            <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Files storage</div>
+            <div class="breadcrumb-item">{$_("app.breadcrumb.settings")}</div>
+            <div class="breadcrumb-item">{$_("app.breadcrumb.storage")}</div>
         </nav>
     </header>
 
     <div class="wrapper">
         <form class="panel" autocomplete="off" on:submit|preventDefault={() => save()}>
             <div class="content txt-xl m-b-base">
-                <p>By default PocketBase uses the local file system to store uploaded files.</p>
+                <p>{$_("settings.storage.tips.default")}</p>
                 <p>
-                    If you have limited disk space, you could optionally connect to a S3 compatible storage.
+                    {$_("settings.storage.tips.s3enable")}
                 </p>
             </div>
 
@@ -83,7 +84,7 @@
             {:else}
                 <Field class="form-field form-field-toggle" let:uniqueId>
                     <input type="checkbox" id={uniqueId} required bind:checked={s3.enabled} />
-                    <label for={uniqueId}>Use S3 storage</label>
+                    <label for={uniqueId}>{$_("settings.storage.tips.uses3")}</label>
                 </Field>
 
                 {#if initialEnabled != s3.enabled}
@@ -93,29 +94,11 @@
                                 <i class="ri-error-warning-line" />
                             </div>
                             <div class="content">
-                                If you have existing uploaded files, you'll have to migrate them manually from
-                                the
-                                <strong>{initialEnabled ? "S3 storage" : "local file system"}</strong>
-                                to the
-                                <strong>{s3.enabled ? "S3 storage" : "local file system"}</strong>.
-                                <br />
-                                There are numerous command line tools that can help you, such as:
-                                <a
-                                    href="https://github.com/rclone/rclone"
-                                    target="_blank"
-                                    rel="noopener"
-                                    class="txt-bold"
-                                >
-                                    rclone
-                                </a>,
-                                <a
-                                    href="https://github.com/peak/s5cmd"
-                                    target="_blank"
-                                    rel="noopener"
-                                    class="txt-bold"
-                                >
-                                    s5cmd
-                                </a>, etc.
+                                {@html $_("settings.storage.tips.s3note1")}
+                                {initialEnabled ? $_("settings.storage.tips.s3storage") : $_("settings.storage.tips.localstorage")}
+                                {@html $_("settings.storage.tips.s3note2")}
+                                {s3.enabled ? $_("settings.storage.tips.s3storage") : $_("settings.storage.tips.localstorage")}
+                                {@html $_("settings.storage.tips.s3note3")}
                             </div>
                         </div>
                         <div class="clearfix m-t-base" />
@@ -126,31 +109,31 @@
                     <div class="grid" transition:slide|local={{ duration: 150 }}>
                         <div class="col-lg-12">
                             <Field class="form-field required" name="s3.endpoint" let:uniqueId>
-                                <label for={uniqueId}>Endpoint</label>
+                                <label for={uniqueId}>{$_("settings.storage.s3.endpoint")}</label>
                                 <input type="text" id={uniqueId} required bind:value={s3.endpoint} />
                             </Field>
                         </div>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="s3.bucket" let:uniqueId>
-                                <label for={uniqueId}>Bucket</label>
+                                <label for={uniqueId}>{$_("settings.storage.s3.bucket")}</label>
                                 <input type="text" id={uniqueId} required bind:value={s3.bucket} />
                             </Field>
                         </div>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="s3.region" let:uniqueId>
-                                <label for={uniqueId}>Region</label>
+                                <label for={uniqueId}>{$_("settings.storage.s3.region")}</label>
                                 <input type="text" id={uniqueId} required bind:value={s3.region} />
                             </Field>
                         </div>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="s3.accessKey" let:uniqueId>
-                                <label for={uniqueId}>Access key</label>
+                                <label for={uniqueId}>{$_("settings.storage.s3.accessKey")}</label>
                                 <input type="text" id={uniqueId} required bind:value={s3.accessKey} />
                             </Field>
                         </div>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="s3.secret" let:uniqueId>
-                                <label for={uniqueId}>Secret</label>
+                                <label for={uniqueId}>{$_("settings.storage.s3.secret")}</label>
                                 <RedactedPasswordInput id={uniqueId} required bind:value={s3.secret} />
                             </Field>
                         </div>
@@ -168,7 +151,7 @@
                         disabled={!hasChanges || isSaving}
                         on:click={() => save()}
                     >
-                        <span class="txt">Save changes</span>
+                        <span class="txt">{$_("settings.storage.tips.save")}</span>
                     </button>
                 </div>
             {/if}

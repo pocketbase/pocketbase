@@ -4,15 +4,9 @@
     import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import { _, locale } from '@/services/i18n';
 
-    const tokensList = [
-        { key: "userAuthToken", label: "Users auth token" },
-        { key: "userVerificationToken", label: "Users email verification token" },
-        { key: "userPasswordResetToken", label: "Users password reset token" },
-        { key: "userEmailChangeToken", label: "Users email change token" },
-        { key: "adminAuthToken", label: "Admins auth token" },
-        { key: "adminPasswordResetToken", label: "Admins password reset token" },
-    ];
+    let tokensList = [];
 
     let tokenSettings = {};
     let isLoading = false;
@@ -21,7 +15,7 @@
 
     $: hasChanges = initialHash != JSON.stringify(tokenSettings);
 
-    CommonHelper.setDocumentTitle("Token options");
+    CommonHelper.setDocumentTitle($_("settings.token.pagetitle"));
 
     loadSettings();
 
@@ -30,12 +24,26 @@
 
         try {
             const result = (await ApiClient.Settings.getAll()) || {};
+            updateTokenList()
             initSettings(result);
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
 
         isLoading = false;
+    }
+
+    locale.subscribe(() => updateTokenList())
+
+    function updateTokenList(){
+        tokensList =  [
+                { key: "userAuthToken", label: $_("settings.token.label.userAuthToken") },
+                { key: "userVerificationToken", label: $_("settings.token.label.userVerificationToken") },
+                { key: "userPasswordResetToken", label: $_("settings.token.label.userPasswordResetToken") },
+                { key: "userEmailChangeToken", label: $_("settings.token.label.userEmailChangeToken") },
+                { key: "adminAuthToken", label: $_("settings.token.label.adminAuthToken") },
+                { key: "adminPasswordResetToken", label: $_("settings.token.label.adminPasswordResetToken") },
+            ];
     }
 
     async function save() {
@@ -48,7 +56,7 @@
         try {
             const result = await ApiClient.Settings.update(CommonHelper.filterRedactedProps(tokenSettings));
             initSettings(result);
-            addSuccessToast("Successfully saved tokens options.");
+            addSuccessToast($_("settings.token.tips.saved"));
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
@@ -75,15 +83,15 @@
 <main class="page-wrapper">
     <header class="page-header">
         <nav class="breadcrumbs">
-            <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Token options</div>
+            <div class="breadcrumb-item">{$_("app.breadcrumb.settings")}</div>
+            <div class="breadcrumb-item">{$_("app.breadcrumb.token")}</div>
         </nav>
     </header>
 
     <div class="wrapper">
         <form class="panel" autocomplete="off" on:submit|preventDefault={save}>
             <div class="content m-b-sm txt-xl">
-                <p>Adjust common token options.</p>
+                <p>{$_("settings.token.title")}</p>
             </div>
 
             {#if isLoading}
@@ -91,7 +99,7 @@
             {:else}
                 {#each tokensList as token (token.key)}
                     <Field class="form-field required" name="{token.key}.duration" let:uniqueId>
-                        <label for={uniqueId}>{token.label} duration (in seconds)</label>
+                        <label for={uniqueId}>{token.label} {$_("settings.token.tips.duration")}</label>
                         <input
                             type="number"
                             id={uniqueId}
@@ -112,7 +120,7 @@
                                     }
                                 }}
                             >
-                                Invalidate all previously issued tokens
+                            {$_("settings.token.tips.invalidate_all")}
                             </span>
                         </div>
                     </Field>
@@ -127,7 +135,7 @@
                         disabled={!hasChanges || isSaving}
                         on:click={() => save()}
                     >
-                        <span class="txt">Save changes</span>
+                        <span class="txt">{$_("settings.token.tips.save")}</span>
                     </button>
                 </div>
             {/if}

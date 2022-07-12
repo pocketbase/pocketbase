@@ -4,6 +4,7 @@
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import { _ } from '@/services/i18n';
 
     let logPanel;
     let item = new Request();
@@ -21,7 +22,7 @@
 
 <OverlayPanel bind:this={logPanel} class="overlay-panel-lg log-panel" on:hide on:show>
     <svelte:fragment slot="header">
-        <h4>Request log</h4>
+        <h4>{$_("logs.tips.request_log")}</h4>
     </svelte:fragment>
 
     <table class="table-compact table-border">
@@ -89,7 +90,7 @@
 
     <svelte:fragment slot="footer">
         <button type="button" class="btn btn-secondary" on:click={() => hide()}>
-            <span class="txt">Close</span>
+            <span class="txt">{$_("app.base.close")}</span>
         </button>
     </svelte:fragment>
 </OverlayPanel>

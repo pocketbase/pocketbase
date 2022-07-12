@@ -2,6 +2,7 @@
     import { tick } from "svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import { confirmation, resetConfirmation } from "@/stores/confirmation";
+    import { _ } from '@/services/i18n';
 
     let confirmationPopup;
     let isConfirmationBusy = false;
@@ -42,7 +43,7 @@
                 confirmationPopup?.hide();
             }}
         >
-            <span class="txt">No</span>
+            <span class="txt">{$_("app.base.no")}</span>
         </button>
         <button
             type="button"
@@ -58,7 +59,7 @@
                 confirmationPopup?.hide();
             }}
         >
-            <span class="txt">Yes</span>
+            <span class="txt">{$_("app.base.yes")}</span>
         </button>
     </svelte:fragment>
 </OverlayPanel>

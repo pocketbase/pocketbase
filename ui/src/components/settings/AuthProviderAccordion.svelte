@@ -6,6 +6,7 @@
     import Accordion from "@/components/base/Accordion.svelte";
     import Field from "@/components/base/Field.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
+    import { _ } from '@/services/i18n';
 
     export let key;
     export let title;
@@ -40,9 +41,9 @@
         </div>
 
         {#if config.enabled}
-            <span class="label label-success">Enabled</span>
+            <span class="label label-success">{$_("settings.auth.tips.enabled")}</span>
         {:else}
-            <span class="label label-hint">Disabled</span>
+            <span class="label label-hint">{$_("settings.auth.tips.disabled")}</span>
         {/if}
 
         <div class="flex-fill" />
@@ -51,14 +52,14 @@
             <i
                 class="ri-error-warning-fill txt-danger"
                 transition:scale={{ duration: 150, start: 0.7 }}
-                use:tooltip={{ text: "Has errors", position: "left" }}
+                use:tooltip={{ text: $_("settings.auth.tips.hasErrors"), position: "left" }}
             />
         {/if}
     </svelte:fragment>
 
     <Field class="form-field form-field-toggle m-b-0" name="{key}.enabled" let:uniqueId>
         <input type="checkbox" id={uniqueId} bind:checked={config.enabled} />
-        <label for={uniqueId}>Enable</label>
+        <label for={uniqueId}>{$_("settings.auth.tips.enable")}</label>
     </Field>
 
     {#if config.enabled}
@@ -81,13 +82,13 @@
             <div class="col-lg-12">
                 <Field class="form-field" name="{key}.allowRegistrations" let:uniqueId>
                     <input type="checkbox" id={uniqueId} bind:checked={config.allowRegistrations} />
-                    <label for={uniqueId}>Allow registration for new users</label>
+                    <label for={uniqueId}>{$_("settings.auth.tips.allowRegistrations")}</label>
                 </Field>
             </div>
 
             {#if showSelfHostedFields}
                 <div class="col-lg-12">
-                    <div class="section-title">Optional endpoints (if you self host the OAUTH2 service)</div>
+                    <div class="section-title">{$_("settings.auth.tips.selfhost")}</div>
                     <div class="grid">
                         <div class="col-lg-4">
                             <Field class="form-field" name="{key}.authUrl" let:uniqueId>

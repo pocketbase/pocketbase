@@ -15,3 +15,5 @@ coverage.out
 
 # plaintask todo files
 *.todo
+ui/yarn.lock
+ui/.gitignore

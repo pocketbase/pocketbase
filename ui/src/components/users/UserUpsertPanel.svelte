@@ -11,6 +11,7 @@
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import { _ } from '@/services/i18n';
 
     const dispatch = createEventDispatcher();
     const formId = "user_" + CommonHelper.randomString(5);
@@ -81,7 +82,7 @@
 
                 confirmClose = false;
                 hide();
-                addSuccessToast(user.isNew ? "Successfully created user." : "Successfully updated user.");
+                addSuccessToast(user.isNew ? $_("users.tips.created_user") : $_("users.tips.updated_user"));
                 dispatch("save", result);
             })
             .catch((err) => {
@@ -97,12 +98,12 @@
             return; // nothing to delete
         }
 
-        confirm(`Do you really want to delete the selected user?`, () => {
+        confirm($_("users.tips.confirm_delete"), () => {
             return ApiClient.Users.delete(user.id)
                 .then(() => {
                     confirmClose = false;
                     hide();
-                    addSuccessToast("Successfully deleted user.");
+                    addSuccessToast($_("users.tips.deleted_user"));
                     dispatch("delete", user);
                 })
                 .catch((err) => {
@@ -117,7 +118,7 @@
                 confirmClose = false;
                 hide();
                 if (notify) {
-                    addSuccessToast(`Successfully sent verification email to ${user.email}.`);
+                    addSuccessToast($_("users.tips.sentmail", {values:{email: user.email}}));
                 }
             })
             .catch((err) => {
@@ -132,7 +133,7 @@
     class="user-panel"
     beforeHide={() => {
         if (hasChanges && confirmClose) {
-            confirm("You have unsaved changes. Do you really want to close the panel?", () => {
+            confirm($_("app.base.confirm_unsave_close"), () => {
                 confirmClose = false;
                 hide();
             });
@@ -145,7 +146,7 @@
 >
     <svelte:fragment slot="header">
         <h4>
-            {user.isNew ? "New user" : "Edit user"}
+            {user.isNew ? $_("users.form.title_new") : $_("users.form.title_edit")}
         </h4>
     </svelte:fragment>
 
@@ -176,7 +177,7 @@
         {#if !user.isNew}
             <Field class="form-field form-field-toggle" let:uniqueId>
                 <input type="checkbox" id={uniqueId} bind:checked={changePasswordToggle} />
-                <label for={uniqueId}>Change password</label>
+                <label for={uniqueId}>{$_("admins.form.change_password")}</label>
             </Field>
         {/if}
 
@@ -187,7 +188,7 @@
                         <Field class="form-field required" name="password" let:uniqueId>
                             <label for={uniqueId}>
                                 <i class="ri-lock-line" />
-                                <span class="txt">Password</span>
+                                <span class="txt">{$_("admins.form.password")}</span>
                             </label>
                             <input
                                 type="password"
@@ -202,7 +203,7 @@
                         <Field class="form-field required" name="passwordConfirm" let:uniqueId>
                             <label for={uniqueId}>
                                 <i class="ri-lock-line" />
-                                <span class="txt">Password confirm</span>
+                                <span class="txt">{$_("admins.form.password_confirm")}</span>
                             </label>
                             <input
                                 type="password"
@@ -220,7 +221,7 @@
         {#if user.isNew}
             <Field class="form-field form-field-toggle" let:uniqueId>
                 <input type="checkbox" id={uniqueId} bind:checked={verificationEmailToggle} />
-                <label for={uniqueId}>Send verification email</label>
+                <label for={uniqueId}>{$_("users.form.sendmail")}</label>
             </Field>
         {/if}
     </form>
@@ -235,12 +236,12 @@
                     {#if !user.verified}
                         <button type="button" class="dropdown-item" on:click={() => sendVerificationEmail()}>
                             <i class="ri-mail-check-line" />
-                            <span class="txt">Send verification email</span>
+                            <span class="txt">{$_("users.form.sendmail")}</span>
                         </button>
                     {/if}
                     <button type="button" class="dropdown-item" on:click={() => deleteConfirm()}>
                         <i class="ri-delete-bin-7-line" />
-                        <span class="txt">Delete</span>
+                        <span class="txt">{$_("admins.form.delete")}</span>
                     </button>
                 </Toggler>
             </button>
@@ -248,7 +249,7 @@
         {/if}
 
         <button type="button" class="btn btn-secondary" disabled={isSaving} on:click={() => hide()}>
-            <span class="txt">Cancel</span>
+            <span class="txt">{$_("admins.form.cancel")}</span>
         </button>
         <button
             type="submit"
@@ -257,7 +258,7 @@
             class:btn-loading={isSaving}
             disabled={!hasChanges || isSaving}
         >
-            <span class="txt">{user.isNew ? "Create" : "Save changes"}</span>
+            <span class="txt">{user.isNew ? $_("admins.form.create") : $_("admins.form.save_change")}</span>
         </button>
     </svelte:fragment>
 </OverlayPanel>

@@ -1,14 +1,15 @@
 <script>
     import { link } from "svelte-spa-router";
     import active from "svelte-spa-router/active";
+    import { _ } from '@/services/i18n';
 </script>
 
 <aside class="page-sidebar settings-sidebar">
     <div class="sidebar-content">
-        <div class="sidebar-title">System</div>
+        <div class="sidebar-title">{$_('settings.sidebar.system')}</div>
         <a href="/settings" class="sidebar-list-item" use:active={{ path: "/settings" }} use:link>
             <i class="ri-home-gear-line" />
-            <span class="txt">Application</span>
+            <span class="txt">{$_('settings.sidebar.application')}</span>
         </a>
         <a
             href="/settings/mail"
@@ -17,7 +18,7 @@
             use:link
         >
             <i class="ri-send-plane-2-line" />
-            <span class="txt">Mail settings</span>
+            <span class="txt">{$_('settings.sidebar.mail_setting')}</span>
         </a>
         <a
             href="/settings/storage"
@@ -26,10 +27,10 @@
             use:link
         >
             <i class="ri-archive-drawer-line" />
-            <span class="txt">Files storage</span>
+            <span class="txt">{$_('settings.sidebar.file_storage')}</span>
         </a>
 
-        <div class="sidebar-title">Authentication</div>
+        <div class="sidebar-title">{$_('settings.sidebar.authentication')}</div>
         <a
             href="/settings/auth-providers"
             class="sidebar-list-item"
@@ -37,7 +38,7 @@
             use:link
         >
             <i class="ri-lock-password-line" />
-            <span class="txt">Auth providers</span>
+            <span class="txt">{$_('settings.sidebar.auth_provider')}</span>
         </a>
         <a
             href="/settings/tokens"
@@ -46,7 +47,7 @@
             use:link
         >
             <i class="ri-key-line" />
-            <span class="txt">Token options</span>
+            <span class="txt">{$_('settings.sidebar.token_options')}</span>
         </a>
         <a
             href="/settings/admins"
@@ -55,7 +56,7 @@
             use:link
         >
             <i class="ri-shield-user-line" />
-            <span class="txt">Admins</span>
+            <span class="txt">{$_('settings.sidebar.admins')}</span>
         </a>
     </div>
 </aside>

@@ -1,6 +1,7 @@
 <script>
     import { collections, activeCollection } from "@/stores/collections";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
+    import { _ } from '@/services/i18n';
 
     let collectionPanel;
     let searchTerm = "";
@@ -35,7 +36,7 @@
                     <i class="ri-close-line" />
                 </button>
             </div>
-            <input type="text" placeholder="Search collections..." bind:value={searchTerm} />
+            <input type="text" placeholder="{$_('collections.sidebar.search_collection')}" bind:value={searchTerm} />
         </div>
     </header>
 
@@ -58,7 +59,7 @@
             </div>
         {:else}
             {#if normalizedSearch.length}
-                <p class="txt-hint m-t-10 m-b-10 txt-center">No collections found.</p>
+                <p class="txt-hint m-t-10 m-b-10 txt-center">{$_('collections.sidebar.no_collection')}</p>
             {/if}
         {/each}
     </div>
@@ -66,7 +67,7 @@
     <footer class="sidebar-footer">
         <button type="button" class="btn btn-block btn-outline" on:click={() => collectionPanel?.show()}>
             <i class="ri-add-line" />
-            <span class="txt">New collection</span>
+            <span class="txt">{$_('collections.sidebar.new_collection')}</span>
         </button>
     </footer>
 </aside>

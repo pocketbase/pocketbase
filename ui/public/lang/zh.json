@@ -1,0 +1,261 @@
+{
+  "app": {
+    "menu": {
+      "logo": "PocketBase标志",
+      "collections": "数据集",
+      "users": "用户",
+      "logs": "日志",
+      "settings": "设置",
+      "admins": "管理员",
+      "logout": "退出"
+    },
+    "breadcrumb": {
+      "settings": "系统设置",
+      "admins": "管理员设置",
+      "application": "应用设置",
+      "mail_settings": "邮件设置",
+      "storage": "文件存储设置",
+      "auth": "认证设置",
+      "token": "令牌选项设置"
+    },
+    "base": {
+      "no": "否",
+      "yes": "是",
+      "clear_filters": "清除筛选条件",
+      "showing": "展示 {counts} 条 / 共 {total} 条",
+      "loadmore": "加载更多",
+      "search": "搜索",
+      "clear": "清空",
+      "confirm_unsave_close": "有未保存变更,确认关闭窗口?",
+      "close": "关闭",
+      "new": "新建",
+      "edit": "编辑",
+      "record": "记录",
+      "delete": "删除"
+    }
+  },
+  "collections": {
+    "sidebar": {
+      "new_collection": "新建数据集",
+      "search_collection": "查找数据集...",
+      "no_collection": "暂无数据集."
+    },
+    "tips": {
+      "loading": "加载数据集 ...",
+      "create_first": "请先创建数据集",
+      "create": "创建新的数据集",
+      "api_preview": "API预览",
+      "new_record": "新建条目"
+    },
+    "pagetitle": "数据集"
+  },
+  "admins": {
+    "pagetitle": "管理员",
+    "new_admin": "新增管理员",
+    "tips": {
+      "you": "自己",
+      "no_admins": "暂无数据",
+      "created_admin": "成功创建管理员",
+      "updated_admin": "成功更新管理员信息.",
+      "confirm_delete": "是否确认删除选中管理员?",
+      "deleted_admin": "成功删除管理员.",
+      "search_placeholder": "过滤条件,如 email='test@example.com'"
+    },
+    "form": {
+      "title_new": "新增管理员",
+      "title_edit": "编辑管理员",
+      "avatar": "头像",
+      "change_password": "修改密码",
+      "password": "密码",
+      "password_confirm": "密码确认",
+      "delete": "删除",
+      "cancel": "取消",
+      "create": "创建",
+      "save_change": "保存修改"
+    },
+    "login": {
+      "invalid": "错误的登录凭证",
+      "title": "管理员登录",
+      "email": "邮件地址",
+      "password": "密码",
+      "forgotten_password": "忘记密码?",
+      "login": "登录"
+    },
+    "reset": {
+      "title": "重置管理员密码",
+      "desc": "输入管理员邮箱,获取密码重置链接",
+      "email": "邮箱",
+      "send": "发送重置链接",
+      "back": "返回登录",
+      "checkemail": "请到邮箱 <strong class=\"txt-nowrap\">{email}</strong> 内接收重置链接"
+    }
+  },
+  "settings": {
+    "sidebar": {
+      "application": "应用设置",
+      "system": "系统设置",
+      "mail_setting": "邮件设置",
+      "file_storage": "存储设置",
+      "authentication": "认证管理",
+      "auth_provider": "认证方式",
+      "token_options": "令牌选项",
+      "admins": "管理员设置"
+    },
+    "app": {
+      "pagetitle": "应用设置",
+      "tips": {
+        "saved": "成功保存应用设置"
+      },
+      "form": {
+        "appname": "应用名称",
+        "appurl": "应用网址",
+        "maxdays": "日志保留天数",
+        "save": "保 存"
+      }
+    },
+    "mail": {
+      "pagetitle": "邮件设置",
+      "tips": {
+        "saved": "成功保存邮件设置",
+        "title": "配置邮件发送选项",
+        "help": {
+          "userVerificationUrl": "用在验证邮件中, 可用的动态参数",
+          "userResetPasswordUrl": "用在用户重置密码邮件中, 可用参数",
+          "userConfirmEmailChangeUrl": "用在用户修改密码邮件中,可用参数",
+          "smtp": "系统默认使用 sendmail 发送邮件.",
+          "smtpenable": "为了更好的邮件到达率,推荐使用SMTP发送邮件,请在下面配置"
+        }
+      },
+      "form": {
+        "senderName": "发件人",
+        "senderAddress": "发件人地址",
+        "userVerificationUrl": "用户验证页面URL地址",
+        "userResetPasswordUrl": "用户密码重置页面URL地址",
+        "userConfirmEmailChangeUrl": "用户修改密码确认页面URL地址",
+        "usesmtp": "使用SMTP发送邮件",
+        "smtp": {
+          "host": "SMTP 服务器地址",
+          "port": "端口",
+          "tls": "TLS加密",
+          "username": "用户名",
+          "password": "密码",
+          "StartTLS": "尝试请求加密",
+          "AlwaysTLS": "全程加密"
+        },
+        "save": "保 存"
+      }
+    },
+    "storage": {
+      "pagetitle": "存储设置",
+      "tips": {
+        "saved": "成功保存存储设置",
+        "default": "系统默认使用本地文件存储, 来保存上传的文件",
+        "s3enable": "如果你本地磁盘空间紧张, 你可以使用 S3 协议兼容的云存储",
+        "uses3": "使用 S3 协议存储",
+        "s3note1": "如果已经存在了上传文件, 你可以手动把这些文件从 ",
+        "s3note2": " 迁移到 ",
+        "s3note3": "</strong>.\n                                <br />\n                                有很多工具可以帮你实现, 如:\n                                <a\n                                    href=\"https://github.com/rclone/rclone\"\n                                    target=\"_blank\"\n                                    rel=\"noopener\"\n                                    class=\"txt-bold\"\n                                >\n                                    rclone\n                                </a>,\n                                <a\n                                    href=\"https://github.com/peak/s5cmd\"\n                                    target=\"_blank\"\n                                    rel=\"noopener\"\n                                    class=\"txt-bold\"\n                                >\n                                    s5cmd\n                                </a>, 等等.",
+        "s3storage": "S3存储",
+        "localstorage": "本地文件系统",
+        "save": "保 存"
+      },
+      "s3": {
+        "endpoint": "节点/Endpoint",
+        "bucket": "桶/Bucket",
+        "region": "区域/Region",
+        "accessKey": "访问Key/Access key",
+        "secret": "访问Secret/Access Secret"
+      }
+    },
+    "auth": {
+      "pagetitle": "认证设置",
+      "tips": {
+        "saved": "成功保存认证设置",
+        "save": "保 存",
+        "emailPassword": "邮件/密码",
+        "enabled": "已启用",
+        "disabled": "未启用",
+        "hasErrors": "存在错误",
+        "enable": "启用",
+        "minPasswordLength": "密码最短长度",
+        "exceptDomains": "邮箱域名黑名单",
+        "onlyDomains": "邮箱域名白名单",
+        "allowRegistrations": "允许通过此方式注册新用户",
+        "selfhost": "如果你有自建 OATH2 服务"
+      },
+      "title": "配置管理用户注册登录方式",
+      "help": {
+        "comma": "多个域名用英文逗号,分割",
+        "exceptDomains": "不允许注册的邮箱域名,如果设置了白名单,则此项失效",
+        "onlyDomains": "只允许设置白名单的邮箱域名注册登录, 如果设置了黑名单,则此项失效."
+      }
+    },
+    "token": {
+      "pagetitle": "令牌选项",
+      "tips": {
+        "saved": "成功保存令牌选项设置",
+        "save": "保 存",
+        "duration": "有效时间(单位:秒)",
+        "invalidate_all": "撤销所有已签发令牌"
+      },
+      "title": "调整签发令牌的选项",
+      "label": {
+        "userAuthToken": "用户登录令牌",
+        "userVerificationToken": "用户邮件校验令牌",
+        "userPasswordResetToken": "用户密码重置令牌",
+        "userEmailChangeToken": "用户修改邮件令牌",
+        "adminAuthToken": "管理员登录令牌",
+        "adminPasswordResetToken": "管理员密码重置令牌"
+      }
+    }
+  },
+  "users": {
+    "pagetitle": "用户管理",
+    "tips": {
+      "loading_users": "加载用户 ...",
+      "edit_profile_collection": "编辑用户资料数据集",
+      "new_user": "新增用户",
+      "search": {
+        "placeholder": "筛选条件 如 verified=1"
+      },
+      "edit_user": "管理用户",
+      "edit_profile": "更新用户资料",
+      "verified": "已验证",
+      "unverified": "未验证",
+      "no_users": "暂无用户",
+      "created_user": "成功新增用户",
+      "updated_user": "成功更新用户",
+      "confirm_delete": "真的要删除该用户吗?",
+      "deleted_user": "成功删除用户",
+      "sentmail": "验证邮件成功发送到 {email}."
+    },
+    "form": {
+      "title_new": "新增用户",
+      "title_edit": "管理用户",
+      "sendmail": "发送验证邮件"
+    }
+  },
+  "logs": {
+    "pagetitle": "请求日志",
+    "tips": {
+      "refresh": "刷新",
+      "includeAdminLogs": "包含管理员请求日志",
+      "search": {
+        "placeholder": "搜索日志,如 status > 200"
+      },
+      "loading": "加载中...",
+      "log": "条记录",
+      "logs": "条记录",
+      "no_log": "暂无日志",
+      "request_log": "请求日志"
+    }
+  },
+  "records": {
+    "tips": {
+      "created": "成功创建记录",
+      "updated": "成功更新记录",
+      "deleted": "成功删除记录",
+      "no_custom_fields": "没有自定义字段需要设置"
+    }
+  }
+}

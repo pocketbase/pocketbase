@@ -1,0 +1,264 @@
+{
+  "app": {
+    "menu": {
+      "logo": "PocketBase logo",
+      "collections": "Collections",
+      "users": "Users",
+      "logs": "Logs",
+      "settings": "Settings",
+      "admins": "Manage admins",
+      "logout": "Logout"
+    },
+    "breadcrumb": {
+      "settings": "Settings",
+      "admins": "Admins",
+      "application": "Application",
+      "mail_settings": "Mail settings",
+      "storage": "Files storage",
+      "auth": "Auth providers",
+      "token": "Token options"
+    },
+    "base": {
+      "no": "No",
+      "yes": "Yes",
+      "clear_filters": "Clear filters",
+      "showing": "Showing {counts} of {total}",
+      "loadmore": "Load more",
+      "search": "Search",
+      "clear": "Clear",
+      "confirm_unsave_close": "You have unsaved changes. Do you really want to close the panel?",
+      "close": "Close",
+      "new": "New",
+      "edit": "Edit",
+      "record": "record",
+      "delete": "Delete"
+    }
+  },
+  "collections": {
+    "sidebar": {
+      "new_collection": "New collection",
+      "search_collection": "Search collections...",
+      "no_collection": "No collections found."
+    },
+    "tips": {
+      "loading": "Loading collections...",
+      "create_first": "Create your first collection to add records!",
+      "create": "Create new collection",
+      "api_preview": "API Preview",
+      "new_record": "New record"
+    },
+    "pagetitle": "Collections"
+  },
+  "admins": {
+    "pagetitle": "Admins",
+    "new_admin": "New admin",
+    "tips": {
+      "you": "You",
+      "no_admins": "No admins found.",
+      "created_admin": "Successfully created admin.",
+      "updated_admin": "Successfully updated admin.",
+      "confirm_delete": "Do you really want to delete the selected admin?",
+      "deleted_admin": "Successfully deleted admin.",
+      "search_placeholder": "Search filter, eg. email='test@example.com'"
+    },
+    "form": {
+      "title_new": "New admin",
+      "title_edit": "Edit admin",
+      "avatar": "Avatar",
+      "change_password": "Change password",
+      "password": "Password",
+      "password_confirm": "Password confirm",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save_change": "Save changes"
+    },
+    "login": {
+      "invalid": "Invalid login credentials.",
+      "title": "Admin sign in",
+      "email": "Email",
+      "password": "Password",
+      "forgotten_password": "Forgotten password?",
+      "login": "Login"
+    },
+    "reset": {
+      "title": "Forgotten admin password",
+      "desc": "Enter the email associated with your account and we’ll send you a recovery link:",
+      "email": "Email",
+      "send": "Send recovery link",
+      "back": "Back to login",
+      "checkemail": "Check <strong class=\"txt-nowrap\">{email}</strong> for the recovery link."
+    }
+  },
+  "settings": {
+    "sidebar": {
+      "system": "System",
+      "search_collection": "Search collections...",
+      "no_collection": "No collections found.",
+      "application": "Application",
+      "mail_setting": "Mail settings",
+      "file_storage": "Files storage",
+      "authentication": "Authentication",
+      "auth_provider": "Auth providers",
+      "token_options": "Token options",
+      "admins": "Admins"
+    },
+    "app": {
+      "pagetitle": "Application settings",
+      "tips": {
+        "saved": "Successfully saved application settings."
+      },
+      "form": {
+        "appname": "Application name",
+        "appurl": "Application url",
+        "maxdays": "Logs max days retention",
+        "save": "Save changes"
+      }
+    },
+    "mail": {
+      "pagetitle": "Mail settings",
+      "tips": {
+        "saved": "Successfully saved mail settings.",
+        "title": "Configure common settings for sending emails.",
+        "help": {
+          "userVerificationUrl": "Used in the user verification email. Available placeholder parameters",
+          "userResetPasswordUrl": "Used in the user password reset email. Available placeholder parameters",
+          "userConfirmEmailChangeUrl": "Used in the user email change confirmation email. Available placeholder parameters",
+          "smtp": "By default PocketBase uses the OS sendmail command for sending emails.",
+          "smtpenable": "For better emails deliverability it is recommended to enable the SMTP settings below."
+        }
+      },
+      "form": {
+        "senderName": "Sender name",
+        "senderAddress": "Sender address",
+        "userVerificationUrl": "User verification page url",
+        "userResetPasswordUrl": "User reset password page url",
+        "userConfirmEmailChangeUrl": "User confirm email change page url",
+        "usesmtp": "Use SMTP mail server",
+        "smtp": {
+          "host": "SMTP server host",
+          "port": "Port",
+          "tls": "TLS Encryption",
+          "username": "Username",
+          "password": "Password",
+          "StartTLS": "Optional (StartTLS)",
+          "AlwaysTLS": "Always"
+        },
+        "save": "Save changes"
+      }
+    },
+    "storage": {
+      "pagetitle": "Files storage",
+      "tips": {
+        "saved": "Successfully saved Files storage settings.",
+        "default": "By default PocketBase uses the local file system to store uploaded files.",
+        "s3enable": "If you have limited disk space, you could optionally connect to a S3 compatible storage.",
+        "uses3": "Use S3 storage",
+        "s3note": "",
+        "s3note1": "If you have existing uploaded files, you'll have to migrate them manually from the ",
+        "s3note2": "to the",
+        "s3note3": ".\n<br />\nThere are numerous command line tools that can help you, such as:\n                                <a\n                                    href=\"https://github.com/rclone/rclone\"\n                                    target=\"_blank\"\n                                    rel=\"noopener\"\n                                    class=\"txt-bold\"\n                                >\n                                    rclone\n                                </a>,\n                                <a\n                                    href=\"https://github.com/peak/s5cmd\"\n                                    target=\"_blank\"\n                                    rel=\"noopener\"\n                                    class=\"txt-bold\"\n                                >\n                                    s5cmd\n                                </a>, etc.",
+        "s3storage": "S3 storage",
+        "localstorage": "local file system",
+        "save": "Save changes"
+      },
+      "s3": {
+        "endpoint": "Endpoint",
+        "bucket": "Bucket",
+        "region": "Region",
+        "accessKey": "Access key",
+        "secret": "Secret"
+      }
+    },
+    "auth": {
+      "pagetitle": "Auth providers",
+      "tips": {
+        "saved": "Successfully updated auth providers.",
+        "save": "Save changes",
+        "emailPassword": "Email/Password",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "hasErrors": "Has errors",
+        "enable": "Enable",
+        "minPasswordLength": "Minimum password length",
+        "exceptDomains": "Except domains",
+        "onlyDomains": "Only domains",
+        "allowRegistrations": "Allow registration for new users",
+        "selfhost": "Optional endpoints (if you self host the OAUTH2 service)"
+      },
+      "title": "Manage the allowed users sign-in/sign-up methods.",
+      "help": {
+        "comma": "Use comma as separator.",
+        "exceptDomains": "Email domains that are NOT allowed to sign up. \\n This field is disabled if \"Only domains\" is set.",
+        "onlyDomains": "Email domains that are ONLY allowed to sign up. \\n This field is disabled if \"Except domains\" is set."
+      }
+    },
+    "token": {
+      "pagetitle": "Token options",
+      "tips": {
+        "saved": "Successfully saved tokens options.",
+        "save": "Save changes",
+        "duration": "duration (in seconds)",
+        "invalidate_all": "Invalidate all previously issued tokens"
+      },
+      "title": "Adjust common token options.",
+      "label": {
+        "userAuthToken": "Users auth token",
+        "userVerificationToken": "Users email verification token",
+        "userPasswordResetToken": "Users password reset token",
+        "userEmailChangeToken": "Users email change token",
+        "adminAuthToken": "Admins auth token",
+        "adminPasswordResetToken": "Admins password reset token"
+      }
+    }
+  },
+  "users": {
+    "pagetitle": "Users",
+    "tips": {
+      "loading_users": "Loading users...",
+      "edit_profile_collection": "Edit profile collection",
+      "new_user": "New user",
+      "search": {
+        "placeholder": "Search filter, eg. verified=1"
+      },
+      "edit_user": "Edit user",
+      "edit_profile": "Edit profile",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "no_users": "No users found.",
+      "created_user": "Successfully created user.",
+      "updated_user": "Successfully updated user.",
+      "confirm_delete": "Do you really want to delete the selected user?",
+      "deleted_user": "Successfully deleted user.",
+      "sentmail": "Successfully sent verification email to {email}."
+    },
+    "form": {
+      "title_new": "New user",
+      "title_edit": "Edit user",
+      "sendmail": "Send verification email"
+    }
+  },
+  "logs": {
+    "pagetitle": "Request logs",
+    "tips": {
+      "refresh": "Refresh",
+      "includeAdminLogs": "Include requests by admins",
+      "search": {
+        "placeholder": "Search logs, ex. status > 200"
+      },
+      "loading": "Loading...",
+      "log": "log",
+      "logs": "logs",
+      "no_log": "No logs found.",
+      "request_log": "Request log"
+    }
+  },
+  "records": {
+    "tips": {
+      "created": "Successfully created record.",
+      "updated": "Successfully updated record.",
+      "deleted": "Successfully deleted record.",
+      "no_custom_fields": "No custom fields to be set"
+    }
+  }
+}

@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
+    import { _ } from '@/services/i18n';
 
     const dispatch = createEventDispatcher();
     const labelMethodClass = {
@@ -164,14 +165,14 @@
                 {:else}
                     <tr>
                         <td colspan="99" class="txt-center txt-hint p-xs">
-                            <h6>No logs found.</h6>
+                            <h6>{$_("logs.tips.no_log")}</h6>
                             {#if filter?.length}
                                 <button
                                     type="button"
                                     class="btn btn-hint btn-expanded m-t-sm"
                                     on:click={() => (filter = "")}
                                 >
-                                    <span class="txt">Clear filters</span>
+                                    <span class="txt">{$_("app.base.clear_filters")}</span>
                                 </button>
                             {/if}
                         </td>
@@ -183,7 +184,7 @@
 </div>
 
 {#if items.length}
-    <small class="block txt-hint txt-right m-t-sm">Showing {items.length} of {totalItems}</small>
+    <small class="block txt-hint txt-right m-t-sm">{$_("app.base.showing", { values: { counts: items.length, total: totalItems}} )}</small>
 {/if}
 
 {#if items.length && canLoadMore}
@@ -195,7 +196,7 @@
             class:btn-disabled={isLoading}
             on:click={() => load(currentPage + 1)}
         >
-            <span class="txt">Load more ({totalItems - items.length})</span>
+            <span class="txt">{$_("app.base.loadmore")} ({totalItems - items.length})</span>
         </button>
     </div>
 {/if}

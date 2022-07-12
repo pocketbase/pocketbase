@@ -6,6 +6,7 @@
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import EmailAuthAccordion from "@/components/settings/EmailAuthAccordion.svelte";
     import AuthProviderAccordion from "@/components/settings/AuthProviderAccordion.svelte";
+    import { _ } from '@/services/i18n';
 
     let emailAuthAccordion;
     let authSettings = {};
@@ -15,7 +16,7 @@
 
     $: hasChanges = initialHash != JSON.stringify(authSettings);
 
-    CommonHelper.setDocumentTitle("Auth providers");
+    CommonHelper.setDocumentTitle($_("settings.auth.pagetitle"));
 
     loadSettings();
 
@@ -44,7 +45,7 @@
             initSettings(result);
             setErrors({});
             emailAuthAccordion?.collapseSiblings();
-            addSuccessToast("Successfully updated auth providers.");
+            addSuccessToast($_("settings.auth.tips.saved"));
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
@@ -75,14 +76,14 @@
 <main class="page-wrapper">
     <header class="page-header">
         <nav class="breadcrumbs">
-            <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Auth providers</div>
+            <div class="breadcrumb-item">{$_("app.breadcrumb.settings")}</div>
+            <div class="breadcrumb-item">{$_("app.breadcrumb.auth")}</div>
         </nav>
     </header>
 
     <div class="wrapper">
         <form class="panel" autocomplete="off" on:submit|preventDefault={save}>
-            <h6 class="m-b-base">Manage the allowed users sign-in/sign-up methods.</h6>
+            <h6 class="m-b-base">{$_("settings.auth.title")}</h6>
 
             {#if isLoading}
                 <div class="loader" />
@@ -133,7 +134,7 @@
                         disabled={!hasChanges || isSaving}
                         on:click={() => save()}
                     >
-                        <span class="txt">Save changes</span>
+                        <span class="txt">{$_("settings.auth.tips.save")}</span>
                     </button>
                 </div>
             {/if}

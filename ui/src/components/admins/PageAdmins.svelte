@@ -7,7 +7,11 @@
     import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
-    import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";
+    import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";    
+    import { _ } from '@/services/i18n';
+    
+import { tooltips } from "@codemirror/view";
+import { search } from "@codemirror/search";
 
     const queryParams = CommonHelper.getQueryParams(window.location?.href);
 
@@ -27,7 +31,7 @@
         loadAdmins();
     }
 
-    CommonHelper.setDocumentTitle("Admins");
+    CommonHelper.setDocumentTitle($_("admins.pagetitle"));
 
     export function loadAdmins() {
         isLoading = true;
@@ -61,21 +65,21 @@
 <main class="page-wrapper">
     <header class="page-header">
         <nav class="breadcrumbs">
-            <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Admins</div>
+            <div class="breadcrumb-item">{$_("app.breadcrumb.settings")}</div>
+            <div class="breadcrumb-item">{$_("app.breadcrumb.admins")}</div>
         </nav>
 
         <div class="flex-fill" />
 
         <button type="button" class="btn btn-expanded" on:click={() => adminUpsertPanel?.show()}>
             <i class="ri-add-line" />
-            <span class="txt">New admin</span>
+            <span class="txt">{$_("admins.new_admin")}</span>
         </button>
     </header>
 
     <Searchbar
         value={filter}
-        placeholder={"Search filter, eg. email='test@example.com'"}
+        placeholder={$_("admins.tips.search_placeholder")}
         extraAutocompleteKeys={["email"]}
         on:submit={(e) => (filter = e.detail)}
     />
@@ -142,7 +146,7 @@
                         <td class="col-type-text col-field-id">
                             <IdLabel id={admin.id} />
                             {#if admin.id === $loggedAdmin.id}
-                                <span class="label label-warning m-l-5">You</span>
+                                <span class="label label-warning m-l-5">{$_("admins.tips.you")}</span>
                             {/if}
                         </td>
 
@@ -172,14 +176,14 @@
                     {:else}
                         <tr>
                             <td colspan="99" class="txt-center txt-hint p-xs">
-                                <h6>No admins found.</h6>
+                                <h6>{$_("admins.tips.no_admins")}</h6>
                                 {#if filter?.length}
                                     <button
                                         type="button"
                                         class="btn btn-hint btn-expanded m-t-sm"
                                         on:click={() => (filter = "")}
                                     >
-                                        <span class="txt">Clear filters</span>
+                                        <span class="txt">{$_("app.base.clear_filters")}</span>
                                     </button>
                                 {/if}
                             </td>
@@ -191,7 +195,7 @@
     </div>
 
     {#if admins.length}
-        <small class="block txt-hint txt-right m-t-sm">Showing {admins.length} of {admins.length}</small>
+        <small class="block txt-hint txt-right m-t-sm">{$_("app.base.showing", { values: { counts: admins.length, total: admins.length}} )}</small>
     {/if}
 </main>
 

@@ -14,6 +14,7 @@
         Tooltip,
     } from "chart.js";
     import "chartjs-adapter-luxon";
+    import { _ } from '@/services/i18n';
 
     export let filter = "";
     export let presets = "";
@@ -153,10 +154,10 @@
 
 <div class="txt-hint m-t-xs txt-right">
     {#if isLoading}
-        Loading...
+       {$_("logs.tips.loading")}
     {:else}
         {totalRequests}
-        {totalRequests === 1 ? "log" : "logs"}
+        {totalRequests === 1 ? $_("logs.tips.log") : $_("logs.tips.logs")}
     {/if}
 </div>
 
