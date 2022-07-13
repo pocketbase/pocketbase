@@ -146,7 +146,7 @@
     <thead>
         <tr>
             <th>Param</th>
-            <th width="60%">Type</th>
+            <th>Type</th>
             <th width="50%">Description</th>
         </tr>
     </thead>
