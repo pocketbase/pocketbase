@@ -91,9 +91,11 @@ Running/building the application is the same as for any other Go program, aka. j
 
 **PocketBase embeds SQLite, but doesn't require CGO.**
 
-If CGO is enabled, it will use [mattn/go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) driver, otherwise - [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite).
+If CGO is enabled, it will use [mattn/go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) driver, otherwise - [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite). You can enable and disable CGO by setting the `CGO_ENABLED` enviroment variable to `1` or `0` respectively. 
 
 Enable CGO only if you really need to squeeze the read/write query performance at the expense of complicating cross compilation.
+
+To build the minimal standalone executable, like the prebuilt ones in the releases page, you can simply run `go build` inside the `examples/base` directory.
 
 ### Testing
 
