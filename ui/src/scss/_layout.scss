@@ -283,7 +283,6 @@
     display: flex;
     align-items: center;
     gap: 30px;
-    user-select: none;
     color: var(--txtDisabledColor);
     .breadcrumb-item {
         @extend h2;

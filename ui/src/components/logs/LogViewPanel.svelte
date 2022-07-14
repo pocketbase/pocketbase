@@ -1,12 +1,12 @@
 <script>
-    import { Request } from "pocketbase";
+    import { LogRequest } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
 
     let logPanel;
-    let item = new Request();
+    let item = new LogRequest();
 
     export function show(model) {
         item = model;

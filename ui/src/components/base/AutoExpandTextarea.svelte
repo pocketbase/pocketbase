@@ -1,11 +1,13 @@
 <script>
+    import { onMount } from "svelte";
+
     export let value = "";
     export let maxHeight = 200;
 
     let inputElem;
     let updateTimeoutId;
 
-    $: if (inputElem && typeof value !== undefined) {
+    $: if (typeof value !== undefined) {
         updateInputHeight();
     }
 
@@ -32,6 +34,12 @@
             form?.requestSubmit && form.requestSubmit();
         }
     }
+
+    onMount(() => {
+        updateInputHeight();
+
+        return () => clearTimeout(updateTimeoutId);
+    });
 </script>
 
 <textarea bind:this={inputElem} bind:value on:keydown={handleKeydown} {...$$restProps} />

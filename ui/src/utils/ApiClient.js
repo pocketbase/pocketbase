@@ -27,12 +27,12 @@ PocketBase.prototype.logout = function(redirect = true) {
  * @param  {String}  defaultMsg Default toast notification message if the error doesn't have one.
  */
 PocketBase.prototype.errorResponseHandler = function(err, notify = true, defaultMsg = '') {
-    if (!err || !(err instanceof Error)) {
+    if (!err || !(err instanceof Error) || err.isAbort) {
         return;
     }
 
-    const statusCode = (err?.response?.status << 0) || 400;
-    const responseData = err?.response?.data || {};
+    const statusCode = (err?.status << 0) || 400;
+    const responseData = err?.data || {};
 
     // add toast error notification
     if (

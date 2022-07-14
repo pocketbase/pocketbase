@@ -44,7 +44,7 @@
                 isLoading = false;
             })
             .catch((err) => {
-                if (err !== null) {
+                if (!err?.isAbort) {
                     isLoading = false;
                     console.warn(err);
                     clearList();

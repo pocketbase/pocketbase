@@ -14,6 +14,20 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestRemoveAll(t *testing.T) {
+	s := store.New(map[string]bool{"test1": true, "test2": true})
+
+	keys := []string{"test1", "test2"}
+
+	s.RemoveAll()
+
+	for i, key := range keys {
+		if s.Has(key) {
+			t.Errorf("(%d) Expected %q to be removed", i, key)
+		}
+	}
+}
+
 func TestRemove(t *testing.T) {
 	s := store.New(map[string]bool{"test": true})
 
