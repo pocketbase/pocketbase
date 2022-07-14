@@ -12,8 +12,8 @@ export default defineConfig({
     plugins: [
         svelte({
             experimental: {
-                useVitePreprocess: true
-            }
+                useVitePreprocess: true,
+            },
         }),
     ],
     resolve: {

@@ -56,7 +56,7 @@
                 });
             })
             .catch((err) => {
-                if (err !== null) {
+                if (!err?.isAbort) {
                     resetData();
                     console.warn(err);
                     ApiClient.errorResponseHandler(err, false);

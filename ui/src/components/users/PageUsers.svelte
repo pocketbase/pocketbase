@@ -66,7 +66,7 @@
                 totalItems = result.totalItems;
             })
             .catch((err) => {
-                if (err !== null) {
+                if (!err?.isAbort) {
                     isLoadingUsers = false;
                     console.warn(err);
                     clearList();

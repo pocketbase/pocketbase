@@ -18,7 +18,6 @@
 
         clearTimeout(refreshTimeoutId);
         refreshTimeoutId = setTimeout(() => {
-            clearTimeout(refreshTimeoutId);
             refreshTimeoutId = null;
             tooltipData = oldTooltipData;
         }, 200);
@@ -45,8 +44,7 @@
             transform: rotate(180deg);
         }
     }
-
     .btn.refreshing i {
-        animation: refresh 200ms linear infinite;
+        animation: refresh 200ms linear;
     }
 </style>
