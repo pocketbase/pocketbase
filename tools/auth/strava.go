@@ -3,7 +3,6 @@ package auth
 
 import (
 	"fmt"
-	"log"
 
 	"golang.org/x/oauth2"
 )
@@ -69,8 +68,6 @@ func (p *Strava) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	if err := p.FetchRawUserData(token, &rawData); err != nil {
 		return nil, err
 	}
-
-	log.Printf("Strava user: %+v", rawData)
 
 	user := &AuthUser{
 		Id:        fmt.Sprintf("%d", rawData.LocalId),
