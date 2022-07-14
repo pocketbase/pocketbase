@@ -68,7 +68,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 		// truly rare case; eg. client already disconnected
 		if cErr != nil && app.IsDebug() {
-			log.Println(err)
+			log.Println(cErr)
 		}
 	}
 
