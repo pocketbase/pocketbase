@@ -3,6 +3,9 @@ package forms
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
+	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -58,6 +61,11 @@ func (form *UserOauth2Login) checkProviderName(value any) error {
 
 // Submit validates and submits the form.
 // On success returns the authorized user model and the fetched provider's data.
+// If exists, the user's give token is used to fetch the user's info rather requesting the access token itself
+// Convention:
+// - The redirect URL must inlucde the oauth2.Token in the redirect url as query params
+// - The query param "access_token" must be given
+// - Example redirect URL: http://localhost:3000?access_token=XXX123&refresh_token=ABC123&token_type=Bearer&expires_at=123344
 func (form *UserOauth2Login) Submit() (*models.User, *auth.AuthUser, error) {
 	if err := form.Validate(); err != nil {
 		return nil, nil, err
@@ -73,17 +81,38 @@ func (form *UserOauth2Login) Submit() (*models.User, *auth.AuthUser, error) {
 
 	provider.SetRedirectUrl(form.RedirectUrl)
 
+	// request the access token with the initial access code or if given use the form.Token as the access_token to request the user's profile
+	var token oauth2.Token
+	// Parse the URL to get the token details (if exists)
+	u, err := url.Parse(form.RedirectUrl)
+	if err == nil {
+		token.AccessToken = u.Query().Get("access_token")
+		token.RefreshToken = u.Query().Get("refresh_token")
+		token.TokenType = u.Query().Get("token_type")
+		i, err := strconv.ParseInt(u.Query().Get("expires_at"), 10, 64)
+		if err == nil {
+			token.Expiry = time.Unix(i, 0)
+		}
+	}
+
 	// fetch token
-	token, err := provider.FetchToken(
-		form.Code,
-		oauth2.SetAuthURLParam("code_verifier", form.CodeVerifier),
-	)
+	// The "access_token" does not exist; request the "access_token" from the provider by the returned code
+	if len(token.AccessToken) == 0 {
+		t, err := provider.FetchToken(
+			form.Code,
+			oauth2.SetAuthURLParam("code_verifier", form.CodeVerifier),
+		)
+		if err != nil {
+			return nil, nil, err
+		}
+		token = *t
+	}
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// fetch auth user
-	authData, err := provider.FetchAuthUser(token)
+	authData, err := provider.FetchAuthUser(&token)
 	if err != nil {
 		return nil, nil, err
 	}
