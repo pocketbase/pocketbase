@@ -13,6 +13,14 @@ func New[T any](data map[string]T) *Store[T] {
 	return &Store[T]{data: data}
 }
 
+// RemoveAll removes all the existing store entries.
+func (s *Store[T]) RemoveAll() {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	s.data = make(map[string]T)
+}
+
 // Remove removes a single entry from the store.
 //
 // Remove does nothing if key doesn't exist in the store.
