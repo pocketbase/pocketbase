@@ -68,10 +68,9 @@ func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) 
 // NewRecordsFromNullStringMaps initializes a new Record model for
 // each row in the provided NullStringMap slice.
 func NewRecordsFromNullStringMaps(collection *Collection, rows []dbx.NullStringMap) []*Record {
-	result := []*Record{}
-
-	for _, row := range rows {
-		result = append(result, NewRecordFromNullStringMap(collection, row))
+	result := make([]*Record, len(rows))
+	for i, row := range rows {
+		result[i] = NewRecordFromNullStringMap(collection, row)
 	}
 
 	return result

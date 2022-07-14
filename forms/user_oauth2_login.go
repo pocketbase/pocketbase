@@ -98,35 +98,35 @@ func (form *UserOauth2Login) Submit() (*models.User, *auth.AuthUser, error) {
 				return nil, authData, err
 			}
 		}
-	} else {
-		if !config.AllowRegistrations {
-			// registration of new users is not allowed via the Oauth2 provider
-			return nil, authData, errors.New("Cannot find user with the authorized email.")
-		}
+		return user, authData, nil
+	}
+	if !config.AllowRegistrations {
+		// registration of new users is not allowed via the Oauth2 provider
+		return nil, authData, errors.New("Cannot find user with the authorized email.")
+	}
 
-		// create new user
-		user = &models.User{Verified: true}
-		upsertForm := NewUserUpsert(form.app, user)
-		upsertForm.Email = authData.Email
-		upsertForm.Password = security.RandomString(30)
-		upsertForm.PasswordConfirm = upsertForm.Password
+	// create new user
+	user = &models.User{Verified: true}
+	upsertForm := NewUserUpsert(form.app, user)
+	upsertForm.Email = authData.Email
+	upsertForm.Password = security.RandomString(30)
+	upsertForm.PasswordConfirm = upsertForm.Password
 
-		event := &core.UserOauth2RegisterEvent{
-			User:     user,
-			AuthData: authData,
-		}
+	event := &core.UserOauth2RegisterEvent{
+		User:     user,
+		AuthData: authData,
+	}
 
-		if err := form.app.OnUserBeforeOauth2Register().Trigger(event); err != nil {
-			return nil, authData, err
-		}
+	if err := form.app.OnUserBeforeOauth2Register().Trigger(event); err != nil {
+		return nil, authData, err
+	}
 
-		if err := upsertForm.Submit(); err != nil {
-			return nil, authData, err
-		}
+	if err := upsertForm.Submit(); err != nil {
+		return nil, authData, err
+	}
 
-		if err := form.app.OnUserAfterOauth2Register().Trigger(event); err != nil {
-			return nil, authData, err
-		}
+	if err := form.app.OnUserAfterOauth2Register().Trigger(event); err != nil {
+		return nil, authData, err
 	}
 
 	return user, authData, nil

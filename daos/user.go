@@ -43,10 +43,10 @@ func (dao *Dao) LoadProfiles(users []*models.User) error {
 	}
 
 	// extract user ids
-	ids := []string{}
+	ids := make([]string, len(users))
 	usersMap := map[string]*models.User{}
-	for _, user := range users {
-		ids = append(ids, user.Id)
+	for i, user := range users {
+		ids[i] = user.Id
 		usersMap[user.Id] = user
 	}
 

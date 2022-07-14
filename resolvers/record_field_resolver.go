@@ -168,7 +168,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 			return "", nil, fmt.Errorf("Failed to find field %q collection.", prop)
 		}
 		newCollectionName := relCollection.Name
-		newTableAlias := (currentTableAlias + "_" + field.Name)
+		newTableAlias := currentTableAlias + "_" + field.Name
 
 		r.addJoin(
 			newCollectionName,

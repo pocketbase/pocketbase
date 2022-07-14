@@ -48,7 +48,7 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest(scenario.Method, scenario.Url, scenario.Body)
 
-	// add middeware to timeout long running requests (eg. keep-alive routes)
+	// add middleware to timeout long-running requests (eg. keep-alive routes)
 	e.Pre(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx, cancelFunc := context.WithTimeout(c.Request().Context(), 100*time.Millisecond)

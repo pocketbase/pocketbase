@@ -64,7 +64,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	}
 
 	// extract the id of the relations to expand
-	relIds := []string{}
+	relIds := make([]string, 0, len(records))
 	for _, record := range records {
 		relIds = append(relIds, record.GetStringSliceDataValue(relField.Name)...)
 	}
@@ -92,7 +92,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	for _, model := range records {
 		relIds := model.GetStringSliceDataValue(relField.Name)
 
-		validRels := []*models.Record{}
+		validRels := make([]*models.Record, 0, len(relIds))
 		for _, id := range relIds {
 			if rel, ok := indexedRels[id]; ok {
 				validRels = append(validRels, rel)
@@ -120,20 +120,18 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 // normalizeExpands normalizes expand strings and merges self containing paths
 // (eg. ["a.b.c", "a.b", "   test  ", "  ", "test"] -> ["a.b.c", "test"]).
 func normalizeExpands(paths []string) []string {
-	result := []string{}
-
 	// normalize paths
-	normalized := []string{}
+	normalized := make([]string, 0, len(paths))
 	for _, p := range paths {
-		p := strings.ReplaceAll(p, " ", "") // replace spaces
-		p = strings.Trim(p, ".")            // trim incomplete paths
-		if p == "" {
-			continue
+		p = strings.ReplaceAll(p, " ", "") // replace spaces
+		p = strings.Trim(p, ".")           // trim incomplete paths
+		if p != "" {
+			normalized = append(normalized, p)
 		}
-		normalized = append(normalized, p)
 	}
 
 	// merge containing paths
+	result := make([]string, 0, len(normalized))
 	for i, p1 := range normalized {
 		var skip bool
 		for j, p2 := range normalized {

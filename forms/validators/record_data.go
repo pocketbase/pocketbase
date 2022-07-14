@@ -318,12 +318,10 @@ func (validator *RecordDataValidator) checkFileValue(field *schema.SchemaField, 
 	}
 
 	// extract the uploaded files
-	files := []*rest.UploadedFile{}
-	if len(validator.uploadedFiles) > 0 {
-		for _, file := range validator.uploadedFiles {
-			if list.ExistInSlice(file.Name(), names) {
-				files = append(files, file)
-			}
+	files := make([]*rest.UploadedFile, 0, len(validator.uploadedFiles))
+	for _, file := range validator.uploadedFiles {
+		if list.ExistInSlice(file.Name(), names) {
+			files = append(files, file)
 		}
 	}
 
