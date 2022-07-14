@@ -150,76 +150,77 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 		value := extendedData[key]
 		value = field.PrepareValue(value)
 
-		if field.Type == schema.FieldTypeFile {
-			options, _ := field.Options.(*schema.FileOptions)
-			oldNames := list.ToUniqueStringSlice(form.Data[key])
+		if field.Type != schema.FieldTypeFile {
+			form.Data[key] = value
+			continue
+		}
 
-			// delete previously uploaded file(s)
-			if options.MaxSelect == 1 {
-				// search for unset zero indexed key as a fallback
-				indexedKeyValue, hasIndexedKey := extendedData[key+".0"]
+		options, _ := field.Options.(*schema.FileOptions)
+		oldNames := list.ToUniqueStringSlice(form.Data[key])
 
-				if cast.ToString(value) == "" || (hasIndexedKey && cast.ToString(indexedKeyValue) == "") {
-					if len(oldNames) > 0 {
-						form.filesToDelete = append(form.filesToDelete, oldNames...)
-					}
-					form.Data[key] = nil
+		// delete previously uploaded file(s)
+		if options.MaxSelect == 1 {
+			// search for unset zero indexed key as a fallback
+			indexedKeyValue, hasIndexedKey := extendedData[key+".0"]
+
+			if cast.ToString(value) == "" || (hasIndexedKey && cast.ToString(indexedKeyValue) == "") {
+				if len(oldNames) > 0 {
+					form.filesToDelete = append(form.filesToDelete, oldNames...)
 				}
-			} else if options.MaxSelect > 1 {
-				// search for individual file index to delete (eg. "file.0")
-				keyExp, _ := regexp.Compile(`^` + regexp.QuoteMeta(key) + `\.\d+$`)
-				indexesToDelete := []int{}
-				for indexedKey := range extendedData {
-					if keyExp.MatchString(indexedKey) && cast.ToString(extendedData[indexedKey]) == "" {
-						index, indexErr := strconv.Atoi(indexedKey[len(key)+1:])
-						if indexErr != nil || index >= len(oldNames) {
-							continue
-						}
-						indexesToDelete = append(indexesToDelete, index)
-					}
-				}
-
-				// slice to fill only with the non-deleted indexes
-				nonDeleted := []string{}
-				for i, name := range oldNames {
-					// not marked for deletion
-					if !list.ExistInSlice(i, indexesToDelete) {
-						nonDeleted = append(nonDeleted, name)
+				form.Data[key] = nil
+			}
+		} else if options.MaxSelect > 1 {
+			// search for individual file index to delete (eg. "file.0")
+			keyExp, _ := regexp.Compile(`^` + regexp.QuoteMeta(key) + `\.\d+$`)
+			indexesToDelete := make([]int, 0, len(extendedData))
+			for indexedKey := range extendedData {
+				if keyExp.MatchString(indexedKey) && cast.ToString(extendedData[indexedKey]) == "" {
+					index, indexErr := strconv.Atoi(indexedKey[len(key)+1:])
+					if indexErr != nil || index >= len(oldNames) {
 						continue
 					}
-
-					// store the id to actually delete the file later
-					form.filesToDelete = append(form.filesToDelete, name)
+					indexesToDelete = append(indexesToDelete, index)
 				}
-				form.Data[key] = nonDeleted
 			}
 
-			// check if there are any new uploaded form files
-			files, err := rest.FindUploadedFiles(r, key)
-			if err != nil {
-				continue // skip invalid or missing file(s)
-			}
-
-			// refresh oldNames list
-			oldNames = list.ToUniqueStringSlice(form.Data[key])
-
-			if options.MaxSelect == 1 {
-				// delete previous file(s) before replacing
-				if len(oldNames) > 0 {
-					form.filesToDelete = list.ToUniqueStringSlice(append(form.filesToDelete, oldNames...))
+			// slice to fill only with the non-deleted indexes
+			nonDeleted := make([]string, 0, len(oldNames))
+			for i, name := range oldNames {
+				// not marked for deletion
+				if !list.ExistInSlice(i, indexesToDelete) {
+					nonDeleted = append(nonDeleted, name)
+					continue
 				}
-				form.filesToUpload = append(form.filesToUpload, files[0])
-				form.Data[key] = files[0].Name()
-			} else if options.MaxSelect > 1 {
-				// append the id of each uploaded file instance
-				form.filesToUpload = append(form.filesToUpload, files...)
-				for _, file := range files {
-					oldNames = append(oldNames, file.Name())
-				}
-				form.Data[key] = oldNames
+
+				// store the id to actually delete the file later
+				form.filesToDelete = append(form.filesToDelete, name)
 			}
-		} else {
-			form.Data[key] = value
+			form.Data[key] = nonDeleted
+		}
+
+		// check if there are any new uploaded form files
+		files, err := rest.FindUploadedFiles(r, key)
+		if err != nil {
+			continue // skip invalid or missing file(s)
+		}
+
+		// refresh oldNames list
+		oldNames = list.ToUniqueStringSlice(form.Data[key])
+
+		if options.MaxSelect == 1 {
+			// delete previous file(s) before replacing
+			if len(oldNames) > 0 {
+				form.filesToDelete = list.ToUniqueStringSlice(append(form.filesToDelete, oldNames...))
+			}
+			form.filesToUpload = append(form.filesToUpload, files[0])
+			form.Data[key] = files[0].Name()
+		} else if options.MaxSelect > 1 {
+			// append the id of each uploaded file instance
+			form.filesToUpload = append(form.filesToUpload, files...)
+			for _, file := range files {
+				oldNames = append(oldNames, file.Name())
+			}
+			form.Data[key] = oldNames
 		}
 	}
 

@@ -66,10 +66,5 @@ func Decrypt(cipherText string, key string) ([]byte, error) {
 	}
 
 	nonce, cipherByteClean := cipherByte[:nonceSize], cipherByte[nonceSize:]
-	plainData, err := gcm.Open(nil, nonce, cipherByteClean, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return plainData, nil
+	return gcm.Open(nil, nonce, cipherByteClean, nil)
 }
