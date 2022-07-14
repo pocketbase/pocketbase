@@ -71,7 +71,7 @@ func (m *BaseModel) RefreshCreated() {
 	m.Created = types.NowDateTime()
 }
 
-// RefreshUpdated updates the model's Created field with the current datetime.
+// RefreshUpdated updates the model's Updated field with the current datetime.
 func (m *BaseModel) RefreshUpdated() {
 	m.Updated = types.NowDateTime()
 }
