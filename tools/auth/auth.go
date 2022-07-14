@@ -90,6 +90,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewGithubProvider(), nil
 	case NameGitlab:
 		return NewGitlabProvider(), nil
+	case NameStrava:
+		return NewStravaProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
