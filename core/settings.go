@@ -36,6 +36,7 @@ type Settings struct {
 	EmailAuth               EmailAuthConfig    `form:"emailAuth" json:"emailAuth"`
 	GoogleAuth              AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
 	FacebookAuth            AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
+	TwitterAuth             AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
 	GithubAuth              AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
 	GitlabAuth              AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
 }
@@ -99,6 +100,10 @@ func NewSettings() *Settings {
 			Enabled:            false,
 			AllowRegistrations: true,
 		},
+		TwitterAuth: AuthProviderConfig{
+			Enabled:            false,
+			AllowRegistrations: true,
+		},
 		GithubAuth: AuthProviderConfig{
 			Enabled:            false,
 			AllowRegistrations: true,
@@ -129,6 +134,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.EmailAuth),
 		validation.Field(&s.GoogleAuth),
 		validation.Field(&s.FacebookAuth),
+		validation.Field(&s.TwitterAuth),
 		validation.Field(&s.GithubAuth),
 		validation.Field(&s.GitlabAuth),
 	)
@@ -177,6 +183,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.UserVerificationToken.Secret,
 		&clone.GoogleAuth.ClientSecret,
 		&clone.FacebookAuth.ClientSecret,
+		&clone.TwitterAuth.ClientSecret,
 		&clone.GithubAuth.ClientSecret,
 		&clone.GitlabAuth.ClientSecret,
 	}
@@ -197,6 +204,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 	return map[string]AuthProviderConfig{
 		auth.NameGoogle:   s.GoogleAuth,
 		auth.NameFacebook: s.FacebookAuth,
+		auth.NameTwitter:  s.TwitterAuth,
 		auth.NameGithub:   s.GithubAuth,
 		auth.NameGitlab:   s.GitlabAuth,
 	}

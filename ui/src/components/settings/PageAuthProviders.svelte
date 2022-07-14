@@ -58,7 +58,7 @@
         authSettings = {};
         authSettings.emailAuth = Object.assign({ enabled: true }, data.emailAuth);
 
-        const providers = ["googleAuth", "facebookAuth", "githubAuth", "gitlabAuth"];
+        const providers = ["googleAuth", "facebookAuth", "twitterAuth", "githubAuth", "gitlabAuth"];
         for (const provider of providers) {
             authSettings[provider] = Object.assign(
                 { enabled: false, allowRegistrations: true },
@@ -106,6 +106,13 @@
                         title="Facebook"
                         icon="ri-facebook-line"
                         bind:config={authSettings.facebookAuth}
+                    />
+                    <AuthProviderAccordion
+                        single
+                        key="twitterAuth"
+                        title="Twitter"
+                        icon="ri-twitter-line"
+                        bind:config={authSettings.twitterAuth}
                     />
                     <AuthProviderAccordion
                         single

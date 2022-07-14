@@ -86,6 +86,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewGoogleProvider(), nil
 	case NameFacebook:
 		return NewFacebookProvider(), nil
+	case NameTwitter:
+		return NewTwitterProvider(), nil
 	case NameGithub:
 		return NewGithubProvider(), nil
 	case NameGitlab:

@@ -37,6 +37,15 @@ func TestNewProviderByName(t *testing.T) {
 		t.Error("Expected to be instance of *auth.Facebook")
 	}
 
+	// twitter
+	p, err = auth.NewProviderByName(auth.NameTwitter)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Twitter); !ok {
+		t.Error("Expected to be instance of *auth.Twitter")
+	}
+
 	// github
 	p, err = auth.NewProviderByName(auth.NameGithub)
 	if err != nil {

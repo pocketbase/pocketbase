@@ -31,6 +31,8 @@ func TestSettingsValidate(t *testing.T) {
 	s.GoogleAuth.ClientId = ""
 	s.FacebookAuth.Enabled = true
 	s.FacebookAuth.ClientId = ""
+	s.TwitterAuth.Enabled = true
+	s.TwitterAuth.ClientId = ""
 	s.GithubAuth.Enabled = true
 	s.GithubAuth.ClientId = ""
 	s.GitlabAuth.Enabled = true
@@ -56,6 +58,7 @@ func TestSettingsValidate(t *testing.T) {
 		`"emailAuth":{`,
 		`"googleAuth":{`,
 		`"facebookAuth":{`,
+		`"twitterAuth":{`,
 		`"githubAuth":{`,
 		`"gitlabAuth":{`,
 	}
@@ -92,6 +95,8 @@ func TestSettingsMerge(t *testing.T) {
 	s2.GoogleAuth.ClientId = "google_test"
 	s2.FacebookAuth.Enabled = true
 	s2.FacebookAuth.ClientId = "facebook_test"
+	s2.TwitterAuth.Enabled = true
+	s2.TwitterAuth.ClientId = "twitter_test"
 	s2.GithubAuth.Enabled = true
 	s2.GithubAuth.ClientId = "github_test"
 	s2.GitlabAuth.Enabled = true
@@ -158,6 +163,7 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.UserEmailChangeToken.Secret = "test123"
 	s1.UserVerificationToken.Secret = "test123"
 	s1.GoogleAuth.ClientSecret = "test123"
+	s1.TwitterAuth.ClientSecret = "test123"
 	s1.FacebookAuth.ClientSecret = "test123"
 	s1.GithubAuth.ClientSecret = "test123"
 	s1.GitlabAuth.ClientSecret = "test123"
@@ -172,7 +178,7 @@ func TestSettingsRedactClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","senderName":"Support","senderAddress":"support@example.com","userVerificationUrl":"%APP_URL%/_/#/users/confirm-verification/%TOKEN%","userResetPasswordUrl":"%APP_URL%/_/#/users/confirm-password-reset/%TOKEN%","userConfirmEmailChangeUrl":"%APP_URL%/_/#/users/confirm-email-change/%TOKEN%"},"logs":{"maxDays":7},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******"},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"userAuthToken":{"secret":"******","duration":1209600},"userPasswordResetToken":{"secret":"******","duration":1800},"userEmailChangeToken":{"secret":"******","duration":1800},"userVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":true,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":8},"googleAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"facebookAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"githubAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"}}`
+	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","senderName":"Support","senderAddress":"support@example.com","userVerificationUrl":"%APP_URL%/_/#/users/confirm-verification/%TOKEN%","userResetPasswordUrl":"%APP_URL%/_/#/users/confirm-password-reset/%TOKEN%","userConfirmEmailChangeUrl":"%APP_URL%/_/#/users/confirm-email-change/%TOKEN%"},"logs":{"maxDays":7},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******"},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"userAuthToken":{"secret":"******","duration":1209600},"userPasswordResetToken":{"secret":"******","duration":1800},"userEmailChangeToken":{"secret":"******","duration":1800},"userVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":true,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":8},"googleAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"facebookAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"twitterAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"githubAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected %v, got \n%v", expected, encodedStr)
@@ -184,6 +190,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 
 	s.GoogleAuth.ClientId = "google_test"
 	s.FacebookAuth.ClientId = "facebook_test"
+	s.TwitterAuth.ClientId = "twitter_test"
 	s.GithubAuth.ClientId = "github_test"
 	s.GitlabAuth.ClientId = "gitlab_test"
 	s.GitlabAuth.Enabled = true
@@ -195,7 +202,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"}}`
+	expected := `{"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"twitter":{"enabled":false,"allowRegistrations":true,"clientId":"twitter_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected the same serialization, got %v", encodedStr)
