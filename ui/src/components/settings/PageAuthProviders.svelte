@@ -58,7 +58,7 @@
         authSettings = {};
         authSettings.emailAuth = Object.assign({ enabled: true }, data.emailAuth);
 
-        const providers = ["googleAuth", "facebookAuth", "githubAuth", "gitlabAuth"];
+        const providers = ["googleAuth", "facebookAuth", "githubAuth", "gitlabAuth", "stravaAuth"];
         for (const provider of providers) {
             authSettings[provider] = Object.assign(
                 { enabled: false, allowRegistrations: true },
@@ -121,6 +121,14 @@
                         icon="ri-gitlab-line"
                         showSelfHostedFields
                         bind:config={authSettings.gitlabAuth}
+                    />
+                    <AuthProviderAccordion
+                        single
+                        key="stravaAuth"
+                        title="Strava"
+                        icon="ri-user-6-line"
+                        showSelfHostedFields
+                        bind:config={authSettings.stravaAuth}
                     />
                 </div>
 
