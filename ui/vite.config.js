@@ -3,6 +3,9 @@ import { svelte }       from '@sveltejs/vite-plugin-svelte';
 
 // see https://vitejs.dev/config
 export default defineConfig({
+    server: {
+        port: 3000,
+    },
     envPrefix: 'PB',
     base: process.env.NODE_ENV === 'production' ? '/_/' : './',
     build: {
