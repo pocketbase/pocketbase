@@ -1,0 +1,17 @@
+{
+  "name": "pocketbase_js-sdk_auth_example_with_strava",
+  "version": "1.0.0",
+  "description": "An example html / javascript ui example for authentication with strava and pocketbase",
+  "main": "index.js",
+  "scripts": {
+    "start": "./node_modules/http-server/bin/http-server -a localhost -o",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "http-server": "^14.1.1",
+    "pocketbase": "^0.2.0"
+  }
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html />
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OAuth2 links page</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"></script>
+</head>
+
+<body>
+    <ul id="list">
+        <li>Loading OAuth2 providers...</li>
+    </ul>
+
+    <script src="/node_modules/pocketbase/dist/pocketbase.umd.js"></script>
+    <script type="text/javascript">
+        const client = new PocketBase("http://0.0.0.0:8090");
+        const redirectUrl = "http://localhost:8080/redirect.html";
+
+        async function loadLinks() {
+            const authMethods = await client.Users.listAuthMethods();
+            const listItems = [];
+
+            for (const provider of authMethods.authProviders) {
+                const $li = $(`<li><a>Login with ${provider.name}</a></li>`);
+
+                $li.find("a")
+                    .attr("href", provider.authUrl + redirectUrl)
+                    .data("provider", provider)
+                    .click(function () {
+                        // store provider's data on click for verification in the redirect page
+                        localStorage.setItem("provider", JSON.stringify($(this).data("provider")));
+                    });
+
+                listItems.push($li);
+            }
+
+            $("#list").html(listItems.length ? listItems : "<li>No OAuth2 providers.</li>");
+        }
+
+        loadLinks();
+    </script>
+</body>
+
+</html>
