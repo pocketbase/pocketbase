@@ -26,12 +26,12 @@ func NewTwitterProvider() *Twitter {
 
 // FetchAuthUser returns an AuthUser instance based on the Twitter's user api.
 func (p *Twitter) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// https://developer.twitter.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
+	// https://developer.twitter.com/en/docs/twitter-api/v1/accounts-and-users/manage-account-settings/api-reference/get-account-verify_credentials#example-response
 	rawData := struct {
 		Id                   string
 		Name                 string
 		Email                string
-		ProfileImageUrlHttps string
+		ProfileImageUrlHttps string `json:"profile_image_url_https"`
 	}{}
 
 	if err := p.FetchRawUserData(token, &rawData); err != nil {
