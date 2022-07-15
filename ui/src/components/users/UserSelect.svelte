@@ -23,7 +23,7 @@
 
     $: canLoadMore = totalItems > list.length;
 
-    loadList();
+    loadList(true);
 
     loadSelected();
 

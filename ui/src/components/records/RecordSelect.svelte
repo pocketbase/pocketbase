@@ -23,7 +23,7 @@
     let isLoadingSelected = false;
 
     $: if (collectionId) {
-        loadList();
+        loadList(true);
     }
 
     $: isLoading = isLoadingList || isLoadingSelected;
