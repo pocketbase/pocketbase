@@ -100,6 +100,7 @@ func (form *UserOauth2Login) Submit() (*models.User, *auth.AuthUser, error) {
 		}
 		return user, authData, nil
 	}
+
 	if !config.AllowRegistrations {
 		// registration of new users is not allowed via the Oauth2 provider
 		return nil, authData, errors.New("Cannot find user with the authorized email.")

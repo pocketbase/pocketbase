@@ -227,7 +227,16 @@ button {
         border-radius: 50%;
         padding: 0;
         i {
+            $iconSize: 23px;
             font-size: 1.2857rem;
+            text-align: center;
+            width: $iconSize;
+            height: $iconSize;
+            line-height: $iconSize;
+            &:before {
+                margin: 0;
+                display: block;
+            }
         }
         &.btn-sm i,
         &.btn-xs i {

@@ -44,7 +44,7 @@
             transform: rotate(180deg);
         }
     }
-    .btn.refreshing i {
+    .btn.refreshing i:before {
         animation: refresh 200ms linear;
     }
 </style>

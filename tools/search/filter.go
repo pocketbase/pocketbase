@@ -153,11 +153,13 @@ func (f FilterData) resolveToken(token fexpr.Token, fieldResolver FieldResolver)
 			}
 			return "", nil, err
 		}
+
 		return name, params, err
 	case fexpr.TokenNumber, fexpr.TokenText:
 		placeholder := "t" + security.RandomString(7)
 		name := fmt.Sprintf("{:%s}", placeholder)
 		params := dbx.Params{placeholder: token.Literal}
+
 		return name, params, nil
 	}
 

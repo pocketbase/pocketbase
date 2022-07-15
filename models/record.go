@@ -69,6 +69,7 @@ func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) 
 // each row in the provided NullStringMap slice.
 func NewRecordsFromNullStringMaps(collection *Collection, rows []dbx.NullStringMap) []*Record {
 	result := make([]*Record, len(rows))
+
 	for i, row := range rows {
 		result[i] = NewRecordFromNullStringMap(collection, row)
 	}
