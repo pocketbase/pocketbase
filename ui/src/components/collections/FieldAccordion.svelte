@@ -221,9 +221,13 @@
                         spellcheck="false"
                         autofocus={!field.id}
                         value={field.name}
-                        on:input={(e) => {
+                        on:blur={(e) => {
                             field.name = normalizeFieldName(e.target.value);
                             e.target.value = field.name;
+                        }}
+                        on:input={(e) => {
+                            const name = CommonHelper.slugify(e.target.value);
+                            e.target.value = name; 
                         }}
                     />
                 </Field>
