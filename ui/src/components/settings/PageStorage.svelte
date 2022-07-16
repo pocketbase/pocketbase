@@ -87,7 +87,7 @@
                 </Field>
 
                 {#if initialEnabled != s3.enabled}
-                    <div transition:slide={{ duration: 150 }}>
+                    <div transition:slide|local={{ duration: 150 }}>
                         <div class="alert alert-warning m-0">
                             <div class="icon">
                                 <i class="ri-error-warning-line" />
