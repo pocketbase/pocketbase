@@ -41,7 +41,7 @@
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
-                        text: "Allow uploading files ONLY with the listed mime types. \n Leave empty for no restriction.",
+                        text: "Allow files ONLY with the listed mime types. \n Leave empty for no restriction.",
                         position: "top",
                     }}
                 />
@@ -56,6 +56,21 @@
                 <span class="inline-flex">
                     <span class="txt link-primary">Choose presets</span>
                     <Toggler class="dropdown dropdown-sm dropdown-nowrap">
+                        <div
+                            tabindex="0"
+                            class="dropdown-item closable"
+                            on:click={() => {
+                                options.mimeTypes = [
+                                    "application/pdf",
+                                    "application/msword",
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    "application/vnd.ms-excel",
+                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                ];
+                            }}
+                        >
+                            <span class="txt">Documents (pdf, doc/docx, xls/xlsx)</span>
+                        </div>
                         <div
                             tabindex="0"
                             class="dropdown-item closable"
@@ -76,15 +91,14 @@
                             class="dropdown-item closable"
                             on:click={() => {
                                 options.mimeTypes = [
-                                    "application/pdf",
-                                    "application/msword",
-                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    "application/vnd.ms-excel",
-                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                    "video/mp4",
+                                    "video/x-ms-wmv",
+                                    "video/quicktime",
+                                    "video/3gpp",
                                 ];
                             }}
                         >
-                            <span class="txt">Documents (pdf, doc/docx, xls/xlsx)</span>
+                            <span class="txt">Videos (mp4, avi, mov, 3gp)</span>
                         </div>
                         <div
                             tabindex="0"
