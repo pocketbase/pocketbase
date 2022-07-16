@@ -81,7 +81,7 @@
     <div bind:this={filesListElem} class="files-list">
         {#each valueAsArray as filename, i (filename)}
             <div class="list-item">
-                <figute
+                <figure
                     class="thumb"
                     class:fade={deletedFileIndexes.includes(i)}
                     class:link-fade={CommonHelper.hasImageExtension(filename)}
@@ -92,7 +92,7 @@
                             : false}
                 >
                     <RecordFilePreview {record} {filename} />
-                </figute>
+                </figure>
                 <a
                     href={ApiClient.Records.getFileUrl(record, filename)}
                     class="filename"
@@ -128,9 +128,9 @@
 
         {#each uploadedFiles as file, i}
             <div class="list-item">
-                <figute class="thumb">
+                <figure class="thumb">
                     <UploadedFilePreview {file} />
-                </figute>
+                </figure>
                 <div class="filename" title={file.name}>
                     <small class="label label-success m-r-5">New</small>
                     <span class="txt">{file.name}</span>
