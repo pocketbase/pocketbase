@@ -409,7 +409,7 @@ select {
     label {
         display: flex;
         width: 100%;
-        column-gap: 10px;
+        column-gap: 5px;
         align-items: center;
         user-select: none;
         font-weight: 600;
@@ -487,7 +487,8 @@ select {
     }
 
     // states
-    &.error {
+    &.error,
+    &.invalid {
         .help-block-error {
             color: var(--dangerColor);
         }
@@ -495,11 +496,17 @@ select {
             color: var(--dangerColor);
         }
     }
+    &.invalid {
+        label, %input {
+            background: var(--dangerAltColor);
+        }
+    }
     &.required:not(.form-field-toggle) {
         > label:after {
             content: '*';
             color: var(--dangerColor);
-            margin-left: -7px;
+            margin-top: -2px;
+            margin-left: -2px;
         }
     }
     &.disabled {
