@@ -89,7 +89,7 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 
 	scenarios := []testDataFieldScenario{
 		{
-			"check required constraint",
+			"(text) check required constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": nil,
@@ -99,7 +99,7 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check unique constraint",
+			"(text) check unique constraint",
 			map[string]any{
 				"field1": "test",
 				"field2": "test",
@@ -109,7 +109,7 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check min constraint",
+			"(text) check min constraint",
 			map[string]any{
 				"field1": "test",
 				"field2": "test",
@@ -119,7 +119,7 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check max constraint",
+			"(text) check max constraint",
 			map[string]any{
 				"field1": "test",
 				"field2": "test",
@@ -129,7 +129,7 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check pattern constraint",
+			"(text) check pattern constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": "test",
@@ -139,7 +139,7 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"valid data (only required)",
+			"(text) valid data (only required)",
 			map[string]any{
 				"field2": "test",
 			},
@@ -147,7 +147,7 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{},
 		},
 		{
-			"valid data (all)",
+			"(text) valid data (all)",
 			map[string]any{
 				"field1": "test",
 				"field2": 12345, // test value cast
@@ -168,7 +168,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 	// create new test collection
 	collection := &models.Collection{}
 	collection.Name = "validate_test"
-	min := 1.0
+	min := 0.0
 	max := 150.0
 	collection.Schema = schema.NewSchema(
 		&schema.SchemaField{
@@ -205,7 +205,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 
 	scenarios := []testDataFieldScenario{
 		{
-			"check required constraint",
+			"(number) check required constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": nil,
@@ -215,17 +215,17 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check required constraint + casting",
+			"(number) check required constraint + casting",
 			map[string]any{
 				"field1": "invalid",
 				"field2": "invalid",
 				"field3": "invalid",
 			},
 			nil,
-			[]string{"field2", "field3"},
+			[]string{"field2"},
 		},
 		{
-			"check unique constraint",
+			"(number) check unique constraint",
 			map[string]any{
 				"field1": 123,
 				"field2": 123,
@@ -235,7 +235,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check min constraint",
+			"(number) check min constraint",
 			map[string]any{
 				"field1": 0.5,
 				"field2": 1,
@@ -245,7 +245,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check max constraint",
+			"(number) check max constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": max,
@@ -255,7 +255,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"valid data (only required)",
+			"(number) valid data (only required)",
 			map[string]any{
 				"field2": 1,
 			},
@@ -263,7 +263,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{},
 		},
 		{
-			"valid data (all)",
+			"(number) valid data (all)",
 			map[string]any{
 				"field1": nil,
 				"field2": 123, // test value cast
@@ -316,7 +316,7 @@ func TestRecordDataValidatorValidateBool(t *testing.T) {
 
 	scenarios := []testDataFieldScenario{
 		{
-			"check required constraint",
+			"(bool) check required constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": nil,
@@ -326,7 +326,7 @@ func TestRecordDataValidatorValidateBool(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check required constraint + casting",
+			"(bool) check required constraint + casting",
 			map[string]any{
 				"field1": "invalid",
 				"field2": "invalid",
@@ -336,7 +336,7 @@ func TestRecordDataValidatorValidateBool(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check unique constraint",
+			"(bool) check unique constraint",
 			map[string]any{
 				"field1": true,
 				"field2": true,
@@ -346,7 +346,7 @@ func TestRecordDataValidatorValidateBool(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"valid data (only required)",
+			"(bool) valid data (only required)",
 			map[string]any{
 				"field2": 1,
 			},
@@ -354,7 +354,7 @@ func TestRecordDataValidatorValidateBool(t *testing.T) {
 			[]string{},
 		},
 		{
-			"valid data (all)",
+			"(bool) valid data (all)",
 			map[string]any{
 				"field1": false,
 				"field2": true,
@@ -412,7 +412,7 @@ func TestRecordDataValidatorValidateEmail(t *testing.T) {
 
 	scenarios := []testDataFieldScenario{
 		{
-			"check required constraint",
+			"(email) check required constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": nil,
@@ -422,7 +422,7 @@ func TestRecordDataValidatorValidateEmail(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check email format validator",
+			"(email) check email format validator",
 			map[string]any{
 				"field1": "test",
 				"field2": "test.com",
@@ -432,7 +432,7 @@ func TestRecordDataValidatorValidateEmail(t *testing.T) {
 			[]string{"field1", "field2", "field3"},
 		},
 		{
-			"check unique constraint",
+			"(email) check unique constraint",
 			map[string]any{
 				"field1": "test@example.com",
 				"field2": "test@test.com",
@@ -442,7 +442,7 @@ func TestRecordDataValidatorValidateEmail(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check ExceptDomains constraint",
+			"(email) check ExceptDomains constraint",
 			map[string]any{
 				"field1": "test@example.com",
 				"field2": "test@example.com",
@@ -452,7 +452,7 @@ func TestRecordDataValidatorValidateEmail(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check OnlyDomains constraint",
+			"(email) check OnlyDomains constraint",
 			map[string]any{
 				"field1": "test@test.com",
 				"field2": "test@test.com",
@@ -462,7 +462,7 @@ func TestRecordDataValidatorValidateEmail(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"valid data (only required)",
+			"(email) valid data (only required)",
 			map[string]any{
 				"field2": "test@test.com",
 			},
@@ -470,7 +470,7 @@ func TestRecordDataValidatorValidateEmail(t *testing.T) {
 			[]string{},
 		},
 		{
-			"valid data (all)",
+			"(email) valid data (all)",
 			map[string]any{
 				"field1": "123@example.com",
 				"field2": "test@test.com",
@@ -528,7 +528,7 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 
 	scenarios := []testDataFieldScenario{
 		{
-			"check required constraint",
+			"(url) check required constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": nil,
@@ -538,7 +538,7 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check url format validator",
+			"(url) check url format validator",
 			map[string]any{
 				"field1": "/abc",
 				"field2": "test.com", // valid
@@ -548,7 +548,7 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 			[]string{"field1", "field3"},
 		},
 		{
-			"check unique constraint",
+			"(url) check unique constraint",
 			map[string]any{
 				"field1": "http://example.com",
 				"field2": "http://test.com",
@@ -558,7 +558,7 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check ExceptDomains constraint",
+			"(url) check ExceptDomains constraint",
 			map[string]any{
 				"field1": "http://example.com",
 				"field2": "http://example.com",
@@ -568,7 +568,7 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check OnlyDomains constraint",
+			"(url) check OnlyDomains constraint",
 			map[string]any{
 				"field1": "http://test.com/abc",
 				"field2": "http://test.com/abc",
@@ -578,7 +578,7 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check subdomains constraint",
+			"(url) check subdomains constraint",
 			map[string]any{
 				"field1": "http://test.test.com",
 				"field2": "http://test.example.com",
@@ -588,7 +588,7 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"valid data (only required)",
+			"(url) valid data (only required)",
 			map[string]any{
 				"field2": "http://sub.test.com/abc",
 			},
@@ -596,7 +596,7 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 			[]string{},
 		},
 		{
-			"valid data (all)",
+			"(url) valid data (all)",
 			map[string]any{
 				"field1": "http://example.com/123",
 				"field2": "http://test.com/",
@@ -656,7 +656,7 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 
 	scenarios := []testDataFieldScenario{
 		{
-			"check required constraint",
+			"(date) check required constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": nil,
@@ -666,7 +666,7 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check required constraint + cast",
+			"(date) check required constraint + cast",
 			map[string]any{
 				"field1": "invalid",
 				"field2": "invalid",
@@ -676,7 +676,7 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check required constraint + zero datetime",
+			"(date) check required constraint + zero datetime",
 			map[string]any{
 				"field1": "January 1, year 1, 00:00:00 UTC",
 				"field2": "0001-01-01 00:00:00",
@@ -686,7 +686,7 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check unique constraint",
+			"(date) check unique constraint",
 			map[string]any{
 				"field1": "2029-01-01 01:01:01.123",
 				"field2": "2029-01-01 01:01:01.123",
@@ -696,7 +696,7 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check min date constraint",
+			"(date) check min date constraint",
 			map[string]any{
 				"field1": "2021-01-01 01:01:01",
 				"field2": "2021-01-01 01:01:01",
@@ -706,7 +706,7 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check max date constraint",
+			"(date) check max date constraint",
 			map[string]any{
 				"field1": "2030-02-01 01:01:01",
 				"field2": "2030-02-01 01:01:01",
@@ -716,7 +716,7 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"valid data (only required)",
+			"(date) valid data (only required)",
 			map[string]any{
 				"field2": "2029-01-01 01:01:01",
 			},
@@ -724,7 +724,7 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 			[]string{},
 		},
 		{
-			"valid data (all)",
+			"(date) valid data (all)",
 			map[string]any{
 				"field1": "2029-01-01 01:01:01.000",
 				"field2": "2029-01-01 01:01:01",
@@ -788,7 +788,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 
 	scenarios := []testDataFieldScenario{
 		{
-			"check required constraint",
+			"(select) check required constraint",
 			map[string]any{
 				"field1": nil,
 				"field2": nil,
@@ -798,7 +798,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check required constraint - empty values",
+			"(select) check required constraint - empty values",
 			map[string]any{
 				"field1": "",
 				"field2": "",
@@ -808,7 +808,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check required constraint - multiple select cast",
+			"(select) check required constraint - multiple select cast",
 			map[string]any{
 				"field1": "a",
 				"field2": "a",
@@ -818,7 +818,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 			[]string{},
 		},
 		{
-			"check unique constraint",
+			"(select) check unique constraint",
 			map[string]any{
 				"field1": "a",
 				"field2": "b",
@@ -828,7 +828,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check unique constraint - same elements but different order",
+			"(select) check unique constraint - same elements but different order",
 			map[string]any{
 				"field1": "a",
 				"field2": "b",
@@ -838,7 +838,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 			[]string{},
 		},
 		{
-			"check Values constraint",
+			"(select) check Values constraint",
 			map[string]any{
 				"field1": 1,
 				"field2": "d",
@@ -848,7 +848,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 			[]string{"field2", "field3"},
 		},
 		{
-			"check MaxSelect constraint",
+			"(select) check MaxSelect constraint",
 			map[string]any{
 				"field1": []string{"a", "b"}, // this will be normalized to a single string value
 				"field2": []string{"a", "b", "c"},
@@ -858,7 +858,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"valid data - only required fields",
+			"(select) valid data - only required fields",
 			map[string]any{
 				"field2": []string{"a", "b"},
 			},
@@ -866,7 +866,7 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 			[]string{},
 		},
 		{
-			"valid data - all fields with normalizations",
+			"(select) valid data - all fields with normalizations",
 			map[string]any{
 				"field1": "a",
 				"field2": []string{"a", "b", "b"}, // will be collapsed
@@ -918,7 +918,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 
 	scenarios := []testDataFieldScenario{
 		{
-			"check required constraint - nil",
+			"(json) check required constraint - nil",
 			map[string]any{
 				"field1": nil,
 				"field2": nil,
@@ -928,7 +928,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check required constraint - zero string",
+			"(json) check required constraint - zero string",
 			map[string]any{
 				"field1": "",
 				"field2": "",
@@ -938,7 +938,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"check required constraint - zero number",
+			"(json) check required constraint - zero number",
 			map[string]any{
 				"field1": 0,
 				"field2": 0,
@@ -948,7 +948,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{},
 		},
 		{
-			"check required constraint - zero slice",
+			"(json) check required constraint - zero slice",
 			map[string]any{
 				"field1": []string{},
 				"field2": []string{},
@@ -958,7 +958,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{},
 		},
 		{
-			"check required constraint - zero map",
+			"(json) check required constraint - zero map",
 			map[string]any{
 				"field1": map[string]string{},
 				"field2": map[string]string{},
@@ -968,7 +968,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{},
 		},
 		{
-			"check unique constraint",
+			"(json) check unique constraint",
 			map[string]any{
 				"field1": `{"test":123}`,
 				"field2": `{"test":123}`,
@@ -978,7 +978,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"check json text validator",
+			"(json) check json text validator",
 			map[string]any{
 				"field1": `[1, 2, 3`,
 				"field2": `invalid`,
@@ -988,7 +988,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{"field1", "field2"},
 		},
 		{
-			"valid data - only required fields",
+			"(json) valid data - only required fields",
 			map[string]any{
 				"field2": `{"test":123}`,
 			},
@@ -996,7 +996,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{},
 		},
 		{
-			"valid data - all fields with normalizations",
+			"(json) valid data - all fields with normalizations",
 			map[string]any{
 				"field1": []string{"a", "b", "c"},
 				"field2": 123,

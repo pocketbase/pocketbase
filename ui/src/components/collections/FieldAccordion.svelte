@@ -67,6 +67,10 @@
         field.toDelete = false; // normalize
     }
 
+    $: if (field.required) {
+        field.nullable = false;
+    }
+
     $: interactive = !disabled && !field.system && !field.toDelete && canBeStored;
 
     $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
@@ -154,7 +158,7 @@
         {/if}
 
         {#if expanded && !field.toDelete}
-            <div class="inline-flex flex-gap-sm flex-nowrap" in:fly={{ duration: 200, x: 20, opacity: 0 }}>
+            <div class="inline-flex flex-gap-base flex-nowrap" in:fly={{ duration: 200, x: 20, opacity: 0 }}>
                 <button
                     type="button"
                     class="btn btn-sm fade p-l-0 p-r-0"

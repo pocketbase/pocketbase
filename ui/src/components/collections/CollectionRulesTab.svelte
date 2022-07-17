@@ -104,7 +104,7 @@
                     <p>
                         Example rule:
                         <br />
-                        <code>@request.user.id!=null && created>"2022-01-01 00:00:00"</code>
+                        <code>@request.user.id!="" && created>"2022-01-01 00:00:00"</code>
                     </p>
                 </div>
             </div>

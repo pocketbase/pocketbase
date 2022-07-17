@@ -240,7 +240,6 @@ func (validator *RecordDataValidator) checkUrlValue(field *schema.SchemaField, v
 
 func (validator *RecordDataValidator) checkDateValue(field *schema.SchemaField, value any) error {
 	val, _ := value.(types.DateTime)
-
 	if val.IsZero() {
 		if field.Required {
 			return requiredErr
@@ -268,6 +267,9 @@ func (validator *RecordDataValidator) checkDateValue(field *schema.SchemaField, 
 func (validator *RecordDataValidator) checkSelectValue(field *schema.SchemaField, value any) error {
 	normalizedVal := list.ToUniqueStringSlice(value)
 	if len(normalizedVal) == 0 {
+		if field.Required {
+			return requiredErr
+		}
 		return nil // nothing to check
 	}
 
@@ -302,13 +304,9 @@ func (validator *RecordDataValidator) checkJsonValue(field *schema.SchemaField, 
 }
 
 func (validator *RecordDataValidator) checkFileValue(field *schema.SchemaField, value any) error {
-	// normalize value access
-	var names []string
-	switch v := value.(type) {
-	case []string:
-		names = v
-	case string:
-		names = []string{v}
+	names := list.ToUniqueStringSlice(value)
+	if len(names) == 0 && field.Required {
+		return requiredErr
 	}
 
 	options, _ := field.Options.(*schema.FileOptions)
@@ -343,16 +341,11 @@ func (validator *RecordDataValidator) checkFileValue(field *schema.SchemaField, 
 }
 
 func (validator *RecordDataValidator) checkRelationValue(field *schema.SchemaField, value any) error {
-	// normalize value access
-	var ids []string
-	switch v := value.(type) {
-	case []string:
-		ids = v
-	case string:
-		ids = []string{v}
-	}
-
+	ids := list.ToUniqueStringSlice(value)
 	if len(ids) == 0 {
+		if field.Required {
+			return requiredErr
+		}
 		return nil // nothing to check
 	}
 
@@ -383,16 +376,11 @@ func (validator *RecordDataValidator) checkRelationValue(field *schema.SchemaFie
 }
 
 func (validator *RecordDataValidator) checkUserValue(field *schema.SchemaField, value any) error {
-	// normalize value access
-	var ids []string
-	switch v := value.(type) {
-	case []string:
-		ids = v
-	case string:
-		ids = []string{v}
-	}
-
+	ids := list.ToUniqueStringSlice(value)
 	if len(ids) == 0 {
+		if field.Required {
+			return requiredErr
+		}
 		return nil // nothing to check
 	}
 

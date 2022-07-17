@@ -498,19 +498,22 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{schema.SchemaField{Type: "unknown"}, []int{1, 2, 1}, "[1,2,1]"},
 
 		// text
-		{schema.SchemaField{Type: schema.FieldTypeText}, nil, `null`},
+		{schema.SchemaField{Type: schema.FieldTypeText}, nil, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeText}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeText}, []int{1, 2}, `""`},
 		{schema.SchemaField{Type: schema.FieldTypeText}, "test", `"test"`},
 		{schema.SchemaField{Type: schema.FieldTypeText}, 123, `"123"`},
 
 		// email
-		{schema.SchemaField{Type: schema.FieldTypeEmail}, nil, `null`},
+		{schema.SchemaField{Type: schema.FieldTypeEmail}, nil, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeEmail}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeEmail}, []int{1, 2}, `""`},
 		{schema.SchemaField{Type: schema.FieldTypeEmail}, "test", `"test"`},
 		{schema.SchemaField{Type: schema.FieldTypeEmail}, 123, `"123"`},
 
 		// url
-		{schema.SchemaField{Type: schema.FieldTypeUrl}, nil, `null`},
+		{schema.SchemaField{Type: schema.FieldTypeUrl}, nil, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeUrl}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeUrl}, []int{1, 2}, `""`},
 		{schema.SchemaField{Type: schema.FieldTypeUrl}, "test", `"test"`},
 		{schema.SchemaField{Type: schema.FieldTypeUrl}, 123, `"123"`},
@@ -523,7 +526,9 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{schema.SchemaField{Type: schema.FieldTypeJson}, []int{1, 2, 1}, `[1,2,1]`},
 
 		// number
-		{schema.SchemaField{Type: schema.FieldTypeNumber}, nil, "null"},
+		{schema.SchemaField{Type: schema.FieldTypeNumber}, nil, "0"},
+		{schema.SchemaField{Type: schema.FieldTypeNumber}, "", "0"},
+		{schema.SchemaField{Type: schema.FieldTypeNumber}, "test", "0"},
 		{schema.SchemaField{Type: schema.FieldTypeNumber}, 1, "1"},
 		{schema.SchemaField{Type: schema.FieldTypeNumber}, 1.5, "1.5"},
 		{schema.SchemaField{Type: schema.FieldTypeNumber}, "1.5", "1.5"},
@@ -533,22 +538,24 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{schema.SchemaField{Type: schema.FieldTypeBool}, 1, "true"},
 		{schema.SchemaField{Type: schema.FieldTypeBool}, 0, "false"},
 		{schema.SchemaField{Type: schema.FieldTypeBool}, "", "false"},
+		{schema.SchemaField{Type: schema.FieldTypeBool}, "test", "false"},
 		{schema.SchemaField{Type: schema.FieldTypeBool}, "false", "false"},
 		{schema.SchemaField{Type: schema.FieldTypeBool}, "true", "true"},
 		{schema.SchemaField{Type: schema.FieldTypeBool}, false, "false"},
 		{schema.SchemaField{Type: schema.FieldTypeBool}, true, "true"},
 
 		// date
-		{schema.SchemaField{Type: schema.FieldTypeDate}, nil, "null"},
+		{schema.SchemaField{Type: schema.FieldTypeDate}, nil, `""`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, "", `""`},
+		{schema.SchemaField{Type: schema.FieldTypeDate}, "test", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, 1641024040, `"2022-01-01 08:00:40.000"`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, "2022-01-01 11:27:10.123", `"2022-01-01 11:27:10.123"`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, types.DateTime{}, `""`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, time.Time{}, `""`},
 
 		// select (single)
-		{schema.SchemaField{Type: schema.FieldTypeSelect}, nil, `null`},
-		{schema.SchemaField{Type: schema.FieldTypeSelect}, "", `null`},
+		{schema.SchemaField{Type: schema.FieldTypeSelect}, nil, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeSelect}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeSelect}, 123, `"123"`},
 		{schema.SchemaField{Type: schema.FieldTypeSelect}, "test", `"test"`},
 		{schema.SchemaField{Type: schema.FieldTypeSelect}, []string{"test1", "test2"}, `"test1"`},
@@ -624,8 +631,8 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		},
 
 		// file (single)
-		{schema.SchemaField{Type: schema.FieldTypeFile}, nil, `null`},
-		{schema.SchemaField{Type: schema.FieldTypeFile}, "", `null`},
+		{schema.SchemaField{Type: schema.FieldTypeFile}, nil, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeFile}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeFile}, 123, `"123"`},
 		{schema.SchemaField{Type: schema.FieldTypeFile}, "test", `"test"`},
 		{schema.SchemaField{Type: schema.FieldTypeFile}, []string{"test1", "test2"}, `"test1"`},
@@ -690,8 +697,8 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		},
 
 		// relation (single)
-		{schema.SchemaField{Type: schema.FieldTypeRelation}, nil, `null`},
-		{schema.SchemaField{Type: schema.FieldTypeRelation}, "", `null`},
+		{schema.SchemaField{Type: schema.FieldTypeRelation}, nil, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeRelation}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeRelation}, 123, `"123"`},
 		{schema.SchemaField{Type: schema.FieldTypeRelation}, "abc", `"abc"`},
 		{schema.SchemaField{Type: schema.FieldTypeRelation}, "1ba88b4f-e9da-42f0-9764-9a55c953e724", `"1ba88b4f-e9da-42f0-9764-9a55c953e724"`},
@@ -761,8 +768,8 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		},
 
 		// user (single)
-		{schema.SchemaField{Type: schema.FieldTypeUser}, nil, `null`},
-		{schema.SchemaField{Type: schema.FieldTypeUser}, "", `null`},
+		{schema.SchemaField{Type: schema.FieldTypeUser}, nil, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeUser}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeUser}, 123, `"123"`},
 		{schema.SchemaField{Type: schema.FieldTypeUser}, "1ba88b4f-e9da-42f0-9764-9a55c953e724", `"1ba88b4f-e9da-42f0-9764-9a55c953e724"`},
 		{

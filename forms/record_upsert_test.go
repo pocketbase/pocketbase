@@ -98,8 +98,8 @@ func TestRecordUpsertLoadDataJson(t *testing.T) {
 	if !ok {
 		t.Fatal("Expect onefile field to be set")
 	}
-	if onefile != nil {
-		t.Fatalf("Expect onefile field to be nil, got %v", onefile)
+	if onefile != "" {
+		t.Fatalf("Expect onefile field to be empty string, got %v", onefile)
 	}
 
 	manyfiles, ok := form.Data["manyfiles"]
@@ -166,8 +166,8 @@ func TestRecordUpsertLoadDataMultipart(t *testing.T) {
 	if !ok {
 		t.Fatal("Expect onefile field to be set")
 	}
-	if onefile != nil {
-		t.Fatalf("Expect onefile field to be nil, got %v", onefile)
+	if onefile != "" {
+		t.Fatalf("Expect onefile field to be empty string, got %v", onefile)
 	}
 
 	manyfiles, ok := form.Data["manyfiles"]

@@ -349,7 +349,7 @@ button {
         border-color: var(--baseAlt2Color);
     }
     &.txt-mono {
-        font-size: var(--smFontSize);
+        line-height: var(--smLineHeight);
     }
 }
 
@@ -436,9 +436,6 @@ select {
             line-height: 1;
             margin-top: -2px;
             margin-bottom: -2px;
-            + .txt {
-                margin-left: -5px;
-            }
         }
     }
     %input, label {

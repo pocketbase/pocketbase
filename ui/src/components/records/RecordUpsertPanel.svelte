@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, tick } from "svelte";
     import { Record } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
@@ -57,12 +57,13 @@
         return recordPanel?.hide();
     }
 
-    function load(model) {
+    async function load(model) {
         setErrors({}); // reset errors
         original = model || {};
         record = model?.clone ? model.clone() : new Record();
         uploadedFilesMap = {};
         deletedFileIndexesMap = {};
+        await tick(); // wait to populate the fields to get the normalized values
         initialFormHash = calculateFormHash(record);
     }
 
@@ -71,7 +72,7 @@
     }
 
     function save() {
-        if (isSaving || !hasChanges) {
+        if (isSaving || !canSave) {
             return;
         }
 

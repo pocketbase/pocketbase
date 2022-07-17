@@ -166,7 +166,7 @@
 
 <OverlayPanel
     bind:this={collectionPanel}
-    class="overlay-panel-lg colored-header collection-panel"
+    class="overlay-panel-lg colored-header compact-header collection-panel"
     beforeHide={() => {
         if (hasChanges && confirmClose) {
             confirm("You have unsaved changes. Do you really want to close the panel?", () => {

@@ -96,6 +96,8 @@
                 readOnlyCompartment.reconfigure(EditorState.readOnly.of(disabled)),
             ],
         });
+
+        triggerNativeChange();
     }
 
     $: if (editor && value != editor.state.doc.toString()) {
@@ -228,7 +230,7 @@
             return null;
         }
 
-        let options = [{ label: "null" }, { label: "false" }, { label: "true" }];
+        let options = [{ label: "false" }, { label: "true" }];
 
         if (!disableIndirectCollectionsKeys) {
             options.push({ label: "@collection.*", apply: "@collection." });

@@ -118,7 +118,7 @@ func TestNewRecordFromNullStringMap(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"@collectionId":"","@collectionName":"test","created":"2022-01-01 10:00:00.123","field1":"test","field2":null,"field3":true,"field4":123.123,"field5":"test1","field6":["test"],"id":"c23eb053-d07e-4fbe-86b3-b8ac31982e9a","updated":"2022-01-01 10:00:00.456"}`
+	expected := `{"@collectionId":"","@collectionName":"test","created":"2022-01-01 10:00:00.123","field1":"test","field2":"","field3":true,"field4":123.123,"field5":"test1","field6":["test"],"id":"c23eb053-d07e-4fbe-86b3-b8ac31982e9a","updated":"2022-01-01 10:00:00.456"}`
 
 	if string(encoded) != expected {
 		t.Fatalf("Expected %v, got \n%v", expected, string(encoded))
@@ -185,10 +185,10 @@ func TestNewRecordsFromNullStringMaps(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[{"@collectionId":"","@collectionName":"test","created":"2022-01-01 10:00:00.123","field1":"test1","field2":null,"id":"11111111-d07e-4fbe-86b3-b8ac31982e9a","updated":"2022-01-01 10:00:00.456"},{"@collectionId":"","@collectionName":"test","created":"","field1":"test2","field2":123,"id":"22222222-d07e-4fbe-86b3-b8ac31982e9a","updated":""}]`
+	expected := `[{"@collectionId":"","@collectionName":"test","created":"2022-01-01 10:00:00.123","field1":"test1","field2":0,"id":"11111111-d07e-4fbe-86b3-b8ac31982e9a","updated":"2022-01-01 10:00:00.456"},{"@collectionId":"","@collectionName":"test","created":"","field1":"test2","field2":123,"id":"22222222-d07e-4fbe-86b3-b8ac31982e9a","updated":""}]`
 
 	if string(encoded) != expected {
-		t.Fatalf("Expected %v, got \n%v", expected, string(encoded))
+		t.Fatalf("Expected \n%v, got \n%v", expected, string(encoded))
 	}
 }
 

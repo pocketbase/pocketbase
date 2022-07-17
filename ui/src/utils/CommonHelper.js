@@ -118,15 +118,15 @@ export default class CommonHelper {
      * Normalizes and returns arr as a valid array instance (if not already).
      *
      * @param  {Array}   arr
-     * @param  {Boolean} [allowNull]
+     * @param  {Boolean} [allowEmpty]
      * @return {Array}
      */
-    static toArray(arr, allowNull = false) {
+    static toArray(arr, allowEmpty = false) {
         if (Array.isArray(arr)) {
             return arr;
         }
 
-        return (allowNull || arr !== null) && typeof arr !== "undefined" ? [arr] : [];
+        return (allowEmpty || !CommonHelper.isEmpty(arr)) && typeof arr !== "undefined" ? [arr] : [];
     }
 
     /**

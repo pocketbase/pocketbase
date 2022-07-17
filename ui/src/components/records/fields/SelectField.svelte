@@ -10,7 +10,7 @@
     $: isMultiple = field.options?.maxSelect > 1;
 
     $: if (typeof value === "undefined") {
-        value = isMultiple ? [] : null;
+        value = isMultiple ? [] : "";
     }
 
     $: if (isMultiple && Array.isArray(value) && value.length > field.options.maxSelect) {

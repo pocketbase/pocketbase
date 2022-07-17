@@ -218,31 +218,19 @@ func (f *SchemaField) PrepareValue(value any) any {
 	f.InitOptions()
 
 	switch f.Type {
-	case FieldTypeText, FieldTypeEmail, FieldTypeUrl: // string
-		if value == nil {
-			return nil
-		}
+	case FieldTypeText, FieldTypeEmail, FieldTypeUrl:
 		return cast.ToString(value)
-	case FieldTypeJson: // string
-		if value == nil {
-			return nil
-		}
+	case FieldTypeJson:
 		val, _ := types.ParseJsonRaw(value)
 		return val
-	case FieldTypeNumber: // nil, int or float
-		if value == nil {
-			return nil
-		}
+	case FieldTypeNumber:
 		return cast.ToFloat64(value)
-	case FieldTypeBool: // bool
+	case FieldTypeBool:
 		return cast.ToBool(value)
-	case FieldTypeDate: // string, DateTime or time.Time
-		if value == nil {
-			return nil
-		}
+	case FieldTypeDate:
 		val, _ := types.ParseDateTime(value)
 		return val
-	case FieldTypeSelect: // nil, string or slice of strings
+	case FieldTypeSelect:
 		val := list.ToUniqueStringSlice(value)
 
 		options, _ := f.Options.(*SelectOptions)
@@ -250,11 +238,11 @@ func (f *SchemaField) PrepareValue(value any) any {
 			if len(val) > 0 {
 				return val[0]
 			}
-			return nil
+			return ""
 		}
 
 		return val
-	case FieldTypeFile: // nil, string or slice of strings
+	case FieldTypeFile:
 		val := list.ToUniqueStringSlice(value)
 
 		options, _ := f.Options.(*FileOptions)
@@ -262,11 +250,11 @@ func (f *SchemaField) PrepareValue(value any) any {
 			if len(val) > 0 {
 				return val[0]
 			}
-			return nil
+			return ""
 		}
 
 		return val
-	case FieldTypeRelation: // nil, string or slice of strings
+	case FieldTypeRelation:
 		ids := list.ToUniqueStringSlice(value)
 
 		options, _ := f.Options.(*RelationOptions)
@@ -274,11 +262,11 @@ func (f *SchemaField) PrepareValue(value any) any {
 			if len(ids) > 0 {
 				return ids[0]
 			}
-			return nil
+			return ""
 		}
 
 		return ids
-	case FieldTypeUser: // nil, string or slice of strings
+	case FieldTypeUser:
 		ids := list.ToUniqueStringSlice(value)
 
 		options, _ := f.Options.(*UserOptions)
@@ -286,7 +274,7 @@ func (f *SchemaField) PrepareValue(value any) any {
 			if len(ids) > 0 {
 				return ids[0]
 			}
-			return nil
+			return ""
 		}
 
 		return ids

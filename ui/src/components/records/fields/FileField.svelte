@@ -5,17 +5,15 @@
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import UploadedFilePreview from "@/components/base/UploadedFilePreview.svelte";
-    import PreviewPopup from "@/components/base/PreviewPopup.svelte";
     import RecordFilePreview from "@/components/records/RecordFilePreview.svelte";
 
     export let record;
-    export let value = null;
+    export let value = "";
     export let uploadedFiles = []; // Array<File> array
     export let deletedFileIndexes = []; // Array<int> array
     export let field = new SchemaField();
 
     let fileInput;
-    let previewPopup;
     let filesListElem;
 
     // normalize uploadedFiles type
@@ -30,8 +28,8 @@
 
     $: isMultiple = field.options?.maxSelect > 1;
 
-    $: if (typeof value === "undefined" || value === null) {
-        value = isMultiple ? [] : null;
+    $: if (CommonHelper.isEmpty(value)) {
+        value = isMultiple ? [] : "";
     }
 
     $: valueAsArray = CommonHelper.toArray(value);
@@ -81,16 +79,7 @@
     <div bind:this={filesListElem} class="files-list">
         {#each valueAsArray as filename, i (filename)}
             <div class="list-item">
-                <figure
-                    class="thumb"
-                    class:fade={deletedFileIndexes.includes(i)}
-                    class:link-fade={CommonHelper.hasImageExtension(filename)}
-                    title={CommonHelper.hasImageExtension(filename) ? "Preview" : ""}
-                    on:click={() =>
-                        CommonHelper.hasImageExtension(filename)
-                            ? previewPopup?.show(ApiClient.Records.getFileUrl(record, filename))
-                            : false}
-                >
+                <figure class="thumb" class:fade={deletedFileIndexes.includes(i)}>
                     <RecordFilePreview {record} {filename} />
                 </figure>
                 <a
@@ -173,5 +162,3 @@
         {/if}
     </div>
 </Field>
-
-<PreviewPopup bind:this={previewPopup} />

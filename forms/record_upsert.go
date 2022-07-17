@@ -167,7 +167,7 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 				if len(oldNames) > 0 {
 					form.filesToDelete = append(form.filesToDelete, oldNames...)
 				}
-				form.Data[key] = nil
+				form.Data[key] = ""
 			}
 		} else if options.MaxSelect > 1 {
 			// search for individual file index to delete (eg. "file.0")

@@ -144,12 +144,12 @@ func TestRecordsList(t *testing.T) {
 				`"manyrels":[{`,
 				`"manyrels":[]`,
 				`"rel_cascade":"`,
-				`"rel_cascade":null`,
+				`"rel_cascade":""`,
 				`"onerel":{"@collectionId":"3f2888f8-075d-49fe-9d09-ea7e951000dc","@collectionName":"demo",`,
 				`"json":[1,2,3]`,
 				`"select":["a","b"]`,
 				`"select":[]`,
-				`"user":null`,
+				`"user":""`,
 				`"bool":true`,
 				`"number":456`,
 				`"user":"97cc3d3d-6ba2-383f-b42a-7bc84d27410c"`,
@@ -650,7 +650,8 @@ func TestRecordCreate(t *testing.T) {
 				"onerel": "577bd676-aacb-4072-b7da-99d00ee210a4",
 				"manyrels": ["577bd676-aacb-4072-b7da-99d00ee210a4"],
 				"text": "test123",
-				"bool": "false"
+				"bool": "false",
+				"number": 1
 			}`),
 			RequestHeaders: map[string]string{
 				// test@example.com
@@ -668,7 +669,8 @@ func TestRecordCreate(t *testing.T) {
 				"onerel":"577bd676-aacb-4072-b7da-99d00ee210a4",
 				"manyrels":["577bd676-aacb-4072-b7da-99d00ee210a4"],
 				"text":"test123",
-				"bool":true
+				"bool":true,
+				"number":1
 			}`),
 			RequestHeaders: map[string]string{
 				// test3@example.com
@@ -682,6 +684,7 @@ func TestRecordCreate(t *testing.T) {
 				`"manyrels":["577bd676-aacb-4072-b7da-99d00ee210a4"]`,
 				`"text":"test123"`,
 				`"bool":true`,
+				`"number":1`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeCreateRequest": 1,
@@ -695,11 +698,12 @@ func TestRecordCreate(t *testing.T) {
 			Method: http.MethodPost,
 			Url:    "/api/collections/demo2/records",
 			Body: strings.NewReader(`{
-				"rel_cascade":"577bd676-aacb-4072-b7da-99d00ee210a4",
-				"onerel":"577bd676-aacb-4072-b7da-99d00ee210a4",
-				"manyrels":["577bd676-aacb-4072-b7da-99d00ee210a4"],
-				"text":"test123",
-				"bool":false
+				"rel_cascade": "577bd676-aacb-4072-b7da-99d00ee210a4",
+				"onerel": "577bd676-aacb-4072-b7da-99d00ee210a4",
+				"manyrels" :["577bd676-aacb-4072-b7da-99d00ee210a4"],
+				"text": "test123",
+				"bool": false,
+				"number": 1
 			}`),
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
@@ -712,6 +716,7 @@ func TestRecordCreate(t *testing.T) {
 				`"manyrels":["577bd676-aacb-4072-b7da-99d00ee210a4"]`,
 				`"text":"test123"`,
 				`"bool":false`,
+				`"number":1`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeCreateRequest": 1,
@@ -867,7 +872,8 @@ func TestRecordUpdate(t *testing.T) {
 			Method: http.MethodPatch,
 			Url:    "/api/collections/demo2/records/63c2ab80-84ab-4057-a592-4604a731f78f",
 			Body: strings.NewReader(`{
-				"text":"test_new"
+				"text":"test_new",
+				"number":1
 			}`),
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
@@ -876,6 +882,7 @@ func TestRecordUpdate(t *testing.T) {
 			ExpectedContent: []string{
 				`"id":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
 				`"text":"test_new"`,
+				`"number":1`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeUpdateRequest": 1,
