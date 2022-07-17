@@ -29,6 +29,9 @@ jobs:
       - name: Build Admin dashboard UI
         run: npm --prefix=./ui ci && npm --prefix=./ui run build
 
+      - name: Run linter
+        uses: golangci/golangci-lint-action@v3
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
