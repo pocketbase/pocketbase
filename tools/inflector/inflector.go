@@ -7,16 +7,19 @@ import (
 )
 
 var (
-	columnifyRemoveRegex = regexp.MustCompile(`[^\w.*\-_@#]+`)
+	columnifyRemoveRegex = regexp.MustCompile(`[^\w\.\*\-\_\@\#]+`)
 	snakecaseSplitRegex  = regexp.MustCompile(`[\W_]+`)
 )
 
 // UcFirst converts the first character of a string into uppercase.
 func UcFirst(str string) string {
-	for i, c := range str {
-		return string(unicode.ToUpper(c)) + str[i+1:]
+	if str == "" {
+		return ""
 	}
-	return ""
+
+	s := []rune(str)
+
+	return string(unicode.ToUpper(s[0])) + string(s[1:])
 }
 
 // Columnify strips invalid db identifier characters.
@@ -30,6 +33,7 @@ func Sentenize(str string) string {
 	if str == "" {
 		return ""
 	}
+
 	str = UcFirst(str)
 
 	lastChar := str[len(str)-1:]

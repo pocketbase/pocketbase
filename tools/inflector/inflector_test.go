@@ -16,8 +16,6 @@ func TestUcFirst(t *testing.T) {
 		{"Test", "Test"},
 		{"test", "Test"},
 		{"test test2", "Test test2"},
-		{"open source go backend", "Open source go backend"},
-		{"PocketBase is an open source Go backend.", "PocketBase is an open source Go backend."},
 	}
 
 	for i, scenario := range scenarios {
@@ -67,8 +65,6 @@ func TestSentenize(t *testing.T) {
 		{"hello world.", "Hello world."},
 		{"hello world!", "Hello world!"},
 		{"hello world?", "Hello world?"},
-		{"go backend", "Go backend."},
-		{"PocketBase is an open source Go backend", "PocketBase is an open source Go backend."},
 	}
 
 	for i, scenario := range scenarios {

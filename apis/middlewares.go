@@ -77,7 +77,7 @@ func RequireAdminAuth() echo.MiddlewareFunc {
 	}
 }
 
-// RequireAdminAuthIfAny middleware requires a request to have
+// RequireAdminAuthOnlyIfAny middleware requires a request to have
 // a valid admin Authorization header set (aka. `Authorization: Admin ...`)
 // ONLY if the application has at least 1 existing Admin model.
 func RequireAdminAuthOnlyIfAny(app core.App) echo.MiddlewareFunc {
@@ -160,23 +160,25 @@ func LoadAuthContext(app core.App) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			token := c.Request().Header.Get("Authorization")
 
-			if token != "" {
-				if strings.HasPrefix(token, "User ") {
-					user, err := app.Dao().FindUserByToken(
-						token[5:],
-						app.Settings().UserAuthToken.Secret,
-					)
-					if err == nil && user != nil {
-						c.Set(ContextUserKey, user)
-					}
-				} else if strings.HasPrefix(token, "Admin ") {
-					admin, err := app.Dao().FindAdminByToken(
-						token[6:],
-						app.Settings().AdminAuthToken.Secret,
-					)
-					if err == nil && admin != nil {
-						c.Set(ContextAdminKey, admin)
-					}
+			rolePrefix := "User "
+			if strings.HasPrefix(token, rolePrefix) {
+				user, err := app.Dao().FindUserByToken(
+					token[len(rolePrefix):],
+					app.Settings().UserAuthToken.Secret,
+				)
+				if err == nil && user != nil {
+					c.Set(ContextUserKey, user)
+				}
+			}
+
+			rolePrefix = "Admin "
+			if strings.HasPrefix(token, rolePrefix) {
+				admin, err := app.Dao().FindAdminByToken(
+					token[len(rolePrefix):],
+					app.Settings().AdminAuthToken.Secret,
+				)
+				if err == nil && admin != nil {
+					c.Set(ContextAdminKey, admin)
 				}
 			}
 

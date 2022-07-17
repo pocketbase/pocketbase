@@ -113,23 +113,20 @@ func (s *System) Delete(fileKey string) error {
 
 // DeletePrefix deletes everything starting with the specified prefix.
 func (s *System) DeletePrefix(prefix string) []error {
-	failed := []error{}
-
 	if prefix == "" {
-		failed = append(failed, errors.New("Prefix mustn't be empty."))
-		return failed
+		return []error{errors.New("Prefix mustn't be empty.")}
 	}
 
-	dirsMap := map[string]struct{}{}
-	dirsMap[prefix] = struct{}{}
-
-	opts := blob.ListOptions{
-		Prefix: prefix,
+	failed := make([]error, 0)
+	dirsMap := map[string]struct{}{
+		prefix: {},
 	}
 
 	// delete all files with the prefix
 	// ---
-	iter := s.bucket.List(&opts)
+	iter := s.bucket.List(&blob.ListOptions{
+		Prefix: prefix,
+	})
 	for {
 		obj, err := iter.Next(s.ctx)
 		if err == io.EOF {
@@ -143,9 +140,9 @@ func (s *System) DeletePrefix(prefix string) []error {
 
 		if err := s.Delete(obj.Key); err != nil {
 			failed = append(failed, err)
-		} else {
-			dirsMap[filepath.Dir(obj.Key)] = struct{}{}
+			continue
 		}
+		dirsMap[filepath.Dir(obj.Key)] = struct{}{}
 	}
 	// ---
 
@@ -153,7 +150,7 @@ func (s *System) DeletePrefix(prefix string) []error {
 	// (this operation usually is optional and there is no need to strictly check the result)
 	// ---
 	// fill dirs slice
-	dirs := []string{}
+	dirs := make([]string, 0, len(dirsMap))
 	for d := range dirsMap {
 		dirs = append(dirs, d)
 	}

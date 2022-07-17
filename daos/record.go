@@ -154,16 +154,15 @@ func (dao *Dao) FindUserRelatedRecords(user *models.User) ([]*models.Record, err
 		return nil, err
 	}
 
-	result := []*models.Record{}
+	result := make([]*models.Record, 0, len(collections))
 	for _, collection := range collections {
-		userFields := []*schema.SchemaField{}
-
 		// prepare fields options
 		if err := collection.Schema.InitFieldsOptions(); err != nil {
 			return nil, err
 		}
 
 		// extract user fields
+		userFields := make([]*schema.SchemaField, 0, len(collection.Schema.Fields()))
 		for _, field := range collection.Schema.Fields() {
 			if field.Type == schema.FieldTypeUser {
 				userFields = append(userFields, field)
@@ -171,9 +170,9 @@ func (dao *Dao) FindUserRelatedRecords(user *models.User) ([]*models.Record, err
 		}
 
 		// fetch records associated to the user
-		exprs := []dbx.Expression{}
-		for _, field := range userFields {
-			exprs = append(exprs, dbx.HashExp{field.Name: user.Id})
+		exprs := make([]dbx.Expression, len(userFields))
+		for i, field := range userFields {
+			exprs[i] = dbx.HashExp{field.Name: user.Id}
 		}
 		rows := []dbx.NullStringMap{}
 		if err := dao.RecordQuery(collection).AndWhere(dbx.Or(exprs...)).All(&rows); err != nil {
