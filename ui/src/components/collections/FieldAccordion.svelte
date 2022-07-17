@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
-    import { scale, fly } from "svelte/transition";
+    import { scale } from "svelte/transition";
     import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
@@ -157,28 +157,6 @@
             />
         {/if}
 
-        {#if expanded && !field.toDelete}
-            <div class="inline-flex flex-gap-base flex-nowrap" in:fly={{ duration: 200, x: 20, opacity: 0 }}>
-                <button
-                    type="button"
-                    class="btn btn-sm fade p-l-0 p-r-0"
-                    on:click|stopPropagation={handleDelete}
-                >
-                    <span class="txt">Remove</span>
-                </button>
-
-                {#if interactive}
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-outline btn-expanded-sm"
-                        on:click|stopPropagation={collapse}
-                    >
-                        <span class="txt">Done</span>
-                    </button>
-                {/if}
-            </div>
-        {/if}
-
         {#if field.toDelete}
             <button
                 type="button"
@@ -259,14 +237,14 @@
                 {/if}
             </div>
 
-            <div class="col-4">
+            <div class="col-sm-4 flex">
                 <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
                     <input type="checkbox" id={uniqueId} bind:checked={field.required} />
                     <label for={uniqueId}>Required</label>
                 </Field>
             </div>
 
-            <div class="col-4">
+            <div class="col-sm-4 flex">
                 {#if field.type !== "file"}
                     <Field class="form-field form-field-toggle m-0" name="unique" let:uniqueId>
                         <input type="checkbox" id={uniqueId} bind:checked={field.unique} />
@@ -274,6 +252,31 @@
                     </Field>
                 {/if}
             </div>
+
+            {#if !field.toDelete}
+                <div class="col-sm-4">
+                    <div class="flex-fill" />
+                    <div class="inline-flex flex-gap-base flex-nowrap">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-secondary fade"
+                            on:click|stopPropagation={handleDelete}
+                        >
+                            <span class="txt">Remove</span>
+                        </button>
+
+                        {#if interactive}
+                            <button
+                                type="button"
+                                class="btn btn-sm btn-outline btn-expanded-sm"
+                                on:click|stopPropagation={collapse}
+                            >
+                                <span class="txt">Done</span>
+                            </button>
+                        {/if}
+                    </div>
+                </div>
+            {/if}
         </div>
 
         <input type="submit" class="hidden" tabindex="-1" />

@@ -132,15 +132,3 @@
         }
     }
 }
-
-.field-accordion {
-    &.active {
-        .accordion-header {
-            padding-right: var(--smSpacing);
-            &:after {
-                content: none;
-                display: none;
-            }
-        }
-    }
-}
