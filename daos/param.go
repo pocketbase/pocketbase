@@ -40,7 +40,7 @@ func (dao *Dao) SaveParam(key string, value any, optEncryptionKey ...string) err
 		param = &models.Param{Key: key}
 	}
 
-	var normalizedValue any
+	normalizedValue := value
 
 	// encrypt if optEncryptionKey is set
 	if len(optEncryptionKey) > 0 && optEncryptionKey[0] != "" {
@@ -55,8 +55,6 @@ func (dao *Dao) SaveParam(key string, value any, optEncryptionKey ...string) err
 		}
 
 		normalizedValue = encryptVal
-	} else {
-		normalizedValue = value
 	}
 
 	encodedValue := types.JsonRaw{}

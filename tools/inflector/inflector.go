@@ -32,15 +32,14 @@ func Sentenize(str string) string {
 		return ""
 	}
 
-	s := []rune(str)
-	sentence := string(unicode.ToUpper(s[0])) + string(s[1:])
+	str = UcFirst(str)
 
-	lastChar := string(s[len(s)-1:])
+	lastChar := str[len(str)-1:]
 	if lastChar != "." && lastChar != "?" && lastChar != "!" {
-		return sentence + "."
+		return str + "."
 	}
 
-	return sentence
+	return str
 }
 
 // Sanitize sanitizes `str` by removing all characters satisfying `removePattern`.

@@ -115,9 +115,8 @@ func (dao *Dao) Delete(m models.Model) error {
 		}
 	}
 
-	deleteErr := dao.db.Model(m).Delete()
-	if deleteErr != nil {
-		return deleteErr
+	if err := dao.db.Model(m).Delete(); err != nil {
+		return err
 	}
 
 	if dao.AfterDeleteFunc != nil {
@@ -162,8 +161,7 @@ func (dao *Dao) update(m models.Model) error {
 			return err
 		}
 	} else {
-		err := dao.db.Model(m).Update()
-		if err != nil {
+		if err := dao.db.Model(m).Update(); err != nil {
 			return err
 		}
 	}
@@ -203,8 +201,7 @@ func (dao *Dao) create(m models.Model) error {
 			return err
 		}
 	} else {
-		err := dao.db.Model(m).Insert()
-		if err != nil {
+		if err := dao.db.Model(m).Insert(); err != nil {
 			return err
 		}
 	}

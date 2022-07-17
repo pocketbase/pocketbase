@@ -77,7 +77,7 @@ func RequireAdminAuth() echo.MiddlewareFunc {
 	}
 }
 
-// RequireAdminAuthIfAny middleware requires a request to have
+// RequireAdminAuthOnlyIfAny middleware requires a request to have
 // a valid admin Authorization header set (aka. `Authorization: Admin ...`)
 // ONLY if the application has at least 1 existing Admin model.
 func RequireAdminAuthOnlyIfAny(app core.App) echo.MiddlewareFunc {

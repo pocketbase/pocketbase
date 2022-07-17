@@ -153,7 +153,7 @@ func (s *System) DeletePrefix(prefix string) []error {
 	// (this operation usually is optional and there is no need to strictly check the result)
 	// ---
 	// fill dirs slice
-	dirs := []string{}
+	dirs := make([]string, 0, len(dirsMap))
 	for d := range dirsMap {
 		dirs = append(dirs, d)
 	}
