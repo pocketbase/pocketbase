@@ -29,8 +29,10 @@ jobs:
       - name: Build Admin dashboard UI
         run: npm --prefix=./ui ci && npm --prefix=./ui run build
 
-      - name: Run linter
-        uses: golangci/golangci-lint-action@v3
+      # The prebuilt golangci-lint doesn't support go 1.18+ yet
+      # https://github.com/golangci/golangci-lint/issues/2649
+      # - name: Run linter
+      #   uses: golangci/golangci-lint-action@v3
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
