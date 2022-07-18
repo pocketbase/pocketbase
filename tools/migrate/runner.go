@@ -220,6 +220,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 				return fmt.Errorf("Failed to save reverted migration info for %s: %w", m.file, err)
 			}
 
+			totalReverted++
 			applied = append(applied, m.file)
 		}
 
