@@ -47,7 +47,7 @@
         accordion && collapse();
 
         // reset the name if it was previously deleted
-        if (!field.name && field.originalName) {
+        if (field.originalName && field.name !== field.originalName) {
             field.name = field.originalName;
         }
     }
@@ -66,7 +66,7 @@
 
     $: interactive = !disabled && !field.system && !field.toDelete && canBeStored;
 
-    $: hasValidName = !excludeNames.includes(field.name);
+    $: hasValidName = validateFieldName(field.name);
 
     $: hasErrors =
         !hasValidName || !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
@@ -86,6 +86,21 @@
         } else {
             field.toDelete = true;
         }
+    }
+
+    function validateFieldName(name) {
+        name = ("" + name).toLowerCase();
+        if (!name) {
+            return false;
+        }
+
+        for (const excluded of excludeNames) {
+            if (excluded.toLowerCase() === name) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     function normalizeFieldName(name) {
@@ -191,7 +206,7 @@
                         <span class="txt">Name</span>
                         {#if !hasValidName}
                             <span class="txt invalid-name-note" transition:fly={{ duration: 150, x: 5 }}>
-                                Duplicated or reserved name
+                                Duplicated or invalid name
                             </span>
                         {/if}
                     </label>
@@ -255,7 +270,7 @@
             </div>
 
             {#if !field.toDelete}
-                <div class="col-sm-4">
+                <div class="col-sm-4 txt-right">
                     <div class="flex-fill" />
                     <div class="inline-flex flex-gap-base flex-nowrap">
                         <button

@@ -23,9 +23,11 @@
     }
 
     onMount(() => {
+        container.addEventListener("input", handleChange);
         container.addEventListener("change", handleChange);
 
         return () => {
+            container.removeEventListener("input", handleChange);
             container.removeEventListener("change", handleChange);
         };
     });
