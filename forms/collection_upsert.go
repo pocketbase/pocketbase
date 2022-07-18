@@ -78,7 +78,6 @@ func (form *CollectionUpsert) Validate() error {
 			&form.Schema,
 			validation.By(form.ensureNoSystemFieldsChange),
 			validation.By(form.ensureNoFieldsTypeChange),
-			validation.By(form.ensureNoFieldsNameReuse),
 		),
 		validation.Field(&form.ListRule, validation.By(form.checkRule)),
 		validation.Field(&form.ViewRule, validation.By(form.checkRule)),
@@ -148,20 +147,6 @@ func (form *CollectionUpsert) ensureNoSystemFieldsChange(value any) error {
 
 		if newField == nil || oldField.String() != newField.String() {
 			return validation.NewError("validation_system_field_change", "System fields cannot be deleted or changed.")
-		}
-	}
-
-	return nil
-}
-
-func (form *CollectionUpsert) ensureNoFieldsNameReuse(value any) error {
-	v, _ := value.(schema.Schema)
-
-	for _, field := range v.Fields() {
-		oldField := form.collection.Schema.GetFieldByName(field.Name)
-
-		if oldField != nil && oldField.Id != field.Id {
-			return validation.NewError("validation_field_old_field_exist", "Cannot use existing schema field names when renaming fields.")
 		}
 	}
 

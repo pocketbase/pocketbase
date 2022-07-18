@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
-    import { scale } from "svelte/transition";
+    import { scale, fly } from "svelte/transition";
     import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
@@ -37,13 +37,6 @@
         field.unique = false;
     }
 
-    $: if (excludeNames.length) {
-        const normalizedName = normalizeFieldName(field.name);
-        if (field.name !== normalizedName) {
-            field.name = normalizedName;
-        }
-    }
-
     $: canBeStored = !CommonHelper.isEmpty(field.name) && field.type;
 
     $: if (!canBeStored) {
@@ -73,7 +66,10 @@
 
     $: interactive = !disabled && !field.system && !field.toDelete && canBeStored;
 
-    $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
+    $: hasValidName = !excludeNames.includes(field.name);
+
+    $: hasErrors =
+        !hasValidName || !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
 
     export function expand() {
         accordion?.expand();
@@ -93,14 +89,7 @@
     }
 
     function normalizeFieldName(name) {
-        name = CommonHelper.slugify(name);
-
-        let counter = "";
-        while (excludeNames.includes(name + counter)) {
-            ++counter;
-        }
-
-        return name + counter;
+        return CommonHelper.slugify(name);
     }
 
     onMount(() => {
@@ -120,7 +109,7 @@
     {interactive}
     class={disabled || field.toDelete || field.system ? "field-accordion disabled" : "field-accordion"}
 >
-    <svelte:fragment slot="header" let:active={expanded}>
+    <svelte:fragment slot="header">
         <div class="inline-flex">
             <span class="icon field-type">
                 <i class={CommonHelper.getFieldTypeIcon(field.type)} />
@@ -149,7 +138,7 @@
 
         <div class="flex-fill" />
 
-        {#if hasErrors}
+        {#if hasErrors && !field.system}
             <i
                 class="ri-error-warning-fill txt-danger"
                 transition:scale={{ duration: 150, start: 0.7 }}
@@ -189,11 +178,23 @@
             </div>
             <div class="col-sm-6">
                 <Field
-                    class="form-field required {field.id && field.system ? 'disabled' : ''}"
+                    class="
+                        form-field
+                        required
+                        {!hasValidName ? 'invalid' : ''}
+                        {field.id && field.system ? 'disabled' : ''}
+                    "
                     name="schema.{key}.name"
                     let:uniqueId
                 >
-                    <label for={uniqueId}>Name</label>
+                    <label for={uniqueId}>
+                        <span class="txt">Name</span>
+                        {#if !hasValidName}
+                            <span class="txt invalid-name-note" transition:fly={{ duration: 150, x: 5 }}>
+                                Duplicated or reserved name
+                            </span>
+                        {/if}
+                    </label>
                     <!-- svelte-ignore a11y-autofocus -->
                     <input
                         type="text"
@@ -284,6 +285,12 @@
 </Accordion>
 
 <style>
+    .invalid-name-note {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        text-transform: none;
+    }
     .title.field-name {
         max-width: 130px;
         overflow: hidden;

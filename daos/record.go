@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -329,20 +330,41 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 		}
 
 		// check for new or renamed columns
+		toRename := map[string]string{}
 		for _, field := range newSchema.Fields() {
 			oldField := oldSchema.GetFieldById(field.Id)
+			// Note:
+			// We are using a temporary column name when adding or renaming columns
+			// to ensure that there are no name collisions in case there is
+			// names switch/reuse of existing columns (eg. name, title -> title, name).
+			// This way we are always doing 1 more rename operation but it provides better dev experience.
+
 			if oldField == nil {
+				tempName := field.Name + security.RandomString(5)
+				toRename[tempName] = field.Name
+
 				// add
-				_, err := txDao.DB().AddColumn(newTableName, field.Name, field.ColDefinition()).Execute()
+				_, err := txDao.DB().AddColumn(newTableName, tempName, field.ColDefinition()).Execute()
 				if err != nil {
 					return err
 				}
 			} else if oldField.Name != field.Name {
+				tempName := field.Name + security.RandomString(5)
+				toRename[tempName] = field.Name
+
 				// rename
-				_, err := txDao.DB().RenameColumn(newTableName, oldField.Name, field.Name).Execute()
+				_, err := txDao.DB().RenameColumn(newTableName, oldField.Name, tempName).Execute()
 				if err != nil {
 					return err
 				}
+			}
+		}
+
+		// set the actual columns name
+		for tempName, actualName := range toRename {
+			_, err := txDao.DB().RenameColumn(newTableName, tempName, actualName).Execute()
+			if err != nil {
+				return err
 			}
 		}
 

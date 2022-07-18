@@ -261,7 +261,7 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			}`,
 			[]string{"schema"},
 		},
-		// update failure - rename fields to existing field names (aka. reusing field names)
+		// update success - rename fields to existing field names (aka. reusing field names)
 		{
 			"test_new",
 			`{
@@ -270,7 +270,7 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 					{"id":"b123456","name":"test1","type":"email"}
 				]
 			}`,
-			[]string{"schema"},
+			[]string{},
 		},
 		// update failure - existing name
 		{
