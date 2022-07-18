@@ -144,7 +144,6 @@ func TestRecordsList(t *testing.T) {
 				`"manyrels":[{`,
 				`"manyrels":[]`,
 				`"rel_cascade":"`,
-				`"rel_cascade":""`,
 				`"onerel":{"@collectionId":"3f2888f8-075d-49fe-9d09-ea7e951000dc","@collectionName":"demo",`,
 				`"json":[1,2,3]`,
 				`"select":["a","b"]`,
@@ -455,11 +454,13 @@ func TestRecordDelete(t *testing.T) {
 				"OnRecordAfterDeleteRequest":  1,
 				"OnModelAfterUpdate":          1, // nullify related record
 				"OnModelBeforeUpdate":         1, // nullify related record
-				"OnModelBeforeDelete":         2, // +1 cascade delete related record
-				"OnModelAfterDelete":          2, // +1 cascade delete related record
+				"OnModelBeforeDelete":         3, // +1 cascade delete related record
+				"OnModelAfterDelete":          3, // +1 cascade delete related record
 			},
 			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				ensureDeletedFiles(app, "3f2888f8-075d-49fe-9d09-ea7e951000dc", "577bd676-aacb-4072-b7da-99d00ee210a4")
+				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "94568ca2-0bee-49d7-b749-06cb97956fd9")
+				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "63c2ab80-84ab-4057-a592-4604a731f78f")
 			},
 		},
 		{
@@ -475,11 +476,13 @@ func TestRecordDelete(t *testing.T) {
 				"OnRecordAfterDeleteRequest":  1,
 				"OnModelAfterUpdate":          1, // nullify related record
 				"OnModelBeforeUpdate":         1, // nullify related record
-				"OnModelBeforeDelete":         2, // +1 cascade delete related record
-				"OnModelAfterDelete":          2, // +1 cascade delete related record
+				"OnModelBeforeDelete":         3, // +1 cascade delete related record
+				"OnModelAfterDelete":          3, // +1 cascade delete related record
 			},
 			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				ensureDeletedFiles(app, "3f2888f8-075d-49fe-9d09-ea7e951000dc", "577bd676-aacb-4072-b7da-99d00ee210a4")
+				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "94568ca2-0bee-49d7-b749-06cb97956fd9")
+				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "63c2ab80-84ab-4057-a592-4604a731f78f")
 			},
 		},
 		{
@@ -554,8 +557,8 @@ func TestRecordDelete(t *testing.T) {
 				"OnRecordAfterDeleteRequest":  1,
 				"OnModelBeforeUpdate":         1,
 				"OnModelAfterUpdate":          1,
-				"OnModelBeforeDelete":         2,
-				"OnModelAfterDelete":          2,
+				"OnModelBeforeDelete":         3,
+				"OnModelAfterDelete":          3,
 			},
 			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				recId := "63c2ab80-84ab-4057-a592-4604a731f78f"
@@ -565,6 +568,7 @@ func TestRecordDelete(t *testing.T) {
 					t.Errorf("Expected record %s to be cascade deleted", recId)
 				}
 				ensureDeletedFiles(app, "3f2888f8-075d-49fe-9d09-ea7e951000dc", "577bd676-aacb-4072-b7da-99d00ee210a4")
+				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "94568ca2-0bee-49d7-b749-06cb97956fd9")
 				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "63c2ab80-84ab-4057-a592-4604a731f78f")
 			},
 		},
