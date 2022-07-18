@@ -194,11 +194,9 @@ func (r *Runner) Up() ([]string, error) {
 //
 // On success returns list with the reverted migrations file names.
 func (r *Runner) Down(toRevertCount int) ([]string, error) {
-	applied := []string{}
+	reverted := make([]string, 0, toRevertCount)
 
 	err := r.db.Transactional(func(tx *dbx.Tx) error {
-		totalReverted := 0
-
 		for i := len(r.migrationsList.Items()) - 1; i >= 0; i-- {
 			m := r.migrationsList.Item(i)
 
@@ -208,7 +206,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 			}
 
 			// revert limit reached
-			if toRevertCount-totalReverted <= 0 {
+			if toRevertCount-len(reverted) <= 0 {
 				break
 			}
 
@@ -220,7 +218,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 				return fmt.Errorf("Failed to save reverted migration info for %s: %w", m.file, err)
 			}
 
-			applied = append(applied, m.file)
+			reverted = append(reverted, m.file)
 		}
 
 		return nil
@@ -229,7 +227,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return applied, nil
+	return reverted, nil
 }
 
 func (r *Runner) createMigrationsTable() error {
