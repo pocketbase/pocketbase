@@ -244,12 +244,13 @@ func (c SmtpConfig) Validate() error {
 // -------------------------------------------------------------------
 
 type S3Config struct {
-	Enabled   bool   `form:"enabled" json:"enabled"`
-	Bucket    string `form:"bucket" json:"bucket"`
-	Region    string `form:"region" json:"region"`
-	Endpoint  string `form:"endpoint" json:"endpoint"`
-	AccessKey string `form:"accessKey" json:"accessKey"`
-	Secret    string `form:"secret" json:"secret"`
+	Enabled        bool   `form:"enabled" json:"enabled"`
+	Bucket         string `form:"bucket" json:"bucket"`
+	Region         string `form:"region" json:"region"`
+	Endpoint       string `form:"endpoint" json:"endpoint"`
+	AccessKey      string `form:"accessKey" json:"accessKey"`
+	Secret         string `form:"secret" json:"secret"`
+	ForcePathStyle bool   `form:"forcePathStyle" json:"forcePathStyle"`
 }
 
 // Validate makes S3Config validatable by implementing [validation.Validatable] interface.

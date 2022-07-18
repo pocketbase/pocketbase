@@ -35,15 +35,17 @@ func NewS3(
 	endpoint string,
 	accessKey string,
 	secretKey string,
+	s3ForcePathStyle bool,
 ) (*System, error) {
 	ctx := context.Background() // default context
 
 	cred := credentials.NewStaticCredentials(accessKey, secretKey, "")
 
 	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(region),
-		Endpoint:    aws.String(endpoint),
-		Credentials: cred,
+		Region:           aws.String(region),
+		Endpoint:         aws.String(endpoint),
+		Credentials:      cred,
+		S3ForcePathStyle: aws.Bool(s3ForcePathStyle),
 	})
 	if err != nil {
 		return nil, err
