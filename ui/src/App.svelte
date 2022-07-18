@@ -10,6 +10,7 @@
     import Toasts from "@/components/base/Toasts.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import Confirmation from "@/components/base/Confirmation.svelte";
+    import { pageTitle, appName } from "@/stores/app";
     import { admin } from "@/stores/admin";
     import { setErrors } from "@/stores/errors";
     import { resetConfirmation } from "@/stores/confirmation";
@@ -17,6 +18,10 @@
     let oldLocation = undefined;
 
     let showAppSidebar = false;
+
+    $: if ($admin?.id) {
+        loadAppName();
+    }
 
     function handleRouteLoading(e) {
         if (e?.detail?.location === oldLocation) {
@@ -28,7 +33,7 @@
         oldLocation = e?.detail?.location;
 
         // resets
-        CommonHelper.setDocumentTitle("");
+        $pageTitle = "";
         setErrors({});
         resetConfirmation();
     }
@@ -37,10 +42,29 @@
         replace("/");
     }
 
+    async function loadAppName() {
+        if (!$admin?.id) {
+            return;
+        }
+
+        try {
+            const settings = await ApiClient.Settings.getAll({
+                $cancelKey: "loadAppName",
+            });
+            $appName = settings?.meta?.appName || "";
+        } catch (err) {
+            console.warn("Failed to load app name.", err);
+        }
+    }
+
     function logout() {
         ApiClient.logout();
     }
 </script>
+
+<svelte:head>
+    <title>{CommonHelper.joinNonEmpty([$pageTitle, $appName, "PocketBase"], " - ")}</title>
+</svelte:head>
 
 <div class="app-layout">
     {#if $admin?.id && showAppSidebar}

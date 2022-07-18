@@ -1,9 +1,12 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle, appName } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+
+    $pageTitle = "Application settings";
 
     let formSettings = {};
     let isLoading = false;
@@ -11,8 +14,6 @@
     let initialHash = "";
 
     $: hasChanges = initialHash != JSON.stringify(formSettings);
-
-    CommonHelper.setDocumentTitle("Application settings");
 
     loadSettings();
 
@@ -48,10 +49,13 @@
     }
 
     function init(settings = {}) {
+        $appName = settings?.meta?.appName;
+
         formSettings = {
             meta: settings?.meta || {},
             logs: settings?.logs || {},
         };
+
         initialHash = JSON.stringify(formSettings);
     }
 </script>

@@ -2,6 +2,7 @@
     import { slide } from "svelte/transition";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
@@ -13,14 +14,14 @@
         { label: "Always", value: true },
     ];
 
+    $pageTitle = "Mail settings";
+
     let formSettings = {};
     let isLoading = false;
     let isSaving = false;
     let initialHash = "";
 
     $: hasChanges = initialHash != JSON.stringify(formSettings);
-
-    CommonHelper.setDocumentTitle("Mail settings");
 
     loadSettings();
 
@@ -70,7 +71,7 @@
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Mail settings</div>
+            <div class="breadcrumb-item">{$pageTitle}</div>
         </nav>
     </header>
 

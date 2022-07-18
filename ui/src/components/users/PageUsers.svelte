@@ -3,6 +3,7 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
+    import { pageTitle } from "@/stores/app";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
@@ -15,6 +16,8 @@
 
     const queryParams = CommonHelper.getQueryParams(window.location?.href);
     const excludedProfileFields = ["id", "userId", "created", "updated"];
+
+    $pageTitle = "Users";
 
     let userUpsertPanel;
     let collectionUpsertPanel;
@@ -43,8 +46,6 @@
     $: profileFields = profileCollection?.schema?.filter(
         (field) => !excludedProfileFields.includes(field.name)
     );
-
-    CommonHelper.setDocumentTitle("Users");
 
     loadProfilesCollection();
 
@@ -111,7 +112,7 @@
     <main class="page-wrapper">
         <header class="page-header">
             <nav class="breadcrumbs">
-                <div class="breadcrumb-item">Users</div>
+                <div class="breadcrumb-item">{$pageTitle}</div>
             </nav>
 
             <button

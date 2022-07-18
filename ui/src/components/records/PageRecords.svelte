@@ -7,6 +7,7 @@
     } from "@/stores/collections";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
+    import { pageTitle } from "@/stores/app";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
@@ -16,6 +17,8 @@
     import RecordsList from "@/components/records/RecordsList.svelte";
 
     const queryParams = CommonHelper.getQueryParams(window.location?.href);
+
+    $pageTitle = "Collections";
 
     let collectionUpsertPanel;
     let collectionDocsPanel;
@@ -29,9 +32,7 @@
 
     // reset filter and sort on collection change
     $: if ($activeCollection?.id && selectedCollectionId != $activeCollection.id) {
-        selectedCollectionId = $activeCollection.id;
-        sort = "-created";
-        filter = "";
+        reset();
     }
 
     // keep the url params in sync
@@ -43,7 +44,11 @@
         });
     }
 
-    CommonHelper.setDocumentTitle("Collections");
+    function reset() {
+        selectedCollectionId = $activeCollection.id;
+        sort = "-created";
+        filter = "";
+    }
 
     loadCollections(selectedCollectionId);
 </script>
@@ -123,6 +128,7 @@
 {/if}
 
 <CollectionUpsertPanel bind:this={collectionUpsertPanel} />
+
 <CollectionDocsPanel bind:this={collectionDocsPanel} />
 
 <RecordUpsertPanel

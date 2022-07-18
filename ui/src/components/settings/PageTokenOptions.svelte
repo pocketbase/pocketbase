@@ -1,6 +1,7 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
@@ -14,14 +15,14 @@
         { key: "adminPasswordResetToken", label: "Admins password reset token" },
     ];
 
+    $pageTitle = "Token options";
+
     let tokenSettings = {};
     let isLoading = false;
     let isSaving = false;
     let initialHash = "";
 
     $: hasChanges = initialHash != JSON.stringify(tokenSettings);
-
-    CommonHelper.setDocumentTitle("Token options");
 
     loadSettings();
 
@@ -76,7 +77,7 @@
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Token options</div>
+            <div class="breadcrumb-item">{$pageTitle}</div>
         </nav>
     </header>
 

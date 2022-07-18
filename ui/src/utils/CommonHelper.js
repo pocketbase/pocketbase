@@ -860,25 +860,6 @@ export default class CommonHelper {
     }
 
     /**
-     * Updates the page document title.
-     *
-     * @param {String} title
-     * @param {String} [suffix]
-     */
-    static setDocumentTitle(title, suffix = "PocketBase") {
-        let parts = [];
-        if (!CommonHelper.isEmpty(title)) {
-            parts.push(title.trim());
-        }
-
-        if (!CommonHelper.isEmpty(suffix)) {
-            parts.push(suffix.trim());
-        }
-
-        document.title = parts.join(' - ')
-    }
-
-    /**
      * Normalizes and append a value to the provided form data.
      *
      * @param {FormData} formData

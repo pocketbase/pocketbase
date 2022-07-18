@@ -1,5 +1,5 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import Field from "@/components/base/Field.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
@@ -8,6 +8,8 @@
     import LogViewPanel from "@/components/logs/LogViewPanel.svelte";
 
     const ADMIN_LOGS_LOCAL_STORAGE_KEY = "includeAdminLogs";
+
+    $pageTitle = "Request logs";
 
     let logPanel;
     let filter = "";
@@ -23,15 +25,13 @@
     function refresh() {
         refreshToken++;
     }
-
-    CommonHelper.setDocumentTitle("Request logs");
 </script>
 
 <main class="page-wrapper">
     <div class="page-header-wrapper m-b-0">
         <header class="page-header">
             <nav class="breadcrumbs">
-                <div class="breadcrumb-item">Request logs</div>
+                <div class="breadcrumb-item">{$pageTitle}</div>
             </nav>
 
             <RefreshButton on:refresh={() => refresh()} />

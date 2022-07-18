@@ -1,6 +1,7 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import { admin as loggedAdmin } from "@/stores/admin";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
@@ -11,6 +12,8 @@
     import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";
 
     const queryParams = CommonHelper.getQueryParams(window.location?.href);
+
+    $pageTitle = "Admins";
 
     let adminUpsertPanel;
     let admins = [];
@@ -27,8 +30,6 @@
 
         loadAdmins();
     }
-
-    CommonHelper.setDocumentTitle("Admins");
 
     export function loadAdmins() {
         isLoading = true;
@@ -64,7 +65,7 @@
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Admins</div>
+            <div class="breadcrumb-item">{$pageTitle}</div>
         </nav>
 
         <RefreshButton on:refresh={() => loadAdmins()} />

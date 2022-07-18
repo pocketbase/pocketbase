@@ -2,11 +2,14 @@
     import { slide } from "svelte/transition";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+
+    $pageTitle = "Files storage";
 
     let s3 = {};
     let isLoading = false;
@@ -15,8 +18,6 @@
     let initialEnabled = false;
 
     $: hasChanges = initialHash != JSON.stringify(s3);
-
-    CommonHelper.setDocumentTitle("Files storage");
 
     loadSettings();
 
@@ -65,7 +66,7 @@
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Files storage</div>
+            <div class="breadcrumb-item">{$pageTitle}</div>
         </nav>
     </header>
 

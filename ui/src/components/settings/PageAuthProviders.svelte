@@ -1,11 +1,14 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import EmailAuthAccordion from "@/components/settings/EmailAuthAccordion.svelte";
     import AuthProviderAccordion from "@/components/settings/AuthProviderAccordion.svelte";
+
+    $pageTitle = "Auth providers";
 
     let emailAuthAccordion;
     let authSettings = {};
@@ -14,8 +17,6 @@
     let initialHash = "";
 
     $: hasChanges = initialHash != JSON.stringify(authSettings);
-
-    CommonHelper.setDocumentTitle("Auth providers");
 
     loadSettings();
 
@@ -76,7 +77,7 @@
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Auth providers</div>
+            <div class="breadcrumb-item">{$pageTitle}</div>
         </nav>
     </header>
 
