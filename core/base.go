@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -123,7 +124,7 @@ type BaseApp struct {
 //
 // To initialize the app, you need to call `app.Bootsrap()`.
 func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
-	return &BaseApp{
+	app := &BaseApp{
 		dataDir:             dataDir,
 		isDebug:             isDebug,
 		encryptionEnv:       encryptionEnv,
@@ -209,6 +210,10 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onCollectionBeforeDeleteRequest: &hook.Hook[*CollectionDeleteEvent]{},
 		onCollectionAfterDeleteRequest:  &hook.Hook[*CollectionDeleteEvent]{},
 	}
+
+	app.registerDefaultHooks()
+
+	return app
 }
 
 // Bootstrap initializes the application
@@ -749,4 +754,34 @@ func (app *BaseApp) createDao(db dbx.Builder) *daos.Dao {
 	}
 
 	return dao
+}
+
+func (app *BaseApp) registerDefaultHooks() {
+	deletePrefix := func(prefix string) error {
+		fs, err := app.NewFilesystem()
+		if err != nil {
+			return err
+		}
+		defer fs.Close()
+
+		failed := fs.DeletePrefix(prefix)
+		if len(failed) > 0 {
+			return errors.New("Failed to delete the files at " + prefix)
+		}
+
+		return nil
+	}
+
+	// delete storage files from deleted Collection, Records, etc.
+	app.OnModelAfterDelete().Add(func(e *ModelEvent) error {
+		if m, ok := e.Model.(models.FilesManager); ok && m.BaseFilesPath() != "" {
+			if err := deletePrefix(m.BaseFilesPath()); err != nil && app.IsDebug() {
+				// non critical error - only log for debug
+				// (usually could happen because of S3 api limits)
+				log.Println(err)
+			}
+		}
+
+		return nil
+	})
 }

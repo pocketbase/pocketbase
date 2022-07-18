@@ -356,13 +356,6 @@ func (api *recordApi) delete(c echo.Context) error {
 			return rest.NewBadRequestError("Failed to delete record. Make sure that the record is not part of a required relation reference.", err)
 		}
 
-		// try to delete the record files
-		if err := api.deleteRecordFiles(e.Record); err != nil && api.app.IsDebug() {
-			// non critical error - only log for debug
-			// (usually could happen due to S3 api limits)
-			log.Println(err)
-		}
-
 		return e.HttpContext.NoContent(http.StatusNoContent)
 	})
 
@@ -371,21 +364,6 @@ func (api *recordApi) delete(c echo.Context) error {
 	}
 
 	return handlerErr
-}
-
-func (api *recordApi) deleteRecordFiles(record *models.Record) error {
-	fs, err := api.app.NewFilesystem()
-	if err != nil {
-		return err
-	}
-	defer fs.Close()
-
-	failed := fs.DeletePrefix(record.BaseFilesPath())
-	if len(failed) > 0 {
-		return fmt.Errorf("Failed to delete %d record files.", len(failed))
-	}
-
-	return nil
 }
 
 func (api *recordApi) exportRequestData(c echo.Context) map[string]any {

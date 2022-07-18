@@ -1,8 +1,6 @@
 package apis
 
 import (
-	"errors"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -160,13 +158,6 @@ func (api *collectionApi) delete(c echo.Context) error {
 			return rest.NewBadRequestError("Failed to delete collection. Make sure that the collection is not referenced by other collections.", err)
 		}
 
-		// try to delete the collection files
-		if err := api.deleteCollectionFiles(e.Collection); err != nil && api.app.IsDebug() {
-			// non critical error - only log for debug
-			// (usually could happen because of S3 api limits)
-			log.Println(err)
-		}
-
 		return e.HttpContext.NoContent(http.StatusNoContent)
 	})
 
@@ -175,19 +166,4 @@ func (api *collectionApi) delete(c echo.Context) error {
 	}
 
 	return handlerErr
-}
-
-func (api *collectionApi) deleteCollectionFiles(collection *models.Collection) error {
-	fs, err := api.app.NewFilesystem()
-	if err != nil {
-		return err
-	}
-	defer fs.Close()
-
-	failed := fs.DeletePrefix(collection.BaseFilesPath())
-	if len(failed) > 0 {
-		return errors.New("Failed to delete all record files.")
-	}
-
-	return nil
 }

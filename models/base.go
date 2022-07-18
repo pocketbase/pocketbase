@@ -15,6 +15,12 @@ type ColumnValueMapper interface {
 	ColumnValueMap() map[string]any
 }
 
+// FilesManager defines an interface with common methods that files manager models should implement.
+type FilesManager interface {
+	// BaseFilesPath returns the storage dir path used by the interface instance.
+	BaseFilesPath() string
+}
+
 // Model defines an interface with common methods that all db models should have.
 type Model interface {
 	TableName() string
