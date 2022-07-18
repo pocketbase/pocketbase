@@ -98,17 +98,9 @@ func (f FilterData) resolveTokenizedExpr(expr fexpr.Expr, fieldResolver FieldRes
 
 	switch expr.Op {
 	case fexpr.SignEq:
-		op := "="
-		if strings.ToLower(lName) == "null" || strings.ToLower(rName) == "null" {
-			op = "IS"
-		}
-		return dbx.NewExp(fmt.Sprintf("%s %s %s", lName, op, rName), params), nil
+		return dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') = COALESCE(%s, '')", lName, rName), params), nil
 	case fexpr.SignNeq:
-		op := "!="
-		if strings.ToLower(lName) == "null" || strings.ToLower(rName) == "null" {
-			op = "IS NOT"
-		}
-		return dbx.NewExp(fmt.Sprintf("%s %s %s", lName, op, rName), params), nil
+		return dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') != COALESCE(%s, '')", lName, rName), params), nil
 	case fexpr.SignLike:
 		// normalize operands and switch sides if the left operand is a number or text
 		if len(lParams) > 0 {

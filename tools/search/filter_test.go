@@ -39,25 +39,25 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"^" +
 				regexp.QuoteMeta("((([[test1]] > {:") +
 				".+" +
-				regexp.QuoteMeta("}) OR ([[test2]] != {:") +
+				regexp.QuoteMeta("}) OR (COALESCE([[test2]], '') != COALESCE({:") +
 				".+" +
-				regexp.QuoteMeta("})) AND ([[test3]] LIKE {:") +
+				regexp.QuoteMeta("}, ''))) AND ([[test3]] LIKE {:") +
 				".+" +
-				regexp.QuoteMeta("})) AND ([[test4.sub]] IS NULL)") +
+				regexp.QuoteMeta("})) AND (COALESCE([[test4.sub]], '') = COALESCE(NULL, ''))") +
 				"$",
 		},
 		// combination of special literals (null, true, false)
 		{
 			"test1=true && test2 != false && test3 = null || test4.sub != null",
 			false,
-			"^" + regexp.QuoteMeta("((([[test1]] = 1) AND ([[test2]] != 0)) AND ([[test3]] IS NULL)) OR ([[test4.sub]] IS NOT NULL)") + "$",
+			"^" + regexp.QuoteMeta("(((COALESCE([[test1]], '') = COALESCE(1, '')) AND (COALESCE([[test2]], '') != COALESCE(0, ''))) AND (COALESCE([[test3]], '') = COALESCE(NULL, ''))) OR (COALESCE([[test4.sub]], '') != COALESCE(NULL, ''))") + "$",
 		},
 		// all operators
 		{
 			"(test1 = test2 || test2 != test3) && (test2 ~ 'example' || test2 !~ '%%abc') && 'switch1%%' ~ test1 && 'switch2' !~ test2 && test3 > 1 && test3 >= 0 && test3 <= 4 && 2 < 5",
 			false,
 			"^" +
-				regexp.QuoteMeta("(((((((([[test1]] = [[test2]]) OR ([[test2]] != [[test3]])) AND (([[test2]] LIKE {:") +
+				regexp.QuoteMeta("((((((((COALESCE([[test1]], '') = COALESCE([[test2]], '')) OR (COALESCE([[test2]], '') != COALESCE([[test3]], ''))) AND (([[test2]] LIKE {:") +
 				".+" +
 				regexp.QuoteMeta("}) OR ([[test2]] NOT LIKE {:") +
 				".+" +

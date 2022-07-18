@@ -273,8 +273,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			false,
 			`{"page":1,"perPage":` + fmt.Sprint(MaxPerPage) + `,"totalItems":1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
 			[]string{
-				"SELECT count(*) FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (test2 IS NOT null)) AND (test1 >= '2') ORDER BY `test1` ASC, `test2` DESC",
-				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (test2 IS NOT null)) AND (test1 >= '2') ORDER BY `test1` ASC, `test2` DESC LIMIT 200",
+				"SELECT count(*) FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (COALESCE(test2, '') != COALESCE(null, ''))) AND (test1 >= '2') ORDER BY `test1` ASC, `test2` DESC",
+				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (COALESCE(test2, '') != COALESCE(null, ''))) AND (test1 >= '2') ORDER BY `test1` ASC, `test2` DESC LIMIT 200",
 			},
 		},
 		// valid sort and filter fields (zero results)
@@ -286,8 +286,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			false,
 			`{"page":1,"perPage":10,"totalItems":0,"items":[]}`,
 			[]string{
-				"SELECT count(*) FROM `test` WHERE (NOT (`test1` IS NULL)) AND (test3 != '') ORDER BY `test1` ASC, `test3` ASC",
-				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (test3 != '') ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
+				"SELECT count(*) FROM `test` WHERE (NOT (`test1` IS NULL)) AND (COALESCE(test3, '') != COALESCE('', '')) ORDER BY `test1` ASC, `test3` ASC",
+				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (COALESCE(test3, '') != COALESCE('', '')) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
 			},
 		},
 		// pagination test
@@ -344,7 +344,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 
 		for _, q := range testDB.CalledQueries {
 			if !list.ExistInSliceWithRegex(q, s.expectQueries) {
-				t.Errorf("(%d) Didn't expect query %v", i, q)
+				t.Errorf("(%d) Didn't expect query \n%v", i, q)
 			}
 		}
 	}

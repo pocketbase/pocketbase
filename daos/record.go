@@ -331,15 +331,15 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 		// check for new or renamed columns
 		for _, field := range newSchema.Fields() {
 			oldField := oldSchema.GetFieldById(field.Id)
-			if oldField != nil {
-				// rename
-				_, err := txDao.DB().RenameColumn(newTableName, oldField.Name, field.Name).Execute()
+			if oldField == nil {
+				// add
+				_, err := txDao.DB().AddColumn(newTableName, field.Name, field.ColDefinition()).Execute()
 				if err != nil {
 					return err
 				}
-			} else {
-				// add
-				_, err := txDao.DB().AddColumn(newTableName, field.Name, field.ColDefinition()).Execute()
+			} else if oldField.Name != field.Name {
+				// rename
+				_, err := txDao.DB().RenameColumn(newTableName, oldField.Name, field.Name).Execute()
 				if err != nil {
 					return err
 				}
