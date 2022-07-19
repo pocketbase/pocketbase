@@ -8,6 +8,7 @@
     import Field from "@/components/base/Field.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import tooltip from "@/actions/tooltip";
 
     $pageTitle = "Files storage";
 
@@ -153,6 +154,21 @@
                             <Field class="form-field required" name="s3.secret" let:uniqueId>
                                 <label for={uniqueId}>Secret</label>
                                 <RedactedPasswordInput id={uniqueId} required bind:value={s3.secret} />
+                            </Field>
+                        </div>
+                        <div class="col-lg-12">
+                            <Field class="form-field" name="s3.forcePathStyle" let:uniqueId>
+                                <input type="checkbox" id={uniqueId} bind:checked={s3.forcePathStyle} />
+                                <label for={uniqueId}>
+                                    <span class="txt">Force path-style addressing</span>
+                                    <i
+                                        class="ri-information-line link-hint"
+                                        use:tooltip={{
+                                            text: 'Forces the request to use path-style addressing, eg. "https://s3.amazonaws.com/BUCKET/KEY" instead of the default "https://BUCKET.s3.amazonaws.com/KEY".',
+                                            position: "top",
+                                        }}
+                                    />
+                                </label>
                             </Field>
                         </div>
                         <!-- margin helper -->
