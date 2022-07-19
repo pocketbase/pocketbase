@@ -5,6 +5,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { errors } from "@/stores/errors";
+    import Toggler from "@/components/base/Toggler.svelte";
     import Accordion from "@/components/base/Accordion.svelte";
     import Field from "@/components/base/Field.svelte";
     import FieldTypeSelect from "@/components/collections/schema/FieldTypeSelect.svelte";
@@ -272,13 +273,16 @@
             {#if !field.toDelete}
                 <div class="col-sm-4 txt-right">
                     <div class="flex-fill" />
-                    <div class="inline-flex flex-gap-base flex-nowrap">
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-secondary fade"
-                            on:click|stopPropagation={handleDelete}
-                        >
-                            <span class="txt">Remove</span>
+                    <div class="inline-flex flex-gap-sm flex-nowrap">
+                        <button type="button" class="btn btn-circle btn-sm btn-secondary">
+                            <i class="ri-more-line" />
+                            <Toggler
+                                class="dropdown dropdown-sm dropdown-upside dropdown-right dropdown-nowrap no-min-width"
+                            >
+                                <button type="button" class="dropdown-item txt-right" on:click={handleDelete}>
+                                    <span class="txt">Remove</span>
+                                </button>
+                            </Toggler>
                         </button>
 
                         {#if interactive}

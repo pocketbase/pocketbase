@@ -392,6 +392,9 @@ a,
         .p-#{$sideAlias}-#{$spacing} { padding-#{$side}: $spacing * 1px !important; }
     }
 }
+.no-min-width {
+    min-width: 0 !important;
+}
 
 .wrapper {
     position: relative;

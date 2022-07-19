@@ -226,6 +226,7 @@ button {
     &.btn-circle {
         border-radius: 50%;
         padding: 0;
+        gap: 0;
         i {
             $iconSize: 23px;
             font-size: 1.2857rem;
