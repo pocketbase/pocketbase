@@ -23,7 +23,7 @@ func TestExpandRecords(t *testing.T) {
 		expands              []string
 		fetchFunc            daos.ExpandFetchFunc
 		expectExpandProps    int
-		expectExpandFailires int
+		expectExpandFailures int
 	}{
 		// empty records
 		{
@@ -130,8 +130,8 @@ func TestExpandRecords(t *testing.T) {
 		records, _ := app.Dao().FindRecordsByIds(col, ids, nil)
 		failed := app.Dao().ExpandRecords(records, s.expands, s.fetchFunc)
 
-		if len(failed) != s.expectExpandFailires {
-			t.Errorf("(%d) Expected %d failures, got %d: \n%v", i, s.expectExpandFailires, len(failed), failed)
+		if len(failed) != s.expectExpandFailures {
+			t.Errorf("(%d) Expected %d failures, got %d: \n%v", i, s.expectExpandFailures, len(failed), failed)
 		}
 
 		encoded, _ := json.Marshal(records)
@@ -155,7 +155,7 @@ func TestExpandRecord(t *testing.T) {
 		expands              []string
 		fetchFunc            daos.ExpandFetchFunc
 		expectExpandProps    int
-		expectExpandFailires int
+		expectExpandFailures int
 	}{
 		// empty expand
 		{
@@ -241,8 +241,8 @@ func TestExpandRecord(t *testing.T) {
 		record, _ := app.Dao().FindFirstRecordByData(col, "id", s.recordId)
 		failed := app.Dao().ExpandRecord(record, s.expands, s.fetchFunc)
 
-		if len(failed) != s.expectExpandFailires {
-			t.Errorf("(%d) Expected %d failures, got %d: \n%v", i, s.expectExpandFailires, len(failed), failed)
+		if len(failed) != s.expectExpandFailures {
+			t.Errorf("(%d) Expected %d failures, got %d: \n%v", i, s.expectExpandFailures, len(failed), failed)
 		}
 
 		encoded, _ := json.Marshal(record)

@@ -7,8 +7,10 @@ import (
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestAdminAuth(t *testing.T) {
@@ -100,14 +102,12 @@ func TestAdminRequestPasswordReset(t *testing.T) {
 			Url:            "/api/admins/request-password-reset",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
 			ExpectedStatus: 204,
-			// usually this events are fired but since the submit is
-			// executed in a separate go routine they are fired async
-			// ExpectedEvents: map[string]int{
-			// 	"OnModelBeforeUpdate": 1,
-			// 	"OnModelAfterUpdate":  1,
-			// 	"OnMailerBeforeUserResetPasswordSend:1":  1,
-			// 	"OnMailerAfterUserResetPasswordSend:1":  1,
-			// },
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":                  1,
+				"OnModelAfterUpdate":                   1,
+				"OnMailerBeforeAdminResetPasswordSend": 1,
+				"OnMailerAfterAdminResetPasswordSend":  1,
+			},
 		},
 		{
 			Name:           "existing admin (after already sent)",
@@ -115,6 +115,18 @@ func TestAdminRequestPasswordReset(t *testing.T) {
 			Url:            "/api/admins/request-password-reset",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
 			ExpectedStatus: 204,
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				// simulate recent password request
+				admin, err := app.Dao().FindAdminByEmail("test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+				admin.LastResetSentAt = types.NowDateTime()
+				dao := daos.New(app.Dao().DB()) // new dao to ignore hooks
+				if err := dao.Save(admin); err != nil {
+					t.Fatal(err)
+				}
+			},
 		},
 	}
 

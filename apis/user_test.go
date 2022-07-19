@@ -6,7 +6,9 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestUsersAuthMethods(t *testing.T) {
@@ -140,14 +142,12 @@ func TestUserRequestPasswordReset(t *testing.T) {
 			Url:            "/api/users/request-password-reset",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
 			ExpectedStatus: 204,
-			// usually this events are fired but since the submit is
-			// executed in a separate go routine they are fired async
-			// ExpectedEvents: map[string]int{
-			// 	"OnModelBeforeUpdate":                 1,
-			// 	"OnModelAfterUpdate":                  1,
-			// 	"OnMailerBeforeUserResetPasswordSend": 1,
-			// 	"OnMailerAfterUserResetPasswordSend":  1,
-			// },
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":                 1,
+				"OnModelAfterUpdate":                  1,
+				"OnMailerBeforeUserResetPasswordSend": 1,
+				"OnMailerAfterUserResetPasswordSend":  1,
+			},
 		},
 		{
 			Name:           "existing user (after already sent)",
@@ -155,6 +155,18 @@ func TestUserRequestPasswordReset(t *testing.T) {
 			Url:            "/api/users/request-password-reset",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
 			ExpectedStatus: 204,
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				// simulate recent password request
+				user, err := app.Dao().FindUserByEmail("test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+				user.LastResetSentAt = types.NowDateTime()
+				dao := daos.New(app.Dao().DB()) // new dao to ignore hooks
+				if err := dao.Save(user); err != nil {
+					t.Fatal(err)
+				}
+			},
 		},
 	}
 
@@ -216,50 +228,67 @@ func TestUserConfirmPasswordReset(t *testing.T) {
 
 func TestUserRequestVerification(t *testing.T) {
 	scenarios := []tests.ApiScenario{
-		// empty data
 		{
+			Name:            "empty data",
 			Method:          http.MethodPost,
 			Url:             "/api/users/request-verification",
 			Body:            strings.NewReader(``),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{"email":{"code":"validation_required","message":"Cannot be blank."}}`},
 		},
-		// invalid data
 		{
+			Name:            "invalid data",
 			Method:          http.MethodPost,
 			Url:             "/api/users/request-verification",
 			Body:            strings.NewReader(`{"email`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 		},
-		// missing user
 		{
+			Name:           "missing user",
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-verification",
 			Body:           strings.NewReader(`{"email":"missing@example.com"}`),
 			ExpectedStatus: 204,
 		},
-		// existing already verified user
 		{
+			Name:           "existing already verified user",
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-verification",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
 			ExpectedStatus: 204,
 		},
-		// existing unverified user
 		{
+			Name:           "existing unverified user",
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-verification",
 			Body:           strings.NewReader(`{"email":"test2@example.com"}`),
 			ExpectedStatus: 204,
-			// usually this events are fired but since the submit is
-			// executed in a separate go routine they are fired async
-			// ExpectedEvents: map[string]int{
-			// 	"OnModelBeforeUpdate":                1,
-			// 	"OnModelAfterUpdate":                 1,
-			// 	"OnMailerBeforeUserVerificationSend": 1,
-			// 	"OnMailerAfterUserVerificationSend":  1,
-			// },
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":                1,
+				"OnModelAfterUpdate":                 1,
+				"OnMailerBeforeUserVerificationSend": 1,
+				"OnMailerAfterUserVerificationSend":  1,
+			},
+		},
+		{
+			Name:           "existing unverified user (after already sent)",
+			Method:         http.MethodPost,
+			Url:            "/api/users/request-verification",
+			Body:           strings.NewReader(`{"email":"test2@example.com"}`),
+			ExpectedStatus: 204,
+			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				// simulate recent verification sent
+				user, err := app.Dao().FindUserByEmail("test2@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+				user.LastVerificationSentAt = types.NowDateTime()
+				dao := daos.New(app.Dao().DB()) // new dao to ignore hooks
+				if err := dao.Save(user); err != nil {
+					t.Fatal(err)
+				}
+			},
 		},
 	}
 

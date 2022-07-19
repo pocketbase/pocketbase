@@ -27,7 +27,7 @@ type ApiScenario struct {
 	ExpectedContent    []string
 	NotExpectedContent []string
 	ExpectedEvents     map[string]int
-	// test events
+	// test hooks
 	BeforeFunc func(t *testing.T, app *TestApp, e *echo.Echo)
 	AfterFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
 }
@@ -80,6 +80,12 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 	if res.StatusCode != scenario.ExpectedStatus {
 		t.Errorf("[%s] Expected status code %d, got %d", prefix, scenario.ExpectedStatus, res.StatusCode)
 	}
+
+	// @todo consider replacing with sync.WaitGroup
+	//
+	// apply a small delay before checking the expectations to ensure
+	// that all fired go routines have complicated before cleaning up the app instance
+	time.Sleep(5 * time.Millisecond)
 
 	if len(scenario.ExpectedContent) == 0 && len(scenario.NotExpectedContent) == 0 {
 		if len(recorder.Body.Bytes()) != 0 {
