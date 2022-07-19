@@ -63,14 +63,11 @@
 
                 const client = new PocketBase("${ApiClient.baseUrl}");
 
+                ...
+
                 const data = { ... };
 
-                client.Records.update("${collection?.name}", "RECORD_ID", data)
-                    .then(function (record) {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
+                const record = await client.Records.update("${collection?.name}", "RECORD_ID", data);
             `,
         },
     ];

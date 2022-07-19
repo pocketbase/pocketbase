@@ -64,12 +64,9 @@
 
                 const client = new PocketBase("${ApiClient.baseUrl}");
 
-                client.Records.delete("${collection?.name}", "RECORD_ID")
-                    .then(function () {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
+                ...
+
+                await client.Records.delete("${collection?.name}", "RECORD_ID");
             `,
         },
     ];

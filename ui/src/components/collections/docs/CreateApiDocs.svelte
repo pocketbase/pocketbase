@@ -53,14 +53,11 @@
 
                 const client = new PocketBase("${ApiClient.baseUrl}");
 
+                ...
+
                 const data = { ... };
 
-                client.Records.create("${collection?.name}", data)
-                    .then(function (record) {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
+                const record = await client.Records.create("${collection?.name}", data);
             `,
         },
     ];

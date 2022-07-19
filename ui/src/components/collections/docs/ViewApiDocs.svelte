@@ -52,12 +52,11 @@
 
                 const client = new PocketBase("${ApiClient.baseUrl}");
 
-                client.Records.getOne("${collection?.name}", "RECORD_ID")
-                    .then(function (record) {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
+                ...
+
+                const record = await client.Records.getOne("${collection?.name}", "RECORD_ID", {
+                    expand: "some_relation"
+                });
             `,
         },
     ];

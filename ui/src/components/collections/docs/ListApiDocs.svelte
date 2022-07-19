@@ -76,20 +76,17 @@
 
                 const client = new PocketBase("${ApiClient.baseUrl}");
 
-                client.Records.getList("${collection?.name}", { page: 2 })
-                    .then(function (list) {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
+                ...
+
+                // fetch a paginated records list
+                const resultList = await client.Records.getList("${collection?.name}", 1, 50, {
+                    filter: "created >= '2022-01-01 00:00:00'",
+                });
 
                 // alternatively you can also fetch all records at once via getFullList:
-                client.Records.getFullList("${collection?.name}", 200 /* batch size */)
-                    .then(function (records) {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
+                const records = await client.Records.getFullList("${collection?.name}", 200 /* batch size */, {
+                    sort: "-created",
+                });
             `,
         },
     ];
