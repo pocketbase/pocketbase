@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/daos"
@@ -134,6 +135,7 @@ func TestUserRequestPasswordReset(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-password-reset",
 			Body:           strings.NewReader(`{"email":"missing@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 		},
 		{
@@ -141,6 +143,7 @@ func TestUserRequestPasswordReset(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-password-reset",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeUpdate":                 1,
@@ -154,6 +157,7 @@ func TestUserRequestPasswordReset(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-password-reset",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// simulate recent password request
@@ -249,6 +253,7 @@ func TestUserRequestVerification(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-verification",
 			Body:           strings.NewReader(`{"email":"missing@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 		},
 		{
@@ -256,6 +261,7 @@ func TestUserRequestVerification(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-verification",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 		},
 		{
@@ -263,6 +269,7 @@ func TestUserRequestVerification(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-verification",
 			Body:           strings.NewReader(`{"email":"test2@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeUpdate":                1,
@@ -276,6 +283,7 @@ func TestUserRequestVerification(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/users/request-verification",
 			Body:           strings.NewReader(`{"email":"test2@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// simulate recent verification sent

@@ -22,12 +22,20 @@ type ApiScenario struct {
 	Url            string
 	Body           io.Reader
 	RequestHeaders map[string]string
+
+	// Delay adds a delay before checking the expectations usually
+	// to ensure that all fired non-awaited go routines have finished
+	Delay time.Duration
+
 	// expectations
+	// ---
 	ExpectedStatus     int
 	ExpectedContent    []string
 	NotExpectedContent []string
 	ExpectedEvents     map[string]int
+
 	// test hooks
+	// ---
 	BeforeFunc func(t *testing.T, app *TestApp, e *echo.Echo)
 	AfterFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
 }
@@ -81,11 +89,9 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		t.Errorf("[%s] Expected status code %d, got %d", prefix, scenario.ExpectedStatus, res.StatusCode)
 	}
 
-	// @todo consider replacing with sync.WaitGroup
-	//
-	// apply a small delay before checking the expectations to ensure
-	// that all fired go routines have complicated before cleaning up the app instance
-	time.Sleep(5 * time.Millisecond)
+	if scenario.Delay > 0 {
+		time.Sleep(scenario.Delay)
+	}
 
 	if len(scenario.ExpectedContent) == 0 && len(scenario.NotExpectedContent) == 0 {
 		if len(recorder.Body.Bytes()) != 0 {
