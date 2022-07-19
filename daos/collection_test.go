@@ -113,7 +113,7 @@ func TestFindCollectionReferences(t *testing.T) {
 		t.Fatalf("Expected 1 collection, got %d: %v", len(result), result)
 	}
 
-	expectedFields := []string{"onerel", "manyrels", "rel_cascade"}
+	expectedFields := []string{"onerel", "manyrels", "cascaderel"}
 
 	for col, fields := range result {
 		if col.Name != "demo2" {

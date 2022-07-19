@@ -150,6 +150,10 @@ func (dao *Dao) IsRecordValueUnique(
 // FindUserRelatedRecords returns all records that has a reference
 // to the provided User model (via the user shema field).
 func (dao *Dao) FindUserRelatedRecords(user *models.User) ([]*models.Record, error) {
+	if user.Id == "" {
+		return []*models.Record{}, nil
+	}
+
 	collections, err := dao.FindCollectionsWithUserFields()
 	if err != nil {
 		return nil, err

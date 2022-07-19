@@ -17,21 +17,27 @@ const MaxExpandDepth = 6
 type ExpandFetchFunc func(relCollection *models.Collection, relIds []string) ([]*models.Record, error)
 
 // ExpandRecord expands the relations of a single Record model.
-func (dao *Dao) ExpandRecord(record *models.Record, expands []string, fetchFunc ExpandFetchFunc) error {
+//
+// Returns a map with the failed expand parameters and their errors.
+func (dao *Dao) ExpandRecord(record *models.Record, expands []string, fetchFunc ExpandFetchFunc) map[string]error {
 	return dao.ExpandRecords([]*models.Record{record}, expands, fetchFunc)
 }
 
 // ExpandRecords expands the relations of the provided Record models list.
-func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, fetchFunc ExpandFetchFunc) error {
+//
+// Returns a map with the failed expand parameters and their errors.
+func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, fetchFunc ExpandFetchFunc) map[string]error {
 	normalized := normalizeExpands(expands)
+
+	failed := map[string]error{}
 
 	for _, expand := range normalized {
 		if err := dao.expandRecords(records, expand, fetchFunc, 1); err != nil {
-			return err
+			failed[expand] = err
 		}
 	}
 
-	return nil
+	return failed
 }
 
 // notes:

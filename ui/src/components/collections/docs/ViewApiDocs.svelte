@@ -137,7 +137,7 @@
                 <span class="label">String</span>
             </td>
             <td>
-                Auto expand nested record relations. Ex.:
+                Auto expand record relations. Ex.:
                 <CodeBlock
                     content={`
                         ?expand=rel1,rel2.subrel21.subrel22

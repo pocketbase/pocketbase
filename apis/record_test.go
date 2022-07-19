@@ -127,7 +127,7 @@ func TestRecordsList(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "expand",
+			Name:   "expand relations",
 			Method: http.MethodGet,
 			Url:    "/api/collections/demo2/records?expand=manyrels,onerel&perPage=2&sort=created",
 			RequestHeaders: map[string]string{
@@ -139,11 +139,12 @@ func TestRecordsList(t *testing.T) {
 				`"perPage":2`,
 				`"totalItems":2`,
 				`"items":[{`,
+				`"@expand":{`,
 				`"id":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
 				`"id":"848a1dea-5ddd-42d6-a00d-030547bffcfe"`,
 				`"manyrels":[{`,
 				`"manyrels":[]`,
-				`"rel_cascade":"`,
+				`"cascaderel":"`,
 				`"onerel":{"@collectionId":"3f2888f8-075d-49fe-9d09-ea7e951000dc","@collectionName":"demo",`,
 				`"json":[1,2,3]`,
 				`"select":["a","b"]`,
@@ -356,6 +357,7 @@ func TestRecordView(t *testing.T) {
 				`"@collectionId":"2c1010aa-b8fe-41d9-a980-99534ca8a167"`,
 				`"@collectionName":"demo2"`,
 				`"id":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
+				`"@expand":{`,
 				`"manyrels":[{`,
 				`"onerel":{`,
 				`"@collectionId":"3f2888f8-075d-49fe-9d09-ea7e951000dc"`,
@@ -454,8 +456,8 @@ func TestRecordDelete(t *testing.T) {
 				"OnRecordAfterDeleteRequest":  1,
 				"OnModelAfterUpdate":          1, // nullify related record
 				"OnModelBeforeUpdate":         1, // nullify related record
-				"OnModelBeforeDelete":         3, // +1 cascade delete related record
-				"OnModelAfterDelete":          3, // +1 cascade delete related record
+				"OnModelBeforeDelete":         3, // +2 cascade delete related records
+				"OnModelAfterDelete":          3, // +2 cascade delete related records
 			},
 			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				ensureDeletedFiles(app, "3f2888f8-075d-49fe-9d09-ea7e951000dc", "577bd676-aacb-4072-b7da-99d00ee210a4")
@@ -476,8 +478,8 @@ func TestRecordDelete(t *testing.T) {
 				"OnRecordAfterDeleteRequest":  1,
 				"OnModelAfterUpdate":          1, // nullify related record
 				"OnModelBeforeUpdate":         1, // nullify related record
-				"OnModelBeforeDelete":         3, // +1 cascade delete related record
-				"OnModelAfterDelete":          3, // +1 cascade delete related record
+				"OnModelBeforeDelete":         3, // +2 cascade delete related records
+				"OnModelAfterDelete":          3, // +2 cascade delete related records
 			},
 			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				ensureDeletedFiles(app, "3f2888f8-075d-49fe-9d09-ea7e951000dc", "577bd676-aacb-4072-b7da-99d00ee210a4")
@@ -650,7 +652,7 @@ func TestRecordCreate(t *testing.T) {
 			Method: http.MethodPost,
 			Url:    "/api/collections/demo2/records",
 			Body: strings.NewReader(`{
-				"rel_cascade": "577bd676-aacb-4072-b7da-99d00ee210a4",
+				"cascaderel": "577bd676-aacb-4072-b7da-99d00ee210a4",
 				"onerel": "577bd676-aacb-4072-b7da-99d00ee210a4",
 				"manyrels": ["577bd676-aacb-4072-b7da-99d00ee210a4"],
 				"text": "test123",
@@ -665,13 +667,14 @@ func TestRecordCreate(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "user submit in restricted collection (rule pass check)",
+			Name:   "user submit in restricted collection (rule pass check) + expand relations",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo2/records",
+			Url:    "/api/collections/demo2/records?expand=missing,onerel,manyrels,selfrel",
 			Body: strings.NewReader(`{
-				"rel_cascade":"577bd676-aacb-4072-b7da-99d00ee210a4",
+				"cascaderel":"577bd676-aacb-4072-b7da-99d00ee210a4",
 				"onerel":"577bd676-aacb-4072-b7da-99d00ee210a4",
 				"manyrels":["577bd676-aacb-4072-b7da-99d00ee210a4"],
+				"selfrel":"63c2ab80-84ab-4057-a592-4604a731f78f",
 				"text":"test123",
 				"bool":true,
 				"number":1
@@ -683,12 +686,21 @@ func TestRecordCreate(t *testing.T) {
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":`,
-				`"rel_cascade":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
+				`"cascaderel":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
 				`"onerel":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
 				`"manyrels":["577bd676-aacb-4072-b7da-99d00ee210a4"]`,
+				`"selfrel":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
 				`"text":"test123"`,
 				`"bool":true`,
 				`"number":1`,
+				`"@expand":{`,
+				`"selfrel":{`,
+				`"id":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
+			},
+			NotExpectedContent: []string{
+				// user don't have access to view the below expands
+				`"manyrels":[{`,
+				`"onerel":{`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeCreateRequest": 1,
@@ -698,13 +710,14 @@ func TestRecordCreate(t *testing.T) {
 			},
 		},
 		{
-			Name:   "admin submit in restricted collection (rule skip check)",
+			Name:   "admin submit in restricted collection (rule skip check) + expand relations",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo2/records",
+			Url:    "/api/collections/demo2/records?expand=missing,onerel,manyrels,selfrel",
 			Body: strings.NewReader(`{
-				"rel_cascade": "577bd676-aacb-4072-b7da-99d00ee210a4",
+				"cascaderel": "577bd676-aacb-4072-b7da-99d00ee210a4",
 				"onerel": "577bd676-aacb-4072-b7da-99d00ee210a4",
-				"manyrels" :["577bd676-aacb-4072-b7da-99d00ee210a4"],
+				"manyrels":["577bd676-aacb-4072-b7da-99d00ee210a4"],
+				"selfrel":"94568ca2-0bee-49d7-b749-06cb97956fd9",
 				"text": "test123",
 				"bool": false,
 				"number": 1
@@ -715,12 +728,20 @@ func TestRecordCreate(t *testing.T) {
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":`,
-				`"rel_cascade":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
+				`"cascaderel":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
 				`"onerel":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
 				`"manyrels":["577bd676-aacb-4072-b7da-99d00ee210a4"]`,
 				`"text":"test123"`,
 				`"bool":false`,
 				`"number":1`,
+				`"@expand":{`,
+				`"manyrels":[{`,
+				`"onerel":{`,
+				`"selfrel":{`,
+				`"@collectionId":"3f2888f8-075d-49fe-9d09-ea7e951000dc"`,
+				`"@collectionName":"demo"`,
+				`"id":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
+				`"id":"94568ca2-0bee-49d7-b749-06cb97956fd9"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeCreateRequest": 1,
@@ -844,12 +865,13 @@ func TestRecordUpdate(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "user submit in restricted collection (rule pass check)",
+			Name:   "user submit in restricted collection (rule pass check) + expand relations",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo2/records/63c2ab80-84ab-4057-a592-4604a731f78f",
+			Url:    "/api/collections/demo2/records/63c2ab80-84ab-4057-a592-4604a731f78f?expand=missing,onerel,manyrels,selfrel",
 			Body: strings.NewReader(`{
 				"text":"test_new",
-				"bool":false
+				"selfrel":"63c2ab80-84ab-4057-a592-4604a731f78f",
+				"bool":true
 			}`),
 			RequestHeaders: map[string]string{
 				// test3@example.com
@@ -858,11 +880,19 @@ func TestRecordUpdate(t *testing.T) {
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
-				`"rel_cascade":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
+				`"cascaderel":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
 				`"onerel":"848a1dea-5ddd-42d6-a00d-030547bffcfe"`,
 				`"manyrels":["848a1dea-5ddd-42d6-a00d-030547bffcfe","577bd676-aacb-4072-b7da-99d00ee210a4"]`,
-				`"bool":false`,
+				`"bool":true`,
 				`"text":"test_new"`,
+				`"selfrel":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
+				`"@expand":{`,
+				`"selfrel":{`,
+			},
+			NotExpectedContent: []string{
+				// user don't have access to view the below expands
+				`"manyrels":[{`,
+				`"onerel":{`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeUpdateRequest": 1,
@@ -872,12 +902,44 @@ func TestRecordUpdate(t *testing.T) {
 			},
 		},
 		{
-			Name:   "admin submit in restricted collection (rule skip check)",
+			Name:   "user submit in restricted collection (rule pass check) + expand relations (no view rule access when bool is false)",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo2/records/63c2ab80-84ab-4057-a592-4604a731f78f",
+			Url:    "/api/collections/demo2/records/63c2ab80-84ab-4057-a592-4604a731f78f?expand=missing,onerel,manyrels,selfrel",
+			Body: strings.NewReader(`{
+				"selfrel":"63c2ab80-84ab-4057-a592-4604a731f78f",
+				"bool":false
+			}`),
+			RequestHeaders: map[string]string{
+				// test3@example.com
+				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoidXNlciIsImVtYWlsIjoidGVzdDNAZXhhbXBsZS5jb20iLCJpZCI6Ijk3Y2MzZDNkLTZiYTItMzgzZi1iNDJhLTdiYzg0ZDI3NDEwYyIsImV4cCI6MTg5MzUxNTU3Nn0.Q965uvlTxxOsZbACXSgJQNXykYK0TKZ87nyPzemvN4E",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
+				`"bool":false`,
+				`"selfrel":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
+			},
+			NotExpectedContent: []string{
+				`"@expand":{`,
+				`"manyrels":[{`, // admin only
+				`"onerel":{`,    // admin only
+				`"selfrel":{`,   // bool=true view rule
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeUpdateRequest": 1,
+				"OnRecordAfterUpdateRequest":  1,
+				"OnModelBeforeUpdate":         1,
+				"OnModelAfterUpdate":          1,
+			},
+		},
+		{
+			Name:   "admin submit in restricted collection (rule skip check) + expand relations",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo2/records/63c2ab80-84ab-4057-a592-4604a731f78f?expand=onerel,manyrels,selfrel,missing",
 			Body: strings.NewReader(`{
 				"text":"test_new",
-				"number":1
+				"number":1,
+				"selfrel":"94568ca2-0bee-49d7-b749-06cb97956fd9"
 			}`),
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
@@ -887,6 +949,15 @@ func TestRecordUpdate(t *testing.T) {
 				`"id":"63c2ab80-84ab-4057-a592-4604a731f78f"`,
 				`"text":"test_new"`,
 				`"number":1`,
+				`"@expand":{`,
+				`"manyrels":[{`,
+				`"onerel":{`,
+				`"selfrel":{`,
+				`"@collectionId":"3f2888f8-075d-49fe-9d09-ea7e951000dc"`,
+				`"@collectionName":"demo"`,
+				`"id":"848a1dea-5ddd-42d6-a00d-030547bffcfe"`,
+				`"id":"577bd676-aacb-4072-b7da-99d00ee210a4"`,
+				`"id":"94568ca2-0bee-49d7-b749-06cb97956fd9"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeUpdateRequest": 1,

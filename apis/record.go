@@ -80,13 +80,13 @@ func (api *recordApi) list(c echo.Context) error {
 	// expand records relations
 	expands := strings.Split(c.QueryParam(expandQueryParam), ",")
 	if len(expands) > 0 {
-		expandErr := api.app.Dao().ExpandRecords(
+		failed := api.app.Dao().ExpandRecords(
 			records,
 			expands,
 			api.expandFunc(c, requestData),
 		)
-		if expandErr != nil && api.app.IsDebug() {
-			log.Println("Failed to expand relations: ", expandErr)
+		if len(failed) > 0 && api.app.IsDebug() {
+			log.Println("Failed to expand relations: ", failed)
 		}
 	}
 
@@ -141,16 +141,14 @@ func (api *recordApi) view(c echo.Context) error {
 		return rest.NewNotFoundError("", fetchErr)
 	}
 
-	expands := strings.Split(c.QueryParam(expandQueryParam), ",")
-	if len(expands) > 0 {
-		expandErr := api.app.Dao().ExpandRecord(
-			record,
-			expands,
-			api.expandFunc(c, requestData),
-		)
-		if expandErr != nil && api.app.IsDebug() {
-			log.Println("Failed to expand relations: ", expandErr)
-		}
+	// expand record relations
+	failed := api.app.Dao().ExpandRecord(
+		record,
+		strings.Split(c.QueryParam(expandQueryParam), ","),
+		api.expandFunc(c, requestData),
+	)
+	if len(failed) > 0 && api.app.IsDebug() {
+		log.Println("Failed to expand relations: ", failed)
 	}
 
 	event := &core.RecordViewEvent{
@@ -226,6 +224,16 @@ func (api *recordApi) create(c echo.Context) error {
 					return rest.NewBadRequestError("Failed to create record.", err)
 				}
 
+				// expand record relations
+				failed := api.app.Dao().ExpandRecord(
+					e.Record,
+					strings.Split(e.HttpContext.QueryParam(expandQueryParam), ","),
+					api.expandFunc(e.HttpContext, requestData),
+				)
+				if len(failed) > 0 && api.app.IsDebug() {
+					log.Println("Failed to expand relations: ", failed)
+				}
+
 				return e.HttpContext.JSON(http.StatusOK, e.Record)
 			})
 		}
@@ -294,6 +302,16 @@ func (api *recordApi) update(c echo.Context) error {
 			return api.app.OnRecordBeforeUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
 				if err := next(); err != nil {
 					return rest.NewBadRequestError("Failed to update record.", err)
+				}
+
+				// expand record relations
+				failed := api.app.Dao().ExpandRecord(
+					e.Record,
+					strings.Split(e.HttpContext.QueryParam(expandQueryParam), ","),
+					api.expandFunc(e.HttpContext, requestData),
+				)
+				if len(failed) > 0 && api.app.IsDebug() {
+					log.Println("Failed to expand relations: ", failed)
 				}
 
 				return e.HttpContext.JSON(http.StatusOK, e.Record)

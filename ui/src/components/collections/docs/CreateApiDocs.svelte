@@ -161,6 +161,37 @@
     </tbody>
 </table>
 
+<div class="section-title">Query parameters</div>
+<table class="table-compact table-border m-b-lg">
+    <thead>
+        <tr>
+            <th>Param</th>
+            <th>Type</th>
+            <th width="60%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>expand</td>
+            <td>
+                <span class="label">String</span>
+            </td>
+            <td>
+                Auto expand relations when returning the created record. Ex.:
+                <CodeBlock
+                    content={`
+                        ?expand=rel1,rel2.subrel21.subrel22
+                    `}
+                />
+                Supports up to 6-levels depth nested relations expansion. <br />
+                The expanded relations will be appended to the record under the
+                <code>@expand</code> property (eg. <code>{`"@expand": {"rel1": {...}, ...}`}</code>). Only the
+                relations that the user has permissions to <strong>view</strong> will be expanded.
+            </td>
+        </tr>
+    </tbody>
+</table>
+
 <div class="section-title">Responses</div>
 <div class="tabs">
     <div class="tabs-header compact left">

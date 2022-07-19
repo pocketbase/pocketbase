@@ -23,9 +23,10 @@ type ApiScenario struct {
 	Body           io.Reader
 	RequestHeaders map[string]string
 	// expectations
-	ExpectedStatus  int
-	ExpectedContent []string
-	ExpectedEvents  map[string]int
+	ExpectedStatus     int
+	ExpectedContent    []string
+	NotExpectedContent []string
+	ExpectedEvents     map[string]int
 	// test events
 	BeforeFunc func(t *testing.T, app *TestApp, e *echo.Echo)
 	AfterFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
@@ -80,9 +81,9 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		t.Errorf("[%s] Expected status code %d, got %d", prefix, scenario.ExpectedStatus, res.StatusCode)
 	}
 
-	if len(scenario.ExpectedContent) == 0 {
+	if len(scenario.ExpectedContent) == 0 && len(scenario.NotExpectedContent) == 0 {
 		if len(recorder.Body.Bytes()) != 0 {
-			t.Errorf("[%s] Expected empty body, got %v", prefix, recorder.Body.String())
+			t.Errorf("[%s] Expected empty body, got \n%v", prefix, recorder.Body.String())
 		}
 	} else {
 		// normalize json response format
@@ -98,7 +99,14 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 
 		for _, item := range scenario.ExpectedContent {
 			if !strings.Contains(normalizedBody, item) {
-				t.Errorf("[%s] Cannot find %v in response body %v", prefix, item, normalizedBody)
+				t.Errorf("[%s] Cannot find %v in response body \n%v", prefix, item, normalizedBody)
+				break
+			}
+		}
+
+		for _, item := range scenario.NotExpectedContent {
+			if strings.Contains(normalizedBody, item) {
+				t.Errorf("[%s] Didn't expect %v in response body \n%v", prefix, item, normalizedBody)
 				break
 			}
 		}

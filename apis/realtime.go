@@ -288,19 +288,24 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 		return nil // no subscribers
 	}
 
+	// remove the expand from the broadcasted record because we don't
+	// know if the clients have access to view the expanded records
+	cleanRecord := *record
+	cleanRecord.SetExpand(nil)
+
 	subscriptionRuleMap := map[string]*string{
-		(collection.Name + "/" + record.Id): collection.ViewRule,
-		(collection.Id + "/" + record.Id):   collection.ViewRule,
-		collection.Name:                     collection.ListRule,
-		collection.Id:                       collection.ListRule,
+		(collection.Name + "/" + cleanRecord.Id): collection.ViewRule,
+		(collection.Id + "/" + cleanRecord.Id):   collection.ViewRule,
+		collection.Name:                          collection.ListRule,
+		collection.Id:                            collection.ListRule,
 	}
 
-	recordData := &recordData{
+	data := &recordData{
 		Action: action,
-		Record: record,
+		Record: &cleanRecord,
 	}
 
-	serializedData, err := json.Marshal(recordData)
+	serializedData, err := json.Marshal(data)
 	if err != nil {
 		if api.app.IsDebug() {
 			log.Println(err)
@@ -314,7 +319,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 				continue
 			}
 
-			if !api.canAccessRecord(client, record, rule) {
+			if !api.canAccessRecord(client, data.Record, rule) {
 				continue
 			}
 
