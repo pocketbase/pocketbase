@@ -52,10 +52,9 @@ func (api *recordApi) list(c echo.Context) error {
 		return rest.NewForbiddenError("Only admins can perform this action.", nil)
 	}
 
-	// forbid user/guest defined non-relational joins (aka. @collection.*)
-	queryStr := c.QueryString()
-	if admin == nil && queryStr != "" && (strings.Contains(queryStr, "@collection") || strings.Contains(queryStr, "%40collection")) {
-		return rest.NewForbiddenError("Only admins can filter by @collection.", nil)
+	// forbid users and guests to query special filter/sort fields
+	if err := api.checkForForbiddenQueryFields(c); err != nil {
+		return err
 	}
 
 	requestData := api.exportRequestData(c)
@@ -63,14 +62,15 @@ func (api *recordApi) list(c echo.Context) error {
 	fieldsResolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData)
 
 	searchProvider := search.NewProvider(fieldsResolver).
-		Query(api.app.Dao().RecordQuery(collection))
+		Query(api.app.Dao().RecordQuery(collection)).
+		CountColumn(fmt.Sprintf("%s.id", api.app.Dao().DB().QuoteSimpleColumnName(collection.Name)))
 
 	if admin == nil && collection.ListRule != nil {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
 	var rawRecords = []dbx.NullStringMap{}
-	result, err := searchProvider.ParseAndExec(queryStr, &rawRecords)
+	result, err := searchProvider.ParseAndExec(c.QueryString(), &rawRecords)
 	if err != nil {
 		return rest.NewBadRequestError("Invalid filter parameters.", err)
 	}
@@ -405,6 +405,24 @@ func (api *recordApi) exportRequestData(c echo.Context) map[string]any {
 	}
 
 	return result
+}
+
+func (api *recordApi) checkForForbiddenQueryFields(c echo.Context) error {
+	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
+	if admin != nil {
+		return nil // admins are allowed to query everything
+	}
+
+	decodedQuery := c.QueryParam(search.FilterQueryParam) + c.QueryParam(search.SortQueryParam)
+	forbiddenFields := []string{"@collection.", "@request."}
+
+	for _, field := range forbiddenFields {
+		if strings.Contains(decodedQuery, field) {
+			return rest.NewForbiddenError("Only admins can filter by @collection and @request query params", nil)
+		}
+	}
+
+	return nil
 }
 
 func (api *recordApi) expandFunc(c echo.Context, requestData map[string]any) daos.ExpandFetchFunc {

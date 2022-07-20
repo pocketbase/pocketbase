@@ -37,6 +37,7 @@ type Provider struct {
 	query         *dbx.SelectQuery
 	page          int
 	perPage       int
+	countColumn   string
 	sort          []SortField
 	filter        []FilterData
 }
@@ -64,6 +65,13 @@ func NewProvider(fieldResolver FieldResolver) *Provider {
 // Query sets the base query that will be used to fetch the search items.
 func (s *Provider) Query(query *dbx.SelectQuery) *Provider {
 	s.query = query
+	return s
+}
+
+// CountColumn specifies an optional distinct column to use in the
+// SELECT COUNT query.
+func (s *Provider) CountColumn(countColumn string) *Provider {
+	s.countColumn = countColumn
 	return s
 }
 
@@ -190,7 +198,11 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	// count
 	var totalCount int64
 	countQuery := modelsQuery
-	if err := countQuery.Select("count(*)").Row(&totalCount); err != nil {
+	countQuery.Distinct(false).Select("COUNT(*)")
+	if s.countColumn != "" {
+		countQuery.Select("COUNT(DISTINCT(" + s.countColumn + "))")
+	}
+	if err := countQuery.Row(&totalCount); err != nil {
 		return nil, err
 	}
 

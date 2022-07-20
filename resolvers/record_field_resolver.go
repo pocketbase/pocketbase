@@ -20,6 +20,7 @@ import (
 var _ search.FieldResolver = (*RecordFieldResolver)(nil)
 
 type join struct {
+	id    string
 	table string
 	on    dbx.Expression
 }
@@ -36,7 +37,7 @@ type RecordFieldResolver struct {
 	baseCollection    *models.Collection
 	allowedFields     []string
 	requestData       map[string]any
-	joins             map[string]join
+	joins             []join // we cannot use a map because the insertion order is not preserved
 	loadedCollections []*models.Collection
 }
 
@@ -50,7 +51,7 @@ func NewRecordFieldResolver(
 		dao:               dao,
 		baseCollection:    baseCollection,
 		requestData:       requestData,
-		joins:             make(map[string]join),
+		joins:             []join{},
 		loadedCollections: []*models.Collection{baseCollection},
 		allowedFields: []string{
 			`^\w+[\w\.]*$`,
@@ -85,6 +86,7 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 //	id
 //	project.screen.status
 //	@request.status
+//	@request.user.profile.someRelation.name
 //	@collection.product.name
 func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, placeholderParams dbx.Params, err error) {
 	if len(r.allowedFields) > 0 && !list.ExistInSliceWithRegex(fieldName, r.allowedFields) {
@@ -92,15 +94,6 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 	}
 
 	props := strings.Split(fieldName, ".")
-
-	// check for @request field
-	if props[0] == "@request" {
-		if len(props) == 1 {
-			return "", nil, fmt.Errorf("Invalid @request data field path in %q.", fieldName)
-		}
-
-		return r.resolveRequestField(props[1:]...)
-	}
 
 	currentCollectionName := r.baseCollection.Name
 	currentTableAlias := currentCollectionName
@@ -113,16 +106,54 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		}
 
 		currentCollectionName = props[1]
-		currentTableAlias = "c_" + currentCollectionName
+		currentTableAlias = "__collection_" + currentCollectionName
 
 		collection, err := r.loadCollection(currentCollectionName)
 		if err != nil {
 			return "", nil, fmt.Errorf("Failed to load collection %q from field path %q.", currentCollectionName, fieldName)
 		}
 
-		r.addJoin(collection.Name, currentTableAlias, "", "", "")
+		r.addJoin(collection.Name, currentTableAlias, nil)
 
 		props = props[2:] // leave only the collection fields
+	} else if props[0] == "@request" {
+		// check for @request field
+		if len(props) == 1 {
+			return "", nil, fmt.Errorf("Invalid @request data field path in %q.", fieldName)
+		}
+
+		// not a profile relational field
+		if len(props) <= 4 || !strings.HasPrefix(fieldName, "@request.user.profile.") {
+			return r.resolveStaticRequestField(props[1:]...)
+		}
+
+		// resolve the profile collection fields
+		currentCollectionName = models.ProfileCollectionName
+		currentTableAlias = "__user_" + currentCollectionName
+
+		collection, err := r.loadCollection(currentCollectionName)
+		if err != nil {
+			return "", nil, fmt.Errorf("Failed to load collection %q from field path %q.", currentCollectionName, fieldName)
+		}
+
+		profileIdPlaceholder, profileIdPlaceholderParam, err := r.resolveStaticRequestField("user", "profile", "id")
+		if err != nil {
+			return "", nil, fmt.Errorf("Failed to resolve @request.user.profile.id path in %q.", fieldName)
+		}
+		if strings.ToLower(profileIdPlaceholder) == "null" {
+			// the user doesn't have an associated profile
+			return "NULL", nil, nil
+		}
+
+		// join the profile collection
+		r.addJoin(collection.Name, currentTableAlias, dbx.NewExp(fmt.Sprintf(
+			// aka. profiles.id = profileId
+			"[[%s.id]] = %s",
+			inflector.Columnify(currentTableAlias),
+			profileIdPlaceholder,
+		), profileIdPlaceholderParam))
+
+		props = props[3:] // leave only the profile fields
 	}
 
 	baseModelFields := schema.ReservedFieldNames()
@@ -173,9 +204,14 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		r.addJoin(
 			newCollectionName,
 			newTableAlias,
-			"id",
-			currentTableAlias,
-			field.Name,
+			dbx.NewExp(fmt.Sprintf(
+				// 'LIKE' expr is used to handle the case when the reference field supports multiple values (aka. is json array)
+				"[[%s.%s]] LIKE ('%%' || [[%s.%s]] || '%%')",
+				inflector.Columnify(currentTableAlias),
+				inflector.Columnify(field.Name),
+				inflector.Columnify(newTableAlias),
+				inflector.Columnify("id"),
+			)),
 		)
 
 		currentCollectionName = newCollectionName
@@ -185,7 +221,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 	return "", nil, fmt.Errorf("Failed to resolve field %q.", fieldName)
 }
 
-func (r *RecordFieldResolver) resolveRequestField(path ...string) (resultName string, placeholderParams dbx.Params, err error) {
+func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (resultName string, placeholderParams dbx.Params, err error) {
 	// ignore error because requestData is dynamic and some of the
 	// lookup keys may not be defined for the request
 	resultVal, _ := extractNestedMapVal(r.requestData, path...)
@@ -259,24 +295,27 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*models
 	return collection, nil
 }
 
-func (r *RecordFieldResolver) addJoin(tableName, tableAlias, fieldName, ref, refFieldName string) {
-	table := fmt.Sprintf(
+func (r *RecordFieldResolver) addJoin(tableName string, tableAlias string, on dbx.Expression) {
+	tableExpr := fmt.Sprintf(
 		"%s %s",
 		inflector.Columnify(tableName),
 		inflector.Columnify(tableAlias),
 	)
 
-	var on dbx.Expression
-	if ref != "" {
-		on = dbx.NewExp(fmt.Sprintf(
-			// 'LIKE' expr is used to handle the case when the reference field supports multiple values (aka. is json array)
-			"[[%s.%s]] LIKE ('%%' || [[%s.%s]] || '%%')",
-			inflector.Columnify(ref),
-			inflector.Columnify(refFieldName),
-			inflector.Columnify(tableAlias),
-			inflector.Columnify(fieldName),
-		))
+	join := join{
+		id:    tableAlias,
+		table: tableExpr,
+		on:    on,
 	}
 
-	r.joins[tableAlias] = join{table, on}
+	// replace existing join
+	for i, j := range r.joins {
+		if j.id == join.id {
+			r.joins[i] = join
+			return
+		}
+	}
+
+	// register new join
+	r.joins = append(r.joins, join)
 }
