@@ -28,7 +28,7 @@ func TestFileSystemExists(t *testing.T) {
 		{"sub1.txt", false},
 		{"test/sub1.txt", true},
 		{"test/sub2.txt", true},
-		{"file.png", true},
+		{"image.png", true},
 	}
 
 	for i, scenario := range scenarios {
@@ -51,13 +51,14 @@ func TestFileSystemAttributes(t *testing.T) {
 	defer fs.Close()
 
 	scenarios := []struct {
-		file        string
-		expectError bool
+		file              string
+		expectError       bool
+		expectContentType string
 	}{
-		{"sub1.txt", true},
-		{"test/sub1.txt", false},
-		{"test/sub2.txt", false},
-		{"file.png", false},
+		{"sub1.txt", true, ""},
+		{"test/sub1.txt", false, "application/octet-stream"},
+		{"test/sub2.txt", false, "application/octet-stream"},
+		{"image.png", false, "image/png"},
 	}
 
 	for i, scenario := range scenarios {
@@ -71,8 +72,8 @@ func TestFileSystemAttributes(t *testing.T) {
 			t.Errorf("(%d) Expected nil, got error, %v", i, err)
 		}
 
-		if err == nil && attr.ContentType != "application/octet-stream" {
-			t.Errorf("(%d) Expected attr.ContentType to be %q, got %q", i, "application/octet-stream", attr.ContentType)
+		if err == nil && attr.ContentType != scenario.expectContentType {
+			t.Errorf("(%d) Expected attr.ContentType to be %q, got %q", i, scenario.expectContentType, attr.ContentType)
 		}
 	}
 }
@@ -91,7 +92,7 @@ func TestFileSystemDelete(t *testing.T) {
 		t.Fatal("Expected error, got nil")
 	}
 
-	if err := fs.Delete("file.png"); err != nil {
+	if err := fs.Delete("image.png"); err != nil {
 		t.Fatalf("Expected nil, got error %v", err)
 	}
 }
@@ -157,33 +158,73 @@ func TestFileSystemServe(t *testing.T) {
 	}
 	defer fs.Close()
 
-	r := httptest.NewRecorder()
-
-	// serve missing file
-	if err := fs.Serve(r, "missing.txt", "download.txt"); err == nil {
-		t.Fatal("Expected error, got nil")
-	}
-
-	// serve existing file
-	if err := fs.Serve(r, "test/sub1.txt", "download.txt"); err != nil {
-		t.Fatal("Expected nil, got error")
-	}
-
-	result := r.Result()
-
-	// check headers
 	scenarios := []struct {
-		header   string
-		expected string
+		path          string
+		name          string
+		expectError   bool
+		expectHeaders map[string]string
 	}{
-		{"Content-Disposition", "attachment; filename=download.txt"},
-		{"Content-Type", "application/octet-stream"},
-		{"Content-Length", "0"},
+		{
+			// missing
+			"missing.txt",
+			"test_name.txt",
+			true,
+			nil,
+		},
+		{
+			// existing regular file
+			"test/sub1.txt",
+			"test_name.txt",
+			false,
+			map[string]string{
+				"Content-Disposition": "attachment; filename=test_name.txt",
+				"Content-Type":        "application/octet-stream",
+				"Content-Length":      "0",
+			},
+		},
+		// png inline
+		{
+			// svg exception
+			"image.png",
+			"test_name.png",
+			false,
+			map[string]string{
+				"Content-Disposition": "inline; filename=test_name.png",
+				"Content-Type":        "image/png",
+				"Content-Length":      "73",
+			},
+		},
+		{
+			// svg exception
+			"image.svg",
+			"test_name.svg",
+			false,
+			map[string]string{
+				"Content-Disposition": "attachment; filename=test_name.svg",
+				"Content-Type":        "image/svg+xml",
+				"Content-Length":      "0",
+			},
+		},
 	}
-	for i, scenario := range scenarios {
-		v := result.Header.Get(scenario.header)
-		if v != scenario.expected {
-			t.Errorf("(%d) Expected value %q for header %q, got %q", i, scenario.expected, scenario.header, v)
+
+	for _, scenario := range scenarios {
+		r := httptest.NewRecorder()
+
+		err := fs.Serve(r, scenario.path, scenario.name)
+		hasErr := err != nil
+
+		if hasErr != scenario.expectError {
+			t.Errorf("(%s) Expected hasError %v, got %v", scenario.path, scenario.expectError, hasErr)
+			continue
+		}
+
+		result := r.Result()
+
+		for hName, hValue := range scenario.expectHeaders {
+			v := result.Header.Get(hName)
+			if v != hValue {
+				t.Errorf("(%s) Expected value %q for header %q, got %q", scenario.path, hValue, hName, v)
+			}
 		}
 	}
 }
@@ -209,11 +250,11 @@ func TestFileSystemCreateThumb(t *testing.T) {
 		// non-image existing file
 		{"test/sub1.txt", "thumb_test_sub1", true, true},
 		// existing image file - crop center
-		{"file.png", "thumb_file_center", true, false},
+		{"image.png", "thumb_file_center", true, false},
 		// existing image file - crop top
-		{"file.png", "thumb_file_top", false, false},
+		{"image.png", "thumb_file_top", false, false},
 		// existing image file with existing thumb path = should fail
-		{"file.png", "test", true, true},
+		{"image.png", "test", true, true},
 	}
 
 	for i, scenario := range scenarios {
@@ -259,7 +300,7 @@ func createTestDir(t *testing.T) string {
 	}
 	file2.Close()
 
-	file3, err := os.OpenFile(filepath.Join(dir, "file.png"), os.O_WRONLY|os.O_CREATE, 0666)
+	file3, err := os.OpenFile(filepath.Join(dir, "image.png"), os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -267,6 +308,16 @@ func createTestDir(t *testing.T) string {
 	imgRect := image.Rect(0, 0, 1, 1)
 	png.Encode(file3, imgRect)
 	file3.Close()
+	err2 := os.WriteFile(filepath.Join(dir, "image.png.attrs"), []byte(`{"user.cache_control":"","user.content_disposition":"","user.content_encoding":"","user.content_language":"","user.content_type":"image/png","user.metadata":null}`), 0666)
+	if err2 != nil {
+		t.Fatal(err2)
+	}
+
+	file4, err := os.OpenFile(filepath.Join(dir, "image.svg"), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file4.Close()
 
 	return dir
 }

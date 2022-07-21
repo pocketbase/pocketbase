@@ -89,7 +89,6 @@
                     title={"Download " + filename}
                     target="_blank"
                     rel="noopener"
-                    download
                 >
                     /.../{filename}
                 </a>

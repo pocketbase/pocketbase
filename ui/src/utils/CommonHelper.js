@@ -789,7 +789,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasImageExtension(filename) {
-        return /\.jpg|\.jpeg|\.png|\.svg|\.webp|\.avif$/.test(filename)
+        return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.webp|\.avif$/.test(filename)
     }
 
     /**

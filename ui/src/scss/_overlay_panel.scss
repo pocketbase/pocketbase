@@ -196,6 +196,7 @@
     &.image-preview {
         width: auto;
         min-width: 300px;
+        min-height: 250px;
         max-width: 70%;
         max-height: 90%;
         .panel-header {
@@ -220,6 +221,9 @@
         .panel-content {
             padding: 0;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         img {
             max-width: 100%;

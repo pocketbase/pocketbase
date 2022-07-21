@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/disintegration/imaging"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/fileblob"
 	"gocloud.dev/blob/s3blob"
@@ -176,6 +177,11 @@ func (s *System) DeletePrefix(prefix string) []error {
 	return failed
 }
 
+var inlineServeContentTypes = []string{
+	"image/png", "image/jpg", "image/jpeg", "image/gif",
+	"video/mp4", "video/3gpp", "video/quicktime", "	video/x-ms-wmv",
+}
+
 // Serve serves the file at fileKey location to an HTTP response.
 func (s *System) Serve(response http.ResponseWriter, fileKey string, name string) error {
 	r, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
@@ -184,9 +190,25 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	}
 	defer r.Close()
 
-	response.Header().Set("Content-Disposition", "attachment; filename="+name)
-	response.Header().Set("Content-Type", r.ContentType())
+	disposition := "attachment"
+	realContentType := r.ContentType()
+	if list.ExistInSlice(realContentType, inlineServeContentTypes) {
+		disposition = "inline"
+	}
+
+	// make an exception for svg and use a custom content type
+	// to send in the response so that it can be loaded in a img tag
+	// (see https://github.com/whatwg/mimesniff/issues/7)
+	ext := filepath.Ext(name)
+	extContentType := realContentType
+	if ext == ".svg" {
+		extContentType = "image/svg+xml"
+	}
+
+	response.Header().Set("Content-Disposition", disposition+"; filename="+name)
+	response.Header().Set("Content-Type", extContentType)
 	response.Header().Set("Content-Length", strconv.FormatInt(r.Size(), 10))
+	response.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox")
 
 	// All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
 	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)

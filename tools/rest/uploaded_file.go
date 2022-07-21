@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
+	"regexp"
 
 	"github.com/pocketbase/pocketbase/tools/security"
 )
@@ -14,6 +15,8 @@ import (
 // DefaultMaxMemory defines the default max memory bytes that
 // will be used when parsing a form request body.
 const DefaultMaxMemory = 32 << 20 // 32mb
+
+var extensionInvalidCharsRegex = regexp.MustCompile(`[^\w\.\*\-\+\=\#]+`)
 
 // UploadedFile defines a single multipart uploaded file instance.
 type UploadedFile struct {
@@ -65,8 +68,10 @@ func FindUploadedFiles(r *http.Request, key string) ([]*UploadedFile, error) {
 			return nil, err
 		}
 
+		ext := extensionInvalidCharsRegex.ReplaceAllString(filepath.Ext(fh.Filename), "")
+
 		result[i] = &UploadedFile{
-			name:   fmt.Sprintf("%s%s", security.RandomString(32), filepath.Ext(fh.Filename)),
+			name:   fmt.Sprintf("%s%s", security.RandomString(32), ext),
 			header: fh,
 			bytes:  buf.Bytes(),
 		}
