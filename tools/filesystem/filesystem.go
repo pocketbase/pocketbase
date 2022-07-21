@@ -199,9 +199,8 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	// make an exception for svg and use a custom content type
 	// to send in the response so that it can be loaded in a img tag
 	// (see https://github.com/whatwg/mimesniff/issues/7)
-	ext := filepath.Ext(name)
 	extContentType := realContentType
-	if ext == ".svg" {
+	if filepath.Ext(name) == ".svg" {
 		extContentType = "image/svg+xml"
 	}
 
