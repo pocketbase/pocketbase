@@ -177,21 +177,22 @@ func TestFileSystemServe(t *testing.T) {
 			"test_name.txt",
 			false,
 			map[string]string{
-				"Content-Disposition": "attachment; filename=test_name.txt",
-				"Content-Type":        "application/octet-stream",
-				"Content-Length":      "0",
+				"Content-Disposition":     "attachment; filename=test_name.txt",
+				"Content-Type":            "application/octet-stream",
+				"Content-Length":          "0",
+				"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
 			},
 		},
-		// png inline
 		{
-			// svg exception
+			// png inline
 			"image.png",
 			"test_name.png",
 			false,
 			map[string]string{
-				"Content-Disposition": "inline; filename=test_name.png",
-				"Content-Type":        "image/png",
-				"Content-Length":      "73",
+				"Content-Disposition":     "inline; filename=test_name.png",
+				"Content-Type":            "image/png",
+				"Content-Length":          "73",
+				"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
 			},
 		},
 		{
@@ -200,9 +201,10 @@ func TestFileSystemServe(t *testing.T) {
 			"test_name.svg",
 			false,
 			map[string]string{
-				"Content-Disposition": "attachment; filename=test_name.svg",
-				"Content-Type":        "image/svg+xml",
-				"Content-Length":      "0",
+				"Content-Disposition":     "attachment; filename=test_name.svg",
+				"Content-Type":            "image/svg+xml",
+				"Content-Length":          "0",
+				"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
 			},
 		},
 	}
