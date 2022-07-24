@@ -665,15 +665,8 @@ export default class CommonHelper {
      * @return {String}
      */
     static getQueryString(url) {
-        let queryStartPos = url.indexOf("?");
-
-        if (queryStartPos < 0) {
-            return "";
-        }
-
-        let hashStartPos = url.indexOf("#");
-
-        return url.substring(queryStartPos + 1, (hashStartPos > queryStartPos ? hashStartPos : url.length));
+        let location = url ? new URL(url) : window.location;
+        return location.hash.split('?')[1] || '';
     }
 
     /**
@@ -685,24 +678,14 @@ export default class CommonHelper {
      */
     static getQueryParams(url) {
         let result = {};
-        let params = CommonHelper.getQueryString(url).split("&");
+        let params = new URLSearchParams(CommonHelper.getQueryString(url));
 
-        for (let i in params) {
-            let parts = params[i].split("=");
-            if (parts.length === 2) {
-                let val = decodeURIComponent(parts[1]);
-
-
-                if (val.startsWith("{") || val.startsWith("[")) {
-                    try {
-                        val = JSON.parse(val);
-                    } catch (e) {
-                    }
-                }
-
-                result[decodeURIComponent(parts[0])] = val;
+        params.forEach((value, key) => {
+            if (value.startsWith('{') || value.startsWith('[')) {
+                value = JSON.parse(value);
             }
-        }
+            result[key] = value;
+        })
 
         return result;
     }
@@ -719,33 +702,28 @@ export default class CommonHelper {
         let oldQueryString = CommonHelper.getQueryString(url);
         let oldParams = extend && oldQueryString ? CommonHelper.getQueryParams(url) : {};
         let resultParams = Object.assign(oldParams, params);
-        let newQueryString = "";
 
+        let searchParams = new URLSearchParams();
         for (let param in resultParams) {
-            if (CommonHelper.isEmpty(resultParams[param])) {
+            let value = resultParams[param];
+            if (CommonHelper.isEmpty(value)) {
                 continue;
             }
 
-            if (newQueryString) {
-                newQueryString += "&";
+            if (CommonHelper.isObject(value) || Array.isArray(value)) {
+                value = JSON.stringify(value);
             }
 
-            newQueryString += encodeURIComponent(param) + "=";
-
-            if (CommonHelper.isObject(resultParams[param])) {
-                newQueryString += encodeURIComponent(JSON.stringify(resultParams[param]));
-            } else {
-                newQueryString += encodeURIComponent(resultParams[param]);
-            }
+            searchParams.set(param, value);
         }
-        newQueryString = newQueryString ? ("?" + newQueryString) : "";
+        let newQueryString = searchParams.toString() ? ("?" + searchParams.toString()) : "";
 
         // append the new query string to the url
         if (CommonHelper.isEmpty(oldQueryString)) {
             return url + newQueryString;
         }
 
-        // replace old query strung with the new one
+        // replace old query string with the new one
         return url.replace("?" + oldQueryString, newQueryString);
     }
 
