@@ -21,7 +21,7 @@ type Github struct {
 // NewGithubProvider creates new Github provider instance with some defaults.
 func NewGithubProvider() *Github {
 	return &Github{&baseProvider{
-		scopes:     []string{"user"},
+		scopes:     []string{"read:user", "user:email"},
 		authUrl:    "https://github.com/login/oauth/authorize",
 		tokenUrl:   "https://github.com/login/oauth/access_token",
 		userApiUrl: "https://api.github.com/user",
