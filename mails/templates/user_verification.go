@@ -15,8 +15,8 @@ const UserVerificationBody = `
 	<p>Thank you for joining us at {{.AppName}}.</p>
 	<p>Click on the button below to verify your email address.</p>
 	<p>
-		<a class="btn" href="{{.ActionUrl}}">Verify</a>
-		<a class="fallback-link" href="{{.ActionUrl}}">{{.ActionUrl}}</a>
+		<a class="btn" href="{{.ActionUrl}}" target="_blank" rel="noopener">Verify</a>
+		<a class="fallback-link" href="{{.ActionUrl}}" target="_blank" rel="noopener">{{.ActionUrl}}</a>
 	</p>
 	<p>
 		Thanks,<br/>

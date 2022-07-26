@@ -14,8 +14,8 @@ const UserConfirmEmailChangeBody = `
 	<p>Hello,</p>
 	<p>Click on the button below to confirm your new email address.</p>
 	<p>
-		<a class="btn" href="{{.ActionUrl}}">Confirm new email</a>
-		<a class="fallback-link" href="{{.ActionUrl}}">{{.ActionUrl}}</a>
+		<a class="btn" href="{{.ActionUrl}}" target="_blank" rel="noopener">Confirm new email</a>
+		<a class="fallback-link" href="{{.ActionUrl}}" target="_blank" rel="noopener">{{.ActionUrl}}</a>
 	</p>
 	<p><i>If you didn’t ask to change your email address, you can ignore this email.</i></p>
 	<p>
