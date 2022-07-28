@@ -58,6 +58,10 @@ func (api *realtimeApi) connect(c echo.Context) error {
 		return err
 	}
 
+	if api.app.IsDebug() {
+		log.Printf("Realtime connection establisehd: %s\n", client.Id())
+	}
+
 	// signalize established connection (aka. fire "connect" message)
 	fmt.Fprint(c.Response(), "id:"+client.Id()+"\n")
 	fmt.Fprint(c.Response(), "event:PB_CONNECT\n")
