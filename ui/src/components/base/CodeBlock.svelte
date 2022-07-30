@@ -1,6 +1,7 @@
 <script>
     import Prism from "prismjs";
     import "prismjs/plugins/normalize-whitespace/prism-normalize-whitespace.js";
+    import "prismjs/components/prism-dart.js";
     import "@/scss/prism_light.scss";
 
     export let content = "";

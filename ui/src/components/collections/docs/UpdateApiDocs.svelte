@@ -3,15 +3,17 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
 
     export let collection = new Collection();
 
     let responseTab = 200;
-    let sdkTab = "JavaScript";
     let responses = [];
-    let sdkExamples = [];
 
     $: adminsOnly = collection?.updateRule === null;
+
+    $: backendAbsUrl =
+        window.location.href.substring(0, window.location.href.indexOf("/_")) || ApiClient.baseUrl;
 
     $: responses = [
         {
@@ -54,23 +56,6 @@
             `,
         },
     ];
-
-    $: sdkExamples = [
-        {
-            lang: "JavaScript",
-            code: `
-                import PocketBase from 'pocketbase';
-
-                const client = new PocketBase("${ApiClient.baseUrl}");
-
-                ...
-
-                const data = { ... };
-
-                const record = await client.Records.update("${collection?.name}", "RECORD_ID", data);
-            `,
-        },
-    ];
 </script>
 
 <div class="alert alert-warning">
@@ -97,26 +82,30 @@
 </div>
 
 <div class="section-title">Client SDKs example</div>
-<div class="tabs m-b-lg">
-    <div class="tabs-header compact left">
-        {#each sdkExamples as example (example.lang)}
-            <button
-                class="tab-item"
-                class:active={sdkTab === example.lang}
-                on:click={() => (sdkTab = example.lang)}
-            >
-                {example.lang}
-            </button>
-        {/each}
-    </div>
-    <div class="tabs-content">
-        {#each sdkExamples as example (example.lang)}
-            <div class="tab-item" class:active={sdkTab === example.lang}>
-                <CodeBlock content={example.code} />
-            </div>
-        {/each}
-    </div>
-</div>
+<SdkTabs
+    js={`
+        import PocketBase from 'pocketbase';
+
+        const client = new PocketBase('${backendAbsUrl}');
+
+        ...
+
+        const data = { ... };
+
+        const record = await client.Records.update('${collection?.name}', 'RECORD_ID', data);
+    `}
+    dart={`
+        import 'package:pocketbase/pocketbase.dart';
+
+        final client = PocketBase('${backendAbsUrl}');
+
+        ...
+
+        final body = <String, dynamic>{ ... };
+
+        final record = await client.records.update('${collection?.name}', 'RECORD_ID', body: body);
+    `}
+/>
 
 <div class="section-title">Path parameters</div>
 <table class="table-compact table-border m-b-lg">

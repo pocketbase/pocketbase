@@ -456,6 +456,7 @@ a,
     border-radius: var(--baseRadius);
     color: var(--txtPrimaryColor);
     font-size: 1.2rem;
+    overflow: hidden;
     @include shadowize();
     i {
         font-size: inherit;
