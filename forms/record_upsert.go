@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -201,6 +202,10 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 		// check if there are any new uploaded form files
 		files, err := rest.FindUploadedFiles(r, key)
 		if err != nil {
+			if form.app.IsDebug() {
+				log.Printf("%q uploaded file error: %v\n", key, err)
+			}
+
 			continue // skip invalid or missing file(s)
 		}
 
