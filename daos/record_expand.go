@@ -58,11 +58,14 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	// extract the relation field (if exist)
 	mainCollection := records[0].Collection()
 	relField := mainCollection.Schema.GetFieldByName(parts[0])
-	if relField == nil {
-		return fmt.Errorf("Couldn't find field %q in collection %q.", parts[0], mainCollection.Name)
+	if relField == nil || relField.Type != schema.FieldTypeRelation {
+		return fmt.Errorf("Couldn't find relation field %q in collection %q.", parts[0], mainCollection.Name)
 	}
 	relField.InitOptions()
-	relFieldOptions, _ := relField.Options.(*schema.RelationOptions)
+	relFieldOptions, ok := relField.Options.(*schema.RelationOptions)
+	if !ok {
+		return fmt.Errorf("Cannot initialize the options of relation field %q.", parts[0])
+	}
 
 	relCollection, err := dao.FindCollectionByNameOrId(relFieldOptions.CollectionId)
 	if err != nil {

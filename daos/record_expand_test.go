@@ -63,7 +63,7 @@ func TestExpandRecords(t *testing.T) {
 			0,
 			2,
 		},
-		// invalid missing first level expand
+		// missing relation field
 		{
 			[]string{"b8ba58f9-e2d7-42a0-b0e7-a11efd98236b", "df55c8ff-45ef-4c82-8aed-6e2183fe1125"},
 			[]string{"invalid"},
@@ -73,7 +73,17 @@ func TestExpandRecords(t *testing.T) {
 			0,
 			1,
 		},
-		// invalid missing second level expand
+		// existing, but non-relation type field
+		{
+			[]string{"b8ba58f9-e2d7-42a0-b0e7-a11efd98236b", "df55c8ff-45ef-4c82-8aed-6e2183fe1125"},
+			[]string{"title"},
+			func(c *models.Collection, ids []string) ([]*models.Record, error) {
+				return app.Dao().FindRecordsByIds(c, ids, nil)
+			},
+			0,
+			1,
+		},
+		// invalid/missing second level expand
 		{
 			[]string{"b8ba58f9-e2d7-42a0-b0e7-a11efd98236b", "df55c8ff-45ef-4c82-8aed-6e2183fe1125"},
 			[]string{"manyrels.invalid"},
