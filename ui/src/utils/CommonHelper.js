@@ -88,33 +88,6 @@ export default class CommonHelper {
     }
 
     /**
-     * Checks whether `arr` is an object array where the first element has `keys`.
-     * NB! Empty arrays are considered thruethfull.
-     *
-     * @param  {Array}        arr
-     * @param  {String|Array} keys
-     * @return {Boolean}
-     */
-    static isObjectArrayWithKeys(arr, keys) {
-        if (!Array.isArray(arr) || typeof arr[0] !== "object") {
-            return false;
-        }
-
-        if (arr.length == 0) {
-            return true;
-        }
-
-        let normalizedKeys = CommonHelper.toArray(keys);
-        for (let key of normalizedKeys) {
-            if (!(key in arr[0])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Normalizes and returns arr as a valid array instance (if not already).
      *
      * @param  {Array}   arr
@@ -628,37 +601,6 @@ export default class CommonHelper {
     }
 
     /**
-     * Opens url address within a new popup window.
-     *
-     * @param  {String} url
-     * @param  {Number} [width]  Popup window width (Default: 600).
-     * @param  {Number} [height] Popup window height (Default: 480).
-     * @param  {String} [name]   The name of the created popup window (default to "popup").
-     * @return {Object} Reference to the newly created window.
-     */
-    static openInWindow(url, width, height, name) {
-        width = width || 1024;
-        height = height || 768;
-        name = name || "popup";
-
-        let windowWidth = window.innerWidth;
-        let windowHeight = window.innerHeight;
-
-        // normalize window size
-        width = width > windowWidth ? windowWidth : width;
-        height = height > windowHeight ? windowHeight : height;
-
-        let left = (windowWidth / 2) - (width / 2);
-        let top = (windowHeight / 2) - (height / 2);
-
-        return window.open(
-            url,
-            name,
-            "width=" + width + ",height=" + height + ",top=" + top + ",left=" + left + ",resizable,menubar=no"
-        );
-    }
-
-    /**
      * Returns the query string (without "?") for the provided url.
      *
      * @param  {String} [url]
@@ -790,25 +732,6 @@ export default class CommonHelper {
      */
     static hasImageExtension(filename) {
         return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.webp|\.avif$/.test(filename)
-    }
-
-    /**
-     * Checks if the image url can be loaded.
-     *
-     * @param  {String} url
-     * @return {Promise}
-     */
-    static checkImageUrl(url) {
-        return new Promise((resolve, reject) => {
-            const image = new Image();
-            image.onload = function() {
-                return resolve(true);
-            }
-            image.onerror = function(err) {
-                return reject(err);
-            }
-            image.src = url;
-        });
     }
 
     /**
