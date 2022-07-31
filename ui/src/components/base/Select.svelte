@@ -4,13 +4,11 @@
     import tooltip from "@/actions/tooltip";
     import Toggler from "@/components/base/Toggler.svelte";
 
-    const baseGroup = "_base_"; // reserved items group name
-
     export let id = "";
     export let noOptionsText = "No options found";
     export let selectPlaceholder = "- Select -";
     export let searchPlaceholder = "Search...";
-    export let items = []; // for groups support wrap in `[{group: 'My group', items: [...]}]`
+    export let items = [];
     export let multiple = false;
     export let disabled = false;
     export let selected = multiple ? [] : undefined;
@@ -30,16 +28,12 @@
     let container = undefined;
     let labelDiv = undefined;
 
-    $: groupedItems = CommonHelper.isObjectArrayWithKeys(items, ["group"])
-        ? items
-        : [{ group: baseGroup, items: items }];
-
     $: if (items) {
         ensureSelectedExist();
         resetSearch();
     }
 
-    $: filteredGroups = filterGroups(groupedItems, searchTerm);
+    $: filteredItems = filterItems(items, searchTerm);
 
     $: isSelected = function (item) {
         let normalized = CommonHelper.toArray(selected);
@@ -95,7 +89,7 @@
     }
 
     function ensureSelectedExist() {
-        if (CommonHelper.isEmpty(selected) || CommonHelper.isEmpty(groupedItems)) {
+        if (CommonHelper.isEmpty(selected) || CommonHelper.isEmpty(items)) {
             return; // nothing to check
         }
 
@@ -104,16 +98,7 @@
 
         // find missing
         for (const selectedItem of selectedArray) {
-            let exist = false;
-
-            for (const group of groupedItems) {
-                if (CommonHelper.inArray(group.items, selectedItem)) {
-                    exist = true;
-                    break;
-                }
-            }
-
-            if (!exist) {
+            if (!CommonHelper.inArray(items, selectedItem)) {
                 unselectedArray.push(selectedItem);
             }
         }
@@ -147,24 +132,12 @@
         searchTerm = "";
     }
 
-    function filterGroups(groups, search) {
-        const result = [];
+    function filterItems(items, search) {
+        items = items || [];
+
         const filterFunc = searchFunc || defaultSearchFunc;
 
-        for (const group of groups) {
-            let groupItems;
-            if (typeof search === "string" && search.length) {
-                groupItems = group.items?.filter((item) => filterFunc(item, search)) || [];
-            } else {
-                groupItems = group.items || [];
-            }
-
-            if (groupItems.length) {
-                result.push({ group: group.group, items: groupItems });
-            }
-        }
-
-        return result;
+        return items.filter((item) => filterFunc(item, search)) || [];
     }
 
     // Option actions
@@ -284,24 +257,18 @@
             <slot name="beforeOptions" />
 
             <div class="options-list">
-                {#each filteredGroups as group}
-                    {#if group.group != baseGroup}
-                        <div class="dropdown-item separator">{group.group}</div>
-                    {/if}
-
-                    {#each group.items as item}
-                        <div
-                            tabindex="0"
-                            class="dropdown-item option closable"
-                            class:selected={isSelected(item)}
-                            on:click={(e) => handleOptionSelect(e, item)}
-                            on:keydown={(e) => handleOptionKeypress(e, item)}
-                        >
-                            {#if optionComponent}
-                                <svelte:component this={optionComponent} {item} {...optionComponentProps} />
-                            {:else}{item}{/if}
-                        </div>
-                    {/each}
+                {#each filteredItems as item}
+                    <div
+                        tabindex="0"
+                        class="dropdown-item option closable"
+                        class:selected={isSelected(item)}
+                        on:click={(e) => handleOptionSelect(e, item)}
+                        on:keydown={(e) => handleOptionKeypress(e, item)}
+                    >
+                        {#if optionComponent}
+                            <svelte:component this={optionComponent} {item} {...optionComponentProps} />
+                        {:else}{item}{/if}
+                    </div>
                 {:else}
                     {#if noOptionsText}
                         <div class="txt-missing">{noOptionsText}</div>

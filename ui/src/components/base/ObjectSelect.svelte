@@ -4,7 +4,7 @@
     import BaseSelectOption from "@/components/base/BaseSelectOption.svelte";
 
     // original select props
-    export let items = []; // for groups support wrap in `[{group: 'My group', items: [...]}]`
+    export let items = [];
     export let multiple = false;
     export let selected = multiple ? [] : undefined;
     export let labelComponent = BaseSelectOption; // custom component to use for each selected option label
