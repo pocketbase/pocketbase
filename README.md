@@ -29,7 +29,7 @@
 The easiest way to interact with the API is to use one of the official SDK clients:
 
 - **JavaScript - [pocketbase/js-sdk](https://github.com/pocketbase/js-sdk)** (_browser and node_)
-- **Dart** - _soon_
+- **Dart - [pocketbase/dart-sdk](https://github.com/pocketbase/dart-sdk)** (_web, mobile, desktop_)
 
 
 ## Overview
