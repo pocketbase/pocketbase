@@ -84,13 +84,13 @@
                 </figure>
                 <a
                     href={ApiClient.Records.getFileUrl(record, filename)}
-                    class="filename"
+                    class="filename link-hint"
                     class:txt-strikethrough={deletedFileIndexes.includes(i)}
-                    title={"Download " + filename}
+                    use:tooltip={{ position: "right", text: "Download" }}
                     target="_blank"
                     rel="noopener"
                 >
-                    /.../{filename}
+                    {filename}
                 </a>
 
                 {#if deletedFileIndexes.includes(i)}
