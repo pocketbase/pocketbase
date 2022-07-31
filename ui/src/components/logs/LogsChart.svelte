@@ -86,6 +86,7 @@
                         pointBackgroundColor: "#ef4565",
                         backgroundColor: "rgb(239,69,101,0.05)",
                         borderWidth: 2,
+                        pointRadius: 1,
                         pointBorderWidth: 0,
                         fill: true,
                     },
