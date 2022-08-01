@@ -1,11 +1,11 @@
 <script>
+    import { replace, querystring } from "svelte-spa-router";
     import {
         collections,
         activeCollection,
         isCollectionsLoading,
         loadCollections,
     } from "@/stores/collections";
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { pageTitle } from "@/stores/app";
     import Searchbar from "@/components/base/Searchbar.svelte";
@@ -16,17 +16,17 @@
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordsList from "@/components/records/RecordsList.svelte";
 
-    const queryParams = CommonHelper.getQueryParams(window.location?.href);
-
     $pageTitle = "Collections";
+
+    const queryParams = new URLSearchParams($querystring);
 
     let collectionUpsertPanel;
     let collectionDocsPanel;
     let recordPanel;
     let recordsList;
-    let filter = queryParams.filter || "";
-    let sort = queryParams.sort || "-created";
-    let selectedCollectionId = queryParams.collectionId;
+    let filter = queryParams.get("filter") || "";
+    let sort = queryParams.get("sort") || "-created";
+    let selectedCollectionId = queryParams.get("collectionId") || "";
 
     $: viewableCollections = $collections.filter((c) => c.name != import.meta.env.PB_PROFILE_COLLECTION);
 
@@ -37,11 +37,12 @@
 
     // keep the url params in sync
     $: if (sort || filter || $activeCollection?.id) {
-        CommonHelper.replaceClientQueryParams({
-            collectionId: $activeCollection?.id,
+        const query = new URLSearchParams({
+            collectionId: $activeCollection?.id || "",
             filter: filter,
             sort: sort,
-        });
+        }).toString();
+        replace("/collections?" + query);
     }
 
     function reset() {

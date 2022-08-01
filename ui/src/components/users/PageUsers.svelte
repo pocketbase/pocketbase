@@ -1,4 +1,5 @@
 <script>
+    import { replace, querystring } from "svelte-spa-router";
     import { Collection } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
@@ -14,10 +15,10 @@
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordFieldCell from "@/components/records/RecordFieldCell.svelte";
 
-    const queryParams = CommonHelper.getQueryParams(window.location?.href);
-    const excludedProfileFields = ["id", "userId", "created", "updated"];
-
     $pageTitle = "Users";
+
+    const queryParams = new URLSearchParams($querystring);
+    const excludedProfileFields = ["id", "userId", "created", "updated"];
 
     let userUpsertPanel;
     let collectionUpsertPanel;
@@ -26,17 +27,15 @@
     let currentPage = 1;
     let totalItems = 0;
     let isLoadingUsers = false;
-    let filter = queryParams.filter || "";
-    let sort = queryParams.sort || "-created";
+    let filter = queryParams.get("filter") || "";
+    let sort = queryParams.get("sort") || "-created";
     let profileCollection = new Collection();
     let isLoadingProfileCollection = false;
 
     $: if (sort !== -1 && filter !== -1) {
         // keep query params
-        CommonHelper.replaceClientQueryParams({
-            filter: filter,
-            sort: sort,
-        });
+        const query = new URLSearchParams({ filter, sort }).toString();
+        replace("/users?" + query);
 
         loadUsers();
     }

@@ -1,4 +1,5 @@
 <script>
+    import { replace, querystring } from "svelte-spa-router";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
@@ -11,22 +12,20 @@
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";
 
-    const queryParams = CommonHelper.getQueryParams(window.location?.href);
-
     $pageTitle = "Admins";
+
+    const queryParams = new URLSearchParams($querystring);
 
     let adminUpsertPanel;
     let admins = [];
     let isLoading = false;
-    let filter = queryParams.filter || "";
-    let sort = queryParams.sort || "-created";
+    let filter = queryParams.get("filter") || "";
+    let sort = queryParams.get("sort") || "-created";
 
     $: if (sort !== -1 && filter !== -1) {
         // keep listing params in sync
-        CommonHelper.replaceClientQueryParams({
-            filter: filter,
-            sort: sort,
-        });
+        const query = new URLSearchParams({ filter, sort }).toString();
+        replace("/settings/admins?" + query);
 
         loadAdmins();
     }

@@ -138,7 +138,7 @@ function showTooltip(node, data) {
         getTooltip().classList.add("active");
 
         refreshTooltip(node, data);
-    }, (!isNaN(data.delay) ? data.delay : 250));
+    }, (!isNaN(data.delay) ? data.delay : 200));
 }
 
 export default function tooltip(node, tooltipData) {

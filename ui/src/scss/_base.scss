@@ -456,7 +456,6 @@ a,
     border-radius: var(--baseRadius);
     color: var(--txtPrimaryColor);
     font-size: 1.2rem;
-    overflow: hidden;
     @include shadowize();
     i {
         font-size: inherit;
@@ -465,6 +464,7 @@ a,
         width: 100%;
         height: 100%;
         border-radius: inherit;
+        overflow: hidden;
     }
     &.thumb-sm {
         --thumbSize: 32px;
