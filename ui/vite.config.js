@@ -7,7 +7,7 @@ export default defineConfig({
         port: 3000,
     },
     envPrefix: 'PB',
-    base: process.env.NODE_ENV === 'production' ? '/_/' : './',
+    base: './',
     build: {
         chunkSizeWarningLimit: 1000,
         reportCompressedSize: false,
