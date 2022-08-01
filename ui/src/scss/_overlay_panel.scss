@@ -202,6 +202,7 @@
         .panel-header {
             position: absolute;
             z-index: 99;
+            box-shadow: none;
             .overlay-close {
                 left: 100%;
                 right: auto;
