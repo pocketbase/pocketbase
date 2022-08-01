@@ -18,6 +18,8 @@ import (
 	"github.com/spf13/cast"
 )
 
+const trailedAdminPath = "/_/"
+
 // InitApi creates a configured echo instance with registered
 // system and app specific routes and middlewares.
 func InitApi(app core.App) (*echo.Echo, error) {
@@ -25,7 +27,12 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	e.Debug = app.IsDebug()
 
 	// default middlewares
-	e.Pre(middleware.RemoveTrailingSlash())
+	e.Pre(middleware.RemoveTrailingSlashWithConfig(middleware.RemoveTrailingSlashConfig{
+		Skipper: func(c echo.Context) bool {
+			// ignore Admin UI route(s)
+			return strings.HasPrefix(c.Request().URL.Path, trailedAdminPath)
+		},
+	}))
 	e.Use(middleware.Recover())
 	e.Use(middleware.Secure())
 	e.Use(LoadAuthContext(app))
@@ -128,21 +135,20 @@ func StaticDirectoryHandler(fileSystem fs.FS, disablePathUnescaping bool) echo.H
 
 // bindStaticAdminUI registers the endpoints that serves the static admin UI.
 func bindStaticAdminUI(app core.App, e *echo.Echo) error {
-	// serves /ui/dist/index.html file
-	// (explicit route is used to avoid conflicts with `RemoveTrailingSlash` middleware)
-	e.FileFS(
-		"/_",
-		"index.html",
-		ui.DistIndexHTML,
-		middleware.Gzip(),
-		installerRedirect(app),
+	// redirect to trailing slash to ensure that relative urls will still work properly
+	e.GET(
+		strings.TrimRight(trailedAdminPath, "/"),
+		func(c echo.Context) error {
+			return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath)
+		},
 	)
 
 	// serves static files from the /ui/dist directory
 	// (similar to echo.StaticFS but with gzip middleware enabled)
 	e.GET(
-		"/_/*",
-		StaticDirectoryHandler(ui.DistDirFS, false),
+		trailedAdminPath+"*",
+		echo.StaticDirectoryHandler(ui.DistDirFS, false),
+		installerRedirect(app),
 		middleware.Gzip(),
 	)
 
@@ -175,6 +181,12 @@ func installerRedirect(app core.App) echo.MiddlewareFunc {
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			// skip redirect checks for non-root level index.html requests
+			path := c.Request().URL.Path
+			if path != trailedAdminPath && path != trailedAdminPath+"index.html" {
+				return next(c)
+			}
+
 			// load into cache (if not already)
 			if !app.Cache().Has(totalAdminsCacheKey) {
 				if err := updateTotalAdminsCache(app); err != nil {
@@ -188,12 +200,12 @@ func installerRedirect(app core.App) echo.MiddlewareFunc {
 
 			if totalAdmins == 0 && !hasInstallerParam {
 				// redirect to the installer page
-				return c.Redirect(http.StatusTemporaryRedirect, "/_/?installer#")
+				return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath+"?installer#")
 			}
 
 			if totalAdmins != 0 && hasInstallerParam {
 				// redirect to the home page
-				return c.Redirect(http.StatusTemporaryRedirect, "/_/#/")
+				return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath+"#/")
 			}
 
 			return next(c)
