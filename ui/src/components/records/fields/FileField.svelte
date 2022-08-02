@@ -83,7 +83,7 @@
                     <RecordFilePreview {record} {filename} />
                 </figure>
                 <a
-                    href={ApiClient.Records.getFileUrl(record, filename)}
+                    href={ApiClient.records.getFileUrl(record, filename)}
                     class="filename link-hint"
                     class:txt-strikethrough={deletedFileIndexes.includes(i)}
                     use:tooltip={{ position: "right", text: "Download" }}

@@ -21,7 +21,7 @@
         isLoading = true;
 
         try {
-            const settings = (await ApiClient.Settings.getAll()) || {};
+            const settings = (await ApiClient.settings.getAll()) || {};
             init(settings);
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -38,7 +38,7 @@
         isSaving = true;
 
         try {
-            const settings = await ApiClient.Settings.update(CommonHelper.filterRedactedProps(formSettings));
+            const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             init(settings);
             addSuccessToast("Successfully saved application settings.");
         } catch (err) {

@@ -29,7 +29,7 @@
     function loadCollections() {
         isLoading = true;
 
-        ApiClient.Collections.getFullList(200, { sort: "-created" })
+        ApiClient.collections.getFullList(200, { sort: "-created" })
             .then((items) => {
                 collections = items;
             })

@@ -72,7 +72,7 @@
 
         ...
 
-        const record = await client.Records.getOne('${collection?.name}', 'RECORD_ID', {
+        const record = await client.records.getOne('${collection?.name}', 'RECORD_ID', {
             expand: 'some_relation'
         });
     `}

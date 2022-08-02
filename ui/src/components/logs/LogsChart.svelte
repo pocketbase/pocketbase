@@ -36,7 +36,7 @@
     export async function load() {
         isLoading = true;
 
-        return ApiClient.Logs.getRequestsStats({
+        return ApiClient.logs.getRequestsStats({
             filter: [presets, filter].filter(Boolean).join("&&"),
         })
             .then((result) => {

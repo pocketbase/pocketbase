@@ -16,7 +16,7 @@
         isLoading = true;
 
         try {
-            await ApiClient.Admins.requestPasswordReset(email);
+            await ApiClient.admins.requestPasswordReset(email);
             success = true;
         } catch (err) {
             ApiClient.errorResponseHandler(err);

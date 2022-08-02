@@ -21,7 +21,7 @@
         isLoading = true;
 
         try {
-            await ApiClient.Users.confirmPasswordReset(params?.token, newPassword, newPasswordConfirm);
+            await ApiClient.users.confirmPasswordReset(params?.token, newPassword, newPasswordConfirm);
             success = true;
         } catch (err) {
             ApiClient.errorResponseHandler(err);

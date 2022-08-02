@@ -82,7 +82,7 @@
 
         const data = { ... };
 
-        const record = await client.Records.create('${collection?.name}', data);
+        const record = await client.records.create('${collection?.name}', data);
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';

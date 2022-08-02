@@ -24,7 +24,7 @@
         isLoading = true;
 
         try {
-            const result = (await ApiClient.Settings.getAll()) || {};
+            const result = (await ApiClient.settings.getAll()) || {};
             initSettings(result);
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -41,7 +41,7 @@
         isSaving = true;
 
         try {
-            const result = await ApiClient.Settings.update(CommonHelper.filterRedactedProps(authSettings));
+            const result = await ApiClient.settings.update(CommonHelper.filterRedactedProps(authSettings));
             initSettings(result);
             setErrors({});
             emailAuthAccordion?.collapseSiblings();

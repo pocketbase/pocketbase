@@ -84,7 +84,7 @@
 
         ...
 
-        await client.Records.delete('${collection?.name}', 'RECORD_ID');
+        await client.records.delete('${collection?.name}', 'RECORD_ID');
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';

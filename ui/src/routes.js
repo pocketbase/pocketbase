@@ -28,37 +28,37 @@ const baseConditions = [
 const routes = {
     "/login": wrap({
         component:  PageAdminLogin,
-        conditions: baseConditions.concat([(_) => !ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => !ApiClient.authStore.isValid]),
         userData: { showAppSidebar: false },
     }),
 
     "/request-password-reset": wrap({
         asyncComponent:  () => import("@/components/admins/PageAdminRequestPasswordReset.svelte"),
-        conditions: baseConditions.concat([(_) => !ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => !ApiClient.authStore.isValid]),
         userData: { showAppSidebar: false },
     }),
 
     "/confirm-password-reset/:token": wrap({
         asyncComponent:  () => import("@/components/admins/PageAdminConfirmPasswordReset.svelte"),
-        conditions: baseConditions.concat([(_) => !ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => !ApiClient.authStore.isValid]),
         userData: { showAppSidebar: false },
     }),
 
     "/collections": wrap({
         component:  PageRecords,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/logs": wrap({
         component: PageLogs,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/users": wrap({
         component:  PageUsers,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
@@ -100,37 +100,37 @@ const routes = {
 
     "/settings": wrap({
         component:  PageApplication,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/admins": wrap({
         component:  PageAdmins,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/mail": wrap({
         component:  PageMail,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/storage": wrap({
         component:  PageStorage,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/auth-providers": wrap({
         component:  PageAuthProviders,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/tokens": wrap({
         component:  PageTokenOptions,
-        conditions: baseConditions.concat([(_) => ApiClient.AuthStore.isValid]),
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 

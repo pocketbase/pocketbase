@@ -35,7 +35,7 @@
 
         admins = []; // reset
 
-        return ApiClient.Admins.getFullList(100, {
+        return ApiClient.admins.getFullList(100, {
             sort: sort || "-created",
             filter: filter,
         })

@@ -13,7 +13,7 @@
         isLoading = true;
 
         try {
-            await ApiClient.Users.confirmVerification(params?.token);
+            await ApiClient.users.confirmVerification(params?.token);
             success = true;
         } catch (err) {
             console.warn(err);

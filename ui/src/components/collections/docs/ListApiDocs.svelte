@@ -97,12 +97,12 @@
         ...
 
         // fetch a paginated records list
-        const resultList = await client.Records.getList('${collection?.name}', 1, 50, {
+        const resultList = await client.records.getList('${collection?.name}', 1, 50, {
             filter: 'created >= '2022-01-01 00:00:00'',
         });
 
         // alternatively you can also fetch all records at once via getFullList:
-        const records = await client.Records.getFullList('${collection?.name}', 200 /* batch size */, {
+        const records = await client.records.getFullList('${collection?.name}', 200 /* batch size */, {
             sort: '-created',
         });
     `}

@@ -92,7 +92,7 @@
 
         const data = { ... };
 
-        const record = await client.Records.update('${collection?.name}', 'RECORD_ID', data);
+        const record = await client.records.update('${collection?.name}', 'RECORD_ID', data);
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';

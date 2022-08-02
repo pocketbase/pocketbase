@@ -41,7 +41,7 @@
                 filters.push(`id="${id}"`);
             }
 
-            selected = await ApiClient.Users.getFullList(100, {
+            selected = await ApiClient.users.getFullList(100, {
                 sort: "-created",
                 filter: filters.join("||"),
                 $cancelKey: uniqueId + "loadSelected",
@@ -62,7 +62,7 @@
         try {
             const page = reset ? 1 : currentPage + 1;
 
-            const result = await ApiClient.Users.getList(page, 200, {
+            const result = await ApiClient.users.getList(page, 200, {
                 sort: "-created",
                 $cancelKey: uniqueId + "loadList",
             });

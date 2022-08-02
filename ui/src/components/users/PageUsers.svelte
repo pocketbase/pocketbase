@@ -55,7 +55,7 @@
             clearList();
         }
 
-        return ApiClient.Users.getList(page, 50, {
+        return ApiClient.users.getList(page, 50, {
             sort: sort || "-created",
             filter: filter,
         })
@@ -93,7 +93,7 @@
         isLoadingProfileCollection = true;
 
         try {
-            profileCollection = await ApiClient.Collections.getOne(import.meta.env.PB_PROFILE_COLLECTION);
+            profileCollection = await ApiClient.collections.getOne(import.meta.env.PB_PROFILE_COLLECTION);
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }

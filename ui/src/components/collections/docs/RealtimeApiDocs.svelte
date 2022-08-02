@@ -56,22 +56,22 @@
         ...
 
         // (Optionally) authenticate
-        client.Users.authViaEmail('test@example.com', '123456');
+        client.users.authViaEmail('test@example.com', '123456');
 
         // Subscribe to changes in any record from the collection
-        client.Realtime.subscribe('${collection?.name}', function (e) {
+        client.realtime.subscribe('${collection?.name}', function (e) {
             console.log(e.record);
         });
 
         // Subscribe to changes in a single record
-        client.Realtime.subscribe('${collection?.name}/RECORD_ID', function (e) {
+        client.realtime.subscribe('${collection?.name}/RECORD_ID', function (e) {
             console.log(e.record);
         });
 
         // Unsubscribe
-        client.Realtime.unsubscribe() // remove all subscriptions
-        client.Realtime.unsubscribe('${collection?.name}') // remove only the collection subscription
-        client.Realtime.unsubscribe('${collection?.name}/RECORD_ID') // remove only the record subscription
+        client.realtime.unsubscribe() // remove all subscriptions
+        client.realtime.unsubscribe('${collection?.name}') // remove only the collection subscription
+        client.realtime.unsubscribe('${collection?.name}/RECORD_ID') // remove only the record subscription
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';

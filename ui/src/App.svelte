@@ -48,7 +48,7 @@
         }
 
         try {
-            const settings = await ApiClient.Settings.getAll({
+            const settings = await ApiClient.settings.getAll({
                 $cancelKey: "loadAppName",
             });
             $appName = settings?.meta?.appName || "";

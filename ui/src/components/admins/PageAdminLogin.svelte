@@ -18,7 +18,7 @@
 
         isLoading = true;
 
-        return ApiClient.Admins.authViaEmail(email, password)
+        return ApiClient.admins.authViaEmail(email, password)
             .then(() => {
                 replace("/");
             })

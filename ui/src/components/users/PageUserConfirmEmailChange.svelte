@@ -20,7 +20,7 @@
         isLoading = true;
 
         try {
-            await ApiClient.Users.confirmEmailChange(params?.token, password);
+            await ApiClient.users.confirmEmailChange(params?.token, password);
             success = true;
         } catch (err) {
             ApiClient.errorResponseHandler(err);

@@ -68,9 +68,9 @@
 
         let request;
         if (user.isNew) {
-            request = ApiClient.Users.create(data);
+            request = ApiClient.users.create(data);
         } else {
-            request = ApiClient.Users.update(user.id, data);
+            request = ApiClient.users.update(user.id, data);
         }
 
         request
@@ -98,7 +98,7 @@
         }
 
         confirm(`Do you really want to delete the selected user?`, () => {
-            return ApiClient.Users.delete(user.id)
+            return ApiClient.users.delete(user.id)
                 .then(() => {
                     confirmClose = false;
                     hide();
@@ -112,7 +112,7 @@
     }
 
     function sendVerificationEmail(notify = true) {
-        return ApiClient.Users.requestVerification(user.isNew ? email : user.email)
+        return ApiClient.users.requestVerification(user.isNew ? email : user.email)
             .then(() => {
                 confirmClose = false;
                 hide();

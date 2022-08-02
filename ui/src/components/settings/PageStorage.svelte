@@ -26,7 +26,7 @@
         isLoading = true;
 
         try {
-            const settings = (await ApiClient.Settings.getAll()) || {};
+            const settings = (await ApiClient.settings.getAll()) || {};
             init(settings);
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -43,7 +43,7 @@
         isSaving = true;
 
         try {
-            const settings = await ApiClient.Settings.update(CommonHelper.filterRedactedProps({ s3 }));
+            const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps({ s3 }));
             init(settings);
             setErrors({});
             addSuccessToast("Successfully saved Files storage settings.");
