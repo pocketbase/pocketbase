@@ -158,6 +158,41 @@ func TestDaoSaveCreate(t *testing.T) {
 	}
 }
 
+type TestAdminMapper struct {
+	models.Admin
+}
+
+func (m *TestAdminMapper) ColumnValueMap() map[string]any {
+	return map[string]any{
+		"email":    m.Email,
+		"avatar":   m.Avatar,
+		"tokenKey": m.TokenKey,
+		"passwordHash":m.PasswordHash,
+	}
+}
+
+func TestDaoSaveCreateWithMapper(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	model := &models.Admin{}
+	model.Email = "test_new@example.com"
+	model.Avatar = 8
+	mapper := &TestAdminMapper{
+		*model,
+	}
+	if err := testApp.Dao().Save(mapper); err != nil {
+		t.Fatal(err)
+	}
+
+	// refresh
+	_, err := testApp.Dao().FindAdminByEmail("test_new@example.com")
+
+	if err != nil {
+		t.Fatalf("Expected to get saved admin, failed with error %v", err)
+	}
+}
+
 func TestDaoSaveUpdate(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()

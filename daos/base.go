@@ -195,6 +195,7 @@ func (dao *Dao) create(m models.Model) error {
 
 	if v, ok := any(m).(models.ColumnValueMapper); ok {
 		dataMap := v.ColumnValueMap()
+		dataMap["id"] = m.GetId() //prevent Mapper not return 'id'
 
 		_, err := dao.db.Insert(m.TableName(), dataMap).Execute()
 		if err != nil {
