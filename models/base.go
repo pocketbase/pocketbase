@@ -44,7 +44,7 @@ type BaseModel struct {
 	Updated types.DateTime `db:"updated" json:"updated"`
 }
 
-// HasId returns whether the model has a nonzero primary key (aka. id).
+// HasId returns whether the model has a nonzero id.
 func (m *BaseModel) HasId() bool {
 	return m.GetId() != ""
 }
@@ -66,8 +66,7 @@ func (m *BaseModel) GetUpdated() types.DateTime {
 
 // RefreshId generates and sets a new model id.
 //
-// The generated id is a cryptographically random 15 characters length string
-// (could change in the future).
+// The generated id is a cryptographically random 15 characters length string.
 func (m *BaseModel) RefreshId() {
 	m.Id = security.RandomString(15)
 }
