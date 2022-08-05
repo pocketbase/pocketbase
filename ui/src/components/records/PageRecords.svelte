@@ -13,6 +13,7 @@
     import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import CollectionDocsPanel from "@/components/collections/docs/CollectionDocsPanel.svelte";
+    import CollectionsExportPanel from "@/components/collections/CollectionsExportPanel.svelte";
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordsList from "@/components/records/RecordsList.svelte";
 
@@ -20,6 +21,7 @@
 
     const queryParams = new URLSearchParams($querystring);
 
+    let collectionsExportPanel;
     let collectionUpsertPanel;
     let collectionDocsPanel;
     let recordPanel;
@@ -84,16 +86,18 @@
                 <div class="breadcrumb-item">{$activeCollection.name}</div>
             </nav>
 
-            <button
-                type="button"
-                class="btn btn-secondary btn-circle"
-                use:tooltip={{ text: "Edit collection", position: "right" }}
-                on:click={() => collectionUpsertPanel?.show($activeCollection)}
-            >
-                <i class="ri-settings-4-line" />
-            </button>
+            <div class="inline-flex gap-5">
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-circle"
+                    use:tooltip={{ text: "Edit collection", position: "right" }}
+                    on:click={() => collectionUpsertPanel?.show($activeCollection)}
+                >
+                    <i class="ri-settings-4-line" />
+                </button>
 
-            <RefreshButton on:refresh={() => recordsList?.load()} />
+                <RefreshButton on:refresh={() => recordsList?.load()} />
+            </div>
 
             <div class="btns-group">
                 <button
@@ -127,6 +131,8 @@
         />
     </main>
 {/if}
+
+<CollectionsExportPanel bind:this={collectionsExportPanel} />
 
 <CollectionUpsertPanel bind:this={collectionUpsertPanel} />
 

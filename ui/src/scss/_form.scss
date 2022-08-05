@@ -53,6 +53,7 @@ button {
         height: 100%;
         pointer-events: none;
         user-select: none;
+        backface-visibility: hidden;
         background: var(--primaryColor);
         transition: filter var(--baseAnimationSpeed),
                     opacity var(--baseAnimationSpeed),
@@ -483,13 +484,13 @@ select {
         line-height: var(--smLineHeight);
         color: var(--txtHintColor);
     }
+    .help-block-error {
+        color: var(--dangerColor);
+    }
 
     // states
     &.error,
     &.invalid {
-        .help-block-error {
-            color: var(--dangerColor);
-        }
         > label {
             color: var(--dangerColor);
         }

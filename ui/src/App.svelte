@@ -143,9 +143,9 @@
 
     <div class="app-body">
         <Router {routes} on:routeLoading={handleRouteLoading} on:conditionsFailed={handleRouteFailure} />
+
+        <Toasts />
     </div>
 </div>
-
-<Toasts />
 
 <Confirmation />

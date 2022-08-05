@@ -601,6 +601,22 @@ export default class CommonHelper {
     }
 
     /**
+     * Downloads a json file created from the provide object.
+     *
+     * @param {mixed} obj   The JS object to download.
+     * @param {String} name  The result file name.
+     */
+    static downloadJson(obj, name) {
+        const encodedObj = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obj, null, 2));
+
+        const tempLink = document.createElement('a');
+        tempLink.setAttribute("href", encodedObj);
+        tempLink.setAttribute("download", name + ".json");
+        tempLink.click();
+        tempLink.remove();
+    }
+
+    /**
      * Parses and returns the decoded jwt payload data.
      *
      * @param  {String} jwt

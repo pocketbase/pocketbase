@@ -24,12 +24,4 @@ export default defineConfig({
             '@': __dirname + '/src',
         }
     },
-    css: {
-        preprocessorOptions: {
-            scss: {
-                includePaths: [__dirname + '/src/scss'],
-                prependData: `@import "${__dirname}/src/scss/mixins"; @import "${__dirname}/src/scss/vars";`,
-            },
-        },
-    },
 })

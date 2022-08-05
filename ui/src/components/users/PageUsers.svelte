@@ -55,10 +55,11 @@
             clearList();
         }
 
-        return ApiClient.users.getList(page, 50, {
-            sort: sort || "-created",
-            filter: filter,
-        })
+        return ApiClient.users
+            .getList(page, 50, {
+                sort: sort || "-created",
+                filter: filter,
+            })
             .then((result) => {
                 isLoadingUsers = false;
                 users = users.concat(result.items);

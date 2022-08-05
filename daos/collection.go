@@ -141,7 +141,7 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 func (dao *Dao) SaveCollection(collection *models.Collection) error {
 	var oldCollection *models.Collection
 
-	if collection.HasId() {
+	if !collection.IsNew() {
 		// get the existing collection state to compare with the new one
 		// note: the select is outside of the transaction to prevent SQLITE_LOCKED error when mixing read&write in a single transaction
 		var findErr error

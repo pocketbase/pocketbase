@@ -128,7 +128,7 @@ func (dao *Dao) Delete(m models.Model) error {
 
 // Save upserts (update or create if primary key is not set) the provided model.
 func (dao *Dao) Save(m models.Model) error {
-	if m.HasId() {
+	if !m.IsNew() {
 		return dao.update(m)
 	}
 
@@ -138,6 +138,10 @@ func (dao *Dao) Save(m models.Model) error {
 func (dao *Dao) update(m models.Model) error {
 	if !m.HasId() {
 		return errors.New("ID is not set")
+	}
+
+	if m.GetCreated().IsZero() {
+		m.RefreshCreated()
 	}
 
 	m.RefreshUpdated()
@@ -195,6 +199,9 @@ func (dao *Dao) create(m models.Model) error {
 
 	if v, ok := any(m).(models.ColumnValueMapper); ok {
 		dataMap := v.ColumnValueMap()
+		if _, ok := dataMap["id"]; !ok {
+			dataMap["id"] = m.GetId()
+		}
 
 		_, err := dao.db.Insert(m.TableName(), dataMap).Execute()
 		if err != nil {
@@ -205,6 +212,9 @@ func (dao *Dao) create(m models.Model) error {
 			return err
 		}
 	}
+
+	// clears the internal isNewFlag
+	m.UnmarkAsNew()
 
 	if dao.AfterCreateFunc != nil {
 		dao.AfterCreateFunc(dao, m)

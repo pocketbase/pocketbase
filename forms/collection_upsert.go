@@ -36,7 +36,7 @@ func NewCollectionUpsert(app core.App, collection *models.Collection) *Collectio
 	form := &CollectionUpsert{
 		app:        app,
 		collection: collection,
-		isCreate:   !collection.HasId(),
+		isCreate:   collection.IsNew(),
 	}
 
 	// load defaults

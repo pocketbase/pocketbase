@@ -24,6 +24,10 @@ type FilesManager interface {
 // Model defines an interface with common methods that all db models should have.
 type Model interface {
 	TableName() string
+	IsNew() bool
+	MarkAsNew()
+	UnmarkAsNew()
+	SetId(id string)
 	HasId() bool
 	GetId() string
 	GetCreated() types.DateTime
@@ -39,6 +43,9 @@ type Model interface {
 
 // BaseModel defines common fields and methods used by all other models.
 type BaseModel struct {
+	insertId  string
+	isNewFlag bool
+
 	Id      string         `db:"id" json:"id"`
 	Created types.DateTime `db:"created" json:"created"`
 	Updated types.DateTime `db:"updated" json:"updated"`
@@ -52,6 +59,27 @@ func (m *BaseModel) HasId() bool {
 // GetId returns the model's id.
 func (m *BaseModel) GetId() string {
 	return m.Id
+}
+
+// SetId sets the model's id to the provided one.
+func (m *BaseModel) SetId(id string) {
+	m.Id = id
+}
+
+// UnmarkAsNew sets the model's isNewFlag enforcing [m.IsNew()] to be true.
+func (m *BaseModel) MarkAsNew() {
+	m.isNewFlag = true
+}
+
+// UnmarkAsNew clears the enforced model's isNewFlag.
+func (m *BaseModel) UnmarkAsNew() {
+	m.isNewFlag = false
+}
+
+// IsNew indicates what type of db query (insert or update)
+// should be used with the model instance.
+func (m *BaseModel) IsNew() bool {
+	return m.isNewFlag || !m.HasId()
 }
 
 // GetCreated returns the model's Created datetime.

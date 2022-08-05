@@ -21,6 +21,7 @@ func BindCollectionApi(app core.App, rg *echo.Group) {
 	subGroup.GET("/:collection", api.view)
 	subGroup.PATCH("/:collection", api.update)
 	subGroup.DELETE("/:collection", api.delete)
+	subGroup.POST("/import", api.bulkImport)
 }
 
 type collectionApi struct {
@@ -166,4 +167,20 @@ func (api *collectionApi) delete(c echo.Context) error {
 	}
 
 	return handlerErr
+}
+
+func (api *collectionApi) bulkImport(c echo.Context) error {
+	form := forms.NewCollectionsImport(api.app)
+
+	// load request
+	if err := c.Bind(form); err != nil {
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
+	}
+
+	submitErr := form.Submit()
+	if submitErr != nil {
+		return rest.NewBadRequestError("Failed to import the submitted collections.", submitErr)
+	}
+
+	return nil
 }

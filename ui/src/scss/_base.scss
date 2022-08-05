@@ -63,6 +63,16 @@ em {
     font-style: italic;
 }
 
+ins {
+    background: var(--successAltColor);
+    text-decoration: none;
+}
+
+del {
+    background: var(--dangerAltColor);
+    text-decoration: none;
+}
+
 strong {
     font-weight: 600;
 }
