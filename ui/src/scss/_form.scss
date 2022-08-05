@@ -353,6 +353,11 @@ button {
     &.txt-mono {
         line-height: var(--smLineHeight);
     }
+    &.code {
+        font-size: 15px;
+        line-height: 1.379rem;
+        font-family: var(--monospaceFontFamily);
+    }
 }
 
 input,
@@ -388,6 +393,13 @@ input[type=number]::-webkit-outer-spin-button {
 textarea {
     min-height: 80px;
     resize: vertical;
+    &:focus,
+    &:focus-within {
+        @include scrollbar(
+            $thumbColor: var(--baseAlt3Color),
+            $thumbActiveColor: var(--baseAlt4Color)
+        );
+    }
 }
 select {
     padding-left: 8px;
@@ -1024,6 +1036,9 @@ select {
             font-family: var(--monospaceFontFamily);
             font-size: var(--baseFontSize);
             line-height: var(--baseLineHeight);
+        }
+        .cm-selectionMatch {
+            background: var(--infoAltColor);
         }
     }
 }

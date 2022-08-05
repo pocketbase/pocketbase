@@ -64,11 +64,13 @@ em {
 }
 
 ins {
+    color: var(--txtPrimaryColor);
     background: var(--successAltColor);
     text-decoration: none;
 }
 
 del {
+    color: var(--txtPrimaryColor);
     background: var(--dangerAltColor);
     text-decoration: none;
 }
@@ -127,6 +129,14 @@ code {
     color: var(--txtPrimaryColor);
     background: var(--baseAlt2Color);
     border-radius: var(--baseRadius);
+}
+
+.code-block {
+    @extend %block;
+    overflow: auto;
+    padding: var(--xsSpacing);
+    white-space: pre-wrap;
+    background: var(--baseAlt1Color);
 }
 
 ol,
@@ -647,6 +657,26 @@ a,
         i {
             font-size: inherit;
             vertical-align: top;
+        }
+    }
+}
+
+.list {
+    @extend %block;
+    position: relative;
+    border: 1px solid var(--baseAlt1Color);
+    border-radius: var(--baseRadius);
+    .list-item {
+        word-break: break-all;
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        gap: 10px;
+        padding: 10px;
+        border-bottom: 1px solid var(--baseAlt1Color);
+        &:last-child {
+            border-bottom: 0;
         }
     }
 }

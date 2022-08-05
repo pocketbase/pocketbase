@@ -10,6 +10,7 @@
 
     const uniqueId = "export_" + CommonHelper.randomString(5);
 
+    let previewContainer;
     let collections = [];
     let isLoadingCollections = false;
 
@@ -68,7 +69,22 @@
                     </p>
                 </div>
 
-                <div class="export-preview">
+                <div
+                    tabindex="0"
+                    bind:this={previewContainer}
+                    class="export-preview"
+                    on:keydown={(e) => {
+                        // select all
+                        if (e.ctrlKey && e.code === "KeyA") {
+                            e.preventDefault();
+                            const selection = window.getSelection();
+                            const range = document.createRange();
+                            range.selectNodeContents(previewContainer);
+                            selection.removeAllRanges();
+                            selection.addRange(range);
+                        }
+                    }}
+                >
                     <button
                         type="button"
                         class="btn btn-sm btn-secondary fade copy-schema"

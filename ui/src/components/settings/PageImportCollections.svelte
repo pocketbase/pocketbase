@@ -1,23 +1,24 @@
 <script>
+    import { tick } from "svelte";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
     import { addInfoToast, addErrorToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
-    import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import DiffPopup from "@/components/base/DiffPopup.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
 
     $pageTitle = "Import collections";
 
-    let uniquePageId = "import_" + CommonHelper.randomString(5);
-
     let fileInput;
+    let diffPopup;
 
     let schema = "";
     let isImporting = false;
     let isLoadingFile = false;
     let newCollections = [];
     let oldCollections = [];
+    let collectionsToModify = [];
     let isLoadingOldCollections = false;
 
     $: if (typeof schema !== "undefined") {
@@ -29,24 +30,22 @@
         newCollections.length &&
         newCollections.length === newCollections.filter((item) => !!item.id && !!item.name).length;
 
-    $: canImport = isValid && !isLoadingOldCollections;
-
     $: collectionsToDelete = oldCollections.filter((collection) => {
-        return !CommonHelper.findByKey(newCollections, "id", collection.id);
+        return isValid && !CommonHelper.findByKey(newCollections, "id", collection.id);
     });
 
     $: collectionsToAdd = newCollections.filter((collection) => {
-        return !CommonHelper.findByKey(oldCollections, "id", collection.id);
+        return isValid && !CommonHelper.findByKey(oldCollections, "id", collection.id);
     });
 
-    $: collectionsToModify = newCollections.filter((newCollection) => {
-        const oldCollection = CommonHelper.findByKey(oldCollections, "id", newCollection.id);
-        if (!oldCollection?.id) {
-            return false;
-        }
+    $: if (typeof newCollections !== "undefined") {
+        loadCollectionsToModify();
+    }
 
-        return JSON.stringify(oldCollection) !== JSON.stringify(newCollection);
-    });
+    $: hasChanges =
+        !!schema && (collectionsToDelete.length || collectionsToAdd.length || collectionsToModify.length);
+
+    $: canImport = !isLoadingOldCollections && isValid && hasChanges;
 
     loadOldCollections();
 
@@ -54,9 +53,7 @@
         isLoadingOldCollections = true;
 
         try {
-            oldCollections = await ApiClient.collections.getFullList(100, {
-                $cancelKey: uniquePageId,
-            });
+            oldCollections = await ApiClient.collections.getFullList(200);
             // delete timestamps
             for (let collection of oldCollections) {
                 delete collection.created;
@@ -69,6 +66,31 @@
         isLoadingOldCollections = false;
     }
 
+    function loadCollectionsToModify() {
+        collectionsToModify = [];
+
+        if (!isValid) {
+            return;
+        }
+
+        for (let newCollection of newCollections) {
+            const oldCollection = CommonHelper.findByKey(oldCollections, "id", newCollection.id);
+            if (
+                // no old collection
+                !oldCollection?.id ||
+                // no changes
+                JSON.stringify(oldCollection) === JSON.stringify(newCollection)
+            ) {
+                continue;
+            }
+
+            collectionsToModify.push({
+                new: newCollection,
+                old: oldCollection,
+            });
+        }
+    }
+
     function loadNewCollections() {
         newCollections = [];
 
@@ -78,6 +100,8 @@
 
         if (!Array.isArray(newCollections)) {
             newCollections = [];
+        } else {
+            newCollections = CommonHelper.filterDuplicatesByKey(newCollections);
         }
 
         // delete timestamps
@@ -92,11 +116,18 @@
 
         const reader = new FileReader();
 
-        reader.onload = (event) => {
-            schema = event.target.result;
-
+        reader.onload = async (event) => {
             isLoadingFile = false;
             fileInput.value = ""; // reset
+
+            schema = event.target.result;
+
+            await tick();
+
+            if (!newCollections.length) {
+                addErrorToast("Invalid collections schema.");
+                clear();
+            }
         };
 
         reader.onerror = (err) => {
@@ -122,6 +153,11 @@
 
         isImporting = false;
     }
+
+    function clear() {
+        schema = "";
+        fileInput.value = "";
+    }
 </script>
 
 <SettingsSidebar />
@@ -136,86 +172,146 @@
 
     <div class="wrapper">
         <div class="panel">
-            <div class="content txt-xl m-b-base">
-                <input
-                    bind:this={fileInput}
-                    type="file"
-                    class="hidden"
-                    accept=".json"
-                    on:change={() => {
-                        if (fileInput.files.length) {
-                            loadFile(fileInput.files[0]);
-                        }
-                    }}
-                />
-
-                <p>
-                    Paste below the collections schema you want to import or
-                    <button
-                        class="btn btn-outline btn-sm"
-                        class:btn-loading={isLoadingFile}
-                        on:click={() => {
-                            fileInput.click();
+            {#if isLoadingOldCollections}
+                <div class="loader" />
+            {:else}
+                <div class="content txt-xl m-b-base">
+                    <input
+                        bind:this={fileInput}
+                        type="file"
+                        class="hidden"
+                        accept=".json"
+                        on:change={() => {
+                            if (fileInput.files.length) {
+                                loadFile(fileInput.files[0]);
+                            }
                         }}
-                    >
-                        <span class="txt">Import from JSON file</span>
-                    </button>
-                </p>
-            </div>
+                    />
 
-            <Field class="form-field {!isValid ? 'field-error' : ''}" name="collections" let:uniqueId>
-                <label for={uniqueId}>Collections schema</label>
-                <textarea
-                    id={uniqueId}
-                    class="json-editor"
-                    spellcheck="false"
-                    rows="20"
-                    required
-                    bind:value={schema}
-                />
-                {#if !!schema && !isValid}
-                    <div class="help-block help-block-error">Invalid collections schema.</div>
+                    <p>
+                        Paste below the collections schema you want to import or
+                        <button
+                            class="btn btn-outline btn-sm m-l-5"
+                            class:btn-loading={isLoadingFile}
+                            on:click={() => {
+                                fileInput.click();
+                            }}
+                        >
+                            <span class="txt">Load from JSON file</span>
+                        </button>
+                    </p>
+                </div>
+
+                <Field class="form-field {!isValid ? 'field-error' : ''}" name="collections" let:uniqueId>
+                    <label for={uniqueId} class="p-b-10">Collections schema</label>
+                    <textarea
+                        id={uniqueId}
+                        class="code"
+                        spellcheck="false"
+                        rows="15"
+                        required
+                        bind:value={schema}
+                    />
+
+                    {#if !!schema && !isValid}
+                        <div class="help-block help-block-error">Invalid collections schema.</div>
+                    {/if}
+                </Field>
+
+                {#if isValid && newCollections.length && !hasChanges}
+                    <div class="alert alert-info">
+                        <div class="icon">
+                            <i class="ri-information-line" />
+                        </div>
+                        <div class="content">
+                            <string>Everything is up-to-date!</string>
+                        </div>
+                    </div>
                 {/if}
-            </Field>
 
-            <div class="section-title">Detected changes</div>
-            <p>No changes to your current collections schema were found.</p>
+                {#if isValid && newCollections.length && hasChanges}
+                    <div class="flex flex-gap-10">
+                        <div>
+                            <h5 class="section-title m-0">Detected changes</h5>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-warning"
+                            on:click={() => {
+                                diffPopup?.show(
+                                    JSON.stringify(oldCollections, null, 2),
+                                    JSON.stringify(newCollections, null, 2)
+                                );
+                            }}
+                        >
+                            View diff
+                        </button>
+                    </div>
 
-            {#each collectionsToDelete as collection (collection.id)}
-                Delete {collection.name}
-                <br />
-            {/each}
+                    <div class="list m-t-sm">
+                        {#if collectionsToDelete.length}
+                            {#each collectionsToDelete as collection (collection.id)}
+                                <div class="list-item">
+                                    <span class="label label-danger list-label">Deleted</span>
+                                    <strong>{collection.name}</strong>
+                                </div>
+                            {/each}
+                        {/if}
 
-            {#each collectionsToModify as collection (collection.id)}
-                Modify {collection.name}
-                <br />
-            {/each}
+                        {#if collectionsToModify.length}
+                            {#each collectionsToModify as entry (entry.old.id + entry.new.id)}
+                                <div class="list-item">
+                                    <span class="label label-warning list-label">Modified</span>
+                                    <strong>
+                                        {#if entry.old.name !== entry.new.name}
+                                            <span class="txt-strikethrough txt-hint">{entry.old.name}</span> -
+                                        {/if}
+                                        {entry.new.name}
+                                    </strong>
+                                </div>
+                            {/each}
+                        {/if}
 
-            {#each collectionsToAdd as collection (collection.id)}
-                Add {collection.name}
-                <br />
-            {/each}
+                        {#if collectionsToAdd.length}
+                            {#each collectionsToAdd as collection (collection.id)}
+                                <div class="list-item">
+                                    <span class="label label-success list-label">New</span>
+                                    <strong>{collection.name}</strong>
+                                </div>
+                            {/each}
+                        {/if}
+                    </div>
+                {/if}
 
-            <div class="flex m-t-base">
-                <div class="flex-fill" />
-                <button
-                    type="button"
-                    class="btn btn-expanded"
-                    class:btn-loading={isImporting}
-                    disabled={!canImport}
-                    on:click={() => submitImport()}
-                >
-                    <span class="txt">Import</span>
-                </button>
-            </div>
+                <div class="flex m-t-base">
+                    <button
+                        type="button"
+                        class="btn btn-secondary link-hint"
+                        disabled={!schema || isImporting}
+                        on:click={() => clear()}
+                    >
+                        <span class="txt">Clear</span>
+                    </button>
+                    <div class="flex-fill" />
+                    <button
+                        type="button"
+                        class="btn btn-expanded m-l-auto"
+                        class:btn-loading={isImporting}
+                        disabled={!canImport}
+                        on:click={() => submitImport()}
+                    >
+                        <span class="txt">Import</span>
+                    </button>
+                </div>
+            {/if}
         </div>
     </div>
 </main>
 
+<DiffPopup bind:this={diffPopup} />
+
 <style>
-    .json-editor {
-        font-size: 15px;
-        line-height: 1.379rem;
-        font-family: var(--monospaceFontFamily);
+    .list-label {
+        min-width: 65px;
     }
 </style>
