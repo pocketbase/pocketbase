@@ -667,7 +667,7 @@ a,
     border: 1px solid var(--baseAlt1Color);
     border-radius: var(--baseRadius);
     .list-item {
-        word-break: break-all;
+        word-break: break-word;
         position: relative;
         display: flex;
         align-items: center;

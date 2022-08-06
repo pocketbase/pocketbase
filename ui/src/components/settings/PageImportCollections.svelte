@@ -3,18 +3,18 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
-    import { addInfoToast, addErrorToast } from "@/stores/toasts";
+    import { addErrorToast } from "@/stores/toasts";
+    import { setErrors } from "@/stores/errors";
     import Field from "@/components/base/Field.svelte";
-    import DiffPopup from "@/components/base/DiffPopup.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import ImportPopup from "@/components/settings/ImportPopup.svelte";
 
     $pageTitle = "Import collections";
 
     let fileInput;
-    let diffPopup;
+    let importPopup;
 
     let schema = "";
-    let isImporting = false;
     let isLoadingFile = false;
     let newCollections = [];
     let oldCollections = [];
@@ -141,22 +141,10 @@
         reader.readAsText(file);
     }
 
-    function submitImport() {
-        isImporting = true;
-
-        try {
-            const newCollections = JSON.parse(schema);
-            ApiClient.collections.import(newCollections);
-        } catch (err) {
-            ApiClient.errorResponseHandler(err);
-        }
-
-        isImporting = false;
-    }
-
     function clear() {
         schema = "";
         fileInput.value = "";
+        setErrors({});
     }
 </script>
 
@@ -224,36 +212,23 @@
                             <i class="ri-information-line" />
                         </div>
                         <div class="content">
-                            <string>Everything is up-to-date!</string>
+                            <string>Your collections schema is already up-to-date!</string>
                         </div>
                     </div>
                 {/if}
 
                 {#if isValid && newCollections.length && hasChanges}
-                    <div class="flex flex-gap-10">
-                        <div>
-                            <h5 class="section-title m-0">Detected changes</h5>
-                        </div>
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-warning"
-                            on:click={() => {
-                                diffPopup?.show(
-                                    JSON.stringify(oldCollections, null, 2),
-                                    JSON.stringify(newCollections, null, 2)
-                                );
-                            }}
-                        >
-                            View diff
-                        </button>
-                    </div>
+                    <h5 class="section-title">Detected changes</h5>
 
-                    <div class="list m-t-sm">
+                    <div class="list">
                         {#if collectionsToDelete.length}
                             {#each collectionsToDelete as collection (collection.id)}
                                 <div class="list-item">
                                     <span class="label label-danger list-label">Deleted</span>
                                     <strong>{collection.name}</strong>
+                                    {#if collection.id}
+                                        <small class="txt-hint">({collection.id})</small>
+                                    {/if}
                                 </div>
                             {/each}
                         {/if}
@@ -268,6 +243,9 @@
                                         {/if}
                                         {entry.new.name}
                                     </strong>
+                                    {#if entry.new.id}
+                                        <small class="txt-hint">({entry.new.id})</small>
+                                    {/if}
                                 </div>
                             {/each}
                         {/if}
@@ -277,6 +255,9 @@
                                 <div class="list-item">
                                     <span class="label label-success list-label">New</span>
                                     <strong>{collection.name}</strong>
+                                    {#if collection.id}
+                                        <small class="txt-hint">({collection.id})</small>
+                                    {/if}
                                 </div>
                             {/each}
                         {/if}
@@ -284,23 +265,19 @@
                 {/if}
 
                 <div class="flex m-t-base">
-                    <button
-                        type="button"
-                        class="btn btn-secondary link-hint"
-                        disabled={!schema || isImporting}
-                        on:click={() => clear()}
-                    >
-                        <span class="txt">Clear</span>
-                    </button>
+                    {#if !!schema}
+                        <button type="button" class="btn btn-secondary link-hint" on:click={() => clear()}>
+                            <span class="txt">Clear</span>
+                        </button>
+                    {/if}
                     <div class="flex-fill" />
                     <button
                         type="button"
-                        class="btn btn-expanded m-l-auto"
-                        class:btn-loading={isImporting}
+                        class="btn btn-expanded btn-warning m-l-auto"
                         disabled={!canImport}
-                        on:click={() => submitImport()}
+                        on:click={() => importPopup?.show(oldCollections, newCollections)}
                     >
-                        <span class="txt">Import</span>
+                        <span class="txt">Review</span>
                     </button>
                 </div>
             {/if}
@@ -308,7 +285,7 @@
     </div>
 </main>
 
-<DiffPopup bind:this={diffPopup} />
+<ImportPopup bind:this={importPopup} on:submit={() => clear()} />
 
 <style>
     .list-label {

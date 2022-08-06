@@ -169,6 +169,7 @@ func (api *collectionApi) delete(c echo.Context) error {
 	return handlerErr
 }
 
+// @todo add event
 func (api *collectionApi) bulkImport(c echo.Context) error {
 	form := forms.NewCollectionsImport(api.app)
 
@@ -182,5 +183,5 @@ func (api *collectionApi) bulkImport(c echo.Context) error {
 		return rest.NewBadRequestError("Failed to import the submitted collections.", submitErr)
 	}
 
-	return nil
+	return c.NoContent(http.StatusNoContent)
 }

@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -59,24 +60,8 @@ func (form *CollectionsImport) Submit() error {
 			mappedOldCollections[old.GetId()] = old
 		}
 
-		// raw insert/replace (aka. without any validations)
-		// (required to make sure that all linked collections exists before running the validations)
 		mappedFormCollections := make(map[string]*models.Collection, len(form.Collections))
 		for _, collection := range form.Collections {
-			if mappedOldCollections[collection.GetId()] == nil {
-				collection.MarkAsNew()
-			}
-
-			if err := txDao.Save(collection); err != nil {
-				if form.app.IsDebug() {
-					log.Println("[CollectionsImport] Save failure", collection.Name, err)
-				}
-				return validation.Errors{"collections": validation.NewError(
-					"collections_import_save_failure",
-					fmt.Sprintf("Failed to save the imported collection %q (id: %s).", collection.Name, collection.Id),
-				)}
-			}
-
 			mappedFormCollections[collection.GetId()] = collection
 		}
 
@@ -89,12 +74,30 @@ func (form *CollectionsImport) Submit() error {
 						if form.app.IsDebug() {
 							log.Println("[CollectionsImport] DeleteOthers failure", old.Name, err)
 						}
-						return validation.Errors{"deleteOthers": validation.NewError(
+						return validation.Errors{"collections": validation.NewError(
 							"collections_import_collection_delete_failure",
-							fmt.Sprintf("Failed to delete collection %q. Make sure that the collection is not system or referenced by other collections.", old.Name),
+							fmt.Sprintf("Failed to delete collection %q (%s). Make sure that the collection is not system or referenced by other collections.", old.Name, old.Id),
 						)}
 					}
 				}
+			}
+		}
+
+		// raw insert/replace (aka. without any validations)
+		// (required to make sure that all linked collections exists before running the validations)
+		for _, collection := range form.Collections {
+			if mappedOldCollections[collection.GetId()] == nil {
+				collection.MarkAsNew()
+			}
+
+			if err := txDao.Save(collection); err != nil {
+				if form.app.IsDebug() {
+					log.Println("[CollectionsImport] Save failure", collection.Name, err)
+				}
+				return validation.Errors{"collections": validation.NewError(
+					"collections_import_save_failure",
+					fmt.Sprintf("Integrity constraints failed - the collection %q (%s) cannot be imported.", collection.Name, collection.Id),
+				)}
 			}
 		}
 
@@ -125,9 +128,13 @@ func (form *CollectionsImport) Submit() error {
 				if form.app.IsDebug() {
 					log.Println("[CollectionsImport] Validate failure", collection.Name, err)
 				}
+
+				// serialize the validation error(s)
+				serializedErr, _ := json.Marshal(err)
+
 				return validation.Errors{"collections": validation.NewError(
 					"collections_import_validate_failure",
-					fmt.Sprintf("Integrity check failed - collection %q has invalid data.", collection.Name),
+					fmt.Sprintf("Data validations failed for collection %q (%s): %s", collection.Name, collection.Id, serializedErr),
 				)}
 			}
 		}

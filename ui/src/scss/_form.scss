@@ -495,6 +495,7 @@ select {
         font-size: var(--smFontSize);
         line-height: var(--smLineHeight);
         color: var(--txtHintColor);
+        word-break: break-word;
     }
     .help-block-error {
         color: var(--dangerColor);

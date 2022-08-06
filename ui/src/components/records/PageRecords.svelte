@@ -13,7 +13,6 @@
     import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import CollectionDocsPanel from "@/components/collections/docs/CollectionDocsPanel.svelte";
-    import CollectionsExportPanel from "@/components/collections/CollectionsExportPanel.svelte";
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordsList from "@/components/records/RecordsList.svelte";
 
@@ -21,7 +20,6 @@
 
     const queryParams = new URLSearchParams($querystring);
 
-    let collectionsExportPanel;
     let collectionUpsertPanel;
     let collectionDocsPanel;
     let recordPanel;
@@ -131,8 +129,6 @@
         />
     </main>
 {/if}
-
-<CollectionsExportPanel bind:this={collectionsExportPanel} />
 
 <CollectionUpsertPanel bind:this={collectionUpsertPanel} />
 
