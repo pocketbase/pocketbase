@@ -118,9 +118,9 @@
             ApiClient.errorResponseHandler(err);
         }
 
-        hide();
-
         isImporting = false;
+
+        hide();
     }
 </script>
 
@@ -128,6 +128,8 @@
     bind:this={panel}
     class="full-width-popup import-popup"
     overlayClose={false}
+    escClose={!isImporting}
+    beforeHide={() => !isImporting}
     popup
     on:show
     on:hide
@@ -172,11 +174,12 @@
     </div>
 
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-secondary" on:click={hide}>Close</button>
+        <button type="button" class="btn btn-secondary" on:click={hide} disabled={isImporting}>Close</button>
         <button
             type="button"
             class="btn btn-expanded"
             class:btn-loading={isImporting}
+            disabled={isImporting}
             on:click={() => submitImport()}
         >
             <span class="txt">Confirm and import</span>

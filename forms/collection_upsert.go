@@ -45,20 +45,21 @@ type CollectionUpsertConfig struct {
 // If you want to submit the form as part of another transaction, use
 // [NewCollectionUpsertWithConfig] with Dao configured to your txDao.
 func NewCollectionUpsert(app core.App, collection *models.Collection) *CollectionUpsert {
-	form := NewCollectionUpsertWithConfig(CollectionUpsertConfig{
+	return NewCollectionUpsertWithConfig(CollectionUpsertConfig{
 		Dao: app.Dao(),
 	}, collection)
-
-	return form
 }
 
 // NewCollectionUpsertWithConfig creates a new [CollectionUpsert] form
 // with the provided config and [models.Collection] instance or panics on invalid configuration
 // (for create you could pass a pointer to an empty Collection instance - `&models.Collection{}`).
 func NewCollectionUpsertWithConfig(config CollectionUpsertConfig, collection *models.Collection) *CollectionUpsert {
-	form := &CollectionUpsert{config: config}
+	form := &CollectionUpsert{
+		config:     config,
+		collection: collection,
+	}
 
-	if form.config.Dao == nil || collection == nil {
+	if form.config.Dao == nil || form.collection == nil {
 		panic("Invalid initializer config or nil upsert model.")
 	}
 
