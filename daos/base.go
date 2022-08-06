@@ -183,6 +183,9 @@ func (dao *Dao) create(m models.Model) error {
 		m.RefreshId()
 	}
 
+	// mark the model as "new" since the model now always has an ID
+	m.MarkAsNew()
+
 	if m.GetCreated().IsZero() {
 		m.RefreshCreated()
 	}
@@ -213,7 +216,7 @@ func (dao *Dao) create(m models.Model) error {
 		}
 	}
 
-	// clears the internal isNewFlag
+	// clears the "new" model flag
 	m.UnmarkAsNew()
 
 	if dao.AfterCreateFunc != nil {

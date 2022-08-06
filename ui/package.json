@@ -14,7 +14,6 @@
   "devDependencies": {
     "@codemirror/autocomplete": "^6.0.0",
     "@codemirror/commands": "^6.0.0",
-    "@codemirror/lang-javascript": "^6.0.2",
     "@codemirror/language": "^6.0.0",
     "@codemirror/legacy-modes": "^6.0.0",
     "@codemirror/search": "^6.0.0",

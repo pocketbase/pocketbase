@@ -98,7 +98,8 @@
         }
 
         confirm(`Do you really want to delete the selected user?`, () => {
-            return ApiClient.users.delete(user.id)
+            return ApiClient.users
+                .delete(user.id)
                 .then(() => {
                     confirmClose = false;
                     hide();
@@ -112,7 +113,8 @@
     }
 
     function sendVerificationEmail(notify = true) {
-        return ApiClient.users.requestVerification(user.isNew ? email : user.email)
+        return ApiClient.users
+            .requestVerification(user.isNew ? email : user.email)
             .then(() => {
                 confirmClose = false;
                 hide();
@@ -182,7 +184,7 @@
 
         {#if user.isNew || changePasswordToggle}
             <div class="col-12">
-                <div class="grid" transition:slide={{ duration: 150 }}>
+                <div class="grid" transition:slide|local={{ duration: 150 }}>
                     <div class="col-sm-6">
                         <Field class="form-field required" name="password" let:uniqueId>
                             <label for={uniqueId}>

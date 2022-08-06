@@ -9,6 +9,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// DefaultIdLength is the default length of the generated model id.
+const DefaultIdLength = 15
+
 // ColumnValueMapper defines an interface for custom db model data serialization.
 type ColumnValueMapper interface {
 	// ColumnValueMap returns the data to be used when persisting the model.
@@ -96,7 +99,7 @@ func (m *BaseModel) GetUpdated() types.DateTime {
 //
 // The generated id is a cryptographically random 15 characters length string.
 func (m *BaseModel) RefreshId() {
-	m.Id = security.RandomString(15)
+	m.Id = security.RandomString(DefaultIdLength)
 }
 
 // RefreshCreated updates the model's Created field with the current datetime.

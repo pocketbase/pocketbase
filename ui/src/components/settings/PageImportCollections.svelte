@@ -14,19 +14,19 @@
     let fileInput;
     let importPopup;
 
-    let schema = "";
+    let schemas = "";
     let isLoadingFile = false;
     let newCollections = [];
     let oldCollections = [];
     let collectionsToModify = [];
     let isLoadingOldCollections = false;
 
-    $: if (typeof schema !== "undefined") {
-        loadNewCollections(schema);
+    $: if (typeof schemas !== "undefined") {
+        loadNewCollections(schemas);
     }
 
     $: isValid =
-        !!schema &&
+        !!schemas &&
         newCollections.length &&
         newCollections.length === newCollections.filter((item) => !!item.id && !!item.name).length;
 
@@ -43,7 +43,7 @@
     }
 
     $: hasChanges =
-        !!schema && (collectionsToDelete.length || collectionsToAdd.length || collectionsToModify.length);
+        !!schemas && (collectionsToDelete.length || collectionsToAdd.length || collectionsToModify.length);
 
     $: canImport = !isLoadingOldCollections && isValid && hasChanges;
 
@@ -95,7 +95,7 @@
         newCollections = [];
 
         try {
-            newCollections = JSON.parse(schema);
+            newCollections = JSON.parse(schemas);
         } catch (_) {}
 
         if (!Array.isArray(newCollections)) {
@@ -120,12 +120,12 @@
             isLoadingFile = false;
             fileInput.value = ""; // reset
 
-            schema = event.target.result;
+            schemas = event.target.result;
 
             await tick();
 
             if (!newCollections.length) {
-                addErrorToast("Invalid collections schema.");
+                addErrorToast("Invalid collections list.");
                 clear();
             }
         };
@@ -142,7 +142,7 @@
     }
 
     function clear() {
-        schema = "";
+        schemas = "";
         fileInput.value = "";
         setErrors({});
     }
@@ -177,7 +177,7 @@
                     />
 
                     <p>
-                        Paste below the collections schema you want to import or
+                        Paste below the collections you want to import or
                         <button
                             class="btn btn-outline btn-sm m-l-5"
                             class:btn-loading={isLoadingFile}
@@ -191,18 +191,18 @@
                 </div>
 
                 <Field class="form-field {!isValid ? 'field-error' : ''}" name="collections" let:uniqueId>
-                    <label for={uniqueId} class="p-b-10">Collections schema</label>
+                    <label for={uniqueId} class="p-b-10">Collections</label>
                     <textarea
                         id={uniqueId}
                         class="code"
                         spellcheck="false"
                         rows="15"
                         required
-                        bind:value={schema}
+                        bind:value={schemas}
                     />
 
-                    {#if !!schema && !isValid}
-                        <div class="help-block help-block-error">Invalid collections schema.</div>
+                    {#if !!schemas && !isValid}
+                        <div class="help-block help-block-error">Invalid collections schemas.</div>
                     {/if}
                 </Field>
 
@@ -212,7 +212,7 @@
                             <i class="ri-information-line" />
                         </div>
                         <div class="content">
-                            <string>Your collections schema is already up-to-date!</string>
+                            <string>Your collections structure is already up-to-date!</string>
                         </div>
                     </div>
                 {/if}
@@ -234,17 +234,17 @@
                         {/if}
 
                         {#if collectionsToModify.length}
-                            {#each collectionsToModify as entry (entry.old.id + entry.new.id)}
+                            {#each collectionsToModify as pair (pair.old.id + pair.new.id)}
                                 <div class="list-item">
                                     <span class="label label-warning list-label">Modified</span>
                                     <strong>
-                                        {#if entry.old.name !== entry.new.name}
-                                            <span class="txt-strikethrough txt-hint">{entry.old.name}</span> -
+                                        {#if pair.old.name !== pair.new.name}
+                                            <span class="txt-strikethrough txt-hint">{pair.old.name}</span> -
                                         {/if}
-                                        {entry.new.name}
+                                        {pair.new.name}
                                     </strong>
-                                    {#if entry.new.id}
-                                        <small class="txt-hint">({entry.new.id})</small>
+                                    {#if pair.new.id}
+                                        <small class="txt-hint">({pair.new.id})</small>
                                     {/if}
                                 </div>
                             {/each}
@@ -265,7 +265,7 @@
                 {/if}
 
                 <div class="flex m-t-base">
-                    {#if !!schema}
+                    {#if !!schemas}
                         <button type="button" class="btn btn-secondary link-hint" on:click={() => clear()}>
                             <span class="txt">Clear</span>
                         </button>

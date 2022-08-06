@@ -11,22 +11,46 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// CollectionsImport defines a bulk collections import form.
+// CollectionsImport specifies a form model to bulk import
+// (create, replace and delete) collections from a user provided list.
 type CollectionsImport struct {
-	app core.App
+	config CollectionsImportConfig
 
 	Collections  []*models.Collection `form:"collections" json:"collections"`
 	DeleteOthers bool                 `form:"deleteOthers" json:"deleteOthers"`
 }
 
-// NewCollectionsImport bulk imports (create, replace and delete)
-// a user provided list with collections data.
-func NewCollectionsImport(app core.App) *CollectionsImport {
-	form := &CollectionsImport{
-		app: app,
+// CollectionsImportConfig is the [CollectionsImport] factory initializer config.
+//
+// NB! Dao is a required struct member.
+type CollectionsImportConfig struct {
+	Dao     *daos.Dao
+	IsDebug bool
+}
+
+// NewCollectionsImportWithConfig creates a new [CollectionsImport]
+// form with the provided config or panics on invalid configuration.
+func NewCollectionsImportWithConfig(config CollectionsImportConfig) *CollectionsImport {
+	form := &CollectionsImport{config: config}
+
+	if form.config.Dao == nil {
+		panic("Invalid initializer config.")
 	}
 
 	return form
+}
+
+// NewCollectionsImport creates a new [CollectionsImport] form with
+// initializer config created from the provided [core.App] instance.
+//
+// This factory method is used primarily for convenience (and backward compatibility).
+// If you want to submit the form as part of another transaction, use
+// [NewCollectionsImportWithConfig] with Dao configured to your txDao.
+func NewCollectionsImport(app core.App) *CollectionsImport {
+	return NewCollectionsImportWithConfig(CollectionsImportConfig{
+		Dao:     app.Dao(),
+		IsDebug: app.IsDebug(),
+	})
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
@@ -49,12 +73,12 @@ func (form *CollectionsImport) Submit() error {
 		return err
 	}
 
-	// @todo validate id length in the form
-	return form.app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
+	return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
 		oldCollections := []*models.Collection{}
 		if err := txDao.CollectionQuery().All(&oldCollections); err != nil {
 			return err
 		}
+
 		mappedOldCollections := make(map[string]*models.Collection, len(oldCollections))
 		for _, old := range oldCollections {
 			mappedOldCollections[old.GetId()] = old
@@ -71,7 +95,7 @@ func (form *CollectionsImport) Submit() error {
 				if mappedFormCollections[old.GetId()] == nil {
 					// delete the collection
 					if err := txDao.DeleteCollection(old); err != nil {
-						if form.app.IsDebug() {
+						if form.config.IsDebug {
 							log.Println("[CollectionsImport] DeleteOthers failure", old.Name, err)
 						}
 						return validation.Errors{"collections": validation.NewError(
@@ -79,6 +103,8 @@ func (form *CollectionsImport) Submit() error {
 							fmt.Sprintf("Failed to delete collection %q (%s). Make sure that the collection is not system or referenced by other collections.", old.Name, old.Id),
 						)}
 					}
+
+					delete(mappedOldCollections, old.GetId())
 				}
 			}
 		}
@@ -91,7 +117,7 @@ func (form *CollectionsImport) Submit() error {
 			}
 
 			if err := txDao.Save(collection); err != nil {
-				if form.app.IsDebug() {
+				if form.config.IsDebug {
 					log.Println("[CollectionsImport] Save failure", collection.Name, err)
 				}
 				return validation.Errors{"collections": validation.NewError(
@@ -112,10 +138,13 @@ func (form *CollectionsImport) Submit() error {
 		for _, collection := range refreshedCollections {
 			upsertModel := mappedOldCollections[collection.GetId()]
 			if upsertModel == nil {
-				upsertModel = &models.Collection{}
+				upsertModel = collection
 			}
-			upsertForm := NewCollectionUpsert(form.app, upsertModel)
+			upsertForm := NewCollectionUpsertWithConfig(CollectionUpsertConfig{
+				Dao: txDao,
+			}, upsertModel)
 			// load form fields with the refreshed collection state
+			upsertForm.Id = collection.Id
 			upsertForm.Name = collection.Name
 			upsertForm.System = collection.System
 			upsertForm.ListRule = collection.ListRule
@@ -125,10 +154,6 @@ func (form *CollectionsImport) Submit() error {
 			upsertForm.DeleteRule = collection.DeleteRule
 			upsertForm.Schema = collection.Schema
 			if err := upsertForm.Validate(); err != nil {
-				if form.app.IsDebug() {
-					log.Println("[CollectionsImport] Validate failure", collection.Name, err)
-				}
-
 				// serialize the validation error(s)
 				serializedErr, _ := json.Marshal(err)
 
@@ -143,7 +168,7 @@ func (form *CollectionsImport) Submit() error {
 		for _, collection := range form.Collections {
 			oldCollection := mappedOldCollections[collection.GetId()]
 			if err := txDao.SyncRecordTableSchema(collection, oldCollection); err != nil {
-				if form.app.IsDebug() {
+				if form.config.IsDebug {
 					log.Println("[CollectionsImport] Records table sync failure", collection.Name, err)
 				}
 				return validation.Errors{"collections": validation.NewError(

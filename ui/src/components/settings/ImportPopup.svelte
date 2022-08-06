@@ -1,6 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
     import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import { addSuccessToast } from "@/stores/toasts";
 
@@ -9,7 +10,12 @@
     let panel;
     let oldCollections = [];
     let newCollections = [];
+    let changes = [];
     let isImporting = false;
+
+    $: if (Array.isArray(oldCollections) && Array.isArray(newCollections)) {
+        loadChanges();
+    }
 
     export function show(a, b) {
         oldCollections = a;
@@ -20,6 +26,32 @@
 
     export function hide() {
         return panel?.hide();
+    }
+
+    function loadChanges() {
+        changes = [];
+
+        // add deleted and modified collections
+        for (const oldCollection of oldCollections) {
+            const newCollection = CommonHelper.findByKey(newCollections, "id", oldCollection.id) || null;
+            if (!newCollection?.id || JSON.stringify(oldCollection) != JSON.stringify(newCollection)) {
+                changes.push({
+                    old: oldCollection,
+                    new: newCollection,
+                });
+            }
+        }
+
+        // add only new collections
+        for (const newCollection of newCollections) {
+            const oldCollection = CommonHelper.findByKey(oldCollections, "id", newCollection.id) || null;
+            if (!oldCollection?.id) {
+                changes.push({
+                    old: oldCollection,
+                    new: newCollection,
+                });
+            }
+        }
     }
 
     function diffsToHtml(diffs, ops = [window.DIFF_INSERT, window.DIFF_DELETE, window.DIFF_EQUAL]) {
@@ -58,11 +90,11 @@
         return html.join("");
     }
 
-    function diff(ops = [window.DIFF_INSERT, window.DIFF_DELETE, window.DIFF_EQUAL]) {
+    function diff(obj1, obj2, ops = [window.DIFF_INSERT, window.DIFF_DELETE, window.DIFF_EQUAL]) {
         const dmp = new diff_match_patch();
         const lines = dmp.diff_linesToChars_(
-            JSON.stringify(oldCollections, null, 4),
-            JSON.stringify(newCollections, null, 4)
+            obj1 ? JSON.stringify(obj1, null, 4) : "",
+            obj2 ? JSON.stringify(obj2, null, 4) : ""
         );
         const diffs = dmp.diff_main(lines.chars1, lines.chars2, false);
 
@@ -80,7 +112,7 @@
 
         try {
             await ApiClient.collections.import(newCollections);
-            addSuccessToast("Successfully imported the provided schema.");
+            addSuccessToast("Successfully imported the provided collections.");
             dispatch("submit");
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -92,27 +124,58 @@
     }
 </script>
 
-<OverlayPanel bind:this={panel} class="full-width-popup import-popup" popup on:show on:hide>
+<OverlayPanel
+    bind:this={panel}
+    class="full-width-popup import-popup"
+    overlayClose={false}
+    popup
+    on:show
+    on:hide
+>
     <svelte:fragment slot="header">
         <h4 class="center txt-break">Side-by-side diff</h4>
     </svelte:fragment>
 
-    <div class="grid m-b-base">
-        <div class="col-6">
-            <div class="section-title">Old schema</div>
-            <code class="code-block">{@html diff([window.DIFF_DELETE, window.DIFF_EQUAL])}</code>
-        </div>
-        <div class="col-6">
-            <div class="section-title">New schema</div>
-            <code class="code-block">{@html diff([window.DIFF_INSERT, window.DIFF_EQUAL])}</code>
-        </div>
+    <div class="grid grid-sm m-b-sm">
+        {#each changes as pair (pair.old?.id + pair.new?.id)}
+            <div class="col-12">
+                <div class="flex flex-gap-10">
+                    {#if !pair.old?.id}
+                        <span class="label label-success">New</span>
+                        <strong>{pair.new?.name}</strong>
+                    {:else if !pair.new?.id}
+                        <span class="label label-danger">Deleted</span>
+                        <strong>{pair.old?.name}</strong>
+                    {:else}
+                        <span class="label label-warning">Modified</span>
+                        <div class="inline-flex fleg-gap-5">
+                            {#if pair.old.name !== pair.new.name}
+                                <strong class="txt-strikethrough txt-hint">{pair.old.name}</strong>
+                                <i class="ri-arrow-right-line txt-sm" />
+                            {/if}
+                            <strong class="txt">{pair.new.name}</strong>
+                        </div>
+                    {/if}
+                </div>
+            </div>
+            <div class="col-6 p-b-10">
+                <code class="code-block">
+                    {@html diff(pair.old, pair.new, [window.DIFF_DELETE, window.DIFF_EQUAL])}
+                </code>
+            </div>
+            <div class="col-6 p-b-10">
+                <code class="code-block">
+                    {@html diff(pair.old, pair.new, [window.DIFF_INSERT, window.DIFF_EQUAL])}
+                </code>
+            </div>
+        {/each}
     </div>
 
     <svelte:fragment slot="footer">
         <button type="button" class="btn btn-secondary" on:click={hide}>Close</button>
         <button
             type="button"
-            class="btn btn-expanded m-l-auto"
+            class="btn btn-expanded"
             class:btn-loading={isImporting}
             on:click={() => submitImport()}
         >

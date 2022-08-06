@@ -6,6 +6,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/resolvers"
@@ -14,12 +15,12 @@ import (
 
 var collectionNameRegex = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]*$`)
 
-// CollectionUpsert defines a collection upsert (create/update) form.
+// CollectionUpsert specifies a [models.Collection] upsert (create/update) form.
 type CollectionUpsert struct {
-	app        core.App
+	config     CollectionUpsertConfig
 	collection *models.Collection
-	isCreate   bool
 
+	Id         string        `form:"id" json:"id"`
 	Name       string        `form:"name" json:"name"`
 	System     bool          `form:"system" json:"system"`
 	Schema     schema.Schema `form:"schema" json:"schema"`
@@ -30,25 +31,48 @@ type CollectionUpsert struct {
 	DeleteRule *string       `form:"deleteRule" json:"deleteRule"`
 }
 
-// NewCollectionUpsert creates new collection upsert form for the provided Collection model
-// (pass an empty Collection model instance (`&models.Collection{}`) for create).
+// CollectionUpsertConfig is the [CollectionUpsert] factory initializer config.
+//
+// NB! Dao is a required struct member.
+type CollectionUpsertConfig struct {
+	Dao *daos.Dao
+}
+
+// NewCollectionUpsert creates a new [CollectionUpsert] form with initializer
+// config created from the provided [core.App] and [models.Collection] instances.
+//
+// This factory method is used primarily for convenience (and backward compatibility).
+// If you want to submit the form as part of another transaction, use
+// [NewCollectionUpsertWithConfig] with Dao configured to your txDao.
 func NewCollectionUpsert(app core.App, collection *models.Collection) *CollectionUpsert {
-	form := &CollectionUpsert{
-		app:        app,
-		collection: collection,
-		isCreate:   collection.IsNew(),
+	form := NewCollectionUpsertWithConfig(CollectionUpsertConfig{
+		Dao: app.Dao(),
+	}, collection)
+
+	return form
+}
+
+// NewCollectionUpsertWithConfig creates a new [CollectionUpsert] form
+// with the provided config and [models.Collection] instance or panics on invalid configuration
+// (for create you could pass a pointer to an empty Collection instance - `&models.Collection{}`).
+func NewCollectionUpsertWithConfig(config CollectionUpsertConfig, collection *models.Collection) *CollectionUpsert {
+	form := &CollectionUpsert{config: config}
+
+	if form.config.Dao == nil || collection == nil {
+		panic("Invalid initializer config or nil upsert model.")
 	}
 
 	// load defaults
-	form.Name = collection.Name
-	form.System = collection.System
-	form.ListRule = collection.ListRule
-	form.ViewRule = collection.ViewRule
-	form.CreateRule = collection.CreateRule
-	form.UpdateRule = collection.UpdateRule
-	form.DeleteRule = collection.DeleteRule
+	form.Id = form.collection.Id
+	form.Name = form.collection.Name
+	form.System = form.collection.System
+	form.ListRule = form.collection.ListRule
+	form.ViewRule = form.collection.ViewRule
+	form.CreateRule = form.collection.CreateRule
+	form.UpdateRule = form.collection.UpdateRule
+	form.DeleteRule = form.collection.DeleteRule
 
-	clone, _ := collection.Schema.Clone()
+	clone, _ := form.collection.Schema.Clone()
 	if clone != nil {
 		form.Schema = *clone
 	} else {
@@ -61,6 +85,10 @@ func NewCollectionUpsert(app core.App, collection *models.Collection) *Collectio
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *CollectionUpsert) Validate() error {
 	return validation.ValidateStruct(form,
+		validation.Field(
+			&form.Id,
+			validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+		),
 		validation.Field(
 			&form.System,
 			validation.By(form.ensureNoSystemFlagChange),
@@ -90,11 +118,11 @@ func (form *CollectionUpsert) Validate() error {
 func (form *CollectionUpsert) checkUniqueName(value any) error {
 	v, _ := value.(string)
 
-	if !form.app.Dao().IsCollectionNameUnique(v, form.collection.Id) {
+	if !form.config.Dao.IsCollectionNameUnique(v, form.collection.Id) {
 		return validation.NewError("validation_collection_name_exists", "Collection name must be unique (case insensitive).")
 	}
 
-	if (form.isCreate || !strings.EqualFold(v, form.collection.Name)) && form.app.Dao().HasTable(v) {
+	if (form.collection.IsNew() || !strings.EqualFold(v, form.collection.Name)) && form.config.Dao.HasTable(v) {
 		return validation.NewError("validation_collection_name_table_exists", "The collection name must be also unique table name.")
 	}
 
@@ -104,7 +132,7 @@ func (form *CollectionUpsert) checkUniqueName(value any) error {
 func (form *CollectionUpsert) ensureNoSystemNameChange(value any) error {
 	v, _ := value.(string)
 
-	if form.isCreate || !form.collection.System || v == form.collection.Name {
+	if form.collection.IsNew() || !form.collection.System || v == form.collection.Name {
 		return nil
 	}
 
@@ -114,7 +142,7 @@ func (form *CollectionUpsert) ensureNoSystemNameChange(value any) error {
 func (form *CollectionUpsert) ensureNoSystemFlagChange(value any) error {
 	v, _ := value.(bool)
 
-	if form.isCreate || v == form.collection.System {
+	if form.collection.IsNew() || v == form.collection.System {
 		return nil
 	}
 
@@ -161,7 +189,7 @@ func (form *CollectionUpsert) checkRule(value any) error {
 	}
 
 	dummy := &models.Collection{Schema: form.Schema}
-	r := resolvers.NewRecordFieldResolver(form.app.Dao(), dummy, nil)
+	r := resolvers.NewRecordFieldResolver(form.config.Dao, dummy, nil)
 
 	_, err := search.FilterData(*v).BuildExpr(r)
 	if err != nil {
@@ -182,13 +210,19 @@ func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc) error {
 		return err
 	}
 
-	// system flag can be set only for create
-	if form.isCreate {
+	if form.collection.IsNew() {
+		// system flag can be set only on create
 		form.collection.System = form.System
+
+		// custom insertion id can be set only on create
+		if form.Id != "" {
+			form.collection.MarkAsNew()
+			form.collection.SetId(form.Id)
+		}
 	}
 
 	// system collections cannot be renamed
-	if form.isCreate || !form.collection.System {
+	if form.collection.IsNew() || !form.collection.System {
 		form.collection.Name = form.Name
 	}
 
@@ -200,6 +234,6 @@ func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc) error {
 	form.collection.DeleteRule = form.DeleteRule
 
 	return runInterceptors(func() error {
-		return form.app.Dao().SaveCollection(form.collection)
+		return form.config.Dao.SaveCollection(form.collection)
 	}, interceptors...)
 }
