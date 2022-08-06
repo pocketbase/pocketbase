@@ -4,32 +4,58 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms/validators"
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// AdminUpsert defines an admin upsert (create/update) form.
+// AdminUpsert specifies a [models.Admin] upsert (create/update) form.
 type AdminUpsert struct {
-	app      core.App
-	admin    *models.Admin
-	isCreate bool
+	config AdminUpsertConfig
+	admin  *models.Admin
 
+	Id              string `form:"id" json:"id"`
 	Avatar          int    `form:"avatar" json:"avatar"`
 	Email           string `form:"email" json:"email"`
 	Password        string `form:"password" json:"password"`
 	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
 }
 
-// NewAdminUpsert creates new upsert form for the provided admin model
-// (pass an empty admin model instance (`&models.Admin{}`) for create).
+// AdminUpsertConfig is the [AdminUpsert] factory initializer config.
+//
+// NB! Dao is a required struct member.
+type AdminUpsertConfig struct {
+	Dao *daos.Dao
+}
+
+// NewAdminUpsert creates a new [AdminUpsert] form with initializer
+// config created from the provided [core.App] and [models.Admin] instances
+// (for create you could pass a pointer to an empty Admin - `&models.Admin{}`).
+//
+// This factory method is used primarily for convenience (and backward compatibility).
+// If you want to submit the form as part of another transaction, use
+// [NewAdminUpsertWithConfig] with Dao configured to your txDao.
 func NewAdminUpsert(app core.App, admin *models.Admin) *AdminUpsert {
+	return NewAdminUpsertWithConfig(AdminUpsertConfig{
+		Dao: app.Dao(),
+	}, admin)
+}
+
+// NewAdminUpsertWithConfig creates a new [AdminUpsert] form
+// with the provided config and [models.Admin] instance or panics on invalid configuration
+// (for create you could pass a pointer to an empty Admin - `&models.Admin{}`).
+func NewAdminUpsertWithConfig(config AdminUpsertConfig, admin *models.Admin) *AdminUpsert {
 	form := &AdminUpsert{
-		app:      app,
-		admin:    admin,
-		isCreate: !admin.HasId(),
+		config: config,
+		admin:  admin,
+	}
+
+	if form.config.Dao == nil || form.admin == nil {
+		panic("Invalid initializer config or nil upsert model.")
 	}
 
 	// load defaults
+	form.Id = admin.Id
 	form.Avatar = admin.Avatar
 	form.Email = admin.Email
 
@@ -39,6 +65,13 @@ func NewAdminUpsert(app core.App, admin *models.Admin) *AdminUpsert {
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *AdminUpsert) Validate() error {
 	return validation.ValidateStruct(form,
+		validation.Field(
+			&form.Id,
+			validation.When(
+				form.admin.IsNew(),
+				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+			).Else(validation.In(form.admin.Id)),
+		),
 		validation.Field(
 			&form.Avatar,
 			validation.Min(0),
@@ -53,7 +86,7 @@ func (form *AdminUpsert) Validate() error {
 		),
 		validation.Field(
 			&form.Password,
-			validation.When(form.isCreate, validation.Required),
+			validation.When(form.admin.IsNew(), validation.Required),
 			validation.Length(10, 100),
 		),
 		validation.Field(
@@ -67,7 +100,7 @@ func (form *AdminUpsert) Validate() error {
 func (form *AdminUpsert) checkUniqueEmail(value any) error {
 	v, _ := value.(string)
 
-	if form.app.Dao().IsAdminEmailUnique(v, form.admin.Id) {
+	if form.config.Dao.IsAdminEmailUnique(v, form.admin.Id) {
 		return nil
 	}
 
@@ -83,6 +116,12 @@ func (form *AdminUpsert) Submit(interceptors ...InterceptorFunc) error {
 		return err
 	}
 
+	// custom insertion id can be set only on create
+	if form.admin.IsNew() && form.Id != "" {
+		form.admin.MarkAsNew()
+		form.admin.SetId(form.Id)
+	}
+
 	form.admin.Avatar = form.Avatar
 	form.admin.Email = form.Email
 
@@ -91,6 +130,6 @@ func (form *AdminUpsert) Submit(interceptors ...InterceptorFunc) error {
 	}
 
 	return runInterceptors(func() error {
-		return form.app.Dao().SaveAdmin(form.admin)
+		return form.config.Dao.SaveAdmin(form.admin)
 	}, interceptors...)
 }

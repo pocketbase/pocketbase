@@ -21,7 +21,7 @@ func BindCollectionApi(app core.App, rg *echo.Group) {
 	subGroup.GET("/:collection", api.view)
 	subGroup.PATCH("/:collection", api.update)
 	subGroup.DELETE("/:collection", api.delete)
-	subGroup.POST("/import", api.bulkImport)
+	subGroup.PUT("/import", api.bulkImport)
 }
 
 type collectionApi struct {

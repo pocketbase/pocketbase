@@ -9,39 +9,73 @@ import (
 	"regexp"
 	"strconv"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms/validators"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/spf13/cast"
 )
 
-// RecordUpsert defines a Record upsert form.
+// RecordUpsert specifies a [models.Record] upsert (create/update) form.
 type RecordUpsert struct {
-	app    core.App
+	config RecordUpsertConfig
 	record *models.Record
 
-	isCreate      bool
 	filesToDelete []string // names list
 	filesToUpload []*rest.UploadedFile
 
+	Id   string         `form:"id" json:"id"`
 	Data map[string]any `json:"data"`
 }
 
-// NewRecordUpsert creates a new Record upsert form.
-// (pass a new Record model instance (`models.NewRecord(...)`) for create).
+// RecordUpsertConfig is the [RecordUpsert] factory initializer config.
+//
+// NB! Dao and FilesystemFactory are required struct members.
+type RecordUpsertConfig struct {
+	Dao               *daos.Dao
+	FilesystemFactory func() (*filesystem.System, error)
+	IsDebug           bool
+}
+
+// NewRecordUpsert creates a new [RecordUpsert] form with initializer
+// config created from the provided [core.App] and [models.Record] instances
+// (for create you could pass a pointer to an empty Record - `&models.Record{}`).
+//
+// This factory method is used primarily for convenience (and backward compatibility).
+// If you want to submit the form as part of another transaction, use
+// [NewRecordUpsertWithConfig] with Dao configured to your txDao.
 func NewRecordUpsert(app core.App, record *models.Record) *RecordUpsert {
+	return NewRecordUpsertWithConfig(RecordUpsertConfig{
+		Dao:               app.Dao(),
+		FilesystemFactory: app.NewFilesystem,
+		IsDebug:           app.IsDebug(),
+	}, record)
+}
+
+// NewRecordUpsertWithConfig creates a new [RecordUpsert] form
+// with the provided config and [models.Record] instance or panics on invalid configuration
+// (for create you could pass a pointer to an empty Record - `&models.Record{}`).
+func NewRecordUpsertWithConfig(config RecordUpsertConfig, record *models.Record) *RecordUpsert {
 	form := &RecordUpsert{
-		app:           app,
+		config:        config,
 		record:        record,
-		isCreate:      !record.HasId(),
 		filesToDelete: []string{},
 		filesToUpload: []*rest.UploadedFile{},
 	}
+
+	if form.config.Dao == nil ||
+		form.config.FilesystemFactory == nil ||
+		form.record == nil {
+		panic("Invalid initializer config or nil upsert model.")
+	}
+
+	form.Id = record.Id
 
 	form.Data = map[string]any{}
 	for _, field := range record.Collection().Schema.Fields() {
@@ -136,6 +170,10 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 		return err
 	}
 
+	if id, ok := requestData["id"]; ok {
+		form.Id = cast.ToString(id)
+	}
+
 	// extend base data with the extracted one
 	extendedData := form.record.Data()
 	rawData, err := json.Marshal(requestData)
@@ -202,7 +240,7 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 		// check if there are any new uploaded form files
 		files, err := rest.FindUploadedFiles(r, key)
 		if err != nil {
-			if form.app.IsDebug() {
+			if form.config.IsDebug {
 				log.Printf("%q uploaded file error: %v\n", key, err)
 			}
 
@@ -234,8 +272,23 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *RecordUpsert) Validate() error {
+	// base form fields validator
+	baseFieldsErrors := validation.ValidateStruct(form,
+		validation.Field(
+			&form.Id,
+			validation.When(
+				form.record.IsNew(),
+				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+			).Else(validation.In(form.record.Id)),
+		),
+	)
+	if baseFieldsErrors != nil {
+		return baseFieldsErrors
+	}
+
+	// record data validator
 	dataValidator := validators.NewRecordDataValidator(
-		form.app.Dao(),
+		form.config.Dao,
 		form.record,
 		form.filesToUpload,
 	)
@@ -252,12 +305,18 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 		return err
 	}
 
+	// custom insertion id can be set only on create
+	if form.record.IsNew() && form.Id != "" {
+		form.record.MarkAsNew()
+		form.record.SetId(form.Id)
+	}
+
 	// bulk load form data
 	if err := form.record.Load(form.Data); err != nil {
 		return err
 	}
 
-	return form.app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
+	return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
 		tx, ok := txDao.DB().(*dbx.Tx)
 		if !ok {
 			return errors.New("failed to get transaction db")
@@ -285,13 +344,19 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc) error {
 		return err
 	}
 
+	// custom insertion id can be set only on create
+	if form.record.IsNew() && form.Id != "" {
+		form.record.MarkAsNew()
+		form.record.SetId(form.Id)
+	}
+
 	// bulk load form data
 	if err := form.record.Load(form.Data); err != nil {
 		return err
 	}
 
 	return runInterceptors(func() error {
-		return form.app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
+		return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
 			// persist record model
 			if err := txDao.SaveRecord(form.record); err != nil {
 				return err
@@ -322,7 +387,7 @@ func (form *RecordUpsert) processFilesToUpload() error {
 		return errors.New("The record is not persisted yet.")
 	}
 
-	fs, err := form.app.NewFilesystem()
+	fs, err := form.config.FilesystemFactory()
 	if err != nil {
 		return err
 	}
@@ -358,7 +423,7 @@ func (form *RecordUpsert) processFilesToDelete() error {
 		return errors.New("The record is not persisted yet.")
 	}
 
-	fs, err := form.app.NewFilesystem()
+	fs, err := form.config.FilesystemFactory()
 	if err != nil {
 		return err
 	}

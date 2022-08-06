@@ -39,7 +39,8 @@ type CollectionUpsertConfig struct {
 }
 
 // NewCollectionUpsert creates a new [CollectionUpsert] form with initializer
-// config created from the provided [core.App] and [models.Collection] instances.
+// config created from the provided [core.App] and [models.Collection] instances
+// (for create you could pass a pointer to an empty Collection - `&models.Collection{}`).
 //
 // This factory method is used primarily for convenience (and backward compatibility).
 // If you want to submit the form as part of another transaction, use
@@ -52,7 +53,7 @@ func NewCollectionUpsert(app core.App, collection *models.Collection) *Collectio
 
 // NewCollectionUpsertWithConfig creates a new [CollectionUpsert] form
 // with the provided config and [models.Collection] instance or panics on invalid configuration
-// (for create you could pass a pointer to an empty Collection instance - `&models.Collection{}`).
+// (for create you could pass a pointer to an empty Collection - `&models.Collection{}`).
 func NewCollectionUpsertWithConfig(config CollectionUpsertConfig, collection *models.Collection) *CollectionUpsert {
 	form := &CollectionUpsert{
 		config:     config,
@@ -88,7 +89,10 @@ func (form *CollectionUpsert) Validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(
 			&form.Id,
-			validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+			validation.When(
+				form.collection.IsNew(),
+				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+			).Else(validation.In(form.collection.Id)),
 		),
 		validation.Field(
 			&form.System,
