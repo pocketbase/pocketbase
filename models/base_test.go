@@ -34,25 +34,55 @@ func TestBaseModelHasId(t *testing.T) {
 	}
 }
 
-func TestBaseModelGetId(t *testing.T) {
-	m0 := models.BaseModel{}
-	if m0.GetId() != "" {
-		t.Fatalf("Expected zero id value, got %v", m0.GetId())
+func TestBaseModelId(t *testing.T) {
+	m := models.BaseModel{}
+
+	if m.GetId() != "" {
+		t.Fatalf("Expected empty id value, got %v", m.GetId())
 	}
 
-	id := "abc"
-	m1 := models.BaseModel{Id: id}
-	if m1.GetId() != id {
-		t.Fatalf("Expected id %v, got %v", id, m1.GetId())
+	m.SetId("test")
+
+	if m.GetId() != "test" {
+		t.Fatalf("Expected %q id, got %v", "test", m.GetId())
+	}
+
+	m.RefreshId()
+
+	if len(m.GetId()) != 15 {
+		t.Fatalf("Expected 15 chars id, got %v", m.GetId())
 	}
 }
 
-func TestBaseModelRefreshId(t *testing.T) {
-	m := models.BaseModel{}
-	m.RefreshId()
+func TestBaseModelIsNew(t *testing.T) {
+	m0 := models.BaseModel{}
+	m1 := models.BaseModel{Id: ""}
+	m2 := models.BaseModel{Id: "test"}
+	m3 := models.BaseModel{}
+	m3.MarkAsNew()
+	m4 := models.BaseModel{Id: "test"}
+	m4.MarkAsNew()
+	m5 := models.BaseModel{Id: "test"}
+	m5.MarkAsNew()
+	m5.UnmarkAsNew()
 
-	if m.GetId() == "" {
-		t.Fatalf("Expected nonempty id value, got %v", m.GetId())
+	scenarios := []struct {
+		model    models.BaseModel
+		expected bool
+	}{
+		{m0, true},
+		{m1, true},
+		{m2, false},
+		{m3, true},
+		{m4, true},
+		{m5, false},
+	}
+
+	for i, s := range scenarios {
+		result := s.model.IsNew()
+		if result != s.expected {
+			t.Errorf("(%d) Expected IsNew %v, got %v", i, s.expected, result)
+		}
 	}
 }
 

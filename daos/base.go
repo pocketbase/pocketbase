@@ -128,11 +128,11 @@ func (dao *Dao) Delete(m models.Model) error {
 
 // Save upserts (update or create if primary key is not set) the provided model.
 func (dao *Dao) Save(m models.Model) error {
-	if !m.IsNew() {
-		return dao.update(m)
+	if m.IsNew() {
+		return dao.create(m)
 	}
 
-	return dao.create(m)
+	return dao.update(m)
 }
 
 func (dao *Dao) update(m models.Model) error {

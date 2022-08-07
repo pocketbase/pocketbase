@@ -70,11 +70,18 @@ func (form *CollectionsImport) Validate() error {
 //
 // All operations are wrapped in a single transaction that are
 // rollbacked on the first encountered error.
-func (form *CollectionsImport) Submit() error {
+//
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
 
+	return runInterceptors(form.submit, interceptors...)
+}
+
+func (form *CollectionsImport) submit() error {
 	return form.config.TxDao.RunInTransaction(func(txDao *daos.Dao) error {
 		oldCollections := []*models.Collection{}
 		if err := txDao.CollectionQuery().All(&oldCollections); err != nil {

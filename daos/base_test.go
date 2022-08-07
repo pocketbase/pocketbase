@@ -158,6 +158,33 @@ func TestDaoSaveCreate(t *testing.T) {
 	}
 }
 
+func TestDaoSaveWithInsertId(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	model := &models.Admin{}
+	model.Id = "test"
+	model.Email = "test_new@example.com"
+	model.MarkAsNew()
+	if err := testApp.Dao().Save(model); err != nil {
+		t.Fatal(err)
+	}
+
+	// refresh
+	model, _ = testApp.Dao().FindAdminById("test")
+
+	if model == nil {
+		t.Fatal("Failed to find admin with id 'test'")
+	}
+
+	expectedHooks := []string{"OnModelBeforeCreate", "OnModelAfterCreate"}
+	for _, h := range expectedHooks {
+		if v, ok := testApp.EventCalls[h]; !ok || v != 1 {
+			t.Fatalf("Expected event %s to be called exactly one time, got %d", h, v)
+		}
+	}
+}
+
 func TestDaoSaveUpdate(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
@@ -181,6 +208,61 @@ func TestDaoSaveUpdate(t *testing.T) {
 		if v, ok := testApp.EventCalls[h]; !ok || v != 1 {
 			t.Fatalf("Expected event %s to be called exactly one time, got %d", h, v)
 		}
+	}
+}
+
+type dummyColumnValueMapper struct {
+	models.Admin
+}
+
+func (a *dummyColumnValueMapper) ColumnValueMap() map[string]any {
+	return map[string]any{
+		"email":        a.Email,
+		"passwordHash": a.PasswordHash,
+		"tokenKey":     "custom_token_key",
+	}
+}
+
+func TestDaoSaveWithColumnValueMapper(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	model := &dummyColumnValueMapper{}
+	model.Id = "test_mapped_id" // explicitly set an id
+	model.Email = "test_mapped_create@example.com"
+	model.TokenKey = "test_unmapped_token_key" // not used in the map
+	model.SetPassword("123456")
+	model.MarkAsNew()
+	if err := testApp.Dao().Save(model); err != nil {
+		t.Fatal(err)
+	}
+
+	createdModel, _ := testApp.Dao().FindAdminById("test_mapped_id")
+	if createdModel == nil {
+		t.Fatal("[create] Failed to find model with id 'test_mapped_id'")
+	}
+	if createdModel.Email != model.Email {
+		t.Fatalf("Expected model with email %q, got %q", model.Email, createdModel.Email)
+	}
+	if createdModel.TokenKey != "custom_token_key" {
+		t.Fatalf("Expected model with tokenKey %q, got %q", "custom_token_key", createdModel.TokenKey)
+	}
+
+	model.Email = "test_mapped_update@example.com"
+	model.Avatar = 9 // not mapped and expect to be ignored
+	if err := testApp.Dao().Save(model); err != nil {
+		t.Fatal(err)
+	}
+
+	updatedModel, _ := testApp.Dao().FindAdminById("test_mapped_id")
+	if updatedModel == nil {
+		t.Fatal("[update] Failed to find model with id 'test_mapped_id'")
+	}
+	if updatedModel.Email != model.Email {
+		t.Fatalf("Expected model with email %q, got %q", model.Email, createdModel.Email)
+	}
+	if updatedModel.Avatar != 0 {
+		t.Fatalf("Expected model avatar 0, got %v", updatedModel.Avatar)
 	}
 }
 

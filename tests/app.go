@@ -313,6 +313,16 @@ func NewTestApp() (*TestApp, error) {
 		return nil
 	})
 
+	t.OnCollectionsBeforeImportRequest().Add(func(e *core.CollectionsImportEvent) error {
+		t.EventCalls["OnCollectionsBeforeImportRequest"]++
+		return nil
+	})
+
+	t.OnCollectionsAfterImportRequest().Add(func(e *core.CollectionsImportEvent) error {
+		t.EventCalls["OnCollectionsAfterImportRequest"]++
+		return nil
+	})
+
 	t.OnAdminsListRequest().Add(func(e *core.AdminsListEvent) error {
 		t.EventCalls["OnAdminsListRequest"]++
 		return nil

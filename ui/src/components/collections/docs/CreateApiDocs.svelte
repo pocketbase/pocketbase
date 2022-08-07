@@ -107,6 +107,22 @@
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td>
+                <div class="inline-flex">
+                    <span class="label label-warning">Optional</span>
+                    <span>id</span>
+                </div>
+            </td>
+            <td>
+                <span class="label">String</span>
+            </td>
+            <td>
+                <strong>15 characters string</strong> to store as record ID.
+                <br />
+                If not set, it will be auto generated.
+            </td>
+        </tr>
         {#each collection?.schema as field (field.name)}
             <tr>
                 <td>

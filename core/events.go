@@ -216,6 +216,11 @@ type CollectionDeleteEvent struct {
 	Collection  *models.Collection
 }
 
+type CollectionsImportEvent struct {
+	HttpContext echo.Context
+	Collections []*models.Collection
+}
+
 // -------------------------------------------------------------------
 // File API events data
 // -------------------------------------------------------------------

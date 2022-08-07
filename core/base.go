@@ -109,14 +109,16 @@ type BaseApp struct {
 	onRecordAfterDeleteRequest  *hook.Hook[*RecordDeleteEvent]
 
 	// collection api event hooks
-	onCollectionsListRequest        *hook.Hook[*CollectionsListEvent]
-	onCollectionViewRequest         *hook.Hook[*CollectionViewEvent]
-	onCollectionBeforeCreateRequest *hook.Hook[*CollectionCreateEvent]
-	onCollectionAfterCreateRequest  *hook.Hook[*CollectionCreateEvent]
-	onCollectionBeforeUpdateRequest *hook.Hook[*CollectionUpdateEvent]
-	onCollectionAfterUpdateRequest  *hook.Hook[*CollectionUpdateEvent]
-	onCollectionBeforeDeleteRequest *hook.Hook[*CollectionDeleteEvent]
-	onCollectionAfterDeleteRequest  *hook.Hook[*CollectionDeleteEvent]
+	onCollectionsListRequest         *hook.Hook[*CollectionsListEvent]
+	onCollectionViewRequest          *hook.Hook[*CollectionViewEvent]
+	onCollectionBeforeCreateRequest  *hook.Hook[*CollectionCreateEvent]
+	onCollectionAfterCreateRequest   *hook.Hook[*CollectionCreateEvent]
+	onCollectionBeforeUpdateRequest  *hook.Hook[*CollectionUpdateEvent]
+	onCollectionAfterUpdateRequest   *hook.Hook[*CollectionUpdateEvent]
+	onCollectionBeforeDeleteRequest  *hook.Hook[*CollectionDeleteEvent]
+	onCollectionAfterDeleteRequest   *hook.Hook[*CollectionDeleteEvent]
+	onCollectionsBeforeImportRequest *hook.Hook[*CollectionsImportEvent]
+	onCollectionsAfterImportRequest  *hook.Hook[*CollectionsImportEvent]
 }
 
 // NewBaseApp creates and returns a new BaseApp instance
@@ -201,14 +203,16 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onRecordAfterDeleteRequest:  &hook.Hook[*RecordDeleteEvent]{},
 
 		// collection API event hooks
-		onCollectionsListRequest:        &hook.Hook[*CollectionsListEvent]{},
-		onCollectionViewRequest:         &hook.Hook[*CollectionViewEvent]{},
-		onCollectionBeforeCreateRequest: &hook.Hook[*CollectionCreateEvent]{},
-		onCollectionAfterCreateRequest:  &hook.Hook[*CollectionCreateEvent]{},
-		onCollectionBeforeUpdateRequest: &hook.Hook[*CollectionUpdateEvent]{},
-		onCollectionAfterUpdateRequest:  &hook.Hook[*CollectionUpdateEvent]{},
-		onCollectionBeforeDeleteRequest: &hook.Hook[*CollectionDeleteEvent]{},
-		onCollectionAfterDeleteRequest:  &hook.Hook[*CollectionDeleteEvent]{},
+		onCollectionsListRequest:         &hook.Hook[*CollectionsListEvent]{},
+		onCollectionViewRequest:          &hook.Hook[*CollectionViewEvent]{},
+		onCollectionBeforeCreateRequest:  &hook.Hook[*CollectionCreateEvent]{},
+		onCollectionAfterCreateRequest:   &hook.Hook[*CollectionCreateEvent]{},
+		onCollectionBeforeUpdateRequest:  &hook.Hook[*CollectionUpdateEvent]{},
+		onCollectionAfterUpdateRequest:   &hook.Hook[*CollectionUpdateEvent]{},
+		onCollectionBeforeDeleteRequest:  &hook.Hook[*CollectionDeleteEvent]{},
+		onCollectionAfterDeleteRequest:   &hook.Hook[*CollectionDeleteEvent]{},
+		onCollectionsBeforeImportRequest: &hook.Hook[*CollectionsImportEvent]{},
+		onCollectionsAfterImportRequest:  &hook.Hook[*CollectionsImportEvent]{},
 	}
 
 	app.registerDefaultHooks()
@@ -685,6 +689,14 @@ func (app *BaseApp) OnCollectionBeforeDeleteRequest() *hook.Hook[*CollectionDele
 
 func (app *BaseApp) OnCollectionAfterDeleteRequest() *hook.Hook[*CollectionDeleteEvent] {
 	return app.onCollectionAfterDeleteRequest
+}
+
+func (app *BaseApp) OnCollectionsBeforeImportRequest() *hook.Hook[*CollectionsImportEvent] {
+	return app.onCollectionsBeforeImportRequest
+}
+
+func (app *BaseApp) OnCollectionsAfterImportRequest() *hook.Hook[*CollectionsImportEvent] {
+	return app.onCollectionsAfterImportRequest
 }
 
 // -------------------------------------------------------------------

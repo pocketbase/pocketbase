@@ -169,19 +169,37 @@ func (api *collectionApi) delete(c echo.Context) error {
 	return handlerErr
 }
 
-// @todo add event
 func (api *collectionApi) bulkImport(c echo.Context) error {
 	form := forms.NewCollectionsImport(api.app)
 
-	// load request
+	// load request data
 	if err := c.Bind(form); err != nil {
 		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	submitErr := form.Submit()
-	if submitErr != nil {
-		return rest.NewBadRequestError("Failed to import the submitted collections.", submitErr)
+	event := &core.CollectionsImportEvent{
+		HttpContext: c,
+		Collections: form.Collections,
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	// import collections
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnCollectionsBeforeImportRequest().Trigger(event, func(e *core.CollectionsImportEvent) error {
+				form.Collections = e.Collections // ensures that the form always has the latest changes
+
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to import the submitted collections.", err)
+				}
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		api.app.OnCollectionsAfterImportRequest().Trigger(event)
+	}
+
+	return submitErr
 }
