@@ -112,7 +112,7 @@
 
         try {
             await ApiClient.collections.import(newCollections);
-            addSuccessToast("Successfully imported the provided collections.");
+            addSuccessToast("Successfully imported the collections configuration.");
             dispatch("submit");
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -162,12 +162,12 @@
             </div>
             <div class="col-6 p-b-10">
                 <code class="code-block">
-                    {@html diff(pair.old, pair.new, [window.DIFF_DELETE, window.DIFF_EQUAL])}
+                    {@html diff(pair.old, pair.new, [window.DIFF_DELETE, window.DIFF_EQUAL]) || "N/A"}
                 </code>
             </div>
             <div class="col-6 p-b-10">
                 <code class="code-block">
-                    {@html diff(pair.old, pair.new, [window.DIFF_INSERT, window.DIFF_EQUAL])}
+                    {@html diff(pair.old, pair.new, [window.DIFF_INSERT, window.DIFF_EQUAL]) || "N/A"}
                 </code>
             </div>
         {/each}

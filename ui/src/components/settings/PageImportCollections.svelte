@@ -125,7 +125,7 @@
             await tick();
 
             if (!newCollections.length) {
-                addErrorToast("Invalid collections list.");
+                addErrorToast("Invalid collections configuration.");
                 clear();
             }
         };
@@ -177,7 +177,7 @@
                     />
 
                     <p>
-                        Paste below the collections you want to import or
+                        Paste below the collections configuration you want to import or
                         <button
                             class="btn btn-outline btn-sm m-l-5"
                             class:btn-loading={isLoadingFile}
@@ -202,7 +202,7 @@
                     />
 
                     {#if !!schemas && !isValid}
-                        <div class="help-block help-block-error">Invalid collections schemas.</div>
+                        <div class="help-block help-block-error">Invalid collections configuration.</div>
                     {/if}
                 </Field>
 
@@ -212,7 +212,7 @@
                             <i class="ri-information-line" />
                         </div>
                         <div class="content">
-                            <string>Your collections structure is already up-to-date!</string>
+                            <string>Your collections configuration is already up-to-date!</string>
                         </div>
                     </div>
                 {/if}

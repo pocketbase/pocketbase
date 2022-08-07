@@ -28,7 +28,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "serve",
-		Short: "Starts the web server (default to localhost:8090)",
+		Short: "Starts the web server (default to 127.0.0.1:8090)",
 		Run: func(command *cobra.Command, args []string) {
 			// ensure that the latest migrations are applied before starting the server
 			if err := runMigrations(app); err != nil {
@@ -123,7 +123,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	command.PersistentFlags().StringVar(
 		&httpAddr,
 		"http",
-		"localhost:8090",
+		"127.0.0.1:8090",
 		"api HTTP server address",
 	)
 

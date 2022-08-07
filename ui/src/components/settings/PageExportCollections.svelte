@@ -43,7 +43,7 @@
 
     function copy() {
         CommonHelper.copyToClipboard(schema);
-        addInfoToast("The schema was copied to your clipboard!", 3000);
+        addInfoToast("The collections list was copied to your clipboard!", 3000);
     }
 </script>
 
@@ -64,7 +64,7 @@
             {:else}
                 <div class="content txt-xl m-b-base">
                     <p>
-                        Below you'll find your current collections schema that you could import later in
+                        Below you'll find your current collections configuration that you could import in
                         another PocketBase environment.
                     </p>
                 </div>

@@ -30,9 +30,9 @@ type Model interface {
 	IsNew() bool
 	MarkAsNew()
 	UnmarkAsNew()
-	SetId(id string)
 	HasId() bool
 	GetId() string
+	SetId(id string)
 	GetCreated() types.DateTime
 	GetUpdated() types.DateTime
 	RefreshId()
@@ -46,7 +46,6 @@ type Model interface {
 
 // BaseModel defines common fields and methods used by all other models.
 type BaseModel struct {
-	insertId  string
 	isNewFlag bool
 
 	Id      string         `db:"id" json:"id"`
@@ -59,22 +58,22 @@ func (m *BaseModel) HasId() bool {
 	return m.GetId() != ""
 }
 
-// GetId returns the model's id.
+// GetId returns the model id.
 func (m *BaseModel) GetId() string {
 	return m.Id
 }
 
-// SetId sets the model's id to the provided one.
+// SetId sets the model id to the provided string value.
 func (m *BaseModel) SetId(id string) {
 	m.Id = id
 }
 
-// UnmarkAsNew sets the model's isNewFlag enforcing [m.IsNew()] to be true.
+// MarkAsNew sets the model isNewFlag enforcing [m.IsNew()] to be true.
 func (m *BaseModel) MarkAsNew() {
 	m.isNewFlag = true
 }
 
-// UnmarkAsNew clears the enforced model's isNewFlag.
+// UnmarkAsNew resets the model isNewFlag.
 func (m *BaseModel) UnmarkAsNew() {
 	m.isNewFlag = false
 }
@@ -85,12 +84,12 @@ func (m *BaseModel) IsNew() bool {
 	return m.isNewFlag || !m.HasId()
 }
 
-// GetCreated returns the model's Created datetime.
+// GetCreated returns the model Created datetime.
 func (m *BaseModel) GetCreated() types.DateTime {
 	return m.Created
 }
 
-// GetUpdated returns the model's Updated datetime.
+// GetUpdated returns the model Updated datetime.
 func (m *BaseModel) GetUpdated() types.DateTime {
 	return m.Updated
 }
@@ -102,12 +101,12 @@ func (m *BaseModel) RefreshId() {
 	m.Id = security.RandomString(DefaultIdLength)
 }
 
-// RefreshCreated updates the model's Created field with the current datetime.
+// RefreshCreated updates the model Created field with the current datetime.
 func (m *BaseModel) RefreshCreated() {
 	m.Created = types.NowDateTime()
 }
 
-// RefreshUpdated updates the model's Updated field with the current datetime.
+// RefreshUpdated updates the model Updated field with the current datetime.
 func (m *BaseModel) RefreshUpdated() {
 	m.Updated = types.NowDateTime()
 }
