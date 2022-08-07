@@ -4,21 +4,49 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// UserEmailLogin defines a user email/pass login form.
+// UserEmailLogin specifies a user email/pass login form.
 type UserEmailLogin struct {
-	app core.App
+	config UserEmailLoginConfig
 
 	Email    string `form:"email" json:"email"`
 	Password string `form:"password" json:"password"`
 }
 
-// NewUserEmailLogin creates a new user email/pass login form.
+// UserEmailLoginConfig is the [UserEmailLogin] factory initializer config.
+//
+// NB! App is required struct member.
+type UserEmailLoginConfig struct {
+	App   core.App
+	TxDao *daos.Dao
+}
+
+// NewUserEmailLogin creates a new [UserEmailLogin] form with
+// initializer config created from the provided [core.App] instance.
+//
+// This factory method is used primarily for convenience (and backward compatibility).
+// If you want to submit the form as part of another transaction, use
+// [NewUserEmailLoginWithConfig] with explicitly set TxDao.
 func NewUserEmailLogin(app core.App) *UserEmailLogin {
-	form := &UserEmailLogin{
-		app: app,
+	return NewUserEmailLoginWithConfig(UserEmailLoginConfig{
+		App: app,
+	})
+}
+
+// NewUserEmailLoginWithConfig creates a new [UserEmailLogin]
+// form with the provided config or panics on invalid configuration.
+func NewUserEmailLoginWithConfig(config UserEmailLoginConfig) *UserEmailLogin {
+	form := &UserEmailLogin{config: config}
+
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
+	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
 	}
 
 	return form
@@ -39,7 +67,7 @@ func (form *UserEmailLogin) Submit() (*models.User, error) {
 		return nil, err
 	}
 
-	user, err := form.app.Dao().FindUserByEmail(form.Email)
+	user, err := form.config.TxDao.FindUserByEmail(form.Email)
 	if err != nil {
 		return nil, err
 	}

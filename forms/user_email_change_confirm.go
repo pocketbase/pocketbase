@@ -3,23 +3,53 @@ package forms
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-// UserEmailChangeConfirm defines a user email change confirmation form.
+// UserEmailChangeConfirm specifies a user email change confirmation form.
 type UserEmailChangeConfirm struct {
-	app core.App
+	config UserEmailChangeConfirmConfig
 
 	Token    string `form:"token" json:"token"`
 	Password string `form:"password" json:"password"`
 }
 
-// NewUserEmailChangeConfirm creates new user email change confirmation form.
+// UserEmailChangeConfirmConfig is the [UserEmailChangeConfirm] factory initializer config.
+//
+// NB! App is required struct member.
+type UserEmailChangeConfirmConfig struct {
+	App   core.App
+	TxDao *daos.Dao
+}
+
+// NewUserEmailChangeConfirm creates a new [UserEmailChangeConfirm]
+// form with initializer config created from the provided [core.App] instance.
+//
+// This factory method is used primarily for convenience (and backward compatibility).
+// If you want to submit the form as part of another transaction, use
+// [NewUserEmailChangeConfirmWithConfig] with explicitly set TxDao.
 func NewUserEmailChangeConfirm(app core.App) *UserEmailChangeConfirm {
-	return &UserEmailChangeConfirm{
-		app: app,
+	return NewUserEmailChangeConfirmWithConfig(UserEmailChangeConfirmConfig{
+		App: app,
+	})
+}
+
+// NewUserEmailChangeConfirmWithConfig creates a new [UserEmailChangeConfirm]
+// form with the provided config or panics on invalid configuration.
+func NewUserEmailChangeConfirmWithConfig(config UserEmailChangeConfirmConfig) *UserEmailChangeConfirm {
+	form := &UserEmailChangeConfirm{config: config}
+
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
 	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
+	}
+
+	return form
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
@@ -73,14 +103,14 @@ func (form *UserEmailChangeConfirm) parseToken(token string) (*models.User, stri
 	}
 
 	// ensure that there aren't other users with the new email
-	if !form.app.Dao().IsUserEmailUnique(newEmail, "") {
+	if !form.config.TxDao.IsUserEmailUnique(newEmail, "") {
 		return nil, "", validation.NewError("validation_existing_token_email", "The new email address is already registered: "+newEmail)
 	}
 
-	// verify that the token is not expired and its signiture is valid
-	user, err := form.app.Dao().FindUserByToken(
+	// verify that the token is not expired and its signature is valid
+	user, err := form.config.TxDao.FindUserByToken(
 		token,
-		form.app.Settings().UserEmailChangeToken.Secret,
+		form.config.App.Settings().UserEmailChangeToken.Secret,
 	)
 	if err != nil || user == nil {
 		return nil, "", validation.NewError("validation_invalid_token", "Invalid or expired token.")
@@ -105,7 +135,7 @@ func (form *UserEmailChangeConfirm) Submit() (*models.User, error) {
 	user.Verified = true
 	user.RefreshTokenKey() // invalidate old tokens
 
-	if err := form.app.Dao().SaveUser(user); err != nil {
+	if err := form.config.TxDao.SaveUser(user); err != nil {
 		return nil, err
 	}
 

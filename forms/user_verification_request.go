@@ -7,24 +7,54 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/mails"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 // UserVerificationRequest defines a user email verification request form.
 type UserVerificationRequest struct {
-	app             core.App
-	resendThreshold float64
+	config UserVerificationRequestConfig
 
 	Email string `form:"email" json:"email"`
 }
 
-// NewUserVerificationRequest creates a new user email verification request form.
+// UserVerificationRequestConfig is the [UserVerificationRequest]
+// factory initializer config.
+//
+// NB! App is required struct member.
+type UserVerificationRequestConfig struct {
+	App             core.App
+	TxDao           *daos.Dao
+	ResendThreshold float64 // in seconds
+}
+
+// NewUserVerificationRequest creates a new [UserVerificationRequest]
+// form with initializer config created from the provided [core.App] instance.
+//
+// If you want to submit the form as part of another transaction, use
+// [NewUserVerificationRequestWithConfig] with explicitly set TxDao.
 func NewUserVerificationRequest(app core.App) *UserVerificationRequest {
-	return &UserVerificationRequest{
-		app:             app,
-		resendThreshold: 120, // 2 min
+	return NewUserVerificationRequestWithConfig(UserVerificationRequestConfig{
+		App:             app,
+		ResendThreshold: 120, // 2 min
+	})
+}
+
+// NewUserVerificationRequestWithConfig creates a new [UserVerificationRequest]
+// form with the provided config or panics on invalid configuration.
+func NewUserVerificationRequestWithConfig(config UserVerificationRequestConfig) *UserVerificationRequest {
+	form := &UserVerificationRequest{config: config}
+
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
 	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
+	}
+
+	return form
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
@@ -48,7 +78,7 @@ func (form *UserVerificationRequest) Submit() error {
 		return err
 	}
 
-	user, err := form.app.Dao().FindUserByEmail(form.Email)
+	user, err := form.config.TxDao.FindUserByEmail(form.Email)
 	if err != nil {
 		return err
 	}
@@ -59,16 +89,16 @@ func (form *UserVerificationRequest) Submit() error {
 
 	now := time.Now().UTC()
 	lastVerificationSentAt := user.LastVerificationSentAt.Time()
-	if (now.Sub(lastVerificationSentAt)).Seconds() < form.resendThreshold {
+	if (now.Sub(lastVerificationSentAt)).Seconds() < form.config.ResendThreshold {
 		return errors.New("A verification email was already sent.")
 	}
 
-	if err := mails.SendUserVerification(form.app, user); err != nil {
+	if err := mails.SendUserVerification(form.config.App, user); err != nil {
 		return err
 	}
 
 	// update last sent timestamp
 	user.LastVerificationSentAt = types.NowDateTime()
 
-	return form.app.Dao().SaveUser(user)
+	return form.config.TxDao.SaveUser(user)
 }

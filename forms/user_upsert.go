@@ -26,28 +26,26 @@ type UserUpsert struct {
 
 // UserUpsertConfig is the [UserUpsert] factory initializer config.
 //
-// NB! Dao and Settings are required struct members.
+// NB! App is required struct member.
 type UserUpsertConfig struct {
-	Dao      *daos.Dao
-	Settings *core.Settings
+	App   core.App
+	TxDao *daos.Dao
 }
 
 // NewUserUpsert creates a new [UserUpsert] form with initializer
-// config created from the provided [core.App] and [models.User] instances
+// config created from the provided [core.App] instance
 // (for create you could pass a pointer to an empty User - `&models.User{}`).
 //
-// This factory method is used primarily for convenience (and backward compatibility).
 // If you want to submit the form as part of another transaction, use
-// [NewUserUpsertWithConfig] with Dao configured to your txDao.
+// [NewUserEmailChangeConfirmWithConfig] with explicitly set TxDao.
 func NewUserUpsert(app core.App, user *models.User) *UserUpsert {
 	return NewUserUpsertWithConfig(UserUpsertConfig{
-		Dao:      app.Dao(),
-		Settings: app.Settings(),
+		App: app,
 	}, user)
 }
 
-// NewUserUpsertWithConfig creates a new [UserUpsert] form
-// with the provided config and [models.User] instance or panics on invalid configuration
+// NewUserUpsertWithConfig creates a new [UserUpsert] form with the provided
+// config and [models.User] instance or panics on invalid configuration
 // (for create you could pass a pointer to an empty User - `&models.User{}`).
 func NewUserUpsertWithConfig(config UserUpsertConfig, user *models.User) *UserUpsert {
 	form := &UserUpsert{
@@ -55,10 +53,12 @@ func NewUserUpsertWithConfig(config UserUpsertConfig, user *models.User) *UserUp
 		user:   user,
 	}
 
-	if form.config.Dao == nil ||
-		form.config.Settings == nil ||
-		form.user == nil {
+	if form.config.App == nil || form.user == nil {
 		panic("Invalid initializer config or nil upsert model.")
+	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
 	}
 
 	// load defaults
@@ -89,7 +89,7 @@ func (form *UserUpsert) Validate() error {
 		validation.Field(
 			&form.Password,
 			validation.When(form.user.IsNew(), validation.Required),
-			validation.Length(form.config.Settings.EmailAuth.MinPasswordLength, 100),
+			validation.Length(form.config.App.Settings().EmailAuth.MinPasswordLength, 100),
 		),
 		validation.Field(
 			&form.PasswordConfirm,
@@ -102,7 +102,7 @@ func (form *UserUpsert) Validate() error {
 func (form *UserUpsert) checkUniqueEmail(value any) error {
 	v, _ := value.(string)
 
-	if v == "" || form.config.Dao.IsUserEmailUnique(v, form.user.Id) {
+	if v == "" || form.config.TxDao.IsUserEmailUnique(v, form.user.Id) {
 		return nil
 	}
 
@@ -116,8 +116,8 @@ func (form *UserUpsert) checkEmailDomain(value any) error {
 	}
 
 	domain := val[strings.LastIndex(val, "@")+1:]
-	only := form.config.Settings.EmailAuth.OnlyDomains
-	except := form.config.Settings.EmailAuth.ExceptDomains
+	only := form.config.App.Settings().EmailAuth.OnlyDomains
+	except := form.config.App.Settings().EmailAuth.ExceptDomains
 
 	// only domains check
 	if len(only) > 0 && !list.ExistInSlice(domain, only) {
@@ -159,6 +159,6 @@ func (form *UserUpsert) Submit(interceptors ...InterceptorFunc) error {
 	form.user.Email = form.Email
 
 	return runInterceptors(func() error {
-		return form.config.Dao.SaveUser(form.user)
+		return form.config.TxDao.SaveUser(form.user)
 	}, interceptors...)
 }

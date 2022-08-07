@@ -5,22 +5,56 @@ import (
 	"time"
 
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// SettingsUpsert defines app settings upsert form.
+// SettingsUpsert specifies a [core.Settings] upsert (create/update) form.
 type SettingsUpsert struct {
 	*core.Settings
 
-	app core.App
+	config SettingsUpsertConfig
 }
 
-// NewSettingsUpsert creates new settings upsert form from the provided app.
+// SettingsUpsertConfig is the [SettingsUpsert] factory initializer config.
+//
+// NB! App is required struct member.
+type SettingsUpsertConfig struct {
+	App       core.App
+	TxDao     *daos.Dao
+	TxLogsDao *daos.Dao
+}
+
+// NewSettingsUpsert creates a new [SettingsUpsert] form with initializer
+// config created from the provided [core.App] instance.
+//
+// If you want to submit the form as part of another transaction, use
+// [NewSettingsUpsertWithConfig] with explicitly set TxDao.
 func NewSettingsUpsert(app core.App) *SettingsUpsert {
-	form := &SettingsUpsert{app: app}
+	return NewSettingsUpsertWithConfig(SettingsUpsertConfig{
+		App: app,
+	})
+}
+
+// NewSettingsUpsertWithConfig creates a new [SettingsUpsert] form
+// with the provided config or panics on invalid configuration.
+func NewSettingsUpsertWithConfig(config SettingsUpsertConfig) *SettingsUpsert {
+	form := &SettingsUpsert{config: config}
+
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
+	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
+	}
+
+	if form.config.TxLogsDao == nil {
+		form.config.TxLogsDao = form.config.App.LogsDao()
+	}
 
 	// load the application settings into the form
-	form.Settings, _ = app.Settings().Clone()
+	form.Settings, _ = config.App.Settings().Clone()
 
 	return form
 }
@@ -41,10 +75,10 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
 		return err
 	}
 
-	encryptionKey := os.Getenv(form.app.EncryptionEnv())
+	encryptionKey := os.Getenv(form.config.App.EncryptionEnv())
 
 	return runInterceptors(func() error {
-		saveErr := form.app.Dao().SaveParam(
+		saveErr := form.config.TxDao.SaveParam(
 			models.ParamAppSettings,
 			form.Settings,
 			encryptionKey,
@@ -54,11 +88,11 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
 		}
 
 		// explicitly trigger old logs deletion
-		form.app.LogsDao().DeleteOldRequests(
+		form.config.TxLogsDao.DeleteOldRequests(
 			time.Now().AddDate(0, 0, -1*form.Settings.Logs.MaxDays),
 		)
 
 		// merge the application settings with the form ones
-		return form.app.Settings().Merge(form.Settings)
+		return form.config.App.Settings().Merge(form.Settings)
 	}, interceptors...)
 }

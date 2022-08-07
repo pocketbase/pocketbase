@@ -23,21 +23,21 @@ type AdminUpsert struct {
 
 // AdminUpsertConfig is the [AdminUpsert] factory initializer config.
 //
-// NB! Dao is a required struct member.
+// NB! App is a required struct member.
 type AdminUpsertConfig struct {
-	Dao *daos.Dao
+	App   core.App
+	TxDao *daos.Dao
 }
 
 // NewAdminUpsert creates a new [AdminUpsert] form with initializer
 // config created from the provided [core.App] and [models.Admin] instances
 // (for create you could pass a pointer to an empty Admin - `&models.Admin{}`).
 //
-// This factory method is used primarily for convenience (and backward compatibility).
 // If you want to submit the form as part of another transaction, use
-// [NewAdminUpsertWithConfig] with Dao configured to your txDao.
+// [NewAdminUpsertWithConfig] with explicitly set TxDao.
 func NewAdminUpsert(app core.App, admin *models.Admin) *AdminUpsert {
 	return NewAdminUpsertWithConfig(AdminUpsertConfig{
-		Dao: app.Dao(),
+		App: app,
 	}, admin)
 }
 
@@ -50,8 +50,12 @@ func NewAdminUpsertWithConfig(config AdminUpsertConfig, admin *models.Admin) *Ad
 		admin:  admin,
 	}
 
-	if form.config.Dao == nil || form.admin == nil {
+	if form.config.App == nil || form.admin == nil {
 		panic("Invalid initializer config or nil upsert model.")
+	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
 	}
 
 	// load defaults
@@ -100,7 +104,7 @@ func (form *AdminUpsert) Validate() error {
 func (form *AdminUpsert) checkUniqueEmail(value any) error {
 	v, _ := value.(string)
 
-	if form.config.Dao.IsAdminEmailUnique(v, form.admin.Id) {
+	if form.config.TxDao.IsAdminEmailUnique(v, form.admin.Id) {
 		return nil
 	}
 
@@ -130,6 +134,6 @@ func (form *AdminUpsert) Submit(interceptors ...InterceptorFunc) error {
 	}
 
 	return runInterceptors(func() error {
-		return form.config.Dao.SaveAdmin(form.admin)
+		return form.config.TxDao.SaveAdmin(form.admin)
 	}, interceptors...)
 }

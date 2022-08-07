@@ -3,21 +3,51 @@ package forms
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// UserVerificationConfirm defines a user email confirmation form.
+// UserVerificationConfirm specifies a user email verification confirmation form.
 type UserVerificationConfirm struct {
-	app core.App
+	config UserVerificationConfirmConfig
 
 	Token string `form:"token" json:"token"`
 }
 
-// NewUserVerificationConfirm creates a new user email confirmation form.
+// UserVerificationConfirmConfig is the [UserVerificationConfirm]
+// factory initializer config.
+//
+// NB! App is required struct member.
+type UserVerificationConfirmConfig struct {
+	App   core.App
+	TxDao *daos.Dao
+}
+
+// NewUserVerificationConfirm creates a new [UserVerificationConfirm]
+// form with initializer config created from the provided [core.App] instance.
+//
+// If you want to submit the form as part of another transaction, use
+// [NewUserVerificationConfirmWithConfig] with explicitly set TxDao.
 func NewUserVerificationConfirm(app core.App) *UserVerificationConfirm {
-	return &UserVerificationConfirm{
-		app: app,
+	return NewUserVerificationConfirmWithConfig(UserVerificationConfirmConfig{
+		App: app,
+	})
+}
+
+// NewUserVerificationConfirmWithConfig creates a new [UserVerificationConfirmConfig]
+// form with the provided config or panics on invalid configuration.
+func NewUserVerificationConfirmWithConfig(config UserVerificationConfirmConfig) *UserVerificationConfirm {
+	form := &UserVerificationConfirm{config: config}
+
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
 	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
+	}
+
+	return form
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
@@ -33,9 +63,9 @@ func (form *UserVerificationConfirm) checkToken(value any) error {
 		return nil // nothing to check
 	}
 
-	user, err := form.app.Dao().FindUserByToken(
+	user, err := form.config.TxDao.FindUserByToken(
 		v,
-		form.app.Settings().UserVerificationToken.Secret,
+		form.config.App.Settings().UserVerificationToken.Secret,
 	)
 	if err != nil || user == nil {
 		return validation.NewError("validation_invalid_token", "Invalid or expired token.")
@@ -51,9 +81,9 @@ func (form *UserVerificationConfirm) Submit() (*models.User, error) {
 		return nil, err
 	}
 
-	user, err := form.app.Dao().FindUserByToken(
+	user, err := form.config.TxDao.FindUserByToken(
 		form.Token,
-		form.app.Settings().UserVerificationToken.Secret,
+		form.config.App.Settings().UserVerificationToken.Secret,
 	)
 	if err != nil {
 		return nil, err
@@ -65,7 +95,7 @@ func (form *UserVerificationConfirm) Submit() (*models.User, error) {
 
 	user.Verified = true
 
-	if err := form.app.Dao().SaveUser(user); err != nil {
+	if err := form.config.TxDao.SaveUser(user); err != nil {
 		return nil, err
 	}
 

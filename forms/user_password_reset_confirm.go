@@ -3,29 +3,59 @@ package forms
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms/validators"
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// UserPasswordResetConfirm defines a user password reset confirmation form.
+// UserPasswordResetConfirm specifies a user password reset confirmation form.
 type UserPasswordResetConfirm struct {
-	app core.App
+	config UserPasswordResetConfirmConfig
 
 	Token           string `form:"token" json:"token"`
 	Password        string `form:"password" json:"password"`
 	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
 }
 
-// NewUserPasswordResetConfirm creates new user password reset confirmation form.
+// UserPasswordResetConfirmConfig is the [UserPasswordResetConfirm]
+// factory initializer config.
+//
+// NB! App is required struct member.
+type UserPasswordResetConfirmConfig struct {
+	App   core.App
+	TxDao *daos.Dao
+}
+
+// NewUserPasswordResetConfirm creates a new [UserPasswordResetConfirm]
+// form with initializer config created from the provided [core.App] instance.
+//
+// If you want to submit the form as part of another transaction, use
+// [NewUserPasswordResetConfirmWithConfig] with explicitly set TxDao.
 func NewUserPasswordResetConfirm(app core.App) *UserPasswordResetConfirm {
-	return &UserPasswordResetConfirm{
-		app: app,
+	return NewUserPasswordResetConfirmWithConfig(UserPasswordResetConfirmConfig{
+		App: app,
+	})
+}
+
+// NewUserPasswordResetConfirmWithConfig creates a new [UserPasswordResetConfirm]
+// form with the provided config or panics on invalid configuration.
+func NewUserPasswordResetConfirmWithConfig(config UserPasswordResetConfirmConfig) *UserPasswordResetConfirm {
+	form := &UserPasswordResetConfirm{config: config}
+
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
 	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
+	}
+
+	return form
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *UserPasswordResetConfirm) Validate() error {
-	minPasswordLength := form.app.Settings().EmailAuth.MinPasswordLength
+	minPasswordLength := form.config.App.Settings().EmailAuth.MinPasswordLength
 
 	return validation.ValidateStruct(form,
 		validation.Field(&form.Token, validation.Required, validation.By(form.checkToken)),
@@ -40,9 +70,9 @@ func (form *UserPasswordResetConfirm) checkToken(value any) error {
 		return nil // nothing to check
 	}
 
-	user, err := form.app.Dao().FindUserByToken(
+	user, err := form.config.TxDao.FindUserByToken(
 		v,
-		form.app.Settings().UserPasswordResetToken.Secret,
+		form.config.App.Settings().UserPasswordResetToken.Secret,
 	)
 	if err != nil || user == nil {
 		return validation.NewError("validation_invalid_token", "Invalid or expired token.")
@@ -58,9 +88,9 @@ func (form *UserPasswordResetConfirm) Submit() (*models.User, error) {
 		return nil, err
 	}
 
-	user, err := form.app.Dao().FindUserByToken(
+	user, err := form.config.TxDao.FindUserByToken(
 		form.Token,
-		form.app.Settings().UserPasswordResetToken.Secret,
+		form.config.App.Settings().UserPasswordResetToken.Secret,
 	)
 	if err != nil {
 		return nil, err
@@ -70,7 +100,7 @@ func (form *UserPasswordResetConfirm) Submit() (*models.User, error) {
 		return nil, err
 	}
 
-	if err := form.app.Dao().SaveUser(user); err != nil {
+	if err := form.config.TxDao.SaveUser(user); err != nil {
 		return nil, err
 	}
 

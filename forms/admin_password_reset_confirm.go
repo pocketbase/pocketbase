@@ -3,24 +3,53 @@ package forms
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms/validators"
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// AdminPasswordResetConfirm defines an admin password reset confirmation form.
+// AdminPasswordResetConfirm specifies an admin password reset confirmation form.
 type AdminPasswordResetConfirm struct {
-	app core.App
+	config AdminPasswordResetConfirmConfig
 
 	Token           string `form:"token" json:"token"`
 	Password        string `form:"password" json:"password"`
 	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
 }
 
-// NewAdminPasswordResetConfirm creates new admin password reset confirmation form.
+// AdminPasswordResetConfirmConfig is the [AdminPasswordResetConfirm] factory initializer config.
+//
+// NB! App is required struct member.
+type AdminPasswordResetConfirmConfig struct {
+	App   core.App
+	TxDao *daos.Dao
+}
+
+// NewAdminPasswordResetConfirm creates a new [AdminPasswordResetConfirm]
+// form with initializer config created from the provided [core.App] instance.
+//
+// If you want to submit the form as part of another transaction, use
+// [NewAdminPasswordResetConfirmWithConfig] with explicitly set TxDao.
 func NewAdminPasswordResetConfirm(app core.App) *AdminPasswordResetConfirm {
-	return &AdminPasswordResetConfirm{
-		app: app,
+	return NewAdminPasswordResetConfirmWithConfig(AdminPasswordResetConfirmConfig{
+		App: app,
+	})
+}
+
+// NewAdminPasswordResetConfirmWithConfig creates a new [AdminPasswordResetConfirm]
+// form with the provided config or panics on invalid configuration.
+func NewAdminPasswordResetConfirmWithConfig(config AdminPasswordResetConfirmConfig) *AdminPasswordResetConfirm {
+	form := &AdminPasswordResetConfirm{config: config}
+
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
 	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
+	}
+
+	return form
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
@@ -38,9 +67,9 @@ func (form *AdminPasswordResetConfirm) checkToken(value any) error {
 		return nil // nothing to check
 	}
 
-	admin, err := form.app.Dao().FindAdminByToken(
+	admin, err := form.config.TxDao.FindAdminByToken(
 		v,
-		form.app.Settings().AdminPasswordResetToken.Secret,
+		form.config.App.Settings().AdminPasswordResetToken.Secret,
 	)
 	if err != nil || admin == nil {
 		return validation.NewError("validation_invalid_token", "Invalid or expired token.")
@@ -56,9 +85,9 @@ func (form *AdminPasswordResetConfirm) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	admin, err := form.app.Dao().FindAdminByToken(
+	admin, err := form.config.TxDao.FindAdminByToken(
 		form.Token,
-		form.app.Settings().AdminPasswordResetToken.Secret,
+		form.config.App.Settings().AdminPasswordResetToken.Secret,
 	)
 	if err != nil {
 		return nil, err
@@ -68,7 +97,7 @@ func (form *AdminPasswordResetConfirm) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	if err := form.app.Dao().SaveAdmin(admin); err != nil {
+	if err := form.config.TxDao.SaveAdmin(admin); err != nil {
 		return nil, err
 	}
 

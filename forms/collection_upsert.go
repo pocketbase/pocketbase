@@ -33,21 +33,21 @@ type CollectionUpsert struct {
 
 // CollectionUpsertConfig is the [CollectionUpsert] factory initializer config.
 //
-// NB! Dao is a required struct member.
+// NB! App is a required struct member.
 type CollectionUpsertConfig struct {
-	Dao *daos.Dao
+	App   core.App
+	TxDao *daos.Dao
 }
 
 // NewCollectionUpsert creates a new [CollectionUpsert] form with initializer
 // config created from the provided [core.App] and [models.Collection] instances
 // (for create you could pass a pointer to an empty Collection - `&models.Collection{}`).
 //
-// This factory method is used primarily for convenience (and backward compatibility).
 // If you want to submit the form as part of another transaction, use
-// [NewCollectionUpsertWithConfig] with Dao configured to your txDao.
+// [NewCollectionUpsertWithConfig] with explicitly set TxDao.
 func NewCollectionUpsert(app core.App, collection *models.Collection) *CollectionUpsert {
 	return NewCollectionUpsertWithConfig(CollectionUpsertConfig{
-		Dao: app.Dao(),
+		App: app,
 	}, collection)
 }
 
@@ -60,8 +60,12 @@ func NewCollectionUpsertWithConfig(config CollectionUpsertConfig, collection *mo
 		collection: collection,
 	}
 
-	if form.config.Dao == nil || form.collection == nil {
+	if form.config.App == nil || form.collection == nil {
 		panic("Invalid initializer config or nil upsert model.")
+	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
 	}
 
 	// load defaults
@@ -123,11 +127,11 @@ func (form *CollectionUpsert) Validate() error {
 func (form *CollectionUpsert) checkUniqueName(value any) error {
 	v, _ := value.(string)
 
-	if !form.config.Dao.IsCollectionNameUnique(v, form.collection.Id) {
+	if !form.config.TxDao.IsCollectionNameUnique(v, form.collection.Id) {
 		return validation.NewError("validation_collection_name_exists", "Collection name must be unique (case insensitive).")
 	}
 
-	if (form.collection.IsNew() || !strings.EqualFold(v, form.collection.Name)) && form.config.Dao.HasTable(v) {
+	if (form.collection.IsNew() || !strings.EqualFold(v, form.collection.Name)) && form.config.TxDao.HasTable(v) {
 		return validation.NewError("validation_collection_name_table_exists", "The collection name must be also unique table name.")
 	}
 
@@ -194,7 +198,7 @@ func (form *CollectionUpsert) checkRule(value any) error {
 	}
 
 	dummy := &models.Collection{Schema: form.Schema}
-	r := resolvers.NewRecordFieldResolver(form.config.Dao, dummy, nil)
+	r := resolvers.NewRecordFieldResolver(form.config.TxDao, dummy, nil)
 
 	_, err := search.FilterData(*v).BuildExpr(r)
 	if err != nil {
@@ -239,6 +243,6 @@ func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc) error {
 	form.collection.DeleteRule = form.DeleteRule
 
 	return runInterceptors(func() error {
-		return form.config.Dao.SaveCollection(form.collection)
+		return form.config.TxDao.SaveCollection(form.collection)
 	}, interceptors...)
 }

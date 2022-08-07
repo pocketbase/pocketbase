@@ -10,7 +10,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// AdminLogin defines an admin email/pass login form.
+// AdminLogin specifies an admin email/pass login form.
 type AdminLogin struct {
 	config AdminLoginConfig
 
@@ -20,20 +20,20 @@ type AdminLogin struct {
 
 // AdminLoginConfig is the [AdminLogin] factory initializer config.
 //
-// NB! Dao is a required struct member.
+// NB! App is a required struct member.
 type AdminLoginConfig struct {
-	Dao *daos.Dao
+	App   core.App
+	TxDao *daos.Dao
 }
 
 // NewAdminLogin creates a new [AdminLogin] form with initializer
 // config created from the provided [core.App] instance.
 //
-// This factory method is used primarily for convenience (and backward compatibility).
 // If you want to submit the form as part of another transaction, use
-// [NewCollectionUpsertWithConfig] with Dao configured to your txDao.
+// [NewAdminLoginWithConfig] with explicitly set TxDao.
 func NewAdminLogin(app core.App) *AdminLogin {
 	return NewAdminLoginWithConfig(AdminLoginConfig{
-		Dao: app.Dao(),
+		App: app,
 	})
 }
 
@@ -42,8 +42,12 @@ func NewAdminLogin(app core.App) *AdminLogin {
 func NewAdminLoginWithConfig(config AdminLoginConfig) *AdminLogin {
 	form := &AdminLogin{config: config}
 
-	if form.config.Dao == nil {
-		panic("Invalid initializer config.")
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
+	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
 	}
 
 	return form
@@ -64,7 +68,7 @@ func (form *AdminLogin) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	admin, err := form.config.Dao.FindAdminByEmail(form.Email)
+	admin, err := form.config.TxDao.FindAdminByEmail(form.Email)
 	if err != nil {
 		return nil, err
 	}

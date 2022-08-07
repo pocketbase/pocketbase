@@ -22,10 +22,21 @@ type CollectionsImport struct {
 
 // CollectionsImportConfig is the [CollectionsImport] factory initializer config.
 //
-// NB! Dao is a required struct member.
+// NB! App is a required struct member.
 type CollectionsImportConfig struct {
-	Dao     *daos.Dao
-	IsDebug bool
+	App   core.App
+	TxDao *daos.Dao
+}
+
+// NewCollectionsImport creates a new [CollectionsImport] form with
+// initializer config created from the provided [core.App] instance.
+//
+// If you want to submit the form as part of another transaction, use
+// [NewCollectionsImportWithConfig] with explicitly set TxDao.
+func NewCollectionsImport(app core.App) *CollectionsImport {
+	return NewCollectionsImportWithConfig(CollectionsImportConfig{
+		App: app,
+	})
 }
 
 // NewCollectionsImportWithConfig creates a new [CollectionsImport]
@@ -33,24 +44,15 @@ type CollectionsImportConfig struct {
 func NewCollectionsImportWithConfig(config CollectionsImportConfig) *CollectionsImport {
 	form := &CollectionsImport{config: config}
 
-	if form.config.Dao == nil {
-		panic("Invalid initializer config.")
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
+	}
+
+	if form.config.TxDao == nil {
+		form.config.TxDao = form.config.App.Dao()
 	}
 
 	return form
-}
-
-// NewCollectionsImport creates a new [CollectionsImport] form with
-// initializer config created from the provided [core.App] instance.
-//
-// This factory method is used primarily for convenience (and backward compatibility).
-// If you want to submit the form as part of another transaction, use
-// [NewCollectionsImportWithConfig] with Dao configured to your txDao.
-func NewCollectionsImport(app core.App) *CollectionsImport {
-	return NewCollectionsImportWithConfig(CollectionsImportConfig{
-		Dao:     app.Dao(),
-		IsDebug: app.IsDebug(),
-	})
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
@@ -73,7 +75,7 @@ func (form *CollectionsImport) Submit() error {
 		return err
 	}
 
-	return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
+	return form.config.TxDao.RunInTransaction(func(txDao *daos.Dao) error {
 		oldCollections := []*models.Collection{}
 		if err := txDao.CollectionQuery().All(&oldCollections); err != nil {
 			return err
@@ -95,7 +97,7 @@ func (form *CollectionsImport) Submit() error {
 				if mappedFormCollections[old.GetId()] == nil {
 					// delete the collection
 					if err := txDao.DeleteCollection(old); err != nil {
-						if form.config.IsDebug {
+						if form.config.App.IsDebug() {
 							log.Println("[CollectionsImport] DeleteOthers failure", old.Name, err)
 						}
 						return validation.Errors{"collections": validation.NewError(
@@ -117,7 +119,7 @@ func (form *CollectionsImport) Submit() error {
 			}
 
 			if err := txDao.Save(collection); err != nil {
-				if form.config.IsDebug {
+				if form.config.App.IsDebug() {
 					log.Println("[CollectionsImport] Save failure", collection.Name, err)
 				}
 				return validation.Errors{"collections": validation.NewError(
@@ -141,7 +143,8 @@ func (form *CollectionsImport) Submit() error {
 				upsertModel = collection
 			}
 			upsertForm := NewCollectionUpsertWithConfig(CollectionUpsertConfig{
-				Dao: txDao,
+				App:   form.config.App,
+				TxDao: txDao,
 			}, upsertModel)
 			// load form fields with the refreshed collection state
 			upsertForm.Id = collection.Id
@@ -168,7 +171,7 @@ func (form *CollectionsImport) Submit() error {
 		for _, collection := range form.Collections {
 			oldCollection := mappedOldCollections[collection.GetId()]
 			if err := txDao.SyncRecordTableSchema(collection, oldCollection); err != nil {
-				if form.config.IsDebug {
+				if form.config.App.IsDebug() {
 					log.Println("[CollectionsImport] Records table sync failure", collection.Name, err)
 				}
 				return validation.Errors{"collections": validation.NewError(
