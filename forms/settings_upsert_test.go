@@ -12,6 +12,16 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
+func TestSettingsUpsertPanic(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewSettingsUpsert(nil)
+}
+
 func TestNewSettingsUpsert(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

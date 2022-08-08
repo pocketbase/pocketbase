@@ -43,7 +43,7 @@ type RecordUpsertConfig struct {
 
 // NewRecordUpsert creates a new [RecordUpsert] form with initializer
 // config created from the provided [core.App] and [models.Record] instances
-// (for create you could pass a pointer to an empty Record - `&models.Record{}`).
+// (for create you could pass a pointer to an empty Record - `models.NewRecord(collection)`).
 //
 // If you want to submit the form as part of another transaction, use
 // [NewRecordUpsertWithConfig] with explicitly set TxDao.
@@ -55,7 +55,7 @@ func NewRecordUpsert(app core.App, record *models.Record) *RecordUpsert {
 
 // NewRecordUpsertWithConfig creates a new [RecordUpsert] form
 // with the provided config and [models.Record] instance or panics on invalid configuration
-// (for create you could pass a pointer to an empty Record - `&models.Record{}`).
+// (for create you could pass a pointer to an empty Record - `models.NewRecord(collection)`).
 func NewRecordUpsertWithConfig(config RecordUpsertConfig, record *models.Record) *RecordUpsert {
 	form := &RecordUpsert{
 		config:        config,
@@ -302,8 +302,10 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 		return err
 	}
 
+	isNew := form.record.IsNew()
+
 	// custom insertion id can be set only on create
-	if form.record.IsNew() && form.Id != "" {
+	if isNew && form.Id != "" {
 		form.record.MarkAsNew()
 		form.record.SetId(form.Id)
 	}
@@ -319,6 +321,7 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 			return errors.New("failed to get transaction db")
 		}
 		defer tx.Rollback()
+
 		txDao.BeforeCreateFunc = nil
 		txDao.AfterCreateFunc = nil
 		txDao.BeforeUpdateFunc = nil
@@ -328,7 +331,16 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 			return err
 		}
 
-		return callback(txDao)
+		// restore record isNew state
+		if isNew {
+			form.record.MarkAsNew()
+		}
+
+		if callback != nil {
+			return callback(txDao)
+		}
+
+		return nil
 	})
 }
 

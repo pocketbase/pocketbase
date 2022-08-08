@@ -44,8 +44,8 @@ func NewUserEmailChangeRequestWithConfig(config UserEmailChangeRequestConfig, us
 		user:   user,
 	}
 
-	if form.config.App == nil {
-		panic("Missing required config.App instance.")
+	if form.config.App == nil || form.user == nil {
+		panic("Invalid initializer config or nil user model.")
 	}
 
 	if form.config.TxDao == nil {

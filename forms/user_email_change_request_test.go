@@ -9,6 +9,29 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
+func TestUserEmailChangeRequestPanic1(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewUserEmailChangeRequest(nil, nil)
+}
+
+func TestUserEmailChangeRequestPanic2(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewUserEmailChangeRequest(testApp, nil)
+}
+
 func TestUserEmailChangeRequestValidateAndSubmit(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()

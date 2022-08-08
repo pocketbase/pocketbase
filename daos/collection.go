@@ -113,7 +113,7 @@ func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeI
 // - is referenced as part of a relation field in another collection
 func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 	if collection.System {
-		return errors.New("System collections cannot be deleted.")
+		return fmt.Errorf("System collection %q cannot be deleted.", collection.Name)
 	}
 
 	// ensure that there aren't any existing references.
@@ -123,7 +123,7 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 		return err
 	}
 	if total := len(result); total > 0 {
-		return fmt.Errorf("The collection has external relation field references (%d).", total)
+		return fmt.Errorf("The collection %q has external relation field references (%d).", collection.Name, total)
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
@@ -159,5 +159,102 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 
 		// sync the changes with the related records table
 		return txDao.SyncRecordTableSchema(collection, oldCollection)
+	})
+}
+
+// ImportCollections imports the provided collections list in a single transaction.
+//
+// If deleteMissing is set, all existing collections that are not present in the
+// imported configuration will be deleted (including their related records table).
+//
+// NB! This method doesn't perform validations on the imported collections data!
+// If you need validations, use [forms.CollectionsImport].
+func (dao *Dao) ImportCollections(
+	importedCollections []*models.Collection,
+	deleteMissing bool,
+	beforeRecordsSync func(txDao *Dao, mappedImported, mappedExisting map[string]*models.Collection) error,
+) error {
+	if len(importedCollections) == 0 {
+		return errors.New("No collections to import")
+	}
+
+	return dao.RunInTransaction(func(txDao *Dao) error {
+		existingCollections := []*models.Collection{}
+		if err := txDao.CollectionQuery().OrderBy("created ASC").All(&existingCollections); err != nil {
+			return err
+		}
+		mappedExisting := make(map[string]*models.Collection, len(existingCollections))
+		for _, existing := range existingCollections {
+			mappedExisting[existing.GetId()] = existing
+		}
+
+		mappedImported := make(map[string]*models.Collection, len(importedCollections))
+		for _, imported := range importedCollections {
+			// normalize
+			if !imported.HasId() {
+				// generate id if not set
+				imported.MarkAsNew()
+				imported.RefreshId()
+			} else if _, ok := mappedExisting[imported.GetId()]; !ok {
+				imported.MarkAsNew()
+			}
+
+			mappedImported[imported.GetId()] = imported
+		}
+
+		// delete old collections not available in the new configuration
+		// (before saving the imports in case a deleted collection name is being reused)
+		if deleteMissing {
+			for _, existing := range existingCollections {
+				if mappedImported[existing.GetId()] != nil {
+					continue // exist
+				}
+
+				if existing.System {
+					return fmt.Errorf("System collection %q cannot be deleted.", existing.Name)
+				}
+
+				// delete the collection
+				if err := txDao.Delete(existing); err != nil {
+					return err
+				}
+			}
+		}
+
+		// upsert imported collections
+		for _, imported := range importedCollections {
+			if err := txDao.Save(imported); err != nil {
+				return err
+			}
+		}
+
+		if beforeRecordsSync != nil {
+			if err := beforeRecordsSync(txDao, mappedImported, mappedExisting); err != nil {
+				return err
+			}
+		}
+
+		// delete the record tables of the deleted collections
+		if deleteMissing {
+			for _, existing := range existingCollections {
+				if mappedImported[existing.GetId()] != nil {
+					continue // exist
+				}
+
+				if err := txDao.DeleteTable(existing.Name); err != nil {
+					return err
+				}
+			}
+		}
+
+		// sync the upserted collections with the related records table
+		for _, imported := range importedCollections {
+			existing := mappedExisting[imported.GetId()]
+			if err := txDao.SyncRecordTableSchema(imported, existing); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 }

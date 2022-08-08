@@ -2,14 +2,11 @@ package migrate
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/spf13/cast"
 )
 
@@ -100,57 +97,6 @@ func (r *Runner) Run(args ...string) error {
 			}
 		}
 
-		return nil
-	case "create":
-		if len(args) < 2 {
-			return fmt.Errorf("Missing migration file name")
-		}
-
-		name := args[1]
-
-		var dir string
-		if len(args) == 3 {
-			dir = args[2]
-		}
-		if dir == "" {
-			// If not specified, auto point to the default migrations folder.
-			//
-			// NB!
-			// Since the create command makes sense only during development,
-			// it is expected the user to be in the app working directory
-			// and to be using `go run ...`
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			dir = path.Join(wd, "migrations")
-		}
-
-		resultFilePath := path.Join(
-			dir,
-			fmt.Sprintf("%d_%s.go", time.Now().Unix(), inflector.Snakecase(name)),
-		)
-
-		confirm := false
-		prompt := &survey.Confirm{
-			Message: fmt.Sprintf("Do you really want to create migration %q?", resultFilePath),
-		}
-		survey.AskOne(prompt, &confirm)
-		if !confirm {
-			fmt.Println("The command has been cancelled")
-			return nil
-		}
-
-		// ensure that migrations dir exist
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			return err
-		}
-
-		if err := os.WriteFile(resultFilePath, []byte(createTemplateContent), 0644); err != nil {
-			return fmt.Errorf("Failed to save migration file %q\n", resultFilePath)
-		}
-
-		fmt.Printf("Successfully created file %q\n", resultFilePath)
 		return nil
 	default:
 		return fmt.Errorf("Unsupported command: %q\n", cmd)

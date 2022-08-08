@@ -1,8 +1,11 @@
 package daos_test
 
 import (
+	"encoding/json"
+	"errors"
 	"testing"
 
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
@@ -247,6 +250,207 @@ func TestSaveCollectionUpdate(t *testing.T) {
 	for i, c := range columns {
 		if !list.ExistInSlice(c, expectedColumns) {
 			t.Fatalf("(%d) Didn't expect record column %s", i, c)
+		}
+	}
+}
+
+func TestImportCollections(t *testing.T) {
+	scenarios := []struct {
+		name                   string
+		jsonData               string
+		deleteMissing          bool
+		beforeRecordsSync      func(txDao *daos.Dao, mappedImported, mappedExisting map[string]*models.Collection) error
+		expectError            bool
+		expectCollectionsCount int
+	}{
+		{
+			name:                   "empty collections",
+			jsonData:               `[]`,
+			expectError:            true,
+			expectCollectionsCount: 5,
+		},
+		{
+			name: "check db constraints",
+			jsonData: `[
+				{"name": "import_test", "schema": []}
+			]`,
+			deleteMissing:          false,
+			expectError:            true,
+			expectCollectionsCount: 5,
+		},
+		{
+			name: "minimal collection import",
+			jsonData: `[
+				{"name": "import_test", "schema": [{"name":"test", "type": "text"}]}
+			]`,
+			deleteMissing:          false,
+			expectError:            false,
+			expectCollectionsCount: 6,
+		},
+		{
+			name: "minimal collection import + failed beforeRecordsSync",
+			jsonData: `[
+				{"name": "import_test", "schema": [{"name":"test", "type": "text"}]}
+			]`,
+			beforeRecordsSync: func(txDao *daos.Dao, mappedImported, mappedExisting map[string]*models.Collection) error {
+				return errors.New("test_error")
+			},
+			deleteMissing:          false,
+			expectError:            true,
+			expectCollectionsCount: 5,
+		},
+		{
+			name: "minimal collection import + successful beforeRecordsSync",
+			jsonData: `[
+				{"name": "import_test", "schema": [{"name":"test", "type": "text"}]}
+			]`,
+			beforeRecordsSync: func(txDao *daos.Dao, mappedImported, mappedExisting map[string]*models.Collection) error {
+				return nil
+			},
+			deleteMissing:          false,
+			expectError:            false,
+			expectCollectionsCount: 6,
+		},
+		{
+			name: "new + update + delete system collection",
+			jsonData: `[
+				{
+					"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
+					"name":"demo",
+					"schema":[
+						{
+							"id":"_2hlxbmp",
+							"name":"title",
+							"type":"text",
+							"system":false,
+							"required":true,
+							"unique":false,
+							"options":{
+								"min":3,
+								"max":null,
+								"pattern":""
+							}
+						}
+					]
+				},
+				{
+					"name": "import1",
+					"schema": [
+						{
+							"name":"active",
+							"type":"bool"
+						}
+					]
+				}
+			]`,
+			deleteMissing:          true,
+			expectError:            true,
+			expectCollectionsCount: 5,
+		},
+		{
+			name: "new + update + delete non-system collection",
+			jsonData: `[
+				{
+					"id":"abe78266-fd4d-4aea-962d-8c0138ac522b",
+					"name":"profiles",
+					"system":true,
+					"listRule":"userId = @request.user.id",
+					"viewRule":"created > 'test_change'",
+					"createRule":"userId = @request.user.id",
+					"updateRule":"userId = @request.user.id",
+					"deleteRule":"userId = @request.user.id",
+					"schema":[
+						{
+							"id":"koih1lqx",
+							"name":"userId",
+							"type":"user",
+							"system":true,
+							"required":true,
+							"unique":true,
+							"options":{
+								"maxSelect":1,
+								"cascadeDelete":true
+							}
+						},
+						{
+							"id":"69ycbg3q",
+							"name":"rel",
+							"type":"relation",
+							"system":false,
+							"required":false,
+							"unique":false,
+							"options":{
+								"maxSelect":2,
+								"collectionId":"abe78266-fd4d-4aea-962d-8c0138ac522b",
+								"cascadeDelete":false
+							}
+						}
+					]
+				},
+				{
+					"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
+					"name":"demo",
+					"schema":[
+						{
+							"id":"_2hlxbmp",
+							"name":"title",
+							"type":"text",
+							"system":false,
+							"required":true,
+							"unique":false,
+							"options":{
+								"min":3,
+								"max":null,
+								"pattern":""
+							}
+						}
+					]
+				},
+				{
+					"id": "test_deleted_collection_name_reuse",
+					"name": "demo2",
+					"schema": [
+						{
+							"id":"fz6iql2m",
+							"name":"active",
+							"type":"bool"
+						}
+					]
+				}
+			]`,
+			deleteMissing:          true,
+			expectError:            false,
+			expectCollectionsCount: 3,
+		},
+	}
+
+	for _, scenario := range scenarios {
+		testApp, _ := tests.NewTestApp()
+		defer testApp.Cleanup()
+
+		importedCollections := []*models.Collection{}
+
+		// load data
+		loadErr := json.Unmarshal([]byte(scenario.jsonData), &importedCollections)
+		if loadErr != nil {
+			t.Fatalf("[%s] Failed to load  data: %v", scenario.name, loadErr)
+			continue
+		}
+
+		err := testApp.Dao().ImportCollections(importedCollections, scenario.deleteMissing, scenario.beforeRecordsSync)
+
+		hasErr := err != nil
+		if hasErr != scenario.expectError {
+			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", scenario.name, scenario.expectError, hasErr, err)
+		}
+
+		// check collections count
+		collections := []*models.Collection{}
+		if err := testApp.Dao().CollectionQuery().All(&collections); err != nil {
+			t.Fatal(err)
+		}
+		if len(collections) != scenario.expectCollectionsCount {
+			t.Errorf("[%s] Expected %d collections, got %d", scenario.name, scenario.expectCollectionsCount, len(collections))
 		}
 	}
 }

@@ -10,8 +10,32 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
 )
+
+func TestCollectionUpsertPanic1(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewCollectionUpsert(nil, nil)
+}
+
+func TestCollectionUpsertPanic2(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewCollectionUpsert(app, nil)
+}
 
 func TestNewCollectionUpsert(t *testing.T) {
 	app, _ := tests.NewTestApp()
@@ -516,5 +540,103 @@ func TestCollectionUpsertSubmitInterceptors(t *testing.T) {
 
 	if interceptorCollectionName != form.Name {
 		t.Fatalf("Expected the form model to be filled before calling the interceptors")
+	}
+}
+
+func TestCollectionUpsertWithCustomId(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	existingCollection, err := app.Dao().FindCollectionByNameOrId("demo3")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	newCollection := func() *models.Collection {
+		return &models.Collection{
+			Name:   "c_" + security.RandomString(4),
+			Schema: existingCollection.Schema,
+		}
+	}
+
+	scenarios := []struct {
+		name        string
+		jsonData    string
+		collection  *models.Collection
+		expectError bool
+	}{
+		{
+			"empty data",
+			"{}",
+			newCollection(),
+			false,
+		},
+		{
+			"empty id",
+			`{"id":""}`,
+			newCollection(),
+			false,
+		},
+		{
+			"id < 15 chars",
+			`{"id":"a23"}`,
+			newCollection(),
+			true,
+		},
+		{
+			"id > 15 chars",
+			`{"id":"a234567890123456"}`,
+			newCollection(),
+			true,
+		},
+		{
+			"id = 15 chars",
+			`{"id":"a23456789012345"}`,
+			newCollection(),
+			false,
+		},
+		{
+			"changing the id of an existing item",
+			`{"id":"b23456789012345"}`,
+			existingCollection,
+			true,
+		},
+		{
+			"using the same existing item id",
+			`{"id":"` + existingCollection.Id + `"}`,
+			existingCollection,
+			false,
+		},
+		{
+			"skipping the id for existing item",
+			`{}`,
+			existingCollection,
+			false,
+		},
+	}
+
+	for _, scenario := range scenarios {
+		form := forms.NewCollectionUpsert(app, scenario.collection)
+
+		// load data
+		loadErr := json.Unmarshal([]byte(scenario.jsonData), form)
+		if loadErr != nil {
+			t.Errorf("[%s] Failed to load form data: %v", scenario.name, loadErr)
+			continue
+		}
+
+		submitErr := form.Submit()
+		hasErr := submitErr != nil
+
+		if hasErr != scenario.expectError {
+			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", scenario.name, scenario.expectError, hasErr, submitErr)
+		}
+
+		if !hasErr && form.Id != "" {
+			_, err := app.Dao().FindCollectionByNameOrId(form.Id)
+			if err != nil {
+				t.Errorf("[%s] Expected to find record with id %s, got %v", scenario.name, form.Id, err)
+			}
+		}
 	}
 }

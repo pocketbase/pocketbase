@@ -16,8 +16,8 @@ import (
 type CollectionsImport struct {
 	config CollectionsImportConfig
 
-	Collections  []*models.Collection `form:"collections" json:"collections"`
-	DeleteOthers bool                 `form:"deleteOthers" json:"deleteOthers"`
+	Collections   []*models.Collection `form:"collections" json:"collections"`
+	DeleteMissing bool                 `form:"deleteMissing" json:"deleteMissing"`
 }
 
 // CollectionsImportConfig is the [CollectionsImport] factory initializer config.
@@ -66,7 +66,7 @@ func (form *CollectionsImport) Validate() error {
 // - imports the form collections (create or replace)
 // - sync the collection changes with their related records table
 // - ensures the integrity of the imported structure (aka. run validations for each collection)
-// - if [form.DeleteOthers] is set, deletes all local collections that are not found in the imports list
+// - if [form.DeleteMissing] is set, deletes all local collections that are not found in the imports list
 //
 // All operations are wrapped in a single transaction that are
 // rollbacked on the first encountered error.
@@ -78,116 +78,75 @@ func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc) error {
 		return err
 	}
 
-	return runInterceptors(form.submit, interceptors...)
+	return runInterceptors(func() error {
+		return form.config.TxDao.RunInTransaction(func(txDao *daos.Dao) error {
+			importErr := txDao.ImportCollections(
+				form.Collections,
+				form.DeleteMissing,
+				form.beforeRecordsSync,
+			)
+			if importErr == nil {
+				return nil
+			}
+
+			// validation failure
+			if err, ok := importErr.(validation.Errors); ok {
+				return err
+			}
+
+			// generic/db failure
+			if form.config.App.IsDebug() {
+				log.Println("Internal import failure:", importErr)
+			}
+			return validation.Errors{"collections": validation.NewError(
+				"collections_import_failure",
+				"Failed to import the collections configuration.",
+			)}
+		})
+	}, interceptors...)
 }
 
-func (form *CollectionsImport) submit() error {
-	return form.config.TxDao.RunInTransaction(func(txDao *daos.Dao) error {
-		oldCollections := []*models.Collection{}
-		if err := txDao.CollectionQuery().All(&oldCollections); err != nil {
-			return err
+func (form *CollectionsImport) beforeRecordsSync(txDao *daos.Dao, mappedNew, mappedOld map[string]*models.Collection) error {
+	// refresh the actual persisted collections list
+	refreshedCollections := []*models.Collection{}
+	if err := txDao.CollectionQuery().OrderBy("created ASC").All(&refreshedCollections); err != nil {
+		return err
+	}
+
+	// trigger the validator for each existing collection to
+	// ensure that the app is not left in a broken state
+	for _, collection := range refreshedCollections {
+		upsertModel := mappedOld[collection.GetId()]
+		if upsertModel == nil {
+			upsertModel = collection
 		}
 
-		mappedOldCollections := make(map[string]*models.Collection, len(oldCollections))
-		for _, old := range oldCollections {
-			mappedOldCollections[old.GetId()] = old
+		upsertForm := NewCollectionUpsertWithConfig(CollectionUpsertConfig{
+			App:   form.config.App,
+			TxDao: txDao,
+		}, upsertModel)
+
+		// load form fields with the refreshed collection state
+		upsertForm.Id = collection.Id
+		upsertForm.Name = collection.Name
+		upsertForm.System = collection.System
+		upsertForm.ListRule = collection.ListRule
+		upsertForm.ViewRule = collection.ViewRule
+		upsertForm.CreateRule = collection.CreateRule
+		upsertForm.UpdateRule = collection.UpdateRule
+		upsertForm.DeleteRule = collection.DeleteRule
+		upsertForm.Schema = collection.Schema
+
+		if err := upsertForm.Validate(); err != nil {
+			// serialize the validation error(s)
+			serializedErr, _ := json.Marshal(err)
+
+			return validation.Errors{"collections": validation.NewError(
+				"collections_import_validate_failure",
+				fmt.Sprintf("Data validations failed for collection %q (%s): %s", collection.Name, collection.Id, serializedErr),
+			)}
 		}
+	}
 
-		mappedFormCollections := make(map[string]*models.Collection, len(form.Collections))
-		for _, collection := range form.Collections {
-			mappedFormCollections[collection.GetId()] = collection
-		}
-
-		// delete all other collections not sent with the import
-		if form.DeleteOthers {
-			for _, old := range oldCollections {
-				if mappedFormCollections[old.GetId()] == nil {
-					// delete the collection
-					if err := txDao.DeleteCollection(old); err != nil {
-						if form.config.App.IsDebug() {
-							log.Println("[CollectionsImport] DeleteOthers failure", old.Name, err)
-						}
-						return validation.Errors{"collections": validation.NewError(
-							"collections_import_collection_delete_failure",
-							fmt.Sprintf("Failed to delete collection %q (%s). Make sure that the collection is not system or referenced by other collections.", old.Name, old.Id),
-						)}
-					}
-
-					delete(mappedOldCollections, old.GetId())
-				}
-			}
-		}
-
-		// raw insert/replace (aka. without any validations)
-		// (required to make sure that all linked collections exists before running the validations)
-		for _, collection := range form.Collections {
-			if mappedOldCollections[collection.GetId()] == nil {
-				collection.MarkAsNew()
-			}
-
-			if err := txDao.Save(collection); err != nil {
-				if form.config.App.IsDebug() {
-					log.Println("[CollectionsImport] Save failure", collection.Name, err)
-				}
-				return validation.Errors{"collections": validation.NewError(
-					"collections_import_save_failure",
-					fmt.Sprintf("Integrity constraints failed - the collection %q (%s) cannot be imported.", collection.Name, collection.Id),
-				)}
-			}
-		}
-
-		// refresh the actual persisted collections list
-		refreshedCollections := []*models.Collection{}
-		if err := txDao.CollectionQuery().All(&refreshedCollections); err != nil {
-			return err
-		}
-
-		// trigger the validator for each existing collection to
-		// ensure that the app is not left in a broken state
-		for _, collection := range refreshedCollections {
-			upsertModel := mappedOldCollections[collection.GetId()]
-			if upsertModel == nil {
-				upsertModel = collection
-			}
-			upsertForm := NewCollectionUpsertWithConfig(CollectionUpsertConfig{
-				App:   form.config.App,
-				TxDao: txDao,
-			}, upsertModel)
-			// load form fields with the refreshed collection state
-			upsertForm.Id = collection.Id
-			upsertForm.Name = collection.Name
-			upsertForm.System = collection.System
-			upsertForm.ListRule = collection.ListRule
-			upsertForm.ViewRule = collection.ViewRule
-			upsertForm.CreateRule = collection.CreateRule
-			upsertForm.UpdateRule = collection.UpdateRule
-			upsertForm.DeleteRule = collection.DeleteRule
-			upsertForm.Schema = collection.Schema
-			if err := upsertForm.Validate(); err != nil {
-				// serialize the validation error(s)
-				serializedErr, _ := json.Marshal(err)
-
-				return validation.Errors{"collections": validation.NewError(
-					"collections_import_validate_failure",
-					fmt.Sprintf("Data validations failed for collection %q (%s): %s", collection.Name, collection.Id, serializedErr),
-				)}
-			}
-		}
-
-		// sync the records table for each updated collection
-		for _, collection := range form.Collections {
-			oldCollection := mappedOldCollections[collection.GetId()]
-			if err := txDao.SyncRecordTableSchema(collection, oldCollection); err != nil {
-				if form.config.App.IsDebug() {
-					log.Println("[CollectionsImport] Records table sync failure", collection.Name, err)
-				}
-				return validation.Errors{"collections": validation.NewError(
-					"collections_import_records_table_sync_failure",
-					fmt.Sprintf("Failed to sync the records table changes for collection %q.", collection.Name),
-				)}
-			}
-		}
-
-		return nil
-	})
+	return nil
 }

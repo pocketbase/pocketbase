@@ -751,6 +751,62 @@ func TestRecordCreate(t *testing.T) {
 			},
 		},
 		{
+			Name:   "invalid custom insertion id (less than 15 chars)",
+			Method: http.MethodPost,
+			Url:    "/api/collections/demo3/records",
+			Body: strings.NewReader(`{
+				"id": "12345678901234",
+				"title": "test"
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"id":{"code":"validation_length_invalid"`,
+			},
+		},
+		{
+			Name:   "invalid custom insertion id (more than 15 chars)",
+			Method: http.MethodPost,
+			Url:    "/api/collections/demo3/records",
+			Body: strings.NewReader(`{
+				"id": "1234567890123456",
+				"title": "test"
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"id":{"code":"validation_length_invalid"`,
+			},
+		},
+		{
+			Name:   "valid custom insertion id (exactly 15 chars)",
+			Method: http.MethodPost,
+			Url:    "/api/collections/demo3/records",
+			Body: strings.NewReader(`{
+				"id": "123456789012345",
+				"title": "test"
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"123456789012345"`,
+				`"title":"test"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeCreateRequest": 1,
+				"OnRecordAfterCreateRequest":  1,
+				"OnModelBeforeCreate":         1,
+				"OnModelAfterCreate":          1,
+			},
+		},
+
+		{
 			Name:   "submit via multipart form data",
 			Method: http.MethodPost,
 			Url:    "/api/collections/demo/records",

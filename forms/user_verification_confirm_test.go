@@ -10,6 +10,16 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
+func TestUserVerificationConfirmPanic(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewUserVerificationConfirm(nil)
+}
+
 func TestUserVerificationConfirmValidate(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

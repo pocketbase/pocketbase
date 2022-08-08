@@ -5,6 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
 )
 
@@ -473,19 +475,229 @@ func TestCollectionImport(t *testing.T) {
 				`"data":{`,
 				`"collections":{"code":"validation_required"`,
 			},
+			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				collections := []*models.Collection{}
+				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
+					t.Fatal(err)
+				}
+				if len(collections) != 5 {
+					t.Fatalf("Expected %d collections, got %d", 5, len(collections))
+				}
+			},
 		},
 		{
-			Name:   "authorized as admin + deleting collections",
+			Name:   "authorized as admin + trying to delete system collections",
 			Method: http.MethodPut,
 			Url:    "/api/collections/import",
-			Body:   strings.NewReader(`{"collections":[]}`),
+			Body:   strings.NewReader(`{"deleteMissing": true, "collections":[{"name": "test123"}]}`),
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
-				`"collections":{"code":"validation_required"`,
+				`"collections":{"code":"collections_import_failure"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnCollectionsBeforeImportRequest": 1,
+			},
+			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				collections := []*models.Collection{}
+				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
+					t.Fatal(err)
+				}
+				if len(collections) != 5 {
+					t.Fatalf("Expected %d collections, got %d", 5, len(collections))
+				}
+			},
+		},
+		{
+			Name:   "authorized as admin + collections validator failure",
+			Method: http.MethodPut,
+			Url:    "/api/collections/import",
+			Body: strings.NewReader(`{
+				"collections":[
+					{
+						"name": "import1",
+						"schema": [
+							{
+							  "id": "koih1lqx",
+							  "name": "test",
+							  "type": "text"
+							}
+						]
+					},
+					{"name": "import2"}
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"collections":{"code":"collections_import_failure"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnCollectionsBeforeImportRequest": 1,
+				"OnModelBeforeCreate":              2,
+				"OnModelAfterCreate":               1,
+			},
+			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				collections := []*models.Collection{}
+				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
+					t.Fatal(err)
+				}
+				if len(collections) != 5 {
+					t.Fatalf("Expected %d collections, got %d", 5, len(collections))
+				}
+			},
+		},
+		{
+			Name:   "authorized as admin + successfull collections save",
+			Method: http.MethodPut,
+			Url:    "/api/collections/import",
+			Body: strings.NewReader(`{
+				"collections":[
+					{
+						"name": "import1",
+						"schema": [
+							{
+							  "id": "koih1lqx",
+							  "name": "test",
+							  "type": "text"
+							}
+						]
+					},
+					{
+						"name": "import2",
+						"schema": [
+							{
+							  "id": "koih1lqx",
+							  "name": "test",
+							  "type": "text"
+							}
+						]
+					}
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"OnCollectionsBeforeImportRequest": 1,
+				"OnCollectionsAfterImportRequest":  1,
+				"OnModelBeforeCreate":              2,
+				"OnModelAfterCreate":               2,
+			},
+			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				collections := []*models.Collection{}
+				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
+					t.Fatal(err)
+				}
+				if len(collections) != 7 {
+					t.Fatalf("Expected %d collections, got %d", 7, len(collections))
+				}
+			},
+		},
+		{
+			Name:   "authorized as admin + successfull collections save and old non-system collections deletion",
+			Method: http.MethodPut,
+			Url:    "/api/collections/import",
+			Body: strings.NewReader(`{
+				"deleteMissing": true,
+				"collections":[
+					{
+						"id":"abe78266-fd4d-4aea-962d-8c0138ac522b",
+						"name":"profiles",
+						"system":true,
+						"listRule":"userId = @request.user.id",
+						"viewRule":"created > 'test_change'",
+						"createRule":"userId = @request.user.id",
+						"updateRule":"userId = @request.user.id",
+						"deleteRule":"userId = @request.user.id",
+						"schema":[
+							{
+								"id":"koih1lqx",
+								"name":"userId",
+								"type":"user",
+								"system":true,
+								"required":true,
+								"unique":true,
+								"options":{
+									"maxSelect":1,
+									"cascadeDelete":true
+								}
+							},
+							{
+								"id":"69ycbg3q",
+								"name":"rel",
+								"type":"relation",
+								"system":false,
+								"required":false,
+								"unique":false,
+								"options":{
+									"maxSelect":2,
+									"collectionId":"abe78266-fd4d-4aea-962d-8c0138ac522b",
+									"cascadeDelete":false
+								}
+							}
+						]
+					},
+					{
+						"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
+						"name":"demo",
+						"schema":[
+							{
+								"id":"_2hlxbmp",
+								"name":"title",
+								"type":"text",
+								"system":false,
+								"required":true,
+								"unique":false,
+								"options":{
+									"min":3,
+									"max":null,
+									"pattern":""
+								}
+							}
+						]
+					},
+					{
+						"name": "new_import",
+						"schema": [
+							{
+							  "id": "koih1lqx",
+							  "name": "test",
+							  "type": "text"
+							}
+						]
+					}
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"OnCollectionsAfterImportRequest":  1,
+				"OnCollectionsBeforeImportRequest": 1,
+				"OnModelBeforeDelete":              3,
+				"OnModelAfterDelete":               3,
+				"OnModelBeforeUpdate":              2,
+				"OnModelAfterUpdate":               2,
+				"OnModelBeforeCreate":              1,
+				"OnModelAfterCreate":               1,
+			},
+			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				collections := []*models.Collection{}
+				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
+					t.Fatal(err)
+				}
+				if len(collections) != 3 {
+					t.Fatalf("Expected %d collections, got %d", 3, len(collections))
+				}
 			},
 		},
 	}
