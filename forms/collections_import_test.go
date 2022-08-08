@@ -95,7 +95,6 @@ func TestCollectionsImportSubmit(t *testing.T) {
 			expectCollectionsCount: 5,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
-				"OnModelAfterCreate":  2,
 			},
 		},
 		{

@@ -49,6 +49,12 @@ func (dao *Dao) FindById(m models.Model, id string) error {
 	return dao.ModelQuery(m).Where(dbx.HashExp{"id": id}).Limit(1).One(m)
 }
 
+type afterCallGroup struct {
+	Action   string
+	EventDao *Dao
+	Model    models.Model
+}
+
 // RunInTransaction wraps fn into a transaction.
 //
 // It is safe to nest RunInTransaction calls.
@@ -59,44 +65,60 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 		// so execute the function within the current transaction
 		return fn(dao)
 	case *dbx.DB:
+
 		return txOrDB.Transactional(func(tx *dbx.Tx) error {
 			txDao := New(tx)
 
-			txDao.BeforeCreateFunc = func(eventDao *Dao, m models.Model) error {
-				if dao.BeforeCreateFunc != nil {
+			afterCalls := []afterCallGroup{}
+
+			if dao.BeforeCreateFunc != nil {
+				txDao.BeforeCreateFunc = func(eventDao *Dao, m models.Model) error {
 					return dao.BeforeCreateFunc(eventDao, m)
 				}
-				return nil
 			}
-			txDao.AfterCreateFunc = func(eventDao *Dao, m models.Model) {
-				if dao.AfterCreateFunc != nil {
-					dao.AfterCreateFunc(eventDao, m)
-				}
-			}
-			txDao.BeforeUpdateFunc = func(eventDao *Dao, m models.Model) error {
-				if dao.BeforeUpdateFunc != nil {
+			if dao.BeforeUpdateFunc != nil {
+				txDao.BeforeUpdateFunc = func(eventDao *Dao, m models.Model) error {
 					return dao.BeforeUpdateFunc(eventDao, m)
 				}
-				return nil
 			}
-			txDao.AfterUpdateFunc = func(eventDao *Dao, m models.Model) {
-				if dao.AfterUpdateFunc != nil {
-					dao.AfterUpdateFunc(eventDao, m)
-				}
-			}
-			txDao.BeforeDeleteFunc = func(eventDao *Dao, m models.Model) error {
-				if dao.BeforeDeleteFunc != nil {
+			if dao.BeforeDeleteFunc != nil {
+				txDao.BeforeDeleteFunc = func(eventDao *Dao, m models.Model) error {
 					return dao.BeforeDeleteFunc(eventDao, m)
-				}
-				return nil
-			}
-			txDao.AfterDeleteFunc = func(eventDao *Dao, m models.Model) {
-				if dao.AfterDeleteFunc != nil {
-					dao.AfterDeleteFunc(eventDao, m)
 				}
 			}
 
-			return fn(txDao)
+			if dao.AfterCreateFunc != nil {
+				txDao.AfterCreateFunc = func(eventDao *Dao, m models.Model) {
+					afterCalls = append(afterCalls, afterCallGroup{"create", eventDao, m})
+				}
+			}
+			if dao.AfterUpdateFunc != nil {
+				txDao.AfterUpdateFunc = func(eventDao *Dao, m models.Model) {
+					afterCalls = append(afterCalls, afterCallGroup{"update", eventDao, m})
+				}
+			}
+			if dao.AfterDeleteFunc != nil {
+				txDao.AfterDeleteFunc = func(eventDao *Dao, m models.Model) {
+					afterCalls = append(afterCalls, afterCallGroup{"delete", eventDao, m})
+				}
+			}
+
+			if err := fn(txDao); err != nil {
+				return err
+			}
+
+			// execute after event calls on successfull transaction
+			for _, call := range afterCalls {
+				if call.Action == "create" {
+					dao.AfterCreateFunc(call.EventDao, call.Model)
+				} else if call.Action == "update" {
+					dao.AfterUpdateFunc(call.EventDao, call.Model)
+				} else if call.Action == "delete" {
+					dao.AfterDeleteFunc(call.EventDao, call.Model)
+				}
+			}
+
+			return nil
 		})
 	}
 

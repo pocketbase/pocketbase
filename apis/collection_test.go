@@ -541,7 +541,6 @@ func TestCollectionImport(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnCollectionsBeforeImportRequest": 1,
 				"OnModelBeforeCreate":              2,
-				"OnModelAfterCreate":               1,
 			},
 			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}
