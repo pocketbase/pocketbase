@@ -65,11 +65,10 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 		// so execute the function within the current transaction
 		return fn(dao)
 	case *dbx.DB:
+		afterCalls := []afterCallGroup{}
 
-		return txOrDB.Transactional(func(tx *dbx.Tx) error {
+		txError := txOrDB.Transactional(func(tx *dbx.Tx) error {
 			txDao := New(tx)
-
-			afterCalls := []afterCallGroup{}
 
 			if dao.BeforeCreateFunc != nil {
 				txDao.BeforeCreateFunc = func(eventDao *Dao, m models.Model) error {
@@ -103,23 +102,24 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 				}
 			}
 
-			if err := fn(txDao); err != nil {
-				return err
-			}
+			return fn(txDao)
+		})
 
-			// execute after event calls on successfull transaction
+		if txError == nil {
+			// execute after event calls on successful transaction
 			for _, call := range afterCalls {
-				if call.Action == "create" {
+				switch call.Action {
+				case "create":
 					dao.AfterCreateFunc(call.EventDao, call.Model)
-				} else if call.Action == "update" {
+				case "update":
 					dao.AfterUpdateFunc(call.EventDao, call.Model)
-				} else if call.Action == "delete" {
+				case "delete":
 					dao.AfterDeleteFunc(call.EventDao, call.Model)
 				}
 			}
+		}
 
-			return nil
-		})
+		return txError
 	}
 
 	return errors.New("Failed to start transaction (unknown dao.db)")

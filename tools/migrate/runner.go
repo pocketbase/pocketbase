@@ -37,9 +37,8 @@ func NewRunner(db *dbx.DB, migrationsList MigrationsList) (*Runner, error) {
 // Run interactively executes the current runner with the provided args.
 //
 // The following commands are supported:
-// - up                        - applies all migrations
-// - down [n]                  - reverts the last n applied migrations
-// - create NEW_MIGRATION_NAME - create NEW_MIGRATION_NAME.go file from a migration template
+// - up       - applies all migrations
+// - down [n] - reverts the last n applied migrations
 func (r *Runner) Run(args ...string) error {
 	cmd := "up"
 	if len(args) > 0 {

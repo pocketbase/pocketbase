@@ -365,32 +365,34 @@ func TestDaoTransactionHooksCallsOnFailure(t *testing.T) {
 
 	existingModel, _ := testApp.Dao().FindAdminByEmail("test@example.com")
 
-	baseDao.RunInTransaction(func(txDao *daos.Dao) error {
-		// test create
-		// ---
-		newModel := &models.Admin{}
-		newModel.Email = "test_new1@example.com"
-		newModel.SetPassword("123456")
-		if err := txDao.Save(newModel); err != nil {
-			t.Fatal(err)
-		}
+	baseDao.RunInTransaction(func(txDao1 *daos.Dao) error {
+		return txDao1.RunInTransaction(func(txDao2 *daos.Dao) error {
+			// test create
+			// ---
+			newModel := &models.Admin{}
+			newModel.Email = "test_new1@example.com"
+			newModel.SetPassword("123456")
+			if err := txDao2.Save(newModel); err != nil {
+				t.Fatal(err)
+			}
 
-		// test update (twice)
-		// ---
-		if err := txDao.Save(existingModel); err != nil {
-			t.Fatal(err)
-		}
-		if err := txDao.Save(existingModel); err != nil {
-			t.Fatal(err)
-		}
+			// test update (twice)
+			// ---
+			if err := txDao2.Save(existingModel); err != nil {
+				t.Fatal(err)
+			}
+			if err := txDao2.Save(existingModel); err != nil {
+				t.Fatal(err)
+			}
 
-		// test delete
-		// ---
-		if err := txDao.Delete(existingModel); err != nil {
-			t.Fatal(err)
-		}
+			// test delete
+			// ---
+			if err := txDao2.Delete(existingModel); err != nil {
+				t.Fatal(err)
+			}
 
-		return errors.New("test_tx_error")
+			return errors.New("test_tx_error")
+		})
 	})
 
 	if beforeCreateFuncCalls != 1 {
@@ -451,32 +453,34 @@ func TestDaoTransactionHooksCallsOnSuccess(t *testing.T) {
 
 	existingModel, _ := testApp.Dao().FindAdminByEmail("test@example.com")
 
-	baseDao.RunInTransaction(func(txDao *daos.Dao) error {
-		// test create
-		// ---
-		newModel := &models.Admin{}
-		newModel.Email = "test_new1@example.com"
-		newModel.SetPassword("123456")
-		if err := txDao.Save(newModel); err != nil {
-			t.Fatal(err)
-		}
+	baseDao.RunInTransaction(func(txDao1 *daos.Dao) error {
+		return txDao1.RunInTransaction(func(txDao2 *daos.Dao) error {
+			// test create
+			// ---
+			newModel := &models.Admin{}
+			newModel.Email = "test_new1@example.com"
+			newModel.SetPassword("123456")
+			if err := txDao2.Save(newModel); err != nil {
+				t.Fatal(err)
+			}
 
-		// test update (twice)
-		// ---
-		if err := txDao.Save(existingModel); err != nil {
-			t.Fatal(err)
-		}
-		if err := txDao.Save(existingModel); err != nil {
-			t.Fatal(err)
-		}
+			// test update (twice)
+			// ---
+			if err := txDao2.Save(existingModel); err != nil {
+				t.Fatal(err)
+			}
+			if err := txDao2.Save(existingModel); err != nil {
+				t.Fatal(err)
+			}
 
-		// test delete
-		// ---
-		if err := txDao.Delete(existingModel); err != nil {
-			t.Fatal(err)
-		}
+			// test delete
+			// ---
+			if err := txDao2.Delete(existingModel); err != nil {
+				t.Fatal(err)
+			}
 
-		return nil
+			return nil
+		})
 	})
 
 	if beforeCreateFuncCalls != 1 {

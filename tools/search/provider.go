@@ -28,6 +28,7 @@ type Result struct {
 	Page       int `json:"page"`
 	PerPage    int `json:"perPage"`
 	TotalItems int `json:"totalItems"`
+	TotalPages int `json:"totalPages"`
 	Items      any `json:"items"`
 }
 
@@ -213,10 +214,12 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		s.perPage = MaxPerPage
 	}
 
+	totalPages := int(math.Ceil(float64(totalCount) / float64(s.perPage)))
+
 	// normalize page according to the total count
 	if s.page <= 0 || totalCount == 0 {
 		s.page = 1
-	} else if totalPages := int(math.Ceil(float64(totalCount) / float64(s.perPage))); s.page > totalPages {
+	} else if s.page > totalPages {
 		s.page = totalPages
 	}
 
@@ -233,6 +236,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		Page:       s.page,
 		PerPage:    s.perPage,
 		TotalItems: int(totalCount),
+		TotalPages: totalPages,
 		Items:      items,
 	}, nil
 }

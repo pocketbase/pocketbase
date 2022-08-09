@@ -210,13 +210,17 @@ func (api *realtimeApi) bindEvents() {
 		return nil
 	})
 
-	api.app.OnRecordAfterCreateRequest().Add(func(e *core.RecordCreateEvent) error {
-		api.broadcastRecord("create", e.Record)
+	api.app.OnModelAfterCreate().Add(func(e *core.ModelEvent) error {
+		if record, ok := e.Model.(*models.Record); ok {
+			api.broadcastRecord("create", record)
+		}
 		return nil
 	})
 
-	api.app.OnRecordAfterUpdateRequest().Add(func(e *core.RecordUpdateEvent) error {
-		api.broadcastRecord("update", e.Record)
+	api.app.OnModelAfterUpdate().Add(func(e *core.ModelEvent) error {
+		if record, ok := e.Model.(*models.Record); ok {
+			api.broadcastRecord("update", record)
+		}
 		return nil
 	})
 

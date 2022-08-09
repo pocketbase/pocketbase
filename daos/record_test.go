@@ -298,7 +298,6 @@ func TestFindUserRelatedRecords(t *testing.T) {
 		}
 
 		if len(records) != len(scenario.expectedIds) {
-			fmt.Println(records[0])
 			t.Errorf("(%d) Expected %d records, got %d (%v)", i, len(scenario.expectedIds), len(records), records)
 			continue
 		}

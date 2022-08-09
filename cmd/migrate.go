@@ -217,7 +217,7 @@ func init() {
 `
 
 func migrateCollectionsHandler(app core.App, args []string) error {
-	createArgs := []string{"collections_import"}
+	createArgs := []string{"collections_snapshot"}
 	createArgs = append(createArgs, args...)
 
 	dao := daos.New(app.DB())

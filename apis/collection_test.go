@@ -553,7 +553,7 @@ func TestCollectionImport(t *testing.T) {
 			},
 		},
 		{
-			Name:   "authorized as admin + successfull collections save",
+			Name:   "authorized as admin + successful collections save",
 			Method: http.MethodPut,
 			Url:    "/api/collections/import",
 			Body: strings.NewReader(`{
@@ -601,7 +601,7 @@ func TestCollectionImport(t *testing.T) {
 			},
 		},
 		{
-			Name:   "authorized as admin + successfull collections save and old non-system collections deletion",
+			Name:   "authorized as admin + successful collections save and old non-system collections deletion",
 			Method: http.MethodPut,
 			Url:    "/api/collections/import",
 			Body: strings.NewReader(`{
