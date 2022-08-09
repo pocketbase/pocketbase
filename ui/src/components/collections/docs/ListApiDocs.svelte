@@ -98,7 +98,7 @@
 
         // fetch a paginated records list
         const resultList = await client.records.getList('${collection?.name}', 1, 50, {
-            filter: 'created >= '2022-01-01 00:00:00'',
+            filter: 'created >= "2022-01-01 00:00:00"',
         });
 
         // alternatively you can also fetch all records at once via getFullList:
