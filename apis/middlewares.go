@@ -204,6 +204,23 @@ func LoadCollectionContext(app core.App) echo.MiddlewareFunc {
 	}
 }
 
+
+// Retrive IP address for requests behind cloudflare
+// nginx, and other reverse proxies
+func ReadUserIP(r *http.Request) string {
+	 IPAddress := r.Header.Get("CF-Connecting-IP")
+	 if IPAddress == "" {
+		  IPAddress := r.Header.Get("X-Real-Ip")
+	 }
+	 if IPAddress == "" {
+		  IPAddress = r.Header.Get("X-Forwarded-For")
+	 }
+	 if IPAddress == "" {
+		  IPAddress = r.RemoteAddr
+	 }
+	 return IPAddress
+}
+
 // ActivityLogger middleware takes care to save the request information
 // into the logs database.
 //
@@ -252,7 +269,7 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 				Method:    strings.ToLower(httpRequest.Method),
 				Status:    status,
 				Auth:      requestAuth,
-				Ip:        httpRequest.RemoteAddr,
+				Ip:        ReadUserIP(httpRequest),
 				Referer:   httpRequest.Referer(),
 				UserAgent: httpRequest.UserAgent(),
 				Meta:      meta,
