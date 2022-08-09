@@ -147,40 +147,6 @@ func (dao *Dao) IsRecordValueUnique(
 	return err == nil && !exists
 }
 
-// IsRecordValueUnique checks if the provided key-value pair is a unique Record value.
-//
-// NB! Array values (eg. from multiple select fields) are matched
-// as a serialized json strings (eg. `["a","b"]`), so the value uniqueness
-// depends on the elements order. Or in other words the following values
-// are considered different: `[]string{"a","b"}` and `[]string{"b","a"}`
-func (dao *Dao) IsRecordUnique(
-	collection *models.Collection,
-	key string,
-	value any,
-	excludeId string,
-) bool {
-	var exists bool
-
-	var normalizedVal any
-	switch val := value.(type) {
-	case []string:
-		normalizedVal = append(types.JsonArray{}, list.ToInterfaceSlice(val)...)
-	case []any:
-		normalizedVal = append(types.JsonArray{}, val...)
-	default:
-		normalizedVal = val
-	}
-
-	err := dao.RecordQuery(collection).
-		Select("count(*)").
-		AndWhere(dbx.Not(dbx.HashExp{"id": excludeId})).
-		AndWhere(dbx.HashExp{key: normalizedVal}).
-		Limit(1).
-		Row(&exists)
-
-	return err == nil && !exists
-}
-
 // FindUserRelatedRecords returns all records that has a reference
 // to the provided User model (via the user shema field).
 func (dao *Dao) FindUserRelatedRecords(user *models.User) ([]*models.Record, error) {
