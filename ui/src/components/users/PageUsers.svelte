@@ -5,6 +5,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { pageTitle } from "@/stores/app";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
@@ -103,13 +104,13 @@
     }
 </script>
 
-{#if isLoadingProfileCollection}
-    <div class="placeholder-section m-b-base">
-        <span class="loader loader-lg" />
-        <h1>Loading users...</h1>
-    </div>
-{:else}
-    <main class="page-wrapper">
+<PageWrapper>
+    {#if isLoadingProfileCollection}
+        <div class="placeholder-section m-b-base">
+            <span class="loader loader-lg" />
+            <h1>Loading users...</h1>
+        </div>
+    {:else}
         <header class="page-header">
             <nav class="breadcrumbs">
                 <div class="breadcrumb-item">{$pageTitle}</div>
@@ -283,8 +284,8 @@
                 </button>
             </div>
         {/if}
-    </main>
-{/if}
+    {/if}
+</PageWrapper>
 
 <UserUpsertPanel bind:this={userUpsertPanel} on:save={() => loadUsers()} on:delete={() => loadUsers()} />
 

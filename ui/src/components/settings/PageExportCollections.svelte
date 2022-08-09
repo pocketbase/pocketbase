@@ -3,6 +3,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
     import { addInfoToast } from "@/stores/toasts";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
 
@@ -43,13 +44,13 @@
 
     function copy() {
         CommonHelper.copyToClipboard(schema);
-        addInfoToast("The collections list was copied to your clipboard!", 3000);
+        addInfoToast("The configuration was copied to your clipboard!", 3000);
     }
 </script>
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
@@ -106,7 +107,7 @@
             {/if}
         </div>
     </div>
-</main>
+</PageWrapper>
 
 <style>
     .export-preview {

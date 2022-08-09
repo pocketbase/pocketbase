@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
     import { admin as loggedAdmin } from "@/stores/admin";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
@@ -35,10 +36,11 @@
 
         admins = []; // reset
 
-        return ApiClient.admins.getFullList(100, {
-            sort: sort || "-created",
-            filter: filter,
-        })
+        return ApiClient.admins
+            .getFullList(100, {
+                sort: sort || "-created",
+                filter: filter,
+            })
             .then((result) => {
                 admins = result;
                 isLoading = false;
@@ -60,7 +62,7 @@
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
@@ -197,6 +199,6 @@
     {#if admins.length}
         <small class="block txt-hint txt-right m-t-sm">Showing {admins.length} of {admins.length}</small>
     {/if}
-</main>
+</PageWrapper>
 
 <AdminUpsertPanel bind:this={adminUpsertPanel} on:save={() => loadAdmins()} on:delete={() => loadAdmins()} />

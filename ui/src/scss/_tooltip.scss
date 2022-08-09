@@ -19,18 +19,30 @@
     transition: opacity var(--baseAnimationSpeed),
                 visibility var(--baseAnimationSpeed),
                 transform var(--baseAnimationSpeed);
-    transform: scale(0.94);
+    transform: translateY(2px);
     white-space: pre-line;
     @include hide();
-    &.active {
-        transform: scale(1);
-        @include show();
+
+    // positions
+    &.left {
+        transform: translateX(2px);
     }
+    &.right  {
+        transform: translateX(-2px);
+    }
+
+    // styles
     &.code {
         font-family: monospace;
         white-space: pre-wrap;
         text-align: left;
         min-width: 150px;
         max-width: 340px;
+    }
+
+    // states
+    &.active {
+        transform: scale(1);
+        @include show();
     }
 }

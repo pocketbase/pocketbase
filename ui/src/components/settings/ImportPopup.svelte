@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import { addSuccessToast } from "@/stores/toasts";
+    import { confirm } from "@/stores/confirmation";
 
     const dispatch = createEventDispatcher();
 
@@ -16,6 +17,10 @@
     $: if (Array.isArray(oldCollections) && Array.isArray(newCollections)) {
         loadChanges();
     }
+
+    $: deletedCollections = oldCollections.filter((old) => {
+        return !CommonHelper.findByKey(newCollections, "id", old.id)?.id;
+    });
 
     export function show(a, b) {
         oldCollections = a;
@@ -103,7 +108,24 @@
         return diffsToHtml(diffs, ops);
     }
 
-    async function submitImport() {
+    function submitWithConfirm() {
+        if (deletedCollections.length) {
+            const deletedNames = deletedCollections.map((c) => c.name);
+
+            confirm(
+                `Do you really want to delete the following collections and their related records data:\n- ${deletedNames.join(
+                    "\n- "
+                )}?`,
+                () => {
+                    submit();
+                }
+            );
+        } else {
+            submit();
+        }
+    }
+
+    async function submit() {
         if (isImporting) {
             return;
         }
@@ -111,7 +133,7 @@
         isImporting = true;
 
         try {
-            await ApiClient.collections.import(newCollections);
+            await ApiClient.collections.import(newCollections, true);
             addSuccessToast("Successfully imported the collections configuration.");
             dispatch("submit");
         } catch (err) {
@@ -180,7 +202,7 @@
             class="btn btn-expanded"
             class:btn-loading={isImporting}
             disabled={isImporting}
-            on:click={() => submitImport()}
+            on:click={() => submitWithConfirm()}
         >
             <span class="txt">Confirm and import</span>
         </button>

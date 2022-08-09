@@ -5,6 +5,7 @@
     import { pageTitle } from "@/stores/app";
     import { addErrorToast } from "@/stores/toasts";
     import { setErrors } from "@/stores/errors";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import ImportPopup from "@/components/settings/ImportPopup.svelte";
@@ -150,7 +151,7 @@
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
@@ -163,19 +164,19 @@
             {#if isLoadingOldCollections}
                 <div class="loader" />
             {:else}
-                <div class="content txt-xl m-b-base">
-                    <input
-                        bind:this={fileInput}
-                        type="file"
-                        class="hidden"
-                        accept=".json"
-                        on:change={() => {
-                            if (fileInput.files.length) {
-                                loadFile(fileInput.files[0]);
-                            }
-                        }}
-                    />
+                <input
+                    bind:this={fileInput}
+                    type="file"
+                    class="hidden"
+                    accept=".json"
+                    on:change={() => {
+                        if (fileInput.files.length) {
+                            loadFile(fileInput.files[0]);
+                        }
+                    }}
+                />
 
+                <div class="content txt-xl m-b-base">
                     <p>
                         Paste below the collections configuration you want to import or
                         <button
@@ -283,7 +284,7 @@
             {/if}
         </div>
     </div>
-</main>
+</PageWrapper>
 
 <ImportPopup bind:this={importPopup} on:submit={() => clear()} />
 

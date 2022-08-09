@@ -1,6 +1,7 @@
 <script>
     import { pageTitle } from "@/stores/app";
     import Field from "@/components/base/Field.svelte";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import LogsList from "@/components/logs/LogsList.svelte";
@@ -27,7 +28,7 @@
     }
 </script>
 
-<main class="page-wrapper">
+<PageWrapper>
     <div class="page-header-wrapper m-b-0">
         <header class="page-header">
             <nav class="breadcrumbs">
@@ -63,6 +64,6 @@
     {#key refreshToken}
         <LogsList bind:filter {presets} on:select={(e) => logPanel?.show(e?.detail)} />
     {/key}
-</main>
+</PageWrapper>
 
 <LogViewPanel bind:this={logPanel} />

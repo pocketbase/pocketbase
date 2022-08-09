@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
@@ -67,7 +68,7 @@
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
@@ -240,4 +241,4 @@
             {/if}
         </form>
     </div>
-</main>
+</PageWrapper>

@@ -8,6 +8,7 @@
     } from "@/stores/collections";
     import tooltip from "@/actions/tooltip";
     import { pageTitle } from "@/stores/app";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
@@ -55,29 +56,33 @@
 </script>
 
 {#if $isCollectionsLoading}
-    <div class="placeholder-section m-b-base">
-        <span class="loader loader-lg" />
-        <h1>Loading collections...</h1>
-    </div>
-{:else if !viewableCollections.length}
-    <div class="placeholder-section m-b-base">
-        <div class="icon">
-            <i class="ri-database-2-line" />
+    <PageWrapper center>
+        <div class="placeholder-section m-b-base">
+            <span class="loader loader-lg" />
+            <h1>Loading collections...</h1>
         </div>
-        <h1 class="m-b-10">Create your first collection to add records!</h1>
-        <button
-            type="button"
-            class="btn btn-expanded-lg btn-lg"
-            on:click={() => collectionUpsertPanel?.show()}
-        >
-            <i class="ri-add-line" />
-            <span class="txt">Create new collection</span>
-        </button>
-    </div>
+    </PageWrapper>
+{:else if !viewableCollections.length}
+    <PageWrapper center>
+        <div class="placeholder-section m-b-base">
+            <div class="icon">
+                <i class="ri-database-2-line" />
+            </div>
+            <h1 class="m-b-10">Create your first collection to add records!</h1>
+            <button
+                type="button"
+                class="btn btn-expanded-lg btn-lg"
+                on:click={() => collectionUpsertPanel?.show()}
+            >
+                <i class="ri-add-line" />
+                <span class="txt">Create new collection</span>
+            </button>
+        </div>
+    </PageWrapper>
 {:else}
     <CollectionsSidebar />
 
-    <main class="page-wrapper">
+    <PageWrapper>
         <header class="page-header">
             <nav class="breadcrumbs">
                 <div class="breadcrumb-item">Collections</div>
@@ -127,7 +132,7 @@
             bind:sort
             on:select={(e) => recordPanel?.show(e?.detail)}
         />
-    </main>
+    </PageWrapper>
 {/if}
 
 <CollectionUpsertPanel bind:this={collectionUpsertPanel} />

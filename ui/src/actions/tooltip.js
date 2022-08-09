@@ -61,6 +61,9 @@ function refreshTooltip(node, data) {
     if (data.class) {
         tooltip.classList.add(data.class);
     }
+    if (data.position) {
+        tooltip.classList.add(data.position);
+    }
 
     // reset tooltip position
     tooltip.style.top = "0px";

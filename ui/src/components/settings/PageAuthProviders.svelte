@@ -4,6 +4,7 @@
     import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import EmailAuthAccordion from "@/components/settings/EmailAuthAccordion.svelte";
     import AuthProviderAccordion from "@/components/settings/AuthProviderAccordion.svelte";
@@ -73,7 +74,7 @@
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
@@ -140,4 +141,4 @@
             {/if}
         </form>
     </div>
-</main>
+</PageWrapper>

@@ -5,10 +5,11 @@
     import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
+    import tooltip from "@/actions/tooltip";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
-    import tooltip from "@/actions/tooltip";
 
     $pageTitle = "Files storage";
 
@@ -63,7 +64,7 @@
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
@@ -191,4 +192,4 @@
             {/if}
         </form>
     </div>
-</main>
+</PageWrapper>
