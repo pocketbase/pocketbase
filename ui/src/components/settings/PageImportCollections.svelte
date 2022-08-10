@@ -275,7 +275,7 @@
                 </Field>
 
                 {#if false}
-                    <!-- for now hide the delete control and enable/remove based on users feedback -->
+                    <!-- for now hide the delete control and eventually enable/remove based on the users feedback -->
                     <Field class="form-field form-field-toggle" let:uniqueId>
                         <input
                             type="checkbox"

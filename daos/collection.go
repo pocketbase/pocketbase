@@ -162,12 +162,12 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 	})
 }
 
-// ImportCollections imports the provided collections list in a single transaction.
+// ImportCollections imports the provided collections list within a single transaction.
 //
-// If deleteMissing is set, all existing collections that are not present in the
-// imported configuration will be deleted (including their related records table).
+// NB1! If deleteMissing is set, all local collections and schema fields, that are not present
+// in the imported configuration, WILL BE DELETED (including their related records data).
 //
-// NB! This method doesn't perform validations on the imported collections data!
+// NB2! This method doesn't perform validations on the imported collections data!
 // If you need validations, use [forms.CollectionsImport].
 func (dao *Dao) ImportCollections(
 	importedCollections []*models.Collection,

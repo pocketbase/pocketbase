@@ -211,6 +211,8 @@ func init() {
 
 		return daos.New(db).ImportCollections(collections, true, nil)
 	}, func(db dbx.Builder) error {
+		// no revert since the configuration on the environment, on which
+		// the migration was executed, could have changed via the UI/API
 		return nil
 	})
 }
