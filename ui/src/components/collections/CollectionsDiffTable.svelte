@@ -5,14 +5,25 @@
     export let collectionA = new Collection();
     export let collectionB = new Collection();
     export let deleteMissing = false;
+    let schemaA = [];
+    let schemaB = [];
+    let removedFields = [];
+    let sharedFields = [];
+    let addedFields = [];
 
     $: isDeleteDiff = !collectionB?.id && !collectionB?.name;
 
     $: isCreateDiff = !isDeleteDiff && !collectionA?.id;
 
-    $: schemaA = Array.isArray(collectionA?.schema) ? collectionA?.schema : [];
+    $: schemaA = Array.isArray(collectionA?.schema) ? collectionA?.schema.concat() : [];
 
-    $: schemaB = Array.isArray(collectionB?.schema) ? collectionB?.schema : [];
+    $: if (
+        typeof collectionA?.schema !== "undefined" ||
+        typeof collectionB?.schema !== "undefined" ||
+        typeof deleteMissing !== "undefined"
+    ) {
+        setSchemaB();
+    }
 
     $: removedFields = schemaA.filter((fieldA) => {
         return !schemaB.find((fieldB) => fieldA.id == fieldB.id);
@@ -26,20 +37,21 @@
         return !schemaA.find((fieldA) => fieldA.id == fieldB.id);
     });
 
-    $: if (typeof deleteMissing !== "undefined") {
-        normalizeSchemaB();
-    }
-
-    $: hasAnyChange = detectChanges(collectionA, collectionB);
+    $: hasAnyChange = CommonHelper.hasCollectionChanges(collectionA, collectionB, deleteMissing);
 
     const mainModelProps = Object.keys(new Collection().export()).filter(
         (key) => !["schema", "created", "updated"].includes(key)
     );
 
-    function normalizeSchemaB() {
-        schemaB = Array.isArray(collectionB?.schema) ? collectionB?.schema : [];
+    function setSchemaB() {
+        schemaB = Array.isArray(collectionB?.schema) ? collectionB?.schema.concat() : [];
+
         if (!deleteMissing) {
-            schemaB = schemaB.concat(removedFields);
+            schemaB = schemaB.concat(
+                schemaA.filter((fieldA) => {
+                    return !schemaB.find((fieldB) => fieldA.id == fieldB.id);
+                })
+            );
         }
     }
 
@@ -54,29 +66,6 @@
         return null;
     }
 
-    function detectChanges() {
-        // added or removed fields
-        if (addedFields?.length || (deleteMissing && removedFields?.length)) {
-            return true;
-        }
-
-        // changes in the main model props
-        for (let prop of mainModelProps) {
-            if (hasChanges(collectionA?.[prop], collectionB?.[prop])) {
-                return true;
-            }
-        }
-
-        // changes in the schema fields
-        for (let field of sharedFields) {
-            if (hasChanges(field, CommonHelper.findByKey(schemaA, "id", field.id))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     function hasChanges(valA, valB) {
         // direct match
         if (valA === valB) {
@@ -88,7 +77,7 @@
 
     function displayValue(value) {
         if (typeof value === "undefined") {
-            return "N/A";
+            return "";
         }
 
         return CommonHelper.isObject(value) ? JSON.stringify(value, null, 4) : value;
@@ -97,21 +86,21 @@
 
 <div class="section-title">
     {#if !collectionA?.id}
-        <strong>{collectionB?.name}</strong>
         <span class="label label-success">Added</span>
+        <strong>{collectionB?.name}</strong>
     {:else if !collectionB?.id}
+        <span class="label label-danger">Deleted</span>
         <strong>{collectionA?.name}</strong>
-        <span class="label label-danger">Removed</span>
     {:else}
         <div class="inline-flex fleg-gap-5">
+            {#if hasAnyChange}
+                <span class="label label-warning">Changed</span>
+            {/if}
             {#if collectionA.name !== collectionB.name}
                 <strong class="txt-strikethrough txt-hint">{collectionA.name}</strong>
                 <i class="ri-arrow-right-line txt-sm" />
             {/if}
             <strong class="txt">{collectionB.name}</strong>
-            {#if hasAnyChange}
-                <span class="label label-warning">Changed</span>
-            {/if}
         </div>
     {/if}
 </div>
@@ -152,9 +141,9 @@
             {#each removedFields as field}
                 <tr>
                     <th class="min-width" colspan="3">
-                        <span class="txt">schema.{field.name}</span>
+                        <span class="txt">field: {field.name}</span>
                         <span class="label label-danger m-l-5">
-                            Removed - <small>
+                            Deleted - <small>
                                 All stored data related to <strong>{field.name}</strong> will be deleted!
                             </small>
                         </span>
@@ -176,7 +165,7 @@
         {#each sharedFields as field}
             <tr>
                 <th class="min-width" colspan="3">
-                    <span class="txt">schema.{field.name}</span>
+                    <span class="txt">field: {field.name}</span>
                     {#if hasChanges(getFieldById(schemaA, field.id), getFieldById(schemaB, field.id))}
                         <span class="label label-warning m-l-5">Changed</span>
                     {/if}
@@ -199,7 +188,7 @@
         {#each addedFields as field}
             <tr>
                 <th class="min-width" colspan="3">
-                    <span class="txt">schema.{field.name}</span>
+                    <span class="txt">field: {field.name}</span>
                     <span class="label label-success m-l-5">Added</span>
                 </th>
             </tr>

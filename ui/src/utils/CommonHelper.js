@@ -874,4 +874,70 @@ export default class CommonHelper {
                 return 'String';
         }
     }
+
+    /**
+     * Returns an API url address extract from the current running instance.
+     *
+     * @param  {String} fallback Fallback url that will be used if the extractions fail.
+     * @return {String}
+     */
+    static getApiExampleUrl(fallback) {
+        let url = window.location.href.substring(0, window.location.href.indexOf("/_")) || fallback || '/';
+
+        // for broader compatibility replace localhost with 127.0.0.1
+        // (see https://github.com/pocketbase/js-sdk/issues/21)
+        return url.replace('//localhost', '//127.0.0.1');
+    }
+
+    /**
+     * Checks if the provided 2 collections has any change (ignoring root schema fields order).
+     *
+     * @param  {Collection} oldCollection
+     * @param  {Collection} newCollection
+     * @param  {Boolean}    withDeleteMissing Skip missing schema fields from the newCollection.
+     * @return {Boolean}
+     */
+    static hasCollectionChanges(oldCollection, newCollection, withDeleteMissing = false) {
+        oldCollection = oldCollection || {};
+        newCollection = newCollection || {};
+
+        if (oldCollection.id != newCollection.id) {
+            return true;
+        }
+
+        for (let prop in oldCollection) {
+            if (prop !== 'schema' && JSON.stringify(oldCollection[prop]) !== JSON.stringify(newCollection[prop])) {
+                return true;
+            }
+        }
+
+        const oldSchema = Array.isArray(oldCollection.schema) ? oldCollection.schema : [];
+        const newSchema = Array.isArray(newCollection.schema) ? newCollection.schema : [];
+        const removedFields = oldSchema.filter((oldField) => {
+            return oldField?.id && !CommonHelper.findByKey(newSchema, "id", oldField.id);
+        });
+        const addedFields = newSchema.filter((newField) => {
+            return newField?.id && !CommonHelper.findByKey(oldSchema, "id", newField.id);
+        });
+        const changedFields = newSchema.filter((newField) => {
+            const oldField = CommonHelper.isObject(newField) && CommonHelper.findByKey(oldSchema, "id", newField.id);
+            if (!oldField) {
+                return false;
+            }
+
+            for (let prop in oldField) {
+                if (JSON.stringify(newField[prop]) != JSON.stringify(oldField[prop])) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        return !!(
+            addedFields.length ||
+            changedFields.length ||
+            (withDeleteMissing && removedFields.length)
+        );
+    }
 }

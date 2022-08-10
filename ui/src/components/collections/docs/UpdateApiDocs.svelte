@@ -12,8 +12,7 @@
 
     $: adminsOnly = collection?.updateRule === null;
 
-    $: backendAbsUrl =
-        window.location.href.substring(0, window.location.href.indexOf("/_")) || ApiClient.baseUrl;
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
 
     $: responses = [
         {

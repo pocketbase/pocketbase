@@ -19,8 +19,8 @@
     let isLoadingFile = false;
     let newCollections = [];
     let oldCollections = [];
-    let deleteMissing = false;
-    let collectionsToChange = [];
+    let deleteMissing = true;
+    let collectionsToUpdate = [];
     let isLoadingOldCollections = false;
 
     $: if (typeof schemas !== "undefined") {
@@ -33,19 +33,19 @@
         newCollections.length === newCollections.filter((item) => !!item.id && !!item.name).length;
 
     $: collectionsToDelete = oldCollections.filter((collection) => {
-        return isValid && !CommonHelper.findByKey(newCollections, "id", collection.id);
+        return isValid && deleteMissing && !CommonHelper.findByKey(newCollections, "id", collection.id);
     });
 
     $: collectionsToAdd = newCollections.filter((collection) => {
         return isValid && !CommonHelper.findByKey(oldCollections, "id", collection.id);
     });
 
-    $: if (typeof newCollections !== "undefined") {
-        loadCollectionsToModify();
+    $: if (typeof newCollections !== "undefined" || typeof deleteMissing !== "undefined") {
+        loadCollectionsToUpdate();
     }
 
     $: hasChanges =
-        !!schemas && (collectionsToDelete.length || collectionsToAdd.length || collectionsToChange.length);
+        !!schemas && (collectionsToDelete.length || collectionsToAdd.length || collectionsToUpdate.length);
 
     $: canImport = !isLoadingOldCollections && isValid && hasChanges;
 
@@ -62,8 +62,13 @@
         const oldSchema = Array.isArray(old.schema) ? old.schema : [];
         const newSchema = Array.isArray(collection.schema) ? collection.schema : [];
         for (const field of newSchema) {
-            const oldField = CommonHelper.findByKey(oldSchema, "name", field.name);
-            if (oldField && field.id != oldField.id) {
+            const oldFieldById = CommonHelper.findByKey(oldSchema, "id", field.id);
+            if (oldFieldById) {
+                continue;
+            }
+
+            const oldFieldByName = CommonHelper.findByKey(oldSchema, "name", field.name);
+            if (oldFieldByName && field.id != oldFieldByName.id) {
                 return true;
             }
         }
@@ -90,8 +95,8 @@
         isLoadingOldCollections = false;
     }
 
-    function loadCollectionsToModify() {
-        collectionsToChange = [];
+    function loadCollectionsToUpdate() {
+        collectionsToUpdate = [];
 
         if (!isValid) {
             return;
@@ -103,12 +108,12 @@
                 // no old collection
                 !oldCollection?.id ||
                 // no changes
-                JSON.stringify(oldCollection) === JSON.stringify(newCollection)
+                !CommonHelper.hasCollectionChanges(oldCollection, newCollection, deleteMissing)
             ) {
                 continue;
             }
 
-            collectionsToChange.push({
+            collectionsToUpdate.push({
                 new: newCollection,
                 old: oldCollection,
             });
@@ -194,7 +199,7 @@
         };
 
         reader.onerror = (err) => {
-            console.log(err);
+            console.warn(err);
             addErrorToast("Failed to load the imported JSON.");
 
             isLoadingFile = false;
@@ -269,13 +274,18 @@
                     {/if}
                 </Field>
 
-                <Field class="form-field form-field-toggle" let:uniqueId>
-                    <input type="checkbox" id={uniqueId} bind:checked={deleteMissing} disabled={!isValid} />
-                    <label for={uniqueId}>
-                        Delete all collections and fields that are not present in the above imported
-                        configuration
-                    </label>
-                </Field>
+                {#if false}
+                    <!-- for now hide the delete control and enable/remove based on users feedback -->
+                    <Field class="form-field form-field-toggle" let:uniqueId>
+                        <input
+                            type="checkbox"
+                            id={uniqueId}
+                            bind:checked={deleteMissing}
+                            disabled={!isValid}
+                        />
+                        <label for={uniqueId}>Delete missing collections and schema fields</label>
+                    </Field>
+                {/if}
 
                 {#if isValid && newCollections.length && !hasChanges}
                     <div class="alert alert-info">
@@ -304,8 +314,8 @@
                             {/each}
                         {/if}
 
-                        {#if collectionsToChange.length}
-                            {#each collectionsToChange as pair (pair.old.id + pair.new.id)}
+                        {#if collectionsToUpdate.length}
+                            {#each collectionsToUpdate as pair (pair.old.id + pair.new.id)}
                                 <div class="list-item">
                                     <span class="label label-warning list-label">Changed</span>
                                     <strong>
@@ -336,13 +346,15 @@
                 {/if}
 
                 {#if idReplacableCollections.length}
-                    <div class="alert alert-warning">
+                    <div class="alert alert-warning m-t-base">
                         <div class="icon">
                             <i class="ri-error-warning-line" />
                         </div>
                         <div class="content">
                             <string>
-                                Some of the imported collections shares the same name but has different IDs.
+                                Some of the imported collections shares the same name and/or fields but are
+                                imported with different IDs. You can replace them in the import if you want
+                                to.
                             </string>
                         </div>
                         <button
@@ -350,7 +362,7 @@
                             class="btn btn-warning btn-sm btn-outline"
                             on:click={() => replaceIds()}
                         >
-                            <span class="txt">Replace and keep old ids</span>
+                            <span class="txt">Replace with original ids</span>
                         </button>
                     </div>
                 {/if}

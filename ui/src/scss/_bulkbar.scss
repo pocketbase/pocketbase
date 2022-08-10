@@ -1,6 +1,6 @@
 .bulkbar {
     position: sticky;
-    bottom: -10px;
+    bottom: var(--baseSpacing);
     z-index: 101;
     gap: 10px;
     display: flex;

@@ -7,8 +7,7 @@
 
     export let collection = new Collection();
 
-    $: backendAbsUrl =
-        window.location.href.substring(0, window.location.href.indexOf("/_")) || ApiClient.baseUrl;
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
 </script>
 
 <div class="alert">

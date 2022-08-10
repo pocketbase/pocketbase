@@ -35,13 +35,19 @@
     function loadPairs() {
         pairs = [];
 
-        // add deleted and modified collections
+        // add modified and deleted (if deleteMissing is set)
         for (const oldCollection of oldCollections) {
             const newCollection = CommonHelper.findByKey(newCollections, "id", oldCollection.id) || null;
-            pairs.push({
-                old: oldCollection,
-                new: newCollection,
-            });
+            if (
+                (deleteMissing && !newCollection?.id) ||
+                (newCollection?.id &&
+                    CommonHelper.hasCollectionChanges(oldCollection, newCollection, deleteMissing))
+            ) {
+                pairs.push({
+                    old: oldCollection,
+                    new: newCollection,
+                });
+            }
         }
 
         // add only new collections
@@ -61,7 +67,7 @@
         const deletedFieldNames = [];
         if (deleteMissing) {
             for (const old of oldCollections) {
-                const imported = !CommonHelper.findByKey(newCollections, "id", old.id);
+                const imported = CommonHelper.findByKey(newCollections, "id", old.id);
                 if (!imported) {
                     // add all fields
                     deletedFieldNames.push(old.name + ".*");
@@ -70,7 +76,7 @@
                     const schema = Array.isArray(old.schema) ? old.schema : [];
                     for (const field of schema) {
                         if (!CommonHelper.findByKey(imported.schema, "id", field.id)) {
-                            deletedFieldNames.push(old.name + "." + field.name);
+                            deletedFieldNames.push(`${old.name}.${field.name} (${field.id})`);
                         }
                     }
                 }
