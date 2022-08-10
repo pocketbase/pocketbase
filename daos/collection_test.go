@@ -262,6 +262,7 @@ func TestImportCollections(t *testing.T) {
 		beforeRecordsSync      func(txDao *daos.Dao, mappedImported, mappedExisting map[string]*models.Collection) error
 		expectError            bool
 		expectCollectionsCount int
+		afterTestFunc          func(testApp *tests.TestApp, resultCollections []*models.Collection)
 	}{
 		{
 			name:                   "empty collections",
@@ -422,6 +423,111 @@ func TestImportCollections(t *testing.T) {
 			expectError:            false,
 			expectCollectionsCount: 3,
 		},
+		{
+			name: "test with deleteMissing: false",
+			jsonData: `[
+				{
+					"id":"abe78266-fd4d-4aea-962d-8c0138ac522b",
+					"name":"profiles",
+					"system":true,
+					"listRule":"userId = @request.user.id",
+					"viewRule":"created > 'test_change'",
+					"createRule":"userId = @request.user.id",
+					"updateRule":"userId = @request.user.id",
+					"deleteRule":"userId = @request.user.id",
+					"schema":[
+						{
+							"id":"69ycbg3q",
+							"name":"rel",
+							"type":"relation",
+							"system":false,
+							"required":false,
+							"unique":false,
+							"options":{
+								"maxSelect":2,
+								"collectionId":"abe78266-fd4d-4aea-962d-8c0138ac522b",
+								"cascadeDelete":true
+							}
+						},
+						{
+							"id":"abcd_import",
+							"name":"new_field",
+							"type":"bool"
+						}
+					]
+				},
+				{
+					"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
+					"name":"demo",
+					"schema":[
+						{
+							"id":"_2hlxbmp",
+							"name":"title",
+							"type":"text",
+							"system":false,
+							"required":true,
+							"unique":false,
+							"options":{
+								"min":3,
+								"max":null,
+								"pattern":""
+							}
+						},
+						{
+							"id":"_2hlxbmp",
+							"name":"field_with_duplicate_id",
+							"type":"text",
+							"system":false,
+							"required":true,
+							"unique":false,
+							"options":{
+								"min":3,
+								"max":null,
+								"pattern":""
+							}
+						},
+						{
+							"id":"abcd_import",
+							"name":"new_field",
+							"type":"text"
+						}
+					]
+				},
+				{
+					"name": "new_import",
+					"schema": [
+						{
+							"id":"abcd_import",
+							"name":"active",
+							"type":"bool"
+						}
+					]
+				}
+			]`,
+			deleteMissing:          false,
+			expectError:            false,
+			expectCollectionsCount: 6,
+			afterTestFunc: func(testApp *tests.TestApp, resultCollections []*models.Collection) {
+				expectedCollectionFields := map[string]int{
+					"profiles":   6,
+					"demo":       3,
+					"demo2":      14,
+					"demo3":      1,
+					"demo4":      6,
+					"new_import": 1,
+				}
+				for name, expectedCount := range expectedCollectionFields {
+					collection, err := testApp.Dao().FindCollectionByNameOrId(name)
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					if totalFields := len(collection.Schema.Fields()); totalFields != expectedCount {
+						t.Errorf("Expected %d %q fields, got %d", expectedCount, collection.Name, totalFields)
+					}
+				}
+			},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -451,6 +557,10 @@ func TestImportCollections(t *testing.T) {
 		}
 		if len(collections) != scenario.expectCollectionsCount {
 			t.Errorf("[%s] Expected %d collections, got %d", scenario.name, scenario.expectCollectionsCount, len(collections))
+		}
+
+		if scenario.afterTestFunc != nil {
+			scenario.afterTestFunc(testApp, collections)
 		}
 	}
 }
