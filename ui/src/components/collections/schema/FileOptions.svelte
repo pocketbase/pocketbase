@@ -126,7 +126,7 @@
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
-                        text: "List of thumb sizes for image files. The thumbs will be generated lazily on first access.",
+                        text: "List of additional thumb sizes for image files, along with the default thumb size of 100x100. The thumbs will be generated lazily on first access.",
                         position: "top",
                     }}
                 />
