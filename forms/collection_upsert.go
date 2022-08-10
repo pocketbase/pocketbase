@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -115,6 +116,7 @@ func (form *CollectionUpsert) Validate() error {
 			&form.Schema,
 			validation.By(form.ensureNoSystemFieldsChange),
 			validation.By(form.ensureNoFieldsTypeChange),
+			validation.By(form.ensureExistingRelationCollectionId),
 		),
 		validation.Field(&form.ListRule, validation.By(form.checkRule)),
 		validation.Field(&form.ViewRule, validation.By(form.checkRule)),
@@ -161,11 +163,38 @@ func (form *CollectionUpsert) ensureNoSystemFlagChange(value any) error {
 func (form *CollectionUpsert) ensureNoFieldsTypeChange(value any) error {
 	v, _ := value.(schema.Schema)
 
-	for _, field := range v.Fields() {
+	for i, field := range v.Fields() {
 		oldField := form.collection.Schema.GetFieldById(field.Id)
 
 		if oldField != nil && oldField.Type != field.Type {
-			return validation.NewError("validation_field_type_change", "Field type cannot be changed.")
+			return validation.Errors{fmt.Sprint(i): validation.NewError(
+				"validation_field_type_change",
+				"Field type cannot be changed.",
+			)}
+		}
+	}
+
+	return nil
+}
+
+func (form *CollectionUpsert) ensureExistingRelationCollectionId(value any) error {
+	v, _ := value.(schema.Schema)
+
+	for i, field := range v.Fields() {
+		if field.Type != schema.FieldTypeRelation {
+			continue
+		}
+
+		options, _ := field.Options.(*schema.RelationOptions)
+		if options == nil {
+			continue
+		}
+
+		if _, err := form.config.TxDao.FindCollectionByNameOrId(options.CollectionId); err != nil {
+			return validation.Errors{fmt.Sprint(i): validation.NewError(
+				"validation_field_invalid_relation",
+				"The relation collection doesn't exist.",
+			)}
 		}
 	}
 

@@ -496,6 +496,9 @@ select {
         line-height: var(--smLineHeight);
         color: var(--txtHintColor);
         word-break: break-word;
+        pre {
+            white-space: pre-wrap;
+        }
     }
     .help-block-error {
         color: var(--dangerColor);

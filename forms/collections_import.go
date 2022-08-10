@@ -139,11 +139,11 @@ func (form *CollectionsImport) beforeRecordsSync(txDao *daos.Dao, mappedNew, map
 
 		if err := upsertForm.Validate(); err != nil {
 			// serialize the validation error(s)
-			serializedErr, _ := json.Marshal(err)
+			serializedErr, _ := json.MarshalIndent(err, "", "  ")
 
 			return validation.Errors{"collections": validation.NewError(
 				"collections_import_validate_failure",
-				fmt.Sprintf("Data validations failed for collection %q (%s): %s", collection.Name, collection.Id, serializedErr),
+				fmt.Sprintf("Data validations failed for collection %q (%s):\n%s", collection.Name, collection.Id, serializedErr),
 			)}
 		}
 	}

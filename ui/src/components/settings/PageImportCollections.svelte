@@ -19,7 +19,8 @@
     let isLoadingFile = false;
     let newCollections = [];
     let oldCollections = [];
-    let collectionsToModify = [];
+    let deleteMissing = false;
+    let collectionsToChange = [];
     let isLoadingOldCollections = false;
 
     $: if (typeof schemas !== "undefined") {
@@ -44,9 +45,31 @@
     }
 
     $: hasChanges =
-        !!schemas && (collectionsToDelete.length || collectionsToAdd.length || collectionsToModify.length);
+        !!schemas && (collectionsToDelete.length || collectionsToAdd.length || collectionsToChange.length);
 
     $: canImport = !isLoadingOldCollections && isValid && hasChanges;
+
+    $: idReplacableCollections = newCollections.filter((collection) => {
+        const old = CommonHelper.findByKey(oldCollections, "name", collection.name);
+        if (!old?.id) {
+            return false;
+        }
+
+        if (old.id != collection.id) {
+            return true;
+        }
+
+        const oldSchema = Array.isArray(old.schema) ? old.schema : [];
+        const newSchema = Array.isArray(collection.schema) ? collection.schema : [];
+        for (const field of newSchema) {
+            const oldField = CommonHelper.findByKey(oldSchema, "name", field.name);
+            if (oldField && field.id != oldField.id) {
+                return true;
+            }
+        }
+
+        return false;
+    });
 
     loadOldCollections();
 
@@ -68,7 +91,7 @@
     }
 
     function loadCollectionsToModify() {
-        collectionsToModify = [];
+        collectionsToChange = [];
 
         if (!isValid) {
             return;
@@ -85,7 +108,7 @@
                 continue;
             }
 
-            collectionsToModify.push({
+            collectionsToChange.push({
                 new: newCollection,
                 old: oldCollection,
             });
@@ -105,11 +128,50 @@
             newCollections = CommonHelper.filterDuplicatesByKey(newCollections);
         }
 
-        // delete timestamps
+        // normalizations
         for (let collection of newCollections) {
+            // delete timestamps
             delete collection.created;
             delete collection.updated;
+
+            // merge fields with duplicated ids
+            collection.schema = CommonHelper.filterDuplicatesByKey(collection.schema);
         }
+    }
+
+    function replaceIds() {
+        for (let collection of newCollections) {
+            const old = CommonHelper.findByKey(oldCollections, "name", collection.name);
+            if (!old?.id) {
+                continue;
+            }
+
+            const originalId = collection.id;
+            const replacedId = old.id;
+            collection.id = replacedId;
+
+            // replace field ids
+            const oldSchema = Array.isArray(old.schema) ? old.schema : [];
+            const newSchema = Array.isArray(collection.schema) ? collection.schema : [];
+            for (const field of newSchema) {
+                const oldField = CommonHelper.findByKey(oldSchema, "name", field.name);
+                field.id = oldField.id;
+            }
+
+            // update references
+            for (let ref of newCollections) {
+                if (!Array.isArray(ref.schema)) {
+                    continue;
+                }
+                for (let field of ref.schema) {
+                    if (field.options?.collectionId === originalId) {
+                        field.options.collectionId = replacedId;
+                    }
+                }
+            }
+        }
+
+        schemas = JSON.stringify(newCollections, null, 4);
     }
 
     function loadFile(file) {
@@ -207,6 +269,14 @@
                     {/if}
                 </Field>
 
+                <Field class="form-field form-field-toggle" let:uniqueId>
+                    <input type="checkbox" id={uniqueId} bind:checked={deleteMissing} disabled={!isValid} />
+                    <label for={uniqueId}>
+                        Delete all collections and fields that are not present in the above imported
+                        configuration
+                    </label>
+                </Field>
+
                 {#if isValid && newCollections.length && !hasChanges}
                     <div class="alert alert-info">
                         <div class="icon">
@@ -234,10 +304,10 @@
                             {/each}
                         {/if}
 
-                        {#if collectionsToModify.length}
-                            {#each collectionsToModify as pair (pair.old.id + pair.new.id)}
+                        {#if collectionsToChange.length}
+                            {#each collectionsToChange as pair (pair.old.id + pair.new.id)}
                                 <div class="list-item">
-                                    <span class="label label-warning list-label">Modified</span>
+                                    <span class="label label-warning list-label">Changed</span>
                                     <strong>
                                         {#if pair.old.name !== pair.new.name}
                                             <span class="txt-strikethrough txt-hint">{pair.old.name}</span> -
@@ -254,7 +324,7 @@
                         {#if collectionsToAdd.length}
                             {#each collectionsToAdd as collection (collection.id)}
                                 <div class="list-item">
-                                    <span class="label label-success list-label">New</span>
+                                    <span class="label label-success list-label">Added</span>
                                     <strong>{collection.name}</strong>
                                     {#if collection.id}
                                         <small class="txt-hint">({collection.id})</small>
@@ -262,6 +332,26 @@
                                 </div>
                             {/each}
                         {/if}
+                    </div>
+                {/if}
+
+                {#if idReplacableCollections.length}
+                    <div class="alert alert-warning">
+                        <div class="icon">
+                            <i class="ri-error-warning-line" />
+                        </div>
+                        <div class="content">
+                            <string>
+                                Some of the imported collections shares the same name but has different IDs.
+                            </string>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-warning btn-sm btn-outline"
+                            on:click={() => replaceIds()}
+                        >
+                            <span class="txt">Replace and keep old ids</span>
+                        </button>
                     </div>
                 {/if}
 
@@ -276,7 +366,7 @@
                         type="button"
                         class="btn btn-expanded btn-warning m-l-auto"
                         disabled={!canImport}
-                        on:click={() => importPopup?.show(oldCollections, newCollections)}
+                        on:click={() => importPopup?.show(oldCollections, newCollections, deleteMissing)}
                     >
                         <span class="txt">Review</span>
                     </button>

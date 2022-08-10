@@ -39,7 +39,7 @@
     {#each fieldErrors as error}
         <div class="help-block help-block-error">
             {#if typeof error === "object"}
-                {error?.message || error?.code || defaultError}
+                <pre>{error?.message || error?.code || defaultError}</pre>
             {:else}
                 {error || defaultError}
             {/if}

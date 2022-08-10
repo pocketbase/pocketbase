@@ -155,12 +155,18 @@
         }
     }
     .sidebar-title {
-        @extend %block;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        width: 100%;
         margin: var(--baseSpacing) 0 var(--xsSpacing);
         font-weight: 600;
         font-size: 1rem;
         line-height: var(--smLineHeight);
         color: var(--txtHintColor);
+        .label {
+            font-weight: normal;
+        }
     }
     .sidebar-list-item {
         cursor: pointer;

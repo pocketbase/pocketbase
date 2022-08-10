@@ -15,7 +15,7 @@
     let collections = [];
     let isLoadingCollections = false;
 
-    $: schema = JSON.stringify(collections, null, 2);
+    $: schema = JSON.stringify(collections, null, 4);
 
     loadCollections();
 

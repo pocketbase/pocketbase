@@ -110,6 +110,8 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static inArray(arr, value) {
+        arr = Array.isArray(arr) ? arr : [];
+
         for (let i = arr.length - 1; i >= 0; i--) {
             if (arr[i] == value) {
                 return true;
@@ -126,6 +128,8 @@ export default class CommonHelper {
      * @param {Mixed} value
      */
     static removeByValue(arr, value) {
+        arr = Array.isArray(arr) ? arr : [];
+
         for (let i = arr.length - 1; i >= 0; i--) {
             if (arr[i] == value) {
                 arr.splice(i, 1);
@@ -155,6 +159,8 @@ export default class CommonHelper {
      * @return {Object}
      */
     static findByKey(objectsArr, key, value) {
+        objectsArr = Array.isArray(objectsArr) ? objectsArr : [];
+
         for (let i in objectsArr) {
             if (objectsArr[i][key] == value) {
                 return objectsArr[i];
@@ -172,7 +178,9 @@ export default class CommonHelper {
      * @return {Object}
      */
     static groupByKey(objectsArr, key) {
-        let result = {};
+        objectsArr = Array.isArray(objectsArr) ? objectsArr : [];
+
+        const result = {};
 
         for (let i in objectsArr) {
             result[objectsArr[i][key]] = result[objectsArr[i][key]] || [];
@@ -226,7 +234,10 @@ export default class CommonHelper {
      * @return {Array}
      */
     static filterDuplicatesByKey(objectsArr, key = "id") {
+        objectsArr = Array.isArray(objectsArr) ? objectsArr : [];
+
         const uniqueMap = {};
+
         for (const item of objectsArr) {
             uniqueMap[item[key]] = item;
         }

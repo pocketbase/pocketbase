@@ -190,13 +190,22 @@ func (dao *Dao) ImportCollections(
 
 		mappedImported := make(map[string]*models.Collection, len(importedCollections))
 		for _, imported := range importedCollections {
-			// normalize
+			// normalize ids
 			if !imported.HasId() {
 				// generate id if not set
 				imported.MarkAsNew()
 				imported.RefreshId()
 			} else if _, ok := mappedExisting[imported.GetId()]; !ok {
 				imported.MarkAsNew()
+			}
+
+			// extend existing schema
+			if existing, ok := mappedExisting[imported.GetId()]; ok && !deleteMissing {
+				schema, _ := existing.Schema.Clone()
+				for _, f := range imported.Schema.Fields() {
+					schema.AddField(f) // add or replace
+				}
+				imported.Schema = *schema
 			}
 
 			mappedImported[imported.GetId()] = imported

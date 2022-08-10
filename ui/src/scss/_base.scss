@@ -443,6 +443,12 @@ a,
     background: var(--baseAlt2Color);
     color: var(--txtPrimaryColor);
     white-space: nowrap;
+    &.label-compact {
+        font-size: var(--xsFontSize);
+        padding: 3px 5px;
+        min-height: 18px;
+        line-height: 1;
+    }
     &.label-primary {
         color: var(--baseColor);
         background: var(--primaryColor);
@@ -508,6 +514,7 @@ a,
 
 .section-title {
     display: flex;
+    align-items: center;
     width: 100%;
     column-gap: 10px;
     row-gap: 5px;

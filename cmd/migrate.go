@@ -27,7 +27,7 @@ Supported arguments are:
 - up                   - runs all available migrations.
 - down [number]        - reverts the last [number] applied migrations.
 - create name [folder] - creates new migration template file.
-- collections [folder] - creates new migration file with the current collections configuration.
+- collections [folder] - (Experimental) creates new migration file with the most recent local collections configuration.
 `
 	var databaseFlag string
 
