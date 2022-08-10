@@ -96,6 +96,7 @@ func init() {
 			UpdateRule: &profileOwnerRule,
 			Schema: schema.NewSchema(
 				&schema.SchemaField{
+					Id:       "pbfielduser",
 					Name:     models.ProfileCollectionUserFieldName,
 					Type:     schema.FieldTypeUser,
 					Unique:   true,
@@ -107,11 +108,13 @@ func init() {
 					},
 				},
 				&schema.SchemaField{
+					Id:      "pbfieldname",
 					Name:    "name",
 					Type:    schema.FieldTypeText,
 					Options: &schema.TextOptions{},
 				},
 				&schema.SchemaField{
+					Id:   "pbfieldavatar",
 					Name: "avatar",
 					Type: schema.FieldTypeFile,
 					Options: &schema.FileOptions{
@@ -128,6 +131,8 @@ func init() {
 				},
 			),
 		}
+		collection.Id = "systemprofiles0"
+		collection.MarkAsNew()
 
 		return daos.New(db).SaveCollection(collection)
 	}, func(db dbx.Builder) error {
