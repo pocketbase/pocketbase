@@ -178,8 +178,14 @@ func (s *System) DeletePrefix(prefix string) []error {
 }
 
 var inlineServeContentTypes = []string{
-	"image/png", "image/jpg", "image/jpeg", "image/gif",
-	"video/mp4", "video/3gpp", "video/quicktime", "video/x-ms-wmv",
+	// image
+	"image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp", "image/x-icon", "image/bmp",
+	// video
+	"video/webm", "video/mp4", "video/3gpp", "video/quicktime", "video/x-ms-wmv",
+	// audio
+	"audio/basic", "audio/aiff", "audio/mpeg", "audio/midi", "audio/wave",
+	// document
+	"application/pdf",
 }
 
 // Serve serves the file at fileKey location to an HTTP response.
