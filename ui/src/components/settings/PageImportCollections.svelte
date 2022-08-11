@@ -165,7 +165,9 @@
             const newSchema = Array.isArray(collection.schema) ? collection.schema : [];
             for (const field of newSchema) {
                 const oldField = CommonHelper.findByKey(oldSchema, "name", field.name);
-                field.id = oldField.id;
+                if (oldField && oldField.id) {
+                    field.id = oldField.id;
+                }
             }
 
             // update references
@@ -174,7 +176,7 @@
                     continue;
                 }
                 for (let field of ref.schema) {
-                    if (field.options?.collectionId === originalId) {
+                    if (field.options?.collectionId && field.options?.collectionId === originalId) {
                         field.options.collectionId = replacedId;
                     }
                 }
