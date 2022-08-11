@@ -653,7 +653,13 @@ func TestRecordUpsertWithCustomId(t *testing.T) {
 			true,
 		},
 		{
-			"id = 15 chars",
+			"id = 15 chars (invalid chars)",
+			map[string]string{"id": "a@3456789012345"},
+			models.NewRecord(collection),
+			true,
+		},
+		{
+			"id = 15 chars (valid chars)",
 			map[string]string{"id": "a23456789012345"},
 			models.NewRecord(collection),
 			false,

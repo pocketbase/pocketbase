@@ -412,7 +412,13 @@ func TestAdminUpsertWithCustomId(t *testing.T) {
 			true,
 		},
 		{
-			"id = 15 chars",
+			"id = 15 chars (invalid chars)",
+			`{"id":"a@3456789012345"}`,
+			&models.Admin{},
+			true,
+		},
+		{
+			"id = 15 chars (valid chars)",
 			`{"id":"a23456789012345"}`,
 			&models.Admin{},
 			false,

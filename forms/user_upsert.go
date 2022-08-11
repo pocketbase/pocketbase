@@ -76,6 +76,7 @@ func (form *UserUpsert) Validate() error {
 			validation.When(
 				form.user.IsNew(),
 				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+				validation.Match(idRegex),
 			).Else(validation.In(form.user.Id)),
 		),
 		validation.Field(

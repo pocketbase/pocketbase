@@ -276,6 +276,7 @@ func (form *RecordUpsert) Validate() error {
 			validation.When(
 				form.record.IsNew(),
 				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+				validation.Match(idRegex),
 			).Else(validation.In(form.record.Id)),
 		),
 	)

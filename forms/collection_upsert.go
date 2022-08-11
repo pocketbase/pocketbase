@@ -97,6 +97,7 @@ func (form *CollectionUpsert) Validate() error {
 			validation.When(
 				form.collection.IsNew(),
 				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+				validation.Match(idRegex),
 			).Else(validation.In(form.collection.Id)),
 		),
 		validation.Field(
