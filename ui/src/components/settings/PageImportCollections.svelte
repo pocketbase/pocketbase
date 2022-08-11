@@ -50,21 +50,24 @@
     $: canImport = !isLoadingOldCollections && isValid && hasChanges;
 
     $: idReplacableCollections = newCollections.filter((collection) => {
-        const old = CommonHelper.findByKey(oldCollections, "name", collection.name);
-        if (!old?.id) {
-            return false;
+        let old = CommonHelper.findByKey(oldCollections, "name", collection.name) ||
+            CommonHelper.findByKey(oldCollections, "id", collection.id);
+
+        if (!old) {
+            return false; // new
         }
 
         if (old.id != collection.id) {
             return true;
         }
 
+        // check for matching schema fields
         const oldSchema = Array.isArray(old.schema) ? old.schema : [];
         const newSchema = Array.isArray(collection.schema) ? collection.schema : [];
         for (const field of newSchema) {
             const oldFieldById = CommonHelper.findByKey(oldSchema, "id", field.id);
             if (oldFieldById) {
-                continue;
+                continue; // no need to do any replacements
             }
 
             const oldFieldByName = CommonHelper.findByKey(oldSchema, "name", field.name);
@@ -146,8 +149,10 @@
 
     function replaceIds() {
         for (let collection of newCollections) {
-            const old = CommonHelper.findByKey(oldCollections, "name", collection.name);
-            if (!old?.id) {
+            const old = CommonHelper.findByKey(oldCollections, "name", collection.name) ||
+                CommonHelper.findByKey(oldCollections, "id", collection.id);
+
+            if (!old) {
                 continue;
             }
 
@@ -318,15 +323,18 @@
                             {#each collectionsToUpdate as pair (pair.old.id + pair.new.id)}
                                 <div class="list-item">
                                     <span class="label label-warning list-label">Changed</span>
-                                    <strong>
+                                    <div class="inline-flex flex-gap-5">
                                         {#if pair.old.name !== pair.new.name}
-                                            <span class="txt-strikethrough txt-hint">{pair.old.name}</span> -
+                                            <strong class="txt-strikethrough txt-hint">{pair.old.name}</strong>
+                                            <i class="ri-arrow-right-line txt-sm" />
                                         {/if}
-                                        {pair.new.name}
-                                    </strong>
-                                    {#if pair.new.id}
-                                        <small class="txt-hint">({pair.new.id})</small>
-                                    {/if}
+                                        <strong>
+                                            {pair.new.name}
+                                        </strong>
+                                        {#if pair.new.id}
+                                            <small class="txt-hint">({pair.new.id})</small>
+                                        {/if}
+                                    </div>
                                 </div>
                             {/each}
                         {/if}
