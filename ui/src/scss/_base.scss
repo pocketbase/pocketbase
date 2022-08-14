@@ -443,7 +443,7 @@ a,
     background: var(--baseAlt2Color);
     color: var(--txtPrimaryColor);
     white-space: nowrap;
-    &.label-compact {
+    &.label-sm {
         font-size: var(--xsFontSize);
         padding: 3px 5px;
         min-height: 18px;

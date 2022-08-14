@@ -2,9 +2,11 @@ package core_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/auth"
 )
@@ -172,7 +174,7 @@ func TestSettingsRedactClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","senderName":"Support","senderAddress":"support@example.com","userVerificationUrl":"%APP_URL%/_/#/users/confirm-verification/%TOKEN%","userResetPasswordUrl":"%APP_URL%/_/#/users/confirm-password-reset/%TOKEN%","userConfirmEmailChangeUrl":"%APP_URL%/_/#/users/confirm-email-change/%TOKEN%"},"logs":{"maxDays":7},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"userAuthToken":{"secret":"******","duration":1209600},"userPasswordResetToken":{"secret":"******","duration":1800},"userEmailChangeToken":{"secret":"******","duration":1800},"userVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":true,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":8},"googleAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"facebookAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"githubAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"}}`
+	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n    \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\n\u003cp\u003e\n    Thanks,\u003cbr/\u003e\n    {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/users/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n    \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n    Thanks,\u003cbr/\u003e\n    {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/users/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n    \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n    Thanks,\u003cbr/\u003e\n    {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/users/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":7},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"userAuthToken":{"secret":"******","duration":1209600},"userPasswordResetToken":{"secret":"******","duration":1800},"userEmailChangeToken":{"secret":"******","duration":1800},"userVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":true,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":8},"googleAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"facebookAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"githubAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected %v, got \n%v", expected, encodedStr)
@@ -355,6 +357,24 @@ func TestS3ConfigValidate(t *testing.T) {
 }
 
 func TestMetaConfigValidate(t *testing.T) {
+	invalidTemplate := core.EmailTemplate{
+		Subject:   "test",
+		ActionUrl: "test",
+		Body:      "test",
+	}
+
+	noPlaceholdersTemplate := core.EmailTemplate{
+		Subject:   "test",
+		ActionUrl: "http://example.com",
+		Body:      "test",
+	}
+
+	withPlaceholdersTemplate := core.EmailTemplate{
+		Subject:   "test",
+		ActionUrl: "http://example.com" + core.EmailPlaceholderToken,
+		Body:      "test" + core.EmailPlaceholderActionUrl,
+	}
+
 	scenarios := []struct {
 		config      core.MetaConfig
 		expectError bool
@@ -367,39 +387,39 @@ func TestMetaConfigValidate(t *testing.T) {
 		// invalid data
 		{
 			core.MetaConfig{
-				AppName:                   strings.Repeat("a", 300),
-				AppUrl:                    "test",
-				SenderName:                strings.Repeat("a", 300),
-				SenderAddress:             "invalid_email",
-				UserVerificationUrl:       "test",
-				UserResetPasswordUrl:      "test",
-				UserConfirmEmailChangeUrl: "test",
+				AppName:                    strings.Repeat("a", 300),
+				AppUrl:                     "test",
+				SenderName:                 strings.Repeat("a", 300),
+				SenderAddress:              "invalid_email",
+				VerificationTemplate:       invalidTemplate,
+				ResetPasswordTemplate:      invalidTemplate,
+				ConfirmEmailChangeTemplate: invalidTemplate,
 			},
 			true,
 		},
 		// invalid data (missing required placeholders)
 		{
 			core.MetaConfig{
-				AppName:                   "test",
-				AppUrl:                    "https://example.com",
-				SenderName:                "test",
-				SenderAddress:             "test@example.com",
-				UserVerificationUrl:       "https://example.com",
-				UserResetPasswordUrl:      "https://example.com",
-				UserConfirmEmailChangeUrl: "https://example.com",
+				AppName:                    "test",
+				AppUrl:                     "https://example.com",
+				SenderName:                 "test",
+				SenderAddress:              "test@example.com",
+				VerificationTemplate:       noPlaceholdersTemplate,
+				ResetPasswordTemplate:      noPlaceholdersTemplate,
+				ConfirmEmailChangeTemplate: noPlaceholdersTemplate,
 			},
 			true,
 		},
 		// valid data
 		{
 			core.MetaConfig{
-				AppName:                   "test",
-				AppUrl:                    "https://example.com",
-				SenderName:                "test",
-				SenderAddress:             "test@example.com",
-				UserVerificationUrl:       "https://example.com/" + core.EmailPlaceholderToken,
-				UserResetPasswordUrl:      "https://example.com/" + core.EmailPlaceholderToken,
-				UserConfirmEmailChangeUrl: "https://example.com/" + core.EmailPlaceholderToken,
+				AppName:                    "test",
+				AppUrl:                     "https://example.com",
+				SenderName:                 "test",
+				SenderAddress:              "test@example.com",
+				VerificationTemplate:       withPlaceholdersTemplate,
+				ResetPasswordTemplate:      withPlaceholdersTemplate,
+				ConfirmEmailChangeTemplate: withPlaceholdersTemplate,
 			},
 			false,
 		},
@@ -414,6 +434,130 @@ func TestMetaConfigValidate(t *testing.T) {
 
 		if result == nil && scenario.expectError {
 			t.Errorf("(%d) Expected error, got nil", i)
+		}
+	}
+}
+
+func TestEmailTemplateValidate(t *testing.T) {
+	scenarios := []struct {
+		emailTemplate  core.EmailTemplate
+		expectedErrors []string
+	}{
+		// require values
+		{
+			core.EmailTemplate{},
+			[]string{"subject", "actionUrl", "body"},
+		},
+		// missing placeholders
+		{
+			core.EmailTemplate{
+				Subject:   "test",
+				ActionUrl: "test",
+				Body:      "test",
+			},
+			[]string{"actionUrl", "body"},
+		},
+		// valid data
+		{
+			core.EmailTemplate{
+				Subject:   "test",
+				ActionUrl: "test" + core.EmailPlaceholderToken,
+				Body:      "test" + core.EmailPlaceholderActionUrl,
+			},
+			[]string{},
+		},
+	}
+
+	for i, s := range scenarios {
+		result := s.emailTemplate.Validate()
+
+		// parse errors
+		errs, ok := result.(validation.Errors)
+		if !ok && result != nil {
+			t.Errorf("(%d) Failed to parse errors %v", i, result)
+			continue
+		}
+
+		// check errors
+		if len(errs) > len(s.expectedErrors) {
+			t.Errorf("(%d) Expected error keys %v, got %v", i, s.expectedErrors, errs)
+		}
+		for _, k := range s.expectedErrors {
+			if _, ok := errs[k]; !ok {
+				t.Errorf("(%d) Missing expected error key %q in %v", i, k, errs)
+			}
+		}
+	}
+}
+
+func TestEmailTemplateResolve(t *testing.T) {
+	allPlaceholders := core.EmailPlaceholderActionUrl + core.EmailPlaceholderToken + core.EmailPlaceholderAppName + core.EmailPlaceholderAppUrl
+
+	scenarios := []struct {
+		emailTemplate     core.EmailTemplate
+		expectedSubject   string
+		expectedBody      string
+		expectedActionUrl string
+	}{
+		// no placeholders
+		{
+			emailTemplate: core.EmailTemplate{
+				Subject:   "subject:",
+				Body:      "body:",
+				ActionUrl: "/actionUrl////",
+			},
+			expectedSubject:   "subject:",
+			expectedActionUrl: "/actionUrl/",
+			expectedBody:      "body:",
+		},
+		// with placeholders
+		{
+			emailTemplate: core.EmailTemplate{
+				ActionUrl: "/actionUrl////" + allPlaceholders,
+				Subject:   "subject:" + allPlaceholders,
+				Body:      "body:" + allPlaceholders,
+			},
+			expectedActionUrl: fmt.Sprintf(
+				"/actionUrl/%%7BACTION_URL%%7D%s%s%s",
+				"token_test",
+				"name_test",
+				"url_test",
+			),
+			expectedSubject: fmt.Sprintf(
+				"subject:%s%s%s%s",
+				core.EmailPlaceholderActionUrl,
+				core.EmailPlaceholderToken,
+				"name_test",
+				"url_test",
+			),
+			expectedBody: fmt.Sprintf(
+				"body:%s%s%s%s",
+				fmt.Sprintf(
+					"/actionUrl/%%7BACTION_URL%%7D%s%s%s",
+					"token_test",
+					"name_test",
+					"url_test",
+				),
+				"token_test",
+				"name_test",
+				"url_test",
+			),
+		},
+	}
+
+	for i, s := range scenarios {
+		subject, body, actionUrl := s.emailTemplate.Resolve("name_test", "url_test", "token_test")
+
+		if s.expectedSubject != subject {
+			t.Errorf("(%d) Expected subject %q got %q", i, s.expectedSubject, subject)
+		}
+
+		if s.expectedBody != body {
+			t.Errorf("(%d) Expected body \n%v got \n%v", i, s.expectedBody, body)
+		}
+
+		if s.expectedActionUrl != actionUrl {
+			t.Errorf("(%d) Expected actionUrl \n%v got \n%v", i, s.expectedActionUrl, actionUrl)
 		}
 	}
 }

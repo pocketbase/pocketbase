@@ -13,13 +13,14 @@
 
     $pageTitle = "Files storage";
 
-    let s3 = {};
+    let originalFormSettings = {};
+    let formSettings = {};
     let isLoading = false;
     let isSaving = false;
-    let initialHash = "";
-    let initialEnabled = false;
 
-    $: hasChanges = initialHash != JSON.stringify(s3);
+    $: initialHash = JSON.stringify(originalFormSettings);
+
+    $: hasChanges = initialHash != JSON.stringify(formSettings);
 
     loadSettings();
 
@@ -44,10 +45,10 @@
         isSaving = true;
 
         try {
-            const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps({ s3 }));
+            const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             init(settings);
             setErrors({});
-            addSuccessToast("Successfully saved Files storage settings.");
+            addSuccessToast("Successfully saved files storage settings.");
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
@@ -56,9 +57,14 @@
     }
 
     function init(settings = {}) {
-        s3 = settings?.s3 || {};
-        initialEnabled = s3.enabled;
-        initialHash = JSON.stringify(s3);
+        formSettings = {
+            s3: settings?.s3 || {},
+        };
+        originalFormSettings = JSON.parse(JSON.stringify(formSettings));
+    }
+
+    function reset() {
+        formSettings = JSON.parse(JSON.stringify(originalFormSettings || {}));
     }
 </script>
 
@@ -85,11 +91,11 @@
                 <div class="loader" />
             {:else}
                 <Field class="form-field form-field-toggle" let:uniqueId>
-                    <input type="checkbox" id={uniqueId} required bind:checked={s3.enabled} />
+                    <input type="checkbox" id={uniqueId} required bind:checked={formSettings.s3.enabled} />
                     <label for={uniqueId}>Use S3 storage</label>
                 </Field>
 
-                {#if initialEnabled != s3.enabled}
+                {#if originalFormSettings.s3?.enabled != formSettings.s3.enabled}
                     <div transition:slide|local={{ duration: 150 }}>
                         <div class="alert alert-warning m-0">
                             <div class="icon">
@@ -98,9 +104,12 @@
                             <div class="content">
                                 If you have existing uploaded files, you'll have to migrate them manually from
                                 the
-                                <strong>{initialEnabled ? "S3 storage" : "local file system"}</strong>
+                                <strong>
+                                    {originalFormSettings.s3?.enabled ? "S3 storage" : "local file system"}
+                                </strong>
                                 to the
-                                <strong>{s3.enabled ? "S3 storage" : "local file system"}</strong>.
+                                <strong>{formSettings.s3.enabled ? "S3 storage" : "local file system"}</strong
+                                >.
                                 <br />
                                 There are numerous command line tools that can help you, such as:
                                 <a
@@ -125,41 +134,69 @@
                     </div>
                 {/if}
 
-                {#if s3.enabled}
+                {#if formSettings.s3.enabled}
                     <div class="grid" transition:slide|local={{ duration: 150 }}>
                         <div class="col-lg-12">
                             <Field class="form-field required" name="s3.endpoint" let:uniqueId>
                                 <label for={uniqueId}>Endpoint</label>
-                                <input type="text" id={uniqueId} required bind:value={s3.endpoint} />
+                                <input
+                                    type="text"
+                                    id={uniqueId}
+                                    required
+                                    bind:value={formSettings.s3.endpoint}
+                                />
                             </Field>
                         </div>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="s3.bucket" let:uniqueId>
                                 <label for={uniqueId}>Bucket</label>
-                                <input type="text" id={uniqueId} required bind:value={s3.bucket} />
+                                <input
+                                    type="text"
+                                    id={uniqueId}
+                                    required
+                                    bind:value={formSettings.s3.bucket}
+                                />
                             </Field>
                         </div>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="s3.region" let:uniqueId>
                                 <label for={uniqueId}>Region</label>
-                                <input type="text" id={uniqueId} required bind:value={s3.region} />
+                                <input
+                                    type="text"
+                                    id={uniqueId}
+                                    required
+                                    bind:value={formSettings.s3.region}
+                                />
                             </Field>
                         </div>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="s3.accessKey" let:uniqueId>
                                 <label for={uniqueId}>Access key</label>
-                                <input type="text" id={uniqueId} required bind:value={s3.accessKey} />
+                                <input
+                                    type="text"
+                                    id={uniqueId}
+                                    required
+                                    bind:value={formSettings.s3.accessKey}
+                                />
                             </Field>
                         </div>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="s3.secret" let:uniqueId>
                                 <label for={uniqueId}>Secret</label>
-                                <RedactedPasswordInput id={uniqueId} required bind:value={s3.secret} />
+                                <RedactedPasswordInput
+                                    id={uniqueId}
+                                    required
+                                    bind:value={formSettings.s3.secret}
+                                />
                             </Field>
                         </div>
                         <div class="col-lg-12">
                             <Field class="form-field" name="s3.forcePathStyle" let:uniqueId>
-                                <input type="checkbox" id={uniqueId} bind:checked={s3.forcePathStyle} />
+                                <input
+                                    type="checkbox"
+                                    id={uniqueId}
+                                    bind:checked={formSettings.s3.forcePathStyle}
+                                />
                                 <label for={uniqueId}>
                                     <span class="txt">Force path-style addressing</span>
                                     <i
@@ -179,6 +216,16 @@
 
                 <div class="flex">
                     <div class="flex-fill" />
+                    {#if hasChanges}
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-hint"
+                            disabled={isSaving}
+                            on:click={() => reset()}
+                        >
+                            <span class="txt">Cancel</span>
+                        </button>
+                    {/if}
                     <button
                         type="submit"
                         class="btn btn-expanded"

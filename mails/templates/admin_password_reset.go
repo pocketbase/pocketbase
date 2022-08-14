@@ -17,7 +17,6 @@ const AdminPasswordResetBody = `
 
 	<p>
 		<a class="btn" href="{{.ActionUrl}}" target="_blank" rel="noopener">Reset password</a>
-		<a class="fallback-link" href="{{.ActionUrl}}" target="_blank" rel="noopener">{{.ActionUrl}}</a>
 	</p>
 
 	<p><i>If you did not request to reset your password, please ignore this email and the link will expire on its own.</i></p>

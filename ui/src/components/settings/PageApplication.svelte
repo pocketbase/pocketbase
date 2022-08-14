@@ -9,10 +9,13 @@
 
     $pageTitle = "Application settings";
 
+    let originalFormSettings = {};
     let formSettings = {};
     let isLoading = false;
     let isSaving = false;
     let initialHash = "";
+
+    $: initialHash = JSON.stringify(originalFormSettings);
 
     $: hasChanges = initialHash != JSON.stringify(formSettings);
 
@@ -57,7 +60,11 @@
             logs: settings?.logs || {},
         };
 
-        initialHash = JSON.stringify(formSettings);
+        originalFormSettings = JSON.parse(JSON.stringify(formSettings));
+    }
+
+    function reset() {
+        formSettings = JSON.parse(JSON.stringify(originalFormSettings || {}));
     }
 </script>
 
@@ -103,6 +110,16 @@
 
                     <div class="col-lg-12 flex">
                         <div class="flex-fill" />
+                        {#if hasChanges}
+                            <button
+                                type="button"
+                                class="btn btn-secondary btn-hint"
+                                disabled={isSaving}
+                                on:click={() => reset()}
+                            >
+                                <span class="txt">Cancel</span>
+                            </button>
+                        {/if}
                         <button
                             type="submit"
                             class="btn btn-expanded"

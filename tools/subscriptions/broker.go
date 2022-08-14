@@ -27,6 +27,9 @@ func (b *Broker) Clients() map[string]Client {
 //
 // Returns non-nil error when client with clientId is not registered.
 func (b *Broker) ClientById(clientId string) (Client, error) {
+	b.mux.RLock()
+	defer b.mux.RUnlock()
+
 	client, ok := b.clients[clientId]
 	if !ok {
 		return nil, fmt.Errorf("No client associated with connection ID %q", clientId)

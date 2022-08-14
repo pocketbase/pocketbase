@@ -284,7 +284,7 @@ export default class CommonHelper {
      */
     static getNestedVal(data, path, defaultVal = null, delimiter = ".") {
         let result = data || {};
-        let parts  = path.split(delimiter);
+        let parts  = (path || '').split(delimiter);
 
         for (const part of parts) {
             if (
@@ -353,7 +353,7 @@ export default class CommonHelper {
      */
     static deleteByPath(data, path, delimiter = ".") {
         let result   = data || {};
-        let parts    = path.split(delimiter);
+        let parts    = (path || '').split(delimiter);
         let lastPart = parts.pop();
 
         for (const part of parts) {

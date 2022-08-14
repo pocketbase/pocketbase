@@ -35,7 +35,7 @@
         <div class="alert alert-success">
             <div class="icon"><i class="ri-checkbox-circle-line" /></div>
             <div class="content txt-bold">
-                <p>Email address changed</p>
+                <p>Successfully changed the user email address.</p>
                 <p>You can now sign in with your new email address.</p>
             </div>
         </div>

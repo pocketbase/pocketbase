@@ -10,48 +10,46 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/tools/auth"
+	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/security"
-)
-
-// Common settings placeholder tokens
-const (
-	EmailPlaceholderAppUrl string = "%APP_URL%"
-	EmailPlaceholderToken  string = "%TOKEN%"
 )
 
 // Settings defines common app configuration options.
 type Settings struct {
 	mux sync.RWMutex
 
-	Meta                    MetaConfig         `form:"meta" json:"meta"`
-	Logs                    LogsConfig         `form:"logs" json:"logs"`
-	Smtp                    SmtpConfig         `form:"smtp" json:"smtp"`
-	S3                      S3Config           `form:"s3" json:"s3"`
-	AdminAuthToken          TokenConfig        `form:"adminAuthToken" json:"adminAuthToken"`
-	AdminPasswordResetToken TokenConfig        `form:"adminPasswordResetToken" json:"adminPasswordResetToken"`
-	UserAuthToken           TokenConfig        `form:"userAuthToken" json:"userAuthToken"`
-	UserPasswordResetToken  TokenConfig        `form:"userPasswordResetToken" json:"userPasswordResetToken"`
-	UserEmailChangeToken    TokenConfig        `form:"userEmailChangeToken" json:"userEmailChangeToken"`
-	UserVerificationToken   TokenConfig        `form:"userVerificationToken" json:"userVerificationToken"`
-	EmailAuth               EmailAuthConfig    `form:"emailAuth" json:"emailAuth"`
-	GoogleAuth              AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
-	FacebookAuth            AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
-	GithubAuth              AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
-	GitlabAuth              AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
+	Meta MetaConfig `form:"meta" json:"meta"`
+	Logs LogsConfig `form:"logs" json:"logs"`
+	Smtp SmtpConfig `form:"smtp" json:"smtp"`
+	S3   S3Config   `form:"s3" json:"s3"`
+
+	AdminAuthToken          TokenConfig `form:"adminAuthToken" json:"adminAuthToken"`
+	AdminPasswordResetToken TokenConfig `form:"adminPasswordResetToken" json:"adminPasswordResetToken"`
+	UserAuthToken           TokenConfig `form:"userAuthToken" json:"userAuthToken"`
+	UserPasswordResetToken  TokenConfig `form:"userPasswordResetToken" json:"userPasswordResetToken"`
+	UserEmailChangeToken    TokenConfig `form:"userEmailChangeToken" json:"userEmailChangeToken"`
+	UserVerificationToken   TokenConfig `form:"userVerificationToken" json:"userVerificationToken"`
+
+	EmailAuth    EmailAuthConfig    `form:"emailAuth" json:"emailAuth"`
+	GoogleAuth   AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
+	FacebookAuth AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
+	GithubAuth   AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
+	GitlabAuth   AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
 }
 
 // NewSettings creates and returns a new default Settings instance.
 func NewSettings() *Settings {
 	return &Settings{
 		Meta: MetaConfig{
-			AppName:                   "Acme",
-			AppUrl:                    "http://localhost:8090",
-			SenderName:                "Support",
-			SenderAddress:             "support@example.com",
-			UserVerificationUrl:       EmailPlaceholderAppUrl + "/_/#/users/confirm-verification/" + EmailPlaceholderToken,
-			UserResetPasswordUrl:      EmailPlaceholderAppUrl + "/_/#/users/confirm-password-reset/" + EmailPlaceholderToken,
-			UserConfirmEmailChangeUrl: EmailPlaceholderAppUrl + "/_/#/users/confirm-email-change/" + EmailPlaceholderToken,
+			AppName:                    "Acme",
+			AppUrl:                     "http://localhost:8090",
+			SenderName:                 "Support",
+			SenderAddress:              "support@example.com",
+			VerificationTemplate:       defaultVerificationTemplate,
+			ResetPasswordTemplate:      defaultResetPasswordTemplate,
+			ConfirmEmailChangeTemplate: defaultConfirmEmailChangeTemplate,
 		},
+
 		Logs: LogsConfig{
 			MaxDays: 7,
 		},
@@ -194,6 +192,9 @@ func (s *Settings) RedactClone() (*Settings, error) {
 // NamedAuthProviderConfigs returns a map with all registered OAuth2
 // provider configurations (indexed by their name identifier).
 func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
+	s.mux.RLock()
+	defer s.mux.RUnlock()
+
 	return map[string]AuthProviderConfig{
 		auth.NameGoogle:   s.GoogleAuth,
 		auth.NameFacebook: s.FacebookAuth,
@@ -267,13 +268,13 @@ func (c S3Config) Validate() error {
 // -------------------------------------------------------------------
 
 type MetaConfig struct {
-	AppName                   string `form:"appName" json:"appName"`
-	AppUrl                    string `form:"appUrl" json:"appUrl"`
-	SenderName                string `form:"senderName" json:"senderName"`
-	SenderAddress             string `form:"senderAddress" json:"senderAddress"`
-	UserVerificationUrl       string `form:"userVerificationUrl" json:"userVerificationUrl"`
-	UserResetPasswordUrl      string `form:"userResetPasswordUrl" json:"userResetPasswordUrl"`
-	UserConfirmEmailChangeUrl string `form:"userConfirmEmailChangeUrl" json:"userConfirmEmailChangeUrl"`
+	AppName                    string        `form:"appName" json:"appName"`
+	AppUrl                     string        `form:"appUrl" json:"appUrl"`
+	SenderName                 string        `form:"senderName" json:"senderName"`
+	SenderAddress              string        `form:"senderAddress" json:"senderAddress"`
+	VerificationTemplate       EmailTemplate `form:"verificationTemplate" json:"verificationTemplate"`
+	ResetPasswordTemplate      EmailTemplate `form:"resetPasswordTemplate" json:"resetPasswordTemplate"`
+	ConfirmEmailChangeTemplate EmailTemplate `form:"confirmEmailChangeTemplate" json:"confirmEmailChangeTemplate"`
 }
 
 // Validate makes MetaConfig validatable by implementing [validation.Validatable] interface.
@@ -283,39 +284,94 @@ func (c MetaConfig) Validate() error {
 		validation.Field(&c.AppUrl, validation.Required, is.URL),
 		validation.Field(&c.SenderName, validation.Required, validation.Length(1, 255)),
 		validation.Field(&c.SenderAddress, is.Email, validation.Required),
+		validation.Field(&c.VerificationTemplate, validation.Required),
+		validation.Field(&c.ResetPasswordTemplate, validation.Required),
+		validation.Field(&c.ConfirmEmailChangeTemplate, validation.Required),
+	)
+}
+
+type EmailTemplate struct {
+	Body      string `form:"body" json:"body"`
+	Subject   string `form:"subject" json:"subject"`
+	ActionUrl string `form:"actionUrl" json:"actionUrl"`
+}
+
+// Validate makes EmailTemplate validatable by implementing [validation.Validatable] interface.
+func (t EmailTemplate) Validate() error {
+	return validation.ValidateStruct(&t,
+		validation.Field(&t.Subject, validation.Required),
 		validation.Field(
-			&c.UserVerificationUrl,
+			&t.Body,
 			validation.Required,
-			validation.By(c.checkPlaceholders(EmailPlaceholderToken)),
+			validation.By(checkPlaceholderParams(EmailPlaceholderActionUrl)),
 		),
 		validation.Field(
-			&c.UserResetPasswordUrl,
+			&t.ActionUrl,
 			validation.Required,
-			validation.By(c.checkPlaceholders(EmailPlaceholderToken)),
-		),
-		validation.Field(
-			&c.UserConfirmEmailChangeUrl,
-			validation.Required,
-			validation.By(c.checkPlaceholders(EmailPlaceholderToken)),
+			validation.By(checkPlaceholderParams(EmailPlaceholderToken)),
 		),
 	)
 }
 
-func (c *MetaConfig) checkPlaceholders(params ...string) validation.RuleFunc {
+func checkPlaceholderParams(params ...string) validation.RuleFunc {
 	return func(value any) error {
 		v, _ := value.(string)
-		if v == "" {
-			return nil // nothing to check
-		}
 
 		for _, param := range params {
 			if !strings.Contains(v, param) {
-				return validation.NewError("validation_missing_required_param", fmt.Sprintf("Missing required parameter %q", param))
+				return validation.NewError(
+					"validation_missing_required_param",
+					fmt.Sprintf("Missing required parameter %q", param),
+				)
 			}
 		}
 
 		return nil
 	}
+}
+
+// Resolve replaces the placeholder parameters in the current email
+// template and returns its components as ready-to-use strings.
+func (t EmailTemplate) Resolve(
+	appName string,
+	appUrl,
+	token string,
+) (subject, body, actionUrl string) {
+	// replace action url placeholder params (if any)
+	actionUrlParams := map[string]string{
+		EmailPlaceholderAppName: appName,
+		EmailPlaceholderAppUrl:  appUrl,
+		EmailPlaceholderToken:   token,
+	}
+	actionUrl = t.ActionUrl
+	for k, v := range actionUrlParams {
+		actionUrl = strings.ReplaceAll(actionUrl, k, v)
+	}
+	actionUrl, _ = rest.NormalizeUrl(actionUrl)
+
+	// replace body placeholder params (if any)
+	bodyParams := map[string]string{
+		EmailPlaceholderAppName:   appName,
+		EmailPlaceholderAppUrl:    appUrl,
+		EmailPlaceholderToken:     token,
+		EmailPlaceholderActionUrl: actionUrl,
+	}
+	body = t.Body
+	for k, v := range bodyParams {
+		body = strings.ReplaceAll(body, k, v)
+	}
+
+	// replace subject placeholder params (if any)
+	subjectParams := map[string]string{
+		EmailPlaceholderAppName: appName,
+		EmailPlaceholderAppUrl:  appUrl,
+	}
+	subject = t.Subject
+	for k, v := range subjectParams {
+		subject = strings.ReplaceAll(subject, k, v)
+	}
+
+	return subject, body, actionUrl
 }
 
 // -------------------------------------------------------------------
@@ -328,6 +384,35 @@ type LogsConfig struct {
 func (c LogsConfig) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.MaxDays, validation.Min(0)),
+	)
+}
+
+// -------------------------------------------------------------------
+
+type EmailAuthConfig struct {
+	Enabled           bool     `form:"enabled" json:"enabled"`
+	ExceptDomains     []string `form:"exceptDomains" json:"exceptDomains"`
+	OnlyDomains       []string `form:"onlyDomains" json:"onlyDomains"`
+	MinPasswordLength int      `form:"minPasswordLength" json:"minPasswordLength"`
+}
+
+// Validate makes `EmailAuthConfig` validatable by implementing [validation.Validatable] interface.
+func (c EmailAuthConfig) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(
+			&c.ExceptDomains,
+			validation.When(len(c.OnlyDomains) > 0, validation.Empty).Else(validation.Each(is.Domain)),
+		),
+		validation.Field(
+			&c.OnlyDomains,
+			validation.When(len(c.ExceptDomains) > 0, validation.Empty).Else(validation.Each(is.Domain)),
+		),
+		validation.Field(
+			&c.MinPasswordLength,
+			validation.When(c.Enabled, validation.Required),
+			validation.Min(5),
+			validation.Max(100),
+		),
 	)
 }
 
@@ -381,33 +466,4 @@ func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 	}
 
 	return nil
-}
-
-// -------------------------------------------------------------------
-
-type EmailAuthConfig struct {
-	Enabled           bool     `form:"enabled" json:"enabled"`
-	ExceptDomains     []string `form:"exceptDomains" json:"exceptDomains"`
-	OnlyDomains       []string `form:"onlyDomains" json:"onlyDomains"`
-	MinPasswordLength int      `form:"minPasswordLength" json:"minPasswordLength"`
-}
-
-// Validate makes `EmailAuthConfig` validatable by implementing [validation.Validatable] interface.
-func (c EmailAuthConfig) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(
-			&c.ExceptDomains,
-			validation.When(len(c.OnlyDomains) > 0, validation.Empty).Else(validation.Each(is.Domain)),
-		),
-		validation.Field(
-			&c.OnlyDomains,
-			validation.When(len(c.ExceptDomains) > 0, validation.Empty).Else(validation.Each(is.Domain)),
-		),
-		validation.Field(
-			&c.MinPasswordLength,
-			validation.When(c.Enabled, validation.Required),
-			validation.Min(5),
-			validation.Max(100),
-		),
-	)
 }

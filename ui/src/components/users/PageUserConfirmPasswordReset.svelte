@@ -36,7 +36,7 @@
         <div class="alert alert-success">
             <div class="icon"><i class="ri-checkbox-circle-line" /></div>
             <div class="content txt-bold">
-                <p>Password changed</p>
+                <p>Successfully changed the user password.</p>
                 <p>You can now sign in with your new password.</p>
             </div>
         </div>
