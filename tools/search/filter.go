@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/store"
+	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 
@@ -129,6 +130,18 @@ func (f FilterData) resolveTokenizedExpr(expr fexpr.Expr, fieldResolver FieldRes
 func (f FilterData) resolveToken(token fexpr.Token, fieldResolver FieldResolver) (name string, params dbx.Params, err error) {
 	switch token.Type {
 	case fexpr.TokenIdentifier:
+		// current datetime constant
+		// ---
+		if token.Literal == "@now" {
+			placeholder := "t" + security.RandomString(7)
+			name := fmt.Sprintf("{:%s}", placeholder)
+			params := dbx.Params{placeholder: types.NowDateTime().String()}
+
+			return name, params, nil
+		}
+
+		// custom resolver
+		// ---
 		name, params, err := fieldResolver.Resolve(token.Literal)
 
 		if name == "" || err != nil {

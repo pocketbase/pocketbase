@@ -489,7 +489,7 @@ span.flatpickr-weekday {
 .flatpickr-day.today:focus {
   border-color: var(--primaryColor);
   background: var(--primaryColor);
-  color: var(--txtPrimaryColor);
+  color: var(--baseColor);
 }
 .flatpickr-day.selected,
 .flatpickr-day.startRange,

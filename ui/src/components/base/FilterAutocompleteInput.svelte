@@ -230,7 +230,7 @@
             return null;
         }
 
-        let options = [{ label: "false" }, { label: "true" }];
+        let options = [{ label: "false" }, { label: "true" }, { label: "@now" }];
 
         if (!disableIndirectCollectionsKeys) {
             options.push({ label: "@collection.*", apply: "@collection." });
@@ -263,7 +263,7 @@
 
     // Returns all field keys as keyword patterns to highlight.
     function keywords() {
-        const result = [];
+        const result = [{ regex: CommonHelper.escapeRegExp("@now"), token: "keyword" }];
         const keys = getAllKeys(!disableRequestKeys, !disableIndirectCollectionsKeys);
 
         for (const key of keys) {

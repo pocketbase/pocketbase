@@ -32,6 +32,14 @@ func TestFilterDataBuildExpr(t *testing.T) {
 				regexp.QuoteMeta("}") +
 				"$",
 		},
+		// current datetime constant
+		{"test1 > @now", false,
+			"^" +
+				regexp.QuoteMeta("[[test1]] > {:") +
+				".+" +
+				regexp.QuoteMeta("}") +
+				"$",
+		},
 		// complex expression
 		{
 			"((test1 > 1) || (test2 != 2)) && test3 ~ '%%example' && test4.sub = null",
