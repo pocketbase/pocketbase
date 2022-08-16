@@ -5,6 +5,7 @@
     import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
+    import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
@@ -19,7 +20,6 @@
 
     $pageTitle = "Mail settings";
 
-    let firstAccordion;
     let originalFormSettings = {};
     let formSettings = {};
     let isLoading = false;
@@ -55,7 +55,6 @@
             const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             init(settings);
             setErrors({});
-            firstAccordion?.collapseSiblings();
             addSuccessToast("Successfully saved mail settings.");
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -125,7 +124,6 @@
 
                 <div class="accordions">
                     <EmailTemplateAccordion
-                        bind:this={firstAccordion}
                         single
                         key="meta.verificationTemplate"
                         title={'Default "Verification" email template'}
@@ -151,22 +149,19 @@
 
                 <Field class="form-field form-field-toggle m-b-sm" let:uniqueId>
                     <input type="checkbox" id={uniqueId} required bind:checked={formSettings.smtp.enabled} />
-                    <label for={uniqueId}>Use SMTP mail server</label>
+                    <label for={uniqueId}>
+                        <span class="txt">Use SMTP mail server <strong>(recommended)</strong></span>
+                        <i
+                            class="ri-information-line link-hint"
+                            use:tooltip={{
+                                text: 'By default PocketBase uses the unix "sendmail" command for sending emails. For better emails deliverability it is recommended to use a SMTP mail server.',
+                                position: "top",
+                            }}
+                        />
+                    </label>
                 </Field>
 
-                {#if !formSettings.smtp.enabled}
-                    <div class="content" transition:slide|local={{ duration: 150 }}>
-                        <p>
-                            By default PocketBase uses the OS <code>sendmail</code> command for sending
-                            emails.
-                            <br />
-                            <strong class="txt-bold">
-                                For better emails deliverability it is recommended to use a SMTP mail server.
-                            </strong>
-                        </p>
-                        <div class="clearfix m-t-lg" />
-                    </div>
-                {:else}
+                {#if formSettings.smtp.enabled}
                     <div class="grid" transition:slide|local={{ duration: 150 }}>
                         <div class="col-lg-6">
                             <Field class="form-field required" name="smtp.host" let:uniqueId>

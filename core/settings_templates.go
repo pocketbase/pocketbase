@@ -14,12 +14,12 @@ var defaultVerificationTemplate = EmailTemplate{
 <p>Thank you for joining us at ` + EmailPlaceholderAppName + `.</p>
 <p>Click on the button below to verify your email address.</p>
 <p>
-    <a class="btn" href="` + EmailPlaceholderActionUrl + `" target="_blank" rel="noopener">Verify</a>
+  <a class="btn" href="` + EmailPlaceholderActionUrl + `" target="_blank" rel="noopener">Verify</a>
 </p>
 
 <p>
-    Thanks,<br/>
-    ` + EmailPlaceholderAppName + ` team
+  Thanks,<br/>
+  ` + EmailPlaceholderAppName + ` team
 </p>`,
 	ActionUrl: EmailPlaceholderAppUrl + "/_/#/users/confirm-verification/" + EmailPlaceholderToken,
 }
@@ -29,12 +29,12 @@ var defaultResetPasswordTemplate = EmailTemplate{
 	Body: `<p>Hello,</p>
 <p>Click on the button below to reset your password.</p>
 <p>
-    <a class="btn" href="` + EmailPlaceholderActionUrl + `" target="_blank" rel="noopener">Reset password</a>
+  <a class="btn" href="` + EmailPlaceholderActionUrl + `" target="_blank" rel="noopener">Reset password</a>
 </p>
 <p><i>If you didn't ask to reset your password, you can ignore this email.</i></p>
 <p>
-    Thanks,<br/>
-    ` + EmailPlaceholderAppName + ` team
+  Thanks,<br/>
+  ` + EmailPlaceholderAppName + ` team
 </p>`,
 	ActionUrl: EmailPlaceholderAppUrl + "/_/#/users/confirm-password-reset/" + EmailPlaceholderToken,
 }
@@ -44,12 +44,12 @@ var defaultConfirmEmailChangeTemplate = EmailTemplate{
 	Body: `<p>Hello,</p>
 <p>Click on the button below to confirm your new email address.</p>
 <p>
-    <a class="btn" href="` + EmailPlaceholderActionUrl + `" target="_blank" rel="noopener">Confirm new email</a>
+  <a class="btn" href="` + EmailPlaceholderActionUrl + `" target="_blank" rel="noopener">Confirm new email</a>
 </p>
 <p><i>If you didn't ask to change your email address, you can ignore this email.</i></p>
 <p>
-    Thanks,<br/>
-    ` + EmailPlaceholderAppName + ` team
+  Thanks,<br/>
+  ` + EmailPlaceholderAppName + ` team
 </p>`,
 	ActionUrl: EmailPlaceholderAppUrl + "/_/#/users/confirm-email-change/" + EmailPlaceholderToken,
 }

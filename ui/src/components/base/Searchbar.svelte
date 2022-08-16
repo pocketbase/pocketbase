@@ -62,6 +62,7 @@
         {#if filterComponent && !isFilterComponentLoading}
             <svelte:component
                 this={filterComponent}
+                id={uniqueId}
                 singleLine
                 disableRequestKeys
                 disableIndirectCollectionsKeys

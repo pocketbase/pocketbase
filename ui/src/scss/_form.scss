@@ -332,8 +332,17 @@ button {
     font-family: var(--baseFontFamily);
     font-weight: normal;
     border-radius: var(--baseRadius);
+    overflow: auto; /* fallback */
+    overflow: overlay;
     &::placeholder {
       color: var(--txtDisabledColor);
+    }
+    &:focus,
+    &:focus-within {
+        @include scrollbar(
+            $thumbColor: var(--baseAlt3Color),
+            $thumbActiveColor: var(--baseAlt4Color)
+        );
     }
     &:focus,
     &.active {
@@ -393,13 +402,6 @@ input[type=number]::-webkit-outer-spin-button {
 textarea {
     min-height: 80px;
     resize: vertical;
-    &:focus,
-    &:focus-within {
-        @include scrollbar(
-            $thumbColor: var(--baseAlt3Color),
-            $thumbActiveColor: var(--baseAlt4Color)
-        );
-    }
 }
 select {
     padding-left: 8px;

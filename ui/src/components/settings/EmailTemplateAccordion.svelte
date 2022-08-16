@@ -4,14 +4,16 @@
     import { errors, removeError } from "@/stores/errors";
     import { addInfoToast } from "@/stores/toasts";
     import CommonHelper from "@/utils/CommonHelper";
-    import Accordion from "@/components/base/Accordion.svelte";
     import Field from "@/components/base/Field.svelte";
+    import Accordion from "@/components/base/Accordion.svelte";
 
     export let key;
     export let title;
     export let config = {};
 
     let accordion;
+    let editorComponent;
+    let isEditorComponentLoading = false;
 
     $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, key));
 
@@ -30,6 +32,20 @@
     export function collapseSiblings() {
         accordion?.collapseSiblings();
     }
+
+    async function loadEditorComponent() {
+        if (editorComponent || isEditorComponentLoading) {
+            return; // already loaded or in the process
+        }
+
+        isEditorComponentLoading = true;
+
+        editorComponent = (await import("@/components/base/CodeEditor.svelte")).default;
+
+        isEditorComponentLoading = false;
+    }
+
+    loadEditorComponent();
 
     function copy(param) {
         CommonHelper.copyToClipboard(param);
@@ -90,14 +106,25 @@
 
     <Field class="form-field m-0 required" name="{key}.body" let:uniqueId>
         <label for={uniqueId}>Body (HTML)</label>
-        <textarea
-            id={uniqueId}
-            bind:value={config.body}
-            class="txt-mono"
-            spellcheck="false"
-            rows="12"
-            required
-        />
+
+        {#if editorComponent && !isEditorComponentLoading}
+            <svelte:component
+                this={editorComponent}
+                id={uniqueId}
+                language="html"
+                bind:value={config.body}
+            />
+        {:else}
+            <textarea
+                id={uniqueId}
+                class="txt-mono"
+                spellcheck="false"
+                rows="12"
+                required
+                bind:value={config.body}
+            />
+        {/if}
+
         <div class="help-block">
             Available placeholder parameters:
             <span class="label label-sm link-primary txt-mono" on:click={() => copy("{APP_NAME}")}>
