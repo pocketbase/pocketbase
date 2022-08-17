@@ -260,7 +260,7 @@ func TestFileSystemCreateThumb(t *testing.T) {
 	}
 
 	for i, scenario := range scenarios {
-		err := fs.CreateThumb(scenario.file, scenario.thumb, "100x100", scenario.cropCenter)
+		err := fs.CreateThumb(scenario.file, scenario.thumb, "100x100")
 
 		hasErr := err != nil
 		if hasErr != scenario.expectError {

@@ -16,7 +16,6 @@ var defaultVerificationTemplate = EmailTemplate{
 <p>
   <a class="btn" href="` + EmailPlaceholderActionUrl + `" target="_blank" rel="noopener">Verify</a>
 </p>
-
 <p>
   Thanks,<br/>
   ` + EmailPlaceholderAppName + ` team

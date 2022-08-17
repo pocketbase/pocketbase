@@ -223,6 +223,9 @@ a {
 .txt-center {
     text-align: center !important;
 }
+.txt-justify {
+    text-align: justify !important;
+}
 .txt-left {
     text-align: left !important;
 }
@@ -278,7 +281,9 @@ a {
         text-decoration: none;
         user-select: none;
         transition: opacity var(--baseAnimationSpeed);
-        &:hover {
+        &:focus-visible,
+        &:hover,
+        &:active {
             opacity: 0.8;
         }
     }

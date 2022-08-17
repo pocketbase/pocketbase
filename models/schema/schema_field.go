@@ -7,6 +7,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
@@ -458,7 +459,10 @@ func (o FileOptions) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.MaxSelect, validation.Required, validation.Min(1)),
 		validation.Field(&o.MaxSize, validation.Required, validation.Min(1)),
-		validation.Field(&o.Thumbs, validation.Each(validation.Match(regexp.MustCompile(`^[1-9]\d*x[1-9]\d*$`)))),
+		validation.Field(&o.Thumbs, validation.Each(
+			validation.NotIn("0x0", "0x0t", "0x0b", "0x0f"),
+			validation.Match(filesystem.ThumbSizeRegex),
+		)),
 	)
 }
 
