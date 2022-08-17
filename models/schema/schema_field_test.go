@@ -1247,7 +1247,7 @@ func TestFileOptionsValidate(t *testing.T) {
 			[]string{"thumbs"},
 		},
 		{
-			"invalid thumbs format - zero with and height",
+			"invalid thumbs format - zero width and height",
 			schema.FileOptions{
 				MaxSize:   1,
 				MaxSelect: 2,
