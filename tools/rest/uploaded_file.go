@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"strings"
 
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
@@ -68,10 +70,29 @@ func FindUploadedFiles(r *http.Request, key string) ([]*UploadedFile, error) {
 			return nil, err
 		}
 
-		ext := extensionInvalidCharsRegex.ReplaceAllString(filepath.Ext(fh.Filename), "")
+		originalExt := filepath.Ext(fh.Filename)
+		sanitizedExt := extensionInvalidCharsRegex.ReplaceAllString(originalExt, "")
+
+		originalName := strings.TrimSuffix(fh.Filename, originalExt)
+		sanitizedName := inflector.Snakecase(originalName)
+
+		if length := len(sanitizedName); length < 3 {
+			// the name is too short so we concatenate an additional random part
+			sanitizedName += ("_" + security.RandomString(10))
+		} else if length > 100 {
+			// keep only the first 100 characters (it is multibyte safe after Snakecase)
+			sanitizedName = sanitizedName[:100]
+		}
+
+		uploadedFilename := fmt.Sprintf(
+			"%s_%s%s",
+			sanitizedName,
+			security.RandomString(10), // ensure that there is always a random part
+			sanitizedExt,
+		)
 
 		result[i] = &UploadedFile{
-			name:   fmt.Sprintf("%s%s", security.RandomString(32), ext),
+			name:   uploadedFilename,
 			header: fh,
 			bytes:  buf.Bytes(),
 		}

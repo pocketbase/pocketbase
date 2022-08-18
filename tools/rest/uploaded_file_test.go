@@ -14,8 +14,8 @@ import (
 )
 
 func TestFindUploadedFiles(t *testing.T) {
-	// create a test temporary file
-	tmpFile, err := os.CreateTemp(os.TempDir(), "tmpfile-*.txt")
+	// create a test temporary file (with very large prefix to test if it will be truncated)
+	tmpFile, err := os.CreateTemp(os.TempDir(), strings.Repeat("a", 150)+"tmpfile-*.txt")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,11 @@ func TestFindUploadedFiles(t *testing.T) {
 	}
 
 	if !strings.HasSuffix(result[0].Name(), ".txt") {
-		t.Fatalf("Expected the file name to have suffix .txt - %v", result[0].Name())
+		t.Fatalf("Expected the file name to have suffix .txt, got %v", result[0].Name())
+	}
+
+	if length := len(result[0].Name()); length != 115 { // truncated + random part + ext
+		t.Fatalf("Expected the file name to have length of 115, got %d\n%q", length, result[0].Name())
 	}
 
 	if string(result[0].Bytes()) != "test" {
