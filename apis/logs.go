@@ -28,7 +28,7 @@ type logsApi struct {
 var requestFilterFields = []string{
 	"rowid", "id", "created", "updated",
 	"url", "method", "status", "auth",
-	"ip", "referer", "userAgent",
+	"remoteIp", "userIp", "referer", "userAgent",
 }
 
 func (api *logsApi) requestsList(c echo.Context) error {

@@ -252,7 +252,8 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 				Method:    strings.ToLower(httpRequest.Method),
 				Status:    status,
 				Auth:      requestAuth,
-				Ip:        httpRequest.RemoteAddr,
+				UserIp:    realUserIp(httpRequest),
+				RemoteIp:  httpRequest.RemoteAddr,
 				Referer:   httpRequest.Referer(),
 				UserAgent: httpRequest.UserAgent(),
 				Meta:      meta,
@@ -296,4 +297,24 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 			return err
 		}
 	}
+}
+
+// Returns the "real" user IP from common proxy headers
+// (fallback to [r.RemoteAddr]).
+//
+// The returned IP shouldn't be trusted if not behind a trusted reverse proxy!
+func realUserIp(r *http.Request) string {
+	ipHeaders := []string{
+		"CF-Connecting-IP",
+		"X-Forwarded-For",
+		"X-Real-Ip",
+	}
+
+	for _, header := range ipHeaders {
+		if ip := r.Header.Get(header); ip != "" {
+			return ip
+		}
+	}
+
+	return r.RemoteAddr
 }

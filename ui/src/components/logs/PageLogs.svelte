@@ -50,7 +50,16 @@
         <Searchbar
             value={filter}
             placeholder="Search logs, ex. status > 200"
-            extraAutocompleteKeys={["method", "url", "ip", "referer", "status", "auth", "userAgent"]}
+            extraAutocompleteKeys={[
+                "method",
+                "url",
+                "remoteIp",
+                "userIp",
+                "referer",
+                "status",
+                "auth",
+                "userAgent",
+            ]}
             on:submit={(e) => (filter = e.detail)}
         />
 
