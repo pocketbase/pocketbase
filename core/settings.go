@@ -43,6 +43,7 @@ func NewSettings() *Settings {
 		Meta: MetaConfig{
 			AppName:                    "Acme",
 			AppUrl:                     "http://localhost:8090",
+			HideControls:               false,
 			SenderName:                 "Support",
 			SenderAddress:              "support@example.com",
 			VerificationTemplate:       defaultVerificationTemplate,
@@ -270,6 +271,7 @@ func (c S3Config) Validate() error {
 type MetaConfig struct {
 	AppName                    string        `form:"appName" json:"appName"`
 	AppUrl                     string        `form:"appUrl" json:"appUrl"`
+	HideControls               bool          `form:"hideControls" json:"hideControls"`
 	SenderName                 string        `form:"senderName" json:"senderName"`
 	SenderAddress              string        `form:"senderAddress" json:"senderAddress"`
 	VerificationTemplate       EmailTemplate `form:"verificationTemplate" json:"verificationTemplate"`

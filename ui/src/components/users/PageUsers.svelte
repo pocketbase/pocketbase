@@ -4,7 +4,7 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
-    import { pageTitle } from "@/stores/app";
+    import { pageTitle, hideControls } from "@/stores/app";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
@@ -116,14 +116,16 @@
                 <div class="breadcrumb-item">{$pageTitle}</div>
             </nav>
 
-            <button
-                type="button"
-                class="btn btn-secondary btn-circle"
-                use:tooltip={{ text: "Edit profile collection", position: "right" }}
-                on:click={() => collectionUpsertPanel?.show(profileCollection)}
-            >
-                <i class="ri-settings-4-line" />
-            </button>
+            {#if !$hideControls}
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-circle"
+                    use:tooltip={{ text: "Edit profile collection", position: "right" }}
+                    on:click={() => collectionUpsertPanel?.show(profileCollection)}
+                >
+                    <i class="ri-settings-4-line" />
+                </button>
+            {/if}
 
             <RefreshButton on:refresh={() => loadUsers()} />
 

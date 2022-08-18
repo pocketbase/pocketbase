@@ -7,7 +7,7 @@
         loadCollections,
     } from "@/stores/collections";
     import tooltip from "@/actions/tooltip";
-    import { pageTitle } from "@/stores/app";
+    import { pageTitle, hideControls } from "@/stores/app";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
@@ -68,15 +68,19 @@
             <div class="icon">
                 <i class="ri-database-2-line" />
             </div>
-            <h1 class="m-b-10">Create your first collection to add records!</h1>
-            <button
-                type="button"
-                class="btn btn-expanded-lg btn-lg"
-                on:click={() => collectionUpsertPanel?.show()}
-            >
-                <i class="ri-add-line" />
-                <span class="txt">Create new collection</span>
-            </button>
+            {#if $hideControls}
+                <h1 class="m-b-10">You don't have any collections yet.</h1>
+            {:else}
+                <h1 class="m-b-10">Create your first collection to add records!</h1>
+                <button
+                    type="button"
+                    class="btn btn-expanded-lg btn-lg"
+                    on:click={() => collectionUpsertPanel?.show()}
+                >
+                    <i class="ri-add-line" />
+                    <span class="txt">Create new collection</span>
+                </button>
+            {/if}
         </div>
     </PageWrapper>
 {:else}
@@ -90,14 +94,16 @@
             </nav>
 
             <div class="inline-flex gap-5">
-                <button
-                    type="button"
-                    class="btn btn-secondary btn-circle"
-                    use:tooltip={{ text: "Edit collection", position: "right" }}
-                    on:click={() => collectionUpsertPanel?.show($activeCollection)}
-                >
-                    <i class="ri-settings-4-line" />
-                </button>
+                {#if !$hideControls}
+                    <button
+                        type="button"
+                        class="btn btn-secondary btn-circle"
+                        use:tooltip={{ text: "Edit collection", position: "right" }}
+                        on:click={() => collectionUpsertPanel?.show($activeCollection)}
+                    >
+                        <i class="ri-settings-4-line" />
+                    </button>
+                {/if}
 
                 <RefreshButton on:refresh={() => recordsList?.load()} />
             </div>

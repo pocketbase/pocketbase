@@ -1,8 +1,9 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import { pageTitle, appName } from "@/stores/app";
+    import { pageTitle, appName, hideControls } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
+    import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
@@ -54,6 +55,7 @@
 
     function init(settings = {}) {
         $appName = settings?.meta?.appName;
+        $hideControls = !!settings?.meta?.hideControls;
 
         formSettings = {
             meta: settings?.meta || {},
@@ -106,6 +108,20 @@
                     <Field class="form-field required" name="logs.maxDays" let:uniqueId>
                         <label for={uniqueId}>Logs max days retention</label>
                         <input type="number" id={uniqueId} required bind:value={formSettings.logs.maxDays} />
+                    </Field>
+
+                    <Field class="form-field form-field-toggle" name="meta.hideControls" let:uniqueId>
+                        <input type="checkbox" id={uniqueId} bind:checked={formSettings.meta.hideControls} />
+                        <label for={uniqueId}>
+                            <span class="txt">Hide collection create and edit controls</span>
+                            <i
+                                class="ri-information-line link-hint"
+                                use:tooltip={{
+                                    text: `This is useful to prevent making accidental schema changes on a production environment.`,
+                                    position: "right",
+                                }}
+                            />
+                        </label>
                     </Field>
 
                     <div class="col-lg-12 flex">
