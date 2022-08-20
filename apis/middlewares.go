@@ -317,9 +317,10 @@ func realUserIp(r *http.Request, fallbackIp string) string {
 	if ipsList := r.Header.Get("X-Forwarded-For"); ipsList != "" {
 		ips := strings.Split(ipsList, ",")
 		// extract the rightmost ip
-		for _, ip := range ips {
-			if trimmedIp := strings.TrimSpace(ip); trimmedIp != "" {
-				return trimmedIp
+		for i := len(ips) - 1; i >= 0; i-- {
+			ip := strings.TrimSpace(ips[i])
+			if ip != "" {
+				return ip
 			}
 		}
 	}
