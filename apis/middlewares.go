@@ -3,6 +3,7 @@ package apis
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -247,13 +248,15 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 				requestAuth = models.RequestAuthAdmin
 			}
 
+			ip, _, _ := net.SplitHostPort(httpRequest.RemoteAddr)
+
 			model := &models.Request{
 				Url:       httpRequest.URL.RequestURI(),
 				Method:    strings.ToLower(httpRequest.Method),
 				Status:    status,
 				Auth:      requestAuth,
-				UserIp:    realUserIp(httpRequest),
-				RemoteIp:  httpRequest.RemoteAddr,
+				UserIp:    realUserIp(httpRequest, ip),
+				RemoteIp:  ip,
 				Referer:   httpRequest.Referer(),
 				UserAgent: httpRequest.UserAgent(),
 				Meta:      meta,
@@ -299,22 +302,25 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 	}
 }
 
-// Returns the "real" user IP from common proxy headers
-// (fallback to [r.RemoteAddr]).
+// Returns the "real" user IP from common proxy headers (or fallbackIp if none is found).
 //
 // The returned IP shouldn't be trusted if not behind a trusted reverse proxy!
-func realUserIp(r *http.Request) string {
-	ipHeaders := []string{
-		"CF-Connecting-IP",
-		"X-Forwarded-For",
-		"X-Real-Ip",
+func realUserIp(r *http.Request, fallbackIp string) string {
+	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
+		return ip
 	}
 
-	for _, header := range ipHeaders {
-		if ip := r.Header.Get(header); ip != "" {
-			return ip
+	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
+		// extract only the last IP
+		if i := strings.IndexAny(ip, ","); i > 0 {
+			return strings.TrimSpace(ip[:i])
 		}
+		return ip
 	}
 
-	return r.RemoteAddr
+	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
+		return ip
+	}
+
+	return fallbackIp
 }
