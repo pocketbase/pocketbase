@@ -37,6 +37,7 @@ func (api *collectionApi) list(c echo.Context) error {
 
 	result, err := search.NewProvider(fieldResolver).
 		Query(api.app.Dao().CollectionQuery()).
+		Sort(search.ParseSortFromString("name")).
 		ParseAndExec(c.QueryString(), &collections)
 
 	if err != nil {
