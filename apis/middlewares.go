@@ -304,22 +304,24 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 
 // Returns the "real" user IP from common proxy headers (or fallbackIp if none is found).
 //
-// The returned IP shouldn't be trusted if not behind a trusted reverse proxy!
+// The returned IP value shouldn't be trusted if not behind a trusted reverse proxy!
 func realUserIp(r *http.Request, fallbackIp string) string {
 	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
 		return ip
 	}
 
-	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
-		// extract only the last IP
-		if i := strings.IndexAny(ip, ","); i > 0 {
-			return strings.TrimSpace(ip[:i])
-		}
+	if ip := r.Header.Get("X-Real-IP"); ip != "" {
 		return ip
 	}
 
-	if ip := r.Header.Get("X-Forwarded-For"); ip != "" {
-		return ip
+	if ipsList := r.Header.Get("X-Forwarded-For"); ipsList != "" {
+		ips := strings.Split(ipsList, ",")
+		// extract the rightmost ip
+		for _, ip := range ips {
+			if trimmedIp := strings.TrimSpace(ip); trimmedIp != "" {
+				return trimmedIp
+			}
+		}
 	}
 
 	return fallbackIp
