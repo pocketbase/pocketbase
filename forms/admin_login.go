@@ -56,7 +56,7 @@ func NewAdminLoginWithConfig(config AdminLoginConfig) *AdminLogin {
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *AdminLogin) Validate() error {
 	return validation.ValidateStruct(form,
-		validation.Field(&form.Email, validation.Required, validation.Length(1, 255), is.Email),
+		validation.Field(&form.Email, validation.Required, validation.Length(1, 255), is.EmailFormat),
 		validation.Field(&form.Password, validation.Required, validation.Length(1, 255)),
 	)
 }
