@@ -102,7 +102,7 @@ func TestSettingsMerge(t *testing.T) {
 	s2.GitlabAuth.Enabled = true
 	s2.GitlabAuth.ClientId = "gitlab_test"
 	s2.DiscordAuth.Enabled = true
-	s2.DiscordAuth.ClientId = "gitlab_test"
+	s2.DiscordAuth.ClientId = "discord_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
