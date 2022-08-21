@@ -47,7 +47,7 @@ export function removeToast(messageOrToast) {
     });
 }
 
-export function removeAll() {
+export function removeAllToasts() {
     toasts.update((t) => {
         for (let toast of t) {
             removeToastFromArray(t, toast);

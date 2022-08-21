@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/mail"
 	"net/smtp"
+	"strings"
 
 	"github.com/domodwyer/mailyak/v3"
 )
@@ -43,7 +44,7 @@ func (m *SmtpClient) Send(
 	fromEmail mail.Address,
 	toEmail mail.Address,
 	subject string,
-	htmlBody string,
+	htmlContent string,
 	attachments map[string]io.Reader,
 ) error {
 	smtpAuth := smtp.PlainAuth("", m.username, m.password, m.host)
@@ -64,9 +65,12 @@ func (m *SmtpClient) Send(
 		yak.FromName(fromEmail.Name)
 	}
 	yak.From(fromEmail.Address)
-	yak.To(toEmail.Address)
+
+	// wrap in brackets as workaround for spamassasin "TO_NO_BRKTS_HTML_ONLY" rule
+	yak.To(strings.TrimSpace(fmt.Sprintf("%s <%s>", toEmail.Name, toEmail.Address)))
+
 	yak.Subject(subject)
-	yak.HTML().Set(htmlBody)
+	yak.HTML().Set(htmlContent)
 
 	for name, data := range attachments {
 		yak.Attach(name, data)

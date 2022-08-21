@@ -163,7 +163,7 @@
                     {:else if field.type === "url"}
                         URL address.
                     {:else if field.type === "file"}
-                        FormData object.<br />
+                        File object.<br />
                         Set to <code>null</code> to delete already uploaded file(s).
                     {:else if field.type === "relation"}
                         Relation record {field.options?.maxSelect > 1 ? "ids" : "id"}.

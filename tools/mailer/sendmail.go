@@ -26,7 +26,7 @@ func (m *Sendmail) Send(
 	fromEmail mail.Address,
 	toEmail mail.Address,
 	subject string,
-	htmlBody string,
+	htmlContent string,
 	attachments map[string]io.Reader,
 ) error {
 	headers := make(http.Header)
@@ -50,7 +50,7 @@ func (m *Sendmail) Send(
 	if _, err := buffer.Write([]byte("\r\n")); err != nil {
 		return err
 	}
-	if _, err := buffer.Write([]byte(htmlBody)); err != nil {
+	if _, err := buffer.Write([]byte(htmlContent)); err != nil {
 		return err
 	}
 	// ---

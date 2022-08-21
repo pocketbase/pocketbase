@@ -4,7 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
-    import { addSuccessToast } from "@/stores/toasts";
+    import { removeAllToasts, addWarningToast, addSuccessToast } from "@/stores/toasts";
     import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
@@ -13,10 +13,15 @@
 
     $pageTitle = "Files storage";
 
+    const testRequestKey = "s3_test_request";
+
     let originalFormSettings = {};
     let formSettings = {};
     let isLoading = false;
     let isSaving = false;
+    let isTesting = false;
+    let testS3Error = null;
+    let testS3TimeoutId = null;
 
     $: initialHash = JSON.stringify(originalFormSettings);
 
@@ -37,6 +42,24 @@
         isLoading = false;
     }
 
+    async function testS3() {
+        testS3Error = null;
+
+        if (!formSettings.s3.enabled) {
+            return; // nothing to test
+        }
+
+        isTesting = true;
+
+        try {
+            await ApiClient.settings.testS3({ $cancelKey: testRequestKey });
+        } catch (err) {
+            testS3Error = err;
+        }
+
+        isTesting = false;
+    }
+
     async function save() {
         if (isSaving || !hasChanges) {
             return;
@@ -44,27 +67,49 @@
 
         isSaving = true;
 
+        // auto cancel the test request after 30sec
+        clearTimeout(testS3TimeoutId);
+        testS3TimeoutId = setTimeout(() => {
+            ApiClient.cancelRequest(testRequestKey);
+            addErrorToast("S3 test connection timeout.");
+        }, 30000);
+
         try {
+            ApiClient.cancelRequest(testRequestKey);
             const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
-            init(settings);
             setErrors({});
-            addSuccessToast("Successfully saved files storage settings.");
+
+            await init(settings);
+
+            removeAllToasts();
+
+            if (testS3Error) {
+                addWarningToast("Successfully saved but failed to establish S3 connection.");
+            } else {
+                addSuccessToast("Successfully saved files storage settings.");
+            }
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
 
+        clearTimeout(testS3TimeoutId);
+
         isSaving = false;
     }
 
-    function init(settings = {}) {
+    async function init(settings = {}) {
         formSettings = {
             s3: settings?.s3 || {},
         };
         originalFormSettings = JSON.parse(JSON.stringify(formSettings));
+
+        await testS3();
     }
 
-    function reset() {
+    async function reset() {
         formSettings = JSON.parse(JSON.stringify(originalFormSettings || {}));
+
+        await testS3();
     }
 </script>
 
@@ -136,7 +181,7 @@
 
                 {#if formSettings.s3.enabled}
                     <div class="grid" transition:slide|local={{ duration: 150 }}>
-                        <div class="col-lg-12">
+                        <div class="col-lg-6">
                             <Field class="form-field required" name="s3.endpoint" let:uniqueId>
                                 <label for={uniqueId}>Endpoint</label>
                                 <input
@@ -147,7 +192,7 @@
                                 />
                             </Field>
                         </div>
-                        <div class="col-lg-6">
+                        <div class="col-lg-3">
                             <Field class="form-field required" name="s3.bucket" let:uniqueId>
                                 <label for={uniqueId}>Bucket</label>
                                 <input
@@ -158,7 +203,7 @@
                                 />
                             </Field>
                         </div>
-                        <div class="col-lg-6">
+                        <div class="col-lg-3">
                             <Field class="form-field required" name="s3.region" let:uniqueId>
                                 <label for={uniqueId}>Region</label>
                                 <input
@@ -216,6 +261,26 @@
 
                 <div class="flex">
                     <div class="flex-fill" />
+
+                    {#if formSettings.s3?.enabled && !hasChanges && !isSaving}
+                        {#if isTesting}
+                            <span class="loader loader-sm" />
+                        {:else if testS3Error}
+                            <div
+                                class="label label-sm label-warning entrance-right"
+                                use:tooltip={testS3Error.data?.message}
+                            >
+                                <i class="ri-error-warning-line txt-warning" />
+                                <span class="txt">Failed to establish S3 connection</span>
+                            </div>
+                        {:else}
+                            <div class="label label-sm label-success entrance-right">
+                                <i class="ri-checkbox-circle-line txt-success" />
+                                <span class="txt">S3 connected successfully</span>
+                            </div>
+                        {/if}
+                    {/if}
+
                     {#if hasChanges}
                         <button
                             type="button"
@@ -226,6 +291,7 @@
                             <span class="txt">Cancel</span>
                         </button>
                     {/if}
+
                     <button
                         type="submit"
                         class="btn btn-expanded"

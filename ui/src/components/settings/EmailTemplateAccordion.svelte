@@ -6,6 +6,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import Accordion from "@/components/base/Accordion.svelte";
+    import { onMount } from "svelte";
 
     export let key;
     export let title;
@@ -45,12 +46,12 @@
         isEditorComponentLoading = false;
     }
 
-    loadEditorComponent();
-
     function copy(param) {
         CommonHelper.copyToClipboard(param);
         addInfoToast(`Copied ${param} to clipboard`, 2000);
     }
+
+    loadEditorComponent();
 </script>
 
 <Accordion bind:this={accordion} on:expand on:collapse on:toggle {...$$restProps}>
@@ -108,18 +109,13 @@
         <label for={uniqueId}>Body (HTML)</label>
 
         {#if editorComponent && !isEditorComponentLoading}
-            <svelte:component
-                this={editorComponent}
-                id={uniqueId}
-                language="html"
-                bind:value={config.body}
-            />
+            <svelte:component this={editorComponent} id={uniqueId} language="html" bind:value={config.body} />
         {:else}
             <textarea
                 id={uniqueId}
                 class="txt-mono"
                 spellcheck="false"
-                rows="12"
+                rows="14"
                 required
                 bind:value={config.body}
             />

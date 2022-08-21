@@ -47,10 +47,11 @@
             clearList();
         }
 
-        return ApiClient.records.getList(collection.id, page, 50, {
-            sort: sort,
-            filter: filter,
-        })
+        return ApiClient.records
+            .getList(collection.id, page, 50, {
+                sort: sort,
+                filter: filter,
+            })
             .then((result) => {
                 isLoading = false;
                 records = records.concat(result.items);

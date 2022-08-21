@@ -117,7 +117,7 @@
                             <i
                                 class="ri-information-line link-hint"
                                 use:tooltip={{
-                                    text: `This is useful to prevent making accidental schema changes on a production environment.`,
+                                    text: `This could prevent making accidental schema changes when in production environment.`,
                                     position: "right",
                                 }}
                             />

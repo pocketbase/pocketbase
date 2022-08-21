@@ -628,11 +628,16 @@ select {
     input[type="radio"] {
         & ~ label:before {
             border-radius: 50%;
-            font-size: 0.5rem;
+            font-size: 1rem;
         }
-        &:checked ~ label:before {
-            content: '\eb7c';
-            color: #fff;
+    }
+
+    .form-field-block {
+        @extend %block;
+        position: relative;
+        margin: 0 0 var(--xsSpacing);
+        &:last-child {
+            margin-bottom: 0;
         }
     }
 
@@ -1045,6 +1050,9 @@ select {
         }
         .cm-selectionMatch {
             background: var(--infoAltColor);
+        }
+        &.cm-focused .cm-matchingBracket {
+            background-color: rgba(50, 140, 130, 0.1);
         }
     }
 }

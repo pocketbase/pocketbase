@@ -12,6 +12,7 @@
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import EmailTemplateAccordion from "@/components/settings/EmailTemplateAccordion.svelte";
+    import EmailTestPopup from "@/components/settings/EmailTestPopup.svelte";
 
     const tlsOptions = [
         { label: "Auto (StartTLS)", value: false },
@@ -20,6 +21,7 @@
 
     $pageTitle = "Mail settings";
 
+    let testPopup;
     let originalFormSettings = {};
     let formSettings = {};
     let isLoading = false;
@@ -217,6 +219,7 @@
 
                 <div class="flex">
                     <div class="flex-fill" />
+
                     {#if hasChanges}
                         <button
                             type="button"
@@ -226,18 +229,29 @@
                         >
                             <span class="txt">Cancel</span>
                         </button>
+                        <button
+                            type="submit"
+                            class="btn btn-expanded"
+                            class:btn-loading={isSaving}
+                            disabled={!hasChanges || isSaving}
+                            on:click={() => save()}
+                        >
+                            <span class="txt">Save changes</span>
+                        </button>
+                    {:else}
+                        <button
+                            type="button"
+                            class="btn btn-expanded btn-outline"
+                            on:click={() => testPopup?.show()}
+                        >
+                            <i class="ri-mail-check-line" />
+                            <span class="txt">Send test email</span>
+                        </button>
                     {/if}
-                    <button
-                        type="submit"
-                        class="btn btn-expanded"
-                        class:btn-loading={isSaving}
-                        disabled={!hasChanges || isSaving}
-                        on:click={() => save()}
-                    >
-                        <span class="txt">Save changes</span>
-                    </button>
                 </div>
             {/if}
         </form>
     </div>
 </PageWrapper>
+
+<EmailTestPopup bind:this={testPopup} />

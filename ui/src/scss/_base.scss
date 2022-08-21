@@ -692,3 +692,17 @@ a,
         }
     }
 }
+
+// base entrance animations
+.entrance-top {
+    animation: entranceTop var(--entranceAnimationSpeed);
+}
+.entrance-bottom {
+    animation: entranceBottom var(--entranceAnimationSpeed);
+}
+.entrance-left {
+    animation: entranceLeft var(--entranceAnimationSpeed);
+}
+.entrance-right {
+    animation: entranceRight var(--entranceAnimationSpeed);
+}

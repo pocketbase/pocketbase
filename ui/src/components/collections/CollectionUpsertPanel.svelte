@@ -146,7 +146,8 @@
         }
 
         confirm(`Do you really want to delete collection "${original?.name}" and all its records?`, () => {
-            return ApiClient.collections.delete(original?.id)
+            return ApiClient.collections
+                .delete(original?.id)
                 .then(() => {
                     hide();
                     addSuccessToast(`Successfully deleted collection "${original?.name}".`);

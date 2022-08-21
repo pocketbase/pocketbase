@@ -66,37 +66,19 @@ const routes = {
 
     "/users/confirm-password-reset/:token": wrap({
         asyncComponent:  () => import("@/components/users/PageUserConfirmPasswordReset.svelte"),
-        conditions: baseConditions.concat([
-            () => {
-                // ensure that there is no authenticated user/admin model
-                ApiClient.logout(false);
-                return true;
-            },
-        ]),
+        conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
 
     "/users/confirm-verification/:token": wrap({
         asyncComponent:  () => import("@/components/users/PageUserConfirmVerification.svelte"),
-        conditions: baseConditions.concat([
-            () => {
-                // ensure that there is no authenticated user/admin model
-                ApiClient.logout(false);
-                return true;
-            },
-        ]),
+        conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
 
     "/users/confirm-email-change/:token": wrap({
         asyncComponent:  () => import("@/components/users/PageUserConfirmEmailChange.svelte"),
-        conditions: baseConditions.concat([
-            () => {
-                // ensure that there is no authenticated user/admin model
-                ApiClient.logout(false);
-                return true;
-            },
-        ]),
+        conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
 

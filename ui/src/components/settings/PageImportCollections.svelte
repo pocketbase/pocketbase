@@ -50,7 +50,8 @@
     $: canImport = !isLoadingOldCollections && isValid && hasChanges;
 
     $: idReplacableCollections = newCollections.filter((collection) => {
-        let old = CommonHelper.findByKey(oldCollections, "name", collection.name) ||
+        let old =
+            CommonHelper.findByKey(oldCollections, "name", collection.name) ||
             CommonHelper.findByKey(oldCollections, "id", collection.id);
 
         if (!old) {
@@ -149,7 +150,8 @@
 
     function replaceIds() {
         for (let collection of newCollections) {
-            const old = CommonHelper.findByKey(oldCollections, "name", collection.name) ||
+            const old =
+                CommonHelper.findByKey(oldCollections, "name", collection.name) ||
                 CommonHelper.findByKey(oldCollections, "id", collection.id);
 
             if (!old) {
@@ -327,7 +329,8 @@
                                     <span class="label label-warning list-label">Changed</span>
                                     <div class="inline-flex flex-gap-5">
                                         {#if pair.old.name !== pair.new.name}
-                                            <strong class="txt-strikethrough txt-hint">{pair.old.name}</strong>
+                                            <strong class="txt-strikethrough txt-hint">{pair.old.name}</strong
+                                            >
                                             <i class="ri-arrow-right-line txt-sm" />
                                         {/if}
                                         <strong>

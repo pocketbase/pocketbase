@@ -120,7 +120,7 @@
 
 <OverlayPanel
     bind:this={panel}
-    class="full-width-popup  import-popup"
+    class="full-width-popup import-popup"
     overlayClose={false}
     escClose={!isImporting}
     beforeHide={() => !isImporting}
