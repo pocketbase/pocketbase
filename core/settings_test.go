@@ -37,6 +37,8 @@ func TestSettingsValidate(t *testing.T) {
 	s.GithubAuth.ClientId = ""
 	s.GitlabAuth.Enabled = true
 	s.GitlabAuth.ClientId = ""
+	s.DiscordAuth.Enabled = true
+	s.DiscordAuth.ClientId = ""
 
 	// check if Validate() is triggering the members validate methods.
 	err := s.Validate()
@@ -60,6 +62,7 @@ func TestSettingsValidate(t *testing.T) {
 		`"facebookAuth":{`,
 		`"githubAuth":{`,
 		`"gitlabAuth":{`,
+		`"discordAuth":{`,
 	}
 
 	errBytes, _ := json.Marshal(err)
@@ -98,6 +101,8 @@ func TestSettingsMerge(t *testing.T) {
 	s2.GithubAuth.ClientId = "github_test"
 	s2.GitlabAuth.Enabled = true
 	s2.GitlabAuth.ClientId = "gitlab_test"
+	s2.DiscordAuth.Enabled = true
+	s2.DiscordAuth.ClientId = "discord_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
@@ -163,6 +168,7 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.FacebookAuth.ClientSecret = "test123"
 	s1.GithubAuth.ClientSecret = "test123"
 	s1.GitlabAuth.ClientSecret = "test123"
+	s1.DiscordAuth.ClientSecret = "test123"
 
 	s2, err := s1.RedactClone()
 	if err != nil {
@@ -174,7 +180,7 @@ func TestSettingsRedactClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/users/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/users/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/users/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":7},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"userAuthToken":{"secret":"******","duration":1209600},"userPasswordResetToken":{"secret":"******","duration":1800},"userEmailChangeToken":{"secret":"******","duration":1800},"userVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":true,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":8},"googleAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"facebookAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"githubAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"}}`
+	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/users/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/users/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/users/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":7},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"userAuthToken":{"secret":"******","duration":1209600},"userPasswordResetToken":{"secret":"******","duration":1800},"userEmailChangeToken":{"secret":"******","duration":1800},"userVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":true,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":8},"googleAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"facebookAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"githubAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"discordAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected %v, got \n%v", expected, encodedStr)
@@ -189,6 +195,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.GithubAuth.ClientId = "github_test"
 	s.GitlabAuth.ClientId = "gitlab_test"
 	s.GitlabAuth.Enabled = true
+	s.DiscordAuth.ClientId = "discord_test"
 
 	result := s.NamedAuthProviderConfigs()
 
@@ -197,7 +204,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"}}`
+	expected := `{"discord":{"enabled":false,"allowRegistrations":true,"clientId":"discord_test"},"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected the same serialization, got %v", encodedStr)

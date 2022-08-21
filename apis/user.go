@@ -129,7 +129,7 @@ func (api *userApi) authMethods(c echo.Context) error {
 		}
 
 		state := security.RandomString(30)
-		codeVerifier := security.RandomString(30)
+		codeVerifier := security.RandomString(43)
 		codeChallenge := security.S256Challenge(codeVerifier)
 		codeChallengeMethod := "S256"
 		result.AuthProviders = append(result.AuthProviders, providerInfo{

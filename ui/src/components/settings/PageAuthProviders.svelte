@@ -63,7 +63,7 @@
             emailAuth: Object.assign({ enabled: true }, data.emailAuth),
         };
 
-        const providers = ["googleAuth", "facebookAuth", "githubAuth", "gitlabAuth"];
+        const providers = ["googleAuth", "facebookAuth", "githubAuth", "gitlabAuth", "discordAuth"];
         for (const provider of providers) {
             formSettings[provider] = Object.assign(
                 { enabled: false, allowRegistrations: true },
@@ -130,6 +130,13 @@
                         icon="ri-gitlab-line"
                         showSelfHostedFields
                         bind:config={formSettings.gitlabAuth}
+                    />
+                    <AuthProviderAccordion
+                        single
+                        key="discordAuth"
+                        title="Discord"
+                        icon="ri-discord-line"
+                        bind:config={formSettings.discordAuth}
                     />
                 </div>
 
