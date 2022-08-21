@@ -8,6 +8,8 @@ import (
 
 var _ Provider = (*Discord)(nil)
 
+var discordScopes = []string{"identify", "email"}
+
 // NameDiscord is the unique name of the Discord provider.
 const NameDiscord string = "discord"
 
@@ -21,7 +23,7 @@ func NewDiscordProvider() *Discord {
 	// https://discord.com/developers/docs/topics/oauth2
 	// https://discord.com/developers/docs/resources/user#get-current-user
 	return &Discord{&baseProvider{
-		scopes:     []string{"identify", "email"},
+		scopes:     discordScopes,
 		authUrl:    "https://discord.com/api/oauth2/authorize",
 		tokenUrl:   "https://discord.com/api/oauth2/token",
 		userApiUrl: "https://discord.com/api/users/@me",
