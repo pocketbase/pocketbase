@@ -6,7 +6,6 @@
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import Accordion from "@/components/base/Accordion.svelte";
-    import { onMount } from "svelte";
 
     export let key;
     export let title;

@@ -6,7 +6,7 @@ import (
 
 func init() {
 	LogsMigrations.Register(func(db dbx.Builder) error {
-		// delete old index (don't check for error because of backward compatability with old installations)
+		// delete old index (don't check for error because of backward compatibility with old installations)
 		db.DropIndex("_requests", "_request_ip_idx").Execute()
 
 		// rename ip -> remoteIp
