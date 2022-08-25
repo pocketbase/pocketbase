@@ -224,15 +224,23 @@ func TestTokenConfigValidate(t *testing.T) {
 		// invalid data
 		{
 			core.TokenConfig{
-				Secret:   "test",
+				Secret:   strings.Repeat("a", 5),
 				Duration: 4,
+			},
+			true,
+		},
+		// valid secret but invalid duration
+		{
+			core.TokenConfig{
+				Secret:   strings.Repeat("a", 30),
+				Duration: 63072000 + 1,
 			},
 			true,
 		},
 		// valid data
 		{
 			core.TokenConfig{
-				Secret:   "testtesttesttesttesttesttestte",
+				Secret:   strings.Repeat("a", 30),
 				Duration: 100,
 			},
 			false,

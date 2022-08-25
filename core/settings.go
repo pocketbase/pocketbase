@@ -223,7 +223,7 @@ type TokenConfig struct {
 func (c TokenConfig) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.Secret, validation.Required, validation.Length(30, 300)),
-		validation.Field(&c.Duration, validation.Required, validation.Min(5), validation.Max(31536000)),
+		validation.Field(&c.Duration, validation.Required, validation.Min(5), validation.Max(63072000)),
 	)
 }
 
