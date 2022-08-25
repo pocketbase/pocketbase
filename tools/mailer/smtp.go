@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/mail"
 	"net/smtp"
-	"strings"
 
 	"github.com/domodwyer/mailyak/v3"
 )
@@ -65,10 +64,7 @@ func (m *SmtpClient) Send(
 		yak.FromName(fromEmail.Name)
 	}
 	yak.From(fromEmail.Address)
-
-	// wrap in brackets as workaround for spamassasin "TO_NO_BRKTS_HTML_ONLY" rule
-	yak.To(strings.TrimSpace(fmt.Sprintf("%s <%s>", toEmail.Name, toEmail.Address)))
-
+	yak.To(toEmail.Address)
 	yak.Subject(subject)
 	yak.HTML().Set(htmlContent)
 
