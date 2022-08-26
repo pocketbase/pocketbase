@@ -68,6 +68,11 @@ func (m *SmtpClient) Send(
 	yak.Subject(subject)
 	yak.HTML().Set(htmlContent)
 
+	// try to generate a plain text version of the HTML
+	if plain, err := html2Text(htmlContent); err == nil {
+		yak.Plain().Set(plain)
+	}
+
 	for name, data := range attachments {
 		yak.Attach(name, data)
 	}
