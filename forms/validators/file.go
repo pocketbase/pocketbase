@@ -3,9 +3,9 @@ package validators
 import (
 	"encoding/binary"
 	"fmt"
-	"net/http"
 	"strings"
 
+	"github.com/gabriel-vasile/mimetype"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/tools/rest"
 )
@@ -47,10 +47,10 @@ func UploadedFileMimeType(validTypes []string) validation.RuleFunc {
 			return validation.NewError("validation_invalid_mime_type", "Unsupported file type.")
 		}
 
-		filetype := http.DetectContentType(v.Bytes())
+		filetype := mimetype.Detect(v.Bytes())
 
 		for _, t := range validTypes {
-			if t == filetype {
+			if filetype.Is(t) {
 				return nil // valid
 			}
 		}
