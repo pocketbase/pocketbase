@@ -194,21 +194,26 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 		options, _ := field.Options.(*schema.FileOptions)
 		oldNames := list.ToUniqueStringSlice(form.Data[key])
 
-		// delete previously uploaded file(s)
-		if options.MaxSelect == 1 {
-			// search for unset zero indexed key as a fallback
-			indexedKeyValue, hasIndexedKey := extendedData[key+".0"]
+		// -----------------------------------------------------------
+		// Delete previously uploaded file(s)
+		// -----------------------------------------------------------
 
-			if cast.ToString(value) == "" || (hasIndexedKey && cast.ToString(indexedKeyValue) == "") {
-				if len(oldNames) > 0 {
-					form.filesToDelete = append(form.filesToDelete, oldNames...)
-				}
-				form.Data[key] = ""
-			}
-		} else if options.MaxSelect > 1 {
-			// search for individual file index to delete (eg. "file.0")
-			keyExp, _ := regexp.Compile(`^` + regexp.QuoteMeta(key) + `\.\d+$`)
+		// if empty value was set, mark all previously uploaded files for deletion
+		if len(list.ToUniqueStringSlice(value)) == 0 && len(oldNames) > 0 {
+			form.filesToDelete = append(form.filesToDelete, oldNames...)
+			form.Data[key] = []string{}
+		} else if len(oldNames) > 0 {
 			indexesToDelete := make([]int, 0, len(extendedData))
+
+			// search for individual file name to delete (eg. "file.test.png = null")
+			for i, name := range oldNames {
+				if v, ok := extendedData[key+"."+name]; ok && cast.ToString(v) == "" {
+					indexesToDelete = append(indexesToDelete, i)
+				}
+			}
+
+			// search for individual file index to delete (eg. "file.0 = null")
+			keyExp, _ := regexp.Compile(`^` + regexp.QuoteMeta(key) + `\.\d+$`)
 			for indexedKey := range extendedData {
 				if keyExp.MatchString(indexedKey) && cast.ToString(extendedData[indexedKey]) == "" {
 					index, indexErr := strconv.Atoi(indexedKey[len(key)+1:])
@@ -234,7 +239,14 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 			form.Data[key] = nonDeleted
 		}
 
-		// check if there are any new uploaded form files
+		// -----------------------------------------------------------
+		// Check for new uploaded file
+		// -----------------------------------------------------------
+
+		if form.getContentType(r) != "multipart/form-data" {
+			continue // file upload is supported only via multipart/form-data
+		}
+
 		files, err := rest.FindUploadedFiles(r, key)
 		if err != nil {
 			if form.config.App.IsDebug() {

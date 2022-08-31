@@ -98,7 +98,7 @@ func TestRecordUpsertLoadDataJson(t *testing.T) {
 		"onefile":     nil,
 		"manyfiles.0": "",
 		"manyfiles.1": "test.png", // should be ignored
-		"onlyimages":  nil,        // should be ignored
+		"onlyimages":  nil,
 	}
 
 	form := forms.NewRecordUpsert(app, record)
@@ -136,18 +136,12 @@ func TestRecordUpsertLoadDataJson(t *testing.T) {
 	}
 	manyfilesRemains := len(list.ToUniqueStringSlice(manyfiles))
 	if manyfilesRemains != 1 {
-		t.Fatalf("Expect only 1 manyfiles to remain, got %v", manyfiles)
+		t.Fatalf("Expect only 1 manyfiles to remain, got \n%v", manyfiles)
 	}
 
-	// cannot reset multiple file upload field with just using the field name
 	onlyimages, ok := form.Data["onlyimages"]
-	if !ok || onlyimages == nil {
-		t.Fatal("Expect onlyimages field to be set and not be altered")
-	}
-	onlyimagesRemains := len(list.ToUniqueStringSlice(onlyimages))
-	expectedRemains := 2 // 2 existing
-	if onlyimagesRemains != expectedRemains {
-		t.Fatalf("Expect onlyimages to be %d, got %d (%v)", expectedRemains, onlyimagesRemains, onlyimages)
+	if len(list.ToUniqueStringSlice(onlyimages)) != 0 {
+		t.Fatalf("Expect onlyimages field to be deleted, got \n%v", onlyimages)
 	}
 }
 
@@ -167,9 +161,10 @@ func TestRecordUpsertLoadDataMultipart(t *testing.T) {
 		"unknown": "test456",
 		// file fields unset/delete
 		"onefile":     "",
-		"manyfiles.0": "",
+		"manyfiles.0": "", // delete by index
+		"manyfiles.b635c395-6837-49e5-8535-b0a6ebfbdbf3.png": "", // delete by name
 		"manyfiles.1": "test.png", // should be ignored
-		"onlyimages":  "",         // should be ignored
+		"onlyimages":  "",
 	}, "onlyimages")
 	if err != nil {
 		t.Fatal(err)
@@ -208,16 +203,16 @@ func TestRecordUpsertLoadDataMultipart(t *testing.T) {
 		t.Fatal("Expect manyfiles field to be set")
 	}
 	manyfilesRemains := len(list.ToUniqueStringSlice(manyfiles))
-	if manyfilesRemains != 1 {
-		t.Fatalf("Expect only 1 manyfiles to remain, got %v", manyfiles)
+	if manyfilesRemains != 0 {
+		t.Fatalf("Expect 0 manyfiles to remain, got %v", manyfiles)
 	}
 
 	onlyimages, ok := form.Data["onlyimages"]
 	if !ok || onlyimages == nil {
-		t.Fatal("Expect onlyimages field to be set and not be altered")
+		t.Fatal("Expect onlyimages field to be set")
 	}
 	onlyimagesRemains := len(list.ToUniqueStringSlice(onlyimages))
-	expectedRemains := 3 // 2 existing + 1 new upload
+	expectedRemains := 1 // -2 removed + 1 new upload
 	if onlyimagesRemains != expectedRemains {
 		t.Fatalf("Expect onlyimages to be %d, got %d (%v)", expectedRemains, onlyimagesRemains, onlyimages)
 	}
@@ -489,8 +484,9 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 	}
 
 	formData, mp, err := tests.MockMultipartData(map[string]string{
-		"title":   "test_save",
-		"onefile": "",
+		"title":      "test_save",
+		"onefile":    "",
+		"onlyimages": "",
 	}, "manyfiles.1", "manyfiles") // replace + new file
 	if err != nil {
 		t.Fatal(err)
@@ -533,6 +529,11 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 
 	if hasRecordFile(app, recordAfter, recordAfter.GetStringDataValue("onefile")) {
 		t.Fatal("Expected record.onefile to be deleted")
+	}
+
+	onlyimages := (recordAfter.GetStringSliceDataValue("onlyimages"))
+	if len(onlyimages) != 0 {
+		t.Fatalf("Expected all onlyimages files to be deleted, got %d (%v)", len(onlyimages), onlyimages)
 	}
 
 	manyfiles := (recordAfter.GetStringSliceDataValue("manyfiles"))
