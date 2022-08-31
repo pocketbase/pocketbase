@@ -94,7 +94,7 @@ func (dao *Dao) FindUserById(id string) (*models.User, error) {
 	return model, nil
 }
 
-// FindUserByEmail finds a single User model by its email address.
+// FindUserByEmail finds a single User model by its non-empty email address.
 //
 // This method also auto loads the related user profile record
 // into the found model.
@@ -102,6 +102,7 @@ func (dao *Dao) FindUserByEmail(email string) (*models.User, error) {
 	model := &models.User{}
 
 	err := dao.UserQuery().
+		AndWhere(dbx.Not(dbx.HashExp{"email": ""})).
 		AndWhere(dbx.HashExp{"email": email}).
 		Limit(1).
 		One(model)

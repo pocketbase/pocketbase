@@ -20,16 +20,16 @@ type SettingsUpsert struct {
 //
 // NB! App is required struct member.
 type SettingsUpsertConfig struct {
-	App       core.App
-	TxDao     *daos.Dao
-	TxLogsDao *daos.Dao
+	App     core.App
+	Dao     *daos.Dao
+	LogsDao *daos.Dao
 }
 
 // NewSettingsUpsert creates a new [SettingsUpsert] form with initializer
 // config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewSettingsUpsertWithConfig] with explicitly set TxDao.
+// [NewSettingsUpsertWithConfig] with explicitly set Dao.
 func NewSettingsUpsert(app core.App) *SettingsUpsert {
 	return NewSettingsUpsertWithConfig(SettingsUpsertConfig{
 		App: app,
@@ -45,12 +45,12 @@ func NewSettingsUpsertWithConfig(config SettingsUpsertConfig) *SettingsUpsert {
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
-	if form.config.TxLogsDao == nil {
-		form.config.TxLogsDao = form.config.App.LogsDao()
+	if form.config.LogsDao == nil {
+		form.config.LogsDao = form.config.App.LogsDao()
 	}
 
 	// load the application settings into the form
@@ -78,7 +78,7 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
 	encryptionKey := os.Getenv(form.config.App.EncryptionEnv())
 
 	return runInterceptors(func() error {
-		saveErr := form.config.TxDao.SaveParam(
+		saveErr := form.config.Dao.SaveParam(
 			models.ParamAppSettings,
 			form.Settings,
 			encryptionKey,
@@ -88,7 +88,7 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
 		}
 
 		// explicitly trigger old logs deletion
-		form.config.TxLogsDao.DeleteOldRequests(
+		form.config.LogsDao.DeleteOldRequests(
 			time.Now().AddDate(0, 0, -1*form.Settings.Logs.MaxDays),
 		)
 

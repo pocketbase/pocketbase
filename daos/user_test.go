@@ -110,6 +110,7 @@ func TestFindUserByEmail(t *testing.T) {
 		email       string
 		expectError bool
 	}{
+		{"", true},
 		{"invalid", true},
 		{"missing@example.com", true},
 		{"test@example.com", false},

@@ -20,8 +20,8 @@ type UserEmailChangeConfirm struct {
 //
 // NB! App is required struct member.
 type UserEmailChangeConfirmConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewUserEmailChangeConfirm creates a new [UserEmailChangeConfirm]
@@ -29,7 +29,7 @@ type UserEmailChangeConfirmConfig struct {
 //
 // This factory method is used primarily for convenience (and backward compatibility).
 // If you want to submit the form as part of another transaction, use
-// [NewUserEmailChangeConfirmWithConfig] with explicitly set TxDao.
+// [NewUserEmailChangeConfirmWithConfig] with explicitly set Dao.
 func NewUserEmailChangeConfirm(app core.App) *UserEmailChangeConfirm {
 	return NewUserEmailChangeConfirmWithConfig(UserEmailChangeConfirmConfig{
 		App: app,
@@ -45,8 +45,8 @@ func NewUserEmailChangeConfirmWithConfig(config UserEmailChangeConfirmConfig) *U
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -103,12 +103,12 @@ func (form *UserEmailChangeConfirm) parseToken(token string) (*models.User, stri
 	}
 
 	// ensure that there aren't other users with the new email
-	if !form.config.TxDao.IsUserEmailUnique(newEmail, "") {
+	if !form.config.Dao.IsUserEmailUnique(newEmail, "") {
 		return nil, "", validation.NewError("validation_existing_token_email", "The new email address is already registered: "+newEmail)
 	}
 
 	// verify that the token is not expired and its signature is valid
-	user, err := form.config.TxDao.FindUserByToken(
+	user, err := form.config.Dao.FindUserByToken(
 		token,
 		form.config.App.Settings().UserEmailChangeToken.Secret,
 	)
@@ -135,7 +135,7 @@ func (form *UserEmailChangeConfirm) Submit() (*models.User, error) {
 	user.Verified = true
 	user.RefreshTokenKey() // invalidate old tokens
 
-	if err := form.config.TxDao.SaveUser(user); err != nil {
+	if err := form.config.Dao.SaveUser(user); err != nil {
 		return nil, err
 	}
 

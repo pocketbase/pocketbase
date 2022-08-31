@@ -25,7 +25,7 @@ type UserVerificationRequest struct {
 // NB! App is required struct member.
 type UserVerificationRequestConfig struct {
 	App             core.App
-	TxDao           *daos.Dao
+	Dao             *daos.Dao
 	ResendThreshold float64 // in seconds
 }
 
@@ -33,7 +33,7 @@ type UserVerificationRequestConfig struct {
 // form with initializer config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewUserVerificationRequestWithConfig] with explicitly set TxDao.
+// [NewUserVerificationRequestWithConfig] with explicitly set Dao.
 func NewUserVerificationRequest(app core.App) *UserVerificationRequest {
 	return NewUserVerificationRequestWithConfig(UserVerificationRequestConfig{
 		App:             app,
@@ -50,8 +50,8 @@ func NewUserVerificationRequestWithConfig(config UserVerificationRequestConfig) 
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -78,7 +78,7 @@ func (form *UserVerificationRequest) Submit() error {
 		return err
 	}
 
-	user, err := form.config.TxDao.FindUserByEmail(form.Email)
+	user, err := form.config.Dao.FindUserByEmail(form.Email)
 	if err != nil {
 		return err
 	}
@@ -100,5 +100,5 @@ func (form *UserVerificationRequest) Submit() error {
 	// update last sent timestamp
 	user.LastVerificationSentAt = types.NowDateTime()
 
-	return form.config.TxDao.SaveUser(user)
+	return form.config.Dao.SaveUser(user)
 }

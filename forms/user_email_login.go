@@ -20,8 +20,8 @@ type UserEmailLogin struct {
 //
 // NB! App is required struct member.
 type UserEmailLoginConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewUserEmailLogin creates a new [UserEmailLogin] form with
@@ -29,7 +29,7 @@ type UserEmailLoginConfig struct {
 //
 // This factory method is used primarily for convenience (and backward compatibility).
 // If you want to submit the form as part of another transaction, use
-// [NewUserEmailLoginWithConfig] with explicitly set TxDao.
+// [NewUserEmailLoginWithConfig] with explicitly set Dao.
 func NewUserEmailLogin(app core.App) *UserEmailLogin {
 	return NewUserEmailLoginWithConfig(UserEmailLoginConfig{
 		App: app,
@@ -45,8 +45,8 @@ func NewUserEmailLoginWithConfig(config UserEmailLoginConfig) *UserEmailLogin {
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -67,7 +67,7 @@ func (form *UserEmailLogin) Submit() (*models.User, error) {
 		return nil, err
 	}
 
-	user, err := form.config.TxDao.FindUserByEmail(form.Email)
+	user, err := form.config.Dao.FindUserByEmail(form.Email)
 	if err != nil {
 		return nil, err
 	}

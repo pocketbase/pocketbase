@@ -22,15 +22,15 @@ type UserPasswordResetConfirm struct {
 //
 // NB! App is required struct member.
 type UserPasswordResetConfirmConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewUserPasswordResetConfirm creates a new [UserPasswordResetConfirm]
 // form with initializer config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewUserPasswordResetConfirmWithConfig] with explicitly set TxDao.
+// [NewUserPasswordResetConfirmWithConfig] with explicitly set Dao.
 func NewUserPasswordResetConfirm(app core.App) *UserPasswordResetConfirm {
 	return NewUserPasswordResetConfirmWithConfig(UserPasswordResetConfirmConfig{
 		App: app,
@@ -46,8 +46,8 @@ func NewUserPasswordResetConfirmWithConfig(config UserPasswordResetConfirmConfig
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -70,7 +70,7 @@ func (form *UserPasswordResetConfirm) checkToken(value any) error {
 		return nil // nothing to check
 	}
 
-	user, err := form.config.TxDao.FindUserByToken(
+	user, err := form.config.Dao.FindUserByToken(
 		v,
 		form.config.App.Settings().UserPasswordResetToken.Secret,
 	)
@@ -88,7 +88,7 @@ func (form *UserPasswordResetConfirm) Submit() (*models.User, error) {
 		return nil, err
 	}
 
-	user, err := form.config.TxDao.FindUserByToken(
+	user, err := form.config.Dao.FindUserByToken(
 		form.Token,
 		form.config.App.Settings().UserPasswordResetToken.Secret,
 	)
@@ -100,7 +100,7 @@ func (form *UserPasswordResetConfirm) Submit() (*models.User, error) {
 		return nil, err
 	}
 
-	if err := form.config.TxDao.SaveUser(user); err != nil {
+	if err := form.config.Dao.SaveUser(user); err != nil {
 		return nil, err
 	}
 

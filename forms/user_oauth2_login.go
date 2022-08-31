@@ -35,15 +35,15 @@ type UserOauth2Login struct {
 //
 // NB! App is required struct member.
 type UserOauth2LoginConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewUserOauth2Login creates a new [UserOauth2Login] form with
 // initializer config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewUserOauth2LoginWithConfig] with explicitly set TxDao.
+// [NewUserOauth2LoginWithConfig] with explicitly set Dao.
 func NewUserOauth2Login(app core.App) *UserOauth2Login {
 	return NewUserOauth2LoginWithConfig(UserOauth2LoginConfig{
 		App: app,
@@ -59,8 +59,8 @@ func NewUserOauth2LoginWithConfig(config UserOauth2LoginConfig) *UserOauth2Login
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -99,8 +99,11 @@ func (form *UserOauth2Login) Submit() (*models.User, *auth.AuthUser, error) {
 		return nil, nil, err
 	}
 
+	// load provider configuration
 	config := form.config.App.Settings().NamedAuthProviderConfigs()[form.Provider]
-	config.SetupProvider(provider)
+	if err := config.SetupProvider(provider); err != nil {
+		return nil, nil, err
+	}
 
 	provider.SetRedirectUrl(form.RedirectUrl)
 
@@ -113,55 +116,78 @@ func (form *UserOauth2Login) Submit() (*models.User, *auth.AuthUser, error) {
 		return nil, nil, err
 	}
 
-	// fetch auth user
+	// fetch external auth user
 	authData, err := provider.FetchAuthUser(token)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// login/register the auth user
-	user, _ := form.config.TxDao.FindUserByEmail(authData.Email)
-	if user != nil {
-		// update the existing user's verified state
-		if !user.Verified {
+	var user *models.User
+
+	// check for existing relation with the external auth user
+	rel, _ := form.config.Dao.FindExternalAuthByProvider(form.Provider, authData.Id)
+	if rel != nil {
+		user, err = form.config.Dao.FindUserById(rel.UserId)
+		if err != nil {
+			return nil, authData, err
+		}
+	} else if authData.Email != "" {
+		// look for an existing user by the external user's email
+		user, _ = form.config.Dao.FindUserByEmail(authData.Email)
+	}
+
+	if user == nil && !config.AllowRegistrations {
+		return nil, authData, errors.New("New users registration is not allowed for the authorized provider.")
+	}
+
+	saveErr := form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
+		if user == nil {
+			user = &models.User{}
 			user.Verified = true
-			if err := form.config.TxDao.SaveUser(user); err != nil {
-				return nil, authData, err
+			user.Email = authData.Email
+			user.SetPassword(security.RandomString(30))
+
+			// create the new user
+			if err := txDao.SaveUser(user); err != nil {
+				return err
+			}
+		} else {
+			// update the existing user verified state
+			if !user.Verified {
+				user.Verified = true
+				if err := txDao.SaveUser(user); err != nil {
+					return err
+				}
+			}
+
+			// update the existing user empty email if the authData has one
+			// (this in case previously the user was created with
+			// an OAuth2 provider that didn't return an email address)
+			if user.Email == "" && authData.Email != "" {
+				user.Email = authData.Email
+				if err := txDao.SaveUser(user); err != nil {
+					return err
+				}
 			}
 		}
-		return user, authData, nil
-	}
 
-	if !config.AllowRegistrations {
-		// registration of new users is not allowed via the Oauth2 provider
-		return nil, authData, errors.New("Cannot find user with the authorized email.")
-	}
+		// create ExternalAuth relation if missing
+		if rel == nil {
+			rel = &models.ExternalAuth{
+				UserId:     user.Id,
+				Provider:   form.Provider,
+				ProviderId: authData.Id,
+			}
+			if err := txDao.SaveExternalAuth(rel); err != nil {
+				return err
+			}
+		}
 
-	// create new user
-	user = &models.User{Verified: true}
-	upsertForm := NewUserUpsertWithConfig(UserUpsertConfig{
-		App:   form.config.App,
-		TxDao: form.config.TxDao,
-	}, user)
-	upsertForm.Email = authData.Email
-	upsertForm.Password = security.RandomString(30)
-	upsertForm.PasswordConfirm = upsertForm.Password
+		return nil
+	})
 
-	event := &core.UserOauth2RegisterEvent{
-		User:     user,
-		AuthData: authData,
-	}
-
-	if err := form.config.App.OnUserBeforeOauth2Register().Trigger(event); err != nil {
-		return nil, authData, err
-	}
-
-	if err := upsertForm.Submit(); err != nil {
-		return nil, authData, err
-	}
-
-	if err := form.config.App.OnUserAfterOauth2Register().Trigger(event); err != nil {
-		return nil, authData, err
+	if saveErr != nil {
+		return nil, authData, saveErr
 	}
 
 	return user, authData, nil

@@ -24,7 +24,7 @@ type AdminPasswordResetRequest struct {
 // NB! App is required struct member.
 type AdminPasswordResetRequestConfig struct {
 	App             core.App
-	TxDao           *daos.Dao
+	Dao             *daos.Dao
 	ResendThreshold float64 // in seconds
 }
 
@@ -32,7 +32,7 @@ type AdminPasswordResetRequestConfig struct {
 // form with initializer config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewAdminPasswordResetRequestWithConfig] with explicitly set TxDao.
+// [NewAdminPasswordResetRequestWithConfig] with explicitly set Dao.
 func NewAdminPasswordResetRequest(app core.App) *AdminPasswordResetRequest {
 	return NewAdminPasswordResetRequestWithConfig(AdminPasswordResetRequestConfig{
 		App:             app,
@@ -49,8 +49,8 @@ func NewAdminPasswordResetRequestWithConfig(config AdminPasswordResetRequestConf
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -77,7 +77,7 @@ func (form *AdminPasswordResetRequest) Submit() error {
 		return err
 	}
 
-	admin, err := form.config.TxDao.FindAdminByEmail(form.Email)
+	admin, err := form.config.Dao.FindAdminByEmail(form.Email)
 	if err != nil {
 		return err
 	}
@@ -95,5 +95,5 @@ func (form *AdminPasswordResetRequest) Submit() error {
 	// update last sent timestamp
 	admin.LastResetSentAt = types.NowDateTime()
 
-	return form.config.TxDao.SaveAdmin(admin)
+	return form.config.Dao.SaveAdmin(admin)
 }

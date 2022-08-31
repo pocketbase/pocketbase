@@ -584,11 +584,12 @@ func TestUsersList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":1`,
 				`"perPage":30`,
-				`"totalItems":3`,
+				`"totalItems":4`,
 				`"items":[{`,
 				`"id":"4d0197cc-2b4a-3f83-a26b-d77bc8423d3c"`,
 				`"id":"7bc84d27-6ba2-b42a-383f-4197cc3d3d0c"`,
 				`"id":"97cc3d3d-6ba2-383f-b42a-7bc84d27410c"`,
+				`"id":"cx9u0dh2udo8xol"`,
 			},
 			ExpectedEvents: map[string]int{"OnUsersListRequest": 1},
 		},
@@ -603,8 +604,9 @@ func TestUsersList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":2`,
 				`"perPage":2`,
-				`"totalItems":3`,
+				`"totalItems":4`,
 				`"items":[{`,
+				`"id":"7bc84d27-6ba2-b42a-383f-4197cc3d3d0c"`,
 				`"id":"4d0197cc-2b4a-3f83-a26b-d77bc8423d3c"`,
 			},
 			ExpectedEvents: map[string]int{"OnUsersListRequest": 1},
@@ -630,10 +632,11 @@ func TestUsersList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":1`,
 				`"perPage":30`,
-				`"totalItems":2`,
+				`"totalItems":3`,
 				`"items":[{`,
 				`"id":"4d0197cc-2b4a-3f83-a26b-d77bc8423d3c"`,
 				`"id":"97cc3d3d-6ba2-383f-b42a-7bc84d27410c"`,
+				`"id":"cx9u0dh2udo8xol"`,
 			},
 			ExpectedEvents: map[string]int{"OnUsersListRequest": 1},
 		},
@@ -918,6 +921,188 @@ func TestUserUpdate(t *testing.T) {
 				"OnUserAfterUpdateRequest":  1,
 				"OnModelBeforeUpdate":       1,
 				"OnModelAfterUpdate":        1,
+			},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestUserListExternalsAuths(t *testing.T) {
+	scenarios := []tests.ApiScenario{
+		{
+			Name:            "unauthorized",
+			Method:          http.MethodGet,
+			Url:             "/api/users/cx9u0dh2udo8xol/external-auths",
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as admin + nonexisting user id",
+			Method: http.MethodGet,
+			Url:    "/api/users/000000000000000/external-auths",
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as admin + existing user id and no external auths",
+			Method: http.MethodGet,
+			Url:    "/api/users/97cc3d3d-6ba2-383f-b42a-7bc84d27410c/external-auths",
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`[]`,
+			},
+			ExpectedEvents: map[string]int{"OnUserListExternalAuths": 1},
+		},
+		{
+			Name:   "authorized as admin + existing user id and 2 external auths",
+			Method: http.MethodGet,
+			Url:    "/api/users/cx9u0dh2udo8xol/external-auths",
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"abcdefghijklmn1"`,
+				`"id":"abcdefghijklmn0"`,
+				`"userId":"cx9u0dh2udo8xol"`,
+			},
+			ExpectedEvents: map[string]int{"OnUserListExternalAuths": 1},
+		},
+		{
+			Name:   "authorized as user - trying to list another user external auths",
+			Method: http.MethodGet,
+			Url:    "/api/users/cx9u0dh2udo8xol/external-auths",
+			RequestHeaders: map[string]string{
+				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as user - owner without external auths",
+			Method: http.MethodGet,
+			Url:    "/api/users/4d0197cc-2b4a-3f83-a26b-d77bc8423d3c/external-auths",
+			RequestHeaders: map[string]string{
+				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`[]`,
+			},
+			ExpectedEvents: map[string]int{"OnUserListExternalAuths": 1},
+		},
+		{
+			Name:   "authorized as user - owner with 2 external auths",
+			Method: http.MethodGet,
+			Url:    "/api/users/cx9u0dh2udo8xol/external-auths",
+			RequestHeaders: map[string]string{
+				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImN4OXUwZGgydWRvOHhvbCIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.NgFYG2D7PftFW1tcfe5E2oDi_AVakDR9J6WI6VUZQfw",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"abcdefghijklmn1"`,
+				`"id":"abcdefghijklmn0"`,
+				`"userId":"cx9u0dh2udo8xol"`,
+			},
+			ExpectedEvents: map[string]int{"OnUserListExternalAuths": 1},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestUserUnlinkExternalsAuth(t *testing.T) {
+	scenarios := []tests.ApiScenario{
+		{
+			Name:            "unauthorized",
+			Method:          http.MethodDelete,
+			Url:             "/api/users/cx9u0dh2udo8xol/external-auths/google",
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as admin - nonexisting user id",
+			Method: http.MethodDelete,
+			Url:    "/api/users/000000000000000/external-auths/google",
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as admin - nonexisting provider",
+			Method: http.MethodDelete,
+			Url:    "/api/users/cx9u0dh2udo8xol/external-auths/facebook",
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as admin - existing provider",
+			Method: http.MethodDelete,
+			Url:    "/api/users/cx9u0dh2udo8xol/external-auths/google",
+			RequestHeaders: map[string]string{
+				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			},
+			ExpectedStatus:  204,
+			ExpectedContent: []string{},
+			ExpectedEvents: map[string]int{
+				"OnModelAfterDelete":                    1,
+				"OnModelBeforeDelete":                   1,
+				"OnUserAfterUnlinkExternalAuthRequest":  1,
+				"OnUserBeforeUnlinkExternalAuthRequest": 1,
+			},
+			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				auth, _ := app.Dao().FindExternalAuthByUserIdAndProvider("cx9u0dh2udo8xol", "google")
+				if auth != nil {
+					t.Fatalf("Expected the google ExternalAuth to be deleted, got got \n%v", auth)
+				}
+			},
+		},
+		{
+			Name:   "authorized as user - trying to unlink another user external auth",
+			Method: http.MethodDelete,
+			Url:    "/api/users/cx9u0dh2udo8xol/external-auths/google",
+			RequestHeaders: map[string]string{
+				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as user - owner with existing external auth",
+			Method: http.MethodDelete,
+			Url:    "/api/users/cx9u0dh2udo8xol/external-auths/google",
+			RequestHeaders: map[string]string{
+				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImN4OXUwZGgydWRvOHhvbCIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.NgFYG2D7PftFW1tcfe5E2oDi_AVakDR9J6WI6VUZQfw",
+			},
+			ExpectedStatus:  204,
+			ExpectedContent: []string{},
+			ExpectedEvents: map[string]int{
+				"OnModelAfterDelete":                    1,
+				"OnModelBeforeDelete":                   1,
+				"OnUserAfterUnlinkExternalAuthRequest":  1,
+				"OnUserBeforeUnlinkExternalAuthRequest": 1,
+			},
+			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				auth, _ := app.Dao().FindExternalAuthByUserIdAndProvider("cx9u0dh2udo8xol", "google")
+				if auth != nil {
+					t.Fatalf("Expected the google ExternalAuth to be deleted, got got \n%v", auth)
+				}
 			},
 		},
 	}

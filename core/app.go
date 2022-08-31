@@ -317,16 +317,21 @@ type App interface {
 	// authenticated user data and token.
 	OnUserAuthRequest() *hook.Hook[*UserAuthEvent]
 
-	// OnUserBeforeOauth2Register hook is triggered before each User OAuth2
-	// authentication request (when the client config has enabled new users registration).
+	// OnUserListExternalAuths hook is triggered on each API user's external auhts list request.
 	//
-	// Could be used to additionally validate or modify the new user
-	// before persisting in the DB.
-	OnUserBeforeOauth2Register() *hook.Hook[*UserOauth2RegisterEvent]
+	// Could be used to validate or modify the response before returning it to the client.
+	OnUserListExternalAuths() *hook.Hook[*UserListExternalAuthsEvent]
 
-	// OnUserAfterOauth2Register hook is triggered after each successful User
-	// OAuth2 authentication sign-up request (right after the new user persistence).
-	OnUserAfterOauth2Register() *hook.Hook[*UserOauth2RegisterEvent]
+	// OnUserBeforeUnlinkExternalAuthRequest hook is triggered before each API user's
+	// external auth unlink request (after models load and before the actual relation deletion).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different delete behavior (returning [hook.StopPropagation]).
+	OnUserBeforeUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent]
+
+	// OnUserAfterUnlinkExternalAuthRequest hook is triggered after each
+	// successful API user's external auth unlink request.
+	OnUserAfterUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent]
 
 	// ---------------------------------------------------------------
 	// Record API event hooks

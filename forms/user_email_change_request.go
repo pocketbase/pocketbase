@@ -21,15 +21,15 @@ type UserEmailChangeRequest struct {
 //
 // NB! App is required struct member.
 type UserEmailChangeRequestConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewUserEmailChangeRequest creates a new [UserEmailChangeRequest]
 // form with initializer config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewUserEmailChangeConfirmWithConfig] with explicitly set TxDao.
+// [NewUserEmailChangeConfirmWithConfig] with explicitly set Dao.
 func NewUserEmailChangeRequest(app core.App, user *models.User) *UserEmailChangeRequest {
 	return NewUserEmailChangeRequestWithConfig(UserEmailChangeRequestConfig{
 		App: app,
@@ -48,8 +48,8 @@ func NewUserEmailChangeRequestWithConfig(config UserEmailChangeRequestConfig, us
 		panic("Invalid initializer config or nil user model.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -71,7 +71,7 @@ func (form *UserEmailChangeRequest) Validate() error {
 func (form *UserEmailChangeRequest) checkUniqueEmail(value any) error {
 	v, _ := value.(string)
 
-	if !form.config.TxDao.IsUserEmailUnique(v, "") {
+	if !form.config.Dao.IsUserEmailUnique(v, "") {
 		return validation.NewError("validation_user_email_exists", "User email already exists.")
 	}
 

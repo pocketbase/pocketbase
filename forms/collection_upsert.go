@@ -36,8 +36,8 @@ type CollectionUpsert struct {
 //
 // NB! App is a required struct member.
 type CollectionUpsertConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewCollectionUpsert creates a new [CollectionUpsert] form with initializer
@@ -45,7 +45,7 @@ type CollectionUpsertConfig struct {
 // (for create you could pass a pointer to an empty Collection - `&models.Collection{}`).
 //
 // If you want to submit the form as part of another transaction, use
-// [NewCollectionUpsertWithConfig] with explicitly set TxDao.
+// [NewCollectionUpsertWithConfig] with explicitly set Dao.
 func NewCollectionUpsert(app core.App, collection *models.Collection) *CollectionUpsert {
 	return NewCollectionUpsertWithConfig(CollectionUpsertConfig{
 		App: app,
@@ -65,8 +65,8 @@ func NewCollectionUpsertWithConfig(config CollectionUpsertConfig, collection *mo
 		panic("Invalid initializer config or nil upsert model.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	// load defaults
@@ -130,11 +130,11 @@ func (form *CollectionUpsert) Validate() error {
 func (form *CollectionUpsert) checkUniqueName(value any) error {
 	v, _ := value.(string)
 
-	if !form.config.TxDao.IsCollectionNameUnique(v, form.collection.Id) {
+	if !form.config.Dao.IsCollectionNameUnique(v, form.collection.Id) {
 		return validation.NewError("validation_collection_name_exists", "Collection name must be unique (case insensitive).")
 	}
 
-	if (form.collection.IsNew() || !strings.EqualFold(v, form.collection.Name)) && form.config.TxDao.HasTable(v) {
+	if (form.collection.IsNew() || !strings.EqualFold(v, form.collection.Name)) && form.config.Dao.HasTable(v) {
 		return validation.NewError("validation_collection_name_table_exists", "The collection name must be also unique table name.")
 	}
 
@@ -191,7 +191,7 @@ func (form *CollectionUpsert) ensureExistingRelationCollectionId(value any) erro
 			continue
 		}
 
-		if _, err := form.config.TxDao.FindCollectionByNameOrId(options.CollectionId); err != nil {
+		if _, err := form.config.Dao.FindCollectionByNameOrId(options.CollectionId); err != nil {
 			return validation.Errors{fmt.Sprint(i): validation.NewError(
 				"validation_field_invalid_relation",
 				"The relation collection doesn't exist.",
@@ -228,7 +228,7 @@ func (form *CollectionUpsert) checkRule(value any) error {
 	}
 
 	dummy := &models.Collection{Schema: form.Schema}
-	r := resolvers.NewRecordFieldResolver(form.config.TxDao, dummy, nil)
+	r := resolvers.NewRecordFieldResolver(form.config.Dao, dummy, nil)
 
 	_, err := search.FilterData(*v).BuildExpr(r)
 	if err != nil {
@@ -273,6 +273,6 @@ func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc) error {
 	form.collection.DeleteRule = form.DeleteRule
 
 	return runInterceptors(func() error {
-		return form.config.TxDao.SaveCollection(form.collection)
+		return form.config.Dao.SaveCollection(form.collection)
 	}, interceptors...)
 }

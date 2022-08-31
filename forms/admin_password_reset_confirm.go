@@ -21,15 +21,15 @@ type AdminPasswordResetConfirm struct {
 //
 // NB! App is required struct member.
 type AdminPasswordResetConfirmConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewAdminPasswordResetConfirm creates a new [AdminPasswordResetConfirm]
 // form with initializer config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewAdminPasswordResetConfirmWithConfig] with explicitly set TxDao.
+// [NewAdminPasswordResetConfirmWithConfig] with explicitly set Dao.
 func NewAdminPasswordResetConfirm(app core.App) *AdminPasswordResetConfirm {
 	return NewAdminPasswordResetConfirmWithConfig(AdminPasswordResetConfirmConfig{
 		App: app,
@@ -45,8 +45,8 @@ func NewAdminPasswordResetConfirmWithConfig(config AdminPasswordResetConfirmConf
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -67,7 +67,7 @@ func (form *AdminPasswordResetConfirm) checkToken(value any) error {
 		return nil // nothing to check
 	}
 
-	admin, err := form.config.TxDao.FindAdminByToken(
+	admin, err := form.config.Dao.FindAdminByToken(
 		v,
 		form.config.App.Settings().AdminPasswordResetToken.Secret,
 	)
@@ -85,7 +85,7 @@ func (form *AdminPasswordResetConfirm) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	admin, err := form.config.TxDao.FindAdminByToken(
+	admin, err := form.config.Dao.FindAdminByToken(
 		form.Token,
 		form.config.App.Settings().AdminPasswordResetToken.Secret,
 	)
@@ -97,7 +97,7 @@ func (form *AdminPasswordResetConfirm) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	if err := form.config.TxDao.SaveAdmin(admin); err != nil {
+	if err := form.config.Dao.SaveAdmin(admin); err != nil {
 		return nil, err
 	}
 

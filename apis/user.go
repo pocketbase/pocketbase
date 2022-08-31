@@ -38,6 +38,8 @@ func BindUserApi(app core.App, rg *echo.Group) {
 	subGroup.GET("/:id", api.view, RequireAdminOrOwnerAuth("id"))
 	subGroup.PATCH("/:id", api.update, RequireAdminAuth())
 	subGroup.DELETE("/:id", api.delete, RequireAdminOrOwnerAuth("id"))
+	subGroup.GET("/:id/external-auths", api.listExternalAuths, RequireAdminOrOwnerAuth("id"))
+	subGroup.DELETE("/:id/external-auths/:provider", api.unlinkExternalAuth, RequireAdminOrOwnerAuth("id"))
 }
 
 type userApi struct {
@@ -446,6 +448,71 @@ func (api *userApi) delete(c echo.Context) error {
 
 	if handlerErr == nil {
 		api.app.OnUserAfterDeleteRequest().Trigger(event)
+	}
+
+	return handlerErr
+}
+
+func (api *userApi) listExternalAuths(c echo.Context) error {
+	id := c.PathParam("id")
+	if id == "" {
+		return rest.NewNotFoundError("", nil)
+	}
+
+	user, err := api.app.Dao().FindUserById(id)
+	if err != nil || user == nil {
+		return rest.NewNotFoundError("", err)
+	}
+
+	externalAuths, err := api.app.Dao().FindAllExternalAuthsByUserId(user.Id)
+	if err != nil {
+		return rest.NewBadRequestError("Failed to fetch the external auths for the specified user.", err)
+	}
+
+	event := &core.UserListExternalAuthsEvent{
+		HttpContext:   c,
+		User:          user,
+		ExternalAuths: externalAuths,
+	}
+
+	return api.app.OnUserListExternalAuths().Trigger(event, func(e *core.UserListExternalAuthsEvent) error {
+		return e.HttpContext.JSON(http.StatusOK, e.ExternalAuths)
+	})
+}
+
+func (api *userApi) unlinkExternalAuth(c echo.Context) error {
+	id := c.PathParam("id")
+	provider := c.PathParam("provider")
+	if id == "" || provider == "" {
+		return rest.NewNotFoundError("", nil)
+	}
+
+	user, err := api.app.Dao().FindUserById(id)
+	if err != nil || user == nil {
+		return rest.NewNotFoundError("", err)
+	}
+
+	externalAuth, err := api.app.Dao().FindExternalAuthByUserIdAndProvider(user.Id, provider)
+	if err != nil {
+		return rest.NewNotFoundError("Missing external auth provider relation.", err)
+	}
+
+	event := &core.UserUnlinkExternalAuthEvent{
+		HttpContext:  c,
+		User:         user,
+		ExternalAuth: externalAuth,
+	}
+
+	handlerErr := api.app.OnUserBeforeUnlinkExternalAuthRequest().Trigger(event, func(e *core.UserUnlinkExternalAuthEvent) error {
+		if err := api.app.Dao().DeleteExternalAuth(externalAuth); err != nil {
+			return rest.NewBadRequestError("Cannot unlink the external auth reference. Make sure that the user has other linked auth providers OR has an email address.", err)
+		}
+
+		return e.HttpContext.NoContent(http.StatusNoContent)
+	})
+
+	if handlerErr == nil {
+		api.app.OnUserAfterUnlinkExternalAuthRequest().Trigger(event)
 	}
 
 	return handlerErr

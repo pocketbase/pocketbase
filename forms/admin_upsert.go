@@ -25,8 +25,8 @@ type AdminUpsert struct {
 //
 // NB! App is a required struct member.
 type AdminUpsertConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewAdminUpsert creates a new [AdminUpsert] form with initializer
@@ -34,7 +34,7 @@ type AdminUpsertConfig struct {
 // (for create you could pass a pointer to an empty Admin - `&models.Admin{}`).
 //
 // If you want to submit the form as part of another transaction, use
-// [NewAdminUpsertWithConfig] with explicitly set TxDao.
+// [NewAdminUpsertWithConfig] with explicitly set Dao.
 func NewAdminUpsert(app core.App, admin *models.Admin) *AdminUpsert {
 	return NewAdminUpsertWithConfig(AdminUpsertConfig{
 		App: app,
@@ -54,8 +54,8 @@ func NewAdminUpsertWithConfig(config AdminUpsertConfig, admin *models.Admin) *Ad
 		panic("Invalid initializer config or nil upsert model.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	// load defaults
@@ -105,7 +105,7 @@ func (form *AdminUpsert) Validate() error {
 func (form *AdminUpsert) checkUniqueEmail(value any) error {
 	v, _ := value.(string)
 
-	if form.config.TxDao.IsAdminEmailUnique(v, form.admin.Id) {
+	if form.config.Dao.IsAdminEmailUnique(v, form.admin.Id) {
 		return nil
 	}
 
@@ -135,6 +135,6 @@ func (form *AdminUpsert) Submit(interceptors ...InterceptorFunc) error {
 	}
 
 	return runInterceptors(func() error {
-		return form.config.TxDao.SaveAdmin(form.admin)
+		return form.config.Dao.SaveAdmin(form.admin)
 	}, interceptors...)
 }

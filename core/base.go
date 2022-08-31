@@ -85,18 +85,19 @@ type BaseApp struct {
 	onAdminAfterDeleteRequest  *hook.Hook[*AdminDeleteEvent]
 	onAdminAuthRequest         *hook.Hook[*AdminAuthEvent]
 
-	// user api event hooks
-	onUsersListRequest         *hook.Hook[*UsersListEvent]
-	onUserViewRequest          *hook.Hook[*UserViewEvent]
-	onUserBeforeCreateRequest  *hook.Hook[*UserCreateEvent]
-	onUserAfterCreateRequest   *hook.Hook[*UserCreateEvent]
-	onUserBeforeUpdateRequest  *hook.Hook[*UserUpdateEvent]
-	onUserAfterUpdateRequest   *hook.Hook[*UserUpdateEvent]
-	onUserBeforeDeleteRequest  *hook.Hook[*UserDeleteEvent]
-	onUserAfterDeleteRequest   *hook.Hook[*UserDeleteEvent]
-	onUserAuthRequest          *hook.Hook[*UserAuthEvent]
-	onUserBeforeOauth2Register *hook.Hook[*UserOauth2RegisterEvent]
-	onUserAfterOauth2Register  *hook.Hook[*UserOauth2RegisterEvent]
+	//                                    user api event hooks
+	onUsersListRequest                    *hook.Hook[*UsersListEvent]
+	onUserViewRequest                     *hook.Hook[*UserViewEvent]
+	onUserBeforeCreateRequest             *hook.Hook[*UserCreateEvent]
+	onUserAfterCreateRequest              *hook.Hook[*UserCreateEvent]
+	onUserBeforeUpdateRequest             *hook.Hook[*UserUpdateEvent]
+	onUserAfterUpdateRequest              *hook.Hook[*UserUpdateEvent]
+	onUserBeforeDeleteRequest             *hook.Hook[*UserDeleteEvent]
+	onUserAfterDeleteRequest              *hook.Hook[*UserDeleteEvent]
+	onUserAuthRequest                     *hook.Hook[*UserAuthEvent]
+	onUserListExternalAuths               *hook.Hook[*UserListExternalAuthsEvent]
+	onUserBeforeUnlinkExternalAuthRequest *hook.Hook[*UserUnlinkExternalAuthEvent]
+	onUserAfterUnlinkExternalAuthRequest  *hook.Hook[*UserUnlinkExternalAuthEvent]
 
 	// record api event hooks
 	onRecordsListRequest        *hook.Hook[*RecordsListEvent]
@@ -180,17 +181,18 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onAdminAuthRequest:         &hook.Hook[*AdminAuthEvent]{},
 
 		// user API event hooks
-		onUsersListRequest:         &hook.Hook[*UsersListEvent]{},
-		onUserViewRequest:          &hook.Hook[*UserViewEvent]{},
-		onUserBeforeCreateRequest:  &hook.Hook[*UserCreateEvent]{},
-		onUserAfterCreateRequest:   &hook.Hook[*UserCreateEvent]{},
-		onUserBeforeUpdateRequest:  &hook.Hook[*UserUpdateEvent]{},
-		onUserAfterUpdateRequest:   &hook.Hook[*UserUpdateEvent]{},
-		onUserBeforeDeleteRequest:  &hook.Hook[*UserDeleteEvent]{},
-		onUserAfterDeleteRequest:   &hook.Hook[*UserDeleteEvent]{},
-		onUserAuthRequest:          &hook.Hook[*UserAuthEvent]{},
-		onUserBeforeOauth2Register: &hook.Hook[*UserOauth2RegisterEvent]{},
-		onUserAfterOauth2Register:  &hook.Hook[*UserOauth2RegisterEvent]{},
+		onUsersListRequest:                    &hook.Hook[*UsersListEvent]{},
+		onUserViewRequest:                     &hook.Hook[*UserViewEvent]{},
+		onUserBeforeCreateRequest:             &hook.Hook[*UserCreateEvent]{},
+		onUserAfterCreateRequest:              &hook.Hook[*UserCreateEvent]{},
+		onUserBeforeUpdateRequest:             &hook.Hook[*UserUpdateEvent]{},
+		onUserAfterUpdateRequest:              &hook.Hook[*UserUpdateEvent]{},
+		onUserBeforeDeleteRequest:             &hook.Hook[*UserDeleteEvent]{},
+		onUserAfterDeleteRequest:              &hook.Hook[*UserDeleteEvent]{},
+		onUserAuthRequest:                     &hook.Hook[*UserAuthEvent]{},
+		onUserListExternalAuths:               &hook.Hook[*UserListExternalAuthsEvent]{},
+		onUserBeforeUnlinkExternalAuthRequest: &hook.Hook[*UserUnlinkExternalAuthEvent]{},
+		onUserAfterUnlinkExternalAuthRequest:  &hook.Hook[*UserUnlinkExternalAuthEvent]{},
 
 		// record API event hooks
 		onRecordsListRequest:        &hook.Hook[*RecordsListEvent]{},
@@ -611,12 +613,16 @@ func (app *BaseApp) OnUserAuthRequest() *hook.Hook[*UserAuthEvent] {
 	return app.onUserAuthRequest
 }
 
-func (app *BaseApp) OnUserBeforeOauth2Register() *hook.Hook[*UserOauth2RegisterEvent] {
-	return app.onUserBeforeOauth2Register
+func (app *BaseApp) OnUserListExternalAuths() *hook.Hook[*UserListExternalAuthsEvent] {
+	return app.onUserListExternalAuths
 }
 
-func (app *BaseApp) OnUserAfterOauth2Register() *hook.Hook[*UserOauth2RegisterEvent] {
-	return app.onUserAfterOauth2Register
+func (app *BaseApp) OnUserBeforeUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent] {
+	return app.onUserBeforeUnlinkExternalAuthRequest
+}
+
+func (app *BaseApp) OnUserAfterUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent] {
+	return app.onUserAfterUnlinkExternalAuthRequest
 }
 
 // -------------------------------------------------------------------

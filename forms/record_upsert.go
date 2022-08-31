@@ -37,8 +37,8 @@ type RecordUpsert struct {
 //
 // NB! App is required struct member.
 type RecordUpsertConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewRecordUpsert creates a new [RecordUpsert] form with initializer
@@ -46,7 +46,7 @@ type RecordUpsertConfig struct {
 // (for create you could pass a pointer to an empty Record - `models.NewRecord(collection)`).
 //
 // If you want to submit the form as part of another transaction, use
-// [NewRecordUpsertWithConfig] with explicitly set TxDao.
+// [NewRecordUpsertWithConfig] with explicitly set Dao.
 func NewRecordUpsert(app core.App, record *models.Record) *RecordUpsert {
 	return NewRecordUpsertWithConfig(RecordUpsertConfig{
 		App: app,
@@ -68,8 +68,8 @@ func NewRecordUpsertWithConfig(config RecordUpsertConfig, record *models.Record)
 		panic("Invalid initializer config or nil upsert model.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	form.Id = record.Id
@@ -286,7 +286,7 @@ func (form *RecordUpsert) Validate() error {
 
 	// record data validator
 	dataValidator := validators.NewRecordDataValidator(
-		form.config.TxDao,
+		form.config.Dao,
 		form.record,
 		form.filesToUpload,
 	)
@@ -316,7 +316,7 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 		return err
 	}
 
-	return form.config.TxDao.RunInTransaction(func(txDao *daos.Dao) error {
+	return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
 		tx, ok := txDao.DB().(*dbx.Tx)
 		if !ok {
 			return errors.New("failed to get transaction db")
@@ -366,7 +366,7 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc) error {
 	}
 
 	return runInterceptors(func() error {
-		return form.config.TxDao.RunInTransaction(func(txDao *daos.Dao) error {
+		return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
 			// persist record model
 			if err := txDao.SaveRecord(form.record); err != nil {
 				return err

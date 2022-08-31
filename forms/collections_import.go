@@ -24,15 +24,15 @@ type CollectionsImport struct {
 //
 // NB! App is a required struct member.
 type CollectionsImportConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewCollectionsImport creates a new [CollectionsImport] form with
 // initializer config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewCollectionsImportWithConfig] with explicitly set TxDao.
+// [NewCollectionsImportWithConfig] with explicitly set Dao.
 func NewCollectionsImport(app core.App) *CollectionsImport {
 	return NewCollectionsImportWithConfig(CollectionsImportConfig{
 		App: app,
@@ -48,8 +48,8 @@ func NewCollectionsImportWithConfig(config CollectionsImportConfig) *Collections
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -79,7 +79,7 @@ func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc) error {
 	}
 
 	return runInterceptors(func() error {
-		return form.config.TxDao.RunInTransaction(func(txDao *daos.Dao) error {
+		return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
 			importErr := txDao.ImportCollections(
 				form.Collections,
 				form.DeleteMissing,
@@ -122,8 +122,8 @@ func (form *CollectionsImport) beforeRecordsSync(txDao *daos.Dao, mappedNew, map
 		}
 
 		upsertForm := NewCollectionUpsertWithConfig(CollectionUpsertConfig{
-			App:   form.config.App,
-			TxDao: txDao,
+			App: form.config.App,
+			Dao: txDao,
 		}, upsertModel)
 
 		// load form fields with the refreshed collection state

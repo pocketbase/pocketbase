@@ -188,18 +188,23 @@ func NewTestApp() (*TestApp, error) {
 		return nil
 	})
 
-	t.OnUserBeforeOauth2Register().Add(func(e *core.UserOauth2RegisterEvent) error {
-		t.EventCalls["OnUserBeforeOauth2Register"]++
-		return nil
-	})
-
-	t.OnUserAfterOauth2Register().Add(func(e *core.UserOauth2RegisterEvent) error {
-		t.EventCalls["OnUserAfterOauth2Register"]++
-		return nil
-	})
-
 	t.OnUserAuthRequest().Add(func(e *core.UserAuthEvent) error {
 		t.EventCalls["OnUserAuthRequest"]++
+		return nil
+	})
+
+	t.OnUserListExternalAuths().Add(func(e *core.UserListExternalAuthsEvent) error {
+		t.EventCalls["OnUserListExternalAuths"]++
+		return nil
+	})
+
+	t.OnUserBeforeUnlinkExternalAuthRequest().Add(func(e *core.UserUnlinkExternalAuthEvent) error {
+		t.EventCalls["OnUserBeforeUnlinkExternalAuthRequest"]++
+		return nil
+	})
+
+	t.OnUserAfterUnlinkExternalAuthRequest().Add(func(e *core.UserUnlinkExternalAuthEvent) error {
+		t.EventCalls["OnUserAfterUnlinkExternalAuthRequest"]++
 		return nil
 	})
 

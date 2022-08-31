@@ -319,12 +319,16 @@ func TestBaseAppGetters(t *testing.T) {
 		t.Fatalf("Getter app.OnUserAuthRequest does not match or nil (%v vs %v)", app.OnUserAuthRequest(), app.onUserAuthRequest)
 	}
 
-	if app.onUserBeforeOauth2Register != app.OnUserBeforeOauth2Register() || app.OnUserBeforeOauth2Register() == nil {
-		t.Fatalf("Getter app.OnUserBeforeOauth2Register does not match or nil (%v vs %v)", app.OnUserBeforeOauth2Register(), app.onUserBeforeOauth2Register)
+	if app.onUserListExternalAuths != app.OnUserListExternalAuths() || app.OnUserListExternalAuths() == nil {
+		t.Fatalf("Getter app.OnUserListExternalAuths does not match or nil (%v vs %v)", app.OnUserListExternalAuths(), app.onUserListExternalAuths)
 	}
 
-	if app.onUserAfterOauth2Register != app.OnUserAfterOauth2Register() || app.OnUserAfterOauth2Register() == nil {
-		t.Fatalf("Getter app.OnUserAfterOauth2Register does not match or nil (%v vs %v)", app.OnUserAfterOauth2Register(), app.onUserAfterOauth2Register)
+	if app.onUserBeforeUnlinkExternalAuthRequest != app.OnUserBeforeUnlinkExternalAuthRequest() || app.OnUserBeforeUnlinkExternalAuthRequest() == nil {
+		t.Fatalf("Getter app.OnUserBeforeUnlinkExternalAuthRequest does not match or nil (%v vs %v)", app.OnUserBeforeUnlinkExternalAuthRequest(), app.onUserBeforeUnlinkExternalAuthRequest)
+	}
+
+	if app.onUserAfterUnlinkExternalAuthRequest != app.OnUserAfterUnlinkExternalAuthRequest() || app.OnUserAfterUnlinkExternalAuthRequest() == nil {
+		t.Fatalf("Getter app.OnUserAfterUnlinkExternalAuthRequest does not match or nil (%v vs %v)", app.OnUserAfterUnlinkExternalAuthRequest(), app.onUserAfterUnlinkExternalAuthRequest)
 	}
 
 	if app.onRecordsListRequest != app.OnRecordsListRequest() || app.OnRecordsListRequest() == nil {

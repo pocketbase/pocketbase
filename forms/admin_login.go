@@ -22,15 +22,15 @@ type AdminLogin struct {
 //
 // NB! App is a required struct member.
 type AdminLoginConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewAdminLogin creates a new [AdminLogin] form with initializer
 // config created from the provided [core.App] instance.
 //
 // If you want to submit the form as part of another transaction, use
-// [NewAdminLoginWithConfig] with explicitly set TxDao.
+// [NewAdminLoginWithConfig] with explicitly set Dao.
 func NewAdminLogin(app core.App) *AdminLogin {
 	return NewAdminLoginWithConfig(AdminLoginConfig{
 		App: app,
@@ -46,8 +46,8 @@ func NewAdminLoginWithConfig(config AdminLoginConfig) *AdminLogin {
 		panic("Missing required config.App instance.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	return form
@@ -68,7 +68,7 @@ func (form *AdminLogin) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	admin, err := form.config.TxDao.FindAdminByEmail(form.Email)
+	admin, err := form.config.Dao.FindAdminByEmail(form.Email)
 	if err != nil {
 		return nil, err
 	}

@@ -197,9 +197,12 @@
 
                             <td class="col-type-email col-field-email">
                                 <div class="inline-flex">
-                                    <span class="txt" title={user.email}>
-                                        {user.email}
-                                    </span>
+                                    {#if user.email}
+                                        <span class="txt" title={user.email}>{user.email}</span>
+                                    {:else}
+                                        <div class="txt-hint">N/A</div>
+                                    {/if}
+
                                     <span
                                         class="label"
                                         class:label-success={user.verified}

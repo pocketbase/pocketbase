@@ -28,8 +28,8 @@ type UserUpsert struct {
 //
 // NB! App is required struct member.
 type UserUpsertConfig struct {
-	App   core.App
-	TxDao *daos.Dao
+	App core.App
+	Dao *daos.Dao
 }
 
 // NewUserUpsert creates a new [UserUpsert] form with initializer
@@ -37,7 +37,7 @@ type UserUpsertConfig struct {
 // (for create you could pass a pointer to an empty User - `&models.User{}`).
 //
 // If you want to submit the form as part of another transaction, use
-// [NewUserEmailChangeConfirmWithConfig] with explicitly set TxDao.
+// [NewUserEmailChangeConfirmWithConfig] with explicitly set Dao.
 func NewUserUpsert(app core.App, user *models.User) *UserUpsert {
 	return NewUserUpsertWithConfig(UserUpsertConfig{
 		App: app,
@@ -57,8 +57,8 @@ func NewUserUpsertWithConfig(config UserUpsertConfig, user *models.User) *UserUp
 		panic("Invalid initializer config or nil upsert model.")
 	}
 
-	if form.config.TxDao == nil {
-		form.config.TxDao = form.config.App.Dao()
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	// load defaults
@@ -103,7 +103,7 @@ func (form *UserUpsert) Validate() error {
 func (form *UserUpsert) checkUniqueEmail(value any) error {
 	v, _ := value.(string)
 
-	if v == "" || form.config.TxDao.IsUserEmailUnique(v, form.user.Id) {
+	if v == "" || form.config.Dao.IsUserEmailUnique(v, form.user.Id) {
 		return nil
 	}
 
@@ -160,6 +160,6 @@ func (form *UserUpsert) Submit(interceptors ...InterceptorFunc) error {
 	form.user.Email = form.Email
 
 	return runInterceptors(func() error {
-		return form.config.TxDao.SaveUser(form.user)
+		return form.config.Dao.SaveUser(form.user)
 	}, interceptors...)
 }
