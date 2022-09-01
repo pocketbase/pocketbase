@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
+    import providersList from "@/providers.js";
 
     const dispatch = createEventDispatcher();
 
@@ -11,6 +12,14 @@
 
     let externalAuths = [];
     let isLoading = false;
+
+    function getProviderTitle(provider) {
+        return providersList[provider + "Auth"]?.title || CommonHelper.sentenize(auth.provider, false);
+    }
+
+    function getProviderIcon(provider) {
+        return providersList[provider + "Auth"]?.icon || `ri-${provider}-line`;
+    }
 
     async function loadExternalAuths() {
         if (!user?.id) {
@@ -35,11 +44,11 @@
             return; // nothing to unlink
         }
 
-        confirm(`Do you really want to unlink the selected provider?`, () => {
+        confirm(`Do you really want to unlink the ${getProviderTitle(provider)} provider?`, () => {
             return ApiClient.users
                 .unlinkExternalAuth(user.id, provider)
                 .then(() => {
-                    addSuccessToast("Successfully unlinked the provider.");
+                    addSuccessToast(`Successfully unlinked the ${getProviderTitle(provider)} provider.`);
                     dispatch("unlink", provider);
                     loadExternalAuths(); // reload list
                 })
@@ -62,8 +71,8 @@
     <div class="list">
         {#each externalAuths as auth}
             <div class="list-item">
-                <i class="ri-{auth.provider}-line" />
-                <span class="txt">{CommonHelper.sentenize(auth.provider, false)}</span>
+                <i class={getProviderIcon(auth.provider)} />
+                <span class="txt">{getProviderTitle(auth.provider)}</span>
                 <div class="txt-hint">ID: {auth.providerId}</div>
                 <button
                     type="button"

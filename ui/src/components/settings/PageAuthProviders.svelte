@@ -8,6 +8,7 @@
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import EmailAuthAccordion from "@/components/settings/EmailAuthAccordion.svelte";
     import AuthProviderAccordion from "@/components/settings/AuthProviderAccordion.svelte";
+    import providersList from "@/providers.js";
 
     $pageTitle = "Auth providers";
 
@@ -63,11 +64,10 @@
             emailAuth: Object.assign({ enabled: true }, data.emailAuth),
         };
 
-        const providers = ["googleAuth", "facebookAuth", "githubAuth", "gitlabAuth", "discordAuth"];
-        for (const provider of providers) {
-            formSettings[provider] = Object.assign(
+        for (const providerKey in providersList) {
+            formSettings[providerKey] = Object.assign(
                 { enabled: false, allowRegistrations: true },
-                data[provider]
+                data[providerKey]
             );
         }
 
@@ -102,42 +102,17 @@
                         single
                         bind:config={formSettings.emailAuth}
                     />
-                    <AuthProviderAccordion
-                        single
-                        key="googleAuth"
-                        title="Google"
-                        icon="ri-google-line"
-                        bind:config={formSettings.googleAuth}
-                    />
-                    <AuthProviderAccordion
-                        single
-                        key="facebookAuth"
-                        title="Facebook"
-                        icon="ri-facebook-line"
-                        bind:config={formSettings.facebookAuth}
-                    />
-                    <AuthProviderAccordion
-                        single
-                        key="githubAuth"
-                        title="GitHub"
-                        icon="ri-github-line"
-                        bind:config={formSettings.githubAuth}
-                    />
-                    <AuthProviderAccordion
-                        single
-                        key="gitlabAuth"
-                        title="GitLab"
-                        icon="ri-gitlab-line"
-                        showSelfHostedFields
-                        bind:config={formSettings.gitlabAuth}
-                    />
-                    <AuthProviderAccordion
-                        single
-                        key="discordAuth"
-                        title="Discord"
-                        icon="ri-discord-line"
-                        bind:config={formSettings.discordAuth}
-                    />
+
+                    {#each Object.entries(providersList) as [key, provider]}
+                        <AuthProviderAccordion
+                            single
+                            {key}
+                            title={provider.title}
+                            icon={provider.icon || "ri-fingerprint-line"}
+                            showSelfHostedFields={provider.selfHosted}
+                            bind:config={formSettings[key]}
+                        />
+                    {/each}
                 </div>
 
                 <div class="flex m-t-base">
