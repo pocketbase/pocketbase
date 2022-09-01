@@ -37,6 +37,8 @@
 
         confirmClose = true;
 
+        activeTab = user.isNew || user.email ? accountTab : providersTab;
+
         return panel?.show();
     }
 

@@ -36,6 +36,7 @@ type Settings struct {
 	GithubAuth   AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
 	GitlabAuth   AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
 	DiscordAuth  AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
+	TwitterAuth  AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
 }
 
 // NewSettings creates and returns a new default Settings instance.
@@ -111,6 +112,10 @@ func NewSettings() *Settings {
 			Enabled:            false,
 			AllowRegistrations: true,
 		},
+		TwitterAuth: AuthProviderConfig{
+			Enabled:            false,
+			AllowRegistrations: true,
+		},
 	}
 }
 
@@ -136,6 +141,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.GithubAuth),
 		validation.Field(&s.GitlabAuth),
 		validation.Field(&s.DiscordAuth),
+		validation.Field(&s.TwitterAuth),
 	)
 }
 
@@ -185,6 +191,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.GithubAuth.ClientSecret,
 		&clone.GitlabAuth.ClientSecret,
 		&clone.DiscordAuth.ClientSecret,
+		&clone.TwitterAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -209,6 +216,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameGithub:   s.GithubAuth,
 		auth.NameGitlab:   s.GitlabAuth,
 		auth.NameDiscord:  s.DiscordAuth,
+		auth.NameTwitter:  s.TwitterAuth,
 	}
 }
 

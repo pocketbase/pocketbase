@@ -92,6 +92,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewGitlabProvider(), nil
 	case NameDiscord:
 		return NewDiscordProvider(), nil
+	case NameTwitter:
+		return NewTwitterProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
