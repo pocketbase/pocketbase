@@ -86,7 +86,7 @@ func (form *AdminUpsert) Validate() error {
 			&form.Email,
 			validation.Required,
 			validation.Length(1, 255),
-			is.Email,
+			is.EmailFormat,
 			validation.By(form.checkUniqueEmail),
 		),
 		validation.Field(

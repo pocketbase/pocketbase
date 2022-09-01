@@ -65,7 +65,7 @@ func (form *AdminPasswordResetRequest) Validate() error {
 			&form.Email,
 			validation.Required,
 			validation.Length(1, 255),
-			is.Email,
+			is.EmailFormat,
 		),
 	)
 }

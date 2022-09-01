@@ -301,7 +301,7 @@ func (c MetaConfig) Validate() error {
 		validation.Field(&c.AppName, validation.Required, validation.Length(1, 255)),
 		validation.Field(&c.AppUrl, validation.Required, is.URL),
 		validation.Field(&c.SenderName, validation.Required, validation.Length(1, 255)),
-		validation.Field(&c.SenderAddress, is.Email, validation.Required),
+		validation.Field(&c.SenderAddress, is.EmailFormat, validation.Required),
 		validation.Field(&c.VerificationTemplate, validation.Required),
 		validation.Field(&c.ResetPasswordTemplate, validation.Required),
 		validation.Field(&c.ConfirmEmailChangeTemplate, validation.Required),

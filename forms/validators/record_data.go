@@ -189,7 +189,7 @@ func (validator *RecordDataValidator) checkEmailValue(field *schema.SchemaField,
 		return nil // nothing to check
 	}
 
-	if is.Email.Validate(val) != nil {
+	if is.EmailFormat.Validate(val) != nil {
 		return validation.NewError("validation_invalid_email", "Must be a valid email")
 	}
 

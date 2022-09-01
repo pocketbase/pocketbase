@@ -83,7 +83,7 @@ func (form *UserUpsert) Validate() error {
 			&form.Email,
 			validation.Required,
 			validation.Length(1, 255),
-			is.Email,
+			is.EmailFormat,
 			validation.By(form.checkEmailDomain),
 			validation.By(form.checkUniqueEmail),
 		),

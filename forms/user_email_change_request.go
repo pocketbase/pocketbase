@@ -62,7 +62,7 @@ func (form *UserEmailChangeRequest) Validate() error {
 			&form.NewEmail,
 			validation.Required,
 			validation.Length(1, 255),
-			is.Email,
+			is.EmailFormat,
 			validation.By(form.checkUniqueEmail),
 		),
 	)
