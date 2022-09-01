@@ -152,19 +152,20 @@ func (form *UserOauth2Login) Submit() (*models.User, *auth.AuthUser, error) {
 				return err
 			}
 		} else {
-			// update the existing user verified state
-			if !user.Verified {
-				user.Verified = true
-				if err := txDao.SaveUser(user); err != nil {
-					return err
-				}
-			}
-
 			// update the existing user empty email if the authData has one
 			// (this in case previously the user was created with
 			// an OAuth2 provider that didn't return an email address)
 			if user.Email == "" && authData.Email != "" {
 				user.Email = authData.Email
+				if err := txDao.SaveUser(user); err != nil {
+					return err
+				}
+			}
+
+			// update the existing user verified state
+			// (only if the user doesn't have an email or the user email match with the one in authData)
+			if !user.Verified && (user.Email == "" || user.Email == authData.Email) {
+				user.Verified = true
 				if err := txDao.SaveUser(user); err != nil {
 					return err
 				}

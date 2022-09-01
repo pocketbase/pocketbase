@@ -11,9 +11,13 @@
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import ExternalAuthsList from "./ExternalAuthsList.svelte";
 
     const dispatch = createEventDispatcher();
+
     const formId = "user_" + CommonHelper.randomString(5);
+    const accountTab = "account";
+    const providersTab = "providers";
 
     let panel;
     let user = new User();
@@ -24,6 +28,7 @@
     let passwordConfirm = "";
     let changePasswordToggle = false;
     let verificationEmailToggle = true;
+    let activeTab = accountTab;
 
     $: hasChanges = (user.isNew && email != "") || changePasswordToggle || email !== user.email;
 
@@ -41,7 +46,9 @@
 
     function load(model) {
         setErrors({}); // reset errors
+
         user = model?.clone ? model.clone() : new User();
+
         reset(); // reset form
     }
 
@@ -75,6 +82,8 @@
 
         request
             .then(async (result) => {
+                user = result;
+
                 if (verificationEmailToggle) {
                     sendVerificationEmail(false);
                 }
@@ -114,7 +123,7 @@
 
     function sendVerificationEmail(notify = true) {
         return ApiClient.users
-            .requestVerification(user.isNew ? email : user.email)
+            .requestVerification(user.email || email)
             .then(() => {
                 confirmClose = false;
                 hide();
@@ -130,8 +139,8 @@
 
 <OverlayPanel
     bind:this={panel}
-    popup
     class="user-panel"
+    popup={user.isNew}
     beforeHide={() => {
         if (hasChanges && confirmClose) {
             confirm("You have unsaved changes. Do you really want to close the panel?", () => {
@@ -146,95 +155,15 @@
     on:show
 >
     <svelte:fragment slot="header">
-        <h4>
-            {user.isNew ? "New user" : "Edit user"}
-        </h4>
-    </svelte:fragment>
-
-    <form id={formId} class="grid" autocomplete="off" on:submit|preventDefault={save}>
-        {#if !user.isNew}
-            <Field class="form-field disabled" name="id" let:uniqueId>
-                <label for={uniqueId}>
-                    <i class={CommonHelper.getFieldTypeIcon("primary")} />
-                    <span class="txt">ID</span>
-                </label>
-                <input type="text" id={uniqueId} value={user.id} disabled />
-            </Field>
-        {/if}
-
-        <Field class="form-field required" name="email" let:uniqueId>
-            <label for={uniqueId}>
-                <i class={CommonHelper.getFieldTypeIcon("email")} />
-                <span class="txt">Email</span>
-            </label>
-            {#if user.verified}
-                <div class="form-field-addon txt-success" use:tooltip={"Verified"}>
-                    <i class="ri-shield-check-line" />
-                </div>
-            {/if}
-            <input type="email" autocomplete="off" id={uniqueId} required bind:value={email} />
-        </Field>
+        <h4>{user.isNew ? "New user" : "Edit user"}</h4>
 
         {#if !user.isNew}
-            <Field class="form-field form-field-toggle" let:uniqueId>
-                <input type="checkbox" id={uniqueId} bind:checked={changePasswordToggle} />
-                <label for={uniqueId}>Change password</label>
-            </Field>
-        {/if}
-
-        {#if user.isNew || changePasswordToggle}
-            <div class="col-12">
-                <div class="grid" transition:slide|local={{ duration: 150 }}>
-                    <div class="col-sm-6">
-                        <Field class="form-field required" name="password" let:uniqueId>
-                            <label for={uniqueId}>
-                                <i class="ri-lock-line" />
-                                <span class="txt">Password</span>
-                            </label>
-                            <input
-                                type="password"
-                                autocomplete="new-password"
-                                id={uniqueId}
-                                required
-                                bind:value={password}
-                            />
-                        </Field>
-                    </div>
-                    <div class="col-sm-6">
-                        <Field class="form-field required" name="passwordConfirm" let:uniqueId>
-                            <label for={uniqueId}>
-                                <i class="ri-lock-line" />
-                                <span class="txt">Password confirm</span>
-                            </label>
-                            <input
-                                type="password"
-                                autocomplete="new-password"
-                                id={uniqueId}
-                                required
-                                bind:value={passwordConfirm}
-                            />
-                        </Field>
-                    </div>
-                </div>
-            </div>
-        {/if}
-
-        {#if user.isNew}
-            <Field class="form-field form-field-toggle" let:uniqueId>
-                <input type="checkbox" id={uniqueId} bind:checked={verificationEmailToggle} />
-                <label for={uniqueId}>Send verification email</label>
-            </Field>
-        {/if}
-    </form>
-
-    <svelte:fragment slot="footer">
-        {#if !user.isNew}
-            <button type="button" class="btn btn-sm btn-circle btn-secondary">
+            <button type="button" class="btn btn-sm btn-circle btn-secondary m-l-auto">
                 <!-- empty span for alignment -->
                 <span />
                 <i class="ri-more-line" />
-                <Toggler class="dropdown dropdown-upside dropdown-left dropdown-nowrap">
-                    {#if !user.verified}
+                <Toggler class="dropdown dropdown-right dropdown-nowrap">
+                    {#if !user.verified && user.email}
                         <button type="button" class="dropdown-item" on:click={() => sendVerificationEmail()}>
                             <i class="ri-mail-check-line" />
                             <span class="txt">Send verification email</span>
@@ -246,20 +175,132 @@
                     </button>
                 </Toggler>
             </button>
-            <div class="flex-fill" />
         {/if}
+    </svelte:fragment>
 
+    <div class="tabs user-tabs">
+        {#if !user.isNew}
+            <div class="tabs-header stretched">
+                <button
+                    type="button"
+                    class="tab-item"
+                    class:active={activeTab === accountTab}
+                    on:click={() => (activeTab = accountTab)}
+                >
+                    Account
+                </button>
+                <button
+                    type="button"
+                    class="tab-item"
+                    class:active={activeTab === providersTab}
+                    on:click={() => (activeTab = providersTab)}
+                >
+                    Authorized providers
+                </button>
+            </div>
+        {/if}
+        <div class="tabs-content">
+            <div class="tab-item" class:active={activeTab === accountTab}>
+                <form id={formId} class="grid" autocomplete="off" on:submit|preventDefault={save}>
+                    {#if !user.isNew}
+                        <Field class="form-field disabled" name="id" let:uniqueId>
+                            <label for={uniqueId}>
+                                <i class={CommonHelper.getFieldTypeIcon("primary")} />
+                                <span class="txt">ID</span>
+                            </label>
+                            <input type="text" id={uniqueId} value={user.id} disabled />
+                        </Field>
+                    {/if}
+
+                    <Field class="form-field required" name="email" let:uniqueId>
+                        <label for={uniqueId}>
+                            <i class={CommonHelper.getFieldTypeIcon("email")} />
+                            <span class="txt">Email</span>
+                        </label>
+                        {#if user.verified && user.email}
+                            <div class="form-field-addon txt-success" use:tooltip={"Verified"}>
+                                <i class="ri-shield-check-line" />
+                            </div>
+                        {/if}
+                        <input type="email" autocomplete="off" id={uniqueId} required bind:value={email} />
+                    </Field>
+
+                    {#if !user.isNew && user.email}
+                        <Field class="form-field form-field-toggle" let:uniqueId>
+                            <input type="checkbox" id={uniqueId} bind:checked={changePasswordToggle} />
+                            <label for={uniqueId}>Change password</label>
+                        </Field>
+                    {/if}
+
+                    {#if user.isNew || !user.email || changePasswordToggle}
+                        <div class="col-12">
+                            <div class="grid" transition:slide|local={{ duration: 150 }}>
+                                <div class="col-sm-6">
+                                    <Field class="form-field required" name="password" let:uniqueId>
+                                        <label for={uniqueId}>
+                                            <i class="ri-lock-line" />
+                                            <span class="txt">Password</span>
+                                        </label>
+                                        <input
+                                            type="password"
+                                            autocomplete="new-password"
+                                            id={uniqueId}
+                                            required
+                                            bind:value={password}
+                                        />
+                                    </Field>
+                                </div>
+                                <div class="col-sm-6">
+                                    <Field class="form-field required" name="passwordConfirm" let:uniqueId>
+                                        <label for={uniqueId}>
+                                            <i class="ri-lock-line" />
+                                            <span class="txt">Password confirm</span>
+                                        </label>
+                                        <input
+                                            type="password"
+                                            autocomplete="new-password"
+                                            id={uniqueId}
+                                            required
+                                            bind:value={passwordConfirm}
+                                        />
+                                    </Field>
+                                </div>
+                            </div>
+                        </div>
+                    {/if}
+
+                    {#if user.isNew || !user.email}
+                        <Field class="form-field form-field-toggle" let:uniqueId>
+                            <input type="checkbox" id={uniqueId} bind:checked={verificationEmailToggle} />
+                            <label for={uniqueId}>Send verification email</label>
+                        </Field>
+                    {/if}
+                </form>
+            </div>
+
+            {#if !user.isNew}
+                <div class="tab-item" class:active={activeTab === providersTab}>
+                    <ExternalAuthsList {user} />
+                </div>
+            {/if}
+        </div>
+    </div>
+
+    <svelte:fragment slot="footer">
         <button type="button" class="btn btn-secondary" disabled={isSaving} on:click={() => hide()}>
             <span class="txt">Cancel</span>
         </button>
-        <button
-            type="submit"
-            form={formId}
-            class="btn btn-expanded"
-            class:btn-loading={isSaving}
-            disabled={!hasChanges || isSaving}
-        >
-            <span class="txt">{user.isNew ? "Create" : "Save changes"}</span>
-        </button>
+
+        {#if activeTab === accountTab}
+            <button
+                type="submit"
+                form={formId}
+                class="btn btn-expanded"
+                class:btn-loading={isSaving}
+                disabled={!hasChanges || isSaving}
+            >
+                <span class="txt">{user.isNew ? "Create" : "Save changes"}</span>
+            </button>
+        {/if}
     </svelte:fragment>
 </OverlayPanel>
