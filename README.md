@@ -41,7 +41,7 @@ your own custom app specific business logic and still have a single portable exe
 
 ```sh
 # go 1.18+
-go get github.com/pocketbase/pocketbase
+go install github.com/pocketbase/pocketbase@latest
 ```
 > For Windows, you may have to use go 1.19+ due to an incorrect js mime type in the Windows Registry (see [issue#6](https://github.com/pocketbase/pocketbase/issues/6)).
 
