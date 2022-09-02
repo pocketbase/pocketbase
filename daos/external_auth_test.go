@@ -123,6 +123,12 @@ func TestSaveExternalAuth(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
+	// save with empty provider data
+	emptyAuth := &models.ExternalAuth{}
+	if err := app.Dao().SaveExternalAuth(emptyAuth); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
 	auth := &models.ExternalAuth{
 		UserId:     "97cc3d3d-6ba2-383f-b42a-7bc84d27410c",
 		Provider:   "test",

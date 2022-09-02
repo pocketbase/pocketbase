@@ -35,6 +35,7 @@ func (dao *Dao) FindExternalAuthByProvider(provider, providerId string) (*models
 	model := &models.ExternalAuth{}
 
 	err := dao.ExternalAuthQuery().
+		AndWhere(dbx.Not(dbx.HashExp{"providerId": ""})). // exclude empty providerIds
 		AndWhere(dbx.HashExp{
 			"provider":   provider,
 			"providerId": providerId,
@@ -71,6 +72,12 @@ func (dao *Dao) FindExternalAuthByUserIdAndProvider(userId, provider string) (*m
 
 // SaveExternalAuth upserts the provided ExternalAuth model.
 func (dao *Dao) SaveExternalAuth(model *models.ExternalAuth) error {
+	// extra check the model data in case the provider's API response
+	// changes and no longer returns the expected fields
+	if model.UserId == "" || model.Provider == "" || model.ProviderId == "" {
+		return errors.New("Missing required ExternalAuth fields.")
+	}
+
 	return dao.Save(model)
 }
 
