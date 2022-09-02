@@ -73,7 +73,7 @@ func (dao *Dao) FindExternalAuthByUserIdAndProvider(userId, provider string) (*m
 // SaveExternalAuth upserts the provided ExternalAuth model.
 func (dao *Dao) SaveExternalAuth(model *models.ExternalAuth) error {
 	// extra check the model data in case the provider's API response
-	// changes and no longer returns the expected fields
+	// has changed and no longer returns the expected fields
 	if model.UserId == "" || model.Provider == "" || model.ProviderId == "" {
 		return errors.New("Missing required ExternalAuth fields.")
 	}
