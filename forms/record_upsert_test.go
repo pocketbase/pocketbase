@@ -139,7 +139,7 @@ func TestRecordUpsertLoadDataJson(t *testing.T) {
 		t.Fatalf("Expect only 1 manyfiles to remain, got \n%v", manyfiles)
 	}
 
-	onlyimages, ok := form.Data["onlyimages"]
+	onlyimages := form.Data["onlyimages"]
 	if len(list.ToUniqueStringSlice(onlyimages)) != 0 {
 		t.Fatalf("Expect onlyimages field to be deleted, got \n%v", onlyimages)
 	}

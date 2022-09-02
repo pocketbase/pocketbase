@@ -25,7 +25,7 @@
     "chart.js": "^3.7.1",
     "chartjs-adapter-luxon": "^1.1.0",
     "luxon": "^2.3.2",
-    "pocketbase": "^0.5.0",
+    "pocketbase": "^0.7.0",
     "prismjs": "^1.28.0",
     "sass": "^1.45.0",
     "svelte": "^3.44.0",
