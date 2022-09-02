@@ -505,7 +505,7 @@ func (api *userApi) unlinkExternalAuth(c echo.Context) error {
 
 	handlerErr := api.app.OnUserBeforeUnlinkExternalAuthRequest().Trigger(event, func(e *core.UserUnlinkExternalAuthEvent) error {
 		if err := api.app.Dao().DeleteExternalAuth(externalAuth); err != nil {
-			return rest.NewBadRequestError("Cannot unlink the external auth reference. Make sure that the user has other linked auth providers OR has an email address.", err)
+			return rest.NewBadRequestError("Cannot unlink the external auth provider. Make sure that the user has other linked auth providers OR has an email address.", err)
 		}
 
 		return e.HttpContext.NoContent(http.StatusNoContent)

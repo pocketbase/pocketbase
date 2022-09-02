@@ -317,7 +317,7 @@ type App interface {
 	// authenticated user data and token.
 	OnUserAuthRequest() *hook.Hook[*UserAuthEvent]
 
-	// OnUserListExternalAuths hook is triggered on each API user's external auhts list request.
+	// OnUserListExternalAuths hook is triggered on each API user's external auths list request.
 	//
 	// Could be used to validate or modify the response before returning it to the client.
 	OnUserListExternalAuths() *hook.Hook[*UserListExternalAuthsEvent]

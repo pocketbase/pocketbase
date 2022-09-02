@@ -34,7 +34,7 @@ The easiest way to interact with the API is to use one of the official SDK clien
 
 ## Overview
 
-PocketBase could be used as a standalone app or as a Go framework/toolkit that enables you to build
+PocketBase could be [downloaded directly as a standalone app](https://github.com/pocketbase/pocketbase/releases) or it could be used as a Go framework/toolkit which allows you to build
 your own custom app specific business logic and still have a single portable executable at the end.
 
 ### Installation

@@ -84,6 +84,8 @@ func (dao *Dao) DeleteExternalAuth(model *models.ExternalAuth) error {
 		return err
 	}
 
+	// if the user doesn't have an email, make sure that there
+	// is at least one other external auth relation available
 	if user.Email == "" {
 		allExternalAuths, err := dao.FindAllExternalAuthsByUserId(user.Id)
 		if err != nil {
@@ -91,7 +93,7 @@ func (dao *Dao) DeleteExternalAuth(model *models.ExternalAuth) error {
 		}
 
 		if len(allExternalAuths) <= 1 {
-			return errors.New("You cannot delete the only available external auth relation because the user doesn't have an email set.")
+			return errors.New("You cannot delete the only available external auth relation because the user doesn't have an email address.")
 		}
 	}
 
