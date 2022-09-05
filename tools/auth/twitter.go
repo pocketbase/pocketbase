@@ -26,7 +26,7 @@ func NewTwitterProvider() *Twitter {
 		},
 		authUrl:    "https://twitter.com/i/oauth2/authorize",
 		tokenUrl:   "https://api.twitter.com/2/oauth2/token",
-		userApiUrl: "https://api.twitter.com/2/users/me?user.fields=id,name,profile_image_url",
+		userApiUrl: "https://api.twitter.com/2/users/me?user.fields=id,name,username,profile_image_url",
 	}}
 }
 
@@ -37,6 +37,7 @@ func (p *Twitter) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Data struct {
 			Id              string `json:"id"`
 			Name            string `json:"name"`
+			Username        string `json:"username"`
 			ProfileImageUrl string `json:"profile_image_url"`
 
 			// NB! At the time of writing, Twitter OAuth2 doesn't support returning the user email address
@@ -52,6 +53,7 @@ func (p *Twitter) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:        rawData.Data.Id,
 		Name:      rawData.Data.Name,
+		Username:  rawData.Data.Username,
 		Email:     rawData.Data.Email,
 		AvatarUrl: rawData.Data.ProfileImageUrl,
 	}

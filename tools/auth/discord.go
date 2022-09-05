@@ -53,6 +53,7 @@ func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:        rawData.Id,
 		Name:      username,
+		Username:  rawData.Username,
 		Email:     rawData.Email,
 		AvatarUrl: avatarUrl,
 	}

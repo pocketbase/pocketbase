@@ -32,6 +32,7 @@ func (p *Gitlab) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	rawData := struct {
 		Id        int    `json:"id"`
 		Name      string `json:"name"`
+		Username  string `json:"username"`
 		Email     string `json:"email"`
 		AvatarUrl string `json:"avatar_url"`
 	}{}
@@ -43,6 +44,7 @@ func (p *Gitlab) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:        strconv.Itoa(rawData.Id),
 		Name:      rawData.Name,
+		Username:  rawData.Username,
 		Email:     rawData.Email,
 		AvatarUrl: rawData.AvatarUrl,
 	}

@@ -32,6 +32,7 @@ func NewGithubProvider() *Github {
 func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	// https://docs.github.com/en/rest/reference/users#get-the-authenticated-user
 	rawData := struct {
+		Login     string `json:"login"`
 		Id        int    `json:"id"`
 		Name      string `json:"name"`
 		Email     string `json:"email"`
@@ -45,6 +46,7 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:        strconv.Itoa(rawData.Id),
 		Name:      rawData.Name,
+		Username:  rawData.Login,
 		Email:     rawData.Email,
 		AvatarUrl: rawData.AvatarUrl,
 	}
