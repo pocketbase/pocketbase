@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/disintegration/imaging"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/fileblob"
@@ -98,7 +99,11 @@ func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
 
 // Upload writes content into the fileKey location.
 func (s *System) Upload(content []byte, fileKey string) error {
-	w, writerErr := s.bucket.NewWriter(s.ctx, fileKey, nil)
+	opts := &blob.WriterOptions{
+		ContentType: mimetype.Detect(content).String(),
+	}
+
+	w, writerErr := s.bucket.NewWriter(s.ctx, fileKey, opts)
 	if writerErr != nil {
 		return writerErr
 	}
@@ -185,9 +190,10 @@ var inlineServeContentTypes = []string{
 	// video
 	"video/webm", "video/mp4", "video/3gpp", "video/quicktime", "video/x-ms-wmv",
 	// audio
-	"audio/basic", "audio/aiff", "audio/mpeg", "audio/midi", "audio/wave",
+	"audio/basic", "audio/aiff", "audio/mpeg", "audio/midi", "audio/mp3", "audio/wave",
+	"audio/wav", "audio/x-wav", "audio/x-mpeg", "audio/x-m4a", "audio/aac",
 	// document
-	"application/pdf",
+	"application/pdf", "application/x-pdf",
 }
 
 // Serve serves the file at fileKey location to an HTTP response.
@@ -204,11 +210,11 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 		disposition = "inline"
 	}
 
-	// make an exception for svg and use a custom content type
-	// to send in the response so that it can be loaded in a img tag
+	// make an exception for svg and force a custom content type
+	// to send in the response so that it can be loaded in an img tag
 	// (see https://github.com/whatwg/mimesniff/issues/7)
 	extContentType := realContentType
-	if filepath.Ext(name) == ".svg" {
+	if extContentType != "image/svg+xml" && filepath.Ext(name) == ".svg" {
 		extContentType = "image/svg+xml"
 	}
 
