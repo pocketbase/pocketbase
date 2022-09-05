@@ -246,7 +246,7 @@ func (m *Record) PublicExport() map[string]any {
 // MarshalJSON implements the [json.Marshaler] interface.
 //
 // Only the data exported by `PublicExport()` will be serialized.
-func (m Record) MarshalJSON() ([]byte, error) {
+func (m *Record) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m.PublicExport())
 }
 

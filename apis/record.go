@@ -177,19 +177,20 @@ func (api *recordApi) create(c echo.Context) error {
 
 	// temporary save the record and check it against the create rule
 	if admin == nil && collection.CreateRule != nil && *collection.CreateRule != "" {
+		testRecord := models.NewRecord(collection)
+		testForm := forms.NewRecordUpsert(api.app, testRecord)
+
 		ruleFunc := func(q *dbx.SelectQuery) error {
-			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData)
+			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData, testRecord)
 			expr, err := search.FilterData(*collection.CreateRule).BuildExpr(resolver)
 			if err != nil {
 				return err
 			}
-			resolver.UpdateQuery(q)
+			_ = resolver.UpdateQuery(q)
 			q.AndWhere(expr)
 			return nil
 		}
 
-		testRecord := models.NewRecord(collection)
-		testForm := forms.NewRecordUpsert(api.app, testRecord)
 		if err := testForm.LoadData(c.Request()); err != nil {
 			return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 		}

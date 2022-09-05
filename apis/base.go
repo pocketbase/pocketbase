@@ -134,7 +134,7 @@ func StaticDirectoryHandler(fileSystem fs.FS, disablePathUnescaping bool) echo.H
 }
 
 // bindStaticAdminUI registers the endpoints that serves the static admin UI.
-func bindStaticAdminUI(app core.App, e *echo.Echo) error {
+func bindStaticAdminUI(app core.App, e *echo.Echo) {
 	// redirect to trailing slash to ensure that relative urls will still work properly
 	e.GET(
 		strings.TrimRight(trailedAdminPath, "/"),
@@ -152,7 +152,7 @@ func bindStaticAdminUI(app core.App, e *echo.Echo) error {
 		middleware.Gzip(),
 	)
 
-	return nil
+	return
 }
 
 const totalAdminsCacheKey = "totalAdmins"

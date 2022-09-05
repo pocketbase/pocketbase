@@ -35,6 +35,7 @@ type join struct {
 type RecordFieldResolver struct {
 	dao               *daos.Dao
 	baseCollection    *models.Collection
+	testRecord        *models.Record
 	allowedFields     []string
 	requestData       map[string]any
 	joins             []join // we cannot use a map because the insertion order is not preserved
@@ -46,10 +47,18 @@ func NewRecordFieldResolver(
 	dao *daos.Dao,
 	baseCollection *models.Collection,
 	requestData map[string]any,
+	testRecord ...*models.Record,
 ) *RecordFieldResolver {
+	var tr *models.Record
+	if len(testRecord) == 1 {
+		tr = testRecord[0]
+	} else if len(testRecord) > 1 {
+		panic("BuildExpr() incorrectly called, 0 or 1 testRecords can be passed.")
+	}
 	return &RecordFieldResolver{
 		dao:               dao,
 		baseCollection:    baseCollection,
+		testRecord:        tr,
 		requestData:       requestData,
 		joins:             []join{},
 		loadedCollections: []*models.Collection{baseCollection},
@@ -296,11 +305,22 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*models
 }
 
 func (r *RecordFieldResolver) addJoin(tableName string, tableAlias string, on dbx.Expression) {
-	tableExpr := fmt.Sprintf(
-		"%s %s",
-		inflector.Columnify(tableName),
-		inflector.Columnify(tableAlias),
-	)
+	var tableExpr string
+	if r.testRecord != nil && r.testRecord.Collection().Name == tableName {
+		// Build a sub query excluding the possible test record for security.
+		tableExpr = fmt.Sprintf(
+			"%s %s",
+			fmt.Sprintf("(SELECT * FROM %s WHERE id != '%s')", inflector.Columnify(tableName), inflector.SafeID(r.testRecord.Id)),
+			inflector.Columnify(tableAlias),
+		)
+	} else {
+		tableExpr = fmt.Sprintf(
+			"%s %s",
+			inflector.Columnify(tableName),
+			inflector.Columnify(tableAlias),
+		)
+
+	}
 
 	join := join{
 		id:    tableAlias,

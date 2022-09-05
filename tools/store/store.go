@@ -41,6 +41,18 @@ func (s *Store[T]) Has(key string) bool {
 	return ok
 }
 
+// MightGet returns a single element value and a status of if the retrieve was successful
+//
+// If key is not set, the zero T value is returned along with a false.
+func (s *Store[T]) MightGet(key string) (T, bool) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	v, ok := s.data[key]
+
+	return v, ok
+}
+
 // Get returns a single element value from the store.
 //
 // If key is not set, the zero T value is returned.

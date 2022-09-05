@@ -2,13 +2,14 @@ package list
 
 import (
 	"encoding/json"
+	"github.com/pocketbase/pocketbase/tools/store"
 	"regexp"
 	"strings"
 
 	"github.com/spf13/cast"
 )
 
-var cachedPatterns = map[string]*regexp.Regexp{}
+var cachedPatterns = store.New(make(map[string]*regexp.Regexp, 50))
 
 // ExistInSlice checks whether a comparable element exists in a slice of the same type.
 func ExistInSlice[T comparable](item T, list []T) bool {
@@ -42,7 +43,7 @@ func ExistInSliceWithRegex(str string, list []string) bool {
 		}
 
 		// check for regex match
-		pattern, ok := cachedPatterns[field]
+		pattern, ok := cachedPatterns.MightGet(field)
 		if !ok {
 			var err error
 			pattern, err = regexp.Compile(field)
@@ -50,7 +51,7 @@ func ExistInSliceWithRegex(str string, list []string) bool {
 				continue
 			}
 			// "cache" the pattern to avoid compiling it every time
-			cachedPatterns[field] = pattern
+			cachedPatterns.Set(field, pattern)
 		}
 
 		if pattern != nil && pattern.MatchString(str) {

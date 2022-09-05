@@ -6,6 +6,32 @@ import (
 	"github.com/pocketbase/pocketbase/tools/inflector"
 )
 
+func TestSafeID(t *testing.T) {
+	scenarios := []struct {
+		val      string
+		expected string
+	}{
+		{"", ""},
+		{"   ", ""},
+		{"123", "123"},
+		{"Test.", "Test"},
+		{" test ", "test"},
+		{"test1.test2", "test1test2"},
+		{"@test!abc", "testabc"},
+		{"#test?abc", "testabc"},
+		{"123test(123)#", "123test123"},
+		{"test1--test2", "test1--test2"},
+		{"01bc82c4-4fae-45e7-aaa7-9be704179e64", "01bc82c4-4fae-45e7-aaa7-9be704179e64"},
+		{`'\n;'`, "n"},
+	}
+
+	for i, scenario := range scenarios {
+		if result := inflector.SafeID(scenario.val); result != scenario.expected {
+			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
+		}
+	}
+}
+
 func TestUcFirst(t *testing.T) {
 	scenarios := []struct {
 		val      string

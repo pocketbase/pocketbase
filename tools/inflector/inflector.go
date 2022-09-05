@@ -8,6 +8,13 @@ import (
 
 var columnifyRemoveRegex = regexp.MustCompile(`[^\w\.\*\-\_\@\#]+`)
 var snakecaseSplitRegex = regexp.MustCompile(`[\W_]+`)
+var safeIDRemoveRegex = regexp.MustCompile(`[^0-9a-zA-Z\-]`)
+
+// SafeID strips out invalid id characters
+// uuids and contiguous letters are allowed.
+func SafeID(str string) string {
+	return safeIDRemoveRegex.ReplaceAllString(str, "")
+}
 
 // UcFirst converts the first character of a string into uppercase.
 func UcFirst(str string) string {
