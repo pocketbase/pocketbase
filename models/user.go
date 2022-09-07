@@ -9,10 +9,10 @@ import (
 var _ Model = (*User)(nil)
 
 const (
-	// The name of the system user profiles collection.
+	// ProfileCollectionName is the name of the system user profiles collection.
 	ProfileCollectionName = "profiles"
 
-	// The name of the user field from the system user profiles collection.
+	// ProfileCollectionUserFieldName is the name of the user field from the system user profiles collection.
 	ProfileCollectionUserFieldName = "userId"
 )
 

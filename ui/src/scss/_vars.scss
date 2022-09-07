@@ -12,7 +12,7 @@
     --bodyColor: #f8f9fa;
 
     --baseColor:     #ffffff;
-    --baseAlt1Color: #edf0f3;
+    --baseAlt1Color: #ebeff2;
     --baseAlt2Color: #dee3e8;
     --baseAlt3Color: #a9b4bc;
     --baseAlt4Color: #7c868d;
@@ -20,13 +20,13 @@
     --infoColor:       #3da9fc;
     --infoAltColor:    #d8eefe;
     --successColor:    #2cb67d;
-    --successAltColor: #daf6ea;
+    --successAltColor: #d6f5e8;
     --dangerColor:     #ef4565;
     --dangerAltColor:  #fcdee4;
     --warningColor:    #ff8e3c;
     --warningAltColor: #ffe7d6;
 
-    --overlayColor:   rgba(88, 95, 101, 0.3);
+    --overlayColor:   rgba(65, 82, 105, 0.25);
     --tooltipColor:   rgba(0, 0, 0, 0.85);
     --shadowColor:    rgba(0, 0, 0, 0.05);
 
@@ -62,6 +62,7 @@
 
     --baseAnimationSpeed: 150ms;
     --activeAnimationSpeed: 70ms;
+    --entranceAnimationSpeed: 250ms;
 
     --baseRadius: 3px;
     --lgRadius:   12px;

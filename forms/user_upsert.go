@@ -6,33 +6,63 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms/validators"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-// UserUpsert defines a user upsert (create/update) form.
+// UserUpsert specifies a [models.User] upsert (create/update) form.
 type UserUpsert struct {
-	app      core.App
-	user     *models.User
-	isCreate bool
+	config UserUpsertConfig
+	user   *models.User
 
+	Id              string `form:"id" json:"id"`
 	Email           string `form:"email" json:"email"`
 	Password        string `form:"password" json:"password"`
 	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
 }
 
-// NewUserUpsert creates new upsert form for the provided user model
-// (pass an empty user model instance (`&models.User{}`) for create).
+// UserUpsertConfig is the [UserUpsert] factory initializer config.
+//
+// NB! App is required struct member.
+type UserUpsertConfig struct {
+	App core.App
+	Dao *daos.Dao
+}
+
+// NewUserUpsert creates a new [UserUpsert] form with initializer
+// config created from the provided [core.App] instance
+// (for create you could pass a pointer to an empty User - `&models.User{}`).
+//
+// If you want to submit the form as part of another transaction, use
+// [NewUserEmailChangeConfirmWithConfig] with explicitly set Dao.
 func NewUserUpsert(app core.App, user *models.User) *UserUpsert {
+	return NewUserUpsertWithConfig(UserUpsertConfig{
+		App: app,
+	}, user)
+}
+
+// NewUserUpsertWithConfig creates a new [UserUpsert] form with the provided
+// config and [models.User] instance or panics on invalid configuration
+// (for create you could pass a pointer to an empty User - `&models.User{}`).
+func NewUserUpsertWithConfig(config UserUpsertConfig, user *models.User) *UserUpsert {
 	form := &UserUpsert{
-		app:      app,
-		user:     user,
-		isCreate: !user.HasId(),
+		config: config,
+		user:   user,
+	}
+
+	if form.config.App == nil || form.user == nil {
+		panic("Invalid initializer config or nil upsert model.")
+	}
+
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
 	}
 
 	// load defaults
+	form.Id = user.Id
 	form.Email = user.Email
 
 	return form
@@ -40,25 +70,31 @@ func NewUserUpsert(app core.App, user *models.User) *UserUpsert {
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *UserUpsert) Validate() error {
-	config := form.app.Settings()
-
 	return validation.ValidateStruct(form,
+		validation.Field(
+			&form.Id,
+			validation.When(
+				form.user.IsNew(),
+				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
+				validation.Match(idRegex),
+			).Else(validation.In(form.user.Id)),
+		),
 		validation.Field(
 			&form.Email,
 			validation.Required,
 			validation.Length(1, 255),
-			is.Email,
+			is.EmailFormat,
 			validation.By(form.checkEmailDomain),
 			validation.By(form.checkUniqueEmail),
 		),
 		validation.Field(
 			&form.Password,
-			validation.When(form.isCreate, validation.Required),
-			validation.Length(config.EmailAuth.MinPasswordLength, 100),
+			validation.When(form.user.IsNew(), validation.Required),
+			validation.Length(form.config.App.Settings().EmailAuth.MinPasswordLength, 100),
 		),
 		validation.Field(
 			&form.PasswordConfirm,
-			validation.When(form.isCreate || form.Password != "", validation.Required),
+			validation.When(form.user.IsNew() || form.Password != "", validation.Required),
 			validation.By(validators.Compare(form.Password)),
 		),
 	)
@@ -67,7 +103,7 @@ func (form *UserUpsert) Validate() error {
 func (form *UserUpsert) checkUniqueEmail(value any) error {
 	v, _ := value.(string)
 
-	if v == "" || form.app.Dao().IsUserEmailUnique(v, form.user.Id) {
+	if v == "" || form.config.Dao.IsUserEmailUnique(v, form.user.Id) {
 		return nil
 	}
 
@@ -81,8 +117,8 @@ func (form *UserUpsert) checkEmailDomain(value any) error {
 	}
 
 	domain := val[strings.LastIndex(val, "@")+1:]
-	only := form.app.Settings().EmailAuth.OnlyDomains
-	except := form.app.Settings().EmailAuth.ExceptDomains
+	only := form.config.App.Settings().EmailAuth.OnlyDomains
+	except := form.config.App.Settings().EmailAuth.ExceptDomains
 
 	// only domains check
 	if len(only) > 0 && !list.ExistInSlice(domain, only) {
@@ -110,7 +146,13 @@ func (form *UserUpsert) Submit(interceptors ...InterceptorFunc) error {
 		form.user.SetPassword(form.Password)
 	}
 
-	if !form.isCreate && form.Email != form.user.Email {
+	// custom insertion id can be set only on create
+	if form.user.IsNew() && form.Id != "" {
+		form.user.MarkAsNew()
+		form.user.SetId(form.Id)
+	}
+
+	if !form.user.IsNew() && form.Email != form.user.Email {
 		form.user.Verified = false
 		form.user.LastVerificationSentAt = types.DateTime{} // reset
 	}
@@ -118,6 +160,6 @@ func (form *UserUpsert) Submit(interceptors ...InterceptorFunc) error {
 	form.user.Email = form.Email
 
 	return runInterceptors(func() error {
-		return form.app.Dao().SaveUser(form.user)
+		return form.config.Dao.SaveUser(form.user)
 	}, interceptors...)
 }

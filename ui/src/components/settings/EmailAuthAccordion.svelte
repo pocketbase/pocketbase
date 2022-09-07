@@ -11,7 +11,7 @@
 
     let accordion;
 
-    $: hasErrors = !CommonHelper.isEmpty($errors?.emailPassword);
+    $: hasErrors = !CommonHelper.isEmpty($errors?.emailAuth);
 
     export function expand() {
         accordion?.expand();
@@ -50,7 +50,7 @@
         {/if}
     </svelte:fragment>
 
-    <Field class="form-field form-field-toggle m-b-0" name="emailPassword.enabled" let:uniqueId>
+    <Field class="form-field form-field-toggle m-b-0" name="emailAuth.enabled" let:uniqueId>
         <input type="checkbox" id={uniqueId} bind:checked={config.enabled} />
         <label for={uniqueId}>Enable</label>
     </Field>
@@ -58,7 +58,7 @@
     {#if config.enabled}
         <div class="grid" transition:slide|local={{ duration: 150 }}>
             <div class="col-sm-12 m-t-sm">
-                <Field class="form-field required" name="emailPassword.minPasswordLength" let:uniqueId>
+                <Field class="form-field required" name="emailAuth.minPasswordLength" let:uniqueId>
                     <label for={uniqueId}>Minimum password length</label>
                     <input
                         type="number"
@@ -73,7 +73,7 @@
             <div class="col-lg-6">
                 <Field
                     class="form-field {!CommonHelper.isEmpty(config.onlyDomains) ? 'disabled' : ''}"
-                    name="emailPassword.exceptDomains"
+                    name="emailAuth.exceptDomains"
                     let:uniqueId
                 >
                     <label for={uniqueId}>
@@ -97,7 +97,7 @@
             <div class="col-lg-6">
                 <Field
                     class="form-field {!CommonHelper.isEmpty(config.exceptDomains) ? 'disabled' : ''}"
-                    name="emailPassword.onlyDomains"
+                    name="emailAuth.onlyDomains"
                     let:uniqueId
                 >
                     <label for="{uniqueId}.config.onlyDomains">

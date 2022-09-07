@@ -54,7 +54,7 @@ func TestCustomRoutesAndErrorsHandling(t *testing.T) {
 			Name:   "custom route",
 			Method: http.MethodGet,
 			Url:    "/custom",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/custom",
@@ -70,7 +70,7 @@ func TestCustomRoutesAndErrorsHandling(t *testing.T) {
 			Name:   "route with HTTPError",
 			Method: http.MethodGet,
 			Url:    "/http-error",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/http-error",
@@ -86,7 +86,7 @@ func TestCustomRoutesAndErrorsHandling(t *testing.T) {
 			Name:   "route with api error",
 			Method: http.MethodGet,
 			Url:    "/api-error",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/api-error",
@@ -102,7 +102,7 @@ func TestCustomRoutesAndErrorsHandling(t *testing.T) {
 			Name:   "route with plain error",
 			Method: http.MethodGet,
 			Url:    "/plain-error",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/plain-error",

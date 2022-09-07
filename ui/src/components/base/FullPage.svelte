@@ -1,11 +1,11 @@
 <script>
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
+
     export let nobranding = false;
 </script>
 
-<div class="page-wrapper full-page-panel">
-    <div class="flex-fill" />
-
-    <div class="wrapper wrapper-sm m-b-xl">
+<PageWrapper class="full-page" center>
+    <div class="wrapper wrapper-sm m-b-xl panel-wrapper">
         {#if !nobranding}
             <div class="block txt-center m-b-lg">
                 <figure class="logo">
@@ -23,18 +23,10 @@
 
         <slot />
     </div>
-
-    <div class="flex-fill" />
-</div>
+</PageWrapper>
 
 <style>
-    .full-page-panel {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background: var(--baseColor);
-    }
-    .full-page-panel .wrapper {
+    .panel-wrapper {
         animation: slideIn 200ms;
     }
 </style>

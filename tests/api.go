@@ -22,18 +22,37 @@ type ApiScenario struct {
 	Url            string
 	Body           io.Reader
 	RequestHeaders map[string]string
+
+	// Delay adds a delay before checking the expectations usually
+	// to ensure that all fired non-awaited go routines have finished
+	Delay time.Duration
+
 	// expectations
-	ExpectedStatus  int
-	ExpectedContent []string
-	ExpectedEvents  map[string]int
-	// test events
-	BeforeFunc func(t *testing.T, app *TestApp, e *echo.Echo)
-	AfterFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
+	// ---
+	ExpectedStatus     int
+	ExpectedContent    []string
+	NotExpectedContent []string
+	ExpectedEvents     map[string]int
+
+	// test hooks
+	// ---
+	TestAppFactory func() (*TestApp, error)
+	BeforeTestFunc func(t *testing.T, app *TestApp, e *echo.Echo)
+	AfterTestFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
 }
 
 // Test executes the test case/scenario.
 func (scenario *ApiScenario) Test(t *testing.T) {
-	testApp, _ := NewTestApp()
+	var testApp *TestApp
+	var testAppErr error
+	if scenario.TestAppFactory != nil {
+		testApp, testAppErr = scenario.TestAppFactory()
+	} else {
+		testApp, testAppErr = NewTestApp()
+	}
+	if testAppErr != nil {
+		t.Fatalf("Failed to initialize the test app instance: %v", testAppErr)
+	}
 	defer testApp.Cleanup()
 
 	e, err := apis.InitApi(testApp)
@@ -41,14 +60,14 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if scenario.BeforeFunc != nil {
-		scenario.BeforeFunc(t, testApp, e)
+	if scenario.BeforeTestFunc != nil {
+		scenario.BeforeTestFunc(t, testApp, e)
 	}
 
 	recorder := httptest.NewRecorder()
 	req := httptest.NewRequest(scenario.Method, scenario.Url, scenario.Body)
 
-	// add middeware to timeout long running requests (eg. keep-alive routes)
+	// add middleware to timeout long-running requests (eg. keep-alive routes)
 	e.Pre(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx, cancelFunc := context.WithTimeout(c.Request().Context(), 100*time.Millisecond)
@@ -80,9 +99,13 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		t.Errorf("[%s] Expected status code %d, got %d", prefix, scenario.ExpectedStatus, res.StatusCode)
 	}
 
-	if len(scenario.ExpectedContent) == 0 {
+	if scenario.Delay > 0 {
+		time.Sleep(scenario.Delay)
+	}
+
+	if len(scenario.ExpectedContent) == 0 && len(scenario.NotExpectedContent) == 0 {
 		if len(recorder.Body.Bytes()) != 0 {
-			t.Errorf("[%s] Expected empty body, got %v", prefix, recorder.Body.String())
+			t.Errorf("[%s] Expected empty body, got \n%v", prefix, recorder.Body.String())
 		}
 	} else {
 		// normalize json response format
@@ -98,7 +121,14 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 
 		for _, item := range scenario.ExpectedContent {
 			if !strings.Contains(normalizedBody, item) {
-				t.Errorf("[%s] Cannot find %v in response body %v", prefix, item, normalizedBody)
+				t.Errorf("[%s] Cannot find %v in response body \n%v", prefix, item, normalizedBody)
+				break
+			}
+		}
+
+		for _, item := range scenario.NotExpectedContent {
+			if strings.Contains(normalizedBody, item) {
+				t.Errorf("[%s] Didn't expect %v in response body \n%v", prefix, item, normalizedBody)
 				break
 			}
 		}
@@ -115,7 +145,7 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		}
 	}
 
-	if scenario.AfterFunc != nil {
-		scenario.AfterFunc(t, testApp, e)
+	if scenario.AfterTestFunc != nil {
+		scenario.AfterTestFunc(t, testApp, e)
 	}
 }

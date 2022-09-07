@@ -17,21 +17,27 @@ const MaxExpandDepth = 6
 type ExpandFetchFunc func(relCollection *models.Collection, relIds []string) ([]*models.Record, error)
 
 // ExpandRecord expands the relations of a single Record model.
-func (dao *Dao) ExpandRecord(record *models.Record, expands []string, fetchFunc ExpandFetchFunc) error {
+//
+// Returns a map with the failed expand parameters and their errors.
+func (dao *Dao) ExpandRecord(record *models.Record, expands []string, fetchFunc ExpandFetchFunc) map[string]error {
 	return dao.ExpandRecords([]*models.Record{record}, expands, fetchFunc)
 }
 
 // ExpandRecords expands the relations of the provided Record models list.
-func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, fetchFunc ExpandFetchFunc) error {
+//
+// Returns a map with the failed expand parameters and their errors.
+func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, fetchFunc ExpandFetchFunc) map[string]error {
 	normalized := normalizeExpands(expands)
+
+	failed := map[string]error{}
 
 	for _, expand := range normalized {
 		if err := dao.expandRecords(records, expand, fetchFunc, 1); err != nil {
-			return err
+			failed[expand] = err
 		}
 	}
 
-	return nil
+	return failed
 }
 
 // notes:
@@ -52,11 +58,14 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	// extract the relation field (if exist)
 	mainCollection := records[0].Collection()
 	relField := mainCollection.Schema.GetFieldByName(parts[0])
-	if relField == nil {
-		return fmt.Errorf("Couldn't find field %q in collection %q.", parts[0], mainCollection.Name)
+	if relField == nil || relField.Type != schema.FieldTypeRelation {
+		return fmt.Errorf("Couldn't find relation field %q in collection %q.", parts[0], mainCollection.Name)
 	}
 	relField.InitOptions()
-	relFieldOptions, _ := relField.Options.(*schema.RelationOptions)
+	relFieldOptions, ok := relField.Options.(*schema.RelationOptions)
+	if !ok {
+		return fmt.Errorf("Cannot initialize the options of relation field %q.", parts[0])
+	}
 
 	relCollection, err := dao.FindCollectionByNameOrId(relFieldOptions.CollectionId)
 	if err != nil {
@@ -64,7 +73,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	}
 
 	// extract the id of the relations to expand
-	relIds := []string{}
+	relIds := make([]string, 0, len(records))
 	for _, record := range records {
 		relIds = append(relIds, record.GetStringSliceDataValue(relField.Name)...)
 	}
@@ -92,7 +101,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	for _, model := range records {
 		relIds := model.GetStringSliceDataValue(relField.Name)
 
-		validRels := []*models.Record{}
+		validRels := make([]*models.Record, 0, len(relIds))
 		for _, id := range relIds {
 			if rel, ok := indexedRels[id]; ok {
 				validRels = append(validRels, rel)
@@ -120,20 +129,18 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 // normalizeExpands normalizes expand strings and merges self containing paths
 // (eg. ["a.b.c", "a.b", "   test  ", "  ", "test"] -> ["a.b.c", "test"]).
 func normalizeExpands(paths []string) []string {
-	result := []string{}
-
 	// normalize paths
-	normalized := []string{}
+	normalized := make([]string, 0, len(paths))
 	for _, p := range paths {
-		p := strings.ReplaceAll(p, " ", "") // replace spaces
-		p = strings.Trim(p, ".")            // trim incomplete paths
-		if p == "" {
-			continue
+		p = strings.ReplaceAll(p, " ", "") // replace spaces
+		p = strings.Trim(p, ".")           // trim incomplete paths
+		if p != "" {
+			normalized = append(normalized, p)
 		}
-		normalized = append(normalized, p)
 	}
 
 	// merge containing paths
+	result := make([]string, 0, len(normalized))
 	for i, p1 := range normalized {
 		var skip bool
 		for j, p2 := range normalized {

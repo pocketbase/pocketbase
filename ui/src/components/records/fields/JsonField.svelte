@@ -18,5 +18,5 @@
         <i class={CommonHelper.getFieldTypeIcon(field.type)} />
         <span class="txt">{field.name}</span>
     </label>
-    <textarea id={uniqueId} required={field.required} class="txt-mono txt-sm" bind:value />
+    <textarea id={uniqueId} required={field.required} class="txt-mono" bind:value />
 </Field>

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"crypto/tls"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -28,7 +27,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 
 	command := &cobra.Command{
 		Use:   "serve",
-		Short: "Starts the web server (default to localhost:8090)",
+		Short: "Starts the web server (default to 127.0.0.1:8090)",
 		Run: func(command *cobra.Command, args []string) {
 			// ensure that the latest migrations are applied before starting the server
 			if err := runMigrations(app); err != nil {
@@ -87,10 +86,11 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 				if httpsAddr != "" {
 					schema = "https"
 				}
+				regular := color.New()
 				bold := color.New(color.Bold).Add(color.FgGreen)
 				bold.Printf("> Server started at: %s\n", color.CyanString("%s://%s", schema, serverConfig.Addr))
-				fmt.Printf("  - REST API: %s\n", color.CyanString("%s://%s/api/", schema, serverConfig.Addr))
-				fmt.Printf("  - Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, serverConfig.Addr))
+				regular.Printf("  - REST API: %s\n", color.CyanString("%s://%s/api/", schema, serverConfig.Addr))
+				regular.Printf("  - Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, serverConfig.Addr))
 			}
 
 			var serveErr error
@@ -123,7 +123,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	command.PersistentFlags().StringVar(
 		&httpAddr,
 		"http",
-		"localhost:8090",
+		"127.0.0.1:8090",
 		"api HTTP server address",
 	)
 

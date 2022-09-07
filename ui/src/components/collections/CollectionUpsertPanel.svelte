@@ -97,9 +97,9 @@
 
         let request;
         if (collection.isNew) {
-            request = ApiClient.Collections.create(data);
+            request = ApiClient.collections.create(data);
         } else {
-            request = ApiClient.Collections.update(collection.id, data);
+            request = ApiClient.collections.update(collection.id, data);
         }
 
         request
@@ -146,7 +146,8 @@
         }
 
         confirm(`Do you really want to delete collection "${original?.name}" and all its records?`, () => {
-            return ApiClient.Collections.delete(original?.id)
+            return ApiClient.collections
+                .delete(original?.id)
                 .then(() => {
                     hide();
                     addSuccessToast(`Successfully deleted collection "${original?.name}".`);
@@ -166,7 +167,7 @@
 
 <OverlayPanel
     bind:this={collectionPanel}
-    class="overlay-panel-lg colored-header collection-panel"
+    class="overlay-panel-lg colored-header compact-header collection-panel"
     beforeHide={() => {
         if (hasChanges && confirmClose) {
             confirm("You have unsaved changes. Do you really want to close the panel?", () => {

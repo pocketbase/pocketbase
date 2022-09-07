@@ -1,21 +1,26 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import EmailAuthAccordion from "@/components/settings/EmailAuthAccordion.svelte";
     import AuthProviderAccordion from "@/components/settings/AuthProviderAccordion.svelte";
+    import providersList from "@/providers.js";
+
+    $pageTitle = "Auth providers";
 
     let emailAuthAccordion;
-    let authSettings = {};
+    let originalFormSettings = {};
+    let formSettings = {};
     let isLoading = false;
     let isSaving = false;
-    let initialHash = "";
 
-    $: hasChanges = initialHash != JSON.stringify(authSettings);
+    $: initialHash = JSON.stringify(originalFormSettings);
 
-    CommonHelper.setDocumentTitle("Auth providers");
+    $: hasChanges = initialHash != JSON.stringify(formSettings);
 
     loadSettings();
 
@@ -23,7 +28,7 @@
         isLoading = true;
 
         try {
-            const result = (await ApiClient.Settings.getAll()) || {};
+            const result = (await ApiClient.settings.getAll()) || {};
             initSettings(result);
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -40,7 +45,7 @@
         isSaving = true;
 
         try {
-            const result = await ApiClient.Settings.update(CommonHelper.filterRedactedProps(authSettings));
+            const result = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             initSettings(result);
             setErrors({});
             emailAuthAccordion?.collapseSiblings();
@@ -55,28 +60,32 @@
     function initSettings(data) {
         data = data || {};
 
-        authSettings = {};
-        authSettings.emailAuth = Object.assign({ enabled: true }, data.emailAuth);
+        formSettings = {
+            emailAuth: Object.assign({ enabled: true }, data.emailAuth),
+        };
 
-        const providers = ["googleAuth", "facebookAuth", "githubAuth", "gitlabAuth"];
-        for (const provider of providers) {
-            authSettings[provider] = Object.assign(
+        for (const providerKey in providersList) {
+            formSettings[providerKey] = Object.assign(
                 { enabled: false, allowRegistrations: true },
-                data[provider]
+                data[providerKey]
             );
         }
 
-        initialHash = JSON.stringify(authSettings);
+        originalFormSettings = JSON.parse(JSON.stringify(formSettings));
+    }
+
+    function reset() {
+        formSettings = JSON.parse(JSON.stringify(originalFormSettings || {}));
     }
 </script>
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Auth providers</div>
+            <div class="breadcrumb-item">{$pageTitle}</div>
         </nav>
     </header>
 
@@ -91,41 +100,33 @@
                     <EmailAuthAccordion
                         bind:this={emailAuthAccordion}
                         single
-                        bind:config={authSettings.emailAuth}
+                        bind:config={formSettings.emailAuth}
                     />
-                    <AuthProviderAccordion
-                        single
-                        key="googleAuth"
-                        title="Google"
-                        icon="ri-google-line"
-                        bind:config={authSettings.googleAuth}
-                    />
-                    <AuthProviderAccordion
-                        single
-                        key="facebookAuth"
-                        title="Facebook"
-                        icon="ri-facebook-line"
-                        bind:config={authSettings.facebookAuth}
-                    />
-                    <AuthProviderAccordion
-                        single
-                        key="githubAuth"
-                        title="GitHub"
-                        icon="ri-github-line"
-                        bind:config={authSettings.githubAuth}
-                    />
-                    <AuthProviderAccordion
-                        single
-                        key="gitlabAuth"
-                        title="GitLab"
-                        icon="ri-gitlab-line"
-                        showSelfHostedFields
-                        bind:config={authSettings.gitlabAuth}
-                    />
+
+                    {#each Object.entries(providersList) as [key, provider]}
+                        <AuthProviderAccordion
+                            single
+                            {key}
+                            title={provider.title}
+                            icon={provider.icon || "ri-fingerprint-line"}
+                            showSelfHostedFields={provider.selfHosted}
+                            bind:config={formSettings[key]}
+                        />
+                    {/each}
                 </div>
 
                 <div class="flex m-t-base">
                     <div class="flex-fill" />
+                    {#if hasChanges}
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-hint"
+                            disabled={isSaving}
+                            on:click={() => reset()}
+                        >
+                            <span class="txt">Cancel</span>
+                        </button>
+                    {/if}
                     <button
                         type="submit"
                         class="btn btn-expanded"
@@ -139,4 +140,4 @@
             {/if}
         </form>
     </div>
-</main>
+</PageWrapper>

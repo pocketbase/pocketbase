@@ -16,7 +16,7 @@
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
-                        text: 'Domains that are NOT allowed as value. \n This field is disabled if "Only domains" is set.',
+                        text: 'List of domains that are NOT allowed. \n This field is disabled if "Only domains" is set.',
                         position: "top",
                     }}
                 />
@@ -37,7 +37,7 @@
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
-                        text: 'Domains that are ONLY allowed as value. \n This field is disabled if "Except domains" is set.',
+                        text: 'List of domains that are ONLY allowed. \n This field is disabled if "Except domains" is set.',
                         position: "top",
                     }}
                 />

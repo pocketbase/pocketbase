@@ -78,7 +78,7 @@ func (api *fileApi) download(c echo.Context) error {
 			// - if exists - compare last modified dates to determine whether the thumb should be recreated
 			tAttrs, tAttrsErr := fs.Attributes(servedPath)
 			if tAttrsErr != nil || oAttrs.ModTime.After(tAttrs.ModTime) {
-				if err := fs.CreateThumb(originalPath, servedPath, thumbSize, false); err != nil {
+				if err := fs.CreateThumb(originalPath, servedPath, thumbSize); err != nil {
 					servedPath = originalPath // fallback to the original
 				}
 			}

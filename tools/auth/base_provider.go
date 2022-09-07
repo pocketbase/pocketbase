@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -118,6 +119,16 @@ func (p *baseProvider) FetchRawUserData(token *oauth2.Token, result any) error {
 	content, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return err
+	}
+
+	// http.Client.Get doesn't treat non 2xx responses as error
+	if response.StatusCode >= 400 {
+		return fmt.Errorf(
+			"Failed to fetch OAuth2 user profile via %s (%d):\n%s",
+			p.userApiUrl,
+			response.StatusCode,
+			string(content),
+		)
 	}
 
 	return json.Unmarshal(content, &result)

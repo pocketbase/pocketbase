@@ -53,6 +53,7 @@ button {
         height: 100%;
         pointer-events: none;
         user-select: none;
+        backface-visibility: hidden;
         background: var(--primaryColor);
         transition: filter var(--baseAnimationSpeed),
                     opacity var(--baseAnimationSpeed),
@@ -226,8 +227,18 @@ button {
     &.btn-circle {
         border-radius: 50%;
         padding: 0;
+        gap: 0;
         i {
+            $iconSize: 24px;
             font-size: 1.2857rem;
+            text-align: center;
+            width: $iconSize;
+            height: $iconSize;
+            line-height: $iconSize;
+            &:before {
+                margin: 0;
+                display: block;
+            }
         }
         &.btn-sm i,
         &.btn-xs i {
@@ -321,8 +332,17 @@ button {
     font-family: var(--baseFontFamily);
     font-weight: normal;
     border-radius: var(--baseRadius);
+    overflow: auto; /* fallback */
+    overflow: overlay;
     &::placeholder {
       color: var(--txtDisabledColor);
+    }
+    &:focus,
+    &:focus-within {
+        @include scrollbar(
+            $thumbColor: var(--baseAlt3Color),
+            $thumbActiveColor: var(--baseAlt4Color)
+        );
     }
     &:focus,
     &.active {
@@ -340,7 +360,12 @@ button {
         border-color: var(--baseAlt2Color);
     }
     &.txt-mono {
-        font-size: var(--smFontSize);
+        line-height: var(--smLineHeight);
+    }
+    &.code {
+        font-size: 15px;
+        line-height: 1.379rem;
+        font-family: var(--monospaceFontFamily);
     }
 }
 
@@ -400,7 +425,7 @@ select {
     label {
         display: flex;
         width: 100%;
-        column-gap: 10px;
+        column-gap: 5px;
         align-items: center;
         user-select: none;
         font-weight: 600;
@@ -427,9 +452,6 @@ select {
             line-height: 1;
             margin-top: -2px;
             margin-bottom: -2px;
-            + .txt {
-                margin-left: -5px;
-            }
         }
     }
     %input, label {
@@ -475,22 +497,33 @@ select {
         font-size: var(--smFontSize);
         line-height: var(--smLineHeight);
         color: var(--txtHintColor);
+        word-break: break-word;
+        pre {
+            white-space: pre-wrap;
+        }
+    }
+    .help-block-error {
+        color: var(--dangerColor);
     }
 
     // states
-    &.error {
-        .help-block-error {
-            color: var(--dangerColor);
-        }
+    &.error,
+    &.invalid {
         > label {
             color: var(--dangerColor);
+        }
+    }
+    &.invalid {
+        label, %input {
+            background: var(--dangerAltColor);
         }
     }
     &.required:not(.form-field-toggle) {
         > label:after {
             content: '*';
             color: var(--dangerColor);
-            margin-left: -7px;
+            margin-top: -2px;
+            margin-left: -2px;
         }
     }
     &.disabled {
@@ -595,11 +628,16 @@ select {
     input[type="radio"] {
         & ~ label:before {
             border-radius: 50%;
-            font-size: 0.5rem;
+            font-size: 1rem;
         }
-        &:checked ~ label:before {
-            content: '\eb7c';
-            color: #fff;
+    }
+
+    .form-field-block {
+        @extend %block;
+        position: relative;
+        margin: 0 0 var(--xsSpacing);
+        &:last-child {
+            margin-bottom: 0;
         }
     }
 
@@ -1009,6 +1047,12 @@ select {
             font-family: var(--monospaceFontFamily);
             font-size: var(--baseFontSize);
             line-height: var(--baseLineHeight);
+        }
+        .cm-selectionMatch {
+            background: var(--infoAltColor);
+        }
+        &.cm-focused .cm-matchingBracket {
+            background-color: rgba(50, 140, 130, 0.1);
         }
     }
 }

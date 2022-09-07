@@ -44,7 +44,9 @@ func (h *Hook[T]) Reset() {
 // - any non-nil error is returned in one of the handlers
 func (h *Hook[T]) Trigger(data T, oneOffHandlers ...Handler[T]) error {
 	h.mux.Lock()
-	handlers := append(h.handlers, oneOffHandlers...) //nolint:gocritic
+	handlers := make([]Handler[T], 0, len(h.handlers)+len(oneOffHandlers))
+	handlers = append(handlers, h.handlers...)
+	handlers = append(handlers, oneOffHandlers...)
 	// unlock is not deferred to avoid deadlocks when Trigger is called recursive by the handlers
 	h.mux.Unlock()
 

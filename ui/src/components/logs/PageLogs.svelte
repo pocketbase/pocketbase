@@ -1,6 +1,7 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import Field from "@/components/base/Field.svelte";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import LogsList from "@/components/logs/LogsList.svelte";
@@ -8,6 +9,8 @@
     import LogViewPanel from "@/components/logs/LogViewPanel.svelte";
 
     const ADMIN_LOGS_LOCAL_STORAGE_KEY = "includeAdminLogs";
+
+    $pageTitle = "Request logs";
 
     let logPanel;
     let filter = "";
@@ -23,15 +26,13 @@
     function refresh() {
         refreshToken++;
     }
-
-    CommonHelper.setDocumentTitle("Request logs");
 </script>
 
-<main class="page-wrapper">
+<PageWrapper>
     <div class="page-header-wrapper m-b-0">
         <header class="page-header">
             <nav class="breadcrumbs">
-                <div class="breadcrumb-item">Request logs</div>
+                <div class="breadcrumb-item">{$pageTitle}</div>
             </nav>
 
             <RefreshButton on:refresh={() => refresh()} />
@@ -49,7 +50,16 @@
         <Searchbar
             value={filter}
             placeholder="Search logs, ex. status > 200"
-            extraAutocompleteKeys={["method", "url", "ip", "referer", "status", "auth", "userAgent"]}
+            extraAutocompleteKeys={[
+                "method",
+                "url",
+                "remoteIp",
+                "userIp",
+                "referer",
+                "status",
+                "auth",
+                "userAgent",
+            ]}
             on:submit={(e) => (filter = e.detail)}
         />
 
@@ -63,6 +73,6 @@
     {#key refreshToken}
         <LogsList bind:filter {presets} on:select={(e) => logPanel?.show(e?.detail)} />
     {/key}
-</main>
+</PageWrapper>
 
 <LogViewPanel bind:this={logPanel} />

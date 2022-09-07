@@ -45,6 +45,6 @@
         }
     }
     .btn.refreshing i {
-        animation: refresh 200ms linear;
+        animation: refresh 200ms ease-out;
     }
 </style>

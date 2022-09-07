@@ -18,7 +18,7 @@ func TestRequireGuestOnly(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -40,7 +40,7 @@ func TestRequireGuestOnly(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -62,7 +62,7 @@ func TestRequireGuestOnly(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxNjQwOTkxNjYxfQ.HkAldxpbn0EybkMfFGQKEJUIYKE5UJA0AjcsrV7Q6Io",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -81,7 +81,7 @@ func TestRequireGuestOnly(t *testing.T) {
 			Name:   "guest",
 			Method: http.MethodGet,
 			Url:    "/my/test",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -109,7 +109,7 @@ func TestRequireUserAuth(t *testing.T) {
 			Name:   "guest",
 			Method: http.MethodGet,
 			Url:    "/my/test",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -131,7 +131,7 @@ func TestRequireUserAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxNjQwOTkxNjYxfQ.HkAldxpbn0EybkMfFGQKEJUIYKE5UJA0AjcsrV7Q6Io",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -153,7 +153,7 @@ func TestRequireUserAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -175,7 +175,7 @@ func TestRequireUserAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -203,7 +203,7 @@ func TestRequireAdminAuth(t *testing.T) {
 			Name:   "guest",
 			Method: http.MethodGet,
 			Url:    "/my/test",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -225,7 +225,7 @@ func TestRequireAdminAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -247,7 +247,7 @@ func TestRequireAdminAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -269,7 +269,7 @@ func TestRequireAdminAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -297,7 +297,7 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 			Name:   "guest (while having at least 1 existing admin)",
 			Method: http.MethodGet,
 			Url:    "/my/test",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -316,7 +316,7 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 			Name:   "guest (while having 0 existing admins)",
 			Method: http.MethodGet,
 			Url:    "/my/test",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// delete all admins
 				_, err := app.Dao().DB().NewQuery("DELETE FROM {{_admins}}").Execute()
 				if err != nil {
@@ -344,7 +344,7 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -366,7 +366,7 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -388,7 +388,7 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -416,7 +416,7 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 			Name:   "guest",
 			Method: http.MethodGet,
 			Url:    "/my/test",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -438,7 +438,7 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -460,7 +460,7 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -482,7 +482,7 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test",
@@ -510,7 +510,7 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 			Name:   "guest",
 			Method: http.MethodGet,
 			Url:    "/my/test/4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test/:id",
@@ -532,7 +532,7 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxNjQwOTkxNjYxfQ.HkAldxpbn0EybkMfFGQKEJUIYKE5UJA0AjcsrV7Q6Io",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test/:id",
@@ -555,7 +555,7 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 				// test3@example.com
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoidXNlciIsImVtYWlsIjoidGVzdDNAZXhhbXBsZS5jb20iLCJpZCI6Ijk3Y2MzZDNkLTZiYTItMzgzZi1iNDJhLTdiYzg0ZDI3NDEwYyIsImV4cCI6MTg5MzUxNTU3Nn0.Q965uvlTxxOsZbACXSgJQNXykYK0TKZ87nyPzemvN4E",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test/:id",
@@ -577,7 +577,7 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test/:id",
@@ -599,7 +599,7 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
 					Path:   "/my/test/:custom",

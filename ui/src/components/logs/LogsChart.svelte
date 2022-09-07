@@ -36,9 +36,10 @@
     export async function load() {
         isLoading = true;
 
-        return ApiClient.Logs.getRequestsStats({
-            filter: [presets, filter].filter(Boolean).join("&&"),
-        })
+        return ApiClient.logs
+            .getRequestsStats({
+                filter: [presets, filter].filter(Boolean).join("&&"),
+            })
             .then((result) => {
                 resetData();
                 for (let item of result) {
@@ -86,6 +87,7 @@
                         pointBackgroundColor: "#ef4565",
                         backgroundColor: "rgb(239,69,101,0.05)",
                         borderWidth: 2,
+                        pointRadius: 1,
                         pointBorderWidth: 0,
                         fill: true,
                     },
@@ -146,7 +148,7 @@
 
 <div class="chart-wrapper" class:loading={isLoading}>
     {#if isLoading}
-        <div class="chart-loader loader" transition:scale={{ duration: 150 }} />
+        <div class="chart-loader loader" transition:scale|local={{ duration: 150 }} />
     {/if}
     <canvas bind:this={chartCanvas} class="chart-canvas" style="height: 250px; width: 100%;" />
 </div>

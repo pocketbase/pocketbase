@@ -4,15 +4,16 @@
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import FilterSyntax from "@/components/collections/docs/FilterSyntax.svelte";
+    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
 
     export let collection = new Collection();
 
     let responseTab = 200;
-    let sdkTab = "JavaScript";
     let responses = [];
-    let sdkExamples = [];
 
     $: adminsOnly = collection?.listRule === null;
+
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
 
     $: if (collection?.id) {
         responses.push({
@@ -67,32 +68,6 @@
             `,
         });
     }
-
-    $: sdkExamples = [
-        {
-            lang: "JavaScript",
-            code: `
-                import PocketBase from 'pocketbase';
-
-                const client = new PocketBase("${ApiClient.baseUrl}");
-
-                client.Records.getList("${collection?.name}", { page: 2 })
-                    .then(function (list) {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
-
-                // alternatively you can also fetch all records at once via getFullList:
-                client.Records.getFullList("${collection?.name}", 200 /* batch size */)
-                    .then(function (records) {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
-            `,
-        },
-    ];
 </script>
 
 <div class="alert alert-info">
@@ -112,26 +87,43 @@
 </div>
 
 <div class="section-title">Client SDKs example</div>
-<div class="tabs m-b-lg">
-    <div class="tabs-header compact left">
-        {#each sdkExamples as example (example.lang)}
-            <button
-                class="tab-item"
-                class:active={sdkTab === example.lang}
-                on:click={() => (sdkTab = example.lang)}
-            >
-                {example.lang}
-            </button>
-        {/each}
-    </div>
-    <div class="tabs-content">
-        {#each sdkExamples as example (example.lang)}
-            <div class="tab-item" class:active={sdkTab === example.lang}>
-                <CodeBlock content={example.code} />
-            </div>
-        {/each}
-    </div>
-</div>
+<SdkTabs
+    js={`
+        import PocketBase from 'pocketbase';
+
+        const client = new PocketBase('${backendAbsUrl}');
+
+        ...
+
+        // fetch a paginated records list
+        const resultList = await client.records.getList('${collection?.name}', 1, 50, {
+            filter: 'created >= "2022-01-01 00:00:00"',
+        });
+
+        // alternatively you can also fetch all records at once via getFullList:
+        const records = await client.records.getFullList('${collection?.name}', 200 /* batch size */, {
+            sort: '-created',
+        });
+    `}
+    dart={`
+        import 'package:pocketbase/pocketbase.dart';
+
+        final client = PocketBase('${backendAbsUrl}');
+
+        ...
+
+        // fetch a paginated records list
+        final result = await client.records.getList(
+          '${collection?.name}',
+          page: 1,
+          perPage: 50,
+          filter: 'created >= "2022-01-01 00:00:00"',
+        );
+
+        // alternatively you can also fetch all records at once via getFullList:
+        final records = await client.records.getFullList('${collection?.name}', batch: 200, sort: '-created');
+    `}
+/>
 
 <div class="section-title">Query parameters</div>
 <table class="table-compact table-border m-b-lg">
@@ -195,7 +187,7 @@
                 <span class="label">String</span>
             </td>
             <td>
-                Auto expand nested record relations. Ex.:
+                Auto expand record relations. Ex.:
                 <CodeBlock
                     content={`
                         ?expand=rel1,rel2.subrel21.subrel22

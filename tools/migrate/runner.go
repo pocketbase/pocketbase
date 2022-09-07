@@ -2,14 +2,11 @@ package migrate
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/spf13/cast"
 )
 
@@ -40,9 +37,8 @@ func NewRunner(db *dbx.DB, migrationsList MigrationsList) (*Runner, error) {
 // Run interactively executes the current runner with the provided args.
 //
 // The following commands are supported:
-// - up                        - applies all migrations
-// - down [n]                  - reverts the last n applied migrations
-// - create NEW_MIGRATION_NAME - create NEW_MIGRATION_NAME.go file from a migration template
+// - up       - applies all migrations
+// - down [n] - reverts the last n applied migrations
 func (r *Runner) Run(args ...string) error {
 	cmd := "up"
 	if len(args) > 0 {
@@ -101,57 +97,6 @@ func (r *Runner) Run(args ...string) error {
 		}
 
 		return nil
-	case "create":
-		if len(args) < 2 {
-			return fmt.Errorf("Missing migration file name")
-		}
-
-		name := args[1]
-
-		var dir string
-		if len(args) == 3 {
-			dir = args[2]
-		}
-		if dir == "" {
-			// If not specified, auto point to the default migrations folder.
-			//
-			// NB!
-			// Since the create command makes sense only during development,
-			// it is expected the user to be in the app working directory
-			// and to be using `go run ...`
-			wd, err := os.Getwd()
-			if err != nil {
-				return err
-			}
-			dir = path.Join(wd, "migrations")
-		}
-
-		resultFilePath := path.Join(
-			dir,
-			fmt.Sprintf("%d_%s.go", time.Now().Unix(), inflector.Snakecase(name)),
-		)
-
-		confirm := false
-		prompt := &survey.Confirm{
-			Message: fmt.Sprintf("Do you really want to create migration %q?", resultFilePath),
-		}
-		survey.AskOne(prompt, &confirm)
-		if !confirm {
-			fmt.Println("The command has been cancelled")
-			return nil
-		}
-
-		// ensure that migrations dir exist
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			return err
-		}
-
-		if err := os.WriteFile(resultFilePath, []byte(createTemplateContent), 0644); err != nil {
-			return fmt.Errorf("Failed to save migration file %q\n", resultFilePath)
-		}
-
-		fmt.Printf("Successfully created file %q\n", resultFilePath)
-		return nil
 	default:
 		return fmt.Errorf("Unsupported command: %q\n", cmd)
 	}
@@ -194,11 +139,9 @@ func (r *Runner) Up() ([]string, error) {
 //
 // On success returns list with the reverted migrations file names.
 func (r *Runner) Down(toRevertCount int) ([]string, error) {
-	applied := []string{}
+	reverted := make([]string, 0, toRevertCount)
 
 	err := r.db.Transactional(func(tx *dbx.Tx) error {
-		totalReverted := 0
-
 		for i := len(r.migrationsList.Items()) - 1; i >= 0; i-- {
 			m := r.migrationsList.Item(i)
 
@@ -208,7 +151,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 			}
 
 			// revert limit reached
-			if toRevertCount-totalReverted <= 0 {
+			if toRevertCount-len(reverted) <= 0 {
 				break
 			}
 
@@ -220,7 +163,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 				return fmt.Errorf("Failed to save reverted migration info for %s: %w", m.file, err)
 			}
 
-			applied = append(applied, m.file)
+			reverted = append(reverted, m.file)
 		}
 
 		return nil
@@ -229,7 +172,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return applied, nil
+	return reverted, nil
 }
 
 func (r *Runner) createMigrationsTable() error {

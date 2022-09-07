@@ -20,6 +20,29 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 )
 
+func TestRecordUpsertPanic1(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewRecordUpsert(nil, nil)
+}
+
+func TestRecordUpsertPanic2(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewRecordUpsert(app, nil)
+}
+
 func TestNewRecordUpsert(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -32,7 +55,7 @@ func TestNewRecordUpsert(t *testing.T) {
 
 	val := form.Data["title"]
 	if val != "test_value" {
-		t.Errorf("Expected record data to be load, got %v", form.Data)
+		t.Errorf("Expected record data to be loaded, got %v", form.Data)
 	}
 }
 
@@ -68,13 +91,14 @@ func TestRecordUpsertLoadDataJson(t *testing.T) {
 	}
 
 	testData := map[string]any{
+		"id":      "test_id",
 		"title":   "test123",
 		"unknown": "test456",
 		// file fields unset/delete
 		"onefile":     nil,
 		"manyfiles.0": "",
 		"manyfiles.1": "test.png", // should be ignored
-		"onlyimages":  nil,        // should be ignored
+		"onlyimages":  nil,
 	}
 
 	form := forms.NewRecordUpsert(app, record)
@@ -84,6 +108,10 @@ func TestRecordUpsertLoadDataJson(t *testing.T) {
 	loadErr := form.LoadData(req)
 	if loadErr != nil {
 		t.Fatal(loadErr)
+	}
+
+	if form.Id != "test_id" {
+		t.Fatalf("Expect id field to be %q, got %q", "test_id", form.Id)
 	}
 
 	if v, ok := form.Data["title"]; !ok || v != "test123" {
@@ -98,8 +126,8 @@ func TestRecordUpsertLoadDataJson(t *testing.T) {
 	if !ok {
 		t.Fatal("Expect onefile field to be set")
 	}
-	if onefile != nil {
-		t.Fatalf("Expect onefile field to be nil, got %v", onefile)
+	if onefile != "" {
+		t.Fatalf("Expect onefile field to be empty string, got %v", onefile)
 	}
 
 	manyfiles, ok := form.Data["manyfiles"]
@@ -108,18 +136,12 @@ func TestRecordUpsertLoadDataJson(t *testing.T) {
 	}
 	manyfilesRemains := len(list.ToUniqueStringSlice(manyfiles))
 	if manyfilesRemains != 1 {
-		t.Fatalf("Expect only 1 manyfiles to remain, got %v", manyfiles)
+		t.Fatalf("Expect only 1 manyfiles to remain, got \n%v", manyfiles)
 	}
 
-	// cannot reset multiple file upload field with just using the field name
-	onlyimages, ok := form.Data["onlyimages"]
-	if !ok || onlyimages == nil {
-		t.Fatal("Expect onlyimages field to be set and not be altered")
-	}
-	onlyimagesRemains := len(list.ToUniqueStringSlice(onlyimages))
-	expectedRemains := 2 // 2 existing
-	if onlyimagesRemains != expectedRemains {
-		t.Fatalf("Expect onlyimages to be %d, got %d (%v)", expectedRemains, onlyimagesRemains, onlyimages)
+	onlyimages := form.Data["onlyimages"]
+	if len(list.ToUniqueStringSlice(onlyimages)) != 0 {
+		t.Fatalf("Expect onlyimages field to be deleted, got \n%v", onlyimages)
 	}
 }
 
@@ -134,13 +156,15 @@ func TestRecordUpsertLoadDataMultipart(t *testing.T) {
 	}
 
 	formData, mp, err := tests.MockMultipartData(map[string]string{
+		"id":      "test_id",
 		"title":   "test123",
 		"unknown": "test456",
 		// file fields unset/delete
 		"onefile":     "",
-		"manyfiles.0": "",
+		"manyfiles.0": "", // delete by index
+		"manyfiles.b635c395-6837-49e5-8535-b0a6ebfbdbf3.png": "", // delete by name
 		"manyfiles.1": "test.png", // should be ignored
-		"onlyimages":  "",         // should be ignored
+		"onlyimages":  "",
 	}, "onlyimages")
 	if err != nil {
 		t.Fatal(err)
@@ -152,6 +176,10 @@ func TestRecordUpsertLoadDataMultipart(t *testing.T) {
 	loadErr := form.LoadData(req)
 	if loadErr != nil {
 		t.Fatal(loadErr)
+	}
+
+	if form.Id != "test_id" {
+		t.Fatalf("Expect id field to be %q, got %q", "test_id", form.Id)
 	}
 
 	if v, ok := form.Data["title"]; !ok || v != "test123" {
@@ -166,8 +194,8 @@ func TestRecordUpsertLoadDataMultipart(t *testing.T) {
 	if !ok {
 		t.Fatal("Expect onefile field to be set")
 	}
-	if onefile != nil {
-		t.Fatalf("Expect onefile field to be nil, got %v", onefile)
+	if onefile != "" {
+		t.Fatalf("Expect onefile field to be empty string, got %v", onefile)
 	}
 
 	manyfiles, ok := form.Data["manyfiles"]
@@ -175,16 +203,16 @@ func TestRecordUpsertLoadDataMultipart(t *testing.T) {
 		t.Fatal("Expect manyfiles field to be set")
 	}
 	manyfilesRemains := len(list.ToUniqueStringSlice(manyfiles))
-	if manyfilesRemains != 1 {
-		t.Fatalf("Expect only 1 manyfiles to remain, got %v", manyfiles)
+	if manyfilesRemains != 0 {
+		t.Fatalf("Expect 0 manyfiles to remain, got %v", manyfiles)
 	}
 
 	onlyimages, ok := form.Data["onlyimages"]
 	if !ok || onlyimages == nil {
-		t.Fatal("Expect onlyimages field to be set and not be altered")
+		t.Fatal("Expect onlyimages field to be set")
 	}
 	onlyimagesRemains := len(list.ToUniqueStringSlice(onlyimages))
-	expectedRemains := 3 // 2 existing + 1 new upload
+	expectedRemains := 1 // -2 removed + 1 new upload
 	if onlyimagesRemains != expectedRemains {
 		t.Fatalf("Expect onlyimages to be %d, got %d (%v)", expectedRemains, onlyimagesRemains, onlyimages)
 	}
@@ -202,6 +230,7 @@ func TestRecordUpsertValidateFailure(t *testing.T) {
 
 	// try with invalid test data to check whether the RecordDataValidator is triggered
 	formData, mp, err := tests.MockMultipartData(map[string]string{
+		"id":      "",
 		"unknown": "test456", // should be ignored
 		"title":   "a",
 		"onerel":  "00000000-84ab-4057-a592-4604a731f78f",
@@ -247,6 +276,7 @@ func TestRecordUpsertValidateSuccess(t *testing.T) {
 	}
 
 	formData, mp, err := tests.MockMultipartData(map[string]string{
+		"id":      record.Id,
 		"unknown": "test456", // should be ignored
 		"title":   "abc",
 		"onerel":  "054f9f24-0a0a-4e09-87b1-bc7ff2b336a2",
@@ -454,8 +484,9 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 	}
 
 	formData, mp, err := tests.MockMultipartData(map[string]string{
-		"title":   "test_save",
-		"onefile": "",
+		"title":      "test_save",
+		"onefile":    "",
+		"onlyimages": "",
 	}, "manyfiles.1", "manyfiles") // replace + new file
 	if err != nil {
 		t.Fatal(err)
@@ -498,6 +529,11 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 
 	if hasRecordFile(app, recordAfter, recordAfter.GetStringDataValue("onefile")) {
 		t.Fatal("Expected record.onefile to be deleted")
+	}
+
+	onlyimages := (recordAfter.GetStringSliceDataValue("onlyimages"))
+	if len(onlyimages) != 0 {
+		t.Fatalf("Expected all onlyimages files to be deleted, got %d (%v)", len(onlyimages), onlyimages)
 	}
 
 	manyfiles := (recordAfter.GetStringSliceDataValue("manyfiles"))
@@ -575,4 +611,110 @@ func hasRecordFile(app core.App, record *models.Record, filename string) bool {
 	exists, _ := fs.Exists(fileKey)
 
 	return exists
+}
+
+func TestRecordUpsertWithCustomId(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, _ := app.Dao().FindCollectionByNameOrId("demo3")
+	existingRecord, err := app.Dao().FindFirstRecordByData(collection, "id", "2c542824-9de1-42fe-8924-e57c86267760")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		name        string
+		data        map[string]string
+		record      *models.Record
+		expectError bool
+	}{
+		{
+			"empty data",
+			map[string]string{},
+			models.NewRecord(collection),
+			false,
+		},
+		{
+			"empty id",
+			map[string]string{"id": ""},
+			models.NewRecord(collection),
+			false,
+		},
+		{
+			"id < 15 chars",
+			map[string]string{"id": "a23"},
+			models.NewRecord(collection),
+			true,
+		},
+		{
+			"id > 15 chars",
+			map[string]string{"id": "a234567890123456"},
+			models.NewRecord(collection),
+			true,
+		},
+		{
+			"id = 15 chars (invalid chars)",
+			map[string]string{"id": "a@3456789012345"},
+			models.NewRecord(collection),
+			true,
+		},
+		{
+			"id = 15 chars (valid chars)",
+			map[string]string{"id": "a23456789012345"},
+			models.NewRecord(collection),
+			false,
+		},
+		{
+			"changing the id of an existing record",
+			map[string]string{"id": "b23456789012345"},
+			existingRecord,
+			true,
+		},
+		{
+			"using the same existing record id",
+			map[string]string{"id": existingRecord.Id},
+			existingRecord,
+			false,
+		},
+		{
+			"skipping the id for existing record",
+			map[string]string{},
+			existingRecord,
+			false,
+		},
+	}
+
+	for _, scenario := range scenarios {
+		formData, mp, err := tests.MockMultipartData(scenario.data)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		form := forms.NewRecordUpsert(app, scenario.record)
+		req := httptest.NewRequest(http.MethodGet, "/", formData)
+		req.Header.Set(echo.HeaderContentType, mp.FormDataContentType())
+		form.LoadData(req)
+
+		dryErr := form.DrySubmit(nil)
+		hasDryErr := dryErr != nil
+
+		submitErr := form.Submit()
+		hasSubmitErr := submitErr != nil
+
+		if hasDryErr != hasSubmitErr {
+			t.Errorf("[%s] Expected hasDryErr and hasSubmitErr to have the same value, got %v vs %v", scenario.name, hasDryErr, hasSubmitErr)
+		}
+
+		if hasSubmitErr != scenario.expectError {
+			t.Errorf("[%s] Expected hasSubmitErr to be %v, got %v (%v)", scenario.name, scenario.expectError, hasSubmitErr, submitErr)
+		}
+
+		if id, ok := scenario.data["id"]; ok && id != "" && !hasSubmitErr {
+			_, err := app.Dao().FindRecordById(collection, id, nil)
+			if err != nil {
+				t.Errorf("[%s] Expected to find record with id %s, got %v", scenario.name, id, err)
+			}
+		}
+	}
 }

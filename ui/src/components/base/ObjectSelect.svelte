@@ -4,7 +4,7 @@
     import BaseSelectOption from "@/components/base/BaseSelectOption.svelte";
 
     // original select props
-    export let items = []; // for groups support wrap in `[{group: 'My group', items: [...]}]`
+    export let items = [];
     export let multiple = false;
     export let selected = multiple ? [] : undefined;
     export let labelComponent = BaseSelectOption; // custom component to use for each selected option label
@@ -24,9 +24,8 @@
         newKeyOfSelected = CommonHelper.toArray(newKeyOfSelected, true);
 
         let newSelected = [];
-        let allItems = getFlattenItems();
 
-        for (let item of allItems) {
+        for (let item of items) {
             if (CommonHelper.inArray(newKeyOfSelected, item[selectionKey])) {
                 newSelected.push(item);
             }
@@ -47,20 +46,6 @@
         }
 
         keyOfSelected = multiple ? extractedKeys : extractedKeys[0];
-    }
-
-    function getFlattenItems() {
-        if (!CommonHelper.isObjectArrayWithKeys(items, ["group", "items"])) {
-            return items; // already flatten
-        }
-
-        // extract items from groups
-        let result = [];
-        for (const group of items) {
-            result = result.concat(group.items);
-        }
-
-        return result;
     }
 </script>
 

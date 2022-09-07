@@ -119,7 +119,7 @@ type App interface {
 	// sending a password reset email to an admin.
 	//
 	// Could be used to send your own custom email template if
-	// hook.StopPropagation is returned in one of its listeners.
+	// [hook.StopPropagation] is returned in one of its listeners.
 	OnMailerBeforeAdminResetPasswordSend() *hook.Hook[*MailerAdminEvent]
 
 	// OnMailerAfterAdminResetPasswordSend hook is triggered after
@@ -130,7 +130,7 @@ type App interface {
 	// sending a password reset email to a user.
 	//
 	// Could be used to send your own custom email template if
-	// hook.StopPropagation is returned in one of its listeners.
+	// [hook.StopPropagation] is returned in one of its listeners.
 	OnMailerBeforeUserResetPasswordSend() *hook.Hook[*MailerUserEvent]
 
 	// OnMailerAfterUserResetPasswordSend hook is triggered after
@@ -141,7 +141,7 @@ type App interface {
 	// sending a verification email to a user.
 	//
 	// Could be used to send your own custom email template if
-	// hook.StopPropagation is returned in one of its listeners.
+	// [hook.StopPropagation] is returned in one of its listeners.
 	OnMailerBeforeUserVerificationSend() *hook.Hook[*MailerUserEvent]
 
 	// OnMailerAfterUserVerificationSend hook is triggered after a user
@@ -152,7 +152,7 @@ type App interface {
 	// sending a confirmation new address email to a a user.
 	//
 	// Could be used to send your own custom email template if
-	// hook.StopPropagation is returned in one of its listeners.
+	// [hook.StopPropagation] is returned in one of its listeners.
 	OnMailerBeforeUserChangeEmailSend() *hook.Hook[*MailerUserEvent]
 
 	// OnMailerAfterUserChangeEmailSend hook is triggered after a user
@@ -192,7 +192,7 @@ type App interface {
 	//
 	// Could be used to additionally validate the request data or
 	// implement completely different persistence behavior
-	// (returning hook.StopPropagation).
+	// (returning [hook.StopPropagation]).
 	OnSettingsBeforeUpdateRequest() *hook.Hook[*SettingsUpdateEvent]
 
 	// OnSettingsAfterUpdateRequest hook is triggered after each
@@ -227,7 +227,7 @@ type App interface {
 	// Admin create request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning hook.StopPropagation).
+	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnAdminBeforeCreateRequest() *hook.Hook[*AdminCreateEvent]
 
 	// OnAdminAfterCreateRequest hook is triggered after each
@@ -238,7 +238,7 @@ type App interface {
 	// Admin update request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning hook.StopPropagation).
+	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnAdminBeforeUpdateRequest() *hook.Hook[*AdminUpdateEvent]
 
 	// OnAdminAfterUpdateRequest hook is triggered after each
@@ -249,7 +249,7 @@ type App interface {
 	// Admin delete request (after model load and before actual deletion).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning hook.StopPropagation).
+	// completely different delete behavior (returning [hook.StopPropagation]).
 	OnAdminBeforeDeleteRequest() *hook.Hook[*AdminDeleteEvent]
 
 	// OnAdminAfterDeleteRequest hook is triggered after each
@@ -281,7 +281,7 @@ type App interface {
 	// create request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning hook.StopPropagation).
+	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnUserBeforeCreateRequest() *hook.Hook[*UserCreateEvent]
 
 	// OnUserAfterCreateRequest hook is triggered after each
@@ -292,7 +292,7 @@ type App interface {
 	// update request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning hook.StopPropagation).
+	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnUserBeforeUpdateRequest() *hook.Hook[*UserUpdateEvent]
 
 	// OnUserAfterUpdateRequest hook is triggered after each
@@ -303,7 +303,7 @@ type App interface {
 	// delete request (after model load and before actual deletion).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning hook.StopPropagation).
+	// completely different delete behavior (returning [hook.StopPropagation]).
 	OnUserBeforeDeleteRequest() *hook.Hook[*UserDeleteEvent]
 
 	// OnUserAfterDeleteRequest hook is triggered after each
@@ -317,16 +317,21 @@ type App interface {
 	// authenticated user data and token.
 	OnUserAuthRequest() *hook.Hook[*UserAuthEvent]
 
-	// OnUserBeforeOauth2Register hook is triggered before each User OAuth2
-	// authentication request (when the client config has enabled new users registration).
+	// OnUserListExternalAuths hook is triggered on each API user's external auths list request.
 	//
-	// Could be used to additionally validate or modify the new user
-	// before persisting in the DB.
-	OnUserBeforeOauth2Register() *hook.Hook[*UserOauth2RegisterEvent]
+	// Could be used to validate or modify the response before returning it to the client.
+	OnUserListExternalAuths() *hook.Hook[*UserListExternalAuthsEvent]
 
-	// OnUserAfterOauth2Register hook is triggered after each successful User
-	// OAuth2 authentication sign-up request (right after the new user persistence).
-	OnUserAfterOauth2Register() *hook.Hook[*UserOauth2RegisterEvent]
+	// OnUserBeforeUnlinkExternalAuthRequest hook is triggered before each API user's
+	// external auth unlink request (after models load and before the actual relation deletion).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different delete behavior (returning [hook.StopPropagation]).
+	OnUserBeforeUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent]
+
+	// OnUserAfterUnlinkExternalAuthRequest hook is triggered after each
+	// successful API user's external auth unlink request.
+	OnUserAfterUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent]
 
 	// ---------------------------------------------------------------
 	// Record API event hooks
@@ -346,7 +351,7 @@ type App interface {
 	// create request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning hook.StopPropagation).
+	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeCreateRequest() *hook.Hook[*RecordCreateEvent]
 
 	// OnRecordAfterCreateRequest hook is triggered after each
@@ -357,7 +362,7 @@ type App interface {
 	// update request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning hook.StopPropagation).
+	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeUpdateRequest() *hook.Hook[*RecordUpdateEvent]
 
 	// OnRecordAfterUpdateRequest hook is triggered after each
@@ -368,7 +373,7 @@ type App interface {
 	// delete request (after model load and before actual deletion).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning hook.StopPropagation).
+	// completely different delete behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeDeleteRequest() *hook.Hook[*RecordDeleteEvent]
 
 	// OnRecordAfterDeleteRequest hook is triggered after each
@@ -393,7 +398,7 @@ type App interface {
 	// create request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning hook.StopPropagation).
+	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnCollectionBeforeCreateRequest() *hook.Hook[*CollectionCreateEvent]
 
 	// OnCollectionAfterCreateRequest hook is triggered after each
@@ -404,7 +409,7 @@ type App interface {
 	// update request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning hook.StopPropagation).
+	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnCollectionBeforeUpdateRequest() *hook.Hook[*CollectionUpdateEvent]
 
 	// OnCollectionAfterUpdateRequest hook is triggered after each
@@ -415,10 +420,21 @@ type App interface {
 	// Collection delete request (after model load and before actual deletion).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning hook.StopPropagation).
+	// completely different delete behavior (returning [hook.StopPropagation]).
 	OnCollectionBeforeDeleteRequest() *hook.Hook[*CollectionDeleteEvent]
 
 	// OnCollectionAfterDeleteRequest hook is triggered after each
 	// successful API Collection delete request.
 	OnCollectionAfterDeleteRequest() *hook.Hook[*CollectionDeleteEvent]
+
+	// OnCollectionsBeforeImportRequest hook is triggered before each API
+	// collections import request (after request data load and before the actual import).
+	//
+	// Could be used to additionally validate the imported collections or
+	// to implement completely different import behavior (returning [hook.StopPropagation]).
+	OnCollectionsBeforeImportRequest() *hook.Hook[*CollectionsImportEvent]
+
+	// OnCollectionsAfterImportRequest hook is triggered after each
+	// successful API collections import request.
+	OnCollectionsAfterImportRequest() *hook.Hook[*CollectionsImportEvent]
 }

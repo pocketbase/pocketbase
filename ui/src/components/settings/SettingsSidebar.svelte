@@ -29,6 +29,29 @@
             <span class="txt">Files storage</span>
         </a>
 
+        <div class="sidebar-title">
+            <span class="txt">Sync</span>
+            <small class="label label-danger label-sm">Experimental</small>
+        </div>
+        <a
+            href="/settings/export-collections"
+            class="sidebar-list-item"
+            use:active={{ path: "/settings/export-collections/?.*" }}
+            use:link
+        >
+            <i class="ri-uninstall-line" />
+            <span class="txt">Export collections</span>
+        </a>
+        <a
+            href="/settings/import-collections"
+            class="sidebar-list-item"
+            use:active={{ path: "/settings/import-collections/?.*" }}
+            use:link
+        >
+            <i class="ri-install-line" />
+            <span class="txt">Import collections</span>
+        </a>
+
         <div class="sidebar-title">Authentication</div>
         <a
             href="/settings/auth-providers"

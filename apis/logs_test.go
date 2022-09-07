@@ -34,7 +34,7 @@ func TestRequestsList(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if err := tests.MockRequestLogsData(app); err != nil {
 					t.Fatal(err)
 				}
@@ -56,7 +56,7 @@ func TestRequestsList(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if err := tests.MockRequestLogsData(app); err != nil {
 					t.Fatal(err)
 				}
@@ -103,7 +103,7 @@ func TestRequestView(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if err := tests.MockRequestLogsData(app); err != nil {
 					t.Fatal(err)
 				}
@@ -118,7 +118,7 @@ func TestRequestView(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if err := tests.MockRequestLogsData(app); err != nil {
 					t.Fatal(err)
 				}
@@ -161,7 +161,7 @@ func TestRequestsStats(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if err := tests.MockRequestLogsData(app); err != nil {
 					t.Fatal(err)
 				}
@@ -178,7 +178,7 @@ func TestRequestsStats(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if err := tests.MockRequestLogsData(app); err != nil {
 					t.Fatal(err)
 				}

@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/store"
+	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 
@@ -89,30 +90,18 @@ func (f FilterData) resolveTokenizedExpr(expr fexpr.Expr, fieldResolver FieldRes
 
 	// merge both operands parameters (if any)
 	params := dbx.Params{}
-	if len(lParams) > 0 {
-		for k, v := range lParams {
-			params[k] = v
-		}
+	for k, v := range lParams {
+		params[k] = v
 	}
-	if len(rParams) > 0 {
-		for k, v := range rParams {
-			params[k] = v
-		}
+	for k, v := range rParams {
+		params[k] = v
 	}
 
 	switch expr.Op {
 	case fexpr.SignEq:
-		op := "="
-		if strings.ToLower(lName) == "null" || strings.ToLower(rName) == "null" {
-			op = "IS"
-		}
-		return dbx.NewExp(fmt.Sprintf("%s %s %s", lName, op, rName), params), nil
+		return dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') = COALESCE(%s, '')", lName, rName), params), nil
 	case fexpr.SignNeq:
-		op := "!="
-		if strings.ToLower(lName) == "null" || strings.ToLower(rName) == "null" {
-			op = "IS NOT"
-		}
-		return dbx.NewExp(fmt.Sprintf("%s %s %s", lName, op, rName), params), nil
+		return dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') != COALESCE(%s, '')", lName, rName), params), nil
 	case fexpr.SignLike:
 		// normalize operands and switch sides if the left operand is a number or text
 		if len(lParams) > 0 {
@@ -139,35 +128,49 @@ func (f FilterData) resolveTokenizedExpr(expr fexpr.Expr, fieldResolver FieldRes
 }
 
 func (f FilterData) resolveToken(token fexpr.Token, fieldResolver FieldResolver) (name string, params dbx.Params, err error) {
-	if token.Type == fexpr.TokenIdentifier {
+	switch token.Type {
+	case fexpr.TokenIdentifier:
+		// current datetime constant
+		// ---
+		if token.Literal == "@now" {
+			placeholder := "t" + security.RandomString(7)
+			name := fmt.Sprintf("{:%s}", placeholder)
+			params := dbx.Params{placeholder: types.NowDateTime().String()}
+
+			return name, params, nil
+		}
+
+		// custom resolver
+		// ---
 		name, params, err := fieldResolver.Resolve(token.Literal)
 
 		if name == "" || err != nil {
-			// if `null` field is missing, treat `null` identifier as NULL token
-			if strings.ToLower(token.Literal) == "null" {
-				return "NULL", nil, nil
+			m := map[string]string{
+				// if `null` field is missing, treat `null` identifier as NULL token
+				"null": "NULL",
+				// if `true` field is missing, treat `true` identifier as TRUE token
+				"true": "1",
+				// if `false` field is missing, treat `false` identifier as FALSE token
+				"false": "0",
 			}
-
-			// if `true` field is missing, treat `true` identifier as TRUE token
-			if strings.ToLower(token.Literal) == "true" {
-				return "1", nil, nil
+			if v, ok := m[strings.ToLower(token.Literal)]; ok {
+				return v, nil, nil
 			}
-
-			// if `false` field is missing, treat `false` identifier as FALSE token
-			if strings.ToLower(token.Literal) == "false" {
-				return "0", nil, nil
-			}
-
 			return "", nil, err
 		}
 
 		return name, params, err
-	}
-
-	if token.Type == fexpr.TokenNumber || token.Type == fexpr.TokenText {
+	case fexpr.TokenText:
 		placeholder := "t" + security.RandomString(7)
 		name := fmt.Sprintf("{:%s}", placeholder)
 		params := dbx.Params{placeholder: token.Literal}
+
+		return name, params, nil
+	case fexpr.TokenNumber:
+		placeholder := "t" + security.RandomString(7)
+		name := fmt.Sprintf("{:%s}", placeholder)
+		params := dbx.Params{placeholder: cast.ToFloat64(token.Literal)}
+
 		return name, params, nil
 	}
 
@@ -176,10 +179,6 @@ func (f FilterData) resolveToken(token fexpr.Token, fieldResolver FieldResolver)
 
 func (f FilterData) normalizeLikeParams(params dbx.Params) dbx.Params {
 	result := dbx.Params{}
-
-	if len(params) == 0 {
-		return result
-	}
 
 	for k, v := range params {
 		vStr := cast.ToString(v)

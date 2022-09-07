@@ -1,5 +1,5 @@
 <script>
-    import ApiClient from "@/utils/ApiClient";
+    import PocketBase from "pocketbase";
     import FullPage from "@/components/base/FullPage.svelte";
 
     export let params;
@@ -12,11 +12,13 @@
     async function send() {
         isLoading = true;
 
+        // init a custom client to avoid interfering with the admin state
+        const client = new PocketBase(import.meta.env.PB_BACKEND_URL);
+
         try {
-            await ApiClient.Users.confirmVerification(params?.token);
+            await client.users.confirmVerification(params?.token);
             success = true;
         } catch (err) {
-            console.warn(err);
             success = false;
         }
 

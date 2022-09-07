@@ -58,6 +58,10 @@ func (api *realtimeApi) connect(c echo.Context) error {
 		return err
 	}
 
+	if api.app.IsDebug() {
+		log.Printf("Realtime connection establisehd: %s\n", client.Id())
+	}
+
 	// signalize established connection (aka. fire "connect" message)
 	fmt.Fprint(c.Response(), "id:"+client.Id()+"\n")
 	fmt.Fprint(c.Response(), "event:PB_CONNECT\n")
@@ -159,8 +163,8 @@ func (api *realtimeApi) bindEvents() {
 	adminTable := (&models.Admin{}).TableName()
 
 	// update user/admin auth state
-	api.app.OnModelAfterUpdate().Add(func(data *core.ModelEvent) error {
-		modelTable := data.Model.TableName()
+	api.app.OnModelAfterUpdate().Add(func(e *core.ModelEvent) error {
+		modelTable := e.Model.TableName()
 
 		var contextKey string
 		switch modelTable {
@@ -174,8 +178,8 @@ func (api *realtimeApi) bindEvents() {
 
 		for _, client := range api.app.SubscriptionsBroker().Clients() {
 			model, _ := client.Get(contextKey).(models.Model)
-			if model != nil && model.GetId() == data.Model.GetId() {
-				client.Set(contextKey, data.Model)
+			if model != nil && model.GetId() == e.Model.GetId() {
+				client.Set(contextKey, e.Model)
 			}
 		}
 
@@ -183,8 +187,8 @@ func (api *realtimeApi) bindEvents() {
 	})
 
 	// remove user/admin client(s)
-	api.app.OnModelAfterDelete().Add(func(data *core.ModelEvent) error {
-		modelTable := data.Model.TableName()
+	api.app.OnModelAfterDelete().Add(func(e *core.ModelEvent) error {
+		modelTable := e.Model.TableName()
 
 		var contextKey string
 		switch modelTable {
@@ -198,7 +202,7 @@ func (api *realtimeApi) bindEvents() {
 
 		for _, client := range api.app.SubscriptionsBroker().Clients() {
 			model, _ := client.Get(contextKey).(models.Model)
-			if model != nil && model.GetId() == data.Model.GetId() {
+			if model != nil && model.GetId() == e.Model.GetId() {
 				api.app.SubscriptionsBroker().Unregister(client.Id())
 			}
 		}
@@ -206,18 +210,24 @@ func (api *realtimeApi) bindEvents() {
 		return nil
 	})
 
-	api.app.OnRecordAfterCreateRequest().Add(func(data *core.RecordCreateEvent) error {
-		api.broadcastRecord("create", data.Record)
+	api.app.OnModelAfterCreate().Add(func(e *core.ModelEvent) error {
+		if record, ok := e.Model.(*models.Record); ok {
+			api.broadcastRecord("create", record)
+		}
 		return nil
 	})
 
-	api.app.OnRecordAfterUpdateRequest().Add(func(data *core.RecordUpdateEvent) error {
-		api.broadcastRecord("update", data.Record)
+	api.app.OnModelAfterUpdate().Add(func(e *core.ModelEvent) error {
+		if record, ok := e.Model.(*models.Record); ok {
+			api.broadcastRecord("update", record)
+		}
 		return nil
 	})
 
-	api.app.OnRecordAfterDeleteRequest().Add(func(data *core.RecordDeleteEvent) error {
-		api.broadcastRecord("delete", data.Record)
+	api.app.OnModelBeforeDelete().Add(func(e *core.ModelEvent) error {
+		if record, ok := e.Model.(*models.Record); ok {
+			api.broadcastRecord("delete", record)
+		}
 		return nil
 	})
 }
@@ -286,19 +296,24 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 		return nil // no subscribers
 	}
 
+	// remove the expand from the broadcasted record because we don't
+	// know if the clients have access to view the expanded records
+	cleanRecord := *record
+	cleanRecord.SetExpand(nil)
+
 	subscriptionRuleMap := map[string]*string{
-		(collection.Name + "/" + record.Id): collection.ViewRule,
-		(collection.Id + "/" + record.Id):   collection.ViewRule,
-		collection.Name:                     collection.ListRule,
-		collection.Id:                       collection.ListRule,
+		(collection.Name + "/" + cleanRecord.Id): collection.ViewRule,
+		(collection.Id + "/" + cleanRecord.Id):   collection.ViewRule,
+		collection.Name:                          collection.ListRule,
+		collection.Id:                            collection.ListRule,
 	}
 
-	recordData := &recordData{
+	data := &recordData{
 		Action: action,
-		Record: record,
+		Record: &cleanRecord,
 	}
 
-	serializedData, err := json.Marshal(recordData)
+	serializedData, err := json.Marshal(data)
 	if err != nil {
 		if api.app.IsDebug() {
 			log.Println(err)
@@ -312,7 +327,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 				continue
 			}
 
-			if !api.canAccessRecord(client, record, rule) {
+			if !api.canAccessRecord(client, data.Record, rule) {
 				continue
 			}
 

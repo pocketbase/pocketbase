@@ -4,11 +4,14 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestAdminAuth(t *testing.T) {
@@ -92,6 +95,7 @@ func TestAdminRequestPasswordReset(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/admins/request-password-reset",
 			Body:           strings.NewReader(`{"email":"missing@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 		},
 		{
@@ -99,22 +103,34 @@ func TestAdminRequestPasswordReset(t *testing.T) {
 			Method:         http.MethodPost,
 			Url:            "/api/admins/request-password-reset",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
-			// usually this events are fired but since the submit is
-			// executed in a separate go routine they are fired async
-			// ExpectedEvents: map[string]int{
-			// 	"OnModelBeforeUpdate": 1,
-			// 	"OnModelAfterUpdate":  1,
-			// 	"OnMailerBeforeUserResetPasswordSend:1":  1,
-			// 	"OnMailerAfterUserResetPasswordSend:1":  1,
-			// },
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":                  1,
+				"OnModelAfterUpdate":                   1,
+				"OnMailerBeforeAdminResetPasswordSend": 1,
+				"OnMailerAfterAdminResetPasswordSend":  1,
+			},
 		},
 		{
 			Name:           "existing admin (after already sent)",
 			Method:         http.MethodPost,
 			Url:            "/api/admins/request-password-reset",
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				// simulate recent password request
+				admin, err := app.Dao().FindAdminByEmail("test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+				admin.LastResetSentAt = types.NowDateTime()
+				dao := daos.New(app.Dao().DB()) // new dao to ignore hooks
+				if err := dao.Save(admin); err != nil {
+					t.Fatal(err)
+				}
+			},
 		},
 	}
 
@@ -430,7 +446,7 @@ func TestAdminDelete(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// delete all admins except the authorized one
 				adminModel := &models.Admin{}
 				_, err := app.Dao().DB().Delete(adminModel.TableName(), dbx.Not(dbx.HashExp{
@@ -467,7 +483,7 @@ func TestAdminCreate(t *testing.T) {
 			Method: http.MethodPost,
 			Url:    "/api/admins",
 			Body:   strings.NewReader(`{"email":"testnew@example.com","password":"1234567890","passwordConfirm":"1234567890","avatar":3}`),
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// delete all admins
 				_, err := app.Dao().DB().NewQuery("DELETE FROM {{_admins}}").Execute()
 				if err != nil {

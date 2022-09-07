@@ -28,6 +28,7 @@ type Result struct {
 	Page       int `json:"page"`
 	PerPage    int `json:"perPage"`
 	TotalItems int `json:"totalItems"`
+	TotalPages int `json:"totalPages"`
 	Items      any `json:"items"`
 }
 
@@ -37,6 +38,7 @@ type Provider struct {
 	query         *dbx.SelectQuery
 	page          int
 	perPage       int
+	countColumn   string
 	sort          []SortField
 	filter        []FilterData
 }
@@ -64,6 +66,13 @@ func NewProvider(fieldResolver FieldResolver) *Provider {
 // Query sets the base query that will be used to fetch the search items.
 func (s *Provider) Query(query *dbx.SelectQuery) *Provider {
 	s.query = query
+	return s
+}
+
+// CountColumn specifies an optional distinct column to use in the
+// SELECT COUNT query.
+func (s *Provider) CountColumn(countColumn string) *Provider {
+	s.countColumn = countColumn
 	return s
 }
 
@@ -190,7 +199,11 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	// count
 	var totalCount int64
 	countQuery := modelsQuery
-	if err := countQuery.Select("count(*)").Row(&totalCount); err != nil {
+	countQuery.Distinct(false).Select("COUNT(*)")
+	if s.countColumn != "" {
+		countQuery.Select("COUNT(DISTINCT(" + s.countColumn + "))")
+	}
+	if err := countQuery.Row(&totalCount); err != nil {
 		return nil, err
 	}
 
@@ -201,10 +214,12 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		s.perPage = MaxPerPage
 	}
 
+	totalPages := int(math.Ceil(float64(totalCount) / float64(s.perPage)))
+
 	// normalize page according to the total count
 	if s.page <= 0 || totalCount == 0 {
 		s.page = 1
-	} else if totalPages := int(math.Ceil(float64(totalCount) / float64(s.perPage))); s.page > totalPages {
+	} else if s.page > totalPages {
 		s.page = totalPages
 	}
 
@@ -221,6 +236,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		Page:       s.page,
 		PerPage:    s.perPage,
 		TotalItems: int(totalCount),
+		TotalPages: totalPages,
 		Items:      items,
 	}, nil
 }

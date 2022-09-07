@@ -63,8 +63,12 @@
                 </td>
             </tr>
             <tr>
-                <td class="min-width txt-hint txt-bold">IP</td>
-                <td>{item.ip}</td>
+                <td class="min-width txt-hint txt-bold">Remote IP</td>
+                <td>{item.remoteIp}</td>
+            </tr>
+            <tr>
+                <td class="min-width txt-hint txt-bold">User IP</td>
+                <td>{item.userIp}</td>
             </tr>
             <tr>
                 <td class="min-width txt-hint txt-bold">UserAgent</td>

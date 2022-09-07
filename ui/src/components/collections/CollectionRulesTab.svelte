@@ -104,7 +104,7 @@
                     <p>
                         Example rule:
                         <br />
-                        <code>@request.user.id!=null && created>"2022-01-01 00:00:00"</code>
+                        <code>@request.user.id!="" && created>"2022-01-01 00:00:00"</code>
                     </p>
                 </div>
             </div>
@@ -152,12 +152,13 @@
                 name={prop}
                 let:uniqueId
             >
-                <label for={uniqueId} on:click={() => editorRefs[prop]?.focus()}>
+                <label for={uniqueId}>
                     {label} - {isAdminOnly(collection[prop]) ? "Admins only" : "Custom rule"}
                 </label>
 
                 <svelte:component
                     this={ruleInputComponent}
+                    id={uniqueId}
                     bind:this={editorRefs[prop]}
                     bind:value={collection[prop]}
                     baseCollection={collection}

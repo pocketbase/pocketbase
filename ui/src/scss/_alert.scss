@@ -94,14 +94,14 @@
     }
 }
 
-// toast alerts
 .toasts-wrapper {
     position: fixed;
     z-index: 999999;
     bottom: 0;
     left: 0;
+    right: 0;
     padding: 0 var(--smSpacing);
-    width: 100%;
+    width: auto;
     display: block;
     text-align: center;
     pointer-events: none;
@@ -111,5 +111,11 @@
         width: var(--smWrapperWidth);
         margin: var(--baseSpacing) auto;
         @include shadowize();
+    }
+    .app-sidebar ~ .app-body & {
+        left: var(--appSidebarWidth);
+    }
+    .app-sidebar ~ .app-body .page-sidebar ~ & {
+        left: calc(var(--appSidebarWidth) + var(--pageSidebarWidth));
     }
 }

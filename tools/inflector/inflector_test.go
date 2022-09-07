@@ -12,6 +12,7 @@ func TestUcFirst(t *testing.T) {
 		expected string
 	}{
 		{"", ""},
+		{" ", " "},
 		{"Test", "Test"},
 		{"test", "Test"},
 		{"test test2", "Test test2"},
@@ -55,6 +56,9 @@ func TestSentenize(t *testing.T) {
 	}{
 		{"", ""},
 		{"   ", ""},
+		{".", "."},
+		{"?", "?"},
+		{"!", "!"},
 		{"Test", "Test."},
 		{" test ", "Test."},
 		{"hello world", "Hello world."},

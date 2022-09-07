@@ -11,6 +11,7 @@ import (
 type AuthUser struct {
 	Id        string `json:"id"`
 	Name      string `json:"name"`
+	Username  string `json:"username"`
 	Email     string `json:"email"`
 	AvatarUrl string `json:"avatarUrl"`
 }
@@ -90,6 +91,10 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewGithubProvider(), nil
 	case NameGitlab:
 		return NewGitlabProvider(), nil
+	case NameDiscord:
+		return NewDiscordProvider(), nil
+	case NameTwitter:
+		return NewTwitterProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}

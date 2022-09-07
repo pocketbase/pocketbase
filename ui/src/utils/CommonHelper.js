@@ -88,45 +88,18 @@ export default class CommonHelper {
     }
 
     /**
-     * Checks whether `arr` is an object array where the first element has `keys`.
-     * NB! Empty arrays are considered thruethfull.
-     *
-     * @param  {Array}        arr
-     * @param  {String|Array} keys
-     * @return {Boolean}
-     */
-    static isObjectArrayWithKeys(arr, keys) {
-        if (!Array.isArray(arr) || typeof arr[0] !== "object") {
-            return false;
-        }
-
-        if (arr.length == 0) {
-            return true;
-        }
-
-        let normalizedKeys = CommonHelper.toArray(keys);
-        for (let key of normalizedKeys) {
-            if (!(key in arr[0])) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Normalizes and returns arr as a valid array instance (if not already).
      *
      * @param  {Array}   arr
-     * @param  {Boolean} [allowNull]
+     * @param  {Boolean} [allowEmpty]
      * @return {Array}
      */
-    static toArray(arr, allowNull = false) {
+    static toArray(arr, allowEmpty = false) {
         if (Array.isArray(arr)) {
             return arr;
         }
 
-        return (allowNull || arr !== null) && typeof arr !== "undefined" ? [arr] : [];
+        return (allowEmpty || !CommonHelper.isEmpty(arr)) && typeof arr !== "undefined" ? [arr] : [];
     }
 
     /**
@@ -137,6 +110,8 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static inArray(arr, value) {
+        arr = Array.isArray(arr) ? arr : [];
+
         for (let i = arr.length - 1; i >= 0; i--) {
             if (arr[i] == value) {
                 return true;
@@ -153,6 +128,8 @@ export default class CommonHelper {
      * @param {Mixed} value
      */
     static removeByValue(arr, value) {
+        arr = Array.isArray(arr) ? arr : [];
+
         for (let i = arr.length - 1; i >= 0; i--) {
             if (arr[i] == value) {
                 arr.splice(i, 1);
@@ -182,6 +159,8 @@ export default class CommonHelper {
      * @return {Object}
      */
     static findByKey(objectsArr, key, value) {
+        objectsArr = Array.isArray(objectsArr) ? objectsArr : [];
+
         for (let i in objectsArr) {
             if (objectsArr[i][key] == value) {
                 return objectsArr[i];
@@ -199,7 +178,9 @@ export default class CommonHelper {
      * @return {Object}
      */
     static groupByKey(objectsArr, key) {
-        let result = {};
+        objectsArr = Array.isArray(objectsArr) ? objectsArr : [];
+
+        const result = {};
 
         for (let i in objectsArr) {
             result[objectsArr[i][key]] = result[objectsArr[i][key]] || [];
@@ -253,7 +234,10 @@ export default class CommonHelper {
      * @return {Array}
      */
     static filterDuplicatesByKey(objectsArr, key = "id") {
+        objectsArr = Array.isArray(objectsArr) ? objectsArr : [];
+
         const uniqueMap = {};
+
         for (const item of objectsArr) {
             uniqueMap[item[key]] = item;
         }
@@ -300,7 +284,7 @@ export default class CommonHelper {
      */
     static getNestedVal(data, path, defaultVal = null, delimiter = ".") {
         let result = data || {};
-        let parts  = path.split(delimiter);
+        let parts  = (path || '').split(delimiter);
 
         for (const part of parts) {
             if (
@@ -369,7 +353,7 @@ export default class CommonHelper {
      */
     static deleteByPath(data, path, delimiter = ".") {
         let result   = data || {};
-        let parts    = path.split(delimiter);
+        let parts    = (path || '').split(delimiter);
         let lastPart = parts.pop();
 
         for (const part of parts) {
@@ -628,136 +612,19 @@ export default class CommonHelper {
     }
 
     /**
-     * Opens url address within a new popup window.
+     * Downloads a json file created from the provide object.
      *
-     * @param  {String} url
-     * @param  {Number} [width]  Popup window width (Default: 600).
-     * @param  {Number} [height] Popup window height (Default: 480).
-     * @param  {String} [name]   The name of the created popup window (default to "popup").
-     * @return {Object} Reference to the newly created window.
+     * @param {mixed} obj   The JS object to download.
+     * @param {String} name  The result file name.
      */
-    static openInWindow(url, width, height, name) {
-        width = width || 1024;
-        height = height || 768;
-        name = name || "popup";
+    static downloadJson(obj, name) {
+        const encodedObj = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obj, null, 2));
 
-        let windowWidth = window.innerWidth;
-        let windowHeight = window.innerHeight;
-
-        // normalize window size
-        width = width > windowWidth ? windowWidth : width;
-        height = height > windowHeight ? windowHeight : height;
-
-        let left = (windowWidth / 2) - (width / 2);
-        let top = (windowHeight / 2) - (height / 2);
-
-        return window.open(
-            url,
-            name,
-            "width=" + width + ",height=" + height + ",top=" + top + ",left=" + left + ",resizable,menubar=no"
-        );
-    }
-
-    /**
-     * Returns the query string (without "?") for the provided url.
-     *
-     * @param  {String} [url]
-     * @return {String}
-     */
-    static getQueryString(url) {
-        let queryStartPos = url.indexOf("?");
-
-        if (queryStartPos < 0) {
-            return "";
-        }
-
-        let hashStartPos = url.indexOf("#");
-
-        return url.substring(queryStartPos + 1, (hashStartPos > queryStartPos ? hashStartPos : url.length));
-    }
-
-    /**
-     * Very simple and robust query params parser
-     * (suppors encoded object and array params too).
-     *
-     * @param  {String} url
-     * @return {Object}
-     */
-    static getQueryParams(url) {
-        let result = {};
-        let params = CommonHelper.getQueryString(url).split("&");
-
-        for (let i in params) {
-            let parts = params[i].split("=");
-            if (parts.length === 2) {
-                let val = decodeURIComponent(parts[1]);
-
-
-                if (val.startsWith("{") || val.startsWith("[")) {
-                    try {
-                        val = JSON.parse(val);
-                    } catch (e) {
-                    }
-                }
-
-                result[decodeURIComponent(parts[0])] = val;
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Updates the query parameter of the provided url.
-     *
-     * @param  {String}  url
-     * @param  {Object}  params
-     * @param  {Boolean} [extend]
-     * @return {String}
-     */
-    static setQueryParams(url, params, extend = true) {
-        let oldQueryString = CommonHelper.getQueryString(url);
-        let oldParams = extend && oldQueryString ? CommonHelper.getQueryParams(url) : {};
-        let resultParams = Object.assign(oldParams, params);
-        let newQueryString = "";
-
-        for (let param in resultParams) {
-            if (CommonHelper.isEmpty(resultParams[param])) {
-                continue;
-            }
-
-            if (newQueryString) {
-                newQueryString += "&";
-            }
-
-            newQueryString += encodeURIComponent(param) + "=";
-
-            if (CommonHelper.isObject(resultParams[param])) {
-                newQueryString += encodeURIComponent(JSON.stringify(resultParams[param]));
-            } else {
-                newQueryString += encodeURIComponent(resultParams[param]);
-            }
-        }
-        newQueryString = newQueryString ? ("?" + newQueryString) : "";
-
-        // append the new query string to the url
-        if (CommonHelper.isEmpty(oldQueryString)) {
-            return url + newQueryString;
-        }
-
-        // replace old query strung with the new one
-        return url.replace("?" + oldQueryString, newQueryString);
-    }
-
-    /**
-     * Replaces the current url query params.
-     *
-     * @param {Object} params
-     */
-    static replaceClientQueryParams(params) {
-        let url = CommonHelper.setQueryParams(window.location.href, params);
-
-        window.location.replace(url);
+        const tempLink = document.createElement('a');
+        tempLink.setAttribute("href", encodedObj);
+        tempLink.setAttribute("download", name + ".json");
+        tempLink.click();
+        tempLink.remove();
     }
 
     /**
@@ -789,26 +656,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasImageExtension(filename) {
-        return /\.jpg|\.jpeg|\.png|\.svg|\.webp|\.avif$/.test(filename)
-    }
-
-    /**
-     * Checks if the image url can be loaded.
-     *
-     * @param  {String} url
-     * @return {Promise}
-     */
-    static checkImageUrl(url) {
-        return new Promise((resolve, reject) => {
-            const image = new Image();
-            image.onload = function() {
-                return resolve(true);
-            }
-            image.onerror = function(err) {
-                return reject(err);
-            }
-            image.src = url;
-        });
+        return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.webp|\.avif$/.test(filename)
     }
 
     /**
@@ -857,25 +705,6 @@ export default class CommonHelper {
 
             reader.readAsDataURL(file);
         });
-    }
-
-    /**
-     * Updates the page document title.
-     *
-     * @param {String} title
-     * @param {String} [suffix]
-     */
-    static setDocumentTitle(title, suffix = "PocketBase") {
-        let parts = [];
-        if (!CommonHelper.isEmpty(title)) {
-            parts.push(title.trim());
-        }
-
-        if (!CommonHelper.isEmpty(suffix)) {
-            parts.push(suffix.trim());
-        }
-
-        document.title = parts.join(' - ')
     }
 
     /**
@@ -1044,5 +873,71 @@ export default class CommonHelper {
             default:
                 return 'String';
         }
+    }
+
+    /**
+     * Returns an API url address extract from the current running instance.
+     *
+     * @param  {String} fallback Fallback url that will be used if the extractions fail.
+     * @return {String}
+     */
+    static getApiExampleUrl(fallback) {
+        let url = window.location.href.substring(0, window.location.href.indexOf("/_")) || fallback || '/';
+
+        // for broader compatibility replace localhost with 127.0.0.1
+        // (see https://github.com/pocketbase/js-sdk/issues/21)
+        return url.replace('//localhost', '//127.0.0.1');
+    }
+
+    /**
+     * Checks if the provided 2 collections has any change (ignoring root schema fields order).
+     *
+     * @param  {Collection} oldCollection
+     * @param  {Collection} newCollection
+     * @param  {Boolean}    withDeleteMissing Skip missing schema fields from the newCollection.
+     * @return {Boolean}
+     */
+    static hasCollectionChanges(oldCollection, newCollection, withDeleteMissing = false) {
+        oldCollection = oldCollection || {};
+        newCollection = newCollection || {};
+
+        if (oldCollection.id != newCollection.id) {
+            return true;
+        }
+
+        for (let prop in oldCollection) {
+            if (prop !== 'schema' && JSON.stringify(oldCollection[prop]) !== JSON.stringify(newCollection[prop])) {
+                return true;
+            }
+        }
+
+        const oldSchema = Array.isArray(oldCollection.schema) ? oldCollection.schema : [];
+        const newSchema = Array.isArray(newCollection.schema) ? newCollection.schema : [];
+        const removedFields = oldSchema.filter((oldField) => {
+            return oldField?.id && !CommonHelper.findByKey(newSchema, "id", oldField.id);
+        });
+        const addedFields = newSchema.filter((newField) => {
+            return newField?.id && !CommonHelper.findByKey(oldSchema, "id", newField.id);
+        });
+        const changedFields = newSchema.filter((newField) => {
+            const oldField = CommonHelper.isObject(newField) && CommonHelper.findByKey(oldSchema, "id", newField.id);
+            if (!oldField) {
+                return false;
+            }
+
+            for (let prop in oldField) {
+                if (JSON.stringify(newField[prop]) != JSON.stringify(oldField[prop])) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        return !!(
+            addedFields.length ||
+            changedFields.length ||
+            (withDeleteMissing && removedFields.length)
+        );
     }
 }

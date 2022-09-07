@@ -16,6 +16,7 @@ import (
 
 var _ Model = (*Record)(nil)
 var _ ColumnValueMapper = (*Record)(nil)
+var _ FilesManager = (*Record)(nil)
 
 type Record struct {
 	BaseModel
@@ -68,10 +69,10 @@ func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) 
 // NewRecordsFromNullStringMaps initializes a new Record model for
 // each row in the provided NullStringMap slice.
 func NewRecordsFromNullStringMaps(collection *Collection, rows []dbx.NullStringMap) []*Record {
-	result := []*Record{}
+	result := make([]*Record, len(rows))
 
-	for _, row := range rows {
-		result = append(result, NewRecordFromNullStringMap(collection, row))
+	for i, row := range rows {
+		result[i] = NewRecordFromNullStringMap(collection, row)
 	}
 
 	return result

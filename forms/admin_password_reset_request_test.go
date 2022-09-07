@@ -7,6 +7,16 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
+func TestAdminPasswordResetRequestPanic(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewAdminPasswordResetRequest(nil)
+}
+
 func TestAdminPasswordResetRequestValidate(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()

@@ -44,7 +44,7 @@
     {:else if field.type === "file"}
         <div class="inline-flex">
             {#each CommonHelper.toArray(record[field.name]) as filename}
-                <figure class="thumb thumb-sm" use:tooltip={filename}>
+                <figure class="thumb thumb-sm">
                     <RecordFilePreview {record} {filename} />
                 </figure>
             {/each}
