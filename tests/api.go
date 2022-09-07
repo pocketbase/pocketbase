@@ -36,7 +36,7 @@ type ApiScenario struct {
 
 	// test hooks
 	// ---
-	TestAppFactory func() *TestApp
+	TestAppFactory func() (*TestApp, error)
 	BeforeTestFunc func(t *testing.T, app *TestApp, e *echo.Echo)
 	AfterTestFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
 }
@@ -44,13 +44,14 @@ type ApiScenario struct {
 // Test executes the test case/scenario.
 func (scenario *ApiScenario) Test(t *testing.T) {
 	var testApp *TestApp
+	var testAppErr error
 	if scenario.TestAppFactory != nil {
-		testApp = scenario.TestAppFactory()
+		testApp, testAppErr = scenario.TestAppFactory()
 	} else {
-		testApp, _ = NewTestApp()
+		testApp, testAppErr = NewTestApp()
 	}
-	if testApp == nil {
-		t.Fatal("Failed to initialize the test app instance.")
+	if testAppErr != nil {
+		t.Fatalf("Failed to initialize the test app instance: %v", testAppErr)
 	}
 	defer testApp.Cleanup()
 
