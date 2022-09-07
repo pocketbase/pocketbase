@@ -36,13 +36,22 @@ type ApiScenario struct {
 
 	// test hooks
 	// ---
-	BeforeFunc func(t *testing.T, app *TestApp, e *echo.Echo)
-	AfterFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
+	TestAppFactory func() *TestApp
+	BeforeTestFunc func(t *testing.T, app *TestApp, e *echo.Echo)
+	AfterTestFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
 }
 
 // Test executes the test case/scenario.
 func (scenario *ApiScenario) Test(t *testing.T) {
-	testApp, _ := NewTestApp()
+	var testApp *TestApp
+	if scenario.TestAppFactory != nil {
+		testApp = scenario.TestAppFactory()
+	} else {
+		testApp, _ = NewTestApp()
+	}
+	if testApp == nil {
+		t.Fatal("Failed to initialize the test app instance.")
+	}
 	defer testApp.Cleanup()
 
 	e, err := apis.InitApi(testApp)
@@ -50,8 +59,8 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if scenario.BeforeFunc != nil {
-		scenario.BeforeFunc(t, testApp, e)
+	if scenario.BeforeTestFunc != nil {
+		scenario.BeforeTestFunc(t, testApp, e)
 	}
 
 	recorder := httptest.NewRecorder()
@@ -135,7 +144,7 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		}
 	}
 
-	if scenario.AfterFunc != nil {
-		scenario.AfterFunc(t, testApp, e)
+	if scenario.AfterTestFunc != nil {
+		scenario.AfterTestFunc(t, testApp, e)
 	}
 }

@@ -459,7 +459,7 @@ func TestRecordDelete(t *testing.T) {
 				"OnModelBeforeDelete":         3, // +2 cascade delete related records
 				"OnModelAfterDelete":          3, // +2 cascade delete related records
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				ensureDeletedFiles(app, "3f2888f8-075d-49fe-9d09-ea7e951000dc", "577bd676-aacb-4072-b7da-99d00ee210a4")
 				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "94568ca2-0bee-49d7-b749-06cb97956fd9")
 				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "63c2ab80-84ab-4057-a592-4604a731f78f")
@@ -481,7 +481,7 @@ func TestRecordDelete(t *testing.T) {
 				"OnModelBeforeDelete":         3, // +2 cascade delete related records
 				"OnModelAfterDelete":          3, // +2 cascade delete related records
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				ensureDeletedFiles(app, "3f2888f8-075d-49fe-9d09-ea7e951000dc", "577bd676-aacb-4072-b7da-99d00ee210a4")
 				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "94568ca2-0bee-49d7-b749-06cb97956fd9")
 				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "63c2ab80-84ab-4057-a592-4604a731f78f")
@@ -501,7 +501,7 @@ func TestRecordDelete(t *testing.T) {
 				"OnModelBeforeDelete":         1,
 				"OnModelAfterDelete":          1,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "94568ca2-0bee-49d7-b749-06cb97956fd9")
 			},
 		},
@@ -529,7 +529,7 @@ func TestRecordDelete(t *testing.T) {
 				"OnModelBeforeDelete":         1,
 				"OnModelAfterDelete":          1,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				ensureDeletedFiles(app, "2c1010aa-b8fe-41d9-a980-99534ca8a167", "63c2ab80-84ab-4057-a592-4604a731f78f")
 			},
 		},
@@ -562,7 +562,7 @@ func TestRecordDelete(t *testing.T) {
 				"OnModelBeforeDelete":         3,
 				"OnModelAfterDelete":          3,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				recId := "63c2ab80-84ab-4057-a592-4604a731f78f"
 				col, _ := app.Dao().FindCollectionByNameOrId("demo2")
 				rec, _ := app.Dao().FindRecordById(col, recId, nil)

@@ -119,7 +119,7 @@ func TestAdminRequestPasswordReset(t *testing.T) {
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// simulate recent password request
 				admin, err := app.Dao().FindAdminByEmail("test@example.com")
 				if err != nil {
@@ -446,7 +446,7 @@ func TestAdminDelete(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
 			},
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// delete all admins except the authorized one
 				adminModel := &models.Admin{}
 				_, err := app.Dao().DB().Delete(adminModel.TableName(), dbx.Not(dbx.HashExp{
@@ -483,7 +483,7 @@ func TestAdminCreate(t *testing.T) {
 			Method: http.MethodPost,
 			Url:    "/api/admins",
 			Body:   strings.NewReader(`{"email":"testnew@example.com","password":"1234567890","passwordConfirm":"1234567890","avatar":3}`),
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// delete all admins
 				_, err := app.Dao().DB().NewQuery("DELETE FROM {{_admins}}").Execute()
 				if err != nil {

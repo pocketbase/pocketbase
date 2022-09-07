@@ -45,12 +45,21 @@ func (t *TestApp) ResetEventCalls() {
 	t.EventCalls = make(map[string]int)
 }
 
-// NewTestApp creates and initializes a full application instance for testing.
+// NewTestApp creates and initializes a test application instance.
 //
 // It is the caller's responsibility to call `app.Cleanup()`
 // when the app is no longer needed.
-func NewTestApp() (*TestApp, error) {
-	tempDir, err := NewTempDataDir()
+func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
+	var testDataDir string
+	if len(optTestDataDir) == 0 || optTestDataDir[0] == "" {
+		// fallback to the default test data directory
+		_, currentFile, _, _ := runtime.Caller(0)
+		testDataDir = filepath.Join(path.Dir(currentFile), "data")
+	} else {
+		testDataDir = optTestDataDir[0]
+	}
+
+	tempDir, err := CloneIntoTempDir(testDataDir)
 	if err != nil {
 		return nil, err
 	}
@@ -381,21 +390,19 @@ func NewTestApp() (*TestApp, error) {
 	return t, nil
 }
 
-// NewTempDataDir creates a new temporary directory copy of the test data.
+// CloneIntoTempDir creates a new temporary directory copy from the
+// provided directory path.
 //
-// It is the caller's responsibility to call `os.RemoveAll(dir)`
-// when the directory is no longer needed.
-func NewTempDataDir() (string, error) {
+// It is the caller's responsibility to call `os.RemoveAll(tempDir)`
+// when the directory is no longer needed!
+func CloneIntoTempDir(dirToClone string) (string, error) {
 	tempDir, err := os.MkdirTemp("", "pb_test_*")
 	if err != nil {
 		return "", err
 	}
 
-	_, currentFile, _, _ := runtime.Caller(0)
-	testDataDir := filepath.Join(path.Dir(currentFile), "data")
-
 	// copy everything from testDataDir to tempDir
-	if err := copyDir(testDataDir, tempDir); err != nil {
+	if err := copyDir(dirToClone, tempDir); err != nil {
 		return "", err
 	}
 

@@ -84,7 +84,7 @@ func TestUserEmailAuth(t *testing.T) {
 			Method: http.MethodPost,
 			Url:    "/api/users/auth-via-email",
 			Body:   strings.NewReader(`{"email":"test@example.com","password":"123456"}`),
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				app.Settings().EmailAuth.Enabled = false
 			},
 			ExpectedStatus:  400,
@@ -159,7 +159,7 @@ func TestUserRequestPasswordReset(t *testing.T) {
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// simulate recent password request
 				user, err := app.Dao().FindUserByEmail("test@example.com")
 				if err != nil {
@@ -285,7 +285,7 @@ func TestUserRequestVerification(t *testing.T) {
 			Body:           strings.NewReader(`{"email":"test2@example.com"}`),
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// simulate recent verification sent
 				user, err := app.Dao().FindUserByEmail("test2@example.com")
 				if err != nil {
@@ -807,7 +807,7 @@ func TestUserCreate(t *testing.T) {
 			Method: http.MethodPost,
 			Url:    "/api/users",
 			Body:   strings.NewReader(`{"email":"newuser@example.com","password":"123456789","passwordConfirm":"123456789"}`),
-			BeforeFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				app.Settings().EmailAuth.Enabled = false
 			},
 			ExpectedStatus:  400,
@@ -1066,7 +1066,7 @@ func TestUserUnlinkExternalsAuth(t *testing.T) {
 				"OnUserAfterUnlinkExternalAuthRequest":  1,
 				"OnUserBeforeUnlinkExternalAuthRequest": 1,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				auth, _ := app.Dao().FindExternalAuthByUserIdAndProvider("cx9u0dh2udo8xol", "google")
 				if auth != nil {
 					t.Fatalf("Expected the google ExternalAuth to be deleted, got got \n%v", auth)
@@ -1098,7 +1098,7 @@ func TestUserUnlinkExternalsAuth(t *testing.T) {
 				"OnUserAfterUnlinkExternalAuthRequest":  1,
 				"OnUserBeforeUnlinkExternalAuthRequest": 1,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				auth, _ := app.Dao().FindExternalAuthByUserIdAndProvider("cx9u0dh2udo8xol", "google")
 				if auth != nil {
 					t.Fatalf("Expected the google ExternalAuth to be deleted, got got \n%v", auth)

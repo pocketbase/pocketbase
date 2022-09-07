@@ -475,7 +475,7 @@ func TestCollectionImport(t *testing.T) {
 				`"data":{`,
 				`"collections":{"code":"validation_required"`,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
@@ -501,7 +501,7 @@ func TestCollectionImport(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnCollectionsBeforeImportRequest": 1,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
@@ -542,7 +542,7 @@ func TestCollectionImport(t *testing.T) {
 				"OnCollectionsBeforeImportRequest": 1,
 				"OnModelBeforeCreate":              2,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
@@ -590,7 +590,7 @@ func TestCollectionImport(t *testing.T) {
 				"OnModelBeforeCreate":              2,
 				"OnModelAfterCreate":               2,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
@@ -689,7 +689,7 @@ func TestCollectionImport(t *testing.T) {
 				"OnModelBeforeCreate":              1,
 				"OnModelAfterCreate":               1,
 			},
-			AfterFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
