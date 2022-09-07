@@ -59,7 +59,7 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		testDataDir = optTestDataDir[0]
 	}
 
-	tempDir, err := CloneIntoTempDir(testDataDir)
+	tempDir, err := TempDirClone(testDataDir)
 	if err != nil {
 		return nil, err
 	}
@@ -390,12 +390,12 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 	return t, nil
 }
 
-// CloneIntoTempDir creates a new temporary directory copy from the
+// TempDirClone creates a new temporary directory copy from the
 // provided directory path.
 //
 // It is the caller's responsibility to call `os.RemoveAll(tempDir)`
 // when the directory is no longer needed!
-func CloneIntoTempDir(dirToClone string) (string, error) {
+func TempDirClone(dirToClone string) (string, error) {
 	tempDir, err := os.MkdirTemp("", "pb_test_*")
 	if err != nil {
 		return "", err
