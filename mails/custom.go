@@ -6,6 +6,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
+// SendCustomEmail sends an email to the email address with the template string (html/template) as html body with the PocketBase mail client.
+// The hooks OnMailerBeforeCustomEmailSend and OnMailerAfterCustomEmailSend are triggered.
 func SendCustomEmail(app core.App, email string, title string, template string, data any) error {
 	mailClient := app.NewMailClient()
 
