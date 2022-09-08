@@ -1,0 +1,118 @@
+{
+  "name": "http-server",
+  "version": "14.1.1",
+  "description": "A simple zero-configuration command-line http server",
+  "main": "./lib/http-server",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/http-party/http-server.git"
+  },
+  "keywords": [
+    "cli",
+    "command",
+    "static",
+    "http",
+    "https",
+    "http-server",
+    "https-server",
+    "server"
+  ],
+  "scripts": {
+    "start": "node ./bin/http-server",
+    "test": "tap --reporter=spec test/*.test.js",
+    "test-watch": "tap --reporter=spec --watch test/*.test.js"
+  },
+  "files": [
+    "lib",
+    "bin",
+    "doc"
+  ],
+  "man": "./doc/http-server.1",
+  "engines": {
+    "node": ">=12"
+  },
+  "contributors": [
+    {
+      "name": "Charlie Robbins",
+      "email": "charlie.robbins@gmail.com"
+    },
+    {
+      "name": "Marak Squires",
+      "email": "marak.squires@gmail.com"
+    },
+    {
+      "name": "Charlie McConnell",
+      "email": "charlie@charlieistheman.com"
+    },
+    {
+      "name": "Joshua Holbrook",
+      "email": "josh.holbrook@gmail.com"
+    },
+    {
+      "name": "Maciej Małecki",
+      "email": "maciej.malecki@notimplemented.org"
+    },
+    {
+      "name": "Matthew Bergman",
+      "email": "mzbphoto@gmail.com"
+    },
+    {
+      "name": "brad dunbar",
+      "email": "dunbarb2@gmail.com"
+    },
+    {
+      "name": "Dominic Tarr"
+    },
+    {
+      "name": "Travis Person",
+      "email": "travis.person@gmail.com"
+    },
+    {
+      "name": "Jinkwon Lee",
+      "email": "master@bdyne.net"
+    },
+    {
+      "name": "BigBlueHat",
+      "email": "byoung@bigbluehat.com"
+    },
+    {
+      "name": "Daniel Dalton",
+      "email": "daltond2@hawkmail.newpaltz.edu"
+    },
+    {
+      "name": "Jade Michael Thornton",
+      "email": "jademichael@jmthornton.net"
+    }
+  ],
+  "dependencies": {
+    "basic-auth": "^2.0.1",
+    "chalk": "^4.1.2",
+    "corser": "^2.0.1",
+    "he": "^1.2.0",
+    "html-encoding-sniffer": "^3.0.0",
+    "http-proxy": "^1.18.1",
+    "mime": "^1.6.0",
+    "minimist": "^1.2.6",
+    "opener": "^1.5.1",
+    "portfinder": "^1.0.28",
+    "secure-compare": "3.0.1",
+    "union": "~0.5.0",
+    "url-join": "^4.0.1"
+  },
+  "devDependencies": {
+    "eol": "^0.9.1",
+    "eslint": "^4.19.1",
+    "eslint-config-populist": "^4.2.0",
+    "express": "^4.17.1",
+    "request": "^2.88.2",
+    "tap": "^14.11.0"
+  },
+  "bugs": {
+    "url": "https://github.com/http-party/http-server/issues"
+  },
+  "license": "MIT",
+  "preferGlobal": true,
+  "bin": {
+    "http-server": "./bin/http-server"
+  }
+}

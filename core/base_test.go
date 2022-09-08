@@ -219,6 +219,14 @@ func TestBaseAppGetters(t *testing.T) {
 		t.Fatalf("Getter app.OnMailerAfterUserChangeEmailSend does not match or nil (%v vs %v)", app.OnMailerAfterUserChangeEmailSend(), app.onMailerAfterUserChangeEmailSend)
 	}
 
+	if app.onMailerBeforeCustomEmailSend != app.OnMailerBeforeCustomEmailSend() || app.OnMailerBeforeCustomEmailSend() == nil {
+		t.Fatalf("Getter app.OnMailerBeforeCustomEmailSend does not match or nil (%v vs %v)", app.OnMailerBeforeCustomEmailSend(), app.onMailerBeforeCustomEmailSend)
+	}
+
+	if app.onMailerAfterCustomEmailSend != app.OnMailerAfterCustomEmailSend() || app.OnMailerAfterCustomEmailSend() == nil {
+		t.Fatalf("Getter app.OnMailerBeforeCustomEmailSend does not match or nil (%v vs %v)", app.OnMailerAfterCustomEmailSend(), app.onMailerAfterCustomEmailSend)
+	}
+
 	if app.onRealtimeConnectRequest != app.OnRealtimeConnectRequest() || app.OnRealtimeConnectRequest() == nil {
 		t.Fatalf("Getter app.OnRealtimeConnectRequest does not match or nil (%v vs %v)", app.OnRealtimeConnectRequest(), app.onRealtimeConnectRequest)
 	}

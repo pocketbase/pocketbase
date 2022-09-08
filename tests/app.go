@@ -257,6 +257,16 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil
 	})
 
+	t.OnMailerBeforeCustomEmailSend().Add(func(e *core.MailerCustomEvent) error {
+		t.EventCalls["OnMailerBeforeCustomEmailSend"]++
+		return nil
+	})
+
+	t.OnMailerAfterCustomEmailSend().Add(func(e *core.MailerCustomEvent) error {
+		t.EventCalls["OnMailerAfterCustomEmailSend"]++
+		return nil
+	})
+
 	t.OnRealtimeConnectRequest().Add(func(e *core.RealtimeConnectEvent) error {
 		t.EventCalls["OnRealtimeConnectRequest"]++
 		return nil

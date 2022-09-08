@@ -60,6 +60,8 @@ type BaseApp struct {
 	onMailerAfterUserVerificationSend    *hook.Hook[*MailerUserEvent]
 	onMailerBeforeUserChangeEmailSend    *hook.Hook[*MailerUserEvent]
 	onMailerAfterUserChangeEmailSend     *hook.Hook[*MailerUserEvent]
+	onMailerBeforeCustomEmailSend        *hook.Hook[*MailerCustomEvent]
+	onMailerAfterCustomEmailSend         *hook.Hook[*MailerCustomEvent]
 
 	// realtime api event hooks
 	onRealtimeConnectRequest         *hook.Hook[*RealtimeConnectEvent]
@@ -155,6 +157,8 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onMailerAfterUserVerificationSend:    &hook.Hook[*MailerUserEvent]{},
 		onMailerBeforeUserChangeEmailSend:    &hook.Hook[*MailerUserEvent]{},
 		onMailerAfterUserChangeEmailSend:     &hook.Hook[*MailerUserEvent]{},
+		onMailerBeforeCustomEmailSend:        &hook.Hook[*MailerCustomEvent]{},
+		onMailerAfterCustomEmailSend:         &hook.Hook[*MailerCustomEvent]{},
 
 		// realtime API event hooks
 		onRealtimeConnectRequest:         &hook.Hook[*RealtimeConnectEvent]{},
@@ -491,6 +495,14 @@ func (app *BaseApp) OnMailerBeforeUserChangeEmailSend() *hook.Hook[*MailerUserEv
 
 func (app *BaseApp) OnMailerAfterUserChangeEmailSend() *hook.Hook[*MailerUserEvent] {
 	return app.onMailerAfterUserChangeEmailSend
+}
+
+func (app *BaseApp) OnMailerBeforeCustomEmailSend() *hook.Hook[*MailerCustomEvent] {
+	return app.onMailerBeforeCustomEmailSend
+}
+
+func (app *BaseApp) OnMailerAfterCustomEmailSend() *hook.Hook[*MailerCustomEvent] {
+	return app.onMailerAfterCustomEmailSend
 }
 
 // -------------------------------------------------------------------

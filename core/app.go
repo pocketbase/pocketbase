@@ -159,6 +159,14 @@ type App interface {
 	// change address email was successfully sent.
 	OnMailerAfterUserChangeEmailSend() *hook.Hook[*MailerUserEvent]
 
+	// OnMailerBeforeCustomEmailSend hook is triggered right before
+	// sending a custom email to a given email address.
+	OnMailerBeforeCustomEmailSend() *hook.Hook[*MailerCustomEvent]
+
+	// OnMailerAfterCustomEmailSend hook is triggered after a custom
+	// email was successfully sent.
+	OnMailerAfterCustomEmailSend() *hook.Hook[*MailerCustomEvent]
+
 	// ---------------------------------------------------------------
 	// Realtime API event hooks
 	// ---------------------------------------------------------------

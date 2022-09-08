@@ -45,6 +45,13 @@ type MailerAdminEvent struct {
 	Meta       map[string]any
 }
 
+type MailerCustomEvent struct {
+	MailClient mailer.Mailer
+	Email      string
+	Title      string
+	Meta       any
+}
+
 // -------------------------------------------------------------------
 // Realtime API events data
 // -------------------------------------------------------------------

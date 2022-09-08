@@ -1,0 +1,34 @@
+{
+  "autoIndex": [ "autoIndex", "autoindex" ],
+  "showDir": [ "showDir", "showdir" ],
+  "showDotfiles": ["showDotfiles", "showdotfiles"],
+  "humanReadable": [ "humanReadable", "humanreadable", "human-readable" ],
+  "hidePermissions": ["hidePermissions", "hidepermissions", "hide-permissions"],
+  "si": [ "si", "index" ],
+  "handleError": [ "handleError", "handleerror" ],
+  "cors": [ "cors", "CORS" ],
+  "headers": [ "H", "header", "headers" ],
+  "contentType": [ "contentType", "contenttype", "content-type" ],
+  "mimeType": [
+    "mimetype",
+    "mimetypes",
+    "mimeType",
+    "mimeTypes",
+    "mime-type",
+    "mime-types",
+    "mime-Type",
+    "mime-Types"
+  ],
+  "weakEtags": [ "weakEtags", "weaketags", "weak-etags" ],
+  "weakCompare": [
+    "weakcompare",
+    "weakCompare",
+    "weak-compare",
+    "weak-Compare"
+  ],
+  "handleOptionsMethod": [
+    "handleOptionsMethod",
+    "handleoptionsmethod",
+    "handle-options-method"
+  ]
+}
