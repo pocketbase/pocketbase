@@ -29,12 +29,11 @@ func NewGoogleProvider() *Google {
 
 // FetchAuthUser returns an AuthUser instance based the Google's user api.
 func (p *Google) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// https://cloud.google.com/identity-platform/docs/reference/rest/v1/UserInfo
 	rawData := struct {
-		LocalId     string `json:"localId"`
-		DisplayName string `json:"displayName"`
-		Email       string `json:"email"`
-		PhotoUrl    string `json:"photoUrl"`
+		Id      string `json:"id"`
+		Name    string `json:"name"`
+		Email   string `json:"email"`
+		Picture string `json:"picture"`
 	}{}
 
 	if err := p.FetchRawUserData(token, &rawData); err != nil {
@@ -42,10 +41,10 @@ func (p *Google) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:        rawData.LocalId,
-		Name:      rawData.DisplayName,
+		Id:        rawData.Id,
+		Name:      rawData.Name,
 		Email:     rawData.Email,
-		AvatarUrl: rawData.PhotoUrl,
+		AvatarUrl: rawData.Picture,
 	}
 
 	return user, nil
