@@ -151,10 +151,6 @@ func (pb *PocketBase) Start() error {
 // This method differs from pb.Start() by not registering the default
 // system commands!
 func (pb *PocketBase) Execute() error {
-	// if err := pb.Bootstrap(); err != nil {
-	// 	return err
-	// }
-
 	var wg sync.WaitGroup
 
 	wg.Add(1)
