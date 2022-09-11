@@ -61,6 +61,9 @@ function refreshTooltip(node, data) {
     if (data.class) {
         tooltip.classList.add(data.class);
     }
+    if (data.position) {
+        tooltip.classList.add(data.position);
+    }
 
     // reset tooltip position
     tooltip.style.top = "0px";
@@ -138,7 +141,7 @@ function showTooltip(node, data) {
         getTooltip().classList.add("active");
 
         refreshTooltip(node, data);
-    }, (!isNaN(data.delay) ? data.delay : 250));
+    }, (!isNaN(data.delay) ? data.delay : 200));
 }
 
 export default function tooltip(node, tooltipData) {

@@ -1,5 +1,7 @@
 <script>
     /**
+     * @todo consider combining with the CodeEditor component.
+     *
      * This component uses Codemirror editor under the hood and its a "little heavy".
      * To allow manuall chunking it is recommended to load the component lazily!
      *
@@ -65,6 +67,7 @@
 
     const dispatch = createEventDispatcher();
 
+    export let id = "";
     export let value = "";
     export let disabled = false;
     export let placeholder = "";
@@ -82,6 +85,10 @@
     let placeholderCompartment = new Compartment();
 
     $: mergedCollections = mergeWithBaseCollection($collections);
+
+    $: if (id) {
+        addLabelListeners();
+    }
 
     $: if (editor && baseCollection?.schema) {
         editor.dispatch({
@@ -138,7 +145,33 @@
         );
     }
 
-    // Returns list with all collection field keys recursively.
+    // Remove any attached label listeners.
+    function removeLabelListeners() {
+        if (!id) {
+            return;
+        }
+
+        const labels = document.querySelectorAll('[for="' + id + '"]');
+        for (let label of labels) {
+            label.removeEventListener("click", focus);
+        }
+    }
+
+    // Add `<label for="ID">...</label>` focus support.
+    function addLabelListeners() {
+        if (!id) {
+            return;
+        }
+
+        removeLabelListeners();
+
+        const labels = document.querySelectorAll('[for="' + id + '"]');
+        for (let label of labels) {
+            label.addEventListener("click", focus);
+        }
+    }
+
+    // Returns a list with all collection field keys recursively.
     function getCollectionFieldKeys(nameOrId, prefix = "", level = 0) {
         let collection = mergedCollections.find((item) => item.name == nameOrId || item.id == nameOrId);
         if (!collection || level >= 4) {
@@ -230,7 +263,7 @@
             return null;
         }
 
-        let options = [{ label: "false" }, { label: "true" }];
+        let options = [{ label: "false" }, { label: "true" }, { label: "@now" }];
 
         if (!disableIndirectCollectionsKeys) {
             options.push({ label: "@collection.*", apply: "@collection." });
@@ -263,7 +296,7 @@
 
     // Returns all field keys as keyword patterns to highlight.
     function keywords() {
-        const result = [];
+        const result = [{ regex: CommonHelper.escapeRegExp("@now"), token: "keyword" }];
         const keys = getAllKeys(!disableRequestKeys, !disableIndirectCollectionsKeys);
 
         for (const key of keys) {
@@ -324,6 +357,8 @@
             },
         };
 
+        addLabelListeners();
+
         editor = new EditorView({
             parent: container,
             state: EditorState.create({
@@ -371,7 +406,10 @@
             }),
         });
 
-        return () => editor?.destroy();
+        return () => {
+            removeLabelListeners();
+            editor?.destroy();
+        };
     });
 </script>
 

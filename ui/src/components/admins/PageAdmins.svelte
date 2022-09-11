@@ -1,7 +1,10 @@
 <script>
+    import { replace, querystring } from "svelte-spa-router";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import { admin as loggedAdmin } from "@/stores/admin";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
@@ -10,35 +13,34 @@
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";
 
-    const queryParams = CommonHelper.getQueryParams(window.location?.href);
+    $pageTitle = "Admins";
+
+    const queryParams = new URLSearchParams($querystring);
 
     let adminUpsertPanel;
     let admins = [];
     let isLoading = false;
-    let filter = queryParams.filter || "";
-    let sort = queryParams.sort || "-created";
+    let filter = queryParams.get("filter") || "";
+    let sort = queryParams.get("sort") || "-created";
 
     $: if (sort !== -1 && filter !== -1) {
         // keep listing params in sync
-        CommonHelper.replaceClientQueryParams({
-            filter: filter,
-            sort: sort,
-        });
+        const query = new URLSearchParams({ filter, sort }).toString();
+        replace("/settings/admins?" + query);
 
         loadAdmins();
     }
-
-    CommonHelper.setDocumentTitle("Admins");
 
     export function loadAdmins() {
         isLoading = true;
 
         admins = []; // reset
 
-        return ApiClient.Admins.getFullList(100, {
-            sort: sort || "-created",
-            filter: filter,
-        })
+        return ApiClient.admins
+            .getFullList(100, {
+                sort: sort || "-created",
+                filter: filter,
+            })
             .then((result) => {
                 admins = result;
                 isLoading = false;
@@ -60,11 +62,11 @@
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Admins</div>
+            <div class="breadcrumb-item">{$pageTitle}</div>
         </nav>
 
         <RefreshButton on:refresh={() => loadAdmins()} />
@@ -197,6 +199,6 @@
     {#if admins.length}
         <small class="block txt-hint txt-right m-t-sm">Showing {admins.length} of {admins.length}</small>
     {/if}
-</main>
+</PageWrapper>
 
 <AdminUpsertPanel bind:this={adminUpsertPanel} on:save={() => loadAdmins()} on:delete={() => loadAdmins()} />

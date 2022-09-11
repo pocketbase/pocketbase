@@ -4,7 +4,6 @@ import (
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
@@ -180,10 +179,16 @@ type UserAuthEvent struct {
 	Meta        any
 }
 
-type UserOauth2RegisterEvent struct {
-	HttpContext echo.Context
-	User        *models.User
-	AuthData    *auth.AuthUser
+type UserListExternalAuthsEvent struct {
+	HttpContext   echo.Context
+	User          *models.User
+	ExternalAuths []*models.ExternalAuth
+}
+
+type UserUnlinkExternalAuthEvent struct {
+	HttpContext  echo.Context
+	User         *models.User
+	ExternalAuth *models.ExternalAuth
 }
 
 // -------------------------------------------------------------------
@@ -214,6 +219,11 @@ type CollectionUpdateEvent struct {
 type CollectionDeleteEvent struct {
 	HttpContext echo.Context
 	Collection  *models.Collection
+}
+
+type CollectionsImportEvent struct {
+	HttpContext echo.Context
+	Collections []*models.Collection
 }
 
 // -------------------------------------------------------------------

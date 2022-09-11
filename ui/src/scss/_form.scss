@@ -53,6 +53,7 @@ button {
         height: 100%;
         pointer-events: none;
         user-select: none;
+        backface-visibility: hidden;
         background: var(--btnPrimaryColor);
         transition: filter var(--baseAnimationSpeed),
                     opacity var(--baseAnimationSpeed),
@@ -226,8 +227,9 @@ button {
     &.btn-circle {
         border-radius: 50%;
         padding: 0;
+        gap: 0;
         i {
-            $iconSize: 23px;
+            $iconSize: 24px;
             font-size: 1.2857rem;
             text-align: center;
             width: $iconSize;
@@ -330,8 +332,17 @@ button {
     font-family: var(--baseFontFamily);
     font-weight: normal;
     border-radius: var(--baseRadius);
+    overflow: auto; /* fallback */
+    overflow: overlay;
     &::placeholder {
       color: var(--txtDisabledColor);
+    }
+    &:focus,
+    &:focus-within {
+        @include scrollbar(
+            $thumbColor: var(--baseAlt3Color),
+            $thumbActiveColor: var(--baseAlt4Color)
+        );
     }
     &:focus,
     &.active {
@@ -351,12 +362,21 @@ button {
     &.txt-mono {
         line-height: var(--smLineHeight);
     }
+    &.code {
+        font-size: 15px;
+        line-height: 1.379rem;
+        font-family: var(--monospaceFontFamily);
+    }
 }
 
 input,
 select,
 textarea {
     @extend %input;
+}
+input {
+    // Safari and GNOME Web has a default height and ignores the min-height
+    height: var(--inputHeight);
 }
 input:-webkit-autofill {
     -webkit-text-fill-color: var(--txtPrimaryColor);
@@ -481,14 +501,18 @@ select {
         font-size: var(--smFontSize);
         line-height: var(--smLineHeight);
         color: var(--txtHintColor);
+        word-break: break-word;
+        pre {
+            white-space: pre-wrap;
+        }
+    }
+    .help-block-error {
+        color: var(--dangerColor);
     }
 
     // states
     &.error,
     &.invalid {
-        .help-block-error {
-            color: var(--dangerColor);
-        }
         > label {
             color: var(--dangerColor);
         }
@@ -608,11 +632,16 @@ select {
     input[type="radio"] {
         & ~ label:before {
             border-radius: 50%;
-            font-size: 0.5rem;
+            font-size: 1rem;
         }
-        &:checked ~ label:before {
-            content: '\eb7c';
-            color: #fff;
+    }
+
+    .form-field-block {
+        @extend %block;
+        position: relative;
+        margin: 0 0 var(--xsSpacing);
+        &:last-child {
+            margin-bottom: 0;
         }
     }
 
@@ -1022,6 +1051,12 @@ select {
             font-family: var(--monospaceFontFamily);
             font-size: var(--baseFontSize);
             line-height: var(--baseLineHeight);
+        }
+        .cm-selectionMatch {
+            background: var(--infoAltColor);
+        }
+        &.cm-focused .cm-matchingBracket {
+            background-color: rgba(50, 140, 130, 0.1);
         }
     }
 }

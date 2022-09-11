@@ -20,6 +20,8 @@
                     <i class="ri-information-line" />
                 {:else if toast.type === "success"}
                     <i class="ri-checkbox-circle-line" />
+                {:else if toast.type === "warning"}
+                    <i class="ri-error-warning-line" />
                 {:else}
                     <i class="ri-alert-line" />
                 {/if}

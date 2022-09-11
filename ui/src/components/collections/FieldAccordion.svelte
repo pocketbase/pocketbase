@@ -1,10 +1,11 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
-    import { scale } from "svelte/transition";
+    import { scale, fly } from "svelte/transition";
     import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { errors } from "@/stores/errors";
+    import Toggler from "@/components/base/Toggler.svelte";
     import Accordion from "@/components/base/Accordion.svelte";
     import Field from "@/components/base/Field.svelte";
     import FieldTypeSelect from "@/components/collections/schema/FieldTypeSelect.svelte";
@@ -37,13 +38,6 @@
         field.unique = false;
     }
 
-    $: if (excludeNames.length) {
-        const normalizedName = normalizeFieldName(field.name);
-        if (field.name !== normalizedName) {
-            field.name = normalizedName;
-        }
-    }
-
     $: canBeStored = !CommonHelper.isEmpty(field.name) && field.type;
 
     $: if (!canBeStored) {
@@ -54,7 +48,7 @@
         accordion && collapse();
 
         // reset the name if it was previously deleted
-        if (!field.name && field.originalName) {
+        if (field.originalName && field.name !== field.originalName) {
             field.name = field.originalName;
         }
     }
@@ -73,7 +67,10 @@
 
     $: interactive = !disabled && !field.system && !field.toDelete && canBeStored;
 
-    $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
+    $: hasValidName = validateFieldName(field.name);
+
+    $: hasErrors =
+        !hasValidName || !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
 
     export function expand() {
         accordion?.expand();
@@ -92,15 +89,23 @@
         }
     }
 
-    function normalizeFieldName(name) {
-        name = CommonHelper.slugify(name);
-
-        let counter = "";
-        while (excludeNames.includes(name + counter)) {
-            ++counter;
+    function validateFieldName(name) {
+        name = ("" + name).toLowerCase();
+        if (!name) {
+            return false;
         }
 
-        return name + counter;
+        for (const excluded of excludeNames) {
+            if (excluded.toLowerCase() === name) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function normalizeFieldName(name) {
+        return CommonHelper.slugify(name);
     }
 
     onMount(() => {
@@ -120,7 +125,7 @@
     {interactive}
     class={disabled || field.toDelete || field.system ? "field-accordion disabled" : "field-accordion"}
 >
-    <svelte:fragment slot="header" let:active={expanded}>
+    <svelte:fragment slot="header">
         <div class="inline-flex">
             <span class="icon field-type">
                 <i class={CommonHelper.getFieldTypeIcon(field.type)} />
@@ -149,7 +154,7 @@
 
         <div class="flex-fill" />
 
-        {#if hasErrors}
+        {#if hasErrors && !field.system}
             <i
                 class="ri-error-warning-fill txt-danger"
                 transition:scale={{ duration: 150, start: 0.7 }}
@@ -189,11 +194,23 @@
             </div>
             <div class="col-sm-6">
                 <Field
-                    class="form-field required {field.id && field.system ? 'disabled' : ''}"
+                    class="
+                        form-field
+                        required
+                        {!hasValidName ? 'invalid' : ''}
+                        {field.id && field.system ? 'disabled' : ''}
+                    "
                     name="schema.{key}.name"
                     let:uniqueId
                 >
-                    <label for={uniqueId}>Name</label>
+                    <label for={uniqueId}>
+                        <span class="txt">Name</span>
+                        {#if !hasValidName}
+                            <span class="txt invalid-name-note" transition:fly={{ duration: 150, x: 5 }}>
+                                Duplicated or invalid name
+                            </span>
+                        {/if}
+                    </label>
                     <!-- svelte-ignore a11y-autofocus -->
                     <input
                         type="text"
@@ -254,15 +271,18 @@
             </div>
 
             {#if !field.toDelete}
-                <div class="col-sm-4">
+                <div class="col-sm-4 txt-right">
                     <div class="flex-fill" />
-                    <div class="inline-flex flex-gap-base flex-nowrap">
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-secondary fade"
-                            on:click|stopPropagation={handleDelete}
-                        >
-                            <span class="txt">Remove</span>
+                    <div class="inline-flex flex-gap-sm flex-nowrap">
+                        <button type="button" class="btn btn-circle btn-sm btn-secondary">
+                            <i class="ri-more-line" />
+                            <Toggler
+                                class="dropdown dropdown-sm dropdown-upside dropdown-right dropdown-nowrap no-min-width"
+                            >
+                                <button type="button" class="dropdown-item txt-right" on:click={handleDelete}>
+                                    <span class="txt">Remove</span>
+                                </button>
+                            </Toggler>
                         </button>
 
                         {#if interactive}
@@ -284,6 +304,12 @@
 </Accordion>
 
 <style>
+    .invalid-name-note {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        text-transform: none;
+    }
     .title.field-name {
         max-width: 130px;
         overflow: hidden;

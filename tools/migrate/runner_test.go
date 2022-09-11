@@ -104,7 +104,8 @@ func TestRunnerUpAndDown(t *testing.T) {
 
 	// Down()
 	// ---
-	if _, err := r.Down(2); err != nil {
+	// revert one migration
+	if _, err := r.Down(1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -112,8 +113,12 @@ func TestRunnerUpAndDown(t *testing.T) {
 		t.Fatal("Didn't expect 3_test to be reverted.")
 	}
 
-	if !test1DownCalled || !test2DownCalled {
-		t.Fatalf("Expected 1_test and 2_test to be reverted, got %v and %v", test1DownCalled, test2DownCalled)
+	if !test2DownCalled {
+		t.Fatal("Expected 2_test to be reverted.")
+	}
+
+	if test1DownCalled {
+		t.Fatal("Didn't expect 1_test to be reverted.")
 	}
 }
 

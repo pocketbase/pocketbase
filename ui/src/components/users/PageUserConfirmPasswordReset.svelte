@@ -1,4 +1,5 @@
 <script>
+    import PocketBase from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import FullPage from "@/components/base/FullPage.svelte";
@@ -20,8 +21,11 @@
 
         isLoading = true;
 
+        // init a custom client to avoid interfering with the admin state
+        const client = new PocketBase(import.meta.env.PB_BACKEND_URL);
+
         try {
-            await ApiClient.Users.confirmPasswordReset(params?.token, newPassword, newPasswordConfirm);
+            await client.users.confirmPasswordReset(params?.token, newPassword, newPasswordConfirm);
             success = true;
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -36,7 +40,7 @@
         <div class="alert alert-success">
             <div class="icon"><i class="ri-checkbox-circle-line" /></div>
             <div class="content txt-bold">
-                <p>Password changed</p>
+                <p>Successfully changed the user password.</p>
                 <p>You can now sign in with your new password.</p>
             </div>
         </div>
@@ -46,13 +50,13 @@
         </button>
     {:else}
         <form on:submit|preventDefault={submit}>
-            <div class="content txt-center m-b-sm">
-                <h4 class="m-b-xs">
+            <div class="content txt-center m-b-base">
+                <h5>
                     Reset your user password
                     {#if email}
                         for <strong>{email}</strong>
                     {/if}
-                </h4>
+                </h5>
             </div>
 
             <Field class="form-field required" name="password" let:uniqueId>

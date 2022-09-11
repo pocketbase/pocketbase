@@ -1,7 +1,9 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { pageTitle } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
 
@@ -14,14 +16,16 @@
         { key: "adminPasswordResetToken", label: "Admins password reset token" },
     ];
 
-    let tokenSettings = {};
+    $pageTitle = "Token options";
+
+    let originalFormSettings = {};
+    let formSettings = {};
     let isLoading = false;
     let isSaving = false;
-    let initialHash = "";
 
-    $: hasChanges = initialHash != JSON.stringify(tokenSettings);
+    $: initialHash = JSON.stringify(originalFormSettings);
 
-    CommonHelper.setDocumentTitle("Token options");
+    $: hasChanges = initialHash != JSON.stringify(formSettings);
 
     loadSettings();
 
@@ -29,7 +33,7 @@
         isLoading = true;
 
         try {
-            const result = (await ApiClient.Settings.getAll()) || {};
+            const result = (await ApiClient.settings.getAll()) || {};
             initSettings(result);
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -46,7 +50,7 @@
         isSaving = true;
 
         try {
-            const result = await ApiClient.Settings.update(CommonHelper.filterRedactedProps(tokenSettings));
+            const result = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             initSettings(result);
             addSuccessToast("Successfully saved tokens options.");
         } catch (err) {
@@ -58,25 +62,29 @@
 
     function initSettings(data) {
         data = data || {};
-        tokenSettings = {};
+        formSettings = {};
 
         for (const listItem of tokensList) {
-            tokenSettings[listItem.key] = {
+            formSettings[listItem.key] = {
                 duration: data[listItem.key]?.duration || 0,
             };
         }
 
-        initialHash = JSON.stringify(tokenSettings);
+        originalFormSettings = JSON.parse(JSON.stringify(formSettings));
+    }
+
+    function reset() {
+        formSettings = JSON.parse(JSON.stringify(originalFormSettings || {}));
     }
 </script>
 
 <SettingsSidebar />
 
-<main class="page-wrapper">
+<PageWrapper>
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Token options</div>
+            <div class="breadcrumb-item">{$pageTitle}</div>
         </nav>
     </header>
 
@@ -96,19 +104,19 @@
                             type="number"
                             id={uniqueId}
                             required
-                            bind:value={tokenSettings[token.key].duration}
+                            bind:value={formSettings[token.key].duration}
                         />
                         <div class="help-block">
                             <span
                                 class="link-primary"
-                                class:txt-success={tokenSettings[token.key].secret}
+                                class:txt-success={formSettings[token.key].secret}
                                 on:click={() => {
                                     // toggle
-                                    if (tokenSettings[token.key].secret) {
-                                        delete tokenSettings[token.key].secret;
-                                        tokenSettings[token.key] = tokenSettings[token.key];
+                                    if (formSettings[token.key].secret) {
+                                        delete formSettings[token.key].secret;
+                                        formSettings[token.key] = formSettings[token.key];
                                     } else {
-                                        tokenSettings[token.key].secret = CommonHelper.randomString(50);
+                                        formSettings[token.key].secret = CommonHelper.randomString(50);
                                     }
                                 }}
                             >
@@ -120,6 +128,16 @@
 
                 <div class="flex">
                     <div class="flex-fill" />
+                    {#if hasChanges}
+                        <button
+                            type="button"
+                            class="btn btn-secondary btn-hint"
+                            disabled={isSaving}
+                            on:click={() => reset()}
+                        >
+                            <span class="txt">Cancel</span>
+                        </button>
+                    {/if}
                     <button
                         type="submit"
                         class="btn btn-expanded"
@@ -133,4 +151,4 @@
             {/if}
         </form>
     </div>
-</main>
+</PageWrapper>

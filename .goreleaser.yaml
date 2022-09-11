@@ -20,13 +20,20 @@ builds:
     goarch:
       - amd64
       - arm64
+      - arm
+    goarm:
+      - 7
+    ignore:
+      - goos: windows
+        goarch: arm
+      - goos: darwin
+        goarch: arm
 
 release:
   draft: true
 
 archives:
-  -
-    format: zip
+  - format: zip
     files:
       - LICENSE*
       - CHANGELOG*
@@ -35,7 +42,7 @@ checksum:
   name_template: 'checksums.txt'
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  name_template: '{{ incpatch .Version }}-next'
 
 changelog:
   sort: asc

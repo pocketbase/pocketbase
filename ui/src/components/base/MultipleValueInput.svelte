@@ -4,7 +4,7 @@
     export let value = [];
     export let separator = ",";
 
-    $: valueStr = (value || []).join(",");
+    $: valueStr = (value || []).join(", ");
 </script>
 
 <input

@@ -2,6 +2,11 @@
 // validation and applying changes to existing DB models through the app Dao.
 package forms
 
+import "regexp"
+
+// base ID value regex pattern
+var idRegex = regexp.MustCompile(`^[^\@\#\$\&\|\.\,\'\"\\\/\s]+$`)
+
 // InterceptorNextFunc is a interceptor handler function.
 // Usually used in combination with InterceptorFunc.
 type InterceptorNextFunc = func() error

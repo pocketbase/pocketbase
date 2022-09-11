@@ -4,7 +4,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
-// RealtimeSubscribe defines a RealtimeSubscribe request form.
+// RealtimeSubscribe is a realtime subscriptions request form.
 type RealtimeSubscribe struct {
 	ClientId      string   `form:"clientId" json:"clientId"`
 	Subscriptions []string `form:"subscriptions" json:"subscriptions"`

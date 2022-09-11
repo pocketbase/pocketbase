@@ -7,7 +7,7 @@ export default defineConfig({
         port: 3000,
     },
     envPrefix: 'PB',
-    base: process.env.NODE_ENV === 'production' ? '/_/' : './',
+    base: './',
     build: {
         chunkSizeWarningLimit: 1000,
         reportCompressedSize: false,
@@ -23,13 +23,5 @@ export default defineConfig({
         alias: {
             '@': __dirname + '/src',
         }
-    },
-    css: {
-        preprocessorOptions: {
-            scss: {
-                includePaths: [__dirname + '/src/scss'],
-                prependData: `@import "${__dirname}/src/scss/mixins"; @import "${__dirname}/src/scss/vars";`,
-            },
-        },
     },
 })

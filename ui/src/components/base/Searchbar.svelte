@@ -62,6 +62,7 @@
         {#if filterComponent && !isFilterComponentLoading}
             <svelte:component
                 this={filterComponent}
+                id={uniqueId}
                 singleLine
                 disableRequestKeys
                 disableIndirectCollectionsKeys
@@ -86,7 +87,7 @@
                 <button
                     type="submit"
                     class="btn btn-expanded btn-sm btn-warning"
-                    transition:fly={{ duration: 150, x: 5 }}
+                    transition:fly|local={{ duration: 150, x: 5 }}
                 >
                     <span class="txt">Search</span>
                 </button>
@@ -95,7 +96,7 @@
             <button
                 type="button"
                 class="btn btn-secondary btn-sm btn-hint p-l-xs p-r-xs m-l-10"
-                transition:fly={{ duration: 150, x: 5 }}
+                transition:fly|local={{ duration: 150, x: 5 }}
                 on:click={() => {
                     clear(false);
                     submit();

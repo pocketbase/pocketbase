@@ -82,9 +82,9 @@
 
         let request;
         if (record.isNew) {
-            request = ApiClient.Records.create(collection?.id, data);
+            request = ApiClient.records.create(collection?.id, data);
         } else {
-            request = ApiClient.Records.update(collection?.id, record.id, data);
+            request = ApiClient.records.update(collection?.id, record.id, data);
         }
 
         request
@@ -110,7 +110,7 @@
         }
 
         confirm(`Do you really want to delete the selected record?`, () => {
-            return ApiClient.Records.delete(original["@collectionId"], original.id)
+            return ApiClient.records.delete(original["@collectionId"], original.id)
                 .then(() => {
                     hide();
                     addSuccessToast("Successfully deleted record.");

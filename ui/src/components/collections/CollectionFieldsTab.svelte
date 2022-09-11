@@ -44,16 +44,16 @@
     function getSiblingsFieldNames(currentField) {
         let result = [];
 
+        if (currentField.toDelete) {
+            return result;
+        }
+
         for (let field of collection.schema) {
-            if (field === currentField) {
-                continue; // skip current
+            if (field === currentField || field.toDelete) {
+                continue; // skip current and deleted fields
             }
 
             result.push(field.name);
-
-            if (field.id && field.originalName !== "" && field.originalName !== field.name) {
-                result.push(field.originalName);
-            }
         }
 
         return result;

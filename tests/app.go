@@ -45,12 +45,21 @@ func (t *TestApp) ResetEventCalls() {
 	t.EventCalls = make(map[string]int)
 }
 
-// NewTestApp creates and initializes a full application instance for testing.
+// NewTestApp creates and initializes a test application instance.
 //
 // It is the caller's responsibility to call `app.Cleanup()`
 // when the app is no longer needed.
-func NewTestApp() (*TestApp, error) {
-	tempDir, err := NewTempDataDir()
+func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
+	var testDataDir string
+	if len(optTestDataDir) == 0 || optTestDataDir[0] == "" {
+		// fallback to the default test data directory
+		_, currentFile, _, _ := runtime.Caller(0)
+		testDataDir = filepath.Join(path.Dir(currentFile), "data")
+	} else {
+		testDataDir = optTestDataDir[0]
+	}
+
+	tempDir, err := TempDirClone(testDataDir)
 	if err != nil {
 		return nil, err
 	}
@@ -188,18 +197,23 @@ func NewTestApp() (*TestApp, error) {
 		return nil
 	})
 
-	t.OnUserBeforeOauth2Register().Add(func(e *core.UserOauth2RegisterEvent) error {
-		t.EventCalls["OnUserBeforeOauth2Register"]++
-		return nil
-	})
-
-	t.OnUserAfterOauth2Register().Add(func(e *core.UserOauth2RegisterEvent) error {
-		t.EventCalls["OnUserAfterOauth2Register"]++
-		return nil
-	})
-
 	t.OnUserAuthRequest().Add(func(e *core.UserAuthEvent) error {
 		t.EventCalls["OnUserAuthRequest"]++
+		return nil
+	})
+
+	t.OnUserListExternalAuths().Add(func(e *core.UserListExternalAuthsEvent) error {
+		t.EventCalls["OnUserListExternalAuths"]++
+		return nil
+	})
+
+	t.OnUserBeforeUnlinkExternalAuthRequest().Add(func(e *core.UserUnlinkExternalAuthEvent) error {
+		t.EventCalls["OnUserBeforeUnlinkExternalAuthRequest"]++
+		return nil
+	})
+
+	t.OnUserAfterUnlinkExternalAuthRequest().Add(func(e *core.UserUnlinkExternalAuthEvent) error {
+		t.EventCalls["OnUserAfterUnlinkExternalAuthRequest"]++
 		return nil
 	})
 
@@ -313,6 +327,16 @@ func NewTestApp() (*TestApp, error) {
 		return nil
 	})
 
+	t.OnCollectionsBeforeImportRequest().Add(func(e *core.CollectionsImportEvent) error {
+		t.EventCalls["OnCollectionsBeforeImportRequest"]++
+		return nil
+	})
+
+	t.OnCollectionsAfterImportRequest().Add(func(e *core.CollectionsImportEvent) error {
+		t.EventCalls["OnCollectionsAfterImportRequest"]++
+		return nil
+	})
+
 	t.OnAdminsListRequest().Add(func(e *core.AdminsListEvent) error {
 		t.EventCalls["OnAdminsListRequest"]++
 		return nil
@@ -366,21 +390,19 @@ func NewTestApp() (*TestApp, error) {
 	return t, nil
 }
 
-// NewTempDataDir creates a new temporary directory copy of the test data.
+// TempDirClone creates a new temporary directory copy from the
+// provided directory path.
 //
-// It is the caller's responsibility to call `os.RemoveAll(dir)`
-// when the directory is no longer needed.
-func NewTempDataDir() (string, error) {
+// It is the caller's responsibility to call `os.RemoveAll(tempDir)`
+// when the directory is no longer needed!
+func TempDirClone(dirToClone string) (string, error) {
 	tempDir, err := os.MkdirTemp("", "pb_test_*")
 	if err != nil {
 		return "", err
 	}
 
-	_, currentFile, _, _ := runtime.Caller(0)
-	testDataDir := filepath.Join(path.Dir(currentFile), "data")
-
 	// copy everything from testDataDir to tempDir
-	if err := copyDir(testDataDir, tempDir); err != nil {
+	if err := copyDir(dirToClone, tempDir); err != nil {
 		return "", err
 	}
 

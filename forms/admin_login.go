@@ -6,26 +6,57 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// AdminLogin defines an admin email/pass login form.
+// AdminLogin specifies an admin email/pass login form.
 type AdminLogin struct {
-	app core.App
+	config AdminLoginConfig
 
 	Email    string `form:"email" json:"email"`
 	Password string `form:"password" json:"password"`
 }
 
-// NewAdminLogin creates new admin login form for the provided app.
+// AdminLoginConfig is the [AdminLogin] factory initializer config.
+//
+// NB! App is a required struct member.
+type AdminLoginConfig struct {
+	App core.App
+	Dao *daos.Dao
+}
+
+// NewAdminLogin creates a new [AdminLogin] form with initializer
+// config created from the provided [core.App] instance.
+//
+// If you want to submit the form as part of another transaction, use
+// [NewAdminLoginWithConfig] with explicitly set Dao.
 func NewAdminLogin(app core.App) *AdminLogin {
-	return &AdminLogin{app: app}
+	return NewAdminLoginWithConfig(AdminLoginConfig{
+		App: app,
+	})
+}
+
+// NewAdminLoginWithConfig creates a new [AdminLogin] form
+// with the provided config or panics on invalid configuration.
+func NewAdminLoginWithConfig(config AdminLoginConfig) *AdminLogin {
+	form := &AdminLogin{config: config}
+
+	if form.config.App == nil {
+		panic("Missing required config.App instance.")
+	}
+
+	if form.config.Dao == nil {
+		form.config.Dao = form.config.App.Dao()
+	}
+
+	return form
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *AdminLogin) Validate() error {
 	return validation.ValidateStruct(form,
-		validation.Field(&form.Email, validation.Required, validation.Length(1, 255), is.Email),
+		validation.Field(&form.Email, validation.Required, validation.Length(1, 255), is.EmailFormat),
 		validation.Field(&form.Password, validation.Required, validation.Length(1, 255)),
 	)
 }
@@ -37,7 +68,7 @@ func (form *AdminLogin) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	admin, err := form.app.Dao().FindAdminByEmail(form.Email)
+	admin, err := form.config.Dao.FindAdminByEmail(form.Email)
 	if err != nil {
 		return nil, err
 	}

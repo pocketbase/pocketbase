@@ -11,6 +11,16 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
+func TestUserVerificationRequestPanic(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewUserVerificationRequest(nil)
+}
+
 func TestUserVerificationRequestValidate(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()

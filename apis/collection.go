@@ -1,8 +1,6 @@
 package apis
 
 import (
-	"errors"
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -23,6 +21,7 @@ func BindCollectionApi(app core.App, rg *echo.Group) {
 	subGroup.GET("/:collection", api.view)
 	subGroup.PATCH("/:collection", api.update)
 	subGroup.DELETE("/:collection", api.delete)
+	subGroup.PUT("/import", api.bulkImport)
 }
 
 type collectionApi struct {
@@ -160,13 +159,6 @@ func (api *collectionApi) delete(c echo.Context) error {
 			return rest.NewBadRequestError("Failed to delete collection. Make sure that the collection is not referenced by other collections.", err)
 		}
 
-		// try to delete the collection files
-		if err := api.deleteCollectionFiles(e.Collection); err != nil && api.app.IsDebug() {
-			// non critical error - only log for debug
-			// (usually could happen because of S3 api limits)
-			log.Println(err)
-		}
-
 		return e.HttpContext.NoContent(http.StatusNoContent)
 	})
 
@@ -177,17 +169,37 @@ func (api *collectionApi) delete(c echo.Context) error {
 	return handlerErr
 }
 
-func (api *collectionApi) deleteCollectionFiles(collection *models.Collection) error {
-	fs, err := api.app.NewFilesystem()
-	if err != nil {
-		return err
-	}
-	defer fs.Close()
+func (api *collectionApi) bulkImport(c echo.Context) error {
+	form := forms.NewCollectionsImport(api.app)
 
-	failed := fs.DeletePrefix(collection.BaseFilesPath())
-	if len(failed) > 0 {
-		return errors.New("Failed to delete all record files.")
+	// load request data
+	if err := c.Bind(form); err != nil {
+		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	return nil
+	event := &core.CollectionsImportEvent{
+		HttpContext: c,
+		Collections: form.Collections,
+	}
+
+	// import collections
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
+		return func() error {
+			return api.app.OnCollectionsBeforeImportRequest().Trigger(event, func(e *core.CollectionsImportEvent) error {
+				form.Collections = e.Collections // ensures that the form always has the latest changes
+
+				if err := next(); err != nil {
+					return rest.NewBadRequestError("Failed to import the submitted collections.", err)
+				}
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		api.app.OnCollectionsAfterImportRequest().Trigger(event)
+	}
+
+	return submitErr
 }

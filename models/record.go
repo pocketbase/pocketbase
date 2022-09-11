@@ -16,6 +16,7 @@ import (
 
 var _ Model = (*Record)(nil)
 var _ ColumnValueMapper = (*Record)(nil)
+var _ FilesManager = (*Record)(nil)
 
 type Record struct {
 	BaseModel

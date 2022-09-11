@@ -3,6 +3,7 @@ package forms_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"testing"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -10,6 +11,29 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
 )
+
+func TestUserUpsertPanic1(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewUserUpsert(nil, nil)
+}
+
+func TestUserUpsertPanic2(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewUserUpsert(app, nil)
+}
 
 func TestNewUserUpsert(t *testing.T) {
 	app, _ := tests.NewTestApp()
@@ -302,5 +326,107 @@ func TestUserUpsertSubmitInterceptors(t *testing.T) {
 
 	if interceptorUserEmail != form.Email {
 		t.Fatalf("Expected the form model to be filled before calling the interceptors")
+	}
+}
+
+func TestUserUpsertWithCustomId(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	existingUser, err := app.Dao().FindUserByEmail("test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		name        string
+		jsonData    string
+		collection  *models.User
+		expectError bool
+	}{
+		{
+			"empty data",
+			"{}",
+			&models.User{},
+			false,
+		},
+		{
+			"empty id",
+			`{"id":""}`,
+			&models.User{},
+			false,
+		},
+		{
+			"id < 15 chars",
+			`{"id":"a23"}`,
+			&models.User{},
+			true,
+		},
+		{
+			"id > 15 chars",
+			`{"id":"a234567890123456"}`,
+			&models.User{},
+			true,
+		},
+		{
+			"id = 15 chars (invalid chars)",
+			`{"id":"a@3456789012345"}`,
+			&models.User{},
+			true,
+		},
+		{
+			"id = 15 chars (valid chars)",
+			`{"id":"a23456789012345"}`,
+			&models.User{},
+			false,
+		},
+		{
+			"changing the id of an existing item",
+			`{"id":"b23456789012345"}`,
+			existingUser,
+			true,
+		},
+		{
+			"using the same existing item id",
+			`{"id":"` + existingUser.Id + `"}`,
+			existingUser,
+			false,
+		},
+		{
+			"skipping the id for existing item",
+			`{}`,
+			existingUser,
+			false,
+		},
+	}
+
+	for i, scenario := range scenarios {
+		form := forms.NewUserUpsert(app, scenario.collection)
+		if form.Email == "" {
+			form.Email = fmt.Sprintf("test_id_%d@example.com", i)
+		}
+		form.Password = "1234567890"
+		form.PasswordConfirm = form.Password
+
+		// load data
+		loadErr := json.Unmarshal([]byte(scenario.jsonData), form)
+		if loadErr != nil {
+			t.Errorf("[%s] Failed to load form data: %v", scenario.name, loadErr)
+			continue
+		}
+
+		submitErr := form.Submit()
+		hasErr := submitErr != nil
+
+		if hasErr != scenario.expectError {
+			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", scenario.name, scenario.expectError, hasErr, submitErr)
+		}
+
+		if !hasErr && form.Id != "" {
+			_, err := app.Dao().FindUserById(form.Id)
+			if err != nil {
+				t.Errorf("[%s] Expected to find record with id %s, got %v", scenario.name, form.Id, err)
+			}
+		}
 	}
 }

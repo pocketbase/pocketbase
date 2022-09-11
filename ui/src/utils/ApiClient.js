@@ -12,7 +12,7 @@ import { setAdmin }      from "@/stores/admin";
  * @param {Boolean} [redirect] Whether to redirect to the login page.
  */
 PocketBase.prototype.logout = function(redirect = true) {
-    this.AuthStore.clear();
+    this.authStore.clear();
 
     if (redirect) {
         replace('/login');
@@ -81,6 +81,7 @@ class AppAuthStore extends LocalAuthStore {
      */
     clear() {
         super.clear();
+
         setAdmin(null);
     }
 }
@@ -91,8 +92,8 @@ const client = new PocketBase(
     new AppAuthStore("pb_admin_auth")
 );
 
-if (client.AuthStore.model instanceof Admin) {
-    setAdmin(client.AuthStore.model);
+if (client.authStore.model instanceof Admin) {
+    setAdmin(client.authStore.model);
 }
 
 export default client;

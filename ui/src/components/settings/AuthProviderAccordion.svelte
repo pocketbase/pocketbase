@@ -28,6 +28,10 @@
     export function collapse() {
         accordion?.collapse();
     }
+
+    export function collapseSiblings() {
+        accordion?.collapseSiblings();
+    }
 </script>
 
 <Accordion bind:this={accordion} on:expand on:collapse on:toggle {...$$restProps}>

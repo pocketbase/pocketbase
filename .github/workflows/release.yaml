@@ -21,7 +21,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: '1.19.0-beta.1'
+          go-version: '>=1.19.0'
 
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
@@ -33,6 +33,9 @@ jobs:
       # https://github.com/golangci/golangci-lint/issues/2649
       # - name: Run linter
       #   uses: golangci/golangci-lint-action@v3
+
+      - name: Run tests
+        run: go test ./...
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3

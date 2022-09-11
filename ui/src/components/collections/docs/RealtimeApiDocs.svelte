@@ -3,40 +3,11 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
 
     export let collection = new Collection();
 
-    let sdkTab = "JavaScript";
-    let sdkExamples = [];
-
-    $: sdkExamples = [
-        {
-            lang: "JavaScript",
-            code: `
-                import PocketBase from 'pocketbase';
-
-                const client = new PocketBase("${ApiClient.baseUrl}");
-
-                // (Optionally) authenticate
-                client.Users.authViaEmail("test@example.com", "123456");
-
-                // Subscribe to changes in any record from the collection
-                client.Realtime.subscribe("${collection?.name}", function (e) {
-                    console.log(e.record);
-                });
-
-                // Subscribe to changes in a single record
-                client.Realtime.subscribe("${collection?.name}/RECORD_ID", function (e) {
-                    console.log(e.record);
-                });
-
-                // Unsubscribe
-                client.Realtime.unsubscribe() // remove all subscriptions
-                client.Realtime.unsubscribe("${collection?.name}") // remove the collection subscription
-                client.Realtime.unsubscribe("${collection?.name}/RECORD_ID") // remove the record subscription
-            `,
-        },
-    ];
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
 </script>
 
 <div class="alert">
@@ -75,26 +46,58 @@
 </div>
 
 <div class="section-title">Client SDKs example</div>
-<div class="tabs m-b-base">
-    <div class="tabs-header compact left">
-        {#each sdkExamples as example (example.lang)}
-            <button
-                class="tab-item"
-                class:active={sdkTab === example.lang}
-                on:click={() => (sdkTab = example.lang)}
-            >
-                {example.lang}
-            </button>
-        {/each}
-    </div>
-    <div class="tabs-content">
-        {#each sdkExamples as example (example.lang)}
-            <div class="tab-item" class:active={sdkTab === example.lang}>
-                <CodeBlock content={example.code} />
-            </div>
-        {/each}
-    </div>
-</div>
+<SdkTabs
+    js={`
+        import PocketBase from 'pocketbase';
+
+        const client = new PocketBase('${backendAbsUrl}');
+
+        ...
+
+        // (Optionally) authenticate
+        client.users.authViaEmail('test@example.com', '123456');
+
+        // Subscribe to changes in any record from the collection
+        client.realtime.subscribe('${collection?.name}', function (e) {
+            console.log(e.record);
+        });
+
+        // Subscribe to changes in a single record
+        client.realtime.subscribe('${collection?.name}/RECORD_ID', function (e) {
+            console.log(e.record);
+        });
+
+        // Unsubscribe
+        client.realtime.unsubscribe() // remove all subscriptions
+        client.realtime.unsubscribe('${collection?.name}') // remove only the collection subscription
+        client.realtime.unsubscribe('${collection?.name}/RECORD_ID') // remove only the record subscription
+    `}
+    dart={`
+        import 'package:pocketbase/pocketbase.dart';
+
+        final client = PocketBase('${backendAbsUrl}');
+
+        ...
+
+        // (Optionally) authenticate
+        client.users.authViaEmail('test@example.com', '123456');
+
+        // Subscribe to changes in any record from the collection
+        client.realtime.subscribe('${collection?.name}', (e) {
+          print(e.record);
+        });
+
+        // Subscribe to changes in a single record
+        client.realtime.subscribe('${collection?.name}/RECORD_ID', (e) {
+          print(e.record);
+        });
+
+        // Unsubscribe
+        client.realtime.unsubscribe() // remove all subscriptions
+        client.realtime.unsubscribe('${collection?.name}') // remove only the collection subscription
+        client.realtime.unsubscribe('${collection?.name}/RECORD_ID') // remove only the record subscription
+    `}
+/>
 
 <div class="section-title">Event data format</div>
 <CodeBlock

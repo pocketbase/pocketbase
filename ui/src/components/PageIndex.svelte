@@ -19,7 +19,7 @@
             return;
         }
 
-        if (ApiClient.AuthStore.isValid) {
+        if (ApiClient.authStore.isValid) {
             replace("/collections");
         } else {
             ApiClient.logout();

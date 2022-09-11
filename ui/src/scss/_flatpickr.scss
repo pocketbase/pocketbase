@@ -22,6 +22,7 @@
     box-shadow: none;
     min-height: 0;
     height: var(--inputHeight);
+    background: none;
     border-radius: var(--baseRadius);
     border: 1px solid var(--baseAlt1Color);
   }
@@ -156,7 +157,6 @@
      -moz-user-select: none;
       -ms-user-select: none;
           user-select: none;
-  overflow: hidden;
   -webkit-box-flex: 1;
   -webkit-flex: 1;
       -ms-flex: 1;
@@ -489,7 +489,7 @@ span.flatpickr-weekday {
 .flatpickr-day.today:focus {
   border-color: var(--primaryColor);
   background: var(--primaryColor);
-  color: var(--txtPrimaryColor);
+  color: var(--baseColor);
 }
 .flatpickr-day.selected,
 .flatpickr-day.startRange,

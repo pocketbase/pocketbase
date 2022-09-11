@@ -58,6 +58,10 @@ func (api *realtimeApi) connect(c echo.Context) error {
 		return err
 	}
 
+	if api.app.IsDebug() {
+		log.Printf("Realtime connection establisehd: %s\n", client.Id())
+	}
+
 	// signalize established connection (aka. fire "connect" message)
 	fmt.Fprint(c.Response(), "id:"+client.Id()+"\n")
 	fmt.Fprint(c.Response(), "event:PB_CONNECT\n")
@@ -206,13 +210,17 @@ func (api *realtimeApi) bindEvents() {
 		return nil
 	})
 
-	api.app.OnRecordAfterCreateRequest().Add(func(e *core.RecordCreateEvent) error {
-		api.broadcastRecord("create", e.Record)
+	api.app.OnModelAfterCreate().Add(func(e *core.ModelEvent) error {
+		if record, ok := e.Model.(*models.Record); ok {
+			api.broadcastRecord("create", record)
+		}
 		return nil
 	})
 
-	api.app.OnRecordAfterUpdateRequest().Add(func(e *core.RecordUpdateEvent) error {
-		api.broadcastRecord("update", e.Record)
+	api.app.OnModelAfterUpdate().Add(func(e *core.ModelEvent) error {
+		if record, ok := e.Model.(*models.Record); ok {
+			api.broadcastRecord("update", record)
+		}
 		return nil
 	})
 
@@ -288,19 +296,24 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 		return nil // no subscribers
 	}
 
+	// remove the expand from the broadcasted record because we don't
+	// know if the clients have access to view the expanded records
+	cleanRecord := *record
+	cleanRecord.SetExpand(nil)
+
 	subscriptionRuleMap := map[string]*string{
-		(collection.Name + "/" + record.Id): collection.ViewRule,
-		(collection.Id + "/" + record.Id):   collection.ViewRule,
-		collection.Name:                     collection.ListRule,
-		collection.Id:                       collection.ListRule,
+		(collection.Name + "/" + cleanRecord.Id): collection.ViewRule,
+		(collection.Id + "/" + cleanRecord.Id):   collection.ViewRule,
+		collection.Name:                          collection.ListRule,
+		collection.Id:                            collection.ListRule,
 	}
 
-	recordData := &recordData{
+	data := &recordData{
 		Action: action,
-		Record: record,
+		Record: &cleanRecord,
 	}
 
-	serializedData, err := json.Marshal(recordData)
+	serializedData, err := json.Marshal(data)
 	if err != nil {
 		if api.app.IsDebug() {
 			log.Println(err)
@@ -314,7 +327,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 				continue
 			}
 
-			if !api.canAccessRecord(client, record, rule) {
+			if !api.canAccessRecord(client, data.Record, rule) {
 				continue
 			}
 

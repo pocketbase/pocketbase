@@ -1247,29 +1247,11 @@ func TestFileOptionsValidate(t *testing.T) {
 			[]string{"thumbs"},
 		},
 		{
-			"invalid thumbs format - zero width",
+			"invalid thumbs format - zero width and height",
 			schema.FileOptions{
 				MaxSize:   1,
 				MaxSelect: 2,
-				Thumbs:    []string{"0x100"},
-			},
-			[]string{"thumbs"},
-		},
-		{
-			"invalid thumbs format - zero height",
-			schema.FileOptions{
-				MaxSize:   1,
-				MaxSelect: 2,
-				Thumbs:    []string{"100x0"},
-			},
-			[]string{"thumbs"},
-		},
-		{
-			"invalid thumbs format - zero with and height",
-			schema.FileOptions{
-				MaxSize:   1,
-				MaxSelect: 2,
-				Thumbs:    []string{"0x0"},
+				Thumbs:    []string{"0x0", "0x0t", "0x0b", "0x0f"},
 			},
 			[]string{"thumbs"},
 		},
@@ -1278,7 +1260,10 @@ func TestFileOptionsValidate(t *testing.T) {
 			schema.FileOptions{
 				MaxSize:   1,
 				MaxSelect: 2,
-				Thumbs:    []string{"100x100", "200x100", "1x1"},
+				Thumbs: []string{
+					"100x100", "200x100", "0x100", "100x0",
+					"10x10t", "10x10b", "10x10f",
+				},
 			},
 			[]string{},
 		},

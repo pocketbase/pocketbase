@@ -3,12 +3,12 @@ package mails
 import (
 	"fmt"
 	"net/mail"
-	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/mails/templates"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tokens"
+	"github.com/pocketbase/pocketbase/tools/rest"
 )
 
 // SendAdminPasswordReset sends a password reset request email to the specified admin.
@@ -18,9 +18,9 @@ func SendAdminPasswordReset(app core.App, admin *models.Admin) error {
 		return tokenErr
 	}
 
-	actionUrl, urlErr := normalizeUrl(fmt.Sprintf(
-		"%s/#/confirm-password-reset/%s",
-		strings.TrimSuffix(app.Settings().Meta.AppUrl, "/"),
+	actionUrl, urlErr := rest.NormalizeUrl(fmt.Sprintf(
+		"%s/_/#/confirm-password-reset/%s",
+		app.Settings().Meta.AppUrl,
 		token,
 	))
 	if urlErr != nil {

@@ -47,7 +47,7 @@
                 filters.push(`id="${id}"`);
             }
 
-            selected = await ApiClient.Records.getFullList(collectionId, 200, {
+            selected = await ApiClient.records.getFullList(collectionId, 200, {
                 sort: "-created",
                 filter: filters.join("||"),
                 $cancelKey: uniqueId + "loadSelected",
@@ -72,7 +72,7 @@
         try {
             const page = reset ? 1 : currentPage + 1;
 
-            const result = await ApiClient.Records.getList(collectionId, page, 200, {
+            const result = await ApiClient.records.getList(collectionId, page, 200, {
                 sort: "-created",
                 $cancelKey: uniqueId + "loadList",
             });

@@ -1,4 +1,5 @@
 <script>
+    import { hideControls } from "@/stores/app";
     import { collections, activeCollection } from "@/stores/collections";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
 
@@ -63,12 +64,14 @@
         {/each}
     </div>
 
-    <footer class="sidebar-footer">
-        <button type="button" class="btn btn-block btn-outline" on:click={() => collectionPanel?.show()}>
-            <i class="ri-add-line" />
-            <span class="txt">New collection</span>
-        </button>
-    </footer>
+    {#if !$hideControls}
+        <footer class="sidebar-footer">
+            <button type="button" class="btn btn-block btn-outline" on:click={() => collectionPanel?.show()}>
+                <i class="ri-add-line" />
+                <span class="txt">New collection</span>
+            </button>
+        </footer>
+    {/if}
 </aside>
 
 <CollectionUpsertPanel bind:this={collectionPanel} />

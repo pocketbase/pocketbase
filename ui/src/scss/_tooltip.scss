@@ -1,24 +1,3 @@
-@keyframes tooltipHide {
-    100% {
-        opacity: 0;
-        visibility: hidden;
-        transform: scale(0.9);
-    }
-}
-
-@keyframes tooltipShow {
-    0% {
-        opacity: 0;
-        visibility: hidden;
-        transform: scale(0.9);
-    }
-    100% {
-        opacity: 1;
-        visibility: visible;
-        transform: scale(1);
-    }
-}
-
 .app-tooltip {
     position: fixed;
     z-index: 999999;
@@ -40,18 +19,30 @@
     transition: opacity var(--baseAnimationSpeed),
                 visibility var(--baseAnimationSpeed),
                 transform var(--baseAnimationSpeed);
-    transform: scale(0.9);
+    transform: translateY(2px);
     white-space: pre-line;
     @include hide();
-    &.active {
-        transform: scale(1);
-        @include show();
+
+    // positions
+    &.left {
+        transform: translateX(2px);
     }
+    &.right  {
+        transform: translateX(-2px);
+    }
+
+    // styles
     &.code {
         font-family: monospace;
         white-space: pre-wrap;
         text-align: left;
         min-width: 150px;
         max-width: 340px;
+    }
+
+    // states
+    &.active {
+        transform: scale(1);
+        @include show();
     }
 }

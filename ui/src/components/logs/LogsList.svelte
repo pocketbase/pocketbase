@@ -32,7 +32,7 @@
     export async function load(page = 1) {
         isLoading = true;
 
-        return ApiClient.Logs.getRequestsList(page, 40, {
+        return ApiClient.logs.getRequestsList(page, 40, {
             sort: sort,
             filter: [presets, filter].filter(Boolean).join("&&"),
         })

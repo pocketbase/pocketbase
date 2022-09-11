@@ -47,10 +47,11 @@
             clearList();
         }
 
-        return ApiClient.Records.getList(collection.id, page, 50, {
-            sort: sort,
-            filter: filter,
-        })
+        return ApiClient.records
+            .getList(collection.id, page, 50, {
+                sort: sort,
+                filter: filter,
+            })
             .then((result) => {
                 isLoading = false;
                 records = records.concat(result.items);
@@ -120,7 +121,7 @@
 
         let promises = [];
         for (const recordId of Object.keys(bulkSelected)) {
-            promises.push(ApiClient.Records.delete(collection?.id, recordId));
+            promises.push(ApiClient.records.delete(collection?.id, recordId));
         }
 
         isDeleting = true;

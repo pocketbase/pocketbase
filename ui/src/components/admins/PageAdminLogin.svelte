@@ -1,16 +1,14 @@
 <script>
-    import { link } from "svelte-spa-router";
-    import { replace } from "svelte-spa-router";
+    import { link, replace, querystring } from "svelte-spa-router";
     import FullPage from "@/components/base/FullPage.svelte";
     import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import { addErrorToast } from "@/stores/toasts";
 
-    const queryParams = CommonHelper.getQueryParams(window.location?.href);
+    const queryParams = new URLSearchParams($querystring);
 
-    let email = queryParams.demoEmail || "";
-    let password = queryParams.demoPassword || "";
+    let email = queryParams.get("demoEmail") || "";
+    let password = queryParams.get("demoPassword") || "";
     let isLoading = false;
 
     function login() {
@@ -20,7 +18,7 @@
 
         isLoading = true;
 
-        return ApiClient.Admins.authViaEmail(email, password)
+        return ApiClient.admins.authViaEmail(email, password)
             .then(() => {
                 replace("/");
             })

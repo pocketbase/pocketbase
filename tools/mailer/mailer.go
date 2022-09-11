@@ -12,7 +12,7 @@ type Mailer interface {
 		fromEmail mail.Address,
 		toEmail mail.Address,
 		subject string,
-		htmlBody string,
+		htmlContent string,
 		attachments map[string]io.Reader,
 	) error
 }

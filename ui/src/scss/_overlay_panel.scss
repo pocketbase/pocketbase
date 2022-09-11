@@ -194,14 +194,19 @@
             row-gap: var(--smSpacing);
         }
     }
+    &.full-width-popup {
+        width: 100%;
+    }
     &.image-preview {
         width: auto;
         min-width: 300px;
+        min-height: 250px;
         max-width: 70%;
         max-height: 90%;
         .panel-header {
             position: absolute;
             z-index: 99;
+            box-shadow: none;
             .overlay-close {
                 left: 100%;
                 right: auto;
@@ -222,6 +227,9 @@
         .panel-content {
             padding: 0;
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         img {
             max-width: 100%;

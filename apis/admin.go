@@ -66,7 +66,7 @@ func (api *adminApi) refresh(c echo.Context) error {
 func (api *adminApi) emailAuth(c echo.Context) error {
 	form := forms.NewAdminLogin(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occurred while reading the submitted data.", readErr)
+		return rest.NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
 	admin, submitErr := form.Submit()
@@ -80,7 +80,7 @@ func (api *adminApi) emailAuth(c echo.Context) error {
 func (api *adminApi) requestPasswordReset(c echo.Context) error {
 	form := forms.NewAdminPasswordResetRequest(api.app)
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("An error occurred while reading the submitted data.", err)
+		return rest.NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
 	if err := form.Validate(); err != nil {
@@ -101,7 +101,7 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 	form := forms.NewAdminPasswordResetConfirm(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occurred while reading the submitted data.", readErr)
+		return rest.NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
 	admin, submitErr := form.Submit()

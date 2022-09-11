@@ -3,15 +3,16 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
 
     export let collection = new Collection();
 
     let responseTab = 200;
-    let sdkTab = "JavaScript";
     let responses = [];
-    let sdkExamples = [];
 
     $: adminsOnly = collection?.updateRule === null;
+
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
 
     $: responses = [
         {
@@ -54,26 +55,6 @@
             `,
         },
     ];
-
-    $: sdkExamples = [
-        {
-            lang: "JavaScript",
-            code: `
-                import PocketBase from 'pocketbase';
-
-                const client = new PocketBase("${ApiClient.baseUrl}");
-
-                const data = { ... };
-
-                client.Records.update("${collection?.name}", "RECORD_ID", data)
-                    .then(function (record) {
-                        // success...
-                    }).catch(function (error) {
-                        // error...
-                    });
-            `,
-        },
-    ];
 </script>
 
 <div class="alert alert-warning">
@@ -100,26 +81,30 @@
 </div>
 
 <div class="section-title">Client SDKs example</div>
-<div class="tabs m-b-lg">
-    <div class="tabs-header compact left">
-        {#each sdkExamples as example (example.lang)}
-            <button
-                class="tab-item"
-                class:active={sdkTab === example.lang}
-                on:click={() => (sdkTab = example.lang)}
-            >
-                {example.lang}
-            </button>
-        {/each}
-    </div>
-    <div class="tabs-content">
-        {#each sdkExamples as example (example.lang)}
-            <div class="tab-item" class:active={sdkTab === example.lang}>
-                <CodeBlock content={example.code} />
-            </div>
-        {/each}
-    </div>
-</div>
+<SdkTabs
+    js={`
+        import PocketBase from 'pocketbase';
+
+        const client = new PocketBase('${backendAbsUrl}');
+
+        ...
+
+        const data = { ... };
+
+        const record = await client.records.update('${collection?.name}', 'RECORD_ID', data);
+    `}
+    dart={`
+        import 'package:pocketbase/pocketbase.dart';
+
+        final client = PocketBase('${backendAbsUrl}');
+
+        ...
+
+        final body = <String, dynamic>{ ... };
+
+        final record = await client.records.update('${collection?.name}', 'RECORD_ID', body: body);
+    `}
+/>
 
 <div class="section-title">Path parameters</div>
 <table class="table-compact table-border m-b-lg">
@@ -178,7 +163,7 @@
                     {:else if field.type === "url"}
                         URL address.
                     {:else if field.type === "file"}
-                        FormData object.<br />
+                        File object.<br />
                         Set to <code>null</code> to delete already uploaded file(s).
                     {:else if field.type === "relation"}
                         Relation record {field.options?.maxSelect > 1 ? "ids" : "id"}.
@@ -188,6 +173,37 @@
                 </td>
             </tr>
         {/each}
+    </tbody>
+</table>
+
+<div class="section-title">Query parameters</div>
+<table class="table-compact table-border m-b-lg">
+    <thead>
+        <tr>
+            <th>Param</th>
+            <th>Type</th>
+            <th width="60%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>expand</td>
+            <td>
+                <span class="label">String</span>
+            </td>
+            <td>
+                Auto expand relations when returning the updated record. Ex.:
+                <CodeBlock
+                    content={`
+                        ?expand=rel1,rel2.subrel21.subrel22
+                    `}
+                />
+                Supports up to 6-levels depth nested relations expansion. <br />
+                The expanded relations will be appended to the record under the
+                <code>@expand</code> property (eg. <code>{`"@expand": {"rel1": {...}, ...}`}</code>). Only the
+                relations that the user has permissions to <strong>view</strong> will be expanded.
+            </td>
+        </tr>
     </tbody>
 </table>
 

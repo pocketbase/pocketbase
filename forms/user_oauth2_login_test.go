@@ -9,6 +9,16 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
+func TestUserOauth2LoginPanic(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewUserOauth2Login(nil)
+}
+
 func TestUserOauth2LoginValidate(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

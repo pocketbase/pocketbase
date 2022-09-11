@@ -71,9 +71,9 @@
 
         let request;
         if (admin.isNew) {
-            request = ApiClient.Admins.create(data);
+            request = ApiClient.admins.create(data);
         } else {
-            request = ApiClient.Admins.update(admin.id, data);
+            request = ApiClient.admins.update(admin.id, data);
         }
 
         request
@@ -83,8 +83,8 @@
                 addSuccessToast(admin.isNew ? "Successfully created admin." : "Successfully updated admin.");
                 dispatch("save", result);
 
-                if (ApiClient.AuthStore.model?.id === result.id) {
-                    ApiClient.AuthStore.save(ApiClient.AuthStore.token, result);
+                if (ApiClient.authStore.model?.id === result.id) {
+                    ApiClient.authStore.save(ApiClient.authStore.token, result);
                 }
             })
             .catch((err) => {
@@ -101,7 +101,8 @@
         }
 
         confirm(`Do you really want to delete the selected admin?`, () => {
-            return ApiClient.Admins.delete(admin.id)
+            return ApiClient.admins
+                .delete(admin.id)
                 .then(() => {
                     confirmClose = false;
                     hide();
@@ -190,7 +191,7 @@
 
         {#if admin.isNew || changePasswordToggle}
             <div class="col-12">
-                <div class="grid" transition:slide={{ duration: 150 }}>
+                <div class="grid" transition:slide|local={{ duration: 150 }}>
                     <div class="col-sm-6">
                         <Field class="form-field required" name="password" let:uniqueId>
                             <label for={uniqueId}>

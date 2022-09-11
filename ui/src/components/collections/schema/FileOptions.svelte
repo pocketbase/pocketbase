@@ -52,9 +52,10 @@
                 bind:value={options.mimeTypes}
             />
             <div class="help-block">
-                Use comma as separator.
-                <span class="inline-flex">
+                <span class="txt">Use comma as separator.</span>
+                <button type="button" class="inline-flex flex-gap-0">
                     <span class="txt link-primary">Choose presets</span>
+                    <i class="ri-arrow-drop-down-fill" />
                     <Toggler class="dropdown dropdown-sm dropdown-nowrap">
                         <div
                             tabindex="0"
@@ -114,7 +115,7 @@
                             <span class="txt">Archives (zip, 7zip, rar)</span>
                         </div>
                     </Toggler>
-                </span>
+                </button>
             </div>
         </Field>
     </div>
@@ -126,13 +127,47 @@
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
-                        text: "List of thumb sizes for image files. The thumbs will be generated lazily on first access.",
+                        text: "List of additional thumb sizes for image files, along with the default thumb size of 100x100. The thumbs are generated lazily on first access.",
                         position: "top",
                     }}
                 />
             </label>
             <MultipleValueInput id={uniqueId} placeholder="eg. 50x50, 480x720" bind:value={options.thumbs} />
-            <div class="help-block">Use comma as separator.</div>
+            <div class="help-block">
+                <span class="txt">Use comma as separator.</span>
+                <button type="button" class="inline-flex flex-gap-0">
+                    <span class="txt link-primary">Supported formats</span>
+                    <i class="ri-arrow-drop-down-fill" />
+                    <Toggler class="dropdown dropdown-sm dropdown-center dropdown-nowrap p-r-10">
+                        <ul class="m-0">
+                            <li>
+                                <strong>WxH</strong>
+                                (eg. 100x50) - crop to WxH viewbox (from center)
+                            </li>
+                            <li>
+                                <strong>WxHt</strong>
+                                (eg. 100x50t) - crop to WxH viewbox (from top)
+                            </li>
+                            <li>
+                                <strong>WxHb</strong>
+                                (eg. 100x50b) - crop to WxH viewbox (from bottom)
+                            </li>
+                            <li>
+                                <strong>WxHf</strong>
+                                (eg. 100x50f) - fit inside a WxH viewbox (without cropping)
+                            </li>
+                            <li>
+                                <strong>0xH</strong>
+                                (eg. 0x50) - resize to H height preserving the aspect ratio
+                            </li>
+                            <li>
+                                <strong>Wx0</strong>
+                                (eg. 100x0) - resize to W width preserving the aspect ratio
+                            </li>
+                        </ul>
+                    </Toggler>
+                </button>
+            </div>
         </Field>
     </div>
 </div>

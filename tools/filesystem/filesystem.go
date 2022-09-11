@@ -3,10 +3,12 @@ package filesystem
 import (
 	"context"
 	"errors"
+	"image"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,6 +18,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/disintegration/imaging"
+	"github.com/gabriel-vasile/mimetype"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/fileblob"
 	"gocloud.dev/blob/s3blob"
@@ -35,15 +39,17 @@ func NewS3(
 	endpoint string,
 	accessKey string,
 	secretKey string,
+	s3ForcePathStyle bool,
 ) (*System, error) {
 	ctx := context.Background() // default context
 
 	cred := credentials.NewStaticCredentials(accessKey, secretKey, "")
 
 	sess, err := session.NewSession(&aws.Config{
-		Region:      aws.String(region),
-		Endpoint:    aws.String(endpoint),
-		Credentials: cred,
+		Region:           aws.String(region),
+		Endpoint:         aws.String(endpoint),
+		Credentials:      cred,
+		S3ForcePathStyle: aws.Bool(s3ForcePathStyle),
 	})
 	if err != nil {
 		return nil, err
@@ -93,7 +99,11 @@ func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
 
 // Upload writes content into the fileKey location.
 func (s *System) Upload(content []byte, fileKey string) error {
-	w, writerErr := s.bucket.NewWriter(s.ctx, fileKey, nil)
+	opts := &blob.WriterOptions{
+		ContentType: mimetype.Detect(content).String(),
+	}
+
+	w, writerErr := s.bucket.NewWriter(s.ctx, fileKey, opts)
 	if writerErr != nil {
 		return writerErr
 	}
@@ -174,6 +184,18 @@ func (s *System) DeletePrefix(prefix string) []error {
 	return failed
 }
 
+var inlineServeContentTypes = []string{
+	// image
+	"image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp", "image/x-icon", "image/bmp",
+	// video
+	"video/webm", "video/mp4", "video/3gpp", "video/quicktime", "video/x-ms-wmv",
+	// audio
+	"audio/basic", "audio/aiff", "audio/mpeg", "audio/midi", "audio/mp3", "audio/wave",
+	"audio/wav", "audio/x-wav", "audio/x-mpeg", "audio/x-m4a", "audio/aac",
+	// document
+	"application/pdf", "application/x-pdf",
+}
+
 // Serve serves the file at fileKey location to an HTTP response.
 func (s *System) Serve(response http.ResponseWriter, fileKey string, name string) error {
 	r, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
@@ -182,9 +204,24 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	}
 	defer r.Close()
 
-	response.Header().Set("Content-Disposition", "attachment; filename="+name)
-	response.Header().Set("Content-Type", r.ContentType())
+	disposition := "attachment"
+	realContentType := r.ContentType()
+	if list.ExistInSlice(realContentType, inlineServeContentTypes) {
+		disposition = "inline"
+	}
+
+	// make an exception for svg and force a custom content type
+	// to send in the response so that it can be loaded in an img tag
+	// (see https://github.com/whatwg/mimesniff/issues/7)
+	extContentType := realContentType
+	if extContentType != "image/svg+xml" && filepath.Ext(name) == ".svg" {
+		extContentType = "image/svg+xml"
+	}
+
+	response.Header().Set("Content-Disposition", disposition+"; filename="+name)
+	response.Header().Set("Content-Type", extContentType)
 	response.Header().Set("Content-Length", strconv.FormatInt(r.Size(), 10))
+	response.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox")
 
 	// All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
 	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
@@ -201,18 +238,31 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	return err
 }
 
+var ThumbSizeRegex = regexp.MustCompile(`^(\d+)x(\d+)(t|b|f)?$`)
+
 // CreateThumb creates a new thumb image for the file at originalKey location.
 // The new thumb file is stored at thumbKey location.
 //
-// thumbSize is in the format "WxH", eg. "100x50".
-func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string, cropCenter bool) error {
-	thumbSizeParts := strings.SplitN(thumbSize, "x", 2)
-	if len(thumbSizeParts) != 2 {
-		return errors.New("Thumb size must be in WxH format.")
+// thumbSize is in the format:
+// - 0xH  (eg. 0x100)    - resize to H height preserving the aspect ratio
+// - Wx0  (eg. 300x0)    - resize to W width preserving the aspect ratio
+// - WxH  (eg. 300x100)  - resize and crop to WxH viewbox (from center)
+// - WxHt (eg. 300x100t) - resize and crop to WxH viewbox (from top)
+// - WxHb (eg. 300x100b) - resize and crop to WxH viewbox (from bottom)
+// - WxHf (eg. 300x100f) - fit inside a WxH viewbox (without cropping)
+func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) error {
+	sizeParts := ThumbSizeRegex.FindStringSubmatch(thumbSize)
+	if len(sizeParts) != 4 {
+		return errors.New("Thumb size must be in WxH, WxHt, WxHb or WxHf format.")
 	}
 
-	width, _ := strconv.Atoi(thumbSizeParts[0])
-	height, _ := strconv.Atoi(thumbSizeParts[1])
+	width, _ := strconv.Atoi(sizeParts[1])
+	height, _ := strconv.Atoi(sizeParts[2])
+	resizeType := sizeParts[3]
+
+	if width == 0 && height == 0 {
+		return errors.New("Thumb width and height cannot be zero at the same time.")
+	}
 
 	// fetch the original
 	r, readErr := s.bucket.NewReader(s.ctx, originalKey, nil)
@@ -227,14 +277,27 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string, cro
 		return decodeErr
 	}
 
-	// determine crop anchor
-	cropAnchor := imaging.Center
-	if !cropCenter {
-		cropAnchor = imaging.Top
-	}
+	var thumbImg *image.NRGBA
 
-	// create thumb imaging object
-	thumbImg := imaging.Fill(img, width, height, cropAnchor, imaging.CatmullRom)
+	if width == 0 || height == 0 {
+		// force resize preserving aspect ratio
+		thumbImg = imaging.Resize(img, width, height, imaging.CatmullRom)
+	} else {
+		switch resizeType {
+		case "f":
+			// fit
+			thumbImg = imaging.Fit(img, width, height, imaging.CatmullRom)
+		case "t":
+			// fill and crop from top
+			thumbImg = imaging.Fill(img, width, height, imaging.Top, imaging.CatmullRom)
+		case "b":
+			// fill and crop from bottom
+			thumbImg = imaging.Fill(img, width, height, imaging.Bottom, imaging.CatmullRom)
+		default:
+			// fill and crop from center
+			thumbImg = imaging.Fill(img, width, height, imaging.Center, imaging.CatmullRom)
+		}
+	}
 
 	// open a thumb storage writer (aka. prepare for upload)
 	w, writerErr := s.bucket.NewWriter(s.ctx, thumbKey, nil)
@@ -245,7 +308,6 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string, cro
 	// thumb encode (aka. upload)
 	if err := imaging.Encode(w, thumbImg, imaging.PNG); err != nil {
 		w.Close()
-
 		return err
 	}
 

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -84,18 +85,19 @@ type BaseApp struct {
 	onAdminAfterDeleteRequest  *hook.Hook[*AdminDeleteEvent]
 	onAdminAuthRequest         *hook.Hook[*AdminAuthEvent]
 
-	// user api event hooks
-	onUsersListRequest         *hook.Hook[*UsersListEvent]
-	onUserViewRequest          *hook.Hook[*UserViewEvent]
-	onUserBeforeCreateRequest  *hook.Hook[*UserCreateEvent]
-	onUserAfterCreateRequest   *hook.Hook[*UserCreateEvent]
-	onUserBeforeUpdateRequest  *hook.Hook[*UserUpdateEvent]
-	onUserAfterUpdateRequest   *hook.Hook[*UserUpdateEvent]
-	onUserBeforeDeleteRequest  *hook.Hook[*UserDeleteEvent]
-	onUserAfterDeleteRequest   *hook.Hook[*UserDeleteEvent]
-	onUserAuthRequest          *hook.Hook[*UserAuthEvent]
-	onUserBeforeOauth2Register *hook.Hook[*UserOauth2RegisterEvent]
-	onUserAfterOauth2Register  *hook.Hook[*UserOauth2RegisterEvent]
+	//                                    user api event hooks
+	onUsersListRequest                    *hook.Hook[*UsersListEvent]
+	onUserViewRequest                     *hook.Hook[*UserViewEvent]
+	onUserBeforeCreateRequest             *hook.Hook[*UserCreateEvent]
+	onUserAfterCreateRequest              *hook.Hook[*UserCreateEvent]
+	onUserBeforeUpdateRequest             *hook.Hook[*UserUpdateEvent]
+	onUserAfterUpdateRequest              *hook.Hook[*UserUpdateEvent]
+	onUserBeforeDeleteRequest             *hook.Hook[*UserDeleteEvent]
+	onUserAfterDeleteRequest              *hook.Hook[*UserDeleteEvent]
+	onUserAuthRequest                     *hook.Hook[*UserAuthEvent]
+	onUserListExternalAuths               *hook.Hook[*UserListExternalAuthsEvent]
+	onUserBeforeUnlinkExternalAuthRequest *hook.Hook[*UserUnlinkExternalAuthEvent]
+	onUserAfterUnlinkExternalAuthRequest  *hook.Hook[*UserUnlinkExternalAuthEvent]
 
 	// record api event hooks
 	onRecordsListRequest        *hook.Hook[*RecordsListEvent]
@@ -108,14 +110,16 @@ type BaseApp struct {
 	onRecordAfterDeleteRequest  *hook.Hook[*RecordDeleteEvent]
 
 	// collection api event hooks
-	onCollectionsListRequest        *hook.Hook[*CollectionsListEvent]
-	onCollectionViewRequest         *hook.Hook[*CollectionViewEvent]
-	onCollectionBeforeCreateRequest *hook.Hook[*CollectionCreateEvent]
-	onCollectionAfterCreateRequest  *hook.Hook[*CollectionCreateEvent]
-	onCollectionBeforeUpdateRequest *hook.Hook[*CollectionUpdateEvent]
-	onCollectionAfterUpdateRequest  *hook.Hook[*CollectionUpdateEvent]
-	onCollectionBeforeDeleteRequest *hook.Hook[*CollectionDeleteEvent]
-	onCollectionAfterDeleteRequest  *hook.Hook[*CollectionDeleteEvent]
+	onCollectionsListRequest         *hook.Hook[*CollectionsListEvent]
+	onCollectionViewRequest          *hook.Hook[*CollectionViewEvent]
+	onCollectionBeforeCreateRequest  *hook.Hook[*CollectionCreateEvent]
+	onCollectionAfterCreateRequest   *hook.Hook[*CollectionCreateEvent]
+	onCollectionBeforeUpdateRequest  *hook.Hook[*CollectionUpdateEvent]
+	onCollectionAfterUpdateRequest   *hook.Hook[*CollectionUpdateEvent]
+	onCollectionBeforeDeleteRequest  *hook.Hook[*CollectionDeleteEvent]
+	onCollectionAfterDeleteRequest   *hook.Hook[*CollectionDeleteEvent]
+	onCollectionsBeforeImportRequest *hook.Hook[*CollectionsImportEvent]
+	onCollectionsAfterImportRequest  *hook.Hook[*CollectionsImportEvent]
 }
 
 // NewBaseApp creates and returns a new BaseApp instance
@@ -123,7 +127,7 @@ type BaseApp struct {
 //
 // To initialize the app, you need to call `app.Bootsrap()`.
 func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
-	return &BaseApp{
+	app := &BaseApp{
 		dataDir:             dataDir,
 		isDebug:             isDebug,
 		encryptionEnv:       encryptionEnv,
@@ -177,17 +181,18 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onAdminAuthRequest:         &hook.Hook[*AdminAuthEvent]{},
 
 		// user API event hooks
-		onUsersListRequest:         &hook.Hook[*UsersListEvent]{},
-		onUserViewRequest:          &hook.Hook[*UserViewEvent]{},
-		onUserBeforeCreateRequest:  &hook.Hook[*UserCreateEvent]{},
-		onUserAfterCreateRequest:   &hook.Hook[*UserCreateEvent]{},
-		onUserBeforeUpdateRequest:  &hook.Hook[*UserUpdateEvent]{},
-		onUserAfterUpdateRequest:   &hook.Hook[*UserUpdateEvent]{},
-		onUserBeforeDeleteRequest:  &hook.Hook[*UserDeleteEvent]{},
-		onUserAfterDeleteRequest:   &hook.Hook[*UserDeleteEvent]{},
-		onUserAuthRequest:          &hook.Hook[*UserAuthEvent]{},
-		onUserBeforeOauth2Register: &hook.Hook[*UserOauth2RegisterEvent]{},
-		onUserAfterOauth2Register:  &hook.Hook[*UserOauth2RegisterEvent]{},
+		onUsersListRequest:                    &hook.Hook[*UsersListEvent]{},
+		onUserViewRequest:                     &hook.Hook[*UserViewEvent]{},
+		onUserBeforeCreateRequest:             &hook.Hook[*UserCreateEvent]{},
+		onUserAfterCreateRequest:              &hook.Hook[*UserCreateEvent]{},
+		onUserBeforeUpdateRequest:             &hook.Hook[*UserUpdateEvent]{},
+		onUserAfterUpdateRequest:              &hook.Hook[*UserUpdateEvent]{},
+		onUserBeforeDeleteRequest:             &hook.Hook[*UserDeleteEvent]{},
+		onUserAfterDeleteRequest:              &hook.Hook[*UserDeleteEvent]{},
+		onUserAuthRequest:                     &hook.Hook[*UserAuthEvent]{},
+		onUserListExternalAuths:               &hook.Hook[*UserListExternalAuthsEvent]{},
+		onUserBeforeUnlinkExternalAuthRequest: &hook.Hook[*UserUnlinkExternalAuthEvent]{},
+		onUserAfterUnlinkExternalAuthRequest:  &hook.Hook[*UserUnlinkExternalAuthEvent]{},
 
 		// record API event hooks
 		onRecordsListRequest:        &hook.Hook[*RecordsListEvent]{},
@@ -200,15 +205,21 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onRecordAfterDeleteRequest:  &hook.Hook[*RecordDeleteEvent]{},
 
 		// collection API event hooks
-		onCollectionsListRequest:        &hook.Hook[*CollectionsListEvent]{},
-		onCollectionViewRequest:         &hook.Hook[*CollectionViewEvent]{},
-		onCollectionBeforeCreateRequest: &hook.Hook[*CollectionCreateEvent]{},
-		onCollectionAfterCreateRequest:  &hook.Hook[*CollectionCreateEvent]{},
-		onCollectionBeforeUpdateRequest: &hook.Hook[*CollectionUpdateEvent]{},
-		onCollectionAfterUpdateRequest:  &hook.Hook[*CollectionUpdateEvent]{},
-		onCollectionBeforeDeleteRequest: &hook.Hook[*CollectionDeleteEvent]{},
-		onCollectionAfterDeleteRequest:  &hook.Hook[*CollectionDeleteEvent]{},
+		onCollectionsListRequest:         &hook.Hook[*CollectionsListEvent]{},
+		onCollectionViewRequest:          &hook.Hook[*CollectionViewEvent]{},
+		onCollectionBeforeCreateRequest:  &hook.Hook[*CollectionCreateEvent]{},
+		onCollectionAfterCreateRequest:   &hook.Hook[*CollectionCreateEvent]{},
+		onCollectionBeforeUpdateRequest:  &hook.Hook[*CollectionUpdateEvent]{},
+		onCollectionAfterUpdateRequest:   &hook.Hook[*CollectionUpdateEvent]{},
+		onCollectionBeforeDeleteRequest:  &hook.Hook[*CollectionDeleteEvent]{},
+		onCollectionAfterDeleteRequest:   &hook.Hook[*CollectionDeleteEvent]{},
+		onCollectionsBeforeImportRequest: &hook.Hook[*CollectionsImportEvent]{},
+		onCollectionsAfterImportRequest:  &hook.Hook[*CollectionsImportEvent]{},
 	}
+
+	app.registerDefaultHooks()
+
+	return app
 }
 
 // Bootstrap initializes the application
@@ -342,6 +353,7 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 			app.settings.S3.Endpoint,
 			app.settings.S3.AccessKey,
 			app.settings.S3.Secret,
+			app.settings.S3.ForcePathStyle,
 		)
 	}
 
@@ -601,12 +613,16 @@ func (app *BaseApp) OnUserAuthRequest() *hook.Hook[*UserAuthEvent] {
 	return app.onUserAuthRequest
 }
 
-func (app *BaseApp) OnUserBeforeOauth2Register() *hook.Hook[*UserOauth2RegisterEvent] {
-	return app.onUserBeforeOauth2Register
+func (app *BaseApp) OnUserListExternalAuths() *hook.Hook[*UserListExternalAuthsEvent] {
+	return app.onUserListExternalAuths
 }
 
-func (app *BaseApp) OnUserAfterOauth2Register() *hook.Hook[*UserOauth2RegisterEvent] {
-	return app.onUserAfterOauth2Register
+func (app *BaseApp) OnUserBeforeUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent] {
+	return app.onUserBeforeUnlinkExternalAuthRequest
+}
+
+func (app *BaseApp) OnUserAfterUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent] {
+	return app.onUserAfterUnlinkExternalAuthRequest
 }
 
 // -------------------------------------------------------------------
@@ -681,6 +697,14 @@ func (app *BaseApp) OnCollectionAfterDeleteRequest() *hook.Hook[*CollectionDelet
 	return app.onCollectionAfterDeleteRequest
 }
 
+func (app *BaseApp) OnCollectionsBeforeImportRequest() *hook.Hook[*CollectionsImportEvent] {
+	return app.onCollectionsBeforeImportRequest
+}
+
+func (app *BaseApp) OnCollectionsAfterImportRequest() *hook.Hook[*CollectionsImportEvent] {
+	return app.onCollectionsAfterImportRequest
+}
+
 // -------------------------------------------------------------------
 // Helpers
 // -------------------------------------------------------------------
@@ -749,4 +773,34 @@ func (app *BaseApp) createDao(db dbx.Builder) *daos.Dao {
 	}
 
 	return dao
+}
+
+func (app *BaseApp) registerDefaultHooks() {
+	deletePrefix := func(prefix string) error {
+		fs, err := app.NewFilesystem()
+		if err != nil {
+			return err
+		}
+		defer fs.Close()
+
+		failed := fs.DeletePrefix(prefix)
+		if len(failed) > 0 {
+			return errors.New("Failed to delete the files at " + prefix)
+		}
+
+		return nil
+	}
+
+	// delete storage files from deleted Collection, Records, etc.
+	app.OnModelAfterDelete().Add(func(e *ModelEvent) error {
+		if m, ok := e.Model.(models.FilesManager); ok && m.BaseFilesPath() != "" {
+			if err := deletePrefix(m.BaseFilesPath()); err != nil && app.IsDebug() {
+				// non critical error - only log for debug
+				// (usually could happen because of S3 api limits)
+				log.Println(err)
+			}
+		}
+
+		return nil
+	})
 }

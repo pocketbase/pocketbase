@@ -10,6 +10,7 @@
     import Toasts from "@/components/base/Toasts.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import Confirmation from "@/components/base/Confirmation.svelte";
+    import { pageTitle, appName, hideControls } from "@/stores/app";
     import { admin } from "@/stores/admin";
     import { setErrors } from "@/stores/errors";
     import { resetConfirmation } from "@/stores/confirmation";
@@ -17,8 +18,13 @@
     let oldLocation = undefined;
 
     let showAppSidebar = false;
-
+    
     let theme = localStorage.getItem("theme")
+
+    $: if ($admin?.id) {
+        loadSettings();
+    }
+    
 
     function handleRouteLoading(e) {
         if (e?.detail?.location === oldLocation) {
@@ -30,7 +36,7 @@
         oldLocation = e?.detail?.location;
 
         // resets
-        CommonHelper.setDocumentTitle("");
+        $pageTitle = "";
         setErrors({});
         resetConfirmation();
         
@@ -40,6 +46,22 @@
 
     function handleRouteFailure() {
         replace("/");
+    }
+
+    async function loadSettings() {
+        if (!$admin?.id) {
+            return;
+        }
+
+        try {
+            const settings = await ApiClient.settings.getAll({
+                $cancelKey: "initialAppSettings",
+            });
+            $appName = settings?.meta?.appName || "";
+            $hideControls = !!settings?.meta?.hideControls;
+        } catch (err) {
+            console.warn("Failed to load app settings.", err);
+        }
     }
 
     function logout() {
@@ -57,6 +79,10 @@
         else setTheme("dark-theme");
     }
 </script>
+
+<svelte:head>
+    <title>{CommonHelper.joinNonEmpty([$pageTitle, $appName, "PocketBase"], " - ")}</title>
+</svelte:head>
 
 <div class="app-layout">
     {#if $admin?.id && showAppSidebar}
@@ -140,9 +166,9 @@
 
     <div class="app-body">
         <Router {routes} on:routeLoading={handleRouteLoading} on:conditionsFailed={handleRouteFailure} />
+
+        <Toasts />
     </div>
 </div>
-
-<Toasts />
 
 <Confirmation />

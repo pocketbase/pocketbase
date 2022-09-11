@@ -1,35 +1,3 @@
-// footer
-// -------------------------------------------------------------------
-
-.app-footer {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: right;
-    column-gap: var(--smSpacing);
-    font-size: var(--smFontSize);
-    line-height: var(--smLineHeight);
-    color: var(--txtHintColor);
-    .footer-item {
-        display: inline-flex;
-        align-items: center;
-        column-gap: 5px;
-        img {
-            width: 16px;
-        }
-    }
-    a {
-        color: inherit;
-        text-decoration: none;
-        transition: color var(--baseAnimationSpeed);
-        &:focus-visible,
-        &:hover,
-        &:active {
-            color: var(--txtPrimaryColor);
-        }
-    }
-}
-
 // sidebar
 // -------------------------------------------------------------------
 
@@ -187,12 +155,18 @@
         }
     }
     .sidebar-title {
-        @extend %block;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        width: 100%;
         margin: var(--baseSpacing) 0 var(--xsSpacing);
         font-weight: 600;
         font-size: 1rem;
         line-height: var(--smLineHeight);
         color: var(--txtHintColor);
+        .label {
+            font-weight: normal;
+        }
     }
     .sidebar-list-item {
         cursor: pointer;
@@ -319,13 +293,54 @@
     }
 }
 
-.page-wrapper {
+.page-content {
     position: relative;
     display: block;
     width: 100%;
     flex-grow: 1;
     padding: calc(var(--baseSpacing) - 5px) var(--baseSpacing);
+}
+
+.page-footer {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: right;
+    text-align: right;
+    padding: 0px var(--baseSpacing) 15px;
+    color: var(--txtDisabledColor);
+    font-size: var(--xsFontSize);
+    line-height: var(--smLineHeight);
+    i {
+        font-size: 1.2em;
+    }
+    a {
+        color: inherit;
+        text-decoration: none;
+        transition: color var(--baseAnimationSpeed);
+        &:focus-visible,
+        &:hover,
+        &:active {
+            color: var(--txtPrimaryColor);
+        }
+    }
+}
+
+.page-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    width: 100%;
     overflow-x: hidden;
     overflow-y: auto; /* fallback */
     overflow-y: overlay;
+    &.full-page {
+        background: var(--baseColor);
+    }
+    &.center-content {
+        .page-content {
+            display: flex;
+            align-items: center;
+        }
+    }
 }

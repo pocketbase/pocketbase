@@ -1,0 +1,24 @@
+<script>
+    export let center = false;
+
+    let classes = "";
+    export { classes as class }; // export reserved keyword
+</script>
+
+<div class="page-wrapper {classes}" class:center-content={center}>
+    <main class="page-content">
+        <slot />
+    </main>
+
+    <footer class="page-footer">
+        <a
+            href={import.meta.env.PB_RELEASES}
+            class="inline-flex flex-gap-5"
+            target="_blank"
+            rel="noopener"
+            title="Releases"
+        >
+            <span class="txt">PocketBase {import.meta.env.PB_VERSION}</span>
+        </a>
+    </footer>
+</div>

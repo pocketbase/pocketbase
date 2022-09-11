@@ -42,7 +42,7 @@ export async function loadCollections(activeId = null) {
     activeCollection.set({});
     collections.set([]);
 
-    return ApiClient.Collections.getFullList(200, {
+    return ApiClient.collections.getFullList(200, {
         "sort": "+created",
     })
         .then((items) => {

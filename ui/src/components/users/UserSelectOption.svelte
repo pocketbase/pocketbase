@@ -11,5 +11,7 @@
 
 <div class="content">
     <div class="block txt-ellipsis">{item.id}</div>
-    <small class="block txt-hint txt-ellipsis">{item.email}</small>
+    {#if item.email}
+        <small class="block txt-hint txt-ellipsis">{item.email}</small>
+    {/if}
 </div>

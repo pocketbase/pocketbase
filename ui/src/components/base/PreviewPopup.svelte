@@ -1,5 +1,4 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
 
     let panel;
@@ -10,15 +9,9 @@
             return;
         }
 
-        CommonHelper.checkImageUrl(newUrl)
-            .then(() => {
-                url = newUrl;
-                panel?.show();
-            })
-            .catch(() => {
-                console.warn("Invalid image preview url: ", newUrl);
-                hide();
-            });
+        url = newUrl;
+
+        panel?.show();
     }
 
     export function hide() {
@@ -33,11 +26,11 @@
         </div>
     </svelte:fragment>
 
-    <img src={url} alt="Preview" />
+    <img src={url} alt="Preview {url}" />
 
     <svelte:fragment slot="footer">
         <a href={url} title="Download" class="link-hint txt-ellipsis">
-            /../{url.substring(url.lastIndexOf("/") + 1)}
+            {url.substring(url.lastIndexOf("/") + 1)}
         </a>
         <div class="flex-fill" />
         <button type="button" class="btn btn-secondary" on:click={hide}>Close</button>

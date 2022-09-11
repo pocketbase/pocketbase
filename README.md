@@ -29,12 +29,12 @@
 The easiest way to interact with the API is to use one of the official SDK clients:
 
 - **JavaScript - [pocketbase/js-sdk](https://github.com/pocketbase/js-sdk)** (_browser and node_)
-- **Dart** - _soon_
+- **Dart - [pocketbase/dart-sdk](https://github.com/pocketbase/dart-sdk)** (_web, mobile, desktop_)
 
 
 ## Overview
 
-PocketBase could be used as a standalone app or as a Go framework/toolkit that enables you to build
+PocketBase could be [downloaded directly as a standalone app](https://github.com/pocketbase/pocketbase/releases) or it could be used as a Go framework/toolkit which allows you to build
 your own custom app specific business logic and still have a single portable executable at the end.
 
 ### Installation
@@ -91,7 +91,7 @@ Running/building the application is the same as for any other Go program, aka. j
 
 **PocketBase embeds SQLite, but doesn't require CGO.**
 
-If CGO is enabled, it will use [mattn/go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) driver, otherwise - [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite). You can enable and disable CGO by setting the `CGO_ENABLED` enviroment variable to `1` or `0` respectively. 
+If CGO is enabled, it will use [mattn/go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) driver, otherwise - [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite). You can enable and disable CGO by setting the `CGO_ENABLED` environment variable to `1` or `0` respectively.
 
 Enable CGO only if you really need to squeeze the read/write query performance at the expense of complicating cross compilation.
 

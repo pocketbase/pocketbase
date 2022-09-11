@@ -1,8 +1,11 @@
 <script>
+    import { replace, querystring } from "svelte-spa-router";
     import { Collection } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
+    import { pageTitle, hideControls } from "@/stores/app";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
@@ -13,7 +16,9 @@
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordFieldCell from "@/components/records/RecordFieldCell.svelte";
 
-    const queryParams = CommonHelper.getQueryParams(window.location?.href);
+    $pageTitle = "Users";
+
+    const queryParams = new URLSearchParams($querystring);
     const excludedProfileFields = ["id", "userId", "created", "updated"];
 
     let userUpsertPanel;
@@ -23,17 +28,15 @@
     let currentPage = 1;
     let totalItems = 0;
     let isLoadingUsers = false;
-    let filter = queryParams.filter || "";
-    let sort = queryParams.sort || "-created";
+    let filter = queryParams.get("filter") || "";
+    let sort = queryParams.get("sort") || "-created";
     let profileCollection = new Collection();
     let isLoadingProfileCollection = false;
 
     $: if (sort !== -1 && filter !== -1) {
         // keep query params
-        CommonHelper.replaceClientQueryParams({
-            filter: filter,
-            sort: sort,
-        });
+        const query = new URLSearchParams({ filter, sort }).toString();
+        replace("/users?" + query);
 
         loadUsers();
     }
@@ -44,8 +47,6 @@
         (field) => !excludedProfileFields.includes(field.name)
     );
 
-    CommonHelper.setDocumentTitle("Users");
-
     loadProfilesCollection();
 
     export async function loadUsers(page = 1) {
@@ -55,10 +56,11 @@
             clearList();
         }
 
-        return ApiClient.Users.getList(page, 50, {
-            sort: sort || "-created",
-            filter: filter,
-        })
+        return ApiClient.users
+            .getList(page, 50, {
+                sort: sort || "-created",
+                filter: filter,
+            })
             .then((result) => {
                 isLoadingUsers = false;
                 users = users.concat(result.items);
@@ -93,7 +95,7 @@
         isLoadingProfileCollection = true;
 
         try {
-            profileCollection = await ApiClient.Collections.getOne(import.meta.env.PB_PROFILE_COLLECTION);
+            profileCollection = await ApiClient.collections.getOne(import.meta.env.PB_PROFILE_COLLECTION);
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
@@ -102,26 +104,28 @@
     }
 </script>
 
-{#if isLoadingProfileCollection}
-    <div class="placeholder-section m-b-base">
-        <span class="loader loader-lg" />
-        <h1>Loading users...</h1>
-    </div>
-{:else}
-    <main class="page-wrapper">
+<PageWrapper>
+    {#if isLoadingProfileCollection}
+        <div class="placeholder-section m-b-base">
+            <span class="loader loader-lg" />
+            <h1>Loading users...</h1>
+        </div>
+    {:else}
         <header class="page-header">
             <nav class="breadcrumbs">
-                <div class="breadcrumb-item">Users</div>
+                <div class="breadcrumb-item">{$pageTitle}</div>
             </nav>
 
-            <button
-                type="button"
-                class="btn btn-secondary btn-circle"
-                use:tooltip={{ text: "Edit profile collection", position: "right" }}
-                on:click={() => collectionUpsertPanel?.show(profileCollection)}
-            >
-                <i class="ri-settings-4-line" />
-            </button>
+            {#if !$hideControls}
+                <button
+                    type="button"
+                    class="btn btn-secondary btn-circle"
+                    use:tooltip={{ text: "Edit profile collection", position: "right" }}
+                    on:click={() => collectionUpsertPanel?.show(profileCollection)}
+                >
+                    <i class="ri-settings-4-line" />
+                </button>
+            {/if}
 
             <RefreshButton on:refresh={() => loadUsers()} />
 
@@ -193,16 +197,21 @@
 
                             <td class="col-type-email col-field-email">
                                 <div class="inline-flex">
-                                    <span class="txt" title={user.email}>
-                                        {user.email}
-                                    </span>
-                                    <span
-                                        class="label"
-                                        class:label-success={user.verified}
-                                        class:label-warning={!user.verified}
-                                    >
-                                        {user.verified ? "Verified" : "Unverified"}
-                                    </span>
+                                    {#if user.email}
+                                        <span class="txt" title={user.email}>{user.email}</span>
+                                        <span
+                                            class="label"
+                                            class:label-success={user.verified}
+                                            class:label-warning={!user.verified}
+                                        >
+                                            {user.verified ? "Verified" : "Unverified"}
+                                        </span>
+                                    {:else}
+                                        <div class="txt-hint">N/A</div>
+                                        {#if user.verified}
+                                            <span class="label label-success">OAuth2 verified</span>
+                                        {/if}
+                                    {/if}
                                 </div>
                             </td>
 
@@ -282,8 +291,8 @@
                 </button>
             </div>
         {/if}
-    </main>
-{/if}
+    {/if}
+</PageWrapper>
 
 <UserUpsertPanel bind:this={userUpsertPanel} on:save={() => loadUsers()} on:delete={() => loadUsers()} />
 

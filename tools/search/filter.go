@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/store"
+	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 
@@ -98,17 +99,9 @@ func (f FilterData) resolveTokenizedExpr(expr fexpr.Expr, fieldResolver FieldRes
 
 	switch expr.Op {
 	case fexpr.SignEq:
-		op := "="
-		if strings.ToLower(lName) == "null" || strings.ToLower(rName) == "null" {
-			op = "IS"
-		}
-		return dbx.NewExp(fmt.Sprintf("%s %s %s", lName, op, rName), params), nil
+		return dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') = COALESCE(%s, '')", lName, rName), params), nil
 	case fexpr.SignNeq:
-		op := "!="
-		if strings.ToLower(lName) == "null" || strings.ToLower(rName) == "null" {
-			op = "IS NOT"
-		}
-		return dbx.NewExp(fmt.Sprintf("%s %s %s", lName, op, rName), params), nil
+		return dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') != COALESCE(%s, '')", lName, rName), params), nil
 	case fexpr.SignLike:
 		// normalize operands and switch sides if the left operand is a number or text
 		if len(lParams) > 0 {
@@ -137,6 +130,18 @@ func (f FilterData) resolveTokenizedExpr(expr fexpr.Expr, fieldResolver FieldRes
 func (f FilterData) resolveToken(token fexpr.Token, fieldResolver FieldResolver) (name string, params dbx.Params, err error) {
 	switch token.Type {
 	case fexpr.TokenIdentifier:
+		// current datetime constant
+		// ---
+		if token.Literal == "@now" {
+			placeholder := "t" + security.RandomString(7)
+			name := fmt.Sprintf("{:%s}", placeholder)
+			params := dbx.Params{placeholder: types.NowDateTime().String()}
+
+			return name, params, nil
+		}
+
+		// custom resolver
+		// ---
 		name, params, err := fieldResolver.Resolve(token.Literal)
 
 		if name == "" || err != nil {
@@ -155,10 +160,16 @@ func (f FilterData) resolveToken(token fexpr.Token, fieldResolver FieldResolver)
 		}
 
 		return name, params, err
-	case fexpr.TokenNumber, fexpr.TokenText:
+	case fexpr.TokenText:
 		placeholder := "t" + security.RandomString(7)
 		name := fmt.Sprintf("{:%s}", placeholder)
 		params := dbx.Params{placeholder: token.Literal}
+
+		return name, params, nil
+	case fexpr.TokenNumber:
+		placeholder := "t" + security.RandomString(7)
+		name := fmt.Sprintf("{:%s}", placeholder)
+		params := dbx.Params{placeholder: cast.ToFloat64(token.Literal)}
 
 		return name, params, nil
 	}

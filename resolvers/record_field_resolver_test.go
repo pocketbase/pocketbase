@@ -2,11 +2,12 @@ package resolvers_test
 
 import (
 	"encoding/json"
-	"strings"
+	"regexp"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/list"
 )
 
 func TestRecordFieldResolverUpdateQuery(t *testing.T) {
@@ -18,54 +19,94 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	requestData := map[string]any{
+		"user": map[string]any{
+			"id": "4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
+			"profile": map[string]any{
+				"id":   "d13f60a4-5765-48c7-9e1d-3e782340f833",
+				"name": "test",
+			},
+		},
+	}
+
 	scenarios := []struct {
-		fieldName        string
-		expectQueryParts []string // we are matching parts of the query
-		// since joins are added with map iteration and the order is not guaranteed
+		name        string
+		fields      []string
+		expectQuery string
 	}{
-		// missing field
-		{"", []string{
+		{
+			"missing field",
+			[]string{""},
 			"SELECT `demo4`.* FROM `demo4`",
-		}},
-		// non relation field
-		{"title", []string{
+		},
+		{
+			"non relation field",
+			[]string{"title"},
 			"SELECT `demo4`.* FROM `demo4`",
-		}},
-		// incomplete rel
-		{"onerel", []string{
+		},
+		{
+			"incomplete rel",
+			[]string{"onerel"},
 			"SELECT `demo4`.* FROM `demo4`",
-		}},
-		// single rel
-		{"onerel.title", []string{
-			"SELECT DISTINCT `demo4`.* FROM `demo4`",
-			" LEFT JOIN `demo4` `demo4_onerel` ON [[demo4.onerel]] LIKE ('%' || [[demo4_onerel.id]] || '%')",
-		}},
-		// nested incomplete rels
-		{"manyrels.onerel", []string{
-			"SELECT DISTINCT `demo4`.* FROM `demo4`",
-			" LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%')",
-		}},
-		// nested complete rels
-		{"manyrels.onerel.title", []string{
-			"SELECT DISTINCT `demo4`.* FROM `demo4`",
-			" LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%')",
-			" LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel.id]] || '%')",
-		}},
-		// // repeated nested rels
-		{"manyrels.onerel.manyrels.onerel.title", []string{
-			"SELECT DISTINCT `demo4`.* FROM `demo4`",
-			" LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%')",
-			" LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel.id]] || '%')",
-			" LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels` ON [[demo4_manyrels_onerel.manyrels]] LIKE ('%' || [[demo4_manyrels_onerel_manyrels.id]] || '%')",
-			" LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels_onerel` ON [[demo4_manyrels_onerel_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel_manyrels_onerel.id]] || '%')",
-		}},
+		},
+		{
+			"single rel",
+			[]string{"onerel.title"},
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4.onerel]] LIKE ('%' || [[demo4_onerel.id]] || '%')",
+		},
+		{
+			"non-relation field + single rel",
+			[]string{"title", "onerel.title"},
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4.onerel]] LIKE ('%' || [[demo4_onerel.id]] || '%')",
+		},
+		{
+			"nested incomplete rels",
+			[]string{"manyrels.onerel"},
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%')",
+		},
+		{
+			"nested complete rels",
+			[]string{"manyrels.onerel.title"},
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%') LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel.id]] || '%')",
+		},
+		{
+			"repeated nested rels",
+			[]string{"manyrels.onerel.manyrels.onerel.title"},
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%') LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel.id]] || '%') LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels` ON [[demo4_manyrels_onerel.manyrels]] LIKE ('%' || [[demo4_manyrels_onerel_manyrels.id]] || '%') LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels_onerel` ON [[demo4_manyrels_onerel_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel_manyrels_onerel.id]] || '%')",
+		},
+		{
+			"multiple rels",
+			[]string{"manyrels.title", "onerel.onefile"},
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%') LEFT JOIN `demo4` `demo4_onerel` ON [[demo4.onerel]] LIKE ('%' || [[demo4_onerel.id]] || '%')",
+		},
+		{
+			"@collection join",
+			[]string{"@collection.demo.title", "@collection.demo2.text", "@collection.demo.file"},
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo` `__collection_demo` LEFT JOIN `demo2` `__collection_demo2`",
+		},
+		{
+			"static @request.user.profile fields",
+			[]string{"@request.user.id", "@request.user.profile.id", "@request.data.demo"},
+			"SELECT `demo4`.* FROM `demo4`",
+		},
+		{
+			"relational @request.user.profile fields",
+			[]string{"@request.user.profile.rel.id", "@request.user.profile.rel.name"},
+			"^" +
+				regexp.QuoteMeta("SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `profiles` `__user_profiles` ON [[__user_profiles.id]] =") +
+				" {:.*} " +
+				regexp.QuoteMeta("LEFT JOIN `profiles` `__user_profiles_rel` ON [[__user_profiles.rel]] LIKE ('%' || [[__user_profiles_rel.id]] || '%')") +
+				"$",
+		},
 	}
 
 	for i, s := range scenarios {
 		query := app.Dao().RecordQuery(collection)
 
-		r := resolvers.NewRecordFieldResolver(app.Dao(), collection, nil)
-		r.Resolve(s.fieldName)
+		r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData)
+		for _, field := range s.fields {
+			r.Resolve(field)
+		}
 
 		if err := r.UpdateQuery(query); err != nil {
 			t.Errorf("(%d) UpdateQuery failed with error %v", i, err)
@@ -74,16 +115,8 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 
 		rawQuery := query.Build().SQL()
 
-		partsLength := 0
-		for _, part := range s.expectQueryParts {
-			partsLength += len(part)
-			if !strings.Contains(rawQuery, part) {
-				t.Errorf("(%d) Part %v is missing from query \n%v", i, part, rawQuery)
-			}
-		}
-
-		if partsLength != len(rawQuery) {
-			t.Errorf("(%d) Expected %d characters, got %d in \n%v", i, partsLength, len(rawQuery), rawQuery)
+		if !list.ExistInSliceWithRegex(rawQuery, []string{s.expectQuery}) {
+			t.Errorf("(%d) Expected query\n %v \ngot:\n %v", i, s.expectQuery, rawQuery)
 		}
 	}
 }
@@ -97,7 +130,16 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, nil)
+	requestData := map[string]any{
+		"user": map[string]any{
+			"id": "4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
+			"profile": map[string]any{
+				"id": "d13f60a4-5765-48c7-9e1d-3e782340f833",
+			},
+		},
+	}
+
+	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData)
 
 	scenarios := []struct {
 		fieldName   string
@@ -118,42 +160,45 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		{"manyrels.unknown", true, ""},
 		{"manyrels.title", false, "[[demo4_manyrels.title]]"},
 		{"manyrels.onerel.manyrels.onefile", false, "[[demo4_manyrels_onerel_manyrels.onefile]]"},
+		// @request.user.profile relation join:
+		{"@request.user.profile.rel.name", false, "[[__user_profiles_rel.name]]"},
+		// @collection fieds:
 		{"@collect", true, ""},
 		{"collection.demo4.title", true, ""},
 		{"@collection", true, ""},
 		{"@collection.unknown", true, ""},
 		{"@collection.demo", true, ""},
 		{"@collection.demo.", true, ""},
-		{"@collection.demo.title", false, "[[c_demo.title]]"},
-		{"@collection.demo4.title", false, "[[c_demo4.title]]"},
-		{"@collection.demo4.id", false, "[[c_demo4.id]]"},
-		{"@collection.demo4.created", false, "[[c_demo4.created]]"},
-		{"@collection.demo4.updated", false, "[[c_demo4.updated]]"},
+		{"@collection.demo.title", false, "[[__collection_demo.title]]"},
+		{"@collection.demo4.title", false, "[[__collection_demo4.title]]"},
+		{"@collection.demo4.id", false, "[[__collection_demo4.id]]"},
+		{"@collection.demo4.created", false, "[[__collection_demo4.created]]"},
+		{"@collection.demo4.updated", false, "[[__collection_demo4.updated]]"},
 		{"@collection.demo4.manyrels.missing", true, ""},
-		{"@collection.demo4.manyrels.onerel.manyrels.onerel.onefile", false, "[[c_demo4_manyrels_onerel_manyrels_onerel.onefile]]"},
+		{"@collection.demo4.manyrels.onerel.manyrels.onerel.onefile", false, "[[__collection_demo4_manyrels_onerel_manyrels_onerel.onefile]]"},
 	}
 
-	for i, s := range scenarios {
+	for _, s := range scenarios {
 		name, params, err := r.Resolve(s.fieldName)
 
 		hasErr := err != nil
 		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected hasErr %v, got %v (%v)", i, s.expectError, hasErr, err)
+			t.Errorf("(%q) Expected hasErr %v, got %v (%v)", s.fieldName, s.expectError, hasErr, err)
 			continue
 		}
 
 		if name != s.expectName {
-			t.Errorf("(%d) Expected name %q, got %q", i, s.expectName, name)
+			t.Errorf("(%q) Expected name %q, got %q", s.fieldName, s.expectName, name)
 		}
 
 		// params should be empty for non @request fields
 		if len(params) != 0 {
-			t.Errorf("(%d) Expected 0 params, got %v", i, params)
+			t.Errorf("(%q) Expected 0 params, got %v", s.fieldName, params)
 		}
 	}
 }
 
-func TestRecordFieldResolverResolveRequestDataFields(t *testing.T) {
+func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -171,7 +216,13 @@ func TestRecordFieldResolverResolveRequestDataFields(t *testing.T) {
 			"b": 456,
 			"c": map[string]int{"sub": 1},
 		},
-		"user": nil,
+		"user": map[string]any{
+			"id": "4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
+			"profile": map[string]any{
+				"id":   "d13f60a4-5765-48c7-9e1d-3e782340f833",
+				"name": "test",
+			},
+		},
 	}
 
 	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData)
@@ -194,7 +245,9 @@ func TestRecordFieldResolverResolveRequestDataFields(t *testing.T) {
 		{"@request.data.b.missing", false, ``},
 		{"@request.data.c", false, `"{\"sub\":1}"`},
 		{"@request.user", true, ""},
-		{"@request.user.id", false, ""},
+		{"@request.user.id", false, `"4d0197cc-2b4a-3f83-a26b-d77bc8423d3c"`},
+		{"@request.user.profile", false, `"{\"id\":\"d13f60a4-5765-48c7-9e1d-3e782340f833\",\"name\":\"test\"}"`},
+		{"@request.user.profile.name", false, `"test"`},
 	}
 
 	for i, s := range scenarios {

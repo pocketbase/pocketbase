@@ -7,6 +7,16 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
+func TestAdminLoginPanic(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("The form did not panic")
+		}
+	}()
+
+	forms.NewAdminLogin(nil)
+}
+
 func TestAdminLoginValidate(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

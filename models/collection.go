@@ -3,6 +3,7 @@ package models
 import "github.com/pocketbase/pocketbase/models/schema"
 
 var _ Model = (*Collection)(nil)
+var _ FilesManager = (*Collection)(nil)
 
 type Collection struct {
 	BaseModel

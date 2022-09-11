@@ -152,12 +152,13 @@
                 name={prop}
                 let:uniqueId
             >
-                <label for={uniqueId} on:click={() => editorRefs[prop]?.focus()}>
+                <label for={uniqueId}>
                     {label} - {isAdminOnly(collection[prop]) ? "Admins only" : "Custom rule"}
                 </label>
 
                 <svelte:component
                     this={ruleInputComponent}
+                    id={uniqueId}
                     bind:this={editorRefs[prop]}
                     bind:value={collection[prop]}
                     baseCollection={collection}

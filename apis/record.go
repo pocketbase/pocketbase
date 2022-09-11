@@ -52,10 +52,9 @@ func (api *recordApi) list(c echo.Context) error {
 		return rest.NewForbiddenError("Only admins can perform this action.", nil)
 	}
 
-	// forbid user/guest defined non-relational joins (aka. @collection.*)
-	queryStr := c.QueryString()
-	if admin == nil && queryStr != "" && (strings.Contains(queryStr, "@collection") || strings.Contains(queryStr, "%40collection")) {
-		return rest.NewForbiddenError("Only admins can filter by @collection.", nil)
+	// forbid users and guests to query special filter/sort fields
+	if err := api.checkForForbiddenQueryFields(c); err != nil {
+		return err
 	}
 
 	requestData := api.exportRequestData(c)
@@ -63,14 +62,15 @@ func (api *recordApi) list(c echo.Context) error {
 	fieldsResolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData)
 
 	searchProvider := search.NewProvider(fieldsResolver).
-		Query(api.app.Dao().RecordQuery(collection))
+		Query(api.app.Dao().RecordQuery(collection)).
+		CountColumn(fmt.Sprintf("%s.id", api.app.Dao().DB().QuoteSimpleColumnName(collection.Name)))
 
 	if admin == nil && collection.ListRule != nil {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
 	var rawRecords = []dbx.NullStringMap{}
-	result, err := searchProvider.ParseAndExec(queryStr, &rawRecords)
+	result, err := searchProvider.ParseAndExec(c.QueryString(), &rawRecords)
 	if err != nil {
 		return rest.NewBadRequestError("Invalid filter parameters.", err)
 	}
@@ -80,13 +80,13 @@ func (api *recordApi) list(c echo.Context) error {
 	// expand records relations
 	expands := strings.Split(c.QueryParam(expandQueryParam), ",")
 	if len(expands) > 0 {
-		expandErr := api.app.Dao().ExpandRecords(
+		failed := api.app.Dao().ExpandRecords(
 			records,
 			expands,
 			api.expandFunc(c, requestData),
 		)
-		if expandErr != nil && api.app.IsDebug() {
-			log.Println("Failed to expand relations: ", expandErr)
+		if len(failed) > 0 && api.app.IsDebug() {
+			log.Println("Failed to expand relations: ", failed)
 		}
 	}
 
@@ -141,16 +141,14 @@ func (api *recordApi) view(c echo.Context) error {
 		return rest.NewNotFoundError("", fetchErr)
 	}
 
-	expands := strings.Split(c.QueryParam(expandQueryParam), ",")
-	if len(expands) > 0 {
-		expandErr := api.app.Dao().ExpandRecord(
-			record,
-			expands,
-			api.expandFunc(c, requestData),
-		)
-		if expandErr != nil && api.app.IsDebug() {
-			log.Println("Failed to expand relations: ", expandErr)
-		}
+	// expand record relations
+	failed := api.app.Dao().ExpandRecord(
+		record,
+		strings.Split(c.QueryParam(expandQueryParam), ","),
+		api.expandFunc(c, requestData),
+	)
+	if len(failed) > 0 && api.app.IsDebug() {
+		log.Println("Failed to expand relations: ", failed)
 	}
 
 	event := &core.RecordViewEvent{
@@ -226,6 +224,16 @@ func (api *recordApi) create(c echo.Context) error {
 					return rest.NewBadRequestError("Failed to create record.", err)
 				}
 
+				// expand record relations
+				failed := api.app.Dao().ExpandRecord(
+					e.Record,
+					strings.Split(e.HttpContext.QueryParam(expandQueryParam), ","),
+					api.expandFunc(e.HttpContext, requestData),
+				)
+				if len(failed) > 0 && api.app.IsDebug() {
+					log.Println("Failed to expand relations: ", failed)
+				}
+
 				return e.HttpContext.JSON(http.StatusOK, e.Record)
 			})
 		}
@@ -296,6 +304,16 @@ func (api *recordApi) update(c echo.Context) error {
 					return rest.NewBadRequestError("Failed to update record.", err)
 				}
 
+				// expand record relations
+				failed := api.app.Dao().ExpandRecord(
+					e.Record,
+					strings.Split(e.HttpContext.QueryParam(expandQueryParam), ","),
+					api.expandFunc(e.HttpContext, requestData),
+				)
+				if len(failed) > 0 && api.app.IsDebug() {
+					log.Println("Failed to expand relations: ", failed)
+				}
+
 				return e.HttpContext.JSON(http.StatusOK, e.Record)
 			})
 		}
@@ -356,13 +374,6 @@ func (api *recordApi) delete(c echo.Context) error {
 			return rest.NewBadRequestError("Failed to delete record. Make sure that the record is not part of a required relation reference.", err)
 		}
 
-		// try to delete the record files
-		if err := api.deleteRecordFiles(e.Record); err != nil && api.app.IsDebug() {
-			// non critical error - only log for debug
-			// (usually could happen due to S3 api limits)
-			log.Println(err)
-		}
-
 		return e.HttpContext.NoContent(http.StatusNoContent)
 	})
 
@@ -371,21 +382,6 @@ func (api *recordApi) delete(c echo.Context) error {
 	}
 
 	return handlerErr
-}
-
-func (api *recordApi) deleteRecordFiles(record *models.Record) error {
-	fs, err := api.app.NewFilesystem()
-	if err != nil {
-		return err
-	}
-	defer fs.Close()
-
-	failed := fs.DeletePrefix(record.BaseFilesPath())
-	if len(failed) > 0 {
-		return fmt.Errorf("Failed to delete %d record files.", len(failed))
-	}
-
-	return nil
 }
 
 func (api *recordApi) exportRequestData(c echo.Context) map[string]any {
@@ -409,6 +405,24 @@ func (api *recordApi) exportRequestData(c echo.Context) map[string]any {
 	}
 
 	return result
+}
+
+func (api *recordApi) checkForForbiddenQueryFields(c echo.Context) error {
+	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
+	if admin != nil {
+		return nil // admins are allowed to query everything
+	}
+
+	decodedQuery := c.QueryParam(search.FilterQueryParam) + c.QueryParam(search.SortQueryParam)
+	forbiddenFields := []string{"@collection.", "@request."}
+
+	for _, field := range forbiddenFields {
+		if strings.Contains(decodedQuery, field) {
+			return rest.NewForbiddenError("Only admins can filter by @collection and @request query params", nil)
+		}
+	}
+
+	return nil
 }
 
 func (api *recordApi) expandFunc(c echo.Context, requestData map[string]any) daos.ExpandFetchFunc {
