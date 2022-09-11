@@ -30,13 +30,14 @@ type Settings struct {
 	UserEmailChangeToken    TokenConfig `form:"userEmailChangeToken" json:"userEmailChangeToken"`
 	UserVerificationToken   TokenConfig `form:"userVerificationToken" json:"userVerificationToken"`
 
-	EmailAuth    EmailAuthConfig    `form:"emailAuth" json:"emailAuth"`
-	GoogleAuth   AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
-	FacebookAuth AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
-	GithubAuth   AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
-	GitlabAuth   AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
-	DiscordAuth  AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
-	TwitterAuth  AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
+	EmailAuth		EmailAuthConfig    `form:"emailAuth" json:"emailAuth"`
+	GoogleAuth		AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
+	FacebookAuth	AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
+	GithubAuth		AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
+	GitlabAuth		AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
+	DiscordAuth		AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
+	TwitterAuth		AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
+	InstagramAuth	AuthProviderConfig `form:"instagramAuth" json:"instagramAuth"`
 }
 
 // NewSettings creates and returns a new default Settings instance.
@@ -116,6 +117,10 @@ func NewSettings() *Settings {
 			Enabled:            false,
 			AllowRegistrations: true,
 		},
+		InstagramAuth: AuthProviderConfig{
+			Enabled:            false,
+			AllowRegistrations: true,
+		},
 	}
 }
 
@@ -142,6 +147,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.GitlabAuth),
 		validation.Field(&s.DiscordAuth),
 		validation.Field(&s.TwitterAuth),
+		validation.Field(&s.InstagramAuth),
 	)
 }
 
@@ -192,6 +198,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.GitlabAuth.ClientSecret,
 		&clone.DiscordAuth.ClientSecret,
 		&clone.TwitterAuth.ClientSecret,
+		&clone.InstagramAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -211,12 +218,13 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 	defer s.mux.RUnlock()
 
 	return map[string]AuthProviderConfig{
-		auth.NameGoogle:   s.GoogleAuth,
-		auth.NameFacebook: s.FacebookAuth,
-		auth.NameGithub:   s.GithubAuth,
-		auth.NameGitlab:   s.GitlabAuth,
-		auth.NameDiscord:  s.DiscordAuth,
-		auth.NameTwitter:  s.TwitterAuth,
+		auth.NameGoogle:    s.GoogleAuth,
+		auth.NameFacebook:  s.FacebookAuth,
+		auth.NameGithub:    s.GithubAuth,
+		auth.NameGitlab:    s.GitlabAuth,
+		auth.NameDiscord:   s.DiscordAuth,
+		auth.NameTwitter:   s.TwitterAuth,
+		auth.NameInstagram: s.InstagramAuth,
 	}
 }
 

@@ -28,4 +28,8 @@ export default {
         title: "Discord",
         icon:  "ri-discord-fill",
     },
+    instagramAuth: {
+        title: "Instagram",
+        icon:  "ri-instagram-fill",
+    },
 };
