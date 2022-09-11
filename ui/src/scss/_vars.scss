@@ -6,6 +6,7 @@
     --txtPrimaryColor:  #16161a;
     --txtHintColor:     #666f75;
     --txtDisabledColor: #adb3b8;
+    --txtAlt1Color:  #16161a;
 
     --primaryColor: #16161a;
 
@@ -25,6 +26,9 @@
     --dangerAltColor:  #fcdee4;
     --warningColor:    #ff8e3c;
     --warningAltColor: #ffe7d6;
+
+    --btnPrimaryColor: #16161a;
+    --codeWrapper: #edf0f3;
 
     --overlayColor:   rgba(88, 95, 101, 0.3);
     --tooltipColor:   rgba(0, 0, 0, 0.85);
@@ -69,6 +73,43 @@
 
     // https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color
     accent-color: var(--primaryColor);
+
+    &.dark-theme{
+        --baseFontFamily: 'Source Sans Pro', sans-serif, emoji;
+        --monospaceFontFamily: 'Ubuntu Mono', monospace, emoji;
+        --iconFontFamily: 'remixicon';
+    
+        --txtPrimaryColor:  #FAFAFA;
+        --txtHintColor:     #CECECE;
+        --txtDisabledColor: #acacac;
+        --txtAlt1Color:  #16161a;
+    
+        --primaryColor: #FAFAFA;
+    
+        --bodyColor: #31353f;
+    
+        --baseColor:     #202229;
+        --baseAlt1Color: #30343d;
+        --baseAlt2Color: #414553;
+        --baseAlt3Color: #a9b4bc;
+        --baseAlt4Color: #7c868d;
+    
+        --infoColor:       #3da9fc;
+        --infoAltColor:    #d8eefe;
+        --successColor:    #2cb67d;
+        --successAltColor: #d6f5e8;
+        --dangerColor:     #ef4565;
+        --dangerAltColor:  #fcdee4;
+        --warningColor:    #ff8e3c;
+        --warningAltColor: #ffe7d6;
+
+        --btnPrimaryColor: #16161a;
+        --codeWrapper: #16161a;
+    
+        --overlayColor:   rgba(88, 95, 101, 0.3);
+        --tooltipColor:   rgba(0, 0, 0, 0.85);
+        --shadowColor:    rgba(0, 0, 0, 0.05);
+    }
 }
 
 // Maps

@@ -84,13 +84,13 @@
     &.active {
         @include shadowize();
         .accordion-header {
-            color: var(--baseColor);
-            box-shadow: 0px 0px 0px 1px var(--primaryColor);
+            color: var(--txtPrimaryColor);
+            box-shadow: 0px 0px 0px 1px var(--btnPrimaryColor);
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
             background: var(--primaryColor);
             &.interactive{
-                background: var(--primaryColor);
+                background: var(--btnPrimaryColor);
                 &:after {
                     color: inherit;
                     content: '\ea78';

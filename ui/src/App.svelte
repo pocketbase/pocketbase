@@ -18,6 +18,8 @@
 
     let showAppSidebar = false;
 
+    let theme = localStorage.getItem("theme")
+
     function handleRouteLoading(e) {
         if (e?.detail?.location === oldLocation) {
             return; // not an actual change
@@ -31,6 +33,9 @@
         CommonHelper.setDocumentTitle("");
         setErrors({});
         resetConfirmation();
+        
+        if (theme === "dark-theme") setTheme("dark-theme");
+        else setTheme("light-theme");
     }
 
     function handleRouteFailure() {
@@ -39,6 +44,17 @@
 
     function logout() {
         ApiClient.logout();
+    }
+
+    function setTheme(themeName) {
+        localStorage.setItem("theme", themeName);
+        document.documentElement.className = themeName;
+    }
+
+    function toggleTheme() {
+        let _theme = localStorage.getItem("theme")
+        if (_theme === "dark-theme") setTheme("light-theme");
+        else setTheme("dark-theme");
     }
 </script>
 
@@ -107,6 +123,11 @@
                         <i class="ri-shield-user-line" />
                         <span class="txt">Manage admins</span>
                     </a>
+                    <hr />
+                    <div tabindex="0" class="dropdown-item closable" on:click={toggleTheme}>
+                        <i class="ri-brush-line" />
+                        <span class="txt">change theme</span>
+                    </div>
                     <hr />
                     <div tabindex="0" class="dropdown-item closable" on:click={logout}>
                         <i class="ri-logout-circle-line" />

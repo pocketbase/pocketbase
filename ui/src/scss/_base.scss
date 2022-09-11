@@ -425,15 +425,19 @@ a,
         background: var(--primaryColor);
     }
     &.label-info {
+        color: var(--txtAlt1Color);
         background: var(--infoAltColor);
     }
     &.label-success {
+        color: var(--txtAlt1Color);
         background: var(--successAltColor);
     }
     &.label-danger {
+        color: var(--txtAlt1Color);
         background: var(--dangerAltColor);
     }
     &.label-warning {
+        color: var(--txtAlt1Color);
         background: var(--warningAltColor);
     }
 }

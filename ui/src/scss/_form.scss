@@ -53,7 +53,7 @@ button {
         height: 100%;
         pointer-events: none;
         user-select: none;
-        background: var(--primaryColor);
+        background: var(--btnPrimaryColor);
         transition: filter var(--baseAnimationSpeed),
                     opacity var(--baseAnimationSpeed),
                     transform var(--baseAnimationSpeed),
@@ -107,7 +107,7 @@ button {
     // secondary/bordered styles
     &.btn-outline {
         border: 2px solid currentColor;
-        background: #fff;
+        background: var(--baseColor);
     }
     &.btn-secondary,
     &.btn-outline {

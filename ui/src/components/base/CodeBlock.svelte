@@ -45,6 +45,6 @@
     }
     .prism-light code {
         color: var(--txtPrimaryColor);
-        background: var(--baseAlt1Color);
+        background: var(--codeWrapper);
     }
 </style>

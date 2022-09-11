@@ -13,7 +13,7 @@
     border-radius: var(--baseRadius);
     padding: ($padding - 3) $padding;
     background: var(--baseAlt1Color);
-    color: var(--txtAltColor);
+    color: var(--txtPrimaryColor);
     .content {
         flex-grow: 1;
     }
@@ -73,11 +73,27 @@
         .icon {
             color: var(--infoColor);
         }
+        .txt-hint {
+            color: var(--baseAlt4Color) !important;
+        }
+        div,
+        p,
+        code {
+            color: var(--txtAlt1Color) !important
+        }
     }
     &.alert-warning {
         background: var(--warningAltColor);
         .icon {
             color: var(--warningColor);
+        }
+        .txt-hint {
+            color: var(--baseAlt4Color) !important;
+        }
+        div,
+        p,
+        code {
+            color: var(--txtAlt1Color) !important
         }
     }
     &.alert-success {
@@ -85,11 +101,27 @@
         .icon {
             color: var(--successColor);
         }
+        .txt-hint {
+            color: var(--baseAlt4Color) !important;
+        }
+        div,
+        p,
+        code {
+            color: var(--txtAlt1Color) !important
+        }
     }
     &.alert-danger {
         background: var(--dangerAltColor);
         .icon {
             color: var(--dangerColor);
+        }
+        .txt-hint {
+            color: var(--baseAlt4Color) !important;
+        }
+        div,
+        p,
+        code {
+            color: var(--txtAlt1Color) !important
         }
     }
 }
