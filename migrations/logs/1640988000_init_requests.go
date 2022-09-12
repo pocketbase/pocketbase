@@ -35,6 +35,7 @@ func init() {
 			CREATE INDEX _request_auth_idx on {{_requests}} ([[auth]]);
 			CREATE INDEX _request_ip_idx on {{_requests}} ([[ip]]);
 		`).Execute()
+		// TODO: Enable this again, by changing to to_date
 		//CREATE INDEX _request_created_hour_idx on {{_requests}} (strftime('%Y-%m-%d %H:00:00', [[created]]));
 
 		return err
