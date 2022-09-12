@@ -36,7 +36,6 @@ type BaseApp struct {
 	settings            *Settings
 	db                  *dbx.DB
 	dao                 *daos.Dao
-	logsDB              *dbx.DB
 	logsDao             *daos.Dao
 	subscriptionsBroker *subscriptions.Broker
 
@@ -235,11 +234,7 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	if err := app.initDataDB(); err != nil {
-		return err
-	}
-
-	if err := app.initLogsDB(); err != nil {
+	if err := app.initDB(); err != nil {
 		return err
 	}
 
@@ -255,12 +250,6 @@ func (app *BaseApp) Bootstrap() error {
 func (app *BaseApp) ResetBootstrapState() error {
 	if app.db != nil {
 		if err := app.db.Close(); err != nil {
-			return err
-		}
-	}
-
-	if app.logsDB != nil {
-		if err := app.logsDB.Close(); err != nil {
 			return err
 		}
 	}
@@ -284,7 +273,7 @@ func (app *BaseApp) Dao() *daos.Dao {
 
 // LogsDB returns the app logs database instance.
 func (app *BaseApp) LogsDB() *dbx.DB {
-	return app.logsDB
+	return app.db
 }
 
 // LogsDao returns the app logs Dao instance.
@@ -709,21 +698,15 @@ func (app *BaseApp) OnCollectionsAfterImportRequest() *hook.Hook[*CollectionsImp
 // Helpers
 // -------------------------------------------------------------------
 
-func (app *BaseApp) initLogsDB() error {
-	var connectErr error
-	app.logsDB, connectErr = connectDB(filepath.Join(app.DataDir(), "logs.db"))
-	if connectErr != nil {
-		return connectErr
+func (app *BaseApp) initDB() error {
+	dbPath := os.Getenv("PB_DBPATH")
+	if dbPath == "" {
+		color.Yellow("No PB_DBPATH specified. Please specify in order to continue! Format should look like: %s", "postgres://database:password@host/database")
+		return errors.New("no database path was specified!")
 	}
 
-	app.logsDao = app.createDao(app.logsDB)
-
-	return nil
-}
-
-func (app *BaseApp) initDataDB() error {
 	var connectErr error
-	app.db, connectErr = connectDB(filepath.Join(app.DataDir(), "data.db"))
+	app.db, connectErr = connectDB(dbPath)
 	if connectErr != nil {
 		return connectErr
 	}
@@ -740,6 +723,7 @@ func (app *BaseApp) initDataDB() error {
 		}
 	}
 
+	app.logsDao = app.createDao(app.db)
 	app.dao = app.createDao(app.db)
 
 	return nil

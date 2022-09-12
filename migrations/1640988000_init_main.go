@@ -41,9 +41,9 @@ func init() {
 				[[email]]           TEXT UNIQUE NOT NULL,
 				[[tokenKey]]        TEXT UNIQUE NOT NULL,
 				[[passwordHash]]    TEXT NOT NULL,
-				[[lastResetSentAt]] TEXT DEFAULT "" NOT NULL,
-				[[created]]         TEXT DEFAULT "" NOT NULL,
-				[[updated]]         TEXT DEFAULT "" NOT NULL
+				[[lastResetSentAt]] TEXT DEFAULT '' NOT NULL,
+				[[created]]         TEXT DEFAULT '' NOT NULL,
+				[[updated]]         TEXT DEFAULT '' NOT NULL
 			);
 
 			CREATE TABLE {{_users}} (
@@ -52,32 +52,32 @@ func init() {
 				[[email]]                  TEXT UNIQUE NOT NULL,
 				[[tokenKey]]               TEXT UNIQUE NOT NULL,
 				[[passwordHash]]           TEXT NOT NULL,
-				[[lastResetSentAt]]        TEXT DEFAULT "" NOT NULL,
-				[[lastVerificationSentAt]] TEXT DEFAULT "" NOT NULL,
-				[[created]]                TEXT DEFAULT "" NOT NULL,
-				[[updated]]                TEXT DEFAULT "" NOT NULL
+				[[lastResetSentAt]]        TEXT DEFAULT '' NOT NULL,
+				[[lastVerificationSentAt]] TEXT DEFAULT '' NOT NULL,
+				[[created]]                TEXT DEFAULT '' NOT NULL,
+				[[updated]]                TEXT DEFAULT '' NOT NULL
 			);
 
 			CREATE TABLE {{_collections}} (
 				[[id]]         TEXT PRIMARY KEY,
 				[[system]]     BOOLEAN DEFAULT FALSE NOT NULL,
 				[[name]]       TEXT UNIQUE NOT NULL,
-				[[schema]]     JSON DEFAULT "[]" NOT NULL,
+				[[schema]]     JSON DEFAULT '[]' NOT NULL,
 				[[listRule]]   TEXT DEFAULT NULL,
 				[[viewRule]]   TEXT DEFAULT NULL,
 				[[createRule]] TEXT DEFAULT NULL,
 				[[updateRule]] TEXT DEFAULT NULL,
 				[[deleteRule]] TEXT DEFAULT NULL,
-				[[created]]    TEXT DEFAULT "" NOT NULL,
-				[[updated]]    TEXT DEFAULT "" NOT NULL
+				[[created]]    TEXT DEFAULT '' NOT NULL,
+				[[updated]]    TEXT DEFAULT '' NOT NULL
 			);
 
 			CREATE TABLE {{_params}} (
 				[[id]]      TEXT PRIMARY KEY,
 				[[key]]     TEXT UNIQUE NOT NULL,
 				[[value]]   JSON DEFAULT NULL,
-				[[created]] TEXT DEFAULT "" NOT NULL,
-				[[updated]] TEXT DEFAULT "" NOT NULL
+				[[created]] TEXT DEFAULT '' NOT NULL,
+				[[updated]] TEXT DEFAULT '' NOT NULL
 			);
 		`).Execute()
 		if tablesErr != nil {

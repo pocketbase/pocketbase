@@ -25,9 +25,6 @@ type App interface {
 	// trying to access the request logs table will result in error.
 	Dao() *daos.Dao
 
-	// LogsDB returns the app logs database instance.
-	LogsDB() *dbx.DB
-
 	// LogsDao returns the app logs Dao instance.
 	//
 	// This Dao could operate only on the tables and models

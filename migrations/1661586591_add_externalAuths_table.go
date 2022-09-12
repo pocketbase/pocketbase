@@ -10,8 +10,8 @@ func init() {
 				[[userId]]     TEXT NOT NULL,
 				[[provider]]   TEXT NOT NULL,
 				[[providerId]] TEXT NOT NULL,
-				[[created]]    TEXT DEFAULT "" NOT NULL,
-				[[updated]]    TEXT DEFAULT "" NOT NULL,
+				[[created]]    TEXT DEFAULT '' NOT NULL,
+				[[updated]]    TEXT DEFAULT '' NOT NULL,
 				---
 				FOREIGN KEY ([[userId]]) REFERENCES {{_users}} ([[id]]) ON UPDATE CASCADE ON DELETE CASCADE
 			);
@@ -30,26 +30,26 @@ func init() {
 			CREATE TABLE {{_newUsers}} (
 				[[id]]                     TEXT PRIMARY KEY,
 				[[verified]]               BOOLEAN DEFAULT FALSE NOT NULL,
-				[[email]]                  TEXT DEFAULT "" NOT NULL,
+				[[email]]                  TEXT DEFAULT '' NOT NULL,
 				[[tokenKey]]               TEXT NOT NULL,
 				[[passwordHash]]           TEXT NOT NULL,
-				[[lastResetSentAt]]        TEXT DEFAULT "" NOT NULL,
-				[[lastVerificationSentAt]] TEXT DEFAULT "" NOT NULL,
-				[[created]]                TEXT DEFAULT "" NOT NULL,
-				[[updated]]                TEXT DEFAULT "" NOT NULL
+				[[lastResetSentAt]]        TEXT DEFAULT '' NOT NULL,
+				[[lastVerificationSentAt]] TEXT DEFAULT '' NOT NULL,
+				[[created]]                TEXT DEFAULT '' NOT NULL,
+				[[updated]]                TEXT DEFAULT '' NOT NULL
 			);
 
 			-- copy all data from the old users table to the new one
 			INSERT INTO {{_newUsers}} SELECT * FROM {{_users}};
 
 			-- drop old table
-			DROP TABLE {{_users}};
+			DROP TABLE {{_users}} cascade;
 
 			-- rename new table
 			ALTER TABLE {{_newUsers}} RENAME TO {{_users}};
 
 			-- create named indexes
-			CREATE UNIQUE INDEX _users_email_idx ON {{_users}} ([[email]]) WHERE [[email]] != "";
+			CREATE UNIQUE INDEX _users_email_idx ON {{_users}} ([[email]]) WHERE [[email]] != '';
 			CREATE UNIQUE INDEX _users_tokenKey_idx ON {{_users}} ([[tokenKey]]);
 		`).Execute()
 		if alterErr != nil {

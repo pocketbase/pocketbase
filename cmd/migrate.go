@@ -58,23 +58,21 @@ Supported arguments are:
 			}
 			// ---
 
-			// normalize
-			if databaseFlag != "logs" {
-				databaseFlag = "db"
-			}
-
 			connections := migrationsConnectionsMap(app)
 
-			runner, err := migrate.NewRunner(
-				connections[databaseFlag].DB,
-				connections[databaseFlag].MigrationsList,
-			)
-			if err != nil {
-				log.Fatal(err)
-			}
+			for _, connection := range connections {
+				runner, err := migrate.NewRunner(
+					connection.DB,
+					connection.MigrationsList,
+				)
 
-			if err := runner.Run(args...); err != nil {
-				log.Fatal(err)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				if err := runner.Run(args...); err != nil {
+					log.Fatal(err)
+				}
 			}
 		},
 	}
@@ -94,15 +92,15 @@ type migrationsConnection struct {
 	MigrationsList migrate.MigrationsList
 }
 
-func migrationsConnectionsMap(app core.App) map[string]migrationsConnection {
-	return map[string]migrationsConnection{
-		"db": {
+func migrationsConnectionsMap(app core.App) []migrationsConnection {
+	return []migrationsConnection{
+		{
+			DB:             app.DB(),
+			MigrationsList: logs.LogsMigrations,
+		},
+		{
 			DB:             app.DB(),
 			MigrationsList: migrations.AppMigrations,
-		},
-		"logs": {
-			DB:             app.LogsDB(),
-			MigrationsList: logs.LogsMigrations,
 		},
 	}
 }
