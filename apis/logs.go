@@ -26,7 +26,7 @@ type logsApi struct {
 }
 
 var requestFilterFields = []string{
-	"rowid", "id", "created", "updated",
+	"id", "created", "updated",
 	"url", "method", "status", "auth",
 	"remoteIp", "userIp", "referer", "userAgent",
 }
@@ -34,7 +34,7 @@ var requestFilterFields = []string{
 func (api *logsApi) requestsList(c echo.Context) error {
 	fieldResolver := search.NewSimpleFieldResolver(requestFilterFields...)
 
-	result, err := search.NewProvider(fieldResolver).
+	result, err := search.NewProvider(api.app.Dao().DB(), fieldResolver).
 		Query(api.app.LogsDao().RequestQuery()).
 		ParseAndExec(c.QueryString(), &[]*models.Request{})
 

@@ -119,7 +119,7 @@ func (api *adminApi) list(c echo.Context) error {
 
 	admins := []*models.Admin{}
 
-	result, err := search.NewProvider(fieldResolver).
+	result, err := search.NewProvider(api.app.Dao().DB(), fieldResolver).
 		Query(api.app.Dao().AdminQuery()).
 		ParseAndExec(c.QueryString(), &admins)
 

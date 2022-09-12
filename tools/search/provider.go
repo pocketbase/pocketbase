@@ -34,6 +34,9 @@ type Result struct {
 
 // Provider represents a single configured search provider instance.
 type Provider struct {
+	db        dbx.Builder
+	tableName string
+
 	fieldResolver FieldResolver
 	query         *dbx.SelectQuery
 	page          int
@@ -46,6 +49,7 @@ type Provider struct {
 // NewProvider creates and returns a new search provider.
 //
 // Example:
+//
 //	baseQuery := db.Select("*").From("user")
 //	fieldResolver := search.NewSimpleFieldResolver("id", "name")
 //	models := []*YourDataStruct{}
@@ -53,8 +57,9 @@ type Provider struct {
 //	result, err := search.NewProvider(fieldResolver).
 //		Query(baseQuery).
 //		ParseAndExec("page=2&filter=id>0&sort=-name", &models)
-func NewProvider(fieldResolver FieldResolver) *Provider {
+func NewProvider(db dbx.Builder, fieldResolver FieldResolver) *Provider {
 	return &Provider{
+		db:            db,
 		fieldResolver: fieldResolver,
 		page:          1,
 		perPage:       DefaultPerPage,
@@ -202,7 +207,10 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	countQuery.Distinct(false).Select("COUNT(*)")
 	if s.countColumn != "" {
 		countQuery.Select("COUNT(DISTINCT(" + s.countColumn + "))")
+		//countQuery = s.db.NewQuery(fmt.Sprintf("SELECT COUNT(DISTINCT(%s))", s.countColumn))
+		//countQuery.Select("COUNT(DISTINCT(" + s.countColumn + "))")
 	}
+	countQuery.OrderBy()
 	if err := countQuery.Row(&totalCount); err != nil {
 		return nil, err
 	}

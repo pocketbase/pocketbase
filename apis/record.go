@@ -61,7 +61,7 @@ func (api *recordApi) list(c echo.Context) error {
 
 	fieldsResolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData)
 
-	searchProvider := search.NewProvider(fieldsResolver).
+	searchProvider := search.NewProvider(api.app.Dao().DB(), fieldsResolver).
 		Query(api.app.Dao().RecordQuery(collection)).
 		CountColumn(fmt.Sprintf("%s.id", api.app.Dao().DB().QuoteSimpleColumnName(collection.Name)))
 

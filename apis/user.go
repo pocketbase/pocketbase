@@ -296,7 +296,7 @@ func (api *userApi) list(c echo.Context) error {
 
 	users := []*models.User{}
 
-	result, searchErr := search.NewProvider(fieldResolver).
+	result, searchErr := search.NewProvider(api.app.Dao().DB(), fieldResolver).
 		Query(api.app.Dao().UserQuery()).
 		ParseAndExec(c.QueryString(), &users)
 	if searchErr != nil {

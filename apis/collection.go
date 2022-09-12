@@ -35,7 +35,7 @@ func (api *collectionApi) list(c echo.Context) error {
 
 	collections := []*models.Collection{}
 
-	result, err := search.NewProvider(fieldResolver).
+	result, err := search.NewProvider(api.app.Dao().DB(), fieldResolver).
 		Query(api.app.Dao().CollectionQuery()).
 		ParseAndExec(c.QueryString(), &collections)
 
