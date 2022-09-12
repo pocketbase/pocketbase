@@ -280,8 +280,8 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 	if oldCollection == nil {
 		cols := map[string]string{
 			schema.ReservedFieldNameId:      "TEXT PRIMARY KEY",
-			schema.ReservedFieldNameCreated: `TEXT DEFAULT "" NOT NULL`,
-			schema.ReservedFieldNameUpdated: `TEXT DEFAULT "" NOT NULL`,
+			schema.ReservedFieldNameCreated: `TEXT DEFAULT '' NOT NULL`,
+			schema.ReservedFieldNameUpdated: `TEXT DEFAULT '' NOT NULL`,
 		}
 
 		tableName := newCollection.Name
