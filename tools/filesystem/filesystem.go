@@ -305,8 +305,15 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 		return writerErr
 	}
 
+	// try to detect the thumb format based on the original file name
+	// (fallbacks to png on error)
+	format, err := imaging.FormatFromFilename(thumbKey)
+	if err != nil {
+		format = imaging.PNG
+	}
+
 	// thumb encode (aka. upload)
-	if err := imaging.Encode(w, thumbImg, imaging.PNG); err != nil {
+	if err := imaging.Encode(w, thumbImg, format); err != nil {
 		w.Close()
 		return err
 	}
