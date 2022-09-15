@@ -20,7 +20,7 @@
 <div class="content m-b-base">
     <p>Subscribe to realtime changes via Server-Sent Events (SSE).</p>
     <p>
-        Events are send for <strong>create</strong>, <strong>update</strong>
+        Events are sent for <strong>create</strong>, <strong>update</strong>
         and <strong>delete</strong> record operations (see "Event data format" section below).
     </p>
     <div class="alert alert-info m-t-10">
