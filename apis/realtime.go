@@ -48,6 +48,9 @@ func (api *realtimeApi) connect(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "text/event-stream; charset=UTF-8")
 	c.Response().Header().Set("Cache-Control", "no-store")
 	c.Response().Header().Set("Connection", "keep-alive")
+	// https://github.com/pocketbase/pocketbase/discussions/480#discussioncomment-3657640
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering
+	c.Response().Header().Set("X-Accel-Buffering", "no")
 
 	event := &core.RealtimeConnectEvent{
 		HttpContext: c,
