@@ -122,7 +122,7 @@ You could help continuing its development by:
 
 - [Contribute to the source code](CONTRIBUTING.md)
 
-  > **NB! PR for new features will not be merged until until we manage to complete the users refactoring in [#376](https://github.com/pocketbase/pocketbase/issues/376)!**
+  > **NB! PR for new features will not be merged until we manage to complete the users refactoring in [#376](https://github.com/pocketbase/pocketbase/issues/376)!**
 
 - [Suggest new features and report issues](https://github.com/pocketbase/pocketbase/issues)
 
