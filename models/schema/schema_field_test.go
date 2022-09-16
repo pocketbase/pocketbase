@@ -84,6 +84,10 @@ func TestSchemaFieldColDefinition(t *testing.T) {
 			schema.SchemaField{Type: schema.FieldTypeUser, Name: "test"},
 			"TEXT DEFAULT ''",
 		},
+		{
+			schema.SchemaField{Type: schema.FieldTypeColor, Name: "test"},
+			"TEXT DEFAULT ''",
+		},
 	}
 
 	for i, s := range scenarios {
@@ -1207,6 +1211,18 @@ func TestJsonOptionsValidate(t *testing.T) {
 		{
 			"empty",
 			schema.JsonOptions{},
+			[]string{},
+		},
+	}
+
+	checkFieldOptionsScenarios(t, scenarios)
+}
+
+func TestColorOptionsValidate(t *testing.T) {
+	scenarios := []fieldOptionsScenario{
+		{
+			"empty",
+			schema.ColorOptions{},
 			[]string{},
 		},
 	}

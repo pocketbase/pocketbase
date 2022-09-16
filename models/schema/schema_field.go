@@ -44,6 +44,7 @@ const (
 	FieldTypeFile     string = "file"
 	FieldTypeRelation string = "relation"
 	FieldTypeUser     string = "user"
+	FieldTypeColor    string = "color"
 )
 
 // FieldTypes returns slice with all supported field types.
@@ -60,6 +61,7 @@ func FieldTypes() []string {
 		FieldTypeFile,
 		FieldTypeRelation,
 		FieldTypeUser,
+		FieldTypeColor,
 	}
 }
 
@@ -200,6 +202,8 @@ func (f *SchemaField) InitOptions() error {
 		options = &RelationOptions{}
 	case FieldTypeUser:
 		options = &UserOptions{}
+	case FieldTypeColor:
+		options = &ColorOptions{}
 	default:
 		return errors.New("Missing or unknown field field type.")
 	}
@@ -492,4 +496,13 @@ func (o UserOptions) Validate() error {
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.MaxSelect, validation.Required, validation.Min(1)),
 	)
+}
+
+// -------------------------------------------------------------------
+
+type ColorOptions struct {
+}
+
+func (o ColorOptions) Validate() error {
+	return nil
 }

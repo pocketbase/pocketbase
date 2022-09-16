@@ -996,6 +996,35 @@ select {
     }
 }
 
+.form-field-color {
+    .color-picker {
+        @extend %block;
+        background: var(--baseAlt1Color);
+        transition: background var(--baseAnimationSpeed);
+        display: flex;
+
+        input[type="color"]{
+            display: none;
+        }
+
+        &-preview {
+            cursor: pointer;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-bottom: 6px;
+            margin-top: 4px;
+            margin-right: 6px;
+        }
+    }
+
+    &:focus-within {
+        .color-picker, label {
+            background: var(--baseAlt2Color);
+        }
+    }
+}
+
 // codemirror field
 .code-editor {
     @extend %input;

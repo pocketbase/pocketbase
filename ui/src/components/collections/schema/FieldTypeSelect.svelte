@@ -63,6 +63,11 @@
             value: "user",
             icon: CommonHelper.getFieldTypeIcon("user"),
         },
+        {
+            label: "Color",
+            value: "color",
+            icon: CommonHelper.getFieldTypeIcon("color"),
+        },
     ];
 </script>
 

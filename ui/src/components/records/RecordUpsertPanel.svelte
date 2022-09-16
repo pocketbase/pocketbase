@@ -20,6 +20,7 @@
     import FileField from "@/components/records/fields/FileField.svelte";
     import RelationField from "@/components/records/fields/RelationField.svelte";
     import UserField from "@/components/records/fields/UserField.svelte";
+    import ColorField from "@/components/records/fields/ColorField.svelte";
 
     const dispatch = createEventDispatcher();
     const formId = "record_" + CommonHelper.randomString(5);
@@ -245,6 +246,8 @@
                 <RelationField {field} bind:value={record[field.name]} />
             {:else if field.type === "user"}
                 <UserField {field} bind:value={record[field.name]} />
+            {:else if field.type === "color"}
+                <ColorField {field} bind:value={record[field.name]} />
             {/if}
         {:else}
             <div class="block txt-center txt-disabled">

@@ -828,6 +828,8 @@ export default class CommonHelper {
                 return "ri-calendar-line";
             case "bool":
                 return "ri-toggle-line";
+            case "color":
+                return "ri-drop-line";
             case "email":
                 return "ri-mail-line";
             case "url":
