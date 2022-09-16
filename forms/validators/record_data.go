@@ -23,6 +23,7 @@ var requiredErr = validation.NewError("validation_required", "Missing required v
 // using the provided record constraints and schema.
 //
 // Example:
+//
 //	validator := NewRecordDataValidator(app.Dao(), record, nil)
 //	err := validator.Validate(map[string]any{"test":123})
 func NewRecordDataValidator(
@@ -129,6 +130,8 @@ func (validator *RecordDataValidator) checkFieldValue(field *schema.SchemaField,
 		return validator.checkRelationValue(field, value)
 	case schema.FieldTypeUser:
 		return validator.checkUserValue(field, value)
+	case schema.FieldTypeColor:
+		return validator.checkColorHex(field, value)
 	}
 
 	return nil
@@ -398,6 +401,14 @@ func (validator *RecordDataValidator) checkUserValue(field *schema.SchemaField, 
 		Row(&total)
 	if total != len(ids) {
 		return validation.NewError("validation_missing_users", "Failed to fetch all users with the provided ids")
+	}
+
+	return nil
+}
+
+func (validator *RecordDataValidator) checkColorHex(field *schema.SchemaField, value any) error {
+	if is.HexColor.Validate(value) != nil {
+		return validation.NewError("validation_invalid_color_hex", "Must be a valid color hex")
 	}
 
 	return nil
