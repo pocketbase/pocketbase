@@ -189,7 +189,7 @@
                         submitShortcut,
                         ...closeBracketsKeymap,
                         ...defaultKeymap,
-                        ...searchKeymap,
+                        searchKeymap.find((item) => item.key === "Mod-d"),
                         ...historyKeymap,
                         ...completionKeymap,
                     ]),

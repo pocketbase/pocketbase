@@ -359,6 +359,8 @@
 
         addLabelListeners();
 
+        console.log();
+
         editor = new EditorView({
             parent: container,
             state: EditorState.create({
@@ -379,7 +381,7 @@
                         submitShortcut,
                         ...closeBracketsKeymap,
                         ...defaultKeymap,
-                        ...searchKeymap,
+                        searchKeymap.find((item) => item.key === "Mod-d"),
                         ...historyKeymap,
                         ...completionKeymap,
                     ]),
