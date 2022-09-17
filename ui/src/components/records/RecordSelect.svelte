@@ -8,7 +8,7 @@
 
     // original select props
     export let multiple = false;
-    export let selected = multiple ? [] : undefined;
+    export let selected = [];
     export let keyOfSelected = multiple ? [] : undefined;
     export let selectPlaceholder = "- Select -";
     export let optionComponent = RecordSelectOption; // custom component to use for each dropdown option item
@@ -23,14 +23,14 @@
     let isLoadingSelected = false;
 
     $: if (collectionId) {
-        loadList(true);
+        loadSelected().then(function () {
+            loadList(true);
+        });
     }
 
     $: isLoading = isLoadingList || isLoadingSelected;
 
     $: canLoadMore = totalItems > list.length;
-
-    loadSelected();
 
     async function loadSelected() {
         const selectedIds = CommonHelper.toArray(keyOfSelected);
@@ -47,14 +47,22 @@
                 filters.push(`id="${id}"`);
             }
 
-            selected = await ApiClient.records.getFullList(collectionId, 200, {
-                sort: "-created",
+            const result = await ApiClient.records.getFullList(collectionId, 200, {
                 filter: filters.join("||"),
                 $cancelKey: uniqueId + "loadSelected",
             });
 
+            // preserve selected order
+            selected = [];
+            for (const id of selectedIds) {
+                const item = CommonHelper.findByKey(result, "id", id);
+                if (item) {
+                    selected.push(item);
+                }
+            }
+
             // add the selected models to the list (if not already)
-            list = CommonHelper.filterDuplicatesByKey(list.concat(selected));
+            list = CommonHelper.filterDuplicatesByKey(selected.concat(list));
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
@@ -81,7 +89,9 @@
                 list = [];
             }
 
-            list = CommonHelper.filterDuplicatesByKey(list.concat(result.items));
+            list = CommonHelper.filterDuplicatesByKey(
+                CommonHelper.toArray(selected).concat(list, result.items)
+            );
             currentPage = result.page;
             totalItems = result.totalItems;
         } catch (err) {
