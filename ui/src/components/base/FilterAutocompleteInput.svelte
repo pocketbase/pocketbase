@@ -359,8 +359,6 @@
 
         addLabelListeners();
 
-        console.log();
-
         editor = new EditorView({
             parent: container,
             state: EditorState.create({
