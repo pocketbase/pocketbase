@@ -23,9 +23,9 @@
 
     $: canLoadMore = totalItems > list.length;
 
-    loadList(true);
-
-    loadSelected();
+    loadList(true).then(() => {
+        loadSelected();
+    });
 
     async function loadSelected() {
         const selectedIds = CommonHelper.toArray(keyOfSelected);
@@ -76,11 +76,11 @@
             });
 
             if (reset) {
-                list = [];
+                list = CommonHelper.toArray(selected).slice();
             }
 
             list = CommonHelper.filterDuplicatesByKey(
-                CommonHelper.toArray(selected).concat(list, result.items)
+                list.concat(result.items, CommonHelper.toArray(selected))
             );
             currentPage = result.page;
             totalItems = result.totalItems;

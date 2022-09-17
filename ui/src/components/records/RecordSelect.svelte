@@ -23,7 +23,7 @@
     let isLoadingSelected = false;
 
     $: if (collectionId) {
-        loadSelected().then(function () {
+        loadSelected().then(() => {
             loadList(true);
         });
     }
@@ -86,11 +86,11 @@
             });
 
             if (reset) {
-                list = [];
+                list = CommonHelper.toArray(selected).slice();
             }
 
             list = CommonHelper.filterDuplicatesByKey(
-                CommonHelper.toArray(selected).concat(list, result.items)
+                list.concat(result.items, CommonHelper.toArray(selected))
             );
             currentPage = result.page;
             totalItems = result.totalItems;
