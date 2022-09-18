@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"strconv"
-
 	"golang.org/x/oauth2"
 )
 
@@ -11,7 +9,7 @@ var _ Provider = (*Twitch)(nil)
 // NameTwitch is the unique name of the Twitch provider.
 const NameTwitch string = "twitch"
 
-// Github allows authentication via Twitch OAuth2.
+// Twitch allows authentication via Twitch OAuth2.
 type Twitch struct {
 	*baseProvider
 }
@@ -32,7 +30,7 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	rawData := struct {
 		Data []struct {
 			Login     string `json:"login"`
-			Id        int    `json:"id"`
+			Id        string `json:"id"`
 			Name      string `json:"display_name"`
 			Email     string `json:"email"`
 			AvatarUrl string `json:"profile_image_url"`
@@ -44,7 +42,7 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:        strconv.Itoa(rawData.Data[0].Id),
+		Id:        rawData.Data[0].Id,
 		Name:      rawData.Data[0].Name,
 		Username:  rawData.Data[0].Login,
 		Email:     rawData.Data[0].Email,
