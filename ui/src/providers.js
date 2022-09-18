@@ -5,27 +5,31 @@
 export default {
     googleAuth: {
         title: "Google",
-        icon:  "ri-google-fill",
+        icon: "ri-google-fill",
     },
     facebookAuth: {
         title: "Facebook",
-        icon:  "ri-facebook-fill",
+        icon: "ri-facebook-fill",
     },
     twitterAuth: {
         title: "Twitter",
-        icon:  "ri-twitter-fill",
+        icon: "ri-twitter-fill",
     },
     githubAuth: {
         title: "GitHub",
-        icon:  "ri-github-fill",
+        icon: "ri-github-fill",
     },
     gitlabAuth: {
-        title:    "GitLab",
-        icon:     "ri-gitlab-fill",
+        title: "GitLab",
+        icon: "ri-gitlab-fill",
         selfHosted: true,
     },
     discordAuth: {
         title: "Discord",
-        icon:  "ri-discord-fill",
+        icon: "ri-discord-fill",
+    },
+    twitchAuth: {
+        title: "Twitch",
+        icon: "ri-twitch-fill",
     },
 };

@@ -41,6 +41,8 @@ func TestSettingsValidate(t *testing.T) {
 	s.DiscordAuth.ClientId = ""
 	s.TwitterAuth.Enabled = true
 	s.TwitterAuth.ClientId = ""
+	s.TwitchAuth.Enabled = true
+	s.TwitchAuth.ClientId = ""
 
 	// check if Validate() is triggering the members validate methods.
 	err := s.Validate()
@@ -65,6 +67,7 @@ func TestSettingsValidate(t *testing.T) {
 		`"githubAuth":{`,
 		`"gitlabAuth":{`,
 		`"discordAuth":{`,
+		`"twitchAuth":{`,
 	}
 
 	errBytes, _ := json.Marshal(err)
@@ -107,6 +110,8 @@ func TestSettingsMerge(t *testing.T) {
 	s2.DiscordAuth.ClientId = "discord_test"
 	s2.TwitterAuth.Enabled = true
 	s2.TwitterAuth.ClientId = "twitter_test"
+	s2.TwitchAuth.Enabled = true
+	s2.TwitchAuth.ClientId = "twitch_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
@@ -174,6 +179,7 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.GitlabAuth.ClientSecret = "test123"
 	s1.DiscordAuth.ClientSecret = "test123"
 	s1.TwitterAuth.ClientSecret = "test123"
+	s1.TwitchAuth.ClientSecret = "test123"
 
 	s2, err := s1.RedactClone()
 	if err != nil {
@@ -202,6 +208,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.GitlabAuth.Enabled = true
 	s.DiscordAuth.ClientId = "discord_test"
 	s.TwitterAuth.ClientId = "twitter_test"
+	s.TwitchAuth.ClientId = "twitch_test"
 
 	result := s.NamedAuthProviderConfigs()
 
@@ -210,7 +217,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"discord":{"enabled":false,"allowRegistrations":true,"clientId":"discord_test"},"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"},"twitter":{"enabled":false,"allowRegistrations":true,"clientId":"twitter_test"}}`
+	expected := `{"discord":{"enabled":false,"allowRegistrations":true,"clientId":"discord_test"},"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"},"twitter":{"enabled":false,"allowRegistrations":true,"clientId":"twitter_test"},"twitch":{"enabled":false,"allowRegistrations":true,"clientId":"twitch_test"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected the same serialization, got %v", encodedStr)
