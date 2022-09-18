@@ -30,11 +30,13 @@ func NewTwitchProvider() *Twitch {
 func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	// https://dev.twitch.tv/docs/api/reference#get-users
 	rawData := struct {
-		Login     string `json:"login"`
-		Id        int    `json:"id"`
-		Name      string `json:"display_name"`
-		Email     string `json:"email"`
-		AvatarUrl string `json:"profile_image_url"`
+		Data []struct {
+			Login     string `json:"login"`
+			Id        int    `json:"id"`
+			Name      string `json:"display_name"`
+			Email     string `json:"email"`
+			AvatarUrl string `json:"profile_image_url"`
+		} `json:"data"`
 	}{}
 
 	if err := p.FetchRawUserData(token, &rawData); err != nil {
@@ -42,11 +44,11 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:        strconv.Itoa(rawData.Id),
-		Name:      rawData.Name,
-		Username:  rawData.Login,
-		Email:     rawData.Email,
-		AvatarUrl: rawData.AvatarUrl,
+		Id:        strconv.Itoa(rawData.Data[0].Id),
+		Name:      rawData.Data[0].Name,
+		Username:  rawData.Data[0].Login,
+		Email:     rawData.Data[0].Email,
+		AvatarUrl: rawData.Data[0].AvatarUrl,
 	}
 
 	return user, nil
