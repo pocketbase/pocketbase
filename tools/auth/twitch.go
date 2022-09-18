@@ -14,7 +14,7 @@ type Twitch struct {
 	*baseProvider
 }
 
-// NewTwitchProvider creates new Github provider instance with some defaults.
+// NewTwitchProvider creates new Twitch provider instance with some defaults.
 func NewTwitchProvider() *Twitch {
 	return &Twitch{&baseProvider{
 		scopes:     []string{"user:read:email"},
