@@ -43,7 +43,7 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		} `json:"data"`
 	}{}
 
-	if err := p.fetchUser(token, &rawData); err != nil {
+	if err := p.fetchRawUserData(token, &rawData); err != nil {
 		return nil, err
 	}
 
@@ -60,7 +60,7 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 // Temporary hack to get the user from the Twitch API.
 // Must be done this way so that we can include the "Client-ID" header.
-func (p *Twitch) fetchUser(token *oauth2.Token, result any) error {
+func (p *Twitch) fetchRawUserData(token *oauth2.Token, result any) error {
 	req, err := http.NewRequest("GET", p.userApiUrl, nil)
 	if err != nil {
 		return err
