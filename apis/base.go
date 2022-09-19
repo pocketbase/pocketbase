@@ -115,7 +115,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 // but without the directory redirect which conflicts with RemoveTrailingSlash middleware.
 //
 // @see https://github.com/labstack/echo/issues/2211
-func StaticDirectoryHandler(fileSystem fs.FS, disablePathUnescaping bool) echo.HandlerFunc {
+func StaticDirectoryHandler(fileSystem fs.FS, disablePathUnescaping bool, isSPA bool) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		p := c.PathParam("*")
 		if !disablePathUnescaping { // when router is already unescaping we do not want to do is twice
@@ -128,6 +128,18 @@ func StaticDirectoryHandler(fileSystem fs.FS, disablePathUnescaping bool) echo.H
 
 		// fs.FS.Open() already assumes that file names are relative to FS root path and considers name with prefix `/` as invalid
 		name := filepath.ToSlash(filepath.Clean(strings.TrimPrefix(p, "/")))
+
+		if isSPA {
+			err := c.FileFS(name, fileSystem)
+			if err != nil && !strings.Contains(name, ".") {
+				if he, ok := err.(*echo.HTTPError); ok {
+					if he.Code == http.StatusNotFound {
+						return c.FileFS("index.html", fileSystem)
+					}
+				}
+			}
+			return err
+		}
 
 		return c.FileFS(name, fileSystem)
 	}
