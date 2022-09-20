@@ -123,7 +123,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		}
 
 		// not a profile relational field
-		if len(props) <= 4 || !strings.HasPrefix(fieldName, "@request.user.profile.") {
+		if !strings.HasPrefix(fieldName, "@request.user.profile.") {
 			return r.resolveStaticRequestField(props[1:]...)
 		}
 

@@ -87,7 +87,9 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		{
 			"static @request.user.profile fields",
 			[]string{"@request.user.id", "@request.user.profile.id", "@request.data.demo"},
-			"SELECT `demo4`.* FROM `demo4`",
+			"^" +
+				regexp.QuoteMeta("SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `profiles` `__user_profiles` ON [[__user_profiles.id]] =") +
+				" {:.*}$",
 		},
 		{
 			"relational @request.user.profile fields",
@@ -161,6 +163,7 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		{"manyrels.title", false, "[[demo4_manyrels.title]]"},
 		{"manyrels.onerel.manyrels.onefile", false, "[[demo4_manyrels_onerel_manyrels.onefile]]"},
 		// @request.user.profile relation join:
+		{"@request.user.profile.rel", false, "[[__user_profiles.rel]]"},
 		{"@request.user.profile.rel.name", false, "[[__user_profiles_rel.name]]"},
 		// @collection fieds:
 		{"@collect", true, ""},
@@ -247,7 +250,6 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		{"@request.user", true, ""},
 		{"@request.user.id", false, `"4d0197cc-2b4a-3f83-a26b-d77bc8423d3c"`},
 		{"@request.user.profile", false, `"{\"id\":\"d13f60a4-5765-48c7-9e1d-3e782340f833\",\"name\":\"test\"}"`},
-		{"@request.user.profile.name", false, `"test"`},
 	}
 
 	for i, s := range scenarios {
