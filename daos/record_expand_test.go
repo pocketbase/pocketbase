@@ -108,6 +108,18 @@ func TestExpandRecords(t *testing.T) {
 			9,
 			0,
 		},
+		// expand multiple relations sharing a common root path
+		{
+			[]string{
+				"i15r5aa28ad06c8",
+			},
+			[]string{"manyrels.onerel.manyrels.onerel", "manyrels.onerel.onerel"},
+			func(c *models.Collection, ids []string) ([]*models.Record, error) {
+				return app.Dao().FindRecordsByIds(c, ids, nil)
+			},
+			4,
+			0,
+		},
 		// single expand
 		{
 			[]string{
