@@ -17,7 +17,18 @@ type Hook[T any] struct {
 	handlers []Handler[T]
 }
 
-// Add registers a new handler to the hook.
+// PreAdd registers a new handler to the hook by prepending it to the existing queue.
+func (h *Hook[T]) PreAdd(fn Handler[T]) {
+	h.mux.Lock()
+	defer h.mux.Unlock()
+
+	// minimize allocations by shifting the slice
+	h.handlers = append(h.handlers, nil)
+	copy(h.handlers[1:], h.handlers)
+	h.handlers[0] = fn
+}
+
+// Add registers a new handler to the hook by appending it to the existing queue.
 func (h *Hook[T]) Add(fn Handler[T]) {
 	h.mux.Lock()
 	defer h.mux.Unlock()

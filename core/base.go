@@ -716,7 +716,7 @@ func (app *BaseApp) initLogsDB() error {
 		return connectErr
 	}
 
-	app.logsDao = app.createDao(app.logsDB)
+	app.logsDao = daos.New(app.logsDB)
 
 	return nil
 }
@@ -740,12 +740,12 @@ func (app *BaseApp) initDataDB() error {
 		}
 	}
 
-	app.dao = app.createDao(app.db)
+	app.dao = app.createDaoWithHooks(app.db)
 
 	return nil
 }
 
-func (app *BaseApp) createDao(db dbx.Builder) *daos.Dao {
+func (app *BaseApp) createDaoWithHooks(db dbx.Builder) *daos.Dao {
 	dao := daos.New(db)
 
 	dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {

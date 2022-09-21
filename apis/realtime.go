@@ -166,7 +166,7 @@ func (api *realtimeApi) bindEvents() {
 	adminTable := (&models.Admin{}).TableName()
 
 	// update user/admin auth state
-	api.app.OnModelAfterUpdate().Add(func(e *core.ModelEvent) error {
+	api.app.OnModelAfterUpdate().PreAdd(func(e *core.ModelEvent) error {
 		modelTable := e.Model.TableName()
 
 		var contextKey string
@@ -190,7 +190,7 @@ func (api *realtimeApi) bindEvents() {
 	})
 
 	// remove user/admin client(s)
-	api.app.OnModelAfterDelete().Add(func(e *core.ModelEvent) error {
+	api.app.OnModelAfterDelete().PreAdd(func(e *core.ModelEvent) error {
 		modelTable := e.Model.TableName()
 
 		var contextKey string
@@ -213,14 +213,14 @@ func (api *realtimeApi) bindEvents() {
 		return nil
 	})
 
-	api.app.OnModelAfterCreate().Add(func(e *core.ModelEvent) error {
+	api.app.OnModelAfterCreate().PreAdd(func(e *core.ModelEvent) error {
 		if record, ok := e.Model.(*models.Record); ok {
 			api.broadcastRecord("create", record)
 		}
 		return nil
 	})
 
-	api.app.OnModelAfterUpdate().Add(func(e *core.ModelEvent) error {
+	api.app.OnModelAfterUpdate().PreAdd(func(e *core.ModelEvent) error {
 		if record, ok := e.Model.(*models.Record); ok {
 			api.broadcastRecord("update", record)
 		}
