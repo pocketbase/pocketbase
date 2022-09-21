@@ -272,7 +272,7 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 	defer r.Close()
 
 	// create imaging object from the origial reader
-	img, decodeErr := imaging.Decode(r)
+	img, decodeErr := imaging.Decode(r, imaging.AutoOrientation(true))
 	if decodeErr != nil {
 		return decodeErr
 	}
