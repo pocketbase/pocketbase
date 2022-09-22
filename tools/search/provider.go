@@ -199,7 +199,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	// count
 	var totalCount int64
 	countQuery := modelsQuery
-	countQuery.Distinct(false).Select("COUNT(*)")
+	countQuery.Distinct(false).Select("COUNT(*)").OrderBy([]string{}...) // unset ORDER BY statements
 	if s.countColumn != "" {
 		countQuery.Select("COUNT(DISTINCT(" + s.countColumn + "))")
 	}
