@@ -4,12 +4,18 @@
     import ApiClient from "@/utils/ApiClient";
     import Field from "@/components/base/Field.svelte";
     import { addErrorToast } from "@/stores/toasts";
+    import EyeOpen from "@/components/base/svg/EyeOpen.svelte";
+    import EyeClosed from "@/components/base/svg/EyeClosed.svelte";
 
     const queryParams = new URLSearchParams($querystring);
 
     let email = queryParams.get("demoEmail") || "";
     let password = queryParams.get("demoPassword") || "";
     let isLoading = false;
+    let showPassword = false;
+    const setPassword = (e) => {
+        password = e.target.value;
+    };
 
     function login() {
         if (isLoading) {
@@ -18,7 +24,8 @@
 
         isLoading = true;
 
-        return ApiClient.admins.authViaEmail(email, password)
+        return ApiClient.admins
+            .authViaEmail(email, password)
             .then(() => {
                 replace("/");
             })
@@ -44,8 +51,23 @@
         </Field>
 
         <Field class="form-field required" name="password" let:uniqueId>
-            <label for={uniqueId}>Password</label>
-            <input type="password" id={uniqueId} bind:value={password} required />
+            <label for={uniqueId}>
+                <button id="eye" on:click|preventDefault={() => (showPassword = !showPassword)}>
+                    {#if showPassword}
+                        <EyeClosed />
+                    {:else}
+                        <EyeOpen />
+                    {/if}
+                </button>
+                Password
+            </label>
+            <input
+                type={showPassword ? "text" : "password"}
+                id={uniqueId}
+                value={password}
+                on:change={setPassword}
+                required
+            />
             <div class="help-block">
                 <a href="/request-password-reset" class="link-hint" use:link>Forgotten password?</a>
             </div>

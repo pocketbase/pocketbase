@@ -2,6 +2,8 @@
     import { createEventDispatcher } from "svelte";
     import ApiClient from "@/utils/ApiClient";
     import Field from "@/components/base/Field.svelte";
+    import EyeOpen from "@/components/base/svg/EyeOpen.svelte";
+    import EyeClosed from "@/components/base/svg/EyeClosed.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -9,6 +11,13 @@
     let password = "";
     let passwordConfirm = "";
     let isLoading = false;
+    let showPassword = false;
+    const setPassword = (e) => {
+        password = e.target.value;
+    };
+    const setPasswordConfirm = (e) => {
+        passwordConfirm = e.target.value;
+    };
 
     async function submit() {
         if (isLoading) {
@@ -35,6 +44,8 @@
     }
 </script>
 
+<!-- TODO -->
+
 <form class="block" autocomplete="off" on:submit|preventDefault={submit}>
     <div class="content txt-center m-b-base">
         <h4>Create your first admin account in order to continue</h4>
@@ -47,21 +58,47 @@
     </Field>
 
     <Field class="form-field required" name="password" let:uniqueId>
-        <label for={uniqueId}>Password</label>
+        <label for={uniqueId}>
+            <button id="eye" on:click|preventDefault={() => (showPassword = !showPassword)}>
+                {#if showPassword}
+                    <EyeClosed />
+                {:else}
+                    <EyeOpen />
+                {/if}
+            </button>
+            Password
+        </label>
         <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             autocomplete="new-password"
             minlength="10"
             id={uniqueId}
-            bind:value={password}
+            value={password}
+            on:change={setPassword}
             required
         />
         <div class="help-block">Minimum 10 characters.</div>
     </Field>
 
     <Field class="form-field required" name="passwordConfirm" let:uniqueId>
-        <label for={uniqueId}>Password confirm</label>
-        <input type="password" minlength="10" id={uniqueId} bind:value={passwordConfirm} required />
+        <label for={uniqueId}>
+            <button id="eye" on:click|preventDefault={() => (showPassword = !showPassword)}>
+                {#if showPassword}
+                    <EyeClosed />
+                {:else}
+                    <EyeOpen />
+                {/if}
+            </button>
+            Password confirm
+        </label>
+        <input
+            type={showPassword ? "text" : "password"}
+            minlength="10"
+            id={uniqueId}
+            value={passwordConfirm}
+            on:change={setPasswordConfirm}
+            required
+        />
     </Field>
 
     <button
