@@ -207,6 +207,7 @@ table {
     // states
     &.table-loading {
         pointer-events: none;
+        opacity: 0.7;
     }
 }
 
@@ -218,6 +219,7 @@ table {
     margin-left: calc(var(--baseSpacing) * -1);
     margin-right: calc(var(--baseSpacing) * -1);
     .bulk-select-col {
+        min-width: 70px;
         input[type="checkbox"] ~ label {
             opacity: 0.7;
         }

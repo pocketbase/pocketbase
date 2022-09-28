@@ -23,8 +23,11 @@
     let isLoading = true;
     let isDeleting = false;
 
-    $: if (collection && collection.id && sort !== -1 && filter !== -1) {
+    $: if (collection?.id) {
         clearList();
+    }
+
+    $: if (collection?.id && sort !== -1 && filter !== -1) {
         load(1);
     }
 
@@ -43,16 +46,16 @@
 
         isLoading = true;
 
-        if (page <= 1) {
-            clearList();
-        }
-
         return ApiClient.records
             .getList(collection.id, page, 50, {
                 sort: sort,
                 filter: filter,
             })
             .then((result) => {
+                if (page <= 1) {
+                    clearList();
+                }
+
                 isLoading = false;
                 records = records.concat(result.items);
                 currentPage = result.page;
@@ -150,16 +153,20 @@
         <thead>
             <tr>
                 <th class="bulk-select-col min-width">
-                    <div class="form-field">
-                        <input
-                            type="checkbox"
-                            id="checkbox_0"
-                            disabled={!records.length}
-                            checked={areAllRecordsSelected}
-                            on:change={() => toggleSelectAllRecords()}
-                        />
-                        <label for="checkbox_0" />
-                    </div>
+                    {#if isLoading}
+                        <span class="loader loader-sm" />
+                    {:else}
+                        <div class="form-field">
+                            <input
+                                type="checkbox"
+                                id="checkbox_0"
+                                disabled={!records.length}
+                                checked={areAllRecordsSelected}
+                                on:change={() => toggleSelectAllRecords()}
+                            />
+                            <label for="checkbox_0" />
+                        </div>
+                    {/if}
                 </th>
                 <SortHeader class="col-type-text col-field-id" name="id" bind:sort>
                     <div class="col-header-content">
