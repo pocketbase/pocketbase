@@ -196,6 +196,12 @@ var inlineServeContentTypes = []string{
 	"application/pdf", "application/x-pdf",
 }
 
+// manualExtensionContentTypes is a map of file extensions to content types.
+var manualExtensionContentTypes = map[string]string{
+	".svg": "image/svg+xml", // (see https://github.com/whatwg/mimesniff/issues/7)
+	".css": "text/css",      // (see https://github.com/gabriel-vasile/mimetype/pull/113)
+}
+
 // Serve serves the file at fileKey location to an HTTP response.
 func (s *System) Serve(response http.ResponseWriter, fileKey string, name string) error {
 	r, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
@@ -210,12 +216,11 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 		disposition = "inline"
 	}
 
-	// make an exception for svg and force a custom content type
-	// to send in the response so that it can be loaded in an img tag
-	// (see https://github.com/whatwg/mimesniff/issues/7)
+	// make an exception for specific content types and force a
+	// custom content type to send in the response so that it can be loaded directly.
 	extContentType := realContentType
-	if extContentType != "image/svg+xml" && filepath.Ext(name) == ".svg" {
-		extContentType = "image/svg+xml"
+	if ct, found := manualExtensionContentTypes[filepath.Ext(name)]; found && extContentType != ct {
+		extContentType = ct
 	}
 
 	response.Header().Set("Content-Disposition", disposition+"; filename="+name)

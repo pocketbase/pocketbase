@@ -207,6 +207,18 @@ func TestFileSystemServe(t *testing.T) {
 				"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
 			},
 		},
+		{
+			// css exception
+			"style.css",
+			"test_name.css",
+			false,
+			map[string]string{
+				"Content-Disposition":     "attachment; filename=test_name.css",
+				"Content-Type":            "text/css",
+				"Content-Length":          "0",
+				"Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+			},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -216,7 +228,7 @@ func TestFileSystemServe(t *testing.T) {
 		hasErr := err != nil
 
 		if hasErr != scenario.expectError {
-			t.Errorf("(%s) Expected hasError %v, got %v", scenario.path, scenario.expectError, hasErr)
+			t.Errorf("(%s) Expected hasError %v, got %v (%v)", scenario.path, scenario.expectError, hasErr, err)
 			continue
 		}
 
@@ -320,6 +332,12 @@ func createTestDir(t *testing.T) string {
 		t.Fatal(err)
 	}
 	file4.Close()
+
+	file5, err := os.OpenFile(filepath.Join(dir, "style.css"), os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file5.Close()
 
 	return dir
 }
