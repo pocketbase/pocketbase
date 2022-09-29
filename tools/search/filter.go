@@ -103,16 +103,28 @@ func (f FilterData) resolveTokenizedExpr(expr fexpr.Expr, fieldResolver FieldRes
 	case fexpr.SignNeq:
 		return dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') != COALESCE(%s, '')", lName, rName), params), nil
 	case fexpr.SignLike:
+		// both sides are columns and therefore wrap the right side with "%" for contains like behavior
+		if len(params) == 0 {
+			return dbx.NewExp(fmt.Sprintf("%s LIKE ('%%' || %s || '%%')", lName, rName), params), nil
+		}
+
 		// normalize operands and switch sides if the left operand is a number or text
 		if len(lParams) > 0 {
 			return dbx.NewExp(fmt.Sprintf("%s LIKE %s", rName, lName), f.normalizeLikeParams(params)), nil
 		}
+
 		return dbx.NewExp(fmt.Sprintf("%s LIKE %s", lName, rName), f.normalizeLikeParams(params)), nil
 	case fexpr.SignNlike:
+		// both sides are columns and therefore wrap the right side with "%" for not-contains like behavior
+		if len(params) == 0 {
+			return dbx.NewExp(fmt.Sprintf("%s NOT LIKE ('%%' || %s || '%%')", lName, rName), params), nil
+		}
+
 		// normalize operands and switch sides if the left operand is a number or text
 		if len(lParams) > 0 {
 			return dbx.NewExp(fmt.Sprintf("%s NOT LIKE %s", rName, lName), f.normalizeLikeParams(params)), nil
 		}
+
 		return dbx.NewExp(fmt.Sprintf("%s NOT LIKE %s", lName, rName), f.normalizeLikeParams(params)), nil
 	case fexpr.SignLt:
 		return dbx.NewExp(fmt.Sprintf("%s < %s", lName, rName), params), nil
