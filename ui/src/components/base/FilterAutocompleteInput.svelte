@@ -270,7 +270,6 @@
         }
 
         const skipFields = [
-            "@request.user.profile.id",
             "@request.user.profile.userId",
             "@request.user.profile.created",
             "@request.user.profile.updated",
