@@ -3,7 +3,7 @@
 
     // note: manual trim the ms without converting to DateTime
     // to help improving the rendering performance in large data sets
-    let shortDate = date.length > 19 ? date.substring(0, 19) : date;
+    $: shortDate = date.length > 19 ? date.substring(0, 19) : date;
 </script>
 
 {#if date}
