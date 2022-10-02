@@ -374,6 +374,10 @@ select,
 textarea {
     @extend %input;
 }
+input {
+    // Safari and GNOME Web has a default height and ignores the min-height
+    height: var(--inputHeight);
+}
 input:-webkit-autofill {
     -webkit-text-fill-color: var(--txtPrimaryColor);
     -webkit-box-shadow: inset 0 0 0 50px var(--baseAlt1Color);

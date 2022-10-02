@@ -32,6 +32,34 @@ func TestFilterDataBuildExpr(t *testing.T) {
 				regexp.QuoteMeta("}") +
 				"$",
 		},
+		// like with 2 columns
+		{"test1 ~ test2", false,
+			"^" +
+				regexp.QuoteMeta("[[test1]] LIKE ('%' || [[test2]] || '%')") +
+				"$",
+		},
+		// reversed like with text
+		{"'lorem' ~ test1", false,
+			"^" +
+				regexp.QuoteMeta("[[test1]] LIKE {:") +
+				".+" +
+				regexp.QuoteMeta("}") +
+				"$",
+		},
+		// not like with 2 columns
+		{"test1 !~ test2", false,
+			"^" +
+				regexp.QuoteMeta("[[test1]] NOT LIKE ('%' || [[test2]] || '%')") +
+				"$",
+		},
+		// reversed not like with text
+		{"'lorem' !~ test1", false,
+			"^" +
+				regexp.QuoteMeta("[[test1]] NOT LIKE {:") +
+				".+" +
+				regexp.QuoteMeta("}") +
+				"$",
+		},
 		// current datetime constant
 		{"test1 > @now", false,
 			"^" +

@@ -270,7 +270,6 @@
         }
 
         const skipFields = [
-            "@request.user.profile.id",
             "@request.user.profile.userId",
             "@request.user.profile.created",
             "@request.user.profile.updated",
@@ -379,7 +378,7 @@
                         submitShortcut,
                         ...closeBracketsKeymap,
                         ...defaultKeymap,
-                        ...searchKeymap,
+                        searchKeymap.find((item) => item.key === "Mod-d"),
                         ...historyKeymap,
                         ...completionKeymap,
                     ]),

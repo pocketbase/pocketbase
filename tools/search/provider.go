@@ -13,7 +13,7 @@ import (
 const DefaultPerPage int = 30
 
 // MaxPerPage specifies the maximum allowed search result items returned in a single page.
-const MaxPerPage int = 200
+const MaxPerPage int = 400
 
 // url search query params
 const (
@@ -199,7 +199,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	// count
 	var totalCount int64
 	countQuery := modelsQuery
-	countQuery.Distinct(false).Select("COUNT(*)")
+	countQuery.Distinct(false).Select("COUNT(*)").OrderBy() // unset ORDER BY statements
 	if s.countColumn != "" {
 		countQuery.Select("COUNT(DISTINCT(" + s.countColumn + "))")
 	}

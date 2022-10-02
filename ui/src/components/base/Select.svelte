@@ -36,7 +36,7 @@
     $: filteredItems = filterItems(items, searchTerm);
 
     $: isSelected = function (item) {
-        let normalized = CommonHelper.toArray(selected);
+        const normalized = CommonHelper.toArray(selected);
 
         return CommonHelper.inArray(normalized, item);
     };

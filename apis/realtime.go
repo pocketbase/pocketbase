@@ -48,6 +48,9 @@ func (api *realtimeApi) connect(c echo.Context) error {
 	c.Response().Header().Set("Content-Type", "text/event-stream; charset=UTF-8")
 	c.Response().Header().Set("Cache-Control", "no-store")
 	c.Response().Header().Set("Connection", "keep-alive")
+	// https://github.com/pocketbase/pocketbase/discussions/480#discussioncomment-3657640
+	// https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_buffering
+	c.Response().Header().Set("X-Accel-Buffering", "no")
 
 	event := &core.RealtimeConnectEvent{
 		HttpContext: c,
@@ -163,7 +166,7 @@ func (api *realtimeApi) bindEvents() {
 	adminTable := (&models.Admin{}).TableName()
 
 	// update user/admin auth state
-	api.app.OnModelAfterUpdate().Add(func(e *core.ModelEvent) error {
+	api.app.OnModelAfterUpdate().PreAdd(func(e *core.ModelEvent) error {
 		modelTable := e.Model.TableName()
 
 		var contextKey string
@@ -187,7 +190,7 @@ func (api *realtimeApi) bindEvents() {
 	})
 
 	// remove user/admin client(s)
-	api.app.OnModelAfterDelete().Add(func(e *core.ModelEvent) error {
+	api.app.OnModelAfterDelete().PreAdd(func(e *core.ModelEvent) error {
 		modelTable := e.Model.TableName()
 
 		var contextKey string
@@ -210,14 +213,14 @@ func (api *realtimeApi) bindEvents() {
 		return nil
 	})
 
-	api.app.OnModelAfterCreate().Add(func(e *core.ModelEvent) error {
+	api.app.OnModelAfterCreate().PreAdd(func(e *core.ModelEvent) error {
 		if record, ok := e.Model.(*models.Record); ok {
 			api.broadcastRecord("create", record)
 		}
 		return nil
 	})
 
-	api.app.OnModelAfterUpdate().Add(func(e *core.ModelEvent) error {
+	api.app.OnModelAfterUpdate().PreAdd(func(e *core.ModelEvent) error {
 		if record, ok := e.Model.(*models.Record); ok {
 			api.broadcastRecord("update", record)
 		}

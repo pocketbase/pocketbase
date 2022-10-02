@@ -25,8 +25,9 @@
 
         let newSelected = [];
 
-        for (let item of items) {
-            if (CommonHelper.inArray(newKeyOfSelected, item[selectionKey])) {
+        for (let v of newKeyOfSelected) {
+            const item = CommonHelper.findByKey(items, selectionKey, v);
+            if (item) {
                 newSelected.push(item);
             }
         }

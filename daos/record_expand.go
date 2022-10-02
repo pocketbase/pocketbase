@@ -114,12 +114,41 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 
 		expandData := model.GetExpand()
 
-		// normalize and set the expanded relations
+		// normalize access to the previously expanded rel records (if any)
+		var oldExpandedRels []*models.Record
+		switch v := expandData[relField.Name].(type) {
+		case nil:
+			// no old expands
+		case *models.Record:
+			oldExpandedRels = []*models.Record{v}
+		case []*models.Record:
+			oldExpandedRels = v
+		}
+
+		// merge expands
+		for _, oldExpandedRel := range oldExpandedRels {
+			// find a matching rel record
+			for _, rel := range validRels {
+				if rel.Id != oldExpandedRel.Id {
+					continue
+				}
+
+				oldRelExpand := oldExpandedRel.GetExpand()
+				newRelExpand := rel.GetExpand()
+				for k, v := range oldRelExpand {
+					newRelExpand[k] = v
+				}
+				rel.SetExpand(newRelExpand)
+			}
+		}
+
+		// update the expanded data
 		if relFieldOptions.MaxSelect == 1 {
 			expandData[relField.Name] = validRels[0]
 		} else {
 			expandData[relField.Name] = validRels
 		}
+
 		model.SetExpand(expandData)
 	}
 

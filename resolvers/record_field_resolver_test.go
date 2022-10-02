@@ -52,32 +52,32 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		{
 			"single rel",
 			[]string{"onerel.title"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4.onerel]] LIKE ('%' || [[demo4_onerel.id]] || '%')",
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.onerel]]) THEN [[demo4.onerel]] ELSE json_array([[demo4.onerel]]) END) `demo4_onerel_je` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4_onerel.id]] = [[demo4_onerel_je.value]]",
 		},
 		{
 			"non-relation field + single rel",
 			[]string{"title", "onerel.title"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4.onerel]] LIKE ('%' || [[demo4_onerel.id]] || '%')",
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.onerel]]) THEN [[demo4.onerel]] ELSE json_array([[demo4.onerel]]) END) `demo4_onerel_je` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4_onerel.id]] = [[demo4_onerel_je.value]]",
 		},
 		{
 			"nested incomplete rels",
 			[]string{"manyrels.onerel"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%')",
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.manyrels]]) THEN [[demo4.manyrels]] ELSE json_array([[demo4.manyrels]]) END) `demo4_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4_manyrels.id]] = [[demo4_manyrels_je.value]]",
 		},
 		{
 			"nested complete rels",
 			[]string{"manyrels.onerel.title"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%') LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel.id]] || '%')",
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.manyrels]]) THEN [[demo4.manyrels]] ELSE json_array([[demo4.manyrels]]) END) `demo4_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4_manyrels.id]] = [[demo4_manyrels_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_manyrels.onerel]]) THEN [[demo4_manyrels.onerel]] ELSE json_array([[demo4_manyrels.onerel]]) END) `demo4_manyrels_onerel_je` LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels_onerel.id]] = [[demo4_manyrels_onerel_je.value]]",
 		},
 		{
 			"repeated nested rels",
 			[]string{"manyrels.onerel.manyrels.onerel.title"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%') LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel.id]] || '%') LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels` ON [[demo4_manyrels_onerel.manyrels]] LIKE ('%' || [[demo4_manyrels_onerel_manyrels.id]] || '%') LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels_onerel` ON [[demo4_manyrels_onerel_manyrels.onerel]] LIKE ('%' || [[demo4_manyrels_onerel_manyrels_onerel.id]] || '%')",
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.manyrels]]) THEN [[demo4.manyrels]] ELSE json_array([[demo4.manyrels]]) END) `demo4_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4_manyrels.id]] = [[demo4_manyrels_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_manyrels.onerel]]) THEN [[demo4_manyrels.onerel]] ELSE json_array([[demo4_manyrels.onerel]]) END) `demo4_manyrels_onerel_je` LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels_onerel.id]] = [[demo4_manyrels_onerel_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_manyrels_onerel.manyrels]]) THEN [[demo4_manyrels_onerel.manyrels]] ELSE json_array([[demo4_manyrels_onerel.manyrels]]) END) `demo4_manyrels_onerel_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels` ON [[demo4_manyrels_onerel_manyrels.id]] = [[demo4_manyrels_onerel_manyrels_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_manyrels_onerel_manyrels.onerel]]) THEN [[demo4_manyrels_onerel_manyrels.onerel]] ELSE json_array([[demo4_manyrels_onerel_manyrels.onerel]]) END) `demo4_manyrels_onerel_manyrels_onerel_je` LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels_onerel` ON [[demo4_manyrels_onerel_manyrels_onerel.id]] = [[demo4_manyrels_onerel_manyrels_onerel_je.value]]",
 		},
 		{
 			"multiple rels",
 			[]string{"manyrels.title", "onerel.onefile"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4.manyrels]] LIKE ('%' || [[demo4_manyrels.id]] || '%') LEFT JOIN `demo4` `demo4_onerel` ON [[demo4.onerel]] LIKE ('%' || [[demo4_onerel.id]] || '%')",
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.manyrels]]) THEN [[demo4.manyrels]] ELSE json_array([[demo4.manyrels]]) END) `demo4_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4_manyrels.id]] = [[demo4_manyrels_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4.onerel]]) THEN [[demo4.onerel]] ELSE json_array([[demo4.onerel]]) END) `demo4_onerel_je` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4_onerel.id]] = [[demo4_onerel_je.value]]",
 		},
 		{
 			"@collection join",
@@ -87,7 +87,9 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		{
 			"static @request.user.profile fields",
 			[]string{"@request.user.id", "@request.user.profile.id", "@request.data.demo"},
-			"SELECT `demo4`.* FROM `demo4`",
+			"^" +
+				regexp.QuoteMeta("SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `profiles` `__user_profiles` ON [[__user_profiles.id]] =") +
+				" {:.*}$",
 		},
 		{
 			"relational @request.user.profile fields",
@@ -95,12 +97,12 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 			"^" +
 				regexp.QuoteMeta("SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `profiles` `__user_profiles` ON [[__user_profiles.id]] =") +
 				" {:.*} " +
-				regexp.QuoteMeta("LEFT JOIN `profiles` `__user_profiles_rel` ON [[__user_profiles.rel]] LIKE ('%' || [[__user_profiles_rel.id]] || '%')") +
+				regexp.QuoteMeta("LEFT JOIN json_each(CASE WHEN json_valid([[__user_profiles.rel]]) THEN [[__user_profiles.rel]] ELSE json_array([[__user_profiles.rel]]) END) `__user_profiles_rel_je` LEFT JOIN `profiles` `__user_profiles_rel` ON [[__user_profiles_rel.id]] = [[__user_profiles_rel_je.value]]") +
 				"$",
 		},
 	}
 
-	for i, s := range scenarios {
+	for _, s := range scenarios {
 		query := app.Dao().RecordQuery(collection)
 
 		r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData)
@@ -109,14 +111,14 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		}
 
 		if err := r.UpdateQuery(query); err != nil {
-			t.Errorf("(%d) UpdateQuery failed with error %v", i, err)
+			t.Errorf("(%s) UpdateQuery failed with error %v", s.name, err)
 			continue
 		}
 
 		rawQuery := query.Build().SQL()
 
 		if !list.ExistInSliceWithRegex(rawQuery, []string{s.expectQuery}) {
-			t.Errorf("(%d) Expected query\n %v \ngot:\n %v", i, s.expectQuery, rawQuery)
+			t.Errorf("(%s) Expected query\n %v \ngot:\n %v", s.name, s.expectQuery, rawQuery)
 		}
 	}
 }
@@ -161,6 +163,7 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		{"manyrels.title", false, "[[demo4_manyrels.title]]"},
 		{"manyrels.onerel.manyrels.onefile", false, "[[demo4_manyrels_onerel_manyrels.onefile]]"},
 		// @request.user.profile relation join:
+		{"@request.user.profile.rel", false, "[[__user_profiles.rel]]"},
 		{"@request.user.profile.rel.name", false, "[[__user_profiles_rel.name]]"},
 		// @collection fieds:
 		{"@collect", true, ""},
@@ -247,7 +250,6 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		{"@request.user", true, ""},
 		{"@request.user.id", false, `"4d0197cc-2b4a-3f83-a26b-d77bc8423d3c"`},
 		{"@request.user.profile", false, `"{\"id\":\"d13f60a4-5765-48c7-9e1d-3e782340f833\",\"name\":\"test\"}"`},
-		{"@request.user.profile.name", false, `"test"`},
 	}
 
 	for i, s := range scenarios {

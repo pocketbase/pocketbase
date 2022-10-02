@@ -7,6 +7,12 @@
 
     export let record;
     export let field;
+
+    // rough text cut to avoid rendering large chunk of texts
+    function cutText(text) {
+        text = text || "";
+        return text.length > 200 ? text.substring(0, 200) : text;
+    }
 </script>
 
 <td class="col-type-{field.type} col-field-{field.name}">
@@ -28,7 +34,9 @@
     {:else if field.type === "date"}
         <FormattedDate date={record[field.name]} />
     {:else if field.type === "json"}
-        <span class="txt txt-ellipsis">{JSON.stringify(record[field.name])}</span>
+        <span class="txt txt-ellipsis">
+            {cutText(JSON.stringify(record[field.name]))}
+        </span>
     {:else if field.type === "select"}
         <div class="inline-flex">
             {#each CommonHelper.toArray(record[field.name]) as item}
@@ -50,8 +58,8 @@
             {/each}
         </div>
     {:else}
-        <span class="txt txt-ellipsis" title={record[field.name]}>
-            {record[field.name]}
+        <span class="txt txt-ellipsis" title={cutText(record[field.name])}>
+            {cutText(record[field.name])}
         </span>
     {/if}
 </td>

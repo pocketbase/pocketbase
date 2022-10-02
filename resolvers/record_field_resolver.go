@@ -96,7 +96,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 	props := strings.Split(fieldName, ".")
 
 	currentCollectionName := r.baseCollection.Name
-	currentTableAlias := currentCollectionName
+	currentTableAlias := inflector.Columnify(currentCollectionName)
 
 	// check for @collection field (aka. non-relational join)
 	// must be in the format "@collection.COLLECTION_NAME.FIELD[.FIELD2....]"
@@ -106,14 +106,14 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		}
 
 		currentCollectionName = props[1]
-		currentTableAlias = "__collection_" + currentCollectionName
+		currentTableAlias = inflector.Columnify("__collection_" + currentCollectionName)
 
 		collection, err := r.loadCollection(currentCollectionName)
 		if err != nil {
 			return "", nil, fmt.Errorf("Failed to load collection %q from field path %q.", currentCollectionName, fieldName)
 		}
 
-		r.addJoin(collection.Name, currentTableAlias, nil)
+		r.addJoin(inflector.Columnify(collection.Name), currentTableAlias, nil)
 
 		props = props[2:] // leave only the collection fields
 	} else if props[0] == "@request" {
@@ -123,13 +123,13 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		}
 
 		// not a profile relational field
-		if len(props) <= 4 || !strings.HasPrefix(fieldName, "@request.user.profile.") {
+		if !strings.HasPrefix(fieldName, "@request.user.profile.") {
 			return r.resolveStaticRequestField(props[1:]...)
 		}
 
 		// resolve the profile collection fields
 		currentCollectionName = models.ProfileCollectionName
-		currentTableAlias = "__user_" + currentCollectionName
+		currentTableAlias = inflector.Columnify("__user_" + currentCollectionName)
 
 		collection, err := r.loadCollection(currentCollectionName)
 		if err != nil {
@@ -146,12 +146,16 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		}
 
 		// join the profile collection
-		r.addJoin(collection.Name, currentTableAlias, dbx.NewExp(fmt.Sprintf(
-			// aka. profiles.id = profileId
-			"[[%s.id]] = %s",
-			inflector.Columnify(currentTableAlias),
-			profileIdPlaceholder,
-		), profileIdPlaceholderParam))
+		r.addJoin(
+			inflector.Columnify(collection.Name),
+			currentTableAlias,
+			dbx.NewExp(fmt.Sprintf(
+				// aka. profiles.id = profileId
+				"[[%s.id]] = %s",
+				currentTableAlias,
+				profileIdPlaceholder,
+			), profileIdPlaceholderParam),
+		)
 
 		props = props[3:] // leave only the profile fields
 	}
@@ -168,7 +172,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 
 		// base model prop (always available but not part of the collection schema)
 		if list.ExistInSlice(prop, baseModelFields) {
-			return fmt.Sprintf("[[%s.%s]]", inflector.Columnify(currentTableAlias), inflector.Columnify(prop)), nil, nil
+			return fmt.Sprintf("[[%s.%s]]", currentTableAlias, inflector.Columnify(prop)), nil, nil
 		}
 
 		field := collection.Schema.GetFieldByName(prop)
@@ -178,7 +182,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 
 		// last prop
 		if i == totalProps-1 {
-			return fmt.Sprintf("[[%s.%s]]", inflector.Columnify(currentTableAlias), inflector.Columnify(prop)), nil, nil
+			return fmt.Sprintf("[[%s.%s]]", currentTableAlias, inflector.Columnify(prop)), nil, nil
 		}
 
 		// check if it is a relation field
@@ -198,20 +202,27 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		if relErr != nil {
 			return "", nil, fmt.Errorf("Failed to find field %q collection.", prop)
 		}
+
+		cleanFieldName := inflector.Columnify(field.Name)
 		newCollectionName := relCollection.Name
-		newTableAlias := currentTableAlias + "_" + field.Name
+		newTableAlias := currentTableAlias + "_" + cleanFieldName
+
+		jeTable := currentTableAlias + "_" + cleanFieldName + "_je"
+		jePair := currentTableAlias + "." + cleanFieldName
 
 		r.addJoin(
-			newCollectionName,
+			fmt.Sprintf(
+				// note: the case is used to normalize value access for single and multiple relations.
+				`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END)`,
+				jePair, jePair, jePair,
+			),
+			jeTable,
+			nil,
+		)
+		r.addJoin(
+			inflector.Columnify(newCollectionName),
 			newTableAlias,
-			dbx.NewExp(fmt.Sprintf(
-				// 'LIKE' expr is used to handle the case when the reference field supports multiple values (aka. is json array)
-				"[[%s.%s]] LIKE ('%%' || [[%s.%s]] || '%%')",
-				inflector.Columnify(currentTableAlias),
-				inflector.Columnify(field.Name),
-				inflector.Columnify(newTableAlias),
-				inflector.Columnify("id"),
-			)),
+			dbx.NewExp(fmt.Sprintf("[[%s.id]] = [[%s.value]]", newTableAlias, jeTable)),
 		)
 
 		currentCollectionName = newCollectionName
@@ -296,11 +307,7 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*models
 }
 
 func (r *RecordFieldResolver) addJoin(tableName string, tableAlias string, on dbx.Expression) {
-	tableExpr := fmt.Sprintf(
-		"%s %s",
-		inflector.Columnify(tableName),
-		inflector.Columnify(tableAlias),
-	)
+	tableExpr := fmt.Sprintf("%s %s", tableName, tableAlias)
 
 	join := join{
 		id:    tableAlias,

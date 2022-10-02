@@ -121,7 +121,11 @@ PocketBase is free and open source project licensed under the [MIT License](LICE
 You could help continuing its development by:
 
 - [Contribute to the source code](CONTRIBUTING.md)
+
+  > **NB! PR for new features will not be merged until we manage to complete the users refactoring in [#376](https://github.com/pocketbase/pocketbase/issues/376)!**
+
 - [Suggest new features and report issues](https://github.com/pocketbase/pocketbase/issues)
+
 - [Donate a small amount](https://pocketbase.io/support-us)
 
 > Please note that PocketBase was initially created to serve as a new backend for my other open source project - [Presentator](https://presentator.io) (see [#183](https://github.com/presentator/presentator/issues/183)),

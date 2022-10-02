@@ -196,6 +196,12 @@ var inlineServeContentTypes = []string{
 	"application/pdf", "application/x-pdf",
 }
 
+// manualExtensionContentTypes is a map of file extensions to content types.
+var manualExtensionContentTypes = map[string]string{
+	".svg": "image/svg+xml", // (see https://github.com/whatwg/mimesniff/issues/7)
+	".css": "text/css",      // (see https://github.com/gabriel-vasile/mimetype/pull/113)
+}
+
 // Serve serves the file at fileKey location to an HTTP response.
 func (s *System) Serve(response http.ResponseWriter, fileKey string, name string) error {
 	r, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
@@ -210,18 +216,22 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 		disposition = "inline"
 	}
 
-	// make an exception for svg and force a custom content type
-	// to send in the response so that it can be loaded in an img tag
-	// (see https://github.com/whatwg/mimesniff/issues/7)
+	// make an exception for specific content types and force a custom
+	// content type to send in the response so that it can be loaded directly
 	extContentType := realContentType
-	if extContentType != "image/svg+xml" && filepath.Ext(name) == ".svg" {
-		extContentType = "image/svg+xml"
+	if ct, found := manualExtensionContentTypes[filepath.Ext(name)]; found && extContentType != ct {
+		extContentType = ct
 	}
+
+	// clickjacking shouldn't be a concern when serving uploaded files,
+	// so it safe to unset the global X-Frame-Options to allow files embedding
+	// (see https://github.com/pocketbase/pocketbase/issues/677)
+	response.Header().Del("X-Frame-Options")
 
 	response.Header().Set("Content-Disposition", disposition+"; filename="+name)
 	response.Header().Set("Content-Type", extContentType)
 	response.Header().Set("Content-Length", strconv.FormatInt(r.Size(), 10))
-	response.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox")
+	response.Header().Set("Content-Security-Policy", "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox")
 
 	// All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
 	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
@@ -271,8 +281,8 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 	}
 	defer r.Close()
 
-	// create imaging object from the origial reader
-	img, decodeErr := imaging.Decode(r)
+	// create imaging object from the original reader
+	img, decodeErr := imaging.Decode(r, imaging.AutoOrientation(true))
 	if decodeErr != nil {
 		return decodeErr
 	}
@@ -305,8 +315,15 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 		return writerErr
 	}
 
+	// try to detect the thumb format based on the original file name
+	// (fallbacks to png on error)
+	format, err := imaging.FormatFromFilename(thumbKey)
+	if err != nil {
+		format = imaging.PNG
+	}
+
 	// thumb encode (aka. upload)
-	if err := imaging.Encode(w, thumbImg, imaging.PNG); err != nil {
+	if err := imaging.Encode(w, thumbImg, format); err != nil {
 		w.Close()
 		return err
 	}

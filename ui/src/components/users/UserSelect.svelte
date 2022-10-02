@@ -23,9 +23,9 @@
 
     $: canLoadMore = totalItems > list.length;
 
-    loadList(true);
-
-    loadSelected();
+    loadList(true).then(() => {
+        loadSelected();
+    });
 
     async function loadSelected() {
         const selectedIds = CommonHelper.toArray(keyOfSelected);
@@ -41,14 +41,22 @@
                 filters.push(`id="${id}"`);
             }
 
-            selected = await ApiClient.users.getFullList(100, {
-                sort: "-created",
+            const result = await ApiClient.users.getFullList(100, {
                 filter: filters.join("||"),
                 $cancelKey: uniqueId + "loadSelected",
             });
 
+            // preserve selected order
+            selected = [];
+            for (const id of selectedIds) {
+                const item = CommonHelper.findByKey(result, "id", id);
+                if (item) {
+                    selected.push(item);
+                }
+            }
+
             // add the selected models to the list (if not already)
-            list = CommonHelper.filterDuplicatesByKey(list.concat(selected));
+            list = CommonHelper.filterDuplicatesByKey(selected.concat(list));
         } catch (err) {
             ApiClient.errorResponseHandler(err);
         }
@@ -68,10 +76,12 @@
             });
 
             if (reset) {
-                list = [];
+                list = CommonHelper.toArray(selected).slice();
             }
 
-            list = CommonHelper.filterDuplicatesByKey(list.concat(result.items));
+            list = CommonHelper.filterDuplicatesByKey(
+                list.concat(result.items, CommonHelper.toArray(selected))
+            );
             currentPage = result.page;
             totalItems = result.totalItems;
         } catch (err) {

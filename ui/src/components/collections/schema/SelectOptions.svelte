@@ -14,7 +14,7 @@
         };
     }
 
-    // leave the validation to the api
+    // note: leave the validation to the api
     // $: if (!CommonHelper.isEmpty(options.values) && options.maxSelect > options.values.length) {
     //     options.maxSelect = options.values.length;
     // }
