@@ -223,6 +223,11 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 		extContentType = ct
 	}
 
+	// clickjacking shouldn't be a concern when serving static files,
+	// so it safe to unset the global X-Frame-Options to allow files embedding
+	// (https://github.com/pocketbase/pocketbase/issues/677)
+	response.Header().Del("X-Frame-Options")
+
 	response.Header().Set("Content-Disposition", disposition+"; filename="+name)
 	response.Header().Set("Content-Type", extContentType)
 	response.Header().Set("Content-Length", strconv.FormatInt(r.Size(), 10))

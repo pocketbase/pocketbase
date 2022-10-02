@@ -240,6 +240,10 @@ func TestFileSystemServe(t *testing.T) {
 				t.Errorf("(%s) Expected value %q for header %q, got %q", scenario.path, hValue, hName, v)
 			}
 		}
+
+		if v := result.Header.Get("X-Frame-Options"); v != "" {
+			t.Errorf("(%s) Expected the X-Frame-Options header to be unset, got %v", scenario.path, v)
+		}
 	}
 }
 
