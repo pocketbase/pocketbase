@@ -216,16 +216,16 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 		disposition = "inline"
 	}
 
-	// make an exception for specific content types and force a
-	// custom content type to send in the response so that it can be loaded directly.
+	// make an exception for specific content types and force a custom
+	// content type to send in the response so that it can be loaded directly
 	extContentType := realContentType
 	if ct, found := manualExtensionContentTypes[filepath.Ext(name)]; found && extContentType != ct {
 		extContentType = ct
 	}
 
-	// clickjacking shouldn't be a concern when serving static files,
+	// clickjacking shouldn't be a concern when serving uploaded files,
 	// so it safe to unset the global X-Frame-Options to allow files embedding
-	// (https://github.com/pocketbase/pocketbase/issues/677)
+	// (see https://github.com/pocketbase/pocketbase/issues/677)
 	response.Header().Del("X-Frame-Options")
 
 	response.Header().Set("Content-Disposition", disposition+"; filename="+name)
