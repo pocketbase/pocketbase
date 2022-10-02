@@ -226,7 +226,7 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	response.Header().Set("Content-Disposition", disposition+"; filename="+name)
 	response.Header().Set("Content-Type", extContentType)
 	response.Header().Set("Content-Length", strconv.FormatInt(r.Size(), 10))
-	response.Header().Set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox")
+	response.Header().Set("Content-Security-Policy", "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox")
 
 	// All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
 	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
