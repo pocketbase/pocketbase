@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/benallfree/pbscript/modules/pbscript/engine"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -22,6 +23,7 @@ func defaultPublicDir() string {
 
 func main() {
 	app := pocketbase.New()
+	engine.StartPBScript(app)
 
 	var publicDirFlag string
 
