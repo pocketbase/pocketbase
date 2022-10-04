@@ -39,19 +39,19 @@
         </span>
     {:else if field.type === "select"}
         <div class="inline-flex">
-            {#each CommonHelper.toArray(record[field.name]) as item}
+            {#each CommonHelper.toArray(record[field.name]) as item, i (i + item)}
                 <span class="label">{item}</span>
             {/each}
         </div>
     {:else if field.type === "relation" || field.type === "user"}
         <div class="inline-flex">
-            {#each CommonHelper.toArray(record[field.name]) as item}
+            {#each CommonHelper.toArray(record[field.name]) as item, i (i + item)}
                 <IdLabel id={item} />
             {/each}
         </div>
     {:else if field.type === "file"}
         <div class="inline-flex">
-            {#each CommonHelper.toArray(record[field.name]) as filename}
+            {#each CommonHelper.toArray(record[field.name]) as filename, i (i + filename)}
                 <figure class="thumb thumb-sm">
                     <RecordFilePreview {record} {filename} />
                 </figure>

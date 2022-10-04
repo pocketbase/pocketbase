@@ -39,6 +39,16 @@
 
     $: areAllRecordsSelected = records.length && totalBulkSelected === records.length;
 
+    export async function reloadLoadedPages() {
+        const loadedPages = currentPage;
+
+        for (let i = 1; i <= loadedPages; i++) {
+            if (i === 1 || canLoadMore) {
+                await load(i);
+            }
+        }
+    }
+
     export async function load(page = 1) {
         if (!collection?.id) {
             return;
@@ -143,7 +153,7 @@
                 isDeleting = false;
 
                 // always reload because some of the records may not be deletable
-                return load();
+                return reloadLoadedPages();
             });
     }
 </script>

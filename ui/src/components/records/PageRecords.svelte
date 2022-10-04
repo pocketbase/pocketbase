@@ -148,6 +148,6 @@
 <RecordUpsertPanel
     bind:this={recordPanel}
     collection={$activeCollection}
-    on:save={() => recordsList?.load()}
-    on:delete={() => recordsList?.load()}
+    on:save={() => recordsList?.reloadLoadedPages()}
+    on:delete={() => recordsList?.reloadLoadedPages()}
 />
