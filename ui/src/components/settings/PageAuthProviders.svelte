@@ -110,6 +110,8 @@
                             title={provider.title}
                             icon={provider.icon || "ri-fingerprint-line"}
                             showSelfHostedFields={provider.selfHosted}
+                            showSelfHostedRequired={provider.selfHostedRequired}
+                            selfHostedDescription={provider.selfHostedDescription}
                             bind:config={formSettings[key]}
                         />
                     {/each}

@@ -15,6 +15,7 @@ type baseProvider struct {
 	scopes       []string
 	clientId     string
 	clientSecret string
+	tenant       string
 	redirectUrl  string
 	authUrl      string
 	tokenUrl     string
@@ -49,6 +50,16 @@ func (p *baseProvider) ClientSecret() string {
 // SetClientSecret implements Provider.SetClientSecret interface.
 func (p *baseProvider) SetClientSecret(secret string) {
 	p.clientSecret = secret
+}
+
+// Tenant implements Provider.Tenant interface.
+func (p *baseProvider) Tenant() string {
+	return p.tenant
+}
+
+// SetTenant implements Provider.SetTenant interface.
+func (p *baseProvider) SetTenant(tenant string) {
+	p.tenant = tenant
 }
 
 // RedirectUrl implements Provider.RedirectUrl interface.

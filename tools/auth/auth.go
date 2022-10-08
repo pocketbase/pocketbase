@@ -36,6 +36,12 @@ type Provider interface {
 	// SetClientSecret sets the provider client's app secret.
 	SetClientSecret(secret string)
 
+	// OAuth Tenant for Microsoft AD
+	Tenant() string
+
+	// SetTenant sets the Microsoft AD tenant
+	SetTenant(tenant string)
+
 	// RedirectUrl returns the end address to redirect the user
 	// going through the OAuth flow.
 	RedirectUrl() string
@@ -95,6 +101,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewDiscordProvider(), nil
 	case NameTwitter:
 		return NewTwitterProvider(), nil
+	case NameMicrosoftAd:
+		return NewMicrosoftAdProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
