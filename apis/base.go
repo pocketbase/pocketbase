@@ -92,6 +92,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	BindFileApi(app, api)
 	BindRealtimeApi(app, api)
 	BindLogsApi(app, api)
+	BindViewApi(app, api)
 
 	// trigger the custom BeforeServe hook for the created api router
 	// allowing users to further adjust its options or register new routes

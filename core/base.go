@@ -120,6 +120,17 @@ type BaseApp struct {
 	onCollectionAfterDeleteRequest   *hook.Hook[*CollectionDeleteEvent]
 	onCollectionsBeforeImportRequest *hook.Hook[*CollectionsImportEvent]
 	onCollectionsAfterImportRequest  *hook.Hook[*CollectionsImportEvent]
+
+	// View api event hooks
+	onRecordsFromViewListRequest *hook.Hook[*RecordsFromViewListEvent]
+	onViewListRequest            *hook.Hook[*ViewListEvent]
+	onViewViewRequest            *hook.Hook[*ViewViewEvent]
+	onViewBeforeCreateRequest    *hook.Hook[*ViewCreateEvent]
+	onViewAfterCreateRequest     *hook.Hook[*ViewCreateEvent]
+	onViewBeforeUpdateRequest    *hook.Hook[*ViewUpdateEvent]
+	onViewAfterUpdateRequest     *hook.Hook[*ViewUpdateEvent]
+	onViewBeforeDeleteRequest    *hook.Hook[*ViewDeleteEvent]
+	onViewAfterDeleteRequest     *hook.Hook[*ViewDeleteEvent]
 }
 
 // NewBaseApp creates and returns a new BaseApp instance
@@ -215,6 +226,17 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onCollectionAfterDeleteRequest:   &hook.Hook[*CollectionDeleteEvent]{},
 		onCollectionsBeforeImportRequest: &hook.Hook[*CollectionsImportEvent]{},
 		onCollectionsAfterImportRequest:  &hook.Hook[*CollectionsImportEvent]{},
+
+		// View api event hooks
+		onRecordsFromViewListRequest: &hook.Hook[*RecordsFromViewListEvent]{},
+		onViewListRequest:            &hook.Hook[*ViewListEvent]{},
+		onViewViewRequest:            &hook.Hook[*ViewViewEvent]{},
+		onViewBeforeCreateRequest:    &hook.Hook[*ViewCreateEvent]{},
+		onViewAfterCreateRequest:     &hook.Hook[*ViewCreateEvent]{},
+		onViewBeforeUpdateRequest:    &hook.Hook[*ViewUpdateEvent]{},
+		onViewAfterUpdateRequest:     &hook.Hook[*ViewUpdateEvent]{},
+		onViewBeforeDeleteRequest:    &hook.Hook[*ViewDeleteEvent]{},
+		onViewAfterDeleteRequest:     &hook.Hook[*ViewDeleteEvent]{},
 	}
 
 	app.registerDefaultHooks()
@@ -703,6 +725,46 @@ func (app *BaseApp) OnCollectionsBeforeImportRequest() *hook.Hook[*CollectionsIm
 
 func (app *BaseApp) OnCollectionsAfterImportRequest() *hook.Hook[*CollectionsImportEvent] {
 	return app.onCollectionsAfterImportRequest
+}
+
+// -------------------------------------------------------------------
+// View API event hooks
+// -------------------------------------------------------------------
+
+func (app *BaseApp) OnRecordsFromViewListRequest() *hook.Hook[*RecordsFromViewListEvent] {
+	return app.onRecordsFromViewListRequest
+}
+
+func (app *BaseApp) OnViewListRequest() *hook.Hook[*ViewListEvent] {
+	return app.onViewListRequest
+}
+
+func (app *BaseApp) OnViewViewRequest() *hook.Hook[*ViewViewEvent] {
+	return app.onViewViewRequest
+}
+
+func (app *BaseApp) OnViewBeforeCreateRequest() *hook.Hook[*ViewCreateEvent] {
+	return app.onViewBeforeCreateRequest
+}
+
+func (app *BaseApp) OnViewAfterCreateRequest() *hook.Hook[*ViewCreateEvent] {
+	return app.onViewAfterCreateRequest
+}
+
+func (app *BaseApp) OnViewBeforeUpdateRequest() *hook.Hook[*ViewUpdateEvent] {
+	return app.onViewBeforeUpdateRequest
+}
+
+func (app *BaseApp) OnViewAfterUpdateRequest() *hook.Hook[*ViewUpdateEvent] {
+	return app.onViewAfterUpdateRequest
+}
+
+func (app *BaseApp) OnViewBeforeDeleteRequest() *hook.Hook[*ViewDeleteEvent] {
+	return app.onViewBeforeDeleteRequest
+}
+
+func (app *BaseApp) OnViewAfterDeleteRequest() *hook.Hook[*ViewDeleteEvent] {
+	return app.onViewAfterDeleteRequest
 }
 
 // -------------------------------------------------------------------
