@@ -20,12 +20,15 @@ func (dao *Dao) RecordFromViewQuery(view *models.View) *dbx.SelectQuery {
 	return dao.DB().Select(selectCols).From(viewName)
 }
 
-// FindViewByName finds the view by its name or id.
-func (dao *Dao) FindViewByName(name string) (*models.View, error) {
+// FindViewByIdOrName finds the view by its name or id.
+func (dao *Dao) FindViewByIdOrName(nameOrId string) (*models.View, error) {
 	model := &models.View{}
 
 	err := dao.ViewQuery().
-		Where(dbx.HashExp{"name": name}).
+		AndWhere(dbx.Or(
+			dbx.HashExp{"id": nameOrId},
+			dbx.HashExp{"name": nameOrId},
+		)).
 		Limit(1).
 		One(model)
 	if err != nil {

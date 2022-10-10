@@ -45,7 +45,7 @@ func TestFindViewByName(t *testing.T) {
 	}
 
 	for i, scenario := range scenarios {
-		model, err := app.Dao().FindViewByName(scenario.name)
+		model, err := app.Dao().FindViewByIdOrName(scenario.name)
 		hasErr := err != nil
 		if hasErr != scenario.expectError {
 			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, scenario.expectError, hasErr, err)
@@ -85,11 +85,11 @@ func TestDeleteViews(t *testing.T) {
 	defer app.Cleanup()
 
 	c0 := &models.View{}
-	c1, err := app.Dao().FindViewByName("view_demo")
+	c1, err := app.Dao().FindViewByIdOrName("view_demo")
 	if err != nil {
 		t.Fatal(err)
 	}
-	c2, err := app.Dao().FindViewByName("view_demo2")
+	c2, err := app.Dao().FindViewByIdOrName("view_demo2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +144,7 @@ func TestSaveView(t *testing.T) {
 		Sql:  `SELECT * from profiles`,
 	}
 
-	err := app.Dao().SaveView(view)
+	_, err := app.Dao().SaveView(view)
 	if err != nil {
 		t.Fatal(err)
 	}

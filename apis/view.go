@@ -34,7 +34,7 @@ type ViewApi struct {
 }
 
 func (api *ViewApi) list(c echo.Context) error {
-	v, err := api.app.Dao().FindViewByName(c.PathParam("view"))
+	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil {
 		return rest.NewNotFoundError("View was not found", err)
 	}
@@ -100,7 +100,7 @@ func (api *ViewApi) adminList(c echo.Context) error {
 }
 
 func (api *ViewApi) view(c echo.Context) error {
-	v, err := api.app.Dao().FindViewByName(c.PathParam("view"))
+	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil || v == nil {
 		return rest.NewNotFoundError("", err)
 	}
@@ -151,7 +151,7 @@ func (api *ViewApi) create(c echo.Context) error {
 }
 
 func (api *ViewApi) update(c echo.Context) error {
-	v, err := api.app.Dao().FindViewByName(c.PathParam("view"))
+	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil || v == nil {
 		return rest.NewNotFoundError("", err)
 	}
@@ -189,7 +189,7 @@ func (api *ViewApi) update(c echo.Context) error {
 }
 
 func (api *ViewApi) delete(c echo.Context) error {
-	v, err := api.app.Dao().FindViewByName(c.PathParam("view"))
+	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil || v == nil {
 		return rest.NewNotFoundError("", err)
 	}
