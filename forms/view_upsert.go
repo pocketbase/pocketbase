@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"fmt"
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -74,6 +75,11 @@ func NewViewUpsertWithConfig(config ViewUpsertConfig, view *models.View) *ViewUp
 func (form *ViewUpsert) Validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(
+			&form.Sql,
+			validation.Required,
+			validation.By(form.checkSqlValid),
+		),
+		validation.Field(
 			&form.Name,
 			validation.Required,
 			validation.Length(1, 255),
@@ -88,11 +94,6 @@ func (form *ViewUpsert) Validate() error {
 				validation.Match(idRegex),
 			).Else(validation.In(form.view.Id)),
 		),
-		validation.Field(
-			&form.Sql,
-			validation.Required,
-			validation.By(form.checkSqlValid),
-		),
 	)
 }
 
@@ -101,6 +102,10 @@ func (form *ViewUpsert) checkUniqueName(value any) error {
 
 	if !form.config.Dao.IsViewNameUnique(v, form.view.Id) {
 		return validation.NewError("validation_view_name_exists", "View name must be unique (case insensitive).")
+	}
+
+	if form.config.Dao.HasTable(form.view.Name) {
+		return validation.NewError("validation_view_name_same_as_collection", fmt.Sprintf("View name '%s'must not be same as collection (case insensitive).", form.view.Name))
 	}
 
 	return nil
@@ -113,14 +118,14 @@ func (form *ViewUpsert) checkSqlValid(value any) error {
 	query = strings.Split(query, ";")[0]
 
 	db := form.config.Dao.DB().(*dbx.DB)
+	tx, err := db.Begin()
 	var totalChangesBefore int
+	defer tx.Rollback()
 	// testing changes before
 	// total_changes() function return changes done by insert, update, delete
-	db.NewQuery("select total_changes()").Row(&totalChangesBefore)
 
 	// doing the test in transaction even if the data changes it can be reverted
-	tx, err := db.Begin()
-	defer tx.Rollback()
+	db.NewQuery("select total_changes()").Row(&totalChangesBefore)
 	if err != nil {
 		return err
 	}
@@ -128,10 +133,11 @@ func (form *ViewUpsert) checkSqlValid(value any) error {
 	if err != nil {
 		return validation.NewError("validation_sql_invalid", err.Error())
 	}
-
 	var totalChangesAfter int
 	// testing changes after
 	db.NewQuery("select total_changes()").Row(&totalChangesAfter)
+
+	fmt.Println("before", totalChangesBefore, "after", totalChangesAfter)
 
 	if totalChangesAfter > totalChangesBefore {
 		return validation.NewError("validation_sql_invalid", "SQL should not affect data")
