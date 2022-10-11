@@ -165,11 +165,7 @@ func (form *ViewUpsert) Submit(interceptors ...InterceptorFunc) error {
 		}
 	}
 
-	// system collections cannot be renamed
-	if form.view.IsNew() {
-		form.view.Name = form.Name
-	}
-
+	form.view.Name = form.Name
 	form.view.ListRule = form.ListRule
 	form.view.Sql = form.Sql
 
