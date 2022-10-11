@@ -52,6 +52,9 @@ func (dao *Dao) IsViewNameUnique(name string, excludeId string) bool {
 		AndWhere(dbx.NewExp("LOWER([[name]])={:name}", dbx.Params{"name": strings.ToLower(name)})).
 		Limit(1).
 		Row(&exists)
+	if err == nil && !exists {
+		dao.DeleteView(name)
+	}
 
 	return err == nil && !exists
 }

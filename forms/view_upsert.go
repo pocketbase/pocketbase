@@ -1,12 +1,10 @@
 package forms
 
 import (
-	"database/sql"
-	"fmt"
-	"path/filepath"
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
@@ -50,7 +48,6 @@ func NewViewUpsert(app core.App, view *models.View) *ViewUpsert {
 // with the provided config and [models.Collection] instance or panics on invalid configuration
 // (for create you could pass a pointer to an empty Collection - `&models.Collection{}`).
 func NewViewUpsertWithConfig(config ViewUpsertConfig, view *models.View) *ViewUpsert {
-	fmt.Println("RUN")
 	form := &ViewUpsert{
 		config: config,
 		view:   view,
@@ -105,42 +102,39 @@ func (form *ViewUpsert) checkUniqueName(value any) error {
 	if !form.config.Dao.IsViewNameUnique(v, form.view.Id) {
 		return validation.NewError("validation_view_name_exists", "View name must be unique (case insensitive).")
 	}
-	if (form.view.IsNew() || !strings.EqualFold(v, form.view.Name)) && form.config.Dao.HasView(v) {
-		return validation.NewError("validation_view_name_table_exists", "The View name must be also unique view name.")
-	}
 
 	return nil
 }
 
 func (form *ViewUpsert) checkSqlValid(value any) error {
+	// the query provided should not affect any data
+	// testing before and after the query to make sure the data do not change
 	query, _ := value.(string)
-	query = "CREATE VIEW TEST1 AS " + query
 	query = strings.Split(query, ";")[0]
-	fmt.Println(query)
 
-	dbPath := filepath.Join(form.config.App.DataDir(), "data.db")
-	params := "mode=ro"
-	db, err := sql.Open("sqlite3", fmt.Sprintf("%s?%s", dbPath, params))
-	defer db.Close()
-	if err != nil {
-		return err
-	}
+	db := form.config.Dao.DB().(*dbx.DB)
+	var totalChangesBefore int
+	// testing changes before
+	// total_changes() function return changes done by insert, update, delete
+	db.NewQuery("select total_changes()").Row(&totalChangesBefore)
+
+	// doing the test in transaction even if the data changes it can be reverted
 	tx, err := db.Begin()
+	defer tx.Rollback()
 	if err != nil {
 		return err
 	}
-	res, err := tx.Exec(query)
+	_, err = tx.NewQuery(query).Rows()
 	if err != nil {
-		tx.Rollback()
 		return validation.NewError("validation_sql_invalid", err.Error())
 	}
-	tx.Rollback()
-	n, _ := res.RowsAffected()
-	if n > 0 {
+
+	var totalChangesAfter int
+	// testing changes after
+	db.NewQuery("select total_changes()").Row(&totalChangesAfter)
+
+	if totalChangesAfter > totalChangesBefore {
 		return validation.NewError("validation_sql_invalid", "SQL should not affect data")
-	}
-	if err != nil {
-		return validation.NewError("validation_sql_invalid", err.Error())
 	}
 	return nil
 }
