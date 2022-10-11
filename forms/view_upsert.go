@@ -50,6 +50,7 @@ func NewViewUpsert(app core.App, view *models.View) *ViewUpsert {
 // with the provided config and [models.Collection] instance or panics on invalid configuration
 // (for create you could pass a pointer to an empty Collection - `&models.Collection{}`).
 func NewViewUpsertWithConfig(config ViewUpsertConfig, view *models.View) *ViewUpsert {
+	fmt.Println("RUN")
 	form := &ViewUpsert{
 		config: config,
 		view:   view,
@@ -113,6 +114,10 @@ func (form *ViewUpsert) checkUniqueName(value any) error {
 
 func (form *ViewUpsert) checkSqlValid(value any) error {
 	query, _ := value.(string)
+	query = "CREATE VIEW TEST1 AS " + query
+	query = strings.Split(query, ";")[0]
+	fmt.Println(query)
+
 	dbPath := filepath.Join(form.config.App.DataDir(), "data.db")
 	params := "mode=ro"
 	db, err := sql.Open("sqlite3", fmt.Sprintf("%s?%s", dbPath, params))
@@ -126,6 +131,7 @@ func (form *ViewUpsert) checkSqlValid(value any) error {
 	}
 	res, err := tx.Exec(query)
 	if err != nil {
+		tx.Rollback()
 		return validation.NewError("validation_sql_invalid", err.Error())
 	}
 	tx.Rollback()
@@ -149,6 +155,7 @@ func (form *ViewUpsert) Submit(interceptors ...InterceptorFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
+	form.Sql = strings.Split(form.Sql, ";")[0]
 
 	if form.view.IsNew() {
 		// custom insertion id can be set only on create
