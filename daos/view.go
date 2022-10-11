@@ -56,27 +56,31 @@ func (dao *Dao) IsViewNameUnique(name string, excludeId string) bool {
 	return err == nil && !exists
 }
 
-// DeleteView deletes the provided View model.
-func (dao *Dao) DeleteView(view *models.View) error {
+func (dao *Dao) DeleteView(viewName string) error {
+	sql := "DROP VIEW IF EXISTS" + dao.DB().QuoteSimpleTableName(viewName)
+	_, err := dao.DB().NewQuery(sql).Execute()
+	return err
+}
+
+func (dao *Dao) DeleteViewModel(view *models.View) error {
 	return dao.RunInTransaction(func(txDao *Dao) error {
-		sql := "DROP VIEW " + dao.DB().QuoteSimpleTableName(view.Name)
-		_, err := dao.DB().NewQuery(sql).Execute()
+		err := dao.DeleteView(view.Name)
 		if err != nil {
 			return err
 		}
-		return txDao.Delete(view)
+		txDao.Delete(view)
+		return nil
 	})
 }
 
 func (dao *Dao) CreateOrReplaceView(view *models.View) error {
 	// drop if exists
-	sql := "DROP VIEW IF EXISTS " + dao.DB().QuoteSimpleTableName(view.Name)
-	_, err := dao.DB().NewQuery(sql).Execute()
+	err := dao.DeleteView(view.Name)
 	if err != nil {
 		return err
 	}
 	// create
-	sql = fmt.Sprintf("CREATE VIEW %s AS %s", dao.DB().QuoteSimpleTableName(view.Name), view.Sql)
+	sql := fmt.Sprintf("CREATE VIEW %s AS %s", dao.DB().QuoteSimpleTableName(view.Name), view.Sql)
 	_, err = dao.DB().NewQuery(sql).Execute()
 
 	return err

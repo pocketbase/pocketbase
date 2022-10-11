@@ -191,6 +191,7 @@ func (api *ViewApi) update(c echo.Context) error {
 func (api *ViewApi) delete(c echo.Context) error {
 	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil || v == nil {
+		api.app.Dao().DeleteView(c.PathParam("view"))
 		return rest.NewNotFoundError("", err)
 	}
 
@@ -200,7 +201,7 @@ func (api *ViewApi) delete(c echo.Context) error {
 	}
 
 	handlerErr := api.app.OnViewBeforeDeleteRequest().Trigger(event, func(e *core.ViewDeleteEvent) error {
-		if err := api.app.Dao().DeleteView(e.View); err != nil {
+		if err := api.app.Dao().DeleteViewModel(e.View); err != nil {
 			return rest.NewBadRequestError("Failed to delete View. ", err)
 		}
 

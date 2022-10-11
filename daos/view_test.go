@@ -104,7 +104,7 @@ func TestDeleteViews(t *testing.T) {
 	}
 
 	for i, scenario := range scenarios {
-		err := app.Dao().DeleteView(scenario.model)
+		err := app.Dao().DeleteViewModel(scenario.model)
 		hasErr := err != nil
 
 		if hasErr != scenario.expectError {
