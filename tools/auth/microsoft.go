@@ -22,18 +22,18 @@ func NewMicrosoftAdProvider() *MicrosoftAd {
 		scopes:     []string{"User.Read"},
 		authUrl:    endpoints.AuthURL,
 		tokenUrl:   endpoints.TokenURL,
-		userApiUrl: "https:/graph.microsoft.com/oidc/userinfo",
+		userApiUrl: "https://graph.microsoft.com/v1.0/me",
 	}}
 }
 
 // FetchAuthUser returns an AuthUser instance based on the Microsoft's user api.
 func (p *MicrosoftAd) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	// https://learn.microsoft.com/en-us/azure/active-directory/develop/userinfo
+	// explore graph: https://developer.microsoft.com/en-us/graph/graph-explorer
 	rawData := struct {
-		Id      string `json:"sub"`
-		Name    string `json:"name"`
-		Email   string `json:"email"`
-		Picture string `json:"picture"`
+		Id    string `json:"id"`
+		Name  string `json:"displayName"`
+		Email string `json:"mail"`
 	}{}
 
 	if err := p.FetchRawUserData(token, &rawData); err != nil {
@@ -41,10 +41,9 @@ func (p *MicrosoftAd) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:        rawData.Id,
-		Name:      rawData.Name,
-		Email:     rawData.Email,
-		AvatarUrl: rawData.Picture,
+		Id:    rawData.Id,
+		Name:  rawData.Name,
+		Email: rawData.Email,
 	}
 
 	return user, nil

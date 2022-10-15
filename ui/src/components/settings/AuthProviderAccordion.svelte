@@ -108,7 +108,7 @@
                             </Field>
                         </div>
                         <div class="col-lg-4">
-                            <Field class="form-field {showSelfHostedRequired}" name="{key}.userApiUrl" let:uniqueId>
+                            <Field class="form-field" name="{key}.userApiUrl" let:uniqueId>
                                 <label for={uniqueId}>Custom User API URL</label>
                                 <input type="text" id={uniqueId} bind:value={config.userApiUrl} />
                             </Field>
