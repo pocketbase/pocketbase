@@ -8,7 +8,7 @@ import (
 var _ Provider = (*MicrosoftAd)(nil)
 
 // NameMicrosoftAd is the unique name of the MicrosoftAD provider.
-const NameMicrosoftAd string = "microsoft"
+const NameMicrosoftAd string = "microsoftAd"
 
 // Microsoft allows authentication via AzureADEndpoint OAuth2.
 type MicrosoftAd struct {
@@ -19,7 +19,7 @@ type MicrosoftAd struct {
 func NewMicrosoftAdProvider() *MicrosoftAd {
 	endpoints := microsoft.AzureADEndpoint("")
 	return &MicrosoftAd{&baseProvider{
-		scopes:     []string{"User.default", "User.profile", "User.email"},
+		scopes:     []string{"User.Read"},
 		authUrl:    endpoints.AuthURL,
 		tokenUrl:   endpoints.TokenURL,
 		userApiUrl: "https:/graph.microsoft.com/oidc/userinfo",

@@ -111,7 +111,7 @@ func TestSettingsMerge(t *testing.T) {
 	s2.TwitterAuth.Enabled = true
 	s2.TwitterAuth.ClientId = "twitter_test"
 	s2.MicrosoftAdAuth.Enabled = true
-	s2.MicrosoftAdAuth.ClientId = "microsoft_test"
+	s2.MicrosoftAdAuth.ClientId = "microsoft_ad_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
@@ -217,7 +217,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"discord":{"enabled":false,"allowRegistrations":true,"clientId":"discord_test"},"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"},"twitter":{"enabled":false,"allowRegistrations":true,"clientId":"twitter_test"},"microsoft ad":{"enabled":false,"allowRegistrations":true,"clientId":"microsoft_test"}}`
+	expected := `{"discord":{"enabled":false,"allowRegistrations":true,"clientId":"discord_test"},"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"},"twitter":{"enabled":false,"allowRegistrations":true,"clientId":"twitter_test"},"microsoftAd":{"enabled":false,"allowRegistrations":true,"clientId":"microsoft_ad_test"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected the same serialization, got %v", encodedStr)

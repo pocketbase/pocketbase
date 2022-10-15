@@ -37,7 +37,7 @@ type Settings struct {
 	GitlabAuth      AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
 	DiscordAuth     AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
 	TwitterAuth     AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
-	MicrosoftAdAuth AuthProviderConfig `from:"microsoftAuth" json:"microsoftAdAuth"`
+	MicrosoftAdAuth AuthProviderConfig `from:"microsoftAdAuth" json:"microsoftAdAuth"`
 }
 
 // NewSettings creates and returns a new default Settings instance.
