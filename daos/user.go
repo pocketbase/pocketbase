@@ -35,7 +35,7 @@ func (dao *Dao) LoadProfile(user *models.User) error {
 	return nil
 }
 
-// LoadProfiles loads the profile records associated to the provied users list.
+// LoadProfiles loads the profile records associated to the provided users list.
 func (dao *Dao) LoadProfiles(users []*models.User) error {
 	collection, err := dao.FindCollectionByNameOrId(models.ProfileCollectionName)
 	if err != nil {
