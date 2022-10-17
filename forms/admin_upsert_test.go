@@ -241,7 +241,7 @@ func TestAdminUpsertSubmit(t *testing.T) {
 			true,
 		},
 		{
-			// update succcess - new email
+			// update success - new email
 			"2b4a97cc-3f83-4d01-a26b-3d77bc842d3c",
 			`{
 				"email": "test_update@example.com"
@@ -249,7 +249,7 @@ func TestAdminUpsertSubmit(t *testing.T) {
 			false,
 		},
 		{
-			// update succcess - new password
+			// update success - new password
 			"2b4a97cc-3f83-4d01-a26b-3d77bc842d3c",
 			`{
 				"password":        "1234567890",

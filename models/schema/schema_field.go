@@ -133,7 +133,7 @@ func (f SchemaField) Validate() error {
 	// init field options (if not already)
 	f.InitOptions()
 
-	// add commonly used filter literals to the exlude names list
+	// add commonly used filter literals to the exclude names list
 	excludeNames := ReservedFieldNames()
 	excludeNames = append(excludeNames, "null", "true", "false")
 

@@ -125,7 +125,7 @@ type BaseApp struct {
 // NewBaseApp creates and returns a new BaseApp instance
 // configured with the provided arguments.
 //
-// To initialize the app, you need to call `app.Bootsrap()`.
+// To initialize the app, you need to call `app.Bootstrap()`.
 func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 	app := &BaseApp{
 		dataDir:             dataDir,
