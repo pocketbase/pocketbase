@@ -76,7 +76,7 @@ func (dao *Dao) FindCollectionsWithUserFields() ([]*models.Collection, error) {
 // relation schema fields referencing the provided collection.
 //
 // If the provided collection has reference to itself then it will be
-// also included in the result. To exlude it, pass the collection id
+// also included in the result. To exclude it, pass the collection id
 // as the excludeId argument.
 func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeId string) (map[*models.Collection][]*schema.SchemaField, error) {
 	collections := []*models.Collection{}
