@@ -46,6 +46,7 @@ type Provider struct {
 // NewProvider creates and returns a new search provider.
 //
 // Example:
+//
 //	baseQuery := db.Select("*").From("user")
 //	fieldResolver := search.NewSimpleFieldResolver("id", "name")
 //	models := []*YourDataStruct{}
@@ -241,7 +242,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	}, nil
 }
 
-// ParseAndExec is a short conventient method to trigger both
+// ParseAndExec is a short convenient method to trigger both
 // `Parse()` and `Exec()` in a single call.
 func (s *Provider) ParseAndExec(urlQuery string, modelsSlice any) (*Result, error) {
 	if err := s.Parse(urlQuery); err != nil {

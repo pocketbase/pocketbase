@@ -13,16 +13,17 @@ import (
 	"github.com/spf13/cast"
 )
 
-// FilterData is a filter expession string following the `fexpr` package grammar.
+// FilterData is a filter expression string following the `fexpr` package grammar.
 //
 // Example:
+//
 //	var filter FilterData = "id = null || (name = 'test' && status = true)"
 //	resolver := search.NewSimpleFieldResolver("id", "name", "status")
 //	expr, err := filter.BuildExpr(resolver)
 type FilterData string
 
 // parsedFilterData holds a cache with previously parsed filter data expressions
-// (initialized with some prealocated empty data map)
+// (initialized with some preallocated empty data map)
 var parsedFilterData = store.New(make(map[string][]fexpr.ExprGroup, 50))
 
 // BuildExpr parses the current filter data and returns a new db WHERE expression.
