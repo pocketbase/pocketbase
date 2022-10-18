@@ -40,7 +40,7 @@ func (d DateTime) IsZero() bool {
 	return d.Time().IsZero()
 }
 
-// String serializes the current DateTime instance into a formated
+// String serializes the current DateTime instance into a formatted
 // UTC date string.
 //
 // The zero value is serialized to an empty string.

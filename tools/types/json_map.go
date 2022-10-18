@@ -13,7 +13,7 @@ type JsonMap map[string]any
 func (m JsonMap) MarshalJSON() ([]byte, error) {
 	type alias JsonMap // prevent recursion
 
-	// inialize an empty map to ensure that `{}` is returned as json
+	// initialize an empty map to ensure that `{}` is returned as json
 	if m == nil {
 		m = JsonMap{}
 	}

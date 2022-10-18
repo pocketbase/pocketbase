@@ -107,7 +107,7 @@ func (c *DefaultClient) Unsubscribe(subs ...string) {
 			delete(c.subscriptions, s)
 		}
 	} else {
-		// unsubsribe all
+		// unsubscribe all
 		for s := range c.subscriptions {
 			delete(c.subscriptions, s)
 		}

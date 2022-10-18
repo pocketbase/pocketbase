@@ -13,7 +13,7 @@ type JsonArray []any
 func (m JsonArray) MarshalJSON() ([]byte, error) {
 	type alias JsonArray // prevent recursion
 
-	// inialize an empty map to ensure that `[]` is returned as json
+	// initialize an empty map to ensure that `[]` is returned as json
 	if m == nil {
 		m = JsonArray{}
 	}
