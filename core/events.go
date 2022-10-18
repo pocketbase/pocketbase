@@ -227,6 +227,38 @@ type CollectionsImportEvent struct {
 }
 
 // -------------------------------------------------------------------
+// View API events data
+// -------------------------------------------------------------------
+
+type ViewListEvent struct {
+	HttpContext echo.Context
+	Result      *search.Result
+}
+
+type ViewViewEvent struct {
+	HttpContext echo.Context
+	View        *models.View
+}
+type ViewCreateEvent struct {
+	HttpContext echo.Context
+	View        *models.View
+}
+type ViewUpdateEvent struct {
+	HttpContext echo.Context
+	View        *models.View
+}
+
+type ViewDeleteEvent struct {
+	HttpContext echo.Context
+	View        *models.View
+}
+type RecordsFromViewListEvent struct {
+	HttpContext echo.Context
+	View        *models.View
+	Result      *search.Result
+}
+
+// -------------------------------------------------------------------
 // File API events data
 // -------------------------------------------------------------------
 

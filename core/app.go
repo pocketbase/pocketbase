@@ -437,4 +437,54 @@ type App interface {
 	// OnCollectionsAfterImportRequest hook is triggered after each
 	// successful API collections import request.
 	OnCollectionsAfterImportRequest() *hook.Hook[*CollectionsImportEvent]
+
+	// ---------------------------------------------------------------
+	// View API event hooks
+	// ---------------------------------------------------------------
+
+	// OnRecordsFromViewListRequest hook is triggered on each API View list request.
+	//
+	// Could be used to validate or modify the response before returning it to the client.
+	OnRecordsFromViewListRequest() *hook.Hook[*RecordsFromViewListEvent]
+	// OnViewListRequest hook is triggered on each API View list request.
+	//
+	// Could be used to validate or modify the response before returning it to the client.
+	OnViewListRequest() *hook.Hook[*ViewListEvent]
+
+	// OnViewViewRequest hook is triggered on each API View view request.
+	//
+	// Could be used to validate or modify the response before returning it to the client.
+	OnViewViewRequest() *hook.Hook[*ViewViewEvent]
+	// OnViewBeforeCreateRequest hook is triggered before each API View
+	// create request (after request data load and before model persistence).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different persistence behavior (returning [hook.StopPropagation]).
+	OnViewBeforeCreateRequest() *hook.Hook[*ViewCreateEvent]
+
+	// OnViewAfterCreateRequest hook is triggered after each
+	// successful API View create request.
+	OnViewAfterCreateRequest() *hook.Hook[*ViewCreateEvent]
+
+	// OnViewBeforeUpdateRequest hook is triggered before each API View
+	// update request (after request data load and before model persistence).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different persistence behavior (returning [hook.StopPropagation]).
+	OnViewBeforeUpdateRequest() *hook.Hook[*ViewUpdateEvent]
+
+	// OnViewAfterUpdateRequest hook is triggered after each
+	// successful API View update request.
+	OnViewAfterUpdateRequest() *hook.Hook[*ViewUpdateEvent]
+
+	// OnViewBeforeDeleteRequest hook is triggered before each API
+	// View delete request (after model load and before actual deletion).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different delete behavior (returning [hook.StopPropagation]).
+	OnViewBeforeDeleteRequest() *hook.Hook[*ViewDeleteEvent]
+
+	// OnViewAfterDeleteRequest hook is triggered after each
+	// successful API View delete request.
+	OnViewAfterDeleteRequest() *hook.Hook[*ViewDeleteEvent]
 }
