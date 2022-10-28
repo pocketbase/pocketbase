@@ -88,13 +88,13 @@ type SchemaField struct {
 func (f *SchemaField) ColDefinition() string {
 	switch f.Type {
 	case FieldTypeNumber:
-		return "REAL DEFAULT 0"
+		return "REAL"
 	case FieldTypeBool:
-		return "Boolean DEFAULT FALSE"
+		return "BOOLEAN"
 	case FieldTypeJson:
-		return "JSON DEFAULT NULL"
+		return "JSON"
 	default:
-		return "TEXT DEFAULT ''"
+		return "TEXT"
 	}
 }
 
@@ -220,14 +220,18 @@ func (f *SchemaField) PrepareValue(value any) any {
 
 	switch f.Type {
 	case FieldTypeText, FieldTypeEmail, FieldTypeUrl:
-		return cast.ToString(value)
+		return value
 	case FieldTypeJson:
 		val, _ := types.ParseJsonRaw(value)
 		return val
 	case FieldTypeNumber:
-		return cast.ToFloat64(value)
+		if value != nil {
+			return cast.ToFloat64(value)
+		}
 	case FieldTypeBool:
-		return cast.ToBool(value)
+		if value != nil {
+			return cast.ToBool(value)
+		}
 	case FieldTypeDate:
 		val, _ := types.ParseDateTime(value)
 		return val
@@ -279,9 +283,8 @@ func (f *SchemaField) PrepareValue(value any) any {
 		}
 
 		return ids
-	default:
-		return value // unmodified
 	}
+	return value
 }
 
 // -------------------------------------------------------------------
@@ -343,8 +346,7 @@ func (o NumberOptions) Validate() error {
 
 // -------------------------------------------------------------------
 
-type BoolOptions struct {
-}
+type BoolOptions struct{}
 
 func (o BoolOptions) Validate() error {
 	return nil
@@ -439,8 +441,7 @@ func (o SelectOptions) Validate() error {
 
 // -------------------------------------------------------------------
 
-type JsonOptions struct {
-}
+type JsonOptions struct{}
 
 func (o JsonOptions) Validate() error {
 	return nil
