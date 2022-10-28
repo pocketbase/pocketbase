@@ -23,6 +23,7 @@ var requiredErr = validation.NewError("validation_required", "Missing required v
 // using the provided record constraints and schema.
 //
 // Example:
+//
 //	validator := NewRecordDataValidator(app.Dao(), record, nil)
 //	err := validator.Validate(map[string]any{"test":123})
 func NewRecordDataValidator(
@@ -76,6 +77,10 @@ func (validator *RecordDataValidator) Validate(data map[string]any) error {
 
 		// check required constraint
 		if field.Required && validation.Required.Validate(value) != nil {
+			switch value.(type) {
+			case bool, float64:
+				continue
+			}
 			errs[key] = requiredErr
 			continue
 		}
@@ -135,10 +140,10 @@ func (validator *RecordDataValidator) checkFieldValue(field *schema.SchemaField,
 }
 
 func (validator *RecordDataValidator) checkTextValue(field *schema.SchemaField, value any) error {
-	val, _ := value.(string)
-	if val == "" {
-		return nil // nothing to check
+	if !field.Required && value == nil {
+		return nil
 	}
+	val, _ := value.(string)
 
 	options, _ := field.Options.(*schema.TextOptions)
 
@@ -165,6 +170,9 @@ func (validator *RecordDataValidator) checkNumberValue(field *schema.SchemaField
 		return nil // nothing to check
 	}
 
+	if !field.Required && value == nil {
+		return nil
+	}
 	val, _ := value.(float64)
 	options, _ := field.Options.(*schema.NumberOptions)
 
