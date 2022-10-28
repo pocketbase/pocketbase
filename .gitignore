@@ -1,4 +1,5 @@
 /.vscode/
+.gonvim/
 .idea
 
 .DS_Store
