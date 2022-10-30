@@ -1,6 +1,6 @@
 // Object list with all supported OAuth2 providers in the format:
 // ```
-// { settingsKey: { title, icon, selfHosted, selfHostedRequired} }
+// { settingsKey: { title, icon, selfHosted, selfHostedRequired, selfHostedDescription} }
 // ```
 export default {
     googleAuth: {
