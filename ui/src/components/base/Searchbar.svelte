@@ -53,8 +53,8 @@
     });
 </script>
 
-<div class="searchbar-wrapper" on:click|stopPropagation>
-    <form class="searchbar" on:submit|preventDefault={submit}>
+<div class="searchbar-wrapper">
+    <form class="searchbar" on:click|stopPropagation on:submit|preventDefault={submit}>
         <label for={uniqueId} class="m-l-10 txt-xl">
             <i class="ri-search-line" />
         </label>

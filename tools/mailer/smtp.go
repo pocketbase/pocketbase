@@ -46,7 +46,10 @@ func (m *SmtpClient) Send(
 	htmlContent string,
 	attachments map[string]io.Reader,
 ) error {
-	smtpAuth := smtp.PlainAuth("", m.username, m.password, m.host)
+	var smtpAuth smtp.Auth
+	if m.username != "" || m.password != "" {
+		smtpAuth = smtp.PlainAuth("", m.username, m.password, m.host)
+	}
 
 	// create mail instance
 	var yak *mailyak.MailYak

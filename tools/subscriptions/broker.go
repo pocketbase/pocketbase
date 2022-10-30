@@ -20,6 +20,9 @@ func NewBroker() *Broker {
 
 // Clients returns all registered clients.
 func (b *Broker) Clients() map[string]Client {
+	b.mux.RLock()
+	defer b.mux.RUnlock()
+
 	return b.clients
 }
 

@@ -72,7 +72,7 @@ func main() {
                 return c.String(200, "Hello world!")
             },
             Middlewares: []echo.MiddlewareFunc{
-                apis.RequireAdminOrUserAuth(),
+                apis.RequireAdminOrRecordAuth(),
             },
         })
 

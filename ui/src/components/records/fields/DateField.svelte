@@ -6,6 +6,13 @@
 
     export let field = new SchemaField();
     export let value = undefined;
+
+    // strip ms and zone for backwards compatibility with the older format
+    // and because flatpickr currently doesn't have integrated
+    // zones support and requires manual parsing and formatting
+    $: if (value && value.length > 19) {
+        value = value.substring(0, 19);
+    }
 </script>
 
 <Field class="form-field {field.required ? 'required' : ''}" name={field.name} let:uniqueId>

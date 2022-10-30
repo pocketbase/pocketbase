@@ -185,17 +185,23 @@
             prefix + "updated",
         ];
 
+        if (collection.isAuth) {
+            result.push(prefix + "username");
+            result.push(prefix + "email");
+            result.push(prefix + "emailVisibility");
+            result.push(prefix + "verified");
+        }
+
         for (const field of collection.schema) {
             const key = prefix + field.name;
+
+            result.push(key);
+
             if (field.type === "relation" && field.options.collectionId) {
                 const subKeys = getCollectionFieldKeys(field.options.collectionId, key + ".", level + 1);
                 if (subKeys.length) {
                     result = result.concat(subKeys);
-                } else {
-                    result.push(key);
                 }
-            } else {
-                result.push(key);
             }
         }
 
@@ -217,28 +223,27 @@
             result.push("@request.method");
             result.push("@request.query.");
             result.push("@request.data.");
-            result.push("@request.user.id");
-            result.push("@request.user.email");
-            result.push("@request.user.verified");
-            result.push("@request.user.created");
-            result.push("@request.user.updated");
+            result.push("@request.auth.");
+            result.push("@request.auth.id");
+            result.push("@request.auth.collectionId");
+            result.push("@request.auth.collectionName");
+            result.push("@request.auth.username");
+            result.push("@request.auth.email");
+            result.push("@request.auth.emailVisibility");
+            result.push("@request.auth.verified");
+            result.push("@request.auth.created");
+            result.push("@request.auth.updated");
         }
 
-        // add @collections and  @request.user.profile keys
+        // add @collections.* keys
         if (includeRequestKeys || includeIndirectCollectionsKeys) {
             for (const collection of mergedCollections) {
                 let prefix = "";
-                if (collection.name === import.meta.env.PB_PROFILE_COLLECTION) {
-                    if (!includeRequestKeys) {
-                        continue;
-                    }
-                    prefix = "@request.user.profile.";
-                } else {
-                    if (!includeIndirectCollectionsKeys) {
-                        continue;
-                    }
-                    prefix = "@collection." + collection.name + ".";
+
+                if (!includeIndirectCollectionsKeys) {
+                    continue;
                 }
+                prefix = "@collection." + collection.name + ".";
 
                 const keys = getCollectionFieldKeys(collection.name, prefix);
                 for (const key of keys) {
@@ -258,8 +263,8 @@
 
     // Returns object with all the completions matching the context.
     function completions(context) {
-        let word = context.matchBefore(/[\@\w\.]*/);
-        if (word.from == word.to && !context.explicit) {
+        let word = context.matchBefore(/[\'\"\@\w\.]*/);
+        if (word && word.from == word.to && !context.explicit) {
             return null;
         }
 
@@ -269,18 +274,8 @@
             options.push({ label: "@collection.*", apply: "@collection." });
         }
 
-        const skipFields = [
-            "@request.user.profile.userId",
-            "@request.user.profile.created",
-            "@request.user.profile.updated",
-        ];
-
         const keys = getAllKeys(!disableRequestKeys, !disableRequestKeys && word.text.startsWith("@c"));
         for (const key of keys) {
-            if (skipFields.includes(key)) {
-                continue;
-            }
-
             options.push({
                 label: key.endsWith(".") ? key + "*" : key,
                 apply: key,

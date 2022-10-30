@@ -75,14 +75,14 @@ func TestBindBody(t *testing.T) {
 	}
 }
 
-func TestReadJsonBodyCopy(t *testing.T) {
+func TestCopyJsonBody(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", strings.NewReader(`{"test":"test123"}`))
 
 	// simulate multiple reads from the same request
 	result1 := map[string]string{}
-	rest.ReadJsonBodyCopy(req, &result1)
+	rest.CopyJsonBody(req, &result1)
 	result2 := map[string]string{}
-	rest.ReadJsonBodyCopy(req, &result2)
+	rest.CopyJsonBody(req, &result2)
 
 	if len(result1) == 0 {
 		t.Error("Expected result1 to be filled")

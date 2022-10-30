@@ -12,11 +12,11 @@ import (
 func TestRequireGuestOnly(t *testing.T) {
 	scenarios := []tests.ApiScenario{
 		{
-			Name:   "valid user token",
+			Name:   "valid record token",
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -38,7 +38,7 @@ func TestRequireGuestOnly(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -60,7 +60,7 @@ func TestRequireGuestOnly(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxNjQwOTkxNjYxfQ.HkAldxpbn0EybkMfFGQKEJUIYKE5UJA0AjcsrV7Q6Io",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoxNjQwOTkxNjYxfQ.HqvpCpM0RAk3Qu9PfCMuZsk_DKh9UYuzFLwXBMTZd1w",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -103,7 +103,7 @@ func TestRequireGuestOnly(t *testing.T) {
 	}
 }
 
-func TestRequireUserAuth(t *testing.T) {
+func TestRequireRecordAuth(t *testing.T) {
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "guest",
@@ -117,7 +117,7 @@ func TestRequireUserAuth(t *testing.T) {
 						return c.String(200, "test123")
 					},
 					Middlewares: []echo.MiddlewareFunc{
-						apis.RequireUserAuth(),
+						apis.RequireRecordAuth(),
 					},
 				})
 			},
@@ -129,7 +129,7 @@ func TestRequireUserAuth(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxNjQwOTkxNjYxfQ.HkAldxpbn0EybkMfFGQKEJUIYKE5UJA0AjcsrV7Q6Io",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoxNjQwOTkxNjYxfQ.HqvpCpM0RAk3Qu9PfCMuZsk_DKh9UYuzFLwXBMTZd1w",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -139,7 +139,7 @@ func TestRequireUserAuth(t *testing.T) {
 						return c.String(200, "test123")
 					},
 					Middlewares: []echo.MiddlewareFunc{
-						apis.RequireUserAuth(),
+						apis.RequireRecordAuth(),
 					},
 				})
 			},
@@ -151,7 +151,7 @@ func TestRequireUserAuth(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -161,7 +161,7 @@ func TestRequireUserAuth(t *testing.T) {
 						return c.String(200, "test123")
 					},
 					Middlewares: []echo.MiddlewareFunc{
-						apis.RequireUserAuth(),
+						apis.RequireRecordAuth(),
 					},
 				})
 			},
@@ -169,11 +169,11 @@ func TestRequireUserAuth(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "valid user token",
+			Name:   "valid record token",
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -183,7 +183,167 @@ func TestRequireUserAuth(t *testing.T) {
 						return c.String(200, "test123")
 					},
 					Middlewares: []echo.MiddlewareFunc{
-						apis.RequireUserAuth(),
+						apis.RequireRecordAuth(),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "valid record token with collection not in the restricted list",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireRecordAuth("demo1", "demo2"),
+					},
+				})
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid record token with collection in the restricted list",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireRecordAuth("demo1", "demo2", "users"),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestRequireSameContextRecordAuth(t *testing.T) {
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "guest",
+			Method: http.MethodGet,
+			Url:    "/my/users/test",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireSameContextRecordAuth(),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "expired/invalid token",
+			Method: http.MethodGet,
+			Url:    "/my/users/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoxNjQwOTkxNjYxfQ.HqvpCpM0RAk3Qu9PfCMuZsk_DKh9UYuzFLwXBMTZd1w",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireSameContextRecordAuth(),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid admin token",
+			Method: http.MethodGet,
+			Url:    "/my/users/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireSameContextRecordAuth(),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid record token but from different collection",
+			Method: http.MethodGet,
+			Url:    "/my/users/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyMjA4OTg1MjYxfQ.q34IWXrRWsjLvbbVNRfAs_J4SoTHloNBfdGEiLmy-D8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireSameContextRecordAuth(),
+					},
+				})
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid record token",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireRecordAuth(),
 					},
 				})
 			},
@@ -223,7 +383,7 @@ func TestRequireAdminAuth(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -241,11 +401,11 @@ func TestRequireAdminAuth(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "valid user token",
+			Name:   "valid record token",
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -267,7 +427,7 @@ func TestRequireAdminAuth(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -342,7 +502,7 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -360,11 +520,11 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "valid user token",
+			Name:   "valid record token",
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -386,7 +546,7 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -410,7 +570,7 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 	}
 }
 
-func TestRequireAdminOrUserAuth(t *testing.T) {
+func TestRequireAdminOrRecordAuth(t *testing.T) {
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "guest",
@@ -424,7 +584,7 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 						return c.String(200, "test123")
 					},
 					Middlewares: []echo.MiddlewareFunc{
-						apis.RequireAdminOrUserAuth(),
+						apis.RequireAdminOrRecordAuth(),
 					},
 				})
 			},
@@ -436,7 +596,7 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -446,7 +606,7 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 						return c.String(200, "test123")
 					},
 					Middlewares: []echo.MiddlewareFunc{
-						apis.RequireAdminOrUserAuth(),
+						apis.RequireAdminOrRecordAuth(),
 					},
 				})
 			},
@@ -454,11 +614,11 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "valid user token",
+			Name:   "valid record token",
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -468,7 +628,51 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 						return c.String(200, "test123")
 					},
 					Middlewares: []echo.MiddlewareFunc{
-						apis.RequireAdminOrUserAuth(),
+						apis.RequireAdminOrRecordAuth(),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "valid record token with collection not in the restricted list",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminOrRecordAuth("demo1", "demo2", "clients"),
+					},
+				})
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid record token with collection in the restricted list",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminOrRecordAuth("demo1", "demo2", "users"),
 					},
 				})
 			},
@@ -480,7 +684,7 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/my/test",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -490,7 +694,29 @@ func TestRequireAdminOrUserAuth(t *testing.T) {
 						return c.String(200, "test123")
 					},
 					Middlewares: []echo.MiddlewareFunc{
-						apis.RequireAdminOrUserAuth(),
+						apis.RequireAdminOrRecordAuth(),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "valid admin token + restricted collections list (should be ignored)",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminOrRecordAuth("demo1", "demo2"),
 					},
 				})
 			},
@@ -509,7 +735,7 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 		{
 			Name:   "guest",
 			Method: http.MethodGet,
-			Url:    "/my/test/4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
+			Url:    "/my/test/4q1xlclmfloku33",
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: http.MethodGet,
@@ -528,9 +754,9 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 		{
 			Name:   "expired/invalid token",
 			Method: http.MethodGet,
-			Url:    "/my/test/4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
+			Url:    "/my/test/4q1xlclmfloku33",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxNjQwOTkxNjYxfQ.HkAldxpbn0EybkMfFGQKEJUIYKE5UJA0AjcsrV7Q6Io",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoxNjQwOTkxNjYxfQ.HqvpCpM0RAk3Qu9PfCMuZsk_DKh9UYuzFLwXBMTZd1w",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -548,12 +774,11 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "valid user token (different user)",
+			Name:   "valid record token (different user)",
 			Method: http.MethodGet,
-			Url:    "/my/test/4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
+			Url:    "/my/test/4q1xlclmfloku33",
 			RequestHeaders: map[string]string{
-				// test3@example.com
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoidXNlciIsImVtYWlsIjoidGVzdDNAZXhhbXBsZS5jb20iLCJpZCI6Ijk3Y2MzZDNkLTZiYTItMzgzZi1iNDJhLTdiYzg0ZDI3NDEwYyIsImV4cCI6MTg5MzUxNTU3Nn0.Q965uvlTxxOsZbACXSgJQNXykYK0TKZ87nyPzemvN4E",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImJnczgyMG4zNjF2ajFxZCIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.tW4NZWZ0mHBgvSZsQ0OOQhWajpUNFPCvNrOF9aCZLZs",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -571,11 +796,33 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "valid user token (owner)",
+			Name:   "valid record token (different collection)",
 			Method: http.MethodGet,
-			Url:    "/my/test/4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
+			Url:    "/my/test/4q1xlclmfloku33",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyMjA4OTg1MjYxfQ.q34IWXrRWsjLvbbVNRfAs_J4SoTHloNBfdGEiLmy-D8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test/:id",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireAdminOrOwnerAuth(""),
+					},
+				})
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid record token (owner)",
+			Method: http.MethodGet,
+			Url:    "/my/test/4q1xlclmfloku33",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -595,9 +842,9 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 		{
 			Name:   "valid admin token",
 			Method: http.MethodGet,
-			Url:    "/my/test/2b4a97cc-3f83-4d01-a26b-3d77bc842d3c",
+			Url:    "/my/test/4q1xlclmfloku33",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
@@ -608,6 +855,135 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 					},
 					Middlewares: []echo.MiddlewareFunc{
 						apis.RequireAdminOrOwnerAuth("custom"),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestLoadCollectionContext(t *testing.T) {
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "missing collection",
+			Method: http.MethodGet,
+			Url:    "/my/missing",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.LoadCollectionContext(app),
+					},
+				})
+			},
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "guest",
+			Method: http.MethodGet,
+			Url:    "/my/demo1",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.LoadCollectionContext(app),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "valid record token",
+			Method: http.MethodGet,
+			Url:    "/my/demo1",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.LoadCollectionContext(app),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "valid admin token",
+			Method: http.MethodGet,
+			Url:    "/my/demo1",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.LoadCollectionContext(app),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "mismatched type",
+			Method: http.MethodGet,
+			Url:    "/my/demo1",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.LoadCollectionContext(app, "auth"),
+					},
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "matched type",
+			Method: http.MethodGet,
+			Url:    "/my/users",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/:collection",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.LoadCollectionContext(app, "auth"),
 					},
 				})
 			},

@@ -19,7 +19,7 @@ func TestExternalAuthQuery(t *testing.T) {
 	}
 }
 
-func TestFindAllExternalAuthsByUserId(t *testing.T) {
+func TestFindAllExternalAuthsByRecord(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -27,16 +27,20 @@ func TestFindAllExternalAuthsByUserId(t *testing.T) {
 		userId        string
 		expectedCount int
 	}{
-		{"", 0},
-		{"missing", 0},
-		{"97cc3d3d-6ba2-383f-b42a-7bc84d27410c", 0},
-		{"cx9u0dh2udo8xol", 2},
+		{"oap640cot4yru2s", 0},
+		{"4q1xlclmfloku33", 2},
 	}
 
 	for i, s := range scenarios {
-		auths, err := app.Dao().FindAllExternalAuthsByUserId(s.userId)
+		record, err := app.Dao().FindRecordById("users", s.userId)
 		if err != nil {
-			t.Errorf("(%d) Unexpected error %v", i, err)
+			t.Errorf("(%d) Unexpected record fetch error %v", i, err)
+			continue
+		}
+
+		auths, err := app.Dao().FindAllExternalAuthsByRecord(record)
+		if err != nil {
+			t.Errorf("(%d) Unexpected auths fetch error %v", i, err)
 			continue
 		}
 
@@ -45,8 +49,8 @@ func TestFindAllExternalAuthsByUserId(t *testing.T) {
 		}
 
 		for _, auth := range auths {
-			if auth.UserId != s.userId {
-				t.Errorf("(%d) Expected all auths to be linked to userId %s, got %v", i, s.userId, auth)
+			if auth.RecordId != record.Id {
+				t.Errorf("(%d) Expected all auths to be linked to record id %s, got %v", i, record.Id, auth)
 			}
 		}
 	}
@@ -65,8 +69,8 @@ func TestFindExternalAuthByProvider(t *testing.T) {
 		{"github", "", ""},
 		{"github", "id1", ""},
 		{"github", "id2", ""},
-		{"google", "id1", "abcdefghijklmn0"},
-		{"gitlab", "id2", "abcdefghijklmn1"},
+		{"google", "test123", "clmflokuq1xl341"},
+		{"gitlab", "test123", "dlmflokuq1xl342"},
 	}
 
 	for i, s := range scenarios {
@@ -85,7 +89,7 @@ func TestFindExternalAuthByProvider(t *testing.T) {
 	}
 }
 
-func TestFindExternalAuthByUserIdAndProvider(t *testing.T) {
+func TestFindExternalAuthByRecordAndProvider(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -94,17 +98,19 @@ func TestFindExternalAuthByUserIdAndProvider(t *testing.T) {
 		provider   string
 		expectedId string
 	}{
-		{"", "", ""},
-		{"", "github", ""},
-		{"123456", "github", ""}, // missing user and provider record
-		{"123456", "google", ""}, // missing user but existing provider record
-		{"97cc3d3d-6ba2-383f-b42a-7bc84d27410c", "google", ""},
-		{"cx9u0dh2udo8xol", "google", "abcdefghijklmn0"},
-		{"cx9u0dh2udo8xol", "gitlab", "abcdefghijklmn1"},
+		{"bgs820n361vj1qd", "google", ""},
+		{"4q1xlclmfloku33", "google", "clmflokuq1xl341"},
+		{"4q1xlclmfloku33", "gitlab", "dlmflokuq1xl342"},
 	}
 
 	for i, s := range scenarios {
-		auth, err := app.Dao().FindExternalAuthByUserIdAndProvider(s.userId, s.provider)
+		record, err := app.Dao().FindRecordById("users", s.userId)
+		if err != nil {
+			t.Errorf("(%d) Unexpected record fetch error %v", i, err)
+			continue
+		}
+
+		auth, err := app.Dao().FindExternalAuthByRecordAndProvider(record, s.provider)
 
 		hasErr := err != nil
 		expectErr := s.expectedId == ""
@@ -130,9 +136,10 @@ func TestSaveExternalAuth(t *testing.T) {
 	}
 
 	auth := &models.ExternalAuth{
-		UserId:     "97cc3d3d-6ba2-383f-b42a-7bc84d27410c",
-		Provider:   "test",
-		ProviderId: "test_id",
+		RecordId:     "o1y0dd0spd786md",
+		CollectionId: "v851q4r790rhknl",
+		Provider:     "test",
+		ProviderId:   "test_id",
 	}
 
 	if err := app.Dao().SaveExternalAuth(auth); err != nil {
@@ -154,42 +161,29 @@ func TestDeleteExternalAuth(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	user, err := app.Dao().FindUserById("cx9u0dh2udo8xol")
+	record, err := app.Dao().FindRecordById("users", "4q1xlclmfloku33")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	auths, err := app.Dao().FindAllExternalAuthsByUserId(user.Id)
+	auths, err := app.Dao().FindAllExternalAuthsByRecord(record)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := app.Dao().DeleteExternalAuth(auths[0]); err != nil {
-		t.Fatalf("Failed to delete the first ExternalAuth relation, got \n%v", err)
-	}
-
-	if err := app.Dao().DeleteExternalAuth(auths[1]); err == nil {
-		t.Fatal("Expected delete to fail, got nil")
-	}
-
-	// update the user model and try again
-	user.Email = "test_new@example.com"
-	if err := app.Dao().SaveUser(user); err != nil {
-		t.Fatal(err)
-	}
-
-	// try to delete auths[1] again
-	if err := app.Dao().DeleteExternalAuth(auths[1]); err != nil {
-		t.Fatalf("Failed to delete the last ExternalAuth relation, got \n%v", err)
+	for _, auth := range auths {
+		if err := app.Dao().DeleteExternalAuth(auth); err != nil {
+			t.Fatalf("Failed to delete the ExternalAuth relation, got \n%v", err)
+		}
 	}
 
 	// check if the relations were really deleted
-	newAuths, err := app.Dao().FindAllExternalAuthsByUserId(user.Id)
+	newAuths, err := app.Dao().FindAllExternalAuthsByRecord(record)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if len(newAuths) != 0 {
-		t.Fatalf("Expected all user %s ExternalAuth relations to be deleted, got \n%v", user.Id, newAuths)
+		t.Fatalf("Expected all record %s ExternalAuth relations to be deleted, got \n%v", record.Id, newAuths)
 	}
 }

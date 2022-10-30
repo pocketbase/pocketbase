@@ -44,7 +44,7 @@ func TestRandomStringWithAlphabet(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		generated := make([]string, 100)
+		generated := make([]string, 0, 100)
 		length := 10
 
 		for j := 0; j < 100; j++ {

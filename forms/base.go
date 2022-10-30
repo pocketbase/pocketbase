@@ -2,7 +2,9 @@
 // validation and applying changes to existing DB models through the app Dao.
 package forms
 
-import "regexp"
+import (
+	"regexp"
+)
 
 // base ID value regex pattern
 var idRegex = regexp.MustCompile(`^[^\@\#\$\&\|\.\,\'\"\\\/\s]+$`)

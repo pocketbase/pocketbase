@@ -25,7 +25,7 @@
             class="txt-ellipsis"
             href={record[field.name]}
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
             use:tooltip={"Open in new tab"}
             on:click|stopPropagation
         >
@@ -45,9 +45,12 @@
         </div>
     {:else if field.type === "relation" || field.type === "user"}
         <div class="inline-flex">
-            {#each CommonHelper.toArray(record[field.name]) as item, i (i + item)}
+            {#each CommonHelper.toArray(record[field.name]).slice(0, 20) as item, i (i + item)}
                 <IdLabel id={item} />
             {/each}
+            {#if CommonHelper.toArray(record[field.name]).length > 20}
+                ...
+            {/if}
         </div>
     {:else if field.type === "file"}
         <div class="inline-flex">

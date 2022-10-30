@@ -18,16 +18,18 @@
             title: "JavaScript",
             language: "javascript",
             content: js,
+            url: import.meta.env.PB_JS_SDK_URL,
         },
         {
             title: "Dart",
             language: "dart",
             content: dart,
+            url: import.meta.env.PB_DART_SDK_URL,
         },
     ];
 </script>
 
-<div class="tabs sdk-tabs m-b-lg">
+<div class="tabs sdk-tabs m-b-base">
     <div class="tabs-header compact left">
         {#each sdkExamples as example (example.language)}
             <button
@@ -43,6 +45,13 @@
         {#each sdkExamples as example (example.language)}
             <div class="tab-item" class:active={activeTab === example.language}>
                 <CodeBlock language={example.language} content={example.content} />
+                <div class="txt-right">
+                    <em class="txt-sm txt-hint">
+                        <a href={example.url} target="_blank" rel="noopener noreferrer">
+                            {example.title} SDK
+                        </a>
+                    </em>
+                </div>
             </div>
         {/each}
     </div>

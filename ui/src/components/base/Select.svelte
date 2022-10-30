@@ -194,13 +194,15 @@
     });
 </script>
 
-<div class="select {classes}" class:multiple class:disabled bind:this={container}>
-    <div tabindex={disabled ? "-1" : "0"} class="selected-container" class:disabled bind:this={labelDiv}>
+<div bind:this={container} class="select {classes}" class:multiple class:disabled>
+    <div bind:this={labelDiv} tabindex={disabled ? "-1" : "0"} class="selected-container" class:disabled>
         {#each CommonHelper.toArray(selected) as item}
             <div class="option">
                 {#if labelComponent}
                     <svelte:component this={labelComponent} {item} {...labelComponentProps} />
-                {:else}<span class="txt">{item}</span>{/if}
+                {:else}
+                    <span class="txt">{item}</span>
+                {/if}
 
                 {#if multiple || toggle}
                     <span
@@ -213,17 +215,19 @@
                 {/if}
             </div>
         {:else}
-            <div class="txt-placeholder">{selectPlaceholder}</div>
+            <div class="block txt-placeholder" class:link-hint={!disabled}>
+                {selectPlaceholder}
+            </div>
         {/each}
     </div>
 
     {#if !disabled}
         <Toggler
+            bind:this={toggler}
             class="dropdown dropdown-block options-dropdown dropdown-left"
             trigger={labelDiv}
             on:show={onDropdownShow}
             on:hide
-            bind:this={toggler}
         >
             {#if searchable}
                 <div class="form-field form-field-sm options-search">

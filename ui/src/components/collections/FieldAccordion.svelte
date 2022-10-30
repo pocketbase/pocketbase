@@ -121,9 +121,15 @@
     on:expand
     on:collapse
     on:toggle
+    on:dragenter
+    on:dragleave
+    on:dragstart
+    on:drop
+    draggable
     single
     {interactive}
     class={disabled || field.toDelete || field.system ? "field-accordion disabled" : "field-accordion"}
+    {...$$restProps}
 >
     <svelte:fragment slot="header">
         <div class="inline-flex">
@@ -144,7 +150,7 @@
                     <span class="label" class:label-warning={interactive && !field.toDelete}>New</span>
                 {/if}
                 {#if field.required}
-                    <span class="label label-success">Required</span>
+                    <span class="label label-success">Nonempty</span>
                 {/if}
                 {#if field.unique}
                     <span class="label label-success">Unique</span>
@@ -177,6 +183,11 @@
 
     <form
         class="field-form"
+        on:dragstart={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        }}
         on:submit|preventDefault={() => {
             canBeStored && collapse();
         }}
@@ -192,6 +203,7 @@
                     <FieldTypeSelect id={uniqueId} disabled={field.id} bind:value={field.type} />
                 </Field>
             </div>
+
             <div class="col-sm-6">
                 <Field
                     class="
@@ -257,7 +269,18 @@
             <div class="col-sm-4 flex">
                 <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
                     <input type="checkbox" id={uniqueId} bind:checked={field.required} />
-                    <label for={uniqueId}>Required</label>
+                    <label for={uniqueId}>
+                        <span class="txt">Nonempty</span>
+                        <i
+                            class="ri-information-line link-hint"
+                            use:tooltip={{
+                                text: `Requires the field value to be nonempty\n(aka. not ${CommonHelper.zeroDefaultStr(
+                                    field
+                                )}).`,
+                                position: "right",
+                            }}
+                        />
+                    </label>
                 </Field>
             </div>
 

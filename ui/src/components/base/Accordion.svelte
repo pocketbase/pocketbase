@@ -10,9 +10,12 @@
     let classes = "";
     export { classes as class }; // export reserved keyword
 
+    export let draggable = false;
     export let active = false;
     export let interactive = true;
     export let single = false; // ensures that only one accordion is expanded in its given parent container
+
+    let isDragOver = false;
 
     $: if (active) {
         clearTimeout(expandTimeoutId);
@@ -49,10 +52,10 @@
     }
 
     export function collapseSiblings() {
-        if (single && accordionElem.parentElement) {
-            const handlers = accordionElem.parentElement.querySelectorAll(
-                ".accordion.active .accordion-header.interactive"
-            );
+        if (single && accordionElem.closest(".accordions")) {
+            const handlers = accordionElem
+                .closest(".accordions")
+                .querySelectorAll(".accordion.active .accordion-header.interactive");
             for (const handler of handlers) {
                 handler.click(); // @todo consider using store or other more reliable approach
             }
@@ -78,14 +81,36 @@
 <div
     bind:this={accordionElem}
     tabindex={interactive ? 0 : -1}
-    class="accordion {classes}"
+    class="accordion {isDragOver ? 'drag-over' : ''} {classes}"
     class:active
     on:keydown|self={keyToggle}
 >
     <header
         class="accordion-header"
+        {draggable}
         class:interactive
         on:click|preventDefault={() => interactive && toggle()}
+        on:drop|preventDefault={(e) => {
+            if (draggable) {
+                isDragOver = false;
+                collapseSiblings();
+                dispatch("drop", e);
+            }
+        }}
+        on:dragstart={(e) => draggable && dispatch("dragstart", e)}
+        on:dragenter={(e) => {
+            if (draggable) {
+                isDragOver = true;
+                dispatch("dragenter", e);
+            }
+        }}
+        on:dragleave={(e) => {
+            if (draggable) {
+                isDragOver = false;
+                dispatch("dragleave", e);
+            }
+        }}
+        on:dragover|preventDefault
     >
         <slot name="header" {active} />
     </header>

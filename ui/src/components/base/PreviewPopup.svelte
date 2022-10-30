@@ -21,15 +21,21 @@
 
 <OverlayPanel bind:this={panel} class="image-preview" btnClose={false} popup on:show on:hide>
     <svelte:fragment slot="header">
-        <div class="overlay-close" on:click|preventDefault={hide}>
+        <button type="button" class="overlay-close" on:click|preventDefault={hide}>
             <i class="ri-close-line" />
-        </div>
+        </button>
     </svelte:fragment>
 
     <img src={url} alt="Preview {url}" />
 
     <svelte:fragment slot="footer">
-        <a href={url} title="Download" class="link-hint txt-ellipsis">
+        <a
+            href={url}
+            title="Download"
+            target="_blank"
+            rel="noreferrer noopener"
+            class="link-hint txt-ellipsis"
+        >
             {url.substring(url.lastIndexOf("/") + 1)}
         </a>
         <div class="flex-fill" />

@@ -82,13 +82,6 @@
                 </Field>
             </div>
 
-            <div class="col-lg-12">
-                <Field class="form-field" name="{key}.allowRegistrations" let:uniqueId>
-                    <input type="checkbox" id={uniqueId} bind:checked={config.allowRegistrations} />
-                    <label for={uniqueId}>Allow registration for new users</label>
-                </Field>
-            </div>
-
             {#if showSelfHostedFields}
                 <div class="col-lg-12">
                     <div class="section-title">Optional endpoints (if you self host the OAUTH2 service)</div>

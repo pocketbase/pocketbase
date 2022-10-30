@@ -61,25 +61,25 @@ func NewDefaultClient() *DefaultClient {
 	}
 }
 
-// Id implements the Client.Id interface method.
+// Id implements the [Client.Id] interface method.
 func (c *DefaultClient) Id() string {
 	return c.id
 }
 
-// Channel implements the Client.Channel interface method.
+// Channel implements the [Client.Channel] interface method.
 func (c *DefaultClient) Channel() chan Message {
 	return c.channel
 }
 
-// Subscriptions implements the Client.Subscriptions interface method.
+// Subscriptions implements the [Client.Subscriptions] interface method.
 func (c *DefaultClient) Subscriptions() map[string]struct{} {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	return c.subscriptions
 }
 
-// Subscribe implements the Client.Subscribe interface method.
+// Subscribe implements the [Client.Subscribe] interface method.
 //
 // Empty subscriptions (aka. "") are ignored.
 func (c *DefaultClient) Subscribe(subs ...string) {
@@ -95,7 +95,7 @@ func (c *DefaultClient) Subscribe(subs ...string) {
 	}
 }
 
-// Unsubscribe implements the Client.Unsubscribe interface method.
+// Unsubscribe implements the [Client.Unsubscribe] interface method.
 //
 // If subs is not set, this method removes all registered client's subscriptions.
 func (c *DefaultClient) Unsubscribe(subs ...string) {
@@ -114,25 +114,25 @@ func (c *DefaultClient) Unsubscribe(subs ...string) {
 	}
 }
 
-// HasSubscription implements the Client.HasSubscription interface method.
+// HasSubscription implements the [Client.HasSubscription] interface method.
 func (c *DefaultClient) HasSubscription(sub string) bool {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	_, ok := c.subscriptions[sub]
 
 	return ok
 }
 
-// Get implements the Client.Get interface method.
+// Get implements the [Client.Get] interface method.
 func (c *DefaultClient) Get(key string) any {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	return c.store[key]
 }
 
-// Set implements the Client.Set interface method.
+// Set implements the [Client.Set] interface method.
 func (c *DefaultClient) Set(key string, value any) {
 	c.mux.Lock()
 	defer c.mux.Unlock()

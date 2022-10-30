@@ -7,46 +7,7 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
-func TestAdminPasswordResetRequestPanic(t *testing.T) {
-	defer func() {
-		if recover() == nil {
-			t.Fatal("The form did not panic")
-		}
-	}()
-
-	forms.NewAdminPasswordResetRequest(nil)
-}
-
-func TestAdminPasswordResetRequestValidate(t *testing.T) {
-	testApp, _ := tests.NewTestApp()
-	defer testApp.Cleanup()
-
-	form := forms.NewAdminPasswordResetRequest(testApp)
-
-	scenarios := []struct {
-		email       string
-		expectError bool
-	}{
-		{"", true},
-		{"", true},
-		{"invalid", true},
-		{"missing@example.com", false}, // doesn't check for existing admin
-		{"test@example.com", false},
-	}
-
-	for i, s := range scenarios {
-		form.Email = s.email
-
-		err := form.Validate()
-
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, s.expectError, hasErr, err)
-		}
-	}
-}
-
-func TestAdminPasswordResetRequestSubmit(t *testing.T) {
+func TestAdminPasswordResetRequestValidateAndSubmit(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

@@ -9,10 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
-func TestEmailSendValidate(t *testing.T) {
-	app, _ := tests.NewTestApp()
-	defer app.Cleanup()
-
+func TestEmailSendValidateAndSubmit(t *testing.T) {
 	scenarios := []struct {
 		template       string
 		email          string
@@ -27,11 +24,14 @@ func TestEmailSendValidate(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
+		app, _ := tests.NewTestApp()
+		defer app.Cleanup()
+
 		form := forms.NewTestEmailSend(app)
 		form.Email = s.email
 		form.Template = s.template
 
-		result := form.Validate()
+		result := form.Submit()
 
 		// parse errors
 		errs, ok := result.(validation.Errors)
@@ -43,50 +43,26 @@ func TestEmailSendValidate(t *testing.T) {
 		// check errors
 		if len(errs) > len(s.expectedErrors) {
 			t.Errorf("(%d) Expected error keys %v, got %v", i, s.expectedErrors, errs)
+			continue
 		}
 		for _, k := range s.expectedErrors {
 			if _, ok := errs[k]; !ok {
 				t.Errorf("(%d) Missing expected error key %q in %v", i, k, errs)
+				continue
 			}
 		}
-	}
-}
 
-func TestEmailSendSubmit(t *testing.T) {
-	scenarios := []struct {
-		template    string
-		email       string
-		expectError bool
-	}{
-		{"", "", true},
-		{"invalid", "test@example.com", true},
-		{"verification", "invalid", true},
-		{"verification", "test@example.com", false},
-		{"password-reset", "test@example.com", false},
-		{"email-change", "test@example.com", false},
-	}
-
-	for i, s := range scenarios {
-		app, _ := tests.NewTestApp()
-		defer app.Cleanup()
-
-		form := forms.NewTestEmailSend(app)
-		form.Email = s.email
-		form.Template = s.template
-
-		err := form.Submit()
-
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, s.expectError, hasErr, err)
+		expectedEmails := 1
+		if len(s.expectedErrors) > 0 {
+			expectedEmails = 0
 		}
 
-		if hasErr {
+		if app.TestMailer.TotalSend != expectedEmails {
+			t.Errorf("(%d) Expected %d email(s) to be sent, got %d", i, expectedEmails, app.TestMailer.TotalSend)
+		}
+
+		if len(s.expectedErrors) > 0 {
 			continue
-		}
-
-		if app.TestMailer.TotalSend != 1 {
-			t.Errorf("(%d) Expected one email to be sent, got %d", i, app.TestMailer.TotalSend)
 		}
 
 		expectedContent := "Verify"

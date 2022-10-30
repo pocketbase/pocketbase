@@ -10,16 +10,6 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
-func TestCollectionsImportPanic(t *testing.T) {
-	defer func() {
-		if recover() == nil {
-			t.Fatal("The form did not panic")
-		}
-	}()
-
-	forms.NewCollectionsImport(nil)
-}
-
 func TestCollectionsImportValidate(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -62,7 +52,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"collections": []
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 5,
+			expectCollectionsCount: 7,
 			expectEvents:           nil,
 		},
 		{
@@ -92,7 +82,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 5,
+			expectCollectionsCount: 7,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
 			},
@@ -124,7 +114,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 9,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
 				"OnModelAfterCreate":  2,
@@ -147,7 +137,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 5,
+			expectCollectionsCount: 7,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 1,
 			},
@@ -158,8 +148,8 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"deleteMissing": true,
 				"collections": [
 					{
-						"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
-						"name":"demo",
+						"id":"sz5l5z67tg7gku0",
+						"name":"demo2",
 						"schema":[
 							{
 								"id":"_2hlxbmp",
@@ -189,19 +179,22 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 5,
+			expectCollectionsCount: 7,
+			expectEvents: map[string]int{
+				"OnModelBeforeDelete": 5,
+			},
 		},
 		{
 			name: "modified + new collection",
 			jsonData: `{
 				"collections": [
 					{
-						"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
-						"name":"demo",
+						"id":"sz5l5z67tg7gku0",
+						"name":"demo2",
 						"schema":[
 							{
 								"id":"_2hlxbmp",
-								"name":"title",
+								"name":"title_new",
 								"type":"text",
 								"system":false,
 								"required":true,
@@ -237,7 +230,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 9,
 			expectEvents: map[string]int{
 				"OnModelBeforeUpdate": 1,
 				"OnModelAfterUpdate":  1,
@@ -251,45 +244,44 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"deleteMissing": true,
 				"collections": [
 					{
-						"id":"abe78266-fd4d-4aea-962d-8c0138ac522b",
-						"name":"profiles",
-						"system":true,
-						"listRule":"userId = @request.user.id",
-						"viewRule":"created > 'test_change'",
-						"createRule":"userId = @request.user.id",
-						"updateRule":"userId = @request.user.id",
-						"deleteRule":"userId = @request.user.id",
-						"schema":[
+						"id": "kpv709sk2lqbqk8",
+						"system": true,
+						"name": "nologin",
+						"type": "auth",
+						"options": {
+							"allowEmailAuth": false,
+							"allowOAuth2Auth": false,
+							"allowUsernameAuth": false,
+							"exceptEmailDomains": [],
+							"manageRule": "@request.auth.collectionName = 'users'",
+							"minPasswordLength": 8,
+							"onlyEmailDomains": [],
+							"requireEmail": true
+						},
+						"listRule": "",
+						"viewRule": "",
+						"createRule": "",
+						"updateRule": "",
+						"deleteRule": "",
+						"schema": [
 							{
-								"id":"koih1lqx",
-								"name":"userId",
-								"type":"user",
-								"system":true,
-								"required":true,
-								"unique":true,
-								"options":{
-									"maxSelect":1,
-									"cascadeDelete":true
-								}
-							},
-							{
-								"id":"69ycbg3q",
-								"name":"rel",
-								"type":"relation",
-								"system":false,
-								"required":false,
-								"unique":false,
-								"options":{
-									"maxSelect":2,
-									"collectionId":"abe78266-fd4d-4aea-962d-8c0138ac522b",
-									"cascadeDelete":false
+								"id": "x8zzktwe",
+								"name": "name",
+								"type": "text",
+								"system": false,
+								"required": false,
+								"unique": false,
+								"options": {
+									"min": null,
+									"max": null,
+									"pattern": ""
 								}
 							}
 						]
 					},
 					{
-						"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
-						"name":"demo",
+						"id":"sz5l5z67tg7gku0",
+						"name":"demo2",
 						"schema":[
 							{
 								"id":"_2hlxbmp",
@@ -308,7 +300,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 					},
 					{
 						"id": "test_deleted_collection_name_reuse",
-						"name": "demo2",
+						"name": "demo1",
 						"schema": [
 							{
 								"id":"fz6iql2m",
@@ -326,8 +318,8 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"OnModelAfterUpdate":  2,
 				"OnModelBeforeCreate": 1,
 				"OnModelAfterCreate":  1,
-				"OnModelBeforeDelete": 3,
-				"OnModelAfterDelete":  3,
+				"OnModelBeforeDelete": 5,
+				"OnModelAfterDelete":  5,
 			},
 		},
 	}

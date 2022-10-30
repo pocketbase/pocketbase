@@ -2,11 +2,10 @@ package rest_test
 
 import (
 	"bytes"
-	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -14,58 +13,51 @@ import (
 )
 
 func TestFindUploadedFiles(t *testing.T) {
-	// create a test temporary file (with very large prefix to test if it will be truncated)
-	tmpFile, err := os.CreateTemp(os.TempDir(), strings.Repeat("a", 150)+"tmpfile-*.txt")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := tmpFile.Write([]byte("test")); err != nil {
-		t.Fatal(err)
-	}
-	tmpFile.Seek(0, 0)
-	defer tmpFile.Close()
-	defer os.Remove(tmpFile.Name())
-	// ---
-
-	// stub multipart form file body
-	body := new(bytes.Buffer)
-	mp := multipart.NewWriter(body)
-	w, err := mp.CreateFormFile("test", tmpFile.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := io.Copy(w, tmpFile); err != nil {
-		t.Fatal(err)
-	}
-	mp.Close()
-	// ---
-
-	req := httptest.NewRequest(http.MethodPost, "/", body)
-	req.Header.Add("Content-Type", mp.FormDataContentType())
-
-	result, err := rest.FindUploadedFiles(req, "test")
-	if err != nil {
-		t.Fatal(err)
+	scenarios := []struct {
+		filename        string
+		expectedPattern string
+	}{
+		{"ab.png", `^ab_\w{10}_\w{10}\.png$`},
+		{"test", `^test_\w{10}\.txt$`},
+		{"a b c d!@$.j!@$pg", `^a_b_c_d_\w{10}\.jpg$`},
+		{strings.Repeat("a", 150), `^a{100}_\w{10}\.txt$`},
 	}
 
-	if len(result) != 1 {
-		t.Fatalf("Expected 1 file, got %d", len(result))
-	}
+	for i, s := range scenarios {
+		// create multipart form file body
+		body := new(bytes.Buffer)
+		mp := multipart.NewWriter(body)
+		w, err := mp.CreateFormFile("test", s.filename)
+		if err != nil {
+			t.Fatal(err)
+		}
+		w.Write([]byte("test"))
+		mp.Close()
+		// ---
 
-	if result[0].Header().Size != 4 {
-		t.Fatalf("Expected the file size to be 4 bytes, got %d", result[0].Header().Size)
-	}
+		req := httptest.NewRequest(http.MethodPost, "/", body)
+		req.Header.Add("Content-Type", mp.FormDataContentType())
 
-	if !strings.HasSuffix(result[0].Name(), ".txt") {
-		t.Fatalf("Expected the file name to have suffix .txt, got %v", result[0].Name())
-	}
+		result, err := rest.FindUploadedFiles(req, "test")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	if length := len(result[0].Name()); length != 115 { // truncated + random part + ext
-		t.Fatalf("Expected the file name to have length of 115, got %d\n%q", length, result[0].Name())
-	}
+		if len(result) != 1 {
+			t.Errorf("[%d] Expected 1 file, got %d", i, len(result))
+		}
 
-	if string(result[0].Bytes()) != "test" {
-		t.Fatalf("Expected the file content to be %q, got %q", "test", string(result[0].Bytes()))
+		if result[0].Header().Size != 4 {
+			t.Errorf("[%d] Expected the file size to be 4 bytes, got %d", i, result[0].Header().Size)
+		}
+
+		pattern, err := regexp.Compile(s.expectedPattern)
+		if err != nil {
+			t.Errorf("[%d] Invalid filename pattern %q: %v", i, s.expectedPattern, err)
+		}
+		if !pattern.MatchString(result[0].Name()) {
+			t.Fatalf("Expected filename to match %s, got filename %s", s.expectedPattern, result[0].Name())
+		}
 	}
 }
 

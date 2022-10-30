@@ -91,16 +91,6 @@
                     <i class="ri-database-2-line" />
                 </a>
                 <a
-                    href="/users"
-                    class="menu-item"
-                    aria-label="Users"
-                    use:link
-                    use:active={{ path: "/users/?.*", className: "current-route" }}
-                    use:tooltip={{ text: "Users", position: "right" }}
-                >
-                    <i class="ri-group-line" />
-                </a>
-                <a
                     href="/logs"
                     class="menu-item"
                     aria-label="Logs"
@@ -133,10 +123,10 @@
                         <span class="txt">Manage admins</span>
                     </a>
                     <hr />
-                    <div tabindex="0" class="dropdown-item closable" on:click={logout}>
+                    <button type="button" class="dropdown-item closable" on:click={logout}>
                         <i class="ri-logout-circle-line" />
                         <span class="txt">Logout</span>
-                    </div>
+                    </button>
                 </Toggler>
             </figure>
         </aside>

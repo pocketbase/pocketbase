@@ -9,15 +9,20 @@
     let classes = "";
     export { classes as class }; // export reserved keyword
 
-    let container;
+    let container = undefined;
+    let activeTrigger = undefined;
 
     const dispatch = createEventDispatcher();
 
+    $: if (container) {
+        bindTrigger(trigger);
+    }
+
     $: if (active) {
-        trigger?.classList?.add("active");
+        activeTrigger?.classList?.add("active");
         dispatch("show");
     } else {
-        trigger?.classList?.remove("active");
+        activeTrigger?.classList?.remove("active");
         dispatch("hide");
     }
 
@@ -42,7 +47,7 @@
             !container ||
             elem.classList.contains(closableClass) ||
             // is the trigger itself (or a direct child)
-            (trigger?.contains(elem) && !container.contains(elem)) ||
+            (activeTrigger?.contains(elem) && !container.contains(elem)) ||
             // is closable toggler child
             (container.contains(elem) && elem.closest && elem.closest("." + closableClass))
         );
@@ -51,6 +56,8 @@
     function handleClickToggle(e) {
         if (!active || isClosable(e.target)) {
             e.preventDefault();
+            e.stopPropagation();
+
             toggle();
         }
     }
@@ -67,13 +74,13 @@
     }
 
     function handleOutsideClick(e) {
-        if (active && !container?.contains(e.target) && !trigger?.contains(e.target)) {
+        if (active && !container?.contains(e.target) && !activeTrigger?.contains(e.target)) {
             hide();
         }
     }
 
     function handleEscPress(e) {
-        if (active && escClose && e.code == "Escape") {
+        if (active && escClose && e.code === "Escape") {
             e.preventDefault();
             hide();
         }
@@ -83,16 +90,34 @@
         return handleOutsideClick(e);
     }
 
+    function bindTrigger(newTrigger) {
+        cleanup();
+
+        activeTrigger = newTrigger || container?.parentNode;
+
+        if (!activeTrigger) {
+            return;
+        }
+
+        container?.addEventListener("click", handleClickToggle);
+        activeTrigger.addEventListener("click", handleClickToggle);
+        activeTrigger.addEventListener("keydown", handleKeydownToggle);
+    }
+
+    function cleanup() {
+        if (!activeTrigger) {
+            return;
+        }
+
+        container?.removeEventListener("click", handleClickToggle);
+        activeTrigger.removeEventListener("click", handleClickToggle);
+        activeTrigger.removeEventListener("keydown", handleKeydownToggle);
+    }
+
     onMount(() => {
-        trigger = trigger || container.parentNode;
+        bindTrigger();
 
-        trigger.addEventListener("click", handleClickToggle);
-        trigger.addEventListener("keydown", handleKeydownToggle);
-
-        return () => {
-            trigger.removeEventListener("click", handleClickToggle);
-            trigger.removeEventListener("keydown", handleKeydownToggle);
-        };
+        return () => cleanup();
     });
 </script>
 

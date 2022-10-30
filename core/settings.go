@@ -23,14 +23,16 @@ type Settings struct {
 	Smtp SmtpConfig `form:"smtp" json:"smtp"`
 	S3   S3Config   `form:"s3" json:"s3"`
 
-	AdminAuthToken          TokenConfig `form:"adminAuthToken" json:"adminAuthToken"`
-	AdminPasswordResetToken TokenConfig `form:"adminPasswordResetToken" json:"adminPasswordResetToken"`
-	UserAuthToken           TokenConfig `form:"userAuthToken" json:"userAuthToken"`
-	UserPasswordResetToken  TokenConfig `form:"userPasswordResetToken" json:"userPasswordResetToken"`
-	UserEmailChangeToken    TokenConfig `form:"userEmailChangeToken" json:"userEmailChangeToken"`
-	UserVerificationToken   TokenConfig `form:"userVerificationToken" json:"userVerificationToken"`
+	AdminAuthToken           TokenConfig `form:"adminAuthToken" json:"adminAuthToken"`
+	AdminPasswordResetToken  TokenConfig `form:"adminPasswordResetToken" json:"adminPasswordResetToken"`
+	RecordAuthToken          TokenConfig `form:"recordAuthToken" json:"recordAuthToken"`
+	RecordPasswordResetToken TokenConfig `form:"recordPasswordResetToken" json:"recordPasswordResetToken"`
+	RecordEmailChangeToken   TokenConfig `form:"recordEmailChangeToken" json:"recordEmailChangeToken"`
+	RecordVerificationToken  TokenConfig `form:"recordVerificationToken" json:"recordVerificationToken"`
 
-	EmailAuth    EmailAuthConfig    `form:"emailAuth" json:"emailAuth"`
+	// Deprecated: Will be removed in v0.9!
+	EmailAuth EmailAuthConfig `form:"emailAuth" json:"emailAuth"`
+
 	GoogleAuth   AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
 	FacebookAuth AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
 	GithubAuth   AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
@@ -52,9 +54,8 @@ func NewSettings() *Settings {
 			ResetPasswordTemplate:      defaultResetPasswordTemplate,
 			ConfirmEmailChangeTemplate: defaultConfirmEmailChangeTemplate,
 		},
-
 		Logs: LogsConfig{
-			MaxDays: 7,
+			MaxDays: 5,
 		},
 		Smtp: SmtpConfig{
 			Enabled:  false,
@@ -72,49 +73,39 @@ func NewSettings() *Settings {
 			Secret:   security.RandomString(50),
 			Duration: 1800, // 30 minutes,
 		},
-		UserAuthToken: TokenConfig{
+		RecordAuthToken: TokenConfig{
 			Secret:   security.RandomString(50),
 			Duration: 1209600, // 14 days,
 		},
-		UserPasswordResetToken: TokenConfig{
+		RecordPasswordResetToken: TokenConfig{
 			Secret:   security.RandomString(50),
 			Duration: 1800, // 30 minutes,
 		},
-		UserVerificationToken: TokenConfig{
+		RecordVerificationToken: TokenConfig{
 			Secret:   security.RandomString(50),
 			Duration: 604800, // 7 days,
 		},
-		UserEmailChangeToken: TokenConfig{
+		RecordEmailChangeToken: TokenConfig{
 			Secret:   security.RandomString(50),
 			Duration: 1800, // 30 minutes,
 		},
-		EmailAuth: EmailAuthConfig{
-			Enabled:           true,
-			MinPasswordLength: 8,
-		},
 		GoogleAuth: AuthProviderConfig{
-			Enabled:            false,
-			AllowRegistrations: true,
+			Enabled: false,
 		},
 		FacebookAuth: AuthProviderConfig{
-			Enabled:            false,
-			AllowRegistrations: true,
+			Enabled: false,
 		},
 		GithubAuth: AuthProviderConfig{
-			Enabled:            false,
-			AllowRegistrations: true,
+			Enabled: false,
 		},
 		GitlabAuth: AuthProviderConfig{
-			Enabled:            false,
-			AllowRegistrations: true,
+			Enabled: false,
 		},
 		DiscordAuth: AuthProviderConfig{
-			Enabled:            false,
-			AllowRegistrations: true,
+			Enabled: false,
 		},
 		TwitterAuth: AuthProviderConfig{
-			Enabled:            false,
-			AllowRegistrations: true,
+			Enabled: false,
 		},
 	}
 }
@@ -129,13 +120,12 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.Logs),
 		validation.Field(&s.AdminAuthToken),
 		validation.Field(&s.AdminPasswordResetToken),
-		validation.Field(&s.UserAuthToken),
-		validation.Field(&s.UserPasswordResetToken),
-		validation.Field(&s.UserEmailChangeToken),
-		validation.Field(&s.UserVerificationToken),
+		validation.Field(&s.RecordAuthToken),
+		validation.Field(&s.RecordPasswordResetToken),
+		validation.Field(&s.RecordEmailChangeToken),
+		validation.Field(&s.RecordVerificationToken),
 		validation.Field(&s.Smtp),
 		validation.Field(&s.S3),
-		validation.Field(&s.EmailAuth),
 		validation.Field(&s.GoogleAuth),
 		validation.Field(&s.FacebookAuth),
 		validation.Field(&s.GithubAuth),
@@ -182,10 +172,10 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.S3.Secret,
 		&clone.AdminAuthToken.Secret,
 		&clone.AdminPasswordResetToken.Secret,
-		&clone.UserAuthToken.Secret,
-		&clone.UserPasswordResetToken.Secret,
-		&clone.UserEmailChangeToken.Secret,
-		&clone.UserVerificationToken.Secret,
+		&clone.RecordAuthToken.Secret,
+		&clone.RecordPasswordResetToken.Secret,
+		&clone.RecordEmailChangeToken.Secret,
+		&clone.RecordVerificationToken.Secret,
 		&clone.GoogleAuth.ClientSecret,
 		&clone.FacebookAuth.ClientSecret,
 		&clone.GithubAuth.ClientSecret,
@@ -407,43 +397,13 @@ func (c LogsConfig) Validate() error {
 
 // -------------------------------------------------------------------
 
-type EmailAuthConfig struct {
-	Enabled           bool     `form:"enabled" json:"enabled"`
-	ExceptDomains     []string `form:"exceptDomains" json:"exceptDomains"`
-	OnlyDomains       []string `form:"onlyDomains" json:"onlyDomains"`
-	MinPasswordLength int      `form:"minPasswordLength" json:"minPasswordLength"`
-}
-
-// Validate makes `EmailAuthConfig` validatable by implementing [validation.Validatable] interface.
-func (c EmailAuthConfig) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(
-			&c.ExceptDomains,
-			validation.When(len(c.OnlyDomains) > 0, validation.Empty).Else(validation.Each(is.Domain)),
-		),
-		validation.Field(
-			&c.OnlyDomains,
-			validation.When(len(c.ExceptDomains) > 0, validation.Empty).Else(validation.Each(is.Domain)),
-		),
-		validation.Field(
-			&c.MinPasswordLength,
-			validation.When(c.Enabled, validation.Required),
-			validation.Min(5),
-			validation.Max(100),
-		),
-	)
-}
-
-// -------------------------------------------------------------------
-
 type AuthProviderConfig struct {
-	Enabled            bool   `form:"enabled" json:"enabled"`
-	AllowRegistrations bool   `form:"allowRegistrations" json:"allowRegistrations"`
-	ClientId           string `form:"clientId" json:"clientId,omitempty"`
-	ClientSecret       string `form:"clientSecret" json:"clientSecret,omitempty"`
-	AuthUrl            string `form:"authUrl" json:"authUrl,omitempty"`
-	TokenUrl           string `form:"tokenUrl" json:"tokenUrl,omitempty"`
-	UserApiUrl         string `form:"userApiUrl" json:"userApiUrl,omitempty"`
+	Enabled      bool   `form:"enabled" json:"enabled"`
+	ClientId     string `form:"clientId" json:"clientId,omitempty"`
+	ClientSecret string `form:"clientSecret" json:"clientSecret,omitempty"`
+	AuthUrl      string `form:"authUrl" json:"authUrl,omitempty"`
+	TokenUrl     string `form:"tokenUrl" json:"tokenUrl,omitempty"`
+	UserApiUrl   string `form:"userApiUrl" json:"userApiUrl,omitempty"`
 }
 
 // Validate makes `ProviderConfig` validatable by implementing [validation.Validatable] interface.
@@ -483,5 +443,20 @@ func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 		provider.SetTokenUrl(c.TokenUrl)
 	}
 
+	return nil
+}
+
+// -------------------------------------------------------------------
+
+// Deprecated: Will be removed in v0.9!
+type EmailAuthConfig struct {
+	Enabled           bool     `form:"enabled" json:"enabled"`
+	ExceptDomains     []string `form:"exceptDomains" json:"exceptDomains"`
+	OnlyDomains       []string `form:"onlyDomains" json:"onlyDomains"`
+	MinPasswordLength int      `form:"minPasswordLength" json:"minPasswordLength"`
+}
+
+// Deprecated: Will be removed in v0.9!
+func (c EmailAuthConfig) Validate() error {
 	return nil
 }

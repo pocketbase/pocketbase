@@ -23,7 +23,7 @@ func BindBody(c echo.Context, i interface{}) error {
 	ctype := req.Header.Get(echo.HeaderContentType)
 	switch {
 	case strings.HasPrefix(ctype, echo.MIMEApplicationJSON):
-		err := ReadJsonBodyCopy(c.Request(), i)
+		err := CopyJsonBody(c.Request(), i)
 		if err != nil {
 			return echo.NewHTTPErrorWithInternal(http.StatusBadRequest, err, err.Error())
 		}
@@ -34,9 +34,9 @@ func BindBody(c echo.Context, i interface{}) error {
 	}
 }
 
-// ReadJsonBodyCopy reads the request body into i by
+// CopyJsonBody reads the request body into i by
 // creating a copy of `r.Body` to allow multiple reads.
-func ReadJsonBodyCopy(r *http.Request, i interface{}) error {
+func CopyJsonBody(r *http.Request, i interface{}) error {
 	body := r.Body
 
 	// this usually shouldn't be needed because the Server calls close for us

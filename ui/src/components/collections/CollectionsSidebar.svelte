@@ -1,4 +1,6 @@
 <script>
+    import { link } from "svelte-spa-router";
+    import CommonHelper from "@/utils/CommonHelper";
     import { hideControls } from "@/stores/app";
     import { collections, activeCollection } from "@/stores/collections";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
@@ -12,14 +14,26 @@
 
     $: filteredCollections = $collections.filter((collection) => {
         return (
-            collection.name != import.meta.env.PB_PROFILE_COLLECTION &&
-            (collection.id == searchTerm ||
-                collection.name.replace(/\s+/g, "").toLowerCase().includes(normalizedSearch))
+            collection.id == searchTerm ||
+            collection.name.replace(/\s+/g, "").toLowerCase().includes(normalizedSearch)
         );
     });
 
+    $: if ($collections) {
+        scrollIntoView();
+    }
+
     function selectCollection(collection) {
         $activeCollection = collection;
+    }
+
+    function scrollIntoView() {
+        setTimeout(() => {
+            const activeItem = document.querySelector(".collection-sidebar .sidebar-list-item.active");
+            if (activeItem) {
+                activeItem?.scrollIntoView({ block: "nearest" });
+            }
+        }, 0);
     }
 </script>
 
@@ -42,21 +56,18 @@
 
     <hr class="m-t-5 m-b-xs" />
 
-    <div class="sidebar-content">
+    <div class="sidebar-content" class:sidebar-content-compact={filteredCollections.length > 20}>
         {#each filteredCollections as collection (collection.id)}
-            <div
-                tabindex="0"
+            <a
+                href="/collections?collectionId={collection.id}"
                 class="sidebar-list-item"
                 class:active={$activeCollection?.id === collection.id}
-                on:click={() => selectCollection(collection)}
+                use:link
             >
-                {#if $activeCollection?.id === collection.id}
-                    <i class="ri-folder-open-line" />
-                {:else}
-                    <i class="ri-folder-2-line" />
-                {/if}
+                <i class={CommonHelper.getCollectionTypeIcon(collection.type)} />
+
                 <span class="txt">{collection.name}</span>
-            </div>
+            </a>
         {:else}
             {#if normalizedSearch.length}
                 <p class="txt-hint m-t-10 m-b-10 txt-center">No collections found.</p>
@@ -74,4 +85,11 @@
     {/if}
 </aside>
 
-<CollectionUpsertPanel bind:this={collectionPanel} />
+<CollectionUpsertPanel
+    bind:this={collectionPanel}
+    on:save={(e) => {
+        if (e.detail?.isNew && e.detail.collection) {
+            selectCollection(e.detail.collection);
+        }
+    }}
+/>
