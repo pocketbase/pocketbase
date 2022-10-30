@@ -12,6 +12,8 @@
     export let icon = "";
     export let config = {};
     export let showSelfHostedFields = false;
+    export let showSelfHostedRequired = "";
+    export let selfHostedDescription = "";
 
     let accordion;
 
@@ -84,16 +86,16 @@
 
             {#if showSelfHostedFields}
                 <div class="col-lg-12">
-                    <div class="section-title">Optional endpoints (if you self host the OAUTH2 service)</div>
+                    <div class="section-title">{selfHostedDescription}</div>
                     <div class="grid">
                         <div class="col-lg-4">
-                            <Field class="form-field" name="{key}.authUrl" let:uniqueId>
+                            <Field class="form-field {showSelfHostedRequired}" name="{key}.authUrl" let:uniqueId>
                                 <label for={uniqueId}>Custom Auth URL</label>
                                 <input type="url" id={uniqueId} bind:value={config.authUrl} />
                             </Field>
                         </div>
                         <div class="col-lg-4">
-                            <Field class="form-field" name="{key}.tokenUrl" let:uniqueId>
+                            <Field class="form-field {showSelfHostedRequired}" name="{key}.tokenUrl" let:uniqueId>
                                 <label for={uniqueId}>Custom Token URL</label>
                                 <input type="text" id={uniqueId} bind:value={config.tokenUrl} />
                             </Field>
