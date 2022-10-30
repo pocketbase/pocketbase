@@ -109,8 +109,7 @@ func NewSettings() *Settings {
 			Enabled: false,
 		},
 		MicrosoftAdAuth: AuthProviderConfig{
-			Enabled:            false,
-			AllowRegistrations: true,
+			Enabled: false,
 		},
 	}
 }
