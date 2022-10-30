@@ -10,6 +10,10 @@
     <a href="https://pkg.go.dev/github.com/pocketbase/pocketbase" target="_blank" rel="noopener"><img src="https://godoc.org/github.com/ganigeorgiev/fexpr?status.svg" alt="Go package documentation" /></a>
 </p>
 
+> **⚠️ This is a pre-release branch, contains breaking changes and works only with JS SDK v0.8+ and Dart SDK v0.5+!**
+>
+> **For more details on the changes please check the [v0.8.0-rc release notes](https://github.com/pocketbase/pocketbase/releases/tag/v0.8.0-rc1).**
+
 [PocketBase](https://pocketbase.io) is an open source Go backend, consisting of:
 
 - embedded database (_SQLite_) with **realtime subscriptions**
@@ -19,8 +23,7 @@
 
 **For documentation and examples, please visit https://pocketbase.io/docs.**
 
-> ⚠️ Although the web API definitions are considered stable,
-> please keep in mind that PocketBase is still under active development
+> ⚠️ Please keep in mind that PocketBase is still under active development
 > and therefore full backward compatibility is not guaranteed before reaching v1.0.0.
 
 
@@ -121,11 +124,7 @@ PocketBase is free and open source project licensed under the [MIT License](LICE
 You could help continuing its development by:
 
 - [Contribute to the source code](CONTRIBUTING.md)
-
-  > **NB! PR for new features will not be merged until we manage to complete the users refactoring in [#376](https://github.com/pocketbase/pocketbase/issues/376)!**
-
 - [Suggest new features and report issues](https://github.com/pocketbase/pocketbase/issues)
-
 - [Donate a small amount](https://pocketbase.io/support-us)
 
 > Please note that PocketBase was initially created to serve as a new backend for my other open source project - [Presentator](https://presentator.io) (see [#183](https://github.com/presentator/presentator/issues/183)),
