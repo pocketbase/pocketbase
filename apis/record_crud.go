@@ -227,14 +227,14 @@ func (api *recordApi) create(c echo.Context) error {
 		testErr := testForm.DrySubmit(func(txDao *daos.Dao) error {
 			foundRecord, err := txDao.FindRecordById(collection.Id, testRecord.Id, createRuleFunc)
 			if err != nil {
-				return err
+				return fmt.Errorf("DrySubmit create rule failure: %v", err)
 			}
 			hasFullManageAccess = hasAuthManageAccess(txDao, foundRecord, requestData)
 			return nil
 		})
 
 		if testErr != nil {
-			return NewBadRequestError("Failed to create record.", fmt.Errorf("DrySubmit error: %v", testErr))
+			return NewBadRequestError("Failed to create record.", testErr)
 		}
 	}
 

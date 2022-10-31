@@ -819,6 +819,14 @@ func TestRecordCrudCreate(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
+			Name:            "submit nil body",
+			Method:          http.MethodPost,
+			Url:             "/api/collections/demo2/records",
+			Body:            nil,
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
 			Name:            "submit invalid format",
 			Method:          http.MethodPost,
 			Url:             "/api/collections/demo2/records",
@@ -827,12 +835,17 @@ func TestRecordCrudCreate(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:            "submit nil body",
-			Method:          http.MethodPost,
-			Url:             "/api/collections/demo2/records",
-			Body:            nil,
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
+			Name:           "submit empty json body",
+			Method:         http.MethodPost,
+			Url:            "/api/collections/nologin/records",
+			Body:           strings.NewReader(`{}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"email":{"code":"validation_required"`,
+				`"password":{"code":"validation_required"`,
+				`"passwordConfirm":{"code":"validation_required"`,
+			},
 		},
 		{
 			Name:           "guest submit in public collection",
@@ -1314,6 +1327,17 @@ func TestRecordCrudUpdate(t *testing.T) {
 				"OnModelBeforeUpdate":         1,
 				"OnRecordAfterUpdateRequest":  1,
 				"OnRecordBeforeUpdateRequest": 1,
+			},
+		},
+		{
+			Name:           "trigger field validation",
+			Method:         http.MethodPatch,
+			Url:            "/api/collections/demo2/records/0yxhwia2amd8gec",
+			Body:           strings.NewReader(`{"title":"a"}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`data":{`,
+				`"title":{"code":"validation_min_text_constraint"`,
 			},
 		},
 		{
