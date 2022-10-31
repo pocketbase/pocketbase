@@ -33,12 +33,13 @@ type Settings struct {
 	// Deprecated: Will be removed in v0.9!
 	EmailAuth EmailAuthConfig `form:"emailAuth" json:"emailAuth"`
 
-	GoogleAuth   AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
-	FacebookAuth AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
-	GithubAuth   AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
-	GitlabAuth   AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
-	DiscordAuth  AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
-	TwitterAuth  AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
+	GoogleAuth    AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
+	FacebookAuth  AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
+	GithubAuth    AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
+	GitlabAuth    AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
+	DiscordAuth   AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
+	TwitterAuth   AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
+	MicrosoftAuth AuthProviderConfig `form:"microsoftAuth" json:"microsoftAuth"`
 }
 
 // NewSettings creates and returns a new default Settings instance.
@@ -107,6 +108,9 @@ func NewSettings() *Settings {
 		TwitterAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		MicrosoftAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -132,6 +136,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.GitlabAuth),
 		validation.Field(&s.DiscordAuth),
 		validation.Field(&s.TwitterAuth),
+		validation.Field(&s.MicrosoftAuth),
 	)
 }
 
@@ -182,6 +187,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.GitlabAuth.ClientSecret,
 		&clone.DiscordAuth.ClientSecret,
 		&clone.TwitterAuth.ClientSecret,
+		&clone.MicrosoftAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -201,12 +207,13 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 	defer s.mux.RUnlock()
 
 	return map[string]AuthProviderConfig{
-		auth.NameGoogle:   s.GoogleAuth,
-		auth.NameFacebook: s.FacebookAuth,
-		auth.NameGithub:   s.GithubAuth,
-		auth.NameGitlab:   s.GitlabAuth,
-		auth.NameDiscord:  s.DiscordAuth,
-		auth.NameTwitter:  s.TwitterAuth,
+		auth.NameGoogle:    s.GoogleAuth,
+		auth.NameFacebook:  s.FacebookAuth,
+		auth.NameGithub:    s.GithubAuth,
+		auth.NameGitlab:    s.GitlabAuth,
+		auth.NameDiscord:   s.DiscordAuth,
+		auth.NameTwitter:   s.TwitterAuth,
+		auth.NameMicrosoft: s.MicrosoftAuth,
 	}
 }
 

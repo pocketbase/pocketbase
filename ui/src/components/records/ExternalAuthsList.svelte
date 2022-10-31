@@ -14,7 +14,7 @@
     let isLoading = false;
 
     function getProviderTitle(provider) {
-        return providersList[provider + "Auth"]?.title || CommonHelper.sentenize(auth.provider, false);
+        return providersList[provider + "Auth"]?.title || CommonHelper.sentenize(provider, false);
     }
 
     function getProviderIcon(provider) {
