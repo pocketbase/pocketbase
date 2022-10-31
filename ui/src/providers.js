@@ -29,8 +29,8 @@ export default {
         title: "Discord",
         icon:  "ri-discord-fill",
     },
-    microsoftAuth: {
-        title: "Microsoft",
+    azureAuth: {
+        title: "Azure",
         icon:  "ri-microsoft-fill",
         selfHosted: true,
         selfHostedRequired: "required",
