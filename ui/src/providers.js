@@ -40,4 +40,8 @@ export default {
         icon:  "ri-microsoft-fill",
         optionsComponent: MicrosoftOptions,
     },
+    spotifyAuth: {
+        title: "Spotify",
+        icon:  "ri-spotify-fill",
+    },
 };

@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -160,7 +161,7 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 		}
 
 		state := security.RandomString(30)
-		codeVerifier := security.RandomString(43)
+		codeVerifier := base64.URLEncoding.EncodeToString([]byte(security.RandomString(43)))
 		codeChallenge := security.S256Challenge(codeVerifier)
 		codeChallengeMethod := "S256"
 		result.AuthProviders = append(result.AuthProviders, providerInfo{
