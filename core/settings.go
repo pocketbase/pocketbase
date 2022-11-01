@@ -40,6 +40,7 @@ type Settings struct {
 	DiscordAuth   AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
 	TwitterAuth   AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
 	MicrosoftAuth AuthProviderConfig `form:"microsoftAuth" json:"microsoftAuth"`
+	SpotifyAuth   AuthProviderConfig `form:"spotifyAuth" json:"spotifyAuth"`
 }
 
 // NewSettings creates and returns a new default Settings instance.
@@ -111,6 +112,9 @@ func NewSettings() *Settings {
 		MicrosoftAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		SpotifyAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -137,6 +141,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.DiscordAuth),
 		validation.Field(&s.TwitterAuth),
 		validation.Field(&s.MicrosoftAuth),
+		validation.Field(&s.SpotifyAuth),
 	)
 }
 
@@ -188,6 +193,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.DiscordAuth.ClientSecret,
 		&clone.TwitterAuth.ClientSecret,
 		&clone.MicrosoftAuth.ClientSecret,
+		&clone.SpotifyAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -214,6 +220,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameDiscord:   s.DiscordAuth,
 		auth.NameTwitter:   s.TwitterAuth,
 		auth.NameMicrosoft: s.MicrosoftAuth,
+		auth.NameSpotify:   s.SpotifyAuth,
 	}
 }
 
