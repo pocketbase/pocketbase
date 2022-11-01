@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"log"
-
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/spotify"
 )
@@ -29,21 +27,27 @@ func NewSpotifyProvider() *Spotify {
 
 // FetchAuthUser returns an AuthUser instance based on the Spotify's user api.
 func (p *Spotify) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
+	// https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
 	rawData := struct {
-		Id    string `json:"id"`
-		Name  string `json:"display_name"`
-		Email string `json:"email"`
+		Id     string `json:"id"`
+		Name   string `json:"display_name"`
+		Email  string `json:"email"`
+		Images []struct {
+			Url string `json:"url"`
+		} `json:"images"`
 	}{}
 
 	if err := p.FetchRawUserData(token, &rawData); err != nil {
 		return nil, err
 	}
-	log.Printf("rawData: %+v", rawData)
 
 	user := &AuthUser{
 		Id:    rawData.Id,
 		Name:  rawData.Name,
 		Email: rawData.Email,
+	}
+	if len(rawData.Images) > 0 {
+		user.AvatarUrl = rawData.Images[0].Url
 	}
 
 	return user, nil
