@@ -220,7 +220,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"discord":{"enabled":false,"clientId":"discord_test"},"facebook":{"enabled":false,"clientId":"facebook_test"},"github":{"enabled":false,"clientId":"github_test"},"gitlab":{"enabled":true,"clientId":"gitlab_test"},"google":{"enabled":false,"clientId":"google_test"},"microsoft":{"enabled":false,"clientId":"microsoft_test"},"twitter":{"enabled":false,"clientId":"twitter_test"},"spotify":{"enabled":false,"clientId":"spotify_test"}}`
+	expected := `{"discord":{"enabled":false,"clientId":"discord_test"},"facebook":{"enabled":false,"clientId":"facebook_test"},"github":{"enabled":false,"clientId":"github_test"},"gitlab":{"enabled":true,"clientId":"gitlab_test"},"google":{"enabled":false,"clientId":"google_test"},"microsoft":{"enabled":false,"clientId":"microsoft_test"},"spotify":{"enabled":false,"clientId":"spotify_test"},"twitter":{"enabled":false,"clientId":"twitter_test"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected the same serialization, got \n%v", encodedStr)
