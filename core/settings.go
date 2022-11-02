@@ -33,6 +33,7 @@ type Settings struct {
 	// Deprecated: Will be removed in v0.9!
 	EmailAuth EmailAuthConfig `form:"emailAuth" json:"emailAuth"`
 
+	AppleAuth     AuthProviderConfig `form:"appleAuth" json:"appleAuth"`
 	GoogleAuth    AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
 	FacebookAuth  AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
 	GithubAuth    AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
@@ -91,6 +92,9 @@ func NewSettings() *Settings {
 			Secret:   security.RandomString(50),
 			Duration: 1800, // 30 minutes,
 		},
+		AppleAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 		GoogleAuth: AuthProviderConfig{
 			Enabled: false,
 		},
@@ -134,6 +138,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.RecordVerificationToken),
 		validation.Field(&s.Smtp),
 		validation.Field(&s.S3),
+		validation.Field(&s.AppleAuth),
 		validation.Field(&s.GoogleAuth),
 		validation.Field(&s.FacebookAuth),
 		validation.Field(&s.GithubAuth),
@@ -186,6 +191,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.RecordPasswordResetToken.Secret,
 		&clone.RecordEmailChangeToken.Secret,
 		&clone.RecordVerificationToken.Secret,
+		&clone.AppleAuth.ClientSecret,
 		&clone.GoogleAuth.ClientSecret,
 		&clone.FacebookAuth.ClientSecret,
 		&clone.GithubAuth.ClientSecret,
@@ -213,6 +219,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 	defer s.mux.RUnlock()
 
 	return map[string]AuthProviderConfig{
+		auth.NameApple:     s.AppleAuth,
 		auth.NameGoogle:    s.GoogleAuth,
 		auth.NameFacebook:  s.FacebookAuth,
 		auth.NameGithub:    s.GithubAuth,

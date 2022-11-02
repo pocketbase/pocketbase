@@ -10,6 +10,10 @@ import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.
 // - `key`    - the provider settings key (eg. "gitlabAuth")
 // - `config` - the provider settings config that is currently being updated
 export default {
+    appleAuth: {
+        title: "Apple",
+        icon:  "ri-apple-fill",
+    },
     googleAuth: {
         title: "Google",
         icon:  "ri-google-fill",
