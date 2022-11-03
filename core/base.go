@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -358,8 +359,8 @@ func (app *BaseApp) RefreshSettings() error {
 		return err
 	}
 
+	// no settings were previously stored
 	if param == nil {
-		// no settings were previously stored
 		return app.Dao().SaveParam(models.ParamAppSettings, app.settings, encryptionKey)
 	}
 
@@ -390,12 +391,25 @@ func (app *BaseApp) RefreshSettings() error {
 		}
 	}
 
+	beforeMergeRaw, err := json.Marshal(newSettings)
+	if err != nil {
+		return err
+	}
+
 	if err := app.settings.Merge(newSettings); err != nil {
 		return err
 	}
 
-	if plainDecodeErr == nil && encryptionKey != "" {
-		// save because previously the settings weren't stored encrypted
+	afterMergeRaw, err := json.Marshal(app.settings)
+	if err != nil {
+		return err
+	}
+
+	if
+	// save because previously the settings weren't stored encrypted
+	(plainDecodeErr == nil && encryptionKey != "") ||
+		// or save because there are new fields after the merge
+		!bytes.Equal(beforeMergeRaw, afterMergeRaw) {
 		saveErr := app.Dao().SaveParam(models.ParamAppSettings, app.settings, encryptionKey)
 		if saveErr != nil {
 			return saveErr
