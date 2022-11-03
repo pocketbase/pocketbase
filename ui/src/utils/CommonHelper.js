@@ -959,6 +959,10 @@ export default class CommonHelper {
             return "0";
         }
 
+        if (field?.type === "bool") {
+            return "false";
+        }
+
         // array value
         if (["select", "relation", "file"].includes(field?.type) && field?.options?.maxSelect != 1) {
             return "[]";

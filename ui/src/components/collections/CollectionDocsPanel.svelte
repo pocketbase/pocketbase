@@ -123,7 +123,12 @@
     <div class="docs-content-wrapper">
         <aside class="docs-sidebar" class:compact={collection?.isAuth}>
             <nav class="sidebar-content">
-                {#each Object.entries(tabs) as [key, tab] (key)}
+                {#each Object.entries(tabs) as [key, tab], i (key)}
+                    <!-- add a separator before the first auth tab -->
+                    {#if i === Object.keys(baseTabs).length}
+                        <hr class="m-t-sm m-b-sm" />
+                    {/if}
+
                     <button
                         type="button"
                         class="sidebar-item"
