@@ -23,7 +23,7 @@ func TestBaseAppRefreshSettings(t *testing.T) {
 	if err := app.RefreshSettings(); err != nil {
 		t.Fatal("Failed to refresh the settings after delete")
 	}
-	testEvents(t, app, map[string]int{
+	testEventCalls(t, app, map[string]int{
 		"OnModelBeforeCreate": 1,
 		"OnModelAfterCreate":  1,
 	})
@@ -41,7 +41,7 @@ func TestBaseAppRefreshSettings(t *testing.T) {
 	if err := app.RefreshSettings(); err != nil {
 		t.Fatalf("Failed to refresh the app settings: %v", err)
 	}
-	testEvents(t, app, map[string]int{
+	testEventCalls(t, app, map[string]int{
 		"OnModelBeforeUpdate": 1,
 		"OnModelAfterUpdate":  1,
 	})
@@ -52,7 +52,7 @@ func TestBaseAppRefreshSettings(t *testing.T) {
 		t.Fatalf("Failed to fetch new settings param: %v", err)
 	}
 	if bytes.Equal(param.Value, newParam.Value) {
-		t.Fatalf("Expected the changed refreshed and merged settings to be persisted, got: \n%v", string(newParam.Value))
+		t.Fatalf("Expected the new refreshed settings to be different, got: \n%v", string(newParam.Value))
 	}
 
 	// try to refresh again and ensure that there was no db update
@@ -60,10 +60,10 @@ func TestBaseAppRefreshSettings(t *testing.T) {
 	if err := app.RefreshSettings(); err != nil {
 		t.Fatalf("Failed to refresh the app settings without change: %v", err)
 	}
-	testEvents(t, app, nil)
+	testEventCalls(t, app, nil)
 }
 
-func testEvents(t *testing.T, app *tests.TestApp, events map[string]int) {
+func testEventCalls(t *testing.T, app *tests.TestApp, events map[string]int) {
 	if len(events) != len(app.EventCalls) {
 		t.Fatalf("Expected events doesn't match: \n%v, \ngot \n%v", events, app.EventCalls)
 	}

@@ -391,11 +391,6 @@ func (app *BaseApp) RefreshSettings() error {
 		}
 	}
 
-	beforeMergeRaw, err := json.Marshal(newSettings)
-	if err != nil {
-		return err
-	}
-
 	if err := app.settings.Merge(newSettings); err != nil {
 		return err
 	}
@@ -409,7 +404,7 @@ func (app *BaseApp) RefreshSettings() error {
 	// save because previously the settings weren't stored encrypted
 	(plainDecodeErr == nil && encryptionKey != "") ||
 		// or save because there are new fields after the merge
-		!bytes.Equal(beforeMergeRaw, afterMergeRaw) {
+		!bytes.Equal(param.Value, afterMergeRaw) {
 		saveErr := app.Dao().SaveParam(models.ParamAppSettings, app.settings, encryptionKey)
 		if saveErr != nil {
 			return saveErr
