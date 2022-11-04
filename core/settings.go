@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -33,15 +34,15 @@ type Settings struct {
 	// Deprecated: Will be removed in v0.9!
 	EmailAuth EmailAuthConfig `form:"emailAuth" json:"emailAuth"`
 
-	AppleAuth     AuthProviderConfig `form:"appleAuth" json:"appleAuth"`
-	GoogleAuth    AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
-	FacebookAuth  AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
-	GithubAuth    AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
-	GitlabAuth    AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
-	DiscordAuth   AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
-	TwitterAuth   AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
-	MicrosoftAuth AuthProviderConfig `form:"microsoftAuth" json:"microsoftAuth"`
-	SpotifyAuth   AuthProviderConfig `form:"spotifyAuth" json:"spotifyAuth"`
+	AppleAuth     AppleAuthProviderConfig `form:"appleAuth" json:"appleAuth"`
+	GoogleAuth    BaseAuthProviderConfig  `form:"googleAuth" json:"googleAuth"`
+	FacebookAuth  BaseAuthProviderConfig  `form:"facebookAuth" json:"facebookAuth"`
+	GithubAuth    BaseAuthProviderConfig  `form:"githubAuth" json:"githubAuth"`
+	GitlabAuth    BaseAuthProviderConfig  `form:"gitlabAuth" json:"gitlabAuth"`
+	DiscordAuth   BaseAuthProviderConfig  `form:"discordAuth" json:"discordAuth"`
+	TwitterAuth   BaseAuthProviderConfig  `form:"twitterAuth" json:"twitterAuth"`
+	MicrosoftAuth BaseAuthProviderConfig  `form:"microsoftAuth" json:"microsoftAuth"`
+	SpotifyAuth   BaseAuthProviderConfig  `form:"spotifyAuth" json:"spotifyAuth"`
 }
 
 // NewSettings creates and returns a new default Settings instance.
@@ -92,31 +93,33 @@ func NewSettings() *Settings {
 			Secret:   security.RandomString(50),
 			Duration: 1800, // 30 minutes,
 		},
-		AppleAuth: AuthProviderConfig{
+		AppleAuth: AppleAuthProviderConfig{
+			BaseAuthProviderConfig: BaseAuthProviderConfig{
+				Enabled: false,
+			},
+		},
+		GoogleAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
-		GoogleAuth: AuthProviderConfig{
+		FacebookAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
-		FacebookAuth: AuthProviderConfig{
+		GithubAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
-		GithubAuth: AuthProviderConfig{
+		GitlabAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
-		GitlabAuth: AuthProviderConfig{
+		DiscordAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
-		DiscordAuth: AuthProviderConfig{
+		TwitterAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
-		TwitterAuth: AuthProviderConfig{
+		MicrosoftAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
-		MicrosoftAuth: AuthProviderConfig{
-			Enabled: false,
-		},
-		SpotifyAuth: AuthProviderConfig{
+		SpotifyAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
 	}
@@ -192,6 +195,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.RecordEmailChangeToken.Secret,
 		&clone.RecordVerificationToken.Secret,
 		&clone.AppleAuth.ClientSecret,
+		&clone.AppleAuth.SigningKey,
 		&clone.GoogleAuth.ClientSecret,
 		&clone.FacebookAuth.ClientSecret,
 		&clone.GithubAuth.ClientSecret,
@@ -418,7 +422,18 @@ func (c LogsConfig) Validate() error {
 
 // -------------------------------------------------------------------
 
-type AuthProviderConfig struct {
+// AuthProviderConfig is a common interface for all provider configs.
+type AuthProviderConfig interface {
+	validation.Validatable
+
+	// IsEnabled returns true if the provider is enabled in the config.
+	IsEnabled() bool
+	// SetupProvider loads the current AuthProviderConfig into the specified provider.
+	SetupProvider(provider auth.Provider) error
+}
+
+// BaseAuthProviderConfig is the provider config used by all starndard providers
+type BaseAuthProviderConfig struct {
 	Enabled      bool   `form:"enabled" json:"enabled"`
 	ClientId     string `form:"clientId" json:"clientId,omitempty"`
 	ClientSecret string `form:"clientSecret" json:"clientSecret,omitempty"`
@@ -427,8 +442,13 @@ type AuthProviderConfig struct {
 	UserApiUrl   string `form:"userApiUrl" json:"userApiUrl,omitempty"`
 }
 
-// Validate makes `ProviderConfig` validatable by implementing [validation.Validatable] interface.
-func (c AuthProviderConfig) Validate() error {
+// IsEnabled implements [AuthProviderConfig] interface
+func (c BaseAuthProviderConfig) IsEnabled() bool {
+	return c.Enabled
+}
+
+// Validate implements [validation.Validatable] interface.
+func (c BaseAuthProviderConfig) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.ClientId, validation.When(c.Enabled, validation.Required)),
 		validation.Field(&c.ClientSecret, validation.When(c.Enabled, validation.Required)),
@@ -438,8 +458,8 @@ func (c AuthProviderConfig) Validate() error {
 	)
 }
 
-// SetupProvider loads the current AuthProviderConfig into the specified provider.
-func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
+// SetupProvider implements [AuthProviderConfig] interface
+func (c BaseAuthProviderConfig) SetupProvider(provider auth.Provider) error {
 	if !c.Enabled {
 		return errors.New("The provider is not enabled.")
 	}
@@ -462,6 +482,72 @@ func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 
 	if c.TokenUrl != "" {
 		provider.SetTokenUrl(c.TokenUrl)
+	}
+
+	return nil
+}
+
+type AppleAuthProviderConfig struct {
+	BaseAuthProviderConfig
+	TeamId     string `form:"teamId" json:"teamId,omitempty"`
+	KeyId      string `form:"keyId" json:"keyId,omitempty"`
+	SigningKey string `form:"signingKey" json:"signingKey,omitempty"`
+}
+
+// Validate implements [validation.Validatable] interface.
+func (c AppleAuthProviderConfig) Validate() error {
+	requireSecret := c.Enabled && c.TeamId == "" && c.KeyId == "" && c.SigningKey == ""
+
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.ClientId, validation.When(c.Enabled, validation.Required)),
+		validation.Field(&c.ClientSecret, validation.When(requireSecret, validation.Required)),
+		validation.Field(&c.AuthUrl, is.URL),
+		validation.Field(&c.TokenUrl, is.URL),
+		validation.Field(&c.UserApiUrl, is.URL),
+		validation.Field(&c.TeamId, validation.When(!requireSecret, validation.Required)),
+		validation.Field(&c.KeyId, validation.When(!requireSecret, validation.Required)),
+		validation.Field(&c.SigningKey, validation.When(!requireSecret, validation.Required)),
+	)
+}
+
+// SetupProvider implements [AuthProviderConfig] interface
+func (c AppleAuthProviderConfig) SetupProvider(provider auth.Provider) error {
+	err := c.BaseAuthProviderConfig.SetupProvider(provider)
+	if err != nil {
+		return err
+	}
+
+	appleProvider, ok := provider.(*auth.Apple)
+	if !ok {
+		return nil
+	}
+
+	if c.TeamId != "" {
+		appleProvider.SetTeamId(c.TeamId)
+	}
+
+	if c.KeyId != "" {
+		appleProvider.SetKeyId(c.KeyId)
+	}
+
+	if c.SigningKey != "" {
+		appleProvider.SetSigningKey(c.SigningKey)
+	}
+
+	if appleProvider.TeamId() != "" && appleProvider.KeyId() != "" && appleProvider.SigningKey() != "" {
+		// TODO: maybe generate outside?
+		validity := time.Hour*24*180 - time.Second
+		clientSecret, err := auth.GenerateAppleClientSecret(
+			appleProvider.SigningKey(),
+			appleProvider.TeamId(),
+			appleProvider.ClientId(),
+			appleProvider.KeyId(),
+			validity,
+		)
+		if err != nil {
+			return err
+		}
+		appleProvider.SetClientSecret(clientSecret)
 	}
 
 	return nil
