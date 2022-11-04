@@ -50,7 +50,7 @@
     $: if (collection.isAuth) {
         baseData = {
             username: "test_username",
-            email: "test@exampe.com",
+            email: "test@example.com",
             emailVisibility: true,
             password: "12345678",
             passwordConfirm: "12345678",
@@ -90,7 +90,12 @@ const pb = new PocketBase('${backendAbsUrl}');
 const data = ${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection)), null, 4)};
 
 const record = await pb.collection('${collection?.name}').create(data);
-    `}
+` + (collection?.isAuth ?
+`
+// (optional) send an email verification request
+await pb.collection('${collection?.name}').requestVerification('test@example.com');
+` : ""
+)}
     dart={`
 import 'package:pocketbase/pocketbase.dart';
 
@@ -102,7 +107,12 @@ final pb = PocketBase('${backendAbsUrl}');
 final body = <String, dynamic>${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection)), null, 2)};
 
 final record = await pb.collection('${collection?.name}').create(body: body);
-    `}
+` + (collection?.isAuth ?
+`
+// (optional) send an email verification request
+await pb.collection('${collection?.name}').requestVerification('test@example.com');
+` : ""
+)}
 />
 
 <h6 class="m-b-xs">API details</h6>
