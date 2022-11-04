@@ -1,3 +1,4 @@
+import AppleOptions  from "@/components/settings/providers/AppleOptions.svelte";
 import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
 import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
 
@@ -13,6 +14,7 @@ export default {
     appleAuth: {
         title: "Apple",
         icon:  "ri-apple-fill",
+        optionsComponent: AppleOptions,
     },
     googleAuth: {
         title: "Google",
