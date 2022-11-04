@@ -227,12 +227,21 @@
             result.push("@request.auth.id");
             result.push("@request.auth.collectionId");
             result.push("@request.auth.collectionName");
+            result.push("@request.auth.verified");
             result.push("@request.auth.username");
             result.push("@request.auth.email");
             result.push("@request.auth.emailVisibility");
-            result.push("@request.auth.verified");
             result.push("@request.auth.created");
             result.push("@request.auth.updated");
+
+            // load auth collection fields
+            const authCollections = mergedCollections.filter((collection) => collection.isAuth);
+            for (const collection of authCollections) {
+                const authKeys = getCollectionFieldKeys(collection.id, "@request.auth.");
+                for (const k of authKeys) {
+                    CommonHelper.pushUnique(result, k);
+                }
+            }
         }
 
         // add @collections.* keys
