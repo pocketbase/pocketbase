@@ -2,6 +2,7 @@ package security
 
 import (
 	"crypto/rand"
+	"math/big"
 )
 
 // RandomString generates a random string with the specified length.
@@ -16,14 +17,19 @@ func RandomString(length int) string {
 
 // RandomStringWithAlphabet generates a cryptographically random string
 // with the specified length and characters set.
+//
+// It panics if for some reason rand.Int returns a non-nil error.
 func RandomStringWithAlphabet(length int, alphabet string) string {
-	bytes := make([]byte, length)
+	b := make([]byte, length)
+	max := big.NewInt(int64(len(alphabet)))
 
-	rand.Read(bytes)
-
-	for i, b := range bytes {
-		bytes[i] = alphabet[b%byte(len(alphabet))]
+	for i := range b {
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			panic(err)
+		}
+		b[i] = alphabet[n.Int64()]
 	}
 
-	return string(bytes)
+	return string(b)
 }
