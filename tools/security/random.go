@@ -38,16 +38,16 @@ func RandomStringWithAlphabet(length int, alphabet string) string {
 //
 // The generated string matches [A-Za-z0-9]+ and it's transparent to URL-encoding.
 //
-// For a cryptographically random string (but a little bit slower) use PseudoRandomString instead.
-func PseudoRandomString(length int) string {
+// For a cryptographically random string (but a little bit slower) use PseudorandomString instead.
+func PseudorandomString(length int) string {
 	return RandomStringWithAlphabet(length, defaultRandomAlphabet)
 }
 
-// PseudoRandomStringWithAlphabet generates a pseudorandom string
+// PseudorandomStringWithAlphabet generates a pseudorandom string
 // with the specified length and characters set.
 //
 // For a cryptographically random (but a little bit slower) use RandomStringWithAlphabet instead.
-func PseudoRandomStringWithAlphabet(length int, alphabet string) string {
+func PseudorandomStringWithAlphabet(length int, alphabet string) string {
 	b := make([]byte, length)
 	max := len(alphabet)
 

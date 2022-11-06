@@ -129,7 +129,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 		}
 		// indirect relation
 		relField = &schema.SchemaField{
-			Id:      "indirect_" + security.PseudoRandomString(5),
+			Id:      "indirect_" + security.PseudorandomString(5),
 			Type:    schema.FieldTypeRelation,
 			Name:    parts[0],
 			Options: relFieldOptions,

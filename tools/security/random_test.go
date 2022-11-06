@@ -15,12 +15,12 @@ func TestRandomStringWithAlphabet(t *testing.T) {
 	testRandomStringWithAlphabet(t, security.RandomStringWithAlphabet)
 }
 
-func TestPseudoRandomString(t *testing.T) {
-	testRandomString(t, security.PseudoRandomString)
+func TestPseudorandomString(t *testing.T) {
+	testRandomString(t, security.PseudorandomString)
 }
 
-func TestPseudoRandomStringWithAlphabet(t *testing.T) {
-	testRandomStringWithAlphabet(t, security.PseudoRandomStringWithAlphabet)
+func TestPseudorandomStringWithAlphabet(t *testing.T) {
+	testRandomStringWithAlphabet(t, security.PseudorandomStringWithAlphabet)
 }
 
 // -------------------------------------------------------------------
