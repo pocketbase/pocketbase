@@ -1603,6 +1603,20 @@ func TestRecordLastVerificationSentAt(t *testing.T) {
 	}
 }
 
+func TestRecordPasswordHash(t *testing.T) {
+	m := models.NewRecord(&models.Collection{})
+
+	if v := m.PasswordHash(); v != "" {
+		t.Errorf("Expected PasswordHash() to be empty, got %v", v)
+	}
+
+	m.Set(schema.FieldNamePasswordHash, "test")
+
+	if v := m.PasswordHash(); v != "test" {
+		t.Errorf("Expected PasswordHash() to be 'test', got %v", v)
+	}
+}
+
 func TestRecordValidatePassword(t *testing.T) {
 	// 123456
 	hash := "$2a$10$YKU8mPP8sTE3xZrpuM.xQuq27KJ7aIJB2oUeKPsDDqZshbl5g5cDK"
