@@ -1,18 +1,18 @@
 package security
 
 import (
-	"crypto/rand"
+	cryptoRand "crypto/rand"
 	"math/big"
+	mathRand "math/rand"
 )
 
-// RandomString generates a random string with the specified length.
-//
-// The generated string is cryptographically random and matches
-// [A-Za-z0-9]+ (aka. it's transparent to URL-encoding).
-func RandomString(length int) string {
-	const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+const defaultRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
-	return RandomStringWithAlphabet(length, alphabet)
+// RandomString generates a cryptographically random string with the specified length.
+//
+// The generated string matches [A-Za-z0-9]+ and it's transparent to URL-encoding.
+func RandomString(length int) string {
+	return RandomStringWithAlphabet(length, defaultRandomAlphabet)
 }
 
 // RandomStringWithAlphabet generates a cryptographically random string
@@ -24,11 +24,35 @@ func RandomStringWithAlphabet(length int, alphabet string) string {
 	max := big.NewInt(int64(len(alphabet)))
 
 	for i := range b {
-		n, err := rand.Int(rand.Reader, max)
+		n, err := cryptoRand.Int(cryptoRand.Reader, max)
 		if err != nil {
 			panic(err)
 		}
 		b[i] = alphabet[n.Int64()]
+	}
+
+	return string(b)
+}
+
+// RandomString generates a pseudorandom string with the specified length.
+//
+// The generated string matches [A-Za-z0-9]+ and it's transparent to URL-encoding.
+//
+// For a cryptographically random string (but a little bit slower) use PseudoRandomString instead.
+func PseudoRandomString(length int) string {
+	return RandomStringWithAlphabet(length, defaultRandomAlphabet)
+}
+
+// PseudoRandomStringWithAlphabet generates a pseudorandom string
+// with the specified length and characters set.
+//
+// For a cryptographically random (but a little bit slower) use RandomStringWithAlphabet instead.
+func PseudoRandomStringWithAlphabet(length int, alphabet string) string {
+	b := make([]byte, length)
+	max := len(alphabet)
+
+	for i := range b {
+		b[i] = alphabet[mathRand.Intn(max)]
 	}
 
 	return string(b)

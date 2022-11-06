@@ -91,7 +91,7 @@ func (api *settingsApi) testS3(c echo.Context) error {
 	}
 	defer fs.Close()
 
-	testFileKey := "pb_test_" + security.RandomString(5) + "/test.txt"
+	testFileKey := "pb_test_" + security.PseudoRandomString(5) + "/test.txt"
 
 	if err := fs.Upload([]byte("test"), testFileKey); err != nil {
 		return NewBadRequestError("Failed to upload a test file. Raw error: \n"+err.Error(), nil)

@@ -193,7 +193,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		currentCollectionName = collection.Name
 		currentTableAlias = "__auth_" + inflector.Columnify(currentCollectionName)
 
-		authIdParamKey := "auth" + security.RandomString(5)
+		authIdParamKey := "auth" + security.PseudoRandomString(5)
 		authIdParams := dbx.Params{authIdParamKey: authRecordId}
 		// ---
 
@@ -354,7 +354,7 @@ func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (resultN
 		resultVal = val
 	}
 
-	placeholder := "f" + security.RandomString(7)
+	placeholder := "f" + security.PseudoRandomString(5)
 	name := fmt.Sprintf("{:%s}", placeholder)
 	params := dbx.Params{placeholder: resultVal}
 

@@ -494,7 +494,7 @@ func TestCollectionUpsertWithCustomId(t *testing.T) {
 
 	newCollection := func() *models.Collection {
 		return &models.Collection{
-			Name:   "c_" + security.RandomString(4),
+			Name:   "c_" + security.PseudoRandomString(4),
 			Schema: existingCollection.Schema,
 		}
 	}

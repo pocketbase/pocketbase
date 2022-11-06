@@ -530,7 +530,7 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 			// This way we are always doing 1 more rename operation but it provides better dev experience.
 
 			if oldField == nil {
-				tempName := field.Name + security.RandomString(5)
+				tempName := field.Name + security.PseudoRandomString(5)
 				toRename[tempName] = field.Name
 
 				// add
@@ -539,7 +539,7 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 					return err
 				}
 			} else if oldField.Name != field.Name {
-				tempName := field.Name + security.RandomString(5)
+				tempName := field.Name + security.PseudoRandomString(5)
 				toRename[tempName] = field.Name
 
 				// rename

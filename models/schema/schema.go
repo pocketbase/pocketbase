@@ -113,7 +113,7 @@ func (s *Schema) RemoveField(id string) {
 func (s *Schema) AddField(newField *SchemaField) {
 	if newField.Id == "" {
 		// set default id
-		newField.Id = strings.ToLower(security.RandomString(8))
+		newField.Id = strings.ToLower(security.PseudoRandomString(8))
 	}
 
 	for i, field := range s.fields {
