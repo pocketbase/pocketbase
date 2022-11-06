@@ -39,7 +39,7 @@ func RandomStringWithAlphabet(length int, alphabet string) string {
 	return string(b)
 }
 
-// RandomString generates a pseudorandom string with the specified length.
+// PseudorandomString generates a pseudorandom string with the specified length.
 //
 // The generated string matches [A-Za-z0-9]+ and it's transparent to URL-encoding.
 //
