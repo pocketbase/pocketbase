@@ -305,12 +305,12 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	record, submitErr := form.Submit()
+	_, submitErr := form.Submit()
 	if submitErr != nil {
 		return NewBadRequestError("Failed to set new password.", submitErr)
 	}
 
-	return api.authResponse(c, record, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *recordAuthApi) requestVerification(c echo.Context) error {
@@ -350,18 +350,12 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	record, submitErr := form.Submit()
+	_, submitErr := form.Submit()
 	if submitErr != nil {
 		return NewBadRequestError("An error occurred while submitting the form.", submitErr)
 	}
 
-	// don't return an auth response if the collection doesn't allow email or username authentication
-	authOptions := collection.AuthOptions()
-	if !authOptions.AllowEmailAuth && !authOptions.AllowUsernameAuth {
-		return c.NoContent(http.StatusNoContent)
-	}
-
-	return api.authResponse(c, record, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
@@ -393,12 +387,12 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	record, submitErr := form.Submit()
+	_, submitErr := form.Submit()
 	if submitErr != nil {
 		return NewBadRequestError("Failed to confirm email change.", submitErr)
 	}
 
-	return api.authResponse(c, record, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *recordAuthApi) listExternalAuths(c echo.Context) error {

@@ -103,12 +103,12 @@ func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	admin, submitErr := form.Submit()
+	_, submitErr := form.Submit()
 	if submitErr != nil {
 		return NewBadRequestError("Failed to set new password.", submitErr)
 	}
 
-	return api.authResponse(c, admin)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *adminApi) list(c echo.Context) error {

@@ -458,27 +458,14 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 		{
 			Name:   "valid token and data",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/confirm-password-reset?expand=rel,missing",
+			Url:    "/api/collections/users/confirm-password-reset",
 			Body: strings.NewReader(`{
 				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.R_4FOSUHIuJQ5Crl3PpIPCXMsoHzuTaNlccpXg_3FOg",
 				"password":"12345678",
 				"passwordConfirm":"12345678"
 			}`),
-			ExpectedStatus: 200,
-			ExpectedContent: []string{
-				`"token":`,
-				`"record":`,
-				`"id":"4q1xlclmfloku33"`,
-				`"email":"test@example.com"`,
-				`"expand":`,
-				`"rel":`,
-				`"id":"llvuca81nly1qls"`,
-			},
-			NotExpectedContent: []string{
-				`"missing":`,
-			},
+			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
 				"OnModelAfterUpdate":  1,
 				"OnModelBeforeUpdate": 1,
 			},
@@ -634,26 +621,12 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 		{
 			Name:   "valid token",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/confirm-verification?expand=rel,missing",
+			Url:    "/api/collections/users/confirm-verification",
 			Body: strings.NewReader(`{
 				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.hL16TVmStHFdHLc4a860bRqJ3sFfzjv0_NRNzwsvsrc"
 			}`),
-			ExpectedStatus: 200,
-			ExpectedContent: []string{
-				`"token":`,
-				`"record":`,
-				`"id":"4q1xlclmfloku33"`,
-				`"email":"test@example.com"`,
-				`"verified":true`,
-				`"expand":`,
-				`"rel":`,
-				`"id":"llvuca81nly1qls"`,
-			},
-			NotExpectedContent: []string{
-				`"missing":`,
-			},
+			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
 				"OnModelAfterUpdate":  1,
 				"OnModelBeforeUpdate": 1,
 			},
@@ -661,30 +634,17 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 		{
 			Name:   "valid token (already verified)",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/confirm-verification?expand=rel,missing",
+			Url:    "/api/collections/users/confirm-verification",
 			Body: strings.NewReader(`{
 				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im9hcDY0MGNvdDR5cnUycyIsImVtYWlsIjoidGVzdDJAZXhhbXBsZS5jb20iLCJjb2xsZWN0aW9uSWQiOiJfcGJfdXNlcnNfYXV0aF8iLCJ0eXBlIjoiYXV0aFJlY29yZCIsImV4cCI6MjIwODk4NTI2MX0.PsOABmYUzGbd088g8iIBL4-pf7DUZm0W5Ju6lL5JVRg"
 			}`),
-			ExpectedStatus: 200,
-			ExpectedContent: []string{
-				`"token":`,
-				`"record":`,
-				`"id":"oap640cot4yru2s"`,
-				`"email":"test2@example.com"`,
-				`"verified":true`,
-			},
-			NotExpectedContent: []string{
-				`"expand":`, // no rel id attached
-				`"missing":`,
-			},
-			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
-			},
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{},
 		},
 		{
 			Name:   "valid verification token from a collection without allowed login",
 			Method: http.MethodPost,
-			Url:    "/api/collections/nologin/confirm-verification?expand=rel,missing",
+			Url:    "/api/collections/nologin/confirm-verification",
 			Body: strings.NewReader(`{
 				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImRjNDlrNmpnZWpuNDBoMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6ImtwdjcwOXNrMmxxYnFrOCIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.coREjeTDS3_Go7DP1nxHtevIX5rujwHU-_mRB6oOm3w"
 			}`),
@@ -871,16 +831,8 @@ func TestRecordAuthConfirmEmailChange(t *testing.T) {
 				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwibmV3RW1haWwiOiJjaGFuZ2VAZXhhbXBsZS5jb20iLCJleHAiOjIyMDg5ODUyNjF9.1sG6cL708pRXXjiHRZhG-in0X5fnttSf5nNcadKoYRs",
 				"password":"1234567890"
 			}`),
-			ExpectedStatus: 200,
-			ExpectedContent: []string{
-				`"token":`,
-				`"record":`,
-				`"id":"4q1xlclmfloku33"`,
-				`"email":"change@example.com"`,
-				`"verified":true`,
-			},
+			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
 				"OnModelAfterUpdate":  1,
 				"OnModelBeforeUpdate": 1,
 			},
