@@ -44,4 +44,8 @@ export default {
         title: "Spotify",
         icon:  "ri-spotify-fill",
     },
+    twitchAuth: {
+        title: "Twitch",
+        icon:  "ri-twitch-fill",
+    },
 };
