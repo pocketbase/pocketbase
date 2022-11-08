@@ -7,22 +7,15 @@
 
     export let collection = new Collection();
 
-    let responseTab = 200;
+    let responseTab = 204;
     let responses = [];
 
     $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
 
     $: responses = [
         {
-            code: 200,
-            body: JSON.stringify(
-                {
-                    token: "JWT_TOKEN",
-                    record: CommonHelper.dummyCollectionRecord(collection),
-                },
-                null,
-                2
-            ),
+            code: 204,
+            body: "null",
         },
         {
             code: 400,
@@ -45,7 +38,6 @@
 <h3 class="m-b-sm">Confirm email change ({collection.name})</h3>
 <div class="content txt-lg m-b-sm">
     <p>Confirms <strong>{collection.name}</strong> email change request.</p>
-    <p>Returns the refreshed auth data.</p>
 </div>
 
 <SdkTabs
@@ -56,15 +48,10 @@
 
         ...
 
-        const authData = await pb.collection('${collection?.name}').confirmEmailChange(
+        await pb.collection('${collection?.name}').confirmEmailChange(
             'TOKEN',
             'YOUR_PASSWORD',
         );
-
-        // after the above you can also access the auth data from the authStore
-        console.log(pb.authStore.isValid);
-        console.log(pb.authStore.token);
-        console.log(pb.authStore.model.id);
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';
@@ -73,15 +60,10 @@
 
         ...
 
-        final authData = await pb.collection('${collection?.name}').confirmEmailChange(
+        await pb.collection('${collection?.name}').confirmEmailChange(
           'TOKEN',
           'YOUR_PASSWORD',
         );
-
-        // after the above you can also access the auth data from the authStore
-        console.log(pb.authStore.isValid);
-        console.log(pb.authStore.token);
-        console.log(pb.authStore.model.id);
     `}
 />
 

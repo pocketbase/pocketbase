@@ -91,9 +91,9 @@
             filter: 'created >= "2022-01-01 00:00:00" && someFiled1 != someField2',
         });
 
-        // you can also fetch all records at once via getFullList:
+        // you can also fetch all records at once via getFullList
         const records = await pb.collection('${collection?.name}').getFullList(200 /* batch size */, {
-            sort: '-created'
+            sort: '-created',
         });
 
         // or fetch only the first record that matches the specified filter
@@ -122,7 +122,7 @@
         );
 
         // or fetch only the first record that matches the specified filter
-        final record2 = await pb.collection('${collection?.name}').getFirstListItem(
+        final record = await pb.collection('${collection?.name}').getFirstListItem(
           'someField="test"',
           expand: 'relField1,relField2.subRelField',
         );

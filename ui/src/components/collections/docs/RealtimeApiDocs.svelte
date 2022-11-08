@@ -50,19 +50,20 @@
         // (Optionally) authenticate
         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-        // Subscribe to changes in any record from the collection
-        pb.collection('${collection?.name}').subscribe(function (e) {
+        // Subscribe to changes in any ${collection?.name} record
+        pb.collection('${collection?.name}').subscribe('*', function (e) {
             console.log(e.record);
         });
 
-        // Subscribe to changes in a single record
+        // Subscribe to changes only in the specified record
         pb.collection('${collection?.name}').subscribeOne('RECORD_ID', function (e) {
             console.log(e.record);
         });
 
         // Unsubscribe
-        pb.collection('${collection?.name}').unsubscribe() // remove all collection subscriptions
-        pb.collection('${collection?.name}').unsubscribe('RECORD_ID') // remove only the record subscription
+        pb.collection('${collection?.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${collection?.name}').unsubscribe('*'); // remove all '*' topic subscriptions
+        pb.collection('${collection?.name}').unsubscribe(); // remove all subscriptions in the collection
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';
@@ -74,19 +75,20 @@
         // (Optionally) authenticate
         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-        // Subscribe to changes in any record from the collection
-        pb.collection('${collection?.name}').subscribe((e) {
-          print(e.record);
+        // Subscribe to changes in any ${collection?.name} record
+        pb.collection('${collection?.name}').subscribe('*', (e) {
+            console.log(e.record);
         });
 
-        // Subscribe to changes in a single record
+        // Subscribe to changes only in the specified record
         pb.collection('${collection?.name}').subscribeOne('RECORD_ID', (e) {
-          print(e.record);
+            console.log(e.record);
         });
 
         // Unsubscribe
-        pb.collection('${collection?.name}').unsubscribe() // remove all collection subscriptions
-        pb.collection('${collection?.name}').unsubscribe('RECORD_ID') // remove only the record subscription
+        pb.collection('${collection?.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${collection?.name}').unsubscribe('*'); // remove all '*' topic subscriptions
+        pb.collection('${collection?.name}').unsubscribe(); // remove all subscriptions in the collection
     `}
 />
 

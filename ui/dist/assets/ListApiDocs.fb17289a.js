@@ -1,4 +1,4 @@
-import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as xt,o as u,w as k,h as e,O as Ae,c as ge,m as ye,x as Ue,P as Lt,Q as Dt,k as It,R as Bt,n as zt,t as ce,a as de,d as ve,L as Gt,C as je,p as Ut,r as Ee}from"./index.b110ca95.js";import{S as jt}from"./SdkTabs.b01956c7.js";function Qt(r){let s,n,i;return{c(){s=l("span"),s.textContent="Show details",n=a(),i=l("i"),d(s,"class","txt"),d(i,"class","ri-arrow-down-s-line")},m(c,f){p(c,s,f),p(c,n,f),p(c,i,f)},d(c){c&&u(s),c&&u(n),c&&u(i)}}}function Jt(r){let s,n,i;return{c(){s=l("span"),s.textContent="Hide details",n=a(),i=l("i"),d(s,"class","txt"),d(i,"class","ri-arrow-up-s-line")},m(c,f){p(c,s,f),p(c,n,f),p(c,i,f)},d(c){c&&u(s),c&&u(n),c&&u(i)}}}function Tt(r){let s,n,i,c,f,m,_,w,b,$,h,H,W,fe,T,pe,O,G,C,M,Fe,A,E,Ce,U,X,q,Y,xe,j,Q,D,P,ue,Z,v,I,ee,me,te,N,B,le,be,se,x,J,ne,Le,K,he,V;return{c(){s=l("p"),s.innerHTML=`The syntax basically follows the format
+import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as xt,o as u,w as k,h as e,O as Ae,c as ge,m as ye,x as Ue,P as Lt,Q as Dt,k as It,R as Bt,n as zt,t as ce,a as de,d as ve,L as Gt,C as je,p as Ut,r as Ee}from"./index.a710f1eb.js";import{S as jt}from"./SdkTabs.d25acbcc.js";function Qt(r){let s,n,i;return{c(){s=l("span"),s.textContent="Show details",n=a(),i=l("i"),d(s,"class","txt"),d(i,"class","ri-arrow-down-s-line")},m(c,f){p(c,s,f),p(c,n,f),p(c,i,f)},d(c){c&&u(s),c&&u(n),c&&u(i)}}}function Jt(r){let s,n,i;return{c(){s=l("span"),s.textContent="Hide details",n=a(),i=l("i"),d(s,"class","txt"),d(i,"class","ri-arrow-up-s-line")},m(c,f){p(c,s,f),p(c,n,f),p(c,i,f)},d(c){c&&u(s),c&&u(n),c&&u(i)}}}function Tt(r){let s,n,i,c,f,m,_,w,b,$,h,H,W,fe,T,pe,O,G,C,M,Fe,A,E,Ce,U,X,q,Y,xe,j,Q,D,P,ue,Z,v,I,ee,me,te,N,B,le,be,se,x,J,ne,Le,K,he,V;return{c(){s=l("p"),s.innerHTML=`The syntax basically follows the format
         <code><span class="txt-success">OPERAND</span> 
             <span class="txt-danger">OPERATOR</span> 
             <span class="txt-success">OPERAND</span></code>, where:`,n=a(),i=l("ul"),c=l("li"),c.innerHTML=`<code class="txt-success">OPERAND</code> - could be any of the above field literal, string (single
@@ -18,9 +18,9 @@ import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as 
             filter: 'created >= "2022-01-01 00:00:00" && someFiled1 != someField2',
         });
 
-        // you can also fetch all records at once via getFullList:
+        // you can also fetch all records at once via getFullList
         const records = await pb.collection('${(bt=r[0])==null?void 0:bt.name}').getFullList(200 /* batch size */, {
-            sort: '-created'
+            sort: '-created',
         });
 
         // or fetch only the first record that matches the specified filter
@@ -48,7 +48,7 @@ import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as 
         );
 
         // or fetch only the first record that matches the specified filter
-        final record2 = await pb.collection('${(kt=r[0])==null?void 0:kt.name}').getFirstListItem(
+        final record = await pb.collection('${(kt=r[0])==null?void 0:kt.name}').getFirstListItem(
           'someField="test"',
           expand: 'relField1,relField2.subRelField',
         );
@@ -85,9 +85,9 @@ import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as 
             filter: 'created >= "2022-01-01 00:00:00" && someFiled1 != someField2',
         });
 
-        // you can also fetch all records at once via getFullList:
+        // you can also fetch all records at once via getFullList
         const records = await pb.collection('${(gt=t[0])==null?void 0:gt.name}').getFullList(200 /* batch size */, {
-            sort: '-created'
+            sort: '-created',
         });
 
         // or fetch only the first record that matches the specified filter
@@ -115,7 +115,7 @@ import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as 
         );
 
         // or fetch only the first record that matches the specified filter
-        final record2 = await pb.collection('${(Ct=t[0])==null?void 0:Ct.name}').getFirstListItem(
+        final record = await pb.collection('${(Ct=t[0])==null?void 0:Ct.name}').getFirstListItem(
           'someField="test"',
           expand: 'relField1,relField2.subRelField',
         );
