@@ -307,8 +307,11 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 	subscriptionRuleMap := map[string]*string{
 		(collection.Name + "/" + cleanRecord.Id): collection.ViewRule,
 		(collection.Id + "/" + cleanRecord.Id):   collection.ViewRule,
-		collection.Name:                          collection.ListRule,
-		collection.Id:                            collection.ListRule,
+		(collection.Name + "/*"):                 collection.ListRule,
+		(collection.Id + "/*"):                   collection.ListRule,
+		// @deprecated: the same as the wildcard topic but kept for backward compatibility
+		collection.Name: collection.ListRule,
+		collection.Id:   collection.ListRule,
 	}
 
 	data := &recordData{
