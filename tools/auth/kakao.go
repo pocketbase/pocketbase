@@ -15,7 +15,7 @@ type Kakao struct {
 	*baseProvider
 }
 
-// NewSpotifyProvider creates a new Spotify provider instance with some defaults.
+// NewKakaoProvider creates a new Kakao provider instance with some defaults.
 func NewKakaoProvider() *Kakao {
 	return &Kakao{&baseProvider{
 		scopes:     []string{"profile_nickname", "profile_image", "account_email", "name", "gender", "age_range", "birthyear"},
@@ -25,9 +25,9 @@ func NewKakaoProvider() *Kakao {
 	}}
 }
 
-// FetchAuthUser returns an AuthUser instance based on the Spotify's user api.
+// FetchAuthUser returns an AuthUser instance based on the Kakao's user api.
 func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
+	// https://developers.kakao.com/docs/latest/en/kakaologin/prerequisite#personal-information
 	rawData := struct {
 		Id         string `json:"id"`
 		Name       string `json:"kakao_account.name"`
