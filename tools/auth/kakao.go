@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"strconv"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/kakao"
 )
@@ -18,7 +20,7 @@ type Kakao struct {
 // NewKakaoProvider creates a new Kakao provider instance with some defaults.
 func NewKakaoProvider() *Kakao {
 	return &Kakao{&baseProvider{
-		scopes:     []string{"profile_nickname", "profile_image", "account_email", "name", "gender", "age_range", "birthyear"},
+		scopes:     []string{"account_email", "profile_nickname", "profile_image"},
 		authUrl:    kakao.Endpoint.AuthURL,
 		tokenUrl:   kakao.Endpoint.TokenURL,
 		userApiUrl: "https://kapi.kakao.com/v2/user/me",
@@ -29,10 +31,14 @@ func NewKakaoProvider() *Kakao {
 func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	// https://developers.kakao.com/docs/latest/en/kakaologin/prerequisite#personal-information
 	rawData := struct {
-		Id         string `json:"id"`
-		Name       string `json:"kakao_account.name"`
-		Email      string `json:"kakao_account.email"`
-		ProfileImg string `json:"kakao_account.profile.thumbnail_image_url"`
+		Id      int `json:"id"`
+		Profile struct {
+			Name     string `json:"nickname"`
+			ImageUrl string `json:"profile_image"`
+		} `json:"properties"`
+		KakaoAccount struct {
+			Email string `json:"email"`
+		} `json:"kakao_account"`
 	}{}
 
 	if err := p.FetchRawUserData(token, &rawData); err != nil {
@@ -40,10 +46,10 @@ func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:        rawData.Id,
-		Name:      rawData.Name,
-		Email:     rawData.Email,
-		AvatarUrl: rawData.ProfileImg,
+		Id:        strconv.Itoa(rawData.Id),
+		Name:      rawData.Profile.Name,
+		Email:     rawData.KakaoAccount.Email,
+		AvatarUrl: rawData.Profile.ImageUrl,
 	}
 
 	return user, nil
