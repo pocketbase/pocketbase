@@ -26,9 +26,15 @@ import (
 	"gocloud.dev/blob/s3blob"
 )
 
+const (
+	S3UrlRewriteRulePlaceholderBucket string = "{BUCKET}"
+	S3UrlRewriteRulePlaceholderKey    string = "{KEY}"
+)
+
 type System struct {
-	ctx    context.Context
-	bucket *blob.Bucket
+	ctx            context.Context
+	bucket         *blob.Bucket
+	urlRewriteRule string
 }
 
 // NewS3 initializes an S3 filesystem instance.
@@ -41,6 +47,7 @@ func NewS3(
 	accessKey string,
 	secretKey string,
 	s3ForcePathStyle bool,
+	urlRewriteRule string,
 ) (*System, error) {
 	ctx := context.Background() // default context
 
@@ -61,7 +68,11 @@ func NewS3(
 		return nil, err
 	}
 
-	return &System{ctx: ctx, bucket: bucket}, nil
+	if urlRewriteRule != "" {
+		urlRewriteRule = strings.ReplaceAll(urlRewriteRule, S3UrlRewriteRulePlaceholderBucket, bucketName)
+	}
+
+	return &System{ctx: ctx, bucket: bucket, urlRewriteRule: urlRewriteRule}, nil
 }
 
 // NewLocal initializes a new local filesystem instance.
@@ -238,6 +249,12 @@ var manualExtensionContentTypes = map[string]string{
 
 // Serve serves the file at fileKey location to an HTTP response.
 func (s *System) Serve(response http.ResponseWriter, fileKey string, name string) error {
+	if s.urlRewriteRule != "" {
+		redirectUrl := strings.ReplaceAll(s.urlRewriteRule, S3UrlRewriteRulePlaceholderKey, fileKey)
+		http.Redirect(response, &http.Request{Method: http.MethodGet}, redirectUrl, http.StatusFound)
+		return nil
+	}
+
 	r, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
 	if readErr != nil {
 		return readErr

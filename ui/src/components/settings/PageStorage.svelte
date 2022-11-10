@@ -5,6 +5,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
+    import { addInfoToast } from "@/stores/toasts";
     import { removeAllToasts, addWarningToast, addSuccessToast } from "@/stores/toasts";
     import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
@@ -111,6 +112,11 @@
 
         isTesting = false;
         clearTimeout(testS3TimeoutId);
+    }
+
+    function copy(param) {
+        CommonHelper.copyToClipboard(param);
+        addInfoToast(`Copied ${param} to clipboard`, 2000);
     }
 
     onMount(() => {
@@ -240,6 +246,32 @@
                                     required
                                     bind:value={formSettings.s3.secret}
                                 />
+                            </Field>
+                        </div>
+                        <div class="col-lg-12">
+                            <Field class="form-field" name="s3.urlRewriteRule" let:uniqueId>
+                                <label for={uniqueId}><span class="txt">URL rewrite rule</span>
+                                    <i
+                                        class="ri-information-line link-hint"
+                                        use:tooltip={{
+                                            text: 'Rewrite file downloading URLs, eg. "https://cdn.example.com/{BUCKET}/{KEY}". Leave empty to serve files directly from the file API.',
+                                            position: "top",
+                                        }}
+                                    /></label>
+                                <input
+                                    type="text"
+                                    id={uniqueId}
+                                    bind:value={formSettings.s3.urlRewriteRule}
+                                />
+                                <div class="help-block">
+                                    Available placeholder parameters:
+                                    <span class="label label-sm link-primary txt-mono" on:click={() => copy("{BUCKET}")}>
+                                        {"{BUCKET}"}
+                                    </span>,
+                                    <span class="label label-sm link-primary txt-mono" on:click={() => copy("{KEY}")}>
+                                        {"{KEY}"}
+                                    </span>
+                                </div>
                             </Field>
                         </div>
                         <div class="col-lg-12">

@@ -339,6 +339,7 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 			app.settings.S3.AccessKey,
 			app.settings.S3.Secret,
 			app.settings.S3.ForcePathStyle,
+			app.settings.S3.UrlRewriteRule,
 		)
 	}
 

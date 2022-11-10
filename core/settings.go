@@ -273,6 +273,7 @@ type S3Config struct {
 	AccessKey      string `form:"accessKey" json:"accessKey"`
 	Secret         string `form:"secret" json:"secret"`
 	ForcePathStyle bool   `form:"forcePathStyle" json:"forcePathStyle"`
+	UrlRewriteRule string `form:"urlRewriteRule" json:"urlRewriteRule"`
 }
 
 // Validate makes S3Config validatable by implementing [validation.Validatable] interface.
