@@ -99,13 +99,68 @@ func (s *System) Close() error {
 	return s.bucket.Close()
 }
 
+func (s *System) GetRedirectUrl(fileKey string) string {
+	return strings.ReplaceAll(s.urlRewriteRule, S3UrlRewriteRulePlaceholderKey, fileKey)
+}
+
 // Exists checks if file with fileKey path exists or not.
 func (s *System) Exists(fileKey string) (bool, error) {
+	if s.urlRewriteRule != "" { // Use redirectUrl when urlRewriteRule is set
+		redirectUrl := s.GetRedirectUrl(fileKey)
+
+		res, err := http.Head(redirectUrl)
+		if err != nil {
+			return false, err
+		}
+
+		if res.StatusCode != http.StatusOK {
+			return false, nil
+		}
+
+		return true, nil
+	}
+
 	return s.bucket.Exists(s.ctx, fileKey)
 }
 
 // Attributes returns the attributes for the file with fileKey path.
 func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
+	if s.urlRewriteRule != "" { // Use redirectUrl when urlRewriteRule is set
+		redirectUrl := s.GetRedirectUrl(fileKey)
+
+		res, err := http.Head(redirectUrl)
+		if err != nil {
+			return nil, err
+		}
+
+		if res.StatusCode != http.StatusOK {
+			return nil, errors.New("File not found")
+		}
+
+		lastModifiedTimeStr := res.Header.Get("Last-Modified")
+		lastModifiedTime, err := time.Parse(time.RFC1123, lastModifiedTimeStr)
+		if err != nil {
+			return nil, err
+		}
+
+		if res.Header.Get("X-Bz-Upload-Timestamp") != "" { // workaround for Backblaze B2
+			lastModifiedTimeStr = res.Header.Get("X-Bz-Upload-Timestamp")
+			lastModifiedTimeUnixNano, err := strconv.ParseInt(lastModifiedTimeStr, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			lastModifiedTime = time.Unix(0, lastModifiedTimeUnixNano)
+		}
+
+		return &blob.Attributes{
+			CacheControl: res.Header.Get("Cache-Control"),
+			ContentType:  res.Header.Get("Content-Type"),
+			Size:         res.ContentLength,
+			ModTime:      lastModifiedTime,
+			ETag:         res.Header.Get("ETag"),
+		}, nil
+	}
+
 	return s.bucket.Attributes(s.ctx, fileKey)
 }
 
@@ -250,7 +305,7 @@ var manualExtensionContentTypes = map[string]string{
 // Serve serves the file at fileKey location to an HTTP response.
 func (s *System) Serve(response http.ResponseWriter, fileKey string, name string) error {
 	if s.urlRewriteRule != "" {
-		redirectUrl := strings.ReplaceAll(s.urlRewriteRule, S3UrlRewriteRulePlaceholderKey, fileKey)
+		redirectUrl := s.GetRedirectUrl(fileKey)
 		http.Redirect(response, &http.Request{Method: http.MethodGet}, redirectUrl, http.StatusFound)
 		return nil
 	}
