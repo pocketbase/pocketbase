@@ -1,4 +1,6 @@
-:root {
+@use "sass:color";
+
+html {
     --baseFontFamily: 'Source Sans Pro', sans-serif, emoji;
     --monospaceFontFamily: 'Ubuntu Mono', monospace, emoji;
     --iconFontFamily: 'remixicon';
@@ -10,6 +12,7 @@
     --primaryColor: #16161a;
 
     --bodyColor: #f8f9fa;
+    --themeColor: #fff;
 
     --baseColor:     #ffffff;
     --baseAlt1Color: #ebeff2;
@@ -70,6 +73,41 @@
 
     // https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color
     accent-color: var(--primaryColor);
+}
+
+@function colorDark($color) {
+    $light: lightness($color);
+    @if (color.lightness($color) < 50%) {
+        @return color.scale($color, $lightness: 100% - $light);
+    }
+    @return color.scale($color, $lightness: -$light);
+}
+
+html[data-theme=dark] {
+
+    --txtPrimaryColor:  #{colorDark(#16161a)};
+    --txtHintColor:     #{colorDark(#666f75)};
+    --txtDisabledColor: #{colorDark(#adb3b8)};
+
+    --primaryColor: #{colorDark(#16161a)};
+
+    --bodyColor: #{colorDark(#f8f9fa)};
+    --themeColor: #{colorDark(#fff)};
+
+    --baseColor:     #{colorDark(#ffffff)};
+    --baseAlt1Color: #{colorDark(#ebeff2)};
+    --baseAlt2Color: #{colorDark(#dee3e8)};
+    --baseAlt3Color: #{colorDark(#a9b4bc)};
+    --baseAlt4Color: #{colorDark(#7c868d)};
+
+    --infoColor:       #{colorDark(#3da9fc)};
+    --infoAltColor:    #{colorDark(#d8eefe)};
+    --successColor:    #{colorDark(#2cb67d)};
+    --successAltColor: #{colorDark(#d6f5e8)};
+    --dangerColor:     #{colorDark(#ef4565)};
+    --dangerAltColor:  #{colorDark(#fcdee4)};
+    --warningColor:    #{colorDark(#ff8e3c)};
+    --warningAltColor: #{colorDark(#ffe7d6)};
 }
 
 // Maps

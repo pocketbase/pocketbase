@@ -43,6 +43,8 @@
         replace("/");
     }
 
+    setDarkTheme($darkTheme);
+
     async function loadSettings() {
         if (!$admin?.id) {
             return;
@@ -134,7 +136,7 @@
                         <span class="txt">Manage admins</span>
                     </a>
                     <hr />
-                    <button class="dropdown-item closable" on:click={() => {setDarkTheme(!$darkTheme)}}>
+                    <button class="dropdown-item closable" on:click={() => setDarkTheme(!$darkTheme)}>
                         {#if $darkTheme === false}
                             <i class="ri-moon-fill" />
                             <span class="txt">

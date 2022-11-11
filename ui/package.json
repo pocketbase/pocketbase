@@ -27,7 +27,7 @@
     "luxon": "^2.3.2",
     "pocketbase": "^0.7.0",
     "prismjs": "^1.28.0",
-    "sass": "^1.45.0",
+    "sass": "^1.56.1",
     "svelte": "^3.44.0",
     "svelte-flatpickr": "^3.2.6",
     "svelte-spa-router": "^3.2.0",

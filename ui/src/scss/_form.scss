@@ -29,7 +29,7 @@ button {
     text-decoration: none;
     line-height: 1;
     font-weight: 600;
-    color: #fff;
+    color: var(--themeColor);
     font-size: var(--baseFontSize);
     font-family: var(--baseFontFamily);
     border-radius: var(--btnRadius);
@@ -108,7 +108,7 @@ button {
     // secondary/bordered styles
     &.btn-outline {
         border: 2px solid currentColor;
-        background: #fff;
+        background: var(--themeColor);
     }
     &.btn-secondary,
     &.btn-outline {
