@@ -14,6 +14,7 @@
     import { admin } from "@/stores/admin";
     import { setErrors } from "@/stores/errors";
     import { resetConfirmation } from "@/stores/confirmation";
+    import { darkTheme, setDarkTheme } from "@/stores/theme"
 
     let oldLocation = undefined;
 
@@ -67,7 +68,7 @@
     <title>{CommonHelper.joinNonEmpty([$pageTitle, $appName, "PocketBase"], " - ")}</title>
 </svelte:head>
 
-<div class="app-layout">
+<div class="app-layout" class:dark={$darkTheme === true}>
     {#if $admin?.id && showAppSidebar}
         <aside class="app-sidebar">
             <a href="/" class="logo logo-sm" use:link>
@@ -132,6 +133,20 @@
                         <i class="ri-shield-user-line" />
                         <span class="txt">Manage admins</span>
                     </a>
+                    <hr />
+                    <button class="dropdown-item closable" on:click={() => {setDarkTheme(!$darkTheme)}}>
+                        {#if $darkTheme === false}
+                            <i class="ri-moon-fill" />
+                            <span class="txt">
+                                Dark theme
+                            </span>
+                        {:else}
+                            <i class="ri-sun-line" />
+                            <span class="txt">
+                                Light theme
+                            </span>
+                        {/if}
+                    </button>
                     <hr />
                     <div tabindex="0" class="dropdown-item closable" on:click={logout}>
                         <i class="ri-logout-circle-line" />
