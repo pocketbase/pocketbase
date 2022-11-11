@@ -78,9 +78,9 @@ html {
 @function colorDark($color) {
     $light: lightness($color);
     @if (color.lightness($color) < 50%) {
-        @return color.scale($color, $lightness: 100% - $light);
+        @return color.scale($color, $lightness: 100% - $light - 10%);
     }
-    @return color.scale($color, $lightness: -$light);
+    @return color.scale($color, $lightness: -$light + 10%);
 }
 
 html[data-theme=dark] {
