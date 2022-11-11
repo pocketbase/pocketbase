@@ -108,6 +108,10 @@ html[data-theme=dark] {
     --dangerAltColor:  #{colorDark(#fcdee4)};
     --warningColor:    #{colorDark(#ff8e3c)};
     --warningAltColor: #{colorDark(#ffe7d6)};
+
+    --overlayColor:   #{colorDark(rgba(65, 82, 105, 0.25))};
+    --tooltipColor:   #{colorDark(rgba(0, 0, 0, 0.85))};
+    --shadowColor:    #{colorDark(rgba(0, 0, 0, 0.05))};
 }
 
 // Maps
