@@ -70,7 +70,7 @@
     <title>{CommonHelper.joinNonEmpty([$pageTitle, $appName, "PocketBase"], " - ")}</title>
 </svelte:head>
 
-<div class="app-layout" class:dark={$darkTheme === true}>
+<div class="app-layout">
     {#if $admin?.id && showAppSidebar}
         <aside class="app-sidebar">
             <a href="/" class="logo logo-sm" use:link>
