@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -9,7 +8,6 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
@@ -186,56 +184,14 @@ func (api *recordApi) view(c echo.Context) error {
 
 func (api *recordApi) create(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
-	if collection == nil {
-		return NewNotFoundError("", "Missing collection context.")
-	}
 
 	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-	if admin == nil && collection.CreateRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
-	}
 
 	requestData := exportRequestData(c)
 
-	hasFullManageAccess := admin != nil
-
-	// temporary save the record and check it against the create rule
-	if admin == nil && collection.CreateRule != nil {
-		createRuleFunc := func(q *dbx.SelectQuery) error {
-			if *collection.CreateRule == "" {
-				return nil // no create rule to resolve
-			}
-
-			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData, true)
-			expr, err := search.FilterData(*collection.CreateRule).BuildExpr(resolver)
-			if err != nil {
-				return err
-			}
-			resolver.UpdateQuery(q)
-			q.AndWhere(expr)
-			return nil
-		}
-
-		testRecord := models.NewRecord(collection)
-		testForm := forms.NewRecordUpsert(api.app, testRecord)
-		testForm.SetFullManageAccess(true)
-		if err := testForm.LoadRequest(c.Request(), ""); err != nil {
-			return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
-		}
-
-		testErr := testForm.DrySubmit(func(txDao *daos.Dao) error {
-			foundRecord, err := txDao.FindRecordById(collection.Id, testRecord.Id, createRuleFunc)
-			if err != nil {
-				return fmt.Errorf("DrySubmit create rule failure: %v", err)
-			}
-			hasFullManageAccess = hasAuthManageAccess(txDao, foundRecord, requestData)
-			return nil
-		})
-
-		if testErr != nil {
-			return NewBadRequestError("Failed to create record.", testErr)
-		}
+	hasFullManageAccess, errCreate := createTest(api.app, collection, admin, requestData)
+	if errCreate != nil {
+		return errCreate
 	}
 
 	record := models.NewRecord(collection)
