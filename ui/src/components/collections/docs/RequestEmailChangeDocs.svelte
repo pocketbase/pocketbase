@@ -68,7 +68,7 @@
 
         ...
 
-        await pb.collection('${collection?.name}').authViaEmail('test@example.com', '123456');
+        await pb.collection('${collection?.name}').authWithPassword('test@example.com', '1234567890');
 
         await pb.collection('${collection?.name}').requestEmailChange('new@example.com');
     `}
@@ -79,7 +79,7 @@
 
         ...
 
-        await pb.collection('${collection?.name}').authViaEmail('test@example.com', '123456');
+        await pb.collection('${collection?.name}').authWithPassword('test@example.com', '1234567890');
 
         await pb.collection('${collection?.name}').requestEmailChange('new@example.com');
     `}
@@ -90,7 +90,7 @@
     <strong class="label label-primary">POST</strong>
     <div class="content">
         <p>
-            /api/collections/<strong>{collection.name}</strong>/confirm-email-change
+            /api/collections/<strong>{collection.name}</strong>/request-email-change
         </p>
     </div>
     <p class="txt-hint txt-sm txt-right">Requires record <code>Authorization:TOKEN</code> header</p>

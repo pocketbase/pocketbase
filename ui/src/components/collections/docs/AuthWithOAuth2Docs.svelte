@@ -51,7 +51,7 @@
 
 <h3 class="m-b-sm">Auth with OAuth2 ({collection.name})</h3>
 <div class="content txt-lg m-b-sm">
-    <p>Authenticate with an OAuth2 provider and returns a new auth token and account data.</p>
+    <p>Authenticate with an OAuth2 provider and returns a new auth token and record data.</p>
     <p>This action usually should be called right after the provider login page redirect.</p>
     <p>
         You could also check the
@@ -232,7 +232,7 @@
                 The expanded relations will be appended to the record under the
                 <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>).
                 <br />
-                Only the relations to which the account has permissions to <strong>view</strong> will be expanded.
+                Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
     </tbody>

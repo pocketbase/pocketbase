@@ -1,7 +1,10 @@
 package daos_test
 
 import (
+	"context"
+	"database/sql"
 	"testing"
+	"time"
 
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -77,5 +80,30 @@ func TestDeleteTable(t *testing.T) {
 		if hasErr != scenario.expectError {
 			t.Errorf("(%d) Expected hasErr %v, got %v", i, scenario.expectError, hasErr)
 		}
+	}
+}
+
+func TestVacuum(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	calledQueries := []string{}
+	app.DB().QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		calledQueries = append(calledQueries, sql)
+	}
+	app.DB().ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+		calledQueries = append(calledQueries, sql)
+	}
+
+	if err := app.Dao().Vacuum(); err != nil {
+		t.Fatal(err)
+	}
+
+	if total := len(calledQueries); total != 1 {
+		t.Fatalf("Expected 1 query, got %d", total)
+	}
+
+	if calledQueries[0] != "VACUUM" {
+		t.Fatalf("Expected VACUUM query, got %s", calledQueries[0])
 	}
 }

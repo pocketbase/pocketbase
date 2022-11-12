@@ -72,6 +72,11 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
 			time.Now().AddDate(0, 0, -1*form.Settings.Logs.MaxDays),
 		)
 
+		if form.Settings.Logs.MaxDays == 0 {
+			// reclaim deleted logs disk space
+			form.app.LogsDao().Vacuum()
+		}
+
 		// merge the application settings with the form ones
 		return form.app.Settings().Merge(form.Settings)
 	}, interceptors...)

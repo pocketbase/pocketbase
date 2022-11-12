@@ -66,7 +66,7 @@
 
         ...
 
-        await pb.collection('${collection?.name}').authViaEmail('test@example.com', '123456');
+        await pb.collection('${collection?.name}').authWithPassword('test@example.com', '123456');
 
         await pb.collection('${collection?.name}').unlinkExternalAuth(
             pb.authStore.model.id,
@@ -80,7 +80,7 @@
 
         ...
 
-        await pb.collection('${collection?.name}').authViaEmail('test@example.com', '123456');
+        await pb.collection('${collection?.name}').authWithPassword('test@example.com', '123456');
 
         await pb.collection('${collection?.name}').unlinkExternalAuth(
           pb.authStore.model.id,

@@ -99,7 +99,7 @@ func (dao *Dao) FindRecordsByIds(
 //
 // Example:
 //	expr1 := dbx.HashExp{"email": "test@example.com"}
-//	expr2 := dbx.HashExp{"status": "active"}
+//	expr2 := dbx.NewExp("LOWER(username) = {:username}", dbx.Params{"username": "test"})
 //	dao.FindRecordsByExpr("example", expr1, expr2)
 func (dao *Dao) FindRecordsByExpr(collectionNameOrId string, exprs ...dbx.Expression) ([]*models.Record, error) {
 	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)

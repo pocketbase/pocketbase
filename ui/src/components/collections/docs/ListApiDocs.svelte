@@ -57,17 +57,6 @@
                 `,
             });
         }
-
-        responses.push({
-            code: 404,
-            body: `
-                {
-                  "code": 404,
-                  "message": "The requested resource wasn't found.",
-                  "data": {}
-                }
-            `,
-        });
     }
 </script>
 
@@ -109,13 +98,13 @@
         ...
 
         // fetch a paginated records list
-        final result = await pb.collection('${collection?.name}').getList(
+        final resultList = await pb.collection('${collection?.name}').getList(
           page: 1,
           perPage: 50,
           filter: 'created >= "2022-01-01 00:00:00" && someFiled1 != someField2',
         );
 
-        // alternatively you can also fetch all records at once via getFullList:
+        // you can also fetch all records at once via getFullList
         final records = await pb.collection('${collection?.name}').getFullList(
           batch: 200,
           sort: '-created',
@@ -210,7 +199,7 @@
                 The expanded relations will be appended to each individual record under the
                 <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>).
                 <br />
-                Only the relations to which the account has permissions to <strong>view</strong> will be expanded.
+                Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
     </tbody>

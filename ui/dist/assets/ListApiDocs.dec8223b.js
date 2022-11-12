@@ -1,4 +1,4 @@
-import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as xt,o as u,w as k,h as e,O as Ae,c as ge,m as ye,x as Ue,P as Lt,Q as Dt,k as It,R as Bt,n as zt,t as ce,a as de,d as ve,L as Gt,C as je,p as Ut,r as Ee}from"./index.a710f1eb.js";import{S as jt}from"./SdkTabs.d25acbcc.js";function Qt(r){let s,n,i;return{c(){s=l("span"),s.textContent="Show details",n=a(),i=l("i"),d(s,"class","txt"),d(i,"class","ri-arrow-down-s-line")},m(c,f){p(c,s,f),p(c,n,f),p(c,i,f)},d(c){c&&u(s),c&&u(n),c&&u(i)}}}function Jt(r){let s,n,i;return{c(){s=l("span"),s.textContent="Hide details",n=a(),i=l("i"),d(s,"class","txt"),d(i,"class","ri-arrow-up-s-line")},m(c,f){p(c,s,f),p(c,n,f),p(c,i,f)},d(c){c&&u(s),c&&u(n),c&&u(i)}}}function Tt(r){let s,n,i,c,f,m,_,w,b,$,h,H,W,fe,T,pe,O,G,C,M,Fe,A,E,Ce,U,X,q,Y,xe,j,Q,D,P,ue,Z,v,I,ee,me,te,N,B,le,be,se,x,J,ne,Le,K,he,V;return{c(){s=l("p"),s.innerHTML=`The syntax basically follows the format
+import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as xt,o as u,w as k,h as e,O as Ae,c as ge,m as ye,x as Ue,P as Lt,Q as Dt,k as It,R as Bt,n as zt,t as ce,a as de,d as ve,L as Gt,C as je,p as Ut,r as Ee}from"./index.2d20c7a4.js";import{S as jt}from"./SdkTabs.dcaa443a.js";function Qt(r){let s,n,i;return{c(){s=l("span"),s.textContent="Show details",n=a(),i=l("i"),d(s,"class","txt"),d(i,"class","ri-arrow-down-s-line")},m(c,f){p(c,s,f),p(c,n,f),p(c,i,f)},d(c){c&&u(s),c&&u(n),c&&u(i)}}}function Jt(r){let s,n,i;return{c(){s=l("span"),s.textContent="Hide details",n=a(),i=l("i"),d(s,"class","txt"),d(i,"class","ri-arrow-up-s-line")},m(c,f){p(c,s,f),p(c,n,f),p(c,i,f)},d(c){c&&u(s),c&&u(n),c&&u(i)}}}function Tt(r){let s,n,i,c,f,m,_,w,b,$,h,H,W,fe,T,pe,O,G,C,M,Fe,A,E,Ce,U,X,q,Y,xe,j,Q,D,P,ue,Z,v,I,ee,me,te,N,B,le,be,se,x,J,ne,Le,K,he,V;return{c(){s=l("p"),s.innerHTML=`The syntax basically follows the format
         <code><span class="txt-success">OPERAND</span> 
             <span class="txt-danger">OPERATOR</span> 
             <span class="txt-success">OPERAND</span></code>, where:`,n=a(),i=l("ul"),c=l("li"),c.innerHTML=`<code class="txt-success">OPERAND</code> - could be any of the above field literal, string (single
@@ -35,13 +35,13 @@ import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as 
         ...
 
         // fetch a paginated records list
-        final result = await pb.collection('${(_t=r[0])==null?void 0:_t.name}').getList(
+        final resultList = await pb.collection('${(_t=r[0])==null?void 0:_t.name}').getList(
           page: 1,
           perPage: 50,
           filter: 'created >= "2022-01-01 00:00:00" && someFiled1 != someField2',
         );
 
-        // alternatively you can also fetch all records at once via getFullList:
+        // you can also fetch all records at once via getFullList
         final records = await pb.collection('${($t=r[0])==null?void 0:$t.name}').getFullList(
           batch: 200,
           sort: '-created',
@@ -73,7 +73,7 @@ import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as 
                 The expanded relations will be appended to each individual record under the
                 `),De=l("code"),De.textContent="expand",nt=k(" property (eg. "),Ie=l("code"),Ie.textContent='"expand": {"relField1": {...}, ...}',it=k(`).
                 `),ot=l("br"),at=k(`
-                Only the relations to which the account has permissions to `),Be=l("strong"),Be.textContent="view",rt=k(" will be expanded."),ze=a(),Te=l("div"),Te.textContent="Responses",Ge=a(),ae=l("div"),Pe=l("div");for(let t=0;t<z.length;t+=1)z[t].c();dt=a(),Re=l("div");for(let t=0;t<S.length;t+=1)S[t].c();d(s,"class","m-b-sm"),d(_,"class","content txt-lg m-b-sm"),d(O,"class","m-b-xs"),d(M,"class","label label-primary"),d(A,"class","content"),d(C,"class","alert alert-info"),d(Q,"class","section-title"),d(P,"class","table-compact table-border m-b-base"),d(Te,"class","section-title"),d(Pe,"class","tabs-header compact left"),d(Re,"class","tabs-content"),d(ae,"class","tabs")},m(t,o){p(t,s,o),e(s,n),e(s,c),e(s,f),p(t,m,o),p(t,_,o),e(_,w),e(w,b),e(w,$),e($,H),e(w,W),p(t,fe,o),ye(T,t,o),p(t,pe,o),p(t,O,o),p(t,G,o),p(t,C,o),e(C,M),e(C,Fe),e(C,A),e(A,E),e(E,Ce),e(E,U),e(U,q),e(E,Y),e(C,xe),L&&L.m(C,null),p(t,j,o),p(t,Q,o),p(t,D,o),p(t,P,o),e(P,ue),e(P,Z),e(P,v),e(v,I),e(v,ee),e(v,me),e(v,te),e(v,N),e(N,B),e(N,le),e(N,be),e(N,se),e(N,x),e(x,J),e(x,ne),e(x,Le),e(x,K),e(x,he),e(x,V),e(x,F),ye(R,x,null),e(v,Qe),e(v,ie),e(ie,Ne),e(ie,Je),e(ie,He),e(ie,Ke),e(ie,_e),e(_e,Ve),ye($e,_e,null),e(_e,We),ye(ke,_e,null),e(v,Xe),e(v,oe),e(oe,Me),e(oe,Ye),e(oe,qe),e(oe,Ze),e(oe,y),e(y,et),ye(we,y,null),e(y,tt),e(y,lt),e(y,st),e(y,De),e(y,nt),e(y,Ie),e(y,it),e(y,ot),e(y,at),e(y,Be),e(y,rt),p(t,ze,o),p(t,Te,o),p(t,Ge,o),p(t,ae,o),e(ae,Pe);for(let g=0;g<z.length;g+=1)z[g].m(Pe,null);e(ae,dt),e(ae,Re);for(let g=0;g<S.length;g+=1)S[g].m(Re,null);re=!0},p(t,[o]){var wt,gt,yt,vt,Ft,Ct;(!re||o&1)&&i!==(i=t[0].name+"")&&Ue(c,i),(!re||o&1)&&h!==(h=t[0].name+"")&&Ue(H,h);const g={};o&9&&(g.js=`
+                Only the relations to which the request user has permissions to `),Be=l("strong"),Be.textContent="view",rt=k(" will be expanded."),ze=a(),Te=l("div"),Te.textContent="Responses",Ge=a(),ae=l("div"),Pe=l("div");for(let t=0;t<z.length;t+=1)z[t].c();dt=a(),Re=l("div");for(let t=0;t<S.length;t+=1)S[t].c();d(s,"class","m-b-sm"),d(_,"class","content txt-lg m-b-sm"),d(O,"class","m-b-xs"),d(M,"class","label label-primary"),d(A,"class","content"),d(C,"class","alert alert-info"),d(Q,"class","section-title"),d(P,"class","table-compact table-border m-b-base"),d(Te,"class","section-title"),d(Pe,"class","tabs-header compact left"),d(Re,"class","tabs-content"),d(ae,"class","tabs")},m(t,o){p(t,s,o),e(s,n),e(s,c),e(s,f),p(t,m,o),p(t,_,o),e(_,w),e(w,b),e(w,$),e($,H),e(w,W),p(t,fe,o),ye(T,t,o),p(t,pe,o),p(t,O,o),p(t,G,o),p(t,C,o),e(C,M),e(C,Fe),e(C,A),e(A,E),e(E,Ce),e(E,U),e(U,q),e(E,Y),e(C,xe),L&&L.m(C,null),p(t,j,o),p(t,Q,o),p(t,D,o),p(t,P,o),e(P,ue),e(P,Z),e(P,v),e(v,I),e(v,ee),e(v,me),e(v,te),e(v,N),e(N,B),e(N,le),e(N,be),e(N,se),e(N,x),e(x,J),e(x,ne),e(x,Le),e(x,K),e(x,he),e(x,V),e(x,F),ye(R,x,null),e(v,Qe),e(v,ie),e(ie,Ne),e(ie,Je),e(ie,He),e(ie,Ke),e(ie,_e),e(_e,Ve),ye($e,_e,null),e(_e,We),ye(ke,_e,null),e(v,Xe),e(v,oe),e(oe,Me),e(oe,Ye),e(oe,qe),e(oe,Ze),e(oe,y),e(y,et),ye(we,y,null),e(y,tt),e(y,lt),e(y,st),e(y,De),e(y,nt),e(y,Ie),e(y,it),e(y,ot),e(y,at),e(y,Be),e(y,rt),p(t,ze,o),p(t,Te,o),p(t,Ge,o),p(t,ae,o),e(ae,Pe);for(let g=0;g<z.length;g+=1)z[g].m(Pe,null);e(ae,dt),e(ae,Re);for(let g=0;g<S.length;g+=1)S[g].m(Re,null);re=!0},p(t,[o]){var wt,gt,yt,vt,Ft,Ct;(!re||o&1)&&i!==(i=t[0].name+"")&&Ue(c,i),(!re||o&1)&&h!==(h=t[0].name+"")&&Ue(H,h);const g={};o&9&&(g.js=`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${t[3]}');
@@ -102,13 +102,13 @@ import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as 
         ...
 
         // fetch a paginated records list
-        final result = await pb.collection('${(vt=t[0])==null?void 0:vt.name}').getList(
+        final resultList = await pb.collection('${(vt=t[0])==null?void 0:vt.name}').getList(
           page: 1,
           perPage: 50,
           filter: 'created >= "2022-01-01 00:00:00" && someFiled1 != someField2',
         );
 
-        // alternatively you can also fetch all records at once via getFullList:
+        // you can also fetch all records at once via getFullList
         final records = await pb.collection('${(Ft=t[0])==null?void 0:Ft.name}').getFullList(
           batch: 200,
           sort: '-created',
@@ -131,10 +131,4 @@ import{S as Et,i as Nt,s as Ht,e as l,b as a,E as qt,f as d,g as p,u as Mt,y as 
                       "message": "Only admins can access this action.",
                       "data": {}
                     }
-                `}),_.push({code:404,body:`
-                {
-                  "code": 404,
-                  "message": "The requested resource wasn't found.",
-                  "data": {}
-                }
-            `}))},n(3,c=je.getApiExampleUrl(Ut.baseUrl)),[f,i,m,c,_,w]}class tl extends Et{constructor(s){super(),Nt(this,s,Yt,Xt,Ht,{collection:0})}}export{tl as default};
+                `}))},n(3,c=je.getApiExampleUrl(Ut.baseUrl)),[f,i,m,c,_,w]}class tl extends Et{constructor(s){super(),Nt(this,s,Yt,Xt,Ht,{collection:0})}}export{tl as default};

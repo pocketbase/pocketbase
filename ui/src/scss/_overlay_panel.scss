@@ -113,6 +113,7 @@
         overflow-x: hidden;
         overflow-y: auto; /* fallback */
         overflow-y: overlay;
+        scroll-behavior: smooth;
     }
     .panel-header ~ .panel-content {
         padding-top: 5px;

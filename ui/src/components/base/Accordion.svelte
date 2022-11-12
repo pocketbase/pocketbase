@@ -20,13 +20,15 @@
     $: if (active) {
         clearTimeout(expandTimeoutId);
         expandTimeoutId = setTimeout(() => {
-            if (accordionElem?.scrollIntoView) {
-                accordionElem.scrollIntoView({
+            if (accordionElem?.scrollIntoViewIfNeeded) {
+                accordionElem?.scrollIntoViewIfNeeded();
+            } else if (accordionElem?.scrollIntoView) {
+                accordionElem?.scrollIntoView({
                     behavior: "smooth",
                     block: "nearest",
                 });
             }
-        }, 250);
+        }, 200);
     }
 
     export function expand() {
@@ -62,30 +64,14 @@
         }
     }
 
-    function keyToggle(e) {
-        if (!interactive) {
-            return;
-        }
-
-        if (e.code === "Enter" || e.code === "Space") {
-            e.preventDefault();
-            toggle();
-        }
-    }
-
     onMount(() => {
         return () => clearTimeout(expandTimeoutId);
     });
 </script>
 
-<div
-    bind:this={accordionElem}
-    tabindex={interactive ? 0 : -1}
-    class="accordion {isDragOver ? 'drag-over' : ''} {classes}"
-    class:active
-    on:keydown|self={keyToggle}
->
-    <header
+<div bind:this={accordionElem} class="accordion {isDragOver ? 'drag-over' : ''} {classes}" class:active>
+    <button
+        type="button"
         class="accordion-header"
         {draggable}
         class:interactive
@@ -113,7 +99,7 @@
         on:dragover|preventDefault
     >
         <slot name="header" {active} />
-    </header>
+    </button>
 
     {#if active}
         <div class="accordion-content" transition:slide|local={{ duration: 150 }}>

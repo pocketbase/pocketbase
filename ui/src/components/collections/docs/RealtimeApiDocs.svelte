@@ -56,7 +56,7 @@
         });
 
         // Subscribe to changes only in the specified record
-        pb.collection('${collection?.name}').subscribeOne('RECORD_ID', function (e) {
+        pb.collection('${collection?.name}').subscribe('RECORD_ID', function (e) {
             console.log(e.record);
         });
 
@@ -81,7 +81,7 @@
         });
 
         // Subscribe to changes only in the specified record
-        pb.collection('${collection?.name}').subscribeOne('RECORD_ID', (e) {
+        pb.collection('${collection?.name}').subscribe('RECORD_ID', (e) {
             console.log(e.record);
         });
 

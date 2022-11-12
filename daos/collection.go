@@ -18,18 +18,18 @@ func (dao *Dao) CollectionQuery() *dbx.SelectQuery {
 
 // FindCollectionsByType finds all collections by the given type
 func (dao *Dao) FindCollectionsByType(collectionType string) ([]*models.Collection, error) {
-	models := []*models.Collection{}
+	collections := []*models.Collection{}
 
 	err := dao.CollectionQuery().
 		AndWhere(dbx.HashExp{"type": collectionType}).
 		OrderBy("created ASC").
-		All(&models)
+		All(&collections)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return models, nil
+	return collections, nil
 }
 
 // FindCollectionByNameOrId finds the first collection by its name or id.
