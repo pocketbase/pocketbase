@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/github"
 )
 
 var _ Provider = (*Github)(nil)
@@ -22,8 +23,8 @@ type Github struct {
 func NewGithubProvider() *Github {
 	return &Github{&baseProvider{
 		scopes:     []string{"read:user", "user:email"},
-		authUrl:    "https://github.com/login/oauth/authorize",
-		tokenUrl:   "https://github.com/login/oauth/access_token",
+		authUrl:    github.Endpoint.AuthURL,
+		tokenUrl:   github.Endpoint.TokenURL,
 		userApiUrl: "https://api.github.com/user",
 	}}
 }
