@@ -48,4 +48,8 @@ export default {
         title: "Kakao",
         icon:  "ri-kakao-talk-fill",
     },
+    twitchAuth: {
+        title: "Twitch",
+        icon:  "ri-twitch-fill",
+    },
 };
