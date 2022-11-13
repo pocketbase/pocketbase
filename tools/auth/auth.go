@@ -99,6 +99,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewMicrosoftProvider(), nil
 	case NameSpotify:
 		return NewSpotifyProvider(), nil
+	case NameKakao:
+		return NewKakaoProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
