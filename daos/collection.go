@@ -16,7 +16,7 @@ func (dao *Dao) CollectionQuery() *dbx.SelectQuery {
 	return dao.ModelQuery(&models.Collection{})
 }
 
-// FindCollectionsByType finds all collections by the given type
+// FindCollectionsByType finds all collections by the given type.
 func (dao *Dao) FindCollectionsByType(collectionType string) ([]*models.Collection, error) {
 	collections := []*models.Collection{}
 
