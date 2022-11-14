@@ -3,6 +3,7 @@ package daos_test
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/daos"
@@ -71,6 +72,7 @@ func TestFindCollectionByNameOrId(t *testing.T) {
 		{"missing", true},
 		{"wsmn24bux7wo113", false},
 		{"demo1", false},
+		{"DEMO1", false}, // case insensitive check
 	}
 
 	for i, scenario := range scenarios {
@@ -81,7 +83,7 @@ func TestFindCollectionByNameOrId(t *testing.T) {
 			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, scenario.expectError, hasErr, err)
 		}
 
-		if model != nil && model.Id != scenario.nameOrId && model.Name != scenario.nameOrId {
+		if model != nil && model.Id != scenario.nameOrId && !strings.EqualFold(model.Name, scenario.nameOrId) {
 			t.Errorf("(%d) Expected model with identifier %s, got %v", i, scenario.nameOrId, model)
 		}
 	}

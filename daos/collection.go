@@ -32,15 +32,15 @@ func (dao *Dao) FindCollectionsByType(collectionType string) ([]*models.Collecti
 	return collections, nil
 }
 
-// FindCollectionByNameOrId finds the first collection by its name or id.
+// FindCollectionByNameOrId finds a single collection by its name (case insensitive) or id.
 func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, error) {
 	model := &models.Collection{}
 
 	err := dao.CollectionQuery().
-		AndWhere(dbx.Or(
-			dbx.HashExp{"id": nameOrId},
-			dbx.HashExp{"name": nameOrId},
-		)).
+		AndWhere(dbx.NewExp("[[id]] = {:id} OR LOWER([[name]])={:name}", dbx.Params{
+			"id":   nameOrId,
+			"name": strings.ToLower(nameOrId),
+		})).
 		Limit(1).
 		One(model)
 
