@@ -279,8 +279,12 @@ func (form *CollectionUpsert) checkRule(value any) error {
 		return nil // nothing to check
 	}
 
-	dummy := &models.Collection{Schema: form.Schema}
-	r := resolvers.NewRecordFieldResolver(form.dao, dummy, nil, true)
+	dummy := *form.collection
+	dummy.Schema = form.Schema
+	dummy.System = form.System
+	dummy.Options = form.Options
+
+	r := resolvers.NewRecordFieldResolver(form.dao, &dummy, nil, true)
 
 	_, err := search.FilterData(*v).BuildExpr(r)
 	if err != nil {

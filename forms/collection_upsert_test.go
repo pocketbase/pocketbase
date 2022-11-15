@@ -279,11 +279,11 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"schema": [
 					{"id":"_2hlxbmp","name":"test","type":"text"}
 				],
-				"listRule": "test='123'",
-				"viewRule": "test='123'",
-				"createRule": "test='123'",
-				"updateRule": "test='123'",
-				"deleteRule": "test='123'",
+				"listRule": "test='123' && verified = true",
+				"viewRule": "test='123' && emailVisibility = true",
+				"createRule": "test='123' && email != ''",
+				"updateRule": "test='123' && username != ''",
+				"deleteRule": "test='123' && id != ''",
 				"options": {"minPasswordLength": 10}
 			}`,
 			[]string{},
