@@ -185,16 +185,17 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 			"",
 			`{
 				"name": "test_new",
+				"type": "auth",
 				"system": true,
 				"schema": [
 					{"id":"a123456","name":"test1","type":"text"},
 					{"id":"b123456","name":"test2","type":"email"}
 				],
-				"listRule": "test1='123'",
-				"viewRule": "test1='123'",
-				"createRule": "test1='123'",
-				"updateRule": "test1='123'",
-				"deleteRule": "test1='123'"
+				"listRule": "test1='123' && verified = true",
+				"viewRule": "test1='123' && emailVisibility = true",
+				"createRule": "test1='123' && email != ''",
+				"updateRule": "test1='123' && username != ''",
+				"deleteRule": "test1='123' && id != ''"
 			}`,
 			[]string{},
 		},

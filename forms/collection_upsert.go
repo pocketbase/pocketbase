@@ -280,6 +280,7 @@ func (form *CollectionUpsert) checkRule(value any) error {
 	}
 
 	dummy := *form.collection
+	dummy.Type = form.Type
 	dummy.Schema = form.Schema
 	dummy.System = form.System
 	dummy.Options = form.Options
