@@ -845,7 +845,7 @@ func TestCollectionImport(t *testing.T) {
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
-				`"collections":{"code":"collections_import_failure"`,
+				`"collections":{"code":"collections_import_validate_failure"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnCollectionsBeforeImportRequest": 1,
@@ -887,6 +887,10 @@ func TestCollectionImport(t *testing.T) {
 							  "type": "text"
 							}
 						]
+					},
+					{
+						"name": "auth_without_schema",
+						"type": "auth"
 					}
 				]
 			}`),
@@ -897,15 +901,15 @@ func TestCollectionImport(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnCollectionsBeforeImportRequest": 1,
 				"OnCollectionsAfterImportRequest":  1,
-				"OnModelBeforeCreate":              2,
-				"OnModelAfterCreate":               2,
+				"OnModelBeforeCreate":              3,
+				"OnModelAfterCreate":               3,
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 9
+				expected := 10
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}

@@ -96,7 +96,8 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 		jsonData       string
 		expectedErrors []string
 	}{
-		{"empty create", "", "{}", []string{"name", "schema"}},
+		{"empty create (base)", "", "{}", []string{"name", "schema"}},
+		{"empty create (auth)", "", `{"type":"auth"}`, []string{"name"}},
 		{"empty update", "demo2", "{}", []string{}},
 		{
 			"create failure",

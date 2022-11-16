@@ -333,7 +333,10 @@
 
             {#if collection?.isAuth}
                 <AuthFields bind:record {collection} />
-                <hr />
+
+                {#if collection?.schema?.length}
+                    <hr />
+                {/if}
             {/if}
 
             {#each collection?.schema || [] as field (field.name)}
@@ -364,10 +367,6 @@
                 {:else if field.type === "relation"}
                     <RelationField {field} bind:value={record[field.name]} />
                 {/if}
-            {:else}
-                <div class="block txt-center txt-disabled">
-                    <h5>No custom fields to be set</h5>
-                </div>
             {/each}
         </form>
 

@@ -4,7 +4,7 @@
     import { scale } from "svelte/transition";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
-    import { errors, setErrors } from "@/stores/errors";
+    import { errors, setErrors, removeError } from "@/stores/errors";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
     import { addCollection, removeCollection } from "@/stores/collections";
@@ -180,6 +180,9 @@
 
     function setCollectionType(t) {
         collection.type = t;
+
+        // reset schema errors on type change
+        removeError("schema");
     }
 </script>
 
@@ -242,7 +245,7 @@
                     disabled={isSystemUpdate}
                     spellcheck="false"
                     autofocus={collection.isNew}
-                    placeholder={`eg. "posts"`}
+                    placeholder={collection.isAuth ? `eg. "users"` : `eg. "posts"`}
                     value={collection.name}
                     on:input={(e) => {
                         collection.name = CommonHelper.slugify(e.target.value);

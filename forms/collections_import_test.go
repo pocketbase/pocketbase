@@ -88,6 +88,25 @@ func TestCollectionsImportSubmit(t *testing.T) {
 			},
 		},
 		{
+			name: "test empty base collection schema",
+			jsonData: `{
+				"collections": [
+					{
+						"name": "import1"
+					},
+					{
+						"name": "import2",
+						"type": "auth"
+					}
+				]
+			}`,
+			expectError:            true,
+			expectCollectionsCount: 7,
+			expectEvents: map[string]int{
+				"OnModelBeforeCreate": 2,
+			},
+		},
+		{
 			name: "all imported collections has valid data",
 			jsonData: `{
 				"collections": [
@@ -110,14 +129,18 @@ func TestCollectionsImportSubmit(t *testing.T) {
 								"type":"bool"
 							}
 						]
+					},
+					{
+						"name": "import3",
+						"type": "auth"
 					}
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 9,
+			expectCollectionsCount: 10,
 			expectEvents: map[string]int{
-				"OnModelBeforeCreate": 2,
-				"OnModelAfterCreate":  2,
+				"OnModelBeforeCreate": 3,
+				"OnModelAfterCreate":  3,
 			},
 		},
 		{

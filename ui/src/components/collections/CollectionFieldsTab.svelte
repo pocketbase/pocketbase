@@ -158,7 +158,7 @@
 
 <button
     type="button"
-    class="btn btn-block {collection.schema?.length ? 'btn-secondary' : 'btn-warning'}"
+    class="btn btn-block {collection?.isAuth || collection.schema?.length ? 'btn-secondary' : 'btn-warning'}"
     on:click={newField}
 >
     <i class="ri-add-line" />

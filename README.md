@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://pocketbase.io" target="_blank" rel="noopener">
-        <img src="https://i.imgur.com/ZfD4BHO.png" alt="PocketBase - open source backend in 1 file" />
+        <img src="https://i.imgur.com/1Ag0seN.png" alt="PocketBase - open source backend in 1 file" />
     </a>
 </p>
 
@@ -9,10 +9,6 @@
     <a href="https://github.com/pocketbase/pocketbase/releases" target="_blank" rel="noopener"><img src="https://img.shields.io/github/release/pocketbase/pocketbase.svg" alt="Latest releases" /></a>
     <a href="https://pkg.go.dev/github.com/pocketbase/pocketbase" target="_blank" rel="noopener"><img src="https://godoc.org/github.com/ganigeorgiev/fexpr?status.svg" alt="Go package documentation" /></a>
 </p>
-
-> **⚠️ This is a pre-release branch, contains breaking changes and works only with JS SDK v0.8+ and Dart SDK v0.5+!**
->
-> **For more details on the changes please check the [v0.8.0-rc release notes](https://github.com/pocketbase/pocketbase/releases/tag/v0.8.0-rc1).**
 
 [PocketBase](https://pocketbase.io) is an open source Go backend, consisting of:
 
@@ -67,15 +63,15 @@ func main() {
     app := pocketbase.New()
 
     app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-        // add new "GET /api/hello" route to the app router (echo)
+        // add new "GET /hello" route to the app router (echo)
         e.Router.AddRoute(echo.Route{
             Method: http.MethodGet,
-            Path:   "/api/hello",
+            Path:   "/hello",
             Handler: func(c echo.Context) error {
                 return c.String(200, "Hello world!")
             },
             Middlewares: []echo.MiddlewareFunc{
-                apis.RequireAdminOrRecordAuth(),
+                apis.ActivityLogger(app),
             },
         })
 
@@ -120,6 +116,7 @@ All reports will be promptly addressed and you'll be credited accordingly.
 ## Contributing
 
 PocketBase is free and open source project licensed under the [MIT License](LICENSE.md).
+You are free to do whatever you want with it, even offering it as a paid service.
 
 You could help continuing its development by:
 
@@ -127,5 +124,14 @@ You could help continuing its development by:
 - [Suggest new features and report issues](https://github.com/pocketbase/pocketbase/issues)
 - [Donate a small amount](https://pocketbase.io/support-us)
 
-> Please note that PocketBase was initially created to serve as a new backend for my other open source project - [Presentator](https://presentator.io) (see [#183](https://github.com/presentator/presentator/issues/183)),
-so all feature requests will be first aligned with what we need for Presentator v3.
+PRs for _small features_ (eg. adding new OAuth2 providers), bug and documentation fixes, etc. are more than welcome.
+
+But please refrain creating PRs for _big features_ without previously discussing the implementation details. Reviewing big PRs often requires a lot of time and tedious back-and-forth communication.
+PocketBase has a [roadmap](https://github.com/orgs/pocketbase/projects/2)
+and I try to work on issues in a specific order and PRs often come in out of nowhere and skew all initial planning.
+
+Don't get upset if I close your PR, even if it is well executed and tested. This doesn't mean that it will never be merged.
+Later we can always refer to it and/or take pieces of your implementation when the time to work on the issue come in (don't worry you'll be credited in the release notes).
+
+_Please also note that PocketBase was initially created to serve as a new backend for my other open source project - [Presentator](https://presentator.io) (see [#183](https://github.com/presentator/presentator/issues/183)),
+so all feature requests will be first aligned with what we need for Presentator v3._

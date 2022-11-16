@@ -26,7 +26,7 @@ git clone https://github.com/your_username/pocketbase.git
 
 ## Making changes in the Go code
 
-PocketBase is a Go package, which means that in order to run the project you'll have to create a Go `main` program that imports the package.
+PocketBase is distributed as a Go package, which means that in order to run the project you'll have to create a Go `main` program that imports the package.
 
 The repository already includes such program, located in `/examples/base`, that is also used for the prebuilt executables.
 

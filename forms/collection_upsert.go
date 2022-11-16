@@ -116,6 +116,7 @@ func (form *CollectionUpsert) Validate() error {
 		// validates using the type's own validation rules + some collection's specific
 		validation.Field(
 			&form.Schema,
+			validation.By(form.checkMinSchemaFields),
 			validation.By(form.ensureNoSystemFieldsChange),
 			validation.By(form.ensureNoFieldsTypeChange),
 			validation.By(form.ensureExistingRelationCollectionId),
@@ -250,6 +251,19 @@ func (form *CollectionUpsert) ensureNoAuthFieldName(value any) error {
 
 	if len(errs) > 0 {
 		return errs
+	}
+
+	return nil
+}
+
+func (form *CollectionUpsert) checkMinSchemaFields(value any) error {
+	if form.Type == models.CollectionTypeAuth {
+		return nil // auth collections doesn't require having additional schema fields
+	}
+
+	v, ok := value.(schema.Schema)
+	if !ok || len(v.Fields()) == 0 {
+		return validation.ErrRequired
 	}
 
 	return nil

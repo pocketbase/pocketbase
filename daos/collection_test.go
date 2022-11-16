@@ -299,22 +299,14 @@ func TestImportCollections(t *testing.T) {
 			expectCollectionsCount: 7,
 		},
 		{
-			name: "check db constraints",
-			jsonData: `[
-				{"name": "import_test", "schema": []}
-			]`,
-			deleteMissing:          false,
-			expectError:            true,
-			expectCollectionsCount: 7,
-		},
-		{
 			name: "minimal collection import",
 			jsonData: `[
-				{"name": "import_test", "schema": [{"name":"test", "type": "text"}]}
+				{"name": "import_test1", "schema": [{"name":"test", "type": "text"}]},
+				{"name": "import_test2", "type": "auth"}
 			]`,
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: 9,
 		},
 		{
 			name: "minimal collection import + failed beforeRecordsSync",
