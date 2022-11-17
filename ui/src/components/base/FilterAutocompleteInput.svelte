@@ -99,8 +99,8 @@
         disableIndirectCollectionsKeys !== -1
     ) {
         cachedBaseKeys = getBaseKeys();
-        cachedRequestKeys = getRequestKeys();
-        cachedIndirectCollectionKeys = getIndirectCollectionKeys();
+        cachedRequestKeys = !disableRequestKeys ? getRequestKeys() : [];
+        cachedIndirectCollectionKeys = !disableIndirectCollectionsKeys ? getIndirectCollectionKeys() : [];
     }
 
     $: if (id) {
