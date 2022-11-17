@@ -381,6 +381,6 @@
 
 <style>
     .tabs-content {
-        z-index: auto; /* autocomplete dropdown overlay fix */
+        z-index: 3; /* autocomplete dropdown overlay fix */
     }
 </style>

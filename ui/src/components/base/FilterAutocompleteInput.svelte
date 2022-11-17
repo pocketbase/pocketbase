@@ -84,7 +84,24 @@
     let readOnlyCompartment = new Compartment();
     let placeholderCompartment = new Compartment();
 
+    let cachedBaseKeys = [];
+    let cachedRequestKeys = [];
+    let cachedIndirectCollectionKeys = [];
+
+    $: collectionType = baseCollection.type; // cache the collection type
+
     $: mergedCollections = mergeWithBaseCollection($collections);
+
+    $: if (
+        collectionType ||
+        mergedCollections !== -1 ||
+        disableRequestKeys !== -1 ||
+        disableIndirectCollectionsKeys !== -1
+    ) {
+        cachedBaseKeys = getBaseKeys();
+        cachedRequestKeys = getRequestKeys();
+        cachedIndirectCollectionKeys = getIndirectCollectionKeys();
+    }
 
     $: if (id) {
         addLabelListeners();
@@ -208,57 +225,68 @@
         return result;
     }
 
+    function getBaseKeys() {
+        return getCollectionFieldKeys(baseCollection.name);
+    }
+
+    function getRequestKeys() {
+        const result = [];
+
+        result.push("@request.method");
+        result.push("@request.query.");
+        result.push("@request.data.");
+        result.push("@request.auth.");
+        result.push("@request.auth.id");
+        result.push("@request.auth.collectionId");
+        result.push("@request.auth.collectionName");
+        result.push("@request.auth.verified");
+        result.push("@request.auth.username");
+        result.push("@request.auth.email");
+        result.push("@request.auth.emailVisibility");
+        result.push("@request.auth.created");
+        result.push("@request.auth.updated");
+
+        // load auth collection fields
+        const authCollections = mergedCollections.filter((collection) => collection.isAuth);
+        for (const collection of authCollections) {
+            const authKeys = getCollectionFieldKeys(collection.id, "@request.auth.");
+            for (const k of authKeys) {
+                CommonHelper.pushUnique(result, k);
+            }
+        }
+
+        return result;
+    }
+
+    function getIndirectCollectionKeys() {
+        const result = [];
+
+        for (const collection of mergedCollections) {
+            const prefix = "@collection." + collection.name + ".";
+            const keys = getCollectionFieldKeys(collection.name, prefix);
+            for (const key of keys) {
+                result.push(key);
+            }
+        }
+
+        return result;
+    }
+
     // Returns an array with all the supported keys.
     function getAllKeys(includeRequestKeys = true, includeIndirectCollectionsKeys = true) {
         let result = [].concat(extraAutocompleteKeys);
 
         // add base keys
-        const baseKeys = getCollectionFieldKeys(baseCollection.name);
-        for (const key of baseKeys) {
-            result.push(key);
-        }
+        result = result.concat(cachedBaseKeys);
 
-        // add base request keys
+        // add @request.* keys
         if (includeRequestKeys) {
-            result.push("@request.method");
-            result.push("@request.query.");
-            result.push("@request.data.");
-            result.push("@request.auth.");
-            result.push("@request.auth.id");
-            result.push("@request.auth.collectionId");
-            result.push("@request.auth.collectionName");
-            result.push("@request.auth.verified");
-            result.push("@request.auth.username");
-            result.push("@request.auth.email");
-            result.push("@request.auth.emailVisibility");
-            result.push("@request.auth.created");
-            result.push("@request.auth.updated");
-
-            // load auth collection fields
-            const authCollections = mergedCollections.filter((collection) => collection.isAuth);
-            for (const collection of authCollections) {
-                const authKeys = getCollectionFieldKeys(collection.id, "@request.auth.");
-                for (const k of authKeys) {
-                    CommonHelper.pushUnique(result, k);
-                }
-            }
+            result = result.concat(cachedRequestKeys);
         }
 
         // add @collections.* keys
-        if (includeRequestKeys || includeIndirectCollectionsKeys) {
-            for (const collection of mergedCollections) {
-                let prefix = "";
-
-                if (!includeIndirectCollectionsKeys) {
-                    continue;
-                }
-                prefix = "@collection." + collection.name + ".";
-
-                const keys = getCollectionFieldKeys(collection.name, prefix);
-                for (const key of keys) {
-                    result.push(key);
-                }
-            }
+        if (includeIndirectCollectionsKeys) {
+            result = result.concat(cachedIndirectCollectionKeys);
         }
 
         // sort longer keys first because the highlighter will highlight
@@ -297,25 +325,6 @@
         };
     }
 
-    // Returns all field keys as keyword patterns to highlight.
-    function keywords() {
-        const result = [{ regex: CommonHelper.escapeRegExp("@now"), token: "keyword" }];
-        const keys = getAllKeys(!disableRequestKeys, !disableIndirectCollectionsKeys);
-
-        for (const key of keys) {
-            let pattern;
-            if (key.endsWith(".")) {
-                pattern = CommonHelper.escapeRegExp(key) + "\\w+[\\w.]*";
-            } else {
-                pattern = CommonHelper.escapeRegExp(key);
-            }
-
-            result.push({ regex: pattern, token: "keyword" });
-        }
-
-        return result;
-    }
-
     // Creates a new language mode.
     // @see https://codemirror.net/5/demo/simplemode.html
     function ruleLang() {
@@ -344,7 +353,11 @@
                     // indent and dedent properties guide autoindentation
                     { regex: /[\{\[\(]/, indent: true },
                     { regex: /[\}\]\)]/, dedent: true },
-                ].concat(keywords()),
+                    // keywords
+                    { regex: /\w+[\w\.]*\w+/, token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@now"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@request.method"), token: "keyword" },
+                ],
             })
         );
     }
