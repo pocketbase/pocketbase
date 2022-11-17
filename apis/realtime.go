@@ -251,16 +251,10 @@ func (api *realtimeApi) canAccessRecord(client subscriptions.Client, record *mod
 		}
 
 		// emulate request data
-		requestData := map[string]any{
-			"method": "GET",
-			"query":  map[string]any{},
-			"data":   map[string]any{},
-			"auth":   nil,
+		requestData := &models.FilterRequestData{
+			Method: "GET",
 		}
-		authRecord, _ := client.Get(ContextAuthRecordKey).(*models.Record)
-		if authRecord != nil {
-			requestData["auth"] = authRecord.PublicExport()
-		}
+		requestData.AuthRecord, _ = client.Get(ContextAuthRecordKey).(*models.Record)
 
 		resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), record.Collection(), requestData, true)
 		expr, err := search.FilterData(*accessRule).BuildExpr(resolver)

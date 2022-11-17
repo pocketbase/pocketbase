@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -19,8 +20,8 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := map[string]any{
-		"auth": authRecord.PublicExport(),
+	requestData := &models.FilterRequestData{
+		AuthRecord: authRecord,
 	}
 
 	scenarios := []struct {
@@ -181,8 +182,8 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := map[string]any{
-		"auth": authRecord.PublicExport(),
+	requestData := &models.FilterRequestData{
+		AuthRecord: authRecord,
 	}
 
 	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData, true)
@@ -262,16 +263,16 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := map[string]any{
-		"method": "get",
-		"query": map[string]any{
+	requestData := &models.FilterRequestData{
+		Method: "get",
+		Query: map[string]any{
 			"a": 123,
 		},
-		"data": map[string]any{
+		Data: map[string]any{
 			"b": 456,
 			"c": map[string]int{"sub": 1},
 		},
-		"user": authRecord.PublicExport(),
+		AuthRecord: authRecord,
 	}
 
 	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData, true)
@@ -295,7 +296,11 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		{"@request.data.c", false, `"{\"sub\":1}"`},
 		{"@request.auth", true, ""},
 		{"@request.auth.id", false, `"4q1xlclmfloku33"`},
-		{"@request.auth.file", false, `"[]"`},
+		{"@request.auth.email", false, `"test@example.com"`},
+		{"@request.auth.username", false, `"users75657"`},
+		{"@request.auth.verified", false, `false`},
+		{"@request.auth.emailVisibility", false, `false`},
+		{"@request.auth.missing", false, `NULL`},
 	}
 
 	for i, s := range scenarios {
@@ -315,7 +320,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		// ---
 		if len(params) == 0 {
 			if name != "NULL" {
-				t.Errorf("(%d) Expected 0 placeholder parameters, got %v", i, params)
+				t.Errorf("(%d) Expected 0 placeholder parameters for %v, got %v", i, name, params)
 			}
 			continue
 		}
@@ -323,7 +328,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		// existing key
 		// ---
 		if len(params) != 1 {
-			t.Errorf("(%d) Expected 1 placeholder parameter, got %v", i, params)
+			t.Errorf("(%d) Expected 1 placeholder parameter for %v, got %v", i, name, params)
 			continue
 		}
 
@@ -340,7 +345,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 
 		encodedParamValue, _ := json.Marshal(paramValue)
 		if string(encodedParamValue) != s.expectParamValue {
-			t.Errorf("(%d) Expected params %v, got %v", i, s.expectParamValue, string(encodedParamValue))
+			t.Errorf("(%d) Expected params %v for %v, got %v", i, s.expectParamValue, name, string(encodedParamValue))
 		}
 	}
 }

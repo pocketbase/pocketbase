@@ -52,10 +52,11 @@ type RecordFieldResolver struct {
 	baseCollection    *models.Collection
 	allowHiddenFields bool
 	allowedFields     []string
-	requestData       map[string]any
 	loadedCollections []*models.Collection
 	joins             []join // we cannot use a map because the insertion order is not preserved
 	exprs             []dbx.Expression
+	requestData       *models.FilterRequestData
+	staticRequestData map[string]any
 }
 
 // NewRecordFieldResolver creates and initializes a new `RecordFieldResolver`.
@@ -66,10 +67,10 @@ type RecordFieldResolver struct {
 func NewRecordFieldResolver(
 	dao *daos.Dao,
 	baseCollection *models.Collection,
-	requestData map[string]any,
+	requestData *models.FilterRequestData,
 	allowHiddenFields bool,
 ) *RecordFieldResolver {
-	return &RecordFieldResolver{
+	r := &RecordFieldResolver{
 		dao:               dao,
 		baseCollection:    baseCollection,
 		requestData:       requestData,
@@ -86,6 +87,22 @@ func NewRecordFieldResolver(
 			`^\@collection\.\w+\.\w+[\w\.]*$`,
 		},
 	}
+
+	// @todo remove after IN operator and multi-match filter enhancements
+	r.staticRequestData = map[string]any{}
+	if r.requestData != nil {
+		r.staticRequestData["method"] = r.requestData.Method
+		r.staticRequestData["query"] = r.requestData.Query
+		r.staticRequestData["data"] = r.requestData.Data
+		r.staticRequestData["auth"] = nil
+		if r.requestData.AuthRecord != nil {
+			r.requestData.AuthRecord.IgnoreEmailVisibility(true)
+			r.staticRequestData["auth"] = r.requestData.AuthRecord.PublicExport()
+			r.requestData.AuthRecord.IgnoreEmailVisibility(false)
+		}
+	}
+
+	return r
 }
 
 // UpdateQuery implements `search.FieldResolver` interface.
@@ -159,6 +176,10 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 			return "", nil, fmt.Errorf("Invalid @request data field path in %q.", fieldName)
 		}
 
+		if r.requestData == nil {
+			return "NULL", nil, nil
+		}
+
 		// plain @request.* field
 		if !strings.HasPrefix(fieldName, "@request.auth.") || list.ExistInSlice(fieldName, plainRequestAuthFields) {
 			return r.resolveStaticRequestField(props[1:]...)
@@ -173,28 +194,18 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 
 		// resolve the auth collection fields
 		// ---
-		rawAuthRecordId, _ := extractNestedMapVal(r.requestData, "auth", "id")
-		authRecordId := cast.ToString(rawAuthRecordId)
-		if authRecordId == "" {
+		if r.requestData == nil || r.requestData.AuthRecord == nil || r.requestData.AuthRecord.Collection() == nil {
 			return "NULL", nil, nil
 		}
 
-		rawAuthCollectionId, _ := extractNestedMapVal(r.requestData, "auth", schema.FieldNameCollectionId)
-		authCollectionId := cast.ToString(rawAuthCollectionId)
-		if authCollectionId == "" {
-			return "NULL", nil, nil
-		}
-
-		collection, err := r.loadCollection(authCollectionId)
-		if err != nil {
-			return "", nil, fmt.Errorf("Failed to load collection %q from field path %q.", currentCollectionName, fieldName)
-		}
+		collection := r.requestData.AuthRecord.Collection()
+		r.loadedCollections = append(r.loadedCollections, collection)
 
 		currentCollectionName = collection.Name
 		currentTableAlias = "__auth_" + inflector.Columnify(currentCollectionName)
 
 		authIdParamKey := "auth" + security.PseudorandomString(5)
-		authIdParams := dbx.Params{authIdParamKey: authRecordId}
+		authIdParams := dbx.Params{authIdParamKey: r.requestData.AuthRecord.Id}
 		// ---
 
 		// join the auth collection
@@ -331,7 +342,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (resultName string, placeholderParams dbx.Params, err error) {
 	// ignore error because requestData is dynamic and some of the
 	// lookup keys may not be defined for the request
-	resultVal, _ := extractNestedMapVal(r.requestData, path...)
+	resultVal, _ := extractNestedMapVal(r.staticRequestData, path...)
 
 	switch v := resultVal.(type) {
 	case nil:
@@ -387,7 +398,7 @@ func extractNestedMapVal(m map[string]any, keys ...string) (result any, err erro
 func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*models.Collection, error) {
 	// return already loaded
 	for _, collection := range r.loadedCollections {
-		if collection.Name == collectionNameOrId || collection.Id == collectionNameOrId {
+		if collection.Id == collectionNameOrId || strings.EqualFold(collection.Name, collectionNameOrId) {
 			return collection, nil
 		}
 	}

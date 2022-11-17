@@ -88,7 +88,7 @@ type BaseApp struct {
 
 	// user api event hooks
 	onRecordAuthRequest                     *hook.Hook[*RecordAuthEvent]
-	onRecordListExternalAuths               *hook.Hook[*RecordListExternalAuthsEvent]
+	onRecordListExternalAuthsRequest        *hook.Hook[*RecordListExternalAuthsEvent]
 	onRecordBeforeUnlinkExternalAuthRequest *hook.Hook[*RecordUnlinkExternalAuthEvent]
 	onRecordAfterUnlinkExternalAuthRequest  *hook.Hook[*RecordUnlinkExternalAuthEvent]
 
@@ -175,7 +175,7 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 
 		// user API event hooks
 		onRecordAuthRequest:                     &hook.Hook[*RecordAuthEvent]{},
-		onRecordListExternalAuths:               &hook.Hook[*RecordListExternalAuthsEvent]{},
+		onRecordListExternalAuthsRequest:        &hook.Hook[*RecordListExternalAuthsEvent]{},
 		onRecordBeforeUnlinkExternalAuthRequest: &hook.Hook[*RecordUnlinkExternalAuthEvent]{},
 		onRecordAfterUnlinkExternalAuthRequest:  &hook.Hook[*RecordUnlinkExternalAuthEvent]{},
 
@@ -574,8 +574,8 @@ func (app *BaseApp) OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent] {
 	return app.onRecordAuthRequest
 }
 
-func (app *BaseApp) OnRecordListExternalAuths() *hook.Hook[*RecordListExternalAuthsEvent] {
-	return app.onRecordListExternalAuths
+func (app *BaseApp) OnRecordListExternalAuthsRequest() *hook.Hook[*RecordListExternalAuthsEvent] {
+	return app.onRecordListExternalAuthsRequest
 }
 
 func (app *BaseApp) OnRecordBeforeUnlinkExternalAuthRequest() *hook.Hook[*RecordUnlinkExternalAuthEvent] {

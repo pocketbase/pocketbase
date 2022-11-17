@@ -886,7 +886,7 @@ func TestRecordAuthListExternalsAuths(t *testing.T) {
 			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{`[]`},
-			ExpectedEvents:  map[string]int{"OnRecordListExternalAuths": 1},
+			ExpectedEvents:  map[string]int{"OnRecordListExternalAuthsRequest": 1},
 		},
 		{
 			Name:   "admin + existing user id and 2 external auths",
@@ -902,7 +902,7 @@ func TestRecordAuthListExternalsAuths(t *testing.T) {
 				`"recordId":"4q1xlclmfloku33"`,
 				`"collectionId":"_pb_users_auth_"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordListExternalAuths": 1},
+			ExpectedEvents: map[string]int{"OnRecordListExternalAuthsRequest": 1},
 		},
 		{
 			Name:   "auth record + trying to list another user external auths",
@@ -933,7 +933,7 @@ func TestRecordAuthListExternalsAuths(t *testing.T) {
 			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{`[]`},
-			ExpectedEvents:  map[string]int{"OnRecordListExternalAuths": 1},
+			ExpectedEvents:  map[string]int{"OnRecordListExternalAuthsRequest": 1},
 		},
 		{
 			Name:   "authorized as user - owner with 2 external auths",
@@ -949,7 +949,7 @@ func TestRecordAuthListExternalsAuths(t *testing.T) {
 				`"recordId":"4q1xlclmfloku33"`,
 				`"collectionId":"_pb_users_auth_"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordListExternalAuths": 1},
+			ExpectedEvents: map[string]int{"OnRecordListExternalAuthsRequest": 1},
 		},
 	}
 

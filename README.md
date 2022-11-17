@@ -131,7 +131,7 @@ PocketBase has a [roadmap](https://github.com/orgs/pocketbase/projects/2)
 and I try to work on issues in a specific order and PRs often come in out of nowhere and skew all initial planning.
 
 Don't get upset if I close your PR, even if it is well executed and tested. This doesn't mean that it will never be merged.
-Later we can always refer to it and/or take pieces of your implementation when the time to work on the issue come in (don't worry you'll be credited in the release notes).
+Later we can always refer to it and/or take pieces of your implementation when the time comes to work on the issue (don't worry you'll be credited in the release notes).
 
 _Please also note that PocketBase was initially created to serve as a new backend for my other open source project - [Presentator](https://presentator.io) (see [#183](https://github.com/presentator/presentator/issues/183)),
 so all feature requests will be first aligned with what we need for Presentator v3._

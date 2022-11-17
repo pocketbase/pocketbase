@@ -2,6 +2,7 @@ package apis
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -10,45 +11,77 @@ import (
 	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/search"
-	"github.com/spf13/cast"
 )
 
-// exportRequestData exports a map with common request fields.
-//
-// @todo consider changing the map to a typed struct after v0.8 and the
-// IN operator support.
-func exportRequestData(c echo.Context) map[string]any {
-	result := map[string]any{}
-	queryParams := map[string]any{}
-	bodyData := map[string]any{}
-	method := c.Request().Method
+const ContextRequestDataKey = "requestData"
 
-	echo.BindQueryParams(c, &queryParams)
-
-	rest.BindBody(c, &bodyData)
-
-	result["method"] = method
-	result["query"] = queryParams
-	result["data"] = bodyData
-	result["auth"] = nil
-
-	auth, _ := c.Get(ContextAuthRecordKey).(*models.Record)
-	if auth != nil {
-		result["auth"] = auth.PublicExport()
+// GetRequestData exports common request data fields
+// (query, body, logged auth state, etc.) from the provided context.
+func GetRequestData(c echo.Context) *models.FilterRequestData {
+	// return cached to avoid reading the body multiple times
+	if v := c.Get(ContextRequestDataKey); v != nil {
+		if data, ok := v.(*models.FilterRequestData); ok {
+			return data
+		}
 	}
 
+	result := &models.FilterRequestData{
+		Method: c.Request().Method,
+		Query:  map[string]any{},
+		Data:   map[string]any{},
+	}
+
+	result.AuthRecord, _ = c.Get(ContextAuthRecordKey).(*models.Record)
+	result.Admin, _ = c.Get(ContextAdminKey).(*models.Admin)
+	echo.BindQueryParams(c, &result.Query)
+	rest.BindBody(c, &result.Data)
+
+	c.Set(ContextRequestDataKey, result)
+
 	return result
+}
+
+// EnrichRecord parses the request context and enrich the provided record:
+// - expands relations (if defaultExpands and/or ?expand query param is set)
+// - ensures that the emails of the auth record and its expanded auth relations
+//   are visibe only for the current logged admin, record owner or record with manage access
+func EnrichRecord(c echo.Context, dao *daos.Dao, record *models.Record, defaultExpands ...string) error {
+	return EnrichRecords(c, dao, []*models.Record{record}, defaultExpands...)
+}
+
+// EnrichRecords parses the request context and enriches the provided records:
+// - expands relations (if defaultExpands and/or ?expand query param is set)
+// - ensures that the emails of the auth records and their expanded auth relations
+//   are visibe only for the current logged admin, record owner or record with manage access
+func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defaultExpands ...string) error {
+	requestData := GetRequestData(c)
+
+	if err := autoIgnoreAuthRecordsEmailVisibility(dao, records, requestData); err != nil {
+		return fmt.Errorf("Failed to resolve email visibility: %v", err)
+	}
+
+	expands := defaultExpands
+	expands = append(expands, strings.Split(c.QueryParam(expandQueryParam), ",")...)
+	if len(expands) == 0 {
+		return nil // nothing to expand
+	}
+
+	errs := dao.ExpandRecords(records, expands, expandFetch(dao, requestData))
+	if len(errs) > 0 {
+		return fmt.Errorf("Failed to expand: %v", errs)
+	}
+
+	return nil
 }
 
 // expandFetch is the records fetch function that is used to expand related records.
 func expandFetch(
 	dao *daos.Dao,
-	isAdmin bool,
-	requestData map[string]any,
+	requestData *models.FilterRequestData,
 ) daos.ExpandFetchFunc {
 	return func(relCollection *models.Collection, relIds []string) ([]*models.Record, error) {
 		records, err := dao.FindRecordsByIds(relCollection.Id, relIds, func(q *dbx.SelectQuery) error {
-			if isAdmin {
+			if requestData.Admin != nil {
 				return nil // admins can access everything
 			}
 
@@ -70,7 +103,7 @@ func expandFetch(
 		})
 
 		if err == nil && len(records) > 0 {
-			autoIgnoreAuthRecordsEmailVisibility(dao, records, isAdmin, requestData)
+			autoIgnoreAuthRecordsEmailVisibility(dao, records, requestData)
 		}
 
 		return records, err
@@ -84,14 +117,13 @@ func expandFetch(
 func autoIgnoreAuthRecordsEmailVisibility(
 	dao *daos.Dao,
 	records []*models.Record,
-	isAdmin bool,
-	requestData map[string]any,
+	requestData *models.FilterRequestData,
 ) error {
 	if len(records) == 0 || !records[0].Collection().IsAuth() {
 		return nil // nothing to check
 	}
 
-	if isAdmin {
+	if requestData.Admin != nil {
 		for _, rec := range records {
 			rec.IgnoreEmailVisibility(true)
 		}
@@ -107,8 +139,8 @@ func autoIgnoreAuthRecordsEmailVisibility(
 		recordIds = append(recordIds, rec.Id)
 	}
 
-	if auth, ok := requestData["auth"].(map[string]any); ok && mappedRecords[cast.ToString(auth["id"])] != nil {
-		mappedRecords[cast.ToString(auth["id"])].IgnoreEmailVisibility(true)
+	if requestData != nil && requestData.AuthRecord != nil && mappedRecords[requestData.AuthRecord.Id] != nil {
+		mappedRecords[requestData.AuthRecord.Id].IgnoreEmailVisibility(true)
 	}
 
 	authOptions := collection.AuthOptions()
@@ -153,7 +185,7 @@ func autoIgnoreAuthRecordsEmailVisibility(
 func hasAuthManageAccess(
 	dao *daos.Dao,
 	record *models.Record,
-	requestData map[string]any,
+	requestData *models.FilterRequestData,
 ) bool {
 	if !record.Collection().IsAuth() {
 		return false
@@ -165,7 +197,7 @@ func hasAuthManageAccess(
 		return false // only for admins (manageRule can't be empty)
 	}
 
-	if auth, ok := requestData["auth"].(map[string]any); !ok || cast.ToString(auth["id"]) == "" {
+	if requestData == nil || requestData.AuthRecord == nil {
 		return false // no auth record
 	}
 

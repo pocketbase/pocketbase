@@ -274,10 +274,10 @@ type App interface {
 	// record data and token.
 	OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent]
 
-	// OnRecordListExternalAuths hook is triggered on each API record external auths list request.
+	// OnRecordListExternalAuthsRequest hook is triggered on each API record external auths list request.
 	//
 	// Could be used to validate or modify the response before returning it to the client.
-	OnRecordListExternalAuths() *hook.Hook[*RecordListExternalAuthsEvent]
+	OnRecordListExternalAuthsRequest() *hook.Hook[*RecordListExternalAuthsEvent]
 
 	// OnRecordBeforeUnlinkExternalAuthRequest hook is triggered before each API record
 	// external auth unlink request (after models load and before the actual relation deletion).

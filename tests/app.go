@@ -162,8 +162,8 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil
 	})
 
-	t.OnRecordListExternalAuths().Add(func(e *core.RecordListExternalAuthsEvent) error {
-		t.EventCalls["OnRecordListExternalAuths"]++
+	t.OnRecordListExternalAuthsRequest().Add(func(e *core.RecordListExternalAuthsEvent) error {
+		t.EventCalls["OnRecordListExternalAuthsRequest"]++
 		return nil
 	})
 

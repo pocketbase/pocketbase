@@ -46,31 +46,30 @@ func (api *recordApi) list(c echo.Context) error {
 		return NewNotFoundError("", "Missing collection context.")
 	}
 
-	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-	if admin == nil && collection.ListRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
-	}
-
 	// forbid users and guests to query special filter/sort fields
 	if err := api.checkForForbiddenQueryFields(c); err != nil {
 		return err
 	}
 
-	requestData := exportRequestData(c)
+	requestData := GetRequestData(c)
+
+	if requestData.Admin == nil && collection.ListRule == nil {
+		// only admins can access if the rule is nil
+		return NewForbiddenError("Only admins can perform this action.", nil)
+	}
 
 	fieldsResolver := resolvers.NewRecordFieldResolver(
 		api.app.Dao(),
 		collection,
 		requestData,
 		// hidden fields are searchable only by admins
-		admin != nil,
+		requestData.Admin != nil,
 	)
 
 	searchProvider := search.NewProvider(fieldsResolver).
 		Query(api.app.Dao().RecordQuery(collection))
 
-	if admin == nil && collection.ListRule != nil {
+	if requestData.Admin == nil && collection.ListRule != nil {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
@@ -82,28 +81,6 @@ func (api *recordApi) list(c echo.Context) error {
 
 	records := models.NewRecordsFromNullStringMaps(collection, rawRecords)
 
-	// expand records relations
-	expands := strings.Split(c.QueryParam(expandQueryParam), ",")
-	if len(expands) > 0 {
-		failed := api.app.Dao().ExpandRecords(
-			records,
-			expands,
-			expandFetch(api.app.Dao(), admin != nil, requestData),
-		)
-		if len(failed) > 0 && api.app.IsDebug() {
-			log.Println("Failed to expand relations: ", failed)
-		}
-	}
-
-	if collection.IsAuth() {
-		err := autoIgnoreAuthRecordsEmailVisibility(
-			api.app.Dao(), records, admin != nil, requestData,
-		)
-		if err != nil && api.app.IsDebug() {
-			log.Println("IgnoreEmailVisibility failure:", err)
-		}
-	}
-
 	result.Items = records
 
 	event := &core.RecordsListEvent{
@@ -114,6 +91,10 @@ func (api *recordApi) list(c echo.Context) error {
 	}
 
 	return api.app.OnRecordsListRequest().Trigger(event, func(e *core.RecordsListEvent) error {
+		if err := EnrichRecords(e.HttpContext, api.app.Dao(), e.Records); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+
 		return e.HttpContext.JSON(http.StatusOK, e.Result)
 	})
 }
@@ -124,21 +105,20 @@ func (api *recordApi) view(c echo.Context) error {
 		return NewNotFoundError("", "Missing collection context.")
 	}
 
-	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-	if admin == nil && collection.ViewRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
-	}
-
 	recordId := c.PathParam("id")
 	if recordId == "" {
 		return NewNotFoundError("", nil)
 	}
 
-	requestData := exportRequestData(c)
+	requestData := GetRequestData(c)
+
+	if requestData.Admin == nil && collection.ViewRule == nil {
+		// only admins can access if the rule is nil
+		return NewForbiddenError("Only admins can perform this action.", nil)
+	}
 
 	ruleFunc := func(q *dbx.SelectQuery) error {
-		if admin == nil && collection.ViewRule != nil && *collection.ViewRule != "" {
+		if requestData.Admin == nil && collection.ViewRule != nil && *collection.ViewRule != "" {
 			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData, true)
 			expr, err := search.FilterData(*collection.ViewRule).BuildExpr(resolver)
 			if err != nil {
@@ -155,31 +135,16 @@ func (api *recordApi) view(c echo.Context) error {
 		return NewNotFoundError("", fetchErr)
 	}
 
-	// expand record relations
-	failed := api.app.Dao().ExpandRecord(
-		record,
-		strings.Split(c.QueryParam(expandQueryParam), ","),
-		expandFetch(api.app.Dao(), admin != nil, requestData),
-	)
-	if len(failed) > 0 && api.app.IsDebug() {
-		log.Println("Failed to expand relations: ", failed)
-	}
-
-	if collection.IsAuth() {
-		err := autoIgnoreAuthRecordsEmailVisibility(
-			api.app.Dao(), []*models.Record{record}, admin != nil, requestData,
-		)
-		if err != nil && api.app.IsDebug() {
-			log.Println("IgnoreEmailVisibility failure:", err)
-		}
-	}
-
 	event := &core.RecordViewEvent{
 		HttpContext: c,
 		Record:      record,
 	}
 
 	return api.app.OnRecordViewRequest().Trigger(event, func(e *core.RecordViewEvent) error {
+		if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+
 		return e.HttpContext.JSON(http.StatusOK, e.Record)
 	})
 }
@@ -190,18 +155,17 @@ func (api *recordApi) create(c echo.Context) error {
 		return NewNotFoundError("", "Missing collection context.")
 	}
 
-	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-	if admin == nil && collection.CreateRule == nil {
+	requestData := GetRequestData(c)
+
+	if requestData.Admin == nil && collection.CreateRule == nil {
 		// only admins can access if the rule is nil
 		return NewForbiddenError("Only admins can perform this action.", nil)
 	}
 
-	requestData := exportRequestData(c)
-
-	hasFullManageAccess := admin != nil
+	hasFullManageAccess := requestData.Admin != nil
 
 	// temporary save the record and check it against the create rule
-	if admin == nil && collection.CreateRule != nil {
+	if requestData.Admin == nil && collection.CreateRule != nil {
 		createRuleFunc := func(q *dbx.SelectQuery) error {
 			if *collection.CreateRule == "" {
 				return nil // no create rule to resolve
@@ -260,23 +224,8 @@ func (api *recordApi) create(c echo.Context) error {
 					return NewBadRequestError("Failed to create record.", err)
 				}
 
-				// expand record relations
-				failed := api.app.Dao().ExpandRecord(
-					e.Record,
-					strings.Split(e.HttpContext.QueryParam(expandQueryParam), ","),
-					expandFetch(api.app.Dao(), admin != nil, requestData),
-				)
-				if len(failed) > 0 && api.app.IsDebug() {
-					log.Println("Failed to expand relations: ", failed)
-				}
-
-				if collection.IsAuth() {
-					err := autoIgnoreAuthRecordsEmailVisibility(
-						api.app.Dao(), []*models.Record{e.Record}, admin != nil, requestData,
-					)
-					if err != nil && api.app.IsDebug() {
-						log.Println("IgnoreEmailVisibility failure:", err)
-					}
+				if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
+					log.Println(err)
 				}
 
 				return e.HttpContext.JSON(http.StatusOK, e.Record)
@@ -297,21 +246,20 @@ func (api *recordApi) update(c echo.Context) error {
 		return NewNotFoundError("", "Missing collection context.")
 	}
 
-	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-	if admin == nil && collection.UpdateRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
-	}
-
 	recordId := c.PathParam("id")
 	if recordId == "" {
 		return NewNotFoundError("", nil)
 	}
 
-	requestData := exportRequestData(c)
+	requestData := GetRequestData(c)
+
+	if requestData.Admin == nil && collection.UpdateRule == nil {
+		// only admins can access if the rule is nil
+		return NewForbiddenError("Only admins can perform this action.", nil)
+	}
 
 	ruleFunc := func(q *dbx.SelectQuery) error {
-		if admin == nil && collection.UpdateRule != nil && *collection.UpdateRule != "" {
+		if requestData.Admin == nil && collection.UpdateRule != nil && *collection.UpdateRule != "" {
 			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData, true)
 			expr, err := search.FilterData(*collection.UpdateRule).BuildExpr(resolver)
 			if err != nil {
@@ -330,7 +278,7 @@ func (api *recordApi) update(c echo.Context) error {
 	}
 
 	form := forms.NewRecordUpsert(api.app, record)
-	form.SetFullManageAccess(admin != nil || hasAuthManageAccess(api.app.Dao(), record, requestData))
+	form.SetFullManageAccess(requestData.Admin != nil || hasAuthManageAccess(api.app.Dao(), record, requestData))
 
 	// load request
 	if err := form.LoadRequest(c.Request(), ""); err != nil {
@@ -350,23 +298,8 @@ func (api *recordApi) update(c echo.Context) error {
 					return NewBadRequestError("Failed to update record.", err)
 				}
 
-				// expand record relations
-				failed := api.app.Dao().ExpandRecord(
-					e.Record,
-					strings.Split(e.HttpContext.QueryParam(expandQueryParam), ","),
-					expandFetch(api.app.Dao(), admin != nil, requestData),
-				)
-				if len(failed) > 0 && api.app.IsDebug() {
-					log.Println("Failed to expand relations: ", failed)
-				}
-
-				if collection.IsAuth() {
-					err := autoIgnoreAuthRecordsEmailVisibility(
-						api.app.Dao(), []*models.Record{e.Record}, admin != nil, requestData,
-					)
-					if err != nil && api.app.IsDebug() {
-						log.Println("IgnoreEmailVisibility failure:", err)
-					}
+				if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
+					log.Println(err)
 				}
 
 				return e.HttpContext.JSON(http.StatusOK, e.Record)
@@ -387,21 +320,20 @@ func (api *recordApi) delete(c echo.Context) error {
 		return NewNotFoundError("", "Missing collection context.")
 	}
 
-	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-	if admin == nil && collection.DeleteRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
-	}
-
 	recordId := c.PathParam("id")
 	if recordId == "" {
 		return NewNotFoundError("", nil)
 	}
 
-	requestData := exportRequestData(c)
+	requestData := GetRequestData(c)
+
+	if requestData.Admin == nil && collection.DeleteRule == nil {
+		// only admins can access if the rule is nil
+		return NewForbiddenError("Only admins can perform this action.", nil)
+	}
 
 	ruleFunc := func(q *dbx.SelectQuery) error {
-		if admin == nil && collection.DeleteRule != nil && *collection.DeleteRule != "" {
+		if requestData.Admin == nil && collection.DeleteRule != nil && *collection.DeleteRule != "" {
 			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestData, true)
 			expr, err := search.FilterData(*collection.DeleteRule).BuildExpr(resolver)
 			if err != nil {

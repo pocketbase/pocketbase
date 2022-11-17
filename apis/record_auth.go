@@ -65,20 +65,19 @@ func (api *recordAuthApi) authResponse(c echo.Context, authRecord *models.Record
 	}
 
 	return api.app.OnRecordAuthRequest().Trigger(event, func(e *core.RecordAuthEvent) error {
-		admin, _ := e.HttpContext.Get(ContextAdminKey).(*models.Admin)
-
 		// allow always returning the email address of the authenticated account
 		e.Record.IgnoreEmailVisibility(true)
 
 		// expand record relations
 		expands := strings.Split(c.QueryParam(expandQueryParam), ",")
 		if len(expands) > 0 {
-			requestData := exportRequestData(e.HttpContext)
-			requestData["auth"] = e.Record.PublicExport()
+			requestData := GetRequestData(e.HttpContext)
+			requestData.Admin = nil
+			requestData.AuthRecord = e.Record
 			failed := api.app.Dao().ExpandRecord(
 				e.Record,
 				expands,
-				expandFetch(api.app.Dao(), admin != nil, requestData),
+				expandFetch(api.app.Dao(), requestData),
 			)
 			if len(failed) > 0 && api.app.IsDebug() {
 				log.Println("Failed to expand relations: ", failed)
@@ -204,8 +203,8 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 
 	record, authData, submitErr := form.Submit(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
 		return createForm.DrySubmit(func(txDao *daos.Dao) error {
-			requestData := exportRequestData(c)
-			requestData["data"] = form.CreateData
+			requestData := GetRequestData(c)
+			requestData.Data = form.CreateData
 
 			createRuleFunc := func(q *dbx.SelectQuery) error {
 				admin, _ := c.Get(ContextAdminKey).(*models.Admin)
@@ -422,7 +421,7 @@ func (api *recordAuthApi) listExternalAuths(c echo.Context) error {
 		ExternalAuths: externalAuths,
 	}
 
-	return api.app.OnRecordListExternalAuths().Trigger(event, func(e *core.RecordListExternalAuthsEvent) error {
+	return api.app.OnRecordListExternalAuthsRequest().Trigger(event, func(e *core.RecordListExternalAuthsEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.ExternalAuths)
 	})
 }
