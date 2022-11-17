@@ -71,13 +71,14 @@ func (api *recordAuthApi) authResponse(c echo.Context, authRecord *models.Record
 		// expand record relations
 		expands := strings.Split(c.QueryParam(expandQueryParam), ",")
 		if len(expands) > 0 {
-			requestData := GetRequestData(e.HttpContext)
+			// create a copy of the cached request data and adjust it to the current auth record
+			requestData := *GetRequestData(e.HttpContext)
 			requestData.Admin = nil
 			requestData.AuthRecord = e.Record
 			failed := api.app.Dao().ExpandRecord(
 				e.Record,
 				expands,
-				expandFetch(api.app.Dao(), requestData),
+				expandFetch(api.app.Dao(), &requestData),
 			)
 			if len(failed) > 0 && api.app.IsDebug() {
 				log.Println("Failed to expand relations: ", failed)
