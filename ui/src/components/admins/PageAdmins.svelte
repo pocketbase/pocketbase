@@ -10,6 +10,7 @@
     import SortHeader from "@/components/base/SortHeader.svelte";
     import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
+    import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";
 
@@ -86,7 +87,7 @@
         on:submit={(e) => (filter = e.detail)}
     />
 
-    <div class="table-wrapper">
+    <HorizontalScroller class="table-wrapper">
         <table class="table" class:table-loading={isLoading}>
             <thead>
                 <tr>
@@ -145,6 +146,7 @@
                                 />
                             </figure>
                         </td>
+
                         <td class="col-type-text col-field-id">
                             <IdLabel id={admin.id} />
                             {#if admin.id === $loggedAdmin.id}
@@ -161,9 +163,11 @@
                         <td class="col-type-date col-field-created">
                             <FormattedDate date={admin.created} />
                         </td>
+
                         <td class="col-type-date col-field-updated">
                             <FormattedDate date={admin.updated} />
                         </td>
+
                         <td class="col-type-action min-width">
                             <i class="ri-arrow-right-line" />
                         </td>
@@ -194,7 +198,7 @@
                 {/each}
             </tbody>
         </table>
-    </div>
+    </HorizontalScroller>
 
     {#if admins.length}
         <small class="block txt-hint txt-right m-t-sm">Showing {admins.length} of {admins.length}</small>

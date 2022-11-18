@@ -9,6 +9,7 @@
 
     let responseTab = 200;
     let responses = [];
+    let baseData = {};
 
     $: adminsOnly = collection?.updateRule === null;
 
@@ -55,8 +56,66 @@
             `,
         },
     ];
+
+    $: if (collection.isAuth) {
+        baseData = {
+            username: "test_username_update",
+            emailVisibility: false,
+            password: "87654321",
+            passwordConfirm: "87654321",
+            oldPassword: "12345678",
+        };
+    } else {
+        baseData = {};
+    }
 </script>
 
+<h3 class="m-b-sm">Update ({collection.name})</h3>
+<div class="content txt-lg m-b-sm">
+    <p>Update a single <strong>{collection.name}</strong> record.</p>
+    <p>
+        Body parameters could be sent as <code>application/json</code> or
+        <code>multipart/form-data</code>.
+    </p>
+    <p>
+        File upload is supported only via <code>multipart/form-data</code>.
+        <br />
+        For more info and examples you could check the detailed
+        <a href={import.meta.env.PB_FILE_UPLOAD_DOCS} target="_blank" rel="noopener noreferrer">
+            Files upload and handling docs
+        </a>.
+    </p>
+</div>
+
+<!-- prettier-ignore -->
+<SdkTabs
+    js={`
+import PocketBase from 'pocketbase';
+
+const pb = new PocketBase('${backendAbsUrl}');
+
+...
+
+// example update data
+const data = ${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection)), null, 4)};
+
+const record = await pb.collection('${collection?.name}').update('RECORD_ID', data);
+    `}
+    dart={`
+import 'package:pocketbase/pocketbase.dart';
+
+final pb = PocketBase('${backendAbsUrl}');
+
+...
+
+// example update body
+final body = <String, dynamic>${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection)), null, 2)};
+
+final record = await pb.collection('${collection?.name}').update('RECORD_ID', body: body);
+    `}
+/>
+
+<h6 class="m-b-xs">API details</h6>
 <div class="alert alert-warning">
     <strong class="label label-primary">PATCH</strong>
     <div class="content">
@@ -65,49 +124,12 @@
         </p>
     </div>
     {#if adminsOnly}
-        <p class="txt-hint txt-sm txt-right">Requires <code>Authorization: Admin TOKEN</code> header</p>
+        <p class="txt-hint txt-sm txt-right">Requires admin <code>Authorization:TOKEN</code> header</p>
     {/if}
 </div>
 
-<div class="content m-b-base">
-    <p>Update a single <strong>{collection.name}</strong> record.</p>
-    <p>
-        Body parameters could be sent as <code>application/json</code> or
-        <code>multipart/form-data</code>.
-    </p>
-    <p>
-        File upload is supported only via <code>multipart/form-data</code>.
-    </p>
-</div>
-
-<div class="section-title">Client SDKs example</div>
-<SdkTabs
-    js={`
-        import PocketBase from 'pocketbase';
-
-        const client = new PocketBase('${backendAbsUrl}');
-
-        ...
-
-        const data = { ... };
-
-        const record = await client.records.update('${collection?.name}', 'RECORD_ID', data);
-    `}
-    dart={`
-        import 'package:pocketbase/pocketbase.dart';
-
-        final client = PocketBase('${backendAbsUrl}');
-
-        ...
-
-        final body = <String, dynamic>{ ... };
-
-        final record = await client.records.update('${collection?.name}', 'RECORD_ID', body: body);
-    `}
-/>
-
 <div class="section-title">Path parameters</div>
-<table class="table-compact table-border m-b-lg">
+<table class="table-compact table-border m-b-base">
     <thead>
         <tr>
             <th>Param</th>
@@ -127,7 +149,7 @@
 </table>
 
 <div class="section-title">Body Parameters</div>
-<table class="table-compact table-border m-b-lg">
+<table class="table-compact table-border m-b-base">
     <thead>
         <tr>
             <th>Param</th>
@@ -136,6 +158,114 @@
         </tr>
     </thead>
     <tbody>
+        {#if collection?.isAuth}
+            <tr>
+                <td colspan="3" class="txt-hint">Auth fields</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="inline-flex">
+                        <span class="label label-warning">Optional</span>
+                        <span>username</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="label">String</span>
+                </td>
+                <td>The username of the auth record.</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="inline-flex">
+                        <span class="label label-warning">Optional</span>
+                        <span>email</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="label">String</span>
+                </td>
+                <td>
+                    The auth record email address.
+                    <br />
+                    This field can be updated only by admins or auth records with "Manage" access.
+                    <br />
+                    Regular accounts can update their email by calling "Request email change".
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="inline-flex">
+                        <span class="label label-warning">Optional</span>
+                        <span>emailVisibility</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="label">Boolean</span>
+                </td>
+                <td>Whether to show/hide the auth record email when fetching the record data.</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="inline-flex">
+                        <span class="label label-warning">Optional</span>
+                        <span>oldPassword</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="label">String</span>
+                </td>
+                <td>
+                    Old auth record password.
+                    <br />
+                    This field is required only when changing the record password. Admins and auth records with
+                    "Manage" access can skip this field.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="inline-flex">
+                        <span class="label label-warning">Optional</span>
+                        <span>password</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="label">String</span>
+                </td>
+                <td>New auth record password.</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="inline-flex">
+                        <span class="label label-warning">Optional</span>
+                        <span>passwordConfirm</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="label">String</span>
+                </td>
+                <td>New auth record password confirmation.</td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="inline-flex">
+                        <span class="label label-warning">Optional</span>
+                        <span>verified</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="label">Boolean</span>
+                </td>
+                <td>
+                    Indicates whether the auth record is verified or not.
+                    <br />
+                    This field can be set only by admins or auth records with "Manage" access.
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" class="txt-hint">Schema fields</td>
+            </tr>
+        {/if}
+
         {#each collection?.schema as field (field.name)}
             <tr>
                 <td>
@@ -193,15 +323,11 @@
             </td>
             <td>
                 Auto expand relations when returning the updated record. Ex.:
-                <CodeBlock
-                    content={`
-                        ?expand=rel1,rel2.subrel21.subrel22
-                    `}
-                />
+                <CodeBlock content={`?expand=relField1,relField2.subRelField21`} />
                 Supports up to 6-levels depth nested relations expansion. <br />
                 The expanded relations will be appended to the record under the
-                <code>@expand</code> property (eg. <code>{`"@expand": {"rel1": {...}, ...}`}</code>). Only the
-                relations that the user has permissions to <strong>view</strong> will be expanded.
+                <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>). Only
+                the relations that the user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
     </tbody>

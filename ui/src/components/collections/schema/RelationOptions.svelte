@@ -1,8 +1,10 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
+    import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
 
     export let key = "";
     export let options = {};
@@ -14,6 +16,7 @@
 
     let isLoading = false;
     let collections = [];
+    let upsertPanel = null;
 
     // load defaults
     $: if (CommonHelper.isEmpty(options)) {
@@ -26,19 +29,20 @@
 
     loadCollections();
 
-    function loadCollections() {
+    async function loadCollections() {
         isLoading = true;
 
-        ApiClient.collections.getFullList(200, { sort: "-created" })
-            .then((items) => {
-                collections = items;
-            })
-            .catch((err) => {
-                ApiClient.errorResponseHandler(err);
-            })
-            .finally(() => {
-                isLoading = false;
+        try {
+            const result = await ApiClient.collections.getFullList(200, {
+                sort: "created",
             });
+
+            collections = CommonHelper.sortCollections(result);
+        } catch (err) {
+            ApiClient.errorResponseHandler(err);
+        }
+
+        isLoading = false;
     }
 </script>
 
@@ -53,13 +57,32 @@
                 selectionKey="id"
                 items={collections}
                 bind:keyOfSelected={options.collectionId}
-            />
+            >
+                <svelte:fragment slot="afterOptions">
+                    <button
+                        type="button"
+                        class="btn btn-warning btn-block btn-sm m-t-5"
+                        on:click={() => upsertPanel?.show()}
+                    >
+                        <span class="txt">New collection</span>
+                    </button>
+                </svelte:fragment>
+            </ObjectSelect>
         </Field>
     </div>
     <div class="col-sm-3">
-        <Field class="form-field required" name="schema.{key}.options.maxSelect" let:uniqueId>
-            <label for={uniqueId}>Max select</label>
-            <input type="number" id={uniqueId} step="1" min="1" required bind:value={options.maxSelect} />
+        <Field class="form-field" name="schema.{key}.options.maxSelect" let:uniqueId>
+            <label for={uniqueId}>
+                <span class="txt">Max select</span>
+                <i
+                    class="ri-information-line link-hint"
+                    use:tooltip={{
+                        text: "Leave empty for no limit.",
+                        position: "top",
+                    }}
+                />
+            </label>
+            <input type="number" id={uniqueId} step="1" min="1" bind:value={options.maxSelect} />
         </Field>
     </div>
     <div class="col-sm-12">
@@ -69,3 +92,13 @@
         </Field>
     </div>
 </div>
+
+<CollectionUpsertPanel
+    bind:this={upsertPanel}
+    on:save={(e) => {
+        if (e?.detail?.collection?.id) {
+            options.collectionId = e.detail.collection.id;
+        }
+        loadCollections();
+    }}
+/>

@@ -32,9 +32,8 @@
      * ```
      */
     import { onMount, createEventDispatcher } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
     import { collections } from "@/stores/collections";
-    import { Collection } from "pocketbase";
+    import CommonHelper from "@/utils/CommonHelper";
     // code mirror imports
     // ---
     import {
@@ -71,7 +70,7 @@
     export let value = "";
     export let disabled = false;
     export let placeholder = "";
-    export let baseCollection = new Collection();
+    export let baseCollection = null;
     export let singleLine = false;
     export let extraAutocompleteKeys = []; // eg. ["test1", "test2"]
     export let disableRequestKeys = false;
@@ -79,12 +78,30 @@
 
     let editor;
     let container;
+    let oldDisabledState = disabled;
     let langCompartment = new Compartment();
     let editableCompartment = new Compartment();
     let readOnlyCompartment = new Compartment();
     let placeholderCompartment = new Compartment();
 
-    $: mergedCollections = mergeWithBaseCollection($collections);
+    let cachedCollections = [];
+    let cachedRequestKeys = [];
+    let cachedIndirectCollectionKeys = [];
+    let cachedBaseKeys = [];
+    let baseKeysChangeHash = "";
+    let oldBaseKeysChangeHash = "";
+
+    $: baseKeysChangeHash = getCollectionKeysChangeHash(baseCollection);
+
+    $: if (
+        !disabled &&
+        (oldBaseKeysChangeHash != baseKeysChangeHash ||
+            disableRequestKeys !== -1 ||
+            disableIndirectCollectionsKeys !== -1)
+    ) {
+        oldBaseKeysChangeHash = baseKeysChangeHash;
+        refreshCachedKeys();
+    }
 
     $: if (id) {
         addLabelListeners();
@@ -96,14 +113,14 @@
         });
     }
 
-    $: if (editor && typeof disabled !== "undefined") {
+    $: if (editor && oldDisabledState != disabled) {
         editor.dispatch({
             effects: [
                 editableCompartment.reconfigure(EditorView.editable.of(!disabled)),
                 readOnlyCompartment.reconfigure(EditorState.readOnly.of(disabled)),
             ],
         });
-
+        oldDisabledState = disabled;
         triggerNativeChange();
     }
 
@@ -128,10 +145,32 @@
         editor?.focus();
     }
 
-    // Replace the base collection in the provided list.
-    function mergeWithBaseCollection(collections) {
+    let refreshDebounceId = null;
+
+    // Refresh the cached autocomplete keys.
+    function refreshCachedKeys() {
+        clearTimeout(refreshDebounceId);
+        refreshDebounceId = setTimeout(() => {
+            cachedCollections = concatWithBaseCollection($collections);
+            cachedBaseKeys = getBaseKeys();
+            cachedRequestKeys = !disableRequestKeys ? getRequestKeys() : [];
+            cachedIndirectCollectionKeys = !disableIndirectCollectionsKeys ? getIndirectCollectionKeys() : [];
+        }, 300);
+    }
+
+    // Return a collection keys hash string that can be used to compare with previous states.
+    function getCollectionKeysChangeHash(collection) {
+        return JSON.stringify([collection?.name, collection?.type, collection?.schema]);
+    }
+
+    // Merge the base collection in a new list with the provided collections.
+    function concatWithBaseCollection(collections) {
         let copy = collections.slice();
-        CommonHelper.pushOrReplaceByKey(copy, baseCollection, "id");
+
+        if (baseCollection) {
+            CommonHelper.pushOrReplaceByKey(copy, baseCollection, "id");
+        }
+
         return copy;
     }
 
@@ -173,7 +212,7 @@
 
     // Returns a list with all collection field keys recursively.
     function getCollectionFieldKeys(nameOrId, prefix = "", level = 0) {
-        let collection = mergedCollections.find((item) => item.name == nameOrId || item.id == nameOrId);
+        let collection = cachedCollections.find((item) => item.name == nameOrId || item.id == nameOrId);
         if (!collection || level >= 4) {
             return [];
         }
@@ -185,16 +224,72 @@
             prefix + "updated",
         ];
 
+        if (collection.isAuth) {
+            result.push(prefix + "username");
+            result.push(prefix + "email");
+            result.push(prefix + "emailVisibility");
+            result.push(prefix + "verified");
+        }
+
         for (const field of collection.schema) {
             const key = prefix + field.name;
+
+            result.push(key);
+
             if (field.type === "relation" && field.options.collectionId) {
                 const subKeys = getCollectionFieldKeys(field.options.collectionId, key + ".", level + 1);
                 if (subKeys.length) {
                     result = result.concat(subKeys);
-                } else {
-                    result.push(key);
                 }
-            } else {
+            }
+        }
+
+        return result;
+    }
+
+    // Returns baseCollection keys.
+    function getBaseKeys() {
+        return getCollectionFieldKeys(baseCollection?.name);
+    }
+
+    // Returns @request.* keys.
+    function getRequestKeys() {
+        const result = [];
+
+        result.push("@request.method");
+        result.push("@request.query.");
+        result.push("@request.data.");
+        result.push("@request.auth.");
+        result.push("@request.auth.id");
+        result.push("@request.auth.collectionId");
+        result.push("@request.auth.collectionName");
+        result.push("@request.auth.verified");
+        result.push("@request.auth.username");
+        result.push("@request.auth.email");
+        result.push("@request.auth.emailVisibility");
+        result.push("@request.auth.created");
+        result.push("@request.auth.updated");
+
+        // load auth collection fields
+        const authCollections = cachedCollections.filter((collection) => collection.isAuth);
+        for (const collection of authCollections) {
+            const authKeys = getCollectionFieldKeys(collection.id, "@request.auth.");
+            for (const k of authKeys) {
+                CommonHelper.pushUnique(result, k);
+            }
+        }
+
+        return result;
+    }
+
+    // Returns @collection.* keys.
+    function getIndirectCollectionKeys() {
+        const result = [];
+
+        for (const collection of cachedCollections) {
+            const prefix = "@collection." + collection.name + ".";
+            const keys = getCollectionFieldKeys(collection.name, prefix);
+            for (const key of keys) {
                 result.push(key);
             }
         }
@@ -207,44 +302,16 @@
         let result = [].concat(extraAutocompleteKeys);
 
         // add base keys
-        const baseKeys = getCollectionFieldKeys(baseCollection.name);
-        for (const key of baseKeys) {
-            result.push(key);
-        }
+        result = result.concat(cachedBaseKeys || []);
 
-        // add base request keys
+        // add @request.* keys
         if (includeRequestKeys) {
-            result.push("@request.method");
-            result.push("@request.query.");
-            result.push("@request.data.");
-            result.push("@request.user.id");
-            result.push("@request.user.email");
-            result.push("@request.user.verified");
-            result.push("@request.user.created");
-            result.push("@request.user.updated");
+            result = result.concat(cachedRequestKeys || []);
         }
 
-        // add @collections and  @request.user.profile keys
-        if (includeRequestKeys || includeIndirectCollectionsKeys) {
-            for (const collection of mergedCollections) {
-                let prefix = "";
-                if (collection.name === import.meta.env.PB_PROFILE_COLLECTION) {
-                    if (!includeRequestKeys) {
-                        continue;
-                    }
-                    prefix = "@request.user.profile.";
-                } else {
-                    if (!includeIndirectCollectionsKeys) {
-                        continue;
-                    }
-                    prefix = "@collection." + collection.name + ".";
-                }
-
-                const keys = getCollectionFieldKeys(collection.name, prefix);
-                for (const key of keys) {
-                    result.push(key);
-                }
-            }
+        // add @collections.* keys
+        if (includeIndirectCollectionsKeys) {
+            result = result.concat(cachedIndirectCollectionKeys || []);
         }
 
         // sort longer keys first because the highlighter will highlight
@@ -258,8 +325,8 @@
 
     // Returns object with all the completions matching the context.
     function completions(context) {
-        let word = context.matchBefore(/[\@\w\.]*/);
-        if (word.from == word.to && !context.explicit) {
+        let word = context.matchBefore(/[\'\"\@\w\.]*/);
+        if (word && word.from == word.to && !context.explicit) {
             return null;
         }
 
@@ -269,18 +336,8 @@
             options.push({ label: "@collection.*", apply: "@collection." });
         }
 
-        const skipFields = [
-            "@request.user.profile.userId",
-            "@request.user.profile.created",
-            "@request.user.profile.updated",
-        ];
-
         const keys = getAllKeys(!disableRequestKeys, !disableRequestKeys && word.text.startsWith("@c"));
         for (const key of keys) {
-            if (skipFields.includes(key)) {
-                continue;
-            }
-
             options.push({
                 label: key.endsWith(".") ? key + "*" : key,
                 apply: key,
@@ -291,25 +348,6 @@
             from: word.from,
             options: options,
         };
-    }
-
-    // Returns all field keys as keyword patterns to highlight.
-    function keywords() {
-        const result = [{ regex: CommonHelper.escapeRegExp("@now"), token: "keyword" }];
-        const keys = getAllKeys(!disableRequestKeys, !disableIndirectCollectionsKeys);
-
-        for (const key of keys) {
-            let pattern;
-            if (key.endsWith(".")) {
-                pattern = CommonHelper.escapeRegExp(key) + "\\w+[\\w.]*";
-            } else {
-                pattern = CommonHelper.escapeRegExp(key);
-            }
-
-            result.push({ regex: pattern, token: "keyword" });
-        }
-
-        return result;
     }
 
     // Creates a new language mode.
@@ -340,7 +378,11 @@
                     // indent and dedent properties guide autoindentation
                     { regex: /[\{\[\(]/, indent: true },
                     { regex: /[\}\]\)]/, dedent: true },
-                ].concat(keywords()),
+                    // keywords
+                    { regex: /\w+[\w\.]*\w+/, token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@now"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@request.method"), token: "keyword" },
+                ],
             })
         );
     }
@@ -388,8 +430,8 @@
                         icons: false,
                     }),
                     placeholderCompartment.of(placeholderExt(placeholder)),
-                    editableCompartment.of(EditorView.editable.of(true)),
-                    readOnlyCompartment.of(EditorState.readOnly.of(false)),
+                    editableCompartment.of(EditorView.editable.of(!disabled)),
+                    readOnlyCompartment.of(EditorState.readOnly.of(disabled)),
                     langCompartment.of(ruleLang()),
                     EditorState.transactionFilter.of((tr) => {
                         return singleLine && tr.newDoc.lines > 1 ? [] : tr;
@@ -406,6 +448,7 @@
         });
 
         return () => {
+            clearTimeout(refreshDebounceId);
             removeLabelListeners();
             editor?.destroy();
         };

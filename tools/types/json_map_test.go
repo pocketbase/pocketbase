@@ -35,7 +35,7 @@ func TestJsonMapValue(t *testing.T) {
 		json     types.JsonMap
 		expected driver.Value
 	}{
-		{nil, nil},
+		{nil, `{}`},
 		{types.JsonMap{}, `{}`},
 		{types.JsonMap{"test1": 123, "test2": "lorem"}, `{"test1":123,"test2":"lorem"}`},
 		{types.JsonMap{"test": []int{1, 2, 3}}, `{"test":[1,2,3]}`},

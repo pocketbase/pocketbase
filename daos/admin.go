@@ -5,6 +5,7 @@ import (
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
@@ -49,6 +50,7 @@ func (dao *Dao) FindAdminByEmail(email string) (*models.Admin, error) {
 //
 // Returns an error if the JWT token is invalid or expired.
 func (dao *Dao) FindAdminByToken(token string, baseTokenKey string) (*models.Admin, error) {
+	// @todo consider caching the unverified claims
 	unverifiedClaims, err := security.ParseUnverifiedJWT(token)
 	if err != nil {
 		return nil, err
@@ -86,20 +88,22 @@ func (dao *Dao) TotalAdmins() (int, error) {
 
 // IsAdminEmailUnique checks if the provided email address is not
 // already in use by other admins.
-func (dao *Dao) IsAdminEmailUnique(email string, excludeId string) bool {
+func (dao *Dao) IsAdminEmailUnique(email string, excludeIds ...string) bool {
 	if email == "" {
 		return false
 	}
 
-	var exists bool
-	err := dao.AdminQuery().
-		Select("count(*)").
-		AndWhere(dbx.Not(dbx.HashExp{"id": excludeId})).
+	query := dao.AdminQuery().Select("count(*)").
 		AndWhere(dbx.HashExp{"email": email}).
-		Limit(1).
-		Row(&exists)
+		Limit(1)
 
-	return err == nil && !exists
+	if len(excludeIds) > 0 {
+		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(excludeIds)...))
+	}
+
+	var exists bool
+
+	return query.Row(&exists) == nil && !exists
 }
 
 // DeleteAdmin deletes the provided Admin model.

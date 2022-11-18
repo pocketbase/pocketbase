@@ -7,12 +7,11 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
-// BindLogsApi registers the request logs api endpoints.
-func BindLogsApi(app core.App, rg *echo.Group) {
+// bindLogsApi registers the request logs api endpoints.
+func bindLogsApi(app core.App, rg *echo.Group) {
 	api := logsApi{app: app}
 
 	subGroup := rg.Group("/logs", RequireAdminAuth())
@@ -39,7 +38,7 @@ func (api *logsApi) requestsList(c echo.Context) error {
 		ParseAndExec(c.QueryString(), &[]*models.Request{})
 
 	if err != nil {
-		return rest.NewBadRequestError("", err)
+		return NewBadRequestError("", err)
 	}
 
 	return c.JSON(http.StatusOK, result)
@@ -55,13 +54,13 @@ func (api *logsApi) requestsStats(c echo.Context) error {
 		var err error
 		expr, err = search.FilterData(filter).BuildExpr(fieldResolver)
 		if err != nil {
-			return rest.NewBadRequestError("Invalid filter format.", err)
+			return NewBadRequestError("Invalid filter format.", err)
 		}
 	}
 
 	stats, err := api.app.LogsDao().RequestsStats(expr)
 	if err != nil {
-		return rest.NewBadRequestError("Failed to generate requests stats.", err)
+		return NewBadRequestError("Failed to generate requests stats.", err)
 	}
 
 	return c.JSON(http.StatusOK, stats)
@@ -70,12 +69,12 @@ func (api *logsApi) requestsStats(c echo.Context) error {
 func (api *logsApi) requestView(c echo.Context) error {
 	id := c.PathParam("id")
 	if id == "" {
-		return rest.NewNotFoundError("", nil)
+		return NewNotFoundError("", nil)
 	}
 
 	request, err := api.app.LogsDao().FindRequestById(id)
 	if err != nil || request == nil {
-		return rest.NewNotFoundError("", err)
+		return NewNotFoundError("", err)
 	}
 
 	return c.JSON(http.StatusOK, request)

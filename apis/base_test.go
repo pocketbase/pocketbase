@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/rest"
 )
 
 func Test404(t *testing.T) {
@@ -91,7 +91,7 @@ func TestCustomRoutesAndErrorsHandling(t *testing.T) {
 					Method: http.MethodGet,
 					Path:   "/api-error",
 					Handler: func(c echo.Context) error {
-						return rest.NewApiError(500, "test message", errors.New("internal_test"))
+						return apis.NewApiError(500, "test message", errors.New("internal_test"))
 					},
 				})
 			},

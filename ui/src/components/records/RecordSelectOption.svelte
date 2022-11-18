@@ -13,13 +13,15 @@
 
         const props = [
             // prioritized common displayable props
-            "name",
             "title",
+            "name",
+            "email",
+            "username",
             "label",
             "key",
-            "email",
             "heading",
             "content",
+            "description",
             // fallback to the available props
             ...Object.keys(model),
         ];

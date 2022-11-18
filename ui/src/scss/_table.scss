@@ -1,17 +1,20 @@
 table {
+    --entranceAnimationSpeed: 0.3s;
+
     border-collapse: separate;
     min-width: 100%;
     transition: opacity var(--baseAnimationSpeed);
     .form-field {
         margin: 0;
         line-height: 1;
+        text-align: left;
     }
     td, th {
         outline: 0;
         vertical-align: middle;
         position: relative;
         text-align: left;
-        padding: 10px;
+        padding: 5px 10px;
         border-bottom: 1px solid var(--baseAlt2Color);
         &:first-child {
             padding-left: 20px;
@@ -150,7 +153,8 @@ table {
     }
 
     // field name specific columns
-    td.col-field-id {
+    td.col-field-id,
+    td.col-field-username {
         width: 0;
         white-space: nowrap;
     }
@@ -205,6 +209,11 @@ table {
     }
 
     // states
+    &.table-animate {
+        tr {
+            animation: entranceTop var(--entranceAnimationSpeed);
+        }
+    }
     &.table-loading {
         pointer-events: none;
         opacity: 0.7;
@@ -214,7 +223,6 @@ table {
 .table-wrapper {
     width: auto;
     padding: 0;
-    overflow-x: auto;
     max-width: calc(100% + 2*var(--baseSpacing));
     margin-left: calc(var(--baseSpacing) * -1);
     margin-right: calc(var(--baseSpacing) * -1);
@@ -230,6 +238,7 @@ table {
         }
     }
     td, th {
+        position: relative;
         &:first-child {
             padding-left: calc(var(--baseSpacing) + 3px);
         }
@@ -243,6 +252,7 @@ table {
     .col-type-action {
         position: sticky;
         z-index: 99;
+        transition: box-shadow var(--baseAnimationSpeed);
     }
     .bulk-select-col {
         left: 0px;
@@ -257,5 +267,19 @@ table {
     th.bulk-select-col,
     th.col-type-action {
         background: var(--bodyColor);
+    }
+
+    // scrolling styles
+    &.scrollable {
+        .bulk-select-col {
+            box-shadow: 3px 0px 5px 0px var(--shadowColor);
+        }
+        .col-type-action {
+            box-shadow: -3px 0px 5px 0px var(--shadowColor);
+        }
+        &.scroll-start .bulk-select-col,
+        &.scroll-end .col-type-action {
+            box-shadow: none;
+        }
     }
 }

@@ -6,9 +6,9 @@ var _ Model = (*Request)(nil)
 
 // list with the supported values for `Request.Auth`
 const (
-	RequestAuthGuest = "guest"
-	RequestAuthUser  = "user"
-	RequestAuthAdmin = "admin"
+	RequestAuthGuest  = "guest"
+	RequestAuthAdmin  = "admin"
+	RequestAuthRecord = "auth_record"
 )
 
 type Request struct {

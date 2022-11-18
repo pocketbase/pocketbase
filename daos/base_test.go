@@ -35,8 +35,8 @@ func TestDaoModelQuery(t *testing.T) {
 			"SELECT {{_collections}}.* FROM `_collections`",
 		},
 		{
-			&models.User{},
-			"SELECT {{_users}}.* FROM `_users`",
+			&models.Admin{},
+			"SELECT {{_admins}}.* FROM `_admins`",
 		},
 		{
 			&models.Request{},
@@ -64,19 +64,19 @@ func TestDaoFindById(t *testing.T) {
 		// missing id
 		{
 			&models.Collection{},
-			"00000000-075d-49fe-9d09-ea7e951000dc",
+			"missing",
 			true,
 		},
 		// existing collection id
 		{
 			&models.Collection{},
-			"3f2888f8-075d-49fe-9d09-ea7e951000dc",
+			"wsmn24bux7wo113",
 			false,
 		},
-		// existing user id
+		// existing admin id
 		{
-			&models.User{},
-			"97cc3d3d-6ba2-383f-b42a-7bc84d27410c",
+			&models.Admin{},
+			"sbmbsdb40jyxf7h",
 			false,
 		},
 	}

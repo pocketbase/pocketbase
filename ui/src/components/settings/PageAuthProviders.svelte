@@ -6,13 +6,12 @@
     import { addSuccessToast } from "@/stores/toasts";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
-    import EmailAuthAccordion from "@/components/settings/EmailAuthAccordion.svelte";
     import AuthProviderAccordion from "@/components/settings/AuthProviderAccordion.svelte";
     import providersList from "@/providers.js";
 
     $pageTitle = "Auth providers";
 
-    let emailAuthAccordion;
+    let accordions = {};
     let originalFormSettings = {};
     let formSettings = {};
     let isLoading = false;
@@ -48,7 +47,8 @@
             const result = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             initSettings(result);
             setErrors({});
-            emailAuthAccordion?.collapseSiblings();
+
+            accordions[Object.keys(accordions)[0]]?.collapseSiblings();
             addSuccessToast("Successfully updated auth providers.");
         } catch (err) {
             ApiClient.errorResponseHandler(err);
@@ -60,15 +60,10 @@
     function initSettings(data) {
         data = data || {};
 
-        formSettings = {
-            emailAuth: Object.assign({ enabled: true }, data.emailAuth),
-        };
+        formSettings = {};
 
         for (const providerKey in providersList) {
-            formSettings[providerKey] = Object.assign(
-                { enabled: false, allowRegistrations: true },
-                data[providerKey]
-            );
+            formSettings[providerKey] = Object.assign({ enabled: false }, data[providerKey]);
         }
 
         originalFormSettings = JSON.parse(JSON.stringify(formSettings));
@@ -97,19 +92,14 @@
                 <div class="loader" />
             {:else}
                 <div class="accordions">
-                    <EmailAuthAccordion
-                        bind:this={emailAuthAccordion}
-                        single
-                        bind:config={formSettings.emailAuth}
-                    />
-
                     {#each Object.entries(providersList) as [key, provider]}
                         <AuthProviderAccordion
+                            bind:this={accordions[key]}
                             single
                             {key}
                             title={provider.title}
                             icon={provider.icon || "ri-fingerprint-line"}
-                            showSelfHostedFields={provider.selfHosted}
+                            optionsComponent={provider.optionsComponent}
                             bind:config={formSettings[key]}
                         />
                     {/each}

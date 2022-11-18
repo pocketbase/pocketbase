@@ -20,7 +20,7 @@
         refreshTimeoutId = setTimeout(() => {
             refreshTimeoutId = null;
             tooltipData = oldTooltipData;
-        }, 200);
+        }, 150);
     }
 
     onMount(() => {
@@ -45,6 +45,6 @@
         }
     }
     .btn.refreshing i {
-        animation: refresh 200ms ease-out;
+        animation: refresh 150ms ease-out;
     }
 </style>

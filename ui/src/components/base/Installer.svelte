@@ -24,7 +24,7 @@
                 passwordConfirm,
             });
 
-            await ApiClient.admins.authViaEmail(email, password);
+            await ApiClient.admins.authWithPassword(email, password);
 
             dispatch("submit");
         } catch (err) {

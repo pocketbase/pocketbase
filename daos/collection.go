@@ -8,6 +8,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/tools/list"
 )
 
 // CollectionQuery returns a new Collection select query.
@@ -15,15 +16,31 @@ func (dao *Dao) CollectionQuery() *dbx.SelectQuery {
 	return dao.ModelQuery(&models.Collection{})
 }
 
-// FindCollectionByNameOrId finds the first collection by its name or id.
+// FindCollectionsByType finds all collections by the given type.
+func (dao *Dao) FindCollectionsByType(collectionType string) ([]*models.Collection, error) {
+	collections := []*models.Collection{}
+
+	err := dao.CollectionQuery().
+		AndWhere(dbx.HashExp{"type": collectionType}).
+		OrderBy("created ASC").
+		All(&collections)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return collections, nil
+}
+
+// FindCollectionByNameOrId finds a single collection by its name (case insensitive) or id.
 func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, error) {
 	model := &models.Collection{}
 
 	err := dao.CollectionQuery().
-		AndWhere(dbx.Or(
-			dbx.HashExp{"id": nameOrId},
-			dbx.HashExp{"name": nameOrId},
-		)).
+		AndWhere(dbx.NewExp("[[id]] = {:id} OR LOWER([[name]])={:name}", dbx.Params{
+			"id":   nameOrId,
+			"name": strings.ToLower(nameOrId),
+		})).
 		Limit(1).
 		One(model)
 
@@ -37,39 +54,25 @@ func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, e
 // IsCollectionNameUnique checks that there is no existing collection
 // with the provided name (case insensitive!).
 //
-// Note: case sensitive check because the name is used also as a table name for the records.
-func (dao *Dao) IsCollectionNameUnique(name string, excludeId string) bool {
+// Note: case insensitive check because the name is used also as a table name for the records.
+func (dao *Dao) IsCollectionNameUnique(name string, excludeIds ...string) bool {
 	if name == "" {
 		return false
 	}
 
-	var exists bool
-	err := dao.CollectionQuery().
+	query := dao.CollectionQuery().
 		Select("count(*)").
-		AndWhere(dbx.Not(dbx.HashExp{"id": excludeId})).
 		AndWhere(dbx.NewExp("LOWER([[name]])={:name}", dbx.Params{"name": strings.ToLower(name)})).
-		Limit(1).
-		Row(&exists)
+		Limit(1)
 
-	return err == nil && !exists
-}
+	if len(excludeIds) > 0 {
+		uniqueExcludeIds := list.NonzeroUniques(excludeIds)
+		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
+	}
 
-// FindCollectionsWithUserFields finds all collections that has
-// at least one user schema field.
-func (dao *Dao) FindCollectionsWithUserFields() ([]*models.Collection, error) {
-	result := []*models.Collection{}
+	var exists bool
 
-	err := dao.CollectionQuery().
-		InnerJoin(
-			"json_each(schema) as jsonField",
-			dbx.NewExp(
-				"json_extract(jsonField.value, '$.type') = {:type}",
-				dbx.Params{"type": schema.FieldTypeUser},
-			),
-		).
-		All(&result)
-
-	return result, err
+	return query.Row(&exists) == nil && !exists
 }
 
 // FindCollectionReferences returns information for all
@@ -78,13 +81,15 @@ func (dao *Dao) FindCollectionsWithUserFields() ([]*models.Collection, error) {
 // If the provided collection has reference to itself then it will be
 // also included in the result. To exclude it, pass the collection id
 // as the excludeId argument.
-func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeId string) (map[*models.Collection][]*schema.SchemaField, error) {
+func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeIds ...string) (map[*models.Collection][]*schema.SchemaField, error) {
 	collections := []*models.Collection{}
 
-	err := dao.CollectionQuery().
-		AndWhere(dbx.Not(dbx.HashExp{"id": excludeId})).
-		All(&collections)
-	if err != nil {
+	query := dao.CollectionQuery()
+	if len(excludeIds) > 0 {
+		uniqueExcludeIds := list.NonzeroUniques(excludeIds)
+		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
+	}
+	if err := query.All(&collections); err != nil {
 		return nil, err
 	}
 
@@ -152,6 +157,11 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
+		// set default collection type
+		if collection.Type == "" {
+			collection.Type = models.CollectionTypeBase
+		}
+
 		// persist the collection model
 		if err := txDao.Save(collection); err != nil {
 			return err
@@ -194,6 +204,11 @@ func (dao *Dao) ImportCollections(
 			if !imported.HasId() {
 				imported.MarkAsNew()
 				imported.RefreshId()
+			}
+
+			// set default type if missing
+			if imported.Type == "" {
+				imported.Type = models.CollectionTypeBase
 			}
 
 			if existing, ok := mappedExisting[imported.GetId()]; ok {

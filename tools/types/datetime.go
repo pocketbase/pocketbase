@@ -9,7 +9,7 @@ import (
 )
 
 // DefaultDateLayout specifies the default app date strings layout.
-const DefaultDateLayout = "2006-01-02 15:04:05.000"
+const DefaultDateLayout = "2006-01-02 15:04:05.000Z"
 
 // NowDateTime returns new DateTime instance with the current local time.
 func NowDateTime() DateTime {

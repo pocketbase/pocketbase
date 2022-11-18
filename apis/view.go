@@ -14,7 +14,7 @@ import (
 )
 
 // BindViewApi registers the view api endpoints and the corresponding handlers.
-func BindViewApi(app core.App, rg *echo.Group) {
+func bindViewApi(app core.App, rg *echo.Group) {
 	api := ViewApi{app: app}
 
 	// client path

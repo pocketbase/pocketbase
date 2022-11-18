@@ -23,10 +23,6 @@ func (m JsonMap) MarshalJSON() ([]byte, error) {
 
 // Value implements the [driver.Valuer] interface.
 func (m JsonMap) Value() (driver.Value, error) {
-	if m == nil {
-		return nil, nil
-	}
-
 	data, err := json.Marshal(m)
 
 	return string(data), err

@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/pocketbase/dbx"
 )
@@ -13,7 +14,7 @@ import (
 const DefaultPerPage int = 30
 
 // MaxPerPage specifies the maximum allowed search result items returned in a single page.
-const MaxPerPage int = 400
+const MaxPerPage int = 500
 
 // url search query params
 const (
@@ -38,7 +39,6 @@ type Provider struct {
 	query         *dbx.SelectQuery
 	page          int
 	perPage       int
-	countColumn   string
 	sort          []SortField
 	filter        []FilterData
 }
@@ -53,7 +53,7 @@ type Provider struct {
 //
 //	result, err := search.NewProvider(fieldResolver).
 //		Query(baseQuery).
-//		ParseAndExec("page=2&filter=id>0&sort=-name", &models)
+//		ParseAndExec("page=2&filter=id>0&sort=-email", &models)
 func NewProvider(fieldResolver FieldResolver) *Provider {
 	return &Provider{
 		fieldResolver: fieldResolver,
@@ -67,13 +67,6 @@ func NewProvider(fieldResolver FieldResolver) *Provider {
 // Query sets the base query that will be used to fetch the search items.
 func (s *Provider) Query(query *dbx.SelectQuery) *Provider {
 	s.query = query
-	return s
-}
-
-// CountColumn specifies an optional distinct column to use in the
-// SELECT COUNT query.
-func (s *Provider) CountColumn(countColumn string) *Provider {
-	s.countColumn = countColumn
 	return s
 }
 
@@ -170,7 +163,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	// clone provider's query
 	modelsQuery := *s.query
 
-	// apply filters
+	// build filters
 	for _, f := range s.filter {
 		expr, err := f.BuildExpr(s.fieldResolver)
 		if err != nil {
@@ -197,14 +190,19 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		return nil, err
 	}
 
+	queryInfo := modelsQuery.Info()
+
 	// count
 	var totalCount int64
-	countQuery := modelsQuery
-	countQuery.Distinct(false).Select("COUNT(*)").OrderBy() // unset ORDER BY statements
-	if s.countColumn != "" {
-		countQuery.Select("COUNT(DISTINCT(" + s.countColumn + "))")
+	var baseTable string
+	if len(queryInfo.From) > 0 {
+		baseTable = queryInfo.From[0]
 	}
-	if err := countQuery.Row(&totalCount); err != nil {
+	countQuery := modelsQuery
+	rawCountQuery := countQuery.Select(strings.Join([]string{baseTable, "id"}, ".")).OrderBy().Build().SQL()
+	wrappedCountQuery := queryInfo.Builder.NewQuery("SELECT COUNT(*) FROM (" + rawCountQuery + ")")
+	wrappedCountQuery.Bind(countQuery.Build().Params())
+	if err := wrappedCountQuery.Row(&totalCount); err != nil {
 		return nil, err
 	}
 

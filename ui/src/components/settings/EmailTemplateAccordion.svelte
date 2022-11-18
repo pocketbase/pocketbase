@@ -1,3 +1,7 @@
+<script context="module">
+    let cachedEditorComponent;
+</script>
+
 <script>
     import { scale } from "svelte/transition";
     import tooltip from "@/actions/tooltip";
@@ -12,7 +16,7 @@
     export let config = {};
 
     let accordion;
-    let editorComponent;
+    let editorComponent = cachedEditorComponent;
     let isEditorComponentLoading = false;
 
     $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, key));
@@ -41,6 +45,8 @@
         isEditorComponentLoading = true;
 
         editorComponent = (await import("@/components/base/CodeEditor.svelte")).default;
+
+        cachedEditorComponent = editorComponent;
 
         isEditorComponentLoading = false;
     }

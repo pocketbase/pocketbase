@@ -1,3 +1,5 @@
+@use "sass:math";
+
 button {
     outline: 0;
     border: 0;
@@ -491,7 +493,7 @@ select {
         }
     }
     label ~ .form-field-addon {
-        min-height: calc(var(--inputHeight) + var(--baseLineHeight));
+        min-height: calc(26px + var(--inputHeight));
     }
 
     // hints
@@ -647,23 +649,44 @@ select {
 
     // toggle
     &.form-field-toggle {
-        $toggleWidth: 40px;
-        $toggleHeight: 24px;
-        $toggleSize: $toggleHeight - 8;
-        $toggleOffset: ($toggleHeight - $toggleSize) * 0.5;
+        @mixin toggleSize($toggleWidth: 40px, $toggleHeight: 24px) {
+            $toggleSize: $toggleHeight - 8;
+            $toggleOffset: ($toggleHeight - $toggleSize) * 0.5;
+            input[type="radio"],
+            input[type="checkbox"] {
+                & ~ label {
+                    min-height: $toggleHeight;
+                    padding-left: $toggleWidth + 7px;
+                    &:empty {
+                        padding-left: $toggleWidth;
+                    }
+                    &:before {
+                        width: $toggleWidth;
+                        height: $toggleHeight;
+                        border-radius: $toggleHeight;
+                    }
+                    &:after {
+                        top: $toggleOffset;
+                        left: $toggleOffset;
+                        width: $toggleSize;
+                        height: $toggleSize;
+                        border-radius: $toggleSize;
+                    }
+                }
+                &:checked ~ label {
+                    &:after {
+                        left: $toggleWidth - $toggleSize - $toggleOffset;
+                    }
+                }
+            }
+        }
+
         input[type="radio"],
         input[type="checkbox"] {
             & ~ label {
-                min-height: $toggleHeight;
-                padding-left: $toggleWidth + 7px;
-                &:empty {
-                    padding-left: $toggleWidth;
-                }
+                position: relative;
                 &:before {
                     content: '';
-                    width: $toggleWidth;
-                    height: $toggleHeight;
-                    border-radius: $toggleHeight;
                     border: 0;
                     box-shadow: none;
                     background: var(--baseAlt3Color);
@@ -673,13 +696,8 @@ select {
                     content: '';
                     position: absolute;
                     z-index: 1;
-                    top: $toggleOffset;
-                    left: $toggleOffset;
-                    width: $toggleSize;
-                    height: $toggleSize;
                     cursor: pointer;
                     background: var(--baseColor);
-                    border-radius: $toggleSize;
                     transition: left var(--activeAnimationSpeed),
                                 transform var(--activeAnimationSpeed),
                                 background var(--activeAnimationSpeed);
@@ -707,10 +725,55 @@ select {
                     background: var(--successColor);
                 }
                 &:after {
-                    left: $toggleWidth - $toggleSize - $toggleOffset;
                     background: var(--baseColor);
                 }
             }
+        }
+
+        @include toggleSize(40px, 24px);
+
+        &.form-field-sm {
+            @include toggleSize(32px, 20px);
+        }
+    }
+}
+
+.form-field-group {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    > .form-field {
+        flex-grow: 1;
+        border-left: 1px solid var(--baseAlt2Color);
+        &:first-child {
+            border-left: 0;
+        }
+        &:not(:first-child) {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            > label {
+                border-top-left-radius: 0;
+            }
+            > %input,
+            > .select .selected-container {
+                border-bottom-left-radius: 0;
+            }
+        }
+        &:not(:last-child) {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+            > label {
+                border-top-right-radius: 0;
+            }
+            > %input,
+            > .select .selected-container {
+                border-bottom-right-radius: 0;
+            }
+        }
+    }
+    @for $i from 12 through 1 {
+        .form-field.col-#{$i} {
+            width: math.div(100%, math.div(12, $i));
         }
     }
 }
@@ -942,8 +1005,39 @@ select {
     }
 }
 
-.field-type-select .options-dropdown .options-list {
-    max-height: 490px;
+.field-type-select {
+    .options-dropdown {
+        padding: 2px;
+        .form-field.options-search {
+            margin: 0;
+        }
+        .options-list {
+            max-height: 490px;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        .dropdown-item {
+            width: 50%;
+            flex-grow: 1;
+            margin: 0;
+            padding-left: 12px; // visual align with the label
+            border-radius: 0;
+            border-bottom: 1px solid var(--baseAlt2Color);
+            &:nth-child(2n) {
+                border-left: 1px solid var(--baseAlt2Color);
+            }
+            &:nth-last-child(-n+2) {
+                border-bottom: 0;
+            }
+            &.selected {
+                background: var(--baseAlt1Color);
+            }
+        }
+    }
 }
 
 
@@ -1017,6 +1111,7 @@ select {
             border-radius: var(--baseRadius);
             background: var(--baseColor);
             border: 0;
+            z-index: 9999;
             padding: 0 3px;
             font-size: 0.92rem;
             ul {

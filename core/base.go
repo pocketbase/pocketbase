@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -52,14 +53,14 @@ type BaseApp struct {
 	onModelAfterDelete  *hook.Hook[*ModelEvent]
 
 	// mailer event hooks
-	onMailerBeforeAdminResetPasswordSend *hook.Hook[*MailerAdminEvent]
-	onMailerAfterAdminResetPasswordSend  *hook.Hook[*MailerAdminEvent]
-	onMailerBeforeUserResetPasswordSend  *hook.Hook[*MailerUserEvent]
-	onMailerAfterUserResetPasswordSend   *hook.Hook[*MailerUserEvent]
-	onMailerBeforeUserVerificationSend   *hook.Hook[*MailerUserEvent]
-	onMailerAfterUserVerificationSend    *hook.Hook[*MailerUserEvent]
-	onMailerBeforeUserChangeEmailSend    *hook.Hook[*MailerUserEvent]
-	onMailerAfterUserChangeEmailSend     *hook.Hook[*MailerUserEvent]
+	onMailerBeforeAdminResetPasswordSend  *hook.Hook[*MailerAdminEvent]
+	onMailerAfterAdminResetPasswordSend   *hook.Hook[*MailerAdminEvent]
+	onMailerBeforeRecordResetPasswordSend *hook.Hook[*MailerRecordEvent]
+	onMailerAfterRecordResetPasswordSend  *hook.Hook[*MailerRecordEvent]
+	onMailerBeforeRecordVerificationSend  *hook.Hook[*MailerRecordEvent]
+	onMailerAfterRecordVerificationSend   *hook.Hook[*MailerRecordEvent]
+	onMailerBeforeRecordChangeEmailSend   *hook.Hook[*MailerRecordEvent]
+	onMailerAfterRecordChangeEmailSend    *hook.Hook[*MailerRecordEvent]
 
 	// realtime api event hooks
 	onRealtimeConnectRequest         *hook.Hook[*RealtimeConnectEvent]
@@ -85,19 +86,11 @@ type BaseApp struct {
 	onAdminAfterDeleteRequest  *hook.Hook[*AdminDeleteEvent]
 	onAdminAuthRequest         *hook.Hook[*AdminAuthEvent]
 
-	//                                    user api event hooks
-	onUsersListRequest                    *hook.Hook[*UsersListEvent]
-	onUserViewRequest                     *hook.Hook[*UserViewEvent]
-	onUserBeforeCreateRequest             *hook.Hook[*UserCreateEvent]
-	onUserAfterCreateRequest              *hook.Hook[*UserCreateEvent]
-	onUserBeforeUpdateRequest             *hook.Hook[*UserUpdateEvent]
-	onUserAfterUpdateRequest              *hook.Hook[*UserUpdateEvent]
-	onUserBeforeDeleteRequest             *hook.Hook[*UserDeleteEvent]
-	onUserAfterDeleteRequest              *hook.Hook[*UserDeleteEvent]
-	onUserAuthRequest                     *hook.Hook[*UserAuthEvent]
-	onUserListExternalAuths               *hook.Hook[*UserListExternalAuthsEvent]
-	onUserBeforeUnlinkExternalAuthRequest *hook.Hook[*UserUnlinkExternalAuthEvent]
-	onUserAfterUnlinkExternalAuthRequest  *hook.Hook[*UserUnlinkExternalAuthEvent]
+	// user api event hooks
+	onRecordAuthRequest                     *hook.Hook[*RecordAuthEvent]
+	onRecordListExternalAuthsRequest        *hook.Hook[*RecordListExternalAuthsEvent]
+	onRecordBeforeUnlinkExternalAuthRequest *hook.Hook[*RecordUnlinkExternalAuthEvent]
+	onRecordAfterUnlinkExternalAuthRequest  *hook.Hook[*RecordUnlinkExternalAuthEvent]
 
 	// record api event hooks
 	onRecordsListRequest        *hook.Hook[*RecordsListEvent]
@@ -158,14 +151,14 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onModelAfterDelete:  &hook.Hook[*ModelEvent]{},
 
 		// mailer event hooks
-		onMailerBeforeAdminResetPasswordSend: &hook.Hook[*MailerAdminEvent]{},
-		onMailerAfterAdminResetPasswordSend:  &hook.Hook[*MailerAdminEvent]{},
-		onMailerBeforeUserResetPasswordSend:  &hook.Hook[*MailerUserEvent]{},
-		onMailerAfterUserResetPasswordSend:   &hook.Hook[*MailerUserEvent]{},
-		onMailerBeforeUserVerificationSend:   &hook.Hook[*MailerUserEvent]{},
-		onMailerAfterUserVerificationSend:    &hook.Hook[*MailerUserEvent]{},
-		onMailerBeforeUserChangeEmailSend:    &hook.Hook[*MailerUserEvent]{},
-		onMailerAfterUserChangeEmailSend:     &hook.Hook[*MailerUserEvent]{},
+		onMailerBeforeAdminResetPasswordSend:  &hook.Hook[*MailerAdminEvent]{},
+		onMailerAfterAdminResetPasswordSend:   &hook.Hook[*MailerAdminEvent]{},
+		onMailerBeforeRecordResetPasswordSend: &hook.Hook[*MailerRecordEvent]{},
+		onMailerAfterRecordResetPasswordSend:  &hook.Hook[*MailerRecordEvent]{},
+		onMailerBeforeRecordVerificationSend:  &hook.Hook[*MailerRecordEvent]{},
+		onMailerAfterRecordVerificationSend:   &hook.Hook[*MailerRecordEvent]{},
+		onMailerBeforeRecordChangeEmailSend:   &hook.Hook[*MailerRecordEvent]{},
+		onMailerAfterRecordChangeEmailSend:    &hook.Hook[*MailerRecordEvent]{},
 
 		// realtime API event hooks
 		onRealtimeConnectRequest:         &hook.Hook[*RealtimeConnectEvent]{},
@@ -192,18 +185,10 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onAdminAuthRequest:         &hook.Hook[*AdminAuthEvent]{},
 
 		// user API event hooks
-		onUsersListRequest:                    &hook.Hook[*UsersListEvent]{},
-		onUserViewRequest:                     &hook.Hook[*UserViewEvent]{},
-		onUserBeforeCreateRequest:             &hook.Hook[*UserCreateEvent]{},
-		onUserAfterCreateRequest:              &hook.Hook[*UserCreateEvent]{},
-		onUserBeforeUpdateRequest:             &hook.Hook[*UserUpdateEvent]{},
-		onUserAfterUpdateRequest:              &hook.Hook[*UserUpdateEvent]{},
-		onUserBeforeDeleteRequest:             &hook.Hook[*UserDeleteEvent]{},
-		onUserAfterDeleteRequest:              &hook.Hook[*UserDeleteEvent]{},
-		onUserAuthRequest:                     &hook.Hook[*UserAuthEvent]{},
-		onUserListExternalAuths:               &hook.Hook[*UserListExternalAuthsEvent]{},
-		onUserBeforeUnlinkExternalAuthRequest: &hook.Hook[*UserUnlinkExternalAuthEvent]{},
-		onUserAfterUnlinkExternalAuthRequest:  &hook.Hook[*UserUnlinkExternalAuthEvent]{},
+		onRecordAuthRequest:                     &hook.Hook[*RecordAuthEvent]{},
+		onRecordListExternalAuthsRequest:        &hook.Hook[*RecordListExternalAuthsEvent]{},
+		onRecordBeforeUnlinkExternalAuthRequest: &hook.Hook[*RecordUnlinkExternalAuthEvent]{},
+		onRecordAfterUnlinkExternalAuthRequest:  &hook.Hook[*RecordUnlinkExternalAuthEvent]{},
 
 		// record API event hooks
 		onRecordsListRequest:        &hook.Hook[*RecordsListEvent]{},
@@ -396,8 +381,8 @@ func (app *BaseApp) RefreshSettings() error {
 		return err
 	}
 
+	// no settings were previously stored
 	if param == nil {
-		// no settings were previously stored
 		return app.Dao().SaveParam(models.ParamAppSettings, app.settings, encryptionKey)
 	}
 
@@ -432,8 +417,16 @@ func (app *BaseApp) RefreshSettings() error {
 		return err
 	}
 
-	if plainDecodeErr == nil && encryptionKey != "" {
-		// save because previously the settings weren't stored encrypted
+	afterMergeRaw, err := json.Marshal(app.settings)
+	if err != nil {
+		return err
+	}
+
+	if
+	// save because previously the settings weren't stored encrypted
+	(plainDecodeErr == nil && encryptionKey != "") ||
+		// or save because there are new fields after the merge
+		!bytes.Equal(param.Value, afterMergeRaw) {
 		saveErr := app.Dao().SaveParam(models.ParamAppSettings, app.settings, encryptionKey)
 		if saveErr != nil {
 			return saveErr
@@ -491,28 +484,28 @@ func (app *BaseApp) OnMailerAfterAdminResetPasswordSend() *hook.Hook[*MailerAdmi
 	return app.onMailerAfterAdminResetPasswordSend
 }
 
-func (app *BaseApp) OnMailerBeforeUserResetPasswordSend() *hook.Hook[*MailerUserEvent] {
-	return app.onMailerBeforeUserResetPasswordSend
+func (app *BaseApp) OnMailerBeforeRecordResetPasswordSend() *hook.Hook[*MailerRecordEvent] {
+	return app.onMailerBeforeRecordResetPasswordSend
 }
 
-func (app *BaseApp) OnMailerAfterUserResetPasswordSend() *hook.Hook[*MailerUserEvent] {
-	return app.onMailerAfterUserResetPasswordSend
+func (app *BaseApp) OnMailerAfterRecordResetPasswordSend() *hook.Hook[*MailerRecordEvent] {
+	return app.onMailerAfterRecordResetPasswordSend
 }
 
-func (app *BaseApp) OnMailerBeforeUserVerificationSend() *hook.Hook[*MailerUserEvent] {
-	return app.onMailerBeforeUserVerificationSend
+func (app *BaseApp) OnMailerBeforeRecordVerificationSend() *hook.Hook[*MailerRecordEvent] {
+	return app.onMailerBeforeRecordVerificationSend
 }
 
-func (app *BaseApp) OnMailerAfterUserVerificationSend() *hook.Hook[*MailerUserEvent] {
-	return app.onMailerAfterUserVerificationSend
+func (app *BaseApp) OnMailerAfterRecordVerificationSend() *hook.Hook[*MailerRecordEvent] {
+	return app.onMailerAfterRecordVerificationSend
 }
 
-func (app *BaseApp) OnMailerBeforeUserChangeEmailSend() *hook.Hook[*MailerUserEvent] {
-	return app.onMailerBeforeUserChangeEmailSend
+func (app *BaseApp) OnMailerBeforeRecordChangeEmailSend() *hook.Hook[*MailerRecordEvent] {
+	return app.onMailerBeforeRecordChangeEmailSend
 }
 
-func (app *BaseApp) OnMailerAfterUserChangeEmailSend() *hook.Hook[*MailerUserEvent] {
-	return app.onMailerAfterUserChangeEmailSend
+func (app *BaseApp) OnMailerAfterRecordChangeEmailSend() *hook.Hook[*MailerRecordEvent] {
+	return app.onMailerAfterRecordChangeEmailSend
 }
 
 // -------------------------------------------------------------------
@@ -596,55 +589,23 @@ func (app *BaseApp) OnAdminAuthRequest() *hook.Hook[*AdminAuthEvent] {
 }
 
 // -------------------------------------------------------------------
-// User API event hooks
+// Auth Record API event hooks
 // -------------------------------------------------------------------
 
-func (app *BaseApp) OnUsersListRequest() *hook.Hook[*UsersListEvent] {
-	return app.onUsersListRequest
+func (app *BaseApp) OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent] {
+	return app.onRecordAuthRequest
 }
 
-func (app *BaseApp) OnUserViewRequest() *hook.Hook[*UserViewEvent] {
-	return app.onUserViewRequest
+func (app *BaseApp) OnRecordListExternalAuthsRequest() *hook.Hook[*RecordListExternalAuthsEvent] {
+	return app.onRecordListExternalAuthsRequest
 }
 
-func (app *BaseApp) OnUserBeforeCreateRequest() *hook.Hook[*UserCreateEvent] {
-	return app.onUserBeforeCreateRequest
+func (app *BaseApp) OnRecordBeforeUnlinkExternalAuthRequest() *hook.Hook[*RecordUnlinkExternalAuthEvent] {
+	return app.onRecordBeforeUnlinkExternalAuthRequest
 }
 
-func (app *BaseApp) OnUserAfterCreateRequest() *hook.Hook[*UserCreateEvent] {
-	return app.onUserAfterCreateRequest
-}
-
-func (app *BaseApp) OnUserBeforeUpdateRequest() *hook.Hook[*UserUpdateEvent] {
-	return app.onUserBeforeUpdateRequest
-}
-
-func (app *BaseApp) OnUserAfterUpdateRequest() *hook.Hook[*UserUpdateEvent] {
-	return app.onUserAfterUpdateRequest
-}
-
-func (app *BaseApp) OnUserBeforeDeleteRequest() *hook.Hook[*UserDeleteEvent] {
-	return app.onUserBeforeDeleteRequest
-}
-
-func (app *BaseApp) OnUserAfterDeleteRequest() *hook.Hook[*UserDeleteEvent] {
-	return app.onUserAfterDeleteRequest
-}
-
-func (app *BaseApp) OnUserAuthRequest() *hook.Hook[*UserAuthEvent] {
-	return app.onUserAuthRequest
-}
-
-func (app *BaseApp) OnUserListExternalAuths() *hook.Hook[*UserListExternalAuthsEvent] {
-	return app.onUserListExternalAuths
-}
-
-func (app *BaseApp) OnUserBeforeUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent] {
-	return app.onUserBeforeUnlinkExternalAuthRequest
-}
-
-func (app *BaseApp) OnUserAfterUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent] {
-	return app.onUserAfterUnlinkExternalAuthRequest
+func (app *BaseApp) OnRecordAfterUnlinkExternalAuthRequest() *hook.Hook[*RecordUnlinkExternalAuthEvent] {
+	return app.onRecordAfterUnlinkExternalAuthRequest
 }
 
 // -------------------------------------------------------------------

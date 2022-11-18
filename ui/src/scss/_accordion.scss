@@ -56,6 +56,7 @@
             }
         }
         &:hover,
+        &.focus,
         &:focus-visible {
             &:after {
                 color: var(--txtPrimaryColor);
@@ -81,16 +82,23 @@
             background: var(--baseAlt1Color);
         }
     }
+    &.drag-over {
+        .accordion-header {
+            background: var(--bodyColor);
+        }
+    }
     &.active {
         @include shadowize();
         .accordion-header {
-            color: var(--baseColor);
-            box-shadow: 0px 0px 0px 1px var(--primaryColor);
+            position: sticky;
+            top: 0;
+            z-index: 9;
+            box-shadow: 0px 0px 0px 1px var(--baseAlt2Color);
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
-            background: var(--primaryColor);
+            background: var(--bodyColor);
             &.interactive{
-                background: var(--primaryColor);
+                background: var(--bodyColor);
                 &:after {
                     color: inherit;
                     content: '\ea78';
@@ -107,28 +115,28 @@
     }
 }
 
+
 // wrapper
 .accordions {
     .accordion {
         border-radius: 0;
         margin: -1px 0 0;
-        &.active {
-            border-radius: var(--baseRadius);
-            margin: var(--smSpacing) 0;
-            + .accordion {
-                border-top-left-radius: var(--baseRadius);
-                border-top-right-radius: var(--baseRadius);
-            }
-        }
-        &:first-child {
-            margin-top: 0;
-            border-top-left-radius: var(--baseRadius);
-            border-top-right-radius: var(--baseRadius);
-        }
-        &:last-child {
-            margin-bottom: 0;
-            border-bottom-left-radius: var(--baseRadius);
-            border-bottom-right-radius: var(--baseRadius);
-        }
+    }
+    & > .accordion.active,
+    & > .accordion-wrapper > .accordion.active {
+        margin: var(--smSpacing) 0;
+        border-radius: var(--baseRadius);
+    }
+    & > .accordion:first-child,
+    & > .accordion-wrapper:first-child > .accordion {
+        margin-top: 0;
+        border-top-left-radius: var(--baseRadius);
+        border-top-right-radius: var(--baseRadius);
+    }
+    & > .accordion:last-child,
+    & > .accordion-wrapper:last-child > .accordion {
+        margin-bottom: 0;
+        border-bottom-left-radius: var(--baseRadius);
+        border-bottom-right-radius: var(--baseRadius);
     }
 }

@@ -19,11 +19,11 @@ func TestSettingsList(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "authorized as user",
+			Name:   "authorized as auth record",
 			Method: http.MethodGet,
 			Url:    "/api/settings",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus:  401,
 			ExpectedContent: []string{`"data":{}`},
@@ -33,7 +33,7 @@ func TestSettingsList(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/api/settings",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -43,16 +43,21 @@ func TestSettingsList(t *testing.T) {
 				`"s3":{`,
 				`"adminAuthToken":{`,
 				`"adminPasswordResetToken":{`,
-				`"userAuthToken":{`,
-				`"userPasswordResetToken":{`,
-				`"userEmailChangeToken":{`,
-				`"userVerificationToken":{`,
+				`"recordAuthToken":{`,
+				`"recordPasswordResetToken":{`,
+				`"recordEmailChangeToken":{`,
+				`"recordVerificationToken":{`,
 				`"emailAuth":{`,
 				`"googleAuth":{`,
 				`"facebookAuth":{`,
 				`"githubAuth":{`,
 				`"gitlabAuth":{`,
+				`"twitterAuth":{`,
 				`"discordAuth":{`,
+				`"microsoftAuth":{`,
+				`"spotifyAuth":{`,
+				`"kakaoAuth":{`,
+				`"twitchAuth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 			},
@@ -68,7 +73,7 @@ func TestSettingsList(t *testing.T) {
 }
 
 func TestSettingsSet(t *testing.T) {
-	validData := `{"meta":{"appName":"update_test"},"emailAuth":{"minPasswordLength": 12}}`
+	validData := `{"meta":{"appName":"update_test"}}`
 
 	scenarios := []tests.ApiScenario{
 		{
@@ -80,12 +85,12 @@ func TestSettingsSet(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "authorized as user",
+			Name:   "authorized as auth record",
 			Method: http.MethodPatch,
 			Url:    "/api/settings",
 			Body:   strings.NewReader(validData),
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus:  401,
 			ExpectedContent: []string{`"data":{}`},
@@ -96,7 +101,7 @@ func TestSettingsSet(t *testing.T) {
 			Url:    "/api/settings",
 			Body:   strings.NewReader(``),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -106,20 +111,23 @@ func TestSettingsSet(t *testing.T) {
 				`"s3":{`,
 				`"adminAuthToken":{`,
 				`"adminPasswordResetToken":{`,
-				`"userAuthToken":{`,
-				`"userPasswordResetToken":{`,
-				`"userEmailChangeToken":{`,
-				`"userVerificationToken":{`,
+				`"recordAuthToken":{`,
+				`"recordPasswordResetToken":{`,
+				`"recordEmailChangeToken":{`,
+				`"recordVerificationToken":{`,
 				`"emailAuth":{`,
 				`"googleAuth":{`,
 				`"facebookAuth":{`,
 				`"githubAuth":{`,
 				`"gitlabAuth":{`,
 				`"discordAuth":{`,
+				`"microsoftAuth":{`,
+				`"spotifyAuth":{`,
+				`"kakaoAuth":{`,
+				`"twitchAuth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 				`"appName":"Acme"`,
-				`"minPasswordLength":8`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeUpdate":           1,
@@ -132,15 +140,14 @@ func TestSettingsSet(t *testing.T) {
 			Name:   "authorized as admin submitting invalid data",
 			Method: http.MethodPatch,
 			Url:    "/api/settings",
-			Body:   strings.NewReader(`{"meta":{"appName":""},"emailAuth":{"minPasswordLength": 3}}`),
+			Body:   strings.NewReader(`{"meta":{"appName":""}}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
-				`"emailAuth":{"minPasswordLength":{"code":"validation_min_greater_equal_than_required","message":"Must be no less than 5."}}`,
-				`"meta":{"appName":{"code":"validation_required","message":"Cannot be blank."}}`,
+				`"meta":{"appName":{"code":"validation_required"`,
 			},
 		},
 		{
@@ -149,7 +156,7 @@ func TestSettingsSet(t *testing.T) {
 			Url:    "/api/settings",
 			Body:   strings.NewReader(validData),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -159,20 +166,24 @@ func TestSettingsSet(t *testing.T) {
 				`"s3":{`,
 				`"adminAuthToken":{`,
 				`"adminPasswordResetToken":{`,
-				`"userAuthToken":{`,
-				`"userPasswordResetToken":{`,
-				`"userEmailChangeToken":{`,
-				`"userVerificationToken":{`,
+				`"recordAuthToken":{`,
+				`"recordPasswordResetToken":{`,
+				`"recordEmailChangeToken":{`,
+				`"recordVerificationToken":{`,
 				`"emailAuth":{`,
 				`"googleAuth":{`,
 				`"facebookAuth":{`,
 				`"githubAuth":{`,
 				`"gitlabAuth":{`,
+				`"twitterAuth":{`,
 				`"discordAuth":{`,
+				`"microsoftAuth":{`,
+				`"spotifyAuth":{`,
+				`"kakaoAuth":{`,
+				`"twitchAuth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 				`"appName":"update_test"`,
-				`"minPasswordLength":12`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeUpdate":           1,
@@ -198,11 +209,11 @@ func TestSettingsTestS3(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "authorized as user",
+			Name:   "authorized as auth record",
 			Method: http.MethodPost,
 			Url:    "/api/settings/test/s3",
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus:  401,
 			ExpectedContent: []string{`"data":{}`},
@@ -212,12 +223,11 @@ func TestSettingsTestS3(t *testing.T) {
 			Method: http.MethodPost,
 			Url:    "/api/settings/test/s3",
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 		},
-		// @todo consider creating a test S3 filesystem
 	}
 
 	for _, scenario := range scenarios {
@@ -239,7 +249,7 @@ func TestSettingsTestEmail(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "authorized as user",
+			Name:   "authorized as auth record",
 			Method: http.MethodPost,
 			Url:    "/api/settings/test/email",
 			Body: strings.NewReader(`{
@@ -247,7 +257,7 @@ func TestSettingsTestEmail(t *testing.T) {
 				"email": "test@example.com"
 			}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus:  401,
 			ExpectedContent: []string{`"data":{}`},
@@ -258,7 +268,7 @@ func TestSettingsTestEmail(t *testing.T) {
 			Url:    "/api/settings/test/email",
 			Body:   strings.NewReader(`{`),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
@@ -269,7 +279,7 @@ func TestSettingsTestEmail(t *testing.T) {
 			Url:    "/api/settings/test/email",
 			Body:   strings.NewReader(`{}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
@@ -286,7 +296,7 @@ func TestSettingsTestEmail(t *testing.T) {
 				"email": "test@example.com"
 			}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if app.TestMailer.TotalSend != 1 {
@@ -304,8 +314,8 @@ func TestSettingsTestEmail(t *testing.T) {
 			ExpectedStatus:  204,
 			ExpectedContent: []string{},
 			ExpectedEvents: map[string]int{
-				"OnMailerBeforeUserVerificationSend": 1,
-				"OnMailerAfterUserVerificationSend":  1,
+				"OnMailerBeforeRecordVerificationSend": 1,
+				"OnMailerAfterRecordVerificationSend":  1,
 			},
 		},
 		{
@@ -317,7 +327,7 @@ func TestSettingsTestEmail(t *testing.T) {
 				"email": "test@example.com"
 			}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if app.TestMailer.TotalSend != 1 {
@@ -335,8 +345,8 @@ func TestSettingsTestEmail(t *testing.T) {
 			ExpectedStatus:  204,
 			ExpectedContent: []string{},
 			ExpectedEvents: map[string]int{
-				"OnMailerBeforeUserResetPasswordSend": 1,
-				"OnMailerAfterUserResetPasswordSend":  1,
+				"OnMailerBeforeRecordResetPasswordSend": 1,
+				"OnMailerAfterRecordResetPasswordSend":  1,
 			},
 		},
 		{
@@ -348,7 +358,7 @@ func TestSettingsTestEmail(t *testing.T) {
 				"email": "test@example.com"
 			}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if app.TestMailer.TotalSend != 1 {
@@ -366,8 +376,8 @@ func TestSettingsTestEmail(t *testing.T) {
 			ExpectedStatus:  204,
 			ExpectedContent: []string{},
 			ExpectedEvents: map[string]int{
-				"OnMailerBeforeUserChangeEmailSend": 1,
-				"OnMailerAfterUserChangeEmailSend":  1,
+				"OnMailerBeforeRecordChangeEmailSend": 1,
+				"OnMailerAfterRecordChangeEmailSend":  1,
 			},
 		},
 	}

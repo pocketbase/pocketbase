@@ -1,4 +1,5 @@
 <script>
+    import { onMount } from "svelte";
     import { slide } from "svelte/transition";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
@@ -42,37 +43,12 @@
         isLoading = false;
     }
 
-    async function testS3() {
-        testS3Error = null;
-
-        if (!formSettings.s3.enabled) {
-            return; // nothing to test
-        }
-
-        isTesting = true;
-
-        try {
-            await ApiClient.settings.testS3({ $cancelKey: testRequestKey });
-        } catch (err) {
-            testS3Error = err;
-        }
-
-        isTesting = false;
-    }
-
     async function save() {
         if (isSaving || !hasChanges) {
             return;
         }
 
         isSaving = true;
-
-        // auto cancel the test request after 30sec
-        clearTimeout(testS3TimeoutId);
-        testS3TimeoutId = setTimeout(() => {
-            ApiClient.cancelRequest(testRequestKey);
-            addErrorToast("S3 test connection timeout.");
-        }, 30000);
 
         try {
             ApiClient.cancelRequest(testRequestKey);
@@ -92,8 +68,6 @@
             ApiClient.errorResponseHandler(err);
         }
 
-        clearTimeout(testS3TimeoutId);
-
         isSaving = false;
     }
 
@@ -111,6 +85,39 @@
 
         await testS3();
     }
+
+    async function testS3() {
+        testS3Error = null;
+
+        if (!formSettings.s3.enabled) {
+            return; // nothing to test
+        }
+
+        // auto cancel the test request after 30sec
+        ApiClient.cancelRequest(testRequestKey);
+        clearTimeout(testS3TimeoutId);
+        testS3TimeoutId = setTimeout(() => {
+            ApiClient.cancelRequest(testRequestKey);
+            addErrorToast("S3 test connection timeout.");
+        }, 30000);
+
+        isTesting = true;
+
+        try {
+            await ApiClient.settings.testS3({ $cancelKey: testRequestKey });
+        } catch (err) {
+            testS3Error = err;
+        }
+
+        isTesting = false;
+        clearTimeout(testS3TimeoutId);
+    }
+
+    onMount(() => {
+        return () => {
+            clearTimeout(testS3TimeoutId);
+        };
+    });
 </script>
 
 <SettingsSidebar />
@@ -160,7 +167,7 @@
                                 <a
                                     href="https://github.com/rclone/rclone"
                                     target="_blank"
-                                    rel="noopener"
+                                    rel="noopener noreferrer"
                                     class="txt-bold"
                                 >
                                     rclone
@@ -168,7 +175,7 @@
                                 <a
                                     href="https://github.com/peak/s5cmd"
                                     target="_blank"
-                                    rel="noopener"
+                                    rel="noopener noreferrer"
                                     class="txt-bold"
                                 >
                                     s5cmd

@@ -23,12 +23,10 @@ func TestSettingsValidate(t *testing.T) {
 	s.S3.Endpoint = "invalid"
 	s.AdminAuthToken.Duration = -10
 	s.AdminPasswordResetToken.Duration = -10
-	s.UserAuthToken.Duration = -10
-	s.UserPasswordResetToken.Duration = -10
-	s.UserEmailChangeToken.Duration = -10
-	s.UserVerificationToken.Duration = -10
-	s.EmailAuth.Enabled = true
-	s.EmailAuth.MinPasswordLength = -10
+	s.RecordAuthToken.Duration = -10
+	s.RecordPasswordResetToken.Duration = -10
+	s.RecordEmailChangeToken.Duration = -10
+	s.RecordVerificationToken.Duration = -10
 	s.GoogleAuth.Enabled = true
 	s.GoogleAuth.ClientId = ""
 	s.FacebookAuth.Enabled = true
@@ -41,6 +39,14 @@ func TestSettingsValidate(t *testing.T) {
 	s.DiscordAuth.ClientId = ""
 	s.TwitterAuth.Enabled = true
 	s.TwitterAuth.ClientId = ""
+	s.MicrosoftAuth.Enabled = true
+	s.MicrosoftAuth.ClientId = ""
+	s.SpotifyAuth.Enabled = true
+	s.SpotifyAuth.ClientId = ""
+	s.KakaoAuth.Enabled = true
+	s.KakaoAuth.ClientId = ""
+	s.TwitchAuth.Enabled = true
+	s.TwitchAuth.ClientId = ""
 
 	// check if Validate() is triggering the members validate methods.
 	err := s.Validate()
@@ -55,16 +61,20 @@ func TestSettingsValidate(t *testing.T) {
 		`"s3":{`,
 		`"adminAuthToken":{`,
 		`"adminPasswordResetToken":{`,
-		`"userAuthToken":{`,
-		`"userPasswordResetToken":{`,
-		`"userEmailChangeToken":{`,
-		`"userVerificationToken":{`,
-		`"emailAuth":{`,
+		`"recordAuthToken":{`,
+		`"recordPasswordResetToken":{`,
+		`"recordEmailChangeToken":{`,
+		`"recordVerificationToken":{`,
 		`"googleAuth":{`,
 		`"facebookAuth":{`,
 		`"githubAuth":{`,
 		`"gitlabAuth":{`,
 		`"discordAuth":{`,
+		`"twitterAuth":{`,
+		`"microsoftAuth":{`,
+		`"spotifyAuth":{`,
+		`"kakaoAuth":{`,
+		`"twitchAuth":{`,
 	}
 
 	errBytes, _ := json.Marshal(err)
@@ -89,12 +99,10 @@ func TestSettingsMerge(t *testing.T) {
 	s2.S3.Endpoint = "test"
 	s2.AdminAuthToken.Duration = 1
 	s2.AdminPasswordResetToken.Duration = 2
-	s2.UserAuthToken.Duration = 3
-	s2.UserPasswordResetToken.Duration = 4
-	s2.UserEmailChangeToken.Duration = 5
-	s2.UserVerificationToken.Duration = 6
-	s2.EmailAuth.Enabled = false
-	s2.EmailAuth.MinPasswordLength = 30
+	s2.RecordAuthToken.Duration = 3
+	s2.RecordPasswordResetToken.Duration = 4
+	s2.RecordEmailChangeToken.Duration = 5
+	s2.RecordVerificationToken.Duration = 6
 	s2.GoogleAuth.Enabled = true
 	s2.GoogleAuth.ClientId = "google_test"
 	s2.FacebookAuth.Enabled = true
@@ -107,6 +115,14 @@ func TestSettingsMerge(t *testing.T) {
 	s2.DiscordAuth.ClientId = "discord_test"
 	s2.TwitterAuth.Enabled = true
 	s2.TwitterAuth.ClientId = "twitter_test"
+	s2.MicrosoftAuth.Enabled = true
+	s2.MicrosoftAuth.ClientId = "microsoft_test"
+	s2.SpotifyAuth.Enabled = true
+	s2.SpotifyAuth.ClientId = "spotify_test"
+	s2.KakaoAuth.Enabled = true
+	s2.KakaoAuth.ClientId = "kakao_test"
+	s2.TwitchAuth.Enabled = true
+	s2.TwitchAuth.ClientId = "twitch_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
@@ -164,16 +180,20 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.S3.Secret = "test123"
 	s1.AdminAuthToken.Secret = "test123"
 	s1.AdminPasswordResetToken.Secret = "test123"
-	s1.UserAuthToken.Secret = "test123"
-	s1.UserPasswordResetToken.Secret = "test123"
-	s1.UserEmailChangeToken.Secret = "test123"
-	s1.UserVerificationToken.Secret = "test123"
+	s1.RecordAuthToken.Secret = "test123"
+	s1.RecordPasswordResetToken.Secret = "test123"
+	s1.RecordEmailChangeToken.Secret = "test123"
+	s1.RecordVerificationToken.Secret = "test123"
 	s1.GoogleAuth.ClientSecret = "test123"
 	s1.FacebookAuth.ClientSecret = "test123"
 	s1.GithubAuth.ClientSecret = "test123"
 	s1.GitlabAuth.ClientSecret = "test123"
 	s1.DiscordAuth.ClientSecret = "test123"
 	s1.TwitterAuth.ClientSecret = "test123"
+	s1.MicrosoftAuth.ClientSecret = "test123"
+	s1.SpotifyAuth.ClientSecret = "test123"
+	s1.KakaoAuth.ClientSecret = "test123"
+	s1.TwitchAuth.ClientSecret = "test123"
 
 	s2, err := s1.RedactClone()
 	if err != nil {
@@ -185,10 +205,10 @@ func TestSettingsRedactClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/users/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/users/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/users/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":7},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"userAuthToken":{"secret":"******","duration":1209600},"userPasswordResetToken":{"secret":"******","duration":1800},"userEmailChangeToken":{"secret":"******","duration":1800},"userVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":true,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":8},"googleAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"facebookAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"githubAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"discordAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"},"twitterAuth":{"enabled":false,"allowRegistrations":true,"clientSecret":"******"}}`
+	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":5},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"recordAuthToken":{"secret":"******","duration":1209600},"recordPasswordResetToken":{"secret":"******","duration":1800},"recordEmailChangeToken":{"secret":"******","duration":1800},"recordVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":false,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":0},"googleAuth":{"enabled":false,"clientSecret":"******"},"facebookAuth":{"enabled":false,"clientSecret":"******"},"githubAuth":{"enabled":false,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"clientSecret":"******"},"discordAuth":{"enabled":false,"clientSecret":"******"},"twitterAuth":{"enabled":false,"clientSecret":"******"},"microsoftAuth":{"enabled":false,"clientSecret":"******"},"spotifyAuth":{"enabled":false,"clientSecret":"******"},"kakaoAuth":{"enabled":false,"clientSecret":"******"},"twitchAuth":{"enabled":false,"clientSecret":"******"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
-		t.Fatalf("Expected %v, got \n%v", expected, encodedStr)
+		t.Fatalf("Expected\n%v\ngot\n%v", expected, encodedStr)
 	}
 }
 
@@ -202,6 +222,10 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.GitlabAuth.Enabled = true
 	s.DiscordAuth.ClientId = "discord_test"
 	s.TwitterAuth.ClientId = "twitter_test"
+	s.MicrosoftAuth.ClientId = "microsoft_test"
+	s.SpotifyAuth.ClientId = "spotify_test"
+	s.KakaoAuth.ClientId = "kakao_test"
+	s.TwitchAuth.ClientId = "twitch_test"
 
 	result := s.NamedAuthProviderConfigs()
 
@@ -209,11 +233,24 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	encodedStr := string(encoded)
 
-	expected := `{"discord":{"enabled":false,"allowRegistrations":true,"clientId":"discord_test"},"facebook":{"enabled":false,"allowRegistrations":true,"clientId":"facebook_test"},"github":{"enabled":false,"allowRegistrations":true,"clientId":"github_test"},"gitlab":{"enabled":true,"allowRegistrations":true,"clientId":"gitlab_test"},"google":{"enabled":false,"allowRegistrations":true,"clientId":"google_test"},"twitter":{"enabled":false,"allowRegistrations":true,"clientId":"twitter_test"}}`
-
-	if encodedStr := string(encoded); encodedStr != expected {
-		t.Fatalf("Expected the same serialization, got %v", encodedStr)
+	expectedParts := []string{
+		`"discord":{"enabled":false,"clientId":"discord_test"}`,
+		`"facebook":{"enabled":false,"clientId":"facebook_test"}`,
+		`"github":{"enabled":false,"clientId":"github_test"}`,
+		`"gitlab":{"enabled":true,"clientId":"gitlab_test"}`,
+		`"google":{"enabled":false,"clientId":"google_test"}`,
+		`"microsoft":{"enabled":false,"clientId":"microsoft_test"}`,
+		`"spotify":{"enabled":false,"clientId":"spotify_test"}`,
+		`"twitter":{"enabled":false,"clientId":"twitter_test"}`,
+		`"kakao":{"enabled":false,"clientId":"kakao_test"}`,
+		`"twitch":{"enabled":false,"clientId":"twitch_test"}`,
+	}
+	for _, p := range expectedParts {
+		if !strings.Contains(encodedStr, p) {
+			t.Fatalf("Expected \n%s \nin \n%s", p, encodedStr)
+		}
 	}
 }
 
@@ -701,83 +738,24 @@ func TestAuthProviderConfigSetupProvider(t *testing.T) {
 	if err := c2.SetupProvider(provider); err != nil {
 		t.Error(err)
 	}
-	encoded, _ := json.Marshal(c2)
-	expected := `{"enabled":true,"allowRegistrations":false,"clientId":"test_ClientId","clientSecret":"test_ClientSecret","authUrl":"test_AuthUrl","tokenUrl":"test_TokenUrl","userApiUrl":"test_UserApiUrl"}`
-	if string(encoded) != expected {
-		t.Errorf("Expected %s, got %s", expected, string(encoded))
-	}
-}
 
-func TestEmailAuthConfigValidate(t *testing.T) {
-	scenarios := []struct {
-		config      core.EmailAuthConfig
-		expectError bool
-	}{
-		// zero values (disabled)
-		{
-			core.EmailAuthConfig{},
-			false,
-		},
-		// zero values (enabled)
-		{
-			core.EmailAuthConfig{Enabled: true},
-			true,
-		},
-		// invalid data (only the required)
-		{
-			core.EmailAuthConfig{
-				Enabled:           true,
-				MinPasswordLength: 4,
-			},
-			true,
-		},
-		// valid data (only the required)
-		{
-			core.EmailAuthConfig{
-				Enabled:           true,
-				MinPasswordLength: 5,
-			},
-			false,
-		},
-		// invalid data (both OnlyDomains and ExceptDomains set)
-		{
-			core.EmailAuthConfig{
-				Enabled:           true,
-				MinPasswordLength: 5,
-				OnlyDomains:       []string{"example.com", "test.com"},
-				ExceptDomains:     []string{"example.com", "test.com"},
-			},
-			true,
-		},
-		// valid data (only onlyDomains set)
-		{
-			core.EmailAuthConfig{
-				Enabled:           true,
-				MinPasswordLength: 5,
-				OnlyDomains:       []string{"example.com", "test.com"},
-			},
-			false,
-		},
-		// valid data (only exceptDomains set)
-		{
-			core.EmailAuthConfig{
-				Enabled:           true,
-				MinPasswordLength: 5,
-				ExceptDomains:     []string{"example.com", "test.com"},
-			},
-			false,
-		},
+	if provider.ClientId() != c2.ClientId {
+		t.Fatalf("Expected ClientId %s, got %s", c2.ClientId, provider.ClientId())
 	}
 
-	for i, scenario := range scenarios {
-		result := scenario.config.Validate()
+	if provider.ClientSecret() != c2.ClientSecret {
+		t.Fatalf("Expected ClientSecret %s, got %s", c2.ClientSecret, provider.ClientSecret())
+	}
 
-		if result != nil && !scenario.expectError {
-			t.Errorf("(%d) Didn't expect error, got %v", i, result)
-		}
+	if provider.AuthUrl() != c2.AuthUrl {
+		t.Fatalf("Expected AuthUrl %s, got %s", c2.AuthUrl, provider.AuthUrl())
+	}
 
-		if result == nil && scenario.expectError {
-			t.Errorf("(%d) Expected error, got nil", i)
-		}
+	if provider.UserApiUrl() != c2.UserApiUrl {
+		t.Fatalf("Expected UserApiUrl %s, got %s", c2.UserApiUrl, provider.UserApiUrl())
+	}
+
+	if provider.TokenUrl() != c2.TokenUrl {
+		t.Fatalf("Expected TokenUrl %s, got %s", c2.TokenUrl, provider.TokenUrl())
 	}
 }

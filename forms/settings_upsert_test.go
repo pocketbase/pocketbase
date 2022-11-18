@@ -12,16 +12,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-func TestSettingsUpsertPanic(t *testing.T) {
-	defer func() {
-		if recover() == nil {
-			t.Fatal("The form did not panic")
-		}
-	}()
-
-	forms.NewSettingsUpsert(nil)
-}
-
 func TestNewSettingsUpsert(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -38,29 +28,7 @@ func TestNewSettingsUpsert(t *testing.T) {
 	}
 }
 
-func TestSettingsUpsertValidate(t *testing.T) {
-	app, _ := tests.NewTestApp()
-	defer app.Cleanup()
-
-	form := forms.NewSettingsUpsert(app)
-
-	// check if settings validations are triggered
-	// (there are already individual tests for each setting)
-	form.Meta.AppName = ""
-	form.Logs.MaxDays = -10
-
-	// parse errors
-	err := form.Validate()
-	jsonResult, _ := json.Marshal(err)
-
-	expected := `{"logs":{"maxDays":"must be no less than 0"},"meta":{"appName":"cannot be blank"}}`
-
-	if string(jsonResult) != expected {
-		t.Errorf("Expected %v, got %v", expected, string(jsonResult))
-	}
-}
-
-func TestSettingsUpsertSubmit(t *testing.T) {
+func TestSettingsUpsertValidateAndSubmit(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -75,19 +43,19 @@ func TestSettingsUpsertSubmit(t *testing.T) {
 		{"{}", true, nil},
 		// failure - invalid data
 		{
-			`{"emailAuth": {"minPasswordLength": 1}, "logs": {"maxDays": -1}}`,
+			`{"meta": {"appName": ""}, "logs": {"maxDays": -1}}`,
 			false,
-			[]string{"emailAuth", "logs"},
+			[]string{"meta", "logs"},
 		},
 		// success - valid data (plain)
 		{
-			`{"emailAuth": {"minPasswordLength": 6}, "logs": {"maxDays": 0}}`,
+			`{"meta": {"appName": "test"}, "logs": {"maxDays": 0}}`,
 			false,
 			nil,
 		},
 		// success - valid data (encrypt)
 		{
-			`{"emailAuth": {"minPasswordLength": 6}, "logs": {"maxDays": 0}}`,
+			`{"meta": {"appName": "test"}, "logs": {"maxDays": 7}}`,
 			true,
 			nil,
 		},

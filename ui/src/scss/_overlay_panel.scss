@@ -41,10 +41,6 @@
         max-width: 100%;
     }
 
-    hr {
-        background: var(--baseAlt2Color);
-    }
-
     // header
     .panel-header {
         position: relative;
@@ -105,7 +101,7 @@
             margin-right: -10px;
         }
         .tabs-header {
-            margin-bottom: -23px;
+            margin-bottom: -24px;
         }
     }
 
@@ -117,6 +113,7 @@
         overflow-x: hidden;
         overflow-y: auto; /* fallback */
         overflow-y: overlay;
+        scroll-behavior: smooth;
     }
     .panel-header ~ .panel-content {
         padding-top: 5px;
@@ -182,6 +179,23 @@
             border-bottom: 1px solid var(--baseAlt1Color);
             .tabs-header {
                 border-bottom: 0;
+                .tab-item {
+                    border: 1px solid transparent;
+                    border-bottom: 0;
+                    &:hover,
+                    &:focus-visible {
+                        background: var(--baseAlt1Color);
+                    }
+                    &:after {
+                        content: none;
+                        display: none;;
+                    }
+                }
+                .tab-item.active {
+                    background: var(--baseColor);
+                    border-color: var(--baseAlt1Color);
+
+                }
             }
         }
         .panel-header ~ .panel-content {

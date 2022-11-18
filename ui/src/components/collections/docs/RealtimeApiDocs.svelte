@@ -10,94 +10,95 @@
     $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
 </script>
 
+<h3 class="m-b-sm">Realtime ({collection.name})</h3>
+<div class="content txt-lg m-b-sm">
+    <p>Subscribe to realtime changes via Server-Sent Events (SSE).</p>
+    <p>
+        Events are sent for <strong>create</strong>, <strong>update</strong>
+        and <strong>delete</strong> record operations (see "Event data format" section below).
+    </p>
+</div>
+<div class="alert alert-info m-t-10 m-b-sm">
+    <div class="icon">
+        <i class="ri-information-line" />
+    </div>
+    <div class="contet">
+        <p>
+            <strong>You could subscribe to a single record or to an entire collection.</strong>
+        </p>
+        <p>
+            When you subscribe to a <strong>single record</strong>, the collection's
+            <strong>ViewRule</strong> will be used to determine whether the subscriber has access to receive the
+            event message.
+        </p>
+        <p>
+            When you subscribe to an <strong>entire collection</strong>, the collection's
+            <strong>ListRule</strong> will be used to determine whether the subscriber has access to receive the
+            event message.
+        </p>
+    </div>
+</div>
+
+<SdkTabs
+    js={`
+        import PocketBase from 'pocketbase';
+
+        const pb = new PocketBase('${backendAbsUrl}');
+
+        ...
+
+        // (Optionally) authenticate
+        await pb.collection('users').authWithPassword('test@example.com', '123456');
+
+        // Subscribe to changes in any ${collection?.name} record
+        pb.collection('${collection?.name}').subscribe('*', function (e) {
+            console.log(e.record);
+        });
+
+        // Subscribe to changes only in the specified record
+        pb.collection('${collection?.name}').subscribe('RECORD_ID', function (e) {
+            console.log(e.record);
+        });
+
+        // Unsubscribe
+        pb.collection('${collection?.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${collection?.name}').unsubscribe('*'); // remove all '*' topic subscriptions
+        pb.collection('${collection?.name}').unsubscribe(); // remove all subscriptions in the collection
+    `}
+    dart={`
+        import 'package:pocketbase/pocketbase.dart';
+
+        final pb = PocketBase('${backendAbsUrl}');
+
+        ...
+
+        // (Optionally) authenticate
+        await pb.collection('users').authWithPassword('test@example.com', '123456');
+
+        // Subscribe to changes in any ${collection?.name} record
+        pb.collection('${collection?.name}').subscribe('*', (e) {
+            console.log(e.record);
+        });
+
+        // Subscribe to changes only in the specified record
+        pb.collection('${collection?.name}').subscribe('RECORD_ID', (e) {
+            console.log(e.record);
+        });
+
+        // Unsubscribe
+        pb.collection('${collection?.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${collection?.name}').unsubscribe('*'); // remove all '*' topic subscriptions
+        pb.collection('${collection?.name}').unsubscribe(); // remove all subscriptions in the collection
+    `}
+/>
+
+<h6 class="m-b-xs">API details</h6>
 <div class="alert">
     <strong class="label label-primary">SSE</strong>
     <div class="content">
         <p>/api/realtime</p>
     </div>
 </div>
-
-<div class="content m-b-base">
-    <p>Subscribe to realtime changes via Server-Sent Events (SSE).</p>
-    <p>
-        Events are sent for <strong>create</strong>, <strong>update</strong>
-        and <strong>delete</strong> record operations (see "Event data format" section below).
-    </p>
-    <div class="alert alert-info m-t-10">
-        <div class="icon">
-            <i class="ri-information-line" />
-        </div>
-        <div class="contet">
-            <p>
-                <strong>You could subscribe to a single record or to an entire collection.</strong>
-            </p>
-            <p>
-                When you subscribe to a <strong>single record</strong>, the collection's
-                <strong>ViewRule</strong> will be used to determine whether the subscriber has access to receive
-                the event message.
-            </p>
-            <p>
-                When you subscribe to an <strong>entire collection</strong>, the collection's
-                <strong>ListRule</strong> will be used to determine whether the subscriber has access to receive
-                the event message.
-            </p>
-        </div>
-    </div>
-</div>
-
-<div class="section-title">Client SDKs example</div>
-<SdkTabs
-    js={`
-        import PocketBase from 'pocketbase';
-
-        const client = new PocketBase('${backendAbsUrl}');
-
-        ...
-
-        // (Optionally) authenticate
-        client.users.authViaEmail('test@example.com', '123456');
-
-        // Subscribe to changes in any record from the collection
-        client.realtime.subscribe('${collection?.name}', function (e) {
-            console.log(e.record);
-        });
-
-        // Subscribe to changes in a single record
-        client.realtime.subscribe('${collection?.name}/RECORD_ID', function (e) {
-            console.log(e.record);
-        });
-
-        // Unsubscribe
-        client.realtime.unsubscribe() // remove all subscriptions
-        client.realtime.unsubscribe('${collection?.name}') // remove only the collection subscription
-        client.realtime.unsubscribe('${collection?.name}/RECORD_ID') // remove only the record subscription
-    `}
-    dart={`
-        import 'package:pocketbase/pocketbase.dart';
-
-        final client = PocketBase('${backendAbsUrl}');
-
-        ...
-
-        // (Optionally) authenticate
-        client.users.authViaEmail('test@example.com', '123456');
-
-        // Subscribe to changes in any record from the collection
-        client.realtime.subscribe('${collection?.name}', (e) {
-          print(e.record);
-        });
-
-        // Subscribe to changes in a single record
-        client.realtime.subscribe('${collection?.name}/RECORD_ID', (e) {
-          print(e.record);
-        });
-
-        // Unsubscribe
-        client.realtime.unsubscribe() // remove all subscriptions
-        client.realtime.unsubscribe('${collection?.name}') // remove only the collection subscription
-        client.realtime.unsubscribe('${collection?.name}/RECORD_ID') // remove only the record subscription
-    `}
-/>
 
 <div class="section-title">Event data format</div>
 <CodeBlock

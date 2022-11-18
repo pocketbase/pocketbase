@@ -4,6 +4,7 @@
     import { Admin } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
+    import tooltip from "@/actions/tooltip";
     import { setErrors } from "@/stores/errors";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
@@ -43,7 +44,6 @@
     }
 
     function load(model) {
-        setErrors({}); // reset errors
         admin = model?.clone ? model.clone() : new Admin();
         reset(); // reset form
     }
@@ -54,6 +54,7 @@
         avatar = admin?.avatar || 0;
         password = "";
         passwordConfirm = "";
+        setErrors({}); // reset errors
     }
 
     function save() {
@@ -146,6 +147,15 @@
                     <i class={CommonHelper.getFieldTypeIcon("primary")} />
                     <span class="txt">ID</span>
                 </label>
+                <div class="form-field-addon">
+                    <i
+                        class="ri-calendar-event-line txt-disabled"
+                        use:tooltip={{
+                            text: `Created: ${admin.created}\nUpdated: ${admin.updated}`,
+                            position: "left",
+                        }}
+                    />
+                </div>
                 <input type="text" id={uniqueId} value={admin.id} disabled />
             </Field>
         {/if}
@@ -154,22 +164,16 @@
             <p class="section-title">Avatar</p>
             <div class="flex flex-gap-xs flex-wrap">
                 {#each [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as index}
-                    <figure
-                        tabindex="0"
+                    <button
+                        type="button"
                         class="link-fade thumb thumb-circle {index == avatar ? 'thumb-active' : 'thumb-sm'}"
                         on:click={() => (avatar = index)}
-                        on:keydown={(e) => {
-                            if (e.code === "Enter" || e.code === "Space") {
-                                e.preventDefault();
-                                avatar = index;
-                            }
-                        }}
                     >
                         <img
                             src="{import.meta.env.BASE_URL}images/avatars/avatar{index}.svg"
                             alt="Avatar {index}"
                         />
-                    </figure>
+                    </button>
                 {/each}
             </div>
         </div>
@@ -234,7 +238,7 @@
                 <span />
                 <i class="ri-more-line" />
                 <Toggler class="dropdown dropdown-upside dropdown-left dropdown-nowrap">
-                    <button type="button" class="dropdown-item" on:click={() => deleteConfirm()}>
+                    <button type="button" class="dropdown-item txt-danger" on:click={() => deleteConfirm()}>
                         <i class="ri-delete-bin-7-line" />
                         <span class="txt">Delete</span>
                     </button>

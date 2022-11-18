@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
@@ -18,68 +20,86 @@ import (
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/rest"
+	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
 )
 
-// RecordUpsert specifies a [models.Record] upsert (create/update) form.
+// username value regex pattern
+var usernameRegex = regexp.MustCompile(`^[\w][\w\.]*$`)
+
+// RecordUpsert is a [models.Record] upsert (create/update) form.
 type RecordUpsert struct {
-	config RecordUpsertConfig
-	record *models.Record
+	app          core.App
+	dao          *daos.Dao
+	manageAccess bool
+	record       *models.Record
 
 	filesToDelete []string // names list
-	filesToUpload []*rest.UploadedFile
+	filesToUpload map[string][]*rest.UploadedFile
 
-	Id   string         `form:"id" json:"id"`
+	// base model fields
+	Id string `json:"id"`
+
+	// auth collection fields
+	// ---
+	Username        string `json:"username"`
+	Email           string `json:"email"`
+	EmailVisibility bool   `json:"emailVisibility"`
+	Verified        bool   `json:"verified"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
+	OldPassword     string `json:"oldPassword"`
+	// ---
+
 	Data map[string]any `json:"data"`
-}
-
-// RecordUpsertConfig is the [RecordUpsert] factory initializer config.
-//
-// NB! App is required struct member.
-type RecordUpsertConfig struct {
-	App core.App
-	Dao *daos.Dao
 }
 
 // NewRecordUpsert creates a new [RecordUpsert] form with initializer
 // config created from the provided [core.App] and [models.Record] instances
-// (for create you could pass a pointer to an empty Record - `models.NewRecord(collection)`).
+// (for create you could pass a pointer to an empty Record - models.NewRecord(collection)).
 //
-// If you want to submit the form as part of another transaction, use
-// [NewRecordUpsertWithConfig] with explicitly set Dao.
+// If you want to submit the form as part of a transaction,
+// you can change the default Dao via [SetDao()].
 func NewRecordUpsert(app core.App, record *models.Record) *RecordUpsert {
-	return NewRecordUpsertWithConfig(RecordUpsertConfig{
-		App: app,
-	}, record)
-}
-
-// NewRecordUpsertWithConfig creates a new [RecordUpsert] form
-// with the provided config and [models.Record] instance or panics on invalid configuration
-// (for create you could pass a pointer to an empty Record - `models.NewRecord(collection)`).
-func NewRecordUpsertWithConfig(config RecordUpsertConfig, record *models.Record) *RecordUpsert {
 	form := &RecordUpsert{
-		config:        config,
+		app:           app,
+		dao:           app.Dao(),
 		record:        record,
 		filesToDelete: []string{},
-		filesToUpload: []*rest.UploadedFile{},
+		filesToUpload: map[string][]*rest.UploadedFile{},
 	}
 
-	if form.config.App == nil || form.record == nil {
-		panic("Invalid initializer config or nil upsert model.")
-	}
-
-	if form.config.Dao == nil {
-		form.config.Dao = form.config.App.Dao()
-	}
-
-	form.Id = record.Id
-
-	form.Data = map[string]any{}
-	for _, field := range record.Collection().Schema.Fields() {
-		form.Data[field.Name] = record.GetDataValue(field.Name)
-	}
+	form.loadFormDefaults()
 
 	return form
+}
+
+// SetFullManageAccess sets the manageAccess bool flag of the current
+// form to enable/disable directly changing some system record fields
+// (often used with auth collection records).
+func (form *RecordUpsert) SetFullManageAccess(fullManageAccess bool) {
+	form.manageAccess = fullManageAccess
+}
+
+// SetDao replaces the default form Dao instance with the provided one.
+func (form *RecordUpsert) SetDao(dao *daos.Dao) {
+	form.dao = dao
+}
+
+func (form *RecordUpsert) loadFormDefaults() {
+	form.Id = form.record.Id
+
+	if form.record.Collection().IsAuth() {
+		form.Username = form.record.Username()
+		form.Email = form.record.Email()
+		form.EmailVisibility = form.record.EmailVisibility()
+		form.Verified = form.record.Verified()
+	}
+
+	form.Data = map[string]any{}
+	for _, field := range form.record.Collection().Schema.Fields() {
+		form.Data[field.Name] = form.record.Get(field.Name)
+	}
 }
 
 func (form *RecordUpsert) getContentType(r *http.Request) string {
@@ -92,26 +112,38 @@ func (form *RecordUpsert) getContentType(r *http.Request) string {
 	return t
 }
 
-func (form *RecordUpsert) extractRequestData(r *http.Request) (map[string]any, error) {
+func (form *RecordUpsert) extractRequestData(r *http.Request, keyPrefix string) (map[string]any, error) {
 	switch form.getContentType(r) {
 	case "application/json":
-		return form.extractJsonData(r)
+		return form.extractJsonData(r, keyPrefix)
 	case "multipart/form-data":
-		return form.extractMultipartFormData(r)
+		return form.extractMultipartFormData(r, keyPrefix)
 	default:
 		return nil, errors.New("Unsupported request Content-Type.")
 	}
 }
 
-func (form *RecordUpsert) extractJsonData(r *http.Request) (map[string]any, error) {
+func (form *RecordUpsert) extractJsonData(r *http.Request, keyPrefix string) (map[string]any, error) {
 	result := map[string]any{}
 
-	err := rest.ReadJsonBodyCopy(r, &result)
+	err := rest.CopyJsonBody(r, &result)
+
+	if keyPrefix != "" {
+		parts := strings.Split(keyPrefix, ".")
+		for _, part := range parts {
+			if result[part] == nil {
+				break
+			}
+			if v, ok := result[part].(map[string]any); ok {
+				result = v
+			}
+		}
+	}
 
 	return result, err
 }
 
-func (form *RecordUpsert) extractMultipartFormData(r *http.Request) (map[string]any, error) {
+func (form *RecordUpsert) extractMultipartFormData(r *http.Request, keyPrefix string) (map[string]any, error) {
 	result := map[string]any{}
 
 	// parse form data (if not already)
@@ -121,7 +153,14 @@ func (form *RecordUpsert) extractMultipartFormData(r *http.Request) (map[string]
 
 	arrayValueSupportTypes := schema.ArraybleFieldTypes()
 
-	for key, values := range r.PostForm {
+	form.filesToUpload = map[string][]*rest.UploadedFile{}
+
+	for fullKey, values := range r.PostForm {
+		key := fullKey
+		if keyPrefix != "" {
+			key = strings.TrimPrefix(key, keyPrefix+".")
+		}
+
 		if len(values) == 0 {
 			result[key] = nil
 			continue
@@ -135,6 +174,44 @@ func (form *RecordUpsert) extractMultipartFormData(r *http.Request) (map[string]
 		}
 	}
 
+	// load uploaded files (if any)
+	for _, field := range form.record.Collection().Schema.Fields() {
+		if field.Type != schema.FieldTypeFile {
+			continue // not a file field
+		}
+
+		key := field.Name
+		fullKey := key
+		if keyPrefix != "" {
+			fullKey = keyPrefix + "." + key
+		}
+
+		files, err := rest.FindUploadedFiles(r, fullKey)
+		if err != nil || len(files) == 0 {
+			if err != nil && err != http.ErrMissingFile && form.app.IsDebug() {
+				log.Printf("%q uploaded file error: %v\n", fullKey, err)
+			}
+
+			// skip invalid or missing file(s)
+			continue
+		}
+
+		options, ok := field.Options.(*schema.FileOptions)
+		if !ok {
+			continue
+		}
+
+		if form.filesToUpload[key] == nil {
+			form.filesToUpload[key] = []*rest.UploadedFile{}
+		}
+
+		if options.MaxSelect == 1 {
+			form.filesToUpload[key] = append(form.filesToUpload[key], files[0])
+		} else if options.MaxSelect > 1 {
+			form.filesToUpload[key] = append(form.filesToUpload[key], files...)
+		}
+	}
+
 	return result, nil
 }
 
@@ -144,35 +221,66 @@ func (form *RecordUpsert) normalizeData() error {
 			form.Data[field.Name] = field.PrepareValue(v)
 		}
 	}
-
 	return nil
 }
 
-// LoadData loads and normalizes json OR multipart/form-data request data.
+// LoadRequest extracts the json or multipart/form-data request data
+// and lods it into the form.
 //
 // File upload is supported only via multipart/form-data.
 //
-// To REPLACE previously uploaded file(s) you can suffix the field name
-// with the file index (eg. `myfile.0`) and set the new value.
-// For single file upload fields, you can skip the index and directly
-// assign the file value to the field name (eg. `myfile`).
-//
 // To DELETE previously uploaded file(s) you can suffix the field name
-// with the file index (eg. `myfile.0`) and set it to null or empty string.
+// with the file index or filename (eg. `myfile.0`) and set it to null or empty string.
 // For single file upload fields, you can skip the index and directly
-// reset the field using its field name (eg. `myfile`).
-func (form *RecordUpsert) LoadData(r *http.Request) error {
-	requestData, err := form.extractRequestData(r)
+// reset the field using its field name (eg. `myfile = null`).
+func (form *RecordUpsert) LoadRequest(r *http.Request, keyPrefix string) error {
+	requestData, err := form.extractRequestData(r, keyPrefix)
 	if err != nil {
 		return err
 	}
 
-	if id, ok := requestData["id"]; ok {
-		form.Id = cast.ToString(id)
+	return form.LoadData(requestData)
+}
+
+// LoadData loads and normalizes the provided data into the form.
+//
+// To DELETE previously uploaded file(s) you can suffix the field name
+// with the file index or filename (eg. `myfile.0`) and set it to null or empty string.
+// For single file upload fields, you can skip the index and directly
+// reset the field using its field name (eg. `myfile = null`).
+func (form *RecordUpsert) LoadData(requestData map[string]any) error {
+	// load base system fields
+	if v, ok := requestData["id"]; ok {
+		form.Id = cast.ToString(v)
 	}
 
-	// extend base data with the extracted one
-	extendedData := form.record.Data()
+	// load auth system fields
+	if form.record.Collection().IsAuth() {
+		if v, ok := requestData["username"]; ok {
+			form.Username = cast.ToString(v)
+		}
+		if v, ok := requestData["email"]; ok {
+			form.Email = cast.ToString(v)
+		}
+		if v, ok := requestData["emailVisibility"]; ok {
+			form.EmailVisibility = cast.ToBool(v)
+		}
+		if v, ok := requestData["verified"]; ok {
+			form.Verified = cast.ToBool(v)
+		}
+		if v, ok := requestData["password"]; ok {
+			form.Password = cast.ToString(v)
+		}
+		if v, ok := requestData["passwordConfirm"]; ok {
+			form.PasswordConfirm = cast.ToString(v)
+		}
+		if v, ok := requestData["oldPassword"]; ok {
+			form.OldPassword = cast.ToString(v)
+		}
+	}
+
+	// extend the record schema data with the request data
+	extendedData := form.record.SchemaData()
 	rawData, err := json.Marshal(requestData)
 	if err != nil {
 		return err
@@ -243,17 +351,8 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 		// Check for new uploaded file
 		// -----------------------------------------------------------
 
-		if form.getContentType(r) != "multipart/form-data" {
-			continue // file upload is supported only via multipart/form-data
-		}
-
-		files, err := rest.FindUploadedFiles(r, key)
-		if err != nil {
-			if form.config.App.IsDebug() {
-				log.Printf("%q uploaded file error: %v\n", key, err)
-			}
-
-			continue // skip invalid or missing file(s)
+		if len(form.filesToUpload[key]) == 0 {
+			continue
 		}
 
 		// refresh oldNames list
@@ -264,12 +363,10 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 			if len(oldNames) > 0 {
 				form.filesToDelete = list.ToUniqueStringSlice(append(form.filesToDelete, oldNames...))
 			}
-			form.filesToUpload = append(form.filesToUpload, files[0])
-			form.Data[key] = files[0].Name()
+			form.Data[key] = form.filesToUpload[key][0].Name()
 		} else if options.MaxSelect > 1 {
 			// append the id of each uploaded file instance
-			form.filesToUpload = append(form.filesToUpload, files...)
-			for _, file := range files {
+			for _, file := range form.filesToUpload[key] {
 				oldNames = append(oldNames, file.Name())
 			}
 			form.Data[key] = oldNames
@@ -282,7 +379,7 @@ func (form *RecordUpsert) LoadData(r *http.Request) error {
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *RecordUpsert) Validate() error {
 	// base form fields validator
-	baseFieldsErrors := validation.ValidateStruct(form,
+	baseFieldsRules := []*validation.FieldRules{
 		validation.Field(
 			&form.Id,
 			validation.When(
@@ -291,26 +388,159 @@ func (form *RecordUpsert) Validate() error {
 				validation.Match(idRegex),
 			).Else(validation.In(form.record.Id)),
 		),
-	)
-	if baseFieldsErrors != nil {
-		return baseFieldsErrors
+	}
+
+	// auth fields validators
+	if form.record.Collection().IsAuth() {
+		baseFieldsRules = append(baseFieldsRules,
+			validation.Field(
+				&form.Username,
+				// require only on update, because on create we fallback to auto generated username
+				validation.When(!form.record.IsNew(), validation.Required),
+				validation.Length(3, 100),
+				validation.Match(usernameRegex),
+				validation.By(form.checkUniqueUsername),
+			),
+			validation.Field(
+				&form.Email,
+				validation.When(
+					form.record.Collection().AuthOptions().RequireEmail,
+					validation.Required,
+				),
+				// don't allow direct email change (or unset) if the form doesn't have manage access permissions
+				// (aka. allow only admin or authorized auth models to directly update the field)
+				validation.When(
+					!form.record.IsNew() && !form.manageAccess,
+					validation.In(form.record.Email()),
+				),
+				validation.Length(1, 255),
+				is.EmailFormat,
+				validation.By(form.checkEmailDomain),
+				validation.By(form.checkUniqueEmail),
+			),
+			validation.Field(
+				&form.Verified,
+				// don't allow changing verified if the form doesn't have manage access permissions
+				// (aka. allow only admin or authorized auth models to directly change the field)
+				validation.When(
+					!form.manageAccess,
+					validation.In(form.record.Verified()),
+				),
+			),
+			validation.Field(
+				&form.Password,
+				validation.When(form.record.IsNew(), validation.Required),
+				validation.Length(form.record.Collection().AuthOptions().MinPasswordLength, 72),
+			),
+			validation.Field(
+				&form.PasswordConfirm,
+				validation.When(
+					(form.record.IsNew() || form.Password != ""),
+					validation.Required,
+				),
+				validation.By(validators.Compare(form.Password)),
+			),
+			validation.Field(
+				&form.OldPassword,
+				// require old password only on update when:
+				// - form.manageAccess is not set
+				// - changing the existing password
+				validation.When(
+					!form.record.IsNew() && !form.manageAccess && form.Password != "",
+					validation.Required,
+					validation.By(form.checkOldPassword),
+				),
+			),
+		)
+	}
+
+	if err := validation.ValidateStruct(form, baseFieldsRules...); err != nil {
+		return err
 	}
 
 	// record data validator
-	dataValidator := validators.NewRecordDataValidator(
-		form.config.Dao,
+	return validators.NewRecordDataValidator(
+		form.dao,
 		form.record,
 		form.filesToUpload,
-	)
-
-	return dataValidator.Validate(form.Data)
+	).Validate(form.Data)
 }
 
-// DrySubmit performs a form submit within a transaction and reverts it.
-// For actual record persistence, check the `form.Submit()` method.
-//
-// This method doesn't handle file uploads/deletes or trigger any app events!
-func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error {
+func (form *RecordUpsert) checkUniqueUsername(value any) error {
+	v, _ := value.(string)
+	if v == "" {
+		return nil
+	}
+
+	isUnique := form.dao.IsRecordValueUnique(
+		form.record.Collection().Id,
+		schema.FieldNameUsername,
+		v,
+		form.record.Id,
+	)
+	if !isUnique {
+		return validation.NewError("validation_invalid_username", "The username is invalid or already in use.")
+	}
+
+	return nil
+}
+
+func (form *RecordUpsert) checkUniqueEmail(value any) error {
+	v, _ := value.(string)
+	if v == "" {
+		return nil
+	}
+
+	isUnique := form.dao.IsRecordValueUnique(
+		form.record.Collection().Id,
+		schema.FieldNameEmail,
+		v,
+		form.record.Id,
+	)
+	if !isUnique {
+		return validation.NewError("validation_invalid_email", "The email is invalid or already in use.")
+	}
+
+	return nil
+}
+
+func (form *RecordUpsert) checkEmailDomain(value any) error {
+	val, _ := value.(string)
+	if val == "" {
+		return nil // nothing to check
+	}
+
+	domain := val[strings.LastIndex(val, "@")+1:]
+	only := form.record.Collection().AuthOptions().OnlyEmailDomains
+	except := form.record.Collection().AuthOptions().ExceptEmailDomains
+
+	// only domains check
+	if len(only) > 0 && !list.ExistInSlice(domain, only) {
+		return validation.NewError("validation_email_domain_not_allowed", "Email domain is not allowed.")
+	}
+
+	// except domains check
+	if len(except) > 0 && list.ExistInSlice(domain, except) {
+		return validation.NewError("validation_email_domain_not_allowed", "Email domain is not allowed.")
+	}
+
+	return nil
+}
+
+func (form *RecordUpsert) checkOldPassword(value any) error {
+	v, _ := value.(string)
+	if v == "" {
+		return nil // nothing to check
+	}
+
+	if !form.record.ValidatePassword(v) {
+		return validation.NewError("validation_invalid_old_password", "Missing or invalid old password.")
+	}
+
+	return nil
+}
+
+func (form *RecordUpsert) ValidateAndFill() error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -319,16 +549,67 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 
 	// custom insertion id can be set only on create
 	if isNew && form.Id != "" {
-		form.record.MarkAsNew()
 		form.record.SetId(form.Id)
+		form.record.MarkAsNew()
 	}
 
-	// bulk load form data
-	if err := form.record.Load(form.Data); err != nil {
+	// set auth fields
+	if form.record.Collection().IsAuth() {
+		// generate a default username during create (if missing)
+		if form.record.IsNew() && form.Username == "" {
+			baseUsername := form.record.Collection().Name + security.RandomStringWithAlphabet(5, "123456789")
+			form.Username = form.dao.SuggestUniqueAuthRecordUsername(form.record.Collection().Id, baseUsername)
+		}
+
+		if form.Username != "" {
+			if err := form.record.SetUsername(form.Username); err != nil {
+				return err
+			}
+		}
+
+		if isNew || form.manageAccess {
+			if err := form.record.SetEmail(form.Email); err != nil {
+				return err
+			}
+		}
+
+		if err := form.record.SetEmailVisibility(form.EmailVisibility); err != nil {
+			return err
+		}
+
+		if form.manageAccess {
+			if err := form.record.SetVerified(form.Verified); err != nil {
+				return err
+			}
+		}
+
+		if form.Password != "" {
+			if err := form.record.SetPassword(form.Password); err != nil {
+				return err
+			}
+		}
+	}
+
+	// bulk load the remaining form data
+	form.record.Load(form.Data)
+
+	return nil
+}
+
+// DrySubmit performs a form submit within a transaction and reverts it.
+// For actual record persistence, check the `form.Submit()` method.
+//
+// This method doesn't handle file uploads/deletes or trigger any app events!
+func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error {
+	isNew := form.record.IsNew()
+
+	if err := form.ValidateAndFill(); err != nil {
 		return err
 	}
 
-	return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
+	// use the default app.Dao to prevent changing the transaction form.Dao
+	// and causing "transaction has already been committed or rolled back" error
+	return form.app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
 		tx, ok := txDao.DB().(*dbx.Tx)
 		if !ok {
 			return errors.New("failed to get transaction db")
@@ -362,31 +643,20 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 // You can optionally provide a list of InterceptorFunc to further
 // modify the form behavior before persisting it.
 func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc) error {
-	if err := form.Validate(); err != nil {
-		return err
-	}
-
-	// custom insertion id can be set only on create
-	if form.record.IsNew() && form.Id != "" {
-		form.record.MarkAsNew()
-		form.record.SetId(form.Id)
-	}
-
-	// bulk load form data
-	if err := form.record.Load(form.Data); err != nil {
+	if err := form.ValidateAndFill(); err != nil {
 		return err
 	}
 
 	return runInterceptors(func() error {
-		return form.config.Dao.RunInTransaction(func(txDao *daos.Dao) error {
+		return form.dao.RunInTransaction(func(txDao *daos.Dao) error {
 			// persist record model
 			if err := txDao.SaveRecord(form.record); err != nil {
-				return err
+				return fmt.Errorf("Failed to save the record: %v", err)
 			}
 
 			// upload new files (if any)
 			if err := form.processFilesToUpload(); err != nil {
-				return err
+				return fmt.Errorf("Failed to process the upload files: %v", err)
 			}
 
 			// delete old files (if any)
@@ -402,30 +672,33 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc) error {
 
 func (form *RecordUpsert) processFilesToUpload() error {
 	if len(form.filesToUpload) == 0 {
-		return nil // nothing to upload
+		return nil // no parsed file fields
 	}
 
 	if !form.record.HasId() {
 		return errors.New("The record is not persisted yet.")
 	}
 
-	fs, err := form.config.App.NewFilesystem()
+	fs, err := form.app.NewFilesystem()
 	if err != nil {
 		return err
 	}
 	defer fs.Close()
 
 	var uploadErrors []error
-	for i := len(form.filesToUpload) - 1; i >= 0; i-- {
-		file := form.filesToUpload[i]
-		path := form.record.BaseFilesPath() + "/" + file.Name()
 
-		if err := fs.Upload(file.Bytes(), path); err == nil {
-			// remove the uploaded file from the list
-			form.filesToUpload = append(form.filesToUpload[:i], form.filesToUpload[i+1:]...)
-		} else {
-			// store the upload error
-			uploadErrors = append(uploadErrors, fmt.Errorf("File %d: %v", i, err))
+	for fieldKey := range form.filesToUpload {
+		for i := len(form.filesToUpload[fieldKey]) - 1; i >= 0; i-- {
+			file := form.filesToUpload[fieldKey][i]
+			path := form.record.BaseFilesPath() + "/" + file.Name()
+
+			if err := fs.UploadMultipart(file.Header(), path); err == nil {
+				// remove the uploaded file from the list
+				form.filesToUpload[fieldKey] = append(form.filesToUpload[fieldKey][:i], form.filesToUpload[fieldKey][i+1:]...)
+			} else {
+				// store the upload error
+				uploadErrors = append(uploadErrors, fmt.Errorf("File %d: %v", i, err))
+			}
 		}
 	}
 
@@ -445,7 +718,7 @@ func (form *RecordUpsert) processFilesToDelete() error {
 		return errors.New("The record is not persisted yet.")
 	}
 
-	fs, err := form.config.App.NewFilesystem()
+	fs, err := form.app.NewFilesystem()
 	if err != nil {
 		return err
 	}

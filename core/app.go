@@ -126,38 +126,38 @@ type App interface {
 	// admin password reset email was successfully sent.
 	OnMailerAfterAdminResetPasswordSend() *hook.Hook[*MailerAdminEvent]
 
-	// OnMailerBeforeUserResetPasswordSend hook is triggered right before
-	// sending a password reset email to a user.
+	// OnMailerBeforeRecordResetPasswordSend hook is triggered right before
+	// sending a password reset email to an auth record.
 	//
 	// Could be used to send your own custom email template if
 	// [hook.StopPropagation] is returned in one of its listeners.
-	OnMailerBeforeUserResetPasswordSend() *hook.Hook[*MailerUserEvent]
+	OnMailerBeforeRecordResetPasswordSend() *hook.Hook[*MailerRecordEvent]
 
-	// OnMailerAfterUserResetPasswordSend hook is triggered after
-	// a user password reset email was successfully sent.
-	OnMailerAfterUserResetPasswordSend() *hook.Hook[*MailerUserEvent]
+	// OnMailerAfterRecordResetPasswordSend hook is triggered after
+	// an auth record password reset email was successfully sent.
+	OnMailerAfterRecordResetPasswordSend() *hook.Hook[*MailerRecordEvent]
 
-	// OnMailerBeforeUserVerificationSend hook is triggered right before
-	// sending a verification email to a user.
+	// OnMailerBeforeRecordVerificationSend hook is triggered right before
+	// sending a verification email to an auth record.
 	//
 	// Could be used to send your own custom email template if
 	// [hook.StopPropagation] is returned in one of its listeners.
-	OnMailerBeforeUserVerificationSend() *hook.Hook[*MailerUserEvent]
+	OnMailerBeforeRecordVerificationSend() *hook.Hook[*MailerRecordEvent]
 
-	// OnMailerAfterUserVerificationSend hook is triggered after a user
-	// verification email was successfully sent.
-	OnMailerAfterUserVerificationSend() *hook.Hook[*MailerUserEvent]
+	// OnMailerAfterRecordVerificationSend hook is triggered after a
+	// verification email was successfully sent to an auth record.
+	OnMailerAfterRecordVerificationSend() *hook.Hook[*MailerRecordEvent]
 
-	// OnMailerBeforeUserChangeEmailSend hook is triggered right before
-	// sending a confirmation new address email to a a user.
+	// OnMailerBeforeRecordChangeEmailSend hook is triggered right before
+	// sending a confirmation new address email to an auth record.
 	//
 	// Could be used to send your own custom email template if
 	// [hook.StopPropagation] is returned in one of its listeners.
-	OnMailerBeforeUserChangeEmailSend() *hook.Hook[*MailerUserEvent]
+	OnMailerBeforeRecordChangeEmailSend() *hook.Hook[*MailerRecordEvent]
 
-	// OnMailerAfterUserChangeEmailSend hook is triggered after a user
-	// change address email was successfully sent.
-	OnMailerAfterUserChangeEmailSend() *hook.Hook[*MailerUserEvent]
+	// OnMailerAfterRecordChangeEmailSend hook is triggered after a
+	// verification email was successfully sent to an auth record.
+	OnMailerAfterRecordChangeEmailSend() *hook.Hook[*MailerRecordEvent]
 
 	// ---------------------------------------------------------------
 	// Realtime API event hooks
@@ -264,74 +264,31 @@ type App interface {
 	OnAdminAuthRequest() *hook.Hook[*AdminAuthEvent]
 
 	// ---------------------------------------------------------------
-	// User API event hooks
+	// Auth Record API event hooks
 	// ---------------------------------------------------------------
 
-	// OnUsersListRequest hook is triggered on each API Users list request.
+	// OnRecordAuthRequest hook is triggered on each successful API
+	// record authentication request (sign-in, token refresh, etc.).
+	//
+	// Could be used to additionally validate or modify the authenticated
+	// record data and token.
+	OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent]
+
+	// OnRecordListExternalAuthsRequest hook is triggered on each API record external auths list request.
 	//
 	// Could be used to validate or modify the response before returning it to the client.
-	OnUsersListRequest() *hook.Hook[*UsersListEvent]
+	OnRecordListExternalAuthsRequest() *hook.Hook[*RecordListExternalAuthsEvent]
 
-	// OnUserViewRequest hook is triggered on each API User view request.
-	//
-	// Could be used to validate or modify the response before returning it to the client.
-	OnUserViewRequest() *hook.Hook[*UserViewEvent]
-
-	// OnUserBeforeCreateRequest hook is triggered before each API User
-	// create request (after request data load and before model persistence).
-	//
-	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
-	OnUserBeforeCreateRequest() *hook.Hook[*UserCreateEvent]
-
-	// OnUserAfterCreateRequest hook is triggered after each
-	// successful API User create request.
-	OnUserAfterCreateRequest() *hook.Hook[*UserCreateEvent]
-
-	// OnUserBeforeUpdateRequest hook is triggered before each API User
-	// update request (after request data load and before model persistence).
-	//
-	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
-	OnUserBeforeUpdateRequest() *hook.Hook[*UserUpdateEvent]
-
-	// OnUserAfterUpdateRequest hook is triggered after each
-	// successful API User update request.
-	OnUserAfterUpdateRequest() *hook.Hook[*UserUpdateEvent]
-
-	// OnUserBeforeDeleteRequest hook is triggered before each API User
-	// delete request (after model load and before actual deletion).
-	//
-	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning [hook.StopPropagation]).
-	OnUserBeforeDeleteRequest() *hook.Hook[*UserDeleteEvent]
-
-	// OnUserAfterDeleteRequest hook is triggered after each
-	// successful API User delete request.
-	OnUserAfterDeleteRequest() *hook.Hook[*UserDeleteEvent]
-
-	// OnUserAuthRequest hook is triggered on each successful API User
-	// authentication request (sign-in, token refresh, etc.).
-	//
-	// Could be used to additionally validate or modify the
-	// authenticated user data and token.
-	OnUserAuthRequest() *hook.Hook[*UserAuthEvent]
-
-	// OnUserListExternalAuths hook is triggered on each API user's external auths list request.
-	//
-	// Could be used to validate or modify the response before returning it to the client.
-	OnUserListExternalAuths() *hook.Hook[*UserListExternalAuthsEvent]
-
-	// OnUserBeforeUnlinkExternalAuthRequest hook is triggered before each API user's
+	// OnRecordBeforeUnlinkExternalAuthRequest hook is triggered before each API record
 	// external auth unlink request (after models load and before the actual relation deletion).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different delete behavior (returning [hook.StopPropagation]).
-	OnUserBeforeUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent]
+	OnRecordBeforeUnlinkExternalAuthRequest() *hook.Hook[*RecordUnlinkExternalAuthEvent]
 
-	// OnUserAfterUnlinkExternalAuthRequest hook is triggered after each
-	// successful API user's external auth unlink request.
-	OnUserAfterUnlinkExternalAuthRequest() *hook.Hook[*UserUnlinkExternalAuthEvent]
+	// OnRecordAfterUnlinkExternalAuthRequest hook is triggered after each
+	// successful API record external auth unlink request.
+	OnRecordAfterUnlinkExternalAuthRequest() *hook.Hook[*RecordUnlinkExternalAuthEvent]
 
 	// ---------------------------------------------------------------
 	// Record API event hooks

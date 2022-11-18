@@ -6,14 +6,13 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/rest"
 )
 
-var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg"}
+var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg", "image/gif"}
 var defaultThumbSizes = []string{"100x100"}
 
-// BindFileApi registers the file api endpoints and the corresponding handlers.
-func BindFileApi(app core.App, rg *echo.Group) {
+// bindFileApi registers the file api endpoints and the corresponding handlers.
+func bindFileApi(app core.App, rg *echo.Group) {
 	api := fileApi{app: app}
 
 	subGroup := rg.Group("/files", ActivityLogger(app))
@@ -27,30 +26,30 @@ type fileApi struct {
 func (api *fileApi) download(c echo.Context) error {
 	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
 	if collection == nil {
-		return rest.NewNotFoundError("", nil)
+		return NewNotFoundError("", nil)
 	}
 
 	recordId := c.PathParam("recordId")
 	if recordId == "" {
-		return rest.NewNotFoundError("", nil)
+		return NewNotFoundError("", nil)
 	}
 
-	record, err := api.app.Dao().FindRecordById(collection, recordId, nil)
+	record, err := api.app.Dao().FindRecordById(collection.Id, recordId)
 	if err != nil {
-		return rest.NewNotFoundError("", err)
+		return NewNotFoundError("", err)
 	}
 
 	filename := c.PathParam("filename")
 
 	fileField := record.FindFileFieldByFile(filename)
 	if fileField == nil {
-		return rest.NewNotFoundError("", nil)
+		return NewNotFoundError("", nil)
 	}
 	options, _ := fileField.Options.(*schema.FileOptions)
 
 	fs, err := api.app.NewFilesystem()
 	if err != nil {
-		return rest.NewBadRequestError("Filesystem initialization failure.", err)
+		return NewBadRequestError("Filesystem initialization failure.", err)
 	}
 	defer fs.Close()
 
@@ -64,7 +63,7 @@ func (api *fileApi) download(c echo.Context) error {
 		// extract the original file meta attributes and check it existence
 		oAttrs, oAttrsErr := fs.Attributes(originalPath)
 		if oAttrsErr != nil {
-			return rest.NewNotFoundError("", err)
+			return NewNotFoundError("", err)
 		}
 
 		// check if it is an image
@@ -96,7 +95,7 @@ func (api *fileApi) download(c echo.Context) error {
 
 	return api.app.OnFileDownloadRequest().Trigger(event, func(e *core.FileDownloadEvent) error {
 		if err := fs.Serve(e.HttpContext.Response(), e.ServedPath, e.ServedName); err != nil {
-			return rest.NewNotFoundError("", err)
+			return NewNotFoundError("", err)
 		}
 
 		return nil

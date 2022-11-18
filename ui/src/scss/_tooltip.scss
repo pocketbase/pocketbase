@@ -19,17 +19,9 @@
     transition: opacity var(--baseAnimationSpeed),
                 visibility var(--baseAnimationSpeed),
                 transform var(--baseAnimationSpeed);
-    transform: translateY(2px);
+    transform: scale(0.98);
     white-space: pre-line;
     @include hide();
-
-    // positions
-    &.left {
-        transform: translateX(2px);
-    }
-    &.right  {
-        transform: translateX(-2px);
-    }
 
     // styles
     &.code {

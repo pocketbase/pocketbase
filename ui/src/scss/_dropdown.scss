@@ -9,7 +9,7 @@
     display: inline-block;
     vertical-align: top;
     padding: $spacing;
-    margin: 10px 0 0;
+    margin: 5px 0 0;
     width: auto;
     min-width: 140px;
     max-width: 450px;
@@ -90,7 +90,7 @@
     &.dropdown-upside {
         top: auto;
         bottom: 100%;
-        margin: 0 0 10px;
+        margin: 0 0 5px;
     }
     &.dropdown-left {
         right: auto;

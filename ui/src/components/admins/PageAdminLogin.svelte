@@ -3,7 +3,7 @@
     import FullPage from "@/components/base/FullPage.svelte";
     import ApiClient from "@/utils/ApiClient";
     import Field from "@/components/base/Field.svelte";
-    import { addErrorToast } from "@/stores/toasts";
+    import { addErrorToast, removeAllToasts } from "@/stores/toasts";
 
     const queryParams = new URLSearchParams($querystring);
 
@@ -18,8 +18,10 @@
 
         isLoading = true;
 
-        return ApiClient.admins.authViaEmail(email, password)
+        return ApiClient.admins
+            .authWithPassword(email, password)
             .then(() => {
+                removeAllToasts();
                 replace("/");
             })
             .catch(() => {
@@ -37,7 +39,7 @@
             <h4>Admin sign in</h4>
         </div>
 
-        <Field class="form-field required" name="email" let:uniqueId>
+        <Field class="form-field required" name="identity" let:uniqueId>
             <label for={uniqueId}>Email</label>
             <!-- svelte-ignore a11y-autofocus -->
             <input type="email" id={uniqueId} bind:value={email} required autofocus />

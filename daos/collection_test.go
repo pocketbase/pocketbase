@@ -3,6 +3,7 @@ package daos_test
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/daos"
@@ -24,6 +25,41 @@ func TestCollectionQuery(t *testing.T) {
 	}
 }
 
+func TestFindCollectionsByType(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	scenarios := []struct {
+		collectionType string
+		expectError    bool
+		expectTotal    int
+	}{
+		{"", false, 0},
+		{"unknown", false, 0},
+		{models.CollectionTypeAuth, false, 3},
+		{models.CollectionTypeBase, false, 4},
+	}
+
+	for i, scenario := range scenarios {
+		collections, err := app.Dao().FindCollectionsByType(scenario.collectionType)
+
+		hasErr := err != nil
+		if hasErr != scenario.expectError {
+			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, scenario.expectError, hasErr, err)
+		}
+
+		if len(collections) != scenario.expectTotal {
+			t.Errorf("(%d) Expected %d collections, got %d", i, scenario.expectTotal, len(collections))
+		}
+
+		for _, c := range collections {
+			if c.Type != scenario.collectionType {
+				t.Errorf("(%d) Expected collection with type %s, got %s: \n%v", i, scenario.collectionType, c.Type, c)
+			}
+		}
+	}
+}
+
 func TestFindCollectionByNameOrId(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -34,9 +70,9 @@ func TestFindCollectionByNameOrId(t *testing.T) {
 	}{
 		{"", true},
 		{"missing", true},
-		{"00000000-075d-49fe-9d09-ea7e951000dc", true},
-		{"3f2888f8-075d-49fe-9d09-ea7e951000dc", false},
-		{"demo", false},
+		{"wsmn24bux7wo113", false},
+		{"demo1", false},
+		{"DEMO1", false}, // case insensitive check
 	}
 
 	for i, scenario := range scenarios {
@@ -47,7 +83,7 @@ func TestFindCollectionByNameOrId(t *testing.T) {
 			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, scenario.expectError, hasErr, err)
 		}
 
-		if model != nil && model.Id != scenario.nameOrId && model.Name != scenario.nameOrId {
+		if model != nil && model.Id != scenario.nameOrId && !strings.EqualFold(model.Name, scenario.nameOrId) {
 			t.Errorf("(%d) Expected model with identifier %s, got %v", i, scenario.nameOrId, model)
 		}
 	}
@@ -63,9 +99,10 @@ func TestIsCollectionNameUnique(t *testing.T) {
 		expected  bool
 	}{
 		{"", "", false},
-		{"demo", "", false},
+		{"demo1", "", false},
+		{"Demo1", "", false},
 		{"new", "", true},
-		{"demo", "3f2888f8-075d-49fe-9d09-ea7e951000dc", true},
+		{"demo1", "wsmn24bux7wo113", true},
 	}
 
 	for i, scenario := range scenarios {
@@ -76,33 +113,11 @@ func TestIsCollectionNameUnique(t *testing.T) {
 	}
 }
 
-func TestFindCollectionsWithUserFields(t *testing.T) {
-	app, _ := tests.NewTestApp()
-	defer app.Cleanup()
-
-	result, err := app.Dao().FindCollectionsWithUserFields()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expectedNames := []string{"demo2", models.ProfileCollectionName}
-
-	if len(result) != len(expectedNames) {
-		t.Fatalf("Expected collections %v, got %v", expectedNames, result)
-	}
-
-	for i, col := range result {
-		if !list.ExistInSlice(col.Name, expectedNames) {
-			t.Errorf("(%d) Couldn't find %s in %v", i, col.Name, expectedNames)
-		}
-	}
-}
-
 func TestFindCollectionReferences(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	collection, err := app.Dao().FindCollectionByNameOrId("demo")
+	collection, err := app.Dao().FindCollectionByNameOrId("demo3")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,11 +131,18 @@ func TestFindCollectionReferences(t *testing.T) {
 		t.Fatalf("Expected 1 collection, got %d: %v", len(result), result)
 	}
 
-	expectedFields := []string{"onerel", "manyrels", "cascaderel"}
+	expectedFields := []string{
+		"rel_one_no_cascade",
+		"rel_one_no_cascade_required",
+		"rel_one_cascade",
+		"rel_many_no_cascade",
+		"rel_many_no_cascade_required",
+		"rel_many_cascade",
+	}
 
 	for col, fields := range result {
-		if col.Name != "demo2" {
-			t.Fatalf("Expected collection demo2, got %s", col.Name)
+		if col.Name != "demo4" {
+			t.Fatalf("Expected collection demo4, got %s", col.Name)
 		}
 		if len(fields) != len(expectedFields) {
 			t.Fatalf("Expected fields %v, got %v", expectedFields, fields)
@@ -138,7 +160,7 @@ func TestDeleteCollection(t *testing.T) {
 	defer app.Cleanup()
 
 	c0 := &models.Collection{}
-	c1, err := app.Dao().FindCollectionByNameOrId("demo")
+	c1, err := app.Dao().FindCollectionByNameOrId("clients")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,8 +168,12 @@ func TestDeleteCollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c3, err := app.Dao().FindCollectionByNameOrId(models.ProfileCollectionName)
+	c3, err := app.Dao().FindCollectionByNameOrId("demo1")
 	if err != nil {
+		t.Fatal(err)
+	}
+	c3.System = true
+	if err := app.Dao().Save(c3); err != nil {
 		t.Fatal(err)
 	}
 
@@ -156,8 +182,8 @@ func TestDeleteCollection(t *testing.T) {
 		expectError bool
 	}{
 		{c0, true},
-		{c1, true}, // is part of a reference
-		{c2, false},
+		{c1, false},
+		{c2, true}, // is part of a reference
 		{c3, true}, // system
 	}
 
@@ -177,6 +203,7 @@ func TestSaveCollectionCreate(t *testing.T) {
 
 	collection := &models.Collection{
 		Name: "new_test",
+		Type: models.CollectionTypeBase,
 		Schema: schema.NewSchema(
 			&schema.SchemaField{
 				Type: schema.FieldTypeText,
@@ -239,7 +266,7 @@ func TestSaveCollectionUpdate(t *testing.T) {
 	}
 
 	// check if the records table has the schema fields
-	expectedColumns := []string{"id", "created", "updated", "title_update", "test"}
+	expectedColumns := []string{"id", "created", "updated", "title_update", "test", "files"}
 	columns, err := app.Dao().GetTableColumns(collection.Name)
 	if err != nil {
 		t.Fatal(err)
@@ -262,31 +289,24 @@ func TestImportCollections(t *testing.T) {
 		beforeRecordsSync      func(txDao *daos.Dao, mappedImported, mappedExisting map[string]*models.Collection) error
 		expectError            bool
 		expectCollectionsCount int
+		beforeTestFunc         func(testApp *tests.TestApp, resultCollections []*models.Collection)
 		afterTestFunc          func(testApp *tests.TestApp, resultCollections []*models.Collection)
 	}{
 		{
 			name:                   "empty collections",
 			jsonData:               `[]`,
 			expectError:            true,
-			expectCollectionsCount: 5,
-		},
-		{
-			name: "check db constraints",
-			jsonData: `[
-				{"name": "import_test", "schema": []}
-			]`,
-			deleteMissing:          false,
-			expectError:            true,
-			expectCollectionsCount: 5,
+			expectCollectionsCount: 7,
 		},
 		{
 			name: "minimal collection import",
 			jsonData: `[
-				{"name": "import_test", "schema": [{"name":"test", "type": "text"}]}
+				{"name": "import_test1", "schema": [{"name":"test", "type": "text"}]},
+				{"name": "import_test2", "type": "auth"}
 			]`,
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 6,
+			expectCollectionsCount: 9,
 		},
 		{
 			name: "minimal collection import + failed beforeRecordsSync",
@@ -298,7 +318,7 @@ func TestImportCollections(t *testing.T) {
 			},
 			deleteMissing:          false,
 			expectError:            true,
-			expectCollectionsCount: 5,
+			expectCollectionsCount: 7,
 		},
 		{
 			name: "minimal collection import + successful beforeRecordsSync",
@@ -310,13 +330,13 @@ func TestImportCollections(t *testing.T) {
 			},
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 6,
+			expectCollectionsCount: 8,
 		},
 		{
 			name: "new + update + delete system collection",
 			jsonData: `[
 				{
-					"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
+					"id":"wsmn24bux7wo113",
 					"name":"demo",
 					"schema":[
 						{
@@ -346,50 +366,49 @@ func TestImportCollections(t *testing.T) {
 			]`,
 			deleteMissing:          true,
 			expectError:            true,
-			expectCollectionsCount: 5,
+			expectCollectionsCount: 7,
 		},
 		{
 			name: "new + update + delete non-system collection",
 			jsonData: `[
 				{
-					"id":"abe78266-fd4d-4aea-962d-8c0138ac522b",
-					"name":"profiles",
-					"system":true,
-					"listRule":"userId = @request.user.id",
-					"viewRule":"created > 'test_change'",
-					"createRule":"userId = @request.user.id",
-					"updateRule":"userId = @request.user.id",
-					"deleteRule":"userId = @request.user.id",
-					"schema":[
+					"id": "kpv709sk2lqbqk8",
+					"system": true,
+					"name": "nologin",
+					"type": "auth",
+					"options": {
+						"allowEmailAuth": false,
+						"allowOAuth2Auth": false,
+						"allowUsernameAuth": false,
+						"exceptEmailDomains": [],
+						"manageRule": "@request.auth.collectionName = 'users'",
+						"minPasswordLength": 8,
+						"onlyEmailDomains": [],
+						"requireEmail": true
+					},
+					"listRule": "",
+					"viewRule": "",
+					"createRule": "",
+					"updateRule": "",
+					"deleteRule": "",
+					"schema": [
 						{
-							"id":"koih1lqx",
-							"name":"userId",
-							"type":"user",
-							"system":true,
-							"required":true,
-							"unique":true,
-							"options":{
-								"maxSelect":1,
-								"cascadeDelete":true
-							}
-						},
-						{
-							"id":"69ycbg3q",
-							"name":"rel",
-							"type":"relation",
-							"system":false,
-							"required":false,
-							"unique":false,
-							"options":{
-								"maxSelect":2,
-								"collectionId":"abe78266-fd4d-4aea-962d-8c0138ac522b",
-								"cascadeDelete":false
+							"id": "x8zzktwe",
+							"name": "name",
+							"type": "text",
+							"system": false,
+							"required": false,
+							"unique": false,
+							"options": {
+								"min": null,
+								"max": null,
+								"pattern": ""
 							}
 						}
 					]
 				},
 				{
-					"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
+					"id":"wsmn24bux7wo113",
 					"name":"demo",
 					"schema":[
 						{
@@ -427,38 +446,8 @@ func TestImportCollections(t *testing.T) {
 			name: "test with deleteMissing: false",
 			jsonData: `[
 				{
-					"id":"abe78266-fd4d-4aea-962d-8c0138ac522b",
-					"name":"profiles",
-					"system":true,
-					"listRule":"userId = @request.user.id",
-					"viewRule":"created > 'test_change'",
-					"createRule":"userId = @request.user.id",
-					"updateRule":"userId = @request.user.id",
-					"deleteRule":"userId = @request.user.id",
-					"schema":[
-						{
-							"id":"69ycbg3q",
-							"name":"rel",
-							"type":"relation",
-							"system":false,
-							"required":false,
-							"unique":false,
-							"options":{
-								"maxSelect":2,
-								"collectionId":"abe78266-fd4d-4aea-962d-8c0138ac522b",
-								"cascadeDelete":true
-							}
-						},
-						{
-							"id":"abcd_import",
-							"name":"new_field",
-							"type":"bool"
-						}
-					]
-				},
-				{
-					"id":"3f2888f8-075d-49fe-9d09-ea7e951000dc",
-					"name":"demo",
+					"id":"wsmn24bux7wo113",
+					"name":"demo1",
 					"schema":[
 						{
 							"id":"_2hlxbmp",
@@ -506,14 +495,14 @@ func TestImportCollections(t *testing.T) {
 			]`,
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 6,
+			expectCollectionsCount: 8,
 			afterTestFunc: func(testApp *tests.TestApp, resultCollections []*models.Collection) {
 				expectedCollectionFields := map[string]int{
-					"profiles":   6,
-					"demo":       3,
-					"demo2":      14,
-					"demo3":      1,
-					"demo4":      6,
+					"nologin":    1,
+					"demo1":      15,
+					"demo2":      2,
+					"demo3":      2,
+					"demo4":      11,
 					"new_import": 1,
 				}
 				for name, expectedCount := range expectedCollectionFields {

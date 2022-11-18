@@ -9,6 +9,8 @@ import (
 
 // ParseUnverifiedJWT parses JWT token and returns its claims
 // but DOES NOT verify the signature.
+//
+// It verifies only the exp, iat and nbf claims.
 func ParseUnverifiedJWT(token string) (jwt.MapClaims, error) {
 	claims := jwt.MapClaims{}
 

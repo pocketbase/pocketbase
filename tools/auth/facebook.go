@@ -2,6 +2,7 @@ package auth
 
 import (
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/facebook"
 )
 
 var _ Provider = (*Facebook)(nil)
@@ -18,8 +19,8 @@ type Facebook struct {
 func NewFacebookProvider() *Facebook {
 	return &Facebook{&baseProvider{
 		scopes:     []string{"email"},
-		authUrl:    "https://www.facebook.com/dialog/oauth",
-		tokenUrl:   "https://graph.facebook.com/oauth/access_token",
+		authUrl:    facebook.Endpoint.AuthURL,
+		tokenUrl:   facebook.Endpoint.TokenURL,
 		userApiUrl: "https://graph.facebook.com/me?fields=name,email,picture.type(large)",
 	}}
 }

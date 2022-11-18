@@ -108,9 +108,20 @@ func (p *baseProvider) Client(token *oauth2.Token) *http.Client {
 
 // FetchRawUserData implements Provider.FetchRawUserData interface.
 func (p *baseProvider) FetchRawUserData(token *oauth2.Token, result any) error {
+	req, err := http.NewRequest("GET", p.userApiUrl, nil)
+	if err != nil {
+		return err
+	}
+
+	return p.sendRawUserDataRequest(req, token, result)
+}
+
+// sendRawUserDataRequest sends the specified request and
+// unmarshal the response body into result.
+func (p *baseProvider) sendRawUserDataRequest(req *http.Request, token *oauth2.Token, result any) error {
 	client := p.Client(token)
 
-	response, err := client.Get(p.userApiUrl)
+	response, err := client.Do(req)
 	if err != nil {
 		return err
 	}

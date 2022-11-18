@@ -33,9 +33,9 @@ type ModelEvent struct {
 // Mailer events data
 // -------------------------------------------------------------------
 
-type MailerUserEvent struct {
+type MailerRecordEvent struct {
 	MailClient mailer.Mailer
-	User       *models.User
+	Record     *models.Record
 	Meta       map[string]any
 }
 
@@ -143,51 +143,25 @@ type AdminAuthEvent struct {
 }
 
 // -------------------------------------------------------------------
-// User API events data
+// Auth Record API events data
 // -------------------------------------------------------------------
 
-type UsersListEvent struct {
+type RecordAuthEvent struct {
 	HttpContext echo.Context
-	Users       []*models.User
-	Result      *search.Result
-}
-
-type UserViewEvent struct {
-	HttpContext echo.Context
-	User        *models.User
-}
-
-type UserCreateEvent struct {
-	HttpContext echo.Context
-	User        *models.User
-}
-
-type UserUpdateEvent struct {
-	HttpContext echo.Context
-	User        *models.User
-}
-
-type UserDeleteEvent struct {
-	HttpContext echo.Context
-	User        *models.User
-}
-
-type UserAuthEvent struct {
-	HttpContext echo.Context
-	User        *models.User
+	Record      *models.Record
 	Token       string
 	Meta        any
 }
 
-type UserListExternalAuthsEvent struct {
+type RecordListExternalAuthsEvent struct {
 	HttpContext   echo.Context
-	User          *models.User
+	Record        *models.Record
 	ExternalAuths []*models.ExternalAuth
 }
 
-type UserUnlinkExternalAuthEvent struct {
+type RecordUnlinkExternalAuthEvent struct {
 	HttpContext  echo.Context
-	User         *models.User
+	Record       *models.Record
 	ExternalAuth *models.ExternalAuth
 }
 

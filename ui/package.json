@@ -1,37 +1,40 @@
 {
-    "name": "pocketbase-admin",
-    "private": true,
-    "scripts": {
-        "dev": "vite",
-        "build": "vite build",
-        "preview": "vite preview"
-    },
-    "prettier": {
-        "tabWidth": 4,
-        "printWidth": 110,
-        "svelteBracketNewLine": true
-    },
-    "devDependencies": {
-        "@codemirror/autocomplete": "^6.0.0",
-        "@codemirror/commands": "^6.0.0",
-        "@codemirror/lang-html": "^6.1.0",
-        "@codemirror/lang-javascript": "^6.0.2",
-        "@codemirror/lang-sql": "^6.3.0",
-        "@codemirror/language": "^6.0.0",
-        "@codemirror/legacy-modes": "^6.0.0",
-        "@codemirror/search": "^6.0.0",
-        "@codemirror/state": "^6.0.0",
-        "@codemirror/view": "^6.0.0",
-        "@sveltejs/vite-plugin-svelte": "^1.0.1",
-        "chart.js": "^3.7.1",
-        "chartjs-adapter-luxon": "^1.1.0",
-        "luxon": "^2.3.2",
-        "pocketbase": "file:../../js-sdk",
-        "prismjs": "^1.28.0",
-        "sass": "^1.45.0",
-        "svelte": "^3.44.0",
-        "svelte-flatpickr": "^3.2.6",
-        "svelte-spa-router": "^3.2.0",
-        "vite": "^3.0.0"
-    }
+  "name": "pocketbase-admin",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "prettier": {
+    "tabWidth": 4,
+    "printWidth": 110,
+    "svelteBracketNewLine": true
+  },
+  "devDependencies": {
+    "@codemirror/autocomplete": "^6.0.0",
+    "@codemirror/commands": "^6.0.0",
+    "@codemirror/lang-html": "^6.1.0",
+    "@codemirror/lang-javascript": "^6.0.2",
+    "@codemirror/lang-sql": "^6.3.0",
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/legacy-modes": "^6.0.0",
+    "@codemirror/search": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@sveltejs/vite-plugin-svelte": "^1.0.1",
+    "chart.js": "^3.7.1",
+    "chartjs-adapter-luxon": "^1.2.0",
+    "luxon": "^2.3.2",
+    "pocketbase": "file:../../js-sdk",
+    "prismjs": "^1.28.0",
+    "sass": "^1.45.0",
+    "svelte": "^3.44.0",
+    "svelte-flatpickr": "^3.2.6",
+    "svelte-spa-router": "^3.2.0",
+    "vite": "^3.0.0"
+  },
+  "dependencies": {
+    "@iskaa02/pocketbase": "file:../../js-sdk"
+  }
 }

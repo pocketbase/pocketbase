@@ -22,6 +22,7 @@
                 {
                     page: 1,
                     perPage: 30,
+                    totalPages: 1,
                     totalItems: 2,
                     items: [
                         CommonHelper.dummyCollectionRecord(collection),
@@ -56,20 +57,68 @@
                 `,
             });
         }
-
-        responses.push({
-            code: 404,
-            body: `
-                {
-                  "code": 404,
-                  "message": "The requested resource wasn't found.",
-                  "data": {}
-                }
-            `,
-        });
     }
 </script>
 
+<h3 class="m-b-sm">List/Search ({collection.name})</h3>
+<div class="content txt-lg m-b-sm">
+    <p>
+        Fetch a paginated <strong>{collection.name}</strong> records list, supporting sorting and filtering.
+    </p>
+</div>
+
+<SdkTabs
+    js={`
+        import PocketBase from 'pocketbase';
+
+        const pb = new PocketBase('${backendAbsUrl}');
+
+        ...
+
+        // fetch a paginated records list
+        const resultList = await pb.collection('${collection?.name}').getList(1, 50, {
+            filter: 'created >= "2022-01-01 00:00:00" && someFiled1 != someField2',
+        });
+
+        // you can also fetch all records at once via getFullList
+        const records = await pb.collection('${collection?.name}').getFullList(200 /* batch size */, {
+            sort: '-created',
+        });
+
+        // or fetch only the first record that matches the specified filter
+        const record = await pb.collection('${collection?.name}').getFirstListItem('someField="test"', {
+            expand: 'relField1,relField2.subRelField',
+        });
+    `}
+    dart={`
+        import 'package:pocketbase/pocketbase.dart';
+
+        final pb = PocketBase('${backendAbsUrl}');
+
+        ...
+
+        // fetch a paginated records list
+        final resultList = await pb.collection('${collection?.name}').getList(
+          page: 1,
+          perPage: 50,
+          filter: 'created >= "2022-01-01 00:00:00" && someFiled1 != someField2',
+        );
+
+        // you can also fetch all records at once via getFullList
+        final records = await pb.collection('${collection?.name}').getFullList(
+          batch: 200,
+          sort: '-created',
+        );
+
+        // or fetch only the first record that matches the specified filter
+        final record = await pb.collection('${collection?.name}').getFirstListItem(
+          'someField="test"',
+          expand: 'relField1,relField2.subRelField',
+        );
+    `}
+/>
+
+<h6 class="m-b-xs">API details</h6>
 <div class="alert alert-info">
     <strong class="label label-primary">GET</strong>
     <div class="content">
@@ -78,55 +127,12 @@
         </p>
     </div>
     {#if adminsOnly}
-        <p class="txt-hint txt-sm txt-right">Requires <code>Authorization: Admin TOKEN</code> header</p>
+        <p class="txt-hint txt-sm txt-right">Requires admin <code>Authorization:TOKEN</code> header</p>
     {/if}
 </div>
 
-<div class="content m-b-base">
-    <p>Fetch a paginated <strong>{collection.name}</strong> records list.</p>
-</div>
-
-<div class="section-title">Client SDKs example</div>
-<SdkTabs
-    js={`
-        import PocketBase from 'pocketbase';
-
-        const client = new PocketBase('${backendAbsUrl}');
-
-        ...
-
-        // fetch a paginated records list
-        const resultList = await client.records.getList('${collection?.name}', 1, 50, {
-            filter: 'created >= "2022-01-01 00:00:00"',
-        });
-
-        // alternatively you can also fetch all records at once via getFullList:
-        const records = await client.records.getFullList('${collection?.name}', 200 /* batch size */, {
-            sort: '-created',
-        });
-    `}
-    dart={`
-        import 'package:pocketbase/pocketbase.dart';
-
-        final client = PocketBase('${backendAbsUrl}');
-
-        ...
-
-        // fetch a paginated records list
-        final result = await client.records.getList(
-          '${collection?.name}',
-          page: 1,
-          perPage: 50,
-          filter: 'created >= "2022-01-01 00:00:00"',
-        );
-
-        // alternatively you can also fetch all records at once via getFullList:
-        final records = await client.records.getFullList('${collection?.name}', batch: 200, sort: '-created');
-    `}
-/>
-
 <div class="section-title">Query parameters</div>
-<table class="table-compact table-border m-b-lg">
+<table class="table-compact table-border m-b-base">
     <thead>
         <tr>
             <th>Param</th>
@@ -188,15 +194,12 @@
             </td>
             <td>
                 Auto expand record relations. Ex.:
-                <CodeBlock
-                    content={`
-                        ?expand=rel1,rel2.subrel21.subrel22
-                    `}
-                />
+                <CodeBlock content={`?expand=relField1,relField2.subRelField`} />
                 Supports up to 6-levels depth nested relations expansion. <br />
                 The expanded relations will be appended to each individual record under the
-                <code>@expand</code> property (eg. <code>{`"@expand": {"rel1": {...}, ...}`}</code>). Only the
-                relations that the user has permissions to <strong>view</strong> will be expanded.
+                <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>).
+                <br />
+                Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
     </tbody>

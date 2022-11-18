@@ -9,20 +9,19 @@ import (
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tokens"
-	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
-// BindAdminApi registers the admin api endpoints and the corresponding handlers.
-func BindAdminApi(app core.App, rg *echo.Group) {
+// bindAdminApi registers the admin api endpoints and the corresponding handlers.
+func bindAdminApi(app core.App, rg *echo.Group) {
 	api := adminApi{app: app}
 
 	subGroup := rg.Group("/admins", ActivityLogger(app))
-	subGroup.POST("/auth-via-email", api.emailAuth, RequireGuestOnly())
+	subGroup.POST("/auth-with-password", api.authWithPassword, RequireGuestOnly())
 	subGroup.POST("/request-password-reset", api.requestPasswordReset)
 	subGroup.POST("/confirm-password-reset", api.confirmPasswordReset)
-	subGroup.POST("/refresh", api.refresh, RequireAdminAuth())
+	subGroup.POST("/auth-refresh", api.authRefresh, RequireAdminAuth())
 	subGroup.GET("", api.list, RequireAdminAuth())
 	subGroup.POST("", api.create, RequireAdminAuthOnlyIfAny(app))
 	subGroup.GET("/:id", api.view, RequireAdminAuth())
@@ -37,7 +36,7 @@ type adminApi struct {
 func (api *adminApi) authResponse(c echo.Context, admin *models.Admin) error {
 	token, tokenErr := tokens.NewAdminAuthToken(api.app, admin)
 	if tokenErr != nil {
-		return rest.NewBadRequestError("Failed to create auth token.", tokenErr)
+		return NewBadRequestError("Failed to create auth token.", tokenErr)
 	}
 
 	event := &core.AdminAuthEvent{
@@ -54,24 +53,24 @@ func (api *adminApi) authResponse(c echo.Context, admin *models.Admin) error {
 	})
 }
 
-func (api *adminApi) refresh(c echo.Context) error {
+func (api *adminApi) authRefresh(c echo.Context) error {
 	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
 	if admin == nil {
-		return rest.NewNotFoundError("Missing auth admin context.", nil)
+		return NewNotFoundError("Missing auth admin context.", nil)
 	}
 
 	return api.authResponse(c, admin)
 }
 
-func (api *adminApi) emailAuth(c echo.Context) error {
+func (api *adminApi) authWithPassword(c echo.Context) error {
 	form := forms.NewAdminLogin(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occurred while loading the submitted data.", readErr)
+		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
 	admin, submitErr := form.Submit()
 	if submitErr != nil {
-		return rest.NewBadRequestError("Failed to authenticate.", submitErr)
+		return NewBadRequestError("Failed to authenticate.", submitErr)
 	}
 
 	return api.authResponse(c, admin)
@@ -80,11 +79,11 @@ func (api *adminApi) emailAuth(c echo.Context) error {
 func (api *adminApi) requestPasswordReset(c echo.Context) error {
 	form := forms.NewAdminPasswordResetRequest(api.app)
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("An error occurred while loading the submitted data.", err)
+		return NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
 	if err := form.Validate(); err != nil {
-		return rest.NewBadRequestError("An error occurred while validating the form.", err)
+		return NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
 	// run in background because we don't need to show the result
@@ -101,15 +100,15 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 	form := forms.NewAdminPasswordResetConfirm(api.app)
 	if readErr := c.Bind(form); readErr != nil {
-		return rest.NewBadRequestError("An error occurred while loading the submitted data.", readErr)
+		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	admin, submitErr := form.Submit()
+	_, submitErr := form.Submit()
 	if submitErr != nil {
-		return rest.NewBadRequestError("Failed to set new password.", submitErr)
+		return NewBadRequestError("Failed to set new password.", submitErr)
 	}
 
-	return api.authResponse(c, admin)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *adminApi) list(c echo.Context) error {
@@ -124,7 +123,7 @@ func (api *adminApi) list(c echo.Context) error {
 		ParseAndExec(c.QueryString(), &admins)
 
 	if err != nil {
-		return rest.NewBadRequestError("", err)
+		return NewBadRequestError("", err)
 	}
 
 	event := &core.AdminsListEvent{
@@ -141,12 +140,12 @@ func (api *adminApi) list(c echo.Context) error {
 func (api *adminApi) view(c echo.Context) error {
 	id := c.PathParam("id")
 	if id == "" {
-		return rest.NewNotFoundError("", nil)
+		return NewNotFoundError("", nil)
 	}
 
 	admin, err := api.app.Dao().FindAdminById(id)
 	if err != nil || admin == nil {
-		return rest.NewNotFoundError("", err)
+		return NewNotFoundError("", err)
 	}
 
 	event := &core.AdminViewEvent{
@@ -166,7 +165,7 @@ func (api *adminApi) create(c echo.Context) error {
 
 	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
+		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.AdminCreateEvent{
@@ -179,7 +178,7 @@ func (api *adminApi) create(c echo.Context) error {
 		return func() error {
 			return api.app.OnAdminBeforeCreateRequest().Trigger(event, func(e *core.AdminCreateEvent) error {
 				if err := next(); err != nil {
-					return rest.NewBadRequestError("Failed to create admin.", err)
+					return NewBadRequestError("Failed to create admin.", err)
 				}
 
 				return e.HttpContext.JSON(http.StatusOK, e.Admin)
@@ -197,19 +196,19 @@ func (api *adminApi) create(c echo.Context) error {
 func (api *adminApi) update(c echo.Context) error {
 	id := c.PathParam("id")
 	if id == "" {
-		return rest.NewNotFoundError("", nil)
+		return NewNotFoundError("", nil)
 	}
 
 	admin, err := api.app.Dao().FindAdminById(id)
 	if err != nil || admin == nil {
-		return rest.NewNotFoundError("", err)
+		return NewNotFoundError("", err)
 	}
 
 	form := forms.NewAdminUpsert(api.app, admin)
 
 	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
+		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.AdminUpdateEvent{
@@ -222,7 +221,7 @@ func (api *adminApi) update(c echo.Context) error {
 		return func() error {
 			return api.app.OnAdminBeforeUpdateRequest().Trigger(event, func(e *core.AdminUpdateEvent) error {
 				if err := next(); err != nil {
-					return rest.NewBadRequestError("Failed to update admin.", err)
+					return NewBadRequestError("Failed to update admin.", err)
 				}
 
 				return e.HttpContext.JSON(http.StatusOK, e.Admin)
@@ -240,12 +239,12 @@ func (api *adminApi) update(c echo.Context) error {
 func (api *adminApi) delete(c echo.Context) error {
 	id := c.PathParam("id")
 	if id == "" {
-		return rest.NewNotFoundError("", nil)
+		return NewNotFoundError("", nil)
 	}
 
 	admin, err := api.app.Dao().FindAdminById(id)
 	if err != nil || admin == nil {
-		return rest.NewNotFoundError("", err)
+		return NewNotFoundError("", err)
 	}
 
 	event := &core.AdminDeleteEvent{
@@ -255,7 +254,7 @@ func (api *adminApi) delete(c echo.Context) error {
 
 	handlerErr := api.app.OnAdminBeforeDeleteRequest().Trigger(event, func(e *core.AdminDeleteEvent) error {
 		if err := api.app.Dao().DeleteAdmin(e.Admin); err != nil {
-			return rest.NewBadRequestError("Failed to delete admin.", err)
+			return NewBadRequestError("Failed to delete admin.", err)
 		}
 
 		return e.HttpContext.NoContent(http.StatusNoContent)

@@ -2,7 +2,6 @@
 package migrations
 
 import (
-	"fmt"
 	"path/filepath"
 	"runtime"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/migrate"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 var AppMigrations migrate.MigrationsList
@@ -46,21 +46,10 @@ func init() {
 				[[updated]]         TEXT DEFAULT "" NOT NULL
 			);
 
-			CREATE TABLE {{_users}} (
-				[[id]]                     TEXT PRIMARY KEY,
-				[[verified]]               BOOLEAN DEFAULT FALSE NOT NULL,
-				[[email]]                  TEXT UNIQUE NOT NULL,
-				[[tokenKey]]               TEXT UNIQUE NOT NULL,
-				[[passwordHash]]           TEXT NOT NULL,
-				[[lastResetSentAt]]        TEXT DEFAULT "" NOT NULL,
-				[[lastVerificationSentAt]] TEXT DEFAULT "" NOT NULL,
-				[[created]]                TEXT DEFAULT "" NOT NULL,
-				[[updated]]                TEXT DEFAULT "" NOT NULL
-			);
-
 			CREATE TABLE {{_collections}} (
 				[[id]]         TEXT PRIMARY KEY,
 				[[system]]     BOOLEAN DEFAULT FALSE NOT NULL,
+				[[type]]       TEXT DEFAULT "base" NOT NULL,
 				[[name]]       TEXT UNIQUE NOT NULL,
 				[[schema]]     JSON DEFAULT "[]" NOT NULL,
 				[[listRule]]   TEXT DEFAULT NULL,
@@ -68,6 +57,7 @@ func init() {
 				[[createRule]] TEXT DEFAULT NULL,
 				[[updateRule]] TEXT DEFAULT NULL,
 				[[deleteRule]] TEXT DEFAULT NULL,
+				[[options]]    JSON DEFAULT "{}" NOT NULL,
 				[[created]]    TEXT DEFAULT "" NOT NULL,
 				[[updated]]    TEXT DEFAULT "" NOT NULL
 			);
@@ -79,6 +69,21 @@ func init() {
 				[[created]] TEXT DEFAULT "" NOT NULL,
 				[[updated]] TEXT DEFAULT "" NOT NULL
 			);
+
+			CREATE TABLE {{_externalAuths}} (
+				[[id]]           TEXT PRIMARY KEY,
+				[[collectionId]] TEXT NOT NULL,
+				[[recordId]]     TEXT NOT NULL,
+				[[provider]]     TEXT NOT NULL,
+				[[providerId]]   TEXT NOT NULL,
+				[[created]]      TEXT DEFAULT "" NOT NULL,
+				[[updated]]      TEXT DEFAULT "" NOT NULL,
+				---
+				FOREIGN KEY ([[collectionId]]) REFERENCES {{_collections}} ([[id]]) ON UPDATE CASCADE ON DELETE CASCADE
+			);
+
+			CREATE UNIQUE INDEX _externalAuths_record_provider_idx on {{_externalAuths}} ([[collectionId]], [[recordId]], [[provider]]);
+			CREATE UNIQUE INDEX _externalAuths_provider_providerId_idx on {{_externalAuths}} ([[provider]], [[providerId]]);
 		`).Execute()
 		if tablesErr != nil {
 			return tablesErr
@@ -86,62 +91,61 @@ func init() {
 
 		// inserts the system profiles collection
 		// -----------------------------------------------------------
-		profileOwnerRule := fmt.Sprintf("%s = @request.user.id", models.ProfileCollectionUserFieldName)
-		collection := &models.Collection{
-			Name:       models.ProfileCollectionName,
-			System:     true,
-			CreateRule: &profileOwnerRule,
-			ListRule:   &profileOwnerRule,
-			ViewRule:   &profileOwnerRule,
-			UpdateRule: &profileOwnerRule,
-			Schema: schema.NewSchema(
-				&schema.SchemaField{
-					Id:       "pbfielduser",
-					Name:     models.ProfileCollectionUserFieldName,
-					Type:     schema.FieldTypeUser,
-					Unique:   true,
-					Required: true,
-					System:   true,
-					Options: &schema.UserOptions{
-						MaxSelect:     1,
-						CascadeDelete: true,
-					},
-				},
-				&schema.SchemaField{
-					Id:      "pbfieldname",
-					Name:    "name",
-					Type:    schema.FieldTypeText,
-					Options: &schema.TextOptions{},
-				},
-				&schema.SchemaField{
-					Id:   "pbfieldavatar",
-					Name: "avatar",
-					Type: schema.FieldTypeFile,
-					Options: &schema.FileOptions{
-						MaxSelect: 1,
-						MaxSize:   5242880,
-						MimeTypes: []string{
-							"image/jpg",
-							"image/jpeg",
-							"image/png",
-							"image/svg+xml",
-							"image/gif",
-						},
-					},
-				},
-			),
-		}
-		collection.Id = "systemprofiles0"
-		collection.MarkAsNew()
+		usersCollection := &models.Collection{}
+		usersCollection.MarkAsNew()
+		usersCollection.Id = "_pb_users_auth_"
+		usersCollection.Name = "users"
+		usersCollection.Type = models.CollectionTypeAuth
+		usersCollection.ListRule = types.Pointer("id = @request.auth.id")
+		usersCollection.ViewRule = types.Pointer("id = @request.auth.id")
+		usersCollection.CreateRule = types.Pointer("")
+		usersCollection.UpdateRule = types.Pointer("id = @request.auth.id")
+		usersCollection.DeleteRule = types.Pointer("id = @request.auth.id")
 
-		return daos.New(db).SaveCollection(collection)
+		// set auth options
+		usersCollection.SetOptions(models.CollectionAuthOptions{
+			ManageRule:        nil,
+			AllowOAuth2Auth:   true,
+			AllowUsernameAuth: true,
+			AllowEmailAuth:    true,
+			MinPasswordLength: 8,
+			RequireEmail:      false,
+		})
+
+		// set optional default fields
+		usersCollection.Schema = schema.NewSchema(
+			&schema.SchemaField{
+				Id:      "users_name",
+				Type:    schema.FieldTypeText,
+				Name:    "name",
+				Options: &schema.TextOptions{},
+			},
+			&schema.SchemaField{
+				Id:   "users_avatar",
+				Type: schema.FieldTypeFile,
+				Name: "avatar",
+				Options: &schema.FileOptions{
+					MaxSelect: 1,
+					MaxSize:   5242880,
+					MimeTypes: []string{
+						"image/jpg",
+						"image/jpeg",
+						"image/png",
+						"image/svg+xml",
+						"image/gif",
+					},
+				},
+			},
+		)
+
+		return daos.New(db).SaveCollection(usersCollection)
 	}, func(db dbx.Builder) error {
 		tables := []string{
+			"users",
+			"_externalAuths",
 			"_params",
 			"_collections",
-			"_users",
 			"_admins",
-			models.ProfileCollectionName,
 		}
 
 		for _, name := range tables {

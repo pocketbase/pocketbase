@@ -1,13 +1,28 @@
 <script>
     export let date = "";
 
-    // note: manual trim the ms without converting to DateTime
-    // to help improving the rendering performance in large data sets
-    $: shortDate = date.length > 19 ? date.substring(0, 19) : date;
+    $: dateOnly = date ? date.substring(0, 10) : null;
+
+    $: timeOnly = date ? date.substring(10, 19) : null;
 </script>
 
 {#if date}
-    <span class="txt">{shortDate} UTC</span>
+    <div class="datetime">
+        <div class="date">{dateOnly}</div>
+        <div class="time">{timeOnly} UTC</div>
+    </div>
 {:else}
     <span class="txt txt-hint">N/A</span>
 {/if}
+
+<style>
+    .datetime {
+        width: 100%;
+        display: block;
+        line-height: var(--smLineHeight);
+    }
+    .time {
+        font-size: var(--smFontSize);
+        color: var(--txtHintColor);
+    }
+</style>

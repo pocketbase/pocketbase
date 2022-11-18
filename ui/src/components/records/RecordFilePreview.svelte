@@ -13,7 +13,7 @@
     $: hasPreview = CommonHelper.hasImageExtension(filename);
 
     $: if (hasPreview) {
-        originalUrl = ApiClient.records.getFileUrl(record, `${filename}`);
+        originalUrl = ApiClient.getFileUrl(record, `${filename}`);
     }
 
     $: thumbUrl = originalUrl ? originalUrl + "?thumb=100x100" : "";
