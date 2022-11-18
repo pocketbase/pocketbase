@@ -2,6 +2,7 @@
 package apis
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"log"
@@ -13,7 +14,6 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/ui"
 	"github.com/spf13/cast"
 )
@@ -43,7 +43,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			return
 		}
 
-		var apiErr *rest.ApiError
+		var apiErr *ApiError
 
 		switch v := err.(type) {
 		case *echo.HTTPError:
@@ -51,8 +51,8 @@ func InitApi(app core.App) (*echo.Echo, error) {
 				log.Println(v.Internal)
 			}
 			msg := fmt.Sprintf("%v", v.Message)
-			apiErr = rest.NewApiError(v.Code, msg, v)
-		case *rest.ApiError:
+			apiErr = NewApiError(v.Code, msg, v)
+		case *ApiError:
 			if app.IsDebug() && v.RawData() != nil {
 				log.Println(v.RawData())
 			}
@@ -61,7 +61,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			if err != nil && app.IsDebug() {
 				log.Println(err)
 			}
-			apiErr = rest.NewBadRequestError("", err)
+			apiErr = NewBadRequestError("", err)
 		}
 
 		// Send response
@@ -84,15 +84,15 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 	// default routes
 	api := e.Group("/api")
-	BindSettingsApi(app, api)
-	BindAdminApi(app, api)
-	BindUserApi(app, api)
-	BindCollectionApi(app, api)
-	BindRecordApi(app, api)
-	BindFileApi(app, api)
-	BindRealtimeApi(app, api)
-	BindLogsApi(app, api)
-	BindViewApi(app, api)
+	bindSettingsApi(app, api)
+	bindAdminApi(app, api)
+	bindCollectionApi(app, api)
+	bindRecordCrudApi(app, api)
+	bindRecordAuthApi(app, api)
+	bindFileApi(app, api)
+	bindRealtimeApi(app, api)
+	bindLogsApi(app, api)
+	bindViewApi(app, api)
 
 	// trigger the custom BeforeServe hook for the created api router
 	// allowing users to further adjust its options or register new routes
@@ -115,22 +115,31 @@ func InitApi(app core.App) (*echo.Echo, error) {
 // StaticDirectoryHandler is similar to `echo.StaticDirectoryHandler`
 // but without the directory redirect which conflicts with RemoveTrailingSlash middleware.
 //
+// If a file resource is missing and indexFallback is set, the request
+// will be forwarded to the base index.html (useful also for SPA).
+//
 // @see https://github.com/labstack/echo/issues/2211
-func StaticDirectoryHandler(fileSystem fs.FS, disablePathUnescaping bool) echo.HandlerFunc {
+func StaticDirectoryHandler(fileSystem fs.FS, indexFallback bool) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		p := c.PathParam("*")
-		if !disablePathUnescaping { // when router is already unescaping we do not want to do is twice
-			tmpPath, err := url.PathUnescape(p)
-			if err != nil {
-				return fmt.Errorf("failed to unescape path variable: %w", err)
-			}
-			p = tmpPath
+
+		// escape url path
+		tmpPath, err := url.PathUnescape(p)
+		if err != nil {
+			return fmt.Errorf("failed to unescape path variable: %w", err)
 		}
+		p = tmpPath
 
 		// fs.FS.Open() already assumes that file names are relative to FS root path and considers name with prefix `/` as invalid
 		name := filepath.ToSlash(filepath.Clean(strings.TrimPrefix(p, "/")))
 
-		return c.FileFS(name, fileSystem)
+		fileErr := c.FileFS(name, fileSystem)
+
+		if fileErr != nil && indexFallback && errors.Is(fileErr, echo.ErrNotFound) {
+			return c.FileFS("index.html", fileSystem)
+		}
+
+		return fileErr
 	}
 }
 

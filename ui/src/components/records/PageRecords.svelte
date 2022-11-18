@@ -5,6 +5,7 @@
         activeCollection,
         isCollectionsLoading,
         loadCollections,
+        changeActiveCollectionById,
     } from "@/stores/collections";
     import tooltip from "@/actions/tooltip";
     import { pageTitle, hideControls } from "@/stores/app";
@@ -13,7 +14,7 @@
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
-    import CollectionDocsPanel from "@/components/collections/docs/CollectionDocsPanel.svelte";
+    import CollectionDocsPanel from "@/components/collections/CollectionDocsPanel.svelte";
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordsList from "@/components/records/RecordsList.svelte";
 
@@ -29,7 +30,15 @@
     let sort = queryParams.get("sort") || "-created";
     let selectedCollectionId = queryParams.get("collectionId") || "";
 
-    $: viewableCollections = $collections.filter((c) => c.name != import.meta.env.PB_PROFILE_COLLECTION);
+    $: reactiveParams = new URLSearchParams($querystring);
+
+    $: if (
+        !$isCollectionsLoading &&
+        reactiveParams.has("collectionId") &&
+        reactiveParams.get("collectionId") != selectedCollectionId
+    ) {
+        changeActiveCollectionById(reactiveParams.get("collectionId"));
+    }
 
     // reset filter and sort on collection change
     $: if ($activeCollection?.id && selectedCollectionId != $activeCollection.id) {
@@ -62,7 +71,7 @@
             <h1>Loading collections...</h1>
         </div>
     </PageWrapper>
-{:else if !viewableCollections.length}
+{:else if !$collections.length}
     <PageWrapper center>
         <div class="placeholder-section m-b-base">
             <div class="icon">

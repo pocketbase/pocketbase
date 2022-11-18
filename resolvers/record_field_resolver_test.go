@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -14,111 +15,155 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	collection, err := app.Dao().FindCollectionByNameOrId("demo4")
+	authRecord, err := app.Dao().FindRecordById("users", "4q1xlclmfloku33")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	requestData := map[string]any{
-		"user": map[string]any{
-			"id": "4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
-			"profile": map[string]any{
-				"id":   "d13f60a4-5765-48c7-9e1d-3e782340f833",
-				"name": "test",
-			},
-		},
+	requestData := &models.RequestData{
+		AuthRecord: authRecord,
 	}
 
 	scenarios := []struct {
-		name        string
-		fields      []string
-		expectQuery string
+		name               string
+		collectionIdOrName string
+		fields             []string
+		allowHiddenFields  bool
+		expectQuery        string
 	}{
 		{
 			"missing field",
+			"demo4",
 			[]string{""},
+			false,
 			"SELECT `demo4`.* FROM `demo4`",
 		},
 		{
 			"non relation field",
+			"demo4",
 			[]string{"title"},
+			false,
 			"SELECT `demo4`.* FROM `demo4`",
 		},
 		{
 			"incomplete rel",
-			[]string{"onerel"},
+			"demo4",
+			[]string{"self_rel_one"},
+			false,
 			"SELECT `demo4`.* FROM `demo4`",
 		},
 		{
-			"single rel",
-			[]string{"onerel.title"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.onerel]]) THEN [[demo4.onerel]] ELSE json_array([[demo4.onerel]]) END) `demo4_onerel_je` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4_onerel.id]] = [[demo4_onerel_je.value]]",
+			"single rel (self rel)",
+			"demo4",
+			[]string{"self_rel_one.title"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.self_rel_one]]) THEN [[demo4.self_rel_one]] ELSE json_array([[demo4.self_rel_one]]) END) `demo4_self_rel_one_je` LEFT JOIN `demo4` `demo4_self_rel_one` ON [[demo4_self_rel_one.id]] = [[demo4_self_rel_one_je.value]]",
+		},
+		{
+			"single rel (other collection)",
+			"demo4",
+			[]string{"rel_one_cascade.title"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.rel_one_cascade]]) THEN [[demo4.rel_one_cascade]] ELSE json_array([[demo4.rel_one_cascade]]) END) `demo4_rel_one_cascade_je` LEFT JOIN `demo3` `demo4_rel_one_cascade` ON [[demo4_rel_one_cascade.id]] = [[demo4_rel_one_cascade_je.value]]",
 		},
 		{
 			"non-relation field + single rel",
-			[]string{"title", "onerel.title"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.onerel]]) THEN [[demo4.onerel]] ELSE json_array([[demo4.onerel]]) END) `demo4_onerel_je` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4_onerel.id]] = [[demo4_onerel_je.value]]",
+			"demo4",
+			[]string{"title", "self_rel_one.title"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.self_rel_one]]) THEN [[demo4.self_rel_one]] ELSE json_array([[demo4.self_rel_one]]) END) `demo4_self_rel_one_je` LEFT JOIN `demo4` `demo4_self_rel_one` ON [[demo4_self_rel_one.id]] = [[demo4_self_rel_one_je.value]]",
 		},
 		{
 			"nested incomplete rels",
-			[]string{"manyrels.onerel"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.manyrels]]) THEN [[demo4.manyrels]] ELSE json_array([[demo4.manyrels]]) END) `demo4_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4_manyrels.id]] = [[demo4_manyrels_je.value]]",
+			"demo4",
+			[]string{"self_rel_many.self_rel_one"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.self_rel_many]]) THEN [[demo4.self_rel_many]] ELSE json_array([[demo4.self_rel_many]]) END) `demo4_self_rel_many_je` LEFT JOIN `demo4` `demo4_self_rel_many` ON [[demo4_self_rel_many.id]] = [[demo4_self_rel_many_je.value]]",
 		},
 		{
 			"nested complete rels",
-			[]string{"manyrels.onerel.title"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.manyrels]]) THEN [[demo4.manyrels]] ELSE json_array([[demo4.manyrels]]) END) `demo4_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4_manyrels.id]] = [[demo4_manyrels_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_manyrels.onerel]]) THEN [[demo4_manyrels.onerel]] ELSE json_array([[demo4_manyrels.onerel]]) END) `demo4_manyrels_onerel_je` LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels_onerel.id]] = [[demo4_manyrels_onerel_je.value]]",
+			"demo4",
+			[]string{"self_rel_many.self_rel_one.title"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.self_rel_many]]) THEN [[demo4.self_rel_many]] ELSE json_array([[demo4.self_rel_many]]) END) `demo4_self_rel_many_je` LEFT JOIN `demo4` `demo4_self_rel_many` ON [[demo4_self_rel_many.id]] = [[demo4_self_rel_many_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_self_rel_many.self_rel_one]]) THEN [[demo4_self_rel_many.self_rel_one]] ELSE json_array([[demo4_self_rel_many.self_rel_one]]) END) `demo4_self_rel_many_self_rel_one_je` LEFT JOIN `demo4` `demo4_self_rel_many_self_rel_one` ON [[demo4_self_rel_many_self_rel_one.id]] = [[demo4_self_rel_many_self_rel_one_je.value]]",
 		},
 		{
 			"repeated nested rels",
-			[]string{"manyrels.onerel.manyrels.onerel.title"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.manyrels]]) THEN [[demo4.manyrels]] ELSE json_array([[demo4.manyrels]]) END) `demo4_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4_manyrels.id]] = [[demo4_manyrels_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_manyrels.onerel]]) THEN [[demo4_manyrels.onerel]] ELSE json_array([[demo4_manyrels.onerel]]) END) `demo4_manyrels_onerel_je` LEFT JOIN `demo4` `demo4_manyrels_onerel` ON [[demo4_manyrels_onerel.id]] = [[demo4_manyrels_onerel_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_manyrels_onerel.manyrels]]) THEN [[demo4_manyrels_onerel.manyrels]] ELSE json_array([[demo4_manyrels_onerel.manyrels]]) END) `demo4_manyrels_onerel_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels` ON [[demo4_manyrels_onerel_manyrels.id]] = [[demo4_manyrels_onerel_manyrels_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_manyrels_onerel_manyrels.onerel]]) THEN [[demo4_manyrels_onerel_manyrels.onerel]] ELSE json_array([[demo4_manyrels_onerel_manyrels.onerel]]) END) `demo4_manyrels_onerel_manyrels_onerel_je` LEFT JOIN `demo4` `demo4_manyrels_onerel_manyrels_onerel` ON [[demo4_manyrels_onerel_manyrels_onerel.id]] = [[demo4_manyrels_onerel_manyrels_onerel_je.value]]",
+			"demo4",
+			[]string{"self_rel_many.self_rel_one.self_rel_many.self_rel_one.title"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.self_rel_many]]) THEN [[demo4.self_rel_many]] ELSE json_array([[demo4.self_rel_many]]) END) `demo4_self_rel_many_je` LEFT JOIN `demo4` `demo4_self_rel_many` ON [[demo4_self_rel_many.id]] = [[demo4_self_rel_many_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_self_rel_many.self_rel_one]]) THEN [[demo4_self_rel_many.self_rel_one]] ELSE json_array([[demo4_self_rel_many.self_rel_one]]) END) `demo4_self_rel_many_self_rel_one_je` LEFT JOIN `demo4` `demo4_self_rel_many_self_rel_one` ON [[demo4_self_rel_many_self_rel_one.id]] = [[demo4_self_rel_many_self_rel_one_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_self_rel_many_self_rel_one.self_rel_many]]) THEN [[demo4_self_rel_many_self_rel_one.self_rel_many]] ELSE json_array([[demo4_self_rel_many_self_rel_one.self_rel_many]]) END) `demo4_self_rel_many_self_rel_one_self_rel_many_je` LEFT JOIN `demo4` `demo4_self_rel_many_self_rel_one_self_rel_many` ON [[demo4_self_rel_many_self_rel_one_self_rel_many.id]] = [[demo4_self_rel_many_self_rel_one_self_rel_many_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4_self_rel_many_self_rel_one_self_rel_many.self_rel_one]]) THEN [[demo4_self_rel_many_self_rel_one_self_rel_many.self_rel_one]] ELSE json_array([[demo4_self_rel_many_self_rel_one_self_rel_many.self_rel_one]]) END) `demo4_self_rel_many_self_rel_one_self_rel_many_self_rel_one_je` LEFT JOIN `demo4` `demo4_self_rel_many_self_rel_one_self_rel_many_self_rel_one` ON [[demo4_self_rel_many_self_rel_one_self_rel_many_self_rel_one.id]] = [[demo4_self_rel_many_self_rel_one_self_rel_many_self_rel_one_je.value]]",
 		},
 		{
 			"multiple rels",
-			[]string{"manyrels.title", "onerel.onefile"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.manyrels]]) THEN [[demo4.manyrels]] ELSE json_array([[demo4.manyrels]]) END) `demo4_manyrels_je` LEFT JOIN `demo4` `demo4_manyrels` ON [[demo4_manyrels.id]] = [[demo4_manyrels_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4.onerel]]) THEN [[demo4.onerel]] ELSE json_array([[demo4.onerel]]) END) `demo4_onerel_je` LEFT JOIN `demo4` `demo4_onerel` ON [[demo4_onerel.id]] = [[demo4_onerel_je.value]]",
+			"demo4",
+			[]string{"self_rel_many.title", "self_rel_one.onefile"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN json_each(CASE WHEN json_valid([[demo4.self_rel_many]]) THEN [[demo4.self_rel_many]] ELSE json_array([[demo4.self_rel_many]]) END) `demo4_self_rel_many_je` LEFT JOIN `demo4` `demo4_self_rel_many` ON [[demo4_self_rel_many.id]] = [[demo4_self_rel_many_je.value]] LEFT JOIN json_each(CASE WHEN json_valid([[demo4.self_rel_one]]) THEN [[demo4.self_rel_one]] ELSE json_array([[demo4.self_rel_one]]) END) `demo4_self_rel_one_je` LEFT JOIN `demo4` `demo4_self_rel_one` ON [[demo4_self_rel_one.id]] = [[demo4_self_rel_one_je.value]]",
 		},
 		{
 			"@collection join",
-			[]string{"@collection.demo.title", "@collection.demo2.text", "@collection.demo.file"},
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo` `__collection_demo` LEFT JOIN `demo2` `__collection_demo2`",
+			"demo4",
+			[]string{"@collection.demo1.text", "@collection.demo2.active", "@collection.demo1.file_one"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo1` `__collection_demo1` LEFT JOIN `demo2` `__collection_demo2`",
 		},
 		{
-			"static @request.user.profile fields",
-			[]string{"@request.user.id", "@request.user.profile.id", "@request.data.demo"},
+			"@request.auth fields",
+			"demo4",
+			[]string{"@request.auth.id", "@request.auth.username", "@request.auth.rel.title", "@request.data.demo"},
+			false,
 			"^" +
-				regexp.QuoteMeta("SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `profiles` `__user_profiles` ON [[__user_profiles.id]] =") +
-				" {:.*}$",
-		},
-		{
-			"relational @request.user.profile fields",
-			[]string{"@request.user.profile.rel.id", "@request.user.profile.rel.name"},
-			"^" +
-				regexp.QuoteMeta("SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `profiles` `__user_profiles` ON [[__user_profiles.id]] =") +
+				regexp.QuoteMeta("SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `users` `__auth_users` ON [[__auth_users.id]] =") +
 				" {:.*} " +
-				regexp.QuoteMeta("LEFT JOIN json_each(CASE WHEN json_valid([[__user_profiles.rel]]) THEN [[__user_profiles.rel]] ELSE json_array([[__user_profiles.rel]]) END) `__user_profiles_rel_je` LEFT JOIN `profiles` `__user_profiles_rel` ON [[__user_profiles_rel.id]] = [[__user_profiles_rel_je.value]]") +
+				regexp.QuoteMeta("LEFT JOIN json_each(CASE WHEN json_valid([[__auth_users.rel]]) THEN [[__auth_users.rel]] ELSE json_array([[__auth_users.rel]]) END) `__auth_users_rel_je` LEFT JOIN `demo2` `__auth_users_rel` ON [[__auth_users_rel.id]] = [[__auth_users_rel_je.value]]") +
 				"$",
+		},
+		{
+			"hidden field with system filters (ignore emailVisibility)",
+			"demo4",
+			[]string{"@collection.users.email", "@request.auth.email"},
+			false,
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `users` `__collection_users`",
+		},
+		{
+			"hidden field (add emailVisibility)",
+			"users",
+			[]string{"email"},
+			false,
+			"SELECT `users`.* FROM `users` WHERE [[users.emailVisibility]] = TRUE",
+		},
+		{
+			"hidden field (force ignore emailVisibility)",
+			"users",
+			[]string{"email"},
+			true,
+			"SELECT `users`.* FROM `users`",
 		},
 	}
 
 	for _, s := range scenarios {
+		collection, err := app.Dao().FindCollectionByNameOrId(s.collectionIdOrName)
+		if err != nil {
+			t.Errorf("[%s] Failed to load collection %s: %v", s.name, s.collectionIdOrName, err)
+		}
+
 		query := app.Dao().RecordQuery(collection)
 
-		r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData)
+		r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData, s.allowHiddenFields)
 		for _, field := range s.fields {
 			r.Resolve(field)
 		}
 
 		if err := r.UpdateQuery(query); err != nil {
-			t.Errorf("(%s) UpdateQuery failed with error %v", s.name, err)
+			t.Errorf("[%s] UpdateQuery failed with error %v", s.name, err)
 			continue
 		}
 
 		rawQuery := query.Build().SQL()
 
 		if !list.ExistInSliceWithRegex(rawQuery, []string{s.expectQuery}) {
-			t.Errorf("(%s) Expected query\n %v \ngot:\n %v", s.name, s.expectQuery, rawQuery)
+			t.Errorf("[%s] Expected query\n %v \ngot:\n %v", s.name, s.expectQuery, rawQuery)
 		}
 	}
 }
@@ -132,16 +177,16 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := map[string]any{
-		"user": map[string]any{
-			"id": "4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
-			"profile": map[string]any{
-				"id": "d13f60a4-5765-48c7-9e1d-3e782340f833",
-			},
-		},
+	authRecord, err := app.Dao().FindRecordById("users", "4q1xlclmfloku33")
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData)
+	requestData := &models.RequestData{
+		AuthRecord: authRecord,
+	}
+
+	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData, true)
 
 	scenarios := []struct {
 		fieldName   string
@@ -157,28 +202,31 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		{"updated", false, "[[demo4.updated]]"},
 		{"title", false, "[[demo4.title]]"},
 		{"title.test", true, ""},
-		{"manyrels", false, "[[demo4.manyrels]]"},
-		{"manyrels.", true, ""},
-		{"manyrels.unknown", true, ""},
-		{"manyrels.title", false, "[[demo4_manyrels.title]]"},
-		{"manyrels.onerel.manyrels.onefile", false, "[[demo4_manyrels_onerel_manyrels.onefile]]"},
-		// @request.user.profile relation join:
-		{"@request.user.profile.rel", false, "[[__user_profiles.rel]]"},
-		{"@request.user.profile.rel.name", false, "[[__user_profiles_rel.name]]"},
+		{"self_rel_many", false, "[[demo4.self_rel_many]]"},
+		{"self_rel_many.", true, ""},
+		{"self_rel_many.unknown", true, ""},
+		{"self_rel_many.title", false, "[[demo4_self_rel_many.title]]"},
+		{"self_rel_many.self_rel_one.self_rel_many.title", false, "[[demo4_self_rel_many_self_rel_one_self_rel_many.title]]"},
+		// json_extract
+		{"json_array.0", false, "JSON_EXTRACT([[demo4.json_array]], '$[0]')"},
+		{"json_object.a.b.c", false, "JSON_EXTRACT([[demo4.json_object]], '$.a.b.c')"},
+		// @request.auth relation join:
+		{"@request.auth.rel", false, "[[__auth_users.rel]]"},
+		{"@request.auth.rel.title", false, "[[__auth_users_rel.title]]"},
 		// @collection fieds:
 		{"@collect", true, ""},
 		{"collection.demo4.title", true, ""},
 		{"@collection", true, ""},
 		{"@collection.unknown", true, ""},
-		{"@collection.demo", true, ""},
-		{"@collection.demo.", true, ""},
-		{"@collection.demo.title", false, "[[__collection_demo.title]]"},
+		{"@collection.demo2", true, ""},
+		{"@collection.demo2.", true, ""},
+		{"@collection.demo2.title", false, "[[__collection_demo2.title]]"},
 		{"@collection.demo4.title", false, "[[__collection_demo4.title]]"},
 		{"@collection.demo4.id", false, "[[__collection_demo4.id]]"},
 		{"@collection.demo4.created", false, "[[__collection_demo4.created]]"},
 		{"@collection.demo4.updated", false, "[[__collection_demo4.updated]]"},
-		{"@collection.demo4.manyrels.missing", true, ""},
-		{"@collection.demo4.manyrels.onerel.manyrels.onerel.onefile", false, "[[__collection_demo4_manyrels_onerel_manyrels_onerel.onefile]]"},
+		{"@collection.demo4.self_rel_many.missing", true, ""},
+		{"@collection.demo4.self_rel_many.self_rel_one.self_rel_many.self_rel_one.title", false, "[[__collection_demo4_self_rel_many_self_rel_one_self_rel_many_self_rel_one.title]]"},
 	}
 
 	for _, s := range scenarios {
@@ -210,25 +258,24 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := map[string]any{
-		"method": "get",
-		"query": map[string]any{
+	authRecord, err := app.Dao().FindRecordById("users", "4q1xlclmfloku33")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	requestData := &models.RequestData{
+		Method: "get",
+		Query: map[string]any{
 			"a": 123,
 		},
-		"data": map[string]any{
+		Data: map[string]any{
 			"b": 456,
 			"c": map[string]int{"sub": 1},
 		},
-		"user": map[string]any{
-			"id": "4d0197cc-2b4a-3f83-a26b-d77bc8423d3c",
-			"profile": map[string]any{
-				"id":   "d13f60a4-5765-48c7-9e1d-3e782340f833",
-				"name": "test",
-			},
-		},
+		AuthRecord: authRecord,
 	}
 
-	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData)
+	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData, true)
 
 	scenarios := []struct {
 		fieldName        string
@@ -247,9 +294,13 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		{"@request.data.b", false, `456`},
 		{"@request.data.b.missing", false, ``},
 		{"@request.data.c", false, `"{\"sub\":1}"`},
-		{"@request.user", true, ""},
-		{"@request.user.id", false, `"4d0197cc-2b4a-3f83-a26b-d77bc8423d3c"`},
-		{"@request.user.profile", false, `"{\"id\":\"d13f60a4-5765-48c7-9e1d-3e782340f833\",\"name\":\"test\"}"`},
+		{"@request.auth", true, ""},
+		{"@request.auth.id", false, `"4q1xlclmfloku33"`},
+		{"@request.auth.email", false, `"test@example.com"`},
+		{"@request.auth.username", false, `"users75657"`},
+		{"@request.auth.verified", false, `false`},
+		{"@request.auth.emailVisibility", false, `false`},
+		{"@request.auth.missing", false, `NULL`},
 	}
 
 	for i, s := range scenarios {
@@ -269,7 +320,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		// ---
 		if len(params) == 0 {
 			if name != "NULL" {
-				t.Errorf("(%d) Expected 0 placeholder parameters, got %v", i, params)
+				t.Errorf("(%d) Expected 0 placeholder parameters for %v, got %v", i, name, params)
 			}
 			continue
 		}
@@ -277,7 +328,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		// existing key
 		// ---
 		if len(params) != 1 {
-			t.Errorf("(%d) Expected 1 placeholder parameter, got %v", i, params)
+			t.Errorf("(%d) Expected 1 placeholder parameter for %v, got %v", i, name, params)
 			continue
 		}
 
@@ -294,7 +345,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 
 		encodedParamValue, _ := json.Marshal(paramValue)
 		if string(encodedParamValue) != s.expectParamValue {
-			t.Errorf("(%d) Expected params %v, got %v", i, s.expectParamValue, string(encodedParamValue))
+			t.Errorf("(%d) Expected params %v for %v, got %v", i, s.expectParamValue, name, string(encodedParamValue))
 		}
 	}
 }

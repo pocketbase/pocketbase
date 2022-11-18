@@ -8,55 +8,41 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// AdminPasswordResetConfirm specifies an admin password reset confirmation form.
+// AdminPasswordResetConfirm is an admin password reset confirmation form.
 type AdminPasswordResetConfirm struct {
-	config AdminPasswordResetConfirmConfig
+	app core.App
+	dao *daos.Dao
 
 	Token           string `form:"token" json:"token"`
 	Password        string `form:"password" json:"password"`
 	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
 }
 
-// AdminPasswordResetConfirmConfig is the [AdminPasswordResetConfirm] factory initializer config.
-//
-// NB! App is required struct member.
-type AdminPasswordResetConfirmConfig struct {
-	App core.App
-	Dao *daos.Dao
-}
-
 // NewAdminPasswordResetConfirm creates a new [AdminPasswordResetConfirm]
-// form with initializer config created from the provided [core.App] instance.
+// form initialized with from the provided [core.App] instance.
 //
-// If you want to submit the form as part of another transaction, use
-// [NewAdminPasswordResetConfirmWithConfig] with explicitly set Dao.
+// If you want to submit the form as part of a transaction,
+// you can change the default Dao via [SetDao()].
 func NewAdminPasswordResetConfirm(app core.App) *AdminPasswordResetConfirm {
-	return NewAdminPasswordResetConfirmWithConfig(AdminPasswordResetConfirmConfig{
-		App: app,
-	})
+	return &AdminPasswordResetConfirm{
+		app: app,
+		dao: app.Dao(),
+	}
 }
 
-// NewAdminPasswordResetConfirmWithConfig creates a new [AdminPasswordResetConfirm]
-// form with the provided config or panics on invalid configuration.
-func NewAdminPasswordResetConfirmWithConfig(config AdminPasswordResetConfirmConfig) *AdminPasswordResetConfirm {
-	form := &AdminPasswordResetConfirm{config: config}
-
-	if form.config.App == nil {
-		panic("Missing required config.App instance.")
-	}
-
-	if form.config.Dao == nil {
-		form.config.Dao = form.config.App.Dao()
-	}
-
-	return form
+// SetDao replaces the form Dao instance with the provided one.
+//
+// This is useful if you want to use a specific transaction Dao instance
+// instead of the default app.Dao().
+func (form *AdminPasswordResetConfirm) SetDao(dao *daos.Dao) {
+	form.dao = dao
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *AdminPasswordResetConfirm) Validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(&form.Token, validation.Required, validation.By(form.checkToken)),
-		validation.Field(&form.Password, validation.Required, validation.Length(10, 100)),
+		validation.Field(&form.Password, validation.Required, validation.Length(10, 72)),
 		validation.Field(&form.PasswordConfirm, validation.Required, validation.By(validators.Compare(form.Password))),
 	)
 }
@@ -67,10 +53,7 @@ func (form *AdminPasswordResetConfirm) checkToken(value any) error {
 		return nil // nothing to check
 	}
 
-	admin, err := form.config.Dao.FindAdminByToken(
-		v,
-		form.config.App.Settings().AdminPasswordResetToken.Secret,
-	)
+	admin, err := form.dao.FindAdminByToken(v, form.app.Settings().AdminPasswordResetToken.Secret)
 	if err != nil || admin == nil {
 		return validation.NewError("validation_invalid_token", "Invalid or expired token.")
 	}
@@ -85,9 +68,9 @@ func (form *AdminPasswordResetConfirm) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	admin, err := form.config.Dao.FindAdminByToken(
+	admin, err := form.dao.FindAdminByToken(
 		form.Token,
-		form.config.App.Settings().AdminPasswordResetToken.Secret,
+		form.app.Settings().AdminPasswordResetToken.Secret,
 	)
 	if err != nil {
 		return nil, err
@@ -97,7 +80,7 @@ func (form *AdminPasswordResetConfirm) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	if err := form.config.Dao.SaveAdmin(admin); err != nil {
+	if err := form.dao.SaveAdmin(admin); err != nil {
 		return nil, err
 	}
 

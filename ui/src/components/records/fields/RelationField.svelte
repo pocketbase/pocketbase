@@ -7,9 +7,14 @@
     export let field = new SchemaField();
     export let value = undefined;
 
-    $: isMultiple = field.options?.maxSelect > 1;
+    $: isMultiple = field.options?.maxSelect != 1;
 
-    $: if (isMultiple && Array.isArray(value) && value.length > field.options.maxSelect) {
+    $: if (
+        isMultiple &&
+        Array.isArray(value) &&
+        field.options?.maxSelect &&
+        value.length > field.options.maxSelect
+    ) {
         value = value.slice(field.options.maxSelect - 1);
     }
 </script>

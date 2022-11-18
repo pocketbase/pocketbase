@@ -17,6 +17,12 @@ export default defineConfig({
             experimental: {
                 useVitePreprocess: true,
             },
+            onwarn: (warning, handler) => {
+                if (warning.code.startsWith('a11y-')) {
+                    return; // silence a11y warnings
+                }
+                handler(warning);
+            },
         }),
     ],
     resolve: {

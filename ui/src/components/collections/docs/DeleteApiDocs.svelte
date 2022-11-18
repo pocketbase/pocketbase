@@ -59,6 +59,33 @@
     }
 </script>
 
+<h3 class="m-b-sm">Delete ({collection.name})</h3>
+<div class="content txt-lg m-b-sm">
+    <p>Delete a single <strong>{collection.name}</strong> record.</p>
+</div>
+
+<SdkTabs
+    js={`
+        import PocketBase from 'pocketbase';
+
+        const pb = new PocketBase('${backendAbsUrl}');
+
+        ...
+
+        await pb.collection('${collection?.name}').delete('RECORD_ID');
+    `}
+    dart={`
+        import 'package:pocketbase/pocketbase.dart';
+
+        final pb = PocketBase('${backendAbsUrl}');
+
+        ...
+
+        await pb.collection('${collection?.name}').delete('RECORD_ID');
+    `}
+/>
+
+<h6 class="m-b-xs">API details</h6>
 <div class="alert alert-danger">
     <strong class="label label-primary">DELETE</strong>
     <div class="content">
@@ -67,38 +94,12 @@
         </p>
     </div>
     {#if adminsOnly}
-        <p class="txt-hint txt-sm txt-right">Requires <code>Authorization: Admin TOKEN</code> header</p>
+        <p class="txt-hint txt-sm txt-right">Requires admin <code>Authorization:TOKEN</code> header</p>
     {/if}
 </div>
 
-<div class="content m-b-base">
-    <p>Delete a single <strong>{collection.name}</strong> record.</p>
-</div>
-
-<div class="section-title">Client SDKs example</div>
-<SdkTabs
-    js={`
-        import PocketBase from 'pocketbase';
-
-        const client = new PocketBase('${backendAbsUrl}');
-
-        ...
-
-        await client.records.delete('${collection?.name}', 'RECORD_ID');
-    `}
-    dart={`
-        import 'package:pocketbase/pocketbase.dart';
-
-        final client = PocketBase('${backendAbsUrl}');
-
-        ...
-
-        await client.records.delete('${collection?.name}', 'RECORD_ID');
-    `}
-/>
-
 <div class="section-title">Path parameters</div>
-<table class="table-compact table-border m-b-lg">
+<table class="table-compact table-border m-b-base">
     <thead>
         <tr>
             <th>Param</th>

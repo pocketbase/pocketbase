@@ -4,20 +4,30 @@
     import { scale } from "svelte/transition";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
-    import { errors, setErrors } from "@/stores/errors";
+    import { errors, setErrors, removeError } from "@/stores/errors";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
-    import { addCollection, removeCollection, activeCollection } from "@/stores/collections";
+    import { addCollection, removeCollection } from "@/stores/collections";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import CollectionFieldsTab from "@/components/collections/CollectionFieldsTab.svelte";
     import CollectionRulesTab from "@/components/collections/CollectionRulesTab.svelte";
+    import CollectionAuthOptionsTab from "@/components/collections/CollectionAuthOptionsTab.svelte";
     import CollectionUpdateConfirm from "@/components/collections/CollectionUpdateConfirm.svelte";
 
     const TAB_FIELDS = "fields";
     const TAB_RULES = "api_rules";
+    const TAB_OPTIONS = "options";
+
+    const TYPE_BASE = "base";
+    const TYPE_AUTH = "auth";
+
+    const collectionTypes = {};
+    collectionTypes[TYPE_BASE] = "Base";
+    collectionTypes[TYPE_AUTH] = "Auth";
+
     const dispatch = createEventDispatcher();
 
     let collectionPanel;
@@ -41,6 +51,11 @@
     $: hasChanges = initialFormHash != calculateFormHash(collection);
 
     $: canSave = collection.isNew || hasChanges;
+
+    $: if (activeTab === TAB_OPTIONS && collection.type !== TYPE_AUTH) {
+        // reset selected tab
+        changeTab(TAB_FIELDS);
+    }
 
     export function changeTab(newTab) {
         activeTab = newTab;
@@ -111,11 +126,10 @@
                 );
                 addCollection(result);
 
-                if (collection.isNew) {
-                    $activeCollection = result;
-                }
-
-                dispatch("save", result);
+                dispatch("save", {
+                    isNew: collection.isNew,
+                    collection: result,
+                });
             })
             .catch((err) => {
                 ApiClient.errorResponseHandler(err);
@@ -163,11 +177,18 @@
     function calculateFormHash(m) {
         return JSON.stringify(m);
     }
+
+    function setCollectionType(t) {
+        collection.type = t;
+
+        // reset schema errors on type change
+        removeError("schema");
+    }
 </script>
 
 <OverlayPanel
     bind:this={collectionPanel}
-    class="overlay-panel-lg colored-header compact-header collection-panel"
+    class="overlay-panel-lg colored-header collection-panel"
     beforeHide={() => {
         if (hasChanges && confirmClose) {
             confirm("You have unsaved changes. Do you really want to close the panel?", () => {
@@ -191,7 +212,11 @@
             <button type="button" class="btn btn-sm btn-circle btn-secondary flex-gap-0">
                 <i class="ri-more-line" />
                 <Toggler class="dropdown dropdown-right m-t-5">
-                    <button type="button" class="dropdown-item closable" on:click={() => deleteConfirm()}>
+                    <button
+                        type="button"
+                        class="dropdown-item txt-danger closable"
+                        on:click|preventDefault|stopPropagation={() => deleteConfirm()}
+                    >
                         <i class="ri-delete-bin-7-line" />
                         <span class="txt">Delete</span>
                     </button>
@@ -206,11 +231,12 @@
             }}
         >
             <Field
-                class="form-field required m-b-0 {isSystemUpdate ? 'disabled' : ''}"
+                class="form-field collection-field-name required m-b-0 {isSystemUpdate ? 'disabled' : ''}"
                 name="name"
                 let:uniqueId
             >
                 <label for={uniqueId}>Name</label>
+
                 <!-- svelte-ignore a11y-autofocus -->
                 <input
                     type="text"
@@ -219,13 +245,42 @@
                     disabled={isSystemUpdate}
                     spellcheck="false"
                     autofocus={collection.isNew}
-                    placeholder={`eg. "posts"`}
+                    placeholder={collection.isAuth ? `eg. "users"` : `eg. "posts"`}
                     value={collection.name}
                     on:input={(e) => {
                         collection.name = CommonHelper.slugify(e.target.value);
                         e.target.value = collection.name;
                     }}
                 />
+
+                <div class="form-field-addon">
+                    <button
+                        type="button"
+                        class="btn btn-sm p-r-10 p-l-10 {collection.isNew ? 'btn-hint' : 'btn-secondary'}"
+                        disabled={!collection.isNew}
+                    >
+                        <!-- empty span for alignment -->
+                        <span />
+                        <span class="txt">Type: {collectionTypes[collection.type] || "N/A"}</span>
+                        {#if collection.isNew}
+                            <i class="ri-arrow-down-s-fill" />
+                            <Toggler class="dropdown dropdown-right dropdown-nowrap m-t-5">
+                                {#each Object.entries(collectionTypes) as [type, label]}
+                                    <button
+                                        type="button"
+                                        class="dropdown-item closable"
+                                        class:selected={type == collection.type}
+                                        on:click={() => setCollectionType(type)}
+                                    >
+                                        <i class={CommonHelper.getCollectionTypeIcon(type)} />
+                                        <span class="txt">{label} collection</span>
+                                    </button>
+                                {/each}
+                            </Toggler>
+                        {/if}
+                    </button>
+                </div>
+
                 {#if collection.system}
                     <div class="help-block">System collection</div>
                 {/if}
@@ -258,7 +313,7 @@
                 on:click={() => changeTab(TAB_RULES)}
             >
                 <span class="txt">API Rules</span>
-                {#if !CommonHelper.isEmpty($errors?.listRule) || !CommonHelper.isEmpty($errors?.viewRule) || !CommonHelper.isEmpty($errors?.createRule) || !CommonHelper.isEmpty($errors?.updateRule) || !CommonHelper.isEmpty($errors?.deleteRule)}
+                {#if !CommonHelper.isEmpty($errors?.listRule) || !CommonHelper.isEmpty($errors?.viewRule) || !CommonHelper.isEmpty($errors?.createRule) || !CommonHelper.isEmpty($errors?.updateRule) || !CommonHelper.isEmpty($errors?.deleteRule) || !CommonHelper.isEmpty($errors?.options?.manageRule)}
                     <i
                         class="ri-error-warning-fill txt-danger"
                         transition:scale|local={{ duration: 150, start: 0.7 }}
@@ -266,6 +321,24 @@
                     />
                 {/if}
             </button>
+
+            {#if collection.isAuth}
+                <button
+                    type="button"
+                    class="tab-item"
+                    class:active={activeTab === TAB_OPTIONS}
+                    on:click={() => changeTab(TAB_OPTIONS)}
+                >
+                    <span class="txt">Options</span>
+                    {#if !CommonHelper.isEmpty($errors?.options) && !$errors?.options?.manageRule}
+                        <i
+                            class="ri-error-warning-fill txt-danger"
+                            transition:scale|local={{ duration: 150, start: 0.7 }}
+                            use:tooltip={"Has errors"}
+                        />
+                    {/if}
+                </button>
+            {/if}
         </div>
     </svelte:fragment>
 
@@ -278,6 +351,12 @@
         {#if activeTab === TAB_RULES}
             <div class="tab-item active">
                 <CollectionRulesTab bind:collection />
+            </div>
+        {/if}
+
+        {#if collection.isAuth}
+            <div class="tab-item" class:active={activeTab === TAB_OPTIONS}>
+                <CollectionAuthOptionsTab bind:collection />
             </div>
         {/if}
     </div>

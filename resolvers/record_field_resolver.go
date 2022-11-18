@@ -3,6 +3,7 @@ package resolvers
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/pocketbase/dbx"
@@ -19,6 +20,20 @@ import (
 // ensure that `search.FieldResolver` interface is implemented
 var _ search.FieldResolver = (*RecordFieldResolver)(nil)
 
+// list of auth filter fields that don't require join with the auth
+// collection or any other extra checks to be resolved
+var plainRequestAuthFields = []string{
+	"@request.auth." + schema.FieldNameId,
+	"@request.auth." + schema.FieldNameCollectionId,
+	"@request.auth." + schema.FieldNameCollectionName,
+	"@request.auth." + schema.FieldNameUsername,
+	"@request.auth." + schema.FieldNameEmail,
+	"@request.auth." + schema.FieldNameEmailVisibility,
+	"@request.auth." + schema.FieldNameVerified,
+	"@request.auth." + schema.FieldNameCreated,
+	"@request.auth." + schema.FieldNameUpdated,
+}
+
 type join struct {
 	id    string
 	table string
@@ -29,39 +44,66 @@ type join struct {
 // managing Record model search fields.
 //
 // Usually used together with `search.Provider`. Example:
-//	resolver := resolvers.NewRecordFieldResolver(app.Dao(), myCollection, map[string]any{"test": 123})
+//	resolver := resolvers.NewRecordFieldResolver(
+//		app.Dao(),
+//		myCollection,
+//		&models.RequestData{...},
+//		true,
+//	)
 //	provider := search.NewProvider(resolver)
 //	...
 type RecordFieldResolver struct {
 	dao               *daos.Dao
 	baseCollection    *models.Collection
+	allowHiddenFields bool
 	allowedFields     []string
-	requestData       map[string]any
-	joins             []join // we cannot use a map because the insertion order is not preserved
 	loadedCollections []*models.Collection
+	joins             []join // we cannot use a map because the insertion order is not preserved
+	exprs             []dbx.Expression
+	requestData       *models.RequestData
+	staticRequestData map[string]any
 }
 
 // NewRecordFieldResolver creates and initializes a new `RecordFieldResolver`.
 func NewRecordFieldResolver(
 	dao *daos.Dao,
 	baseCollection *models.Collection,
-	requestData map[string]any,
+	requestData *models.RequestData,
+	allowHiddenFields bool,
 ) *RecordFieldResolver {
-	return &RecordFieldResolver{
+	r := &RecordFieldResolver{
 		dao:               dao,
 		baseCollection:    baseCollection,
 		requestData:       requestData,
+		allowHiddenFields: allowHiddenFields,
 		joins:             []join{},
+		exprs:             []dbx.Expression{},
 		loadedCollections: []*models.Collection{baseCollection},
 		allowedFields: []string{
 			`^\w+[\w\.]*$`,
 			`^\@request\.method$`,
-			`^\@request\.user\.\w+[\w\.]*$`,
+			`^\@request\.auth\.\w+[\w\.]*$`,
 			`^\@request\.data\.\w+[\w\.]*$`,
 			`^\@request\.query\.\w+[\w\.]*$`,
 			`^\@collection\.\w+\.\w+[\w\.]*$`,
 		},
 	}
+
+	// @todo remove after IN operator and multi-match filter enhancements
+	r.staticRequestData = map[string]any{}
+	if r.requestData != nil {
+		r.staticRequestData["method"] = r.requestData.Method
+		r.staticRequestData["query"] = r.requestData.Query
+		r.staticRequestData["data"] = r.requestData.Data
+		r.staticRequestData["auth"] = nil
+		if r.requestData.AuthRecord != nil {
+			r.requestData.AuthRecord.IgnoreEmailVisibility(true)
+			r.staticRequestData["auth"] = r.requestData.AuthRecord.PublicExport()
+			r.requestData.AuthRecord.IgnoreEmailVisibility(false)
+		}
+	}
+
+	return r
 }
 
 // UpdateQuery implements `search.FieldResolver` interface.
@@ -77,6 +119,12 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 		}
 	}
 
+	for _, expr := range r.exprs {
+		if expr != nil {
+			query.AndWhere(expr)
+		}
+	}
+
 	return nil
 }
 
@@ -86,7 +134,7 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 //	id
 //	project.screen.status
 //	@request.status
-//	@request.user.profile.someRelation.name
+//	@request.auth.someRelation.name
 //	@collection.product.name
 func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, placeholderParams dbx.Params, err error) {
 	if len(r.allowedFields) > 0 && !list.ExistInSliceWithRegex(fieldName, r.allowedFields) {
@@ -97,6 +145,11 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 
 	currentCollectionName := r.baseCollection.Name
 	currentTableAlias := inflector.Columnify(currentCollectionName)
+
+	// flag indicating whether to return null on missing field or return on an error
+	nullifyMisingField := false
+
+	allowHiddenFields := r.allowHiddenFields
 
 	// check for @collection field (aka. non-relational join)
 	// must be in the format "@collection.COLLECTION_NAME.FIELD[.FIELD2....]"
@@ -113,54 +166,63 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 			return "", nil, fmt.Errorf("Failed to load collection %q from field path %q.", currentCollectionName, fieldName)
 		}
 
-		r.addJoin(inflector.Columnify(collection.Name), currentTableAlias, nil)
+		// always allow hidden fields since the @collection.* filter is a system one
+		allowHiddenFields = true
+
+		r.registerJoin(inflector.Columnify(collection.Name), currentTableAlias, nil)
 
 		props = props[2:] // leave only the collection fields
 	} else if props[0] == "@request" {
-		// check for @request field
 		if len(props) == 1 {
 			return "", nil, fmt.Errorf("Invalid @request data field path in %q.", fieldName)
 		}
 
-		// not a profile relational field
-		if !strings.HasPrefix(fieldName, "@request.user.profile.") {
-			return r.resolveStaticRequestField(props[1:]...)
-		}
-
-		// resolve the profile collection fields
-		currentCollectionName = models.ProfileCollectionName
-		currentTableAlias = inflector.Columnify("__user_" + currentCollectionName)
-
-		collection, err := r.loadCollection(currentCollectionName)
-		if err != nil {
-			return "", nil, fmt.Errorf("Failed to load collection %q from field path %q.", currentCollectionName, fieldName)
-		}
-
-		profileIdPlaceholder, profileIdPlaceholderParam, err := r.resolveStaticRequestField("user", "profile", "id")
-		if err != nil {
-			return "", nil, fmt.Errorf("Failed to resolve @request.user.profile.id path in %q.", fieldName)
-		}
-		if strings.ToLower(profileIdPlaceholder) == "null" {
-			// the user doesn't have an associated profile
+		if r.requestData == nil {
 			return "NULL", nil, nil
 		}
 
-		// join the profile collection
-		r.addJoin(
+		// plain @request.* field
+		if !strings.HasPrefix(fieldName, "@request.auth.") || list.ExistInSlice(fieldName, plainRequestAuthFields) {
+			return r.resolveStaticRequestField(props[1:]...)
+		}
+
+		// always allow hidden fields since the @request.* filter is a system one
+		allowHiddenFields = true
+
+		// enable the ignore flag for missing @request.auth.* fields
+		// for consistency with @request.data.* and @request.query.*
+		nullifyMisingField = true
+
+		// resolve the auth collection fields
+		// ---
+		if r.requestData == nil || r.requestData.AuthRecord == nil || r.requestData.AuthRecord.Collection() == nil {
+			return "NULL", nil, nil
+		}
+
+		collection := r.requestData.AuthRecord.Collection()
+		r.loadedCollections = append(r.loadedCollections, collection)
+
+		currentCollectionName = collection.Name
+		currentTableAlias = "__auth_" + inflector.Columnify(currentCollectionName)
+
+		authIdParamKey := "auth" + security.PseudorandomString(5)
+		authIdParams := dbx.Params{authIdParamKey: r.requestData.AuthRecord.Id}
+		// ---
+
+		// join the auth collection
+		r.registerJoin(
 			inflector.Columnify(collection.Name),
 			currentTableAlias,
 			dbx.NewExp(fmt.Sprintf(
-				// aka. profiles.id = profileId
-				"[[%s.id]] = %s",
-				currentTableAlias,
-				profileIdPlaceholder,
-			), profileIdPlaceholderParam),
+				// aka. __auth_users.id = :userId
+				"[[%s.id]] = {:%s}",
+				inflector.Columnify(currentTableAlias),
+				authIdParamKey,
+			), authIdParams),
 		)
 
-		props = props[3:] // leave only the profile fields
+		props = props[2:] // leave only the auth relation fields
 	}
-
-	baseModelFields := schema.ReservedFieldNames()
 
 	totalProps := len(props)
 
@@ -170,19 +232,65 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 			return "", nil, fmt.Errorf("Failed to resolve field %q.", prop)
 		}
 
-		// base model prop (always available but not part of the collection schema)
-		if list.ExistInSlice(prop, baseModelFields) {
+		systemFieldNames := schema.BaseModelFieldNames()
+		if collection.IsAuth() {
+			systemFieldNames = append(
+				systemFieldNames,
+				schema.FieldNameUsername,
+				schema.FieldNameVerified,
+				schema.FieldNameEmailVisibility,
+				schema.FieldNameEmail,
+			)
+		}
+
+		// internal model prop (always available but not part of the collection schema)
+		if list.ExistInSlice(prop, systemFieldNames) {
+			// allow querying only auth records with emails marked as public
+			if prop == schema.FieldNameEmail && !allowHiddenFields {
+				r.registerExpr(dbx.NewExp(fmt.Sprintf(
+					"[[%s.%s]] = TRUE",
+					currentTableAlias,
+					inflector.Columnify(schema.FieldNameEmailVisibility),
+				)))
+			}
+
 			return fmt.Sprintf("[[%s.%s]]", currentTableAlias, inflector.Columnify(prop)), nil, nil
 		}
 
 		field := collection.Schema.GetFieldByName(prop)
 		if field == nil {
+			if nullifyMisingField {
+				return "NULL", nil, nil
+			}
+
 			return "", nil, fmt.Errorf("Unrecognized field %q.", prop)
 		}
 
 		// last prop
 		if i == totalProps-1 {
 			return fmt.Sprintf("[[%s.%s]]", currentTableAlias, inflector.Columnify(prop)), nil, nil
+		}
+
+		// check if it is a json field
+		if field.Type == schema.FieldTypeJson {
+			var jsonPath strings.Builder
+			jsonPath.WriteString("$")
+			for _, p := range props[i+1:] {
+				if _, err := strconv.Atoi(p); err == nil {
+					jsonPath.WriteString("[")
+					jsonPath.WriteString(inflector.Columnify(p))
+					jsonPath.WriteString("]")
+				} else {
+					jsonPath.WriteString(".")
+					jsonPath.WriteString(inflector.Columnify(p))
+				}
+			}
+			return fmt.Sprintf(
+				"JSON_EXTRACT([[%s.%s]], '%s')",
+				currentTableAlias,
+				inflector.Columnify(prop),
+				jsonPath.String(),
+			), nil, nil
 		}
 
 		// check if it is a relation field
@@ -210,7 +318,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 		jeTable := currentTableAlias + "_" + cleanFieldName + "_je"
 		jePair := currentTableAlias + "." + cleanFieldName
 
-		r.addJoin(
+		r.registerJoin(
 			fmt.Sprintf(
 				// note: the case is used to normalize value access for single and multiple relations.
 				`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END)`,
@@ -219,7 +327,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 			jeTable,
 			nil,
 		)
-		r.addJoin(
+		r.registerJoin(
 			inflector.Columnify(newCollectionName),
 			newTableAlias,
 			dbx.NewExp(fmt.Sprintf("[[%s.id]] = [[%s.value]]", newTableAlias, jeTable)),
@@ -235,7 +343,7 @@ func (r *RecordFieldResolver) Resolve(fieldName string) (resultName string, plac
 func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (resultName string, placeholderParams dbx.Params, err error) {
 	// ignore error because requestData is dynamic and some of the
 	// lookup keys may not be defined for the request
-	resultVal, _ := extractNestedMapVal(r.requestData, path...)
+	resultVal, _ := extractNestedMapVal(r.staticRequestData, path...)
 
 	switch v := resultVal.(type) {
 	case nil:
@@ -258,7 +366,7 @@ func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (resultN
 		resultVal = val
 	}
 
-	placeholder := "f" + security.RandomString(7)
+	placeholder := "f" + security.PseudorandomString(5)
 	name := fmt.Sprintf("{:%s}", placeholder)
 	params := dbx.Params{placeholder: resultVal}
 
@@ -291,7 +399,7 @@ func extractNestedMapVal(m map[string]any, keys ...string) (result any, err erro
 func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*models.Collection, error) {
 	// return already loaded
 	for _, collection := range r.loadedCollections {
-		if collection.Name == collectionNameOrId || collection.Id == collectionNameOrId {
+		if collection.Id == collectionNameOrId || strings.EqualFold(collection.Name, collectionNameOrId) {
 			return collection, nil
 		}
 	}
@@ -306,7 +414,7 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*models
 	return collection, nil
 }
 
-func (r *RecordFieldResolver) addJoin(tableName string, tableAlias string, on dbx.Expression) {
+func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, on dbx.Expression) {
 	tableExpr := fmt.Sprintf("%s %s", tableName, tableAlias)
 
 	join := join{
@@ -325,4 +433,8 @@ func (r *RecordFieldResolver) addJoin(tableName string, tableAlias string, on db
 
 	// register new join
 	r.joins = append(r.joins, join)
+}
+
+func (r *RecordFieldResolver) registerExpr(expr dbx.Expression) {
+	r.exprs = append(r.exprs, expr)
 }

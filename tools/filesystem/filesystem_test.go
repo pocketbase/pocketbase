@@ -1,8 +1,11 @@
 package filesystem_test
 
 import (
+	"bytes"
 	"image"
 	"image/png"
+	"mime/multipart"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -128,6 +131,46 @@ func TestFileSystemDeletePrefix(t *testing.T) {
 	}
 }
 
+func TestFileSystemUploadMultipart(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	// create multipart form file
+	body := new(bytes.Buffer)
+	mp := multipart.NewWriter(body)
+	w, err := mp.CreateFormFile("test", "test")
+	if err != nil {
+		t.Fatalf("Failed creating form file: %v", err)
+	}
+	w.Write([]byte("demo"))
+	mp.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/", body)
+	req.Header.Add("Content-Type", mp.FormDataContentType())
+
+	file, fh, err := req.FormFile("test")
+	if err != nil {
+		t.Fatalf("Failed to fetch form file: %v", err)
+	}
+	defer file.Close()
+	// ---
+
+	fs, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fs.Close()
+
+	uploadErr := fs.UploadMultipart(fh, "newdir/newkey.txt")
+	if uploadErr != nil {
+		t.Fatal(uploadErr)
+	}
+
+	if exists, _ := fs.Exists("newdir/newkey.txt"); !exists {
+		t.Fatalf("Expected newdir/newkey.txt to exist")
+	}
+}
+
 func TestFileSystemUpload(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
@@ -232,6 +275,10 @@ func TestFileSystemServe(t *testing.T) {
 			continue
 		}
 
+		if scenario.expectError {
+			continue
+		}
+
 		result := r.Result()
 
 		for hName, hValue := range scenario.expectHeaders {
@@ -243,6 +290,10 @@ func TestFileSystemServe(t *testing.T) {
 
 		if v := result.Header.Get("X-Frame-Options"); v != "" {
 			t.Errorf("(%s) Expected the X-Frame-Options header to be unset, got %v", scenario.path, v)
+		}
+
+		if v := result.Header.Get("Cache-Control"); v == "" {
+			t.Errorf("(%s) Expected Cache-Control header to be set, got empty string", scenario.path)
 		}
 	}
 }

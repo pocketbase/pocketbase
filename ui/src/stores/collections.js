@@ -6,6 +6,20 @@ export const collections          = writable([]);
 export const activeCollection     = writable({});
 export const isCollectionsLoading = writable(false);
 
+export function changeActiveCollectionById(collectionId) {
+    collections.update((list) => {
+        const found = CommonHelper.findByKey(list, "id", collectionId);
+
+        if (found) {
+            activeCollection.set(found);
+        } else if (list.length) {
+            activeCollection.set(list[0]);
+        }
+
+        return list;
+    });
+}
+
 // add or update collection
 export function addCollection(collection) {
     activeCollection.update((current) => {
@@ -14,7 +28,7 @@ export function addCollection(collection) {
 
     collections.update((list) => {
         CommonHelper.pushOrReplaceByKey(list, collection, "id");
-        return list;
+        return CommonHelper.sortCollections(list);
     });
 }
 
@@ -24,15 +38,13 @@ export function removeCollection(collection) {
 
         activeCollection.update((current) => {
             if (current.id === collection.id) {
-                // fallback to the first non-profile collection item
-                return list.find((c) => c.name != import.meta.env.PB_PROFILE_COLLECTION) || {}
+                return list[0];
             }
             return current;
         });
 
         return list;
     });
-
 }
 
 // load all collections (excluding the user profile)
@@ -46,17 +58,13 @@ export async function loadCollections(activeId = null) {
         "sort": "+created",
     })
         .then((items) => {
-            collections.set(items);
+            collections.set(CommonHelper.sortCollections(items));
 
             const item = activeId && CommonHelper.findByKey(items, "id", activeId);
             if (item) {
                 activeCollection.set(item);
             } else if (items.length) {
-                // fallback to the first non-profile collection item
-                const nonProfile = items.find((c) => c.name != import.meta.env.PB_PROFILE_COLLECTION)
-                if (nonProfile) {
-                    activeCollection.set(nonProfile);
-                }
+                activeCollection.set(items[0]);
             }
         })
         .catch((err) => {

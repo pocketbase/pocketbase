@@ -12,48 +12,31 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-// AdminPasswordResetRequest specifies an admin password reset request form.
+// AdminPasswordResetRequest is an admin password reset request form.
 type AdminPasswordResetRequest struct {
-	config AdminPasswordResetRequestConfig
+	app             core.App
+	dao             *daos.Dao
+	resendThreshold float64 // in seconds
 
 	Email string `form:"email" json:"email"`
 }
 
-// AdminPasswordResetRequestConfig is the [AdminPasswordResetRequest] factory initializer config.
-//
-// NB! App is required struct member.
-type AdminPasswordResetRequestConfig struct {
-	App             core.App
-	Dao             *daos.Dao
-	ResendThreshold float64 // in seconds
-}
-
 // NewAdminPasswordResetRequest creates a new [AdminPasswordResetRequest]
-// form with initializer config created from the provided [core.App] instance.
+// form initialized with from the provided [core.App] instance.
 //
-// If you want to submit the form as part of another transaction, use
-// [NewAdminPasswordResetRequestWithConfig] with explicitly set Dao.
+// If you want to submit the form as part of a transaction,
+// you can change the default Dao via [SetDao()].
 func NewAdminPasswordResetRequest(app core.App) *AdminPasswordResetRequest {
-	return NewAdminPasswordResetRequestWithConfig(AdminPasswordResetRequestConfig{
-		App:             app,
-		ResendThreshold: 120, // 2min
-	})
+	return &AdminPasswordResetRequest{
+		app:             app,
+		dao:             app.Dao(),
+		resendThreshold: 120, // 2min
+	}
 }
 
-// NewAdminPasswordResetRequestWithConfig creates a new [AdminPasswordResetRequest]
-// form with the provided config or panics on invalid configuration.
-func NewAdminPasswordResetRequestWithConfig(config AdminPasswordResetRequestConfig) *AdminPasswordResetRequest {
-	form := &AdminPasswordResetRequest{config: config}
-
-	if form.config.App == nil {
-		panic("Missing required config.App instance.")
-	}
-
-	if form.config.Dao == nil {
-		form.config.Dao = form.config.App.Dao()
-	}
-
-	return form
+// SetDao replaces the default form Dao instance with the provided one.
+func (form *AdminPasswordResetRequest) SetDao(dao *daos.Dao) {
+	form.dao = dao
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
@@ -77,23 +60,23 @@ func (form *AdminPasswordResetRequest) Submit() error {
 		return err
 	}
 
-	admin, err := form.config.Dao.FindAdminByEmail(form.Email)
+	admin, err := form.dao.FindAdminByEmail(form.Email)
 	if err != nil {
 		return err
 	}
 
 	now := time.Now().UTC()
 	lastResetSentAt := admin.LastResetSentAt.Time()
-	if now.Sub(lastResetSentAt).Seconds() < form.config.ResendThreshold {
+	if now.Sub(lastResetSentAt).Seconds() < form.resendThreshold {
 		return errors.New("You have already requested a password reset.")
 	}
 
-	if err := mails.SendAdminPasswordReset(form.config.App, admin); err != nil {
+	if err := mails.SendAdminPasswordReset(form.app, admin); err != nil {
 		return err
 	}
 
 	// update last sent timestamp
 	admin.LastResetSentAt = types.NowDateTime()
 
-	return form.config.Dao.SaveAdmin(admin)
+	return form.dao.SaveAdmin(admin)
 }

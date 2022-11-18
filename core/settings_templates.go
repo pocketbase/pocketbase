@@ -20,7 +20,7 @@ var defaultVerificationTemplate = EmailTemplate{
   Thanks,<br/>
   ` + EmailPlaceholderAppName + ` team
 </p>`,
-	ActionUrl: EmailPlaceholderAppUrl + "/_/#/users/confirm-verification/" + EmailPlaceholderToken,
+	ActionUrl: EmailPlaceholderAppUrl + "/_/#/auth/confirm-verification/" + EmailPlaceholderToken,
 }
 
 var defaultResetPasswordTemplate = EmailTemplate{
@@ -35,7 +35,7 @@ var defaultResetPasswordTemplate = EmailTemplate{
   Thanks,<br/>
   ` + EmailPlaceholderAppName + ` team
 </p>`,
-	ActionUrl: EmailPlaceholderAppUrl + "/_/#/users/confirm-password-reset/" + EmailPlaceholderToken,
+	ActionUrl: EmailPlaceholderAppUrl + "/_/#/auth/confirm-password-reset/" + EmailPlaceholderToken,
 }
 
 var defaultConfirmEmailChangeTemplate = EmailTemplate{
@@ -50,5 +50,5 @@ var defaultConfirmEmailChangeTemplate = EmailTemplate{
   Thanks,<br/>
   ` + EmailPlaceholderAppName + ` team
 </p>`,
-	ActionUrl: EmailPlaceholderAppUrl + "/_/#/users/confirm-email-change/" + EmailPlaceholderToken,
+	ActionUrl: EmailPlaceholderAppUrl + "/_/#/auth/confirm-email-change/" + EmailPlaceholderToken,
 }

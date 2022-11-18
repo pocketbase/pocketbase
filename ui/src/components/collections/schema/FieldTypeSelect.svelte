@@ -39,7 +39,7 @@
             icon: CommonHelper.getFieldTypeIcon("date"),
         },
         {
-            label: "Multiple choices",
+            label: "Select",
             value: "select",
             icon: CommonHelper.getFieldTypeIcon("select"),
         },
@@ -58,17 +58,11 @@
             value: "relation",
             icon: CommonHelper.getFieldTypeIcon("relation"),
         },
-        {
-            label: "User",
-            value: "user",
-            icon: CommonHelper.getFieldTypeIcon("user"),
-        },
     ];
 </script>
 
 <ObjectSelect
     class="field-type-select {classes}"
-    searchable
     items={types}
     bind:keyOfSelected={value}
     {...$$restProps}

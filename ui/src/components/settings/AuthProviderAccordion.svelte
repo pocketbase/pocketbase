@@ -11,7 +11,7 @@
     export let title;
     export let icon = "";
     export let config = {};
-    export let showSelfHostedFields = false;
+    export let optionsComponent;
 
     let accordion;
 
@@ -82,36 +82,9 @@
                 </Field>
             </div>
 
-            <div class="col-lg-12">
-                <Field class="form-field" name="{key}.allowRegistrations" let:uniqueId>
-                    <input type="checkbox" id={uniqueId} bind:checked={config.allowRegistrations} />
-                    <label for={uniqueId}>Allow registration for new users</label>
-                </Field>
-            </div>
-
-            {#if showSelfHostedFields}
+            {#if optionsComponent}
                 <div class="col-lg-12">
-                    <div class="section-title">Optional endpoints (if you self host the OAUTH2 service)</div>
-                    <div class="grid">
-                        <div class="col-lg-4">
-                            <Field class="form-field" name="{key}.authUrl" let:uniqueId>
-                                <label for={uniqueId}>Custom Auth URL</label>
-                                <input type="url" id={uniqueId} bind:value={config.authUrl} />
-                            </Field>
-                        </div>
-                        <div class="col-lg-4">
-                            <Field class="form-field" name="{key}.tokenUrl" let:uniqueId>
-                                <label for={uniqueId}>Custom Token URL</label>
-                                <input type="text" id={uniqueId} bind:value={config.tokenUrl} />
-                            </Field>
-                        </div>
-                        <div class="col-lg-4">
-                            <Field class="form-field" name="{key}.userApiUrl" let:uniqueId>
-                                <label for={uniqueId}>Custom User API URL</label>
-                                <input type="text" id={uniqueId} bind:value={config.userApiUrl} />
-                            </Field>
-                        </div>
-                    </div>
+                    <svelte:component this={optionsComponent} {key} bind:config />
                 </div>
             {/if}
         </div>

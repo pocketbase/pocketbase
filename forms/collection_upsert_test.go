@@ -14,35 +14,13 @@ import (
 	"github.com/spf13/cast"
 )
 
-func TestCollectionUpsertPanic1(t *testing.T) {
-	defer func() {
-		if recover() == nil {
-			t.Fatal("The form did not panic")
-		}
-	}()
-
-	forms.NewCollectionUpsert(nil, nil)
-}
-
-func TestCollectionUpsertPanic2(t *testing.T) {
-	app, _ := tests.NewTestApp()
-	defer app.Cleanup()
-
-	defer func() {
-		if recover() == nil {
-			t.Fatal("The form did not panic")
-		}
-	}()
-
-	forms.NewCollectionUpsert(app, nil)
-}
-
 func TestNewCollectionUpsert(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
 	collection := &models.Collection{}
-	collection.Name = "test"
+	collection.Name = "test_name"
+	collection.Type = "test_type"
 	collection.System = true
 	listRule := "testview"
 	collection.ListRule = &listRule
@@ -63,6 +41,10 @@ func TestNewCollectionUpsert(t *testing.T) {
 
 	if form.Name != collection.Name {
 		t.Errorf("Expected Name %q, got %q", collection.Name, form.Name)
+	}
+
+	if form.Type != collection.Type {
+		t.Errorf("Expected Type %q, got %q", collection.Type, form.Type)
 	}
 
 	if form.System != collection.System {
@@ -104,95 +86,25 @@ func TestNewCollectionUpsert(t *testing.T) {
 	}
 }
 
-func TestCollectionUpsertValidate(t *testing.T) {
+func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
 	scenarios := []struct {
-		jsonData       string
-		expectedErrors []string
-	}{
-		{"{}", []string{"name", "schema"}},
-		{
-			`{
-				"name": "test ?!@#$",
-				"system": true,
-				"schema": [
-					{"name":"","type":"text"}
-				],
-				"listRule": "missing = '123'",
-				"viewRule": "missing = '123'",
-				"createRule": "missing = '123'",
-				"updateRule": "missing = '123'",
-				"deleteRule": "missing = '123'"
-			}`,
-			[]string{"name", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
-		},
-		{
-			`{
-				"name": "test",
-				"system": true,
-				"schema": [
-					{"name":"test","type":"text"}
-				],
-				"listRule": "test='123'",
-				"viewRule": "test='123'",
-				"createRule": "test='123'",
-				"updateRule": "test='123'",
-				"deleteRule": "test='123'"
-			}`,
-			[]string{},
-		},
-	}
-
-	for i, s := range scenarios {
-		form := forms.NewCollectionUpsert(app, &models.Collection{})
-
-		// load data
-		loadErr := json.Unmarshal([]byte(s.jsonData), form)
-		if loadErr != nil {
-			t.Errorf("(%d) Failed to load form data: %v", i, loadErr)
-			continue
-		}
-
-		// parse errors
-		result := form.Validate()
-		errs, ok := result.(validation.Errors)
-		if !ok && result != nil {
-			t.Errorf("(%d) Failed to parse errors %v", i, result)
-			continue
-		}
-
-		// check errors
-		if len(errs) > len(s.expectedErrors) {
-			t.Errorf("(%d) Expected error keys %v, got %v", i, s.expectedErrors, errs)
-		}
-		for _, k := range s.expectedErrors {
-			if _, ok := errs[k]; !ok {
-				t.Errorf("(%d) Missing expected error key %q in %v", i, k, errs)
-			}
-		}
-	}
-}
-
-func TestCollectionUpsertSubmit(t *testing.T) {
-	app, _ := tests.NewTestApp()
-	defer app.Cleanup()
-
-	scenarios := []struct {
+		testName       string
 		existingName   string
 		jsonData       string
 		expectedErrors []string
 	}{
-		// empty create
-		{"", "{}", []string{"name", "schema"}},
-		// empty update
-		{"demo", "{}", []string{}},
-		// create failure
+		{"empty create (base)", "", "{}", []string{"name", "schema"}},
+		{"empty create (auth)", "", `{"type":"auth"}`, []string{"name"}},
+		{"empty update", "demo2", "{}", []string{}},
 		{
+			"create failure",
 			"",
 			`{
 				"name": "test ?!@#$",
+				"type": "invalid",
 				"system": true,
 				"schema": [
 					{"name":"","type":"text"}
@@ -203,13 +115,13 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 				"updateRule": "missing = '123'",
 				"deleteRule": "missing = '123'"
 			}`,
-			[]string{"name", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
+			[]string{"name", "type", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
 		},
-		// create failure - existing name
 		{
+			"create failure - existing name",
 			"",
 			`{
-				"name": "demo",
+				"name": "demo1",
 				"system": true,
 				"schema": [
 					{"name":"test","type":"text"}
@@ -222,19 +134,19 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			}`,
 			[]string{"name"},
 		},
-		// create failure - existing internal table
 		{
+			"create failure - existing internal table",
 			"",
 			`{
-				"name": "_users",
+				"name": "_admins",
 				"schema": [
 					{"name":"test","type":"text"}
 				]
 			}`,
 			[]string{"name"},
 		},
-		// create failure - name starting with underscore
 		{
+			"create failure - name starting with underscore",
 			"",
 			`{
 				"name": "_test_new",
@@ -244,8 +156,8 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			}`,
 			[]string{"name"},
 		},
-		// create failure - duplicated field names (case insensitive)
 		{
+			"create failure - duplicated field names (case insensitive)",
 			"",
 			`{
 				"name": "test_new",
@@ -256,26 +168,40 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			}`,
 			[]string{"schema"},
 		},
-		// create success
 		{
+			"create failure - check type options validators",
 			"",
 			`{
 				"name": "test_new",
+				"type": "auth",
+				"schema": [
+					{"name":"test","type":"text"}
+				],
+				"options": { "minPasswordLength": 3 }
+			}`,
+			[]string{"options"},
+		},
+		{
+			"create success",
+			"",
+			`{
+				"name": "test_new",
+				"type": "auth",
 				"system": true,
 				"schema": [
 					{"id":"a123456","name":"test1","type":"text"},
 					{"id":"b123456","name":"test2","type":"email"}
 				],
-				"listRule": "test1='123'",
-				"viewRule": "test1='123'",
-				"createRule": "test1='123'",
-				"updateRule": "test1='123'",
-				"deleteRule": "test1='123'"
+				"listRule": "test1='123' && verified = true",
+				"viewRule": "test1='123' && emailVisibility = true",
+				"createRule": "test1='123' && email != ''",
+				"updateRule": "test1='123' && username != ''",
+				"deleteRule": "test1='123' && id != ''"
 			}`,
 			[]string{},
 		},
-		// update failure - changing field type
 		{
+			"update failure - changing field type",
 			"test_new",
 			`{
 				"schema": [
@@ -285,8 +211,8 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			}`,
 			[]string{"schema"},
 		},
-		// update success - rename fields to existing field names (aka. reusing field names)
 		{
+			"update success - rename fields to existing field names (aka. reusing field names)",
 			"test_new",
 			`{
 				"schema": [
@@ -296,34 +222,43 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			}`,
 			[]string{},
 		},
-		// update failure - existing name
 		{
-			"demo",
-			`{"name": "demo2"}`,
+			"update failure - existing name",
+			"demo2",
+			`{"name": "demo3"}`,
 			[]string{"name"},
 		},
-		// update failure - changing system collection
 		{
-			models.ProfileCollectionName,
+			"update failure - changing system collection",
+			"nologin",
 			`{
 				"name": "update",
 				"system": false,
 				"schema": [
-					{"id":"koih1lqx","name":"userId","type":"text"}
+					{"id":"koih1lqx","name":"abc","type":"text"}
 				],
-				"listRule": "userId = '123'",
-				"viewRule": "userId = '123'",
-				"createRule": "userId = '123'",
-				"updateRule": "userId = '123'",
-				"deleteRule": "userId = '123'"
+				"listRule": "abc = '123'",
+				"viewRule": "abc = '123'",
+				"createRule": "abc = '123'",
+				"updateRule": "abc = '123'",
+				"deleteRule": "abc = '123'"
 			}`,
-			[]string{"name", "system", "schema"},
+			[]string{"name", "system"},
 		},
-		// update failure - all fields
 		{
-			"demo",
+			"update failure - changing collection type",
+			"demo3",
+			`{
+				"type": "auth"
+			}`,
+			[]string{"type"},
+		},
+		{
+			"update failure - all fields",
+			"demo2",
 			`{
 				"name": "test ?!@#$",
+				"type": "invalid",
 				"system": true,
 				"schema": [
 					{"name":"","type":"text"}
@@ -332,29 +267,32 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 				"viewRule": "missing = '123'",
 				"createRule": "missing = '123'",
 				"updateRule": "missing = '123'",
-				"deleteRule": "missing = '123'"
+				"deleteRule": "missing = '123'",
+				"options": {"test": 123}
 			}`,
-			[]string{"name", "system", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
+			[]string{"name", "type", "system", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
 		},
-		// update success - update all fields
 		{
-			"demo",
+			"update success - update all fields",
+			"clients",
 			`{
 				"name": "demo_update",
+				"type": "auth",
 				"schema": [
 					{"id":"_2hlxbmp","name":"test","type":"text"}
 				],
-				"listRule": "test='123'",
-				"viewRule": "test='123'",
-				"createRule": "test='123'",
-				"updateRule": "test='123'",
-				"deleteRule": "test='123'"
+				"listRule": "test='123' && verified = true",
+				"viewRule": "test='123' && emailVisibility = true",
+				"createRule": "test='123' && email != ''",
+				"updateRule": "test='123' && username != ''",
+				"deleteRule": "test='123' && id != ''",
+				"options": {"minPasswordLength": 10}
 			}`,
 			[]string{},
 		},
-		// update failure - rename the schema field of the last updated collection
 		// (fail due to filters old field references)
 		{
+			"update failure - rename the schema field of the last updated collection",
 			"demo_update",
 			`{
 				"schema": [
@@ -363,9 +301,9 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			}`,
 			[]string{"listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
 		},
-		// update success - rename the schema field of the last updated collection
 		// (cleared filter references)
 		{
+			"update success - rename the schema field of the last updated collection",
 			"demo_update",
 			`{
 				"schema": [
@@ -379,21 +317,21 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			}`,
 			[]string{},
 		},
-		// update success - system collection
 		{
-			models.ProfileCollectionName,
+			"update success - system collection",
+			"nologin",
 			`{
-				"listRule": "userId='123'",
-				"viewRule": "userId='123'",
-				"createRule": "userId='123'",
-				"updateRule": "userId='123'",
-				"deleteRule": "userId='123'"
+				"listRule": "name='123'",
+				"viewRule": "name='123'",
+				"createRule": "name='123'",
+				"updateRule": "name='123'",
+				"deleteRule": "name='123'"
 			}`,
 			[]string{},
 		},
 	}
 
-	for i, s := range scenarios {
+	for _, s := range scenarios {
 		collection := &models.Collection{}
 		if s.existingName != "" {
 			var err error
@@ -408,7 +346,7 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 		// load data
 		loadErr := json.Unmarshal([]byte(s.jsonData), form)
 		if loadErr != nil {
-			t.Errorf("(%d) Failed to load form data: %v", i, loadErr)
+			t.Errorf("[%s] Failed to load form data: %v", s.testName, loadErr)
 			continue
 		}
 
@@ -424,7 +362,7 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 		result := form.Submit(interceptor)
 		errs, ok := result.(validation.Errors)
 		if !ok && result != nil {
-			t.Errorf("(%d) Failed to parse errors %v", i, result)
+			t.Errorf("[%s] Failed to parse errors %v", s.testName, result)
 			continue
 		}
 
@@ -434,16 +372,16 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 			expectInterceptorCall = 0
 		}
 		if interceptorCalls != expectInterceptorCall {
-			t.Errorf("(%d) Expected interceptor to be called %d, got %d", i, expectInterceptorCall, interceptorCalls)
+			t.Errorf("[%s] Expected interceptor to be called %d, got %d", s.testName, expectInterceptorCall, interceptorCalls)
 		}
 
 		// check errors
 		if len(errs) > len(s.expectedErrors) {
-			t.Errorf("(%d) Expected error keys %v, got %v", i, s.expectedErrors, errs)
+			t.Errorf("[%s] Expected error keys %v, got %v", s.testName, s.expectedErrors, errs)
 		}
 		for _, k := range s.expectedErrors {
 			if _, ok := errs[k]; !ok {
-				t.Errorf("(%d) Missing expected error key %q in %v", i, k, errs)
+				t.Errorf("[%s] Missing expected error key %q in %v", s.testName, k, errs)
 			}
 		}
 
@@ -453,42 +391,46 @@ func TestCollectionUpsertSubmit(t *testing.T) {
 
 		collection, _ = app.Dao().FindCollectionByNameOrId(form.Name)
 		if collection == nil {
-			t.Errorf("(%d) Expected to find collection %q, got nil", i, form.Name)
+			t.Errorf("[%s] Expected to find collection %q, got nil", s.testName, form.Name)
 			continue
 		}
 
 		if form.Name != collection.Name {
-			t.Errorf("(%d) Expected Name %q, got %q", i, collection.Name, form.Name)
+			t.Errorf("[%s] Expected Name %q, got %q", s.testName, collection.Name, form.Name)
+		}
+
+		if form.Type != collection.Type {
+			t.Errorf("[%s] Expected Type %q, got %q", s.testName, collection.Type, form.Type)
 		}
 
 		if form.System != collection.System {
-			t.Errorf("(%d) Expected System %v, got %v", i, collection.System, form.System)
+			t.Errorf("[%s] Expected System %v, got %v", s.testName, collection.System, form.System)
 		}
 
 		if cast.ToString(form.ListRule) != cast.ToString(collection.ListRule) {
-			t.Errorf("(%d) Expected ListRule %v, got %v", i, collection.ListRule, form.ListRule)
+			t.Errorf("[%s] Expected ListRule %v, got %v", s.testName, collection.ListRule, form.ListRule)
 		}
 
 		if cast.ToString(form.ViewRule) != cast.ToString(collection.ViewRule) {
-			t.Errorf("(%d) Expected ViewRule %v, got %v", i, collection.ViewRule, form.ViewRule)
+			t.Errorf("[%s] Expected ViewRule %v, got %v", s.testName, collection.ViewRule, form.ViewRule)
 		}
 
 		if cast.ToString(form.CreateRule) != cast.ToString(collection.CreateRule) {
-			t.Errorf("(%d) Expected CreateRule %v, got %v", i, collection.CreateRule, form.CreateRule)
+			t.Errorf("[%s] Expected CreateRule %v, got %v", s.testName, collection.CreateRule, form.CreateRule)
 		}
 
 		if cast.ToString(form.UpdateRule) != cast.ToString(collection.UpdateRule) {
-			t.Errorf("(%d) Expected UpdateRule %v, got %v", i, collection.UpdateRule, form.UpdateRule)
+			t.Errorf("[%s] Expected UpdateRule %v, got %v", s.testName, collection.UpdateRule, form.UpdateRule)
 		}
 
 		if cast.ToString(form.DeleteRule) != cast.ToString(collection.DeleteRule) {
-			t.Errorf("(%d) Expected DeleteRule %v, got %v", i, collection.DeleteRule, form.DeleteRule)
+			t.Errorf("[%s] Expected DeleteRule %v, got %v", s.testName, collection.DeleteRule, form.DeleteRule)
 		}
 
 		formSchema, _ := form.Schema.MarshalJSON()
 		collectionSchema, _ := collection.Schema.MarshalJSON()
 		if string(formSchema) != string(collectionSchema) {
-			t.Errorf("(%d) Expected Schema %v, got %v", i, string(collectionSchema), string(formSchema))
+			t.Errorf("[%s] Expected Schema %v, got %v", s.testName, string(collectionSchema), string(formSchema))
 		}
 	}
 }
@@ -497,7 +439,7 @@ func TestCollectionUpsertSubmitInterceptors(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	collection, err := app.Dao().FindCollectionByNameOrId("demo")
+	collection, err := app.Dao().FindCollectionByNameOrId("demo2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -547,14 +489,14 @@ func TestCollectionUpsertWithCustomId(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	existingCollection, err := app.Dao().FindCollectionByNameOrId("demo3")
+	existingCollection, err := app.Dao().FindCollectionByNameOrId("demo2")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	newCollection := func() *models.Collection {
 		return &models.Collection{
-			Name:   "c_" + security.RandomString(4),
+			Name:   "c_" + security.PseudorandomString(4),
 			Schema: existingCollection.Schema,
 		}
 	}
@@ -621,27 +563,27 @@ func TestCollectionUpsertWithCustomId(t *testing.T) {
 		},
 	}
 
-	for _, scenario := range scenarios {
-		form := forms.NewCollectionUpsert(app, scenario.collection)
+	for _, s := range scenarios {
+		form := forms.NewCollectionUpsert(app, s.collection)
 
 		// load data
-		loadErr := json.Unmarshal([]byte(scenario.jsonData), form)
+		loadErr := json.Unmarshal([]byte(s.jsonData), form)
 		if loadErr != nil {
-			t.Errorf("[%s] Failed to load form data: %v", scenario.name, loadErr)
+			t.Errorf("[%s] Failed to load form data: %v", s.name, loadErr)
 			continue
 		}
 
 		submitErr := form.Submit()
 		hasErr := submitErr != nil
 
-		if hasErr != scenario.expectError {
-			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", scenario.name, scenario.expectError, hasErr, submitErr)
+		if hasErr != s.expectError {
+			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", s.name, s.expectError, hasErr, submitErr)
 		}
 
 		if !hasErr && form.Id != "" {
 			_, err := app.Dao().FindCollectionByNameOrId(form.Id)
 			if err != nil {
-				t.Errorf("[%s] Expected to find record with id %s, got %v", scenario.name, form.Id, err)
+				t.Errorf("[%s] Expected to find record with id %s, got %v", s.name, form.Id, err)
 			}
 		}
 	}

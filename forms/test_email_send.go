@@ -6,6 +6,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/mails"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/schema"
 )
 
 const (
@@ -39,7 +40,7 @@ func (form *TestEmailSend) Validate() error {
 		validation.Field(
 			&form.Template,
 			validation.Required,
-			validation.In(templateVerification, templateEmailChange, templatePasswordReset),
+			validation.In(templateVerification, templatePasswordReset, templateEmailChange),
 		),
 	)
 }
@@ -50,19 +51,26 @@ func (form *TestEmailSend) Submit() error {
 		return err
 	}
 
-	// create a test user
-	user := &models.User{}
-	user.Id = "__pb_test_id__"
-	user.Email = form.Email
-	user.RefreshTokenKey()
+	// create a test auth record
+	collection := &models.Collection{
+		BaseModel: models.BaseModel{Id: "__pb_test_collection_id__"},
+		Name:      "__pb_test_collection_name__",
+		Type:      models.CollectionTypeAuth,
+	}
+
+	record := models.NewRecord(collection)
+	record.Id = "__pb_test_id__"
+	record.Set(schema.FieldNameUsername, "pb_test")
+	record.Set(schema.FieldNameEmail, form.Email)
+	record.RefreshTokenKey()
 
 	switch form.Template {
 	case templateVerification:
-		return mails.SendUserVerification(form.app, user)
+		return mails.SendRecordVerification(form.app, record)
 	case templatePasswordReset:
-		return mails.SendUserPasswordReset(form.app, user)
+		return mails.SendRecordPasswordReset(form.app, record)
 	case templateEmailChange:
-		return mails.SendUserChangeEmail(form.app, user, form.Email)
+		return mails.SendRecordChangeEmail(form.app, record, form.Email)
 	}
 
 	return nil

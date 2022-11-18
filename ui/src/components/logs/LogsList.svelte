@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
+    import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
 
     const dispatch = createEventDispatcher();
     const labelMethodClass = {
@@ -21,6 +22,7 @@
     let currentPage = 1;
     let totalItems = 0;
     let isLoading = false;
+    let yieldedItemsId = 0;
 
     $: if (typeof sort !== "undefined" || typeof filter !== "undefined" || typeof presets !== "undefined") {
         clearList();
@@ -29,24 +31,39 @@
 
     $: canLoadMore = totalItems > items.length;
 
-    export async function load(page = 1) {
+    export async function load(page = 1, breakTasks = true) {
         isLoading = true;
 
-        return ApiClient.logs.getRequestsList(page, 40, {
-            sort: sort,
-            filter: [presets, filter].filter(Boolean).join("&&"),
-        })
-            .then((result) => {
+        return ApiClient.logs
+            .getRequestsList(page, 30, {
+                sort: sort,
+                filter: [presets, filter].filter(Boolean).join("&&"),
+            })
+            .then(async (result) => {
                 if (page <= 1) {
                     clearList();
                 }
 
                 isLoading = false;
-                items = items.concat(result.items);
                 currentPage = result.page;
                 totalItems = result.totalItems;
+                dispatch("load", items.concat(result.items));
 
-                dispatch("load", items);
+                // optimize the items listing by rendering the rows in task batches
+                if (breakTasks) {
+                    const currentYieldId = ++yieldedItemsId;
+                    while (result.items.length) {
+                        if (yieldedItemsId != currentYieldId) {
+                            break; // new yeild has been started
+                        }
+
+                        items = items.concat(result.items.splice(0, 10));
+
+                        await CommonHelper.yieldToMain();
+                    }
+                } else {
+                    items = items.concat(result.items);
+                }
             })
             .catch((err) => {
                 if (!err?.isAbort) {
@@ -65,7 +82,7 @@
     }
 </script>
 
-<div class="table-wrapper">
+<HorizontalScroller class="table-wrapper">
     <table class="table" class:table-loading={isLoading}>
         <thead>
             <tr>
@@ -90,6 +107,13 @@
                     </div>
                 </SortHeader>
 
+                <SortHeader disable class="col-type-number col-field-userIp" name="userIp" bind:sort>
+                    <div class="col-header-content">
+                        <i class={CommonHelper.getFieldTypeIcon("number")} />
+                        <span class="txt">User IP</span>
+                    </div>
+                </SortHeader>
+
                 <SortHeader disable class="col-type-number col-field-status" name="status" bind:sort>
                     <div class="col-header-content">
                         <i class={CommonHelper.getFieldTypeIcon("number")} />
@@ -103,6 +127,7 @@
                         <span class="txt">created</span>
                     </div>
                 </SortHeader>
+
                 <th class="col-type-action min-width" />
             </tr>
         </thead>
@@ -137,6 +162,12 @@
                     <td class="col-type-text col-field-referer">
                         <span class="txt txt-ellipsis" class:txt-hint={!item.referer} title={item.referer}>
                             {item.referer || "N/A"}
+                        </span>
+                    </td>
+
+                    <td class="col-type-number col-field-userIp">
+                        <span class="txt txt-ellipsis" class:txt-hint={!item.userIp} title={item.userIp}>
+                            {item.userIp || "N/A"}
                         </span>
                     </td>
 
@@ -180,7 +211,7 @@
             {/each}
         </tbody>
     </table>
-</div>
+</HorizontalScroller>
 
 {#if items.length}
     <small class="block txt-hint txt-right m-t-sm">Showing {items.length} of {totalItems}</small>

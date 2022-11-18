@@ -28,7 +28,7 @@ export default class CommonHelper {
             (value === "") ||
             (value === null) ||
             (value === "00000000-0000-0000-0000-000000000000") || // zero uuid
-            (value === "0001-01-01T00:00:00Z") || // zero time
+            (value === "0001-01-01 00:00:00.000Z") || // zero datetime
             (value === "0001-01-01") || // zero date
             (typeof value === "undefined") ||
             (Array.isArray(value) && value.length === 0) ||
@@ -314,7 +314,7 @@ export default class CommonHelper {
      * @param  {String}       delimiter
      */
     static setByPath(data, path, newValue, delimiter = ".") {
-        if (!CommonHelper.isObject(data) && !Array.isArray(data)) {
+        if (data === null || typeof data !== 'object') {
             console.warn("setByPath: data not an object or array.");
             return
         }
@@ -562,9 +562,13 @@ export default class CommonHelper {
      */
     static getDateTime(date) {
         if (typeof date === 'string') {
-            const sFormat = "yyyy-MM-dd HH:mm:ss";
-            const msFormat = "yyyy-MM-dd HH:mm:ss.SSS";
-            const format = date.length === msFormat.length ? msFormat : sFormat;
+            const formats = {
+                19: "yyyy-MM-dd HH:mm:ss",
+                23: "yyyy-MM-dd HH:mm:ss.SSS",
+                20: "yyyy-MM-dd HH:mm:ssZ",
+                24: "yyyy-MM-dd HH:mm:ss.SSSZ",
+            }
+            const format = formats[date.length] || formats[19];
             return DateTime.fromFormat(date, format, { zone: 'UTC' });
         }
 
@@ -656,7 +660,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasImageExtension(filename) {
-        return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.webp|\.avif$/.test(filename)
+        return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.jfif|\.webp|\.avif$/.test(filename)
     }
 
     /**
@@ -764,19 +768,26 @@ export default class CommonHelper {
         const fields = collection?.schema || [];
 
         const dummy = {
-            "@collectionId": collection?.id,
-            "@collectionName": collection?.name,
             "id": "RECORD_ID",
-            "created": "2022-01-01 01:00:00",
-            "updated": "2022-01-01 23:59:59",
+            "collectionId": collection?.id,
+            "collectionName": collection?.name,
+            "created": "2022-01-01 01:00:00.123Z",
+            "updated": "2022-01-01 23:59:59.456Z",
         };
+
+        if (collection?.isAuth) {
+            dummy["username"] = "username123";
+            dummy["verified"] = false;
+            dummy["emailVisibility"] = true;
+            dummy["email"] = "test@example.com";
+        }
 
         for (const field of fields) {
             let val = null;
-            if (field.type === 'number') {
+            if (field.type === "number") {
                 val = 123;
             } else if (field.type === "date") {
-                val = "2022-01-01 10:00:00";
+                val = "2022-01-01 10:00:00.123Z";
             } else if (field.type === "bool") {
                 val = true;
             } else if (field.type === "email") {
@@ -784,20 +795,20 @@ export default class CommonHelper {
             } else if (field.type === "url") {
                 val = "https://example.com";
             } else if (field.type === "json") {
-                val = 'JSON (array/object)';
+                val = 'JSON';
             } else if (field.type === "file") {
                 val = 'filename.jpg';
-                if (field.options?.maxSelect > 1) {
+                if (field.options?.maxSelect !== 1) {
                     val = [val];
                 }
             } else if (field.type === "select") {
                 val = field.options?.values?.[0];
-                if (field.options?.maxSelect > 1) {
+                if (field.options?.maxSelect !== 1) {
                     val = [val];
                 }
-            } else if (field.type === "relation" || field.type === "user") {
+            } else if (field.type === "relation") {
                 val = 'RELATION_RECORD_ID';
-                if (field.options?.maxSelect > 1) {
+                if (field.options?.maxSelect !== 1) {
                     val = [val];
                 }
             } else {
@@ -808,6 +819,71 @@ export default class CommonHelper {
         }
 
         return dummy;
+    }
+
+    /**
+     * Returns a dummy collection schema data object.
+     *
+     * @param  {Object} collection
+     * @return {Object}
+     */
+    static dummyCollectionSchemaData(collection) {
+        const fields = collection?.schema || [];
+
+        const dummy = {};
+
+        for (const field of fields) {
+            let val = null;
+
+            if (field.type === "number") {
+                val = 123;
+            } else if (field.type === "date") {
+                val = "2022-01-01 10:00:00.123Z";
+            } else if (field.type === "bool") {
+                val = true;
+            } else if (field.type === "email") {
+                val = "test@example.com";
+            } else if (field.type === "url") {
+                val = "https://example.com";
+            } else if (field.type === "json") {
+                val = 'JSON';
+            } else if (field.type === "file") {
+                continue; // currently file upload is supported only via FormData
+            } else if (field.type === "select") {
+                val = field.options?.values?.[0];
+                if (field.options?.maxSelect !== 1) {
+                    val = [val];
+                }
+            } else if (field.type === "relation") {
+                val = 'RELATION_RECORD_ID';
+                if (field.options?.maxSelect !== 1) {
+                    val = [val];
+                }
+            } else {
+                val = "test";
+            }
+
+            dummy[field.name] = val;
+        }
+
+        return dummy;
+    }
+
+    /**
+     * Returns a collection type icon.
+     *
+     * @param  {String} type
+     * @return {String}
+     */
+    static getCollectionTypeIcon(type) {
+        switch (type?.toLowerCase()) {
+            case "auth":
+                return "ri-group-line";
+            case "single":
+                return "ri-file-list-2-line";
+            default:
+                return "ri-folder-2-line";
+        }
     }
 
     /**
@@ -854,9 +930,7 @@ export default class CommonHelper {
      * @return {String}
      */
     static getFieldValueType(field) {
-        field = field || {};
-
-        switch (field.type) {
+        switch (field?.type) {
             case 'bool':
                 return 'Boolean';
             case 'number':
@@ -865,14 +939,36 @@ export default class CommonHelper {
                 return 'File';
             case 'select':
             case 'relation':
-            case 'user':
-                if (field.options?.maxSelect > 1) {
-                    return 'Array<String>';
+                if (field?.options?.maxSelect === 1) {
+                    return 'String';
                 }
-                return 'String';
+                return 'Array<String>';
             default:
                 return 'String';
         }
+    }
+
+    /**
+     * Returns the zero-default string value of the provided field.
+     *
+     * @param  {Object} field
+     * @return {String}
+     */
+    static zeroDefaultStr(field) {
+        if (field?.type === "number") {
+            return "0";
+        }
+
+        if (field?.type === "bool") {
+            return "false";
+        }
+
+        // array value
+        if (["select", "relation", "file"].includes(field?.type) && field?.options?.maxSelect != 1) {
+            return "[]";
+        }
+
+        return '""';
     }
 
     /**
@@ -939,5 +1035,41 @@ export default class CommonHelper {
             changedFields.length ||
             (withDeleteMissing && removedFields.length)
         );
+    }
+
+    /**
+     * Groups and sorts collections array by type (auth, single, base).
+     *
+     * @param  {Array} collections
+     * @return {Array}
+     */
+    static sortCollections(collections = []) {
+        const authCollections = [];
+        const singleCollections = [];
+        const baseCollections = [];
+
+        for (const colelction of collections) {
+            if (colelction.type == 'auth') {
+                authCollections.push(colelction);
+            } else if (colelction.type == 'single') {
+                singleCollections.push(colelction);
+            } else {
+                baseCollections.push(colelction);
+            }
+        }
+
+        return [].concat(authCollections, singleCollections, baseCollections);
+    }
+
+
+    /**
+     * "Yield" to the main thread to break long runing task into smaller ones.
+     *
+     * (see https://web.dev/optimize-long-tasks/)
+     */
+    static yieldToMain() {
+        return new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
     }
 }

@@ -157,63 +157,23 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil
 	})
 
-	t.OnUsersListRequest().Add(func(e *core.UsersListEvent) error {
-		t.EventCalls["OnUsersListRequest"]++
+	t.OnRecordAuthRequest().Add(func(e *core.RecordAuthEvent) error {
+		t.EventCalls["OnRecordAuthRequest"]++
 		return nil
 	})
 
-	t.OnUserViewRequest().Add(func(e *core.UserViewEvent) error {
-		t.EventCalls["OnUserViewRequest"]++
+	t.OnRecordListExternalAuthsRequest().Add(func(e *core.RecordListExternalAuthsEvent) error {
+		t.EventCalls["OnRecordListExternalAuthsRequest"]++
 		return nil
 	})
 
-	t.OnUserBeforeCreateRequest().Add(func(e *core.UserCreateEvent) error {
-		t.EventCalls["OnUserBeforeCreateRequest"]++
+	t.OnRecordBeforeUnlinkExternalAuthRequest().Add(func(e *core.RecordUnlinkExternalAuthEvent) error {
+		t.EventCalls["OnRecordBeforeUnlinkExternalAuthRequest"]++
 		return nil
 	})
 
-	t.OnUserAfterCreateRequest().Add(func(e *core.UserCreateEvent) error {
-		t.EventCalls["OnUserAfterCreateRequest"]++
-		return nil
-	})
-
-	t.OnUserBeforeUpdateRequest().Add(func(e *core.UserUpdateEvent) error {
-		t.EventCalls["OnUserBeforeUpdateRequest"]++
-		return nil
-	})
-
-	t.OnUserAfterUpdateRequest().Add(func(e *core.UserUpdateEvent) error {
-		t.EventCalls["OnUserAfterUpdateRequest"]++
-		return nil
-	})
-
-	t.OnUserBeforeDeleteRequest().Add(func(e *core.UserDeleteEvent) error {
-		t.EventCalls["OnUserBeforeDeleteRequest"]++
-		return nil
-	})
-
-	t.OnUserAfterDeleteRequest().Add(func(e *core.UserDeleteEvent) error {
-		t.EventCalls["OnUserAfterDeleteRequest"]++
-		return nil
-	})
-
-	t.OnUserAuthRequest().Add(func(e *core.UserAuthEvent) error {
-		t.EventCalls["OnUserAuthRequest"]++
-		return nil
-	})
-
-	t.OnUserListExternalAuths().Add(func(e *core.UserListExternalAuthsEvent) error {
-		t.EventCalls["OnUserListExternalAuths"]++
-		return nil
-	})
-
-	t.OnUserBeforeUnlinkExternalAuthRequest().Add(func(e *core.UserUnlinkExternalAuthEvent) error {
-		t.EventCalls["OnUserBeforeUnlinkExternalAuthRequest"]++
-		return nil
-	})
-
-	t.OnUserAfterUnlinkExternalAuthRequest().Add(func(e *core.UserUnlinkExternalAuthEvent) error {
-		t.EventCalls["OnUserAfterUnlinkExternalAuthRequest"]++
+	t.OnRecordAfterUnlinkExternalAuthRequest().Add(func(e *core.RecordUnlinkExternalAuthEvent) error {
+		t.EventCalls["OnRecordAfterUnlinkExternalAuthRequest"]++
 		return nil
 	})
 
@@ -227,33 +187,33 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil
 	})
 
-	t.OnMailerBeforeUserResetPasswordSend().Add(func(e *core.MailerUserEvent) error {
-		t.EventCalls["OnMailerBeforeUserResetPasswordSend"]++
+	t.OnMailerBeforeRecordResetPasswordSend().Add(func(e *core.MailerRecordEvent) error {
+		t.EventCalls["OnMailerBeforeRecordResetPasswordSend"]++
 		return nil
 	})
 
-	t.OnMailerAfterUserResetPasswordSend().Add(func(e *core.MailerUserEvent) error {
-		t.EventCalls["OnMailerAfterUserResetPasswordSend"]++
+	t.OnMailerAfterRecordResetPasswordSend().Add(func(e *core.MailerRecordEvent) error {
+		t.EventCalls["OnMailerAfterRecordResetPasswordSend"]++
 		return nil
 	})
 
-	t.OnMailerBeforeUserVerificationSend().Add(func(e *core.MailerUserEvent) error {
-		t.EventCalls["OnMailerBeforeUserVerificationSend"]++
+	t.OnMailerBeforeRecordVerificationSend().Add(func(e *core.MailerRecordEvent) error {
+		t.EventCalls["OnMailerBeforeRecordVerificationSend"]++
 		return nil
 	})
 
-	t.OnMailerAfterUserVerificationSend().Add(func(e *core.MailerUserEvent) error {
-		t.EventCalls["OnMailerAfterUserVerificationSend"]++
+	t.OnMailerAfterRecordVerificationSend().Add(func(e *core.MailerRecordEvent) error {
+		t.EventCalls["OnMailerAfterRecordVerificationSend"]++
 		return nil
 	})
 
-	t.OnMailerBeforeUserChangeEmailSend().Add(func(e *core.MailerUserEvent) error {
-		t.EventCalls["OnMailerBeforeUserChangeEmailSend"]++
+	t.OnMailerBeforeRecordChangeEmailSend().Add(func(e *core.MailerRecordEvent) error {
+		t.EventCalls["OnMailerBeforeRecordChangeEmailSend"]++
 		return nil
 	})
 
-	t.OnMailerAfterUserChangeEmailSend().Add(func(e *core.MailerUserEvent) error {
-		t.EventCalls["OnMailerAfterUserChangeEmailSend"]++
+	t.OnMailerAfterRecordChangeEmailSend().Add(func(e *core.MailerRecordEvent) error {
+		t.EventCalls["OnMailerAfterRecordChangeEmailSend"]++
 		return nil
 	})
 

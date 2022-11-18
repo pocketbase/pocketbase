@@ -26,7 +26,7 @@ func connectDB(dbPath string) (*dbx.DB, error) {
 	// (the limits are arbitrary and may change in the future)
 	//
 	// @see https://gitlab.com/cznic/sqlite/-/issues/115
-	db.DB().SetMaxOpenConns(500)
+	db.DB().SetMaxOpenConns(1000)
 	db.DB().SetMaxIdleConns(30)
 	db.DB().SetConnMaxIdleTime(5 * time.Minute)
 

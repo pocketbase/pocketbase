@@ -5,8 +5,10 @@
 
     let confirmationPopup;
     let isConfirmationBusy = false;
+    let confirmed = false;
 
     $: if ($confirmation?.text) {
+        confirmed = false;
         confirmationPopup?.show();
     }
 </script>
@@ -19,10 +21,11 @@
     btnClose={false}
     popup
     on:hide={async () => {
-        if ($confirmation?.noCallback) {
+        if (!confirmed && $confirmation?.noCallback) {
             $confirmation.noCallback();
         }
         await tick();
+        confirmed = false;
         resetConfirmation();
     }}
 >
@@ -36,9 +39,7 @@
             class="btn btn-secondary btn-expanded-sm"
             disabled={isConfirmationBusy}
             on:click={() => {
-                if ($confirmation?.noCallback) {
-                    $confirmation.noCallback();
-                }
+                confirmed = false;
                 confirmationPopup?.hide();
             }}
         >
@@ -55,6 +56,7 @@
                     await Promise.resolve($confirmation.yesCallback());
                     isConfirmationBusy = false;
                 }
+                confirmed = true;
                 confirmationPopup?.hide();
             }}
         >

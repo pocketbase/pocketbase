@@ -13,21 +13,55 @@ import (
 	"github.com/spf13/cast"
 )
 
-var schemaFieldNameRegex = regexp.MustCompile(`^\#?\w+$`)
+var schemaFieldNameRegex = regexp.MustCompile(`^\w+$`)
 
-// reserved internal field names
+// commonly used field names
 const (
-	ReservedFieldNameId      = "id"
-	ReservedFieldNameCreated = "created"
-	ReservedFieldNameUpdated = "updated"
+	FieldNameId                     = "id"
+	FieldNameCreated                = "created"
+	FieldNameUpdated                = "updated"
+	FieldNameCollectionId           = "collectionId"
+	FieldNameCollectionName         = "collectionName"
+	FieldNameExpand                 = "expand"
+	FieldNameUsername               = "username"
+	FieldNameEmail                  = "email"
+	FieldNameEmailVisibility        = "emailVisibility"
+	FieldNameVerified               = "verified"
+	FieldNameTokenKey               = "tokenKey"
+	FieldNamePasswordHash           = "passwordHash"
+	FieldNameLastResetSentAt        = "lastResetSentAt"
+	FieldNameLastVerificationSentAt = "lastVerificationSentAt"
 )
 
-// ReservedFieldNames returns slice with reserved/system field names.
-func ReservedFieldNames() []string {
+// BaseModelFieldNames returns the field names that all models have (id, created, updated).
+func BaseModelFieldNames() []string {
 	return []string{
-		ReservedFieldNameId,
-		ReservedFieldNameCreated,
-		ReservedFieldNameUpdated,
+		FieldNameId,
+		FieldNameCreated,
+		FieldNameUpdated,
+	}
+}
+
+// SystemFields returns special internal field names that are usually readonly.
+func SystemFieldNames() []string {
+	return []string{
+		FieldNameCollectionId,
+		FieldNameCollectionName,
+		FieldNameExpand,
+	}
+}
+
+// AuthFieldNames returns the reserved "auth" collection auth field names.
+func AuthFieldNames() []string {
+	return []string{
+		FieldNameUsername,
+		FieldNameEmail,
+		FieldNameEmailVisibility,
+		FieldNameVerified,
+		FieldNameTokenKey,
+		FieldNamePasswordHash,
+		FieldNameLastResetSentAt,
+		FieldNameLastVerificationSentAt,
 	}
 }
 
@@ -43,7 +77,9 @@ const (
 	FieldTypeJson     string = "json"
 	FieldTypeFile     string = "file"
 	FieldTypeRelation string = "relation"
-	FieldTypeUser     string = "user"
+
+	// Deprecated: Will be removed in v0.9!
+	FieldTypeUser string = "user"
 )
 
 // FieldTypes returns slice with all supported field types.
@@ -59,7 +95,6 @@ func FieldTypes() []string {
 		FieldTypeJson,
 		FieldTypeFile,
 		FieldTypeRelation,
-		FieldTypeUser,
 	}
 }
 
@@ -69,7 +104,6 @@ func ArraybleFieldTypes() []string {
 		FieldTypeSelect,
 		FieldTypeFile,
 		FieldTypeRelation,
-		FieldTypeUser,
 	}
 }
 
@@ -133,9 +167,11 @@ func (f SchemaField) Validate() error {
 	// init field options (if not already)
 	f.InitOptions()
 
-	// add commonly used filter literals to the exclude names list
-	excludeNames := ReservedFieldNames()
+	excludeNames := BaseModelFieldNames()
+	// exclude filter literals
 	excludeNames = append(excludeNames, "null", "true", "false")
+	// exclude system literals
+	excludeNames = append(excludeNames, SystemFieldNames()...)
 
 	return validation.ValidateStruct(&f,
 		validation.Field(&f.Options, validation.Required, validation.By(f.checkOptions)),
@@ -198,8 +234,11 @@ func (f *SchemaField) InitOptions() error {
 		options = &FileOptions{}
 	case FieldTypeRelation:
 		options = &RelationOptions{}
+
+	// Deprecated: Will be removed in v0.9!
 	case FieldTypeUser:
 		options = &UserOptions{}
+
 	default:
 		return errors.New("Missing or unknown field field type.")
 	}
@@ -263,19 +302,7 @@ func (f *SchemaField) PrepareValue(value any) any {
 		ids := list.ToUniqueStringSlice(value)
 
 		options, _ := f.Options.(*RelationOptions)
-		if options.MaxSelect <= 1 {
-			if len(ids) > 0 {
-				return ids[0]
-			}
-			return ""
-		}
-
-		return ids
-	case FieldTypeUser:
-		ids := list.ToUniqueStringSlice(value)
-
-		options, _ := f.Options.(*UserOptions)
-		if options.MaxSelect <= 1 {
+		if options.MaxSelect != nil && *options.MaxSelect <= 1 {
 			if len(ids) > 0 {
 				return ids[0]
 			}
@@ -428,13 +455,18 @@ type SelectOptions struct {
 }
 
 func (o SelectOptions) Validate() error {
+	max := len(o.Values)
+	if max == 0 {
+		max = 1
+	}
+
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.Values, validation.Required),
 		validation.Field(
 			&o.MaxSelect,
 			validation.Required,
 			validation.Min(1),
-			validation.Max(len(o.Values)),
+			validation.Max(max),
 		),
 	)
 }
@@ -470,27 +502,27 @@ func (o FileOptions) Validate() error {
 // -------------------------------------------------------------------
 
 type RelationOptions struct {
-	MaxSelect     int    `form:"maxSelect" json:"maxSelect"`
+	MaxSelect     *int   `form:"maxSelect" json:"maxSelect"`
 	CollectionId  string `form:"collectionId" json:"collectionId"`
 	CascadeDelete bool   `form:"cascadeDelete" json:"cascadeDelete"`
 }
 
 func (o RelationOptions) Validate() error {
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.MaxSelect, validation.Required, validation.Min(1)),
 		validation.Field(&o.CollectionId, validation.Required),
+		validation.Field(&o.MaxSelect, validation.NilOrNotEmpty, validation.Min(1)),
 	)
 }
 
 // -------------------------------------------------------------------
 
+// Deprecated: Will be removed in v0.9!
 type UserOptions struct {
 	MaxSelect     int  `form:"maxSelect" json:"maxSelect"`
 	CascadeDelete bool `form:"cascadeDelete" json:"cascadeDelete"`
 }
 
+// Deprecated: Will be removed in v0.9!
 func (o UserOptions) Validate() error {
-	return validation.ValidateStruct(&o,
-		validation.Field(&o.MaxSelect, validation.Required, validation.Min(1)),
-	)
+	return nil
 }

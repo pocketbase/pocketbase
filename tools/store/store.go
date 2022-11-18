@@ -33,8 +33,8 @@ func (s *Store[T]) Remove(key string) {
 
 // Has checks if element with the specified key exist or not.
 func (s *Store[T]) Has(key string) bool {
-	s.mux.Lock()
-	defer s.mux.Unlock()
+	s.mux.RLock()
+	defer s.mux.RUnlock()
 
 	_, ok := s.data[key]
 
@@ -45,8 +45,8 @@ func (s *Store[T]) Has(key string) bool {
 //
 // If key is not set, the zero T value is returned.
 func (s *Store[T]) Get(key string) T {
-	s.mux.Lock()
-	defer s.mux.Unlock()
+	s.mux.RLock()
+	defer s.mux.RUnlock()
 
 	return s.data[key]
 }

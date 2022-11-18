@@ -8,10 +8,10 @@
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
 
     const tokensList = [
-        { key: "userAuthToken", label: "Users auth token" },
-        { key: "userVerificationToken", label: "Users email verification token" },
-        { key: "userPasswordResetToken", label: "Users password reset token" },
-        { key: "userEmailChangeToken", label: "Users email change token" },
+        { key: "recordAuthToken", label: "Auth record authentication token" },
+        { key: "recordVerificationToken", label: "Auth record email verification token" },
+        { key: "recordPasswordResetToken", label: "Auth record password reset token" },
+        { key: "recordEmailChangeToken", label: "Auth record email change token" },
         { key: "adminAuthToken", label: "Admins auth token" },
         { key: "adminPasswordResetToken", label: "Admins password reset token" },
     ];

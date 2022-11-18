@@ -1,5 +1,4 @@
 <script>
-    // @todo consider replacing with readonly CodeEditor
     import Prism from "prismjs";
     import "prismjs/plugins/normalize-whitespace/prism-normalize-whitespace.js";
     import "prismjs/components/prism-dart.js";
@@ -40,7 +39,7 @@
     code {
         display: block;
         width: 100%;
-        padding: var(--xsSpacing);
+        padding: 10px 15px;
         white-space: pre-wrap;
         word-break: break-word;
     }

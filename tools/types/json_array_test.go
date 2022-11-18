@@ -36,7 +36,7 @@ func TestJsonArrayValue(t *testing.T) {
 		json     types.JsonArray
 		expected driver.Value
 	}{
-		{nil, nil},
+		{nil, `[]`},
 		{types.JsonArray{}, `[]`},
 		{types.JsonArray{1, 2, 3}, `[1,2,3]`},
 		{types.JsonArray{"test1", "test2", "test3"}, `["test1","test2","test3"]`},

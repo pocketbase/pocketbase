@@ -15,7 +15,7 @@
             href={import.meta.env.PB_RELEASES}
             class="inline-flex flex-gap-5"
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
             title="Releases"
         >
             <span class="txt">PocketBase {import.meta.env.PB_VERSION}</span>

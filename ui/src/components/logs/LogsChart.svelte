@@ -2,7 +2,6 @@
     import { onMount } from "svelte";
     import { scale } from "svelte/transition";
     import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
     import {
         Chart,
         LineElement,
@@ -44,7 +43,7 @@
                 resetData();
                 for (let item of result) {
                     chartData.push({
-                        x: CommonHelper.getDateTime(item.date).toLocal().toJSDate(),
+                        x: new Date(item.date),
                         y: item.total,
                     });
                     totalRequests += item.total;

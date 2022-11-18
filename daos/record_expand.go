@@ -3,11 +3,16 @@ package daos
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 // MaxExpandDepth specifies the max allowed nested expand depth path.
@@ -40,10 +45,13 @@ func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, fetchF
 	return failed
 }
 
+var indirectExpandRegex = regexp.MustCompile(`^(\w+)\((\w+)\)$`)
+
 // notes:
 // - fetchFunc must be non-nil func
 // - all records are expected to be from the same collection
 // - if MaxExpandDepth is reached, the function returns nil ignoring the remaining expand path
+// - indirect expands are supported only with single relation fields
 func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetchFunc ExpandFetchFunc, recursionLevel int) error {
 	if fetchFunc == nil {
 		return errors.New("Relation records fetchFunc is not set.")
@@ -53,29 +61,104 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 		return nil
 	}
 
-	parts := strings.SplitN(expandPath, ".", 2)
-
-	// extract the relation field (if exist)
 	mainCollection := records[0].Collection()
-	relField := mainCollection.Schema.GetFieldByName(parts[0])
-	if relField == nil || relField.Type != schema.FieldTypeRelation {
-		return fmt.Errorf("Couldn't find relation field %q in collection %q.", parts[0], mainCollection.Name)
-	}
-	relField.InitOptions()
-	relFieldOptions, ok := relField.Options.(*schema.RelationOptions)
-	if !ok {
-		return fmt.Errorf("Cannot initialize the options of relation field %q.", parts[0])
+
+	var relField *schema.SchemaField
+	var relFieldOptions *schema.RelationOptions
+	var relCollection *models.Collection
+
+	parts := strings.SplitN(expandPath, ".", 2)
+	matches := indirectExpandRegex.FindStringSubmatch(parts[0])
+
+	if len(matches) == 3 {
+		indirectRel, _ := dao.FindCollectionByNameOrId(matches[1])
+		if indirectRel == nil {
+			return fmt.Errorf("Couldn't find indirect related collection %q.", matches[1])
+		}
+
+		indirectRelField := indirectRel.Schema.GetFieldByName(matches[2])
+		if indirectRelField == nil || indirectRelField.Type != schema.FieldTypeRelation {
+			return fmt.Errorf("Couldn't find indirect relation field %q in collection %q.", matches[2], mainCollection.Name)
+		}
+
+		indirectRelField.InitOptions()
+		indirectRelFieldOptions, _ := indirectRelField.Options.(*schema.RelationOptions)
+		if indirectRelFieldOptions == nil || indirectRelFieldOptions.CollectionId != mainCollection.Id {
+			return fmt.Errorf("Invalid indirect relation field path %q.", parts[0])
+		}
+		if indirectRelFieldOptions.MaxSelect != nil && *indirectRelFieldOptions.MaxSelect != 1 {
+			// for now don't allow multi-relation indirect fields expand
+			// due to eventual poor query performance with large data sets.
+			return fmt.Errorf("Multi-relation fields cannot be indirectly expanded in %q.", parts[0])
+		}
+
+		recordIds := make([]any, len(records))
+		for _, record := range records {
+			recordIds = append(recordIds, record.Id)
+		}
+
+		indirectRecords, err := dao.FindRecordsByExpr(
+			indirectRel.Id,
+			dbx.In(inflector.Columnify(matches[2]), recordIds...),
+		)
+		if err != nil {
+			return err
+		}
+		mappedIndirectRecordIds := make(map[string][]string, len(indirectRecords))
+		for _, indirectRecord := range indirectRecords {
+			recId := indirectRecord.GetString(matches[2])
+			if recId != "" {
+				mappedIndirectRecordIds[recId] = append(mappedIndirectRecordIds[recId], indirectRecord.Id)
+			}
+		}
+
+		// add the indirect relation ids as a new relation field value
+		for _, record := range records {
+			relIds, ok := mappedIndirectRecordIds[record.Id]
+			if ok && len(relIds) > 0 {
+				record.Set(parts[0], relIds)
+			}
+		}
+
+		relFieldOptions = &schema.RelationOptions{
+			MaxSelect:    nil,
+			CollectionId: indirectRel.Id,
+		}
+		if indirectRelField.Unique {
+			relFieldOptions.MaxSelect = types.Pointer(1)
+		}
+		// indirect relation
+		relField = &schema.SchemaField{
+			Id:      "indirect_" + security.PseudorandomString(5),
+			Type:    schema.FieldTypeRelation,
+			Name:    parts[0],
+			Options: relFieldOptions,
+		}
+		relCollection = indirectRel
+	} else {
+		// direct relation
+		relField = mainCollection.Schema.GetFieldByName(parts[0])
+		if relField == nil || relField.Type != schema.FieldTypeRelation {
+			return fmt.Errorf("Couldn't find relation field %q in collection %q.", parts[0], mainCollection.Name)
+		}
+		relField.InitOptions()
+		relFieldOptions, _ = relField.Options.(*schema.RelationOptions)
+		if relFieldOptions == nil {
+			return fmt.Errorf("Couldn't initialize the options of relation field %q.", parts[0])
+		}
+
+		relCollection, _ = dao.FindCollectionByNameOrId(relFieldOptions.CollectionId)
+		if relCollection == nil {
+			return fmt.Errorf("Couldn't find related collection %q.", relFieldOptions.CollectionId)
+		}
 	}
 
-	relCollection, err := dao.FindCollectionByNameOrId(relFieldOptions.CollectionId)
-	if err != nil {
-		return fmt.Errorf("Couldn't find collection %q.", relFieldOptions.CollectionId)
-	}
+	// ---------------------------------------------------------------
 
 	// extract the id of the relations to expand
 	relIds := make([]string, 0, len(records))
 	for _, record := range records {
-		relIds = append(relIds, record.GetStringSliceDataValue(relField.Name)...)
+		relIds = append(relIds, record.GetStringSlice(relField.Name)...)
 	}
 
 	// fetch rels
@@ -99,7 +182,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	}
 
 	for _, model := range records {
-		relIds := model.GetStringSliceDataValue(relField.Name)
+		relIds := model.GetStringSlice(relField.Name)
 
 		validRels := make([]*models.Record, 0, len(relIds))
 		for _, id := range relIds {
@@ -112,7 +195,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 			continue // no valid relations
 		}
 
-		expandData := model.GetExpand()
+		expandData := model.Expand()
 
 		// normalize access to the previously expanded rel records (if any)
 		var oldExpandedRels []*models.Record
@@ -133,8 +216,8 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 					continue
 				}
 
-				oldRelExpand := oldExpandedRel.GetExpand()
-				newRelExpand := rel.GetExpand()
+				oldRelExpand := oldExpandedRel.Expand()
+				newRelExpand := rel.Expand()
 				for k, v := range oldRelExpand {
 					newRelExpand[k] = v
 				}
@@ -143,7 +226,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 		}
 
 		// update the expanded data
-		if relFieldOptions.MaxSelect == 1 {
+		if relFieldOptions.MaxSelect != nil && *relFieldOptions.MaxSelect <= 1 {
 			expandData[relField.Name] = validRels[0]
 		} else {
 			expandData[relField.Name] = validRels

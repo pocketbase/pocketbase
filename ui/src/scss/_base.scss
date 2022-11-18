@@ -122,7 +122,8 @@ blockquote {
 code {
     display: inline-block;
     font-family: var(--monospaceFontFamily);
-    font-size: 15px;
+    font-style: normal;
+    font-size: var(--lgFontSize);
     line-height: 1.379rem;
     padding: 0px 4px;
     white-space: nowrap;
@@ -165,6 +166,9 @@ hr {
     width: 100%;
     background: var(--baseAlt1Color);
     margin: var(--baseSpacing) 0;
+    &.dark {
+        background: var(--baseAlt2Color);
+    }
 }
 
 a {
@@ -339,6 +343,14 @@ a,
     border-radius: var(--lgRadius);
     padding: calc(var(--baseSpacing) - 5px) var(--baseSpacing);
     @include shadowize();
+}
+
+.sub-panel {
+    @extend .content;
+    background: var(--baseColor);
+    border-radius: var(--baseRadius);
+    padding: calc(var(--smSpacing) - 5px) var(--smSpacing);
+    border: 1px solid var(--baseAlt1Color);
 }
 
 .clearfix {
@@ -676,7 +688,7 @@ a,
 .list {
     @extend %block;
     position: relative;
-    border: 1px solid var(--baseAlt1Color);
+    border: 1px solid var(--baseAlt2Color);
     border-radius: var(--baseRadius);
     .list-item {
         word-break: break-word;
@@ -686,7 +698,7 @@ a,
         width: 100%;
         gap: 10px;
         padding: 10px;
-        border-bottom: 1px solid var(--baseAlt1Color);
+        border-bottom: 1px solid var(--baseAlt2Color);
         &:last-child {
             border-bottom: 0;
         }

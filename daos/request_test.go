@@ -59,7 +59,7 @@ func TestRequestsStats(t *testing.T) {
 
 	tests.MockRequestLogsData(app)
 
-	expected := `[{"total":1,"date":"2022-05-01 10:00:00.000"},{"total":1,"date":"2022-05-02 10:00:00.000"}]`
+	expected := `[{"total":1,"date":"2022-05-01 10:00:00.000Z"},{"total":1,"date":"2022-05-02 10:00:00.000Z"}]`
 
 	now := time.Now().UTC().Format(types.DefaultDateLayout)
 	exp := dbx.NewExp("[[created]] <= {:date}", dbx.Params{"date": now})
@@ -84,10 +84,10 @@ func TestDeleteOldRequests(t *testing.T) {
 		date          string
 		expectedTotal int
 	}{
-		{"2022-01-01 10:00:00.000", 2}, // no requests to delete before that time
-		{"2022-05-01 11:00:00.000", 1}, // only 1 request should have left
-		{"2022-05-03 11:00:00.000", 0}, // no more requests should have left
-		{"2022-05-04 11:00:00.000", 0}, // no more requests should have left
+		{"2022-01-01 10:00:00.000Z", 2}, // no requests to delete before that time
+		{"2022-05-01 11:00:00.000Z", 1}, // only 1 request should have left
+		{"2022-05-03 11:00:00.000Z", 0}, // no more requests should have left
+		{"2022-05-04 11:00:00.000Z", 0}, // no more requests should have left
 	}
 
 	for i, scenario := range scenarios {

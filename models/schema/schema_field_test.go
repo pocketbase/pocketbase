@@ -11,27 +11,48 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-func TestReservedFieldNames(t *testing.T) {
-	result := schema.ReservedFieldNames()
+func TestBaseModelFieldNames(t *testing.T) {
+	result := schema.BaseModelFieldNames()
+	expected := 3
 
-	if len(result) != 3 {
-		t.Fatalf("Expected %d names, got %d (%v)", 3, len(result), result)
+	if len(result) != expected {
+		t.Fatalf("Expected %d field names, got %d (%v)", expected, len(result), result)
+	}
+}
+
+func TestSystemFieldNames(t *testing.T) {
+	result := schema.SystemFieldNames()
+	expected := 3
+
+	if len(result) != expected {
+		t.Fatalf("Expected %d field names, got %d (%v)", expected, len(result), result)
+	}
+}
+
+func TestAuthFieldNames(t *testing.T) {
+	result := schema.AuthFieldNames()
+	expected := 8
+
+	if len(result) != expected {
+		t.Fatalf("Expected %d auth field names, got %d (%v)", expected, len(result), result)
 	}
 }
 
 func TestFieldTypes(t *testing.T) {
 	result := schema.FieldTypes()
+	expected := 10
 
-	if len(result) != 11 {
-		t.Fatalf("Expected %d types, got %d (%v)", 3, len(result), result)
+	if len(result) != expected {
+		t.Fatalf("Expected %d types, got %d (%v)", expected, len(result), result)
 	}
 }
 
 func TestArraybleFieldTypes(t *testing.T) {
 	result := schema.ArraybleFieldTypes()
+	expected := 3
 
-	if len(result) != 4 {
-		t.Fatalf("Expected %d types, got %d (%v)", 3, len(result), result)
+	if len(result) != expected {
+		t.Fatalf("Expected %d arrayble types, got %d (%v)", expected, len(result), result)
 	}
 }
 
@@ -50,7 +71,7 @@ func TestSchemaFieldColDefinition(t *testing.T) {
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeBool, Name: "test"},
-			"Boolean DEFAULT FALSE",
+			"BOOLEAN DEFAULT FALSE",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeEmail, Name: "test"},
@@ -78,10 +99,6 @@ func TestSchemaFieldColDefinition(t *testing.T) {
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeRelation, Name: "test"},
-			"TEXT DEFAULT ''",
-		},
-		{
-			schema.SchemaField{Type: schema.FieldTypeUser, Name: "test"},
 			"TEXT DEFAULT ''",
 		},
 	}
@@ -297,7 +314,7 @@ func TestSchemaFieldValidate(t *testing.T) {
 			schema.SchemaField{
 				Type: schema.FieldTypeText,
 				Id:   "1234567890",
-				Name: schema.ReservedFieldNameId,
+				Name: schema.FieldNameId,
 			},
 			[]string{"name"},
 		},
@@ -306,7 +323,7 @@ func TestSchemaFieldValidate(t *testing.T) {
 			schema.SchemaField{
 				Type: schema.FieldTypeText,
 				Id:   "1234567890",
-				Name: schema.ReservedFieldNameCreated,
+				Name: schema.FieldNameCreated,
 			},
 			[]string{"name"},
 		},
@@ -315,7 +332,34 @@ func TestSchemaFieldValidate(t *testing.T) {
 			schema.SchemaField{
 				Type: schema.FieldTypeText,
 				Id:   "1234567890",
-				Name: schema.ReservedFieldNameUpdated,
+				Name: schema.FieldNameUpdated,
+			},
+			[]string{"name"},
+		},
+		{
+			"reserved name (collectionId)",
+			schema.SchemaField{
+				Type: schema.FieldTypeText,
+				Id:   "1234567890",
+				Name: schema.FieldNameCollectionId,
+			},
+			[]string{"name"},
+		},
+		{
+			"reserved name (collectionName)",
+			schema.SchemaField{
+				Type: schema.FieldTypeText,
+				Id:   "1234567890",
+				Name: schema.FieldNameCollectionName,
+			},
+			[]string{"name"},
+		},
+		{
+			"reserved name (expand)",
+			schema.SchemaField{
+				Type: schema.FieldTypeText,
+				Id:   "1234567890",
+				Name: schema.FieldNameExpand,
 			},
 			[]string{"name"},
 		},
@@ -456,7 +500,7 @@ func TestSchemaFieldInitOptions(t *testing.T) {
 		{
 			schema.SchemaField{Type: schema.FieldTypeRelation},
 			false,
-			`{"system":false,"id":"","name":"","type":"relation","required":false,"unique":false,"options":{"maxSelect":0,"collectionId":"","cascadeDelete":false}}`,
+			`{"system":false,"id":"","name":"","type":"relation","required":false,"unique":false,"options":{"maxSelect":null,"collectionId":"","cascadeDelete":false}}`,
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeUser},
@@ -548,8 +592,9 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{schema.SchemaField{Type: schema.FieldTypeDate}, nil, `""`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, "test", `""`},
-		{schema.SchemaField{Type: schema.FieldTypeDate}, 1641024040, `"2022-01-01 08:00:40.000"`},
-		{schema.SchemaField{Type: schema.FieldTypeDate}, "2022-01-01 11:27:10.123", `"2022-01-01 11:27:10.123"`},
+		{schema.SchemaField{Type: schema.FieldTypeDate}, 1641024040, `"2022-01-01 08:00:40.000Z"`},
+		{schema.SchemaField{Type: schema.FieldTypeDate}, "2022-01-01 11:27:10.123", `"2022-01-01 11:27:10.123Z"`},
+		{schema.SchemaField{Type: schema.FieldTypeDate}, "2022-01-01 11:27:10.123Z", `"2022-01-01 11:27:10.123Z"`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, types.DateTime{}, `""`},
 		{schema.SchemaField{Type: schema.FieldTypeDate}, time.Time{}, `""`},
 
@@ -697,13 +742,48 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		},
 
 		// relation (single)
-		{schema.SchemaField{Type: schema.FieldTypeRelation}, nil, `""`},
-		{schema.SchemaField{Type: schema.FieldTypeRelation}, "", `""`},
-		{schema.SchemaField{Type: schema.FieldTypeRelation}, 123, `"123"`},
-		{schema.SchemaField{Type: schema.FieldTypeRelation}, "abc", `"abc"`},
-		{schema.SchemaField{Type: schema.FieldTypeRelation}, "1ba88b4f-e9da-42f0-9764-9a55c953e724", `"1ba88b4f-e9da-42f0-9764-9a55c953e724"`},
 		{
-			schema.SchemaField{Type: schema.FieldTypeRelation},
+			schema.SchemaField{
+				Type:    schema.FieldTypeRelation,
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)},
+			},
+			nil,
+			`""`,
+		},
+		{
+			schema.SchemaField{
+				Type:    schema.FieldTypeRelation,
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)},
+			},
+			"",
+			`""`,
+		},
+		{
+			schema.SchemaField{
+				Type:    schema.FieldTypeRelation,
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)},
+			},
+			123,
+			`"123"`,
+		},
+		{
+			schema.SchemaField{
+				Type:    schema.FieldTypeRelation,
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)},
+			},
+			"abc",
+			`"abc"`,
+		},
+		{
+			schema.SchemaField{
+				Type:    schema.FieldTypeRelation,
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)},
+			},
+			"1ba88b4f-e9da-42f0-9764-9a55c953e724",
+			`"1ba88b4f-e9da-42f0-9764-9a55c953e724"`,
+		},
+		{
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
 			[]string{"1ba88b4f-e9da-42f0-9764-9a55c953e724", "2ba88b4f-e9da-42f0-9764-9a55c953e724"},
 			`"1ba88b4f-e9da-42f0-9764-9a55c953e724"`,
 		},
@@ -711,7 +791,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{
 			schema.SchemaField{
 				Type:    schema.FieldTypeRelation,
-				Options: &schema.RelationOptions{MaxSelect: 2},
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(2)},
 			},
 			nil,
 			`[]`,
@@ -719,7 +799,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{
 			schema.SchemaField{
 				Type:    schema.FieldTypeRelation,
-				Options: &schema.RelationOptions{MaxSelect: 2},
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(2)},
 			},
 			"",
 			`[]`,
@@ -727,7 +807,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{
 			schema.SchemaField{
 				Type:    schema.FieldTypeRelation,
-				Options: &schema.RelationOptions{MaxSelect: 2},
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(2)},
 			},
 			[]string{},
 			`[]`,
@@ -735,7 +815,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{
 			schema.SchemaField{
 				Type:    schema.FieldTypeRelation,
-				Options: &schema.RelationOptions{MaxSelect: 2},
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(2)},
 			},
 			123,
 			`["123"]`,
@@ -743,7 +823,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{
 			schema.SchemaField{
 				Type:    schema.FieldTypeRelation,
-				Options: &schema.RelationOptions{MaxSelect: 2},
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(2)},
 			},
 			[]string{"", "abc"},
 			`["abc"]`,
@@ -752,7 +832,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 			// no values validation
 			schema.SchemaField{
 				Type:    schema.FieldTypeRelation,
-				Options: &schema.RelationOptions{MaxSelect: 2},
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(2)},
 			},
 			[]string{"1ba88b4f-e9da-42f0-9764-9a55c953e724", "2ba88b4f-e9da-42f0-9764-9a55c953e724"},
 			`["1ba88b4f-e9da-42f0-9764-9a55c953e724","2ba88b4f-e9da-42f0-9764-9a55c953e724"]`,
@@ -761,77 +841,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 			// duplicated values
 			schema.SchemaField{
 				Type:    schema.FieldTypeRelation,
-				Options: &schema.RelationOptions{MaxSelect: 2},
-			},
-			[]string{"1ba88b4f-e9da-42f0-9764-9a55c953e724", "2ba88b4f-e9da-42f0-9764-9a55c953e724", "1ba88b4f-e9da-42f0-9764-9a55c953e724"},
-			`["1ba88b4f-e9da-42f0-9764-9a55c953e724","2ba88b4f-e9da-42f0-9764-9a55c953e724"]`,
-		},
-
-		// user (single)
-		{schema.SchemaField{Type: schema.FieldTypeUser}, nil, `""`},
-		{schema.SchemaField{Type: schema.FieldTypeUser}, "", `""`},
-		{schema.SchemaField{Type: schema.FieldTypeUser}, 123, `"123"`},
-		{schema.SchemaField{Type: schema.FieldTypeUser}, "1ba88b4f-e9da-42f0-9764-9a55c953e724", `"1ba88b4f-e9da-42f0-9764-9a55c953e724"`},
-		{
-			schema.SchemaField{Type: schema.FieldTypeUser},
-			[]string{"1ba88b4f-e9da-42f0-9764-9a55c953e724", "2ba88b4f-e9da-42f0-9764-9a55c953e724"},
-			`"1ba88b4f-e9da-42f0-9764-9a55c953e724"`,
-		},
-		// user (multiple)
-		{
-			schema.SchemaField{
-				Type:    schema.FieldTypeUser,
-				Options: &schema.UserOptions{MaxSelect: 2},
-			},
-			nil,
-			`[]`,
-		},
-		{
-			schema.SchemaField{
-				Type:    schema.FieldTypeUser,
-				Options: &schema.UserOptions{MaxSelect: 2},
-			},
-			"",
-			`[]`,
-		},
-		{
-			schema.SchemaField{
-				Type:    schema.FieldTypeUser,
-				Options: &schema.UserOptions{MaxSelect: 2},
-			},
-			[]string{},
-			`[]`,
-		},
-		{
-			schema.SchemaField{
-				Type:    schema.FieldTypeUser,
-				Options: &schema.UserOptions{MaxSelect: 2},
-			},
-			123,
-			`["123"]`,
-		},
-		{
-			schema.SchemaField{
-				Type:    schema.FieldTypeUser,
-				Options: &schema.UserOptions{MaxSelect: 2},
-			},
-			[]string{"", "abc"},
-			`["abc"]`,
-		},
-		{
-			// no values validation
-			schema.SchemaField{
-				Type:    schema.FieldTypeUser,
-				Options: &schema.UserOptions{MaxSelect: 2},
-			},
-			[]string{"1ba88b4f-e9da-42f0-9764-9a55c953e724", "2ba88b4f-e9da-42f0-9764-9a55c953e724"},
-			`["1ba88b4f-e9da-42f0-9764-9a55c953e724","2ba88b4f-e9da-42f0-9764-9a55c953e724"]`,
-		},
-		{
-			// duplicated values
-			schema.SchemaField{
-				Type:    schema.FieldTypeUser,
-				Options: &schema.UserOptions{MaxSelect: 2},
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(2)},
 			},
 			[]string{"1ba88b4f-e9da-42f0-9764-9a55c953e724", "2ba88b4f-e9da-42f0-9764-9a55c953e724", "1ba88b4f-e9da-42f0-9764-9a55c953e724"},
 			`["1ba88b4f-e9da-42f0-9764-9a55c953e724","2ba88b4f-e9da-42f0-9764-9a55c953e724"]`,
@@ -1277,13 +1287,13 @@ func TestRelationOptionsValidate(t *testing.T) {
 		{
 			"empty",
 			schema.RelationOptions{},
-			[]string{"maxSelect", "collectionId"},
+			[]string{"collectionId"},
 		},
 		{
 			"empty CollectionId",
 			schema.RelationOptions{
 				CollectionId: "",
-				MaxSelect:    1,
+				MaxSelect:    types.Pointer(1),
 			},
 			[]string{"collectionId"},
 		},
@@ -1291,7 +1301,7 @@ func TestRelationOptionsValidate(t *testing.T) {
 			"MaxSelect <= 0",
 			schema.RelationOptions{
 				CollectionId: "abc",
-				MaxSelect:    0,
+				MaxSelect:    types.Pointer(0),
 			},
 			[]string{"maxSelect"},
 		},
@@ -1299,33 +1309,7 @@ func TestRelationOptionsValidate(t *testing.T) {
 			"MaxSelect > 0 && non-empty CollectionId",
 			schema.RelationOptions{
 				CollectionId: "abc",
-				MaxSelect:    1,
-			},
-			[]string{},
-		},
-	}
-
-	checkFieldOptionsScenarios(t, scenarios)
-}
-
-func TestUserOptionsValidate(t *testing.T) {
-	scenarios := []fieldOptionsScenario{
-		{
-			"empty",
-			schema.UserOptions{},
-			[]string{"maxSelect"},
-		},
-		{
-			"MaxSelect <= 0",
-			schema.UserOptions{
-				MaxSelect: 0,
-			},
-			[]string{"maxSelect"},
-		},
-		{
-			"MaxSelect > 0",
-			schema.UserOptions{
-				MaxSelect: 1,
+				MaxSelect:    types.Pointer(1),
 			},
 			[]string{},
 		},

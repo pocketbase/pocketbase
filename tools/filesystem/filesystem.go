@@ -5,6 +5,7 @@ import (
 	"errors"
 	"image"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -109,6 +110,39 @@ func (s *System) Upload(content []byte, fileKey string) error {
 	}
 
 	if _, err := w.Write(content); err != nil {
+		w.Close()
+		return err
+	}
+
+	return w.Close()
+}
+
+// UploadMultipart upload the provided multipart file to the fileKey location.
+func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error {
+	f, err := fh.Open()
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	mt, err := mimetype.DetectReader(f)
+	if err != nil {
+		return err
+	}
+
+	// rewind
+	f.Seek(0, io.SeekStart)
+
+	opts := &blob.WriterOptions{
+		ContentType: mt.String(),
+	}
+
+	w, err := s.bucket.NewWriter(s.ctx, fileKey, opts)
+	if err != nil {
+		return err
+	}
+
+	if _, err := w.ReadFrom(f); err != nil {
 		w.Close()
 		return err
 	}
@@ -233,13 +267,20 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	response.Header().Set("Content-Length", strconv.FormatInt(r.Size(), 10))
 	response.Header().Set("Content-Security-Policy", "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox")
 
-	// All HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
+	// all HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
 	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
 	//
 	// NB! time.LoadLocation may fail on non-Unix systems (see https://github.com/pocketbase/pocketbase/issues/45)
 	location, locationErr := time.LoadLocation("GMT")
 	if locationErr == nil {
 		response.Header().Set("Last-Modified", r.ModTime().In(location).Format("Mon, 02 Jan 06 15:04:05 MST"))
+	}
+
+	// set a default cache-control header
+	// (valid for 30 days but the cache is allowed to reuse the file for any requests
+	// that are made in the last day while revalidating the response in the background)
+	if response.Header().Get("Cache-Control") == "" {
+		response.Header().Set("Cache-Control", "max-age=2592000, stale-while-revalidate=86400")
 	}
 
 	// copy from the read range to response.
@@ -282,6 +323,7 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 	defer r.Close()
 
 	// create imaging object from the original reader
+	// (note: only the first frame for animated image formats)
 	img, decodeErr := imaging.Decode(r, imaging.AutoOrientation(true))
 	if decodeErr != nil {
 		return decodeErr

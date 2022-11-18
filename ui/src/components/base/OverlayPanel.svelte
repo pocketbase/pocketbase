@@ -86,10 +86,12 @@
             oldFocusedElem = document.activeElement;
             wrapper?.focus();
             dispatch("show");
+            document.body.classList.add("overlay-active");
         } else {
             clearTimeout(contentScrollThrottle);
             oldFocusedElem?.focus();
             dispatch("hide");
+            document.body.classList.remove("overlay-active");
         }
 
         await tick();
@@ -179,13 +181,17 @@
             // ensures that no artifacts remains
             // (currently there is a bug with svelte transition)
             wrapper?.classList?.add("hidden");
+
+            setTimeout(() => {
+                wrapper?.remove();
+            }, 0);
         };
     });
 </script>
 
 <svelte:window on:resize={handleResize} on:keydown={handleEscPress} />
 
-<div class="overlay-panel-wrapper" bind:this={wrapper}>
+<div bind:this={wrapper} class="overlay-panel-wrapper">
     {#if active}
         <div class="overlay-panel-container" class:padded={popup} class:active>
             <div

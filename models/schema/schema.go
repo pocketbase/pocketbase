@@ -113,7 +113,7 @@ func (s *Schema) RemoveField(id string) {
 func (s *Schema) AddField(newField *SchemaField) {
 	if newField.Id == "" {
 		// set default id
-		newField.Id = strings.ToLower(security.RandomString(8))
+		newField.Id = strings.ToLower(security.PseudorandomString(8))
 	}
 
 	for i, field := range s.fields {
@@ -133,12 +133,8 @@ func (s *Schema) AddField(newField *SchemaField) {
 // Internally calls each individual field's validator and additionally
 // checks for invalid renamed fields and field name duplications.
 func (s Schema) Validate() error {
-	return validation.Validate(&s.fields, validation.Required, validation.By(func(value any) error {
+	return validation.Validate(&s.fields, validation.By(func(value any) error {
 		fields := s.fields // use directly the schema value to avoid unnecessary interface casting
-
-		if len(fields) == 0 {
-			return validation.NewError("validation_invalid_schema", "Invalid schema format.")
-		}
 
 		ids := []string{}
 		names := []string{}
@@ -204,8 +200,9 @@ func (s *Schema) UnmarshalJSON(data []byte) error {
 
 // Value implements the [driver.Valuer] interface.
 func (s Schema) Value() (driver.Value, error) {
-	if len(s.fields) == 0 {
-		return nil, nil
+	if s.fields == nil {
+		// initialize an empty slice to ensure that `[]` is returned
+		s.fields = []*SchemaField{}
 	}
 
 	data, err := json.Marshal(s.fields)

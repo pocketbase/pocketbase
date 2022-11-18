@@ -215,7 +215,7 @@ func TestSchemaValidate(t *testing.T) {
 		// no fields
 		{
 			schema.NewSchema(),
-			true,
+			false,
 		},
 		// duplicated field ids
 		{
@@ -342,7 +342,7 @@ func TestSchemaValue(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if v1 != nil {
+	if v1 != "[]" {
 		t.Fatalf("Expected nil, got %v", v1)
 	}
 

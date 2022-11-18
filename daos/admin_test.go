@@ -27,8 +27,9 @@ func TestFindAdminById(t *testing.T) {
 		id          string
 		expectError bool
 	}{
-		{"00000000-2b4a-a26b-4d01-42d3c3d77bc8", true},
-		{"3f8397cc-2b4a-a26b-4d01-42d3c3d77bc8", false},
+		{" ", true},
+		{"missing", true},
+		{"9q2trqumvlyr3bd", false},
 	}
 
 	for i, scenario := range scenarios {
@@ -53,6 +54,7 @@ func TestFindAdminByEmail(t *testing.T) {
 		email       string
 		expectError bool
 	}{
+		{"", true},
 		{"invalid", true},
 		{"missing@example.com", true},
 		{"test@example.com", false},
@@ -83,23 +85,30 @@ func TestFindAdminByToken(t *testing.T) {
 		expectedEmail string
 		expectError   bool
 	}{
-		// invalid base key (password reset key for auth token)
+		// invalid auth token
 		{
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
-			app.Settings().AdminPasswordResetToken.Secret,
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MDk5MTY2MX0.qrbkI2TITtFKMP6vrATrBVKPGjEiDIBeQ0mlqPGMVeY",
+			app.Settings().AdminAuthToken.Secret,
 			"",
 			true,
 		},
 		// expired token
 		{
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MDk5MTY2MX0.uXZ_ywsZeRFSvDNQ9zBoYUXKXw7VEr48Fzx-E06OkS8",
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MDk5MTY2MX0.I7w8iktkleQvC7_UIRpD7rNzcU4OnF7i7SFIUu6lD_4",
 			app.Settings().AdminAuthToken.Secret,
+			"",
+			true,
+		},
+		// wrong base token (password reset token secret instead of auth secret)
+		{
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			app.Settings().AdminPasswordResetToken.Secret,
 			"",
 			true,
 		},
 		// valid token
 		{
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			app.Settings().AdminAuthToken.Secret,
 			"test@example.com",
 			false,
@@ -129,8 +138,8 @@ func TestTotalAdmins(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if result1 != 2 {
-		t.Fatalf("Expected 2 admins, got %d", result1)
+	if result1 != 3 {
+		t.Fatalf("Expected 3 admins, got %d", result1)
 	}
 
 	// delete all
@@ -156,8 +165,10 @@ func TestIsAdminEmailUnique(t *testing.T) {
 	}{
 		{"", "", false},
 		{"test@example.com", "", false},
+		{"test2@example.com", "", false},
+		{"test3@example.com", "", false},
 		{"new@example.com", "", true},
-		{"test@example.com", "2b4a97cc-3f83-4d01-a26b-3d77bc842d3c", true},
+		{"test@example.com", "sywbhecnh46rhm0", true},
 	}
 
 	for i, scenario := range scenarios {
@@ -186,15 +197,24 @@ func TestDeleteAdmin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	admin3, err := app.Dao().FindAdminByEmail("test3@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	deleteErr1 := app.Dao().DeleteAdmin(admin1)
 	if deleteErr1 != nil {
 		t.Fatal(deleteErr1)
 	}
 
-	// cannot delete the only remaining admin
 	deleteErr2 := app.Dao().DeleteAdmin(admin2)
-	if deleteErr2 == nil {
+	if deleteErr2 != nil {
+		t.Fatal(deleteErr2)
+	}
+
+	// cannot delete the only remaining admin
+	deleteErr3 := app.Dao().DeleteAdmin(admin3)
+	if deleteErr3 == nil {
 		t.Fatal("Expected delete error, got nil")
 	}
 

@@ -15,6 +15,7 @@ import (
 
 func TestNewRecord(t *testing.T) {
 	collection := &models.Collection{
+		Name: "test_collection",
 		Schema: schema.NewSchema(
 			&schema.SchemaField{
 				Name: "test",
@@ -25,12 +26,12 @@ func TestNewRecord(t *testing.T) {
 
 	m := models.NewRecord(collection)
 
-	if m.Collection().Id != collection.Id {
-		t.Fatalf("Expected collection with id %v, got %v", collection.Id, m.Collection().Id)
+	if m.Collection().Name != collection.Name {
+		t.Fatalf("Expected collection with name %q, got %q", collection.Id, m.Collection().Id)
 	}
 
-	if len(m.Data()) != 0 {
-		t.Fatalf("Expected empty data, got %v", m.Data())
+	if len(m.SchemaData()) != 0 {
+		t.Fatalf("Expected empty schema data, got %v", m.SchemaData())
 	}
 }
 
@@ -75,17 +76,51 @@ func TestNewRecordFromNullStringMap(t *testing.T) {
 
 	data := dbx.NullStringMap{
 		"id": sql.NullString{
-			String: "c23eb053-d07e-4fbe-86b3-b8ac31982e9a",
+			String: "test_id",
 			Valid:  true,
 		},
 		"created": sql.NullString{
-			String: "2022-01-01 10:00:00.123",
+			String: "2022-01-01 10:00:00.123Z",
 			Valid:  true,
 		},
 		"updated": sql.NullString{
-			String: "2022-01-01 10:00:00.456",
+			String: "2022-01-01 10:00:00.456Z",
 			Valid:  true,
 		},
+		// auth collection specific fields
+		"username": sql.NullString{
+			String: "test_username",
+			Valid:  true,
+		},
+		"email": sql.NullString{
+			String: "test_email",
+			Valid:  true,
+		},
+		"emailVisibility": sql.NullString{
+			String: "true",
+			Valid:  true,
+		},
+		"verified": sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		"tokenKey": sql.NullString{
+			String: "test_tokenKey",
+			Valid:  true,
+		},
+		"passwordHash": sql.NullString{
+			String: "test_passwordHash",
+			Valid:  true,
+		},
+		"lastResetSentAt": sql.NullString{
+			String: "2022-01-02 10:00:00.123Z",
+			Valid:  true,
+		},
+		"lastVerificationSentAt": sql.NullString{
+			String: "2022-02-03 10:00:00.456Z",
+			Valid:  true,
+		},
+		// custom schema fields
 		"field1": sql.NullString{
 			String: "test",
 			Valid:  true,
@@ -110,18 +145,56 @@ func TestNewRecordFromNullStringMap(t *testing.T) {
 			String: "test", // will be converted to slice
 			Valid:  true,
 		},
+		"unknown": sql.NullString{
+			String: "test",
+			Valid:  true,
+		},
 	}
 
-	m := models.NewRecordFromNullStringMap(collection, data)
-	encoded, err := m.MarshalJSON()
-	if err != nil {
-		t.Fatal(err)
+	scenarios := []struct {
+		collectionType string
+		expectedJson   string
+	}{
+		{
+			models.CollectionTypeBase,
+			`{"collectionId":"","collectionName":"test","created":"2022-01-01 10:00:00.123Z","field1":"test","field2":"","field3":true,"field4":123.123,"field5":"test1","field6":["test"],"id":"test_id","updated":"2022-01-01 10:00:00.456Z"}`,
+		},
+		{
+			models.CollectionTypeAuth,
+			`{"collectionId":"","collectionName":"test","created":"2022-01-01 10:00:00.123Z","email":"test_email","emailVisibility":true,"field1":"test","field2":"","field3":true,"field4":123.123,"field5":"test1","field6":["test"],"id":"test_id","updated":"2022-01-01 10:00:00.456Z","username":"test_username","verified":false}`,
+		},
 	}
 
-	expected := `{"@collectionId":"","@collectionName":"test","created":"2022-01-01 10:00:00.123","field1":"test","field2":"","field3":true,"field4":123.123,"field5":"test1","field6":["test"],"id":"c23eb053-d07e-4fbe-86b3-b8ac31982e9a","updated":"2022-01-01 10:00:00.456"}`
+	for i, s := range scenarios {
+		collection.Type = s.collectionType
+		m := models.NewRecordFromNullStringMap(collection, data)
+		m.IgnoreEmailVisibility(true)
 
-	if string(encoded) != expected {
-		t.Fatalf("Expected %v, got \n%v", expected, string(encoded))
+		encoded, err := m.MarshalJSON()
+		if err != nil {
+			t.Errorf("(%d) Unexpected error: %v", i, err)
+			continue
+		}
+
+		if string(encoded) != s.expectedJson {
+			t.Errorf("(%d) Expected \n%v \ngot \n%v", i, s.expectedJson, string(encoded))
+		}
+
+		// additional data checks
+		if collection.IsAuth() {
+			if v := m.GetString(schema.FieldNamePasswordHash); v != "test_passwordHash" {
+				t.Errorf("(%d) Expected %q, got %q", i, "test_passwordHash", v)
+			}
+			if v := m.GetString(schema.FieldNameTokenKey); v != "test_tokenKey" {
+				t.Errorf("(%d) Expected %q, got %q", i, "test_tokenKey", v)
+			}
+			if v := m.GetString(schema.FieldNameLastResetSentAt); v != "2022-01-02 10:00:00.123Z" {
+				t.Errorf("(%d) Expected %q, got %q", i, "2022-01-02 10:00:00.123Z", v)
+			}
+			if v := m.GetString(schema.FieldNameLastVerificationSentAt); v != "2022-02-03 10:00:00.456Z" {
+				t.Errorf("(%d) Expected %q, got %q", i, "2022-01-02 10:00:00.123Z", v)
+			}
+		}
 	}
 }
 
@@ -137,69 +210,101 @@ func TestNewRecordsFromNullStringMaps(t *testing.T) {
 				Name: "field2",
 				Type: schema.FieldTypeNumber,
 			},
+			&schema.SchemaField{
+				Name: "field3",
+				Type: schema.FieldTypeUrl,
+			},
 		),
 	}
 
 	data := []dbx.NullStringMap{
 		{
 			"id": sql.NullString{
-				String: "11111111-d07e-4fbe-86b3-b8ac31982e9a",
+				String: "test_id1",
 				Valid:  true,
 			},
 			"created": sql.NullString{
-				String: "2022-01-01 10:00:00.123",
+				String: "2022-01-01 10:00:00.123Z",
 				Valid:  true,
 			},
 			"updated": sql.NullString{
-				String: "2022-01-01 10:00:00.456",
+				String: "2022-01-01 10:00:00.456Z",
 				Valid:  true,
 			},
+			// partial auth fields
+			"email": sql.NullString{
+				String: "test_email",
+				Valid:  true,
+			},
+			"tokenKey": sql.NullString{
+				String: "test_tokenKey",
+				Valid:  true,
+			},
+			"emailVisibility": sql.NullString{
+				String: "true",
+				Valid:  true,
+			},
+			// custom schema fields
 			"field1": sql.NullString{
-				String: "test1",
+				String: "test",
 				Valid:  true,
 			},
 			"field2": sql.NullString{
-				String: "123",
-				Valid:  false, // test invalid db serialization
+				String: "123.123",
+				Valid:  true,
+			},
+			"field3": sql.NullString{
+				String: "test",
+				Valid:  false, // should force resolving to empty string
+			},
+			"unknown": sql.NullString{
+				String: "test",
+				Valid:  true,
 			},
 		},
 		{
-			"id": sql.NullString{
-				String: "22222222-d07e-4fbe-86b3-b8ac31982e9a",
+			"field3": sql.NullString{
+				String: "test",
 				Valid:  true,
 			},
-			"field1": sql.NullString{
-				String: "test2",
+			"email": sql.NullString{
+				String: "test_email",
 				Valid:  true,
 			},
-			"field2": sql.NullString{
-				String: "123",
+			"emailVisibility": sql.NullString{
+				String: "false",
 				Valid:  true,
 			},
 		},
 	}
 
-	result := models.NewRecordsFromNullStringMaps(collection, data)
-	encoded, err := json.Marshal(result)
-	if err != nil {
-		t.Fatal(err)
+	scenarios := []struct {
+		collectionType string
+		expectedJson   string
+	}{
+		{
+			models.CollectionTypeBase,
+			`[{"collectionId":"","collectionName":"test","created":"2022-01-01 10:00:00.123Z","field1":"test","field2":123.123,"field3":"","id":"test_id1","updated":"2022-01-01 10:00:00.456Z"},{"collectionId":"","collectionName":"test","created":"","field1":"","field2":0,"field3":"test","id":"","updated":""}]`,
+		},
+		{
+			models.CollectionTypeAuth,
+			`[{"collectionId":"","collectionName":"test","created":"2022-01-01 10:00:00.123Z","email":"test_email","emailVisibility":true,"field1":"test","field2":123.123,"field3":"","id":"test_id1","updated":"2022-01-01 10:00:00.456Z","username":"","verified":false},{"collectionId":"","collectionName":"test","created":"","emailVisibility":false,"field1":"","field2":0,"field3":"test","id":"","updated":"","username":"","verified":false}]`,
+		},
 	}
 
-	expected := `[{"@collectionId":"","@collectionName":"test","created":"2022-01-01 10:00:00.123","field1":"test1","field2":0,"id":"11111111-d07e-4fbe-86b3-b8ac31982e9a","updated":"2022-01-01 10:00:00.456"},{"@collectionId":"","@collectionName":"test","created":"","field1":"test2","field2":123,"id":"22222222-d07e-4fbe-86b3-b8ac31982e9a","updated":""}]`
+	for i, s := range scenarios {
+		collection.Type = s.collectionType
+		result := models.NewRecordsFromNullStringMaps(collection, data)
 
-	if string(encoded) != expected {
-		t.Fatalf("Expected \n%v, got \n%v", expected, string(encoded))
-	}
-}
+		encoded, err := json.Marshal(result)
+		if err != nil {
+			t.Errorf("(%d) Unexpected error: %v", i, err)
+			continue
+		}
 
-func TestRecordCollection(t *testing.T) {
-	collection := &models.Collection{}
-	collection.RefreshId()
-
-	m := models.NewRecord(collection)
-
-	if m.Collection().Id != collection.Id {
-		t.Fatalf("Expected collection with id %v, got %v", collection.Id, m.Collection().Id)
+		if string(encoded) != s.expectedJson {
+			t.Errorf("(%d) Expected \n%v \ngot \n%v", i, s.expectedJson, string(encoded))
+		}
 	}
 }
 
@@ -215,6 +320,17 @@ func TestRecordTableName(t *testing.T) {
 	}
 }
 
+func TestRecordCollection(t *testing.T) {
+	collection := &models.Collection{}
+	collection.RefreshId()
+
+	m := models.NewRecord(collection)
+
+	if m.Collection().Id != collection.Id {
+		t.Fatalf("Expected collection with id %v, got %v", collection.Id, m.Collection().Id)
+	}
+}
+
 func TestRecordExpand(t *testing.T) {
 	collection := &models.Collection{}
 	m := models.NewRecord(collection)
@@ -226,80 +342,19 @@ func TestRecordExpand(t *testing.T) {
 	// change the original data to check if it was shallow copied
 	data["test"] = 456
 
-	expand := m.GetExpand()
+	expand := m.Expand()
 	if v, ok := expand["test"]; !ok || v != 123 {
 		t.Fatalf("Expected expand.test to be %v, got %v", 123, v)
 	}
 }
 
-func TestRecordLoadAndData(t *testing.T) {
+func TestRecordSchemaData(t *testing.T) {
 	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{
-				Name: "field",
-				Type: schema.FieldTypeText,
-			},
-		),
-	}
-	m := models.NewRecord(collection)
-
-	data := map[string]any{
-		"id":      "11111111-d07e-4fbe-86b3-b8ac31982e9a",
-		"created": "2022-01-01 10:00:00.123",
-		"updated": "2022-01-01 10:00:00.456",
-		"field":   "test",
-		"unknown": "test",
-	}
-
-	m.Load(data)
-
-	// change some of original data fields to check if they were shallow copied
-	data["id"] = "22222222-d07e-4fbe-86b3-b8ac31982e9a"
-	data["field"] = "new_test"
-
-	expectedData := `{"field":"test"}`
-	encodedData, _ := json.Marshal(m.Data())
-	if string(encodedData) != expectedData {
-		t.Fatalf("Expected data %v, got \n%v", expectedData, string(encodedData))
-	}
-
-	expectedModel := `{"@collectionId":"","@collectionName":"","created":"2022-01-01 10:00:00.123","field":"test","id":"11111111-d07e-4fbe-86b3-b8ac31982e9a","updated":"2022-01-01 10:00:00.456"}`
-	encodedModel, _ := json.Marshal(m)
-	if string(encodedModel) != expectedModel {
-		t.Fatalf("Expected model %v, got \n%v", expectedModel, string(encodedModel))
-	}
-}
-
-func TestRecordSetDataValue(t *testing.T) {
-	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{
-				Name: "field",
-				Type: schema.FieldTypeText,
-			},
-		),
-	}
-	m := models.NewRecord(collection)
-
-	m.SetDataValue("unknown", 123)
-	m.SetDataValue("field", 123) // test whether PrepareValue will be called and casted to string
-
-	data := m.Data()
-	if len(data) != 1 {
-		t.Fatalf("Expected only 1 data field to be set, got %v", data)
-	}
-
-	if v, ok := data["field"]; !ok || v != "123" {
-		t.Fatalf("Expected field to be %v, got %v", "123", v)
-	}
-}
-
-func TestRecordGetDataValue(t *testing.T) {
-	collection := &models.Collection{
+		Type: models.CollectionTypeAuth,
 		Schema: schema.NewSchema(
 			&schema.SchemaField{
 				Name: "field1",
-				Type: schema.FieldTypeNumber,
+				Type: schema.FieldTypeText,
 			},
 			&schema.SchemaField{
 				Name: "field2",
@@ -307,30 +362,158 @@ func TestRecordGetDataValue(t *testing.T) {
 			},
 		),
 	}
+
 	m := models.NewRecord(collection)
+	m.Set("email", "test@example.com")
+	m.Set("field1", 123)
+	m.Set("field2", 456)
+	m.Set("unknown", 789)
 
-	m.SetDataValue("field2", 123)
-
-	// missing
-	v0 := m.GetDataValue("missing")
-	if v0 != nil {
-		t.Fatalf("Unexpected value for key 'missing'")
+	encoded, err := json.Marshal(m.SchemaData())
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	// existing - not set
-	v1 := m.GetDataValue("field1")
-	if v1 != nil {
-		t.Fatalf("Unexpected value for key 'field1'")
-	}
+	expected := `{"field1":"123","field2":456}`
 
-	// existing - set
-	v2 := m.GetDataValue("field2")
-	if v2 != 123.0 {
-		t.Fatalf("Expected 123.0, got %v", v2)
+	if v := string(encoded); v != expected {
+		t.Fatalf("Expected \n%v \ngot \n%v", v, expected)
 	}
 }
 
-func TestRecordGetBoolDataValue(t *testing.T) {
+func TestRecordUnknownData(t *testing.T) {
+	collection := &models.Collection{
+		Schema: schema.NewSchema(
+			&schema.SchemaField{
+				Name: "field1",
+				Type: schema.FieldTypeText,
+			},
+			&schema.SchemaField{
+				Name: "field2",
+				Type: schema.FieldTypeNumber,
+			},
+		),
+	}
+
+	data := map[string]any{
+		"id":                     "test_id",
+		"created":                "2022-01-01 00:00:00.000",
+		"updated":                "2022-01-01 00:00:00.000",
+		"collectionId":           "test_collectionId",
+		"collectionName":         "test_collectionName",
+		"expand":                 "test_expand",
+		"field1":                 "test_field1",
+		"field2":                 "test_field1",
+		"unknown1":               "test_unknown1",
+		"unknown2":               "test_unknown2",
+		"passwordHash":           "test_passwordHash",
+		"username":               "test_username",
+		"emailVisibility":        true,
+		"email":                  "test_email",
+		"verified":               true,
+		"tokenKey":               "test_tokenKey",
+		"lastResetSentAt":        "2022-01-01 00:00:00.000",
+		"lastVerificationSentAt": "2022-01-01 00:00:00.000",
+	}
+
+	scenarios := []struct {
+		collectionType string
+		expectedKeys   []string
+	}{
+		{
+			models.CollectionTypeBase,
+			[]string{
+				"unknown1",
+				"unknown2",
+				"passwordHash",
+				"username",
+				"emailVisibility",
+				"email",
+				"verified",
+				"tokenKey",
+				"lastResetSentAt",
+				"lastVerificationSentAt",
+			},
+		},
+		{
+			models.CollectionTypeAuth,
+			[]string{"unknown1", "unknown2"},
+		},
+	}
+
+	for i, s := range scenarios {
+		collection.Type = s.collectionType
+		m := models.NewRecord(collection)
+		m.Load(data)
+
+		result := m.UnknownData()
+
+		if len(result) != len(s.expectedKeys) {
+			t.Errorf("(%d) Expected data \n%v \ngot \n%v", i, s.expectedKeys, result)
+			continue
+		}
+
+		for _, key := range s.expectedKeys {
+			if _, ok := result[key]; !ok {
+				t.Errorf("(%d) Missing expected key %q in \n%v", i, key, result)
+			}
+		}
+	}
+}
+
+func TestRecordSetAndGet(t *testing.T) {
+	collection := &models.Collection{
+		Schema: schema.NewSchema(
+			&schema.SchemaField{
+				Name: "field1",
+				Type: schema.FieldTypeText,
+			},
+			&schema.SchemaField{
+				Name: "field2",
+				Type: schema.FieldTypeNumber,
+			},
+		),
+	}
+
+	m := models.NewRecord(collection)
+	m.Set("id", "test_id")
+	m.Set("created", "2022-09-15 00:00:00.123Z")
+	m.Set("updated", "invalid")
+	m.Set("field1", 123)                         // should be casted to string
+	m.Set("field2", "invlaid")                   // should be casted to zero-number
+	m.Set("unknown", 456)                        // undefined fields are allowed but not exported by default
+	m.Set("expand", map[string]any{"test": 123}) // should store the value in m.expand
+
+	if m.Get("id") != "test_id" {
+		t.Fatalf("Expected id %q, got %q", "test_id", m.Get("id"))
+	}
+
+	if m.GetString("created") != "2022-09-15 00:00:00.123Z" {
+		t.Fatalf("Expected created %q, got %q", "2022-09-15 00:00:00.123Z", m.GetString("created"))
+	}
+
+	if m.GetString("updated") != "" {
+		t.Fatalf("Expected updated to be empty, got %q", m.GetString("updated"))
+	}
+
+	if m.Get("field1") != "123" {
+		t.Fatalf("Expected field1 %q, got %v", "123", m.Get("field1"))
+	}
+
+	if m.Get("field2") != 0.0 {
+		t.Fatalf("Expected field2 %v, got %v", 0.0, m.Get("field2"))
+	}
+
+	if m.Get("unknown") != 456 {
+		t.Fatalf("Expected unknown %v, got %v", 456, m.Get("unknown"))
+	}
+
+	if m.Expand()["test"] != 123 {
+		t.Fatalf("Expected expand to be %v, got %v", map[string]any{"test": 123}, m.Expand())
+	}
+}
+
+func TestRecordGetBool(t *testing.T) {
 	scenarios := []struct {
 		value    any
 		expected bool
@@ -348,24 +531,20 @@ func TestRecordGetBoolDataValue(t *testing.T) {
 		{true, true},
 	}
 
-	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{Name: "test"},
-		),
-	}
+	collection := &models.Collection{}
 
 	for i, s := range scenarios {
 		m := models.NewRecord(collection)
-		m.SetDataValue("test", s.value)
+		m.Set("test", s.value)
 
-		result := m.GetBoolDataValue("test")
+		result := m.GetBool("test")
 		if result != s.expected {
 			t.Errorf("(%d) Expected %v, got %v", i, s.expected, result)
 		}
 	}
 }
 
-func TestRecordGetStringDataValue(t *testing.T) {
+func TestRecordGetString(t *testing.T) {
 	scenarios := []struct {
 		value    any
 		expected string
@@ -382,24 +561,20 @@ func TestRecordGetStringDataValue(t *testing.T) {
 		{true, "true"},
 	}
 
-	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{Name: "test"},
-		),
-	}
+	collection := &models.Collection{}
 
 	for i, s := range scenarios {
 		m := models.NewRecord(collection)
-		m.SetDataValue("test", s.value)
+		m.Set("test", s.value)
 
-		result := m.GetStringDataValue("test")
+		result := m.GetString("test")
 		if result != s.expected {
 			t.Errorf("(%d) Expected %v, got %v", i, s.expected, result)
 		}
 	}
 }
 
-func TestRecordGetIntDataValue(t *testing.T) {
+func TestRecordGetInt(t *testing.T) {
 	scenarios := []struct {
 		value    any
 		expected int
@@ -418,24 +593,20 @@ func TestRecordGetIntDataValue(t *testing.T) {
 		{true, 1},
 	}
 
-	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{Name: "test"},
-		),
-	}
+	collection := &models.Collection{}
 
 	for i, s := range scenarios {
 		m := models.NewRecord(collection)
-		m.SetDataValue("test", s.value)
+		m.Set("test", s.value)
 
-		result := m.GetIntDataValue("test")
+		result := m.GetInt("test")
 		if result != s.expected {
 			t.Errorf("(%d) Expected %v, got %v", i, s.expected, result)
 		}
 	}
 }
 
-func TestRecordGetFloatDataValue(t *testing.T) {
+func TestRecordGetFloat(t *testing.T) {
 	scenarios := []struct {
 		value    any
 		expected float64
@@ -454,26 +625,22 @@ func TestRecordGetFloatDataValue(t *testing.T) {
 		{true, 1},
 	}
 
-	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{Name: "test"},
-		),
-	}
+	collection := &models.Collection{}
 
 	for i, s := range scenarios {
 		m := models.NewRecord(collection)
-		m.SetDataValue("test", s.value)
+		m.Set("test", s.value)
 
-		result := m.GetFloatDataValue("test")
+		result := m.GetFloat("test")
 		if result != s.expected {
 			t.Errorf("(%d) Expected %v, got %v", i, s.expected, result)
 		}
 	}
 }
 
-func TestRecordGetTimeDataValue(t *testing.T) {
+func TestRecordGetTime(t *testing.T) {
 	nowTime := time.Now()
-	testTime, _ := time.Parse(types.DefaultDateLayout, "2022-01-01 08:00:40.000")
+	testTime, _ := time.Parse(types.DefaultDateLayout, "2022-01-01 08:00:40.000Z")
 
 	scenarios := []struct {
 		value    any
@@ -491,26 +658,22 @@ func TestRecordGetTimeDataValue(t *testing.T) {
 		{nowTime, nowTime},
 	}
 
-	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{Name: "test"},
-		),
-	}
+	collection := &models.Collection{}
 
 	for i, s := range scenarios {
 		m := models.NewRecord(collection)
-		m.SetDataValue("test", s.value)
+		m.Set("test", s.value)
 
-		result := m.GetTimeDataValue("test")
+		result := m.GetTime("test")
 		if !result.Equal(s.expected) {
 			t.Errorf("(%d) Expected %v, got %v", i, s.expected, result)
 		}
 	}
 }
 
-func TestRecordGetDateTimeDataValue(t *testing.T) {
+func TestRecordGetDateTime(t *testing.T) {
 	nowTime := time.Now()
-	testTime, _ := time.Parse(types.DefaultDateLayout, "2022-01-01 08:00:40.000")
+	testTime, _ := time.Parse(types.DefaultDateLayout, "2022-01-01 08:00:40.000Z")
 
 	scenarios := []struct {
 		value    any
@@ -528,24 +691,20 @@ func TestRecordGetDateTimeDataValue(t *testing.T) {
 		{nowTime, nowTime},
 	}
 
-	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{Name: "test"},
-		),
-	}
+	collection := &models.Collection{}
 
 	for i, s := range scenarios {
 		m := models.NewRecord(collection)
-		m.SetDataValue("test", s.value)
+		m.Set("test", s.value)
 
-		result := m.GetDateTimeDataValue("test")
+		result := m.GetDateTime("test")
 		if !result.Time().Equal(s.expected) {
 			t.Errorf("(%d) Expected %v, got %v", i, s.expected, result)
 		}
 	}
 }
 
-func TestRecordGetStringSliceDataValue(t *testing.T) {
+func TestRecordGetStringSlice(t *testing.T) {
 	nowTime := time.Now()
 
 	scenarios := []struct {
@@ -565,17 +724,13 @@ func TestRecordGetStringSliceDataValue(t *testing.T) {
 		{[]string{"test", "test", "123"}, []string{"test", "123"}},
 	}
 
-	collection := &models.Collection{
-		Schema: schema.NewSchema(
-			&schema.SchemaField{Name: "test"},
-		),
-	}
+	collection := &models.Collection{}
 
 	for i, s := range scenarios {
 		m := models.NewRecord(collection)
-		m.SetDataValue("test", s.value)
+		m.Set("test", s.value)
 
-		result := m.GetStringSliceDataValue("test")
+		result := m.GetStringSlice("test")
 
 		if len(result) != len(s.expected) {
 			t.Errorf("(%d) Expected %d elements, got %d: %v", i, len(s.expected), len(result), result)
@@ -586,6 +741,61 @@ func TestRecordGetStringSliceDataValue(t *testing.T) {
 			if !list.ExistInSlice(v, s.expected) {
 				t.Errorf("(%d) Cannot find %v in %v", i, v, s.expected)
 			}
+		}
+	}
+}
+
+func TestRecordUnmarshalJSONField(t *testing.T) {
+	collection := &models.Collection{
+		Schema: schema.NewSchema(&schema.SchemaField{
+			Name: "field",
+			Type: schema.FieldTypeJson,
+		}),
+	}
+	m := models.NewRecord(collection)
+
+	var testPointer *string
+	var testStr string
+	var testInt int
+	var testBool bool
+	var testSlice []int
+	var testMap map[string]any
+
+	scenarios := []struct {
+		value        any
+		destination  any
+		expectError  bool
+		expectedJson string
+	}{
+		{nil, testStr, true, `""`},
+		{"", testStr, true, `""`},
+		{1, testInt, false, `1`},
+		{true, testBool, false, `true`},
+		{[]int{1, 2, 3}, testSlice, false, `[1,2,3]`},
+		{map[string]any{"test": 123}, testMap, false, `{"test":123}`},
+		// json encoded values
+		{`null`, testPointer, false, `null`},
+		{`true`, testBool, false, `true`},
+		{`456`, testInt, false, `456`},
+		{`"test"`, testStr, false, `"test"`},
+		{`[4,5,6]`, testSlice, false, `[4,5,6]`},
+		{`{"test":456}`, testMap, false, `{"test":456}`},
+	}
+
+	for i, s := range scenarios {
+		m.Set("field", s.value)
+
+		err := m.UnmarshalJSONField("field", &s.destination)
+		hasErr := err != nil
+
+		if hasErr != s.expectError {
+			t.Errorf("(%d) Expected hasErr %v, got %v", i, s.expectError, hasErr)
+			continue
+		}
+
+		raw, _ := json.Marshal(s.destination)
+		if v := string(raw); v != s.expectedJson {
+			t.Errorf("(%d) Expected %q, got %q", i, s.expectedJson, v)
 		}
 	}
 }
@@ -633,9 +843,9 @@ func TestRecordFindFileFieldByFile(t *testing.T) {
 	}
 
 	m := models.NewRecord(collection)
-	m.SetDataValue("field1", "test")
-	m.SetDataValue("field2", "test.png")
-	m.SetDataValue("field3", []string{"test1.png", "test2.png"})
+	m.Set("field1", "test")
+	m.Set("field2", "test.png")
+	m.Set("field3", []string{"test1.png", "test2.png"})
 
 	scenarios := []struct {
 		filename    string
@@ -663,6 +873,79 @@ func TestRecordFindFileFieldByFile(t *testing.T) {
 	}
 }
 
+func TestRecordLoadAndData(t *testing.T) {
+	collection := &models.Collection{
+		Schema: schema.NewSchema(
+			&schema.SchemaField{
+				Name: "field1",
+				Type: schema.FieldTypeText,
+			},
+			&schema.SchemaField{
+				Name: "field2",
+				Type: schema.FieldTypeNumber,
+			},
+		),
+	}
+
+	data := map[string]any{
+		"id":      "test_id",
+		"created": "2022-01-01 10:00:00.123Z",
+		"updated": "2022-01-01 10:00:00.456Z",
+		"field1":  "test_field",
+		"field2":  "123", // should be casted to float
+		"unknown": "test_unknown",
+		// auth collection sepcific casting test
+		"passwordHash":           "test_passwordHash",
+		"emailVisibility":        "12345", // should be casted to bool only for auth collections
+		"username":               123,     // should be casted to string only for auth collections
+		"email":                  "test_email",
+		"verified":               true,
+		"tokenKey":               "test_tokenKey",
+		"lastResetSentAt":        "2022-01-01 11:00:00.000", // should be casted to DateTime only for auth collections
+		"lastVerificationSentAt": "2022-01-01 12:00:00.000", // should be casted to DateTime only for auth collections
+	}
+
+	scenarios := []struct {
+		collectionType string
+	}{
+		{models.CollectionTypeBase},
+		{models.CollectionTypeAuth},
+	}
+
+	for i, s := range scenarios {
+		collection.Type = s.collectionType
+		m := models.NewRecord(collection)
+
+		m.Load(data)
+
+		expectations := map[string]any{}
+		for k, v := range data {
+			expectations[k] = v
+		}
+
+		expectations["created"], _ = types.ParseDateTime("2022-01-01 10:00:00.123Z")
+		expectations["updated"], _ = types.ParseDateTime("2022-01-01 10:00:00.456Z")
+		expectations["field2"] = 123.0
+
+		// extra casting test
+		if collection.IsAuth() {
+			lastResetSentAt, _ := types.ParseDateTime(expectations["lastResetSentAt"])
+			lastVerificationSentAt, _ := types.ParseDateTime(expectations["lastVerificationSentAt"])
+			expectations["emailVisibility"] = false
+			expectations["username"] = "123"
+			expectations["verified"] = true
+			expectations["lastResetSentAt"] = lastResetSentAt
+			expectations["lastVerificationSentAt"] = lastVerificationSentAt
+		}
+
+		for k, v := range expectations {
+			if m.Get(k) != v {
+				t.Errorf("(%d) Expected field %s to be %v, got %v", i, k, v, m.Get(k))
+			}
+		}
+	}
+}
+
 func TestRecordColumnValueMap(t *testing.T) {
 	collection := &models.Collection{
 		Schema: schema.NewSchema(
@@ -679,7 +962,7 @@ func TestRecordColumnValueMap(t *testing.T) {
 				},
 			},
 			&schema.SchemaField{
-				Name: "#field3",
+				Name: "field3",
 				Type: schema.FieldTypeSelect,
 				Options: &schema.SelectOptions{
 					MaxSelect: 2,
@@ -690,41 +973,69 @@ func TestRecordColumnValueMap(t *testing.T) {
 				Name: "field4",
 				Type: schema.FieldTypeRelation,
 				Options: &schema.RelationOptions{
-					MaxSelect: 2,
+					MaxSelect: types.Pointer(2),
 				},
 			},
 		),
 	}
 
-	id1 := "11111111-1e32-4c94-ae06-90c25fcf6791"
-	id2 := "22222222-1e32-4c94-ae06-90c25fcf6791"
-	created, _ := types.ParseDateTime("2022-01-01 10:00:30.123")
-
-	m := models.NewRecord(collection)
-	m.Id = id1
-	m.Created = created
-	m.SetDataValue("field1", "test")
-	m.SetDataValue("field2", "test.png")
-	m.SetDataValue("#field3", []string{"test1", "test2"})
-	m.SetDataValue("field4", []string{id1, id2, id1})
-
-	result := m.ColumnValueMap()
-
-	encoded, err := json.Marshal(result)
-	if err != nil {
-		t.Fatal(err)
+	scenarios := []struct {
+		collectionType string
+		expectedJson   string
+	}{
+		{
+			models.CollectionTypeBase,
+			`{"created":"2022-01-01 10:00:30.123Z","field1":"test","field2":"test.png","field3":["test1","test2"],"field4":["test11","test12"],"id":"test_id","updated":""}`,
+		},
+		{
+			models.CollectionTypeAuth,
+			`{"created":"2022-01-01 10:00:30.123Z","email":"test_email","emailVisibility":true,"field1":"test","field2":"test.png","field3":["test1","test2"],"field4":["test11","test12"],"id":"test_id","lastResetSentAt":"2022-01-02 10:00:30.123Z","lastVerificationSentAt":"","passwordHash":"test_passwordHash","tokenKey":"test_tokenKey","updated":"","username":"test_username","verified":false}`,
+		},
 	}
 
-	expected := `{"#field3":["test1","test2"],"created":"2022-01-01 10:00:30.123","field1":"test","field2":"test.png","field4":["11111111-1e32-4c94-ae06-90c25fcf6791","22222222-1e32-4c94-ae06-90c25fcf6791"],"id":"11111111-1e32-4c94-ae06-90c25fcf6791","updated":""}`
+	created, _ := types.ParseDateTime("2022-01-01 10:00:30.123Z")
+	lastResetSentAt, _ := types.ParseDateTime("2022-01-02 10:00:30.123Z")
+	data := map[string]any{
+		"id":              "test_id",
+		"created":         created,
+		"field1":          "test",
+		"field2":          "test.png",
+		"field3":          []string{"test1", "test2"},
+		"field4":          []string{"test11", "test12", "test11"}, // strip duplicate,
+		"unknown":         "test_unknown",
+		"passwordHash":    "test_passwordHash",
+		"username":        "test_username",
+		"emailVisibility": true,
+		"email":           "test_email",
+		"verified":        "invalid", // should be casted
+		"tokenKey":        "test_tokenKey",
+		"lastResetSentAt": lastResetSentAt,
+	}
 
-	if string(encoded) != expected {
-		t.Fatalf("Expected %v, got \n%v", expected, string(encoded))
+	m := models.NewRecord(collection)
+
+	for i, s := range scenarios {
+		collection.Type = s.collectionType
+
+		m.Load(data)
+
+		result := m.ColumnValueMap()
+
+		encoded, err := json.Marshal(result)
+		if err != nil {
+			t.Errorf("(%d) Unexpected error %v", i, err)
+			continue
+		}
+
+		if str := string(encoded); str != s.expectedJson {
+			t.Errorf("(%d) Expected \n%v \ngot \n%v", i, s.expectedJson, str)
+		}
 	}
 }
 
-func TestRecordPublicExport(t *testing.T) {
+func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 	collection := &models.Collection{
-		Name: "test",
+		Name: "c_name",
 		Schema: schema.NewSchema(
 			&schema.SchemaField{
 				Name: "field1",
@@ -739,7 +1050,7 @@ func TestRecordPublicExport(t *testing.T) {
 				},
 			},
 			&schema.SchemaField{
-				Name: "#field3",
+				Name: "field3",
 				Type: schema.FieldTypeSelect,
 				Options: &schema.SelectOptions{
 					MaxSelect: 2,
@@ -748,77 +1059,121 @@ func TestRecordPublicExport(t *testing.T) {
 			},
 		),
 	}
+	collection.Id = "c_id"
 
-	created, _ := types.ParseDateTime("2022-01-01 10:00:30.123")
+	scenarios := []struct {
+		collectionType string
+		exportHidden   bool
+		exportUnknown  bool
+		expectedJson   string
+	}{
+		// base
+		{
+			models.CollectionTypeBase,
+			false,
+			false,
+			`{"collectionId":"c_id","collectionName":"c_name","created":"2022-01-01 10:00:30.123Z","expand":{"test":123},"field1":"test","field2":"test.png","field3":["test1","test2"],"id":"test_id","updated":""}`,
+		},
+		{
+			models.CollectionTypeBase,
+			true,
+			false,
+			`{"collectionId":"c_id","collectionName":"c_name","created":"2022-01-01 10:00:30.123Z","expand":{"test":123},"field1":"test","field2":"test.png","field3":["test1","test2"],"id":"test_id","updated":""}`,
+		},
+		{
+			models.CollectionTypeBase,
+			false,
+			true,
+			`{"collectionId":"c_id","collectionName":"c_name","created":"2022-01-01 10:00:30.123Z","email":"test_email","emailVisibility":"test_invalid","expand":{"test":123},"field1":"test","field2":"test.png","field3":["test1","test2"],"id":"test_id","lastResetSentAt":"2022-01-02 10:00:30.123Z","lastVerificationSentAt":"test_lastVerificationSentAt","passwordHash":"test_passwordHash","tokenKey":"test_tokenKey","unknown":"test_unknown","updated":"","username":123,"verified":true}`,
+		},
+		{
+			models.CollectionTypeBase,
+			true,
+			true,
+			`{"collectionId":"c_id","collectionName":"c_name","created":"2022-01-01 10:00:30.123Z","email":"test_email","emailVisibility":"test_invalid","expand":{"test":123},"field1":"test","field2":"test.png","field3":["test1","test2"],"id":"test_id","lastResetSentAt":"2022-01-02 10:00:30.123Z","lastVerificationSentAt":"test_lastVerificationSentAt","passwordHash":"test_passwordHash","tokenKey":"test_tokenKey","unknown":"test_unknown","updated":"","username":123,"verified":true}`,
+		},
+
+		// auth
+		{
+			models.CollectionTypeAuth,
+			false,
+			false,
+			`{"collectionId":"c_id","collectionName":"c_name","created":"2022-01-01 10:00:30.123Z","emailVisibility":false,"expand":{"test":123},"field1":"test","field2":"test.png","field3":["test1","test2"],"id":"test_id","updated":"","username":"123","verified":true}`,
+		},
+		{
+			models.CollectionTypeAuth,
+			true,
+			false,
+			`{"collectionId":"c_id","collectionName":"c_name","created":"2022-01-01 10:00:30.123Z","email":"test_email","emailVisibility":false,"expand":{"test":123},"field1":"test","field2":"test.png","field3":["test1","test2"],"id":"test_id","updated":"","username":"123","verified":true}`,
+		},
+		{
+			models.CollectionTypeAuth,
+			false,
+			true,
+			`{"collectionId":"c_id","collectionName":"c_name","created":"2022-01-01 10:00:30.123Z","emailVisibility":false,"expand":{"test":123},"field1":"test","field2":"test.png","field3":["test1","test2"],"id":"test_id","unknown":"test_unknown","updated":"","username":"123","verified":true}`,
+		},
+		{
+			models.CollectionTypeAuth,
+			true,
+			true,
+			`{"collectionId":"c_id","collectionName":"c_name","created":"2022-01-01 10:00:30.123Z","email":"test_email","emailVisibility":false,"expand":{"test":123},"field1":"test","field2":"test.png","field3":["test1","test2"],"id":"test_id","unknown":"test_unknown","updated":"","username":"123","verified":true}`,
+		},
+	}
+
+	created, _ := types.ParseDateTime("2022-01-01 10:00:30.123Z")
+	lastResetSentAt, _ := types.ParseDateTime("2022-01-02 10:00:30.123Z")
+
+	data := map[string]any{
+		"id":                     "test_id",
+		"created":                created,
+		"field1":                 "test",
+		"field2":                 "test.png",
+		"field3":                 []string{"test1", "test2"},
+		"expand":                 map[string]any{"test": 123},
+		"collectionId":           "m_id",   // should be always ignored
+		"collectionName":         "m_name", // should be always ignored
+		"unknown":                "test_unknown",
+		"passwordHash":           "test_passwordHash",
+		"username":               123,            // for auth collections should be casted to string
+		"emailVisibility":        "test_invalid", // for auth collections should be casted to bool
+		"email":                  "test_email",
+		"verified":               true,
+		"tokenKey":               "test_tokenKey",
+		"lastResetSentAt":        lastResetSentAt,
+		"lastVerificationSentAt": "test_lastVerificationSentAt",
+	}
 
 	m := models.NewRecord(collection)
-	m.Id = "210a896c-1e32-4c94-ae06-90c25fcf6791"
-	m.Created = created
-	m.SetDataValue("field1", "test")
-	m.SetDataValue("field2", "test.png")
-	m.SetDataValue("#field3", []string{"test1", "test2"})
-	m.SetExpand(map[string]any{"test": 123})
 
-	result := m.PublicExport()
+	for i, s := range scenarios {
+		collection.Type = s.collectionType
 
-	encoded, err := json.Marshal(result)
-	if err != nil {
-		t.Fatal(err)
-	}
+		m.Load(data)
+		m.IgnoreEmailVisibility(s.exportHidden)
+		m.WithUnkownData(s.exportUnknown)
 
-	expected := `{"@collectionId":"","@collectionName":"test","@expand":{"test":123},"created":"2022-01-01 10:00:30.123","field1":"test","field2":"test.png","id":"210a896c-1e32-4c94-ae06-90c25fcf6791","updated":""}`
+		exportResult, err := json.Marshal(m.PublicExport())
+		if err != nil {
+			t.Errorf("(%d) Unexpected error %v", i, err)
+			continue
+		}
+		exportResultStr := string(exportResult)
 
-	if string(encoded) != expected {
-		t.Fatalf("Expected %v, got \n%v", expected, string(encoded))
-	}
-}
+		// MarshalJSON and PublicExport should return the same
+		marshalResult, err := m.MarshalJSON()
+		if err != nil {
+			t.Errorf("(%d) Unexpected error %v", i, err)
+			continue
+		}
+		marshalResultStr := string(marshalResult)
 
-func TestRecordMarshalJSON(t *testing.T) {
-	collection := &models.Collection{
-		Name: "test",
-		Schema: schema.NewSchema(
-			&schema.SchemaField{
-				Name: "field1",
-				Type: schema.FieldTypeText,
-			},
-			&schema.SchemaField{
-				Name: "field2",
-				Type: schema.FieldTypeFile,
-				Options: &schema.FileOptions{
-					MaxSelect: 1,
-					MaxSize:   1,
-				},
-			},
-			&schema.SchemaField{
-				Name: "#field3",
-				Type: schema.FieldTypeSelect,
-				Options: &schema.SelectOptions{
-					MaxSelect: 2,
-					Values:    []string{"test1", "test2", "test3"},
-				},
-			},
-		),
-	}
+		if exportResultStr != marshalResultStr {
+			t.Errorf("(%d) Expected the PublicExport to be the same as MarshalJSON, but got \n%v \nvs \n%v", i, exportResultStr, marshalResultStr)
+		}
 
-	created, _ := types.ParseDateTime("2022-01-01 10:00:30.123")
-
-	m := models.NewRecord(collection)
-	m.Id = "210a896c-1e32-4c94-ae06-90c25fcf6791"
-	m.Created = created
-	m.SetDataValue("field1", "test")
-	m.SetDataValue("field2", "test.png")
-	m.SetDataValue("#field3", []string{"test1", "test2"})
-	m.SetExpand(map[string]any{"test": 123})
-
-	encoded, err := m.MarshalJSON()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	expected := `{"@collectionId":"","@collectionName":"test","@expand":{"test":123},"created":"2022-01-01 10:00:30.123","field1":"test","field2":"test.png","id":"210a896c-1e32-4c94-ae06-90c25fcf6791","updated":""}`
-
-	if string(encoded) != expected {
-		t.Fatalf("Expected %v, got \n%v", expected, string(encoded))
+		if exportResultStr != s.expectedJson {
+			t.Errorf("(%d) Expected json \n%v \ngot \n%v", i, s.expectedJson, exportResultStr)
+		}
 	}
 }
 
@@ -826,24 +1181,503 @@ func TestRecordUnmarshalJSON(t *testing.T) {
 	collection := &models.Collection{
 		Schema: schema.NewSchema(
 			&schema.SchemaField{
-				Name: "field",
+				Name: "field1",
 				Type: schema.FieldTypeText,
+			},
+			&schema.SchemaField{
+				Name: "field2",
+				Type: schema.FieldTypeNumber,
 			},
 		),
 	}
-	m := models.NewRecord(collection)
 
-	m.UnmarshalJSON([]byte(`{
-		"id":      "11111111-d07e-4fbe-86b3-b8ac31982e9a",
-		"created": "2022-01-01 10:00:00.123",
-		"updated": "2022-01-01 10:00:00.456",
-		"field":   "test",
-		"unknown": "test"
-	}`))
+	data := map[string]any{
+		"id":      "test_id",
+		"created": "2022-01-01 10:00:00.123Z",
+		"updated": "2022-01-01 10:00:00.456Z",
+		"field1":  "test_field",
+		"field2":  "123", // should be casted to float
+		"unknown": "test_unknown",
+		// auth collection sepcific casting test
+		"passwordHash":           "test_passwordHash",
+		"emailVisibility":        "12345", // should be casted to bool only for auth collections
+		"username":               123.123, // should be casted to string only for auth collections
+		"email":                  "test_email",
+		"verified":               true,
+		"tokenKey":               "test_tokenKey",
+		"lastResetSentAt":        "2022-01-01 11:00:00.000", // should be casted to DateTime only for auth collections
+		"lastVerificationSentAt": "2022-01-01 12:00:00.000", // should be casted to DateTime only for auth collections
+	}
+	dataRaw, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("Unexpected data marshal error %v", err)
+	}
 
-	expected := `{"@collectionId":"","@collectionName":"","created":"2022-01-01 10:00:00.123","field":"test","id":"11111111-d07e-4fbe-86b3-b8ac31982e9a","updated":"2022-01-01 10:00:00.456"}`
-	encoded, _ := json.Marshal(m)
-	if string(encoded) != expected {
-		t.Fatalf("Expected model %v, got \n%v", expected, string(encoded))
+	scenarios := []struct {
+		collectionType string
+	}{
+		{models.CollectionTypeBase},
+		{models.CollectionTypeAuth},
+	}
+
+	// with invalid data
+	m0 := models.NewRecord(collection)
+	if err := m0.UnmarshalJSON([]byte("test")); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	// with valid data (it should be pretty much the same as load)
+	for i, s := range scenarios {
+		collection.Type = s.collectionType
+		m := models.NewRecord(collection)
+
+		err := m.UnmarshalJSON(dataRaw)
+		if err != nil {
+			t.Errorf("(%d) Unexpected error %v", i, err)
+			continue
+		}
+
+		expectations := map[string]any{}
+		for k, v := range data {
+			expectations[k] = v
+		}
+
+		expectations["created"], _ = types.ParseDateTime("2022-01-01 10:00:00.123Z")
+		expectations["updated"], _ = types.ParseDateTime("2022-01-01 10:00:00.456Z")
+		expectations["field2"] = 123.0
+
+		// extra casting test
+		if collection.IsAuth() {
+			lastResetSentAt, _ := types.ParseDateTime(expectations["lastResetSentAt"])
+			lastVerificationSentAt, _ := types.ParseDateTime(expectations["lastVerificationSentAt"])
+			expectations["emailVisibility"] = false
+			expectations["username"] = "123.123"
+			expectations["verified"] = true
+			expectations["lastResetSentAt"] = lastResetSentAt
+			expectations["lastVerificationSentAt"] = lastVerificationSentAt
+		}
+
+		for k, v := range expectations {
+			if m.Get(k) != v {
+				t.Errorf("(%d) Expected field %s to be %v, got %v", i, k, v, m.Get(k))
+			}
+		}
+	}
+}
+
+// -------------------------------------------------------------------
+// Auth helpers:
+// -------------------------------------------------------------------
+
+func TestRecordUsername(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true},
+		{models.CollectionTypeAuth, false},
+	}
+
+	testValue := "test 1232 !@#%" // formatting isn't checked
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetUsername(testValue); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.Username(); v != "" {
+				t.Fatalf("(%d) Expected empty string, got %q", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameUsername); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameUsername, v)
+			}
+		} else {
+			if err := m.SetUsername(testValue); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.Username(); v != testValue {
+				t.Fatalf("(%d) Expected %q, got %q", i, testValue, v)
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameUsername); v != testValue {
+				t.Fatalf("(%d) Expected data field value %q, got %q", i, testValue, v)
+			}
+		}
+	}
+}
+
+func TestRecordEmail(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true},
+		{models.CollectionTypeAuth, false},
+	}
+
+	testValue := "test 1232 !@#%" // formatting isn't checked
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetEmail(testValue); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.Email(); v != "" {
+				t.Fatalf("(%d) Expected empty string, got %q", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameEmail); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameEmail, v)
+			}
+		} else {
+			if err := m.SetEmail(testValue); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.Email(); v != testValue {
+				t.Fatalf("(%d) Expected %q, got %q", i, testValue, v)
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameEmail); v != testValue {
+				t.Fatalf("(%d) Expected data field value %q, got %q", i, testValue, v)
+			}
+		}
+	}
+}
+
+func TestRecordEmailVisibility(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		value          bool
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true, true},
+		{models.CollectionTypeBase, true, true},
+		{models.CollectionTypeAuth, false, false},
+		{models.CollectionTypeAuth, true, false},
+	}
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetEmailVisibility(s.value); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.EmailVisibility(); v != false {
+				t.Fatalf("(%d) Expected empty string, got %v", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameEmailVisibility); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameEmailVisibility, v)
+			}
+		} else {
+			if err := m.SetEmailVisibility(s.value); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.EmailVisibility(); v != s.value {
+				t.Fatalf("(%d) Expected %v, got %v", i, s.value, v)
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameEmailVisibility); v != s.value {
+				t.Fatalf("(%d) Expected data field value %v, got %v", i, s.value, v)
+			}
+		}
+	}
+}
+
+func TestRecordEmailVerified(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		value          bool
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true, true},
+		{models.CollectionTypeBase, true, true},
+		{models.CollectionTypeAuth, false, false},
+		{models.CollectionTypeAuth, true, false},
+	}
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetVerified(s.value); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.Verified(); v != false {
+				t.Fatalf("(%d) Expected empty string, got %v", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameVerified); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameVerified, v)
+			}
+		} else {
+			if err := m.SetVerified(s.value); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.Verified(); v != s.value {
+				t.Fatalf("(%d) Expected %v, got %v", i, s.value, v)
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameVerified); v != s.value {
+				t.Fatalf("(%d) Expected data field value %v, got %v", i, s.value, v)
+			}
+		}
+	}
+}
+
+func TestRecordTokenKey(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true},
+		{models.CollectionTypeAuth, false},
+	}
+
+	testValue := "test 1232 !@#%" // formatting isn't checked
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetTokenKey(testValue); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.TokenKey(); v != "" {
+				t.Fatalf("(%d) Expected empty string, got %q", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameTokenKey); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameTokenKey, v)
+			}
+		} else {
+			if err := m.SetTokenKey(testValue); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.TokenKey(); v != testValue {
+				t.Fatalf("(%d) Expected %q, got %q", i, testValue, v)
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameTokenKey); v != testValue {
+				t.Fatalf("(%d) Expected data field value %q, got %q", i, testValue, v)
+			}
+		}
+	}
+}
+
+func TestRecordRefreshTokenKey(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true},
+		{models.CollectionTypeAuth, false},
+	}
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.RefreshTokenKey(); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.TokenKey(); v != "" {
+				t.Fatalf("(%d) Expected empty string, got %q", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameTokenKey); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameTokenKey, v)
+			}
+		} else {
+			if err := m.RefreshTokenKey(); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.TokenKey(); len(v) != 50 {
+				t.Fatalf("(%d) Expected 50 chars, got %d", i, len(v))
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameTokenKey); v != m.TokenKey() {
+				t.Fatalf("(%d) Expected data field value %q, got %q", i, m.TokenKey(), v)
+			}
+		}
+	}
+}
+
+func TestRecordLastResetSentAt(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true},
+		{models.CollectionTypeAuth, false},
+	}
+
+	testValue, err := types.ParseDateTime("2022-01-01 00:00:00.123Z")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetLastResetSentAt(testValue); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.LastResetSentAt(); !v.IsZero() {
+				t.Fatalf("(%d) Expected empty value, got %v", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameLastResetSentAt); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameLastResetSentAt, v)
+			}
+		} else {
+			if err := m.SetLastResetSentAt(testValue); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.LastResetSentAt(); v != testValue {
+				t.Fatalf("(%d) Expected %v, got %v", i, testValue, v)
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameLastResetSentAt); v != testValue {
+				t.Fatalf("(%d) Expected data field value %v, got %v", i, testValue, v)
+			}
+		}
+	}
+}
+
+func TestRecordLastVerificationSentAt(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true},
+		{models.CollectionTypeAuth, false},
+	}
+
+	testValue, err := types.ParseDateTime("2022-01-01 00:00:00.123Z")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetLastVerificationSentAt(testValue); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.LastVerificationSentAt(); !v.IsZero() {
+				t.Fatalf("(%d) Expected empty value, got %v", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameLastVerificationSentAt); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameLastVerificationSentAt, v)
+			}
+		} else {
+			if err := m.SetLastVerificationSentAt(testValue); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.LastVerificationSentAt(); v != testValue {
+				t.Fatalf("(%d) Expected %v, got %v", i, testValue, v)
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameLastVerificationSentAt); v != testValue {
+				t.Fatalf("(%d) Expected data field value %v, got %v", i, testValue, v)
+			}
+		}
+	}
+}
+
+func TestRecordPasswordHash(t *testing.T) {
+	m := models.NewRecord(&models.Collection{})
+
+	if v := m.PasswordHash(); v != "" {
+		t.Errorf("Expected PasswordHash() to be empty, got %v", v)
+	}
+
+	m.Set(schema.FieldNamePasswordHash, "test")
+
+	if v := m.PasswordHash(); v != "test" {
+		t.Errorf("Expected PasswordHash() to be 'test', got %v", v)
+	}
+}
+
+func TestRecordValidatePassword(t *testing.T) {
+	// 123456
+	hash := "$2a$10$YKU8mPP8sTE3xZrpuM.xQuq27KJ7aIJB2oUeKPsDDqZshbl5g5cDK"
+
+	scenarios := []struct {
+		collectionType string
+		password       string
+		hash           string
+		expected       bool
+	}{
+		{models.CollectionTypeBase, "123456", hash, false},
+		{models.CollectionTypeAuth, "", "", false},
+		{models.CollectionTypeAuth, "", hash, false},
+		{models.CollectionTypeAuth, "123456", hash, true},
+		{models.CollectionTypeAuth, "654321", hash, false},
+	}
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+		m.Set(schema.FieldNamePasswordHash, hash)
+
+		if v := m.ValidatePassword(s.password); v != s.expected {
+			t.Errorf("(%d) Expected %v, got %v", i, s.expected, v)
+		}
+	}
+}
+
+func TestRecordSetPassword(t *testing.T) {
+	scenarios := []struct {
+		collectionType string
+		password       string
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, "", true},
+		{models.CollectionTypeBase, "123456", true},
+		{models.CollectionTypeAuth, "", true},
+		{models.CollectionTypeAuth, "123456", false},
+	}
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetPassword(s.password); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.GetString(schema.FieldNamePasswordHash); v != "" {
+				t.Errorf("(%d) Expected empty hash, got %q", i, v)
+			}
+		} else {
+			if err := m.SetPassword(s.password); err != nil {
+				t.Errorf("(%d) Expected nil, got err", i)
+			}
+			if v := m.GetString(schema.FieldNamePasswordHash); v == "" {
+				t.Errorf("(%d) Expected non empty hash", i)
+			}
+			if !m.ValidatePassword(s.password) {
+				t.Errorf("(%d) Expected true, got false", i)
+			}
+		}
 	}
 }

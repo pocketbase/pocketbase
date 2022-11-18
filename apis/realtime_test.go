@@ -46,7 +46,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 	resetClient := func() {
 		client.Unsubscribe()
 		client.Set(apis.ContextAdminKey, nil)
-		client.Set(apis.ContextUserKey, nil)
+		client.Set(apis.ContextAuthRecordKey, nil)
 	}
 
 	scenarios := []tests.ApiScenario{
@@ -113,7 +113,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 			Url:    "/api/realtime",
 			Body:   strings.NewReader(`{"clientId":"` + client.Id() + `","subscriptions":["test1", "test2"]}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "Admin eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTg3MzQ2Mjc5Mn0.AtRtXR6FHBrCUGkj5OffhmxLbSZaQ4L_Qgw4gfoHyfo",
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
@@ -132,12 +132,12 @@ func TestRealtimeSubscribe(t *testing.T) {
 			},
 		},
 		{
-			Name:   "existing client - authorized user",
+			Name:   "existing client - authorized record",
 			Method: http.MethodPost,
 			Url:    "/api/realtime",
 			Body:   strings.NewReader(`{"clientId":"` + client.Id() + `","subscriptions":["test1", "test2"]}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
@@ -148,9 +148,9 @@ func TestRealtimeSubscribe(t *testing.T) {
 				app.SubscriptionsBroker().Register(client)
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				user, _ := client.Get(apis.ContextUserKey).(*models.User)
-				if user == nil {
-					t.Errorf("Expected user auth model, got nil")
+				authRecord, _ := client.Get(apis.ContextAuthRecordKey).(*models.Record)
+				if authRecord == nil {
+					t.Errorf("Expected auth record model, got nil")
 				}
 				resetClient()
 			},
@@ -161,21 +161,21 @@ func TestRealtimeSubscribe(t *testing.T) {
 			Url:    "/api/realtime",
 			Body:   strings.NewReader(`{"clientId":"` + client.Id() + `","subscriptions":["test1", "test2"]}`),
 			RequestHeaders: map[string]string{
-				"Authorization": "User eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRkMDE5N2NjLTJiNGEtM2Y4My1hMjZiLWQ3N2JjODQyM2QzYyIsInR5cGUiOiJ1c2VyIiwiZXhwIjoxODkzNDc0MDAwfQ.Wq5ac1q1f5WntIzEngXk22ydMj-eFgvfSRg7dhmPKic",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				initialAuth := &models.User{}
+				initialAuth := &models.Record{}
 				initialAuth.RefreshId()
-				client.Set(apis.ContextUserKey, initialAuth)
+				client.Set(apis.ContextAuthRecordKey, initialAuth)
 
 				app.SubscriptionsBroker().Register(client)
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				user, _ := client.Get(apis.ContextUserKey).(*models.User)
-				if user == nil {
-					t.Errorf("Expected user auth model, got nil")
+				authRecord, _ := client.Get(apis.ContextAuthRecordKey).(*models.Record)
+				if authRecord == nil {
+					t.Errorf("Expected auth record model, got nil")
 				}
 				resetClient()
 			},
@@ -187,55 +187,55 @@ func TestRealtimeSubscribe(t *testing.T) {
 	}
 }
 
-func TestRealtimeUserDeleteEvent(t *testing.T) {
+func TestRealtimeAuthRecordDeleteEvent(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
 	apis.InitApi(testApp)
 
-	user, err := testApp.Dao().FindUserByEmail("test@example.com")
+	authRecord, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	client := subscriptions.NewDefaultClient()
-	client.Set(apis.ContextUserKey, user)
+	client.Set(apis.ContextAuthRecordKey, authRecord)
 	testApp.SubscriptionsBroker().Register(client)
 
-	testApp.OnModelAfterDelete().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: user})
+	testApp.OnModelAfterDelete().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: authRecord})
 
 	if len(testApp.SubscriptionsBroker().Clients()) != 0 {
 		t.Fatalf("Expected no subscription clients, found %d", len(testApp.SubscriptionsBroker().Clients()))
 	}
 }
 
-func TestRealtimeUserUpdateEvent(t *testing.T) {
+func TestRealtimeAuthRecordUpdateEvent(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
 	apis.InitApi(testApp)
 
-	user1, err := testApp.Dao().FindUserByEmail("test@example.com")
+	authRecord1, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	client := subscriptions.NewDefaultClient()
-	client.Set(apis.ContextUserKey, user1)
+	client.Set(apis.ContextAuthRecordKey, authRecord1)
 	testApp.SubscriptionsBroker().Register(client)
 
-	// refetch the user and change its email
-	user2, err := testApp.Dao().FindUserByEmail("test@example.com")
+	// refetch the authRecord and change its email
+	authRecord2, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
-	user2.Email = "new@example.com"
+	authRecord2.SetEmail("new@example.com")
 
-	testApp.OnModelAfterUpdate().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: user2})
+	testApp.OnModelAfterUpdate().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: authRecord2})
 
-	clientUser, _ := client.Get(apis.ContextUserKey).(*models.User)
-	if clientUser.Email != user2.Email {
-		t.Fatalf("Expected user with email %q, got %q", user2.Email, clientUser.Email)
+	clientAuthRecord, _ := client.Get(apis.ContextAuthRecordKey).(*models.Record)
+	if clientAuthRecord.Email() != authRecord2.Email() {
+		t.Fatalf("Expected authRecord with email %q, got %q", authRecord2.Email(), clientAuthRecord.Email())
 	}
 }
 
@@ -276,7 +276,7 @@ func TestRealtimeAdminUpdateEvent(t *testing.T) {
 	client.Set(apis.ContextAdminKey, admin1)
 	testApp.SubscriptionsBroker().Register(client)
 
-	// refetch the user and change its email
+	// refetch the authRecord and change its email
 	admin2, err := testApp.Dao().FindAdminByEmail("test@example.com")
 	if err != nil {
 		t.Fatal(err)
@@ -287,6 +287,6 @@ func TestRealtimeAdminUpdateEvent(t *testing.T) {
 
 	clientAdmin, _ := client.Get(apis.ContextAdminKey).(*models.Admin)
 	if clientAdmin.Email != admin2.Email {
-		t.Fatalf("Expected user with email %q, got %q", admin2.Email, clientAdmin.Email)
+		t.Fatalf("Expected authRecord with email %q, got %q", admin2.Email, clientAdmin.Email)
 	}
 }

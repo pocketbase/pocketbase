@@ -1,7 +1,6 @@
 package validators
 
 import (
-	"encoding/binary"
 	"fmt"
 	"strings"
 
@@ -22,7 +21,7 @@ func UploadedFileSize(maxBytes int) validation.RuleFunc {
 			return nil // nothing to validate
 		}
 
-		if binary.Size(v.Bytes()) > maxBytes {
+		if int(v.Header().Size) > maxBytes {
 			return validation.NewError("validation_file_size_limit", fmt.Sprintf("Maximum allowed file size is %v bytes.", maxBytes))
 		}
 
@@ -47,7 +46,16 @@ func UploadedFileMimeType(validTypes []string) validation.RuleFunc {
 			return validation.NewError("validation_invalid_mime_type", "Unsupported file type.")
 		}
 
-		filetype := mimetype.Detect(v.Bytes())
+		f, err := v.Header().Open()
+		if err != nil {
+			return validation.NewError("validation_invalid_mime_type", "Unsupported file type.")
+		}
+		defer f.Close()
+
+		filetype, err := mimetype.DetectReader(f)
+		if err != nil {
+			return validation.NewError("validation_invalid_mime_type", "Unsupported file type.")
+		}
 
 		for _, t := range validTypes {
 			if filetype.Is(t) {

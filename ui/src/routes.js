@@ -1,11 +1,10 @@
+import PageViewRecords from "@/components/records/PageViewRecords.svelte";
 import { replace } from "svelte-spa-router";
 import { wrap } from "svelte-spa-router/wrap";
 import ApiClient from "@/utils/ApiClient";
 import PageIndex from "@/components/PageIndex.svelte";
 import PageLogs from "@/components/logs/PageLogs.svelte";
 import PageRecords from "@/components/records/PageRecords.svelte";
-import PageViewRecords from "@/components/records/PageViewRecords.svelte";
-import PageUsers from "@/components/users/PageUsers.svelte";
 import PageAdmins from "@/components/admins/PageAdmins.svelte";
 import PageAdminLogin from "@/components/admins/PageAdminLogin.svelte";
 import PageApplication from "@/components/settings/PageApplication.svelte";
@@ -64,30 +63,6 @@ const routes = {
         userData: { showAppSidebar: true },
     }),
 
-    "/users": wrap({
-        component: PageUsers,
-        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
-        userData: { showAppSidebar: true },
-    }),
-
-    "/users/confirm-password-reset/:token": wrap({
-        asyncComponent: () => import("@/components/users/PageUserConfirmPasswordReset.svelte"),
-        conditions: baseConditions,
-        userData: { showAppSidebar: false },
-    }),
-
-    "/users/confirm-verification/:token": wrap({
-        asyncComponent: () => import("@/components/users/PageUserConfirmVerification.svelte"),
-        conditions: baseConditions,
-        userData: { showAppSidebar: false },
-    }),
-
-    "/users/confirm-email-change/:token": wrap({
-        asyncComponent: () => import("@/components/users/PageUserConfirmEmailChange.svelte"),
-        conditions: baseConditions,
-        userData: { showAppSidebar: false },
-    }),
-
     "/settings": wrap({
         component: PageApplication,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
@@ -136,7 +111,47 @@ const routes = {
         userData: { showAppSidebar: true },
     }),
 
-    // fallback
+    // ---------------------------------------------------------------
+    // Records email confirmation actions
+    // ---------------------------------------------------------------
+
+    // @deprecated
+    "/users/confirm-password-reset/:token": wrap({
+        asyncComponent: () => import("@/components/records/PageRecordConfirmPasswordReset.svelte"),
+        conditions: baseConditions,
+        userData: { showAppSidebar: false },
+    }),
+    "/auth/confirm-password-reset/:token": wrap({
+        asyncComponent: () => import("@/components/records/PageRecordConfirmPasswordReset.svelte"),
+        conditions: baseConditions,
+        userData: { showAppSidebar: false },
+    }),
+
+    // @deprecated
+    "/users/confirm-verification/:token": wrap({
+        asyncComponent: () => import("@/components/records/PageRecordConfirmVerification.svelte"),
+        conditions: baseConditions,
+        userData: { showAppSidebar: false },
+    }),
+    "/auth/confirm-verification/:token": wrap({
+        asyncComponent: () => import("@/components/records/PageRecordConfirmVerification.svelte"),
+        conditions: baseConditions,
+        userData: { showAppSidebar: false },
+    }),
+
+    // @deprecated
+    "/users/confirm-email-change/:token": wrap({
+        asyncComponent: () => import("@/components/records/PageRecordConfirmEmailChange.svelte"),
+        conditions: baseConditions,
+        userData: { showAppSidebar: false },
+    }),
+    "/auth/confirm-email-change/:token": wrap({
+        asyncComponent: () => import("@/components/records/PageRecordConfirmEmailChange.svelte"),
+        conditions: baseConditions,
+        userData: { showAppSidebar: false },
+    }),
+
+    // catch-all fallback
     "*": wrap({
         component: PageIndex,
         userData: { showAppSidebar: false },
