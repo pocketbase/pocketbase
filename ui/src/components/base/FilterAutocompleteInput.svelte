@@ -32,8 +32,8 @@
      * ```
      */
     import { onMount, createEventDispatcher } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
     import { collections } from "@/stores/collections";
+    import CommonHelper from "@/utils/CommonHelper";
     // code mirror imports
     // ---
     import {
@@ -84,28 +84,23 @@
     let readOnlyCompartment = new Compartment();
     let placeholderCompartment = new Compartment();
 
-    let mergedCollections = [];
+    let cachedCollections = [];
     let cachedRequestKeys = [];
     let cachedIndirectCollectionKeys = [];
     let cachedBaseKeys = [];
     let baseKeysChangeHash = "";
     let oldBaseKeysChangeHash = "";
 
-    $: mergedCollections = mergeWithBaseCollection($collections);
-
     $: baseKeysChangeHash = getCollectionKeysChangeHash(baseCollection);
-
-    $: if (!disabled && oldBaseKeysChangeHash != baseKeysChangeHash) {
-        oldBaseKeysChangeHash = baseKeysChangeHash;
-        cachedBaseKeys = getBaseKeys();
-    }
 
     $: if (
         !disabled &&
-        (mergedCollections !== -1 || disableRequestKeys !== -1 || disableIndirectCollectionsKeys !== -1)
+        (oldBaseKeysChangeHash != baseKeysChangeHash ||
+            disableRequestKeys !== -1 ||
+            disableIndirectCollectionsKeys !== -1)
     ) {
-        cachedRequestKeys = !disableRequestKeys ? getRequestKeys() : [];
-        cachedIndirectCollectionKeys = !disableIndirectCollectionsKeys ? getIndirectCollectionKeys() : [];
+        oldBaseKeysChangeHash = baseKeysChangeHash;
+        refreshCachedKeys();
     }
 
     $: if (id) {
@@ -150,15 +145,32 @@
         editor?.focus();
     }
 
-    // Return a collection keys hash string that can be used to compare with previous states.
-    function getCollectionKeysChangeHash(collection) {
-        return JSON.stringify([collection?.type, collection?.schema]);
+    let refreshDebounceId = null;
+
+    // Refresh the cached autocomplete keys.
+    function refreshCachedKeys() {
+        clearTimeout(refreshDebounceId);
+        refreshDebounceId = setTimeout(() => {
+            cachedCollections = concatWithBaseCollection($collections);
+            cachedBaseKeys = getBaseKeys();
+            cachedRequestKeys = !disableRequestKeys ? getRequestKeys() : [];
+            cachedIndirectCollectionKeys = !disableIndirectCollectionsKeys ? getIndirectCollectionKeys() : [];
+        }, 300);
     }
 
-    // Replace the base collection in the provided list.
-    function mergeWithBaseCollection(collections) {
+    // Return a collection keys hash string that can be used to compare with previous states.
+    function getCollectionKeysChangeHash(collection) {
+        return JSON.stringify([collection?.name, collection?.type, collection?.schema]);
+    }
+
+    // Merge the base collection in a new list with the provided collections.
+    function concatWithBaseCollection(collections) {
         let copy = collections.slice();
-        CommonHelper.pushOrReplaceByKey(copy, baseCollection, "id");
+
+        if (baseCollection) {
+            CommonHelper.pushOrReplaceByKey(copy, baseCollection, "id");
+        }
+
         return copy;
     }
 
@@ -200,7 +212,7 @@
 
     // Returns a list with all collection field keys recursively.
     function getCollectionFieldKeys(nameOrId, prefix = "", level = 0) {
-        let collection = mergedCollections.find((item) => item.name == nameOrId || item.id == nameOrId);
+        let collection = cachedCollections.find((item) => item.name == nameOrId || item.id == nameOrId);
         if (!collection || level >= 4) {
             return [];
         }
@@ -235,10 +247,12 @@
         return result;
     }
 
+    // Returns baseCollection keys.
     function getBaseKeys() {
         return getCollectionFieldKeys(baseCollection?.name);
     }
 
+    // Returns @request.* keys.
     function getRequestKeys() {
         const result = [];
 
@@ -257,7 +271,7 @@
         result.push("@request.auth.updated");
 
         // load auth collection fields
-        const authCollections = mergedCollections.filter((collection) => collection.isAuth);
+        const authCollections = cachedCollections.filter((collection) => collection.isAuth);
         for (const collection of authCollections) {
             const authKeys = getCollectionFieldKeys(collection.id, "@request.auth.");
             for (const k of authKeys) {
@@ -268,10 +282,11 @@
         return result;
     }
 
+    // Returns @collection.* keys.
     function getIndirectCollectionKeys() {
         const result = [];
 
-        for (const collection of mergedCollections) {
+        for (const collection of cachedCollections) {
             const prefix = "@collection." + collection.name + ".";
             const keys = getCollectionFieldKeys(collection.name, prefix);
             for (const key of keys) {
@@ -433,6 +448,7 @@
         });
 
         return () => {
+            clearTimeout(refreshDebounceId);
             removeLabelListeners();
             editor?.destroy();
         };
