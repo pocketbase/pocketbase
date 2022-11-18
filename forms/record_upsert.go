@@ -397,7 +397,7 @@ func (form *RecordUpsert) Validate() error {
 				&form.Username,
 				// require only on update, because on create we fallback to auto generated username
 				validation.When(!form.record.IsNew(), validation.Required),
-				validation.Length(4, 100),
+				validation.Length(3, 100),
 				validation.Match(usernameRegex),
 				validation.By(form.checkUniqueUsername),
 			),

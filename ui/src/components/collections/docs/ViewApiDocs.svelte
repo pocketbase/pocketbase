@@ -59,7 +59,7 @@
 
         ...
 
-        const record1 = await pb.collection('${collection?.name}').getOne('RECORD_ID', {
+        const record = await pb.collection('${collection?.name}').getOne('RECORD_ID', {
             expand: 'relField1,relField2.subRelField',
         });
     `}
@@ -70,7 +70,7 @@
 
         ...
 
-        final record1 = await pb.collection('${collection?.name}').getOne('RECORD_ID',
+        final record = await pb.collection('${collection?.name}').getOne('RECORD_ID',
           'expand': 'relField1,relField2.subRelField',
         );
     `}
@@ -131,7 +131,7 @@
                 The expanded relations will be appended to the record under the
                 <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>).
                 <br />
-                Only the relations to which the account has permissions to <strong>view</strong> will be expanded.
+                Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
     </tbody>

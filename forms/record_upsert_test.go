@@ -694,6 +694,41 @@ func TestRecordUpsertAuthRecord(t *testing.T) {
 			false,
 		},
 
+		// username
+		{
+			"invalid username characters",
+			"",
+			map[string]any{
+				"username":        "test abc!@#",
+				"password":        "12345678",
+				"passwordConfirm": "12345678",
+			},
+			false,
+			true,
+		},
+		{
+			"invalid username length (less than 3)",
+			"",
+			map[string]any{
+				"username":        "ab",
+				"password":        "12345678",
+				"passwordConfirm": "12345678",
+			},
+			false,
+			true,
+		},
+		{
+			"invalid username length (more than 100)",
+			"",
+			map[string]any{
+				"username":        strings.Repeat("a", 101),
+				"password":        "12345678",
+				"passwordConfirm": "12345678",
+			},
+			false,
+			true,
+		},
+
 		// verified
 		{
 			"try to set verified without managed access",

@@ -65,20 +65,20 @@ func (api *recordAuthApi) authResponse(c echo.Context, authRecord *models.Record
 	}
 
 	return api.app.OnRecordAuthRequest().Trigger(event, func(e *core.RecordAuthEvent) error {
-		admin, _ := e.HttpContext.Get(ContextAdminKey).(*models.Admin)
-
 		// allow always returning the email address of the authenticated account
 		e.Record.IgnoreEmailVisibility(true)
 
 		// expand record relations
 		expands := strings.Split(c.QueryParam(expandQueryParam), ",")
 		if len(expands) > 0 {
-			requestData := exportRequestData(e.HttpContext)
-			requestData["auth"] = e.Record.PublicExport()
+			// create a copy of the cached request data and adjust it to the current auth record
+			requestData := *RequestData(e.HttpContext)
+			requestData.Admin = nil
+			requestData.AuthRecord = e.Record
 			failed := api.app.Dao().ExpandRecord(
 				e.Record,
 				expands,
-				expandFetch(api.app.Dao(), admin != nil, requestData),
+				expandFetch(api.app.Dao(), &requestData),
 			)
 			if len(failed) > 0 && api.app.IsDebug() {
 				log.Println("Failed to expand relations: ", failed)
@@ -204,8 +204,8 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 
 	record, authData, submitErr := form.Submit(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
 		return createForm.DrySubmit(func(txDao *daos.Dao) error {
-			requestData := exportRequestData(c)
-			requestData["data"] = form.CreateData
+			requestData := RequestData(c)
+			requestData.Data = form.CreateData
 
 			createRuleFunc := func(q *dbx.SelectQuery) error {
 				admin, _ := c.Get(ContextAdminKey).(*models.Admin)
@@ -305,12 +305,12 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	record, submitErr := form.Submit()
+	_, submitErr := form.Submit()
 	if submitErr != nil {
 		return NewBadRequestError("Failed to set new password.", submitErr)
 	}
 
-	return api.authResponse(c, record, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *recordAuthApi) requestVerification(c echo.Context) error {
@@ -350,18 +350,12 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	record, submitErr := form.Submit()
+	_, submitErr := form.Submit()
 	if submitErr != nil {
 		return NewBadRequestError("An error occurred while submitting the form.", submitErr)
 	}
 
-	// don't return an auth response if the collection doesn't allow email or username authentication
-	authOptions := collection.AuthOptions()
-	if !authOptions.AllowEmailAuth && !authOptions.AllowUsernameAuth {
-		return c.NoContent(http.StatusNoContent)
-	}
-
-	return api.authResponse(c, record, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
@@ -393,12 +387,12 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	record, submitErr := form.Submit()
+	_, submitErr := form.Submit()
 	if submitErr != nil {
 		return NewBadRequestError("Failed to confirm email change.", submitErr)
 	}
 
-	return api.authResponse(c, record, nil)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *recordAuthApi) listExternalAuths(c echo.Context) error {
@@ -428,7 +422,7 @@ func (api *recordAuthApi) listExternalAuths(c echo.Context) error {
 		ExternalAuths: externalAuths,
 	}
 
-	return api.app.OnRecordListExternalAuths().Trigger(event, func(e *core.RecordListExternalAuthsEvent) error {
+	return api.app.OnRecordListExternalAuthsRequest().Trigger(event, func(e *core.RecordListExternalAuthsEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.ExternalAuths)
 	})
 }

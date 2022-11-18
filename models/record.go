@@ -586,6 +586,11 @@ func (m *Record) SetLastVerificationSentAt(dateTime types.DateTime) error {
 	return nil
 }
 
+// PasswordHash returns the "passwordHash" auth record data value.
+func (m *Record) PasswordHash() string {
+	return m.GetString(schema.FieldNamePasswordHash)
+}
+
 // ValidatePassword validates a plain password against the auth record password.
 //
 // Returns false if the password is incorrect or record is not from an auth collection.
@@ -594,10 +599,8 @@ func (m *Record) ValidatePassword(password string) bool {
 		return false
 	}
 
-	err := bcrypt.CompareHashAndPassword(
-		[]byte(m.GetString(schema.FieldNamePasswordHash)),
-		[]byte(password),
-	)
+	err := bcrypt.CompareHashAndPassword([]byte(m.PasswordHash()), []byte(password))
+
 	return err == nil
 }
 

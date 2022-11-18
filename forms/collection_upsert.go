@@ -116,6 +116,7 @@ func (form *CollectionUpsert) Validate() error {
 		// validates using the type's own validation rules + some collection's specific
 		validation.Field(
 			&form.Schema,
+			validation.By(form.checkMinSchemaFields),
 			validation.By(form.ensureNoSystemFieldsChange),
 			validation.By(form.ensureNoFieldsTypeChange),
 			validation.By(form.ensureExistingRelationCollectionId),
@@ -255,6 +256,19 @@ func (form *CollectionUpsert) ensureNoAuthFieldName(value any) error {
 	return nil
 }
 
+func (form *CollectionUpsert) checkMinSchemaFields(value any) error {
+	if form.Type == models.CollectionTypeAuth {
+		return nil // auth collections doesn't require having additional schema fields
+	}
+
+	v, ok := value.(schema.Schema)
+	if !ok || len(v.Fields()) == 0 {
+		return validation.ErrRequired
+	}
+
+	return nil
+}
+
 func (form *CollectionUpsert) ensureNoSystemFieldsChange(value any) error {
 	v, _ := value.(schema.Schema)
 
@@ -279,8 +293,13 @@ func (form *CollectionUpsert) checkRule(value any) error {
 		return nil // nothing to check
 	}
 
-	dummy := &models.Collection{Schema: form.Schema}
-	r := resolvers.NewRecordFieldResolver(form.dao, dummy, nil, true)
+	dummy := *form.collection
+	dummy.Type = form.Type
+	dummy.Schema = form.Schema
+	dummy.System = form.System
+	dummy.Options = form.Options
+
+	r := resolvers.NewRecordFieldResolver(form.dao, &dummy, nil, true)
 
 	_, err := search.FilterData(*v).BuildExpr(r)
 	if err != nil {

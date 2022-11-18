@@ -198,15 +198,10 @@ func TestAdminConfirmPasswordReset(t *testing.T) {
 				"password":"1234567891",
 				"passwordConfirm":"1234567891"
 			}`),
-			ExpectedStatus: 200,
-			ExpectedContent: []string{
-				`"admin":{"id":"sywbhecnh46rhm0"`,
-				`"token":`,
-			},
+			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeUpdate": 1,
 				"OnModelAfterUpdate":  1,
-				"OnAdminAuthRequest":  1,
 			},
 		},
 	}

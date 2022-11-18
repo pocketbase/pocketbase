@@ -251,16 +251,10 @@ func (api *realtimeApi) canAccessRecord(client subscriptions.Client, record *mod
 		}
 
 		// emulate request data
-		requestData := map[string]any{
-			"method": "GET",
-			"query":  map[string]any{},
-			"data":   map[string]any{},
-			"auth":   nil,
+		requestData := &models.RequestData{
+			Method: "GET",
 		}
-		authRecord, _ := client.Get(ContextAuthRecordKey).(*models.Record)
-		if authRecord != nil {
-			requestData["auth"] = authRecord.PublicExport()
-		}
+		requestData.AuthRecord, _ = client.Get(ContextAuthRecordKey).(*models.Record)
 
 		resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), record.Collection(), requestData, true)
 		expr, err := search.FilterData(*accessRule).BuildExpr(resolver)
@@ -307,8 +301,11 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 	subscriptionRuleMap := map[string]*string{
 		(collection.Name + "/" + cleanRecord.Id): collection.ViewRule,
 		(collection.Id + "/" + cleanRecord.Id):   collection.ViewRule,
-		collection.Name:                          collection.ListRule,
-		collection.Id:                            collection.ListRule,
+		(collection.Name + "/*"):                 collection.ListRule,
+		(collection.Id + "/*"):                   collection.ListRule,
+		// @deprecated: the same as the wildcard topic but kept for backward compatibility
+		collection.Name: collection.ListRule,
+		collection.Id:   collection.ListRule,
 	}
 
 	data := &recordData{

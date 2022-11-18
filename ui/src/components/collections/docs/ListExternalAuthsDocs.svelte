@@ -87,7 +87,7 @@
 
         ...
 
-        await pb.collection('${collection?.name}').authViaEmail('test@example.com', '123456');
+        await pb.collection('${collection?.name}').authWithPassword('test@example.com', '123456');
 
         const result = await pb.collection('${collection?.name}').listExternalAuths(
             pb.authStore.model.id
@@ -100,7 +100,7 @@
 
         ...
 
-        await pb.collection('${collection?.name}').authViaEmail('test@example.com', '123456');
+        await pb.collection('${collection?.name}').authWithPassword('test@example.com', '123456');
 
         final result = await pb.collection('${collection?.name}').listExternalAuths(
           pb.authStore.model.id,

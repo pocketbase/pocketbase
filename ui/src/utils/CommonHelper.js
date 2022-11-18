@@ -660,7 +660,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasImageExtension(filename) {
-        return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.webp|\.avif$/.test(filename)
+        return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.jfif|\.webp|\.avif$/.test(filename)
     }
 
     /**
@@ -771,8 +771,8 @@ export default class CommonHelper {
             "id": "RECORD_ID",
             "collectionId": collection?.id,
             "collectionName": collection?.name,
-            "created": "2022-01-01 01:00:00Z",
-            "updated": "2022-01-01 23:59:59Z",
+            "created": "2022-01-01 01:00:00.123Z",
+            "updated": "2022-01-01 23:59:59.456Z",
         };
 
         if (collection?.isAuth) {

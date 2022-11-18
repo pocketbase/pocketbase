@@ -45,6 +45,10 @@ func TestSettingsValidate(t *testing.T) {
 	s.MicrosoftAuth.ClientId = ""
 	s.SpotifyAuth.Enabled = true
 	s.SpotifyAuth.ClientId = ""
+	s.KakaoAuth.Enabled = true
+	s.KakaoAuth.ClientId = ""
+	s.TwitchAuth.Enabled = true
+	s.TwitchAuth.ClientId = ""
 
 	// check if Validate() is triggering the members validate methods.
 	err := s.Validate()
@@ -72,6 +76,8 @@ func TestSettingsValidate(t *testing.T) {
 		`"twitterAuth":{`,
 		`"microsoftAuth":{`,
 		`"spotifyAuth":{`,
+		`"kakaoAuth":{`,
+		`"twitchAuth":{`,
 	}
 
 	errBytes, _ := json.Marshal(err)
@@ -118,6 +124,10 @@ func TestSettingsMerge(t *testing.T) {
 	s2.MicrosoftAuth.ClientId = "microsoft_test"
 	s2.SpotifyAuth.Enabled = true
 	s2.SpotifyAuth.ClientId = "spotify_test"
+	s2.KakaoAuth.Enabled = true
+	s2.KakaoAuth.ClientId = "kakao_test"
+	s2.TwitchAuth.Enabled = true
+	s2.TwitchAuth.ClientId = "twitch_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
@@ -188,6 +198,8 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.TwitterAuth.ClientSecret = "test123"
 	s1.MicrosoftAuth.ClientSecret = "test123"
 	s1.SpotifyAuth.ClientSecret = "test123"
+	s1.KakaoAuth.ClientSecret = "test123"
+	s1.TwitchAuth.ClientSecret = "test123"
 
 	s2, err := s1.RedactClone()
 	if err != nil {
@@ -199,7 +211,7 @@ func TestSettingsRedactClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":5},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"recordAuthToken":{"secret":"******","duration":1209600},"recordPasswordResetToken":{"secret":"******","duration":1800},"recordEmailChangeToken":{"secret":"******","duration":1800},"recordVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":false,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":0},"appleAuth":{"enabled":false,"clientSecret":"******"},"googleAuth":{"enabled":false,"clientSecret":"******"},"facebookAuth":{"enabled":false,"clientSecret":"******"},"githubAuth":{"enabled":false,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"clientSecret":"******"},"discordAuth":{"enabled":false,"clientSecret":"******"},"twitterAuth":{"enabled":false,"clientSecret":"******"},"microsoftAuth":{"enabled":false,"clientSecret":"******"},"spotifyAuth":{"enabled":false,"clientSecret":"******"}}`
+	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":5},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"recordAuthToken":{"secret":"******","duration":1209600},"recordPasswordResetToken":{"secret":"******","duration":1800},"recordEmailChangeToken":{"secret":"******","duration":1800},"recordVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":false,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":0},"appleAuth":{"enabled":false,"clientSecret":"******"},"googleAuth":{"enabled":false,"clientSecret":"******"},"facebookAuth":{"enabled":false,"clientSecret":"******"},"githubAuth":{"enabled":false,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"clientSecret":"******"},"discordAuth":{"enabled":false,"clientSecret":"******"},"twitterAuth":{"enabled":false,"clientSecret":"******"},"microsoftAuth":{"enabled":false,"clientSecret":"******"},"spotifyAuth":{"enabled":false,"clientSecret":"******"},"kakaoAuth":{"enabled":false,"clientSecret":"******"},"twitchAuth":{"enabled":false,"clientSecret":"******"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected\n%v\ngot\n%v", expected, encodedStr)
@@ -219,6 +231,8 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.TwitterAuth.ClientId = "twitter_test"
 	s.MicrosoftAuth.ClientId = "microsoft_test"
 	s.SpotifyAuth.ClientId = "spotify_test"
+	s.KakaoAuth.ClientId = "kakao_test"
+	s.TwitchAuth.ClientId = "twitch_test"
 
 	result := s.NamedAuthProviderConfigs()
 
@@ -227,10 +241,25 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"apple":{"enabled":false,"clientId":"apple_test"},"discord":{"enabled":false,"clientId":"discord_test"},"facebook":{"enabled":false,"clientId":"facebook_test"},"github":{"enabled":false,"clientId":"github_test"},"gitlab":{"enabled":true,"clientId":"gitlab_test"},"google":{"enabled":false,"clientId":"google_test"},"microsoft":{"enabled":false,"clientId":"microsoft_test"},"spotify":{"enabled":false,"clientId":"spotify_test"},"twitter":{"enabled":false,"clientId":"twitter_test"}}`
+	encodedStr := string(encoded)
 
-	if encodedStr := string(encoded); encodedStr != expected {
-		t.Fatalf("Expected the same serialization, got \n%v", encodedStr)
+	expectedParts := []string{
+		`"apple":{"enabled":false,"clientId":"apple_test"}`,
+		`"discord":{"enabled":false,"clientId":"discord_test"}`,
+		`"facebook":{"enabled":false,"clientId":"facebook_test"}`,
+		`"github":{"enabled":false,"clientId":"github_test"}`,
+		`"gitlab":{"enabled":true,"clientId":"gitlab_test"}`,
+		`"google":{"enabled":false,"clientId":"google_test"}`,
+		`"microsoft":{"enabled":false,"clientId":"microsoft_test"}`,
+		`"spotify":{"enabled":false,"clientId":"spotify_test"}`,
+		`"twitter":{"enabled":false,"clientId":"twitter_test"}`,
+		`"kakao":{"enabled":false,"clientId":"kakao_test"}`,
+		`"twitch":{"enabled":false,"clientId":"twitch_test"}`,
+	}
+	for _, p := range expectedParts {
+		if !strings.Contains(encodedStr, p) {
+			t.Fatalf("Expected \n%s \nin \n%s", p, encodedStr)
+		}
 	}
 }
 
@@ -642,17 +671,17 @@ func TestAuthProviderConfigValidate(t *testing.T) {
 	}{
 		// zero values (disabled)
 		{
-			core.AuthProviderConfig{},
+			core.BaseAuthProviderConfig{},
 			false,
 		},
 		// zero values (enabled)
 		{
-			core.AuthProviderConfig{Enabled: true},
+			core.BaseAuthProviderConfig{Enabled: true},
 			true,
 		},
 		// invalid data
 		{
-			core.AuthProviderConfig{
+			core.BaseAuthProviderConfig{
 				Enabled:      true,
 				ClientId:     "",
 				ClientSecret: "",
@@ -664,7 +693,7 @@ func TestAuthProviderConfigValidate(t *testing.T) {
 		},
 		// valid data (only the required)
 		{
-			core.AuthProviderConfig{
+			core.BaseAuthProviderConfig{
 				Enabled:      true,
 				ClientId:     "test",
 				ClientSecret: "test",
@@ -673,7 +702,7 @@ func TestAuthProviderConfigValidate(t *testing.T) {
 		},
 		// valid data (fill all fields)
 		{
-			core.AuthProviderConfig{
+			core.BaseAuthProviderConfig{
 				Enabled:      true,
 				ClientId:     "test",
 				ClientSecret: "test",
@@ -702,12 +731,12 @@ func TestAuthProviderConfigSetupProvider(t *testing.T) {
 	provider := auth.NewGithubProvider()
 
 	// disabled config
-	c1 := core.AuthProviderConfig{Enabled: false}
+	c1 := core.BaseAuthProviderConfig{Enabled: false}
 	if err := c1.SetupProvider(provider); err == nil {
 		t.Errorf("Expected error, got nil")
 	}
 
-	c2 := core.AuthProviderConfig{
+	c2 := core.BaseAuthProviderConfig{
 		Enabled:      true,
 		ClientId:     "test_ClientId",
 		ClientSecret: "test_ClientSecret",

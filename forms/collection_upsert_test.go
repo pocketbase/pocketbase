@@ -96,7 +96,8 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 		jsonData       string
 		expectedErrors []string
 	}{
-		{"empty create", "", "{}", []string{"name", "schema"}},
+		{"empty create (base)", "", "{}", []string{"name", "schema"}},
+		{"empty create (auth)", "", `{"type":"auth"}`, []string{"name"}},
 		{"empty update", "demo2", "{}", []string{}},
 		{
 			"create failure",
@@ -185,16 +186,17 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 			"",
 			`{
 				"name": "test_new",
+				"type": "auth",
 				"system": true,
 				"schema": [
 					{"id":"a123456","name":"test1","type":"text"},
 					{"id":"b123456","name":"test2","type":"email"}
 				],
-				"listRule": "test1='123'",
-				"viewRule": "test1='123'",
-				"createRule": "test1='123'",
-				"updateRule": "test1='123'",
-				"deleteRule": "test1='123'"
+				"listRule": "test1='123' && verified = true",
+				"viewRule": "test1='123' && emailVisibility = true",
+				"createRule": "test1='123' && email != ''",
+				"updateRule": "test1='123' && username != ''",
+				"deleteRule": "test1='123' && id != ''"
 			}`,
 			[]string{},
 		},
@@ -279,11 +281,11 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"schema": [
 					{"id":"_2hlxbmp","name":"test","type":"text"}
 				],
-				"listRule": "test='123'",
-				"viewRule": "test='123'",
-				"createRule": "test='123'",
-				"updateRule": "test='123'",
-				"deleteRule": "test='123'",
+				"listRule": "test='123' && verified = true",
+				"viewRule": "test='123' && emailVisibility = true",
+				"createRule": "test='123' && email != ''",
+				"updateRule": "test='123' && username != ''",
+				"deleteRule": "test='123' && id != ''",
 				"options": {"minPasswordLength": 10}
 			}`,
 			[]string{},
@@ -494,7 +496,7 @@ func TestCollectionUpsertWithCustomId(t *testing.T) {
 
 	newCollection := func() *models.Collection {
 		return &models.Collection{
-			Name:   "c_" + security.RandomString(4),
+			Name:   "c_" + security.PseudorandomString(4),
 			Schema: existingCollection.Schema,
 		}
 	}

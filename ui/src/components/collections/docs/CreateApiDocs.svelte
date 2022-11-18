@@ -308,7 +308,7 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
                 The expanded relations will be appended to the record under the
                 <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>).
                 <br />
-                Only the relations to which the account has permissions to <strong>view</strong> will be expanded.
+                Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
     </tbody>

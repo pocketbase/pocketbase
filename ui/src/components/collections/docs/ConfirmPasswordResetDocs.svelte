@@ -7,22 +7,15 @@
 
     export let collection = new Collection();
 
-    let responseTab = 200;
+    let responseTab = 204;
     let responses = [];
 
     $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
 
     $: responses = [
         {
-            code: 200,
-            body: JSON.stringify(
-                {
-                    token: "JWT_TOKEN",
-                    record: CommonHelper.dummyCollectionRecord(collection),
-                },
-                null,
-                2
-            ),
+            code: 204,
+            body: "null",
         },
         {
             code: 400,
@@ -44,8 +37,7 @@
 
 <h3 class="m-b-sm">Confirm password reset ({collection.name})</h3>
 <div class="content txt-lg m-b-sm">
-    <p>Confirms <strong>{collection.name}</strong> password reset request.</p>
-    <p>Returns the refreshed auth data.</p>
+    <p>Confirms <strong>{collection.name}</strong> password reset request and sets a new password.</p>
 </div>
 
 <SdkTabs
@@ -56,16 +48,11 @@
 
         ...
 
-        const authData = await pb.collection('${collection?.name}').confirmPasswordReset(
+        await pb.collection('${collection?.name}').confirmPasswordReset(
             'TOKEN',
             'NEW_PASSWORD',
             'NEW_PASSWORD_CONFIRM',
         );
-
-        // after the above you can also access the refreshed auth data from the authStore
-        console.log(pb.authStore.isValid);
-        console.log(pb.authStore.token);
-        console.log(pb.authStore.model.id);
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';
@@ -74,16 +61,11 @@
 
         ...
 
-        final authData = await pb.collection('${collection?.name}').confirmPasswordReset(
+        await pb.collection('${collection?.name}').confirmPasswordReset(
           'TOKEN',
           'NEW_PASSWORD',
           'NEW_PASSWORD_CONFIRM',
         );
-
-        // after the above you can also access the refreshed auth data from the authStore
-        console.log(pb.authStore.isValid);
-        console.log(pb.authStore.token);
-        console.log(pb.authStore.model.id);
     `}
 />
 
@@ -142,34 +124,6 @@
                 <span class="label">String</span>
             </td>
             <td>The new password confirmation.</td>
-        </tr>
-    </tbody>
-</table>
-
-<div class="section-title">Query parameters</div>
-<table class="table-compact table-border m-b-base">
-    <thead>
-        <tr>
-            <th>Param</th>
-            <th>Type</th>
-            <th width="60%">Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>expand</td>
-            <td>
-                <span class="label">String</span>
-            </td>
-            <td>
-                Auto expand record relations. Ex.:
-                <CodeBlock content={`?expand=relField1,relField2.subRelField`} />
-                Supports up to 6-levels depth nested relations expansion. <br />
-                The expanded relations will be appended to the record under the
-                <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>).
-                <br />
-                Only the relations to which the account has permissions to <strong>view</strong> will be expanded.
-            </td>
         </tr>
     </tbody>
 </table>

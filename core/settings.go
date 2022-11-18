@@ -43,6 +43,8 @@ type Settings struct {
 	TwitterAuth   BaseAuthProviderConfig  `form:"twitterAuth" json:"twitterAuth"`
 	MicrosoftAuth BaseAuthProviderConfig  `form:"microsoftAuth" json:"microsoftAuth"`
 	SpotifyAuth   BaseAuthProviderConfig  `form:"spotifyAuth" json:"spotifyAuth"`
+	KakaoAuth     BaseAuthProviderConfig  `form:"kakaoAuth" json:"kakaoAuth"`
+	TwitchAuth    BaseAuthProviderConfig  `form:"twitchAuth" json:"twitchAuth"`
 }
 
 // NewSettings creates and returns a new default Settings instance.
@@ -122,6 +124,12 @@ func NewSettings() *Settings {
 		SpotifyAuth: BaseAuthProviderConfig{
 			Enabled: false,
 		},
+		KakaoAuth: BaseAuthProviderConfig{
+			Enabled: false,
+		},
+		TwitchAuth: BaseAuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -150,6 +158,8 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.TwitterAuth),
 		validation.Field(&s.MicrosoftAuth),
 		validation.Field(&s.SpotifyAuth),
+		validation.Field(&s.KakaoAuth),
+		validation.Field(&s.TwitchAuth),
 	)
 }
 
@@ -204,6 +214,8 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.TwitterAuth.ClientSecret,
 		&clone.MicrosoftAuth.ClientSecret,
 		&clone.SpotifyAuth.ClientSecret,
+		&clone.KakaoAuth.ClientSecret,
+		&clone.TwitchAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -232,6 +244,8 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameTwitter:   s.TwitterAuth,
 		auth.NameMicrosoft: s.MicrosoftAuth,
 		auth.NameSpotify:   s.SpotifyAuth,
+		auth.NameKakao:     s.KakaoAuth,
+		auth.NameTwitch:    s.TwitchAuth,
 	}
 }
 
@@ -504,9 +518,9 @@ func (c AppleAuthProviderConfig) Validate() error {
 		validation.Field(&c.AuthUrl, is.URL),
 		validation.Field(&c.TokenUrl, is.URL),
 		validation.Field(&c.UserApiUrl, is.URL),
-		validation.Field(&c.TeamId, validation.When(!requireSecret, validation.Required)),
-		validation.Field(&c.KeyId, validation.When(!requireSecret, validation.Required)),
-		validation.Field(&c.SigningKey, validation.When(!requireSecret, validation.Required)),
+		validation.Field(&c.TeamId, validation.When(c.Enabled && !requireSecret, validation.Required)),
+		validation.Field(&c.KeyId, validation.When(c.Enabled && !requireSecret, validation.Required)),
+		validation.Field(&c.SigningKey, validation.When(c.Enabled && !requireSecret, validation.Required)),
 	)
 }
 

@@ -168,7 +168,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 	// create new test collection
 	collection := &models.Collection{}
 	collection.Name = "validate_test"
-	min := 0.0
+	min := 2.0
 	max := 150.0
 	collection.Schema = schema.NewSchema(
 		&schema.SchemaField{
@@ -243,6 +243,15 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			},
 			nil,
 			[]string{"field3"},
+		},
+		{
+			"(number) check min with zero-default",
+			map[string]any{
+				"field2": 1,
+				"field3": 0,
+			},
+			nil,
+			[]string{},
 		},
 		{
 			"(number) check max constraint",

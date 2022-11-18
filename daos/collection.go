@@ -16,31 +16,31 @@ func (dao *Dao) CollectionQuery() *dbx.SelectQuery {
 	return dao.ModelQuery(&models.Collection{})
 }
 
-// FindCollectionsByType finds all collections by the given type
+// FindCollectionsByType finds all collections by the given type.
 func (dao *Dao) FindCollectionsByType(collectionType string) ([]*models.Collection, error) {
-	models := []*models.Collection{}
+	collections := []*models.Collection{}
 
 	err := dao.CollectionQuery().
 		AndWhere(dbx.HashExp{"type": collectionType}).
 		OrderBy("created ASC").
-		All(&models)
+		All(&collections)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return models, nil
+	return collections, nil
 }
 
-// FindCollectionByNameOrId finds the first collection by its name or id.
+// FindCollectionByNameOrId finds a single collection by its name (case insensitive) or id.
 func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, error) {
 	model := &models.Collection{}
 
 	err := dao.CollectionQuery().
-		AndWhere(dbx.Or(
-			dbx.HashExp{"id": nameOrId},
-			dbx.HashExp{"name": nameOrId},
-		)).
+		AndWhere(dbx.NewExp("[[id]] = {:id} OR LOWER([[name]])={:name}", dbx.Params{
+			"id":   nameOrId,
+			"name": strings.ToLower(nameOrId),
+		})).
 		Limit(1).
 		One(model)
 
@@ -54,7 +54,7 @@ func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, e
 // IsCollectionNameUnique checks that there is no existing collection
 // with the provided name (case insensitive!).
 //
-// Note: case sensitive check because the name is used also as a table name for the records.
+// Note: case insensitive check because the name is used also as a table name for the records.
 func (dao *Dao) IsCollectionNameUnique(name string, excludeIds ...string) bool {
 	if name == "" {
 		return false

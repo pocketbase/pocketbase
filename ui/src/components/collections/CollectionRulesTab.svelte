@@ -16,12 +16,13 @@
                 PocketBase filter syntax and operators
             </a>.
         </p>
-        <span
+        <button
+            type="button"
             class="expand-handle txt-sm txt-bold txt-nowrap link-hint"
             on:click={() => (showFiltersInfo = !showFiltersInfo)}
         >
             {showFiltersInfo ? "Hide available fields" : "Show available fields"}
-        </span>
+        </button>
     </div>
 
     {#if showFiltersInfo}

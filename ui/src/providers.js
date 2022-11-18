@@ -50,4 +50,12 @@ export default {
         title: "Spotify",
         icon:  "ri-spotify-fill",
     },
+    kakaoAuth: {
+        title: "Kakao",
+        icon:  "ri-kakao-talk-fill",
+    },
+    twitchAuth: {
+        title: "Twitch",
+        icon:  "ri-twitch-fill",
+    },
 };

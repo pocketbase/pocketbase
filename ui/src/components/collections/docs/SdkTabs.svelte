@@ -3,6 +3,9 @@
 
     const SDK_PREFERENCE_KEY = "pb_sdk_preference";
 
+    let classes = "m-b-base";
+    export { classes as class }; // export reserved keyword
+
     export let js = "";
     export let dart = "";
 
@@ -29,7 +32,7 @@
     ];
 </script>
 
-<div class="tabs sdk-tabs m-b-base">
+<div class="tabs sdk-tabs {classes}">
     <div class="tabs-header compact left">
         {#each sdkExamples as example (example.language)}
             <button

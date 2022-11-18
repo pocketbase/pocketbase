@@ -8,7 +8,7 @@ import (
 var StopPropagation = errors.New("Event hook propagation stopped")
 
 // Handler defines a hook handler function.
-type Handler[T any] func(data T) error
+type Handler[T any] func(e T) error
 
 // Hook defines a concurrent safe structure for handling event hooks
 // (aka. callbacks propagation).

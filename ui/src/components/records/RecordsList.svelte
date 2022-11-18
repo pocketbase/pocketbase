@@ -27,8 +27,9 @@
     let isLoading = true;
     let isDeleting = false;
     let yieldedRecordsId = 0;
-    let hiddenColumns = [];
     let columnsTrigger;
+    let hiddenColumns = [];
+    let collumnsToHide = [];
 
     $: if (collection?.id) {
         loadStoredHiddenColumns();
@@ -52,6 +53,22 @@
     $: if (hiddenColumns !== -1) {
         updateStoredHiddenColumns();
     }
+
+    $: collumnsToHide = [].concat(
+        collection.isAuth
+            ? [
+                  { id: "@username", name: "username" },
+                  { id: "@email", name: "email" },
+              ]
+            : [],
+        fields.map((f) => {
+            return { id: f.id, name: f.name };
+        }),
+        [
+            { id: "@created", name: "created" },
+            { id: "@updated", name: "updated" },
+        ]
+    );
 
     function updateStoredHiddenColumns() {
         if (!collection?.id) {
@@ -210,23 +227,23 @@
 <HorizontalScroller class="table-wrapper">
     <svelte:fragment slot="before">
         <Toggler class="dropdown dropdown-right dropdown-nowrap columns-dropdown" trigger={columnsTrigger}>
-            <div class="txt-hint txt-sm p-5 m-b-5">Toggle Columns</div>
-            {#each fields as field (field.id + field.name)}
+            <div class="txt-hint txt-sm p-5 m-b-5">Toggle columns</div>
+            {#each collumnsToHide as column (column.id + column.name)}
                 <Field class="form-field form-field-sm form-field-toggle m-0 p-5" let:uniqueId>
                     <input
                         type="checkbox"
                         id={uniqueId}
-                        checked={!hiddenColumns.includes(field.id)}
+                        checked={!hiddenColumns.includes(column.id)}
                         on:change={(e) => {
                             if (e.target.checked) {
-                                CommonHelper.removeByValue(hiddenColumns, field.id);
+                                CommonHelper.removeByValue(hiddenColumns, column.id);
                             } else {
-                                CommonHelper.pushUnique(hiddenColumns, field.id);
+                                CommonHelper.pushUnique(hiddenColumns, column.id);
                             }
                             hiddenColumns = hiddenColumns;
                         }}
                     />
-                    <label for={uniqueId}>{field.name}</label>
+                    <label for={uniqueId}>{column.name}</label>
                 </Field>
             {/each}
         </Toggler>
@@ -252,26 +269,32 @@
                     {/if}
                 </th>
 
-                <SortHeader class="col-type-text col-field-id" name="id" bind:sort>
-                    <div class="col-header-content">
-                        <i class={CommonHelper.getFieldTypeIcon("primary")} />
-                        <span class="txt">id</span>
-                    </div>
-                </SortHeader>
+                {#if !hiddenColumns.includes("@id")}
+                    <SortHeader class="col-type-text col-field-id" name="id" bind:sort>
+                        <div class="col-header-content">
+                            <i class={CommonHelper.getFieldTypeIcon("primary")} />
+                            <span class="txt">id</span>
+                        </div>
+                    </SortHeader>
+                {/if}
 
                 {#if collection.isAuth}
-                    <SortHeader class="col-type-text col-field-id" name="username" bind:sort>
-                        <div class="col-header-content">
-                            <i class={CommonHelper.getFieldTypeIcon("user")} />
-                            <span class="txt">username</span>
-                        </div>
-                    </SortHeader>
-                    <SortHeader class="col-type-email col-field-email" name="email" bind:sort>
-                        <div class="col-header-content">
-                            <i class={CommonHelper.getFieldTypeIcon("email")} />
-                            <span class="txt">email</span>
-                        </div>
-                    </SortHeader>
+                    {#if !hiddenColumns.includes("@username")}
+                        <SortHeader class="col-type-text col-field-id" name="username" bind:sort>
+                            <div class="col-header-content">
+                                <i class={CommonHelper.getFieldTypeIcon("user")} />
+                                <span class="txt">username</span>
+                            </div>
+                        </SortHeader>
+                    {/if}
+                    {#if !hiddenColumns.includes("@email")}
+                        <SortHeader class="col-type-email col-field-email" name="email" bind:sort>
+                            <div class="col-header-content">
+                                <i class={CommonHelper.getFieldTypeIcon("email")} />
+                                <span class="txt">email</span>
+                            </div>
+                        </SortHeader>
+                    {/if}
                 {/if}
 
                 {#each visibleFields as field (field.name)}
@@ -287,19 +310,23 @@
                     </SortHeader>
                 {/each}
 
-                <SortHeader class="col-type-date col-field-created" name="created" bind:sort>
-                    <div class="col-header-content">
-                        <i class={CommonHelper.getFieldTypeIcon("date")} />
-                        <span class="txt">created</span>
-                    </div>
-                </SortHeader>
+                {#if !hiddenColumns.includes("@created")}
+                    <SortHeader class="col-type-date col-field-created" name="created" bind:sort>
+                        <div class="col-header-content">
+                            <i class={CommonHelper.getFieldTypeIcon("date")} />
+                            <span class="txt">created</span>
+                        </div>
+                    </SortHeader>
+                {/if}
 
-                <SortHeader class="col-type-date col-field-updated" name="updated" bind:sort>
-                    <div class="col-header-content">
-                        <i class={CommonHelper.getFieldTypeIcon("date")} />
-                        <span class="txt">updated</span>
-                    </div>
-                </SortHeader>
+                {#if !hiddenColumns.includes("@updated")}
+                    <SortHeader class="col-type-date col-field-updated" name="updated" bind:sort>
+                        <div class="col-header-content">
+                            <i class={CommonHelper.getFieldTypeIcon("date")} />
+                            <span class="txt">updated</span>
+                        </div>
+                    </SortHeader>
+                {/if}
 
                 <th class="col-type-action min-width">
                     <button bind:this={columnsTrigger} type="button" class="btn btn-sm btn-secondary p-0">
@@ -322,6 +349,7 @@
                     }}
                 >
                     <td class="bulk-select-col min-width">
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
                         <div class="form-field" on:click|stopPropagation>
                             <input
                                 type="checkbox"
@@ -333,58 +361,68 @@
                         </div>
                     </td>
 
-                    <td class="col-type-text col-field-id">
-                        <div class="flex flex-gap-5">
-                            <IdLabel id={record.id} />
+                    {#if !hiddenColumns.includes("@id")}
+                        <td class="col-type-text col-field-id">
+                            <div class="flex flex-gap-5">
+                                <IdLabel id={record.id} />
 
-                            {#if collection.isAuth}
-                                {#if record.verified}
-                                    <i
-                                        class="ri-checkbox-circle-fill txt-sm txt-success"
-                                        use:tooltip={"Verified"}
-                                    />
-                                {:else}
-                                    <i
-                                        class="ri-error-warning-fill txt-sm txt-hint"
-                                        use:tooltip={"Unverified"}
-                                    />
+                                {#if collection.isAuth}
+                                    {#if record.verified}
+                                        <i
+                                            class="ri-checkbox-circle-fill txt-sm txt-success"
+                                            use:tooltip={"Verified"}
+                                        />
+                                    {:else}
+                                        <i
+                                            class="ri-error-warning-fill txt-sm txt-hint"
+                                            use:tooltip={"Unverified"}
+                                        />
+                                    {/if}
                                 {/if}
-                            {/if}
-                        </div>
-                    </td>
+                            </div>
+                        </td>
+                    {/if}
 
                     {#if collection.isAuth}
-                        <td class="col-type-text col-field-username">
-                            {#if CommonHelper.isEmpty(record.username)}
-                                <span class="txt-hint">N/A</span>
-                            {:else}
-                                <span class="txt txt-ellipsis" title={record.username}>
-                                    {record.username}
-                                </span>
-                            {/if}
-                        </td>
-                        <td class="col-type-text col-field-email">
-                            {#if CommonHelper.isEmpty(record.email)}
-                                <span class="txt-hint">N/A</span>
-                            {:else}
-                                <span class="txt txt-ellipsis" title={record.email}>
-                                    {record.email}
-                                </span>
-                            {/if}
-                        </td>
+                        {#if !hiddenColumns.includes("@username")}
+                            <td class="col-type-text col-field-username">
+                                {#if CommonHelper.isEmpty(record.username)}
+                                    <span class="txt-hint">N/A</span>
+                                {:else}
+                                    <span class="txt txt-ellipsis" title={record.username}>
+                                        {record.username}
+                                    </span>
+                                {/if}
+                            </td>
+                        {/if}
+                        {#if !hiddenColumns.includes("@email")}
+                            <td class="col-type-text col-field-email">
+                                {#if CommonHelper.isEmpty(record.email)}
+                                    <span class="txt-hint">N/A</span>
+                                {:else}
+                                    <span class="txt txt-ellipsis" title={record.email}>
+                                        {record.email}
+                                    </span>
+                                {/if}
+                            </td>
+                        {/if}
                     {/if}
 
                     {#each visibleFields as field (field.name)}
                         <RecordFieldCell {record} {field} />
                     {/each}
 
-                    <td class="col-type-date col-field-created">
-                        <FormattedDate date={record.created} />
-                    </td>
+                    {#if !hiddenColumns.includes("@created")}
+                        <td class="col-type-date col-field-created">
+                            <FormattedDate date={record.created} />
+                        </td>
+                    {/if}
 
-                    <td class="col-type-date col-field-updated">
-                        <FormattedDate date={record.updated} />
-                    </td>
+                    {#if !hiddenColumns.includes("@updated")}
+                        <td class="col-type-date col-field-updated">
+                            <FormattedDate date={record.updated} />
+                        </td>
+                    {/if}
 
                     <td class="col-type-action min-width">
                         <i class="ri-arrow-right-line" />

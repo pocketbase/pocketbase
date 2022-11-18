@@ -155,7 +155,7 @@ func (form *RecordOAuth2Login) Submit(
 			createForm := NewRecordUpsert(form.app, authRecord)
 			createForm.SetFullManageAccess(true)
 			createForm.SetDao(txDao)
-			if authUser.Username != "" {
+			if authUser.Username != "" && usernameRegex.MatchString(authUser.Username) {
 				createForm.Username = form.dao.SuggestUniqueAuthRecordUsername(form.collection.Id, authUser.Username)
 			}
 

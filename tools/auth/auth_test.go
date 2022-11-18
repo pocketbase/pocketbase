@@ -64,6 +64,15 @@ func TestNewProviderByName(t *testing.T) {
 		t.Error("Expected to be instance of *auth.Gitlab")
 	}
 
+	// twitter
+	p, err = auth.NewProviderByName(auth.NameTwitter)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Twitter); !ok {
+		t.Error("Expected to be instance of *auth.Twitter")
+	}
+
 	// discord
 	p, err = auth.NewProviderByName(auth.NameDiscord)
 	if err != nil {
@@ -89,5 +98,23 @@ func TestNewProviderByName(t *testing.T) {
 	}
 	if _, ok := p.(*auth.Spotify); !ok {
 		t.Error("Expected to be instance of *auth.Spotify")
+	}
+
+	// kakao
+	p, err = auth.NewProviderByName(auth.NameKakao)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Kakao); !ok {
+		t.Error("Expected to be instance of *auth.Kakao")
+	}
+
+	// twitch
+	p, err = auth.NewProviderByName(auth.NameTwitch)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Twitch); !ok {
+		t.Error("Expected to be instance of *auth.Twitch")
 	}
 }

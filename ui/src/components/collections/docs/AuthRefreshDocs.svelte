@@ -25,21 +25,6 @@
             ),
         },
         {
-            code: 400,
-            body: `
-                {
-                  "code": 400,
-                  "message": "Failed to authenticate.",
-                  "data": {
-                    "identity": {
-                      "code": "validation_required",
-                      "message": "Missing required value."
-                    }
-                  }
-                }
-            `,
-        },
-        {
             code: 401,
             body: `
                 {
@@ -59,13 +44,23 @@
                 }
             `,
         },
+        {
+            code: 404,
+            body: `
+                {
+                  "code": 404,
+                  "message": "Missing auth record context.",
+                  "data": {}
+                }
+            `,
+        },
     ];
 </script>
 
 <h3 class="m-b-sm">Auth refresh ({collection.name})</h3>
 <div class="content txt-lg m-b-sm">
     <p>
-        Returns a new auth response (token and account data) for an
+        Returns a new auth response (token and record data) for an
         <strong>already authenticated record</strong>.
     </p>
     <p>
@@ -140,7 +135,7 @@
                 The expanded relations will be appended to the record under the
                 <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>).
                 <br />
-                Only the relations to which the account has permissions to <strong>view</strong> will be expanded.
+                Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
     </tbody>

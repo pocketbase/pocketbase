@@ -135,7 +135,7 @@ func (validator *RecordDataValidator) checkFieldValue(field *schema.SchemaField,
 func (validator *RecordDataValidator) checkTextValue(field *schema.SchemaField, value any) error {
 	val, _ := value.(string)
 	if val == "" {
-		return nil // nothing to check
+		return nil // nothing to check (skip zero-defaults)
 	}
 
 	options, _ := field.Options.(*schema.TextOptions)
@@ -159,11 +159,11 @@ func (validator *RecordDataValidator) checkTextValue(field *schema.SchemaField, 
 }
 
 func (validator *RecordDataValidator) checkNumberValue(field *schema.SchemaField, value any) error {
-	if value == nil {
-		return nil // nothing to check
+	val, _ := value.(float64)
+	if val == 0 {
+		return nil // nothing to check (skip zero-defaults)
 	}
 
-	val, _ := value.(float64)
 	options, _ := field.Options.(*schema.NumberOptions)
 
 	if options.Min != nil && val < *options.Min {

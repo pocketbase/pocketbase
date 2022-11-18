@@ -54,6 +54,7 @@
 </script>
 
 <div class="searchbar-wrapper">
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <form class="searchbar" on:click|stopPropagation on:submit|preventDefault={submit}>
         <label for={uniqueId} class="m-l-10 txt-xl">
             <i class="ri-search-line" />

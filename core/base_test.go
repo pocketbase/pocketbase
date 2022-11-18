@@ -319,8 +319,8 @@ func TestBaseAppGetters(t *testing.T) {
 		t.Fatalf("Getter app.OnRecordAuthRequest does not match or nil (%v vs %v)", app.OnRecordAuthRequest(), app.onRecordAuthRequest)
 	}
 
-	if app.onRecordListExternalAuths != app.OnRecordListExternalAuths() || app.OnRecordListExternalAuths() == nil {
-		t.Fatalf("Getter app.OnRecordListExternalAuths does not match or nil (%v vs %v)", app.OnRecordListExternalAuths(), app.onRecordListExternalAuths)
+	if app.onRecordListExternalAuthsRequest != app.OnRecordListExternalAuthsRequest() || app.OnRecordListExternalAuthsRequest() == nil {
+		t.Fatalf("Getter app.OnRecordListExternalAuthsRequest does not match or nil (%v vs %v)", app.OnRecordListExternalAuthsRequest(), app.onRecordListExternalAuthsRequest)
 	}
 
 	if app.onRecordBeforeUnlinkExternalAuthRequest != app.OnRecordBeforeUnlinkExternalAuthRequest() || app.OnRecordBeforeUnlinkExternalAuthRequest() == nil {
