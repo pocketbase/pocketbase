@@ -193,7 +193,7 @@ func checkViewListRule(view *models.View, dao *daos.Dao) error {
 	}
 
 	dummy := &models.Collection{Schema: view.Schema}
-	r := resolvers.NewRecordFieldResolver(dao, dummy, nil)
+	r := resolvers.NewRecordFieldResolver(dao, dummy, nil, false)
 
 	_, err := search.FilterData(*listRule).BuildExpr(r)
 	if err != nil {

@@ -9,7 +9,6 @@ import (
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
-	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
@@ -36,13 +35,13 @@ type ViewApi struct {
 func (api *ViewApi) list(c echo.Context) error {
 	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil {
-		return rest.NewNotFoundError("View was not found", err)
+		return NewNotFoundError("View was not found", err)
 	}
 
 	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
 	if admin == nil && v.ListRule == nil {
 		// only admins can access if the rule is nil
-		return rest.NewForbiddenError("Only admins can perform this action.", nil)
+		return NewForbiddenError("Only admins can perform this action.", nil)
 	}
 
 	// forbid users and guests to query special filter/sort fields
@@ -51,9 +50,11 @@ func (api *ViewApi) list(c echo.Context) error {
 		return err
 	}
 
-	requestData := RA.exportRequestData(c)
+	requestData := RequestData(c)
 
-	fieldsResolver := resolvers.NewRecordFieldResolver(api.app.Dao(), &models.Collection{Schema: v.Schema, Name: v.Name}, requestData)
+
+	fieldsResolver := resolvers.NewRecordFieldResolver(api.app.Dao(), &models.Collection{Schema: v.Schema, Name: v.Name},
+		 requestData,false)
 
 	searchProvider := search.NewProvider(fieldsResolver).
 		Query(api.app.Dao().RecordFromViewQuery(v))
@@ -65,7 +66,7 @@ func (api *ViewApi) list(c echo.Context) error {
 	rawRecords := []dbx.NullStringMap{}
 	result, err := searchProvider.ParseAndExec(c.QueryString(), &rawRecords)
 	if err != nil {
-		return rest.NewBadRequestError("Invalid filter parameters.", err)
+		return NewBadRequestError("Invalid filter parameters.", err)
 	}
 	result.Items = models.NewRecordsFromViewSchema(v, rawRecords)
 
@@ -86,7 +87,7 @@ func (api *ViewApi) adminList(c echo.Context) error {
 
 	result, err := search.NewProvider(fieldResolver).Query(api.app.Dao().ViewQuery()).ParseAndExec(c.QueryString(), &View)
 	if err != nil {
-		return rest.NewBadRequestError("", err)
+		return NewBadRequestError("", err)
 	}
 
 	event := &core.ViewListEvent{
@@ -102,7 +103,7 @@ func (api *ViewApi) adminList(c echo.Context) error {
 func (api *ViewApi) view(c echo.Context) error {
 	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil || v == nil {
-		return rest.NewNotFoundError("", err)
+		return NewNotFoundError("", err)
 	}
 
 	event := &core.ViewViewEvent{
@@ -122,7 +123,7 @@ func (api *ViewApi) create(c echo.Context) error {
 
 	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
+		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.ViewCreateEvent{
@@ -135,7 +136,7 @@ func (api *ViewApi) create(c echo.Context) error {
 		return func() error {
 			return api.app.OnViewBeforeCreateRequest().Trigger(event, func(e *core.ViewCreateEvent) error {
 				if err := next(); err != nil {
-					return rest.NewBadRequestError("Failed to create the view.", err)
+					return NewBadRequestError("Failed to create the view.", err)
 				}
 
 				return e.HttpContext.JSON(http.StatusOK, e.View)
@@ -153,14 +154,14 @@ func (api *ViewApi) create(c echo.Context) error {
 func (api *ViewApi) update(c echo.Context) error {
 	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil || v == nil {
-		return rest.NewNotFoundError("", err)
+		return NewNotFoundError("", err)
 	}
 
 	form := forms.NewViewUpsert(api.app, v)
 
 	// load request
 	if err := c.Bind(form); err != nil {
-		return rest.NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
+		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
 	event := &core.ViewUpdateEvent{
@@ -173,7 +174,7 @@ func (api *ViewApi) update(c echo.Context) error {
 		return func() error {
 			return api.app.OnViewBeforeUpdateRequest().Trigger(event, func(e *core.ViewUpdateEvent) error {
 				if err := next(); err != nil {
-					return rest.NewBadRequestError("Failed to update the view.", err)
+					return NewBadRequestError("Failed to update the view.", err)
 				}
 
 				return e.HttpContext.JSON(http.StatusOK, e.View)
@@ -192,7 +193,7 @@ func (api *ViewApi) delete(c echo.Context) error {
 	v, err := api.app.Dao().FindViewByIdOrName(c.PathParam("view"))
 	if err != nil || v == nil {
 		api.app.Dao().DeleteView(c.PathParam("view"))
-		return rest.NewNotFoundError("", err)
+		return NewNotFoundError("", err)
 	}
 
 	event := &core.ViewDeleteEvent{
@@ -202,7 +203,7 @@ func (api *ViewApi) delete(c echo.Context) error {
 
 	handlerErr := api.app.OnViewBeforeDeleteRequest().Trigger(event, func(e *core.ViewDeleteEvent) error {
 		if err := api.app.Dao().DeleteViewModel(e.View); err != nil {
-			return rest.NewBadRequestError("Failed to delete View. ", err)
+			return NewBadRequestError("Failed to delete View. ", err)
 		}
 
 		return e.HttpContext.NoContent(http.StatusNoContent)

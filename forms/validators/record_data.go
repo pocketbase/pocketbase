@@ -172,7 +172,7 @@ func (validator *RecordDataValidator) checkNumberValue(field *schema.SchemaField
 	if !field.Required && value == nil {
 		return nil
 	}
-	val, _ := value.(float64)
+	val, _ = value.(float64)
 	options, _ := field.Options.(*schema.NumberOptions)
 
 	if options.Min != nil && val < *options.Min {
