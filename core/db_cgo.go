@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/pocketbase/dbx"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func connectDB(dbPath string) (*dbx.DB, error) {

@@ -44,7 +44,12 @@ type join struct {
 // managing Record model search fields.
 //
 // Usually used together with `search.Provider`. Example:
-//	resolver := resolvers.NewRecordFieldResolver(app.Dao(), myCollection, map[string]any{"test": 123})
+//	resolver := resolvers.NewRecordFieldResolver(
+//		app.Dao(),
+//		myCollection,
+//		&models.RequestData{...},
+//		true,
+//	)
 //	provider := search.NewProvider(resolver)
 //	...
 type RecordFieldResolver struct {
@@ -60,10 +65,6 @@ type RecordFieldResolver struct {
 }
 
 // NewRecordFieldResolver creates and initializes a new `RecordFieldResolver`.
-//
-// @todo consider changing in v0.8+:
-// 	- requestData to a typed struct when introducing the "IN" operator
-// 	- allowHiddenFields -> isSystemAdmin
 func NewRecordFieldResolver(
 	dao *daos.Dao,
 	baseCollection *models.Collection,

@@ -2,7 +2,7 @@
 
 **⚠️ This release contains breaking changes and requires some manual migration steps!**
 
-The biggest change is the merge of the `User` models and the `profiles` collection per #376.
+The biggest change is the merge of the `User` models and the `profiles` collection per [#376](https://github.com/pocketbase/pocketbase/issues/376).
 There is no longer `user` type field and the users are just an "auth" collection (we now support **collection types**, currently only "base" and "auth").
 This should simplify the users management and at the same time allow us to have unlimited multiple "auth" collections each with their own custom fields and authentication options (eg. staff, client, etc.).
 
@@ -32,15 +32,14 @@ In addition to the `Users` and `profiles` merge, this release comes with several
 
 - Other minor performance improvements (mostly related to the search apis).
 
-
-#### Migrate from v0.7.x
+### Migrate from v0.7.x
 
 - **[Data](#data)**
 - **[SDKs](#sdks)**
 - **[API](#api)**
 - **[Internals](#internals)**
 
-##### Data
+#### Data
 
 The merge of users and profiles comes with several required db changes.
 The easiest way to apply them is to use the new temporary `upgrade` command:
@@ -79,7 +78,7 @@ The upgrade command:
   lastVerificationSentAt => lastVerificationSentAt2
   ```
 
-##### SDKs
+#### SDKs
 
 Please check the individual SDK package changelog and apply the necessary changes in your code:
 
@@ -96,7 +95,7 @@ Please check the individual SDK package changelog and apply the necessary change
   flutter pub add pocketbase:^0.5.0
   ```
 
-##### API
+#### API
 
 > _**You don't have to read this if you are using an official SDK.**_
 
@@ -304,7 +303,7 @@ Please check the individual SDK package changelog and apply the necessary change
     </tr>
   </table>
 
-##### Internals
+#### Internals
 
 > _**You don't have to read this if you are not using PocketBase as framework.**_
 

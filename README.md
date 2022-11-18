@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://pocketbase.io" target="_blank" rel="noopener">
-        <img src="https://i.imgur.com/1Ag0seN.png" alt="PocketBase - open source backend in 1 file" />
+        <img src="https://i.imgur.com/5qimnm5.png" alt="PocketBase - open source backend in 1 file" />
     </a>
 </p>
 
@@ -128,7 +128,7 @@ PRs for _small features_ (eg. adding new OAuth2 providers), bug and documentatio
 
 But please refrain creating PRs for _big features_ without previously discussing the implementation details. Reviewing big PRs often requires a lot of time and tedious back-and-forth communication.
 PocketBase has a [roadmap](https://github.com/orgs/pocketbase/projects/2)
-and I try to work on issues in a specific order and PRs often come in out of nowhere and skew all initial planning.
+and I try to work on issues in a specific order and such PRs often come in out of nowhere and skew all initial planning.
 
 Don't get upset if I close your PR, even if it is well executed and tested. This doesn't mean that it will never be merged.
 Later we can always refer to it and/or take pieces of your implementation when the time comes to work on the issue (don't worry you'll be credited in the release notes).
