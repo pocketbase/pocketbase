@@ -34,7 +34,6 @@
     import { onMount, createEventDispatcher } from "svelte";
     import CommonHelper from "@/utils/CommonHelper";
     import { collections } from "@/stores/collections";
-    import { Collection } from "pocketbase";
     // code mirror imports
     // ---
     import {
@@ -71,7 +70,7 @@
     export let value = "";
     export let disabled = false;
     export let placeholder = "";
-    export let baseCollection = new Collection();
+    export let baseCollection = null;
     export let singleLine = false;
     export let extraAutocompleteKeys = []; // eg. ["test1", "test2"]
     export let disableRequestKeys = false;
@@ -79,26 +78,32 @@
 
     let editor;
     let container;
+    let oldDisabledState = disabled;
     let langCompartment = new Compartment();
     let editableCompartment = new Compartment();
     let readOnlyCompartment = new Compartment();
     let placeholderCompartment = new Compartment();
 
-    let cachedBaseKeys = [];
+    let mergedCollections = [];
     let cachedRequestKeys = [];
     let cachedIndirectCollectionKeys = [];
-
-    $: collectionType = baseCollection.type; // cache the collection type
+    let cachedBaseKeys = [];
+    let baseKeysChangeHash = "";
+    let oldBaseKeysChangeHash = "";
 
     $: mergedCollections = mergeWithBaseCollection($collections);
 
-    $: if (
-        collectionType ||
-        mergedCollections !== -1 ||
-        disableRequestKeys !== -1 ||
-        disableIndirectCollectionsKeys !== -1
-    ) {
+    $: baseKeysChangeHash = getCollectionKeysChangeHash(baseCollection);
+
+    $: if (!disabled && oldBaseKeysChangeHash != baseKeysChangeHash) {
+        oldBaseKeysChangeHash = baseKeysChangeHash;
         cachedBaseKeys = getBaseKeys();
+    }
+
+    $: if (
+        !disabled &&
+        (mergedCollections !== -1 || disableRequestKeys !== -1 || disableIndirectCollectionsKeys !== -1)
+    ) {
         cachedRequestKeys = !disableRequestKeys ? getRequestKeys() : [];
         cachedIndirectCollectionKeys = !disableIndirectCollectionsKeys ? getIndirectCollectionKeys() : [];
     }
@@ -113,14 +118,14 @@
         });
     }
 
-    $: if (editor && typeof disabled !== "undefined") {
+    $: if (editor && oldDisabledState != disabled) {
         editor.dispatch({
             effects: [
                 editableCompartment.reconfigure(EditorView.editable.of(!disabled)),
                 readOnlyCompartment.reconfigure(EditorState.readOnly.of(disabled)),
             ],
         });
-
+        oldDisabledState = disabled;
         triggerNativeChange();
     }
 
@@ -143,6 +148,11 @@
     // Focus the editor (if inited).
     export function focus() {
         editor?.focus();
+    }
+
+    // Return a collection keys hash string that can be used to compare with previous states.
+    function getCollectionKeysChangeHash(collection) {
+        return JSON.stringify([collection?.type, collection?.schema]);
     }
 
     // Replace the base collection in the provided list.
@@ -226,7 +236,7 @@
     }
 
     function getBaseKeys() {
-        return getCollectionFieldKeys(baseCollection.name);
+        return getCollectionFieldKeys(baseCollection?.name);
     }
 
     function getRequestKeys() {
@@ -277,16 +287,16 @@
         let result = [].concat(extraAutocompleteKeys);
 
         // add base keys
-        result = result.concat(cachedBaseKeys);
+        result = result.concat(cachedBaseKeys || []);
 
         // add @request.* keys
         if (includeRequestKeys) {
-            result = result.concat(cachedRequestKeys);
+            result = result.concat(cachedRequestKeys || []);
         }
 
         // add @collections.* keys
         if (includeIndirectCollectionsKeys) {
-            result = result.concat(cachedIndirectCollectionKeys);
+            result = result.concat(cachedIndirectCollectionKeys || []);
         }
 
         // sort longer keys first because the highlighter will highlight
@@ -405,8 +415,8 @@
                         icons: false,
                     }),
                     placeholderCompartment.of(placeholderExt(placeholder)),
-                    editableCompartment.of(EditorView.editable.of(true)),
-                    readOnlyCompartment.of(EditorState.readOnly.of(false)),
+                    editableCompartment.of(EditorView.editable.of(!disabled)),
+                    readOnlyCompartment.of(EditorState.readOnly.of(disabled)),
                     langCompartment.of(ruleLang()),
                     EditorState.transactionFilter.of((tr) => {
                         return singleLine && tr.newDoc.lines > 1 ? [] : tr;

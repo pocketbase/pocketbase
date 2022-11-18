@@ -54,7 +54,7 @@ func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, e
 // IsCollectionNameUnique checks that there is no existing collection
 // with the provided name (case insensitive!).
 //
-// Note: case sensitive check because the name is used also as a table name for the records.
+// Note: case insensitive check because the name is used also as a table name for the records.
 func (dao *Dao) IsCollectionNameUnique(name string, excludeIds ...string) bool {
 	if name == "" {
 		return false

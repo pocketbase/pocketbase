@@ -251,7 +251,7 @@ func (api *realtimeApi) canAccessRecord(client subscriptions.Client, record *mod
 		}
 
 		// emulate request data
-		requestData := &models.FilterRequestData{
+		requestData := &models.RequestData{
 			Method: "GET",
 		}
 		requestData.AuthRecord, _ = client.Get(ContextAuthRecordKey).(*models.Record)

@@ -55,7 +55,7 @@ type RecordFieldResolver struct {
 	loadedCollections []*models.Collection
 	joins             []join // we cannot use a map because the insertion order is not preserved
 	exprs             []dbx.Expression
-	requestData       *models.FilterRequestData
+	requestData       *models.RequestData
 	staticRequestData map[string]any
 }
 
@@ -67,7 +67,7 @@ type RecordFieldResolver struct {
 func NewRecordFieldResolver(
 	dao *daos.Dao,
 	baseCollection *models.Collection,
-	requestData *models.FilterRequestData,
+	requestData *models.RequestData,
 	allowHiddenFields bool,
 ) *RecordFieldResolver {
 	r := &RecordFieldResolver{

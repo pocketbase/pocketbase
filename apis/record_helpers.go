@@ -15,17 +15,22 @@ import (
 
 const ContextRequestDataKey = "requestData"
 
-// GetRequestData exports common request data fields
+// Deprecated: Will be removed after v0.9. Use apis.RequestData(c) instead.
+func GetRequestData(c echo.Context) *models.RequestData {
+	return RequestData(c)
+}
+
+// RequestData exports cached common request data fields
 // (query, body, logged auth state, etc.) from the provided context.
-func GetRequestData(c echo.Context) *models.FilterRequestData {
-	// return cached to avoid reading the body multiple times
+func RequestData(c echo.Context) *models.RequestData {
+	// return cached to avoid copying the body multiple times
 	if v := c.Get(ContextRequestDataKey); v != nil {
-		if data, ok := v.(*models.FilterRequestData); ok {
+		if data, ok := v.(*models.RequestData); ok {
 			return data
 		}
 	}
 
-	result := &models.FilterRequestData{
+	result := &models.RequestData{
 		Method: c.Request().Method,
 		Query:  map[string]any{},
 		Data:   map[string]any{},
@@ -54,7 +59,7 @@ func EnrichRecord(c echo.Context, dao *daos.Dao, record *models.Record, defaultE
 // - ensures that the emails of the auth records and their expanded auth relations
 //   are visibe only for the current logged admin, record owner or record with manage access
 func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defaultExpands ...string) error {
-	requestData := GetRequestData(c)
+	requestData := RequestData(c)
 
 	if err := autoIgnoreAuthRecordsEmailVisibility(dao, records, requestData); err != nil {
 		return fmt.Errorf("Failed to resolve email visibility: %v", err)
@@ -77,7 +82,7 @@ func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defa
 // expandFetch is the records fetch function that is used to expand related records.
 func expandFetch(
 	dao *daos.Dao,
-	requestData *models.FilterRequestData,
+	requestData *models.RequestData,
 ) daos.ExpandFetchFunc {
 	return func(relCollection *models.Collection, relIds []string) ([]*models.Record, error) {
 		records, err := dao.FindRecordsByIds(relCollection.Id, relIds, func(q *dbx.SelectQuery) error {
@@ -117,7 +122,7 @@ func expandFetch(
 func autoIgnoreAuthRecordsEmailVisibility(
 	dao *daos.Dao,
 	records []*models.Record,
-	requestData *models.FilterRequestData,
+	requestData *models.RequestData,
 ) error {
 	if len(records) == 0 || !records[0].Collection().IsAuth() {
 		return nil // nothing to check
@@ -185,7 +190,7 @@ func autoIgnoreAuthRecordsEmailVisibility(
 func hasAuthManageAccess(
 	dao *daos.Dao,
 	record *models.Record,
-	requestData *models.FilterRequestData,
+	requestData *models.RequestData,
 ) bool {
 	if !record.Collection().IsAuth() {
 		return false

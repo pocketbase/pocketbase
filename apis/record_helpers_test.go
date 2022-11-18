@@ -13,7 +13,7 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
-func TestGetRequestData(t *testing.T) {
+func TestRequestData(t *testing.T) {
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/?test=123", strings.NewReader(`{"test":456}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -28,10 +28,10 @@ func TestGetRequestData(t *testing.T) {
 	dummyAdmin.Id = "id2"
 	c.Set(apis.ContextAdminKey, dummyAdmin)
 
-	result := apis.GetRequestData(c)
+	result := apis.RequestData(c)
 
 	if result == nil {
-		t.Fatal("Expected *models.FilterRequestData instance, got nil")
+		t.Fatal("Expected *models.RequestData instance, got nil")
 	}
 
 	if result.Method != http.MethodPost {

@@ -72,7 +72,7 @@ func (api *recordAuthApi) authResponse(c echo.Context, authRecord *models.Record
 		expands := strings.Split(c.QueryParam(expandQueryParam), ",")
 		if len(expands) > 0 {
 			// create a copy of the cached request data and adjust it to the current auth record
-			requestData := *GetRequestData(e.HttpContext)
+			requestData := *RequestData(e.HttpContext)
 			requestData.Admin = nil
 			requestData.AuthRecord = e.Record
 			failed := api.app.Dao().ExpandRecord(
@@ -204,7 +204,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 
 	record, authData, submitErr := form.Submit(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
 		return createForm.DrySubmit(func(txDao *daos.Dao) error {
-			requestData := GetRequestData(c)
+			requestData := RequestData(c)
 			requestData.Data = form.CreateData
 
 			createRuleFunc := func(q *dbx.SelectQuery) error {

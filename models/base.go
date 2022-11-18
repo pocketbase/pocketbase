@@ -1,4 +1,4 @@
-// Package models implements all PocketBase DB models.
+// Package models implements all PocketBase DB models and DTOs.
 package models
 
 import (

@@ -20,7 +20,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := &models.FilterRequestData{
+	requestData := &models.RequestData{
 		AuthRecord: authRecord,
 	}
 
@@ -182,7 +182,7 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := &models.FilterRequestData{
+	requestData := &models.RequestData{
 		AuthRecord: authRecord,
 	}
 
@@ -263,7 +263,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := &models.FilterRequestData{
+	requestData := &models.RequestData{
 		Method: "get",
 		Query: map[string]any{
 			"a": 123,

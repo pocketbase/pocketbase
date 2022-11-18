@@ -51,7 +51,7 @@ func (api *recordApi) list(c echo.Context) error {
 		return err
 	}
 
-	requestData := GetRequestData(c)
+	requestData := RequestData(c)
 
 	if requestData.Admin == nil && collection.ListRule == nil {
 		// only admins can access if the rule is nil
@@ -110,7 +110,7 @@ func (api *recordApi) view(c echo.Context) error {
 		return NewNotFoundError("", nil)
 	}
 
-	requestData := GetRequestData(c)
+	requestData := RequestData(c)
 
 	if requestData.Admin == nil && collection.ViewRule == nil {
 		// only admins can access if the rule is nil
@@ -155,7 +155,7 @@ func (api *recordApi) create(c echo.Context) error {
 		return NewNotFoundError("", "Missing collection context.")
 	}
 
-	requestData := GetRequestData(c)
+	requestData := RequestData(c)
 
 	if requestData.Admin == nil && collection.CreateRule == nil {
 		// only admins can access if the rule is nil
@@ -251,7 +251,7 @@ func (api *recordApi) update(c echo.Context) error {
 		return NewNotFoundError("", nil)
 	}
 
-	requestData := GetRequestData(c)
+	requestData := RequestData(c)
 
 	if requestData.Admin == nil && collection.UpdateRule == nil {
 		// only admins can access if the rule is nil
@@ -325,7 +325,7 @@ func (api *recordApi) delete(c echo.Context) error {
 		return NewNotFoundError("", nil)
 	}
 
-	requestData := GetRequestData(c)
+	requestData := RequestData(c)
 
 	if requestData.Admin == nil && collection.DeleteRule == nil {
 		// only admins can access if the rule is nil
