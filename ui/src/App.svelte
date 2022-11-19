@@ -90,6 +90,17 @@
                 >
                     <i class="ri-database-2-line" />
                 </a>
+
+                <a
+                    href="/views"
+                    class="menu-item"
+                    aria-label="Views"
+                    use:link
+                    use:active={{ path: "/views/?.*", className: "current-route" }}
+                    use:tooltip={{ text: "Views", position: "right" }}
+                >
+                    <i class="ri-code-s-slash-line" />
+                </a>
                 <a
                     href="/logs"
                     class="menu-item"
