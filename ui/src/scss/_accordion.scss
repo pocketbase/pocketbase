@@ -90,7 +90,7 @@
     &.active {
         @include shadowize();
         .accordion-header {
-            position: sticky;
+            position: relative;
             top: 0;
             z-index: 9;
             box-shadow: 0px 0px 0px 1px var(--baseAlt2Color);

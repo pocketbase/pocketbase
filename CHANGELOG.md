@@ -1,3 +1,28 @@
+## (WIP) v0.9.0
+
+- Changes to the `mailer.Mailer` interface (_minor breaking if you are sending custom emails_):
+    ```go
+    // Old:
+    app.NewMailClient().Send(from, to, subject, html, attachments?)
+
+    // New:
+    app.NewMailClient().Send(&mailer.Message{
+      From: from,
+      To: to,
+      Subject: subject,
+      HTML: html,
+      Attachments: attachments,
+      // new configurable fields
+      Bcc: []string{"bcc1@example.com", "bcc2@example.com"},
+      Cc: []string{"cc1@example.com", "cc2@example.com"},
+      Headers: map[string]string{"Custom-Header": "test"},
+      Text: "custom plain text version",
+    })
+    ```
+
+- Added the new `*mailer.Message` to the `MailerRecordEvent`, `MailerAdminEvent` event structs.
+
+
 ## v0.8.0
 
 **⚠️ This release contains breaking changes and requires some manual migration steps!**

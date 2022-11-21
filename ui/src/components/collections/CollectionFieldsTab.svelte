@@ -141,8 +141,9 @@
         .
     </p>
 </div>
+
 <div class="accordions">
-    {#each collection.schema as field, i (i + field.id)}
+    {#each collection.schema as field, i (field)}
         <FieldAccordion
             bind:field
             key={i}
