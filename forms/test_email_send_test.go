@@ -72,8 +72,8 @@ func TestEmailSendValidateAndSubmit(t *testing.T) {
 			expectedContent = "Confirm new email"
 		}
 
-		if !strings.Contains(app.TestMailer.LastHtmlBody, expectedContent) {
-			t.Errorf("(%d) Expected the email to contains %s, got \n%v", i, expectedContent, app.TestMailer.LastHtmlBody)
+		if !strings.Contains(app.TestMailer.LastMessage.HTML, expectedContent) {
+			t.Errorf("(%d) Expected the email to contains %s, got \n%v", i, expectedContent, app.TestMailer.LastMessage.HTML)
 		}
 	}
 }

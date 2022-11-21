@@ -8,6 +8,7 @@ import (
 	"github.com/pocketbase/pocketbase/mails/templates"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tokens"
+	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/rest"
 )
 
@@ -43,29 +44,31 @@ func SendAdminPasswordReset(app core.App, admin *models.Admin) error {
 
 	mailClient := app.NewMailClient()
 
+	// resolve body template
+	body, renderErr := resolveTemplateContent(params, templates.Layout, templates.AdminPasswordResetBody)
+	if renderErr != nil {
+		return renderErr
+	}
+
+	message := &mailer.Message{
+		From: mail.Address{
+			Name:    app.Settings().Meta.SenderName,
+			Address: app.Settings().Meta.SenderAddress,
+		},
+		To:      mail.Address{Address: admin.Email},
+		Subject: "Reset admin password",
+		HTML:    body,
+	}
+
 	event := &core.MailerAdminEvent{
 		MailClient: mailClient,
+		Message:    message,
 		Admin:      admin,
 		Meta:       map[string]any{"token": token},
 	}
 
 	sendErr := app.OnMailerBeforeAdminResetPasswordSend().Trigger(event, func(e *core.MailerAdminEvent) error {
-		// resolve body template
-		body, renderErr := resolveTemplateContent(params, templates.Layout, templates.AdminPasswordResetBody)
-		if renderErr != nil {
-			return renderErr
-		}
-
-		return e.MailClient.Send(
-			mail.Address{
-				Name:    app.Settings().Meta.SenderName,
-				Address: app.Settings().Meta.SenderAddress,
-			},
-			mail.Address{Address: e.Admin.Email},
-			"Reset admin password",
-			body,
-			nil,
-		)
+		return e.MailClient.Send(e.Message)
 	})
 
 	if sendErr == nil {

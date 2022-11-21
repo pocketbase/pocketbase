@@ -35,12 +35,14 @@ type ModelEvent struct {
 
 type MailerRecordEvent struct {
 	MailClient mailer.Mailer
+	Message    *mailer.Message
 	Record     *models.Record
 	Meta       map[string]any
 }
 
 type MailerAdminEvent struct {
 	MailClient mailer.Mailer
+	Message    *mailer.Message
 	Admin      *models.Admin
 	Meta       map[string]any
 }

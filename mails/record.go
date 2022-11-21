@@ -7,8 +7,8 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/mails/templates"
 	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tokens"
+	"github.com/pocketbase/pocketbase/tools/mailer"
 )
 
 // SendRecordPasswordReset sends a password reset request email to the specified user.
@@ -20,30 +20,32 @@ func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
 
 	mailClient := app.NewMailClient()
 
+	settings := app.Settings()
+
+	subject, body, err := resolveEmailTemplate(app, token, settings.Meta.ResetPasswordTemplate)
+	if err != nil {
+		return err
+	}
+
+	message := &mailer.Message{
+		From: mail.Address{
+			Name:    settings.Meta.SenderName,
+			Address: settings.Meta.SenderAddress,
+		},
+		To:      mail.Address{Address: authRecord.Email()},
+		Subject: subject,
+		HTML:    body,
+	}
+
 	event := &core.MailerRecordEvent{
 		MailClient: mailClient,
+		Message:    message,
 		Record:     authRecord,
 		Meta:       map[string]any{"token": token},
 	}
 
 	sendErr := app.OnMailerBeforeRecordResetPasswordSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		settings := app.Settings()
-
-		subject, body, err := resolveEmailTemplate(app, token, settings.Meta.ResetPasswordTemplate)
-		if err != nil {
-			return err
-		}
-
-		return e.MailClient.Send(
-			mail.Address{
-				Name:    settings.Meta.SenderName,
-				Address: settings.Meta.SenderAddress,
-			},
-			mail.Address{Address: e.Record.GetString(schema.FieldNameEmail)},
-			subject,
-			body,
-			nil,
-		)
+		return e.MailClient.Send(e.Message)
 	})
 
 	if sendErr == nil {
@@ -62,30 +64,32 @@ func SendRecordVerification(app core.App, authRecord *models.Record) error {
 
 	mailClient := app.NewMailClient()
 
+	settings := app.Settings()
+
+	subject, body, err := resolveEmailTemplate(app, token, settings.Meta.VerificationTemplate)
+	if err != nil {
+		return err
+	}
+
+	message := &mailer.Message{
+		From: mail.Address{
+			Name:    settings.Meta.SenderName,
+			Address: settings.Meta.SenderAddress,
+		},
+		To:      mail.Address{Address: authRecord.Email()},
+		Subject: subject,
+		HTML:    body,
+	}
+
 	event := &core.MailerRecordEvent{
 		MailClient: mailClient,
+		Message:    message,
 		Record:     authRecord,
 		Meta:       map[string]any{"token": token},
 	}
 
 	sendErr := app.OnMailerBeforeRecordVerificationSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		settings := app.Settings()
-
-		subject, body, err := resolveEmailTemplate(app, token, settings.Meta.VerificationTemplate)
-		if err != nil {
-			return err
-		}
-
-		return e.MailClient.Send(
-			mail.Address{
-				Name:    settings.Meta.SenderName,
-				Address: settings.Meta.SenderAddress,
-			},
-			mail.Address{Address: e.Record.GetString(schema.FieldNameEmail)},
-			subject,
-			body,
-			nil,
-		)
+		return e.MailClient.Send(e.Message)
 	})
 
 	if sendErr == nil {
@@ -104,8 +108,26 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 
 	mailClient := app.NewMailClient()
 
+	settings := app.Settings()
+
+	subject, body, err := resolveEmailTemplate(app, token, settings.Meta.ConfirmEmailChangeTemplate)
+	if err != nil {
+		return err
+	}
+
+	message := &mailer.Message{
+		From: mail.Address{
+			Name:    settings.Meta.SenderName,
+			Address: settings.Meta.SenderAddress,
+		},
+		To:      mail.Address{Address: newEmail},
+		Subject: subject,
+		HTML:    body,
+	}
+
 	event := &core.MailerRecordEvent{
 		MailClient: mailClient,
+		Message:    message,
 		Record:     record,
 		Meta: map[string]any{
 			"token":    token,
@@ -114,23 +136,7 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 	}
 
 	sendErr := app.OnMailerBeforeRecordChangeEmailSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		settings := app.Settings()
-
-		subject, body, err := resolveEmailTemplate(app, token, settings.Meta.ConfirmEmailChangeTemplate)
-		if err != nil {
-			return err
-		}
-
-		return e.MailClient.Send(
-			mail.Address{
-				Name:    settings.Meta.SenderName,
-				Address: settings.Meta.SenderAddress,
-			},
-			mail.Address{Address: newEmail},
-			subject,
-			body,
-			nil,
-		)
+		return e.MailClient.Send(e.Message)
 	})
 
 	if sendErr == nil {

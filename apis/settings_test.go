@@ -303,12 +303,12 @@ func TestSettingsTestEmail(t *testing.T) {
 					t.Fatalf("[verification] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
 
-				if app.TestMailer.LastToAddress.Address != "test@example.com" {
-					t.Fatalf("[verification] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastToAddress.Address)
+				if app.TestMailer.LastMessage.To.Address != "test@example.com" {
+					t.Fatalf("[verification] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To.Address)
 				}
 
-				if !strings.Contains(app.TestMailer.LastHtmlBody, "Verify") {
-					t.Fatalf("[verification] Expected to sent a verification email, got \n%v\n%v", app.TestMailer.LastHtmlSubject, app.TestMailer.LastHtmlBody)
+				if !strings.Contains(app.TestMailer.LastMessage.HTML, "Verify") {
+					t.Fatalf("[verification] Expected to sent a verification email, got \n%v\n%v", app.TestMailer.LastMessage.Subject, app.TestMailer.LastMessage.HTML)
 				}
 			},
 			ExpectedStatus:  204,
@@ -334,12 +334,12 @@ func TestSettingsTestEmail(t *testing.T) {
 					t.Fatalf("[password-reset] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
 
-				if app.TestMailer.LastToAddress.Address != "test@example.com" {
-					t.Fatalf("[password-reset] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastToAddress.Address)
+				if app.TestMailer.LastMessage.To.Address != "test@example.com" {
+					t.Fatalf("[password-reset] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To.Address)
 				}
 
-				if !strings.Contains(app.TestMailer.LastHtmlBody, "Reset password") {
-					t.Fatalf("[password-reset] Expected to sent a password-reset email, got \n%v\n%v", app.TestMailer.LastHtmlSubject, app.TestMailer.LastHtmlBody)
+				if !strings.Contains(app.TestMailer.LastMessage.HTML, "Reset password") {
+					t.Fatalf("[password-reset] Expected to sent a password-reset email, got \n%v\n%v", app.TestMailer.LastMessage.Subject, app.TestMailer.LastMessage.HTML)
 				}
 			},
 			ExpectedStatus:  204,
@@ -365,12 +365,12 @@ func TestSettingsTestEmail(t *testing.T) {
 					t.Fatalf("[email-change] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
 
-				if app.TestMailer.LastToAddress.Address != "test@example.com" {
-					t.Fatalf("[email-change] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastToAddress.Address)
+				if app.TestMailer.LastMessage.To.Address != "test@example.com" {
+					t.Fatalf("[email-change] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To.Address)
 				}
 
-				if !strings.Contains(app.TestMailer.LastHtmlBody, "Confirm new email") {
-					t.Fatalf("[email-change] Expected to sent a confirm new email email, got \n%v\n%v", app.TestMailer.LastHtmlSubject, app.TestMailer.LastHtmlBody)
+				if !strings.Contains(app.TestMailer.LastMessage.HTML, "Confirm new email") {
+					t.Fatalf("[email-change] Expected to sent a confirm new email email, got \n%v\n%v", app.TestMailer.LastMessage.Subject, app.TestMailer.LastMessage.HTML)
 				}
 			},
 			ExpectedStatus:  204,

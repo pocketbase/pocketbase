@@ -2,11 +2,11 @@ package mailer
 
 import (
 	"fmt"
-	"io"
-	"net/mail"
 	"net/smtp"
+	"strings"
 
 	"github.com/domodwyer/mailyak/v3"
+	"github.com/pocketbase/pocketbase/tools/security"
 )
 
 var _ Mailer = (*SmtpClient)(nil)
@@ -39,45 +39,71 @@ type SmtpClient struct {
 }
 
 // Send implements `mailer.Mailer` interface.
-func (m *SmtpClient) Send(
-	fromEmail mail.Address,
-	toEmail mail.Address,
-	subject string,
-	htmlContent string,
-	attachments map[string]io.Reader,
-) error {
+func (c *SmtpClient) Send(m *Message) error {
 	var smtpAuth smtp.Auth
-	if m.username != "" || m.password != "" {
-		smtpAuth = smtp.PlainAuth("", m.username, m.password, m.host)
+	if c.username != "" || c.password != "" {
+		smtpAuth = smtp.PlainAuth("", c.username, c.password, c.host)
 	}
 
 	// create mail instance
 	var yak *mailyak.MailYak
-	if m.tls {
+	if c.tls {
 		var tlsErr error
-		yak, tlsErr = mailyak.NewWithTLS(fmt.Sprintf("%s:%d", m.host, m.port), smtpAuth, nil)
+		yak, tlsErr = mailyak.NewWithTLS(fmt.Sprintf("%s:%d", c.host, c.port), smtpAuth, nil)
 		if tlsErr != nil {
 			return tlsErr
 		}
 	} else {
-		yak = mailyak.New(fmt.Sprintf("%s:%d", m.host, m.port), smtpAuth)
+		yak = mailyak.New(fmt.Sprintf("%s:%d", c.host, c.port), smtpAuth)
 	}
 
-	if fromEmail.Name != "" {
-		yak.FromName(fromEmail.Name)
+	if m.From.Name != "" {
+		yak.FromName(m.From.Name)
 	}
-	yak.From(fromEmail.Address)
-	yak.To(toEmail.Address)
-	yak.Subject(subject)
-	yak.HTML().Set(htmlContent)
+	yak.From(m.From.Address)
+	yak.To(m.To.Address)
+	yak.Subject(m.Subject)
+	yak.HTML().Set(m.HTML)
 
-	// try to generate a plain text version of the HTML
-	if plain, err := html2Text(htmlContent); err == nil {
-		yak.Plain().Set(plain)
+	if m.Text == "" {
+		// try to generate a plain text version of the HTML
+		if plain, err := html2Text(m.HTML); err == nil {
+			yak.Plain().Set(plain)
+		}
+	} else {
+		yak.Plain().Set(m.Text)
 	}
 
-	for name, data := range attachments {
+	if len(m.Bcc) > 0 {
+		yak.Bcc(m.Bcc...)
+	}
+
+	if len(m.Cc) > 0 {
+		yak.Cc(m.Cc...)
+	}
+
+	// add attachements (if any)
+	for name, data := range m.Attachments {
 		yak.Attach(name, data)
+	}
+
+	// add custom headers (if any)
+	var hasMessageId bool
+	for k, v := range m.Headers {
+		if strings.EqualFold(k, "Message-ID") {
+			hasMessageId = true
+		}
+		yak.AddHeader(k, v)
+	}
+	if !hasMessageId {
+		// add a default message id if missing
+		fromParts := strings.Split(m.From.Address, "@")
+		if len(fromParts) == 2 {
+			yak.AddHeader("Message-ID", fmt.Sprintf("<%s@%s>",
+				security.PseudorandomString(15),
+				fromParts[1],
+			))
+		}
 	}
 
 	return yak.Send()
