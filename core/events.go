@@ -4,6 +4,7 @@ import (
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
@@ -14,6 +15,10 @@ import (
 // -------------------------------------------------------------------
 // Serve events data
 // -------------------------------------------------------------------
+
+type BootstrapEvent struct {
+	App App
+}
 
 type ServeEvent struct {
 	App    App
@@ -68,13 +73,13 @@ type RealtimeSubscribeEvent struct {
 
 type SettingsListEvent struct {
 	HttpContext      echo.Context
-	RedactedSettings *Settings
+	RedactedSettings *settings.Settings
 }
 
 type SettingsUpdateEvent struct {
 	HttpContext echo.Context
-	OldSettings *Settings
-	NewSettings *Settings
+	OldSettings *settings.Settings
+	NewSettings *settings.Settings
 }
 
 // -------------------------------------------------------------------

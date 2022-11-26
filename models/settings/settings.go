@@ -1,4 +1,4 @@
-package core
+package settings
 
 import (
 	"encoding/json"
@@ -45,8 +45,8 @@ type Settings struct {
 	TwitchAuth    AuthProviderConfig `form:"twitchAuth" json:"twitchAuth"`
 }
 
-// NewSettings creates and returns a new default Settings instance.
-func NewSettings() *Settings {
+// New creates and returns a new default Settings instance.
+func New() *Settings {
 	return &Settings{
 		Meta: MetaConfig{
 			AppName:                    "Acme",
@@ -170,11 +170,11 @@ func (s *Settings) Merge(other *Settings) error {
 
 // Clone creates a new deep copy of the current settings.
 func (s *Settings) Clone() (*Settings, error) {
-	settings := &Settings{}
-	if err := settings.Merge(s); err != nil {
+	clone := &Settings{}
+	if err := clone.Merge(s); err != nil {
 		return nil, err
 	}
-	return settings, nil
+	return clone, nil
 }
 
 // RedactClone creates a new deep copy of the current settings,

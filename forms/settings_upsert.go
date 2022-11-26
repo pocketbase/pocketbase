@@ -6,12 +6,12 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/settings"
 )
 
-// SettingsUpsert is a [core.Settings] upsert (create/update) form.
+// SettingsUpsert is a [settings.Settings] upsert (create/update) form.
 type SettingsUpsert struct {
-	*core.Settings
+	*settings.Settings
 
 	app core.App
 	dao *daos.Dao
@@ -55,16 +55,10 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
 		return err
 	}
 
-	encryptionKey := os.Getenv(form.app.EncryptionEnv())
-
 	return runInterceptors(func() error {
-		saveErr := form.dao.SaveParam(
-			models.ParamAppSettings,
-			form.Settings,
-			encryptionKey,
-		)
-		if saveErr != nil {
-			return saveErr
+		encryptionKey := os.Getenv(form.app.EncryptionEnv())
+		if err := form.dao.SaveSettings(form.Settings, encryptionKey); err != nil {
+			return err
 		}
 
 		// explicitly trigger old logs deletion
@@ -73,7 +67,7 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
 		)
 
 		if form.Settings.Logs.MaxDays == 0 {
-			// reclaim deleted logs disk space
+			// no logs are allowed -> reclaim preserved disk space after the previous delete operation
 			form.app.LogsDao().Vacuum()
 		}
 

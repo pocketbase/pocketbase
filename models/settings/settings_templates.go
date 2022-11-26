@@ -1,4 +1,4 @@
-package core
+package settings
 
 // Common settings placeholder tokens
 const (

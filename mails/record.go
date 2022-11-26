@@ -7,6 +7,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/mails/templates"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 )
@@ -20,17 +21,15 @@ func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
 
 	mailClient := app.NewMailClient()
 
-	settings := app.Settings()
-
-	subject, body, err := resolveEmailTemplate(app, token, settings.Meta.ResetPasswordTemplate)
+	subject, body, err := resolveEmailTemplate(app, token, app.Settings().Meta.ResetPasswordTemplate)
 	if err != nil {
 		return err
 	}
 
 	message := &mailer.Message{
 		From: mail.Address{
-			Name:    settings.Meta.SenderName,
-			Address: settings.Meta.SenderAddress,
+			Name:    app.Settings().Meta.SenderName,
+			Address: app.Settings().Meta.SenderAddress,
 		},
 		To:      mail.Address{Address: authRecord.Email()},
 		Subject: subject,
@@ -64,17 +63,15 @@ func SendRecordVerification(app core.App, authRecord *models.Record) error {
 
 	mailClient := app.NewMailClient()
 
-	settings := app.Settings()
-
-	subject, body, err := resolveEmailTemplate(app, token, settings.Meta.VerificationTemplate)
+	subject, body, err := resolveEmailTemplate(app, token, app.Settings().Meta.VerificationTemplate)
 	if err != nil {
 		return err
 	}
 
 	message := &mailer.Message{
 		From: mail.Address{
-			Name:    settings.Meta.SenderName,
-			Address: settings.Meta.SenderAddress,
+			Name:    app.Settings().Meta.SenderName,
+			Address: app.Settings().Meta.SenderAddress,
 		},
 		To:      mail.Address{Address: authRecord.Email()},
 		Subject: subject,
@@ -108,17 +105,15 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 
 	mailClient := app.NewMailClient()
 
-	settings := app.Settings()
-
-	subject, body, err := resolveEmailTemplate(app, token, settings.Meta.ConfirmEmailChangeTemplate)
+	subject, body, err := resolveEmailTemplate(app, token, app.Settings().Meta.ConfirmEmailChangeTemplate)
 	if err != nil {
 		return err
 	}
 
 	message := &mailer.Message{
 		From: mail.Address{
-			Name:    settings.Meta.SenderName,
-			Address: settings.Meta.SenderAddress,
+			Name:    app.Settings().Meta.SenderName,
+			Address: app.Settings().Meta.SenderAddress,
 		},
 		To:      mail.Address{Address: newEmail},
 		Subject: subject,
@@ -149,13 +144,11 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 func resolveEmailTemplate(
 	app core.App,
 	token string,
-	emailTemplate core.EmailTemplate,
+	emailTemplate settings.EmailTemplate,
 ) (subject string, body string, err error) {
-	settings := app.Settings()
-
 	subject, rawBody, _ := emailTemplate.Resolve(
-		settings.Meta.AppName,
-		settings.Meta.AppUrl,
+		app.Settings().Meta.AppName,
+		app.Settings().Meta.AppUrl,
 		token,
 	)
 

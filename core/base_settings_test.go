@@ -1,7 +1,6 @@
 package core_test
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/models"
@@ -32,7 +31,7 @@ func TestBaseAppRefreshSettings(t *testing.T) {
 		t.Fatalf("Expected new settings to be persisted, got %v", err)
 	}
 
-	// change the db entry and refresh the app settings
+	// change the db entry and refresh the app settings (ensure that there was no db update)
 	param.Value = types.JsonRaw([]byte(`{"example": 123}`))
 	if err := app.Dao().SaveParam(param.Key, param.Value); err != nil {
 		t.Fatalf("Failed to update the test settings: %v", err)
@@ -41,21 +40,9 @@ func TestBaseAppRefreshSettings(t *testing.T) {
 	if err := app.RefreshSettings(); err != nil {
 		t.Fatalf("Failed to refresh the app settings: %v", err)
 	}
-	testEventCalls(t, app, map[string]int{
-		"OnModelBeforeUpdate": 1,
-		"OnModelAfterUpdate":  1,
-	})
+	testEventCalls(t, app, nil)
 
-	// make sure that the newly merged settings were actually saved
-	newParam, err := app.Dao().FindParamByKey(models.ParamAppSettings)
-	if err != nil {
-		t.Fatalf("Failed to fetch new settings param: %v", err)
-	}
-	if bytes.Equal(param.Value, newParam.Value) {
-		t.Fatalf("Expected the new refreshed settings to be different, got: \n%v", string(newParam.Value))
-	}
-
-	// try to refresh again and ensure that there was no db update
+	// try to refresh again without doing any changes
 	app.ResetEventCalls()
 	if err := app.RefreshSettings(); err != nil {
 		t.Fatalf("Failed to refresh the app settings without change: %v", err)

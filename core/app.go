@@ -6,6 +6,7 @@ package core
 import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/mailer"
@@ -47,7 +48,7 @@ type App interface {
 	IsDebug() bool
 
 	// Settings returns the loaded app settings.
-	Settings() *Settings
+	Settings() *settings.Settings
 
 	// Cache returns the app internal cache store.
 	Cache() *store.Store[any]
@@ -78,6 +79,14 @@ type App interface {
 	// ---------------------------------------------------------------
 	// App event hooks
 	// ---------------------------------------------------------------
+
+	// OnBeforeBootstrap hook is triggered before initializing the base
+	// application resources (eg. before db open and initial settings load).
+	OnBeforeBootstrap() *hook.Hook[*BootstrapEvent]
+
+	// OnAfterBootstrap hook is triggered after initializing the base
+	// application resources (eg. after db open and initial settings load).
+	OnAfterBootstrap() *hook.Hook[*BootstrapEvent]
 
 	// OnBeforeServe hook is triggered before serving the internal router (echo),
 	// allowing you to adjust its options and attach new routes.

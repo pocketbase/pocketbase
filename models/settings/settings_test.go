@@ -1,4 +1,4 @@
-package core_test
+package settings_test
 
 import (
 	"encoding/json"
@@ -7,12 +7,12 @@ import (
 	"testing"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/auth"
 )
 
 func TestSettingsValidate(t *testing.T) {
-	s := core.NewSettings()
+	s := settings.New()
 
 	// set invalid settings data
 	s.Meta.AppName = ""
@@ -87,10 +87,10 @@ func TestSettingsValidate(t *testing.T) {
 }
 
 func TestSettingsMerge(t *testing.T) {
-	s1 := core.NewSettings()
+	s1 := settings.New()
 	s1.Meta.AppUrl = "old_app_url"
 
-	s2 := core.NewSettings()
+	s2 := settings.New()
 	s2.Meta.AppName = "test"
 	s2.Logs.MaxDays = 123
 	s2.Smtp.Host = "test"
@@ -144,7 +144,7 @@ func TestSettingsMerge(t *testing.T) {
 }
 
 func TestSettingsClone(t *testing.T) {
-	s1 := core.NewSettings()
+	s1 := settings.New()
 
 	s2, err := s1.Clone()
 	if err != nil {
@@ -173,7 +173,7 @@ func TestSettingsClone(t *testing.T) {
 }
 
 func TestSettingsRedactClone(t *testing.T) {
-	s1 := core.NewSettings()
+	s1 := settings.New()
 	s1.Meta.AppName = "test123" // control field
 	s1.Smtp.Password = "test123"
 	s1.Smtp.Tls = true
@@ -213,7 +213,7 @@ func TestSettingsRedactClone(t *testing.T) {
 }
 
 func TestNamedAuthProviderConfigs(t *testing.T) {
-	s := core.NewSettings()
+	s := settings.New()
 
 	s.GoogleAuth.ClientId = "google_test"
 	s.FacebookAuth.ClientId = "facebook_test"
@@ -256,17 +256,17 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 
 func TestTokenConfigValidate(t *testing.T) {
 	scenarios := []struct {
-		config      core.TokenConfig
+		config      settings.TokenConfig
 		expectError bool
 	}{
 		// zero values
 		{
-			core.TokenConfig{},
+			settings.TokenConfig{},
 			true,
 		},
 		// invalid data
 		{
-			core.TokenConfig{
+			settings.TokenConfig{
 				Secret:   strings.Repeat("a", 5),
 				Duration: 4,
 			},
@@ -274,7 +274,7 @@ func TestTokenConfigValidate(t *testing.T) {
 		},
 		// valid secret but invalid duration
 		{
-			core.TokenConfig{
+			settings.TokenConfig{
 				Secret:   strings.Repeat("a", 30),
 				Duration: 63072000 + 1,
 			},
@@ -282,7 +282,7 @@ func TestTokenConfigValidate(t *testing.T) {
 		},
 		// valid data
 		{
-			core.TokenConfig{
+			settings.TokenConfig{
 				Secret:   strings.Repeat("a", 30),
 				Duration: 100,
 			},
@@ -305,22 +305,22 @@ func TestTokenConfigValidate(t *testing.T) {
 
 func TestSmtpConfigValidate(t *testing.T) {
 	scenarios := []struct {
-		config      core.SmtpConfig
+		config      settings.SmtpConfig
 		expectError bool
 	}{
 		// zero values (disabled)
 		{
-			core.SmtpConfig{},
+			settings.SmtpConfig{},
 			false,
 		},
 		// zero values (enabled)
 		{
-			core.SmtpConfig{Enabled: true},
+			settings.SmtpConfig{Enabled: true},
 			true,
 		},
 		// invalid data
 		{
-			core.SmtpConfig{
+			settings.SmtpConfig{
 				Enabled: true,
 				Host:    "test:test:test",
 				Port:    -10,
@@ -329,7 +329,7 @@ func TestSmtpConfigValidate(t *testing.T) {
 		},
 		// valid data
 		{
-			core.SmtpConfig{
+			settings.SmtpConfig{
 				Enabled: true,
 				Host:    "example.com",
 				Port:    100,
@@ -354,22 +354,22 @@ func TestSmtpConfigValidate(t *testing.T) {
 
 func TestS3ConfigValidate(t *testing.T) {
 	scenarios := []struct {
-		config      core.S3Config
+		config      settings.S3Config
 		expectError bool
 	}{
 		// zero values (disabled)
 		{
-			core.S3Config{},
+			settings.S3Config{},
 			false,
 		},
 		// zero values (enabled)
 		{
-			core.S3Config{Enabled: true},
+			settings.S3Config{Enabled: true},
 			true,
 		},
 		// invalid data
 		{
-			core.S3Config{
+			settings.S3Config{
 				Enabled:  true,
 				Endpoint: "test:test:test",
 			},
@@ -377,7 +377,7 @@ func TestS3ConfigValidate(t *testing.T) {
 		},
 		// valid data (url endpoint)
 		{
-			core.S3Config{
+			settings.S3Config{
 				Enabled:   true,
 				Endpoint:  "https://localhost:8090",
 				Bucket:    "test",
@@ -389,7 +389,7 @@ func TestS3ConfigValidate(t *testing.T) {
 		},
 		// valid data (hostname endpoint)
 		{
-			core.S3Config{
+			settings.S3Config{
 				Enabled:   true,
 				Endpoint:  "example.com",
 				Bucket:    "test",
@@ -415,36 +415,36 @@ func TestS3ConfigValidate(t *testing.T) {
 }
 
 func TestMetaConfigValidate(t *testing.T) {
-	invalidTemplate := core.EmailTemplate{
+	invalidTemplate := settings.EmailTemplate{
 		Subject:   "test",
 		ActionUrl: "test",
 		Body:      "test",
 	}
 
-	noPlaceholdersTemplate := core.EmailTemplate{
+	noPlaceholdersTemplate := settings.EmailTemplate{
 		Subject:   "test",
 		ActionUrl: "http://example.com",
 		Body:      "test",
 	}
 
-	withPlaceholdersTemplate := core.EmailTemplate{
+	withPlaceholdersTemplate := settings.EmailTemplate{
 		Subject:   "test",
-		ActionUrl: "http://example.com" + core.EmailPlaceholderToken,
-		Body:      "test" + core.EmailPlaceholderActionUrl,
+		ActionUrl: "http://example.com" + settings.EmailPlaceholderToken,
+		Body:      "test" + settings.EmailPlaceholderActionUrl,
 	}
 
 	scenarios := []struct {
-		config      core.MetaConfig
+		config      settings.MetaConfig
 		expectError bool
 	}{
 		// zero values
 		{
-			core.MetaConfig{},
+			settings.MetaConfig{},
 			true,
 		},
 		// invalid data
 		{
-			core.MetaConfig{
+			settings.MetaConfig{
 				AppName:                    strings.Repeat("a", 300),
 				AppUrl:                     "test",
 				SenderName:                 strings.Repeat("a", 300),
@@ -457,7 +457,7 @@ func TestMetaConfigValidate(t *testing.T) {
 		},
 		// invalid data (missing required placeholders)
 		{
-			core.MetaConfig{
+			settings.MetaConfig{
 				AppName:                    "test",
 				AppUrl:                     "https://example.com",
 				SenderName:                 "test",
@@ -470,7 +470,7 @@ func TestMetaConfigValidate(t *testing.T) {
 		},
 		// valid data
 		{
-			core.MetaConfig{
+			settings.MetaConfig{
 				AppName:                    "test",
 				AppUrl:                     "https://example.com",
 				SenderName:                 "test",
@@ -498,17 +498,17 @@ func TestMetaConfigValidate(t *testing.T) {
 
 func TestEmailTemplateValidate(t *testing.T) {
 	scenarios := []struct {
-		emailTemplate  core.EmailTemplate
+		emailTemplate  settings.EmailTemplate
 		expectedErrors []string
 	}{
 		// require values
 		{
-			core.EmailTemplate{},
+			settings.EmailTemplate{},
 			[]string{"subject", "actionUrl", "body"},
 		},
 		// missing placeholders
 		{
-			core.EmailTemplate{
+			settings.EmailTemplate{
 				Subject:   "test",
 				ActionUrl: "test",
 				Body:      "test",
@@ -517,10 +517,10 @@ func TestEmailTemplateValidate(t *testing.T) {
 		},
 		// valid data
 		{
-			core.EmailTemplate{
+			settings.EmailTemplate{
 				Subject:   "test",
-				ActionUrl: "test" + core.EmailPlaceholderToken,
-				Body:      "test" + core.EmailPlaceholderActionUrl,
+				ActionUrl: "test" + settings.EmailPlaceholderToken,
+				Body:      "test" + settings.EmailPlaceholderActionUrl,
 			},
 			[]string{},
 		},
@@ -549,17 +549,17 @@ func TestEmailTemplateValidate(t *testing.T) {
 }
 
 func TestEmailTemplateResolve(t *testing.T) {
-	allPlaceholders := core.EmailPlaceholderActionUrl + core.EmailPlaceholderToken + core.EmailPlaceholderAppName + core.EmailPlaceholderAppUrl
+	allPlaceholders := settings.EmailPlaceholderActionUrl + settings.EmailPlaceholderToken + settings.EmailPlaceholderAppName + settings.EmailPlaceholderAppUrl
 
 	scenarios := []struct {
-		emailTemplate     core.EmailTemplate
+		emailTemplate     settings.EmailTemplate
 		expectedSubject   string
 		expectedBody      string
 		expectedActionUrl string
 	}{
 		// no placeholders
 		{
-			emailTemplate: core.EmailTemplate{
+			emailTemplate: settings.EmailTemplate{
 				Subject:   "subject:",
 				Body:      "body:",
 				ActionUrl: "/actionUrl////",
@@ -570,7 +570,7 @@ func TestEmailTemplateResolve(t *testing.T) {
 		},
 		// with placeholders
 		{
-			emailTemplate: core.EmailTemplate{
+			emailTemplate: settings.EmailTemplate{
 				ActionUrl: "/actionUrl////" + allPlaceholders,
 				Subject:   "subject:" + allPlaceholders,
 				Body:      "body:" + allPlaceholders,
@@ -583,8 +583,8 @@ func TestEmailTemplateResolve(t *testing.T) {
 			),
 			expectedSubject: fmt.Sprintf(
 				"subject:%s%s%s%s",
-				core.EmailPlaceholderActionUrl,
-				core.EmailPlaceholderToken,
+				settings.EmailPlaceholderActionUrl,
+				settings.EmailPlaceholderToken,
 				"name_test",
 				"url_test",
 			),
@@ -622,22 +622,22 @@ func TestEmailTemplateResolve(t *testing.T) {
 
 func TestLogsConfigValidate(t *testing.T) {
 	scenarios := []struct {
-		config      core.LogsConfig
+		config      settings.LogsConfig
 		expectError bool
 	}{
 		// zero values
 		{
-			core.LogsConfig{},
+			settings.LogsConfig{},
 			false,
 		},
 		// invalid data
 		{
-			core.LogsConfig{MaxDays: -10},
+			settings.LogsConfig{MaxDays: -10},
 			true,
 		},
 		// valid data
 		{
-			core.LogsConfig{MaxDays: 1},
+			settings.LogsConfig{MaxDays: 1},
 			false,
 		},
 	}
@@ -657,22 +657,22 @@ func TestLogsConfigValidate(t *testing.T) {
 
 func TestAuthProviderConfigValidate(t *testing.T) {
 	scenarios := []struct {
-		config      core.AuthProviderConfig
+		config      settings.AuthProviderConfig
 		expectError bool
 	}{
 		// zero values (disabled)
 		{
-			core.AuthProviderConfig{},
+			settings.AuthProviderConfig{},
 			false,
 		},
 		// zero values (enabled)
 		{
-			core.AuthProviderConfig{Enabled: true},
+			settings.AuthProviderConfig{Enabled: true},
 			true,
 		},
 		// invalid data
 		{
-			core.AuthProviderConfig{
+			settings.AuthProviderConfig{
 				Enabled:      true,
 				ClientId:     "",
 				ClientSecret: "",
@@ -684,7 +684,7 @@ func TestAuthProviderConfigValidate(t *testing.T) {
 		},
 		// valid data (only the required)
 		{
-			core.AuthProviderConfig{
+			settings.AuthProviderConfig{
 				Enabled:      true,
 				ClientId:     "test",
 				ClientSecret: "test",
@@ -693,7 +693,7 @@ func TestAuthProviderConfigValidate(t *testing.T) {
 		},
 		// valid data (fill all fields)
 		{
-			core.AuthProviderConfig{
+			settings.AuthProviderConfig{
 				Enabled:      true,
 				ClientId:     "test",
 				ClientSecret: "test",
@@ -722,12 +722,12 @@ func TestAuthProviderConfigSetupProvider(t *testing.T) {
 	provider := auth.NewGithubProvider()
 
 	// disabled config
-	c1 := core.AuthProviderConfig{Enabled: false}
+	c1 := settings.AuthProviderConfig{Enabled: false}
 	if err := c1.SetupProvider(provider); err == nil {
 		t.Errorf("Expected error, got nil")
 	}
 
-	c2 := core.AuthProviderConfig{
+	c2 := settings.AuthProviderConfig{
 		Enabled:      true,
 		ClientId:     "test_ClientId",
 		ClientSecret: "test_ClientSecret",

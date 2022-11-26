@@ -1,10 +1,8 @@
 package core
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"log"
 	"os"
@@ -15,10 +13,10 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/mailer"
-	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/store"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 )
@@ -34,15 +32,17 @@ type BaseApp struct {
 
 	// internals
 	cache               *store.Store[any]
-	settings            *Settings
+	settings            *settings.Settings
 	db                  *dbx.DB
 	dao                 *daos.Dao
 	logsDB              *dbx.DB
 	logsDao             *daos.Dao
 	subscriptionsBroker *subscriptions.Broker
 
-	// serve event hooks
-	onBeforeServe *hook.Hook[*ServeEvent]
+	// app event hooks
+	onBeforeBootstrap *hook.Hook[*BootstrapEvent]
+	onAfterBootstrap  *hook.Hook[*BootstrapEvent]
+	onBeforeServe     *hook.Hook[*ServeEvent]
 
 	// dao event hooks
 	onModelBeforeCreate *hook.Hook[*ModelEvent]
@@ -125,11 +125,13 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		isDebug:             isDebug,
 		encryptionEnv:       encryptionEnv,
 		cache:               store.New[any](nil),
-		settings:            NewSettings(),
+		settings:            settings.New(),
 		subscriptionsBroker: subscriptions.NewBroker(),
 
-		// serve event hooks
-		onBeforeServe: &hook.Hook[*ServeEvent]{},
+		// app event hooks
+		onBeforeBootstrap: &hook.Hook[*BootstrapEvent]{},
+		onAfterBootstrap:  &hook.Hook[*BootstrapEvent]{},
+		onBeforeServe:     &hook.Hook[*ServeEvent]{},
 
 		// dao event hooks
 		onModelBeforeCreate: &hook.Hook[*ModelEvent]{},
@@ -210,6 +212,12 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 // Bootstrap initializes the application
 // (aka. create data dir, open db connections, load settings, etc.)
 func (app *BaseApp) Bootstrap() error {
+	event := &BootstrapEvent{app}
+
+	if err := app.OnBeforeBootstrap().Trigger(event); err != nil {
+		return err
+	}
+
 	// clear resources of previous core state (if any)
 	if err := app.ResetBootstrapState(); err != nil {
 		return err
@@ -228,9 +236,12 @@ func (app *BaseApp) Bootstrap() error {
 		return err
 	}
 
-	// we don't check for an error because the db migrations may
-	// have not been executed yet.
+	// we don't check for an error because the db migrations may have not been executed yet
 	app.RefreshSettings()
+
+	if err := app.OnAfterBootstrap().Trigger(event); err != nil && app.IsDebug() {
+		log.Println(err)
+	}
 
 	return nil
 }
@@ -295,7 +306,7 @@ func (app *BaseApp) IsDebug() bool {
 }
 
 // Settings returns the loaded app settings.
-func (app *BaseApp) Settings() *Settings {
+func (app *BaseApp) Settings() *settings.Settings {
 	return app.settings
 }
 
@@ -349,74 +360,40 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 // RefreshSettings reinitializes and reloads the stored application settings.
 func (app *BaseApp) RefreshSettings() error {
 	if app.settings == nil {
-		app.settings = NewSettings()
+		app.settings = settings.New()
 	}
 
 	encryptionKey := os.Getenv(app.EncryptionEnv())
 
-	param, err := app.Dao().FindParamByKey(models.ParamAppSettings)
+	storedSettings, err := app.Dao().FindSettings(encryptionKey)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
 	// no settings were previously stored
-	if param == nil {
-		return app.Dao().SaveParam(models.ParamAppSettings, app.settings, encryptionKey)
+	if storedSettings == nil {
+		return app.Dao().SaveSettings(app.settings, encryptionKey)
 	}
 
 	// load the settings from the stored param into the app ones
-	// ---
-	newSettings := NewSettings()
-
-	// try first without decryption
-	plainDecodeErr := json.Unmarshal(param.Value, newSettings)
-
-	// failed, try to decrypt
-	if plainDecodeErr != nil {
-		// load without decrypt has failed and there is no encryption key to use for decrypt
-		if encryptionKey == "" {
-			return errors.New("Failed to load the stored app settings (missing or invalid encryption key).")
-		}
-
-		// decrypt
-		decrypted, decryptErr := security.Decrypt(string(param.Value), encryptionKey)
-		if decryptErr != nil {
-			return decryptErr
-		}
-
-		// decode again
-		decryptedDecodeErr := json.Unmarshal(decrypted, newSettings)
-		if decryptedDecodeErr != nil {
-			return decryptedDecodeErr
-		}
-	}
-
-	if err := app.settings.Merge(newSettings); err != nil {
+	if err := app.settings.Merge(storedSettings); err != nil {
 		return err
-	}
-
-	afterMergeRaw, err := json.Marshal(app.settings)
-	if err != nil {
-		return err
-	}
-
-	if
-	// save because previously the settings weren't stored encrypted
-	(plainDecodeErr == nil && encryptionKey != "") ||
-		// or save because there are new fields after the merge
-		!bytes.Equal(param.Value, afterMergeRaw) {
-		saveErr := app.Dao().SaveParam(models.ParamAppSettings, app.settings, encryptionKey)
-		if saveErr != nil {
-			return saveErr
-		}
 	}
 
 	return nil
 }
 
 // -------------------------------------------------------------------
-// Serve event hooks
+// App event hooks
 // -------------------------------------------------------------------
+
+func (app *BaseApp) OnBeforeBootstrap() *hook.Hook[*BootstrapEvent] {
+	return app.onBeforeBootstrap
+}
+
+func (app *BaseApp) OnAfterBootstrap() *hook.Hook[*BootstrapEvent] {
+	return app.onAfterBootstrap
+}
 
 func (app *BaseApp) OnBeforeServe() *hook.Hook[*ServeEvent] {
 	return app.onBeforeServe

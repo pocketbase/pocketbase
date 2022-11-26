@@ -127,7 +127,7 @@ func TestSettingsSet(t *testing.T) {
 				`"twitchAuth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
-				`"appName":"Acme"`,
+				`"appName":"acme_test"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeUpdate":           1,
