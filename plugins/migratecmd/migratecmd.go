@@ -82,7 +82,7 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 	// watch for collection changes
 	if p.options.Automigrate {
 		if _, err := exec.LookPath(p.options.GitPath); err != nil {
-			color.Yellow("WARNING: Automigrate cannot be enabled because %s is not installed or accessable.", p.options.GitPath)
+			color.Yellow("WARNING: Automigrate cannot be enabled because %s is not installed or accessible.", p.options.GitPath)
 		} else {
 			p.app.OnModelAfterCreate().Add(p.onCollectionChange())
 			p.app.OnModelAfterUpdate().Add(p.onCollectionChange())
