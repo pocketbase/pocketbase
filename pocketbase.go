@@ -127,7 +127,6 @@ func NewWithConfig(config Config) *PocketBase {
 func (pb *PocketBase) Start() error {
 	// register system commands
 	pb.RootCmd.AddCommand(cmd.NewServeCommand(pb, !pb.hideStartBanner))
-	pb.RootCmd.AddCommand(cmd.NewMigrateCommand(pb))
 	pb.RootCmd.AddCommand(cmd.NewTempUpgradeCommand(pb))
 
 	return pb.Execute()

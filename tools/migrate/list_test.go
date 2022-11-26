@@ -26,8 +26,8 @@ func TestMigrationsList(t *testing.T) {
 
 	for i, name := range expected {
 		item := l.Item(i)
-		if item.file != name {
-			t.Fatalf("Expected name %s for index %d, got %s", name, i, item.file)
+		if item.File != name {
+			t.Fatalf("Expected name %s for index %d, got %s", name, i, item.File)
 		}
 	}
 }

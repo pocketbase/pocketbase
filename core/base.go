@@ -714,7 +714,10 @@ func (app *BaseApp) createDaoWithHooks(db dbx.Builder) *daos.Dao {
 	}
 
 	dao.AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) {
-		app.OnModelAfterCreate().Trigger(&ModelEvent{eventDao, m})
+		err := app.OnModelAfterCreate().Trigger(&ModelEvent{eventDao, m})
+		if err != nil && app.isDebug {
+			log.Println(err)
+		}
 	}
 
 	dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
@@ -722,7 +725,10 @@ func (app *BaseApp) createDaoWithHooks(db dbx.Builder) *daos.Dao {
 	}
 
 	dao.AfterUpdateFunc = func(eventDao *daos.Dao, m models.Model) {
-		app.OnModelAfterUpdate().Trigger(&ModelEvent{eventDao, m})
+		err := app.OnModelAfterUpdate().Trigger(&ModelEvent{eventDao, m})
+		if err != nil && app.isDebug {
+			log.Println(err)
+		}
 	}
 
 	dao.BeforeDeleteFunc = func(eventDao *daos.Dao, m models.Model) error {
@@ -730,7 +736,10 @@ func (app *BaseApp) createDaoWithHooks(db dbx.Builder) *daos.Dao {
 	}
 
 	dao.AfterDeleteFunc = func(eventDao *daos.Dao, m models.Model) {
-		app.OnModelAfterDelete().Trigger(&ModelEvent{eventDao, m})
+		err := app.OnModelAfterDelete().Trigger(&ModelEvent{eventDao, m})
+		if err != nil && app.isDebug {
+			log.Println(err)
+		}
 	}
 
 	return dao

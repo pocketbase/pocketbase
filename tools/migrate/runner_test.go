@@ -79,7 +79,7 @@ func TestRunnerUpAndDown(t *testing.T) {
 	}
 
 	// simulate partially run migration
-	r.saveAppliedMigration(testDB, r.migrationsList.Item(0).file)
+	r.saveAppliedMigration(testDB, r.migrationsList.Item(0).File)
 
 	// Up()
 	// ---

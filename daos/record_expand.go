@@ -93,8 +93,8 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 		}
 
 		recordIds := make([]any, len(records))
-		for _, record := range records {
-			recordIds = append(recordIds, record.Id)
+		for i, record := range records {
+			recordIds[i] = record.Id
 		}
 
 		indirectRecords, err := dao.FindRecordsByExpr(

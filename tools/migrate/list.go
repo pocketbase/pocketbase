@@ -8,24 +8,24 @@ import (
 	"github.com/pocketbase/dbx"
 )
 
-type migration struct {
-	file string
-	up   func(db dbx.Builder) error
-	down func(db dbx.Builder) error
+type Migration struct {
+	File string
+	Up   func(db dbx.Builder) error
+	Down func(db dbx.Builder) error
 }
 
 // MigrationsList defines a list with migration definitions
 type MigrationsList struct {
-	list []*migration
+	list []*Migration
 }
 
 // Item returns a single migration from the list by its index.
-func (l *MigrationsList) Item(index int) *migration {
+func (l *MigrationsList) Item(index int) *Migration {
 	return l.list[index]
 }
 
 // Items returns the internal migrations list slice.
-func (l *MigrationsList) Items() []*migration {
+func (l *MigrationsList) Items() []*Migration {
 	return l.list
 }
 
@@ -47,13 +47,13 @@ func (l *MigrationsList) Register(
 		file = filepath.Base(path)
 	}
 
-	l.list = append(l.list, &migration{
-		file: file,
-		up:   up,
-		down: down,
+	l.list = append(l.list, &Migration{
+		File: file,
+		Up:   up,
+		Down: down,
 	})
 
 	sort.Slice(l.list, func(i int, j int) bool {
-		return l.list[i].file < l.list[j].file
+		return l.list[i].File < l.list[j].File
 	})
 }
