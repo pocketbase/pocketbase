@@ -13,8 +13,9 @@ import (
 
 // MigrationsLoaderOptions defines optional struct to customize the default plugin behavior.
 type MigrationsLoaderOptions struct {
-	// Dir is the app migrations directory from where the js files will be loaded
-	// (default to pb_data/migrations)
+	// Dir specifies the directory with the JS migrations.
+	//
+	// If not set it fallbacks to a relative "pb_data/../pb_migrations" directory.
 	Dir string
 }
 

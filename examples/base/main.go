@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"os/exec"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/plugins/jsvm"
@@ -12,19 +14,65 @@ import (
 func main() {
 	app := pocketbase.New()
 
+	// ---------------------------------------------------------------
+	// Optional plugin flags:
+	// ---------------------------------------------------------------
+
+	var migrationsDir string
+	app.RootCmd.PersistentFlags().StringVar(
+		&migrationsDir,
+		"migrationsDir",
+		"",
+		"the directory with the user defined migrations",
+	)
+
+	var automigrate bool
+	_, gitErr := exec.LookPath("git")
+	app.RootCmd.PersistentFlags().BoolVar(
+		&automigrate,
+		"automigrate",
+		gitErr == nil,
+		"enable/disable auto migrations",
+	)
+
+	var publicDir string
+	app.RootCmd.PersistentFlags().StringVar(
+		&publicDir,
+		"publicDir",
+		"",
+		"the directory to serve static files",
+	)
+
+	var indexFallback bool
+	app.RootCmd.PersistentFlags().BoolVar(
+		&indexFallback,
+		"indexFallback",
+		true,
+		"fallback the request to index.html on missing static path (eg. when pretty urls are used with SPA)",
+	)
+
+	app.RootCmd.ParseFlags(os.Args[1:])
+
+	// ---------------------------------------------------------------
+	// Plugins:
+	// ---------------------------------------------------------------
+
 	// load js pb_migrations
-	jsvm.MustRegisterMigrationsLoader(app, nil)
+	jsvm.MustRegisterMigrationsLoader(app, &jsvm.MigrationsLoaderOptions{
+		Dir: migrationsDir,
+	})
 
 	// migrate command (with js templates)
 	migratecmd.MustRegister(app, app.RootCmd, &migratecmd.Options{
 		TemplateLang: migratecmd.TemplateLangJS,
-		AutoMigrate:  true,
+		Automigrate:  automigrate,
+		Dir:          migrationsDir,
 	})
 
 	// pb_public dir
 	publicdir.MustRegister(app, &publicdir.Options{
-		FlagsCmd:      app.RootCmd,
-		IndexFallback: true,
+		Dir:           publicDir,
+		IndexFallback: indexFallback,
 	})
 
 	if err := app.Start(); err != nil {

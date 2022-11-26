@@ -115,8 +115,11 @@ func (r *Runner) Up() ([]string, error) {
 				continue
 			}
 
-			if err := m.Up(tx); err != nil {
-				return fmt.Errorf("Failed to apply migration %s: %w", m.File, err)
+			// ignore empty Up action
+			if m.Up != nil {
+				if err := m.Up(tx); err != nil {
+					return fmt.Errorf("Failed to apply migration %s: %w", m.File, err)
+				}
 			}
 
 			if err := r.saveAppliedMigration(tx, m.File); err != nil {
@@ -155,8 +158,11 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 				break
 			}
 
-			if err := m.Down(tx); err != nil {
-				return fmt.Errorf("Failed to revert migration %s: %w", m.File, err)
+			// ignore empty Down action
+			if m.Down != nil {
+				if err := m.Down(tx); err != nil {
+					return fmt.Errorf("Failed to revert migration %s: %w", m.File, err)
+				}
 			}
 
 			if err := r.saveRevertedMigration(tx, m.File); err != nil {

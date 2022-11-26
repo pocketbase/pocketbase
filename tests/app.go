@@ -18,7 +18,13 @@ type TestApp struct {
 
 	// EventCalls defines a map to inspect which app events
 	// (and how many times) were triggered.
+	//
+	// The following events are not counted because they execute always:
+	// - OnBeforeBootstrap
+	// - OnAfterBootstrap
+	// - OnBeforeServe
 	EventCalls map[string]int
+
 	TestMailer *TestMailer
 }
 
@@ -80,12 +86,6 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		EventCalls: make(map[string]int),
 		TestMailer: &TestMailer{},
 	}
-
-	// no need to count since this is executed always
-	// t.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-	// 	t.EventCalls["OnBeforeServe"]++
-	// 	return nil
-	// })
 
 	t.OnModelBeforeCreate().Add(func(e *core.ModelEvent) error {
 		t.EventCalls["OnModelBeforeCreate"]++

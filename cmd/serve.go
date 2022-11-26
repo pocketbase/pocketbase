@@ -10,8 +10,11 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/labstack/echo/v5/middleware"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/migrations"
+	"github.com/pocketbase/pocketbase/migrations/logs"
 	"github.com/pocketbase/pocketbase/tools/migrate"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/acme"
@@ -38,7 +41,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 			// (or if this is the first time the init migration was executed)
 			if err := app.RefreshSettings(); err != nil {
 				color.Yellow("=====================================")
-				color.Yellow("WARNING - Settings load error! \n%v", err)
+				color.Yellow("WARNING: Settings load error! \n%v", err)
 				color.Yellow("Fallback to the application defaults.")
 				color.Yellow("=====================================")
 			}
@@ -137,8 +140,22 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	return command
 }
 
+type migrationsConnection struct {
+	DB             *dbx.DB
+	MigrationsList migrate.MigrationsList
+}
+
 func runMigrations(app core.App) error {
-	connections := migrationsConnectionsMap(app)
+	connections := []migrationsConnection{
+		{
+			DB:             app.DB(),
+			MigrationsList: migrations.AppMigrations,
+		},
+		{
+			DB:             app.LogsDB(),
+			MigrationsList: logs.LogsMigrations,
+		},
+	}
 
 	for _, c := range connections {
 		runner, err := migrate.NewRunner(c.DB, c.MigrationsList)

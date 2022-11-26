@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/models"
@@ -17,10 +19,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Options defines optional struct to customize the default plugin behavior.
 type Options struct {
-	Dir          string // the directory with user defined migrations
-	AutoMigrate  bool
+	// Dir specifies the directory with the user defined migrations.
+	//
+	// If not set it fallbacks to a relative "pb_data/../pb_migrations" (for js)
+	// or "pb_data/../migrations" (for go) directory.
+	Dir string
+
+	// Automigrate specifies whether to enable automigrations.
+	Automigrate bool
+
+	// TemplateLang specifies the template language to use when
+	// generating migrations - js or go (default).
 	TemplateLang string
+
+	// GitPath is the git cmd binary path (default to just "git").
+	GitPath string
 }
 
 type plugin struct {
@@ -55,25 +70,24 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 		}
 	}
 
+	if p.options.GitPath == "" {
+		p.options.GitPath = "git"
+	}
+
 	// attach the migrate command
 	if rootCmd != nil {
 		rootCmd.AddCommand(p.createCommand())
 	}
 
 	// watch for collection changes
-	if p.options.AutoMigrate {
-		// @todo replace with AfterBootstrap
-		p.app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-			if err := p.tidyMigrationsTable(); err != nil && p.app.IsDebug() {
-				log.Println("Failed to tidy the migrations table.")
-			}
-
-			return nil
-		})
-
-		p.app.OnModelAfterCreate().Add(p.onCollectionChange())
-		p.app.OnModelAfterUpdate().Add(p.onCollectionChange())
-		p.app.OnModelAfterDelete().Add(p.onCollectionChange())
+	if p.options.Automigrate {
+		if _, err := exec.LookPath(p.options.GitPath); err != nil {
+			color.Yellow("WARNING: Automigrate cannot be enabled because %s is not installed or accessable.", p.options.GitPath)
+		} else {
+			p.app.OnModelAfterCreate().Add(p.onCollectionChange())
+			p.app.OnModelAfterUpdate().Add(p.onCollectionChange())
+			p.app.OnModelAfterDelete().Add(p.onCollectionChange())
+		}
 	}
 
 	return nil
@@ -81,10 +95,10 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 
 func (p *plugin) createCommand() *cobra.Command {
 	const cmdDesc = `Supported arguments are:
-- up                   - runs all available migrations.
-- down [number]        - reverts the last [number] applied migrations.
-- create name [folder] - creates new blank migration template file.
-- collections [folder] - creates new migration file with the latest local collections snapshot (similar to the automigrate but allows editing).
+- up                   - runs all available migrations
+- down [number]        - reverts the last [number] applied migrations
+- create name [folder] - creates new blank migration template file
+- collections [folder] - creates new migration file with the latest local collections snapshot (similar to the automigrate but allows editing)
 `
 
 	command := &cobra.Command{
@@ -98,30 +112,24 @@ func (p *plugin) createCommand() *cobra.Command {
 				cmd = args[0]
 			}
 
-			// additional commands
-			// ---
-			if cmd == "create" {
+			switch cmd {
+			case "create":
 				if err := p.migrateCreateHandler("", args[1:]); err != nil {
 					log.Fatal(err)
 				}
-				return
-			}
-
-			if cmd == "collections" {
+			case "collections":
 				if err := p.migrateCollectionsHandler(args[1:]); err != nil {
 					log.Fatal(err)
 				}
-				return
-			}
-			// ---
+			default:
+				runner, err := migrate.NewRunner(p.app.DB(), migrations.AppMigrations)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-			runner, err := migrate.NewRunner(p.app.DB(), migrations.AppMigrations)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			if err := runner.Run(args...); err != nil {
-				log.Fatal(err)
+				if err := runner.Run(args...); err != nil {
+					log.Fatal(err)
+				}
 			}
 		},
 	}
