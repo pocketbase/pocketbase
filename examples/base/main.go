@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"os"
-	"os/exec"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/plugins/jsvm"
@@ -27,11 +26,10 @@ func main() {
 	)
 
 	var automigrate bool
-	_, gitErr := exec.LookPath("git")
 	app.RootCmd.PersistentFlags().BoolVar(
 		&automigrate,
 		"automigrate",
-		gitErr == nil,
+		true,
 		"enable/disable auto migrations",
 	)
 

@@ -1,3 +1,6 @@
-pb_data/
-pb_public/
-pb_migrations/
+# ignore everything
+/*
+
+# exclude from the ignore filter
+!.gitignore
+!main.go

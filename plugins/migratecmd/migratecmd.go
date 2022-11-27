@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/models"
@@ -33,9 +31,6 @@ type Options struct {
 	// TemplateLang specifies the template language to use when
 	// generating migrations - js or go (default).
 	TemplateLang string
-
-	// GitPath is the git cmd binary path (default to just "git").
-	GitPath string
 }
 
 type plugin struct {
@@ -70,10 +65,6 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 		}
 	}
 
-	if p.options.GitPath == "" {
-		p.options.GitPath = "git"
-	}
-
 	// attach the migrate command
 	if rootCmd != nil {
 		rootCmd.AddCommand(p.createCommand())
@@ -86,13 +77,9 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 			return nil
 		})
 
-		if _, err := exec.LookPath(p.options.GitPath); err != nil {
-			color.Yellow("WARNING: Automigrate cannot be enabled because %s is not installed or accessible.", p.options.GitPath)
-		} else {
-			p.app.OnModelAfterCreate().Add(p.afterCollectionChange())
-			p.app.OnModelAfterUpdate().Add(p.afterCollectionChange())
-			p.app.OnModelAfterDelete().Add(p.afterCollectionChange())
-		}
+		p.app.OnModelAfterCreate().Add(p.afterCollectionChange())
+		p.app.OnModelAfterUpdate().Add(p.afterCollectionChange())
+		p.app.OnModelAfterDelete().Add(p.afterCollectionChange())
 	}
 
 	return nil
