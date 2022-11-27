@@ -1,16 +1,14 @@
 package migratecmd
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
-	"strings"
 	"time"
 
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/models"
@@ -19,34 +17,34 @@ import (
 
 const migrationsTable = "_migrations"
 const automigrateSuffix = "_automigrate"
+const collectionsCacheKey = "_automigrate_collections"
 
 // onCollectionChange handles the automigration snapshot generation on
 // collection change event (create/update/delete).
-func (p *plugin) onCollectionChange() func(*core.ModelEvent) error {
+func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 	return func(e *core.ModelEvent) error {
 		if e.Model.TableName() != "_collections" {
 			return nil // not a collection
 		}
 
-		collections := []*models.Collection{}
-		if err := p.app.Dao().CollectionQuery().OrderBy("created ASC").All(&collections); err != nil {
-			return fmt.Errorf("failed to fetch collections list: %v", err)
-		}
-		if len(collections) == 0 {
-			return errors.New("missing collections to automigrate")
+		oldCollections, err := p.getCachedCollections()
+		if err != nil {
+			return err
 		}
 
-		oldFiles, err := p.getAllMigrationNames()
-		if err != nil {
-			return fmt.Errorf("failed to fetch migration files list: %v", err)
+		old, _ := oldCollections[e.Model.GetId()]
+
+		new, err := p.app.Dao().FindCollectionByNameOrId(e.Model.GetId())
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return err
 		}
 
 		var template string
 		var templateErr error
 		if p.options.TemplateLang == TemplateLangJS {
-			template, templateErr = p.jsSnapshotTemplate(collections)
+			template, templateErr = p.jsDiffTemplate(new, old)
 		} else {
-			template, templateErr = p.goSnapshotTemplate(collections)
+			template, templateErr = p.goDiffTemplate(new, old)
 		}
 		if templateErr != nil {
 			return fmt.Errorf("failed to resolve template: %v", templateErr)
@@ -64,29 +62,38 @@ func (p *plugin) onCollectionChange() func(*core.ModelEvent) error {
 			return fmt.Errorf("failed to save automigrate file: %v", err)
 		}
 
-		// remove the old untracked automigrate file
-		// (only if the last one was automigrate!)
-		if len(oldFiles) > 0 && strings.HasSuffix(oldFiles[len(oldFiles)-1], automigrateSuffix+"."+p.options.TemplateLang) {
-			olfName := oldFiles[len(oldFiles)-1]
-			oldPath := filepath.Join(p.options.Dir, olfName)
-
-			isUntracked := exec.Command(p.options.GitPath, "ls-files", "--error-unmatch", oldPath).Run() != nil
-			if isUntracked {
-				// delete the old automigrate from the db if it was already applied
-				_, err := p.app.Dao().DB().Delete(migrationsTable, dbx.HashExp{"file": olfName}).Execute()
-				if err != nil {
-					return fmt.Errorf("failed to delete last applied automigrate from the migration db: %v", err)
-				}
-
-				// delete the old automigrate file from the filesystem
-				if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
-					return fmt.Errorf("failed to delete last automigrates from the filesystem: %v", err)
-				}
-			}
-		}
+		p.refreshCachedCollections()
 
 		return nil
 	}
+}
+
+func (p *plugin) refreshCachedCollections() error {
+	var collections []*models.Collection
+	if err := p.app.Dao().CollectionQuery().All(&collections); err != nil {
+		return err
+	}
+
+	mapped := map[string]*models.Collection{}
+	for _, c := range collections {
+		mapped[c.Id] = c
+	}
+
+	p.app.Cache().Set(collectionsCacheKey, mapped)
+
+	return nil
+}
+
+func (p *plugin) getCachedCollections() (map[string]*models.Collection, error) {
+	if !p.app.Cache().Has(collectionsCacheKey) {
+		if err := p.refreshCachedCollections(); err != nil {
+			return nil, err
+		}
+	}
+
+	result, _ := p.app.Cache().Get(collectionsCacheKey).(map[string]*models.Collection)
+
+	return result, nil
 }
 
 // getAllMigrationNames return sorted slice with both applied and new

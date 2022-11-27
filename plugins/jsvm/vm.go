@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/schema"
 )
 
 func NewBaseVM(app core.App) *goja.Runtime {
@@ -33,6 +34,7 @@ func NewBaseVM(app core.App) *goja.Runtime {
 	collectionConstructor(vm)
 	recordConstructor(vm)
 	adminConstructor(vm)
+	schemaConstructor(vm)
 	daoConstructor(vm)
 	dbxBinds(vm)
 
@@ -60,6 +62,21 @@ func recordConstructor(vm *goja.Runtime) {
 func adminConstructor(vm *goja.Runtime) {
 	vm.Set("Admin", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Admin{}
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+		return instanceValue
+	})
+}
+
+func schemaConstructor(vm *goja.Runtime) {
+	vm.Set("Schema", func(call goja.ConstructorCall) *goja.Object {
+		instance := &schema.Schema{}
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+		return instanceValue
+	})
+	vm.Set("SchemaField", func(call goja.ConstructorCall) *goja.Object {
+		instance := &schema.SchemaField{}
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
 		return instanceValue

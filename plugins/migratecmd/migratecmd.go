@@ -81,12 +81,17 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 
 	// watch for collection changes
 	if p.options.Automigrate {
+		p.app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
+			p.refreshCachedCollections()
+			return nil
+		})
+
 		if _, err := exec.LookPath(p.options.GitPath); err != nil {
 			color.Yellow("WARNING: Automigrate cannot be enabled because %s is not installed or accessible.", p.options.GitPath)
 		} else {
-			p.app.OnModelAfterCreate().Add(p.onCollectionChange())
-			p.app.OnModelAfterUpdate().Add(p.onCollectionChange())
-			p.app.OnModelAfterDelete().Add(p.onCollectionChange())
+			p.app.OnModelAfterCreate().Add(p.afterCollectionChange())
+			p.app.OnModelAfterUpdate().Add(p.afterCollectionChange())
+			p.app.OnModelAfterDelete().Add(p.afterCollectionChange())
 		}
 	}
 
@@ -171,9 +176,9 @@ func (p *plugin) migrateCreateHandler(template string, args []string) error {
 	if template == "" {
 		var templateErr error
 		if p.options.TemplateLang == TemplateLangJS {
-			template, templateErr = p.jsCreateTemplate()
+			template, templateErr = p.jsBlankTemplate()
 		} else {
-			template, templateErr = p.goCreateTemplate()
+			template, templateErr = p.goBlankTemplate()
 		}
 		if templateErr != nil {
 			return fmt.Errorf("Failed to resolve create template: %v\n", templateErr)
