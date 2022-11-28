@@ -15,9 +15,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 )
 
-const migrationsTable = "_migrations"
-const automigrateSuffix = "_automigrate"
-const collectionsCacheKey = "_automigrate_collections"
+const collectionsCacheKey = "migratecmd_collections"
 
 // onCollectionChange handles the automigration snapshot generation on
 // collection change event (create/update/delete).
@@ -27,6 +25,7 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 			return nil // not a collection
 		}
 
+		// @todo replace with the OldModel when added to the ModelEvent
 		oldCollections, err := p.getCachedCollections()
 		if err != nil {
 			return err
@@ -50,8 +49,18 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 			return fmt.Errorf("failed to resolve template: %v", templateErr)
 		}
 
+		var action string
+		switch {
+		case new == nil:
+			action = "deleted_" + old.Name
+		case old == nil:
+			action = "created_" + new.Name
+		default:
+			action = "updated_" + old.Name
+		}
+
 		appliedTime := time.Now().Unix()
-		fileDest := filepath.Join(p.options.Dir, fmt.Sprintf("%d_automigrate.%s", appliedTime, p.options.TemplateLang))
+		fileDest := filepath.Join(p.options.Dir, fmt.Sprintf("%d_%s.%s", appliedTime, action, p.options.TemplateLang))
 
 		// ensure that the local migrations dir exist
 		if err := os.MkdirAll(p.options.Dir, os.ModePerm); err != nil {
@@ -69,6 +78,10 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 }
 
 func (p *plugin) refreshCachedCollections() error {
+	if p.app.Dao() == nil {
+		return errors.New("app is not initialized yet")
+	}
+
 	var collections []*models.Collection
 	if err := p.app.Dao().CollectionQuery().All(&collections); err != nil {
 		return err

@@ -72,7 +72,15 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 
 	// watch for collection changes
 	if p.options.Automigrate {
+		// refresh the cache right after app bootstap
 		p.app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
+			p.refreshCachedCollections()
+			return nil
+		})
+
+		// refresh the cache to ensure that it constains the latest changes
+		// when migrations are applied on server start
+		p.app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 			p.refreshCachedCollections()
 			return nil
 		})
