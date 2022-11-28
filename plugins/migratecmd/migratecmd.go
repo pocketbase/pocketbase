@@ -95,10 +95,10 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 
 func (p *plugin) createCommand() *cobra.Command {
 	const cmdDesc = `Supported arguments are:
-- up                   - runs all available migrations
-- down [number]        - reverts the last [number] applied migrations
-- create name [folder] - creates new blank migration template file
-- collections [folder] - creates new migration file with the latest local collections snapshot (similar to the automigrate but allows editing)
+- up            - runs all available migrations
+- down [number] - reverts the last [number] applied migrations
+- create name   - creates new blank migration template file
+- collections   - creates new migration file with snapshot of the local collections configuration
 `
 
 	command := &cobra.Command{
@@ -143,14 +143,7 @@ func (p *plugin) migrateCreateHandler(template string, args []string) error {
 	}
 
 	name := args[0]
-
-	var dir string
-	if len(args) == 2 {
-		dir = args[1]
-	}
-	if dir == "" {
-		dir = p.options.Dir
-	}
+	dir := p.options.Dir
 
 	resultFilePath := path.Join(
 		dir,

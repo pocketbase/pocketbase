@@ -1,6 +1,78 @@
 ## (WIP) v0.9.0
 
-- Changes to the `mailer.Mailer` interface (_minor breaking if you are sending custom emails_):
+- Added new event hooks:
+  ```
+  app.OnBeforeBootstrap()
+  app.OnAfterBootstrap()
+  ```
+
+- Refactored the `migrate` command to support **external JavaScript migration files** using an embedded JS interpreter ([goja](https://github.com/dop251/goja)).
+  This allow writting custom migration scripts such as programmatically creating collections,
+  initializing default settings, running import scripts, etc., with a JavaScript API very similar to the Go one (_more documentation will be available soon_).
+
+  The `migrate` command is available by default for the prebult executable,
+  but if you use PocketBase as framework you need register it manually:
+  ```go
+  migrationsDir := "" // default to "pb_migrations" (for js) and "migrations" (for go)
+
+  // load js files if you want to allow loading external JavaScript migrations
+  jsvm.MustRegisterMigrationsLoader(app, &jsvm.MigrationsLoaderOptions{
+    Dir: migrationsDir,
+  })
+
+  // init the `migrate` command
+  migratecmd.MustRegister(app, app.RootCmd, &migratecmd.Options{
+    TemplateLang: migratecmd.TemplateLangGo, // or migratecmd.TemplateLangJS
+    Dir:          migrationsDir,
+    Automigrate:  true,
+  })
+  ```
+
+  **The refactoring also comes with automigrations support.**
+
+  If `Automigrate` is enabled (`true` by default for the prebuilt executable; can be disabled with `--automigrate=0`),
+  PocketBase will generate seamlessly in the background JS (or Go) migration file with your collection changes.
+  **The directory with the JS migrations can be committed to your git repo.**
+  All migrations (Go and JS) are automatically executed on server start.
+  Also note that the auto generated migrations are granural (in contrast to the `migrate collections` snapshot command)
+  and allow multiple developers to do changes on the collections independently (even editing the same collection) miniziming the eventual merge conflicts.
+  Here is a sample JS migration file that will be generated if you for example edit a single collection name:
+  ```js
+  // pb_migrations/1669663597_updated_posts_old.js
+  migrate((db) => {
+    // up
+    const dao = new Dao(db)
+    const collection = dao.findCollectionByNameOrId("lngf8rb3dqu86r3")
+    collection.name = "posts_new"
+    return dao.saveCollection(collection)
+  }, (db) => {
+    // down
+    const dao = new Dao(db)
+    const collection = dao.findCollectionByNameOrId("lngf8rb3dqu86r3")
+    collection.name = "posts_old"
+    return dao.saveCollection(collection)
+  })
+  ```
+
+- Added new Dao helpers to make it easier fetching and updating the app settings from a migration:
+    ```go
+    dao.FindSettings([optEncryptionKey])
+    dao.SaveSettings(newSettings, [optEncryptionKey])
+    ```
+
+- Moved `core.Settings` to `models/settings.Settings`:
+    ```
+    core.Settings{}           -> settings.Settings{}
+    core.NewSettings()        -> settings.New()
+    core.MetaConfig{}         -> settings.MetaConfig{}
+    core.LogsConfig{}         -> settings.LogsConfig{}
+    core.SmtpConfig{}         -> settings.SmtpConfig{}
+    core.S3Config{}           -> settings.S3Config{}
+    core.TokenConfig{}        -> settings.TokenConfig{}
+    core.AuthProviderConfig{} -> settings.AuthProviderConfig{}
+    ```
+
+- Changed the `mailer.Mailer` interface (**minor breaking if you are sending custom emails**):
     ```go
     // Old:
     app.NewMailClient().Send(from, to, subject, html, attachments?)
@@ -19,8 +91,7 @@
       Text: "custom plain text version",
     })
     ```
-
-- Added the new `*mailer.Message` to the `MailerRecordEvent`, `MailerAdminEvent` event structs.
+    The new `*mailer.Message` struct is also now a member of the `MailerRecordEvent` and `MailerAdminEvent` events.
 
 
 ## v0.8.0

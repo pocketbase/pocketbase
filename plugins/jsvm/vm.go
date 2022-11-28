@@ -15,9 +15,15 @@ import (
 func NewBaseVM(app core.App) *goja.Runtime {
 	vm := goja.New()
 	vm.SetFieldNameMapper(goja.UncapFieldNameMapper())
-
 	vm.Set("$app", app)
 
+	baseBind(vm)
+	dbxBind(vm)
+
+	return vm
+}
+
+func baseBind(vm *goja.Runtime) {
 	vm.Set("unmarshal", func(src map[string]any, dest any) (any, error) {
 		raw, err := json.Marshal(src)
 		if err != nil {
@@ -31,59 +37,41 @@ func NewBaseVM(app core.App) *goja.Runtime {
 		return dest, nil
 	})
 
-	collectionConstructor(vm)
-	recordConstructor(vm)
-	adminConstructor(vm)
-	schemaConstructor(vm)
-	daoConstructor(vm)
-	dbxBinds(vm)
-
-	return vm
-}
-
-func collectionConstructor(vm *goja.Runtime) {
 	vm.Set("Collection", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Collection{}
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
 		return instanceValue
 	})
-}
 
-func recordConstructor(vm *goja.Runtime) {
 	vm.Set("Record", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Record{}
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
 		return instanceValue
 	})
-}
 
-func adminConstructor(vm *goja.Runtime) {
 	vm.Set("Admin", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Admin{}
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
 		return instanceValue
 	})
-}
 
-func schemaConstructor(vm *goja.Runtime) {
 	vm.Set("Schema", func(call goja.ConstructorCall) *goja.Object {
 		instance := &schema.Schema{}
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
 		return instanceValue
 	})
+
 	vm.Set("SchemaField", func(call goja.ConstructorCall) *goja.Object {
 		instance := &schema.SchemaField{}
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
 		return instanceValue
 	})
-}
 
-func daoConstructor(vm *goja.Runtime) {
 	vm.Set("Dao", func(call goja.ConstructorCall) *goja.Object {
 		db, ok := call.Argument(0).Export().(dbx.Builder)
 		if !ok || db == nil {
@@ -97,7 +85,7 @@ func daoConstructor(vm *goja.Runtime) {
 	})
 }
 
-func dbxBinds(vm *goja.Runtime) {
+func dbxBind(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$dbx", obj)
 
@@ -145,7 +133,6 @@ func apisBind(vm *goja.Runtime) {
 	obj.Set("unauthorizedError", apis.NewUnauthorizedError)
 
 	// record helpers
-	obj.Set("getRequestData", apis.GetRequestData)
 	obj.Set("requestData", apis.RequestData)
 	obj.Set("enrichRecord", apis.EnrichRecord)
 	obj.Set("enrichRecords", apis.EnrichRecords)

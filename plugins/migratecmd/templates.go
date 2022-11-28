@@ -648,27 +648,29 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 
 	up := strings.Join(upParts, "\n\t\t")
 	down := strings.Join(downParts, "\n\t\t")
-
-	var optImports string
-
 	combined := up + down
+
+	// generate imports
+	// ---
+	var imports string
 
 	if strings.Contains(combined, "json.Unmarshal(") ||
 		strings.Contains(combined, "json.Marshal(") {
-		optImports += "\n\t\"encoding/json\"\n"
+		imports += "\n\t\"encoding/json\"\n"
 	}
 
-	optImports += "\n\t\"github.com/pocketbase/dbx\""
-	optImports += "\n\t\"github.com/pocketbase/pocketbase/daos\""
-	optImports += "\n\tm \"github.com/pocketbase/pocketbase/migrations\""
+	imports += "\n\t\"github.com/pocketbase/dbx\""
+	imports += "\n\t\"github.com/pocketbase/pocketbase/daos\""
+	imports += "\n\tm \"github.com/pocketbase/pocketbase/migrations\""
 
 	if strings.Contains(combined, "schema.SchemaField{") {
-		optImports += "\n\t\"github.com/pocketbase/pocketbase/models/schema\""
+		imports += "\n\t\"github.com/pocketbase/pocketbase/models/schema\""
 	}
 
 	if strings.Contains(combined, "types.Pointer(") {
-		optImports += "\n\t\"github.com/pocketbase/pocketbase/tools/types\""
+		imports += "\n\t\"github.com/pocketbase/pocketbase/tools/types\""
 	}
+	// ---
 
 	const template = `package %s
 
@@ -705,7 +707,7 @@ func init() {
 	return fmt.Sprintf(
 		template,
 		filepath.Base(p.options.Dir),
-		optImports,
+		imports,
 		old.Id, strings.TrimSpace(up),
 		new.Id, strings.TrimSpace(down),
 	), nil

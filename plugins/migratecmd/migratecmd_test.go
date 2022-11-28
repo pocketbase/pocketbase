@@ -164,7 +164,7 @@ func init() {
 
 		expectedName := "_created_new_name." + s.lang
 		if !strings.Contains(files[0].Name(), expectedName) {
-			t.Fatalf("Expected filename to contains %q, got %q", expectedName, files[0].Name())
+			t.Fatalf("[%d] Expected filename to contains %q, got %q", i, expectedName, files[0].Name())
 		}
 
 		fullPath := filepath.Join(migrationsDir, files[0].Name())
@@ -335,7 +335,7 @@ func init() {
 
 		expectedName := "_deleted_test456." + s.lang
 		if !strings.Contains(files[0].Name(), expectedName) {
-			t.Fatalf("Expected filename to contains %q, got %q", expectedName, files[0].Name())
+			t.Fatalf("[%d] Expected filename to contains %q, got %q", i, expectedName, files[0].Name())
 		}
 
 		fullPath := filepath.Join(migrationsDir, files[0].Name())
@@ -681,7 +681,7 @@ func init() {
 
 		expectedName := "_updated_test456." + s.lang
 		if !strings.Contains(files[0].Name(), expectedName) {
-			t.Fatalf("Expected filename to contains %q, got %q", expectedName, files[0].Name())
+			t.Fatalf("[%d] Expected filename to contains %q, got %q", i, expectedName, files[0].Name())
 		}
 
 		fullPath := filepath.Join(migrationsDir, files[0].Name())
