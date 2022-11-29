@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
@@ -347,27 +348,42 @@ func (dao *Dao) SaveRecord(record *models.Record) error {
 // The delete operation may fail if the record is part of a required
 // reference in another record (aka. cannot be deleted or set to NULL).
 func (dao *Dao) DeleteRecord(record *models.Record) error {
-	// check for references
-	// note: the select is outside of the transaction to prevent SQLITE_LOCKED error when mixing read&write in a single transaction.
-	refs, err := dao.FindCollectionReferences(record.Collection())
-	if err != nil {
-		return err
+	const maxAttempts = 5
+
+	attempts := 1
+
+DeleteRetry:
+	deleteErr := dao.deleteRecord(record)
+	if deleteErr != nil &&
+		attempts <= maxAttempts &&
+		// note: we are checking the error msg so that we can handle both the cgo and noncgo errors
+		strings.Contains(deleteErr.Error(), "database is locked") {
+		time.Sleep(time.Duration(250*attempts) * time.Millisecond)
+		attempts++
+		goto DeleteRetry
 	}
 
-	// check if related records has to be deleted (if `CascadeDelete` is set)
-	// OR
-	// just unset the record id from any relation field values (if they are not required)
-	// -----------------------------------------------------------
+	return deleteErr
+}
+
+func (dao *Dao) deleteRecord(record *models.Record) error {
 	return dao.RunInTransaction(func(txDao *Dao) error {
-		// delete/update references
+		// check for references
+		refs, err := txDao.FindCollectionReferences(record.Collection())
+		if err != nil {
+			return err
+		}
+
+		// check if related records has to be deleted (if `CascadeDelete` is set)
+		// OR
+		// just unset the record id from any relation field values (if they are not required)
 		for refCollection, fields := range refs {
 			for _, field := range fields {
 				options, _ := field.Options.(*schema.RelationOptions)
 
 				rows := []dbx.NullStringMap{}
 
-				// note: the select is not using the transaction dao to prevent SQLITE_LOCKED error when mixing read&write in a single transaction
-				err := dao.RecordQuery(refCollection).
+				err := txDao.RecordQuery(refCollection).
 					AndWhere(dbx.Not(dbx.HashExp{"id": record.Id})).
 					AndWhere(dbx.Like(field.Name, record.Id).Match(true, true)).
 					All(&rows)
