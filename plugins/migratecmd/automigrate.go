@@ -6,13 +6,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"time"
 
 	"github.com/pocketbase/pocketbase/core"
-	m "github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tools/list"
 )
 
 const collectionsCacheKey = "migratecmd_collections"
@@ -31,7 +28,7 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 			return err
 		}
 
-		old, _ := oldCollections[e.Model.GetId()]
+		old := oldCollections[e.Model.GetId()]
 
 		new, err := p.app.Dao().FindCollectionByNameOrId(e.Model.GetId())
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -105,56 +102,6 @@ func (p *plugin) getCachedCollections() (map[string]*models.Collection, error) {
 	}
 
 	result, _ := p.app.Cache().Get(collectionsCacheKey).(map[string]*models.Collection)
-
-	return result, nil
-}
-
-// getAllMigrationNames return sorted slice with both applied and new
-// local migration file names.
-func (p *plugin) getAllMigrationNames() ([]string, error) {
-	names := []string{}
-
-	for _, migration := range m.AppMigrations.Items() {
-		names = append(names, migration.File)
-	}
-
-	localFiles, err := p.getLocalMigrationNames()
-	if err != nil {
-		return nil, err
-	}
-	for _, name := range localFiles {
-		if !list.ExistInSlice(name, names) {
-			names = append(names, name)
-		}
-	}
-
-	sort.Slice(names, func(i int, j int) bool {
-		return names[i] < names[j]
-	})
-
-	return names, nil
-}
-
-// getLocalMigrationNames returns a list with all local migration files
-//
-// Returns an empty slice if the migrations directory doesn't exist.
-func (p *plugin) getLocalMigrationNames() ([]string, error) {
-	files, err := os.ReadDir(p.options.Dir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return []string{}, nil
-		}
-		return nil, err
-	}
-
-	result := make([]string, 0, len(files))
-
-	for _, f := range files {
-		if f.IsDir() {
-			continue
-		}
-		result = append(result, f.Name())
-	}
 
 	return result, nil
 }

@@ -103,6 +103,8 @@
   filesystem.Serve(res, req, e.ServedPath, e.ServedName)
   ```
 
+- Fixed concurrent multi-relation cascade update/delete ([#1138](https://github.com/pocketbase/pocketbase/issues/1138)).
+
 
 ## v0.8.0
 

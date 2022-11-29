@@ -720,7 +720,7 @@ func marhshalWithoutEscape(v any, prefix string, indent string) ([]byte, error) 
 	}
 
 	// unescape escaped unicode characters
-	unescaped, err := strconv.Unquote(strings.Replace(strconv.Quote(string(raw)), `\\u`, `\u`, -1))
+	unescaped, err := strconv.Unquote(strings.ReplaceAll(strconv.Quote(string(raw)), `\\u`, `\u`))
 	if err != nil {
 		return nil, err
 	}
