@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/filesystem"
@@ -299,7 +300,7 @@ func TestFileSystemServe(t *testing.T) {
 	}
 }
 
-func TestFileSystemServeRange(t *testing.T) {
+func TestFileSystemServeSingleRange(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -330,6 +331,35 @@ func TestFileSystemServeRange(t *testing.T) {
 
 	if l := result.Header.Get("Content-Length"); l != "21" {
 		t.Fatalf("Expected Content-Length %v, got %v", 21, l)
+	}
+}
+
+func TestFileSystemServeMultiRange(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fs, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fs.Close()
+
+	res := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/", nil)
+	req.Header.Add("Range", "bytes=0-20, 25-30")
+
+	if err := fs.Serve(res, req, "image.png", "image.png"); err != nil {
+		t.Fatal(err)
+	}
+
+	result := res.Result()
+
+	if result.StatusCode != http.StatusPartialContent {
+		t.Fatalf("Expected StatusCode %d, got %d", http.StatusPartialContent, result.StatusCode)
+	}
+
+	if ct := result.Header.Get("Content-Type"); !strings.HasPrefix(ct, "multipart/byteranges; boundary=") {
+		t.Fatalf("Expected Content-Type to be multipart/byteranges, got %v", ct)
 	}
 }
 
