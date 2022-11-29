@@ -348,22 +348,22 @@ func (dao *Dao) SaveRecord(record *models.Record) error {
 // The delete operation may fail if the record is part of a required
 // reference in another record (aka. cannot be deleted or set to NULL).
 func (dao *Dao) DeleteRecord(record *models.Record) error {
-	const maxAttempts = 5
+	const maxAttempts = 6
 
 	attempts := 1
 
-DeleteRetry:
-	deleteErr := dao.deleteRecord(record)
-	if deleteErr != nil &&
+Retry:
+	err := dao.deleteRecord(record)
+	if err != nil &&
 		attempts <= maxAttempts &&
 		// note: we are checking the error msg so that we can handle both the cgo and noncgo errors
-		strings.Contains(deleteErr.Error(), "database is locked") {
-		time.Sleep(time.Duration(250*attempts) * time.Millisecond)
+		strings.Contains(err.Error(), "database is locked") {
+		time.Sleep(time.Duration(300*attempts) * time.Millisecond)
 		attempts++
-		goto DeleteRetry
+		goto Retry
 	}
 
-	return deleteErr
+	return err
 }
 
 func (dao *Dao) deleteRecord(record *models.Record) error {
@@ -383,9 +383,18 @@ func (dao *Dao) deleteRecord(record *models.Record) error {
 
 				rows := []dbx.NullStringMap{}
 
+				// fetch all referenced records
+				recordTableName := inflector.Columnify(refCollection.Name)
+				fieldColumnName := inflector.Columnify(field.Name)
 				err := txDao.RecordQuery(refCollection).
-					AndWhere(dbx.Not(dbx.HashExp{"id": record.Id})).
-					AndWhere(dbx.Like(field.Name, record.Id).Match(true, true)).
+					Distinct(true).
+					LeftJoin(fmt.Sprintf(
+						// note: the case is used to normalize value access for single and multiple relations.
+						`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END) as {{__je__}}`,
+						fieldColumnName, fieldColumnName, fieldColumnName,
+					), nil).
+					AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": record.Id})).
+					AndWhere(dbx.HashExp{"__je__.value": record.Id}).
 					All(&rows)
 				if err != nil {
 					return err
