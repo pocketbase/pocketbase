@@ -1,14 +1,14 @@
 ## (WIP) v0.9.0
 
 - Added new event hooks:
-  ```
+  ```go
   app.OnBeforeBootstrap()
   app.OnAfterBootstrap()
   ```
 
 - Refactored the `migrate` command to support **external JavaScript migration files** using an embedded JS interpreter ([goja](https://github.com/dop251/goja)).
   This allow writting custom migration scripts such as programmatically creating collections,
-  initializing default settings, running import scripts, etc., with a JavaScript API very similar to the Go one (_more documentation will be available soon_).
+  initializing default settings, running data imports, etc., with a JavaScript API very similar to the Go one (_more documentation will be available soon_).
 
   The `migrate` command is available by default for the prebult executable,
   but if you use PocketBase as framework you need register it manually:
@@ -20,9 +20,9 @@
     Dir: migrationsDir,
   })
 
-  // init the `migrate` command
+  // register the `migrate` command
   migratecmd.MustRegister(app, app.RootCmd, &migratecmd.Options{
-    TemplateLang: migratecmd.TemplateLangGo, // or migratecmd.TemplateLangJS
+    TemplateLang: migratecmd.TemplateLangJS, // or migratecmd.TemplateLangGo (default)
     Dir:          migrationsDir,
     Automigrate:  true,
   })
@@ -92,6 +92,16 @@
     })
     ```
     The new `*mailer.Message` struct is also now a member of the `MailerRecordEvent` and `MailerAdminEvent` events.
+
+- Added support for `Partial/Range` file requests ([#1125](https://github.com/pocketbase/pocketbase/issues/1125)).
+  This is a minor breaking change if you are using `filesystem.Serve` (eg. as part of a custom `OnFileDownloadRequest` hook):
+  ```go
+  // old
+  filesystem.Serve(res, e.ServedPath, e.ServedName)
+
+  // new
+  filesystem.Serve(res, req, e.ServedPath, e.ServedName)
+  ```
 
 
 ## v0.8.0

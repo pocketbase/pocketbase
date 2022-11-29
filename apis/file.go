@@ -94,7 +94,9 @@ func (api *fileApi) download(c echo.Context) error {
 	}
 
 	return api.app.OnFileDownloadRequest().Trigger(event, func(e *core.FileDownloadEvent) error {
-		if err := fs.Serve(e.HttpContext.Response(), e.ServedPath, e.ServedName); err != nil {
+		res := e.HttpContext.Response()
+		req := e.HttpContext.Request()
+		if err := fs.Serve(res, req, e.ServedPath, e.ServedName); err != nil {
 			return NewNotFoundError("", err)
 		}
 

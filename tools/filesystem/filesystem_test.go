@@ -265,9 +265,10 @@ func TestFileSystemServe(t *testing.T) {
 	}
 
 	for _, scenario := range scenarios {
-		r := httptest.NewRecorder()
+		res := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/", nil)
 
-		err := fs.Serve(r, scenario.path, scenario.name)
+		err := fs.Serve(res, req, scenario.path, scenario.name)
 		hasErr := err != nil
 
 		if hasErr != scenario.expectError {
@@ -279,7 +280,7 @@ func TestFileSystemServe(t *testing.T) {
 			continue
 		}
 
-		result := r.Result()
+		result := res.Result()
 
 		for hName, hValue := range scenario.expectHeaders {
 			v := result.Header.Get(hName)
@@ -295,6 +296,40 @@ func TestFileSystemServe(t *testing.T) {
 		if v := result.Header.Get("Cache-Control"); v == "" {
 			t.Errorf("(%s) Expected Cache-Control header to be set, got empty string", scenario.path)
 		}
+	}
+}
+
+func TestFileSystemServeRange(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fs, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fs.Close()
+
+	res := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/", nil)
+	req.Header.Add("Range", "bytes=0-20")
+
+	if err := fs.Serve(res, req, "image.png", "image.png"); err != nil {
+		t.Fatal(err)
+	}
+
+	result := res.Result()
+
+	if result.StatusCode != http.StatusPartialContent {
+		t.Fatalf("Expected StatusCode %d, got %d", http.StatusPartialContent, result.StatusCode)
+	}
+
+	expectedRange := "bytes 0-20/73"
+	if cr := result.Header.Get("Content-Range"); cr != expectedRange {
+		t.Fatalf("Expected Content-Range %q, got %q", expectedRange, cr)
+	}
+
+	if l := result.Header.Get("Content-Length"); l != "21" {
+		t.Fatalf("Expected Content-Length %v, got %v", 21, l)
 	}
 }
 

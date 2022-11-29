@@ -237,15 +237,15 @@ var manualExtensionContentTypes = map[string]string{
 }
 
 // Serve serves the file at fileKey location to an HTTP response.
-func (s *System) Serve(response http.ResponseWriter, fileKey string, name string) error {
-	r, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
+func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey string, name string) error {
+	br, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
 	if readErr != nil {
 		return readErr
 	}
-	defer r.Close()
+	defer br.Close()
 
 	disposition := "attachment"
-	realContentType := r.ContentType()
+	realContentType := br.ContentType()
 	if list.ExistInSlice(realContentType, inlineServeContentTypes) {
 		disposition = "inline"
 	}
@@ -260,12 +260,12 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	// clickjacking shouldn't be a concern when serving uploaded files,
 	// so it safe to unset the global X-Frame-Options to allow files embedding
 	// (see https://github.com/pocketbase/pocketbase/issues/677)
-	response.Header().Del("X-Frame-Options")
+	res.Header().Del("X-Frame-Options")
 
-	response.Header().Set("Content-Disposition", disposition+"; filename="+name)
-	response.Header().Set("Content-Type", extContentType)
-	response.Header().Set("Content-Length", strconv.FormatInt(r.Size(), 10))
-	response.Header().Set("Content-Security-Policy", "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox")
+	res.Header().Set("Content-Disposition", disposition+"; filename="+name)
+	res.Header().Set("Content-Type", extContentType)
+	res.Header().Set("Content-Length", strconv.FormatInt(br.Size(), 10))
+	res.Header().Set("Content-Security-Policy", "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox")
 
 	// all HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
 	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
@@ -273,20 +273,19 @@ func (s *System) Serve(response http.ResponseWriter, fileKey string, name string
 	// NB! time.LoadLocation may fail on non-Unix systems (see https://github.com/pocketbase/pocketbase/issues/45)
 	location, locationErr := time.LoadLocation("GMT")
 	if locationErr == nil {
-		response.Header().Set("Last-Modified", r.ModTime().In(location).Format("Mon, 02 Jan 06 15:04:05 MST"))
+		res.Header().Set("Last-Modified", br.ModTime().In(location).Format("Mon, 02 Jan 06 15:04:05 MST"))
 	}
 
 	// set a default cache-control header
 	// (valid for 30 days but the cache is allowed to reuse the file for any requests
-	// that are made in the last day while revalidating the response in the background)
-	if response.Header().Get("Cache-Control") == "" {
-		response.Header().Set("Cache-Control", "max-age=2592000, stale-while-revalidate=86400")
+	// that are made in the last day while revalidating the res in the background)
+	if res.Header().Get("Cache-Control") == "" {
+		res.Header().Set("Cache-Control", "max-age=2592000, stale-while-revalidate=86400")
 	}
 
-	// copy from the read range to response.
-	_, err := io.Copy(response, r)
+	http.ServeContent(res, req, name, br.ModTime(), br)
 
-	return err
+	return nil
 }
 
 var ThumbSizeRegex = regexp.MustCompile(`^(\d+)x(\d+)(t|b|f)?$`)
