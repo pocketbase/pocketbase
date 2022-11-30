@@ -191,7 +191,7 @@ func (api *recordApi) create(c echo.Context) error {
 		testErr := testForm.DrySubmit(func(txDao *daos.Dao) error {
 			foundRecord, err := txDao.FindRecordById(collection.Id, testRecord.Id, createRuleFunc)
 			if err != nil {
-				return fmt.Errorf("DrySubmit create rule failure: %v", err)
+				return fmt.Errorf("DrySubmit create rule failure: %w", err)
 			}
 			hasFullManageAccess = hasAuthManageAccess(txDao, foundRecord, requestData)
 			return nil

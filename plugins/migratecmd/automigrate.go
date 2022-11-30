@@ -43,7 +43,7 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 			template, templateErr = p.goDiffTemplate(new, old)
 		}
 		if templateErr != nil {
-			return fmt.Errorf("failed to resolve template: %v", templateErr)
+			return fmt.Errorf("failed to resolve template: %w", templateErr)
 		}
 
 		var action string
@@ -61,11 +61,11 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 
 		// ensure that the local migrations dir exist
 		if err := os.MkdirAll(p.options.Dir, os.ModePerm); err != nil {
-			return fmt.Errorf("failed to create migration dir: %v", err)
+			return fmt.Errorf("failed to create migration dir: %w", err)
 		}
 
 		if err := os.WriteFile(fileDest, []byte(template), 0644); err != nil {
-			return fmt.Errorf("failed to save automigrate file: %v", err)
+			return fmt.Errorf("failed to save automigrate file: %w", err)
 		}
 
 		p.refreshCachedCollections()

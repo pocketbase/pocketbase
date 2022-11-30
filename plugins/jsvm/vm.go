@@ -2,6 +2,9 @@ package jsvm
 
 import (
 	"encoding/json"
+	"reflect"
+	"strings"
+	"unicode"
 
 	"github.com/dop251/goja"
 	"github.com/pocketbase/dbx"
@@ -14,7 +17,7 @@ import (
 
 func NewBaseVM(app core.App) *goja.Runtime {
 	vm := goja.New()
-	vm.SetFieldNameMapper(goja.UncapFieldNameMapper())
+	vm.SetFieldNameMapper(fieldMapper{})
 	vm.Set("$app", app)
 
 	baseBind(vm)
@@ -136,4 +139,39 @@ func apisBind(vm *goja.Runtime) {
 	obj.Set("requestData", apis.RequestData)
 	obj.Set("enrichRecord", apis.EnrichRecord)
 	obj.Set("enrichRecords", apis.EnrichRecords)
+}
+
+// fieldMapper provides custom mapping between Go and JavaScript property names.
+//
+// It is similar to the builtin "uncapFieldNameMapper" but also converts
+// all uppercase identifiers to their lowercase equivalent (eg. "GET" -> "get").
+type fieldMapper struct {
+}
+
+// FieldName implements the [FieldNameMapper.FieldName] interface method.
+func (u fieldMapper) FieldName(_ reflect.Type, f reflect.StructField) string {
+	return convertGoToJSName(f.Name)
+}
+
+// MethodName implements the [FieldNameMapper.MethodName] interface method.
+func (u fieldMapper) MethodName(_ reflect.Type, m reflect.Method) string {
+	return convertGoToJSName(m.Name)
+}
+
+func convertGoToJSName(name string) string {
+	allUppercase := true
+	for _, c := range name {
+		if !unicode.IsUpper(c) {
+			allUppercase = false
+			break
+		}
+	}
+
+	// eg. "JSON" -> "json"
+	if allUppercase {
+		return strings.ToLower(name)
+	}
+
+	// eg. "GetField" -> "getField"
+	return strings.ToLower(name[0:1]) + name[1:]
 }

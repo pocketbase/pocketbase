@@ -62,7 +62,7 @@ func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defa
 	requestData := RequestData(c)
 
 	if err := autoIgnoreAuthRecordsEmailVisibility(dao, records, requestData); err != nil {
-		return fmt.Errorf("Failed to resolve email visibility: %v", err)
+		return fmt.Errorf("Failed to resolve email visibility: %w", err)
 	}
 
 	expands := defaultExpands

@@ -35,7 +35,7 @@ func (p *plugin) jsBlankTemplate() (string, error) {
 func (p *plugin) jsSnapshotTemplate(collections []*models.Collection) (string, error) {
 	jsonData, err := marhshalWithoutEscape(collections, "  ", "  ")
 	if err != nil {
-		return "", fmt.Errorf("failed to serialize collections list: %v", err)
+		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
 	const template = `migrate((db) => {
@@ -55,7 +55,7 @@ func (p *plugin) jsSnapshotTemplate(collections []*models.Collection) (string, e
 func (p *plugin) jsCreateTemplate(collection *models.Collection) (string, error) {
 	jsonData, err := marhshalWithoutEscape(collection, "  ", "  ")
 	if err != nil {
-		return "", fmt.Errorf("failed to serialize collections list: %v", err)
+		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
 	const template = `migrate((db) => {
@@ -76,7 +76,7 @@ func (p *plugin) jsCreateTemplate(collection *models.Collection) (string, error)
 func (p *plugin) jsDeleteTemplate(collection *models.Collection) (string, error) {
 	jsonData, err := marhshalWithoutEscape(collection, "  ", "  ")
 	if err != nil {
-		return "", fmt.Errorf("failed to serialize collections list: %v", err)
+		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
 	const template = `migrate((db) => {
@@ -329,7 +329,7 @@ func init() {
 func (p *plugin) goSnapshotTemplate(collections []*models.Collection) (string, error) {
 	jsonData, err := marhshalWithoutEscape(collections, "\t\t", "\t")
 	if err != nil {
-		return "", fmt.Errorf("failed to serialize collections list: %v", err)
+		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
 	const template = `package %s
@@ -368,7 +368,7 @@ func init() {
 func (p *plugin) goCreateTemplate(collection *models.Collection) (string, error) {
 	jsonData, err := marhshalWithoutEscape(collection, "\t\t", "\t")
 	if err != nil {
-		return "", fmt.Errorf("failed to serialize collections list: %v", err)
+		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
 	const template = `package %s
@@ -416,7 +416,7 @@ func init() {
 func (p *plugin) goDeleteTemplate(collection *models.Collection) (string, error) {
 	jsonData, err := marhshalWithoutEscape(collection, "\t\t", "\t")
 	if err != nil {
-		return "", fmt.Errorf("failed to serialize collections list: %v", err)
+		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
 	const template = `package %s

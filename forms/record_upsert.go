@@ -651,12 +651,12 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc) error {
 		return form.dao.RunInTransaction(func(txDao *daos.Dao) error {
 			// persist record model
 			if err := txDao.SaveRecord(form.record); err != nil {
-				return fmt.Errorf("Failed to save the record: %v", err)
+				return fmt.Errorf("Failed to save the record: %w", err)
 			}
 
 			// upload new files (if any)
 			if err := form.processFilesToUpload(); err != nil {
-				return fmt.Errorf("Failed to process the upload files: %v", err)
+				return fmt.Errorf("Failed to process the upload files: %w", err)
 			}
 
 			// delete old files (if any)

@@ -231,7 +231,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 			}
 
 			if _, err := txDao.FindRecordById(collection.Id, createForm.Id, createRuleFunc); err != nil {
-				return fmt.Errorf("Failed create rule constraint: %v", err)
+				return fmt.Errorf("Failed create rule constraint: %w", err)
 			}
 
 			return nil

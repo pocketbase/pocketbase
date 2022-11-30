@@ -324,7 +324,7 @@ func (dao *Dao) SaveRecord(record *models.Record) error {
 		// This is to make sure that the filter `@request.auth.id` always returns a unique id.
 		authCollections, err := dao.FindCollectionsByType(models.CollectionTypeAuth)
 		if err != nil {
-			return fmt.Errorf("Unable to fetch the auth collections for cross-id unique check: %v", err)
+			return fmt.Errorf("Unable to fetch the auth collections for cross-id unique check: %w", err)
 		}
 		for _, collection := range authCollections {
 			if record.Collection().Id == collection.Id {
