@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"encoding/json"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
 )
@@ -27,23 +29,35 @@ func NewMicrosoftProvider() *Microsoft {
 }
 
 // FetchAuthUser returns an AuthUser instance based on the Microsoft's user api.
+//
+// API reference:  https://learn.microsoft.com/en-us/azure/active-directory/develop/userinfo
+// Graph explorer: https://developer.microsoft.com/en-us/graph/graph-explorer
 func (p *Microsoft) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// https://learn.microsoft.com/en-us/azure/active-directory/develop/userinfo
-	// explore graph: https://developer.microsoft.com/en-us/graph/graph-explorer
-	rawData := struct {
+	data, err := p.FetchRawUserData(token)
+	if err != nil {
+		return nil, err
+	}
+
+	rawUser := map[string]any{}
+	if err := json.Unmarshal(data, &rawUser); err != nil {
+		return nil, err
+	}
+
+	extracted := struct {
 		Id    string `json:"id"`
 		Name  string `json:"displayName"`
 		Email string `json:"mail"`
 	}{}
-
-	if err := p.FetchRawUserData(token, &rawData); err != nil {
+	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}
 
 	user := &AuthUser{
-		Id:    rawData.Id,
-		Name:  rawData.Name,
-		Email: rawData.Email,
+		Id:          extracted.Id,
+		Name:        extracted.Name,
+		Email:       extracted.Email,
+		RawUser:     rawUser,
+		AccessToken: token.AccessToken,
 	}
 
 	return user, nil

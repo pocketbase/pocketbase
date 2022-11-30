@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"golang.org/x/oauth2"
@@ -29,33 +30,48 @@ func NewDiscordProvider() *Discord {
 }
 
 // FetchAuthUser returns an AuthUser instance from Discord's user api.
+//
+// API reference:  https://discord.com/developers/docs/resources/user#user-object
 func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// https://discord.com/developers/docs/resources/user#user-object
-	rawData := struct {
+	data, err := p.FetchRawUserData(token)
+	if err != nil {
+		return nil, err
+	}
+
+	rawUser := map[string]any{}
+	if err := json.Unmarshal(data, &rawUser); err != nil {
+		return nil, err
+	}
+
+	extracted := struct {
 		Id            string `json:"id"`
 		Username      string `json:"username"`
 		Discriminator string `json:"discriminator"`
 		Email         string `json:"email"`
+		Verified      bool   `json:"verified"`
 		Avatar        string `json:"avatar"`
 	}{}
-
-	if err := p.FetchRawUserData(token, &rawData); err != nil {
+	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}
 
 	// Build a full avatar URL using the avatar hash provided in the API response
 	// https://discord.com/developers/docs/reference#image-formatting
-	avatarUrl := fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", rawData.Id, rawData.Avatar)
+	avatarUrl := fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", extracted.Id, extracted.Avatar)
 
 	// Concatenate the user's username and discriminator into a single username string
-	username := fmt.Sprintf("%s#%s", rawData.Username, rawData.Discriminator)
+	username := fmt.Sprintf("%s#%s", extracted.Username, extracted.Discriminator)
 
 	user := &AuthUser{
-		Id:        rawData.Id,
-		Name:      username,
-		Username:  rawData.Username,
-		Email:     rawData.Email,
-		AvatarUrl: avatarUrl,
+		Id:          extracted.Id,
+		Name:        username,
+		Username:    extracted.Username,
+		AvatarUrl:   avatarUrl,
+		RawUser:     rawUser,
+		AccessToken: token.AccessToken,
+	}
+	if extracted.Verified {
+		user.Email = extracted.Email
 	}
 
 	return user, nil

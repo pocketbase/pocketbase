@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"encoding/json"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/spotify"
 )
@@ -30,9 +32,20 @@ func NewSpotifyProvider() *Spotify {
 }
 
 // FetchAuthUser returns an AuthUser instance based on the Spotify's user api.
+//
+// API reference: https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
 func (p *Spotify) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
-	rawData := struct {
+	data, err := p.FetchRawUserData(token)
+	if err != nil {
+		return nil, err
+	}
+
+	rawUser := map[string]any{}
+	if err := json.Unmarshal(data, &rawUser); err != nil {
+		return nil, err
+	}
+
+	extracted := struct {
 		Id     string `json:"id"`
 		Name   string `json:"display_name"`
 		Images []struct {
@@ -43,17 +56,18 @@ func (p *Spotify) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		// that it actually belongs to the user
 		// Email  string `json:"email"`
 	}{}
-
-	if err := p.FetchRawUserData(token, &rawData); err != nil {
+	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}
 
 	user := &AuthUser{
-		Id:   rawData.Id,
-		Name: rawData.Name,
+		Id:          extracted.Id,
+		Name:        extracted.Name,
+		RawUser:     rawUser,
+		AccessToken: token.AccessToken,
 	}
-	if len(rawData.Images) > 0 {
-		user.AvatarUrl = rawData.Images[0].Url
+	if len(extracted.Images) > 0 {
+		user.AvatarUrl = extracted.Images[0].Url
 	}
 
 	return user, nil

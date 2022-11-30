@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"golang.org/x/oauth2"
@@ -28,9 +29,20 @@ func NewKakaoProvider() *Kakao {
 }
 
 // FetchAuthUser returns an AuthUser instance based on the Kakao's user api.
+//
+// API reference: https://developers.kakao.com/docs/latest/en/kakaologin/rest-api#req-user-info-response
 func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// https://developers.kakao.com/docs/latest/en/kakaologin/rest-api#req-user-info-response
-	rawData := struct {
+	data, err := p.FetchRawUserData(token)
+	if err != nil {
+		return nil, err
+	}
+
+	rawUser := map[string]any{}
+	if err := json.Unmarshal(data, &rawUser); err != nil {
+		return nil, err
+	}
+
+	extracted := struct {
 		Id      int `json:"id"`
 		Profile struct {
 			Nickname string `json:"nickname"`
@@ -42,18 +54,19 @@ func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			IsEmailValid    bool   `json:"is_email_valid"`
 		} `json:"kakao_account"`
 	}{}
-
-	if err := p.FetchRawUserData(token, &rawData); err != nil {
+	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}
 
 	user := &AuthUser{
-		Id:        strconv.Itoa(rawData.Id),
-		Username:  rawData.Profile.Nickname,
-		AvatarUrl: rawData.Profile.ImageUrl,
+		Id:          strconv.Itoa(extracted.Id),
+		Username:    extracted.Profile.Nickname,
+		AvatarUrl:   extracted.Profile.ImageUrl,
+		RawUser:     rawUser,
+		AccessToken: token.AccessToken,
 	}
-	if rawData.KakaoAccount.IsEmailValid && rawData.KakaoAccount.IsEmailVerified {
-		user.Email = rawData.KakaoAccount.Email
+	if extracted.KakaoAccount.IsEmailValid && extracted.KakaoAccount.IsEmailVerified {
+		user.Email = extracted.KakaoAccount.Email
 	}
 
 	return user, nil

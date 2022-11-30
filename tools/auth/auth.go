@@ -9,11 +9,13 @@ import (
 
 // AuthUser defines a standardized oauth2 user data structure.
 type AuthUser struct {
-	Id        string `json:"id"`
-	Name      string `json:"name"`
-	Username  string `json:"username"`
-	Email     string `json:"email"`
-	AvatarUrl string `json:"avatarUrl"`
+	Id          string         `json:"id"`
+	Name        string         `json:"name"`
+	Username    string         `json:"username"`
+	Email       string         `json:"email"`
+	AvatarUrl   string         `json:"avatarUrl"`
+	RawUser     map[string]any `json:"rawUser"`
+	AccessToken string         `json:"accessToken"`
 }
 
 // Provider defines a common interface for an OAuth2 client.
@@ -73,7 +75,7 @@ type Provider interface {
 
 	// FetchRawUserData requests and marshalizes into `result` the
 	// the OAuth user api response.
-	FetchRawUserData(token *oauth2.Token, result any) error
+	FetchRawUserData(token *oauth2.Token) ([]byte, error)
 
 	// FetchAuthUser is similar to FetchRawUserData, but normalizes and
 	// marshalizes the user api response into a standardized AuthUser struct.

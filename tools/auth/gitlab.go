@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"golang.org/x/oauth2"
@@ -27,26 +28,38 @@ func NewGitlabProvider() *Gitlab {
 }
 
 // FetchAuthUser returns an AuthUser instance based the Gitlab's user api.
+//
+// API reference: https://docs.gitlab.com/ee/api/users.html#for-admin
 func (p *Gitlab) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// https://docs.gitlab.com/ee/api/users.html#for-admin
-	rawData := struct {
+	data, err := p.FetchRawUserData(token)
+	if err != nil {
+		return nil, err
+	}
+
+	rawUser := map[string]any{}
+	if err := json.Unmarshal(data, &rawUser); err != nil {
+		return nil, err
+	}
+
+	extracted := struct {
 		Id        int    `json:"id"`
 		Name      string `json:"name"`
 		Username  string `json:"username"`
 		Email     string `json:"email"`
 		AvatarUrl string `json:"avatar_url"`
 	}{}
-
-	if err := p.FetchRawUserData(token, &rawData); err != nil {
+	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}
 
 	user := &AuthUser{
-		Id:        strconv.Itoa(rawData.Id),
-		Name:      rawData.Name,
-		Username:  rawData.Username,
-		Email:     rawData.Email,
-		AvatarUrl: rawData.AvatarUrl,
+		Id:          strconv.Itoa(extracted.Id),
+		Name:        extracted.Name,
+		Username:    extracted.Username,
+		Email:       extracted.Email,
+		AvatarUrl:   extracted.AvatarUrl,
+		RawUser:     rawUser,
+		AccessToken: token.AccessToken,
 	}
 
 	return user, nil

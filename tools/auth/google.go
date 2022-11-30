@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"encoding/json"
+
 	"golang.org/x/oauth2"
 )
 
@@ -29,22 +31,33 @@ func NewGoogleProvider() *Google {
 
 // FetchAuthUser returns an AuthUser instance based the Google's user api.
 func (p *Google) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	rawData := struct {
-		Id      string `json:"id"`
-		Name    string `json:"name"`
-		Email   string `json:"email"`
-		Picture string `json:"picture"`
-	}{}
+	data, err := p.FetchRawUserData(token)
+	if err != nil {
+		return nil, err
+	}
 
-	if err := p.FetchRawUserData(token, &rawData); err != nil {
+	rawUser := map[string]any{}
+	if err := json.Unmarshal(data, &rawUser); err != nil {
+		return nil, err
+	}
+
+	extracted := struct {
+		Id      string
+		Name    string
+		Email   string
+		Picture string
+	}{}
+	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}
 
 	user := &AuthUser{
-		Id:        rawData.Id,
-		Name:      rawData.Name,
-		Email:     rawData.Email,
-		AvatarUrl: rawData.Picture,
+		Id:          extracted.Id,
+		Name:        extracted.Name,
+		Email:       extracted.Email,
+		AvatarUrl:   extracted.Picture,
+		RawUser:     rawUser,
+		AccessToken: token.AccessToken,
 	}
 
 	return user, nil
