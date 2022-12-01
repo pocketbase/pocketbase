@@ -353,7 +353,7 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 	attempts := 1
 
 Retry:
-	err := dao.deleteRecord(record)
+	err := dao.deleteRecord(record, attempts)
 	if err != nil &&
 		attempts <= maxAttempts &&
 		// note: we are checking the error msg so that we can handle both the cgo and noncgo errors
@@ -366,8 +366,26 @@ Retry:
 	return err
 }
 
-func (dao *Dao) deleteRecord(record *models.Record) error {
+func (dao *Dao) deleteRecord(record *models.Record, attempts int) error {
 	return dao.RunInTransaction(func(txDao *Dao) error {
+		// unset transaction dao before hook on retry to avoid
+		// triggering the same before callbacks multiple times
+		if attempts > 1 {
+			oldBeforeCreateFunc := txDao.BeforeCreateFunc
+			oldBeforeUpdateFunc := txDao.BeforeUpdateFunc
+			oldBeforeDeleteFunc := txDao.BeforeDeleteFunc
+			txDao.BeforeCreateFunc = nil
+			txDao.BeforeUpdateFunc = nil
+			txDao.BeforeDeleteFunc = nil
+			defer func() {
+				if txDao != nil {
+					txDao.BeforeCreateFunc = oldBeforeCreateFunc
+					txDao.BeforeUpdateFunc = oldBeforeUpdateFunc
+					txDao.BeforeDeleteFunc = oldBeforeDeleteFunc
+				}
+			}()
+		}
+
 		// check for references
 		refs, err := txDao.FindCollectionReferences(record.Collection())
 		if err != nil {
