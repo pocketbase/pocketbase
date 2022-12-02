@@ -43,6 +43,8 @@ type BaseApp struct {
 	onBeforeBootstrap *hook.Hook[*BootstrapEvent]
 	onAfterBootstrap  *hook.Hook[*BootstrapEvent]
 	onBeforeServe     *hook.Hook[*ServeEvent]
+	onBeforeApiError  *hook.Hook[*ApiErrorEvent]
+	onAfterApiError   *hook.Hook[*ApiErrorEvent]
 
 	// dao event hooks
 	onModelBeforeCreate *hook.Hook[*ModelEvent]
@@ -135,6 +137,8 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onBeforeBootstrap: &hook.Hook[*BootstrapEvent]{},
 		onAfterBootstrap:  &hook.Hook[*BootstrapEvent]{},
 		onBeforeServe:     &hook.Hook[*ServeEvent]{},
+		onBeforeApiError:  &hook.Hook[*ApiErrorEvent]{},
+		onAfterApiError:   &hook.Hook[*ApiErrorEvent]{},
 
 		// dao event hooks
 		onModelBeforeCreate: &hook.Hook[*ModelEvent]{},
@@ -403,6 +407,14 @@ func (app *BaseApp) OnAfterBootstrap() *hook.Hook[*BootstrapEvent] {
 
 func (app *BaseApp) OnBeforeServe() *hook.Hook[*ServeEvent] {
 	return app.onBeforeServe
+}
+
+func (app *BaseApp) OnBeforeApiError() *hook.Hook[*ApiErrorEvent] {
+	return app.onBeforeApiError
+}
+
+func (app *BaseApp) OnAfterApiError() *hook.Hook[*ApiErrorEvent] {
+	return app.onAfterApiError
 }
 
 // -------------------------------------------------------------------

@@ -92,6 +92,16 @@ type App interface {
 	// allowing you to adjust its options and attach new routes.
 	OnBeforeServe() *hook.Hook[*ServeEvent]
 
+	// OnBeforeApiError hook is triggered right before sending an error API
+	// response to the client, allowing you to further modify the error data
+	// or to return a completely different API response (using [hook.StopPropagation]).
+	OnBeforeApiError() *hook.Hook[*ApiErrorEvent]
+
+	// OnAfterApiError hook is triggered right after sending an error API
+	// response to the client.
+	// It could be used to log the final API error in external services.
+	OnAfterApiError() *hook.Hook[*ApiErrorEvent]
+
 	// ---------------------------------------------------------------
 	// Dao event hooks
 	// ---------------------------------------------------------------

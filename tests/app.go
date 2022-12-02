@@ -87,6 +87,16 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		TestMailer: &TestMailer{},
 	}
 
+	t.OnBeforeApiError().Add(func(e *core.ApiErrorEvent) error {
+		t.EventCalls["OnBeforeApiError"]++
+		return nil
+	})
+
+	t.OnAfterApiError().Add(func(e *core.ApiErrorEvent) error {
+		t.EventCalls["OnAfterApiError"]++
+		return nil
+	})
+
 	t.OnModelBeforeCreate().Add(func(e *core.ModelEvent) error {
 		t.EventCalls["OnModelBeforeCreate"]++
 		return nil

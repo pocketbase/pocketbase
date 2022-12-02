@@ -64,19 +64,27 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			apiErr = NewBadRequestError("", err)
 		}
 
-		// Send response
-		var cErr error
-		if c.Request().Method == http.MethodHead {
-			// @see https://github.com/labstack/echo/issues/608
-			cErr = c.NoContent(apiErr.Code)
-		} else {
-			cErr = c.JSON(apiErr.Code, apiErr)
+		event := &core.ApiErrorEvent{
+			HttpContext: c,
+			Error:       apiErr,
 		}
 
+		hookErr := app.OnBeforeApiError().Trigger(event, func(e *core.ApiErrorEvent) error {
+			// Send response
+			if e.HttpContext.Request().Method == http.MethodHead {
+				// @see https://github.com/labstack/echo/issues/608
+				return e.HttpContext.NoContent(apiErr.Code)
+			}
+
+			return e.HttpContext.JSON(apiErr.Code, apiErr)
+		})
+
 		// truly rare case; eg. client already disconnected
-		if cErr != nil && app.IsDebug() {
-			log.Println(cErr)
+		if hookErr != nil && app.IsDebug() {
+			log.Println(hookErr)
 		}
+
+		app.OnAfterApiError().Trigger(event)
 	}
 
 	// admin ui routes

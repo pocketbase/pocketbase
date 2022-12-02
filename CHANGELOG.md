@@ -6,6 +6,8 @@
   ```go
   app.OnBeforeBootstrap()
   app.OnAfterBootstrap()
+  app.OnBeforeApiError()
+  app.OnAfterApiError()
   app.OnRealtimeDisconnectRequest()
   app.OnRealtimeBeforeMessageSend()
   app.OnRealtimeAfterMessageSend()

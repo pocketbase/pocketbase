@@ -25,6 +25,11 @@ type ServeEvent struct {
 	Router *echo.Echo
 }
 
+type ApiErrorEvent struct {
+	HttpContext echo.Context
+	Error       error
+}
+
 // -------------------------------------------------------------------
 // Model DAO events data
 // -------------------------------------------------------------------

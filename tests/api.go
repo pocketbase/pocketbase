@@ -134,6 +134,20 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		}
 	}
 
+	// to minimize the breaking changes we always expect the error
+	// events to be called on API error
+	if res.StatusCode >= 400 {
+		if scenario.ExpectedEvents == nil {
+			scenario.ExpectedEvents = map[string]int{}
+		}
+		if _, ok := scenario.ExpectedEvents["OnBeforeApiError"]; !ok {
+			scenario.ExpectedEvents["OnBeforeApiError"] = 1
+		}
+		if _, ok := scenario.ExpectedEvents["OnAfterApiError"]; !ok {
+			scenario.ExpectedEvents["OnAfterApiError"] = 1
+		}
+	}
+
 	if len(testApp.EventCalls) > len(scenario.ExpectedEvents) {
 		t.Errorf("[%s] Expected events %v, got %v", prefix, scenario.ExpectedEvents, testApp.EventCalls)
 	}
