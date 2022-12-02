@@ -667,7 +667,7 @@ func init() {
 
 		// save the changes and trigger automigrate
 		if err := app.Dao().SaveCollection(collection); err != nil {
-			t.Fatalf("[%d] Failed to delete dummy collection, got %v", i, err)
+			t.Fatalf("[%d] Failed to save dummy collection changes, got %v", i, err)
 		}
 
 		files, err := os.ReadDir(migrationsDir)
@@ -692,6 +692,55 @@ func init() {
 
 		if v := strings.TrimSpace(string(content)); v != strings.TrimSpace(s.expectedTemplate) {
 			t.Fatalf("[%d] Expected template \n%v \ngot \n%v", i, s.expectedTemplate, v)
+		}
+	}
+}
+
+func TestAutomigrateCollectionNoChanges(t *testing.T) {
+	scenarios := []struct {
+		lang string
+	}{
+		{
+			migratecmd.TemplateLangJS,
+		},
+		{
+			migratecmd.TemplateLangGo,
+		},
+	}
+
+	for i, s := range scenarios {
+		app, _ := tests.NewTestApp()
+		defer app.Cleanup()
+
+		migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
+
+		migratecmd.MustRegister(app, nil, &migratecmd.Options{
+			TemplateLang: s.lang,
+			Automigrate:  true,
+			Dir:          migrationsDir,
+		})
+
+		// create dummy collection
+		collection := &models.Collection{}
+		collection.Name = "test123"
+		collection.Type = models.CollectionTypeAuth
+
+		// use different dao to avoid triggering automigrate while saving the dummy collection
+		if err := daos.New(app.DB()).SaveCollection(collection); err != nil {
+			t.Fatalf("[%d] Failed to save dummy collection, got %v", i, err)
+		}
+
+		// @todo remove after collections cache is replaced
+		app.Bootstrap()
+
+		// resave without changes and trigger automigrate
+		if err := app.Dao().SaveCollection(collection); err != nil {
+			t.Fatalf("[%d] Failed to save dummy collection update, got %v", i, err)
+		}
+
+		files, _ := os.ReadDir(migrationsDir)
+		if total := len(files); total != 0 {
+			t.Fatalf("[%d] Expected 0 files to be generated, got %d", i, total)
 		}
 	}
 }

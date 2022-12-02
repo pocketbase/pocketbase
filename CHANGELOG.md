@@ -1,5 +1,7 @@
 ## (WIP) v0.9.0
 
+- Added `Record.OriginalCopy()` method that returns a new `Record` copy populated with the initially loaded record data (useful if you want to compare old and new field values).
+
 - Added new event hooks:
   ```go
   app.OnBeforeBootstrap()
@@ -16,7 +18,7 @@
   migrationsDir := "" // default to "pb_migrations" (for js) and "migrations" (for go)
 
   // load js files if you want to allow loading external JavaScript migrations
-  jsvm.MustRegisterMigrationsLoader(app, &jsvm.MigrationsLoaderOptions{
+  jsvm.MustRegisterMigrations(app, &jsvm.MigrationsOptions{
     Dir: migrationsDir,
   })
 

@@ -11,46 +11,46 @@ import (
 	m "github.com/pocketbase/pocketbase/migrations"
 )
 
-// MigrationsLoaderOptions defines optional struct to customize the default plugin behavior.
-type MigrationsLoaderOptions struct {
+// MigrationsOptions defines optional struct to customize the default migrations loader behavior.
+type MigrationsOptions struct {
 	// Dir specifies the directory with the JS migrations.
 	//
 	// If not set it fallbacks to a relative "pb_data/../pb_migrations" directory.
 	Dir string
 }
 
-// migrationsLoader is the plugin definition.
-// Usually it is instantiated via RegisterMigrationsLoader or MustRegisterMigrationsLoader.
-type migrationsLoader struct {
+// migrations is the migrations loader plugin definition.
+// Usually it is instantiated via RegisterMigrations or MustRegisterMigrations.
+type migrations struct {
 	app     core.App
-	options *MigrationsLoaderOptions
+	options *MigrationsOptions
 }
 
 //
-// MustRegisterMigrationsLoader registers the plugin to the provided
-// app instance and panics if it fails.
+// MustRegisterMigrations registers the migrations loader plugin to
+// the provided app instance and panics if it fails.
 //
-// It it calls RegisterMigrationsLoader(app, options)
+// Internally it calls RegisterMigrations(app, options).
 //
 // If options is nil, by default the js files from pb_data/migrations are loaded.
 // Set custom options.Dir if you want to change it to some other directory.
-func MustRegisterMigrationsLoader(app core.App, options *MigrationsLoaderOptions) {
-	if err := RegisterMigrationsLoader(app, options); err != nil {
+func MustRegisterMigrations(app core.App, options *MigrationsOptions) {
+	if err := RegisterMigrations(app, options); err != nil {
 		panic(err)
 	}
 }
 
-// RegisterMigrationsLoader registers the plugin to the provided app instance.
+// RegisterMigrations registers the plugin to the provided app instance.
 //
 // If options is nil, by default the js files from pb_data/migrations are loaded.
 // Set custom options.Dir if you want to change it to some other directory.
-func RegisterMigrationsLoader(app core.App, options *MigrationsLoaderOptions) error {
-	l := &migrationsLoader{app: app}
+func RegisterMigrations(app core.App, options *MigrationsOptions) error {
+	l := &migrations{app: app}
 
 	if options != nil {
 		l.options = options
 	} else {
-		l.options = &MigrationsLoaderOptions{}
+		l.options = &MigrationsOptions{}
 	}
 
 	if l.options.Dir == "" {
