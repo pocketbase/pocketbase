@@ -30,6 +30,8 @@ type Record struct {
 	ignoreEmailVisibility bool           // whether to ignore the emailVisibility flag for auth collections
 	data                  map[string]any // any custom data in addition to the base model fields
 	expand                map[string]any // expanded relations
+	loaded                bool
+	originalData          map[string]any // the original (aka. first loaded) model data
 }
 
 // NewRecord initializes a new empty Record model.
@@ -101,6 +103,15 @@ func (m *Record) TableName() string {
 // Collection returns the Collection model associated to the current Record model.
 func (m *Record) Collection() *Collection {
 	return m.collection
+}
+
+// OriginalCopy returns a copy of the current record model populated
+// with its original (aka. the initially loaded) data state.
+func (m *Record) OriginalCopy() *Record {
+	newRecord := NewRecord(m.collection)
+	newRecord.Load(m.originalData)
+
+	return newRecord
 }
 
 // Expand returns a shallow copy of  the record.expand data
@@ -270,6 +281,11 @@ func (m *Record) FindFileFieldByFile(filename string) *schema.SchemaField {
 
 // Load bulk loads the provided data into the current Record model.
 func (m *Record) Load(data map[string]any) {
+	if !m.loaded {
+		m.loaded = true
+		m.originalData = data
+	}
+
 	for k, v := range data {
 		m.Set(k, v)
 	}

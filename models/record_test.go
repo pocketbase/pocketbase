@@ -331,6 +331,33 @@ func TestRecordCollection(t *testing.T) {
 	}
 }
 
+func TestRecordOriginalCopy(t *testing.T) {
+	m := models.NewRecord(&models.Collection{})
+	m.Load(map[string]any{"f": "123"})
+
+	// change the field
+	m.Set("f", "456")
+
+	if v := m.GetString("f"); v != "456" {
+		t.Fatalf("Expected f to be %q, got %q", "456", v)
+	}
+
+	if v := m.OriginalCopy().GetString("f"); v != "123" {
+		t.Fatalf("Expected the initial/original f to be %q, got %q", "123", v)
+	}
+
+	// Loading new data shouldn't affect the original state
+	m.Load(map[string]any{"f": "789"})
+
+	if v := m.GetString("f"); v != "789" {
+		t.Fatalf("Expected f to be %q, got %q", "789", v)
+	}
+
+	if v := m.OriginalCopy().GetString("f"); v != "123" {
+		t.Fatalf("Expected the initial/original f still to be %q, got %q", "123", v)
+	}
+}
+
 func TestRecordExpand(t *testing.T) {
 	collection := &models.Collection{}
 	m := models.NewRecord(collection)
