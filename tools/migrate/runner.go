@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-const migrationsTable = "_migrations"
+const DefaultMigrationsTable = "_migrations"
 
 // Runner defines a simple struct for managing the execution of db migrations.
 type Runner struct {
@@ -24,7 +24,7 @@ func NewRunner(db *dbx.DB, migrationsList MigrationsList) (*Runner, error) {
 	runner := &Runner{
 		db:             db,
 		migrationsList: migrationsList,
-		tableName:      migrationsTable,
+		tableName:      DefaultMigrationsTable,
 	}
 
 	if err := runner.createMigrationsTable(); err != nil {

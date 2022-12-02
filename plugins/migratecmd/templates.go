@@ -17,6 +17,8 @@ const (
 	TemplateLangGo = "go"
 )
 
+var emptyTemplateErr = errors.New("empty template")
+
 // -------------------------------------------------------------------
 // JavaScript templates
 // -------------------------------------------------------------------
@@ -270,6 +272,10 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	// -----------------------------------------------------------------
+
+	if len(upParts) == 0 && len(downParts) == 0 {
+		return "", emptyTemplateErr
+	}
 
 	up := strings.Join(upParts, "\n  ")
 	down := strings.Join(downParts, "\n  ")
@@ -645,6 +651,10 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 		downParts = append(downParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
 	}
 	// ---------------------------------------------------------------
+
+	if len(upParts) == 0 && len(downParts) == 0 {
+		return "", emptyTemplateErr
+	}
 
 	up := strings.Join(upParts, "\n\t\t")
 	down := strings.Join(downParts, "\n\t\t")
