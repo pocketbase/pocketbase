@@ -1,6 +1,7 @@
 package apis_test
 
 import (
+	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 )
 
@@ -25,7 +27,56 @@ func TestRealtimeConnect(t *testing.T) {
 				`data:{"clientId":`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRealtimeConnectRequest": 1,
+				"OnRealtimeConnectRequest":    1,
+				"OnRealtimeBeforeMessageSend": 1,
+				"OnRealtimeAfterMessageSend":  1,
+				"OnRealtimeDisconnectRequest": 1,
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				if len(app.SubscriptionsBroker().Clients()) != 0 {
+					t.Errorf("Expected the subscribers to be removed after connection close, found %d", len(app.SubscriptionsBroker().Clients()))
+				}
+			},
+		},
+		{
+			Name:           "PB_CONNECT interrupt",
+			Method:         http.MethodGet,
+			Url:            "/api/realtime",
+			ExpectedStatus: 200,
+			ExpectedEvents: map[string]int{
+				"OnRealtimeConnectRequest":    1,
+				"OnRealtimeBeforeMessageSend": 1,
+				"OnRealtimeDisconnectRequest": 1,
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRealtimeBeforeMessageSend().Add(func(e *core.RealtimeMessageEvent) error {
+					if e.Message.Name == "PB_CONNECT" {
+						return errors.New("PB_CONNECT error")
+					}
+					return nil
+				})
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				if len(app.SubscriptionsBroker().Clients()) != 0 {
+					t.Errorf("Expected the subscribers to be removed after connection close, found %d", len(app.SubscriptionsBroker().Clients()))
+				}
+			},
+		},
+		{
+			Name:           "Skipping/ignoring messages",
+			Method:         http.MethodGet,
+			Url:            "/api/realtime",
+			ExpectedStatus: 200,
+			ExpectedEvents: map[string]int{
+				"OnRealtimeConnectRequest":    1,
+				"OnRealtimeBeforeMessageSend": 1,
+				"OnRealtimeAfterMessageSend":  1,
+				"OnRealtimeDisconnectRequest": 1,
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRealtimeBeforeMessageSend().Add(func(e *core.RealtimeMessageEvent) error {
+					return hook.StopPropagation
+				})
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if len(app.SubscriptionsBroker().Clients()) != 0 {

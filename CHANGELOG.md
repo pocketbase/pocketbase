@@ -6,6 +6,9 @@
   ```go
   app.OnBeforeBootstrap()
   app.OnAfterBootstrap()
+  app.OnRealtimeDisconnectRequest()
+  app.OnRealtimeBeforeMessageSend()
+  app.OnRealtimeAfterMessageSend()
   ```
 
 - Refactored the `migrate` command to support **external JavaScript migration files** using an embedded JS interpreter ([goja](https://github.com/dop251/goja)).

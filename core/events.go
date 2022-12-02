@@ -61,6 +61,17 @@ type RealtimeConnectEvent struct {
 	Client      subscriptions.Client
 }
 
+type RealtimeDisconnectEvent struct {
+	HttpContext echo.Context
+	Client      subscriptions.Client
+}
+
+type RealtimeMessageEvent struct {
+	HttpContext echo.Context
+	Client      subscriptions.Client
+	Message     *subscriptions.Message
+}
+
 type RealtimeSubscribeEvent struct {
 	HttpContext   echo.Context
 	Client        subscriptions.Client

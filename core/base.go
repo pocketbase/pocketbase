@@ -64,6 +64,9 @@ type BaseApp struct {
 
 	// realtime api event hooks
 	onRealtimeConnectRequest         *hook.Hook[*RealtimeConnectEvent]
+	onRealtimeDisconnectRequest      *hook.Hook[*RealtimeDisconnectEvent]
+	onRealtimeBeforeMessageSend      *hook.Hook[*RealtimeMessageEvent]
+	onRealtimeAfterMessageSend       *hook.Hook[*RealtimeMessageEvent]
 	onRealtimeBeforeSubscribeRequest *hook.Hook[*RealtimeSubscribeEvent]
 	onRealtimeAfterSubscribeRequest  *hook.Hook[*RealtimeSubscribeEvent]
 
@@ -153,6 +156,9 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 
 		// realtime API event hooks
 		onRealtimeConnectRequest:         &hook.Hook[*RealtimeConnectEvent]{},
+		onRealtimeDisconnectRequest:      &hook.Hook[*RealtimeDisconnectEvent]{},
+		onRealtimeBeforeMessageSend:      &hook.Hook[*RealtimeMessageEvent]{},
+		onRealtimeAfterMessageSend:       &hook.Hook[*RealtimeMessageEvent]{},
 		onRealtimeBeforeSubscribeRequest: &hook.Hook[*RealtimeSubscribeEvent]{},
 		onRealtimeAfterSubscribeRequest:  &hook.Hook[*RealtimeSubscribeEvent]{},
 
@@ -469,6 +475,18 @@ func (app *BaseApp) OnMailerAfterRecordChangeEmailSend() *hook.Hook[*MailerRecor
 
 func (app *BaseApp) OnRealtimeConnectRequest() *hook.Hook[*RealtimeConnectEvent] {
 	return app.onRealtimeConnectRequest
+}
+
+func (app *BaseApp) OnRealtimeDisconnectRequest() *hook.Hook[*RealtimeDisconnectEvent] {
+	return app.onRealtimeDisconnectRequest
+}
+
+func (app *BaseApp) OnRealtimeBeforeMessageSend() *hook.Hook[*RealtimeMessageEvent] {
+	return app.onRealtimeBeforeMessageSend
+}
+
+func (app *BaseApp) OnRealtimeAfterMessageSend() *hook.Hook[*RealtimeMessageEvent] {
+	return app.onRealtimeAfterMessageSend
 }
 
 func (app *BaseApp) OnRealtimeBeforeSubscribeRequest() *hook.Hook[*RealtimeSubscribeEvent] {

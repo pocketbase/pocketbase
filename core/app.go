@@ -176,6 +176,21 @@ type App interface {
 	// the SSE client connection.
 	OnRealtimeConnectRequest() *hook.Hook[*RealtimeConnectEvent]
 
+	// OnRealtimeDisconnectRequest hook is triggered on disconnected/interrupted
+	// SSE client connection.
+	OnRealtimeDisconnectRequest() *hook.Hook[*RealtimeDisconnectEvent]
+
+	// OnRealtimeBeforeMessage hook is triggered right before sending
+	// an SSE message to a client.
+	//
+	// Returning [hook.StopPropagation] will prevent sending the message.
+	// Returning any other non-nil error will close the realtime connection.
+	OnRealtimeBeforeMessageSend() *hook.Hook[*RealtimeMessageEvent]
+
+	// OnRealtimeBeforeMessage hook is triggered right after sending
+	// an SSE message to a client.
+	OnRealtimeAfterMessageSend() *hook.Hook[*RealtimeMessageEvent]
+
 	// OnRealtimeBeforeSubscribeRequest hook is triggered before changing
 	// the client subscriptions, allowing you to further validate and
 	// modify the submitted change.

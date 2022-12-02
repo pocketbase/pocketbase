@@ -222,6 +222,21 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil
 	})
 
+	t.OnRealtimeDisconnectRequest().Add(func(e *core.RealtimeDisconnectEvent) error {
+		t.EventCalls["OnRealtimeDisconnectRequest"]++
+		return nil
+	})
+
+	t.OnRealtimeBeforeMessageSend().Add(func(e *core.RealtimeMessageEvent) error {
+		t.EventCalls["OnRealtimeBeforeMessageSend"]++
+		return nil
+	})
+
+	t.OnRealtimeAfterMessageSend().Add(func(e *core.RealtimeMessageEvent) error {
+		t.EventCalls["OnRealtimeAfterMessageSend"]++
+		return nil
+	})
+
 	t.OnRealtimeBeforeSubscribeRequest().Add(func(e *core.RealtimeSubscribeEvent) error {
 		t.EventCalls["OnRealtimeBeforeSubscribeRequest"]++
 		return nil
