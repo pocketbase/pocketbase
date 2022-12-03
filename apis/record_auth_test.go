@@ -346,10 +346,12 @@ func TestRecordAuthRequestPasswordReset(t *testing.T) {
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelBeforeUpdate":                   1,
-				"OnModelAfterUpdate":                    1,
-				"OnMailerBeforeRecordResetPasswordSend": 1,
-				"OnMailerAfterRecordResetPasswordSend":  1,
+				"OnModelBeforeUpdate":                       1,
+				"OnModelAfterUpdate":                        1,
+				"OnRecordBeforeRequestPasswordResetRequest": 1,
+				"OnRecordAfterRequestPasswordResetRequest":  1,
+				"OnMailerBeforeRecordResetPasswordSend":     1,
+				"OnMailerAfterRecordResetPasswordSend":      1,
 			},
 		},
 		{
@@ -466,8 +468,10 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 			}`),
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":  1,
-				"OnModelBeforeUpdate": 1,
+				"OnModelAfterUpdate":                        1,
+				"OnModelBeforeUpdate":                       1,
+				"OnRecordBeforeConfirmPasswordResetRequest": 1,
+				"OnRecordAfterConfirmPasswordResetRequest":  1,
 			},
 		},
 	}
@@ -518,6 +522,10 @@ func TestRecordAuthRequestVerification(t *testing.T) {
 			Body:           strings.NewReader(`{"email":"test2@example.com"}`),
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeRequestVerificationRequest": 1,
+				"OnRecordAfterRequestVerificationRequest":  1,
+			},
 		},
 		{
 			Name:           "existing auth record",
@@ -527,10 +535,12 @@ func TestRecordAuthRequestVerification(t *testing.T) {
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelBeforeUpdate":                  1,
-				"OnModelAfterUpdate":                   1,
-				"OnMailerBeforeRecordVerificationSend": 1,
-				"OnMailerAfterRecordVerificationSend":  1,
+				"OnModelBeforeUpdate":                      1,
+				"OnModelAfterUpdate":                       1,
+				"OnRecordBeforeRequestVerificationRequest": 1,
+				"OnRecordAfterRequestVerificationRequest":  1,
+				"OnMailerBeforeRecordVerificationSend":     1,
+				"OnMailerAfterRecordVerificationSend":      1,
 			},
 		},
 		{
@@ -540,6 +550,10 @@ func TestRecordAuthRequestVerification(t *testing.T) {
 			Body:           strings.NewReader(`{"email":"test@example.com"}`),
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				// "OnRecordBeforeRequestVerificationRequest": 1,
+				// "OnRecordAfterRequestVerificationRequest":  1,
+			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				// simulate recent verification sent
 				authRecord, err := app.Dao().FindFirstRecordByData("users", "email", "test@example.com")
@@ -627,8 +641,10 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 			}`),
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":  1,
-				"OnModelBeforeUpdate": 1,
+				"OnModelAfterUpdate":                       1,
+				"OnModelBeforeUpdate":                      1,
+				"OnRecordBeforeConfirmVerificationRequest": 1,
+				"OnRecordAfterConfirmVerificationRequest":  1,
 			},
 		},
 		{
@@ -639,7 +655,10 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Im9hcDY0MGNvdDR5cnUycyIsImVtYWlsIjoidGVzdDJAZXhhbXBsZS5jb20iLCJjb2xsZWN0aW9uSWQiOiJfcGJfdXNlcnNfYXV0aF8iLCJ0eXBlIjoiYXV0aFJlY29yZCIsImV4cCI6MjIwODk4NTI2MX0.PsOABmYUzGbd088g8iIBL4-pf7DUZm0W5Ju6lL5JVRg"
 			}`),
 			ExpectedStatus: 204,
-			ExpectedEvents: map[string]int{},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeConfirmVerificationRequest": 1,
+				"OnRecordAfterConfirmVerificationRequest":  1,
+			},
 		},
 		{
 			Name:   "valid verification token from a collection without allowed login",
@@ -651,8 +670,10 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 			ExpectedStatus:  204,
 			ExpectedContent: []string{},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":  1,
-				"OnModelBeforeUpdate": 1,
+				"OnModelAfterUpdate":                       1,
+				"OnModelBeforeUpdate":                      1,
+				"OnRecordBeforeConfirmVerificationRequest": 1,
+				"OnRecordAfterConfirmVerificationRequest":  1,
 			},
 		},
 	}
@@ -751,8 +772,10 @@ func TestRecordAuthRequestEmailChange(t *testing.T) {
 			},
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnMailerBeforeRecordChangeEmailSend": 1,
-				"OnMailerAfterRecordChangeEmailSend":  1,
+				"OnMailerBeforeRecordChangeEmailSend":     1,
+				"OnMailerAfterRecordChangeEmailSend":      1,
+				"OnRecordBeforeRequestEmailChangeRequest": 1,
+				"OnRecordAfterRequestEmailChangeRequest":  1,
 			},
 		},
 	}
@@ -833,8 +856,10 @@ func TestRecordAuthConfirmEmailChange(t *testing.T) {
 			}`),
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":  1,
-				"OnModelBeforeUpdate": 1,
+				"OnModelAfterUpdate":                      1,
+				"OnModelBeforeUpdate":                     1,
+				"OnRecordBeforeConfirmEmailChangeRequest": 1,
+				"OnRecordAfterConfirmEmailChangeRequest":  1,
 			},
 		},
 		{

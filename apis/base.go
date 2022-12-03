@@ -69,10 +69,10 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			Error:       apiErr,
 		}
 
+		// send error response
 		hookErr := app.OnBeforeApiError().Trigger(event, func(e *core.ApiErrorEvent) error {
-			// Send response
+			// @see https://github.com/labstack/echo/issues/608
 			if e.HttpContext.Request().Method == http.MethodHead {
-				// @see https://github.com/labstack/echo/issues/608
 				return e.HttpContext.NoContent(apiErr.Code)
 			}
 

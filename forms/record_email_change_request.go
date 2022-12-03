@@ -61,10 +61,15 @@ func (form *RecordEmailChangeRequest) checkUniqueEmail(value any) error {
 }
 
 // Submit validates and sends the change email request.
-func (form *RecordEmailChangeRequest) Submit() error {
+//
+// You can optionally provide a list of InterceptorWithRecordFunc to
+// further modify the form behavior before persisting it.
+func (form *RecordEmailChangeRequest) Submit(interceptors ...InterceptorWithRecordFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
 
-	return mails.SendRecordChangeEmail(form.app, form.record, form.NewEmail)
+	return runInterceptorsWithRecord(form.record, func(m *models.Record) error {
+		return mails.SendRecordChangeEmail(form.app, m, form.NewEmail)
+	}, interceptors...)
 }

@@ -91,13 +91,25 @@ type BaseApp struct {
 	onAdminAfterDeleteRequest  *hook.Hook[*AdminDeleteEvent]
 	onAdminAuthRequest         *hook.Hook[*AdminAuthEvent]
 
-	// user api event hooks
-	onRecordAuthRequest                     *hook.Hook[*RecordAuthEvent]
-	onRecordListExternalAuthsRequest        *hook.Hook[*RecordListExternalAuthsEvent]
-	onRecordBeforeUnlinkExternalAuthRequest *hook.Hook[*RecordUnlinkExternalAuthEvent]
-	onRecordAfterUnlinkExternalAuthRequest  *hook.Hook[*RecordUnlinkExternalAuthEvent]
+	// record auth API event hooks
+	onRecordAuthRequest                       *hook.Hook[*RecordAuthEvent]
+	onRecordBeforeRequestPasswordResetRequest *hook.Hook[*RecordRequestPasswordResetEvent]
+	onRecordAfterRequestPasswordResetRequest  *hook.Hook[*RecordRequestPasswordResetEvent]
+	onRecordBeforeConfirmPasswordResetRequest *hook.Hook[*RecordConfirmPasswordResetEvent]
+	onRecordAfterConfirmPasswordResetRequest  *hook.Hook[*RecordConfirmPasswordResetEvent]
+	onRecordBeforeRequestVerificationRequest  *hook.Hook[*RecordRequestVerificationEvent]
+	onRecordAfterRequestVerificationRequest   *hook.Hook[*RecordRequestVerificationEvent]
+	onRecordBeforeConfirmVerificationRequest  *hook.Hook[*RecordConfirmVerificationEvent]
+	onRecordAfterConfirmVerificationRequest   *hook.Hook[*RecordConfirmVerificationEvent]
+	onRecordBeforeRequestEmailChangeRequest   *hook.Hook[*RecordRequestEmailChangeEvent]
+	onRecordAfterRequestEmailChangeRequest    *hook.Hook[*RecordRequestEmailChangeEvent]
+	onRecordBeforeConfirmEmailChangeRequest   *hook.Hook[*RecordConfirmEmailChangeEvent]
+	onRecordAfterConfirmEmailChangeRequest    *hook.Hook[*RecordConfirmEmailChangeEvent]
+	onRecordListExternalAuthsRequest          *hook.Hook[*RecordListExternalAuthsEvent]
+	onRecordBeforeUnlinkExternalAuthRequest   *hook.Hook[*RecordUnlinkExternalAuthEvent]
+	onRecordAfterUnlinkExternalAuthRequest    *hook.Hook[*RecordUnlinkExternalAuthEvent]
 
-	// record api event hooks
+	// record crud API event hooks
 	onRecordsListRequest        *hook.Hook[*RecordsListEvent]
 	onRecordViewRequest         *hook.Hook[*RecordViewEvent]
 	onRecordBeforeCreateRequest *hook.Hook[*RecordCreateEvent]
@@ -107,7 +119,7 @@ type BaseApp struct {
 	onRecordBeforeDeleteRequest *hook.Hook[*RecordDeleteEvent]
 	onRecordAfterDeleteRequest  *hook.Hook[*RecordDeleteEvent]
 
-	// collection api event hooks
+	// collection API event hooks
 	onCollectionsListRequest         *hook.Hook[*CollectionsListEvent]
 	onCollectionViewRequest          *hook.Hook[*CollectionViewEvent]
 	onCollectionBeforeCreateRequest  *hook.Hook[*CollectionCreateEvent]
@@ -185,13 +197,25 @@ func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
 		onAdminAfterDeleteRequest:  &hook.Hook[*AdminDeleteEvent]{},
 		onAdminAuthRequest:         &hook.Hook[*AdminAuthEvent]{},
 
-		// user API event hooks
-		onRecordAuthRequest:                     &hook.Hook[*RecordAuthEvent]{},
-		onRecordListExternalAuthsRequest:        &hook.Hook[*RecordListExternalAuthsEvent]{},
-		onRecordBeforeUnlinkExternalAuthRequest: &hook.Hook[*RecordUnlinkExternalAuthEvent]{},
-		onRecordAfterUnlinkExternalAuthRequest:  &hook.Hook[*RecordUnlinkExternalAuthEvent]{},
+		// record auth API event hooks
+		onRecordAuthRequest:                       &hook.Hook[*RecordAuthEvent]{},
+		onRecordBeforeRequestPasswordResetRequest: &hook.Hook[*RecordRequestPasswordResetEvent]{},
+		onRecordAfterRequestPasswordResetRequest:  &hook.Hook[*RecordRequestPasswordResetEvent]{},
+		onRecordBeforeConfirmPasswordResetRequest: &hook.Hook[*RecordConfirmPasswordResetEvent]{},
+		onRecordAfterConfirmPasswordResetRequest:  &hook.Hook[*RecordConfirmPasswordResetEvent]{},
+		onRecordBeforeRequestVerificationRequest:  &hook.Hook[*RecordRequestVerificationEvent]{},
+		onRecordAfterRequestVerificationRequest:   &hook.Hook[*RecordRequestVerificationEvent]{},
+		onRecordBeforeConfirmVerificationRequest:  &hook.Hook[*RecordConfirmVerificationEvent]{},
+		onRecordAfterConfirmVerificationRequest:   &hook.Hook[*RecordConfirmVerificationEvent]{},
+		onRecordBeforeRequestEmailChangeRequest:   &hook.Hook[*RecordRequestEmailChangeEvent]{},
+		onRecordAfterRequestEmailChangeRequest:    &hook.Hook[*RecordRequestEmailChangeEvent]{},
+		onRecordBeforeConfirmEmailChangeRequest:   &hook.Hook[*RecordConfirmEmailChangeEvent]{},
+		onRecordAfterConfirmEmailChangeRequest:    &hook.Hook[*RecordConfirmEmailChangeEvent]{},
+		onRecordListExternalAuthsRequest:          &hook.Hook[*RecordListExternalAuthsEvent]{},
+		onRecordBeforeUnlinkExternalAuthRequest:   &hook.Hook[*RecordUnlinkExternalAuthEvent]{},
+		onRecordAfterUnlinkExternalAuthRequest:    &hook.Hook[*RecordUnlinkExternalAuthEvent]{},
 
-		// record API event hooks
+		// record crud API event hooks
 		onRecordsListRequest:        &hook.Hook[*RecordsListEvent]{},
 		onRecordViewRequest:         &hook.Hook[*RecordViewEvent]{},
 		onRecordBeforeCreateRequest: &hook.Hook[*RecordCreateEvent]{},
@@ -574,11 +598,59 @@ func (app *BaseApp) OnAdminAuthRequest() *hook.Hook[*AdminAuthEvent] {
 }
 
 // -------------------------------------------------------------------
-// Auth Record API event hooks
+// Record auth API event hooks
 // -------------------------------------------------------------------
 
 func (app *BaseApp) OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent] {
 	return app.onRecordAuthRequest
+}
+
+func (app *BaseApp) OnRecordBeforeRequestPasswordResetRequest() *hook.Hook[*RecordRequestPasswordResetEvent] {
+	return app.onRecordBeforeRequestPasswordResetRequest
+}
+
+func (app *BaseApp) OnRecordAfterRequestPasswordResetRequest() *hook.Hook[*RecordRequestPasswordResetEvent] {
+	return app.onRecordAfterRequestPasswordResetRequest
+}
+
+func (app *BaseApp) OnRecordBeforeConfirmPasswordResetRequest() *hook.Hook[*RecordConfirmPasswordResetEvent] {
+	return app.onRecordBeforeConfirmPasswordResetRequest
+}
+
+func (app *BaseApp) OnRecordAfterConfirmPasswordResetRequest() *hook.Hook[*RecordConfirmPasswordResetEvent] {
+	return app.onRecordAfterConfirmPasswordResetRequest
+}
+
+func (app *BaseApp) OnRecordBeforeRequestVerificationRequest() *hook.Hook[*RecordRequestVerificationEvent] {
+	return app.onRecordBeforeRequestVerificationRequest
+}
+
+func (app *BaseApp) OnRecordAfterRequestVerificationRequest() *hook.Hook[*RecordRequestVerificationEvent] {
+	return app.onRecordAfterRequestVerificationRequest
+}
+
+func (app *BaseApp) OnRecordBeforeConfirmVerificationRequest() *hook.Hook[*RecordConfirmVerificationEvent] {
+	return app.onRecordBeforeConfirmVerificationRequest
+}
+
+func (app *BaseApp) OnRecordAfterConfirmVerificationRequest() *hook.Hook[*RecordConfirmVerificationEvent] {
+	return app.onRecordAfterConfirmVerificationRequest
+}
+
+func (app *BaseApp) OnRecordBeforeRequestEmailChangeRequest() *hook.Hook[*RecordRequestEmailChangeEvent] {
+	return app.onRecordBeforeRequestEmailChangeRequest
+}
+
+func (app *BaseApp) OnRecordAfterRequestEmailChangeRequest() *hook.Hook[*RecordRequestEmailChangeEvent] {
+	return app.onRecordAfterRequestEmailChangeRequest
+}
+
+func (app *BaseApp) OnRecordBeforeConfirmEmailChangeRequest() *hook.Hook[*RecordConfirmEmailChangeEvent] {
+	return app.onRecordBeforeConfirmEmailChangeRequest
+}
+
+func (app *BaseApp) OnRecordAfterConfirmEmailChangeRequest() *hook.Hook[*RecordConfirmEmailChangeEvent] {
+	return app.onRecordAfterConfirmEmailChangeRequest
 }
 
 func (app *BaseApp) OnRecordListExternalAuthsRequest() *hook.Hook[*RecordListExternalAuthsEvent] {
@@ -594,7 +666,7 @@ func (app *BaseApp) OnRecordAfterUnlinkExternalAuthRequest() *hook.Hook[*RecordU
 }
 
 // -------------------------------------------------------------------
-// Record API event hooks
+// Record CRUD API event hooks
 // -------------------------------------------------------------------
 
 func (app *BaseApp) OnRecordsListRequest() *hook.Hook[*RecordsListEvent] {

@@ -76,7 +76,10 @@ func (form *RecordVerificationConfirm) checkToken(value any) error {
 
 // Submit validates and submits the form.
 // On success returns the verified auth record associated to `form.Token`.
-func (form *RecordVerificationConfirm) Submit() (*models.Record, error) {
+//
+// You can optionally provide a list of InterceptorWithRecordFunc to
+// further modify the form behavior before persisting it.
+func (form *RecordVerificationConfirm) Submit(interceptors ...InterceptorWithRecordFunc) (*models.Record, error) {
 	if err := form.Validate(); err != nil {
 		return nil, err
 	}
@@ -89,14 +92,22 @@ func (form *RecordVerificationConfirm) Submit() (*models.Record, error) {
 		return nil, err
 	}
 
-	if record.Verified() {
-		return record, nil // already verified
+	wasVerified := record.Verified()
+
+	if !wasVerified {
+		record.SetVerified(true)
 	}
 
-	record.SetVerified(true)
+	interceptorsErr := runInterceptorsWithRecord(record, func(m *models.Record) error {
+		if wasVerified {
+			return nil // already verified
+		}
 
-	if err := form.dao.SaveRecord(record); err != nil {
-		return nil, err
+		return form.dao.SaveRecord(m)
+	}, interceptors...)
+
+	if interceptorsErr != nil {
+		return nil, interceptorsErr
 	}
 
 	return record, nil

@@ -283,15 +283,39 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
-	// run in background because we don't need to show
-	// the result to the user (prevents users enumeration)
-	routine.FireAndForget(func() {
-		if err := form.Submit(); err != nil && api.app.IsDebug() {
-			log.Println(err)
+	event := &core.RecordRequestPasswordResetEvent{
+		HttpContext: c,
+	}
+
+	submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		return func(record *models.Record) error {
+			event.Record = record
+
+			return api.app.OnRecordBeforeRequestPasswordResetRequest().Trigger(event, func(e *core.RecordRequestPasswordResetEvent) error {
+				// run in background because we don't need to show the result to the client
+				routine.FireAndForget(func() {
+					if err := next(e.Record); err != nil && api.app.IsDebug() {
+						log.Println(err)
+					}
+				})
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
 		}
 	})
 
-	return c.NoContent(http.StatusNoContent)
+	if submitErr == nil {
+		api.app.OnRecordAfterRequestPasswordResetRequest().Trigger(event)
+	} else if api.app.IsDebug() {
+		log.Println(submitErr)
+	}
+
+	// don't return the response error to prevent emails enumeration
+	if !c.Response().Committed {
+		c.NoContent(http.StatusNoContent)
+	}
+
+	return nil
 }
 
 func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
@@ -305,12 +329,29 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	_, submitErr := form.Submit()
-	if submitErr != nil {
-		return NewBadRequestError("Failed to set new password.", submitErr)
+	event := &core.RecordConfirmPasswordResetEvent{
+		HttpContext: c,
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	_, submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		return func(record *models.Record) error {
+			event.Record = record
+
+			return api.app.OnRecordBeforeConfirmPasswordResetRequest().Trigger(event, func(e *core.RecordConfirmPasswordResetEvent) error {
+				if err := next(e.Record); err != nil {
+					return NewBadRequestError("Failed to set new password.", err)
+				}
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		api.app.OnRecordAfterConfirmPasswordResetRequest().Trigger(event)
+	}
+
+	return submitErr
 }
 
 func (api *recordAuthApi) requestVerification(c echo.Context) error {
@@ -328,15 +369,39 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 		return NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
-	// run in background because we don't need to show
-	// the result to the user (prevents users enumeration)
-	routine.FireAndForget(func() {
-		if err := form.Submit(); err != nil && api.app.IsDebug() {
-			log.Println(err)
+	event := &core.RecordRequestVerificationEvent{
+		HttpContext: c,
+	}
+
+	submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		return func(record *models.Record) error {
+			event.Record = record
+
+			return api.app.OnRecordBeforeRequestVerificationRequest().Trigger(event, func(e *core.RecordRequestVerificationEvent) error {
+				// run in background because we don't need to show the result to the client
+				routine.FireAndForget(func() {
+					if err := next(e.Record); err != nil && api.app.IsDebug() {
+						log.Println(err)
+					}
+				})
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
 		}
 	})
 
-	return c.NoContent(http.StatusNoContent)
+	if submitErr == nil {
+		api.app.OnRecordAfterRequestVerificationRequest().Trigger(event)
+	} else if api.app.IsDebug() {
+		log.Println(submitErr)
+	}
+
+	// don't return the response error to prevent emails enumeration
+	if !c.Response().Committed {
+		c.NoContent(http.StatusNoContent)
+	}
+
+	return nil
 }
 
 func (api *recordAuthApi) confirmVerification(c echo.Context) error {
@@ -350,12 +415,29 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	_, submitErr := form.Submit()
-	if submitErr != nil {
-		return NewBadRequestError("An error occurred while submitting the form.", submitErr)
+	event := &core.RecordConfirmVerificationEvent{
+		HttpContext: c,
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	_, submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		return func(record *models.Record) error {
+			event.Record = record
+
+			return api.app.OnRecordBeforeConfirmVerificationRequest().Trigger(event, func(e *core.RecordConfirmVerificationEvent) error {
+				if err := next(e.Record); err != nil {
+					return NewBadRequestError("An error occurred while submitting the form.", err)
+				}
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		api.app.OnRecordAfterConfirmVerificationRequest().Trigger(event)
+	}
+
+	return submitErr
 }
 
 func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
@@ -369,11 +451,28 @@ func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
-	if err := form.Submit(); err != nil {
-		return NewBadRequestError("Failed to request email change.", err)
+	event := &core.RecordRequestEmailChangeEvent{
+		HttpContext: c,
+		Record:      record,
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		return func(record *models.Record) error {
+			return api.app.OnRecordBeforeRequestEmailChangeRequest().Trigger(event, func(e *core.RecordRequestEmailChangeEvent) error {
+				if err := next(e.Record); err != nil {
+					return NewBadRequestError("Failed to request email change.", err)
+				}
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		api.app.OnRecordAfterRequestEmailChangeRequest().Trigger(event)
+	}
+
+	return submitErr
 }
 
 func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
@@ -387,12 +486,29 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	_, submitErr := form.Submit()
-	if submitErr != nil {
-		return NewBadRequestError("Failed to confirm email change.", submitErr)
+	event := &core.RecordConfirmEmailChangeEvent{
+		HttpContext: c,
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	_, submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		return func(record *models.Record) error {
+			event.Record = record
+
+			return api.app.OnRecordBeforeConfirmEmailChangeRequest().Trigger(event, func(e *core.RecordConfirmEmailChangeEvent) error {
+				if err := next(e.Record); err != nil {
+					return NewBadRequestError("Failed to confirm email change.", err)
+				}
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		api.app.OnRecordAfterConfirmEmailChangeRequest().Trigger(event)
+	}
+
+	return submitErr
 }
 
 func (api *recordAuthApi) listExternalAuths(c echo.Context) error {

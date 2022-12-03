@@ -172,6 +172,66 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil
 	})
 
+	t.OnRecordBeforeRequestPasswordResetRequest().Add(func(e *core.RecordRequestPasswordResetEvent) error {
+		t.EventCalls["OnRecordBeforeRequestPasswordResetRequest"]++
+		return nil
+	})
+
+	t.OnRecordAfterRequestPasswordResetRequest().Add(func(e *core.RecordRequestPasswordResetEvent) error {
+		t.EventCalls["OnRecordAfterRequestPasswordResetRequest"]++
+		return nil
+	})
+
+	t.OnRecordBeforeConfirmPasswordResetRequest().Add(func(e *core.RecordConfirmPasswordResetEvent) error {
+		t.EventCalls["OnRecordBeforeConfirmPasswordResetRequest"]++
+		return nil
+	})
+
+	t.OnRecordAfterConfirmPasswordResetRequest().Add(func(e *core.RecordConfirmPasswordResetEvent) error {
+		t.EventCalls["OnRecordAfterConfirmPasswordResetRequest"]++
+		return nil
+	})
+
+	t.OnRecordBeforeRequestVerificationRequest().Add(func(e *core.RecordRequestVerificationEvent) error {
+		t.EventCalls["OnRecordBeforeRequestVerificationRequest"]++
+		return nil
+	})
+
+	t.OnRecordAfterRequestVerificationRequest().Add(func(e *core.RecordRequestVerificationEvent) error {
+		t.EventCalls["OnRecordAfterRequestVerificationRequest"]++
+		return nil
+	})
+
+	t.OnRecordBeforeConfirmVerificationRequest().Add(func(e *core.RecordConfirmVerificationEvent) error {
+		t.EventCalls["OnRecordBeforeConfirmVerificationRequest"]++
+		return nil
+	})
+
+	t.OnRecordAfterConfirmVerificationRequest().Add(func(e *core.RecordConfirmVerificationEvent) error {
+		t.EventCalls["OnRecordAfterConfirmVerificationRequest"]++
+		return nil
+	})
+
+	t.OnRecordBeforeRequestEmailChangeRequest().Add(func(e *core.RecordRequestEmailChangeEvent) error {
+		t.EventCalls["OnRecordBeforeRequestEmailChangeRequest"]++
+		return nil
+	})
+
+	t.OnRecordAfterRequestEmailChangeRequest().Add(func(e *core.RecordRequestEmailChangeEvent) error {
+		t.EventCalls["OnRecordAfterRequestEmailChangeRequest"]++
+		return nil
+	})
+
+	t.OnRecordBeforeConfirmEmailChangeRequest().Add(func(e *core.RecordConfirmEmailChangeEvent) error {
+		t.EventCalls["OnRecordBeforeConfirmEmailChangeRequest"]++
+		return nil
+	})
+
+	t.OnRecordAfterConfirmEmailChangeRequest().Add(func(e *core.RecordConfirmEmailChangeEvent) error {
+		t.EventCalls["OnRecordAfterConfirmEmailChangeRequest"]++
+		return nil
+	})
+
 	t.OnRecordListExternalAuthsRequest().Add(func(e *core.RecordListExternalAuthsEvent) error {
 		t.EventCalls["OnRecordListExternalAuthsRequest"]++
 		return nil

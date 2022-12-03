@@ -59,12 +59,15 @@ func (form *RecordPasswordResetRequest) Validate() error {
 
 // Submit validates and submits the form.
 // On success, sends a password reset email to the `form.Email` auth record.
-func (form *RecordPasswordResetRequest) Submit() error {
+//
+// You can optionally provide a list of InterceptorWithRecordFunc to
+// further modify the form behavior before persisting it.
+func (form *RecordPasswordResetRequest) Submit(interceptors ...InterceptorWithRecordFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
 
-	authRecord, err := form.dao.FindFirstRecordByData(form.collection.Id, schema.FieldNameEmail, form.Email)
+	authRecord, err := form.dao.FindAuthRecordByEmail(form.collection.Id, form.Email)
 	if err != nil {
 		return err
 	}
@@ -75,12 +78,14 @@ func (form *RecordPasswordResetRequest) Submit() error {
 		return errors.New("You've already requested a password reset.")
 	}
 
-	if err := mails.SendRecordPasswordReset(form.app, authRecord); err != nil {
-		return err
-	}
-
 	// update last sent timestamp
 	authRecord.Set(schema.FieldNameLastResetSentAt, types.NowDateTime())
 
-	return form.dao.SaveRecord(authRecord)
+	return runInterceptorsWithRecord(authRecord, func(m *models.Record) error {
+		if err := mails.SendRecordPasswordReset(form.app, m); err != nil {
+			return err
+		}
+
+		return form.dao.SaveRecord(m)
+	}, interceptors...)
 }

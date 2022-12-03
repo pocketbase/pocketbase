@@ -2,9 +2,11 @@ package forms_test
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/forms"
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
@@ -54,7 +56,24 @@ func TestRecordVerificationConfirmValidateAndSubmit(t *testing.T) {
 			continue
 		}
 
-		record, err := form.Submit()
+		interceptorCalls := 0
+		interceptor := func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+			return func(r *models.Record) error {
+				interceptorCalls++
+				return next(r)
+			}
+		}
+
+		record, err := form.Submit(interceptor)
+
+		// check interceptor calls
+		expectInterceptorCalls := 1
+		if s.expectError {
+			expectInterceptorCalls = 0
+		}
+		if interceptorCalls != expectInterceptorCalls {
+			t.Errorf("[%d] Expected interceptor to be called %d, got %d", i, expectInterceptorCalls, interceptorCalls)
+		}
 
 		hasErr := err != nil
 		if hasErr != s.expectError {
@@ -75,5 +94,59 @@ func TestRecordVerificationConfirmValidateAndSubmit(t *testing.T) {
 		if !record.Verified() {
 			t.Errorf("(%d) Expected record.Verified() to be true, got false", i)
 		}
+	}
+}
+
+func TestRecordVerificationConfirmInterceptors(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	authCollection, err := testApp.Dao().FindCollectionByNameOrId("users")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	authRecord, err := testApp.Dao().FindAuthRecordByEmail("users", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	form := forms.NewRecordVerificationConfirm(testApp, authCollection)
+	form.Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.hL16TVmStHFdHLc4a860bRqJ3sFfzjv0_NRNzwsvsrc"
+	interceptorVerified := authRecord.Verified()
+	testErr := errors.New("test_error")
+
+	interceptor1Called := false
+	interceptor1 := func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		return func(record *models.Record) error {
+			interceptor1Called = true
+			return next(record)
+		}
+	}
+
+	interceptor2Called := false
+	interceptor2 := func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		return func(record *models.Record) error {
+			interceptorVerified = record.Verified()
+			interceptor2Called = true
+			return testErr
+		}
+	}
+
+	_, submitErr := form.Submit(interceptor1, interceptor2)
+	if submitErr != testErr {
+		t.Fatalf("Expected submitError %v, got %v", testErr, submitErr)
+	}
+
+	if !interceptor1Called {
+		t.Fatalf("Expected interceptor1 to be called")
+	}
+
+	if !interceptor2Called {
+		t.Fatalf("Expected interceptor2 to be called")
+	}
+
+	if interceptorVerified == authRecord.Verified() {
+		t.Fatalf("Expected the form model to be filled before calling the interceptors")
 	}
 }

@@ -367,12 +367,12 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 		}
 
 		// check interceptor calls
-		expectInterceptorCall := 1
+		expectInterceptorCalls := 1
 		if len(s.expectedErrors) > 0 {
-			expectInterceptorCall = 0
+			expectInterceptorCalls = 0
 		}
-		if interceptorCalls != expectInterceptorCall {
-			t.Errorf("[%s] Expected interceptor to be called %d, got %d", s.testName, expectInterceptorCall, interceptorCalls)
+		if interceptorCalls != expectInterceptorCalls {
+			t.Errorf("[%s] Expected interceptor to be called %d, got %d", s.testName, expectInterceptorCalls, interceptorCalls)
 		}
 
 		// check errors

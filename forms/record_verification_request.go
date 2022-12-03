@@ -59,7 +59,10 @@ func (form *RecordVerificationRequest) Validate() error {
 
 // Submit validates and sends a verification request email
 // to the `form.Email` auth record.
-func (form *RecordVerificationRequest) Submit() error {
+//
+// You can optionally provide a list of InterceptorWithRecordFunc to
+// further modify the form behavior before persisting it.
+func (form *RecordVerificationRequest) Submit(interceptors ...InterceptorWithRecordFunc) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -73,22 +76,26 @@ func (form *RecordVerificationRequest) Submit() error {
 		return err
 	}
 
-	if record.GetBool(schema.FieldNameVerified) {
-		return nil // already verified
+	if !record.Verified() {
+		now := time.Now().UTC()
+		lastVerificationSentAt := record.LastVerificationSentAt().Time()
+		if (now.Sub(lastVerificationSentAt)).Seconds() < form.resendThreshold {
+			return errors.New("A verification email was already sent.")
+		}
+
+		// update last sent timestamp
+		record.SetLastVerificationSentAt(types.NowDateTime())
 	}
 
-	now := time.Now().UTC()
-	lastVerificationSentAt := record.LastVerificationSentAt().Time()
-	if (now.Sub(lastVerificationSentAt)).Seconds() < form.resendThreshold {
-		return errors.New("A verification email was already sent.")
-	}
+	return runInterceptorsWithRecord(record, func(m *models.Record) error {
+		if m.Verified() {
+			return nil // already verified
+		}
 
-	if err := mails.SendRecordVerification(form.app, record); err != nil {
-		return err
-	}
+		if err := mails.SendRecordVerification(form.app, m); err != nil {
+			return err
+		}
 
-	// update last sent timestamp
-	record.Set(schema.FieldNameLastVerificationSentAt, types.NowDateTime())
-
-	return form.dao.SaveRecord(record)
+		return form.dao.SaveRecord(m)
+	}, interceptors...)
 }

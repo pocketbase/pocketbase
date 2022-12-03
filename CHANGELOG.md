@@ -11,6 +11,18 @@
   app.OnRealtimeDisconnectRequest()
   app.OnRealtimeBeforeMessageSend()
   app.OnRealtimeAfterMessageSend()
+  app.OnRecordBeforeRequestPasswordResetRequest()
+  app.OnRecordAfterRequestPasswordResetRequest()
+  app.OnRecordBeforeConfirmPasswordResetRequest()
+  app.OnRecordAfterConfirmPasswordResetRequest()
+  app.OnRecordBeforeRequestVerificationRequest()
+  app.OnRecordAfterRequestVerificationRequest()
+  app.OnRecordBeforeConfirmVerificationRequest()
+  app.OnRecordAfterConfirmVerificationRequest()
+  app.OnRecordBeforeRequestEmailChangeRequest()
+  app.OnRecordAfterRequestEmailChangeRequest()
+  app.OnRecordBeforeConfirmEmailChangeRequest()
+  app.OnRecordAfterConfirmEmailChangeRequest()
   ```
 
 - Refactored the `migrate` command to support **external JavaScript migration files** using an embedded JS interpreter ([goja](https://github.com/dop251/goja)).

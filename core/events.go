@@ -99,7 +99,7 @@ type SettingsUpdateEvent struct {
 }
 
 // -------------------------------------------------------------------
-// Record API events data
+// Record CRUD API events data
 // -------------------------------------------------------------------
 
 type RecordsListEvent struct {
@@ -127,6 +127,59 @@ type RecordUpdateEvent struct {
 type RecordDeleteEvent struct {
 	HttpContext echo.Context
 	Record      *models.Record
+}
+
+// -------------------------------------------------------------------
+// Auth Record API events data
+// -------------------------------------------------------------------
+
+type RecordAuthEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+	Token       string
+	Meta        any
+}
+
+type RecordRequestPasswordResetEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+}
+
+type RecordConfirmPasswordResetEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+}
+
+type RecordRequestVerificationEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+}
+
+type RecordConfirmVerificationEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+}
+
+type RecordRequestEmailChangeEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+}
+
+type RecordConfirmEmailChangeEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+}
+
+type RecordListExternalAuthsEvent struct {
+	HttpContext   echo.Context
+	Record        *models.Record
+	ExternalAuths []*models.ExternalAuth
+}
+
+type RecordUnlinkExternalAuthEvent struct {
+	HttpContext  echo.Context
+	Record       *models.Record
+	ExternalAuth *models.ExternalAuth
 }
 
 // -------------------------------------------------------------------
@@ -163,29 +216,6 @@ type AdminAuthEvent struct {
 	HttpContext echo.Context
 	Admin       *models.Admin
 	Token       string
-}
-
-// -------------------------------------------------------------------
-// Auth Record API events data
-// -------------------------------------------------------------------
-
-type RecordAuthEvent struct {
-	HttpContext echo.Context
-	Record      *models.Record
-	Token       string
-	Meta        any
-}
-
-type RecordListExternalAuthsEvent struct {
-	HttpContext   echo.Context
-	Record        *models.Record
-	ExternalAuths []*models.ExternalAuth
-}
-
-type RecordUnlinkExternalAuthEvent struct {
-	HttpContext  echo.Context
-	Record       *models.Record
-	ExternalAuth *models.ExternalAuth
 }
 
 // -------------------------------------------------------------------
