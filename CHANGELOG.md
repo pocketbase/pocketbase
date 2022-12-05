@@ -1,5 +1,9 @@
 ## (WIP) v0.9.0
 
+- Fixed concurrent multi-relation cascade update/delete ([#1138](https://github.com/pocketbase/pocketbase/issues/1138)).
+
+- Added the raw OAuth2 user data (`meta.rawUser`) and OAuth2 access token (`meta.accessToken`) to the auth response ([#654](https://github.com/pocketbase/pocketbase/discussions/654)).
+
 - `BaseModel.UnmarkAsNew()` method was renamed to `BaseModel.MarkAsNotNew()`.
   Additionally, to simplify the insert model queries with custom IDs, it is no longer required to call `MarkAsNew()` for manually initialized models with set ID since now this is the default state.
   When the model is populated with values from the database (eg. after row `Scan`) it will be marked automatically as "not new".
@@ -27,6 +31,25 @@
   app.OnRecordAfterRequestEmailChangeRequest()
   app.OnRecordBeforeConfirmEmailChangeRequest()
   app.OnRecordAfterConfirmEmailChangeRequest()
+  ```
+
+- The original uploaded file name is now stored as metadata under the `original_filename` key. It could be accessed via:
+  ```go
+  fs, _ := app.NewFilesystem()
+  defer fs.Close()
+
+  attrs, _ := fs.Attributes(fikeKey)
+  attrs.Metadata["original_name"]
+  ```
+
+- Added support for `Partial/Range` file requests ([#1125](https://github.com/pocketbase/pocketbase/issues/1125)).
+  This is a minor breaking change if you are using `filesystem.Serve` (eg. as part of a custom `OnFileDownloadRequest` hook):
+  ```go
+  // old
+  filesystem.Serve(res, e.ServedPath, e.ServedName)
+
+  // new
+  filesystem.Serve(res, req, e.ServedPath, e.ServedName)
   ```
 
 - Refactored the `migrate` command to support **external JavaScript migration files** using an embedded JS interpreter ([goja](https://github.com/dop251/goja)).
@@ -78,57 +101,43 @@
   ```
 
 - Added new Dao helpers to make it easier fetching and updating the app settings from a migration:
-    ```go
-    dao.FindSettings([optEncryptionKey])
-    dao.SaveSettings(newSettings, [optEncryptionKey])
-    ```
-
-- Moved `core.Settings` to `models/settings.Settings`:
-    ```
-    core.Settings{}           -> settings.Settings{}
-    core.NewSettings()        -> settings.New()
-    core.MetaConfig{}         -> settings.MetaConfig{}
-    core.LogsConfig{}         -> settings.LogsConfig{}
-    core.SmtpConfig{}         -> settings.SmtpConfig{}
-    core.S3Config{}           -> settings.S3Config{}
-    core.TokenConfig{}        -> settings.TokenConfig{}
-    core.AuthProviderConfig{} -> settings.AuthProviderConfig{}
-    ```
-
-- Changed the `mailer.Mailer` interface (**minor breaking if you are sending custom emails**):
-    ```go
-    // Old:
-    app.NewMailClient().Send(from, to, subject, html, attachments?)
-
-    // New:
-    app.NewMailClient().Send(&mailer.Message{
-      From: from,
-      To: to,
-      Subject: subject,
-      HTML: html,
-      Attachments: attachments,
-      // new configurable fields
-      Bcc: []string{"bcc1@example.com", "bcc2@example.com"},
-      Cc: []string{"cc1@example.com", "cc2@example.com"},
-      Headers: map[string]string{"Custom-Header": "test"},
-      Text: "custom plain text version",
-    })
-    ```
-    The new `*mailer.Message` struct is also now a member of the `MailerRecordEvent` and `MailerAdminEvent` events.
-
-- Added support for `Partial/Range` file requests ([#1125](https://github.com/pocketbase/pocketbase/issues/1125)).
-  This is a minor breaking change if you are using `filesystem.Serve` (eg. as part of a custom `OnFileDownloadRequest` hook):
   ```go
-  // old
-  filesystem.Serve(res, e.ServedPath, e.ServedName)
-
-  // new
-  filesystem.Serve(res, req, e.ServedPath, e.ServedName)
+  dao.FindSettings([optEncryptionKey])
+  dao.SaveSettings(newSettings, [optEncryptionKey])
   ```
 
-- Fixed concurrent multi-relation cascade update/delete ([#1138](https://github.com/pocketbase/pocketbase/issues/1138)).
+- Moved `core.Settings` to `models/settings.Settings`:
+  ```
+  core.Settings{}           -> settings.Settings{}
+  core.NewSettings()        -> settings.New()
+  core.MetaConfig{}         -> settings.MetaConfig{}
+  core.LogsConfig{}         -> settings.LogsConfig{}
+  core.SmtpConfig{}         -> settings.SmtpConfig{}
+  core.S3Config{}           -> settings.S3Config{}
+  core.TokenConfig{}        -> settings.TokenConfig{}
+  core.AuthProviderConfig{} -> settings.AuthProviderConfig{}
+  ```
 
-- Added the raw OAuth2 user data (`meta.rawUser`) and OAuth2 access token (`meta.accessToken`) to the auth response ([#654](https://github.com/pocketbase/pocketbase/discussions/654)).
+- Changed the `mailer.Mailer` interface (**minor breaking if you are sending custom emails**):
+  ```go
+  // Old:
+  app.NewMailClient().Send(from, to, subject, html, attachments?)
+
+  // New:
+  app.NewMailClient().Send(&mailer.Message{
+    From: from,
+    To: to,
+    Subject: subject,
+    HTML: html,
+    Attachments: attachments,
+    // new configurable fields
+    Bcc: []string{"bcc1@example.com", "bcc2@example.com"},
+    Cc: []string{"cc1@example.com", "cc2@example.com"},
+    Headers: map[string]string{"Custom-Header": "test"},
+    Text: "custom plain text version",
+  })
+  ```
+  The new `*mailer.Message` struct is also now a member of the `MailerRecordEvent` and `MailerAdminEvent` events.
 
 
 ## v0.8.0
