@@ -133,8 +133,17 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 	// rewind
 	f.Seek(0, io.SeekStart)
 
+	originalName := fh.Filename
+	if len(originalName) > 255 {
+		// keep only the first 255 chars as a very rudimentary measure
+		// to prevent the metadata to grow too big in size
+		originalName = originalName[:255]
+	}
 	opts := &blob.WriterOptions{
 		ContentType: mt.String(),
+		Metadata: map[string]string{
+			"original_filename": fh.Filename,
+		},
 	}
 
 	w, err := s.bucket.NewWriter(s.ctx, fileKey, opts)

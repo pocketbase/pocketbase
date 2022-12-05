@@ -162,13 +162,23 @@ func TestFileSystemUploadMultipart(t *testing.T) {
 	}
 	defer fs.Close()
 
-	uploadErr := fs.UploadMultipart(fh, "newdir/newkey.txt")
+	fileKey := "newdir/newkey.txt"
+
+	uploadErr := fs.UploadMultipart(fh, fileKey)
 	if uploadErr != nil {
 		t.Fatal(uploadErr)
 	}
 
-	if exists, _ := fs.Exists("newdir/newkey.txt"); !exists {
+	if exists, _ := fs.Exists(fileKey); !exists {
 		t.Fatalf("Expected newdir/newkey.txt to exist")
+	}
+
+	attrs, err := fs.Attributes(fileKey)
+	if err != nil {
+		t.Fatalf("Failed to fetch file attributes: %v", err)
+	}
+	if name, ok := attrs.Metadata["original_filename"]; !ok || name != "test" {
+		t.Fatalf("Expected original_filename to be %q, got %q", "test", name)
 	}
 }
 
