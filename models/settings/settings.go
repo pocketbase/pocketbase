@@ -30,7 +30,7 @@ type Settings struct {
 	RecordEmailChangeToken   TokenConfig `form:"recordEmailChangeToken" json:"recordEmailChangeToken"`
 	RecordVerificationToken  TokenConfig `form:"recordVerificationToken" json:"recordVerificationToken"`
 
-	// Deprecated: Will be removed in v0.9!
+	// Deprecated: Will be removed in v0.9+
 	EmailAuth EmailAuthConfig `form:"emailAuth" json:"emailAuth"`
 
 	GoogleAuth    AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
@@ -476,7 +476,7 @@ func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 
 // -------------------------------------------------------------------
 
-// Deprecated: Will be removed in v0.9!
+// Deprecated: Will be removed in v0.9+
 type EmailAuthConfig struct {
 	Enabled           bool     `form:"enabled" json:"enabled"`
 	ExceptDomains     []string `form:"exceptDomains" json:"exceptDomains"`
@@ -484,7 +484,7 @@ type EmailAuthConfig struct {
 	MinPasswordLength int      `form:"minPasswordLength" json:"minPasswordLength"`
 }
 
-// Deprecated: Will be removed in v0.9!
+// Deprecated: Will be removed in v0.9+
 func (c EmailAuthConfig) Validate() error {
 	return nil
 }

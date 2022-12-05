@@ -1,4 +1,4 @@
-## (WIP) v0.9.0
+## v0.9.0
 
 - Fixed concurrent multi-relation cascade update/delete ([#1138](https://github.com/pocketbase/pocketbase/issues/1138)).
 
@@ -100,7 +100,7 @@
   })
   ```
 
-- Added new Dao helpers to make it easier fetching and updating the app settings from a migration:
+- Added new `Dao` helpers to make it easier fetching and updating the app settings from a migration:
   ```go
   dao.FindSettings([optEncryptionKey])
   dao.SaveSettings(newSettings, [optEncryptionKey])
@@ -138,6 +138,8 @@
   })
   ```
   The new `*mailer.Message` struct is also now a member of the `MailerRecordEvent` and `MailerAdminEvent` events.
+
+- Other minor UI fixes and improvements
 
 
 ## v0.8.0
@@ -790,7 +792,7 @@ Please check the individual SDK package changelog and apply the necessary change
     </tr>
   </table>
 
-- Marked as "Deprecated" and will be removed in v0.9:
+- Marked as "Deprecated" and will be removed in v0.9+:
     ```
     core.Settings.EmailAuth{}
     core.EmailAuthConfig{}

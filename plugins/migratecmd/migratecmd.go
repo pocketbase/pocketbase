@@ -1,3 +1,18 @@
+// Package migratecmd adds a new "migrate" command support to a PocketBase instance.
+//
+// It also comes with automigrations support and templates generation
+// (both for JS and GO migration files).
+//
+// Example usage:
+//
+// 	migratecmd.MustRegister(app, app.RootCmd, &migratecmd.Options{
+// 		TemplateLang: migratecmd.TemplateLangJS, // default to migratecmd.TemplateLangGo
+// 		Automigrate:  true,
+// 		Dir:          "migrations_dir_path", // optional template migrations path; default to "pb_migrations" (for JS) and "migrations" (for Go)
+// 	})
+//
+// 	Note: To allow running JS migrations you'll need to enable first
+// 	[jsvm.MustRegisterMigrations].
 package migratecmd
 
 import (

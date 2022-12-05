@@ -1,3 +1,13 @@
+// Package jsvm implements optional utilities for binding a JS goja runtime
+// to the PocketBase instance (loading migrations, attaching to app hooks, etc.).
+//
+// Currently it provides the following plugins:
+//
+// 1. JS Migrations loader:
+//
+// 	jsvm.MustRegisterMigrations(app, &jsvm.MigrationsOptions{
+// 		Dir: "custom_js_migrations_dir_path", // default to "pb_data/../pb_migrations"
+// 	})
 package jsvm
 
 import (

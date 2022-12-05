@@ -78,7 +78,7 @@ const (
 	FieldTypeFile     string = "file"
 	FieldTypeRelation string = "relation"
 
-	// Deprecated: Will be removed in v0.9!
+	// Deprecated: Will be removed in v0.9+
 	FieldTypeUser string = "user"
 )
 
@@ -235,7 +235,7 @@ func (f *SchemaField) InitOptions() error {
 	case FieldTypeRelation:
 		options = &RelationOptions{}
 
-	// Deprecated: Will be removed in v0.9!
+	// Deprecated: Will be removed in v0.9+
 	case FieldTypeUser:
 		options = &UserOptions{}
 
@@ -515,13 +515,13 @@ func (o RelationOptions) Validate() error {
 
 // -------------------------------------------------------------------
 
-// Deprecated: Will be removed in v0.9!
+// Deprecated: Will be removed in v0.9+
 type UserOptions struct {
 	MaxSelect     int  `form:"maxSelect" json:"maxSelect"`
 	CascadeDelete bool `form:"cascadeDelete" json:"cascadeDelete"`
 }
 
-// Deprecated: Will be removed in v0.9!
+// Deprecated: Will be removed in v0.9+
 func (o UserOptions) Validate() error {
 	return nil
 }

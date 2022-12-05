@@ -112,7 +112,9 @@ func (m *Record) OriginalCopy() *Record {
 	newRecord := NewRecord(m.collection)
 	newRecord.Load(m.originalData)
 
-	if !m.IsNew() {
+	if m.IsNew() {
+		newRecord.MarkAsNew()
+	} else {
 		newRecord.MarkAsNotNew()
 	}
 

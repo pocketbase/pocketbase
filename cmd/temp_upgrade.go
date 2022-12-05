@@ -18,7 +18,7 @@ import (
 
 // Temporary console command to update the pb_data structure to be compatible with the v0.8.0 changes.
 //
-// NB! It will be removed in v0.9.0!
+// NB! It will be removed in v0.9+
 func NewTempUpgradeCommand(app core.App) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "upgrade",
