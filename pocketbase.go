@@ -83,7 +83,7 @@ func NewWithConfig(config Config) *PocketBase {
 
 	pb := &PocketBase{
 		RootCmd: &cobra.Command{
-			Use:     "pocketbase",
+			Use:     filepath.Base(os.Args[0]),
 			Short:   "PocketBase CLI",
 			Version: Version,
 			FParseErrWhitelist: cobra.FParseErrWhitelist{
