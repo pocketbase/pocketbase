@@ -103,6 +103,7 @@ func (form *CollectionsImport) beforeRecordsSync(txDao *daos.Dao, mappedNew, map
 		if upsertModel == nil {
 			upsertModel = collection
 		}
+		upsertModel.MarkAsNotNew()
 
 		upsertForm := NewCollectionUpsert(form.app, upsertModel)
 		upsertForm.SetDao(txDao)

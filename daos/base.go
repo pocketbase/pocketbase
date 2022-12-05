@@ -239,7 +239,7 @@ func (dao *Dao) create(m models.Model) error {
 	}
 
 	// clears the "new" model flag
-	m.UnmarkAsNew()
+	m.MarkAsNotNew()
 
 	if dao.AfterCreateFunc != nil {
 		dao.AfterCreateFunc(dao, m)

@@ -1,5 +1,9 @@
 ## (WIP) v0.9.0
 
+- `BaseModel.UnmarkAsNew()` method was renamed to `BaseModel.MarkAsNotNew()`.
+  Additionally, to simplify the insert model queries with custom IDs, it is no longer required to call `MarkAsNew()` for manually initialized models with set ID since now this is the default state.
+  When the model is populated with values from the database (eg. after row `Scan`) it will be marked automatically as "not new".
+
 - Added `Record.OriginalCopy()` method that returns a new `Record` copy populated with the initially loaded record data (useful if you want to compare old and new field values).
 
 - Added new event hooks:

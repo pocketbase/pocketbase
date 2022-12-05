@@ -58,15 +58,19 @@ func TestBaseModelIsNew(t *testing.T) {
 	m1 := models.BaseModel{Id: ""}
 	m2 := models.BaseModel{Id: "test"}
 	m3 := models.BaseModel{}
-	m3.MarkAsNew()
+	m3.MarkAsNotNew()
 	m4 := models.BaseModel{Id: "test"}
-	m4.MarkAsNew()
+	m4.MarkAsNotNew()
 	m5 := models.BaseModel{Id: "test"}
 	m5.MarkAsNew()
-	m5.UnmarkAsNew()
-	// check if MarkAsNew will be called on initial RefreshId()
+	m5.MarkAsNotNew()
 	m6 := models.BaseModel{}
 	m6.RefreshId()
+	m7 := models.BaseModel{}
+	m7.MarkAsNotNew()
+	m7.RefreshId()
+	m8 := models.BaseModel{}
+	m8.PostScan()
 
 	scenarios := []struct {
 		model    models.BaseModel
@@ -74,11 +78,13 @@ func TestBaseModelIsNew(t *testing.T) {
 	}{
 		{m0, true},
 		{m1, true},
-		{m2, false},
-		{m3, true},
-		{m4, true},
+		{m2, true},
+		{m3, false},
+		{m4, false},
 		{m5, false},
 		{m6, true},
+		{m7, false},
+		{m8, false},
 	}
 
 	for i, s := range scenarios {

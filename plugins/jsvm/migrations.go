@@ -65,7 +65,7 @@ func RegisterMigrations(app core.App, options *MigrationsOptions) error {
 	registry := new(require.Registry) // this can be shared by multiple runtimes
 
 	for file, content := range files {
-		vm := NewBaseVM(l.app)
+		vm := NewBaseVM()
 		registry.Enable(vm)
 		console.Enable(vm)
 

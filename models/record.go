@@ -79,6 +79,7 @@ func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) 
 	record := NewRecord(collection)
 
 	record.Load(resultMap)
+	record.PostScan()
 
 	return record
 }
@@ -110,6 +111,10 @@ func (m *Record) Collection() *Collection {
 func (m *Record) OriginalCopy() *Record {
 	newRecord := NewRecord(m.collection)
 	newRecord.Load(m.originalData)
+
+	if !m.IsNew() {
+		newRecord.MarkAsNotNew()
+	}
 
 	return newRecord
 }

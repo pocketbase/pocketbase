@@ -9,24 +9,22 @@ import (
 	"github.com/dop251/goja"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
-	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 )
 
-func NewBaseVM(app core.App) *goja.Runtime {
+func NewBaseVM() *goja.Runtime {
 	vm := goja.New()
-	vm.SetFieldNameMapper(fieldMapper{})
-	vm.Set("$app", app)
+	vm.SetFieldNameMapper(FieldMapper{})
 
-	baseBind(vm)
-	dbxBind(vm)
+	baseBinds(vm)
+	dbxBinds(vm)
 
 	return vm
 }
 
-func baseBind(vm *goja.Runtime) {
+func baseBinds(vm *goja.Runtime) {
 	vm.Set("unmarshal", func(src map[string]any, dest any) (any, error) {
 		raw, err := json.Marshal(src)
 		if err != nil {
@@ -40,39 +38,46 @@ func baseBind(vm *goja.Runtime) {
 		return dest, nil
 	})
 
-	vm.Set("Collection", func(call goja.ConstructorCall) *goja.Object {
-		instance := &models.Collection{}
+	vm.Set("Record", func(call goja.ConstructorCall) *goja.Object {
+		var instance *models.Record
+
+		collection, ok := call.Argument(0).Export().(*models.Collection)
+		if ok {
+			instance = models.NewRecord(collection)
+			data, ok := call.Argument(1).Export().(map[string]any)
+			if ok {
+				if raw, err := json.Marshal(data); err == nil {
+					json.Unmarshal(raw, instance)
+				}
+			}
+		} else {
+			instance = &models.Record{}
+		}
+
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
+
 		return instanceValue
 	})
 
-	vm.Set("Record", func(call goja.ConstructorCall) *goja.Object {
-		instance := &models.Record{}
-		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
-		return instanceValue
+	vm.Set("Collection", func(call goja.ConstructorCall) *goja.Object {
+		instance := &models.Collection{}
+		return defaultConstructor(vm, call, instance)
 	})
 
 	vm.Set("Admin", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Admin{}
-		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
-		return instanceValue
+		return defaultConstructor(vm, call, instance)
 	})
 
 	vm.Set("Schema", func(call goja.ConstructorCall) *goja.Object {
 		instance := &schema.Schema{}
-		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
-		return instanceValue
+		return defaultConstructor(vm, call, instance)
 	})
 
 	vm.Set("SchemaField", func(call goja.ConstructorCall) *goja.Object {
 		instance := &schema.SchemaField{}
-		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
-		return instanceValue
+		return defaultConstructor(vm, call, instance)
 	})
 
 	vm.Set("Dao", func(call goja.ConstructorCall) *goja.Object {
@@ -84,11 +89,25 @@ func baseBind(vm *goja.Runtime) {
 		instance := daos.New(db)
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
+
 		return instanceValue
 	})
 }
 
-func dbxBind(vm *goja.Runtime) {
+func defaultConstructor(vm *goja.Runtime, call goja.ConstructorCall, instance any) *goja.Object {
+	if data := call.Argument(0).Export(); data != nil {
+		if raw, err := json.Marshal(data); err == nil {
+			json.Unmarshal(raw, instance)
+		}
+	}
+
+	instanceValue := vm.ToValue(instance).(*goja.Object)
+	instanceValue.SetPrototype(call.This.Prototype())
+
+	return instanceValue
+}
+
+func dbxBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$dbx", obj)
 
@@ -141,27 +160,27 @@ func apisBind(vm *goja.Runtime) {
 	obj.Set("enrichRecords", apis.EnrichRecords)
 }
 
-// fieldMapper provides custom mapping between Go and JavaScript property names.
+// FieldMapper provides custom mapping between Go and JavaScript property names.
 //
 // It is similar to the builtin "uncapFieldNameMapper" but also converts
 // all uppercase identifiers to their lowercase equivalent (eg. "GET" -> "get").
-type fieldMapper struct {
+type FieldMapper struct {
 }
 
 // FieldName implements the [FieldNameMapper.FieldName] interface method.
-func (u fieldMapper) FieldName(_ reflect.Type, f reflect.StructField) string {
+func (u FieldMapper) FieldName(_ reflect.Type, f reflect.StructField) string {
 	return convertGoToJSName(f.Name)
 }
 
 // MethodName implements the [FieldNameMapper.MethodName] interface method.
-func (u fieldMapper) MethodName(_ reflect.Type, m reflect.Method) string {
+func (u FieldMapper) MethodName(_ reflect.Type, m reflect.Method) string {
 	return convertGoToJSName(m.Name)
 }
 
 func convertGoToJSName(name string) string {
 	allUppercase := true
 	for _, c := range name {
-		if !unicode.IsUpper(c) {
+		if c != '_' && !unicode.IsUpper(c) {
 			allUppercase = false
 			break
 		}

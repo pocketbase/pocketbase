@@ -17,7 +17,7 @@ func TestFindUploadedFiles(t *testing.T) {
 		filename        string
 		expectedPattern string
 	}{
-		{"ab.png", `^ab_\w{10}_\w{10}\.png$`},
+		{"ab.png", `^ab\w{10}_\w{10}\.png$`},
 		{"test", `^test_\w{10}\.txt$`},
 		{"a b c d!@$.j!@$pg", `^a_b_c_d_\w{10}\.jpg$`},
 		{strings.Repeat("a", 150), `^a{100}_\w{10}\.txt$`},

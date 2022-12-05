@@ -31,7 +31,7 @@ type Model interface {
 	TableName() string
 	IsNew() bool
 	MarkAsNew()
-	UnmarkAsNew()
+	MarkAsNotNew()
 	HasId() bool
 	GetId() string
 	SetId(id string)
@@ -48,7 +48,7 @@ type Model interface {
 
 // BaseModel defines common fields and methods used by all other models.
 type BaseModel struct {
-	isNewFlag bool
+	isNotNew bool
 
 	Id      string         `db:"id" json:"id"`
 	Created types.DateTime `db:"created" json:"created"`
@@ -70,20 +70,20 @@ func (m *BaseModel) SetId(id string) {
 	m.Id = id
 }
 
-// MarkAsNew sets the model isNewFlag enforcing [m.IsNew()] to be true.
+// MarkAsNew marks the model as "new" (aka. enforces m.IsNew() to be true).
 func (m *BaseModel) MarkAsNew() {
-	m.isNewFlag = true
+	m.isNotNew = false
 }
 
-// UnmarkAsNew resets the model isNewFlag.
-func (m *BaseModel) UnmarkAsNew() {
-	m.isNewFlag = false
+// MarkAsNotNew marks the model as "not new" (aka. enforces m.IsNew() to be false)
+func (m *BaseModel) MarkAsNotNew() {
+	m.isNotNew = true
 }
 
 // IsNew indicates what type of db query (insert or update)
 // should be used with the model instance.
 func (m *BaseModel) IsNew() bool {
-	return m.isNewFlag || !m.HasId()
+	return !m.isNotNew
 }
 
 // GetCreated returns the model Created datetime.
@@ -100,9 +100,6 @@ func (m *BaseModel) GetUpdated() types.DateTime {
 //
 // The generated id is a cryptographically random 15 characters length string.
 func (m *BaseModel) RefreshId() {
-	if m.Id == "" { // no previous id
-		m.MarkAsNew()
-	}
 	m.Id = security.RandomStringWithAlphabet(DefaultIdLength, DefaultIdAlphabet)
 }
 
@@ -114,4 +111,12 @@ func (m *BaseModel) RefreshCreated() {
 // RefreshUpdated updates the model Updated field with the current datetime.
 func (m *BaseModel) RefreshUpdated() {
 	m.Updated = types.NowDateTime()
+}
+
+// PostScan implements the [dbx.PostScanner] interface.
+//
+// It is executed right after the model was populated with the db row values.
+func (m *BaseModel) PostScan() error {
+	m.MarkAsNotNew()
+	return nil
 }

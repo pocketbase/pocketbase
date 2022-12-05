@@ -195,7 +195,14 @@ func (s *Schema) UnmarshalJSON(data []byte) error {
 		s.AddField(f)
 	}
 
-	return s.InitFieldsOptions()
+	for _, field := range s.fields {
+		if err := field.InitOptions(); err != nil {
+			// ignore the error and remove the invalid field
+			s.RemoveField(field.Id)
+		}
+	}
+
+	return nil
 }
 
 // Value implements the [driver.Valuer] interface.

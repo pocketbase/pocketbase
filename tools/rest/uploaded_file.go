@@ -77,7 +77,7 @@ func FindUploadedFiles(r *http.Request, key string) ([]*UploadedFile, error) {
 		sanitizedName := inflector.Snakecase(originalName)
 		if length := len(sanitizedName); length < 3 {
 			// the name is too short so we concatenate an additional random part
-			sanitizedName += ("_" + security.RandomString(10))
+			sanitizedName += security.RandomString(10)
 		} else if length > 100 {
 			// keep only the first 100 characters (it is multibyte safe after Snakecase)
 			sanitizedName = sanitizedName[:100]

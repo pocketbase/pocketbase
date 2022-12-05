@@ -308,70 +308,70 @@ type App interface {
 	// record data and token.
 	OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent]
 
-	// OnRecordBeforeRequestPasswordResetRequest hook is triggered before each API Record
-	// request password reset request (after request data load and before sending the reset email).
+	// OnRecordBeforeRequestPasswordResetRequest hook is triggered before each Record
+	// request password reset API request (after request data load and before sending the reset email).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different password reset behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeRequestPasswordResetRequest() *hook.Hook[*RecordRequestPasswordResetEvent]
 
 	// OnRecordAfterRequestPasswordResetRequest hook is triggered after each
-	// successful API request password reset request.
+	// successful request password reset API request.
 	OnRecordAfterRequestPasswordResetRequest() *hook.Hook[*RecordRequestPasswordResetEvent]
 
-	// OnRecordBeforeConfirmPasswordResetRequest hook is triggered before each API Record
-	// confirm password reset request (after request data load and before persistence).
+	// OnRecordBeforeConfirmPasswordResetRequest hook is triggered before each Record
+	// confirm password reset API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeConfirmPasswordResetRequest() *hook.Hook[*RecordConfirmPasswordResetEvent]
 
 	// OnRecordAfterConfirmPasswordResetRequest hook is triggered after each
-	// successful API confirm password reset request.
+	// successful confirm password reset API request.
 	OnRecordAfterConfirmPasswordResetRequest() *hook.Hook[*RecordConfirmPasswordResetEvent]
 
-	// OnRecordBeforeRequestVerificationRequest hook is triggered before each API Record
-	// request verification request (after request data load and before sending the verification email).
+	// OnRecordBeforeRequestVerificationRequest hook is triggered before each Record
+	// request verification API request (after request data load and before sending the verification email).
 	//
-	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// Could be used to additionally validate the loaded request data or implement
+	// completely different verification behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeRequestVerificationRequest() *hook.Hook[*RecordRequestVerificationEvent]
 
 	// OnRecordAfterRequestVerificationRequest hook is triggered after each
-	// successful API request verification request.
+	// successful request verification API request.
 	OnRecordAfterRequestVerificationRequest() *hook.Hook[*RecordRequestVerificationEvent]
 
-	// OnRecordBeforeConfirmVerificationRequest hook is triggered before each API Record
-	// confirm verification request (after request data load and before persistence).
+	// OnRecordBeforeConfirmVerificationRequest hook is triggered before each Record
+	// confirm verification API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeConfirmVerificationRequest() *hook.Hook[*RecordConfirmVerificationEvent]
 
 	// OnRecordAfterConfirmVerificationRequest hook is triggered after each
-	// successful API confirm verification request.
+	// successful confirm verification API request.
 	OnRecordAfterConfirmVerificationRequest() *hook.Hook[*RecordConfirmVerificationEvent]
 
-	// OnRecordBeforeRequestEmailChangeRequest hook is triggered before each API Record request email change request
-	// (after request data load and before sending the email change confirmation email).
+	// OnRecordBeforeRequestEmailChangeRequest hook is triggered before each Record request email change API request
+	// (after request data load and before sending the email link to confirm the change).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different request email change behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeRequestEmailChangeRequest() *hook.Hook[*RecordRequestEmailChangeEvent]
 
 	// OnRecordAfterRequestEmailChangeRequest hook is triggered after each
-	// successful API request email change request.
+	// successful request email change API request.
 	OnRecordAfterRequestEmailChangeRequest() *hook.Hook[*RecordRequestEmailChangeEvent]
 
-	// OnRecordBeforeConfirmEmailChangeRequest hook is triggered before each API Record
-	// confirm email change request (after request data load and before persistence).
+	// OnRecordBeforeConfirmEmailChangeRequest hook is triggered before each Record
+	// confirm email change API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different persistence behavior (returning [hook.StopPropagation]).
 	OnRecordBeforeConfirmEmailChangeRequest() *hook.Hook[*RecordConfirmEmailChangeEvent]
 
 	// OnRecordAfterConfirmEmailChangeRequest hook is triggered after each
-	// successful API confirm email change request.
+	// successful confirm email change API request.
 	OnRecordAfterConfirmEmailChangeRequest() *hook.Hook[*RecordConfirmEmailChangeEvent]
 
 	// OnRecordListExternalAuthsRequest hook is triggered on each API record external auths list request.

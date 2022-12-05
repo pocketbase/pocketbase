@@ -43,7 +43,7 @@ func (p *plugin) jsSnapshotTemplate(collections []*models.Collection) (string, e
 	const template = `migrate((db) => {
   const snapshot = %s;
 
-  const collections = snapshot.map((item) => unmarshal(item, new Collection()));
+  const collections = snapshot.map((item) => new Collection(item));
 
   return Dao(db).importCollections(collections, true, null);
 }, (db) => {
@@ -61,7 +61,7 @@ func (p *plugin) jsCreateTemplate(collection *models.Collection) (string, error)
 	}
 
 	const template = `migrate((db) => {
-  const collection = unmarshal(%s, new Collection());
+  const collection = new Collection(%s);
 
   return Dao(db).saveCollection(collection);
 }, (db) => {
@@ -87,7 +87,7 @@ func (p *plugin) jsDeleteTemplate(collection *models.Collection) (string, error)
 
   return dao.deleteCollection(collection);
 }, (db) => {
-  const collection = unmarshal(%s, new Collection());
+  const collection = new Collection(%s);
 
   return Dao(db).saveCollection(collection);
 })
@@ -222,7 +222,7 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 		upParts = append(upParts, fmt.Sprintf("%s.schema.removeField(%q)\n", varName, oldField.Id))
 
 		downParts = append(downParts, "// add")
-		downParts = append(downParts, fmt.Sprintf("%s.schema.addField(unmarshal(%s, new SchemaField()))\n", varName, rawOldField))
+		downParts = append(downParts, fmt.Sprintf("%s.schema.addField(new SchemaField(%s))\n", varName, rawOldField))
 	}
 
 	// created fields
@@ -237,7 +237,7 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 		}
 
 		upParts = append(upParts, "// add")
-		upParts = append(upParts, fmt.Sprintf("%s.schema.addField(unmarshal(%s, new SchemaField()))\n", varName, rawNewField))
+		upParts = append(upParts, fmt.Sprintf("%s.schema.addField(new SchemaField(%s))\n", varName, rawNewField))
 
 		downParts = append(downParts, "// remove")
 		downParts = append(downParts, fmt.Sprintf("%s.schema.removeField(%q)\n", varName, newField.Id))
@@ -265,10 +265,10 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 		}
 
 		upParts = append(upParts, "// update")
-		upParts = append(upParts, fmt.Sprintf("%s.schema.addField(unmarshal(%s, new SchemaField()))\n", varName, rawNewField))
+		upParts = append(upParts, fmt.Sprintf("%s.schema.addField(new SchemaField(%s))\n", varName, rawNewField))
 
 		downParts = append(downParts, "// update")
-		downParts = append(downParts, fmt.Sprintf("%s.schema.addField(unmarshal(%s, new SchemaField()))\n", varName, rawOldField))
+		downParts = append(downParts, fmt.Sprintf("%s.schema.addField(new SchemaField(%s))\n", varName, rawOldField))
 	}
 
 	// -----------------------------------------------------------------

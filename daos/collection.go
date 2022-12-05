@@ -212,6 +212,8 @@ func (dao *Dao) ImportCollections(
 			}
 
 			if existing, ok := mappedExisting[imported.GetId()]; ok {
+				imported.MarkAsNotNew()
+
 				// preserve original created date
 				if !existing.Created.IsZero() {
 					imported.Created = existing.Created

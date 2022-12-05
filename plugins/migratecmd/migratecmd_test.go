@@ -23,7 +23,7 @@ func TestAutomigrateCollectionCreate(t *testing.T) {
 			migratecmd.TemplateLangJS,
 			`
 migrate((db) => {
-  const collection = unmarshal({
+  const collection = new Collection({
     "id": "new_id",
     "created": "2022-01-01 00:00:00.000Z",
     "updated": "2022-01-01 00:00:00.000Z",
@@ -46,7 +46,7 @@ migrate((db) => {
       "onlyEmailDomains": null,
       "requireEmail": false
     }
-  }, new Collection());
+  });
 
   return Dao(db).saveCollection(collection);
 }, (db) => {
@@ -193,7 +193,7 @@ migrate((db) => {
 
   return dao.deleteCollection(collection);
 }, (db) => {
-  const collection = unmarshal({
+  const collection = new Collection({
     "id": "test123",
     "created": "2022-01-01 00:00:00.000Z",
     "updated": "2022-01-01 00:00:00.000Z",
@@ -216,7 +216,7 @@ migrate((db) => {
       "onlyEmailDomains": null,
       "requireEmail": false
     }
-  }, new Collection());
+  });
 
   return Dao(db).saveCollection(collection);
 })
@@ -372,7 +372,7 @@ migrate((db) => {
   collection.schema.removeField("f3_id")
 
   // add
-  collection.schema.addField(unmarshal({
+  collection.schema.addField(new SchemaField({
     "system": false,
     "id": "f4_id",
     "name": "f4_name",
@@ -384,10 +384,10 @@ migrate((db) => {
       "max": null,
       "pattern": "` + "`" + `test backtick` + "`" + `123"
     }
-  }, new SchemaField()))
+  }))
 
   // update
-  collection.schema.addField(unmarshal({
+  collection.schema.addField(new SchemaField({
     "system": false,
     "id": "f2_id",
     "name": "f2_name_new",
@@ -398,7 +398,7 @@ migrate((db) => {
       "min": 10,
       "max": null
     }
-  }, new SchemaField()))
+  }))
 
   return dao.saveCollection(collection)
 }, (db) => {
@@ -421,7 +421,7 @@ migrate((db) => {
   }
 
   // add
-  collection.schema.addField(unmarshal({
+  collection.schema.addField(new SchemaField({
     "system": false,
     "id": "f3_id",
     "name": "f3_name",
@@ -429,13 +429,13 @@ migrate((db) => {
     "required": false,
     "unique": false,
     "options": {}
-  }, new SchemaField()))
+  }))
 
   // remove
   collection.schema.removeField("f4_id")
 
   // update
-  collection.schema.addField(unmarshal({
+  collection.schema.addField(new SchemaField({
     "system": false,
     "id": "f2_id",
     "name": "f2_name",
@@ -446,7 +446,7 @@ migrate((db) => {
       "min": 10,
       "max": null
     }
-  }, new SchemaField()))
+  }))
 
   return dao.saveCollection(collection)
 })

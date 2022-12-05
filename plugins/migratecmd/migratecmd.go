@@ -82,6 +82,15 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 		// when migrations are applied on server start
 		p.app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 			p.refreshCachedCollections()
+
+			cachedCollections, _ := p.getCachedCollections()
+			// create a full initial snapshot, if there are no custom
+			// migrations but there is already at least 1 collection created,
+			// to ensure that the automigrate will work with up-to-date collections data
+			if !p.hasCustomMigrations() && len(cachedCollections) > 1 {
+				p.migrateCollectionsHandler(nil, false)
+			}
+
 			return nil
 		})
 
@@ -114,11 +123,11 @@ func (p *plugin) createCommand() *cobra.Command {
 
 			switch cmd {
 			case "create":
-				if err := p.migrateCreateHandler("", args[1:]); err != nil {
+				if err := p.migrateCreateHandler("", args[1:], true); err != nil {
 					log.Fatal(err)
 				}
 			case "collections":
-				if err := p.migrateCollectionsHandler(args[1:]); err != nil {
+				if err := p.migrateCollectionsHandler(args[1:], true); err != nil {
 					log.Fatal(err)
 				}
 			default:
@@ -137,7 +146,7 @@ func (p *plugin) createCommand() *cobra.Command {
 	return command
 }
 
-func (p *plugin) migrateCreateHandler(template string, args []string) error {
+func (p *plugin) migrateCreateHandler(template string, args []string, interactive bool) error {
 	if len(args) < 1 {
 		return fmt.Errorf("Missing migration file name")
 	}
@@ -150,14 +159,16 @@ func (p *plugin) migrateCreateHandler(template string, args []string) error {
 		fmt.Sprintf("%d_%s.%s", time.Now().Unix(), inflector.Snakecase(name), p.options.TemplateLang),
 	)
 
-	confirm := false
-	prompt := &survey.Confirm{
-		Message: fmt.Sprintf("Do you really want to create migration %q?", resultFilePath),
-	}
-	survey.AskOne(prompt, &confirm)
-	if !confirm {
-		fmt.Println("The command has been cancelled")
-		return nil
+	if interactive {
+		confirm := false
+		prompt := &survey.Confirm{
+			Message: fmt.Sprintf("Do you really want to create migration %q?", resultFilePath),
+		}
+		survey.AskOne(prompt, &confirm)
+		if !confirm {
+			fmt.Println("The command has been cancelled")
+			return nil
+		}
 	}
 
 	// get default create template
@@ -183,11 +194,14 @@ func (p *plugin) migrateCreateHandler(template string, args []string) error {
 		return fmt.Errorf("Failed to save migration file %q: %v\n", resultFilePath, err)
 	}
 
-	fmt.Printf("Successfully created file %q\n", resultFilePath)
+	if interactive {
+		fmt.Printf("Successfully created file %q\n", resultFilePath)
+	}
+
 	return nil
 }
 
-func (p *plugin) migrateCollectionsHandler(args []string) error {
+func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) error {
 	createArgs := []string{"collections_snapshot"}
 	createArgs = append(createArgs, args...)
 
@@ -207,5 +221,5 @@ func (p *plugin) migrateCollectionsHandler(args []string) error {
 		return fmt.Errorf("Failed to resolve template: %v", templateErr)
 	}
 
-	return p.migrateCreateHandler(template, createArgs)
+	return p.migrateCreateHandler(template, createArgs, interactive)
 }
