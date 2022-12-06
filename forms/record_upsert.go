@@ -34,8 +34,8 @@ type RecordUpsert struct {
 	manageAccess bool
 	record       *models.Record
 
-	filesToDelete []string // names list
 	filesToUpload map[string][]*rest.UploadedFile
+	filesToDelete []string // names list
 
 	// base model fields
 	Id string `json:"id"`
@@ -648,26 +648,48 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc) error {
 	}
 
 	return runInterceptors(func() error {
-		return form.dao.RunInTransaction(func(txDao *daos.Dao) error {
-			// persist record model
-			if err := txDao.SaveRecord(form.record); err != nil {
-				return fmt.Errorf("Failed to save the record: %w", err)
+		if !form.record.HasId() {
+			form.record.RefreshId()
+			form.record.MarkAsNew()
+		}
+
+		// upload new files (if any)
+		if err := form.processFilesToUpload(); err != nil {
+			return fmt.Errorf("failed to process the uploaded files: %w", err)
+		}
+
+		// persist the record model
+		if saveErr := form.dao.SaveRecord(form.record); saveErr != nil {
+			// try to cleanup the successfully uploaded files
+			if _, err := form.deleteFilesByNamesList(form.getFilesToUploadNames()); err != nil && form.app.IsDebug() {
+				log.Println(err)
 			}
 
-			// upload new files (if any)
-			if err := form.processFilesToUpload(); err != nil {
-				return fmt.Errorf("Failed to process the upload files: %w", err)
-			}
+			return fmt.Errorf("failed to save the record: %w", saveErr)
+		}
 
-			// delete old files (if any)
-			if err := form.processFilesToDelete(); err != nil { //nolint:staticcheck
-				// for now fail silently to avoid reupload when `form.Submit()`
-				// is called manually (aka. not from an api request)...
-			}
+		// delete old files (if any)
+		//
+		// for now fail silently to avoid reupload when `form.Submit()`
+		// is called manually (aka. not from an api request)...
+		if err := form.processFilesToDelete(); err != nil && form.app.IsDebug() {
+			log.Println(err)
+		}
 
-			return nil
-		})
+		return nil
 	}, interceptors...)
+}
+
+func (form *RecordUpsert) getFilesToUploadNames() []string {
+	names := []string{}
+
+	for fieldKey := range form.filesToUpload {
+		for _, file := range form.filesToUpload[fieldKey] {
+			names = append(names, file.Name())
+		}
+	}
+
+	return names
 }
 
 func (form *RecordUpsert) processFilesToUpload() error {
@@ -676,7 +698,7 @@ func (form *RecordUpsert) processFilesToUpload() error {
 	}
 
 	if !form.record.HasId() {
-		return errors.New("The record is not persisted yet.")
+		return errors.New("the record is not persisted yet")
 	}
 
 	fs, err := form.app.NewFilesystem()
@@ -685,65 +707,75 @@ func (form *RecordUpsert) processFilesToUpload() error {
 	}
 	defer fs.Close()
 
-	var uploadErrors []error
+	var uploadErrors []error // list of upload errors
+	var uploaded []string    // list of uploaded file paths
 
 	for fieldKey := range form.filesToUpload {
-		for i := len(form.filesToUpload[fieldKey]) - 1; i >= 0; i-- {
-			file := form.filesToUpload[fieldKey][i]
+		for i, file := range form.filesToUpload[fieldKey] {
 			path := form.record.BaseFilesPath() + "/" + file.Name()
-
 			if err := fs.UploadMultipart(file.Header(), path); err == nil {
-				// remove the uploaded file from the list
-				form.filesToUpload[fieldKey] = append(form.filesToUpload[fieldKey][:i], form.filesToUpload[fieldKey][i+1:]...)
+				// keep track of the already uploaded file
+				uploaded = append(uploaded, path)
 			} else {
 				// store the upload error
-				uploadErrors = append(uploadErrors, fmt.Errorf("File %d: %v", i, err))
+				uploadErrors = append(uploadErrors, fmt.Errorf("file %d: %v", i, err))
 			}
 		}
 	}
 
 	if len(uploadErrors) > 0 {
-		return fmt.Errorf("Failed to upload all files: %v", uploadErrors)
+		// cleanup - try to delete the successfully uploaded files (if any)
+		form.deleteFilesByNamesList(uploaded)
+
+		return fmt.Errorf("failed to upload all files: %v", uploadErrors)
 	}
 
 	return nil
 }
 
-func (form *RecordUpsert) processFilesToDelete() error {
-	if len(form.filesToDelete) == 0 {
-		return nil // nothing to delete
+func (form *RecordUpsert) processFilesToDelete() (err error) {
+	form.filesToDelete, err = form.deleteFilesByNamesList(form.filesToDelete)
+	return
+}
+
+// deleteFiles deletes a list of record files by their names.
+// Returns the failed/remaining files.
+func (form *RecordUpsert) deleteFilesByNamesList(filenames []string) ([]string, error) {
+	if len(filenames) == 0 {
+		return filenames, nil // nothing to delete
 	}
 
 	if !form.record.HasId() {
-		return errors.New("The record is not persisted yet.")
+		return filenames, errors.New("the record doesn't have a unique ID")
 	}
 
 	fs, err := form.app.NewFilesystem()
 	if err != nil {
-		return err
+		return filenames, err
 	}
 	defer fs.Close()
 
 	var deleteErrors []error
-	for i := len(form.filesToDelete) - 1; i >= 0; i-- {
-		filename := form.filesToDelete[i]
+
+	for i := len(filenames) - 1; i >= 0; i-- {
+		filename := filenames[i]
 		path := form.record.BaseFilesPath() + "/" + filename
 
 		if err := fs.Delete(path); err == nil {
 			// remove the deleted file from the list
-			form.filesToDelete = append(form.filesToDelete[:i], form.filesToDelete[i+1:]...)
+			filenames = append(filenames[:i], filenames[i+1:]...)
+
+			// try to delete the related file thumbs (if any)
+			fs.DeletePrefix(form.record.BaseFilesPath() + "/thumbs_" + filename + "/")
 		} else {
 			// store the delete error
-			deleteErrors = append(deleteErrors, fmt.Errorf("File %d: %v", i, err))
+			deleteErrors = append(deleteErrors, fmt.Errorf("file %d: %v", i, err))
 		}
-
-		// try to delete the related file thumbs (if any)
-		fs.DeletePrefix(form.record.BaseFilesPath() + "/thumbs_" + filename + "/")
 	}
 
 	if len(deleteErrors) > 0 {
-		return fmt.Errorf("Failed to delete all files: %v", deleteErrors)
+		return filenames, fmt.Errorf("failed to delete all files: %v", deleteErrors)
 	}
 
-	return nil
+	return filenames, nil
 }

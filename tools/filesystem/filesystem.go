@@ -176,13 +176,11 @@ func (s *System) DeletePrefix(prefix string) []error {
 	dirsMap := map[string]struct{}{}
 	dirsMap[prefix] = struct{}{}
 
-	opts := blob.ListOptions{
-		Prefix: prefix,
-	}
-
 	// delete all files with the prefix
 	// ---
-	iter := s.bucket.List(&opts)
+	iter := s.bucket.List(&blob.ListOptions{
+		Prefix: prefix,
+	})
 	for {
 		obj, err := iter.Next(s.ctx)
 		if err == io.EOF {

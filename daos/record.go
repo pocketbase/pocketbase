@@ -317,14 +317,14 @@ func (dao *Dao) SuggestUniqueAuthRecordUsername(
 func (dao *Dao) SaveRecord(record *models.Record) error {
 	if record.Collection().IsAuth() {
 		if record.Username() == "" {
-			return errors.New("Unable to save auth record without username.")
+			return errors.New("unable to save auth record without username")
 		}
 
 		// Cross-check that the auth record id is unique for all auth collections.
 		// This is to make sure that the filter `@request.auth.id` always returns a unique id.
 		authCollections, err := dao.FindCollectionsByType(models.CollectionTypeAuth)
 		if err != nil {
-			return fmt.Errorf("Unable to fetch the auth collections for cross-id unique check: %w", err)
+			return fmt.Errorf("unable to fetch the auth collections for cross-id unique check: %w", err)
 		}
 		for _, collection := range authCollections {
 			if record.Collection().Id == collection.Id {
@@ -332,7 +332,7 @@ func (dao *Dao) SaveRecord(record *models.Record) error {
 			}
 			isUnique := dao.IsRecordValueUnique(collection.Id, schema.FieldNameId, record.Id)
 			if !isUnique {
-				return errors.New("The auth record ID must be unique across all auth collections.")
+				return errors.New("the auth record ID must be unique across all auth collections")
 			}
 		}
 	}
