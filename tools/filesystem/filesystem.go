@@ -142,7 +142,7 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 	opts := &blob.WriterOptions{
 		ContentType: mt.String(),
 		Metadata: map[string]string{
-			"original_filename": fh.Filename,
+			"original_filename": originalName,
 		},
 	}
 
