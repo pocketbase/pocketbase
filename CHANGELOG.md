@@ -1,3 +1,12 @@
+## (WIP) v0.9.1
+
+- Moved the record file upload and delete out of the db transaction to minimize the locking times.
+
+- Added `Dao` query semaphore and base fail/retry handling to improve the concurrent writes throughput ([#1187](https://github.com/pocketbase/pocketbase/issues/1187)).
+
+- Updated the GitHub goreleaser action to use go 1.19.4 since it comes with [some security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.19.4+label%3ACherryPickApproved).
+
+
 ## v0.9.0
 
 - Fixed concurrent multi-relation cascade update/delete ([#1138](https://github.com/pocketbase/pocketbase/issues/1138)).

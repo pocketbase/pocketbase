@@ -48,7 +48,7 @@ func (dao *Dao) DB() dbx.Builder {
 // the Dao instance until dao.Continue() is called, effectively making
 // the concurrent requests to perform synchronous db operations.
 //
-// This method should be used only as a last resort as a workaround
+// This method should be used only as a last resort and as a workaround
 // for the SQLITE_BUSY error when mixing read&write in a transaction.
 //
 // Example:
