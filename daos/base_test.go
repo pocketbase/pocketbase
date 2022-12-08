@@ -289,6 +289,170 @@ func TestDaoDelete(t *testing.T) {
 	}
 }
 
+func TestDaoRetryCreate(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	// init mock retry dao
+	retryBeforeCreateHookCalls := 0
+	retryAfterCreateHookCalls := 0
+	retryDao := daos.New(testApp.DB())
+	retryDao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
+		retryBeforeCreateHookCalls++
+		return errors.New("database is locked")
+	}
+	retryDao.AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) {
+		retryAfterCreateHookCalls++
+	}
+
+	model := &models.Admin{Email: "new@example.com"}
+	if err := retryDao.Save(model); err != nil {
+		t.Fatalf("Expected nil after retry, got error: %v", err)
+	}
+
+	// the before hook is expected to be called only once because
+	// it is ignored after the first "database is locked" error
+	if retryBeforeCreateHookCalls != 1 {
+		t.Fatalf("Expected before hook calls to be 1, got %d", retryBeforeCreateHookCalls)
+	}
+
+	if retryAfterCreateHookCalls != 1 {
+		t.Fatalf("Expected after hook calls to be 1, got %d", retryAfterCreateHookCalls)
+	}
+
+	// with non-locking error
+	retryBeforeCreateHookCalls = 0
+	retryAfterCreateHookCalls = 0
+	retryDao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
+		retryBeforeCreateHookCalls++
+		return errors.New("non-locking error")
+	}
+
+	dummy := &models.Admin{Email: "test@example.com"}
+	if err := retryDao.Save(dummy); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	if retryBeforeCreateHookCalls != 1 {
+		t.Fatalf("Expected before hook calls to be 1, got %d", retryBeforeCreateHookCalls)
+	}
+
+	if retryAfterCreateHookCalls != 0 {
+		t.Fatalf("Expected after hook calls to be 0, got %d", retryAfterCreateHookCalls)
+	}
+}
+
+func TestDaoRetryUpdate(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	model, err := testApp.Dao().FindAdminByEmail("test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// init mock retry dao
+	retryBeforeUpdateHookCalls := 0
+	retryAfterUpdateHookCalls := 0
+	retryDao := daos.New(testApp.DB())
+	retryDao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
+		retryBeforeUpdateHookCalls++
+		return errors.New("database is locked")
+	}
+	retryDao.AfterUpdateFunc = func(eventDao *daos.Dao, m models.Model) {
+		retryAfterUpdateHookCalls++
+	}
+
+	if err := retryDao.Save(model); err != nil {
+		t.Fatalf("Expected nil after retry, got error: %v", err)
+	}
+
+	// the before hook is expected to be called only once because
+	// it is ignored after the first "database is locked" error
+	if retryBeforeUpdateHookCalls != 1 {
+		t.Fatalf("Expected before hook calls to be 1, got %d", retryBeforeUpdateHookCalls)
+	}
+
+	if retryAfterUpdateHookCalls != 1 {
+		t.Fatalf("Expected after hook calls to be 1, got %d", retryAfterUpdateHookCalls)
+	}
+
+	// with non-locking error
+	retryBeforeUpdateHookCalls = 0
+	retryAfterUpdateHookCalls = 0
+	retryDao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
+		retryBeforeUpdateHookCalls++
+		return errors.New("non-locking error")
+	}
+
+	if err := retryDao.Save(model); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	if retryBeforeUpdateHookCalls != 1 {
+		t.Fatalf("Expected before hook calls to be 1, got %d", retryBeforeUpdateHookCalls)
+	}
+
+	if retryAfterUpdateHookCalls != 0 {
+		t.Fatalf("Expected after hook calls to be 0, got %d", retryAfterUpdateHookCalls)
+	}
+}
+
+func TestDaoRetryDelete(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	// init mock retry dao
+	retryBeforeDeleteHookCalls := 0
+	retryAfterDeleteHookCalls := 0
+	retryDao := daos.New(testApp.DB())
+	retryDao.BeforeDeleteFunc = func(eventDao *daos.Dao, m models.Model) error {
+		retryBeforeDeleteHookCalls++
+		return errors.New("database is locked")
+	}
+	retryDao.AfterDeleteFunc = func(eventDao *daos.Dao, m models.Model) {
+		retryAfterDeleteHookCalls++
+	}
+
+	model, _ := retryDao.FindAdminByEmail("test@example.com")
+	if err := retryDao.Delete(model); err != nil {
+		t.Fatalf("Expected nil after retry, got error: %v", err)
+	}
+
+	// the before hook is expected to be called only once because
+	// it is ignored after the first "database is locked" error
+	if retryBeforeDeleteHookCalls != 1 {
+		t.Fatalf("Expected before hook calls to be 1, got %d", retryBeforeDeleteHookCalls)
+	}
+
+	if retryAfterDeleteHookCalls != 1 {
+		t.Fatalf("Expected after hook calls to be 1, got %d", retryAfterDeleteHookCalls)
+	}
+
+	// with non-locking error
+	retryBeforeDeleteHookCalls = 0
+	retryAfterDeleteHookCalls = 0
+	retryDao.BeforeDeleteFunc = func(eventDao *daos.Dao, m models.Model) error {
+		retryBeforeDeleteHookCalls++
+		return errors.New("non-locking error")
+	}
+
+	dummy := &models.Admin{}
+	dummy.RefreshId()
+	dummy.MarkAsNotNew()
+	if err := retryDao.Delete(dummy); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	if retryBeforeDeleteHookCalls != 1 {
+		t.Fatalf("Expected before hook calls to be 1, got %d", retryBeforeDeleteHookCalls)
+	}
+
+	if retryAfterDeleteHookCalls != 0 {
+		t.Fatalf("Expected after hook calls to be 0, got %d", retryAfterDeleteHookCalls)
+	}
+}
+
 func TestDaoBeforeHooksError(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()

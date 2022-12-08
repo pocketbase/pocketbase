@@ -415,7 +415,7 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*models
 }
 
 func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, on dbx.Expression) {
-	tableExpr := fmt.Sprintf("%s %s", tableName, tableAlias)
+	tableExpr := (tableName + " " + tableAlias)
 
 	join := join{
 		id:    tableAlias,

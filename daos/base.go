@@ -4,12 +4,18 @@
 package daos
 
 import (
+	"context"
 	"errors"
-	"fmt"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
+	"golang.org/x/sync/semaphore"
 )
+
+const DefaultMaxFailRetries = 5
 
 // New creates a new Dao instance with the provided db builder.
 func New(db dbx.Builder) *Dao {
@@ -21,7 +27,9 @@ func New(db dbx.Builder) *Dao {
 // Dao handles various db operations.
 // Think of Dao as a repository and service layer in one.
 type Dao struct {
-	db dbx.Builder
+	db  dbx.Builder
+	sem *semaphore.Weighted
+	mux sync.RWMutex
 
 	BeforeCreateFunc func(eventDao *Dao, m models.Model) error
 	AfterCreateFunc  func(eventDao *Dao, m models.Model)
@@ -36,11 +44,51 @@ func (dao *Dao) DB() dbx.Builder {
 	return dao.db
 }
 
+// Block acquires a lock and blocks all other go routines that uses
+// the Dao instance until dao.Continue() is called, effectively making
+// the concurrent requests to perform synchronous db operations.
+//
+// This method should be used only as a last resort as a workaround
+// for the SQLITE_BUSY error when mixing read&write in a transaction.
+//
+// Example:
+//
+// 	func someLongRunningTransaction() error {
+// 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+// 		defer cancel()
+// 		if err := app.Dao().Block(ctx); err != nil {
+// 			return err
+// 		}
+// 		defer app.Dao().Continue()
+//
+//  	return app.Dao().RunInTransaction(func (txDao *daos.Dao) error {
+//  	    // some long running read&write transaction...
+//  	})
+// 	}
+func (dao *Dao) Block(ctx context.Context) error {
+	if dao.sem == nil {
+		dao.mux.Lock()
+		dao.sem = semaphore.NewWeighted(1)
+		dao.mux.Unlock()
+	}
+
+	return dao.sem.Acquire(ctx, 1)
+}
+
+// Continue releases the previously acquired Block() lock.
+func (dao *Dao) Continue() {
+	if dao.sem == nil {
+		return
+	}
+
+	dao.sem.Release(1)
+}
+
 // ModelQuery creates a new query with preset Select and From fields
 // based on the provided model argument.
 func (dao *Dao) ModelQuery(m models.Model) *dbx.SelectQuery {
 	tableName := m.TableName()
-	return dao.db.Select(fmt.Sprintf("{{%s}}.*", tableName)).From(tableName)
+	return dao.db.Select("{{" + tableName + "}}.*").From(tableName)
 }
 
 // FindById finds a single db record with the specified id and
@@ -63,7 +111,17 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 	case *dbx.Tx:
 		// nested transactions are not supported by default
 		// so execute the function within the current transaction
-		return fn(dao)
+
+		// create a new dao with the same hooks to avoid semaphore deadlock when nesting
+		txDao := New(txOrDB)
+		txDao.BeforeCreateFunc = dao.BeforeCreateFunc
+		txDao.BeforeUpdateFunc = dao.BeforeUpdateFunc
+		txDao.BeforeDeleteFunc = dao.BeforeDeleteFunc
+		txDao.AfterCreateFunc = dao.AfterCreateFunc
+		txDao.AfterUpdateFunc = dao.AfterUpdateFunc
+		txDao.AfterDeleteFunc = dao.AfterDeleteFunc
+
+		return fn(txDao)
 	case *dbx.DB:
 		afterCalls := []afterCallGroup{}
 
@@ -131,30 +189,36 @@ func (dao *Dao) Delete(m models.Model) error {
 		return errors.New("ID is not set")
 	}
 
-	if dao.BeforeDeleteFunc != nil {
-		if err := dao.BeforeDeleteFunc(dao, m); err != nil {
+	return dao.failRetry(func(retryDao *Dao) error {
+		if retryDao.BeforeDeleteFunc != nil {
+			if err := retryDao.BeforeDeleteFunc(retryDao, m); err != nil {
+				return err
+			}
+		}
+
+		if err := retryDao.db.Model(m).Delete(); err != nil {
 			return err
 		}
-	}
 
-	if err := dao.db.Model(m).Delete(); err != nil {
-		return err
-	}
+		if retryDao.AfterDeleteFunc != nil {
+			retryDao.AfterDeleteFunc(retryDao, m)
+		}
 
-	if dao.AfterDeleteFunc != nil {
-		dao.AfterDeleteFunc(dao, m)
-	}
-
-	return nil
+		return nil
+	}, DefaultMaxFailRetries)
 }
 
 // Save upserts (update or create if primary key is not set) the provided model.
 func (dao *Dao) Save(m models.Model) error {
 	if m.IsNew() {
-		return dao.create(m)
+		return dao.failRetry(func(retryDao *Dao) error {
+			return retryDao.create(m)
+		}, DefaultMaxFailRetries)
 	}
 
-	return dao.update(m)
+	return dao.failRetry(func(retryDao *Dao) error {
+		return retryDao.update(m)
+	}, DefaultMaxFailRetries)
 }
 
 func (dao *Dao) update(m models.Model) error {
@@ -246,4 +310,36 @@ func (dao *Dao) create(m models.Model) error {
 	}
 
 	return nil
+}
+
+func (dao *Dao) failRetry(op func(retryDao *Dao) error, maxRetries int) error {
+	retryDao := dao
+	attempts := 1
+
+Retry:
+	if attempts == 2 {
+		// assign new Dao without the before hooks to avoid triggering
+		// the already fired before callbacks multiple times
+		retryDao = &Dao{
+			db:              dao.db,
+			AfterCreateFunc: dao.AfterCreateFunc,
+			AfterUpdateFunc: dao.AfterUpdateFunc,
+			AfterDeleteFunc: dao.AfterDeleteFunc,
+		}
+	}
+
+	// execute
+	err := op(retryDao)
+
+	if err != nil &&
+		attempts < maxRetries &&
+		// note: we are checking the err message so that we can handle both the cgo and noncgo errors
+		strings.Contains(err.Error(), "database is locked") {
+		// wait and retry
+		time.Sleep(time.Duration(200*attempts) * time.Millisecond)
+		attempts++
+		goto Retry
+	}
+
+	return err
 }

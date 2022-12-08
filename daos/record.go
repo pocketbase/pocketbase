@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -348,50 +349,27 @@ func (dao *Dao) SaveRecord(record *models.Record) error {
 // The delete operation may fail if the record is part of a required
 // reference in another record (aka. cannot be deleted or set to NULL).
 func (dao *Dao) DeleteRecord(record *models.Record) error {
-	const maxAttempts = 6
-
-	attempts := 1
-
-Retry:
-	err := dao.deleteRecord(record, attempts)
-	if err != nil &&
-		attempts <= maxAttempts &&
-		// note: we are checking the error msg so that we can handle both the cgo and noncgo errors
-		strings.Contains(err.Error(), "database is locked") {
-		time.Sleep(time.Duration(300*attempts) * time.Millisecond)
-		attempts++
-		goto Retry
+	// fetch rel references (if any)
+	//
+	// note: the select is outside of the transaction to minimize
+	// SQLITE_BUSY errors when mixing read&write in a single transaction
+	refs, err := dao.FindCollectionReferences(record.Collection())
+	if err != nil {
+		return err
 	}
 
-	return err
-}
-
-func (dao *Dao) deleteRecord(record *models.Record, attempts int) error {
-	return dao.RunInTransaction(func(txDao *Dao) error {
-		// unset transaction dao before hook on retry to avoid
-		// triggering the same before callbacks multiple times
-		if attempts > 1 {
-			oldBeforeCreateFunc := txDao.BeforeCreateFunc
-			oldBeforeUpdateFunc := txDao.BeforeUpdateFunc
-			oldBeforeDeleteFunc := txDao.BeforeDeleteFunc
-			txDao.BeforeCreateFunc = nil
-			txDao.BeforeUpdateFunc = nil
-			txDao.BeforeDeleteFunc = nil
-			defer func() {
-				if txDao != nil {
-					txDao.BeforeCreateFunc = oldBeforeCreateFunc
-					txDao.BeforeUpdateFunc = oldBeforeUpdateFunc
-					txDao.BeforeDeleteFunc = oldBeforeDeleteFunc
-				}
-			}()
-		}
-
-		// check for references
-		refs, err := txDao.FindCollectionReferences(record.Collection())
-		if err != nil {
+	// run all consequent DeleteRecord requests synchroniously
+	// to minimize SQLITE_BUSY errors
+	if len(refs) > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		if err := dao.Block(ctx); err != nil {
 			return err
 		}
+		defer dao.Continue()
+	}
 
+	return dao.RunInTransaction(func(txDao *Dao) error {
 		// check if related records has to be deleted (if `CascadeDelete` is set)
 		// OR
 		// just unset the record id from any relation field values (if they are not required)
