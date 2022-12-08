@@ -35,7 +35,7 @@ func (api *logsApi) requestsList(c echo.Context) error {
 
 	result, err := search.NewProvider(fieldResolver).
 		Query(api.app.LogsDao().RequestQuery()).
-		ParseAndExec(c.QueryString(), &[]*models.Request{})
+		ParseAndExec(c.QueryParams().Encode(), &[]*models.Request{})
 
 	if err != nil {
 		return NewBadRequestError("", err)

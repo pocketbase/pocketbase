@@ -74,7 +74,7 @@ func (api *recordApi) list(c echo.Context) error {
 	}
 
 	var rawRecords = []dbx.NullStringMap{}
-	result, err := searchProvider.ParseAndExec(c.QueryString(), &rawRecords)
+	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &rawRecords)
 	if err != nil {
 		return NewBadRequestError("Invalid filter parameters.", err)
 	}
