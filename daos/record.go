@@ -370,6 +370,12 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
+		// always delete the record first to ensure that there will be no "A<->B"
+		// relations to prevent deadlock when calling DeleteRecord recursively
+		if err := txDao.Delete(record); err != nil {
+			return err
+		}
+
 		// check if related records has to be deleted (if `CascadeDelete` is set)
 		// OR
 		// just unset the record id from any relation field values (if they are not required)
@@ -414,7 +420,7 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 						if err := txDao.DeleteRecord(refRecord); err != nil {
 							return err
 						}
-						// no further action are needed (the reference is deleted)
+						// no further actions are needed (the reference is deleted)
 						continue
 					}
 
@@ -442,7 +448,7 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 			}
 		}
 
-		return txDao.Delete(record)
+		return nil
 	})
 }
 
