@@ -53,7 +53,7 @@ func (d DateTime) String() string {
 
 // MarshalJSON implements the [json.Marshaler] interface.
 func (d DateTime) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.String())
+	return []byte(`"` + d.String() + `"`), nil
 }
 
 // UnmarshalJSON implements the [json.Unmarshaler] interface.
@@ -80,6 +80,13 @@ func (d *DateTime) Scan(value any) error {
 		d.t = v
 	case int:
 		d.t = cast.ToTime(v)
+	case string:
+		t, err := time.Parse(DefaultDateLayout, v)
+		if err != nil {
+			// check for other common date layouts
+			t = cast.ToTime(v)
+		}
+		d.t = t
 	default:
 		str := cast.ToString(v)
 		if str == "" {
