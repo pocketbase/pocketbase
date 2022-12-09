@@ -731,7 +731,7 @@ func TestRecordCrudDelete(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeDeleteRequest": 1,
 				"OnModelBeforeUpdate":         1, // self_rel_many update of test1 record
-				"OnModelBeforeDelete":         1, // rel_one_cascade of test1 record
+				"OnModelBeforeDelete":         2, // the record itself + rel_one_cascade of test1 record
 			},
 		},
 		{
