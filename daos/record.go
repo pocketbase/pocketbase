@@ -379,6 +379,7 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 		// check if related records has to be deleted (if `CascadeDelete` is set)
 		// OR
 		// just unset the record id from any relation field values (if they are not required)
+		uniqueJsonEachAlias := "__je__" + security.PseudorandomString(5)
 		for refCollection, fields := range refs {
 			for _, field := range fields {
 				options, _ := field.Options.(*schema.RelationOptions)
@@ -387,16 +388,16 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 
 				// fetch all referenced records
 				recordTableName := inflector.Columnify(refCollection.Name)
-				fieldColumnName := inflector.Columnify(field.Name)
+				prefixedFieldName := recordTableName + "." + inflector.Columnify(field.Name)
 				err := txDao.RecordQuery(refCollection).
 					Distinct(true).
 					LeftJoin(fmt.Sprintf(
 						// note: the case is used to normalize value access for single and multiple relations.
-						`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END) as {{__je__}}`,
-						fieldColumnName, fieldColumnName, fieldColumnName,
+						`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END) as {{%s}}`,
+						prefixedFieldName, prefixedFieldName, prefixedFieldName, uniqueJsonEachAlias,
 					), nil).
 					AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": record.Id})).
-					AndWhere(dbx.HashExp{"__je__.value": record.Id}).
+					AndWhere(dbx.HashExp{uniqueJsonEachAlias + ".value": record.Id}).
 					All(&rows)
 				if err != nil {
 					return err

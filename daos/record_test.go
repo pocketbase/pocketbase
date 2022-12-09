@@ -1,11 +1,14 @@
 package daos_test
 
 import (
+	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
@@ -628,7 +631,15 @@ func TestDeleteRecord(t *testing.T) {
 
 	// delete existing record + cascade
 	// ---
+	calledQueries := []string{}
+	app.DB().QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		calledQueries = append(calledQueries, sql)
+	}
+	app.DB().ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+		calledQueries = append(calledQueries, sql)
+	}
 	rec3, _ := app.Dao().FindRecordById("users", "oap640cot4yru2s")
+	// delete
 	if err := app.Dao().DeleteRecord(rec3); err != nil {
 		t.Fatalf("(rec3) Expected nil, got error %v", err)
 	}
@@ -641,6 +652,16 @@ func TestDeleteRecord(t *testing.T) {
 	rel, _ := app.Dao().FindRecordById("demo1", "84nmscqy84lsi1t")
 	if rel != nil {
 		t.Fatalf("(rec3) Expected the delete to cascade, found relation %v", rel)
+	}
+	// ensure that the json rel fields were prefixed
+	joinedQueries := strings.Join(calledQueries, " ")
+	expectedRelManyJoin := "`demo1` LEFT JOIN  json_each(CASE WHEN json_valid([[demo1.rel_many]]) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END)"
+	if !strings.Contains(joinedQueries, expectedRelManyJoin) {
+		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelManyJoin, calledQueries)
+	}
+	expectedRelOneJoin := "`demo1` LEFT JOIN  json_each(CASE WHEN json_valid([[demo1.rel_one]]) THEN [[demo1.rel_one]] ELSE json_array([[demo1.rel_one]]) END)"
+	if !strings.Contains(joinedQueries, expectedRelOneJoin) {
+		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelOneJoin, calledQueries)
 	}
 }
 

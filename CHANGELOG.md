@@ -1,3 +1,8 @@
+## v0.9.2
+
+- Fixed field column name conflict on record deletion ([#1220](https://github.com/pocketbase/pocketbase/discussions/1220)).
+
+
 ## v0.9.1
 
 - Moved the record file upload and delete out of the db transaction to minimize the locking times.
