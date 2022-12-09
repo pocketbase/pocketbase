@@ -1,8 +1,10 @@
-## (WIP) v0.9.1
+## v0.9.1
 
 - Moved the record file upload and delete out of the db transaction to minimize the locking times.
 
 - Added `Dao` query semaphore and base fail/retry handling to improve the concurrent writes throughput ([#1187](https://github.com/pocketbase/pocketbase/issues/1187)).
+
+- Fixed records cascade deletion when there are "A<->B" relation references.
 
 - Replaced `c.QueryString()` with `c.QueryParams().Encode()` to allow loading middleware modified query parameters in the default crud actions ([#1210](https://github.com/pocketbase/pocketbase/discussions/1210)).
 
