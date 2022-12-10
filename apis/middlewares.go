@@ -333,19 +333,8 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 			model.RefreshUpdated()
 
 			routine.FireAndForget(func() {
-				attempts := 1
-
-			BeginSave:
-				logErr := app.LogsDao().SaveRequest(model)
-				if logErr != nil {
-					// try one more time after 10s in case of SQLITE_BUSY or "database is locked" error
-					if attempts <= 2 {
-						attempts++
-						time.Sleep(10 * time.Second)
-						goto BeginSave
-					} else if app.IsDebug() {
-						log.Println("Log save failed:", logErr)
-					}
+				if err := app.LogsDao().SaveRequest(model); err != nil && app.IsDebug() {
+					log.Println("Log save failed:", err)
 				}
 
 				// Delete old request logs
