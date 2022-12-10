@@ -13,7 +13,7 @@
 
 - Refactored `forms.RecordUpsert` to allow more easily loading and removing files programmatically.
   ```
-  forms.RecordUpsert.LoadFiles(key, filesystem.File...) // add new filesystem.File to the form for upload
+  forms.RecordUpsert.AddFiles(key, filesystem.File...) // add new filesystem.File to the form for upload
   forms.RecordUpsert.RemoveFiles(key, filenames...)     // marks the filenames for deletion
   ```
 
