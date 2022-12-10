@@ -80,7 +80,10 @@ func NonzeroUniques[T comparable](list []T) []T {
 	var zeroVal T
 
 	for _, val := range list {
-		if _, ok := existMap[val]; ok || val == zeroVal {
+		if val == zeroVal {
+			continue
+		}
+		if _, ok := existMap[val]; ok {
 			continue
 		}
 		existMap[val] = struct{}{}
@@ -103,8 +106,13 @@ func ToUniqueStringSlice(value any) (result []string) {
 		}
 
 		// check if it is a json encoded array of strings
-		if err := json.Unmarshal([]byte(val), &result); err != nil {
-			// not a json array, just add the string as single array element
+		if strings.Contains(val, "[") {
+			if err := json.Unmarshal([]byte(val), &result); err != nil {
+				// not a json array, just add the string as single array element
+				result = append(result, val)
+			}
+		} else {
+			// just add the string as single array element
 			result = append(result, val)
 		}
 	case json.Marshaler: // eg. JsonArray
