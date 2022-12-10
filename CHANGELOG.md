@@ -1,3 +1,25 @@
+## (WIP) v0.10.0
+
+- Removed `rest.UploadedFile` struct (see below `filesystem.File`).
+
+- Added generic file resource struct that allows loading and uploading file content from
+  different sources (at the moment multipart/formdata requests and from the local filesystem).
+  ```
+  filesystem.File{}
+  filesystem.NewFileFromPath(path)
+  filesystem.NewFileFromMultipart(multipartHeader)
+  filesystem/System.UploadFile(file)
+  ```
+
+- Refactored `forms.RecordUpsert` to allow more easily loading and removing files programmatically.
+  ```
+  forms.RecordUpsert.LoadFiles(key, filesystem.File...) // add new filesystem.File to the form for upload
+  forms.RecordUpsert.RemoveFiles(key, filenames...)     // marks the filenames for deletion
+  ```
+
+- Optimized memory allocations (~20% improvement).
+
+
 ## v0.9.2
 
 - Fixed field column name conflict on record deletion ([#1220](https://github.com/pocketbase/pocketbase/discussions/1220)).

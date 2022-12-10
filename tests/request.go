@@ -29,24 +29,32 @@ func MockMultipartData(data map[string]string, fileFields ...string) (*bytes.Buf
 	// write file fields
 	for _, fileField := range fileFields {
 		// create a test temporary file
-		tmpFile, err := os.CreateTemp(os.TempDir(), "tmpfile-*.txt")
-		if err != nil {
-			return nil, nil, err
-		}
-		if _, err := tmpFile.Write([]byte("test")); err != nil {
-			return nil, nil, err
-		}
-		tmpFile.Seek(0, 0)
-		defer tmpFile.Close()
-		defer os.Remove(tmpFile.Name())
+		err := func() error {
+			tmpFile, err := os.CreateTemp(os.TempDir(), "tmpfile-*.txt")
+			if err != nil {
+				return err
+			}
 
-		// stub uploaded file
-		w, err := mp.CreateFormFile(fileField, tmpFile.Name())
+			if _, err := tmpFile.Write([]byte("test")); err != nil {
+				return err
+			}
+			tmpFile.Seek(0, 0)
+			defer tmpFile.Close()
+			defer os.Remove(tmpFile.Name())
+
+			// stub uploaded file
+			w, err := mp.CreateFormFile(fileField, tmpFile.Name())
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(w, tmpFile); err != nil {
+				return err
+			}
+
+			return nil
+		}()
 		if err != nil {
-			return nil, mp, err
-		}
-		if _, err := io.Copy(w, tmpFile); err != nil {
-			return nil, mp, err
+			return nil, nil, err
 		}
 	}
 

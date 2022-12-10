@@ -52,7 +52,7 @@ type RecordUpsert struct {
 	OldPassword     string `json:"oldPassword"`
 	// ---
 
-	Data map[string]any `json:"data"`
+	data map[string]any
 }
 
 // NewRecordUpsert creates a new [RecordUpsert] form with initializer
@@ -73,6 +73,11 @@ func NewRecordUpsert(app core.App, record *models.Record) *RecordUpsert {
 	form.loadFormDefaults()
 
 	return form
+}
+
+// Data returns the loaded form's data.
+func (form *RecordUpsert) Data() map[string]any {
+	return form.data
 }
 
 // SetFullManageAccess sets the manageAccess bool flag of the current
@@ -97,9 +102,9 @@ func (form *RecordUpsert) loadFormDefaults() {
 		form.Verified = form.record.Verified()
 	}
 
-	form.Data = map[string]any{}
+	form.data = map[string]any{}
 	for _, field := range form.record.Collection().Schema.Fields() {
-		form.Data[field.Name] = form.record.Get(field.Name)
+		form.data[field.Name] = form.record.Get(field.Name)
 	}
 }
 
@@ -113,48 +118,55 @@ func (form *RecordUpsert) getContentType(r *http.Request) string {
 	return t
 }
 
-func (form *RecordUpsert) extractRequestData(r *http.Request, keyPrefix string) (map[string]any, error) {
+func (form *RecordUpsert) extractRequestData(
+	r *http.Request,
+	keyPrefix string,
+) (map[string]any, map[string][]*filesystem.File, error) {
 	switch form.getContentType(r) {
 	case "application/json":
 		return form.extractJsonData(r, keyPrefix)
 	case "multipart/form-data":
 		return form.extractMultipartFormData(r, keyPrefix)
 	default:
-		return nil, errors.New("Unsupported request Content-Type.")
+		return nil, nil, errors.New("unsupported request content-type")
 	}
 }
 
-func (form *RecordUpsert) extractJsonData(r *http.Request, keyPrefix string) (map[string]any, error) {
-	result := map[string]any{}
+func (form *RecordUpsert) extractJsonData(
+	r *http.Request,
+	keyPrefix string,
+) (map[string]any, map[string][]*filesystem.File, error) {
+	data := map[string]any{}
 
-	err := rest.CopyJsonBody(r, &result)
+	err := rest.CopyJsonBody(r, &data)
 
 	if keyPrefix != "" {
 		parts := strings.Split(keyPrefix, ".")
 		for _, part := range parts {
-			if result[part] == nil {
+			if data[part] == nil {
 				break
 			}
-			if v, ok := result[part].(map[string]any); ok {
-				result = v
+			if v, ok := data[part].(map[string]any); ok {
+				data = v
 			}
 		}
 	}
 
-	return result, err
+	return data, nil, err
 }
 
-func (form *RecordUpsert) extractMultipartFormData(r *http.Request, keyPrefix string) (map[string]any, error) {
-	result := map[string]any{}
-
+func (form *RecordUpsert) extractMultipartFormData(
+	r *http.Request,
+	keyPrefix string,
+) (map[string]any, map[string][]*filesystem.File, error) {
 	// parse form data (if not already)
 	if err := r.ParseMultipartForm(rest.DefaultMaxMemory); err != nil {
-		return result, err
+		return nil, nil, err
 	}
 
+	data := map[string]any{}
+	filesToUpload := map[string][]*filesystem.File{}
 	arrayValueSupportTypes := schema.ArraybleFieldTypes()
-
-	form.filesToUpload = map[string][]*filesystem.File{}
 
 	for fullKey, values := range r.PostForm {
 		key := fullKey
@@ -163,15 +175,15 @@ func (form *RecordUpsert) extractMultipartFormData(r *http.Request, keyPrefix st
 		}
 
 		if len(values) == 0 {
-			result[key] = nil
+			data[key] = nil
 			continue
 		}
 
 		field := form.record.Collection().Schema.GetFieldByName(key)
 		if field != nil && list.ExistInSlice(field.Type, arrayValueSupportTypes) {
-			result[key] = values
+			data[key] = values
 		} else {
-			result[key] = values[0]
+			data[key] = values[0]
 		}
 	}
 
@@ -197,32 +209,10 @@ func (form *RecordUpsert) extractMultipartFormData(r *http.Request, keyPrefix st
 			continue
 		}
 
-		options, ok := field.Options.(*schema.FileOptions)
-		if !ok {
-			continue
-		}
-
-		if form.filesToUpload[key] == nil {
-			form.filesToUpload[key] = []*filesystem.File{}
-		}
-
-		if options.MaxSelect == 1 {
-			form.filesToUpload[key] = append(form.filesToUpload[key], files[0])
-		} else if options.MaxSelect > 1 {
-			form.filesToUpload[key] = append(form.filesToUpload[key], files...)
-		}
+		filesToUpload[key] = append(filesToUpload[key], files...)
 	}
 
-	return result, nil
-}
-
-func (form *RecordUpsert) normalizeData() error {
-	for _, field := range form.record.Collection().Schema.Fields() {
-		if v, ok := form.Data[field.Name]; ok {
-			form.Data[field.Name] = field.PrepareValue(v)
-		}
-	}
-	return nil
+	return data, filesToUpload, nil
 }
 
 // LoadRequest extracts the json or multipart/form-data request data
@@ -235,15 +225,126 @@ func (form *RecordUpsert) normalizeData() error {
 // For single file upload fields, you can skip the index and directly
 // reset the field using its field name (eg. `myfile = null`).
 func (form *RecordUpsert) LoadRequest(r *http.Request, keyPrefix string) error {
-	requestData, err := form.extractRequestData(r, keyPrefix)
+	requestData, uploadedFiles, err := form.extractRequestData(r, keyPrefix)
 	if err != nil {
 		return err
 	}
 
-	return form.LoadData(requestData)
+	if err := form.LoadData(requestData); err != nil {
+		return err
+	}
+
+	for key, files := range uploadedFiles {
+		form.AddFiles(key, files...)
+	}
+
+	return nil
 }
 
-// LoadData loads and normalizes the provided data into the form.
+// AddFiles adds the provided file(s) to the specified file field.
+//
+// If the file field is a SINGLE-value file field (aka. "Max Select = 1"),
+// then the newly added file will REPLACE the existing one.
+// In this case if you pass more than 1 files only the first one will be assigned.
+//
+// If the file field is a MULTI-value file field (aka. "Max Select > 1"),
+// then the newly added file(s) will be APPENDED to the existing one(s).
+//
+// Example
+//
+// 	f1, _ := filesystem.NewFileFromPath("/path/to/file1.txt")
+// 	f2, _ := filesystem.NewFileFromPath("/path/to/file2.txt")
+// 	form.AddFiles("documents", f1, f2)
+func (form *RecordUpsert) AddFiles(key string, files ...*filesystem.File) error {
+	field := form.record.Collection().Schema.GetFieldByName(key)
+	if field == nil || field.Type != schema.FieldTypeFile {
+		return errors.New("invalid field key")
+	}
+
+	options, ok := field.Options.(*schema.FileOptions)
+	if !ok {
+		return errors.New("failed to initilize field options")
+	}
+
+	if len(files) == 0 {
+		return nil // nothing to upload
+	}
+
+	if form.filesToUpload == nil {
+		form.filesToUpload = map[string][]*filesystem.File{}
+	}
+
+	oldNames := list.ToUniqueStringSlice(form.data[key])
+
+	if options.MaxSelect == 1 {
+		// mark previous file(s) for deletion before replacing
+		if len(oldNames) > 0 {
+			form.filesToDelete = list.ToUniqueStringSlice(append(form.filesToDelete, oldNames...))
+		}
+
+		// replace
+		form.filesToUpload[key] = []*filesystem.File{files[0]}
+		form.data[key] = field.PrepareValue(files[0].Name)
+	} else {
+		// append
+		form.filesToUpload[key] = append(form.filesToUpload[key], files...)
+		for _, f := range files {
+			oldNames = append(oldNames, f.Name)
+		}
+		form.data[key] = field.PrepareValue(oldNames)
+	}
+
+	return nil
+}
+
+// RemoveFiles removes a single or multiple file from the specified file field.
+//
+// NB! If filesToDelete is not set it will remove all existing files
+// assigned to the file field (including those assigned with AddFiles)!
+//
+// Example
+//
+//  // mark only only 2 files for removal
+// 	form.AddFiles("documents", "file1_aw4bdrvws6.txt", "file2_xwbs36bafv.txt")
+//
+// 	// mark all "documents" files for removal
+// 	form.AddFiles("documents")
+func (form *RecordUpsert) RemoveFiles(key string, toDelete ...string) error {
+	field := form.record.Collection().Schema.GetFieldByName(key)
+	if field == nil || field.Type != schema.FieldTypeFile {
+		return errors.New("invalid field key")
+	}
+
+	existing := list.ToUniqueStringSlice(form.data[key])
+
+	// mark all files for deletion
+	if len(toDelete) == 0 {
+		toDelete = make([]string, len(existing))
+		copy(toDelete, existing)
+	}
+
+	// check for existing files
+	for i := len(existing) - 1; i >= 0; i-- {
+		if list.ExistInSlice(existing[i], toDelete) {
+			form.filesToDelete = append(form.filesToDelete, existing[i])
+			existing = append(existing[:i], existing[i+1:]...)
+		}
+	}
+
+	// check for newly uploaded files
+	for i := len(form.filesToUpload[key]) - 1; i >= 0; i-- {
+		f := form.filesToUpload[key][i]
+		if list.ExistInSlice(f.Name, toDelete) {
+			form.filesToUpload[key] = append(form.filesToUpload[key][:i], form.filesToUpload[key][i+1:]...)
+		}
+	}
+
+	form.data[key] = field.PrepareValue(existing)
+
+	return nil
+}
+
+// LoadData loads and normalizes the provided regular record data fields into the form.
 //
 // To DELETE previously uploaded file(s) you can suffix the field name
 // with the file index or filename (eg. `myfile.0`) and set it to null or empty string.
@@ -296,28 +397,26 @@ func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 		value = field.PrepareValue(value)
 
 		if field.Type != schema.FieldTypeFile {
-			form.Data[key] = value
+			form.data[key] = value
 			continue
 		}
-
-		options, _ := field.Options.(*schema.FileOptions)
-		oldNames := list.ToUniqueStringSlice(form.Data[key])
 
 		// -----------------------------------------------------------
 		// Delete previously uploaded file(s)
 		// -----------------------------------------------------------
 
+		oldNames := list.ToUniqueStringSlice(form.data[key])
+
 		// if empty value was set, mark all previously uploaded files for deletion
 		if len(list.ToUniqueStringSlice(value)) == 0 && len(oldNames) > 0 {
-			form.filesToDelete = append(form.filesToDelete, oldNames...)
-			form.Data[key] = []string{}
+			form.RemoveFiles(key)
 		} else if len(oldNames) > 0 {
-			indexesToDelete := make([]int, 0, len(extendedData))
+			toDelete := []string{}
 
 			// search for individual file name to delete (eg. "file.test.png = null")
-			for i, name := range oldNames {
+			for _, name := range oldNames {
 				if v, ok := extendedData[key+"."+name]; ok && cast.ToString(v) == "" {
-					indexesToDelete = append(indexesToDelete, i)
+					toDelete = append(toDelete, name)
 				}
 			}
 
@@ -329,52 +428,17 @@ func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 					if indexErr != nil || index >= len(oldNames) {
 						continue
 					}
-					indexesToDelete = append(indexesToDelete, index)
+					toDelete = append(toDelete, oldNames[index])
 				}
 			}
 
-			// slice to fill only with the non-deleted indexes
-			nonDeleted := make([]string, 0, len(oldNames))
-			for i, name := range oldNames {
-				// not marked for deletion
-				if !list.ExistInSlice(i, indexesToDelete) {
-					nonDeleted = append(nonDeleted, name)
-					continue
-				}
-
-				// store the id to actually delete the file later
-				form.filesToDelete = append(form.filesToDelete, name)
+			if len(toDelete) > 0 {
+				form.RemoveFiles(key, toDelete...)
 			}
-			form.Data[key] = nonDeleted
-		}
-
-		// -----------------------------------------------------------
-		// Check for new uploaded file
-		// -----------------------------------------------------------
-
-		if len(form.filesToUpload[key]) == 0 {
-			continue
-		}
-
-		// refresh oldNames list
-		oldNames = list.ToUniqueStringSlice(form.Data[key])
-
-		if options.MaxSelect == 1 {
-			// delete previous file(s) before replacing
-			if len(oldNames) > 0 {
-				form.filesToDelete = list.ToUniqueStringSlice(append(form.filesToDelete, oldNames...))
-			}
-			form.Data[key] = form.filesToUpload[key][0].Name
-		} else if options.MaxSelect > 1 {
-			// append the id of each uploaded file instance
-			for _, file := range form.filesToUpload[key] {
-				oldNames = append(oldNames, file.Name)
-			}
-			form.Data[key] = oldNames
 		}
 	}
 
-	return form.normalizeData()
+	return nil
 }
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
@@ -464,7 +528,7 @@ func (form *RecordUpsert) Validate() error {
 		form.dao,
 		form.record,
 		form.filesToUpload,
-	).Validate(form.Data)
+	).Validate(form.data)
 }
 
 func (form *RecordUpsert) checkUniqueUsername(value any) error {
@@ -592,7 +656,7 @@ func (form *RecordUpsert) ValidateAndFill() error {
 	}
 
 	// bulk load the remaining form data
-	form.record.Load(form.Data)
+	form.record.Load(form.data)
 
 	return nil
 }
