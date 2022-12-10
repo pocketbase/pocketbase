@@ -12,8 +12,8 @@ import (
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -28,7 +28,7 @@ var requiredErr = validation.NewError("validation_required", "Missing required v
 func NewRecordDataValidator(
 	dao *daos.Dao,
 	record *models.Record,
-	uploadedFiles map[string][]*rest.UploadedFile,
+	uploadedFiles map[string][]*filesystem.File,
 ) *RecordDataValidator {
 	return &RecordDataValidator{
 		dao:           dao,
@@ -42,7 +42,7 @@ func NewRecordDataValidator(
 type RecordDataValidator struct {
 	dao           *daos.Dao
 	record        *models.Record
-	uploadedFiles map[string][]*rest.UploadedFile
+	uploadedFiles map[string][]*filesystem.File
 }
 
 // Validate validates the provided `data` by checking it against
@@ -314,9 +314,9 @@ func (validator *RecordDataValidator) checkFileValue(field *schema.SchemaField, 
 	}
 
 	// extract the uploaded files
-	files := make([]*rest.UploadedFile, 0, len(validator.uploadedFiles[field.Name]))
+	files := make([]*filesystem.File, 0, len(validator.uploadedFiles[field.Name]))
 	for _, file := range validator.uploadedFiles[field.Name] {
-		if list.ExistInSlice(file.Name(), names) {
+		if list.ExistInSlice(file.Name, names) {
 			files = append(files, file)
 		}
 	}

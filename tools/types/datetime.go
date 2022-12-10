@@ -81,12 +81,16 @@ func (d *DateTime) Scan(value any) error {
 	case int:
 		d.t = cast.ToTime(v)
 	case string:
-		t, err := time.Parse(DefaultDateLayout, v)
-		if err != nil {
-			// check for other common date layouts
-			t = cast.ToTime(v)
+		if v == "" {
+			d.t = time.Time{}
+		} else {
+			t, err := time.Parse(DefaultDateLayout, v)
+			if err != nil {
+				// check for other common date layouts
+				t = cast.ToTime(v)
+			}
+			d.t = t
 		}
-		d.t = t
 	default:
 		str := cast.ToString(v)
 		if str == "" {

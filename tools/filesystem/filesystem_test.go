@@ -448,8 +448,7 @@ func createTestDir(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// tiny 1x1 png
-	imgRect := image.Rect(0, 0, 1, 1)
+	imgRect := image.Rect(0, 0, 1, 1) // tiny 1x1 png
 	png.Encode(file3, imgRect)
 	file3.Close()
 	err2 := os.WriteFile(filepath.Join(dir, "image.png.attrs"), []byte(`{"user.cache_control":"","user.content_disposition":"","user.content_encoding":"","user.content_language":"","user.content_type":"image/png","user.metadata":null}`), 0644)
@@ -468,6 +467,13 @@ func createTestDir(t *testing.T) string {
 		t.Fatal(err)
 	}
 	file5.Close()
+
+	file6, err := os.OpenFile(filepath.Join(dir, "image_! noext"), os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	png.Encode(file6, image.Rect(0, 0, 1, 1)) // tiny 1x1 png
+	file6.Close()
 
 	return dir
 }

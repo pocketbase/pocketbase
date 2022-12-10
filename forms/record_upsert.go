@@ -18,6 +18,7 @@ import (
 	"github.com/pocketbase/pocketbase/forms/validators"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/security"
@@ -34,7 +35,7 @@ type RecordUpsert struct {
 	manageAccess bool
 	record       *models.Record
 
-	filesToUpload map[string][]*rest.UploadedFile
+	filesToUpload map[string][]*filesystem.File
 	filesToDelete []string // names list
 
 	// base model fields
@@ -66,7 +67,7 @@ func NewRecordUpsert(app core.App, record *models.Record) *RecordUpsert {
 		dao:           app.Dao(),
 		record:        record,
 		filesToDelete: []string{},
-		filesToUpload: map[string][]*rest.UploadedFile{},
+		filesToUpload: map[string][]*filesystem.File{},
 	}
 
 	form.loadFormDefaults()
@@ -153,7 +154,7 @@ func (form *RecordUpsert) extractMultipartFormData(r *http.Request, keyPrefix st
 
 	arrayValueSupportTypes := schema.ArraybleFieldTypes()
 
-	form.filesToUpload = map[string][]*rest.UploadedFile{}
+	form.filesToUpload = map[string][]*filesystem.File{}
 
 	for fullKey, values := range r.PostForm {
 		key := fullKey
@@ -202,7 +203,7 @@ func (form *RecordUpsert) extractMultipartFormData(r *http.Request, keyPrefix st
 		}
 
 		if form.filesToUpload[key] == nil {
-			form.filesToUpload[key] = []*rest.UploadedFile{}
+			form.filesToUpload[key] = []*filesystem.File{}
 		}
 
 		if options.MaxSelect == 1 {
@@ -363,11 +364,11 @@ func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 			if len(oldNames) > 0 {
 				form.filesToDelete = list.ToUniqueStringSlice(append(form.filesToDelete, oldNames...))
 			}
-			form.Data[key] = form.filesToUpload[key][0].Name()
+			form.Data[key] = form.filesToUpload[key][0].Name
 		} else if options.MaxSelect > 1 {
 			// append the id of each uploaded file instance
 			for _, file := range form.filesToUpload[key] {
-				oldNames = append(oldNames, file.Name())
+				oldNames = append(oldNames, file.Name)
 			}
 			form.Data[key] = oldNames
 		}
@@ -685,7 +686,7 @@ func (form *RecordUpsert) getFilesToUploadNames() []string {
 
 	for fieldKey := range form.filesToUpload {
 		for _, file := range form.filesToUpload[fieldKey] {
-			names = append(names, file.Name())
+			names = append(names, file.Name)
 		}
 	}
 
@@ -712,8 +713,8 @@ func (form *RecordUpsert) processFilesToUpload() error {
 
 	for fieldKey := range form.filesToUpload {
 		for i, file := range form.filesToUpload[fieldKey] {
-			path := form.record.BaseFilesPath() + "/" + file.Name()
-			if err := fs.UploadMultipart(file.Header(), path); err == nil {
+			path := form.record.BaseFilesPath() + "/" + file.Name
+			if err := fs.UploadFile(file, path); err == nil {
 				// keep track of the already uploaded file
 				uploaded = append(uploaded, path)
 			} else {

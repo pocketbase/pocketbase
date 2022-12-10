@@ -47,16 +47,16 @@ func TestFindUploadedFiles(t *testing.T) {
 			t.Errorf("[%d] Expected 1 file, got %d", i, len(result))
 		}
 
-		if result[0].Header().Size != 4 {
-			t.Errorf("[%d] Expected the file size to be 4 bytes, got %d", i, result[0].Header().Size)
+		if result[0].Size != 4 {
+			t.Errorf("[%d] Expected the file size to be 4 bytes, got %d", i, result[0].Size)
 		}
 
 		pattern, err := regexp.Compile(s.expectedPattern)
 		if err != nil {
 			t.Errorf("[%d] Invalid filename pattern %q: %v", i, s.expectedPattern, err)
 		}
-		if !pattern.MatchString(result[0].Name()) {
-			t.Fatalf("Expected filename to match %s, got filename %s", s.expectedPattern, result[0].Name())
+		if !pattern.MatchString(result[0].Name) {
+			t.Fatalf("Expected filename to match %s, got filename %s", s.expectedPattern, result[0].Name)
 		}
 	}
 }

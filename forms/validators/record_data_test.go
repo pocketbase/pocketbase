@@ -13,6 +13,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
@@ -20,7 +21,7 @@ import (
 type testDataFieldScenario struct {
 	name           string
 	data           map[string]any
-	files          map[string][]*rest.UploadedFile
+	files          map[string][]*filesystem.File
 	expectedErrors []string
 }
 
@@ -1086,10 +1087,10 @@ func TestRecordDataValidatorValidateFile(t *testing.T) {
 			"check MaxSelect constraint",
 			map[string]any{
 				"field1": "test1",
-				"field2": []string{"test1", testFiles[0].Name(), testFiles[3].Name()},
+				"field2": []string{"test1", testFiles[0].Name, testFiles[3].Name},
 				"field3": []string{"test1", "test2", "test3", "test4"},
 			},
-			map[string][]*rest.UploadedFile{
+			map[string][]*filesystem.File{
 				"field2": {testFiles[0], testFiles[3]},
 			},
 			[]string{"field2", "field3"},
@@ -1097,11 +1098,11 @@ func TestRecordDataValidatorValidateFile(t *testing.T) {
 		{
 			"check MaxSize constraint",
 			map[string]any{
-				"field1": testFiles[0].Name(),
-				"field2": []string{"test1", testFiles[0].Name()},
+				"field1": testFiles[0].Name,
+				"field2": []string{"test1", testFiles[0].Name},
 				"field3": []string{"test1", "test2", "test3"},
 			},
-			map[string][]*rest.UploadedFile{
+			map[string][]*filesystem.File{
 				"field1": {testFiles[0]},
 				"field2": {testFiles[0]},
 			},
@@ -1111,10 +1112,10 @@ func TestRecordDataValidatorValidateFile(t *testing.T) {
 			"check MimeTypes constraint",
 			map[string]any{
 				"field1": "test1",
-				"field2": []string{"test1", testFiles[0].Name()},
-				"field3": []string{testFiles[1].Name(), testFiles[2].Name()},
+				"field2": []string{"test1", testFiles[0].Name},
+				"field3": []string{testFiles[1].Name, testFiles[2].Name},
 			},
-			map[string][]*rest.UploadedFile{
+			map[string][]*filesystem.File{
 				"field2": {testFiles[0], testFiles[1], testFiles[2]},
 				"field3": {testFiles[1], testFiles[2]},
 			},
@@ -1134,10 +1135,10 @@ func TestRecordDataValidatorValidateFile(t *testing.T) {
 			"valid data - just new files",
 			map[string]any{
 				"field1": nil,
-				"field2": []string{testFiles[0].Name(), testFiles[1].Name()},
+				"field2": []string{testFiles[0].Name, testFiles[1].Name},
 				"field3": nil,
 			},
-			map[string][]*rest.UploadedFile{
+			map[string][]*filesystem.File{
 				"field2": {testFiles[0], testFiles[1]},
 			},
 			[]string{},
@@ -1146,10 +1147,10 @@ func TestRecordDataValidatorValidateFile(t *testing.T) {
 			"valid data - mixed existing and new files",
 			map[string]any{
 				"field1": "test1",
-				"field2": []string{"test1", testFiles[0].Name()},
+				"field2": []string{"test1", testFiles[0].Name},
 				"field3": "test1", // will be casted
 			},
-			map[string][]*rest.UploadedFile{
+			map[string][]*filesystem.File{
 				"field2": {testFiles[0], testFiles[1], testFiles[2]},
 			},
 			[]string{},

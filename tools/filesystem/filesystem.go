@@ -117,7 +117,49 @@ func (s *System) Upload(content []byte, fileKey string) error {
 	return w.Close()
 }
 
-// UploadMultipart upload the provided multipart file to the fileKey location.
+// UploadFile uploads the provided multipart file to the fileKey location.
+func (s *System) UploadFile(file *File, fileKey string) error {
+	f, err := file.Reader.Open()
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	mt, err := mimetype.DetectReader(f)
+	if err != nil {
+		return err
+	}
+
+	// rewind
+	f.Seek(0, io.SeekStart)
+
+	originalName := file.OriginalName
+	if len(originalName) > 255 {
+		// keep only the first 255 chars as a very rudimentary measure
+		// to prevent the metadata to grow too big in size
+		originalName = originalName[:255]
+	}
+	opts := &blob.WriterOptions{
+		ContentType: mt.String(),
+		Metadata: map[string]string{
+			"original_filename": originalName,
+		},
+	}
+
+	w, err := s.bucket.NewWriter(s.ctx, fileKey, opts)
+	if err != nil {
+		return err
+	}
+
+	if _, err := w.ReadFrom(f); err != nil {
+		w.Close()
+		return err
+	}
+
+	return w.Close()
+}
+
+// UploadMultipart uploads the provided multipart file to the fileKey location.
 func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error {
 	f, err := fh.Open()
 	if err != nil {
