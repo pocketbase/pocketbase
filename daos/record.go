@@ -461,7 +461,7 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 	// create
 	if oldCollection == nil {
 		cols := map[string]string{
-			schema.FieldNameId:      "TEXT PRIMARY KEY",
+			schema.FieldNameId:      "TEXT PRIMARY KEY NOT NULL",
 			schema.FieldNameCreated: "TEXT DEFAULT '' NOT NULL",
 			schema.FieldNameUpdated: "TEXT DEFAULT '' NOT NULL",
 		}

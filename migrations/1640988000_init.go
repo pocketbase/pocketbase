@@ -36,7 +36,7 @@ func init() {
 	AppMigrations.Register(func(db dbx.Builder) error {
 		_, tablesErr := db.NewQuery(`
 			CREATE TABLE {{_admins}} (
-				[[id]]              TEXT PRIMARY KEY,
+				[[id]]              TEXT PRIMARY KEY NOT NULL,
 				[[avatar]]          INTEGER DEFAULT 0 NOT NULL,
 				[[email]]           TEXT UNIQUE NOT NULL,
 				[[tokenKey]]        TEXT UNIQUE NOT NULL,
@@ -47,7 +47,7 @@ func init() {
 			);
 
 			CREATE TABLE {{_collections}} (
-				[[id]]         TEXT PRIMARY KEY,
+				[[id]]         TEXT PRIMARY KEY NOT NULL,
 				[[system]]     BOOLEAN DEFAULT FALSE NOT NULL,
 				[[type]]       TEXT DEFAULT "base" NOT NULL,
 				[[name]]       TEXT UNIQUE NOT NULL,
@@ -63,7 +63,7 @@ func init() {
 			);
 
 			CREATE TABLE {{_params}} (
-				[[id]]      TEXT PRIMARY KEY,
+				[[id]]      TEXT PRIMARY KEY NOT NULL,
 				[[key]]     TEXT UNIQUE NOT NULL,
 				[[value]]   JSON DEFAULT NULL,
 				[[created]] TEXT DEFAULT "" NOT NULL,
@@ -71,7 +71,7 @@ func init() {
 			);
 
 			CREATE TABLE {{_externalAuths}} (
-				[[id]]           TEXT PRIMARY KEY,
+				[[id]]           TEXT PRIMARY KEY NOT NULL,
 				[[collectionId]] TEXT NOT NULL,
 				[[recordId]]     TEXT NOT NULL,
 				[[provider]]     TEXT NOT NULL,

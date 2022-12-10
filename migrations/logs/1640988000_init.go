@@ -11,7 +11,7 @@ func init() {
 	LogsMigrations.Register(func(db dbx.Builder) (err error) {
 		_, err = db.NewQuery(`
 			CREATE TABLE {{_requests}} (
-				[[id]]        TEXT PRIMARY KEY,
+				[[id]]        TEXT PRIMARY KEY NOT NULL,
 				[[url]]       TEXT DEFAULT "" NOT NULL,
 				[[method]]    TEXT DEFAULT "get" NOT NULL,
 				[[status]]    INTEGER DEFAULT 200 NOT NULL,
