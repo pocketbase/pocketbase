@@ -27,6 +27,8 @@
         };
     }
 
+    $: selectedColection = collections.find((c) => c.id == options.collectionId) || null;
+
     loadCollections();
 
     async function loadCollections() {
@@ -87,7 +89,9 @@
     </div>
     <div class="col-sm-12">
         <Field class="form-field" name="schema.{key}.options.cascadeDelete" let:uniqueId>
-            <label for={uniqueId}>Delete record on relation delete</label>
+            <label for={uniqueId}>
+                Delete record on {selectedColection ? selectedColection.name : "relation"} delete
+            </label>
             <ObjectSelect id={uniqueId} items={defaultOptions} bind:keyOfSelected={options.cascadeDelete} />
         </Field>
     </div>

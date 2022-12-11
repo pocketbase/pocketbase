@@ -4,6 +4,10 @@
 
 - Removed `rest.UploadedFile` struct (see below `filesystem.File`).
 
+- Optimized memory allocations (~20% improvement).
+
+- Improved record references delete performance.
+
 - Added generic file resource struct that allows loading and uploading file content from
   different sources (at the moment multipart/formdata requests and from the local filesystem).
   ```
@@ -19,7 +23,7 @@
   forms.RecordUpsert.RemoveFiles(key, filenames...)     // marks the filenames for deletion
   ```
 
-- Optimized memory allocations (~20% improvement).
+- Fixed fixed `LIKE` expressions backslash escaping ([#1231](https://github.com/pocketbase/pocketbase/discussions/1231)).
 
 
 ## v0.9.2

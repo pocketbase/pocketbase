@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -361,7 +362,7 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 	// run all consequent DeleteRecord requests synchroniously
 	// to minimize SQLITE_BUSY errors
 	if len(refs) > 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 		defer cancel()
 		if err := dao.Block(ctx); err != nil {
 			return err
@@ -379,14 +380,11 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 		// check if related records has to be deleted (if `CascadeDelete` is set)
 		// OR
 		// just unset the record id from any relation field values (if they are not required)
-		uniqueJsonEachAlias := "__je__" + security.PseudorandomString(5)
+		uniqueJsonEachAlias := "__je__" + security.PseudorandomString(4)
 		for refCollection, fields := range refs {
 			for _, field := range fields {
-				options, _ := field.Options.(*schema.RelationOptions)
-
-				rows := []dbx.NullStringMap{}
-
 				// fetch all referenced records
+				rows := []dbx.NullStringMap{}
 				recordTableName := inflector.Columnify(refCollection.Name)
 				prefixedFieldName := recordTableName + "." + inflector.Columnify(field.Name)
 				err := txDao.RecordQuery(refCollection).
@@ -403,38 +401,39 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 					return err
 				}
 
-				refRecords := models.NewRecordsFromNullStringMaps(refCollection, rows)
-				for _, refRecord := range refRecords {
-					ids := refRecord.GetStringSlice(field.Name)
+				total := len(rows)
 
-					// unset the record id
-					for i := len(ids) - 1; i >= 0; i-- {
-						if ids[i] == record.Id {
-							ids = append(ids[:i], ids[i+1:]...)
-							break
-						}
+				if total == 0 {
+					continue
+				}
+
+				ch := make(chan error)
+				perPage := 200
+				pages := int(math.Ceil(float64(total) / float64(perPage)))
+
+				for i := 0; i < pages; i++ {
+					var chunks []dbx.NullStringMap
+					if len(rows) <= perPage {
+						chunks = rows[0:]
+						rows = nil
+					} else {
+						chunks = rows[0:perPage]
+						rows = rows[perPage:]
 					}
 
-					// cascade delete the reference
-					// (only if there are no other active references in case of multiple select)
-					if options.CascadeDelete && len(ids) == 0 {
-						if err := txDao.DeleteRecord(refRecord); err != nil {
-							return err
-						}
-						// no further actions are needed (the reference is deleted)
-						continue
-					}
+					go func() {
+						refRecords := models.NewRecordsFromNullStringMaps(refCollection, chunks)
+						ch <- txDao.deleteRefRecords(record, refRecords, field)
+					}()
+				}
 
-					if field.Required && len(ids) == 0 {
-						return fmt.Errorf("The record cannot be deleted because it is part of a required reference in record %s (%s collection).", refRecord.Id, refCollection.Name)
-					}
-
-					// save the reference changes
-					refRecord.Set(field.Name, field.PrepareValue(ids))
-					if err := txDao.SaveRecord(refRecord); err != nil {
+				for i := 0; i < pages; i++ {
+					if err := <-ch; err != nil {
+						close(ch)
 						return err
 					}
 				}
+				close(ch)
 			}
 		}
 
@@ -451,6 +450,47 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 
 		return nil
 	})
+}
+
+func (dao *Dao) deleteRefRecords(mainRecord *models.Record, refRecords []*models.Record, field *schema.SchemaField) error {
+	options, _ := field.Options.(*schema.RelationOptions)
+	if options == nil {
+		return errors.New("relation field options are not initialized")
+	}
+
+	for _, refRecord := range refRecords {
+		ids := refRecord.GetStringSlice(field.Name)
+
+		// unset the record id
+		for i := len(ids) - 1; i >= 0; i-- {
+			if ids[i] == mainRecord.Id {
+				ids = append(ids[:i], ids[i+1:]...)
+				break
+			}
+		}
+
+		// cascade delete the reference
+		// (only if there are no other active references in case of multiple select)
+		if options.CascadeDelete && len(ids) == 0 {
+			if err := dao.DeleteRecord(refRecord); err != nil {
+				return err
+			}
+			// no further actions are needed (the reference is deleted)
+			continue
+		}
+
+		if field.Required && len(ids) == 0 {
+			return fmt.Errorf("The record cannot be deleted because it is part of a required reference in record %s (%s collection).", refRecord.Id, refRecord.Collection().Name)
+		}
+
+		// save the reference changes
+		refRecord.Set(field.Name, field.PrepareValue(ids))
+		if err := dao.SaveRecord(refRecord); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // SyncRecordTableSchema compares the two provided collections
