@@ -1,9 +1,10 @@
 package apis
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
-	"net/http"
 )
 
 // bindHealthApi registers the health api endpoint.
@@ -24,5 +25,6 @@ func (api *healthApi) healthCheck(c echo.Context) error {
 		"code":    http.StatusOK,
 		"message": "API is healthy.",
 	}
+
 	return c.JSON(http.StatusOK, payload)
 }
