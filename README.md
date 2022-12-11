@@ -110,7 +110,7 @@ Check also the [Testing guide](http://pocketbase.io/docs/testing) to learn how t
 
 If you discover a security vulnerability within PocketBase, please send an e-mail to **support at pocketbase.io**.
 
-All reports will be promptly addressed and you'll be credited accordingly.
+All reports will be promptly addressed, and you'll be credited accordingly.
 
 
 ## Contributing
