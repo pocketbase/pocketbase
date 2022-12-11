@@ -22,7 +22,6 @@ type healthApi struct {
 func (api *healthApi) healthCheck(c echo.Context) error {
 	payload := map[string]any{
 		"code":    http.StatusOK,
-		"status":  "ok",
 		"message": "API is healthy.",
 	}
 	return c.JSON(http.StatusOK, payload)
