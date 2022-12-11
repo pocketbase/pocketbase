@@ -92,6 +92,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 	// default routes
 	api := e.Group("/api")
+	defer bindHealthApi(app, api) // health check should always be initialized after everything else is done
 	bindSettingsApi(app, api)
 	bindAdminApi(app, api)
 	bindCollectionApi(app, api)
