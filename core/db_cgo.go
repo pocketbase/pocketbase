@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pocketbase/dbx"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/pocketbase/dbx"
 )
 
 func connectDB(dbPath string) (*dbx.DB, error) {
@@ -24,9 +24,9 @@ func connectDB(dbPath string) (*dbx.DB, error) {
 	// use a fixed connection pool to limit the SQLITE_BUSY errors
 	// and reduce the open file descriptors
 	// (the limits are arbitrary and may change in the future)
-	db.DB().SetMaxOpenConns(800)
-	db.DB().SetMaxIdleConns(30)
-	db.DB().SetConnMaxIdleTime(5 * time.Minute)
+	db.DB().SetMaxOpenConns(20)
+	db.DB().SetMaxIdleConns(20)
+	db.DB().SetConnMaxIdleTime(3 * time.Minute)
 
 	// additional pragmas not supported through the dsn string
 	_, err := db.NewQuery(`
