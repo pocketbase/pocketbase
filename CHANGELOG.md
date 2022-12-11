@@ -1,4 +1,6 @@
-## (WIP) v0.10.0
+## (WIP)
+
+- Added `/api/health` endpoint (thanks @MarvinJWendt).
 
 - Removed `rest.UploadedFile` struct (see below `filesystem.File`).
 
