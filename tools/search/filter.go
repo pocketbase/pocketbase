@@ -97,23 +97,23 @@ func (f FilterData) resolveTokenizedExpr(expr fexpr.Expr, fieldResolver FieldRes
 	case fexpr.SignLike:
 		// the right side is a column and therefor wrap it with "%" for contains like behavior
 		if len(rParams) == 0 {
-			return dbx.NewExp(fmt.Sprintf("%s LIKE ('%%' || %s || '%%')", lName, rName), lParams), nil
+			return dbx.NewExp(fmt.Sprintf("%s LIKE ('%%' || %s || '%%') ESCAPE '\\'", lName, rName), lParams), nil
 		}
 
-		return dbx.NewExp(fmt.Sprintf("%s LIKE %s", lName, rName), mergeParams(lParams, wrapLikeParams(rParams))), nil
+		return dbx.NewExp(fmt.Sprintf("%s LIKE %s ESCAPE '\\'", lName, rName), mergeParams(lParams, wrapLikeParams(rParams))), nil
 	case fexpr.SignNlike:
 		// the right side is a column and therefor wrap it with "%" for not-contains like behavior
 		if len(rParams) == 0 {
-			return dbx.NewExp(fmt.Sprintf("%s NOT LIKE ('%%' || %s || '%%')", lName, rName), lParams), nil
+			return dbx.NewExp(fmt.Sprintf("%s NOT LIKE ('%%' || %s || '%%') ESCAPE '\\'", lName, rName), lParams), nil
 		}
 
 		// normalize operands and switch sides if the left operand is a number/text, but the right one is a column
 		// (usually this shouldn't be needed, but it's kept for backward compatibility)
 		if len(lParams) > 0 && len(rParams) == 0 {
-			return dbx.NewExp(fmt.Sprintf("%s NOT LIKE %s", rName, lName), wrapLikeParams(lParams)), nil
+			return dbx.NewExp(fmt.Sprintf("%s NOT LIKE %s ESCAPE '\\'", rName, lName), wrapLikeParams(lParams)), nil
 		}
 
-		return dbx.NewExp(fmt.Sprintf("%s NOT LIKE %s", lName, rName), mergeParams(lParams, wrapLikeParams(rParams))), nil
+		return dbx.NewExp(fmt.Sprintf("%s NOT LIKE %s ESCAPE '\\'", lName, rName), mergeParams(lParams, wrapLikeParams(rParams))), nil
 	case fexpr.SignLt:
 		return dbx.NewExp(fmt.Sprintf("%s < %s", lName, rName), mergeParams(lParams, rParams)), nil
 	case fexpr.SignLte:

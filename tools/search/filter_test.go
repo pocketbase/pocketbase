@@ -35,7 +35,7 @@ func TestFilterDataBuildExpr(t *testing.T) {
 		// like with 2 columns
 		{"test1 ~ test2", false,
 			"^" +
-				regexp.QuoteMeta("[[test1]] LIKE ('%' || [[test2]] || '%')") +
+				regexp.QuoteMeta("[[test1]] LIKE ('%' || [[test2]] || '%') ESCAPE '\\'") +
 				"$",
 		},
 		// like with right column operand
@@ -43,7 +43,7 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"^" +
 				regexp.QuoteMeta("{:") +
 				".+" +
-				regexp.QuoteMeta("} LIKE ('%' || [[test1]] || '%')") +
+				regexp.QuoteMeta("} LIKE ('%' || [[test1]] || '%') ESCAPE '\\'") +
 				"$",
 		},
 		// like with left column operand and text as right operand
@@ -51,13 +51,13 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"^" +
 				regexp.QuoteMeta("[[test1]] LIKE {:") +
 				".+" +
-				regexp.QuoteMeta("}") +
+				regexp.QuoteMeta("} ESCAPE '\\'") +
 				"$",
 		},
 		// not like with 2 columns
 		{"test1 !~ test2", false,
 			"^" +
-				regexp.QuoteMeta("[[test1]] NOT LIKE ('%' || [[test2]] || '%')") +
+				regexp.QuoteMeta("[[test1]] NOT LIKE ('%' || [[test2]] || '%') ESCAPE '\\'") +
 				"$",
 		},
 		// not like with right column operand
@@ -65,7 +65,7 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"^" +
 				regexp.QuoteMeta("{:") +
 				".+" +
-				regexp.QuoteMeta("} NOT LIKE ('%' || [[test1]] || '%')") +
+				regexp.QuoteMeta("} NOT LIKE ('%' || [[test1]] || '%') ESCAPE '\\'") +
 				"$",
 		},
 		// like with left column operand and text as right operand
@@ -73,7 +73,7 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"^" +
 				regexp.QuoteMeta("[[test1]] NOT LIKE {:") +
 				".+" +
-				regexp.QuoteMeta("}") +
+				regexp.QuoteMeta("} ESCAPE '\\'") +
 				"$",
 		},
 		// current datetime constant
@@ -95,7 +95,7 @@ func TestFilterDataBuildExpr(t *testing.T) {
 				".+" +
 				regexp.QuoteMeta("}, ''))) AND ([[test3]] LIKE {:") +
 				".+" +
-				regexp.QuoteMeta("})) AND (COALESCE([[test4.sub]], '') = COALESCE(NULL, ''))") +
+				regexp.QuoteMeta("} ESCAPE '\\')) AND (COALESCE([[test4.sub]], '') = COALESCE(NULL, ''))") +
 				"$",
 		},
 		// combination of special literals (null, true, false)
@@ -111,13 +111,13 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"^" +
 				regexp.QuoteMeta("((((((((COALESCE([[test1]], '') = COALESCE([[test2]], '')) OR (COALESCE([[test2]], '') != COALESCE([[test3]], ''))) AND (([[test2]] LIKE {:") +
 				".+" +
-				regexp.QuoteMeta("}) OR ([[test2]] NOT LIKE {:") +
+				regexp.QuoteMeta("} ESCAPE '\\') OR ([[test2]] NOT LIKE {:") +
 				".+" +
-				regexp.QuoteMeta("}))) AND ({:") +
+				regexp.QuoteMeta("} ESCAPE '\\'))) AND ({:") +
 				".+" +
-				regexp.QuoteMeta("} LIKE ('%' || [[test1]] || '%'))) AND ({:") +
+				regexp.QuoteMeta("} LIKE ('%' || [[test1]] || '%') ESCAPE '\\')) AND ({:") +
 				".+" +
-				regexp.QuoteMeta("} NOT LIKE ('%' || [[test2]] || '%'))) AND ([[test3]] > {:") +
+				regexp.QuoteMeta("} NOT LIKE ('%' || [[test2]] || '%') ESCAPE '\\')) AND ([[test3]] > {:") +
 				".+" +
 				regexp.QuoteMeta("})) AND ([[test3]] >= {:") +
 				".+" +
