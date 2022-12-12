@@ -21,8 +21,8 @@ func connectDB(dbPath string) (*dbx.DB, error) {
 		return nil, err
 	}
 
-	// use a fixed connection pool to limit the SQLITE_BUSY errors and
-	// reduce the open file descriptors
+	// use a fixed connection pool to limit the SQLITE_BUSY errors
+	// and reduce the open file descriptors
 	// (the limits are arbitrary and may change in the future)
 	db.DB().SetMaxOpenConns(30)
 	db.DB().SetMaxIdleConns(30)
