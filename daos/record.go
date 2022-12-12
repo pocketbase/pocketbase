@@ -387,7 +387,6 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 				// create base query of referenced records
 				recordTableName := inflector.Columnify(refCollection.Name)
 				prefixedFieldName := recordTableName + "." + inflector.Columnify(field.Name)
-				now := time.Now().UTC().Format(types.DefaultDateLayout)
 				baseQuery := txDao.RecordQuery(refCollection).
 					Distinct(true).
 					LeftJoin(fmt.Sprintf(
@@ -397,7 +396,6 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 					), nil).
 					AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": record.Id})).
 					AndWhere(dbx.HashExp{uniqueJsonEachAlias + ".value": record.Id}).
-					AndWhere(dbx.NewExp(recordTableName+".updated <= {:date}", dbx.Params{"date": now})). // do not reselect updated records
 					OrderBy(recordTableName + ".created ASC")
 
 				perFrame := 1000
