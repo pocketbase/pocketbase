@@ -111,7 +111,7 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 	case *dbx.Tx:
 		// nested transactions are not supported by default
 		// so execute the function within the current transaction
-
+		// ---
 		// create a new dao with the same hooks to avoid semaphore deadlock when nesting
 		txDao := New(txOrDB)
 		txDao.BeforeCreateFunc = dao.BeforeCreateFunc
@@ -320,12 +320,10 @@ Retry:
 	if attempts == 2 {
 		// assign new Dao without the before hooks to avoid triggering
 		// the already fired before callbacks multiple times
-		retryDao = &Dao{
-			db:              dao.db,
-			AfterCreateFunc: dao.AfterCreateFunc,
-			AfterUpdateFunc: dao.AfterUpdateFunc,
-			AfterDeleteFunc: dao.AfterDeleteFunc,
-		}
+		retryDao = New(dao.db)
+		retryDao.AfterCreateFunc = dao.AfterCreateFunc
+		retryDao.AfterUpdateFunc = dao.AfterUpdateFunc
+		retryDao.AfterDeleteFunc = dao.AfterDeleteFunc
 	}
 
 	// execute

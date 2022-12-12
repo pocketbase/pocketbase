@@ -433,21 +433,21 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 					break
 				}
 
-				perPage := 200
-				pages := int(math.Ceil(float64(total) / float64(perPage)))
+				perWorkers := 50
+				workers := int(math.Ceil(float64(total) / float64(perWorkers)))
 
 				batchErr := func() error {
 					ch := make(chan error)
 					defer close(ch)
 
-					for i := 0; i < pages; i++ {
+					for i := 0; i < workers; i++ {
 						var chunks []dbx.NullStringMap
-						if len(rows) <= perPage {
-							chunks = rows[0:]
+						if len(rows) <= perWorkers {
+							chunks = rows
 							rows = nil
 						} else {
-							chunks = rows[0:perPage]
-							rows = rows[perPage:]
+							chunks = rows[:perWorkers]
+							rows = rows[perWorkers:]
 						}
 
 						go func() {
@@ -456,7 +456,7 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 						}()
 					}
 
-					for i := 0; i < pages; i++ {
+					for i := 0; i < workers; i++ {
 						if err := <-ch; err != nil {
 							return err
 						}

@@ -684,7 +684,7 @@ func TestRecordCrudDelete(t *testing.T) {
 			},
 		},
 		{
-			Name:   "authenticated record that does match the collection delete rule",
+			Name:   "authenticated record that match the collection delete rule",
 			Method: http.MethodDelete,
 			Url:    "/api/collections/users/records/4q1xlclmfloku33",
 			RequestHeaders: map[string]string{
@@ -693,9 +693,9 @@ func TestRecordCrudDelete(t *testing.T) {
 			},
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterDelete":          1,
+				"OnModelAfterDelete":          3, // +2 because of the external auths
+				"OnModelBeforeDelete":         3, // +2 because of the external auths
 				"OnModelAfterUpdate":          1,
-				"OnModelBeforeDelete":         1,
 				"OnModelBeforeUpdate":         1,
 				"OnRecordAfterDeleteRequest":  1,
 				"OnRecordBeforeDeleteRequest": 1,
