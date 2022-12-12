@@ -795,6 +795,24 @@ func TestRecordUpsertAuthRecord(t *testing.T) {
 
 		// password
 		{
+			"trigger the password validations if only oldPassword is set",
+			"4q1xlclmfloku33",
+			map[string]any{
+				"oldPassword": "1234567890",
+			},
+			false,
+			true,
+		},
+		{
+			"trigger the password validations if only passwordConfirm is set",
+			"4q1xlclmfloku33",
+			map[string]any{
+				"passwordConfirm": "1234567890",
+			},
+			false,
+			true,
+		},
+		{
 			"try to update password without managed access",
 			"4q1xlclmfloku33",
 			map[string]any{

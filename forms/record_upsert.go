@@ -494,13 +494,16 @@ func (form *RecordUpsert) Validate() error {
 			),
 			validation.Field(
 				&form.Password,
-				validation.When(form.record.IsNew(), validation.Required),
+				validation.When(
+					(form.record.IsNew() || form.PasswordConfirm != "" || form.OldPassword != ""),
+					validation.Required,
+				),
 				validation.Length(form.record.Collection().AuthOptions().MinPasswordLength, 72),
 			),
 			validation.Field(
 				&form.PasswordConfirm,
 				validation.When(
-					(form.record.IsNew() || form.Password != ""),
+					(form.record.IsNew() || form.Password != "" || form.OldPassword != ""),
 					validation.Required,
 				),
 				validation.By(validators.Compare(form.Password)),
@@ -511,7 +514,7 @@ func (form *RecordUpsert) Validate() error {
 				// - form.manageAccess is not set
 				// - changing the existing password
 				validation.When(
-					!form.record.IsNew() && !form.manageAccess && form.Password != "",
+					!form.record.IsNew() && !form.manageAccess && (form.Password != "" || form.PasswordConfirm != ""),
 					validation.Required,
 					validation.By(form.checkOldPassword),
 				),
@@ -648,7 +651,7 @@ func (form *RecordUpsert) ValidateAndFill() error {
 			}
 		}
 
-		if form.Password != "" {
+		if form.Password != "" && form.Password == form.PasswordConfirm {
 			if err := form.record.SetPassword(form.Password); err != nil {
 				return err
 			}
