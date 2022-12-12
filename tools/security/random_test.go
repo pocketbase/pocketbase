@@ -31,7 +31,7 @@ func testRandomStringWithAlphabet(t *testing.T, randomFunc func(n int, alphabet 
 		expectPattern string
 	}{
 		{"0123456789_", `[0-9_]+`},
-		{"abcdef", `[abcdef]+`},
+		{"abcdef123", `[abcdef123]+`},
 		{"!@#$%^&*()", `[\!\@\#\$\%\^\&\*\(\)]+`},
 	}
 

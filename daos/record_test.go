@@ -11,10 +11,12 @@ import (
 	"time"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestRecordQuery(t *testing.T) {
@@ -665,111 +667,125 @@ func TestDeleteRecord(t *testing.T) {
 	}
 }
 
-func TestSyncRecordTableSchema(t *testing.T) {
+func TestDeleteRecordBatchProcessing(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	oldCollection, err := app.Dao().FindCollectionByNameOrId("demo2")
-	if err != nil {
+	if err := createMockBatchProcessingData(app.Dao()); err != nil {
 		t.Fatal(err)
 	}
-	updatedCollection, err := app.Dao().FindCollectionByNameOrId("demo2")
-	if err != nil {
+
+	// find and delete the first c1 record to trigger cascade
+	mainRecord, _ := app.Dao().FindRecordById("c1", "a")
+	if err := app.Dao().DeleteRecord(mainRecord); err != nil {
 		t.Fatal(err)
 	}
-	updatedCollection.Name = "demo_renamed"
-	updatedCollection.Schema.RemoveField(updatedCollection.Schema.GetFieldByName("active").Id)
-	updatedCollection.Schema.AddField(
-		&schema.SchemaField{
-			Name: "new_field",
-			Type: schema.FieldTypeEmail,
-		},
-	)
-	updatedCollection.Schema.AddField(
-		&schema.SchemaField{
-			Id:   updatedCollection.Schema.GetFieldByName("title").Id,
-			Name: "title_renamed",
-			Type: schema.FieldTypeEmail,
-		},
-	)
 
-	scenarios := []struct {
-		newCollection     *models.Collection
-		oldCollection     *models.Collection
-		expectedTableName string
-		expectedColumns   []string
-	}{
-		// new base collection
-		{
-			&models.Collection{
-				Name: "new_table",
-				Schema: schema.NewSchema(
-					&schema.SchemaField{
-						Name: "test",
-						Type: schema.FieldTypeText,
-					},
-				),
-			},
-			nil,
-			"new_table",
-			[]string{"id", "created", "updated", "test"},
-		},
-		// new auth collection
-		{
-			&models.Collection{
-				Name: "new_table_auth",
-				Type: models.CollectionTypeAuth,
-				Schema: schema.NewSchema(
-					&schema.SchemaField{
-						Name: "test",
-						Type: schema.FieldTypeText,
-					},
-				),
-			},
-			nil,
-			"new_table_auth",
-			[]string{
-				"id", "created", "updated", "test",
-				"username", "email", "verified", "emailVisibility",
-				"tokenKey", "passwordHash", "lastResetSentAt", "lastVerificationSentAt",
-			},
-		},
-		// no changes
-		{
-			oldCollection,
-			oldCollection,
-			"demo3",
-			[]string{"id", "created", "updated", "title", "active"},
-		},
-		// renamed table, deleted column, renamed columnd and new column
-		{
-			updatedCollection,
-			oldCollection,
-			"demo_renamed",
-			[]string{"id", "created", "updated", "title_renamed", "new_field"},
-		},
+	// check if the main record was deleted
+	_, err := app.Dao().FindRecordById(mainRecord.Collection().Id, mainRecord.Id)
+	if err == nil {
+		t.Fatal("The main record wasn't deleted")
 	}
 
-	for i, scenario := range scenarios {
-		err := app.Dao().SyncRecordTableSchema(scenario.newCollection, scenario.oldCollection)
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-			continue
-		}
-
-		if !app.Dao().HasTable(scenario.newCollection.Name) {
-			t.Errorf("(%d) Expected table %s to exist", i, scenario.newCollection.Name)
-		}
-
-		cols, _ := app.Dao().GetTableColumns(scenario.newCollection.Name)
-		if len(cols) != len(scenario.expectedColumns) {
-			t.Errorf("(%d) Expected columns %v, got %v", i, scenario.expectedColumns, cols)
-		}
-
-		for _, c := range cols {
-			if !list.ExistInSlice(c, scenario.expectedColumns) {
-				t.Errorf("(%d) Couldn't find column %s in %v", i, c, scenario.expectedColumns)
-			}
+	// check if the c2 rel fields were updated
+	c2Records, err := app.Dao().FindRecordsByExpr("c2", nil)
+	if err != nil || len(c2Records) == 0 {
+		t.Fatalf("Failed to fetch c2 records: %v", err)
+	}
+	for _, r := range c2Records {
+		ids := r.GetStringSlice("rel")
+		if len(ids) != 1 || ids[0] != "b" {
+			t.Fatalf("Expected only 'b' rel id, got %v", ids)
 		}
 	}
+
+	// check if all c3 relations were deleted
+	c3Records, err := app.Dao().FindRecordsByExpr("c3", nil)
+	if err != nil {
+		t.Fatalf("Failed to fetch c3 records: %v", err)
+	}
+	if total := len(c3Records); total != 0 {
+		t.Fatalf("Expected c3 records to be deleted, found %d", total)
+	}
+}
+
+func createMockBatchProcessingData(dao *daos.Dao) error {
+	// create mock collection without relation
+	c1 := &models.Collection{}
+	c1.Id = "c1"
+	c1.Name = c1.Id
+	c1.Schema = schema.NewSchema(
+		&schema.SchemaField{
+			Name: "text",
+			Type: schema.FieldTypeText,
+		},
+	)
+	if err := dao.SaveCollection(c1); err != nil {
+		return err
+	}
+
+	// create mock collection with a multi-rel field
+	c2 := &models.Collection{}
+	c2.Id = "c2"
+	c2.Name = c2.Id
+	c2.Schema = schema.NewSchema(
+		&schema.SchemaField{
+			Name: "rel",
+			Type: schema.FieldTypeRelation,
+			Options: &schema.RelationOptions{
+				MaxSelect:     types.Pointer(10),
+				CollectionId:  "c1",
+				CascadeDelete: false, // should unset all rel fields
+			},
+		},
+	)
+	if err := dao.SaveCollection(c2); err != nil {
+		return err
+	}
+
+	// create mock collection with a single-rel field
+	c3 := &models.Collection{}
+	c3.Id = "c3"
+	c3.Name = c3.Id
+	c3.Schema = schema.NewSchema(
+		&schema.SchemaField{
+			Name: "rel",
+			Type: schema.FieldTypeRelation,
+			Options: &schema.RelationOptions{
+				MaxSelect:     types.Pointer(1),
+				CollectionId:  "c1",
+				CascadeDelete: true, // should delete all c3 records
+			},
+		},
+	)
+	if err := dao.SaveCollection(c3); err != nil {
+		return err
+	}
+
+	// insert mock records
+	c1RecordA := models.NewRecord(c1)
+	c1RecordA.Id = "a"
+	if err := dao.Save(c1RecordA); err != nil {
+		return err
+	}
+	c1RecordB := models.NewRecord(c1)
+	c1RecordB.Id = "b"
+	if err := dao.Save(c1RecordB); err != nil {
+		return err
+	}
+	for i := 0; i < 2400; i++ {
+		c2Record := models.NewRecord(c2)
+		c2Record.Set("rel", []string{c1RecordA.Id, c1RecordB.Id})
+		if err := dao.Save(c2Record); err != nil {
+			return err
+		}
+
+		c3Record := models.NewRecord(c3)
+		c3Record.Set("rel", c1RecordA.Id)
+		if err := dao.Save(c3Record); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
