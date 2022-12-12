@@ -25,6 +25,8 @@
 
 - Fixed fixed `LIKE` expressions backslash escaping ([#1231](https://github.com/pocketbase/pocketbase/discussions/1231)).
 
+- Trigger the `password` validators in any of the others password change fields is set.
+
 
 ## v0.9.2
 
