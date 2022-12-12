@@ -426,7 +426,7 @@ func (m *Record) getNormalizeDataValueForDB(key string) any {
 
 // shallowCopy shallow copy data into a new map.
 func shallowCopy(data map[string]any) map[string]any {
-	result := map[string]any{}
+	result := make(map[string]any, len(data))
 
 	for k, v := range data {
 		result[k] = v
