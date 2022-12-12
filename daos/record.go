@@ -101,6 +101,7 @@ func (dao *Dao) FindRecordsByIds(
 // Returns an empty slice if no records are found.
 //
 // Example:
+//
 //	expr1 := dbx.HashExp{"email": "test@example.com"}
 //	expr2 := dbx.NewExp("LOWER(username) = {:username}", dbx.Params{"username": "test"})
 //	dao.FindRecordsByExpr("example", expr1, expr2)
@@ -383,11 +384,11 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 		uniqueJsonEachAlias := "__je__" + security.PseudorandomString(4)
 		for refCollection, fields := range refs {
 			for _, field := range fields {
-				// fetch all referenced records
-				rows := []dbx.NullStringMap{}
+				// create base query of referenced records
 				recordTableName := inflector.Columnify(refCollection.Name)
 				prefixedFieldName := recordTableName + "." + inflector.Columnify(field.Name)
-				err := txDao.RecordQuery(refCollection).
+				now := time.Now().UTC().Format(types.DefaultDateLayout)
+				baseQuery := txDao.RecordQuery(refCollection).
 					Distinct(true).
 					LeftJoin(fmt.Sprintf(
 						// note: the case is used to normalize value access for single and multiple relations.
@@ -396,44 +397,66 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 					), nil).
 					AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": record.Id})).
 					AndWhere(dbx.HashExp{uniqueJsonEachAlias + ".value": record.Id}).
-					All(&rows)
-				if err != nil {
-					return err
-				}
+					AndWhere(dbx.NewExp(recordTableName+".updated <= {:date}", dbx.Params{"date": now})). // do not reselect updated records
+					OrderBy(recordTableName + ".created ASC")
 
-				total := len(rows)
+				perFrame := 1000
+				hasNext := true
+				rows := make([]dbx.NullStringMap, 0, perFrame+1)
 
-				if total == 0 {
-					continue
-				}
+				for hasNext {
 
-				ch := make(chan error)
-				perPage := 200
-				pages := int(math.Ceil(float64(total) / float64(perPage)))
-
-				for i := 0; i < pages; i++ {
-					var chunks []dbx.NullStringMap
-					if len(rows) <= perPage {
-						chunks = rows[0:]
-						rows = nil
-					} else {
-						chunks = rows[0:perPage]
-						rows = rows[perPage:]
-					}
-
-					go func() {
-						refRecords := models.NewRecordsFromNullStringMaps(refCollection, chunks)
-						ch <- txDao.deleteRefRecords(record, refRecords, field)
-					}()
-				}
-
-				for i := 0; i < pages; i++ {
-					if err := <-ch; err != nil {
-						close(ch)
+					// fetch 1001 referenced records
+					if err := baseQuery.Limit(int64(perFrame + 1)).All(&rows); err != nil {
 						return err
 					}
+
+					total := len(rows)
+
+					if total == 0 {
+						break
+					}
+
+					hasNext = total == perFrame+1
+					perPage := 200
+					pages := int(math.Ceil(float64(total) / float64(perPage)))
+					iterateRows := rows[:total]
+
+					del := func() error {
+						ch := make(chan error)
+						defer close(ch)
+
+						for i := 0; i < pages; i++ {
+							var chunks []dbx.NullStringMap
+							if len(iterateRows) <= perPage {
+								chunks = iterateRows[0:]
+								iterateRows = nil
+							} else {
+								chunks = iterateRows[0:perPage]
+								iterateRows = iterateRows[perPage:]
+							}
+
+							go func() {
+								refRecords := models.NewRecordsFromNullStringMaps(refCollection, chunks)
+								ch <- txDao.deleteRefRecords(record, refRecords, field)
+							}()
+						}
+
+						for i := 0; i < pages; i++ {
+							if err := <-ch; err != nil {
+								return err
+							}
+						}
+						return nil
+					}
+
+					if err := del(); err != nil {
+						return err
+					}
+
+					// keep allocated memory instead of nil
+					rows = rows[:0]
 				}
-				close(ch)
 			}
 		}
 
