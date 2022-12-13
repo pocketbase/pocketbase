@@ -423,7 +423,7 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 			// trigger cascade for each 1000 rel items until there is none
 			batchSize := 1000
 			for {
-				rows := []dbx.NullStringMap{}
+				rows := make([]dbx.NullStringMap, 0, batchSize)
 				if err := query.Limit(int64(batchSize)).All(&rows); err != nil {
 					return err
 				}
@@ -433,8 +433,8 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 					break
 				}
 
-				perWorkers := 50
-				workers := int(math.Ceil(float64(total) / float64(perWorkers)))
+				perWorker := 50
+				workers := int(math.Ceil(float64(total) / float64(perWorker)))
 
 				batchErr := func() error {
 					ch := make(chan error)
@@ -442,12 +442,12 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 
 					for i := 0; i < workers; i++ {
 						var chunks []dbx.NullStringMap
-						if len(rows) <= perWorkers {
+						if len(rows) <= perWorker {
 							chunks = rows
 							rows = nil
 						} else {
-							chunks = rows[:perWorkers]
-							rows = rows[perWorkers:]
+							chunks = rows[:perWorker]
+							rows = rows[perWorker:]
 						}
 
 						go func() {

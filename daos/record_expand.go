@@ -176,7 +176,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	}
 
 	// reindex with the rel id
-	indexedRels := map[string]*models.Record{}
+	indexedRels := make(map[string]*models.Record, len(rels))
 	for _, rel := range rels {
 		indexedRels[rel.GetId()] = rel
 	}
