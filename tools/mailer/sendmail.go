@@ -10,8 +10,8 @@ import (
 
 var _ Mailer = (*Sendmail)(nil)
 
-// Sendmail implements `mailer.Mailer` interface and defines a mail
-// client that sends emails via the `sendmail` *nix command.
+// Sendmail implements [mailer.Mailer] interface and defines a mail
+// client that sends emails via the "sendmail" *nix command.
 //
 // This client is usually recommended only for development and testing.
 type Sendmail struct {

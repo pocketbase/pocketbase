@@ -358,13 +358,14 @@ func (app *BaseApp) SubscriptionsBroker() *subscriptions.Broker {
 // based on the current app settings.
 func (app *BaseApp) NewMailClient() mailer.Mailer {
 	if app.Settings().Smtp.Enabled {
-		return mailer.NewSmtpClient(
-			app.Settings().Smtp.Host,
-			app.Settings().Smtp.Port,
-			app.Settings().Smtp.Username,
-			app.Settings().Smtp.Password,
-			app.Settings().Smtp.Tls,
-		)
+		return &mailer.SmtpClient{
+			Host:       app.Settings().Smtp.Host,
+			Port:       app.Settings().Smtp.Port,
+			Username:   app.Settings().Smtp.Username,
+			Password:   app.Settings().Smtp.Password,
+			Tls:        app.Settings().Smtp.Tls,
+			AuthMethod: app.Settings().Smtp.AuthMethod,
+		}
 	}
 
 	return &mailer.Sendmail{}

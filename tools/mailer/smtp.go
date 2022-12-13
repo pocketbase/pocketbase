@@ -1,6 +1,7 @@
 package mailer
 
 import (
+	"errors"
 	"fmt"
 	"net/smtp"
 	"strings"
@@ -11,7 +12,14 @@ import (
 
 var _ Mailer = (*SmtpClient)(nil)
 
-// NewSmtpClient creates new `SmtpClient` with the provided configuration.
+const (
+	SmtpAuthPlain = "PLAIN"
+	SmtpAuthLogin = "LOGIN"
+)
+
+// Deprecated: Use directly the SmtpClient struct literal.
+//
+// NewSmtpClient creates new SmtpClient with the provided configuration.
 func NewSmtpClient(
 	host string,
 	port int,
@@ -20,41 +28,47 @@ func NewSmtpClient(
 	tls bool,
 ) *SmtpClient {
 	return &SmtpClient{
-		host:     host,
-		port:     port,
-		username: username,
-		password: password,
-		tls:      tls,
+		Host:     host,
+		Port:     port,
+		Username: username,
+		Password: password,
+		Tls:      tls,
 	}
 }
 
 // SmtpClient defines a SMTP mail client structure that implements
 // `mailer.Mailer` interface.
 type SmtpClient struct {
-	host     string
-	port     int
-	username string
-	password string
-	tls      bool
+	Host       string
+	Port       int
+	Username   string
+	Password   string
+	Tls        bool
+	AuthMethod string // default to "PLAIN"
 }
 
 // Send implements `mailer.Mailer` interface.
 func (c *SmtpClient) Send(m *Message) error {
 	var smtpAuth smtp.Auth
-	if c.username != "" || c.password != "" {
-		smtpAuth = smtp.PlainAuth("", c.username, c.password, c.host)
+	if c.Username != "" || c.Password != "" {
+		switch c.AuthMethod {
+		case SmtpAuthLogin:
+			smtpAuth = &smtpLoginAuth{c.Username, c.Password}
+		default:
+			smtpAuth = smtp.PlainAuth("", c.Username, c.Password, c.Host)
+		}
 	}
 
 	// create mail instance
 	var yak *mailyak.MailYak
-	if c.tls {
+	if c.Tls {
 		var tlsErr error
-		yak, tlsErr = mailyak.NewWithTLS(fmt.Sprintf("%s:%d", c.host, c.port), smtpAuth, nil)
+		yak, tlsErr = mailyak.NewWithTLS(fmt.Sprintf("%s:%d", c.Host, c.Port), smtpAuth, nil)
 		if tlsErr != nil {
 			return tlsErr
 		}
 	} else {
-		yak = mailyak.New(fmt.Sprintf("%s:%d", c.host, c.port), smtpAuth)
+		yak = mailyak.New(fmt.Sprintf("%s:%d", c.Host, c.Port), smtpAuth)
 	}
 
 	if m.From.Name != "" {
@@ -107,4 +121,60 @@ func (c *SmtpClient) Send(m *Message) error {
 	}
 
 	return yak.Send()
+}
+
+// -------------------------------------------------------------------
+// AUTH LOGIN
+// -------------------------------------------------------------------
+
+var _ smtp.Auth = (*smtpLoginAuth)(nil)
+
+// smtpLoginAuth defines an AUTH that implements the LOGIN authentication mechanism.
+//
+// AUTH LOGIN is obsolete[1] but some mail services like outlook requires it [2].
+//
+// NB!
+// It will only send the credentials if the connection is using TLS or is connected to localhost.
+// Otherwise authentication will fail with an error, without sending the credentials.
+//
+// [1]: https://github.com/golang/go/issues/40817
+// [2]: https://support.microsoft.com/en-us/office/outlook-com-no-longer-supports-auth-plain-authentication-07f7d5e9-1697-465f-84d2-4513d4ff0145?ui=en-us&rs=en-us&ad=us
+type smtpLoginAuth struct {
+	username, password string
+}
+
+// Start initializes an authentication with the server.
+//
+// It is part of the [smtp.Auth] interface.
+func (a *smtpLoginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	// Must have TLS, or else localhost server.
+	// Note: If TLS is not true, then we can't trust ANYTHING in ServerInfo.
+	// In particular, it doesn't matter if the server advertises LOGIN auth.
+	// That might just be the attacker saying
+	// "it's ok, you can trust me with your password."
+	if !server.TLS && !isLocalhost(server.Name) {
+		return "", nil, errors.New("unencrypted connection")
+	}
+
+	return "LOGIN", nil, nil
+}
+
+// Next "continues" the auth process by feeding the server with the requested data.
+//
+// It is part of the [smtp.Auth] interface.
+func (a *smtpLoginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		switch strings.ToLower(string(fromServer)) {
+		case "username:":
+			return []byte(a.username), nil
+		case "password:":
+			return []byte(a.password), nil
+		}
+	}
+
+	return nil, nil
+}
+
+func isLocalhost(name string) bool {
+	return name == "localhost" || name == "127.0.0.1" || name == "::1"
 }

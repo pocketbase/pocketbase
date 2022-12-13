@@ -19,6 +19,11 @@
         { label: "Always", value: true },
     ];
 
+    const authMethods = [
+        { label: "PLAIN (default)", value: "PLAIN" },
+        { label: "LOGIN", value: "LOGIN" },
+    ];
+
     $pageTitle = "Mail settings";
 
     let testPopup;
@@ -70,6 +75,10 @@
             meta: settings?.meta || {},
             smtp: settings?.smtp || {},
         };
+
+        if (!formSettings.smtp.authMethod) {
+            formSettings.smtp.authMethod = authMethods[0].value;
+        }
 
         originalFormSettings = JSON.parse(JSON.stringify(formSettings));
     }
@@ -165,7 +174,7 @@
 
                 {#if formSettings.smtp.enabled}
                     <div class="grid" transition:slide|local={{ duration: 150 }}>
-                        <div class="col-lg-6">
+                        <div class="col-lg-4">
                             <Field class="form-field required" name="smtp.host" let:uniqueId>
                                 <label for={uniqueId}>SMTP server host</label>
                                 <input
@@ -176,7 +185,7 @@
                                 />
                             </Field>
                         </div>
-                        <div class="col-lg-3">
+                        <div class="col-lg-2">
                             <Field class="form-field required" name="smtp.port" let:uniqueId>
                                 <label for={uniqueId}>Port</label>
                                 <input
@@ -194,6 +203,16 @@
                                     id={uniqueId}
                                     items={tlsOptions}
                                     bind:keyOfSelected={formSettings.smtp.tls}
+                                />
+                            </Field>
+                        </div>
+                        <div class="col-lg-3">
+                            <Field class="form-field" name="smtp.authMethod" let:uniqueId>
+                                <label for={uniqueId}>AUTH Method</label>
+                                <ObjectSelect
+                                    id={uniqueId}
+                                    items={authMethods}
+                                    bind:keyOfSelected={formSettings.smtp.authMethod}
                                 />
                             </Field>
                         </div>

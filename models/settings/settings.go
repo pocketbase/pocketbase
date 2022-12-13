@@ -10,6 +10,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/tools/auth"
+	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
@@ -262,6 +263,9 @@ type SmtpConfig struct {
 	Username string `form:"username" json:"username"`
 	Password string `form:"password" json:"password"`
 
+	// SMTP AUTH - PLAIN (default) or LOGIN
+	AuthMethod string `form:"authMethod" json:"authMethod"`
+
 	// Whether to enforce TLS encryption for the mail server connection.
 	//
 	// When set to false StartTLS command is send, leaving the server
@@ -272,8 +276,23 @@ type SmtpConfig struct {
 // Validate makes SmtpConfig validatable by implementing [validation.Validatable] interface.
 func (c SmtpConfig) Validate() error {
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.Host, is.Host, validation.When(c.Enabled, validation.Required)),
-		validation.Field(&c.Port, validation.When(c.Enabled, validation.Required), validation.Min(0)),
+		validation.Field(
+			&c.Host,
+			validation.When(c.Enabled, validation.Required),
+			is.Host,
+		),
+		validation.Field(
+			&c.Port,
+			validation.When(c.Enabled, validation.Required),
+			validation.Min(0),
+		),
+		validation.Field(
+			&c.AuthMethod,
+			// don't require it for backward compatibility
+			// (fallback internally to PLAIN)
+			// validation.When(c.Enabled, validation.Required),
+			validation.In(mailer.SmtpAuthLogin, mailer.SmtpAuthPlain),
+		),
 	)
 }
 
