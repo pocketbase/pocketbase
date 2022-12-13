@@ -2,11 +2,13 @@
 
 - Added `/api/health` endpoint (thanks @MarvinJWendt).
 
-- Removed `rest.UploadedFile` struct (see below `filesystem.File`).
+- Added support for SMTP `LOGIN` auth for Microsoft/Outlook and other providers that dont't support the `PLAIN` auth method ([#1217](https://github.com/pocketbase/pocketbase/discussions/1217#discussioncomment-4387970)).
 
-- Optimized memory allocations (~20% improvement).
+- Reduced memory consumption (~20% improvement).
 
 - Improved record references delete performance.
+
+- Removed `rest.UploadedFile` struct (see below `filesystem.File`).
 
 - Added generic file resource struct that allows loading and uploading file content from
   different sources (at the moment multipart/formdata requests and from the local filesystem).
