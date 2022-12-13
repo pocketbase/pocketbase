@@ -345,10 +345,10 @@ func (dao *Dao) SaveRecord(record *models.Record) error {
 // DeleteRecord deletes the provided Record model.
 //
 // This method will also cascade the delete operation to all linked
-// relational records (delete or set to NULL, depending on the rel settings).
+// relational records (delete or unset, depending on the rel settings).
 //
 // The delete operation may fail if the record is part of a required
-// reference in another record (aka. cannot be deleted or set to NULL).
+// reference in another record (aka. cannot be deleted or unset).
 func (dao *Dao) DeleteRecord(record *models.Record) error {
 	// fetch rel references (if any)
 	//
