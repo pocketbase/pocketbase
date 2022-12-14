@@ -210,6 +210,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 		OrderBy("test1 ASC")
 
 	scenarios := []struct {
+		name          string
 		page          int
 		perPage       int
 		sort          []SortField
@@ -218,8 +219,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 		expectResult  string
 		expectQueries []string
 	}{
-		// page normalization
 		{
+			"page normalization",
 			-1,
 			10,
 			[]SortField{},
@@ -231,8 +232,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 				"SELECT * FROM `test` WHERE NOT (`test1` IS NULL) ORDER BY `test1` ASC LIMIT 10",
 			},
 		},
-		// perPage normalization
 		{
+			"perPage normalization",
 			10, // will be capped by total count
 			0,  // fallback to default
 			[]SortField{},
@@ -244,8 +245,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 				"SELECT * FROM `test` WHERE NOT (`test1` IS NULL) ORDER BY `test1` ASC LIMIT 30",
 			},
 		},
-		// invalid sort field
 		{
+			"invalid sort field",
 			1,
 			10,
 			[]SortField{{"unknown", SortAsc}},
@@ -254,8 +255,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			"",
 			nil,
 		},
-		// invalid filter
 		{
+			"invalid filter",
 			1,
 			10,
 			[]SortField{},
@@ -264,8 +265,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			"",
 			nil,
 		},
-		// valid sort and filter fields
 		{
+			"valid sort and filter fields",
 			1,
 			5555, // will be limited by MaxPerPage
 			[]SortField{{"test2", SortDesc}},
@@ -277,8 +278,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (COALESCE(test2, '') != COALESCE(null, ''))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT 500",
 			},
 		},
-		// valid sort and filter fields (zero results)
 		{
+			"valid sort and filter fields (zero results)",
 			1,
 			10,
 			[]SortField{{"test3", SortAsc}},
@@ -290,8 +291,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (COALESCE(test3, '') != COALESCE('', '')) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
 			},
 		},
-		// pagination test
 		{
+			"pagination test",
 			3,
 			1,
 			[]SortField{},
@@ -305,7 +306,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 		},
 	}
 
-	for i, s := range scenarios {
+	for _, s := range scenarios {
 		testDB.CalledQueries = []string{} // reset
 
 		testResolver := &testFieldResolver{}
@@ -320,7 +321,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 
 		hasErr := err != nil
 		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected hasErr %v, got %v (%v)", i, s.expectError, hasErr, err)
+			t.Errorf("[%s] Expected hasErr %v, got %v (%v)", s.name, s.expectError, hasErr, err)
 			continue
 		}
 
@@ -329,22 +330,22 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 		}
 
 		if testResolver.UpdateQueryCalls != 1 {
-			t.Errorf("(%d) Expected resolver.Update to be called %d, got %d", i, 1, testResolver.UpdateQueryCalls)
+			t.Errorf("[%s] Expected resolver.Update to be called %d, got %d", s.name, 1, testResolver.UpdateQueryCalls)
 		}
 
 		encoded, _ := json.Marshal(result)
 		if string(encoded) != s.expectResult {
-			t.Errorf("(%d) Expected result %v, got \n%v", i, s.expectResult, string(encoded))
+			t.Errorf("[%s] Expected result %v, got \n%v", s.name, s.expectResult, string(encoded))
 		}
 
 		if len(s.expectQueries) != len(testDB.CalledQueries) {
-			t.Errorf("(%d) Expected %d queries, got %d: \n%v", i, len(s.expectQueries), len(testDB.CalledQueries), testDB.CalledQueries)
+			t.Errorf("[%s] Expected %d queries, got %d: \n%v", s.name, len(s.expectQueries), len(testDB.CalledQueries), testDB.CalledQueries)
 			continue
 		}
 
 		for _, q := range testDB.CalledQueries {
 			if !list.ExistInSliceWithRegex(q, s.expectQueries) {
-				t.Errorf("(%d) Didn't expect query \n%v in \n%v", i, q, testDB.CalledQueries)
+				t.Errorf("[%s] Didn't expect query \n%v in \n%v", s.name, q, testDB.CalledQueries)
 			}
 		}
 	}

@@ -47,7 +47,7 @@ func (f FilterData) build(data []fexpr.ExprGroup, fieldResolver FieldResolver) (
 		return nil, errors.New("Empty filter expression.")
 	}
 
-	var result dbx.Expression
+	result := &concatExpr{separator: " "}
 
 	for _, group := range data {
 		var expr dbx.Expression
@@ -68,11 +68,17 @@ func (f FilterData) build(data []fexpr.ExprGroup, fieldResolver FieldResolver) (
 			return nil, exprErr
 		}
 
-		if group.Join == fexpr.JoinAnd {
-			result = dbx.And(result, expr)
-		} else {
-			result = dbx.Or(result, expr)
+		if len(result.parts) > 0 {
+			var op string
+			if group.Join == fexpr.JoinOr {
+				op = "OR"
+			} else {
+				op = "AND"
+			}
+			result.parts = append(result.parts, &opExpr{op})
 		}
+
+		result.parts = append(result.parts, expr)
 	}
 
 	return result, nil
@@ -208,4 +214,56 @@ func wrapLikeParams(params dbx.Params) dbx.Params {
 	}
 
 	return result
+}
+
+// -------------------------------------------------------------------
+
+// opExpr defines an expression that contains a raw sql operator string.
+type opExpr struct {
+	op string
+}
+
+// Build converts an expression into a SQL fragment.
+//
+// Implements [dbx.Expression] interface.
+func (e *opExpr) Build(db *dbx.DB, params dbx.Params) string {
+	return e.op
+}
+
+// concatExpr defines an expression that concatenates multiple
+// other expressions with a specified separator.
+type concatExpr struct {
+	parts     []dbx.Expression
+	separator string
+}
+
+// Build converts an expression into a SQL fragment.
+//
+// Implements [dbx.Expression] interface.
+func (e *concatExpr) Build(db *dbx.DB, params dbx.Params) string {
+	if len(e.parts) == 0 {
+		return ""
+	}
+
+	stringParts := make([]string, 0, len(e.parts))
+
+	for _, a := range e.parts {
+		if a == nil {
+			continue
+		}
+
+		if sql := a.Build(db, params); sql != "" {
+			stringParts = append(stringParts, sql)
+		}
+	}
+
+	// skip extra parenthesis for single concat expression
+	if len(stringParts) == 1 &&
+		// check for already concatenated raw/plain expressions
+		!strings.Contains(strings.ToUpper(stringParts[0]), " AND ") &&
+		!strings.Contains(strings.ToUpper(stringParts[0]), " OR ") {
+		return stringParts[0]
+	}
+
+	return "(" + strings.Join(stringParts, e.separator) + ")"
 }
