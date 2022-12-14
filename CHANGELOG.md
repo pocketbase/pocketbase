@@ -8,6 +8,8 @@
 
 - Improved record references delete performance.
 
+- Removed the unnecessary parenthesis in the generated filter SQL query, reducing the "parse stack overflow" errors.
+
 - Removed `rest.UploadedFile` struct (see below `filesystem.File`).
 
 - Added generic file resource struct that allows loading and uploading file content from
