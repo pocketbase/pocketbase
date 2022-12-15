@@ -51,10 +51,10 @@ type Config struct {
 	HideStartBanner bool
 
 	// optional DB configurations
-	DataMaxOpenConns int // default to 600
-	DataMaxIdleConns int // default 20
-	LogsMaxOpenConns int // default to 500
-	LogsMaxIdleConns int // default to 10
+	DataMaxOpenConns int // default to core.DefaultDataMaxOpenConns
+	DataMaxIdleConns int // default to core.DefaultDataMaxIdleConns
+	LogsMaxOpenConns int // default to core.DefaultLogsMaxOpenConns
+	LogsMaxIdleConns int // default to core.DefaultLogsMaxIdleConns
 }
 
 // New creates a new PocketBase instance with the default configuration.

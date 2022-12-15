@@ -21,6 +21,13 @@ import (
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 )
 
+const (
+	DefaultDataMaxOpenConns int = 100
+	DefaultDataMaxIdleConns int = 20
+	DefaultLogsMaxOpenConns int = 10
+	DefaultLogsMaxIdleConns int = 2
+)
+
 var _ App = (*BaseApp)(nil)
 
 // BaseApp implements core.App and defines the base PocketBase app structure.
@@ -139,10 +146,10 @@ type BaseAppConfig struct {
 	DataDir          string
 	EncryptionEnv    string
 	IsDebug          bool
-	DataMaxOpenConns int // default to 600
+	DataMaxOpenConns int // default to 500
 	DataMaxIdleConns int // default 20
-	LogsMaxOpenConns int // default to 500
-	LogsMaxIdleConns int // default to 10
+	LogsMaxOpenConns int // default to 100
+	LogsMaxIdleConns int // default to 5
 }
 
 // NewBaseApp creates and returns a new BaseApp instance
@@ -802,8 +809,8 @@ func (app *BaseApp) OnCollectionsAfterImportRequest() *hook.Hook[*CollectionsImp
 // -------------------------------------------------------------------
 
 func (app *BaseApp) initLogsDB() error {
-	maxOpenConns := 500
-	maxIdleConns := 10
+	maxOpenConns := DefaultLogsMaxOpenConns
+	maxIdleConns := DefaultLogsMaxIdleConns
 	if app.logsMaxOpenConns > 0 {
 		maxOpenConns = app.logsMaxOpenConns
 	}
@@ -833,8 +840,8 @@ func (app *BaseApp) initLogsDB() error {
 }
 
 func (app *BaseApp) initDataDB() error {
-	maxOpenConns := 600
-	maxIdleConns := 20
+	maxOpenConns := DefaultDataMaxOpenConns
+	maxIdleConns := DefaultDataMaxIdleConns
 	if app.dataMaxOpenConns > 0 {
 		maxOpenConns = app.dataMaxOpenConns
 	}
