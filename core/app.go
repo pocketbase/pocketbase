@@ -16,6 +16,11 @@ import (
 
 // App defines the main PocketBase app interface.
 type App interface {
+	// Deprecated:
+	// This method may get removed in the near future.
+	// It is recommended to access the logs db instance from app.Dao().DB() or
+	// if you want more flexibility - app.Dao().AsyncDB() and app.Dao().SyncDB().
+	//
 	// DB returns the default app database instance.
 	DB() *dbx.DB
 
@@ -26,6 +31,11 @@ type App interface {
 	// trying to access the request logs table will result in error.
 	Dao() *daos.Dao
 
+	// Deprecated:
+	// This method may get removed in the near future.
+	// It is recommended to access the logs db instance from app.LogsDao().DB() or
+	// if you want more flexibility - app.LogsDao().AsyncDB() and app.LogsDao().SyncDB().
+	//
 	// LogsDB returns the app logs database instance.
 	LogsDB() *dbx.DB
 

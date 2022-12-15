@@ -1,12 +1,10 @@
 package daos
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"math"
 	"strings"
-	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
@@ -359,25 +357,12 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 		return err
 	}
 
-	// run all consequent DeleteRecord requests synchroniously
-	// to minimize SQLITE_BUSY errors
-	if len(refs) > 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-		defer cancel()
-		if err := dao.Block(ctx); err != nil {
-			// ignore blocking and try to run directly...
-		} else {
-			defer dao.Continue()
-		}
-	}
-
 	return dao.RunInTransaction(func(txDao *Dao) error {
 		// manually trigger delete on any linked external auth to ensure
-		// that the `OnModel*` hooks are triggered.
-		//
-		// note: the select is outside of the transaction to minimize
-		// SQLITE_BUSY errors when mixing read&write in a single transaction
+		// that the `OnModel*` hooks are triggered
 		if record.Collection().IsAuth() {
+			// note: the select is outside of the transaction to minimize
+			// SQLITE_BUSY errors when mixing read&write in a single transaction
 			externalAuths, err := dao.FindAllExternalAuthsByRecord(record)
 			if err != nil {
 				return err

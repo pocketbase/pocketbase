@@ -11,7 +11,11 @@ func TestNewBaseApp(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
-	app := NewBaseApp(testDataDir, "test_env", true)
+	app := NewBaseApp(&BaseAppConfig{
+		DataDir:       testDataDir,
+		EncryptionEnv: "test_env",
+		IsDebug:       true,
+	})
 
 	if app.dataDir != testDataDir {
 		t.Fatalf("expected dataDir %q, got %q", testDataDir, app.dataDir)
@@ -42,7 +46,11 @@ func TestBaseAppBootstrap(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
-	app := NewBaseApp(testDataDir, "pb_test_env", false)
+	app := NewBaseApp(&BaseAppConfig{
+		DataDir:       testDataDir,
+		EncryptionEnv: "pb_test_env",
+		IsDebug:       false,
+	})
 	defer app.ResetBootstrapState()
 
 	// bootstrap
@@ -112,27 +120,31 @@ func TestBaseAppGetters(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
-	app := NewBaseApp(testDataDir, "pb_test_env", false)
+	app := NewBaseApp(&BaseAppConfig{
+		DataDir:       testDataDir,
+		EncryptionEnv: "pb_test_env",
+		IsDebug:       false,
+	})
 	defer app.ResetBootstrapState()
 
 	if err := app.Bootstrap(); err != nil {
 		t.Fatal(err)
 	}
 
-	if app.db != app.DB() {
-		t.Fatalf("Expected app.DB %v, got %v", app.DB(), app.db)
-	}
-
 	if app.dao != app.Dao() {
 		t.Fatalf("Expected app.Dao %v, got %v", app.Dao(), app.dao)
 	}
 
-	if app.logsDB != app.LogsDB() {
-		t.Fatalf("Expected app.LogsDB %v, got %v", app.LogsDB(), app.logsDB)
+	if app.dao.AsyncDB() != app.DB() {
+		t.Fatalf("Expected app.DB %v, got %v", app.DB(), app.dao.AsyncDB())
 	}
 
 	if app.logsDao != app.LogsDao() {
 		t.Fatalf("Expected app.LogsDao %v, got %v", app.LogsDao(), app.logsDao)
+	}
+
+	if app.logsDao.AsyncDB() != app.LogsDB() {
+		t.Fatalf("Expected app.LogsDB %v, got %v", app.LogsDB(), app.logsDao.AsyncDB())
 	}
 
 	if app.dataDir != app.DataDir() {
@@ -400,7 +412,11 @@ func TestBaseAppNewMailClient(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
-	app := NewBaseApp(testDataDir, "pb_test_env", false)
+	app := NewBaseApp(&BaseAppConfig{
+		DataDir:       testDataDir,
+		EncryptionEnv: "pb_test_env",
+		IsDebug:       false,
+	})
 
 	client1 := app.NewMailClient()
 	if val, ok := client1.(*mailer.Sendmail); !ok {
@@ -419,7 +435,11 @@ func TestBaseAppNewFilesystem(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
-	app := NewBaseApp(testDataDir, "pb_test_env", false)
+	app := NewBaseApp(&BaseAppConfig{
+		DataDir:       testDataDir,
+		EncryptionEnv: "pb_test_env",
+		IsDebug:       false,
+	})
 
 	// local
 	local, localErr := app.NewFilesystem()

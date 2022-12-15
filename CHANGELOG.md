@@ -4,11 +4,17 @@
 
 - Added support for SMTP `LOGIN` auth for Microsoft/Outlook and other providers that dont't support the `PLAIN` auth method ([#1217](https://github.com/pocketbase/pocketbase/discussions/1217#discussioncomment-4387970)).
 
-- Reduced memory consumption (~20% improvement).
+- Reduced memory consumption (you can expect ~20% less allocated memory).
+
+- Added support for split (async and sync) DB connections pool increasing even further the concurrent throughput.
 
 - Improved record references delete performance.
 
-- Removed the unnecessary parenthesis in the generated filter SQL query, reducing the "parse stack overflow" errors.
+- Removed the unnecessary parenthesis in the generated filter SQL query, reducing the "_parse stack overflow_" errors.
+
+- Fixed `~` expressions backslash literal escaping ([#1231](https://github.com/pocketbase/pocketbase/discussions/1231)).
+
+- Changed `core.NewBaseApp(dir, encryptionEnv, isDebug)` to `NewBaseApp(config *BaseAppConfig)` which allows to further configure the app instance.
 
 - Removed `rest.UploadedFile` struct (see below `filesystem.File`).
 
@@ -27,9 +33,7 @@
   forms.RecordUpsert.RemoveFiles(key, filenames...)     // marks the filenames for deletion
   ```
 
-- Fixed `LIKE` expressions backslash escaping ([#1231](https://github.com/pocketbase/pocketbase/discussions/1231)).
-
-- Trigger the `password` validators in any of the others password change fields is set.
+- Trigger the `password` validators if any of the others password change fields is set.
 
 
 ## v0.9.2

@@ -93,7 +93,11 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil, err
 	}
 
-	app := core.NewBaseApp(tempDir, "pb_test_env", false)
+	app := core.NewBaseApp(&core.BaseAppConfig{
+		DataDir:       tempDir,
+		EncryptionEnv: "pb_test_env",
+		IsDebug:       false,
+	})
 
 	// load data dir and db connections
 	if err := app.Bootstrap(); err != nil {

@@ -634,10 +634,16 @@ func TestDeleteRecord(t *testing.T) {
 	// delete existing record + cascade
 	// ---
 	calledQueries := []string{}
-	app.DB().QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+	app.Dao().SyncDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
-	app.DB().ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+	app.Dao().AsyncDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		calledQueries = append(calledQueries, sql)
+	}
+	app.Dao().SyncDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+		calledQueries = append(calledQueries, sql)
+	}
+	app.Dao().AsyncDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
 	rec3, _ := app.Dao().FindRecordById("users", "oap640cot4yru2s")

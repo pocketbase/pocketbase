@@ -49,6 +49,12 @@ type Config struct {
 
 	// hide the default console server info on app startup
 	HideStartBanner bool
+
+	// optional DB configurations
+	DataMaxOpenConns int // default to 600
+	DataMaxIdleConns int // default 20
+	LogsMaxOpenConns int // default to 500
+	LogsMaxIdleConns int // default to 10
 }
 
 // New creates a new PocketBase instance with the default configuration.
@@ -105,11 +111,15 @@ func NewWithConfig(config Config) *PocketBase {
 	pb.eagerParseFlags(config)
 
 	// initialize the app instance
-	pb.appWrapper = &appWrapper{core.NewBaseApp(
-		pb.dataDirFlag,
-		pb.encryptionEnvFlag,
-		pb.debugFlag,
-	)}
+	pb.appWrapper = &appWrapper{core.NewBaseApp(&core.BaseAppConfig{
+		DataDir:          pb.dataDirFlag,
+		EncryptionEnv:    pb.encryptionEnvFlag,
+		IsDebug:          pb.debugFlag,
+		DataMaxOpenConns: config.DataMaxOpenConns,
+		DataMaxIdleConns: config.DataMaxIdleConns,
+		LogsMaxOpenConns: config.LogsMaxOpenConns,
+		LogsMaxIdleConns: config.LogsMaxIdleConns,
+	})}
 
 	// hide the default help command (allow only `--help` flag)
 	pb.RootCmd.SetHelpCommand(&cobra.Command{Hidden: true})

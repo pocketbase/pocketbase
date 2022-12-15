@@ -26,16 +26,18 @@ var _ App = (*BaseApp)(nil)
 // BaseApp implements core.App and defines the base PocketBase app structure.
 type BaseApp struct {
 	// configurable parameters
-	isDebug       bool
-	dataDir       string
-	encryptionEnv string
+	isDebug          bool
+	dataDir          string
+	encryptionEnv    string
+	dataMaxOpenConns int
+	dataMaxIdleConns int
+	logsMaxOpenConns int
+	logsMaxIdleConns int
 
 	// internals
 	cache               *store.Store[any]
 	settings            *settings.Settings
-	db                  *dbx.DB
 	dao                 *daos.Dao
-	logsDB              *dbx.DB
 	logsDao             *daos.Dao
 	subscriptionsBroker *subscriptions.Broker
 
@@ -132,15 +134,30 @@ type BaseApp struct {
 	onCollectionsAfterImportRequest  *hook.Hook[*CollectionsImportEvent]
 }
 
+// BaseAppConfig defines a BaseApp configuration option
+type BaseAppConfig struct {
+	DataDir          string
+	EncryptionEnv    string
+	IsDebug          bool
+	DataMaxOpenConns int // default to 600
+	DataMaxIdleConns int // default 20
+	LogsMaxOpenConns int // default to 500
+	LogsMaxIdleConns int // default to 10
+}
+
 // NewBaseApp creates and returns a new BaseApp instance
 // configured with the provided arguments.
 //
 // To initialize the app, you need to call `app.Bootstrap()`.
-func NewBaseApp(dataDir string, encryptionEnv string, isDebug bool) *BaseApp {
+func NewBaseApp(config *BaseAppConfig) *BaseApp {
 	app := &BaseApp{
-		dataDir:             dataDir,
-		isDebug:             isDebug,
-		encryptionEnv:       encryptionEnv,
+		dataDir:             config.DataDir,
+		isDebug:             config.IsDebug,
+		encryptionEnv:       config.EncryptionEnv,
+		dataMaxOpenConns:    config.DataMaxOpenConns,
+		dataMaxIdleConns:    config.DataMaxIdleConns,
+		logsMaxOpenConns:    config.LogsMaxOpenConns,
+		logsMaxIdleConns:    config.LogsMaxIdleConns,
 		cache:               store.New[any](nil),
 		settings:            settings.New(),
 		subscriptionsBroker: subscriptions.NewBroker(),
@@ -283,14 +300,20 @@ func (app *BaseApp) Bootstrap() error {
 // ResetBootstrapState takes care for releasing initialized app resources
 // (eg. closing db connections).
 func (app *BaseApp) ResetBootstrapState() error {
-	if app.db != nil {
-		if err := app.db.Close(); err != nil {
+	if app.Dao() != nil {
+		if err := app.Dao().AsyncDB().(*dbx.DB).Close(); err != nil {
+			return err
+		}
+		if err := app.Dao().SyncDB().(*dbx.DB).Close(); err != nil {
 			return err
 		}
 	}
 
-	if app.logsDB != nil {
-		if err := app.logsDB.Close(); err != nil {
+	if app.LogsDao() != nil {
+		if err := app.LogsDao().AsyncDB().(*dbx.DB).Close(); err != nil {
+			return err
+		}
+		if err := app.LogsDao().SyncDB().(*dbx.DB).Close(); err != nil {
 			return err
 		}
 	}
@@ -302,9 +325,23 @@ func (app *BaseApp) ResetBootstrapState() error {
 	return nil
 }
 
+// Deprecated:
+// This method may get removed in the near future.
+// It is recommended to access the db instance from app.Dao().DB() or
+// if you want more flexibility - app.Dao().AsyncDB() and app.Dao().SyncDB().
+//
 // DB returns the default app database instance.
 func (app *BaseApp) DB() *dbx.DB {
-	return app.db
+	if app.Dao() == nil {
+		return nil
+	}
+
+	db, ok := app.Dao().DB().(*dbx.DB)
+	if !ok {
+		return nil
+	}
+
+	return db
 }
 
 // Dao returns the default app Dao instance.
@@ -312,9 +349,23 @@ func (app *BaseApp) Dao() *daos.Dao {
 	return app.dao
 }
 
+// Deprecated:
+// This method may get removed in the near future.
+// It is recommended to access the logs db instance from app.LogsDao().DB() or
+// if you want more flexibility - app.LogsDao().AsyncDB() and app.LogsDao().SyncDB().
+//
 // LogsDB returns the app logs database instance.
 func (app *BaseApp) LogsDB() *dbx.DB {
-	return app.logsDB
+	if app.LogsDao() == nil {
+		return nil
+	}
+
+	db, ok := app.LogsDao().DB().(*dbx.DB)
+	if !ok {
+		return nil
+	}
+
+	return db
 }
 
 // LogsDao returns the app logs Dao instance.
@@ -751,41 +802,81 @@ func (app *BaseApp) OnCollectionsAfterImportRequest() *hook.Hook[*CollectionsImp
 // -------------------------------------------------------------------
 
 func (app *BaseApp) initLogsDB() error {
-	var connectErr error
-	app.logsDB, connectErr = connectDB(filepath.Join(app.DataDir(), "logs.db"))
-	if connectErr != nil {
-		return connectErr
+	maxOpenConns := 500
+	maxIdleConns := 10
+	if app.logsMaxOpenConns > 0 {
+		maxOpenConns = app.logsMaxOpenConns
+	}
+	if app.logsMaxIdleConns > 0 {
+		maxIdleConns = app.logsMaxIdleConns
 	}
 
-	app.logsDao = daos.New(app.logsDB)
+	asyncDB, err := connectDB(filepath.Join(app.DataDir(), "logs.db"))
+	if err != nil {
+		return err
+	}
+	asyncDB.DB().SetMaxOpenConns(maxOpenConns)
+	asyncDB.DB().SetMaxIdleConns(maxIdleConns)
+	asyncDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+
+	syncDB, err := connectDB(filepath.Join(app.DataDir(), "logs.db"))
+	if err != nil {
+		return err
+	}
+	syncDB.DB().SetMaxOpenConns(1)
+	syncDB.DB().SetMaxIdleConns(1)
+	syncDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+
+	app.logsDao = daos.NewMultiDB(asyncDB, syncDB)
 
 	return nil
 }
 
 func (app *BaseApp) initDataDB() error {
-	var connectErr error
-	app.db, connectErr = connectDB(filepath.Join(app.DataDir(), "data.db"))
-	if connectErr != nil {
-		return connectErr
+	maxOpenConns := 600
+	maxIdleConns := 20
+	if app.dataMaxOpenConns > 0 {
+		maxOpenConns = app.dataMaxOpenConns
 	}
+	if app.dataMaxIdleConns > 0 {
+		maxIdleConns = app.dataMaxIdleConns
+	}
+
+	asyncDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
+	if err != nil {
+		return err
+	}
+	asyncDB.DB().SetMaxOpenConns(maxOpenConns)
+	asyncDB.DB().SetMaxIdleConns(maxIdleConns)
+	asyncDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+
+	syncDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
+	if err != nil {
+		return err
+	}
+	syncDB.DB().SetMaxOpenConns(1)
+	syncDB.DB().SetMaxIdleConns(1)
+	syncDB.DB().SetConnMaxIdleTime(5 * time.Minute)
 
 	if app.IsDebug() {
-		app.db.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		syncDB.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 			color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
 		}
+		asyncDB.QueryLogFunc = syncDB.QueryLogFunc
 
-		app.db.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+		syncDB.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
 			color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
 		}
+		asyncDB.ExecLogFunc = syncDB.ExecLogFunc
 	}
 
-	app.dao = app.createDaoWithHooks(app.db)
+	app.dao = app.createDaoWithHooks(asyncDB, syncDB)
 
 	return nil
 }
 
-func (app *BaseApp) createDaoWithHooks(db dbx.Builder) *daos.Dao {
-	dao := daos.New(db)
+func (app *BaseApp) createDaoWithHooks(asyncDB, syncDB dbx.Builder) *daos.Dao {
+	dao := daos.NewMultiDB(asyncDB, syncDB)
 
 	dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
 		return app.OnModelBeforeCreate().Trigger(&ModelEvent{eventDao, m})
