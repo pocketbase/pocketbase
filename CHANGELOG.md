@@ -14,9 +14,22 @@
 
 - Fixed `~` expressions backslash literal escaping ([#1231](https://github.com/pocketbase/pocketbase/discussions/1231)).
 
-- Changed `core.NewBaseApp(dir, encryptionEnv, isDebug)` to `NewBaseApp(config *BaseAppConfig)` which allows to further configure the app instance.
+- Refactored the `core.app.Bootstrap()` to be called before starting the cobra commands ([#1267](https://github.com/pocketbase/pocketbase/discussions/1267)).
 
-- Removed `rest.UploadedFile` struct (see below `filesystem.File`).
+- ! Changed `pocketbase.NewWithConfig(config Config)` to `pocketbase.NewWithConfig(config *Config)` and added 4 new config settings:
+  ```go
+  DataMaxOpenConns int // default to core.DefaultDataMaxOpenConns
+  DataMaxIdleConns int // default to core.DefaultDataMaxIdleConns
+  LogsMaxOpenConns int // default to core.DefaultLogsMaxOpenConns
+  LogsMaxIdleConns int // default to core.DefaultLogsMaxIdleConns
+  ```
+
+- Added new helper method `core.App.IsBootstrapped()` to check the current app bootstrap state.
+
+- ! Changed `core.NewBaseApp(dir, encryptionEnv, isDebug)` to `NewBaseApp(config *BaseAppConfig)`.
+
+- ! Removed `rest.UploadedFile` struct (see below `filesystem.File`).
+
 
 - Added generic file resource struct that allows loading and uploading file content from
   different sources (at the moment multipart/formdata requests and from the local filesystem).

@@ -78,8 +78,14 @@ type App interface {
 	// RefreshSettings reinitializes and reloads the stored application settings.
 	RefreshSettings() error
 
+	// IsBootstrapped checks if the application was initialized
+	// (aka. whether Bootstrap() was called).
+	IsBootstrapped() bool
+
 	// Bootstrap takes care for initializing the application
-	// (open db connections, load settings, etc.)
+	// (open db connections, load settings, etc.).
+	//
+	// It will call ResetBootstrapState() if the application was already bootstrapped.
 	Bootstrap() error
 
 	// ResetBootstrapState takes care for releasing initialized app resources

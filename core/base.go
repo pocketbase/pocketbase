@@ -267,8 +267,16 @@ func NewBaseApp(config *BaseAppConfig) *BaseApp {
 	return app
 }
 
+// IsBootstrapped checks if the application was initialized
+// (aka. whether Bootstrap() was called).
+func (app *BaseApp) IsBootstrapped() bool {
+	return app.dao != nil && app.logsDao != nil && app.settings != nil
+}
+
 // Bootstrap initializes the application
-// (aka. create data dir, open db connections, load settings, etc.)
+// (aka. create data dir, open db connections, load settings, etc.).
+//
+// It will call ResetBootstrapState() if the application was already bootstrapped.
 func (app *BaseApp) Bootstrap() error {
 	event := &BootstrapEvent{app}
 

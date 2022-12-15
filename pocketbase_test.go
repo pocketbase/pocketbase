@@ -2,20 +2,23 @@ package pocketbase
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
 func TestNew(t *testing.T) {
 	// copy os.Args
-	originalArgs := []string{}
+	originalArgs := make([]string, len(os.Args))
 	copy(originalArgs, os.Args)
 	defer func() {
 		// restore os.Args
-		copy(os.Args, originalArgs)
+		os.Args = originalArgs
 	}()
 
 	// change os.Args
-	os.Args = os.Args[0:1]
+	os.Args = os.Args[:1]
 	os.Args = append(
 		os.Args,
 		"--dir=test_dir",
@@ -51,7 +54,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewWithConfig(t *testing.T) {
-	app := NewWithConfig(Config{
+	app := NewWithConfig(&Config{
 		DefaultDebug:         true,
 		DefaultDataDir:       "test_dir",
 		DefaultEncryptionEnv: "test_encryption_env",
@@ -89,15 +92,15 @@ func TestNewWithConfig(t *testing.T) {
 
 func TestNewWithConfigAndFlags(t *testing.T) {
 	// copy os.Args
-	originalArgs := []string{}
+	originalArgs := make([]string, len(os.Args))
 	copy(originalArgs, os.Args)
 	defer func() {
 		// restore os.Args
-		copy(os.Args, originalArgs)
+		os.Args = originalArgs
 	}()
 
 	// change os.Args
-	os.Args = os.Args[0:1]
+	os.Args = os.Args[:1]
 	os.Args = append(
 		os.Args,
 		"--dir=test_dir_flag",
@@ -105,7 +108,7 @@ func TestNewWithConfigAndFlags(t *testing.T) {
 		"--debug=false",
 	)
 
-	app := NewWithConfig(Config{
+	app := NewWithConfig(&Config{
 		DefaultDebug:         true,
 		DefaultDataDir:       "test_dir",
 		DefaultEncryptionEnv: "test_encryption_env",
@@ -138,5 +141,84 @@ func TestNewWithConfigAndFlags(t *testing.T) {
 
 	if app.IsDebug() != false {
 		t.Fatal("Expected app.IsDebug() false, got true")
+	}
+}
+
+func TestSkipBootstrap(t *testing.T) {
+	// copy os.Args
+	originalArgs := make([]string, len(os.Args))
+	copy(originalArgs, os.Args)
+	defer func() {
+		// restore os.Args
+		os.Args = originalArgs
+	}()
+
+	tempDir := filepath.Join(os.TempDir(), "temp_pb_data")
+	defer os.RemoveAll(tempDir)
+
+	// already bootstrapped
+	app0 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+	app0.Bootstrap()
+	if v := app0.skipBootstrap(); !v {
+		t.Fatal("[bootstrapped] Expected true, got false")
+	}
+
+	// unknown command
+	os.Args = os.Args[:1]
+	os.Args = append(os.Args, "demo")
+	app1 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+	app1.RootCmd.AddCommand(&cobra.Command{Use: "test"})
+	if v := app1.skipBootstrap(); !v {
+		t.Fatal("[unknown] Expected true, got false")
+	}
+
+	// default flags
+	flagScenarios := []struct {
+		name  string
+		short string
+	}{
+		{"help", "h"},
+		{"version", "v"},
+	}
+
+	for _, s := range flagScenarios {
+		// base flag
+		os.Args = os.Args[:1]
+		os.Args = append(os.Args, "--"+s.name)
+		app1 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+		if v := app1.skipBootstrap(); !v {
+			t.Fatalf("[--%s] Expected true, got false", s.name)
+		}
+
+		// short flag
+		os.Args = os.Args[:1]
+		os.Args = append(os.Args, "-"+s.short)
+		app2 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+		if v := app2.skipBootstrap(); !v {
+			t.Fatalf("[-%s] Expected true, got false", s.short)
+		}
+
+		customCmd := &cobra.Command{Use: "custom"}
+		customCmd.PersistentFlags().BoolP(s.name, s.short, false, "")
+
+		// base flag in custom command
+		os.Args = os.Args[:1]
+		os.Args = append(os.Args, "custom")
+		os.Args = append(os.Args, "--"+s.name)
+		app3 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+		app3.RootCmd.AddCommand(customCmd)
+		if v := app3.skipBootstrap(); v {
+			t.Fatalf("[--%s custom] Expected false, got true", s.name)
+		}
+
+		// short flag in custom command
+		os.Args = os.Args[:1]
+		os.Args = append(os.Args, "custom")
+		os.Args = append(os.Args, "-"+s.short)
+		app4 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+		app4.RootCmd.AddCommand(customCmd)
+		if v := app4.skipBootstrap(); v {
+			t.Fatalf("[-%s custom] Expected false, got true", s.short)
+		}
 	}
 }

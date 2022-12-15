@@ -53,9 +53,17 @@ func TestBaseAppBootstrap(t *testing.T) {
 	})
 	defer app.ResetBootstrapState()
 
+	if app.IsBootstrapped() {
+		t.Fatal("Didn't expect the application to be bootstrapped.")
+	}
+
 	// bootstrap
 	if err := app.Bootstrap(); err != nil {
 		t.Fatal(err)
+	}
+
+	if !app.IsBootstrapped() {
+		t.Fatal("Expected the application to be bootstrapped.")
 	}
 
 	if stat, err := os.Stat(testDataDir); err != nil || !stat.IsDir() {
