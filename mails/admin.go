@@ -2,6 +2,7 @@ package mails
 
 import (
 	"fmt"
+	"log"
 	"net/mail"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -72,7 +73,9 @@ func SendAdminPasswordReset(app core.App, admin *models.Admin) error {
 	})
 
 	if sendErr == nil {
-		app.OnMailerAfterAdminResetPasswordSend().Trigger(event)
+		if err := app.OnMailerAfterAdminResetPasswordSend().Trigger(event); err != nil {
+			log.Println(err)
+		}
 	}
 
 	return sendErr

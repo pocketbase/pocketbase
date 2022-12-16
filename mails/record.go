@@ -2,6 +2,7 @@ package mails
 
 import (
 	"html/template"
+	"log"
 	"net/mail"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -48,7 +49,9 @@ func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
 	})
 
 	if sendErr == nil {
-		app.OnMailerAfterRecordResetPasswordSend().Trigger(event)
+		if err := app.OnMailerAfterRecordResetPasswordSend().Trigger(event); err != nil && app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return sendErr
@@ -90,7 +93,9 @@ func SendRecordVerification(app core.App, authRecord *models.Record) error {
 	})
 
 	if sendErr == nil {
-		app.OnMailerAfterRecordVerificationSend().Trigger(event)
+		if err := app.OnMailerAfterRecordVerificationSend().Trigger(event); err != nil && app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return sendErr
@@ -135,7 +140,9 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 	})
 
 	if sendErr == nil {
-		app.OnMailerAfterRecordChangeEmailSend().Trigger(event)
+		if err := app.OnMailerAfterRecordChangeEmailSend().Trigger(event); err != nil && app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return sendErr
