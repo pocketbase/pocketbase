@@ -1,8 +1,8 @@
-## (WIP)
+## v0.10.0
 
 - Added `/api/health` endpoint (thanks @MarvinJWendt).
 
-- Added support for SMTP `LOGIN` auth for Microsoft/Outlook and other providers that dont't support the `PLAIN` auth method ([#1217](https://github.com/pocketbase/pocketbase/discussions/1217#discussioncomment-4387970)).
+- Added support for SMTP `LOGIN` auth for Microsoft/Outlook and other providers that don't support the `PLAIN` auth method ([#1217](https://github.com/pocketbase/pocketbase/discussions/1217#discussioncomment-4387970)).
 
 - Reduced memory consumption (you can expect ~20% less allocated memory).
 
@@ -32,7 +32,7 @@
 
 
 - Added generic file resource struct that allows loading and uploading file content from
-  different sources (at the moment multipart/formdata requests and from the local filesystem).
+  different sources (at the moment multipart/form-data requests and from the local filesystem).
   ```
   filesystem.File{}
   filesystem.NewFileFromPath(path)
@@ -64,7 +64,7 @@
 
 - Replaced `c.QueryString()` with `c.QueryParams().Encode()` to allow loading middleware modified query parameters in the default crud actions ([#1210](https://github.com/pocketbase/pocketbase/discussions/1210)).
 
-- Fixed the datetime field not triggerering the `onChange` event on manual field edit and added a "Clear" button ([#1219](https://github.com/pocketbase/pocketbase/issues/1219)).
+- Fixed the datetime field not triggering the `onChange` event on manual field edit and added a "Clear" button ([#1219](https://github.com/pocketbase/pocketbase/issues/1219)).
 
 - Updated the GitHub goreleaser action to use go 1.19.4 since it comes with [some security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.19.4+label%3ACherryPickApproved).
 
@@ -124,7 +124,7 @@
   ```
 
 - Refactored the `migrate` command to support **external JavaScript migration files** using an embedded JS interpreter ([goja](https://github.com/dop251/goja)).
-  This allow writting custom migration scripts such as programmatically creating collections,
+  This allow writing custom migration scripts such as programmatically creating collections,
   initializing default settings, running data imports, etc., with a JavaScript API very similar to the Go one (_more documentation will be available soon_).
 
   The `migrate` command is available by default for the prebult executable,
