@@ -30,7 +30,6 @@
 
 - ! Removed `rest.UploadedFile` struct (see below `filesystem.File`).
 
-
 - Added generic file resource struct that allows loading and uploading file content from
   different sources (at the moment multipart/form-data requests and from the local filesystem).
   ```
@@ -127,7 +126,7 @@
   This allow writing custom migration scripts such as programmatically creating collections,
   initializing default settings, running data imports, etc., with a JavaScript API very similar to the Go one (_more documentation will be available soon_).
 
-  The `migrate` command is available by default for the prebult executable,
+  The `migrate` command is available by default for the prebuilt executable,
   but if you use PocketBase as framework you need register it manually:
   ```go
   migrationsDir := "" // default to "pb_migrations" (for js) and "migrations" (for go)
@@ -227,7 +226,7 @@ In addition to the `Users` and `profiles` merge, this release comes with several
 
 - The `json` field type now supports filtering and sorting [#423](https://github.com/pocketbase/pocketbase/issues/423#issuecomment-1258302125).
 
-- The `relation` field now allows unlimitted `maxSelect` (aka. without upper limit).
+- The `relation` field now allows unlimited `maxSelect` (aka. without upper limit).
 
 - Added support for combined email/username + password authentication (see below `authWithPassword()`).
 
