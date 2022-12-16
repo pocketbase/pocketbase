@@ -73,7 +73,7 @@ func SendAdminPasswordReset(app core.App, admin *models.Admin) error {
 	})
 
 	if sendErr == nil {
-		if err := app.OnMailerAfterAdminResetPasswordSend().Trigger(event); err != nil {
+		if err := app.OnMailerAfterAdminResetPasswordSend().Trigger(event); err != nil && app.IsDebug() {
 			log.Println(err)
 		}
 	}
