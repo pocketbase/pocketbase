@@ -24,17 +24,17 @@ func TestNewMultiDB(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
-	dao := daos.NewMultiDB(testApp.Dao().AsyncDB(), testApp.Dao().SyncDB())
+	dao := daos.NewMultiDB(testApp.Dao().ConcurrentDB(), testApp.Dao().NonconcurrentDB())
 
-	if dao.DB() != testApp.Dao().AsyncDB() {
+	if dao.DB() != testApp.Dao().ConcurrentDB() {
 		t.Fatal("[db-asyncdb] The 2 db instances are different")
 	}
 
-	if dao.AsyncDB() != testApp.Dao().AsyncDB() {
+	if dao.ConcurrentDB() != testApp.Dao().ConcurrentDB() {
 		t.Fatal("[asyncdb-asyncdb] The 2 db instances are different")
 	}
 
-	if dao.SyncDB() != testApp.Dao().SyncDB() {
+	if dao.NonconcurrentDB() != testApp.Dao().NonconcurrentDB() {
 		t.Fatal("[syncdb-syncdb] The 2 db instances are different")
 	}
 }

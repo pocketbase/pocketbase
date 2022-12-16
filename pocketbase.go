@@ -148,12 +148,6 @@ func (pb *PocketBase) Start() error {
 // This method differs from pb.Start() by not registering the default
 // system commands!
 func (pb *PocketBase) Execute() error {
-	// Run the bootstrap process if the command exist and it is not
-	// the default cobra version command to prevent creating
-	// unnecessary the initialization system files.
-	//
-	// https://github.com/pocketbase/pocketbase/issues/404
-	// https://github.com/pocketbase/pocketbase/discussions/1267
 	if !pb.skipBootstrap() {
 		if err := pb.Bootstrap(); err != nil {
 			return err
@@ -218,11 +212,14 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 	return pb.RootCmd.ParseFlags(os.Args[1:])
 }
 
-// eager check if the app should skip the bootstap process:
+// skipBootstrap eagerly checks if the app should skip the bootstap process:
 // - already bootstrapped
 // - is unknown command
 // - is the default help command
 // - is the default version command
+//
+// https://github.com/pocketbase/pocketbase/issues/404
+// https://github.com/pocketbase/pocketbase/discussions/1267
 func (pb *PocketBase) skipBootstrap() bool {
 	flags := []string{
 		"-h",
@@ -258,7 +255,7 @@ func (pb *PocketBase) skipBootstrap() bool {
 	return false
 }
 
-// tries to find the base executable directory and how it was run
+// inspectRuntime tries to find the base executable directory and how it was run.
 func inspectRuntime() (baseDir string, withGoRun bool) {
 	if strings.HasPrefix(os.Args[0], os.TempDir()) {
 		// probably ran with go run

@@ -6,7 +6,7 @@
 
 - Reduced memory consumption (you can expect ~20% less allocated memory).
 
-- Added support for split (async and sync) DB connections pool increasing even further the concurrent throughput.
+- Added support for split (concurrent and nonconcurrent) DB connections pool increasing even further the concurrent throughput without blocking reads on heavy write load.
 
 - Improved record references delete performance.
 

@@ -19,7 +19,7 @@ type App interface {
 	// Deprecated:
 	// This method may get removed in the near future.
 	// It is recommended to access the logs db instance from app.Dao().DB() or
-	// if you want more flexibility - app.Dao().AsyncDB() and app.Dao().SyncDB().
+	// if you want more flexibility - app.Dao().ConcurrentDB() and app.Dao().NonconcurrentDB().
 	//
 	// DB returns the default app database instance.
 	DB() *dbx.DB
@@ -34,7 +34,7 @@ type App interface {
 	// Deprecated:
 	// This method may get removed in the near future.
 	// It is recommended to access the logs db instance from app.LogsDao().DB() or
-	// if you want more flexibility - app.LogsDao().AsyncDB() and app.LogsDao().SyncDB().
+	// if you want more flexibility - app.LogsDao().ConcurrentDB() and app.LogsDao().NonconcurrentDB().
 	//
 	// LogsDB returns the app logs database instance.
 	LogsDB() *dbx.DB

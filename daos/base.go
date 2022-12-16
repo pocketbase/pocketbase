@@ -25,10 +25,10 @@ func New(db dbx.Builder) *Dao {
 
 // New creates a new Dao instance with the provided dedicated
 // async and sync db builders.
-func NewMultiDB(asyncDB, syncDB dbx.Builder) *Dao {
+func NewMultiDB(concurrentDB, nonconcurrentDB dbx.Builder) *Dao {
 	return &Dao{
-		asyncDB: asyncDB,
-		syncDB:  syncDB,
+		concurrentDB:    concurrentDB,
+		nonconcurrentDB: nonconcurrentDB,
 	}
 }
 
@@ -36,8 +36,8 @@ func NewMultiDB(asyncDB, syncDB dbx.Builder) *Dao {
 // Think of Dao as a repository and service layer in one.
 type Dao struct {
 	// in a transaction both refer to the same *dbx.TX instance
-	asyncDB dbx.Builder
-	syncDB  dbx.Builder
+	concurrentDB    dbx.Builder
+	nonconcurrentDB dbx.Builder
 
 	// @todo delete after removing Block and Continue
 	sem *semaphore.Weighted
@@ -53,26 +53,28 @@ type Dao struct {
 
 // DB returns the default dao db builder (*dbx.DB or *dbx.TX).
 //
-// Currently the default db builder is dao.asyncDB but that may change in the future.
+// Currently the default db builder is dao.concurrentDB but that may change in the future.
 func (dao *Dao) DB() dbx.Builder {
-	return dao.AsyncDB()
+	return dao.ConcurrentDB()
 }
 
-// AsyncDB returns the dao asynchronous db builder (*dbx.DB or *dbx.TX).
+// ConcurrentDB returns the dao concurrent (aka. multiple open connections)
+// db builder (*dbx.DB or *dbx.TX).
 //
-// In a transaction the asyncDB and syncDB refer to the same *dbx.TX instance.
-func (dao *Dao) AsyncDB() dbx.Builder {
-	return dao.asyncDB
+// In a transaction the concurrentDB and nonconcurrentDB refer to the same *dbx.TX instance.
+func (dao *Dao) ConcurrentDB() dbx.Builder {
+	return dao.concurrentDB
 }
 
-// SyncDB returns the dao synchronous db builder (*dbx.DB or *dbx.TX).
+// NonconcurrentDB returns the dao nonconcurrent (aka. single open connection)
+// db builder (*dbx.DB or *dbx.TX).
 //
-// In a transaction the asyncDB and syncDB refer to the same *dbx.TX instance.
-func (dao *Dao) SyncDB() dbx.Builder {
-	return dao.syncDB
+// In a transaction the concurrentDB and nonconcurrentDB refer to the same *dbx.TX instance.
+func (dao *Dao) NonconcurrentDB() dbx.Builder {
+	return dao.nonconcurrentDB
 }
 
-// Deprecated: Will be removed in the next releases. Use [Dao.SyncDB()] instead.
+// Deprecated: Will be removed in the next releases. Use [Dao.NonconcurrentDB()] instead.
 //
 // Block acquires a lock and blocks all other go routines that uses
 // the Dao instance until dao.Continue() is called, effectively making
@@ -105,7 +107,7 @@ func (dao *Dao) Block(ctx context.Context) error {
 	return dao.sem.Acquire(ctx, 1)
 }
 
-// Deprecated: Will be removed in the next releases. Use [Dao.SyncDB()] instead.
+// Deprecated: Will be removed in the next releases. Use [Dao.NonconcurrentDB()] instead.
 //
 // Continue releases the previously acquired Block() lock.
 func (dao *Dao) Continue() {
@@ -139,7 +141,7 @@ type afterCallGroup struct {
 //
 // It is safe to nest RunInTransaction calls as long as you use the txDao.
 func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
-	switch txOrDB := dao.SyncDB().(type) {
+	switch txOrDB := dao.NonconcurrentDB().(type) {
 	case *dbx.Tx:
 		// nested transactions are not supported by default
 		// so execute the function within the current transaction
@@ -213,7 +215,7 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 		return txError
 	}
 
-	return errors.New("Failed to start transaction (unknown dao.db)")
+	return errors.New("failed to start transaction (unknown dao.NonconcurrentDB() instance)")
 }
 
 // Delete deletes the provided model.
@@ -229,7 +231,7 @@ func (dao *Dao) Delete(m models.Model) error {
 			}
 		}
 
-		if err := retryDao.SyncDB().Model(m).Delete(); err != nil {
+		if err := retryDao.NonconcurrentDB().Model(m).Delete(); err != nil {
 			return err
 		}
 
@@ -274,7 +276,7 @@ func (dao *Dao) update(m models.Model) error {
 	if v, ok := any(m).(models.ColumnValueMapper); ok {
 		dataMap := v.ColumnValueMap()
 
-		_, err := dao.SyncDB().Update(
+		_, err := dao.NonconcurrentDB().Update(
 			m.TableName(),
 			dataMap,
 			dbx.HashExp{"id": m.GetId()},
@@ -284,7 +286,7 @@ func (dao *Dao) update(m models.Model) error {
 			return err
 		}
 	} else {
-		if err := dao.SyncDB().Model(m).Update(); err != nil {
+		if err := dao.NonconcurrentDB().Model(m).Update(); err != nil {
 			return err
 		}
 	}
@@ -325,12 +327,12 @@ func (dao *Dao) create(m models.Model) error {
 			dataMap["id"] = m.GetId()
 		}
 
-		_, err := dao.SyncDB().Insert(m.TableName(), dataMap).Execute()
+		_, err := dao.NonconcurrentDB().Insert(m.TableName(), dataMap).Execute()
 		if err != nil {
 			return err
 		}
 	} else {
-		if err := dao.SyncDB().Model(m).Insert(); err != nil {
+		if err := dao.NonconcurrentDB().Model(m).Insert(); err != nil {
 			return err
 		}
 	}
@@ -353,7 +355,7 @@ Retry:
 	if attempts == 2 {
 		// assign new Dao without the before hooks to avoid triggering
 		// the already fired before callbacks multiple times
-		retryDao = NewMultiDB(dao.asyncDB, dao.syncDB)
+		retryDao = NewMultiDB(dao.concurrentDB, dao.nonconcurrentDB)
 		retryDao.AfterCreateFunc = dao.AfterCreateFunc
 		retryDao.AfterUpdateFunc = dao.AfterUpdateFunc
 		retryDao.AfterDeleteFunc = dao.AfterDeleteFunc

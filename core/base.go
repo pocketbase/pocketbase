@@ -316,19 +316,19 @@ func (app *BaseApp) Bootstrap() error {
 // (eg. closing db connections).
 func (app *BaseApp) ResetBootstrapState() error {
 	if app.Dao() != nil {
-		if err := app.Dao().AsyncDB().(*dbx.DB).Close(); err != nil {
+		if err := app.Dao().ConcurrentDB().(*dbx.DB).Close(); err != nil {
 			return err
 		}
-		if err := app.Dao().SyncDB().(*dbx.DB).Close(); err != nil {
+		if err := app.Dao().NonconcurrentDB().(*dbx.DB).Close(); err != nil {
 			return err
 		}
 	}
 
 	if app.LogsDao() != nil {
-		if err := app.LogsDao().AsyncDB().(*dbx.DB).Close(); err != nil {
+		if err := app.LogsDao().ConcurrentDB().(*dbx.DB).Close(); err != nil {
 			return err
 		}
-		if err := app.LogsDao().SyncDB().(*dbx.DB).Close(); err != nil {
+		if err := app.LogsDao().NonconcurrentDB().(*dbx.DB).Close(); err != nil {
 			return err
 		}
 	}
@@ -343,7 +343,7 @@ func (app *BaseApp) ResetBootstrapState() error {
 // Deprecated:
 // This method may get removed in the near future.
 // It is recommended to access the db instance from app.Dao().DB() or
-// if you want more flexibility - app.Dao().AsyncDB() and app.Dao().SyncDB().
+// if you want more flexibility - app.Dao().ConcurrentDB() and app.Dao().NonconcurrentDB().
 //
 // DB returns the default app database instance.
 func (app *BaseApp) DB() *dbx.DB {
@@ -367,7 +367,7 @@ func (app *BaseApp) Dao() *daos.Dao {
 // Deprecated:
 // This method may get removed in the near future.
 // It is recommended to access the logs db instance from app.LogsDao().DB() or
-// if you want more flexibility - app.LogsDao().AsyncDB() and app.LogsDao().SyncDB().
+// if you want more flexibility - app.LogsDao().ConcurrentDB() and app.LogsDao().NonconcurrentDB().
 //
 // LogsDB returns the app logs database instance.
 func (app *BaseApp) LogsDB() *dbx.DB {
@@ -826,23 +826,23 @@ func (app *BaseApp) initLogsDB() error {
 		maxIdleConns = app.logsMaxIdleConns
 	}
 
-	asyncDB, err := connectDB(filepath.Join(app.DataDir(), "logs.db"))
+	concurrentDB, err := connectDB(filepath.Join(app.DataDir(), "logs.db"))
 	if err != nil {
 		return err
 	}
-	asyncDB.DB().SetMaxOpenConns(maxOpenConns)
-	asyncDB.DB().SetMaxIdleConns(maxIdleConns)
-	asyncDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+	concurrentDB.DB().SetMaxOpenConns(maxOpenConns)
+	concurrentDB.DB().SetMaxIdleConns(maxIdleConns)
+	concurrentDB.DB().SetConnMaxIdleTime(5 * time.Minute)
 
-	syncDB, err := connectDB(filepath.Join(app.DataDir(), "logs.db"))
+	nonconcurrentDB, err := connectDB(filepath.Join(app.DataDir(), "logs.db"))
 	if err != nil {
 		return err
 	}
-	syncDB.DB().SetMaxOpenConns(1)
-	syncDB.DB().SetMaxIdleConns(1)
-	syncDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+	nonconcurrentDB.DB().SetMaxOpenConns(1)
+	nonconcurrentDB.DB().SetMaxIdleConns(1)
+	nonconcurrentDB.DB().SetConnMaxIdleTime(5 * time.Minute)
 
-	app.logsDao = daos.NewMultiDB(asyncDB, syncDB)
+	app.logsDao = daos.NewMultiDB(concurrentDB, nonconcurrentDB)
 
 	return nil
 }
@@ -857,41 +857,41 @@ func (app *BaseApp) initDataDB() error {
 		maxIdleConns = app.dataMaxIdleConns
 	}
 
-	asyncDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
+	concurrentDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
 	if err != nil {
 		return err
 	}
-	asyncDB.DB().SetMaxOpenConns(maxOpenConns)
-	asyncDB.DB().SetMaxIdleConns(maxIdleConns)
-	asyncDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+	concurrentDB.DB().SetMaxOpenConns(maxOpenConns)
+	concurrentDB.DB().SetMaxIdleConns(maxIdleConns)
+	concurrentDB.DB().SetConnMaxIdleTime(5 * time.Minute)
 
-	syncDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
+	nonconcurrentDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
 	if err != nil {
 		return err
 	}
-	syncDB.DB().SetMaxOpenConns(1)
-	syncDB.DB().SetMaxIdleConns(1)
-	syncDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+	nonconcurrentDB.DB().SetMaxOpenConns(1)
+	nonconcurrentDB.DB().SetMaxIdleConns(1)
+	nonconcurrentDB.DB().SetConnMaxIdleTime(5 * time.Minute)
 
 	if app.IsDebug() {
-		syncDB.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		nonconcurrentDB.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 			color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
 		}
-		asyncDB.QueryLogFunc = syncDB.QueryLogFunc
+		concurrentDB.QueryLogFunc = nonconcurrentDB.QueryLogFunc
 
-		syncDB.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+		nonconcurrentDB.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
 			color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
 		}
-		asyncDB.ExecLogFunc = syncDB.ExecLogFunc
+		concurrentDB.ExecLogFunc = nonconcurrentDB.ExecLogFunc
 	}
 
-	app.dao = app.createDaoWithHooks(asyncDB, syncDB)
+	app.dao = app.createDaoWithHooks(concurrentDB, nonconcurrentDB)
 
 	return nil
 }
 
-func (app *BaseApp) createDaoWithHooks(asyncDB, syncDB dbx.Builder) *daos.Dao {
-	dao := daos.NewMultiDB(asyncDB, syncDB)
+func (app *BaseApp) createDaoWithHooks(concurrentDB, nonconcurrentDB dbx.Builder) *daos.Dao {
+	dao := daos.NewMultiDB(concurrentDB, nonconcurrentDB)
 
 	dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
 		return app.OnModelBeforeCreate().Trigger(&ModelEvent{eventDao, m})

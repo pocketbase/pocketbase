@@ -143,16 +143,16 @@ func TestBaseAppGetters(t *testing.T) {
 		t.Fatalf("Expected app.Dao %v, got %v", app.Dao(), app.dao)
 	}
 
-	if app.dao.AsyncDB() != app.DB() {
-		t.Fatalf("Expected app.DB %v, got %v", app.DB(), app.dao.AsyncDB())
+	if app.dao.ConcurrentDB() != app.DB() {
+		t.Fatalf("Expected app.DB %v, got %v", app.DB(), app.dao.ConcurrentDB())
 	}
 
 	if app.logsDao != app.LogsDao() {
 		t.Fatalf("Expected app.LogsDao %v, got %v", app.LogsDao(), app.logsDao)
 	}
 
-	if app.logsDao.AsyncDB() != app.LogsDB() {
-		t.Fatalf("Expected app.LogsDB %v, got %v", app.LogsDB(), app.logsDao.AsyncDB())
+	if app.logsDao.ConcurrentDB() != app.LogsDB() {
+		t.Fatalf("Expected app.LogsDB %v, got %v", app.LogsDB(), app.logsDao.ConcurrentDB())
 	}
 
 	if app.dataDir != app.DataDir() {
