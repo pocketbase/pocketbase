@@ -45,6 +45,10 @@ func TestNewFileFromFromPath(t *testing.T) {
 
 func TestNewFileFromMultipart(t *testing.T) {
 	formData, mp, err := tests.MockMultipartData(nil, "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	req := httptest.NewRequest("", "/", formData)
 	req.Header.Set(echo.HeaderContentType, mp.FormDataContentType())
 	req.ParseMultipartForm(32 << 20)

@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -125,7 +125,7 @@ func (p *baseProvider) sendRawUserDataRequest(req *http.Request, token *oauth2.T
 	}
 	defer response.Body.Close()
 
-	result, err := ioutil.ReadAll(response.Body)
+	result, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}

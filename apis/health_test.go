@@ -1,9 +1,10 @@
 package apis_test
 
 import (
-	"github.com/pocketbase/pocketbase/tests"
 	"net/http"
 	"testing"
+
+	"github.com/pocketbase/pocketbase/tests"
 )
 
 func TestHealthAPI(t *testing.T) {

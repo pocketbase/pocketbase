@@ -93,9 +93,9 @@ func (dao *Dao) NonconcurrentDB() dbx.Builder {
 // 		}
 // 		defer app.Dao().Continue()
 //
-//  	return app.Dao().RunInTransaction(func (txDao *daos.Dao) error {
-//  	    // some long running read&write transaction...
-//  	})
+// 		return app.Dao().RunInTransaction(func (txDao *daos.Dao) error {
+// 			// some long running read&write transaction...
+// 		})
 // 	}
 func (dao *Dao) Block(ctx context.Context) error {
 	if dao.sem == nil {

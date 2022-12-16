@@ -2,7 +2,7 @@ package auth
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"strconv"
 
 	"golang.org/x/oauth2"
@@ -75,7 +75,7 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		}
 		defer response.Body.Close()
 
-		content, err := ioutil.ReadAll(response.Body)
+		content, err := io.ReadAll(response.Body)
 		if err != nil {
 			return user, err
 		}

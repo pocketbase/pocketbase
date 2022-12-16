@@ -68,7 +68,7 @@ func TestLoginAuthStart(t *testing.T) {
 		}
 
 		if len(resp) != 0 {
-			t.Fatalf("[%s] Expected emtpy data response, got %v", s.name, resp)
+			t.Fatalf("[%s] Expected empty data response, got %v", s.name, resp)
 		}
 
 		if method != "LOGIN" {

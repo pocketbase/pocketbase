@@ -7,10 +7,8 @@ linters:
   disable-all: true
   enable:
     - asciicheck
-    - deadcode
     - depguard
     - exportloopref
-    - gocritic
     - gofmt
     - goimports
     - gomodguard
@@ -26,5 +24,4 @@ linters:
     - typecheck
     - unconvert
     - unused
-    - varcheck
     - whitespace
