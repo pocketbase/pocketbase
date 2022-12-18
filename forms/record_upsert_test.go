@@ -318,12 +318,10 @@ func TestRecordUpsertDrySubmitSuccess(t *testing.T) {
 	}
 
 	// ensure that the record changes weren't persisted
-	// ---
 	recordAfter, err := app.Dao().FindRecordById(collection.Id, recordBefore.Id)
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if recordAfter.GetString("title") == "dry_test" {
 		t.Fatalf("Expected record.title to be %v, got %v", recordAfter.GetString("title"), "dry_test")
 	}
@@ -374,6 +372,11 @@ func TestRecordUpsertDrySubmitWithNestedTx(t *testing.T) {
 		// ensure callback was called
 		if callbackCalls != 1 {
 			t.Fatalf("Expected callbackCalls to be 1, got %d", callbackCalls)
+		}
+
+		// ensure that the original txDao can still be used after the DrySubmit rollback
+		if _, err := txDao.FindRecordById(collection.Id, recordBefore.Id); err != nil {
+			t.Fatalf("Expected the dry submit rollback to not affect the outer tx context, got %v", err)
 		}
 
 		// ensure that the record changes weren't persisted

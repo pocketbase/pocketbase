@@ -215,7 +215,7 @@ func (dao *Dao) FindAuthRecordByToken(token string, baseTokenKey string) (*model
 	id, _ := unverifiedClaims["id"].(string)
 	collectionId, _ := unverifiedClaims["collectionId"].(string)
 	if id == "" || collectionId == "" {
-		return nil, errors.New("Missing or invalid token claims.")
+		return nil, errors.New("missing or invalid token claims")
 	}
 
 	record, err := dao.FindRecordById(collectionId, id)
@@ -242,8 +242,11 @@ func (dao *Dao) FindAuthRecordByToken(token string, baseTokenKey string) (*model
 // Returns an error if it is not an auth collection or the record is not found.
 func (dao *Dao) FindAuthRecordByEmail(collectionNameOrId string, email string) (*models.Record, error) {
 	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)
-	if err != nil || !collection.IsAuth() {
-		return nil, errors.New("Missing or not an auth collection.")
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch auth collection %q (%w)", collectionNameOrId, err)
+	}
+	if !collection.IsAuth() {
+		return nil, fmt.Errorf("%q is not an auth collection", collectionNameOrId)
 	}
 
 	row := dbx.NullStringMap{}
@@ -265,8 +268,11 @@ func (dao *Dao) FindAuthRecordByEmail(collectionNameOrId string, email string) (
 // Returns an error if it is not an auth collection or the record is not found.
 func (dao *Dao) FindAuthRecordByUsername(collectionNameOrId string, username string) (*models.Record, error) {
 	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)
-	if err != nil || !collection.IsAuth() {
-		return nil, errors.New("Missing or not an auth collection.")
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch auth collection %q (%w)", collectionNameOrId, err)
+	}
+	if !collection.IsAuth() {
+		return nil, fmt.Errorf("%q is not an auth collection", collectionNameOrId)
 	}
 
 	row := dbx.NullStringMap{}
@@ -497,7 +503,7 @@ func (dao *Dao) deleteRefRecords(mainRecord *models.Record, refRecords []*models
 		}
 
 		if field.Required && len(ids) == 0 {
-			return fmt.Errorf("The record cannot be deleted because it is part of a required reference in record %s (%s collection).", refRecord.Id, refRecord.Collection().Name)
+			return fmt.Errorf("the record cannot be deleted because it is part of a required reference in record %s (%s collection)", refRecord.Id, refRecord.Collection().Name)
 		}
 
 		// save the reference changes
