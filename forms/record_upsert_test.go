@@ -382,7 +382,7 @@ func TestRecordUpsertDrySubmitWithNestedTx(t *testing.T) {
 			t.Fatal(err)
 		}
 		if recordAfter.GetString("title") == "dry_test" {
-			t.Fatalf("Expected record.title to be %v, got %v", recordAfter.GetString("title"), "dry_test")
+			t.Fatalf("Expected record.title to be %v, got %v", recordBefore.GetString("title"), "dry_test")
 		}
 
 		return nil
