@@ -337,6 +337,61 @@ func TestRecordUpsertDrySubmitSuccess(t *testing.T) {
 	}
 }
 
+func TestRecordUpsertDrySubmitWithNestedTx(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, _ := app.Dao().FindCollectionByNameOrId("demo1")
+	recordBefore, err := app.Dao().FindRecordById(collection.Id, "84nmscqy84lsi1t")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	formData, mp, err := tests.MockMultipartData(map[string]string{
+		"title": "dry_test",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	txErr := app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
+		form := forms.NewRecordUpsert(app, recordBefore)
+		form.SetDao(txDao)
+		req := httptest.NewRequest(http.MethodGet, "/", formData)
+		req.Header.Set(echo.HeaderContentType, mp.FormDataContentType())
+		form.LoadRequest(req, "")
+
+		callbackCalls := 0
+
+		result := form.DrySubmit(func(innerTxDao *daos.Dao) error {
+			callbackCalls++
+			return nil
+		})
+		if result != nil {
+			t.Fatalf("Expected nil, got error %v", result)
+		}
+
+		// ensure callback was called
+		if callbackCalls != 1 {
+			t.Fatalf("Expected callbackCalls to be 1, got %d", callbackCalls)
+		}
+
+		// ensure that the record changes weren't persisted
+		recordAfter, err := app.Dao().FindRecordById(collection.Id, recordBefore.Id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if recordAfter.GetString("title") == "dry_test" {
+			t.Fatalf("Expected record.title to be %v, got %v", recordAfter.GetString("title"), "dry_test")
+		}
+
+		return nil
+	})
+	if txErr != nil {
+		t.Fatalf("Nested transactions failure: %v", err)
+	}
+}
+
 func TestRecordUpsertSubmitFailure(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

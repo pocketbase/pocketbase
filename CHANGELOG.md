@@ -1,3 +1,8 @@
+## v0.10.1
+
+- Fixed nested transactions deadlock when authenticating with OAuth2 ([#1291](https://github.com/pocketbase/pocketbase/issues/1291)).
+
+
 ## v0.10.0
 
 - Added `/api/health` endpoint (thanks @MarvinJWendt).
