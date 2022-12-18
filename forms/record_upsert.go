@@ -675,20 +675,22 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 		return err
 	}
 
-	// use the default app.Dao().ConcurrentDB() to prevent changing the transaction form.Dao
-	// and causing "transaction has already been committed or rolled back" error
-	dryDao := daos.New(form.app.Dao().ConcurrentDB())
+	var dryDao *daos.Dao
+	if form.dao.ConcurrentDB() == form.dao.NonconcurrentDB() {
+		// it is already in a transaction and therefore use the app concurrent db pool
+		// to prevent "transaction has already been committed or rolled back" error
+		dryDao = daos.New(form.app.Dao().ConcurrentDB())
+	} else {
+		// otherwise use the form noncurrent dao db pool
+		dryDao = daos.New(form.dao.NonconcurrentDB())
+	}
+
 	return dryDao.RunInTransaction(func(txDao *daos.Dao) error {
 		tx, ok := txDao.DB().(*dbx.Tx)
 		if !ok {
 			return errors.New("failed to get transaction db")
 		}
 		defer tx.Rollback()
-
-		txDao.BeforeCreateFunc = nil
-		txDao.AfterCreateFunc = nil
-		txDao.BeforeUpdateFunc = nil
-		txDao.AfterUpdateFunc = nil
 
 		if err := txDao.SaveRecord(form.record); err != nil {
 			return err
