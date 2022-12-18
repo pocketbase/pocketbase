@@ -388,7 +388,7 @@ func TestRecordUpsertDrySubmitWithNestedTx(t *testing.T) {
 		return nil
 	})
 	if txErr != nil {
-		t.Fatalf("Nested transactions failure: %v", err)
+		t.Fatalf("Nested transactions failure: %v", txErr)
 	}
 }
 
