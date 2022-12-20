@@ -1,7 +1,7 @@
 ## v0.10.2
 
 - Fixed nested multiple expands with shared path ([#586](https://github.com/pocketbase/pocketbase/issues/586#issuecomment-1357784227)).
-  A new helper method `models.Record.MergeExpands(map[string]any)` was also added to simplify the expand handling and unit testing.
+  A new helper method `models.Record.MergeExpand(map[string]any)` was also added to simplify the expand handling and unit testing.
 
 
 ## v0.10.1
