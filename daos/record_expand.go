@@ -216,12 +216,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 					continue
 				}
 
-				oldRelExpand := oldExpandedRel.Expand()
-				newRelExpand := rel.Expand()
-				for k, v := range oldRelExpand {
-					newRelExpand[k] = v
-				}
-				rel.SetExpand(newRelExpand)
+				rel.MergeExpand(oldExpandedRel.Expand())
 			}
 		}
 

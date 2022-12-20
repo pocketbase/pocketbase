@@ -358,7 +358,7 @@ func TestRecordOriginalCopy(t *testing.T) {
 	}
 }
 
-func TestRecordExpand(t *testing.T) {
+func TestRecordSetAndGetExpand(t *testing.T) {
 	collection := &models.Collection{}
 	m := models.NewRecord(collection)
 
@@ -372,6 +372,98 @@ func TestRecordExpand(t *testing.T) {
 	expand := m.Expand()
 	if v, ok := expand["test"]; !ok || v != 123 {
 		t.Fatalf("Expected expand.test to be %v, got %v", 123, v)
+	}
+}
+
+func TestRecordMergeExpandDirect(t *testing.T) {
+	collection := &models.Collection{}
+	m := models.NewRecord(collection)
+	m.Id = "m"
+
+	// a
+	a := models.NewRecord(collection)
+	a.Id = "a"
+	a1 := models.NewRecord(collection)
+	a1.Id = "a1"
+	a2 := models.NewRecord(collection)
+	a2.Id = "a2"
+	a3 := models.NewRecord(collection)
+	a3.Id = "a3"
+	a31 := models.NewRecord(collection)
+	a31.Id = "a31"
+	a32 := models.NewRecord(collection)
+	a32.Id = "a32"
+	a.SetExpand(map[string]any{
+		"a1":  a1,
+		"a23": []*models.Record{a2, a3},
+	})
+	a3.SetExpand(map[string]any{
+		"a31": a31,
+		"a32": []*models.Record{a32},
+	})
+
+	// b
+	b := models.NewRecord(collection)
+	b.Id = "b"
+	b1 := models.NewRecord(collection)
+	b1.Id = "b1"
+	b.SetExpand(map[string]any{
+		"b1": b1,
+	})
+
+	// c
+	c := models.NewRecord(collection)
+	c.Id = "c"
+
+	// load initial expand
+	m.SetExpand(map[string]any{
+		"a": a,
+		"b": b,
+		"c": []*models.Record{c},
+	})
+
+	// a (new)
+	aNew := models.NewRecord(collection)
+	aNew.Id = a.Id
+	a3New := models.NewRecord(collection)
+	a3New.Id = a3.Id
+	a32New := models.NewRecord(collection)
+	a32New.Id = "a32New"
+	a33New := models.NewRecord(collection)
+	a33New.Id = "a33New"
+	a3New.SetExpand(map[string]any{
+		"a32":    []*models.Record{a32New},
+		"a33New": a33New,
+	})
+	aNew.SetExpand(map[string]any{
+		"a23": []*models.Record{a2, a3New},
+	})
+
+	// b (new)
+	bNew := models.NewRecord(collection)
+	bNew.Id = "bNew"
+	dNew := models.NewRecord(collection)
+	dNew.Id = "dNew"
+
+	// merge expands
+	m.MergeExpand(map[string]any{
+		"a":    aNew,
+		"b":    []*models.Record{bNew},
+		"dNew": dNew,
+	})
+
+	result := m.Expand()
+
+	raw, err := json.Marshal(result)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rawStr := string(raw)
+
+	expected := `{"a":{"collectionId":"","collectionName":"","created":"","expand":{"a1":{"collectionId":"","collectionName":"","created":"","id":"a1","updated":""},"a23":[{"collectionId":"","collectionName":"","created":"","id":"a2","updated":""},{"collectionId":"","collectionName":"","created":"","expand":{"a31":{"collectionId":"","collectionName":"","created":"","id":"a31","updated":""},"a32":[{"collectionId":"","collectionName":"","created":"","id":"a32","updated":""},{"collectionId":"","collectionName":"","created":"","id":"a32New","updated":""}],"a33New":{"collectionId":"","collectionName":"","created":"","id":"a33New","updated":""}},"id":"a3","updated":""}]},"id":"a","updated":""},"b":[{"collectionId":"","collectionName":"","created":"","expand":{"b1":{"collectionId":"","collectionName":"","created":"","id":"b1","updated":""}},"id":"b","updated":""},{"collectionId":"","collectionName":"","created":"","id":"bNew","updated":""}],"c":[{"collectionId":"","collectionName":"","created":"","id":"c","updated":""}],"dNew":{"collectionId":"","collectionName":"","created":"","id":"dNew","updated":""}}`
+
+	if expected != rawStr {
+		t.Fatalf("Expected \n%v, \ngot \n%v", expected, rawStr)
 	}
 }
 

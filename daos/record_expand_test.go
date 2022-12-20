@@ -167,6 +167,22 @@ func TestExpandRecords(t *testing.T) {
 			5,
 			0,
 		},
+		{
+			"expand multiple relations sharing a common path",
+			"demo4",
+			[]string{"qzaqccwrmva4o1n"},
+			[]string{
+				"rel_one_no_cascade",
+				"rel_many_no_cascade",
+				"self_rel_many.self_rel_one.rel_many_cascade",
+				"self_rel_many.self_rel_one.rel_many_no_cascade_required",
+			},
+			func(c *models.Collection, ids []string) ([]*models.Record, error) {
+				return app.Dao().FindRecordsByIds(c.Id, ids, nil)
+			},
+			5,
+			0,
+		},
 	}
 
 	for _, s := range scenarios {

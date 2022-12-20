@@ -132,6 +132,72 @@ func (m *Record) SetExpand(expand map[string]any) {
 	m.expand = shallowCopy(expand)
 }
 
+// MergeExpand merges recursively the provided expand data into
+// the current model's expand (if any).
+//
+// Note that if an expanded prop with the same key is a slice (old or new expand)
+// then both old and new records will be merged into a new slice (aka. a :merge: [b,c] => [a,b,c]).
+// Otherwise the "old" expanded record will be replace with the "new" one (aka. a :merge: aNew => aNew).
+func (m *Record) MergeExpand(expand map[string]any) {
+	for key, new := range expand {
+		old, ok := m.expand[key]
+		if !ok {
+			m.expand[key] = new
+			continue
+		}
+
+		var wasOldSlice bool
+		var oldSlice []*Record
+		switch v := old.(type) {
+		case *Record:
+			oldSlice = []*Record{v}
+		case []*Record:
+			wasOldSlice = true
+			oldSlice = v
+		default:
+			// invalid old expand data -> assign directly the new
+			// (no matter whether new is valid or not)
+			m.expand[key] = new
+			continue
+		}
+
+		var wasNewSlice bool
+		var newSlice []*Record
+		switch v := new.(type) {
+		case *Record:
+			newSlice = []*Record{v}
+		case []*Record:
+			wasNewSlice = true
+			newSlice = v
+		default:
+			// invalid new expand data -> skip
+			continue
+		}
+
+		oldIndexed := map[string]*Record{}
+		for _, oldRecord := range oldSlice {
+			oldIndexed[oldRecord.Id] = oldRecord
+		}
+
+		for _, newRecord := range newSlice {
+			oldRecord := oldIndexed[newRecord.Id]
+			if oldRecord != nil {
+				// note: there is no need to update oldSlice since oldRecord is a reference
+				oldRecord.MergeExpand(newRecord.Expand())
+			} else {
+				// missing new entry
+				oldSlice = append(oldSlice, newRecord)
+			}
+		}
+
+		if wasOldSlice || wasNewSlice {
+			m.expand[key] = oldSlice
+		} else {
+			m.expand[key] = oldSlice[0]
+		}
+	}
+}
+
 // SchemaData returns a shallow copy ONLY of the defined record schema fields data.
 func (m *Record) SchemaData() map[string]any {
 	result := map[string]any{}
