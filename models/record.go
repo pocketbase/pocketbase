@@ -174,7 +174,7 @@ func (m *Record) MergeExpand(expand map[string]any) {
 			continue
 		}
 
-		oldIndexed := map[string]*Record{}
+		oldIndexed := make(map[string]*Record, len(oldSlice))
 		for _, oldRecord := range oldSlice {
 			oldIndexed[oldRecord.Id] = oldRecord
 		}
