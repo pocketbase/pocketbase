@@ -66,7 +66,7 @@
     <strong class="label label-primary">POST</strong>
     <div class="content">
         <p>
-            /api/collections/<strong>{collection.name}</strong>/request-password-reset
+            /api/collections/<strong>{collection.name}</strong>/request-verification
         </p>
     </div>
 </div>
