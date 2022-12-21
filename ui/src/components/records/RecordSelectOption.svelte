@@ -2,7 +2,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
 
-    const excludedMetaProps = ["id", "created", "updated", "@collectionId", "@collectionName"];
+    const excludedMetaProps = ["id", "created", "updated", "collectionId", "collectionName"];
 
     export let item = {}; // model
 
