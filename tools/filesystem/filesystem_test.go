@@ -177,8 +177,8 @@ func TestFileSystemUploadMultipart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to fetch file attributes: %v", err)
 	}
-	if name, ok := attrs.Metadata["original_filename"]; !ok || name != "test" {
-		t.Fatalf("Expected original_filename to be %q, got %q", "test", name)
+	if name, ok := attrs.Metadata["original-filename"]; !ok || name != "test" {
+		t.Fatalf("Expected original-filename to be %q, got %q", "test", name)
 	}
 }
 
