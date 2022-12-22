@@ -52,4 +52,11 @@ export default {
         title: "Twitch",
         icon:  "ri-twitch-fill",
     },
+    authentikAuth: {
+        title: "Authentik",
+        // TODO: Add icon for authentik
+        // Opened issue for remix icon https://github.com/Remix-Design/RemixIcon/issues/475
+        // Seems like RemixIcon is a dead project though
+        icon: "",
+    },
 };

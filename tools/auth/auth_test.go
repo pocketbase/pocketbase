@@ -108,4 +108,13 @@ func TestNewProviderByName(t *testing.T) {
 	if _, ok := p.(*auth.Twitch); !ok {
 		t.Error("Expected to be instance of *auth.Twitch")
 	}
+
+	// authentik
+	p, err = auth.NewProviderByName(auth.NameAuthentik)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Twitch); !ok {
+		t.Error("Expected to be instance of *auth.Authentik")
+	}
 }
