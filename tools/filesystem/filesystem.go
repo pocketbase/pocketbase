@@ -142,7 +142,7 @@ func (s *System) UploadFile(file *File, fileKey string) error {
 	opts := &blob.WriterOptions{
 		ContentType: mt.String(),
 		Metadata: map[string]string{
-			"original_filename": originalName,
+			"original-filename": originalName,
 		},
 	}
 
@@ -184,7 +184,7 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 	opts := &blob.WriterOptions{
 		ContentType: mt.String(),
 		Metadata: map[string]string{
-			"original_filename": originalName,
+			"original-filename": originalName,
 		},
 	}
 
