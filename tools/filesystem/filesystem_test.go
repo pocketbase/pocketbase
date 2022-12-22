@@ -170,7 +170,7 @@ func TestFileSystemUploadMultipart(t *testing.T) {
 	}
 
 	if exists, _ := fs.Exists(fileKey); !exists {
-		t.Fatalf("Expected newdir/newkey.txt to exist")
+		t.Fatalf("Expected %q to exist", fileKey)
 	}
 
 	attrs, err := fs.Attributes(fileKey)
@@ -179,6 +179,43 @@ func TestFileSystemUploadMultipart(t *testing.T) {
 	}
 	if name, ok := attrs.Metadata["original-filename"]; !ok || name != "test" {
 		t.Fatalf("Expected original-filename to be %q, got %q", "test", name)
+	}
+}
+
+func TestFileSystemUploadFile(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fs, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fs.Close()
+
+	fileKey := "newdir/newkey.txt"
+
+	file, err := filesystem.NewFileFromPath(filepath.Join(dir, "image.svg"))
+	if err != nil {
+		t.Fatalf("Failed to load test file: %v", err)
+	}
+
+	file.OriginalName = "test.txt"
+
+	uploadErr := fs.UploadFile(file, fileKey)
+	if uploadErr != nil {
+		t.Fatal(uploadErr)
+	}
+
+	if exists, _ := fs.Exists(fileKey); !exists {
+		t.Fatalf("Expected %q to exist", fileKey)
+	}
+
+	attrs, err := fs.Attributes(fileKey)
+	if err != nil {
+		t.Fatalf("Failed to fetch file attributes: %v", err)
+	}
+	if name, ok := attrs.Metadata["original-filename"]; !ok || name != file.OriginalName {
+		t.Fatalf("Expected original-filename to be %q, got %q", file.OriginalName, name)
 	}
 }
 
@@ -192,13 +229,15 @@ func TestFileSystemUpload(t *testing.T) {
 	}
 	defer fs.Close()
 
-	uploadErr := fs.Upload([]byte("demo"), "newdir/newkey.txt")
+	fileKey := "newdir/newkey.txt"
+
+	uploadErr := fs.Upload([]byte("demo"), fileKey)
 	if uploadErr != nil {
 		t.Fatal(uploadErr)
 	}
 
-	if exists, _ := fs.Exists("newdir/newkey.txt"); !exists {
-		t.Fatalf("Expected newdir/newkey.txt to exist")
+	if exists, _ := fs.Exists(fileKey); !exists {
+		t.Fatalf("Expected %s to exist", fileKey)
 	}
 }
 
