@@ -1,5 +1,6 @@
 import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
 import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
+import AuthentikOptions from "@/components/settings/providers/AuthentikOptions.svelte"
 
 // Object list with all supported OAuth2 providers in the format:
 // ```
@@ -54,9 +55,9 @@ export default {
     },
     authentikAuth: {
         title: "Authentik",
-        // TODO: Add icon for authentik
         // Opened issue for remix icon https://github.com/Remix-Design/RemixIcon/issues/475
-        // Seems like RemixIcon is a dead project though
-        icon: "",
+        // Since this is a more generic oauth provider this is set to a lock atm
+        icon: "ri-lock-fill",
+        optionsComponent: AuthentikOptions,
     },
 };

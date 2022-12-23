@@ -1,5 +1,10 @@
 package auth
 
+/*
+ *	https://goauthentik.io/
+ *  authentik is an open-source Identity Provider focused on flexibility and versatility
+ */
+
 import (
 	"fmt"
 
@@ -8,6 +13,7 @@ import (
 
 var _ Provider = (*Authentik)(nil)
 
+// Name of the oauth provider
 const NameAuthentik string = "authentik"
 
 type Authentik struct {
@@ -16,14 +22,10 @@ type Authentik struct {
 
 func NewAuthentikProvider() *Authentik {
 	return &Authentik{&baseProvider{
-		scopes:   []string{},
+		scopes:   []string{"profile"},
 		authUrl:  "",
 		tokenUrl: "",
 	}}
-}
-
-func (p *Authentik) BuildAuthUrl(state string, opts ...oauth2.AuthCodeOption) string {
-	return p.oauth2Config().AuthCodeURL(state, opts...)
 }
 
 func (p *Authentik) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
