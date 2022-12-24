@@ -26,7 +26,7 @@
     //
     // note: New line could be added using "Enter+Shift".
     function handleKeydown(e) {
-        if (e?.code === "Enter" && !e?.shiftKey) {
+        if (e?.code === "Enter" && !e?.shiftKey && !e?.isComposing) {
             e.preventDefault();
 
             // trigger parent form submission (if any)
