@@ -1,6 +1,7 @@
 <script>
     import "./scss/main.scss";
 
+    import { onMount } from "svelte";
     import Router, { replace, link } from "svelte-spa-router";
     import active from "svelte-spa-router/active";
     import routes from "./routes";
@@ -18,6 +19,8 @@
     let oldLocation = undefined;
 
     let showAppSidebar = false;
+
+    let avatarElement;
 
     $: if ($admin?.id) {
         loadSettings();
@@ -61,6 +64,14 @@
     function logout() {
         ApiClient.logout();
     }
+
+    onMount(() => {
+        document.addEventListener("mousemove", (e) => {
+            const x = e.clientX / window.innerWidth - 0.5;
+            const y = e.clientY / window.innerHeight - 0.5;
+            avatarElement.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
+        });
+    });
 </script>
 
 <svelte:head>
@@ -116,6 +127,8 @@
                 <img
                     src="{import.meta.env.BASE_URL}images/avatars/avatar{$admin?.avatar || 0}.svg"
                     alt="Avatar"
+                    bind:this={avatarElement}
+                    style="transition: transform 0.2s ease;"
                 />
                 <Toggler class="dropdown dropdown-nowrap dropdown-upside dropdown-left">
                     <a href="/settings/admins" class="dropdown-item closable" use:link>
