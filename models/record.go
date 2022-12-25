@@ -139,6 +139,10 @@ func (m *Record) SetExpand(expand map[string]any) {
 // then both old and new records will be merged into a new slice (aka. a :merge: [b,c] => [a,b,c]).
 // Otherwise the "old" expanded record will be replace with the "new" one (aka. a :merge: aNew => aNew).
 func (m *Record) MergeExpand(expand map[string]any) {
+	if m.expand == nil && len(expand) > 0 {
+		m.expand = make(map[string]any)
+	}
+
 	for key, new := range expand {
 		old, ok := m.expand[key]
 		if !ok {

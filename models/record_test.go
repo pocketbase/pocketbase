@@ -375,7 +375,7 @@ func TestRecordSetAndGetExpand(t *testing.T) {
 	}
 }
 
-func TestRecordMergeExpandDirect(t *testing.T) {
+func TestRecordMergeExpand(t *testing.T) {
 	collection := &models.Collection{}
 	m := models.NewRecord(collection)
 	m.Id = "m"
@@ -464,6 +464,47 @@ func TestRecordMergeExpandDirect(t *testing.T) {
 
 	if expected != rawStr {
 		t.Fatalf("Expected \n%v, \ngot \n%v", expected, rawStr)
+	}
+}
+
+func TestRecordMergeExpandNilCheck(t *testing.T) {
+	collection := &models.Collection{}
+
+	scenarios := []struct {
+		name     string
+		expand   map[string]any
+		expected string
+	}{
+		{
+			"nil expand",
+			nil,
+			`{"collectionId":"","collectionName":"","created":"","id":"","updated":""}`,
+		},
+		{
+			"empty expand",
+			map[string]any{},
+			`{"collectionId":"","collectionName":"","created":"","id":"","updated":""}`,
+		},
+		{
+			"non-empty expand",
+			map[string]any{"test": models.NewRecord(collection)},
+			`{"collectionId":"","collectionName":"","created":"","expand":{"test":{"collectionId":"","collectionName":"","created":"","id":"","updated":""}},"id":"","updated":""}`,
+		},
+	}
+
+	for _, s := range scenarios {
+		m := models.NewRecord(collection)
+		m.MergeExpand(s.expand)
+
+		raw, err := json.Marshal(m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rawStr := string(raw)
+
+		if rawStr != s.expected {
+			t.Fatalf("[%s] Expected \n%v, \ngot \n%v", s.name, s.expected, rawStr)
+		}
 	}
 }
 
