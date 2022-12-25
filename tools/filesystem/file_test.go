@@ -44,7 +44,7 @@ func TestNewFileFromFromPath(t *testing.T) {
 }
 
 func TestNewFileFromMultipart(t *testing.T) {
-	formData, mp, err := tests.MockMultipartData(nil, "test")
+	formData, mp, err := tests.MockMultipartData(nil, tests.DefaultTestFile)
 	if err != nil {
 		t.Fatal(err)
 	}

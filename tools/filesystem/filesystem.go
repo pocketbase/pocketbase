@@ -337,6 +337,8 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 	return nil
 }
 
+var DimensionsRegex = regexp.MustCompile(`^(\d+)x(\d+)$`)
+
 var ThumbSizeRegex = regexp.MustCompile(`^(\d+)x(\d+)(t|b|f)?$`)
 
 // CreateThumb creates a new thumb image for the file at originalKey location.

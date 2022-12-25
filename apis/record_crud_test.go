@@ -12,6 +12,8 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
+var testFile = tests.TestFile{Field: "files"}
+
 func TestRecordCrudList(t *testing.T) {
 	scenarios := []tests.ApiScenario{
 		{
@@ -787,7 +789,7 @@ func TestRecordCrudDelete(t *testing.T) {
 func TestRecordCrudCreate(t *testing.T) {
 	formData, mp, err := tests.MockMultipartData(map[string]string{
 		"title": "title_test",
-	}, "files")
+	}, testFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1265,7 +1267,7 @@ func TestRecordCrudCreate(t *testing.T) {
 func TestRecordCrudUpdate(t *testing.T) {
 	formData, mp, err := tests.MockMultipartData(map[string]string{
 		"title": "title_test",
-	}, "files")
+	}, testFile)
 	if err != nil {
 		t.Fatal(err)
 	}
