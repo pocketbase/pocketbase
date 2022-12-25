@@ -21,6 +21,11 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 )
 
+var (
+	testFileMany = tests.TestFile{Field: "file_many"}
+	testFileOne  = tests.TestFile{Field: "file_one"}
+)
+
 func hasRecordFile(app core.App, record *models.Record, filename string) bool {
 	fs, _ := app.NewFilesystem()
 	defer fs.Close()
@@ -117,7 +122,7 @@ func TestRecordUpsertLoadRequestJson(t *testing.T) {
 		t.Fatalf("Didn't expect unknown field to be set, got %v", v)
 	}
 
-	fileOne, ok := form.Data()["file_one"]
+	fileOne, ok := form.Data()[testFileOne.Field]
 	if !ok {
 		t.Fatal("Expect file_one field to be set")
 	}
@@ -125,7 +130,7 @@ func TestRecordUpsertLoadRequestJson(t *testing.T) {
 		t.Fatalf("Expect file_one field to be empty string, got %v", fileOne)
 	}
 
-	fileMany, ok := form.Data()["file_many"]
+	fileMany, ok := form.Data()[testFileMany.Field]
 	if !ok || fileMany == nil {
 		t.Fatal("Expect file_many field to be set")
 	}
@@ -153,7 +158,7 @@ func TestRecordUpsertLoadRequestMultipart(t *testing.T) {
 		"a.b.file_many.0":                  "",
 		"a.b.file_many.300_WlbFWSGmW9.png": "test.png", // delete by name
 		"a.b.file_many.1":                  "test.png", // should be ignored
-	}, "file_many")
+	}, testFileMany)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -178,7 +183,7 @@ func TestRecordUpsertLoadRequestMultipart(t *testing.T) {
 		t.Fatalf("Didn't expect unknown field to be set, got %v", v)
 	}
 
-	fileOne, ok := form.Data()["file_one"]
+	fileOne, ok := form.Data()[testFileOne.Field]
 	if !ok {
 		t.Fatal("Expect file_one field to be set")
 	}
@@ -186,7 +191,7 @@ func TestRecordUpsertLoadRequestMultipart(t *testing.T) {
 		t.Fatalf("Expect file_one field to be empty string, got %v", fileOne)
 	}
 
-	fileMany, ok := form.Data()["file_many"]
+	fileMany, ok := form.Data()[testFileMany.Field]
 	if !ok || fileMany == nil {
 		t.Fatal("Expect file_many field to be set")
 	}
@@ -292,7 +297,7 @@ func TestRecordUpsertDrySubmitSuccess(t *testing.T) {
 	formData, mp, err := tests.MockMultipartData(map[string]string{
 		"title":    "dry_test",
 		"file_one": "",
-	}, "file_many")
+	}, testFileMany)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -415,7 +420,7 @@ func TestRecordUpsertSubmitFailure(t *testing.T) {
 		"select_one": "invalid",
 		"file_many":  "invalid",
 		"email":      "invalid",
-	}, "file_one")
+	}, testFileOne)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -492,7 +497,7 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 		"bool":       "true",
 		"select_one": "optionA",
 		"file_one":   "",
-	}, "file_many.1", "file_many") // replace + new file
+	}, tests.TestFile{Field: "file_many.1"}, testFileMany) // replace + new file
 	if err != nil {
 		t.Fatal(err)
 	}

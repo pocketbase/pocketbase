@@ -12,7 +12,7 @@ import (
 )
 
 func TestUploadedFileSize(t *testing.T) {
-	data, mp, err := tests.MockMultipartData(nil, "test")
+	data, mp, err := tests.MockMultipartData(nil, tests.DefaultTestFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func TestUploadedFileSize(t *testing.T) {
 }
 
 func TestUploadedFileMimeType(t *testing.T) {
-	data, mp, err := tests.MockMultipartData(nil, "test")
+	data, mp, err := tests.MockMultipartData(nil, tests.DefaultTestFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,6 +84,46 @@ func TestUploadedFileMimeType(t *testing.T) {
 
 	for i, s := range scenarios {
 		err := validators.UploadedFileMimeType(s.types)(s.file)
+
+		hasErr := err != nil
+		if hasErr != s.expectError {
+			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, s.expectError, hasErr, err)
+		}
+	}
+}
+
+func TestUploadedFileDimensions(t *testing.T) {
+	data, mp, err := tests.MockMultipartData(nil, tests.TestFile{Field: "test", IsImage: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", data)
+	req.Header.Add("Content-Type", mp.FormDataContentType())
+
+	files, err := rest.FindUploadedFiles(req, "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(files) != 1 {
+		t.Fatalf("Expected one test file, got %d", len(files))
+	}
+
+	scenarios := []struct {
+		dimensions  []string
+		file        *filesystem.File
+		expectError bool
+	}{
+		{nil, nil, false},
+		{[]string{"100x100"}, nil, false},
+		{[]string{}, files[0], true},
+		{[]string{"200x200"}, files[0], true},
+		{[]string{"100x100"}, files[0], false},
+	}
+
+	for i, s := range scenarios {
+		err := validators.UploadedFileDimensions(s.dimensions)(s.file)
 
 		hasErr := err != nil
 		if hasErr != s.expectError {

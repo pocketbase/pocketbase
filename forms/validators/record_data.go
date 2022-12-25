@@ -23,6 +23,7 @@ var requiredErr = validation.NewError("validation_required", "Missing required v
 // using the provided record constraints and schema.
 //
 // Example:
+//
 //	validator := NewRecordDataValidator(app.Dao(), record, nil)
 //	err := validator.Validate(map[string]any{"test":123})
 func NewRecordDataValidator(
@@ -330,6 +331,13 @@ func (validator *RecordDataValidator) checkFileValue(field *schema.SchemaField, 
 		// check type
 		if len(options.MimeTypes) > 0 {
 			if err := UploadedFileMimeType(options.MimeTypes)(file); err != nil {
+				return err
+			}
+		}
+
+		// check dimensions constraints (width and height)
+		if len(options.Dimensions) > 0 {
+			if err := UploadedFileDimensions(options.Dimensions)(file); err != nil {
 				return err
 			}
 		}

@@ -481,10 +481,11 @@ func (o JsonOptions) Validate() error {
 // -------------------------------------------------------------------
 
 type FileOptions struct {
-	MaxSelect int      `form:"maxSelect" json:"maxSelect"`
-	MaxSize   int      `form:"maxSize" json:"maxSize"` // in bytes
-	MimeTypes []string `form:"mimeTypes" json:"mimeTypes"`
-	Thumbs    []string `form:"thumbs" json:"thumbs"`
+	MaxSelect  int      `form:"maxSelect" json:"maxSelect"`
+	MaxSize    int      `form:"maxSize" json:"maxSize"` // in bytes
+	MimeTypes  []string `form:"mimeTypes" json:"mimeTypes"`
+	Thumbs     []string `form:"thumbs" json:"thumbs"`
+	Dimensions []string `form:"dimensions" json:"dimensions"`
 }
 
 func (o FileOptions) Validate() error {
@@ -494,6 +495,10 @@ func (o FileOptions) Validate() error {
 		validation.Field(&o.Thumbs, validation.Each(
 			validation.NotIn("0x0", "0x0t", "0x0b", "0x0f"),
 			validation.Match(filesystem.ThumbSizeRegex),
+		)),
+		validation.Field(&o.Dimensions, validation.Each(
+			validation.NotIn("0x0"),
+			validation.Match(filesystem.DimensionsRegex),
 		)),
 	)
 }

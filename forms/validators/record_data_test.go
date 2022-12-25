@@ -1061,7 +1061,7 @@ func TestRecordDataValidatorValidateFile(t *testing.T) {
 	}
 
 	// stub uploaded files
-	data, mp, err := tests.MockMultipartData(nil, "test", "test", "test", "test", "test")
+	data, mp, err := tests.MockMultipartData(nil, tests.DefaultTestFile, tests.DefaultTestFile, tests.DefaultTestFile, tests.DefaultTestFile, tests.DefaultTestFile)
 	if err != nil {
 		t.Fatal(err)
 	}

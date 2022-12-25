@@ -495,7 +495,7 @@ func TestSchemaFieldInitOptions(t *testing.T) {
 		{
 			schema.SchemaField{Type: schema.FieldTypeFile},
 			false,
-			`{"system":false,"id":"","name":"","type":"file","required":false,"unique":false,"options":{"maxSelect":0,"maxSize":0,"mimeTypes":null,"thumbs":null}}`,
+			`{"system":false,"id":"","name":"","type":"file","required":false,"unique":false,"options":{"maxSelect":0,"maxSize":0,"mimeTypes":null,"thumbs":null,"dimensions":null}}`,
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeRelation},
@@ -1273,6 +1273,44 @@ func TestFileOptionsValidate(t *testing.T) {
 				Thumbs: []string{
 					"100x100", "200x100", "0x100", "100x0",
 					"10x10t", "10x10b", "10x10f",
+				},
+			},
+			[]string{},
+		},
+		{
+			"invalid dimensions format - zero width and height",
+			schema.FileOptions{
+				MaxSize:    1,
+				MaxSelect:  2,
+				Dimensions: []string{"0x0"},
+			},
+			[]string{"dimensions"},
+		},
+		{
+			"invalid dimensions format",
+			schema.FileOptions{
+				MaxSize:    1,
+				MaxSelect:  2,
+				Dimensions: []string{"1200:1200"},
+			},
+			[]string{"dimensions"},
+		},
+		{
+			"invalid dimensions format",
+			schema.FileOptions{
+				MaxSize:    1,
+				MaxSelect:  2,
+				Dimensions: []string{"1200/1200"},
+			},
+			[]string{"dimensions"},
+		},
+		{
+			"valid dimensions format",
+			schema.FileOptions{
+				MaxSize:   1,
+				MaxSelect: 2,
+				Dimensions: []string{
+					"225x225", "800x1200", "5600x1200",
 				},
 			},
 			[]string{},
