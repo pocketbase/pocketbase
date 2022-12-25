@@ -170,4 +170,39 @@
             </div>
         </Field>
     </div>
+
+    <div class="col-sm-12">
+        <Field class="form-field" name="schema.{key}.options.dimensions" let:uniqueId>
+            <label for={uniqueId}>
+                <span class="txt">Accepted image sizes</span>
+                <i
+                    class="ri-information-line link-hint"
+                    use:tooltip={{
+                        text: "List of allowed image dimensions. When creating a record, the image will have to match one of the provided dimensions (width and height).",
+                        position: "top",
+                    }}
+                />
+            </label>
+            <MultipleValueInput
+                id={uniqueId}
+                placeholder="eg. 480x480, 800x1200"
+                bind:value={options.dimensions}
+            />
+            <div class="help-block">
+                <span class="txt">Use comma as separator.</span>
+                <button type="button" class="inline-flex flex-gap-0">
+                    <span class="txt link-primary">Supported formats</span>
+                    <i class="ri-arrow-drop-down-fill" />
+                    <Toggler class="dropdown dropdown-sm dropdown-center dropdown-nowrap p-r-10">
+                        <ul class="m-0">
+                            <li>
+                                <strong>WxH</strong>
+                                (eg. 480x480)
+                            </li>
+                        </ul>
+                    </Toggler>
+                </button>
+            </div>
+        </Field>
+    </div>
 </div>
