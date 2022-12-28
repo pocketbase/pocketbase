@@ -4,7 +4,7 @@
     outline: 0;
     display: flex;
     align-items: center;
-    height: var(--searchHeight);
+    min-height: var(--searchHeight);
     width: 100%;
     flex-grow: 1;
     padding: 5px 7px;
@@ -34,6 +34,9 @@
         font-family: var(--monospaceFontFamily);
         border: 0;
         background: none;
+        min-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
     }
     label > i {
         line-height: inherit;
