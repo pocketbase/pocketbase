@@ -54,7 +54,8 @@ func TestNewFileFromBytes(t *testing.T) {
 		t.Fatal("Expected error, got nil")
 	}
 
-	originalName := "notes.txt"
+	originalName := "image_! noext"
+	normalizedNamePattern := regexp.QuoteMeta("image_noext_") + `\w{10}` + regexp.QuoteMeta(".txt")
 	f, err := filesystem.NewFileFromBytes([]byte("text\n"), originalName)
 	if err != nil {
 		t.Fatal(err)
@@ -64,6 +65,9 @@ func TestNewFileFromBytes(t *testing.T) {
 	}
 	if f.OriginalName != originalName {
 		t.Fatalf("Expected originalName %q, got %q", originalName, f.OriginalName)
+	}
+	if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
+		t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
 	}
 }
 
