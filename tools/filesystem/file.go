@@ -2,6 +2,7 @@ package filesystem
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -49,10 +50,15 @@ func NewFileFromPath(path string) (*File, error) {
 
 // NewFileFromBytes creates a new File instance from the provided byte slice.
 func NewFileFromBytes(b []byte, name string) (*File, error) {
+	size := len(b)
+	if size == 0 || b == nil {
+		return nil, errors.New("cannot create an empty file")
+	}
+
 	f := &File{}
 
 	f.Reader = &bytesReader{b}
-	f.Size = int64(len(b))
+	f.Size = int64(size)
 	f.OriginalName = name
 	f.Name = normalizeName(f.Reader, f.OriginalName)
 

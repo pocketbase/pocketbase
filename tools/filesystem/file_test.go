@@ -12,7 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 )
 
-func TestNewFileFromFromPath(t *testing.T) {
+func TestNewFileFromPath(t *testing.T) {
 	testDir := createTestDir(t)
 	defer os.RemoveAll(testDir)
 
@@ -40,6 +40,33 @@ func TestNewFileFromFromPath(t *testing.T) {
 	}
 	if _, ok := f.Reader.(*filesystem.PathReader); !ok {
 		t.Fatalf("Expected Reader to be PathReader, got %v", f.Reader)
+	}
+}
+
+func TestNewFileFromBytes(t *testing.T) {
+	testDir := createTestDir(t)
+	defer os.RemoveAll(testDir)
+
+	// nil bytes
+	if _, err := filesystem.NewFileFromBytes(nil, "photo.jpg"); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	// zero bytes
+	if _, err := filesystem.NewFileFromBytes([]byte{}, "photo.jpg"); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	originalName := "notes.txt"
+	f, err := filesystem.NewFileFromBytes([]byte("TODO: Write Tests\n"), originalName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f.Size != 18 {
+		t.Fatalf("Expected Size %v, got %v", 18, f.Size)
+	}
+	if f.OriginalName != originalName {
+		t.Fatalf("Expected originalName %q, got %q", originalName, f.OriginalName)
 	}
 }
 
