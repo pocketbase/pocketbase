@@ -30,7 +30,7 @@ func TestNewFileFromPath(t *testing.T) {
 		t.Fatalf("Expected nil error, got %v", err)
 	}
 	if f.OriginalName != originalName {
-		t.Fatalf("Expected originalName %q, got %q", originalName, f.OriginalName)
+		t.Fatalf("Expected OriginalName %q, got %q", originalName, f.OriginalName)
 	}
 	if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
 		t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
@@ -64,7 +64,7 @@ func TestNewFileFromBytes(t *testing.T) {
 		t.Fatalf("Expected Size %v, got %v", 5, f.Size)
 	}
 	if f.OriginalName != originalName {
-		t.Fatalf("Expected originalName %q, got %q", originalName, f.OriginalName)
+		t.Fatalf("Expected OriginalName %q, got %q", originalName, f.OriginalName)
 	}
 	if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
 		t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)

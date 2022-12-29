@@ -81,7 +81,7 @@ func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 
 var _ FileReader = (*MultipartReader)(nil)
 
-// MultipartReader defines a [multipart.FileHeader] reader.
+// MultipartReader defines a FileReader from [multipart.FileHeader].
 type MultipartReader struct {
 	Header *multipart.FileHeader
 }
@@ -95,6 +95,7 @@ func (r *MultipartReader) Open() (io.ReadSeekCloser, error) {
 
 var _ FileReader = (*PathReader)(nil)
 
+// PathReader defines a FileReader from a local file path.
 type PathReader struct {
 	Path string
 }
@@ -108,6 +109,7 @@ func (r *PathReader) Open() (io.ReadSeekCloser, error) {
 
 var _ FileReader = (*BytesReader)(nil)
 
+// BytesReader defines a FileReader from bytes content.
 type BytesReader struct {
 	Bytes []byte
 }
@@ -117,11 +119,11 @@ func (r *BytesReader) Open() (io.ReadSeekCloser, error) {
 	return &bytesReadSeekCloser{bytes.NewReader(r.Bytes)}, nil
 }
 
-// bytesReadSeekCloser implements io.ReadSeekCloser
 type bytesReadSeekCloser struct {
 	*bytes.Reader
 }
 
+// Close implements the [io.ReadSeekCloser] interface.
 func (r *bytesReadSeekCloser) Close() error {
 	return nil
 }
