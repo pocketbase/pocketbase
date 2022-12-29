@@ -114,15 +114,11 @@ type bytesReader struct {
 
 // Open implements the [filesystem.FileReader] interface.
 func (r *bytesReader) Open() (io.ReadSeekCloser, error) {
-	return newBytesReadSeekCloser(r.Bytes), nil
+	return &bytesReadSeekCloser{bytes.NewReader(r.Bytes)}, nil
 }
 
 type bytesReadSeekCloser struct {
 	*bytes.Reader
-}
-
-func newBytesReadSeekCloser(b []byte) *bytesReadSeekCloser {
-	return &bytesReadSeekCloser{bytes.NewReader(b)}
 }
 
 func (r *bytesReadSeekCloser) Close() error {
