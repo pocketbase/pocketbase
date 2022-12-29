@@ -1,6 +1,8 @@
 package filesystem
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -46,6 +48,23 @@ func NewFileFromPath(path string) (*File, error) {
 	return f, nil
 }
 
+// NewFileFromBytes creates a new File instance from the provided byte slice.
+func NewFileFromBytes(b []byte, name string) (*File, error) {
+	size := len(b)
+	if size == 0 {
+		return nil, errors.New("cannot create an empty file")
+	}
+
+	f := &File{}
+
+	f.Reader = &BytesReader{b}
+	f.Size = int64(size)
+	f.OriginalName = name
+	f.Name = normalizeName(f.Reader, f.OriginalName)
+
+	return f, nil
+}
+
 // NewFileFromMultipart creates a new File instace from the provided multipart header.
 func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 	f := &File{}
@@ -83,6 +102,28 @@ type PathReader struct {
 // Open implements the [filesystem.FileReader] interface.
 func (r *PathReader) Open() (io.ReadSeekCloser, error) {
 	return os.Open(r.Path)
+}
+
+// -------------------------------------------------------------------
+
+var _ FileReader = (*BytesReader)(nil)
+
+type BytesReader struct {
+	Bytes []byte
+}
+
+// Open implements the [filesystem.FileReader] interface.
+func (r *BytesReader) Open() (io.ReadSeekCloser, error) {
+	return &bytesReadSeekCloser{bytes.NewReader(r.Bytes)}, nil
+}
+
+// bytesReadSeekCloser implements io.ReadSeekCloser
+type bytesReadSeekCloser struct {
+	*bytes.Reader
+}
+
+func (r *bytesReadSeekCloser) Close() error {
+	return nil
 }
 
 // -------------------------------------------------------------------
