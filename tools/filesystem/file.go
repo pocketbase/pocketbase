@@ -1,6 +1,7 @@
 package filesystem
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -46,6 +47,18 @@ func NewFileFromPath(path string) (*File, error) {
 	return f, nil
 }
 
+// NewFileFromBytes creates a new File instance from the provided byte slice.
+func NewFileFromBytes(b []byte, name string) (*File, error) {
+	f := &File{}
+
+	f.Reader = &BufReader{b}
+	f.Size = int64(len(b))
+	f.OriginalName = name
+	f.Name = normalizeName(f.Reader, f.OriginalName)
+
+	return f, nil
+}
+
 // NewFileFromMultipart creates a new File instace from the provided multipart header.
 func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 	f := &File{}
@@ -83,6 +96,31 @@ type PathReader struct {
 // Open implements the [filesystem.FileReader] interface.
 func (r *PathReader) Open() (io.ReadSeekCloser, error) {
 	return os.Open(r.Path)
+}
+
+// -------------------------------------------------------------------
+
+var _ FileReader = (*BufReader)(nil)
+
+type BufReader struct {
+	Bytes []byte
+}
+
+// Open implements the [filesystem.FileReader] interface.
+func (r *BufReader) Open() (io.ReadSeekCloser, error) {
+	return NewBytesReadSeekCloser(r.Bytes), nil
+}
+
+type BytesReadSeekCloser struct {
+	*bytes.Reader
+}
+
+func NewBytesReadSeekCloser(b []byte) *BytesReadSeekCloser {
+	return &BytesReadSeekCloser{bytes.NewReader(b)}
+}
+
+func (r *BytesReadSeekCloser) Close() error {
+	return nil
 }
 
 // -------------------------------------------------------------------
