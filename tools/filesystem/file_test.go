@@ -44,9 +44,6 @@ func TestNewFileFromPath(t *testing.T) {
 }
 
 func TestNewFileFromBytes(t *testing.T) {
-	testDir := createTestDir(t)
-	defer os.RemoveAll(testDir)
-
 	// nil bytes
 	if _, err := filesystem.NewFileFromBytes(nil, "photo.jpg"); err == nil {
 		t.Fatal("Expected error, got nil")
@@ -58,12 +55,12 @@ func TestNewFileFromBytes(t *testing.T) {
 	}
 
 	originalName := "notes.txt"
-	f, err := filesystem.NewFileFromBytes([]byte("TODO: Write Tests\n"), originalName)
+	f, err := filesystem.NewFileFromBytes([]byte("text\n"), originalName)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if f.Size != 18 {
-		t.Fatalf("Expected Size %v, got %v", 18, f.Size)
+	if f.Size != 5 {
+		t.Fatalf("Expected Size %v, got %v", 5, f.Size)
 	}
 	if f.OriginalName != originalName {
 		t.Fatalf("Expected originalName %q, got %q", originalName, f.OriginalName)

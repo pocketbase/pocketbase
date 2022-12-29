@@ -51,13 +51,13 @@ func NewFileFromPath(path string) (*File, error) {
 // NewFileFromBytes creates a new File instance from the provided byte slice.
 func NewFileFromBytes(b []byte, name string) (*File, error) {
 	size := len(b)
-	if size == 0 || b == nil {
+	if size == 0 {
 		return nil, errors.New("cannot create an empty file")
 	}
 
 	f := &File{}
 
-	f.Reader = &bytesReader{b}
+	f.Reader = &BytesReader{b}
 	f.Size = int64(size)
 	f.OriginalName = name
 	f.Name = normalizeName(f.Reader, f.OriginalName)
@@ -106,17 +106,18 @@ func (r *PathReader) Open() (io.ReadSeekCloser, error) {
 
 // -------------------------------------------------------------------
 
-var _ FileReader = (*bytesReader)(nil)
+var _ FileReader = (*BytesReader)(nil)
 
-type bytesReader struct {
+type BytesReader struct {
 	Bytes []byte
 }
 
 // Open implements the [filesystem.FileReader] interface.
-func (r *bytesReader) Open() (io.ReadSeekCloser, error) {
+func (r *BytesReader) Open() (io.ReadSeekCloser, error) {
 	return &bytesReadSeekCloser{bytes.NewReader(r.Bytes)}, nil
 }
 
+// bytesReadSeekCloser implements io.ReadSeekCloser
 type bytesReadSeekCloser struct {
 	*bytes.Reader
 }
