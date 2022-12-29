@@ -51,7 +51,7 @@ func NewFileFromPath(path string) (*File, error) {
 func NewFileFromBytes(b []byte, name string) (*File, error) {
 	f := &File{}
 
-	f.Reader = &BufReader{b}
+	f.Reader = &bytesReader{b}
 	f.Size = int64(len(b))
 	f.OriginalName = name
 	f.Name = normalizeName(f.Reader, f.OriginalName)
@@ -100,26 +100,26 @@ func (r *PathReader) Open() (io.ReadSeekCloser, error) {
 
 // -------------------------------------------------------------------
 
-var _ FileReader = (*BufReader)(nil)
+var _ FileReader = (*bytesReader)(nil)
 
-type BufReader struct {
+type bytesReader struct {
 	Bytes []byte
 }
 
 // Open implements the [filesystem.FileReader] interface.
-func (r *BufReader) Open() (io.ReadSeekCloser, error) {
-	return NewBytesReadSeekCloser(r.Bytes), nil
+func (r *bytesReader) Open() (io.ReadSeekCloser, error) {
+	return newBytesReadSeekCloser(r.Bytes), nil
 }
 
-type BytesReadSeekCloser struct {
+type bytesReadSeekCloser struct {
 	*bytes.Reader
 }
 
-func NewBytesReadSeekCloser(b []byte) *BytesReadSeekCloser {
-	return &BytesReadSeekCloser{bytes.NewReader(b)}
+func newBytesReadSeekCloser(b []byte) *bytesReadSeekCloser {
+	return &bytesReadSeekCloser{bytes.NewReader(b)}
 }
 
-func (r *BytesReadSeekCloser) Close() error {
+func (r *bytesReadSeekCloser) Close() error {
 	return nil
 }
 
