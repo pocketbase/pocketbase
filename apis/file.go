@@ -29,6 +29,14 @@ func (api *fileApi) download(c echo.Context) error {
 		return NewNotFoundError("", nil)
 	}
 
+	// check browser cache and return 304 if possible
+	ifModifiedSince := c.Request().Header.Get("If-Modified-Since")
+	if ifModifiedSince != "" {
+		c.Response().Header().Set("Last-Modified", ifModifiedSince)
+		c.Response().WriteHeader(304)
+		return nil
+	}
+
 	recordId := c.PathParam("recordId")
 	if recordId == "" {
 		return NewNotFoundError("", nil)
