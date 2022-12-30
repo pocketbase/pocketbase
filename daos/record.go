@@ -84,7 +84,7 @@ func (dao *Dao) FindRecordsByIds(
 		}
 	}
 
-	rows := []dbx.NullStringMap{}
+	rows := make([]dbx.NullStringMap, 0, len(recordIds))
 	if err := query.All(&rows); err != nil {
 		return nil, err
 	}
@@ -428,7 +428,7 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 				workers := int(math.Ceil(float64(total) / float64(perWorker)))
 
 				batchErr := func() error {
-					ch := make(chan error)
+					ch := make(chan error, workers)
 					defer close(ch)
 
 					for i := 0; i < workers; i++ {
