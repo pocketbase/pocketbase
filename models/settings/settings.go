@@ -44,6 +44,7 @@ type Settings struct {
 	SpotifyAuth   AuthProviderConfig `form:"spotifyAuth" json:"spotifyAuth"`
 	KakaoAuth     AuthProviderConfig `form:"kakaoAuth" json:"kakaoAuth"`
 	TwitchAuth    AuthProviderConfig `form:"twitchAuth" json:"twitchAuth"`
+	StravaAuth    AuthProviderConfig `form:"stravaAuth" json:"stravaAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -124,6 +125,9 @@ func New() *Settings {
 		TwitchAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		StravaAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -153,6 +157,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.SpotifyAuth),
 		validation.Field(&s.KakaoAuth),
 		validation.Field(&s.TwitchAuth),
+		validation.Field(&s.StravaAuth),
 	)
 }
 
@@ -207,6 +212,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.SpotifyAuth.ClientSecret,
 		&clone.KakaoAuth.ClientSecret,
 		&clone.TwitchAuth.ClientSecret,
+		&clone.StravaAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -236,6 +242,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameSpotify:   s.SpotifyAuth,
 		auth.NameKakao:     s.KakaoAuth,
 		auth.NameTwitch:    s.TwitchAuth,
+		auth.NameStrava:    s.StravaAuth,
 	}
 }
 

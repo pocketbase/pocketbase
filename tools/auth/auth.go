@@ -105,6 +105,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewKakaoProvider(), nil
 	case NameTwitch:
 		return NewTwitchProvider(), nil
+	case NameStrava:
+		return NewStravaProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
