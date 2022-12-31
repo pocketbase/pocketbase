@@ -69,22 +69,28 @@ func (p *Gitee) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		return user, nil
 	}
 
-	// Optional: in case user set "Keep my email address private",
-	// or uncheck the "all emails" checkbox, we need to
-	// retrieve emails from the emails api.
-	// All response errors in this request will be ignored.
+	// in case user set "Keep my email address private",
+	// email should be retrieved via extra API request
+	// in case user has set "Keep my email address private", send an
+	// **optional** API request to retrieve the verified primary email
 
 	client := p.Client(token)
 
 	response, err := client.Get("https://gitee.com/api/v5/emails")
 	if err != nil {
-		return user, nil
+		return user, err
 	}
 	defer response.Body.Close()
 
+	// ignore not found errors caused by unsufficient scope permissions
+	// (the email field is optional, return the auth user without it)
+	if response.StatusCode == 404 {
+		return user, nil
+	}
+
 	content, err := io.ReadAll(response.Body)
 	if err != nil {
-		return user, nil
+		return user, err
 	}
 
 	emails := []struct {
@@ -93,7 +99,7 @@ func (p *Gitee) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Scope []string
 	}{}
 	if err := json.Unmarshal(content, &emails); err != nil {
-		return user, nil
+		return user, err
 	}
 
 	// extract the verified primary email
