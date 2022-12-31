@@ -45,6 +45,7 @@ type Settings struct {
 	KakaoAuth     AuthProviderConfig `form:"kakaoAuth" json:"kakaoAuth"`
 	TwitchAuth    AuthProviderConfig `form:"twitchAuth" json:"twitchAuth"`
 	StravaAuth    AuthProviderConfig `form:"stravaAuth" json:"stravaAuth"`
+	GiteeAuth     AuthProviderConfig `form:"giteeAuth" json:"giteeAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -128,6 +129,9 @@ func New() *Settings {
 		StravaAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		GiteeAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -158,6 +162,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.KakaoAuth),
 		validation.Field(&s.TwitchAuth),
 		validation.Field(&s.StravaAuth),
+		validation.Field(&s.GiteeAuth),
 	)
 }
 
@@ -213,6 +218,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.KakaoAuth.ClientSecret,
 		&clone.TwitchAuth.ClientSecret,
 		&clone.StravaAuth.ClientSecret,
+		&clone.GiteeAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -243,6 +249,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameKakao:     s.KakaoAuth,
 		auth.NameTwitch:    s.TwitchAuth,
 		auth.NameStrava:    s.StravaAuth,
+		auth.NameGitee:     s.GiteeAuth,
 	}
 }
 
