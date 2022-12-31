@@ -64,8 +64,8 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		AccessToken: token.AccessToken,
 	}
 
-	// in case user set "Keep my email address private",
-	// email should be retrieved via extra API request
+	// in case user has set "Keep my email address private", send an
+	// **optional** API request to retrieve the verified primary email
 	if user.Email == "" {
 		client := p.Client(token)
 
@@ -74,6 +74,12 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			return user, err
 		}
 		defer response.Body.Close()
+
+		// ignore not found errors caused by unsufficient scope permissions
+		// (the email field is optional, return the auth user without it)
+		if response.StatusCode == 404 {
+			return user, nil
+		}
 
 		content, err := io.ReadAll(response.Body)
 		if err != nil {
