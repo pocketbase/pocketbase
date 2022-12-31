@@ -5,6 +5,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"golang.org/x/oauth2"
 )
 
@@ -57,48 +58,53 @@ func (p *Gitee) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id:          strconv.Itoa(extracted.Id),
 		Name:        extracted.Name,
 		Username:    extracted.Login,
-		Email:       extracted.Email,
 		AvatarUrl:   extracted.AvatarUrl,
 		RawUser:     rawUser,
 		AccessToken: token.AccessToken,
 	}
 
-	// in case user set "Keep my email address private",
-	// email should be retrieved via extra API request
-	if user.Email == "" {
-		client := p.Client(token)
+	// extract the email when it is available
+	if extracted.Email != "" && is.EmailFormat.Validate(extracted.Email) == nil {
+		user.Email = extracted.Email
+		return user, nil
+	}
 
-		response, err := client.Get("https://gitee.com/api/v5/emails")
-		if err != nil {
-			return user, err
-		}
-		defer response.Body.Close()
+	// Optional: in case user set "Keep my email address private",
+	// or uncheck the "all emails" checkbox, we need to
+	// retrieve emails from the emails api.
+	// All response errors in this request will be ignored.
 
-		content, err := io.ReadAll(response.Body)
-		if err != nil {
-			return user, err
-		}
+	client := p.Client(token)
 
-		emails := []struct {
-			Email string
-			State string
-			Scope []string
-		}{}
-		if err := json.Unmarshal(content, &emails); err != nil {
-			return user, err
-		}
+	response, err := client.Get("https://gitee.com/api/v5/emails")
+	if err != nil {
+		return user, nil
+	}
+	defer response.Body.Close()
 
-		// extract the verified primary email
+	content, err := io.ReadAll(response.Body)
+	if err != nil {
+		return user, nil
+	}
 
-		//
-		// API reference: https://gitee.com/api/v5/swagger#/getV5Emails
-	outer:
-		for _, email := range emails {
-			for _, scope := range email.Scope {
-				if email.State == "confirmed" && scope == "primary" {
-					user.Email = email.Email
-					break outer
-				}
+	emails := []struct {
+		Email string
+		State string
+		Scope []string
+	}{}
+	if err := json.Unmarshal(content, &emails); err != nil {
+		return user, nil
+	}
+
+	// extract the verified primary email
+
+	//
+	// API reference: https://gitee.com/api/v5/swagger#/getV5Emails
+	for _, email := range emails {
+		for _, scope := range email.Scope {
+			if email.State == "confirmed" && scope == "primary" {
+				user.Email = email.Email
+				return user, nil
 			}
 		}
 	}
