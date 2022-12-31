@@ -5,6 +5,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"golang.org/x/oauth2"
 )
 
@@ -57,51 +58,73 @@ func (p *Gitee) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id:          strconv.Itoa(extracted.Id),
 		Name:        extracted.Name,
 		Username:    extracted.Login,
-		Email:       extracted.Email,
 		AvatarUrl:   extracted.AvatarUrl,
 		RawUser:     rawUser,
 		AccessToken: token.AccessToken,
 	}
 
-	// in case user set "Keep my email address private",
-	// email should be retrieved via extra API request
-	if user.Email == "" {
-		client := p.Client(token)
-
-		response, err := client.Get("https://gitee.com/api/v5/emails")
+	if extracted.Email != "" && is.EmailFormat.Validate(extracted.Email) == nil {
+		// valid public primary email
+		user.Email = extracted.Email
+	} else {
+		// send an additional optional request to retrieve the email
+		email, err := p.fetchPrimaryEmail(token)
 		if err != nil {
-			return user, err
+			return nil, err
 		}
-		defer response.Body.Close()
+		user.Email = email
+	}
 
-		content, err := io.ReadAll(response.Body)
-		if err != nil {
-			return user, err
-		}
+	return user, nil
+}
 
-		emails := []struct {
-			Email string
-			State string
-			Scope []string
-		}{}
-		if err := json.Unmarshal(content, &emails); err != nil {
-			return user, err
-		}
+// fetchPrimaryEmail sends an API request to retrieve the verified primary email,
+// in case the user hasn't set "Public email address" or has unchecked
+// the "Access your emails data" permission during authentication.
+//
+// NB! This method can succeed and still return an empty email.
+// Error responses that are result of insufficient scopes permissions are ignored.
+//
+// API reference: https://gitee.com/api/v5/swagger#/getV5Emails
+func (p *Gitee) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
+	client := p.Client(token)
 
-		// extract the verified primary email
+	response, err := client.Get("https://gitee.com/api/v5/emails")
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
 
-		//
-		// API reference: https://gitee.com/api/v5/swagger#/getV5Emails
-	outer:
-		for _, email := range emails {
-			for _, scope := range email.Scope {
-				if email.State == "confirmed" && scope == "primary" {
-					user.Email = email.Email
-					break outer
-				}
+	// ignore common http errors caused by insufficient scope permissions
+	if response.StatusCode == 401 || response.StatusCode == 403 || response.StatusCode == 404 {
+		return "", nil
+	}
+
+	content, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	emails := []struct {
+		Email string
+		State string
+		Scope []string
+	}{}
+	if err := json.Unmarshal(content, &emails); err != nil {
+		// ignore unmarshal error in case "Keep my email address private"
+		// was set because response.Body will be something like:
+		// {"email":"12285415+test@user.noreply.gitee.com"}
+		return "", nil
+	}
+
+	// extract the first verified primary email
+	for _, email := range emails {
+		for _, scope := range email.Scope {
+			if email.State == "confirmed" && scope == "primary" && is.EmailFormat.Validate(email.Email) == nil {
+				return email.Email, nil
 			}
 		}
 	}
 
-	return user, nil
+	return "", nil
 }

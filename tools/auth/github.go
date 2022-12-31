@@ -67,42 +67,58 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	// in case user has set "Keep my email address private", send an
 	// **optional** API request to retrieve the verified primary email
 	if user.Email == "" {
-		client := p.Client(token)
-
-		response, err := client.Get(p.userApiUrl + "/emails")
+		email, err := p.fetchPrimaryEmail(token)
 		if err != nil {
-			return user, err
+			return nil, err
 		}
-		defer response.Body.Close()
-
-		// ignore not found errors caused by unsufficient scope permissions
-		// (the email field is optional, return the auth user without it)
-		if response.StatusCode == 404 {
-			return user, nil
-		}
-
-		content, err := io.ReadAll(response.Body)
-		if err != nil {
-			return user, err
-		}
-
-		emails := []struct {
-			Email    string
-			Verified bool
-			Primary  bool
-		}{}
-		if err := json.Unmarshal(content, &emails); err != nil {
-			return user, err
-		}
-
-		// extract the verified primary email
-		for _, email := range emails {
-			if email.Verified && email.Primary {
-				user.Email = email.Email
-				break
-			}
-		}
+		user.Email = email
 	}
 
 	return user, nil
+}
+
+// fetchPrimaryEmail sends an API request to retrieve the verified
+// primary email, in case "Keep my email address private" was set.
+//
+// NB! This method can succeed and still return an empty email.
+// Error responses that are result of insufficient scopes permissions are ignored.
+//
+// API reference: https://docs.github.com/en/rest/users/emails?apiVersion=2022-11-28
+func (p *Github) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
+	client := p.Client(token)
+
+	response, err := client.Get(p.userApiUrl + "/emails")
+	if err != nil {
+		return "", err
+	}
+	defer response.Body.Close()
+
+	// ignore common http errors caused by insufficient scope permissions
+	// (the email field is optional, aka. return the auth user without it)
+	if response.StatusCode == 401 || response.StatusCode == 403 || response.StatusCode == 404 {
+		return "", nil
+	}
+
+	content, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", err
+	}
+
+	emails := []struct {
+		Email    string
+		Verified bool
+		Primary  bool
+	}{}
+	if err := json.Unmarshal(content, &emails); err != nil {
+		return "", err
+	}
+
+	// extract the verified primary email
+	for _, email := range emails {
+		if email.Verified && email.Primary {
+			return email.Email, nil
+		}
+	}
+
+	return "", nil
 }
