@@ -56,4 +56,8 @@ export default {
         title: "Strava",
         icon:  "ri-riding-fill",
     },
+    giteeAuth: {
+        title: "Gitee",
+        icon:  "ri-git-repository-fill",
+    },
 };
