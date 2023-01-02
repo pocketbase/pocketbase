@@ -12,6 +12,8 @@
 
 - Fixed number field value output in the records listing ([#1447](https://github.com/pocketbase/pocketbase/issues/1447)).
 
+- Added webp to the default images mime type presets list ([#1469](https://github.com/pocketbase/pocketbase/pull/1469); thanks @khairulhaaziq).
+
 
 ## v0.10.4
 
