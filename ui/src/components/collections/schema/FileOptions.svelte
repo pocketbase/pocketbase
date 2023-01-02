@@ -82,10 +82,11 @@
                                     "image/png",
                                     "image/svg+xml",
                                     "image/gif",
+                                    "image/webp",
                                 ];
                             }}
                         >
-                            <span class="txt">Images (jpg, png, svg, gif)</span>
+                            <span class="txt">Images (jpg, png, svg, gif, webp)</span>
                         </div>
                         <div
                             tabindex="0"
