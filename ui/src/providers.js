@@ -60,4 +60,8 @@ export default {
         title: "Gitee",
         icon:  "ri-git-repository-fill",
     },
+    redditAuth: {
+        title: "Reddit",
+        icon:  "ri-reddit-line",
+    },
 };
