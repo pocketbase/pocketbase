@@ -1030,7 +1030,7 @@ select {
             &:nth-child(2n) {
                 border-left: 1px solid var(--baseAlt2Color);
             }
-            &:nth-last-child(-n+2) {
+            &:nth-last-child(-n+1) {
                 border-bottom: 0;
             }
             &.selected {

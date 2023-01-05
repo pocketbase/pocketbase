@@ -898,6 +898,8 @@ export default class CommonHelper {
                 return "ri-key-line";
             case "text":
                 return "ri-text";
+            case "md":
+                return "ri-markdown-line";
             case "number":
                 return "ri-hashtag";
             case "date":

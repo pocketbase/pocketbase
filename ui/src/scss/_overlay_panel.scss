@@ -34,6 +34,7 @@
         }
         .btn {
             flex-grow: 0;
+            z-index: auto;
         }
     }
 
@@ -44,7 +45,7 @@
     // header
     .panel-header {
         position: relative;
-        z-index: 2;
+        z-index: auto;
         display: flex;
         flex-wrap: wrap;
         align-items:center;
@@ -60,7 +61,7 @@
         }
         .overlay-close {
             $size: 35px;
-            z-index: 3;
+            z-index: auto;
             outline: 0;
             position: absolute;
             right: 100%;
@@ -121,7 +122,7 @@
 
     // footer
     .panel-footer {
-        z-index: 2;
+        z-index: -1;
         column-gap: var(--smSpacing);
         display: flex;
         align-items:center;

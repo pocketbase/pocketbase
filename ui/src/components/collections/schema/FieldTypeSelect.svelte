@@ -14,6 +14,11 @@
             icon: CommonHelper.getFieldTypeIcon("text"),
         },
         {
+            label: "Markdown",
+            value: "md",
+            icon: CommonHelper.getFieldTypeIcon("md"),
+        },
+        {
             label: "Number",
             value: "number",
             icon: CommonHelper.getFieldTypeIcon("number"),

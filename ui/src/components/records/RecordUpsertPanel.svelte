@@ -22,6 +22,7 @@
     import FileField from "@/components/records/fields/FileField.svelte";
     import RelationField from "@/components/records/fields/RelationField.svelte";
     import ExternalAuthsList from "@/components/records/ExternalAuthsList.svelte";
+    import MdField from "./fields/MdField.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -356,6 +357,8 @@
                     <SelectField {field} bind:value={record[field.name]} />
                 {:else if field.type === "json"}
                     <JsonField {field} bind:value={record[field.name]} />
+                {:else if field.type === "md"}
+                    <MdField {field} bind:value={record[field.name]} />
                 {:else if field.type === "file"}
                     <FileField
                         {field}

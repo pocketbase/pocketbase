@@ -40,7 +40,7 @@ func TestAuthFieldNames(t *testing.T) {
 
 func TestFieldTypes(t *testing.T) {
 	result := schema.FieldTypes()
-	expected := 10
+	expected := 11
 
 	if len(result) != expected {
 		t.Fatalf("Expected %d types, got %d (%v)", expected, len(result), result)
@@ -63,6 +63,10 @@ func TestSchemaFieldColDefinition(t *testing.T) {
 	}{
 		{
 			schema.SchemaField{Type: schema.FieldTypeText, Name: "test"},
+			"TEXT DEFAULT ''",
+		},
+		{
+			schema.SchemaField{Type: schema.FieldTypeMd, Name: "test"},
 			"TEXT DEFAULT ''",
 		},
 		{
