@@ -145,8 +145,6 @@ func (api *recordApi) view(c echo.Context) error {
 			log.Println(err)
 		}
 
-		fmt.Println(e.Record)
-
 		return e.HttpContext.JSON(http.StatusOK, e.Record)
 	})
 }
