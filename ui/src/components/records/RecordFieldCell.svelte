@@ -4,6 +4,7 @@
     import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import RecordFilePreview from "@/components/records/RecordFilePreview.svelte";
+    import RelationLabel from "../base/RelationLabel.svelte";
 
     export let record;
     export let field;
@@ -48,7 +49,11 @@
     {:else if field.type === "relation" || field.type === "user"}
         <div class="inline-flex">
             {#each CommonHelper.toArray(record[field.name]).slice(0, 20) as item, i (i + item)}
-                <IdLabel id={item} />
+                {#if record.expand[field.name] instanceof Array}
+                    <RelationLabel item={record.expand[field.name][i]} />
+                {:else}
+                    <RelationLabel item={record.expand[field.name]} />
+                {/if}
             {/each}
             {#if CommonHelper.toArray(record[field.name]).length > 20}
                 ...

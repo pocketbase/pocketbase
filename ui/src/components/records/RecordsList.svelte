@@ -108,10 +108,21 @@
 
         isLoading = true;
 
+        let relations = [];
+
+        for (let i = 0; i < collection.schema.length; i++) {
+            let field = collection.schema[i];
+
+            if (field.type === 'relation') {
+                relations.push(field.name)
+            }
+        }
+
         return ApiClient.collection(collection.id)
             .getList(page, 30, {
                 sort: sort,
                 filter: filter,
+                expand: relations.join(',')
             })
             .then(async (result) => {
                 if (page <= 1) {
