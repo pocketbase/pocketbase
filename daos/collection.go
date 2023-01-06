@@ -87,7 +87,9 @@ func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeI
 	query := dao.CollectionQuery()
 	if len(excludeIds) > 0 {
 		uniqueExcludeIds := list.NonzeroUniques(excludeIds)
-		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
+		if len(uniqueExcludeIds) > 0 {
+			query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
+		}
 	}
 	if err := query.All(&collections); err != nil {
 		return nil, err
