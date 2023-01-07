@@ -55,13 +55,14 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          strconv.Itoa(extracted.Id),
-		Name:        extracted.Name,
-		Username:    extracted.Login,
-		Email:       extracted.Email,
-		AvatarUrl:   extracted.AvatarUrl,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           strconv.Itoa(extracted.Id),
+		Name:         extracted.Name,
+		Username:     extracted.Login,
+		Email:        extracted.Email,
+		AvatarUrl:    extracted.AvatarUrl,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 
 	// in case user has set "Keep my email address private", send an

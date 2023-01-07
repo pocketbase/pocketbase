@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"fmt"
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -91,14 +92,17 @@ func (api *settingsApi) testS3(c echo.Context) error {
 	}
 	defer fs.Close()
 
-	testFileKey := "pb_test_" + security.PseudorandomString(5) + "/test.txt"
+	testPrefix := "pb_settings_test_" + security.PseudorandomString(5)
+	testFileKey := testPrefix + "/test.txt"
 
+	// try to upload a test file
 	if err := fs.Upload([]byte("test"), testFileKey); err != nil {
 		return NewBadRequestError("Failed to upload a test file. Raw error: \n"+err.Error(), nil)
 	}
 
-	if err := fs.Delete(testFileKey); err != nil {
-		return NewBadRequestError("Failed to delete a test file. Raw error: \n"+err.Error(), nil)
+	// test prefix deletion (ensures that both bucket list and delete works)
+	if errs := fs.DeletePrefix(testPrefix); len(errs) > 0 {
+		return NewBadRequestError(fmt.Sprintf("Failed to delete a test file. Raw error: %v", errs), nil)
 	}
 
 	return c.NoContent(http.StatusNoContent)

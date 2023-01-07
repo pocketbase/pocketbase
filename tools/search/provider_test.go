@@ -495,12 +495,12 @@ func (t *testFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 	return nil
 }
 
-func (t *testFieldResolver) Resolve(field string) (name string, placeholderParams dbx.Params, err error) {
+func (t *testFieldResolver) Resolve(field string) (*ResolverResult, error) {
 	t.ResolveCalls++
 
 	if field == "unknown" {
-		return "", nil, errors.New("test error")
+		return nil, errors.New("test error")
 	}
 
-	return field, nil, nil
+	return &ResolverResult{Identifier: field}, nil
 }

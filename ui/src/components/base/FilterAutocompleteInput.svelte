@@ -236,11 +236,22 @@
 
             result.push(key);
 
-            if (field.type === "relation" && field.options.collectionId) {
+            // add relation fields
+            if (field.type === "relation" && field.options?.collectionId) {
                 const subKeys = getCollectionFieldKeys(field.options.collectionId, key + ".", level + 1);
                 if (subKeys.length) {
                     result = result.concat(subKeys);
                 }
+            }
+
+            // add ":each" field modifier
+            if (field.type === "select" && field.options?.maxSelect != 1) {
+                result.push(key + ":each");
+            }
+
+            // add ":length" field modifier to arrayble fields
+            if (field.options?.maxSelect != 1 && ["select", "file", "relation"].includes(field.type)) {
+                result.push(key + ":length");
             }
         }
 
@@ -259,7 +270,6 @@
         result.push("@request.method");
         result.push("@request.query.");
         result.push("@request.data.");
-        result.push("@request.auth.");
         result.push("@request.auth.id");
         result.push("@request.auth.collectionId");
         result.push("@request.auth.collectionName");
@@ -276,6 +286,27 @@
             const authKeys = getCollectionFieldKeys(collection.id, "@request.auth.");
             for (const k of authKeys) {
                 CommonHelper.pushUnique(result, k);
+            }
+        }
+
+        // load base collection fields into @request.data.*
+        const issetExcludeList = ["created", "updated"];
+        if (baseCollection?.id) {
+            const keys = getCollectionFieldKeys(baseCollection.name, "@request.data.");
+            for (const key of keys) {
+                result.push(key);
+
+                // add ":isset" modifier to non-base keys
+                const parts = key.split(".");
+                if (
+                    parts.length === 3 &&
+                    // doesn't contain another modifier
+                    parts[2].indexOf(":") === -1 &&
+                    // is not from the exclude list
+                    !issetExcludeList.includes(parts[2])
+                ) {
+                    result.push(key + ":isset");
+                }
             }
         }
 

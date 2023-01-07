@@ -84,7 +84,7 @@ func (dao *Dao) FindRecordsByIds(
 		}
 	}
 
-	rows := []dbx.NullStringMap{}
+	rows := make([]dbx.NullStringMap, 0, len(recordIds))
 	if err := query.All(&rows); err != nil {
 		return nil, err
 	}
@@ -192,8 +192,7 @@ func (dao *Dao) IsRecordValueUnique(
 		AndWhere(expr).
 		Limit(1)
 
-	if len(excludeIds) > 0 {
-		uniqueExcludeIds := list.NonzeroUniques(excludeIds)
+	if uniqueExcludeIds := list.NonzeroUniques(excludeIds); len(uniqueExcludeIds) > 0 {
 		query.AndWhere(dbx.NotIn(collection.Name+".id", list.ToInterfaceSlice(uniqueExcludeIds)...))
 	}
 

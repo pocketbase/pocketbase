@@ -1,4 +1,66 @@
-## (WIP)
+## (WIP) v0.11.0
+
+- Added `+` and `-` body field modifiers for `number`, `files`, `select` and `relation` fields.
+  ```js
+  {
+    // oldValue + 2
+    "someNumber+": 2,
+
+    // oldValue + ["id1", "id2"] - ["id3"]
+    "someRelation+": ["id1", "id2"],
+    "someRelation-": ["id3"],
+
+    // delete single file by its name (file fields supports only the "-" modifier!)
+    "someFile-": "filename.png",
+  }
+  ```
+  _Note1: `@request.data.someField` will contain the final resolved value._
+
+  _Note2: The old index (`"field.0":null`) and filename (`"field.filename.png":null`) based suffixed syntax for deleting files is still supported._
+
+- ! Added support for multi-match/match-all request data and collection multi-valued fields (`select`, `relation`) conditions.
+  If you want a "at least one of" type of condition, you can prefix the operator with `?`.
+  ```js
+  // for each someRelA.someRelB record require the "status" field to be "active"
+  someRelA.someRelB.status = "active"
+
+  // OR for "at least one of" condition
+  someRelA.someRelB.status ?= "active"
+  ```
+  _**Note: Previously the behavior for multi-valued fields was as the "at least one of" type.
+  The release comes with system db migration that will update your existing API rules (if needed) to preserve the compatibility.
+  If you have multi-select or multi-relation filter checks in your client-side code and want to preserve the old behavior, you'll have to prefix with `?` your operators.**_
+
+- Added support for querying `@request.data.someRelField.*` relation fields.
+  ```js
+  // example submitted data: {"someRel": "REL_RECORD_ID"}
+  @request.data.someRel.status = "active"
+  ```
+
+- Added `:isset` modifier for the static request data fields.
+  ```js
+  // prevent changing the "role" field
+  @request.data.role:isset = false
+  ```
+
+- Added `:length` modifier for the arrayable request data and collection fields (`select`, `file`, `relation`).
+  ```js
+  // example submitted data: {"someSelectField": ["val1", "val2"]}
+  @request.data.someSelectField:length = 2
+
+  // check existing record field length
+  someSelectField:length = 2
+  ```
+
+- Added `:each` modifier support for the multi-`select` request data and collection field.
+  ```js
+  // check if all selected rows has "pb_" prefix
+  roles:each ~ 'pb_%'
+  ```
+
+- Improved the Admin UI filters autocomplete.
+
+- Added `@random` sort key for `RANDOM()` sorted list results.
 
 - Added Strava OAuth2 provider ([#1443](https://github.com/pocketbase/pocketbase/pull/1443); thanks @szsascha).
 
@@ -6,13 +68,27 @@
 
 - Added IME status check to the textarea keydown handler ([#1370](https://github.com/pocketbase/pocketbase/pull/1370); thanks @tenthree).
 
-- Fixed the text wrapping in the Admin UI listing searchbar ([#1416](https://github.com/pocketbase/pocketbase/issues/1416)).
-
 - Added `filesystem.NewFileFromBytes()` helper ([#1420](https://github.com/pocketbase/pocketbase/pull/1420); thanks @dschissler).
+
+- Added support for reordering uploaded multiple files.
+
+- Added `webp` to the default images mime type presets list ([#1469](https://github.com/pocketbase/pocketbase/pull/1469); thanks @khairulhaaziq).
+
+- Added the OAuth2 refresh token to the auth meta response ([#1487](https://github.com/pocketbase/pocketbase/issues/1487)).
+
+- Fixed the text wrapping in the Admin UI listing searchbar ([#1416](https://github.com/pocketbase/pocketbase/issues/1416)).
 
 - Fixed number field value output in the records listing ([#1447](https://github.com/pocketbase/pocketbase/issues/1447)).
 
-- Added webp to the default images mime type presets list ([#1469](https://github.com/pocketbase/pocketbase/pull/1469); thanks @khairulhaaziq).
+- Fixed duplicated settings view pages caused by uncompleted transitions ([#1498](https://github.com/pocketbase/pocketbase/issues/1498)).
+
+- Allowed sending `Authorization` header with the `/auth-with-password` record and admin login requests ([#1494](https://github.com/pocketbase/pocketbase/discussions/1494)).
+
+- `migrate down` now reverts migrations in the applied order.
+
+- Added additional list-bucket check in the S3 config test API.
+
+- Other minor improvements.
 
 
 ## v0.10.4

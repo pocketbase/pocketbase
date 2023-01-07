@@ -9,7 +9,7 @@
 </script>
 
 <div class="block m-b-base">
-    <div class="flex txt-sm m-b-5">
+    <div class="flex txt-sm txt-hint m-b-5">
         <p>
             All rules follow the
             <a href={import.meta.env.PB_RULES_SYNTAX_DOCS} target="_blank" rel="noopener noreferrer">

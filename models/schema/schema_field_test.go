@@ -603,7 +603,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{schema.SchemaField{Type: schema.FieldTypeSelect}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeSelect}, 123, `"123"`},
 		{schema.SchemaField{Type: schema.FieldTypeSelect}, "test", `"test"`},
-		{schema.SchemaField{Type: schema.FieldTypeSelect}, []string{"test1", "test2"}, `"test1"`},
+		{schema.SchemaField{Type: schema.FieldTypeSelect}, []string{"test1", "test2"}, `"test2"`},
 		{
 			// no values validation/filtering
 			schema.SchemaField{
@@ -680,7 +680,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{schema.SchemaField{Type: schema.FieldTypeFile}, "", `""`},
 		{schema.SchemaField{Type: schema.FieldTypeFile}, 123, `"123"`},
 		{schema.SchemaField{Type: schema.FieldTypeFile}, "test", `"test"`},
-		{schema.SchemaField{Type: schema.FieldTypeFile}, []string{"test1", "test2"}, `"test1"`},
+		{schema.SchemaField{Type: schema.FieldTypeFile}, []string{"test1", "test2"}, `"test2"`},
 		// file (multiple)
 		{
 			schema.SchemaField{
@@ -785,7 +785,7 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{
 			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
 			[]string{"1ba88b4f-e9da-42f0-9764-9a55c953e724", "2ba88b4f-e9da-42f0-9764-9a55c953e724"},
-			`"1ba88b4f-e9da-42f0-9764-9a55c953e724"`,
+			`"2ba88b4f-e9da-42f0-9764-9a55c953e724"`,
 		},
 		// relation (multiple)
 		{
@@ -859,6 +859,696 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 
 		if string(encoded) != s.expectJson {
 			t.Errorf("(%d), Expected %v, got %v", i, s.expectJson, string(encoded))
+		}
+	}
+}
+
+func TestSchemaFieldPrepareValueWithModifier(t *testing.T) {
+	scenarios := []struct {
+		name          string
+		field         schema.SchemaField
+		baseValue     any
+		modifier      string
+		modifierValue any
+		expectJson    string
+	}{
+		// text
+		{
+			"text with '+' modifier",
+			schema.SchemaField{Type: schema.FieldTypeText},
+			"base",
+			"+",
+			"new",
+			`"base"`,
+		},
+		{
+			"text with '-' modifier",
+			schema.SchemaField{Type: schema.FieldTypeText},
+			"base",
+			"-",
+			"new",
+			`"base"`,
+		},
+		{
+			"text with unknown modifier",
+			schema.SchemaField{Type: schema.FieldTypeText},
+			"base",
+			"?",
+			"new",
+			`"base"`,
+		},
+		{
+			"text cast check",
+			schema.SchemaField{Type: schema.FieldTypeText},
+			123,
+			"?",
+			"new",
+			`"123"`,
+		},
+
+		// number
+		{
+			"number with '+' modifier",
+			schema.SchemaField{Type: schema.FieldTypeNumber},
+			1,
+			"+",
+			4,
+			`5`,
+		},
+		{
+			"number with '-' modifier",
+			schema.SchemaField{Type: schema.FieldTypeNumber},
+			1,
+			"-",
+			4,
+			`-3`,
+		},
+		{
+			"number with unknown modifier",
+			schema.SchemaField{Type: schema.FieldTypeNumber},
+			"1",
+			"?",
+			4,
+			`1`,
+		},
+		{
+			"number cast check",
+			schema.SchemaField{Type: schema.FieldTypeNumber},
+			"test",
+			"+",
+			"4",
+			`4`,
+		},
+
+		// bool
+		{
+			"bool with '+' modifier",
+			schema.SchemaField{Type: schema.FieldTypeBool},
+			true,
+			"+",
+			false,
+			`true`,
+		},
+		{
+			"bool with '-' modifier",
+			schema.SchemaField{Type: schema.FieldTypeBool},
+			true,
+			"-",
+			false,
+			`true`,
+		},
+		{
+			"bool with unknown modifier",
+			schema.SchemaField{Type: schema.FieldTypeBool},
+			true,
+			"?",
+			false,
+			`true`,
+		},
+		{
+			"bool cast check",
+			schema.SchemaField{Type: schema.FieldTypeBool},
+			"true",
+			"?",
+			false,
+			`true`,
+		},
+
+		// email
+		{
+			"email with '+' modifier",
+			schema.SchemaField{Type: schema.FieldTypeEmail},
+			"base",
+			"+",
+			"new",
+			`"base"`,
+		},
+		{
+			"email with '-' modifier",
+			schema.SchemaField{Type: schema.FieldTypeEmail},
+			"base",
+			"-",
+			"new",
+			`"base"`,
+		},
+		{
+			"email with unknown modifier",
+			schema.SchemaField{Type: schema.FieldTypeEmail},
+			"base",
+			"?",
+			"new",
+			`"base"`,
+		},
+		{
+			"email cast check",
+			schema.SchemaField{Type: schema.FieldTypeEmail},
+			123,
+			"?",
+			"new",
+			`"123"`,
+		},
+
+		// url
+		{
+			"url with '+' modifier",
+			schema.SchemaField{Type: schema.FieldTypeUrl},
+			"base",
+			"+",
+			"new",
+			`"base"`,
+		},
+		{
+			"url with '-' modifier",
+			schema.SchemaField{Type: schema.FieldTypeUrl},
+			"base",
+			"-",
+			"new",
+			`"base"`,
+		},
+		{
+			"url with unknown modifier",
+			schema.SchemaField{Type: schema.FieldTypeUrl},
+			"base",
+			"?",
+			"new",
+			`"base"`,
+		},
+		{
+			"url cast check",
+			schema.SchemaField{Type: schema.FieldTypeUrl},
+			123,
+			"-",
+			"new",
+			`"123"`,
+		},
+
+		// date
+		{
+			"date with '+' modifier",
+			schema.SchemaField{Type: schema.FieldTypeDate},
+			"2023-01-01 00:00:00.123",
+			"+",
+			"2023-02-01 00:00:00.456",
+			`"2023-01-01 00:00:00.123Z"`,
+		},
+		{
+			"date with '-' modifier",
+			schema.SchemaField{Type: schema.FieldTypeDate},
+			"2023-01-01 00:00:00.123Z",
+			"-",
+			"2023-02-01 00:00:00.456Z",
+			`"2023-01-01 00:00:00.123Z"`,
+		},
+		{
+			"date with unknown modifier",
+			schema.SchemaField{Type: schema.FieldTypeDate},
+			"2023-01-01 00:00:00.123",
+			"?",
+			"2023-01-01 00:00:00.456",
+			`"2023-01-01 00:00:00.123Z"`,
+		},
+		{
+			"date cast check",
+			schema.SchemaField{Type: schema.FieldTypeDate},
+			1672524000, // 2022-12-31 22:00:00.000Z
+			"+",
+			100,
+			`"2022-12-31 22:00:00.000Z"`,
+		},
+
+		// json
+		{
+			"json with '+' modifier",
+			schema.SchemaField{Type: schema.FieldTypeJson},
+			10,
+			"+",
+			5,
+			`10`,
+		},
+		{
+			"json with '+' modifier (slice)",
+			schema.SchemaField{Type: schema.FieldTypeJson},
+			[]string{"a", "b"},
+			"+",
+			"c",
+			`["a","b"]`,
+		},
+		{
+			"json with '-' modifier",
+			schema.SchemaField{Type: schema.FieldTypeJson},
+			10,
+			"-",
+			5,
+			`10`,
+		},
+		{
+			"json with '-' modifier (slice)",
+			schema.SchemaField{Type: schema.FieldTypeJson},
+			`["a","b"]`,
+			"-",
+			"c",
+			`["a","b"]`,
+		},
+		{
+			"json with unknown modifier",
+			schema.SchemaField{Type: schema.FieldTypeJson},
+			`"base"`,
+			"?",
+			`"new"`,
+			`"base"`,
+		},
+
+		// single select
+		{
+			"single select with '+' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 1}},
+			"",
+			"+",
+			"b",
+			`"b"`,
+		},
+		{
+			"single select with '+' modifier (nonempty base)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 1}},
+			"a",
+			"+",
+			"b",
+			`"b"`,
+		},
+		{
+			"single select with '-' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 1}},
+			"",
+			"-",
+			"a",
+			`""`,
+		},
+		{
+			"single select with '-' modifier (nonempty base and empty modifier value)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 1}},
+			"a",
+			"-",
+			"",
+			`"a"`,
+		},
+		{
+			"single select with '-' modifier (nonempty base and different value)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 1}},
+			"a",
+			"-",
+			"b",
+			`"a"`,
+		},
+		{
+			"single select with '-' modifier (nonempty base and matching value)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 1}},
+			"a",
+			"-",
+			"a",
+			`""`,
+		},
+		{
+			"single select with '-' modifier (nonempty base and matching value in a slice)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 1}},
+			"a",
+			"-",
+			[]string{"b", "a", "c", "123"},
+			`""`,
+		},
+		{
+			"single select with unknown modifier (nonempty)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 1}},
+			"",
+			"?",
+			"a",
+			`""`,
+		},
+
+		// multi select
+		{
+			"multi select with '+' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			nil,
+			"+",
+			"b",
+			`["b"]`,
+		},
+		{
+			"multi select with '+' modifier (nonempty base)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			[]string{"a"},
+			"+",
+			[]string{"b", "c"},
+			`["a","b","c"]`,
+		},
+		{
+			"multi select with '+' modifier (nonempty base; already existing value)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			[]string{"a", "b"},
+			"+",
+			"b",
+			`["a","b"]`,
+		},
+		{
+			"multi select with '-' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			nil,
+			"-",
+			[]string{"a"},
+			`[]`,
+		},
+		{
+			"multi select with '-' modifier (nonempty base and empty modifier value)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			"a",
+			"-",
+			"",
+			`["a"]`,
+		},
+		{
+			"multi select with '-' modifier (nonempty base and different value)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			"a",
+			"-",
+			"b",
+			`["a"]`,
+		},
+		{
+			"multi select with '-' modifier (nonempty base and matching value)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			[]string{"a", "b", "c", "d"},
+			"-",
+			"c",
+			`["a","b","d"]`,
+		},
+		{
+			"multi select with '-' modifier (nonempty base and matching value in a slice)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			[]string{"a", "b", "c", "d"},
+			"-",
+			[]string{"b", "a", "123"},
+			`["c","d"]`,
+		},
+		{
+			"multi select with unknown modifier (nonempty)",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Options: &schema.SelectOptions{MaxSelect: 10}},
+			[]string{"a", "b"},
+			"?",
+			"a",
+			`["a","b"]`,
+		},
+
+		// single relation
+		{
+			"single relation with '+' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"",
+			"+",
+			"b",
+			`"b"`,
+		},
+		{
+			"single relation with '+' modifier (nonempty base)",
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"a",
+			"+",
+			"b",
+			`"b"`,
+		},
+		{
+			"single relation with '-' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"",
+			"-",
+			"a",
+			`""`,
+		},
+		{
+			"single relation with '-' modifier (nonempty base and empty modifier value)",
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"a",
+			"-",
+			"",
+			`"a"`,
+		},
+		{
+			"single relation with '-' modifier (nonempty base and different value)",
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"a",
+			"-",
+			"b",
+			`"a"`,
+		},
+		{
+			"single relation with '-' modifier (nonempty base and matching value)",
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"a",
+			"-",
+			"a",
+			`""`,
+		},
+		{
+			"single relation with '-' modifier (nonempty base and matching value in a slice)",
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"a",
+			"-",
+			[]string{"b", "a", "c", "123"},
+			`""`,
+		},
+		{
+			"single relation with unknown modifier (nonempty)",
+			schema.SchemaField{Type: schema.FieldTypeRelation, Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"",
+			"?",
+			"a",
+			`""`,
+		},
+
+		// multi relation
+		{
+			"multi relation with '+' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			nil,
+			"+",
+			"b",
+			`["b"]`,
+		},
+		{
+			"multi relation with '+' modifier (nonempty base)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			[]string{"a"},
+			"+",
+			[]string{"b", "c"},
+			`["a","b","c"]`,
+		},
+		{
+			"multi relation with '+' modifier (nonempty base; already existing value)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			[]string{"a", "b"},
+			"+",
+			"b",
+			`["a","b"]`,
+		},
+		{
+			"multi relation with '-' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			nil,
+			"-",
+			[]string{"a"},
+			`[]`,
+		},
+		{
+			"multi relation with '-' modifier (nonempty base and empty modifier value)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			"a",
+			"-",
+			"",
+			`["a"]`,
+		},
+		{
+			"multi relation with '-' modifier (nonempty base and different value)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			"a",
+			"-",
+			"b",
+			`["a"]`,
+		},
+		{
+			"multi relation with '-' modifier (nonempty base and matching value)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			[]string{"a", "b", "c", "d"},
+			"-",
+			"c",
+			`["a","b","d"]`,
+		},
+		{
+			"multi relation with '-' modifier (nonempty base and matching value in a slice)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			[]string{"a", "b", "c", "d"},
+			"-",
+			[]string{"b", "a", "123"},
+			`["c","d"]`,
+		},
+		{
+			"multi relation with unknown modifier (nonempty)",
+			schema.SchemaField{Type: schema.FieldTypeRelation},
+			[]string{"a", "b"},
+			"?",
+			"a",
+			`["a","b"]`,
+		},
+
+		// single file
+		{
+			"single file with '+' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1}},
+			"",
+			"+",
+			"b",
+			`""`,
+		},
+		{
+			"single file with '+' modifier (nonempty base)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1}},
+			"a",
+			"+",
+			"b",
+			`"a"`,
+		},
+		{
+			"single file with '-' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1}},
+			"",
+			"-",
+			"a",
+			`""`,
+		},
+		{
+			"single file with '-' modifier (nonempty base and empty modifier value)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1}},
+			"a",
+			"-",
+			"",
+			`"a"`,
+		},
+		{
+			"single file with '-' modifier (nonempty base and different value)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1}},
+			"a",
+			"-",
+			"b",
+			`"a"`,
+		},
+		{
+			"single file with '-' modifier (nonempty base and matching value)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1}},
+			"a",
+			"-",
+			"a",
+			`""`,
+		},
+		{
+			"single file with '-' modifier (nonempty base and matching value in a slice)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1}},
+			"a",
+			"-",
+			[]string{"b", "a", "c", "123"},
+			`""`,
+		},
+		{
+			"single file with unknown modifier (nonempty)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1}},
+			"",
+			"?",
+			"a",
+			`""`,
+		},
+
+		// multi file
+		{
+			"multi file with '+' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			nil,
+			"+",
+			"b",
+			`[]`,
+		},
+		{
+			"multi file with '+' modifier (nonempty base)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			[]string{"a"},
+			"+",
+			[]string{"b", "c"},
+			`["a"]`,
+		},
+		{
+			"multi file with '+' modifier (nonempty base; already existing value)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			[]string{"a", "b"},
+			"+",
+			"b",
+			`["a","b"]`,
+		},
+		{
+			"multi file with '-' modifier (empty base)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			nil,
+			"-",
+			[]string{"a"},
+			`[]`,
+		},
+		{
+			"multi file with '-' modifier (nonempty base and empty modifier value)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			"a",
+			"-",
+			"",
+			`["a"]`,
+		},
+		{
+			"multi file with '-' modifier (nonempty base and different value)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			"a",
+			"-",
+			"b",
+			`["a"]`,
+		},
+		{
+			"multi file with '-' modifier (nonempty base and matching value)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			[]string{"a", "b", "c", "d"},
+			"-",
+			"c",
+			`["a","b","d"]`,
+		},
+		{
+			"multi file with '-' modifier (nonempty base and matching value in a slice)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			[]string{"a", "b", "c", "d"},
+			"-",
+			[]string{"b", "a", "123"},
+			`["c","d"]`,
+		},
+		{
+			"multi file with unknown modifier (nonempty)",
+			schema.SchemaField{Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 10}},
+			[]string{"a", "b"},
+			"?",
+			"a",
+			`["a","b"]`,
+		},
+	}
+
+	for _, s := range scenarios {
+		result := s.field.PrepareValueWithModifier(s.baseValue, s.modifier, s.modifierValue)
+
+		encoded, err := json.Marshal(result)
+		if err != nil {
+			t.Fatalf("[%s] %v", s.name, err)
+		}
+
+		if string(encoded) != s.expectJson {
+			t.Fatalf("[%s], Expected %v, got %v", s.name, s.expectJson, string(encoded))
 		}
 	}
 }
@@ -1306,7 +1996,7 @@ func TestRelationOptionsValidate(t *testing.T) {
 			[]string{"maxSelect"},
 		},
 		{
-			"MaxSelect > 0 && non-empty CollectionId",
+			"MaxSelect > 0 && nonempty CollectionId",
 			schema.RelationOptions{
 				CollectionId: "abc",
 				MaxSelect:    types.Pointer(1),

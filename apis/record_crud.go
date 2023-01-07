@@ -166,6 +166,20 @@ func (api *recordApi) create(c echo.Context) error {
 
 	// temporary save the record and check it against the create rule
 	if requestData.Admin == nil && collection.CreateRule != nil {
+		testRecord := models.NewRecord(collection)
+
+		// replace modifiers fields so that the resolved value is always
+		// available when accessing requestData.Data using just the field name
+		if requestData.HasModifierDataKeys() {
+			requestData.Data = testRecord.ReplaceModifers(requestData.Data)
+		}
+
+		testForm := forms.NewRecordUpsert(api.app, testRecord)
+		testForm.SetFullManageAccess(true)
+		if err := testForm.LoadRequest(c.Request(), ""); err != nil {
+			return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
+		}
+
 		createRuleFunc := func(q *dbx.SelectQuery) error {
 			if *collection.CreateRule == "" {
 				return nil // no create rule to resolve
@@ -179,13 +193,6 @@ func (api *recordApi) create(c echo.Context) error {
 			resolver.UpdateQuery(q)
 			q.AndWhere(expr)
 			return nil
-		}
-
-		testRecord := models.NewRecord(collection)
-		testForm := forms.NewRecordUpsert(api.app, testRecord)
-		testForm.SetFullManageAccess(true)
-		if err := testForm.LoadRequest(c.Request(), ""); err != nil {
-			return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 		}
 
 		testErr := testForm.DrySubmit(func(txDao *daos.Dao) error {
@@ -256,6 +263,16 @@ func (api *recordApi) update(c echo.Context) error {
 	if requestData.Admin == nil && collection.UpdateRule == nil {
 		// only admins can access if the rule is nil
 		return NewForbiddenError("Only admins can perform this action.", nil)
+	}
+
+	// eager fetch the record so that the modifier field values are replaced
+	// and available when accessing requestData.Data using just the field name
+	if requestData.HasModifierDataKeys() {
+		record, err := api.app.Dao().FindRecordById(collection.Id, recordId)
+		if err != nil || record == nil {
+			return NewNotFoundError("", err)
+		}
+		requestData.Data = record.ReplaceModifers(requestData.Data)
 	}
 
 	ruleFunc := func(q *dbx.SelectQuery) error {

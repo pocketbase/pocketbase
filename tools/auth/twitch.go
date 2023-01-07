@@ -61,13 +61,14 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          extracted.Data[0].Id,
-		Name:        extracted.Data[0].DisplayName,
-		Username:    extracted.Data[0].Login,
-		Email:       extracted.Data[0].Email,
-		AvatarUrl:   extracted.Data[0].ProfileImageUrl,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           extracted.Data[0].Id,
+		Name:         extracted.Data[0].DisplayName,
+		Username:     extracted.Data[0].Login,
+		Email:        extracted.Data[0].Email,
+		AvatarUrl:    extracted.Data[0].ProfileImageUrl,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 
 	return user, nil

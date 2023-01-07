@@ -10,6 +10,20 @@ import (
 
 var cachedPatterns = map[string]*regexp.Regexp{}
 
+// SubtractSlice returns a new slice with only the "base" elements
+// that don't exist in "subtract".
+func SubtractSlice[T comparable](base []T, subtract []T) []T {
+	var result = make([]T, 0, len(base))
+
+	for _, b := range base {
+		if !ExistInSlice(b, subtract) {
+			result = append(result, b)
+		}
+	}
+
+	return result
+}
+
 // ExistInSlice checks whether a comparable element exists in a slice of the same type.
 func ExistInSlice[T comparable](item T, list []T) bool {
 	if len(list) == 0 {

@@ -63,12 +63,13 @@ func (p *Twitter) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          extracted.Data.Id,
-		Name:        extracted.Data.Name,
-		Username:    extracted.Data.Username,
-		AvatarUrl:   extracted.Data.ProfileImageUrl,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           extracted.Data.Id,
+		Name:         extracted.Data.Name,
+		Username:     extracted.Data.Username,
+		AvatarUrl:    extracted.Data.ProfileImageUrl,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 
 	return user, nil

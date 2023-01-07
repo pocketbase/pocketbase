@@ -58,12 +58,13 @@ func (p *Strava) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          strconv.Itoa(extracted.Id),
-		Name:        extracted.FirstName + " " + extracted.LastName,
-		Username:    extracted.Username,
-		AvatarUrl:   extracted.ProfileImageUrl,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           strconv.Itoa(extracted.Id),
+		Name:         extracted.FirstName + " " + extracted.LastName,
+		Username:     extracted.Username,
+		AvatarUrl:    extracted.ProfileImageUrl,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 
 	return user, nil

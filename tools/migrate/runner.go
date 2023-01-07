@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -72,9 +73,19 @@ func (r *Runner) Run(args ...string) error {
 			}
 		}
 
+		names, err := r.lastAppliedMigrations(toRevertCount)
+		if err != nil {
+			color.Red(err.Error())
+			return err
+		}
+
 		confirm := false
 		prompt := &survey.Confirm{
-			Message: fmt.Sprintf("Do you really want to revert the last %d applied migration(s)?", toRevertCount),
+			Message: fmt.Sprintf(
+				"\n%v\nDo you really want to revert the last %d applied migration(s)?",
+				strings.Join(names, "\n"),
+				toRevertCount,
+			),
 		}
 		survey.AskOne(prompt, &confirm)
 		if !confirm {
@@ -138,38 +149,43 @@ func (r *Runner) Up() ([]string, error) {
 	return applied, nil
 }
 
-// Down reverts the last `toRevertCount` applied migrations.
+// Down reverts the last `toRevertCount` applied migrations
+// (in the order they were applied).
 //
 // On success returns list with the reverted migrations file names.
 func (r *Runner) Down(toRevertCount int) ([]string, error) {
 	reverted := make([]string, 0, toRevertCount)
 
+	names, appliedErr := r.lastAppliedMigrations(toRevertCount)
+	if appliedErr != nil {
+		return nil, appliedErr
+	}
+
 	err := r.db.Transactional(func(tx *dbx.Tx) error {
-		for i := len(r.migrationsList.Items()) - 1; i >= 0; i-- {
-			m := r.migrationsList.Item(i)
-
-			// skip unapplied
-			if !r.isMigrationApplied(tx, m.File) {
-				continue
-			}
-
-			// revert limit reached
-			if toRevertCount-len(reverted) <= 0 {
-				break
-			}
-
-			// ignore empty Down action
-			if m.Down != nil {
-				if err := m.Down(tx); err != nil {
-					return fmt.Errorf("Failed to revert migration %s: %w", m.File, err)
+		for _, name := range names {
+			for _, m := range r.migrationsList.Items() {
+				if m.File != name {
+					continue
 				}
-			}
 
-			if err := r.saveRevertedMigration(tx, m.File); err != nil {
-				return fmt.Errorf("Failed to save reverted migration info for %s: %w", m.File, err)
-			}
+				// revert limit reached
+				if toRevertCount-len(reverted) <= 0 {
+					return nil
+				}
 
-			reverted = append(reverted, m.File)
+				// ignore empty Down action
+				if m.Down != nil {
+					if err := m.Down(tx); err != nil {
+						return fmt.Errorf("Failed to revert migration %s: %w", m.File, err)
+					}
+				}
+
+				if err := r.saveRevertedMigration(tx, m.File); err != nil {
+					return fmt.Errorf("Failed to save reverted migration info for %s: %w", m.File, err)
+				}
+
+				reverted = append(reverted, m.File)
+			}
 		}
 
 		return nil
@@ -178,6 +194,7 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return reverted, nil
 }
 
@@ -207,7 +224,7 @@ func (r *Runner) isMigrationApplied(tx dbx.Builder, file string) bool {
 func (r *Runner) saveAppliedMigration(tx dbx.Builder, file string) error {
 	_, err := tx.Insert(r.tableName, dbx.Params{
 		"file":    file,
-		"applied": time.Now().Unix(),
+		"applied": time.Now().UnixMicro(),
 	}).Execute()
 
 	return err
@@ -217,4 +234,21 @@ func (r *Runner) saveRevertedMigration(tx dbx.Builder, file string) error {
 	_, err := tx.Delete(r.tableName, dbx.HashExp{"file": file}).Execute()
 
 	return err
+}
+
+func (r *Runner) lastAppliedMigrations(limit int) ([]string, error) {
+	var files = make([]string, 0, limit)
+
+	err := r.db.Select("file").
+		From(r.tableName).
+		Where(dbx.Not(dbx.HashExp{"applied": nil})).
+		OrderBy("applied DESC", "file DESC").
+		Limit(int64(limit)).
+		Column(&files)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
 }

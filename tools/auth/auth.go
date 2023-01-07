@@ -9,13 +9,14 @@ import (
 
 // AuthUser defines a standardized oauth2 user data structure.
 type AuthUser struct {
-	Id          string         `json:"id"`
-	Name        string         `json:"name"`
-	Username    string         `json:"username"`
-	Email       string         `json:"email"`
-	AvatarUrl   string         `json:"avatarUrl"`
-	RawUser     map[string]any `json:"rawUser"`
-	AccessToken string         `json:"accessToken"`
+	Id           string         `json:"id"`
+	Name         string         `json:"name"`
+	Username     string         `json:"username"`
+	Email        string         `json:"email"`
+	AvatarUrl    string         `json:"avatarUrl"`
+	RawUser      map[string]any `json:"rawUser"`
+	AccessToken  string         `json:"accessToken"`
+	RefreshToken string         `json:"refreshToken"`
 }
 
 // Provider defines a common interface for an OAuth2 client.

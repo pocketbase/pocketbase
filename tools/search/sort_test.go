@@ -27,6 +27,8 @@ func TestSortFieldBuildExpr(t *testing.T) {
 		{search.SortField{"test1", search.SortAsc}, false, "[[test1]] ASC"},
 		// allowed field - desc
 		{search.SortField{"test1", search.SortDesc}, false, "[[test1]] DESC"},
+		// special @random field (ignore direction)
+		{search.SortField{"@random", search.SortDesc}, false, "RANDOM()"},
 	}
 
 	for i, s := range scenarios {
@@ -54,6 +56,7 @@ func TestParseSortFromString(t *testing.T) {
 		{"+test", `[{"name":"test","direction":"ASC"}]`},
 		{"-test", `[{"name":"test","direction":"DESC"}]`},
 		{"test1,-test2,+test3", `[{"name":"test1","direction":"ASC"},{"name":"test2","direction":"DESC"},{"name":"test3","direction":"ASC"}]`},
+		{"@random,-test", `[{"name":"@random","direction":"ASC"},{"name":"test","direction":"DESC"}]`},
 	}
 
 	for i, s := range scenarios {

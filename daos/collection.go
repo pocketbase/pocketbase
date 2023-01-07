@@ -65,8 +65,7 @@ func (dao *Dao) IsCollectionNameUnique(name string, excludeIds ...string) bool {
 		AndWhere(dbx.NewExp("LOWER([[name]])={:name}", dbx.Params{"name": strings.ToLower(name)})).
 		Limit(1)
 
-	if len(excludeIds) > 0 {
-		uniqueExcludeIds := list.NonzeroUniques(excludeIds)
+	if uniqueExcludeIds := list.NonzeroUniques(excludeIds); len(uniqueExcludeIds) > 0 {
 		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
 	}
 
@@ -85,15 +84,17 @@ func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeI
 	collections := []*models.Collection{}
 
 	query := dao.CollectionQuery()
-	if len(excludeIds) > 0 {
-		uniqueExcludeIds := list.NonzeroUniques(excludeIds)
+
+	if uniqueExcludeIds := list.NonzeroUniques(excludeIds); len(uniqueExcludeIds) > 0 {
 		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
 	}
+
 	if err := query.All(&collections); err != nil {
 		return nil, err
 	}
 
 	result := map[*models.Collection][]*schema.SchemaField{}
+
 	for _, c := range collections {
 		for _, f := range c.Schema.Fields() {
 			if f.Type != schema.FieldTypeRelation {

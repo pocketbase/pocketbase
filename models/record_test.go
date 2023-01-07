@@ -138,7 +138,7 @@ func TestNewRecordFromNullStringMap(t *testing.T) {
 			Valid:  true,
 		},
 		"field5": sql.NullString{
-			String: `["test1","test2"]`, // will select only the first elem
+			String: `["test1","test2"]`, // will select only the last elem
 			Valid:  true,
 		},
 		"field6": sql.NullString{
@@ -157,11 +157,11 @@ func TestNewRecordFromNullStringMap(t *testing.T) {
 	}{
 		{
 			models.CollectionTypeBase,
-			`{"collectionId":"","collectionName":"test","created":"2022-01-01 10:00:00.123Z","field1":"test","field2":"","field3":true,"field4":123.123,"field5":"test1","field6":["test"],"id":"test_id","updated":"2022-01-01 10:00:00.456Z"}`,
+			`{"collectionId":"","collectionName":"test","created":"2022-01-01 10:00:00.123Z","field1":"test","field2":"","field3":true,"field4":123.123,"field5":"test2","field6":["test"],"id":"test_id","updated":"2022-01-01 10:00:00.456Z"}`,
 		},
 		{
 			models.CollectionTypeAuth,
-			`{"collectionId":"","collectionName":"test","created":"2022-01-01 10:00:00.123Z","email":"test_email","emailVisibility":true,"field1":"test","field2":"","field3":true,"field4":123.123,"field5":"test1","field6":["test"],"id":"test_id","updated":"2022-01-01 10:00:00.456Z","username":"test_username","verified":false}`,
+			`{"collectionId":"","collectionName":"test","created":"2022-01-01 10:00:00.123Z","email":"test_email","emailVisibility":true,"field1":"test","field2":"","field3":true,"field4":123.123,"field5":"test2","field6":["test"],"id":"test_id","updated":"2022-01-01 10:00:00.456Z","username":"test_username","verified":false}`,
 		},
 	}
 
@@ -1422,6 +1422,109 @@ func TestRecordUnmarshalJSON(t *testing.T) {
 				t.Errorf("(%d) Expected field %s to be %v, got %v", i, k, v, m.Get(k))
 			}
 		}
+	}
+}
+
+func TestRecordReplaceModifers(t *testing.T) {
+	collection := &models.Collection{
+		Schema: schema.NewSchema(
+			&schema.SchemaField{
+				Name: "text",
+				Type: schema.FieldTypeText,
+			},
+			&schema.SchemaField{
+				Name: "number",
+				Type: schema.FieldTypeNumber,
+			},
+			&schema.SchemaField{
+				Name:    "rel_one",
+				Type:    schema.FieldTypeRelation,
+				Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)},
+			},
+			&schema.SchemaField{
+				Name: "rel_many",
+				Type: schema.FieldTypeRelation,
+			},
+			&schema.SchemaField{
+				Name:    "select_one",
+				Type:    schema.FieldTypeSelect,
+				Options: &schema.SelectOptions{MaxSelect: 1},
+			},
+			&schema.SchemaField{
+				Name:    "select_many",
+				Type:    schema.FieldTypeSelect,
+				Options: &schema.SelectOptions{MaxSelect: 10},
+			},
+			&schema.SchemaField{
+				Name:    "file_one",
+				Type:    schema.FieldTypeFile,
+				Options: &schema.FileOptions{MaxSelect: 1},
+			},
+			&schema.SchemaField{
+				Name:    "file_one_index",
+				Type:    schema.FieldTypeFile,
+				Options: &schema.FileOptions{MaxSelect: 1},
+			},
+			&schema.SchemaField{
+				Name:    "file_one_name",
+				Type:    schema.FieldTypeFile,
+				Options: &schema.FileOptions{MaxSelect: 1},
+			},
+			&schema.SchemaField{
+				Name:    "file_many",
+				Type:    schema.FieldTypeFile,
+				Options: &schema.FileOptions{MaxSelect: 10},
+			},
+		),
+	}
+
+	record := models.NewRecord(collection)
+
+	record.Load(map[string]any{
+		"text":           "test",
+		"number":         10,
+		"rel_one":        "a",
+		"rel_many":       []string{"a", "b"},
+		"select_one":     "a",
+		"select_many":    []string{"a", "b", "c"},
+		"file_one":       "a",
+		"file_one_index": "b",
+		"file_one_name":  "c",
+		"file_many":      []string{"a", "b", "c", "d", "e", "f"},
+	})
+
+	result := record.ReplaceModifers(map[string]any{
+		"text-":            "m-",
+		"text+":            "m+",
+		"number-":          3,
+		"number+":          5,
+		"rel_one-":         "a",
+		"rel_one+":         "b",
+		"rel_many-":        []string{"a"},
+		"rel_many+":        []string{"c", "d", "e"},
+		"select_one-":      "a",
+		"select_one+":      "c",
+		"select_many-":     []string{"b", "c"},
+		"select_many+":     []string{"d", "e"},
+		"file_one+":        "skip", // should be ignored
+		"file_one-":        "a",
+		"file_one_index.0": "",
+		"file_one_name.c":  "",
+		"file_many+":       []string{"e", "f"}, // should be ignored
+		"file_many-":       []string{"c", "d"},
+		"file_many.f":      nil,
+		"file_many.0":      nil,
+	})
+
+	raw, err := json.Marshal(result)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := `{"file_many":["b","e"],"file_one":"","file_one_index":"","file_one_name":"","number":12,"rel_many":["b","c","d","e"],"rel_one":"b","select_many":["a","d","e"],"select_one":"c","text":"test"}`
+
+	if v := string(raw); v != expected {
+		t.Fatalf("Expected \n%s, \ngot \n%s", expected, v)
 	}
 }
 

@@ -1,8 +1,10 @@
 package jsvm
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/dop251/goja_nodejs/console"
 	"github.com/dop251/goja_nodejs/require"
@@ -75,7 +77,7 @@ func RegisterMigrations(app core.App, options *MigrationsOptions) error {
 
 		_, err := vm.RunString(string(content))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to run migration %s: %w", file, err)
 		}
 	}
 
@@ -97,8 +99,8 @@ func readDirFiles(dirPath string) (map[string][]byte, error) {
 	result := map[string][]byte{}
 
 	for _, f := range files {
-		if f.IsDir() {
-			continue
+		if f.IsDir() || !strings.HasSuffix(f.Name(), ".js") {
+			continue // not a .js file
 		}
 		raw, err := os.ReadFile(filepath.Join(dirPath, f.Name()))
 		if err != nil {
