@@ -63,12 +63,16 @@
             </span>
 
             {#if isAdminOnly}
-                <button type="button" class="lock-toggle link-success" on:click={unlock}>
+                <button
+                    type="button"
+                    class="btn  btn-sm btn-secondary btn-success lock-toggle"
+                    on:click={unlock}
+                >
                     <i class="ri-lock-unlock-line" />
                     <span class="txt">Set custom rule</span>
                 </button>
             {:else}
-                <button type="button" class="lock-toggle link-hint" on:click={lock}>
+                <button type="button" class="btn  btn-sm btn-secondary btn-hint lock-toggle" on:click={lock}>
                     <i class="ri-lock-line" />
                     <span class="txt">Set Admins only</span>
                 </button>
@@ -102,10 +106,13 @@
 
 <style>
     .lock-toggle {
-        margin-left: auto;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-size: var(--smFontSize);
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        min-width: 135px;
+        padding: 10px 10px;
+        border-top-left-radius: 0;
+        border-bottom-right-radius: 0;
+        background: rgba(0, 0, 0, 0.05);
     }
 </style>
