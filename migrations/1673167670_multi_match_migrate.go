@@ -36,16 +36,16 @@ func init() {
 
 		var isMultiRelLiteral func(mainCollection *models.Collection, literal string) bool
 		isMultiRelLiteral = func(mainCollection *models.Collection, literal string) bool {
+			if strings.HasPrefix(literal, "@collection.") {
+				return true
+			}
+
 			if strings.HasPrefix(literal, `"`) ||
 				strings.HasPrefix(literal, `'`) ||
 				strings.HasPrefix(literal, "@request.method") ||
 				strings.HasPrefix(literal, "@request.data") ||
 				strings.HasPrefix(literal, "@request.query") {
 				return false
-			}
-
-			if strings.HasPrefix(literal, "@collection.") {
-				return true
 			}
 
 			parts := strings.Split(literal, ".")
