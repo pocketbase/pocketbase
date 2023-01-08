@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
-	github.com/aws/aws-sdk-go v1.44.174
+	github.com/aws/aws-sdk-go v1.44.175
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.3.4
 	github.com/dop251/goja v0.0.0-20221118162653-d4bf6fde1b86
@@ -24,7 +24,7 @@ require (
 	golang.org/x/net v0.5.0
 	golang.org/x/oauth2 v0.4.0
 	golang.org/x/sync v0.1.0
-	modernc.org/sqlite v1.20.1
+	modernc.org/sqlite v1.20.2
 )
 
 require (
@@ -77,7 +77,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.106.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230104163317-caabf589fcbf // indirect
+	google.golang.org/genproto v0.0.0-20230106154932-a12b697841d9 // indirect
 	google.golang.org/grpc v1.51.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	lukechampine.com/uint128 v1.2.0 // indirect

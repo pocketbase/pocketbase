@@ -1,4 +1,4 @@
-## (WIP) v0.11.0
+## v0.11.0
 
 - Added `+` and `-` body field modifiers for `number`, `files`, `select` and `relation` fields.
   ```js
