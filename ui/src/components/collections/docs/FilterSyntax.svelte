@@ -36,38 +36,85 @@
             <ul>
                 <li>
                     <code class="filter-op">{"="}</code>
-                    <span class="txt-hint">Equal</span>
+                    <span class="txt">Equal</span>
                 </li>
                 <li>
                     <code class="filter-op">{"!="}</code>
-                    <span class="txt-hint">NOT equal</span>
+                    <span class="txt">NOT equal</span>
                 </li>
                 <li>
                     <code class="filter-op">{">"}</code>
-                    <span class="txt-hint">Greater than</span>
+                    <span class="txt">Greater than</span>
                 </li>
                 <li>
                     <code class="filter-op">{">="}</code>
-                    <span class="txt-hint">Greater than or equal</span>
+                    <span class="txt">Greater than or equal</span>
                 </li>
                 <li>
                     <code class="filter-op">{"<"}</code>
-                    <span class="txt-hint">Less than or equal</span>
+                    <span class="txt">Less than or equal</span>
                 </li>
                 <li>
                     <code class="filter-op">{"<="}</code>
-                    <span class="txt-hint">Less than or equal</span>
+                    <span class="txt">Less than or equal</span>
                 </li>
                 <li>
                     <code class="filter-op">{"~"}</code>
-                    <span class="txt-hint">
+                    <span class="txt">
                         Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for
                         wildcard match)
                     </span>
                 </li>
                 <li>
                     <code class="filter-op">{"!~"}</code>
-                    <span class="txt-hint">
+                    <span class="txt">
+                        NOT Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for
+                        wildcard match)
+                    </span>
+                </li>
+
+                <li>
+                    <code class="filter-op">{"?="}</code>
+                    <em class="txt-hint">Any/At least one of</em>
+                    <span class="txt">Equal</span>
+                </li>
+                <li>
+                    <code class="filter-op">{"?!="}</code>
+                    <em class="txt-hint">Any/At least one of</em>
+                    <span class="txt">NOT equal</span>
+                </li>
+                <li>
+                    <code class="filter-op">{"?>"}</code>
+                    <em class="txt-hint">Any/At least one of</em>
+                    <span class="txt">Greater than</span>
+                </li>
+                <li>
+                    <code class="filter-op">{"?>="}</code>
+                    <em class="txt-hint">Any/At least one of</em>
+                    <span class="txt">Greater than or equal</span>
+                </li>
+                <li>
+                    <code class="filter-op">{"?<"}</code>
+                    <em class="txt-hint">Any/At least one of</em>
+                    <span class="txt">Less than or equal</span>
+                </li>
+                <li>
+                    <code class="filter-op">{"?<="}</code>
+                    <em class="txt-hint">Any/At least one of</em>
+                    <span class="txt">Less than or equal</span>
+                </li>
+                <li>
+                    <code class="filter-op">{"?~"}</code>
+                    <em class="txt-hint">Any/At least one of</em>
+                    <span class="txt">
+                        Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for
+                        wildcard match)
+                    </span>
+                </li>
+                <li>
+                    <code class="filter-op">{"?!~"}</code>
+                    <em class="txt-hint">Any/At least one of</em>
+                    <span class="txt">
                         NOT Like/Contains (if not specified auto wraps the right string OPERAND in a "%" for
                         wildcard match)
                     </span>
