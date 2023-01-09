@@ -664,6 +664,28 @@ export default class CommonHelper {
     }
 
     /**
+     * Loosely check if a file is a pdf based on its filename extension.
+     *
+     * @param  {String} filename
+     * @return {Boolean}
+     */
+    static hasPdfExtension(filename) {
+        return /\.pdf$/.test(filename);
+    }
+
+    /**
+     * Returns file type
+     *
+     * @param  {String} filename
+     * @return {String}
+     */
+    static getFileType(filename) {
+        if (this.hasImageExtension(filename)) return "image";
+        if (this.hasPdfExtension(filename)) return "pdf";
+        return "file";
+    }
+
+    /**
      * Creates a thumbnail from `File` with the specified `width` and `height` params.
      * Returns a `Promise` with the generated base64 url.
      *

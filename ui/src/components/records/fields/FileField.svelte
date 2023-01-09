@@ -5,7 +5,7 @@
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import UploadedFilePreview from "@/components/base/UploadedFilePreview.svelte";
-    import RecordFilePreview from "@/components/records/RecordFilePreview.svelte";
+    import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
 
     export let record;
     export let value = "";
@@ -79,9 +79,9 @@
     <div bind:this={filesListElem} class="files-list">
         {#each valueAsArray as filename, i (filename)}
             <div class="list-item">
-                <figure class="thumb" class:fade={deletedFileIndexes.includes(i)}>
-                    <RecordFilePreview {record} {filename} />
-                </figure>
+                <div class:fade={deletedFileIndexes.includes(i)}>
+                    <RecordFileThumb {record} {filename} />
+                </div>
                 <a
                     href={ApiClient.getFileUrl(record, filename)}
                     class="filename link-hint"

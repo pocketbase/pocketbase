@@ -3,7 +3,7 @@
     import tooltip from "@/actions/tooltip";
     import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
-    import RecordFilePreview from "@/components/records/RecordFilePreview.svelte";
+    import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
 
     export let record;
     export let field;
@@ -57,9 +57,7 @@
     {:else if field.type === "file"}
         <div class="inline-flex">
             {#each CommonHelper.toArray(record[field.name]) as filename, i (i + filename)}
-                <figure class="thumb thumb-sm">
-                    <RecordFilePreview {record} {filename} />
-                </figure>
+                <RecordFileThumb {record} {filename} size="sm" />
             {/each}
         </div>
     {:else}
