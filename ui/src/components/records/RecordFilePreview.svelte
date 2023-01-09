@@ -8,14 +8,10 @@
 
     let previewPopup;
     let thumbUrl = "";
-    let originalUrl = "";
+    let originalUrl = ApiClient.getFileUrl(record, `${filename}`);
 
-    $: hasPreview = CommonHelper.hasImageExtension(filename);
-
-    $: if (hasPreview) {
-        originalUrl = ApiClient.getFileUrl(record, `${filename}`);
-    }
-
+    $: type = CommonHelper.getFileType(filename);
+    $: hasPreview = /^(image|pdf)$/.test(type);
     $: thumbUrl = originalUrl ? originalUrl + "?thumb=100x100" : "";
 
     function onError() {
@@ -23,20 +19,24 @@
     }
 </script>
 
-{#if hasPreview}
-    <img
-        src={thumbUrl}
-        alt={filename}
-        title="Preview {filename}"
-        class:link-fade={hasPreview}
-        on:click={(e) => {
-            e.stopPropagation();
-            previewPopup?.show(originalUrl);
-        }}
-        on:error={onError}
-    />
-{:else}
-    <i class="ri-file-line" />
-{/if}
+<a
+    class="thumb thumb-sm link-fade"
+    href={originalUrl}
+    target="_blank"
+    rel="noreferrer"
+    on:click|stopPropagation={(e) => {
+        if (!hasPreview) return;
+        e.preventDefault();
+        previewPopup?.show(originalUrl);
+    }}
+>
+    {#if type === "image"}
+        <img src={thumbUrl} alt={filename} title="Preview {filename}" on:error={onError} />
+    {:else if type === "pdf"}
+        <i class="ri-file-pdf-line" />
+    {:else}
+        <i class="ri-file-3-line" />
+    {/if}
+</a>
 
-<PreviewPopup bind:this={previewPopup} />
+<PreviewPopup bind:this={previewPopup} {type} />

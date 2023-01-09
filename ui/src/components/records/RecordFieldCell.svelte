@@ -57,9 +57,7 @@
     {:else if field.type === "file"}
         <div class="inline-flex">
             {#each CommonHelper.toArray(record[field.name]) as filename, i (i + filename)}
-                <figure class="thumb thumb-sm">
-                    <RecordFilePreview {record} {filename} />
-                </figure>
+                <RecordFilePreview {record} {filename} />
             {/each}
         </div>
     {:else}
