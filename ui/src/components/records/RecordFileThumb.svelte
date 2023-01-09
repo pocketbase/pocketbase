@@ -5,13 +5,14 @@
 
     export let record;
     export let filename;
+    export let size;
 
     let previewPopup;
     let thumbUrl = "";
     let originalUrl = ApiClient.getFileUrl(record, `${filename}`);
 
     $: type = CommonHelper.getFileType(filename);
-    $: hasPreview = /^(image|pdf)$/.test(type);
+    $: hasPreview = ["image", "pdf"].includes(type);
     $: thumbUrl = originalUrl ? originalUrl + "?thumb=100x100" : "";
 
     function onError() {
@@ -20,7 +21,7 @@
 </script>
 
 <a
-    class="thumb thumb-sm link-fade"
+    class="thumb thumb-{size} link-fade"
     href={originalUrl}
     target="_blank"
     rel="noreferrer"

@@ -19,6 +19,8 @@
     export function hide() {
         return panel?.hide();
     }
+
+    $: filename = url.substring(url.lastIndexOf("/") + 1);
 </script>
 
 <OverlayPanel bind:this={panel} class="preview {type}-preview" btnClose={false} popup on:show on:hide>
@@ -31,9 +33,7 @@
     {#if type === "image"}
         <img src={url} alt="Preview {url}" />
     {:else if type === "pdf"}
-        <object title={url.substring(url.lastIndexOf("/") + 1)} data={url} type="application/pdf">
-            PDF embed not loaded.
-        </object>
+        <object title={filename} data={url} type="application/pdf"> PDF embed not loaded. </object>
     {/if}
 
     <svelte:fragment slot="footer">
@@ -45,7 +45,7 @@
             class="link-hint txt-ellipsis"
         >
             <i class="ri-file-download-line" />
-            {url.substring(url.lastIndexOf("/") + 1)}
+            {filename}
         </a>
         <div class="flex-fill" />
         <button type="button" class="btn btn-secondary" on:click={hide}>Close</button>
