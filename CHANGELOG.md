@@ -1,3 +1,8 @@
+## v0.11.1
+
+- Unescaped path parameter values ([#1552](https://github.com/pocketbase/pocketbase/issues/1552)).
+
+
 ## v0.11.0
 
 - Added `+` and `-` body field modifiers for `number`, `files`, `select` and `relation` fields.

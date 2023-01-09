@@ -67,6 +67,22 @@ func TestCustomRoutesAndErrorsHandling(t *testing.T) {
 			ExpectedContent: []string{"test123"},
 		},
 		{
+			Name:   "custom route with url encoded parameter",
+			Method: http.MethodGet,
+			Url:    "/a%2Bb%2Bc",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/:param",
+					Handler: func(c echo.Context) error {
+						return c.String(200, c.PathParam("param"))
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"a+b+c"},
+		},
+		{
 			Name:   "route with HTTPError",
 			Method: http.MethodGet,
 			Url:    "/http-error",
