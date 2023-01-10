@@ -26,6 +26,13 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	e := echo.New()
 	e.Debug = app.IsDebug()
 
+	// configure a custom router
+	e.ResetRouterCreator(func(ec *echo.Echo) echo.Router {
+		return echo.NewRouter(echo.RouterConfig{
+			UnescapePathParamValues: true,
+		})
+	})
+
 	// default middlewares
 	e.Pre(middleware.RemoveTrailingSlashWithConfig(middleware.RemoveTrailingSlashConfig{
 		Skipper: func(c echo.Context) bool {
