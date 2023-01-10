@@ -66,3 +66,9 @@
         </span>
     {/if}
 </td>
+
+<style>
+    .filename {
+        max-width: 200px;
+    }
+</style>

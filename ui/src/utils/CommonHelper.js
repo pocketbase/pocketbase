@@ -1,5 +1,25 @@
 import { DateTime } from "luxon";
 
+const imageExtensions = [
+   ".jpg", ".jpeg", ".png", ".svg",
+   ".gif", ".jfif", ".webp", ".avif",
+];
+
+const videoExtensions = [
+    ".mp4", ".avi", ".mov", ".3gp", ".wmv",
+];
+
+const audioExtensions = [
+    ".aa", ".aac", ".m4v", ".mp3",
+    ".ogg", ".oga", ".mogg", ".amr",
+];
+
+const documentExtensions = [
+    ".pdf", ".doc", ".docx", ".xls",
+    ".xlsx", ".ppt", ".pptx", ".odp",
+    ".odt", ".ods", ".txt",
+];
+
 export default class CommonHelper {
     /**
      * Checks whether value is plain object.
@@ -654,34 +674,56 @@ export default class CommonHelper {
     }
 
     /**
-     * Loosely check if a file is an image based on its filename extension.
+     * Loosely check if a file has image extension.
      *
      * @param  {String} filename
      * @return {Boolean}
      */
     static hasImageExtension(filename) {
-        return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.jfif|\.webp|\.avif$/.test(filename)
+        return !!imageExtensions.find((ext) => filename.endsWith(ext));
     }
 
     /**
-     * Loosely check if a file is a pdf based on its filename extension.
+     * Loosely check if a file has video extension.
      *
      * @param  {String} filename
      * @return {Boolean}
      */
-    static hasPdfExtension(filename) {
-        return /\.pdf$/.test(filename);
+    static hasVideoExtension(filename) {
+        return !!videoExtensions.find((ext) => filename.endsWith(ext));
     }
 
     /**
-     * Returns file type
+     * Loosely check if a file has audio extension.
+     *
+     * @param  {String} filename
+     * @return {Boolean}
+     */
+    static hasAudioExtension(filename) {
+        return !!audioExtensions.find((ext) => filename.endsWith(ext));
+    }
+
+    /**
+     * Loosely check if a file has document extension.
+     *
+     * @param  {String} filename
+     * @return {Boolean}
+     */
+    static hasDocumentExtension(filename) {
+        return !!documentExtensions.find((ext) => filename.endsWith(ext));
+    }
+
+    /**
+     * Returns the file type based on its filename.
      *
      * @param  {String} filename
      * @return {String}
      */
     static getFileType(filename) {
-        if (this.hasImageExtension(filename)) return "image";
-        if (this.hasPdfExtension(filename)) return "pdf";
+        if (CommonHelper.hasImageExtension(filename)) return "image";
+        if (CommonHelper.hasDocumentExtension(filename)) return "document";
+        if (CommonHelper.hasVideoExtension(filename)) return "video";
+        if (CommonHelper.hasAudioExtension(filename)) return "audio";
         return "file";
     }
 

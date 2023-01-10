@@ -485,7 +485,7 @@ a,
 }
 
 .thumb {
-    --thumbSize: 44px;
+    --thumbSize: 40px;
 
     flex-shrink: 0;
     position: relative;
@@ -498,7 +498,7 @@ a,
     background: var(--baseAlt2Color);
     border-radius: var(--baseRadius);
     color: var(--txtPrimaryColor);
-    font-size: 1.2rem;
+    font-size: 1.16rem;
     @include shadowize();
     i {
         font-size: inherit;
@@ -511,7 +511,7 @@ a,
     }
     &.thumb-sm {
         --thumbSize: 32px;
-        font-size: 0.85rem;
+        font-size: 0.92rem;
     }
     &.thumb-lg {
         --thumbSize: 60px;
@@ -526,6 +526,13 @@ a,
     }
     &.thumb-active {
         box-shadow: 0px 0px 0px 2px var(--primaryColor);
+    }
+}
+a.thumb:not(.thumb-active) {
+    transition: box-shadow var(--baseAnimationSpeed);
+    &:hover,
+    &:focus {
+        @include shadowize(0px 2px 4px 1px var(--shadowColor));
     }
 }
 

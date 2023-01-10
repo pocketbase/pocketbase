@@ -1,10 +1,13 @@
 <script>
+    import CommonHelper from "@/utils/CommonHelper";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
 
     let panel;
     let url = "";
 
-    export let type;
+    $: filename = url.substring(url.lastIndexOf("/") + 1);
+
+    $: type = CommonHelper.getFileType(filename);
 
     export function show(newUrl) {
         if (newUrl === "") {
@@ -19,33 +22,33 @@
     export function hide() {
         return panel?.hide();
     }
-
-    $: filename = url.substring(url.lastIndexOf("/") + 1);
 </script>
 
-<OverlayPanel bind:this={panel} class="preview {type}-preview" btnClose={false} popup on:show on:hide>
+<OverlayPanel bind:this={panel} class="preview preview-{type}" btnClose={false} popup on:show on:hide>
     <svelte:fragment slot="header">
         <button type="button" class="overlay-close" on:click|preventDefault={hide}>
             <i class="ri-close-line" />
         </button>
     </svelte:fragment>
 
-    {#if type === "image"}
-        <img src={url} alt="Preview {url}" />
-    {:else if type === "pdf"}
-        <object title={filename} data={url} type="application/pdf"> PDF embed not loaded. </object>
+    {#if panel?.isActive()}
+        {#if type === "image"}
+            <img src={url} alt="Preview {filename}" />
+        {:else}
+            <object title={filename} data={url}>Cannot preview the file.</object>
+        {/if}
     {/if}
 
     <svelte:fragment slot="footer">
         <a
             href={url}
-            title="Download"
+            title={filename}
             target="_blank"
             rel="noreferrer noopener"
-            class="link-hint txt-ellipsis"
+            class="link-hint txt-ellipsis inline-flex"
         >
-            <i class="ri-file-download-line" />
             {filename}
+            <i class="ri-external-link-line" />
         </a>
         <div class="flex-fill" />
         <button type="button" class="btn btn-secondary" on:click={hide}>Close</button>

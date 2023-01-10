@@ -1,3 +1,10 @@
+## (WIP) v0.12.0
+
+- Added PDF file previews ([#1548](https://github.com/pocketbase/pocketbase/pull/1548); thanks @mjadobson).
+
+- Added video and audio file previews.
+
+
 ## v0.11.1
 
 - Unescaped path parameter values ([#1552](https://github.com/pocketbase/pocketbase/issues/1552)).
