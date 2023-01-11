@@ -8,12 +8,15 @@ import (
 
 var _ Provider = (*Livechat)(nil)
 
+// NameLivechat is the unique name of the Livechat provider
 const NameLivechat = "livechat"
 
+// Livechat allows authentication via Livechat OAuth2
 type Livechat struct {
 	*baseProvider
 }
 
+// NewLivechatProvider creates new Livechat provider instance with some defaults.
 func NewLivechatProvider() *Livechat {
 	return &Livechat{
 		&baseProvider{
@@ -24,6 +27,9 @@ func NewLivechatProvider() *Livechat {
 	}
 }
 
+// FetchAuthUser returns an AuthUser based on the Livechat accounts API.
+//
+// API reference: https://developers.livechat.com/docs/authorization
 func (p *Livechat) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserData(token)
 	if err != nil {
