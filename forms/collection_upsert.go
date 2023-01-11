@@ -9,6 +9,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/forms/validators"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/resolvers"
@@ -93,6 +94,7 @@ func (form *CollectionUpsert) Validate() error {
 				form.collection.IsNew(),
 				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
 				validation.Match(idRegex),
+				validation.By(validators.UniqueId(form.dao, form.collection.TableName())),
 			).Else(validation.In(form.collection.Id)),
 		),
 		validation.Field(

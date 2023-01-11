@@ -57,6 +57,7 @@ func (form *AdminUpsert) Validate() error {
 				form.admin.IsNew(),
 				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
 				validation.Match(idRegex),
+				validation.By(validators.UniqueId(form.dao, form.admin.TableName())),
 			).Else(validation.In(form.admin.Id)),
 		),
 		validation.Field(

@@ -455,6 +455,7 @@ func (form *RecordUpsert) Validate() error {
 				form.record.IsNew(),
 				validation.Length(models.DefaultIdLength, models.DefaultIdLength),
 				validation.Match(idRegex),
+				validation.By(validators.UniqueId(form.dao, form.record.TableName())),
 			).Else(validation.In(form.record.Id)),
 		),
 	}
