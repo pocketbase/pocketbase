@@ -62,6 +62,6 @@ export default {
     },
     livechatAuth: {
         title: "LiveChat",
-        icon: "ri-chat1-fill",
+        icon: "ri-chat-1-fill",
     },
 };
