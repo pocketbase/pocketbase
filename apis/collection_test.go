@@ -382,7 +382,7 @@ func TestCollectionCreate(t *testing.T) {
 				`"type":"auth"`,
 				`"system":false`,
 				`"schema":[{"system":false,"id":"12345789","name":"test","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`,
-				`"options":{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":0,"onlyEmailDomains":null,"requireEmail":false}`,
+				`"options":{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowTgAuth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":0,"onlyEmailDomains":null,"requireEmail":false}`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeCreate":             1,

@@ -158,6 +158,7 @@ type CollectionAuthOptions struct {
 	AllowOAuth2Auth    bool     `form:"allowOAuth2Auth" json:"allowOAuth2Auth"`
 	AllowUsernameAuth  bool     `form:"allowUsernameAuth" json:"allowUsernameAuth"`
 	AllowEmailAuth     bool     `form:"allowEmailAuth" json:"allowEmailAuth"`
+	AllowTgAuth        bool     `form:"allowTgAuth" json:"allowTgAuth"`
 	RequireEmail       bool     `form:"requireEmail" json:"requireEmail"`
 	ExceptEmailDomains []string `form:"exceptEmailDomains" json:"exceptEmailDomains"`
 	OnlyEmailDomains   []string `form:"onlyEmailDomains" json:"onlyEmailDomains"`

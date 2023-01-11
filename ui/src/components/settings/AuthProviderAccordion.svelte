@@ -11,6 +11,7 @@
     export let title;
     export let icon = "";
     export let config = {};
+    export let removeDefaultFields = false;
     export let optionsComponent;
 
     let accordion;
@@ -68,19 +69,21 @@
     {#if config.enabled}
         <div class="grid" transition:slide|local={{ duration: 200 }}>
             <div class="col-12 spacing" />
-            <div class="col-lg-6">
-                <Field class="form-field required" name="{key}.clientId" let:uniqueId>
-                    <label for={uniqueId}>Client ID</label>
-                    <input type="text" id={uniqueId} bind:value={config.clientId} required />
-                </Field>
-            </div>
+            {#if !removeDefaultFields}
+                <div class="col-lg-6">
+                    <Field class="form-field required" name="{key}.clientId" let:uniqueId>
+                        <label for={uniqueId}>Client ID</label>
+                        <input type="text" id={uniqueId} bind:value={config.clientId} required />
+                    </Field>
+                </div>
 
-            <div class="col-lg-6">
-                <Field class="form-field required" name="{key}.clientSecret" let:uniqueId>
-                    <label for={uniqueId}>Client Secret</label>
-                    <RedactedPasswordInput bind:value={config.clientSecret} id={uniqueId} required />
-                </Field>
-            </div>
+                <div class="col-lg-6">
+                    <Field class="form-field required" name="{key}.clientSecret" let:uniqueId>
+                        <label for={uniqueId}>Client Secret</label>
+                        <RedactedPasswordInput bind:value={config.clientSecret} id={uniqueId} required />
+                    </Field>
+                </div>
+            {/if}
 
             {#if optionsComponent}
                 <div class="col-lg-12">

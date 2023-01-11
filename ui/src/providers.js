@@ -1,9 +1,10 @@
 import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
 import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
+import TelegramOptions  from "@/components/settings/providers/TelegramOptions.svelte";
 
 // Object list with all supported OAuth2 providers in the format:
 // ```
-// { settingsKey: { title, icon, optionsComponent? } }
+// { settingsKey: { title, icon, removeDefaultFields?, optionsComponent? } }
 // ```
 //
 // If `optionsComponent` is provided it will receive 2 parameters:
@@ -59,5 +60,11 @@ export default {
     giteeAuth: {
         title: "Gitee",
         icon:  "ri-git-repository-fill",
+    },
+    telegramAuth: {
+        title: "Telegram",
+        icon:  "ri-telegram-fill",
+        removeDefaultFields: true,
+        optionsComponent: TelegramOptions,
     },
 };

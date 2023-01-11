@@ -37,6 +37,7 @@ func bindRecordAuthApi(app core.App, rg *echo.Group) {
 	subGroup.POST("/auth-refresh", api.authRefresh, RequireSameContextRecordAuth())
 	subGroup.POST("/auth-with-oauth2", api.authWithOAuth2)
 	subGroup.POST("/auth-with-password", api.authWithPassword)
+	subGroup.POST("/auth-with-telegram", api.authWithTelegram)
 	subGroup.POST("/request-password-reset", api.requestPasswordReset)
 	subGroup.POST("/confirm-password-reset", api.confirmPasswordReset)
 	subGroup.POST("/request-verification", api.requestVerification)
@@ -127,10 +128,12 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 	result := struct {
 		UsernamePassword bool           `json:"usernamePassword"`
 		EmailPassword    bool           `json:"emailPassword"`
+		Telegram         bool           `json:"telegram"`
 		AuthProviders    []providerInfo `json:"authProviders"`
 	}{
 		UsernamePassword: authOptions.AllowUsernameAuth,
 		EmailPassword:    authOptions.AllowEmailAuth,
+		Telegram:         authOptions.AllowTgAuth,
 		AuthProviders:    []providerInfo{},
 	}
 
@@ -261,6 +264,70 @@ func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 	}
 
 	return api.authResponse(c, record, nil)
+}
+
+func (api *recordAuthApi) authWithTelegram(c echo.Context) error {
+	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
+	if collection == nil {
+		return NewNotFoundError("Missing collection context.", nil)
+	}
+
+	if !collection.AuthOptions().AllowTgAuth {
+		return NewBadRequestError("The collection is not configured to allow Telegram authentication.", nil)
+	}
+
+	var fallbackAuthRecord *models.Record
+
+	loggedAuthRecord, _ := c.Get(ContextAuthRecordKey).(*models.Record)
+	if loggedAuthRecord != nil && loggedAuthRecord.Collection().Id == collection.Id {
+		fallbackAuthRecord = loggedAuthRecord
+	}
+
+	form := forms.NewRecordTelegramLogin(api.app, collection, fallbackAuthRecord)
+	if readErr := c.Bind(form); readErr != nil {
+		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
+	}
+
+	record, authData, submitErr := form.Submit(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
+		return createForm.DrySubmit(func(txDao *daos.Dao) error {
+			requestData := RequestData(c)
+			requestData.Data = form.CreateData
+
+			createRuleFunc := func(q *dbx.SelectQuery) error {
+				admin, _ := c.Get(ContextAdminKey).(*models.Admin)
+				if admin != nil {
+					return nil // either admin or the rule is empty
+				}
+
+				if collection.CreateRule == nil {
+					return errors.New("Only admins can create new accounts with OAuth2")
+				}
+
+				if *collection.CreateRule != "" {
+					resolver := resolvers.NewRecordFieldResolver(txDao, collection, requestData, true)
+					expr, err := search.FilterData(*collection.CreateRule).BuildExpr(resolver)
+					if err != nil {
+						return err
+					}
+					resolver.UpdateQuery(q)
+					q.AndWhere(expr)
+				}
+
+				return nil
+			}
+
+			if _, err := txDao.FindRecordById(collection.Id, createForm.Id, createRuleFunc); err != nil {
+				return fmt.Errorf("Failed create rule constraint: %w", err)
+			}
+
+			return nil
+		})
+	})
+	if submitErr != nil {
+		return NewBadRequestError("Failed to authenticate.", submitErr)
+	}
+
+	return api.authResponse(c, record, authData)
 }
 
 func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {

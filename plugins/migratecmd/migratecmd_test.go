@@ -39,6 +39,7 @@ migrate((db) => {
     "options": {
       "allowEmailAuth": false,
       "allowOAuth2Auth": false,
+      "allowTgAuth": false,
       "allowUsernameAuth": false,
       "exceptEmailDomains": null,
       "manageRule": "created > 0",
@@ -89,6 +90,7 @@ func init() {
 			"options": {
 				"allowEmailAuth": false,
 				"allowOAuth2Auth": false,
+				"allowTgAuth": false,
 				"allowUsernameAuth": false,
 				"exceptEmailDomains": null,
 				"manageRule": "created > 0",
@@ -209,6 +211,7 @@ migrate((db) => {
     "options": {
       "allowEmailAuth": false,
       "allowOAuth2Auth": false,
+      "allowTgAuth": false,
       "allowUsernameAuth": false,
       "exceptEmailDomains": null,
       "manageRule": "created > 0",
@@ -263,6 +266,7 @@ func init() {
 			"options": {
 				"allowEmailAuth": false,
 				"allowOAuth2Auth": false,
+				"allowTgAuth": false,
 				"allowUsernameAuth": false,
 				"exceptEmailDomains": null,
 				"manageRule": "created > 0",
@@ -412,6 +416,7 @@ migrate((db) => {
   collection.options = {
     "allowEmailAuth": false,
     "allowOAuth2Auth": false,
+    "allowTgAuth": false,
     "allowUsernameAuth": false,
     "exceptEmailDomains": null,
     "manageRule": "created > 0",
@@ -545,6 +550,7 @@ func init() {
 		json.Unmarshal([]byte(` + "`" + `{
 			"allowEmailAuth": false,
 			"allowOAuth2Auth": false,
+			"allowTgAuth": false,
 			"allowUsernameAuth": false,
 			"exceptEmailDomains": null,
 			"manageRule": "created > 0",

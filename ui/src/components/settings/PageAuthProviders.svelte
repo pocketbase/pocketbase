@@ -99,6 +99,7 @@
                             {key}
                             title={provider.title}
                             icon={provider.icon || "ri-fingerprint-line"}
+                            removeDefaultFields={provider.removeDefaultFields}
                             optionsComponent={provider.optionsComponent}
                             bind:config={formSettings[key]}
                         />

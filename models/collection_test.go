@@ -90,7 +90,7 @@ func TestCollectionMarshalJSON(t *testing.T) {
 		{
 			"auth type + non empty options",
 			models.Collection{BaseModel: models.BaseModel{Id: "test"}, Type: models.CollectionTypeAuth, Options: types.JsonMap{"test": 123, "allowOAuth2Auth": true, "minPasswordLength": 4}},
-			`{"id":"test","created":"","updated":"","name":"","type":"auth","system":false,"schema":[],"listRule":null,"viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{"allowEmailAuth":false,"allowOAuth2Auth":true,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"requireEmail":false}}`,
+			`{"id":"test","created":"","updated":"","name":"","type":"auth","system":false,"schema":[],"listRule":null,"viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{"allowEmailAuth":false,"allowOAuth2Auth":true,"allowTgAuth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"requireEmail":false}}`,
 		},
 	}
 
@@ -150,7 +150,7 @@ func TestCollectionBaseOptions(t *testing.T) {
 
 func TestCollectionAuthOptions(t *testing.T) {
 	options := types.JsonMap{"test": 123, "minPasswordLength": 4}
-	expectedSerialization := `{"manageRule":null,"allowOAuth2Auth":false,"allowUsernameAuth":false,"allowEmailAuth":false,"requireEmail":false,"exceptEmailDomains":null,"onlyEmailDomains":null,"minPasswordLength":4}`
+	expectedSerialization := `{"manageRule":null,"allowOAuth2Auth":false,"allowUsernameAuth":false,"allowEmailAuth":false,"allowTgAuth":false,"requireEmail":false,"exceptEmailDomains":null,"onlyEmailDomains":null,"minPasswordLength":4}`
 
 	scenarios := []struct {
 		name       string
@@ -212,7 +212,7 @@ func TestNormalizeOptions(t *testing.T) {
 		{
 			"auth type",
 			models.Collection{Type: models.CollectionTypeAuth, Options: types.JsonMap{"test": 123, "minPasswordLength": 4}},
-			`{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"requireEmail":false}`,
+			`{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowTgAuth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"requireEmail":false}`,
 		},
 	}
 
@@ -280,7 +280,7 @@ func TestSetOptions(t *testing.T) {
 			"auth type",
 			models.Collection{Type: models.CollectionTypeAuth, Options: types.JsonMap{"test": 123}},
 			map[string]any{"test": 456, "minPasswordLength": 4},
-			`{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"requireEmail":false}`,
+			`{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowTgAuth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"requireEmail":false}`,
 		},
 	}
 

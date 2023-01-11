@@ -15,6 +15,7 @@
             allowEmailAuth: true,
             allowUsernameAuth: true,
             allowOAuth2Auth: true,
+            allowTgAuth: false,
             minPasswordLength: 8,
         };
     }
@@ -27,6 +28,8 @@
         !CommonHelper.isEmpty($errors?.options?.exceptEmailDomains);
 
     $: hasOAuth2Errors = !CommonHelper.isEmpty($errors?.options?.allowOAuth2Auth);
+
+    $: hasTgErrors = !CommonHelper.isEmpty($errors?.options?.allowTgAuth);
 </script>
 
 <h4 class="section-title">Auth methods</h4>
@@ -183,6 +186,46 @@
                 <div class="flex p-t-base">
                     <a href="/_/#/settings/auth-providers" target="_blank" class="btn btn-sm btn-outline">
                         <span class="txt">Manage OAuth2 providers</span>
+                    </a>
+                </div>
+            </div>
+        {/if}
+    </Accordion>
+
+    <Accordion single>
+        <svelte:fragment slot="header">
+            <div class="inline-flex">
+                <i class="ri-telegram-line" />
+                <span class="txt">Telegram</span>
+            </div>
+
+            <div class="flex-fill" />
+
+            {#if collection.options.allowTgAuth}
+                <span class="label label-success">Enabled</span>
+            {:else}
+                <span class="label">Disabled</span>
+            {/if}
+
+            {#if hasTgErrors}
+                <i
+                        class="ri-error-warning-fill txt-danger"
+                        transition:scale={{ duration: 150, start: 0.7 }}
+                        use:tooltip={{ text: "Has errors", position: "left" }}
+                />
+            {/if}
+        </svelte:fragment>
+
+        <Field class="form-field form-field-toggle m-b-0" name="options.allowTgAuth" let:uniqueId>
+            <input type="checkbox" id={uniqueId} bind:checked={collection.options.allowTgAuth} />
+            <label for={uniqueId}>Enable</label>
+        </Field>
+
+        {#if collection.options.allowTgAuth}
+            <div class="block" transition:slide|local={{ duration: 150 }}>
+                <div class="flex p-t-base">
+                    <a href="/_/#/settings/auth-providers" target="_blank" class="btn btn-sm btn-outline">
+                        <span class="txt">Manage Auth providers</span>
                     </a>
                 </div>
             </div>

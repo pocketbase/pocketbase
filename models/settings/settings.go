@@ -46,6 +46,8 @@ type Settings struct {
 	TwitchAuth    AuthProviderConfig `form:"twitchAuth" json:"twitchAuth"`
 	StravaAuth    AuthProviderConfig `form:"stravaAuth" json:"stravaAuth"`
 	GiteeAuth     AuthProviderConfig `form:"giteeAuth" json:"giteeAuth"`
+
+	TelegramAuth TgAuthProviderConfig `form:"telegramAuth" json:"telegramAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -132,6 +134,9 @@ func New() *Settings {
 		GiteeAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		TelegramAuth: TgAuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -163,6 +168,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.TwitchAuth),
 		validation.Field(&s.StravaAuth),
 		validation.Field(&s.GiteeAuth),
+		validation.Field(&s.TelegramAuth),
 	)
 }
 
@@ -219,6 +225,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.TwitchAuth.ClientSecret,
 		&clone.StravaAuth.ClientSecret,
 		&clone.GiteeAuth.ClientSecret,
+		&clone.TelegramAuth.BotToken,
 	}
 
 	// mask all sensitive fields
@@ -505,6 +512,20 @@ func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 	}
 
 	return nil
+}
+
+// -------------------------------------------------------------------
+
+type TgAuthProviderConfig struct {
+	Enabled  bool   `form:"enabled" json:"enabled"`
+	BotToken string `form:"botToken" json:"botToken,omitempty"`
+}
+
+// Validate makes `ProviderConfig` validatable by implementing [validation.Validatable] interface.
+func (c TgAuthProviderConfig) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.BotToken, validation.When(c.Enabled, validation.Required)),
+	)
 }
 
 // -------------------------------------------------------------------
