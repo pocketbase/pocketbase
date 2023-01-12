@@ -126,4 +126,13 @@ func TestNewProviderByName(t *testing.T) {
 	if _, ok := p.(*auth.Gitee); !ok {
 		t.Error("Expected to be instance of *auth.Gitee")
 	}
+
+	// livechat
+	p, err = auth.NewProviderByName(auth.NameLivechat)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Livechat); !ok {
+		t.Error("Expected to be instance of *auth.Livechat")
+	}
 }

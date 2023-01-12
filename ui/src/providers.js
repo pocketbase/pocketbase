@@ -60,4 +60,8 @@ export default {
         title: "Gitee",
         icon:  "ri-git-repository-fill",
     },
+    livechatAuth: {
+        title: "LiveChat",
+        icon:  "ri-chat-1-fill",
+    },
 };

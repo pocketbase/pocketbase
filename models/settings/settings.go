@@ -46,6 +46,7 @@ type Settings struct {
 	TwitchAuth    AuthProviderConfig `form:"twitchAuth" json:"twitchAuth"`
 	StravaAuth    AuthProviderConfig `form:"stravaAuth" json:"stravaAuth"`
 	GiteeAuth     AuthProviderConfig `form:"giteeAuth" json:"giteeAuth"`
+	LivechatAuth  AuthProviderConfig `form:"livechatAuth" json:"livechatAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -132,6 +133,9 @@ func New() *Settings {
 		GiteeAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		LivechatAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -163,6 +167,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.TwitchAuth),
 		validation.Field(&s.StravaAuth),
 		validation.Field(&s.GiteeAuth),
+		validation.Field(&s.LivechatAuth),
 	)
 }
 
@@ -219,6 +224,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.TwitchAuth.ClientSecret,
 		&clone.StravaAuth.ClientSecret,
 		&clone.GiteeAuth.ClientSecret,
+		&clone.LivechatAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -250,6 +256,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameTwitch:    s.TwitchAuth,
 		auth.NameStrava:    s.StravaAuth,
 		auth.NameGitee:     s.GiteeAuth,
+		auth.NameLivechat:  s.LivechatAuth,
 	}
 }
 
