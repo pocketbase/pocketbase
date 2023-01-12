@@ -3,7 +3,6 @@ package daos
 import (
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 
 	"github.com/pocketbase/dbx"
@@ -389,8 +388,7 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 	})
 }
 
-// cascadeRecordDelete triggers cascade deletion for the provided references
-// and split the work to a batched set of go routines.
+// cascadeRecordDelete triggers cascade deletion for the provided references.
 //
 // NB! This method is expected to be called inside a transaction.
 func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.Collection][]*schema.SchemaField) error {
@@ -400,20 +398,21 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 		for _, field := range fields {
 			recordTableName := inflector.Columnify(refCollection.Name)
 			prefixedFieldName := recordTableName + "." + inflector.Columnify(field.Name)
+
+			// @todo optimize single relation lookup in v0.12+
 			query := dao.RecordQuery(refCollection).
 				Distinct(true).
-				LeftJoin(fmt.Sprintf(
-					// note: the case is used to normalize value access for single and multiple relations.
+				AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": mainRecord.Id})).
+				InnerJoin(fmt.Sprintf(
+					// note: the case is used to normalize the value access
 					`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END) as {{%s}}`,
 					prefixedFieldName, prefixedFieldName, prefixedFieldName, uniqueJsonEachAlias,
-				), nil).
-				AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": mainRecord.Id})).
-				AndWhere(dbx.HashExp{uniqueJsonEachAlias + ".value": mainRecord.Id})
+				), dbx.HashExp{uniqueJsonEachAlias + ".value": mainRecord.Id})
 
-			// trigger cascade for each 1000 rel items until there is none
-			batchSize := 1000
+			// trigger cascade for each batchSize rel items until there is none
+			batchSize := 4000
+			rows := make([]dbx.NullStringMap, 0, batchSize)
 			for {
-				rows := make([]dbx.NullStringMap, 0, batchSize)
 				if err := query.Limit(int64(batchSize)).All(&rows); err != nil {
 					return err
 				}
@@ -423,45 +422,18 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 					break
 				}
 
-				perWorker := 50
-				workers := int(math.Ceil(float64(total) / float64(perWorker)))
+				refRecords := models.NewRecordsFromNullStringMaps(refCollection, rows)
 
-				batchErr := func() error {
-					ch := make(chan error)
-					defer close(ch)
-
-					for i := 0; i < workers; i++ {
-						var chunks []dbx.NullStringMap
-						if len(rows) <= perWorker {
-							chunks = rows
-							rows = nil
-						} else {
-							chunks = rows[:perWorker]
-							rows = rows[perWorker:]
-						}
-
-						go func() {
-							refRecords := models.NewRecordsFromNullStringMaps(refCollection, chunks)
-							ch <- dao.deleteRefRecords(mainRecord, refRecords, field)
-						}()
-					}
-
-					for i := 0; i < workers; i++ {
-						if err := <-ch; err != nil {
-							return err
-						}
-					}
-
-					return nil
-				}()
-
-				if batchErr != nil {
-					return batchErr
+				err := dao.deleteRefRecords(mainRecord, refRecords, field)
+				if err != nil {
+					return err
 				}
 
 				if total < batchSize {
 					break // no more items
 				}
+
+				rows = rows[:0] // keep allocated memory
 			}
 		}
 	}
