@@ -225,13 +225,11 @@ func (s *System) DeletePrefix(prefix string) []error {
 	})
 	for {
 		obj, err := iter.Next(s.ctx)
-		if err == io.EOF {
-			break
-		}
-
 		if err != nil {
-			failed = append(failed, err)
-			continue
+			if err != io.EOF {
+				failed = append(failed, err)
+			}
+			break
 		}
 
 		if err := s.Delete(obj.Key); err != nil {

@@ -1,3 +1,12 @@
+## v0.11.2
+
+- Fixed `fs.DeleteByPrefix()` hang on invalid S3 settings ([#1575](https://github.com/pocketbase/pocketbase/discussions/1575#discussioncomment-4661089)).
+
+- Updated file(s) delete to run in the background on record/collection delete to avoid blocking the delete model transaction.
+  _Currently the cascade files delete operation is treated as "non-critical" and in case of an error it is just logged during debug._
+  _This will be improved in the near future with the planned async job queue implementation._
+
+
 ## v0.11.1
 
 - Unescaped path parameter values ([#1552](https://github.com/pocketbase/pocketbase/issues/1552)).
