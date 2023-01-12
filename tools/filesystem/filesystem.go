@@ -285,6 +285,16 @@ var manualExtensionContentTypes = map[string]string{
 	".css": "text/css",      // (see https://github.com/gabriel-vasile/mimetype/pull/113)
 }
 
+// / GetFile returns a file content reader for given file key
+// / NB! Make sure to call `Close()` after you are done working with it.
+func (s *System) GetFile(fileKey string) (io.ReadCloser, error) {
+	br, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
+	if readErr != nil {
+		return nil, readErr
+	}
+	return br, nil
+}
+
 // Serve serves the file at fileKey location to an HTTP response.
 func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey string, name string) error {
 	br, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
