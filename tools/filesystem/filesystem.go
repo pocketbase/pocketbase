@@ -98,6 +98,18 @@ func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
 	return s.bucket.Attributes(s.ctx, fileKey)
 }
 
+// GetFile returns a file content reader for the given fileKey.
+//
+// NB! Make sure to call `Close()` after you are done working with it.
+func (s *System) GetFile(fileKey string) (io.ReadCloser, error) {
+	br, err := s.bucket.NewReader(s.ctx, fileKey, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return br, nil
+}
+
 // Upload writes content into the fileKey location.
 func (s *System) Upload(content []byte, fileKey string) error {
 	opts := &blob.WriterOptions{
@@ -283,16 +295,6 @@ var inlineServeContentTypes = []string{
 var manualExtensionContentTypes = map[string]string{
 	".svg": "image/svg+xml", // (see https://github.com/whatwg/mimesniff/issues/7)
 	".css": "text/css",      // (see https://github.com/gabriel-vasile/mimetype/pull/113)
-}
-
-// / GetFile returns a file content reader for given file key
-// / NB! Make sure to call `Close()` after you are done working with it.
-func (s *System) GetFile(fileKey string) (io.ReadCloser, error) {
-	br, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
-	if readErr != nil {
-		return nil, readErr
-	}
-	return br, nil
 }
 
 // Serve serves the file at fileKey location to an HTTP response.

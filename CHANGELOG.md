@@ -4,6 +4,8 @@
 
 - Added video and audio file previews.
 
+- Added `filesystem.GetFile()` helper to read files through the FileSystem abstraction ([#1578](https://github.com/pocketbase/pocketbase/pull/1578); thanks @avarabyeu).
+
 
 ## v0.11.1
 
