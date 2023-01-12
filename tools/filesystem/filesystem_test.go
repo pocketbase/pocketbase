@@ -348,7 +348,25 @@ func TestFileSystemServe(t *testing.T) {
 		}
 	}
 }
+func TestFileSystemGetFile(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
 
+	fs, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fs.Close()
+
+	f, fErr := fs.GetFile("image.png")
+	if fErr != nil {
+		t.Fatal(fErr)
+	}
+	defer f.Close()
+	if f == nil {
+		t.Fatal("File is supposed to be found")
+	}
+}
 func TestFileSystemServeSingleRange(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
