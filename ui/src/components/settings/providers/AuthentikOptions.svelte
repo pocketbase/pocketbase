@@ -9,7 +9,7 @@
 <div class="grid">
     <div class="col-lg-4">
         <Field class="form-field" name="{key}.authUrl" let:uniqueId>
-            <label for={uniqueId}>Auth URL</label>
+            <label for={uniqueId}>Authorize URL</label>
             <input type="url" id={uniqueId} bind:value={config.authUrl} />
         </Field>
     </div>
@@ -21,7 +21,7 @@
     </div>
     <div class="col-lg-4">
         <Field class="form-field" name="{key}.userApiUrl" let:uniqueId>
-            <label for={uniqueId}>User API URL</label>
+            <label for={uniqueId}>Userinfo URL</label>
             <input type="text" id={uniqueId} bind:value={config.userApiUrl} />
         </Field>
     </div>

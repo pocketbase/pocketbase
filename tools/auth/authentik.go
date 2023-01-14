@@ -77,5 +77,4 @@ func (p *Authentik) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	return user, nil
-
 }
