@@ -35,8 +35,8 @@ func bindRecordAuthApi(app core.App, rg *echo.Group) {
 
 	subGroup.GET("/auth-methods", api.authMethods)
 	subGroup.POST("/auth-refresh", api.authRefresh, RequireSameContextRecordAuth())
-	subGroup.POST("/auth-with-oauth2", api.authWithOAuth2) // allow anyone so that we can link the OAuth2 profile with the authenticated record
-	subGroup.POST("/auth-with-password", api.authWithPassword, RequireGuestOnly())
+	subGroup.POST("/auth-with-oauth2", api.authWithOAuth2)
+	subGroup.POST("/auth-with-password", api.authWithPassword)
 	subGroup.POST("/request-password-reset", api.requestPasswordReset)
 	subGroup.POST("/confirm-password-reset", api.confirmPasswordReset)
 	subGroup.POST("/request-verification", api.requestVerification)

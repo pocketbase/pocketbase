@@ -12,7 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 )
 
-func TestNewFileFromFromPath(t *testing.T) {
+func TestNewFileFromPath(t *testing.T) {
 	testDir := createTestDir(t)
 	defer os.RemoveAll(testDir)
 
@@ -30,7 +30,7 @@ func TestNewFileFromFromPath(t *testing.T) {
 		t.Fatalf("Expected nil error, got %v", err)
 	}
 	if f.OriginalName != originalName {
-		t.Fatalf("Expected originalName %q, got %q", originalName, f.OriginalName)
+		t.Fatalf("Expected OriginalName %q, got %q", originalName, f.OriginalName)
 	}
 	if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
 		t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
@@ -40,6 +40,34 @@ func TestNewFileFromFromPath(t *testing.T) {
 	}
 	if _, ok := f.Reader.(*filesystem.PathReader); !ok {
 		t.Fatalf("Expected Reader to be PathReader, got %v", f.Reader)
+	}
+}
+
+func TestNewFileFromBytes(t *testing.T) {
+	// nil bytes
+	if _, err := filesystem.NewFileFromBytes(nil, "photo.jpg"); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	// zero bytes
+	if _, err := filesystem.NewFileFromBytes([]byte{}, "photo.jpg"); err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	originalName := "image_! noext"
+	normalizedNamePattern := regexp.QuoteMeta("image_noext_") + `\w{10}` + regexp.QuoteMeta(".txt")
+	f, err := filesystem.NewFileFromBytes([]byte("text\n"), originalName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f.Size != 5 {
+		t.Fatalf("Expected Size %v, got %v", 5, f.Size)
+	}
+	if f.OriginalName != originalName {
+		t.Fatalf("Expected OriginalName %q, got %q", originalName, f.OriginalName)
+	}
+	if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
+		t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
 	}
 }
 

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/pocketbase/dbx"
@@ -57,7 +59,7 @@ func nullStringMapValue(data dbx.NullStringMap, key string) any {
 // NewRecordFromNullStringMap initializes a single new Record model
 // with data loaded from the provided NullStringMap.
 func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) *Record {
-	resultMap := map[string]any{}
+	resultMap := make(map[string]any, len(data))
 
 	// load schema fields
 	for _, field := range collection.Schema.Fields() {
@@ -140,7 +142,7 @@ func (m *Record) SetExpand(expand map[string]any) {
 // Otherwise the "old" expanded record will be replace with the "new" one (aka. a :merge: aNew => aNew).
 func (m *Record) MergeExpand(expand map[string]any) {
 	if m.expand == nil && len(expand) > 0 {
-		m.expand = make(map[string]any)
+		m.expand = make(map[string]any, len(expand))
 	}
 
 	for key, new := range expand {
@@ -194,7 +196,7 @@ func (m *Record) MergeExpand(expand map[string]any) {
 			}
 		}
 
-		if wasOldSlice || wasNewSlice {
+		if wasOldSlice || wasNewSlice || len(oldSlice) == 0 {
 			m.expand[key] = oldSlice
 		} else {
 			m.expand[key] = oldSlice[0]
@@ -204,7 +206,7 @@ func (m *Record) MergeExpand(expand map[string]any) {
 
 // SchemaData returns a shallow copy ONLY of the defined record schema fields data.
 func (m *Record) SchemaData() map[string]any {
-	result := map[string]any{}
+	result := make(map[string]any, len(m.collection.Schema.Fields()))
 
 	for _, field := range m.collection.Schema.Fields() {
 		if v, ok := m.data[field.Name]; ok {
@@ -370,7 +372,7 @@ func (m *Record) Load(data map[string]any) {
 
 // ColumnValueMap implements [ColumnValueMapper] interface.
 func (m *Record) ColumnValueMap() map[string]any {
-	result := map[string]any{}
+	result := make(map[string]any, len(m.collection.Schema.Fields())+3)
 
 	// export schema field values
 	for _, field := range m.collection.Schema.Fields() {
@@ -396,7 +398,7 @@ func (m *Record) ColumnValueMap() map[string]any {
 //
 // Fields marked as hidden will be exported only if `m.IgnoreEmailVisibility(true)` is set.
 func (m *Record) PublicExport() map[string]any {
-	result := map[string]any{}
+	result := make(map[string]any, len(m.collection.Schema.Fields())+5)
 
 	// export unknown data fields if allowed
 	if m.exportUnknown {
@@ -455,6 +457,101 @@ func (m *Record) UnmarshalJSON(data []byte) error {
 	m.Load(result)
 
 	return nil
+}
+
+// ReplaceModifers returns a new map with applied modifier
+// values based on the current record and the specified data.
+//
+// The resolved modifier keys will be removed.
+//
+// Multiple modifiers will be applied one after another,
+// while reusing the previous base key value result (eg. 1; -5; +2 => -2).
+//
+// Example usage:
+//
+//  newData := record.ReplaceModifers(data)
+//	// record:  {"field": 10}
+// 	// data:    {"field+": 5}
+// 	// newData: {"field": 15}
+func (m *Record) ReplaceModifers(data map[string]any) map[string]any {
+	var clone = shallowCopy(data)
+	if len(clone) == 0 {
+		return clone
+	}
+
+	var recordDataCache map[string]any
+
+	// export recordData lazily
+	recordData := func() map[string]any {
+		if recordDataCache == nil {
+			recordDataCache = m.SchemaData()
+		}
+		return recordDataCache
+	}
+
+	modifiers := schema.FieldValueModifiers()
+
+	for _, field := range m.Collection().Schema.Fields() {
+		key := field.Name
+
+		for _, m := range modifiers {
+			if mv, mOk := clone[key+m]; mOk {
+				if _, ok := clone[key]; !ok {
+					// get base value from the merged data
+					clone[key] = recordData()[key]
+				}
+
+				clone[key] = field.PrepareValueWithModifier(clone[key], m, mv)
+				delete(clone, key+m)
+			}
+		}
+
+		if field.Type != schema.FieldTypeFile {
+			continue
+		}
+
+		// -----------------------------------------------------------
+		// legacy file field modifiers (kept for backward compatability)
+		// -----------------------------------------------------------
+
+		var oldNames []string
+		var toDelete []string
+		if _, ok := clone[key]; ok {
+			oldNames = list.ToUniqueStringSlice(clone[key])
+		} else {
+			// get oldNames from the model
+			oldNames = list.ToUniqueStringSlice(recordData()[key])
+		}
+
+		// search for individual file name to delete (eg. "file.test.png = null")
+		for _, name := range oldNames {
+			suffixedKey := key + "." + name
+			if v, ok := clone[suffixedKey]; ok && cast.ToString(v) == "" {
+				toDelete = append(toDelete, name)
+				delete(clone, suffixedKey)
+				continue
+			}
+		}
+
+		// search for individual file index to delete (eg. "file.0 = null")
+		keyExp, _ := regexp.Compile(`^` + regexp.QuoteMeta(key) + `\.\d+$`)
+		for indexedKey := range clone {
+			if keyExp.MatchString(indexedKey) && cast.ToString(clone[indexedKey]) == "" {
+				index, indexErr := strconv.Atoi(indexedKey[len(key)+1:])
+				if indexErr != nil || index < 0 || index >= len(oldNames) {
+					continue
+				}
+				toDelete = append(toDelete, oldNames[index])
+				delete(clone, indexedKey)
+			}
+		}
+
+		if toDelete != nil {
+			clone[key] = field.PrepareValue(list.SubtractSlice(oldNames, toDelete))
+		}
+	}
+
+	return clone
 }
 
 // getNormalizeDataValueForDB returns the "key" data value formatted for db storage.

@@ -61,10 +61,11 @@ func (p *Spotify) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          extracted.Id,
-		Name:        extracted.Name,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           extracted.Id,
+		Name:         extracted.Name,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 	if len(extracted.Images) > 0 {
 		user.AvatarUrl = extracted.Images[0].Url

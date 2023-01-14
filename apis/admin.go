@@ -18,7 +18,7 @@ func bindAdminApi(app core.App, rg *echo.Group) {
 	api := adminApi{app: app}
 
 	subGroup := rg.Group("/admins", ActivityLogger(app))
-	subGroup.POST("/auth-with-password", api.authWithPassword, RequireGuestOnly())
+	subGroup.POST("/auth-with-password", api.authWithPassword)
 	subGroup.POST("/request-password-reset", api.requestPasswordReset)
 	subGroup.POST("/confirm-password-reset", api.confirmPasswordReset)
 	subGroup.POST("/auth-refresh", api.authRefresh, RequireAdminAuth())

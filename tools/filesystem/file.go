@@ -1,6 +1,8 @@
 package filesystem
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -46,6 +48,23 @@ func NewFileFromPath(path string) (*File, error) {
 	return f, nil
 }
 
+// NewFileFromBytes creates a new File instance from the provided byte slice.
+func NewFileFromBytes(b []byte, name string) (*File, error) {
+	size := len(b)
+	if size == 0 {
+		return nil, errors.New("cannot create an empty file")
+	}
+
+	f := &File{}
+
+	f.Reader = &BytesReader{b}
+	f.Size = int64(size)
+	f.OriginalName = name
+	f.Name = normalizeName(f.Reader, f.OriginalName)
+
+	return f, nil
+}
+
 // NewFileFromMultipart creates a new File instace from the provided multipart header.
 func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 	f := &File{}
@@ -62,7 +81,7 @@ func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 
 var _ FileReader = (*MultipartReader)(nil)
 
-// MultipartReader defines a [multipart.FileHeader] reader.
+// MultipartReader defines a FileReader from [multipart.FileHeader].
 type MultipartReader struct {
 	Header *multipart.FileHeader
 }
@@ -76,6 +95,7 @@ func (r *MultipartReader) Open() (io.ReadSeekCloser, error) {
 
 var _ FileReader = (*PathReader)(nil)
 
+// PathReader defines a FileReader from a local file path.
 type PathReader struct {
 	Path string
 }
@@ -83,6 +103,29 @@ type PathReader struct {
 // Open implements the [filesystem.FileReader] interface.
 func (r *PathReader) Open() (io.ReadSeekCloser, error) {
 	return os.Open(r.Path)
+}
+
+// -------------------------------------------------------------------
+
+var _ FileReader = (*BytesReader)(nil)
+
+// BytesReader defines a FileReader from bytes content.
+type BytesReader struct {
+	Bytes []byte
+}
+
+// Open implements the [filesystem.FileReader] interface.
+func (r *BytesReader) Open() (io.ReadSeekCloser, error) {
+	return &bytesReadSeekCloser{bytes.NewReader(r.Bytes)}, nil
+}
+
+type bytesReadSeekCloser struct {
+	*bytes.Reader
+}
+
+// Close implements the [io.ReadSeekCloser] interface.
+func (r *bytesReadSeekCloser) Close() error {
+	return nil
 }
 
 // -------------------------------------------------------------------

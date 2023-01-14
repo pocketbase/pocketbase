@@ -97,8 +97,8 @@ func (dao *Dao) IsAdminEmailUnique(email string, excludeIds ...string) bool {
 		AndWhere(dbx.HashExp{"email": email}).
 		Limit(1)
 
-	if len(excludeIds) > 0 {
-		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(excludeIds)...))
+	if uniqueExcludeIds := list.NonzeroUniques(excludeIds); len(uniqueExcludeIds) > 0 {
+		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
 	}
 
 	var exists bool

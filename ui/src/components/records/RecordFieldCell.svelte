@@ -20,6 +20,8 @@
         <span class="txt-hint">N/A</span>
     {:else if field.type === "bool"}
         <span class="txt">{record[field.name] ? "True" : "False"}</span>
+    {:else if field.type === "number"}
+        <span class="txt">{record[field.name]}</span>
     {:else if field.type === "url"}
         <a
             class="txt-ellipsis"

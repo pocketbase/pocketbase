@@ -133,6 +133,7 @@ func init() {
 						"image/png",
 						"image/svg+xml",
 						"image/gif",
+						"image/webp",
 					},
 				},
 			},

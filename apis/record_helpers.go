@@ -15,11 +15,6 @@ import (
 
 const ContextRequestDataKey = "requestData"
 
-// Deprecated: Will be removed after v0.9. Use apis.RequestData(c) instead.
-func GetRequestData(c echo.Context) *models.RequestData {
-	return RequestData(c)
-}
-
 // RequestData exports cached common request data fields
 // (query, body, logged auth state, etc.) from the provided context.
 func RequestData(c echo.Context) *models.RequestData {

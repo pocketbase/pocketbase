@@ -17,6 +17,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/mailer"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/store"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 )
@@ -939,20 +940,29 @@ func (app *BaseApp) registerDefaultHooks() {
 
 		failed := fs.DeletePrefix(prefix)
 		if len(failed) > 0 {
-			return errors.New("Failed to delete the files at " + prefix)
+			return errors.New("failed to delete the files at " + prefix)
 		}
 
 		return nil
 	}
 
-	// delete storage files from deleted Collection, Records, etc.
+	// try to delete the storage files from deleted Collection, Records, etc. model
 	app.OnModelAfterDelete().Add(func(e *ModelEvent) error {
 		if m, ok := e.Model.(models.FilesManager); ok && m.BaseFilesPath() != "" {
-			if err := deletePrefix(m.BaseFilesPath()); err != nil && app.IsDebug() {
-				// non critical error - only log for debug
-				// (usually could happen because of S3 api limits)
-				log.Println(err)
-			}
+			prefix := m.BaseFilesPath()
+
+			// run in the background for "optimistic" delete to avoid
+			// blocking the delete transaction
+			//
+			// @todo consider creating a bg process queue so that the
+			// call could be "retried" in case of a failure.
+			routine.FireAndForget(func() {
+				if err := deletePrefix(prefix); err != nil && app.IsDebug() {
+					// non critical error - only log for debug
+					// (usually could happen because of S3 api limits)
+					log.Println(err)
+				}
+			})
 		}
 
 		return nil

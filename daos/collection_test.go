@@ -37,7 +37,7 @@ func TestFindCollectionsByType(t *testing.T) {
 		{"", false, 0},
 		{"unknown", false, 0},
 		{models.CollectionTypeAuth, false, 3},
-		{models.CollectionTypeBase, false, 4},
+		{models.CollectionTypeBase, false, 5},
 	}
 
 	for i, scenario := range scenarios {
@@ -122,7 +122,13 @@ func TestFindCollectionReferences(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result, err := app.Dao().FindCollectionReferences(collection, collection.Id)
+	result, err := app.Dao().FindCollectionReferences(
+		collection,
+		collection.Id,
+		// test whether "nonempty" exclude ids condition will be skipped
+		"",
+		"",
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -296,7 +302,7 @@ func TestImportCollections(t *testing.T) {
 			name:                   "empty collections",
 			jsonData:               `[]`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 8,
 		},
 		{
 			name: "minimal collection import",
@@ -306,7 +312,7 @@ func TestImportCollections(t *testing.T) {
 			]`,
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 9,
+			expectCollectionsCount: 10,
 		},
 		{
 			name: "minimal collection import + failed beforeRecordsSync",
@@ -318,7 +324,7 @@ func TestImportCollections(t *testing.T) {
 			},
 			deleteMissing:          false,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 8,
 		},
 		{
 			name: "minimal collection import + successful beforeRecordsSync",
@@ -330,7 +336,7 @@ func TestImportCollections(t *testing.T) {
 			},
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: 9,
 		},
 		{
 			name: "new + update + delete system collection",
@@ -366,7 +372,7 @@ func TestImportCollections(t *testing.T) {
 			]`,
 			deleteMissing:          true,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 8,
 		},
 		{
 			name: "new + update + delete non-system collection",
@@ -495,7 +501,7 @@ func TestImportCollections(t *testing.T) {
 			]`,
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: 9,
 			afterTestFunc: func(testApp *tests.TestApp, resultCollections []*models.Collection) {
 				expectedCollectionFields := map[string]int{
 					"nologin":    1,
@@ -503,6 +509,7 @@ func TestImportCollections(t *testing.T) {
 					"demo2":      2,
 					"demo3":      2,
 					"demo4":      11,
+					"demo5":      5,
 					"new_import": 1,
 				}
 				for name, expectedCount := range expectedCollectionFields {

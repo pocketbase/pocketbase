@@ -67,26 +67,6 @@ func TestRecordAuthMethodsList(t *testing.T) {
 func TestRecordAuthWithPassword(t *testing.T) {
 	scenarios := []tests.ApiScenario{
 		{
-			Name:   "authenticated record",
-			Method: http.MethodPost,
-			Url:    "/api/collections/users/auth-with-password",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
-			},
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-		},
-		{
-			Name:   "authenticated admin",
-			Method: http.MethodPost,
-			Url:    "/api/collections/users/auth-with-password",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
-			},
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-		},
-		{
 			Name:            "invalid body format",
 			Method:          http.MethodPost,
 			Url:             "/api/collections/users/auth-with-password",
@@ -211,6 +191,52 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			Name:   "valid email and valid password in allowed collection",
 			Method: http.MethodPost,
 			Url:    "/api/collections/users/auth-with-password",
+			Body: strings.NewReader(`{
+				"identity":"test@example.com",
+				"password":"1234567890"
+			}`),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"record":{`,
+				`"token":"`,
+				`"id":"4q1xlclmfloku33"`,
+				`"email":"test@example.com"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordAuthRequest": 1,
+			},
+		},
+
+		// with already authenticated record or admin
+		{
+			Name:   "authenticated record",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/auth-with-password",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			Body: strings.NewReader(`{
+				"identity":"test@example.com",
+				"password":"1234567890"
+			}`),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"record":{`,
+				`"token":"`,
+				`"id":"4q1xlclmfloku33"`,
+				`"email":"test@example.com"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordAuthRequest": 1,
+			},
+		},
+		{
+			Name:   "authenticated admin",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/auth-with-password",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
 			Body: strings.NewReader(`{
 				"identity":"test@example.com",
 				"password":"1234567890"

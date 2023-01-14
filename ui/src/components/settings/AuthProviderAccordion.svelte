@@ -54,7 +54,7 @@
         {#if hasErrors}
             <i
                 class="ri-error-warning-fill txt-danger"
-                transition:scale={{ duration: 150, start: 0.7 }}
+                transition:scale|local={{ duration: 150, start: 0.7 }}
                 use:tooltip={{ text: "Has errors", position: "left" }}
             />
         {/if}

@@ -53,6 +53,14 @@ export default {
         title: "Twitch",
         icon:  "ri-twitch-fill",
     },
+    stravaAuth: {
+        title: "Strava",
+        icon:  "ri-riding-fill",
+    },
+    giteeAuth: {
+        title: "Gitee",
+        icon:  "ri-git-repository-fill",
+    },
     authentikAuth: {
         title: "Authentik",
         // Opened issue for remix icon https://github.com/Remix-Design/RemixIcon/issues/475

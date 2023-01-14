@@ -15,22 +15,36 @@ import (
 
 var schemaFieldNameRegex = regexp.MustCompile(`^\w+$`)
 
+// field value modifiers
+const (
+	FieldValueModifierAdd      string = "+"
+	FieldValueModifierSubtract string = "-"
+)
+
+// FieldValueModifiers returns a list with all available field modifier tokens.
+func FieldValueModifiers() []string {
+	return []string{
+		FieldValueModifierAdd,
+		FieldValueModifierSubtract,
+	}
+}
+
 // commonly used field names
 const (
-	FieldNameId                     = "id"
-	FieldNameCreated                = "created"
-	FieldNameUpdated                = "updated"
-	FieldNameCollectionId           = "collectionId"
-	FieldNameCollectionName         = "collectionName"
-	FieldNameExpand                 = "expand"
-	FieldNameUsername               = "username"
-	FieldNameEmail                  = "email"
-	FieldNameEmailVisibility        = "emailVisibility"
-	FieldNameVerified               = "verified"
-	FieldNameTokenKey               = "tokenKey"
-	FieldNamePasswordHash           = "passwordHash"
-	FieldNameLastResetSentAt        = "lastResetSentAt"
-	FieldNameLastVerificationSentAt = "lastVerificationSentAt"
+	FieldNameId                     string = "id"
+	FieldNameCreated                string = "created"
+	FieldNameUpdated                string = "updated"
+	FieldNameCollectionId           string = "collectionId"
+	FieldNameCollectionName         string = "collectionName"
+	FieldNameExpand                 string = "expand"
+	FieldNameUsername               string = "username"
+	FieldNameEmail                  string = "email"
+	FieldNameEmailVisibility        string = "emailVisibility"
+	FieldNameVerified               string = "verified"
+	FieldNameTokenKey               string = "tokenKey"
+	FieldNamePasswordHash           string = "passwordHash"
+	FieldNameLastResetSentAt        string = "lastResetSentAt"
+	FieldNameLastVerificationSentAt string = "lastVerificationSentAt"
 )
 
 // BaseModelFieldNames returns the field names that all models have (id, created, updated).
@@ -168,8 +182,8 @@ func (f SchemaField) Validate() error {
 	f.InitOptions()
 
 	excludeNames := BaseModelFieldNames()
-	// exclude filter literals
-	excludeNames = append(excludeNames, "null", "true", "false")
+	// exclude special filter literals
+	excludeNames = append(excludeNames, "null", "true", "false", "isset")
 	// exclude system literals
 	excludeNames = append(excludeNames, SystemFieldNames()...)
 
@@ -276,7 +290,7 @@ func (f *SchemaField) PrepareValue(value any) any {
 		options, _ := f.Options.(*SelectOptions)
 		if options.MaxSelect <= 1 {
 			if len(val) > 0 {
-				return val[0]
+				return val[len(val)-1] // the last selected
 			}
 			return ""
 		}
@@ -288,7 +302,7 @@ func (f *SchemaField) PrepareValue(value any) any {
 		options, _ := f.Options.(*FileOptions)
 		if options.MaxSelect <= 1 {
 			if len(val) > 0 {
-				return val[0]
+				return val[len(val)-1] // the last selected
 			}
 			return ""
 		}
@@ -300,7 +314,7 @@ func (f *SchemaField) PrepareValue(value any) any {
 		options, _ := f.Options.(*RelationOptions)
 		if options.MaxSelect != nil && *options.MaxSelect <= 1 {
 			if len(ids) > 0 {
-				return ids[0]
+				return ids[len(ids)-1] // the last selected
 			}
 			return ""
 		}
@@ -309,6 +323,46 @@ func (f *SchemaField) PrepareValue(value any) any {
 	default:
 		return value // unmodified
 	}
+}
+
+// PrepareValueWithModifier returns normalized and properly formatted field value
+// by "merging" baseValue with the modifierValue based on the specified modifier (+ or -).
+func (f *SchemaField) PrepareValueWithModifier(baseValue any, modifier string, modifierValue any) any {
+	resolvedValue := baseValue
+
+	switch f.Type {
+	case FieldTypeNumber:
+		switch modifier {
+		case FieldValueModifierAdd:
+			resolvedValue = cast.ToFloat64(baseValue) + cast.ToFloat64(modifierValue)
+		case FieldValueModifierSubtract:
+			resolvedValue = cast.ToFloat64(baseValue) - cast.ToFloat64(modifierValue)
+		}
+	case FieldTypeSelect, FieldTypeRelation:
+		switch modifier {
+		case FieldValueModifierAdd:
+			resolvedValue = append(
+				list.ToUniqueStringSlice(baseValue),
+				list.ToUniqueStringSlice(modifierValue)...,
+			)
+		case FieldValueModifierSubtract:
+			resolvedValue = list.SubtractSlice(
+				list.ToUniqueStringSlice(baseValue),
+				list.ToUniqueStringSlice(modifierValue),
+			)
+		}
+	case FieldTypeFile:
+		// note: file for now supports only the subtract modifier
+		switch modifier {
+		case FieldValueModifierSubtract:
+			resolvedValue = list.SubtractSlice(
+				list.ToUniqueStringSlice(baseValue),
+				list.ToUniqueStringSlice(modifierValue),
+			)
+		}
+	}
+
+	return f.PrepareValue(resolvedValue)
 }
 
 // -------------------------------------------------------------------

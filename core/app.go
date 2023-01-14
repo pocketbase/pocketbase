@@ -18,7 +18,7 @@ import (
 type App interface {
 	// Deprecated:
 	// This method may get removed in the near future.
-	// It is recommended to access the logs db instance from app.Dao().DB() or
+	// It is recommended to access the app db instance from app.Dao().DB() or
 	// if you want more flexibility - app.Dao().ConcurrentDB() and app.Dao().NonconcurrentDB().
 	//
 	// DB returns the default app database instance.

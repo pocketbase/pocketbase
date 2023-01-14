@@ -78,7 +78,8 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 					GetCertificate: certManager.GetCertificate,
 					NextProtos:     []string{acme.ALPNProto},
 				},
-				ReadTimeout: 60 * time.Second,
+				ReadTimeout:       5 * time.Minute,
+				ReadHeaderTimeout: 30 * time.Second,
 				// WriteTimeout: 60 * time.Second, // breaks sse!
 				Handler: router,
 				Addr:    mainAddr,

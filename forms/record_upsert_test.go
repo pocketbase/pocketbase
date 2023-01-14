@@ -89,9 +89,10 @@ func TestRecordUpsertLoadRequestJson(t *testing.T) {
 				"unknown": "test456",
 				// file fields unset/delete
 				"file_one":                     nil,
-				"file_many.0":                  "",         // delete by index
-				"file_many.1":                  "test.png", // should be ignored
-				"file_many.300_WlbFWSGmW9.png": nil,        // delete by filename
+				"file_many.0":                  "",                                                     // delete by index
+				"file_many-":                   []string{"test_MaWC6mWyrP.txt", "test_tC1Yc87DfC.txt"}, // multiple delete with modifier
+				"file_many.300_WlbFWSGmW9.png": nil,                                                    // delete by filename
+				"file_many.2":                  "test.png",                                             // should be ignored
 			},
 		},
 	}
@@ -149,11 +150,12 @@ func TestRecordUpsertLoadRequestMultipart(t *testing.T) {
 		"a.b.text":    "test123",
 		"a.b.unknown": "test456",
 		// file fields unset/delete
-		"a.b.file_one":                     "",
-		"a.b.file_many.0":                  "",
-		"a.b.file_many.300_WlbFWSGmW9.png": "test.png", // delete by name
-		"a.b.file_many.1":                  "test.png", // should be ignored
-	}, "file_many")
+		"a.b.file_one-":                    "test_d61b33QdDU.txt", // delete with modifier
+		"a.b.file_many.0":                  "",                    // delete by index
+		"a.b.file_many-":                   "test_tC1Yc87DfC.txt", // delete with modifier
+		"a.b.file_many.300_WlbFWSGmW9.png": "",                    // delete by filename
+		"a.b.file_many.2":                  "test.png",            // should be ignored
+	}, "a.b.file_many")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +193,7 @@ func TestRecordUpsertLoadRequestMultipart(t *testing.T) {
 		t.Fatal("Expect file_many field to be set")
 	}
 	manyfilesRemains := len(list.ToUniqueStringSlice(fileMany))
-	expectedRemains := 2 // -2 from 3 removed + 1 new upload
+	expectedRemains := 3 // 5 old; 3 deleted and 1 new uploaded
 	if manyfilesRemains != expectedRemains {
 		t.Fatalf("Expect file_many to be %d, got %d (%v)", expectedRemains, manyfilesRemains, fileMany)
 	}
@@ -465,7 +467,7 @@ func TestRecordUpsertSubmitFailure(t *testing.T) {
 	if v := recordAfter.Get("email"); v == "invalid" {
 		t.Fatalf("Expected record.email not to change, got %v", v)
 	}
-	if v := recordAfter.GetStringSlice("file_many"); len(v) != 3 {
+	if v := recordAfter.GetStringSlice("file_many"); len(v) != 5 {
 		t.Fatalf("Expected record.file_many not to change, got %v", v)
 	}
 
@@ -537,8 +539,8 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 	}
 
 	fileMany := (recordAfter.GetStringSlice("file_many"))
-	if len(fileMany) != 4 { // 1 replace + 1 new
-		t.Fatalf("Expected 4 record.file_many, got %d (%v)", len(fileMany), fileMany)
+	if len(fileMany) != 6 { // 1 replace + 1 new
+		t.Fatalf("Expected 6 record.file_many, got %d (%v)", len(fileMany), fileMany)
 	}
 	for _, f := range fileMany {
 		if !hasRecordFile(app, recordAfter, f) {
@@ -1009,7 +1011,7 @@ func TestRecordUpsertAddAndRemoveFiles(t *testing.T) {
 	}
 
 	fileMany := recordAfter.GetStringSlice("file_many")
-	if len(fileMany) != 3 {
-		t.Fatalf("Expected file_many to be 3, got %v", fileMany)
+	if len(fileMany) != 5 {
+		t.Fatalf("Expected file_many to be 5, got %v", fileMany)
 	}
 }

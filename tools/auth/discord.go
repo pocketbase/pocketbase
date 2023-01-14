@@ -63,12 +63,13 @@ func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	username := fmt.Sprintf("%s#%s", extracted.Username, extracted.Discriminator)
 
 	user := &AuthUser{
-		Id:          extracted.Id,
-		Name:        username,
-		Username:    extracted.Username,
-		AvatarUrl:   avatarUrl,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           extracted.Id,
+		Name:         username,
+		Username:     extracted.Username,
+		AvatarUrl:    avatarUrl,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 	if extracted.Verified {
 		user.Email = extracted.Email

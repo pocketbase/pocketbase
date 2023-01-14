@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/models"
@@ -42,7 +43,7 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":1`,
 				`"perPage":30`,
-				`"totalItems":7`,
+				`"totalItems":8`,
 				`"items":[{`,
 				`"id":"_pb_users_auth_"`,
 				`"id":"v851q4r790rhknl"`,
@@ -51,6 +52,7 @@ func TestCollectionsList(t *testing.T) {
 				`"id":"sz5l5z67tg7gku0"`,
 				`"id":"wzlqyes4orhoygb"`,
 				`"id":"4d1blo5cuycfaca"`,
+				`"id":"9n89pl5vkct6330"`,
 				`"type":"auth"`,
 				`"type":"base"`,
 			},
@@ -69,10 +71,10 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":2`,
 				`"perPage":2`,
-				`"totalItems":7`,
+				`"totalItems":8`,
 				`"items":[{`,
+				`"id":"v851q4r790rhknl"`,
 				`"id":"4d1blo5cuycfaca"`,
-				`"id":"wzlqyes4orhoygb"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnCollectionsListRequest": 1,
@@ -99,12 +101,13 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":1`,
 				`"perPage":30`,
-				`"totalItems":4`,
+				`"totalItems":5`,
 				`"items":[{`,
 				`"id":"wsmn24bux7wo113"`,
 				`"id":"sz5l5z67tg7gku0"`,
 				`"id":"wzlqyes4orhoygb"`,
 				`"id":"4d1blo5cuycfaca"`,
+				`"id":"9n89pl5vkct6330"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnCollectionsListRequest": 1,
@@ -230,6 +233,7 @@ func TestCollectionDelete(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeDelete":             1,
@@ -248,6 +252,7 @@ func TestCollectionDelete(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeDelete":             1,
@@ -786,7 +791,7 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 7
+				expected := 8
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}
@@ -814,7 +819,7 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 7
+				expected := 8
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}
@@ -856,7 +861,7 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 7
+				expected := 8
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}
@@ -909,7 +914,7 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 10
+				expected := 11
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}
@@ -996,8 +1001,8 @@ func TestCollectionImport(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnCollectionsAfterImportRequest":  1,
 				"OnCollectionsBeforeImportRequest": 1,
-				"OnModelBeforeDelete":              5,
-				"OnModelAfterDelete":               5,
+				"OnModelBeforeDelete":              6,
+				"OnModelAfterDelete":               6,
 				"OnModelBeforeUpdate":              2,
 				"OnModelAfterUpdate":               2,
 				"OnModelBeforeCreate":              1,

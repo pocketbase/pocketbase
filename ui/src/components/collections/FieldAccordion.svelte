@@ -108,6 +108,17 @@
         return CommonHelper.slugify(name);
     }
 
+    function requiredLabel(field) {
+        switch (field?.type) {
+            case "bool":
+                return "Nonfalsey";
+            case "number":
+                return "Nonzero";
+            default:
+                return "Nonempty";
+        }
+    }
+
     onMount(() => {
         // auto expand new fields
         if (!field.id) {
@@ -150,7 +161,7 @@
                     <span class="label" class:label-warning={interactive && !field.toDelete}>New</span>
                 {/if}
                 {#if field.required}
-                    <span class="label label-success">Nonempty</span>
+                    <span class="label label-success">{requiredLabel(field)}</span>
                 {/if}
                 {#if field.unique}
                     <span class="label label-success">Unique</span>
@@ -270,13 +281,13 @@
                 <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
                     <input type="checkbox" id={uniqueId} bind:checked={field.required} />
                     <label for={uniqueId}>
-                        <span class="txt">Nonempty</span>
+                        <span class="txt">{requiredLabel(field)}</span>
                         <i
                             class="ri-information-line link-hint"
                             use:tooltip={{
-                                text: `Requires the field value to be nonempty\n(aka. not ${CommonHelper.zeroDefaultStr(
+                                text: `Requires the field value to be ${requiredLabel(
                                     field
-                                )}).`,
+                                )}\n(aka. not ${CommonHelper.zeroDefaultStr(field)}).`,
                                 position: "right",
                             }}
                         />

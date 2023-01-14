@@ -215,7 +215,7 @@ func (form *CollectionUpsert) ensureExistingRelationCollectionId(value any) erro
 			continue
 		}
 
-		if _, err := form.dao.FindCollectionByNameOrId(options.CollectionId); err != nil {
+		if err := form.dao.FindById(&models.Collection{}, options.CollectionId); err != nil {
 			return validation.Errors{fmt.Sprint(i): validation.NewError(
 				"validation_field_invalid_relation",
 				"The relation collection doesn't exist.",

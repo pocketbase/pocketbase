@@ -49,6 +49,20 @@ func TestAdminAuthWithEmail(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
+			Name:           "valid email/password (guest)",
+			Method:         http.MethodPost,
+			Url:            "/api/admins/auth-with-password",
+			Body:           strings.NewReader(`{"identity":"test@example.com","password":"1234567890"}`),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"admin":{"id":"sywbhecnh46rhm0"`,
+				`"token":`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnAdminAuthRequest": 1,
+			},
+		},
+		{
 			Name:   "valid email/password (already authorized)",
 			Method: http.MethodPost,
 			Url:    "/api/admins/auth-with-password",
@@ -56,14 +70,6 @@ func TestAdminAuthWithEmail(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4MTYwMH0.han3_sG65zLddpcX2ic78qgy7FKecuPfOpFa8Dvi5Bg",
 			},
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"message":"The request can be accessed only by guests.","data":{}`},
-		},
-		{
-			Name:           "valid email/password (guest)",
-			Method:         http.MethodPost,
-			Url:            "/api/admins/auth-with-password",
-			Body:           strings.NewReader(`{"identity":"test@example.com","password":"1234567890"}`),
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"admin":{"id":"sywbhecnh46rhm0"`,

@@ -52,7 +52,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"collections": []
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 8,
 			expectEvents:           nil,
 		},
 		{
@@ -82,7 +82,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 8,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
 			},
@@ -101,7 +101,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 8,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
 			},
@@ -137,7 +137,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 10,
+			expectCollectionsCount: 11,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 3,
 				"OnModelAfterCreate":  3,
@@ -160,7 +160,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 8,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 1,
 			},
@@ -202,7 +202,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: 8,
 			expectEvents: map[string]int{
 				"OnModelBeforeDelete": 5,
 			},
@@ -253,7 +253,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 9,
+			expectCollectionsCount: 10,
 			expectEvents: map[string]int{
 				"OnModelBeforeUpdate": 1,
 				"OnModelAfterUpdate":  1,
@@ -341,8 +341,8 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"OnModelAfterUpdate":  2,
 				"OnModelBeforeCreate": 1,
 				"OnModelAfterCreate":  1,
-				"OnModelBeforeDelete": 5,
-				"OnModelAfterDelete":  5,
+				"OnModelBeforeDelete": 6,
+				"OnModelAfterDelete":  6,
 			},
 		},
 	}

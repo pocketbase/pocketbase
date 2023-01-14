@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -219,11 +218,6 @@ func (form *RecordUpsert) extractMultipartFormData(
 // and lods it into the form.
 //
 // File upload is supported only via multipart/form-data.
-//
-// To DELETE previously uploaded file(s) you can suffix the field name
-// with the file index or filename (eg. `myfile.0`) and set it to null or empty string.
-// For single file upload fields, you can skip the index and directly
-// reset the field using its field name (eg. `myfile = null`).
 func (form *RecordUpsert) LoadRequest(r *http.Request, keyPrefix string) error {
 	requestData, uploadedFiles, err := form.extractRequestData(r, keyPrefix)
 	if err != nil {
@@ -345,29 +339,24 @@ func (form *RecordUpsert) RemoveFiles(key string, toDelete ...string) error {
 }
 
 // LoadData loads and normalizes the provided regular record data fields into the form.
-//
-// To DELETE previously uploaded file(s) you can suffix the field name
-// with the file index or filename (eg. `myfile.0`) and set it to null or empty string.
-// For single file upload fields, you can skip the index and directly
-// reset the field using its field name (eg. `myfile = null`).
 func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 	// load base system fields
-	if v, ok := requestData["id"]; ok {
+	if v, ok := requestData[schema.FieldNameId]; ok {
 		form.Id = cast.ToString(v)
 	}
 
 	// load auth system fields
 	if form.record.Collection().IsAuth() {
-		if v, ok := requestData["username"]; ok {
+		if v, ok := requestData[schema.FieldNameUsername]; ok {
 			form.Username = cast.ToString(v)
 		}
-		if v, ok := requestData["email"]; ok {
+		if v, ok := requestData[schema.FieldNameEmail]; ok {
 			form.Email = cast.ToString(v)
 		}
-		if v, ok := requestData["emailVisibility"]; ok {
+		if v, ok := requestData[schema.FieldNameEmailVisibility]; ok {
 			form.EmailVisibility = cast.ToBool(v)
 		}
-		if v, ok := requestData["verified"]; ok {
+		if v, ok := requestData[schema.FieldNameVerified]; ok {
 			form.Verified = cast.ToBool(v)
 		}
 		if v, ok := requestData["password"]; ok {
@@ -381,8 +370,16 @@ func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 		}
 	}
 
-	// extend the record schema data with the request data
-	extendedData := form.record.SchemaData()
+	// replace modifiers (if any)
+	requestData = form.record.ReplaceModifers(requestData)
+
+	// create a shallow copy of form.data
+	var extendedData = make(map[string]any, len(form.data))
+	for k, v := range form.data {
+		extendedData[k] = v
+	}
+
+	// extend form.data with the request data
 	rawData, err := json.Marshal(requestData)
 	if err != nil {
 		return err
@@ -393,8 +390,7 @@ func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 
 	for _, field := range form.record.Collection().Schema.Fields() {
 		key := field.Name
-		value := extendedData[key]
-		value = field.PrepareValue(value)
+		value := field.PrepareValue(extendedData[key])
 
 		if field.Type != schema.FieldTypeFile {
 			form.data[key] = value
@@ -405,36 +401,44 @@ func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 		// Delete previously uploaded file(s)
 		// -----------------------------------------------------------
 
-		oldNames := list.ToUniqueStringSlice(form.data[key])
+		oldNames := form.record.GetStringSlice(key)
+		submittedNames := list.ToUniqueStringSlice(value)
+
+		// ensure that all submitted names are existing to prevent accidental files deletions
+		if len(submittedNames) > len(oldNames) || len(list.SubtractSlice(submittedNames, oldNames)) != 0 {
+			return validation.Errors{
+				key: validation.NewError(
+					"validation_unknown_filenames",
+					"The field contains unknown filenames.",
+				),
+			}
+		}
 
 		// if empty value was set, mark all previously uploaded files for deletion
-		if len(list.ToUniqueStringSlice(value)) == 0 && len(oldNames) > 0 {
+		// otherwise check for "deleted" (aka. unsubmitted) file names
+		if len(submittedNames) == 0 && len(oldNames) > 0 {
 			form.RemoveFiles(key)
 		} else if len(oldNames) > 0 {
+
 			toDelete := []string{}
 
-			// search for individual file name to delete (eg. "file.test.png = null")
 			for _, name := range oldNames {
-				if v, ok := extendedData[key+"."+name]; ok && cast.ToString(v) == "" {
+				// submitted as a modifier or a new array
+				if !list.ExistInSlice(name, submittedNames) {
 					toDelete = append(toDelete, name)
-				}
-			}
-
-			// search for individual file index to delete (eg. "file.0 = null")
-			keyExp, _ := regexp.Compile(`^` + regexp.QuoteMeta(key) + `\.\d+$`)
-			for indexedKey := range extendedData {
-				if keyExp.MatchString(indexedKey) && cast.ToString(extendedData[indexedKey]) == "" {
-					index, indexErr := strconv.Atoi(indexedKey[len(key)+1:])
-					if indexErr != nil || index >= len(oldNames) {
-						continue
-					}
-					toDelete = append(toDelete, oldNames[index])
+					continue
 				}
 			}
 
 			if len(toDelete) > 0 {
 				form.RemoveFiles(key, toDelete...)
 			}
+		}
+
+		// allow file key reasignments for file names sorting
+		// (only if all submitted values already exists)
+		if len(submittedNames) > 0 && len(list.SubtractSlice(submittedNames, oldNames)) == 0 {
+			form.data[key] = submittedNames
 		}
 	}
 
