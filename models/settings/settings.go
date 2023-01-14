@@ -256,7 +256,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameTwitch:    s.TwitchAuth,
 		auth.NameStrava:    s.StravaAuth,
 		auth.NameGitee:     s.GiteeAuth,
-		auth.NameAuthentik	s.AuthentikAuth,
+		auth.NameAuthentik: s.AuthentikAuth,
 	}
 }
 
