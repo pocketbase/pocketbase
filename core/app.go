@@ -313,6 +313,50 @@ type App interface {
 	// authenticated admin data and token.
 	OnAdminAuthRequest() *hook.Hook[*AdminAuthEvent]
 
+	// OnAdminBeforeAuthWithPasswordRequest hook is triggered before each Admin
+	// auth with password API request (after request data load and before password validation).
+	//
+	// Could be used to implement for example a custom password validation
+	// or to locate a different Admin identity (by assigning [AdminAuthWithPasswordEvent.Admin]).
+	OnAdminBeforeAuthWithPasswordRequest() *hook.Hook[*AdminAuthWithPasswordEvent]
+
+	// OnAdminAfterAuthWithPasswordRequest hook is triggered after each
+	// successful Admin auth with password API request.
+	OnAdminAfterAuthWithPasswordRequest() *hook.Hook[*AdminAuthWithPasswordEvent]
+
+	// OnAdminBeforeAuthRefreshRequest hook is triggered before each Admin
+	// auth refresh API request (right before generating a new auth token).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different auth refresh behavior (returning [hook.StopPropagation]).
+	OnAdminBeforeAuthRefreshRequest() *hook.Hook[*AdminAuthRefreshEvent]
+
+	// OnAdminAfterAuthRefreshRequest hook is triggered after each
+	// successful auth refresh API request (right after generating a new auth token).
+	OnAdminAfterAuthRefreshRequest() *hook.Hook[*AdminAuthRefreshEvent]
+
+	// OnAdminBeforeRequestPasswordResetRequest hook is triggered before each Admin
+	// request password reset API request (after request data load and before sending the reset email).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different password reset behavior (returning [hook.StopPropagation]).
+	OnAdminBeforeRequestPasswordResetRequest() *hook.Hook[*AdminRequestPasswordResetEvent]
+
+	// OnAdminAfterRequestPasswordResetRequest hook is triggered after each
+	// successful request password reset API request.
+	OnAdminAfterRequestPasswordResetRequest() *hook.Hook[*AdminRequestPasswordResetEvent]
+
+	// OnAdminBeforeConfirmPasswordResetRequest hook is triggered before each Admin
+	// confirm password reset API request (after request data load and before persistence).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different persistence behavior (returning [hook.StopPropagation]).
+	OnAdminBeforeConfirmPasswordResetRequest() *hook.Hook[*AdminConfirmPasswordResetEvent]
+
+	// OnAdminAfterConfirmPasswordResetRequest hook is triggered after each
+	// successful confirm password reset API request.
+	OnAdminAfterConfirmPasswordResetRequest() *hook.Hook[*AdminConfirmPasswordResetEvent]
+
 	// ---------------------------------------------------------------
 	// Record Auth API event hooks
 	// ---------------------------------------------------------------
@@ -323,6 +367,42 @@ type App interface {
 	// Could be used to additionally validate or modify the authenticated
 	// record data and token.
 	OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent]
+
+	// OnRecordBeforeAuthWithPasswordRequest hook is triggered before each Record
+	// auth with password API request (after request data load and before password validation).
+	//
+	// Could be used to implement for example a custom password validation
+	// or to locate a different Record identity (by assigning [RecordAuthWithPasswordEvent.Record]).
+	OnRecordBeforeAuthWithPasswordRequest() *hook.Hook[*RecordAuthWithPasswordEvent]
+
+	// OnRecordAfterAuthWithPasswordRequest hook is triggered after each
+	// successful Record auth with password API request.
+	OnRecordAfterAuthWithPasswordRequest() *hook.Hook[*RecordAuthWithPasswordEvent]
+
+	// OnRecordBeforeAuthWithOAuth2Request hook is triggered before each Record
+	// OAuth2 sign-in/sign-up API request (after token exchange and before external provider linking).
+	//
+	// If the [RecordAuthWithOAuth2Event.Record] is nil, then the OAuth2
+	// request will try to create a new auth Record.
+	//
+	// To assign or link a different existing record model you can
+	// overwrite/modify the [RecordAuthWithOAuth2Event.Record] field.
+	OnRecordBeforeAuthWithOAuth2Request() *hook.Hook[*RecordAuthWithOAuth2Event]
+
+	// OnRecordAfterAuthWithOAuth2Request hook is triggered after each
+	// successful Record OAuth2 API request.
+	OnRecordAfterAuthWithOAuth2Request() *hook.Hook[*RecordAuthWithOAuth2Event]
+
+	// OnRecordBeforeAuthRefreshRequest hook is triggered before each Record
+	// auth refresh API request (right before generating a new auth token).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different auth refresh behavior (returning [hook.StopPropagation]).
+	OnRecordBeforeAuthRefreshRequest() *hook.Hook[*RecordAuthRefreshEvent]
+
+	// OnRecordAfterAuthRefreshRequest hook is triggered after each
+	// successful auth refresh API request (right after generating a new auth token).
+	OnRecordAfterAuthRefreshRequest() *hook.Hook[*RecordAuthRefreshEvent]
 
 	// OnRecordBeforeRequestPasswordResetRequest hook is triggered before each Record
 	// request password reset API request (after request data load and before sending the reset email).

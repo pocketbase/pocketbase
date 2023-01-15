@@ -100,6 +100,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{}`,
 			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+			},
 		},
 		{
 			Name:   "valid username and invalid password",
@@ -113,6 +116,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{}`,
 			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+			},
 		},
 		{
 			Name:   "valid username and valid password in restricted collection",
@@ -125,6 +131,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{}`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
 			},
 		},
 		{
@@ -143,7 +152,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				`"email":"test2@example.com"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+				"OnRecordAfterAuthWithPasswordRequest":  1,
+				"OnRecordAuthRequest":                   1,
 			},
 		},
 
@@ -160,6 +171,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{}`,
 			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+			},
 		},
 		{
 			Name:   "valid email and invalid password",
@@ -173,6 +187,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{}`,
 			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+			},
 		},
 		{
 			Name:   "valid email and valid password in restricted collection",
@@ -185,6 +202,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{}`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
 			},
 		},
 		{
@@ -203,7 +223,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				`"email":"test@example.com"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+				"OnRecordAfterAuthWithPasswordRequest":  1,
+				"OnRecordAuthRequest":                   1,
 			},
 		},
 
@@ -227,7 +249,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				`"email":"test@example.com"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+				"OnRecordAfterAuthWithPasswordRequest":  1,
+				"OnRecordAuthRequest":                   1,
 			},
 		},
 		{
@@ -249,7 +273,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				`"email":"test@example.com"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+				"OnRecordAfterAuthWithPasswordRequest":  1,
+				"OnRecordAuthRequest":                   1,
 			},
 		},
 	}
@@ -320,7 +346,9 @@ func TestRecordAuthRefresh(t *testing.T) {
 				`"missing":`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordAuthRequest": 1,
+				"OnRecordBeforeAuthRefreshRequest": 1,
+				"OnRecordAuthRequest":              1,
+				"OnRecordAfterAuthRefreshRequest":  1,
 			},
 		},
 	}

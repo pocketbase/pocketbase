@@ -29,7 +29,7 @@ func UniqueId(dao *daos.Dao, tableName string) validation.RuleFunc {
 			Limit(1).
 			Row(&foundId)
 
-		if !errors.Is(err, sql.ErrNoRows) || foundId != "" {
+		if (err != nil && !errors.Is(err, sql.ErrNoRows)) || foundId != "" {
 			return validation.NewError("validation_invalid_id", "The model id is invalid or already exists.")
 		}
 

@@ -99,7 +99,7 @@ func (form *AdminUpsert) checkUniqueEmail(value any) error {
 //
 // You can optionally provide a list of InterceptorFunc to further
 // modify the form behavior before persisting it.
-func (form *AdminUpsert) Submit(interceptors ...InterceptorFunc) error {
+func (form *AdminUpsert) Submit(interceptors ...InterceptorFunc[*models.Admin]) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (form *AdminUpsert) Submit(interceptors ...InterceptorFunc) error {
 		form.admin.SetPassword(form.Password)
 	}
 
-	return runInterceptors(func() error {
-		return form.dao.SaveAdmin(form.admin)
+	return runInterceptors(form.admin, func(admin *models.Admin) error {
+		return form.dao.SaveAdmin(admin)
 	}, interceptors...)
 }

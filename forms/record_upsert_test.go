@@ -428,10 +428,10 @@ func TestRecordUpsertSubmitFailure(t *testing.T) {
 	form.LoadRequest(req, "")
 
 	interceptorCalls := 0
-	interceptor := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor := func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(r *models.Record) error {
 			interceptorCalls++
-			return next()
+			return next(r)
 		}
 	}
 
@@ -505,10 +505,10 @@ func TestRecordUpsertSubmitSuccess(t *testing.T) {
 	form.LoadRequest(req, "")
 
 	interceptorCalls := 0
-	interceptor := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor := func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(r *models.Record) error {
 			interceptorCalls++
-			return next()
+			return next(r)
 		}
 	}
 
@@ -566,16 +566,16 @@ func TestRecordUpsertSubmitInterceptors(t *testing.T) {
 	interceptorRecordTitle := ""
 
 	interceptor1Called := false
-	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor1 := func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(r *models.Record) error {
 			interceptor1Called = true
-			return next()
+			return next(r)
 		}
 	}
 
 	interceptor2Called := false
-	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor2 := func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(r *models.Record) error {
 			interceptorRecordTitle = record.GetString("title") // to check if the record was filled
 			interceptor2Called = true
 			return testErr

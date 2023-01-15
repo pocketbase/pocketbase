@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -85,10 +86,12 @@ func (api *collectionApi) create(c echo.Context) error {
 	}
 
 	// create the collection
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
+		return func(m *models.Collection) error {
+			event.Collection = m
+
 			return api.app.OnCollectionBeforeCreateRequest().Trigger(event, func(e *core.CollectionCreateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.Collection); err != nil {
 					return NewBadRequestError("Failed to create the collection.", err)
 				}
 
@@ -98,7 +101,9 @@ func (api *collectionApi) create(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnCollectionAfterCreateRequest().Trigger(event)
+		if err := api.app.OnCollectionAfterCreateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -123,10 +128,12 @@ func (api *collectionApi) update(c echo.Context) error {
 	}
 
 	// update the collection
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
+		return func(m *models.Collection) error {
+			event.Collection = m
+
 			return api.app.OnCollectionBeforeUpdateRequest().Trigger(event, func(e *core.CollectionUpdateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.Collection); err != nil {
 					return NewBadRequestError("Failed to update the collection.", err)
 				}
 
@@ -136,7 +143,9 @@ func (api *collectionApi) update(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnCollectionAfterUpdateRequest().Trigger(event)
+		if err := api.app.OnCollectionAfterUpdateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -162,7 +171,9 @@ func (api *collectionApi) delete(c echo.Context) error {
 	})
 
 	if handlerErr == nil {
-		api.app.OnCollectionAfterDeleteRequest().Trigger(event)
+		if err := api.app.OnCollectionAfterDeleteRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return handlerErr
@@ -182,12 +193,12 @@ func (api *collectionApi) bulkImport(c echo.Context) error {
 	}
 
 	// import collections
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
-			return api.app.OnCollectionsBeforeImportRequest().Trigger(event, func(e *core.CollectionsImportEvent) error {
-				form.Collections = e.Collections // ensures that the form always has the latest changes
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[[]*models.Collection]) forms.InterceptorNextFunc[[]*models.Collection] {
+		return func(imports []*models.Collection) error {
+			event.Collections = imports
 
-				if err := next(); err != nil {
+			return api.app.OnCollectionsBeforeImportRequest().Trigger(event, func(e *core.CollectionsImportEvent) error {
+				if err := next(e.Collections); err != nil {
 					return NewBadRequestError("Failed to import the submitted collections.", err)
 				}
 
@@ -197,7 +208,9 @@ func (api *collectionApi) bulkImport(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnCollectionsAfterImportRequest().Trigger(event)
+		if err := api.app.OnCollectionsAfterImportRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr

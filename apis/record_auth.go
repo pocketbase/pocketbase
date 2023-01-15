@@ -104,7 +104,22 @@ func (api *recordAuthApi) authRefresh(c echo.Context) error {
 		return NewNotFoundError("Missing auth record context.", nil)
 	}
 
-	return api.authResponse(c, record, nil)
+	event := &core.RecordAuthRefreshEvent{
+		HttpContext: c,
+		Record:      record,
+	}
+
+	handlerErr := api.app.OnRecordBeforeAuthRefreshRequest().Trigger(event, func(e *core.RecordAuthRefreshEvent) error {
+		return api.authResponse(e.HttpContext, e.Record, nil)
+	})
+
+	if handlerErr == nil {
+		if err := api.app.OnRecordAfterAuthRefreshRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+	}
+
+	return handlerErr
 }
 
 type providerInfo struct {
@@ -202,7 +217,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	record, authData, submitErr := form.Submit(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
+	form.SetBeforeNewRecordCreateFunc(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
 		return createForm.DrySubmit(func(txDao *daos.Dao) error {
 			requestData := RequestData(c)
 			requestData.Data = form.CreateData
@@ -237,11 +252,36 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 			return nil
 		})
 	})
-	if submitErr != nil {
-		return NewBadRequestError("Failed to authenticate.", submitErr)
+
+	event := &core.RecordAuthWithOAuth2Event{
+		HttpContext: c,
 	}
 
-	return api.authResponse(c, record, authData)
+	_, _, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*forms.RecordOAuth2LoginData]) forms.InterceptorNextFunc[*forms.RecordOAuth2LoginData] {
+		return func(data *forms.RecordOAuth2LoginData) error {
+			event.Record = data.Record
+			event.OAuth2User = data.OAuth2User
+
+			return api.app.OnRecordBeforeAuthWithOAuth2Request().Trigger(event, func(e *core.RecordAuthWithOAuth2Event) error {
+				data.Record = e.Record
+				data.OAuth2User = e.OAuth2User
+
+				if err := next(data); err != nil {
+					return NewBadRequestError("Failed to authenticate.", err)
+				}
+
+				return api.authResponse(e.HttpContext, e.Record, e.OAuth2User)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		if err := api.app.OnRecordAfterAuthWithOAuth2Request().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+	}
+
+	return submitErr
 }
 
 func (api *recordAuthApi) authWithPassword(c echo.Context) error {
@@ -255,12 +295,33 @@ func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	record, submitErr := form.Submit()
-	if submitErr != nil {
-		return NewBadRequestError("Failed to authenticate.", submitErr)
+	event := &core.RecordAuthWithPasswordEvent{
+		HttpContext: c,
+		Password:    form.Password,
+		Identity:    form.Identity,
 	}
 
-	return api.authResponse(c, record, nil)
+	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(record *models.Record) error {
+			event.Record = record
+
+			return api.app.OnRecordBeforeAuthWithPasswordRequest().Trigger(event, func(e *core.RecordAuthWithPasswordEvent) error {
+				if err := next(e.Record); err != nil {
+					return NewBadRequestError("Failed to authenticate.", err)
+				}
+
+				return api.authResponse(e.HttpContext, e.Record, nil)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		if err := api.app.OnRecordAfterAuthWithPasswordRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+	}
+
+	return submitErr
 }
 
 func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
@@ -287,7 +348,7 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 		HttpContext: c,
 	}
 
-	submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			event.Record = record
 
@@ -305,7 +366,9 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterRequestPasswordResetRequest().Trigger(event)
+		if err := api.app.OnRecordAfterRequestPasswordResetRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	} else if api.app.IsDebug() {
 		log.Println(submitErr)
 	}
@@ -333,7 +396,7 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 		HttpContext: c,
 	}
 
-	_, submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			event.Record = record
 
@@ -348,7 +411,9 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterConfirmPasswordResetRequest().Trigger(event)
+		if err := api.app.OnRecordAfterConfirmPasswordResetRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -373,7 +438,7 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 		HttpContext: c,
 	}
 
-	submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			event.Record = record
 
@@ -391,7 +456,9 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterRequestVerificationRequest().Trigger(event)
+		if err := api.app.OnRecordAfterRequestVerificationRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	} else if api.app.IsDebug() {
 		log.Println(submitErr)
 	}
@@ -419,7 +486,7 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 		HttpContext: c,
 	}
 
-	_, submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			event.Record = record
 
@@ -434,7 +501,9 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterConfirmVerificationRequest().Trigger(event)
+		if err := api.app.OnRecordAfterConfirmVerificationRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -456,7 +525,7 @@ func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
 		Record:      record,
 	}
 
-	submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			return api.app.OnRecordBeforeRequestEmailChangeRequest().Trigger(event, func(e *core.RecordRequestEmailChangeEvent) error {
 				if err := next(e.Record); err != nil {
@@ -490,7 +559,7 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 		HttpContext: c,
 	}
 
-	_, submitErr := form.Submit(func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			event.Record = record
 
@@ -505,7 +574,9 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterConfirmEmailChangeRequest().Trigger(event)
+		if err := api.app.OnRecordAfterConfirmEmailChangeRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr

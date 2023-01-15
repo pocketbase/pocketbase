@@ -137,10 +137,10 @@ func TestAdminUpsertValidateAndSubmit(t *testing.T) {
 
 		interceptorCalls := 0
 
-		err := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-			return func() error {
+		err := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+			return func(m *models.Admin) error {
 				interceptorCalls++
-				return next()
+				return next(m)
 			}
 		})
 
@@ -196,16 +196,16 @@ func TestAdminUpsertSubmitInterceptors(t *testing.T) {
 	interceptorAdminEmail := ""
 
 	interceptor1Called := false
-	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor1 := func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(m *models.Admin) error {
 			interceptor1Called = true
-			return next()
+			return next(m)
 		}
 	}
 
 	interceptor2Called := false
-	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor2 := func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(m *models.Admin) error {
 			interceptorAdminEmail = admin.Email // to check if the record was filled
 			interceptor2Called = true
 			return testErr

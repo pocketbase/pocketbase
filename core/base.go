@@ -91,18 +91,32 @@ type BaseApp struct {
 	onFileDownloadRequest *hook.Hook[*FileDownloadEvent]
 
 	// admin api event hooks
-	onAdminsListRequest        *hook.Hook[*AdminsListEvent]
-	onAdminViewRequest         *hook.Hook[*AdminViewEvent]
-	onAdminBeforeCreateRequest *hook.Hook[*AdminCreateEvent]
-	onAdminAfterCreateRequest  *hook.Hook[*AdminCreateEvent]
-	onAdminBeforeUpdateRequest *hook.Hook[*AdminUpdateEvent]
-	onAdminAfterUpdateRequest  *hook.Hook[*AdminUpdateEvent]
-	onAdminBeforeDeleteRequest *hook.Hook[*AdminDeleteEvent]
-	onAdminAfterDeleteRequest  *hook.Hook[*AdminDeleteEvent]
-	onAdminAuthRequest         *hook.Hook[*AdminAuthEvent]
+	onAdminsListRequest                      *hook.Hook[*AdminsListEvent]
+	onAdminViewRequest                       *hook.Hook[*AdminViewEvent]
+	onAdminBeforeCreateRequest               *hook.Hook[*AdminCreateEvent]
+	onAdminAfterCreateRequest                *hook.Hook[*AdminCreateEvent]
+	onAdminBeforeUpdateRequest               *hook.Hook[*AdminUpdateEvent]
+	onAdminAfterUpdateRequest                *hook.Hook[*AdminUpdateEvent]
+	onAdminBeforeDeleteRequest               *hook.Hook[*AdminDeleteEvent]
+	onAdminAfterDeleteRequest                *hook.Hook[*AdminDeleteEvent]
+	onAdminAuthRequest                       *hook.Hook[*AdminAuthEvent]
+	onAdminBeforeAuthWithPasswordRequest     *hook.Hook[*AdminAuthWithPasswordEvent]
+	onAdminAfterAuthWithPasswordRequest      *hook.Hook[*AdminAuthWithPasswordEvent]
+	onAdminBeforeAuthRefreshRequest          *hook.Hook[*AdminAuthRefreshEvent]
+	onAdminAfterAuthRefreshRequest           *hook.Hook[*AdminAuthRefreshEvent]
+	onAdminBeforeRequestPasswordResetRequest *hook.Hook[*AdminRequestPasswordResetEvent]
+	onAdminAfterRequestPasswordResetRequest  *hook.Hook[*AdminRequestPasswordResetEvent]
+	onAdminBeforeConfirmPasswordResetRequest *hook.Hook[*AdminConfirmPasswordResetEvent]
+	onAdminAfterConfirmPasswordResetRequest  *hook.Hook[*AdminConfirmPasswordResetEvent]
 
 	// record auth API event hooks
 	onRecordAuthRequest                       *hook.Hook[*RecordAuthEvent]
+	onRecordBeforeAuthWithPasswordRequest     *hook.Hook[*RecordAuthWithPasswordEvent]
+	onRecordAfterAuthWithPasswordRequest      *hook.Hook[*RecordAuthWithPasswordEvent]
+	onRecordBeforeAuthWithOAuth2Request       *hook.Hook[*RecordAuthWithOAuth2Event]
+	onRecordAfterAuthWithOAuth2Request        *hook.Hook[*RecordAuthWithOAuth2Event]
+	onRecordBeforeAuthRefreshRequest          *hook.Hook[*RecordAuthRefreshEvent]
+	onRecordAfterAuthRefreshRequest           *hook.Hook[*RecordAuthRefreshEvent]
 	onRecordBeforeRequestPasswordResetRequest *hook.Hook[*RecordRequestPasswordResetEvent]
 	onRecordAfterRequestPasswordResetRequest  *hook.Hook[*RecordRequestPasswordResetEvent]
 	onRecordBeforeConfirmPasswordResetRequest *hook.Hook[*RecordConfirmPasswordResetEvent]
@@ -212,18 +226,32 @@ func NewBaseApp(config *BaseAppConfig) *BaseApp {
 		onFileDownloadRequest: &hook.Hook[*FileDownloadEvent]{},
 
 		// admin API event hooks
-		onAdminsListRequest:        &hook.Hook[*AdminsListEvent]{},
-		onAdminViewRequest:         &hook.Hook[*AdminViewEvent]{},
-		onAdminBeforeCreateRequest: &hook.Hook[*AdminCreateEvent]{},
-		onAdminAfterCreateRequest:  &hook.Hook[*AdminCreateEvent]{},
-		onAdminBeforeUpdateRequest: &hook.Hook[*AdminUpdateEvent]{},
-		onAdminAfterUpdateRequest:  &hook.Hook[*AdminUpdateEvent]{},
-		onAdminBeforeDeleteRequest: &hook.Hook[*AdminDeleteEvent]{},
-		onAdminAfterDeleteRequest:  &hook.Hook[*AdminDeleteEvent]{},
-		onAdminAuthRequest:         &hook.Hook[*AdminAuthEvent]{},
+		onAdminsListRequest:                      &hook.Hook[*AdminsListEvent]{},
+		onAdminViewRequest:                       &hook.Hook[*AdminViewEvent]{},
+		onAdminBeforeCreateRequest:               &hook.Hook[*AdminCreateEvent]{},
+		onAdminAfterCreateRequest:                &hook.Hook[*AdminCreateEvent]{},
+		onAdminBeforeUpdateRequest:               &hook.Hook[*AdminUpdateEvent]{},
+		onAdminAfterUpdateRequest:                &hook.Hook[*AdminUpdateEvent]{},
+		onAdminBeforeDeleteRequest:               &hook.Hook[*AdminDeleteEvent]{},
+		onAdminAfterDeleteRequest:                &hook.Hook[*AdminDeleteEvent]{},
+		onAdminAuthRequest:                       &hook.Hook[*AdminAuthEvent]{},
+		onAdminBeforeAuthWithPasswordRequest:     &hook.Hook[*AdminAuthWithPasswordEvent]{},
+		onAdminAfterAuthWithPasswordRequest:      &hook.Hook[*AdminAuthWithPasswordEvent]{},
+		onAdminBeforeAuthRefreshRequest:          &hook.Hook[*AdminAuthRefreshEvent]{},
+		onAdminAfterAuthRefreshRequest:           &hook.Hook[*AdminAuthRefreshEvent]{},
+		onAdminBeforeRequestPasswordResetRequest: &hook.Hook[*AdminRequestPasswordResetEvent]{},
+		onAdminAfterRequestPasswordResetRequest:  &hook.Hook[*AdminRequestPasswordResetEvent]{},
+		onAdminBeforeConfirmPasswordResetRequest: &hook.Hook[*AdminConfirmPasswordResetEvent]{},
+		onAdminAfterConfirmPasswordResetRequest:  &hook.Hook[*AdminConfirmPasswordResetEvent]{},
 
 		// record auth API event hooks
 		onRecordAuthRequest:                       &hook.Hook[*RecordAuthEvent]{},
+		onRecordBeforeAuthWithPasswordRequest:     &hook.Hook[*RecordAuthWithPasswordEvent]{},
+		onRecordAfterAuthWithPasswordRequest:      &hook.Hook[*RecordAuthWithPasswordEvent]{},
+		onRecordBeforeAuthWithOAuth2Request:       &hook.Hook[*RecordAuthWithOAuth2Event]{},
+		onRecordAfterAuthWithOAuth2Request:        &hook.Hook[*RecordAuthWithOAuth2Event]{},
+		onRecordBeforeAuthRefreshRequest:          &hook.Hook[*RecordAuthRefreshEvent]{},
+		onRecordAfterAuthRefreshRequest:           &hook.Hook[*RecordAuthRefreshEvent]{},
 		onRecordBeforeRequestPasswordResetRequest: &hook.Hook[*RecordRequestPasswordResetEvent]{},
 		onRecordAfterRequestPasswordResetRequest:  &hook.Hook[*RecordRequestPasswordResetEvent]{},
 		onRecordBeforeConfirmPasswordResetRequest: &hook.Hook[*RecordConfirmPasswordResetEvent]{},
@@ -665,12 +693,68 @@ func (app *BaseApp) OnAdminAuthRequest() *hook.Hook[*AdminAuthEvent] {
 	return app.onAdminAuthRequest
 }
 
+func (app *BaseApp) OnAdminBeforeAuthWithPasswordRequest() *hook.Hook[*AdminAuthWithPasswordEvent] {
+	return app.onAdminBeforeAuthWithPasswordRequest
+}
+
+func (app *BaseApp) OnAdminAfterAuthWithPasswordRequest() *hook.Hook[*AdminAuthWithPasswordEvent] {
+	return app.onAdminAfterAuthWithPasswordRequest
+}
+
+func (app *BaseApp) OnAdminBeforeAuthRefreshRequest() *hook.Hook[*AdminAuthRefreshEvent] {
+	return app.onAdminBeforeAuthRefreshRequest
+}
+
+func (app *BaseApp) OnAdminAfterAuthRefreshRequest() *hook.Hook[*AdminAuthRefreshEvent] {
+	return app.onAdminAfterAuthRefreshRequest
+}
+
+func (app *BaseApp) OnAdminBeforeRequestPasswordResetRequest() *hook.Hook[*AdminRequestPasswordResetEvent] {
+	return app.onAdminBeforeRequestPasswordResetRequest
+}
+
+func (app *BaseApp) OnAdminAfterRequestPasswordResetRequest() *hook.Hook[*AdminRequestPasswordResetEvent] {
+	return app.onAdminAfterRequestPasswordResetRequest
+}
+
+func (app *BaseApp) OnAdminBeforeConfirmPasswordResetRequest() *hook.Hook[*AdminConfirmPasswordResetEvent] {
+	return app.onAdminBeforeConfirmPasswordResetRequest
+}
+
+func (app *BaseApp) OnAdminAfterConfirmPasswordResetRequest() *hook.Hook[*AdminConfirmPasswordResetEvent] {
+	return app.onAdminAfterConfirmPasswordResetRequest
+}
+
 // -------------------------------------------------------------------
 // Record auth API event hooks
 // -------------------------------------------------------------------
 
 func (app *BaseApp) OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent] {
 	return app.onRecordAuthRequest
+}
+
+func (app *BaseApp) OnRecordBeforeAuthWithPasswordRequest() *hook.Hook[*RecordAuthWithPasswordEvent] {
+	return app.onRecordBeforeAuthWithPasswordRequest
+}
+
+func (app *BaseApp) OnRecordAfterAuthWithPasswordRequest() *hook.Hook[*RecordAuthWithPasswordEvent] {
+	return app.onRecordAfterAuthWithPasswordRequest
+}
+
+func (app *BaseApp) OnRecordBeforeAuthWithOAuth2Request() *hook.Hook[*RecordAuthWithOAuth2Event] {
+	return app.onRecordBeforeAuthWithOAuth2Request
+}
+
+func (app *BaseApp) OnRecordAfterAuthWithOAuth2Request() *hook.Hook[*RecordAuthWithOAuth2Event] {
+	return app.onRecordAfterAuthWithOAuth2Request
+}
+
+func (app *BaseApp) OnRecordBeforeAuthRefreshRequest() *hook.Hook[*RecordAuthRefreshEvent] {
+	return app.onRecordBeforeAuthRefreshRequest
+}
+
+func (app *BaseApp) OnRecordAfterAuthRefreshRequest() *hook.Hook[*RecordAuthRefreshEvent] {
+	return app.onRecordAfterAuthRefreshRequest
 }
 
 func (app *BaseApp) OnRecordBeforeRequestPasswordResetRequest() *hook.Hook[*RecordRequestPasswordResetEvent] {

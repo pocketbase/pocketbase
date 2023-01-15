@@ -56,15 +56,15 @@ func (form *CollectionsImport) Validate() error {
 //
 // You can optionally provide a list of InterceptorFunc to further
 // modify the form behavior before persisting it.
-func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc) error {
+func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc[[]*models.Collection]) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
 
-	return runInterceptors(func() error {
+	return runInterceptors(form.Collections, func(collections []*models.Collection) error {
 		return form.dao.RunInTransaction(func(txDao *daos.Dao) error {
 			importErr := txDao.ImportCollections(
-				form.Collections,
+				collections,
 				form.DeleteMissing,
 				form.beforeRecordsSync,
 			)

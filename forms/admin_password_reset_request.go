@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/mails"
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -55,7 +56,10 @@ func (form *AdminPasswordResetRequest) Validate() error {
 
 // Submit validates and submits the form.
 // On success sends a password reset email to the `form.Email` admin.
-func (form *AdminPasswordResetRequest) Submit() error {
+//
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *AdminPasswordResetRequest) Submit(interceptors ...InterceptorFunc[*models.Admin]) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -71,12 +75,14 @@ func (form *AdminPasswordResetRequest) Submit() error {
 		return errors.New("You have already requested a password reset.")
 	}
 
-	if err := mails.SendAdminPasswordReset(form.app, admin); err != nil {
-		return err
-	}
-
 	// update last sent timestamp
 	admin.LastResetSentAt = types.NowDateTime()
 
-	return form.dao.SaveAdmin(admin)
+	return runInterceptors(admin, func(m *models.Admin) error {
+		if err := mails.SendAdminPasswordReset(form.app, m); err != nil {
+			return err
+		}
+
+		return form.dao.SaveAdmin(m)
+	}, interceptors...)
 }

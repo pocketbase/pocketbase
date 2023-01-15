@@ -224,10 +224,12 @@ func (api *recordApi) create(c echo.Context) error {
 	}
 
 	// create the record
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(m *models.Record) error {
+			event.Record = m
+
 			return api.app.OnRecordBeforeCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.Record); err != nil {
 					return NewBadRequestError("Failed to create record.", err)
 				}
 
@@ -241,7 +243,9 @@ func (api *recordApi) create(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterCreateRequest().Trigger(event)
+		if err := api.app.OnRecordAfterCreateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -308,10 +312,12 @@ func (api *recordApi) update(c echo.Context) error {
 	}
 
 	// update the record
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(m *models.Record) error {
+			event.Record = m
+
 			return api.app.OnRecordBeforeUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.Record); err != nil {
 					return NewBadRequestError("Failed to update record.", err)
 				}
 
@@ -325,7 +331,9 @@ func (api *recordApi) update(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterUpdateRequest().Trigger(event)
+		if err := api.app.OnRecordAfterUpdateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -382,7 +390,9 @@ func (api *recordApi) delete(c echo.Context) error {
 	})
 
 	if handlerErr == nil {
-		api.app.OnRecordAfterDeleteRequest().Trigger(event)
+		if err := api.app.OnRecordAfterDeleteRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return handlerErr

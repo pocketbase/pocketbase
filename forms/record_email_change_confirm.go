@@ -114,9 +114,9 @@ func (form *RecordEmailChangeConfirm) parseToken(token string) (*models.Record, 
 // Submit validates and submits the auth record email change confirmation form.
 // On success returns the updated auth record associated to `form.Token`.
 //
-// You can optionally provide a list of InterceptorWithRecordFunc to
+// You can optionally provide a list of InterceptorFunc to
 // further modify the form behavior before persisting it.
-func (form *RecordEmailChangeConfirm) Submit(interceptors ...InterceptorWithRecordFunc) (*models.Record, error) {
+func (form *RecordEmailChangeConfirm) Submit(interceptors ...InterceptorFunc[*models.Record]) (*models.Record, error) {
 	if err := form.Validate(); err != nil {
 		return nil, err
 	}
@@ -130,7 +130,8 @@ func (form *RecordEmailChangeConfirm) Submit(interceptors ...InterceptorWithReco
 	authRecord.SetVerified(true)
 	authRecord.RefreshTokenKey() // invalidate old tokens
 
-	interceptorsErr := runInterceptorsWithRecord(authRecord, func(m *models.Record) error {
+	interceptorsErr := runInterceptors(authRecord, func(m *models.Record) error {
+		authRecord = m
 		return form.dao.SaveRecord(m)
 	}, interceptors...)
 

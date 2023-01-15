@@ -14,7 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-func TestAdminAuthWithEmail(t *testing.T) {
+func TestAdminAuthWithPassword(t *testing.T) {
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "empty data",
@@ -39,6 +39,9 @@ func TestAdminAuthWithEmail(t *testing.T) {
 			Body:            strings.NewReader(`{"identity":"missing@example.com","password":"1234567890"}`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnAdminBeforeAuthWithPasswordRequest": 1,
+			},
 		},
 		{
 			Name:            "wrong password",
@@ -47,6 +50,9 @@ func TestAdminAuthWithEmail(t *testing.T) {
 			Body:            strings.NewReader(`{"identity":"test@example.com","password":"invalid"}`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnAdminBeforeAuthWithPasswordRequest": 1,
+			},
 		},
 		{
 			Name:           "valid email/password (guest)",
@@ -59,7 +65,9 @@ func TestAdminAuthWithEmail(t *testing.T) {
 				`"token":`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnAdminAuthRequest": 1,
+				"OnAdminBeforeAuthWithPasswordRequest": 1,
+				"OnAdminAfterAuthWithPasswordRequest":  1,
+				"OnAdminAuthRequest":                   1,
 			},
 		},
 		{
@@ -76,7 +84,9 @@ func TestAdminAuthWithEmail(t *testing.T) {
 				`"token":`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnAdminAuthRequest": 1,
+				"OnAdminBeforeAuthWithPasswordRequest": 1,
+				"OnAdminAfterAuthWithPasswordRequest":  1,
+				"OnAdminAuthRequest":                   1,
 			},
 		},
 	}
@@ -120,10 +130,12 @@ func TestAdminRequestPasswordReset(t *testing.T) {
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelBeforeUpdate":                  1,
-				"OnModelAfterUpdate":                   1,
-				"OnMailerBeforeAdminResetPasswordSend": 1,
-				"OnMailerAfterAdminResetPasswordSend":  1,
+				"OnModelBeforeUpdate":                      1,
+				"OnModelAfterUpdate":                       1,
+				"OnMailerBeforeAdminResetPasswordSend":     1,
+				"OnMailerAfterAdminResetPasswordSend":      1,
+				"OnAdminBeforeRequestPasswordResetRequest": 1,
+				"OnAdminAfterRequestPasswordResetRequest":  1,
 			},
 		},
 		{
@@ -206,8 +218,10 @@ func TestAdminConfirmPasswordReset(t *testing.T) {
 			}`),
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelBeforeUpdate": 1,
-				"OnModelAfterUpdate":  1,
+				"OnModelBeforeUpdate":                      1,
+				"OnModelAfterUpdate":                       1,
+				"OnAdminBeforeConfirmPasswordResetRequest": 1,
+				"OnAdminAfterConfirmPasswordResetRequest":  1,
 			},
 		},
 	}
@@ -259,7 +273,9 @@ func TestAdminRefresh(t *testing.T) {
 				`"token":`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnAdminAuthRequest": 1,
+				"OnAdminAuthRequest":              1,
+				"OnAdminBeforeAuthRefreshRequest": 1,
+				"OnAdminAfterAuthRefreshRequest":  1,
 			},
 		},
 	}

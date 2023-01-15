@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"database/sql"
 	"errors"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -46,19 +47,34 @@ func (form *AdminLogin) Validate() error {
 
 // Submit validates and submits the admin form.
 // On success returns the authorized admin model.
-func (form *AdminLogin) Submit() (*models.Admin, error) {
+//
+// You can optionally provide a list of InterceptorFunc to
+// further modify the form behavior before persisting it.
+func (form *AdminLogin) Submit(interceptors ...InterceptorFunc[*models.Admin]) (*models.Admin, error) {
 	if err := form.Validate(); err != nil {
 		return nil, err
 	}
 
-	admin, err := form.dao.FindAdminByEmail(form.Identity)
-	if err != nil {
-		return nil, err
+	admin, fetchErr := form.dao.FindAdminByEmail(form.Identity)
+
+	// ignore not found errors to allow custom fetch implementations
+	if fetchErr != nil && !errors.Is(fetchErr, sql.ErrNoRows) {
+		return nil, fetchErr
 	}
 
-	if admin.ValidatePassword(form.Password) {
-		return admin, nil
+	interceptorsErr := runInterceptors(admin, func(m *models.Admin) error {
+		admin = m
+
+		if admin == nil || !admin.ValidatePassword(form.Password) {
+			return errors.New("Invalid login credentials.")
+		}
+
+		return nil
+	}, interceptors...)
+
+	if interceptorsErr != nil {
+		return nil, interceptorsErr
 	}
 
-	return nil, errors.New("Invalid login credentials.")
+	return admin, nil
 }

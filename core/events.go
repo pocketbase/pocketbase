@@ -5,6 +5,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/models/settings"
+	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
@@ -140,6 +141,24 @@ type RecordAuthEvent struct {
 	Meta        any
 }
 
+type RecordAuthWithPasswordEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+	Identity    string
+	Password    string
+}
+
+type RecordAuthWithOAuth2Event struct {
+	HttpContext echo.Context
+	Record      *models.Record
+	OAuth2User  *auth.AuthUser
+}
+
+type RecordAuthRefreshEvent struct {
+	HttpContext echo.Context
+	Record      *models.Record
+}
+
 type RecordRequestPasswordResetEvent struct {
 	HttpContext echo.Context
 	Record      *models.Record
@@ -216,6 +235,28 @@ type AdminAuthEvent struct {
 	HttpContext echo.Context
 	Admin       *models.Admin
 	Token       string
+}
+
+type AdminAuthWithPasswordEvent struct {
+	HttpContext echo.Context
+	Admin       *models.Admin
+	Identity    string
+	Password    string
+}
+
+type AdminAuthRefreshEvent struct {
+	HttpContext echo.Context
+	Admin       *models.Admin
+}
+
+type AdminRequestPasswordResetEvent struct {
+	HttpContext echo.Context
+	Admin       *models.Admin
+}
+
+type AdminConfirmPasswordResetEvent struct {
+	HttpContext echo.Context
+	Admin       *models.Admin
 }
 
 // -------------------------------------------------------------------

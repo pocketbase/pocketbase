@@ -72,9 +72,9 @@ func (form *RecordPasswordResetConfirm) checkToken(value any) error {
 // Submit validates and submits the form.
 // On success returns the updated auth record associated to `form.Token`.
 //
-// You can optionally provide a list of InterceptorWithRecordFunc to
-// further modify the form behavior before persisting it.
-func (form *RecordPasswordResetConfirm) Submit(interceptors ...InterceptorWithRecordFunc) (*models.Record, error) {
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *RecordPasswordResetConfirm) Submit(interceptors ...InterceptorFunc[*models.Record]) (*models.Record, error) {
 	if err := form.Validate(); err != nil {
 		return nil, err
 	}
@@ -91,7 +91,8 @@ func (form *RecordPasswordResetConfirm) Submit(interceptors ...InterceptorWithRe
 		return nil, err
 	}
 
-	interceptorsErr := runInterceptorsWithRecord(authRecord, func(m *models.Record) error {
+	interceptorsErr := runInterceptors(authRecord, func(m *models.Record) error {
+		authRecord = m
 		return form.dao.SaveRecord(m)
 	}, interceptors...)
 

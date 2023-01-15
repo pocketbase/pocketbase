@@ -8,6 +8,27 @@
 
 - Added LiveChat OAuth2 provider ([#1573](https://github.com/pocketbase/pocketbase/pull/1573); thanks @mariosant).
 
+- Added new event hooks:
+
+  ```go
+  OnRecordBeforeAuthWithPasswordRequest()
+  OnRecordAfterAuthWithPasswordRequest()
+  OnRecordBeforeAuthWithOAuth2Request()
+  OnRecordAfterAuthWithOAuth2Request()
+  OnRecordBeforeAuthRefreshRequest()
+  OnRecordAfterAuthRefreshRequest()
+  OnAdminBeforeAuthWithPasswordRequest()
+  OnAdminAfterAuthWithPasswordRequest()
+  OnAdminBeforeAuthRefreshRequest()
+  OnAdminAfterAuthRefreshRequest()
+  OnAdminBeforeRequestPasswordResetRequest()
+  OnAdminAfterRequestPasswordResetRequest()
+  OnAdminBeforeConfirmPasswordResetRequest()
+  OnAdminAfterConfirmPasswordResetRequest()
+  ```
+
+- Refactored all `forms` Submit interceptors to use a Generic data type as their payload.
+
 
 ## v0.11.2
 

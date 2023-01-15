@@ -351,10 +351,10 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 		}
 
 		interceptorCalls := 0
-		interceptor := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-			return func() error {
+		interceptor := func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
+			return func(c *models.Collection) error {
 				interceptorCalls++
-				return next()
+				return next(c)
 			}
 		}
 
@@ -451,16 +451,16 @@ func TestCollectionUpsertSubmitInterceptors(t *testing.T) {
 	interceptorCollectionName := ""
 
 	interceptor1Called := false
-	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor1 := func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
+		return func(c *models.Collection) error {
 			interceptor1Called = true
-			return next()
+			return next(c)
 		}
 	}
 
 	interceptor2Called := false
-	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor2 := func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
+		return func(c *models.Collection) error {
 			interceptorCollectionName = collection.Name // to check if the record was filled
 			interceptor2Called = true
 			return testErr

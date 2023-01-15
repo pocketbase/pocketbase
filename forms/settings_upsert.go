@@ -50,12 +50,14 @@ func (form *SettingsUpsert) Validate() error {
 //
 // You can optionally provide a list of InterceptorFunc to further
 // modify the form behavior before persisting it.
-func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc) error {
+func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc[*settings.Settings]) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
 
-	return runInterceptors(func() error {
+	return runInterceptors(form.Settings, func(s *settings.Settings) error {
+		form.Settings = s
+
 		encryptionKey := os.Getenv(form.app.EncryptionEnv())
 		if err := form.dao.SaveSettings(form.Settings, encryptionKey); err != nil {
 			return err

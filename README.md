@@ -100,7 +100,7 @@ To build the minimal standalone executable, like the prebuilt ones in the releas
 2. Navigate to `examples/base`
 3. Run `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`
     (_https://go.dev/doc/install/source#environment_)
-4. Start the generated executable by running `./base serve`.
+4. Start the created executable by running `./base serve`.
 
 The supported build targets by the non-cgo driver at the moment are:
 ```

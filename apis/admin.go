@@ -59,21 +59,57 @@ func (api *adminApi) authRefresh(c echo.Context) error {
 		return NewNotFoundError("Missing auth admin context.", nil)
 	}
 
-	return api.authResponse(c, admin)
+	event := &core.AdminAuthRefreshEvent{
+		HttpContext: c,
+		Admin:       admin,
+	}
+
+	handlerErr := api.app.OnAdminBeforeAuthRefreshRequest().Trigger(event, func(e *core.AdminAuthRefreshEvent) error {
+		return api.authResponse(e.HttpContext, e.Admin)
+	})
+
+	if handlerErr == nil {
+		if err := api.app.OnAdminAfterAuthRefreshRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+	}
+
+	return handlerErr
 }
 
 func (api *adminApi) authWithPassword(c echo.Context) error {
 	form := forms.NewAdminLogin(api.app)
-	if readErr := c.Bind(form); readErr != nil {
-		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
+	if err := c.Bind(form); err != nil {
+		return NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
-	admin, submitErr := form.Submit()
-	if submitErr != nil {
-		return NewBadRequestError("Failed to authenticate.", submitErr)
+	event := &core.AdminAuthWithPasswordEvent{
+		HttpContext: c,
+		Password:    form.Password,
+		Identity:    form.Identity,
 	}
 
-	return api.authResponse(c, admin)
+	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(admin *models.Admin) error {
+			event.Admin = admin
+
+			return api.app.OnAdminBeforeAuthWithPasswordRequest().Trigger(event, func(e *core.AdminAuthWithPasswordEvent) error {
+				if err := next(e.Admin); err != nil {
+					return NewBadRequestError("Failed to authenticate.", err)
+				}
+
+				return api.authResponse(e.HttpContext, e.Admin)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		if err := api.app.OnAdminAfterAuthWithPasswordRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+	}
+
+	return submitErr
 }
 
 func (api *adminApi) requestPasswordReset(c echo.Context) error {
@@ -86,15 +122,41 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
-	// run in background because we don't need to show the result
-	// (prevents admins enumeration)
-	routine.FireAndForget(func() {
-		if err := form.Submit(); err != nil && api.app.IsDebug() {
-			log.Println(err)
+	event := &core.AdminRequestPasswordResetEvent{
+		HttpContext: c,
+	}
+
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(Admin *models.Admin) error {
+			event.Admin = Admin
+
+			return api.app.OnAdminBeforeRequestPasswordResetRequest().Trigger(event, func(e *core.AdminRequestPasswordResetEvent) error {
+				// run in background because we don't need to show the result to the client
+				routine.FireAndForget(func() {
+					if err := next(e.Admin); err != nil && api.app.IsDebug() {
+						log.Println(err)
+					}
+				})
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
 		}
 	})
 
-	return c.NoContent(http.StatusNoContent)
+	if submitErr == nil {
+		if err := api.app.OnAdminAfterRequestPasswordResetRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+	} else if api.app.IsDebug() {
+		log.Println(submitErr)
+	}
+
+	// don't return the response error to prevent emails enumeration
+	if !c.Response().Committed {
+		c.NoContent(http.StatusNoContent)
+	}
+
+	return nil
 }
 
 func (api *adminApi) confirmPasswordReset(c echo.Context) error {
@@ -103,12 +165,31 @@ func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	_, submitErr := form.Submit()
-	if submitErr != nil {
-		return NewBadRequestError("Failed to set new password.", submitErr)
+	event := &core.AdminConfirmPasswordResetEvent{
+		HttpContext: c,
 	}
 
-	return c.NoContent(http.StatusNoContent)
+	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(admin *models.Admin) error {
+			event.Admin = admin
+
+			return api.app.OnAdminBeforeConfirmPasswordResetRequest().Trigger(event, func(e *core.AdminConfirmPasswordResetEvent) error {
+				if err := next(e.Admin); err != nil {
+					return NewBadRequestError("Failed to set new password.", err)
+				}
+
+				return e.HttpContext.NoContent(http.StatusNoContent)
+			})
+		}
+	})
+
+	if submitErr == nil {
+		if err := api.app.OnAdminAfterConfirmPasswordResetRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+	}
+
+	return submitErr
 }
 
 func (api *adminApi) list(c echo.Context) error {
@@ -174,10 +255,12 @@ func (api *adminApi) create(c echo.Context) error {
 	}
 
 	// create the admin
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(m *models.Admin) error {
+			event.Admin = m
+
 			return api.app.OnAdminBeforeCreateRequest().Trigger(event, func(e *core.AdminCreateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.Admin); err != nil {
 					return NewBadRequestError("Failed to create admin.", err)
 				}
 
@@ -187,7 +270,9 @@ func (api *adminApi) create(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnAdminAfterCreateRequest().Trigger(event)
+		if err := api.app.OnAdminAfterCreateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -217,10 +302,12 @@ func (api *adminApi) update(c echo.Context) error {
 	}
 
 	// update the admin
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(m *models.Admin) error {
+			event.Admin = m
+
 			return api.app.OnAdminBeforeUpdateRequest().Trigger(event, func(e *core.AdminUpdateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.Admin); err != nil {
 					return NewBadRequestError("Failed to update admin.", err)
 				}
 
@@ -230,7 +317,9 @@ func (api *adminApi) update(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnAdminAfterUpdateRequest().Trigger(event)
+		if err := api.app.OnAdminAfterUpdateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -261,7 +350,9 @@ func (api *adminApi) delete(c echo.Context) error {
 	})
 
 	if handlerErr == nil {
-		api.app.OnAdminAfterDeleteRequest().Trigger(event)
+		if err := api.app.OnAdminAfterDeleteRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return handlerErr

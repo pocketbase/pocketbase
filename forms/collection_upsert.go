@@ -345,7 +345,7 @@ func (form *CollectionUpsert) checkOptions(value any) error {
 //
 // You can optionally provide a list of InterceptorFunc to further
 // modify the form behavior before persisting it.
-func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc) error {
+func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc[*models.Collection]) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -377,7 +377,7 @@ func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc) error {
 	form.collection.DeleteRule = form.DeleteRule
 	form.collection.SetOptions(form.Options)
 
-	return runInterceptors(func() error {
-		return form.dao.SaveCollection(form.collection)
+	return runInterceptors(form.collection, func(collection *models.Collection) error {
+		return form.dao.SaveCollection(collection)
 	}, interceptors...)
 }
