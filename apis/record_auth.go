@@ -270,6 +270,9 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 					return NewBadRequestError("Failed to authenticate.", err)
 				}
 
+				e.Record = data.Record
+				e.OAuth2User = data.OAuth2User
+
 				return api.authResponse(e.HttpContext, e.Record, e.OAuth2User)
 			})
 		}
