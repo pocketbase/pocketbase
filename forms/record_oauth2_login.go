@@ -194,7 +194,10 @@ func (form *RecordOAuth2Login) submit(data *RecordOAuth2LoginData) error {
 			createForm := NewRecordUpsert(form.app, data.Record)
 			createForm.SetFullManageAccess(true)
 			createForm.SetDao(txDao)
-			if data.OAuth2User.Username != "" && usernameRegex.MatchString(data.OAuth2User.Username) {
+			if data.OAuth2User.Username != "" &&
+				len(data.OAuth2User.Username) >= 3 &&
+				len(data.OAuth2User.Username) <= 150 &&
+				usernameRegex.MatchString(data.OAuth2User.Username) {
 				createForm.Username = form.dao.SuggestUniqueAuthRecordUsername(
 					form.collection.Id,
 					data.OAuth2User.Username,

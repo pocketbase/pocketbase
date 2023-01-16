@@ -47,6 +47,7 @@ type Settings struct {
 	StravaAuth    AuthProviderConfig `form:"stravaAuth" json:"stravaAuth"`
 	GiteeAuth     AuthProviderConfig `form:"giteeAuth" json:"giteeAuth"`
 	LivechatAuth  AuthProviderConfig `form:"livechatAuth" json:"livechatAuth"`
+	AuthentikAuth AuthProviderConfig `form:"authentikAuth" json:"authentikAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -136,6 +137,9 @@ func New() *Settings {
 		LivechatAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		AuthentikAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -168,6 +172,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.StravaAuth),
 		validation.Field(&s.GiteeAuth),
 		validation.Field(&s.LivechatAuth),
+		validation.Field(&s.AuthentikAuth),
 	)
 }
 
@@ -225,6 +230,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.StravaAuth.ClientSecret,
 		&clone.GiteeAuth.ClientSecret,
 		&clone.LivechatAuth.ClientSecret,
+		&clone.AuthentikAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -257,6 +263,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameStrava:    s.StravaAuth,
 		auth.NameGitee:     s.GiteeAuth,
 		auth.NameLivechat:  s.LivechatAuth,
+		auth.NameAuthentik: s.AuthentikAuth,
 	}
 }
 

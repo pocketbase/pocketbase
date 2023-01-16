@@ -780,10 +780,10 @@ func TestRecordUpsertAuthRecord(t *testing.T) {
 			true,
 		},
 		{
-			"invalid username length (more than 100)",
+			"invalid username length (more than 150)",
 			"",
 			map[string]any{
-				"username":        strings.Repeat("a", 101),
+				"username":        strings.Repeat("a", 151),
 				"password":        "12345678",
 				"passwordConfirm": "12345678",
 			},

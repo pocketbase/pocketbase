@@ -8,6 +8,8 @@
 
 - Added LiveChat OAuth2 provider ([#1573](https://github.com/pocketbase/pocketbase/pull/1573); thanks @mariosant).
 
+- Added Authentik OAuth2 provider ([#1377](https://github.com/pocketbase/pocketbase/pull/1377); thanks @pr0ton11).
+
 - Added new event hooks:
 
   ```go

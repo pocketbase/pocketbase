@@ -1,5 +1,6 @@
 import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
 import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
+import AuthentikOptions  from "@/components/settings/providers/AuthentikOptions.svelte";
 
 // Object list with all supported OAuth2 providers in the format:
 // ```
@@ -63,5 +64,10 @@ export default {
     livechatAuth: {
         title: "LiveChat",
         icon:  "ri-chat-1-fill",
+    },
+    authentikAuth: {
+        title: "Authentik",
+        icon:  "ri-lock-fill",
+        optionsComponent: AuthentikOptions,
     },
 };
