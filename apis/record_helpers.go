@@ -2,13 +2,17 @@ package apis
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
+	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
@@ -39,6 +43,53 @@ func RequestData(c echo.Context) *models.RequestData {
 	c.Set(ContextRequestDataKey, result)
 
 	return result
+}
+
+func RecordAuthResponse(app core.App, c echo.Context, authRecord *models.Record, meta any) error {
+	token, tokenErr := tokens.NewRecordAuthToken(app, authRecord)
+	if tokenErr != nil {
+		return NewBadRequestError("Failed to create auth token.", tokenErr)
+	}
+
+	event := &core.RecordAuthEvent{
+		HttpContext: c,
+		Record:      authRecord,
+		Token:       token,
+		Meta:        meta,
+	}
+
+	return app.OnRecordAuthRequest().Trigger(event, func(e *core.RecordAuthEvent) error {
+		// allow always returning the email address of the authenticated account
+		e.Record.IgnoreEmailVisibility(true)
+
+		// expand record relations
+		expands := strings.Split(c.QueryParam(expandQueryParam), ",")
+		if len(expands) > 0 {
+			// create a copy of the cached request data and adjust it to the current auth record
+			requestData := *RequestData(e.HttpContext)
+			requestData.Admin = nil
+			requestData.AuthRecord = e.Record
+			failed := app.Dao().ExpandRecord(
+				e.Record,
+				expands,
+				expandFetch(app.Dao(), &requestData),
+			)
+			if len(failed) > 0 && app.IsDebug() {
+				log.Println("Failed to expand relations: ", failed)
+			}
+		}
+
+		result := map[string]any{
+			"token":  e.Token,
+			"record": e.Record,
+		}
+
+		if e.Meta != nil {
+			result["meta"] = e.Meta
+		}
+
+		return e.HttpContext.JSON(http.StatusOK, result)
+	})
 }
 
 // EnrichRecord parses the request context and enrich the provided record:

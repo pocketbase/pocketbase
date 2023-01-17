@@ -33,6 +33,8 @@
 
 - Refactored all `forms` Submit interceptors to use a Generic data type as their payload.
 
+- Added new helper `apis.RecordAuthResponse(app, httpContext, record, meta)` to return a standard Record auth API response ([#1623](https://github.com/pocketbase/pocketbase/issues/1623)).
+
 
 ## v0.11.2
 

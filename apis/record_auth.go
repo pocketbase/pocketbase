@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -14,7 +13,6 @@ import (
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
-	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/search"
@@ -51,53 +49,6 @@ type recordAuthApi struct {
 	app core.App
 }
 
-func (api *recordAuthApi) authResponse(c echo.Context, authRecord *models.Record, meta any) error {
-	token, tokenErr := tokens.NewRecordAuthToken(api.app, authRecord)
-	if tokenErr != nil {
-		return NewBadRequestError("Failed to create auth token.", tokenErr)
-	}
-
-	event := &core.RecordAuthEvent{
-		HttpContext: c,
-		Record:      authRecord,
-		Token:       token,
-		Meta:        meta,
-	}
-
-	return api.app.OnRecordAuthRequest().Trigger(event, func(e *core.RecordAuthEvent) error {
-		// allow always returning the email address of the authenticated account
-		e.Record.IgnoreEmailVisibility(true)
-
-		// expand record relations
-		expands := strings.Split(c.QueryParam(expandQueryParam), ",")
-		if len(expands) > 0 {
-			// create a copy of the cached request data and adjust it to the current auth record
-			requestData := *RequestData(e.HttpContext)
-			requestData.Admin = nil
-			requestData.AuthRecord = e.Record
-			failed := api.app.Dao().ExpandRecord(
-				e.Record,
-				expands,
-				expandFetch(api.app.Dao(), &requestData),
-			)
-			if len(failed) > 0 && api.app.IsDebug() {
-				log.Println("Failed to expand relations: ", failed)
-			}
-		}
-
-		result := map[string]any{
-			"token":  e.Token,
-			"record": e.Record,
-		}
-
-		if e.Meta != nil {
-			result["meta"] = e.Meta
-		}
-
-		return e.HttpContext.JSON(http.StatusOK, result)
-	})
-}
-
 func (api *recordAuthApi) authRefresh(c echo.Context) error {
 	record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
 	if record == nil {
@@ -110,7 +61,7 @@ func (api *recordAuthApi) authRefresh(c echo.Context) error {
 	}
 
 	handlerErr := api.app.OnRecordBeforeAuthRefreshRequest().Trigger(event, func(e *core.RecordAuthRefreshEvent) error {
-		return api.authResponse(e.HttpContext, e.Record, nil)
+		return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil)
 	})
 
 	if handlerErr == nil {
@@ -273,7 +224,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 				e.Record = data.Record
 				e.OAuth2User = data.OAuth2User
 
-				return api.authResponse(e.HttpContext, e.Record, e.OAuth2User)
+				return RecordAuthResponse(api.app, e.HttpContext, e.Record, e.OAuth2User)
 			})
 		}
 	})
@@ -313,7 +264,7 @@ func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 					return NewBadRequestError("Failed to authenticate.", err)
 				}
 
-				return api.authResponse(e.HttpContext, e.Record, nil)
+				return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil)
 			})
 		}
 	})
