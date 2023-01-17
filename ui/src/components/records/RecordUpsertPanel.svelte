@@ -21,6 +21,7 @@
     import JsonField from "@/components/records/fields/JsonField.svelte";
     import FileField from "@/components/records/fields/FileField.svelte";
     import RelationField from "@/components/records/fields/RelationField.svelte";
+    import EditorField from "@/components/records/fields/EditorField.svelte";
     import ExternalAuthsList from "@/components/records/ExternalAuthsList.svelte";
 
     const dispatch = createEventDispatcher();
@@ -350,6 +351,8 @@
                     <EmailField {field} bind:value={record[field.name]} />
                 {:else if field.type === "url"}
                     <UrlField {field} bind:value={record[field.name]} />
+                {:else if field.type === "editor"}
+                    <EditorField {field} bind:value={record[field.name]} />
                 {:else if field.type === "date"}
                     <DateField {field} bind:value={record[field.name]} />
                 {:else if field.type === "select"}

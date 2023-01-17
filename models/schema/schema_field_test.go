@@ -40,7 +40,7 @@ func TestAuthFieldNames(t *testing.T) {
 
 func TestFieldTypes(t *testing.T) {
 	result := schema.FieldTypes()
-	expected := 10
+	expected := 11
 
 	if len(result) != expected {
 		t.Fatalf("Expected %d types, got %d (%v)", expected, len(result), result)
@@ -79,6 +79,10 @@ func TestSchemaFieldColDefinition(t *testing.T) {
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeUrl, Name: "test"},
+			"TEXT DEFAULT ''",
+		},
+		{
+			schema.SchemaField{Type: schema.FieldTypeEditor, Name: "test"},
 			"TEXT DEFAULT ''",
 		},
 		{
@@ -478,6 +482,11 @@ func TestSchemaFieldInitOptions(t *testing.T) {
 			`{"system":false,"id":"","name":"","type":"url","required":false,"unique":false,"options":{"exceptDomains":null,"onlyDomains":null}}`,
 		},
 		{
+			schema.SchemaField{Type: schema.FieldTypeEditor},
+			false,
+			`{"system":false,"id":"","name":"","type":"editor","required":false,"unique":false,"options":{}}`,
+		},
+		{
 			schema.SchemaField{Type: schema.FieldTypeDate},
 			false,
 			`{"system":false,"id":"","name":"","type":"date","required":false,"unique":false,"options":{"min":"","max":""}}`,
@@ -561,6 +570,13 @@ func TestSchemaFieldPrepareValue(t *testing.T) {
 		{schema.SchemaField{Type: schema.FieldTypeUrl}, []int{1, 2}, `""`},
 		{schema.SchemaField{Type: schema.FieldTypeUrl}, "test", `"test"`},
 		{schema.SchemaField{Type: schema.FieldTypeUrl}, 123, `"123"`},
+
+		// text
+		{schema.SchemaField{Type: schema.FieldTypeEditor}, nil, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeEditor}, "", `""`},
+		{schema.SchemaField{Type: schema.FieldTypeEditor}, []int{1, 2}, `""`},
+		{schema.SchemaField{Type: schema.FieldTypeEditor}, "test", `"test"`},
+		{schema.SchemaField{Type: schema.FieldTypeEditor}, 123, `"123"`},
 
 		// json
 		{schema.SchemaField{Type: schema.FieldTypeJson}, nil, "null"},
@@ -1036,6 +1052,40 @@ func TestSchemaFieldPrepareValueWithModifier(t *testing.T) {
 		{
 			"url cast check",
 			schema.SchemaField{Type: schema.FieldTypeUrl},
+			123,
+			"-",
+			"new",
+			`"123"`,
+		},
+
+		// editor
+		{
+			"editor with '+' modifier",
+			schema.SchemaField{Type: schema.FieldTypeEditor},
+			"base",
+			"+",
+			"new",
+			`"base"`,
+		},
+		{
+			"editor with '-' modifier",
+			schema.SchemaField{Type: schema.FieldTypeEditor},
+			"base",
+			"-",
+			"new",
+			`"base"`,
+		},
+		{
+			"editor with unknown modifier",
+			schema.SchemaField{Type: schema.FieldTypeEditor},
+			"base",
+			"?",
+			"new",
+			`"base"`,
+		},
+		{
+			"editor cast check",
+			schema.SchemaField{Type: schema.FieldTypeEditor},
 			123,
 			"-",
 			"new",
@@ -1791,6 +1841,18 @@ func TestUrlOptionsValidate(t *testing.T) {
 				OnlyDomains:   []string{"test2.com"},
 			},
 			[]string{"exceptDomains", "onlyDomains"},
+		},
+	}
+
+	checkFieldOptionsScenarios(t, scenarios)
+}
+
+func TestEditorOptionsValidate(t *testing.T) {
+	scenarios := []fieldOptionsScenario{
+		{
+			"empty",
+			schema.EditorOptions{},
+			[]string{},
 		},
 	}
 

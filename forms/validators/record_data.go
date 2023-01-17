@@ -117,6 +117,8 @@ func (validator *RecordDataValidator) checkFieldValue(field *schema.SchemaField,
 		return validator.checkEmailValue(field, value)
 	case schema.FieldTypeUrl:
 		return validator.checkUrlValue(field, value)
+	case schema.FieldTypeEditor:
+		return validator.checkEditorValue(field, value)
 	case schema.FieldTypeDate:
 		return validator.checkDateValue(field, value)
 	case schema.FieldTypeSelect:
@@ -233,6 +235,10 @@ func (validator *RecordDataValidator) checkUrlValue(field *schema.SchemaField, v
 		return validation.NewError("validation_url_domain_not_allowed", "Url domain is not allowed")
 	}
 
+	return nil
+}
+
+func (validator *RecordDataValidator) checkEditorValue(field *schema.SchemaField, value any) error {
 	return nil
 }
 

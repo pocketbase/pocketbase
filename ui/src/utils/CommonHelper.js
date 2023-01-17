@@ -458,6 +458,22 @@ export default class CommonHelper {
     }
 
     /**
+     * Returns the plain text version (aka. strip tags) of the provided string.
+     *
+     * @param  {String} str
+     * @return {String}
+     */
+    static plainText(str) {
+        if (!str) {
+            return "";
+        }
+
+        const doc = new DOMParser().parseFromString(str, "text/html");
+
+        return (doc.body.innerText || "").trim();
+    }
+
+    /**
      * Normalizes and converts the provided string to a slug.
      *
      * @param  {String} str
@@ -805,24 +821,6 @@ export default class CommonHelper {
     }
 
     /**
-     * Returns the default Flatpickr initialization options.
-     *
-     * @return {Object}
-     */
-    static defaultFlatpickrOptions() {
-        return {
-            dateFormat: "Y-m-d H:i:S",
-            disableMobile: true,
-            allowInput: true,
-            enableTime: true,
-            time_24hr: true,
-            locale: {
-                firstDayOfWeek: 1,
-            },
-        }
-    }
-
-    /**
      * Returns a dummy collection record object.
      *
      * @param  {Object} collection
@@ -972,6 +970,8 @@ export default class CommonHelper {
                 return "ri-mail-line";
             case "url":
                 return "ri-link";
+            case "editor":
+                return "ri-edit-2-line";
             case "select":
                 return "ri-list-check";
             case "json":
@@ -1135,5 +1135,91 @@ export default class CommonHelper {
         return new Promise((resolve) => {
             setTimeout(resolve, 0);
         });
+    }
+
+    /**
+     * Returns the default Flatpickr initialization options.
+     *
+     * @return {Object}
+     */
+    static defaultFlatpickrOptions() {
+        return {
+            dateFormat: "Y-m-d H:i:S",
+            disableMobile: true,
+            allowInput: true,
+            enableTime: true,
+            time_24hr: true,
+            locale: {
+                firstDayOfWeek: 1,
+            },
+        }
+    }
+
+    /**
+     * Returns the default rich editor options.
+     *
+     * @return {Object}
+     */
+    static defaultEditorOptions() {
+        return {
+            branding: false,
+            promotion: false,
+            menubar: false,
+            min_height: 270,
+            height: 270,
+            max_height: 700,
+            autoresize_bottom_margin: 30,
+            skin: "pocketbase",
+            content_css: "pocketbase",
+            content_style: "body { font-size: 14px }",
+            plugins: [
+                "autoresize",
+                "autolink",
+                "lists",
+                "link",
+                "image",
+                "searchreplace",
+                "fullscreen",
+                "insertdatetime",
+                "media",
+                "table",
+                "code",
+            ],
+            toolbar:
+                "code undo redo insert | styles | bold italic | alignleft aligncenter alignright | bullist numlist | link image table | forecolor backcolor fullscreen",
+            file_picker_types: "image",
+            // @see https://www.tiny.cloud/docs/tinymce/6/file-image-upload/#interactive-example
+            file_picker_callback: (cb, value, meta) => {
+                const input = document.createElement("input");
+                input.setAttribute("type", "file");
+                input.setAttribute("accept", "image/*");
+
+                input.addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+
+                    reader.addEventListener("load", () => {
+                        if (!tinymce) {
+                            return;
+                        }
+
+                        // We need to register the blob in TinyMCEs image blob registry.
+                        // In future TinyMCE version this part will be handled internally.
+                        const id = "blobid" + new Date().getTime();
+                        const blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                        const base64 = reader.result.split(",")[1];
+                        const blobInfo = blobCache.create(id, file, base64);
+                        blobCache.add(blobInfo);
+
+                        // call the callback and populate the Title field with the file name
+                        cb(blobInfo.blobUri(), { title: file.name });
+                    });
+
+                    reader.readAsDataURL(file);
+                });
+
+                input.click();
+            },
+        };
     }
 }

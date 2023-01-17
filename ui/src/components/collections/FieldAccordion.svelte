@@ -14,6 +14,7 @@
     import BoolOptions from "@/components/collections/schema/BoolOptions.svelte";
     import EmailOptions from "@/components/collections/schema/EmailOptions.svelte";
     import UrlOptions from "@/components/collections/schema/UrlOptions.svelte";
+    import EditorOptions from "@/components/collections/schema/EditorOptions.svelte";
     import DateOptions from "@/components/collections/schema/DateOptions.svelte";
     import SelectOptions from "@/components/collections/schema/SelectOptions.svelte";
     import JsonOptions from "@/components/collections/schema/JsonOptions.svelte";
@@ -262,6 +263,8 @@
                     <EmailOptions {key} bind:options={field.options} />
                 {:else if field.type === "url"}
                     <UrlOptions {key} bind:options={field.options} />
+                {:else if field.type === "editor"}
+                    <EditorOptions {key} bind:options={field.options} />
                 {:else if field.type === "date"}
                     <DateOptions {key} bind:options={field.options} />
                 {:else if field.type === "select"}

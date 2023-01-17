@@ -114,6 +114,9 @@
         overflow-y: auto; /* fallback */
         overflow-y: overlay;
         scroll-behavior: smooth;
+        .tox-fullscreen & {
+            z-index: 9;
+        }
     }
     .panel-header ~ .panel-content {
         padding-top: 5px;

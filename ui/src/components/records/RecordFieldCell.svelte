@@ -11,7 +11,7 @@
     // rough text cut to avoid rendering large chunk of texts
     function cutText(text) {
         text = text || "";
-        return text.length > 200 ? text.substring(0, 200) : text;
+        return text.length > 150 ? text.substring(0, 150) : text;
     }
 </script>
 
@@ -31,8 +31,12 @@
             use:tooltip={"Open in new tab"}
             on:click|stopPropagation
         >
-            {record[field.name]}
+            {cutText(record[field.name])}
         </a>
+    {:else if field.type === "editor"}
+        <span class="txt txt-ellipsis">
+            {cutText(CommonHelper.plainText(record[field.name]))}
+        </span>
     {:else if field.type === "date"}
         <FormattedDate date={record[field.name]} />
     {:else if field.type === "json"}

@@ -86,6 +86,7 @@ const (
 	FieldTypeBool     string = "bool"
 	FieldTypeEmail    string = "email"
 	FieldTypeUrl      string = "url"
+	FieldTypeEditor   string = "editor"
 	FieldTypeDate     string = "date"
 	FieldTypeSelect   string = "select"
 	FieldTypeJson     string = "json"
@@ -104,6 +105,7 @@ func FieldTypes() []string {
 		FieldTypeBool,
 		FieldTypeEmail,
 		FieldTypeUrl,
+		FieldTypeEditor,
 		FieldTypeDate,
 		FieldTypeSelect,
 		FieldTypeJson,
@@ -238,6 +240,8 @@ func (f *SchemaField) InitOptions() error {
 		options = &EmailOptions{}
 	case FieldTypeUrl:
 		options = &UrlOptions{}
+	case FieldTypeEditor:
+		options = &EditorOptions{}
 	case FieldTypeDate:
 		options = &DateOptions{}
 	case FieldTypeSelect:
@@ -272,7 +276,7 @@ func (f *SchemaField) PrepareValue(value any) any {
 	f.InitOptions()
 
 	switch f.Type {
-	case FieldTypeText, FieldTypeEmail, FieldTypeUrl:
+	case FieldTypeText, FieldTypeEmail, FieldTypeUrl, FieldTypeEditor:
 		return cast.ToString(value)
 	case FieldTypeJson:
 		val, _ := types.ParseJsonRaw(value)
@@ -469,6 +473,15 @@ func (o UrlOptions) Validate() error {
 			validation.When(len(o.ExceptDomains) > 0, validation.Empty).Else(validation.Each(is.Domain)),
 		),
 	)
+}
+
+// -------------------------------------------------------------------
+
+type EditorOptions struct {
+}
+
+func (o EditorOptions) Validate() error {
+	return nil
 }
 
 // -------------------------------------------------------------------
