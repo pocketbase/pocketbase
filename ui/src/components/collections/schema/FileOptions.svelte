@@ -57,23 +57,8 @@
                     <span class="txt link-primary">Choose presets</span>
                     <i class="ri-arrow-drop-down-fill" />
                     <Toggler class="dropdown dropdown-sm dropdown-nowrap">
-                        <div
-                            tabindex="0"
-                            class="dropdown-item closable"
-                            on:click={() => {
-                                options.mimeTypes = [
-                                    "application/pdf",
-                                    "application/msword",
-                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                                    "application/vnd.ms-excel",
-                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                ];
-                            }}
-                        >
-                            <span class="txt">Documents (pdf, doc/docx, xls/xlsx)</span>
-                        </div>
-                        <div
-                            tabindex="0"
+                        <button
+                            type="button"
                             class="dropdown-item closable"
                             on:click={() => {
                                 options.mimeTypes = [
@@ -87,9 +72,24 @@
                             }}
                         >
                             <span class="txt">Images (jpg, png, svg, gif, webp)</span>
-                        </div>
-                        <div
-                            tabindex="0"
+                        </button>
+                        <button
+                            type="button"
+                            class="dropdown-item closable"
+                            on:click={() => {
+                                options.mimeTypes = [
+                                    "application/pdf",
+                                    "application/msword",
+                                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                    "application/vnd.ms-excel",
+                                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                ];
+                            }}
+                        >
+                            <span class="txt">Documents (pdf, doc/docx, xls/xlsx)</span>
+                        </button>
+                        <button
+                            type="button"
                             class="dropdown-item closable"
                             on:click={() => {
                                 options.mimeTypes = [
@@ -101,9 +101,9 @@
                             }}
                         >
                             <span class="txt">Videos (mp4, avi, mov, 3gp)</span>
-                        </div>
-                        <div
-                            tabindex="0"
+                        </button>
+                        <button
+                            type="button"
                             class="dropdown-item closable"
                             on:click={() => {
                                 options.mimeTypes = [
@@ -114,7 +114,16 @@
                             }}
                         >
                             <span class="txt">Archives (zip, 7zip, rar)</span>
-                        </div>
+                        </button>
+                        <a
+                            href="https://github.com/gabriel-vasile/mimetype/blob/master/supported_mimes.md"
+                            class="btn btn-sm btn-hint closable"
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            on:click|stopPropagation
+                        >
+                            List with all suported mimetypes
+                        </a>
                     </Toggler>
                 </button>
             </div>
