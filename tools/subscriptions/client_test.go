@@ -129,3 +129,17 @@ func TestSetAndGet(t *testing.T) {
 		t.Errorf("Expected 1, got %v", result)
 	}
 }
+
+func TestDiscard(t *testing.T) {
+	c := subscriptions.NewDefaultClient()
+
+	if v := c.IsDiscarded(); v {
+		t.Fatal("Expected false, got true")
+	}
+
+	c.Discard()
+
+	if v := c.IsDiscarded(); !v {
+		t.Fatal("Expected true, got false")
+	}
+}

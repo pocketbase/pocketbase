@@ -18,12 +18,19 @@ func NewBroker() *Broker {
 	}
 }
 
-// Clients returns all registered clients.
+// Clients returns a shallow copy of all registered clients indexed
+// with their connection id.
 func (b *Broker) Clients() map[string]Client {
 	b.mux.RLock()
 	defer b.mux.RUnlock()
 
-	return b.clients
+	copy := make(map[string]Client, len(b.clients))
+
+	for id, c := range b.clients {
+		copy[id] = c
+	}
+
+	return copy
 }
 
 // ClientById finds a registered client by its id.
@@ -56,9 +63,8 @@ func (b *Broker) Unregister(clientId string) {
 	b.mux.Lock()
 	defer b.mux.Unlock()
 
-	// Note:
-	// There is no need to explicitly close the client's channel since it will be GC-ed anyway.
-	// Addinitionally, closing the channel explicitly could panic when there are several
-	// subscriptions attached to the client that needs to receive the same event.
-	delete(b.clients, clientId)
+	if client, ok := b.clients[clientId]; ok {
+		client.Discard()
+		delete(b.clients, clientId)
+	}
 }
