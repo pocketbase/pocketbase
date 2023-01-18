@@ -122,7 +122,7 @@
                             rel="noreferrer noopener"
                             on:click|stopPropagation
                         >
-                            List with all suported mimetypes
+                            List with all supported mimetypes
                         </a>
                     </Toggler>
                 </button>
