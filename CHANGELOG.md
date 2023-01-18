@@ -1,3 +1,14 @@
+## v0.11.3
+
+- Fix realtime API panic on concurrent clients iteration ([#1628](https://github.com/pocketbase/pocketbase/issues/1628))
+
+  - `app.SubscriptionsBroker().Clients()` now returns a shallow copy of the underlying map.
+
+  - Added `Discard()` and `IsDiscarded()` helper methods to the `subscriptions.Client` interface.
+
+  - Slow clients should no longer "block" the main action completion.
+
+
 ## v0.11.2
 
 - Fixed `fs.DeleteByPrefix()` hang on invalid S3 settings ([#1575](https://github.com/pocketbase/pocketbase/discussions/1575#discussioncomment-4661089)).

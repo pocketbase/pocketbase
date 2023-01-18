@@ -24,6 +24,13 @@ func TestClients(t *testing.T) {
 	b.Register(subscriptions.NewDefaultClient())
 	b.Register(subscriptions.NewDefaultClient())
 
+	// check if it is a shallow copy
+	clients := b.Clients()
+	for k := range clients {
+		delete(clients, k)
+	}
+
+	// should return a new copy
 	if total := len(b.Clients()); total != 2 {
 		t.Fatalf("Expected 2 clients, got %v", total)
 	}

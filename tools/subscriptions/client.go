@@ -37,6 +37,16 @@ type Client interface {
 
 	// Get retrieves the key value from the client's context.
 	Get(key string) any
+
+	// Discard marks the client as "discarded", meaning that it
+	// shouldn't be used anymore for sending new messages.
+	//
+	// It is safe to call Discard() multiple times.
+	Discard()
+
+	// IsDiscarded indicates whether the client has been "discarded"
+	// and should no longer be used.
+	IsDiscarded() bool
 }
 
 // ensures that DefaultClient satisfies the Client interface
@@ -45,6 +55,7 @@ var _ Client = (*DefaultClient)(nil)
 // DefaultClient defines a generic subscription client.
 type DefaultClient struct {
 	mux           sync.RWMutex
+	isDiscarded   bool
 	id            string
 	store         map[string]any
 	channel       chan Message
@@ -63,11 +74,17 @@ func NewDefaultClient() *DefaultClient {
 
 // Id implements the [Client.Id] interface method.
 func (c *DefaultClient) Id() string {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
 	return c.id
 }
 
 // Channel implements the [Client.Channel] interface method.
 func (c *DefaultClient) Channel() chan Message {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
 	return c.channel
 }
 
@@ -138,4 +155,20 @@ func (c *DefaultClient) Set(key string, value any) {
 	defer c.mux.Unlock()
 
 	c.store[key] = value
+}
+
+// Discard implements the [Client.Discard] interface method.
+func (c *DefaultClient) Discard() {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	c.isDiscarded = true
+}
+
+// IsDiscarded implements the [Client.IsDiscarded] interface method.
+func (c *DefaultClient) IsDiscarded() bool {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	return c.isDiscarded
 }
