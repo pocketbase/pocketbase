@@ -61,6 +61,11 @@ export default {
         title: "Gitee",
         icon:  "ri-git-repository-fill",
     },
+    giteaAuth: {
+        title: "Gitea",
+        icon:  "ri-cup-fill",
+        optionsComponent: SelfHostedOptions,
+    },
     livechatAuth: {
         title: "LiveChat",
         icon:  "ri-chat-1-fill",

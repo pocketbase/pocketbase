@@ -48,6 +48,7 @@ type Settings struct {
 	GiteeAuth     AuthProviderConfig `form:"giteeAuth" json:"giteeAuth"`
 	LivechatAuth  AuthProviderConfig `form:"livechatAuth" json:"livechatAuth"`
 	AuthentikAuth AuthProviderConfig `form:"authentikAuth" json:"authentikAuth"`
+	GiteaAuth     AuthProviderConfig `form:"giteaAuth" json:"giteaAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -140,6 +141,9 @@ func New() *Settings {
 		AuthentikAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		GiteaAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -173,6 +177,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.GiteeAuth),
 		validation.Field(&s.LivechatAuth),
 		validation.Field(&s.AuthentikAuth),
+		validation.Field(&s.GiteaAuth),
 	)
 }
 
@@ -231,6 +236,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.GiteeAuth.ClientSecret,
 		&clone.LivechatAuth.ClientSecret,
 		&clone.AuthentikAuth.ClientSecret,
+		&clone.GiteaAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -264,6 +270,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameGitee:     s.GiteeAuth,
 		auth.NameLivechat:  s.LivechatAuth,
 		auth.NameAuthentik: s.AuthentikAuth,
+		auth.NameGitea:     s.GiteaAuth,
 	}
 }
 

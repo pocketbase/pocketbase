@@ -10,6 +10,8 @@
 
 - Added Authentik OAuth2 provider ([#1377](https://github.com/pocketbase/pocketbase/pull/1377); thanks @pr0ton11).
 
+- Added Gitea OAuth2 provider ([#1643](https://github.com/pocketbase/pocketbase/pull/1643); thanks @hlanderdev).
+
 - Added rich text editor (`editor`) field for HTML content based on TinyMCE ([#370](https://github.com/pocketbase/pocketbase/issues/370)).
 
 - Added new event hooks:
