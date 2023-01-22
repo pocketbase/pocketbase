@@ -264,7 +264,7 @@
                 {#each filteredItems as item}
                     <div
                         tabindex="0"
-                        class="dropdown-item option closable"
+                        class="dropdown-item option {multiple ? '':'closable'}"
                         class:selected={isSelected(item)}
                         on:click={(e) => handleOptionSelect(e, item)}
                         on:keydown={(e) => handleOptionKeypress(e, item)}
