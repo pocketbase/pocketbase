@@ -51,6 +51,6 @@
             <i class="ri-external-link-line" />
         </a>
         <div class="flex-fill" />
-        <button type="button" class="btn btn-secondary" on:click={hide}>Close</button>
+        <button type="button" class="btn btn-transparent" on:click={hide}>Close</button>
     </svelte:fragment>
 </OverlayPanel>

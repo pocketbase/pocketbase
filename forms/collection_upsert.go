@@ -121,7 +121,7 @@ func (form *CollectionUpsert) Validate() error {
 			validation.By(form.checkMinSchemaFields),
 			validation.By(form.ensureNoSystemFieldsChange),
 			validation.By(form.ensureNoFieldsTypeChange),
-			validation.By(form.ensureExistingRelationCollectionId),
+			validation.By(form.checkRelationFields),
 			validation.When(
 				isAuth,
 				validation.By(form.ensureNoAuthFieldName),
@@ -204,8 +204,16 @@ func (form *CollectionUpsert) ensureNoFieldsTypeChange(value any) error {
 	return nil
 }
 
-func (form *CollectionUpsert) ensureExistingRelationCollectionId(value any) error {
+func (form *CollectionUpsert) checkRelationFields(value any) error {
 	v, _ := value.(schema.Schema)
+
+	systemDisplayFields := schema.BaseModelFieldNames()
+	systemDisplayFields = append(systemDisplayFields,
+		schema.FieldNameUsername,
+		schema.FieldNameEmail,
+		schema.FieldNameEmailVisibility,
+		schema.FieldNameVerified,
+	)
 
 	for i, field := range v.Fields() {
 		if field.Type != schema.FieldTypeRelation {
@@ -217,11 +225,32 @@ func (form *CollectionUpsert) ensureExistingRelationCollectionId(value any) erro
 			continue
 		}
 
-		if err := form.dao.FindById(&models.Collection{}, options.CollectionId); err != nil {
-			return validation.Errors{fmt.Sprint(i): validation.NewError(
-				"validation_field_invalid_relation",
-				"The relation collection doesn't exist.",
-			)}
+		collection, err := form.dao.FindCollectionByNameOrId(options.CollectionId)
+
+		// validate collectionId
+		if err != nil || collection.Id != options.CollectionId {
+			return validation.Errors{fmt.Sprint(i): validation.Errors{
+				"options": validation.Errors{
+					"collectionId": validation.NewError(
+						"validation_field_invalid_relation",
+						"The relation collection doesn't exist.",
+					),
+				}},
+			}
+		}
+
+		// validate displayFields (if any)
+		for _, name := range options.DisplayFields {
+			if collection.Schema.GetFieldByName(name) == nil && !list.ExistInSlice(name, systemDisplayFields) {
+				return validation.Errors{fmt.Sprint(i): validation.Errors{
+					"options": validation.Errors{
+						"displayFields": validation.NewError(
+							"validation_field_invalid_relation_displayFields",
+							fmt.Sprintf("%q does not exist in the related %q collection.", name, collection.Name),
+						),
+					}},
+				}
+			}
 		}
 	}
 

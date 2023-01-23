@@ -23,7 +23,7 @@
      *     <h5 slot="header">My title</h5>
      *     <p>Lorem ipsum dolor sit amet...</p>
      *     <svelte:fragment slot="footer">
-     *         <button class="btn btn-secondary">Cancel</button>
+     *         <button class="btn btn-transparent">Cancel</button>
      *         <button class="btn btn-expanded">Save</button>
      *     </svelte:fragment>
      * </OverlayPanel>
@@ -52,8 +52,11 @@
     let transitionSpeed = 150;
     let contentScrollThrottle;
     let contentScrollClass = "";
+    let oldActive = active;
 
-    $: onActiveChange(active);
+    $: if (oldActive != active) {
+        onActiveChange(active);
+    }
 
     $: handleContentScroll(contentPanel, true);
 
@@ -81,8 +84,10 @@
         return active;
     }
 
-    async function onActiveChange(state) {
-        if (state) {
+    async function onActiveChange(newState) {
+        oldActive = newState;
+
+        if (newState) {
             oldFocusedElem = document.activeElement;
             wrapper?.focus();
             dispatch("show");
@@ -91,7 +96,10 @@
             clearTimeout(contentScrollThrottle);
             oldFocusedElem?.focus();
             dispatch("hide");
-            document.body.classList.remove("overlay-active");
+
+            if (getHolder().querySelectorAll(".overlay-panel-container.active").length <= 1) {
+                document.body.classList.remove("overlay-active");
+            }
         }
 
         await tick();
@@ -194,6 +202,7 @@
 <div bind:this={wrapper} class="overlay-panel-wrapper">
     {#if active}
         <div class="overlay-panel-container" class:padded={popup} class:active>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="overlay"
                 on:click|preventDefault={() => (overlayClose ? hide() : true)}
@@ -208,9 +217,9 @@
             >
                 <div class="overlay-panel-section panel-header">
                     {#if btnClose && !popup}
-                        <div class="overlay-close" on:click|preventDefault={hide}>
+                        <button type="button" class="overlay-close" on:click|preventDefault={hide}>
                             <i class="ri-close-line" />
-                        </div>
+                        </button>
                     {/if}
 
                     <slot name="header" />
@@ -218,7 +227,7 @@
                     {#if btnClose && popup}
                         <button
                             type="button"
-                            class="btn btn-sm btn-circle btn-secondary btn-close m-l-auto"
+                            class="btn btn-sm btn-circle btn-transparent btn-close m-l-auto"
                             on:click|preventDefault={hide}
                         >
                             <i class="ri-close-line txt-lg" />

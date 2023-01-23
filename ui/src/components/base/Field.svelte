@@ -33,6 +33,7 @@
     });
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div bind:this={container} class={classes} class:error={fieldErrors.length} on:click>
     <slot {uniqueId} />
 

@@ -246,7 +246,7 @@
 
         {#if !record.isNew}
             <div class="flex-fill" />
-            <button type="button" class="btn btn-sm btn-circle btn-secondary">
+            <button type="button" class="btn btn-sm btn-circle btn-transparent">
                 <div class="content">
                     <i class="ri-more-line" />
                     <Toggler class="dropdown dropdown-right dropdown-nowrap">
@@ -381,7 +381,7 @@
     </div>
 
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-secondary" disabled={isSaving} on:click={() => hide()}>
+        <button type="button" class="btn btn-transparent" disabled={isSaving} on:click={() => hide()}>
             <span class="txt">Cancel</span>
         </button>
         <button

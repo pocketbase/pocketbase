@@ -112,31 +112,38 @@ button {
         border: 2px solid currentColor;
         background: #fff;
     }
-    &.btn-secondary,
-    &.btn-outline {
-        box-shadow: none;
-        color: var(--txtPrimaryColor);
+
+    @mixin btnOpacity($base: 1, $hover: 1, $active: 1) {
         &:before {
-            opacity: 0;
-            background: var(--baseAlt4Color);
+            opacity: $base;
         }
         &:focus-visible,
-        &:hover,
-        &:active,
-        &.active {
+        &:hover {
             &:before {
-                opacity: 0.11;
+                opacity: $hover;
             }
         }
         &.active,
         &:active {
             &:before {
-                opacity: 0.22;
+                opacity: $active;
             }
+        }
+    }
+
+    &.btn-secondary,
+    &.btn-transparent,
+    &.btn-outline {
+        box-shadow: none;
+        color: var(--txtPrimaryColor);
+        @include btnOpacity(0, 0.25, 0.35);
+        &:before {
+            background: var(--baseAlt3Color);
         }
         @each $name, $color in $variationsMap {
             &.btn-#{$name} {
                 color: $color;
+                @include btnOpacity(0, 0.15, 0.25);
                 &:before {
                     background: $color;
                 }
@@ -144,6 +151,20 @@ button {
         }
         &.btn-hint {
             color: var(--txtHintColor);
+            &:focus-visible,
+            &:hover,
+            &:active,
+            &.active {
+                color: var(--txtPrimaryColor);
+            }
+        }
+    }
+    &.btn-secondary {
+        @include btnOpacity(0.3, 0.5, 0.7);
+        @each $name, $color in $variationsMap {
+            &.btn-#{$name} {
+                @include btnOpacity(0.15, 0.25, 0.3);
+            }
         }
     }
 
@@ -157,7 +178,7 @@ button {
         &:before {
             display: none;
         }
-        &.btn-secondary {
+        &.btn-transparent {
             background: none;
         }
         &.btn-outline {
@@ -167,7 +188,7 @@ button {
 
     // sizes
     &.btn-expanded {
-        min-width: 140px;
+        min-width: 150px;
     }
     &.btn-expanded-sm {
         min-width: 90px;
@@ -231,7 +252,7 @@ button {
         padding: 0;
         gap: 0;
         i {
-            $iconSize: 24px;
+            $iconSize: 19px;
             font-size: 1.2857rem;
             text-align: center;
             width: $iconSize;
@@ -242,9 +263,11 @@ button {
                 display: block;
             }
         }
-        &.btn-sm i,
-        &.btn-xs i {
+        &.btn-sm i {
             font-size: 1.1rem;
+        }
+        &.btn-xs i {
+            font-size: 1.05rem;
         }
     }
 
@@ -1025,51 +1048,34 @@ select {
     }
 }
 
-
-.form-field-file {
+.form-field-list {
     label {
-        border-bottom: 0;
+        padding-bottom: 10px;
     }
-    .filename {
-        align-items: center;
-        max-width: 100%;
-        min-width: 0;
-        margin-right: auto;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        i {
-            text-decoration: none;
-        }
-    }
-    .files-list {
-        @extend %block;
-        padding-top: 5px;
+    .list {
         background: var(--baseAlt1Color);
         border: 0;
+        border-radius: 0;
         border-bottom-left-radius: var(--baseRadius);
         border-bottom-right-radius: var(--baseRadius);
-        transition: background var(--baseAnimationSpeed);
         .list-item {
-            display: flex;
-            width: 100%;
-            align-items: center;
-            row-gap: 10px;
-            column-gap: var(--xsSpacing);
-            padding: 10px 15px;
-            min-height: 44px;
             border-top: 1px solid var(--baseAlt2Color);
-            &:last-child {
-                border-radius: inherit;
-                border-bottom: 0;
+            &.selected {
+                background: var(--baseAlt2Color);
             }
-        }
-        .btn-list-item {
-            padding: 5px;
+            &.handle:not(.disabled) {
+                &:hover,
+                &:focus-visible {
+                    background: var(--baseAlt2Color);
+                }
+                &:active {
+                    background: var(--baseAlt3Color);
+                }
+            }
         }
     }
     &:focus-within {
-        .files-list, label {
+        .list, label {
             background: var(--baseAlt1Color);
         }
     }

@@ -86,6 +86,7 @@
         extraAutocompleteKeys={["email"]}
         on:submit={(e) => (filter = e.detail)}
     />
+    <div class="clearfix m-b-base" />
 
     <HorizontalScroller class="table-wrapper">
         <table class="table" class:table-loading={isLoading}>

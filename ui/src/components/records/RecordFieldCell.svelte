@@ -1,18 +1,13 @@
 <script>
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
-    import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
+    import IdLabel from "@/components/base/IdLabel.svelte";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
+    import RecordInfo from "@/components/records/RecordInfo.svelte";
 
     export let record;
     export let field;
-
-    // rough text cut to avoid rendering large chunk of texts
-    function cutText(text) {
-        text = text || "";
-        return text.length > 150 ? text.substring(0, 150) : text;
-    }
 </script>
 
 <td class="col-type-{field.type} col-field-{field.name}">
@@ -31,17 +26,17 @@
             use:tooltip={"Open in new tab"}
             on:click|stopPropagation
         >
-            {cutText(record[field.name])}
+            {CommonHelper.truncate(record[field.name])}
         </a>
     {:else if field.type === "editor"}
-        <span class="txt txt-ellipsis">
-            {cutText(CommonHelper.plainText(record[field.name]))}
+        <span class="txt">
+            {CommonHelper.truncate(CommonHelper.plainText(record[field.name]), 300, true)}
         </span>
     {:else if field.type === "date"}
         <FormattedDate date={record[field.name]} />
     {:else if field.type === "json"}
         <span class="txt txt-ellipsis">
-            {cutText(JSON.stringify(record[field.name]))}
+            {CommonHelper.truncate(JSON.stringify(record[field.name]))}
         </span>
     {:else if field.type === "select"}
         <div class="inline-flex">
@@ -50,11 +45,21 @@
             {/each}
         </div>
     {:else if field.type === "relation" || field.type === "user"}
+        {@const relations = CommonHelper.toArray(record[field.name])}
+        {@const expanded = CommonHelper.toArray(record.expand[field.name])}
         <div class="inline-flex">
-            {#each CommonHelper.toArray(record[field.name]).slice(0, 20) as item, i (i + item)}
-                <IdLabel id={item} />
-            {/each}
-            {#if CommonHelper.toArray(record[field.name]).length > 20}
+            {#if expanded.length}
+                {#each expanded.slice(0, 20) as item, i (i + item)}
+                    <span class="label">
+                        <RecordInfo record={item} displayFields={field.options?.displayFields} />
+                    </span>
+                {/each}
+            {:else}
+                {#each relations.slice(0, 20) as item, i (i + item)}
+                    <IdLabel id={item} />
+                {/each}
+            {/if}
+            {#if relations.length > 20}
                 ...
             {/if}
         </div>
@@ -65,8 +70,8 @@
             {/each}
         </div>
     {:else}
-        <span class="txt txt-ellipsis" title={cutText(record[field.name])}>
-            {cutText(record[field.name])}
+        <span class="txt txt-ellipsis" title={CommonHelper.truncate(record[field.name])}>
+            {CommonHelper.truncate(record[field.name])}
         </span>
     {/if}
 </td>

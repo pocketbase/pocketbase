@@ -382,7 +382,7 @@
 
                 <div class="flex m-t-base">
                     {#if !!schemas}
-                        <button type="button" class="btn btn-secondary link-hint" on:click={() => clear()}>
+                        <button type="button" class="btn btn-transparent link-hint" on:click={() => clear()}>
                             <span class="txt">Clear</span>
                         </button>
                     {/if}

@@ -221,7 +221,7 @@
     <div class="block txt-center m-t-xs">
         <button
             type="button"
-            class="btn btn-lg btn-secondary btn-expanded"
+            class="btn btn-lg btn-transparent btn-expanded"
             class:btn-loading={isLoading}
             class:btn-disabled={isLoading}
             on:click={() => load(currentPage + 1)}

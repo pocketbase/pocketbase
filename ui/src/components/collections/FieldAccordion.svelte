@@ -183,7 +183,7 @@
         {#if field.toDelete}
             <button
                 type="button"
-                class="btn btn-sm btn-danger btn-secondary"
+                class="btn btn-sm btn-danger btn-transparent"
                 on:click|stopPropagation={() => {
                     field.toDelete = false;
                 }}
@@ -311,7 +311,7 @@
                 <div class="col-sm-4 txt-right">
                     <div class="flex-fill" />
                     <div class="inline-flex flex-gap-sm flex-nowrap">
-                        <button type="button" class="btn btn-circle btn-sm btn-secondary">
+                        <button type="button" class="btn btn-circle btn-sm btn-transparent">
                             <i class="ri-more-line" />
                             <Toggler
                                 class="dropdown dropdown-sm dropdown-upside dropdown-right dropdown-nowrap no-min-width"

@@ -6,6 +6,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
@@ -82,6 +83,8 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 		newTableName := newCollection.Name
 		oldSchema := oldCollection.Schema
 		newSchema := newCollection.Schema
+		deletedFieldNames := []string{}
+		renamedFieldNames := map[string]string{}
 
 		// check for renamed table
 		if !strings.EqualFold(oldTableName, newTableName) {
@@ -101,6 +104,8 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 			if err != nil {
 				return err
 			}
+
+			deletedFieldNames = append(deletedFieldNames, oldField.Name)
 		}
 
 		// check for new or renamed columns
@@ -131,6 +136,8 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 				if err != nil {
 					return err
 				}
+
+				renamedFieldNames[oldField.Name] = field.Name
 			}
 		}
 
@@ -142,6 +149,50 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 			}
 		}
 
-		return nil
+		return txDao.syncCollectionReferences(newCollection, renamedFieldNames, deletedFieldNames)
 	})
+}
+
+func (dao *Dao) syncCollectionReferences(collection *models.Collection, renamedFieldNames map[string]string, deletedFieldNames []string) error {
+	if len(renamedFieldNames) == 0 && len(deletedFieldNames) == 0 {
+		return nil // nothing to sync
+	}
+
+	refs, err := dao.FindCollectionReferences(collection)
+	if err != nil {
+		return err
+	}
+
+	for refCollection, refFields := range refs {
+		for _, refField := range refFields {
+			options, _ := refField.Options.(*schema.RelationOptions)
+			if options == nil {
+				continue
+			}
+
+			// remove deleted (if any)
+			newDisplayFields := list.SubtractSlice(options.DisplayFields, deletedFieldNames)
+
+			for old, new := range renamedFieldNames {
+				for i, name := range newDisplayFields {
+					if name == old {
+						newDisplayFields[i] = new
+					}
+				}
+			}
+
+			// has changes
+			if len(list.SubtractSlice(options.DisplayFields, newDisplayFields)) > 0 {
+				options.DisplayFields = newDisplayFields
+
+				// direct collection save to prevent self-referencing
+				// recursion and unnecessary records table sync checks
+				if err := dao.Save(refCollection); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }

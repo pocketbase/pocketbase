@@ -509,7 +509,7 @@ func TestSchemaFieldInitOptions(t *testing.T) {
 		{
 			schema.SchemaField{Type: schema.FieldTypeRelation},
 			false,
-			`{"system":false,"id":"","name":"","type":"relation","required":false,"unique":false,"options":{"maxSelect":null,"collectionId":"","cascadeDelete":false}}`,
+			`{"system":false,"id":"","name":"","type":"relation","required":false,"unique":false,"options":{"collectionId":"","cascadeDelete":false,"maxSelect":null,"displayFields":null}}`,
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeUser},

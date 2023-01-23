@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <button type="button" class="btn btn-secondary btn-block" on:click={() => window.close()}>
+        <button type="button" class="btn btn-transparent btn-block" on:click={() => window.close()}>
             Close
         </button>
     {:else}
@@ -53,7 +53,7 @@
             </div>
         </div>
 
-        <button type="button" class="btn btn-secondary btn-block" on:click={() => window.close()}>
+        <button type="button" class="btn btn-transparent btn-block" on:click={() => window.close()}>
             Close
         </button>
     {/if}

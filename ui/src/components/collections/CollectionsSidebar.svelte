@@ -2,7 +2,7 @@
     import { link } from "svelte-spa-router";
     import CommonHelper from "@/utils/CommonHelper";
     import { hideControls } from "@/stores/app";
-    import { collections, activeCollection } from "@/stores/collections";
+    import { collections, activeCollection, isCollectionsLoading } from "@/stores/collections";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
 
     let collectionPanel;
@@ -43,7 +43,7 @@
             <div class="form-field-addon">
                 <button
                     type="button"
-                    class="btn btn-xs btn-secondary btn-circle btn-clear"
+                    class="btn btn-xs btn-transparent btn-circle btn-clear"
                     class:hidden={!hasSearch}
                     on:click={() => (searchTerm = "")}
                 >
@@ -56,7 +56,11 @@
 
     <hr class="m-t-5 m-b-xs" />
 
-    <div class="sidebar-content" class:sidebar-content-compact={filteredCollections.length > 20}>
+    <div
+        class="sidebar-content"
+        class:fade={$isCollectionsLoading}
+        class:sidebar-content-compact={filteredCollections.length > 20}
+    >
         {#each filteredCollections as collection (collection.id)}
             <a
                 href="/collections?collectionId={collection.id}"

@@ -92,7 +92,7 @@
     </table>
 
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-secondary" on:click={() => hide()}>
+        <button type="button" class="btn btn-transparent" on:click={() => hide()}>
             <span class="txt">Close</span>
         </button>
     </svelte:fragment>

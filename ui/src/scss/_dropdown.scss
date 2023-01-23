@@ -55,7 +55,7 @@
         }
 
         // states
-        &:focus,
+        &:focus-visible,
         &:hover {
             background: var(--baseAlt1Color);
         }

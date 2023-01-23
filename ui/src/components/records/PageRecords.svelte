@@ -28,13 +28,13 @@
     let recordsList;
     let filter = queryParams.get("filter") || "";
     let sort = queryParams.get("sort") || "-created";
-    let selectedCollectionId = queryParams.get("collectionId") || "";
+    let selectedCollectionId = queryParams.get("collectionId") || $activeCollection?.id;
 
     $: reactiveParams = new URLSearchParams($querystring);
 
     $: if (
         !$isCollectionsLoading &&
-        reactiveParams.has("collectionId") &&
+        reactiveParams.get("collectionId") &&
         reactiveParams.get("collectionId") != selectedCollectionId
     ) {
         changeActiveCollectionById(reactiveParams.get("collectionId"));
@@ -64,7 +64,7 @@
     loadCollections(selectedCollectionId);
 </script>
 
-{#if $isCollectionsLoading}
+{#if $isCollectionsLoading && !$collections.length}
     <PageWrapper center>
         <div class="placeholder-section m-b-base">
             <span class="loader loader-lg" />
@@ -106,7 +106,7 @@
                 {#if !$hideControls}
                     <button
                         type="button"
-                        class="btn btn-secondary btn-circle"
+                        class="btn btn-transparent btn-circle"
                         use:tooltip={{ text: "Edit collection", position: "right" }}
                         on:click={() => collectionUpsertPanel?.show($activeCollection)}
                     >
@@ -139,6 +139,7 @@
             autocompleteCollection={$activeCollection}
             on:submit={(e) => (filter = e.detail)}
         />
+        <div class="clearfix m-b-base" />
 
         <RecordsList
             bind:this={recordsList}
@@ -146,6 +147,7 @@
             bind:filter
             bind:sort
             on:select={(e) => recordPanel?.show(e?.detail)}
+            on:new={() => recordPanel?.show()}
         />
     </PageWrapper>
 {/if}

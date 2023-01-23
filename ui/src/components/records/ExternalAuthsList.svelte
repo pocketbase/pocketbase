@@ -74,7 +74,7 @@
                 <div class="txt-hint">ID: {auth.providerId}</div>
                 <button
                     type="button"
-                    class="btn btn-secondary link-hint btn-circle btn-sm m-l-auto"
+                    class="btn btn-transparent link-hint btn-circle btn-sm m-l-auto"
                     on:click={() => unlinkExternalAuth(auth.provider)}
                 >
                     <i class="ri-close-line" />

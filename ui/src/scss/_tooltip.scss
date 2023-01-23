@@ -21,6 +21,7 @@
                 transform var(--baseAnimationSpeed);
     transform: scale(0.98);
     white-space: pre-line;
+    word-break: break-all;
     @include hide();
 
     // styles

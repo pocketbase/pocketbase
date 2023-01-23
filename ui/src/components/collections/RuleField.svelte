@@ -65,14 +65,18 @@
             {#if isAdminOnly}
                 <button
                     type="button"
-                    class="btn  btn-sm btn-secondary btn-success lock-toggle"
+                    class="btn btn-sm btn-transparent btn-success lock-toggle"
                     on:click={unlock}
                 >
                     <i class="ri-lock-unlock-line" />
                     <span class="txt">Set custom rule</span>
                 </button>
             {:else}
-                <button type="button" class="btn  btn-sm btn-secondary btn-hint lock-toggle" on:click={lock}>
+                <button
+                    type="button"
+                    class="btn  btn-sm btn-transparent btn-hint lock-toggle"
+                    on:click={lock}
+                >
                     <i class="ri-lock-line" />
                     <span class="txt">Set Admins only</span>
                 </button>

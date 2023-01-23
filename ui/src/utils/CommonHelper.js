@@ -108,7 +108,7 @@ export default class CommonHelper {
     }
 
     /**
-     * Normalizes and returns arr as a valid array instance (if not already).
+     * Normalizes and returns arr as a new array instance.
      *
      * @param  {Array}   arr
      * @param  {Boolean} [allowEmpty]
@@ -116,7 +116,7 @@ export default class CommonHelper {
      */
     static toArray(arr, allowEmpty = false) {
         if (Array.isArray(arr)) {
-            return arr;
+            return arr.slice();
         }
 
         return (allowEmpty || !CommonHelper.isEmpty(arr)) && typeof arr !== "undefined" ? [arr] : [];
@@ -230,10 +230,9 @@ export default class CommonHelper {
     /**
      * Adds or replace an object array element by comparing its key value.
      *
-     * @param  {Array}  objectsArr
-     * @param  {Object} item
-     * @param  {Mixed}  [key]
-     * @return {Array}
+     * @param {Array}  objectsArr
+     * @param {Object} item
+     * @param {Mixed}  [key]
      */
     static pushOrReplaceByKey(objectsArr, item, key = "id") {
         for (let i = objectsArr.length - 1; i >= 0; i--) {
@@ -471,6 +470,45 @@ export default class CommonHelper {
         const doc = new DOMParser().parseFromString(str, "text/html");
 
         return (doc.body.innerText || "").trim();
+    }
+
+    /**
+     * Truncates the provided text to the specified max characters length.
+     *
+     * @param  {String} str
+     * @param  {Number} length
+     * @return {String}
+     */
+    static truncate(str, length = 150, dots = false) {
+        str = str || "";
+
+        if (str.length <= length) {
+            return str;
+        }
+
+        return str.substring(0, length) + (dots ? "..." : "");
+    }
+
+    /**
+     * Returns a new object copy with truncated the large text fields.
+     *
+     * @param  {Object} obj
+     * @return {Object}
+     */
+    static truncateObject(obj) {
+        const truncated = {};
+
+        for (let key in obj) {
+            let value = obj[key];
+
+            if (typeof value === 'string') {
+                value = CommonHelper.truncate(value, 150, true);
+            }
+
+            truncated[key] = value;
+        }
+
+        return truncated;
     }
 
     /**
@@ -1112,13 +1150,13 @@ export default class CommonHelper {
         const singleCollections = [];
         const baseCollections = [];
 
-        for (const colelction of collections) {
-            if (colelction.type == 'auth') {
-                authCollections.push(colelction);
-            } else if (colelction.type == 'single') {
-                singleCollections.push(colelction);
+        for (const collection of collections) {
+            if (collection.type === 'auth') {
+                authCollections.push(collection);
+            } else if (collection.type === 'single') {
+                singleCollections.push(collection);
             } else {
-                baseCollections.push(colelction);
+                baseCollections.push(collection);
             }
         }
 
@@ -1221,5 +1259,60 @@ export default class CommonHelper {
                 input.click();
             },
         };
+    }
+
+    /**
+     * Tries to output the first displayable field of the provided model.
+     *
+     * @param  {Object} model
+     * @return {String}
+     */
+    static displayValue(model, displayFields) {
+        model = model || {};
+        displayFields = displayFields || [];
+
+        let result = [];
+
+        for (const field of displayFields) {
+            let val = model[field];
+
+            if (typeof val === "undefined") {
+                continue
+            }
+
+            if (CommonHelper.isEmpty(val)) {
+                result.push("N/A");
+            } else if (typeof val === "boolean")  {
+                result.push(val ? "True" : "False");
+            } else if (typeof val === "string") {
+                val = val.indexOf("<") >= 0 ? CommonHelper.plainText(val) : val;
+                result.push(CommonHelper.truncate(val));
+            } else {
+                result.push(val);
+            }
+        }
+
+        if (result.length > 0) {
+            return result.join(", ");
+        }
+
+        const fallbackProps = [
+            "title",
+            "name",
+            "email",
+            "username",
+            "heading",
+            "label",
+            "key",
+            "id",
+        ];
+
+        for (const prop of fallbackProps) {
+            if (!CommonHelper.isEmpty(model[prop])) {
+                return model[prop];
+            }
+        }
+
+        return "N/A";
     }
 }

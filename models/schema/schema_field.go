@@ -185,7 +185,7 @@ func (f SchemaField) Validate() error {
 
 	excludeNames := BaseModelFieldNames()
 	// exclude special filter literals
-	excludeNames = append(excludeNames, "null", "true", "false", "isset")
+	excludeNames = append(excludeNames, "null", "true", "false")
 	// exclude system literals
 	excludeNames = append(excludeNames, SystemFieldNames()...)
 
@@ -568,9 +568,21 @@ func (o FileOptions) Validate() error {
 // -------------------------------------------------------------------
 
 type RelationOptions struct {
-	MaxSelect     *int   `form:"maxSelect" json:"maxSelect"`
-	CollectionId  string `form:"collectionId" json:"collectionId"`
-	CascadeDelete bool   `form:"cascadeDelete" json:"cascadeDelete"`
+	// CollectionId is the id of the related collection.
+	CollectionId string `form:"collectionId" json:"collectionId"`
+
+	// CascadeDelete indicates whether the root model should be deleted
+	// in case of delete of all linked relations.
+	CascadeDelete bool `form:"cascadeDelete" json:"cascadeDelete"`
+
+	// MaxSelect indicates the max number of allowed relation records
+	// that could be linked to the main model.
+	//
+	// If nil no limits are applied.
+	MaxSelect *int `form:"maxSelect" json:"maxSelect"`
+
+	// DisplayFields is optional slice of collection field names used for UI purposes.
+	DisplayFields []string `form:"displayFields" json:"displayFields"`
 }
 
 func (o RelationOptions) Validate() error {

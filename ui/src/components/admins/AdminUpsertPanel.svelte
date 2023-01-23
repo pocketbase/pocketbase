@@ -233,7 +233,7 @@
 
     <svelte:fragment slot="footer">
         {#if !admin.isNew}
-            <button type="button" class="btn btn-sm btn-circle btn-secondary">
+            <button type="button" class="btn btn-sm btn-circle btn-transparent">
                 <!-- empty span for alignment -->
                 <span />
                 <i class="ri-more-line" />
@@ -247,7 +247,7 @@
             <div class="flex-fill" />
         {/if}
 
-        <button type="button" class="btn btn-secondary" disabled={isSaving} on:click={() => hide()}>
+        <button type="button" class="btn btn-transparent" disabled={isSaving} on:click={() => hide()}>
             <span class="txt">Cancel</span>
         </button>
         <button

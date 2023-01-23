@@ -51,26 +51,24 @@ export function removeCollection(collection) {
 export async function loadCollections(activeId = null) {
     isCollectionsLoading.set(true);
 
-    activeCollection.set({});
-    collections.set([]);
-
-    return ApiClient.collections.getFullList(200, {
-        "sort": "+created",
-    })
-        .then((items) => {
-            collections.set(CommonHelper.sortCollections(items));
-
-            const item = activeId && CommonHelper.findByKey(items, "id", activeId);
-            if (item) {
-                activeCollection.set(item);
-            } else if (items.length) {
-                activeCollection.set(items[0]);
-            }
+    try {
+        let items = await ApiClient.collections.getFullList(200, {
+            "sort": "+created",
         })
-        .catch((err) => {
-            ApiClient.errorResponseHandler(err);
-        })
-        .finally(() => {
-            isCollectionsLoading.set(false);
-        });
+
+        items = CommonHelper.sortCollections(items);
+
+        collections.set(items);
+
+        const item = activeId && CommonHelper.findByKey(items, "id", activeId);
+        if (item) {
+            activeCollection.set(item);
+        } else if (items.length) {
+            activeCollection.set(items[0]);
+        }
+    } catch (err) {
+        ApiClient.errorResponseHandler(err);
+    }
+
+    isCollectionsLoading.set(false);
 }

@@ -6,8 +6,8 @@
     import ApiClient from "@/utils/ApiClient";
     import { errors, setErrors, removeError } from "@/stores/errors";
     import { confirm } from "@/stores/confirmation";
-    import { addSuccessToast } from "@/stores/toasts";
-    import { addCollection, removeCollection } from "@/stores/collections";
+    import { removeAllToasts, addSuccessToast } from "@/stores/toasts";
+    import { loadCollections, removeCollection } from "@/stores/collections";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
@@ -119,12 +119,16 @@
 
         request
             .then((result) => {
+                removeAllToasts();
+
+                loadCollections(result.id);
+
                 confirmClose = false;
                 hide();
+
                 addSuccessToast(
                     collection.isNew ? "Successfully created collection." : "Successfully updated collection."
                 );
-                addCollection(result);
 
                 dispatch("save", {
                     isNew: collection.isNew,
@@ -209,7 +213,7 @@
 
         {#if !collection.isNew && !collection.system}
             <div class="flex-fill" />
-            <button type="button" class="btn btn-sm btn-circle btn-secondary flex-gap-0">
+            <button type="button" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
                 <i class="ri-more-line" />
                 <Toggler class="dropdown dropdown-right m-t-5">
                     <button
@@ -256,7 +260,7 @@
                 <div class="form-field-addon">
                     <button
                         type="button"
-                        class="btn btn-sm p-r-10 p-l-10 {collection.isNew ? 'btn-hint' : 'btn-secondary'}"
+                        class="btn btn-sm p-r-10 p-l-10 {collection.isNew ? 'btn-hint' : 'btn-transparent'}"
                         disabled={!collection.isNew}
                     >
                         <!-- empty span for alignment -->
@@ -362,7 +366,7 @@
     </div>
 
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-secondary" disabled={isSaving} on:click={() => hide()}>
+        <button type="button" class="btn btn-transparent" disabled={isSaving} on:click={() => hide()}>
             <span class="txt">Cancel</span>
         </button>
         <button

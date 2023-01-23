@@ -92,7 +92,7 @@
 
     <svelte:fragment slot="footer">
         <!-- svelte-ignore a11y-autofocus -->
-        <button autofocus type="button" class="btn btn-secondary" on:click={() => hide()}>
+        <button autofocus type="button" class="btn btn-transparent" on:click={() => hide()}>
             <span class="txt">Cancel</span>
         </button>
         <button type="button" class="btn btn-expanded" on:click={() => confirm()}>

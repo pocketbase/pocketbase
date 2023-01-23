@@ -70,47 +70,56 @@
     }
 </script>
 
-<Field class="form-field form-field-file {field.required ? 'required' : ''}" name={field.name} let:uniqueId>
+<Field
+    class="form-field form-field-list form-field-file {field.required ? 'required' : ''}"
+    name={field.name}
+    let:uniqueId
+>
     <label for={uniqueId}>
         <i class={CommonHelper.getFieldTypeIcon(field.type)} />
         <span class="txt">{field.name}</span>
     </label>
 
-    <div bind:this={filesListElem} class="files-list">
+    <div bind:this={filesListElem} class="list">
         {#each valueAsArray as filename, i (filename)}
+            {@const isDeleted = deletedFileIndexes.includes(i)}
             <div class="list-item">
                 <div class:fade={deletedFileIndexes.includes(i)}>
                     <RecordFileThumb {record} {filename} />
                 </div>
-                <a
-                    href={ApiClient.getFileUrl(record, filename)}
-                    class="filename link-hint"
-                    class:txt-strikethrough={deletedFileIndexes.includes(i)}
-                    title="Download"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    {filename}
-                </a>
 
-                {#if deletedFileIndexes.includes(i)}
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-danger btn-secondary"
-                        on:click={() => restoreExistingFile(i)}
+                <div class="content">
+                    <a
+                        href={ApiClient.getFileUrl(record, filename)}
+                        class="txt-ellipsis {isDeleted ? 'txt-strikethrough txt-hint' : 'link-primary'}"
+                        title="Download"
+                        target="_blank"
+                        rel="noopener noreferrer"
                     >
-                        <span class="txt">Restore</span>
-                    </button>
-                {:else}
-                    <button
-                        type="button"
-                        class="btn btn-secondary btn-sm btn-circle btn-remove txt-hint"
-                        use:tooltip={"Remove file"}
-                        on:click={() => removeExistingFile(i)}
-                    >
-                        <i class="ri-close-line" />
-                    </button>
-                {/if}
+                        {filename}
+                    </a>
+                </div>
+
+                <div class="actions">
+                    {#if deletedFileIndexes.includes(i)}
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-danger btn-transparent"
+                            on:click={() => restoreExistingFile(i)}
+                        >
+                            <span class="txt">Restore</span>
+                        </button>
+                    {:else}
+                        <button
+                            type="button"
+                            class="btn btn-transparent btn-hint btn-sm btn-circle btn-remove"
+                            use:tooltip={"Remove file"}
+                            on:click={() => removeExistingFile(i)}
+                        >
+                            <i class="ri-close-line" />
+                        </button>
+                    {/if}
+                </div>
             </div>
         {/each}
 
@@ -125,7 +134,7 @@
                 </div>
                 <button
                     type="button"
-                    class="btn btn-secondary btn-sm btn-circle btn-remove"
+                    class="btn btn-transparent btn-sm btn-circle btn-remove"
                     use:tooltip={"Remove file"}
                     on:click={() => removeNewFile(i)}
                 >
@@ -135,7 +144,7 @@
         {/each}
 
         {#if !maxReached}
-            <div class="list-item btn-list-item">
+            <div class="list-item list-item-btn">
                 <input
                     bind:this={fileInput}
                     type="file"
@@ -151,7 +160,7 @@
                 />
                 <button
                     type="button"
-                    class="btn btn-secondary btn-sm btn-block"
+                    class="btn btn-transparent btn-sm btn-block"
                     on:click={() => fileInput?.click()}
                 >
                     <i class="ri-upload-cloud-line" />

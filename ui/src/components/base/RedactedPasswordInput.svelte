@@ -24,7 +24,7 @@
     <div class="form-field-addon">
         <button
             type="button"
-            class="btn btn-secondary btn-circle"
+            class="btn btn-transparent btn-circle"
             use:tooltip={{ position: "left", text: "Set new value" }}
             on:click={() => unlock()}
         >

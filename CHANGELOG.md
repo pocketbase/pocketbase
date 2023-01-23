@@ -37,6 +37,10 @@
 
 - Added new helper `apis.RecordAuthResponse(app, httpContext, record, meta)` to return a standard Record auth API response ([#1623](https://github.com/pocketbase/pocketbase/issues/1623)).
 
+- Added optional `RelationOptions.DisplayFields` slice to support custom relation field(s) visualization in the Admin UI.
+
+- Refactored the relation picker UI, allowing inline search, sorting, create, update and delete of relation records.
+
 
 ## v0.11.3
 

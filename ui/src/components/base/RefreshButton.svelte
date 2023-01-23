@@ -30,7 +30,7 @@
 
 <button
     type="button"
-    class="btn btn-secondary btn-circle"
+    class="btn btn-transparent btn-circle"
     class:refreshing={refreshTimeoutId}
     use:tooltip={tooltipData}
     on:click={refresh}

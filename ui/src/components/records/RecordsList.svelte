@@ -15,11 +15,13 @@
     import RecordFieldCell from "@/components/records/RecordFieldCell.svelte";
 
     const dispatch = createEventDispatcher();
+    const sortRegex = /^([\+\-])?(\w+)$/;
 
     export let collection;
     export let sort = "";
     export let filter = "";
 
+    let recordPanel;
     let records = [];
     let currentPage = 1;
     let totalRecords = 0;
@@ -31,6 +33,12 @@
     let hiddenColumns = [];
     let collumnsToHide = [];
 
+    $: fields = collection?.schema || [];
+
+    $: relFields = fields.filter((field) => field.type === "relation");
+
+    $: visibleFields = fields.filter((field) => !hiddenColumns.includes(field.id));
+
     $: if (collection?.id) {
         loadStoredHiddenColumns();
         clearList();
@@ -41,10 +49,6 @@
     }
 
     $: canLoadMore = totalRecords > records.length;
-
-    $: fields = collection?.schema || [];
-
-    $: visibleFields = fields.filter((field) => !hiddenColumns.includes(field.id));
 
     $: totalBulkSelected = Object.keys(bulkSelected).length;
 
@@ -108,10 +112,23 @@
 
         isLoading = true;
 
+        // allow sorting by the relation display fields
+        let listSort = sort;
+        const sortMatch = listSort.match(sortRegex);
+        const relField = sortMatch ? relFields.find((f) => f.name === sortMatch[2]) : null;
+        if (sortMatch && relField?.options?.displayFields?.length > 0) {
+            const parts = [];
+            for (const displayField of relField.options.displayFields) {
+                parts.push((sortMatch[1] || "") + sortMatch[2] + "." + displayField);
+            }
+            listSort = parts.join(",");
+        }
+
         return ApiClient.collection(collection.id)
             .getList(page, 30, {
-                sort: sort,
+                sort: listSort,
                 filter: filter,
+                expand: relFields.map((field) => field.name).join(","),
             })
             .then(async (result) => {
                 if (page <= 1) {
@@ -329,7 +346,7 @@
                 {/if}
 
                 <th class="col-type-action min-width">
-                    <button bind:this={columnsTrigger} type="button" class="btn btn-sm btn-secondary p-0">
+                    <button bind:this={columnsTrigger} type="button" class="btn btn-sm btn-transparent p-0">
                         <i class="ri-more-line" />
                     </button>
                 </th>
@@ -447,6 +464,15 @@
                                 >
                                     <span class="txt">Clear filters</span>
                                 </button>
+                            {:else}
+                                <button
+                                    type="button"
+                                    class="btn btn-secondary btn-expanded m-t-sm"
+                                    on:click={() => dispatch("new")}
+                                >
+                                    <i class="ri-add-line" />
+                                    <span class="txt">New record</span>
+                                </button>
                             {/if}
                         </td>
                     </tr>
@@ -464,7 +490,7 @@
     <div class="block txt-center m-t-xs">
         <button
             type="button"
-            class="btn btn-lg btn-secondary btn-expanded"
+            class="btn btn-lg btn-transparent btn-expanded"
             class:btn-loading={isLoading}
             class:btn-disabled={isLoading}
             on:click={() => load(currentPage + 1)}
@@ -482,7 +508,7 @@
         </div>
         <button
             type="button"
-            class="btn btn-xs btn-secondary btn-outline p-l-5 p-r-5"
+            class="btn btn-xs btn-transparent btn-outline p-l-5 p-r-5"
             class:btn-disabled={isDeleting}
             on:click={() => deselectAllRecords()}
         >
@@ -491,7 +517,7 @@
         <div class="flex-fill" />
         <button
             type="button"
-            class="btn btn-sm btn-secondary btn-danger"
+            class="btn btn-sm btn-transparent btn-danger"
             class:btn-loading={isDeleting}
             class:btn-disabled={isDeleting}
             on:click={() => deleteSelectedConfirm()}

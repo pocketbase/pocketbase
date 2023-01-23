@@ -169,6 +169,25 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 			[]string{"schema"},
 		},
 		{
+			"create failure - missing relation display field",
+			"",
+			`{
+				"name": "test_new",
+				"type": "base",
+				"schema": [
+					{
+						"name":"test",
+						"type":"relation",
+						"options":{
+							"collectionId":"wsmn24bux7wo113",
+							"displayFields":["text", "missing"]
+						}
+					}
+				]
+			}`,
+			[]string{"schema"},
+		},
+		{
 			"create failure - check type options validators",
 			"",
 			`{
@@ -190,7 +209,15 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"system": true,
 				"schema": [
 					{"id":"a123456","name":"test1","type":"text"},
-					{"id":"b123456","name":"test2","type":"email"}
+					{"id":"b123456","name":"test2","type":"email"},
+					{
+						"name":"test3",
+						"type":"relation",
+						"options":{
+							"collectionId":"v851q4r790rhknl",
+							"displayFields":["name","id","created","updated","username","email","emailVisibility","verified"]
+						}
+					}
 				],
 				"listRule": "test1='123' && verified = true",
 				"viewRule": "test1='123' && emailVisibility = true",
