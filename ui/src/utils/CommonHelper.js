@@ -1265,9 +1265,9 @@ export default class CommonHelper {
      * Tries to output the first displayable field of the provided model.
      *
      * @param  {Object} model
-     * @return {String}
+     * @return {Any}
      */
-    static displayValue(model, displayFields) {
+    static displayValue(model, displayFields, missingValue = "N/A") {
         model = model || {};
         displayFields = displayFields || [];
 
@@ -1281,7 +1281,7 @@ export default class CommonHelper {
             }
 
             if (CommonHelper.isEmpty(val)) {
-                result.push("N/A");
+                result.push(missingValue);
             } else if (typeof val === "boolean")  {
                 result.push(val ? "True" : "False");
             } else if (typeof val === "string") {
@@ -1313,6 +1313,6 @@ export default class CommonHelper {
             }
         }
 
-        return "N/A";
+        return missingValue;
     }
 }
