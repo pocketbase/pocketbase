@@ -8,7 +8,6 @@
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
-    import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
@@ -149,7 +148,7 @@
                         </td>
 
                         <td class="col-type-text col-field-id">
-                            <IdLabel id={admin.id} />
+                            <span class="label">{admin.id}</span>
                             {#if admin.id === $loggedAdmin.id}
                                 <span class="label label-warning m-l-5">You</span>
                             {/if}

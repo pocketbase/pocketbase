@@ -118,8 +118,13 @@
         </div>
 
         <div class="list-item list-item-btn">
-            <button type="button" class="btn btn-transparent btn-sm btn-block" on:click={() => picker?.show()}>
-                <i class="ri-layout-line" />
+            <button
+                type="button"
+                class="btn btn-transparent btn-sm btn-block"
+                on:click={() => picker?.show()}
+            >
+                <i class="ri-magic-line" />
+                <!-- <i class="ri-layout-line" /> -->
                 <span class="txt">Open picker</span>
             </button>
         </div>
@@ -132,7 +137,7 @@
     {field}
     on:save={(e) => {
         list = e.detail || [];
-        value = isMultiple ? list.map((r) => r.id) : list[0] || "";
+        value = isMultiple ? list.map((r) => r.id) : list[0].id || "";
     }}
 />
 

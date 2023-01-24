@@ -10,7 +10,6 @@
     import Toggler from "@/components/base/Toggler.svelte";
     import Field from "@/components/base/Field.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
-    import IdLabel from "@/components/base/IdLabel.svelte";
     import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
     import RecordFieldCell from "@/components/records/RecordFieldCell.svelte";
 
@@ -21,7 +20,6 @@
     export let sort = "";
     export let filter = "";
 
-    let recordPanel;
     let records = [];
     let currentPage = 1;
     let totalRecords = 0;
@@ -381,7 +379,7 @@
                     {#if !hiddenColumns.includes("@id")}
                         <td class="col-type-text col-field-id">
                             <div class="flex flex-gap-5">
-                                <IdLabel id={record.id} />
+                                <span class="label">{record.id}</span>
 
                                 {#if collection.isAuth}
                                     {#if record.verified}
@@ -490,7 +488,7 @@
     <div class="block txt-center m-t-xs">
         <button
             type="button"
-            class="btn btn-lg btn-transparent btn-expanded"
+            class="btn btn-lg btn-secondary btn-expanded"
             class:btn-loading={isLoading}
             class:btn-disabled={isLoading}
             on:click={() => load(currentPage + 1)}

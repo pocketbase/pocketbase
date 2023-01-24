@@ -2,7 +2,6 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
-    import IdLabel from "@/components/base/IdLabel.svelte";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
     import RecordInfo from "@/components/records/RecordInfo.svelte";
 
@@ -55,8 +54,8 @@
                     </span>
                 {/each}
             {:else}
-                {#each relations.slice(0, 20) as item, i (i + item)}
-                    <IdLabel id={item} />
+                {#each relations.slice(0, 20) as id}
+                    <span class="label">{id}</span>
                 {/each}
             {/if}
             {#if relations.length > 20}

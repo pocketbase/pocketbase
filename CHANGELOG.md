@@ -41,6 +41,8 @@
 
 - Refactored the relation picker UI, allowing inline search, sorting, create, update and delete of relation records.
 
+- Improved API and validations error reporting by providing more detailed messages.
+
 
 ## v0.11.3
 

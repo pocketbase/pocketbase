@@ -113,7 +113,7 @@
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
-                        text: "Optional select the field(s) that will be used in the listings UI. Leave empty for auto.",
+                        text: "Optionally select the field(s) that will be used in the listings UI. Leave empty for auto.",
                         position: "top",
                     }}
                 />
@@ -122,6 +122,7 @@
                 multiple
                 searchable
                 id={uniqueId}
+                selectPlaceholder="Auto"
                 items={displayFieldsList}
                 bind:selected={options.displayFields}
             />
