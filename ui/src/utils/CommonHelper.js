@@ -1222,9 +1222,10 @@ export default class CommonHelper {
                 "media",
                 "table",
                 "code",
+                "codesample",
             ],
             toolbar:
-                "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image table | fullscreen code",
+                "undo redo | styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image table codesample | code fullscreen",
             file_picker_types: "image",
             // @see https://www.tiny.cloud/docs/tinymce/6/file-image-upload/#interactive-example
             file_picker_callback: (cb, value, meta) => {

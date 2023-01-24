@@ -10,6 +10,7 @@
     import SortHeader from "@/components/base/SortHeader.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
+    import CopyIcon from "@/components/base/CopyIcon.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";
 
@@ -148,7 +149,10 @@
                         </td>
 
                         <td class="col-type-text col-field-id">
-                            <span class="label">{admin.id}</span>
+                            <div class="label">
+                                <CopyIcon value={admin.id} />
+                                <span class="txt">{admin.id}</span>
+                            </div>
                             {#if admin.id === $loggedAdmin.id}
                                 <span class="label label-warning m-l-5">You</span>
                             {/if}

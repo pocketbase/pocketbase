@@ -9,6 +9,7 @@
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import Field from "@/components/base/Field.svelte";
+    import CopyIcon from "@/components/base/CopyIcon.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
     import RecordFieldCell from "@/components/records/RecordFieldCell.svelte";
@@ -379,7 +380,10 @@
                     {#if !hiddenColumns.includes("@id")}
                         <td class="col-type-text col-field-id">
                             <div class="flex flex-gap-5">
-                                <span class="label">{record.id}</span>
+                                <div class="label">
+                                    <CopyIcon value={record.id} />
+                                    <div class="txt">{record.id}</div>
+                                </div>
 
                                 {#if collection.isAuth}
                                     {#if record.verified}

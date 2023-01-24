@@ -86,7 +86,7 @@
 
     <div class="wrapper">
         <form class="panel" autocomplete="off" on:submit|preventDefault={save}>
-            <h6 class="m-b-base">Manage the allowed users sign-in/sign-up methods.</h6>
+            <h6 class="m-b-base">Manage the allowed users OAuth2 sign-in/sign-up methods.</h6>
 
             {#if isLoading}
                 <div class="loader" />
@@ -122,7 +122,6 @@
                         class="btn btn-expanded"
                         class:btn-loading={isSaving}
                         disabled={!hasChanges || isSaving}
-                        on:click={() => save()}
                     >
                         <span class="txt">Save changes</span>
                     </button>

@@ -93,13 +93,13 @@
             dispatch("show");
             document.body.classList.add("overlay-active");
         } else {
-            clearTimeout(contentScrollThrottle);
-            oldFocusedElem?.focus();
-            dispatch("hide");
-
             if (getHolder().querySelectorAll(".overlay-panel-container.active").length <= 1) {
                 document.body.classList.remove("overlay-active");
             }
+
+            clearTimeout(contentScrollThrottle);
+            oldFocusedElem?.focus();
+            dispatch("hide");
         }
 
         await tick();

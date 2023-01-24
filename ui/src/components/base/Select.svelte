@@ -11,9 +11,9 @@
     export let items = [];
     export let multiple = false;
     export let disabled = false;
-    export let closable = true;
     export let selected = multiple ? [] : undefined;
     export let toggle = multiple; // toggle option on click
+    export let closable = true; // close the dropdown on option select/deselect
     export let labelComponent = undefined; // custom component to use for each selected option label
     export let labelComponentProps = {}; // props to pass to the custom option component
     export let optionComponent = undefined; // custom component to use for each dropdown option item

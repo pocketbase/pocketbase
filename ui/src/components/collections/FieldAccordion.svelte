@@ -20,7 +20,6 @@
     import JsonOptions from "@/components/collections/schema/JsonOptions.svelte";
     import FileOptions from "@/components/collections/schema/FileOptions.svelte";
     import RelationOptions from "@/components/collections/schema/RelationOptions.svelte";
-    import UserOptions from "@/components/collections/schema/UserOptions.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -275,8 +274,6 @@
                     <FileOptions {key} bind:options={field.options} />
                 {:else if field.type === "relation"}
                     <RelationOptions {key} bind:options={field.options} />
-                {:else if field.type === "user"}
-                    <UserOptions {key} bind:options={field.options} />
                 {/if}
             </div>
 

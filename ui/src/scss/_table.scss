@@ -231,14 +231,6 @@ table {
     margin-right: calc(var(--baseSpacing) * -1);
     .bulk-select-col {
         min-width: 70px;
-        input[type="checkbox"] ~ label {
-            opacity: 0.7;
-        }
-        label:hover,
-        label:focus-within,
-        input[type="checkbox"]:checked ~ label {
-            opacity: 1 !important;
-        }
     }
     td, th {
         position: relative;

@@ -128,7 +128,6 @@ func init() {
 					MaxSelect: 1,
 					MaxSize:   5242880,
 					MimeTypes: []string{
-						"image/jpg",
 						"image/jpeg",
 						"image/png",
 						"image/svg+xml",

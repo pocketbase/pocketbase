@@ -42,6 +42,8 @@
     let initialFormHash = "";
     let activeTab = TAB_FORM;
 
+    $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
+
     $: hasFileChanges =
         CommonHelper.hasNonEmptyProps(uploadedFilesMap) ||
         CommonHelper.hasNonEmptyProps(deletedFileIndexesMap);
@@ -223,7 +225,11 @@
 
 <OverlayPanel
     bind:this={recordPanel}
-    class="overlay-panel-lg record-panel {collection?.isAuth && !record.isNew ? 'colored-header' : ''}"
+    class="
+        record-panel
+        {hasEditorField ? 'overlay-panel-xl' : 'overlay-panel-lg'}
+        {collection?.isAuth && !record.isNew ? 'colored-header' : ''}
+    "
     beforeHide={() => {
         if (hasChanges && confirmClose) {
             confirm("You have unsaved changes. Do you really want to close the panel?", () => {
