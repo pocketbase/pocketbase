@@ -221,6 +221,40 @@
                 });
         });
     }
+
+    function duplicateConfirm() {
+        if (hasChanges) {
+            confirm("You have unsaved changes. Do you really want to discard them?", () => {
+                duplicate();
+            });
+        } else {
+            duplicate();
+        }
+    }
+
+    async function duplicate() {
+        const clone = original?.clone();
+
+        if (clone) {
+            clone.id = "";
+            clone.created = "";
+            clone.updated = "";
+
+            // reset file fields
+            const fields = collection?.schema || [];
+            for (const field of fields) {
+                if (field.type === "file") {
+                    delete clone[field.name];
+                }
+            }
+        }
+
+        show(clone);
+
+        await tick();
+
+        initialFormHash = "";
+    }
 </script>
 
 <OverlayPanel
@@ -276,6 +310,14 @@
                                 <span class="txt">Send password reset email</span>
                             </button>
                         {/if}
+                        <button
+                            type="button"
+                            class="dropdown-item closable"
+                            on:click={() => duplicateConfirm()}
+                        >
+                            <i class="ri-file-copy-line" />
+                            <span class="txt">Duplicate</span>
+                        </button>
                         <button
                             type="button"
                             class="dropdown-item txt-danger closable"

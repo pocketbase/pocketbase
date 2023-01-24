@@ -81,7 +81,7 @@
     </label>
 
     <div bind:this={filesListElem} class="list">
-        {#each valueAsArray as filename, i (filename)}
+        {#each valueAsArray as filename, i (filename + record.id)}
             {@const isDeleted = deletedFileIndexes.includes(i)}
             <div class="list-item">
                 <div class:fade={deletedFileIndexes.includes(i)}>

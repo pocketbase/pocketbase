@@ -77,6 +77,7 @@
 
     async function load(model) {
         setErrors({}); // reset errors
+
         if (typeof model !== "undefined") {
             original = model;
             collection = model?.clone();
@@ -84,6 +85,7 @@
             original = null;
             collection = new Collection();
         }
+
         // normalize
         collection.schema = collection.schema || [];
         collection.originalName = collection.name || "";
@@ -188,6 +190,33 @@
         // reset schema errors on type change
         removeError("schema");
     }
+
+    function duplicateConfirm() {
+        if (hasChanges) {
+            confirm("You have unsaved changes. Do you really want to discard them?", () => {
+                duplicate();
+            });
+        } else {
+            duplicate();
+        }
+    }
+
+    async function duplicate() {
+        const clone = original?.clone();
+
+        if (clone) {
+            clone.id = "";
+            clone.created = "";
+            clone.updated = "";
+            clone.name += "_duplicate";
+        }
+
+        show(clone);
+
+        await tick();
+
+        initialFormHash = "";
+    }
 </script>
 
 <OverlayPanel
@@ -207,7 +236,7 @@
     on:show
 >
     <svelte:fragment slot="header">
-        <h4>
+        <h4 class="upsert-panel-title">
             {collection.isNew ? "New collection" : "Edit collection"}
         </h4>
 
@@ -216,6 +245,10 @@
             <button type="button" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
                 <i class="ri-more-line" />
                 <Toggler class="dropdown dropdown-right m-t-5">
+                    <button type="button" class="dropdown-item closable" on:click={() => duplicateConfirm()}>
+                        <i class="ri-file-copy-line" />
+                        <span class="txt">Duplicate</span>
+                    </button>
                     <button
                         type="button"
                         class="dropdown-item txt-danger closable"
@@ -384,6 +417,11 @@
 <CollectionUpdateConfirm bind:this={confirmChangesPanel} on:confirm={() => save()} />
 
 <style>
+    .upsert-panel-title {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--smBtnHeight);
+    }
     .tabs-content {
         z-index: 3; /* autocomplete dropdown overlay fix */
     }

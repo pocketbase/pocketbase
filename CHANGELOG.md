@@ -41,6 +41,8 @@
 
 - Refactored the relation picker UI, allowing inline search, sorting, create, update and delete of relation records.
 
+- Added "Duplicate" Collection and Record option in the Admin UI ([#1656](https://github.com/pocketbase/pocketbase/issues/1656)).
+
 - Improved API and validations error reporting by providing more detailed messages.
 
 
