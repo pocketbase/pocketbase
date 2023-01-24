@@ -235,6 +235,12 @@ func (api *realtimeApi) unregisterClientsByAuthModel(contextKey string, model mo
 	return nil
 }
 
+const (
+	createEvent string = "create"
+	updateEvent string = "update"
+	deleteEvent string = "delete"
+)
+
 func (api *realtimeApi) bindEvents() {
 	// update the clients that has admin or auth record association
 	api.app.OnModelAfterUpdate().PreAdd(func(e *core.ModelEvent) error {
@@ -264,7 +270,7 @@ func (api *realtimeApi) bindEvents() {
 
 	api.app.OnModelAfterCreate().PreAdd(func(e *core.ModelEvent) error {
 		if record, ok := e.Model.(*models.Record); ok {
-			if err := api.broadcastRecord("create", record); err != nil && api.app.IsDebug() {
+			if err := api.broadcastRecord(createEvent, record); err != nil && api.app.IsDebug() {
 				log.Println(err)
 			}
 		}
@@ -273,7 +279,7 @@ func (api *realtimeApi) bindEvents() {
 
 	api.app.OnModelAfterUpdate().PreAdd(func(e *core.ModelEvent) error {
 		if record, ok := e.Model.(*models.Record); ok {
-			if err := api.broadcastRecord("update", record); err != nil && api.app.IsDebug() {
+			if err := api.broadcastRecord(updateEvent, record); err != nil && api.app.IsDebug() {
 				log.Println(err)
 			}
 		}
@@ -282,7 +288,7 @@ func (api *realtimeApi) bindEvents() {
 
 	api.app.OnModelBeforeDelete().Add(func(e *core.ModelEvent) error {
 		if record, ok := e.Model.(*models.Record); ok {
-			if err := api.broadcastRecord("delete", record); err != nil && api.app.IsDebug() {
+			if err := api.broadcastRecord(deleteEvent, record); err != nil && api.app.IsDebug() {
 				log.Println(err)
 			}
 		}
