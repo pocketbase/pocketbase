@@ -693,6 +693,12 @@ func TestDeleteRecordBatchProcessing(t *testing.T) {
 		t.Fatal("The main record wasn't deleted")
 	}
 
+	// check if the c1 b rel field were updated
+	c1RecordB, err := app.Dao().FindRecordById("c1", "b")
+	if err != nil || c1RecordB.GetString("rel") != "" {
+		t.Fatalf("Expected c1RecordB.rel to be nil, got %v", c1RecordB.GetString("rel"))
+	}
+
 	// check if the c2 rel fields were updated
 	c2Records, err := app.Dao().FindRecordsByExpr("c2", nil)
 	if err != nil || len(c2Records) == 0 {
@@ -724,6 +730,16 @@ func createMockBatchProcessingData(dao *daos.Dao) error {
 		&schema.SchemaField{
 			Name: "text",
 			Type: schema.FieldTypeText,
+		},
+		// self reference
+		&schema.SchemaField{
+			Name: "rel",
+			Type: schema.FieldTypeRelation,
+			Options: &schema.RelationOptions{
+				MaxSelect:     types.Pointer(1),
+				CollectionId:  "c1",
+				CascadeDelete: false, // should unset all rel fields
+			},
 		},
 	)
 	if err := dao.SaveCollection(c1); err != nil {
@@ -771,15 +787,17 @@ func createMockBatchProcessingData(dao *daos.Dao) error {
 	// insert mock records
 	c1RecordA := models.NewRecord(c1)
 	c1RecordA.Id = "a"
+	c1RecordA.Set("rel", c1RecordA.Id) // self reference
 	if err := dao.Save(c1RecordA); err != nil {
 		return err
 	}
 	c1RecordB := models.NewRecord(c1)
 	c1RecordB.Id = "b"
+	c1RecordB.Set("rel", c1RecordA.Id) // rel to another record from the same collection
 	if err := dao.Save(c1RecordB); err != nil {
 		return err
 	}
-	for i := 0; i < 2400; i++ {
+	for i := 0; i < 4500; i++ {
 		c2Record := models.NewRecord(c2)
 		c2Record.Set("rel", []string{c1RecordA.Id, c1RecordB.Id})
 		if err := dao.Save(c2Record); err != nil {
@@ -791,6 +809,15 @@ func createMockBatchProcessingData(dao *daos.Dao) error {
 		if err := dao.Save(c3Record); err != nil {
 			return err
 		}
+	}
+
+	// set the same id as the relation for at least 1 record
+	// to check whether the correct condition will be added
+	c3Record := models.NewRecord(c3)
+	c3Record.Set("rel", c1RecordA.Id)
+	c3Record.Id = c1RecordA.Id
+	if err := dao.Save(c3Record); err != nil {
+		return err
 	}
 
 	return nil

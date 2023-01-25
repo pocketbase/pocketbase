@@ -98,6 +98,7 @@ func (dao *Dao) FindRecordsByIds(
 // Returns an empty slice if no records are found.
 //
 // Example:
+//
 //	expr1 := dbx.HashExp{"email": "test@example.com"}
 //	expr2 := dbx.NewExp("LOWER(username) = {:username}", dbx.Params{"username": "test"})
 //	dao.FindRecordsByExpr("example", expr1, expr2)
@@ -402,12 +403,15 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 			// @todo optimize single relation lookup in v0.12+
 			query := dao.RecordQuery(refCollection).
 				Distinct(true).
-				AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": mainRecord.Id})).
 				InnerJoin(fmt.Sprintf(
 					// note: the case is used to normalize the value access
 					`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END) as {{%s}}`,
 					prefixedFieldName, prefixedFieldName, prefixedFieldName, uniqueJsonEachAlias,
 				), dbx.HashExp{uniqueJsonEachAlias + ".value": mainRecord.Id})
+
+			if refCollection.Id == mainRecord.Collection().Id {
+				query.AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": mainRecord.Id}))
+			}
 
 			// trigger cascade for each batchSize rel items until there is none
 			batchSize := 4000
