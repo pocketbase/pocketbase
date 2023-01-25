@@ -179,6 +179,7 @@ func TestDateTimeScan(t *testing.T) {
 		{"invalid", ""},
 		{types.NowDateTime(), now},
 		{time.Now(), now},
+		{1.0, ""},
 		{1641024040, "2022-01-01 08:00:40.000Z"},
 		{"2022-01-01 11:23:45.678", "2022-01-01 11:23:45.678Z"},
 	}

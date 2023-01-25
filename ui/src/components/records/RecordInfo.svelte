@@ -32,5 +32,9 @@
         max-width: 100%;
         min-width: 0;
         gap: 5px;
+        line-height: normal;
+        > * {
+            line-height: inherit;
+        }
     }
 </style>

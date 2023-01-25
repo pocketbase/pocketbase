@@ -1,16 +1,80 @@
 package store_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/store"
 )
 
 func TestNew(t *testing.T) {
-	s := store.New(map[string]int{"test": 1})
+	data := map[string]int{"test1": 1, "test2": 2}
+	originalRawData, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	if s.Get("test") != 1 {
-		t.Error("Expected the initizialized store map to be loaded")
+	s := store.New(data)
+	s.Set("test3", 3) // add 1 item
+	s.Remove("test1") // remove 1 item
+
+	// check if data was shallow copied
+	rawData, _ := json.Marshal(data)
+	if !bytes.Equal(originalRawData, rawData) {
+		t.Fatalf("Expected data \n%s, \ngot \n%s", originalRawData, rawData)
+	}
+
+	if s.Has("test1") {
+		t.Fatalf("Expected test1 to be deleted, got %v", s.Get("test1"))
+	}
+
+	if v := s.Get("test2"); v != 2 {
+		t.Fatalf("Expected test2 to be %v, got %v", 2, v)
+	}
+
+	if v := s.Get("test3"); v != 3 {
+		t.Fatalf("Expected test3 to be %v, got %v", 3, v)
+	}
+}
+
+func TestReset(t *testing.T) {
+	s := store.New(map[string]int{"test1": 1})
+
+	data := map[string]int{"test2": 2}
+	originalRawData, err := json.Marshal(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s.Reset(data)
+	s.Set("test3", 3)
+
+	// check if data was shallow copied
+	rawData, _ := json.Marshal(data)
+	if !bytes.Equal(originalRawData, rawData) {
+		t.Fatalf("Expected data \n%s, \ngot \n%s", originalRawData, rawData)
+	}
+
+	if s.Has("test1") {
+		t.Fatalf("Expected test1 to be deleted, got %v", s.Get("test1"))
+	}
+
+	if v := s.Get("test2"); v != 2 {
+		t.Fatalf("Expected test2 to be %v, got %v", 2, v)
+	}
+
+	if v := s.Get("test3"); v != 3 {
+		t.Fatalf("Expected test3 to be %v, got %v", 3, v)
+	}
+}
+
+func TestLength(t *testing.T) {
+	s := store.New(map[string]int{"test1": 1})
+	s.Set("test2", 2)
+
+	if v := s.Length(); v != 2 {
+		t.Fatalf("Expected length %d, got %d", 2, v)
 	}
 }
 
@@ -81,8 +145,36 @@ func TestGet(t *testing.T) {
 	}
 }
 
+func TestGetAll(t *testing.T) {
+	data := map[string]int{
+		"a": 1,
+		"b": 2,
+	}
+
+	s := store.New(data)
+
+	// fetch and delete each key to make sure that it was shallow copied
+	result := s.GetAll()
+	for k := range result {
+		delete(result, k)
+	}
+
+	// refetch again
+	result = s.GetAll()
+
+	if len(result) != len(data) {
+		t.Fatalf("Expected %d, got %d items", len(data), len(result))
+	}
+
+	for k := range result {
+		if result[k] != data[k] {
+			t.Fatalf("Expected %s to be %v, got %v", k, data[k], result[k])
+		}
+	}
+}
+
 func TestSet(t *testing.T) {
-	s := store.New[int](nil)
+	s := store.Store[int]{}
 
 	data := map[string]int{"test1": 0, "test2": 1, "test3": 3}
 
@@ -105,7 +197,7 @@ func TestSet(t *testing.T) {
 }
 
 func TestSetIfLessThanLimit(t *testing.T) {
-	s := store.New[int](nil)
+	s := store.Store[int]{}
 
 	limit := 2
 

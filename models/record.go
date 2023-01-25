@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/store"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 	"golang.org/x/crypto/bcrypt"
@@ -28,19 +29,19 @@ type Record struct {
 
 	collection *Collection
 
-	exportUnknown         bool           // whether to export unknown fields
-	ignoreEmailVisibility bool           // whether to ignore the emailVisibility flag for auth collections
-	data                  map[string]any // any custom data in addition to the base model fields
-	expand                map[string]any // expanded relations
+	exportUnknown         bool // whether to export unknown fields
+	ignoreEmailVisibility bool // whether to ignore the emailVisibility flag for auth collections
 	loaded                bool
-	originalData          map[string]any // the original (aka. first loaded) model data
+	originalData          map[string]any    // the original (aka. first loaded) model data
+	expand                *store.Store[any] // expanded relations
+	data                  *store.Store[any] // any custom data in addition to the base model fields
 }
 
 // NewRecord initializes a new empty Record model.
 func NewRecord(collection *Collection) *Record {
 	return &Record{
 		collection: collection,
-		data:       map[string]any{},
+		data:       store.New[any](nil),
 	}
 }
 
@@ -109,7 +110,8 @@ func (m *Record) Collection() *Collection {
 }
 
 // OriginalCopy returns a copy of the current record model populated
-// with its original (aka. the initially loaded) data state.
+// with its ORIGINAL data state (aka. the initially loaded) and
+// everything else reset to the defaults.
 func (m *Record) OriginalCopy() *Record {
 	newRecord := NewRecord(m.collection)
 	newRecord.Load(m.originalData)
@@ -123,15 +125,40 @@ func (m *Record) OriginalCopy() *Record {
 	return newRecord
 }
 
-// Expand returns a shallow copy of  the record.expand data
-// attached to the current Record model.
-func (m *Record) Expand() map[string]any {
-	return shallowCopy(m.expand)
+// CleanCopy returns a copy of the current record model populated only
+// with its LATEST data state and everything else reset to the defaults.
+func (m *Record) CleanCopy() *Record {
+	newRecord := NewRecord(m.collection)
+	newRecord.Load(m.data.GetAll())
+	newRecord.Id = m.Id
+	newRecord.Created = m.Created
+	newRecord.Updated = m.Updated
+
+	if m.IsNew() {
+		newRecord.MarkAsNew()
+	} else {
+		newRecord.MarkAsNotNew()
+	}
+
+	return newRecord
 }
 
-// SetExpand assigns the provided data to record.expand.
+// Expand returns a shallow copy of the current Record model expand data.
+func (m *Record) Expand() map[string]any {
+	if m.expand == nil {
+		m.expand = store.New[any](nil)
+	}
+
+	return m.expand.GetAll()
+}
+
+// SetExpand shallow copies the provided data to the current Record model's expand.
 func (m *Record) SetExpand(expand map[string]any) {
-	m.expand = shallowCopy(expand)
+	if m.expand == nil {
+		m.expand = store.New[any](nil)
+	}
+
+	m.expand.Reset(expand)
 }
 
 // MergeExpand merges recursively the provided expand data into
@@ -141,14 +168,23 @@ func (m *Record) SetExpand(expand map[string]any) {
 // then both old and new records will be merged into a new slice (aka. a :merge: [b,c] => [a,b,c]).
 // Otherwise the "old" expanded record will be replace with the "new" one (aka. a :merge: aNew => aNew).
 func (m *Record) MergeExpand(expand map[string]any) {
-	if m.expand == nil && len(expand) > 0 {
-		m.expand = make(map[string]any, len(expand))
+	// nothing to merge
+	if len(expand) == 0 {
+		return
 	}
 
+	// no old expand
+	if m.expand == nil {
+		m.expand = store.New(expand)
+		return
+	}
+
+	oldExpand := m.expand.GetAll()
+
 	for key, new := range expand {
-		old, ok := m.expand[key]
+		old, ok := oldExpand[key]
 		if !ok {
-			m.expand[key] = new
+			oldExpand[key] = new
 			continue
 		}
 
@@ -163,7 +199,7 @@ func (m *Record) MergeExpand(expand map[string]any) {
 		default:
 			// invalid old expand data -> assign directly the new
 			// (no matter whether new is valid or not)
-			m.expand[key] = new
+			oldExpand[key] = new
 			continue
 		}
 
@@ -197,19 +233,23 @@ func (m *Record) MergeExpand(expand map[string]any) {
 		}
 
 		if wasOldSlice || wasNewSlice || len(oldSlice) == 0 {
-			m.expand[key] = oldSlice
+			oldExpand[key] = oldSlice
 		} else {
-			m.expand[key] = oldSlice[0]
+			oldExpand[key] = oldSlice[0]
 		}
 	}
+
+	m.expand.Reset(oldExpand)
 }
 
 // SchemaData returns a shallow copy ONLY of the defined record schema fields data.
 func (m *Record) SchemaData() map[string]any {
 	result := make(map[string]any, len(m.collection.Schema.Fields()))
 
+	data := m.data.GetAll()
+
 	for _, field := range m.collection.Schema.Fields() {
-		if v, ok := m.data[field.Name]; ok {
+		if v, ok := data[field.Name]; ok {
 			result[field.Name] = v
 		}
 	}
@@ -221,7 +261,11 @@ func (m *Record) SchemaData() map[string]any {
 // aka. fields that are neither one of the base and special system ones,
 // nor defined by the collection schema.
 func (m *Record) UnknownData() map[string]any {
-	return m.extractUnknownData(m.data)
+	if m.data == nil {
+		return nil
+	}
+
+	return m.extractUnknownData(m.data.GetAll())
 }
 
 // IgnoreEmailVisibility toggles the flag to ignore the auth record email visibility check.
@@ -267,10 +311,10 @@ func (m *Record) Set(key string, value any) {
 		}
 
 		if m.data == nil {
-			m.data = map[string]any{}
+			m.data = store.New[any](nil)
 		}
 
-		m.data[key] = v
+		m.data.Set(key, v)
 	}
 }
 
@@ -284,11 +328,11 @@ func (m *Record) Get(key string) any {
 	case schema.FieldNameUpdated:
 		return m.Updated
 	default:
-		if v, ok := m.data[key]; ok {
-			return v
+		if m.data == nil {
+			return nil
 		}
 
-		return nil
+		return m.data.Get(key)
 	}
 }
 
@@ -331,10 +375,11 @@ func (m *Record) GetStringSlice(key string) []string {
 // Retrieves the "key" json field value and unmarshals it into "result".
 //
 // Example
-//  result := struct {
-//      FirstName string `json:"first_name"`
-//  }{}
-//  err := m.UnmarshalJSONField("my_field_name", &result)
+//
+//	result := struct {
+//	    FirstName string `json:"first_name"`
+//	}{}
+//	err := m.UnmarshalJSONField("my_field_name", &result)
 func (m *Record) UnmarshalJSONField(key string, result any) error {
 	return json.Unmarshal([]byte(m.GetString(key)), &result)
 }
@@ -432,8 +477,8 @@ func (m *Record) PublicExport() map[string]any {
 	result[schema.FieldNameCollectionName] = m.collection.Name
 
 	// add expand (if set)
-	if m.expand != nil {
-		result[schema.FieldNameExpand] = m.expand
+	if m.expand != nil && m.expand.Length() > 0 {
+		result[schema.FieldNameExpand] = m.expand.GetAll()
 	}
 
 	return result
@@ -469,10 +514,10 @@ func (m *Record) UnmarshalJSON(data []byte) error {
 //
 // Example usage:
 //
-//  newData := record.ReplaceModifers(data)
-//	// record:  {"field": 10}
-// 	// data:    {"field+": 5}
-// 	// newData: {"field": 15}
+//	 newData := record.ReplaceModifers(data)
+//		// record:  {"field": 10}
+//		// data:    {"field+": 5}
+//		// newData: {"field": 15}
 func (m *Record) ReplaceModifers(data map[string]any) map[string]any {
 	var clone = shallowCopy(data)
 	if len(clone) == 0 {
@@ -624,7 +669,7 @@ func (m *Record) extractUnknownData(data map[string]any) map[string]any {
 
 	result := map[string]any{}
 
-	for k, v := range m.data {
+	for k, v := range data {
 		if _, ok := knownFields[k]; !ok {
 			result[k] = v
 		}

@@ -45,6 +45,16 @@
 
 - Improved API and validations error reporting by providing more detailed messages.
 
+- Refactored `models.Record` expand and data change operations to be concurrent safe.
+
+- Added `models.Record.CleanCopy()` helper that creates a new record copy with only the latest data state of the existing one and all other options reset to their defaults.
+
+- Added several `store.Store` helpers:
+  ```go
+  store.Reset(newData map[string]T)
+  store.Length() int
+  store.GetAll() map[string]T
+  ```
 
 ## v0.11.3
 

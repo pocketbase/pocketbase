@@ -348,12 +348,9 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 		return nil // no subscribers
 	}
 
-	// remove the expand from the broadcasted record because we don't
-	// know if the clients have access to view the expanded records
-	cleanRecord := *record
-	cleanRecord.SetExpand(nil)
-	cleanRecord.WithUnkownData(false)
-	cleanRecord.IgnoreEmailVisibility(false)
+	// create a clean record copy without expand and unknown fields
+	// because we don't know if the clients have permissions to view them
+	cleanRecord := record.CleanCopy()
 
 	subscriptionRuleMap := map[string]*string{
 		(collection.Name + "/" + cleanRecord.Id): collection.ViewRule,
@@ -367,7 +364,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record) er
 
 	data := &recordData{
 		Action: action,
-		Record: &cleanRecord,
+		Record: cleanRecord,
 	}
 
 	dataBytes, err := json.Marshal(data)

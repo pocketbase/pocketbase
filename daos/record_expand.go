@@ -97,6 +97,8 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 			recordIds[i] = record.Id
 		}
 
+		// @todo after the index optimizations consider allowing
+		// indirect expand for multi-relation fields
 		indirectRecords, err := dao.FindRecordsByExpr(
 			indirectRel.Id,
 			dbx.In(inflector.Columnify(matches[2]), recordIds...),

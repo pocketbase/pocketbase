@@ -1,6 +1,7 @@
 package models_test
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"testing"
@@ -346,7 +347,7 @@ func TestRecordOriginalCopy(t *testing.T) {
 		t.Fatalf("Expected the initial/original f to be %q, got %q", "123", v)
 	}
 
-	// Loading new data shouldn't affect the original state
+	// loading new data shouldn't affect the original state
 	m.Load(map[string]any{"f": "789"})
 
 	if v := m.GetString("f"); v != "789" {
@@ -355,6 +356,38 @@ func TestRecordOriginalCopy(t *testing.T) {
 
 	if v := m.OriginalCopy().GetString("f"); v != "123" {
 		t.Fatalf("Expected the initial/original f still to be %q, got %q", "123", v)
+	}
+}
+
+func TestRecordCleanCopy(t *testing.T) {
+	m := models.NewRecord(&models.Collection{
+		Name: "cname",
+		Type: models.CollectionTypeAuth,
+	})
+	m.Load(map[string]any{
+		"id":       "id1",
+		"created":  "2023-01-01 00:00:00.000Z",
+		"updated":  "2023-01-02 00:00:00.000Z",
+		"username": "test",
+		"verified": true,
+		"email":    "test@example.com",
+		"unknown":  "456",
+	})
+
+	// make a change to ensure that the latest data is targeted
+	m.Set("id", "id2")
+
+	// allow the special flags and options to check whether they will be ignored
+	m.SetExpand(map[string]any{"test": 123})
+	m.IgnoreEmailVisibility(true)
+	m.WithUnkownData(true)
+
+	copy := m.CleanCopy()
+	copyExport, _ := copy.MarshalJSON()
+
+	expectedExport := []byte(`{"collectionId":"","collectionName":"cname","created":"2023-01-01 00:00:00.000Z","emailVisibility":false,"id":"id2","updated":"2023-01-02 00:00:00.000Z","username":"test","verified":true}`)
+	if !bytes.Equal(copyExport, expectedExport) {
+		t.Fatalf("Expected clean export \n%s, \ngot \n%s", expectedExport, copyExport)
 	}
 }
 
