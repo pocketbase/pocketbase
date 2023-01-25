@@ -1,3 +1,8 @@
+## v0.11.4
+
+- Fixed cascade delete for rel records with the same id as the main record ([#1689](https://github.com/pocketbase/pocketbase/issues/1689)).
+
+
 ## v0.11.3
 
 - Fix realtime API panic on concurrent clients iteration ([#1628](https://github.com/pocketbase/pocketbase/issues/1628))
