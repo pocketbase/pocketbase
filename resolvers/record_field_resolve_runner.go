@@ -348,11 +348,11 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 				// allow querying only auth records with emails marked as public
 				if prop == schema.FieldNameEmail && !r.allowHiddenFields {
 					result.AfterBuild = func(expr dbx.Expression) dbx.Expression {
-						return dbx.And(expr, dbx.NewExp(fmt.Sprintf(
+						return dbx.Enclose(dbx.And(expr, dbx.NewExp(fmt.Sprintf(
 							"[[%s.%s]] = TRUE",
 							r.activeTableAlias,
 							schema.FieldNameEmailVisibility,
-						)))
+						))))
 					}
 				}
 

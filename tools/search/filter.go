@@ -147,7 +147,7 @@ func buildExpr(
 				op:            op,
 			}
 
-			expr = dbx.And(expr, mm)
+			expr = dbx.Enclose(dbx.And(expr, mm))
 		} else if left.MultiMatchSubQuery != nil {
 			mm := &manyVsOneExpr{
 				subQuery:     left.MultiMatchSubQuery,
@@ -155,7 +155,7 @@ func buildExpr(
 				otherOperand: right,
 			}
 
-			expr = dbx.And(expr, mm)
+			expr = dbx.Enclose(dbx.And(expr, mm))
 		} else if right.MultiMatchSubQuery != nil {
 			mm := &manyVsOneExpr{
 				subQuery:     right.MultiMatchSubQuery,
@@ -164,7 +164,7 @@ func buildExpr(
 				inverse:      true,
 			}
 
-			expr = dbx.And(expr, mm)
+			expr = dbx.Enclose(dbx.And(expr, mm))
 		}
 	}
 
@@ -473,6 +473,6 @@ func multiMatchAfterBuildFunc(op fexpr.SignOp, multiMatchAliases ...string) func
 			orExprs[i+1] = dbx.NewExp("[[" + mAlias + ".multiMatchValue]] IS NULL")
 		}
 
-		return dbx.Or(orExprs...)
+		return dbx.Enclose(dbx.Or(orExprs...))
 	}
 }
