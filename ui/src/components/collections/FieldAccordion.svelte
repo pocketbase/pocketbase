@@ -120,8 +120,8 @@
     }
 
     onMount(() => {
-        // auto expand new fields
-        if (!field.id) {
+        if (field?.onMountExpand) {
+            field.onMountExpand = false; // auto expand only the first time
             expand();
         }
     });

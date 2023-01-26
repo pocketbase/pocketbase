@@ -209,6 +209,13 @@
             clone.created = "";
             clone.updated = "";
             clone.name += "_duplicate";
+
+            // reset the schema
+            if (!CommonHelper.isEmpty(clone.schema)) {
+                for (const field of clone.schema) {
+                    field.id = "";
+                }
+            }
         }
 
         show(clone);

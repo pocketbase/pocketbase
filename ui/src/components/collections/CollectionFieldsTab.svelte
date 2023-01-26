@@ -53,6 +53,8 @@
             name: getUniqueFieldName(),
         });
 
+        field.onMountExpand = true;
+
         collection.schema.push(field);
         collection.schema = collection.schema;
     }
