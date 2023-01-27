@@ -34,10 +34,9 @@ func (api *settingsApi) list(c echo.Context) error {
 		return NewBadRequestError("", err)
 	}
 
-	event := &core.SettingsListEvent{
-		HttpContext:      c,
-		RedactedSettings: settings,
-	}
+	event := new(core.SettingsListEvent)
+	event.HttpContext = c
+	event.RedactedSettings = settings
 
 	return api.app.OnSettingsListRequest().Trigger(event, func(e *core.SettingsListEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.RedactedSettings)
@@ -52,10 +51,9 @@ func (api *settingsApi) set(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
-	event := &core.SettingsUpdateEvent{
-		HttpContext: c,
-		OldSettings: api.app.Settings(),
-	}
+	event := new(core.SettingsUpdateEvent)
+	event.HttpContext = c
+	event.OldSettings = api.app.Settings()
 
 	// update the settings
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*settings.Settings]) forms.InterceptorNextFunc[*settings.Settings] {

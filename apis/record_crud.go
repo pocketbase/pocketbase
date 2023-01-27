@@ -83,12 +83,11 @@ func (api *recordApi) list(c echo.Context) error {
 
 	result.Items = records
 
-	event := &core.RecordsListEvent{
-		HttpContext: c,
-		Collection:  collection,
-		Records:     records,
-		Result:      result,
-	}
+	event := new(core.RecordsListEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Records = records
+	event.Result = result
 
 	return api.app.OnRecordsListRequest().Trigger(event, func(e *core.RecordsListEvent) error {
 		if err := EnrichRecords(e.HttpContext, api.app.Dao(), e.Records); err != nil && api.app.IsDebug() {
@@ -135,10 +134,10 @@ func (api *recordApi) view(c echo.Context) error {
 		return NewNotFoundError("", fetchErr)
 	}
 
-	event := &core.RecordViewEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordViewEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
 
 	return api.app.OnRecordViewRequest().Trigger(event, func(e *core.RecordViewEvent) error {
 		if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
@@ -218,10 +217,10 @@ func (api *recordApi) create(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.RecordCreateEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordCreateEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
 
 	// create the record
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
@@ -306,10 +305,10 @@ func (api *recordApi) update(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.RecordUpdateEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordUpdateEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
 
 	// update the record
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
@@ -375,10 +374,10 @@ func (api *recordApi) delete(c echo.Context) error {
 		return NewNotFoundError("", fetchErr)
 	}
 
-	event := &core.RecordDeleteEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordDeleteEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
 
 	handlerErr := api.app.OnRecordBeforeDeleteRequest().Trigger(event, func(e *core.RecordDeleteEvent) error {
 		// delete the record

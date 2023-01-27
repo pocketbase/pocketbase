@@ -43,11 +43,10 @@ func (api *collectionApi) list(c echo.Context) error {
 		return NewBadRequestError("", err)
 	}
 
-	event := &core.CollectionsListEvent{
-		HttpContext: c,
-		Collections: collections,
-		Result:      result,
-	}
+	event := new(core.CollectionsListEvent)
+	event.HttpContext = c
+	event.Collections = collections
+	event.Result = result
 
 	return api.app.OnCollectionsListRequest().Trigger(event, func(e *core.CollectionsListEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.Result)
@@ -60,10 +59,9 @@ func (api *collectionApi) view(c echo.Context) error {
 		return NewNotFoundError("", err)
 	}
 
-	event := &core.CollectionViewEvent{
-		HttpContext: c,
-		Collection:  collection,
-	}
+	event := new(core.CollectionViewEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	return api.app.OnCollectionViewRequest().Trigger(event, func(e *core.CollectionViewEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.Collection)
@@ -80,10 +78,9 @@ func (api *collectionApi) create(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.CollectionCreateEvent{
-		HttpContext: c,
-		Collection:  collection,
-	}
+	event := new(core.CollectionCreateEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	// create the collection
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
@@ -122,10 +119,9 @@ func (api *collectionApi) update(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.CollectionUpdateEvent{
-		HttpContext: c,
-		Collection:  collection,
-	}
+	event := new(core.CollectionUpdateEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	// update the collection
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
@@ -157,10 +153,9 @@ func (api *collectionApi) delete(c echo.Context) error {
 		return NewNotFoundError("", err)
 	}
 
-	event := &core.CollectionDeleteEvent{
-		HttpContext: c,
-		Collection:  collection,
-	}
+	event := new(core.CollectionDeleteEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	handlerErr := api.app.OnCollectionBeforeDeleteRequest().Trigger(event, func(e *core.CollectionDeleteEvent) error {
 		if err := api.app.Dao().DeleteCollection(e.Collection); err != nil {
@@ -187,10 +182,9 @@ func (api *collectionApi) bulkImport(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.CollectionsImportEvent{
-		HttpContext: c,
-		Collections: form.Collections,
-	}
+	event := new(core.CollectionsImportEvent)
+	event.HttpContext = c
+	event.Collections = form.Collections
 
 	// import collections
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[[]*models.Collection]) forms.InterceptorNextFunc[[]*models.Collection] {

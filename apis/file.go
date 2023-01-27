@@ -84,14 +84,13 @@ func (api *fileApi) download(c echo.Context) error {
 		}
 	}
 
-	event := &core.FileDownloadEvent{
-		HttpContext: c,
-		Record:      record,
-		Collection:  collection,
-		FileField:   fileField,
-		ServedPath:  servedPath,
-		ServedName:  servedName,
-	}
+	event := new(core.FileDownloadEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
+	event.FileField = fileField
+	event.ServedPath = servedPath
+	event.ServedName = servedName
 
 	return api.app.OnFileDownloadRequest().Trigger(event, func(e *core.FileDownloadEvent) error {
 		res := e.HttpContext.Response()

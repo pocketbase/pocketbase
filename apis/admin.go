@@ -39,11 +39,10 @@ func (api *adminApi) authResponse(c echo.Context, admin *models.Admin) error {
 		return NewBadRequestError("Failed to create auth token.", tokenErr)
 	}
 
-	event := &core.AdminAuthEvent{
-		HttpContext: c,
-		Admin:       admin,
-		Token:       token,
-	}
+	event := new(core.AdminAuthEvent)
+	event.HttpContext = c
+	event.Admin = admin
+	event.Token = token
 
 	return api.app.OnAdminAuthRequest().Trigger(event, func(e *core.AdminAuthEvent) error {
 		return e.HttpContext.JSON(200, map[string]any{
@@ -59,10 +58,9 @@ func (api *adminApi) authRefresh(c echo.Context) error {
 		return NewNotFoundError("Missing auth admin context.", nil)
 	}
 
-	event := &core.AdminAuthRefreshEvent{
-		HttpContext: c,
-		Admin:       admin,
-	}
+	event := new(core.AdminAuthRefreshEvent)
+	event.HttpContext = c
+	event.Admin = admin
 
 	handlerErr := api.app.OnAdminBeforeAuthRefreshRequest().Trigger(event, func(e *core.AdminAuthRefreshEvent) error {
 		return api.authResponse(e.HttpContext, e.Admin)
@@ -83,11 +81,10 @@ func (api *adminApi) authWithPassword(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
-	event := &core.AdminAuthWithPasswordEvent{
-		HttpContext: c,
-		Password:    form.Password,
-		Identity:    form.Identity,
-	}
+	event := new(core.AdminAuthWithPasswordEvent)
+	event.HttpContext = c
+	event.Password = form.Password
+	event.Identity = form.Identity
 
 	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
 		return func(admin *models.Admin) error {
@@ -122,9 +119,8 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
-	event := &core.AdminRequestPasswordResetEvent{
-		HttpContext: c,
-	}
+	event := new(core.AdminRequestPasswordResetEvent)
+	event.HttpContext = c
 
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
 		return func(Admin *models.Admin) error {
@@ -165,9 +161,8 @@ func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	event := &core.AdminConfirmPasswordResetEvent{
-		HttpContext: c,
-	}
+	event := new(core.AdminConfirmPasswordResetEvent)
+	event.HttpContext = c
 
 	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
 		return func(admin *models.Admin) error {
@@ -207,11 +202,10 @@ func (api *adminApi) list(c echo.Context) error {
 		return NewBadRequestError("", err)
 	}
 
-	event := &core.AdminsListEvent{
-		HttpContext: c,
-		Admins:      admins,
-		Result:      result,
-	}
+	event := new(core.AdminsListEvent)
+	event.HttpContext = c
+	event.Admins = admins
+	event.Result = result
 
 	return api.app.OnAdminsListRequest().Trigger(event, func(e *core.AdminsListEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.Result)
@@ -229,10 +223,9 @@ func (api *adminApi) view(c echo.Context) error {
 		return NewNotFoundError("", err)
 	}
 
-	event := &core.AdminViewEvent{
-		HttpContext: c,
-		Admin:       admin,
-	}
+	event := new(core.AdminViewEvent)
+	event.HttpContext = c
+	event.Admin = admin
 
 	return api.app.OnAdminViewRequest().Trigger(event, func(e *core.AdminViewEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.Admin)
@@ -249,10 +242,9 @@ func (api *adminApi) create(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.AdminCreateEvent{
-		HttpContext: c,
-		Admin:       admin,
-	}
+	event := new(core.AdminCreateEvent)
+	event.HttpContext = c
+	event.Admin = admin
 
 	// create the admin
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
@@ -296,10 +288,9 @@ func (api *adminApi) update(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.AdminUpdateEvent{
-		HttpContext: c,
-		Admin:       admin,
-	}
+	event := new(core.AdminUpdateEvent)
+	event.HttpContext = c
+	event.Admin = admin
 
 	// update the admin
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
@@ -336,10 +327,9 @@ func (api *adminApi) delete(c echo.Context) error {
 		return NewNotFoundError("", err)
 	}
 
-	event := &core.AdminDeleteEvent{
-		HttpContext: c,
-		Admin:       admin,
-	}
+	event := new(core.AdminDeleteEvent)
+	event.HttpContext = c
+	event.Admin = admin
 
 	handlerErr := api.app.OnAdminBeforeDeleteRequest().Trigger(event, func(e *core.AdminDeleteEvent) error {
 		if err := api.app.Dao().DeleteAdmin(e.Admin); err != nil {

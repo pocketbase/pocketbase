@@ -55,10 +55,10 @@ func (api *recordAuthApi) authRefresh(c echo.Context) error {
 		return NewNotFoundError("Missing auth record context.", nil)
 	}
 
-	event := &core.RecordAuthRefreshEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordAuthRefreshEvent)
+	event.HttpContext = c
+	event.Collection = record.Collection()
+	event.Record = record
 
 	handlerErr := api.app.OnRecordBeforeAuthRefreshRequest().Trigger(event, func(e *core.RecordAuthRefreshEvent) error {
 		return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil)
@@ -204,9 +204,9 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 		})
 	})
 
-	event := &core.RecordAuthWithOAuth2Event{
-		HttpContext: c,
-	}
+	event := new(core.RecordAuthWithOAuth2Event)
+	event.HttpContext = c
+	event.Collection = collection
 
 	_, _, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*forms.RecordOAuth2LoginData]) forms.InterceptorNextFunc[*forms.RecordOAuth2LoginData] {
 		return func(data *forms.RecordOAuth2LoginData) error {
@@ -249,11 +249,11 @@ func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	event := &core.RecordAuthWithPasswordEvent{
-		HttpContext: c,
-		Password:    form.Password,
-		Identity:    form.Identity,
-	}
+	event := new(core.RecordAuthWithPasswordEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Password = form.Password
+	event.Identity = form.Identity
 
 	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
@@ -298,9 +298,9 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
-	event := &core.RecordRequestPasswordResetEvent{
-		HttpContext: c,
-	}
+	event := new(core.RecordRequestPasswordResetEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
@@ -346,9 +346,9 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	event := &core.RecordConfirmPasswordResetEvent{
-		HttpContext: c,
-	}
+	event := new(core.RecordConfirmPasswordResetEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
@@ -388,9 +388,9 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 		return NewBadRequestError("An error occurred while validating the form.", err)
 	}
 
-	event := &core.RecordRequestVerificationEvent{
-		HttpContext: c,
-	}
+	event := new(core.RecordRequestVerificationEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
@@ -436,9 +436,9 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	event := &core.RecordConfirmVerificationEvent{
-		HttpContext: c,
-	}
+	event := new(core.RecordConfirmVerificationEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
@@ -464,6 +464,11 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 }
 
 func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
+	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
+	if collection == nil {
+		return NewNotFoundError("Missing collection context.", nil)
+	}
+
 	record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
 	if record == nil {
 		return NewUnauthorizedError("The request requires valid auth record.", nil)
@@ -474,10 +479,10 @@ func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
-	event := &core.RecordRequestEmailChangeEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordRequestEmailChangeEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
 
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
@@ -509,9 +514,9 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
-	event := &core.RecordConfirmEmailChangeEvent{
-		HttpContext: c,
-	}
+	event := new(core.RecordConfirmEmailChangeEvent)
+	event.HttpContext = c
+	event.Collection = collection
 
 	_, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
@@ -557,11 +562,11 @@ func (api *recordAuthApi) listExternalAuths(c echo.Context) error {
 		return NewBadRequestError("Failed to fetch the external auths for the specified auth record.", err)
 	}
 
-	event := &core.RecordListExternalAuthsEvent{
-		HttpContext:   c,
-		Record:        record,
-		ExternalAuths: externalAuths,
-	}
+	event := new(core.RecordListExternalAuthsEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
+	event.ExternalAuths = externalAuths
 
 	return api.app.OnRecordListExternalAuthsRequest().Trigger(event, func(e *core.RecordListExternalAuthsEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.ExternalAuths)
@@ -590,11 +595,11 @@ func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 		return NewNotFoundError("Missing external auth provider relation.", err)
 	}
 
-	event := &core.RecordUnlinkExternalAuthEvent{
-		HttpContext:  c,
-		Record:       record,
-		ExternalAuth: externalAuth,
-	}
+	event := new(core.RecordUnlinkExternalAuthEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
+	event.ExternalAuth = externalAuth
 
 	handlerErr := api.app.OnRecordBeforeUnlinkExternalAuthRequest().Trigger(event, func(e *core.RecordUnlinkExternalAuthEvent) error {
 		if err := api.app.Dao().DeleteExternalAuth(externalAuth); err != nil {

@@ -124,27 +124,51 @@ type App interface {
 
 	// OnModelBeforeCreate hook is triggered before inserting a new
 	// entry in the DB, allowing you to modify or validate the stored data.
-	OnModelBeforeCreate() *hook.Hook[*ModelEvent]
+	//
+	// You can optionally specify a list of "tags"
+	// (table names and/or the Collection id for Record models)
+	// to filter any the newly attached event data handler.
+	OnModelBeforeCreate(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelAfterCreate hook is triggered after successfully
 	// inserting a new entry in the DB.
-	OnModelAfterCreate() *hook.Hook[*ModelEvent]
+	//
+	// You can optionally specify a list of "tags"
+	// (table names and/or the Collection id for Record models)
+	// to filter any the newly attached event data handler.
+	OnModelAfterCreate(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelBeforeUpdate hook is triggered before updating existing
 	// entry in the DB, allowing you to modify or validate the stored data.
-	OnModelBeforeUpdate() *hook.Hook[*ModelEvent]
+	//
+	// You can optionally specify a list of "tags"
+	// (table names and/or the Collection id for Record models)
+	// to filter any the newly attached event data handler.
+	OnModelBeforeUpdate(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelAfterUpdate hook is triggered after successfully updating
 	// existing entry in the DB.
-	OnModelAfterUpdate() *hook.Hook[*ModelEvent]
+	//
+	// You can optionally specify a list of "tags"
+	// (table names and/or the Collection id for Record models)
+	// to filter any the newly attached event data handler.
+	OnModelAfterUpdate(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelBeforeDelete hook is triggered before deleting an
 	// existing entry from the DB.
-	OnModelBeforeDelete() *hook.Hook[*ModelEvent]
+	//
+	// You can optionally specify a list of "tags"
+	// (table names and/or the Collection id for Record models)
+	// to filter any the newly attached event data handler.
+	OnModelBeforeDelete(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelAfterDelete is triggered after successfully deleting an
 	// existing entry from the DB.
-	OnModelAfterDelete() *hook.Hook[*ModelEvent]
+	//
+	// You can optionally specify a list of "tags"
+	// (table names and/or the Collection id for Record models)
+	// to filter any the newly attached event data handler.
+	OnModelAfterDelete(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// ---------------------------------------------------------------
 	// Mailer event hooks
@@ -166,33 +190,51 @@ type App interface {
 	//
 	// Could be used to send your own custom email template if
 	// [hook.StopPropagation] is returned in one of its listeners.
-	OnMailerBeforeRecordResetPasswordSend() *hook.Hook[*MailerRecordEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnMailerBeforeRecordResetPasswordSend(tags ...string) *hook.TaggedHook[*MailerRecordEvent]
 
 	// OnMailerAfterRecordResetPasswordSend hook is triggered after
 	// an auth record password reset email was successfully sent.
-	OnMailerAfterRecordResetPasswordSend() *hook.Hook[*MailerRecordEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnMailerAfterRecordResetPasswordSend(tags ...string) *hook.TaggedHook[*MailerRecordEvent]
 
 	// OnMailerBeforeRecordVerificationSend hook is triggered right before
 	// sending a verification email to an auth record.
 	//
 	// Could be used to send your own custom email template if
 	// [hook.StopPropagation] is returned in one of its listeners.
-	OnMailerBeforeRecordVerificationSend() *hook.Hook[*MailerRecordEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnMailerBeforeRecordVerificationSend(tags ...string) *hook.TaggedHook[*MailerRecordEvent]
 
 	// OnMailerAfterRecordVerificationSend hook is triggered after a
 	// verification email was successfully sent to an auth record.
-	OnMailerAfterRecordVerificationSend() *hook.Hook[*MailerRecordEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnMailerAfterRecordVerificationSend(tags ...string) *hook.TaggedHook[*MailerRecordEvent]
 
 	// OnMailerBeforeRecordChangeEmailSend hook is triggered right before
 	// sending a confirmation new address email to an auth record.
 	//
 	// Could be used to send your own custom email template if
 	// [hook.StopPropagation] is returned in one of its listeners.
-	OnMailerBeforeRecordChangeEmailSend() *hook.Hook[*MailerRecordEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnMailerBeforeRecordChangeEmailSend(tags ...string) *hook.TaggedHook[*MailerRecordEvent]
 
 	// OnMailerAfterRecordChangeEmailSend hook is triggered after a
 	// verification email was successfully sent to an auth record.
-	OnMailerAfterRecordChangeEmailSend() *hook.Hook[*MailerRecordEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnMailerAfterRecordChangeEmailSend(tags ...string) *hook.TaggedHook[*MailerRecordEvent]
 
 	// ---------------------------------------------------------------
 	// Realtime API event hooks
@@ -257,7 +299,7 @@ type App interface {
 	//
 	// Could be used to validate or modify the file response before
 	// returning it to the client.
-	OnFileDownloadRequest() *hook.Hook[*FileDownloadEvent]
+	OnFileDownloadRequest(tags ...string) *hook.TaggedHook[*FileDownloadEvent]
 
 	// ---------------------------------------------------------------
 	// Admin API event hooks
@@ -366,18 +408,27 @@ type App interface {
 	//
 	// Could be used to additionally validate or modify the authenticated
 	// record data and token.
-	OnRecordAuthRequest() *hook.Hook[*RecordAuthEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAuthRequest(tags ...string) *hook.TaggedHook[*RecordAuthEvent]
 
 	// OnRecordBeforeAuthWithPasswordRequest hook is triggered before each Record
 	// auth with password API request (after request data load and before password validation).
 	//
 	// Could be used to implement for example a custom password validation
 	// or to locate a different Record identity (by assigning [RecordAuthWithPasswordEvent.Record]).
-	OnRecordBeforeAuthWithPasswordRequest() *hook.Hook[*RecordAuthWithPasswordEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeAuthWithPasswordRequest(tags ...string) *hook.TaggedHook[*RecordAuthWithPasswordEvent]
 
 	// OnRecordAfterAuthWithPasswordRequest hook is triggered after each
 	// successful Record auth with password API request.
-	OnRecordAfterAuthWithPasswordRequest() *hook.Hook[*RecordAuthWithPasswordEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterAuthWithPasswordRequest(tags ...string) *hook.TaggedHook[*RecordAuthWithPasswordEvent]
 
 	// OnRecordBeforeAuthWithOAuth2Request hook is triggered before each Record
 	// OAuth2 sign-in/sign-up API request (after token exchange and before external provider linking).
@@ -387,104 +438,161 @@ type App interface {
 	//
 	// To assign or link a different existing record model you can
 	// overwrite/modify the [RecordAuthWithOAuth2Event.Record] field.
-	OnRecordBeforeAuthWithOAuth2Request() *hook.Hook[*RecordAuthWithOAuth2Event]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeAuthWithOAuth2Request(tags ...string) *hook.TaggedHook[*RecordAuthWithOAuth2Event]
 
 	// OnRecordAfterAuthWithOAuth2Request hook is triggered after each
 	// successful Record OAuth2 API request.
-	OnRecordAfterAuthWithOAuth2Request() *hook.Hook[*RecordAuthWithOAuth2Event]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterAuthWithOAuth2Request(tags ...string) *hook.TaggedHook[*RecordAuthWithOAuth2Event]
 
 	// OnRecordBeforeAuthRefreshRequest hook is triggered before each Record
 	// auth refresh API request (right before generating a new auth token).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different auth refresh behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeAuthRefreshRequest() *hook.Hook[*RecordAuthRefreshEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeAuthRefreshRequest(tags ...string) *hook.TaggedHook[*RecordAuthRefreshEvent]
 
 	// OnRecordAfterAuthRefreshRequest hook is triggered after each
 	// successful auth refresh API request (right after generating a new auth token).
-	OnRecordAfterAuthRefreshRequest() *hook.Hook[*RecordAuthRefreshEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterAuthRefreshRequest(tags ...string) *hook.TaggedHook[*RecordAuthRefreshEvent]
 
 	// OnRecordBeforeRequestPasswordResetRequest hook is triggered before each Record
 	// request password reset API request (after request data load and before sending the reset email).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different password reset behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeRequestPasswordResetRequest() *hook.Hook[*RecordRequestPasswordResetEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeRequestPasswordResetRequest(tags ...string) *hook.TaggedHook[*RecordRequestPasswordResetEvent]
 
 	// OnRecordAfterRequestPasswordResetRequest hook is triggered after each
 	// successful request password reset API request.
-	OnRecordAfterRequestPasswordResetRequest() *hook.Hook[*RecordRequestPasswordResetEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterRequestPasswordResetRequest(tags ...string) *hook.TaggedHook[*RecordRequestPasswordResetEvent]
 
 	// OnRecordBeforeConfirmPasswordResetRequest hook is triggered before each Record
 	// confirm password reset API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different persistence behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeConfirmPasswordResetRequest() *hook.Hook[*RecordConfirmPasswordResetEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeConfirmPasswordResetRequest(tags ...string) *hook.TaggedHook[*RecordConfirmPasswordResetEvent]
 
 	// OnRecordAfterConfirmPasswordResetRequest hook is triggered after each
 	// successful confirm password reset API request.
-	OnRecordAfterConfirmPasswordResetRequest() *hook.Hook[*RecordConfirmPasswordResetEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterConfirmPasswordResetRequest(tags ...string) *hook.TaggedHook[*RecordConfirmPasswordResetEvent]
 
 	// OnRecordBeforeRequestVerificationRequest hook is triggered before each Record
 	// request verification API request (after request data load and before sending the verification email).
 	//
 	// Could be used to additionally validate the loaded request data or implement
 	// completely different verification behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeRequestVerificationRequest() *hook.Hook[*RecordRequestVerificationEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeRequestVerificationRequest(tags ...string) *hook.TaggedHook[*RecordRequestVerificationEvent]
 
 	// OnRecordAfterRequestVerificationRequest hook is triggered after each
 	// successful request verification API request.
-	OnRecordAfterRequestVerificationRequest() *hook.Hook[*RecordRequestVerificationEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterRequestVerificationRequest(tags ...string) *hook.TaggedHook[*RecordRequestVerificationEvent]
 
 	// OnRecordBeforeConfirmVerificationRequest hook is triggered before each Record
 	// confirm verification API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different persistence behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeConfirmVerificationRequest() *hook.Hook[*RecordConfirmVerificationEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeConfirmVerificationRequest(tags ...string) *hook.TaggedHook[*RecordConfirmVerificationEvent]
 
 	// OnRecordAfterConfirmVerificationRequest hook is triggered after each
 	// successful confirm verification API request.
-	OnRecordAfterConfirmVerificationRequest() *hook.Hook[*RecordConfirmVerificationEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterConfirmVerificationRequest(tags ...string) *hook.TaggedHook[*RecordConfirmVerificationEvent]
 
 	// OnRecordBeforeRequestEmailChangeRequest hook is triggered before each Record request email change API request
 	// (after request data load and before sending the email link to confirm the change).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different request email change behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeRequestEmailChangeRequest() *hook.Hook[*RecordRequestEmailChangeEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeRequestEmailChangeRequest(tags ...string) *hook.TaggedHook[*RecordRequestEmailChangeEvent]
 
 	// OnRecordAfterRequestEmailChangeRequest hook is triggered after each
 	// successful request email change API request.
-	OnRecordAfterRequestEmailChangeRequest() *hook.Hook[*RecordRequestEmailChangeEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterRequestEmailChangeRequest(tags ...string) *hook.TaggedHook[*RecordRequestEmailChangeEvent]
 
 	// OnRecordBeforeConfirmEmailChangeRequest hook is triggered before each Record
 	// confirm email change API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different persistence behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeConfirmEmailChangeRequest() *hook.Hook[*RecordConfirmEmailChangeEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeConfirmEmailChangeRequest(tags ...string) *hook.TaggedHook[*RecordConfirmEmailChangeEvent]
 
 	// OnRecordAfterConfirmEmailChangeRequest hook is triggered after each
 	// successful confirm email change API request.
-	OnRecordAfterConfirmEmailChangeRequest() *hook.Hook[*RecordConfirmEmailChangeEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterConfirmEmailChangeRequest(tags ...string) *hook.TaggedHook[*RecordConfirmEmailChangeEvent]
 
 	// OnRecordListExternalAuthsRequest hook is triggered on each API record external auths list request.
 	//
 	// Could be used to validate or modify the response before returning it to the client.
-	OnRecordListExternalAuthsRequest() *hook.Hook[*RecordListExternalAuthsEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordListExternalAuthsRequest(tags ...string) *hook.TaggedHook[*RecordListExternalAuthsEvent]
 
 	// OnRecordBeforeUnlinkExternalAuthRequest hook is triggered before each API record
 	// external auth unlink request (after models load and before the actual relation deletion).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different delete behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeUnlinkExternalAuthRequest() *hook.Hook[*RecordUnlinkExternalAuthEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeUnlinkExternalAuthRequest(tags ...string) *hook.TaggedHook[*RecordUnlinkExternalAuthEvent]
 
 	// OnRecordAfterUnlinkExternalAuthRequest hook is triggered after each
 	// successful API record external auth unlink request.
-	OnRecordAfterUnlinkExternalAuthRequest() *hook.Hook[*RecordUnlinkExternalAuthEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterUnlinkExternalAuthRequest(tags ...string) *hook.TaggedHook[*RecordUnlinkExternalAuthEvent]
 
 	// ---------------------------------------------------------------
 	// Record CRUD API event hooks
@@ -493,45 +601,69 @@ type App interface {
 	// OnRecordsListRequest hook is triggered on each API Records list request.
 	//
 	// Could be used to validate or modify the response before returning it to the client.
-	OnRecordsListRequest() *hook.Hook[*RecordsListEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordsListRequest(tags ...string) *hook.TaggedHook[*RecordsListEvent]
 
 	// OnRecordViewRequest hook is triggered on each API Record view request.
 	//
 	// Could be used to validate or modify the response before returning it to the client.
-	OnRecordViewRequest() *hook.Hook[*RecordViewEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordViewRequest(tags ...string) *hook.TaggedHook[*RecordViewEvent]
 
 	// OnRecordBeforeCreateRequest hook is triggered before each API Record
 	// create request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different persistence behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeCreateRequest() *hook.Hook[*RecordCreateEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeCreateRequest(tags ...string) *hook.TaggedHook[*RecordCreateEvent]
 
 	// OnRecordAfterCreateRequest hook is triggered after each
 	// successful API Record create request.
-	OnRecordAfterCreateRequest() *hook.Hook[*RecordCreateEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterCreateRequest(tags ...string) *hook.TaggedHook[*RecordCreateEvent]
 
 	// OnRecordBeforeUpdateRequest hook is triggered before each API Record
 	// update request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different persistence behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeUpdateRequest() *hook.Hook[*RecordUpdateEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeUpdateRequest(tags ...string) *hook.TaggedHook[*RecordUpdateEvent]
 
 	// OnRecordAfterUpdateRequest hook is triggered after each
 	// successful API Record update request.
-	OnRecordAfterUpdateRequest() *hook.Hook[*RecordUpdateEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterUpdateRequest(tags ...string) *hook.TaggedHook[*RecordUpdateEvent]
 
 	// OnRecordBeforeDeleteRequest hook is triggered before each API Record
 	// delete request (after model load and before actual deletion).
 	//
 	// Could be used to additionally validate the request data or implement
 	// completely different delete behavior (returning [hook.StopPropagation]).
-	OnRecordBeforeDeleteRequest() *hook.Hook[*RecordDeleteEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordBeforeDeleteRequest(tags ...string) *hook.TaggedHook[*RecordDeleteEvent]
 
 	// OnRecordAfterDeleteRequest hook is triggered after each
 	// successful API Record delete request.
-	OnRecordAfterDeleteRequest() *hook.Hook[*RecordDeleteEvent]
+	//
+	// You can optionally specify a list of "tags" (Collection ids or names)
+	// to filter any newly attached event data handler.
+	OnRecordAfterDeleteRequest(tags ...string) *hook.TaggedHook[*RecordDeleteEvent]
 
 	// ---------------------------------------------------------------
 	// Collection API event hooks

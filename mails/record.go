@@ -37,12 +37,12 @@ func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
 		HTML:    body,
 	}
 
-	event := &core.MailerRecordEvent{
-		MailClient: mailClient,
-		Message:    message,
-		Record:     authRecord,
-		Meta:       map[string]any{"token": token},
-	}
+	event := new(core.MailerRecordEvent)
+	event.MailClient = mailClient
+	event.Message = message
+	event.Collection = authRecord.Collection()
+	event.Record = authRecord
+	event.Meta = map[string]any{"token": token}
 
 	sendErr := app.OnMailerBeforeRecordResetPasswordSend().Trigger(event, func(e *core.MailerRecordEvent) error {
 		return e.MailClient.Send(e.Message)
@@ -81,12 +81,12 @@ func SendRecordVerification(app core.App, authRecord *models.Record) error {
 		HTML:    body,
 	}
 
-	event := &core.MailerRecordEvent{
-		MailClient: mailClient,
-		Message:    message,
-		Record:     authRecord,
-		Meta:       map[string]any{"token": token},
-	}
+	event := new(core.MailerRecordEvent)
+	event.MailClient = mailClient
+	event.Message = message
+	event.Collection = authRecord.Collection()
+	event.Record = authRecord
+	event.Meta = map[string]any{"token": token}
 
 	sendErr := app.OnMailerBeforeRecordVerificationSend().Trigger(event, func(e *core.MailerRecordEvent) error {
 		return e.MailClient.Send(e.Message)
@@ -125,14 +125,14 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 		HTML:    body,
 	}
 
-	event := &core.MailerRecordEvent{
-		MailClient: mailClient,
-		Message:    message,
-		Record:     record,
-		Meta: map[string]any{
-			"token":    token,
-			"newEmail": newEmail,
-		},
+	event := new(core.MailerRecordEvent)
+	event.MailClient = mailClient
+	event.Message = message
+	event.Collection = record.Collection()
+	event.Record = record
+	event.Meta = map[string]any{
+		"token":    token,
+		"newEmail": newEmail,
 	}
 
 	sendErr := app.OnMailerBeforeRecordChangeEmailSend().Trigger(event, func(e *core.MailerRecordEvent) error {

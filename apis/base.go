@@ -71,10 +71,9 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			apiErr = NewBadRequestError("", err)
 		}
 
-		event := &core.ApiErrorEvent{
-			HttpContext: c,
-			Error:       apiErr,
-		}
+		event := new(core.ApiErrorEvent)
+		event.HttpContext = c
+		event.Error = apiErr
 
 		// send error response
 		hookErr := app.OnBeforeApiError().Trigger(event, func(e *core.ApiErrorEvent) error {

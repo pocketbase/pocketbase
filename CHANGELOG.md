@@ -56,6 +56,8 @@
   store.GetAll() map[string]T
   ```
 
+- Added tagged/proxy hook for all Record and Model events (@todo document).
+
 
 ## v0.11.4
 
