@@ -33,13 +33,13 @@ type TaggedHook[T Tagger] struct {
 
 // CanTriggerOn checks if the current TaggedHook can be triggered with
 // the provided event data tags.
-func (p *TaggedHook[T]) CanTriggerOn(tags []string) bool {
-	if len(p.tags) == 0 {
+func (h *TaggedHook[T]) CanTriggerOn(tags []string) bool {
+	if len(h.tags) == 0 {
 		return true // match all
 	}
 
 	for _, t := range tags {
-		if list.ExistInSlice(t, p.tags) {
+		if list.ExistInSlice(t, h.tags) {
 			return true
 		}
 	}
@@ -49,10 +49,10 @@ func (p *TaggedHook[T]) CanTriggerOn(tags []string) bool {
 
 // PreAdd registers a new handler to the hook by prepending it to the existing queue.
 //
-// The fn handler will be called only if the event data tags satisfy p.CanTriggerOn.
-func (p *TaggedHook[T]) PreAdd(fn Handler[T]) {
-	p.mainHook.PreAdd(func(e T) error {
-		if p.CanTriggerOn(e.Tags()) {
+// The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
+func (h *TaggedHook[T]) PreAdd(fn Handler[T]) {
+	h.mainHook.PreAdd(func(e T) error {
+		if h.CanTriggerOn(e.Tags()) {
 			return fn(e)
 		}
 
@@ -62,10 +62,10 @@ func (p *TaggedHook[T]) PreAdd(fn Handler[T]) {
 
 // Add registers a new handler to the hook by appending it to the existing queue.
 //
-// The fn handler will be called only if the event data tags satisfy p.CanTriggerOn.
-func (p *TaggedHook[T]) Add(fn Handler[T]) {
-	p.mainHook.Add(func(e T) error {
-		if p.CanTriggerOn(e.Tags()) {
+// The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
+func (h *TaggedHook[T]) Add(fn Handler[T]) {
+	h.mainHook.Add(func(e T) error {
+		if h.CanTriggerOn(e.Tags()) {
 			return fn(e)
 		}
 
