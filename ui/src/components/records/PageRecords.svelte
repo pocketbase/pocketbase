@@ -105,6 +105,7 @@
             <div class="inline-flex gap-5">
                 {#if !$hideControls}
                     <button
+                        aria-label="Edit collection"
                         type="button"
                         class="btn btn-secondary btn-circle"
                         use:tooltip={{ text: "Edit collection", position: "right" }}

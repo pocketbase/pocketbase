@@ -308,7 +308,7 @@
                 <div class="col-sm-4 txt-right">
                     <div class="flex-fill" />
                     <div class="inline-flex flex-gap-sm flex-nowrap">
-                        <button type="button" class="btn btn-circle btn-sm btn-secondary">
+                        <button aria-label="More" type="button" class="btn btn-circle btn-sm btn-secondary">
                             <i class="ri-more-line" />
                             <Toggler
                                 class="dropdown dropdown-sm dropdown-upside dropdown-right dropdown-nowrap no-min-width"

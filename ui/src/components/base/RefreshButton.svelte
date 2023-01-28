@@ -29,6 +29,7 @@
 </script>
 
 <button
+    aria-label="Refresh"
     type="button"
     class="btn btn-secondary btn-circle"
     class:refreshing={refreshTimeoutId}
