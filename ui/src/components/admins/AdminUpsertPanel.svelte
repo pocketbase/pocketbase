@@ -233,7 +233,7 @@
 
     <svelte:fragment slot="footer">
         {#if !admin.isNew}
-            <button type="button" class="btn btn-sm btn-circle btn-transparent">
+            <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent">
                 <!-- empty span for alignment -->
                 <span />
                 <i class="ri-more-line" />

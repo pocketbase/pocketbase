@@ -249,7 +249,7 @@
 
         {#if !collection.isNew && !collection.system}
             <div class="flex-fill" />
-            <button type="button" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
+            <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
                 <i class="ri-more-line" />
                 <Toggler class="dropdown dropdown-right m-t-5">
                     <button type="button" class="dropdown-item closable" on:click={() => duplicateConfirm()}>

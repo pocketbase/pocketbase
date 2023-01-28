@@ -345,7 +345,12 @@
                 {/if}
 
                 <th class="col-type-action min-width">
-                    <button bind:this={columnsTrigger} type="button" class="btn btn-sm btn-transparent p-0">
+                    <button
+                        bind:this={columnsTrigger}
+                        type="button"
+                        aria-label="Toggle columns"
+                        class="btn btn-sm btn-transparent p-0"
+                    >
                         <i class="ri-more-line" />
                     </button>
                 </th>

@@ -57,6 +57,9 @@
   ```
 
 - Added tagged/proxy hook for all Record and Model events (@todo document).
+  (for all those event hooks `*hook.Hook` was replaced with `*hooks.TaggedHook`, but the hook methods signatures are the same so it should behave as it was previously if no tags were set)
+
+- Added `aria-label` to some of the buttons in the Admin UI for better accessibility ([#1702](https://github.com/pocketbase/pocketbase/pull/1702); thanks @ndarilek).
 
 
 ## v0.11.4

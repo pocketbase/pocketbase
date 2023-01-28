@@ -286,48 +286,42 @@
 
         {#if !record.isNew}
             <div class="flex-fill" />
-            <button type="button" class="btn btn-sm btn-circle btn-transparent">
-                <div class="content">
-                    <i class="ri-more-line" />
-                    <Toggler class="dropdown dropdown-right dropdown-nowrap">
-                        {#if collection.isAuth && !original.verified && original.email}
-                            <button
-                                type="button"
-                                class="dropdown-item closable"
-                                on:click={() => sendVerificationEmail()}
-                            >
-                                <i class="ri-mail-check-line" />
-                                <span class="txt">Send verification email</span>
-                            </button>
-                        {/if}
-                        {#if collection.isAuth && original.email}
-                            <button
-                                type="button"
-                                class="dropdown-item closable"
-                                on:click={() => sendPasswordResetEmail()}
-                            >
-                                <i class="ri-mail-lock-line" />
-                                <span class="txt">Send password reset email</span>
-                            </button>
-                        {/if}
+            <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
+                <i class="ri-more-line" />
+                <Toggler class="dropdown dropdown-right dropdown-nowrap">
+                    {#if collection.isAuth && !original.verified && original.email}
                         <button
                             type="button"
                             class="dropdown-item closable"
-                            on:click={() => duplicateConfirm()}
+                            on:click={() => sendVerificationEmail()}
                         >
-                            <i class="ri-file-copy-line" />
-                            <span class="txt">Duplicate</span>
+                            <i class="ri-mail-check-line" />
+                            <span class="txt">Send verification email</span>
                         </button>
+                    {/if}
+                    {#if collection.isAuth && original.email}
                         <button
                             type="button"
-                            class="dropdown-item txt-danger closable"
-                            on:click|preventDefault|stopPropagation={() => deleteConfirm()}
+                            class="dropdown-item closable"
+                            on:click={() => sendPasswordResetEmail()}
                         >
-                            <i class="ri-delete-bin-7-line" />
-                            <span class="txt">Delete</span>
+                            <i class="ri-mail-lock-line" />
+                            <span class="txt">Send password reset email</span>
                         </button>
-                    </Toggler>
-                </div>
+                    {/if}
+                    <button type="button" class="dropdown-item closable" on:click={() => duplicateConfirm()}>
+                        <i class="ri-file-copy-line" />
+                        <span class="txt">Duplicate</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="dropdown-item txt-danger closable"
+                        on:click|preventDefault|stopPropagation={() => deleteConfirm()}
+                    >
+                        <i class="ri-delete-bin-7-line" />
+                        <span class="txt">Delete</span>
+                    </button>
+                </Toggler>
             </button>
         {/if}
 

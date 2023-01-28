@@ -106,6 +106,7 @@
                 {#if !$hideControls}
                     <button
                         type="button"
+                        aria-label="Edit collection"
                         class="btn btn-transparent btn-circle"
                         use:tooltip={{ text: "Edit collection", position: "right" }}
                         on:click={() => collectionUpsertPanel?.show($activeCollection)}
