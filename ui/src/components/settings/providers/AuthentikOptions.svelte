@@ -22,7 +22,7 @@
         </Field>
     </div>
     <div class="col-lg-12">
-        <Field class="form-field" name="{key}.userApiUrl" let:uniqueId>
+        <Field class="form-field required" name="{key}.userApiUrl" let:uniqueId>
             <label for={uniqueId}>User API URL</label>
             <input type="text" id={uniqueId} bind:value={config.userApiUrl} required />
             <div class="help-block">Eg. https://YOUR_AUTHENTIK_URL/application/o/userinfo/</div>
