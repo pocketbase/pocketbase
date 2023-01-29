@@ -18,8 +18,6 @@
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordsList from "@/components/records/RecordsList.svelte";
 
-    $pageTitle = "Collections";
-
     const queryParams = new URLSearchParams($querystring);
 
     let collectionUpsertPanel;
@@ -54,6 +52,8 @@
         }).toString();
         replace("/collections?" + query);
     }
+
+    $: $pageTitle = $activeCollection?.name || "Collections";
 
     function reset() {
         selectedCollectionId = $activeCollection.id;

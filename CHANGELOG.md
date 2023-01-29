@@ -1,6 +1,8 @@
 ## (WIP) v0.12.1
 
-- Fixed empty relation(s) save js error.
+- Fixed js error on empty relation save.
+
+- Added the collection name in the page title ([#1711](https://github.com/pocketbase/pocketbase/issues/1711)).
 
 
 ## v0.12.0
