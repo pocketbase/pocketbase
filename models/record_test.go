@@ -961,7 +961,7 @@ func TestRecordUnmarshalJSONField(t *testing.T) {
 		expectedJson string
 	}{
 		{nil, testStr, true, `""`},
-		{"", testStr, true, `""`},
+		{"", testStr, false, `""`},
 		{1, testInt, false, `1`},
 		{true, testBool, false, `true`},
 		{[]int{1, 2, 3}, testSlice, false, `[1,2,3]`},

@@ -1065,7 +1065,11 @@ export default class CommonHelper {
             return "false";
         }
 
-        // array value
+        if (field?.type === "json") {
+            return 'null, "", [], {}';
+        }
+
+        // arrayable fields
         if (["select", "relation", "file"].includes(field?.type) && field?.options?.maxSelect != 1) {
             return "[]";
         }

@@ -23,6 +23,7 @@ var requiredErr = validation.NewError("validation_required", "Missing required v
 // using the provided record constraints and schema.
 //
 // Example:
+//
 //	validator := NewRecordDataValidator(app.Dao(), record, nil)
 //	err := validator.Validate(map[string]any{"test":123})
 func NewRecordDataValidator(
@@ -294,14 +295,20 @@ func (validator *RecordDataValidator) checkSelectValue(field *schema.SchemaField
 	return nil
 }
 
-func (validator *RecordDataValidator) checkJsonValue(field *schema.SchemaField, value any) error {
-	raw, _ := types.ParseJsonRaw(value)
-	if len(raw) == 0 {
-		return nil // nothing to check
-	}
+var emptyJsonValues = []string{
+	"null", `""`, "[]", "{}",
+}
 
+func (validator *RecordDataValidator) checkJsonValue(field *schema.SchemaField, value any) error {
 	if is.JSON.Validate(value) != nil {
 		return validation.NewError("validation_invalid_json", "Must be a valid json value")
+	}
+
+	raw, _ := types.ParseJsonRaw(value)
+	rawStr := strings.TrimSpace(raw.String())
+
+	if field.Required && list.ExistInSlice(rawStr, emptyJsonValues) {
+		return requiredErr
 	}
 
 	return nil

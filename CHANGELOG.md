@@ -61,6 +61,21 @@
 
 - Added `aria-label` to some of the buttons in the Admin UI for better accessibility ([#1702](https://github.com/pocketbase/pocketbase/pull/1702); thanks @ndarilek).
 
+- Fixed `json` field plain string data normalizations and vizualization in the Admin UI ([#1703](https://github.com/pocketbase/pocketbase/issues/1703)).
+
+  In order to support seamlessly both json and multipart/form-data request bodies,
+  the following normalization rules are applied for plain `json` field string values:
+  - "true" is converted to the json `true`
+  - "false" is converted to the json `false`
+  - "null" is converted to the json `null`
+  - "[1,2,3]" is converted to the json `[1,2,3]`
+  - "{\"a\":1,\"b\":2}" is converted to the json `{"a":1,"b":2}`
+  - numeric strings are converted to json number
+  - double quoted strings are left as they are (aka. without normalizations)
+  - any other string (empty string too) is double quoted
+
+  Additionally, the "Nonempty" `json` field constraint now checks for `null`, `[]`, `{}` and `""` (empty string).
+
 
 ## v0.11.4
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
+	"strconv"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -279,7 +280,35 @@ func (f *SchemaField) PrepareValue(value any) any {
 	case FieldTypeText, FieldTypeEmail, FieldTypeUrl, FieldTypeEditor:
 		return cast.ToString(value)
 	case FieldTypeJson:
-		val, _ := types.ParseJsonRaw(value)
+		val := value
+
+		if str, ok := val.(string); ok {
+			// in order to support seamlessly both json and multipart/form-data requests,
+			// the following normalization rules are applied for plain string values:
+			// - "true" is converted to the json `true`
+			// - "false" is converted to the json `false`
+			// - "null" is converted to the json `null`
+			// - "[1,2,3]" is converted to the json `[1,2,3]`
+			// - "{\"a\":1,\"b\":2}" is converted to the json `{"a":1,"b":2}`
+			// - numeric strings are converted to json number
+			// - double quoted strings are left as they are (aka. without normalizations)
+			// - any other string (empty string too) is double quoted
+			if str == "" {
+				val = strconv.Quote(str)
+			} else if str == "null" || str == "true" || str == "false" {
+				val = str
+			} else if ((str[0] >= '0' && str[0] <= '9') ||
+				str[0] == '"' ||
+				str[0] == '[' ||
+				str[0] == '{') &&
+				is.JSON.Validate(str) == nil {
+				val = str
+			} else {
+				val = strconv.Quote(str)
+			}
+		}
+
+		val, _ = types.ParseJsonRaw(val)
 		return val
 	case FieldTypeNumber:
 		return cast.ToFloat64(value)

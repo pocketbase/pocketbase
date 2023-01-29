@@ -10,7 +10,11 @@
 </script>
 
 <td class="col-type-{field.type} col-field-{field.name}">
-    {#if CommonHelper.isEmpty(record[field.name])}
+    {#if field.type === "json"}
+        <span class="txt txt-ellipsis">
+            {CommonHelper.truncate(JSON.stringify(record[field.name]))}
+        </span>
+    {:else if CommonHelper.isEmpty(record[field.name])}
         <span class="txt-hint">N/A</span>
     {:else if field.type === "bool"}
         <span class="txt">{record[field.name] ? "True" : "False"}</span>
@@ -33,10 +37,6 @@
         </span>
     {:else if field.type === "date"}
         <FormattedDate date={record[field.name]} />
-    {:else if field.type === "json"}
-        <span class="txt txt-ellipsis">
-            {CommonHelper.truncate(JSON.stringify(record[field.name]))}
-        </span>
     {:else if field.type === "select"}
         <div class="inline-flex">
             {#each CommonHelper.toArray(record[field.name]) as item, i (i + item)}
