@@ -1,6 +1,6 @@
 ## v0.12.0
 
-- Refactored the relation picker UI, allowing server-side search, sorting, create, update and delete of relation records ([#976](https://github.com/pocketbase/pocketbase/issues/976)).
+- Refactored the relation picker UI to allowing server-side search, sorting, create, update and delete of relation records ([#976](https://github.com/pocketbase/pocketbase/issues/976)).
 
 - Added new `RelationOptions.DisplayFields` option to specify custom relation field(s) visualization in the Admin UI.
 
@@ -21,15 +21,18 @@
 
 - Added `filesystem.GetFile()` helper to read files through the FileSystem abstraction ([#1578](https://github.com/pocketbase/pocketbase/pull/1578); thanks @avarabyeu).
 
-- Added new event hooks:
+- Added new auth event hooks for finer control and more advanced auth scenarios handling:
 
   ```go
+  // auth record
   OnRecordBeforeAuthWithPasswordRequest()
   OnRecordAfterAuthWithPasswordRequest()
   OnRecordBeforeAuthWithOAuth2Request()
   OnRecordAfterAuthWithOAuth2Request()
   OnRecordBeforeAuthRefreshRequest()
   OnRecordAfterAuthRefreshRequest()
+
+  // admin
   OnAdminBeforeAuthWithPasswordRequest()
   OnAdminAfterAuthWithPasswordRequest()
   OnAdminBeforeAuthRefreshRequest()
@@ -46,7 +49,7 @@
 
 - Refactored `models.Record` expand and data change operations to be concurrent safe.
 
-- Refactored all `forms` Submit interceptors to use a Generic data type as their payload.
+- Refactored all `forms` Submit interceptors to use a generic data type as their payload.
 
 - Added several `store.Store` helpers:
   ```go
@@ -57,36 +60,37 @@
 
 - Added "tags" support for all Record and Model related event hooks.
 
-  The "tags" allow registering event handlers that will be called only on matching table name(s) or colleciton id(s)/name(s).
-  For example:
-  ```go
-  app.OnRecordBeforeCreateRequest("articles").Add(func(e *core.RecordCreateEvent) error {
-    // fired only on "articles" record creation
-    log.Println(e.Record)
-    return nil
-  })
-  ```
-  For all those event hooks `*hook.Hook` was replaced with `*hooks.TaggedHook`, but the hook methods signatures are the same so it should behave as it was previously if no tags were specified.
+    The "tags" allow registering event handlers that will be called only on matching table name(s) or colleciton id(s)/name(s).
+    For example:
+    ```go
+    app.OnRecordBeforeCreateRequest("articles").Add(func(e *core.RecordCreateEvent) error {
+      // called only on "articles" record creation
+      log.Println(e.Record)
+      return nil
+    })
+    ```
+    For all those event hooks `*hook.Hook` was replaced with `*hooks.TaggedHook`, but the hook methods signatures are the same so it should behave as it was previously if no tags were specified.
 
-- Fixed `json` field string value normalizations and vizualization in the Admin UI ([#1703](https://github.com/pocketbase/pocketbase/issues/1703)).
+- **!** Fixed the `json` field **string** value normalization ([#1703](https://github.com/pocketbase/pocketbase/issues/1703)).
 
-  In order to support seamlessly both `application/json` and `multipart/form-data`
-  requests, the following normalization rules are applied if the `json` field is a
-  plain **string** value:
-  - "true" is converted to the json `true`
-  - "false" is converted to the json `false`
-  - "null" is converted to the json `null`
-  - "[1,2,3]" is converted to the json `[1,2,3]`
-  - "{\"a\":1,\"b\":2}" is converted to the json `{"a":1,"b":2}`
-  - numeric strings are converted to json number
-  - double quoted strings are left as they are (aka. without normalizations)
-  - any other string (empty string too) is double quoted
+    In order to support seamlessly both `application/json` and `multipart/form-data`
+    requests, the following normalization rules are applied if the `json` field is a
+    **plain string value**:
 
-  Additionally, the "Nonempty" `json` field constraint now checks for `null`, `[]`, `{}` and `""` (empty string).
+    - "true" is converted to the json `true`
+    - "false" is converted to the json `false`
+    - "null" is converted to the json `null`
+    - "[1,2,3]" is converted to the json `[1,2,3]`
+    - "{\"a\":1,\"b\":2}" is converted to the json `{"a":1,"b":2}`
+    - numeric strings are converted to json number
+    - double quoted strings are left as they are (aka. without normalizations)
+    - any other string (empty string too) is double quoted
+
+    Additionally, the "Nonempty" `json` field constraint now checks for `null`, `[]`, `{}` and `""` (empty string).
 
 - Added `aria-label` to some of the buttons in the Admin UI for better accessibility ([#1702](https://github.com/pocketbase/pocketbase/pull/1702); thanks @ndarilek).
 
-- Other minor improvements (more detailed API file upload errors, UI optimizations, etc.)
+- Other minor improvements (more detailed API file upload errors, UI optimizations, docs improvements, etc.)
 
 
 ## v0.11.4

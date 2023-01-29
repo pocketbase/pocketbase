@@ -42,7 +42,7 @@
                     <li>double quoted strings are left as they are (aka. without normalizations)</li>
                     <li>any other string (empty string too) is double quoted</li>
                 </ul>
-                Alternatively, if you don't want the string value normalizations, you can wrap your data inside
+                Alternatively, if you want to avoid the string value normalizations, you can wrap your data inside
                 an object, eg.<code>{'{"data": anything}'}</code>
             </div>
         </div>
