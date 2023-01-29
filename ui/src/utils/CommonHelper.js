@@ -1222,7 +1222,6 @@ export default class CommonHelper {
                 "image",
                 "searchreplace",
                 "fullscreen",
-                "insertdatetime",
                 "media",
                 "table",
                 "code",
