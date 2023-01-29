@@ -90,6 +90,8 @@
 
 - Added `aria-label` to some of the buttons in the Admin UI for better accessibility ([#1702](https://github.com/pocketbase/pocketbase/pull/1702); thanks @ndarilek).
 
+- Updated the filename extension checks in the Admin UI to be case-insensitive ([#1707](https://github.com/pocketbase/pocketbase/pull/1707); thanks @hungcrush).
+
 - Other minor improvements (more detailed API file upload errors, UI optimizations, docs improvements, etc.)
 
 
