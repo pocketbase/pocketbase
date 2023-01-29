@@ -1,3 +1,8 @@
+## (WIP) v0.12.1
+
+- Fixed empty relation(s) save js error.
+
+
 ## v0.12.0
 
 - Refactored the relation picker UI to allowing server-side search, sorting, create, update and delete of relation records ([#976](https://github.com/pocketbase/pocketbase/issues/976)).

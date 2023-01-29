@@ -137,7 +137,7 @@
     {field}
     on:save={(e) => {
         list = e.detail || [];
-        value = isMultiple ? list.map((r) => r.id) : list[0].id || "";
+        value = isMultiple ? list.map((r) => r.id) : list[0]?.id || "";
     }}
 />
 
