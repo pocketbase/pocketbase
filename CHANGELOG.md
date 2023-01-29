@@ -1,8 +1,8 @@
-## (WIP) v0.12.0
+## v0.12.0
 
-- Refactored the relation picker UI, allowing inline search, sorting, create, update and delete of relation records ([#976](https://github.com/pocketbase/pocketbase/issues/976)).
+- Refactored the relation picker UI, allowing server-side search, sorting, create, update and delete of relation records ([#976](https://github.com/pocketbase/pocketbase/issues/976)).
 
-- Added optional `RelationOptions.DisplayFields` slice to specify custom relation field(s) visualization in the Admin UI.
+- Added new `RelationOptions.DisplayFields` option to specify custom relation field(s) visualization in the Admin UI.
 
 - Added Authentik OAuth2 provider ([#1377](https://github.com/pocketbase/pocketbase/pull/1377); thanks @pr0ton11).
 
@@ -15,6 +15,7 @@
 - Added video and audio file previews.
 
 - Added rich text editor (`editor`) field for HTML content based on TinyMCE ([#370](https://github.com/pocketbase/pocketbase/issues/370)).
+  _Currently the new field doesn't have any configuration options or validations but this may change in the future depending on how devs ended up using it._
 
 - Added "Duplicate" Collection and Record options in the Admin UI ([#1656](https://github.com/pocketbase/pocketbase/issues/1656)).
 
@@ -69,8 +70,9 @@
 
 - Fixed `json` field string value normalizations and vizualization in the Admin UI ([#1703](https://github.com/pocketbase/pocketbase/issues/1703)).
 
-  In order to support seamlessly both json and multipart/form-data request bodies,
-  the following normalization rules are applied for plain `json` field string values:
+  In order to support seamlessly both `application/json` and `multipart/form-data`
+  requests, the following normalization rules are applied if the `json` field is a
+  plain **string** value:
   - "true" is converted to the json `true`
   - "false" is converted to the json `false`
   - "null" is converted to the json `null`
