@@ -734,7 +734,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasImageExtension(filename) {
-        return !!imageExtensions.find((ext) => filename.endsWith(ext));
+        return !!imageExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
     }
 
     /**
@@ -744,7 +744,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasVideoExtension(filename) {
-        return !!videoExtensions.find((ext) => filename.endsWith(ext));
+        return !!videoExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
     }
 
     /**
@@ -754,7 +754,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasAudioExtension(filename) {
-        return !!audioExtensions.find((ext) => filename.endsWith(ext));
+        return !!audioExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
     }
 
     /**
@@ -764,7 +764,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasDocumentExtension(filename) {
-        return !!documentExtensions.find((ext) => filename.endsWith(ext));
+        return !!documentExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
     }
 
     /**
