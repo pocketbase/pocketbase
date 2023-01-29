@@ -1,18 +1,24 @@
 ## (WIP) v0.12.0
 
+- Refactored the relation picker UI, allowing inline search, sorting, create, update and delete of relation records ([#976](https://github.com/pocketbase/pocketbase/issues/976)).
+
+- Added optional `RelationOptions.DisplayFields` slice to specify custom relation field(s) visualization in the Admin UI.
+
+- Added Authentik OAuth2 provider ([#1377](https://github.com/pocketbase/pocketbase/pull/1377); thanks @pr0ton11).
+
+- Added LiveChat OAuth2 provider ([#1573](https://github.com/pocketbase/pocketbase/pull/1573); thanks @mariosant).
+
+- Added Gitea OAuth2 provider ([#1643](https://github.com/pocketbase/pocketbase/pull/1643); thanks @hlanderdev).
+
 - Added PDF file previews ([#1548](https://github.com/pocketbase/pocketbase/pull/1548); thanks @mjadobson).
 
 - Added video and audio file previews.
 
-- Added `filesystem.GetFile()` helper to read files through the FileSystem abstraction ([#1578](https://github.com/pocketbase/pocketbase/pull/1578); thanks @avarabyeu).
-
-- Added LiveChat OAuth2 provider ([#1573](https://github.com/pocketbase/pocketbase/pull/1573); thanks @mariosant).
-
-- Added Authentik OAuth2 provider ([#1377](https://github.com/pocketbase/pocketbase/pull/1377); thanks @pr0ton11).
-
-- Added Gitea OAuth2 provider ([#1643](https://github.com/pocketbase/pocketbase/pull/1643); thanks @hlanderdev).
-
 - Added rich text editor (`editor`) field for HTML content based on TinyMCE ([#370](https://github.com/pocketbase/pocketbase/issues/370)).
+
+- Added "Duplicate" Collection and Record options in the Admin UI ([#1656](https://github.com/pocketbase/pocketbase/issues/1656)).
+
+- Added `filesystem.GetFile()` helper to read files through the FileSystem abstraction ([#1578](https://github.com/pocketbase/pocketbase/pull/1578); thanks @avarabyeu).
 
 - Added new event hooks:
 
@@ -33,21 +39,13 @@
   OnAdminAfterConfirmPasswordResetRequest()
   ```
 
-- Refactored all `forms` Submit interceptors to use a Generic data type as their payload.
+- Added `models.Record.CleanCopy()` helper that creates a new record copy with only the latest data state of the existing one and all other options reset to their defaults.
 
 - Added new helper `apis.RecordAuthResponse(app, httpContext, record, meta)` to return a standard Record auth API response ([#1623](https://github.com/pocketbase/pocketbase/issues/1623)).
 
-- Added optional `RelationOptions.DisplayFields` slice to support custom relation field(s) visualization in the Admin UI.
-
-- Refactored the relation picker UI, allowing inline search, sorting, create, update and delete of relation records.
-
-- Added "Duplicate" Collection and Record option in the Admin UI ([#1656](https://github.com/pocketbase/pocketbase/issues/1656)).
-
-- Improved API and validations error reporting by providing more detailed messages.
-
 - Refactored `models.Record` expand and data change operations to be concurrent safe.
 
-- Added `models.Record.CleanCopy()` helper that creates a new record copy with only the latest data state of the existing one and all other options reset to their defaults.
+- Refactored all `forms` Submit interceptors to use a Generic data type as their payload.
 
 - Added several `store.Store` helpers:
   ```go
@@ -56,12 +54,20 @@
   store.GetAll() map[string]T
   ```
 
-- Added tagged/proxy hook for all Record and Model events (@todo document).
-  (for all those event hooks `*hook.Hook` was replaced with `*hooks.TaggedHook`, but the hook methods signatures are the same so it should behave as it was previously if no tags were set)
+- Added "tags" support for all Record and Model related event hooks.
 
-- Added `aria-label` to some of the buttons in the Admin UI for better accessibility ([#1702](https://github.com/pocketbase/pocketbase/pull/1702); thanks @ndarilek).
+  The "tags" allow registering event handlers that will be called only on matching table name(s) or colleciton id(s)/name(s).
+  For example:
+  ```go
+  app.OnRecordBeforeCreateRequest("articles").Add(func(e *core.RecordCreateEvent) error {
+    // fired only on "articles" record creation
+    log.Println(e.Record)
+    return nil
+  })
+  ```
+  For all those event hooks `*hook.Hook` was replaced with `*hooks.TaggedHook`, but the hook methods signatures are the same so it should behave as it was previously if no tags were specified.
 
-- Fixed `json` field plain string data normalizations and vizualization in the Admin UI ([#1703](https://github.com/pocketbase/pocketbase/issues/1703)).
+- Fixed `json` field string value normalizations and vizualization in the Admin UI ([#1703](https://github.com/pocketbase/pocketbase/issues/1703)).
 
   In order to support seamlessly both json and multipart/form-data request bodies,
   the following normalization rules are applied for plain `json` field string values:
@@ -75,6 +81,10 @@
   - any other string (empty string too) is double quoted
 
   Additionally, the "Nonempty" `json` field constraint now checks for `null`, `[]`, `{}` and `""` (empty string).
+
+- Added `aria-label` to some of the buttons in the Admin UI for better accessibility ([#1702](https://github.com/pocketbase/pocketbase/pull/1702); thanks @ndarilek).
+
+- Other minor improvements (more detailed API file upload errors, UI optimizations, etc.)
 
 
 ## v0.11.4
