@@ -6,10 +6,11 @@
     export let field = new SchemaField();
     export let value = undefined;
 
-    let serialized = undefined;
+    let serialized = JSON.stringify(typeof value === "undefined" ? null : value, null, 2);
 
     $: if (value !== serialized?.trim()) {
-        serialized = JSON.stringify(value, null, 2);
+        serialized = JSON.stringify(typeof value === "undefined" ? null : value, null, 2);
+        value = serialized;
     }
 </script>
 
