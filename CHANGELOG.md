@@ -7,7 +7,7 @@
 
 ## v0.12.0
 
-- Refactored the relation picker UI to allowing server-side search, sorting, create, update and delete of relation records ([#976](https://github.com/pocketbase/pocketbase/issues/976)).
+- Refactored the relation picker UI to allow server-side search, sort, create, update and delete of relation records ([#976](https://github.com/pocketbase/pocketbase/issues/976)).
 
 - Added new `RelationOptions.DisplayFields` option to specify custom relation field(s) visualization in the Admin UI.
 
