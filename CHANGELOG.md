@@ -2,6 +2,8 @@
 
 - Fixed js error on empty relation save.
 
+- Fixed `overlay-active` css class not being removed on nested overlay panel close ([#1718](https://github.com/pocketbase/pocketbase/issues/1718)).
+
 - Added the collection name in the page title ([#1711](https://github.com/pocketbase/pocketbase/issues/1711)).
 
 
