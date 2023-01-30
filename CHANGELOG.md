@@ -1,3 +1,10 @@
+## (WIP) v0.13.0
+
+- Allowed overwriting the default file serve headers if an explicit response header is set.
+
+- Changed `System.GetFile()` to return directly `*blob.Reader` instead of the `io.ReadCloser` interface.
+
+
 ## v0.12.1
 
 - Fixed js error on empty relation save.
