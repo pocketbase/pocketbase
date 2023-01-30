@@ -1,6 +1,8 @@
 <script context="module">
     let holder;
 
+    let activePanels = [];
+
     function getHolder() {
         holder = holder || document.querySelector(".overlays");
 
@@ -45,6 +47,7 @@
     export let beforeHide = undefined; // function callback called before hide; if return false - no close
 
     const dispatch = createEventDispatcher();
+    const uniqueId = "op_" + CommonHelper.randomString(10);
 
     let wrapper;
     let contentPanel;
@@ -62,6 +65,18 @@
 
     $: if (wrapper) {
         zIndexUpdate();
+    }
+
+    $: if (active) {
+        // add helper body class
+        CommonHelper.pushUnique(activePanels, uniqueId);
+        document.body.classList.add("overlay-active");
+    } else {
+        // remove helper body class if there are no other active panels
+        CommonHelper.removeByValue(activePanels, uniqueId);
+        if (!activePanels.length) {
+            document.body.classList.remove("overlay-active");
+        }
     }
 
     export function show() {
@@ -91,12 +106,7 @@
             oldFocusedElem = document.activeElement;
             wrapper?.focus();
             dispatch("show");
-            document.body.classList.add("overlay-active");
         } else {
-            if (getHolder().querySelectorAll(".overlay-panel-container.active").length <= 1) {
-                document.body.classList.remove("overlay-active");
-            }
-
             clearTimeout(contentScrollThrottle);
             oldFocusedElem?.focus();
             dispatch("hide");
@@ -190,6 +200,10 @@
             // (currently there is a bug with svelte transition)
             wrapper?.classList?.add("hidden");
 
+            if (!activePanels.length) {
+                document.body.classList.remove("overlay-active");
+            }
+
             setTimeout(() => {
                 wrapper?.remove();
             }, 0);
@@ -206,7 +220,7 @@
             <div
                 class="overlay"
                 on:click|preventDefault={() => (overlayClose ? hide() : true)}
-                transition:fade={{ duration: transitionSpeed, opacity: 0 }}
+                transition:fade|local={{ duration: transitionSpeed, opacity: 0 }}
             />
 
             <div
