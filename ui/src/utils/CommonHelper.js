@@ -1212,7 +1212,6 @@ export default class CommonHelper {
             max_height: 700,
             autoresize_bottom_margin: 30,
             skin: "pocketbase",
-            content_css: "pocketbase",
             content_style: "body { font-size: 14px }",
             plugins: [
                 "autoresize",
