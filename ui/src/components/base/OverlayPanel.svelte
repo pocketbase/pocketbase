@@ -68,15 +68,9 @@
     }
 
     $: if (active) {
-        // add helper body class
-        CommonHelper.pushUnique(activePanels, uniqueId);
-        document.body.classList.add("overlay-active");
+        registerActivePanel();
     } else {
-        // remove helper body class if there are no other active panels
-        CommonHelper.removeByValue(activePanels, uniqueId);
-        if (!activePanels.length) {
-            document.body.classList.remove("overlay-active");
-        }
+        unregisterActivePanel();
     }
 
     export function show() {
@@ -126,6 +120,20 @@
             wrapper.style.zIndex = highestZIndex();
         } else {
             wrapper.style = "";
+        }
+    }
+
+    function registerActivePanel() {
+        CommonHelper.pushUnique(activePanels, uniqueId);
+
+        document.body.classList.add("overlay-active");
+    }
+
+    function unregisterActivePanel() {
+        CommonHelper.removeByValue(activePanels, uniqueId);
+
+        if (!activePanels.length) {
+            document.body.classList.remove("overlay-active");
         }
     }
 
@@ -196,13 +204,11 @@
         return () => {
             clearTimeout(contentScrollThrottle);
 
+            unregisterActivePanel();
+
             // ensures that no artifacts remains
             // (currently there is a bug with svelte transition)
             wrapper?.classList?.add("hidden");
-
-            if (!activePanels.length) {
-                document.body.classList.remove("overlay-active");
-            }
 
             setTimeout(() => {
                 wrapper?.remove();
