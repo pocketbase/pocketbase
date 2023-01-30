@@ -1,4 +1,4 @@
-## (WIP) v0.12.1
+## v0.12.1
 
 - Fixed js error on empty relation save.
 
