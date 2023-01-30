@@ -156,7 +156,7 @@
         if (maxSelect == 1) {
             selected = [record];
         } else if (canSelectMore) {
-            CommonHelper.pushUnique(selected, record);
+            CommonHelper.pushOrReplaceByKey(selected, record);
             selected = selected;
         }
     }
@@ -317,15 +317,13 @@
         list.unshift(e.detail);
         list = list;
 
-        CommonHelper.pushOrReplaceByKey(selected, e.detail);
-        selected = selected;
+        select(e.detail);
     }}
     on:delete={(e) => {
         CommonHelper.removeByKey(list, "id", e.detail.id);
         list = list;
 
-        CommonHelper.removeByKey(selected, "id", e.detail.id);
-        selected = selected;
+        deselect(e.detail);
     }}
 />
 
