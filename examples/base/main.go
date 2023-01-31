@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pocketbase/pocketbase/plugins/cloudcode"
 	"log"
 	"os"
 	"path/filepath"
@@ -34,6 +35,22 @@ func main() {
 		"automigrate",
 		true,
 		"enable/disable auto migrations",
+	)
+
+	var cloudCode string
+	app.RootCmd.PersistentFlags().StringVar(
+		&cloudCode,
+		"cloudCode",
+		defaultCloudCode(),
+		"the path to user-defined cloud code",
+	)
+
+	var cloudCodeInit string
+	app.RootCmd.PersistentFlags().StringVar(
+		&cloudCode,
+		"cloudCodeInit",
+		"",
+		"the path to a lua file run before the main cloud code. useful for sandboxing or pre-loading libraries.",
 	)
 
 	var publicDir string
@@ -70,6 +87,9 @@ func main() {
 		Dir:          migrationsDir,
 	})
 
+	// register cloud code.
+	cloudcode.MustRegister(app, cloudCode, cloudCodeInit)
+
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		// serves static files from the provided public dir (if exists)
 		e.Router.GET("/*", apis.StaticDirectoryHandler(os.DirFS(publicDir), indexFallback))
@@ -88,4 +108,12 @@ func defaultPublicDir() string {
 		return "./pb_public"
 	}
 	return filepath.Join(os.Args[0], "../pb_public")
+}
+
+func defaultCloudCode() string {
+	if strings.HasPrefix(os.Args[0], os.TempDir()) {
+		// most likely ran with go run
+		return "./pb_cloudcode/main.lua"
+	}
+	return filepath.Join(os.Args[0], "../pb_cloudcode/main.lua")
 }

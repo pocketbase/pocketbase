@@ -19,6 +19,7 @@ require (
 	github.com/pocketbase/dbx v1.9.0
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
+	github.com/yuin/gopher-lua v1.1.0
 	gocloud.dev v0.28.0
 	golang.org/x/crypto v0.5.0
 	golang.org/x/net v0.5.0
