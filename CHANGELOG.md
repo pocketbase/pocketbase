@@ -11,13 +11,13 @@
     message := &mailer.Message{
       ...
 
-      // (old) To: mail.Address{Address: "test@example.com"}
-      To: []mail.Address{{Address: "test@example.com", Name: "Some optional name"}},
+      // (old) To: mail.Address{Address: "to@example.com"}
+      To: []mail.Address{{Address: "to@example.com", Name: "Some optional name"}},
 
-      // (old) Cc: []string{"test@example.com"}
+      // (old) Cc: []string{"cc@example.com"}
       Cc: []mail.Address{{Address: "cc@example.com", Name: "Some optional name"}},
 
-      // (old) Bcc: []string{"test@example.com"}
+      // (old) Bcc: []string{"bcc@example.com"}
       Bcc: []mail.Address{{Address: "bcc@example.com", Name: "Some optional name"}},
 
       ...
