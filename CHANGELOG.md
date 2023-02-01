@@ -12,13 +12,13 @@
       ...
 
       // (old) To: mail.Address{Address: "test@example.com"}
-      To: []mail.Address{{Address: "test@example.com", Name: "Some optional name"}}
+      To: []mail.Address{{Address: "test@example.com", Name: "Some optional name"}},
 
       // (old) Cc: []string{"test@example.com"}
-      Cc: []mail.Address{{Address: "cc@example.com", Name: "Some optional name"}}
+      Cc: []mail.Address{{Address: "cc@example.com", Name: "Some optional name"}},
 
       // (old) Bcc: []string{"test@example.com"}
-      Bcc: []mail.Address{{Address: "cc@example.com", Name: "Some optional name"}}
+      Bcc: []mail.Address{{Address: "bcc@example.com", Name: "Some optional name"}},
 
       ...
     }
