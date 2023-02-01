@@ -32,7 +32,7 @@ func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
 			Name:    app.Settings().Meta.SenderName,
 			Address: app.Settings().Meta.SenderAddress,
 		},
-		To:      mail.Address{Address: authRecord.Email()},
+		To:      []mail.Address{{Address: authRecord.Email()}},
 		Subject: subject,
 		HTML:    body,
 	}
@@ -76,7 +76,7 @@ func SendRecordVerification(app core.App, authRecord *models.Record) error {
 			Name:    app.Settings().Meta.SenderName,
 			Address: app.Settings().Meta.SenderAddress,
 		},
-		To:      mail.Address{Address: authRecord.Email()},
+		To:      []mail.Address{{Address: authRecord.Email()}},
 		Subject: subject,
 		HTML:    body,
 	}
@@ -120,7 +120,7 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 			Name:    app.Settings().Meta.SenderName,
 			Address: app.Settings().Meta.SenderAddress,
 		},
-		To:      mail.Address{Address: newEmail},
+		To:      []mail.Address{{Address: newEmail}},
 		Subject: subject,
 		HTML:    body,
 	}

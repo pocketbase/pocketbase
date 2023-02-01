@@ -4,6 +4,26 @@
 
 - Changed `System.GetFile()` to return directly `*blob.Reader` instead of the `io.ReadCloser` interface.
 
+- **!** Changed `To`, `Cc` and `Bcc` of `mailer.Message` to `[]mail.Address` for consistency and to allow multiple recipients and optional name.
+
+    If you are sending custom emails, you'll have to replace:
+    ```go
+    message := &mailer.Message{
+      ...
+
+      // (old) To: mail.Address{Address: "test@example.com"}
+      To: []mail.Address{{Address: "test@example.com", Name: "Some optional name"}}
+
+      // (old) Cc: []string{"test@example.com"}
+      Cc: []mail.Address{{Address: "cc@example.com", Name: "Some optional name"}}
+
+      // (old) Bcc: []string{"test@example.com"}
+      Bcc: []mail.Address{{Address: "cc@example.com", Name: "Some optional name"}}
+
+      ...
+    }
+    ```
+
 
 ## v0.12.1
 
