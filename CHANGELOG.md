@@ -4,6 +4,8 @@
 
 - Increased slightly the fields contrast ([#1742](https://github.com/pocketbase/pocketbase/issues/1742)).
 
+- Auto close the multi-select dropdown if "Max select" is reached.
+
 
 ## v0.12.1
 
