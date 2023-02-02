@@ -300,7 +300,9 @@
                 <div class="form-field-addon">
                     <button
                         type="button"
-                        class="btn btn-sm p-r-10 p-l-10 {collection.isNew ? 'btn-hint' : 'btn-transparent'}"
+                        class="btn btn-sm p-r-10 p-l-10 {collection.isNew
+                            ? 'btn-secondary'
+                            : 'btn-transparent'}"
                         disabled={!collection.isNew}
                     >
                         <!-- empty span for alignment -->

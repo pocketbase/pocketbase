@@ -117,6 +117,6 @@
         padding: 10px 10px;
         border-top-left-radius: 0;
         border-bottom-right-radius: 0;
-        background: rgba(0, 0, 0, 0.05);
+        background: rgba(53, 71, 104, 0.1);
     }
 </style>

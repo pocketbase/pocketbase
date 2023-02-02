@@ -173,7 +173,7 @@ button {
     &[disabled] {
         box-shadow: none;
         cursor: default;
-        background: var(--baseAlt2Color);
+        background: var(--baseAlt1Color);
         color: var(--txtDisabledColor) !important;
         &:before {
             display: none;
