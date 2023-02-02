@@ -27,7 +27,7 @@
         id={uniqueId}
         toggle={!field.required || isMultiple}
         multiple={isMultiple}
-        closable={!isMultiple}
+        closable={!isMultiple || value?.length >= field.options?.maxSelect}
         items={field.options?.values}
         searchable={field.options?.values > 5}
         bind:selected={value}
