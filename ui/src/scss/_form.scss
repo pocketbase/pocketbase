@@ -136,7 +136,7 @@ button {
     &.btn-outline {
         box-shadow: none;
         color: var(--txtPrimaryColor);
-        @include btnOpacity(0, 0.25, 0.35);
+        @include btnOpacity(0, 0.3, 0.45);
         &:before {
             background: var(--baseAlt3Color);
         }
@@ -160,7 +160,7 @@ button {
         }
     }
     &.btn-secondary {
-        @include btnOpacity(0.3, 0.5, 0.7);
+        @include btnOpacity(0.35, 0.5, 0.7);
         @each $name, $color in $variationsMap {
             &.btn-#{$name} {
                 @include btnOpacity(0.15, 0.25, 0.3);
@@ -173,7 +173,7 @@ button {
     &[disabled] {
         box-shadow: none;
         cursor: default;
-        background: var(--baseAlt2Color);
+        background: var(--baseAlt1Color);
         color: var(--txtDisabledColor) !important;
         &:before {
             display: none;

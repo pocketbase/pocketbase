@@ -25,6 +25,15 @@
     ```
 
 
+## v0.12.2
+
+- Fixed the "Clear" button of the datepicker component not clearing the value ([#1730](https://github.com/pocketbase/pocketbase/discussions/1730)).
+
+- Increased slightly the fields contrast ([#1742](https://github.com/pocketbase/pocketbase/issues/1742)).
+
+- Auto close the multi-select dropdown if "Max select" is reached.
+
+
 ## v0.12.1
 
 - Fixed js error on empty relation save.
