@@ -54,7 +54,7 @@ func TestFactories(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	tk := NewFromString("abc 123.456 (abc)")
+	tk := NewFromString("abc, 123.456, (abc)")
 
 	expectedTokens := []string{"abc", "123.456", "(abc)"}
 
@@ -79,7 +79,7 @@ func TestScan(t *testing.T) {
 	}
 }
 
-func TestScanAllWithDefaultSeparators(t *testing.T) {
+func TestScanAll(t *testing.T) {
 	scenarios := []struct {
 		name         string
 		content      string
@@ -119,10 +119,24 @@ func TestScanAllWithDefaultSeparators(t *testing.T) {
 		},
 		{
 			"default separators",
+			`a, b, c, d e, "a,b,  c  ", (123, 456)`,
+			DefaultSeparators,
+			false,
+			[]string{
+				"a",
+				"b",
+				"c",
+				"d e",
+				`"a,b,  c  "`,
+				`(123, 456)`,
+			},
+		},
+		{
+			"custom separators",
 			`   a   , 123.456, b, c d, (
 				test (a,b,c) " 123 "
 			),"(abc d", "abc) d", "(abc) d \" " 'abc "'`,
-			DefaultSeparators,
+			[]rune{',', ' ', '\t', '\n'},
 			false,
 			[]string{
 				"a",
@@ -135,20 +149,6 @@ func TestScanAllWithDefaultSeparators(t *testing.T) {
 				`"abc) d"`,
 				`"(abc) d \" "`,
 				`'abc "'`,
-			},
-		},
-		{
-			"custom separators",
-			`a, b, c, d e, "a,b,  c  ", (123, 456)`,
-			[]rune{','},
-			false,
-			[]string{
-				"a",
-				"b",
-				"c",
-				"d e",
-				`"a,b,  c  "`,
-				`(123, 456)`,
 			},
 		},
 	}
@@ -166,7 +166,7 @@ func TestScanAllWithDefaultSeparators(t *testing.T) {
 		}
 
 		if len(tokens) != len(s.expectTokens) {
-			t.Fatalf("[%s] Expected \n%v, \ngot \n%v", s.name, s.expectTokens, tokens)
+			t.Fatalf("[%s] Expected \n%v (%d), \ngot \n%v (%d)", s.name, s.expectTokens, len(s.expectTokens), tokens, len(tokens))
 		}
 
 		for _, tok := range tokens {

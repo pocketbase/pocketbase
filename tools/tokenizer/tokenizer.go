@@ -19,7 +19,7 @@ import (
 const eof = rune(0)
 
 // DefaultSeparators is a list with the default token separator characters.
-var DefaultSeparators = []rune{',', ' ', '\t', '\n'}
+var DefaultSeparators = []rune{','}
 
 // NewFromString creates new Tokenizer from the provided string.
 func NewFromString(str string) *Tokenizer {
@@ -31,7 +31,7 @@ func NewFromBytes(b []byte) *Tokenizer {
 	return New(bytes.NewReader(b))
 }
 
-// New creates new Tokenizer from the provided reader.
+// New creates new Tokenizer from the provided reader with DefaultSeparators.
 func New(r io.Reader) *Tokenizer {
 	return &Tokenizer{
 		r:          bufio.NewReader(r),
