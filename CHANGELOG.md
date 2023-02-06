@@ -24,6 +24,8 @@
     }
     ```
 
+- Enabled `process.env` in js migrations to allow accessing `os.Environ()`.
+
 
 ## v0.12.2
 
