@@ -58,6 +58,8 @@ func TestSettingsValidate(t *testing.T) {
 	s.AuthentikAuth.ClientId = ""
 	s.GiteaAuth.Enabled = true
 	s.GiteaAuth.ClientId = ""
+	s.OktaAuth.Enabled = true
+	s.OktaAuth.ClientId = ""
 
 	// check if Validate() is triggering the members validate methods.
 	err := s.Validate()
@@ -91,6 +93,7 @@ func TestSettingsValidate(t *testing.T) {
 		`"livechatAuth":{`,
 		`"authentikAuth":{`,
 		`"giteaAuth":{`,
+		`"oktaAuth":{`,
 	}
 
 	errBytes, _ := json.Marshal(err)
@@ -149,6 +152,8 @@ func TestSettingsMerge(t *testing.T) {
 	s2.AuthentikAuth.ClientId = "authentik_test"
 	s2.GiteaAuth.Enabled = true
 	s2.GiteaAuth.ClientId = "gitea_test"
+	s2.OktaAuth.Enabled = true
+	s2.OktaAuth.ClientId = "okta_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
@@ -225,6 +230,7 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.LivechatAuth.ClientSecret = "test123"
 	s1.AuthentikAuth.ClientSecret = "test123"
 	s1.GiteaAuth.ClientSecret = "test123"
+	s1.OktaAuth.ClientSecret = "test123"
 
 	s2, err := s1.RedactClone()
 	if err != nil {
@@ -262,6 +268,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.LivechatAuth.ClientId = "livechat_test"
 	s.AuthentikAuth.ClientId = "authentik_test"
 	s.GiteaAuth.ClientId = "gitea_test"
+	s.OktaAuth.ClientId = "okta_test"
 
 	result := s.NamedAuthProviderConfigs()
 
@@ -287,6 +294,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		`"livechat":{"enabled":false,"clientId":"livechat_test"}`,
 		`"authentik":{"enabled":false,"clientId":"authentik_test"}`,
 		`"gitea":{"enabled":false,"clientId":"gitea_test"}`,
+		`"okta":{"enabled":false,"clientId":"okta_test"}`,
 	}
 	for _, p := range expectedParts {
 		if !strings.Contains(encodedStr, p) {

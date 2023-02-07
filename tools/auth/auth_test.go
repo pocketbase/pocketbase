@@ -153,4 +153,12 @@ func TestNewProviderByName(t *testing.T) {
 	if _, ok := p.(*auth.Gitea); !ok {
 		t.Error("Expected to be instance of *auth.Gitea")
 	}
+	// okta
+	p, err = auth.NewProviderByName(auth.NameOkta)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Okta); !ok {
+		t.Error("Expected to be instance of *auth.Okta")
+	}
 }
