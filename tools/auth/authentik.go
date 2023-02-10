@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/json"
-
 	"golang.org/x/oauth2"
 )
 

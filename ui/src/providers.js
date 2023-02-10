@@ -1,6 +1,7 @@
 import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
 import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
 import AuthentikOptions  from "@/components/settings/providers/AuthentikOptions.svelte";
+import NextcloudOptions  from "@/components/settings/providers/NextcloudOptions.svelte";
 
 // Object list with all supported OAuth2 providers in the format:
 // ```
@@ -75,4 +76,9 @@ export default {
         icon:  "ri-lock-fill",
         optionsComponent: AuthentikOptions,
     },
+		nextcloudAuth: {
+				title: "Nextcloud OIDC",
+				icon: "ri-cloud-fill",
+				optionsComponent: NextcloudOptions,
+		},
 };

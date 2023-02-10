@@ -116,6 +116,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewAuthentikProvider(), nil
 	case NameGitea:
 		return NewGiteaProvider(), nil
+	case NameNextcloud:
+		return NewNextcloudProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
