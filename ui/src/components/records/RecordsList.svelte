@@ -131,6 +131,7 @@
             })
             .then(async (result) => {
                 if (page <= 1) {
+                    loadStoredHiddenColumns();
                     clearList();
                 }
 
