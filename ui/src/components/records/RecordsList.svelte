@@ -32,16 +32,16 @@
     let hiddenColumns = [];
     let collumnsToHide = [];
 
+    $: if (collection?.id) {
+        loadStoredHiddenColumns();
+        clearList();
+    }
+
     $: fields = collection?.schema || [];
 
     $: relFields = fields.filter((field) => field.type === "relation");
 
     $: visibleFields = fields.filter((field) => !hiddenColumns.includes(field.id));
-
-    $: if (collection?.id) {
-        loadStoredHiddenColumns();
-        clearList();
-    }
 
     $: if (collection?.id && sort !== -1 && filter !== -1) {
         load(1);
