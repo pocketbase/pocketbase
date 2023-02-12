@@ -1,3 +1,10 @@
+## v0.12.3
+
+- Fixed "Toggle column" reactivity when navigating between collections ([#1836](https://github.com/pocketbase/pocketbase/pull/1836)).
+
+- Logged the current datetime on server start ([#1822](https://github.com/pocketbase/pocketbase/issues/1822)).
+
+
 ## v0.12.2
 
 - Fixed the "Clear" button of the datepicker component not clearing the value ([#1730](https://github.com/pocketbase/pocketbase/discussions/1730)).
