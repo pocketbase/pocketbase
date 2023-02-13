@@ -335,16 +335,16 @@ func (validator *RecordDataValidator) checkFileValue(field *schema.SchemaField, 
 	}
 
 	for _, file := range files {
-		// check size
-		if err := UploadedFileSize(options.MaxSize)(file); err != nil {
-			return err
-		}
-
 		// check type
 		if len(options.MimeTypes) > 0 {
 			if err := UploadedFileMimeType(options.MimeTypes)(file); err != nil {
 				return err
 			}
+		}
+
+		// check size
+		if err := UploadedFileSize(options.MaxSize)(file); err != nil {
+			return err
 		}
 	}
 
