@@ -7,6 +7,7 @@
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
+    import OpenSidebarButton from "@/components/base/OpenSidebarButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
@@ -65,6 +66,8 @@
 
 <PageWrapper>
     <header class="page-header">
+        <OpenSidebarButton />
+
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
             <div class="breadcrumb-item">{$pageTitle}</div>

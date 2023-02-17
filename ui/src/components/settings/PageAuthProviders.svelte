@@ -7,6 +7,7 @@
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import AuthProviderAccordion from "@/components/settings/AuthProviderAccordion.svelte";
+    import OpenSidebarButton from "@/components/base/OpenSidebarButton.svelte";
     import providersList from "@/providers.js";
 
     $pageTitle = "Auth providers";
@@ -78,6 +79,8 @@
 
 <PageWrapper>
     <header class="page-header">
+        <OpenSidebarButton />
+
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
             <div class="breadcrumb-item">{$pageTitle}</div>

@@ -11,6 +11,7 @@
     import Field from "@/components/base/Field.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import OpenSidebarButton from "@/components/base/OpenSidebarButton.svelte";
 
     $pageTitle = "Files storage";
 
@@ -124,6 +125,8 @@
 
 <PageWrapper>
     <header class="page-header">
+        <OpenSidebarButton />
+
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
             <div class="breadcrumb-item">{$pageTitle}</div>

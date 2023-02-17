@@ -13,6 +13,7 @@
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import EmailTemplateAccordion from "@/components/settings/EmailTemplateAccordion.svelte";
     import EmailTestPopup from "@/components/settings/EmailTestPopup.svelte";
+    import OpenSidebarButton from "@/components/base/OpenSidebarButton.svelte";
 
     const tlsOptions = [
         { label: "Auto (StartTLS)", value: false },
@@ -92,6 +93,8 @@
 
 <PageWrapper>
     <header class="page-header">
+        <OpenSidebarButton />
+
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
             <div class="breadcrumb-item">{$pageTitle}</div>

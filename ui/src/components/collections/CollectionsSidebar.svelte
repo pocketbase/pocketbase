@@ -1,7 +1,7 @@
 <script>
     import { link } from "svelte-spa-router";
     import CommonHelper from "@/utils/CommonHelper";
-    import { hideControls } from "@/stores/app";
+    import { hideControls, showPageSidebar } from "@/stores/app";
     import { collections, activeCollection, isCollectionsLoading } from "@/stores/collections";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
 
@@ -35,9 +35,11 @@
             }
         }, 0);
     }
+
+
 </script>
 
-<aside class="page-sidebar collection-sidebar">
+<aside class="page-sidebar collection-sidebar" class:show={$showPageSidebar}>
     <header class="sidebar-header">
         <div class="form-field search" class:active={hasSearch}>
             <div class="form-field-addon">
@@ -66,6 +68,7 @@
                 href="/collections?collectionId={collection.id}"
                 class="sidebar-list-item"
                 class:active={$activeCollection?.id === collection.id}
+                on:click={() => showPageSidebar.set(false)}
                 use:link
             >
                 <i class={CommonHelper.getCollectionTypeIcon(collection.type)} />

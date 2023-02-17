@@ -12,6 +12,7 @@
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
+    import OpenSidebarButton from "@/components/base/OpenSidebarButton.svelte";
     import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import CollectionDocsPanel from "@/components/collections/CollectionDocsPanel.svelte";
@@ -97,6 +98,8 @@
 
     <PageWrapper>
         <header class="page-header">
+            <OpenSidebarButton />
+
             <nav class="breadcrumbs">
                 <div class="breadcrumb-item">Collections</div>
                 <div class="breadcrumb-item">{$activeCollection.name}</div>
@@ -121,7 +124,7 @@
             <div class="btns-group">
                 <button
                     type="button"
-                    class="btn btn-outline"
+                    class="btn btn-outline btn-api"
                     on:click={() => collectionDocsPanel?.show($activeCollection)}
                 >
                     <i class="ri-code-s-slash-line" />

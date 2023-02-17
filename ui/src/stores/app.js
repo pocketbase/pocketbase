@@ -5,3 +5,5 @@ export const pageTitle = writable('');
 export const appName = writable('');
 
 export const hideControls = writable(false);
+
+export const showPageSidebar = writable(false);

@@ -49,6 +49,17 @@
     }
 }
 
+
+@media screen and (max-width: 1023px) {
+    .main-menu {
+        width: 100%;
+        flex-direction: row;
+        padding: 0 15px;
+        margin: 0;
+        gap: 10px;
+    }
+}
+
 .app-sidebar {
     position: relative;
     z-index: 1;
@@ -73,6 +84,20 @@
     }
 }
 
+@media screen and (max-width: 1023px) {
+    .app-sidebar {
+        width: 100%;
+        flex-direction: row;
+        padding: calc(var(--smSpacing) / 2) var(--smSpacing);
+        border-bottom: 1px solid var(--baseAlt2Color);
+
+        .main-menu {
+            padding: 0 15px;
+            margin: 0;
+        }
+    }
+}
+
 // layout container
 // -------------------------------------------------------------------
 
@@ -89,6 +114,19 @@
     }
     .app-sidebar ~ .app-body {
         min-width: 650px;
+    }
+}
+
+@media screen and (max-width: 1023px) {
+    .app-layout {
+        flex-direction: column;
+    }
+}
+@media screen and (max-width: 767px) {
+    .app-layout {
+        .app-sidebar ~ .app-body {
+            min-width: auto;
+        }
     }
 }
 
@@ -227,6 +265,22 @@
     }
 }
 
+@media screen and (max-width: 767px) {
+    .page-sidebar {
+        --pageSidebarWidth: 100%;
+        position: fixed;
+        left: -100vw;
+        top: 0;
+        height: 100%;
+        z-index: 100;
+        transition: transform 200ms ease;
+
+        &.show {
+            transform: translate(100vw);
+        }
+    }
+}
+
 .page-header {
     display: flex;
     align-items: center;
@@ -238,14 +292,36 @@
         margin-left: auto;
         justify-content: end;
     }
+
+    .btn-open-sidebar {
+        display: none;
+    }
+
     // responsive
-    @media screen and (max-width: 1050px) {
+    @media screen and (max-width: 1023px) {
         flex-wrap: wrap;
         .btns-group {
+            .btn-api .txt{
+                display: none;
+            }
+        }
+    }
+
+    @media screen and (max-width: 767px) {
+        .btn-open-sidebar {
+            display: inline-flex;
+        }
+
+        .btns-group {
             width: 100%;
+
             .btn {
                 flex-grow: 1;
                 flex-basis: 0;
+            }
+
+            .btn-api .txt {
+                display: inline;
             }
         }
     }
@@ -297,6 +373,14 @@
         transition: color var(--baseAnimationSpeed);
         &:hover {
             color: var(--txtPrimaryColor);
+        }
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .breadcrumbs {
+        .breadcrumb-item {
+            font-size: 16px;
         }
     }
 }

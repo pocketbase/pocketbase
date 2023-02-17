@@ -1,12 +1,17 @@
 <script>
     import { link } from "svelte-spa-router";
+    import { showPageSidebar } from "@/stores/app";
     import active from "svelte-spa-router/active";
+
+    function hideSidebar() {
+        showPageSidebar.set(false);
+    }
 </script>
 
-<aside class="page-sidebar settings-sidebar">
+<aside class="page-sidebar settings-sidebar" class:show={$showPageSidebar}>
     <div class="sidebar-content">
         <div class="sidebar-title">System</div>
-        <a href="/settings" class="sidebar-list-item" use:active={{ path: "/settings" }} use:link>
+        <a href="/settings" class="sidebar-list-item" use:active={{ path: "/settings" }} use:link on:click={hideSidebar}>
             <i class="ri-home-gear-line" />
             <span class="txt">Application</span>
         </a>
@@ -15,6 +20,7 @@
             class="sidebar-list-item"
             use:active={{ path: "/settings/mail/?.*" }}
             use:link
+            on:click={hideSidebar}
         >
             <i class="ri-send-plane-2-line" />
             <span class="txt">Mail settings</span>
@@ -24,6 +30,7 @@
             class="sidebar-list-item"
             use:active={{ path: "/settings/storage/?.*" }}
             use:link
+            on:click={hideSidebar}
         >
             <i class="ri-archive-drawer-line" />
             <span class="txt">Files storage</span>
@@ -37,6 +44,7 @@
             class="sidebar-list-item"
             use:active={{ path: "/settings/export-collections/?.*" }}
             use:link
+            on:click={hideSidebar}
         >
             <i class="ri-uninstall-line" />
             <span class="txt">Export collections</span>
@@ -46,6 +54,7 @@
             class="sidebar-list-item"
             use:active={{ path: "/settings/import-collections/?.*" }}
             use:link
+            on:click={hideSidebar}
         >
             <i class="ri-install-line" />
             <span class="txt">Import collections</span>
@@ -57,6 +66,7 @@
             class="sidebar-list-item"
             use:active={{ path: "/settings/auth-providers/?.*" }}
             use:link
+            on:click={hideSidebar}
         >
             <i class="ri-lock-password-line" />
             <span class="txt">Auth providers</span>
@@ -66,6 +76,7 @@
             class="sidebar-list-item"
             use:active={{ path: "/settings/tokens/?.*" }}
             use:link
+            on:click={hideSidebar}
         >
             <i class="ri-key-line" />
             <span class="txt">Token options</span>
@@ -75,6 +86,7 @@
             class="sidebar-list-item"
             use:active={{ path: "/settings/admins/?.*" }}
             use:link
+            on:click={hideSidebar}
         >
             <i class="ri-shield-user-line" />
             <span class="txt">Admins</span>
