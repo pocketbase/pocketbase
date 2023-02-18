@@ -69,7 +69,7 @@ func NewCollectionUpsert(app core.App, collection *models.Collection) *Collectio
 	}
 
 	clone, _ := form.collection.Schema.Clone()
-	if clone != nil {
+	if clone != nil && form.Type != models.CollectionTypeView {
 		form.Schema = *clone
 	} else {
 		form.Schema = schema.Schema{}
@@ -86,6 +86,16 @@ func (form *CollectionUpsert) SetDao(dao *daos.Dao) {
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *CollectionUpsert) Validate() error {
 	isAuth := form.Type == models.CollectionTypeAuth
+	isView := form.Type == models.CollectionTypeView
+
+	// generate schema from the query (overwriting any explicit user defined schema)
+	if isView {
+		options := models.CollectionViewOptions{}
+		if err := decodeOptions(form.Options, &options); err != nil {
+			return err
+		}
+		form.Schema, _ = form.dao.CreateViewSchema(options.Query)
+	}
 
 	return validation.ValidateStruct(form,
 		validation.Field(
@@ -104,7 +114,11 @@ func (form *CollectionUpsert) Validate() error {
 		validation.Field(
 			&form.Type,
 			validation.Required,
-			validation.In(models.CollectionTypeAuth, models.CollectionTypeBase),
+			validation.In(
+				models.CollectionTypeBase,
+				models.CollectionTypeAuth,
+				models.CollectionTypeView,
+			),
 			validation.By(form.ensureNoTypeChange),
 		),
 		validation.Field(
@@ -115,23 +129,32 @@ func (form *CollectionUpsert) Validate() error {
 			validation.By(form.ensureNoSystemNameChange),
 			validation.By(form.checkUniqueName),
 		),
-		// validates using the type's own validation rules + some collection's specific
+		// validates using the type's own validation rules + some collection's specifics
 		validation.Field(
 			&form.Schema,
 			validation.By(form.checkMinSchemaFields),
 			validation.By(form.ensureNoSystemFieldsChange),
 			validation.By(form.ensureNoFieldsTypeChange),
 			validation.By(form.checkRelationFields),
-			validation.When(
-				isAuth,
-				validation.By(form.ensureNoAuthFieldName),
-			),
+			validation.When(isAuth, validation.By(form.ensureNoAuthFieldName)),
 		),
 		validation.Field(&form.ListRule, validation.By(form.checkRule)),
 		validation.Field(&form.ViewRule, validation.By(form.checkRule)),
-		validation.Field(&form.CreateRule, validation.By(form.checkRule)),
-		validation.Field(&form.UpdateRule, validation.By(form.checkRule)),
-		validation.Field(&form.DeleteRule, validation.By(form.checkRule)),
+		validation.Field(
+			&form.CreateRule,
+			validation.When(isView, validation.Nil),
+			validation.By(form.checkRule),
+		),
+		validation.Field(
+			&form.UpdateRule,
+			validation.When(isView, validation.Nil),
+			validation.By(form.checkRule),
+		),
+		validation.Field(
+			&form.DeleteRule,
+			validation.When(isView, validation.Nil),
+			validation.By(form.checkRule),
+		),
 		validation.Field(&form.Options, validation.By(form.checkOptions)),
 	)
 }
@@ -288,13 +311,15 @@ func (form *CollectionUpsert) ensureNoAuthFieldName(value any) error {
 }
 
 func (form *CollectionUpsert) checkMinSchemaFields(value any) error {
-	if form.Type == models.CollectionTypeAuth {
-		return nil // auth collections doesn't require having additional schema fields
-	}
+	v, _ := value.(schema.Schema)
 
-	v, ok := value.(schema.Schema)
-	if !ok || len(v.Fields()) == 0 {
-		return validation.ErrRequired
+	switch form.Type {
+	case models.CollectionTypeAuth, models.CollectionTypeView:
+		return nil // no schema fields constraint
+	default:
+		if len(v.Fields()) == 0 {
+			return validation.ErrRequired
+		}
 	}
 
 	return nil
@@ -343,15 +368,11 @@ func (form *CollectionUpsert) checkRule(value any) error {
 func (form *CollectionUpsert) checkOptions(value any) error {
 	v, _ := value.(types.JsonMap)
 
-	if form.Type == models.CollectionTypeAuth {
-		raw, err := v.MarshalJSON()
-		if err != nil {
-			return validation.NewError("validation_invalid_options", "Invalid options.")
-		}
-
+	switch form.Type {
+	case models.CollectionTypeAuth:
 		options := models.CollectionAuthOptions{}
-		if err := json.Unmarshal(raw, &options); err != nil {
-			return validation.NewError("validation_invalid_options", "Invalid options.")
+		if err := decodeOptions(v, &options); err != nil {
+			return err
 		}
 
 		// check the generic validations
@@ -363,6 +384,39 @@ func (form *CollectionUpsert) checkOptions(value any) error {
 		if err := form.checkRule(options.ManageRule); err != nil {
 			return validation.Errors{"manageRule": err}
 		}
+	case models.CollectionTypeView:
+		options := models.CollectionViewOptions{}
+		if err := decodeOptions(v, &options); err != nil {
+			return err
+		}
+
+		// check the generic validations
+		if err := options.Validate(); err != nil {
+			return err
+		}
+
+		// check the query option
+		if _, err := form.dao.CreateViewSchema(options.Query); err != nil {
+			return validation.Errors{
+				"query": validation.NewError(
+					"validation_invalid_view_query",
+					fmt.Sprintf("Invalid query - %s", err.Error()),
+				),
+			}
+		}
+	}
+
+	return nil
+}
+
+func decodeOptions(options types.JsonMap, result any) error {
+	raw, err := options.MarshalJSON()
+	if err != nil {
+		return validation.NewError("validation_invalid_options", "Invalid options.")
+	}
+
+	if err := json.Unmarshal(raw, result); err != nil {
+		return validation.NewError("validation_invalid_options", "Invalid options.")
 	}
 
 	return nil
@@ -398,7 +452,11 @@ func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc[*models.Col
 		form.collection.Name = form.Name
 	}
 
-	form.collection.Schema = form.Schema
+	// view schema is autogenerated on save
+	if !form.collection.IsView() {
+		form.collection.Schema = form.Schema
+	}
+
 	form.collection.ListRule = form.ListRule
 	form.collection.ViewRule = form.ViewRule
 	form.collection.CreateRule = form.CreateRule

@@ -26,14 +26,13 @@ func bindRecordCrudApi(app core.App, rg *echo.Group) {
 	subGroup := rg.Group(
 		"/collections/:collection",
 		ActivityLogger(app),
-		LoadCollectionContext(app),
 	)
 
-	subGroup.GET("/records", api.list)
-	subGroup.POST("/records", api.create)
-	subGroup.GET("/records/:id", api.view)
-	subGroup.PATCH("/records/:id", api.update)
-	subGroup.DELETE("/records/:id", api.delete)
+	subGroup.GET("/records", api.list, LoadCollectionContext(app))
+	subGroup.GET("/records/:id", api.view, LoadCollectionContext(app))
+	subGroup.POST("/records", api.create, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+	subGroup.PATCH("/records/:id", api.update, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+	subGroup.DELETE("/records/:id", api.delete, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
 }
 
 type recordApi struct {

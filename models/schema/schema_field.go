@@ -139,7 +139,7 @@ type SchemaField struct {
 func (f *SchemaField) ColDefinition() string {
 	switch f.Type {
 	case FieldTypeNumber:
-		return "REAL DEFAULT 0"
+		return "NUMERIC DEFAULT 0"
 	case FieldTypeBool:
 		return "BOOLEAN DEFAULT FALSE"
 	case FieldTypeJson:

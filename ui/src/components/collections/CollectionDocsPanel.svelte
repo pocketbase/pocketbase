@@ -93,6 +93,12 @@
         if (!collection?.options.allowOAuth2Auth) {
             delete tabs["auth-with-oauth2"];
         }
+    } else if (collection.isView) {
+        tabs = Object.assign({}, baseTabs);
+        delete tabs.create;
+        delete tabs.update;
+        delete tabs.delete;
+        delete tabs.realtime;
     } else {
         tabs = Object.assign({}, baseTabs);
     }

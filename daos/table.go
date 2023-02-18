@@ -1,7 +1,10 @@
 package daos
 
 import (
+	"fmt"
+
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/models"
 )
 
 // HasTable checks if a table with the provided name exists (case insensitive).
@@ -29,9 +32,28 @@ func (dao *Dao) GetTableColumns(tableName string) ([]string, error) {
 	return columns, err
 }
 
+// GetTableInfo returns the `table_info` pragma result for the specified table.
+func (dao *Dao) GetTableInfo(tableName string) ([]*models.TableInfoRow, error) {
+	info := []*models.TableInfoRow{}
+
+	err := dao.DB().NewQuery("SELECT * FROM PRAGMA_TABLE_INFO({:tableName})").
+		Bind(dbx.Params{"tableName": tableName}).
+		All(&info)
+
+	return info, err
+}
+
 // DeleteTable drops the specified table.
+//
+// This method is a no-op if a table with the provided name doesn't exist.
+//
+// Be aware that this method is vulnerable to SQL injection and the
+// "tableName" argument must come only from trusted input!
 func (dao *Dao) DeleteTable(tableName string) error {
-	_, err := dao.DB().DropTable(tableName).Execute()
+	_, err := dao.DB().NewQuery(fmt.Sprintf(
+		"DROP TABLE IF EXISTS {{%s}}",
+		tableName,
+	)).Execute()
 
 	return err
 }

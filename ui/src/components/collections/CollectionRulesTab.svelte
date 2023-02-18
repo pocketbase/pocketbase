@@ -1,9 +1,12 @@
 <script>
     import { slide } from "svelte/transition";
     import { Collection } from "pocketbase";
+    import CommonHelper from "@/utils/CommonHelper";
     import RuleField from "@/components/collections/RuleField.svelte";
 
     export let collection = new Collection();
+
+    $: fields = CommonHelper.getAllCollectionIdentifiers(collection);
 
     let showFiltersInfo = false;
 </script>
@@ -31,15 +34,8 @@
                 <div class="content">
                     <p class="m-b-0">The following record fields are available:</p>
                     <div class="inline-flex flex-gap-5">
-                        <code>id</code>
-                        <code>created</code>
-                        <code>updated</code>
-                        {#each collection.schema as field}
-                            {#if field.type === "relation" || field.type === "user"}
-                                <code>{field.name}.*</code>
-                            {:else}
-                                <code>{field.name}</code>
-                            {/if}
+                        {#each fields as name}
+                            <code>{name}</code>
                         {/each}
                     </div>
 
@@ -84,14 +80,16 @@
 <hr class="m-t-sm m-b-sm" />
 <RuleField label="View action" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
-<hr class="m-t-sm m-b-sm" />
-<RuleField label="Create action" formKey="createRule" {collection} bind:rule={collection.createRule} />
+{#if !collection?.isView}
+    <hr class="m-t-sm m-b-sm" />
+    <RuleField label="Create action" formKey="createRule" {collection} bind:rule={collection.createRule} />
 
-<hr class="m-t-sm m-b-sm" />
-<RuleField label="Update action" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
+    <hr class="m-t-sm m-b-sm" />
+    <RuleField label="Update action" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
 
-<hr class="m-t-sm m-b-sm" />
-<RuleField label="Delete action" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
+    <hr class="m-t-sm m-b-sm" />
+    <RuleField label="Delete action" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
+{/if}
 
 {#if collection?.isAuth}
     <hr class="m-t-sm m-b-sm" />

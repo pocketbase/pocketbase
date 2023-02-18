@@ -8,20 +8,20 @@
     let collectionPanel;
     let searchTerm = "";
 
+    $: if ($collections) {
+        scrollIntoView();
+    }
+
     $: normalizedSearch = searchTerm.replace(/\s+/g, "").toLowerCase();
 
     $: hasSearch = searchTerm !== "";
 
-    $: filteredCollections = $collections.filter((collection) => {
+    $: filtered = $collections.filter((collection) => {
         return (
             collection.id == searchTerm ||
             collection.name.replace(/\s+/g, "").toLowerCase().includes(normalizedSearch)
         );
     });
-
-    $: if ($collections) {
-        scrollIntoView();
-    }
 
     function selectCollection(collection) {
         $activeCollection = collection;
@@ -59,9 +59,9 @@
     <div
         class="sidebar-content"
         class:fade={$isCollectionsLoading}
-        class:sidebar-content-compact={filteredCollections.length > 20}
+        class:sidebar-content-compact={filtered.length > 20}
     >
-        {#each filteredCollections as collection (collection.id)}
+        {#each filtered as collection (collection.id)}
             <a
                 href="/collections?collectionId={collection.id}"
                 class="sidebar-list-item"
@@ -69,7 +69,6 @@
                 use:link
             >
                 <i class={CommonHelper.getCollectionTypeIcon(collection.type)} />
-
                 <span class="txt">{collection.name}</span>
             </a>
         {:else}

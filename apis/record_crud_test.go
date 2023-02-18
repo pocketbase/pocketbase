@@ -256,7 +256,7 @@ func TestRecordCrudList(t *testing.T) {
 			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
 		},
 
-		// auth collection checks
+		// auth collection
 		// -----------------------------------------------------------
 		{
 			Name:           "check email visibility as guest",
@@ -403,6 +403,63 @@ func TestRecordCrudList(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
 		},
+
+		// view collection
+		// -----------------------------------------------------------
+		{
+			Name:           "public view records",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/view2/records?filter=state=false",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":1`,
+				`"totalItems":2`,
+				`"items":[{`,
+				`"id":"al1h9ijdeojtsjy"`,
+				`"id":"imy661ixudk5izi"`,
+			},
+			NotExpectedContent: []string{
+				`"created"`,
+				`"updated"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
+		{
+			Name:           "guest that doesn't match the view collection list rule",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/view1/records",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":0`,
+				`"totalItems":0`,
+				`"items":[]`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
+		{
+			Name:   "authenticated record that matches the view collection list rule",
+			Method: http.MethodGet,
+			Url:    "/api/collections/view1/records",
+			RequestHeaders: map[string]string{
+				// users, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":1`,
+				`"totalItems":1`,
+				`"items":[{`,
+				`"id":"84nmscqy84lsi1t"`,
+				`"bool":true`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -531,7 +588,7 @@ func TestRecordCrudView(t *testing.T) {
 			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
 		},
 
-		// auth collection checks
+		// auth collection
 		// -----------------------------------------------------------
 		{
 			Name:           "check email visibility as guest",
@@ -629,6 +686,49 @@ func TestRecordCrudView(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
 		},
+
+		// view collection
+		// -----------------------------------------------------------
+		{
+			Name:           "public view record",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/view2/records/84nmscqy84lsi1t",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"84nmscqy84lsi1t"`,
+				`"state":true`,
+				`"file_many":["`,
+				`"rel_many":["`,
+			},
+			NotExpectedContent: []string{
+				`"created"`,
+				`"updated"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+		},
+		{
+			Name:            "guest that doesn't match the view collection view rule",
+			Method:          http.MethodGet,
+			Url:             "/api/collections/view1/records/84nmscqy84lsi1t",
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authenticated record that matches the view collection view rule",
+			Method: http.MethodGet,
+			Url:    "/api/collections/view1/records/84nmscqy84lsi1t",
+			RequestHeaders: map[string]string{
+				// users, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"84nmscqy84lsi1t"`,
+				`"bool":true`,
+				`"text":"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -688,6 +788,13 @@ func TestRecordCrudDelete(t *testing.T) {
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "trying to delete a view collection record",
+			Method:          http.MethodDelete,
+			Url:             "/api/collections/view1/records/imy661ixudk5izi",
+			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
@@ -883,6 +990,14 @@ func TestRecordCrudCreate(t *testing.T) {
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "trying to create a new view collection record",
+			Method:          http.MethodPost,
+			Url:             "/api/collections/view1/records",
+			Body:            strings.NewReader(`{"text":"new"}`),
+			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
@@ -1425,6 +1540,14 @@ func TestRecordCrudUpdate(t *testing.T) {
 			Method:          http.MethodPatch,
 			Url:             "/api/collections/demo2/records/0yxhwia2amd8gec",
 			Body:            strings.NewReader(`{"`),
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "trying to update a view collection record",
+			Method:          http.MethodPatch,
+			Url:             "/api/collections/view1/records/imy661ixudk5izi",
+			Body:            strings.NewReader(`{"text":"new"}`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 		},

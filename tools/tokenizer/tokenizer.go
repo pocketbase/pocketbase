@@ -34,8 +34,9 @@ func NewFromBytes(b []byte) *Tokenizer {
 // New creates new Tokenizer from the provided reader with DefaultSeparators.
 func New(r io.Reader) *Tokenizer {
 	return &Tokenizer{
-		r:          bufio.NewReader(r),
-		separators: DefaultSeparators,
+		r:             bufio.NewReader(r),
+		separators:    DefaultSeparators,
+		keepSeparator: false,
 	}
 }
 
@@ -44,12 +45,19 @@ func New(r io.Reader) *Tokenizer {
 type Tokenizer struct {
 	r *bufio.Reader
 
-	separators []rune
+	separators    []rune
+	keepSeparator bool
 }
 
-// SetSeparators specifies the provided separatos of the current Tokenizer.
-func (s *Tokenizer) SetSeparators(separators ...rune) {
+// Separators defines the provided separatos of the current Tokenizer.
+func (s *Tokenizer) Separators(separators ...rune) {
 	s.separators = separators
+}
+
+// KeepSeparator defines whether to keep the separator rune as part
+// of the token (default to false).
+func (s *Tokenizer) KeepSeparator(state bool) {
+	s.keepSeparator = state
 }
 
 // Scan reads and returns the next available token from the Tokenizer's buffer (trimmed).
@@ -128,6 +136,9 @@ func (s *Tokenizer) readToken() (string, error) {
 		}
 
 		if s.isSeperatorRune(ch) && parenthesis == 0 && quoteCh == eof {
+			if s.keepSeparator {
+				buf.WriteRune(ch)
+			}
 			break
 		}
 

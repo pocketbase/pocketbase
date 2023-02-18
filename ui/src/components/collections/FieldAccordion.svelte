@@ -206,7 +206,7 @@
         <div class="grid">
             <div class="col-sm-6">
                 <Field
-                    class="form-field required {field.id ? 'disabled' : ''}"
+                    class="form-field required {field.id ? 'readonly' : ''}"
                     name="schema.{key}.type"
                     let:uniqueId
                 >

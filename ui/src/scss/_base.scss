@@ -123,7 +123,7 @@ code {
     display: inline-block;
     font-family: var(--monospaceFontFamily);
     font-style: normal;
-    font-size: var(--lgFontSize);
+    font-size: 1em;
     line-height: 1.379rem;
     padding: 0px 4px;
     white-space: nowrap;
@@ -521,6 +521,10 @@ a,
         height: 100%;
         border-radius: inherit;
         overflow: hidden;
+    }
+    &.thumb-xs {
+        --thumbSize: 24px;
+        font-size: 0.85rem;
     }
     &.thumb-sm {
         --thumbSize: 32px;

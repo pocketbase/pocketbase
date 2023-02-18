@@ -475,11 +475,12 @@ export default class CommonHelper {
     /**
      * Truncates the provided text to the specified max characters length.
      *
-     * @param  {String} str
-     * @param  {Number} length
+     * @param  {String}  str
+     * @param  {Number}  [length]
+     * @param  {Boolean} [dots]
      * @return {String}
      */
-    static truncate(str, length = 150, dots = false) {
+    static truncate(str, length = 150, dots = true) {
         str = str || "";
 
         if (str.length <= length) {
@@ -979,8 +980,8 @@ export default class CommonHelper {
         switch (type?.toLowerCase()) {
             case "auth":
                 return "ri-group-line";
-            case "single":
-                return "ri-file-list-2-line";
+            case "view":
+                return "ri-terminal-box-line";
             default:
                 return "ri-folder-2-line";
         }
@@ -1157,7 +1158,7 @@ export default class CommonHelper {
         for (const collection of collections) {
             if (collection.type === 'auth') {
                 authCollections.push(collection);
-            } else if (collection.type === 'single') {
+            } else if (collection.type === 'base') {
                 singleCollections.push(collection);
             } else {
                 baseCollections.push(collection);
@@ -1317,5 +1318,77 @@ export default class CommonHelper {
         }
 
         return missingValue;
+    }
+
+    /**
+     * Rudimentary SELECT query columns extractor.
+     * Returns an array with the identifier aliases
+     * (expressions wrapped in parenthesis are skipped).
+     *
+     * @param  {String} selectQuery
+     * @return {Array}
+     */
+    static extractColumnsFromQuery(selectQuery) {
+        const groupReplacement = "__GROUP__";
+
+        selectQuery = (selectQuery || "").
+            // replace parenthesis/group expessions
+            replace(/\([\s\S]+?\)/gm, groupReplacement).
+            // replace multi-whitespace characters with single space
+            replace(/[\t\r\n]|(?:\s\s)+/g, " ");
+
+        const match = selectQuery.match(/select\s+([\s\S]+)\s+from/);
+
+        const expressions = match?.[1]?.split(",") || [];
+
+        const result = [];
+
+        for (let expr of expressions) {
+            const column = expr.trim().split(" ").pop(); // get only the alias
+            if (column != "" && column != groupReplacement) {
+                result.push(column);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns an array with all public collection identifiers (schema + type specific fields).
+     *
+     * @param  {[type]} collection The collection to extract identifiers from.
+     * @param  {String} prefix     Optional prefix for each found identified.
+     * @return {Array}
+     */
+    static getAllCollectionIdentifiers(collection, prefix = "") {
+        if (!collection) {
+            return;
+        }
+
+        let result = [prefix + "id"];
+
+        if (collection.isView) {
+            for (let col of CommonHelper.extractColumnsFromQuery(collection.options.query)) {
+                CommonHelper.pushUnique(result, prefix + col);
+            }
+        } else if (collection.isAuth) {
+            result.push(prefix + "username");
+            result.push(prefix + "email");
+            result.push(prefix + "emailVisibility");
+            result.push(prefix + "verified");
+            result.push(prefix + "created");
+            result.push(prefix + "updated");
+        } else {
+            result.push(prefix + "created");
+            result.push(prefix + "updated");
+        }
+
+        const schema = collection.schema || [];
+
+        for (const field of schema) {
+            CommonHelper.pushUnique(result, prefix + field.name);
+        }
+
+        return result;
     }
 }

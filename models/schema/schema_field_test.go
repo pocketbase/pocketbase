@@ -67,7 +67,7 @@ func TestSchemaFieldColDefinition(t *testing.T) {
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeNumber, Name: "test"},
-			"REAL DEFAULT 0",
+			"NUMERIC DEFAULT 0",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeBool, Name: "test"},

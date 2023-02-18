@@ -129,13 +129,23 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 		return err
 	}
 	if total := len(result); total > 0 {
-		return fmt.Errorf("The collection %q has external relation field references (%d).", collection.Name, total)
+		names := make([]string, 0, len(result))
+		for ref := range result {
+			names = append(names, ref.Name)
+		}
+		return fmt.Errorf("The collection %q has external relation field references (%s).", collection.Name, strings.Join(names, ", "))
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
-		// delete the related records table
-		if err := txDao.DeleteTable(collection.Name); err != nil {
-			return err
+		// delete the related view or records table
+		if collection.IsView() {
+			if err := txDao.DeleteView(collection.Name); err != nil {
+				return err
+			}
+		} else {
+			if err := txDao.DeleteTable(collection.Name); err != nil {
+				return err
+			}
 		}
 
 		return txDao.Delete(collection)
@@ -163,13 +173,18 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 			collection.Type = models.CollectionTypeBase
 		}
 
-		// persist the collection model
-		if err := txDao.Save(collection); err != nil {
-			return err
-		}
+		switch collection.Type {
+		case models.CollectionTypeView:
+			return txDao.saveViewCollection(collection, oldCollection)
+		default:
+			// persist the collection model
+			if err := txDao.Save(collection); err != nil {
+				return err
+			}
 
-		// sync the changes with the related records table
-		return txDao.SyncRecordTableSchema(collection, oldCollection)
+			// sync the changes with the related records table
+			return txDao.SyncRecordTableSchema(collection, oldCollection)
+		}
 	})
 }
 
@@ -274,8 +289,14 @@ func (dao *Dao) ImportCollections(
 					continue // exist
 				}
 
-				if err := txDao.DeleteTable(existing.Name); err != nil {
-					return err
+				if existing.IsView() {
+					if err := txDao.DeleteView(existing.Name); err != nil {
+						return err
+					}
+				} else {
+					if err := txDao.DeleteTable(existing.Name); err != nil {
+						return err
+					}
 				}
 			}
 		}
@@ -283,11 +304,58 @@ func (dao *Dao) ImportCollections(
 		// sync the upserted collections with the related records table
 		for _, imported := range importedCollections {
 			existing := mappedExisting[imported.GetId()]
-			if err := txDao.SyncRecordTableSchema(imported, existing); err != nil {
-				return err
+
+			if imported.IsView() {
+				if err := txDao.saveViewCollection(imported, existing); err != nil {
+					return err
+				}
+			} else {
+				if err := txDao.SyncRecordTableSchema(imported, existing); err != nil {
+					return err
+				}
 			}
 		}
 
 		return nil
+	})
+}
+
+// saveViewCollection persists the provided View collection changes:
+//   - deletes the old related SQL view (if any)
+//   - creates a new SQL view with the latest newCollection.Options.Query
+//   - generates a new schema based on newCollection.Options.Query
+//   - updates newCollection.Schema based on the generated view table info and query
+//   - saves the newCollection
+//
+// This method returns an error if newCollection is not a "view".
+func (dao *Dao) saveViewCollection(newCollection *models.Collection, oldCollection *models.Collection) error {
+	if newCollection.IsAuth() {
+		return errors.New("not a view collection")
+	}
+
+	return dao.RunInTransaction(func(txDao *Dao) error {
+		query := newCollection.ViewOptions().Query
+
+		// generate collection schema from the query
+		schema, err := txDao.CreateViewSchema(query)
+		if err != nil {
+			return err
+		}
+
+		// delete old renamed view
+		if oldCollection != nil && newCollection.Name != oldCollection.Name {
+			if err := txDao.DeleteView(oldCollection.Name); err != nil {
+				return err
+			}
+		}
+
+		// (re)create the view
+		if err := txDao.SaveView(newCollection.Name, query); err != nil {
+			return err
+		}
+
+		newCollection.Schema = schema
+
+		return txDao.Save(newCollection)
 	})
 }

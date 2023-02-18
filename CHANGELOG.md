@@ -26,6 +26,10 @@
 
 - Enabled `process.env` in js migrations to allow accessing `os.Environ()`.
 
+- Enabled file thumbs when visualizing `relation` display file fields.
+
+- Added new "View" collection type (@todo document)
+
 
 ## v0.12.3
 

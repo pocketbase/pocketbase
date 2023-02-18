@@ -45,16 +45,16 @@ func TestFindCollectionsByType(t *testing.T) {
 
 		hasErr := err != nil
 		if hasErr != scenario.expectError {
-			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, scenario.expectError, hasErr, err)
+			t.Errorf("[%d] Expected hasErr to be %v, got %v (%v)", i, scenario.expectError, hasErr, err)
 		}
 
 		if len(collections) != scenario.expectTotal {
-			t.Errorf("(%d) Expected %d collections, got %d", i, scenario.expectTotal, len(collections))
+			t.Errorf("[%d] Expected %d collections, got %d", i, scenario.expectTotal, len(collections))
 		}
 
 		for _, c := range collections {
 			if c.Type != scenario.collectionType {
-				t.Errorf("(%d) Expected collection with type %s, got %s: \n%v", i, scenario.collectionType, c.Type, c)
+				t.Errorf("[%d] Expected collection with type %s, got %s: \n%v", i, scenario.collectionType, c.Type, c)
 			}
 		}
 	}
@@ -80,11 +80,11 @@ func TestFindCollectionByNameOrId(t *testing.T) {
 
 		hasErr := err != nil
 		if hasErr != scenario.expectError {
-			t.Errorf("(%d) Expected hasErr to be %v, got %v (%v)", i, scenario.expectError, hasErr, err)
+			t.Errorf("[%d] Expected hasErr to be %v, got %v (%v)", i, scenario.expectError, hasErr, err)
 		}
 
 		if model != nil && model.Id != scenario.nameOrId && !strings.EqualFold(model.Name, scenario.nameOrId) {
-			t.Errorf("(%d) Expected model with identifier %s, got %v", i, scenario.nameOrId, model)
+			t.Errorf("[%d] Expected model with identifier %s, got %v", i, scenario.nameOrId, model)
 		}
 	}
 }
@@ -108,7 +108,7 @@ func TestIsCollectionNameUnique(t *testing.T) {
 	for i, scenario := range scenarios {
 		result := app.Dao().IsCollectionNameUnique(scenario.name, scenario.excludeId)
 		if result != scenario.expected {
-			t.Errorf("(%d) Expected %v, got %v", i, scenario.expected, result)
+			t.Errorf("[%d] Expected %v, got %v", i, scenario.expected, result)
 		}
 	}
 }
@@ -155,7 +155,7 @@ func TestFindCollectionReferences(t *testing.T) {
 		}
 		for i, f := range fields {
 			if !list.ExistInSlice(f.Name, expectedFields) {
-				t.Fatalf("(%d) Didn't expect field %v", i, f)
+				t.Fatalf("[%d] Didn't expect field %v", i, f)
 			}
 		}
 	}
@@ -165,21 +165,29 @@ func TestDeleteCollection(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	c0 := &models.Collection{}
-	c1, err := app.Dao().FindCollectionByNameOrId("clients")
+	colEmpty := &models.Collection{}
+
+	colAuth, err := app.Dao().FindCollectionByNameOrId("clients")
 	if err != nil {
 		t.Fatal(err)
 	}
-	c2, err := app.Dao().FindCollectionByNameOrId("demo2")
+
+	colReferenced, err := app.Dao().FindCollectionByNameOrId("demo2")
 	if err != nil {
 		t.Fatal(err)
 	}
-	c3, err := app.Dao().FindCollectionByNameOrId("demo1")
+
+	colSystem, err := app.Dao().FindCollectionByNameOrId("demo3")
 	if err != nil {
 		t.Fatal(err)
 	}
-	c3.System = true
-	if err := app.Dao().Save(c3); err != nil {
+	colSystem.System = true
+	if err := app.Dao().Save(colSystem); err != nil {
+		t.Fatal(err)
+	}
+
+	colView, err := app.Dao().FindCollectionByNameOrId("view1")
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -187,18 +195,28 @@ func TestDeleteCollection(t *testing.T) {
 		model       *models.Collection
 		expectError bool
 	}{
-		{c0, true},
-		{c1, false},
-		{c2, true}, // is part of a reference
-		{c3, true}, // system
+		{colEmpty, true},
+		{colAuth, false},
+		{colReferenced, true},
+		{colSystem, true},
+		{colView, false},
 	}
 
-	for i, scenario := range scenarios {
-		err := app.Dao().DeleteCollection(scenario.model)
-		hasErr := err != nil
+	for i, s := range scenarios {
+		err := app.Dao().DeleteCollection(s.model)
 
-		if hasErr != scenario.expectError {
-			t.Errorf("(%d) Expected hasErr %v, got %v", i, scenario.expectError, hasErr)
+		hasErr := err != nil
+		if hasErr != s.expectError {
+			t.Errorf("[%d] Expected hasErr %v, got %v (%v)", i, s.expectError, hasErr, err)
+			continue
+		}
+
+		if hasErr {
+			continue
+		}
+
+		if app.Dao().HasTable(s.model.Name) {
+			t.Errorf("[%d] Expected table/view %s to be deleted", i, s.model.Name)
 		}
 	}
 }
@@ -244,7 +262,7 @@ func TestSaveCollectionCreate(t *testing.T) {
 	}
 	for i, c := range columns {
 		if !list.ExistInSlice(c, expectedColumns) {
-			t.Fatalf("(%d) Didn't expect record column %s", i, c)
+			t.Fatalf("[%d] Didn't expect record column %s", i, c)
 		}
 	}
 }
@@ -282,12 +300,14 @@ func TestSaveCollectionUpdate(t *testing.T) {
 	}
 	for i, c := range columns {
 		if !list.ExistInSlice(c, expectedColumns) {
-			t.Fatalf("(%d) Didn't expect record column %s", i, c)
+			t.Fatalf("[%d] Didn't expect record column %s", i, c)
 		}
 	}
 }
 
 func TestImportCollections(t *testing.T) {
+	totalCollections := 10
+
 	scenarios := []struct {
 		name                   string
 		jsonData               string
@@ -302,7 +322,7 @@ func TestImportCollections(t *testing.T) {
 			name:                   "empty collections",
 			jsonData:               `[]`,
 			expectError:            true,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: totalCollections,
 		},
 		{
 			name: "minimal collection import",
@@ -312,7 +332,7 @@ func TestImportCollections(t *testing.T) {
 			]`,
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 10,
+			expectCollectionsCount: totalCollections + 2,
 		},
 		{
 			name: "minimal collection import + failed beforeRecordsSync",
@@ -324,7 +344,7 @@ func TestImportCollections(t *testing.T) {
 			},
 			deleteMissing:          false,
 			expectError:            true,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: totalCollections,
 		},
 		{
 			name: "minimal collection import + successful beforeRecordsSync",
@@ -336,7 +356,7 @@ func TestImportCollections(t *testing.T) {
 			},
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 9,
+			expectCollectionsCount: totalCollections + 1,
 		},
 		{
 			name: "new + update + delete system collection",
@@ -372,7 +392,7 @@ func TestImportCollections(t *testing.T) {
 			]`,
 			deleteMissing:          true,
 			expectError:            true,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: totalCollections,
 		},
 		{
 			name: "new + update + delete non-system collection",
@@ -442,11 +462,19 @@ func TestImportCollections(t *testing.T) {
 							"type":"bool"
 						}
 					]
+				},
+				{
+					"id": "test_new_view",
+					"name": "new_view",
+					"type": "view",
+					"options": {
+						"query": "select id from demo2"
+					}
 				}
 			]`,
 			deleteMissing:          true,
 			expectError:            false,
-			expectCollectionsCount: 3,
+			expectCollectionsCount: 4,
 		},
 		{
 			name: "test with deleteMissing: false",
@@ -501,7 +529,7 @@ func TestImportCollections(t *testing.T) {
 			]`,
 			deleteMissing:          false,
 			expectError:            false,
-			expectCollectionsCount: 9,
+			expectCollectionsCount: totalCollections + 1,
 			afterTestFunc: func(testApp *tests.TestApp, resultCollections []*models.Collection) {
 				expectedCollectionFields := map[string]int{
 					"nologin":    1,
@@ -509,7 +537,7 @@ func TestImportCollections(t *testing.T) {
 					"demo2":      2,
 					"demo3":      2,
 					"demo4":      11,
-					"demo5":      5,
+					"demo5":      6,
 					"new_import": 1,
 				}
 				for name, expectedCount := range expectedCollectionFields {

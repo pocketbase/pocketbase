@@ -97,11 +97,11 @@ func TestCollectionMarshalJSON(t *testing.T) {
 	for _, s := range scenarios {
 		result, err := s.collection.MarshalJSON()
 		if err != nil {
-			t.Errorf("(%s) Unexpected error %v", s.name, err)
+			t.Errorf("[%s] Unexpected error %v", s.name, err)
 			continue
 		}
 		if string(result) != s.expected {
-			t.Errorf("(%s) Expected\n%v \ngot \n%v", s.name, s.expected, string(result))
+			t.Errorf("[%s] Expected\n%v \ngot \n%v", s.name, s.expected, string(result))
 		}
 	}
 }
@@ -143,7 +143,7 @@ func TestCollectionBaseOptions(t *testing.T) {
 		}
 
 		if strEncoded := string(encoded); strEncoded != s.expected {
-			t.Errorf("(%s) Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
+			t.Errorf("[%s] Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
 		}
 	}
 }
@@ -188,7 +188,52 @@ func TestCollectionAuthOptions(t *testing.T) {
 		}
 
 		if strEncoded := string(encoded); strEncoded != s.expected {
-			t.Errorf("(%s) Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
+			t.Errorf("[%s] Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
+		}
+	}
+}
+
+func TestCollectionViewOptions(t *testing.T) {
+	options := types.JsonMap{"query": "select id from demo1", "minPasswordLength": 4}
+	expectedSerialization := `{"query":"select id from demo1"}`
+
+	scenarios := []struct {
+		name       string
+		collection models.Collection
+		expected   string
+	}{
+		{
+			"no type",
+			models.Collection{Options: options},
+			expectedSerialization,
+		},
+		{
+			"unknown type",
+			models.Collection{Type: "anything", Options: options},
+			expectedSerialization,
+		},
+		{
+			"different type",
+			models.Collection{Type: models.CollectionTypeBase, Options: options},
+			expectedSerialization,
+		},
+		{
+			"view type",
+			models.Collection{Type: models.CollectionTypeView, Options: options},
+			expectedSerialization,
+		},
+	}
+
+	for _, s := range scenarios {
+		result := s.collection.ViewOptions()
+
+		encoded, err := json.Marshal(result)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if strEncoded := string(encoded); strEncoded != s.expected {
+			t.Errorf("[%s] Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
 		}
 	}
 }
@@ -218,7 +263,7 @@ func TestNormalizeOptions(t *testing.T) {
 
 	for _, s := range scenarios {
 		if err := s.collection.NormalizeOptions(); err != nil {
-			t.Errorf("(%s) Unexpected error %v", s.name, err)
+			t.Errorf("[%s] Unexpected error %v", s.name, err)
 			continue
 		}
 
@@ -228,7 +273,7 @@ func TestNormalizeOptions(t *testing.T) {
 		}
 
 		if strEncoded := string(encoded); strEncoded != s.expected {
-			t.Errorf("(%s) Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
+			t.Errorf("[%s] Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
 		}
 	}
 }
@@ -286,7 +331,7 @@ func TestSetOptions(t *testing.T) {
 
 	for _, s := range scenarios {
 		if err := s.collection.SetOptions(s.options); err != nil {
-			t.Errorf("(%s) Unexpected error %v", s.name, err)
+			t.Errorf("[%s] Unexpected error %v", s.name, err)
 			continue
 		}
 
@@ -296,7 +341,7 @@ func TestSetOptions(t *testing.T) {
 		}
 
 		if strEncoded := string(encoded); strEncoded != s.expected {
-			t.Errorf("(%s) Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
+			t.Errorf("[%s] Expected \n%v \ngot \n%v", s.name, s.expected, strEncoded)
 		}
 	}
 }
@@ -378,18 +423,61 @@ func TestCollectionAuthOptionsValidate(t *testing.T) {
 		// parse errors
 		errs, ok := result.(validation.Errors)
 		if !ok && result != nil {
-			t.Errorf("(%s) Failed to parse errors %v", s.name, result)
+			t.Errorf("[%s] Failed to parse errors %v", s.name, result)
 			continue
 		}
 
 		if len(errs) != len(s.expectedErrors) {
-			t.Errorf("(%s) Expected error keys %v, got errors \n%v", s.name, s.expectedErrors, result)
+			t.Errorf("[%s] Expected error keys %v, got errors \n%v", s.name, s.expectedErrors, result)
 			continue
 		}
 
 		for key := range errs {
 			if !list.ExistInSlice(key, s.expectedErrors) {
-				t.Errorf("(%s) Unexpected error key %q in \n%v", s.name, key, errs)
+				t.Errorf("[%s] Unexpected error key %q in \n%v", s.name, key, errs)
+			}
+		}
+	}
+}
+
+func TestCollectionViewOptionsValidate(t *testing.T) {
+	scenarios := []struct {
+		name           string
+		options        models.CollectionViewOptions
+		expectedErrors []string
+	}{
+		{
+			"empty",
+			models.CollectionViewOptions{},
+			[]string{"query"},
+		},
+		{
+			"valid data",
+			models.CollectionViewOptions{
+				Query: "test123",
+			},
+			[]string{},
+		},
+	}
+
+	for _, s := range scenarios {
+		result := s.options.Validate()
+
+		// parse errors
+		errs, ok := result.(validation.Errors)
+		if !ok && result != nil {
+			t.Errorf("[%s] Failed to parse errors %v", s.name, result)
+			continue
+		}
+
+		if len(errs) != len(s.expectedErrors) {
+			t.Errorf("[%s] Expected error keys %v, got errors \n%v", s.name, s.expectedErrors, result)
+			continue
+		}
+
+		for key := range errs {
+			if !list.ExistInSlice(key, s.expectedErrors) {
+				t.Errorf("[%s] Unexpected error key %q in \n%v", s.name, key, errs)
 			}
 		}
 	}

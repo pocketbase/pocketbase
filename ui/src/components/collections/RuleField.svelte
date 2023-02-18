@@ -114,9 +114,9 @@
         right: 0px;
         top: 0px;
         min-width: 135px;
-        padding: 10px 10px;
+        padding: 10px;
         border-top-left-radius: 0;
         border-bottom-right-radius: 0;
-        background: rgba(53, 71, 104, 0.1);
+        background: rgba(53, 71, 104, 0.08);
     }
 </style>

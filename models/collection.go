@@ -17,6 +17,7 @@ var (
 const (
 	CollectionTypeBase = "base"
 	CollectionTypeAuth = "auth"
+	CollectionTypeView = "view"
 )
 
 type Collection struct {
@@ -52,9 +53,14 @@ func (m *Collection) IsBase() bool {
 	return m.Type == CollectionTypeBase
 }
 
-// IsBase checks if the current collection has "auth" type.
+// IsAuth checks if the current collection has "auth" type.
 func (m *Collection) IsAuth() bool {
 	return m.Type == CollectionTypeAuth
+}
+
+// IsView checks if the current collection has "view" type.
+func (m *Collection) IsView() bool {
+	return m.Type == CollectionTypeView
 }
 
 // MarshalJSON implements the [json.Marshaler] interface.
@@ -82,6 +88,14 @@ func (m *Collection) AuthOptions() CollectionAuthOptions {
 	return result
 }
 
+// ViewOptions decodes the current collection options and returns them
+// as new [CollectionViewOptions] instance.
+func (m *Collection) ViewOptions() CollectionViewOptions {
+	result := CollectionViewOptions{}
+	m.DecodeOptions(&result)
+	return result
+}
+
 // NormalizeOptions updates the current collection options with a
 // new normalized state based on the collection type.
 func (m *Collection) NormalizeOptions() error {
@@ -89,6 +103,8 @@ func (m *Collection) NormalizeOptions() error {
 	switch m.Type {
 	case CollectionTypeAuth:
 		typedOptions = m.AuthOptions()
+	case CollectionTypeView:
+		typedOptions = m.ViewOptions()
 	default:
 		typedOptions = m.BaseOptions()
 	}
@@ -143,7 +159,7 @@ func (m *Collection) SetOptions(typedOptions any) error {
 
 // -------------------------------------------------------------------
 
-// CollectionAuthOptions defines the "base" Collection.Options fields.
+// CollectionBaseOptions defines the "base" Collection.Options fields.
 type CollectionBaseOptions struct {
 }
 
@@ -151,6 +167,8 @@ type CollectionBaseOptions struct {
 func (o CollectionBaseOptions) Validate() error {
 	return nil
 }
+
+// -------------------------------------------------------------------
 
 // CollectionAuthOptions defines the "auth" Collection.Options fields.
 type CollectionAuthOptions struct {
@@ -182,5 +200,19 @@ func (o CollectionAuthOptions) Validate() error {
 			validation.Min(5),
 			validation.Max(72),
 		),
+	)
+}
+
+// -------------------------------------------------------------------
+
+// CollectionViewOptions defines the "view" Collection.Options fields.
+type CollectionViewOptions struct {
+	Query string `form:"query" json:"query"`
+}
+
+// Validate implements [validation.Validatable] interface.
+func (o CollectionViewOptions) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.Query, validation.Required),
 	)
 }

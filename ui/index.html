@@ -10,15 +10,35 @@
 
     <title>PocketBase</title>
 
-    <link rel="apple-touch-icon" sizes="180x180" href="./images/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="./images/favicon/favicon-16x16.png">
-    <link rel="manifest" href="./images/favicon/site.webmanifest">
-    <link rel="mask-icon" href="./images/favicon/safari-pinned-tab.svg" color="#000000">
-    <link rel="shortcut icon" href="./images/favicon/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/images/favicon/site.webmanifest">
+    <link rel="mask-icon" href="/images/favicon/safari-pinned-tab.svg" color="#000000">
+    <link rel="shortcut icon" href="/images/favicon/favicon.ico">
     <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-config" content="./images/favicon/browserconfig.xml">
+    <meta name="msapplication-config" content="/images/favicon/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
+
+    <!-- prefetch common tinymce resources to speed up the initial loading times -->
+    <link rel="prefetch" href="/libs/tinymce/skins/content/default/content.min.css" as="style" />
+    <link rel="prefetch" href="/libs/tinymce/skins/ui/pocketbase/skin.min.css" as="style" />
+    <link rel="prefetch" href="/libs/tinymce/skins/ui/pocketbase/content.min.css" as="style" />
+    <link rel="prefetch" href="/libs/tinymce/tinymce.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/themes/silver/theme.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/models/dom/model.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/icons/default/icons.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/autoresize/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/autolink/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/lists/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/link/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/image/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/searchreplace/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/fullscreen/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/media/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/table/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/code/plugin.min.js" as="script" />
+    <link rel="prefetch" href="/libs/tinymce/plugins/codesample/plugin.min.js" as="script" />
 
     <script>
         window.Prism = window.Prism || {};

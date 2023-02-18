@@ -1,6 +1,8 @@
 package apis
 
 import (
+	"fmt"
+
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
@@ -45,7 +47,19 @@ func (api *fileApi) download(c echo.Context) error {
 	if fileField == nil {
 		return NewNotFoundError("", nil)
 	}
+
 	options, _ := fileField.Options.(*schema.FileOptions)
+
+	baseFilesPath := record.BaseFilesPath()
+
+	// fetch the original view file field related record
+	if collection.IsView() {
+		fileRecord, err := api.app.Dao().FindRecordByViewFile(collection.Id, fileField.Name, filename)
+		if err != nil {
+			return NewNotFoundError("", fmt.Errorf("Failed to fetch view file field record: %w", err))
+		}
+		baseFilesPath = fileRecord.BaseFilesPath()
+	}
 
 	fs, err := api.app.NewFilesystem()
 	if err != nil {
@@ -53,7 +67,7 @@ func (api *fileApi) download(c echo.Context) error {
 	}
 	defer fs.Close()
 
-	originalPath := record.BaseFilesPath() + "/" + filename
+	originalPath := baseFilesPath + "/" + filename
 	servedPath := originalPath
 	servedName := filename
 
@@ -70,7 +84,7 @@ func (api *fileApi) download(c echo.Context) error {
 		if list.ExistInSlice(oAttrs.ContentType, imageContentTypes) {
 			// add thumb size as file suffix
 			servedName = thumbSize + "_" + filename
-			servedPath = record.BaseFilesPath() + "/thumbs_" + filename + "/" + servedName
+			servedPath = baseFilesPath + "/thumbs_" + filename + "/" + servedName
 
 			// check if the thumb exists:
 			// - if doesn't exist - create a new thumb with the specified thumb size

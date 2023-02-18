@@ -128,7 +128,11 @@ func (dao *Dao) FindRecordsByExpr(collectionNameOrId string, exprs ...dbx.Expres
 
 // FindFirstRecordByData returns the first found record matching
 // the provided key-value pair.
-func (dao *Dao) FindFirstRecordByData(collectionNameOrId string, key string, value any) (*models.Record, error) {
+func (dao *Dao) FindFirstRecordByData(
+	collectionNameOrId string,
+	key string,
+	value any,
+) (*models.Record, error) {
 	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)
 	if err != nil {
 		return nil, err
@@ -396,11 +400,15 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 	uniqueJsonEachAlias := "__je__" + security.PseudorandomString(4)
 
 	for refCollection, fields := range refs {
+		if refCollection.IsView() {
+			continue // skip view collections
+		}
+
 		for _, field := range fields {
 			recordTableName := inflector.Columnify(refCollection.Name)
 			prefixedFieldName := recordTableName + "." + inflector.Columnify(field.Name)
 
-			// @todo optimize single relation lookup in v0.12+
+			// @todo optimize single relation lookup
 			query := dao.RecordQuery(refCollection).
 				Distinct(true).
 				InnerJoin(fmt.Sprintf(

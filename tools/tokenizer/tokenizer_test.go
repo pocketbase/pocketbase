@@ -34,6 +34,10 @@ func TestFactories(t *testing.T) {
 			t.Fatalf("[%s] Expected reader with content %q, got %q", s.name, expectedContent, content)
 		}
 
+		if s.tk.keepSeparator != false {
+			t.Fatalf("[%s] Expected false, got true", s.name)
+		}
+
 		if len(s.tk.separators) != len(DefaultSeparators) {
 			t.Fatalf("[%s] Expected \n%v, \ngot \n%v", s.name, DefaultSeparators, s.tk.separators)
 		}
@@ -81,16 +85,18 @@ func TestScan(t *testing.T) {
 
 func TestScanAll(t *testing.T) {
 	scenarios := []struct {
-		name         string
-		content      string
-		separators   []rune
-		expectError  bool
-		expectTokens []string
+		name          string
+		content       string
+		separators    []rune
+		keepSeparator bool
+		expectError   bool
+		expectTokens  []string
 	}{
 		{
 			"empty string",
 			"",
 			DefaultSeparators,
+			false,
 			false,
 			nil,
 		},
@@ -98,6 +104,7 @@ func TestScanAll(t *testing.T) {
 			"unbalanced parenthesis",
 			`(a,b() c`,
 			DefaultSeparators,
+			false,
 			true,
 			[]string{},
 		},
@@ -105,6 +112,7 @@ func TestScanAll(t *testing.T) {
 			"unmatching quotes",
 			`'asd"`,
 			DefaultSeparators,
+			false,
 			true,
 			[]string{},
 		},
@@ -112,6 +120,7 @@ func TestScanAll(t *testing.T) {
 			"no separators",
 			`a, b, c, d, e 123, "abc"`,
 			nil,
+			false,
 			false,
 			[]string{
 				`a, b, c, d, e 123, "abc"`,
@@ -121,6 +130,7 @@ func TestScanAll(t *testing.T) {
 			"default separators",
 			`a, b, c, d e, "a,b,  c  ", (123, 456)`,
 			DefaultSeparators,
+			false,
 			false,
 			[]string{
 				"a",
@@ -132,11 +142,27 @@ func TestScanAll(t *testing.T) {
 			},
 		},
 		{
+			"default separators (with preserve)",
+			`a, b, c, d e, "a,b,  c  ", (123, 456)`,
+			DefaultSeparators,
+			true,
+			false,
+			[]string{
+				"a,",
+				"b,",
+				"c,",
+				"d e,",
+				`"a,b,  c  ",`,
+				`(123, 456)`,
+			},
+		},
+		{
 			"custom separators",
 			`   a   , 123.456, b, c d, (
 				test (a,b,c) " 123 "
 			),"(abc d", "abc) d", "(abc) d \" " 'abc "'`,
 			[]rune{',', ' ', '\t', '\n'},
+			false,
 			false,
 			[]string{
 				"a",
@@ -151,12 +177,34 @@ func TestScanAll(t *testing.T) {
 				`'abc "'`,
 			},
 		},
+		{
+			"custom separators (with preserve)",
+			`   a   , 123.456, b, c d, (
+				test (a,b,c) " 123 "
+			),"(abc d", "abc) d", "(abc) d \" " 'abc "'`,
+			[]rune{',', ' ', '\t', '\n'},
+			true,
+			false,
+			[]string{
+				"a ",
+				"123.456,",
+				"b,",
+				"c ",
+				"d,",
+				"(\n\t\t\t\ttest (a,b,c) \" 123 \"\n\t\t\t),",
+				`"(abc d",`,
+				`"abc) d",`,
+				`"(abc) d \" " `,
+				`'abc "'`,
+			},
+		},
 	}
 
 	for _, s := range scenarios {
 		tk := NewFromString(s.content)
 
-		tk.SetSeparators(s.separators...)
+		tk.Separators(s.separators...)
+		tk.KeepSeparator(s.keepSeparator)
 
 		tokens, err := tk.ScanAll()
 
