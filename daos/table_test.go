@@ -70,8 +70,8 @@ func TestGetTableInfo(t *testing.T) {
 		tableName string
 		expected  string
 	}{
-		{"", "[]"},
-		{"missing", "[]"},
+		{"", "null"},
+		{"missing", "null"},
 		{
 			"_admins",
 			`[{"PK":1,"Index":0,"Name":"id","Type":"TEXT","NotNull":false,"DefaultValue":null},{"PK":0,"Index":1,"Name":"avatar","Type":"INTEGER","NotNull":true,"DefaultValue":0},{"PK":0,"Index":2,"Name":"email","Type":"TEXT","NotNull":true,"DefaultValue":null},{"PK":0,"Index":3,"Name":"tokenKey","Type":"TEXT","NotNull":true,"DefaultValue":null},{"PK":0,"Index":4,"Name":"passwordHash","Type":"TEXT","NotNull":true,"DefaultValue":null},{"PK":0,"Index":5,"Name":"lastResetSentAt","Type":"TEXT","NotNull":true,"DefaultValue":""},{"PK":0,"Index":6,"Name":"created","Type":"TEXT","NotNull":true,"DefaultValue":""},{"PK":0,"Index":7,"Name":"updated","Type":"TEXT","NotNull":true,"DefaultValue":""}]`,
