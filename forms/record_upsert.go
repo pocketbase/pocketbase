@@ -246,9 +246,9 @@ func (form *RecordUpsert) LoadRequest(r *http.Request, keyPrefix string) error {
 //
 // Example
 //
-// 	f1, _ := filesystem.NewFileFromPath("/path/to/file1.txt")
-// 	f2, _ := filesystem.NewFileFromPath("/path/to/file2.txt")
-// 	form.AddFiles("documents", f1, f2)
+//	f1, _ := filesystem.NewFileFromPath("/path/to/file1.txt")
+//	f2, _ := filesystem.NewFileFromPath("/path/to/file2.txt")
+//	form.AddFiles("documents", f1, f2)
 func (form *RecordUpsert) AddFiles(key string, files ...*filesystem.File) error {
 	field := form.record.Collection().Schema.GetFieldByName(key)
 	if field == nil || field.Type != schema.FieldTypeFile {
@@ -298,11 +298,11 @@ func (form *RecordUpsert) AddFiles(key string, files ...*filesystem.File) error 
 //
 // Example
 //
-//  // mark only only 2 files for removal
-// 	form.AddFiles("documents", "file1_aw4bdrvws6.txt", "file2_xwbs36bafv.txt")
+//	// mark only only 2 files for removal
+//	form.AddFiles("documents", "file1_aw4bdrvws6.txt", "file2_xwbs36bafv.txt")
 //
-// 	// mark all "documents" files for removal
-// 	form.AddFiles("documents")
+//	// mark all "documents" files for removal
+//	form.AddFiles("documents")
 func (form *RecordUpsert) RemoveFiles(key string, toDelete ...string) error {
 	field := form.record.Collection().Schema.GetFieldByName(key)
 	if field == nil || field.Type != schema.FieldTypeFile {
