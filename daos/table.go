@@ -7,13 +7,13 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 )
 
-// HasTable checks if a table with the provided name exists (case insensitive).
+// HasTable checks if a table (or view) with the provided name exists (case insensitive).
 func (dao *Dao) HasTable(tableName string) bool {
 	var exists bool
 
 	err := dao.DB().Select("count(*)").
 		From("sqlite_schema").
-		AndWhere(dbx.HashExp{"type": "table"}).
+		AndWhere(dbx.HashExp{"type": []any{"table", "view"}}).
 		AndWhere(dbx.NewExp("LOWER([[name]])=LOWER({:tableName})", dbx.Params{"tableName": tableName})).
 		Limit(1).
 		Row(&exists)

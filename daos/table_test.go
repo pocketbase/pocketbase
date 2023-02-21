@@ -24,6 +24,7 @@ func TestHasTable(t *testing.T) {
 		{"_admins", true},
 		{"demo3", true},
 		{"DEMO3", true}, // table names are case insensitives by default
+		{"view1", true}, // view
 	}
 
 	for i, scenario := range scenarios {
