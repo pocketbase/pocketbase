@@ -58,8 +58,11 @@
         let:uniqueId
     >
         <label for={uniqueId}>
-            <span class="txt">
-                {label} - {isAdminOnly ? "Admins only" : "Custom rule"}
+            <span class="txt" class:txt-hint={isAdminOnly}>
+                {label}
+            </span>
+            <span class="label label-sm" class:label-danger={!isAdminOnly}>
+                {isAdminOnly ? "Admins only" : "Custom rule"}
             </span>
 
             {#if isAdminOnly}
@@ -69,7 +72,7 @@
                     on:click={unlock}
                 >
                     <i class="ri-lock-unlock-line" />
-                    <span class="txt">Set custom rule</span>
+                    <span class="txt">Enable custom rule</span>
                 </button>
             {:else}
                 <button
@@ -97,7 +100,7 @@
                 <p>
                     {#if isAdminOnly}
                         Only admins will be able to perform this action (
-                        <button type="button" class="link-hint" on:click={unlock}>unlock to change</button>
+                        <button type="button" class="link-primary" on:click={unlock}>unlock to change</button>
                         ).
                     {:else}
                         Leave empty to grant everyone access.
@@ -109,6 +112,9 @@
 {/if}
 
 <style>
+    label .label {
+        margin: -5px 0;
+    }
     .lock-toggle {
         position: absolute;
         right: 0px;

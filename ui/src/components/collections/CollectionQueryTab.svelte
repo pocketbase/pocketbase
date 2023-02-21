@@ -61,7 +61,9 @@
 </script>
 
 <Field class="form-field required {schemaErrors.length ? 'error' : ''}" name="options.query" let:uniqueId>
-    <label for={uniqueId}>Select query</label>
+    <label for={uniqueId}>
+        <span class="txt">Select query</span>
+    </label>
 
     {#if isCodeEditorComponentLoading}
         <textarea disabled rows="7" placeholder="Loading..." />
@@ -83,11 +85,11 @@
 
     <div class="help-block">
         <ul>
-            <li>Wildcard (<code>*</code>) columns are not supported.</li>
+            <li>Wildcard columns (<code>*</code>) are not supported.</li>
             <li>
                 The query must have a unique <code>id</code> column.
                 <br />
-                If your query doesn't have a suitable one, you can use
+                If your query doesn't have a suitable one, you can use the universal
                 <code>(ROW_NUMBER() OVER()) as id</code>.
             </li>
         </ul>

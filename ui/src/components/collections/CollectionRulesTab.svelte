@@ -11,7 +11,7 @@
     let showFiltersInfo = false;
 </script>
 
-<div class="block m-b-base">
+<div class="block m-b-base handle" class:fade={!showFiltersInfo}>
     <div class="flex txt-sm txt-hint m-b-5">
         <p>
             All rules follow the
@@ -75,26 +75,26 @@
     {/if}
 </div>
 
-<RuleField label="List/Search action" formKey="listRule" {collection} bind:rule={collection.listRule} />
+<RuleField label="List/Search rule" formKey="listRule" {collection} bind:rule={collection.listRule} />
 
 <hr class="m-t-sm m-b-sm" />
-<RuleField label="View action" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
+<RuleField label="View rule" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
 {#if !collection?.isView}
     <hr class="m-t-sm m-b-sm" />
-    <RuleField label="Create action" formKey="createRule" {collection} bind:rule={collection.createRule} />
+    <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule} />
 
     <hr class="m-t-sm m-b-sm" />
-    <RuleField label="Update action" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
+    <RuleField label="Update rule" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
 
     <hr class="m-t-sm m-b-sm" />
-    <RuleField label="Delete action" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
+    <RuleField label="Delete rule" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
 {/if}
 
 {#if collection?.isAuth}
     <hr class="m-t-sm m-b-sm" />
     <RuleField
-        label="Manage action"
+        label="Manage rule"
         formKey="options.manageRule"
         {collection}
         bind:rule={collection.options.manageRule}

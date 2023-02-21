@@ -630,6 +630,29 @@ export default class CommonHelper {
     }
 
     /**
+     * Extract the user initials from the provided username or email address
+     * (eg. converts "john.doe@example.com" to "JD").
+     *
+     * @param  {String} str
+     * @return {String}
+     */
+    static getInitials(str) {
+        str = (str || '').split('@')[0].trim();
+
+        if (str.length <= 2) {
+            return str.toUpperCase();
+        }
+
+        const parts = str.split(/[\.\_\-\ ]/);
+
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+
+        return str[0].toUpperCase();
+    }
+
+    /**
      * Returns a DateTime instance from a date object/string.
      *
      * @param  {String|Date} date
@@ -872,8 +895,6 @@ export default class CommonHelper {
             "id": "RECORD_ID",
             "collectionId": collection?.id,
             "collectionName": collection?.name,
-            "created": "2022-01-01 01:00:00.123Z",
-            "updated": "2022-01-01 23:59:59.456Z",
         };
 
         if (collection?.isAuth) {
@@ -881,6 +902,16 @@ export default class CommonHelper {
             dummy["verified"] = false;
             dummy["emailVisibility"] = true;
             dummy["email"] = "test@example.com";
+        }
+
+        const hasCreated = !collection?.isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("created");
+        if (hasCreated) {
+            dummy["created"] = "2022-01-01 01:00:00.123Z";
+        }
+
+        const hasUpdated = !collection?.isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("updated");
+        if (hasUpdated) {
+            dummy["updated"] = "2022-01-01 23:59:59.456Z";
         }
 
         for (const field of fields) {

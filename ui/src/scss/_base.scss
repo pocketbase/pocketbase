@@ -511,7 +511,6 @@ a,
     background: var(--baseAlt2Color);
     border-radius: var(--baseRadius);
     color: var(--txtPrimaryColor);
-    font-size: 1.16rem;
     @include shadowize();
     i {
         font-size: inherit;

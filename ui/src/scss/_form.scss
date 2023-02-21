@@ -565,6 +565,9 @@ select {
         }
     }
     &.disabled {
+        label, %input {
+            box-shadow: inset 0 0 0 var(--btnHeight) rgba(#fff, 0.45);
+        }
         > label {
             color: var(--txtDisabledColor);
         }

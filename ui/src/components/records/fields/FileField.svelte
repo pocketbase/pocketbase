@@ -128,7 +128,7 @@
                 <figure class="thumb">
                     <UploadedFilePreview {file} />
                 </figure>
-                <div class="filename" title={file.name}>
+                <div class="filename m-r-auto" title={file.name}>
                     <small class="label label-success m-r-5">New</small>
                     <span class="txt">{file.name}</span>
                 </div>
@@ -143,30 +143,29 @@
             </div>
         {/each}
 
-        {#if !maxReached}
-            <div class="list-item list-item-btn">
-                <input
-                    bind:this={fileInput}
-                    type="file"
-                    class="hidden"
-                    multiple={isMultiple}
-                    on:change={() => {
-                        for (let file of fileInput.files) {
-                            uploadedFiles.push(file);
-                        }
-                        uploadedFiles = uploadedFiles;
-                        fileInput.value = null; // reset
-                    }}
-                />
-                <button
-                    type="button"
-                    class="btn btn-transparent btn-sm btn-block"
-                    on:click={() => fileInput?.click()}
-                >
-                    <i class="ri-upload-cloud-line" />
-                    <span class="txt">Upload new file</span>
-                </button>
-            </div>
-        {/if}
+        <div class="list-item list-item-btn">
+            <input
+                bind:this={fileInput}
+                type="file"
+                class="hidden"
+                multiple={isMultiple}
+                on:change={() => {
+                    for (let file of fileInput.files) {
+                        uploadedFiles.push(file);
+                    }
+                    uploadedFiles = uploadedFiles;
+                    fileInput.value = null; // reset
+                }}
+            />
+            <button
+                type="button"
+                class="btn btn-transparent btn-sm btn-block"
+                disabled={maxReached}
+                on:click={() => fileInput?.click()}
+            >
+                <i class="ri-upload-cloud-line" />
+                <span class="txt">Upload new file</span>
+            </button>
+        </div>
     </div>
 </Field>
