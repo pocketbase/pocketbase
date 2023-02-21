@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	DefaultDataMaxOpenConns int = 100
+	DefaultDataMaxOpenConns int = 120
 	DefaultDataMaxIdleConns int = 20
 	DefaultLogsMaxOpenConns int = 10
 	DefaultLogsMaxIdleConns int = 2

@@ -36,6 +36,91 @@ func TestRecordQuery(t *testing.T) {
 	}
 }
 
+func TestRecordQueryOneWithRecord(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.Dao().FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id := "84nmscqy84lsi1t"
+
+	q := app.Dao().RecordQuery(collection).
+		Where(dbx.HashExp{"id": id})
+
+	record := &models.Record{}
+	if err := q.One(record); err != nil {
+		t.Fatal(err)
+	}
+
+	if record.GetString("id") != id {
+		t.Fatalf("Expected record with id %q, got %q", id, record.GetString("id"))
+	}
+}
+
+func TestRecordQueryAllWithRecordsSlices(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.Dao().FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id1 := "84nmscqy84lsi1t"
+	id2 := "al1h9ijdeojtsjy"
+
+	{
+		records := []models.Record{}
+
+		q := app.Dao().RecordQuery(collection).
+			Where(dbx.HashExp{"id": []any{id1, id2}}).
+			OrderBy("created asc")
+
+		if err := q.All(&records); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(records) != 2 {
+			t.Fatalf("Expected %d records, got %d", 2, len(records))
+		}
+
+		if records[0].Id != id1 {
+			t.Fatalf("Expected record with id %q, got %q", id1, records[0].Id)
+		}
+
+		if records[1].Id != id2 {
+			t.Fatalf("Expected record with id %q, got %q", id2, records[1].Id)
+		}
+	}
+
+	{
+		records := []*models.Record{}
+
+		q := app.Dao().RecordQuery(collection).
+			Where(dbx.HashExp{"id": []any{id1, id2}}).
+			OrderBy("created asc")
+
+		if err := q.All(&records); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(records) != 2 {
+			t.Fatalf("Expected %d records, got %d", 2, len(records))
+		}
+
+		if records[0].Id != id1 {
+			t.Fatalf("Expected record with id %q, got %q", id1, records[0].Id)
+		}
+
+		if records[1].Id != id2 {
+			t.Fatalf("Expected record with id %q, got %q", id2, records[1].Id)
+		}
+	}
+}
+
 func TestFindRecordById(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

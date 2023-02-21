@@ -187,7 +187,7 @@ func (dao *Dao) FindRecordByViewFile(
 
 	cleanFieldName := inflector.Columnify(qf.original.Name)
 
-	row := dbx.NullStringMap{}
+	record := &models.Record{}
 
 	err = dao.RecordQuery(qf.collection).
 		InnerJoin(fmt.Sprintf(
@@ -196,12 +196,12 @@ func (dao *Dao) FindRecordByViewFile(
 			cleanFieldName, cleanFieldName, cleanFieldName,
 		), dbx.HashExp{"_je_file.value": filename}).
 		Limit(1).
-		One(row)
+		One(record)
 	if err != nil {
 		return nil, err
 	}
 
-	return models.NewRecordFromNullStringMap(qf.collection, row), nil
+	return record, nil
 }
 
 // -------------------------------------------------------------------

@@ -1,8 +1,20 @@
 ## (WIP) v0.13.0
 
-- Allowed overwriting the default file serve headers if an explicit response header is set.
+- Added new "View" collection type (@todo document)
 
-- Changed `System.GetFile()` to return directly `*blob.Reader` instead of the `io.ReadCloser` interface.
+- Added auto fail/retry for the `SELECT` queries to gracefully handle the `database is locked` errors ([#1795](https://github.com/pocketbase/pocketbase/discussions/1795#discussioncomment-4882169)).
+
+- Added default max query executation timeout (120s).
+
+- Added support for `dao.RecordQuery(collection)` to scan directly the `One()` and `All()` results in `*models.Record` or `[]*models.Record` without the need of explicit `NullStringMap`.
+
+- Added support to overwrite the default file serve headers if an explicit response header is set.
+
+- Added file thumbs when visualizing `relation` display file fields.
+
+- Enabled `process.env` in JS migrations to allow accessing `os.Environ()`.
+
+- **!** Changed `System.GetFile()` to return directly `*blob.Reader` instead of the `io.ReadCloser` interface.
 
 - **!** Changed `To`, `Cc` and `Bcc` of `mailer.Message` to `[]mail.Address` for consistency and to allow multiple recipients and optional name.
 
@@ -24,11 +36,7 @@
     }
     ```
 
-- Enabled `process.env` in js migrations to allow accessing `os.Environ()`.
-
-- Enabled file thumbs when visualizing `relation` display file fields.
-
-- Added new "View" collection type (@todo document)
+- **!** Removed the previously deprecated `Dao.Block()` and `Dao.Continue()` helpers in favor of `Dao.NonconcurrentDB()`.
 
 
 ## v0.12.3

@@ -72,15 +72,12 @@ func (api *recordApi) list(c echo.Context) error {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
-	var rawRecords = []dbx.NullStringMap{}
-	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &rawRecords)
+	records := []*models.Record{}
+
+	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &records)
 	if err != nil {
 		return NewBadRequestError("Invalid filter parameters.", err)
 	}
-
-	records := models.NewRecordsFromNullStringMaps(collection, rawRecords)
-
-	result.Items = records
 
 	event := new(core.RecordsListEvent)
 	event.HttpContext = c
