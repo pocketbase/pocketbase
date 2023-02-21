@@ -981,7 +981,7 @@ export default class CommonHelper {
             case "auth":
                 return "ri-group-line";
             case "view":
-                return "ri-terminal-box-line";
+                return "ri-table-line";
             default:
                 return "ri-folder-2-line";
         }

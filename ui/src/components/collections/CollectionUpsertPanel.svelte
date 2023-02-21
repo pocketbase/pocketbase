@@ -62,6 +62,13 @@
         changeTab(TAB_SCHEMA);
     }
 
+    $: if (collection.type === TYPE_VIEW) {
+        // reset create, update and delete rules
+        collection.createRule = null;
+        collection.updateRule = null;
+        collection.deleteRule = null;
+    }
+
     export function changeTab(newTab) {
         activeTab = newTab;
     }
