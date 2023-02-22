@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/models/schema"
 )
 
 // DefaultPerPage specifies the default returned search result items.
@@ -22,6 +23,7 @@ const (
 	PerPageQueryParam string = "perPage"
 	SortQueryParam    string = "sort"
 	FilterQueryParam  string = "filter"
+	SelectsQueryParam string = "selects"
 )
 
 // Result defines the returned search result structure.
@@ -41,6 +43,7 @@ type Provider struct {
 	perPage       int
 	sort          []SortField
 	filter        []FilterData
+	selects       []string
 }
 
 // NewProvider creates and returns a new search provider.
@@ -53,7 +56,7 @@ type Provider struct {
 //
 //	result, err := search.NewProvider(fieldResolver).
 //		Query(baseQuery).
-//		ParseAndExec("page=2&filter=id>0&sort=-email", &models)
+//		ParseAndExec("page=2&filter=id>0&sort=-email&selects=email,name", &models)
 func NewProvider(fieldResolver FieldResolver) *Provider {
 	return &Provider{
 		fieldResolver: fieldResolver,
@@ -61,6 +64,7 @@ func NewProvider(fieldResolver FieldResolver) *Provider {
 		perPage:       DefaultPerPage,
 		sort:          []SortField{},
 		filter:        []FilterData{},
+		selects:       []string{},
 	}
 }
 
@@ -112,6 +116,12 @@ func (s *Provider) AddFilter(filter FilterData) *Provider {
 	return s
 }
 
+// SetSelects sets the `selects` field of the current search provider
+func (s *Provider) SetSelects(selects []string) *Provider {
+	s.selects = selects
+	return s
+}
+
 // Parse parses the search query parameter from the provided query string
 // and assigns the found fields to the current search provider.
 //
@@ -148,6 +158,10 @@ func (s *Provider) Parse(urlQuery string) error {
 
 	if rawFilter := params.Get(FilterQueryParam); rawFilter != "" {
 		s.AddFilter(FilterData(rawFilter))
+	}
+
+	if rawSelects := params.Get(SelectsQueryParam); rawSelects != "" {
+		s.SetSelects(ParseSelectsFromString(rawSelects))
 	}
 
 	return nil
@@ -220,6 +234,18 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		s.page = 1
 	} else if s.page > totalPages {
 		s.page = totalPages
+	}
+
+	// apply select fields
+	if len(s.selects) > 0 {
+		cols := []string{}
+		for _, field := range s.selects {
+			cols = append(cols, baseTable+"."+field)
+		}
+		for _, field := range schema.BaseModelFieldNames() {
+			cols = append(cols, baseTable+"."+field)
+		}
+		modelsQuery.Select(cols...)
 	}
 
 	// apply pagination
