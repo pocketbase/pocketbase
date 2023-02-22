@@ -130,6 +130,7 @@
                 sort: listSort,
                 filter: filter,
                 expand: relFields.map((field) => field.name).join(","),
+                $cancelKey: "records_list",
             })
             .then(async (result) => {
                 if (page <= 1) {

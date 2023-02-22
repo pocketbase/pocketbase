@@ -172,7 +172,7 @@
                     // lightweight sql dialect with mostly SELECT statements keywords
                     dialect: SQLDialect.define({
                         keywords:
-                            "select from where having group by order limit offset join left right inner with like not in match asc desc regexp isnull notnull glob " +
+                            "select distinct from where having group by order limit offset join left right inner with like not in match asc desc regexp isnull notnull glob " +
                             "count avg sum min max current random cast as int real text " +
                             "date time datetime unixepoch strftime coalesce lower upper substr " +
                             "case when then iif if else json_extract json_each json_tree json_array_length json_valid ",
