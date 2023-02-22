@@ -5,6 +5,7 @@ package daos
 
 import (
 	"errors"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
@@ -20,8 +21,10 @@ func New(db dbx.Builder) *Dao {
 // async and sync db builders.
 func NewMultiDB(concurrentDB, nonconcurrentDB dbx.Builder) *Dao {
 	return &Dao{
-		concurrentDB:    concurrentDB,
-		nonconcurrentDB: nonconcurrentDB,
+		concurrentDB:      concurrentDB,
+		nonconcurrentDB:   nonconcurrentDB,
+		MaxLockRetries:    8,
+		ModelQueryTimeout: 90 * time.Second,
 	}
 }
 
@@ -31,6 +34,14 @@ type Dao struct {
 	// in a transaction both refer to the same *dbx.TX instance
 	concurrentDB    dbx.Builder
 	nonconcurrentDB dbx.Builder
+
+	// MaxLockRetries specifies the default max "database is locked" auto retry attempts.
+	MaxLockRetries int
+
+	// ModelQueryTimeout is the default max duration of a running ModelQuery().
+	//
+	// This field has no effect if an explicit query context is already specified.
+	ModelQueryTimeout time.Duration
 
 	BeforeCreateFunc func(eventDao *Dao, m models.Model) error
 	AfterCreateFunc  func(eventDao *Dao, m models.Model)
@@ -63,15 +74,17 @@ func (dao *Dao) NonconcurrentDB() dbx.Builder {
 	return dao.nonconcurrentDB
 }
 
-// ModelQuery creates a new query with preset Select and From fields
-// based on the provided model argument.
+// ModelQuery creates a new preconfigured select query with preset
+// SELECT, FROM and other common fields based on the provided model.
 func (dao *Dao) ModelQuery(m models.Model) *dbx.SelectQuery {
 	tableName := m.TableName()
 
 	return dao.DB().
 		Select("{{" + tableName + "}}.*").
 		From(tableName).
-		WithExecHook(onLockErrorRetry)
+		WithBuildHook(func(query *dbx.Query) {
+			query.WithExecHook(execLockRetry(dao.ModelQueryTimeout, dao.MaxLockRetries))
+		})
 }
 
 // FindById finds a single db record with the specified id and
@@ -189,7 +202,7 @@ func (dao *Dao) Delete(m models.Model) error {
 		}
 
 		return nil
-	}, defaultMaxRetries)
+	})
 }
 
 // Save upserts (update or create if primary key is not set) the provided model.
@@ -197,12 +210,12 @@ func (dao *Dao) Save(m models.Model) error {
 	if m.IsNew() {
 		return dao.lockRetry(func(retryDao *Dao) error {
 			return retryDao.create(m)
-		}, defaultMaxRetries)
+		})
 	}
 
 	return dao.lockRetry(func(retryDao *Dao) error {
 		return retryDao.update(m)
-	}, defaultMaxRetries)
+	})
 }
 
 func (dao *Dao) update(m models.Model) error {
@@ -296,7 +309,7 @@ func (dao *Dao) create(m models.Model) error {
 	return nil
 }
 
-func (dao *Dao) lockRetry(op func(retryDao *Dao) error, maxRetries int) error {
+func (dao *Dao) lockRetry(op func(retryDao *Dao) error) error {
 	retryDao := dao
 
 	return baseLockRetry(func(attempt int) error {
@@ -310,5 +323,5 @@ func (dao *Dao) lockRetry(op func(retryDao *Dao) error, maxRetries int) error {
 		}
 
 		return op(retryDao)
-	}, maxRetries)
+	}, dao.MaxLockRetries)
 }

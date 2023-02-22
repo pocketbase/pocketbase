@@ -6,12 +6,12 @@ import (
 )
 
 func TestGetDefaultRetryInterval(t *testing.T) {
-	if i := getDefaultRetryInterval(-1); i.Milliseconds() != 1500 {
-		t.Fatalf("Expected 1500ms, got %v", i)
+	if i := getDefaultRetryInterval(-1); i.Milliseconds() != 1000 {
+		t.Fatalf("Expected 1000ms, got %v", i)
 	}
 
-	if i := getDefaultRetryInterval(999); i.Milliseconds() != 1500 {
-		t.Fatalf("Expected 1500ms, got %v", i)
+	if i := getDefaultRetryInterval(999); i.Milliseconds() != 1000 {
+		t.Fatalf("Expected 1000ms, got %v", i)
 	}
 
 	if i := getDefaultRetryInterval(3); i.Milliseconds() != 500 {

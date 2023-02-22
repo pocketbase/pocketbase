@@ -2,9 +2,11 @@
 
 - Added new "View" collection type (@todo document)
 
-- Added auto fail/retry for the `SELECT` queries to gracefully handle the `database is locked` errors ([#1795](https://github.com/pocketbase/pocketbase/discussions/1795#discussioncomment-4882169)).
+- Added auto fail/retry (default to 8 attempts) for the `SELECT` queries to gracefully handle the `database is locked` errors ([#1795](https://github.com/pocketbase/pocketbase/discussions/1795#discussioncomment-4882169)).
+  _The default max attempts can be accessed or changed via `Dao.MaxLockRetries`._
 
-- Added default max query executation timeout (120s).
+- Added default max query executation timeout (90s).
+  _The default timeout can be access or changed via `Dao.ModelQueryTimeout`._
 
 - Added support for `dao.RecordQuery(collection)` to scan directly the `One()` and `All()` results in `*models.Record` or `[]*models.Record` without the need of explicit `NullStringMap`.
 
@@ -13,6 +15,10 @@
 - Added file thumbs when visualizing `relation` display file fields.
 
 - Enabled `process.env` in JS migrations to allow accessing `os.Environ()`.
+
+- Added `UploadedFiles` field to the `RecordCreateEvent` and `RecordUpdateEvent` event structs.
+
+- **!** Moved file upload after the record persistent to allow custom changing the record id safely from the `OnModelBeforeCreate` hook.
 
 - **!** Changed `System.GetFile()` to return directly `*blob.Reader` instead of the `io.ReadCloser` interface.
 
@@ -38,6 +44,7 @@
 
 - **!** Removed the previously deprecated `Dao.Block()` and `Dao.Continue()` helpers in favor of `Dao.NonconcurrentDB()`.
 
+- Other minor Admin UI improvements.
 
 ## v0.12.3
 

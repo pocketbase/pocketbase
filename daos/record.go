@@ -23,68 +23,70 @@ func (dao *Dao) RecordQuery(collection *models.Collection) *dbx.SelectQuery {
 	return dao.DB().
 		Select(selectCols).
 		From(tableName).
-		WithExecHook(onLockErrorRetry).
-		WithOneHook(func(s *dbx.SelectQuery, a any, op func(b any) error) error {
-			switch v := a.(type) {
-			case *models.Record:
-				if v == nil {
-					return op(a)
-				}
+		WithBuildHook(func(query *dbx.Query) {
+			query.WithExecHook(execLockRetry(dao.ModelQueryTimeout, dao.MaxLockRetries)).
+				WithOneHook(func(q *dbx.Query, a any, op func(b any) error) error {
+					switch v := a.(type) {
+					case *models.Record:
+						if v == nil {
+							return op(a)
+						}
 
-				row := dbx.NullStringMap{}
-				if err := op(&row); err != nil {
-					return err
-				}
+						row := dbx.NullStringMap{}
+						if err := op(&row); err != nil {
+							return err
+						}
 
-				record := models.NewRecordFromNullStringMap(collection, row)
+						record := models.NewRecordFromNullStringMap(collection, row)
 
-				*v = *record
+						*v = *record
 
-				return nil
-			default:
-				return op(a)
-			}
-		}).
-		WithAllHook(func(s *dbx.SelectQuery, sliceA any, op func(sliceB any) error) error {
-			switch v := sliceA.(type) {
-			case *[]*models.Record:
-				if v == nil {
-					return op(sliceA)
-				}
+						return nil
+					default:
+						return op(a)
+					}
+				}).
+				WithAllHook(func(q *dbx.Query, sliceA any, op func(sliceB any) error) error {
+					switch v := sliceA.(type) {
+					case *[]*models.Record:
+						if v == nil {
+							return op(sliceA)
+						}
 
-				rows := []dbx.NullStringMap{}
-				if err := op(&rows); err != nil {
-					return err
-				}
+						rows := []dbx.NullStringMap{}
+						if err := op(&rows); err != nil {
+							return err
+						}
 
-				records := models.NewRecordsFromNullStringMaps(collection, rows)
+						records := models.NewRecordsFromNullStringMaps(collection, rows)
 
-				*v = records
+						*v = records
 
-				return nil
-			case *[]models.Record:
-				if v == nil {
-					return op(sliceA)
-				}
+						return nil
+					case *[]models.Record:
+						if v == nil {
+							return op(sliceA)
+						}
 
-				rows := []dbx.NullStringMap{}
-				if err := op(&rows); err != nil {
-					return err
-				}
+						rows := []dbx.NullStringMap{}
+						if err := op(&rows); err != nil {
+							return err
+						}
 
-				records := models.NewRecordsFromNullStringMaps(collection, rows)
+						records := models.NewRecordsFromNullStringMaps(collection, rows)
 
-				nonPointers := make([]models.Record, len(records))
-				for i, r := range records {
-					nonPointers[i] = *r
-				}
+						nonPointers := make([]models.Record, len(records))
+						for i, r := range records {
+							nonPointers[i] = *r
+						}
 
-				*v = nonPointers
+						*v = nonPointers
 
-				return nil
-			default:
-				return op(sliceA)
-			}
+						return nil
+					default:
+						return op(sliceA)
+					}
+				})
 		})
 }
 

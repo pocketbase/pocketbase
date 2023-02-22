@@ -8,26 +8,24 @@ import (
 	"github.com/pocketbase/dbx"
 )
 
-const defaultQueryTimeout time.Duration = 2 * time.Minute
+// default retries intervals (in ms)
+var defaultRetryIntervals = []int{100, 250, 350, 500, 700, 1000}
 
-const defaultMaxRetries int = 10
-
-var defaultRetryIntervals = []int{100, 250, 350, 500, 700, 1000, 1200, 1500}
-
-func onLockErrorRetry(s *dbx.SelectQuery, op func() error) error {
-	return baseLockRetry(func(attempt int) error {
-		// load a default timeout context if not set explicitly
-		if s.Context() == nil {
-			ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+func execLockRetry(timeout time.Duration, maxRetries int) dbx.ExecHookFunc {
+	return func(q *dbx.Query, op func() error) error {
+		if q.Context() == nil {
+			cancelCtx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer func() {
 				cancel()
-				s.WithContext(nil) // reset
+				q.WithContext(nil) // reset
 			}()
-			s.WithContext(ctx)
+			q.WithContext(cancelCtx)
 		}
 
-		return op()
-	}, defaultMaxRetries)
+		return baseLockRetry(func(attempt int) error {
+			return op()
+		}, maxRetries)
+	}
 }
 
 func baseLockRetry(op func(attempt int) error, maxRetries int) error {
