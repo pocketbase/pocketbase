@@ -217,6 +217,7 @@ func (api *recordApi) create(c echo.Context) error {
 	event.HttpContext = c
 	event.Collection = collection
 	event.Record = record
+	event.UploadedFiles = form.FilesToUpload()
 
 	// create the record
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
@@ -305,6 +306,7 @@ func (api *recordApi) update(c echo.Context) error {
 	event.HttpContext = c
 	event.Collection = collection
 	event.Record = record
+	event.UploadedFiles = form.FilesToUpload()
 
 	// update the record
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
