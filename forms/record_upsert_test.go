@@ -979,11 +979,33 @@ func TestRecordUpsertAddAndRemoveFiles(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	removed0 := "test_d61b33QdDU.txt" // replaced
+	removed1 := "300_WlbFWSGmW9.png"
+	removed2 := "logo_vcfJJG5TAh.svg"
+
 	form.AddFiles("file_one", f1) // should replace the existin file
 
 	form.AddFiles("file_many", f2, f3) // should append
 
-	form.RemoveFiles("file_many", "300_WlbFWSGmW9.png", "logo_vcfJJG5TAh.svg") // should remove
+	form.RemoveFiles("file_many", removed1, removed2) // should remove
+
+	filesToUpload := form.FilesToUpload()
+	if v, ok := filesToUpload["file_one"]; !ok || len(v) != 1 {
+		t.Fatalf("Expected filesToUpload[file_one] to have exactly 1 file, got %v", v)
+	}
+	if v, ok := filesToUpload["file_many"]; !ok || len(v) != 2 {
+		t.Fatalf("Expected filesToUpload[file_many] to have exactly 2 file, got %v", v)
+	}
+
+	filesToDelete := form.FilesToDelete()
+	if len(filesToDelete) != 3 {
+		t.Fatalf("Expected exactly 2 file to delete, got %v", filesToDelete)
+	}
+	for _, f := range []string{removed0, removed1, removed2} {
+		if !list.ExistInSlice(f, filesToDelete) {
+			t.Fatalf("Missing file %q from filesToDelete %v", f, filesToDelete)
+		}
+	}
 
 	if err := form.Submit(); err != nil {
 		t.Fatalf("Failed to submit the RecordUpsert form, got %v", err)
@@ -995,14 +1017,14 @@ func TestRecordUpsertAddAndRemoveFiles(t *testing.T) {
 	}
 
 	// ensure files deletion
-	if hasRecordFile(app, recordAfter, "test_d61b33QdDU.txt") {
+	if hasRecordFile(app, recordAfter, removed0) {
 		t.Fatalf("Expected the old file_one file to be deleted")
 	}
-	if hasRecordFile(app, recordAfter, "300_WlbFWSGmW9.png") {
-		t.Fatalf("Expected 300_WlbFWSGmW9.png to be deleted")
+	if hasRecordFile(app, recordAfter, removed1) {
+		t.Fatalf("Expected %s to be deleted", removed1)
 	}
-	if hasRecordFile(app, recordAfter, "logo_vcfJJG5TAh.svg") {
-		t.Fatalf("Expected logo_vcfJJG5TAh.svg to be deleted")
+	if hasRecordFile(app, recordAfter, removed2) {
+		t.Fatalf("Expected %s to be deleted", removed2)
 	}
 
 	fileOne := recordAfter.GetStringSlice("file_one")

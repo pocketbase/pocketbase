@@ -235,6 +235,16 @@ func (form *RecordUpsert) LoadRequest(r *http.Request, keyPrefix string) error {
 	return nil
 }
 
+// FilesToUpload returns the parsed request files ready for upload.
+func (form *RecordUpsert) FilesToUpload() map[string][]*filesystem.File {
+	return form.filesToUpload
+}
+
+// FilesToUpload returns the parsed request filenames ready to be deleted.
+func (form *RecordUpsert) FilesToDelete() []string {
+	return form.filesToDelete
+}
+
 // AddFiles adds the provided file(s) to the specified file field.
 //
 // If the file field is a SINGLE-value file field (aka. "Max Select = 1"),
@@ -731,19 +741,14 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 			form.record.MarkAsNew()
 		}
 
+		// persist the record model
+		if saveErr := form.dao.SaveRecord(form.record); saveErr != nil {
+			return fmt.Errorf("failed to save the record: %w", saveErr)
+		}
+
 		// upload new files (if any)
 		if err := form.processFilesToUpload(); err != nil {
 			return fmt.Errorf("failed to process the uploaded files: %w", err)
-		}
-
-		// persist the record model
-		if saveErr := form.dao.SaveRecord(form.record); saveErr != nil {
-			// try to cleanup the successfully uploaded files
-			if _, err := form.deleteFilesByNamesList(form.getFilesToUploadNames()); err != nil && form.app.IsDebug() {
-				log.Println(err)
-			}
-
-			return fmt.Errorf("failed to save the record: %w", saveErr)
 		}
 
 		// delete old files (if any)
