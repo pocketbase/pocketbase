@@ -12,8 +12,8 @@ func (dao *Dao) ExternalAuthQuery() *dbx.SelectQuery {
 	return dao.ModelQuery(&models.ExternalAuth{})
 }
 
-/// FindAllExternalAuthsByRecord returns all ExternalAuth models
-/// linked to the provided auth record.
+// FindAllExternalAuthsByRecord returns all ExternalAuth models
+// linked to the provided auth record.
 func (dao *Dao) FindAllExternalAuthsByRecord(authRecord *models.Record) ([]*models.ExternalAuth, error) {
 	auths := []*models.ExternalAuth{}
 

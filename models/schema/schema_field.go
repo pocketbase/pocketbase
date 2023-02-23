@@ -386,8 +386,7 @@ func (f *SchemaField) PrepareValueWithModifier(baseValue any, modifier string, m
 		}
 	case FieldTypeFile:
 		// note: file for now supports only the subtract modifier
-		switch modifier {
-		case FieldValueModifierSubtract:
+		if modifier == FieldValueModifierSubtract {
 			resolvedValue = list.SubtractSlice(
 				list.ToUniqueStringSlice(baseValue),
 				list.ToUniqueStringSlice(modifierValue),

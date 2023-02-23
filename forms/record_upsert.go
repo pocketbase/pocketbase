@@ -429,7 +429,6 @@ func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 		if len(submittedNames) == 0 && len(oldNames) > 0 {
 			form.RemoveFiles(key)
 		} else if len(oldNames) > 0 {
-
 			toDelete := []string{}
 
 			for _, name := range oldNames {
@@ -761,18 +760,6 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 
 		return nil
 	}, interceptors...)
-}
-
-func (form *RecordUpsert) getFilesToUploadNames() []string {
-	names := []string{}
-
-	for fieldKey := range form.filesToUpload {
-		for _, file := range form.filesToUpload[fieldKey] {
-			names = append(names, file.Name)
-		}
-	}
-
-	return names
 }
 
 func (form *RecordUpsert) processFilesToUpload() error {

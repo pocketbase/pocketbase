@@ -17,6 +17,7 @@ func execLockRetry(timeout time.Duration, maxRetries int) dbx.ExecHookFunc {
 			cancelCtx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer func() {
 				cancel()
+				//nolint:staticcheck
 				q.WithContext(nil) // reset
 			}()
 			q.WithContext(cancelCtx)

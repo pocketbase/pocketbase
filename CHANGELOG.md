@@ -45,7 +45,7 @@
 
 - **!** Repurposed the Authentik integration as a more generic "OpenID Connect" provider (`oidc`) to support any OIDC provider (Okta, Keycloak, etc.).
   _If you've previously used Authentik, make sure to rename the provider key in your code to `oidc`._
-  _For more than one OIDC provider you can use the additional `oidc2` and `oidc3` settings._
+  _To enable more than one OIDC provider you can use the additional `oidc2` and `oidc3` provider keys._
 
 - **!** Removed the previously deprecated `Dao.Block()` and `Dao.Continue()` helpers in favor of `Dao.NonconcurrentDB()`.
 

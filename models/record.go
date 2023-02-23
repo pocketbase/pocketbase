@@ -566,7 +566,7 @@ func (m *Record) ReplaceModifers(data map[string]any) map[string]any {
 		}
 
 		// -----------------------------------------------------------
-		// legacy file field modifiers (kept for backward compatability)
+		// legacy file field modifiers (kept for backward compatibility)
 		// -----------------------------------------------------------
 
 		var oldNames []string
