@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
@@ -52,6 +53,14 @@ func main() {
 		"fallback the request to index.html on missing static path (eg. when pretty urls are used with SPA)",
 	)
 
+	var queryTimeout int
+	app.RootCmd.PersistentFlags().IntVar(
+		&queryTimeout,
+		"queryTimeout",
+		30,
+		"the default SELECT queries timeout in seconds",
+	)
+
 	app.RootCmd.ParseFlags(os.Args[1:])
 
 	// ---------------------------------------------------------------
@@ -68,6 +77,11 @@ func main() {
 		TemplateLang: migratecmd.TemplateLangJS,
 		Automigrate:  automigrate,
 		Dir:          migrationsDir,
+	})
+
+	app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
+		app.Dao().ModelQueryTimeout = time.Duration(queryTimeout) * time.Second
+		return nil
 	})
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
