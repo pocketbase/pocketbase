@@ -342,6 +342,7 @@
     overflow-x: hidden;
     overflow-y: auto; // fallback
     overflow-y: overlay;
+    scroll-behavior: smooth;
     .overlay-active & {
         overflow-y: hidden; // prevent double scrollbar
     }

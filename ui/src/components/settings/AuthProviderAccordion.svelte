@@ -32,6 +32,13 @@
     export function collapseSiblings() {
         accordion?.collapseSiblings();
     }
+
+    function clear() {
+        for (let k in config) {
+            config[k] = "";
+        }
+        config.enabled = false;
+    }
 </script>
 
 <Accordion bind:this={accordion} on:expand on:collapse on:toggle {...$$restProps}>
@@ -41,6 +48,9 @@
                 <i class={icon} />
             {/if}
             <span class="txt">{title}</span>
+            <code title="Provider key">
+                {key.substring(0, key.length - 4)}
+            </code>
         </div>
 
         <div class="flex-fill" />
@@ -60,24 +70,38 @@
         {/if}
     </svelte:fragment>
 
-    <Field class="form-field form-field-toggle m-b-0" name="{key}.enabled" let:uniqueId>
-        <input type="checkbox" id={uniqueId} bind:checked={config.enabled} />
-        <label for={uniqueId}>Enable</label>
-    </Field>
+    <div class="flex">
+        <Field class="form-field form-field-toggle m-b-0" name="{key}.enabled" let:uniqueId>
+            <input type="checkbox" id={uniqueId} bind:checked={config.enabled} />
+            <label for={uniqueId}>Enable</label>
+        </Field>
+
+        <button type="button" class="btn btn-sm btn-transparent btn-hint m-l-auto" on:click={clear}>
+            <span class="txt">Clear all fields</span>
+        </button>
+    </div>
 
     <div class="grid">
         <div class="col-12 spacing" />
         <div class="col-lg-6">
-            <Field class="form-field required" name="{key}.clientId" let:uniqueId>
+            <Field class="form-field {config.enabled ? 'required' : ''}" name="{key}.clientId" let:uniqueId>
                 <label for={uniqueId}>Client ID</label>
-                <input type="text" id={uniqueId} bind:value={config.clientId} required />
+                <input type="text" id={uniqueId} bind:value={config.clientId} required={config.enabled} />
             </Field>
         </div>
 
         <div class="col-lg-6">
-            <Field class="form-field required" name="{key}.clientSecret" let:uniqueId>
+            <Field
+                class="form-field {config.enabled ? 'required' : ''}"
+                name="{key}.clientSecret"
+                let:uniqueId
+            >
                 <label for={uniqueId}>Client Secret</label>
-                <RedactedPasswordInput bind:value={config.clientSecret} id={uniqueId} required />
+                <RedactedPasswordInput
+                    bind:value={config.clientSecret}
+                    id={uniqueId}
+                    required={config.enabled}
+                />
             </Field>
         </div>
 

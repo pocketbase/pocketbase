@@ -1,6 +1,7 @@
 package settings_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -54,10 +55,14 @@ func TestSettingsValidate(t *testing.T) {
 	s.GiteeAuth.ClientId = ""
 	s.LivechatAuth.Enabled = true
 	s.LivechatAuth.ClientId = ""
-	s.AuthentikAuth.Enabled = true
-	s.AuthentikAuth.ClientId = ""
 	s.GiteaAuth.Enabled = true
 	s.GiteaAuth.ClientId = ""
+	s.OIDCAuth.Enabled = true
+	s.OIDCAuth.ClientId = ""
+	s.OIDC2Auth.Enabled = true
+	s.OIDC2Auth.ClientId = ""
+	s.OIDC3Auth.Enabled = true
+	s.OIDC3Auth.ClientId = ""
 
 	// check if Validate() is triggering the members validate methods.
 	err := s.Validate()
@@ -89,8 +94,10 @@ func TestSettingsValidate(t *testing.T) {
 		`"stravaAuth":{`,
 		`"giteeAuth":{`,
 		`"livechatAuth":{`,
-		`"authentikAuth":{`,
 		`"giteaAuth":{`,
+		`"oidcAuth":{`,
+		`"oidc2Auth":{`,
+		`"oidc3Auth":{`,
 	}
 
 	errBytes, _ := json.Marshal(err)
@@ -145,10 +152,14 @@ func TestSettingsMerge(t *testing.T) {
 	s2.GiteeAuth.ClientId = "gitee_test"
 	s2.LivechatAuth.Enabled = true
 	s2.LivechatAuth.ClientId = "livechat_test"
-	s2.AuthentikAuth.Enabled = true
-	s2.AuthentikAuth.ClientId = "authentik_test"
 	s2.GiteaAuth.Enabled = true
 	s2.GiteaAuth.ClientId = "gitea_test"
+	s2.OIDCAuth.Enabled = true
+	s2.OIDCAuth.ClientId = "oidc_test"
+	s2.OIDC2Auth.Enabled = true
+	s2.OIDC2Auth.ClientId = "oidc2_test"
+	s2.OIDC3Auth.Enabled = true
+	s2.OIDC3Auth.ClientId = "oidc3_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
@@ -199,47 +210,69 @@ func TestSettingsClone(t *testing.T) {
 }
 
 func TestSettingsRedactClone(t *testing.T) {
+	testSecret := "test_secret"
+
 	s1 := settings.New()
-	s1.Meta.AppName = "test123" // control field
-	s1.Smtp.Password = "test123"
-	s1.Smtp.Tls = true
-	s1.S3.Secret = "test123"
-	s1.AdminAuthToken.Secret = "test123"
-	s1.AdminPasswordResetToken.Secret = "test123"
-	s1.RecordAuthToken.Secret = "test123"
-	s1.RecordPasswordResetToken.Secret = "test123"
-	s1.RecordEmailChangeToken.Secret = "test123"
-	s1.RecordVerificationToken.Secret = "test123"
-	s1.GoogleAuth.ClientSecret = "test123"
-	s1.FacebookAuth.ClientSecret = "test123"
-	s1.GithubAuth.ClientSecret = "test123"
-	s1.GitlabAuth.ClientSecret = "test123"
-	s1.DiscordAuth.ClientSecret = "test123"
-	s1.TwitterAuth.ClientSecret = "test123"
-	s1.MicrosoftAuth.ClientSecret = "test123"
-	s1.SpotifyAuth.ClientSecret = "test123"
-	s1.KakaoAuth.ClientSecret = "test123"
-	s1.TwitchAuth.ClientSecret = "test123"
-	s1.StravaAuth.ClientSecret = "test123"
-	s1.GiteeAuth.ClientSecret = "test123"
-	s1.LivechatAuth.ClientSecret = "test123"
-	s1.AuthentikAuth.ClientSecret = "test123"
-	s1.GiteaAuth.ClientSecret = "test123"
+
+	// control fields
+	s1.Meta.AppName = "test123"
+
+	// secrets
+	s1.Smtp.Password = testSecret
+	s1.S3.Secret = testSecret
+	s1.AdminAuthToken.Secret = testSecret
+	s1.AdminPasswordResetToken.Secret = testSecret
+	s1.RecordAuthToken.Secret = testSecret
+	s1.RecordPasswordResetToken.Secret = testSecret
+	s1.RecordEmailChangeToken.Secret = testSecret
+	s1.RecordVerificationToken.Secret = testSecret
+	s1.GoogleAuth.ClientSecret = testSecret
+	s1.FacebookAuth.ClientSecret = testSecret
+	s1.GithubAuth.ClientSecret = testSecret
+	s1.GitlabAuth.ClientSecret = testSecret
+	s1.DiscordAuth.ClientSecret = testSecret
+	s1.TwitterAuth.ClientSecret = testSecret
+	s1.MicrosoftAuth.ClientSecret = testSecret
+	s1.SpotifyAuth.ClientSecret = testSecret
+	s1.KakaoAuth.ClientSecret = testSecret
+	s1.TwitchAuth.ClientSecret = testSecret
+	s1.StravaAuth.ClientSecret = testSecret
+	s1.GiteeAuth.ClientSecret = testSecret
+	s1.LivechatAuth.ClientSecret = testSecret
+	s1.GiteaAuth.ClientSecret = testSecret
+	s1.OIDCAuth.ClientSecret = testSecret
+	s1.OIDC2Auth.ClientSecret = testSecret
+	s1.OIDC3Auth.ClientSecret = testSecret
+
+	s1Bytes, err := json.Marshal(s1)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	s2, err := s1.RedactClone()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	encoded, err := json.Marshal(s2)
+	s2Bytes, err := json.Marshal(s2)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":5},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","authMethod":"","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"recordAuthToken":{"secret":"******","duration":1209600},"recordPasswordResetToken":{"secret":"******","duration":1800},"recordEmailChangeToken":{"secret":"******","duration":1800},"recordVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":false,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":0},"googleAuth":{"enabled":false,"clientSecret":"******"},"facebookAuth":{"enabled":false,"clientSecret":"******"},"githubAuth":{"enabled":false,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"clientSecret":"******"},"discordAuth":{"enabled":false,"clientSecret":"******"},"twitterAuth":{"enabled":false,"clientSecret":"******"},"microsoftAuth":{"enabled":false,"clientSecret":"******"},"spotifyAuth":{"enabled":false,"clientSecret":"******"},"kakaoAuth":{"enabled":false,"clientSecret":"******"},"twitchAuth":{"enabled":false,"clientSecret":"******"},"stravaAuth":{"enabled":false,"clientSecret":"******"},"giteeAuth":{"enabled":false,"clientSecret":"******"},"livechatAuth":{"enabled":false,"clientSecret":"******"},"authentikAuth":{"enabled":false,"clientSecret":"******"},"giteaAuth":{"enabled":false,"clientSecret":"******"}}`
+	if bytes.Equal(s1Bytes, s2Bytes) {
+		t.Fatalf("Expected the 2 settings to differ, got \n%s", s2Bytes)
+	}
 
-	if encodedStr := string(encoded); encodedStr != expected {
-		t.Fatalf("Expected\n%v\ngot\n%v", expected, encodedStr)
+	if strings.Contains(string(s2Bytes), testSecret) {
+		t.Fatalf("Expected %q secret to be replaced with mask, got \n%s", testSecret, s2Bytes)
+	}
+
+	if !strings.Contains(string(s2Bytes), settings.SecretMask) {
+		t.Fatalf("Expected the secrets to be replaced with the secret mask, got \n%s", s2Bytes)
+	}
+
+	if !strings.Contains(string(s2Bytes), `"appName":"test123"`) {
+		t.Fatalf("Missing control field in \n%s", s2Bytes)
 	}
 }
 
@@ -250,7 +283,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.FacebookAuth.ClientId = "facebook_test"
 	s.GithubAuth.ClientId = "github_test"
 	s.GitlabAuth.ClientId = "gitlab_test"
-	s.GitlabAuth.Enabled = true
+	s.GitlabAuth.Enabled = true // control
 	s.DiscordAuth.ClientId = "discord_test"
 	s.TwitterAuth.ClientId = "twitter_test"
 	s.MicrosoftAuth.ClientId = "microsoft_test"
@@ -260,8 +293,10 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.StravaAuth.ClientId = "strava_test"
 	s.GiteeAuth.ClientId = "gitee_test"
 	s.LivechatAuth.ClientId = "livechat_test"
-	s.AuthentikAuth.ClientId = "authentik_test"
 	s.GiteaAuth.ClientId = "gitea_test"
+	s.OIDCAuth.ClientId = "oidc_test"
+	s.OIDC2Auth.ClientId = "oidc2_test"
+	s.OIDC3Auth.ClientId = "oidc3_test"
 
 	result := s.NamedAuthProviderConfigs()
 
@@ -272,21 +307,23 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	encodedStr := string(encoded)
 
 	expectedParts := []string{
-		`"discord":{"enabled":false,"clientId":"discord_test"}`,
-		`"facebook":{"enabled":false,"clientId":"facebook_test"}`,
-		`"github":{"enabled":false,"clientId":"github_test"}`,
-		`"gitlab":{"enabled":true,"clientId":"gitlab_test"}`,
-		`"google":{"enabled":false,"clientId":"google_test"}`,
-		`"microsoft":{"enabled":false,"clientId":"microsoft_test"}`,
-		`"spotify":{"enabled":false,"clientId":"spotify_test"}`,
-		`"twitter":{"enabled":false,"clientId":"twitter_test"}`,
-		`"kakao":{"enabled":false,"clientId":"kakao_test"}`,
-		`"twitch":{"enabled":false,"clientId":"twitch_test"}`,
-		`"strava":{"enabled":false,"clientId":"strava_test"}`,
-		`"gitee":{"enabled":false,"clientId":"gitee_test"}`,
-		`"livechat":{"enabled":false,"clientId":"livechat_test"}`,
-		`"authentik":{"enabled":false,"clientId":"authentik_test"}`,
-		`"gitea":{"enabled":false,"clientId":"gitea_test"}`,
+		`"discord":{"enabled":false,"clientId":"discord_test"`,
+		`"facebook":{"enabled":false,"clientId":"facebook_test"`,
+		`"github":{"enabled":false,"clientId":"github_test"`,
+		`"gitlab":{"enabled":true,"clientId":"gitlab_test"`,
+		`"google":{"enabled":false,"clientId":"google_test"`,
+		`"microsoft":{"enabled":false,"clientId":"microsoft_test"`,
+		`"spotify":{"enabled":false,"clientId":"spotify_test"`,
+		`"twitter":{"enabled":false,"clientId":"twitter_test"`,
+		`"kakao":{"enabled":false,"clientId":"kakao_test"`,
+		`"twitch":{"enabled":false,"clientId":"twitch_test"`,
+		`"strava":{"enabled":false,"clientId":"strava_test"`,
+		`"gitee":{"enabled":false,"clientId":"gitee_test"`,
+		`"livechat":{"enabled":false,"clientId":"livechat_test"`,
+		`"gitea":{"enabled":false,"clientId":"gitea_test"`,
+		`"oidc":{"enabled":false,"clientId":"oidc_test"`,
+		`"oidc2":{"enabled":false,"clientId":"oidc2_test"`,
+		`"oidc3":{"enabled":false,"clientId":"oidc3_test"`,
 	}
 	for _, p := range expectedParts {
 		if !strings.Contains(encodedStr, p) {

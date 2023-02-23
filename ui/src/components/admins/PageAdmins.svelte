@@ -180,7 +180,7 @@
                     {#if isLoading}
                         <tr>
                             <td colspan="99" class="p-xs">
-                                <span class="skeleton-loader" />
+                                <span class="skeleton-loader m-0" />
                             </td>
                         </tr>
                     {:else}

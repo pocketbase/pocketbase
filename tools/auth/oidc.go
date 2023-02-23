@@ -6,19 +6,19 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var _ Provider = (*Authentik)(nil)
+var _ Provider = (*OIDC)(nil)
 
-// NameAuthentik is the unique name of the Authentik provider.
-const NameAuthentik string = "authentik"
+// NameOIDC is the unique name of the OpenID Connect (OIDC) provider.
+const NameOIDC string = "oidc"
 
-// Authentik allows authentication via Authentik OAuth2.
-type Authentik struct {
+// OIDC allows authentication via OpenID Connect (OIDC) OAuth2 provider.
+type OIDC struct {
 	*baseProvider
 }
 
-// NewAuthentikProvider creates new Authentik provider instance with some defaults.
-func NewAuthentikProvider() *Authentik {
-	return &Authentik{&baseProvider{
+// NewOIDCProvider creates new OpenID Connect (OIDC) provider instance with some defaults.
+func NewOIDCProvider() *OIDC {
+	return &OIDC{&baseProvider{
 		scopes: []string{
 			"openid", // minimal requirement to return the id
 			"email",
@@ -27,10 +27,10 @@ func NewAuthentikProvider() *Authentik {
 	}}
 }
 
-// FetchAuthUser returns an AuthUser instance based the Authentik's user api.
+// FetchAuthUser returns an AuthUser instance based the provider's user api.
 //
-// API reference: https://goauthentik.io/docs/providers/oauth2/
-func (p *Authentik) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
+// API reference: https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
+func (p *OIDC) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserData(token)
 	if err != nil {
 		return nil, err

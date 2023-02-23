@@ -385,6 +385,7 @@ a,
 .inline-flex {
     position: relative;
     display: inline-flex;
+    vertical-align: top;
     align-items: center;
     flex-wrap: wrap;
     min-width: 0;

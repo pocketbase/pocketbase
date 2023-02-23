@@ -5,8 +5,9 @@
 - Added auto fail/retry (default to 8 attempts) for the `SELECT` queries to gracefully handle the `database is locked` errors ([#1795](https://github.com/pocketbase/pocketbase/discussions/1795#discussioncomment-4882169)).
   _The default max attempts can be accessed or changed via `Dao.MaxLockRetries`._
 
-- Added default max query executation timeout (60s).
+- Added default max query executation timeout (30s).
   _The default timeout can be access or changed via `Dao.ModelQueryTimeout`._
+  _For the prebuilt executables it can be also changed via the `--queryTimeout=10` flag._
 
 - Added support for `dao.RecordQuery(collection)` to scan directly the `One()` and `All()` results in `*models.Record` or `[]*models.Record` without the need of explicit `NullStringMap`.
 
@@ -18,7 +19,7 @@
 
 - Added `UploadedFiles` field to the `RecordCreateEvent` and `RecordUpdateEvent` event structs.
 
-- **!** Moved file upload after the record persistent to allow custom changing the record id safely from the `OnModelBeforeCreate` hook.
+- **!** Moved file upload after the record persistent to allow setting custom record id safely from the `OnModelBeforeCreate` hook.
 
 - **!** Changed `System.GetFile()` to return directly `*blob.Reader` instead of the `io.ReadCloser` interface.
 
@@ -41,6 +42,10 @@
       ...
     }
     ```
+
+- **!** Repurposed the Authentik integration as a more generic "OpenID Connect" provider (`oidc`) to support any OIDC provider (Okta, Keycloak, etc.).
+  _If you've previously used Authentik, make sure to rename the provider key in your code to `oidc`._
+  _For more than one OIDC provider you can use the additional `oidc2` and `oidc3` settings._
 
 - **!** Removed the previously deprecated `Dao.Block()` and `Dao.Continue()` helpers in favor of `Dao.NonconcurrentDB()`.
 

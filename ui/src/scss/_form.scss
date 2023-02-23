@@ -453,8 +453,9 @@ select {
         align-items: center;
         user-select: none;
         font-weight: 600;
-        color: var(--txtHintColor);
         font-size: var(--smFontSize);
+        letter-spacing: 0.1px;
+        color: var(--txtHintColor);
         line-height: 1;
         padding-top: 12px;
         padding-bottom: 3px;

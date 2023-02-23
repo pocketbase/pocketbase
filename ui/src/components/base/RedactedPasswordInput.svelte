@@ -8,9 +8,7 @@
     let inputElem;
     let locked = false;
 
-    $: if (value === mask) {
-        locked = true;
-    }
+    $: locked = value === mask;
 
     async function unlock() {
         value = "";

@@ -198,7 +198,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		baseTable = queryInfo.From[0]
 	}
 	clone := modelsQuery
-	countQuery := clone.Select("COUNT(DISTINCT {{" + baseTable + ".id}})").OrderBy()
+	countQuery := clone.Select("COUNT(DISTINCT [[" + baseTable + ".id]])").OrderBy()
 	if err := countQuery.Row(&totalCount); err != nil {
 		return nil, err
 	}

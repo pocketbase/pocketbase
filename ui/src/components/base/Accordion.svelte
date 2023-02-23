@@ -21,9 +21,9 @@
         clearTimeout(expandTimeoutId);
         expandTimeoutId = setTimeout(() => {
             if (accordionElem?.scrollIntoViewIfNeeded) {
-                accordionElem?.scrollIntoViewIfNeeded();
+                accordionElem.scrollIntoViewIfNeeded();
             } else if (accordionElem?.scrollIntoView) {
-                accordionElem?.scrollIntoView({
+                accordionElem.scrollIntoView({
                     behavior: "smooth",
                     block: "nearest",
                 });
