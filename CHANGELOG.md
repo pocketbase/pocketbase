@@ -5,7 +5,7 @@
 - Added auto fail/retry (default to 8 attempts) for the `SELECT` queries to gracefully handle the `database is locked` errors ([#1795](https://github.com/pocketbase/pocketbase/discussions/1795#discussioncomment-4882169)).
   _The default max attempts can be accessed or changed via `Dao.MaxLockRetries`._
 
-- Added default max query executation timeout (90s).
+- Added default max query executation timeout (60s).
   _The default timeout can be access or changed via `Dao.ModelQueryTimeout`._
 
 - Added support for `dao.RecordQuery(collection)` to scan directly the `One()` and `All()` results in `*models.Record` or `[]*models.Record` without the need of explicit `NullStringMap`.

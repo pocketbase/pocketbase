@@ -24,7 +24,7 @@ func NewMultiDB(concurrentDB, nonconcurrentDB dbx.Builder) *Dao {
 		concurrentDB:      concurrentDB,
 		nonconcurrentDB:   nonconcurrentDB,
 		MaxLockRetries:    8,
-		ModelQueryTimeout: 90 * time.Second,
+		ModelQueryTimeout: 1 * time.Minute,
 	}
 }
 
