@@ -362,6 +362,10 @@ func (validator *RecordDataValidator) checkRelationValue(field *schema.SchemaFie
 
 	options, _ := field.Options.(*schema.RelationOptions)
 
+	if options.MinSelect != nil && len(ids) < *options.MinSelect {
+		return validation.NewError("validation_not_enough_values", fmt.Sprintf("Select at least %d", *options.MinSelect))
+	}
+
 	if options.MaxSelect != nil && len(ids) > *options.MaxSelect {
 		return validation.NewError("validation_too_many_values", fmt.Sprintf("Select no more than %d", *options.MaxSelect))
 	}

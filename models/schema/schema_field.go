@@ -603,6 +603,12 @@ type RelationOptions struct {
 	// in case of delete of all linked relations.
 	CascadeDelete bool `form:"cascadeDelete" json:"cascadeDelete"`
 
+	// MinSelect indicates the min number of allowed relation records
+	// that could be linked to the main model.
+	//
+	// If nil no limits are applied.
+	MinSelect *int `form:"minSelect" json:"minSelect"`
+
 	// MaxSelect indicates the max number of allowed relation records
 	// that could be linked to the main model.
 	//
@@ -614,9 +620,15 @@ type RelationOptions struct {
 }
 
 func (o RelationOptions) Validate() error {
+	minVal := 0
+	if o.MinSelect != nil {
+		minVal = *o.MinSelect
+	}
+
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.CollectionId, validation.Required),
-		validation.Field(&o.MaxSelect, validation.NilOrNotEmpty, validation.Min(1)),
+		validation.Field(&o.MinSelect, validation.NilOrNotEmpty, validation.Min(1)),
+		validation.Field(&o.MaxSelect, validation.NilOrNotEmpty, validation.Min(minVal)),
 	)
 }
 

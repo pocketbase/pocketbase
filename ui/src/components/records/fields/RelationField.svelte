@@ -13,10 +13,15 @@
     export let picker;
     export let field = new SchemaField();
 
+    let fieldRef;
     let list = [];
     let isLoading = false;
 
     $: isMultiple = field.options?.maxSelect != 1;
+
+    $: if (typeof value != "undefined") {
+        fieldRef?.changed();
+    }
 
     load();
 
@@ -82,7 +87,12 @@
     }
 </script>
 
-<Field class="form-field form-field-list {field.required ? 'required' : ''}" name={field.name} let:uniqueId>
+<Field
+    bind:this={fieldRef}
+    class="form-field form-field-list {field.required ? 'required' : ''}"
+    name={field.name}
+    let:uniqueId
+>
     <label for={uniqueId}>
         <i class={CommonHelper.getFieldTypeIcon(field.type)} />
         <span class="txt">{field.name}</span>

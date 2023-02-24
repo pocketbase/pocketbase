@@ -15,6 +15,8 @@
 
 - Added file thumbs when visualizing `relation` display file fields.
 
+- Added "Min select" `relation` field option.
+
 - Enabled `process.env` in JS migrations to allow accessing `os.Environ()`.
 
 - Added `UploadedFiles` field to the `RecordCreateEvent` and `RecordUpdateEvent` event structs.

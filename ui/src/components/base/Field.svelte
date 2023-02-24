@@ -18,17 +18,17 @@
         fieldErrors = CommonHelper.toArray(CommonHelper.getNestedVal($errors, name));
     }
 
-    function handleChange() {
+    export function changed() {
         removeError(name);
     }
 
     onMount(() => {
-        container.addEventListener("input", handleChange);
-        container.addEventListener("change", handleChange);
+        container.addEventListener("input", changed);
+        container.addEventListener("change", changed);
 
         return () => {
-            container.removeEventListener("input", handleChange);
-            container.removeEventListener("change", handleChange);
+            container.removeEventListener("input", changed);
+            container.removeEventListener("change", changed);
         };
     });
 </script>
