@@ -163,7 +163,7 @@ func bindStaticAdminUI(app core.App, e *echo.Echo) error {
 	e.GET(
 		strings.TrimRight(trailedAdminPath, "/"),
 		func(c echo.Context) error {
-			return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath)
+			return c.Redirect(http.StatusTemporaryRedirect, strings.TrimLeft(trailedAdminPath, "/"))
 		},
 	)
 
@@ -224,12 +224,12 @@ func installerRedirect(app core.App) echo.MiddlewareFunc {
 
 			if totalAdmins == 0 && !hasInstallerParam {
 				// redirect to the installer page
-				return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath+"?installer#")
+				return c.Redirect(http.StatusTemporaryRedirect, "?installer#")
 			}
 
 			if totalAdmins != 0 && hasInstallerParam {
-				// redirect to the home page
-				return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath+"#/")
+				// clear the installer param
+				return c.Redirect(http.StatusTemporaryRedirect, "?")
 			}
 
 			return next(c)

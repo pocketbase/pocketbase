@@ -51,6 +51,8 @@
 
 - **!** Removed the previously deprecated `Dao.Block()` and `Dao.Continue()` helpers in favor of `Dao.NonconcurrentDB()`.
 
+- Updated the internal redirects to allow easier subpath deployment when behind a reverse proxy.
+
 - Other minor Admin UI improvements.
 
 ## v0.12.3
