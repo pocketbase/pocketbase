@@ -245,7 +245,28 @@ func (form *CollectionUpsert) checkRelationFields(value any) error {
 
 		options, _ := field.Options.(*schema.RelationOptions)
 		if options == nil {
-			continue
+			return validation.Errors{fmt.Sprint(i): validation.Errors{
+				"options": validation.NewError(
+					"validation_schema_invalid_relation_field_options",
+					"The relation field has invalid field options.",
+				)},
+			}
+		}
+
+		// prevent collectionId change
+		oldField := form.collection.Schema.GetFieldById(field.Id)
+		if oldField != nil {
+			oldOptions, _ := oldField.Options.(*schema.RelationOptions)
+			if oldOptions != nil && oldOptions.CollectionId != options.CollectionId {
+				return validation.Errors{fmt.Sprint(i): validation.Errors{
+					"options": validation.Errors{
+						"collectionId": validation.NewError(
+							"validation_field_relation_change",
+							"The relation collection cannot be changed.",
+						),
+					}},
+				}
+			}
 		}
 
 		collection, err := form.dao.FindCollectionByNameOrId(options.CollectionId)

@@ -292,6 +292,26 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 			[]string{"type"},
 		},
 		{
+			"update failure - changing relation collection",
+			"users",
+			`{
+				"schema": [
+					{
+						"id": "lkeigvv3",
+						"name": "rel",
+						"type": "relation",
+						"options": {
+							"collectionId": "wzlqyes4orhoygb",
+							"cascadeDelete": false,
+							"maxSelect": 1,
+							"displayFields": null
+						}
+					}
+				]
+			}`,
+			[]string{"schema"},
+		},
+		{
 			"update failure - all fields",
 			"demo2",
 			`{
