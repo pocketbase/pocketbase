@@ -171,4 +171,13 @@ func TestNewProviderByName(t *testing.T) {
 	if _, ok := p.(*auth.OIDC); !ok {
 		t.Error("Expected to be instance of *auth.OIDC")
 	}
+
+	// hubspot
+	p, err = auth.NewProviderByName(auth.NameHubspot)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Hubspot); !ok {
+		t.Error("Expected to be instance of *auth.Hubspot")
+	}
 }
