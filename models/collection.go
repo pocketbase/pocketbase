@@ -52,7 +52,7 @@ func (m *Collection) IsBase() bool {
 	return m.Type == CollectionTypeBase
 }
 
-// IsBase checks if the current collection has "auth" type.
+// IsAuth checks if the current collection has "auth" type.
 func (m *Collection) IsAuth() bool {
 	return m.Type == CollectionTypeAuth
 }
