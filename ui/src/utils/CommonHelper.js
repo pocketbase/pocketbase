@@ -1377,7 +1377,7 @@ export default class CommonHelper {
         for (let expr of expressions) {
             const column = expr.trim().split(" ").pop(); // get only the alias
             if (column != "" && column != groupReplacement) {
-                result.push(column.replace(/[\'\"\`\[\]]/g, ""));
+                result.push(column.replace(/[\'\"\`\[\]\s]/g, ""));
             }
         }
 
