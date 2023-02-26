@@ -1176,27 +1176,27 @@ export default class CommonHelper {
     }
 
     /**
-     * Groups and sorts collections array by type (auth, single, base).
+     * Groups and sorts collections array by type (auth, base, view).
      *
      * @param  {Array} collections
      * @return {Array}
      */
     static sortCollections(collections = []) {
-        const authCollections = [];
-        const singleCollections = [];
-        const baseCollections = [];
+        const auth = [];
+        const base = [];
+        const view = [];
 
         for (const collection of collections) {
             if (collection.type === 'auth') {
-                authCollections.push(collection);
+                auth.push(collection);
             } else if (collection.type === 'base') {
-                singleCollections.push(collection);
+                base.push(collection);
             } else {
-                baseCollections.push(collection);
+                view.push(collection);
             }
         }
 
-        return [].concat(authCollections, singleCollections, baseCollections);
+        return [].concat(auth, base, view);
     }
 
 
@@ -1377,7 +1377,7 @@ export default class CommonHelper {
         for (let expr of expressions) {
             const column = expr.trim().split(" ").pop(); // get only the alias
             if (column != "" && column != groupReplacement) {
-                result.push(column);
+                result.push(column.replace(/[\'\"\`\[\]]/g, ""));
             }
         }
 

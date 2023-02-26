@@ -121,35 +121,25 @@
     {#if !isSingle}
         <div class="col-sm-6">
             <Field class="form-field" name="schema.{key}.options.minSelect" let:uniqueId>
-                <label for={uniqueId}>
-                    <span class="txt">Min select</span>
-                    <i
-                        class="ri-information-line link-hint"
-                        use:tooltip={{
-                            text: "Leave empty for no limit.",
-                            position: "top",
-                        }}
-                    />
-                </label>
-                <input type="number" id={uniqueId} step="1" min="1" bind:value={options.minSelect} />
-            </Field>
-        </div>
-        <div class="col-sm-6">
-            <Field class="form-field" name="schema.{key}.options.maxSelect" let:uniqueId>
-                <label for={uniqueId}>
-                    <span class="txt">Max select</span>
-                    <i
-                        class="ri-information-line link-hint"
-                        use:tooltip={{
-                            text: "Leave empty for no limit.",
-                            position: "top",
-                        }}
-                    />
-                </label>
+                <label for={uniqueId}>Min select</label>
                 <input
                     type="number"
                     id={uniqueId}
                     step="1"
+                    min="1"
+                    placeholder="No min limit"
+                    bind:value={options.minSelect}
+                />
+            </Field>
+        </div>
+        <div class="col-sm-6">
+            <Field class="form-field" name="schema.{key}.options.maxSelect" let:uniqueId>
+                <label for={uniqueId}>Max select</label>
+                <input
+                    type="number"
+                    id={uniqueId}
+                    step="1"
+                    placeholder="No max limit"
                     min={options.minSelect || 2}
                     bind:value={options.maxSelect}
                 />

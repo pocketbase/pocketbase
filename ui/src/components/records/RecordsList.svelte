@@ -487,7 +487,7 @@
                                 >
                                     <span class="txt">Clear filters</span>
                                 </button>
-                            {:else}
+                            {:else if !collection?.isView}
                                 <button
                                     type="button"
                                     class="btn btn-secondary btn-expanded m-t-sm"

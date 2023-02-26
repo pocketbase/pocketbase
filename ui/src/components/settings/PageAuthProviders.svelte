@@ -45,7 +45,6 @@
         isSaving = true;
 
         try {
-            console.log(CommonHelper.filterRedactedProps(formSettings).oidcAuth);
             const result = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             initSettings(result);
             setErrors({});

@@ -61,7 +61,7 @@
             <span class="txt" class:txt-hint={isAdminOnly}>
                 {label}
             </span>
-            <span class="label label-sm" class:label-danger={!isAdminOnly}>
+            <span class="label label-sm">
                 {isAdminOnly ? "Admins only" : "Custom rule"}
             </span>
 
@@ -114,6 +114,7 @@
 <style>
     label .label {
         margin: -5px 0;
+        background: rgba(53, 71, 104, 0.12);
     }
     .lock-toggle {
         position: absolute;
@@ -123,6 +124,6 @@
         padding: 10px;
         border-top-left-radius: 0;
         border-bottom-right-radius: 0;
-        background: rgba(53, 71, 104, 0.08);
+        background: rgba(53, 71, 104, 0.09);
     }
 </style>

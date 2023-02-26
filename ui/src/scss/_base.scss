@@ -454,17 +454,18 @@ a,
     --labelHPadding: 8px;
     display: inline-flex;
     align-items: center;
+    vertical-align: top;
     gap: 5px;
     padding: var(--labelVPadding) var(--labelHPadding);
     min-height: 23px;
     max-width: 100%;
     text-align: center;
+    line-height: 1;
     font-size: var(--smFontSize);
-    line-height: var(--smLineHeight);
-    border-radius: 30px;
     background: var(--baseAlt2Color);
     color: var(--txtPrimaryColor);
     white-space: nowrap;
+    border-radius: 30px;
 
     .btn:last-child {
         margin-right: calc(-0.5 * var(--labelHPadding));
