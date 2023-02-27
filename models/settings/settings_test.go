@@ -303,7 +303,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.OIDCAuth.ClientId = "oidc_test"
 	s.OIDC2Auth.ClientId = "oidc2_test"
 	s.OIDC3Auth.ClientId = "oidc3_test"
-	s.RedditAuth.ClientSecret = "test123"
+	s.RedditAuth.ClientId = "reddit_test"
 
 	result := s.NamedAuthProviderConfigs()
 
@@ -331,7 +331,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		`"oidc":{"enabled":false,"clientId":"oidc_test"`,
 		`"oidc2":{"enabled":false,"clientId":"oidc2_test"`,
 		`"oidc3":{"enabled":false,"clientId":"oidc3_test"`,
-		`"reddit":{"enabled":false,"clientId":"reddit_test"}`,
+		`"reddit":{"enabled":false,"clientId":"reddit_test"`,
 	}
 	for _, p := range expectedParts {
 		if !strings.Contains(encodedStr, p) {
