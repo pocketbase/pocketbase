@@ -64,7 +64,7 @@ func TestSettingsValidate(t *testing.T) {
 	s.OIDC3Auth.Enabled = true
 	s.OIDC3Auth.ClientId = ""
 	s.RedditAuth.Enabled = true
-	s.RedditAuth.ClientID = ""
+	s.RedditAuth.ClientId = ""
 
 	// check if Validate() is triggering the members validate methods.
 	err := s.Validate()
