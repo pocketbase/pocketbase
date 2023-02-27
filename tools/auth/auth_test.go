@@ -127,6 +127,51 @@ func TestNewProviderByName(t *testing.T) {
 		t.Error("Expected to be instance of *auth.Gitee")
 	}
 
+	// livechat
+	p, err = auth.NewProviderByName(auth.NameLivechat)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Livechat); !ok {
+		t.Error("Expected to be instance of *auth.Livechat")
+	}
+
+	// gitea
+	p, err = auth.NewProviderByName(auth.NameGitea)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Gitea); !ok {
+		t.Error("Expected to be instance of *auth.Gitea")
+	}
+
+	// oidc
+	p, err = auth.NewProviderByName(auth.NameOIDC)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.OIDC); !ok {
+		t.Error("Expected to be instance of *auth.OIDC")
+	}
+
+	// oidc2
+	p, err = auth.NewProviderByName(auth.NameOIDC + "2")
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.OIDC); !ok {
+		t.Error("Expected to be instance of *auth.OIDC")
+	}
+
+	// oidc3
+	p, err = auth.NewProviderByName(auth.NameOIDC + "3")
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.OIDC); !ok {
+		t.Error("Expected to be instance of *auth.OIDC")
+	}
+
 	// reddit
 	p, err = auth.NewProviderByName(auth.NameReddit)
 	if err != nil {

@@ -74,7 +74,7 @@
                 <div class="txt-hint">ID: {auth.providerId}</div>
                 <button
                     type="button"
-                    class="btn btn-secondary link-hint btn-circle btn-sm m-l-auto"
+                    class="btn btn-transparent link-hint btn-circle btn-sm m-l-auto"
                     on:click={() => unlinkExternalAuth(auth.provider)}
                 >
                     <i class="ri-close-line" />
@@ -83,5 +83,5 @@
         {/each}
     </div>
 {:else}
-    <p class="txt-hint txt-center">No linked OAuth2 providers.</p>
+    <h6 class="txt-hint txt-center m-t-sm m-b-sm">No linked OAuth2 providers.</h6>
 {/if}

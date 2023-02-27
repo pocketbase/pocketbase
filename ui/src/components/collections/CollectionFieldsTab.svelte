@@ -1,8 +1,8 @@
 <script>
-    import { SchemaField } from "pocketbase";
+    import { Collection, SchemaField } from "pocketbase";
     import FieldAccordion from "@/components/collections/FieldAccordion.svelte";
 
-    export let collection = {};
+    export let collection = new Collection();
 
     const baseReservedNames = [
         "id",
@@ -36,8 +36,8 @@
         reservedNames = baseReservedNames.slice(0);
     }
 
-    $: if (typeof collection?.schema === "undefined") {
-        collection = collection || {};
+    $: if (typeof collection.schema === "undefined") {
+        collection = collection || new Collection();
         collection.schema = [];
     }
 
@@ -52,6 +52,8 @@
         const field = new SchemaField({
             name: getUniqueFieldName(),
         });
+
+        field.onMountExpand = true;
 
         collection.schema.push(field);
         collection.schema = collection.schema;
@@ -159,7 +161,7 @@
 
 <button
     type="button"
-    class="btn btn-block {collection?.isAuth || collection.schema?.length ? 'btn-secondary' : 'btn-warning'}"
+    class="btn btn-block {collection.schema.length ? 'btn-transparent' : 'btn-secondary'}"
     on:click={newField}
 >
     <i class="ri-add-line" />

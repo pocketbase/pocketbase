@@ -54,7 +54,9 @@
             $appName = settings?.meta?.appName || "";
             $hideControls = !!settings?.meta?.hideControls;
         } catch (err) {
-            console.warn("Failed to load app settings.", err);
+            if (!err?.isAbort) {
+                console.warn("Failed to load app settings.", err);
+            }
         }
     }
 

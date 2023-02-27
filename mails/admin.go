@@ -56,17 +56,16 @@ func SendAdminPasswordReset(app core.App, admin *models.Admin) error {
 			Name:    app.Settings().Meta.SenderName,
 			Address: app.Settings().Meta.SenderAddress,
 		},
-		To:      mail.Address{Address: admin.Email},
+		To:      []mail.Address{{Address: admin.Email}},
 		Subject: "Reset admin password",
 		HTML:    body,
 	}
 
-	event := &core.MailerAdminEvent{
-		MailClient: mailClient,
-		Message:    message,
-		Admin:      admin,
-		Meta:       map[string]any{"token": token},
-	}
+	event := new(core.MailerAdminEvent)
+	event.MailClient = mailClient
+	event.Message = message
+	event.Admin = admin
+	event.Meta = map[string]any{"token": token}
 
 	sendErr := app.OnMailerBeforeAdminResetPasswordSend().Trigger(event, func(e *core.MailerAdminEvent) error {
 		return e.MailClient.Send(e.Message)

@@ -5,12 +5,37 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/models/settings"
+	"github.com/pocketbase/pocketbase/tools/auth"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 
 	"github.com/labstack/echo/v5"
 )
+
+type BaseCollectionEvent struct {
+	Collection *models.Collection
+}
+
+func (e *BaseCollectionEvent) Tags() []string {
+	if e.Collection == nil {
+		return nil
+	}
+
+	tags := make([]string, 0, 2)
+
+	if e.Collection.Id != "" {
+		tags = append(tags, e.Collection.Id)
+	}
+
+	if e.Collection.Name != "" {
+		tags = append(tags, e.Collection.Name)
+	}
+
+	return tags
+}
 
 // -------------------------------------------------------------------
 // Serve events data
@@ -34,9 +59,23 @@ type ApiErrorEvent struct {
 // Model DAO events data
 // -------------------------------------------------------------------
 
+var _ hook.Tagger = (*ModelEvent)(nil)
+
 type ModelEvent struct {
 	Dao   *daos.Dao
 	Model models.Model
+}
+
+func (e *ModelEvent) Tags() []string {
+	if e.Model == nil {
+		return nil
+	}
+
+	if r, ok := e.Model.(*models.Record); ok && r.Collection() != nil {
+		return []string{r.Collection().Id, r.Collection().Name}
+	}
+
+	return []string{e.Model.TableName()}
 }
 
 // -------------------------------------------------------------------
@@ -44,6 +83,8 @@ type ModelEvent struct {
 // -------------------------------------------------------------------
 
 type MailerRecordEvent struct {
+	BaseCollectionEvent
+
 	MailClient mailer.Mailer
 	Message    *mailer.Message
 	Record     *models.Record
@@ -103,28 +144,39 @@ type SettingsUpdateEvent struct {
 // -------------------------------------------------------------------
 
 type RecordsListEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
-	Collection  *models.Collection
 	Records     []*models.Record
 	Result      *search.Result
 }
 
 type RecordViewEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 }
 
 type RecordCreateEvent struct {
-	HttpContext echo.Context
-	Record      *models.Record
+	BaseCollectionEvent
+
+	HttpContext   echo.Context
+	Record        *models.Record
+	UploadedFiles map[string][]*filesystem.File
 }
 
 type RecordUpdateEvent struct {
-	HttpContext echo.Context
-	Record      *models.Record
+	BaseCollectionEvent
+
+	HttpContext   echo.Context
+	Record        *models.Record
+	UploadedFiles map[string][]*filesystem.File
 }
 
 type RecordDeleteEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 }
@@ -134,49 +186,91 @@ type RecordDeleteEvent struct {
 // -------------------------------------------------------------------
 
 type RecordAuthEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 	Token       string
 	Meta        any
 }
 
+type RecordAuthWithPasswordEvent struct {
+	BaseCollectionEvent
+
+	HttpContext echo.Context
+	Record      *models.Record
+	Identity    string
+	Password    string
+}
+
+type RecordAuthWithOAuth2Event struct {
+	BaseCollectionEvent
+
+	HttpContext echo.Context
+	Record      *models.Record
+	OAuth2User  *auth.AuthUser
+}
+
+type RecordAuthRefreshEvent struct {
+	BaseCollectionEvent
+
+	HttpContext echo.Context
+	Record      *models.Record
+}
+
 type RecordRequestPasswordResetEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 }
 
 type RecordConfirmPasswordResetEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 }
 
 type RecordRequestVerificationEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 }
 
 type RecordConfirmVerificationEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 }
 
 type RecordRequestEmailChangeEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 }
 
 type RecordConfirmEmailChangeEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
 	Record      *models.Record
 }
 
 type RecordListExternalAuthsEvent struct {
+	BaseCollectionEvent
+
 	HttpContext   echo.Context
 	Record        *models.Record
 	ExternalAuths []*models.ExternalAuth
 }
 
 type RecordUnlinkExternalAuthEvent struct {
+	BaseCollectionEvent
+
 	HttpContext  echo.Context
 	Record       *models.Record
 	ExternalAuth *models.ExternalAuth
@@ -218,6 +312,28 @@ type AdminAuthEvent struct {
 	Token       string
 }
 
+type AdminAuthWithPasswordEvent struct {
+	HttpContext echo.Context
+	Admin       *models.Admin
+	Identity    string
+	Password    string
+}
+
+type AdminAuthRefreshEvent struct {
+	HttpContext echo.Context
+	Admin       *models.Admin
+}
+
+type AdminRequestPasswordResetEvent struct {
+	HttpContext echo.Context
+	Admin       *models.Admin
+}
+
+type AdminConfirmPasswordResetEvent struct {
+	HttpContext echo.Context
+	Admin       *models.Admin
+}
+
 // -------------------------------------------------------------------
 // Collection API events data
 // -------------------------------------------------------------------
@@ -229,23 +345,27 @@ type CollectionsListEvent struct {
 }
 
 type CollectionViewEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
-	Collection  *models.Collection
 }
 
 type CollectionCreateEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
-	Collection  *models.Collection
 }
 
 type CollectionUpdateEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
-	Collection  *models.Collection
 }
 
 type CollectionDeleteEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
-	Collection  *models.Collection
 }
 
 type CollectionsImportEvent struct {
@@ -258,8 +378,9 @@ type CollectionsImportEvent struct {
 // -------------------------------------------------------------------
 
 type FileDownloadEvent struct {
+	BaseCollectionEvent
+
 	HttpContext echo.Context
-	Collection  *models.Collection
 	Record      *models.Record
 	FileField   *schema.SchemaField
 	ServedPath  string

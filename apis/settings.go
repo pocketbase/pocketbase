@@ -1,12 +1,15 @@
 package apis
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/forms"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
@@ -31,10 +34,9 @@ func (api *settingsApi) list(c echo.Context) error {
 		return NewBadRequestError("", err)
 	}
 
-	event := &core.SettingsListEvent{
-		HttpContext:      c,
-		RedactedSettings: settings,
-	}
+	event := new(core.SettingsListEvent)
+	event.HttpContext = c
+	event.RedactedSettings = settings
 
 	return api.app.OnSettingsListRequest().Trigger(event, func(e *core.SettingsListEvent) error {
 		return e.HttpContext.JSON(http.StatusOK, e.RedactedSettings)
@@ -49,17 +51,17 @@ func (api *settingsApi) set(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
-	event := &core.SettingsUpdateEvent{
-		HttpContext: c,
-		OldSettings: api.app.Settings(),
-		NewSettings: form.Settings,
-	}
+	event := new(core.SettingsUpdateEvent)
+	event.HttpContext = c
+	event.OldSettings = api.app.Settings()
 
 	// update the settings
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*settings.Settings]) forms.InterceptorNextFunc[*settings.Settings] {
+		return func(s *settings.Settings) error {
+			event.NewSettings = s
+
 			return api.app.OnSettingsBeforeUpdateRequest().Trigger(event, func(e *core.SettingsUpdateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.NewSettings); err != nil {
 					return NewBadRequestError("An error occurred while submitting the form.", err)
 				}
 
@@ -74,7 +76,9 @@ func (api *settingsApi) set(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnSettingsAfterUpdateRequest().Trigger(event)
+		if err := api.app.OnSettingsAfterUpdateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -91,14 +95,17 @@ func (api *settingsApi) testS3(c echo.Context) error {
 	}
 	defer fs.Close()
 
-	testFileKey := "pb_test_" + security.PseudorandomString(5) + "/test.txt"
+	testPrefix := "pb_settings_test_" + security.PseudorandomString(5)
+	testFileKey := testPrefix + "/test.txt"
 
+	// try to upload a test file
 	if err := fs.Upload([]byte("test"), testFileKey); err != nil {
 		return NewBadRequestError("Failed to upload a test file. Raw error: \n"+err.Error(), nil)
 	}
 
-	if err := fs.Delete(testFileKey); err != nil {
-		return NewBadRequestError("Failed to delete a test file. Raw error: \n"+err.Error(), nil)
+	// test prefix deletion (ensures that both bucket list and delete works)
+	if errs := fs.DeletePrefix(testPrefix); len(errs) > 0 {
+		return NewBadRequestError(fmt.Sprintf("Failed to delete a test file. Raw error: %v", errs), nil)
 	}
 
 	return c.NoContent(http.StatusNoContent)

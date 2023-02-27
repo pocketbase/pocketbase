@@ -182,6 +182,30 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return t.registerEventCall("OnRecordAuthRequest")
 	})
 
+	t.OnRecordBeforeAuthWithPasswordRequest().Add(func(e *core.RecordAuthWithPasswordEvent) error {
+		return t.registerEventCall("OnRecordBeforeAuthWithPasswordRequest")
+	})
+
+	t.OnRecordAfterAuthWithPasswordRequest().Add(func(e *core.RecordAuthWithPasswordEvent) error {
+		return t.registerEventCall("OnRecordAfterAuthWithPasswordRequest")
+	})
+
+	t.OnRecordBeforeAuthWithOAuth2Request().Add(func(e *core.RecordAuthWithOAuth2Event) error {
+		return t.registerEventCall("OnRecordBeforeAuthWithOAuth2Request")
+	})
+
+	t.OnRecordAfterAuthWithOAuth2Request().Add(func(e *core.RecordAuthWithOAuth2Event) error {
+		return t.registerEventCall("OnRecordAfterAuthWithOAuth2Request")
+	})
+
+	t.OnRecordBeforeAuthRefreshRequest().Add(func(e *core.RecordAuthRefreshEvent) error {
+		return t.registerEventCall("OnRecordBeforeAuthRefreshRequest")
+	})
+
+	t.OnRecordAfterAuthRefreshRequest().Add(func(e *core.RecordAuthRefreshEvent) error {
+		return t.registerEventCall("OnRecordAfterAuthRefreshRequest")
+	})
+
 	t.OnRecordBeforeRequestPasswordResetRequest().Add(func(e *core.RecordRequestPasswordResetEvent) error {
 		return t.registerEventCall("OnRecordBeforeRequestPasswordResetRequest")
 	})
@@ -384,6 +408,38 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 
 	t.OnAdminAuthRequest().Add(func(e *core.AdminAuthEvent) error {
 		return t.registerEventCall("OnAdminAuthRequest")
+	})
+
+	t.OnAdminBeforeAuthWithPasswordRequest().Add(func(e *core.AdminAuthWithPasswordEvent) error {
+		return t.registerEventCall("OnAdminBeforeAuthWithPasswordRequest")
+	})
+
+	t.OnAdminAfterAuthWithPasswordRequest().Add(func(e *core.AdminAuthWithPasswordEvent) error {
+		return t.registerEventCall("OnAdminAfterAuthWithPasswordRequest")
+	})
+
+	t.OnAdminBeforeAuthRefreshRequest().Add(func(e *core.AdminAuthRefreshEvent) error {
+		return t.registerEventCall("OnAdminBeforeAuthRefreshRequest")
+	})
+
+	t.OnAdminAfterAuthRefreshRequest().Add(func(e *core.AdminAuthRefreshEvent) error {
+		return t.registerEventCall("OnAdminAfterAuthRefreshRequest")
+	})
+
+	t.OnAdminBeforeRequestPasswordResetRequest().Add(func(e *core.AdminRequestPasswordResetEvent) error {
+		return t.registerEventCall("OnAdminBeforeRequestPasswordResetRequest")
+	})
+
+	t.OnAdminAfterRequestPasswordResetRequest().Add(func(e *core.AdminRequestPasswordResetEvent) error {
+		return t.registerEventCall("OnAdminAfterRequestPasswordResetRequest")
+	})
+
+	t.OnAdminBeforeConfirmPasswordResetRequest().Add(func(e *core.AdminConfirmPasswordResetEvent) error {
+		return t.registerEventCall("OnAdminBeforeConfirmPasswordResetRequest")
+	})
+
+	t.OnAdminAfterConfirmPasswordResetRequest().Add(func(e *core.AdminConfirmPasswordResetEvent) error {
+		return t.registerEventCall("OnAdminAfterConfirmPasswordResetRequest")
 	})
 
 	t.OnFileDownloadRequest().Add(func(e *core.FileDownloadEvent) error {

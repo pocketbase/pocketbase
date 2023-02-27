@@ -59,11 +59,12 @@ func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          strconv.Itoa(extracted.Id),
-		Username:    extracted.Profile.Nickname,
-		AvatarUrl:   extracted.Profile.ImageUrl,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           strconv.Itoa(extracted.Id),
+		Username:     extracted.Profile.Nickname,
+		AvatarUrl:    extracted.Profile.ImageUrl,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 	if extracted.KakaoAccount.IsEmailValid && extracted.KakaoAccount.IsEmailVerified {
 		user.Email = extracted.KakaoAccount.Email

@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/store"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 	"golang.org/x/crypto/bcrypt"
@@ -26,19 +29,19 @@ type Record struct {
 
 	collection *Collection
 
-	exportUnknown         bool           // whether to export unknown fields
-	ignoreEmailVisibility bool           // whether to ignore the emailVisibility flag for auth collections
-	data                  map[string]any // any custom data in addition to the base model fields
-	expand                map[string]any // expanded relations
+	exportUnknown         bool // whether to export unknown fields
+	ignoreEmailVisibility bool // whether to ignore the emailVisibility flag for auth collections
 	loaded                bool
-	originalData          map[string]any // the original (aka. first loaded) model data
+	originalData          map[string]any    // the original (aka. first loaded) model data
+	expand                *store.Store[any] // expanded relations
+	data                  *store.Store[any] // any custom data in addition to the base model fields
 }
 
 // NewRecord initializes a new empty Record model.
 func NewRecord(collection *Collection) *Record {
 	return &Record{
 		collection: collection,
-		data:       map[string]any{},
+		data:       store.New[any](nil),
 	}
 }
 
@@ -56,8 +59,11 @@ func nullStringMapValue(data dbx.NullStringMap, key string) any {
 
 // NewRecordFromNullStringMap initializes a single new Record model
 // with data loaded from the provided NullStringMap.
+//
+// Note that this method is intended to load and Scan data from a database
+// result and calls PostScan() which marks the record as "not new".
 func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) *Record {
-	resultMap := map[string]any{}
+	resultMap := make(map[string]any, len(data))
 
 	// load schema fields
 	for _, field := range collection.Schema.Fields() {
@@ -86,6 +92,9 @@ func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) 
 
 // NewRecordsFromNullStringMaps initializes a new Record model for
 // each row in the provided NullStringMap slice.
+//
+// Note that this method is intended to load and Scan data from a database
+// result and calls PostScan() for each record marking them as "not new".
 func NewRecordsFromNullStringMaps(collection *Collection, rows []dbx.NullStringMap) []*Record {
 	result := make([]*Record, len(rows))
 
@@ -107,7 +116,8 @@ func (m *Record) Collection() *Collection {
 }
 
 // OriginalCopy returns a copy of the current record model populated
-// with its original (aka. the initially loaded) data state.
+// with its ORIGINAL data state (aka. the initially loaded) and
+// everything else reset to the defaults.
 func (m *Record) OriginalCopy() *Record {
 	newRecord := NewRecord(m.collection)
 	newRecord.Load(m.originalData)
@@ -121,15 +131,40 @@ func (m *Record) OriginalCopy() *Record {
 	return newRecord
 }
 
-// Expand returns a shallow copy of  the record.expand data
-// attached to the current Record model.
-func (m *Record) Expand() map[string]any {
-	return shallowCopy(m.expand)
+// CleanCopy returns a copy of the current record model populated only
+// with its LATEST data state and everything else reset to the defaults.
+func (m *Record) CleanCopy() *Record {
+	newRecord := NewRecord(m.collection)
+	newRecord.Load(m.data.GetAll())
+	newRecord.Id = m.Id
+	newRecord.Created = m.Created
+	newRecord.Updated = m.Updated
+
+	if m.IsNew() {
+		newRecord.MarkAsNew()
+	} else {
+		newRecord.MarkAsNotNew()
+	}
+
+	return newRecord
 }
 
-// SetExpand assigns the provided data to record.expand.
+// Expand returns a shallow copy of the current Record model expand data.
+func (m *Record) Expand() map[string]any {
+	if m.expand == nil {
+		m.expand = store.New[any](nil)
+	}
+
+	return m.expand.GetAll()
+}
+
+// SetExpand shallow copies the provided data to the current Record model's expand.
 func (m *Record) SetExpand(expand map[string]any) {
-	m.expand = shallowCopy(expand)
+	if m.expand == nil {
+		m.expand = store.New[any](nil)
+	}
+
+	m.expand.Reset(expand)
 }
 
 // MergeExpand merges recursively the provided expand data into
@@ -139,14 +174,23 @@ func (m *Record) SetExpand(expand map[string]any) {
 // then both old and new records will be merged into a new slice (aka. a :merge: [b,c] => [a,b,c]).
 // Otherwise the "old" expanded record will be replace with the "new" one (aka. a :merge: aNew => aNew).
 func (m *Record) MergeExpand(expand map[string]any) {
-	if m.expand == nil && len(expand) > 0 {
-		m.expand = make(map[string]any)
+	// nothing to merge
+	if len(expand) == 0 {
+		return
 	}
 
+	// no old expand
+	if m.expand == nil {
+		m.expand = store.New(expand)
+		return
+	}
+
+	oldExpand := m.expand.GetAll()
+
 	for key, new := range expand {
-		old, ok := m.expand[key]
+		old, ok := oldExpand[key]
 		if !ok {
-			m.expand[key] = new
+			oldExpand[key] = new
 			continue
 		}
 
@@ -161,7 +205,7 @@ func (m *Record) MergeExpand(expand map[string]any) {
 		default:
 			// invalid old expand data -> assign directly the new
 			// (no matter whether new is valid or not)
-			m.expand[key] = new
+			oldExpand[key] = new
 			continue
 		}
 
@@ -194,20 +238,24 @@ func (m *Record) MergeExpand(expand map[string]any) {
 			}
 		}
 
-		if wasOldSlice || wasNewSlice {
-			m.expand[key] = oldSlice
+		if wasOldSlice || wasNewSlice || len(oldSlice) == 0 {
+			oldExpand[key] = oldSlice
 		} else {
-			m.expand[key] = oldSlice[0]
+			oldExpand[key] = oldSlice[0]
 		}
 	}
+
+	m.expand.Reset(oldExpand)
 }
 
 // SchemaData returns a shallow copy ONLY of the defined record schema fields data.
 func (m *Record) SchemaData() map[string]any {
-	result := map[string]any{}
+	result := make(map[string]any, len(m.collection.Schema.Fields()))
+
+	data := m.data.GetAll()
 
 	for _, field := range m.collection.Schema.Fields() {
-		if v, ok := m.data[field.Name]; ok {
+		if v, ok := data[field.Name]; ok {
 			result[field.Name] = v
 		}
 	}
@@ -219,7 +267,11 @@ func (m *Record) SchemaData() map[string]any {
 // aka. fields that are neither one of the base and special system ones,
 // nor defined by the collection schema.
 func (m *Record) UnknownData() map[string]any {
-	return m.extractUnknownData(m.data)
+	if m.data == nil {
+		return nil
+	}
+
+	return m.extractUnknownData(m.data.GetAll())
 }
 
 // IgnoreEmailVisibility toggles the flag to ignore the auth record email visibility check.
@@ -265,10 +317,10 @@ func (m *Record) Set(key string, value any) {
 		}
 
 		if m.data == nil {
-			m.data = map[string]any{}
+			m.data = store.New[any](nil)
 		}
 
-		m.data[key] = v
+		m.data.Set(key, v)
 	}
 }
 
@@ -282,11 +334,11 @@ func (m *Record) Get(key string) any {
 	case schema.FieldNameUpdated:
 		return m.Updated
 	default:
-		if v, ok := m.data[key]; ok {
-			return v
+		if m.data == nil {
+			return nil
 		}
 
-		return nil
+		return m.data.Get(key)
 	}
 }
 
@@ -329,10 +381,11 @@ func (m *Record) GetStringSlice(key string) []string {
 // Retrieves the "key" json field value and unmarshals it into "result".
 //
 // Example
-//  result := struct {
-//      FirstName string `json:"first_name"`
-//  }{}
-//  err := m.UnmarshalJSONField("my_field_name", &result)
+//
+//	result := struct {
+//	    FirstName string `json:"first_name"`
+//	}{}
+//	err := m.UnmarshalJSONField("my_field_name", &result)
 func (m *Record) UnmarshalJSONField(key string, result any) error {
 	return json.Unmarshal([]byte(m.GetString(key)), &result)
 }
@@ -370,7 +423,7 @@ func (m *Record) Load(data map[string]any) {
 
 // ColumnValueMap implements [ColumnValueMapper] interface.
 func (m *Record) ColumnValueMap() map[string]any {
-	result := map[string]any{}
+	result := make(map[string]any, len(m.collection.Schema.Fields())+3)
 
 	// export schema field values
 	for _, field := range m.collection.Schema.Fields() {
@@ -396,7 +449,7 @@ func (m *Record) ColumnValueMap() map[string]any {
 //
 // Fields marked as hidden will be exported only if `m.IgnoreEmailVisibility(true)` is set.
 func (m *Record) PublicExport() map[string]any {
-	result := map[string]any{}
+	result := make(map[string]any, len(m.collection.Schema.Fields())+5)
 
 	// export unknown data fields if allowed
 	if m.exportUnknown {
@@ -422,16 +475,20 @@ func (m *Record) PublicExport() map[string]any {
 
 	// export base model fields
 	result[schema.FieldNameId] = m.GetId()
-	result[schema.FieldNameCreated] = m.GetCreated()
-	result[schema.FieldNameUpdated] = m.GetUpdated()
+	if created := m.GetCreated(); !m.Collection().IsView() || !created.IsZero() {
+		result[schema.FieldNameCreated] = created
+	}
+	if updated := m.GetUpdated(); !m.Collection().IsView() || !updated.IsZero() {
+		result[schema.FieldNameUpdated] = updated
+	}
 
 	// add helper collection reference fields
 	result[schema.FieldNameCollectionId] = m.collection.Id
 	result[schema.FieldNameCollectionName] = m.collection.Name
 
 	// add expand (if set)
-	if m.expand != nil {
-		result[schema.FieldNameExpand] = m.expand
+	if m.expand != nil && m.expand.Length() > 0 {
+		result[schema.FieldNameExpand] = m.expand.GetAll()
 	}
 
 	return result
@@ -455,6 +512,101 @@ func (m *Record) UnmarshalJSON(data []byte) error {
 	m.Load(result)
 
 	return nil
+}
+
+// ReplaceModifers returns a new map with applied modifier
+// values based on the current record and the specified data.
+//
+// The resolved modifier keys will be removed.
+//
+// Multiple modifiers will be applied one after another,
+// while reusing the previous base key value result (eg. 1; -5; +2 => -2).
+//
+// Example usage:
+//
+//	 newData := record.ReplaceModifers(data)
+//		// record:  {"field": 10}
+//		// data:    {"field+": 5}
+//		// newData: {"field": 15}
+func (m *Record) ReplaceModifers(data map[string]any) map[string]any {
+	var clone = shallowCopy(data)
+	if len(clone) == 0 {
+		return clone
+	}
+
+	var recordDataCache map[string]any
+
+	// export recordData lazily
+	recordData := func() map[string]any {
+		if recordDataCache == nil {
+			recordDataCache = m.SchemaData()
+		}
+		return recordDataCache
+	}
+
+	modifiers := schema.FieldValueModifiers()
+
+	for _, field := range m.Collection().Schema.Fields() {
+		key := field.Name
+
+		for _, m := range modifiers {
+			if mv, mOk := clone[key+m]; mOk {
+				if _, ok := clone[key]; !ok {
+					// get base value from the merged data
+					clone[key] = recordData()[key]
+				}
+
+				clone[key] = field.PrepareValueWithModifier(clone[key], m, mv)
+				delete(clone, key+m)
+			}
+		}
+
+		if field.Type != schema.FieldTypeFile {
+			continue
+		}
+
+		// -----------------------------------------------------------
+		// legacy file field modifiers (kept for backward compatibility)
+		// -----------------------------------------------------------
+
+		var oldNames []string
+		var toDelete []string
+		if _, ok := clone[key]; ok {
+			oldNames = list.ToUniqueStringSlice(clone[key])
+		} else {
+			// get oldNames from the model
+			oldNames = list.ToUniqueStringSlice(recordData()[key])
+		}
+
+		// search for individual file name to delete (eg. "file.test.png = null")
+		for _, name := range oldNames {
+			suffixedKey := key + "." + name
+			if v, ok := clone[suffixedKey]; ok && cast.ToString(v) == "" {
+				toDelete = append(toDelete, name)
+				delete(clone, suffixedKey)
+				continue
+			}
+		}
+
+		// search for individual file index to delete (eg. "file.0 = null")
+		keyExp, _ := regexp.Compile(`^` + regexp.QuoteMeta(key) + `\.\d+$`)
+		for indexedKey := range clone {
+			if keyExp.MatchString(indexedKey) && cast.ToString(clone[indexedKey]) == "" {
+				index, indexErr := strconv.Atoi(indexedKey[len(key)+1:])
+				if indexErr != nil || index < 0 || index >= len(oldNames) {
+					continue
+				}
+				toDelete = append(toDelete, oldNames[index])
+				delete(clone, indexedKey)
+			}
+		}
+
+		if toDelete != nil {
+			clone[key] = field.PrepareValue(list.SubtractSlice(oldNames, toDelete))
+		}
+	}
+
+	return clone
 }
 
 // getNormalizeDataValueForDB returns the "key" data value formatted for db storage.
@@ -527,7 +679,7 @@ func (m *Record) extractUnknownData(data map[string]any) map[string]any {
 
 	result := map[string]any{}
 
-	for k, v := range m.data {
+	for k, v := range data {
 		if _, ok := knownFields[k]; !ok {
 			result[k] = v
 		}

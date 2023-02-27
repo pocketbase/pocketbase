@@ -6,6 +6,7 @@ import (
 	"mime"
 	"net/http"
 	"os/exec"
+	"strings"
 )
 
 var _ Mailer = (*Sendmail)(nil)
@@ -19,11 +20,13 @@ type Sendmail struct {
 
 // Send implements `mailer.Mailer` interface.
 func (c *Sendmail) Send(m *Message) error {
+	toAddresses := addressesToStrings(m.To, false)
+
 	headers := make(http.Header)
 	headers.Set("Subject", mime.QEncoding.Encode("utf-8", m.Subject))
 	headers.Set("From", m.From.String())
-	headers.Set("To", m.To.String())
 	headers.Set("Content-Type", "text/html; charset=UTF-8")
+	headers.Set("To", strings.Join(toAddresses, ","))
 
 	cmdPath, err := findSendmailPath()
 	if err != nil {
@@ -51,7 +54,7 @@ func (c *Sendmail) Send(m *Message) error {
 	}
 	// ---
 
-	sendmail := exec.Command(cmdPath, m.To.Address)
+	sendmail := exec.Command(cmdPath, strings.Join(toAddresses, ","))
 	sendmail.Stdin = &buffer
 
 	return sendmail.Run()

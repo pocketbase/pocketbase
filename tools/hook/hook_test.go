@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestAddAndPreAdd(t *testing.T) {
+func TestHookAddAndPreAdd(t *testing.T) {
 	h := Hook[int]{}
 
 	if total := len(h.handlers); total != 0 {
@@ -36,7 +36,7 @@ func TestAddAndPreAdd(t *testing.T) {
 	}
 }
 
-func TestReset(t *testing.T) {
+func TestHookReset(t *testing.T) {
 	h := Hook[int]{}
 
 	h.Reset() // should do nothing and not panic
@@ -55,7 +55,7 @@ func TestReset(t *testing.T) {
 	}
 }
 
-func TestTrigger(t *testing.T) {
+func TestHookTrigger(t *testing.T) {
 	err1 := errors.New("demo")
 	err2 := errors.New("demo")
 
@@ -92,7 +92,7 @@ func TestTrigger(t *testing.T) {
 	}
 }
 
-func TestTriggerStopPropagation(t *testing.T) {
+func TestHookTriggerStopPropagation(t *testing.T) {
 	called1 := false
 	f1 := func(data int) error { called1 = true; return nil }
 

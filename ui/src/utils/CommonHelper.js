@@ -1,5 +1,25 @@
 import { DateTime } from "luxon";
 
+const imageExtensions = [
+   ".jpg", ".jpeg", ".png", ".svg",
+   ".gif", ".jfif", ".webp", ".avif",
+];
+
+const videoExtensions = [
+    ".mp4", ".avi", ".mov", ".3gp", ".wmv",
+];
+
+const audioExtensions = [
+    ".aa", ".aac", ".m4v", ".mp3",
+    ".ogg", ".oga", ".mogg", ".amr",
+];
+
+const documentExtensions = [
+    ".pdf", ".doc", ".docx", ".xls",
+    ".xlsx", ".ppt", ".pptx", ".odp",
+    ".odt", ".ods", ".txt",
+];
+
 export default class CommonHelper {
     /**
      * Checks whether value is plain object.
@@ -88,7 +108,7 @@ export default class CommonHelper {
     }
 
     /**
-     * Normalizes and returns arr as a valid array instance (if not already).
+     * Normalizes and returns arr as a new array instance.
      *
      * @param  {Array}   arr
      * @param  {Boolean} [allowEmpty]
@@ -96,7 +116,7 @@ export default class CommonHelper {
      */
     static toArray(arr, allowEmpty = false) {
         if (Array.isArray(arr)) {
-            return arr;
+            return arr.slice();
         }
 
         return (allowEmpty || !CommonHelper.isEmpty(arr)) && typeof arr !== "undefined" ? [arr] : [];
@@ -210,10 +230,9 @@ export default class CommonHelper {
     /**
      * Adds or replace an object array element by comparing its key value.
      *
-     * @param  {Array}  objectsArr
-     * @param  {Object} item
-     * @param  {Mixed}  [key]
-     * @return {Array}
+     * @param {Array}  objectsArr
+     * @param {Object} item
+     * @param {Mixed}  [key]
      */
     static pushOrReplaceByKey(objectsArr, item, key = "id") {
         for (let i = objectsArr.length - 1; i >= 0; i--) {
@@ -438,6 +457,62 @@ export default class CommonHelper {
     }
 
     /**
+     * Returns the plain text version (aka. strip tags) of the provided string.
+     *
+     * @param  {String} str
+     * @return {String}
+     */
+    static plainText(str) {
+        if (!str) {
+            return "";
+        }
+
+        const doc = new DOMParser().parseFromString(str, "text/html");
+
+        return (doc.body.innerText || "").trim();
+    }
+
+    /**
+     * Truncates the provided text to the specified max characters length.
+     *
+     * @param  {String}  str
+     * @param  {Number}  [length]
+     * @param  {Boolean} [dots]
+     * @return {String}
+     */
+    static truncate(str, length = 150, dots = true) {
+        str = str || "";
+
+        if (str.length <= length) {
+            return str;
+        }
+
+        return str.substring(0, length) + (dots ? "..." : "");
+    }
+
+    /**
+     * Returns a new object copy with truncated the large text fields.
+     *
+     * @param  {Object} obj
+     * @return {Object}
+     */
+    static truncateObject(obj) {
+        const truncated = {};
+
+        for (let key in obj) {
+            let value = obj[key];
+
+            if (typeof value === 'string') {
+                value = CommonHelper.truncate(value, 150, true);
+            }
+
+            truncated[key] = value;
+        }
+
+        return truncated;
+    }
+
+    /**
      * Normalizes and converts the provided string to a slug.
      *
      * @param  {String} str
@@ -555,6 +630,29 @@ export default class CommonHelper {
     }
 
     /**
+     * Extract the user initials from the provided username or email address
+     * (eg. converts "john.doe@example.com" to "JD").
+     *
+     * @param  {String} str
+     * @return {String}
+     */
+    static getInitials(str) {
+        str = (str || '').split('@')[0].trim();
+
+        if (str.length <= 2) {
+            return str.toUpperCase();
+        }
+
+        const parts = str.split(/[\.\_\-\ ]/);
+
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+
+        return str[0].toUpperCase();
+    }
+
+    /**
      * Returns a DateTime instance from a date object/string.
      *
      * @param  {String|Date} date
@@ -654,13 +752,57 @@ export default class CommonHelper {
     }
 
     /**
-     * Loosely check if a file is an image based on its filename extension.
+     * Loosely check if a file has image extension.
      *
      * @param  {String} filename
      * @return {Boolean}
      */
     static hasImageExtension(filename) {
-        return /\.jpg|\.jpeg|\.png|\.svg|\.gif|\.jfif|\.webp|\.avif$/.test(filename)
+        return !!imageExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
+    }
+
+    /**
+     * Loosely check if a file has video extension.
+     *
+     * @param  {String} filename
+     * @return {Boolean}
+     */
+    static hasVideoExtension(filename) {
+        return !!videoExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
+    }
+
+    /**
+     * Loosely check if a file has audio extension.
+     *
+     * @param  {String} filename
+     * @return {Boolean}
+     */
+    static hasAudioExtension(filename) {
+        return !!audioExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
+    }
+
+    /**
+     * Loosely check if a file has document extension.
+     *
+     * @param  {String} filename
+     * @return {Boolean}
+     */
+    static hasDocumentExtension(filename) {
+        return !!documentExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
+    }
+
+    /**
+     * Returns the file type based on its filename.
+     *
+     * @param  {String} filename
+     * @return {String}
+     */
+    static getFileType(filename) {
+        if (CommonHelper.hasImageExtension(filename)) return "image";
+        if (CommonHelper.hasDocumentExtension(filename)) return "document";
+        if (CommonHelper.hasVideoExtension(filename)) return "video";
+        if (CommonHelper.hasAudioExtension(filename)) return "audio";
+        return "file";
     }
 
     /**
@@ -741,24 +883,6 @@ export default class CommonHelper {
     }
 
     /**
-     * Returns the default Flatpickr initialization options.
-     *
-     * @return {Object}
-     */
-    static defaultFlatpickrOptions() {
-        return {
-            dateFormat: "Y-m-d H:i:S",
-            disableMobile: true,
-            allowInput: true,
-            enableTime: true,
-            time_24hr: true,
-            locale: {
-                firstDayOfWeek: 1,
-            },
-        }
-    }
-
-    /**
      * Returns a dummy collection record object.
      *
      * @param  {Object} collection
@@ -771,8 +895,6 @@ export default class CommonHelper {
             "id": "RECORD_ID",
             "collectionId": collection?.id,
             "collectionName": collection?.name,
-            "created": "2022-01-01 01:00:00.123Z",
-            "updated": "2022-01-01 23:59:59.456Z",
         };
 
         if (collection?.isAuth) {
@@ -780,6 +902,16 @@ export default class CommonHelper {
             dummy["verified"] = false;
             dummy["emailVisibility"] = true;
             dummy["email"] = "test@example.com";
+        }
+
+        const hasCreated = !collection?.isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("created");
+        if (hasCreated) {
+            dummy["created"] = "2022-01-01 01:00:00.123Z";
+        }
+
+        const hasUpdated = !collection?.isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("updated");
+        if (hasUpdated) {
+            dummy["updated"] = "2022-01-01 23:59:59.456Z";
         }
 
         for (const field of fields) {
@@ -879,8 +1011,8 @@ export default class CommonHelper {
         switch (type?.toLowerCase()) {
             case "auth":
                 return "ri-group-line";
-            case "single":
-                return "ri-file-list-2-line";
+            case "view":
+                return "ri-table-line";
             default:
                 return "ri-folder-2-line";
         }
@@ -908,6 +1040,8 @@ export default class CommonHelper {
                 return "ri-mail-line";
             case "url":
                 return "ri-link";
+            case "editor":
+                return "ri-edit-2-line";
             case "select":
                 return "ri-list-check";
             case "json":
@@ -963,7 +1097,11 @@ export default class CommonHelper {
             return "false";
         }
 
-        // array value
+        if (field?.type === "json") {
+            return 'null, "", [], {}';
+        }
+
+        // arrayable fields
         if (["select", "relation", "file"].includes(field?.type) && field?.options?.maxSelect != 1) {
             return "[]";
         }
@@ -1038,27 +1176,27 @@ export default class CommonHelper {
     }
 
     /**
-     * Groups and sorts collections array by type (auth, single, base).
+     * Groups and sorts collections array by type (auth, base, view).
      *
      * @param  {Array} collections
      * @return {Array}
      */
     static sortCollections(collections = []) {
-        const authCollections = [];
-        const singleCollections = [];
-        const baseCollections = [];
+        const auth = [];
+        const base = [];
+        const view = [];
 
-        for (const colelction of collections) {
-            if (colelction.type == 'auth') {
-                authCollections.push(colelction);
-            } else if (colelction.type == 'single') {
-                singleCollections.push(colelction);
+        for (const collection of collections) {
+            if (collection.type === 'auth') {
+                auth.push(collection);
+            } else if (collection.type === 'base') {
+                base.push(collection);
             } else {
-                baseCollections.push(colelction);
+                view.push(collection);
             }
         }
 
-        return [].concat(authCollections, singleCollections, baseCollections);
+        return [].concat(auth, base, view);
     }
 
 
@@ -1071,5 +1209,217 @@ export default class CommonHelper {
         return new Promise((resolve) => {
             setTimeout(resolve, 0);
         });
+    }
+
+    /**
+     * Returns the default Flatpickr initialization options.
+     *
+     * @return {Object}
+     */
+    static defaultFlatpickrOptions() {
+        return {
+            dateFormat: "Y-m-d H:i:S",
+            disableMobile: true,
+            allowInput: true,
+            enableTime: true,
+            time_24hr: true,
+            locale: {
+                firstDayOfWeek: 1,
+            },
+        }
+    }
+
+    /**
+     * Returns the default rich editor options.
+     *
+     * @return {Object}
+     */
+    static defaultEditorOptions() {
+        return {
+            branding: false,
+            promotion: false,
+            menubar: false,
+            min_height: 270,
+            height: 270,
+            max_height: 700,
+            autoresize_bottom_margin: 30,
+            skin: "pocketbase",
+            content_style: "body { font-size: 14px }",
+            plugins: [
+                "autoresize",
+                "autolink",
+                "lists",
+                "link",
+                "image",
+                "searchreplace",
+                "fullscreen",
+                "media",
+                "table",
+                "code",
+                "codesample",
+            ],
+            toolbar:
+                "undo redo | styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image table codesample | code fullscreen",
+            file_picker_types: "image",
+            // @see https://www.tiny.cloud/docs/tinymce/6/file-image-upload/#interactive-example
+            file_picker_callback: (cb, value, meta) => {
+                const input = document.createElement("input");
+                input.setAttribute("type", "file");
+                input.setAttribute("accept", "image/*");
+
+                input.addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+
+                    reader.addEventListener("load", () => {
+                        if (!tinymce) {
+                            return;
+                        }
+
+                        // We need to register the blob in TinyMCEs image blob registry.
+                        // In future TinyMCE version this part will be handled internally.
+                        const id = "blobid" + new Date().getTime();
+                        const blobCache = tinymce.activeEditor.editorUpload.blobCache;
+                        const base64 = reader.result.split(",")[1];
+                        const blobInfo = blobCache.create(id, file, base64);
+                        blobCache.add(blobInfo);
+
+                        // call the callback and populate the Title field with the file name
+                        cb(blobInfo.blobUri(), { title: file.name });
+                    });
+
+                    reader.readAsDataURL(file);
+                });
+
+                input.click();
+            },
+        };
+    }
+
+    /**
+     * Tries to output the first displayable field of the provided model.
+     *
+     * @param  {Object} model
+     * @return {Any}
+     */
+    static displayValue(model, displayFields, missingValue = "N/A") {
+        model = model || {};
+        displayFields = displayFields || [];
+
+        let result = [];
+
+        for (const field of displayFields) {
+            let val = model[field];
+
+            if (typeof val === "undefined") {
+                continue
+            }
+
+            if (CommonHelper.isEmpty(val)) {
+                result.push(missingValue);
+            } else if (typeof val === "boolean")  {
+                result.push(val ? "True" : "False");
+            } else if (typeof val === "string") {
+                val = val.indexOf("<") >= 0 ? CommonHelper.plainText(val) : val;
+                result.push(CommonHelper.truncate(val));
+            } else {
+                result.push(val);
+            }
+        }
+
+        if (result.length > 0) {
+            return result.join(", ");
+        }
+
+        const fallbackProps = [
+            "title",
+            "name",
+            "email",
+            "username",
+            "heading",
+            "label",
+            "key",
+            "id",
+        ];
+
+        for (const prop of fallbackProps) {
+            if (!CommonHelper.isEmpty(model[prop])) {
+                return model[prop];
+            }
+        }
+
+        return missingValue;
+    }
+
+    /**
+     * Rudimentary SELECT query columns extractor.
+     * Returns an array with the identifier aliases
+     * (expressions wrapped in parenthesis are skipped).
+     *
+     * @param  {String} selectQuery
+     * @return {Array}
+     */
+    static extractColumnsFromQuery(selectQuery) {
+        const groupReplacement = "__GROUP__";
+
+        selectQuery = (selectQuery || "").
+            // replace parenthesis/group expessions
+            replace(/\([\s\S]+?\)/gm, groupReplacement).
+            // replace multi-whitespace characters with single space
+            replace(/[\t\r\n]|(?:\s\s)+/g, " ");
+
+        const match = selectQuery.match(/select\s+([\s\S]+)\s+from/);
+
+        const expressions = match?.[1]?.split(",") || [];
+
+        const result = [];
+
+        for (let expr of expressions) {
+            const column = expr.trim().split(" ").pop(); // get only the alias
+            if (column != "" && column != groupReplacement) {
+                result.push(column.replace(/[\'\"\`\[\]\s]/g, ""));
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns an array with all public collection identifiers (schema + type specific fields).
+     *
+     * @param  {[type]} collection The collection to extract identifiers from.
+     * @param  {String} prefix     Optional prefix for each found identified.
+     * @return {Array}
+     */
+    static getAllCollectionIdentifiers(collection, prefix = "") {
+        if (!collection) {
+            return;
+        }
+
+        let result = [prefix + "id"];
+
+        if (collection.isView) {
+            for (let col of CommonHelper.extractColumnsFromQuery(collection.options.query)) {
+                CommonHelper.pushUnique(result, prefix + col);
+            }
+        } else if (collection.isAuth) {
+            result.push(prefix + "username");
+            result.push(prefix + "email");
+            result.push(prefix + "emailVisibility");
+            result.push(prefix + "verified");
+            result.push(prefix + "created");
+            result.push(prefix + "updated");
+        } else {
+            result.push(prefix + "created");
+            result.push(prefix + "updated");
+        }
+
+        const schema = collection.schema || [];
+
+        for (const field of schema) {
+            CommonHelper.pushUnique(result, prefix + field.name);
+        }
+
+        return result;
     }
 }

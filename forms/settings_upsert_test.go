@@ -8,6 +8,7 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/forms"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
@@ -78,10 +79,10 @@ func TestSettingsUpsertValidateAndSubmit(t *testing.T) {
 		}
 
 		interceptorCalls := 0
-		interceptor := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-			return func() error {
+		interceptor := func(next forms.InterceptorNextFunc[*settings.Settings]) forms.InterceptorNextFunc[*settings.Settings] {
+			return func(s *settings.Settings) error {
 				interceptorCalls++
-				return next()
+				return next(s)
 			}
 		}
 
@@ -135,16 +136,16 @@ func TestSettingsUpsertSubmitInterceptors(t *testing.T) {
 	testErr := errors.New("test_error")
 
 	interceptor1Called := false
-	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor1 := func(next forms.InterceptorNextFunc[*settings.Settings]) forms.InterceptorNextFunc[*settings.Settings] {
+		return func(s *settings.Settings) error {
 			interceptor1Called = true
-			return next()
+			return next(s)
 		}
 	}
 
 	interceptor2Called := false
-	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor2 := func(next forms.InterceptorNextFunc[*settings.Settings]) forms.InterceptorNextFunc[*settings.Settings] {
+		return func(s *settings.Settings) error {
 			interceptor2Called = true
 			return testErr
 		}

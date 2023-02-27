@@ -14,11 +14,24 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// RecordOAuth2LoginData defines the OA
+type RecordOAuth2LoginData struct {
+	ExternalAuth *models.ExternalAuth
+	Record       *models.Record
+	OAuth2User   *auth.AuthUser
+}
+
+// BeforeOAuth2RecordCreateFunc defines a callback function that will
+// be called before OAuth2 new Record creation.
+type BeforeOAuth2RecordCreateFunc func(createForm *RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error
+
 // RecordOAuth2Login is an auth record OAuth2 login form.
 type RecordOAuth2Login struct {
 	app        core.App
 	dao        *daos.Dao
 	collection *models.Collection
+
+	beforeOAuth2RecordCreateFunc BeforeOAuth2RecordCreateFunc
 
 	// Optional auth record that will be used if no external
 	// auth relation is found (if it is from the same collection)
@@ -62,6 +75,11 @@ func (form *RecordOAuth2Login) SetDao(dao *daos.Dao) {
 	form.dao = dao
 }
 
+// SetBeforeNewRecordCreateFunc sets a before OAuth2 record create callback handler.
+func (form *RecordOAuth2Login) SetBeforeNewRecordCreateFunc(f BeforeOAuth2RecordCreateFunc) {
+	form.beforeOAuth2RecordCreateFunc = f
+}
+
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 func (form *RecordOAuth2Login) Validate() error {
 	return validation.ValidateStruct(form,
@@ -87,11 +105,14 @@ func (form *RecordOAuth2Login) checkProviderName(value any) error {
 //
 // If an auth record doesn't exist, it will make an attempt to create it
 // based on the fetched OAuth2 profile data via a local [RecordUpsert] form.
-// You can intercept/modify the create form by setting the optional beforeCreateFuncs argument.
+// You can intercept/modify the Record create form with [form.SetBeforeNewRecordCreateFunc()].
+//
+// You can also optionally provide a list of InterceptorFunc to
+// further modify the form behavior before persisting it.
 //
 // On success returns the authorized record model and the fetched provider's data.
 func (form *RecordOAuth2Login) Submit(
-	beforeCreateFuncs ...func(createForm *RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error,
+	interceptors ...InterceptorFunc[*RecordOAuth2LoginData],
 ) (*models.Record, *auth.AuthUser, error) {
 	if err := form.Validate(); err != nil {
 		return nil, nil, err
@@ -147,16 +168,40 @@ func (form *RecordOAuth2Login) Submit(
 		authRecord, _ = form.dao.FindAuthRecordByEmail(form.collection.Id, authUser.Email)
 	}
 
-	saveErr := form.dao.RunInTransaction(func(txDao *daos.Dao) error {
-		if authRecord == nil {
-			authRecord = models.NewRecord(form.collection)
-			authRecord.RefreshId()
-			authRecord.MarkAsNew()
-			createForm := NewRecordUpsert(form.app, authRecord)
+	interceptorData := &RecordOAuth2LoginData{
+		ExternalAuth: rel,
+		Record:       authRecord,
+		OAuth2User:   authUser,
+	}
+
+	interceptorsErr := runInterceptors(interceptorData, func(newData *RecordOAuth2LoginData) error {
+		return form.submit(newData)
+	}, interceptors...)
+
+	if interceptorsErr != nil {
+		return nil, interceptorData.OAuth2User, interceptorsErr
+	}
+
+	return interceptorData.Record, interceptorData.OAuth2User, nil
+}
+
+func (form *RecordOAuth2Login) submit(data *RecordOAuth2LoginData) error {
+	return form.dao.RunInTransaction(func(txDao *daos.Dao) error {
+		if data.Record == nil {
+			data.Record = models.NewRecord(form.collection)
+			data.Record.RefreshId()
+			data.Record.MarkAsNew()
+			createForm := NewRecordUpsert(form.app, data.Record)
 			createForm.SetFullManageAccess(true)
 			createForm.SetDao(txDao)
-			if authUser.Username != "" && usernameRegex.MatchString(authUser.Username) {
-				createForm.Username = form.dao.SuggestUniqueAuthRecordUsername(form.collection.Id, authUser.Username)
+			if data.OAuth2User.Username != "" &&
+				len(data.OAuth2User.Username) >= 3 &&
+				len(data.OAuth2User.Username) <= 150 &&
+				usernameRegex.MatchString(data.OAuth2User.Username) {
+				createForm.Username = form.dao.SuggestUniqueAuthRecordUsername(
+					form.collection.Id,
+					data.OAuth2User.Username,
+				)
 			}
 
 			// load custom data
@@ -164,10 +209,10 @@ func (form *RecordOAuth2Login) Submit(
 
 			// load the OAuth2 profile data as fallback
 			if createForm.Email == "" {
-				createForm.Email = authUser.Email
+				createForm.Email = data.OAuth2User.Email
 			}
 			createForm.Verified = false
-			if createForm.Email == authUser.Email {
+			if createForm.Email == data.OAuth2User.Email {
 				// mark as verified as long as it matches the OAuth2 data (even if the email is empty)
 				createForm.Verified = true
 			}
@@ -176,11 +221,8 @@ func (form *RecordOAuth2Login) Submit(
 				createForm.PasswordConfirm = createForm.Password
 			}
 
-			for _, f := range beforeCreateFuncs {
-				if f == nil {
-					continue
-				}
-				if err := f(createForm, authRecord, authUser); err != nil {
+			if form.beforeOAuth2RecordCreateFunc != nil {
+				if err := form.beforeOAuth2RecordCreateFunc(createForm, data.Record, data.OAuth2User); err != nil {
 					return err
 				}
 			}
@@ -190,45 +232,39 @@ func (form *RecordOAuth2Login) Submit(
 				return err
 			}
 		} else {
-			// update the existing auth record empty email if the authUser has one
+			// update the existing auth record empty email if the data.OAuth2User has one
 			// (this is in case previously the auth record was created
 			// with an OAuth2 provider that didn't return an email address)
-			if authRecord.Email() == "" && authUser.Email != "" {
-				authRecord.SetEmail(authUser.Email)
-				if err := txDao.SaveRecord(authRecord); err != nil {
+			if data.Record.Email() == "" && data.OAuth2User.Email != "" {
+				data.Record.SetEmail(data.OAuth2User.Email)
+				if err := txDao.SaveRecord(data.Record); err != nil {
 					return err
 				}
 			}
 
 			// update the existing auth record verified state
-			// (only if the auth record doesn't have an email or the auth record email match with the one in authUser)
-			if !authRecord.Verified() && (authRecord.Email() == "" || authRecord.Email() == authUser.Email) {
-				authRecord.SetVerified(true)
-				if err := txDao.SaveRecord(authRecord); err != nil {
+			// (only if the auth record doesn't have an email or the auth record email match with the one in data.OAuth2User)
+			if !data.Record.Verified() && (data.Record.Email() == "" || data.Record.Email() == data.OAuth2User.Email) {
+				data.Record.SetVerified(true)
+				if err := txDao.SaveRecord(data.Record); err != nil {
 					return err
 				}
 			}
 		}
 
 		// create ExternalAuth relation if missing
-		if rel == nil {
-			rel = &models.ExternalAuth{
-				CollectionId: authRecord.Collection().Id,
-				RecordId:     authRecord.Id,
+		if data.ExternalAuth == nil {
+			data.ExternalAuth = &models.ExternalAuth{
+				CollectionId: data.Record.Collection().Id,
+				RecordId:     data.Record.Id,
 				Provider:     form.Provider,
-				ProviderId:   authUser.Id,
+				ProviderId:   data.OAuth2User.Id,
 			}
-			if err := txDao.SaveExternalAuth(rel); err != nil {
+			if err := txDao.SaveExternalAuth(data.ExternalAuth); err != nil {
 				return err
 			}
 		}
 
 		return nil
 	})
-
-	if saveErr != nil {
-		return nil, authUser, saveErr
-	}
-
-	return authRecord, authUser, nil
 }

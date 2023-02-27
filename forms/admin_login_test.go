@@ -1,9 +1,11 @@
 package forms_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/forms"
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
 )
 
@@ -45,5 +47,50 @@ func TestAdminLoginValidateAndSubmit(t *testing.T) {
 		if admin != nil && admin.Email != s.email {
 			t.Errorf("(%d) Expected admin with email %s to be returned, got %v", i, s.email, admin)
 		}
+	}
+}
+
+func TestAdminLoginInterceptors(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	form := forms.NewAdminLogin(testApp)
+	form.Identity = "test@example.com"
+	form.Password = "123456"
+	var interceptorAdmin *models.Admin
+	testErr := errors.New("test_error")
+
+	interceptor1Called := false
+	interceptor1 := func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(admin *models.Admin) error {
+			interceptor1Called = true
+			return next(admin)
+		}
+	}
+
+	interceptor2Called := false
+	interceptor2 := func(next forms.InterceptorNextFunc[*models.Admin]) forms.InterceptorNextFunc[*models.Admin] {
+		return func(admin *models.Admin) error {
+			interceptorAdmin = admin
+			interceptor2Called = true
+			return testErr
+		}
+	}
+
+	_, submitErr := form.Submit(interceptor1, interceptor2)
+	if submitErr != testErr {
+		t.Fatalf("Expected submitError %v, got %v", testErr, submitErr)
+	}
+
+	if !interceptor1Called {
+		t.Fatalf("Expected interceptor1 to be called")
+	}
+
+	if !interceptor2Called {
+		t.Fatalf("Expected interceptor2 to be called")
+	}
+
+	if interceptorAdmin == nil || interceptorAdmin.Email != form.Identity {
+		t.Fatalf("Expected Admin model with email %s, got %v", form.Identity, interceptorAdmin)
 	}
 }

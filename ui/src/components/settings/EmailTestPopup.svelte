@@ -117,7 +117,7 @@
     </form>
 
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-secondary" on:click={hide} disabled={isSubmitting}>Close</button>
+        <button type="button" class="btn btn-transparent" on:click={hide} disabled={isSubmitting}>Close</button>
         <button
             type="submit"
             form={formId}

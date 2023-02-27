@@ -26,14 +26,13 @@ func bindRecordCrudApi(app core.App, rg *echo.Group) {
 	subGroup := rg.Group(
 		"/collections/:collection",
 		ActivityLogger(app),
-		LoadCollectionContext(app),
 	)
 
-	subGroup.GET("/records", api.list)
-	subGroup.POST("/records", api.create)
-	subGroup.GET("/records/:id", api.view)
-	subGroup.PATCH("/records/:id", api.update)
-	subGroup.DELETE("/records/:id", api.delete)
+	subGroup.GET("/records", api.list, LoadCollectionContext(app))
+	subGroup.GET("/records/:id", api.view, LoadCollectionContext(app))
+	subGroup.POST("/records", api.create, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+	subGroup.PATCH("/records/:id", api.update, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+	subGroup.DELETE("/records/:id", api.delete, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
 }
 
 type recordApi struct {
@@ -73,22 +72,18 @@ func (api *recordApi) list(c echo.Context) error {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
-	var rawRecords = []dbx.NullStringMap{}
-	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &rawRecords)
+	records := []*models.Record{}
+
+	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &records)
 	if err != nil {
 		return NewBadRequestError("Invalid filter parameters.", err)
 	}
 
-	records := models.NewRecordsFromNullStringMaps(collection, rawRecords)
-
-	result.Items = records
-
-	event := &core.RecordsListEvent{
-		HttpContext: c,
-		Collection:  collection,
-		Records:     records,
-		Result:      result,
-	}
+	event := new(core.RecordsListEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Records = records
+	event.Result = result
 
 	return api.app.OnRecordsListRequest().Trigger(event, func(e *core.RecordsListEvent) error {
 		if err := EnrichRecords(e.HttpContext, api.app.Dao(), e.Records); err != nil && api.app.IsDebug() {
@@ -135,10 +130,10 @@ func (api *recordApi) view(c echo.Context) error {
 		return NewNotFoundError("", fetchErr)
 	}
 
-	event := &core.RecordViewEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordViewEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
 
 	return api.app.OnRecordViewRequest().Trigger(event, func(e *core.RecordViewEvent) error {
 		if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
@@ -166,6 +161,20 @@ func (api *recordApi) create(c echo.Context) error {
 
 	// temporary save the record and check it against the create rule
 	if requestData.Admin == nil && collection.CreateRule != nil {
+		testRecord := models.NewRecord(collection)
+
+		// replace modifiers fields so that the resolved value is always
+		// available when accessing requestData.Data using just the field name
+		if requestData.HasModifierDataKeys() {
+			requestData.Data = testRecord.ReplaceModifers(requestData.Data)
+		}
+
+		testForm := forms.NewRecordUpsert(api.app, testRecord)
+		testForm.SetFullManageAccess(true)
+		if err := testForm.LoadRequest(c.Request(), ""); err != nil {
+			return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
+		}
+
 		createRuleFunc := func(q *dbx.SelectQuery) error {
 			if *collection.CreateRule == "" {
 				return nil // no create rule to resolve
@@ -179,13 +188,6 @@ func (api *recordApi) create(c echo.Context) error {
 			resolver.UpdateQuery(q)
 			q.AndWhere(expr)
 			return nil
-		}
-
-		testRecord := models.NewRecord(collection)
-		testForm := forms.NewRecordUpsert(api.app, testRecord)
-		testForm.SetFullManageAccess(true)
-		if err := testForm.LoadRequest(c.Request(), ""); err != nil {
-			return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 		}
 
 		testErr := testForm.DrySubmit(func(txDao *daos.Dao) error {
@@ -211,16 +213,19 @@ func (api *recordApi) create(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.RecordCreateEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordCreateEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
+	event.UploadedFiles = form.FilesToUpload()
 
 	// create the record
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(m *models.Record) error {
+			event.Record = m
+
 			return api.app.OnRecordBeforeCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.Record); err != nil {
 					return NewBadRequestError("Failed to create record.", err)
 				}
 
@@ -234,7 +239,9 @@ func (api *recordApi) create(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterCreateRequest().Trigger(event)
+		if err := api.app.OnRecordAfterCreateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -256,6 +263,16 @@ func (api *recordApi) update(c echo.Context) error {
 	if requestData.Admin == nil && collection.UpdateRule == nil {
 		// only admins can access if the rule is nil
 		return NewForbiddenError("Only admins can perform this action.", nil)
+	}
+
+	// eager fetch the record so that the modifier field values are replaced
+	// and available when accessing requestData.Data using just the field name
+	if requestData.HasModifierDataKeys() {
+		record, err := api.app.Dao().FindRecordById(collection.Id, recordId)
+		if err != nil || record == nil {
+			return NewNotFoundError("", err)
+		}
+		requestData.Data = record.ReplaceModifers(requestData.Data)
 	}
 
 	ruleFunc := func(q *dbx.SelectQuery) error {
@@ -285,16 +302,19 @@ func (api *recordApi) update(c echo.Context) error {
 		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 	}
 
-	event := &core.RecordUpdateEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordUpdateEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
+	event.UploadedFiles = form.FilesToUpload()
 
 	// update the record
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+		return func(m *models.Record) error {
+			event.Record = m
+
 			return api.app.OnRecordBeforeUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
-				if err := next(); err != nil {
+				if err := next(e.Record); err != nil {
 					return NewBadRequestError("Failed to update record.", err)
 				}
 
@@ -308,7 +328,9 @@ func (api *recordApi) update(c echo.Context) error {
 	})
 
 	if submitErr == nil {
-		api.app.OnRecordAfterUpdateRequest().Trigger(event)
+		if err := api.app.OnRecordAfterUpdateRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return submitErr
@@ -350,10 +372,10 @@ func (api *recordApi) delete(c echo.Context) error {
 		return NewNotFoundError("", fetchErr)
 	}
 
-	event := &core.RecordDeleteEvent{
-		HttpContext: c,
-		Record:      record,
-	}
+	event := new(core.RecordDeleteEvent)
+	event.HttpContext = c
+	event.Collection = collection
+	event.Record = record
 
 	handlerErr := api.app.OnRecordBeforeDeleteRequest().Trigger(event, func(e *core.RecordDeleteEvent) error {
 		// delete the record
@@ -365,7 +387,9 @@ func (api *recordApi) delete(c echo.Context) error {
 	})
 
 	if handlerErr == nil {
-		api.app.OnRecordAfterDeleteRequest().Trigger(event)
+		if err := api.app.OnRecordAfterDeleteRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
 	}
 
 	return handlerErr

@@ -9,12 +9,13 @@
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import Field from "@/components/base/Field.svelte";
+    import CopyIcon from "@/components/base/CopyIcon.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
-    import IdLabel from "@/components/base/IdLabel.svelte";
     import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
-    import RecordFieldCell from "@/components/records/RecordFieldCell.svelte";
+    import RecordFieldValue from "@/components/records/RecordFieldValue.svelte";
 
     const dispatch = createEventDispatcher();
+    const sortRegex = /^([\+\-])?(\w+)$/;
 
     export let collection;
     export let sort = "";
@@ -36,15 +37,17 @@
         clearList();
     }
 
+    $: fields = collection?.schema || [];
+
+    $: relFields = fields.filter((field) => field.type === "relation");
+
+    $: visibleFields = fields.filter((field) => !hiddenColumns.includes(field.id));
+
     $: if (collection?.id && sort !== -1 && filter !== -1) {
         load(1);
     }
 
     $: canLoadMore = totalRecords > records.length;
-
-    $: fields = collection?.schema || [];
-
-    $: visibleFields = fields.filter((field) => !hiddenColumns.includes(field.id));
 
     $: totalBulkSelected = Object.keys(bulkSelected).length;
 
@@ -53,6 +56,10 @@
     $: if (hiddenColumns !== -1) {
         updateStoredHiddenColumns();
     }
+
+    $: hasCreated = !collection?.isView || (records.length > 0 && records[0].created != "");
+
+    $: hasUpdated = !collection?.isView || (records.length > 0 && records[0].updated != "");
 
     $: collumnsToHide = [].concat(
         collection.isAuth
@@ -64,10 +71,8 @@
         fields.map((f) => {
             return { id: f.id, name: f.name };
         }),
-        [
-            { id: "@created", name: "created" },
-            { id: "@updated", name: "updated" },
-        ]
+        hasCreated ? { id: "@created", name: "created" } : [],
+        hasUpdated ? { id: "@updated", name: "updated" } : []
     );
 
     function updateStoredHiddenColumns() {
@@ -108,10 +113,24 @@
 
         isLoading = true;
 
+        // allow sorting by the relation display fields
+        let listSort = sort;
+        const sortMatch = listSort.match(sortRegex);
+        const relField = sortMatch ? relFields.find((f) => f.name === sortMatch[2]) : null;
+        if (sortMatch && relField?.options?.displayFields?.length > 0) {
+            const parts = [];
+            for (const displayField of relField.options.displayFields) {
+                parts.push((sortMatch[1] || "") + sortMatch[2] + "." + displayField);
+            }
+            listSort = parts.join(",");
+        }
+
         return ApiClient.collection(collection.id)
             .getList(page, 30, {
-                sort: sort,
+                sort: listSort,
                 filter: filter,
+                expand: relFields.map((field) => field.name).join(","),
+                $cancelKey: "records_list",
             })
             .then(async (result) => {
                 if (page <= 1) {
@@ -226,48 +245,55 @@
 
 <HorizontalScroller class="table-wrapper">
     <svelte:fragment slot="before">
-        <Toggler class="dropdown dropdown-right dropdown-nowrap columns-dropdown" trigger={columnsTrigger}>
-            <div class="txt-hint txt-sm p-5 m-b-5">Toggle columns</div>
-            {#each collumnsToHide as column (column.id + column.name)}
-                <Field class="form-field form-field-sm form-field-toggle m-0 p-5" let:uniqueId>
-                    <input
-                        type="checkbox"
-                        id={uniqueId}
-                        checked={!hiddenColumns.includes(column.id)}
-                        on:change={(e) => {
-                            if (e.target.checked) {
-                                CommonHelper.removeByValue(hiddenColumns, column.id);
-                            } else {
-                                CommonHelper.pushUnique(hiddenColumns, column.id);
-                            }
-                            hiddenColumns = hiddenColumns;
-                        }}
-                    />
-                    <label for={uniqueId}>{column.name}</label>
-                </Field>
-            {/each}
-        </Toggler>
+        {#if columnsTrigger}
+            <Toggler
+                class="dropdown dropdown-right dropdown-nowrap columns-dropdown"
+                trigger={columnsTrigger}
+            >
+                <div class="txt-hint txt-sm p-5 m-b-5">Toggle columns</div>
+                {#each collumnsToHide as column (column.id + column.name)}
+                    <Field class="form-field form-field-sm form-field-toggle m-0 p-5" let:uniqueId>
+                        <input
+                            type="checkbox"
+                            id={uniqueId}
+                            checked={!hiddenColumns.includes(column.id)}
+                            on:change={(e) => {
+                                if (e.target.checked) {
+                                    CommonHelper.removeByValue(hiddenColumns, column.id);
+                                } else {
+                                    CommonHelper.pushUnique(hiddenColumns, column.id);
+                                }
+                                hiddenColumns = hiddenColumns;
+                            }}
+                        />
+                        <label for={uniqueId}>{column.name}</label>
+                    </Field>
+                {/each}
+            </Toggler>
+        {/if}
     </svelte:fragment>
 
     <table class="table" class:table-loading={isLoading}>
         <thead>
             <tr>
-                <th class="bulk-select-col min-width">
-                    {#if isLoading}
-                        <span class="loader loader-sm" />
-                    {:else}
-                        <div class="form-field">
-                            <input
-                                type="checkbox"
-                                id="checkbox_0"
-                                disabled={!records.length}
-                                checked={areAllRecordsSelected}
-                                on:change={() => toggleSelectAllRecords()}
-                            />
-                            <label for="checkbox_0" />
-                        </div>
-                    {/if}
-                </th>
+                {#if !collection.isView}
+                    <th class="bulk-select-col min-width">
+                        {#if isLoading}
+                            <span class="loader loader-sm" />
+                        {:else}
+                            <div class="form-field">
+                                <input
+                                    type="checkbox"
+                                    id="checkbox_0"
+                                    disabled={!records.length}
+                                    checked={areAllRecordsSelected}
+                                    on:change={() => toggleSelectAllRecords()}
+                                />
+                                <label for="checkbox_0" />
+                            </div>
+                        {/if}
+                    </th>
+                {/if}
 
                 {#if !hiddenColumns.includes("@id")}
                     <SortHeader class="col-type-text col-field-id" name="id" bind:sort>
@@ -310,7 +336,7 @@
                     </SortHeader>
                 {/each}
 
-                {#if !hiddenColumns.includes("@created")}
+                {#if hasCreated && !hiddenColumns.includes("@created")}
                     <SortHeader class="col-type-date col-field-created" name="created" bind:sort>
                         <div class="col-header-content">
                             <i class={CommonHelper.getFieldTypeIcon("date")} />
@@ -319,7 +345,7 @@
                     </SortHeader>
                 {/if}
 
-                {#if !hiddenColumns.includes("@updated")}
+                {#if hasUpdated && !hiddenColumns.includes("@updated")}
                     <SortHeader class="col-type-date col-field-updated" name="updated" bind:sort>
                         <div class="col-header-content">
                             <i class={CommonHelper.getFieldTypeIcon("date")} />
@@ -329,14 +355,21 @@
                 {/if}
 
                 <th class="col-type-action min-width">
-                    <button bind:this={columnsTrigger} type="button" class="btn btn-sm btn-secondary p-0">
-                        <i class="ri-more-line" />
-                    </button>
+                    {#if collumnsToHide.length}
+                        <button
+                            bind:this={columnsTrigger}
+                            type="button"
+                            aria-label="Toggle columns"
+                            class="btn btn-sm btn-transparent p-0"
+                        >
+                            <i class="ri-more-line" />
+                        </button>
+                    {/if}
                 </th>
             </tr>
         </thead>
         <tbody>
-            {#each records as record (record.id)}
+            {#each records as record (!collection.isView ? record.id : record)}
                 <tr
                     tabindex="0"
                     class="row-handle"
@@ -348,23 +381,28 @@
                         }
                     }}
                 >
-                    <td class="bulk-select-col min-width">
-                        <!-- svelte-ignore a11y-click-events-have-key-events -->
-                        <div class="form-field" on:click|stopPropagation>
-                            <input
-                                type="checkbox"
-                                id="checkbox_{record.id}"
-                                checked={bulkSelected[record.id]}
-                                on:change={() => toggleSelectRecord(record)}
-                            />
-                            <label for="checkbox_{record.id}" />
-                        </div>
-                    </td>
+                    {#if !collection.isView}
+                        <td class="bulk-select-col min-width">
+                            <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <div class="form-field" on:click|stopPropagation>
+                                <input
+                                    type="checkbox"
+                                    id="checkbox_{record.id}"
+                                    checked={bulkSelected[record.id]}
+                                    on:change={() => toggleSelectRecord(record)}
+                                />
+                                <label for="checkbox_{record.id}" />
+                            </div>
+                        </td>
+                    {/if}
 
                     {#if !hiddenColumns.includes("@id")}
                         <td class="col-type-text col-field-id">
                             <div class="flex flex-gap-5">
-                                <IdLabel id={record.id} />
+                                <div class="label">
+                                    <CopyIcon value={record.id} />
+                                    <div class="txt">{record.id}</div>
+                                </div>
 
                                 {#if collection.isAuth}
                                     {#if record.verified}
@@ -409,16 +447,18 @@
                     {/if}
 
                     {#each visibleFields as field (field.name)}
-                        <RecordFieldCell {record} {field} />
+                        <td class="col-type-{field.type} col-field-{field.name}">
+                            <RecordFieldValue short {record} {field} />
+                        </td>
                     {/each}
 
-                    {#if !hiddenColumns.includes("@created")}
+                    {#if hasCreated && !hiddenColumns.includes("@created")}
                         <td class="col-type-date col-field-created">
                             <FormattedDate date={record.created} />
                         </td>
                     {/if}
 
-                    {#if !hiddenColumns.includes("@updated")}
+                    {#if hasUpdated && !hiddenColumns.includes("@updated")}
                         <td class="col-type-date col-field-updated">
                             <FormattedDate date={record.updated} />
                         </td>
@@ -432,7 +472,7 @@
                 {#if isLoading}
                     <tr>
                         <td colspan="99" class="p-xs">
-                            <span class="skeleton-loader" />
+                            <span class="skeleton-loader m-0" />
                         </td>
                     </tr>
                 {:else}
@@ -446,6 +486,15 @@
                                     on:click={() => (filter = "")}
                                 >
                                     <span class="txt">Clear filters</span>
+                                </button>
+                            {:else if !collection?.isView}
+                                <button
+                                    type="button"
+                                    class="btn btn-secondary btn-expanded m-t-sm"
+                                    on:click={() => dispatch("new")}
+                                >
+                                    <i class="ri-add-line" />
+                                    <span class="txt">New record</span>
                                 </button>
                             {/if}
                         </td>
@@ -482,7 +531,7 @@
         </div>
         <button
             type="button"
-            class="btn btn-xs btn-secondary btn-outline p-l-5 p-r-5"
+            class="btn btn-xs btn-transparent btn-outline p-l-5 p-r-5"
             class:btn-disabled={isDeleting}
             on:click={() => deselectAllRecords()}
         >
@@ -491,7 +540,7 @@
         <div class="flex-fill" />
         <button
             type="button"
-            class="btn btn-sm btn-secondary btn-danger"
+            class="btn btn-sm btn-transparent btn-danger"
             class:btn-loading={isDeleting}
             class:btn-disabled={isDeleting}
             on:click={() => deleteSelectedConfirm()}

@@ -1,6 +1,8 @@
 <script context="module">
     let holder;
 
+    let activePanels = [];
+
     function getHolder() {
         holder = holder || document.querySelector(".overlays");
 
@@ -23,7 +25,7 @@
      *     <h5 slot="header">My title</h5>
      *     <p>Lorem ipsum dolor sit amet...</p>
      *     <svelte:fragment slot="footer">
-     *         <button class="btn btn-secondary">Cancel</button>
+     *         <button class="btn btn-transparent">Cancel</button>
      *         <button class="btn btn-expanded">Save</button>
      *     </svelte:fragment>
      * </OverlayPanel>
@@ -45,6 +47,7 @@
     export let beforeHide = undefined; // function callback called before hide; if return false - no close
 
     const dispatch = createEventDispatcher();
+    const uniqueId = "op_" + CommonHelper.randomString(10);
 
     let wrapper;
     let contentPanel;
@@ -52,13 +55,22 @@
     let transitionSpeed = 150;
     let contentScrollThrottle;
     let contentScrollClass = "";
+    let oldActive = active;
 
-    $: onActiveChange(active);
+    $: if (oldActive != active) {
+        onActiveChange(active);
+    }
 
     $: handleContentScroll(contentPanel, true);
 
     $: if (wrapper) {
         zIndexUpdate();
+    }
+
+    $: if (active) {
+        registerActivePanel();
+    } else {
+        unregisterActivePanel();
     }
 
     export function show() {
@@ -81,17 +93,17 @@
         return active;
     }
 
-    async function onActiveChange(state) {
-        if (state) {
+    async function onActiveChange(newState) {
+        oldActive = newState;
+
+        if (newState) {
             oldFocusedElem = document.activeElement;
             wrapper?.focus();
             dispatch("show");
-            document.body.classList.add("overlay-active");
         } else {
             clearTimeout(contentScrollThrottle);
             oldFocusedElem?.focus();
             dispatch("hide");
-            document.body.classList.remove("overlay-active");
         }
 
         await tick();
@@ -108,6 +120,20 @@
             wrapper.style.zIndex = highestZIndex();
         } else {
             wrapper.style = "";
+        }
+    }
+
+    function registerActivePanel() {
+        CommonHelper.pushUnique(activePanels, uniqueId);
+
+        document.body.classList.add("overlay-active");
+    }
+
+    function unregisterActivePanel() {
+        CommonHelper.removeByValue(activePanels, uniqueId);
+
+        if (!activePanels.length) {
+            document.body.classList.remove("overlay-active");
         }
     }
 
@@ -178,6 +204,8 @@
         return () => {
             clearTimeout(contentScrollThrottle);
 
+            unregisterActivePanel();
+
             // ensures that no artifacts remains
             // (currently there is a bug with svelte transition)
             wrapper?.classList?.add("hidden");
@@ -194,10 +222,11 @@
 <div bind:this={wrapper} class="overlay-panel-wrapper">
     {#if active}
         <div class="overlay-panel-container" class:padded={popup} class:active>
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
                 class="overlay"
                 on:click|preventDefault={() => (overlayClose ? hide() : true)}
-                transition:fade={{ duration: transitionSpeed, opacity: 0 }}
+                transition:fade|local={{ duration: transitionSpeed, opacity: 0 }}
             />
 
             <div
@@ -208,9 +237,9 @@
             >
                 <div class="overlay-panel-section panel-header">
                     {#if btnClose && !popup}
-                        <div class="overlay-close" on:click|preventDefault={hide}>
+                        <button type="button" class="overlay-close" on:click|preventDefault={hide}>
                             <i class="ri-close-line" />
-                        </div>
+                        </button>
                     {/if}
 
                     <slot name="header" />
@@ -218,7 +247,7 @@
                     {#if btnClose && popup}
                         <button
                             type="button"
-                            class="btn btn-sm btn-circle btn-secondary btn-close m-l-auto"
+                            class="btn btn-sm btn-circle btn-transparent btn-close m-l-auto"
                             on:click|preventDefault={hide}
                         >
                             <i class="ri-close-line txt-lg" />

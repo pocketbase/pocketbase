@@ -36,7 +36,7 @@
         <button
             autofocus
             type="button"
-            class="btn btn-secondary btn-expanded-sm"
+            class="btn btn-transparent btn-expanded-sm"
             disabled={isConfirmationBusy}
             on:click={() => {
                 confirmed = false;

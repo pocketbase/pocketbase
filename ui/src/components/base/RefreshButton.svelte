@@ -30,7 +30,8 @@
 
 <button
     type="button"
-    class="btn btn-secondary btn-circle"
+    aria-label="Refresh"
+    class="btn btn-transparent btn-circle"
     class:refreshing={refreshTimeoutId}
     use:tooltip={tooltipData}
     on:click={refresh}

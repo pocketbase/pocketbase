@@ -5,9 +5,9 @@
 //
 // 1. JS Migrations loader:
 //
-// 	jsvm.MustRegisterMigrations(app, &jsvm.MigrationsOptions{
-// 		Dir: "custom_js_migrations_dir_path", // default to "pb_data/../pb_migrations"
-// 	})
+//	jsvm.MustRegisterMigrations(app, &jsvm.MigrationsOptions{
+//		Dir: "custom_js_migrations_dir_path", // default to "pb_data/../pb_migrations"
+//	})
 package jsvm
 
 import (

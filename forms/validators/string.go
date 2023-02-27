@@ -7,6 +7,7 @@ import (
 // Compare checks whether the validated value matches another string.
 //
 // Example:
+//
 //	validation.Field(&form.PasswordConfirm, validation.By(validators.Compare(form.Password)))
 func Compare(valueToCompare string) validation.RuleFunc {
 	return func(value any) error {

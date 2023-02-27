@@ -88,7 +88,7 @@
                 >
                     <button
                         type="button"
-                        class="btn btn-sm btn-secondary fade copy-schema"
+                        class="btn btn-sm btn-transparent fade copy-schema"
                         on:click={() => copy()}
                     >
                         <span class="txt">Copy</span>

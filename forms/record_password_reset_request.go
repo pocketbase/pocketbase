@@ -60,9 +60,9 @@ func (form *RecordPasswordResetRequest) Validate() error {
 // Submit validates and submits the form.
 // On success, sends a password reset email to the `form.Email` auth record.
 //
-// You can optionally provide a list of InterceptorWithRecordFunc to
-// further modify the form behavior before persisting it.
-func (form *RecordPasswordResetRequest) Submit(interceptors ...InterceptorWithRecordFunc) error {
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *RecordPasswordResetRequest) Submit(interceptors ...InterceptorFunc[*models.Record]) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (form *RecordPasswordResetRequest) Submit(interceptors ...InterceptorWithRe
 	// update last sent timestamp
 	authRecord.Set(schema.FieldNameLastResetSentAt, types.NowDateTime())
 
-	return runInterceptorsWithRecord(authRecord, func(m *models.Record) error {
+	return runInterceptors(authRecord, func(m *models.Record) error {
 		if err := mails.SendRecordPasswordReset(form.app, m); err != nil {
 			return err
 		}

@@ -21,6 +21,7 @@
 
 <th
     tabindex="0"
+    title={name}
     class="col-sort {classes}"
     class:col-sort-disabled={disable}
     class:sort-active={sort === "-" + name || sort === "+" + name}

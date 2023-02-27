@@ -63,7 +63,10 @@ func (form *AdminPasswordResetConfirm) checkToken(value any) error {
 
 // Submit validates and submits the admin password reset confirmation form.
 // On success returns the updated admin model associated to `form.Token`.
-func (form *AdminPasswordResetConfirm) Submit() (*models.Admin, error) {
+//
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *AdminPasswordResetConfirm) Submit(interceptors ...InterceptorFunc[*models.Admin]) (*models.Admin, error) {
 	if err := form.Validate(); err != nil {
 		return nil, err
 	}
@@ -80,8 +83,13 @@ func (form *AdminPasswordResetConfirm) Submit() (*models.Admin, error) {
 		return nil, err
 	}
 
-	if err := form.dao.SaveAdmin(admin); err != nil {
-		return nil, err
+	interceptorsErr := runInterceptors(admin, func(m *models.Admin) error {
+		admin = m
+		return form.dao.SaveAdmin(m)
+	}, interceptors...)
+
+	if interceptorsErr != nil {
+		return nil, interceptorsErr
 	}
 
 	return admin, nil

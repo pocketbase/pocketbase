@@ -59,6 +59,118 @@ func TestRequestData(t *testing.T) {
 	}
 }
 
+func TestRecordAuthResponse(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	dummyAdmin := &models.Admin{}
+	dummyAdmin.Id = "id1"
+
+	nonAuthRecord, err := app.Dao().FindRecordById("demo1", "al1h9ijdeojtsjy")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	authRecord, err := app.Dao().FindRecordById("users", "4q1xlclmfloku33")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		name               string
+		record             *models.Record
+		meta               any
+		expectError        bool
+		expectedContent    []string
+		notExpectedContent []string
+		expectedEvents     map[string]int
+	}{
+		{
+			name:        "non auth record",
+			record:      nonAuthRecord,
+			expectError: true,
+		},
+		{
+			name:        "valid auth record - without meta",
+			record:      authRecord,
+			expectError: false,
+			expectedContent: []string{
+				`"token":"`,
+				`"record":{`,
+				`"id":"`,
+				`"expand":{"rel":{`,
+			},
+			notExpectedContent: []string{
+				`"meta":`,
+			},
+			expectedEvents: map[string]int{
+				"OnRecordAuthRequest": 1,
+			},
+		},
+		{
+			name:        "valid auth record - with meta",
+			record:      authRecord,
+			meta:        map[string]any{"meta_test": 123},
+			expectError: false,
+			expectedContent: []string{
+				`"token":"`,
+				`"record":{`,
+				`"id":"`,
+				`"expand":{"rel":{`,
+				`"meta":{"meta_test":123`,
+			},
+			expectedEvents: map[string]int{
+				"OnRecordAuthRequest": 1,
+			},
+		},
+	}
+
+	for _, s := range scenarios {
+		app.ResetEventCalls()
+
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodGet, "/?expand=rel", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.Set(apis.ContextAdminKey, dummyAdmin)
+
+		responseErr := apis.RecordAuthResponse(app, c, s.record, s.meta)
+
+		hasErr := responseErr != nil
+		if hasErr != s.expectError {
+			t.Fatalf("[%s] Expected hasErr to be %v, got %v (%v)", s.name, s.expectError, hasErr, responseErr)
+		}
+
+		if len(app.EventCalls) != len(s.expectedEvents) {
+			t.Fatalf("[%s] Expected events \n%v, \ngot \n%v", s.name, s.expectedEvents, app.EventCalls)
+		}
+		for k, v := range s.expectedEvents {
+			if app.EventCalls[k] != v {
+				t.Fatalf("[%s] Expected event %s to be called %d times, got %d", s.name, k, v, app.EventCalls[k])
+			}
+		}
+
+		if hasErr {
+			continue
+		}
+
+		response := rec.Body.String()
+
+		for _, v := range s.expectedContent {
+			if !strings.Contains(response, v) {
+				t.Fatalf("[%s] Missing %v in response \n%v", s.name, v, response)
+			}
+		}
+
+		for _, v := range s.notExpectedContent {
+			if strings.Contains(response, v) {
+				t.Fatalf("[%s] Unexpected %v in response \n%v", s.name, v, response)
+			}
+		}
+	}
+}
+
 func TestEnrichRecords(t *testing.T) {
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/?expand=rel_many", nil)

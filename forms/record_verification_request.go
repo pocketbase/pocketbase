@@ -60,9 +60,9 @@ func (form *RecordVerificationRequest) Validate() error {
 // Submit validates and sends a verification request email
 // to the `form.Email` auth record.
 //
-// You can optionally provide a list of InterceptorWithRecordFunc to
-// further modify the form behavior before persisting it.
-func (form *RecordVerificationRequest) Submit(interceptors ...InterceptorWithRecordFunc) error {
+// You can optionally provide a list of InterceptorFunc to further
+// modify the form behavior before persisting it.
+func (form *RecordVerificationRequest) Submit(interceptors ...InterceptorFunc[*models.Record]) error {
 	if err := form.Validate(); err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (form *RecordVerificationRequest) Submit(interceptors ...InterceptorWithRec
 		record.SetLastVerificationSentAt(types.NowDateTime())
 	}
 
-	return runInterceptorsWithRecord(record, func(m *models.Record) error {
+	return runInterceptors(record, func(m *models.Record) error {
 		if m.Verified() {
 			return nil // already verified
 		}

@@ -2,26 +2,26 @@
     import { link } from "svelte-spa-router";
     import CommonHelper from "@/utils/CommonHelper";
     import { hideControls } from "@/stores/app";
-    import { collections, activeCollection } from "@/stores/collections";
+    import { collections, activeCollection, isCollectionsLoading } from "@/stores/collections";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
 
     let collectionPanel;
     let searchTerm = "";
 
+    $: if ($collections) {
+        scrollIntoView();
+    }
+
     $: normalizedSearch = searchTerm.replace(/\s+/g, "").toLowerCase();
 
     $: hasSearch = searchTerm !== "";
 
-    $: filteredCollections = $collections.filter((collection) => {
+    $: filtered = $collections.filter((collection) => {
         return (
             collection.id == searchTerm ||
             collection.name.replace(/\s+/g, "").toLowerCase().includes(normalizedSearch)
         );
     });
-
-    $: if ($collections) {
-        scrollIntoView();
-    }
 
     function selectCollection(collection) {
         $activeCollection = collection;
@@ -43,7 +43,7 @@
             <div class="form-field-addon">
                 <button
                     type="button"
-                    class="btn btn-xs btn-secondary btn-circle btn-clear"
+                    class="btn btn-xs btn-transparent btn-circle btn-clear"
                     class:hidden={!hasSearch}
                     on:click={() => (searchTerm = "")}
                 >
@@ -56,8 +56,12 @@
 
     <hr class="m-t-5 m-b-xs" />
 
-    <div class="sidebar-content" class:sidebar-content-compact={filteredCollections.length > 20}>
-        {#each filteredCollections as collection (collection.id)}
+    <div
+        class="sidebar-content"
+        class:fade={$isCollectionsLoading}
+        class:sidebar-content-compact={filtered.length > 20}
+    >
+        {#each filtered as collection (collection.id)}
             <a
                 href="/collections?collectionId={collection.id}"
                 class="sidebar-list-item"
@@ -65,7 +69,6 @@
                 use:link
             >
                 <i class={CommonHelper.getCollectionTypeIcon(collection.type)} />
-
                 <span class="txt">{collection.name}</span>
             </a>
         {:else}

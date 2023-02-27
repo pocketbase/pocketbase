@@ -1,9 +1,10 @@
 import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
 import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
+import OIDCOptions  from "@/components/settings/providers/OIDCOptions.svelte";
 
 // Object list with all supported OAuth2 providers in the format:
 // ```
-// { settingsKey: { title, icon, optionsComponent? } }
+// { settingsKey: { title, icon, hidden, optionsComponent? } }
 // ```
 //
 // If `optionsComponent` is provided it will receive 2 parameters:
@@ -59,6 +60,32 @@ export default {
     giteeAuth: {
         title: "Gitee",
         icon:  "ri-git-repository-fill",
+    },
+    giteaAuth: {
+        title: "Gitea",
+        icon:  "ri-cup-fill",
+        optionsComponent: SelfHostedOptions,
+    },
+    livechatAuth: {
+        title: "LiveChat",
+        icon:  "ri-chat-1-fill",
+    },
+    oidcAuth: {
+        title: "OpenID Connect (Authentik, Keycloak, Okta, ...)",
+        icon:  "ri-lock-fill",
+        optionsComponent: OIDCOptions,
+    },
+    oidc2Auth: {
+        title: "(2) OpenID Connect (Authentik, Keycloak, Okta, ...)",
+        icon:  "ri-lock-fill",
+        hidden: true,
+        optionsComponent: OIDCOptions,
+    },
+    oidc3Auth: {
+        title: "(3) OpenID Connect (Authentik, Keycloak, Okta, ...)",
+        icon:  "ri-lock-fill",
+        hidden: true,
+        optionsComponent: OIDCOptions,
     },
     redditAuth: {
         title: "Reddit",

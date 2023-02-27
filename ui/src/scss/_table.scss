@@ -9,12 +9,15 @@ table {
         line-height: 1;
         text-align: left;
     }
+    .txt-ellipsis {
+        flex-shrink: 0;
+    }
     td, th {
         outline: 0;
         vertical-align: middle;
         position: relative;
         text-align: left;
-        padding: 5px 10px;
+        padding: 10px;
         border-bottom: 1px solid var(--baseAlt2Color);
         &:first-child {
             padding-left: 20px;
@@ -188,15 +191,14 @@ table {
     }
 
     // styles
-    &.table-compact {
-        td, th {
-            height: auto;
-        }
-    }
     &.table-border {
         border: 1px solid var(--baseAlt2Color);
+        border-radius: var(--baseRadius);
         tr {
             background: var(--baseColor);
+        }
+        td, th {
+            height: 45px;
         }
         th {
             background: var(--baseAlt1Color);
@@ -205,6 +207,29 @@ table {
             th, td {
                 border-bottom: 0;
             }
+        }
+        > tr:first-child,
+        > :first-child > tr:first-child {
+            > :first-child {
+                border-top-left-radius: var(--baseRadius);
+            }
+            > :last-child {
+                border-top-right-radius: var(--baseRadius);
+            }
+        }
+        > tr:last-child,
+        > :last-child > tr:last-child {
+            > :first-child {
+                border-bottom-left-radius: var(--baseRadius);
+            }
+            > :last-child {
+                border-bottom-right-radius: var(--baseRadius);
+            }
+        }
+    }
+    &.table-compact {
+        td, th {
+            height: auto;
         }
     }
 
@@ -228,14 +253,6 @@ table {
     margin-right: calc(var(--baseSpacing) * -1);
     .bulk-select-col {
         min-width: 70px;
-        input[type="checkbox"] ~ label {
-            opacity: 0.7;
-        }
-        label:hover,
-        label:focus-within,
-        input[type="checkbox"]:checked ~ label {
-            opacity: 1 !important;
-        }
     }
     td, th {
         position: relative;

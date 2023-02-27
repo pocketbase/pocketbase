@@ -9,9 +9,14 @@
 
     const types = [
         {
-            label: "Text",
+            label: "Plain text",
             value: "text",
             icon: CommonHelper.getFieldTypeIcon("text"),
+        },
+        {
+            label: "Rich editor",
+            value: "editor",
+            icon: CommonHelper.getFieldTypeIcon("editor"),
         },
         {
             label: "Number",
@@ -44,11 +49,6 @@
             icon: CommonHelper.getFieldTypeIcon("select"),
         },
         {
-            label: "JSON",
-            value: "json",
-            icon: CommonHelper.getFieldTypeIcon("json"),
-        },
-        {
             label: "File",
             value: "file",
             icon: CommonHelper.getFieldTypeIcon("file"),
@@ -58,12 +58,12 @@
             value: "relation",
             icon: CommonHelper.getFieldTypeIcon("relation"),
         },
+        {
+            label: "JSON",
+            value: "json",
+            icon: CommonHelper.getFieldTypeIcon("json"),
+        },
     ];
 </script>
 
-<ObjectSelect
-    class="field-type-select {classes}"
-    items={types}
-    bind:keyOfSelected={value}
-    {...$$restProps}
-/>
+<ObjectSelect class="field-type-select {classes}" items={types} bind:keyOfSelected={value} {...$$restProps} />

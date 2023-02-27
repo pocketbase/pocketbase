@@ -53,58 +53,56 @@
     });
 </script>
 
-<div class="searchbar-wrapper">
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
-    <form class="searchbar" on:click|stopPropagation on:submit|preventDefault={submit}>
-        <label for={uniqueId} class="m-l-10 txt-xl">
-            <i class="ri-search-line" />
-        </label>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<form class="searchbar" on:click|stopPropagation on:submit|preventDefault={submit}>
+    <label for={uniqueId} class="m-l-10 txt-xl">
+        <i class="ri-search-line" />
+    </label>
 
-        {#if filterComponent && !isFilterComponentLoading}
-            <svelte:component
-                this={filterComponent}
-                id={uniqueId}
-                singleLine
-                disableRequestKeys
-                disableIndirectCollectionsKeys
-                {extraAutocompleteKeys}
-                baseCollection={autocompleteCollection}
-                placeholder={value || placeholder}
-                bind:value={tempValue}
-                on:submit={submit}
-            />
-        {:else}
-            <input
-                bind:this={searchInput}
-                type="text"
-                id={uniqueId}
-                placeholder={value || placeholder}
-                bind:value={tempValue}
-            />
-        {/if}
+    {#if filterComponent && !isFilterComponentLoading}
+        <svelte:component
+            this={filterComponent}
+            id={uniqueId}
+            singleLine
+            disableRequestKeys
+            disableIndirectCollectionsKeys
+            {extraAutocompleteKeys}
+            baseCollection={autocompleteCollection}
+            placeholder={value || placeholder}
+            bind:value={tempValue}
+            on:submit={submit}
+        />
+    {:else}
+        <input
+            bind:this={searchInput}
+            type="text"
+            id={uniqueId}
+            placeholder={value || placeholder}
+            bind:value={tempValue}
+        />
+    {/if}
 
-        {#if value.length || tempValue.length}
-            {#if tempValue !== value}
-                <button
-                    type="submit"
-                    class="btn btn-expanded btn-sm btn-warning"
-                    transition:fly|local={{ duration: 150, x: 5 }}
-                >
-                    <span class="txt">Search</span>
-                </button>
-            {/if}
-
+    {#if value.length || tempValue.length}
+        {#if tempValue !== value}
             <button
-                type="button"
-                class="btn btn-secondary btn-sm btn-hint p-l-xs p-r-xs m-l-10"
+                type="submit"
+                class="btn btn-expanded btn-sm btn-warning"
                 transition:fly|local={{ duration: 150, x: 5 }}
-                on:click={() => {
-                    clear(false);
-                    submit();
-                }}
             >
-                <span class="txt">Clear</span>
+                <span class="txt">Search</span>
             </button>
         {/if}
-    </form>
-</div>
+
+        <button
+            type="button"
+            class="btn btn-transparent btn-sm btn-hint p-l-xs p-r-xs m-l-10"
+            transition:fly|local={{ duration: 150, x: 5 }}
+            on:click={() => {
+                clear(false);
+                submit();
+            }}
+        >
+            <span class="txt">Clear</span>
+        </button>
+    {/if}
+</form>

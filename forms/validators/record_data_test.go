@@ -965,7 +965,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field3": []string{},
 			},
 			nil,
-			[]string{},
+			[]string{"field2"},
 		},
 		{
 			"(json) check required constraint - zero map",
@@ -975,7 +975,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field3": map[string]string{},
 			},
 			nil,
-			[]string{},
+			[]string{"field2"},
 		},
 		{
 			"(json) check unique constraint",
@@ -988,14 +988,24 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"(json) check json text validator",
+			"(json) check json text invalid obj, array and number normalizations",
 			map[string]any{
-				"field1": `[1, 2, 3`,
-				"field2": `invalid`,
-				"field3": `null`, // valid
+				"field1": `[1 2 3]`,
+				"field2": `{a: 123}`,
+				"field3": `123.456 abc`,
 			},
 			nil,
-			[]string{"field1", "field2"},
+			[]string{},
+		},
+		{
+			"(json) check json text reserved literals normalizations",
+			map[string]any{
+				"field1": `true`,
+				"field2": `false`,
+				"field3": `null`,
+			},
+			nil,
+			[]string{},
 		},
 		{
 			"(json) valid data - only required fields",
@@ -1202,6 +1212,7 @@ func TestRecordDataValidatorValidateRelation(t *testing.T) {
 			Unique: true,
 			Type:   schema.FieldTypeRelation,
 			Options: &schema.RelationOptions{
+				MinSelect:    types.Pointer(2),
 				CollectionId: demo.Id,
 			},
 		},
@@ -1247,6 +1258,15 @@ func TestRecordDataValidatorValidateRelation(t *testing.T) {
 			},
 			nil,
 			[]string{"field2"},
+		},
+		{
+			"check min constraint",
+			map[string]any{
+				"field2": relId2,
+				"field3": []string{relId1},
+			},
+			nil,
+			[]string{"field3"},
 		},
 		{
 			"check unique constraint",

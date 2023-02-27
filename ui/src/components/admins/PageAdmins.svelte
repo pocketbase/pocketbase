@@ -8,9 +8,9 @@
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
-    import IdLabel from "@/components/base/IdLabel.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
     import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
+    import CopyIcon from "@/components/base/CopyIcon.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";
 
@@ -86,6 +86,7 @@
         extraAutocompleteKeys={["email"]}
         on:submit={(e) => (filter = e.detail)}
     />
+    <div class="clearfix m-b-base" />
 
     <HorizontalScroller class="table-wrapper">
         <table class="table" class:table-loading={isLoading}>
@@ -148,7 +149,10 @@
                         </td>
 
                         <td class="col-type-text col-field-id">
-                            <IdLabel id={admin.id} />
+                            <div class="label">
+                                <CopyIcon value={admin.id} />
+                                <span class="txt">{admin.id}</span>
+                            </div>
                             {#if admin.id === $loggedAdmin.id}
                                 <span class="label label-warning m-l-5">You</span>
                             {/if}
@@ -176,7 +180,7 @@
                     {#if isLoading}
                         <tr>
                             <td colspan="99" class="p-xs">
-                                <span class="skeleton-loader" />
+                                <span class="skeleton-loader m-0" />
                             </td>
                         </tr>
                     {:else}

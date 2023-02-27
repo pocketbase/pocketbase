@@ -6,10 +6,11 @@
     export let field = new SchemaField();
     export let value = undefined;
 
-    $: if (typeof value !== "undefined" && typeof value !== "string" && value !== null) {
-        // the JSON field support both js primitives and encoded JSON string
-        // so we are normalizing the value to only a string
-        value = JSON.stringify(value, null, 2);
+    let serialized = JSON.stringify(typeof value === "undefined" ? null : value, null, 2);
+
+    $: if (value !== serialized?.trim()) {
+        serialized = JSON.stringify(typeof value === "undefined" ? null : value, null, 2);
+        value = serialized;
     }
 </script>
 
@@ -18,5 +19,14 @@
         <i class={CommonHelper.getFieldTypeIcon(field.type)} />
         <span class="txt">{field.name}</span>
     </label>
-    <textarea id={uniqueId} required={field.required} class="txt-mono" bind:value />
+    <textarea
+        id={uniqueId}
+        class="txt-mono"
+        required={field.required}
+        value={serialized}
+        on:input={(e) => {
+            serialized = e.target.value;
+            value = e.target.value.trim(); // trim the submitted value
+        }}
+    />
 </Field>

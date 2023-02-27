@@ -52,12 +52,13 @@ func (p *Google) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          extracted.Id,
-		Name:        extracted.Name,
-		Email:       extracted.Email,
-		AvatarUrl:   extracted.Picture,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           extracted.Id,
+		Name:         extracted.Name,
+		Email:        extracted.Email,
+		AvatarUrl:    extracted.Picture,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 
 	return user, nil

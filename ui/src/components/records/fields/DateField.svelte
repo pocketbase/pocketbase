@@ -8,11 +8,17 @@
     export let field = new SchemaField();
     export let value = undefined;
 
+    let pickerValue = value;
+
     // strip ms and zone for backwards compatibility with the older format
     // and because flatpickr currently doesn't have integrated
     // zones support and requires manual parsing and formatting
     $: if (value && value.length > 19) {
         value = value.substring(0, 19);
+    }
+
+    $: if (pickerValue != value) {
+        pickerValue = value;
     }
 
     // ensure that value is set even on manual input edit
@@ -44,7 +50,7 @@
     <Flatpickr
         id={uniqueId}
         options={CommonHelper.defaultFlatpickrOptions()}
-        {value}
+        bind:value={pickerValue}
         bind:formattedValue={value}
         on:close={onClose}
     />

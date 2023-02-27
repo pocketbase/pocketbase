@@ -26,6 +26,13 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	e := echo.New()
 	e.Debug = app.IsDebug()
 
+	// configure a custom router
+	e.ResetRouterCreator(func(ec *echo.Echo) echo.Router {
+		return echo.NewRouter(echo.RouterConfig{
+			UnescapePathParamValues: true,
+		})
+	})
+
 	// default middlewares
 	e.Pre(middleware.RemoveTrailingSlashWithConfig(middleware.RemoveTrailingSlashConfig{
 		Skipper: func(c echo.Context) bool {
@@ -64,10 +71,9 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			apiErr = NewBadRequestError("", err)
 		}
 
-		event := &core.ApiErrorEvent{
-			HttpContext: c,
-			Error:       apiErr,
-		}
+		event := new(core.ApiErrorEvent)
+		event.HttpContext = c
+		event.Error = apiErr
 
 		// send error response
 		hookErr := app.OnBeforeApiError().Trigger(event, func(e *core.ApiErrorEvent) error {
@@ -157,7 +163,7 @@ func bindStaticAdminUI(app core.App, e *echo.Echo) error {
 	e.GET(
 		strings.TrimRight(trailedAdminPath, "/"),
 		func(c echo.Context) error {
-			return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath)
+			return c.Redirect(http.StatusTemporaryRedirect, strings.TrimLeft(trailedAdminPath, "/"))
 		},
 	)
 
@@ -218,12 +224,12 @@ func installerRedirect(app core.App) echo.MiddlewareFunc {
 
 			if totalAdmins == 0 && !hasInstallerParam {
 				// redirect to the installer page
-				return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath+"?installer#")
+				return c.Redirect(http.StatusTemporaryRedirect, "?installer#")
 			}
 
 			if totalAdmins != 0 && hasInstallerParam {
-				// redirect to the home page
-				return c.Redirect(http.StatusTemporaryRedirect, trailedAdminPath+"#/")
+				// clear the installer param
+				return c.Redirect(http.StatusTemporaryRedirect, "?")
 			}
 
 			return next(c)

@@ -11,7 +11,7 @@ func initPragmas(db *dbx.DB) error {
 	_, err := db.NewQuery(`
 		PRAGMA busy_timeout       = 10000;
 		PRAGMA journal_mode       = WAL;
-		PRAGMA journal_size_limit = 100000000;
+		PRAGMA journal_size_limit = 200000000;
 		PRAGMA synchronous        = NORMAL;
 		PRAGMA foreign_keys       = TRUE;
 	`).Execute()

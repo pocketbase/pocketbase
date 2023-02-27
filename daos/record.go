@@ -3,7 +3,6 @@ package daos
 import (
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 
 	"github.com/pocketbase/dbx"
@@ -21,7 +20,74 @@ func (dao *Dao) RecordQuery(collection *models.Collection) *dbx.SelectQuery {
 	tableName := collection.Name
 	selectCols := fmt.Sprintf("%s.*", dao.DB().QuoteSimpleColumnName(tableName))
 
-	return dao.DB().Select(selectCols).From(tableName)
+	return dao.DB().
+		Select(selectCols).
+		From(tableName).
+		WithBuildHook(func(query *dbx.Query) {
+			query.WithExecHook(execLockRetry(dao.ModelQueryTimeout, dao.MaxLockRetries)).
+				WithOneHook(func(q *dbx.Query, a any, op func(b any) error) error {
+					switch v := a.(type) {
+					case *models.Record:
+						if v == nil {
+							return op(a)
+						}
+
+						row := dbx.NullStringMap{}
+						if err := op(&row); err != nil {
+							return err
+						}
+
+						record := models.NewRecordFromNullStringMap(collection, row)
+
+						*v = *record
+
+						return nil
+					default:
+						return op(a)
+					}
+				}).
+				WithAllHook(func(q *dbx.Query, sliceA any, op func(sliceB any) error) error {
+					switch v := sliceA.(type) {
+					case *[]*models.Record:
+						if v == nil {
+							return op(sliceA)
+						}
+
+						rows := []dbx.NullStringMap{}
+						if err := op(&rows); err != nil {
+							return err
+						}
+
+						records := models.NewRecordsFromNullStringMaps(collection, rows)
+
+						*v = records
+
+						return nil
+					case *[]models.Record:
+						if v == nil {
+							return op(sliceA)
+						}
+
+						rows := []dbx.NullStringMap{}
+						if err := op(&rows); err != nil {
+							return err
+						}
+
+						records := models.NewRecordsFromNullStringMaps(collection, rows)
+
+						nonPointers := make([]models.Record, len(records))
+						for i, r := range records {
+							nonPointers[i] = *r
+						}
+
+						*v = nonPointers
+
+						return nil
+					default:
+						return op(sliceA)
+					}
+				})
+		})
 }
 
 // FindRecordById finds the Record model by its id.
@@ -35,10 +101,8 @@ func (dao *Dao) FindRecordById(
 		return nil, err
 	}
 
-	tableName := collection.Name
-
 	query := dao.RecordQuery(collection).
-		AndWhere(dbx.HashExp{tableName + ".id": recordId})
+		AndWhere(dbx.HashExp{collection.Name + ".id": recordId})
 
 	for _, filter := range optFilters {
 		if filter == nil {
@@ -49,12 +113,13 @@ func (dao *Dao) FindRecordById(
 		}
 	}
 
-	row := dbx.NullStringMap{}
-	if err := query.Limit(1).One(row); err != nil {
+	record := &models.Record{}
+
+	if err := query.Limit(1).One(record); err != nil {
 		return nil, err
 	}
 
-	return models.NewRecordFromNullStringMap(collection, row), nil
+	return record, nil
 }
 
 // FindRecordsByIds finds all Record models by the provided ids.
@@ -84,12 +149,13 @@ func (dao *Dao) FindRecordsByIds(
 		}
 	}
 
-	rows := []dbx.NullStringMap{}
-	if err := query.All(&rows); err != nil {
+	records := make([]*models.Record, 0, len(recordIds))
+
+	if err := query.All(&records); err != nil {
 		return nil, err
 	}
 
-	return models.NewRecordsFromNullStringMaps(collection, rows), nil
+	return records, nil
 }
 
 // FindRecordsByExpr finds all records by the specified db expression.
@@ -99,6 +165,7 @@ func (dao *Dao) FindRecordsByIds(
 // Returns an empty slice if no records are found.
 //
 // Example:
+//
 //	expr1 := dbx.HashExp{"email": "test@example.com"}
 //	expr2 := dbx.NewExp("LOWER(username) = {:username}", dbx.Params{"username": "test"})
 //	dao.FindRecordsByExpr("example", expr1, expr2)
@@ -117,35 +184,38 @@ func (dao *Dao) FindRecordsByExpr(collectionNameOrId string, exprs ...dbx.Expres
 		}
 	}
 
-	rows := []dbx.NullStringMap{}
+	var records []*models.Record
 
-	if err := query.All(&rows); err != nil {
+	if err := query.All(&records); err != nil {
 		return nil, err
 	}
 
-	return models.NewRecordsFromNullStringMaps(collection, rows), nil
+	return records, nil
 }
 
 // FindFirstRecordByData returns the first found record matching
 // the provided key-value pair.
-func (dao *Dao) FindFirstRecordByData(collectionNameOrId string, key string, value any) (*models.Record, error) {
+func (dao *Dao) FindFirstRecordByData(
+	collectionNameOrId string,
+	key string,
+	value any,
+) (*models.Record, error) {
 	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)
 	if err != nil {
 		return nil, err
 	}
 
-	row := dbx.NullStringMap{}
+	record := &models.Record{}
 
 	err = dao.RecordQuery(collection).
 		AndWhere(dbx.HashExp{inflector.Columnify(key): value}).
 		Limit(1).
-		One(row)
-
+		One(record)
 	if err != nil {
 		return nil, err
 	}
 
-	return models.NewRecordFromNullStringMap(collection, row), nil
+	return record, nil
 }
 
 // IsRecordValueUnique checks if the provided key-value pair is a unique Record value.
@@ -192,8 +262,7 @@ func (dao *Dao) IsRecordValueUnique(
 		AndWhere(expr).
 		Limit(1)
 
-	if len(excludeIds) > 0 {
-		uniqueExcludeIds := list.NonzeroUniques(excludeIds)
+	if uniqueExcludeIds := list.NonzeroUniques(excludeIds); len(uniqueExcludeIds) > 0 {
 		query.AndWhere(dbx.NotIn(collection.Name+".id", list.ToInterfaceSlice(uniqueExcludeIds)...))
 	}
 
@@ -249,18 +318,17 @@ func (dao *Dao) FindAuthRecordByEmail(collectionNameOrId string, email string) (
 		return nil, fmt.Errorf("%q is not an auth collection", collectionNameOrId)
 	}
 
-	row := dbx.NullStringMap{}
+	record := &models.Record{}
 
 	err = dao.RecordQuery(collection).
 		AndWhere(dbx.HashExp{schema.FieldNameEmail: email}).
 		Limit(1).
-		One(row)
-
+		One(record)
 	if err != nil {
 		return nil, err
 	}
 
-	return models.NewRecordFromNullStringMap(collection, row), nil
+	return record, nil
 }
 
 // FindAuthRecordByUsername finds the auth record associated with the provided username (case insensitive).
@@ -275,20 +343,19 @@ func (dao *Dao) FindAuthRecordByUsername(collectionNameOrId string, username str
 		return nil, fmt.Errorf("%q is not an auth collection", collectionNameOrId)
 	}
 
-	row := dbx.NullStringMap{}
+	record := &models.Record{}
 
 	err = dao.RecordQuery(collection).
 		AndWhere(dbx.NewExp("LOWER([["+schema.FieldNameUsername+"]])={:username}", dbx.Params{
 			"username": strings.ToLower(username),
 		})).
 		Limit(1).
-		One(row)
-
+		One(record)
 	if err != nil {
 		return nil, err
 	}
 
-	return models.NewRecordFromNullStringMap(collection, row), nil
+	return record, nil
 }
 
 // SuggestUniqueAuthRecordUsername checks if the provided username is unique
@@ -390,31 +457,38 @@ func (dao *Dao) DeleteRecord(record *models.Record) error {
 	})
 }
 
-// cascadeRecordDelete triggers cascade deletion for the provided references
-// and split the work to a batched set of go routines.
+// cascadeRecordDelete triggers cascade deletion for the provided references.
 //
 // NB! This method is expected to be called inside a transaction.
 func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.Collection][]*schema.SchemaField) error {
 	uniqueJsonEachAlias := "__je__" + security.PseudorandomString(4)
 
 	for refCollection, fields := range refs {
+		if refCollection.IsView() {
+			continue // skip view collections
+		}
+
 		for _, field := range fields {
 			recordTableName := inflector.Columnify(refCollection.Name)
 			prefixedFieldName := recordTableName + "." + inflector.Columnify(field.Name)
+
+			// @todo optimize single relation lookup
 			query := dao.RecordQuery(refCollection).
 				Distinct(true).
-				LeftJoin(fmt.Sprintf(
-					// note: the case is used to normalize value access for single and multiple relations.
+				InnerJoin(fmt.Sprintf(
+					// note: the case is used to normalize the value access
 					`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END) as {{%s}}`,
 					prefixedFieldName, prefixedFieldName, prefixedFieldName, uniqueJsonEachAlias,
-				), nil).
-				AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": mainRecord.Id})).
-				AndWhere(dbx.HashExp{uniqueJsonEachAlias + ".value": mainRecord.Id})
+				), dbx.HashExp{uniqueJsonEachAlias + ".value": mainRecord.Id})
 
-			// trigger cascade for each 1000 rel items until there is none
-			batchSize := 1000
+			if refCollection.Id == mainRecord.Collection().Id {
+				query.AndWhere(dbx.Not(dbx.HashExp{recordTableName + ".id": mainRecord.Id}))
+			}
+
+			// trigger cascade for each batchSize rel items until there is none
+			batchSize := 4000
+			rows := make([]dbx.NullStringMap, 0, batchSize)
 			for {
-				rows := make([]dbx.NullStringMap, 0, batchSize)
 				if err := query.Limit(int64(batchSize)).All(&rows); err != nil {
 					return err
 				}
@@ -424,45 +498,18 @@ func (dao *Dao) cascadeRecordDelete(mainRecord *models.Record, refs map[*models.
 					break
 				}
 
-				perWorker := 50
-				workers := int(math.Ceil(float64(total) / float64(perWorker)))
+				refRecords := models.NewRecordsFromNullStringMaps(refCollection, rows)
 
-				batchErr := func() error {
-					ch := make(chan error)
-					defer close(ch)
-
-					for i := 0; i < workers; i++ {
-						var chunks []dbx.NullStringMap
-						if len(rows) <= perWorker {
-							chunks = rows
-							rows = nil
-						} else {
-							chunks = rows[:perWorker]
-							rows = rows[perWorker:]
-						}
-
-						go func() {
-							refRecords := models.NewRecordsFromNullStringMaps(refCollection, chunks)
-							ch <- dao.deleteRefRecords(mainRecord, refRecords, field)
-						}()
-					}
-
-					for i := 0; i < workers; i++ {
-						if err := <-ch; err != nil {
-							return err
-						}
-					}
-
-					return nil
-				}()
-
-				if batchErr != nil {
-					return batchErr
+				err := dao.deleteRefRecords(mainRecord, refRecords, field)
+				if err != nil {
+					return err
 				}
 
 				if total < batchSize {
 					break // no more items
 				}
+
+				rows = rows[:0] // keep allocated memory
 			}
 		}
 	}

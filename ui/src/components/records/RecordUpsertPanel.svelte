@@ -21,6 +21,7 @@
     import JsonField from "@/components/records/fields/JsonField.svelte";
     import FileField from "@/components/records/fields/FileField.svelte";
     import RelationField from "@/components/records/fields/RelationField.svelte";
+    import EditorField from "@/components/records/fields/EditorField.svelte";
     import ExternalAuthsList from "@/components/records/ExternalAuthsList.svelte";
 
     const dispatch = createEventDispatcher();
@@ -40,6 +41,8 @@
     let deletedFileIndexesMap = {}; // eg.: {"field1":[0, 1], ...}
     let initialFormHash = "";
     let activeTab = TAB_FORM;
+
+    $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
 
     $: hasFileChanges =
         CommonHelper.hasNonEmptyProps(uploadedFilesMap) ||
@@ -218,11 +221,49 @@
                 });
         });
     }
+
+    function duplicateConfirm() {
+        if (hasChanges) {
+            confirm("You have unsaved changes. Do you really want to discard them?", () => {
+                duplicate();
+            });
+        } else {
+            duplicate();
+        }
+    }
+
+    async function duplicate() {
+        const clone = original?.clone();
+
+        if (clone) {
+            clone.id = "";
+            clone.created = "";
+            clone.updated = "";
+
+            // reset file fields
+            const fields = collection?.schema || [];
+            for (const field of fields) {
+                if (field.type === "file") {
+                    delete clone[field.name];
+                }
+            }
+        }
+
+        show(clone);
+
+        await tick();
+
+        initialFormHash = "";
+    }
 </script>
 
 <OverlayPanel
     bind:this={recordPanel}
-    class="overlay-panel-lg record-panel {collection?.isAuth && !record.isNew ? 'colored-header' : ''}"
+    class="
+        record-panel
+        {hasEditorField ? 'overlay-panel-xl' : 'overlay-panel-lg'}
+        {collection?.isAuth && !record.isNew ? 'colored-header' : ''}
+    "
     beforeHide={() => {
         if (hasChanges && confirmClose) {
             confirm("You have unsaved changes. Do you really want to close the panel?", () => {
@@ -245,40 +286,42 @@
 
         {#if !record.isNew}
             <div class="flex-fill" />
-            <button type="button" class="btn btn-sm btn-circle btn-secondary">
-                <div class="content">
-                    <i class="ri-more-line" />
-                    <Toggler class="dropdown dropdown-right dropdown-nowrap">
-                        {#if collection.isAuth && !original.verified && original.email}
-                            <button
-                                type="button"
-                                class="dropdown-item closable"
-                                on:click={() => sendVerificationEmail()}
-                            >
-                                <i class="ri-mail-check-line" />
-                                <span class="txt">Send verification email</span>
-                            </button>
-                        {/if}
-                        {#if collection.isAuth && original.email}
-                            <button
-                                type="button"
-                                class="dropdown-item closable"
-                                on:click={() => sendPasswordResetEmail()}
-                            >
-                                <i class="ri-mail-lock-line" />
-                                <span class="txt">Send password reset email</span>
-                            </button>
-                        {/if}
+            <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
+                <i class="ri-more-line" />
+                <Toggler class="dropdown dropdown-right dropdown-nowrap">
+                    {#if collection.isAuth && !original.verified && original.email}
                         <button
                             type="button"
-                            class="dropdown-item txt-danger closable"
-                            on:click|preventDefault|stopPropagation={() => deleteConfirm()}
+                            class="dropdown-item closable"
+                            on:click={() => sendVerificationEmail()}
                         >
-                            <i class="ri-delete-bin-7-line" />
-                            <span class="txt">Delete</span>
+                            <i class="ri-mail-check-line" />
+                            <span class="txt">Send verification email</span>
                         </button>
-                    </Toggler>
-                </div>
+                    {/if}
+                    {#if collection.isAuth && original.email}
+                        <button
+                            type="button"
+                            class="dropdown-item closable"
+                            on:click={() => sendPasswordResetEmail()}
+                        >
+                            <i class="ri-mail-lock-line" />
+                            <span class="txt">Send password reset email</span>
+                        </button>
+                    {/if}
+                    <button type="button" class="dropdown-item closable" on:click={() => duplicateConfirm()}>
+                        <i class="ri-file-copy-line" />
+                        <span class="txt">Duplicate</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="dropdown-item txt-danger closable"
+                        on:click|preventDefault|stopPropagation={() => deleteConfirm()}
+                    >
+                        <i class="ri-delete-bin-7-line" />
+                        <span class="txt">Delete</span>
+                    </button>
+                </Toggler>
             </button>
         {/if}
 
@@ -312,7 +355,7 @@
             on:submit|preventDefault={save}
         >
             {#if !record.isNew}
-                <Field class="form-field disabled" name="id" let:uniqueId>
+                <Field class="form-field readonly" name="id" let:uniqueId>
                     <label for={uniqueId}>
                         <i class={CommonHelper.getFieldTypeIcon("primary")} />
                         <span class="txt">id</span>
@@ -350,6 +393,8 @@
                     <EmailField {field} bind:value={record[field.name]} />
                 {:else if field.type === "url"}
                     <UrlField {field} bind:value={record[field.name]} />
+                {:else if field.type === "editor"}
+                    <EditorField {field} bind:value={record[field.name]} />
                 {:else if field.type === "date"}
                     <DateField {field} bind:value={record[field.name]} />
                 {:else if field.type === "select"}
@@ -378,9 +423,10 @@
     </div>
 
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-secondary" disabled={isSaving} on:click={() => hide()}>
+        <button type="button" class="btn btn-transparent" disabled={isSaving} on:click={() => hide()}>
             <span class="txt">Cancel</span>
         </button>
+
         <button
             type="submit"
             form={formId}

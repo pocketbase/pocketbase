@@ -93,6 +93,12 @@
         if (!collection?.options.allowOAuth2Auth) {
             delete tabs["auth-with-oauth2"];
         }
+    } else if (collection.isView) {
+        tabs = Object.assign({}, baseTabs);
+        delete tabs.create;
+        delete tabs.update;
+        delete tabs.delete;
+        delete tabs.realtime;
     } else {
         tabs = Object.assign({}, baseTabs);
     }
@@ -154,7 +160,7 @@
 
     <!-- visible only on small screens -->
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-secondary" on:click={() => hide()}>
+        <button type="button" class="btn btn-transparent" on:click={() => hide()}>
             <span class="txt">Close</span>
         </button>
     </svelte:fragment>

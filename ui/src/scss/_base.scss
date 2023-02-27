@@ -123,7 +123,7 @@ code {
     display: inline-block;
     font-family: var(--monospaceFontFamily);
     font-style: normal;
-    font-size: var(--lgFontSize);
+    font-size: 1em;
     line-height: 1.379rem;
     padding: 0px 4px;
     white-space: nowrap;
@@ -192,7 +192,7 @@ a {
 .txt-ellipsis {
     display: inline-block;
     vertical-align: top;
-    flex-shrink: 0;
+    flex-shrink: 1;
     max-width: 100%;
     overflow: hidden;
     white-space: nowrap;
@@ -329,6 +329,7 @@ a,
 
 .content {
     @extend %block;
+    min-width: 0;
     & > :first-child {
         margin-top: 0;
     }
@@ -369,6 +370,7 @@ a,
     display: flex;
     align-items: center;
     width: 100%;
+    min-width: 0;
     gap: var(--smSpacing);
 }
 .flex-fill {
@@ -383,6 +385,7 @@ a,
 .inline-flex {
     position: relative;
     display: inline-flex;
+    vertical-align: top;
     align-items: center;
     flex-wrap: wrap;
     min-width: 0;
@@ -447,22 +450,34 @@ a,
 }
 
 .label {
+    --labelVPadding: 3px;
+    --labelHPadding: 8px;
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    vertical-align: top;
     gap: 5px;
-    line-height: 1;
-    padding: 3px 8px;
+    padding: var(--labelVPadding) var(--labelHPadding);
     min-height: 23px;
+    max-width: 100%;
     text-align: center;
+    line-height: 1;
     font-size: var(--smFontSize);
-    border-radius: 30px;
     background: var(--baseAlt2Color);
     color: var(--txtPrimaryColor);
     white-space: nowrap;
+    border-radius: 30px;
+
+    .btn:last-child {
+        margin-right: calc(-0.5 * var(--labelHPadding));
+    }
+    .btn:first-child {
+        margin-left: calc(-0.5 * var(--labelHPadding));
+    }
+
+    // styles
     &.label-sm {
+        --labelHPadding: 5px;
         font-size: var(--xsFontSize);
-        padding: 3px 5px;
         min-height: 18px;
         line-height: 1;
     }
@@ -485,7 +500,7 @@ a,
 }
 
 .thumb {
-    --thumbSize: 44px;
+    --thumbSize: 40px;
 
     flex-shrink: 0;
     position: relative;
@@ -498,7 +513,6 @@ a,
     background: var(--baseAlt2Color);
     border-radius: var(--baseRadius);
     color: var(--txtPrimaryColor);
-    font-size: 1.2rem;
     @include shadowize();
     i {
         font-size: inherit;
@@ -509,9 +523,13 @@ a,
         border-radius: inherit;
         overflow: hidden;
     }
+    &.thumb-xs {
+        --thumbSize: 24px;
+        font-size: 0.85rem;
+    }
     &.thumb-sm {
         --thumbSize: 32px;
-        font-size: 0.85rem;
+        font-size: 0.92rem;
     }
     &.thumb-lg {
         --thumbSize: 60px;
@@ -526,6 +544,13 @@ a,
     }
     &.thumb-active {
         box-shadow: 0px 0px 0px 2px var(--primaryColor);
+    }
+}
+a.thumb:not(.thumb-active) {
+    transition: box-shadow var(--baseAnimationSpeed);
+    &:hover,
+    &:focus {
+        @include shadowize(0px 2px 4px 1px var(--shadowColor));
     }
 }
 
@@ -602,6 +627,7 @@ a,
 
     position: relative;
     display: inline-flex;
+    vertical-align: top;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -688,6 +714,8 @@ a,
 .list {
     @extend %block;
     position: relative;
+    overflow: auto; /* fallback */
+    overflow: overlay;
     border: 1px solid var(--baseAlt2Color);
     border-radius: var(--baseRadius);
     .list-item {
@@ -696,11 +724,77 @@ a,
         display: flex;
         align-items: center;
         width: 100%;
-        gap: 10px;
-        padding: 10px;
-        border-bottom: 1px solid var(--baseAlt2Color);
+        gap: var(--xsSpacing);
+        outline: 0;
+        padding: 10px var(--xsSpacing);
+        min-height: 50px;
+        border-top: 1px solid var(--baseAlt2Color);
+        transition: background var(--baseAnimationSpeed);
+        &:first-child {
+            border-top: 0;
+        }
         &:last-child {
-            border-bottom: 0;
+            border-radius: inherit;
+        }
+        .content {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+            max-width: 100%;
+            user-select: text;
+        }
+        .actions {
+            margin-left: auto;
+            gap: 10px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            margin: -1px -5px -1px 0;
+            &.nonintrusive {
+                @include hide();
+                transform: translateX(5px);
+                transition: transform var(--baseAnimationSpeed),
+                            opacity var(--baseAnimationSpeed),
+                            visibility var(--baseAnimationSpeed);
+            }
+        }
+        &:hover,
+        &:active {
+            .actions.nonintrusive {
+                @include show();
+                transform: translateX(0);
+            }
+        }
+        // styles
+        &.selected {
+            background: var(--bodyColor);
+        }
+        &.handle:not(.disabled) {
+            cursor: pointer;
+            user-select: none;
+            &:hover,
+            &:focus-visible {
+                background: var(--baseAlt1Color);
+            }
+            &:active {
+                background: var(--baseAlt2Color);
+            }
+        }
+        &.disabled:not(.selected) {
+            cursor: default;
+            opacity: 0.6;
+        }
+    }
+
+    .list-item-btn {
+        padding: 5px;
+        min-height: auto;
+    }
+
+    &.list-compact {
+        .list-item {
+            min-height: 40px;
         }
     }
 }

@@ -5,7 +5,7 @@
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import UploadedFilePreview from "@/components/base/UploadedFilePreview.svelte";
-    import RecordFilePreview from "@/components/records/RecordFilePreview.svelte";
+    import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
 
     export let record;
     export let value = "";
@@ -70,47 +70,56 @@
     }
 </script>
 
-<Field class="form-field form-field-file {field.required ? 'required' : ''}" name={field.name} let:uniqueId>
+<Field
+    class="form-field form-field-list form-field-file {field.required ? 'required' : ''}"
+    name={field.name}
+    let:uniqueId
+>
     <label for={uniqueId}>
         <i class={CommonHelper.getFieldTypeIcon(field.type)} />
         <span class="txt">{field.name}</span>
     </label>
 
-    <div bind:this={filesListElem} class="files-list">
-        {#each valueAsArray as filename, i (filename)}
+    <div bind:this={filesListElem} class="list">
+        {#each valueAsArray as filename, i (filename + record.id)}
+            {@const isDeleted = deletedFileIndexes.includes(i)}
             <div class="list-item">
-                <figure class="thumb" class:fade={deletedFileIndexes.includes(i)}>
-                    <RecordFilePreview {record} {filename} />
-                </figure>
-                <a
-                    href={ApiClient.getFileUrl(record, filename)}
-                    class="filename link-hint"
-                    class:txt-strikethrough={deletedFileIndexes.includes(i)}
-                    use:tooltip={{ position: "right", text: "Download" }}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    {filename}
-                </a>
+                <div class:fade={deletedFileIndexes.includes(i)}>
+                    <RecordFileThumb {record} {filename} />
+                </div>
 
-                {#if deletedFileIndexes.includes(i)}
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-danger btn-secondary"
-                        on:click={() => restoreExistingFile(i)}
+                <div class="content">
+                    <a
+                        href={ApiClient.getFileUrl(record, filename)}
+                        class="txt-ellipsis {isDeleted ? 'txt-strikethrough txt-hint' : 'link-primary'}"
+                        title="Download"
+                        target="_blank"
+                        rel="noopener noreferrer"
                     >
-                        <span class="txt">Restore</span>
-                    </button>
-                {:else}
-                    <button
-                        type="button"
-                        class="btn btn-secondary btn-sm btn-circle btn-remove txt-hint"
-                        use:tooltip={"Remove file"}
-                        on:click={() => removeExistingFile(i)}
-                    >
-                        <i class="ri-close-line" />
-                    </button>
-                {/if}
+                        {filename}
+                    </a>
+                </div>
+
+                <div class="actions">
+                    {#if deletedFileIndexes.includes(i)}
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-danger btn-transparent"
+                            on:click={() => restoreExistingFile(i)}
+                        >
+                            <span class="txt">Restore</span>
+                        </button>
+                    {:else}
+                        <button
+                            type="button"
+                            class="btn btn-transparent btn-hint btn-sm btn-circle btn-remove"
+                            use:tooltip={"Remove file"}
+                            on:click={() => removeExistingFile(i)}
+                        >
+                            <i class="ri-close-line" />
+                        </button>
+                    {/if}
+                </div>
             </div>
         {/each}
 
@@ -119,13 +128,13 @@
                 <figure class="thumb">
                     <UploadedFilePreview {file} />
                 </figure>
-                <div class="filename" title={file.name}>
+                <div class="filename m-r-auto" title={file.name}>
                     <small class="label label-success m-r-5">New</small>
                     <span class="txt">{file.name}</span>
                 </div>
                 <button
                     type="button"
-                    class="btn btn-secondary btn-sm btn-circle btn-remove"
+                    class="btn btn-transparent btn-sm btn-circle btn-remove"
                     use:tooltip={"Remove file"}
                     on:click={() => removeNewFile(i)}
                 >
@@ -134,30 +143,29 @@
             </div>
         {/each}
 
-        {#if !maxReached}
-            <div class="list-item btn-list-item">
-                <input
-                    bind:this={fileInput}
-                    type="file"
-                    class="hidden"
-                    multiple={isMultiple}
-                    on:change={() => {
-                        for (let file of fileInput.files) {
-                            uploadedFiles.push(file);
-                        }
-                        uploadedFiles = uploadedFiles;
-                        fileInput.value = null; // reset
-                    }}
-                />
-                <button
-                    type="button"
-                    class="btn btn-secondary btn-sm btn-block"
-                    on:click={() => fileInput?.click()}
-                >
-                    <i class="ri-upload-cloud-line" />
-                    <span class="txt">Upload new file</span>
-                </button>
-            </div>
-        {/if}
+        <div class="list-item list-item-btn">
+            <input
+                bind:this={fileInput}
+                type="file"
+                class="hidden"
+                multiple={isMultiple}
+                on:change={() => {
+                    for (let file of fileInput.files) {
+                        uploadedFiles.push(file);
+                    }
+                    uploadedFiles = uploadedFiles;
+                    fileInput.value = null; // reset
+                }}
+            />
+            <button
+                type="button"
+                class="btn btn-transparent btn-sm btn-block"
+                disabled={maxReached}
+                on:click={() => fileInput?.click()}
+            >
+                <i class="ri-upload-cloud-line" />
+                <span class="txt">Upload new file</span>
+            </button>
+        </div>
     </div>
 </Field>

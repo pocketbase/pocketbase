@@ -6,8 +6,6 @@ This is the PocketBase Admin dashboard UI (built with Svelte and Vite).
 Although it could be used independently, it is mainly intended to be embedded
 as part of a PocketBase app executable (hence the `embed.go` file).
 
-The used admins avatars are from https://boringavatars.com/.
-
 ## Development
 
 Download the repo and run the appropriate console commands:

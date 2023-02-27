@@ -15,6 +15,10 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
+// SecretMask is the default settings secrets replacement value
+// (see Settings.RedactClone()).
+const SecretMask string = "******"
+
 // Settings defines common app configuration options.
 type Settings struct {
 	mux sync.RWMutex
@@ -46,6 +50,11 @@ type Settings struct {
 	TwitchAuth    AuthProviderConfig `form:"twitchAuth" json:"twitchAuth"`
 	StravaAuth    AuthProviderConfig `form:"stravaAuth" json:"stravaAuth"`
 	GiteeAuth     AuthProviderConfig `form:"giteeAuth" json:"giteeAuth"`
+	LivechatAuth  AuthProviderConfig `form:"livechatAuth" json:"livechatAuth"`
+	GiteaAuth     AuthProviderConfig `form:"giteaAuth" json:"giteaAuth"`
+	OIDCAuth      AuthProviderConfig `form:"oidcAuth" json:"oidcAuth"`
+	OIDC2Auth     AuthProviderConfig `form:"oidc2Auth" json:"oidc2Auth"`
+	OIDC3Auth     AuthProviderConfig `form:"oidc3Auth" json:"oidc3Auth"`
 	RedditAuth    AuthProviderConfig `form:"redditAuth" json:"redditAuth"`
 }
 
@@ -133,6 +142,21 @@ func New() *Settings {
 		GiteeAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		LivechatAuth: AuthProviderConfig{
+			Enabled: false,
+		},
+		GiteaAuth: AuthProviderConfig{
+			Enabled: false,
+		},
+		OIDCAuth: AuthProviderConfig{
+			Enabled: false,
+		},
+		OIDC2Auth: AuthProviderConfig{
+			Enabled: false,
+		},
+		OIDC3Auth: AuthProviderConfig{
+			Enabled: false,
+		},
 		RedditAuth: AuthProviderConfig{
 			Enabled: false,
 		},
@@ -167,6 +191,11 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.TwitchAuth),
 		validation.Field(&s.StravaAuth),
 		validation.Field(&s.GiteeAuth),
+		validation.Field(&s.LivechatAuth),
+		validation.Field(&s.GiteaAuth),
+		validation.Field(&s.OIDCAuth),
+		validation.Field(&s.OIDC2Auth),
+		validation.Field(&s.OIDC3Auth),
 		validation.Field(&s.RedditAuth),
 	)
 }
@@ -201,8 +230,6 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		return nil, err
 	}
 
-	mask := "******"
-
 	sensitiveFields := []*string{
 		&clone.Smtp.Password,
 		&clone.S3.Secret,
@@ -224,13 +251,18 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.TwitchAuth.ClientSecret,
 		&clone.StravaAuth.ClientSecret,
 		&clone.GiteeAuth.ClientSecret,
+		&clone.LivechatAuth.ClientSecret,
+		&clone.GiteaAuth.ClientSecret,
+		&clone.OIDCAuth.ClientSecret,
+		&clone.OIDC2Auth.ClientSecret,
+		&clone.OIDC3Auth.ClientSecret,
 		&clone.RedditAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
 	for _, v := range sensitiveFields {
 		if v != nil && *v != "" {
-			*v = mask
+			*v = SecretMask
 		}
 	}
 
@@ -244,19 +276,24 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 	defer s.mux.RUnlock()
 
 	return map[string]AuthProviderConfig{
-		auth.NameGoogle:    s.GoogleAuth,
-		auth.NameFacebook:  s.FacebookAuth,
-		auth.NameGithub:    s.GithubAuth,
-		auth.NameGitlab:    s.GitlabAuth,
-		auth.NameDiscord:   s.DiscordAuth,
-		auth.NameTwitter:   s.TwitterAuth,
-		auth.NameMicrosoft: s.MicrosoftAuth,
-		auth.NameSpotify:   s.SpotifyAuth,
-		auth.NameKakao:     s.KakaoAuth,
-		auth.NameTwitch:    s.TwitchAuth,
-		auth.NameStrava:    s.StravaAuth,
-		auth.NameGitee:     s.GiteeAuth,
-		auth.NameReddit:    s.RedditAuth,
+		auth.NameGoogle:     s.GoogleAuth,
+		auth.NameFacebook:   s.FacebookAuth,
+		auth.NameGithub:     s.GithubAuth,
+		auth.NameGitlab:     s.GitlabAuth,
+		auth.NameDiscord:    s.DiscordAuth,
+		auth.NameTwitter:    s.TwitterAuth,
+		auth.NameMicrosoft:  s.MicrosoftAuth,
+		auth.NameSpotify:    s.SpotifyAuth,
+		auth.NameKakao:      s.KakaoAuth,
+		auth.NameTwitch:     s.TwitchAuth,
+		auth.NameStrava:     s.StravaAuth,
+		auth.NameGitee:      s.GiteeAuth,
+		auth.NameLivechat:   s.LivechatAuth,
+		auth.NameGitea:      s.GiteaAuth,
+		auth.NameOIDC:       s.OIDCAuth,
+		auth.NameOIDC + "2": s.OIDC2Auth,
+		auth.NameOIDC + "3": s.OIDC3Auth,
+		auth.NameReddit:     s.RedditAuth,
 	}
 }
 
@@ -467,11 +504,11 @@ func (c LogsConfig) Validate() error {
 
 type AuthProviderConfig struct {
 	Enabled      bool   `form:"enabled" json:"enabled"`
-	ClientId     string `form:"clientId" json:"clientId,omitempty"`
-	ClientSecret string `form:"clientSecret" json:"clientSecret,omitempty"`
-	AuthUrl      string `form:"authUrl" json:"authUrl,omitempty"`
-	TokenUrl     string `form:"tokenUrl" json:"tokenUrl,omitempty"`
-	UserApiUrl   string `form:"userApiUrl" json:"userApiUrl,omitempty"`
+	ClientId     string `form:"clientId" json:"clientId"`
+	ClientSecret string `form:"clientSecret" json:"clientSecret"`
+	AuthUrl      string `form:"authUrl" json:"authUrl"`
+	TokenUrl     string `form:"tokenUrl" json:"tokenUrl"`
+	UserApiUrl   string `form:"userApiUrl" json:"userApiUrl"`
 }
 
 // Validate makes `ProviderConfig` validatable by implementing [validation.Validatable] interface.

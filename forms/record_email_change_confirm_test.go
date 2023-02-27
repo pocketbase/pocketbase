@@ -85,7 +85,7 @@ func TestRecordEmailChangeConfirmValidateAndSubmit(t *testing.T) {
 		}
 
 		interceptorCalls := 0
-		interceptor := func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+		interceptor := func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 			return func(r *models.Record) error {
 				interceptorCalls++
 				return next(r)
@@ -165,7 +165,7 @@ func TestRecordEmailChangeConfirmInterceptors(t *testing.T) {
 	testErr := errors.New("test_error")
 
 	interceptor1Called := false
-	interceptor1 := func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+	interceptor1 := func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			interceptor1Called = true
 			return next(record)
@@ -173,7 +173,7 @@ func TestRecordEmailChangeConfirmInterceptors(t *testing.T) {
 	}
 
 	interceptor2Called := false
-	interceptor2 := func(next forms.InterceptorWithRecordNextFunc) forms.InterceptorWithRecordNextFunc {
+	interceptor2 := func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			interceptorEmail = record.Email()
 			interceptor2Called = true

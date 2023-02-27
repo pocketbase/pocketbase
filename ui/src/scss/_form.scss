@@ -112,31 +112,38 @@ button {
         border: 2px solid currentColor;
         background: #fff;
     }
-    &.btn-secondary,
-    &.btn-outline {
-        box-shadow: none;
-        color: var(--txtPrimaryColor);
+
+    @mixin btnOpacity($base: 1, $hover: 1, $active: 1) {
         &:before {
-            opacity: 0;
-            background: var(--baseAlt4Color);
+            opacity: $base;
         }
         &:focus-visible,
-        &:hover,
-        &:active,
-        &.active {
+        &:hover {
             &:before {
-                opacity: 0.11;
+                opacity: $hover;
             }
         }
         &.active,
         &:active {
             &:before {
-                opacity: 0.22;
+                opacity: $active;
             }
+        }
+    }
+
+    &.btn-secondary,
+    &.btn-transparent,
+    &.btn-outline {
+        box-shadow: none;
+        color: var(--txtPrimaryColor);
+        @include btnOpacity(0, 0.3, 0.45);
+        &:before {
+            background: var(--baseAlt3Color);
         }
         @each $name, $color in $variationsMap {
             &.btn-#{$name} {
                 color: $color;
+                @include btnOpacity(0, 0.15, 0.25);
                 &:before {
                     background: $color;
                 }
@@ -144,6 +151,20 @@ button {
         }
         &.btn-hint {
             color: var(--txtHintColor);
+            &:focus-visible,
+            &:hover,
+            &:active,
+            &.active {
+                color: var(--txtPrimaryColor);
+            }
+        }
+    }
+    &.btn-secondary {
+        @include btnOpacity(0.35, 0.5, 0.7);
+        @each $name, $color in $variationsMap {
+            &.btn-#{$name} {
+                @include btnOpacity(0.15, 0.25, 0.3);
+            }
         }
     }
 
@@ -152,12 +173,12 @@ button {
     &[disabled] {
         box-shadow: none;
         cursor: default;
-        background: var(--baseAlt2Color);
+        background: var(--baseAlt1Color);
         color: var(--txtDisabledColor) !important;
         &:before {
             display: none;
         }
-        &.btn-secondary {
+        &.btn-transparent {
             background: none;
         }
         &.btn-outline {
@@ -167,7 +188,7 @@ button {
 
     // sizes
     &.btn-expanded {
-        min-width: 140px;
+        min-width: 150px;
     }
     &.btn-expanded-sm {
         min-width: 90px;
@@ -231,7 +252,7 @@ button {
         padding: 0;
         gap: 0;
         i {
-            $iconSize: 24px;
+            $iconSize: 19px;
             font-size: 1.2857rem;
             text-align: center;
             width: $iconSize;
@@ -242,9 +263,11 @@ button {
                 display: block;
             }
         }
-        &.btn-sm i,
-        &.btn-xs i {
+        &.btn-sm i {
             font-size: 1.1rem;
+        }
+        &.btn-xs i {
+            font-size: 1.05rem;
         }
     }
 
@@ -346,10 +369,6 @@ button {
             $thumbActiveColor: var(--baseAlt4Color)
         );
     }
-    &:focus,
-    &.active {
-        border-color: var(--primaryColor);
-    }
     &[readonly],
     &.readonly {
         cursor: default;
@@ -359,7 +378,6 @@ button {
     &.disabled {
         cursor: default;
         color: var(--txtDisabledColor);
-        border-color: var(--baseAlt2Color);
     }
     &.txt-mono {
         line-height: var(--smLineHeight);
@@ -435,12 +453,12 @@ select {
         align-items: center;
         user-select: none;
         font-weight: 600;
+        font-size: var(--smFontSize);
+        letter-spacing: 0.1px;
         color: var(--txtHintColor);
-        font-size: var(--xsFontSize);
-        text-transform: uppercase;
         line-height: 1;
         padding-top: 12px;
-        padding-bottom: 2px;
+        padding-bottom: 3px;
         padding-left: var(--hPadding);
         padding-right: var(--hPadding);
         border: 0;
@@ -456,8 +474,11 @@ select {
         i {
             font-size: 0.96rem;
             line-height: 1;
-            margin-top: -2px;
-            margin-bottom: -2px;
+            margin-top: -1px;
+            margin-bottom: -1px;
+            &:before {
+                margin: 0;
+            }
         }
     }
     %input, label {
@@ -532,15 +553,24 @@ select {
             margin-left: -2px;
         }
     }
+    &.readonly,
     &.disabled {
-        > label {
-            color: var(--txtDisabledColor);
-        }
         label, %input {
-            border-color: var(--baseAlt2Color);
+            background: var(--baseAlt1Color);
+        }
+        > label {
+            color: var(--txtHintColor);
         }
         &.required > label:after {
             opacity: 0.5;
+        }
+    }
+    &.disabled {
+        label, %input {
+            box-shadow: inset 0 0 0 var(--btnHeight) rgba(#fff, 0.45);
+        }
+        > label {
+            color: var(--txtDisabledColor);
         }
     }
 
@@ -785,7 +815,7 @@ select {
     outline: 0;
     .option {
         user-select: none;
-        column-gap: 8px;
+        column-gap: 5px;
         .icon {
             min-width: 20px;
             text-align: center;
@@ -895,9 +925,9 @@ select {
             max-width: 100%;
             line-height: normal;
         }
-        &:hover {
-            cursor: pointer;
-        }
+    }
+    &:not(.disabled) .selected-container:hover {
+        cursor: pointer;
     }
     &.disabled {
         color: var(--txtDisabledColor);
@@ -963,7 +993,7 @@ select {
         }
         .options-list {
             overflow: auto;
-            max-height: 270px;
+            max-height: 240px;
             width: auto;
             margin-left: 0;
             margin-right: -5px;
@@ -1007,7 +1037,7 @@ select {
 
 .field-type-select {
     .options-dropdown {
-        padding: 2px;
+        padding: 2px 1px 1px 2px;
         .form-field.options-search {
             margin: 0;
         }
@@ -1017,22 +1047,15 @@ select {
             flex-direction: row;
             flex-wrap: wrap;
             width: 100%;
-            margin: 0;
             padding: 0;
         }
         .dropdown-item {
             width: 50%;
-            flex-grow: 1;
             margin: 0;
             padding-left: 12px; // visual align with the label
             border-radius: 0;
             border-bottom: 1px solid var(--baseAlt2Color);
-            &:nth-child(2n) {
-                border-left: 1px solid var(--baseAlt2Color);
-            }
-            &:nth-last-child(-n+2) {
-                border-bottom: 0;
-            }
+            border-right: 1px solid var(--baseAlt2Color);
             &.selected {
                 background: var(--baseAlt1Color);
             }
@@ -1040,51 +1063,34 @@ select {
     }
 }
 
-
-.form-field-file {
+.form-field-list {
     label {
-        border-bottom: 0;
+        padding-bottom: 10px;
     }
-    .filename {
-        align-items: center;
-        max-width: 100%;
-        min-width: 0;
-        margin-right: auto;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        i {
-            text-decoration: none;
-        }
-    }
-    .files-list {
-        @extend %block;
-        padding-top: 5px;
+    .list {
         background: var(--baseAlt1Color);
         border: 0;
+        border-radius: 0;
         border-bottom-left-radius: var(--baseRadius);
         border-bottom-right-radius: var(--baseRadius);
-        transition: background var(--baseAnimationSpeed);
         .list-item {
-            display: flex;
-            width: 100%;
-            align-items: center;
-            row-gap: 10px;
-            column-gap: var(--xsSpacing);
-            padding: 10px 15px;
-            min-height: 44px;
             border-top: 1px solid var(--baseAlt2Color);
-            &:last-child {
-                border-radius: inherit;
-                border-bottom: 0;
+            &.selected {
+                background: var(--baseAlt2Color);
             }
-        }
-        .btn-list-item {
-            padding: 5px;
+            &.handle:not(.disabled) {
+                &:hover,
+                &:focus-visible {
+                    background: var(--baseAlt2Color);
+                }
+                &:active {
+                    background: var(--baseAlt3Color);
+                }
+            }
         }
     }
     &:focus-within {
-        .files-list, label {
+        .list, label {
             background: var(--baseAlt1Color);
         }
     }
@@ -1093,13 +1099,15 @@ select {
 // codemirror field
 .code-editor {
     @extend %input;
-
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     .form-field label ~ & {
         padding-bottom: 6px;
         padding-top: 4px;
     }
-
     .cm-editor {
+        flex-grow: 1;
         border: 0 !important;
         outline: none !important;
         .cm-line {
@@ -1131,6 +1139,7 @@ select {
             }
         }
         .cm-scroller {
+            flex-grow: 1;
             outline: 0 !important;
             font-family: var(--monospaceFontFamily);
             font-size: var(--baseFontSize);
@@ -1152,6 +1161,50 @@ select {
         }
         &.cm-focused .cm-matchingBracket {
             background-color: rgba(50, 140, 130, 0.1);
+        }
+    }
+    .ͼf {
+        color: var(--dangerColor);
+    }
+}
+
+// tinymce field
+.tinymce-wrapper {
+    @extend %input;
+    min-height: 277px;
+    .tox-tinymce {
+        border-radius: var(--baseRadius);
+        border: 0;
+    }
+    .form-field label ~ & {
+        padding: 5px 2px 2px 2px;
+    }
+}
+body {
+    .tox .tox-tbtn {
+        height: 30px;
+        svg {
+            transform: scale(0.85);
+        }
+    }
+    .tox .tox-tbtn:not(.tox-tbtn--select) {
+        width: 30px;
+    }
+    .tox .tox-button,
+    .tox .tox-button--secondary {
+        font-size: var(--smFontSize);
+    }
+    .tox .tox-toolbar-overlord {
+        @include shadowize();
+    }
+    .tox .tox-listboxfield .tox-listbox--select,
+    .tox .tox-textarea, .tox .tox-textfield,
+    .tox .tox-toolbar-textfield {
+        padding: 3px 5px;
+    }
+    .tox-swatch:not(.tox-swatch--remove):not(.tox-collection__item--enabled) {
+        svg {
+            display: none;
         }
     }
 }

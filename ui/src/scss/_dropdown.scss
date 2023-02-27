@@ -55,16 +55,16 @@
         }
 
         // states
-        &:focus,
-        &:hover {
+        &.selected {
             background: var(--baseAlt1Color);
         }
-        &.selected {
+        &:focus-visible,
+        &:hover {
             background: var(--baseAlt2Color);
         }
         &:active {
             transition-duration: var(--activeAnimationSpeed);
-            background: var(--baseAlt2Color);
+            background: var(--baseAlt3Color);
         }
         &.disabled {
             color: var(--txtDisabledColor);

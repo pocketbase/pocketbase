@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -78,7 +79,8 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 					GetCertificate: certManager.GetCertificate,
 					NextProtos:     []string{acme.ALPNProto},
 				},
-				ReadTimeout: 60 * time.Second,
+				ReadTimeout:       5 * time.Minute,
+				ReadHeaderTimeout: 30 * time.Second,
 				// WriteTimeout: 60 * time.Second, // breaks sse!
 				Handler: router,
 				Addr:    mainAddr,
@@ -89,11 +91,20 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 				if httpsAddr != "" {
 					schema = "https"
 				}
-				regular := color.New()
+
+				date := new(strings.Builder)
+				log.New(date, "", log.LstdFlags).Print()
+
 				bold := color.New(color.Bold).Add(color.FgGreen)
-				bold.Printf("> Server started at: %s\n", color.CyanString("%s://%s", schema, serverConfig.Addr))
-				regular.Printf("  - REST API: %s\n", color.CyanString("%s://%s/api/", schema, serverConfig.Addr))
-				regular.Printf("  - Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, serverConfig.Addr))
+				bold.Printf(
+					"%s Server started at %s\n",
+					strings.TrimSpace(date.String()),
+					color.CyanString("%s://%s", schema, serverConfig.Addr),
+				)
+
+				regular := color.New()
+				regular.Printf(" ➜ REST API: %s\n", color.CyanString("%s://%s/api/", schema, serverConfig.Addr))
+				regular.Printf(" ➜ Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, serverConfig.Addr))
 			}
 
 			var serveErr error

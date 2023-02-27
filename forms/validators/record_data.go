@@ -23,6 +23,7 @@ var requiredErr = validation.NewError("validation_required", "Missing required v
 // using the provided record constraints and schema.
 //
 // Example:
+//
 //	validator := NewRecordDataValidator(app.Dao(), record, nil)
 //	err := validator.Validate(map[string]any{"test":123})
 func NewRecordDataValidator(
@@ -117,6 +118,8 @@ func (validator *RecordDataValidator) checkFieldValue(field *schema.SchemaField,
 		return validator.checkEmailValue(field, value)
 	case schema.FieldTypeUrl:
 		return validator.checkUrlValue(field, value)
+	case schema.FieldTypeEditor:
+		return validator.checkEditorValue(field, value)
 	case schema.FieldTypeDate:
 		return validator.checkDateValue(field, value)
 	case schema.FieldTypeSelect:
@@ -236,6 +239,10 @@ func (validator *RecordDataValidator) checkUrlValue(field *schema.SchemaField, v
 	return nil
 }
 
+func (validator *RecordDataValidator) checkEditorValue(field *schema.SchemaField, value any) error {
+	return nil
+}
+
 func (validator *RecordDataValidator) checkDateValue(field *schema.SchemaField, value any) error {
 	val, _ := value.(types.DateTime)
 	if val.IsZero() {
@@ -288,14 +295,20 @@ func (validator *RecordDataValidator) checkSelectValue(field *schema.SchemaField
 	return nil
 }
 
-func (validator *RecordDataValidator) checkJsonValue(field *schema.SchemaField, value any) error {
-	raw, _ := types.ParseJsonRaw(value)
-	if len(raw) == 0 {
-		return nil // nothing to check
-	}
+var emptyJsonValues = []string{
+	"null", `""`, "[]", "{}",
+}
 
+func (validator *RecordDataValidator) checkJsonValue(field *schema.SchemaField, value any) error {
 	if is.JSON.Validate(value) != nil {
 		return validation.NewError("validation_invalid_json", "Must be a valid json value")
+	}
+
+	raw, _ := types.ParseJsonRaw(value)
+	rawStr := strings.TrimSpace(raw.String())
+
+	if field.Required && list.ExistInSlice(rawStr, emptyJsonValues) {
+		return requiredErr
 	}
 
 	return nil
@@ -348,6 +361,10 @@ func (validator *RecordDataValidator) checkRelationValue(field *schema.SchemaFie
 	}
 
 	options, _ := field.Options.(*schema.RelationOptions)
+
+	if options.MinSelect != nil && len(ids) < *options.MinSelect {
+		return validation.NewError("validation_not_enough_values", fmt.Sprintf("Select at least %d", *options.MinSelect))
+	}
 
 	if options.MaxSelect != nil && len(ids) > *options.MaxSelect {
 		return validation.NewError("validation_too_many_values", fmt.Sprintf("Select no more than %d", *options.MaxSelect))

@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite';
-import { svelte }       from '@sveltejs/vite-plugin-svelte';
+import { defineConfig }           from 'vite';
+import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 // see https://vitejs.dev/config
 export default defineConfig({
@@ -14,9 +14,7 @@ export default defineConfig({
     },
     plugins: [
         svelte({
-            experimental: {
-                useVitePreprocess: true,
-            },
+            preprocess: [vitePreprocess()],
             onwarn: (warning, handler) => {
                 if (warning.code.startsWith('a11y-')) {
                     return; // silence a11y warnings

@@ -63,7 +63,7 @@
             on:submit={(e) => (filter = e.detail)}
         />
 
-        <div class="clearfix m-b-xs" />
+        <div class="clearfix m-b-base" />
 
         {#key refreshToken}
             <LogsChart bind:filter {presets} />

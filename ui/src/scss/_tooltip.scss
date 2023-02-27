@@ -19,8 +19,10 @@
     transition: opacity var(--baseAnimationSpeed),
                 visibility var(--baseAnimationSpeed),
                 transform var(--baseAnimationSpeed);
-    transform: scale(0.98);
+    transform: translateY(1px);
+    backface-visibility: hidden;
     white-space: pre-line;
+    word-break: break-word;
     @include hide();
 
     // styles

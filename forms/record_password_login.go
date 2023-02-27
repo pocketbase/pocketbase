@@ -1,6 +1,7 @@
 package forms
 
 import (
+	"database/sql"
 	"errors"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -48,30 +49,47 @@ func (form *RecordPasswordLogin) Validate() error {
 
 // Submit validates and submits the form.
 // On success returns the authorized record model.
-func (form *RecordPasswordLogin) Submit() (*models.Record, error) {
+//
+// You can optionally provide a list of InterceptorFunc to
+// further modify the form behavior before persisting it.
+func (form *RecordPasswordLogin) Submit(interceptors ...InterceptorFunc[*models.Record]) (*models.Record, error) {
 	if err := form.Validate(); err != nil {
 		return nil, err
 	}
 
 	authOptions := form.collection.AuthOptions()
 
-	if !authOptions.AllowEmailAuth && !authOptions.AllowUsernameAuth {
-		return nil, errors.New("Password authentication is not allowed for the collection.")
-	}
-
-	var record *models.Record
+	var authRecord *models.Record
 	var fetchErr error
 
-	if authOptions.AllowEmailAuth &&
-		(!authOptions.AllowUsernameAuth || is.EmailFormat.Validate(form.Identity) == nil) {
-		record, fetchErr = form.dao.FindAuthRecordByEmail(form.collection.Id, form.Identity)
-	} else {
-		record, fetchErr = form.dao.FindAuthRecordByUsername(form.collection.Id, form.Identity)
+	isEmail := is.EmailFormat.Validate(form.Identity) == nil
+
+	if isEmail {
+		if authOptions.AllowEmailAuth {
+			authRecord, fetchErr = form.dao.FindAuthRecordByEmail(form.collection.Id, form.Identity)
+		}
+	} else if authOptions.AllowUsernameAuth {
+		authRecord, fetchErr = form.dao.FindAuthRecordByUsername(form.collection.Id, form.Identity)
 	}
 
-	if fetchErr != nil || !record.ValidatePassword(form.Password) {
-		return nil, errors.New("Invalid login credentials.")
+	// ignore not found errors to allow custom fetch implementations
+	if fetchErr != nil && !errors.Is(fetchErr, sql.ErrNoRows) {
+		return nil, fetchErr
 	}
 
-	return record, nil
+	interceptorsErr := runInterceptors(authRecord, func(m *models.Record) error {
+		authRecord = m
+
+		if authRecord == nil || !authRecord.ValidatePassword(form.Password) {
+			return errors.New("Invalid login credentials.")
+		}
+
+		return nil
+	}, interceptors...)
+
+	if interceptorsErr != nil {
+		return nil, interceptorsErr
+	}
+
+	return authRecord, nil
 }

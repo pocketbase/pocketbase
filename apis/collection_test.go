@@ -6,10 +6,13 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/list"
 )
 
 func TestCollectionsList(t *testing.T) {
@@ -42,7 +45,7 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":1`,
 				`"perPage":30`,
-				`"totalItems":7`,
+				`"totalItems":10`,
 				`"items":[{`,
 				`"id":"_pb_users_auth_"`,
 				`"id":"v851q4r790rhknl"`,
@@ -51,6 +54,7 @@ func TestCollectionsList(t *testing.T) {
 				`"id":"sz5l5z67tg7gku0"`,
 				`"id":"wzlqyes4orhoygb"`,
 				`"id":"4d1blo5cuycfaca"`,
+				`"id":"9n89pl5vkct6330"`,
 				`"type":"auth"`,
 				`"type":"base"`,
 			},
@@ -69,10 +73,10 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":2`,
 				`"perPage":2`,
-				`"totalItems":7`,
+				`"totalItems":10`,
 				`"items":[{`,
-				`"id":"4d1blo5cuycfaca"`,
-				`"id":"wzlqyes4orhoygb"`,
+				`"id":"kpv709sk2lqbqk8"`,
+				`"id":"9n89pl5vkct6330"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnCollectionsListRequest": 1,
@@ -99,12 +103,13 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":1`,
 				`"perPage":30`,
-				`"totalItems":4`,
+				`"totalItems":5`,
 				`"items":[{`,
 				`"id":"wsmn24bux7wo113"`,
 				`"id":"sz5l5z67tg7gku0"`,
 				`"id":"wzlqyes4orhoygb"`,
 				`"id":"4d1blo5cuycfaca"`,
+				`"id":"9n89pl5vkct6330"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnCollectionsListRequest": 1,
@@ -226,10 +231,11 @@ func TestCollectionDelete(t *testing.T) {
 		{
 			Name:   "authorized as admin + using the collection name",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/demo1",
+			Url:    "/api/collections/demo5",
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeDelete":             1,
@@ -238,16 +244,17 @@ func TestCollectionDelete(t *testing.T) {
 				"OnCollectionAfterDeleteRequest":  1,
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				ensureDeletedFiles(app, "wsmn24bux7wo113")
+				ensureDeletedFiles(app, "9n89pl5vkct6330")
 			},
 		},
 		{
 			Name:   "authorized as admin + using the collection id",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/wsmn24bux7wo113",
+			Url:    "/api/collections/9n89pl5vkct6330",
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeDelete":             1,
@@ -256,7 +263,7 @@ func TestCollectionDelete(t *testing.T) {
 				"OnCollectionAfterDeleteRequest":  1,
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				ensureDeletedFiles(app, "wsmn24bux7wo113")
+				ensureDeletedFiles(app, "9n89pl5vkct6330")
 			},
 		},
 		{
@@ -283,6 +290,22 @@ func TestCollectionDelete(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
 				"OnCollectionBeforeDeleteRequest": 1,
+			},
+		},
+		{
+			Name:   "authorized as admin + deleting a view",
+			Method: http.MethodDelete,
+			Url:    "/api/collections/view2",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			Delay:          100 * time.Millisecond,
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeDelete":             1,
+				"OnModelAfterDelete":              1,
+				"OnCollectionBeforeDeleteRequest": 1,
+				"OnCollectionAfterDeleteRequest":  1,
 			},
 		},
 	}
@@ -513,6 +536,56 @@ func TestCollectionCreate(t *testing.T) {
 				`"options":{"minPasswordLength":{"code":"validation_required"`,
 			},
 		},
+
+		// view
+		// -----------------------------------------------------------
+		{
+			Name:   "trying to create view collection with invalid options",
+			Method: http.MethodPost,
+			Url:    "/api/collections",
+			Body: strings.NewReader(`{
+				"name":"new",
+				"type":"view",
+				"schema":[{"type":"text","id":"12345789","name":"ignored!@#$"}],
+				"options":{"query": "invalid"}
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"options":{"query":{"code":"validation_invalid_view_query`,
+			},
+		},
+		{
+			Name:   "creating view collection",
+			Method: http.MethodPost,
+			Url:    "/api/collections",
+			Body: strings.NewReader(`{
+				"name":"new",
+				"type":"view",
+				"schema":[{"type":"text","id":"12345789","name":"ignored!@#$"}],
+				"options": {
+					"query": "select 1 as id from _admins"
+				}
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"name":"new"`,
+				`"type":"view"`,
+				`"schema":[]`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeCreate":             1,
+				"OnModelAfterCreate":              1,
+				"OnCollectionBeforeCreateRequest": 1,
+				"OnCollectionAfterCreateRequest":  1,
+			},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -653,7 +726,7 @@ func TestCollectionUpdate(t *testing.T) {
 		{
 			Name:   "updating base collection with reserved auth fields",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo1",
+			Url:    "/api/collections/demo4",
 			Body: strings.NewReader(`{
 				"schema":[
 					{"type":"text","name":"email"},
@@ -674,7 +747,7 @@ func TestCollectionUpdate(t *testing.T) {
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
-				`"name":"demo1"`,
+				`"name":"demo4"`,
 				`"type":"base"`,
 				`"schema":[{`,
 				`"email"`,
@@ -742,6 +815,142 @@ func TestCollectionUpdate(t *testing.T) {
 				`"options":{"minPasswordLength":{"code":"validation_min_greater_equal_than_required"`,
 			},
 		},
+
+		// rel field change displayFields propagation
+		// -----------------------------------------------------------
+		{
+			Name:   "renaming a display field should also update the referenced displayFields value",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo3",
+			Body: strings.NewReader(`{
+				"schema":[
+					{
+						"id": "w5z2x0nq",
+						"type": "text",
+						"name": "title_change"
+					}
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"name":"title_change"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":             2,
+				"OnModelAfterUpdate":              2,
+				"OnCollectionBeforeUpdateRequest": 1,
+				"OnCollectionAfterUpdateRequest":  1,
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				collection, err := app.Dao().FindCollectionByNameOrId("demo4")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				relField := collection.Schema.GetFieldByName("rel_many_no_cascade_required")
+				options := relField.Options.(*schema.RelationOptions)
+				expectedDisplayFields := []string{"title_change", "id"}
+				if len(list.SubtractSlice(options.DisplayFields, expectedDisplayFields)) != 0 {
+					t.Fatalf("Expected displayFields %v, got %v", expectedDisplayFields, options.DisplayFields)
+				}
+			},
+		},
+		{
+			Name:   "deleting a display field should also update the referenced displayFields value",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo3",
+			Body: strings.NewReader(`{
+				"schema":[
+					{
+						"type": "text",
+						"name": "new_field"
+					}
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"name":"new_field"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":             2,
+				"OnModelAfterUpdate":              2,
+				"OnCollectionBeforeUpdateRequest": 1,
+				"OnCollectionAfterUpdateRequest":  1,
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				collection, err := app.Dao().FindCollectionByNameOrId("demo4")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				relField := collection.Schema.GetFieldByName("rel_many_no_cascade_required")
+				options := relField.Options.(*schema.RelationOptions)
+				expectedDisplayFields := []string{"id"}
+				if len(list.SubtractSlice(options.DisplayFields, expectedDisplayFields)) != 0 {
+					t.Fatalf("Expected displayFields %v, got %v", expectedDisplayFields, options.DisplayFields)
+				}
+			},
+		},
+
+		// view
+		// -----------------------------------------------------------
+		{
+			Name:   "trying to update view collection with invalid options",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/view1",
+			Body: strings.NewReader(`{
+				"schema":[{"type":"text","id":"12345789","name":"ignored!@#$"}],
+				"options":{"query": "invalid"}
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"options":{"query":{"code":"validation_invalid_view_query`,
+			},
+		},
+		{
+			Name:   "updating view collection",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/view2",
+			Body: strings.NewReader(`{
+				"name":"view2_update",
+				"schema":[{"type":"text","id":"12345789","name":"ignored!@#$"}],
+				"options": {
+					"query": "select 2 as id, created, updated, email from _admins"
+				}
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"name":"view2_update"`,
+				`"type":"view"`,
+				`"schema":[{`,
+				`"name":"email"`,
+			},
+			NotExpectedContent: []string{
+				// base model fields are not part of the schema
+				`"name":"id"`,
+				`"name":"created"`,
+				`"name":"updated"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":             1,
+				"OnModelAfterUpdate":              1,
+				"OnCollectionBeforeUpdateRequest": 1,
+				"OnCollectionAfterUpdateRequest":  1,
+			},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -750,6 +959,8 @@ func TestCollectionUpdate(t *testing.T) {
 }
 
 func TestCollectionImport(t *testing.T) {
+	totalCollections := 10
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -786,7 +997,7 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 7
+				expected := totalCollections
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}
@@ -814,7 +1025,7 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 7
+				expected := totalCollections
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}
@@ -856,7 +1067,7 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 7
+				expected := totalCollections
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}
@@ -909,7 +1120,7 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
-				expected := 10
+				expected := totalCollections + 3
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
 				}
@@ -996,8 +1207,8 @@ func TestCollectionImport(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnCollectionsAfterImportRequest":  1,
 				"OnCollectionsBeforeImportRequest": 1,
-				"OnModelBeforeDelete":              5,
-				"OnModelAfterDelete":               5,
+				"OnModelBeforeDelete":              8,
+				"OnModelAfterDelete":               8,
 				"OnModelBeforeUpdate":              2,
 				"OnModelAfterUpdate":               2,
 				"OnModelBeforeCreate":              1,

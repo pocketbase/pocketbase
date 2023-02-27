@@ -55,12 +55,13 @@ func (p *Gitee) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          strconv.Itoa(extracted.Id),
-		Name:        extracted.Name,
-		Username:    extracted.Login,
-		AvatarUrl:   extracted.AvatarUrl,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           strconv.Itoa(extracted.Id),
+		Name:         extracted.Name,
+		Username:     extracted.Login,
+		AvatarUrl:    extracted.AvatarUrl,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 
 	if extracted.Email != "" && is.EmailFormat.Validate(extracted.Email) == nil {

@@ -3,10 +3,15 @@
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
+    import ObjectSelect from "@/components/base/ObjectSelect.svelte";
+    import MimeTypeSelectOption from "@/components/base/MimeTypeSelectOption.svelte";
     import MultipleValueInput from "@/components/base/MultipleValueInput.svelte";
+    import baseMimeTypesList from "@/mimes.js";
 
     export let key = "";
     export let options = {};
+
+    let mimeTypesList = baseMimeTypesList.slice();
 
     $: if (CommonHelper.isEmpty(options)) {
         // load defaults
@@ -16,6 +21,30 @@
             thumbs: [],
             mimeTypes: [],
         };
+    } else {
+        appendMissingMimeTypes();
+    }
+
+    // append any previously set custom mime types to the predefined
+    // list for backward compatibility
+    function appendMissingMimeTypes() {
+        if (CommonHelper.isEmpty(options.mimeTypes)) {
+            return;
+        }
+
+        const missing = [];
+
+        for (const v of options.mimeTypes) {
+            if (!!mimeTypesList.find((item) => item.mimeType === v)) {
+                continue; // exist
+            }
+
+            missing.push({ mimeType: v });
+        }
+
+        if (missing.length) {
+            mimeTypesList = mimeTypesList.concat(missing);
+        }
     }
 </script>
 
@@ -37,7 +66,7 @@
     <div class="col-sm-12">
         <Field class="form-field" name="schema.{key}.options.mimeTypes" let:uniqueId>
             <label for={uniqueId}>
-                <span class="txt">Mime types</span>
+                <span class="txt">Allowed mime types</span>
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
@@ -46,19 +75,40 @@
                     }}
                 />
             </label>
-            <MultipleValueInput
+            <ObjectSelect
                 id={uniqueId}
-                placeholder="eg. image/png, application/pdf..."
-                bind:value={options.mimeTypes}
+                multiple
+                searchable
+                closable={false}
+                selectionKey="mimeType"
+                selectPlaceholder="No restriction"
+                items={mimeTypesList}
+                labelComponent={MimeTypeSelectOption}
+                optionComponent={MimeTypeSelectOption}
+                bind:keyOfSelected={options.mimeTypes}
             />
             <div class="help-block">
-                <span class="txt">Use comma as separator.</span>
                 <button type="button" class="inline-flex flex-gap-0">
                     <span class="txt link-primary">Choose presets</span>
                     <i class="ri-arrow-drop-down-fill" />
-                    <Toggler class="dropdown dropdown-sm dropdown-nowrap">
-                        <div
-                            tabindex="0"
+                    <Toggler class="dropdown dropdown-sm dropdown-nowrap dropdown-left">
+                        <button
+                            type="button"
+                            class="dropdown-item closable"
+                            on:click={() => {
+                                options.mimeTypes = [
+                                    "image/jpeg",
+                                    "image/png",
+                                    "image/svg+xml",
+                                    "image/gif",
+                                    "image/webp",
+                                ];
+                            }}
+                        >
+                            <span class="txt">Images (jpg, png, svg, gif, webp)</span>
+                        </button>
+                        <button
+                            type="button"
                             class="dropdown-item closable"
                             on:click={() => {
                                 options.mimeTypes = [
@@ -71,25 +121,9 @@
                             }}
                         >
                             <span class="txt">Documents (pdf, doc/docx, xls/xlsx)</span>
-                        </div>
-                        <div
-                            tabindex="0"
-                            class="dropdown-item closable"
-                            on:click={() => {
-                                options.mimeTypes = [
-                                    "image/jpg",
-                                    "image/jpeg",
-                                    "image/png",
-                                    "image/svg+xml",
-                                    "image/gif",
-                                    "image/webp",
-                                ];
-                            }}
-                        >
-                            <span class="txt">Images (jpg, png, svg, gif, webp)</span>
-                        </div>
-                        <div
-                            tabindex="0"
+                        </button>
+                        <button
+                            type="button"
                             class="dropdown-item closable"
                             on:click={() => {
                                 options.mimeTypes = [
@@ -101,9 +135,9 @@
                             }}
                         >
                             <span class="txt">Videos (mp4, avi, mov, 3gp)</span>
-                        </div>
-                        <div
-                            tabindex="0"
+                        </button>
+                        <button
+                            type="button"
                             class="dropdown-item closable"
                             on:click={() => {
                                 options.mimeTypes = [
@@ -114,7 +148,7 @@
                             }}
                         >
                             <span class="txt">Archives (zip, 7zip, rar)</span>
-                        </div>
+                        </button>
                     </Toggler>
                 </button>
             </div>

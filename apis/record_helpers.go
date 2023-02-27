@@ -2,23 +2,22 @@ package apis
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"strings"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
+	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
 const ContextRequestDataKey = "requestData"
-
-// Deprecated: Will be removed after v0.9. Use apis.RequestData(c) instead.
-func GetRequestData(c echo.Context) *models.RequestData {
-	return RequestData(c)
-}
 
 // RequestData exports cached common request data fields
 // (query, body, logged auth state, etc.) from the provided context.
@@ -46,18 +45,65 @@ func RequestData(c echo.Context) *models.RequestData {
 	return result
 }
 
+func RecordAuthResponse(app core.App, c echo.Context, authRecord *models.Record, meta any) error {
+	token, tokenErr := tokens.NewRecordAuthToken(app, authRecord)
+	if tokenErr != nil {
+		return NewBadRequestError("Failed to create auth token.", tokenErr)
+	}
+
+	event := new(core.RecordAuthEvent)
+	event.HttpContext = c
+	event.Collection = authRecord.Collection()
+	event.Record = authRecord
+	event.Token = token
+	event.Meta = meta
+
+	return app.OnRecordAuthRequest().Trigger(event, func(e *core.RecordAuthEvent) error {
+		// allow always returning the email address of the authenticated account
+		e.Record.IgnoreEmailVisibility(true)
+
+		// expand record relations
+		expands := strings.Split(c.QueryParam(expandQueryParam), ",")
+		if len(expands) > 0 {
+			// create a copy of the cached request data and adjust it to the current auth record
+			requestData := *RequestData(e.HttpContext)
+			requestData.Admin = nil
+			requestData.AuthRecord = e.Record
+			failed := app.Dao().ExpandRecord(
+				e.Record,
+				expands,
+				expandFetch(app.Dao(), &requestData),
+			)
+			if len(failed) > 0 && app.IsDebug() {
+				log.Println("Failed to expand relations: ", failed)
+			}
+		}
+
+		result := map[string]any{
+			"token":  e.Token,
+			"record": e.Record,
+		}
+
+		if e.Meta != nil {
+			result["meta"] = e.Meta
+		}
+
+		return e.HttpContext.JSON(http.StatusOK, result)
+	})
+}
+
 // EnrichRecord parses the request context and enrich the provided record:
-// - expands relations (if defaultExpands and/or ?expand query param is set)
-// - ensures that the emails of the auth record and its expanded auth relations
-//   are visibe only for the current logged admin, record owner or record with manage access
+//   - expands relations (if defaultExpands and/or ?expand query param is set)
+//   - ensures that the emails of the auth record and its expanded auth relations
+//     are visibe only for the current logged admin, record owner or record with manage access
 func EnrichRecord(c echo.Context, dao *daos.Dao, record *models.Record, defaultExpands ...string) error {
 	return EnrichRecords(c, dao, []*models.Record{record}, defaultExpands...)
 }
 
 // EnrichRecords parses the request context and enriches the provided records:
-// - expands relations (if defaultExpands and/or ?expand query param is set)
-// - ensures that the emails of the auth records and their expanded auth relations
-//   are visibe only for the current logged admin, record owner or record with manage access
+//   - expands relations (if defaultExpands and/or ?expand query param is set)
+//   - ensures that the emails of the auth records and their expanded auth relations
+//     are visibe only for the current logged admin, record owner or record with manage access
 func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defaultExpands ...string) error {
 	requestData := RequestData(c)
 

@@ -1,10 +1,13 @@
 package jsvm
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/dop251/goja_nodejs/console"
+	"github.com/dop251/goja_nodejs/process"
 	"github.com/dop251/goja_nodejs/require"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
@@ -26,7 +29,6 @@ type migrations struct {
 	options *MigrationsOptions
 }
 
-//
 // MustRegisterMigrations registers the migrations loader plugin to
 // the provided app instance and panics if it fails.
 //
@@ -68,6 +70,7 @@ func RegisterMigrations(app core.App, options *MigrationsOptions) error {
 		vm := NewBaseVM()
 		registry.Enable(vm)
 		console.Enable(vm)
+		process.Enable(vm)
 
 		vm.Set("migrate", func(up, down func(db dbx.Builder) error) {
 			m.AppMigrations.Register(up, down, file)
@@ -75,7 +78,7 @@ func RegisterMigrations(app core.App, options *MigrationsOptions) error {
 
 		_, err := vm.RunString(string(content))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to run migration %s: %w", file, err)
 		}
 	}
 
@@ -97,8 +100,8 @@ func readDirFiles(dirPath string) (map[string][]byte, error) {
 	result := map[string][]byte{}
 
 	for _, f := range files {
-		if f.IsDir() {
-			continue
+		if f.IsDir() || !strings.HasSuffix(f.Name(), ".js") {
+			continue // not a .js file
 		}
 		raw, err := os.ReadFile(filepath.Join(dirPath, f.Name()))
 		if err != nil {

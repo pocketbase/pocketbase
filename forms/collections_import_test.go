@@ -38,6 +38,8 @@ func TestCollectionsImportValidate(t *testing.T) {
 }
 
 func TestCollectionsImportSubmit(t *testing.T) {
+	totalCollections := 10
+
 	scenarios := []struct {
 		name                   string
 		jsonData               string
@@ -52,7 +54,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"collections": []
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: totalCollections,
 			expectEvents:           nil,
 		},
 		{
@@ -82,7 +84,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
 			},
@@ -101,7 +103,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
 			},
@@ -137,7 +139,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 10,
+			expectCollectionsCount: totalCollections + 3,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 3,
 				"OnModelAfterCreate":  3,
@@ -160,7 +162,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 1,
 			},
@@ -202,7 +204,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 7,
+			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
 				"OnModelBeforeDelete": 5,
 			},
@@ -253,7 +255,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 9,
+			expectCollectionsCount: totalCollections + 2,
 			expectEvents: map[string]int{
 				"OnModelBeforeUpdate": 1,
 				"OnModelAfterUpdate":  1,
@@ -341,8 +343,8 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"OnModelAfterUpdate":  2,
 				"OnModelBeforeCreate": 1,
 				"OnModelAfterCreate":  1,
-				"OnModelBeforeDelete": 5,
-				"OnModelAfterDelete":  5,
+				"OnModelBeforeDelete": totalCollections - 2,
+				"OnModelAfterDelete":  totalCollections - 2,
 			},
 		},
 	}
@@ -404,16 +406,16 @@ func TestCollectionsImportSubmitInterceptors(t *testing.T) {
 	testErr := errors.New("test_error")
 
 	interceptor1Called := false
-	interceptor1 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor1 := func(next forms.InterceptorNextFunc[[]*models.Collection]) forms.InterceptorNextFunc[[]*models.Collection] {
+		return func(imports []*models.Collection) error {
 			interceptor1Called = true
-			return next()
+			return next(imports)
 		}
 	}
 
 	interceptor2Called := false
-	interceptor2 := func(next forms.InterceptorNextFunc) forms.InterceptorNextFunc {
-		return func() error {
+	interceptor2 := func(next forms.InterceptorNextFunc[[]*models.Collection]) forms.InterceptorNextFunc[[]*models.Collection] {
+		return func(imports []*models.Collection) error {
 			interceptor2Called = true
 			return testErr
 		}

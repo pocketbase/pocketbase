@@ -75,7 +75,6 @@ func (c *SmtpClient) Send(m *Message) error {
 		yak.FromName(m.From.Name)
 	}
 	yak.From(m.From.Address)
-	yak.To(m.To.Address)
 	yak.Subject(m.Subject)
 	yak.HTML().Set(m.HTML)
 
@@ -88,12 +87,16 @@ func (c *SmtpClient) Send(m *Message) error {
 		yak.Plain().Set(m.Text)
 	}
 
+	if len(m.To) > 0 {
+		yak.To(addressesToStrings(m.To, true)...)
+	}
+
 	if len(m.Bcc) > 0 {
-		yak.Bcc(m.Bcc...)
+		yak.Bcc(addressesToStrings(m.Bcc, true)...)
 	}
 
 	if len(m.Cc) > 0 {
-		yak.Cc(m.Cc...)
+		yak.Cc(addressesToStrings(m.Cc, true)...)
 	}
 
 	// add attachements (if any)

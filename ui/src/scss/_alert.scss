@@ -112,10 +112,12 @@
         margin: var(--baseSpacing) auto;
         @include shadowize();
     }
-    .app-sidebar ~ .app-body & {
+}
+body:not(.overlay-active) {
+    .app-sidebar ~ .app-body .toasts-wrapper {
         left: var(--appSidebarWidth);
     }
-    .app-sidebar ~ .app-body .page-sidebar ~ & {
+    .app-sidebar ~ .app-body .page-sidebar ~ .toasts-wrapper {
         left: calc(var(--appSidebarWidth) + var(--pageSidebarWidth));
     }
 }

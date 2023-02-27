@@ -31,7 +31,6 @@
 
         <div class="sidebar-title">
             <span class="txt">Sync</span>
-            <small class="label label-danger label-sm">Experimental</small>
         </div>
         <a
             href="/settings/export-collections"

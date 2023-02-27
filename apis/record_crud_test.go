@@ -2,10 +2,12 @@ package apis_test
 
 import (
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/models"
@@ -209,8 +211,52 @@ func TestRecordCrudList(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
 		},
+		{
+			Name:           ":rule modifer",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/demo5/records",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":1`,
+				`"totalItems":1`,
+				`"items":[{`,
+				`"id":"qjeql998mtp1azp"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
+		{
+			Name:           "multi-match - at least one of",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length?=2"),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":1`,
+				`"totalItems":1`,
+				`"items":[{`,
+				`"id":"qzaqccwrmva4o1n"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
+		{
+			Name:           "multi-match - all",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length=2"),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":0`,
+				`"totalItems":0`,
+				`"items":[]`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
 
-		// auth collection checks
+		// auth collection
 		// -----------------------------------------------------------
 		{
 			Name:           "check email visibility as guest",
@@ -357,6 +403,63 @@ func TestRecordCrudList(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
 		},
+
+		// view collection
+		// -----------------------------------------------------------
+		{
+			Name:           "public view records",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/view2/records?filter=state=false",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":1`,
+				`"totalItems":2`,
+				`"items":[{`,
+				`"id":"al1h9ijdeojtsjy"`,
+				`"id":"imy661ixudk5izi"`,
+			},
+			NotExpectedContent: []string{
+				`"created"`,
+				`"updated"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
+		{
+			Name:           "guest that doesn't match the view collection list rule",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/view1/records",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":0`,
+				`"totalItems":0`,
+				`"items":[]`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
+		{
+			Name:   "authenticated record that matches the view collection list rule",
+			Method: http.MethodGet,
+			Url:    "/api/collections/view1/records",
+			RequestHeaders: map[string]string{
+				// users, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":1`,
+				`"totalItems":1`,
+				`"items":[{`,
+				`"id":"84nmscqy84lsi1t"`,
+				`"bool":true`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -485,7 +588,7 @@ func TestRecordCrudView(t *testing.T) {
 			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
 		},
 
-		// auth collection checks
+		// auth collection
 		// -----------------------------------------------------------
 		{
 			Name:           "check email visibility as guest",
@@ -583,6 +686,49 @@ func TestRecordCrudView(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
 		},
+
+		// view collection
+		// -----------------------------------------------------------
+		{
+			Name:           "public view record",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/view2/records/84nmscqy84lsi1t",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"84nmscqy84lsi1t"`,
+				`"state":true`,
+				`"file_many":["`,
+				`"rel_many":["`,
+			},
+			NotExpectedContent: []string{
+				`"created"`,
+				`"updated"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+		},
+		{
+			Name:            "guest that doesn't match the view collection view rule",
+			Method:          http.MethodGet,
+			Url:             "/api/collections/view1/records/84nmscqy84lsi1t",
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authenticated record that matches the view collection view rule",
+			Method: http.MethodGet,
+			Url:    "/api/collections/view1/records/84nmscqy84lsi1t",
+			RequestHeaders: map[string]string{
+				// users, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"84nmscqy84lsi1t"`,
+				`"bool":true`,
+				`"text":"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -645,6 +791,13 @@ func TestRecordCrudDelete(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
+			Name:            "trying to delete a view collection record",
+			Method:          http.MethodDelete,
+			Url:             "/api/collections/view1/records/imy661ixudk5izi",
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
 			Name:           "public collection record delete",
 			Method:         http.MethodDelete,
 			Url:            "/api/collections/nologin/records/dc49k6jgejn40h3",
@@ -691,6 +844,7 @@ func TestRecordCrudDelete(t *testing.T) {
 				// users, test@example.com
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelAfterDelete":          3, // +2 because of the external auths
@@ -716,6 +870,25 @@ func TestRecordCrudDelete(t *testing.T) {
 				}
 			},
 		},
+		{
+			Name:            "@request :isset (rule failure check)",
+			Method:          http.MethodDelete,
+			Url:             "/api/collections/demo5/records/la4y2w4o98acwuj",
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:           "@request :isset (rule pass check)",
+			Method:         http.MethodDelete,
+			Url:            "/api/collections/demo5/records/la4y2w4o98acwuj?test=1",
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"OnModelAfterDelete":          1,
+				"OnModelBeforeDelete":         1,
+				"OnRecordAfterDeleteRequest":  1,
+				"OnRecordBeforeDeleteRequest": 1,
+			},
+		},
 
 		// cascade delete checks
 		// -----------------------------------------------------------
@@ -730,7 +903,7 @@ func TestRecordCrudDelete(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeDeleteRequest": 1,
-				"OnModelBeforeUpdate":         1, // self_rel_many update of test1 record
+				"OnModelBeforeUpdate":         2, // self_rel_many update of test1 record + rel_one_cascade demo4 cascaded in demo5
 				"OnModelBeforeDelete":         2, // the record itself + rel_one_cascade of test1 record
 			},
 		},
@@ -758,6 +931,7 @@ func TestRecordCrudDelete(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
+			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeDelete":         2,
@@ -816,6 +990,14 @@ func TestRecordCrudCreate(t *testing.T) {
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
 			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "trying to create a new view collection record",
+			Method:          http.MethodPost,
+			Url:             "/api/collections/view1/records",
+			Body:            strings.NewReader(`{"text":"new"}`),
+			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
@@ -1092,6 +1274,63 @@ func TestRecordCrudCreate(t *testing.T) {
 			},
 		},
 
+		// fields modifier checks
+		// -----------------------------------------------------------
+		{
+			Name:   "trying to delete a record while being part of a non-cascade required relation",
+			Method: http.MethodDelete,
+			Url:    "/api/collections/demo3/records/7nwo8tuiatetxdm",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeDeleteRequest": 1,
+				"OnModelBeforeUpdate":         2, // self_rel_many update of test1 record + rel_one_cascade demo4 cascaded in demo5
+				"OnModelBeforeDelete":         2, // the record itself + rel_one_cascade of test1 record
+			},
+		},
+
+		// check whether if @request.data modifer fields are properly resolved
+		// -----------------------------------------------------------
+		{
+			Name:   "@request.data.field with compute modifers (rule failure check)",
+			Method: http.MethodPost,
+			Url:    "/api/collections/demo5/records",
+			Body: strings.NewReader(`{
+				"total":1,
+				"total+":4,
+				"total-":1
+			}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{}`,
+			},
+		},
+		{
+			Name:   "@request.data.field with compute modifers (rule pass check)",
+			Method: http.MethodPost,
+			Url:    "/api/collections/demo5/records",
+			Body: strings.NewReader(`{
+				"total":1,
+				"total+":3,
+				"total-":1
+			}`),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"`,
+				`"collectionName":"demo5"`,
+				`"total":3`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelAfterCreate":          1,
+				"OnModelBeforeCreate":         1,
+				"OnRecordAfterCreateRequest":  1,
+				"OnRecordBeforeCreateRequest": 1,
+			},
+		},
+
 		// auth records
 		// -----------------------------------------------------------
 		{
@@ -1305,6 +1544,14 @@ func TestRecordCrudUpdate(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
+			Name:            "trying to update a view collection record",
+			Method:          http.MethodPatch,
+			Url:             "/api/collections/view1/records/imy661ixudk5izi",
+			Body:            strings.NewReader(`{"text":"new"}`),
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
 			Name:            "submit nil body",
 			Method:          http.MethodPatch,
 			Url:             "/api/collections/demo2/records/0yxhwia2amd8gec",
@@ -1498,6 +1745,43 @@ func TestRecordCrudUpdate(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{`,
 				`"id":{"code":"validation_in_invalid"`,
+			},
+		},
+
+		// check whether if @request.data modifer fields are properly resolved
+		// -----------------------------------------------------------
+		{
+			Name:   "@request.data.field with compute modifers (rule failure check)",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo5/records/la4y2w4o98acwuj",
+			Body: strings.NewReader(`{
+				"total+":3,
+				"total-":1
+			}`),
+			ExpectedStatus: 404,
+			ExpectedContent: []string{
+				`"data":{}`,
+			},
+		},
+		{
+			Name:   "@request.data.field with compute modifers (rule pass check)",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo5/records/la4y2w4o98acwuj",
+			Body: strings.NewReader(`{
+				"total+":2,
+				"total-":1
+			}`),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"la4y2w4o98acwuj"`,
+				`"collectionName":"demo5"`,
+				`"total":3`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelAfterUpdate":          1,
+				"OnModelBeforeUpdate":         1,
+				"OnRecordAfterUpdateRequest":  1,
+				"OnRecordBeforeUpdateRequest": 1,
 			},
 		},
 

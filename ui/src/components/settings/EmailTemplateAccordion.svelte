@@ -71,7 +71,7 @@
         {#if hasErrors}
             <i
                 class="ri-error-warning-fill txt-danger"
-                transition:scale={{ duration: 150, start: 0.7 }}
+                transition:scale|local={{ duration: 150, start: 0.7 }}
                 use:tooltip={{ text: "Has errors", position: "left" }}
             />
         {/if}
@@ -82,12 +82,20 @@
         <input type="text" id={uniqueId} bind:value={config.subject} spellcheck="false" required />
         <div class="help-block">
             Available placeholder parameters:
-            <span class="label label-sm link-primary txt-mono" on:click={() => copy("{APP_NAME}")}>
+            <button
+                type="button"
+                class="label label-sm link-primary txt-mono"
+                on:click={() => copy("{APP_NAME}")}
+            >
                 {"{APP_NAME}"}
-            </span>,
-            <span class="label label-sm link-primary txt-mono" on:click={() => copy("{APP_URL}")}>
+            </button>,
+            <button
+                type="button"
+                class="label label-sm link-primary txt-mono"
+                on:click={() => copy("{APP_URL}")}
+            >
                 {"{APP_URL}"}
-            </span>.
+            </button>.
         </div>
     </Field>
 
@@ -96,17 +104,28 @@
         <input type="text" id={uniqueId} bind:value={config.actionUrl} spellcheck="false" required />
         <div class="help-block">
             Available placeholder parameters:
-            <span class="label label-sm link-primary txt-mono" on:click={() => copy("{APP_NAME}")}>
+            <button
+                type="button"
+                class="label label-sm link-primary txt-mono"
+                on:click={() => copy("{APP_NAME}")}
+            >
                 {"{APP_NAME}"}
-            </span>,
-            <span class="label label-sm link-primary txt-mono" on:click={() => copy("{APP_URL}")}>
+            </button>,
+            <button
+                type="button"
+                class="label label-sm link-primary txt-mono"
+                on:click={() => copy("{APP_URL}")}
+            >
                 {"{APP_URL}"}
-            </span>,
-            <span
+            </button>,
+            <button
+                type="button"
                 class="label label-sm link-primary txt-mono"
                 title="Required parameter"
-                on:click={() => copy("{TOKEN}")}>{"{TOKEN}"}</span
-            >.
+                on:click={() => copy("{TOKEN}")}
+            >
+                {"{TOKEN}"}
+            </button>.
         </div>
     </Field>
 
@@ -128,22 +147,35 @@
 
         <div class="help-block">
             Available placeholder parameters:
-            <span class="label label-sm link-primary txt-mono" on:click={() => copy("{APP_NAME}")}>
+            <button
+                type="button"
+                class="label label-sm link-primary txt-mono"
+                on:click={() => copy("{APP_NAME}")}
+            >
                 {"{APP_NAME}"}
-            </span>,
-            <span class="label label-sm link-primary txt-mono" on:click={() => copy("{APP_URL}")}>
+            </button>,
+            <button
+                type="button"
+                class="label label-sm link-primary txt-mono"
+                on:click={() => copy("{APP_URL}")}
+            >
                 {"{APP_URL}"}
-            </span>,
-            <span class="label label-sm link-primary txt-mono" on:click={() => copy("{TOKEN}")}>
+            </button>,
+            <button
+                type="button"
+                class="label label-sm link-primary txt-mono"
+                on:click={() => copy("{TOKEN}")}
+            >
                 {"{TOKEN}"}
-            </span>,
-            <span
+            </button>,
+            <button
+                type="button"
                 class="label label-sm link-primary txt-mono"
                 title="Required parameter"
                 on:click={() => copy("{ACTION_URL}")}
             >
                 {"{ACTION_URL}"}
-            </span>.
+            </button>.
         </div>
     </Field>
 </Accordion>

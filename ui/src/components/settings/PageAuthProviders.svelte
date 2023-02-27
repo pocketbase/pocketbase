@@ -16,6 +16,7 @@
     let formSettings = {};
     let isLoading = false;
     let isSaving = false;
+    let showHidden = false;
 
     $: initialHash = JSON.stringify(originalFormSettings);
 
@@ -86,31 +87,44 @@
 
     <div class="wrapper">
         <form class="panel" autocomplete="off" on:submit|preventDefault={save}>
-            <h6 class="m-b-base">Manage the allowed users sign-in/sign-up methods.</h6>
+            <h6 class="m-b-base">Manage the allowed users OAuth2 sign-in/sign-up methods.</h6>
 
             {#if isLoading}
                 <div class="loader" />
             {:else}
                 <div class="accordions">
                     {#each Object.entries(providersList) as [key, provider]}
-                        <AuthProviderAccordion
-                            bind:this={accordions[key]}
-                            single
-                            {key}
-                            title={provider.title}
-                            icon={provider.icon || "ri-fingerprint-line"}
-                            optionsComponent={provider.optionsComponent}
-                            bind:config={formSettings[key]}
-                        />
+                        {#if showHidden || !provider.hidden || formSettings[key]?.enabled}
+                            <AuthProviderAccordion
+                                bind:this={accordions[key]}
+                                single
+                                {key}
+                                title={provider.title}
+                                icon={provider.icon || "ri-fingerprint-line"}
+                                optionsComponent={provider.optionsComponent}
+                                bind:config={formSettings[key]}
+                            />
+                        {/if}
                     {/each}
                 </div>
+
+                {#if !showHidden}
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-transparent btn-hint m-t-10"
+                        on:click={() => (showHidden = true)}
+                    >
+                        <i class="ri-arrow-down-s-line" />
+                        <span class="txt">Show all</span>
+                    </button>
+                {/if}
 
                 <div class="flex m-t-base">
                     <div class="flex-fill" />
                     {#if hasChanges}
                         <button
                             type="button"
-                            class="btn btn-secondary btn-hint"
+                            class="btn btn-transparent btn-hint"
                             disabled={isSaving}
                             on:click={() => reset()}
                         >
@@ -122,7 +136,6 @@
                         class="btn btn-expanded"
                         class:btn-loading={isSaving}
                         disabled={!hasChanges || isSaving}
-                        on:click={() => save()}
                     >
                         <span class="txt">Save changes</span>
                     </button>

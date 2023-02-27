@@ -21,14 +21,18 @@
         clearTimeout(expandTimeoutId);
         expandTimeoutId = setTimeout(() => {
             if (accordionElem?.scrollIntoViewIfNeeded) {
-                accordionElem?.scrollIntoViewIfNeeded();
+                accordionElem.scrollIntoViewIfNeeded();
             } else if (accordionElem?.scrollIntoView) {
-                accordionElem?.scrollIntoView({
+                accordionElem.scrollIntoView({
                     behavior: "smooth",
                     block: "nearest",
                 });
             }
         }, 200);
+    }
+
+    export function isExpanded() {
+        return !!active;
     }
 
     export function expand() {

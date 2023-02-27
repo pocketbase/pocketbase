@@ -36,6 +36,91 @@ func TestRecordQuery(t *testing.T) {
 	}
 }
 
+func TestRecordQueryOneWithRecord(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.Dao().FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id := "84nmscqy84lsi1t"
+
+	q := app.Dao().RecordQuery(collection).
+		Where(dbx.HashExp{"id": id})
+
+	record := &models.Record{}
+	if err := q.One(record); err != nil {
+		t.Fatal(err)
+	}
+
+	if record.GetString("id") != id {
+		t.Fatalf("Expected record with id %q, got %q", id, record.GetString("id"))
+	}
+}
+
+func TestRecordQueryAllWithRecordsSlices(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.Dao().FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id1 := "84nmscqy84lsi1t"
+	id2 := "al1h9ijdeojtsjy"
+
+	{
+		records := []models.Record{}
+
+		q := app.Dao().RecordQuery(collection).
+			Where(dbx.HashExp{"id": []any{id1, id2}}).
+			OrderBy("created asc")
+
+		if err := q.All(&records); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(records) != 2 {
+			t.Fatalf("Expected %d records, got %d", 2, len(records))
+		}
+
+		if records[0].Id != id1 {
+			t.Fatalf("Expected record with id %q, got %q", id1, records[0].Id)
+		}
+
+		if records[1].Id != id2 {
+			t.Fatalf("Expected record with id %q, got %q", id2, records[1].Id)
+		}
+	}
+
+	{
+		records := []*models.Record{}
+
+		q := app.Dao().RecordQuery(collection).
+			Where(dbx.HashExp{"id": []any{id1, id2}}).
+			OrderBy("created asc")
+
+		if err := q.All(&records); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(records) != 2 {
+			t.Fatalf("Expected %d records, got %d", 2, len(records))
+		}
+
+		if records[0].Id != id1 {
+			t.Fatalf("Expected record with id %q, got %q", id1, records[0].Id)
+		}
+
+		if records[1].Id != id2 {
+			t.Fatalf("Expected record with id %q, got %q", id2, records[1].Id)
+		}
+	}
+}
+
 func TestFindRecordById(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -663,11 +748,11 @@ func TestDeleteRecord(t *testing.T) {
 	}
 	// ensure that the json rel fields were prefixed
 	joinedQueries := strings.Join(calledQueries, " ")
-	expectedRelManyJoin := "`demo1` LEFT JOIN json_each(CASE WHEN json_valid([[demo1.rel_many]]) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END)"
+	expectedRelManyJoin := "`demo1` INNER JOIN json_each(CASE WHEN json_valid([[demo1.rel_many]]) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END)"
 	if !strings.Contains(joinedQueries, expectedRelManyJoin) {
 		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelManyJoin, calledQueries)
 	}
-	expectedRelOneJoin := "`demo1` LEFT JOIN json_each(CASE WHEN json_valid([[demo1.rel_one]]) THEN [[demo1.rel_one]] ELSE json_array([[demo1.rel_one]]) END)"
+	expectedRelOneJoin := "`demo1` INNER JOIN json_each(CASE WHEN json_valid([[demo1.rel_one]]) THEN [[demo1.rel_one]] ELSE json_array([[demo1.rel_one]]) END)"
 	if !strings.Contains(joinedQueries, expectedRelOneJoin) {
 		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelOneJoin, calledQueries)
 	}
@@ -691,6 +776,12 @@ func TestDeleteRecordBatchProcessing(t *testing.T) {
 	_, err := app.Dao().FindRecordById(mainRecord.Collection().Id, mainRecord.Id)
 	if err == nil {
 		t.Fatal("The main record wasn't deleted")
+	}
+
+	// check if the c1 b rel field were updated
+	c1RecordB, err := app.Dao().FindRecordById("c1", "b")
+	if err != nil || c1RecordB.GetString("rel") != "" {
+		t.Fatalf("Expected c1RecordB.rel to be nil, got %v", c1RecordB.GetString("rel"))
 	}
 
 	// check if the c2 rel fields were updated
@@ -724,6 +815,16 @@ func createMockBatchProcessingData(dao *daos.Dao) error {
 		&schema.SchemaField{
 			Name: "text",
 			Type: schema.FieldTypeText,
+		},
+		// self reference
+		&schema.SchemaField{
+			Name: "rel",
+			Type: schema.FieldTypeRelation,
+			Options: &schema.RelationOptions{
+				MaxSelect:     types.Pointer(1),
+				CollectionId:  "c1",
+				CascadeDelete: false, // should unset all rel fields
+			},
 		},
 	)
 	if err := dao.SaveCollection(c1); err != nil {
@@ -771,15 +872,17 @@ func createMockBatchProcessingData(dao *daos.Dao) error {
 	// insert mock records
 	c1RecordA := models.NewRecord(c1)
 	c1RecordA.Id = "a"
+	c1RecordA.Set("rel", c1RecordA.Id) // self reference
 	if err := dao.Save(c1RecordA); err != nil {
 		return err
 	}
 	c1RecordB := models.NewRecord(c1)
 	c1RecordB.Id = "b"
+	c1RecordB.Set("rel", c1RecordA.Id) // rel to another record from the same collection
 	if err := dao.Save(c1RecordB); err != nil {
 		return err
 	}
-	for i := 0; i < 2400; i++ {
+	for i := 0; i < 4500; i++ {
 		c2Record := models.NewRecord(c2)
 		c2Record.Set("rel", []string{c1RecordA.Id, c1RecordB.Id})
 		if err := dao.Save(c2Record); err != nil {
@@ -791,6 +894,15 @@ func createMockBatchProcessingData(dao *daos.Dao) error {
 		if err := dao.Save(c3Record); err != nil {
 			return err
 		}
+	}
+
+	// set the same id as the relation for at least 1 record
+	// to check whether the correct condition will be added
+	c3Record := models.NewRecord(c3)
+	c3Record.Set("rel", c1RecordA.Id)
+	c3Record.Id = c1RecordA.Id
+	if err := dao.Save(c3Record); err != nil {
+		return err
 	}
 
 	return nil

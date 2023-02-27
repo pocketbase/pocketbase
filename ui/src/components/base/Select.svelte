@@ -12,7 +12,8 @@
     export let multiple = false;
     export let disabled = false;
     export let selected = multiple ? [] : undefined;
-    export let toggle = false; // toggle option on click
+    export let toggle = multiple; // toggle option on click
+    export let closable = true; // close the dropdown on option select/deselect
     export let labelComponent = undefined; // custom component to use for each selected option label
     export let labelComponentProps = {}; // props to pass to the custom option component
     export let optionComponent = undefined; // custom component to use for each dropdown option item
@@ -195,8 +196,9 @@
 </script>
 
 <div bind:this={container} class="select {classes}" class:multiple class:disabled>
+    <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
     <div bind:this={labelDiv} tabindex={disabled ? "-1" : "0"} class="selected-container" class:disabled>
-        {#each CommonHelper.toArray(selected) as item}
+        {#each CommonHelper.toArray(selected) as item, i}
             <div class="option">
                 {#if labelComponent}
                     <svelte:component this={labelComponent} {item} {...labelComponentProps} />
@@ -205,6 +207,7 @@
                 {/if}
 
                 {#if multiple || toggle}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <span
                         class="clear"
                         use:tooltip={"Clear"}
@@ -247,7 +250,7 @@
                             <div class="addon suffix p-r-5">
                                 <button
                                     type="button"
-                                    class="btn btn-sm btn-circle btn-secondary clear"
+                                    class="btn btn-sm btn-circle btn-transparent clear"
                                     on:click|preventDefault|stopPropagation={resetSearch}
                                 >
                                     <i class="ri-close-line" />
@@ -262,9 +265,11 @@
 
             <div class="options-list">
                 {#each filteredItems as item}
+                    <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
                     <div
                         tabindex="0"
-                        class="dropdown-item option closable"
+                        class="dropdown-item option"
+                        class:closable
                         class:selected={isSelected(item)}
                         on:click={(e) => handleOptionSelect(e, item)}
                         on:keydown={(e) => handleOptionKeypress(e, item)}

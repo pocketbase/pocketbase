@@ -14,12 +14,12 @@
     import BoolOptions from "@/components/collections/schema/BoolOptions.svelte";
     import EmailOptions from "@/components/collections/schema/EmailOptions.svelte";
     import UrlOptions from "@/components/collections/schema/UrlOptions.svelte";
+    import EditorOptions from "@/components/collections/schema/EditorOptions.svelte";
     import DateOptions from "@/components/collections/schema/DateOptions.svelte";
     import SelectOptions from "@/components/collections/schema/SelectOptions.svelte";
     import JsonOptions from "@/components/collections/schema/JsonOptions.svelte";
     import FileOptions from "@/components/collections/schema/FileOptions.svelte";
     import RelationOptions from "@/components/collections/schema/RelationOptions.svelte";
-    import UserOptions from "@/components/collections/schema/UserOptions.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -108,9 +108,20 @@
         return CommonHelper.slugify(name);
     }
 
+    function requiredLabel(field) {
+        switch (field?.type) {
+            case "bool":
+                return "Nonfalsey";
+            case "number":
+                return "Nonzero";
+            default:
+                return "Nonempty";
+        }
+    }
+
     onMount(() => {
-        // auto expand new fields
-        if (!field.id) {
+        if (field?.onMountExpand) {
+            field.onMountExpand = false; // auto expand only the first time
             expand();
         }
     });
@@ -150,7 +161,7 @@
                     <span class="label" class:label-warning={interactive && !field.toDelete}>New</span>
                 {/if}
                 {#if field.required}
-                    <span class="label label-success">Nonempty</span>
+                    <span class="label label-success">{requiredLabel(field)}</span>
                 {/if}
                 {#if field.unique}
                     <span class="label label-success">Unique</span>
@@ -171,7 +182,7 @@
         {#if field.toDelete}
             <button
                 type="button"
-                class="btn btn-sm btn-danger btn-secondary"
+                class="btn btn-sm btn-danger btn-transparent"
                 on:click|stopPropagation={() => {
                     field.toDelete = false;
                 }}
@@ -195,7 +206,7 @@
         <div class="grid">
             <div class="col-sm-6">
                 <Field
-                    class="form-field required {field.id ? 'disabled' : ''}"
+                    class="form-field required {field.id ? 'readonly' : ''}"
                     name="schema.{key}.type"
                     let:uniqueId
                 >
@@ -251,6 +262,8 @@
                     <EmailOptions {key} bind:options={field.options} />
                 {:else if field.type === "url"}
                     <UrlOptions {key} bind:options={field.options} />
+                {:else if field.type === "editor"}
+                    <EditorOptions {key} bind:options={field.options} />
                 {:else if field.type === "date"}
                     <DateOptions {key} bind:options={field.options} />
                 {:else if field.type === "select"}
@@ -261,8 +274,6 @@
                     <FileOptions {key} bind:options={field.options} />
                 {:else if field.type === "relation"}
                     <RelationOptions {key} bind:options={field.options} />
-                {:else if field.type === "user"}
-                    <UserOptions {key} bind:options={field.options} />
                 {/if}
             </div>
 
@@ -270,13 +281,13 @@
                 <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
                     <input type="checkbox" id={uniqueId} bind:checked={field.required} />
                     <label for={uniqueId}>
-                        <span class="txt">Nonempty</span>
+                        <span class="txt">{requiredLabel(field)}</span>
                         <i
                             class="ri-information-line link-hint"
                             use:tooltip={{
-                                text: `Requires the field value to be nonempty\n(aka. not ${CommonHelper.zeroDefaultStr(
+                                text: `Requires the field value to be ${requiredLabel(
                                     field
-                                )}).`,
+                                )}\n(aka. not ${CommonHelper.zeroDefaultStr(field)}).`,
                                 position: "right",
                             }}
                         />
@@ -297,7 +308,7 @@
                 <div class="col-sm-4 txt-right">
                     <div class="flex-fill" />
                     <div class="inline-flex flex-gap-sm flex-nowrap">
-                        <button type="button" class="btn btn-circle btn-sm btn-secondary">
+                        <button type="button" aria-label="More" class="btn btn-circle btn-sm btn-transparent">
                             <i class="ri-more-line" />
                             <Toggler
                                 class="dropdown dropdown-sm dropdown-upside dropdown-right dropdown-nowrap no-min-width"

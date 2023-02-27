@@ -32,6 +32,13 @@
     export function collapseSiblings() {
         accordion?.collapseSiblings();
     }
+
+    function clear() {
+        for (let k in config) {
+            config[k] = "";
+        }
+        config.enabled = false;
+    }
 </script>
 
 <Accordion bind:this={accordion} on:expand on:collapse on:toggle {...$$restProps}>
@@ -41,52 +48,67 @@
                 <i class={icon} />
             {/if}
             <span class="txt">{title}</span>
+            <code title="Provider key">
+                {key.substring(0, key.length - 4)}
+            </code>
         </div>
-
-        {#if config.enabled}
-            <span class="label label-success">Enabled</span>
-        {:else}
-            <span class="label label-hint">Disabled</span>
-        {/if}
 
         <div class="flex-fill" />
 
         {#if hasErrors}
             <i
                 class="ri-error-warning-fill txt-danger"
-                transition:scale={{ duration: 150, start: 0.7 }}
+                transition:scale|local={{ duration: 150, start: 0.7 }}
                 use:tooltip={{ text: "Has errors", position: "left" }}
             />
         {/if}
+
+        {#if config.enabled}
+            <span class="label label-success">Enabled</span>
+        {:else}
+            <span class="label label-hint">Disabled</span>
+        {/if}
     </svelte:fragment>
 
-    <Field class="form-field form-field-toggle m-b-0" name="{key}.enabled" let:uniqueId>
-        <input type="checkbox" id={uniqueId} bind:checked={config.enabled} />
-        <label for={uniqueId}>Enable</label>
-    </Field>
+    <div class="flex">
+        <Field class="form-field form-field-toggle m-b-0" name="{key}.enabled" let:uniqueId>
+            <input type="checkbox" id={uniqueId} bind:checked={config.enabled} />
+            <label for={uniqueId}>Enable</label>
+        </Field>
 
-    {#if config.enabled}
-        <div class="grid" transition:slide|local={{ duration: 200 }}>
-            <div class="col-12 spacing" />
-            <div class="col-lg-6">
-                <Field class="form-field required" name="{key}.clientId" let:uniqueId>
-                    <label for={uniqueId}>Client ID</label>
-                    <input type="text" id={uniqueId} bind:value={config.clientId} required />
-                </Field>
-            </div>
+        <button type="button" class="btn btn-sm btn-transparent btn-hint m-l-auto" on:click={clear}>
+            <span class="txt">Clear all fields</span>
+        </button>
+    </div>
 
-            <div class="col-lg-6">
-                <Field class="form-field required" name="{key}.clientSecret" let:uniqueId>
-                    <label for={uniqueId}>Client Secret</label>
-                    <RedactedPasswordInput bind:value={config.clientSecret} id={uniqueId} required />
-                </Field>
-            </div>
-
-            {#if optionsComponent}
-                <div class="col-lg-12">
-                    <svelte:component this={optionsComponent} {key} bind:config />
-                </div>
-            {/if}
+    <div class="grid">
+        <div class="col-12 spacing" />
+        <div class="col-lg-6">
+            <Field class="form-field {config.enabled ? 'required' : ''}" name="{key}.clientId" let:uniqueId>
+                <label for={uniqueId}>Client ID</label>
+                <input type="text" id={uniqueId} bind:value={config.clientId} required={config.enabled} />
+            </Field>
         </div>
-    {/if}
+
+        <div class="col-lg-6">
+            <Field
+                class="form-field {config.enabled ? 'required' : ''}"
+                name="{key}.clientSecret"
+                let:uniqueId
+            >
+                <label for={uniqueId}>Client Secret</label>
+                <RedactedPasswordInput
+                    bind:value={config.clientSecret}
+                    id={uniqueId}
+                    required={config.enabled}
+                />
+            </Field>
+        </div>
+
+        {#if optionsComponent}
+            <div class="col-lg-12">
+                <svelte:component this={optionsComponent} {key} bind:config />
+            </div>
+        {/if}
+    </div>
 </Accordion>

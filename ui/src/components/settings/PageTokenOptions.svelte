@@ -131,7 +131,7 @@
                     {#if hasChanges}
                         <button
                             type="button"
-                            class="btn btn-secondary btn-hint"
+                            class="btn btn-transparent btn-hint"
                             disabled={isSaving}
                             on:click={() => reset()}
                         >

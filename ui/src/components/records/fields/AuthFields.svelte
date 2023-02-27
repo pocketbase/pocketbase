@@ -56,7 +56,7 @@
             <div class="form-field-addon email-visibility-addon">
                 <button
                     type="button"
-                    class="btn btn-sm btn-secondary {record.emailVisibility ? 'btn-success' : 'btn-hint'}"
+                    class="btn btn-sm btn-transparent {record.emailVisibility ? 'btn-success' : 'btn-hint'}"
                     use:tooltip={{
                         text: "Make email public or private",
                         position: "top-right",
