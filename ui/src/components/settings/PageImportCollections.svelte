@@ -365,7 +365,7 @@
                         </div>
                         <div class="content">
                             <string>
-                                Some of the imported collections shares the same name and/or fields but are
+                                Some of the imported collections share the same name and/or fields but are
                                 imported with different IDs. You can replace them in the import if you want
                                 to.
                             </string>
