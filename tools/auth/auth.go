@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -21,6 +22,12 @@ type AuthUser struct {
 
 // Provider defines a common interface for an OAuth2 client.
 type Provider interface {
+	// Scopes returns the context associated with the provider (if any).
+	Context() context.Context
+
+	// SetContext assigns the specified context to the current provider.
+	SetContext(ctx context.Context)
+
 	// Scopes returns the provider access permissions that will be requested.
 	Scopes() []string
 
@@ -120,6 +127,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewOIDCProvider(), nil
 	case NameOIDC + "3":
 		return NewOIDCProvider(), nil
+	case NameApple:
+		return NewAppleProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}

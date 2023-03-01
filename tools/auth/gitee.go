@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"strconv"
@@ -22,6 +23,7 @@ type Gitee struct {
 // NewGiteeProvider creates new Gitee provider instance with some defaults.
 func NewGiteeProvider() *Gitee {
 	return &Gitee{&baseProvider{
+		ctx:        context.Background(),
 		scopes:     []string{"user_info", "emails"},
 		authUrl:    "https://gitee.com/oauth/authorize",
 		tokenUrl:   "https://gitee.com/oauth/token",

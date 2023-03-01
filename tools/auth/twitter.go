@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 
 	"golang.org/x/oauth2"
@@ -19,6 +20,7 @@ type Twitter struct {
 // NewTwitterProvider creates new Twitter provider instance with some defaults.
 func NewTwitterProvider() *Twitter {
 	return &Twitter{&baseProvider{
+		ctx: context.Background(),
 		scopes: []string{
 			"users.read",
 

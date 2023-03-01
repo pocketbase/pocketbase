@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -22,6 +23,7 @@ func NewDiscordProvider() *Discord {
 	// https://discord.com/developers/docs/topics/oauth2
 	// https://discord.com/developers/docs/resources/user#get-current-user
 	return &Discord{&baseProvider{
+		ctx:        context.Background(),
 		scopes:     []string{"identify", "email"},
 		authUrl:    "https://discord.com/api/oauth2/authorize",
 		tokenUrl:   "https://discord.com/api/oauth2/token",

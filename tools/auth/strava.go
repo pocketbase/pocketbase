@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 
@@ -20,6 +21,7 @@ type Strava struct {
 // NewStravaProvider creates new Strava provider instance with some defaults.
 func NewStravaProvider() *Strava {
 	return &Strava{&baseProvider{
+		ctx: context.Background(),
 		scopes: []string{
 			"profile:read_all",
 		},
