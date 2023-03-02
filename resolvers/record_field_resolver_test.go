@@ -23,6 +23,10 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 	}
 
 	requestData := &models.RequestData{
+		Headers: map[string]string{
+			"a": "123",
+			"b": "456",
+		},
 		Query: map[string]any{
 			"a": nil,
 			"b": 123,
@@ -438,6 +442,9 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 			"b":              456,
 			"c":              map[string]int{"sub": 1},
 		},
+		Headers: map[string]string{
+			"d": "789",
+		},
 		AuthRecord: authRecord,
 	}
 
@@ -456,6 +463,10 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		{"@request.query", true, ``},
 		{"@request.query.a", false, `123`},
 		{"@request.query.a.missing", false, ``},
+		{"@request.headers", true, ``},
+		{"@request.headers.missing", false, ``},
+		{"@request.headers.d", false, `456`},
+		{"@request.headers.d.sub", true, ``},
 		{"@request.data", true, ``},
 		{"@request.data.b", false, `456`},
 		{"@request.data.number", false, `10`},           // number field normalization

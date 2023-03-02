@@ -17,6 +17,7 @@ func TestRequestData(t *testing.T) {
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/?test=123", strings.NewReader(`{"test":456}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("X-Token-Test", "123")
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -36,6 +37,12 @@ func TestRequestData(t *testing.T) {
 
 	if result.Method != http.MethodPost {
 		t.Fatalf("Expected Method %v, got %v", http.MethodPost, result.Method)
+	}
+
+	rawHeaders, _ := json.Marshal(result.Headers)
+	expectedHeaders := `{"content_type":"application/json","x_token_test":"123"}`
+	if v := string(rawHeaders); v != expectedHeaders {
+		t.Fatalf("Expected Query %v, got %v", expectedHeaders, v)
 	}
 
 	rawQuery, _ := json.Marshal(result.Query)

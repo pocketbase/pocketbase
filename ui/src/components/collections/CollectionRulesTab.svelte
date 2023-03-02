@@ -45,7 +45,7 @@
                         The request fields could be accessed with the special <em>@request</em> filter:
                     </p>
                     <div class="inline-flex flex-gap-5">
-                        <code>@request.method</code>
+                        <code>@request.headers.*</code>
                         <code>@request.query.*</code>
                         <code>@request.data.*</code>
                         <code>@request.auth.*</code>

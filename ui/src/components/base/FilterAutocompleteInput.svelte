@@ -256,6 +256,7 @@
         result.push("@request.method");
         result.push("@request.query.");
         result.push("@request.data.");
+        result.push("@request.headers.");
         result.push("@request.auth.id");
         result.push("@request.auth.collectionId");
         result.push("@request.auth.collectionName");
