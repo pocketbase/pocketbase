@@ -1,3 +1,8 @@
+## (WIP) v0.14.0
+
+- Normalized the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
+
+
 ## v0.13.0
 
 - Added new "View" collection type allowing you to create a read-only collection from a custom SQL `SELECT` statement. It supports:

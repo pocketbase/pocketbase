@@ -321,7 +321,7 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 
 			model := &models.Request{
 				Url:       httpRequest.URL.RequestURI(),
-				Method:    strings.ToLower(httpRequest.Method),
+				Method:    strings.ToUpper(httpRequest.Method),
 				Status:    status,
 				Auth:      requestAuth,
 				UserIp:    realUserIp(httpRequest, ip),
