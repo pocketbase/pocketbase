@@ -21,7 +21,9 @@
   input, select {
     box-shadow: none;
     min-height: 0;
-    height: var(--inputHeight);
+    height: var(--smBtnHeight);
+    padding-top: 3px;
+    padding-bottom: 3px;
     background: none;
     border-radius: var(--baseRadius);
     border: 1px solid var(--baseAlt1Color);
@@ -143,13 +145,16 @@
 }
 .flatpickr-months {
   display: flex;
-  margin: 0 0 4px;
+  align-items: center;
+  padding: 5px 0;
 }
 .flatpickr-months .flatpickr-month {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   color: var(--txtPrimaryColor);
   fill: var(--txtPrimaryColor);
-  height: 34px;
   line-height: 1;
   text-align: center;
   position: relative;
@@ -164,12 +169,12 @@
 }
 .flatpickr-months .flatpickr-prev-month,
 .flatpickr-months .flatpickr-next-month {
+  display: flex;
+  align-items: center;
   text-decoration: none;
   cursor: pointer;
-  position: absolute;
-  top: 0;
   height: 34px;
-  padding: 10px;
+  padding: 5px 12px;
   z-index: 3;
   color: var(--txtPrimaryColor);
   fill: var(--txtPrimaryColor);
@@ -210,6 +215,7 @@
 .numInputWrapper {
   position: relative;
   height: auto;
+  border-radius: var(--baseRadius);
 }
 .numInputWrapper input,
 .numInputWrapper span {
@@ -276,7 +282,7 @@
   fill: rgba(0,0,0,0.5);
 }
 .numInputWrapper:hover {
-  background: var(--baseAlt2Color);
+  background: var(--baseAlt1Color);
 }
 .numInputWrapper:hover span {
   opacity: 1;
@@ -284,12 +290,11 @@
 .flatpickr-current-month {
   line-height: inherit;
   color: inherit;
-  position: absolute;
-  width: 75%;
-  left: 12.5%;
+  width: 85%;
   padding: 1px 0;
   line-height: 1;
   display: flex;
+  gap: 10px;
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -303,14 +308,13 @@
   padding: 0;
 }
 .flatpickr-current-month span.cur-month:hover {
-  background: var(--baseAlt2Color);
+  background: var(--baseAlt1Color);
 }
 .flatpickr-current-month .numInputWrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 63px;
-  margin: 0 5px;
+  width: 62px;
 }
 .flatpickr-current-month .numInputWrapper span.arrowUp:after {
   border-bottom-color: var(--txtPrimaryColor);
@@ -362,7 +366,7 @@
   outline: none;
 }
 .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
-  background: var(--baseAlt2Color);
+  background: var(--baseAlt1Color);
 }
 .flatpickr-current-month .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month {
   background-color: transparent;
