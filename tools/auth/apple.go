@@ -204,7 +204,7 @@ func (p *Apple) fetchJWK(kid string) (*jwk, error) {
 		)
 	}
 
-	jwks := &struct {
+	jwks := struct {
 		Keys []*jwk
 	}{}
 	if err := json.Unmarshal(rawBody, &jwks); err != nil {
