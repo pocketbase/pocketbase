@@ -1,9 +1,6 @@
 package forms
 
 import (
-	"crypto/ecdsa"
-	"crypto/x509"
-	"encoding/pem"
 	"regexp"
 	"strings"
 	"time"
@@ -68,7 +65,7 @@ func (form *AppleClientSecretCreate) Submit() (string, error) {
 		return "", err
 	}
 
-	signKey, err := parsePKCS8PrivateKeyFromPEM([]byte(strings.TrimSpace(form.PrivateKey)))
+	signKey, err := jwt.ParseECPrivateKeyFromPEM([]byte(strings.TrimSpace(form.PrivateKey)))
 	if err != nil {
 		return "", err
 	}
@@ -87,26 +84,4 @@ func (form *AppleClientSecretCreate) Submit() (string, error) {
 	token.Header["kid"] = form.KeyId
 
 	return token.SignedString(signKey)
-}
-
-// parsePKCS8PrivateKeyFromPEM parses PEM encoded Elliptic Curve Private Key Structure.
-//
-// https://github.com/dgrijalva/jwt-go/issues/179
-func parsePKCS8PrivateKeyFromPEM(key []byte) (*ecdsa.PrivateKey, error) {
-	block, _ := pem.Decode(key)
-	if block == nil {
-		return nil, jwt.ErrKeyMustBePEMEncoded
-	}
-
-	parsedKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return nil, err
-	}
-
-	pkey, ok := parsedKey.(*ecdsa.PrivateKey)
-	if !ok {
-		return nil, jwt.ErrNotECPrivateKey
-	}
-
-	return pkey, nil
 }
