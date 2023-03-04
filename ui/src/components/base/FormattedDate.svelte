@@ -19,6 +19,7 @@
     .datetime {
         width: 100%;
         display: block;
+        overflow: hidden;
         line-height: var(--smLineHeight);
     }
     .time {

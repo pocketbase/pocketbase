@@ -466,6 +466,7 @@ a,
     color: var(--txtPrimaryColor);
     white-space: nowrap;
     border-radius: 30px;
+    overflow: hidden;
 
     .btn:last-child {
         margin-right: calc(-0.5 * var(--labelHPadding));

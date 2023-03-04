@@ -107,7 +107,7 @@ table {
     }
 
     .col-header-content {
-        display: inline-flex;
+        display: flex;
         align-items: center;
         flex-wrap: nowrap;
         gap: 5px;
