@@ -1,0 +1,26 @@
+.resize-handler {
+    width: 10px;
+    height: 100%;
+    position: absolute;
+    right: -5px;
+    top: 0;
+    z-index: 100;
+    cursor: ew-resize;
+}
+.resize-indicator {
+    display: none;
+    background: #999;
+    width: 2px;
+    left: 4px;
+    height: 80%;
+    position: absolute;
+    top: 10%;
+    border-radius: 1px;
+}
+.resize-handler:hover .resize-indicator,
+.resize-handler-active .resize-indicator {
+    display: block;
+}
+.resize-handler-active .resize-indicator {
+    background: #000;
+}

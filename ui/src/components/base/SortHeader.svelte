@@ -27,6 +27,7 @@
     class:sort-active={sort === "-" + name || sort === "+" + name}
     class:sort-desc={sort === "-" + name}
     class:sort-asc={sort === "+" + name}
+    column-key={name}
     on:click={() => toggleSort()}
     on:keydown={(e) => {
         if (e.code === "Enter" || e.code === "Space") {

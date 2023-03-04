@@ -4,6 +4,7 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
+    import resizecolumns from "@/actions/resizecolumns";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
     import SortHeader from "@/components/base/SortHeader.svelte";
@@ -273,7 +274,11 @@
         {/if}
     </svelte:fragment>
 
-    <table class="table" class:table-loading={isLoading}>
+    <table
+        class="table"
+        class:table-loading={isLoading}
+        use:resizecolumns={{ id: collection.id, fields: visibleFields }}
+    >
         <thead>
             <tr>
                 {#if !collection.isView}
