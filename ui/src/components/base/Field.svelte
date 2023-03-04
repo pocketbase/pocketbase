@@ -1,5 +1,6 @@
 <script>
     import { onMount } from "svelte";
+    import { slide } from "svelte/transition";
     import { errors, removeError } from "@/stores/errors";
     import CommonHelper from "@/utils/CommonHelper";
 
@@ -38,7 +39,7 @@
     <slot {uniqueId} />
 
     {#each fieldErrors as error}
-        <div class="help-block help-block-error">
+        <div class="help-block help-block-error" transition:slide|local={{ duration: 150 }}>
             {#if typeof error === "object"}
                 <pre>{error?.message || error?.code || defaultError}</pre>
             {:else}
