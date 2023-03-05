@@ -282,7 +282,7 @@
         <thead>
             <tr>
                 {#if !collection.isView}
-                    <th class="bulk-select-col min-width">
+                    <th class="bulk-select-col min-width" column-key="__bulk-select" column-noresize>
                         {#if isLoading}
                             <span class="loader loader-sm" />
                         {:else}
@@ -359,7 +359,7 @@
                     </SortHeader>
                 {/if}
 
-                <th class="col-type-action min-width">
+                <th class="col-type-action min-width" column-key="__action" column-noresize>
                     {#if collumnsToHide.length}
                         <button
                             bind:this={columnsTrigger}

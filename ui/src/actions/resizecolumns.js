@@ -1,35 +1,67 @@
-function getWidth(el) {
-    let { width, boxSizing } = window.getComputedStyle(el, null);
+function getWidthInfo(el) {
+    let { width, boxSizing, paddingLeft, paddingRight, borderLeftWidth, borderRightWidth } =
+        window.getComputedStyle(el, null);
 
-    switch (boxSizing) {
-        case "content-box":
-            return parseFloat(width);
-        case "border-box":
-            return el.offsetWidth;
-    }
+    width = parseFloat(width);
+
+    let nonContentWidth =
+        parseFloat(paddingLeft) +
+        parseFloat(paddingRight) +
+        parseFloat(borderLeftWidth) +
+        parseFloat(borderRightWidth);
+
+    let contentWidth = boxSizing === "content-box" ? width : width - nonContentWidth;
+
+    return { boxSizing, contentWidth, nonContentWidth, width };
 }
 
 export default function resizecolumns(table, { id }) {
     let tables = {};
+    let initialTableWidth;
+    let initialLastThWidth;
+    let lastTh;
+    let lastCol;
     let dragging = false;
     let preDragWidth;
+    let preDragMinWidth;
     let preDragX;
+
+    function keepMinWidth(id) {
+        let widthWithoutLastCol = 0;
+        for (let col of Object.values(tables[id])) {
+            if (col !== lastCol && col.active) {
+                widthWithoutLastCol +=
+                    col.boxSizing === "border-box" ? col.width : col.width + col.nonContentWidth;
+            }
+        }
+
+        if (widthWithoutLastCol < initialTableWidth - initialLastThWidth) {
+            lastCol.width = initialTableWidth - widthWithoutLastCol;
+            if (lastCol.boxSizing === "content-box") lastCol.width -= lastCol.nonContentWidth;
+            lastTh.style.width = Math.max(initialLastThWidth, lastCol.width) + "px";
+        }
+    }
 
     function setup(id) {
         if (!tables[id]) tables[id] = {};
 
+        initialTableWidth = getWidthInfo(table).width;
+        lastTh = table.querySelector("th:last-child");
+        lastCol = tables[id][lastTh.getAttribute("column-key")] ?? getWidthInfo(lastTh);
+        initialLastThWidth = lastCol.width;
+
         for (let th of table.getElementsByTagName("th")) {
             let key = th.getAttribute("column-key");
 
-            let width = tables[id][key]?.width ?? getWidth(th);
+            tables[id][key] ??= getWidthInfo(th);
 
-            th.style.width = width + "px";
+            th.style.width = tables[id][key].width + "px";
             th.style.minWidth = "auto";
             th.style.maxWidth = "none";
 
-            if (!key) continue;
+            tables[id][key].active = true;
 
-            tables[id][key] = { width };
+            if (th.hasAttribute("column-noresize")) continue;
 
             function click(e) {
                 e.stopPropagation();
@@ -38,16 +70,20 @@ export default function resizecolumns(table, { id }) {
             function down(e) {
                 e.currentTarget.setPointerCapture(e.pointerId);
                 dragging = true;
-                preDragWidth = getWidth(th);
+                preDragWidth = tables[id][key].width;
+                preDragMinWidth =
+                    tables[id][key].boxSizing === "content-box" ? 0 : tables[id][key].nonContentWidth;
                 preDragX = e.pageX;
                 resizeHandler.classList.add("resize-handler-active");
             }
 
             function move(e) {
                 if (!dragging) return;
-                let width = preDragWidth + e.pageX - preDragX;
+                let width = Math.max(preDragMinWidth, preDragWidth + e.pageX - preDragX);
                 tables[id][key].width = width;
                 th.style.width = width + "px";
+
+                keepMinWidth(id);
             }
 
             function up(e) {
@@ -74,12 +110,19 @@ export default function resizecolumns(table, { id }) {
         table.style.tableLayout = "fixed";
         table.style.minWidth = "1px";
         table.style.width = "1px";
+
+        keepMinWidth(id);
     }
 
     function teardown() {
         for (let th of table.getElementsByTagName("th")) {
             th.style.removeProperty("width");
             th.querySelector(".resize-handler")?.remove();
+        }
+        for (let table of Object.values(tables)) {
+            for (let col of Object.values(table)) {
+                col.active = false;
+            }
         }
         table.style.removeProperty("table-layout");
         table.style.removeProperty("min-width");
