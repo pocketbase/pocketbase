@@ -77,17 +77,22 @@
 
 <RuleField label="List/Search rule" formKey="listRule" {collection} bind:rule={collection.listRule} />
 
+<hr />
 <RuleField label="View rule" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
 {#if !collection?.isView}
+    <hr />
     <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule} />
 
+    <hr />
     <RuleField label="Update rule" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
 
+    <hr />
     <RuleField label="Delete rule" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
 {/if}
 
 {#if collection?.isAuth}
+    <hr />
     <RuleField
         label="Manage rule"
         formKey="options.manageRule"

@@ -117,4 +117,7 @@
         border-bottom-right-radius: 0;
         background: rgba(53, 71, 104, 0.09);
     }
+    :global(.rule-field .code-editor .cm-placeholder) {
+        font-family: var(--baseFontFamily);
+    }
 </style>
