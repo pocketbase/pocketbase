@@ -179,6 +179,14 @@ func TestFileDownload(t *testing.T) {
 	}
 
 	for _, scenario := range scenarios {
+		// clone for the HEAD test (the same as the original scenario but without body)
+		head := scenario
+		head.Method = http.MethodHead
+		head.Name = ("(HEAD) " + scenario.Name)
+		head.ExpectedContent = nil
+		head.Test(t)
+
+		// regular request test
 		scenario.Test(t)
 	}
 }

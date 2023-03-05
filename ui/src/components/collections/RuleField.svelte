@@ -53,7 +53,7 @@
     </div>
 {:else}
     <Field
-        class="form-field rule-field m-0 {required ? 'requied' : ''} {isAdminOnly ? 'disabled' : ''}"
+        class="form-field rule-field {required ? 'requied' : ''} {isAdminOnly ? 'disabled' : ''}"
         name={formKey}
         let:uniqueId
     >
@@ -93,20 +93,11 @@
             bind:value={rule}
             baseCollection={collection}
             disabled={isAdminOnly}
+            placeholder={!isAdminOnly ? "Leave empty to grant everyone access..." : ""}
         />
 
         <div class="help-block">
-            <slot {isAdminOnly}>
-                <p>
-                    {#if isAdminOnly}
-                        Only admins will be able to perform this action (
-                        <button type="button" class="link-primary" on:click={unlock}>unlock to change</button>
-                        ).
-                    {:else}
-                        Leave empty to grant everyone access.
-                    {/if}
-                </p>
-            </slot>
+            <slot {isAdminOnly} />
         </div>
     </Field>
 {/if}
@@ -125,5 +116,8 @@
         border-top-left-radius: 0;
         border-bottom-right-radius: 0;
         background: rgba(53, 71, 104, 0.09);
+    }
+    :global(.rule-field .code-editor .cm-placeholder) {
+        font-family: var(--baseFontFamily);
     }
 </style>

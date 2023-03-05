@@ -84,6 +84,7 @@ func NewRecordFieldResolver(
 			`^\@request\.auth\.[\w\.\:]*\w+$`,
 			`^\@request\.data\.[\w\.\:]*\w+$`,
 			`^\@request\.query\.[\w\.\:]*\w+$`,
+			`^\@request\.headers\.\w+$`,
 			`^\@collection\.\w+\.[\w\.\:]*\w+$`,
 		},
 	}
@@ -92,6 +93,7 @@ func NewRecordFieldResolver(
 	if r.requestData != nil {
 		r.staticRequestData["method"] = r.requestData.Method
 		r.staticRequestData["query"] = r.requestData.Query
+		r.staticRequestData["headers"] = r.requestData.Headers
 		r.staticRequestData["data"] = r.requestData.Data
 		r.staticRequestData["auth"] = nil
 		if r.requestData.AuthRecord != nil {
@@ -132,6 +134,7 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 //	project.screen.status
 //	@request.status
 //	@request.query.filter
+//	@request.headers.x_token
 //	@request.auth.someRelation.name
 //	@request.data.someRelation.name
 //	@request.data.someField

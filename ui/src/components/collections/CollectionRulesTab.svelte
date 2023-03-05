@@ -45,7 +45,7 @@
                         The request fields could be accessed with the special <em>@request</em> filter:
                     </p>
                     <div class="inline-flex flex-gap-5">
-                        <code>@request.method</code>
+                        <code>@request.headers.*</code>
                         <code>@request.query.*</code>
                         <code>@request.data.*</code>
                         <code>@request.auth.*</code>
@@ -77,22 +77,22 @@
 
 <RuleField label="List/Search rule" formKey="listRule" {collection} bind:rule={collection.listRule} />
 
-<hr class="m-t-sm m-b-sm" />
+<hr />
 <RuleField label="View rule" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
 {#if !collection?.isView}
-    <hr class="m-t-sm m-b-sm" />
+    <hr />
     <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule} />
 
-    <hr class="m-t-sm m-b-sm" />
+    <hr />
     <RuleField label="Update rule" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
 
-    <hr class="m-t-sm m-b-sm" />
+    <hr />
     <RuleField label="Delete rule" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
 {/if}
 
 {#if collection?.isAuth}
-    <hr class="m-t-sm m-b-sm" />
+    <hr />
     <RuleField
         label="Manage rule"
         formKey="options.manageRule"

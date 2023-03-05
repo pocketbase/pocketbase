@@ -30,9 +30,18 @@ func RequestData(c echo.Context) *models.RequestData {
 	}
 
 	result := &models.RequestData{
-		Method: c.Request().Method,
-		Query:  map[string]any{},
-		Data:   map[string]any{},
+		Method:  c.Request().Method,
+		Query:   map[string]any{},
+		Data:    map[string]any{},
+		Headers: map[string]string{},
+	}
+
+	// extract the first value of all headers and normalizes the keys
+	// ("X-Token" is converted to "x_token")
+	for k, v := range c.Request().Header {
+		if len(v) > 0 {
+			result.Headers[strings.ToLower(strings.ReplaceAll(k, "-", "_"))] = v[0]
+		}
 	}
 
 	result.AuthRecord, _ = c.Get(ContextAuthRecordKey).(*models.Record)
