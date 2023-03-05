@@ -18,6 +18,7 @@ func bindFileApi(app core.App, rg *echo.Group) {
 	api := fileApi{app: app}
 
 	subGroup := rg.Group("/files", ActivityLogger(app))
+	subGroup.HEAD("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 	subGroup.GET("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 }
 

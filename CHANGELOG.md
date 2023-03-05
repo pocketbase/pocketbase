@@ -3,6 +3,11 @@
 - Normalized the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
 
 
+## v0.13.1
+
+- Added `HEAD` request method support for the `/api/files/:collection/:recordId/:filename` route ([#1976](https://github.com/pocketbase/pocketbase/discussions/1976)).
+
+
 ## v0.13.0
 
 - Added new "View" collection type allowing you to create a read-only collection from a custom SQL `SELECT` statement. It supports:
