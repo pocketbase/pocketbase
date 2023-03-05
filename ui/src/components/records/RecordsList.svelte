@@ -32,6 +32,7 @@
     let columnsTrigger;
     let hiddenColumns = [];
     let collumnsToHide = [];
+    let scroller;
 
     $: if (collection?.id) {
         loadStoredHiddenColumns();
@@ -244,7 +245,7 @@
     }
 </script>
 
-<HorizontalScroller class="table-wrapper">
+<HorizontalScroller class="table-wrapper" bind:this={scroller}>
     <svelte:fragment slot="before">
         {#if columnsTrigger}
             <Toggler
@@ -277,7 +278,7 @@
     <table
         class="table"
         class:table-loading={isLoading}
-        use:resizecolumns={{ id: collection.id, fields: visibleFields }}
+        use:resizecolumns={{ id: collection.id, fields: visibleFields, onUpdate: () => scroller?.refresh() }}
     >
         <thead>
             <tr>

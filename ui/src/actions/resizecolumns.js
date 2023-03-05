@@ -15,7 +15,7 @@ function getWidthInfo(el) {
     return { boxSizing, contentWidth, nonContentWidth, width };
 }
 
-export default function resizecolumns(table, { id }) {
+export default function resizecolumns(table, { id, onUpdate }) {
     let tables = {};
     let initialTableWidth;
     let initialLastThWidth;
@@ -91,6 +91,8 @@ export default function resizecolumns(table, { id }) {
                 dragging = false;
                 e.currentTarget.releasePointerCapture(e.pointerId);
                 resizeHandler.classList.remove("resize-handler-active");
+
+                if (onUpdate) onUpdate();
             }
 
             let resizeHandler = document.createElement("div");
