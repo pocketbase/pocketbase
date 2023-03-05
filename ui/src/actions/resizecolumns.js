@@ -47,7 +47,8 @@ export default function resizecolumns(table, { id, onUpdate }) {
 
         initialTableWidth = getWidthInfo(table).width;
         lastTh = table.querySelector("th:last-child");
-        lastCol = tables[id][lastTh.getAttribute("column-key")] ?? getWidthInfo(lastTh);
+        lastCol = getWidthInfo(lastTh);
+        tables[id][lastTh.getAttribute("column-key")] = lastCol;
         initialLastThWidth = lastCol.width;
 
         for (let th of table.getElementsByTagName("th")) {
