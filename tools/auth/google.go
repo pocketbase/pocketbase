@@ -42,10 +42,11 @@ func (p *Google) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	extracted := struct {
-		Id      string
-		Name    string
-		Email   string
-		Picture string
+		Id            string `json:"id"`
+		Name          string `json:"name"`
+		Email         string `json:"email"`
+		Picture       string `json:"picture"`
+		VerifiedEmail bool   `json:"verified_email"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
@@ -54,11 +55,14 @@ func (p *Google) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:           extracted.Id,
 		Name:         extracted.Name,
-		Email:        extracted.Email,
 		AvatarUrl:    extracted.Picture,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
+	}
+
+	if extracted.VerifiedEmail {
+		user.Email = extracted.Email
 	}
 
 	return user, nil
