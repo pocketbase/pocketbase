@@ -1983,6 +1983,28 @@ func TestSelectOptionsValidate(t *testing.T) {
 	checkFieldOptionsScenarios(t, scenarios)
 }
 
+func TestSelectOptionsIsMultiple(t *testing.T) {
+	scenarios := []struct {
+		maxSelect int
+		expect    bool
+	}{
+		{-1, false},
+		{0, false},
+		{1, false},
+		{2, true},
+	}
+
+	for i, s := range scenarios {
+		opt := schema.SelectOptions{
+			MaxSelect: s.maxSelect,
+		}
+
+		if v := opt.IsMultiple(); v != s.expect {
+			t.Errorf("[%d] Expected %v, got %v", i, s.expect, v)
+		}
+	}
+}
+
 func TestJsonOptionsValidate(t *testing.T) {
 	scenarios := []fieldOptionsScenario{
 		{
@@ -2053,6 +2075,28 @@ func TestFileOptionsValidate(t *testing.T) {
 	checkFieldOptionsScenarios(t, scenarios)
 }
 
+func TestFileOptionsIsMultiple(t *testing.T) {
+	scenarios := []struct {
+		maxSelect int
+		expect    bool
+	}{
+		{-1, false},
+		{0, false},
+		{1, false},
+		{2, true},
+	}
+
+	for i, s := range scenarios {
+		opt := schema.FileOptions{
+			MaxSelect: s.maxSelect,
+		}
+
+		if v := opt.IsMultiple(); v != s.expect {
+			t.Errorf("[%d] Expected %v, got %v", i, s.expect, v)
+		}
+	}
+}
+
 func TestRelationOptionsValidate(t *testing.T) {
 	scenarios := []fieldOptionsScenario{
 		{
@@ -2087,4 +2131,27 @@ func TestRelationOptionsValidate(t *testing.T) {
 	}
 
 	checkFieldOptionsScenarios(t, scenarios)
+}
+
+func TestRelationOptionsIsMultiple(t *testing.T) {
+	scenarios := []struct {
+		maxSelect *int
+		expect    bool
+	}{
+		{nil, true},
+		{types.Pointer(-1), false},
+		{types.Pointer(0), false},
+		{types.Pointer(1), false},
+		{types.Pointer(2), true},
+	}
+
+	for i, s := range scenarios {
+		opt := schema.RelationOptions{
+			MaxSelect: s.maxSelect,
+		}
+
+		if v := opt.IsMultiple(); v != s.expect {
+			t.Errorf("[%d] Expected %v, got %v", i, s.expect, v)
+		}
+	}
 }

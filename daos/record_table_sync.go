@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -149,7 +150,101 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 			}
 		}
 
+		if err := txDao.normalizeSingleVsMultipleFieldChanges(newCollection, oldCollection); err != nil {
+			return err
+		}
+
 		return txDao.syncCollectionReferences(newCollection, renamedFieldNames, deletedFieldNames)
+	})
+}
+
+func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollection *models.Collection) error {
+	if newCollection.IsView() || oldCollection == nil {
+		return nil // view or not an update
+	}
+
+	return dao.RunInTransaction(func(txDao *Dao) error {
+		for _, newField := range newCollection.Schema.Fields() {
+			oldField := oldCollection.Schema.GetFieldById(newField.Id)
+			if oldField == nil {
+				continue
+			}
+
+			var isNewMultiple bool
+			if opt, ok := newField.Options.(schema.MultiValuer); ok {
+				isNewMultiple = opt.IsMultiple()
+			}
+
+			var isOldMultiple bool
+			if opt, ok := oldField.Options.(schema.MultiValuer); ok {
+				isOldMultiple = opt.IsMultiple()
+			}
+
+			if isOldMultiple == isNewMultiple {
+				continue // no change
+			}
+
+			var updateQuery *dbx.Query
+
+			if !isOldMultiple && isNewMultiple {
+				// single -> multiple (convert to array)
+				updateQuery = txDao.DB().NewQuery(fmt.Sprintf(
+					`UPDATE {{%s}} set [[%s]] = (
+							CASE
+								WHEN COALESCE([[%s]], '') = ''
+								THEN '[]'
+								ELSE (
+									CASE
+										WHEN json_valid([[%s]]) AND json_type([[%s]]) == 'array'
+										THEN [[%s]]
+										ELSE json_array([[%s]])
+									END
+								)
+							END
+						)`,
+					newCollection.Name,
+					newField.Name,
+					newField.Name,
+					newField.Name,
+					newField.Name,
+					newField.Name,
+					newField.Name,
+				))
+			} else {
+				// multiple -> single (keep only the last element)
+				//
+				// note: for file fields the actual files are not deleted
+				// allowing additional custom handling via migration.
+				updateQuery = txDao.DB().NewQuery(fmt.Sprintf(
+					`UPDATE {{%s}} set [[%s]] = (
+						CASE
+							WHEN COALESCE([[%s]], '[]') = '[]'
+							THEN ''
+							ELSE (
+								CASE
+									WHEN json_valid([[%s]]) AND json_type([[%s]]) == 'array'
+									THEN COALESCE(json_extract([[%s]], '$[#-1]'), '')
+									ELSE [[%s]]
+								END
+							)
+						END
+					)`,
+					newCollection.Name,
+					newField.Name,
+					newField.Name,
+					newField.Name,
+					newField.Name,
+					newField.Name,
+					newField.Name,
+				))
+			}
+
+			if _, err := updateQuery.Execute(); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 }
 
