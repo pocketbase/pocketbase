@@ -1,5 +1,7 @@
 ## (WIP) v0.14.0
 
+- Added _experimental_ Apple OAuth2 integration.
+
 - Normalized record values on `maxSelect` field option change (`select`, `file`, `relation`).
   When changing **from single to multiple** all already inserted single values are converted to an array.
   When changing **from multiple to single** only the last item of the already inserted array items is kept.

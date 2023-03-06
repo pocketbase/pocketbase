@@ -35,6 +35,7 @@ type Apple struct {
 func NewAppleProvider() *Apple {
 	return &Apple{
 		baseProvider: &baseProvider{
+			scopes:   nil, // custom scopes are currently not supported since they require a POST redirect
 			ctx:      context.Background(),
 			authUrl:  "https://appleid.apple.com/auth/authorize",
 			tokenUrl: "https://appleid.apple.com/auth/token",
