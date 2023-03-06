@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 
 	"golang.org/x/oauth2"
@@ -20,6 +21,7 @@ type Spotify struct {
 // NewSpotifyProvider creates a new Spotify provider instance with some defaults.
 func NewSpotifyProvider() *Spotify {
 	return &Spotify{&baseProvider{
+		ctx: context.Background(),
 		scopes: []string{
 			"user-read-private",
 			// currently Spotify doesn't return information whether the email is verified or not

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 
 	"golang.org/x/oauth2"
@@ -19,6 +20,7 @@ type OIDC struct {
 // NewOIDCProvider creates new OpenID Connect (OIDC) provider instance with some defaults.
 func NewOIDCProvider() *OIDC {
 	return &OIDC{&baseProvider{
+		ctx: context.Background(),
 		scopes: []string{
 			"openid", // minimal requirement to return the id
 			"email",

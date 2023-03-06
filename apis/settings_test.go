@@ -1,6 +1,12 @@
 package apis_test
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"encoding/pem"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -65,6 +71,7 @@ func TestSettingsList(t *testing.T) {
 				`"oidcAuth":{`,
 				`"oidc2Auth":{`,
 				`"oidc3Auth":{`,
+				`"appleAuth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 			},
@@ -139,6 +146,7 @@ func TestSettingsSet(t *testing.T) {
 				`"oidcAuth":{`,
 				`"oidc2Auth":{`,
 				`"oidc3Auth":{`,
+				`"appleAuth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 				`"appName":"acme_test"`,
@@ -202,6 +210,7 @@ func TestSettingsSet(t *testing.T) {
 				`"oidcAuth":{`,
 				`"oidc2Auth":{`,
 				`"oidc3Auth":{`,
+				`"appleAuth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 				`"appName":"update_test"`,
@@ -411,6 +420,119 @@ func TestSettingsTestEmail(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnMailerBeforeRecordChangeEmailSend": 1,
 				"OnMailerAfterRecordChangeEmailSend":  1,
+			},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestGenerateAppleClientSecret(t *testing.T) {
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	encodedKey, err := x509.MarshalPKCS8PrivateKey(key)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	privatePem := pem.EncodeToMemory(
+		&pem.Block{
+			Type:  "PRIVATE KEY",
+			Bytes: encodedKey,
+		},
+	)
+
+	scenarios := []tests.ApiScenario{
+		{
+			Name:            "unauthorized",
+			Method:          http.MethodPost,
+			Url:             "/api/settings/apple/generate-client-secret",
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as auth record",
+			Method: http.MethodPost,
+			Url:    "/api/settings/apple/generate-client-secret",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as admin (invalid body)",
+			Method: http.MethodPost,
+			Url:    "/api/settings/apple/generate-client-secret",
+			Body:   strings.NewReader(`{`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as admin (empty json)",
+			Method: http.MethodPost,
+			Url:    "/api/settings/apple/generate-client-secret",
+			Body:   strings.NewReader(`{}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"clientId":{"code":"validation_required"`,
+				`"teamId":{"code":"validation_required"`,
+				`"keyId":{"code":"validation_required"`,
+				`"privateKey":{"code":"validation_required"`,
+				`"duration":{"code":"validation_required"`,
+			},
+		},
+		{
+			Name:   "authorized as admin (invalid data)",
+			Method: http.MethodPost,
+			Url:    "/api/settings/apple/generate-client-secret",
+			Body: strings.NewReader(`{
+				"clientId": "",
+				"teamId": "123456789",
+				"keyId": "123456789",
+				"privateKey": "invalid",
+				"duration": -1
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"clientId":{"code":"validation_required"`,
+				`"teamId":{"code":"validation_length_invalid"`,
+				`"keyId":{"code":"validation_length_invalid"`,
+				`"privateKey":{"code":"validation_match_invalid"`,
+				`"duration":{"code":"validation_min_greater_equal_than_required"`,
+			},
+		},
+		{
+			Name:   "authorized as admin",
+			Method: http.MethodPost,
+			Url:    "/api/settings/apple/generate-client-secret",
+			Body: strings.NewReader(fmt.Sprintf(`{
+				"clientId": "123",
+				"teamId": "1234567890",
+				"keyId": "1234567891",
+				"privateKey": %q,
+				"duration": 1
+			}`, privatePem)),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"secret":"`,
 			},
 		},
 	}

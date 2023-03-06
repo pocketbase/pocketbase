@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 
 	"golang.org/x/oauth2"
@@ -21,6 +22,7 @@ type Microsoft struct {
 func NewMicrosoftProvider() *Microsoft {
 	endpoints := microsoft.AzureADEndpoint("")
 	return &Microsoft{&baseProvider{
+		ctx:        context.Background(),
 		scopes:     []string{"User.Read"},
 		authUrl:    endpoints.AuthURL,
 		tokenUrl:   endpoints.TokenURL,

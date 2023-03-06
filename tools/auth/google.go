@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 
 	"golang.org/x/oauth2"
@@ -19,6 +20,7 @@ type Google struct {
 // NewGoogleProvider creates new Google provider instance with some defaults.
 func NewGoogleProvider() *Google {
 	return &Google{&baseProvider{
+		ctx: context.Background(),
 		scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.profile",
 			"https://www.googleapis.com/auth/userinfo.email",

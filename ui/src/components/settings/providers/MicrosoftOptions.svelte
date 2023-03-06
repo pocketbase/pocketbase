@@ -19,7 +19,7 @@
     <div class="col-lg-12">
         <Field class="form-field {config.enabled ? 'required' : ''}" name="{key}.tokenUrl" let:uniqueId>
             <label for={uniqueId}>Token URL</label>
-            <input type="text" id={uniqueId} bind:value={config.tokenUrl} required={config.enabled} />
+            <input type="url" id={uniqueId} bind:value={config.tokenUrl} required={config.enabled} />
             <div class="help-block">
                 Eg. {`https://login.microsoftonline.com/YOUR_DIRECTORY_TENANT_ID/oauth2/v2.0/token`}
             </div>

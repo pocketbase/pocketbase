@@ -22,6 +22,7 @@ func bindSettingsApi(app core.App, rg *echo.Group) {
 	subGroup.PATCH("", api.set)
 	subGroup.POST("/test/s3", api.testS3)
 	subGroup.POST("/test/email", api.testEmail)
+	subGroup.POST("/apple/generate-client-secret", api.generateAppleClientSecret)
 }
 
 type settingsApi struct {
@@ -121,8 +122,8 @@ func (api *settingsApi) testEmail(c echo.Context) error {
 
 	// send
 	if err := form.Submit(); err != nil {
+		// form error
 		if fErr, ok := err.(validation.Errors); ok {
-			// form error
 			return NewBadRequestError("Failed to send the test email.", fErr)
 		}
 
@@ -131,4 +132,29 @@ func (api *settingsApi) testEmail(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (api *settingsApi) generateAppleClientSecret(c echo.Context) error {
+	form := forms.NewAppleClientSecretCreate(api.app)
+
+	// load request
+	if err := c.Bind(form); err != nil {
+		return NewBadRequestError("An error occurred while loading the submitted data.", err)
+	}
+
+	// generate
+	secret, err := form.Submit()
+	if err != nil {
+		// form error
+		if fErr, ok := err.(validation.Errors); ok {
+			return NewBadRequestError("Invalid client secret data.", fErr)
+		}
+
+		// secret generation error
+		return NewBadRequestError("Failed to generate client secret. Raw error: \n"+err.Error(), nil)
+	}
+
+	return c.JSON(http.StatusOK, map[string]any{
+		"secret": secret,
+	})
 }

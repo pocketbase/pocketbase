@@ -1,10 +1,27 @@
 package auth
 
 import (
+	"context"
 	"testing"
 
 	"golang.org/x/oauth2"
 )
+
+func TestContext(t *testing.T) {
+	b := baseProvider{}
+
+	before := b.Scopes()
+	if before != nil {
+		t.Errorf("Expected nil context, got %v", before)
+	}
+
+	b.SetContext(context.Background())
+
+	after := b.Scopes()
+	if after != nil {
+		t.Error("Expected non-nil context")
+	}
+}
 
 func TestScopes(t *testing.T) {
 	b := baseProvider{}

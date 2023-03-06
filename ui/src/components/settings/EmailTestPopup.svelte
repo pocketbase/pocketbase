@@ -117,14 +117,15 @@
     </form>
 
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-transparent" on:click={hide} disabled={isSubmitting}>Close</button>
+        <button type="button" class="btn btn-transparent" on:click={hide} disabled={isSubmitting}
+            >Close</button
+        >
         <button
             type="submit"
             form={formId}
             class="btn btn-expanded"
             class:btn-loading={isSubmitting}
             disabled={!canSubmit || isSubmitting}
-            on:click={() => submit()}
         >
             <i class="ri-mail-send-line" />
             <span class="txt">Send</span>

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 
 	"golang.org/x/oauth2"
@@ -20,6 +21,7 @@ type Facebook struct {
 // NewFacebookProvider creates new Facebook provider instance with some defaults.
 func NewFacebookProvider() *Facebook {
 	return &Facebook{&baseProvider{
+		ctx:        context.Background(),
 		scopes:     []string{"email"},
 		authUrl:    facebook.Endpoint.AuthURL,
 		tokenUrl:   facebook.Endpoint.TokenURL,

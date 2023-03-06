@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"strconv"
@@ -22,6 +23,7 @@ type Github struct {
 // NewGithubProvider creates new Github provider instance with some defaults.
 func NewGithubProvider() *Github {
 	return &Github{&baseProvider{
+		ctx:        context.Background(),
 		scopes:     []string{"read:user", "user:email"},
 		authUrl:    github.Endpoint.AuthURL,
 		tokenUrl:   github.Endpoint.TokenURL,

@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
@@ -11,8 +12,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
-
-	"github.com/labstack/echo/v5"
 )
 
 type BaseCollectionEvent struct {

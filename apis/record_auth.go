@@ -129,6 +129,16 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 		codeVerifier := security.RandomString(43)
 		codeChallenge := security.S256Challenge(codeVerifier)
 		codeChallengeMethod := "S256"
+		urlOpts := []oauth2.AuthCodeOption{
+			oauth2.SetAuthURLParam("code_challenge", codeChallenge),
+			oauth2.SetAuthURLParam("code_challenge_method", codeChallengeMethod),
+		}
+
+		if name == auth.NameApple {
+			// see https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/incorporating_sign_in_with_apple_into_other_platforms#3332113
+			urlOpts = append(urlOpts, oauth2.SetAuthURLParam("response_mode", "query"))
+		}
+
 		result.AuthProviders = append(result.AuthProviders, providerInfo{
 			Name:                name,
 			State:               state,
@@ -137,9 +147,8 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 			CodeChallengeMethod: codeChallengeMethod,
 			AuthUrl: provider.BuildAuthUrl(
 				state,
-				oauth2.SetAuthURLParam("code_challenge", codeChallenge),
-				oauth2.SetAuthURLParam("code_challenge_method", codeChallengeMethod),
-			) + "&redirect_uri=", // empty redirect_uri so that users can append their url
+				urlOpts...,
+			) + "&redirect_uri=", // empty redirect_uri so that users can append their redirect url
 		})
 	}
 

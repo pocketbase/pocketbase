@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 
 	"golang.org/x/oauth2"
@@ -19,6 +20,7 @@ type Livechat struct {
 // NewLivechatProvider creates new Livechat provider instance with some defaults.
 func NewLivechatProvider() *Livechat {
 	return &Livechat{&baseProvider{
+		ctx:        context.Background(),
 		scopes:     []string{}, // default scopes are specified from the provider dashboard
 		authUrl:    "https://accounts.livechat.com/",
 		tokenUrl:   "https://accounts.livechat.com/token",

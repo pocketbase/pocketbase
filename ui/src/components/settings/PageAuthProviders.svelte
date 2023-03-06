@@ -22,6 +22,8 @@
 
     $: hasChanges = initialHash != JSON.stringify(formSettings);
 
+    $: totalHidden = Object.values(providersList).filter((provider) => provider.hidden).length;
+
     loadSettings();
 
     async function loadSettings() {
@@ -115,7 +117,7 @@
                         on:click={() => (showHidden = true)}
                     >
                         <i class="ri-arrow-down-s-line" />
-                        <span class="txt">Show all</span>
+                        <span class="txt">Show all ({totalHidden})</span>
                     </button>
                 {/if}
 

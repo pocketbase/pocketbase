@@ -16,13 +16,13 @@
     <div class="col-lg-4">
         <Field class="form-field" name="{key}.tokenUrl" let:uniqueId>
             <label for={uniqueId}>Token URL</label>
-            <input type="text" id={uniqueId} bind:value={config.tokenUrl} />
+            <input type="url" id={uniqueId} bind:value={config.tokenUrl} />
         </Field>
     </div>
     <div class="col-lg-4">
         <Field class="form-field" name="{key}.userApiUrl" let:uniqueId>
             <label for={uniqueId}>User API URL</label>
-            <input type="text" id={uniqueId} bind:value={config.userApiUrl} />
+            <input type="url" id={uniqueId} bind:value={config.userApiUrl} />
         </Field>
     </div>
 </div>

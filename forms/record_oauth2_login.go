@@ -1,8 +1,10 @@
 package forms
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
@@ -126,6 +128,11 @@ func (form *RecordOAuth2Login) Submit(
 	if err != nil {
 		return nil, nil, err
 	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(30*time.Second))
+	defer cancel()
+
+	provider.SetContext(ctx)
 
 	// load provider configuration
 	providerConfig := form.app.Settings().NamedAuthProviderConfigs()[form.Provider]

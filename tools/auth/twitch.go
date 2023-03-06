@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -22,6 +23,7 @@ type Twitch struct {
 // NewTwitchProvider creates new Twitch provider instance with some defaults.
 func NewTwitchProvider() *Twitch {
 	return &Twitch{&baseProvider{
+		ctx:        context.Background(),
 		scopes:     []string{"user:read:email"},
 		authUrl:    twitch.Endpoint.AuthURL,
 		tokenUrl:   twitch.Endpoint.TokenURL,
