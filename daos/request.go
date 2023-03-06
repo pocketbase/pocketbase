@@ -59,7 +59,7 @@ func (dao *Dao) DeleteOldRequests(createdBefore time.Time) error {
 	formattedDate := createdBefore.UTC().Format(types.DefaultDateLayout)
 	expr := dbx.NewExp("[[created]] <= {:date}", dbx.Params{"date": formattedDate})
 
-	_, err := dao.DB().Delete(tableName, expr).Execute()
+	_, err := dao.NonconcurrentDB().Delete(tableName, expr).Execute()
 
 	return err
 }
