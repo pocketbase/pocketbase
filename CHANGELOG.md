@@ -1,6 +1,15 @@
 ## (WIP) v0.14.0
 
-- Normalized the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
+- Normalized record values on `maxSelect` field option change (`select`, `file`, `relation`).
+  When changing **from single to multiple** all already inserted single values are converted to an array.
+  When changing **from multiple to single** only the last item of the already inserted array items is kept.
+
+- **!** Changed the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
+
+
+## v0.13.2
+
+- Fixed Admin UI js error when selecting multiple `file` field as `relation` "Display fields" ([#1989](https://github.com/pocketbase/pocketbase/issues/1989)).
 
 
 ## v0.13.1
