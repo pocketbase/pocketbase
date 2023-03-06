@@ -35,9 +35,12 @@
     />
 
     {#each fileDisplayFields as name}
-        {#if record[name]}
-            <RecordFileThumb {record} filename={record[name]} size="xs" />
-        {/if}
+        {@const filenames = CommonHelper.toArray(record[name]).slice(0, 5)}
+        {#each filenames as filename}
+            {#if !CommonHelper.isEmpty(filename)}
+                <RecordFileThumb {record} {filename} size="xs" />
+            {/if}
+        {/each}
     {/each}
 
     <span class="txt txt-ellipsis">

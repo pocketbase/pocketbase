@@ -1,3 +1,8 @@
+## v0.13.2
+
+- Fixed Admin UI js error when selecting multiple `file` field as `relation` "Display fields" ([#1989](https://github.com/pocketbase/pocketbase/issues/1989)).
+
+
 ## v0.13.1
 
 - Added `HEAD` request method support for the `/api/files/:collection/:recordId/:filename` route ([#1976](https://github.com/pocketbase/pocketbase/discussions/1976)).
