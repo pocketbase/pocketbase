@@ -5,29 +5,45 @@
     const dispatch = createEventDispatcher();
 
     let panel;
-    let collection;
+    let oldCollection;
+    let newCollection;
 
-    $: isCollectionRenamed = collection?.originalName != collection?.name;
+    $: isCollectionRenamed = oldCollection?.name != newCollection?.name;
 
     $: renamedFields =
-        collection?.schema.filter(
+        newCollection?.schema?.filter(
             (field) => field.id && !field.toDelete && field.originalName != field.name
         ) || [];
 
-    $: deletedFields = collection?.schema.filter((field) => field.id && field.toDelete) || [];
+    $: deletedFields = newCollection?.schema?.filter((field) => field.id && field.toDelete) || [];
 
-    $: showChanges = isCollectionRenamed || !collection?.isView;
+    $: multipleToSingleFields =
+        newCollection?.schema?.filter((field) => {
+            const old = oldCollection?.schema?.find((f) => f.id == field.id);
+            if (!old) {
+                return false;
+            }
+            return old.options?.maxSelect != 1 && field.options?.maxSelect == 1;
+        }) || [];
 
-    export async function show(collectionToCheck) {
-        collection = collectionToCheck;
+    $: showChanges = !newCollection?.isView || isCollectionRenamed;
+
+    export async function show(original, changed) {
+        oldCollection = original;
+        newCollection = changed;
 
         await tick();
 
-        if (!isCollectionRenamed && !renamedFields.length && !deletedFields.length) {
-            // no confirm required changes
-            confirm();
-        } else {
+        if (
+            isCollectionRenamed ||
+            renamedFields.length ||
+            deletedFields.length ||
+            multipleToSingleFields.length
+        ) {
             panel?.show();
+        } else {
+            // no changes to review -> confirm directly
+            confirm();
         }
     }
 
@@ -68,14 +84,22 @@
                 <li>
                     <div class="inline-flex">
                         Renamed collection
-                        <strong class="txt-strikethrough txt-hint">{collection.originalName}</strong>
+                        <strong class="txt-strikethrough txt-hint">{oldCollection?.name}</strong>
                         <i class="ri-arrow-right-line txt-sm" />
-                        <strong class="txt"> {collection.name}</strong>
+                        <strong class="txt"> {newCollection?.name}</strong>
                     </div>
                 </li>
             {/if}
 
-            {#if !collection?.isView}
+            {#if !newCollection?.isView}
+                {#each multipleToSingleFields as field}
+                    <li>
+                        Multiple to single value conversion of field
+                        <strong>{field.name}</strong>
+                        <em class="txt-sm">(will keep only the last array item)</em>
+                    </li>
+                {/each}
+
                 {#each renamedFields as field}
                     <li>
                         <div class="inline-flex">
@@ -107,8 +131,13 @@
     </svelte:fragment>
 </OverlayPanel>
 
-<style>
+<style lang="scss">
     .changes-list {
-        word-break: break-all;
+        word-break: break-word;
+        line-height: var(--smLineHeight);
+        li {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
     }
 </style>

@@ -92,7 +92,7 @@
 
         if (typeof model !== "undefined") {
             original = model;
-            collection = model?.clone();
+            collection = model.clone();
         } else {
             original = null;
             collection = new Collection();
@@ -109,9 +109,9 @@
 
     function saveWithConfirm() {
         if (collection.isNew) {
-            return save();
+            save();
         } else {
-            confirmChangesPanel?.show(collection);
+            confirmChangesPanel?.show(original, collection);
         }
     }
 
