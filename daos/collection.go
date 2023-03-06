@@ -1,6 +1,8 @@
 package daos
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -175,7 +177,9 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 
 		switch collection.Type {
 		case models.CollectionTypeView:
-			return txDao.saveViewCollection(collection, oldCollection)
+			if err := txDao.saveViewCollection(collection, oldCollection); err != nil {
+				return err
+			}
 		default:
 			// persist the collection model
 			if err := txDao.Save(collection); err != nil {
@@ -183,8 +187,16 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 			}
 
 			// sync the changes with the related records table
-			return txDao.SyncRecordTableSchema(collection, oldCollection)
+			if err := txDao.SyncRecordTableSchema(collection, oldCollection); err != nil {
+				return err
+			}
 		}
+
+		// trigger an update for all views with changed schema as a result of the current collection save
+		// (ignoring view errors to allow users to update the query from the UI)
+		txDao.resaveViewsWithChangedSchema(collection.Id)
+
+		return nil
 	})
 }
 
@@ -329,7 +341,7 @@ func (dao *Dao) ImportCollections(
 //
 // This method returns an error if newCollection is not a "view".
 func (dao *Dao) saveViewCollection(newCollection *models.Collection, oldCollection *models.Collection) error {
-	if newCollection.IsAuth() {
+	if !newCollection.IsView() {
 		return errors.New("not a view collection")
 	}
 
@@ -337,7 +349,7 @@ func (dao *Dao) saveViewCollection(newCollection *models.Collection, oldCollecti
 		query := newCollection.ViewOptions().Query
 
 		// generate collection schema from the query
-		schema, err := txDao.CreateViewSchema(query)
+		viewSchema, err := txDao.CreateViewSchema(query)
 		if err != nil {
 			return err
 		}
@@ -354,8 +366,52 @@ func (dao *Dao) saveViewCollection(newCollection *models.Collection, oldCollecti
 			return err
 		}
 
-		newCollection.Schema = schema
+		newCollection.Schema = viewSchema
 
 		return txDao.Save(newCollection)
+	})
+}
+
+// resaveViewsWithChangedSchema updates all view collections with changed schemas.
+func (dao *Dao) resaveViewsWithChangedSchema(excludeIds ...string) error {
+	collections, err := dao.FindCollectionsByType(models.CollectionTypeView)
+	if err != nil {
+		return err
+	}
+
+	return dao.RunInTransaction(func(txDao *Dao) error {
+		for _, collection := range collections {
+			if len(excludeIds) > 0 && list.ExistInSlice(collection.Id, excludeIds) {
+				continue
+			}
+
+			query := collection.ViewOptions().Query
+
+			// generate a new schema from the query
+			newSchema, err := txDao.CreateViewSchema(query)
+			if err != nil {
+				return err
+			}
+
+			encodedNewSchema, err := json.Marshal(newSchema)
+			if err != nil {
+				return err
+			}
+
+			encodedOldSchema, err := json.Marshal(collection.Schema)
+			if err != nil {
+				return err
+			}
+
+			if bytes.EqualFold(encodedNewSchema, encodedOldSchema) {
+				continue // no changes
+			}
+
+			if err := txDao.saveViewCollection(collection, nil); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 }

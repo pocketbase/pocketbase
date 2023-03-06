@@ -20,8 +20,8 @@ func init() {
 				[[referer]]   TEXT DEFAULT "" NOT NULL,
 				[[userAgent]] TEXT DEFAULT "" NOT NULL,
 				[[meta]]      JSON DEFAULT "{}" NOT NULL,
-				[[created]]   TEXT DEFAULT "" NOT NULL,
-				[[updated]]   TEXT DEFAULT "" NOT NULL
+				[[created]]   TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
+				[[updated]]   TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
 			);
 
 			CREATE INDEX _request_status_idx on {{_requests}} ([[status]]);

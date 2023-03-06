@@ -19,9 +19,9 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 	// create
 	if oldCollection == nil {
 		cols := map[string]string{
-			schema.FieldNameId:      "TEXT PRIMARY KEY NOT NULL",
-			schema.FieldNameCreated: "TEXT DEFAULT '' NOT NULL",
-			schema.FieldNameUpdated: "TEXT DEFAULT '' NOT NULL",
+			schema.FieldNameId:      "TEXT PRIMARY KEY DEFAULT ('r'||lower(hex(randomblob(7)))) NOT NULL",
+			schema.FieldNameCreated: "TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL",
+			schema.FieldNameUpdated: "TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL",
 		}
 
 		if newCollection.IsAuth() {
@@ -154,7 +154,7 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 			return err
 		}
 
-		return txDao.syncCollectionReferences(newCollection, renamedFieldNames, deletedFieldNames)
+		return txDao.syncRelationDisplayFieldsChanges(newCollection, renamedFieldNames, deletedFieldNames)
 	})
 }
 
@@ -248,7 +248,7 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 	})
 }
 
-func (dao *Dao) syncCollectionReferences(collection *models.Collection, renamedFieldNames map[string]string, deletedFieldNames []string) error {
+func (dao *Dao) syncRelationDisplayFieldsChanges(collection *models.Collection, renamedFieldNames map[string]string, deletedFieldNames []string) error {
 	if len(renamedFieldNames) == 0 && len(deletedFieldNames) == 0 {
 		return nil // nothing to sync
 	}

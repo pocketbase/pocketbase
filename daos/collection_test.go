@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestCollectionQuery(t *testing.T) {
@@ -301,6 +302,66 @@ func TestSaveCollectionUpdate(t *testing.T) {
 	for i, c := range columns {
 		if !list.ExistInSlice(c, expectedColumns) {
 			t.Fatalf("[%d] Didn't expect record column %s", i, c)
+		}
+	}
+}
+
+// indirect update of a field used in view should cause view(s) update
+func TestSaveCollectionIndirectViewsUpdate(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.Dao().FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// update MaxSelect fields
+	{
+		relMany := collection.Schema.GetFieldByName("rel_many")
+		relManyOpt := relMany.Options.(*schema.RelationOptions)
+		relManyOpt.MaxSelect = types.Pointer(1)
+
+		fileOne := collection.Schema.GetFieldByName("file_one")
+		fileOneOpt := fileOne.Options.(*schema.FileOptions)
+		fileOneOpt.MaxSelect = 10
+
+		if err := app.Dao().SaveCollection(collection); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// check view1 schema
+	{
+		view1, err := app.Dao().FindCollectionByNameOrId("view1")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		relMany := view1.Schema.GetFieldByName("rel_many")
+		relManyOpt := relMany.Options.(*schema.RelationOptions)
+		if relManyOpt.MaxSelect == nil || *relManyOpt.MaxSelect != 1 {
+			t.Fatalf("Expected view1.rel_many MaxSelect to be %d, got %v", 1, relManyOpt.MaxSelect)
+		}
+
+		fileOne := view1.Schema.GetFieldByName("file_one")
+		fileOneOpt := fileOne.Options.(*schema.FileOptions)
+		if fileOneOpt.MaxSelect != 10 {
+			t.Fatalf("Expected view1.file_one MaxSelect to be %d, got %v", 10, fileOneOpt.MaxSelect)
+		}
+	}
+
+	// check view2 schema
+	{
+		view2, err := app.Dao().FindCollectionByNameOrId("view2")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		relMany := view2.Schema.GetFieldByName("rel_many")
+		relManyOpt := relMany.Options.(*schema.RelationOptions)
+		if relManyOpt.MaxSelect == nil || *relManyOpt.MaxSelect != 1 {
+			t.Fatalf("Expected view2.rel_many MaxSelect to be %d, got %v", 1, relManyOpt.MaxSelect)
 		}
 	}
 }
