@@ -748,13 +748,13 @@ func TestDeleteRecord(t *testing.T) {
 	}
 	// ensure that the json rel fields were prefixed
 	joinedQueries := strings.Join(calledQueries, " ")
-	expectedRelManyJoin := "`demo1` INNER JOIN json_each(CASE WHEN json_valid([[demo1.rel_many]]) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END)"
-	if !strings.Contains(joinedQueries, expectedRelManyJoin) {
-		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelManyJoin, calledQueries)
+	expectedRelManyPart := "`demo1` INNER JOIN json_each(CASE WHEN json_valid([[demo1.rel_many]]) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END)"
+	if !strings.Contains(joinedQueries, expectedRelManyPart) {
+		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelManyPart, calledQueries)
 	}
-	expectedRelOneJoin := "`demo1` INNER JOIN json_each(CASE WHEN json_valid([[demo1.rel_one]]) THEN [[demo1.rel_one]] ELSE json_array([[demo1.rel_one]]) END)"
-	if !strings.Contains(joinedQueries, expectedRelOneJoin) {
-		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelOneJoin, calledQueries)
+	expectedRelOnePart := "SELECT DISTINCT `demo1`.* FROM `demo1` WHERE (`demo1`.`rel_one`="
+	if !strings.Contains(joinedQueries, expectedRelOnePart) {
+		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelOnePart, calledQueries)
 	}
 }
 

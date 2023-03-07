@@ -512,44 +512,65 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 		}
 
 		cleanFieldName := inflector.Columnify(field.Name)
-		newCollectionName := relCollection.Name
+		prefixedFieldName := r.activeTableAlias + "." + cleanFieldName
 		newTableAlias := r.activeTableAlias + "_" + cleanFieldName
+		newCollectionName := relCollection.Name
 
-		jeAlias := r.activeTableAlias + "_" + cleanFieldName + "_je"
-		jePair := r.activeTableAlias + "." + cleanFieldName
-		r.resolver.registerJoin(jsonEach(jePair), jeAlias, nil)
-		r.resolver.registerJoin(
-			inflector.Columnify(newCollectionName),
-			newTableAlias,
-			dbx.NewExp(fmt.Sprintf("[[%s.id]] = [[%s.value]]", newTableAlias, jeAlias)),
-		)
+		if !options.IsMultiple() {
+			r.resolver.registerJoin(
+				inflector.Columnify(newCollectionName),
+				newTableAlias,
+				dbx.NewExp(fmt.Sprintf("[[%s.id]] = [[%s]]", newTableAlias, prefixedFieldName)),
+			)
+		} else {
+			jeAlias := r.activeTableAlias + "_" + cleanFieldName + "_je"
+			r.resolver.registerJoin(jsonEach(prefixedFieldName), jeAlias, nil)
+			r.resolver.registerJoin(
+				inflector.Columnify(newCollectionName),
+				newTableAlias,
+				dbx.NewExp(fmt.Sprintf("[[%s.id]] = [[%s.value]]", newTableAlias, jeAlias)),
+			)
+		}
+
 		r.activeCollectionName = newCollectionName
 		r.activeTableAlias = newTableAlias
 		// ---
 
 		// join the relation to the multi-match subquery
 		// ---
-		if options.MaxSelect == nil || *options.MaxSelect != 1 {
+		if options.IsMultiple() {
 			r.withMultiMatch = true
 		}
 
 		newTableAlias2 := r.multiMatchActiveTableAlias + "_" + cleanFieldName
-		jeAlias2 := r.multiMatchActiveTableAlias + "_" + cleanFieldName + "_je"
-		jePair2 := r.multiMatchActiveTableAlias + "." + cleanFieldName
-		r.multiMatchActiveTableAlias = newTableAlias2
+		prefixedFieldName2 := r.multiMatchActiveTableAlias + "." + cleanFieldName
 
-		r.multiMatch.joins = append(
-			r.multiMatch.joins,
-			&join{
-				tableName:  jsonEach(jePair2),
-				tableAlias: jeAlias2,
-			},
-			&join{
-				tableName:  inflector.Columnify(newCollectionName),
-				tableAlias: newTableAlias2,
-				on:         dbx.NewExp(fmt.Sprintf("[[%s.id]] = [[%s.value]]", newTableAlias2, jeAlias2)),
-			},
-		)
+		if !options.IsMultiple() {
+			r.multiMatch.joins = append(
+				r.multiMatch.joins,
+				&join{
+					tableName:  inflector.Columnify(newCollectionName),
+					tableAlias: newTableAlias2,
+					on:         dbx.NewExp(fmt.Sprintf("[[%s.id]] = [[%s]]", newTableAlias2, prefixedFieldName2)),
+				},
+			)
+		} else {
+			jeAlias2 := r.multiMatchActiveTableAlias + "_" + cleanFieldName + "_je"
+			r.multiMatch.joins = append(
+				r.multiMatch.joins,
+				&join{
+					tableName:  jsonEach(prefixedFieldName2),
+					tableAlias: jeAlias2,
+				},
+				&join{
+					tableName:  inflector.Columnify(newCollectionName),
+					tableAlias: newTableAlias2,
+					on:         dbx.NewExp(fmt.Sprintf("[[%s.id]] = [[%s.value]]", newTableAlias2, jeAlias2)),
+				},
+			)
+		}
+
+		r.multiMatchActiveTableAlias = newTableAlias2
 		// ---
 	}
 

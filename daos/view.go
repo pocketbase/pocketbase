@@ -189,15 +189,18 @@ func (dao *Dao) FindRecordByViewFile(
 
 	record := &models.Record{}
 
-	err = dao.RecordQuery(qf.collection).
-		InnerJoin(fmt.Sprintf(
-			// note: the case is used to normalize the value access
+	query := dao.RecordQuery(qf.collection).Limit(1)
+
+	if opt, ok := qf.original.Options.(schema.MultiValuer); !ok || !opt.IsMultiple() {
+		query.AndWhere(dbx.HashExp{cleanFieldName: filename})
+	} else {
+		query.InnerJoin(fmt.Sprintf(
 			`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END) as {{_je_file}}`,
 			cleanFieldName, cleanFieldName, cleanFieldName,
-		), dbx.HashExp{"_je_file.value": filename}).
-		Limit(1).
-		One(record)
-	if err != nil {
+		), dbx.HashExp{"_je_file.value": filename})
+	}
+
+	if err := query.One(record); err != nil {
 		return nil, err
 	}
 
