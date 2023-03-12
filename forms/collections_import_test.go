@@ -347,6 +347,52 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"OnModelAfterDelete":  totalCollections - 2,
 			},
 		},
+		{
+			name: "lazy view evaluation",
+			jsonData: `{
+				"collections": [
+					{
+						"name": "view_before",
+						"type": "view",
+						"options": {
+							"query": "select id, active from base_test"
+						}
+					},
+					{
+						"name": "base_test",
+						"schema": [
+							{
+								"id":"fz6iql2m",
+								"name":"active",
+								"type":"bool"
+							}
+						]
+					},
+					{
+						"name": "view_after_new",
+						"type": "view",
+						"options": {
+							"query": "select id, active from base_test"
+						}
+					},
+					{
+						"name": "view_after_old",
+						"type": "view",
+						"options": {
+							"query": "select id from demo1"
+						}
+					}
+				]
+			}`,
+			expectError:            false,
+			expectCollectionsCount: totalCollections + 4,
+			expectEvents: map[string]int{
+				"OnModelBeforeUpdate": 3,
+				"OnModelAfterUpdate":  3,
+				"OnModelBeforeCreate": 4,
+				"OnModelAfterCreate":  4,
+			},
+		},
 	}
 
 	for _, s := range scenarios {

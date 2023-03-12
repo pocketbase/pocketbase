@@ -66,7 +66,7 @@ func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc[[]*models.
 			importErr := txDao.ImportCollections(
 				collections,
 				form.DeleteMissing,
-				form.beforeRecordsSync,
+				form.afterSync,
 			)
 			if importErr == nil {
 				return nil
@@ -89,10 +89,10 @@ func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc[[]*models.
 	}, interceptors...)
 }
 
-func (form *CollectionsImport) beforeRecordsSync(txDao *daos.Dao, mappedNew, mappedOld map[string]*models.Collection) error {
+func (form *CollectionsImport) afterSync(txDao *daos.Dao, mappedNew, mappedOld map[string]*models.Collection) error {
 	// refresh the actual persisted collections list
 	refreshedCollections := []*models.Collection{}
-	if err := txDao.CollectionQuery().OrderBy("created ASC").All(&refreshedCollections); err != nil {
+	if err := txDao.CollectionQuery().OrderBy("updated ASC").All(&refreshedCollections); err != nil {
 		return err
 	}
 
