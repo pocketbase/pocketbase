@@ -25,6 +25,7 @@
         try {
             collections = await ApiClient.collections.getFullList(100, {
                 $cancelKey: uniqueId,
+                sort: "updated",
             });
             // delete timestamps
             for (let collection of collections) {
@@ -70,9 +71,10 @@
                     </p>
                 </div>
 
+                <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
                 <div
-                    tabindex="0"
                     bind:this={previewContainer}
+                    tabindex="0"
                     class="export-preview"
                     on:keydown={(e) => {
                         // select all

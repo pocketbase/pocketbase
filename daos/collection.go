@@ -210,7 +210,7 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 func (dao *Dao) ImportCollections(
 	importedCollections []*models.Collection,
 	deleteMissing bool,
-	beforeRecordsSync func(txDao *Dao, mappedImported, mappedExisting map[string]*models.Collection) error,
+	afterSync func(txDao *Dao, mappedImported, mappedExisting map[string]*models.Collection) error,
 ) error {
 	if len(importedCollections) == 0 {
 		return errors.New("No collections to import")
@@ -218,7 +218,7 @@ func (dao *Dao) ImportCollections(
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
 		existingCollections := []*models.Collection{}
-		if err := txDao.CollectionQuery().OrderBy("created ASC").All(&existingCollections); err != nil {
+		if err := txDao.CollectionQuery().OrderBy("updated ASC").All(&existingCollections); err != nil {
 			return err
 		}
 		mappedExisting := make(map[string]*models.Collection, len(existingCollections))
@@ -274,6 +274,17 @@ func (dao *Dao) ImportCollections(
 					return fmt.Errorf("System collection %q cannot be deleted.", existing.Name)
 				}
 
+				// delete the related records table or view
+				if existing.IsView() {
+					if err := txDao.DeleteView(existing.Name); err != nil {
+						return err
+					}
+				} else {
+					if err := txDao.DeleteTable(existing.Name); err != nil {
+						return err
+					}
+				}
+
 				// delete the collection
 				if err := txDao.Delete(existing); err != nil {
 					return err
@@ -288,43 +299,35 @@ func (dao *Dao) ImportCollections(
 			}
 		}
 
-		if beforeRecordsSync != nil {
-			if err := beforeRecordsSync(txDao, mappedImported, mappedExisting); err != nil {
+		// sync record tables
+		for _, imported := range importedCollections {
+			if imported.IsView() {
+				continue
+			}
+
+			existing := mappedExisting[imported.GetId()]
+
+			if err := txDao.SyncRecordTableSchema(imported, existing); err != nil {
 				return err
 			}
 		}
 
-		// delete the record tables of the deleted collections
-		if deleteMissing {
-			for _, existing := range existingCollections {
-				if mappedImported[existing.GetId()] != nil {
-					continue // exist
-				}
+		// sync views
+		for _, imported := range importedCollections {
+			if !imported.IsView() {
+				continue
+			}
 
-				if existing.IsView() {
-					if err := txDao.DeleteView(existing.Name); err != nil {
-						return err
-					}
-				} else {
-					if err := txDao.DeleteTable(existing.Name); err != nil {
-						return err
-					}
-				}
+			existing := mappedExisting[imported.GetId()]
+
+			if err := txDao.saveViewCollection(imported, existing); err != nil {
+				return err
 			}
 		}
 
-		// sync the upserted collections with the related records table
-		for _, imported := range importedCollections {
-			existing := mappedExisting[imported.GetId()]
-
-			if imported.IsView() {
-				if err := txDao.saveViewCollection(imported, existing); err != nil {
-					return err
-				}
-			} else {
-				if err := txDao.SyncRecordTableSchema(imported, existing); err != nil {
-					return err
-				}
+		if afterSync != nil {
+			if err := afterSync(txDao, mappedImported, mappedExisting); err != nil {
+				return err
 			}
 		}
 

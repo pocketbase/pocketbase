@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## (WIP) v0.14.0
 
 - Added _experimental_ Apple OAuth2 integration.
@@ -9,6 +10,13 @@
   When changing **from multiple to single** only the last item of the already inserted array items is kept.
 
 - **!** Changed the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
+=======
+## v0.13.3
+
+- Fixed view collections import ([#2044](https://github.com/pocketbase/pocketbase/issues/2044)).
+
+- Updated the records picker Admin UI to show properly view collection relations.
+>>>>>>> master
 
 
 ## v0.13.2
