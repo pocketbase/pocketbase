@@ -33,11 +33,11 @@
         <h4><strong>{collection?.name}</strong> record preview</h4>
     </svelte:fragment>
 
-    <table class="table-border">
+    <table class="table-border preview-table">
         <tbody>
             <tr>
                 <td class="min-width txt-hint txt-bold">id</td>
-                <td>
+                <td class="col-field">
                     <div class="label">
                         <CopyIcon value={record.id} />
                         <span class="txt">{record.id}</span>
@@ -48,7 +48,7 @@
             {#each collection?.schema as field}
                 <tr>
                     <td class="min-width txt-hint txt-bold">{field.name}</td>
-                    <td>
+                    <td class="col-field">
                         <RecordFieldValue {field} {record} />
                     </td>
                 </tr>
@@ -57,14 +57,14 @@
             {#if record.created}
                 <tr>
                     <td class="min-width txt-hint txt-bold">created</td>
-                    <td><FormattedDate date={record.created} /></td>
+                    <td class="col-field"><FormattedDate date={record.created} /></td>
                 </tr>
             {/if}
 
             {#if record.updated}
                 <tr>
                     <td class="min-width txt-hint txt-bold">updated</td>
-                    <td><FormattedDate date={record.updated} /></td>
+                    <td class="col-field"><FormattedDate date={record.updated} /></td>
                 </tr>
             {/if}
         </tbody>
@@ -76,3 +76,9 @@
         </button>
     </svelte:fragment>
 </OverlayPanel>
+
+<style lang="scss">
+    .col-field {
+        max-width: 1px; // text overflow workaround
+    }
+</style>

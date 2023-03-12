@@ -134,7 +134,7 @@
 
             const result = await ApiClient.collection(collectionId).getList(page, batchSize, {
                 filter: filter,
-                sort: "-created",
+                sort: !collection?.isView ? "-created" : "",
                 $cancelKey: uniqueId + "loadList",
             });
 

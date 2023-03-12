@@ -2,6 +2,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
+    import CopyIcon from "@/components/base/CopyIcon.svelte";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
     import RecordInfo from "@/components/records/RecordInfo.svelte";
     import TinyMCE from "@tinymce/tinymce-svelte";
@@ -14,11 +15,17 @@
 </script>
 
 {#if field.type === "json"}
-    <span class="txt txt-ellipsis">
-        {short
-            ? CommonHelper.truncate(JSON.stringify(rawValue))
-            : CommonHelper.truncate(JSON.stringify(rawValue, null, 2), 2000, true)}
-    </span>
+    {@const stringifiedJson = JSON.stringify(rawValue)}
+    {#if short}
+        <span class="txt txt-ellipsis">
+            {CommonHelper.truncate(stringifiedJson)}
+        </span>
+    {:else}
+        <span class="txt">
+            {CommonHelper.truncate(stringifiedJson, 500, true)}
+        </span>
+        <CopyIcon value={JSON.stringify(rawValue, null, 2)} />
+    {/if}
 {:else if CommonHelper.isEmpty(rawValue)}
     <span class="txt-hint">N/A</span>
 {:else if field.type === "bool"}
@@ -103,5 +110,12 @@
         {CommonHelper.truncate(rawValue)}
     </span>
 {:else}
-    <span class="block txt-break">{CommonHelper.truncate(rawValue, 2000)}</span>
+    <div class="block txt-break fallback-block">{rawValue}</div>
 {/if}
+
+<style>
+    .fallback-block {
+        max-height: 100px;
+        overflow: auto;
+    }
+</style>
