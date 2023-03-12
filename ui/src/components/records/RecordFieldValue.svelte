@@ -15,7 +15,7 @@
 </script>
 
 {#if field.type === "json"}
-    {@const stringifiedJson = JSON.stringify(rawValue)}
+    {@const stringifiedJson = JSON.stringify(rawValue) || ""}
     {#if short}
         <span class="txt txt-ellipsis">
             {CommonHelper.truncate(stringifiedJson)}
@@ -24,7 +24,9 @@
         <span class="txt">
             {CommonHelper.truncate(stringifiedJson, 500, true)}
         </span>
-        <CopyIcon value={JSON.stringify(rawValue, null, 2)} />
+        {#if stringifiedJson.length > 500}
+            <CopyIcon value={JSON.stringify(rawValue, null, 2)} />
+        {/if}
     {/if}
 {:else if CommonHelper.isEmpty(rawValue)}
     <span class="txt-hint">N/A</span>
