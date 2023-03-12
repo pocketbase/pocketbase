@@ -2,7 +2,7 @@
 
 - Fixed view collections import ([#2044](https://github.com/pocketbase/pocketbase/issues/2044)).
 
-- Updated the relations picker Admin UI to show properly view collection relations.
+- Updated the records picker Admin UI to show properly view collection relations.
 
 
 ## v0.13.2
