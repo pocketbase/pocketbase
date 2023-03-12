@@ -1,3 +1,10 @@
+## v0.13.3
+
+- Fixed view collections import ([#2044](https://github.com/pocketbase/pocketbase/issues/2044)).
+
+- Updated the relations picker Admin UI to show properly view collection relations.
+
+
 ## v0.13.2
 
 - Fixed Admin UI js error when selecting multiple `file` field as `relation` "Display fields" ([#1989](https://github.com/pocketbase/pocketbase/issues/1989)).
