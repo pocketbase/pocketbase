@@ -435,7 +435,7 @@ func TestImportCollections(t *testing.T) {
 				},
 				{
 					"id":"wsmn24bux7wo113",
-					"name":"demo",
+					"name":"demo1_rename",
 					"schema":[
 						{
 							"id":"_2hlxbmp",

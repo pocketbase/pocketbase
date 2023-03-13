@@ -1,3 +1,8 @@
+## v0.13.4
+
+- Removed eager unique collection name check to allow lazy evaluation during bulk import.
+
+
 ## v0.13.3
 
 - Fixed view collections import ([#2044](https://github.com/pocketbase/pocketbase/issues/2044)).
