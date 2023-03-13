@@ -1,22 +1,24 @@
-<<<<<<< HEAD
 ## (WIP) v0.14.0
 
 - Added _experimental_ Apple OAuth2 integration.
 
-- Optimized single relation lookups (@todo doc).
+- Optimized single relation lookups.
 
 - Normalized record values on `maxSelect` field option change (`select`, `file`, `relation`).
   When changing **from single to multiple** all already inserted single values are converted to an array.
   When changing **from multiple to single** only the last item of the already inserted array items is kept.
 
+- Changed the cost/round factor of the auth records bcrypt hash generation from 13 to 12 since several users complained about the slow authWithPassword responses on lower spec hardware.
+  _The change will affect only new users. Depending on the demand, we may make it configurable from the auth options._
+
 - **!** Changed the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
-=======
+
+
 ## v0.13.3
 
 - Fixed view collections import ([#2044](https://github.com/pocketbase/pocketbase/issues/2044)).
 
 - Updated the records picker Admin UI to show properly view collection relations.
->>>>>>> master
 
 
 ## v0.13.2
