@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
@@ -170,11 +169,6 @@ func (form *CollectionUpsert) checkUniqueName(value any) error {
 	// ensure that the collection name doesn't collide with the id of any collection
 	if form.dao.FindById(&models.Collection{}, v) == nil {
 		return validation.NewError("validation_collection_name_id_duplicate", "The name must not match an existing collection id.")
-	}
-
-	// ensure that there is no existing table name with the same name
-	if (form.collection.IsNew() || !strings.EqualFold(v, form.collection.Name)) && form.dao.HasTable(v) {
-		return validation.NewError("validation_collection_name_table_exists", "The collection name must be also unique table name.")
 	}
 
 	return nil

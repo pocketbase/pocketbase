@@ -13,6 +13,10 @@
 
 - **!** Changed the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
 
+## v0.13.4
+
+- Removed eager unique collection name check to allow lazy evaluation during bulk import.
+
 
 ## v0.13.3
 

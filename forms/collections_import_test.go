@@ -215,7 +215,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"collections": [
 					{
 						"id":"sz5l5z67tg7gku0",
-						"name":"demo2",
+						"name":"demo2_rename",
 						"schema":[
 							{
 								"id":"_2hlxbmp",
@@ -345,6 +345,28 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"OnModelAfterCreate":  1,
 				"OnModelBeforeDelete": totalCollections - 2,
 				"OnModelAfterDelete":  totalCollections - 2,
+			},
+		},
+		{
+			name: "lazy system table name error",
+			jsonData: `{
+				"collections": [
+					{
+						"name": "_admins",
+						"schema": [
+							{
+								"id":"fz6iql2m",
+								"name":"active",
+								"type":"bool"
+							}
+						]
+					}
+				]
+			}`,
+			expectError:            true,
+			expectCollectionsCount: totalCollections,
+			expectEvents: map[string]int{
+				"OnModelBeforeCreate": 1,
 			},
 		},
 		{
