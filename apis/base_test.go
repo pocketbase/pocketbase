@@ -136,3 +136,76 @@ func TestCustomRoutesAndErrorsHandling(t *testing.T) {
 		scenario.Test(t)
 	}
 }
+
+func TestRemoveTrailingSlashMiddleware(t *testing.T) {
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "non /api/* route (exact match)",
+			Method: http.MethodGet,
+			Url:    "/custom",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/custom",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "non /api/* route (with trailing slash)",
+			Method: http.MethodGet,
+			Url:    "/custom/",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/custom",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+				})
+			},
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "/api/* route (exact match)",
+			Method: http.MethodGet,
+			Url:    "/api/custom",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/api/custom",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "/api/* route (with trailing slash)",
+			Method: http.MethodGet,
+			Url:    "/api/custom/",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/api/custom",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
