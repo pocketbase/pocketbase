@@ -19,18 +19,18 @@ const Layout = `
             font-family: Source Sans Pro, sans-serif, emoji;
         }
         body {
-            padding: 30px 20px;
-        }
-        p {
-            display: block;
-            margin: 10px 0;
-            font-family: Source Sans Pro, sans-serif, emoji;
+            padding: 20px 30px;
         }
         strong {
             font-weight: bold;
         }
         em, i {
             font-style: italic;
+        }
+        p {
+            display: block;
+            margin: 10px 0;
+            font-family: inherit;
         }
         small {
             font-size: 12px;
@@ -50,6 +50,12 @@ const Layout = `
         .hidden {
             display: none !important;
         }
+        .fallback-link {
+            display: none !important;
+            word-break: break-all;
+            font-size: 11px;
+            color:  #666f75;
+        }
         .btn {
             display: inline-block;
             vertical-align: top;
@@ -58,54 +64,22 @@ const Layout = `
             color: #fff !important;
             background: #16161a !important;
             text-decoration: none !important;
-            line-height: 45px;
-            width: 100%;
-            max-width: 100%;
+            line-height: 40px;
+            width: auto;
+            min-width: 150px;
             text-align: center;
-            padding: 0 30px;
-            margin: 10px 0;
+            padding: 0 20px;
+            margin: 5px 0;
             font-family: Source Sans Pro, sans-serif, emoji;;
             font-size: 14px;
             font-weight: bold;
-            border-radius: 3px;
+            border-radius: 6px;
             box-sizing: border-box;
-        }
-        .wrapper {
-            display: block;
-            width: 460px;
-            max-width: 100%;
-            margin: auto;
-            font-family: inherit;
-        }
-        .content {
-            display: block;
-            width: 100%;
-            padding: 10px 20px;
-            font-family: inherit;
-            box-sizing: border-box;
-            background: #fff;
-            border-radius: 10px;
-            -webkit-box-shadow: 0px 2px 30px 0px rgb(0,0,0,0.05);
-            -moz-box-shadow: 0px 2px 30px 0px rgb(0,0,0,0.05);
-            box-shadow: 0px 2px 30px 0px rgb(0,0,0,0.05);
-        }
-        .footer {
-            display: block;
-            width: 100%;
-            text-align: center;
-            margin: 10px 0;
-            color:  #666f75;
-            font-size: 11px;
-            font-family: inherit;
         }
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        <div class="content">
-            {{template "content" .}}
-        </div>
-    </div>
+    {{template "content" .}}
 </body>
 </html>
 `
