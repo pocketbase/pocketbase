@@ -89,21 +89,21 @@
                 <SortHeader disable class="col-field-method" name="method" bind:sort>
                     <div class="col-header-content">
                         <i class="ri-global-line" />
-                        <span class="txt">method</span>
+                        <span class="txt">Method</span>
                     </div>
                 </SortHeader>
 
                 <SortHeader disable class="col-type-text col-field-url" name="url" bind:sort>
                     <div class="col-header-content">
                         <i class={CommonHelper.getFieldTypeIcon("url")} />
-                        <span class="txt">url</span>
+                        <span class="txt">URL</span>
                     </div>
                 </SortHeader>
 
                 <SortHeader disable class="col-type-text col-field-referer" name="referer" bind:sort>
                     <div class="col-header-content">
                         <i class={CommonHelper.getFieldTypeIcon("url")} />
-                        <span class="txt">referer</span>
+                        <span class="txt">Referer</span>
                     </div>
                 </SortHeader>
 
@@ -117,14 +117,14 @@
                 <SortHeader disable class="col-type-number col-field-status" name="status" bind:sort>
                     <div class="col-header-content">
                         <i class={CommonHelper.getFieldTypeIcon("number")} />
-                        <span class="txt">status</span>
+                        <span class="txt">Status</span>
                     </div>
                 </SortHeader>
 
                 <SortHeader disable class="col-type-date col-field-created" name="created" bind:sort>
                     <div class="col-header-content">
                         <i class={CommonHelper.getFieldTypeIcon("date")} />
-                        <span class="txt">created</span>
+                        <span class="txt">Created</span>
                     </div>
                 </SortHeader>
 

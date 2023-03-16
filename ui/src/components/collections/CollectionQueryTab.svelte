@@ -72,7 +72,7 @@
             this={codeEditorComponent}
             id={uniqueId}
             placeholder="eg. SELECT id, name from posts"
-            language="sql"
+            language="sql-select"
             minHeight="150"
             on:change={() => {
                 if (schemaErrors.length) {

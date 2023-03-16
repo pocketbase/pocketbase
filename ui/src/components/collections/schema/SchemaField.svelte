@@ -1,0 +1,217 @@
+<script>
+    import { createEventDispatcher } from "svelte";
+    import { SchemaField } from "pocketbase";
+    import CommonHelper from "@/utils/CommonHelper";
+    import tooltip from "@/actions/tooltip";
+    import { errors, setErrors } from "@/stores/errors";
+    import Toggler from "@/components/base/Toggler.svelte";
+    import Field from "@/components/base/Field.svelte";
+
+    const dispatch = createEventDispatcher();
+
+    export let key = "";
+    export let field = new SchemaField();
+
+    let optionsTrigger;
+    let isDragOver = false;
+
+    $: if (field.toDelete) {
+        // reset the name if it was previously deleted
+        if (field.originalName && field.name !== field.originalName) {
+            field.name = field.originalName;
+        }
+    }
+
+    $: if (!field.originalName && field.name) {
+        field.originalName = field.name;
+    }
+
+    $: if (typeof field.toDelete === "undefined") {
+        field.toDelete = false; // normalize
+    }
+
+    $: if (field.required) {
+        field.nullable = false;
+    }
+
+    $: interactive = !field.toDelete && !(field.id && field.system);
+
+    $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
+
+    function remove() {
+        if (!field.id) {
+            dispatch("remove");
+        } else {
+            field.toDelete = true;
+        }
+    }
+
+    function restore() {
+        field.toDelete = false;
+
+        // reset all errors since the error index key would have been changed
+        setErrors({});
+    }
+
+    function normalizeFieldName(name) {
+        return CommonHelper.slugify(name);
+    }
+
+    function requiredLabel(field) {
+        switch (field?.type) {
+            case "bool":
+                return "Nonfalsey";
+            case "number":
+                return "Nonzero";
+            default:
+                return "Nonempty";
+        }
+    }
+</script>
+
+<div
+    draggable={true}
+    class="schema-field"
+    class:drag-over={isDragOver}
+    on:dragstart={(e) => {
+        if (!e.target.classList.contains("drag-handle-wrapper")) {
+            e.preventDefault();
+            return;
+        }
+
+        const blank = document.createElement("div");
+        e.dataTransfer.setDragImage(blank, 0, 0);
+        interactive && dispatch("dragstart", e);
+    }}
+    on:dragenter={(e) => {
+        if (interactive) {
+            isDragOver = true;
+            dispatch("dragenter", e);
+        }
+    }}
+    on:drop|preventDefault={(e) => {
+        if (interactive) {
+            isDragOver = false;
+            dispatch("drop", e);
+        }
+    }}
+    on:dragleave={(e) => {
+        if (interactive) {
+            isDragOver = false;
+            dispatch("dragleave", e);
+        }
+    }}
+    on:dragover|preventDefault
+>
+    <div class="schema-field-header">
+        {#if interactive}
+            <div class="drag-handle-wrapper" draggable="true" aria-label="Sort">
+                <span class="drag-handle" />
+            </div>
+        {/if}
+        <Field
+            class="form-field required m-0 {!interactive ? 'disabled' : ''}"
+            name="schema.{key}.name"
+            inlineError
+        >
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div class="form-field-addon prefix no-pointer-events" class:txt-disabled={!interactive}>
+                <i class={CommonHelper.getFieldTypeIcon(field.type)} />
+            </div>
+
+            <!-- svelte-ignore a11y-autofocus -->
+            <input
+                type="text"
+                required
+                disabled={!interactive}
+                readonly={field.id && field.system}
+                spellcheck="false"
+                autofocus={!field.id}
+                placeholder="Field name"
+                value={field.name}
+                on:input={(e) => {
+                    const oldName = field.name;
+                    field.name = normalizeFieldName(e.target.value);
+                    e.target.value = field.name;
+
+                    dispatch("rename", { oldName: oldName, newName: field.name });
+                }}
+            />
+        </Field>
+
+        <slot {interactive} {hasErrors} />
+
+        {#if field.toDelete}
+            <button
+                type="button"
+                class="btn btn-sm btn-circle btn-warning btn-transparent options-trigger"
+                aria-label="Restore"
+                use:tooltip={"Restore"}
+                on:click={restore}
+            >
+                <i class="ri-restart-line" />
+            </button>
+        {:else if interactive}
+            <button
+                bind:this={optionsTrigger}
+                type="button"
+                aria-label="Field options"
+                class="btn btn-sm btn-circle btn-transparent options-trigger {hasErrors
+                    ? 'btn-danger'
+                    : 'btn-hint'}"
+            >
+                <i class="ri-settings-3-line" />
+            </button>
+        {/if}
+    </div>
+
+    {#if interactive}
+        <Toggler class="dropdown dropdown-block schema-field-dropdown" trigger={optionsTrigger}>
+            <div class="grid grid-sm">
+                <div class="col-sm-12 hidden-empty">
+                    <slot name="options" {interactive} {hasErrors} />
+                </div>
+
+                <div class="col-sm-4 flex">
+                    <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
+                        <input type="checkbox" id={uniqueId} bind:checked={field.required} />
+                        <label for={uniqueId}>
+                            <span class="txt">{requiredLabel(field)}</span>
+                            <i
+                                class="ri-information-line link-hint"
+                                use:tooltip={{
+                                    text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
+                                        field
+                                    )}.`,
+                                    position: "right",
+                                }}
+                            />
+                        </label>
+                    </Field>
+                </div>
+
+                {#if !field.toDelete}
+                    <div class="col-sm-4 m-l-auto txt-right">
+                        <div class="flex-fill" />
+                        <div class="inline-flex flex-gap-sm flex-nowrap">
+                            <button
+                                type="button"
+                                aria-label="More"
+                                class="btn btn-circle btn-sm btn-transparent"
+                            >
+                                <i class="ri-more-line" />
+                                <Toggler
+                                    class="dropdown dropdown-sm dropdown-upside dropdown-right dropdown-nowrap no-min-width"
+                                >
+                                    <button type="button" class="dropdown-item txt-right" on:click={remove}>
+                                        <span class="txt">Remove</span>
+                                    </button>
+                                </Toggler>
+                            </button>
+                        </div>
+                    </div>
+                {/if}
+            </div>
+        </Toggler>
+    {/if}
+</div>

@@ -1,0 +1,75 @@
+.schema-field {
+    @extend %block;
+    position: relative;
+    margin: 0 0 var(--xsSpacing);
+    &.drag-over {
+        opacity: 0.5;
+    }
+}
+.schema-field-header {
+    position: relative;
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    align-items: center;
+    justify-content: stretch;
+    %input,
+    .form-field-addon {
+        min-height: var(--btnHeight);
+    }
+    .form-field {
+        margin: 0;
+    }
+    .options-trigger {
+        i {
+            transition: transform var(--baseAnimationSpeed);
+        }
+        &.active {
+            i {
+                transform: rotate(58deg);
+            }
+        }
+    }
+    .drag-handle-wrapper {
+        position: absolute;
+        top: 0;
+        left: auto;
+        right: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+    }
+    .drag-handle {
+        padding: 0 5px;
+        transform: translateX(5px);
+        @include hide();
+    }
+    .form-field-single-multiple-select {
+        width: 100px;
+        flex-shrink: 0;
+        .dropdown {
+            min-width: 0;
+        }
+    }
+
+    // states
+    &:hover,
+    &:active {
+        .drag-handle {
+            transform: translateX(0px);
+            @include show();
+        }
+    }
+}
+.schema-field-dropdown {
+    padding: var(--smSpacing);
+    max-height: none;
+    overflow: visible;
+    z-index: 999;
+}
+.schema-field-options {
+    margin-top: -10px;
+    background: var(--bodyColor);
+    padding: var(--smSpacing);
+    border-radius: var(--baseRadius);
+}

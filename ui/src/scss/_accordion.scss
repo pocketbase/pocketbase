@@ -121,11 +121,19 @@
     .accordion {
         border-radius: 0;
         margin: -1px 0 0;
+        &:has(+ .accordion.active) {
+           border-bottom-left-radius: var(--baseRadius);
+           border-bottom-right-radius: var(--baseRadius);
+        }
     }
     & > .accordion.active,
     & > .accordion-wrapper > .accordion.active {
         margin: var(--smSpacing) 0;
         border-radius: var(--baseRadius);
+        + .accordion {
+            border-top-left-radius: var(--baseRadius);
+            border-top-right-radius: var(--baseRadius);
+        }
     }
     & > .accordion:first-child,
     & > .accordion-wrapper:first-child > .accordion {

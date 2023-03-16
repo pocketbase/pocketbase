@@ -509,8 +509,15 @@ select {
         .btn {
             margin-right: -5px;
         }
-        & ~ %input {
-            padding-right: 35px;
+        &:not(.prefix) ~ %input {
+            padding-right: 45px;
+        }
+        &.prefix {
+            right: auto;
+            left: var(--hPadding);
+            & ~ %input {
+                padding-left: 45px;
+            }
         }
     }
     label ~ .form-field-addon {

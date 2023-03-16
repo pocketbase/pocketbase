@@ -82,17 +82,17 @@
         />
     {/if}
 
-    {#if value.length || tempValue.length}
-        {#if tempValue !== value}
-            <button
-                type="submit"
-                class="btn btn-expanded btn-sm btn-warning"
-                transition:fly|local={{ duration: 150, x: 5 }}
-            >
-                <span class="txt">Search</span>
-            </button>
-        {/if}
+    {#if (value.length || tempValue.length) && tempValue != value}
+        <button
+            type="submit"
+            class="btn btn-expanded btn-sm btn-warning"
+            transition:fly|local={{ duration: 150, x: 5 }}
+        >
+            <span class="txt">Search</span>
+        </button>
+    {/if}
 
+    {#if value.length || tempValue.length}
         <button
             type="button"
             class="btn btn-transparent btn-sm btn-hint p-l-xs p-r-xs m-l-10"

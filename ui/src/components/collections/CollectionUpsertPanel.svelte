@@ -69,6 +69,13 @@
         collection.deleteRule = null;
     }
 
+    // update indexes on collection rename
+    $: if (collection?.name && original?.name != collection?.name) {
+        collection.indexes = collection.indexes.map((idx) =>
+            CommonHelper.replaceIndexTableName(idx, collection.name)
+        );
+    }
+
     export function changeTab(newTab) {
         activeTab = newTab;
     }
@@ -228,6 +235,15 @@
                     field.id = "";
                 }
             }
+
+            // update indexes with the new table name
+            if (!CommonHelper.isEmpty(clone.indexes)) {
+                for (let i = 0; i < clone.indexes.length; i++) {
+                    const parsed = CommonHelper.parseIndex(clone.indexes[i]);
+                    parsed.tableName = clone.name;
+                    clone.indexes[i] = CommonHelper.buildIndex(parsed);
+                }
+            }
         }
 
         show(clone);
@@ -241,6 +257,7 @@
 <OverlayPanel
     bind:this={collectionPanel}
     class="overlay-panel-lg colored-header collection-panel"
+    escClose={false}
     beforeHide={() => {
         if (hasChanges && confirmClose) {
             confirm("You have unsaved changes. Do you really want to close the panel?", () => {

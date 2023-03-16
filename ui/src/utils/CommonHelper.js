@@ -32,6 +32,16 @@ export default class CommonHelper {
     }
 
     /**
+     * Deep clones the provided value.
+     *
+     * @param  {Mixed} val
+     * @return {Mixed}
+     */
+    static clone(value) {
+        return typeof structuredClone !== "undefined" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+    }
+
+    /**
      * Checks whether a value is empty. The following values are considered as empty:
      * - null
      * - undefined
@@ -1421,5 +1431,199 @@ export default class CommonHelper {
         }
 
         return result;
+    }
+
+    /**
+     * Parses the specified SQL index and returns an object with its components.
+     *
+     * For example:
+     *
+     * ```js
+     * parseIndex("CREATE UNIQUE INDEX IF NOT EXISTS schemaname.idxname on tablename (col1, col2) where expr")
+     * // output:
+     * {
+     *   "unique":     true,
+     *   "optional":   true,
+     *   "schemaName": "schemaname"
+     *   "indexName":  "idxname"
+     *   "tableName":  "tablename"
+     *   "columns":    [{column: "col1", "collate": "", "sort": ""}, {column: "col1", "collate": "", "sort": ""}]
+     *   expression:   "expr"
+     * }
+     * ```
+     *
+     * @param  {String} idx
+     * @return {Object}
+     */
+    static parseIndex(idx) {
+        const result = {
+            unique:     false,
+            optional:   false,
+            schemaName: "",
+            indexName:  "",
+            tableName:  "",
+            columns:    [],
+            expression: "",
+        };
+
+        const indexRegex = /create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?([\w\"\'\`\[\]\.]*)\s+on\s+([\w\"\'\`\[\]\.]*)\s+\(([\s\S]*)\)(?:\s*where\s+([\s\S]*))?/gmi;
+        const matches    = indexRegex.exec((idx || "").trim())
+
+        if (matches?.length != 7) {
+            return result;
+        }
+
+        const sqlQuoteRegex = /^[\"\'\`\[]|[\"\'\`\]]$/gm
+
+        // unique
+        result.unique = matches[1]?.trim().toLowerCase() === "unique";
+
+        // optional
+        result.optional = !CommonHelper.isEmpty(matches[2]?.trim());
+
+        // schemaName and indexName
+        const namePair = (matches[3] || "").split(".");
+        if (namePair.length == 2) {
+            result.schemaName = namePair[0].replace(sqlQuoteRegex, "");
+            result.indexName = namePair[1].replace(sqlQuoteRegex, "");
+        } else {
+            result.schemaName = "";
+            result.indexName = namePair[0].replace(sqlQuoteRegex, "");
+        }
+
+        // tableName
+        result.tableName = (matches[4] || "").replace(sqlQuoteRegex, "");
+
+        // columns
+        const rawColumns = (matches[5] || "")
+            .replace(/,(?=[^\(]*\))/gmi, "{PB_TEMP}") // temporary replace comma within expressions for easier splitting
+            .split(",");                              // split columns
+
+        for (let col of rawColumns) {
+            col = col.trim().replaceAll("{PB_TEMP}", ",") // revert temp replacement
+
+            const colRegex = /^([\s\S]+?)(?:\s+collate\s+([\w]+))?(?:\s+(asc|desc))?$/gmi
+            const colMatches = colRegex.exec(col);
+            if (colMatches?.length != 4) {
+                continue
+            }
+
+            const colOrExpr = colMatches[1]?.trim()?.replace(sqlQuoteRegex, "");
+            if (!colOrExpr) {
+                continue;
+            }
+            result.columns.push({
+                column:  colOrExpr,
+                collate: colMatches[2] || "",
+                sort:    colMatches[3]?.toUpperCase() || "",
+            });
+        }
+
+        // expression
+        result.expression = matches[6] || "";
+
+        return result;
+    }
+
+    /**
+     * Builds an index expression from parsed index parts (see parseIndex()).
+     *
+     * @param  {Array} indexParts
+     * @return {String}
+     */
+    static buildIndex(indexParts) {
+        let result = "CREATE ";
+
+        if (indexParts.unique) {
+            result += "UNIQUE ";
+        }
+
+        result += "INDEX ";
+
+        if (indexParts.optional) {
+            result += "IF NOT EXISTS ";
+        }
+
+        if (indexParts.schemaName) {
+            result += `"${indexParts.schemaName}".`;
+        }
+
+        result += `"${indexParts.indexName || "idx_" + CommonHelper.randomString(7)}" `;
+
+        result += `ON "${indexParts.tableName}" (\n`;
+
+        result += indexParts.columns
+            .filter((c) => !!c?.column)
+            .map((c) => {
+                let item = "";
+
+                if (c.column.includes("(") || c.column.includes(" ")) {
+                    // most likely an expression
+                    item += c.column;
+                } else {
+                    // regular identifier
+                    item += `"${c.column}"`;
+                }
+
+                if (c.collate) {
+                    item += (" COLLATE " + c.collate);
+                }
+
+                if (c.sort) {
+                    item += (" " + c.sort.toUpperCase());
+                }
+
+                return item;
+            })
+            .join(",\n");
+
+        result += `\n)`;
+
+        if (indexParts.expression) {
+            result += ` WHERE ${indexParts.expression}`;
+        }
+
+        return result;
+    }
+
+    /**
+     * Replaces the idx table name with newTableName.
+     *
+     * @param  {String} idx
+     * @param  {String} newTableName
+     * @return {String}
+     */
+    static replaceIndexTableName(idx, newTableName) {
+        const parsed = CommonHelper.parseIndex(idx);
+
+        parsed.tableName = newTableName;
+
+        return CommonHelper.buildIndex(parsed);
+    }
+
+    /**
+     * Replaces an idx column name with a new one (if exists).
+     *
+     * @param  {String} idx
+     * @param  {String} oldColumn
+     * @param  {String} newColumn
+     * @return {String}
+     */
+    static replaceIndexColumn(idx, oldColumn, newColumn) {
+        if (oldColumn === newColumn) {
+            return idx; // no change
+        }
+
+        const parsed = CommonHelper.parseIndex(idx);
+
+        let hasChange = false;
+        for (let col of parsed.columns) {
+            if (col.column === oldColumn) {
+                col.column = newColumn;
+                hasChange = true;
+            }
+        }
+
+        return hasChange ? CommonHelper.buildIndex(parsed) : idx;
     }
 }

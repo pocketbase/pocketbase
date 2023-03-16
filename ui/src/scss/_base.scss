@@ -323,6 +323,10 @@ a,
     }
 }
 
+.no-pointer-events {
+    pointer-events: none;
+}
+
 .block {
     @extend %block;
 }
@@ -352,6 +356,10 @@ a,
     border-radius: var(--baseRadius);
     padding: calc(var(--smSpacing) - 5px) var(--smSpacing);
     border: 1px solid var(--baseAlt1Color);
+}
+
+.shadowize {
+    @include shadowize();
 }
 
 .clearfix {
@@ -451,16 +459,17 @@ a,
 
 .label {
     --labelVPadding: 3px;
-    --labelHPadding: 8px;
+    --labelHPadding: 9px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     vertical-align: top;
     gap: 5px;
     padding: var(--labelVPadding) var(--labelHPadding);
-    min-height: 23px;
+    min-height: 24px;
     max-width: 100%;
     text-align: center;
-    line-height: 1;
+    line-height: var(--smLineHeight);
     font-size: var(--smFontSize);
     background: var(--baseAlt2Color);
     color: var(--txtPrimaryColor);
@@ -562,33 +571,9 @@ a.thumb:not(.thumb-active) {
     row-gap: 5px;
     margin: 0 0 var(--xsSpacing);
     font-weight: 600;
-    font-size: var(--smFontSize);
+    font-size: var(--baseFontSize);
     line-height: var(--smLineHeight);
     color: var(--txtHintColor);
-    text-transform: uppercase;
-}
-
-.drag-handle {
-    outline: 0;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: left;
-    color: var(--txtDisabledColor);
-    transition: color var(--baseAnimationSpeed);
-    &:before,
-    &:after {
-        content: '\ef77';
-        font-family: var(--iconFontFamily);
-        font-size: 18px;
-        line-height: 1;
-        width: 7px;
-        text-align: center;
-    }
-    &:focus-visible,
-    &:hover,
-    &:active {
-        color: var(--txtPrimaryColor);
-    }
 }
 
 .logo {
@@ -619,6 +604,37 @@ a.thumb:not(.thumb-active) {
 
     &.logo-sm {
         font-size: 20px;
+    }
+}
+
+.drag-handle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--txtDisabledColor);
+    user-select: none;
+    cursor: pointer;
+    transition: color var(--baseAnimationSpeed),
+                transform var(--baseAnimationSpeed),
+                opacity var(--baseAnimationSpeed),
+                visibility var(--baseAnimationSpeed);
+    &:before{
+        content: "\ef77";
+        line-height: 1;
+        font-family: var(--iconFontFamily);
+        padding-right: 5px;
+        text-shadow: 5px 0px currentColor;
+    }
+    &:hover,
+    &:focus-visible {
+        color: var(--txtHintColor);
+    }
+    &:active {
+        transition-duration: var(--activeAnimationSpeed);
+        color: var(--txtPrimaryColor);
     }
 }
 

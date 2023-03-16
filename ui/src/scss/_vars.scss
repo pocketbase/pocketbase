@@ -17,14 +17,14 @@
     --baseAlt3Color: #c6cdd7;
     --baseAlt4Color: #a5b0c0;
 
-    --infoColor:       #3da9fc;
-    --infoAltColor:    #d2ecfe;
-    --successColor:    #2aac76;
-    --successAltColor: #d2f4e6;
-    --dangerColor:     #e13756;
-    --dangerAltColor:  #fcdee4;
-    --warningColor:    #ff8e3c;
-    --warningAltColor: #ffeadb;
+    --infoColor:       #5499e8;
+    --infoAltColor:    #cee2f8;
+    --successColor:    #32ad84;
+    --successAltColor: #c4eedc;
+    --dangerColor:     #e34562;
+    --dangerAltColor:  #f7cad2;
+    --warningColor:    #ff944d;
+    --warningAltColor: #ffd4b8;
 
     --overlayColor:   rgba(53, 71, 104, 0.25);
     --tooltipColor:   rgba(0, 0, 0, 0.85);
@@ -64,9 +64,9 @@
     --activeAnimationSpeed: 70ms;
     --entranceAnimationSpeed: 250ms;
 
-    --baseRadius: 3px;
+    --baseRadius: 6px;
     --lgRadius:   12px;
-    --btnRadius:  3px;
+    --btnRadius:  6px;
 
     // https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color
     accent-color: var(--primaryColor);
