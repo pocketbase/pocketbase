@@ -56,7 +56,7 @@ func SendAdminPasswordReset(app core.App, admin *models.Admin) error {
 			Name:    app.Settings().Meta.SenderName,
 			Address: app.Settings().Meta.SenderAddress,
 		},
-		To:      mail.Address{Address: admin.Email},
+		To:      []mail.Address{{Address: admin.Email}},
 		Subject: "Reset admin password",
 		HTML:    body,
 	}

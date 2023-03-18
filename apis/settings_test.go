@@ -61,8 +61,10 @@ func TestSettingsList(t *testing.T) {
 				`"stravaAuth":{`,
 				`"giteeAuth":{`,
 				`"livechatAuth":{`,
-				`"authentikAuth":{`,
 				`"giteaAuth":{`,
+				`"oidcAuth":{`,
+				`"oidc2Auth":{`,
+				`"oidc3Auth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 			},
@@ -133,8 +135,10 @@ func TestSettingsSet(t *testing.T) {
 				`"stravaAuth":{`,
 				`"giteeAuth":{`,
 				`"livechatAuth":{`,
-				`"authentikAuth":{`,
 				`"giteaAuth":{`,
+				`"oidcAuth":{`,
+				`"oidc2Auth":{`,
+				`"oidc3Auth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 				`"appName":"acme_test"`,
@@ -194,8 +198,10 @@ func TestSettingsSet(t *testing.T) {
 				`"stravaAuth":{`,
 				`"giteeAuth":{`,
 				`"livechatAuth":{`,
-				`"authentikAuth":{`,
 				`"giteaAuth":{`,
+				`"oidcAuth":{`,
+				`"oidc2Auth":{`,
+				`"oidc3Auth":{`,
 				`"secret":"******"`,
 				`"clientSecret":"******"`,
 				`"appName":"update_test"`,
@@ -318,8 +324,12 @@ func TestSettingsTestEmail(t *testing.T) {
 					t.Fatalf("[verification] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
 
-				if app.TestMailer.LastMessage.To.Address != "test@example.com" {
-					t.Fatalf("[verification] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To.Address)
+				if len(app.TestMailer.LastMessage.To) != 1 {
+					t.Fatalf("[verification] Expected 1 recipient, got %v", app.TestMailer.LastMessage.To)
+				}
+
+				if app.TestMailer.LastMessage.To[0].Address != "test@example.com" {
+					t.Fatalf("[verification] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To[0].Address)
 				}
 
 				if !strings.Contains(app.TestMailer.LastMessage.HTML, "Verify") {
@@ -349,8 +359,12 @@ func TestSettingsTestEmail(t *testing.T) {
 					t.Fatalf("[password-reset] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
 
-				if app.TestMailer.LastMessage.To.Address != "test@example.com" {
-					t.Fatalf("[password-reset] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To.Address)
+				if len(app.TestMailer.LastMessage.To) != 1 {
+					t.Fatalf("[password-reset] Expected 1 recipient, got %v", app.TestMailer.LastMessage.To)
+				}
+
+				if app.TestMailer.LastMessage.To[0].Address != "test@example.com" {
+					t.Fatalf("[password-reset] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To[0].Address)
 				}
 
 				if !strings.Contains(app.TestMailer.LastMessage.HTML, "Reset password") {
@@ -380,8 +394,12 @@ func TestSettingsTestEmail(t *testing.T) {
 					t.Fatalf("[email-change] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
 
-				if app.TestMailer.LastMessage.To.Address != "test@example.com" {
-					t.Fatalf("[email-change] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To.Address)
+				if len(app.TestMailer.LastMessage.To) != 1 {
+					t.Fatalf("[email-change] Expected 1 recipient, got %v", app.TestMailer.LastMessage.To)
+				}
+
+				if app.TestMailer.LastMessage.To[0].Address != "test@example.com" {
+					t.Fatalf("[email-change] Expected the email to be sent to %s, got %s", "test@example.com", app.TestMailer.LastMessage.To[0].Address)
 				}
 
 				if !strings.Contains(app.TestMailer.LastMessage.HTML, "Confirm new email") {

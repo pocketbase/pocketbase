@@ -6,6 +6,7 @@ import (
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/auth"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/search"
@@ -160,15 +161,17 @@ type RecordViewEvent struct {
 type RecordCreateEvent struct {
 	BaseCollectionEvent
 
-	HttpContext echo.Context
-	Record      *models.Record
+	HttpContext   echo.Context
+	Record        *models.Record
+	UploadedFiles map[string][]*filesystem.File
 }
 
 type RecordUpdateEvent struct {
 	BaseCollectionEvent
 
-	HttpContext echo.Context
-	Record      *models.Record
+	HttpContext   echo.Context
+	Record        *models.Record
+	UploadedFiles map[string][]*filesystem.File
 }
 
 type RecordDeleteEvent struct {

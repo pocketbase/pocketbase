@@ -16,6 +16,8 @@
 
     $: deletedFields = collection?.schema.filter((field) => field.id && field.toDelete) || [];
 
+    $: showChanges = isCollectionRenamed || !collection?.isView;
+
     export async function show(collectionToCheck) {
         collection = collectionToCheck;
 
@@ -50,8 +52,8 @@
         </div>
         <div class="content txt-bold">
             <p>
-                If any of the following changes is part of another collection rule or filter, you'll have to
-                update it manually!
+                If any of the collection changes is part of another collection rule, filter or view query,
+                you'll have to update it manually!
             </p>
             {#if deletedFields.length}
                 <p>All data associated with the removed fields will be permanently deleted!</p>
@@ -59,36 +61,40 @@
         </div>
     </div>
 
-    <h6>Changes:</h6>
-    <ul class="changes-list">
-        {#if isCollectionRenamed}
-            <li>
-                <div class="inline-flex">
-                    Renamed collection
-                    <strong class="txt-strikethrough txt-hint">{collection.originalName}</strong>
-                    <i class="ri-arrow-right-line txt-sm" />
-                    <strong class="txt"> {collection.name}</strong>
-                </div>
-            </li>
-        {/if}
+    {#if showChanges}
+        <h6>Changes:</h6>
+        <ul class="changes-list">
+            {#if isCollectionRenamed}
+                <li>
+                    <div class="inline-flex">
+                        Renamed collection
+                        <strong class="txt-strikethrough txt-hint">{collection.originalName}</strong>
+                        <i class="ri-arrow-right-line txt-sm" />
+                        <strong class="txt"> {collection.name}</strong>
+                    </div>
+                </li>
+            {/if}
 
-        {#each renamedFields as field}
-            <li>
-                <div class="inline-flex">
-                    Renamed field
-                    <strong class="txt-strikethrough txt-hint">{field.originalName}</strong>
-                    <i class="ri-arrow-right-line txt-sm" />
-                    <strong class="txt"> {field.name}</strong>
-                </div>
-            </li>
-        {/each}
+            {#if !collection?.isView}
+                {#each renamedFields as field}
+                    <li>
+                        <div class="inline-flex">
+                            Renamed field
+                            <strong class="txt-strikethrough txt-hint">{field.originalName}</strong>
+                            <i class="ri-arrow-right-line txt-sm" />
+                            <strong class="txt"> {field.name}</strong>
+                        </div>
+                    </li>
+                {/each}
 
-        {#each deletedFields as field}
-            <li class="txt-danger">
-                Removed field <span class="txt-bold">{field.name}</span>
-            </li>
-        {/each}
-    </ul>
+                {#each deletedFields as field}
+                    <li class="txt-danger">
+                        Removed field <span class="txt-bold">{field.name}</span>
+                    </li>
+                {/each}
+            {/if}
+        </ul>
+    {/if}
 
     <svelte:fragment slot="footer">
         <!-- svelte-ignore a11y-autofocus -->

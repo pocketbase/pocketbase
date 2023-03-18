@@ -67,7 +67,7 @@ func TestSchemaFieldColDefinition(t *testing.T) {
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeNumber, Name: "test"},
-			"REAL DEFAULT 0",
+			"NUMERIC DEFAULT 0",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeBool, Name: "test"},
@@ -509,7 +509,7 @@ func TestSchemaFieldInitOptions(t *testing.T) {
 		{
 			schema.SchemaField{Type: schema.FieldTypeRelation},
 			false,
-			`{"system":false,"id":"","name":"","type":"relation","required":false,"unique":false,"options":{"collectionId":"","cascadeDelete":false,"maxSelect":null,"displayFields":null}}`,
+			`{"system":false,"id":"","name":"","type":"relation","required":false,"unique":false,"options":{"collectionId":"","cascadeDelete":false,"minSelect":null,"maxSelect":null,"displayFields":null}}`,
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeUser},

@@ -81,7 +81,7 @@
         });
 
         // you can also fetch all records at once via getFullList
-        const records = await pb.collection('${collection?.name}').getFullList(200 /* batch size */, {
+        const records = await pb.collection('${collection?.name}').getFullList({
             sort: '-created',
         });
 
@@ -106,7 +106,6 @@
 
         // you can also fetch all records at once via getFullList
         final records = await pb.collection('${collection?.name}').getFullList(
-          batch: 200,
           sort: '-created',
         );
 

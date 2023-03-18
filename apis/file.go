@@ -1,6 +1,8 @@
 package apis
 
 import (
+	"fmt"
+
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
@@ -16,6 +18,7 @@ func bindFileApi(app core.App, rg *echo.Group) {
 	api := fileApi{app: app}
 
 	subGroup := rg.Group("/files", ActivityLogger(app))
+	subGroup.HEAD("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 	subGroup.GET("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 }
 
@@ -45,7 +48,19 @@ func (api *fileApi) download(c echo.Context) error {
 	if fileField == nil {
 		return NewNotFoundError("", nil)
 	}
+
 	options, _ := fileField.Options.(*schema.FileOptions)
+
+	baseFilesPath := record.BaseFilesPath()
+
+	// fetch the original view file field related record
+	if collection.IsView() {
+		fileRecord, err := api.app.Dao().FindRecordByViewFile(collection.Id, fileField.Name, filename)
+		if err != nil {
+			return NewNotFoundError("", fmt.Errorf("Failed to fetch view file field record: %w", err))
+		}
+		baseFilesPath = fileRecord.BaseFilesPath()
+	}
 
 	fs, err := api.app.NewFilesystem()
 	if err != nil {
@@ -53,7 +68,7 @@ func (api *fileApi) download(c echo.Context) error {
 	}
 	defer fs.Close()
 
-	originalPath := record.BaseFilesPath() + "/" + filename
+	originalPath := baseFilesPath + "/" + filename
 	servedPath := originalPath
 	servedName := filename
 
@@ -70,7 +85,7 @@ func (api *fileApi) download(c echo.Context) error {
 		if list.ExistInSlice(oAttrs.ContentType, imageContentTypes) {
 			// add thumb size as file suffix
 			servedName = thumbSize + "_" + filename
-			servedPath = record.BaseFilesPath() + "/thumbs_" + filename + "/" + servedName
+			servedPath = baseFilesPath + "/thumbs_" + filename + "/" + servedName
 
 			// check if the thumb exists:
 			// - if doesn't exist - create a new thumb with the specified thumb size
@@ -91,6 +106,11 @@ func (api *fileApi) download(c echo.Context) error {
 	event.FileField = fileField
 	event.ServedPath = servedPath
 	event.ServedName = servedName
+
+	// clickjacking shouldn't be a concern when serving uploaded files,
+	// so it safe to unset the global X-Frame-Options to allow files embedding
+	// (note: it is out of the hook to allow users to customize the behavior)
+	c.Response().Header().Del("X-Frame-Options")
 
 	return api.app.OnFileDownloadRequest().Trigger(event, func(e *core.FileDownloadEvent) error {
 		res := e.HttpContext.Response()

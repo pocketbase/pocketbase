@@ -53,13 +53,17 @@
         closeBracketsKeymap,
     } from "@codemirror/autocomplete";
     import { html as htmlLang } from "@codemirror/lang-html";
+    import { sql, SQLDialect } from "@codemirror/lang-sql";
     import { javascript as javascriptLang } from "@codemirror/lang-javascript";
     // ---
+    import CommonHelper from "@/utils/CommonHelper";
+    import { collections } from "@/stores/collections";
 
     const dispatch = createEventDispatcher();
 
     export let id = "";
     export let value = "";
+    export let minHeight = null;
     export let maxHeight = null;
     export let disabled = false;
     export let placeholder = "";
@@ -123,6 +127,8 @@
                 bubbles: true,
             })
         );
+
+        dispatch("change", value);
     }
 
     // Remove any attached label listeners.
@@ -153,7 +159,33 @@
 
     // Returns the current active editor language.
     function getEditorLang() {
-        return language === "html" ? htmlLang() : javascriptLang();
+        switch (language) {
+            case "html":
+                return htmlLang();
+            case "sql":
+                let schema = {};
+                for (let collection of $collections) {
+                    schema[collection.name] = CommonHelper.getAllCollectionIdentifiers(collection);
+                }
+
+                return sql({
+                    // lightweight sql dialect with mostly SELECT statements keywords
+                    dialect: SQLDialect.define({
+                        keywords:
+                            "select distinct from where having group by order limit offset join left right inner with like not in match asc desc regexp isnull notnull glob " +
+                            "count avg sum min max current random cast as int real text " +
+                            "date time datetime unixepoch strftime coalesce lower upper substr " +
+                            "case when then iif if else json_extract json_each json_tree json_array_length json_valid ",
+                        operatorChars: "*+-%<>!=&|/~",
+                        identifierQuotes: '`"',
+                        specialVar: "@:?$",
+                    }),
+                    schema: schema,
+                    upperCaseKeywords: true,
+                });
+            default:
+                return javascriptLang();
+        }
     }
 
     onMount(() => {
@@ -222,4 +254,9 @@
     });
 </script>
 
-<div bind:this={container} class="code-editor" style:max-height={maxHeight ? maxHeight + "px" : "auto"} />
+<div
+    bind:this={container}
+    class="code-editor"
+    style:min-height={minHeight ? minHeight + "px" : null}
+    style:max-height={maxHeight ? maxHeight + "px" : "auto"}
+/>

@@ -8,18 +8,18 @@
 <div class="section-title">Azure AD endpoints</div>
 <div class="grid">
     <div class="col-lg-12">
-        <Field class="form-field required" name="{key}.authUrl" let:uniqueId>
+        <Field class="form-field {config.enabled ? 'required' : ''}" name="{key}.authUrl" let:uniqueId>
             <label for={uniqueId}>Auth URL</label>
-            <input type="url" id={uniqueId} required bind:value={config.authUrl} />
+            <input type="url" id={uniqueId} bind:value={config.authUrl} required={config.enabled} />
             <div class="help-block">
                 Eg. {`https://login.microsoftonline.com/YOUR_DIRECTORY_TENANT_ID/oauth2/v2.0/authorize`}
             </div>
         </Field>
     </div>
     <div class="col-lg-12">
-        <Field class="form-field required" name="{key}.tokenUrl" let:uniqueId>
+        <Field class="form-field {config.enabled ? 'required' : ''}" name="{key}.tokenUrl" let:uniqueId>
             <label for={uniqueId}>Token URL</label>
-            <input type="text" id={uniqueId} required bind:value={config.tokenUrl} />
+            <input type="text" id={uniqueId} bind:value={config.tokenUrl} required={config.enabled} />
             <div class="help-block">
                 Eg. {`https://login.microsoftonline.com/YOUR_DIRECTORY_TENANT_ID/oauth2/v2.0/token`}
             </div>

@@ -26,14 +26,13 @@ func bindRecordCrudApi(app core.App, rg *echo.Group) {
 	subGroup := rg.Group(
 		"/collections/:collection",
 		ActivityLogger(app),
-		LoadCollectionContext(app),
 	)
 
-	subGroup.GET("/records", api.list)
-	subGroup.POST("/records", api.create)
-	subGroup.GET("/records/:id", api.view)
-	subGroup.PATCH("/records/:id", api.update)
-	subGroup.DELETE("/records/:id", api.delete)
+	subGroup.GET("/records", api.list, LoadCollectionContext(app))
+	subGroup.GET("/records/:id", api.view, LoadCollectionContext(app))
+	subGroup.POST("/records", api.create, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+	subGroup.PATCH("/records/:id", api.update, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+	subGroup.DELETE("/records/:id", api.delete, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
 }
 
 type recordApi struct {
@@ -73,15 +72,12 @@ func (api *recordApi) list(c echo.Context) error {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
-	var rawRecords = []dbx.NullStringMap{}
-	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &rawRecords)
+	records := []*models.Record{}
+
+	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &records)
 	if err != nil {
 		return NewBadRequestError("Invalid filter parameters.", err)
 	}
-
-	records := models.NewRecordsFromNullStringMaps(collection, rawRecords)
-
-	result.Items = records
 
 	event := new(core.RecordsListEvent)
 	event.HttpContext = c
@@ -221,6 +217,7 @@ func (api *recordApi) create(c echo.Context) error {
 	event.HttpContext = c
 	event.Collection = collection
 	event.Record = record
+	event.UploadedFiles = form.FilesToUpload()
 
 	// create the record
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
@@ -309,6 +306,7 @@ func (api *recordApi) update(c echo.Context) error {
 	event.HttpContext = c
 	event.Collection = collection
 	event.Record = record
+	event.UploadedFiles = form.FilesToUpload()
 
 	// update the record
 	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {

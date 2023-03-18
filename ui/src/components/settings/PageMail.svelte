@@ -198,7 +198,7 @@
                         </div>
                         <div class="col-lg-3">
                             <Field class="form-field required" name="smtp.tls" let:uniqueId>
-                                <label for={uniqueId}>TLS Encryption</label>
+                                <label for={uniqueId}>TLS encryption</label>
                                 <ObjectSelect
                                     id={uniqueId}
                                     items={tlsOptions}
@@ -208,7 +208,7 @@
                         </div>
                         <div class="col-lg-3">
                             <Field class="form-field" name="smtp.authMethod" let:uniqueId>
-                                <label for={uniqueId}>AUTH Method</label>
+                                <label for={uniqueId}>AUTH method</label>
                                 <ObjectSelect
                                     id={uniqueId}
                                     items={authMethods}

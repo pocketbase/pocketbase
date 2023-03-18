@@ -40,6 +40,7 @@ func (s *SortField) BuildExpr(fieldResolver FieldResolver) (string, error) {
 // into a slice of SortFields.
 //
 // Example:
+//
 //	fields := search.ParseSortFromString("-name,+created")
 func ParseSortFromString(str string) (fields []SortField) {
 	data := strings.Split(str, ",")

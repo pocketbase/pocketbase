@@ -10,6 +10,11 @@
     export let key = "";
     export let options = {};
 
+    const isSingleOptions = [
+        { label: "Single", value: true },
+        { label: "Multiple", value: false },
+    ];
+
     const defaultOptions = [
         { label: "False", value: false },
         { label: "True", value: true },
@@ -22,6 +27,8 @@
     let upsertPanel = null;
     let displayFieldsList = [];
     let oldCollectionId = null;
+    let isSingle = options?.maxSelect == 1;
+    let oldIsSingle = isSingle;
 
     // load defaults
     $: if (CommonHelper.isEmpty(options)) {
@@ -31,6 +38,18 @@
             cascadeDelete: false,
             displayFields: [],
         };
+        isSingle = true;
+        oldIsSingle = isSingle;
+    }
+
+    $: if (oldIsSingle != isSingle) {
+        oldIsSingle = isSingle;
+        if (isSingle) {
+            options.minSelect = null;
+            options.maxSelect = 1;
+        } else {
+            options.maxSelect = null;
+        }
     }
 
     $: selectedColection = $collections.find((c) => c.id == options.collectionId) || null;
@@ -66,10 +85,11 @@
 </script>
 
 <div class="grid">
-    <div class="col-sm-9">
+    <div class="col-sm-6">
         <Field class="form-field required" name="schema.{key}.options.collectionId" let:uniqueId>
             <label for={uniqueId}>Collection</label>
             <ObjectSelect
+                id={uniqueId}
                 searchable={$collections.length > 5}
                 selectPlaceholder={"Select collection"}
                 noOptionsText="No collections found"
@@ -91,22 +111,43 @@
             </ObjectSelect>
         </Field>
     </div>
-    <div class="col-sm-3">
-        <Field class="form-field" name="schema.{key}.options.maxSelect" let:uniqueId>
-            <label for={uniqueId}>
-                <span class="txt">Max select</span>
-                <i
-                    class="ri-information-line link-hint"
-                    use:tooltip={{
-                        text: "Leave empty for no limit.",
-                        position: "top",
-                    }}
-                />
-            </label>
-            <input type="number" id={uniqueId} step="1" min="1" bind:value={options.maxSelect} />
+    <div class="col-sm-6">
+        <Field class="form-field" let:uniqueId>
+            <label for={uniqueId}>Relation type</label>
+            <ObjectSelect id={uniqueId} items={isSingleOptions} bind:keyOfSelected={isSingle} />
         </Field>
     </div>
-    <div class="col-sm-9">
+
+    {#if !isSingle}
+        <div class="col-sm-6">
+            <Field class="form-field" name="schema.{key}.options.minSelect" let:uniqueId>
+                <label for={uniqueId}>Min select</label>
+                <input
+                    type="number"
+                    id={uniqueId}
+                    step="1"
+                    min="1"
+                    placeholder="No min limit"
+                    bind:value={options.minSelect}
+                />
+            </Field>
+        </div>
+        <div class="col-sm-6">
+            <Field class="form-field" name="schema.{key}.options.maxSelect" let:uniqueId>
+                <label for={uniqueId}>Max select</label>
+                <input
+                    type="number"
+                    id={uniqueId}
+                    step="1"
+                    placeholder="No max limit"
+                    min={options.minSelect || 2}
+                    bind:value={options.maxSelect}
+                />
+            </Field>
+        </div>
+    {/if}
+
+    <div class="col-sm-6">
         <Field class="form-field" name="schema.{key}.options.displayFields" let:uniqueId>
             <label for={uniqueId}>
                 <span class="txt">Display fields</span>
@@ -128,9 +169,9 @@
             />
         </Field>
     </div>
-    <div class="col-sm-3">
+    <div class="col-sm-6">
         <Field class="form-field" name="schema.{key}.options.cascadeDelete" let:uniqueId>
-            <label for={uniqueId}>Cascade delete</label>
+            <label for={uniqueId}>Delete main record on relation delete</label>
             <ObjectSelect id={uniqueId} items={defaultOptions} bind:keyOfSelected={options.cascadeDelete} />
         </Field>
     </div>

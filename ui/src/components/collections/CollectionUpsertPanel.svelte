@@ -1,7 +1,7 @@
 <script>
-    import { Collection } from "pocketbase";
     import { createEventDispatcher, tick } from "svelte";
     import { scale } from "svelte/transition";
+    import { Collection } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
     import { errors, setErrors, removeError } from "@/stores/errors";
@@ -14,18 +14,21 @@
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import CollectionFieldsTab from "@/components/collections/CollectionFieldsTab.svelte";
     import CollectionRulesTab from "@/components/collections/CollectionRulesTab.svelte";
+    import CollectionQueryTab from "@/components/collections/CollectionQueryTab.svelte";
     import CollectionAuthOptionsTab from "@/components/collections/CollectionAuthOptionsTab.svelte";
     import CollectionUpdateConfirm from "@/components/collections/CollectionUpdateConfirm.svelte";
 
-    const TAB_FIELDS = "fields";
+    const TAB_SCHEMA = "schema";
     const TAB_RULES = "api_rules";
     const TAB_OPTIONS = "options";
 
     const TYPE_BASE = "base";
     const TYPE_AUTH = "auth";
+    const TYPE_VIEW = "view";
 
     const collectionTypes = {};
     collectionTypes[TYPE_BASE] = "Base";
+    collectionTypes[TYPE_VIEW] = "View";
     collectionTypes[TYPE_AUTH] = "Auth";
 
     const dispatch = createEventDispatcher();
@@ -37,14 +40,16 @@
     let collection = new Collection();
     let isSaving = false;
     let confirmClose = false; // prevent close recursion
-    let activeTab = TAB_FIELDS;
+    let activeTab = TAB_SCHEMA;
     let initialFormHash = calculateFormHash(collection);
+    let schemaTabError = "";
 
-    $: schemaTabError =
+    $: if ($errors.schema || $errors.options?.query) {
         // extract the direct schema field error, otherwise - return a generic message
-        typeof CommonHelper.getNestedVal($errors, "schema.message", null) === "string"
-            ? CommonHelper.getNestedVal($errors, "schema.message")
-            : "Has errors";
+        schemaTabError = CommonHelper.getNestedVal($errors, "schema.message") || "Has errors";
+    } else {
+        schemaTabError = "";
+    }
 
     $: isSystemUpdate = !collection.isNew && collection.system;
 
@@ -54,7 +59,14 @@
 
     $: if (activeTab === TAB_OPTIONS && collection.type !== TYPE_AUTH) {
         // reset selected tab
-        changeTab(TAB_FIELDS);
+        changeTab(TAB_SCHEMA);
+    }
+
+    $: if (collection.type === TYPE_VIEW) {
+        // reset create, update and delete rules
+        collection.createRule = null;
+        collection.updateRule = null;
+        collection.deleteRule = null;
     }
 
     export function changeTab(newTab) {
@@ -66,7 +78,7 @@
 
         confirmClose = true;
 
-        changeTab(TAB_FIELDS);
+        changeTab(TAB_SCHEMA);
 
         return collectionPanel?.show();
     }
@@ -301,7 +313,7 @@
                     <button
                         type="button"
                         class="btn btn-sm p-r-10 p-l-10 {collection.isNew
-                            ? 'btn-secondary'
+                            ? 'btn-outline'
                             : 'btn-transparent'}"
                         disabled={!collection.isNew}
                     >
@@ -339,11 +351,11 @@
             <button
                 type="button"
                 class="tab-item"
-                class:active={activeTab === TAB_FIELDS}
-                on:click={() => changeTab(TAB_FIELDS)}
+                class:active={activeTab === TAB_SCHEMA}
+                on:click={() => changeTab(TAB_SCHEMA)}
             >
-                <span class="txt">Fields</span>
-                {#if !CommonHelper.isEmpty($errors?.schema)}
+                <span class="txt">{collection?.isView ? "Query" : "Fields"}</span>
+                {#if !CommonHelper.isEmpty(schemaTabError)}
                     <i
                         class="ri-error-warning-fill txt-danger"
                         transition:scale|local={{ duration: 150, start: 0.7 }}
@@ -390,8 +402,12 @@
 
     <div class="tabs-content">
         <!-- avoid rerendering the fields tab -->
-        <div class="tab-item" class:active={activeTab === TAB_FIELDS}>
-            <CollectionFieldsTab bind:collection />
+        <div class="tab-item" class:active={activeTab === TAB_SCHEMA}>
+            {#if collection.isView}
+                <CollectionQueryTab bind:collection />
+            {:else}
+                <CollectionFieldsTab bind:collection />
+            {/if}
         </div>
 
         {#if activeTab === TAB_RULES}
@@ -431,7 +447,7 @@
         align-items: center;
         min-height: var(--smBtnHeight);
     }
-    .tabs-content {
-        z-index: 3; /* autocomplete dropdown overlay fix */
+    .tabs-content:focus-within {
+        z-index: 9; /* autocomplete dropdown overlay fix */
     }
 </style>

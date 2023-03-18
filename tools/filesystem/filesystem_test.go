@@ -251,9 +251,13 @@ func TestFileSystemServe(t *testing.T) {
 	}
 	defer fs.Close()
 
+	csp := "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox"
+	cacheControl := "max-age=2592000, stale-while-revalidate=86400"
+
 	scenarios := []struct {
 		path          string
 		name          string
+		customHeaders map[string]string
 		expectError   bool
 		expectHeaders map[string]string
 	}{
@@ -261,6 +265,7 @@ func TestFileSystemServe(t *testing.T) {
 			// missing
 			"missing.txt",
 			"test_name.txt",
+			nil,
 			true,
 			nil,
 		},
@@ -268,83 +273,109 @@ func TestFileSystemServe(t *testing.T) {
 			// existing regular file
 			"test/sub1.txt",
 			"test_name.txt",
+			nil,
 			false,
 			map[string]string{
 				"Content-Disposition":     "attachment; filename=test_name.txt",
 				"Content-Type":            "application/octet-stream",
 				"Content-Length":          "0",
-				"Content-Security-Policy": "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox",
+				"Content-Security-Policy": csp,
+				"Cache-Control":           cacheControl,
 			},
 		},
 		{
 			// png inline
 			"image.png",
 			"test_name.png",
+			nil,
 			false,
 			map[string]string{
 				"Content-Disposition":     "inline; filename=test_name.png",
 				"Content-Type":            "image/png",
 				"Content-Length":          "73",
-				"Content-Security-Policy": "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox",
+				"Content-Security-Policy": csp,
+				"Cache-Control":           cacheControl,
 			},
 		},
 		{
 			// svg exception
 			"image.svg",
 			"test_name.svg",
+			nil,
 			false,
 			map[string]string{
 				"Content-Disposition":     "attachment; filename=test_name.svg",
 				"Content-Type":            "image/svg+xml",
 				"Content-Length":          "0",
-				"Content-Security-Policy": "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox",
+				"Content-Security-Policy": csp,
+				"Cache-Control":           cacheControl,
 			},
 		},
 		{
 			// css exception
 			"style.css",
 			"test_name.css",
+			nil,
 			false,
 			map[string]string{
 				"Content-Disposition":     "attachment; filename=test_name.css",
 				"Content-Type":            "text/css",
 				"Content-Length":          "0",
-				"Content-Security-Policy": "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox",
+				"Content-Security-Policy": csp,
+				"Cache-Control":           cacheControl,
+			},
+		},
+		{
+			// custom header
+			"test/sub2.txt",
+			"test_name.txt",
+			map[string]string{
+				"Content-Disposition":     "1",
+				"Content-Type":            "2",
+				"Content-Length":          "3",
+				"Content-Security-Policy": "4",
+				"Cache-Control":           "5",
+				"X-Custom":                "6",
+			},
+			false,
+			map[string]string{
+				"Content-Disposition":     "1",
+				"Content-Type":            "2",
+				"Content-Length":          "0", // overwriten by http.ServeContent
+				"Content-Security-Policy": "4",
+				"Cache-Control":           "5",
+				"X-Custom":                "6",
 			},
 		},
 	}
 
-	for _, scenario := range scenarios {
+	for _, s := range scenarios {
 		res := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/", nil)
 
-		err := fs.Serve(res, req, scenario.path, scenario.name)
+		for k, v := range s.customHeaders {
+			res.Header().Set(k, v)
+		}
+
+		err := fs.Serve(res, req, s.path, s.name)
 		hasErr := err != nil
 
-		if hasErr != scenario.expectError {
-			t.Errorf("(%s) Expected hasError %v, got %v (%v)", scenario.path, scenario.expectError, hasErr, err)
+		if hasErr != s.expectError {
+			t.Errorf("(%s) Expected hasError %v, got %v (%v)", s.path, s.expectError, hasErr, err)
 			continue
 		}
 
-		if scenario.expectError {
+		if s.expectError {
 			continue
 		}
 
 		result := res.Result()
 
-		for hName, hValue := range scenario.expectHeaders {
+		for hName, hValue := range s.expectHeaders {
 			v := result.Header.Get(hName)
 			if v != hValue {
-				t.Errorf("(%s) Expected value %q for header %q, got %q", scenario.path, hValue, hName, v)
+				t.Errorf("(%s) Expected value %q for header %q, got %q", s.path, hValue, hName, v)
 			}
-		}
-
-		if v := result.Header.Get("X-Frame-Options"); v != "" {
-			t.Errorf("(%s) Expected the X-Frame-Options header to be unset, got %v", scenario.path, v)
-		}
-
-		if v := result.Header.Get("Cache-Control"); v == "" {
-			t.Errorf("(%s) Expected Cache-Control header to be set, got empty string", scenario.path)
 		}
 	}
 }

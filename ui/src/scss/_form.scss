@@ -453,12 +453,12 @@ select {
         align-items: center;
         user-select: none;
         font-weight: 600;
+        font-size: var(--smFontSize);
+        letter-spacing: 0.1px;
         color: var(--txtHintColor);
-        font-size: var(--xsFontSize);
-        text-transform: uppercase;
         line-height: 1;
         padding-top: 12px;
-        padding-bottom: 2px;
+        padding-bottom: 3px;
         padding-left: var(--hPadding);
         padding-right: var(--hPadding);
         border: 0;
@@ -474,8 +474,11 @@ select {
         i {
             font-size: 0.96rem;
             line-height: 1;
-            margin-top: -2px;
-            margin-bottom: -2px;
+            margin-top: -1px;
+            margin-bottom: -1px;
+            &:before {
+                margin: 0;
+            }
         }
     }
     %input, label {
@@ -550,12 +553,24 @@ select {
             margin-left: -2px;
         }
     }
+    &.readonly,
     &.disabled {
+        label, %input {
+            background: var(--baseAlt1Color);
+        }
         > label {
-            color: var(--txtDisabledColor);
+            color: var(--txtHintColor);
         }
         &.required > label:after {
             opacity: 0.5;
+        }
+    }
+    &.disabled {
+        label, %input {
+            box-shadow: inset 0 0 0 var(--btnHeight) rgba(#fff, 0.45);
+        }
+        > label {
+            color: var(--txtDisabledColor);
         }
     }
 
@@ -1084,13 +1099,15 @@ select {
 // codemirror field
 .code-editor {
     @extend %input;
-
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     .form-field label ~ & {
         padding-bottom: 6px;
         padding-top: 4px;
     }
-
     .cm-editor {
+        flex-grow: 1;
         border: 0 !important;
         outline: none !important;
         .cm-line {
@@ -1122,6 +1139,7 @@ select {
             }
         }
         .cm-scroller {
+            flex-grow: 1;
             outline: 0 !important;
             font-family: var(--monospaceFontFamily);
             font-size: var(--baseFontSize);
@@ -1144,6 +1162,9 @@ select {
         &.cm-focused .cm-matchingBracket {
             background-color: rgba(50, 140, 130, 0.1);
         }
+    }
+    .ͼf {
+        color: var(--dangerColor);
     }
 }
 

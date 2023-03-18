@@ -59,6 +59,9 @@ func nullStringMapValue(data dbx.NullStringMap, key string) any {
 
 // NewRecordFromNullStringMap initializes a single new Record model
 // with data loaded from the provided NullStringMap.
+//
+// Note that this method is intended to load and Scan data from a database
+// result and calls PostScan() which marks the record as "not new".
 func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) *Record {
 	resultMap := make(map[string]any, len(data))
 
@@ -89,6 +92,9 @@ func NewRecordFromNullStringMap(collection *Collection, data dbx.NullStringMap) 
 
 // NewRecordsFromNullStringMaps initializes a new Record model for
 // each row in the provided NullStringMap slice.
+//
+// Note that this method is intended to load and Scan data from a database
+// result and calls PostScan() for each record marking them as "not new".
 func NewRecordsFromNullStringMaps(collection *Collection, rows []dbx.NullStringMap) []*Record {
 	result := make([]*Record, len(rows))
 
@@ -469,8 +475,12 @@ func (m *Record) PublicExport() map[string]any {
 
 	// export base model fields
 	result[schema.FieldNameId] = m.GetId()
-	result[schema.FieldNameCreated] = m.GetCreated()
-	result[schema.FieldNameUpdated] = m.GetUpdated()
+	if created := m.GetCreated(); !m.Collection().IsView() || !created.IsZero() {
+		result[schema.FieldNameCreated] = created
+	}
+	if updated := m.GetUpdated(); !m.Collection().IsView() || !updated.IsZero() {
+		result[schema.FieldNameUpdated] = updated
+	}
 
 	// add helper collection reference fields
 	result[schema.FieldNameCollectionId] = m.collection.Id
@@ -556,7 +566,7 @@ func (m *Record) ReplaceModifers(data map[string]any) map[string]any {
 		}
 
 		// -----------------------------------------------------------
-		// legacy file field modifiers (kept for backward compatability)
+		// legacy file field modifiers (kept for backward compatibility)
 		// -----------------------------------------------------------
 
 		var oldNames []string

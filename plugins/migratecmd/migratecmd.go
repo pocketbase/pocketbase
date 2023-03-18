@@ -5,14 +5,14 @@
 //
 // Example usage:
 //
-// 	migratecmd.MustRegister(app, app.RootCmd, &migratecmd.Options{
-// 		TemplateLang: migratecmd.TemplateLangJS, // default to migratecmd.TemplateLangGo
-// 		Automigrate:  true,
-// 		Dir:          "migrations_dir_path", // optional template migrations path; default to "pb_migrations" (for JS) and "migrations" (for Go)
-// 	})
+//	migratecmd.MustRegister(app, app.RootCmd, &migratecmd.Options{
+//		TemplateLang: migratecmd.TemplateLangJS, // default to migratecmd.TemplateLangGo
+//		Automigrate:  true,
+//		Dir:          "migrations_dir_path", // optional template migrations path; default to "pb_migrations" (for JS) and "migrations" (for Go)
+//	})
 //
-// 	Note: To allow running JS migrations you'll need to enable first
-// 	[jsvm.MustRegisterMigrations].
+//	Note: To allow running JS migrations you'll need to enable first
+//	[jsvm.MustRegisterMigrations].
 package migratecmd
 
 import (

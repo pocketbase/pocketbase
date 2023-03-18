@@ -13,7 +13,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -101,7 +100,7 @@ func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
 // GetFile returns a file content reader for the given fileKey.
 //
 // NB! Make sure to call `Close()` after you are done working with it.
-func (s *System) GetFile(fileKey string) (io.ReadCloser, error) {
+func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
 	br, err := s.bucket.NewReader(s.ctx, fileKey, nil)
 	if err != nil {
 		return nil, err
@@ -316,35 +315,25 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 		extContentType = ct
 	}
 
-	// clickjacking shouldn't be a concern when serving uploaded files,
-	// so it safe to unset the global X-Frame-Options to allow files embedding
-	// (see https://github.com/pocketbase/pocketbase/issues/677)
-	res.Header().Del("X-Frame-Options")
-
-	res.Header().Set("Content-Disposition", disposition+"; filename="+name)
-	res.Header().Set("Content-Type", extContentType)
-	res.Header().Set("Content-Length", strconv.FormatInt(br.Size(), 10))
-	res.Header().Set("Content-Security-Policy", "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox")
-
-	// all HTTP date/time stamps MUST be represented in Greenwich Mean Time (GMT)
-	// (see https://www.w3.org/Protocols/rfc2616/rfc2616-sec3.html#sec3.3.1)
-	//
-	// NB! time.LoadLocation may fail on non-Unix systems (see https://github.com/pocketbase/pocketbase/issues/45)
-	location, locationErr := time.LoadLocation("GMT")
-	if locationErr == nil {
-		res.Header().Set("Last-Modified", br.ModTime().In(location).Format("Mon, 02 Jan 06 15:04:05 MST"))
-	}
+	setHeaderIfMissing(res, "Content-Disposition", disposition+"; filename="+name)
+	setHeaderIfMissing(res, "Content-Type", extContentType)
+	setHeaderIfMissing(res, "Content-Security-Policy", "default-src 'none'; media-src 'self'; style-src 'unsafe-inline'; sandbox")
 
 	// set a default cache-control header
 	// (valid for 30 days but the cache is allowed to reuse the file for any requests
 	// that are made in the last day while revalidating the res in the background)
-	if res.Header().Get("Cache-Control") == "" {
-		res.Header().Set("Cache-Control", "max-age=2592000, stale-while-revalidate=86400")
-	}
+	setHeaderIfMissing(res, "Cache-Control", "max-age=2592000, stale-while-revalidate=86400")
 
 	http.ServeContent(res, req, name, br.ModTime(), br)
 
 	return nil
+}
+
+// note: expects key to be in a canonical form (eg. "accept-encoding" should be "Accept-Encoding").
+func setHeaderIfMissing(res http.ResponseWriter, key string, value string) {
+	if _, ok := res.Header()[key]; !ok {
+		res.Header().Set(key, value)
+	}
 }
 
 var ThumbSizeRegex = regexp.MustCompile(`^(\d+)x(\d+)(t|b|f)?$`)

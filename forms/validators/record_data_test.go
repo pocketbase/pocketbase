@@ -1212,6 +1212,7 @@ func TestRecordDataValidatorValidateRelation(t *testing.T) {
 			Unique: true,
 			Type:   schema.FieldTypeRelation,
 			Options: &schema.RelationOptions{
+				MinSelect:    types.Pointer(2),
 				CollectionId: demo.Id,
 			},
 		},
@@ -1257,6 +1258,15 @@ func TestRecordDataValidatorValidateRelation(t *testing.T) {
 			},
 			nil,
 			[]string{"field2"},
+		},
+		{
+			"check min constraint",
+			map[string]any{
+				"field2": relId2,
+				"field3": []string{relId1},
+			},
+			nil,
+			[]string{"field3"},
 		},
 		{
 			"check unique constraint",

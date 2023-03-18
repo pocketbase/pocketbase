@@ -42,15 +42,17 @@ var _ search.FieldResolver = (*RecordFieldResolver)(nil)
 // RecordFieldResolver defines a custom search resolver struct for
 // managing Record model search fields.
 //
-// Usually used together with `search.Provider`. Example:
-//  resolver := resolvers.NewRecordFieldResolver(
-//      app.Dao(),
-//      myCollection,
-//      &models.RequestData{...},
-//      true,
-//  )
-//  provider := search.NewProvider(resolver)
-//  ...
+// Usually used together with `search.Provider`.
+// Example:
+//
+//	resolver := resolvers.NewRecordFieldResolver(
+//	    app.Dao(),
+//	    myCollection,
+//	    &models.RequestData{...},
+//	    true,
+//	)
+//	provider := search.NewProvider(resolver)
+//	...
 type RecordFieldResolver struct {
 	dao               *daos.Dao
 	baseCollection    *models.Collection
@@ -125,17 +127,17 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 //
 // Example of some resolvable fieldName formats:
 //
-//  id
-//  someSelect.each
-//  project.screen.status
-//  @request.status
-//  @request.query.filter
-//  @request.auth.someRelation.name
-//  @request.data.someRelation.name
-//  @request.data.someField
-//  @request.data.someSelect:each
-//  @request.data.someField:isset
-//  @collection.product.name
+//	id
+//	someSelect.each
+//	project.screen.status
+//	@request.status
+//	@request.query.filter
+//	@request.auth.someRelation.name
+//	@request.data.someRelation.name
+//	@request.data.someField
+//	@request.data.someSelect:each
+//	@request.data.someField:isset
+//	@collection.product.name
 func (r *RecordFieldResolver) Resolve(fieldName string) (*search.ResolverResult, error) {
 	return parseAndRun(fieldName, r)
 }

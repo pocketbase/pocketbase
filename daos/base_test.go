@@ -3,6 +3,7 @@ package daos_test
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
@@ -68,6 +69,24 @@ func TestDaoModelQuery(t *testing.T) {
 		if sql != scenario.expected {
 			t.Errorf("(%d) Expected select %s, got %s", i, scenario.expected, sql)
 		}
+	}
+}
+
+func TestDaoModelQueryCancellation(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	dao := daos.New(testApp.DB())
+
+	m := &models.Admin{}
+
+	if err := dao.ModelQuery(m).One(m); err != nil {
+		t.Fatalf("Failed to execute control query: %v", err)
+	}
+
+	dao.ModelQueryTimeout = 0 * time.Millisecond
+	if err := dao.ModelQuery(m).One(m); err == nil {
+		t.Fatal("Expected to be cancelled, got nil")
 	}
 }
 

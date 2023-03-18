@@ -355,7 +355,7 @@
             on:submit|preventDefault={save}
         >
             {#if !record.isNew}
-                <Field class="form-field disabled" name="id" let:uniqueId>
+                <Field class="form-field readonly" name="id" let:uniqueId>
                     <label for={uniqueId}>
                         <i class={CommonHelper.getFieldTypeIcon("primary")} />
                         <span class="txt">id</span>
@@ -426,6 +426,7 @@
         <button type="button" class="btn btn-transparent" disabled={isSaving} on:click={() => hide()}>
             <span class="txt">Cancel</span>
         </button>
+
         <button
             type="submit"
             form={formId}

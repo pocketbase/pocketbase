@@ -217,24 +217,10 @@
             return [];
         }
 
-        let result = [
-            // base model fields
-            prefix + "id",
-            prefix + "created",
-            prefix + "updated",
-        ];
-
-        if (collection.isAuth) {
-            result.push(prefix + "username");
-            result.push(prefix + "email");
-            result.push(prefix + "emailVisibility");
-            result.push(prefix + "verified");
-        }
+        let result = CommonHelper.getAllCollectionIdentifiers(collection, prefix);
 
         for (const field of collection.schema) {
             const key = prefix + field.name;
-
-            result.push(key);
 
             // add relation fields
             if (field.type === "relation" && field.options?.collectionId) {

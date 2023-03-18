@@ -24,7 +24,7 @@
         <h4>Request log</h4>
     </svelte:fragment>
 
-    <table class="table-compact table-border">
+    <table class="table-border">
         <tbody>
             <tr>
                 <td class="min-width txt-hint txt-bold">ID</td>

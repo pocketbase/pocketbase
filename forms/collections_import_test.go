@@ -38,6 +38,8 @@ func TestCollectionsImportValidate(t *testing.T) {
 }
 
 func TestCollectionsImportSubmit(t *testing.T) {
+	totalCollections := 10
+
 	scenarios := []struct {
 		name                   string
 		jsonData               string
@@ -52,7 +54,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"collections": []
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: totalCollections,
 			expectEvents:           nil,
 		},
 		{
@@ -82,7 +84,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
 			},
@@ -101,7 +103,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 2,
 			},
@@ -137,7 +139,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 11,
+			expectCollectionsCount: totalCollections + 3,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 3,
 				"OnModelAfterCreate":  3,
@@ -160,7 +162,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
 				"OnModelBeforeCreate": 1,
 			},
@@ -202,7 +204,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            true,
-			expectCollectionsCount: 8,
+			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
 				"OnModelBeforeDelete": 5,
 			},
@@ -213,7 +215,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"collections": [
 					{
 						"id":"sz5l5z67tg7gku0",
-						"name":"demo2",
+						"name":"demo2_rename",
 						"schema":[
 							{
 								"id":"_2hlxbmp",
@@ -253,7 +255,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				]
 			}`,
 			expectError:            false,
-			expectCollectionsCount: 10,
+			expectCollectionsCount: totalCollections + 2,
 			expectEvents: map[string]int{
 				"OnModelBeforeUpdate": 1,
 				"OnModelAfterUpdate":  1,
@@ -341,8 +343,76 @@ func TestCollectionsImportSubmit(t *testing.T) {
 				"OnModelAfterUpdate":  2,
 				"OnModelBeforeCreate": 1,
 				"OnModelAfterCreate":  1,
-				"OnModelBeforeDelete": 6,
-				"OnModelAfterDelete":  6,
+				"OnModelBeforeDelete": totalCollections - 2,
+				"OnModelAfterDelete":  totalCollections - 2,
+			},
+		},
+		{
+			name: "lazy system table name error",
+			jsonData: `{
+				"collections": [
+					{
+						"name": "_admins",
+						"schema": [
+							{
+								"id":"fz6iql2m",
+								"name":"active",
+								"type":"bool"
+							}
+						]
+					}
+				]
+			}`,
+			expectError:            true,
+			expectCollectionsCount: totalCollections,
+			expectEvents: map[string]int{
+				"OnModelBeforeCreate": 1,
+			},
+		},
+		{
+			name: "lazy view evaluation",
+			jsonData: `{
+				"collections": [
+					{
+						"name": "view_before",
+						"type": "view",
+						"options": {
+							"query": "select id, active from base_test"
+						}
+					},
+					{
+						"name": "base_test",
+						"schema": [
+							{
+								"id":"fz6iql2m",
+								"name":"active",
+								"type":"bool"
+							}
+						]
+					},
+					{
+						"name": "view_after_new",
+						"type": "view",
+						"options": {
+							"query": "select id, active from base_test"
+						}
+					},
+					{
+						"name": "view_after_old",
+						"type": "view",
+						"options": {
+							"query": "select id from demo1"
+						}
+					}
+				]
+			}`,
+			expectError:            false,
+			expectCollectionsCount: totalCollections + 4,
+			expectEvents: map[string]int{
+				"OnModelBeforeUpdate": 3,
+				"OnModelAfterUpdate":  3,
+				"OnModelBeforeCreate": 4,
+				"OnModelAfterCreate":  4,
 			},
 		},
 	}

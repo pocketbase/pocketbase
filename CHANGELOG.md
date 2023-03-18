@@ -1,3 +1,90 @@
+## v0.13.4
+
+- Removed eager unique collection name check to allow lazy evaluation during bulk import.
+
+
+## v0.13.3
+
+- Fixed view collections import ([#2044](https://github.com/pocketbase/pocketbase/issues/2044)).
+
+- Updated the records picker Admin UI to show properly view collection relations.
+
+
+## v0.13.2
+
+- Fixed Admin UI js error when selecting multiple `file` field as `relation` "Display fields" ([#1989](https://github.com/pocketbase/pocketbase/issues/1989)).
+
+
+## v0.13.1
+
+- Added `HEAD` request method support for the `/api/files/:collection/:recordId/:filename` route ([#1976](https://github.com/pocketbase/pocketbase/discussions/1976)).
+
+
+## v0.13.0
+
+- Added new "View" collection type allowing you to create a read-only collection from a custom SQL `SELECT` statement. It supports:
+  - aggregations (`COUNT()`, `MIN()`, `MAX()`, `GROUP BY`, etc.)
+  - column and table aliases
+  - CTEs and subquery expressions
+  - auto `relation` fields association
+  - `file` fields proxying (up to 5 linked relations, eg. view1->view2->...->base)
+  - `filter`, `sort` and `expand`
+  - List and View API rules
+
+- Added auto fail/retry (default to 8 attempts) for the `SELECT` queries to gracefully handle the `database is locked` errors ([#1795](https://github.com/pocketbase/pocketbase/discussions/1795#discussioncomment-4882169)).
+  _The default max attempts can be accessed or changed via `Dao.MaxLockRetries`._
+
+- Added default max query execution timeout (30s).
+  _The default timeout can be accessed or changed via `Dao.ModelQueryTimeout`._
+  _For the prebuilt executables it can be also changed via the `--queryTimeout=10` flag._
+
+- Added support for `dao.RecordQuery(collection)` to scan directly the `One()` and `All()` results in `*models.Record` or `[]*models.Record` without the need of explicit `NullStringMap`.
+
+- Added support to overwrite the default file serve headers if an explicit response header is set.
+
+- Added file thumbs when visualizing `relation` display file fields.
+
+- Added "Min select" `relation` field option.
+
+- Enabled `process.env` in JS migrations to allow accessing `os.Environ()`.
+
+- Added `UploadedFiles` field to the `RecordCreateEvent` and `RecordUpdateEvent` event structs.
+
+- **!** Moved file upload after the record persistent to allow setting custom record id safely from the `OnModelBeforeCreate` hook.
+
+- **!** Changed `System.GetFile()` to return directly `*blob.Reader` instead of the `io.ReadCloser` interface.
+
+- **!** Changed `To`, `Cc` and `Bcc` of `mailer.Message` to `[]mail.Address` for consistency and to allow multiple recipients and optional name.
+
+    If you are sending custom emails, you'll have to replace:
+    ```go
+    message := &mailer.Message{
+      ...
+
+      // (old) To: mail.Address{Address: "to@example.com"}
+      To: []mail.Address{{Address: "to@example.com", Name: "Some optional name"}},
+
+      // (old) Cc: []string{"cc@example.com"}
+      Cc: []mail.Address{{Address: "cc@example.com", Name: "Some optional name"}},
+
+      // (old) Bcc: []string{"bcc@example.com"}
+      Bcc: []mail.Address{{Address: "bcc@example.com", Name: "Some optional name"}},
+
+      ...
+    }
+    ```
+
+- **!** Refactored the Authentik integration as a more generic "OpenID Connect" provider (`oidc`) to support any OIDC provider (Okta, Keycloak, etc.).
+  _If you've previously used Authentik, make sure to rename the provider key in your code to `oidc`._
+  _To enable more than one OIDC provider you can use the additional `oidc2` and `oidc3` provider keys._
+
+- **!** Removed the previously deprecated `Dao.Block()` and `Dao.Continue()` helpers in favor of `Dao.NonconcurrentDB()`.
+
+- Updated the internal redirects to allow easier subpath deployment when behind a reverse proxy.
+
+- Other minor Admin UI improvements.
+
+
 ## v0.12.3
 
 - Fixed "Toggle column" reactivity when navigating between collections ([#1836](https://github.com/pocketbase/pocketbase/pull/1836)).

@@ -59,9 +59,12 @@ func RequireGuestOnly() echo.MiddlewareFunc {
 // specifying their names.
 //
 // Example:
-//   apis.RequireRecordAuth()
+//
+//	apis.RequireRecordAuth()
+//
 // Or:
-//   apis.RequireRecordAuth("users", "supervisors")
+//
+//	apis.RequireRecordAuth("users", "supervisors")
 //
 // To restrict the auth record only to the loaded context collection,
 // use [apis.RequireSameContextRecordAuth()] instead.
@@ -83,7 +86,6 @@ func RequireRecordAuth(optCollectionNames ...string) echo.MiddlewareFunc {
 	}
 }
 
-//
 // RequireSameContextRecordAuth middleware requires a request to have
 // a valid record Authorization header.
 //
@@ -261,7 +263,7 @@ func LoadCollectionContext(app core.App, optCollectionTypes ...string) echo.Midd
 				}
 
 				if len(optCollectionTypes) > 0 && !list.ExistInSlice(collection.Type, optCollectionTypes) {
-					return NewBadRequestError("Invalid collection type.", nil)
+					return NewBadRequestError("Unsupported collection type.", nil)
 				}
 
 				c.Set(ContextCollectionKey, collection)

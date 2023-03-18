@@ -235,6 +235,16 @@ func (form *RecordUpsert) LoadRequest(r *http.Request, keyPrefix string) error {
 	return nil
 }
 
+// FilesToUpload returns the parsed request files ready for upload.
+func (form *RecordUpsert) FilesToUpload() map[string][]*filesystem.File {
+	return form.filesToUpload
+}
+
+// FilesToUpload returns the parsed request filenames ready to be deleted.
+func (form *RecordUpsert) FilesToDelete() []string {
+	return form.filesToDelete
+}
+
 // AddFiles adds the provided file(s) to the specified file field.
 //
 // If the file field is a SINGLE-value file field (aka. "Max Select = 1"),
@@ -246,9 +256,9 @@ func (form *RecordUpsert) LoadRequest(r *http.Request, keyPrefix string) error {
 //
 // Example
 //
-// 	f1, _ := filesystem.NewFileFromPath("/path/to/file1.txt")
-// 	f2, _ := filesystem.NewFileFromPath("/path/to/file2.txt")
-// 	form.AddFiles("documents", f1, f2)
+//	f1, _ := filesystem.NewFileFromPath("/path/to/file1.txt")
+//	f2, _ := filesystem.NewFileFromPath("/path/to/file2.txt")
+//	form.AddFiles("documents", f1, f2)
 func (form *RecordUpsert) AddFiles(key string, files ...*filesystem.File) error {
 	field := form.record.Collection().Schema.GetFieldByName(key)
 	if field == nil || field.Type != schema.FieldTypeFile {
@@ -298,11 +308,11 @@ func (form *RecordUpsert) AddFiles(key string, files ...*filesystem.File) error 
 //
 // Example
 //
-//  // mark only only 2 files for removal
-// 	form.AddFiles("documents", "file1_aw4bdrvws6.txt", "file2_xwbs36bafv.txt")
+//	// mark only only 2 files for removal
+//	form.AddFiles("documents", "file1_aw4bdrvws6.txt", "file2_xwbs36bafv.txt")
 //
-// 	// mark all "documents" files for removal
-// 	form.AddFiles("documents")
+//	// mark all "documents" files for removal
+//	form.AddFiles("documents")
 func (form *RecordUpsert) RemoveFiles(key string, toDelete ...string) error {
 	field := form.record.Collection().Schema.GetFieldByName(key)
 	if field == nil || field.Type != schema.FieldTypeFile {
@@ -419,7 +429,6 @@ func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 		if len(submittedNames) == 0 && len(oldNames) > 0 {
 			form.RemoveFiles(key)
 		} else if len(oldNames) > 0 {
-
 			toDelete := []string{}
 
 			for _, name := range oldNames {
@@ -731,19 +740,14 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 			form.record.MarkAsNew()
 		}
 
+		// persist the record model
+		if saveErr := form.dao.SaveRecord(form.record); saveErr != nil {
+			return fmt.Errorf("failed to save the record: %w", saveErr)
+		}
+
 		// upload new files (if any)
 		if err := form.processFilesToUpload(); err != nil {
 			return fmt.Errorf("failed to process the uploaded files: %w", err)
-		}
-
-		// persist the record model
-		if saveErr := form.dao.SaveRecord(form.record); saveErr != nil {
-			// try to cleanup the successfully uploaded files
-			if _, err := form.deleteFilesByNamesList(form.getFilesToUploadNames()); err != nil && form.app.IsDebug() {
-				log.Println(err)
-			}
-
-			return fmt.Errorf("failed to save the record: %w", saveErr)
 		}
 
 		// delete old files (if any)
@@ -756,18 +760,6 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 
 		return nil
 	}, interceptors...)
-}
-
-func (form *RecordUpsert) getFilesToUploadNames() []string {
-	names := []string{}
-
-	for fieldKey := range form.filesToUpload {
-		for _, file := range form.filesToUpload[fieldKey] {
-			names = append(names, file.Name)
-		}
-	}
-
-	return names
 }
 
 func (form *RecordUpsert) processFilesToUpload() error {

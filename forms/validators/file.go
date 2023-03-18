@@ -13,6 +13,7 @@ import (
 // size is no more than the provided maxBytes.
 //
 // Example:
+//
 //	validation.Field(&form.File, validation.By(validators.UploadedFileSize(1000)))
 func UploadedFileSize(maxBytes int) validation.RuleFunc {
 	return func(value any) error {
@@ -36,7 +37,8 @@ func UploadedFileSize(maxBytes int) validation.RuleFunc {
 // mimetype is within the provided allowed mime types.
 //
 // Example:
-// 	validMimeTypes := []string{"test/plain","image/jpeg"}
+//
+//	validMimeTypes := []string{"test/plain","image/jpeg"}
 //	validation.Field(&form.File, validation.By(validators.UploadedFileMimeType(validMimeTypes)))
 func UploadedFileMimeType(validTypes []string) validation.RuleFunc {
 	return func(value any) error {

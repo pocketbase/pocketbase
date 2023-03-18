@@ -5,7 +5,6 @@ import (
 	"math"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/pocketbase/dbx"
 )
@@ -198,11 +197,9 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	if len(queryInfo.From) > 0 {
 		baseTable = queryInfo.From[0]
 	}
-	countQuery := modelsQuery
-	rawCountQuery := countQuery.Select(strings.Join([]string{baseTable, "id"}, ".")).OrderBy().Build().SQL()
-	wrappedCountQuery := queryInfo.Builder.NewQuery("SELECT COUNT(*) FROM (" + rawCountQuery + ")")
-	wrappedCountQuery.Bind(countQuery.Build().Params())
-	if err := wrappedCountQuery.Row(&totalCount); err != nil {
+	clone := modelsQuery
+	countQuery := clone.Select("COUNT(DISTINCT [[" + baseTable + ".id]])").OrderBy()
+	if err := countQuery.Row(&totalCount); err != nil {
 		return nil, err
 	}
 

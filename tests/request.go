@@ -10,6 +10,7 @@ import (
 // MockMultipartData creates a mocked multipart/form-data payload.
 //
 // Example
+//
 //	data, mp, err := tests.MockMultipartData(
 //		map[string]string{"title": "new"},
 //		"file1",

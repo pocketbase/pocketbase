@@ -53,7 +53,7 @@ export async function loadCollections(activeId = null) {
 
     try {
         let items = await ApiClient.collections.getFullList(200, {
-            "sort": "+created",
+            "sort": "+name",
         })
 
         items = CommonHelper.sortCollections(items);

@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	DefaultDataMaxOpenConns int = 100
+	DefaultDataMaxOpenConns int = 120
 	DefaultDataMaxIdleConns int = 20
 	DefaultLogsMaxOpenConns int = 10
 	DefaultLogsMaxIdleConns int = 2
@@ -472,7 +472,7 @@ func (app *BaseApp) NewMailClient() mailer.Mailer {
 // NB! Make sure to call `Close()` on the returned result
 // after you are done working with it.
 func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
-	if app.settings.S3.Enabled {
+	if app.settings != nil && app.settings.S3.Enabled {
 		return filesystem.NewS3(
 			app.settings.S3.Bucket,
 			app.settings.S3.Region,
