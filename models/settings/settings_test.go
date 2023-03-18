@@ -17,6 +17,7 @@ func TestSettingsValidate(t *testing.T) {
 
 	// set invalid settings data
 	s.Meta.AppName = ""
+	s.Meta.UITheme = ""
 	s.Logs.MaxDays = -10
 	s.Smtp.Enabled = true
 	s.Smtp.Host = ""
@@ -108,6 +109,7 @@ func TestSettingsMerge(t *testing.T) {
 
 	s2 := settings.New()
 	s2.Meta.AppName = "test"
+	s2.Meta.UITheme = "System"
 	s2.Logs.MaxDays = 123
 	s2.Smtp.Host = "test"
 	s2.Smtp.Enabled = true
@@ -201,6 +203,7 @@ func TestSettingsClone(t *testing.T) {
 func TestSettingsRedactClone(t *testing.T) {
 	s1 := settings.New()
 	s1.Meta.AppName = "test123" // control field
+	s1.Meta.UITheme = "System"
 	s1.Smtp.Password = "test123"
 	s1.Smtp.Tls = true
 	s1.S3.Secret = "test123"
@@ -236,7 +239,7 @@ func TestSettingsRedactClone(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":5},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","authMethod":"","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"recordAuthToken":{"secret":"******","duration":1209600},"recordPasswordResetToken":{"secret":"******","duration":1800},"recordEmailChangeToken":{"secret":"******","duration":1800},"recordVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":false,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":0},"googleAuth":{"enabled":false,"clientSecret":"******"},"facebookAuth":{"enabled":false,"clientSecret":"******"},"githubAuth":{"enabled":false,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"clientSecret":"******"},"discordAuth":{"enabled":false,"clientSecret":"******"},"twitterAuth":{"enabled":false,"clientSecret":"******"},"microsoftAuth":{"enabled":false,"clientSecret":"******"},"spotifyAuth":{"enabled":false,"clientSecret":"******"},"kakaoAuth":{"enabled":false,"clientSecret":"******"},"twitchAuth":{"enabled":false,"clientSecret":"******"},"stravaAuth":{"enabled":false,"clientSecret":"******"},"giteeAuth":{"enabled":false,"clientSecret":"******"},"livechatAuth":{"enabled":false,"clientSecret":"******"},"authentikAuth":{"enabled":false,"clientSecret":"******"},"giteaAuth":{"enabled":false,"clientSecret":"******"}}`
+	expected := `{"meta":{"appName":"test123","appUrl":"http://localhost:8090","hideControls":false,"senderName":"Support","senderAddress":"support@example.com","uiTheme":"System","verificationTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eThank you for joining us at {APP_NAME}.\u003c/p\u003e\n\u003cp\u003eClick on the button below to verify your email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eVerify\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Verify your {APP_NAME} email","actionUrl":"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}"},"resetPasswordTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to reset your password.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eReset password\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to reset your password, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Reset your {APP_NAME} password","actionUrl":"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}"},"confirmEmailChangeTemplate":{"body":"\u003cp\u003eHello,\u003c/p\u003e\n\u003cp\u003eClick on the button below to confirm your new email address.\u003c/p\u003e\n\u003cp\u003e\n  \u003ca class=\"btn\" href=\"{ACTION_URL}\" target=\"_blank\" rel=\"noopener\"\u003eConfirm new email\u003c/a\u003e\n\u003c/p\u003e\n\u003cp\u003e\u003ci\u003eIf you didn't ask to change your email address, you can ignore this email.\u003c/i\u003e\u003c/p\u003e\n\u003cp\u003e\n  Thanks,\u003cbr/\u003e\n  {APP_NAME} team\n\u003c/p\u003e","subject":"Confirm your {APP_NAME} new email address","actionUrl":"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}"}},"logs":{"maxDays":5},"smtp":{"enabled":false,"host":"smtp.example.com","port":587,"username":"","password":"******","authMethod":"","tls":true},"s3":{"enabled":false,"bucket":"","region":"","endpoint":"","accessKey":"","secret":"******","forcePathStyle":false},"adminAuthToken":{"secret":"******","duration":1209600},"adminPasswordResetToken":{"secret":"******","duration":1800},"recordAuthToken":{"secret":"******","duration":1209600},"recordPasswordResetToken":{"secret":"******","duration":1800},"recordEmailChangeToken":{"secret":"******","duration":1800},"recordVerificationToken":{"secret":"******","duration":604800},"emailAuth":{"enabled":false,"exceptDomains":null,"onlyDomains":null,"minPasswordLength":0},"googleAuth":{"enabled":false,"clientSecret":"******"},"facebookAuth":{"enabled":false,"clientSecret":"******"},"githubAuth":{"enabled":false,"clientSecret":"******"},"gitlabAuth":{"enabled":false,"clientSecret":"******"},"discordAuth":{"enabled":false,"clientSecret":"******"},"twitterAuth":{"enabled":false,"clientSecret":"******"},"microsoftAuth":{"enabled":false,"clientSecret":"******"},"spotifyAuth":{"enabled":false,"clientSecret":"******"},"kakaoAuth":{"enabled":false,"clientSecret":"******"},"twitchAuth":{"enabled":false,"clientSecret":"******"},"stravaAuth":{"enabled":false,"clientSecret":"******"},"giteeAuth":{"enabled":false,"clientSecret":"******"},"livechatAuth":{"enabled":false,"clientSecret":"******"},"authentikAuth":{"enabled":false,"clientSecret":"******"},"giteaAuth":{"enabled":false,"clientSecret":"******"}}`
 
 	if encodedStr := string(encoded); encodedStr != expected {
 		t.Fatalf("Expected\n%v\ngot\n%v", expected, encodedStr)
@@ -510,6 +513,7 @@ func TestMetaConfigValidate(t *testing.T) {
 				AppUrl:                     "test",
 				SenderName:                 strings.Repeat("a", 300),
 				SenderAddress:              "invalid_email",
+				UITheme:                    "invalid_theme",
 				VerificationTemplate:       invalidTemplate,
 				ResetPasswordTemplate:      invalidTemplate,
 				ConfirmEmailChangeTemplate: invalidTemplate,
@@ -523,6 +527,7 @@ func TestMetaConfigValidate(t *testing.T) {
 				AppUrl:                     "https://example.com",
 				SenderName:                 "test",
 				SenderAddress:              "test@example.com",
+				UITheme:                    "System",
 				VerificationTemplate:       noPlaceholdersTemplate,
 				ResetPasswordTemplate:      noPlaceholdersTemplate,
 				ConfirmEmailChangeTemplate: noPlaceholdersTemplate,
@@ -536,6 +541,7 @@ func TestMetaConfigValidate(t *testing.T) {
 				AppUrl:                     "https://example.com",
 				SenderName:                 "test",
 				SenderAddress:              "test@example.com",
+				UITheme:                    "System",
 				VerificationTemplate:       withPlaceholdersTemplate,
 				ResetPasswordTemplate:      withPlaceholdersTemplate,
 				ConfirmEmailChangeTemplate: withPlaceholdersTemplate,

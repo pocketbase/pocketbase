@@ -1,0 +1,245 @@
+body.dark {
+    --txtPrimaryColor: #f8f9fa;
+    --txtHintColor: #c2c5c8;
+    --txtDisabledColor: #a3a9ac;
+
+    --primaryColor: #8e979e;
+
+    --bodyColor: #3d4346;
+
+    --baseColor: #33383b;
+    --baseAlt1Color: #474e52;
+    --baseAlt2Color: #5c6469;
+    --baseAlt3Color: #858c91;
+    --baseAlt4Color: #a3a9ac;
+
+    --infoColor: #3187ca;
+    --infoAltColor: #256597;
+    --successColor: #239264;
+    --successAltColor: #1a6d4b;
+    --dangerColor: #b42c45;
+    --dangerAltColor: #872134;
+    --warningColor: #cc7230;
+    --warningAltColor: #995524;
+
+    --overlayColor: rgba(36, 32, 30, 0.25);
+
+    --codeAqua: hsl(180, 62%, 47%);
+    --codeBlue: hsl(202, 62%, 50%);
+    --codeBlueAlpha: hsla(202, 62%, 50%, 0.855);
+    --codeComment: hsl(213, 29%, 60%);
+    --codeCommentAlpha: hsla(213, 29%, 60%, 0.855);
+    --codeGreen: hsl(110, 62%, 50%);
+    --codeOrange: hsl(27, 62%, 50%);
+    --codePink: hsl(300, 62%, 50%);
+    --codePurple: hsl(284, 62%, 50%);
+    --codeRed: hsl(0, 62%, 47%);
+    --codeYellow: hsl(49, 62%, 50%);
+
+    .btn {
+        &.btn-outline {
+            background: none;
+        }
+    }
+
+    .prism-light {
+        code[class*="language-"],
+        pre[class*="language-"] {
+            color: #111b27;
+        }
+        code[class*="language-"] ::-moz-selection,
+        code[class*="language-"]::-moz-selection,
+        pre[class*="language-"] ::-moz-selection,
+        pre[class*="language-"]::-moz-selection {
+            background: #8da1b9;
+        }
+        code[class*="language-"] ::selection,
+        code[class*="language-"]::selection,
+        pre[class*="language-"] ::selection,
+        pre[class*="language-"]::selection {
+            background: #8da1b9;
+        }
+        :not(pre) > code[class*="language-"],
+        pre[class*="language-"] {
+            background: #e3eaf2;
+        }
+        .token.cdata,
+        .token.comment,
+        .token.doctype,
+        .token.prolog {
+            color: var(--codeComment);
+        }
+        .token.punctuation {
+            color: var(--txtPrimaryColor);
+        }
+        .token.delimiter.important,
+        .token.selector .parent,
+        .token.tag,
+        .token.tag .token.punctuation {
+            color: var(--codeAqua);
+        }
+        .token.attr-name,
+        .token.boolean,
+        .token.boolean.important,
+        .token.constant,
+        .token.number,
+        .token.selector .token.attribute {
+            color: var(--codeYellow);
+        }
+        .token.class-name,
+        .token.key,
+        .token.parameter,
+        .token.property,
+        .token.property-access,
+        .token.variable {
+            color: var(--codeBlue);
+        }
+        .token.attr-value,
+        .token.color,
+        .token.inserted,
+        .token.selector .token.value,
+        .token.string,
+        .token.string .token.url-link {
+            color: var(--codeGreen);
+        }
+        .token.builtin,
+        .token.keyword-array,
+        .token.package,
+        .token.regex {
+            color: var(--codePink);
+        }
+        .token.function,
+        .token.selector .token.class,
+        .token.selector .token.id {
+            color: var(--codePurple);
+        }
+        .token.atrule .token.rule,
+        .token.combinator,
+        .token.keyword,
+        .token.operator,
+        .token.pseudo-class,
+        .token.pseudo-element,
+        .token.selector,
+        .token.unit {
+            color: var(--codeOrange);
+        }
+        .token.deleted,
+        .token.important {
+            color: var(--codeRed);
+        }
+        .token.keyword-this,
+        .token.this {
+            color: var(--codeBlue);
+        }
+        .language-markdown .token.title,
+        .language-markdown .token.title .token.punctuation {
+            color: var(--codeBlue);
+        }
+        .language-markdown .token.blockquote.punctuation {
+            color: var(--codePink);
+        }
+        .language-markdown .token.code {
+            color: var(--codeAqua);
+        }
+        .language-markdown .token.hr.punctuation {
+            color: var(--codeBlue);
+        }
+        .language-markdown .token.url > .token.content {
+            color: var(--codeGreen);
+        }
+        .language-markdown .token.url-link {
+            color: var(--codeYellow);
+        }
+        .language-markdown .token.list.punctuation {
+            color: var(--codePink);
+        }
+        .language-markdown .token.table-header {
+            color: #111b27;
+        }
+        .language-json .token.operator {
+            color: #111b27;
+        }
+        .language-scss .token.variable {
+            color: var(--codeAqua);
+        }
+        .token.token.cr:before,
+        .token.token.lf:before,
+        .token.token.space:before,
+        .token.token.tab:not(:empty):before {
+            color: var(--codeComment);
+        }
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > a,
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > button {
+            color: #e3eaf2;
+            background: var(--codeBlue);
+        }
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > a:focus,
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > a:hover,
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > button:focus,
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > button:hover {
+            color: #e3eaf2;
+            background: var(--codeBlueAlpha);
+            text-decoration: none;
+        }
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > span,
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > span:focus,
+        div.code-toolbar > .toolbar.toolbar > .toolbar-item > span:hover {
+            color: #e3eaf2;
+            background: var(--codeComment);
+        }
+        .line-highlight.line-highlight {
+            background: #8da1b92f;
+            background: linear-gradient(to right, #8da1b92f 70%, #8da1b925);
+        }
+        .line-highlight.line-highlight:before,
+        .line-highlight.line-highlight[data-end]:after {
+            background-color: var(--codeComment);
+            color: #e3eaf2;
+            box-shadow: 0 1px #8da1b9;
+        }
+        pre[id].linkable-line-numbers.linkable-line-numbers span.line-numbers-rows > span:hover:before {
+            background-color: #3c526d1f;
+        }
+        .line-numbers.line-numbers .line-numbers-rows {
+            border-right: 1px solid #8da1b97a;
+            background: #d0dae77a;
+        }
+        .line-numbers .line-numbers-rows > span:before {
+            color: var(--codeComment) da;
+        }
+        .rainbow-braces .token.token.punctuation.brace-level-1,
+        .rainbow-braces .token.token.punctuation.brace-level-5,
+        .rainbow-braces .token.token.punctuation.brace-level-9 {
+            color: var(--codeYellow);
+        }
+        .rainbow-braces .token.token.punctuation.brace-level-10,
+        .rainbow-braces .token.token.punctuation.brace-level-2,
+        .rainbow-braces .token.token.punctuation.brace-level-6 {
+            color: var(--codePink);
+        }
+        .rainbow-braces .token.token.punctuation.brace-level-11,
+        .rainbow-braces .token.token.punctuation.brace-level-3,
+        .rainbow-braces .token.token.punctuation.brace-level-7 {
+            color: var(--codeBlue);
+        }
+        .rainbow-braces .token.token.punctuation.brace-level-12,
+        .rainbow-braces .token.token.punctuation.brace-level-4,
+        .rainbow-braces .token.token.punctuation.brace-level-8 {
+            color: var(--codePurple);
+        }
+        pre.diff-highlight > code .token.token.deleted:not(.prefix),
+        pre > code.diff-highlight .token.token.deleted:not(.prefix) {
+            background-color: #c22f2e1f;
+        }
+        pre.diff-highlight > code .token.token.inserted:not(.prefix),
+        pre > code.diff-highlight .token.token.inserted:not(.prefix) {
+            background-color: #116b001f;
+        }
+        .command-line .command-line-prompt {
+            border-right: 1px solid #8da1b97a;
+        }
+        .command-line .command-line-prompt > span:before {
+            color: var(--codeCommentAlpha);
+        }
+    }
+}

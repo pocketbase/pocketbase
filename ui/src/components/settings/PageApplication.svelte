@@ -1,11 +1,13 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import { pageTitle, appName, hideControls } from "@/stores/app";
+    import setUiTheme from "@/utils/UiTheme";
+    import { pageTitle, appName, hideControls, uiTheme } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
     import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
+    import Select from "@/components/base/Select.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
 
     $pageTitle = "Application settings";
@@ -15,6 +17,7 @@
     let isLoading = false;
     let isSaving = false;
     let initialHash = "";
+    let themeOptions = ["System", "Light", "Dark"];
 
     $: initialHash = JSON.stringify(originalFormSettings);
 
@@ -56,6 +59,8 @@
     function init(settings = {}) {
         $appName = settings?.meta?.appName;
         $hideControls = !!settings?.meta?.hideControls;
+        $uiTheme = settings?.meta?.uiTheme;
+        setUiTheme($uiTheme);
 
         formSettings = {
             meta: settings?.meta || {},
@@ -108,6 +113,24 @@
                     <Field class="form-field required" name="logs.maxDays" let:uniqueId>
                         <label for={uniqueId}>Logs max days retention</label>
                         <input type="number" id={uniqueId} required bind:value={formSettings.logs.maxDays} />
+                    </Field>
+
+                    <Field class="form-field" name="meta.uiTheme" let:uniqueId>
+                        <label for={uniqueId}>
+                            <span class="txt">Set UI Theme</span>
+                            <i
+                                class="ri-information-line link-hint"
+                                use:tooltip={{
+                                    text: "You can either choose to let the system handle the theme automatically or set it to your preferred one.",
+                                    position: "top",
+                                }}
+                            />
+                        </label>
+                        <Select
+                            id={uniqueId}
+                            items={themeOptions}
+                            bind:selected={formSettings.meta.uiTheme}
+                        />
                     </Field>
 
                     <Field class="form-field form-field-toggle" name="meta.hideControls" let:uniqueId>

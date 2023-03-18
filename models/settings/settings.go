@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -60,6 +61,7 @@ func New() *Settings {
 			HideControls:               false,
 			SenderName:                 "Support",
 			SenderAddress:              "support@example.com",
+			UITheme:                    "System",
 			VerificationTemplate:       defaultVerificationTemplate,
 			ResetPasswordTemplate:      defaultResetPasswordTemplate,
 			ConfirmEmailChangeTemplate: defaultConfirmEmailChangeTemplate,
@@ -362,6 +364,7 @@ type MetaConfig struct {
 	HideControls               bool          `form:"hideControls" json:"hideControls"`
 	SenderName                 string        `form:"senderName" json:"senderName"`
 	SenderAddress              string        `form:"senderAddress" json:"senderAddress"`
+	UITheme                    string        `form:"uiTheme" json:"uiTheme"`
 	VerificationTemplate       EmailTemplate `form:"verificationTemplate" json:"verificationTemplate"`
 	ResetPasswordTemplate      EmailTemplate `form:"resetPasswordTemplate" json:"resetPasswordTemplate"`
 	ConfirmEmailChangeTemplate EmailTemplate `form:"confirmEmailChangeTemplate" json:"confirmEmailChangeTemplate"`
@@ -369,11 +372,14 @@ type MetaConfig struct {
 
 // Validate makes MetaConfig validatable by implementing [validation.Validatable] interface.
 func (c MetaConfig) Validate() error {
+	uiRegex, _ := regexp.Compile("(System|Light|Dark)")
+
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.AppName, validation.Required, validation.Length(1, 255)),
 		validation.Field(&c.AppUrl, validation.Required, is.URL),
 		validation.Field(&c.SenderName, validation.Required, validation.Length(1, 255)),
 		validation.Field(&c.SenderAddress, is.EmailFormat, validation.Required),
+		validation.Field(&c.UITheme, validation.Required, validation.Match(uiRegex)),
 		validation.Field(&c.VerificationTemplate, validation.Required),
 		validation.Field(&c.ResetPasswordTemplate, validation.Required),
 		validation.Field(&c.ConfirmEmailChangeTemplate, validation.Required),
