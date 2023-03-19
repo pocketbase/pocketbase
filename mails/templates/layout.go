@@ -50,12 +50,6 @@ const Layout = `
         .hidden {
             display: none !important;
         }
-        .fallback-link {
-            display: none !important;
-            word-break: break-all;
-            font-size: 11px;
-            color:  #666f75;
-        }
         .btn {
             display: inline-block;
             vertical-align: top;
