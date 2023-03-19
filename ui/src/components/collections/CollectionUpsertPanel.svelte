@@ -240,6 +240,7 @@
             if (!CommonHelper.isEmpty(clone.indexes)) {
                 for (let i = 0; i < clone.indexes.length; i++) {
                     const parsed = CommonHelper.parseIndex(clone.indexes[i]);
+                    parsed.indexName = "idx_" + CommonHelper.randomString(7);
                     parsed.tableName = clone.name;
                     clone.indexes[i] = CommonHelper.buildIndex(parsed);
                 }

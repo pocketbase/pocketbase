@@ -246,6 +246,11 @@ button {
         width: 100%;
     }
 
+    // pill
+    &.btn-pill {
+        border-radius: 30px;
+    }
+
     // circle
     &.btn-circle {
         border-radius: 50%;

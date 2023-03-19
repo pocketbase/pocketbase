@@ -1,5 +1,6 @@
 <script>
     import { createEventDispatcher } from "svelte";
+    import { slide } from "svelte/transition";
     import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
@@ -73,6 +74,7 @@
     draggable={true}
     class="schema-field"
     class:drag-over={isDragOver}
+    transition:slide|local={{ duration: 150 }}
     on:dragstart={(e) => {
         if (!e.target.classList.contains("drag-handle-wrapper")) {
             e.preventDefault();

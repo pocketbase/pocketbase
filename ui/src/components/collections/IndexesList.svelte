@@ -32,7 +32,7 @@
         {@const parsed = CommonHelper.parseIndex(rawIndex)}
         <button
             type="button"
-            class="label link-primary {$errors.indexes?.[i]?.message ? 'label-danger' : 'label-info'}"
+            class="label link-primary {$errors.indexes?.[i]?.message ? 'label-danger' : ''}"
             use:tooltip={$errors.indexes?.[i]?.message || ""}
             on:click={() => upsertPanel?.show(rawIndex, i)}
         >
@@ -44,7 +44,11 @@
             </span>
         </button>
     {/each}
-    <button type="button" class="label label-primary link-fade" on:click={() => upsertPanel?.show()}>
+    <button
+        type="button"
+        class="btn btn-xs btn-transparent btn-pill btn-outline"
+        on:click={() => upsertPanel?.show()}
+    >
         <span class="txt">+</span>
         <span class="txt">New index</span>
     </button>

@@ -159,6 +159,6 @@
 
 <NewField class="btn btn-block btn-outline" on:select={(e) => newField(e.detail)} />
 
-<div class="clearfix m-b-base" />
+<hr />
 
 <IndexesList bind:collection />
