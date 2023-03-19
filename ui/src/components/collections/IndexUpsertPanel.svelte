@@ -20,7 +20,7 @@
 
     $: indexParts = CommonHelper.parseIndex(index);
 
-    $: indexColumns = indexParts.columns?.map((c) => c.column) || [];
+    $: indexColumns = indexParts.columns?.map((c) => c.name) || [];
 
     export function show(showIndex, showKey) {
         key = !CommonHelper.isEmpty(showKey) ? showKey : "";
@@ -63,11 +63,11 @@
     function toggleColumn(column) {
         const clone = CommonHelper.clone(indexParts);
 
-        const col = clone.columns.find((c) => c.column == column);
+        const col = clone.columns.find((c) => c.name == column);
         if (col) {
             CommonHelper.removeByValue(clone.columns, col);
         } else {
-            CommonHelper.pushUnique(clone.columns, { column });
+            CommonHelper.pushUnique(clone.columns, { name: column });
         }
 
         index = CommonHelper.buildIndex(clone);

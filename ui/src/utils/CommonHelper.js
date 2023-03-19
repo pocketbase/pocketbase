@@ -1447,8 +1447,8 @@ export default class CommonHelper {
      *   "schemaName": "schemaname"
      *   "indexName":  "idxname"
      *   "tableName":  "tablename"
-     *   "columns":    [{column: "col1", "collate": "", "sort": ""}, {column: "col1", "collate": "", "sort": ""}]
-     *   expression:   "expr"
+     *   "columns":    [{name: "col1", "collate": "", "sort": ""}, {name: "col1", "collate": "", "sort": ""}]
+     *   "where":      "expr"
      * }
      * ```
      *
@@ -1463,7 +1463,7 @@ export default class CommonHelper {
             indexName:  "",
             tableName:  "",
             columns:    [],
-            expression: "",
+            where:      "",
         };
 
         const indexRegex = /create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?([\w\"\'\`\[\]\.]*)\s+on\s+([\w\"\'\`\[\]\.]*)\s+\(([\s\S]*)\)(?:\s*where\s+([\s\S]*))?/gmi;
@@ -1513,14 +1513,14 @@ export default class CommonHelper {
                 continue;
             }
             result.columns.push({
-                column:  colOrExpr,
+                name:    colOrExpr,
                 collate: colMatches[2] || "",
                 sort:    colMatches[3]?.toUpperCase() || "",
             });
         }
 
-        // expression
-        result.expression = matches[6] || "";
+        // WHERE expression
+        result.where = matches[6] || "";
 
         return result;
     }
@@ -1553,23 +1553,23 @@ export default class CommonHelper {
         result += `ON "${indexParts.tableName}" (\n`;
 
         result += indexParts.columns
-            .filter((c) => !!c?.column)
-            .map((c) => {
+            .filter((col) => !!col?.name)
+            .map((col) => {
                 let item = "";
 
-                if (c.column.includes("(") || c.column.includes(" ")) {
+                if (col.name.includes("(") || col.name.includes(" ")) {
                     // most likely an expression
-                    item += c.column;
+                    item += col.name;
                 } else {
                     // regular identifier
-                    item += `"${c.column}"`;
+                    item += `"${col.name}"`;
                 }
 
-                if (c.collate) {
-                    item += (" COLLATE " + c.collate);
+                if (col.collate) {
+                    item += (" COLLATE " + col.collate);
                 }
 
-                if (c.sort) {
+                if (col.sort) {
                     item += (" " + c.sort.toUpperCase());
                 }
 
@@ -1579,8 +1579,8 @@ export default class CommonHelper {
 
         result += `\n)`;
 
-        if (indexParts.expression) {
-            result += ` WHERE ${indexParts.expression}`;
+        if (indexParts.where) {
+            result += ` WHERE ${indexParts.where}`;
         }
 
         return result;
@@ -1618,8 +1618,8 @@ export default class CommonHelper {
 
         let hasChange = false;
         for (let col of parsed.columns) {
-            if (col.column === oldColumn) {
-                col.column = newColumn;
+            if (col.name === oldColumn) {
+                col.name = newColumn;
                 hasChange = true;
             }
         }

@@ -40,7 +40,7 @@
                 <strong>Unique:</strong>
             {/if}
             <span class="txt">
-                {parsed.columns?.map((c) => c.column).join(", ")}
+                {parsed.columns?.map((c) => c.name).join(", ")}
             </span>
         </button>
     {/each}
