@@ -416,17 +416,6 @@ func (form *CollectionUpsert) checkIndexes(value any) error {
 	return nil
 }
 
-func (form *CollectionUpsert) dryDao() *daos.Dao {
-	if form.dao.ConcurrentDB() == form.dao.NonconcurrentDB() {
-		// it is already in a transaction and therefore use the app concurrent db pool
-		// to prevent "transaction has already been committed or rolled back" error
-		return daos.New(form.app.Dao().ConcurrentDB())
-	}
-
-	// otherwise use the form noncurrent dao db pool
-	return daos.New(form.dao.NonconcurrentDB())
-}
-
 func (form *CollectionUpsert) checkOptions(value any) error {
 	v, _ := value.(types.JsonMap)
 

@@ -32,7 +32,8 @@ func TestParseIndex(t *testing.T) {
 		// all fields
 		{
 			`CREATE UNIQUE INDEX IF NOT EXISTS "schemaname".[indexname] on 'tablename' (
-				col1,
+				col0,
+				` + "`" + `col1` + "`" + `,
 				json_extract("col2", "$.a") asc,
 				"col3" collate NOCASE,
 				"col4" collate RTRIM desc
@@ -44,6 +45,7 @@ func TestParseIndex(t *testing.T) {
 				IndexName:  "indexname",
 				TableName:  "tablename",
 				Columns: []dbutils.IndexColumn{
+					{Name: "col0"},
 					{Name: "col1"},
 					{Name: `json_extract("col2", "$.a")`, Sort: "ASC"},
 					{Name: `col3`, Collate: "NOCASE"},

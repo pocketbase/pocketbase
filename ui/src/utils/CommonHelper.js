@@ -1466,7 +1466,7 @@ export default class CommonHelper {
             where:      "",
         };
 
-        const indexRegex = /create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?([\w\"\'\`\[\]\.]*)\s+on\s+([\w\"\'\`\[\]\.]*)\s+\(([\s\S]*)\)(?:\s*where\s+([\s\S]*))?/gmi;
+        const indexRegex = /create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?(\S*)\s+on\s+(\S*)\s+\(([\s\S]*)\)(?:\s*where\s+([\s\S]*))?/gmi;
         const matches    = indexRegex.exec((idx || "").trim())
 
         if (matches?.length != 7) {
