@@ -52,6 +52,7 @@ func init() {
 				[[type]]       TEXT DEFAULT "base" NOT NULL,
 				[[name]]       TEXT UNIQUE NOT NULL,
 				[[schema]]     JSON DEFAULT "[]" NOT NULL,
+				[[indexes]]    JSON DEFAULT "[]" NOT NULL,
 				[[listRule]]   TEXT DEFAULT NULL,
 				[[viewRule]]   TEXT DEFAULT NULL,
 				[[createRule]] TEXT DEFAULT NULL,

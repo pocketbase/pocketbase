@@ -75,22 +75,22 @@ func TestCollectionMarshalJSON(t *testing.T) {
 		{
 			"no type",
 			models.Collection{Name: "test"},
-			`{"id":"","created":"","updated":"","name":"test","type":"","system":false,"schema":[],"listRule":null,"viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{}}`,
+			`{"id":"","created":"","updated":"","name":"test","type":"","system":false,"schema":[],"indexes":[],"listRule":null,"viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{}}`,
 		},
 		{
 			"unknown type + non empty options",
-			models.Collection{Name: "test", Type: "unknown", ListRule: types.Pointer("test_list"), Options: types.JsonMap{"test": 123}},
-			`{"id":"","created":"","updated":"","name":"test","type":"unknown","system":false,"schema":[],"listRule":"test_list","viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{}}`,
+			models.Collection{Name: "test", Type: "unknown", ListRule: types.Pointer("test_list"), Options: types.JsonMap{"test": 123}, Indexes: types.JsonArray{"idx_test"}},
+			`{"id":"","created":"","updated":"","name":"test","type":"unknown","system":false,"schema":[],"indexes":["idx_test"],"listRule":"test_list","viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{}}`,
 		},
 		{
 			"base type + non empty options",
 			models.Collection{Name: "test", Type: models.CollectionTypeBase, ListRule: types.Pointer("test_list"), Options: types.JsonMap{"test": 123}},
-			`{"id":"","created":"","updated":"","name":"test","type":"base","system":false,"schema":[],"listRule":"test_list","viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{}}`,
+			`{"id":"","created":"","updated":"","name":"test","type":"base","system":false,"schema":[],"indexes":[],"listRule":"test_list","viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{}}`,
 		},
 		{
 			"auth type + non empty options",
 			models.Collection{BaseModel: models.BaseModel{Id: "test"}, Type: models.CollectionTypeAuth, Options: types.JsonMap{"test": 123, "allowOAuth2Auth": true, "minPasswordLength": 4}},
-			`{"id":"test","created":"","updated":"","name":"","type":"auth","system":false,"schema":[],"listRule":null,"viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{"allowEmailAuth":false,"allowOAuth2Auth":true,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"requireEmail":false}}`,
+			`{"id":"test","created":"","updated":"","name":"","type":"auth","system":false,"schema":[],"indexes":[],"listRule":null,"viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{"allowEmailAuth":false,"allowOAuth2Auth":true,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"requireEmail":false}}`,
 		},
 	}
 

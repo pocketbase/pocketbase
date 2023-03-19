@@ -159,7 +159,7 @@ func (api *collectionApi) delete(c echo.Context) error {
 
 	handlerErr := api.app.OnCollectionBeforeDeleteRequest().Trigger(event, func(e *core.CollectionDeleteEvent) error {
 		if err := api.app.Dao().DeleteCollection(e.Collection); err != nil {
-			return NewBadRequestError("Failed to delete collection. Make sure that the collection is not referenced by other collections.", err)
+			return NewBadRequestError("Failed to delete collection due to existing dependency.", err)
 		}
 
 		return e.HttpContext.NoContent(http.StatusNoContent)

@@ -64,6 +64,10 @@ func (dao *Dao) SaveView(name string, selectQuery string) error {
 		// fetch the view table info to ensure that the view was created
 		// because missing tables or columns won't return an error
 		if _, err := txDao.GetTableInfo(name); err != nil {
+			// manually cleanup previously created view in case the func
+			// is called in a nested transaction and the error is discarded
+			txDao.DeleteView(name)
+
 			return err
 		}
 

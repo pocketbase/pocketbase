@@ -150,6 +150,11 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 			}
 		}
 
+		// trigger views resave to check for dependencies
+		if err := txDao.resaveViewsWithChangedSchema(collection.Id); err != nil {
+			return fmt.Errorf("The collection has a view dependency - %w", err)
+		}
+
 		return txDao.Delete(collection)
 	})
 }
@@ -169,7 +174,7 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 		}
 	}
 
-	return dao.RunInTransaction(func(txDao *Dao) error {
+	txErr := dao.RunInTransaction(func(txDao *Dao) error {
 		// set default collection type
 		if collection.Type == "" {
 			collection.Type = models.CollectionTypeBase
@@ -192,12 +197,18 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 			}
 		}
 
-		// trigger an update for all views with changed schema as a result of the current collection save
-		// (ignoring view errors to allow users to update the query from the UI)
-		txDao.resaveViewsWithChangedSchema(collection.Id)
-
 		return nil
 	})
+
+	if txErr != nil {
+		return txErr
+	}
+
+	// trigger an update for all views with changed schema as a result of the current collection save
+	// (ignoring view errors to allow users to update the query from the UI)
+	dao.resaveViewsWithChangedSchema(collection.Id)
+
+	return nil
 }
 
 // ImportCollections imports the provided collections list within a single transaction.
@@ -343,7 +354,7 @@ func (dao *Dao) ImportCollections(
 //   - saves the newCollection
 //
 // This method returns an error if newCollection is not a "view".
-func (dao *Dao) saveViewCollection(newCollection *models.Collection, oldCollection *models.Collection) error {
+func (dao *Dao) saveViewCollection(newCollection, oldCollection *models.Collection) error {
 	if !newCollection.IsView() {
 		return errors.New("not a view collection")
 	}
@@ -358,7 +369,7 @@ func (dao *Dao) saveViewCollection(newCollection *models.Collection, oldCollecti
 		}
 
 		// delete old renamed view
-		if oldCollection != nil && newCollection.Name != oldCollection.Name {
+		if oldCollection != nil {
 			if err := txDao.DeleteView(oldCollection.Name); err != nil {
 				return err
 			}
@@ -388,12 +399,24 @@ func (dao *Dao) resaveViewsWithChangedSchema(excludeIds ...string) error {
 				continue
 			}
 
-			query := collection.ViewOptions().Query
-
-			// generate a new schema from the query
-			newSchema, err := txDao.CreateViewSchema(query)
+			// clone the existing schema so that it is safe for temp modifications
+			oldSchema, err := collection.Schema.Clone()
 			if err != nil {
 				return err
+			}
+
+			// generate a new schema from the query
+			newSchema, err := txDao.CreateViewSchema(collection.ViewOptions().Query)
+			if err != nil {
+				return err
+			}
+
+			// unset the schema field ids to exclude from the comparison
+			for _, f := range oldSchema.Fields() {
+				f.Id = ""
+			}
+			for _, f := range newSchema.Fields() {
+				f.Id = ""
 			}
 
 			encodedNewSchema, err := json.Marshal(newSchema)
@@ -401,7 +424,7 @@ func (dao *Dao) resaveViewsWithChangedSchema(excludeIds ...string) error {
 				return err
 			}
 
-			encodedOldSchema, err := json.Marshal(collection.Schema)
+			encodedOldSchema, err := json.Marshal(oldSchema)
 			if err != nil {
 				return err
 			}

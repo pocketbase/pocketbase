@@ -741,10 +741,16 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 		}
 
 		// persist the record model
-		if saveErr := form.dao.SaveRecord(form.record); saveErr != nil {
-			return fmt.Errorf("failed to save the record: %w", saveErr)
+		if err := form.dao.SaveRecord(form.record); err != nil {
+			preparedErr := form.prepareError(err)
+			if _, ok := preparedErr.(validation.Errors); ok {
+				return preparedErr
+			}
+			return fmt.Errorf("failed to save the record: %w", err)
 		}
 
+		// @todo exec before the record save (it is after because of eventual record id change)?
+		//
 		// upload new files (if any)
 		if err := form.processFilesToUpload(); err != nil {
 			return fmt.Errorf("failed to process the uploaded files: %w", err)
@@ -848,4 +854,31 @@ func (form *RecordUpsert) deleteFilesByNamesList(filenames []string) ([]string, 
 	}
 
 	return filenames, nil
+}
+
+// prepareError parses the provided error and tries to return
+// user-friendly validation error(s).
+func (form *RecordUpsert) prepareError(err error) error {
+	msg := strings.ToLower(err.Error())
+
+	validationErrs := validation.Errors{}
+
+	// check for unique constraint failure
+	if strings.Contains(msg, "unique constraint failed") {
+		msg = strings.ReplaceAll(strings.TrimSpace(msg), ",", " ")
+
+		c := form.record.Collection()
+		for _, f := range c.Schema.Fields() {
+			// blank space to unify multi-columns lookup
+			if strings.Contains(msg+" ", fmt.Sprintf("%s.%s ", strings.ToLower(c.Name), f.Name)) {
+				validationErrs[f.Name] = validation.NewError("validation_not_unique", "Value must be unique")
+			}
+		}
+	}
+
+	if len(validationErrs) > 0 {
+		return validationErrs
+	}
+
+	return err
 }
