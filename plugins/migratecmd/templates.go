@@ -196,6 +196,20 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 		downParts = append(downParts, fmt.Sprintf("%s.options = %s", varName, rawOldOptions))
 	}
 
+	// Indexes
+	rawNewIndexes, err := marhshalWithoutEscape(new.Indexes, "  ", "  ")
+	if err != nil {
+		return "", err
+	}
+	rawOldIndexes, err := marhshalWithoutEscape(old.Indexes, "  ", "  ")
+	if err != nil {
+		return "", err
+	}
+	if !bytes.Equal(rawNewIndexes, rawOldIndexes) {
+		upParts = append(upParts, fmt.Sprintf("%s.indexes = %s", varName, rawNewIndexes))
+		downParts = append(downParts, fmt.Sprintf("%s.indexes = %s", varName, rawOldIndexes))
+	}
+
 	// ensure new line between regular and collection fields
 	if len(upParts) > 0 {
 		upParts[len(upParts)-1] += "\n"
@@ -569,6 +583,21 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 		downParts = append(downParts, "options := map[string]any{}")
 		downParts = append(downParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), &options)", escapeBacktick(string(rawOldOptions))))
 		downParts = append(downParts, fmt.Sprintf("%s.SetOptions(options)\n", varName))
+	}
+
+	// Indexes
+	rawNewIndexes, err := marhshalWithoutEscape(new.Indexes, "\t\t", "\t")
+	if err != nil {
+		return "", err
+	}
+	rawOldIndexes, err := marhshalWithoutEscape(old.Indexes, "\t\t", "\t")
+	if err != nil {
+		return "", err
+	}
+	if !bytes.Equal(rawNewIndexes, rawOldIndexes) {
+		upParts = append(upParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s.Indexes)\n", escapeBacktick(string(rawNewIndexes)), varName))
+		// ---
+		downParts = append(downParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s.Indexes)\n", escapeBacktick(string(rawOldIndexes)), varName))
 	}
 
 	// Schema
