@@ -139,3 +139,46 @@ func TestVacuum(t *testing.T) {
 		t.Fatalf("Expected VACUUM query, got %s", calledQueries[0])
 	}
 }
+
+func TestTableIndexes(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	scenarios := []struct {
+		table         string
+		expectError   bool
+		expectIndexes []string
+	}{
+		{
+			"missing",
+			false,
+			nil,
+		},
+		{
+			"demo2",
+			false,
+			[]string{"idx_demo2_created", "idx_unique_demo2_title", "idx_demo2_active"},
+		},
+	}
+
+	for _, s := range scenarios {
+		result, err := app.Dao().TableIndexes(s.table)
+
+		hasErr := err != nil
+		if hasErr != s.expectError {
+			t.Errorf("[%s] Expected hasErr %v, got %v", s.table, s.expectError, hasErr)
+		}
+
+		if len(s.expectIndexes) != len(result) {
+			t.Errorf("[%s] Expected %d indexes, got %d:\n%v", s.table, len(s.expectIndexes), len(result), result)
+			continue
+		}
+
+		for _, name := range s.expectIndexes {
+			if result[name] == "" {
+				t.Errorf("[%s] Missing index %q in \n%v", s.table, name, result)
+			}
+		}
+	}
+
+}

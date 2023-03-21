@@ -7,6 +7,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/list"
 )
 
@@ -43,7 +44,7 @@ func init() {
 			TableName string `db:"tbl_name"`
 		}
 
-		indexesQuery := db.NewQuery(`SELECT * FROM sqlite_master  WHERE type = "index" and sql is not null`)
+		indexesQuery := db.NewQuery(`SELECT * FROM sqlite_master WHERE type = "index" and sql is not null`)
 		rawIndexes := []indexInfo{}
 		if err := indexesQuery.All(&rawIndexes); err != nil {
 			return err
@@ -55,7 +56,7 @@ func init() {
 		}
 
 		for _, c := range collections {
-			totalIndexesBefore := len(c.Indexes)
+			c.Indexes = nil // reset
 
 			excludeIndexes := []string{
 				"_" + c.Id + "_email_idx",
@@ -70,7 +71,7 @@ func init() {
 					continue
 				}
 
-				// drop old index (it will be recreated witht the collection)
+				// drop old index (it will be recreated with the collection)
 				if _, err := db.DropIndex(idx.TableName, idx.IndexName).Execute(); err != nil {
 					return err
 				}
@@ -79,18 +80,28 @@ func init() {
 			}
 
 			// convert unique fields to indexes
+		FieldsLoop:
 			for _, f := range c.Schema.Fields() {
-				if f.Unique {
-					c.Indexes = append(c.Indexes, fmt.Sprintf(
-						`CREATE UNIQUE INDEX IF NOT EXISTS idx_%s on %s (%s)`,
-						f.Id,
-						c.Name,
-						f.Name,
-					))
+				if !f.Unique {
+					continue
 				}
+
+				for _, idx := range indexesByTableName[c.Name] {
+					parsed := dbutils.ParseIndex(idx.Sql)
+					if parsed.Unique && len(parsed.Columns) == 1 && strings.EqualFold(parsed.Columns[0].Name, f.Name) {
+						continue FieldsLoop // already added
+					}
+				}
+
+				c.Indexes = append(c.Indexes, fmt.Sprintf(
+					`CREATE UNIQUE INDEX "idx_unique_%s" on "%s" ("%s")`,
+					f.Id,
+					c.Name,
+					f.Name,
+				))
 			}
 
-			if totalIndexesBefore != len(c.Indexes) {
+			if len(c.Indexes) > 0 {
 				if err := dao.SaveCollection(c); err != nil {
 					return err
 				}

@@ -21,6 +21,8 @@ func (dao *Dao) HasTable(tableName string) bool {
 	return err == nil && exists
 }
 
+// @todo rename to TableColumns
+//
 // GetTableColumns returns all column names of a single table by its name.
 func (dao *Dao) GetTableColumns(tableName string) ([]string, error) {
 	columns := []string{}
@@ -32,6 +34,8 @@ func (dao *Dao) GetTableColumns(tableName string) ([]string, error) {
 	return columns, err
 }
 
+// @todo rename to TableInfo
+//
 // GetTableInfo returns the `table_info` pragma result for the specified table.
 func (dao *Dao) GetTableInfo(tableName string) ([]*models.TableInfoRow, error) {
 	info := []*models.TableInfoRow{}
@@ -50,6 +54,36 @@ func (dao *Dao) GetTableInfo(tableName string) ([]*models.TableInfoRow, error) {
 	}
 
 	return info, nil
+}
+
+// TableIndexes returns a name grouped map with all non empty index of the specified table.
+//
+// Note: This method doesn't return an error on nonexisting table.
+func (dao *Dao) TableIndexes(tableName string) (map[string]string, error) {
+	indexes := []struct {
+		Name string
+		Sql  string
+	}{}
+
+	err := dao.DB().Select("name", "sql").
+		From("sqlite_master").
+		AndWhere(dbx.NewExp("sql is not null")).
+		AndWhere(dbx.HashExp{
+			"type":     "index",
+			"tbl_name": tableName,
+		}).
+		All(&indexes)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]string, len(indexes))
+
+	for _, idx := range indexes {
+		result[idx.Name] = idx.Sql
+	}
+
+	return result, nil
 }
 
 // DeleteTable drops the specified table.

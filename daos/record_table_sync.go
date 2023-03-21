@@ -88,17 +88,17 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 		deletedFieldNames := []string{}
 		renamedFieldNames := map[string]string{}
 
+		// drop old indexes (if any)
+		if err := txDao.dropCollectionIndex(oldCollection); err != nil {
+			return err
+		}
+
 		// check for renamed table
 		if !strings.EqualFold(oldTableName, newTableName) {
 			_, err := txDao.DB().RenameTable("{{"+oldTableName+"}}", "{{"+newTableName+"}}").Execute()
 			if err != nil {
 				return err
 			}
-		}
-
-		// drop old indexes (if any)
-		if err := txDao.dropCollectionIndex(oldCollection); err != nil {
-			return err
 		}
 
 		// check for deleted columns
@@ -330,6 +330,11 @@ func (dao *Dao) createCollectionIndexes(collection *models.Collection) error {
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
+		// drop new indexes in case a duplicated index name is used
+		if err := txDao.dropCollectionIndex(collection); err != nil {
+			return err
+		}
+
 		// upsert new indexes
 		//
 		// note: we are returning validation errors because the indexes cannot be
@@ -340,6 +345,9 @@ func (dao *Dao) createCollectionIndexes(collection *models.Collection) error {
 			idxString := cast.ToString(idx)
 			parsed := dbutils.ParseIndex(idxString)
 
+			// ensure that the index is always for the current collection
+			parsed.TableName = collection.Name
+
 			if !parsed.IsValid() {
 				errs[strconv.Itoa(i)] = validation.NewError(
 					"validation_invalid_index_expression",
@@ -348,7 +356,7 @@ func (dao *Dao) createCollectionIndexes(collection *models.Collection) error {
 				continue
 			}
 
-			if _, err := txDao.DB().NewQuery(idxString).Execute(); err != nil {
+			if _, err := txDao.DB().NewQuery(parsed.Build()).Execute(); err != nil {
 				errs[strconv.Itoa(i)] = validation.NewError(
 					"validation_invalid_index_expression",
 					fmt.Sprintf("Failed to create index %s - %v.", parsed.IndexName, err.Error()),

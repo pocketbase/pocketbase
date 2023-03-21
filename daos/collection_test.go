@@ -187,7 +187,12 @@ func TestDeleteCollection(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	colView, err := app.Dao().FindCollectionByNameOrId("view1")
+	colView1, err := app.Dao().FindCollectionByNameOrId("view1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	colView2, err := app.Dao().FindCollectionByNameOrId("view2")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,7 +205,8 @@ func TestDeleteCollection(t *testing.T) {
 		{colAuth, false},
 		{colReferenced, true},
 		{colSystem, true},
-		{colView, false},
+		{colView1, true}, // view2 depend on it
+		{colView2, false},
 	}
 
 	for i, s := range scenarios {

@@ -10,6 +10,7 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
 )
@@ -114,9 +115,10 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"viewRule": "missing = '123'",
 				"createRule": "missing = '123'",
 				"updateRule": "missing = '123'",
-				"deleteRule": "missing = '123'"
+				"deleteRule": "missing = '123'",
+				"indexes": ["create index '' on '' ()"]
 			}`,
-			[]string{"name", "type", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
+			[]string{"name", "type", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule", "indexes"},
 		},
 		{
 			"create failure - existing name",
@@ -234,7 +236,8 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"viewRule": "test1='123' && emailVisibility = true",
 				"createRule": "test1='123' && email != ''",
 				"updateRule": "test1='123' && username != ''",
-				"deleteRule": "test1='123' && id != ''"
+				"deleteRule": "test1='123' && id != ''",
+				"indexes": ["create index idx_test_new on anything (test1)"]
 			}`,
 			[]string{},
 		},
@@ -245,9 +248,10 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"schema": [
 					{"id":"a123456","name":"test1","type":"url"},
 					{"id":"b123456","name":"test2","type":"bool"}
-				]
+				],
+				"indexes": ["create index idx_test_new on test_new (test1)", "invalid"]
 			}`,
-			[]string{"schema"},
+			[]string{"schema", "indexes"},
 		},
 		{
 			"update success - rename fields to existing field names (aka. reusing field names)",
@@ -326,9 +330,10 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"createRule": "missing = '123'",
 				"updateRule": "missing = '123'",
 				"deleteRule": "missing = '123'",
-				"options": {"test": 123}
+				"options": {"test": 123},
+				"indexes": ["create index '' from demo2 on (id)"]
 			}`,
-			[]string{"name", "type", "system", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
+			[]string{"name", "type", "system", "schema", "listRule", "viewRule", "createRule", "updateRule", "deleteRule", "indexes"},
 		},
 		{
 			"update success - update all fields",
@@ -344,7 +349,11 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"createRule": "test='123' && email != ''",
 				"updateRule": "test='123' && username != ''",
 				"deleteRule": "test='123' && id != ''",
-				"options": {"minPasswordLength": 10}
+				"options": {"minPasswordLength": 10},
+				"indexes": [
+					"create index idx_clients_test1 on anything (id, email, test)",
+					"create unique index idx_clients_test2 on clients (id, username, email)"
+				]
 			}`,
 			[]string{},
 		},
@@ -371,7 +380,8 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				"viewRule": null,
 				"createRule": null,
 				"updateRule": null,
-				"deleteRule": null
+				"deleteRule": null,
+				"indexes": []
 			}`,
 			[]string{},
 		},
@@ -403,12 +413,14 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				],
 				"options": {
 					"query": "select id, email from users; drop table _admins;"
-				}
+				},
+				"indexes": ["create index idx_test_view on upsert_view (id)"]
 			}`,
 			[]string{
 				"listRule",
 				"viewRule",
 				"options",
+				"indexes", // views don't have indexes
 			},
 		},
 		{
@@ -589,6 +601,28 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 		for _, f := range form.Schema.Fields() {
 			if collection.Schema.GetFieldByName(f.Name) == nil {
 				t.Errorf("[%s] Missing field %s \nin \n%v", s.testName, f.Name, string(rawFormSchema))
+				continue
+			}
+		}
+
+		// check indexes (if any)
+		allIndexes, _ := app.Dao().TableIndexes(form.Name)
+		for _, formIdx := range form.Indexes {
+			parsed := dbutils.ParseIndex(formIdx)
+			parsed.TableName = form.Name
+			normalizedIdx := parsed.Build()
+
+			var exists bool
+			for _, idx := range allIndexes {
+				if dbutils.ParseIndex(idx).Build() == normalizedIdx {
+					exists = true
+					continue
+				}
+			}
+
+			if !exists {
+				t.Errorf(
+					"[%s] Missing index %s \nin \n%v", s.testName, normalizedIdx, allIndexes)
 				continue
 			}
 		}

@@ -40,15 +40,17 @@ func TestSyncRecordTableSchema(t *testing.T) {
 			Type: schema.FieldTypeEmail,
 		},
 	)
+	updatedCollection.Indexes = types.JsonArray{"create index idx_title_renamed on anything (title_renamed)"}
 
 	scenarios := []struct {
-		newCollection     *models.Collection
-		oldCollection     *models.Collection
-		expectedTableName string
-		expectedColumns   []string
+		name                 string
+		newCollection        *models.Collection
+		oldCollection        *models.Collection
+		expectedColumns      []string
+		expectedIndexesCount int
 	}{
-		// new base collection
 		{
+			"new base collection",
 			&models.Collection{
 				Name: "new_table",
 				Schema: schema.NewSchema(
@@ -59,11 +61,11 @@ func TestSyncRecordTableSchema(t *testing.T) {
 				),
 			},
 			nil,
-			"new_table",
 			[]string{"id", "created", "updated", "test"},
+			0,
 		},
-		// new auth collection
 		{
+			"new auth collection",
 			&models.Collection{
 				Name: "new_table_auth",
 				Type: models.CollectionTypeAuth,
@@ -73,51 +75,58 @@ func TestSyncRecordTableSchema(t *testing.T) {
 						Type: schema.FieldTypeText,
 					},
 				),
+				Indexes: types.JsonArray{"create index idx_auth_test on anything (email, username)"},
 			},
 			nil,
-			"new_table_auth",
 			[]string{
 				"id", "created", "updated", "test",
 				"username", "email", "verified", "emailVisibility",
 				"tokenKey", "passwordHash", "lastResetSentAt", "lastVerificationSentAt",
 			},
+			4,
 		},
-		// no changes
 		{
+			"no changes",
 			oldCollection,
 			oldCollection,
-			"demo3",
 			[]string{"id", "created", "updated", "title", "active"},
+			3,
 		},
-		// renamed table, deleted column, renamed columnd and new column
 		{
+			"renamed table, deleted column, renamed columnd and new column",
 			updatedCollection,
 			oldCollection,
-			"demo_renamed",
 			[]string{"id", "created", "updated", "title_renamed", "new_field"},
+			1,
 		},
 	}
 
-	for i, scenario := range scenarios {
-		err := app.Dao().SyncRecordTableSchema(scenario.newCollection, scenario.oldCollection)
+	for _, s := range scenarios {
+		err := app.Dao().SyncRecordTableSchema(s.newCollection, s.oldCollection)
 		if err != nil {
-			t.Errorf("(%d) %v", i, err)
+			t.Errorf("[%s] %v", s.name, err)
 			continue
 		}
 
-		if !app.Dao().HasTable(scenario.newCollection.Name) {
-			t.Errorf("(%d) Expected table %s to exist", i, scenario.newCollection.Name)
+		if !app.Dao().HasTable(s.newCollection.Name) {
+			t.Errorf("[%s] Expected table %s to exist", s.name, s.newCollection.Name)
 		}
 
-		cols, _ := app.Dao().GetTableColumns(scenario.newCollection.Name)
-		if len(cols) != len(scenario.expectedColumns) {
-			t.Errorf("(%d) Expected columns %v, got %v", i, scenario.expectedColumns, cols)
+		cols, _ := app.Dao().GetTableColumns(s.newCollection.Name)
+		if len(cols) != len(s.expectedColumns) {
+			t.Errorf("[%s] Expected columns %v, got %v", s.name, s.expectedColumns, cols)
 		}
 
 		for _, c := range cols {
-			if !list.ExistInSlice(c, scenario.expectedColumns) {
-				t.Errorf("(%d) Couldn't find column %s in %v", i, c, scenario.expectedColumns)
+			if !list.ExistInSlice(c, s.expectedColumns) {
+				t.Errorf("[%s] Couldn't find column %s in %v", s.name, c, s.expectedColumns)
 			}
+		}
+
+		indexes, _ := app.Dao().TableIndexes(s.newCollection.Name)
+
+		if totalIndexes := len(indexes); totalIndexes != s.expectedIndexesCount {
+			t.Errorf("[%s] Expected %d indexes, got %d:\n%v", s.name, s.expectedIndexesCount, totalIndexes, indexes)
 		}
 	}
 }

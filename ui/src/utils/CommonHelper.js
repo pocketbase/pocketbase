@@ -1473,7 +1473,7 @@ export default class CommonHelper {
             return result;
         }
 
-        const sqlQuoteRegex = /^[\"\'\`\[]|[\"\'\`\]]$/gm
+        const sqlQuoteRegex = /^[\"\'\`\[\{}]|[\"\'\`\]\}]$/gm
 
         // unique
         result.unique = matches[1]?.trim().toLowerCase() === "unique";
@@ -1545,16 +1545,20 @@ export default class CommonHelper {
         }
 
         if (indexParts.schemaName) {
-            result += `"${indexParts.schemaName}".`;
+            result += `\`${indexParts.schemaName}\`.`;
         }
 
-        result += `"${indexParts.indexName || "idx_" + CommonHelper.randomString(7)}" `;
+        result += `\`${indexParts.indexName || "idx_" + CommonHelper.randomString(7)}\` `;
 
-        result += `ON "${indexParts.tableName}" (\n`;
+        result += `ON \`${indexParts.tableName}\` (`;
 
-        result += indexParts.columns
-            .filter((col) => !!col?.name)
-            .map((col) => {
+        const nonEmptyCols = indexParts.columns.filter((col) => !!col?.name);
+
+        if (nonEmptyCols.length > 1) {
+            result += "\n";
+        }
+
+        result += nonEmptyCols.map((col) => {
                 let item = "";
 
                 if (col.name.includes("(") || col.name.includes(" ")) {
@@ -1575,9 +1579,13 @@ export default class CommonHelper {
 
                 return item;
             })
-            .join(",\n");
+            .join(",\n  ");
 
-        result += `\n)`;
+        if (nonEmptyCols.length > 1) {
+            result += "\n";
+        }
+
+        result += `)`;
 
         if (indexParts.where) {
             result += ` WHERE ${indexParts.where}`;

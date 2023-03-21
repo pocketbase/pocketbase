@@ -586,6 +586,83 @@ func TestCollectionCreate(t *testing.T) {
 				"OnCollectionAfterCreateRequest":  1,
 			},
 		},
+
+		// indexes
+		// -----------------------------------------------------------
+		{
+			Name:   "creating base collection with invalid indexes",
+			Method: http.MethodPost,
+			Url:    "/api/collections",
+			Body: strings.NewReader(`{
+				"name":"new",
+				"type":"base",
+				"schema":[
+					{"type":"text","name":"test"}
+				],
+				"indexes": [
+					"create index idx_test1 on new (test)",
+					"create index idx_test2 on new (missing)"
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"indexes":{"1":{"code":"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnCollectionBeforeCreateRequest": 1,
+				"OnModelBeforeCreate":             1,
+			},
+		},
+		{
+			Name:   "creating base collection with valid indexes (+ random table name)",
+			Method: http.MethodPost,
+			Url:    "/api/collections",
+			Body: strings.NewReader(`{
+				"name":"new",
+				"type":"base",
+				"schema":[
+					{"type":"text","name":"test"}
+				],
+				"indexes": [
+					"create index idx_test1 on new (test)",
+					"create index idx_test2 on anything (id, test)"
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"name":"new"`,
+				`"type":"base"`,
+				`"indexes":[`,
+				`idx_test1`,
+				`idx_test2`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeCreate":             1,
+				"OnModelAfterCreate":              1,
+				"OnCollectionBeforeCreateRequest": 1,
+				"OnCollectionAfterCreateRequest":  1,
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				indexes, err := app.Dao().TableIndexes("new")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				expected := []string{"idx_test1", "idx_test2"}
+				for name := range indexes {
+					if !list.ExistInSlice(name, expected) {
+						t.Fatalf("Missing index %q", name)
+					}
+				}
+			},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -951,6 +1028,68 @@ func TestCollectionUpdate(t *testing.T) {
 				"OnCollectionAfterUpdateRequest":  1,
 			},
 		},
+
+		// indexes
+		// -----------------------------------------------------------
+		{
+			Name:   "updating base collection with invalid indexes",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo2",
+			Body: strings.NewReader(`{
+				"indexes": [
+					"create unique idx_test1 on demo1 (text)",
+					"create index idx_test2 on demo2 (id, title)"
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"indexes":{"0":{"code":"`,
+			},
+		},
+		{
+			Name:   "updating base collection with valid indexes (+ random table name)",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo2",
+			Body: strings.NewReader(`{
+				"indexes": [
+					"create unique index idx_test1 on demo2 (title)",
+					"create index idx_test2 on anything (active)"
+				]
+			}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"name":"demo2"`,
+				`"indexes":[`,
+				"CREATE UNIQUE INDEX `idx_test1`",
+				"CREATE INDEX `idx_test2`",
+			},
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":             1,
+				"OnModelAfterUpdate":              1,
+				"OnCollectionBeforeUpdateRequest": 1,
+				"OnCollectionAfterUpdateRequest":  1,
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				indexes, err := app.Dao().TableIndexes("new")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				expected := []string{"idx_test1", "idx_test2"}
+				for name := range indexes {
+					if !list.ExistInSlice(name, expected) {
+						t.Fatalf("Missing index %q", name)
+					}
+				}
+			},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -1018,7 +1157,7 @@ func TestCollectionImport(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{
 				"OnCollectionsBeforeImportRequest": 1,
-				"OnModelBeforeDelete":              6,
+				"OnModelBeforeDelete":              7,
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}
@@ -1097,6 +1236,9 @@ func TestCollectionImport(t *testing.T) {
 							  "name": "test",
 							  "type": "text"
 							}
+						],
+						"indexes": [
+							"create index idx_test on import2 (test)"
 						]
 					},
 					{
@@ -1120,9 +1262,15 @@ func TestCollectionImport(t *testing.T) {
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
 				}
+
 				expected := totalCollections + 3
 				if len(collections) != expected {
 					t.Fatalf("Expected %d collections, got %d", expected, len(collections))
+				}
+
+				indexes, err := app.Dao().TableIndexes("import2")
+				if err != nil || indexes["idx_test"] == "" {
+					t.Fatalf("Missing index %s (%v)", "idx_test", err)
 				}
 			},
 		},
