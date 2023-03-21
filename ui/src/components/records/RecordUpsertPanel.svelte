@@ -41,6 +41,7 @@
     let deletedFileIndexesMap = {}; // eg.: {"field1":[0, 1], ...}
     let initialFormHash = "";
     let activeTab = TAB_FORM;
+    let isNew = true;
 
     $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
 
@@ -50,7 +51,9 @@
 
     $: hasChanges = hasFileChanges || initialFormHash != calculateFormHash(record);
 
-    $: canSave = record.isNew || hasChanges;
+    $: isNew = !original || original.isNew;
+
+    $: canSave = isNew || hasChanges;
 
     export function show(model) {
         load(model);
@@ -68,7 +71,7 @@
 
     async function load(model) {
         setErrors({}); // reset errors
-        original = model || {};
+        original = model || new Record();
         if (model?.clone) {
             record = model.clone();
         } else {
@@ -94,7 +97,7 @@
         const data = exportFormData();
 
         let request;
-        if (record.isNew) {
+        if (isNew) {
             request = ApiClient.collection(collection.id).create(data);
         } else {
             request = ApiClient.collection(collection.id).update(record.id, data);
@@ -102,9 +105,7 @@
 
         request
             .then((result) => {
-                addSuccessToast(
-                    record.isNew ? "Successfully created record." : "Successfully updated record."
-                );
+                addSuccessToast(isNew ? "Successfully created record." : "Successfully updated record.");
                 confirmClose = false;
                 hide();
                 dispatch("save", result);
@@ -140,7 +141,10 @@
         const data = record?.export() || {};
         const formData = new FormData();
 
-        const exportableFields = {};
+        const exportableFields = {
+            id: data.id,
+        };
+
         for (const field of collection?.schema || []) {
             exportableFields[field.name] = true;
         }
@@ -262,7 +266,7 @@
     class="
         record-panel
         {hasEditorField ? 'overlay-panel-xl' : 'overlay-panel-lg'}
-        {collection?.isAuth && !record.isNew ? 'colored-header' : ''}
+        {collection?.isAuth && !isNew ? 'colored-header' : ''}
     "
     beforeHide={() => {
         if (hasChanges && confirmClose) {
@@ -280,11 +284,11 @@
 >
     <svelte:fragment slot="header">
         <h4>
-            {record.isNew ? "New" : "Edit"}
+            {isNew ? "New" : "Edit"}
             <strong>{collection?.name}</strong> record
         </h4>
 
-        {#if !record.isNew}
+        {#if !isNew}
             <div class="flex-fill" />
             <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
                 <i class="ri-more-line" />
@@ -325,7 +329,7 @@
             </button>
         {/if}
 
-        {#if collection.isAuth && !record.isNew}
+        {#if collection.isAuth && !isNew}
             <div class="tabs-header stretched">
                 <button
                     type="button"
@@ -354,13 +358,13 @@
             class:active={activeTab === TAB_FORM}
             on:submit|preventDefault={save}
         >
-            {#if !record.isNew}
-                <Field class="form-field readonly" name="id" let:uniqueId>
-                    <label for={uniqueId}>
-                        <i class={CommonHelper.getFieldTypeIcon("primary")} />
-                        <span class="txt">id</span>
-                        <span class="flex-fill" />
-                    </label>
+            <Field class="form-field readonly" name="id" let:uniqueId>
+                <label for={uniqueId}>
+                    <i class={CommonHelper.getFieldTypeIcon("primary")} />
+                    <span class="txt">id</span>
+                    <span class="flex-fill" />
+                </label>
+                {#if !isNew}
                     <div class="form-field-addon">
                         <i
                             class="ri-calendar-event-line txt-disabled"
@@ -370,9 +374,16 @@
                             }}
                         />
                     </div>
-                    <input type="text" id={uniqueId} value={record.id} readonly />
-                </Field>
-            {/if}
+                {/if}
+                <input
+                    type="text"
+                    id={uniqueId}
+                    placeholder="Leave empty to auto generate..."
+                    minlength="15"
+                    bind:value={record.id}
+                    readonly={!isNew}
+                />
+            </Field>
 
             {#if collection?.isAuth}
                 <AuthFields bind:record {collection} />
@@ -415,7 +426,7 @@
             {/each}
         </form>
 
-        {#if collection.isAuth && !record.isNew}
+        {#if collection.isAuth && !isNew}
             <div class="tab-item" class:active={activeTab === TAB_PROVIDERS}>
                 <ExternalAuthsList {record} />
             </div>
@@ -434,7 +445,7 @@
             class:btn-loading={isSaving}
             disabled={!canSave || isSaving}
         >
-            <span class="txt">{record.isNew ? "Create" : "Save changes"}</span>
+            <span class="txt">{isNew ? "Create" : "Save changes"}</span>
         </button>
     </svelte:fragment>
 </OverlayPanel>
