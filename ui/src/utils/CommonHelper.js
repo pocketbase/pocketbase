@@ -1555,7 +1555,7 @@ export default class CommonHelper {
         const nonEmptyCols = indexParts.columns.filter((col) => !!col?.name);
 
         if (nonEmptyCols.length > 1) {
-            result += "\n";
+            result += "\n  ";
         }
 
         result += nonEmptyCols.map((col) => {

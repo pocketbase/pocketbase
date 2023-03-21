@@ -2,6 +2,8 @@
 
 - Added _experimental_ Apple OAuth2 integration.
 
+- (@todo docs) Added support for advanced unique constraints and indexes management ([#345](https://github.com/pocketbase/pocketbase/issues/345), [#544](https://github.com/pocketbase/pocketbase/issues/544))
+
 - Optimized single relation lookups.
 
 - Normalized record values on `maxSelect` field option change (`select`, `file`, `relation`).
