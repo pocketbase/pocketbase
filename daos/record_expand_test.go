@@ -362,3 +362,57 @@ func TestExpandRecord(t *testing.T) {
 		}
 	}
 }
+
+func TestIndirectExpandSingeVsArrayResult(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	record, err := app.Dao().FindRecordById("demo3", "7nwo8tuiatetxdm")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// non-unique indirect expand
+	{
+		errs := app.Dao().ExpandRecord(record, []string{"demo4(rel_one_cascade)"}, func(c *models.Collection, ids []string) ([]*models.Record, error) {
+			return app.Dao().FindRecordsByIds(c.Id, ids, nil)
+		})
+		if len(errs) > 0 {
+			t.Fatal(errs)
+		}
+
+		result, ok := record.Expand()["demo4(rel_one_cascade)"].([]*models.Record)
+		if !ok {
+			t.Fatalf("Expected the expanded result to be a slice, got %v", result)
+		}
+	}
+
+	// mock a unique constraint for the rel_one_cascade field
+	{
+		demo4, err := app.Dao().FindCollectionByNameOrId("demo4")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		demo4.Indexes = append(demo4.Indexes, "create unique index idx_unique_expand on demo4 (rel_one_cascade)")
+
+		if err := app.Dao().SaveCollection(demo4); err != nil {
+			t.Fatalf("Failed to mock unique constraint: %v", err)
+		}
+	}
+
+	// non-unique indirect expand
+	{
+		errs := app.Dao().ExpandRecord(record, []string{"demo4(rel_one_cascade)"}, func(c *models.Collection, ids []string) ([]*models.Record, error) {
+			return app.Dao().FindRecordsByIds(c.Id, ids, nil)
+		})
+		if len(errs) > 0 {
+			t.Fatal(errs)
+		}
+
+		result, ok := record.Expand()["demo4(rel_one_cascade)"].(*models.Record)
+		if !ok {
+			t.Fatalf("Expected the expanded result to be a single model, got %v", result)
+		}
+	}
+}

@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
@@ -86,7 +87,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 		if indirectRelFieldOptions == nil || indirectRelFieldOptions.CollectionId != mainCollection.Id {
 			return fmt.Errorf("Invalid indirect relation field path %q.", parts[0])
 		}
-		if indirectRelFieldOptions.MaxSelect != nil && *indirectRelFieldOptions.MaxSelect != 1 {
+		if indirectRelFieldOptions.IsMultiple() {
 			// for now don't allow multi-relation indirect fields expand
 			// due to eventual poor query performance with large data sets.
 			return fmt.Errorf("Multi-relation fields cannot be indirectly expanded in %q.", parts[0])
@@ -126,7 +127,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 			MaxSelect:    nil,
 			CollectionId: indirectRel.Id,
 		}
-		if indirectRelField.Unique {
+		if isRelFieldUnique(indirectRel, indirectRelField.Name) {
 			relFieldOptions.MaxSelect = types.Pointer(1)
 		}
 		// indirect relation
@@ -268,4 +269,15 @@ func normalizeExpands(paths []string) []string {
 	}
 
 	return list.ToUniqueStringSlice(result)
+}
+
+func isRelFieldUnique(collection *models.Collection, fieldName string) bool {
+	for _, idx := range collection.Indexes {
+		parsed := dbutils.ParseIndex(idx.(string))
+		if parsed.Unique && len(parsed.Columns) == 1 && strings.EqualFold(parsed.Columns[0].Name, fieldName) {
+			return true
+		}
+	}
+
+	return false
 }
