@@ -142,3 +142,75 @@ func TestIndexIsValid(t *testing.T) {
 		}
 	}
 }
+
+func TestIndexBuild(t *testing.T) {
+	scenarios := []struct {
+		name     string
+		index    dbutils.Index
+		expected string
+	}{
+		{
+			"empty",
+			dbutils.Index{},
+			"",
+		},
+		{
+			"no index name",
+			dbutils.Index{
+				TableName: "table",
+				Columns:   []dbutils.IndexColumn{{Name: "col"}},
+			},
+			"",
+		},
+		{
+			"no table name",
+			dbutils.Index{
+				IndexName: "index",
+				Columns:   []dbutils.IndexColumn{{Name: "col"}},
+			},
+			"",
+		},
+		{
+			"no columns",
+			dbutils.Index{
+				IndexName: "index",
+				TableName: "table",
+			},
+			"",
+		},
+		{
+			"min valid",
+			dbutils.Index{
+				IndexName: "index",
+				TableName: "table",
+				Columns:   []dbutils.IndexColumn{{Name: "col"}},
+			},
+			"CREATE INDEX `index` ON `table` (`col`)",
+		},
+		{
+			"all fields",
+			dbutils.Index{
+				Optional:   true,
+				Unique:     true,
+				SchemaName: "schema",
+				IndexName:  "index",
+				TableName:  "table",
+				Columns: []dbutils.IndexColumn{
+					{Name: "col1", Collate: "NOCASE", Sort: "asc"},
+					{Name: "col2", Sort: "desc"},
+					{Name: `json_extract("col3", "$.a")`, Collate: "NOCASE"},
+				},
+				Where: "test = 1 OR test = 2",
+			},
+			"CREATE UNIQUE INDEX IF NOT EXISTS `schema`.`index` ON `table` (\n  `col1` COLLATE NOCASE ASC,\n  `col2` DESC,\n  " + `json_extract("col3", "$.a")` + " COLLATE NOCASE\n) WHERE test = 1 OR test = 2",
+		},
+	}
+
+	for _, s := range scenarios {
+		result := s.index.Build()
+
+		if result != s.expected {
+			t.Errorf("[%s] Expected \n%v \ngot \n%v", s.name, s.expected, result)
+		}
+	}
+}
