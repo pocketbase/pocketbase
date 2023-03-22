@@ -40,7 +40,7 @@ func TestSyncRecordTableSchema(t *testing.T) {
 			Type: schema.FieldTypeEmail,
 		},
 	)
-	updatedCollection.Indexes = types.JsonArray{"create index idx_title_renamed on anything (title_renamed)"}
+	updatedCollection.Indexes = types.JsonArray[string]{"create index idx_title_renamed on anything (title_renamed)"}
 
 	scenarios := []struct {
 		name                 string
@@ -75,7 +75,7 @@ func TestSyncRecordTableSchema(t *testing.T) {
 						Type: schema.FieldTypeText,
 					},
 				),
-				Indexes: types.JsonArray{"create index idx_auth_test on anything (email, username)"},
+				Indexes: types.JsonArray[string]{"create index idx_auth_test on anything (email, username)"},
 			},
 			nil,
 			[]string{

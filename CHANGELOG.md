@@ -4,6 +4,9 @@
 
 - (@todo docs) Added support for advanced unique constraints and indexes management ([#345](https://github.com/pocketbase/pocketbase/issues/345), [#544](https://github.com/pocketbase/pocketbase/issues/544))
 
+- Deprecated `SchemaField.Unique`. Unique constraints are now managed via indexes.
+  The `Unique` field is a no-op and will be removed in future version.
+
 - Optimized single relation lookups.
 
 - Normalized record values on `maxSelect` field option change (`select`, `file`, `relation`).
@@ -16,6 +19,9 @@
 - Simplified the default mail template styles to allow more control over the template layout ([#1904](https://github.com/pocketbase/pocketbase/issues/1904)).
 
 - Added option to explicitly set the record id from the Admin UI ([#2118](https://github.com/pocketbase/pocketbase/issues/2118)).
+
+- **!** Changed `types.JsonArray` to support specifying a generic type, aka. `types.JsonArray[T]`.
+  If you have previously used `types.JsonArray`, you'll have to update it to `types.JsonArray[any]`.
 
 - **!** Registered the `RemoveTrailingSlash` middleware only for the `/api/*` routes since it is causing issues with subpath file serving endpoints ([#2072](https://github.com/pocketbase/pocketbase/issues/2072)).
 

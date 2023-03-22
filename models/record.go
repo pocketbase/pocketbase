@@ -630,16 +630,16 @@ func (m *Record) getNormalizeDataValueForDB(key string) any {
 	switch ids := val.(type) {
 	case []string:
 		// encode string slice
-		return append(types.JsonArray{}, list.ToInterfaceSlice(ids)...)
+		return append(types.JsonArray[string]{}, ids...)
 	case []int:
 		// encode int slice
-		return append(types.JsonArray{}, list.ToInterfaceSlice(ids)...)
+		return append(types.JsonArray[int]{}, ids...)
 	case []float64:
 		// encode float64 slice
-		return append(types.JsonArray{}, list.ToInterfaceSlice(ids)...)
+		return append(types.JsonArray[float64]{}, ids...)
 	case []any:
 		// encode interface slice
-		return append(types.JsonArray{}, ids...)
+		return append(types.JsonArray[any]{}, ids...)
 	default:
 		// no changes
 		return val

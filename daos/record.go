@@ -247,9 +247,9 @@ func (dao *Dao) IsRecordValueUnique(
 		var normalizedVal any
 		switch val := value.(type) {
 		case []string:
-			normalizedVal = append(types.JsonArray{}, list.ToInterfaceSlice(val)...)
+			normalizedVal = append(types.JsonArray[string]{}, val...)
 		case []any:
-			normalizedVal = append(types.JsonArray{}, val...)
+			normalizedVal = append(types.JsonArray[any]{}, val...)
 		default:
 			normalizedVal = val
 		}

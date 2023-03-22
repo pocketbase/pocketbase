@@ -149,7 +149,7 @@ func init() {
 		collection.Updated = collection.Created
 		collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0 || 'backtick`test' = 0")
 		collection.ViewRule = types.Pointer(`id = "1"`)
-		collection.Indexes = types.JsonArray{"create index test on new_name (id)"}
+		collection.Indexes = types.JsonArray[string]{"create index test on new_name (id)"}
 		collection.SetOptions(models.CollectionAuthOptions{
 			ManageRule:        types.Pointer("created > 0"),
 			MinPasswordLength: 20,
@@ -318,7 +318,7 @@ func init() {
 		collection.Updated = collection.Created
 		collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0 || 'backtick`test' = 0")
 		collection.ViewRule = types.Pointer(`id = "1"`)
-		collection.Indexes = types.JsonArray{"create index test on test456 (id)"}
+		collection.Indexes = types.JsonArray[string]{"create index test on test456 (id)"}
 		collection.SetOptions(models.CollectionAuthOptions{
 			ManageRule:        types.Pointer("created > 0"),
 			MinPasswordLength: 20,
@@ -642,7 +642,7 @@ func init() {
 		collection.Updated = collection.Created
 		collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0")
 		collection.ViewRule = types.Pointer(`id = "1"`)
-		collection.Indexes = types.JsonArray{"create index test1 on test456 (f1_name)"}
+		collection.Indexes = types.JsonArray[string]{"create index test1 on test456 (f1_name)"}
 		collection.SetOptions(models.CollectionAuthOptions{
 			ManageRule:        types.Pointer("created > 0"),
 			MinPasswordLength: 20,
@@ -681,7 +681,7 @@ func init() {
 		collection.Type = models.CollectionTypeBase
 		collection.DeleteRule = types.Pointer(`updated > 0 && @request.auth.id != ''`)
 		collection.ListRule = nil
-		collection.Indexes = types.JsonArray{
+		collection.Indexes = types.JsonArray[string]{
 			"create index test1 on test456_update (f1_name)",
 		}
 		collection.NormalizeOptions()

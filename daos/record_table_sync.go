@@ -12,7 +12,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
-	"github.com/spf13/cast"
 )
 
 // SyncRecordTableSchema compares the two provided collections
@@ -309,7 +308,7 @@ func (dao *Dao) dropCollectionIndex(collection *models.Collection) error {
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
 		for _, raw := range collection.Indexes {
-			parsed := dbutils.ParseIndex(cast.ToString(raw))
+			parsed := dbutils.ParseIndex(raw)
 
 			if !parsed.IsValid() {
 				continue
@@ -342,8 +341,7 @@ func (dao *Dao) createCollectionIndexes(collection *models.Collection) error {
 		//       record table changes
 		errs := validation.Errors{}
 		for i, idx := range collection.Indexes {
-			idxString := cast.ToString(idx)
-			parsed := dbutils.ParseIndex(idxString)
+			parsed := dbutils.ParseIndex(idx)
 
 			// ensure that the index is always for the current collection
 			parsed.TableName = collection.Name

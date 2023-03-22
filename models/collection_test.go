@@ -79,7 +79,7 @@ func TestCollectionMarshalJSON(t *testing.T) {
 		},
 		{
 			"unknown type + non empty options",
-			models.Collection{Name: "test", Type: "unknown", ListRule: types.Pointer("test_list"), Options: types.JsonMap{"test": 123}, Indexes: types.JsonArray{"idx_test"}},
+			models.Collection{Name: "test", Type: "unknown", ListRule: types.Pointer("test_list"), Options: types.JsonMap{"test": 123}, Indexes: types.JsonArray[string]{"idx_test"}},
 			`{"id":"","created":"","updated":"","name":"test","type":"unknown","system":false,"schema":[],"indexes":["idx_test"],"listRule":"test_list","viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{}}`,
 		},
 		{

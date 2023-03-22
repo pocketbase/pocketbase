@@ -27,18 +27,18 @@ type CollectionUpsert struct {
 	dao        *daos.Dao
 	collection *models.Collection
 
-	Id         string        `form:"id" json:"id"`
-	Type       string        `form:"type" json:"type"`
-	Name       string        `form:"name" json:"name"`
-	System     bool          `form:"system" json:"system"`
-	Schema     schema.Schema `form:"schema" json:"schema"`
-	Indexes    []string      `form:"indexes" json:"indexes"`
-	ListRule   *string       `form:"listRule" json:"listRule"`
-	ViewRule   *string       `form:"viewRule" json:"viewRule"`
-	CreateRule *string       `form:"createRule" json:"createRule"`
-	UpdateRule *string       `form:"updateRule" json:"updateRule"`
-	DeleteRule *string       `form:"deleteRule" json:"deleteRule"`
-	Options    types.JsonMap `form:"options" json:"options"`
+	Id         string                  `form:"id" json:"id"`
+	Type       string                  `form:"type" json:"type"`
+	Name       string                  `form:"name" json:"name"`
+	System     bool                    `form:"system" json:"system"`
+	Schema     schema.Schema           `form:"schema" json:"schema"`
+	Indexes    types.JsonArray[string] `form:"indexes" json:"indexes"`
+	ListRule   *string                 `form:"listRule" json:"listRule"`
+	ViewRule   *string                 `form:"viewRule" json:"viewRule"`
+	CreateRule *string                 `form:"createRule" json:"createRule"`
+	UpdateRule *string                 `form:"updateRule" json:"updateRule"`
+	DeleteRule *string                 `form:"deleteRule" json:"deleteRule"`
+	Options    types.JsonMap           `form:"options" json:"options"`
 }
 
 // NewCollectionUpsert creates a new [CollectionUpsert] form with initializer
@@ -59,7 +59,7 @@ func NewCollectionUpsert(app core.App, collection *models.Collection) *Collectio
 	form.Type = form.collection.Type
 	form.Name = form.collection.Name
 	form.System = form.collection.System
-	form.Indexes = list.ToUniqueStringSlice(form.collection.Indexes)
+	form.Indexes = form.collection.Indexes
 	form.ListRule = form.collection.ListRule
 	form.ViewRule = form.collection.ViewRule
 	form.CreateRule = form.collection.CreateRule
@@ -388,7 +388,7 @@ func (form *CollectionUpsert) checkRule(value any) error {
 }
 
 func (form *CollectionUpsert) checkIndexes(value any) error {
-	v, _ := value.([]string)
+	v, _ := value.(types.JsonArray[string])
 
 	for i, rawIndex := range v {
 		parsed := dbutils.ParseIndex(rawIndex)
@@ -510,12 +510,9 @@ func (form *CollectionUpsert) Submit(interceptors ...InterceptorFunc[*models.Col
 		form.collection.Schema = form.Schema
 
 		// normalize indexes format
-		form.collection.Indexes = types.JsonArray{}
-		for _, rawIdx := range form.Indexes {
-			form.collection.Indexes = append(
-				form.collection.Indexes,
-				dbutils.ParseIndex(rawIdx).Build(),
-			)
+		form.collection.Indexes = make(types.JsonArray[string], len(form.Indexes))
+		for i, rawIdx := range form.Indexes {
+			form.collection.Indexes[i] = dbutils.ParseIndex(rawIdx).Build()
 		}
 	}
 

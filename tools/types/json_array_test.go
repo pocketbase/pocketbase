@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -9,14 +10,14 @@ import (
 
 func TestJsonArrayMarshalJSON(t *testing.T) {
 	scenarios := []struct {
-		json     types.JsonArray
+		json     json.Marshaler
 		expected string
 	}{
-		{nil, "[]"},
-		{types.JsonArray{}, `[]`},
-		{types.JsonArray{1, 2, 3}, `[1,2,3]`},
-		{types.JsonArray{"test1", "test2", "test3"}, `["test1","test2","test3"]`},
-		{types.JsonArray{1, "test"}, `[1,"test"]`},
+		{new(types.JsonArray[any]), "[]"},
+		{types.JsonArray[any]{}, `[]`},
+		{types.JsonArray[int]{1, 2, 3}, `[1,2,3]`},
+		{types.JsonArray[string]{"test1", "test2", "test3"}, `["test1","test2","test3"]`},
+		{types.JsonArray[any]{1, "test"}, `[1,"test"]`},
 	}
 
 	for i, s := range scenarios {
@@ -33,14 +34,14 @@ func TestJsonArrayMarshalJSON(t *testing.T) {
 
 func TestJsonArrayValue(t *testing.T) {
 	scenarios := []struct {
-		json     types.JsonArray
+		json     driver.Valuer
 		expected driver.Value
 	}{
-		{nil, `[]`},
-		{types.JsonArray{}, `[]`},
-		{types.JsonArray{1, 2, 3}, `[1,2,3]`},
-		{types.JsonArray{"test1", "test2", "test3"}, `["test1","test2","test3"]`},
-		{types.JsonArray{1, "test"}, `[1,"test"]`},
+		{new(types.JsonArray[any]), `[]`},
+		{types.JsonArray[any]{}, `[]`},
+		{types.JsonArray[int]{1, 2, 3}, `[1,2,3]`},
+		{types.JsonArray[string]{"test1", "test2", "test3"}, `["test1","test2","test3"]`},
+		{types.JsonArray[any]{1, "test"}, `[1,"test"]`},
 	}
 
 	for i, s := range scenarios {
@@ -77,7 +78,7 @@ func TestJsonArrayScan(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		arr := types.JsonArray{}
+		arr := types.JsonArray[any]{}
 		scanErr := arr.Scan(s.value)
 
 		hasErr := scanErr != nil

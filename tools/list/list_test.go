@@ -254,7 +254,7 @@ func TestToUniqueStringSlice(t *testing.T) {
 		{[]any{0, 1, "test", ""}, []string{"0", "1", "test"}},
 		{[]string{"test1", "test2", "test1"}, []string{"test1", "test2"}},
 		{`["test1", "test2", "test2"]`, []string{"test1", "test2"}},
-		{types.JsonArray{"test1", "test2", "test1"}, []string{"test1", "test2"}},
+		{types.JsonArray[string]{"test1", "test2", "test1"}, []string{"test1", "test2"}},
 	}
 
 	for i, scenario := range scenarios {

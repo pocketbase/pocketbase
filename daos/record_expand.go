@@ -273,7 +273,7 @@ func normalizeExpands(paths []string) []string {
 
 func isRelFieldUnique(collection *models.Collection, fieldName string) bool {
 	for _, idx := range collection.Indexes {
-		parsed := dbutils.ParseIndex(idx.(string))
+		parsed := dbutils.ParseIndex(idx)
 		if parsed.Unique && len(parsed.Columns) == 1 && strings.EqualFold(parsed.Columns[0].Name, fieldName) {
 			return true
 		}
