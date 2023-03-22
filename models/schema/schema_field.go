@@ -131,8 +131,12 @@ type SchemaField struct {
 	Name     string `form:"name" json:"name"`
 	Type     string `form:"type" json:"type"`
 	Required bool   `form:"required" json:"required"`
-	Unique   bool   `form:"unique" json:"unique"`
-	Options  any    `form:"options" json:"options"`
+
+	// Deprecated: This field is no-op and will be removed in future versions.
+	// Please use the collection.Indexes field to define a unique constraint.
+	Unique bool `form:"unique" json:"unique"`
+
+	Options any `form:"options" json:"options"`
 }
 
 // ColDefinition returns the field db column type definition as string.

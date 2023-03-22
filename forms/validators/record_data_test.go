@@ -100,16 +100,6 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"(text) check unique constraint",
-			map[string]any{
-				"field1": "test",
-				"field2": "test",
-				"field3": "test",
-			},
-			nil,
-			[]string{"field3"},
-		},
-		{
 			"(text) check min constraint",
 			map[string]any{
 				"field1": "test",
@@ -226,16 +216,6 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"(number) check unique constraint",
-			map[string]any{
-				"field1": 123,
-				"field2": 123,
-				"field3": 123,
-			},
-			nil,
-			[]string{"field3"},
-		},
-		{
 			"(number) check min constraint",
 			map[string]any{
 				"field1": 0.5,
@@ -346,16 +326,6 @@ func TestRecordDataValidatorValidateBool(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"(bool) check unique constraint",
-			map[string]any{
-				"field1": true,
-				"field2": true,
-				"field3": true,
-			},
-			nil,
-			[]string{"field3"},
-		},
-		{
 			"(bool) valid data (only required)",
 			map[string]any{
 				"field2": 1,
@@ -440,16 +410,6 @@ func TestRecordDataValidatorValidateEmail(t *testing.T) {
 			},
 			nil,
 			[]string{"field1", "field2", "field3"},
-		},
-		{
-			"(email) check unique constraint",
-			map[string]any{
-				"field1": "test@example.com",
-				"field2": "test@test.com",
-				"field3": "test@example.com",
-			},
-			nil,
-			[]string{"field3"},
 		},
 		{
 			"(email) check ExceptDomains constraint",
@@ -556,16 +516,6 @@ func TestRecordDataValidatorValidateUrl(t *testing.T) {
 			},
 			nil,
 			[]string{"field1", "field3"},
-		},
-		{
-			"(url) check unique constraint",
-			map[string]any{
-				"field1": "http://example.com",
-				"field2": "http://test.com",
-				"field3": "http://example.com",
-			},
-			nil,
-			[]string{"field3"},
 		},
 		{
 			"(url) check ExceptDomains constraint",
@@ -696,16 +646,6 @@ func TestRecordDataValidatorValidateDate(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
-			"(date) check unique constraint",
-			map[string]any{
-				"field1": "2029-01-01 01:01:01.123",
-				"field2": "2029-01-01 01:01:01.123",
-				"field3": "2029-01-01 01:01:01.123",
-			},
-			nil,
-			[]string{"field3"},
-		},
-		{
 			"(date) check min date constraint",
 			map[string]any{
 				"field1": "2021-01-01 01:01:01",
@@ -823,26 +763,6 @@ func TestRecordDataValidatorValidateSelect(t *testing.T) {
 				"field1": "a",
 				"field2": "a",
 				"field3": "a",
-			},
-			nil,
-			[]string{},
-		},
-		{
-			"(select) check unique constraint",
-			map[string]any{
-				"field1": "a",
-				"field2": "b",
-				"field3": []string{"a", "b", "c"},
-			},
-			nil,
-			[]string{"field3"},
-		},
-		{
-			"(select) check unique constraint - same elements but different order",
-			map[string]any{
-				"field1": "a",
-				"field2": "b",
-				"field3": []string{"a", "c", "b"},
 			},
 			nil,
 			[]string{},
@@ -976,16 +896,6 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			},
 			nil,
 			[]string{"field2"},
-		},
-		{
-			"(json) check unique constraint",
-			map[string]any{
-				"field1": `{"test":123}`,
-				"field2": `{"test":123}`,
-				"field3": map[string]any{"test": 123},
-			},
-			nil,
-			[]string{"field3"},
 		},
 		{
 			"(json) check json text invalid obj, array and number normalizations",
@@ -1264,16 +1174,6 @@ func TestRecordDataValidatorValidateRelation(t *testing.T) {
 			map[string]any{
 				"field2": relId2,
 				"field3": []string{relId1},
-			},
-			nil,
-			[]string{"field3"},
-		},
-		{
-			"check unique constraint",
-			map[string]any{
-				"field1": relId1,
-				"field2": relId2,
-				"field3": []string{relId1, relId2, relId3, relId3}, // repeating values are collapsed
 			},
 			nil,
 			[]string{"field3"},

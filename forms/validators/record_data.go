@@ -86,17 +86,6 @@ func (validator *RecordDataValidator) Validate(data map[string]any) error {
 			errs[key] = err
 			continue
 		}
-
-		// check unique constraint
-		if field.Unique && !validator.dao.IsRecordValueUnique(
-			validator.record.Collection().Id,
-			key,
-			value,
-			validator.record.GetId(),
-		) {
-			errs[key] = validation.NewError("validation_not_unique", "Value must be unique")
-			continue
-		}
 	}
 
 	if len(errs) == 0 {
