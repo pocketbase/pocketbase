@@ -20,6 +20,10 @@
 
 - Added option to explicitly set the record id from the Admin UI ([#2118](https://github.com/pocketbase/pocketbase/issues/2118)).
 
+- **!** Renamed `daos.GetTableColumns()` to `daos.TableColumns()` for consistency with the other Dao table related helpers.
+
+- **!** Renamed `daos.GetTableInfo()` to `daos.TableInfo()` for consistency with the other Dao table related helpers.
+
 - **!** Changed `types.JsonArray` to support specifying a generic type, aka. `types.JsonArray[T]`.
   If you have previously used `types.JsonArray`, you'll have to update it to `types.JsonArray[any]`.
 

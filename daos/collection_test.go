@@ -259,7 +259,7 @@ func TestSaveCollectionCreate(t *testing.T) {
 	}
 
 	// check if the records table has the schema fields
-	columns, err := app.Dao().GetTableColumns(collection.Name)
+	columns, err := app.Dao().TableColumns(collection.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -298,7 +298,7 @@ func TestSaveCollectionUpdate(t *testing.T) {
 
 	// check if the records table has the schema fields
 	expectedColumns := []string{"id", "created", "updated", "title_update", "test", "files"}
-	columns, err := app.Dao().GetTableColumns(collection.Name)
+	columns, err := app.Dao().TableColumns(collection.Name)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -159,7 +159,7 @@ func TestSaveView(t *testing.T) {
 			continue
 		}
 
-		infoRows, err := app.Dao().GetTableInfo(s.viewName)
+		infoRows, err := app.Dao().TableInfo(s.viewName)
 		if err != nil {
 			t.Errorf("[%s] Failed to fetch table info for %s: %v", s.scenarioName, s.viewName, err)
 			continue

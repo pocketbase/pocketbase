@@ -35,7 +35,7 @@ func TestHasTable(t *testing.T) {
 	}
 }
 
-func TestGetTableColumns(t *testing.T) {
+func TestTableColumns(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -48,7 +48,7 @@ func TestGetTableColumns(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		columns, _ := app.Dao().GetTableColumns(s.tableName)
+		columns, _ := app.Dao().TableColumns(s.tableName)
 
 		if len(columns) != len(s.expected) {
 			t.Errorf("[%d] Expected columns %v, got %v", i, s.expected, columns)
@@ -63,7 +63,7 @@ func TestGetTableColumns(t *testing.T) {
 	}
 }
 
-func TestGetTableInfo(t *testing.T) {
+func TestTableInfo(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -80,7 +80,7 @@ func TestGetTableInfo(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		rows, _ := app.Dao().GetTableInfo(s.tableName)
+		rows, _ := app.Dao().TableInfo(s.tableName)
 
 		raw, _ := json.Marshal(rows)
 		rawStr := string(raw)

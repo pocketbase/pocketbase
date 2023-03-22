@@ -18,7 +18,7 @@ func init() {
 	AppMigrations.Register(func(db dbx.Builder) error {
 		dao := daos.New(db)
 
-		cols, err := dao.GetTableColumns("_collections")
+		cols, err := dao.TableColumns("_collections")
 		if err != nil {
 			return err
 		}

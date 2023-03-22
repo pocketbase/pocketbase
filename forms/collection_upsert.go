@@ -158,9 +158,7 @@ func (form *CollectionUpsert) Validate() error {
 			validation.When(isView, validation.Nil),
 			validation.By(form.checkRule),
 		),
-		validation.Field(&form.Indexes,
-			validation.When(isView, validation.Length(0, 0)).Else(validation.By(form.checkIndexes)),
-		),
+		validation.Field(&form.Indexes, validation.By(form.checkIndexes)),
 		validation.Field(&form.Options, validation.By(form.checkOptions)),
 	)
 }
@@ -389,6 +387,13 @@ func (form *CollectionUpsert) checkRule(value any) error {
 
 func (form *CollectionUpsert) checkIndexes(value any) error {
 	v, _ := value.(types.JsonArray[string])
+
+	if form.Type == models.CollectionTypeView && len(v) > 0 {
+		return validation.NewError(
+			"validation_indexes_not_supported",
+			fmt.Sprintf("The collection doesn't support indexes."),
+		)
+	}
 
 	for i, rawIndex := range v {
 		parsed := dbutils.ParseIndex(rawIndex)

@@ -112,7 +112,7 @@ func TestSyncRecordTableSchema(t *testing.T) {
 			t.Errorf("[%s] Expected table %s to exist", s.name, s.newCollection.Name)
 		}
 
-		cols, _ := app.Dao().GetTableColumns(s.newCollection.Name)
+		cols, _ := app.Dao().TableColumns(s.newCollection.Name)
 		if len(cols) != len(s.expectedColumns) {
 			t.Errorf("[%s] Expected columns %v, got %v", s.name, s.expectedColumns, cols)
 		}

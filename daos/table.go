@@ -21,10 +21,8 @@ func (dao *Dao) HasTable(tableName string) bool {
 	return err == nil && exists
 }
 
-// @todo rename to TableColumns
-//
-// GetTableColumns returns all column names of a single table by its name.
-func (dao *Dao) GetTableColumns(tableName string) ([]string, error) {
+// TableColumns returns all column names of a single table by its name.
+func (dao *Dao) TableColumns(tableName string) ([]string, error) {
 	columns := []string{}
 
 	err := dao.DB().NewQuery("SELECT name FROM PRAGMA_TABLE_INFO({:tableName})").
@@ -34,10 +32,8 @@ func (dao *Dao) GetTableColumns(tableName string) ([]string, error) {
 	return columns, err
 }
 
-// @todo rename to TableInfo
-//
-// GetTableInfo returns the `table_info` pragma result for the specified table.
-func (dao *Dao) GetTableInfo(tableName string) ([]*models.TableInfoRow, error) {
+// TableInfo returns the `table_info` pragma result for the specified table.
+func (dao *Dao) TableInfo(tableName string) ([]*models.TableInfoRow, error) {
 	info := []*models.TableInfoRow{}
 
 	err := dao.DB().NewQuery("SELECT * FROM PRAGMA_TABLE_INFO({:tableName})").
