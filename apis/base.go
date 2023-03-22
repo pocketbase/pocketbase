@@ -47,6 +47,9 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	// custom error handler
 	e.HTTPErrorHandler = func(c echo.Context, err error) {
 		if c.Response().Committed {
+			if app.IsDebug() {
+				log.Println("HTTPErrorHandler response was already committed:", err)
+			}
 			return
 		}
 
