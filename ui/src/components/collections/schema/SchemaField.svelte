@@ -116,8 +116,11 @@
             name="schema.{key}.name"
             inlineError
         >
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div class="form-field-addon prefix no-pointer-events" class:txt-disabled={!interactive}>
+            <div
+                class="form-field-addon prefix no-pointer-events field-type-icon"
+                class:txt-disabled={!interactive}
+                class:new={!field.id}
+            >
                 <i class={CommonHelper.getFieldTypeIcon(field.type)} />
             </div>
 

@@ -20,6 +20,17 @@
     .form-field {
         margin: 0;
     }
+    .field-type-icon.new:after {
+        $size: 4px;
+        content: "";
+        position: absolute;
+        left: -6px;
+        top: 9px;
+        width: $size;
+        height: $size;
+        border-radius: $size;
+        background: var(--baseAlt4Color);
+    }
     .options-trigger {
         i {
             transition: transform var(--baseAnimationSpeed);
