@@ -279,16 +279,13 @@ func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, 
 
 		var fieldName string
 		var collection *models.Collection
-		var isMainTableField bool
 
 		if len(parts) == 2 {
 			fieldName = parts[1]
 			collection = collections[parts[0]]
-			isMainTableField = parts[0] == mainTable.alias
 		} else {
 			fieldName = parts[0]
 			collection = collections[mainTable.alias]
-			isMainTableField = true
 		}
 
 		// fallback to the default field if the found column is not from a collection schema
@@ -323,8 +320,8 @@ func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, 
 			continue
 		}
 
-		if fieldName == schema.FieldNameId && !isMainTableField {
-			// convert to relation since it is a direct id reference to non-maintable collection
+		if fieldName == schema.FieldNameId {
+			// convert to relation since it is a direct id reference
 			result[col.alias] = &queryField{
 				field: &schema.SchemaField{
 					Name: col.alias,

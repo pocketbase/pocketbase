@@ -11,6 +11,8 @@
 
 - Removed the `COALESCE` wrapping from some of the generated filter conditions to make better use of the indexes ([#1939](https://github.com/pocketbase/pocketbase/issues/1939)).
 
+- Detect `id` aliased view columns as single `relation` fields ([#2029](https://github.com/pocketbase/pocketbase/discussions/2029)).
+
 - Optimized single relation lookups.
 
 - Normalized record values on `maxSelect` field option change (`select`, `file`, `relation`).

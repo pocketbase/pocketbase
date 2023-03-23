@@ -399,7 +399,7 @@ func TestCreateViewSchema(t *testing.T) {
 			`,
 			false,
 			map[string]string{
-				"id2":           schema.FieldTypeJson,
+				"id2":           schema.FieldTypeRelation,
 				"text_alias":    schema.FieldTypeText,
 				"url_alias":     schema.FieldTypeUrl,
 				"bool_alias":    schema.FieldTypeBool,
