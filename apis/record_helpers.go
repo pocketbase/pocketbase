@@ -33,7 +33,7 @@ func RequestData(c echo.Context) *models.RequestData {
 		Method:  c.Request().Method,
 		Query:   map[string]any{},
 		Data:    map[string]any{},
-		Headers: map[string]string{},
+		Headers: map[string]any{},
 	}
 
 	// extract the first value of all headers and normalizes the keys

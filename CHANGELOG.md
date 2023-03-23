@@ -2,10 +2,14 @@
 
 - Added _experimental_ Apple OAuth2 integration.
 
+- Added `@request.headers.*` filter rule support.
+
 - (@todo docs) Added support for advanced unique constraints and indexes management ([#345](https://github.com/pocketbase/pocketbase/issues/345), [#544](https://github.com/pocketbase/pocketbase/issues/544))
 
 - Deprecated `SchemaField.Unique`. Unique constraints are now managed via indexes.
   The `Unique` field is a no-op and will be removed in future version.
+
+- Removed the `COALESCE` wrapping from some of the generated filter conditions to make better use of the indexes ([#1939](https://github.com/pocketbase/pocketbase/issues/1939)).
 
 - Optimized single relation lookups.
 

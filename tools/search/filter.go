@@ -107,9 +107,15 @@ func buildExpr(
 
 	switch op {
 	case fexpr.SignEq, fexpr.SignAnyEq:
-		expr = dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') = COALESCE(%s, '')", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
+		expr = dbx.NewExp(
+			fmt.Sprintf("%s = %s", normalizeNullIdentifier(left), normalizeNullIdentifier(right)),
+			mergeParams(left.Params, right.Params),
+		)
 	case fexpr.SignNeq, fexpr.SignAnyNeq:
-		expr = dbx.NewExp(fmt.Sprintf("COALESCE(%s, '') != COALESCE(%s, '')", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
+		expr = dbx.NewExp(
+			fmt.Sprintf("%s != %s", normalizeNullIdentifier(left), normalizeNullIdentifier(right)),
+			mergeParams(left.Params, right.Params),
+		)
 	case fexpr.SignLike, fexpr.SignAnyLike:
 		// the right side is a column and therefor wrap it with "%" for contains like behavior
 		if len(right.Params) == 0 {
@@ -230,6 +236,20 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 	}
 
 	return nil, errors.New("unresolvable token type")
+}
+
+func normalizeNullIdentifier(result *ResolverResult) string {
+	lower := strings.ToLower(result.Identifier)
+
+	if lower == "null" {
+		return "''"
+	}
+
+	if strings.Contains(lower, "json_extract(") || strings.Contains(lower, "json_array_length(") {
+		return fmt.Sprintf("COALESCE(%s, '')", result.Identifier)
+	}
+
+	return result.Identifier
 }
 
 func isAnyMatchOp(op fexpr.SignOp) bool {

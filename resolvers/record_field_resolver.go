@@ -252,10 +252,8 @@ func extractNestedMapVal(m map[string]any, keys ...string) (any, error) {
 		return nil, fmt.Errorf("at least one key should be provided")
 	}
 
-	var result any
-	var ok bool
-
-	if result, ok = m[keys[0]]; !ok {
+	result, ok := m[keys[0]]
+	if !ok {
 		return nil, fmt.Errorf("invalid key path - missing key %q", keys[0])
 	}
 
