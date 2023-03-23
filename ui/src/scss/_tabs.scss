@@ -19,7 +19,7 @@ $tabContentAnimationSpeed: 0.2s;
     min-height: 50px;
     user-select: none;
     margin: 0 0 var(--baseSpacing);
-    border-bottom: 1px solid var(--baseAlt2Color);
+    border-bottom: 2px solid var(--baseAlt2Color);
     .tab-item {
         position: relative;
         outline: 0;
@@ -48,7 +48,7 @@ $tabContentAnimationSpeed: 0.2s;
             position: absolute;
             display: block;
             left: 0;
-            bottom: -1px;
+            bottom: -2px;
             width: 100%;
             height: 2px;
             border-top-left-radius: var(--baseRadius);

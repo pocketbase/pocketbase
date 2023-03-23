@@ -11,7 +11,7 @@
     let showFiltersInfo = false;
 </script>
 
-<div class="block m-b-sm handle" class:fade={!showFiltersInfo}>
+<div class="block m-b-sm handle">
     <div class="flex txt-sm txt-hint m-b-5">
         <p>
             All rules follow the

@@ -15,7 +15,7 @@
 </script>
 
 {#if field.type === "json"}
-    {@const stringifiedJson = JSON.stringify(rawValue) || ""}
+    {@const stringifiedJson = CommonHelper.trimQuotedValue(JSON.stringify(rawValue)) || '""'}
     {#if short}
         <span class="txt txt-ellipsis">
             {CommonHelper.truncate(stringifiedJson)}

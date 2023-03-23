@@ -467,6 +467,27 @@ export default class CommonHelper {
     }
 
     /**
+     * Trims the matching quotes from the provided value.
+     *
+     * The value will be returned unchanged if `val` is not
+     * wrapped with quotes or it is not string.
+     *
+     * @param  {Mixed} val
+     * @return {Mixed}
+     */
+    static trimQuotedValue(val) {
+        if (
+            typeof val == "string" &&
+            (val[0] == `"`  || val[0] == `'` || val[0] == "`") &&
+            val[0] == val[val.length-1]
+        ) {
+            return val.slice(1, -1);
+        }
+
+        return val
+    }
+
+    /**
      * Returns the plain text version (aka. strip tags) of the provided string.
      *
      * @param  {String} str
