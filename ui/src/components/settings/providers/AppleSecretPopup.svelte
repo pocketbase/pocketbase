@@ -44,7 +44,7 @@
         isSubmitting = true;
 
         try {
-            const result = await ApiClient.generateAppleClientSecret(
+            const result = await ApiClient.settings.generateAppleClientSecret(
                 clientId,
                 teamId,
                 keyId,

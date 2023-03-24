@@ -157,11 +157,6 @@
 
     // Returns the current active editor language.
     function getEditorLang() {
-        let schema = {};
-        for (let collection of $collections) {
-            schema[collection.name] = CommonHelper.getAllCollectionIdentifiers(collection);
-        }
-
         switch (language) {
             case "html":
                 return htmlLang();
@@ -177,10 +172,14 @@
                         identifierQuotes: '`"',
                         specialVar: "@:?$",
                     }),
-                    schema: schema,
                     upperCaseKeywords: true,
                 });
             case "sql-select":
+                let schema = {};
+                for (let collection of $collections) {
+                    schema[collection.name] = CommonHelper.getAllCollectionIdentifiers(collection);
+                }
+
                 return sql({
                     // lightweight sql dialect with mostly SELECT statements keywords
                     dialect: SQLDialect.define({
