@@ -750,7 +750,8 @@ a.thumb:not(.thumb-active) {
             border-top: 0;
         }
         &:last-child {
-            border-radius: inherit;
+            border-bottom-left-radius: inherit;
+            border-bottom-right-radius: inherit;
         }
         .content {
             display: flex;

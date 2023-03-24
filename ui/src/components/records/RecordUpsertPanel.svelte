@@ -72,8 +72,8 @@
     async function load(model) {
         setErrors({}); // reset errors
         original = model || new Record();
-        if (model?.clone) {
-            record = model.clone();
+        if (model?.$clone) {
+            record = model.$clone();
         } else {
             record = new Record();
         }
@@ -138,7 +138,7 @@
     }
 
     function exportFormData() {
-        const data = record?.export() || {};
+        const data = record?.$export() || {};
         const formData = new FormData();
 
         const exportableFields = {
@@ -237,7 +237,7 @@
     }
 
     async function duplicate() {
-        const clone = original?.clone();
+        const clone = original?.$clone();
 
         if (clone) {
             clone.id = "";

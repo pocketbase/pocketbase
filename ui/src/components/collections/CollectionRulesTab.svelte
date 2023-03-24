@@ -91,6 +91,8 @@
     <RuleField
         label="Manage rule"
         formKey="options.manageRule"
+        placeholder=""
+        required={collection.options.manageRule !== null}
         {collection}
         bind:rule={collection.options.manageRule}
     >

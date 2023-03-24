@@ -39,7 +39,7 @@
 
     $: hasAnyChange = CommonHelper.hasCollectionChanges(collectionA, collectionB, deleteMissing);
 
-    const mainModelProps = Object.keys(new Collection().export()).filter(
+    const mainModelProps = Object.keys(new Collection().$export()).filter(
         (key) => !["schema", "created", "updated"].includes(key)
     );
 

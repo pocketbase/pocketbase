@@ -44,17 +44,13 @@
         isSubmitting = true;
 
         try {
-            // @todo replace with dedicated SDK method
-            const result = await ApiClient.send("/api/settings/apple/generate-client-secret", {
-                method: "POST",
-                body: {
-                    teamId: teamId,
-                    clientId: clientId,
-                    keyId: keyId,
-                    privateKey: privateKey.trim(),
-                    duration: duration,
-                },
-            });
+            const result = await ApiClient.generateAppleClientSecret(
+                clientId,
+                teamId,
+                keyId,
+                privateKey.trim(),
+                duration
+            );
 
             isSubmitting = false;
 

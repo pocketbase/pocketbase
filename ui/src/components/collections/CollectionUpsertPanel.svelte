@@ -51,11 +51,11 @@
         schemaTabError = "";
     }
 
-    $: isSystemUpdate = !collection.isNew && collection.system;
+    $: isSystemUpdate = !collection.$isNew && collection.system;
 
     $: hasChanges = initialFormHash != calculateFormHash(collection);
 
-    $: canSave = collection.isNew || hasChanges;
+    $: canSave = collection.$isNew || hasChanges;
 
     $: if (activeTab === TAB_OPTIONS && collection.type !== TYPE_AUTH) {
         // reset selected tab
@@ -99,7 +99,7 @@
 
         if (typeof model !== "undefined") {
             original = model;
-            collection = model.clone();
+            collection = model.$clone();
         } else {
             original = null;
             collection = new Collection();
@@ -115,7 +115,7 @@
     }
 
     function saveWithConfirm() {
-        if (collection.isNew) {
+        if (collection.$isNew) {
             save();
         } else {
             confirmChangesPanel?.show(original, collection);
@@ -132,7 +132,7 @@
         const data = exportFormData();
 
         let request;
-        if (collection.isNew) {
+        if (collection.$isNew) {
             request = ApiClient.collections.create(data);
         } else {
             request = ApiClient.collections.update(collection.id, data);
@@ -148,11 +148,13 @@
                 hide();
 
                 addSuccessToast(
-                    collection.isNew ? "Successfully created collection." : "Successfully updated collection."
+                    collection.$isNew
+                        ? "Successfully created collection."
+                        : "Successfully updated collection."
                 );
 
                 dispatch("save", {
-                    isNew: collection.isNew,
+                    isNew: collection.$isNew,
                     collection: result,
                 });
             })
@@ -165,7 +167,7 @@
     }
 
     function exportFormData() {
-        const data = collection.export();
+        const data = collection.$export();
         data.schema = data.schema.slice(0);
 
         // remove deleted fields
@@ -221,7 +223,7 @@
     }
 
     async function duplicate() {
-        const clone = original?.clone();
+        const clone = original?.$clone();
 
         if (clone) {
             clone.id = "";
@@ -274,10 +276,10 @@
 >
     <svelte:fragment slot="header">
         <h4 class="upsert-panel-title">
-            {collection.isNew ? "New collection" : "Edit collection"}
+            {collection.$isNew ? "New collection" : "Edit collection"}
         </h4>
 
-        {#if !collection.isNew && !collection.system}
+        {#if !collection.$isNew && !collection.system}
             <div class="flex-fill" />
             <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
                 <i class="ri-more-line" />
@@ -318,7 +320,7 @@
                     required
                     disabled={isSystemUpdate}
                     spellcheck="false"
-                    autofocus={collection.isNew}
+                    autofocus={collection.$isNew}
                     placeholder={collection.isAuth ? `eg. "users"` : `eg. "posts"`}
                     value={collection.name}
                     on:input={(e) => {
@@ -330,15 +332,15 @@
                 <div class="form-field-addon">
                     <button
                         type="button"
-                        class="btn btn-sm p-r-10 p-l-10 {collection.isNew
+                        class="btn btn-sm p-r-10 p-l-10 {collection.$isNew
                             ? 'btn-outline'
                             : 'btn-transparent'}"
-                        disabled={!collection.isNew}
+                        disabled={!collection.$isNew}
                     >
                         <!-- empty span for alignment -->
                         <span />
                         <span class="txt">Type: {collectionTypes[collection.type] || "N/A"}</span>
-                        {#if collection.isNew}
+                        {#if collection.$isNew}
                             <i class="ri-arrow-down-s-fill" />
                             <Toggler class="dropdown dropdown-right dropdown-nowrap m-t-5">
                                 {#each Object.entries(collectionTypes) as [type, label]}
@@ -452,7 +454,7 @@
             disabled={!canSave || isSaving}
             on:click={() => saveWithConfirm()}
         >
-            <span class="txt">{collection.isNew ? "Create" : "Save changes"}</span>
+            <span class="txt">{collection.$isNew ? "Create" : "Save changes"}</span>
         </button>
     </svelte:fragment>
 </OverlayPanel>

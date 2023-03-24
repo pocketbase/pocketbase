@@ -28,15 +28,15 @@
 
 <div class="grid m-b-base">
     <div class="col-lg-6">
-        <Field class="form-field {!record.isNew ? 'required' : ''}" name="username" let:uniqueId>
+        <Field class="form-field {!record.$isNew ? 'required' : ''}" name="username" let:uniqueId>
             <label for={uniqueId}>
                 <i class={CommonHelper.getFieldTypeIcon("user")} />
                 <span class="txt">Username</span>
             </label>
             <input
                 type="text"
-                requried={!record.isNew}
-                placeholder={record.isNew ? "Leave empty to auto generate..." : originalUsername}
+                requried={!record.$isNew}
+                placeholder={record.$isNew ? "Leave empty to auto generate..." : originalUsername}
                 id={uniqueId}
                 bind:value={record.username}
             />
@@ -69,7 +69,7 @@
             <!-- svelte-ignore a11y-autofocus -->
             <input
                 type="email"
-                autofocus={record.isNew}
+                autofocus={record.$isNew}
                 autocomplete="off"
                 id={uniqueId}
                 required={collection.options?.requireEmail}
@@ -79,14 +79,14 @@
     </div>
 
     <div class="col-lg-12">
-        {#if !record.isNew}
+        {#if !record.$isNew}
             <Field class="form-field form-field-toggle" name="verified" let:uniqueId>
                 <input type="checkbox" id={uniqueId} bind:checked={changePasswordToggle} />
                 <label for={uniqueId}>Change password</label>
             </Field>
         {/if}
 
-        {#if record.isNew || changePasswordToggle}
+        {#if record.$isNew || changePasswordToggle}
             <div class="block" transition:slide|local={{ duration: 150 }}>
                 <div class="grid" class:p-t-xs={changePasswordToggle}>
                     <div class="col-sm-6">
@@ -131,7 +131,7 @@
                 id={uniqueId}
                 bind:checked={record.verified}
                 on:change|preventDefault={(e) => {
-                    if (record.isNew) {
+                    if (record.$isNew) {
                         return; // no confirmation required
                     }
                     confirm(

@@ -16,7 +16,7 @@
     let codeEditorComponent;
     let isCodeEditorComponentLoading = false;
 
-    $: presetColumns = collection?.schema?.map((f) => f.name) || [];
+    $: presetColumns = collection?.schema?.filter((f) => !f.toDelete)?.map((f) => f.name) || [];
 
     $: indexParts = CommonHelper.parseIndex(index);
 

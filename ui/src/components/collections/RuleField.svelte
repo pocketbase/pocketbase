@@ -12,6 +12,7 @@
     export let label = "Rule";
     export let formKey = "rule";
     export let required = false;
+    export let placeholder = "Leave empty to grant everyone access...";
 
     let editorRef = null;
     let tempValue = null;
@@ -83,7 +84,7 @@
                 bind:value={rule}
                 baseCollection={collection}
                 disabled={isAdminOnly}
-                placeholder={!isAdminOnly ? "Leave empty to grant everyone access..." : ""}
+                placeholder={!isAdminOnly ? placeholder : ""}
             />
 
             {#if isAdminOnly}
@@ -109,10 +110,6 @@
 {/if}
 
 <style lang="scss">
-    label .label {
-        margin: -5px 0;
-        background: rgba(53, 71, 104, 0.12);
-    }
     .lock-toggle {
         position: absolute;
         right: 0px;
