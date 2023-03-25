@@ -138,6 +138,56 @@ func TestRunnerUpAndDown(t *testing.T) {
 	}
 }
 
+func TestHistorySync(t *testing.T) {
+	testDB, err := createTestDB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer testDB.Close()
+
+	// mock migrations history
+	l := MigrationsList{}
+	l.Register(func(db dbx.Builder) error {
+		return nil
+	}, func(db dbx.Builder) error {
+		return nil
+	}, "1_test")
+	l.Register(func(db dbx.Builder) error {
+		return nil
+	}, func(db dbx.Builder) error {
+		return nil
+	}, "2_test")
+	l.Register(func(db dbx.Builder) error {
+		return nil
+	}, func(db dbx.Builder) error {
+		return nil
+	}, "3_test")
+
+	r, err := NewRunner(testDB.DB, l)
+	if err != nil {
+		t.Fatalf("Failed to initialize the runner: %v", err)
+	}
+
+	if _, err := r.Up(); err != nil {
+		t.Fatalf("Failed to apply the mock migrations: %v", err)
+	}
+
+	if !r.isMigrationApplied(testDB.DB, "2_test") {
+		t.Fatalf("Expected 2_test migration to be applied")
+	}
+
+	// mock deleted migrations
+	r.migrationsList.list = []*Migration{r.migrationsList.list[0], r.migrationsList.list[2]}
+
+	if err := r.removeMissingAppliedMigrations(); err != nil {
+		t.Fatalf("Failed to remove missing applied migrations: %v", err)
+	}
+
+	if r.isMigrationApplied(testDB.DB, "2_test") {
+		t.Fatalf("Expected 2_test migration to NOT be applied")
+	}
+}
+
 // -------------------------------------------------------------------
 // Helpers
 // -------------------------------------------------------------------

@@ -123,6 +123,7 @@ func (p *plugin) createCommand() *cobra.Command {
 - down [number] - reverts the last [number] applied migrations
 - create name   - creates new blank migration template file
 - collections   - creates new migration file with snapshot of the local collections configuration
+- history-sync  - ensures that the _migrations history table doesn't have references to deleted migration files
 `
 
 	command := &cobra.Command{

@@ -108,6 +108,14 @@ func (r *Runner) Run(args ...string) error {
 		}
 
 		return nil
+	case "history-sync":
+		if err := r.removeMissingAppliedMigrations(); err != nil {
+			color.Red(err.Error())
+			return err
+		}
+
+		color.Green("The %s table was synced with the available migrations.", r.tableName)
+		return nil
 	default:
 		return fmt.Errorf("Unsupported command: %q\n", cmd)
 	}
@@ -251,4 +259,19 @@ func (r *Runner) lastAppliedMigrations(limit int) ([]string, error) {
 	}
 
 	return files, nil
+}
+
+func (r *Runner) removeMissingAppliedMigrations() error {
+	loadedMigrations := r.migrationsList.Items()
+
+	names := make([]any, len(loadedMigrations))
+	for i, migration := range loadedMigrations {
+		names[i] = migration.File
+	}
+
+	_, err := r.db.Delete(r.tableName, dbx.Not(dbx.HashExp{
+		"file": names,
+	})).Execute()
+
+	return err
 }

@@ -26,6 +26,8 @@
 
 - Added option to explicitly set the record id from the Admin UI ([#2118](https://github.com/pocketbase/pocketbase/issues/2118)).
 
+- Added `migrate history-sync` command to clean `_migrations` history table from deleted migration files references.
+
 - Added `core.RecordAuthWithOAuth2Event.IsNewRecord` bool field to indicate whether the OAuth2 action created a new auth record.
 
 - **!** Renamed `daos.GetTableColumns()` to `daos.TableColumns()` for consistency with the other Dao table related helpers.
