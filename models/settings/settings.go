@@ -503,13 +503,12 @@ func (c LogsConfig) Validate() error {
 // -------------------------------------------------------------------
 
 type AuthProviderConfig struct {
-	Enabled      bool           `form:"enabled" json:"enabled"`
-	ClientId     string         `form:"clientId" json:"clientId"`
-	ClientSecret string         `form:"clientSecret" json:"clientSecret"`
-	AuthUrl      string         `form:"authUrl" json:"authUrl"`
-	TokenUrl     string         `form:"tokenUrl" json:"tokenUrl"`
-	UserApiUrl   string         `form:"userApiUrl" json:"userApiUrl"`
-	Meta         map[string]any `form:"meta" json:"meta"`
+	Enabled      bool   `form:"enabled" json:"enabled"`
+	ClientId     string `form:"clientId" json:"clientId"`
+	ClientSecret string `form:"clientSecret" json:"clientSecret"`
+	AuthUrl      string `form:"authUrl" json:"authUrl"`
+	TokenUrl     string `form:"tokenUrl" json:"tokenUrl"`
+	UserApiUrl   string `form:"userApiUrl" json:"userApiUrl"`
 }
 
 // Validate makes `ProviderConfig` validatable by implementing [validation.Validatable] interface.
