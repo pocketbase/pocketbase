@@ -208,6 +208,7 @@ type RecordAuthWithOAuth2Event struct {
 	HttpContext echo.Context
 	Record      *models.Record
 	OAuth2User  *auth.AuthUser
+	IsNewRecord bool
 }
 
 type RecordAuthRefreshEvent struct {

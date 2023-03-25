@@ -177,10 +177,16 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 		return NewBadRequestError("An error occurred while loading the submitted data.", readErr)
 	}
 
+	event := new(core.RecordAuthWithOAuth2Event)
+	event.HttpContext = c
+	event.Collection = collection
+	event.IsNewRecord = false
+
 	form.SetBeforeNewRecordCreateFunc(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
 		return createForm.DrySubmit(func(txDao *daos.Dao) error {
 			requestData := RequestData(c)
 			requestData.Data = form.CreateData
+			event.IsNewRecord = true
 
 			createRuleFunc := func(q *dbx.SelectQuery) error {
 				admin, _ := c.Get(ContextAdminKey).(*models.Admin)
@@ -212,10 +218,6 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 			return nil
 		})
 	})
-
-	event := new(core.RecordAuthWithOAuth2Event)
-	event.HttpContext = c
-	event.Collection = collection
 
 	_, _, submitErr := form.Submit(func(next forms.InterceptorNextFunc[*forms.RecordOAuth2LoginData]) forms.InterceptorNextFunc[*forms.RecordOAuth2LoginData] {
 		return func(data *forms.RecordOAuth2LoginData) error {
