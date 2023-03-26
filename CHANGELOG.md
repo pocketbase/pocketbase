@@ -28,7 +28,12 @@
 
 - Added `migrate history-sync` command to clean `_migrations` history table from deleted migration files references.
 
-- Added `core.RecordAuthWithOAuth2Event.IsNewRecord` bool field to indicate whether the OAuth2 action created a new auth record.
+- Added new fields to the `core.RecordAuthWithOAuth2Event` struct:
+    ```
+    IsNewRecord     bool,          // boolean field indicating whether the OAuth2 action created a new auth record
+    ProviderName    string,        // the name of the OAuth2 provider (eg. "google")
+    ProviderClient  auth.Provider, // the loaded Provider client instance
+    ```
 
 - **!** Renamed `daos.GetTableColumns()` to `daos.TableColumns()` for consistency with the other Dao table related helpers.
 

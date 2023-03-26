@@ -180,6 +180,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 	event := new(core.RecordAuthWithOAuth2Event)
 	event.HttpContext = c
 	event.Collection = collection
+	event.ProviderName = form.Provider
 	event.IsNewRecord = false
 
 	form.SetBeforeNewRecordCreateFunc(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
@@ -223,6 +224,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 		return func(data *forms.RecordOAuth2LoginData) error {
 			event.Record = data.Record
 			event.OAuth2User = data.OAuth2User
+			event.ProviderClient = data.ProviderClient
 
 			return api.app.OnRecordBeforeAuthWithOAuth2Request().Trigger(event, func(e *core.RecordAuthWithOAuth2Event) error {
 				data.Record = e.Record

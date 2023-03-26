@@ -205,10 +205,12 @@ type RecordAuthWithPasswordEvent struct {
 type RecordAuthWithOAuth2Event struct {
 	BaseCollectionEvent
 
-	HttpContext echo.Context
-	Record      *models.Record
-	OAuth2User  *auth.AuthUser
-	IsNewRecord bool
+	HttpContext    echo.Context
+	ProviderName   string
+	ProviderClient auth.Provider
+	Record         *models.Record
+	OAuth2User     *auth.AuthUser
+	IsNewRecord    bool
 }
 
 type RecordAuthRefreshEvent struct {

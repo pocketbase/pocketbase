@@ -18,9 +18,10 @@ import (
 
 // RecordOAuth2LoginData defines the OA
 type RecordOAuth2LoginData struct {
-	ExternalAuth *models.ExternalAuth
-	Record       *models.Record
-	OAuth2User   *auth.AuthUser
+	ExternalAuth   *models.ExternalAuth
+	Record         *models.Record
+	OAuth2User     *auth.AuthUser
+	ProviderClient auth.Provider
 }
 
 // BeforeOAuth2RecordCreateFunc defines a callback function that will
@@ -176,9 +177,10 @@ func (form *RecordOAuth2Login) Submit(
 	}
 
 	interceptorData := &RecordOAuth2LoginData{
-		ExternalAuth: rel,
-		Record:       authRecord,
-		OAuth2User:   authUser,
+		ExternalAuth:   rel,
+		Record:         authRecord,
+		OAuth2User:     authUser,
+		ProviderClient: provider,
 	}
 
 	interceptorsErr := runInterceptors(interceptorData, func(newData *RecordOAuth2LoginData) error {
