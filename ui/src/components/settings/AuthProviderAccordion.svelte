@@ -45,7 +45,7 @@
     <svelte:fragment slot="header">
         <div class="inline-flex">
             {#if icon}
-                <i class={icon} />
+                <i class={icon} class:txt-hint={!config.enabled} />
             {/if}
             <span class="txt">{title}</span>
             <em class="txt-hint">

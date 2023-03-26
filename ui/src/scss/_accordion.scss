@@ -8,7 +8,8 @@
     border-radius: var(--baseRadius);
     background: var(--baseColor);
     border: 1px solid var(--baseAlt2Color);
-    transition: box-shadow var(--baseAnimationSpeed),
+    transition: border-radius var(--baseAnimationSpeed),
+                box-shadow var(--baseAnimationSpeed),
                 margin var(--baseAnimationSpeed);
 
     // header
@@ -25,7 +26,8 @@
         user-select: none;
         color: var(--txtPrimaryColor);
         border-radius: inherit;
-        transition: background var(--baseAnimationSpeed),
+        transition: border-radius var(--baseAnimationSpeed),
+                    background var(--baseAnimationSpeed),
                     box-shadow var(--baseAnimationSpeed);
         .icon {
             width: 18px;
