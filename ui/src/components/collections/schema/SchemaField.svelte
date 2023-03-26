@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { slide } from "svelte/transition";
     import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
@@ -13,6 +13,7 @@
     export let key = "";
     export let field = new SchemaField();
 
+    let nameInput;
     let optionsTrigger;
     let isDragOver = false;
 
@@ -68,6 +69,13 @@
                 return "Nonempty";
         }
     }
+
+    onMount(() => {
+        if (field.onMountSelect) {
+            field.onMountSelect = false;
+            nameInput?.select();
+        }
+    });
 </script>
 
 <div
@@ -126,6 +134,7 @@
 
             <!-- svelte-ignore a11y-autofocus -->
             <input
+                bind:this={nameInput}
                 type="text"
                 required
                 disabled={!interactive}

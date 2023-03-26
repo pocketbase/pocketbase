@@ -52,7 +52,7 @@
             type: fieldType,
         });
 
-        field.onMountExpand = true;
+        field.onMountSelect = true;
 
         collection.schema.push(field);
         collection.schema = collection.schema;
