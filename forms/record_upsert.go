@@ -728,6 +728,8 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 // You can optionally provide a list of InterceptorFunc to further
 // modify the form behavior before persisting it.
 func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]) error {
+	oldRecord := form.record.OriginalCopy()
+
 	if err := form.ValidateAndFill(); err != nil {
 		return err
 	}
@@ -749,10 +751,23 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 			return fmt.Errorf("failed to save the record: %w", err)
 		}
 
-		// @todo exec before the record save (it is after because of eventual record id change)?
-		//
 		// upload new files (if any)
+		//
+		// note1: executed outside of transaction to avoid keeping a lock for too long
+		// note2: executed after the record save to allow record id change with a before model hook
 		if err := form.processFilesToUpload(); err != nil {
+			if oldRecord.IsNew() {
+				// delete previously inserted record
+				if err := form.dao.DeleteRecord(form.record); err != nil && form.app.IsDebug() {
+					log.Println(err)
+				}
+			} else {
+				// revert record changes
+				if err := form.dao.SaveRecord(oldRecord); err != nil && form.app.IsDebug() {
+					log.Println(err)
+				}
+			}
+
 			return fmt.Errorf("failed to process the uploaded files: %w", err)
 		}
 
