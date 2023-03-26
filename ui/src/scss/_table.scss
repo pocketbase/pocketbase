@@ -144,6 +144,9 @@ table {
     .col-type-text {
         max-width: 300px;
     }
+    .col-type-editor {
+        min-width: 250px;
+    }
     .col-type-select {
         min-width: 150px;
     }
