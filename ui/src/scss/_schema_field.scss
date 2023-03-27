@@ -20,17 +20,6 @@
     .form-field {
         margin: 0;
     }
-    .field-type-icon.new:after {
-        $size: 4px;
-        content: "";
-        position: absolute;
-        left: -6px;
-        top: 9px;
-        width: $size;
-        height: $size;
-        border-radius: $size;
-        background: var(--baseAlt4Color);
-    }
     .options-trigger {
         i {
             transition: transform var(--baseAnimationSpeed);
@@ -60,6 +49,25 @@
         flex-shrink: 0;
         .dropdown {
             min-width: 0;
+        }
+    }
+
+    // markers
+    .markers {
+        position: absolute;
+        z-index: 1;
+        left: 7px;
+        top: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        .marker {
+            $size: 4px;
+            display: block;
+            width: $size;
+            height: $size;
+            border-radius: $size;
+            background: var(--baseAlt4Color);
         }
     }
 

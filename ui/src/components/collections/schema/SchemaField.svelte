@@ -8,14 +8,19 @@
     import Toggler from "@/components/base/Toggler.svelte";
     import Field from "@/components/base/Field.svelte";
 
-    const dispatch = createEventDispatcher();
-
     export let key = "";
     export let field = new SchemaField();
 
     let nameInput;
     let optionsTrigger;
     let isDragOver = false;
+
+    const dispatch = createEventDispatcher();
+    const customRequiredLabels = {
+        // type => label
+        bool: "Nonfalsey",
+        number: "Nonzero",
+    };
 
     $: if (field.toDelete) {
         // reset the name if it was previously deleted
@@ -40,6 +45,8 @@
 
     $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
 
+    $: requiredLabel = customRequiredLabels[field?.type] || "Nonempty";
+
     function remove() {
         if (!field.id) {
             dispatch("remove");
@@ -57,17 +64,6 @@
 
     function normalizeFieldName(name) {
         return CommonHelper.slugify(name);
-    }
-
-    function requiredLabel(field) {
-        switch (field?.type) {
-            case "bool":
-                return "Nonfalsey";
-            case "number":
-                return "Nonzero";
-            default:
-                return "Nonempty";
-        }
     }
 
     onMount(() => {
@@ -124,10 +120,15 @@
             name="schema.{key}.name"
             inlineError
         >
+            <div class="markers">
+                {#if field.required}
+                    <span class="marker marker-required" use:tooltip={requiredLabel} />
+                {/if}
+            </div>
+
             <div
                 class="form-field-addon prefix no-pointer-events field-type-icon"
                 class:txt-disabled={!interactive}
-                class:new={!field.id}
             >
                 <i class={CommonHelper.getFieldTypeIcon(field.type)} />
             </div>
@@ -190,7 +191,7 @@
                     <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
                         <input type="checkbox" id={uniqueId} bind:checked={field.required} />
                         <label for={uniqueId}>
-                            <span class="txt">{requiredLabel(field)}</span>
+                            <span class="txt">{requiredLabel}</span>
                             <i
                                 class="ri-information-line link-hint"
                                 use:tooltip={{
