@@ -517,7 +517,7 @@ func TestGenerateAppleClientSecret(t *testing.T) {
 			},
 		},
 		{
-			Name:   "authorized as admin",
+			Name:   "authorized as admin (valid data)",
 			Method: http.MethodPost,
 			Url:    "/api/settings/apple/generate-client-secret",
 			Body: strings.NewReader(fmt.Sprintf(`{
