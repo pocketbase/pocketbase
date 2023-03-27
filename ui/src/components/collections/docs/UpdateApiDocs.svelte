@@ -57,7 +57,7 @@
         },
     ];
 
-    $: if (collection.isAuth) {
+    $: if (collection.$isAuth) {
         baseData = {
             username: "test_username_update",
             emailVisibility: false,

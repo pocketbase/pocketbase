@@ -92,6 +92,10 @@
                 If your query doesn't have a suitable one, you can use the universal
                 <code>(ROW_NUMBER() OVER()) as id</code>.
             </li>
+            <li>
+                Expressions must be aliased with a valid formatted field name (eg.
+                <code>MAX(balance) as maxBalance</code>).
+            </li>
         </ul>
     </div>
 

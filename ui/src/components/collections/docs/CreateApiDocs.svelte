@@ -47,7 +47,7 @@
         },
     ];
 
-    $: if (collection.isAuth) {
+    $: if (collection.$isAuth) {
         baseData = {
             username: "test_username",
             email: "test@example.com",

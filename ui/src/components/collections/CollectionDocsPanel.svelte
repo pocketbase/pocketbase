@@ -85,7 +85,7 @@
     let activeTab;
     let tabs = [];
 
-    $: if (collection.isAuth) {
+    $: if (collection.$isAuth) {
         tabs = Object.assign({}, baseTabs, authTabs);
         if (!collection?.options.allowUsernameAuth && !collection?.options.allowEmailAuth) {
             delete tabs["auth-with-password"];
@@ -93,7 +93,7 @@
         if (!collection?.options.allowOAuth2Auth) {
             delete tabs["auth-with-oauth2"];
         }
-    } else if (collection.isView) {
+    } else if (collection.$isView) {
         tabs = Object.assign({}, baseTabs);
         delete tabs.create;
         delete tabs.update;
@@ -127,7 +127,7 @@
 
 <OverlayPanel bind:this={docsPanel} on:hide on:show class="docs-panel">
     <div class="docs-content-wrapper">
-        <aside class="docs-sidebar" class:compact={collection?.isAuth}>
+        <aside class="docs-sidebar" class:compact={collection?.$isAuth}>
             <nav class="sidebar-content">
                 {#each Object.entries(tabs) as [key, tab], i (key)}
                     <!-- add a separator before the first auth tab -->

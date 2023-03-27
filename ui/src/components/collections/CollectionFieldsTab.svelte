@@ -132,7 +132,7 @@
         <code class="txt-sm">id</code> ,
         <code class="txt-sm">created</code> ,
         <code class="txt-sm">updated</code>
-        {#if collection.isAuth}
+        {#if collection.$isAuth}
             ,
             <code class="txt-sm">username</code> ,
             <code class="txt-sm">email</code> ,

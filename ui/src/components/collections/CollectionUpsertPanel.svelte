@@ -63,15 +63,16 @@
     }
 
     $: if (collection.type === TYPE_VIEW) {
-        // reset create, update and delete rules
+        // reset non-view fields
         collection.createRule = null;
         collection.updateRule = null;
         collection.deleteRule = null;
+        collection.indexes = [];
     }
 
     // update indexes on collection rename
     $: if (collection?.name && original?.name != collection?.name) {
-        collection.indexes = collection.indexes.map((idx) =>
+        collection.indexes = collection.indexes?.map((idx) =>
             CommonHelper.replaceIndexTableName(idx, collection.name)
         );
     }
@@ -321,7 +322,7 @@
                     disabled={isSystemUpdate}
                     spellcheck="false"
                     autofocus={collection.$isNew}
-                    placeholder={collection.isAuth ? `eg. "users"` : `eg. "posts"`}
+                    placeholder={collection.$isAuth ? `eg. "users"` : `eg. "posts"`}
                     value={collection.name}
                     on:input={(e) => {
                         collection.name = CommonHelper.slugify(e.target.value);
@@ -374,7 +375,7 @@
                 class:active={activeTab === TAB_SCHEMA}
                 on:click={() => changeTab(TAB_SCHEMA)}
             >
-                <span class="txt">{collection?.isView ? "Query" : "Fields"}</span>
+                <span class="txt">{collection?.$isView ? "Query" : "Fields"}</span>
                 {#if !CommonHelper.isEmpty(schemaTabError)}
                     <i
                         class="ri-error-warning-fill txt-danger"
@@ -400,7 +401,7 @@
                 {/if}
             </button>
 
-            {#if collection.isAuth}
+            {#if collection.$isAuth}
                 <button
                     type="button"
                     class="tab-item"
@@ -423,7 +424,7 @@
     <div class="tabs-content">
         <!-- avoid rerendering the fields tab -->
         <div class="tab-item" class:active={activeTab === TAB_SCHEMA}>
-            {#if collection.isView}
+            {#if collection.$isView}
                 <CollectionQueryTab bind:collection />
             {:else}
                 <CollectionFieldsTab bind:collection />
@@ -436,7 +437,7 @@
             </div>
         {/if}
 
-        {#if collection.isAuth}
+        {#if collection.$isAuth}
             <div class="tab-item" class:active={activeTab === TAB_OPTIONS}>
                 <CollectionAuthOptionsTab bind:collection />
             </div>

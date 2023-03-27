@@ -26,7 +26,7 @@
             return old.options?.maxSelect != 1 && field.options?.maxSelect == 1;
         }) || [];
 
-    $: showChanges = !newCollection?.isView || isCollectionRenamed;
+    $: showChanges = !newCollection?.$isView || isCollectionRenamed;
 
     export async function show(original, changed) {
         oldCollection = original;
@@ -91,7 +91,7 @@
                 </li>
             {/if}
 
-            {#if !newCollection?.isView}
+            {#if !newCollection?.$isView}
                 {#each multipleToSingleFields as field}
                     <li>
                         Multiple to single value conversion of field

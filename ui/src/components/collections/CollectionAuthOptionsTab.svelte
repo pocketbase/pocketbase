@@ -10,7 +10,7 @@
 
     export let collection = new Collection();
 
-    $: if (collection.isAuth && CommonHelper.isEmpty(collection.options)) {
+    $: if (collection.$isAuth && CommonHelper.isEmpty(collection.options)) {
         collection.options = {
             allowEmailAuth: true,
             allowUsernameAuth: true,

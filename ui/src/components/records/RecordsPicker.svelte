@@ -134,7 +134,7 @@
 
             const result = await ApiClient.collection(collectionId).getList(page, batchSize, {
                 filter: filter,
-                sort: !collection?.isView ? "-created" : "",
+                sort: !collection?.$isView ? "-created" : "",
                 $cancelKey: uniqueId + "loadList",
             });
 
@@ -199,7 +199,7 @@
             autocompleteCollection={collection}
             on:submit={(e) => (filter = e.detail)}
         />
-        {#if !collection?.isView}
+        {#if !collection?.$isView}
             <button
                 type="button"
                 class="btn btn-transparent btn-hint p-l-sm p-r-sm"
@@ -243,7 +243,7 @@
                 <div class="content">
                     <RecordInfo {record} {displayFields} />
                 </div>
-                {#if !collection?.isView}
+                {#if !collection?.$isView}
                     <div class="actions nonintrusive">
                         <button
                             type="button"

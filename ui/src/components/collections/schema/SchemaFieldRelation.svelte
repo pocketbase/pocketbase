@@ -114,7 +114,7 @@
                 noOptionsText="No collections found"
                 selectionKey="id"
                 items={$collections}
-                disabled={!interactive}
+                disabled={!interactive || field.id}
                 bind:keyOfSelected={field.options.collectionId}
             >
                 <svelte:fragment slot="afterOptions">

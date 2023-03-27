@@ -935,12 +935,12 @@ export default class CommonHelper {
             dummy["email"] = "test@example.com";
         }
 
-        const hasCreated = !collection?.isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("created");
+        const hasCreated = !collection?.$isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("created");
         if (hasCreated) {
             dummy["created"] = "2022-01-01 01:00:00.123Z";
         }
 
-        const hasUpdated = !collection?.isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("updated");
+        const hasUpdated = !collection?.$isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("updated");
         if (hasUpdated) {
             dummy["updated"] = "2022-01-01 23:59:59.456Z";
         }
@@ -1429,11 +1429,11 @@ export default class CommonHelper {
 
         let result = [prefix + "id"];
 
-        if (collection.isView) {
+        if (collection.$isView) {
             for (let col of CommonHelper.extractColumnsFromQuery(collection.options.query)) {
                 CommonHelper.pushUnique(result, prefix + col);
             }
-        } else if (collection.isAuth) {
+        } else if (collection.$isAuth) {
             result.push(prefix + "username");
             result.push(prefix + "email");
             result.push(prefix + "emailVisibility");

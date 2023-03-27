@@ -65,7 +65,7 @@
 
         // clear default sort if created field is not available
         if (
-            $activeCollection?.isView &&
+            $activeCollection?.$isView &&
             !CommonHelper.extractColumnsFromQuery($activeCollection.options.query).includes("created")
         ) {
             sort = "";
@@ -139,7 +139,7 @@
                     <span class="txt">API Preview</span>
                 </button>
 
-                {#if !$activeCollection.isView}
+                {#if !$activeCollection.$isView}
                     <button type="button" class="btn btn-expanded" on:click={() => recordUpsertPanel?.show()}>
                         <i class="ri-add-line" />
                         <span class="txt">New record</span>
@@ -161,7 +161,7 @@
             bind:filter
             bind:sort
             on:select={(e) => {
-                $activeCollection.isView
+                $activeCollection.$isView
                     ? recordPreviewPanel.show(e?.detail)
                     : recordUpsertPanel?.show(e?.detail);
             }}

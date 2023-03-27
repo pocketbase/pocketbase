@@ -293,7 +293,7 @@
             <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
                 <i class="ri-more-line" />
                 <Toggler class="dropdown dropdown-right dropdown-nowrap">
-                    {#if collection.isAuth && !original.verified && original.email}
+                    {#if collection.$isAuth && !original.verified && original.email}
                         <button
                             type="button"
                             class="dropdown-item closable"
@@ -303,7 +303,7 @@
                             <span class="txt">Send verification email</span>
                         </button>
                     {/if}
-                    {#if collection.isAuth && original.email}
+                    {#if collection.$isAuth && original.email}
                         <button
                             type="button"
                             class="dropdown-item closable"
@@ -329,7 +329,7 @@
             </button>
         {/if}
 
-        {#if collection.isAuth && !isNew}
+        {#if collection.$isAuth && !isNew}
             <div class="tabs-header stretched">
                 <button
                     type="button"
@@ -426,7 +426,7 @@
             {/each}
         </form>
 
-        {#if collection.isAuth && !isNew}
+        {#if collection.$isAuth && !isNew}
             <div class="tab-item" class:active={activeTab === TAB_PROVIDERS}>
                 <ExternalAuthsList {record} />
             </div>

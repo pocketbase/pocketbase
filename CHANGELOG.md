@@ -4,7 +4,9 @@
 
 - Added `@request.headers.*` filter rule support.
 
-- (@todo docs) Added support for advanced unique constraints and indexes management ([#345](https://github.com/pocketbase/pocketbase/issues/345), [#544](https://github.com/pocketbase/pocketbase/issues/544))
+- Added support for advanced unique constraints and indexes management ([#345](https://github.com/pocketbase/pocketbase/issues/345), [#544](https://github.com/pocketbase/pocketbase/issues/544))
+
+- Simplified the collections fields UI to allow easier and quicker scaffolding of the data schema.
 
 - Deprecated `SchemaField.Unique`. Unique constraints are now managed via indexes.
   The `Unique` field is a no-op and will be removed in future version.
@@ -45,6 +47,8 @@
 - **!** Registered the `RemoveTrailingSlash` middleware only for the `/api/*` routes since it is causing issues with subpath file serving endpoints ([#2072](https://github.com/pocketbase/pocketbase/issues/2072)).
 
 - **!** Changed the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
+
+- Other minor improvements
 
 
 ## v0.13.4
