@@ -18,6 +18,25 @@ func init() {
 	AppMigrations.Register(func(db dbx.Builder) error {
 		dao := daos.New(db)
 
+		// cleanup failed remaining/"dangling" temp views to prevent
+		// errors during the indexes upsert
+		// ---
+		tempViews := []string{}
+		viewsErr := db.Select("name").
+			From("sqlite_schema").
+			AndWhere(dbx.HashExp{"type": "view"}).
+			AndWhere(dbx.NewExp(`[[name]] LIKE '\_temp\_%' ESCAPE '\'`)).
+			Column(&tempViews)
+		if viewsErr != nil {
+			return viewsErr
+		}
+		for _, name := range tempViews {
+			if err := dao.DeleteView(name); err != nil {
+				return err
+			}
+		}
+		// ---
+
 		cols, err := dao.TableColumns("_collections")
 		if err != nil {
 			return err
