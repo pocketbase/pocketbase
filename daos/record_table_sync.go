@@ -349,7 +349,7 @@ func (dao *Dao) createCollectionIndexes(collection *models.Collection) error {
 			if !parsed.IsValid() {
 				errs[strconv.Itoa(i)] = validation.NewError(
 					"validation_invalid_index_expression",
-					fmt.Sprintf("Invalid CREATE INDEX expression."),
+					"Invalid CREATE INDEX expression.",
 				)
 				continue
 			}

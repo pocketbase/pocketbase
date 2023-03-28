@@ -92,13 +92,13 @@
                     type="button"
                     class="unlock-overlay"
                     aria-label="Unlock and set custom rule"
-                    transition:scale|local={{ duration: 100, start: 0.9 }}
+                    transition:scale|local={{ duration: 150, start: 0.98 }}
                     on:click={unlock}
                 >
+                    <small class="txt">Unlock and set custom rule</small>
                     <div class="icon">
                         <i class="ri-lock-unlock-line" />
                     </div>
-                    <small class="txt">Unlock and set custom rule</small>
                 </button>
             {/if}
         </div>
@@ -127,6 +127,7 @@
         position: relative;
     }
     .unlock-overlay {
+        --hoverAnimationSpeed: 0.2s;
         position: absolute;
         z-index: 1;
         left: 0;
@@ -134,12 +135,13 @@
         width: 100%;
         height: 100%;
         display: flex;
-        flex-direction: column;
+        padding: 20px;
+        gap: 10px;
         align-items: center;
-        justify-content: center;
+        justify-content: end;
         text-align: center;
         border-radius: var(--baseRadius);
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.2);
         outline: 0;
         cursor: pointer;
         text-decoration: none;
@@ -154,24 +156,22 @@
             font-size: 1.15rem;
             line-height: 1;
             font-weight: normal;
-            margin-top: var(--smLineHeight);
-            transition: transform var(--baseAnimationSpeed);
+            transition: transform var(--hoverAnimationSpeed);
         }
         .txt {
             opacity: 0;
             font-size: var(--xsFontSize);
             font-weight: 600;
             line-height: var(--smLineHeight);
-            margin-bottom: 7px;
-            transform: scale(0.95);
-            transition: transform var(--baseAnimationSpeed), opacity var(--baseAnimationSpeed);
+            transform: translateX(5px);
+            transition: transform var(--hoverAnimationSpeed), opacity var(--hoverAnimationSpeed);
         }
         &:hover,
         &:focus-visible,
         &:active {
-            border-color: var(--baseAlt2Color);
+            border-color: var(--baseAlt3Color);
             .icon {
-                transform: translateY(-3px) scale(1.1);
+                transform: scale(1.1);
             }
             .txt {
                 opacity: 1;

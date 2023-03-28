@@ -152,7 +152,6 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		opt.MaxSelect = 1
 	}
 	{
-
 		fileOneField := collection.Schema.GetFieldByName("file_one")
 		opt := fileOneField.Options.(*schema.FileOptions)
 		opt.MaxSelect = 2
@@ -161,7 +160,6 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		fileManyField := collection.Schema.GetFieldByName("file_many")
 		opt := fileManyField.Options.(*schema.FileOptions)
 		opt.MaxSelect = 1
-
 	}
 	{
 		relOneField := collection.Schema.GetFieldByName("rel_one")

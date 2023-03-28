@@ -1,4 +1,4 @@
-## (WIP) v0.14.0
+## v0.14.0
 
 - Added _experimental_ Apple OAuth2 integration.
 
@@ -37,6 +37,8 @@
     ProviderClient  auth.Provider, // the loaded Provider client instance
     ```
 
+- Added CGO linux target for the prebuilt executable.
+
 - **!** Renamed `daos.GetTableColumns()` to `daos.TableColumns()` for consistency with the other Dao table related helpers.
 
 - **!** Renamed `daos.GetTableInfo()` to `daos.TableInfo()` for consistency with the other Dao table related helpers.
@@ -48,7 +50,7 @@
 
 - **!** Changed the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
 
-- Other minor improvements
+- Other minor UI improvements.
 
 
 ## v0.13.4

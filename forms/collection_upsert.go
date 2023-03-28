@@ -391,7 +391,7 @@ func (form *CollectionUpsert) checkIndexes(value any) error {
 	if form.Type == models.CollectionTypeView && len(v) > 0 {
 		return validation.NewError(
 			"validation_indexes_not_supported",
-			fmt.Sprintf("The collection doesn't support indexes."),
+			"The collection doesn't support indexes.",
 		)
 	}
 
@@ -402,7 +402,7 @@ func (form *CollectionUpsert) checkIndexes(value any) error {
 			return validation.Errors{
 				strconv.Itoa(i): validation.NewError(
 					"validation_invalid_index_expression",
-					fmt.Sprintf("Invalid CREATE INDEX expression."),
+					"Invalid CREATE INDEX expression.",
 				),
 			}
 		}

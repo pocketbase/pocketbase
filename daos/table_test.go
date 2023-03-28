@@ -180,5 +180,4 @@ func TestTableIndexes(t *testing.T) {
 			}
 		}
 	}
-
 }

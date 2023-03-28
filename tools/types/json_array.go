@@ -14,7 +14,6 @@ type jsonArrayAlias[T any] JsonArray[T]
 
 // MarshalJSON implements the [json.Marshaler] interface.
 func (m JsonArray[T]) MarshalJSON() ([]byte, error) {
-
 	// initialize an empty map to ensure that `[]` is returned as json
 	if m == nil {
 		m = JsonArray[T]{}

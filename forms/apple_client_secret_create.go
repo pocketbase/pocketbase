@@ -33,7 +33,7 @@ type AppleClientSecretCreate struct {
 	// Usually wrapped within -----BEGIN PRIVATE KEY----- X -----END PRIVATE KEY-----.
 	PrivateKey string `form:"privateKey" json:"privateKey"`
 
-	// Duration specifies how long the generated JWT token should be considered valid
+	// Duration specifies how long the generated JWT token should be considered valid.
 	// The specified value must be in seconds and max 15777000 (~6months).
 	Duration int `form:"duration" json:"duration"`
 }
@@ -72,12 +72,12 @@ func (form *AppleClientSecretCreate) Submit() (string, error) {
 
 	now := time.Now()
 
-	claims := &jwt.StandardClaims{
-		Audience:  "https://appleid.apple.com",
+	claims := &jwt.RegisteredClaims{
+		Audience:  jwt.ClaimStrings{"https://appleid.apple.com"},
 		Subject:   form.ClientId,
 		Issuer:    form.TeamId,
-		IssuedAt:  now.Unix(),
-		ExpiresAt: now.Add(time.Duration(form.Duration) * time.Second).Unix(),
+		IssuedAt:  jwt.NewNumericDate(now),
+		ExpiresAt: jwt.NewNumericDate(now.Add(time.Duration(form.Duration) * time.Second)),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)

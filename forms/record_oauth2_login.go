@@ -130,7 +130,7 @@ func (form *RecordOAuth2Login) Submit(
 		return nil, nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(30*time.Second))
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	provider.SetContext(ctx)
