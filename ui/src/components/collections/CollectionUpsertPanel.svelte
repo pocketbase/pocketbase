@@ -7,7 +7,7 @@
     import { errors, setErrors, removeError } from "@/stores/errors";
     import { confirm } from "@/stores/confirmation";
     import { removeAllToasts, addSuccessToast } from "@/stores/toasts";
-    import { loadCollections, removeCollection } from "@/stores/collections";
+    import { addCollection, removeCollection } from "@/stores/collections";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
@@ -35,7 +35,6 @@
 
     let collectionPanel;
     let confirmChangesPanel;
-
     let original = null;
     let collection = new Collection();
     let isSaving = false;
@@ -143,7 +142,7 @@
             .then((result) => {
                 removeAllToasts();
 
-                loadCollections(result.id);
+                addCollection(result);
 
                 confirmClose = false;
                 hide();
@@ -262,6 +261,7 @@
     bind:this={collectionPanel}
     class="overlay-panel-lg colored-header collection-panel"
     escClose={false}
+    overlayClose={!isSaving}
     beforeHide={() => {
         if (hasChanges && confirmClose) {
             confirm("You have unsaved changes. Do you really want to close the panel?", () => {

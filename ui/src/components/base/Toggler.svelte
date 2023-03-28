@@ -113,9 +113,10 @@
     function handleOutsideClick(e) {
         if (
             active &&
+            isOutsideMouseDown &&
             !container?.contains(e.target) &&
             !activeTrigger?.contains(e.target) &&
-            isOutsideMouseDown
+            !e.target?.closest(".flatpickr-calendar")
         ) {
             hide();
         }
