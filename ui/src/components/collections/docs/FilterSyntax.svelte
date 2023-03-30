@@ -6,7 +6,7 @@
     }
 </script>
 
-<button class="btn btn-sm btn-transparent m-t-5" on:click={toggle}>
+<button class="btn btn-sm btn-secondary m-t-10" on:click={toggle}>
     {#if expanded}
         <span class="txt">Hide details</span>
         <i class="ri-arrow-up-s-line" />

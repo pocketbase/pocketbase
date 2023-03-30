@@ -11,6 +11,8 @@
     let responseTab = 200;
     let responses = [];
 
+    $: fieldNames = CommonHelper.getAllCollectionIdentifiers(collection);
+
     $: adminsOnly = collection?.listRule === null;
 
     $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
@@ -169,6 +171,13 @@
                         ?sort=-created,id
                     `}
                 />
+                <p>
+                    <strong>Supported record sort fields:</strong> <br />
+                    <code>@random</code>,
+                    {#each fieldNames as name, i}
+                        <code>{name}</code>{i < fieldNames.length - 1 ? ", " : ""}
+                    {/each}
+                </p>
             </td>
         </tr>
         <tr>
