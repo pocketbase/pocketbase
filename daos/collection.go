@@ -159,8 +159,11 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 	})
 }
 
-// SaveCollection upserts the provided Collection model and updates
+// SaveCollection persists the provided Collection model and updates
 // its related records table schema.
+//
+// If collecction.IsNew() is true, the method will perform a create, otherwise an update.
+// To explicitly mark a collection for update you can use collecction.MarkAsNotNew().
 func (dao *Dao) SaveCollection(collection *models.Collection) error {
 	var oldCollection *models.Collection
 
