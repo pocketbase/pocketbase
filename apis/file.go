@@ -87,11 +87,8 @@ func (api *fileApi) download(c echo.Context) error {
 			servedName = thumbSize + "_" + filename
 			servedPath = baseFilesPath + "/thumbs_" + filename + "/" + servedName
 
-			// check if the thumb exists:
-			// - if doesn't exist - create a new thumb with the specified thumb size
-			// - if exists - compare last modified dates to determine whether the thumb should be recreated
-			tAttrs, tAttrsErr := fs.Attributes(servedPath)
-			if tAttrsErr != nil || oAttrs.ModTime.After(tAttrs.ModTime) {
+			// create a new thumb if it doesn exists
+			if exists, _ := fs.Exists(servedPath); !exists {
 				if err := fs.CreateThumb(originalPath, servedPath, thumbSize); err != nil {
 					servedPath = originalPath // fallback to the original
 				}

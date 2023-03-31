@@ -411,8 +411,12 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 		}
 	}
 
+	opts := &blob.WriterOptions{
+		ContentType: r.ContentType(),
+	}
+
 	// open a thumb storage writer (aka. prepare for upload)
-	w, writerErr := s.bucket.NewWriter(s.ctx, thumbKey, nil)
+	w, writerErr := s.bucket.NewWriter(s.ctx, thumbKey, opts)
 	if writerErr != nil {
 		return writerErr
 	}
