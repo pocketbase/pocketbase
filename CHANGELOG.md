@@ -1,3 +1,14 @@
+## v0.14.1
+
+- Fixed realtime events firing before the files upload completion.
+
+- Updated the underlying S3 lib to use `aws-sdk-go-v2` ([#1346](https://github.com/pocketbase/pocketbase/pull/1346); thanks @yuxiang-gao).
+
+- Updated TinyMCE to v6.4.1.
+
+- Updated the godoc of `Dao.Save*` methods.
+
+
 ## v0.14.0
 
 - Added _experimental_ Apple OAuth2 integration.
