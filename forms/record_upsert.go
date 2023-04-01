@@ -742,18 +742,36 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 
 		dao := form.dao.Clone()
 
+		// upload new files (if any)
+		//
+		// note: executed after the default BeforeCreateFunc and BeforeUpdateFunc hooks
+		// to allow uploading AFTER the before app model hooks (eg. in case of an id change)
+		// but BEFORE the actual record db persistence
+		// ---
 		dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
 			if err := form.dao.BeforeCreateFunc(eventDao, m); err != nil {
 				return err
 			}
 
-			// upload new files (if any)
-			//
-			// note: executed after the default BeforeCreateFunc to allow
-			// executing AFTER the before app model hooks (eg. in case of an id change)
-			// but BEFORE the record db persistence
-			return form.processFilesToUpload()
+			if m.GetId() == form.record.GetId() {
+				return form.processFilesToUpload()
+			}
+
+			return nil
 		}
+
+		dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
+			if err := form.dao.BeforeUpdateFunc(eventDao, m); err != nil {
+				return err
+			}
+
+			if m.GetId() == form.record.GetId() {
+				return form.processFilesToUpload()
+			}
+
+			return nil
+		}
+		// ---
 
 		// persist the record model
 		if err := dao.SaveRecord(form.record); err != nil {
