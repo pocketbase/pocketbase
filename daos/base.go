@@ -74,6 +74,13 @@ func (dao *Dao) NonconcurrentDB() dbx.Builder {
 	return dao.nonconcurrentDB
 }
 
+// Clone returns a new Dao with the same configuration options as the current one.
+func (dao *Dao) Clone() *Dao {
+	clone := *dao
+
+	return &clone
+}
+
 // ModelQuery creates a new preconfigured select query with preset
 // SELECT, FROM and other common fields based on the provided model.
 func (dao *Dao) ModelQuery(m models.Model) *dbx.SelectQuery {
@@ -110,6 +117,8 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 		// ---
 		// create a new dao with the same hooks to avoid semaphore deadlock when nesting
 		txDao := New(txOrDB)
+		txDao.MaxLockRetries = dao.MaxLockRetries
+		txDao.ModelQueryTimeout = dao.ModelQueryTimeout
 		txDao.BeforeCreateFunc = dao.BeforeCreateFunc
 		txDao.BeforeUpdateFunc = dao.BeforeUpdateFunc
 		txDao.BeforeDeleteFunc = dao.BeforeDeleteFunc

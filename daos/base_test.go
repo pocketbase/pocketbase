@@ -40,6 +40,86 @@ func TestNewMultiDB(t *testing.T) {
 	}
 }
 
+func TestDaoClone(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	hookCalls := map[string]int{}
+
+	dao := daos.NewMultiDB(testApp.Dao().ConcurrentDB(), testApp.Dao().NonconcurrentDB())
+	dao.MaxLockRetries = 1
+	dao.ModelQueryTimeout = 2
+	dao.BeforeDeleteFunc = func(eventDao *daos.Dao, m models.Model) error {
+		hookCalls["BeforeDeleteFunc"]++
+		return nil
+	}
+	dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
+		hookCalls["BeforeUpdateFunc"]++
+		return nil
+	}
+	dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
+		hookCalls["BeforeCreateFunc"]++
+		return nil
+	}
+	dao.AfterDeleteFunc = func(eventDao *daos.Dao, m models.Model) {
+		hookCalls["AfterDeleteFunc"]++
+	}
+	dao.AfterUpdateFunc = func(eventDao *daos.Dao, m models.Model) {
+		hookCalls["AfterUpdateFunc"]++
+	}
+	dao.AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) {
+		hookCalls["AfterCreateFunc"]++
+	}
+
+	clone := dao.Clone()
+	clone.MaxLockRetries = 3
+	clone.ModelQueryTimeout = 4
+	clone.AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) {
+		hookCalls["NewAfterCreateFunc"]++
+	}
+
+	if dao.MaxLockRetries == clone.MaxLockRetries {
+		t.Fatal("Expected different MaxLockRetries")
+	}
+
+	if dao.ModelQueryTimeout == clone.ModelQueryTimeout {
+		t.Fatal("Expected different ModelQueryTimeout")
+	}
+
+	// trigger hooks
+	dao.BeforeDeleteFunc(nil, nil)
+	dao.BeforeUpdateFunc(nil, nil)
+	dao.BeforeCreateFunc(nil, nil)
+	dao.AfterDeleteFunc(nil, nil)
+	dao.AfterUpdateFunc(nil, nil)
+	dao.AfterCreateFunc(nil, nil)
+	clone.BeforeDeleteFunc(nil, nil)
+	clone.BeforeUpdateFunc(nil, nil)
+	clone.BeforeCreateFunc(nil, nil)
+	clone.AfterDeleteFunc(nil, nil)
+	clone.AfterUpdateFunc(nil, nil)
+	clone.AfterCreateFunc(nil, nil)
+
+	expectations := []struct {
+		hook  string
+		total int
+	}{
+		{"BeforeDeleteFunc", 2},
+		{"BeforeUpdateFunc", 2},
+		{"BeforeCreateFunc", 2},
+		{"AfterDeleteFunc", 2},
+		{"AfterUpdateFunc", 2},
+		{"AfterCreateFunc", 1},
+		{"NewAfterCreateFunc", 1},
+	}
+
+	for _, e := range expectations {
+		if hookCalls[e.hook] != e.total {
+			t.Errorf("Expected %s to be caleed %d", e.hook, e.total)
+		}
+	}
+}
+
 func TestDaoModelQuery(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
