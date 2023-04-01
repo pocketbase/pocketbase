@@ -386,7 +386,10 @@ func (dao *Dao) SuggestUniqueAuthRecordUsername(
 	return username
 }
 
-// SaveRecord upserts the provided Record model.
+// SaveRecord persists the provided Record model in the database.
+//
+// If record.IsNew() is true, the method will perform a create, otherwise an update.
+// To explicitly mark a record for update you can use record.MarkAsNotNew().
 func (dao *Dao) SaveRecord(record *models.Record) error {
 	if record.Collection().IsAuth() {
 		if record.Username() == "" {

@@ -214,7 +214,10 @@ func (dao *Dao) Delete(m models.Model) error {
 	})
 }
 
-// Save upserts (update or create if primary key is not set) the provided model.
+// Save persists the provided model in the database.
+//
+// If m.IsNew() is true, the method will perform a create, otherwise an update.
+// To explicitly mark a model for update you can use m.MarkAsNotNew().
 func (dao *Dao) Save(m models.Model) error {
 	if m.IsNew() {
 		return dao.lockRetry(func(retryDao *Dao) error {
