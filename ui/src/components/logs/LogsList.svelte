@@ -152,7 +152,7 @@
 
                     <td class="col-type-text col-field-url">
                         <span class="txt txt-ellipsis" title={item.url}>
-                            {item.url}
+                            {decodeURI(item.url)}
                         </span>
                         {#if item.meta?.errorMessage || item.meta?.errorData}
                             <i class="ri-error-warning-line txt-danger m-l-5 m-r-5" title="Error" />
