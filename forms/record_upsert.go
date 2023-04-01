@@ -728,8 +728,6 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 // You can optionally provide a list of InterceptorFunc to further
 // modify the form behavior before persisting it.
 func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]) error {
-	oldRecord := form.record.OriginalCopy()
-
 	if err := form.ValidateAndFill(); err != nil {
 		return err
 	}
@@ -742,33 +740,28 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 			form.record.MarkAsNew()
 		}
 
+		dao := form.dao.Clone()
+
+		dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
+			if err := form.dao.BeforeCreateFunc(eventDao, m); err != nil {
+				return err
+			}
+
+			// upload new files (if any)
+			//
+			// note: executed after the default BeforeCreateFunc to allow
+			// executing AFTER the before app model hooks (eg. in case of an id change)
+			// but BEFORE the record db persistence
+			return form.processFilesToUpload()
+		}
+
 		// persist the record model
-		if err := form.dao.SaveRecord(form.record); err != nil {
+		if err := dao.SaveRecord(form.record); err != nil {
 			preparedErr := form.prepareError(err)
 			if _, ok := preparedErr.(validation.Errors); ok {
 				return preparedErr
 			}
 			return fmt.Errorf("failed to save the record: %w", err)
-		}
-
-		// upload new files (if any)
-		//
-		// note1: executed outside of transaction to avoid keeping a lock for too long
-		// note2: executed after the record save to allow record id change with a before model hook
-		if err := form.processFilesToUpload(); err != nil {
-			if oldRecord.IsNew() {
-				// delete previously inserted record
-				if err := form.dao.DeleteRecord(form.record); err != nil && form.app.IsDebug() {
-					log.Println(err)
-				}
-			} else {
-				// revert record changes
-				if err := form.dao.SaveRecord(oldRecord); err != nil && form.app.IsDebug() {
-					log.Println(err)
-				}
-			}
-
-			return fmt.Errorf("failed to process the uploaded files: %w", err)
 		}
 
 		// delete old files (if any)
@@ -789,7 +782,7 @@ func (form *RecordUpsert) processFilesToUpload() error {
 	}
 
 	if !form.record.HasId() {
-		return errors.New("the record is not persisted yet")
+		return errors.New("the record doesn't have an id")
 	}
 
 	fs, err := form.app.NewFilesystem()
@@ -837,7 +830,7 @@ func (form *RecordUpsert) deleteFilesByNamesList(filenames []string) ([]string, 
 	}
 
 	if !form.record.HasId() {
-		return filenames, errors.New("the record doesn't have a unique ID")
+		return filenames, errors.New("the record doesn't have an id")
 	}
 
 	fs, err := form.app.NewFilesystem()
