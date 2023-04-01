@@ -48,7 +48,7 @@
             </tr>
             <tr>
                 <td class="min-width txt-hint txt-bold">URL</td>
-                <td>{item.url}</td>
+                <td>{decodeURI(item.url)}</td>
             </tr>
             <tr>
                 <td class="min-width txt-hint txt-bold">Referer</td>
