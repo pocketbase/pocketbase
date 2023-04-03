@@ -1,3 +1,8 @@
+## v0.14.2
+
+- Reverted part of the old `COALESCE` handling to continue supporting empty string comparison with missing joined relation fields.
+
+
 ## v0.14.1
 
 - Fixed realtime events firing before the files upload completion.

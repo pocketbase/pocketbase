@@ -242,18 +242,18 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	isLeftEmpty := isEmptyIdentifier(left) || (len(left.Params) == 1 && hasEmptyParamValue(left))
 	isRightEmpty := isEmptyIdentifier(right) || (len(right.Params) == 1 && hasEmptyParamValue(right))
 
-	sign := "="
-	nullExpr := "IS NULL"
+	equalOp := "="
 	concatOp := "OR"
+	nullExpr := "IS NULL"
 	if !equal {
-		sign = "!="
-		nullExpr = "IS NOT NULL"
+		equalOp = "!="
 		concatOp = "AND"
+		nullExpr = "IS NOT NULL"
 	}
 
 	// both operands are empty
 	if isLeftEmpty && isRightEmpty {
-		return dbx.NewExp(fmt.Sprintf("'' %s ''", sign), mergeParams(left.Params, right.Params))
+		return dbx.NewExp(fmt.Sprintf("'' %s ''", equalOp), mergeParams(left.Params, right.Params))
 	}
 
 	// direct compare since at least one of the operands is known to be non-empty
@@ -268,7 +268,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 			rightIdentifier = "''"
 		}
 		return dbx.NewExp(
-			fmt.Sprintf("%s %s %s", leftIdentifier, sign, rightIdentifier),
+			fmt.Sprintf("%s %s %s", leftIdentifier, equalOp, rightIdentifier),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -277,7 +277,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	// "" != b AND b IS NOT NULL
 	if isLeftEmpty {
 		return dbx.NewExp(
-			fmt.Sprintf("('' %s %s %s %s %s)", sign, right.Identifier, concatOp, right.Identifier, nullExpr),
+			fmt.Sprintf("('' %s %s %s %s %s)", equalOp, right.Identifier, concatOp, right.Identifier, nullExpr),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -286,7 +286,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	// a != "" AND a IS NOT NULL
 	if isRightEmpty {
 		return dbx.NewExp(
-			fmt.Sprintf("(%s %s '' %s %s %s)", left.Identifier, sign, concatOp, left.Identifier, nullExpr),
+			fmt.Sprintf("(%s %s '' %s %s %s)", left.Identifier, equalOp, concatOp, left.Identifier, nullExpr),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -296,7 +296,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 		fmt.Sprintf(
 			"COALESCE(%s, '') %s COALESCE(%s, '')",
 			left.Identifier,
-			sign,
+			equalOp,
 			right.Identifier,
 		),
 		mergeParams(left.Params, right.Params),
