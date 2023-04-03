@@ -49,6 +49,12 @@ func TestFilterDataBuildExpr(t *testing.T) {
 				"$",
 		},
 		{
+			"empty string vs null",
+			"'' = null && null != ''",
+			false,
+			"('' = '' AND '' != '')",
+		},
+		{
 			"like with 2 columns",
 			"test1 ~ test2",
 			false,
@@ -125,21 +131,21 @@ func TestFilterDataBuildExpr(t *testing.T) {
 				".+" +
 				regexp.QuoteMeta("}) AND [[test3]] LIKE {:") +
 				".+" +
-				regexp.QuoteMeta("} ESCAPE '\\' AND [[test4.sub]] = '')") +
+				regexp.QuoteMeta("} ESCAPE '\\' AND ([[test4.sub]] = '' OR [[test4.sub]] IS NULL))") +
 				"$",
 		},
 		{
 			"combination of special literals (null, true, false)",
-			"test1=true && test2 != false && test3 = null || test4.sub != null",
+			"test1=true && test2 != false && null = test3 || null != test4.sub",
 			false,
-			"^" + regexp.QuoteMeta("([[test1]] = 1 AND [[test2]] != 0 AND [[test3]] = '' OR [[test4.sub]] != '')") + "$",
+			"^" + regexp.QuoteMeta("([[test1]] = 1 AND [[test2]] != 0 AND ('' = [[test3]] OR [[test3]] IS NULL) OR ('' != [[test4.sub]] AND [[test4.sub]] IS NOT NULL))") + "$",
 		},
 		{
 			"all operators",
 			"(test1 = test2 || test2 != test3) && (test2 ~ 'example' || test2 !~ '%%abc') && 'switch1%%' ~ test1 && 'switch2' !~ test2 && test3 > 1 && test3 >= 0 && test3 <= 4 && 2 < 5",
 			false,
 			"^" +
-				regexp.QuoteMeta("(([[test1]] = [[test2]] OR [[test2]] != [[test3]]) AND ([[test2]] LIKE {:") +
+				regexp.QuoteMeta("((COALESCE([[test1]], '') = COALESCE([[test2]], '') OR COALESCE([[test2]], '') != COALESCE([[test3]], '')) AND ([[test2]] LIKE {:") +
 				".+" +
 				regexp.QuoteMeta("} ESCAPE '\\' OR [[test2]] NOT LIKE {:") +
 				".+" +
