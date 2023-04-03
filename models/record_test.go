@@ -380,7 +380,7 @@ func TestRecordCleanCopy(t *testing.T) {
 	// allow the special flags and options to check whether they will be ignored
 	m.SetExpand(map[string]any{"test": 123})
 	m.IgnoreEmailVisibility(true)
-	m.WithUnkownData(true)
+	m.WithUnknownData(true)
 
 	copy := m.CleanCopy()
 	copyExport, _ := copy.MarshalJSON()
@@ -1343,7 +1343,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 
 		m.Load(data)
 		m.IgnoreEmailVisibility(s.exportHidden)
-		m.WithUnkownData(s.exportUnknown)
+		m.WithUnknownData(s.exportUnknown)
 
 		exportResult, err := json.Marshal(m.PublicExport())
 		if err != nil {

@@ -279,9 +279,9 @@ func (m *Record) IgnoreEmailVisibility(state bool) {
 	m.ignoreEmailVisibility = state
 }
 
-// WithUnkownData toggles the export/serialization of unknown data fields
+// WithUnknownData toggles the export/serialization of unknown data fields
 // (false by default).
-func (m *Record) WithUnkownData(state bool) {
+func (m *Record) WithUnknownData(state bool) {
 	m.exportUnknown = state
 }
 

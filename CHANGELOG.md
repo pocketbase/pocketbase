@@ -1,6 +1,11 @@
+## (WIP)
+
+- Fixed typo in `Record.WithUnkownData()` -> `Record.WithUnknownData()`.
+
+
 ## v0.14.2
 
-- Reverted part of the old `COALESCE` handling to continue supporting empty string comparison with missing joined relation fields.
+- Reverted part of the old `COALESCE` handling as a fallback to support empty string comparison with missing joined relation fields.
 
 
 ## v0.14.1
@@ -1150,7 +1155,7 @@ Please check the individual SDK package changelog and apply the necessary change
 - Added option to return serialized custom `models.Record` fields data:
   ```go
   func (m *Record) UnknownData() map[string]any
-  func (m *Record) WithUnkownData(state bool)
+  func (m *Record) WithUnknownData(state bool)
   ```
 
 - Deleted `model.User`. Now the user data is stored as an auth `models.Record`.
