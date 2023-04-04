@@ -187,7 +187,9 @@
                     <slot name="options" {interactive} {hasErrors} />
                 </div>
 
-                <div class="col-sm-4 flex">
+                <slot name="beforeNonempty" {interactive} {hasErrors} />
+
+                <div class="col-sm-4">
                     <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
                         <input type="checkbox" id={uniqueId} bind:checked={field.required} />
                         <label for={uniqueId}>
@@ -204,6 +206,8 @@
                         </label>
                     </Field>
                 </div>
+
+                <slot name="afterNonempty" {interactive} {hasErrors} />
 
                 {#if !field.toDelete}
                     <div class="col-sm-4 m-l-auto txt-right">
