@@ -25,6 +25,7 @@ func TestSettingsValidate(t *testing.T) {
 	s.S3.Endpoint = "invalid"
 	s.AdminAuthToken.Duration = -10
 	s.AdminPasswordResetToken.Duration = -10
+	s.AdminFileToken.Duration = -10
 	s.RecordAuthToken.Duration = -10
 	s.RecordPasswordResetToken.Duration = -10
 	s.RecordEmailChangeToken.Duration = -10
@@ -80,6 +81,7 @@ func TestSettingsValidate(t *testing.T) {
 		`"s3":{`,
 		`"adminAuthToken":{`,
 		`"adminPasswordResetToken":{`,
+		`"adminFileToken":{`,
 		`"recordAuthToken":{`,
 		`"recordPasswordResetToken":{`,
 		`"recordEmailChangeToken":{`,
@@ -127,6 +129,7 @@ func TestSettingsMerge(t *testing.T) {
 	s2.S3.Endpoint = "test"
 	s2.AdminAuthToken.Duration = 1
 	s2.AdminPasswordResetToken.Duration = 2
+	s2.AdminFileToken.Duration = 2
 	s2.RecordAuthToken.Duration = 3
 	s2.RecordPasswordResetToken.Duration = 4
 	s2.RecordEmailChangeToken.Duration = 5
@@ -230,6 +233,7 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.S3.Secret = testSecret
 	s1.AdminAuthToken.Secret = testSecret
 	s1.AdminPasswordResetToken.Secret = testSecret
+	s1.AdminFileToken.Secret = testSecret
 	s1.RecordAuthToken.Secret = testSecret
 	s1.RecordPasswordResetToken.Secret = testSecret
 	s1.RecordEmailChangeToken.Secret = testSecret

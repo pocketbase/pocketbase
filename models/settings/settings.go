@@ -94,7 +94,7 @@ func New() *Settings {
 		},
 		AdminFileToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 180, // 3 minutes
+			Duration: 300, // 5 minutes
 		},
 		RecordAuthToken: TokenConfig{
 			Secret:   security.RandomString(50),
@@ -110,7 +110,7 @@ func New() *Settings {
 		},
 		RecordFileToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 180, // 3 minutes
+			Duration: 300, // 5 minutes
 		},
 		RecordEmailChangeToken: TokenConfig{
 			Secret:   security.RandomString(50),
@@ -183,6 +183,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.Logs),
 		validation.Field(&s.AdminAuthToken),
 		validation.Field(&s.AdminPasswordResetToken),
+		validation.Field(&s.AdminFileToken),
 		validation.Field(&s.RecordAuthToken),
 		validation.Field(&s.RecordPasswordResetToken),
 		validation.Field(&s.RecordEmailChangeToken),
@@ -246,6 +247,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.S3.Secret,
 		&clone.AdminAuthToken.Secret,
 		&clone.AdminPasswordResetToken.Secret,
+		&clone.AdminFileToken.Secret,
 		&clone.RecordAuthToken.Secret,
 		&clone.RecordPasswordResetToken.Secret,
 		&clone.RecordEmailChangeToken.Secret,
