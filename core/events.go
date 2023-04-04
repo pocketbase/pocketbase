@@ -14,6 +14,27 @@ import (
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 )
 
+var (
+	_ hook.Tagger = (*BaseModelEvent)(nil)
+	_ hook.Tagger = (*BaseCollectionEvent)(nil)
+)
+
+type BaseModelEvent struct {
+	Model models.Model
+}
+
+func (e *BaseModelEvent) Tags() []string {
+	if e.Model == nil {
+		return nil
+	}
+
+	if r, ok := e.Model.(*models.Record); ok && r.Collection() != nil {
+		return []string{r.Collection().Id, r.Collection().Name}
+	}
+
+	return []string{e.Model.TableName()}
+}
+
 type BaseCollectionEvent struct {
 	Collection *models.Collection
 }
@@ -58,23 +79,10 @@ type ApiErrorEvent struct {
 // Model DAO events data
 // -------------------------------------------------------------------
 
-var _ hook.Tagger = (*ModelEvent)(nil)
-
 type ModelEvent struct {
-	Dao   *daos.Dao
-	Model models.Model
-}
+	BaseModelEvent
 
-func (e *ModelEvent) Tags() []string {
-	if e.Model == nil {
-		return nil
-	}
-
-	if r, ok := e.Model.(*models.Record); ok && r.Collection() != nil {
-		return []string{r.Collection().Id, r.Collection().Name}
-	}
-
-	return []string{e.Model.TableName()}
+	Dao *daos.Dao
 }
 
 // -------------------------------------------------------------------
@@ -378,6 +386,13 @@ type CollectionsImportEvent struct {
 // -------------------------------------------------------------------
 // File API events data
 // -------------------------------------------------------------------
+
+type FileTokenEvent struct {
+	BaseModelEvent
+
+	HttpContext echo.Context
+	Token       string
+}
 
 type FileDownloadEvent struct {
 	BaseCollectionEvent

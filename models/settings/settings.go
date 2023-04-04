@@ -30,10 +30,12 @@ type Settings struct {
 
 	AdminAuthToken           TokenConfig `form:"adminAuthToken" json:"adminAuthToken"`
 	AdminPasswordResetToken  TokenConfig `form:"adminPasswordResetToken" json:"adminPasswordResetToken"`
+	AdminFileToken           TokenConfig `form:"adminFileToken" json:"adminFileToken"`
 	RecordAuthToken          TokenConfig `form:"recordAuthToken" json:"recordAuthToken"`
 	RecordPasswordResetToken TokenConfig `form:"recordPasswordResetToken" json:"recordPasswordResetToken"`
 	RecordEmailChangeToken   TokenConfig `form:"recordEmailChangeToken" json:"recordEmailChangeToken"`
 	RecordVerificationToken  TokenConfig `form:"recordVerificationToken" json:"recordVerificationToken"`
+	RecordFileToken          TokenConfig `form:"recordFileToken" json:"recordFileToken"`
 
 	// Deprecated: Will be removed in v0.9+
 	EmailAuth EmailAuthConfig `form:"emailAuth" json:"emailAuth"`
@@ -84,27 +86,35 @@ func New() *Settings {
 		},
 		AdminAuthToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 1209600, // 14 days,
+			Duration: 1209600, // 14 days
 		},
 		AdminPasswordResetToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 1800, // 30 minutes,
+			Duration: 1800, // 30 minutes
+		},
+		AdminFileToken: TokenConfig{
+			Secret:   security.RandomString(50),
+			Duration: 180, // 3 minutes
 		},
 		RecordAuthToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 1209600, // 14 days,
+			Duration: 1209600, // 14 days
 		},
 		RecordPasswordResetToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 1800, // 30 minutes,
+			Duration: 1800, // 30 minutes
 		},
 		RecordVerificationToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 604800, // 7 days,
+			Duration: 604800, // 7 days
+		},
+		RecordFileToken: TokenConfig{
+			Secret:   security.RandomString(50),
+			Duration: 180, // 3 minutes
 		},
 		RecordEmailChangeToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 1800, // 30 minutes,
+			Duration: 1800, // 30 minutes
 		},
 		GoogleAuth: AuthProviderConfig{
 			Enabled: false,
@@ -177,6 +187,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.RecordPasswordResetToken),
 		validation.Field(&s.RecordEmailChangeToken),
 		validation.Field(&s.RecordVerificationToken),
+		validation.Field(&s.RecordFileToken),
 		validation.Field(&s.Smtp),
 		validation.Field(&s.S3),
 		validation.Field(&s.GoogleAuth),
@@ -239,6 +250,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.RecordPasswordResetToken.Secret,
 		&clone.RecordEmailChangeToken.Secret,
 		&clone.RecordVerificationToken.Secret,
+		&clone.RecordFileToken.Secret,
 		&clone.GoogleAuth.ClientSecret,
 		&clone.FacebookAuth.ClientSecret,
 		&clone.GithubAuth.ClientSecret,

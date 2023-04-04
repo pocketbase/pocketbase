@@ -206,7 +206,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 			expectError:            true,
 			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
-				"OnModelBeforeDelete": 7,
+				"OnModelBeforeDelete": 4,
 			},
 		},
 		{

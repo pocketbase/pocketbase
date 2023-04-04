@@ -597,6 +597,7 @@ type FileOptions struct {
 	MaxSize   int      `form:"maxSize" json:"maxSize"` // in bytes
 	MimeTypes []string `form:"mimeTypes" json:"mimeTypes"`
 	Thumbs    []string `form:"thumbs" json:"thumbs"`
+	Private   bool     `form:"private" json:"private"`
 }
 
 func (o FileOptions) Validate() error {

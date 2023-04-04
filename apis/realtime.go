@@ -307,7 +307,7 @@ func (api *realtimeApi) canAccessRecord(client subscriptions.Client, record *mod
 			return nil // empty public rule
 		}
 
-		// emulate request data
+		// mock request data
 		requestData := &models.RequestData{
 			Method: "GET",
 		}

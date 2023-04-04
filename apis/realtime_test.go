@@ -253,7 +253,10 @@ func TestRealtimeAuthRecordDeleteEvent(t *testing.T) {
 	client.Set(apis.ContextAuthRecordKey, authRecord)
 	testApp.SubscriptionsBroker().Register(client)
 
-	testApp.OnModelAfterDelete().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: authRecord})
+	e := new(core.ModelEvent)
+	e.Dao = testApp.Dao()
+	e.Model = authRecord
+	testApp.OnModelAfterDelete().Trigger(e)
 
 	if len(testApp.SubscriptionsBroker().Clients()) != 0 {
 		t.Fatalf("Expected no subscription clients, found %d", len(testApp.SubscriptionsBroker().Clients()))
@@ -282,7 +285,10 @@ func TestRealtimeAuthRecordUpdateEvent(t *testing.T) {
 	}
 	authRecord2.SetEmail("new@example.com")
 
-	testApp.OnModelAfterUpdate().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: authRecord2})
+	e := new(core.ModelEvent)
+	e.Dao = testApp.Dao()
+	e.Model = authRecord2
+	testApp.OnModelAfterUpdate().Trigger(e)
 
 	clientAuthRecord, _ := client.Get(apis.ContextAuthRecordKey).(*models.Record)
 	if clientAuthRecord.Email() != authRecord2.Email() {
@@ -305,7 +311,10 @@ func TestRealtimeAdminDeleteEvent(t *testing.T) {
 	client.Set(apis.ContextAdminKey, admin)
 	testApp.SubscriptionsBroker().Register(client)
 
-	testApp.OnModelAfterDelete().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: admin})
+	e := new(core.ModelEvent)
+	e.Dao = testApp.Dao()
+	e.Model = admin
+	testApp.OnModelAfterDelete().Trigger(e)
 
 	if len(testApp.SubscriptionsBroker().Clients()) != 0 {
 		t.Fatalf("Expected no subscription clients, found %d", len(testApp.SubscriptionsBroker().Clients()))
@@ -334,7 +343,10 @@ func TestRealtimeAdminUpdateEvent(t *testing.T) {
 	}
 	admin2.Email = "new@example.com"
 
-	testApp.OnModelAfterUpdate().Trigger(&core.ModelEvent{Dao: testApp.Dao(), Model: admin2})
+	e := new(core.ModelEvent)
+	e.Dao = testApp.Dao()
+	e.Model = admin2
+	testApp.OnModelAfterUpdate().Trigger(e)
 
 	clientAdmin, _ := client.Get(apis.ContextAdminKey).(*models.Admin)
 	if clientAdmin.Email != admin2.Email {

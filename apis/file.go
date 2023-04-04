@@ -1,13 +1,23 @@
 package apis
 
 import (
+	"errors"
 	"fmt"
+	"log"
+	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/resolvers"
+	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/search"
+	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/spf13/cast"
 )
 
 var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg", "image/gif"}
@@ -18,12 +28,44 @@ func bindFileApi(app core.App, rg *echo.Group) {
 	api := fileApi{app: app}
 
 	subGroup := rg.Group("/files", ActivityLogger(app))
+	subGroup.POST("/token", api.fileToken, RequireAdminOrRecordAuth())
 	subGroup.HEAD("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 	subGroup.GET("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 }
 
 type fileApi struct {
 	app core.App
+}
+
+func (api *fileApi) fileToken(c echo.Context) error {
+	event := new(core.FileTokenEvent)
+	event.HttpContext = c
+
+	if admin, _ := c.Get(ContextAdminKey).(*models.Admin); admin != nil {
+		event.Model = admin
+		event.Token, _ = tokens.NewAdminFileToken(api.app, admin)
+	} else if record, _ := c.Get(ContextAuthRecordKey).(*models.Record); record != nil {
+		event.Model = record
+		event.Token, _ = tokens.NewRecordFileToken(api.app, record)
+	}
+
+	handlerErr := api.app.OnFileBeforeTokenRequest().Trigger(event, func(e *core.FileTokenEvent) error {
+		if e.Token == "" {
+			return NewBadRequestError("Failed to generate file token.", nil)
+		}
+
+		return e.HttpContext.JSON(http.StatusOK, map[string]string{
+			"token": e.Token,
+		})
+	})
+
+	if handlerErr == nil {
+		if err := api.app.OnFileAfterTokenRequest().Trigger(event); err != nil && api.app.IsDebug() {
+			log.Println(err)
+		}
+	}
+
+	return handlerErr
 }
 
 func (api *fileApi) download(c echo.Context) error {
@@ -49,7 +91,21 @@ func (api *fileApi) download(c echo.Context) error {
 		return NewNotFoundError("", nil)
 	}
 
-	options, _ := fileField.Options.(*schema.FileOptions)
+	options, ok := fileField.Options.(*schema.FileOptions)
+	if !ok {
+		return NewBadRequestError("", errors.New("Failed to load file options."))
+	}
+
+	// check whether the request is authorized to view the private file
+	if options.Private {
+		token := c.QueryParam("token")
+
+		adminOrAuthRecord, _ := api.findAdminOrAuthRecordByFileToken(token)
+
+		if !api.canAccessRecord(adminOrAuthRecord, record, record.Collection().ViewRule) {
+			return NewForbiddenError("Invalid file token or unsufficient permissions to access the resource.", nil)
+		}
+	}
 
 	baseFilesPath := record.BaseFilesPath()
 
@@ -118,4 +174,78 @@ func (api *fileApi) download(c echo.Context) error {
 
 		return nil
 	})
+}
+
+func (api *fileApi) findAdminOrAuthRecordByFileToken(fileToken string) (models.Model, error) {
+	fileToken = strings.TrimSpace(fileToken)
+	if fileToken == "" {
+		return nil, errors.New("missing file token")
+	}
+
+	claims, _ := security.ParseUnverifiedJWT(strings.TrimSpace(fileToken))
+	tokenType := cast.ToString(claims["type"])
+
+	switch tokenType {
+	case tokens.TypeAdmin:
+		admin, err := api.app.Dao().FindAdminByToken(
+			fileToken,
+			api.app.Settings().AdminFileToken.Secret,
+		)
+		if err == nil && admin != nil {
+			return admin, nil
+		}
+	case tokens.TypeAuthRecord:
+		record, err := api.app.Dao().FindAuthRecordByToken(
+			fileToken,
+			api.app.Settings().RecordFileToken.Secret,
+		)
+		if err == nil && record != nil {
+			return record, nil
+		}
+	}
+
+	return nil, errors.New("missing or invalid file token")
+}
+
+// @todo move to a helper and maybe combine with the realtime checks when refactoring the realtime service
+func (api *fileApi) canAccessRecord(adminOrAuthRecord models.Model, record *models.Record, accessRule *string) bool {
+	admin, _ := adminOrAuthRecord.(*models.Admin)
+	if admin != nil {
+		// admins can access everything
+		return true
+	}
+
+	if accessRule == nil {
+		// only admins can access this record
+		return false
+	}
+
+	ruleFunc := func(q *dbx.SelectQuery) error {
+		if *accessRule == "" {
+			return nil // empty public rule
+		}
+
+		// mock request data
+		requestData := &models.RequestData{
+			Method: "GET",
+		}
+		requestData.AuthRecord, _ = adminOrAuthRecord.(*models.Record)
+
+		resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), record.Collection(), requestData, true)
+		expr, err := search.FilterData(*accessRule).BuildExpr(resolver)
+		if err != nil {
+			return err
+		}
+		resolver.UpdateQuery(q)
+		q.AndWhere(expr)
+
+		return nil
+	}
+
+	foundRecord, err := api.app.Dao().FindRecordById(record.Collection().Id, record.Id, ruleFunc)
+	if err == nil && foundRecord != nil {
+		return true
+	}
+
+	return false
 }

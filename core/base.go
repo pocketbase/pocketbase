@@ -88,7 +88,9 @@ type BaseApp struct {
 	onSettingsAfterUpdateRequest  *hook.Hook[*SettingsUpdateEvent]
 
 	// file api event hooks
-	onFileDownloadRequest *hook.Hook[*FileDownloadEvent]
+	onFileDownloadRequest    *hook.Hook[*FileDownloadEvent]
+	onFileBeforeTokenRequest *hook.Hook[*FileTokenEvent]
+	onFileAfterTokenRequest  *hook.Hook[*FileTokenEvent]
 
 	// admin api event hooks
 	onAdminsListRequest                      *hook.Hook[*AdminsListEvent]
@@ -223,7 +225,9 @@ func NewBaseApp(config *BaseAppConfig) *BaseApp {
 		onSettingsAfterUpdateRequest:  &hook.Hook[*SettingsUpdateEvent]{},
 
 		// file API event hooks
-		onFileDownloadRequest: &hook.Hook[*FileDownloadEvent]{},
+		onFileDownloadRequest:    &hook.Hook[*FileDownloadEvent]{},
+		onFileBeforeTokenRequest: &hook.Hook[*FileTokenEvent]{},
+		onFileAfterTokenRequest:  &hook.Hook[*FileTokenEvent]{},
 
 		// admin API event hooks
 		onAdminsListRequest:                      &hook.Hook[*AdminsListEvent]{},
@@ -653,6 +657,14 @@ func (app *BaseApp) OnFileDownloadRequest(tags ...string) *hook.TaggedHook[*File
 	return hook.NewTaggedHook(app.onFileDownloadRequest, tags...)
 }
 
+func (app *BaseApp) OnFileBeforeTokenRequest(tags ...string) *hook.TaggedHook[*FileTokenEvent] {
+	return hook.NewTaggedHook(app.onFileBeforeTokenRequest, tags...)
+}
+
+func (app *BaseApp) OnFileAfterTokenRequest(tags ...string) *hook.TaggedHook[*FileTokenEvent] {
+	return hook.NewTaggedHook(app.onFileAfterTokenRequest, tags...)
+}
+
 // -------------------------------------------------------------------
 // Admin API event hooks
 // -------------------------------------------------------------------
@@ -979,34 +991,55 @@ func (app *BaseApp) createDaoWithHooks(concurrentDB, nonconcurrentDB dbx.Builder
 	dao := daos.NewMultiDB(concurrentDB, nonconcurrentDB)
 
 	dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
-		return app.OnModelBeforeCreate().Trigger(&ModelEvent{eventDao, m})
+		e := new(ModelEvent)
+		e.Dao = eventDao
+		e.Model = m
+
+		return app.OnModelBeforeCreate().Trigger(e)
 	}
 
 	dao.AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) {
-		err := app.OnModelAfterCreate().Trigger(&ModelEvent{eventDao, m})
-		if err != nil && app.isDebug {
+		e := new(ModelEvent)
+		e.Dao = eventDao
+		e.Model = m
+
+		if err := app.OnModelAfterCreate().Trigger(e); err != nil && app.isDebug {
 			log.Println(err)
 		}
 	}
 
 	dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
-		return app.OnModelBeforeUpdate().Trigger(&ModelEvent{eventDao, m})
+		e := new(ModelEvent)
+		e.Dao = eventDao
+		e.Model = m
+
+		return app.OnModelBeforeUpdate().Trigger(e)
 	}
 
 	dao.AfterUpdateFunc = func(eventDao *daos.Dao, m models.Model) {
-		err := app.OnModelAfterUpdate().Trigger(&ModelEvent{eventDao, m})
-		if err != nil && app.isDebug {
+		e := new(ModelEvent)
+		e.Dao = eventDao
+		e.Model = m
+
+		if err := app.OnModelAfterUpdate().Trigger(e); err != nil && app.isDebug {
 			log.Println(err)
 		}
 	}
 
 	dao.BeforeDeleteFunc = func(eventDao *daos.Dao, m models.Model) error {
-		return app.OnModelBeforeDelete().Trigger(&ModelEvent{eventDao, m})
+		e := new(ModelEvent)
+		e.Dao = eventDao
+		e.Model = m
+
+		return app.OnModelBeforeDelete().Trigger(e)
 	}
 
 	dao.AfterDeleteFunc = func(eventDao *daos.Dao, m models.Model) {
-		err := app.OnModelAfterDelete().Trigger(&ModelEvent{eventDao, m})
-		if err != nil && app.isDebug {
+		e := new(ModelEvent)
+		e.Dao = eventDao
+		e.Model = m
+
+		if err := app.OnModelAfterDelete().Trigger(e); err != nil && app.isDebug {
 			log.Println(err)
 		}
 	}

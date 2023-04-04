@@ -307,6 +307,25 @@ type App interface {
 	// returning it to the client.
 	OnFileDownloadRequest(tags ...string) *hook.TaggedHook[*FileDownloadEvent]
 
+	// OnFileBeforeTokenRequest hook is triggered before each file
+	// token API request.
+	//
+	// If not token or model was submitted, e.Model and e.Token will be empty,
+	// allowing you to implement your own custom model file auth implementation.
+	//
+	// If the optional "tags" list (Collection ids or names) is specified,
+	// then all event handlers registered via the created hook will be
+	// triggered and called only if their event data origin matches the tags.
+	OnFileBeforeTokenRequest(tags ...string) *hook.TaggedHook[*FileTokenEvent]
+
+	// OnFileAfterTokenRequest hook is triggered after each
+	// successful file token API request.
+	//
+	// If the optional "tags" list (Collection ids or names) is specified,
+	// then all event handlers registered via the created hook will be
+	// triggered and called only if their event data origin matches the tags.
+	OnFileAfterTokenRequest(tags ...string) *hook.TaggedHook[*FileTokenEvent]
+
 	// ---------------------------------------------------------------
 	// Admin API event hooks
 	// ---------------------------------------------------------------

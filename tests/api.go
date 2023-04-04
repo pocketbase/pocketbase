@@ -159,6 +159,7 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 		}
 	}
 
+	// @todo consider adding the response body to the AfterTestFunc args
 	if scenario.AfterTestFunc != nil {
 		scenario.AfterTestFunc(t, testApp, e)
 	}

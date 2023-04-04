@@ -24,3 +24,12 @@ func NewAdminResetPasswordToken(app core.App, admin *models.Admin) (string, erro
 		app.Settings().AdminPasswordResetToken.Duration,
 	)
 }
+
+// NewAdminFileToken generates and returns a new admin private file access token.
+func NewAdminFileToken(app core.App, admin *models.Admin) (string, error) {
+	return security.NewToken(
+		jwt.MapClaims{"id": admin.Id, "type": TypeAdmin},
+		(admin.TokenKey + app.Settings().AdminFileToken.Secret),
+		app.Settings().AdminFileToken.Duration,
+	)
+}

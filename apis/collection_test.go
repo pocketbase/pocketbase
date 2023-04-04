@@ -1097,7 +1097,7 @@ func TestCollectionUpdate(t *testing.T) {
 	}
 }
 
-func TestCollectionImport(t *testing.T) {
+func TestCollectionsImport(t *testing.T) {
 	totalCollections := 10
 
 	scenarios := []tests.ApiScenario{
@@ -1157,7 +1157,7 @@ func TestCollectionImport(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{
 				"OnCollectionsBeforeImportRequest": 1,
-				"OnModelBeforeDelete":              7,
+				"OnModelBeforeDelete":              4,
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				collections := []*models.Collection{}

@@ -76,3 +76,20 @@ func NewRecordChangeEmailToken(app core.App, record *models.Record, newEmail str
 		app.Settings().RecordEmailChangeToken.Duration,
 	)
 }
+
+// NewRecordFileToken generates and returns a new record private file access token.
+func NewRecordFileToken(app core.App, record *models.Record) (string, error) {
+	if !record.Collection().IsAuth() {
+		return "", errors.New("The record is not from an auth collection.")
+	}
+
+	return security.NewToken(
+		jwt.MapClaims{
+			"id":           record.Id,
+			"type":         TypeAuthRecord,
+			"collectionId": record.Collection().Id,
+		},
+		(record.TokenKey() + app.Settings().RecordFileToken.Secret),
+		app.Settings().RecordFileToken.Duration,
+	)
+}

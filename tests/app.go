@@ -446,6 +446,14 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return t.registerEventCall("OnFileDownloadRequest")
 	})
 
+	t.OnFileBeforeTokenRequest().Add(func(e *core.FileTokenEvent) error {
+		return t.registerEventCall("OnFileBeforeTokenRequest")
+	})
+
+	t.OnFileAfterTokenRequest().Add(func(e *core.FileTokenEvent) error {
+		return t.registerEventCall("OnFileAfterTokenRequest")
+	})
+
 	return t, nil
 }
 

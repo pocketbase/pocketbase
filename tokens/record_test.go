@@ -98,3 +98,26 @@ func TestNewRecordChangeEmailToken(t *testing.T) {
 		t.Fatalf("Expected auth record %v, got %v", user, tokenRecord)
 	}
 }
+
+func TestNewRecordFileToken(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	user, err := app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	token, err := tokens.NewRecordFileToken(app, user)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tokenRecord, _ := app.Dao().FindAuthRecordByToken(
+		token,
+		app.Settings().RecordFileToken.Secret,
+	)
+	if tokenRecord == nil || tokenRecord.Id != user.Id {
+		t.Fatalf("Expected auth record %v, got %v", user, tokenRecord)
+	}
+}
