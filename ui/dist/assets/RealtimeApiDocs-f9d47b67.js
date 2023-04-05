@@ -1,4 +1,4 @@
-import{S as re,i as ae,s as be,N as ue,C as P,e as u,w as y,b as a,c as te,f as p,g as t,h as I,m as ne,x as pe,t as ie,a as le,o as n,d as ce,T as me,p as de}from"./index-1d2f3928.js";import{S as fe}from"./SdkTabs-88381946.js";function $e(o){var B,U,W,T,A,H,L,q,M,N,j,J;let i,m,l=o[0].name+"",b,d,h,f,_,$,k,c,S,v,w,R,C,g,E,r,D;return c=new fe({props:{js:`
+import{S as re,i as ae,s as be,M as ue,C as P,e as u,w as y,b as a,c as te,f as p,g as t,h as I,m as ne,x as pe,t as ie,a as le,o as n,d as ce,R as me,p as de}from"./index-1752149b.js";import{S as fe}from"./SdkTabs-45b78450.js";function $e(o){var B,U,W,A,H,L,M,T,q,j,J,N;let i,m,l=o[0].name+"",b,d,h,f,_,$,k,c,S,v,w,R,C,g,E,r,D;return c=new fe({props:{js:`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${o[1]}');
@@ -19,9 +19,9 @@ import{S as re,i as ae,s as be,N as ue,C as P,e as u,w as y,b as a,c as te,f as 
         });
 
         // Unsubscribe
-        pb.collection('${(T=o[0])==null?void 0:T.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
-        pb.collection('${(A=o[0])==null?void 0:A.name}').unsubscribe('*'); // remove all '*' topic subscriptions
-        pb.collection('${(H=o[0])==null?void 0:H.name}').unsubscribe(); // remove all subscriptions in the collection
+        pb.collection('${(A=o[0])==null?void 0:A.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${(H=o[0])==null?void 0:H.name}').unsubscribe('*'); // remove all '*' topic subscriptions
+        pb.collection('${(L=o[0])==null?void 0:L.name}').unsubscribe(); // remove all subscriptions in the collection
     `,dart:`
         import 'package:pocketbase/pocketbase.dart';
 
@@ -32,20 +32,20 @@ import{S as re,i as ae,s as be,N as ue,C as P,e as u,w as y,b as a,c as te,f as 
         // (Optionally) authenticate
         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-        // Subscribe to changes in any ${(L=o[0])==null?void 0:L.name} record
-        pb.collection('${(q=o[0])==null?void 0:q.name}').subscribe('*', (e) {
+        // Subscribe to changes in any ${(M=o[0])==null?void 0:M.name} record
+        pb.collection('${(T=o[0])==null?void 0:T.name}').subscribe('*', (e) {
             console.log(e.record);
         });
 
         // Subscribe to changes only in the specified record
-        pb.collection('${(M=o[0])==null?void 0:M.name}').subscribe('RECORD_ID', (e) {
+        pb.collection('${(q=o[0])==null?void 0:q.name}').subscribe('RECORD_ID', (e) {
             console.log(e.record);
         });
 
         // Unsubscribe
-        pb.collection('${(N=o[0])==null?void 0:N.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
-        pb.collection('${(j=o[0])==null?void 0:j.name}').unsubscribe('*'); // remove all '*' topic subscriptions
-        pb.collection('${(J=o[0])==null?void 0:J.name}').unsubscribe(); // remove all subscriptions in the collection
+        pb.collection('${(j=o[0])==null?void 0:j.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${(J=o[0])==null?void 0:J.name}').unsubscribe('*'); // remove all '*' topic subscriptions
+        pb.collection('${(N=o[0])==null?void 0:N.name}').unsubscribe(); // remove all subscriptions in the collection
     `}}),r=new ue({props:{content:JSON.stringify({action:"create",record:P.dummyCollectionRecord(o[0])},null,2).replace('"action": "create"','"action": "create" // create, update or delete')}}),{c(){i=u("h3"),m=y("Realtime ("),b=y(l),d=y(")"),h=a(),f=u("div"),f.innerHTML=`<p>Subscribe to realtime changes via Server-Sent Events (SSE).</p> 
     <p>Events are sent for <strong>create</strong>, <strong>update</strong>
         and <strong>delete</strong> record operations (see &quot;Event data format&quot; section below).</p>`,_=a(),$=u("div"),$.innerHTML=`<div class="icon"><i class="ri-information-line"></i></div> 

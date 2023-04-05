@@ -5,7 +5,12 @@
     let panel;
     let url = "";
 
-    $: filename = url.substring(url.lastIndexOf("/") + 1);
+    $: queryParamsIndex = url.indexOf("?");
+
+    $: filename = url.substring(
+        url.lastIndexOf("/") + 1,
+        queryParamsIndex > 0 ? queryParamsIndex : undefined
+    );
 
     $: type = CommonHelper.getFileType(filename);
 

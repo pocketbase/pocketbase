@@ -6,14 +6,20 @@
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import TokenField from "@/components/settings/TokenField.svelte";
 
-    const tokensList = [
+    const recordTokensList = [
         { key: "recordAuthToken", label: "Auth record authentication token" },
         { key: "recordVerificationToken", label: "Auth record email verification token" },
         { key: "recordPasswordResetToken", label: "Auth record password reset token" },
         { key: "recordEmailChangeToken", label: "Auth record email change token" },
+        { key: "recordFileToken", label: "Records private file access token" },
+    ];
+
+    const adminTokensList = [
         { key: "adminAuthToken", label: "Admins auth token" },
         { key: "adminPasswordResetToken", label: "Admins password reset token" },
+        { key: "adminFileToken", label: "Admins private file access token" },
     ];
 
     $pageTitle = "Token options";
@@ -64,6 +70,8 @@
         data = data || {};
         formSettings = {};
 
+        const tokensList = recordTokensList.concat(adminTokensList);
+
         for (const listItem of tokensList) {
             formSettings[listItem.key] = {
                 duration: data[listItem.key]?.duration || 0,
@@ -97,33 +105,26 @@
             {#if isLoading}
                 <div class="loader" />
             {:else}
-                {#each tokensList as token (token.key)}
-                    <Field class="form-field required" name="{token.key}.duration" let:uniqueId>
-                        <label for={uniqueId}>{token.label} duration (in seconds)</label>
-                        <input
-                            type="number"
-                            id={uniqueId}
-                            required
-                            bind:value={formSettings[token.key].duration}
-                        />
-                        <div class="help-block">
-                            <span
-                                class="link-primary"
-                                class:txt-success={formSettings[token.key].secret}
-                                on:click={() => {
-                                    // toggle
-                                    if (formSettings[token.key].secret) {
-                                        delete formSettings[token.key].secret;
-                                        formSettings[token.key] = formSettings[token.key];
-                                    } else {
-                                        formSettings[token.key].secret = CommonHelper.randomString(50);
-                                    }
-                                }}
-                            >
-                                Invalidate all previously issued tokens
-                            </span>
-                        </div>
-                    </Field>
+                <h3 class="section-title">Record tokens</h3>
+                {#each recordTokensList as token (token.key)}
+                    <TokenField
+                        key={token.key}
+                        label={token.label}
+                        bind:duration={formSettings[token.key].duration}
+                        bind:secret={formSettings[token.key].secret}
+                    />
+                {/each}
+
+                <hr />
+
+                <h3 class="section-title">Admin tokens</h3>
+                {#each adminTokensList as token (token.key)}
+                    <TokenField
+                        key={token.key}
+                        label={token.label}
+                        bind:duration={formSettings[token.key].duration}
+                        bind:secret={formSettings[token.key].secret}
+                    />
                 {/each}
 
                 <div class="flex">

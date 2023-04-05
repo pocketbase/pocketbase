@@ -1,10 +1,12 @@
-import PocketBase, { LocalAuthStore, Admin } from "pocketbase";
+import PocketBase, { LocalAuthStore, Admin, isTokenExpired } from "pocketbase";
 // ---
 import CommonHelper      from "@/utils/CommonHelper";
 import { replace }       from "svelte-spa-router";
 import { addErrorToast } from "@/stores/toasts";
 import { setErrors }     from "@/stores/errors";
 import { setAdmin }      from "@/stores/admin";
+
+const adminFileTokenKey = "pb_admin_file_token";
 
 /**
  * Clears the authorized state and redirects to the login page.
@@ -62,6 +64,29 @@ PocketBase.prototype.errorResponseHandler = function(err, notify = true, default
         return replace('/');
     }
 };
+
+/**
+ * @return {Promise<String>}
+ */
+PocketBase.prototype.getAdminFileToken = async function() {
+    let token = localStorage.getItem(adminFileTokenKey) || '';
+
+    // request a new token only if the previous one is missing or will expire soon
+    if (!token || isTokenExpired(token, 15)) {
+        // remove previously stored token (if any)
+        token && localStorage.removeItem(adminFileTokenKey);
+
+        if (!this._adminFileTokenRequest) {
+            this._adminFileTokenRequest = this.files.getToken();
+        }
+
+        token = await this._adminFileTokenRequest;
+        localStorage.setItem(adminFileTokenKey, token);
+        this._adminFileTokenRequest = null;
+    }
+
+    return token;
+}
 
 // Custom auth store to sync the svelte admin store state with the authorized admin instance.
 class AppAuthStore extends LocalAuthStore {

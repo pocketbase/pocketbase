@@ -677,6 +677,9 @@ a.thumb:not(.thumb-active) {
     }
 
     // sizes
+    &.loader-xs {
+        --loaderSize: 18px;
+    }
     &.loader-sm {
         --loaderSize: 24px;
     }

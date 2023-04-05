@@ -90,7 +90,7 @@
 
                 <div class="content">
                     <a
-                        href={ApiClient.getFileUrl(record, filename)}
+                        href={ApiClient.files.getUrl(record, filename)}
                         class="txt-ellipsis {isDeleted ? 'txt-strikethrough txt-hint' : 'link-primary'}"
                         title="Download"
                         target="_blank"
