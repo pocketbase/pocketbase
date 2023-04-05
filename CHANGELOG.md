@@ -1,6 +1,11 @@
+## v0.14.3
+
+- Fixed Admin UI Logs `meta` visualization in Firefox ([#2221](https://github.com/pocketbase/pocketbase/issues/2221)).
+
+
 ## v0.14.2
 
-- Reverted part of the old `COALESCE` handling to continue supporting empty string comparison with missing joined relation fields.
+- Reverted part of the old `COALESCE` handling as a fallback to support empty string comparison with missing joined relation fields.
 
 
 ## v0.14.1
