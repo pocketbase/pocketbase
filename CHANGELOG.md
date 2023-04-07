@@ -3,6 +3,15 @@
 - Fixed typo in `Record.WithUnkownData()` -> `Record.WithUnknownData()`.
 
 
+## v0.14.3
+
+- Fixed Admin UI Logs `meta` visualization in Firefox ([#2221](https://github.com/pocketbase/pocketbase/issues/2221)).
+
+- Downgraded to v1 of the `aws/aws-sdk-go` package since v2 has compatibility issues with GCS ([#2231](https://github.com/pocketbase/pocketbase/issues/2231)).
+
+- Upgraded the GitHub action to use [min Go 1.20.3](https://github.com/golang/go/issues?q=milestone%3AGo1.20.3+label%3ACherryPickApproved) for the prebuilt executable since it contains some minor `net/http` security fixes.
+
+
 ## v0.14.2
 
 - Reverted part of the old `COALESCE` handling as a fallback to support empty string comparison with missing joined relation fields.

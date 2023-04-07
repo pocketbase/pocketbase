@@ -14,10 +14,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/disintegration/imaging"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -44,31 +43,19 @@ func NewS3(
 ) (*System, error) {
 	ctx := context.Background() // default context
 
-	cred := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
+	cred := credentials.NewStaticCredentials(accessKey, secretKey, "")
 
-	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithCredentialsProvider(cred),
-		config.WithRegion(region),
-		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			// ensure that the endpoint has url scheme for
-			// backward compatibility with v1 of the aws sdk
-			prefixedEndpoint := endpoint
-			if !strings.Contains(endpoint, "://") {
-				prefixedEndpoint = "https://" + endpoint
-			}
-
-			return aws.Endpoint{URL: prefixedEndpoint, SigningRegion: region}, nil
-		})),
-	)
+	sess, err := session.NewSession(&aws.Config{
+		Region:           aws.String(region),
+		Endpoint:         aws.String(endpoint),
+		Credentials:      cred,
+		S3ForcePathStyle: aws.Bool(s3ForcePathStyle),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.UsePathStyle = s3ForcePathStyle
-	})
-
-	bucket, err := s3blob.OpenBucketV2(ctx, client, bucketName, nil)
+	bucket, err := s3blob.OpenBucket(ctx, sess, bucketName, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -78,7 +78,9 @@
                 <td class="min-width txt-hint txt-bold">Meta</td>
                 <td>
                     {#if !CommonHelper.isEmpty(item.meta)}
-                        <CodeBlock content={JSON.stringify(item.meta, null, 2)} />
+                        <div class="block">
+                            <CodeBlock content={JSON.stringify(item.meta, null, 2)} />
+                        </div>
                     {:else}
                         <span class="txt-hint">N/A</span>
                     {/if}
