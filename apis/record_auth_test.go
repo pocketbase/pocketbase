@@ -1203,7 +1203,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "client without @oauth2 subscription",
+			Name:   "client with @oauth2 subscription",
 			Method: http.MethodGet,
 			Url:    "/api/oauth2-redirect?state=" + c3.Id(),
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
