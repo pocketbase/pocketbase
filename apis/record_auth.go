@@ -636,14 +636,14 @@ func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 
 // -------------------------------------------------------------------
 
-const oauth2SubscribeTopic = "@oauth2"
+const oauth2SubscriptionTopic = "@oauth2"
 
 func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 	state := c.QueryParam("state")
 	code := c.QueryParam("code")
 
 	client, err := api.app.SubscriptionsBroker().ClientById(state)
-	if err != nil || client.IsDiscarded() || !client.HasSubscription(oauth2SubscribeTopic) {
+	if err != nil || client.IsDiscarded() || !client.HasSubscription(oauth2SubscriptionTopic) {
 		return NewNotFoundError("Missing or invalid oauth2 subscription client", err)
 	}
 
@@ -658,7 +658,7 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 	}
 
 	msg := subscriptions.Message{
-		Name: oauth2SubscribeTopic,
+		Name: oauth2SubscriptionTopic,
 		Data: string(encodedData),
 	}
 

@@ -1163,7 +1163,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 	c5.Subscribe("@oauth2")
 	c5.Discard()
 
-	baseBeforeTestFunc := func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+	beforeTestFunc := func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 		app.SubscriptionsBroker().Register(c1)
 		app.SubscriptionsBroker().Register(c2)
 		app.SubscriptionsBroker().Register(c3)
@@ -1171,44 +1171,18 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 		app.SubscriptionsBroker().Register(c5)
 	}
 
-	noMessagesBeforeTestFunc := func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-		baseBeforeTestFunc(t, app, e)
-
-		ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
-
-		go func() {
-			defer cancelFunc()
-		L:
-			for {
-				select {
-				case <-c1.Channel():
-					t.Error("Unexpected c1 message")
-					break L
-				case <-c2.Channel():
-					t.Error("Unexpected c2 message")
-					break L
-				case <-c3.Channel():
-					t.Error("Unexpected c3 message")
-					break L
-				case <-c4.Channel():
-					t.Error("Unexpected c4 message")
-					break L
-				case <-c5.Channel():
-					t.Error("Unexpected c5 message")
-					break L
-				case <-ctx.Done():
-					t.Error("Context timeout reached")
-					break L
-				}
-			}
-		}()
-	}
-
 	scenarios := []tests.ApiScenario{
 		{
-			Name:            "no clients",
+			Name:            "no state query param",
 			Method:          http.MethodGet,
 			Url:             "/api/oauth2-redirect",
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "missing client",
+			Method:          http.MethodGet,
+			Url:             "/api/oauth2-redirect?state=missing",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
 		},
@@ -1216,7 +1190,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 			Name:            "discarded client with @oauth2 subscription",
 			Method:          http.MethodGet,
 			Url:             "/api/oauth2-redirect?state=" + c5.Id(),
-			BeforeTestFunc:  noMessagesBeforeTestFunc,
+			BeforeTestFunc:  beforeTestFunc,
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
 		},
@@ -1224,7 +1198,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 			Name:            "client without @oauth2 subscription",
 			Method:          http.MethodGet,
 			Url:             "/api/oauth2-redirect?state=" + c4.Id(),
-			BeforeTestFunc:  noMessagesBeforeTestFunc,
+			BeforeTestFunc:  beforeTestFunc,
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
 		},
@@ -1233,7 +1207,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 			Method: http.MethodGet,
 			Url:    "/api/oauth2-redirect?state=" + c3.Id(),
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				baseBeforeTestFunc(t, app, e)
+				beforeTestFunc(t, app, e)
 
 				ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
 

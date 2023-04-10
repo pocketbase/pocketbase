@@ -1,5 +1,7 @@
 ## (WIP)
 
+- (@todo docs) Simplified OAuth2 authentication flow ([#55](https://github.com/pocketbase/pocketbase/issues/55)).
+
 - Fixed typo in `Record.WithUnkownData()` -> `Record.WithUnknownData()`.
 
 
