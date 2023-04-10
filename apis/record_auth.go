@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -17,6 +18,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/subscriptions"
 	"golang.org/x/oauth2"
 )
 
@@ -25,12 +27,15 @@ import (
 func bindRecordAuthApi(app core.App, rg *echo.Group) {
 	api := recordAuthApi{app: app}
 
+	// global oauth2 subscription redirect handler
+	rg.GET("/oauth2-redirect", api.oauth2SubscriptionRedirect)
+
+	// common collection record related routes
 	subGroup := rg.Group(
 		"/collections/:collection",
 		ActivityLogger(app),
 		LoadCollectionContext(app, models.CollectionTypeAuth),
 	)
-
 	subGroup.GET("/auth-methods", api.authMethods)
 	subGroup.POST("/auth-refresh", api.authRefresh, RequireSameContextRecordAuth())
 	subGroup.POST("/auth-with-oauth2", api.authWithOAuth2)
@@ -627,4 +632,37 @@ func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 	}
 
 	return handlerErr
+}
+
+// -------------------------------------------------------------------
+
+const oauth2SubscribeTopic = "@oauth2"
+
+func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
+	state := c.QueryParam("state")
+	code := c.QueryParam("code")
+
+	client, err := api.app.SubscriptionsBroker().ClientById(state)
+	if err != nil || client.IsDiscarded() || !client.HasSubscription(oauth2SubscribeTopic) {
+		return NewNotFoundError("Missing or invalid oauth2 subscription client", err)
+	}
+
+	data := map[string]string{
+		"state": state,
+		"code":  code,
+	}
+
+	encodedData, err := json.Marshal(data)
+	if err != nil {
+		return NewBadRequestError("Failed to marshalize oauth2 redirect data", err)
+	}
+
+	msg := subscriptions.Message{
+		Name: oauth2SubscribeTopic,
+		Data: string(encodedData),
+	}
+
+	client.Channel() <- msg
+
+	return c.Redirect(http.StatusTemporaryRedirect, "/_/#/auth/oauth2-redirect")
 }

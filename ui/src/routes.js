@@ -145,6 +145,12 @@ const routes = {
         userData: { showAppSidebar: false },
     }),
 
+    "/auth/oauth2-redirect": wrap({
+        asyncComponent:  () => import("@/components/records/PageOAuth2Redirect.svelte"),
+        conditions: baseConditions,
+        userData: { showAppSidebar: false },
+    }),
+
     // catch-all fallback
     "*": wrap({
         component: PageIndex,

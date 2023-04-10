@@ -1,6 +1,7 @@
 package apis_test
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"testing"
@@ -9,6 +10,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/subscriptions"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -1137,6 +1139,142 @@ func TestRecordAuthUnlinkExternalsAuth(t *testing.T) {
 					t.Fatalf("Expected the google ExternalAuth to be deleted, got got \n%v", auth)
 				}
 			},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestRecordAuthOAuth2Redirect(t *testing.T) {
+	c1 := subscriptions.NewDefaultClient()
+
+	c2 := subscriptions.NewDefaultClient()
+	c2.Subscribe("@oauth2")
+
+	c3 := subscriptions.NewDefaultClient()
+	c3.Subscribe("test1", "@oauth2")
+
+	c4 := subscriptions.NewDefaultClient()
+	c4.Subscribe("test1", "test2")
+
+	c5 := subscriptions.NewDefaultClient()
+	c5.Subscribe("@oauth2")
+	c5.Discard()
+
+	baseBeforeTestFunc := func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+		app.SubscriptionsBroker().Register(c1)
+		app.SubscriptionsBroker().Register(c2)
+		app.SubscriptionsBroker().Register(c3)
+		app.SubscriptionsBroker().Register(c4)
+		app.SubscriptionsBroker().Register(c5)
+	}
+
+	noMessagesBeforeTestFunc := func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+		baseBeforeTestFunc(t, app, e)
+
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
+
+		go func() {
+			defer cancelFunc()
+		L:
+			for {
+				select {
+				case <-c1.Channel():
+					t.Error("Unexpected c1 message")
+					break L
+				case <-c2.Channel():
+					t.Error("Unexpected c2 message")
+					break L
+				case <-c3.Channel():
+					t.Error("Unexpected c3 message")
+					break L
+				case <-c4.Channel():
+					t.Error("Unexpected c4 message")
+					break L
+				case <-c5.Channel():
+					t.Error("Unexpected c5 message")
+					break L
+				case <-ctx.Done():
+					t.Error("Context timeout reached")
+					break L
+				}
+			}
+		}()
+	}
+
+	scenarios := []tests.ApiScenario{
+		{
+			Name:            "no clients",
+			Method:          http.MethodGet,
+			Url:             "/api/oauth2-redirect",
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "discarded client with @oauth2 subscription",
+			Method:          http.MethodGet,
+			Url:             "/api/oauth2-redirect?state=" + c5.Id(),
+			BeforeTestFunc:  noMessagesBeforeTestFunc,
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "client without @oauth2 subscription",
+			Method:          http.MethodGet,
+			Url:             "/api/oauth2-redirect?state=" + c4.Id(),
+			BeforeTestFunc:  noMessagesBeforeTestFunc,
+			ExpectedStatus:  404,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "client without @oauth2 subscription",
+			Method: http.MethodGet,
+			Url:    "/api/oauth2-redirect?state=" + c3.Id(),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				baseBeforeTestFunc(t, app, e)
+
+				ctx, cancelFunc := context.WithTimeout(context.Background(), 1*time.Second)
+
+				go func() {
+					defer cancelFunc()
+				L:
+					for {
+						select {
+						case <-c1.Channel():
+							t.Error("Unexpected c1 message")
+							break L
+						case <-c2.Channel():
+							t.Error("Unexpected c2 message")
+							break L
+						case msg := <-c3.Channel():
+							if msg.Name != "@oauth2" {
+								t.Errorf("Expected @oauth2 msg.Name, got %q", msg.Name)
+							}
+
+							expectedParams := []string{`"state"`, `"code"`}
+							for _, p := range expectedParams {
+								if !strings.Contains(msg.Data, p) {
+									t.Errorf("Couldn't find %s in \n%v", p, msg.Data)
+								}
+							}
+
+							break L
+						case <-c4.Channel():
+							t.Error("Unexpected c4 message")
+							break L
+						case <-c5.Channel():
+							t.Error("Unexpected c5 message")
+							break L
+						case <-ctx.Done():
+							t.Error("Context timeout reached")
+							break L
+						}
+					}
+				}()
+			},
+			ExpectedStatus: http.StatusTemporaryRedirect,
 		},
 	}
 
