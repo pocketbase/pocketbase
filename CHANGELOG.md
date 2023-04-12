@@ -1,3 +1,8 @@
+## v0.14.4
+
+- Fixed concurrent map write pannic on resolved filters cache ([#2272](https://github.com/pocketbase/pocketbase/issues/2272)).
+
+
 ## v0.14.3
 
 - Fixed Admin UI Logs `meta` visualization in Firefox ([#2221](https://github.com/pocketbase/pocketbase/issues/2221)).
