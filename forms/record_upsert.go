@@ -755,7 +755,7 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 				}
 			}
 
-			if m.GetId() == form.record.GetId() {
+			if m.TableName() == form.record.TableName() && m.GetId() == form.record.GetId() {
 				return form.processFilesToUpload()
 			}
 
@@ -769,7 +769,7 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 				}
 			}
 
-			if m.GetId() == form.record.GetId() {
+			if m.TableName() == form.record.TableName() && m.GetId() == form.record.GetId() {
 				return form.processFilesToUpload()
 			}
 
