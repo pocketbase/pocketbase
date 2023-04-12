@@ -1,6 +1,6 @@
 ## v0.14.4
 
-- Fixed concurrent map write pannic on resolved filters cache ([#2272](https://github.com/pocketbase/pocketbase/issues/2272)).
+- Fixed concurrent map write pannic on `list.ExistInSliceWithRegex()` cache ([#2272](https://github.com/pocketbase/pocketbase/issues/2272)).
 
 
 ## v0.14.3
