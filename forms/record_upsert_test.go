@@ -1048,12 +1048,12 @@ func TestRecordUpsertUploadFailure(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	daos := []*daos.Dao{
+	testDaos := []*daos.Dao{
 		app.Dao(),                // with hooks
 		daos.New(app.Dao().DB()), // without hooks
 	}
 
-	for i, dao := range daos {
+	for i, dao := range testDaos {
 		// create with invalid file
 		{
 			prefix := fmt.Sprintf("%d-create", i)
