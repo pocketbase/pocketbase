@@ -5,6 +5,11 @@
 - Fixed typo in `Record.WithUnkownData()` -> `Record.WithUnknownData()`.
 
 
+## v0.14.5
+
+- Added checks for `nil` hooks in `forms.RecordUpsert` when used with custom `Dao` ([#2277](https://github.com/pocketbase/pocketbase/issues/2277)).
+
+
 ## v0.14.4
 
 - Fixed concurrent map write pannic on `list.ExistInSliceWithRegex()` cache ([#2272](https://github.com/pocketbase/pocketbase/issues/2272)).

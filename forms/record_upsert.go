@@ -749,8 +749,10 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 		// but BEFORE the actual record db persistence
 		// ---
 		dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
-			if err := form.dao.BeforeCreateFunc(eventDao, m); err != nil {
-				return err
+			if form.dao.BeforeCreateFunc != nil {
+				if err := form.dao.BeforeCreateFunc(eventDao, m); err != nil {
+					return err
+				}
 			}
 
 			if m.GetId() == form.record.GetId() {
@@ -761,8 +763,10 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 		}
 
 		dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
-			if err := form.dao.BeforeUpdateFunc(eventDao, m); err != nil {
-				return err
+			if form.dao.BeforeUpdateFunc != nil {
+				if err := form.dao.BeforeUpdateFunc(eventDao, m); err != nil {
+					return err
+				}
 			}
 
 			if m.GetId() == form.record.GetId() {

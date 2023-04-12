@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -1047,41 +1048,54 @@ func TestRecordUpsertUploadFailure(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// create with invalid file
-	{
-		new := models.NewRecord(collection)
-		new.Id = "123456789012341"
-
-		form := forms.NewRecordUpsert(app, new)
-		form.LoadData(map[string]any{"title": "new_test"})
-		form.AddFiles("files", &filesystem.File{Reader: &filesystem.PathReader{Path: "/tmp/__missing__"}})
-
-		if err := form.Submit(); err == nil {
-			t.Fatal("Expected error, got nil")
-		}
-
-		if r, err := app.Dao().FindRecordById(collection.Id, new.Id); err == nil {
-			t.Fatalf("Expected the inserted record to be deleted, found \n%v", r.PublicExport())
-		}
+	testDaos := []*daos.Dao{
+		app.Dao(),                // with hooks
+		daos.New(app.Dao().DB()), // without hooks
 	}
 
-	// update with invalid file
-	{
-		record, err := app.Dao().FindRecordById(collection.Id, "1tmknxy2868d869")
-		if err != nil {
-			t.Fatal(err)
+	for i, dao := range testDaos {
+		// create with invalid file
+		{
+			prefix := fmt.Sprintf("%d-create", i)
+
+			new := models.NewRecord(collection)
+			new.Id = "123456789012341"
+
+			form := forms.NewRecordUpsert(app, new)
+			form.SetDao(dao)
+			form.LoadData(map[string]any{"title": "new_test"})
+			form.AddFiles("files", &filesystem.File{Reader: &filesystem.PathReader{Path: "/tmp/__missing__"}})
+
+			if err := form.Submit(); err == nil {
+				t.Fatalf("[%s] Expected error, got nil", prefix)
+			}
+
+			if r, err := app.Dao().FindRecordById(collection.Id, new.Id); err == nil {
+				t.Fatalf("[%s] Expected the inserted record to be deleted, found \n%v", prefix, r.PublicExport())
+			}
 		}
 
-		form := forms.NewRecordUpsert(app, record)
-		form.LoadData(map[string]any{"title": "update_test"})
-		form.AddFiles("files", &filesystem.File{Reader: &filesystem.PathReader{Path: "/tmp/__missing__"}})
+		// update with invalid file
+		{
+			prefix := fmt.Sprintf("%d-update", i)
 
-		if err := form.Submit(); err == nil {
-			t.Fatal("Expected error, got nil")
-		}
+			record, err := app.Dao().FindRecordById(collection.Id, "1tmknxy2868d869")
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if r, _ := app.Dao().FindRecordById(collection.Id, record.Id); r == nil || r.GetString("title") == "update_test" {
-			t.Fatalf("Expected the record changes to be reverted, got \n%v", r.PublicExport())
+			form := forms.NewRecordUpsert(app, record)
+			form.SetDao(dao)
+			form.LoadData(map[string]any{"title": "update_test"})
+			form.AddFiles("files", &filesystem.File{Reader: &filesystem.PathReader{Path: "/tmp/__missing__"}})
+
+			if err := form.Submit(); err == nil {
+				t.Fatalf("[%s] Expected error, got nil", prefix)
+			}
+
+			if r, _ := app.Dao().FindRecordById(collection.Id, record.Id); r == nil || r.GetString("title") == "update_test" {
+				t.Fatalf("[%s] Expected the record changes to be reverted, got \n%v", prefix, r.PublicExport())
+			}
 		}
 	}
 }
