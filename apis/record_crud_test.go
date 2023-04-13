@@ -1761,6 +1761,24 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"id":{"code":"validation_in_invalid"`,
 			},
 		},
+		{
+			Name:   "unique field error check",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo2/records/llvuca81nly1qls",
+			Body: strings.NewReader(`{
+				"title":"test2"
+			}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"title":{`,
+				`"code":"validation_not_unique"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeUpdateRequest": 1,
+				"OnModelBeforeUpdate":         1,
+			},
+		},
 
 		// check whether if @request.data modifer fields are properly resolved
 		// -----------------------------------------------------------
