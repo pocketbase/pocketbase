@@ -1173,6 +1173,20 @@ func TestRecordCrudCreate(t *testing.T) {
 				"OnModelAfterCreate":          1,
 			},
 		},
+		{
+			Name:   "unique field error check",
+			Method: http.MethodPost,
+			Url:    "/api/collections/demo2/records",
+			Body: strings.NewReader(`{
+				"title":"test2"
+			}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"title":{`,
+				`"code":"validation_not_unique"`,
+			},
+		},
 
 		// ID checks
 		// -----------------------------------------------------------
