@@ -5,92 +5,108 @@ import AppleOptions      from "@/components/settings/providers/AppleOptions.svel
 
 // Object list with all supported OAuth2 providers in the format:
 // ```
-// { settingsKey: { title, icon, hidden, optionsComponent? } }
+// [ { key, title, logo, optionsComponent? }, ... ]
 // ```
 //
 // If `optionsComponent` is provided it will receive 2 parameters:
 // - `key`    - the provider settings key (eg. "gitlabAuth")
 // - `config` - the provider settings config that is currently being updated
-export default {
-    appleAuth: {
+export default [
+    {
+        key:   "appleAuth",
         title: "Apple",
-        icon:  "ri-apple-fill",
+        logo:  "/images/oauth2/apple.svg",
         optionsComponent: AppleOptions,
     },
-    googleAuth: {
+    {
+        key:   "googleAuth",
         title: "Google",
-        icon:  "ri-google-fill",
+        logo:  "/images/oauth2/google.svg",
     },
-    microsoftAuth: {
+    {
+        key:   "facebookAuth",
+        title: "Facebook",
+        logo:  "/images/oauth2/facebook.svg",
+    },
+    {
+        key:   "microsoftAuth",
         title: "Microsoft",
-        icon:  "ri-microsoft-fill",
+        logo:  "/images/oauth2/microsoft.svg",
         optionsComponent: MicrosoftOptions,
     },
-    facebookAuth: {
-        title: "Facebook",
-        icon:  "ri-facebook-fill",
-    },
-    twitterAuth: {
-        title: "Twitter",
-        icon:  "ri-twitter-fill",
-    },
-    githubAuth: {
+    {
+        key:   "githubAuth",
         title: "GitHub",
-        icon:  "ri-github-fill",
+        logo:  "/images/oauth2/github.svg",
     },
-    gitlabAuth: {
+    {
+        key:   "gitlabAuth",
         title: "GitLab",
-        icon:  "ri-gitlab-fill",
+        logo:  "/images/oauth2/gitlab.svg",
         optionsComponent: SelfHostedOptions,
     },
-    giteeAuth: {
+    {
+        key:   "giteeAuth",
         title: "Gitee",
-        icon:  "ri-git-repository-fill",
+        logo:  "/images/oauth2/gitee.svg",
     },
-    giteaAuth: {
+    {
+        key:   "giteaAuth",
         title: "Gitea",
-        icon:  "ri-cup-fill",
+        logo:  "/images/oauth2/gitea.svg",
         optionsComponent: SelfHostedOptions,
     },
-    discordAuth: {
+    {
+        key:   "discordAuth",
         title: "Discord",
-        icon:  "ri-discord-fill",
+        logo:  "/images/oauth2/discord.svg",
     },
-    kakaoAuth: {
+    {
+        key:   "twitterAuth",
+        title: "Twitter",
+        logo:  "/images/oauth2/twitter.svg",
+    },
+    {
+        key:   "kakaoAuth",
         title: "Kakao",
-        icon:  "ri-kakao-talk-fill",
+        logo:  "/images/oauth2/kakao.svg",
     },
-    spotifyAuth: {
+    {
+        key:   "spotifyAuth",
         title: "Spotify",
-        icon:  "ri-spotify-fill",
+        logo:  "/images/oauth2/spotify.svg",
     },
-    twitchAuth: {
+    {
+        key:   "twitchAuth",
         title: "Twitch",
-        icon:  "ri-twitch-fill",
+        logo:  "/images/oauth2/twitch.svg",
     },
-    stravaAuth: {
+    {
+        key:   "stravaAuth",
         title: "Strava",
-        icon:  "ri-riding-fill",
+        logo:  "/images/oauth2/strava.svg",
     },
-    livechatAuth: {
+    {
+        key:   "livechatAuth",
         title: "LiveChat",
-        icon:  "ri-chat-1-fill",
+        logo:  "/images/oauth2/livechat.svg",
     },
-    oidcAuth: {
-        title: "OpenID Connect - Authentik, Keycloak, Okta, etc.",
-        icon:  "ri-lock-fill",
+    {
+        key:   "oidcAuth",
+        title: "OpenID Connect",
+        logo:  "/images/oauth2/oidc.svg",
         optionsComponent: OIDCOptions,
     },
-    oidc2Auth: {
-        title: "(2) OpenID Connect - Authentik, Keycloak, Okta, etc.",
-        icon:  "ri-lock-fill",
-        hidden: true,
+    {
+        key:   "oidc2Auth",
+        title: "(2) OpenID Connect",
+        logo:  "/images/oauth2/oidc.svg",
         optionsComponent: OIDCOptions,
     },
-    oidc3Auth: {
-        title: "(3) OpenID Connect - Authentik, Keycloak, Okta, etc.",
-        icon:  "ri-lock-fill",
-        hidden: true,
+    {
+        key:   "oidc3Auth",
+        title: "(3) OpenID Connect",
+        logo:  "/images/oauth2/oidc.svg",
         optionsComponent: OIDCOptions,
     },
-};
+];

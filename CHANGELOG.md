@@ -1,6 +1,16 @@
 ## (WIP)
 
-- (@todo docs) Simplified OAuth2 authentication flow ([#55](https://github.com/pocketbase/pocketbase/issues/55)).
+- Simplified the OAuth2 authentication flow in a single "all in one" call ([#55](https://github.com/pocketbase/pocketbase/issues/55)).
+  Requires JS SDK v0.14.0+ or Dart SDK v0.9.0+.
+  The manual code-token exchange flow is still supported but the SDK methods is renamed to `authWithOAuth2Code()` (_to minimize the breaking changes the JS SDK has a function overload that will proxy the existing `authWithOauth2` calls to `authWithOAuth2Code`_).
+  For more details and example, you could check https://pocketbase.io/docs/authentication/#oauth2-integration.
+
+- Added support for private files ([#215](https://github.com/pocketbase/pocketbase/issues/215)).
+  Requires JS SDK v0.14.0+ or Dart SDK v0.9.0+.
+  It works with a short lived (~5min) file token passed as query param with the file url.
+  For more details and example, you could check https://pocketbase.io/docs/files-handling/#private-files.
+
+- Refreshed the OAuth2 Admin UI.
 
 - Fixed typo in `Record.WithUnkownData()` -> `Record.WithUnknownData()`.
 
