@@ -1074,6 +1074,8 @@ select {
 }
 
 .form-field-list {
+    border-radius: var(--baseRadius);
+    transition: box-shadow var(--baseAnimationSpeed);
     label {
         padding-bottom: 10px;
     }
@@ -1083,6 +1085,7 @@ select {
         border-radius: 0;
         border-bottom-left-radius: var(--baseRadius);
         border-bottom-right-radius: var(--baseRadius);
+        transition: background var(--baseAnimationSpeed);
         .list-item {
             border-top: 1px solid var(--baseAlt2Color);
             &.selected {
@@ -1103,6 +1106,9 @@ select {
         .list, label {
             background: var(--baseAlt1Color);
         }
+    }
+    &.dragover {
+        box-shadow: 0px 0px 0px 2px var(--warningColor);
     }
 }
 

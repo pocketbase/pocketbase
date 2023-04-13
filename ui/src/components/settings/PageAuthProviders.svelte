@@ -65,7 +65,7 @@
                     {/each}
                 </div>
 
-                {#if enabledProviders.length > 0}
+                {#if enabledProviders.length > 0 && disabledProviders.length > 0}
                     <hr />
                 {/if}
 
