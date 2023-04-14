@@ -102,10 +102,15 @@
         {/if}
     </div>
 {:else if field.type === "file"}
+    {@const files = CommonHelper.toArray(rawValue)}
+    {@const filesLimit = short ? 10 : 200}
     <div class="inline-flex">
-        {#each CommonHelper.toArray(rawValue) as filename, i (i + filename)}
+        {#each files.slice(0, filesLimit) as filename, i (i + filename)}
             <RecordFileThumb {record} {filename} size="sm" />
         {/each}
+        {#if files.length > filesLimit}
+            ...
+        {/if}
     </div>
 {:else if short}
     <span class="txt txt-ellipsis" title={CommonHelper.truncate(rawValue)}>
