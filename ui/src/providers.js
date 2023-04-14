@@ -8,6 +8,8 @@ import AppleOptions      from "@/components/settings/providers/AppleOptions.svel
 // [ { key, title, logo, optionsComponent? }, ... ]
 // ```
 //
+// The logo images must be placed inside the /public/images/oauth2 directory.
+//
 // If `optionsComponent` is provided it will receive 2 parameters:
 // - `key`    - the provider settings key (eg. "gitlabAuth")
 // - `config` - the provider settings config that is currently being updated
@@ -15,98 +17,98 @@ export default [
     {
         key:   "appleAuth",
         title: "Apple",
-        logo:  "/images/oauth2/apple.svg",
+        logo:  "apple.svg",
         optionsComponent: AppleOptions,
     },
     {
         key:   "googleAuth",
         title: "Google",
-        logo:  "/images/oauth2/google.svg",
+        logo:  "google.svg",
     },
     {
         key:   "facebookAuth",
         title: "Facebook",
-        logo:  "/images/oauth2/facebook.svg",
+        logo:  "facebook.svg",
     },
     {
         key:   "microsoftAuth",
         title: "Microsoft",
-        logo:  "/images/oauth2/microsoft.svg",
+        logo:  "microsoft.svg",
         optionsComponent: MicrosoftOptions,
     },
     {
         key:   "githubAuth",
         title: "GitHub",
-        logo:  "/images/oauth2/github.svg",
+        logo:  "github.svg",
     },
     {
         key:   "gitlabAuth",
         title: "GitLab",
-        logo:  "/images/oauth2/gitlab.svg",
+        logo:  "gitlab.svg",
         optionsComponent: SelfHostedOptions,
     },
     {
         key:   "giteeAuth",
         title: "Gitee",
-        logo:  "/images/oauth2/gitee.svg",
+        logo:  "gitee.svg",
     },
     {
         key:   "giteaAuth",
         title: "Gitea",
-        logo:  "/images/oauth2/gitea.svg",
+        logo:  "gitea.svg",
         optionsComponent: SelfHostedOptions,
     },
     {
         key:   "discordAuth",
         title: "Discord",
-        logo:  "/images/oauth2/discord.svg",
+        logo:  "discord.svg",
     },
     {
         key:   "twitterAuth",
         title: "Twitter",
-        logo:  "/images/oauth2/twitter.svg",
+        logo:  "twitter.svg",
     },
     {
         key:   "kakaoAuth",
         title: "Kakao",
-        logo:  "/images/oauth2/kakao.svg",
+        logo:  "kakao.svg",
     },
     {
         key:   "spotifyAuth",
         title: "Spotify",
-        logo:  "/images/oauth2/spotify.svg",
+        logo:  "spotify.svg",
     },
     {
         key:   "twitchAuth",
         title: "Twitch",
-        logo:  "/images/oauth2/twitch.svg",
+        logo:  "twitch.svg",
     },
     {
         key:   "stravaAuth",
         title: "Strava",
-        logo:  "/images/oauth2/strava.svg",
+        logo:  "strava.svg",
     },
     {
         key:   "livechatAuth",
         title: "LiveChat",
-        logo:  "/images/oauth2/livechat.svg",
+        logo:  "livechat.svg",
     },
     {
         key:   "oidcAuth",
         title: "OpenID Connect",
-        logo:  "/images/oauth2/oidc.svg",
+        logo:  "oidc.svg",
         optionsComponent: OIDCOptions,
     },
     {
         key:   "oidc2Auth",
         title: "(2) OpenID Connect",
-        logo:  "/images/oauth2/oidc.svg",
+        logo:  "oidc.svg",
         optionsComponent: OIDCOptions,
     },
     {
         key:   "oidc3Auth",
         title: "(3) OpenID Connect",
-        logo:  "/images/oauth2/oidc.svg",
+        logo:  "oidc.svg",
         optionsComponent: OIDCOptions,
     },
 ];

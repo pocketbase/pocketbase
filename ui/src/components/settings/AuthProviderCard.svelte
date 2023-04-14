@@ -10,7 +10,7 @@
 <div class="provider-card">
     <figure class="provider-logo">
         {#if provider.logo}
-            <img src={provider.logo} alt="{provider.title} logo" />
+            <img src="{import.meta.env.BASE_URL}images/oauth2/{provider.logo}" alt="{provider.title} logo" />
         {/if}
     </figure>
     <div class="title">{provider.title}</div>
