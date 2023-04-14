@@ -33,6 +33,7 @@
     export let collection;
 
     let recordPanel;
+    let recordForm;
     let original = null;
     let record = new Record();
     let isSaving = false;
@@ -62,11 +63,13 @@
 
         activeTab = TAB_FORM;
 
-        return recordPanel?.show();
+        recordPanel?.show();
+
+        autofocusFirstInput();
     }
 
     export function hide() {
-        return recordPanel?.hide();
+        recordPanel?.hide();
     }
 
     async function load(model) {
@@ -259,6 +262,23 @@
 
         initialFormHash = "";
     }
+
+    async function autofocusFirstInput() {
+        await tick();
+
+        if (!isNew) {
+            return;
+        }
+
+        // autofocus the first available form element if no explicit autofocus is found
+        if (!recordForm.querySelector("[autofocus]")) {
+            recordForm
+                ?.querySelector(
+                    ".form-field:not(.noautofocus) input, .form-field:not(.noautofocus) textarea, .form-field:not(.noautofocus) select"
+                )
+                ?.focus();
+        }
+    }
 </script>
 
 <OverlayPanel
@@ -266,7 +286,7 @@
     class="
         record-panel
         {hasEditorField ? 'overlay-panel-xl' : 'overlay-panel-lg'}
-        {collection?.isAuth && !isNew ? 'colored-header' : ''}
+        {collection?.$isAuth && !isNew ? 'colored-header' : ''}
     "
     beforeHide={() => {
         if (hasChanges && confirmClose) {
@@ -353,12 +373,13 @@
 
     <div class="tabs-content">
         <form
+            bind:this={recordForm}
             id={formId}
             class="tab-item"
             class:active={activeTab === TAB_FORM}
             on:submit|preventDefault={save}
         >
-            <Field class="form-field readonly" name="id" let:uniqueId>
+            <Field class="form-field {!isNew ? 'readonly' : ''}" name="id" let:uniqueId>
                 <label for={uniqueId}>
                     <i class={CommonHelper.getFieldTypeIcon("primary")} />
                     <span class="txt">id</span>
@@ -380,8 +401,8 @@
                     id={uniqueId}
                     placeholder="Leave empty to auto generate..."
                     minlength="15"
-                    bind:value={record.id}
                     readonly={!isNew}
+                    bind:value={record.id}
                 />
             </Field>
 

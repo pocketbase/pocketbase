@@ -98,12 +98,12 @@
 
         if (newState) {
             oldFocusedElem = document.activeElement;
-            wrapper?.focus();
             dispatch("show");
+            wrapper?.focus();
         } else {
             clearTimeout(contentScrollThrottle);
-            oldFocusedElem?.focus();
             dispatch("hide");
+            oldFocusedElem?.focus();
         }
 
         await tick();
@@ -219,7 +219,7 @@
 
 <svelte:window on:resize={handleResize} on:keydown={handleEscPress} />
 
-<div bind:this={wrapper} class="overlay-panel-wrapper">
+<div bind:this={wrapper} class="overlay-panel-wrapper" tabindex="-1">
     {#if active}
         <div class="overlay-panel-container" class:padded={popup} class:active>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
