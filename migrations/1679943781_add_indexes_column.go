@@ -42,14 +42,19 @@ func init() {
 			return err
 		}
 
+		var hasIndexesColumn bool
 		for _, col := range cols {
 			if col == "indexes" {
-				return nil // already existing (probably via the init migration)
+				// already existing (probably via the init migration)
+				hasIndexesColumn = true
+				break
 			}
 		}
 
-		if _, err := db.AddColumn("_collections", "indexes", `JSON DEFAULT "[]" NOT NULL`).Execute(); err != nil {
-			return err
+		if !hasIndexesColumn {
+			if _, err := db.AddColumn("_collections", "indexes", `JSON DEFAULT "[]" NOT NULL`).Execute(); err != nil {
+				return err
+			}
 		}
 
 		collections := []*models.Collection{}
