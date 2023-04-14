@@ -1173,6 +1173,20 @@ func TestRecordCrudCreate(t *testing.T) {
 				"OnModelAfterCreate":          1,
 			},
 		},
+		{
+			Name:   "unique field error check",
+			Method: http.MethodPost,
+			Url:    "/api/collections/demo2/records",
+			Body: strings.NewReader(`{
+				"title":"test2"
+			}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"title":{`,
+				`"code":"validation_not_unique"`,
+			},
+		},
 
 		// ID checks
 		// -----------------------------------------------------------
@@ -1745,6 +1759,24 @@ func TestRecordCrudUpdate(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{`,
 				`"id":{"code":"validation_in_invalid"`,
+			},
+		},
+		{
+			Name:   "unique field error check",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo2/records/llvuca81nly1qls",
+			Body: strings.NewReader(`{
+				"title":"test2"
+			}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"title":{`,
+				`"code":"validation_not_unique"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeUpdateRequest": 1,
+				"OnModelBeforeUpdate":         1,
 			},
 		},
 

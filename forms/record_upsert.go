@@ -707,7 +707,7 @@ func (form *RecordUpsert) DrySubmit(callback func(txDao *daos.Dao) error) error 
 		defer tx.Rollback()
 
 		if err := txDao.SaveRecord(form.record); err != nil {
-			return err
+			return form.prepareError(err)
 		}
 
 		// restore record isNew state
@@ -779,11 +779,7 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 
 		// persist the record model
 		if err := dao.SaveRecord(form.record); err != nil {
-			preparedErr := form.prepareError(err)
-			if _, ok := preparedErr.(validation.Errors); ok {
-				return preparedErr
-			}
-			return fmt.Errorf("failed to save the record: %w", err)
+			return form.prepareError(err)
 		}
 
 		// delete old files (if any)
