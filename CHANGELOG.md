@@ -10,9 +10,11 @@
   It works with a short lived (~5min) file token passed as query param with the file url.
   For more details and example, you could check https://pocketbase.io/docs/files-handling/#private-files.
 
-- Refreshed the OAuth2 Admin UI.
+- **!** Fixed typo in `Record.WithUnkownData()` -> `Record.WithUnknownData()`.
 
-- Fixed typo in `Record.WithUnkownData()` -> `Record.WithUnknownData()`.
+- Added simple loose wildcard search term support in the Admin UI.
+
+- Refreshed the OAuth2 Admin UI.
 
 
 ## v0.14.5

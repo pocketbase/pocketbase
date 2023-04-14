@@ -37,10 +37,17 @@
 
         admins = []; // reset
 
+        const normalizedFilter = CommonHelper.normalizeSearchFilter(filter, [
+            "id",
+            "email",
+            "created",
+            "updated",
+        ]);
+
         return ApiClient.admins
             .getFullList(100, {
                 sort: sort || "-created",
-                filter: filter,
+                filter: normalizedFilter,
             })
             .then((result) => {
                 admins = result;
@@ -82,7 +89,7 @@
 
     <Searchbar
         value={filter}
-        placeholder={"Search filter, eg. email='test@example.com'"}
+        placeholder={"Search term or filter like email='test@example.com'"}
         extraAutocompleteKeys={["email"]}
         on:submit={(e) => (filter = e.detail)}
     />

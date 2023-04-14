@@ -1,5 +1,6 @@
 <script>
     import { pageTitle } from "@/stores/app";
+    import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
@@ -10,12 +11,24 @@
 
     const ADMIN_LOGS_LOCAL_STORAGE_KEY = "includeAdminLogs";
 
+    const autoCompleteKeys = [
+        "method",
+        "url",
+        "remoteIp",
+        "userIp",
+        "referer",
+        "status",
+        "auth",
+        "userAgent",
+        "created",
+    ];
+
     $pageTitle = "Request logs";
 
     let logPanel;
     let filter = "";
     let includeAdminLogs = window.localStorage?.getItem(ADMIN_LOGS_LOCAL_STORAGE_KEY) << 0;
-    let refreshToken = 1;
+    let refreshKey = 1;
 
     $: presets = !includeAdminLogs ? 'auth!="admin"' : "";
 
@@ -23,8 +36,10 @@
         window.localStorage.setItem(ADMIN_LOGS_LOCAL_STORAGE_KEY, includeAdminLogs << 0);
     }
 
+    $: normalizedFilter = CommonHelper.normalizeSearchFilter(filter, autoCompleteKeys);
+
     function refresh() {
-        refreshToken++;
+        refreshKey++;
     }
 </script>
 
@@ -49,29 +64,20 @@
 
         <Searchbar
             value={filter}
-            placeholder="Search logs, ex. status > 200"
-            extraAutocompleteKeys={[
-                "method",
-                "url",
-                "remoteIp",
-                "userIp",
-                "referer",
-                "status",
-                "auth",
-                "userAgent",
-            ]}
+            placeholder="Search term or filter like status >= 400"
+            extraAutocompleteKeys={autoCompleteKeys}
             on:submit={(e) => (filter = e.detail)}
         />
 
         <div class="clearfix m-b-base" />
 
-        {#key refreshToken}
-            <LogsChart bind:filter {presets} />
+        {#key refreshKey}
+            <LogsChart filter={normalizedFilter} {presets} />
         {/key}
     </div>
 
-    {#key refreshToken}
-        <LogsList bind:filter {presets} on:select={(e) => logPanel?.show(e?.detail)} />
+    {#key refreshKey}
+        <LogsList filter={normalizedFilter} {presets} on:select={(e) => logPanel?.show(e?.detail)} />
     {/key}
 </PageWrapper>
 

@@ -125,10 +125,12 @@
             listSort = parts.join(",");
         }
 
+        const fallbackSearchFields = CommonHelper.getAllCollectionIdentifiers(collection);
+
         return ApiClient.collection(collection.id)
             .getList(page, 30, {
                 sort: listSort,
-                filter: filter,
+                filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
                 expand: relFields.map((field) => field.name).join(","),
                 $cancelKey: "records_list",
             })

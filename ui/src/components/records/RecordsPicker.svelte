@@ -132,8 +132,10 @@
         try {
             const page = reset ? 1 : currentPage + 1;
 
+            const fallbackSearchFields = CommonHelper.getAllCollectionIdentifiers(collection);
+
             const result = await ApiClient.collection(collectionId).getList(page, batchSize, {
-                filter: filter,
+                filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
                 sort: !collection?.$isView ? "-created" : "",
                 $cancelKey: uniqueId + "loadList",
             });
