@@ -71,7 +71,7 @@
         ...
 
         final record = await pb.collection('${collection?.name}').getOne('RECORD_ID',
-          'expand': 'relField1,relField2.subRelField',
+          expand: 'relField1,relField2.subRelField',
         );
     `}
 />

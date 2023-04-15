@@ -200,7 +200,18 @@
             </div>
             <div class="col-sm-6">
                 <Field class="form-field" name="schema.{key}.options.cascadeDelete" let:uniqueId>
-                    <label for={uniqueId}>Delete main record on relation delete</label>
+                    <label for={uniqueId}>
+                        <span class="txt">Cascade delete</span>
+                        <i
+                            class="ri-information-line link-hint"
+                            use:tooltip={{
+                                text: `Whether on ${
+                                    selectedColection?.name || "relation"
+                                } record deletion to delete also its relation field associated records.`,
+                                position: "top",
+                            }}
+                        />
+                    </label>
                     <ObjectSelect
                         id={uniqueId}
                         items={defaultOptions}
