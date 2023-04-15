@@ -30,7 +30,7 @@ export function addCollection(collection) {
     collections.update((list) => {
         CommonHelper.pushOrReplaceByKey(list, collection, "id");
 
-        refreshPrivateFilesCollectionsCache();
+        refreshProtectedFilesCollectionsCache();
 
         return CommonHelper.sortCollections(list);
     });
@@ -47,7 +47,7 @@ export function removeCollection(collection) {
             return current;
         });
 
-        refreshPrivateFilesCollectionsCache();
+        refreshProtectedFilesCollectionsCache();
 
         return list;
     });
@@ -73,7 +73,7 @@ export async function loadCollections(activeId = null) {
             activeCollection.set(items[0]);
         }
 
-        refreshPrivateFilesCollectionsCache();
+        refreshProtectedFilesCollectionsCache();
     } catch (err) {
         ApiClient.errorResponseHandler(err);
     }
@@ -81,11 +81,11 @@ export async function loadCollections(activeId = null) {
     isCollectionsLoading.set(false);
 }
 
-function refreshPrivateFilesCollectionsCache() {
+function refreshProtectedFilesCollectionsCache() {
     privateFilesCollectionsCache.update((cache) => {
         collections.update((current) => {
             for (let c of current) {
-                cache[c.id] = !!c.schema?.find((f) => f.type == "file" && f.options?.private);
+                cache[c.id] = !!c.schema?.find((f) => f.type == "file" && f.options?.protected);
             }
 
             return current;

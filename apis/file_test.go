@@ -228,9 +228,9 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 
-		// private file access checks
+		// protected file access checks
 		{
-			Name:            "private file - expired token",
+			Name:            "protected file - expired token",
 			Method:          http.MethodGet,
 			Url:             "/api/files/_pb_users_auth_/oap640cot4yru2s/test_kfd2wYLxkz.txt?thumb=100x100",
 			ExpectedStatus:  200,
@@ -240,14 +240,14 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "private file - admin with expired file token",
+			Name:            "protected file - admin with expired file token",
 			Method:          http.MethodGet,
 			Url:             "/api/files/demo1/al1h9ijdeojtsjy/300_Jsjq7RdBgA.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsImV4cCI6MTY0MDk5MTY2MSwidHlwZSI6ImFkbWluIn0.g7Q_3UX6H--JWJ7yt1Hoe-1ugTX1KpbKzdt0zjGSe-E",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:            "private file - admin with valid file token",
+			Name:            "protected file - admin with valid file token",
 			Method:          http.MethodGet,
 			Url:             "/api/files/demo1/al1h9ijdeojtsjy/300_Jsjq7RdBgA.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsImV4cCI6MTg5MzQ1MjQ2MSwidHlwZSI6ImFkbWluIn0.LyAMpSfaHVsuUqIlqqEbhDQSdFzoPz_EIDcb2VJMBsU",
 			ExpectedStatus:  200,
@@ -257,14 +257,14 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "private file - guest without view access",
+			Name:            "protected file - guest without view access",
 			Method:          http.MethodGet,
 			Url:             "/api/files/demo1/al1h9ijdeojtsjy/300_Jsjq7RdBgA.png",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "private file - guest with view access",
+			Name:   "protected file - guest with view access",
 			Method: http.MethodGet,
 			Url:    "/api/files/demo1/al1h9ijdeojtsjy/300_Jsjq7RdBgA.png",
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
@@ -287,7 +287,7 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:   "private file - auth record without view access",
+			Name:   "protected file - auth record without view access",
 			Method: http.MethodGet,
 			Url:    "/api/files/demo1/al1h9ijdeojtsjy/300_Jsjq7RdBgA.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImV4cCI6MTg5MzQ1MjQ2MSwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwidHlwZSI6ImF1dGhSZWNvcmQifQ.0d_0EO6kfn9ijZIQWAqgRi8Bo1z7MKcg1LQpXhQsEPk",
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
@@ -307,7 +307,7 @@ func TestFileDownload(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "private file - auth record with view access",
+			Name:   "protected file - auth record with view access",
 			Method: http.MethodGet,
 			Url:    "/api/files/demo1/al1h9ijdeojtsjy/300_Jsjq7RdBgA.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImV4cCI6MTg5MzQ1MjQ2MSwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwidHlwZSI6ImF1dGhSZWNvcmQifQ.0d_0EO6kfn9ijZIQWAqgRi8Bo1z7MKcg1LQpXhQsEPk",
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
@@ -330,14 +330,14 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "private file in view (view's View API rule failure)",
+			Name:            "protected file in view (view's View API rule failure)",
 			Method:          http.MethodGet,
 			Url:             "/api/files/view1/al1h9ijdeojtsjy/300_Jsjq7RdBgA.png?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImV4cCI6MTg5MzQ1MjQ2MSwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwidHlwZSI6ImF1dGhSZWNvcmQifQ.0d_0EO6kfn9ijZIQWAqgRi8Bo1z7MKcg1LQpXhQsEPk",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:            "private file in view (view's View API rule success)",
+			Name:            "protected file in view (view's View API rule success)",
 			Method:          http.MethodGet,
 			Url:             "/api/files/view1/84nmscqy84lsi1t/test_d61b33QdDU.txt?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImV4cCI6MTg5MzQ1MjQ2MSwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwidHlwZSI6ImF1dGhSZWNvcmQifQ.0d_0EO6kfn9ijZIQWAqgRi8Bo1z7MKcg1LQpXhQsEPk",
 			ExpectedStatus:  200,

@@ -96,8 +96,8 @@ func (api *fileApi) download(c echo.Context) error {
 		return NewBadRequestError("", errors.New("Failed to load file options."))
 	}
 
-	// check whether the request is authorized to view the private file
-	if options.Private {
+	// check whether the request is authorized to view the protected file
+	if options.Protected {
 		token := c.QueryParam("token")
 
 		adminOrAuthRecord, _ := api.findAdminOrAuthRecordByFileToken(token)

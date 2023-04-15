@@ -273,25 +273,22 @@
 
     <svelte:fragment slot="afterNonempty">
         <div class="col-sm-4">
-            <Field class="form-field form-field-toggle m-0" name="schema.{key}.options.private" let:uniqueId>
-                <input type="checkbox" id={uniqueId} bind:checked={field.options.private} />
+            <Field
+                class="form-field form-field-toggle m-0"
+                name="schema.{key}.options.protected"
+                let:uniqueId
+            >
+                <input type="checkbox" id={uniqueId} bind:checked={field.options.protected} />
                 <label for={uniqueId}>
-                    <span class="txt">Private</span>
-                    <i
-                        class="ri-information-line link-hint"
-                        use:tooltip={{
-                            text: `Only those with "View API" rule access will be able to preview or download the file(s).\nAuthenticated user can pass a file token via the "token" query param.`,
-                            position: "top",
-                        }}
-                    />
+                    <span class="txt">Protected</span>
                 </label>
                 <a
-                    href={import.meta.env.PB_PRIVATE_FILE_DOCS}
+                    href={import.meta.env.PB_PROTECTED_FILE_DOCS}
                     class="toggle-info txt-sm txt-hint m-l-5"
                     target="_blank"
                     rel="noopener"
                 >
-                    Learn more
+                    (Learn more)
                 </a>
             </Field>
         </div>

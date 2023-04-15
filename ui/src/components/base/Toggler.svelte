@@ -130,27 +130,19 @@
     function bindTrigger(newTrigger) {
         cleanup();
 
-        activeTrigger = newTrigger || container?.parentNode;
-
-        if (!activeTrigger) {
-            return;
-        }
-
         container?.addEventListener("click", handleClickToggle);
-        activeTrigger.addEventListener("click", handleClickToggle);
-        activeTrigger.addEventListener("keydown", handleKeydownToggle);
+
+        activeTrigger = newTrigger || container?.parentNode;
+        activeTrigger?.addEventListener("click", handleClickToggle);
+        activeTrigger?.addEventListener("keydown", handleKeydownToggle);
     }
 
     function cleanup() {
         clearTimeout(scrollTimeoutId);
 
-        if (!activeTrigger) {
-            return;
-        }
-
         container?.removeEventListener("click", handleClickToggle);
-        activeTrigger.removeEventListener("click", handleClickToggle);
-        activeTrigger.removeEventListener("keydown", handleKeydownToggle);
+        activeTrigger?.removeEventListener("click", handleClickToggle);
+        activeTrigger?.removeEventListener("keydown", handleKeydownToggle);
     }
 
     onMount(() => {
@@ -167,7 +159,7 @@
     on:focusin={handleFocusChange}
 />
 
-<div bind:this={container} class="toggler-container">
+<div bind:this={container} class="toggler-container" tabindex="-1">
     {#if active}
         <div
             bind:this={containerChild}
