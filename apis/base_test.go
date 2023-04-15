@@ -2,12 +2,15 @@ package apis_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/spf13/cast"
 )
 
 func Test404(t *testing.T) {
@@ -203,6 +206,86 @@ func TestRemoveTrailingSlashMiddleware(t *testing.T) {
 			ExpectedStatus:  200,
 			ExpectedContent: []string{"test123"},
 		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestEagerRequestDataCache(t *testing.T) {
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "[UNKNOWN] unsupported eager cached request method",
+			Method: "UNKNOWN",
+			Url:    "/custom",
+			Body:   strings.NewReader(`{"name":"test123"}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: "UNKNOWN",
+					Path:   "/custom",
+					Handler: func(c echo.Context) error {
+						data := &struct {
+							Name string `json:"name"`
+						}{}
+
+						if err := c.Bind(data); err != nil {
+							return err
+						}
+
+						// since the unknown method is not eager cache support
+						// it should fail reading the json body twice
+						r := apis.RequestData(c)
+						if v := cast.ToString(r.Data["name"]); v != "" {
+							t.Fatalf("Expected empty request data body, got, %v", r.Data)
+						}
+
+						return c.String(200, data.Name)
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+	}
+
+	// supported eager cache request methods
+	supportedMethods := []string{"POST", "PUT", "PATCH", "DELETE"}
+	for _, m := range supportedMethods {
+		scenarios = append(
+			scenarios,
+			tests.ApiScenario{
+				Name:   fmt.Sprintf("[%s] valid cached json body request", m),
+				Method: http.MethodPost,
+				Url:    "/custom",
+				Body:   strings.NewReader(`{"name":"test123"}`),
+				BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+					e.AddRoute(echo.Route{
+						Method: http.MethodPost,
+						Path:   "/custom",
+						Handler: func(c echo.Context) error {
+							data := &struct {
+								Name string `json:"name"`
+							}{}
+
+							if err := c.Bind(data); err != nil {
+								return err
+							}
+
+							// try to read the body again
+							r := apis.RequestData(c)
+							if v := cast.ToString(r.Data["name"]); v != "test123" {
+								t.Fatalf("Expected request data with name %q, got, %q", "test123", v)
+							}
+
+							return c.String(200, data.Name)
+						},
+					})
+				},
+				ExpectedStatus:  200,
+				ExpectedContent: []string{"test123"},
+			},
+		)
 	}
 
 	for _, scenario := range scenarios {

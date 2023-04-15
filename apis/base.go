@@ -121,6 +121,10 @@ func InitApi(app core.App) (*echo.Echo, error) {
 		return nil, err
 	}
 
+	// note: it is after the OnBeforeServe hook to ensure that the implicit
+	// cache is after any user custom defined middlewares
+	e.Use(eagerRequestDataCache(app))
+
 	// catch all any route
 	api.Any("/*", func(c echo.Context) error {
 		return echo.ErrNotFound

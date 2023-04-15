@@ -385,3 +385,19 @@ func realUserIp(r *http.Request, fallbackIp string) string {
 
 	return fallbackIp
 }
+
+// eagerRequestDataCache ensures that the request data is cached in the request
+// context to allow reading for example the json request body data more than once.
+func eagerRequestDataCache(app core.App) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			switch c.Request().Method {
+			// currently we are eagerly caching only the requests with body
+			case "POST", "PUT", "PATCH", "DELETE":
+				RequestData(c)
+			}
+
+			return next(c)
+		}
+	}
+}
