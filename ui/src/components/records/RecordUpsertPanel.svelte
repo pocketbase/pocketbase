@@ -63,13 +63,11 @@
 
         activeTab = TAB_FORM;
 
-        recordPanel?.show();
-
-        autofocusFirstInput();
+        return recordPanel?.show();
     }
 
     export function hide() {
-        recordPanel?.hide();
+        return recordPanel?.hide();
     }
 
     async function load(model) {
@@ -261,23 +259,6 @@
         await tick();
 
         initialFormHash = "";
-    }
-
-    async function autofocusFirstInput() {
-        await tick();
-
-        if (!isNew) {
-            return;
-        }
-
-        // autofocus the first available form element if no explicit autofocus is found
-        if (!recordForm.querySelector("[autofocus]")) {
-            recordForm
-                ?.querySelector(
-                    ".form-field:not(.noautofocus) input, .form-field:not(.noautofocus) textarea, .form-field:not(.noautofocus) select"
-                )
-                ?.focus();
-        }
     }
 </script>
 
