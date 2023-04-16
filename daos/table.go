@@ -97,6 +97,15 @@ func (dao *Dao) DeleteTable(tableName string) error {
 	return err
 }
 
+func (dao *Dao) TruncateTable(tableName string) error {
+	_, err := dao.DB().NewQuery(fmt.Sprintf(
+		"DELETE FROM {{%s}}",
+		tableName,
+	)).Execute()
+
+	return err
+}
+
 // Vacuum executes VACUUM on the current dao.DB() instance in order to
 // reclaim unused db disk space.
 func (dao *Dao) Vacuum() error {

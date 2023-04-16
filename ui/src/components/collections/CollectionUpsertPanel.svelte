@@ -181,6 +181,24 @@
         return data;
     }
 
+    function truncateConfirm() {
+        if (!original?.id) {
+            return; // nothing to truncate
+        }
+
+        confirm(`Do you really want to truncate collection "${original?.name}"?`, () => {
+            return ApiClient.collection(original?.id)
+                .truncate()
+                .then(() => {
+                    hide();
+                    addSuccessToast(`Successfully truncated collection "${original?.name}".`);
+                })
+                .catch((err) => {
+                    ApiClient.errorResponseHandler(err);
+                });
+        });
+    }
+
     function deleteConfirm() {
         if (!original?.id) {
             return; // nothing to delete
@@ -288,6 +306,14 @@
                     <button type="button" class="dropdown-item closable" on:click={() => duplicateConfirm()}>
                         <i class="ri-file-copy-line" />
                         <span class="txt">Duplicate</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="dropdown-item txt-danger closable"
+                        on:click|preventDefault|stopPropagation={() => truncateConfirm()}
+                    >
+                        <i class="ri-delete-bin-7-line" />
+                        <span class="txt">Truncate</span>
                     </button>
                     <button
                         type="button"

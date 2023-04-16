@@ -1,4 +1,4 @@
-import PocketBase, { LocalAuthStore, Admin } from "pocketbase";
+import PocketBase, { LocalAuthStore, Admin, RecordService } from "pocketbase";
 // ---
 import CommonHelper      from "@/utils/CommonHelper";
 import { replace }       from "svelte-spa-router";
@@ -17,6 +17,11 @@ PocketBase.prototype.logout = function(redirect = true) {
     if (redirect) {
         replace('/login');
     }
+};
+
+RecordService.prototype.truncate = async function () {
+    const path = this.baseCollectionPath + '/truncate';
+    return await this.client.send(path, { method: 'POST' });
 };
 
 /**

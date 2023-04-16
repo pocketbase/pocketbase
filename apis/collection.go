@@ -18,6 +18,7 @@ func bindCollectionApi(app core.App, rg *echo.Group) {
 	subGroup := rg.Group("/collections", ActivityLogger(app), RequireAdminAuth())
 	subGroup.GET("", api.list)
 	subGroup.POST("", api.create)
+	subGroup.POST("/:collection/truncate", api.truncate)
 	subGroup.GET("/:collection", api.view)
 	subGroup.PATCH("/:collection", api.update)
 	subGroup.DELETE("/:collection", api.delete)
@@ -172,6 +173,19 @@ func (api *collectionApi) delete(c echo.Context) error {
 	}
 
 	return handlerErr
+}
+
+func (api *collectionApi) truncate(c echo.Context) error {
+	collection, err := api.app.Dao().FindCollectionByNameOrId(c.PathParam("collection"))
+	if err != nil || collection == nil {
+		return NewNotFoundError("", err)
+	}
+
+	if err := api.app.Dao().TruncateTable(collection.Name); err != nil {
+		return NewBadRequestError("Failed to TruncateTable.", err)
+	}
+
+	return c.NoContent(http.StatusNoContent)
 }
 
 func (api *collectionApi) bulkImport(c echo.Context) error {
