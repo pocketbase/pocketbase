@@ -18,6 +18,8 @@
 
 - Added auto "draft" to allow restoring previous record state in case of accidental reload or power outage.
 
+- Added `Ctrl + S` shortcut to save the record changes without closing the panel.
+
 
 ## v0.14.5
 

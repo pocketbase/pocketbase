@@ -16,7 +16,7 @@
         updateTimeoutId = setTimeout(() => {
             if (inputElem) {
                 inputElem.style.height = ""; // reset
-                inputElem.style.height = Math.min(inputElem.scrollHeight + 2, maxHeight) + "px";
+                inputElem.style.height = Math.min(inputElem.scrollHeight, maxHeight) + "px";
             }
         }, 0);
     }

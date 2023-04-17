@@ -13,12 +13,12 @@
     let externalAuths = [];
     let isLoading = false;
 
-    function getProviderTitle(provider) {
-        return providersList[provider + "Auth"]?.title || CommonHelper.sentenize(provider, false);
+    function getProviderConfig(provider) {
+        return providersList.find((p) => p.key == provider + "Auth") || {};
     }
 
-    function getProviderIcon(provider) {
-        return providersList[provider + "Auth"]?.icon || `ri-${provider}-line`;
+    function getProviderTitle(provider) {
+        return getProviderConfig(provider)?.title || CommonHelper.sentenize(provider, false);
     }
 
     async function loadExternalAuths() {
@@ -69,7 +69,12 @@
     <div class="list">
         {#each externalAuths as auth}
             <div class="list-item">
-                <i class={getProviderIcon(auth.provider)} />
+                <figure class="provider-logo">
+                    <img
+                        src="{import.meta.env.BASE_URL}images/oauth2/{getProviderConfig(auth.provider)?.logo}"
+                        alt="Provider logo"
+                    />
+                </figure>
                 <span class="txt">{getProviderTitle(auth.provider)}</span>
                 <div class="txt-hint">ID: {auth.providerId}</div>
                 <button

@@ -832,3 +832,34 @@ a.thumb:not(.thumb-active) {
 .entrance-right {
     animation: entranceRight var(--entranceAnimationSpeed);
 }
+
+.provider-logo {
+    $boxSize: 32px;
+    $imgSize: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: $boxSize;
+    height: $boxSize;
+    border-radius: var(--baseRadius);
+    background: var(--bodyColor);
+    padding: 0;
+    gap: 0;
+    img {
+        max-width: $imgSize;
+        max-height: $imgSize;
+        height: auto;
+        flex-shrink: 0;
+    }
+}
+.provider-card {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    gap: 10px;
+    padding: 10px;
+    border-radius: var(--baseRadius);
+    border: 1px solid var(--baseAlt1Color);
+}

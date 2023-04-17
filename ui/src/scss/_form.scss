@@ -342,6 +342,23 @@ button {
     display: inline-flex;
     align-items: center;
     gap: var(--xsSpacing);
+    &.no-gap {
+        gap: 0;
+        > * {
+            border-radius: 0;
+            min-width: 0;
+            box-shadow: -1px 0px 0px 0px rgba(#fff, 0.1);
+        }
+        > *:first-child {
+            border-top-left-radius: var(--btnRadius);
+            border-bottom-left-radius: var(--btnRadius);
+            box-shadow: none;
+        }
+        > *:last-child {
+            border-top-right-radius: var(--btnRadius);
+            border-bottom-right-radius: var(--btnRadius);
+        }
+    }
 }
 
 %input {

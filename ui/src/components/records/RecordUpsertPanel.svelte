@@ -151,7 +151,7 @@
         window.localStorage.removeItem(draftKey());
     }
 
-    function save() {
+    function save(hidePanel = true) {
         if (isSaving || !canSave || !collection?.id) {
             return;
         }
@@ -170,9 +170,13 @@
         request
             .then((result) => {
                 addSuccessToast(isNew ? "Successfully created record." : "Successfully updated record.");
-                confirmClose = false;
                 deleteDraft();
-                hide();
+                if (hidePanel) {
+                    confirmClose = false;
+                    hide();
+                } else {
+                    show(result);
+                }
                 dispatch("save", result);
             })
             .catch((err) => {
@@ -318,11 +322,20 @@
             }
         }
 
+        deleteDraft();
         show(clone);
 
         await tick();
 
         originalSerializedData = "";
+    }
+
+    function handleFormKeydown(e) {
+        if (e.ctrlKey && e.code == "KeyS") {
+            e.preventDefault();
+            e.stopPropagation();
+            save(false);
+        }
     }
 </script>
 
@@ -352,7 +365,7 @@
     on:show
 >
     <svelte:fragment slot="header">
-        <h4>
+        <h4 class="panel-title">
             {isNew ? "New" : "Edit"}
             <strong>{collection?.name}</strong> record
         </h4>
@@ -426,6 +439,7 @@
             class="tab-item"
             class:active={activeTab === tabFormKey}
             on:submit|preventDefault={save}
+            on:keydown={handleFormKeydown}
         >
             {#if !hasChanges && initialDraft}
                 <div class="block" out:slide={{ duration: 150 }}>
@@ -548,3 +562,9 @@
         </button>
     </svelte:fragment>
 </OverlayPanel>
+
+<style>
+    .panel-title {
+        line-height: var(--smBtnHeight);
+    }
+</style>
