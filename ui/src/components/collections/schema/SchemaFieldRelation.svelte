@@ -6,7 +6,7 @@
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
-    import { collections } from "@/stores/collections";
+    import { collections, activeCollection } from "@/stores/collections";
 
     export let field;
     export let key = "";
@@ -207,7 +207,9 @@
                             use:tooltip={{
                                 text: `Whether on ${
                                     selectedColection?.name || "relation"
-                                } record deletion to delete also its relation field associated records.`,
+                                } record deletion to delete also the ${
+                                    $activeCollection?.name || "field"
+                                } associated records.`,
                                 position: "top",
                             }}
                         />
