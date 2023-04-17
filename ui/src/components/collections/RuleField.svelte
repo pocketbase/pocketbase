@@ -61,14 +61,19 @@
     >
         <div class="input-wrapper">
             <label for={uniqueId}>
+                <slot name="beforeLabel" {isAdminOnly} />
+
                 <span class="txt" class:txt-hint={isAdminOnly}>
                     {label}
                     {isAdminOnly ? "- Admins only" : ""}
                 </span>
+
+                <slot name="afterLabel" {isAdminOnly} />
+
                 {#if !isAdminOnly}
                     <button
                         type="button"
-                        class="btn  btn-sm btn-transparent btn-hint lock-toggle"
+                        class="btn btn-sm btn-transparent btn-hint lock-toggle"
                         on:click={lock}
                     >
                         <i class="ri-lock-line" />

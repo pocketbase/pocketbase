@@ -71,13 +71,13 @@
 
         ...
 
-        // This method initializes a one-off realtime subscription and will
-        // open a popup window with the OAuth2 vendor page to authenticate.
+        // OAuth2 authentication with a single realtime call.
         //
-        // Once the external OAuth2 sign-in/sign-up flow is completed, the popup
-        // window will be automatically closed and the OAuth2 data sent back
-        // to the user through the previously established realtime connection.
+        // Make sure to register ${backendAbsUrl}/api/oauth2-redirect as redirect url.
         const authData = await pb.collection('users').authWithOAuth2({ provider: 'google' });
+
+        // OR authenticate with manual OAuth2 code exchange
+        // const authData = await pb.collection('users').authWithOAuth2Code(...);
 
         // after the above you can also access the auth data from the authStore
         console.log(pb.authStore.isValid);
@@ -95,15 +95,15 @@
 
         ...
 
-        // This method initializes a one-off realtime subscription and will
-        // call the provided urlCallback with the OAuth2 vendor url to authenticate.
+        // OAuth2 authentication with a single realtime call.
         //
-        // Once the external OAuth2 sign-in/sign-up flow is completed, the browser
-        // window will be automatically closed and the OAuth2 data sent back
-        // to the user through the previously established realtime connection.
+        // Make sure to register ${backendAbsUrl}/api/oauth2-redirect as redirect url.
         final authData = await pb.collection('users').authWithOAuth2('google', (url) async {
           await launchUrl(url);
         });
+
+        // OR authenticate with manual OAuth2 code exchange
+        // final authData = await pb.collection('users').authWithOAuth2Code(...);
 
         // after the above you can also access the auth data from the authStore
         print(pb.authStore.isValid);

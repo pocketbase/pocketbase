@@ -1,6 +1,7 @@
 <script>
     import { slide } from "svelte/transition";
     import { Collection } from "pocketbase";
+    import tooltip from "@/actions/tooltip";
     import CommonHelper from "@/utils/CommonHelper";
     import RuleField from "@/components/collections/RuleField.svelte";
 
@@ -79,15 +80,27 @@
 
 <RuleField label="View rule" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
-{#if !collection?.isView}
-    <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule} />
+{#if !collection?.$isView}
+    <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule}>
+        <svelte:fragment slot="afterLabel" let:isAdminOnly>
+            {#if !isAdminOnly}
+                <i
+                    class="ri-information-line link-hint"
+                    use:tooltip={{
+                        text: `The Create rule is executed after a "dry save" of the submitted data, giving you access to the main record fields as in every other rule.`,
+                        position: "top",
+                    }}
+                />
+            {/if}
+        </svelte:fragment>
+    </RuleField>
 
     <RuleField label="Update rule" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
 
     <RuleField label="Delete rule" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
 {/if}
 
-{#if collection?.isAuth}
+{#if collection?.$isAuth}
     <RuleField
         label="Manage rule"
         formKey="options.manageRule"
