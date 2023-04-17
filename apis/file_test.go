@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -20,8 +21,32 @@ func TestFileToken(t *testing.T) {
 			Name:            "unauthorized",
 			Method:          http.MethodPost,
 			Url:             "/api/files/token",
-			ExpectedStatus:  401,
+			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnFileBeforeTokenRequest": 1,
+			},
+		},
+		{
+			Name:   "unauthorized with model and token via hook",
+			Method: http.MethodPost,
+			Url:    "/api/files/token",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnFileBeforeTokenRequest().Add(func(e *core.FileTokenEvent) error {
+					record, _ := app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+					e.Model = record
+					e.Token = "test"
+					return nil
+				})
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"token":"test"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnFileBeforeTokenRequest": 1,
+				"OnFileAfterTokenRequest":  1,
+			},
 		},
 		{
 			Name:   "auth record",

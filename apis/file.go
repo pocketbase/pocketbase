@@ -28,7 +28,7 @@ func bindFileApi(app core.App, rg *echo.Group) {
 	api := fileApi{app: app}
 
 	subGroup := rg.Group("/files", ActivityLogger(app))
-	subGroup.POST("/token", api.fileToken, RequireAdminOrRecordAuth())
+	subGroup.POST("/token", api.fileToken)
 	subGroup.HEAD("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 	subGroup.GET("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
 }
@@ -50,7 +50,7 @@ func (api *fileApi) fileToken(c echo.Context) error {
 	}
 
 	handlerErr := api.app.OnFileBeforeTokenRequest().Trigger(event, func(e *core.FileTokenEvent) error {
-		if e.Token == "" {
+		if e.Model == nil || e.Token == "" {
 			return NewBadRequestError("Failed to generate file token.", nil)
 		}
 
