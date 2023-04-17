@@ -6,6 +6,7 @@
     import Field from "@/components/base/Field.svelte";
     import UploadedFilePreview from "@/components/base/UploadedFilePreview.svelte";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
+    import { onMount } from "svelte";
 
     export let record;
     export let value = "";
@@ -16,6 +17,7 @@
     let fileInput;
     let filesListElem;
     let isDragOver = false;
+    let fileToken = "";
 
     // normalize uploadedFiles type
     $: if (!Array.isArray(uploadedFiles)) {
@@ -93,6 +95,10 @@
 
         uploadedFiles = uploadedFiles;
     }
+
+    onMount(async () => {
+        fileToken = await ApiClient.getAdminFileToken(record.collectionId);
+    });
 </script>
 
 <div
@@ -129,7 +135,7 @@
 
                     <div class="content">
                         <a
-                            href={ApiClient.files.getUrl(record, filename)}
+                            href={ApiClient.files.getUrl(record, filename, { token: fileToken })}
                             class="txt-ellipsis {isDeleted ? 'txt-strikethrough txt-hint' : 'link-primary'}"
                             title="Download"
                             target="_blank"

@@ -1,10 +1,13 @@
 import PocketBase, { LocalAuthStore, Admin, isTokenExpired } from "pocketbase";
 // ---
-import CommonHelper      from "@/utils/CommonHelper";
-import { replace }       from "svelte-spa-router";
-import { addErrorToast } from "@/stores/toasts";
-import { setErrors }     from "@/stores/errors";
-import { setAdmin }      from "@/stores/admin";
+import CommonHelper                     from "@/utils/CommonHelper";
+import { replace }                      from "svelte-spa-router";
+import { get }                          from "svelte/store";
+import { addErrorToast }                from "@/stores/toasts";
+import { setErrors }                    from "@/stores/errors";
+import { setAdmin }                     from "@/stores/admin";
+import { protectedFilesCollectionsCache } from "@/stores/collections";
+
 
 const adminFileTokenKey = "pb_admin_file_token";
 
@@ -17,7 +20,7 @@ PocketBase.prototype.logout = function(redirect = true) {
     this.authStore.clear();
 
     if (redirect) {
-        replace('/login');
+        replace("/login");
     }
 };
 
@@ -28,7 +31,7 @@ PocketBase.prototype.logout = function(redirect = true) {
  * @param  {Boolean} notify     Whether to add a toast notification.
  * @param  {String}  defaultMsg Default toast notification message if the error doesn't have one.
  */
-PocketBase.prototype.errorResponseHandler = function(err, notify = true, defaultMsg = '') {
+PocketBase.prototype.errorResponseHandler = function(err, notify = true, defaultMsg = "") {
     if (!err || !(err instanceof Error) || err.isAbort) {
         return;
     }
@@ -61,15 +64,28 @@ PocketBase.prototype.errorResponseHandler = function(err, notify = true, default
     // forbidden
     if (statusCode === 403) {
         this.cancelAllRequests();
-        return replace('/');
+        return replace("/");
     }
 };
 
 /**
  * @return {Promise<String>}
  */
-PocketBase.prototype.getAdminFileToken = async function() {
-    let token = localStorage.getItem(adminFileTokenKey) || '';
+PocketBase.prototype.getAdminFileToken = async function(collectionId = "") {
+    let needToken = true;
+
+    if (collectionId) {
+        const protectedCollections = get(protectedFilesCollectionsCache);
+        needToken = typeof protectedCollections[collectionId] !== "undefined"
+            ? protectedCollections[collectionId]
+            : true;
+    }
+
+    if (!needToken) {
+        return "";
+    }
+
+    let token = localStorage.getItem(adminFileTokenKey) || "";
 
     // request a new token only if the previous one is missing or will expire soon
     if (!token || isTokenExpired(token, 15)) {

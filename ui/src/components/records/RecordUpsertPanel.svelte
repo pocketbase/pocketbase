@@ -92,6 +92,9 @@
         initialDraft = getDraft();
         if (!initialDraft || areRecordsEqual(record, initialDraft)) {
             initialDraft = null;
+        } else {
+            delete initialDraft.password;
+            delete initialDraft.passwordConfirm;
         }
 
         originalSerializedData = JSON.stringify(record);
@@ -482,7 +485,7 @@
             </Field>
 
             {#if collection?.isAuth}
-                <AuthFields bind:record {collection} />
+                <AuthFields bind:record {isNew} {collection} />
 
                 {#if collection?.schema?.length}
                     <hr />

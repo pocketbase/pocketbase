@@ -16,6 +16,8 @@
 
 - Refreshed the OAuth2 Admin UI.
 
+- Added auto "draft" to allow restoring previous record state in case of accidental reload or power outage.
+
 
 ## v0.14.5
 

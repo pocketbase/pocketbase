@@ -2,10 +2,10 @@ import { writable } from "svelte/store";
 import ApiClient    from "@/utils/ApiClient";
 import CommonHelper from "@/utils/CommonHelper";
 
-export const collections           = writable([]);
-export const activeCollection      = writable({});
-export const isCollectionsLoading  = writable(false);
-export const privateFilesCollectionsCache = writable({});
+export const collections                    = writable([]);
+export const activeCollection               = writable({});
+export const isCollectionsLoading           = writable(false);
+export const protectedFilesCollectionsCache = writable({});
 
 export function changeActiveCollectionById(collectionId) {
     collections.update((list) => {
@@ -82,7 +82,7 @@ export async function loadCollections(activeId = null) {
 }
 
 function refreshProtectedFilesCollectionsCache() {
-    privateFilesCollectionsCache.update((cache) => {
+    protectedFilesCollectionsCache.update((cache) => {
         collections.update((current) => {
             for (let c of current) {
                 cache[c.id] = !!c.schema?.find((f) => f.type == "file" && f.options?.protected);

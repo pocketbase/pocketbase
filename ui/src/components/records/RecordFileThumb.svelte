@@ -2,7 +2,6 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import PreviewPopup from "@/components/base/PreviewPopup.svelte";
-    import { privateFilesCollectionsCache } from "@/stores/collections";
 
     export let record = null;
     export let filename = "";
@@ -14,16 +13,7 @@
     let token = "";
     let isLoadingToken = false;
 
-    $: withToken =
-        typeof $privateFilesCollectionsCache[record?.collectionId] !== "undefined"
-            ? $privateFilesCollectionsCache[record?.collectionId]
-            : true;
-
-    $: if (withToken) {
-        loadFileToken();
-    } else {
-        token = "";
-    }
+    loadFileToken();
 
     $: type = CommonHelper.getFileType(filename);
 
@@ -39,7 +29,7 @@
         isLoadingToken = true;
 
         try {
-            token = await ApiClient.getAdminFileToken();
+            token = await ApiClient.getAdminFileToken(record.collectionId);
         } catch (err) {
             console.warn("File token failure:", err);
         }
