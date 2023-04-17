@@ -310,7 +310,7 @@ type App interface {
 	// OnFileBeforeTokenRequest hook is triggered before each file
 	// token API request.
 	//
-	// If not token or model was submitted, e.Model and e.Token will be empty,
+	// If no token or model was submitted, e.Model and e.Token will be empty,
 	// allowing you to implement your own custom model file auth implementation.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,

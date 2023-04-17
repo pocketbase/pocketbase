@@ -103,7 +103,7 @@ func (api *fileApi) download(c echo.Context) error {
 		adminOrAuthRecord, _ := api.findAdminOrAuthRecordByFileToken(token)
 
 		if !api.canAccessRecord(adminOrAuthRecord, record, record.Collection().ViewRule) {
-			return NewForbiddenError("Unsufficient permissions to access the file resource.", nil)
+			return NewForbiddenError("Insufficient permissions to access the file resource.", nil)
 		}
 	}
 
