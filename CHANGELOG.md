@@ -1,4 +1,4 @@
-## (WIP)
+## v0.15.0
 
 - Simplified the OAuth2 authentication flow in a single "all in one" call ([#55](https://github.com/pocketbase/pocketbase/issues/55)).
   Requires JS SDK v0.14.0+ or Dart SDK v0.9.0+.
@@ -14,11 +14,13 @@
 
 - Added simple loose wildcard search term support in the Admin UI.
 
-- Refreshed the OAuth2 Admin UI.
-
 - Added auto "draft" to allow restoring previous record state in case of accidental reload or power outage.
 
 - Added `Ctrl + S` shortcut to save the record changes without closing the panel.
+
+- Added "drop files" support for the file upload field.
+
+- Refreshed the OAuth2 Admin UI.
 
 
 ## v0.14.5
