@@ -1,4 +1,4 @@
-import{S as re,i as ae,s as be,M as ue,C as P,e as u,w as y,b as a,c as te,f as p,g as t,h as I,m as ne,x as pe,t as ie,a as le,o as n,d as ce,R as me,p as de}from"./index-e5007277.js";import{S as fe}from"./SdkTabs-e5fbf56f.js";function $e(o){var B,U,W,A,H,L,M,T,q,j,J,N;let i,m,l=o[0].name+"",b,d,h,f,_,$,k,c,S,v,w,R,C,g,E,r,D;return c=new fe({props:{js:`
+import{S as re,i as ae,s as be,M as ue,C as P,e as u,w as y,b as a,c as te,f as p,g as t,h as I,m as ne,x as pe,t as ie,a as le,o as n,d as ce,T as me,p as de}from"./index-7275477a.js";import{S as fe}from"./SdkTabs-3e2121ec.js";function $e(o){var B,U,W,T,A,H,L,M,q,j,J,N;let i,m,l=o[0].name+"",b,d,h,f,_,$,k,c,S,v,w,R,C,g,E,r,D;return c=new fe({props:{js:`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${o[1]}');
@@ -19,9 +19,9 @@ import{S as re,i as ae,s as be,M as ue,C as P,e as u,w as y,b as a,c as te,f as 
         });
 
         // Unsubscribe
-        pb.collection('${(A=o[0])==null?void 0:A.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
-        pb.collection('${(H=o[0])==null?void 0:H.name}').unsubscribe('*'); // remove all '*' topic subscriptions
-        pb.collection('${(L=o[0])==null?void 0:L.name}').unsubscribe(); // remove all subscriptions in the collection
+        pb.collection('${(T=o[0])==null?void 0:T.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${(A=o[0])==null?void 0:A.name}').unsubscribe('*'); // remove all '*' topic subscriptions
+        pb.collection('${(H=o[0])==null?void 0:H.name}').unsubscribe(); // remove all subscriptions in the collection
     `,dart:`
         import 'package:pocketbase/pocketbase.dart';
 
@@ -32,8 +32,8 @@ import{S as re,i as ae,s as be,M as ue,C as P,e as u,w as y,b as a,c as te,f as 
         // (Optionally) authenticate
         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-        // Subscribe to changes in any ${(M=o[0])==null?void 0:M.name} record
-        pb.collection('${(T=o[0])==null?void 0:T.name}').subscribe('*', (e) {
+        // Subscribe to changes in any ${(L=o[0])==null?void 0:L.name} record
+        pb.collection('${(M=o[0])==null?void 0:M.name}').subscribe('*', (e) {
             console.log(e.record);
         });
 
