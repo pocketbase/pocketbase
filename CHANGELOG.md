@@ -1,3 +1,8 @@
+## (WIP) v0.15.1
+
+- Fixed `Ctrl + S` in the `editor` field not propagating the quick save shortcut to the parent form.
+
+
 ## v0.15.0
 
 - Simplified the OAuth2 authentication flow in a single "all in one" call ([#55](https://github.com/pocketbase/pocketbase/issues/55)).

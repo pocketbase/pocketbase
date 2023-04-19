@@ -4,7 +4,6 @@
     import { pageTitle } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
-    import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import TokenField from "@/components/settings/TokenField.svelte";
 
@@ -13,13 +12,13 @@
         { key: "recordVerificationToken", label: "Auth record email verification token" },
         { key: "recordPasswordResetToken", label: "Auth record password reset token" },
         { key: "recordEmailChangeToken", label: "Auth record email change token" },
-        { key: "recordFileToken", label: "Records private file access token" },
+        { key: "recordFileToken", label: "Records protected file access token" },
     ];
 
     const adminTokensList = [
         { key: "adminAuthToken", label: "Admins auth token" },
         { key: "adminPasswordResetToken", label: "Admins password reset token" },
-        { key: "adminFileToken", label: "Admins private file access token" },
+        { key: "adminFileToken", label: "Admins protected file access token" },
     ];
 
     $pageTitle = "Token options";
