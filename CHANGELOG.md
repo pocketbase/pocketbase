@@ -1,4 +1,7 @@
-## (WIP)
+## (WIP) v0.15.1
+
+- Fixed `Ctrl + S` in the `editor` field not propagating the quick save shortcut to the parent form.
+
 
 ## v0.15.0
 

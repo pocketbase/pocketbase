@@ -1324,6 +1324,16 @@ export default class CommonHelper {
 
                 input.click();
             },
+            setup: (editor) => {
+                editor.on('keydown', (e) => {
+                    // propagate save shortcut to the parent
+                    if (e.ctrlKey && e.code == "KeyS" && editor.formElement) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        editor.formElement.dispatchEvent(new KeyboardEvent("keydown", e));
+                    }
+                })
+            },
         };
     }
 
