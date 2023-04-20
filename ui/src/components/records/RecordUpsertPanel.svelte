@@ -101,7 +101,8 @@
         isLoaded = true;
     }
 
-    function replaceOriginal(newOriginal) {
+    async function replaceOriginal(newOriginal) {
+        setErrors({}); // reset errors
         original = newOriginal || new Record();
         uploadedFilesMap = {};
         deletedFileIndexesMap = {};
@@ -114,6 +115,9 @@
             }
             record[k] = newOriginal[k];
         }
+
+        // wait to populate the fields to get the normalized values
+        await tick();
 
         originalSerializedData = JSON.stringify(record);
 
@@ -353,7 +357,7 @@
     }
 
     function handleFormKeydown(e) {
-        if (e.ctrlKey && e.code == "KeyS") {
+        if ((e.ctrlKey || e.metaKey) && e.code == "KeyS") {
             e.preventDefault();
             e.stopPropagation();
             save(false);
