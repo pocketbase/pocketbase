@@ -1,4 +1,9 @@
-## (WIP) v0.15.1
+## (WIP)
+
+- Added `apis.Serve(app, options)` helper to allow starting the API server programmatically.
+
+
+## v0.15.1
 
 - Fixed `Ctrl + S` in the `editor` field not propagating the quick save shortcut to the parent form.
 
