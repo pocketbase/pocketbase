@@ -1207,7 +1207,6 @@ select {
     .tox-tinymce {
         border-radius: var(--baseRadius);
         border: 0;
-        transition: height var(--baseAnimationSpeed);
     }
     .form-field label ~ & {
         padding: 5px 2px 2px 2px;
