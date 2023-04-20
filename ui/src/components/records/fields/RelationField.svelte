@@ -1,4 +1,5 @@
 <script>
+    import { onDestroy } from "svelte";
     import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
@@ -16,6 +17,7 @@
     let fieldRef;
     let list = [];
     let isLoading = false;
+    let loadTimeoutId;
 
     $: isMultiple = field.options?.maxSelect != 1;
 
@@ -24,7 +26,12 @@
     }
 
     $: if (needLoad(list, value)) {
-        load();
+        // Move the load function to the end of the execution queue.
+        //
+        // It helps reducing the layout shifts (the relation field has fixed height skeleton loader)
+        // and allows the other form fields to load sooner.
+        clearTimeout(loadTimeoutId);
+        loadTimeoutId = setTimeout(load, 0);
     }
 
     function needLoad() {
@@ -100,6 +107,10 @@
             value = list[0]?.id || "";
         }
     }
+
+    onDestroy(() => {
+        clearTimeout(loadTimeoutId);
+    });
 </script>
 
 <Field
