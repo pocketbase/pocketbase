@@ -1,5 +1,17 @@
 ## (WIP)
 
+- Added new `./pocketbase admin` console command:
+  ```sh
+  // creates new admin account
+  ./pocketbase admin create test@example.com 123456890
+
+  // changes the password of an existing admin account
+  ./pocketbase admin update test@example.com 0987654321
+
+  // deletes single admin account (if exists)
+  ./pocketbase admin delete test@example.com
+  ```
+
 - Added `apis.Serve(app, options)` helper to allow starting the API server programmatically.
 
 
