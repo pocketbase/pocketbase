@@ -6,6 +6,8 @@
 
 - Enabled RTL for the TinyMCE editor ([#2327](https://github.com/pocketbase/pocketbase/issues/2327)).
 
+- Reduced the record form vertical layout shifts and slightly improved the rendering speed when loading multiple `relation` fields.
+
 - Trigger the related `Record` model realtime subscription events on [custom model struct](https://pocketbase.io/docs/custom-models/) save ([#2325](https://github.com/pocketbase/pocketbase/discussions/2325)).
 
 
