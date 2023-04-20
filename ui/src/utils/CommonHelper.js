@@ -1360,7 +1360,7 @@ export default class CommonHelper {
                             },
                             {
                                 type: "menuitem",
-                                text: "RTR content",
+                                text: "RTL content",
                                 icon: "rtl",
                                 onAction: () => {
                                     window?.localStorage?.setItem(lastDirectionKey, "rtl");
