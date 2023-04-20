@@ -310,7 +310,7 @@
             <span class="txt">Cancel</span>
         </button>
         <button type="button" class="btn" on:click={() => save()}>
-            <span class="txt">Save selection</span>
+            <span class="txt">Set selection</span>
         </button>
     </svelte:fragment>
 </OverlayPanel>

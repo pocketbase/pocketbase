@@ -23,13 +23,28 @@
         fieldRef?.changed();
     }
 
-    load();
+    $: if (needLoad(list, value)) {
+        load();
+    }
+
+    function needLoad() {
+        if (isLoading) {
+            return false;
+        }
+
+        const ids = CommonHelper.toArray(value);
+
+        list = list.filter((item) => ids.includes(item.id));
+
+        return ids.length != list.length;
+    }
 
     async function load() {
         const ids = CommonHelper.toArray(value);
 
+        list = []; // reset
+
         if (!field?.options?.collectionId || !ids.length) {
-            list = [];
             isLoading = false;
             return;
         }
@@ -100,7 +115,7 @@
 
     <div class="list">
         <div class="relations-list">
-            {#each list as record}
+            {#each list as record (record.id)}
                 <div class="list-item">
                     <div class="content">
                         <RecordInfo {record} displayFields={field.options?.displayFields} />
