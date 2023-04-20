@@ -1288,9 +1288,9 @@ export default class CommonHelper {
                 "table",
                 "code",
                 "codesample",
+                "directionality",
             ],
-            toolbar:
-                "undo redo | styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image table codesample | code fullscreen",
+            toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image table codesample direction | code fullscreen",
             file_picker_types: "image",
             // @see https://www.tiny.cloud/docs/tinymce/6/file-image-upload/#interactive-example
             file_picker_callback: (cb, value, meta) => {
@@ -1332,7 +1332,46 @@ export default class CommonHelper {
                         e.stopPropagation();
                         editor.formElement.dispatchEvent(new KeyboardEvent("keydown", e));
                     }
-                })
+                });
+
+                const lastDirectionKey = "tinymce_last_direction";
+
+                // load last used text direction for blank editors
+                editor.on('init', () => {
+                    const lastDirection = window?.localStorage?.getItem(lastDirectionKey);
+                    if (!editor.isDirty() && editor.getContent() == "" && lastDirection == "rtl") {
+                        editor.execCommand("mceDirectionRTL");
+                    }
+                });
+
+                // text direction dropdown
+                editor.ui.registry.addMenuButton("direction", {
+                    icon: "visualchars",
+                    fetch: (callback) => {
+                        const items = [
+                            {
+                                type: "menuitem",
+                                text: "LTR content",
+                                icon: "ltr",
+                                onAction: () => {
+                                    window?.localStorage?.setItem(lastDirectionKey, "ltr");
+                                    tinymce.activeEditor.execCommand("mceDirectionLTR");
+                                }
+                            },
+                            {
+                                type: "menuitem",
+                                text: "RTR content",
+                                icon: "rtl",
+                                onAction: () => {
+                                    window?.localStorage?.setItem(lastDirectionKey, "rtl");
+                                    tinymce.activeEditor.execCommand("mceDirectionRTL");
+                                }
+                            }
+                        ];
+
+                        callback(items);
+                    }
+                });
             },
         };
     }
