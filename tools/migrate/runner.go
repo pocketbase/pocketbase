@@ -50,7 +50,6 @@ func (r *Runner) Run(args ...string) error {
 	case "up":
 		applied, err := r.Up()
 		if err != nil {
-			color.Red(err.Error())
 			return err
 		}
 
@@ -75,7 +74,6 @@ func (r *Runner) Run(args ...string) error {
 
 		names, err := r.lastAppliedMigrations(toRevertCount)
 		if err != nil {
-			color.Red(err.Error())
 			return err
 		}
 
@@ -95,7 +93,6 @@ func (r *Runner) Run(args ...string) error {
 
 		reverted, err := r.Down(toRevertCount)
 		if err != nil {
-			color.Red(err.Error())
 			return err
 		}
 
@@ -110,7 +107,6 @@ func (r *Runner) Run(args ...string) error {
 		return nil
 	case "history-sync":
 		if err := r.removeMissingAppliedMigrations(); err != nil {
-			color.Red(err.Error())
 			return err
 		}
 

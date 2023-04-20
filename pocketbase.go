@@ -1,7 +1,6 @@
 package pocketbase
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -9,6 +8,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/cmd"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -171,7 +171,9 @@ func (pb *PocketBase) Execute() error {
 	go func() {
 		defer wg.Done()
 		if err := pb.RootCmd.Execute(); err != nil {
-			log.Println(err)
+			// @todo replace with db log once generalized logs are added
+			// (note may need to update the existing commands to not silence errors)
+			color.Red(err.Error())
 		}
 	}()
 
