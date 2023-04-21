@@ -1207,10 +1207,22 @@ select {
     .tox-tinymce {
         border-radius: var(--baseRadius);
         border: 0;
-        transition: height var(--baseAnimationSpeed);
     }
     .form-field label ~ & {
+        position: relative;
         padding: 5px 2px 2px 2px;
+        // blank placeholder
+        &:before {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            top: 5px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: #fff;
+            border-radius: var(--baseRadius);
+        }
     }
 }
 body {
