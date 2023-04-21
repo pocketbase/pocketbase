@@ -599,12 +599,10 @@ export default class CommonHelper {
             str = str.replace(specialCharsMap[k], k);
         }
 
-        const slug = str
+        return str
             .replace(new RegExp('[' + preserved.join('') + ']', 'g'), ' ') // replace preserved characters with spaces
             .replace(/[^\w\ ]/gi, '')                                      // replaces all non-alphanumeric with empty string
             .replace(/\s+/g, delimiter);                                   // collapse whitespaces and replace with `delimiter`
-
-        return slug.charAt(0).toLowerCase() + slug.slice(1);
     }
 
     /**
