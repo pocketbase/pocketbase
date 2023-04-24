@@ -409,6 +409,20 @@ func TestCreateViewSchema(t *testing.T) {
 				"custom":        schema.FieldTypeJson,
 			},
 		},
+		{
+			"query with distinct and reordered id column",
+			`select distinct
+				id as id2,
+				id,
+				123 as custom
+			from demo1
+			`,
+			false,
+			map[string]string{
+				"id2":    schema.FieldTypeRelation,
+				"custom": schema.FieldTypeJson,
+			},
+		},
 	}
 
 	for _, s := range scenarios {

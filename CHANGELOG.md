@@ -1,3 +1,8 @@
+## (WIP) v0.15.2
+
+- Fixed view query `SELECT DISTINCT` identifiers parsing ([#2349](https://github.com/pocketbase/pocketbase/discussions/2349#discussioncomment-5706019)).
+
+
 ## v0.15.1
 
 - Trigger the related `Record` model realtime subscription events on [custom model struct](https://pocketbase.io/docs/custom-models/) save ([#2325](https://github.com/pocketbase/pocketbase/discussions/2325)).

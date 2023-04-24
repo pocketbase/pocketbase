@@ -462,6 +462,8 @@ func (p *identifiersParser) parse(selectQuery string) error {
 			skip = false
 			partType = "select"
 			activeBuilder = &selectParts
+		case "distinct":
+			continue // ignore as it is not important for the identifiers parsing
 		case "from":
 			skip = false
 			partType = "from"
@@ -477,7 +479,7 @@ func (p *identifiersParser) parse(selectQuery string) error {
 			partType = "join"
 			activeBuilder = &joinParts
 		case "_discard_":
-			// do nothing...
+			// skip following tokens
 			skip = true
 		default:
 			isJoin := partType == "join"
