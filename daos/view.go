@@ -311,6 +311,7 @@ func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, 
 
 		if field != nil {
 			clone := *field
+			clone.Id = "" // unset to prevent duplications if the same field is aliased multiple times
 			clone.Name = col.alias
 			result[col.alias] = &queryField{
 				field:      &clone,
