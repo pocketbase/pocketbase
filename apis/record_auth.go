@@ -642,9 +642,13 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 	state := c.QueryParam("state")
 	code := c.QueryParam("code")
 
+	if code == "" || state == "" {
+		return NewBadRequestError("Invalid OAuth2 redirect parameters.", nil)
+	}
+
 	client, err := api.app.SubscriptionsBroker().ClientById(state)
 	if err != nil || client.IsDiscarded() || !client.HasSubscription(oauth2SubscriptionTopic) {
-		return NewNotFoundError("Missing or invalid oauth2 subscription client", err)
+		return NewNotFoundError("Missing or invalid OAuth2 subscription client.", err)
 	}
 
 	data := map[string]string{
@@ -654,7 +658,7 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 
 	encodedData, err := json.Marshal(data)
 	if err != nil {
-		return NewBadRequestError("Failed to marshalize oauth2 redirect data", err)
+		return NewBadRequestError("Failed to marshalize OAuth2 redirect data.", err)
 	}
 
 	msg := subscriptions.Message{

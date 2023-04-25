@@ -1175,21 +1175,28 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 		{
 			Name:            "no state query param",
 			Method:          http.MethodGet,
-			Url:             "/api/oauth2-redirect",
-			ExpectedStatus:  404,
+			Url:             "/api/oauth2-redirect?code=123",
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "no code query param",
+			Method:          http.MethodGet,
+			Url:             "/api/oauth2-redirect?state=" + c3.Id(),
+			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
 			Name:            "missing client",
 			Method:          http.MethodGet,
-			Url:             "/api/oauth2-redirect?state=missing",
+			Url:             "/api/oauth2-redirect?code=123&state=missing",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
 			Name:            "discarded client with @oauth2 subscription",
 			Method:          http.MethodGet,
-			Url:             "/api/oauth2-redirect?state=" + c5.Id(),
+			Url:             "/api/oauth2-redirect?code=123&state=" + c5.Id(),
 			BeforeTestFunc:  beforeTestFunc,
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
@@ -1197,7 +1204,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 		{
 			Name:            "client without @oauth2 subscription",
 			Method:          http.MethodGet,
-			Url:             "/api/oauth2-redirect?state=" + c4.Id(),
+			Url:             "/api/oauth2-redirect?code=123&state=" + c4.Id(),
 			BeforeTestFunc:  beforeTestFunc,
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
@@ -1205,7 +1212,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 		{
 			Name:   "client with @oauth2 subscription",
 			Method: http.MethodGet,
-			Url:    "/api/oauth2-redirect?state=" + c3.Id(),
+			Url:    "/api/oauth2-redirect?code=123&state=" + c3.Id(),
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				beforeTestFunc(t, app, e)
 
