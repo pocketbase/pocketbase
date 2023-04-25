@@ -4,6 +4,8 @@
 
 - Fixed View collection schema incorrectly resolving multiple aliased fields originating from the same field source ([#2349-5707675](https://github.com/pocketbase/pocketbase/discussions/2349#discussioncomment-5707675)).
 
+- Added OAuth2 redirect page fallback message to notify the user to go back to the app in case the browser window is not auto closed.
+
 
 ## v0.15.1
 
