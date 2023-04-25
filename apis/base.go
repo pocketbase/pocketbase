@@ -14,6 +14,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/ui"
 	"github.com/spf13/cast"
 )
@@ -25,6 +26,9 @@ const trailedAdminPath = "/_/"
 func InitApi(app core.App) (*echo.Echo, error) {
 	e := echo.New()
 	e.Debug = app.IsDebug()
+	e.JSONSerializer = &rest.Serializer{
+		FieldsParam: "fields",
+	}
 
 	// configure a custom router
 	e.ResetRouterCreator(func(ec *echo.Echo) echo.Router {

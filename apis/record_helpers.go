@@ -121,7 +121,9 @@ func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defa
 	}
 
 	expands := defaultExpands
-	expands = append(expands, strings.Split(c.QueryParam(expandQueryParam), ",")...)
+	if param := c.QueryParam(expandQueryParam); param != "" {
+		expands = append(expands, strings.Split(param, ",")...)
+	}
 	if len(expands) == 0 {
 		return nil // nothing to expand
 	}

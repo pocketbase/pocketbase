@@ -1,5 +1,16 @@
 ## (WIP)
 
+- Added option to limit the returned API fields using the `?fields` query parameter.
+  The "fields picker" is applied for `SearchResult.Items` and any other JSON response. For example:
+  ```js
+  // original: {"id": "RECORD_ID", "name": "abc", "description": "...something very big...", "items": ["id1", "id2"], "expand": {"items": [{"id": "id1", "name": "test1"}, {"id": "id2", "name": "test2"}]}}
+  // output:   {"name": "abc", "expand": {"items": [{"name": "test1"}, {"name": "test2"}]}}
+  const result = await pb.collection("example").getOne("RECORD_ID", {
+    expand: "items",
+    fields: "name,expand.items.name",
+  })
+  ```
+
 - Added new `./pocketbase admin` console command:
   ```sh
   // creates new admin account
