@@ -1,6 +1,6 @@
 ## (WIP)
 
-- Added option to limit the returned API fields using the `?fields` query parameter.
+- (@todo docs) Added option to limit the returned API fields using the `?fields` query parameter.
   The "fields picker" is applied for `SearchResult.Items` and any other JSON response. For example:
   ```js
   // original: {"id": "RECORD_ID", "name": "abc", "description": "...something very big...", "items": ["id1", "id2"], "expand": {"items": [{"id": "id1", "name": "test1"}, {"id": "id2", "name": "test2"}]}}
@@ -11,7 +11,7 @@
   })
   ```
 
-- Added new `./pocketbase admin` console command:
+- (@todo docs) Added new `./pocketbase admin` console command:
   ```sh
   // creates new admin account
   ./pocketbase admin create test@example.com 123456890
