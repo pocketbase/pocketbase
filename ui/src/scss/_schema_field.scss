@@ -1,5 +1,5 @@
 .schema-field-header {
-    $minHeight: 44px;
+    $minHeight: 42px;
     position: relative;
     display: flex;
     width: 100%;
@@ -28,9 +28,10 @@
         }
     }
     .separator {
+        flex-shrink: 0;
         width: 1px;
         height: $minHeight;
-        background: rgba(#000, 0.06);
+        background: rgba(#000, 0.05);
     }
     .drag-handle-wrapper {
         position: absolute;
@@ -72,34 +73,37 @@
             background: var(--baseAlt4Color);
         }
     }
-
-    // states
-    &:hover,
-    &:active {
-        .drag-handle {
-            transform: translateX(0px);
-            @include show();
-        }
-    }
 }
 
 .schema-field-options {
+    background: #fff;
     padding: var(--xsSpacing);
     border-bottom-left-radius: var(--baseRadius);
     border-bottom-right-radius: var(--baseRadius);
-    border: 2px solid var(--baseAlt1Color);
 }
 
 .schema-field {
     @extend %block;
     position: relative;
     margin: 0 0 var(--xsSpacing);
-    transition: box-shadow var(--baseAnimationSpeed);
+    border-radius: var(--baseRadius);
+    background: var(--baseAlt1Color);
+    transition: border var(--baseAnimationSpeed),
+                box-shadow var(--baseAnimationSpeed);
+    border: 2px solid var(--baseAlt1Color);
+    // states
+    &:not(.deleted):hover {
+        .drag-handle {
+            transform: translateX(0px);
+            @include show();
+        }
+    }
     &.drag-over {
         opacity: 0.5;
     }
     &.expanded {
         @include shadowize();
+        border-color: var(--baseAlt2Color);
         .schema-field-header {
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
@@ -108,6 +112,9 @@
                     transform: rotate(-60deg);
                 }
             }
+        }
+        .schema-field-options {
+            border-top: 2px solid var(--baseAlt2Color);
         }
     }
     &.deleted {
