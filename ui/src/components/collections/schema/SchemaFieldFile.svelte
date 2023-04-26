@@ -82,6 +82,8 @@
     {...$$restProps}
 >
     <svelte:fragment let:interactive>
+        <div class="separator" />
+
         <Field
             class="form-field form-field-single-multiple-select {!interactive ? 'disabled' : ''}"
             inlineError
@@ -94,6 +96,8 @@
                 bind:keyOfSelected={isSingle}
             />
         </Field>
+
+        <div class="separator" />
     </svelte:fragment>
 
     <svelte:fragment slot="options">

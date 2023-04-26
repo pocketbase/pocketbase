@@ -143,7 +143,7 @@
     </p>
 </div>
 
-<div class="accordions schema-fields">
+<div class="schema-fields">
     {#each collection.schema as field, i (field)}
         <svelte:component
             this={fieldComponents[field.type]}

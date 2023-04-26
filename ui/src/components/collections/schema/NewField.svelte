@@ -71,7 +71,7 @@
     }
 </script>
 
-<button type="button" class={classes} on:click={dispatch}>
+<button type="button" class="field-types-btn {classes}" on:click={dispatch}>
     <i class="ri-add-line" />
     <div class="txt">New field</div>
     <Toggler class="dropdown field-types-dropdown">
@@ -96,13 +96,17 @@
 </button>
 
 <style lang="scss">
+    .field-types-btn.active {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
     :global(.field-types-dropdown) {
         display: flex;
         flex-wrap: wrap;
         width: 100%;
         max-width: none;
         padding: 10px;
-        margin: 0;
+        margin-top: 2px;
         border: 0;
         box-shadow: 0px 0px 0px 2px var(--primaryColor);
         border-top-left-radius: 0;

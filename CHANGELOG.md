@@ -25,6 +25,8 @@
 
 - Added `apis.Serve(app, options)` helper to allow starting the API server programmatically.
 
+- New schema fields UI for "tidier" fields list.
+
 
 ## v0.15.2
 

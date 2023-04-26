@@ -1,34 +1,36 @@
-.schema-field {
-    @extend %block;
-    position: relative;
-    margin: 0 0 var(--xsSpacing);
-    &.drag-over {
-        opacity: 0.5;
-    }
-}
 .schema-field-header {
+    $minHeight: 44px;
     position: relative;
     display: flex;
     width: 100%;
-    gap: 10px;
+    min-height: $minHeight;
+    gap: 5px;
+    padding: 0 5px;
     align-items: center;
     justify-content: stretch;
-    %input,
-    .form-field-addon {
-        min-height: var(--btnHeight);
-    }
+    background: var(--baseAlt1Color);
+    border-radius: var(--baseRadius);
+    transition: border-radius var(--baseAnimationSpeed);
     .form-field {
         margin: 0;
+        .form-field-addon.prefix {
+            left: 10px;
+            ~ %input {
+                padding-left: 37px;
+            }
+        }
     }
     .options-trigger {
+        padding: 2px;
+        margin: 0 3px;
         i {
             transition: transform var(--baseAnimationSpeed);
         }
-        &.active {
-            i {
-                transform: rotate(58deg);
-            }
-        }
+    }
+    .separator {
+        width: 1px;
+        height: $minHeight;
+        background: var(--baseAlt2Color);
     }
     .drag-handle-wrapper {
         position: absolute;
@@ -56,8 +58,8 @@
     .markers {
         position: absolute;
         z-index: 1;
-        left: 7px;
-        top: 6px;
+        left: 4px;
+        top: 4px;
         display: inline-flex;
         align-items: center;
         gap: 5px;
@@ -79,16 +81,34 @@
             @include show();
         }
     }
+
 }
-.schema-field-dropdown {
-    padding: var(--smSpacing);
-    max-height: none;
-    overflow: visible;
-    z-index: 999;
-}
+
 .schema-field-options {
-    margin-top: -10px;
-    background: var(--bodyColor);
-    padding: var(--smSpacing);
-    border-radius: var(--baseRadius);
+    padding: var(--xsSpacing) var(--smSpacing);
+    border-bottom-left-radius: var(--baseRadius);
+    border-bottom-right-radius: var(--baseRadius);
+    border: 2px solid var(--baseAlt1Color);
+}
+
+.schema-field {
+    @extend %block;
+    position: relative;
+    margin: 0 0 var(--xsSpacing);
+    transition: box-shadow var(--baseAnimationSpeed);
+    &.drag-over {
+        opacity: 0.5;
+    }
+    &.expanded {
+        @include shadowize();
+        .schema-field-header {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            .options-trigger {
+                i {
+                    transform: rotate(-60deg);
+                }
+            }
+        }
+    }
 }

@@ -956,7 +956,7 @@ select {
         cursor: pointer;
     }
     &.disabled {
-        color: var(--txtDisabledColor);
+        color: var(--txtHintColor);
         pointer-events: none;
         .txt-placeholder {
             color: inherit;

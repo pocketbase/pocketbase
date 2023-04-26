@@ -1,3 +1,7 @@
+<script context="module">
+    let siblings = [];
+</script>
+
 <script>
     import { createEventDispatcher, onMount } from "svelte";
     import { slide } from "svelte/transition";
@@ -12,10 +16,13 @@
     export let field = new SchemaField();
 
     let nameInput;
-    let optionsTrigger;
     let isDragOver = false;
+    let showOptions = false;
+
+    const componentId = "f_" + CommonHelper.randomString(8);
 
     const dispatch = createEventDispatcher();
+
     const customRequiredLabels = {
         // type => label
         bool: "Nonfalsey",
@@ -66,17 +73,54 @@
         return CommonHelper.slugify(name);
     }
 
+    function expand() {
+        showOptions = true;
+        collapseSiblings();
+    }
+
+    function collapse() {
+        showOptions = false;
+    }
+
+    function toggle() {
+        if (showOptions) {
+            collapse();
+        } else {
+            expand();
+        }
+    }
+
+    function collapseSiblings() {
+        for (let f of siblings) {
+            if (f.id == componentId) {
+                continue;
+            }
+            f.collapse();
+        }
+    }
+
     onMount(() => {
+        siblings.push({
+            id: componentId,
+            collapse: collapse,
+        });
+
         if (field.onMountSelect) {
             field.onMountSelect = false;
             nameInput?.select();
         }
+
+        return () => {
+            CommonHelper.removeByKey(siblings, "id", componentId);
+        };
     });
 </script>
 
 <div
     draggable={true}
     class="schema-field"
+    class:required={field.required}
+    class:expanded={showOptions}
     class:drag-over={isDragOver}
     transition:slide|local={{ duration: 150 }}
     on:dragstart={(e) => {
@@ -154,7 +198,9 @@
             />
         </Field>
 
-        <slot {interactive} {hasErrors} />
+        <slot {interactive} {hasErrors}>
+            <span class="separator" />
+        </slot>
 
         {#if field.toDelete}
             <button
@@ -168,20 +214,22 @@
             </button>
         {:else if interactive}
             <button
-                bind:this={optionsTrigger}
                 type="button"
-                aria-label="Field options"
-                class="btn btn-sm btn-circle btn-transparent options-trigger {hasErrors
-                    ? 'btn-danger'
-                    : 'btn-hint'}"
+                aria-label="Toggle field options"
+                class="btn btn-sm btn-circle options-trigger {showOptions
+                    ? 'btn-secondary'
+                    : 'btn-transparent'}"
+                class:btn-hint={!showOptions && !hasErrors}
+                class:btn-danger={hasErrors}
+                on:click={toggle}
             >
                 <i class="ri-settings-3-line" />
             </button>
         {/if}
     </div>
 
-    {#if interactive}
-        <Toggler class="dropdown dropdown-block schema-field-dropdown" trigger={optionsTrigger}>
+    {#if interactive && showOptions}
+        <div class="schema-field-options" transition:slide|local={{ duration: 150 }}>
             <div class="grid grid-sm">
                 <div class="col-sm-12 hidden-empty">
                     <slot name="options" {interactive} {hasErrors} />
@@ -231,6 +279,6 @@
                     </div>
                 {/if}
             </div>
-        </Toggler>
+        </div>
     {/if}
 </div>
