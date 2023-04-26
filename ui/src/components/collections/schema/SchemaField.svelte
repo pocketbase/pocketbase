@@ -120,7 +120,8 @@
     draggable={true}
     class="schema-field"
     class:required={field.required}
-    class:expanded={showOptions}
+    class:expanded={interactive && showOptions}
+    class:deleted={field.toDelete}
     class:drag-over={isDragOver}
     transition:slide|local={{ duration: 150 }}
     on:dragstart={(e) => {

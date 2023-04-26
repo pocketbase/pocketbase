@@ -116,7 +116,7 @@
                 noOptionsText="No collections found"
                 selectionKey="id"
                 items={$collections}
-                disabled={!interactive || field.id}
+                readonly={!interactive || field.id}
                 bind:keyOfSelected={field.options.collectionId}
             >
                 <svelte:fragment slot="afterOptions">
@@ -136,14 +136,14 @@
         <div class="separator" />
 
         <Field
-            class="form-field form-field-single-multiple-select {!interactive ? 'disabled' : ''}"
+            class="form-field form-field-single-multiple-select {!interactive ? 'readonly' : ''}"
             inlineError
             let:uniqueId
         >
             <ObjectSelect
                 id={uniqueId}
                 items={isSingleOptions}
-                disabled={!interactive}
+                readonly={!interactive}
                 bind:keyOfSelected={isSingle}
             />
         </Field>

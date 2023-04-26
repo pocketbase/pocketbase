@@ -11,6 +11,7 @@
     export let items = [];
     export let multiple = false;
     export let disabled = false;
+    export let readonly = false;
     export let selected = multiple ? [] : undefined;
     export let toggle = multiple; // toggle option on click
     export let closable = true; // close the dropdown on option select/deselect
@@ -177,7 +178,7 @@
     function onLabelClick(e) {
         e.stopPropagation();
 
-        !disabled && toggler?.toggle();
+        !readonly && !disabled && toggler?.toggle();
     }
 
     onMount(() => {
@@ -195,9 +196,15 @@
     });
 </script>
 
-<div bind:this={container} class="select {classes}" class:multiple class:disabled>
+<div bind:this={container} class="select {classes}" class:multiple class:disabled class:readonly>
     <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-    <div bind:this={labelDiv} tabindex={disabled ? "-1" : "0"} class="selected-container" class:disabled>
+    <div
+        bind:this={labelDiv}
+        tabindex={disabled || readonly ? "-1" : "0"}
+        class="selected-container"
+        class:disabled
+        class:readonly
+    >
         {#each CommonHelper.toArray(selected) as item, i}
             <div class="option">
                 {#if labelComponent}
@@ -218,13 +225,13 @@
                 {/if}
             </div>
         {:else}
-            <div class="block txt-placeholder" class:link-hint={!disabled}>
+            <div class="block txt-placeholder" class:link-hint={!disabled && !readonly}>
                 {selectPlaceholder}
             </div>
         {/each}
     </div>
 
-    {#if !disabled}
+    {#if !disabled && !readonly}
         <Toggler
             bind:this={toggler}
             class="dropdown dropdown-block options-dropdown dropdown-left"

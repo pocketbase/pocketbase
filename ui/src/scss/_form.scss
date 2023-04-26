@@ -955,6 +955,7 @@ select {
     &:not(.disabled) .selected-container:hover {
         cursor: pointer;
     }
+    &.readonly,
     &.disabled {
         color: var(--txtHintColor);
         pointer-events: none;
@@ -977,6 +978,9 @@ select {
                 cursor: inherit;
             }
         }
+    }
+    &.disabled {
+        color: var(--txtDisabledColor);
     }
 
     // dropdown

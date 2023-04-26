@@ -30,7 +30,7 @@
     .separator {
         width: 1px;
         height: $minHeight;
-        background: var(--baseAlt2Color);
+        background: rgba(#000, 0.06);
     }
     .drag-handle-wrapper {
         position: absolute;
@@ -81,7 +81,6 @@
             @include show();
         }
     }
-
 }
 
 .schema-field-options {
@@ -109,6 +108,19 @@
                     transform: rotate(-60deg);
                 }
             }
+        }
+    }
+    &.deleted {
+        .schema-field-header {
+            background: var(--bodyColor);
+        }
+        .markers,
+        .separator {
+            opacity: 0.5;
+        }
+        %input {
+            background: none;
+            box-shadow: none;
         }
     }
 }
