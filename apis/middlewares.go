@@ -368,6 +368,10 @@ func realUserIp(r *http.Request, fallbackIp string) string {
 		return ip
 	}
 
+	if ip := r.Header.Get("Fly-Client-IP"); ip != "" {
+		return ip
+	}
+
 	if ip := r.Header.Get("X-Real-IP"); ip != "" {
 		return ip
 	}
