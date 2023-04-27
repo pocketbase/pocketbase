@@ -27,7 +27,7 @@
 
 - New schema fields UI for "tidier" fields list.
 
-- Updated the logs "real" user ip to check for `Fly-Client-IP` header and changed the `X-Forward-For` header to use the first non-empty leftmost-ish IP as it the closes to the "real IP".
+- Updated the logs "real" user IP to check for `Fly-Client-IP` header and changed the `X-Forward-For` header to use the first non-empty leftmost-ish IP as it the closest to the "real IP".
 
 
 ## v0.15.2
