@@ -692,8 +692,8 @@ export default class CommonHelper {
             const formats = {
                 19: "yyyy-MM-dd HH:mm:ss",
                 23: "yyyy-MM-dd HH:mm:ss.SSS",
-                20: "yyyy-MM-dd HH:mm:ssZ",
-                24: "yyyy-MM-dd HH:mm:ss.SSSZ",
+                20: "yyyy-MM-dd HH:mm:ss'Z'",
+                24: "yyyy-MM-dd HH:mm:ss.SSS'Z'",
             }
             const format = formats[date.length] || formats[19];
             return DateTime.fromFormat(date, format, { zone: 'UTC' });
