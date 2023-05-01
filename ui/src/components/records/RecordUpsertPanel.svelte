@@ -56,7 +56,7 @@
 
     $: hasChanges = hasFileChanges || originalSerializedData != serializedData;
 
-    $: isNew = !original || original.isNew;
+    $: isNew = !original || original.$isNew;
 
     $: canSave = isNew || hasChanges;
 
