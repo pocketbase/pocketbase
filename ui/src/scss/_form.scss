@@ -1210,6 +1210,7 @@ select {
     }
     .form-field label ~ & {
         position: relative;
+        z-index: auto; // reset default z-index
         padding: 5px 2px 2px 2px;
         // blank placeholder
         &:before {
@@ -1250,6 +1251,11 @@ body {
     .tox-swatch:not(.tox-swatch--remove):not(.tox-collection__item--enabled) {
         svg {
             display: none;
+        }
+    }
+    &.tox-fullscreen {
+        .overlay-panel-section {
+            overflow: hidden;
         }
     }
 }
