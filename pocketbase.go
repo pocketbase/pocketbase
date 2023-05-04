@@ -5,7 +5,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
-	"sync"
 	"syscall"
 
 	"github.com/fatih/color"
@@ -155,37 +154,33 @@ func (pb *PocketBase) Execute() error {
 		}
 	}
 
-	var wg sync.WaitGroup
-
-	wg.Add(1)
+	done := make(chan bool, 1)
 
 	// wait for interrupt signal to gracefully shutdown the application
 	go func() {
-		defer wg.Done()
-		quit := make(chan os.Signal, 1) // we need to reserve to buffer size 1, so the notifier are not blocked
-		signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-		<-quit
+		sigch := make(chan os.Signal, 1)
+		signal.Notify(sigch, os.Interrupt, syscall.SIGTERM)
+		<-sigch
+		done <- true
 	}()
 
 	// execute the root command
 	go func() {
-		defer wg.Done()
 		if err := pb.RootCmd.Execute(); err != nil {
 			// @todo replace with db log once generalized logs are added
 			// (note may need to update the existing commands to not silence errors)
 			color.Red(err.Error())
 		}
+
+		done <- true
 	}()
 
-	wg.Wait()
+	<-done
 
-	// cleanup
-	return pb.onTerminate()
-}
-
-// onTerminate tries to release the app resources on app termination.
-func (pb *PocketBase) onTerminate() error {
-	return pb.ResetBootstrapState()
+	// trigger app cleanups
+	return pb.OnTerminate().Trigger(&core.TerminateEvent{
+		App: pb,
+	})
 }
 
 // eagerParseFlags parses the global app flags before calling pb.RootCmd.Execute().
