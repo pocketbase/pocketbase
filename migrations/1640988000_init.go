@@ -9,6 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/migrate"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
@@ -90,6 +91,15 @@ func init() {
 			return tablesErr
 		}
 
+		dao := daos.New(db)
+
+		// inserts default settings
+		// -----------------------------------------------------------
+		defaultSettings := settings.New()
+		if err := dao.SaveSettings(defaultSettings); err != nil {
+			return err
+		}
+
 		// inserts the system profiles collection
 		// -----------------------------------------------------------
 		usersCollection := &models.Collection{}
@@ -139,7 +149,7 @@ func init() {
 			},
 		)
 
-		return daos.New(db).SaveCollection(usersCollection)
+		return dao.SaveCollection(usersCollection)
 	}, func(db dbx.Builder) error {
 		tables := []string{
 			"users",
