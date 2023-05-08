@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"context"
 	"crypto/tls"
 	"log"
 	"net"
@@ -85,7 +86,7 @@ func Serve(app core.App, options *ServeOptions) error {
 			GetCertificate: certManager.GetCertificate,
 			NextProtos:     []string{acme.ALPNProto},
 		},
-		ReadTimeout:       5 * time.Minute,
+		ReadTimeout:       10 * time.Minute,
 		ReadHeaderTimeout: 30 * time.Second,
 		// WriteTimeout: 60 * time.Second, // breaks sse!
 		Handler: router,
@@ -118,6 +119,14 @@ func Serve(app core.App, options *ServeOptions) error {
 		regular.Printf(" ➜ REST API: %s\n", color.CyanString("%s://%s/api/", schema, serverConfig.Addr))
 		regular.Printf(" ➜ Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, serverConfig.Addr))
 	}
+
+	// try to gracefully shutdown the server on app termination
+	app.OnTerminate().Add(func(e *core.TerminateEvent) error {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		serverConfig.Shutdown(ctx)
+		return nil
+	})
 
 	// start HTTPS server
 	if options.HttpsAddr != "" {

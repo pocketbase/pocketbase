@@ -34,8 +34,8 @@ func TestCreateSuccess(t *testing.T) {
 	zipPath := filepath.Join(os.TempDir(), zipName)
 	defer os.RemoveAll(zipPath)
 
-	// zip testDir content
-	if err := archive.Create(testDir, zipPath); err != nil {
+	// zip testDir content (excluding test and a/b/c dir)
+	if err := archive.Create(testDir, zipPath, "a/b/c", "test"); err != nil {
 		t.Fatalf("Failed to create archive: %v", err)
 	}
 
@@ -48,7 +48,7 @@ func TestCreateSuccess(t *testing.T) {
 		t.Fatalf("Expected zip with name %q, got %q", zipName, name)
 	}
 
-	expectedSize := int64(300)
+	expectedSize := int64(405)
 	if size := info.Size(); size != expectedSize {
 		t.Fatalf("Expected zip with size %d, got %d", expectedSize, size)
 	}
@@ -68,17 +68,53 @@ func createTestDir(t *testing.T) string {
 		t.Fatal(err)
 	}
 
-	sub1, err := os.OpenFile(filepath.Join(dir, "a/sub1.txt"), os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		t.Fatal(err)
+	{
+		f, err := os.OpenFile(filepath.Join(dir, "test"), os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.Close()
 	}
-	sub1.Close()
 
-	sub2, err := os.OpenFile(filepath.Join(dir, "a/b/c/sub2.txt"), os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		t.Fatal(err)
+	{
+		f, err := os.OpenFile(filepath.Join(dir, "test2"), os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.Close()
 	}
-	sub2.Close()
+
+	{
+		f, err := os.OpenFile(filepath.Join(dir, "a/test"), os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.Close()
+	}
+
+	{
+		f, err := os.OpenFile(filepath.Join(dir, "a/b/sub1"), os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.Close()
+	}
+
+	{
+		f, err := os.OpenFile(filepath.Join(dir, "a/b/c/sub2"), os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.Close()
+	}
+
+	{
+		f, err := os.OpenFile(filepath.Join(dir, "a/b/c/sub3"), os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.Close()
+	}
 
 	return dir
 }

@@ -29,6 +29,14 @@
 
 - Updated the logs "real" user IP to check for `Fly-Client-IP` header and changed the `X-Forward-For` header to use the first non-empty leftmost-ish IP as it the closest to the "real IP".
 
+- Added new `archive.Create()` and `archive.Extract()` helpers (_currently works only with zip_).
+
+- Added new `Filesystem.List(prefix)` helper to retrieve a flat list with all files under the provided prefix.
+
+- Added new `App.NewBackupsFilesystem()` helper to create a dedicated fs abstraction for managing app backups.
+
+- (@todo docs) Added new `App.OnTerminate()` hook.
+
 
 ## v0.15.3
 

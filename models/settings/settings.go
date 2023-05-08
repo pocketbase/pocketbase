@@ -28,6 +28,9 @@ type Settings struct {
 	Smtp SmtpConfig `form:"smtp" json:"smtp"`
 	S3   S3Config   `form:"s3" json:"s3"`
 
+	// @todo update tests
+	Backups BackupsConfig `form:"backups" json:"backups"`
+
 	AdminAuthToken           TokenConfig `form:"adminAuthToken" json:"adminAuthToken"`
 	AdminPasswordResetToken  TokenConfig `form:"adminPasswordResetToken" json:"adminPasswordResetToken"`
 	AdminFileToken           TokenConfig `form:"adminFileToken" json:"adminFileToken"`
@@ -94,7 +97,7 @@ func New() *Settings {
 		},
 		AdminFileToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 300, // 5 minutes
+			Duration: 120, // 2 minutes
 		},
 		RecordAuthToken: TokenConfig{
 			Secret:   security.RandomString(50),
@@ -110,7 +113,7 @@ func New() *Settings {
 		},
 		RecordFileToken: TokenConfig{
 			Secret:   security.RandomString(50),
-			Duration: 300, // 5 minutes
+			Duration: 120, // 2 minutes
 		},
 		RecordEmailChangeToken: TokenConfig{
 			Secret:   security.RandomString(50),
@@ -388,6 +391,33 @@ func (c S3Config) Validate() error {
 		validation.Field(&c.Region, validation.When(c.Enabled, validation.Required)),
 		validation.Field(&c.AccessKey, validation.When(c.Enabled, validation.Required)),
 		validation.Field(&c.Secret, validation.When(c.Enabled, validation.Required)),
+	)
+}
+
+// -------------------------------------------------------------------
+
+type BackupsConfig struct {
+	AutoInterval     BackupInterval `form:"autoInterval" json:"autoInterval"`
+	AutoMaxRetention int            `form:"autoMaxRetention" json:"autoMaxRetention"`
+	S3               S3Config       `form:"s3" json:"s3"`
+}
+
+// Validate makes BackupsConfig validatable by implementing [validation.Validatable] interface.
+func (c BackupsConfig) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.S3),
+	)
+}
+
+// @todo
+type BackupInterval struct {
+	Day int
+}
+
+// Validate makes BackupInterval validatable by implementing [validation.Validatable] interface.
+func (c BackupInterval) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Day),
 	)
 }
 

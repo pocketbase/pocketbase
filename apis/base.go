@@ -113,6 +113,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	bindFileApi(app, api)
 	bindRealtimeApi(app, api)
 	bindLogsApi(app, api)
+	bindBackupApi(app, api)
 	bindHealthApi(app, api)
 
 	// trigger the custom BeforeServe hook for the created api router
@@ -191,7 +192,7 @@ func bindStaticAdminUI(app core.App, e *echo.Echo) error {
 	return nil
 }
 
-const totalAdminsCacheKey = "totalAdmins"
+const totalAdminsCacheKey = "@totalAdmins"
 
 func updateTotalAdminsCache(app core.App) error {
 	total, err := app.Dao().TotalAdmins()

@@ -82,6 +82,12 @@ func NewLocal(dirPath string) (*System, error) {
 	return &System{ctx: ctx, bucket: bucket}, nil
 }
 
+// @todo add test
+// SetContext assigns the specified context to the current filesystem.
+func (s *System) SetContext(ctx context.Context) {
+	s.ctx = ctx
+}
+
 // Close releases any resources used for the related filesystem.
 func (s *System) Close() error {
 	return s.bucket.Close()
@@ -107,6 +113,28 @@ func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
 	}
 
 	return br, nil
+}
+
+// List returns a flat list with info for all files under the specified prefix.
+func (s *System) List(prefix string) ([]*blob.ListObject, error) {
+	files := []*blob.ListObject{}
+
+	iter := s.bucket.List(&blob.ListOptions{
+		Prefix: prefix,
+	})
+
+	for {
+		obj, err := iter.Next(s.ctx)
+		if err != nil {
+			if err != io.EOF {
+				return nil, err
+			}
+			break
+		}
+		files = append(files, obj)
+	}
+
+	return files, nil
 }
 
 // Upload writes content into the fileKey location.

@@ -1,6 +1,7 @@
 package archive_test
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -13,15 +14,15 @@ func TestExtractFailure(t *testing.T) {
 	defer os.RemoveAll(testDir)
 
 	missingZipPath := filepath.Join(os.TempDir(), "pb_missing_test.zip")
-	extractPath := filepath.Join(os.TempDir(), "pb_zip_extract")
-	defer os.RemoveAll(extractPath)
+	extractedPath := filepath.Join(os.TempDir(), "pb_zip_extract")
+	defer os.RemoveAll(extractedPath)
 
-	if err := archive.Extract(missingZipPath, extractPath); err == nil {
+	if err := archive.Extract(missingZipPath, extractedPath); err == nil {
 		t.Fatal("Expected Extract to fail due to missing zipPath")
 	}
 
-	if _, err := os.Stat(extractPath); err == nil {
-		t.Fatalf("Expected %q to not be created", extractPath)
+	if _, err := os.Stat(extractedPath); err == nil {
+		t.Fatalf("Expected %q to not be created", extractedPath)
 	}
 }
 
@@ -32,26 +33,55 @@ func TestExtractSuccess(t *testing.T) {
 	zipPath := filepath.Join(os.TempDir(), "pb_test.zip")
 	defer os.RemoveAll(zipPath)
 
-	extractPath := filepath.Join(os.TempDir(), "pb_zip_extract")
-	defer os.RemoveAll(extractPath)
+	extractedPath := filepath.Join(os.TempDir(), "pb_zip_extract")
+	defer os.RemoveAll(extractedPath)
 
-	// zip testDir content
-	if err := archive.Create(testDir, zipPath); err != nil {
+	// zip testDir content (with exclude)
+	if err := archive.Create(testDir, zipPath, "a/b/c", "test", "sub2"); err != nil {
 		t.Fatalf("Failed to create archive: %v", err)
 	}
 
-	if err := archive.Extract(zipPath, extractPath); err != nil {
-		t.Fatalf("Failed to extract %q in %q", zipPath, extractPath)
+	if err := archive.Extract(zipPath, extractedPath); err != nil {
+		t.Fatalf("Failed to extract %q in %q", zipPath, extractedPath)
 	}
 
-	pathsToCheck := []string{
-		filepath.Join(extractPath, "a/sub1.txt"),
-		filepath.Join(extractPath, "a/b/c/sub2.txt"),
-	}
+	availableFiles := []string{}
 
-	for _, p := range pathsToCheck {
-		if _, err := os.Stat(p); err != nil {
-			t.Fatalf("Failed to retrieve extracted file %q: %v", p, err)
+	walkErr := filepath.WalkDir(extractedPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
 		}
+
+		if d.IsDir() {
+			return nil
+		}
+
+		availableFiles = append(availableFiles, path)
+
+		return nil
+	})
+	if walkErr != nil {
+		t.Fatalf("Failed to read the extracted dir: %v", walkErr)
+	}
+
+	expectedFiles := []string{
+		filepath.Join(extractedPath, "test2"),
+		filepath.Join(extractedPath, "a/test"),
+		filepath.Join(extractedPath, "a/b/sub1"),
+	}
+
+	if len(availableFiles) != len(expectedFiles) {
+		t.Fatalf("Expected \n%v, \ngot \n%v", expectedFiles, availableFiles)
+	}
+
+ExpectedLoop:
+	for _, expected := range expectedFiles {
+		for _, available := range availableFiles {
+			if available == expected {
+				continue ExpectedLoop
+			}
+		}
+
+		t.Fatalf("Missing file %q in \n%v", expected, availableFiles)
 	}
 }

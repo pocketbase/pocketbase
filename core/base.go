@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/fatih/color"
@@ -27,6 +29,10 @@ const (
 	DefaultDataMaxIdleConns int = 20
 	DefaultLogsMaxOpenConns int = 10
 	DefaultLogsMaxIdleConns int = 2
+
+	LocalStorageDirName string = "storage"
+	LocalBackupsDirName string = "backups"
+	LocalTempDirName    string = ".pb_temp_to_delete" // temp pb_data sub directory that will be deleted on each app.Bootstrap()
 )
 
 var _ App = (*BaseApp)(nil)
@@ -55,6 +61,7 @@ type BaseApp struct {
 	onBeforeServe     *hook.Hook[*ServeEvent]
 	onBeforeApiError  *hook.Hook[*ApiErrorEvent]
 	onAfterApiError   *hook.Hook[*ApiErrorEvent]
+	onTerminate       *hook.Hook[*TerminateEvent]
 
 	// dao event hooks
 	onModelBeforeCreate *hook.Hook[*ModelEvent]
@@ -192,6 +199,7 @@ func NewBaseApp(config *BaseAppConfig) *BaseApp {
 		onBeforeServe:     &hook.Hook[*ServeEvent]{},
 		onBeforeApiError:  &hook.Hook[*ApiErrorEvent]{},
 		onAfterApiError:   &hook.Hook[*ApiErrorEvent]{},
+		onTerminate:       &hook.Hook[*TerminateEvent]{},
 
 		// dao event hooks
 		onModelBeforeCreate: &hook.Hook[*ModelEvent]{},
@@ -338,6 +346,9 @@ func (app *BaseApp) Bootstrap() error {
 	// we don't check for an error because the db migrations may have not been executed yet
 	app.RefreshSettings()
 
+	// cleanup the pb_data temp directory (if any)
+	os.RemoveAll(filepath.Join(app.DataDir(), LocalTempDirName))
+
 	if err := app.OnAfterBootstrap().Trigger(event); err != nil && app.IsDebug() {
 		log.Println(err)
 	}
@@ -471,6 +482,7 @@ func (app *BaseApp) NewMailClient() mailer.Mailer {
 }
 
 // NewFilesystem creates a new local or S3 filesystem instance
+// for managing regular app files (eg. collection uploads)
 // based on the current app settings.
 //
 // NB! Make sure to call `Close()` on the returned result
@@ -488,7 +500,54 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 	}
 
 	// fallback to local filesystem
-	return filesystem.NewLocal(filepath.Join(app.DataDir(), "storage"))
+	return filesystem.NewLocal(filepath.Join(app.DataDir(), LocalStorageDirName))
+}
+
+// NewFilesystem creates a new local or S3 filesystem instance
+// for managing app backups based on the current app settings.
+//
+// NB! Make sure to call `Close()` on the returned result
+// after you are done working with it.
+func (app *BaseApp) NewBackupsFilesystem() (*filesystem.System, error) {
+	if app.settings != nil && app.settings.Backups.S3.Enabled {
+		return filesystem.NewS3(
+			app.settings.Backups.S3.Bucket,
+			app.settings.Backups.S3.Region,
+			app.settings.Backups.S3.Endpoint,
+			app.settings.Backups.S3.AccessKey,
+			app.settings.Backups.S3.Secret,
+			app.settings.Backups.S3.ForcePathStyle,
+		)
+	}
+
+	// fallback to local filesystem
+	return filesystem.NewLocal(filepath.Join(app.DataDir(), LocalBackupsDirName))
+}
+
+// Restart restarts (aka. replaces) the current running application process.
+//
+// NB! It relies on execve which is supported only on UNIX based systems.
+func (app *BaseApp) Restart() error {
+	if runtime.GOOS == "windows" {
+		return errors.New("restart is not supported on windows")
+	}
+
+	execPath, err := os.Executable()
+	if err != nil {
+		return err
+	}
+
+	// optimistically reset the app bootstrap state
+	app.ResetBootstrapState()
+
+	if err := syscall.Exec(execPath, os.Args, os.Environ()); err != nil {
+		// restart the app bootstrap state
+		app.Bootstrap()
+
+		return err
+	}
+
+	return nil
 }
 
 // RefreshSettings reinitializes and reloads the stored application settings.
@@ -539,6 +598,10 @@ func (app *BaseApp) OnBeforeApiError() *hook.Hook[*ApiErrorEvent] {
 
 func (app *BaseApp) OnAfterApiError() *hook.Hook[*ApiErrorEvent] {
 	return app.onAfterApiError
+}
+
+func (app *BaseApp) OnTerminate() *hook.Hook[*TerminateEvent] {
+	return app.onTerminate
 }
 
 // -------------------------------------------------------------------
@@ -1082,6 +1145,11 @@ func (app *BaseApp) registerDefaultHooks() {
 			})
 		}
 
+		return nil
+	})
+
+	app.OnTerminate().Add(func(e *TerminateEvent) error {
+		app.ResetBootstrapState()
 		return nil
 	})
 }

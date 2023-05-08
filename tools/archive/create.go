@@ -5,10 +5,19 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // Create creates a new zip archive from src dir content and saves it in dest path.
-func Create(src, dest string) error {
+//
+// You can specify skipPaths to skip/ignore certain directories and files (relative to src)
+// preventing adding them in the final archive.
+func Create(src string, dest string, skipPaths ...string) error {
+	if err := os.MkdirAll(filepath.Dir(dest), os.ModePerm); err != nil {
+		return err
+	}
+
 	zf, err := os.Create(dest)
 	if err != nil {
 		return err
@@ -18,8 +27,8 @@ func Create(src, dest string) error {
 	zw := zip.NewWriter(zf)
 	defer zw.Close()
 
-	if err := zipAddFS(zw, os.DirFS(src)); err != nil {
-		// try to cleanup the created zip file
+	if err := zipAddFS(zw, os.DirFS(src), skipPaths...); err != nil {
+		// try to cleanup at least the created zip file
 		os.Remove(dest)
 
 		return err
@@ -29,7 +38,7 @@ func Create(src, dest string) error {
 }
 
 // note remove after similar method is added in the std lib (https://github.com/golang/go/issues/54898)
-func zipAddFS(w *zip.Writer, fsys fs.FS) error {
+func zipAddFS(w *zip.Writer, fsys fs.FS, skipPaths ...string) error {
 	return fs.WalkDir(fsys, ".", func(name string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -37,6 +46,14 @@ func zipAddFS(w *zip.Writer, fsys fs.FS) error {
 
 		if d.IsDir() {
 			return nil
+		}
+
+		// skip
+		for _, ignore := range skipPaths {
+			if ignore == name ||
+				strings.HasPrefix(name+string(os.PathSeparator), filepath.Clean(ignore)+string(os.PathSeparator)) {
+				return nil
+			}
 		}
 
 		info, err := d.Info()

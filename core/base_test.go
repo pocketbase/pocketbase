@@ -236,3 +236,33 @@ func TestBaseAppNewFilesystem(t *testing.T) {
 		t.Fatalf("Expected nil s3 filesystem, got %v", s3)
 	}
 }
+
+func TestBaseAppNewBackupsFilesystem(t *testing.T) {
+	const testDataDir = "./pb_base_app_test_data_dir/"
+	defer os.RemoveAll(testDataDir)
+
+	app := NewBaseApp(&BaseAppConfig{
+		DataDir:       testDataDir,
+		EncryptionEnv: "pb_test_env",
+		IsDebug:       false,
+	})
+
+	// local
+	local, localErr := app.NewBackupsFilesystem()
+	if localErr != nil {
+		t.Fatal(localErr)
+	}
+	if local == nil {
+		t.Fatal("Expected local backups filesystem instance, got nil")
+	}
+
+	// misconfigured s3
+	app.Settings().Backups.S3.Enabled = true
+	s3, s3Err := app.NewBackupsFilesystem()
+	if s3Err == nil {
+		t.Fatal("Expected S3 error, got nil")
+	}
+	if s3 != nil {
+		t.Fatalf("Expected nil s3 backups filesystem, got %v", s3)
+	}
+}

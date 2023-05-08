@@ -4,6 +4,8 @@
 package core
 
 import (
+	"context"
+
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models/settings"
@@ -69,11 +71,19 @@ type App interface {
 	// NewMailClient creates and returns a configured app mail client.
 	NewMailClient() mailer.Mailer
 
-	// NewFilesystem creates and returns a configured filesystem.System instance.
+	// NewFilesystem creates and returns a configured filesystem.System instance
+	// for managing regular app files (eg. collection uploads).
 	//
 	// NB! Make sure to call `Close()` on the returned result
 	// after you are done working with it.
 	NewFilesystem() (*filesystem.System, error)
+
+	// NewBackupsFilesystem creates and returns a configured filesystem.System instance
+	// for managing app backups.
+	//
+	// NB! Make sure to call `Close()` on the returned result
+	// after you are done working with it.
+	NewBackupsFilesystem() (*filesystem.System, error)
 
 	// RefreshSettings reinitializes and reloads the stored application settings.
 	RefreshSettings() error
@@ -91,6 +101,31 @@ type App interface {
 	// ResetBootstrapState takes care for releasing initialized app resources
 	// (eg. closing db connections).
 	ResetBootstrapState() error
+
+	// CreateBackup creates a new backup of the current app pb_data directory.
+	//
+	// Backups can be stored on S3 if it is configured in app.Settings().Backups.
+	//
+	// Please refer to the godoc of the specific core.App implementation
+	// for details on the backup procedures.
+	CreateBackup(ctx context.Context, name string) error
+
+	// RestoreBackup restores the backup with the specified name and restarts
+	// the current running application process.
+	//
+	// The safely perform the restore it is recommended to have free disk space
+	// for at least 2x the size of the restored pb_data backup.
+	//
+	// Please refer to the godoc of the specific core.App implementation
+	// for details on the restore procedures.
+	//
+	// NB! This feature is experimental and currently is expected to work only on UNIX based systems.
+	RestoreBackup(ctx context.Context, name string) error
+
+	// Restart restarts the current running application process.
+	//
+	// Currently it is relying on execve so it is supported only on UNIX based systems.
+	Restart() error
 
 	// ---------------------------------------------------------------
 	// App event hooks
@@ -117,6 +152,10 @@ type App interface {
 	// response to the client.
 	// It could be used to log the final API error in external services.
 	OnAfterApiError() *hook.Hook[*ApiErrorEvent]
+
+	// OnTerminate hook is triggered when the app is in the process
+	// of being terminated (eg. on SIGTERM signal).
+	OnTerminate() *hook.Hook[*TerminateEvent]
 
 	// ---------------------------------------------------------------
 	// Dao event hooks

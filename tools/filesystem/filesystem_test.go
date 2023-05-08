@@ -401,6 +401,67 @@ func TestFileSystemGetFile(t *testing.T) {
 	}
 }
 
+func TestFileSystemList(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fs, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fs.Close()
+
+	scenarios := []struct {
+		prefix   string
+		expected []string
+	}{
+		{
+			"",
+			[]string{
+				"image.png",
+				"image.svg",
+				"image_! noext",
+				"style.css",
+				"test/sub1.txt",
+				"test/sub2.txt",
+			},
+		},
+		{
+			"test",
+			[]string{
+				"test/sub1.txt",
+				"test/sub2.txt",
+			},
+		},
+		{
+			"missing",
+			[]string{},
+		},
+	}
+
+	for _, s := range scenarios {
+		objs, err := fs.List(s.prefix)
+		if err != nil {
+			t.Fatalf("[%s] %v", s.prefix, err)
+		}
+
+		if len(s.expected) != len(objs) {
+			t.Fatalf("[%s] Expected %d files, got \n%v", s.prefix, len(s.expected), objs)
+		}
+
+	ObjsLoop:
+		for _, obj := range objs {
+			for _, name := range s.expected {
+				if name == obj.Key {
+					continue ObjsLoop
+				}
+			}
+
+			t.Fatalf("[%s] Unexpected file %q", s.prefix, obj.Key)
+		}
+	}
+}
+
 func TestFileSystemServeSingleRange(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
