@@ -129,6 +129,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewOIDCProvider(), nil
 	case NameApple:
 		return NewAppleProvider(), nil
+	case NameFourtytwo:
+		return NewFourtytwoProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}

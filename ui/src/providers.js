@@ -1,7 +1,7 @@
 import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
-import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
-import OIDCOptions       from "@/components/settings/providers/OIDCOptions.svelte";
-import AppleOptions      from "@/components/settings/providers/AppleOptions.svelte";
+import MicrosoftOptions from "@/components/settings/providers/MicrosoftOptions.svelte";
+import OIDCOptions from "@/components/settings/providers/OIDCOptions.svelte";
+import AppleOptions from "@/components/settings/providers/AppleOptions.svelte";
 
 // Object list with all supported OAuth2 providers in the format:
 // ```
@@ -15,100 +15,105 @@ import AppleOptions      from "@/components/settings/providers/AppleOptions.svel
 // - `config` - the provider settings config that is currently being updated
 export default [
     {
-        key:   "appleAuth",
+        key: "appleAuth",
         title: "Apple",
-        logo:  "apple.svg",
+        logo: "apple.svg",
         optionsComponent: AppleOptions,
     },
     {
-        key:   "googleAuth",
+        key: "googleAuth",
         title: "Google",
-        logo:  "google.svg",
+        logo: "google.svg",
     },
     {
-        key:   "facebookAuth",
+        key: "facebookAuth",
         title: "Facebook",
-        logo:  "facebook.svg",
+        logo: "facebook.svg",
     },
     {
-        key:   "microsoftAuth",
+        key: "microsoftAuth",
         title: "Microsoft",
-        logo:  "microsoft.svg",
+        logo: "microsoft.svg",
         optionsComponent: MicrosoftOptions,
     },
     {
-        key:   "githubAuth",
+        key: "githubAuth",
         title: "GitHub",
-        logo:  "github.svg",
+        logo: "github.svg",
     },
     {
-        key:   "gitlabAuth",
+        key: "gitlabAuth",
         title: "GitLab",
-        logo:  "gitlab.svg",
+        logo: "gitlab.svg",
         optionsComponent: SelfHostedOptions,
     },
     {
-        key:   "giteeAuth",
+        key: "giteeAuth",
         title: "Gitee",
-        logo:  "gitee.svg",
+        logo: "gitee.svg",
     },
     {
-        key:   "giteaAuth",
+        key: "giteaAuth",
         title: "Gitea",
-        logo:  "gitea.svg",
+        logo: "gitea.svg",
         optionsComponent: SelfHostedOptions,
     },
     {
-        key:   "discordAuth",
+        key: "discordAuth",
         title: "Discord",
-        logo:  "discord.svg",
+        logo: "discord.svg",
     },
     {
-        key:   "twitterAuth",
+        key: "twitterAuth",
         title: "Twitter",
-        logo:  "twitter.svg",
+        logo: "twitter.svg",
     },
     {
-        key:   "kakaoAuth",
+        key: "kakaoAuth",
         title: "Kakao",
-        logo:  "kakao.svg",
+        logo: "kakao.svg",
     },
     {
-        key:   "spotifyAuth",
+        key: "spotifyAuth",
         title: "Spotify",
-        logo:  "spotify.svg",
+        logo: "spotify.svg",
     },
     {
-        key:   "twitchAuth",
+        key: "twitchAuth",
         title: "Twitch",
-        logo:  "twitch.svg",
+        logo: "twitch.svg",
     },
     {
-        key:   "stravaAuth",
+        key: "stravaAuth",
         title: "Strava",
-        logo:  "strava.svg",
+        logo: "strava.svg",
     },
     {
-        key:   "livechatAuth",
+        key: "livechatAuth",
         title: "LiveChat",
-        logo:  "livechat.svg",
+        logo: "livechat.svg",
     },
     {
-        key:   "oidcAuth",
+        key: "oidcAuth",
         title: "OpenID Connect",
-        logo:  "oidc.svg",
+        logo: "oidc.svg",
         optionsComponent: OIDCOptions,
     },
     {
-        key:   "oidc2Auth",
+        key: "oidc2Auth",
         title: "(2) OpenID Connect",
-        logo:  "oidc.svg",
+        logo: "oidc.svg",
         optionsComponent: OIDCOptions,
     },
     {
-        key:   "oidc3Auth",
+        key: "oidc3Auth",
         title: "(3) OpenID Connect",
-        logo:  "oidc.svg",
+        logo: "oidc.svg",
         optionsComponent: OIDCOptions,
+    },
+    {
+        key: "fourtytwoAuth",
+        title: "42 School",
+        logo: "fourtytwo.svg",
     },
 ];
