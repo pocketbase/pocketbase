@@ -50,7 +50,9 @@ func (p *Fourtytwo) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Name     string `json:"displayname"`
 		Username string `json:"login"`
 		Picture  struct {
-			AvartarUrl string `json:"link"`
+			AvartarUrls struct {
+				AvartarUrl string `json:"large"`
+			} `json:"versions"`
 		} `json:"image"`
 		Email         string `json:"email"`
 		EmailVerified bool   `json:"active?"`
@@ -63,11 +65,14 @@ func (p *Fourtytwo) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id:           strconv.Itoa(extracted.Id),
 		Name:         extracted.Name,
 		Username:     extracted.Username,
-		AvatarUrl:    extracted.Picture.AvartarUrl,
-		Email:        extracted.Email,
+		AvatarUrl:    extracted.Picture.AvartarUrls.AvartarUrl,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
+	}
+
+	if extracted.EmailVerified {
+		user.Email = extracted.Email
 	}
 
 	return user, nil
