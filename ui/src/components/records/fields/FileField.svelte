@@ -194,6 +194,7 @@
                     type="file"
                     class="hidden"
                     multiple={isMultiple}
+                    accept={field.options?.mimeTypes || "*/*"}
                     on:change={() => {
                         for (let file of fileInput.files) {
                             uploadedFiles.push(file);
