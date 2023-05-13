@@ -37,6 +37,8 @@
 
 - (@todo docs) Added new `App.OnTerminate()` hook.
 
+- Added `accept` file field attribute with the field MIME types ([#2466](https://github.com/pocketbase/pocketbase/pull/2466); thanks @Nikhil1920).
+
 
 ## v0.15.3
 

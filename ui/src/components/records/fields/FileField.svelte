@@ -193,6 +193,7 @@
                     bind:this={fileInput}
                     type="file"
                     class="hidden"
+                    accept={field.options?.mimeTypes?.join(",") || null}
                     multiple={isMultiple}
                     on:change={() => {
                         for (let file of fileInput.files) {
