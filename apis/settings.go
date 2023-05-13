@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models/settings"
-	"github.com/pocketbase/pocketbase/tools/security"
 )
 
 // bindSettingsApi registers the settings api endpoints.
@@ -86,27 +84,22 @@ func (api *settingsApi) set(c echo.Context) error {
 }
 
 func (api *settingsApi) testS3(c echo.Context) error {
-	if !api.app.Settings().S3.Enabled {
-		return NewBadRequestError("S3 storage is not enabled.", nil)
+	form := forms.NewTestS3Filesystem(api.app)
+
+	// load request
+	if err := c.Bind(form); err != nil {
+		return NewBadRequestError("An error occurred while loading the submitted data.", err)
 	}
 
-	fs, err := api.app.NewFilesystem()
-	if err != nil {
-		return NewBadRequestError("Failed to initialize the S3 storage. Raw error: \n"+err.Error(), nil)
-	}
-	defer fs.Close()
+	// send
+	if err := form.Submit(); err != nil {
+		// form error
+		if fErr, ok := err.(validation.Errors); ok {
+			return NewBadRequestError("Failed to test the S3 filesystem.", fErr)
+		}
 
-	testPrefix := "pb_settings_test_" + security.PseudorandomString(5)
-	testFileKey := testPrefix + "/test.txt"
-
-	// try to upload a test file
-	if err := fs.Upload([]byte("test"), testFileKey); err != nil {
-		return NewBadRequestError("Failed to upload a test file. Raw error: \n"+err.Error(), nil)
-	}
-
-	// test prefix deletion (ensures that both bucket list and delete works)
-	if errs := fs.DeletePrefix(testPrefix); len(errs) > 0 {
-		return NewBadRequestError(fmt.Sprintf("Failed to delete a test file. Raw error: %v", errs), nil)
+		// mailer error
+		return NewBadRequestError("Failed to test the S3 filesystem. Raw error: \n"+err.Error(), nil)
 	}
 
 	return c.NoContent(http.StatusNoContent)

@@ -150,6 +150,14 @@ func (c *Cron) Start() {
 	}()
 }
 
+// HasStarted checks whether the current Cron ticker has been started.
+func (c *Cron) HasStarted() bool {
+	c.RLock()
+	defer c.RUnlock()
+
+	return c.ticker != nil
+}
+
 // runDue runs all registered jobs that are scheduled for the provided time.
 func (c *Cron) runDue(t time.Time) {
 	c.RLock()

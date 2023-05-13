@@ -165,7 +165,7 @@
                     isLoading = false;
                     console.warn(err);
                     clearList();
-                    ApiClient.errorResponseHandler(err, false);
+                    ApiClient.error(err, false);
                 }
             });
     }
@@ -234,7 +234,7 @@
                 deselectAllRecords();
             })
             .catch((err) => {
-                ApiClient.errorResponseHandler(err);
+                ApiClient.error(err);
             })
             .finally(() => {
                 isDeleting = false;

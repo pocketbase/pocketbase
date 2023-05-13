@@ -26,7 +26,7 @@
             addSuccessToast("Successfully set a new admin password.");
             replace("/");
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isLoading = false;

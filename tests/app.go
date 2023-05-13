@@ -44,6 +44,7 @@ func (t *TestApp) Cleanup() {
 	}
 }
 
+// NewMailClient initializes test app mail client.
 func (t *TestApp) NewMailClient() mailer.Mailer {
 	t.mux.Lock()
 	defer t.mux.Unlock()

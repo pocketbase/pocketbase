@@ -31,7 +31,7 @@
                 .confirmPasswordReset(params?.token, newPassword, newPasswordConfirm);
             success = true;
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isLoading = false;

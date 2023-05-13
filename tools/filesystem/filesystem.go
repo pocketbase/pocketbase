@@ -82,7 +82,6 @@ func NewLocal(dirPath string) (*System, error) {
 	return &System{ctx: ctx, bucket: bucket}, nil
 }
 
-// @todo add test
 // SetContext assigns the specified context to the current filesystem.
 func (s *System) SetContext(ctx context.Context) {
 	s.ctx = ctx

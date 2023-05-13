@@ -60,7 +60,7 @@
 
             panel?.hide();
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isSubmitting = false;

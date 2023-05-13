@@ -107,7 +107,7 @@
                 list = CommonHelper.filterDuplicatesByKey(selected.concat(list));
             }
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isLoadingSelected = false;
@@ -144,7 +144,7 @@
             currentPage = result.page;
             totalItems = result.totalItems;
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isLoadingList = false;

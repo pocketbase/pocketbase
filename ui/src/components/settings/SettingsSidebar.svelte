@@ -28,6 +28,15 @@
             <i class="ri-archive-drawer-line" />
             <span class="txt">Files storage</span>
         </a>
+        <a
+            href="/settings/backups"
+            class="sidebar-list-item"
+            use:active={{ path: "/settings/backups/?.*" }}
+            use:link
+        >
+            <i class="ri-archive-line" />
+            <span class="txt">Backups</span>
+        </a>
 
         <div class="sidebar-title">
             <span class="txt">Sync</span>

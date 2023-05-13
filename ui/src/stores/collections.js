@@ -75,7 +75,7 @@ export async function loadCollections(activeId = null) {
 
         refreshProtectedFilesCollectionsCache();
     } catch (err) {
-        ApiClient.errorResponseHandler(err);
+        ApiClient.error(err);
     }
 
     isCollectionsLoading.set(false);

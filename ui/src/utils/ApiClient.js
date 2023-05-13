@@ -31,7 +31,7 @@ PocketBase.prototype.logout = function(redirect = true) {
  * @param  {Boolean} notify     Whether to add a toast notification.
  * @param  {String}  defaultMsg Default toast notification message if the error doesn't have one.
  */
-PocketBase.prototype.errorResponseHandler = function(err, notify = true, defaultMsg = "") {
+PocketBase.prototype.error = function(err, notify = true, defaultMsg = "") {
     if (!err || !(err instanceof Error) || err.isAbort) {
         return;
     }
@@ -88,7 +88,7 @@ PocketBase.prototype.getAdminFileToken = async function(collectionId = "") {
     let token = localStorage.getItem(adminFileTokenKey) || "";
 
     // request a new token only if the previous one is missing or will expire soon
-    if (!token || isTokenExpired(token, 15)) {
+    if (!token || isTokenExpired(token, 10)) {
         // remove previously stored token (if any)
         token && localStorage.removeItem(adminFileTokenKey);
 

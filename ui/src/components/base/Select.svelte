@@ -157,6 +157,9 @@
     function handleOptionKeypress(e, item) {
         if (e.code === "Enter" || e.code === "Space") {
             handleOptionSelect(e, item);
+            if (closable) {
+                hideDropdown();
+            }
         }
     }
 

@@ -9,16 +9,18 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"time"
 
 	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/archive"
+	"github.com/pocketbase/pocketbase/tools/cron"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/security"
-	"github.com/spf13/cast"
 )
 
-const CacheActiveBackupsKey string = "@activeBackup"
+const CacheKeyActiveBackup string = "@activeBackup"
 
 // CreateBackup creates a new backup of the current app pb_data directory.
 //
@@ -36,9 +38,8 @@ const CacheActiveBackupsKey string = "@activeBackup"
 //
 // Backups can be stored on S3 if it is configured in app.Settings().Backups.
 func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
-	canBackup := cast.ToString(app.Cache().Get(CacheActiveBackupsKey)) != ""
-	if canBackup {
-		return errors.New("try again later - another backup/restore process has already been started")
+	if app.Cache().Has(CacheKeyActiveBackup) {
+		return errors.New("try again later - another backup/restore operation has already been started")
 	}
 
 	// auto generate backup name
@@ -49,8 +50,8 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 		)
 	}
 
-	app.Cache().Set(CacheActiveBackupsKey, name)
-	defer app.Cache().Remove(CacheActiveBackupsKey)
+	app.Cache().Set(CacheKeyActiveBackup, name)
+	defer app.Cache().Remove(CacheKeyActiveBackup)
 
 	// Archive pb_data in a temp directory, exluding the "backups" dir itself (if exist).
 	//
@@ -121,19 +122,18 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 //  6. Restart the app (on successfull app bootstap it will also remove the old pb_data).
 //
 // If a failure occure during the restore process the dir changes are reverted.
-// It for whatever reason the revert is not possible, it panics.
+// If for whatever reason the revert is not possible, it panics.
 func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 	if runtime.GOOS == "windows" {
 		return errors.New("restore is not supported on windows")
 	}
 
-	canBackup := cast.ToString(app.Cache().Get(CacheActiveBackupsKey)) != ""
-	if canBackup {
-		return errors.New("try again later - another backup/restore process has already been started")
+	if app.Cache().Has(CacheKeyActiveBackup) {
+		return errors.New("try again later - another backup/restore operation has already been started")
 	}
 
-	app.Cache().Set(CacheActiveBackupsKey, name)
-	defer app.Cache().Remove(CacheActiveBackupsKey)
+	app.Cache().Set(CacheKeyActiveBackup, name)
+	defer app.Cache().Remove(CacheKeyActiveBackup)
 
 	fsys, err := app.NewBackupsFilesystem()
 	if err != nil {
@@ -227,7 +227,7 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 	// restore the local pb_data/backups dir (if any)
 	if _, err := os.Stat(oldLocalBackupsDir); err == nil {
 		if err := os.Rename(oldLocalBackupsDir, newLocalBackupsDir); err != nil {
-			if err := revertDataDirChanges(true); err != nil && app.IsDebug() {
+			if err := revertDataDirChanges(false); err != nil && app.IsDebug() {
 				log.Println(err)
 			}
 
@@ -237,12 +237,115 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 
 	// restart the app
 	if err := app.Restart(); err != nil {
-		if err := revertDataDirChanges(false); err != nil {
+		if err := revertDataDirChanges(true); err != nil {
 			panic(err)
 		}
 
 		return fmt.Errorf("failed to restart the app process: %w", err)
 	}
+
+	return nil
+}
+
+// initAutobackupHooks registers the autobackup app serve hooks.
+// @todo add tests
+func (app *BaseApp) initAutobackupHooks() error {
+	c := cron.New()
+
+	loadJob := func() {
+		c.Stop()
+
+		rawSchedule := app.Settings().Backups.Cron
+		if rawSchedule == "" || !app.IsBootstrapped() {
+			return
+		}
+
+		c.Add("@autobackup", rawSchedule, func() {
+			autoPrefix := "@auto_pb_backup_"
+
+			name := fmt.Sprintf(
+				"%s%s.zip",
+				autoPrefix,
+				time.Now().UTC().Format("20060102150405"),
+			)
+
+			if err := app.CreateBackup(context.Background(), name); err != nil && app.IsDebug() {
+				// @todo replace after logs generalization
+				log.Println(err)
+			}
+
+			maxKeep := app.Settings().Backups.CronMaxKeep
+
+			if maxKeep == 0 {
+				return // no explicit limit
+			}
+
+			fsys, err := app.NewBackupsFilesystem()
+			if err != nil && app.IsDebug() {
+				// @todo replace after logs generalization
+				log.Println(err)
+				return
+			}
+			defer fsys.Close()
+
+			files, err := fsys.List(autoPrefix)
+			if err != nil && app.IsDebug() {
+				// @todo replace after logs generalization
+				log.Println(err)
+				return
+			}
+
+			if maxKeep >= len(files) {
+				return // nothing to remove
+			}
+
+			// sort desc
+			sort.Slice(files, func(i, j int) bool {
+				return files[i].ModTime.After(files[j].ModTime)
+			})
+
+			// keep only the most recent n auto backup files
+			toRemove := files[maxKeep:]
+
+			for _, f := range toRemove {
+				if err := fsys.Delete(f.Key); err != nil && app.IsDebug() {
+					// @todo replace after logs generalization
+					log.Println(err)
+				}
+			}
+		})
+
+		// restart the ticker
+		c.Start()
+	}
+
+	// load on app serve
+	app.OnBeforeServe().Add(func(e *ServeEvent) error {
+		loadJob()
+		return nil
+	})
+
+	// stop the ticker on app termination
+	app.OnTerminate().Add(func(e *TerminateEvent) error {
+		c.Stop()
+		return nil
+	})
+
+	// reload on app settings change
+	app.OnModelAfterUpdate((&models.Param{}).TableName()).Add(func(e *ModelEvent) error {
+		if !c.HasStarted() {
+			return nil // no need to reload as it hasn't been started yet
+		}
+
+		p := e.Model.(*models.Param)
+		if p == nil || p.Key != models.ParamAppSettings {
+			return nil
+		}
+
+		loadJob()
+
+		return nil
+	})
 
 	return nil
 }

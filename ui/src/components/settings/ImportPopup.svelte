@@ -62,7 +62,7 @@
         }
     }
 
-    function submitWithConfirm() {
+    function submitConfirm() {
         // find deleted fields
         const deletedFieldNames = [];
         if (deleteMissing) {
@@ -109,7 +109,7 @@
             addSuccessToast("Successfully imported collections configuration.");
             dispatch("submit");
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isImporting = false;
@@ -137,13 +137,14 @@
     {/each}
 
     <svelte:fragment slot="footer">
-        <button type="button" class="btn btn-transparent" on:click={hide} disabled={isImporting}>Close</button>
+        <button type="button" class="btn btn-transparent" on:click={hide} disabled={isImporting}>Close</button
+        >
         <button
             type="button"
             class="btn btn-expanded"
             class:btn-loading={isImporting}
             disabled={isImporting}
-            on:click={() => submitWithConfirm()}
+            on:click={() => submitConfirm()}
         >
             <span class="txt">Confirm and import</span>
         </button>

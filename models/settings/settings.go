@@ -10,6 +10,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/tools/auth"
+	"github.com/pocketbase/pocketbase/tools/cron"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/security"
@@ -23,12 +24,10 @@ const SecretMask string = "******"
 type Settings struct {
 	mux sync.RWMutex
 
-	Meta MetaConfig `form:"meta" json:"meta"`
-	Logs LogsConfig `form:"logs" json:"logs"`
-	Smtp SmtpConfig `form:"smtp" json:"smtp"`
-	S3   S3Config   `form:"s3" json:"s3"`
-
-	// @todo update tests
+	Meta    MetaConfig    `form:"meta" json:"meta"`
+	Logs    LogsConfig    `form:"logs" json:"logs"`
+	Smtp    SmtpConfig    `form:"smtp" json:"smtp"`
+	S3      S3Config      `form:"s3" json:"s3"`
 	Backups BackupsConfig `form:"backups" json:"backups"`
 
 	AdminAuthToken           TokenConfig `form:"adminAuthToken" json:"adminAuthToken"`
@@ -86,6 +85,9 @@ func New() *Settings {
 			Username: "",
 			Password: "",
 			Tls:      false,
+		},
+		Backups: BackupsConfig{
+			CronMaxKeep: 3,
 		},
 		AdminAuthToken: TokenConfig{
 			Secret:   security.RandomString(50),
@@ -194,6 +196,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.RecordFileToken),
 		validation.Field(&s.Smtp),
 		validation.Field(&s.S3),
+		validation.Field(&s.Backups),
 		validation.Field(&s.GoogleAuth),
 		validation.Field(&s.FacebookAuth),
 		validation.Field(&s.GithubAuth),
@@ -248,6 +251,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 	sensitiveFields := []*string{
 		&clone.Smtp.Password,
 		&clone.S3.Secret,
+		&clone.Backups.S3.Secret,
 		&clone.AdminAuthToken.Secret,
 		&clone.AdminPasswordResetToken.Secret,
 		&clone.AdminFileToken.Secret,
@@ -397,28 +401,46 @@ func (c S3Config) Validate() error {
 // -------------------------------------------------------------------
 
 type BackupsConfig struct {
-	AutoInterval     BackupInterval `form:"autoInterval" json:"autoInterval"`
-	AutoMaxRetention int            `form:"autoMaxRetention" json:"autoMaxRetention"`
-	S3               S3Config       `form:"s3" json:"s3"`
+	// Cron is a cron expression to schedule auto backups, eg. "* * * * *".
+	//
+	// Leave it empty to disable the auto backups functionality.
+	Cron string `form:"cron" json:"cron"`
+
+	// CronMaxKeep is the the max number of cron generated backups to
+	// keep before removing older entries.
+	//
+	// This field works only when the cron config has valid cron expression.
+	CronMaxKeep int `form:"cronMaxKeep" json:"cronMaxKeep"`
+
+	// S3 is an optional S3 storage config specifying where to store the app backups.
+	S3 S3Config `form:"s3" json:"s3"`
 }
 
 // Validate makes BackupsConfig validatable by implementing [validation.Validatable] interface.
 func (c BackupsConfig) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.S3),
+		validation.Field(&c.Cron, validation.By(checkCronExpression)),
+		validation.Field(
+			&c.CronMaxKeep,
+			validation.When(c.Cron != "", validation.Required),
+			validation.Min(1),
+		),
 	)
 }
 
-// @todo
-type BackupInterval struct {
-	Day int
-}
+func checkCronExpression(value any) error {
+	v, _ := value.(string)
+	if v == "" {
+		return nil // nothing to check
+	}
 
-// Validate makes BackupInterval validatable by implementing [validation.Validatable] interface.
-func (c BackupInterval) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(&c.Day),
-	)
+	_, err := cron.NewSchedule(v)
+	if err != nil {
+		return validation.NewError("validation_invalid_cron", err.Error())
+	}
+
+	return nil
 }
 
 // -------------------------------------------------------------------

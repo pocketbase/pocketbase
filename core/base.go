@@ -1152,4 +1152,8 @@ func (app *BaseApp) registerDefaultHooks() {
 		app.ResetBootstrapState()
 		return nil
 	})
+
+	if err := app.initAutobackupHooks(); err != nil && app.IsDebug() {
+		log.Println(err)
+	}
 }

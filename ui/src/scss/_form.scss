@@ -15,6 +15,7 @@ button {
     position: relative;
     z-index: 1;
     display: inline-flex;
+    vertical-align: top;
     align-items: center;
     justify-content: center;
     outline: 0;
@@ -238,6 +239,8 @@ button {
         }
     }
     &.btn-xs {
+        padding-left: 7px;
+        padding-right: 7px;
         min-width: var(--xsBtnHeight);
         min-height: var(--xsBtnHeight);
     }
@@ -1108,6 +1111,11 @@ select {
         transition: background var(--baseAnimationSpeed);
         .list-item {
             border-top: 1px solid var(--baseAlt2Color);
+            &:hover,
+            &:focus-visible,
+            &:active {
+                background: none;
+            }
             &.selected {
                 background: var(--baseAlt2Color);
             }

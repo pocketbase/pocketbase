@@ -41,7 +41,7 @@
             const result = (await ApiClient.settings.getAll()) || {};
             initSettings(result);
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isLoading = false;
@@ -59,7 +59,7 @@
             initSettings(result);
             addSuccessToast("Successfully saved tokens options.");
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isSaving = false;

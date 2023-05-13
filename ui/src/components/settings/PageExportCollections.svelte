@@ -33,7 +33,7 @@
                 delete collection.updated;
             }
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isLoadingCollections = false;

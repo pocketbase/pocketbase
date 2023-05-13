@@ -127,6 +127,7 @@ func TestSettingsMerge(t *testing.T) {
 	s2.Smtp.Enabled = true
 	s2.S3.Enabled = true
 	s2.S3.Endpoint = "test"
+	s2.Backups.Cron = "* * * * *"
 	s2.AdminAuthToken.Duration = 1
 	s2.AdminPasswordResetToken.Duration = 2
 	s2.AdminFileToken.Duration = 2
@@ -231,6 +232,7 @@ func TestSettingsRedactClone(t *testing.T) {
 	// secrets
 	s1.Smtp.Password = testSecret
 	s1.S3.Secret = testSecret
+	s1.Backups.S3.Secret = testSecret
 	s1.AdminAuthToken.Secret = testSecret
 	s1.AdminPasswordResetToken.Secret = testSecret
 	s1.AdminFileToken.Secret = testSecret
@@ -606,6 +608,74 @@ func TestMetaConfigValidate(t *testing.T) {
 
 		if result == nil && scenario.expectError {
 			t.Errorf("(%d) Expected error, got nil", i)
+		}
+	}
+}
+
+func TestBackupsConfigValidate(t *testing.T) {
+	scenarios := []struct {
+		name           string
+		config         settings.BackupsConfig
+		expectedErrors []string
+	}{
+		{
+			"zero value",
+			settings.BackupsConfig{},
+			[]string{},
+		},
+		{
+			"invalid cron",
+			settings.BackupsConfig{
+				Cron:        "invalid",
+				CronMaxKeep: 0,
+			},
+			[]string{"cron", "cronMaxKeep"},
+		},
+		{
+			"invalid enabled S3",
+			settings.BackupsConfig{
+				S3: settings.S3Config{
+					Enabled: true,
+				},
+			},
+			[]string{"s3"},
+		},
+		{
+			"valid data",
+			settings.BackupsConfig{
+				S3: settings.S3Config{
+					Enabled:   true,
+					Endpoint:  "example.com",
+					Bucket:    "test",
+					Region:    "test",
+					AccessKey: "test",
+					Secret:    "test",
+				},
+				Cron:        "*/10 * * * *",
+				CronMaxKeep: 1,
+			},
+			[]string{},
+		},
+	}
+
+	for _, s := range scenarios {
+		result := s.config.Validate()
+
+		// parse errors
+		errs, ok := result.(validation.Errors)
+		if !ok && result != nil {
+			t.Errorf("[%s] Failed to parse errors %v", s.name, result)
+			continue
+		}
+
+		// check errors
+		if len(errs) > len(s.expectedErrors) {
+			t.Errorf("[%s] Expected error keys %v, got %v", s.name, s.expectedErrors, errs)
+		}
+		for _, k := range s.expectedErrors {
+			if _, ok := errs[k]; !ok {
+				t.Errorf("[%s] Missing expected error key %q in %v", s.name, k, errs)
+			}
 		}
 	}
 }

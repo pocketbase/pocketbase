@@ -58,7 +58,7 @@
                     isLoading = false;
                     console.warn(err);
                     clearList();
-                    ApiClient.errorResponseHandler(err, false);
+                    ApiClient.error(err, false);
                 }
             });
     }

@@ -45,6 +45,9 @@ func (form *BackupCreate) Validate() error {
 
 func (form *BackupCreate) checkUniqueName(value any) error {
 	v, _ := value.(string)
+	if v == "" {
+		return nil // nothing to check
+	}
 
 	fsys, err := form.app.NewBackupsFilesystem()
 	if err != nil {

@@ -206,7 +206,7 @@
                 dispatch("save", result);
             })
             .catch((err) => {
-                ApiClient.errorResponseHandler(err);
+                ApiClient.error(err);
             })
             .finally(() => {
                 isSaving = false;
@@ -227,7 +227,7 @@
                     dispatch("delete", original);
                 })
                 .catch((err) => {
-                    ApiClient.errorResponseHandler(err);
+                    ApiClient.error(err);
                 });
         });
     }
@@ -299,7 +299,7 @@
                     addSuccessToast(`Successfully sent verification email to ${original.email}.`);
                 })
                 .catch((err) => {
-                    ApiClient.errorResponseHandler(err);
+                    ApiClient.error(err);
                 });
         });
     }
@@ -316,7 +316,7 @@
                     addSuccessToast(`Successfully sent password reset email to ${original.email}.`);
                 })
                 .catch((err) => {
-                    ApiClient.errorResponseHandler(err);
+                    ApiClient.error(err);
                 });
         });
     }

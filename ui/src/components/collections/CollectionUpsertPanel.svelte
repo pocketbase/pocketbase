@@ -114,7 +114,7 @@
         initialFormHash = calculateFormHash(collection);
     }
 
-    function saveWithConfirm() {
+    function saveConfirm() {
         if (collection.$isNew) {
             save();
         } else {
@@ -159,7 +159,7 @@
                 });
             })
             .catch((err) => {
-                ApiClient.errorResponseHandler(err);
+                ApiClient.error(err);
             })
             .finally(() => {
                 isSaving = false;
@@ -196,7 +196,7 @@
                     removeCollection(original);
                 })
                 .catch((err) => {
-                    ApiClient.errorResponseHandler(err);
+                    ApiClient.error(err);
                 });
         });
     }
@@ -304,7 +304,7 @@
         <form
             class="block"
             on:submit|preventDefault={() => {
-                canSave && saveWithConfirm();
+                canSave && saveConfirm();
             }}
         >
             <Field
@@ -453,7 +453,7 @@
             class="btn btn-expanded"
             class:btn-loading={isSaving}
             disabled={!canSave || isSaving}
-            on:click={() => saveWithConfirm()}
+            on:click={() => saveConfirm()}
         >
             <span class="txt">{collection.$isNew ? "Create" : "Save changes"}</span>
         </button>

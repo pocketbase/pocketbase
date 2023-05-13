@@ -37,6 +37,8 @@ func (h *Hook[T]) Add(fn Handler[T]) {
 }
 
 // Reset removes all registered handlers.
+//
+// @todo for consistency with other Go methods consider renaming it to Clear.
 func (h *Hook[T]) Reset() {
 	h.mux.Lock()
 	defer h.mux.Unlock()

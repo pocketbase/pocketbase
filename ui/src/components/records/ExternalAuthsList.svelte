@@ -33,7 +33,7 @@
         try {
             externalAuths = await ApiClient.collection(record.collectionId).listExternalAuths(record.id);
         } catch (err) {
-            ApiClient.errorResponseHandler(err);
+            ApiClient.error(err);
         }
 
         isLoading = false;
@@ -53,7 +53,7 @@
                     loadExternalAuths(); // reload list
                 })
                 .catch((err) => {
-                    ApiClient.errorResponseHandler(err);
+                    ApiClient.error(err);
                 });
         });
     }

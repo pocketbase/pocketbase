@@ -47,6 +47,7 @@ func TestSettingsList(t *testing.T) {
 				`"logs":{`,
 				`"smtp":{`,
 				`"s3":{`,
+				`"backups":{`,
 				`"adminAuthToken":{`,
 				`"adminPasswordResetToken":{`,
 				`"adminFileToken":{`,
@@ -125,6 +126,7 @@ func TestSettingsSet(t *testing.T) {
 				`"logs":{`,
 				`"smtp":{`,
 				`"s3":{`,
+				`"backups":{`,
 				`"adminAuthToken":{`,
 				`"adminPasswordResetToken":{`,
 				`"adminFileToken":{`,
@@ -190,6 +192,7 @@ func TestSettingsSet(t *testing.T) {
 				`"logs":{`,
 				`"smtp":{`,
 				`"s3":{`,
+				`"backups":{`,
 				`"adminAuthToken":{`,
 				`"adminPasswordResetToken":{`,
 				`"adminFileToken":{`,
@@ -255,14 +258,44 @@ func TestSettingsTestS3(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "authorized as admin (no s3)",
+			Name:   "authorized as admin (missing body + no s3)",
 			Method: http.MethodPost,
 			Url:    "/api/settings/test/s3",
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"filesystem":{`,
+			},
+		},
+		{
+			Name:   "authorized as admin (invalid filesystem)",
+			Method: http.MethodPost,
+			Url:    "/api/settings/test/s3",
+			Body:   strings.NewReader(`{"filesystem":"invalid"}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"filesystem":{`,
+			},
+		},
+		{
+			Name:   "authorized as admin (valid filesystem and no s3)",
+			Method: http.MethodPost,
+			Url:    "/api/settings/test/s3",
+			Body:   strings.NewReader(`{"filesystem":"storage"}`),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{}`,
+			},
 		},
 	}
 
