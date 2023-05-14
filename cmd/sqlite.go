@@ -9,7 +9,6 @@ import (
 // NewSQLiteCommand allows the user to run arbitrary SQL commands on the database from the CLI
 //Example: pocketbase.exe sqlite "DELETE FROM users WHERE name = 'foo'"
 func NewSQLiteCommand(app core.App) *cobra.Command {
-
 	command := &cobra.Command{
 		Use:   "sqlite",
 		Short: "Run arbitrary SQL commands on the database",
@@ -32,7 +31,7 @@ func NewSQLiteCommand(app core.App) *cobra.Command {
 				color.Yellow("Error: %v", err)
 				return
 			}
-			color.Green("Sucess! Affected %v row(s)", rowsAffected)
+			color.Green("Success! Affected %v row(s)", rowsAffected)
 		},
 	}
 
