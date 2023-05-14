@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewServeCommand creates and returns new command responsible for
-// starting the default PocketBase web server.
+// NewSQLiteCommand allows the user to run arbitrary SQL commands on the database from the CLI
+//Example: pocketbase.exe sqlite "DELETE FROM users WHERE name = 'foo'"
 func NewSQLiteCommand(app core.App) *cobra.Command {
 
 	command := &cobra.Command{
