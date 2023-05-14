@@ -138,7 +138,8 @@ func (pb *PocketBase) Start() error {
 	// register system commands
 	pb.RootCmd.AddCommand(cmd.NewServeCommand(pb, !pb.hideStartBanner))
 	pb.RootCmd.AddCommand(cmd.NewTempUpgradeCommand(pb))
-
+	pb.RootCmd.AddCommand(cmd.NewSQLiteCommand(pb))
+	
 	return pb.Execute()
 }
 
