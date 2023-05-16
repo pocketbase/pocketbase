@@ -210,7 +210,7 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 	return pb.RootCmd.ParseFlags(os.Args[1:])
 }
 
-// skipBootstrap eagerly checks if the app should skip the bootstap process:
+// skipBootstrap eagerly checks if the app should skip the bootstrap process:
 // - already bootstrapped
 // - is unknown command
 // - is the default help command

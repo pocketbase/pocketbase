@@ -1436,10 +1436,12 @@ export default class CommonHelper {
         const fallbackProps = [
             "title",
             "name",
+            "slug",
             "email",
             "username",
-            "heading",
             "label",
+            "heading",
+            "message",
             "key",
             "id",
         ];
