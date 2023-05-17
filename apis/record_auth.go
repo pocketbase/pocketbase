@@ -242,7 +242,15 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 				e.Record = data.Record
 				e.OAuth2User = data.OAuth2User
 
-				return RecordAuthResponse(api.app, e.HttpContext, e.Record, e.OAuth2User)
+				meta := struct {
+					*auth.AuthUser
+					IsNew bool `json:"isNew"`
+				}{
+					AuthUser: e.OAuth2User,
+					IsNew:    event.IsNewRecord,
+				}
+
+				return RecordAuthResponse(api.app, e.HttpContext, e.Record, meta)
 			})
 		}
 	})

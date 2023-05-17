@@ -45,6 +45,8 @@
 
 - Added support for multiple relations sort in the Admin UI.
 
+- Added `meta.isNew` to the OAuth2 auth JSON response to indicate newly created PocketBase user.
+
 
 ## v0.15.3
 
