@@ -43,6 +43,8 @@
 
 - Added support for multiple files sort in the Admin UI ([#2445](https://github.com/pocketbase/pocketbase/issues/2445)).
 
+- Added support for multiple relations sort in the Admin UI.
+
 
 ## v0.15.3
 
