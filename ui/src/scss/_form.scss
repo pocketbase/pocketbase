@@ -1112,6 +1112,8 @@ select {
         .list-item {
             border-top: 1px solid var(--baseAlt2Color);
             &:hover,
+            &:focus,
+            &:focus-within,
             &:focus-visible,
             &:active {
                 background: none;
@@ -1127,6 +1129,13 @@ select {
                 &:active {
                     background: var(--baseAlt3Color);
                 }
+            }
+            &.dragging {
+                z-index: 9;
+                box-shadow: inset 0 0 0 1px var(--baseAlt3Color);
+            }
+            &.dragover {
+                background: var(--baseAlt2Color);
             }
         }
     }

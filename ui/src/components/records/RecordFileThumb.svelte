@@ -46,6 +46,7 @@
     <div class="thumb {size ? `thumb-${size}` : ''}" />
 {:else}
     <a
+        draggable={false}
         class="thumb {size ? `thumb-${size}` : ''}"
         href={originalUrl}
         target="_blank"
@@ -59,7 +60,13 @@
         }}
     >
         {#if type === "image"}
-            <img src={thumbUrl} alt={filename} title="Preview {filename}" on:error={onError} />
+            <img
+                draggable={false}
+                src={thumbUrl}
+                alt={filename}
+                title="Preview {filename}"
+                on:error={onError}
+            />
         {:else if type === "video" || type === "audio"}
             <i class="ri-video-line" />
         {:else}

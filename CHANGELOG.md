@@ -35,9 +35,13 @@
 
 - Added new `App.NewBackupsFilesystem()` helper to create a dedicated fs abstraction for managing app backups.
 
+- (@todo docs) Added `update` command for the prebuilt executable.
+
 - (@todo docs) Added new `App.OnTerminate()` hook.
 
 - Added `accept` file field attribute with the field MIME types ([#2466](https://github.com/pocketbase/pocketbase/pull/2466); thanks @Nikhil1920).
+
+- Added support for multiple files sort in the Admin UI ([#2445](https://github.com/pocketbase/pocketbase/issues/2445)).
 
 
 ## v0.15.3

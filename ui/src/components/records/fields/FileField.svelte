@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
+    import Draggable from "@/components/base/Draggable.svelte";
     import UploadedFilePreview from "@/components/base/UploadedFilePreview.svelte";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
     import { onMount } from "svelte";
@@ -79,7 +80,7 @@
 
         const files = e.dataTransfer?.files || [];
 
-        if (maxReached || !files.length) {
+        if (maxReached || !files.length || e.dataTransfer?.effectAllowed != "copy") {
             return;
         }
 
@@ -103,7 +104,10 @@
 
 <div
     class="block"
-    on:dragover|preventDefault={() => {
+    on:dragover|preventDefault={(e) => {
+        if (e.dataTransfer.effectAllowed != "copy") {
+            return; // not a file drag
+        }
         isDragOver = true;
     }}
     on:dragleave={() => {
@@ -128,64 +132,85 @@
         <div bind:this={filesListElem} class="list">
             {#each valueAsArray as filename, i (filename + record.id)}
                 {@const isDeleted = deletedFileIndexes.includes(i)}
-                <div class="list-item">
-                    <div class:fade={deletedFileIndexes.includes(i)}>
-                        <RecordFileThumb {record} {filename} />
-                    </div>
+                <Draggable
+                    bind:list={value}
+                    group={field.name + "_uploaded"}
+                    index={i}
+                    disabled={!isMultiple}
+                    let:dragging
+                    let:dragover
+                >
+                    <div class="list-item" class:dragging class:dragover>
+                        <div class:fade={deletedFileIndexes.includes(i)}>
+                            <RecordFileThumb {record} {filename} />
+                        </div>
 
-                    <div class="content">
-                        <a
-                            href={ApiClient.files.getUrl(record, filename, { token: fileToken })}
-                            class="txt-ellipsis {isDeleted ? 'txt-strikethrough txt-hint' : 'link-primary'}"
-                            title="Download"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            {filename}
-                        </a>
-                    </div>
+                        <div class="content">
+                            <a
+                                draggable={false}
+                                href={ApiClient.files.getUrl(record, filename, { token: fileToken })}
+                                class="txt-ellipsis {isDeleted
+                                    ? 'txt-strikethrough txt-hint'
+                                    : 'link-primary'}"
+                                title="Download"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                {filename}
+                            </a>
+                        </div>
 
-                    <div class="actions">
-                        {#if deletedFileIndexes.includes(i)}
-                            <button
-                                type="button"
-                                class="btn btn-sm btn-danger btn-transparent"
-                                on:click={() => restoreExistingFile(i)}
-                            >
-                                <span class="txt">Restore</span>
-                            </button>
-                        {:else}
-                            <button
-                                type="button"
-                                class="btn btn-transparent btn-hint btn-sm btn-circle btn-remove"
-                                use:tooltip={"Remove file"}
-                                on:click={() => removeExistingFile(i)}
-                            >
-                                <i class="ri-close-line" />
-                            </button>
-                        {/if}
+                        <div class="actions">
+                            {#if deletedFileIndexes.includes(i)}
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-danger btn-transparent"
+                                    on:click={() => restoreExistingFile(i)}
+                                >
+                                    <span class="txt">Restore</span>
+                                </button>
+                            {:else}
+                                <button
+                                    type="button"
+                                    class="btn btn-transparent btn-hint btn-sm btn-circle btn-remove"
+                                    use:tooltip={"Remove file"}
+                                    on:click={() => removeExistingFile(i)}
+                                >
+                                    <i class="ri-close-line" />
+                                </button>
+                            {/if}
+                        </div>
                     </div>
-                </div>
+                </Draggable>
             {/each}
 
             {#each uploadedFiles as file, i}
-                <div class="list-item">
-                    <figure class="thumb">
-                        <UploadedFilePreview {file} />
-                    </figure>
-                    <div class="filename m-r-auto" title={file.name}>
-                        <small class="label label-success m-r-5">New</small>
-                        <span class="txt">{file.name}</span>
+                <Draggable
+                    bind:list={uploadedFiles}
+                    group={field.name + "_new"}
+                    index={i}
+                    disabled={!isMultiple}
+                    let:dragging
+                    let:dragover
+                >
+                    <div class="list-item" class:dragging class:dragover>
+                        <figure class="thumb">
+                            <UploadedFilePreview {file} />
+                        </figure>
+                        <div class="filename m-r-auto" title={file.name}>
+                            <small class="label label-success m-r-5">New</small>
+                            <span class="txt">{file.name}</span>
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-transparent btn-hint btn-sm btn-circle btn-remove"
+                            use:tooltip={"Remove file"}
+                            on:click={() => removeNewFile(i)}
+                        >
+                            <i class="ri-close-line" />
+                        </button>
                     </div>
-                    <button
-                        type="button"
-                        class="btn btn-transparent btn-hint btn-sm btn-circle btn-remove"
-                        use:tooltip={"Remove file"}
-                        on:click={() => removeNewFile(i)}
-                    >
-                        <i class="ri-close-line" />
-                    </button>
-                </div>
+                </Draggable>
             {/each}
 
             <div class="list-item list-item-btn">

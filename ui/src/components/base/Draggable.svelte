@@ -5,13 +5,14 @@
 
     export let index;
     export let list = [];
+    export let group = "default";
     export let disabled = false;
 
     let dragging = false;
     let dragover = false;
 
     function onDrag(event, i) {
-        if (!event && !disabled) {
+        if (!event || disabled) {
             return;
         }
 
@@ -19,11 +20,17 @@
 
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.dropEffect = "move";
-        event.dataTransfer.setData("text/plain", i);
+        event.dataTransfer.setData(
+            "text/plain",
+            JSON.stringify({
+                index: i,
+                group: group,
+            })
+        );
     }
 
     function onDrop(event, target) {
-        if (!event && !disabled) {
+        if (!event || disabled) {
             return;
         }
 
@@ -32,7 +39,16 @@
 
         event.dataTransfer.dropEffect = "move";
 
-        const start = parseInt(event.dataTransfer.getData("text/plain"));
+        let dragData = {};
+        try {
+            dragData = JSON.parse(event.dataTransfer.getData("text/plain"));
+        } catch (_) {}
+
+        if (dragData.group != group) {
+            return; // different draggable group
+        }
+
+        const start = dragData.index << 0;
 
         if (start < target) {
             list.splice(target + 1, 0, list[start]);
@@ -49,7 +65,7 @@
 </script>
 
 <div
-    draggable={true}
+    draggable={!disabled}
     class="draggable"
     class:dragging
     class:dragover
