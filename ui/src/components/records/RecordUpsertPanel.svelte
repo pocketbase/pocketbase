@@ -39,7 +39,7 @@
     let isSaving = false;
     let confirmClose = false; // prevent close recursion
     let uploadedFilesMap = {}; // eg.: {"field1":[File1, File2], ...}
-    let deletedFileIndexesMap = {}; // eg.: {"field1":[0, 1], ...}
+    let deletedFileNamesMap = {}; // eg.: {"field1":[0, 1], ...}
     let originalSerializedData = JSON.stringify(null);
     let serializedData = originalSerializedData;
     let activeTab = tabFormKey;
@@ -49,8 +49,7 @@
     $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
 
     $: hasFileChanges =
-        CommonHelper.hasNonEmptyProps(uploadedFilesMap) ||
-        CommonHelper.hasNonEmptyProps(deletedFileIndexesMap);
+        CommonHelper.hasNonEmptyProps(uploadedFilesMap) || CommonHelper.hasNonEmptyProps(deletedFileNamesMap);
 
     $: serializedData = JSON.stringify(record);
 
@@ -84,7 +83,7 @@
         original = model || new Record();
         record = original.$clone();
         uploadedFilesMap = {};
-        deletedFileIndexesMap = {};
+        deletedFileNamesMap = {};
 
         // wait to populate the fields to get the normalized values
         await tick();
@@ -105,7 +104,7 @@
         setErrors({}); // reset errors
         original = newOriginal || new Record();
         uploadedFilesMap = {};
-        deletedFileIndexesMap = {};
+        deletedFileNamesMap = {};
 
         // to avoid layout shifts we replace only the file and non-schema fields
         const skipFields = collection?.schema?.filter((f) => f.type != "file")?.map((f) => f.name) || [];
@@ -277,10 +276,10 @@
         }
 
         // unset deleted files (if any)
-        for (const key in deletedFileIndexesMap) {
-            const indexes = CommonHelper.toArray(deletedFileIndexesMap[key]);
-            for (const index of indexes) {
-                formData.append(key + "." + index, "");
+        for (const key in deletedFileNamesMap) {
+            const names = CommonHelper.toArray(deletedFileNamesMap[key]);
+            for (const name of names) {
+                formData.append(key + "." + name, "");
             }
         }
 
@@ -557,7 +556,7 @@
                         {record}
                         bind:value={record[field.name]}
                         bind:uploadedFiles={uploadedFilesMap[field.name]}
-                        bind:deletedFileIndexes={deletedFileIndexesMap[field.name]}
+                        bind:deletedFileNames={deletedFileNamesMap[field.name]}
                     />
                 {:else if field.type === "relation"}
                     <RelationField {field} bind:value={record[field.name]} />

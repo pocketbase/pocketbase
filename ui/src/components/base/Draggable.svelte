@@ -60,7 +60,11 @@
 
         list = list;
 
-        dispatch("sort", list);
+        dispatch("sort", {
+            oldIndex: start,
+            newIndex: target,
+            list: list,
+        });
     }
 </script>
 
