@@ -472,7 +472,7 @@
                         <div class="icon">
                             <i class="ri-information-line" />
                         </div>
-                        <div class="content">
+                        <div class="flex flex-gap-xs">
                             The record has previous unsaved changes.
                             <button
                                 type="button"
