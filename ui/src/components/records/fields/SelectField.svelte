@@ -29,7 +29,7 @@
         multiple={isMultiple}
         closable={!isMultiple || value?.length >= field.options?.maxSelect}
         items={field.options?.values}
-        searchable={field.options?.values > 5}
+        searchable={field.options?.values?.length > 5}
         bind:selected={value}
     />
     {#if field.options?.maxSelect > 1}
