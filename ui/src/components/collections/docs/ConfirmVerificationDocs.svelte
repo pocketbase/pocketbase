@@ -49,6 +49,9 @@
         ...
 
         await pb.collection('${collection?.name}').confirmVerification('TOKEN');
+
+        // optionally refresh the previous authStore state with the latest record changes
+        await pb.collection('${collection?.name}').authRefresh();
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';
@@ -58,6 +61,9 @@
         ...
 
         await pb.collection('${collection?.name}').confirmVerification('TOKEN');
+
+        // optionally refresh the previous authStore state with the latest record changes
+        await pb.collection('${collection?.name}').authRefresh();
     `}
 />
 

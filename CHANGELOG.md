@@ -1,7 +1,12 @@
-## (WIP)
+## v0.16.0
 
-- (@todo docs) Added option to limit the returned API fields using the `?fields` query parameter.
-  The "fields picker" is applied for `SearchResult.Items` and any other JSON response. For example:
+- Added automated backups (_+ cron rotation_) APIs and UI for the `pb_data` directory.
+  The backups can be also initialized programmatically using `app.CreateBackup("backup.zip")`.
+  There is also experimental restore method - `app.RestoreBackup("backup.zip")` (_currently works only on UNIX systems as it relies on execve_).
+  The backups can be stored locally or in external S3 storage (_it has its own configuration, separate from the file uploads storage filesystem_).
+
+- Added option to limit the returned API fields using the `?fields` query parameter.
+  The "fields picker" is applied for `SearchResult.Items` and every other JSON response. For example:
   ```js
   // original: {"id": "RECORD_ID", "name": "abc", "description": "...something very big...", "items": ["id1", "id2"], "expand": {"items": [{"id": "id1", "name": "test1"}, {"id": "id2", "name": "test2"}]}}
   // output:   {"name": "abc", "expand": {"items": [{"name": "test1"}, {"name": "test2"}]}}
@@ -11,7 +16,9 @@
   })
   ```
 
-- (@todo docs) Added new `./pocketbase admin` console command:
+- Added new `./pocketbase update` command to selfupdate the prebuilt executable (with option to generate a backup of your `pb_data`).
+
+- Added new `./pocketbase admin` console command:
   ```sh
   // creates new admin account
   ./pocketbase admin create test@example.com 123456890
@@ -25,19 +32,19 @@
 
 - Added `apis.Serve(app, options)` helper to allow starting the API server programmatically.
 
-- New schema fields UI for "tidier" fields list.
+- Updated the schema fields Admin UI for "tidier" fields visualization.
 
 - Updated the logs "real" user IP to check for `Fly-Client-IP` header and changed the `X-Forward-For` header to use the first non-empty leftmost-ish IP as it the closest to the "real IP".
 
-- Added new `archive.Create()` and `archive.Extract()` helpers (_currently works only with zip_).
+- Added new `tools/archive` helper subpackage for managing archives (_currently works only with zip_).
+
+- Added new `tools/cron` helper subpackage for scheduling task using cron-like syntax (_this eventually may get exported in the future in a separate repo_).
 
 - Added new `Filesystem.List(prefix)` helper to retrieve a flat list with all files under the provided prefix.
 
-- Added new `App.NewBackupsFilesystem()` helper to create a dedicated fs abstraction for managing app backups.
+- Added new `App.NewBackupsFilesystem()` helper to create a dedicated filesystem abstraction for managing app data backups.
 
-- (@todo docs) Added `update` command for the prebuilt executable.
-
-- (@todo docs) Added new `App.OnTerminate()` hook.
+- Added new `App.OnTerminate()` hook (_executed right before app termination, eg. on `SIGTERM` signal_).
 
 - Added `accept` file field attribute with the field MIME types ([#2466](https://github.com/pocketbase/pocketbase/pull/2466); thanks @Nikhil1920).
 
@@ -45,7 +52,7 @@
 
 - Added support for multiple relations sort in the Admin UI.
 
-- Added `meta.isNew` to the OAuth2 auth JSON response to indicate newly created PocketBase user.
+- Added `meta.isNew` to the OAuth2 auth JSON response to indicate a newly OAuth2 created PocketBase user.
 
 
 ## v0.15.3
