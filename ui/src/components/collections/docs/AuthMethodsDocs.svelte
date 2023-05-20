@@ -4,6 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
+    import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
     export let collection = new Collection();
 
@@ -86,6 +87,20 @@
         </p>
     </div>
 </div>
+
+<div class="section-title">Query parameters</div>
+<table class="table-compact table-border m-b-base">
+    <thead>
+        <tr>
+            <th>Param</th>
+            <th>Type</th>
+            <th width="50%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <FieldsQueryParam />
+    </tbody>
+</table>
 
 <div class="section-title">Responses</div>
 <div class="tabs">

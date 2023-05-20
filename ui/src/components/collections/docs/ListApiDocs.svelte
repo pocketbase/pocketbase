@@ -210,6 +210,16 @@
                 Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
+        <tr>
+            <td id="query-page">fields</td>
+            <td>
+                <span class="label">String</span>
+            </td>
+            <td>
+                Comma separated string of the fields to return in the JSON response
+                <em>(by default returns all fields)</em>.
+            </td>
+        </tr>
     </tbody>
 </table>
 
@@ -217,13 +227,14 @@
 <div class="tabs">
     <div class="tabs-header compact left">
         {#each responses as response (response.code)}
-            <div
+            <button
+                type="button"
                 class="tab-item"
                 class:active={responseTab === response.code}
                 on:click={() => (responseTab = response.code)}
             >
                 {response.code}
-            </div>
+            </button>
         {/each}
     </div>
     <div class="tabs-content">
