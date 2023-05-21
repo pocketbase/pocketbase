@@ -1,3 +1,12 @@
+## v0.16.1-WIP
+
+_If you use the prebuilt executable, to update you can run `./pocketbase update`._
+
+- Fixed backup restore not working in a container environment when `pb_data` is mounted as volume ([#2519](https://github.com/pocketbase/pocketbase/issues/2519)).
+
+- Fixed Dart SDK realtime API preview example ([#2523](https://github.com/pocketbase/pocketbase/pull/2523); thanks @xFrann).
+
+
 ## v0.16.0
 
 - Added automated backups (_+ cron rotation_) APIs and UI for the `pb_data` directory.
