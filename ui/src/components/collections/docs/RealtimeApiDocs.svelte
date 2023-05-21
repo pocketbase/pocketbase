@@ -77,12 +77,12 @@
 
         // Subscribe to changes in any ${collection?.name} record
         pb.collection('${collection?.name}').subscribe('*', (e) {
-            console.log(e.record);
+            print(e.record);
         });
 
         // Subscribe to changes only in the specified record
         pb.collection('${collection?.name}').subscribe('RECORD_ID', (e) {
-            console.log(e.record);
+            print(e.record);
         });
 
         // Unsubscribe
