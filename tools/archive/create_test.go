@@ -54,7 +54,7 @@ func TestCreateSuccess(t *testing.T) {
 	}
 }
 
-// ---
+// -------------------------------------------------------------------
 
 // note: make sure to call os.RemoveAll(dir) after you are done
 // working with the created test dir.
