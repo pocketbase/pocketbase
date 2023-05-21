@@ -14,6 +14,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/core"
@@ -137,7 +138,7 @@ func (p *plugin) update(withBackup bool) error {
 		return err
 	}
 
-	if p.currentVersion >= latest.Tag {
+	if strings.TrimPrefix(p.currentVersion, "v") >= strings.TrimPrefix(latest.Tag, "v") {
 		color.Green("You already have the latest PocketBase %s.", p.currentVersion)
 		return nil
 	}
