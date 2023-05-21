@@ -58,8 +58,22 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc[*settings.Set
 	return runInterceptors(form.Settings, func(s *settings.Settings) error {
 		form.Settings = s
 
+		oldSettings, err := form.app.Settings().Clone();
+		if err != nil {
+			return err
+		}
+
+		// eagerly merge the application settings with the form ones
+		if err := form.app.Settings().Merge(form.Settings); err != nil {
+			return err
+		}
+
+		// persists settings change
 		encryptionKey := os.Getenv(form.app.EncryptionEnv())
 		if err := form.dao.SaveSettings(form.Settings, encryptionKey); err != nil {
+			// try to revert app settings
+			form.app.Settings().Merge(oldSettings)
+
 			return err
 		}
 
@@ -73,7 +87,6 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc[*settings.Set
 			form.app.LogsDao().Vacuum()
 		}
 
-		// merge the application settings with the form ones
-		return form.app.Settings().Merge(form.Settings)
+		return nil
 	}, interceptors...)
 }

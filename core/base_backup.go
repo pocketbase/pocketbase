@@ -251,12 +251,13 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 // @todo add tests
 func (app *BaseApp) initAutobackupHooks() error {
 	c := cron.New()
+	isServe := false
 
 	loadJob := func() {
 		c.Stop()
 
 		rawSchedule := app.Settings().Backups.Cron
-		if rawSchedule == "" || !app.IsBootstrapped() {
+		if rawSchedule == "" || !isServe || !app.IsBootstrapped() {
 			return
 		}
 
@@ -321,6 +322,7 @@ func (app *BaseApp) initAutobackupHooks() error {
 
 	// load on app serve
 	app.OnBeforeServe().Add(func(e *ServeEvent) error {
+		isServe = true
 		loadJob()
 		return nil
 	})
@@ -333,10 +335,6 @@ func (app *BaseApp) initAutobackupHooks() error {
 
 	// reload on app settings change
 	app.OnModelAfterUpdate((&models.Param{}).TableName()).Add(func(e *ModelEvent) error {
-		if !c.HasStarted() {
-			return nil // no need to reload as it hasn't been started yet
-		}
-
 		p := e.Model.(*models.Param)
 		if p == nil || p.Key != models.ParamAppSettings {
 			return nil
