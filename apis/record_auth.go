@@ -144,6 +144,11 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 			urlOpts = append(urlOpts, oauth2.SetAuthURLParam("response_mode", "query"))
 		}
 
+		if name == auth.NameVk {
+			// vk doesn't support PKCE for server-side authorization
+			urlOpts = []oauth2.AuthCodeOption{}
+		}
+
 		result.AuthProviders = append(result.AuthProviders, providerInfo{
 			Name:                name,
 			State:               state,

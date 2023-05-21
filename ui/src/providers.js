@@ -94,6 +94,11 @@ export default [
         logo:  "livechat.svg",
     },
     {
+        key:   "vkAuth",
+        title: "Vk",
+        logo:  "vk.svg"
+    },
+    {
         key:   "oidcAuth",
         title: "OpenID Connect",
         logo:  "oidc.svg",
