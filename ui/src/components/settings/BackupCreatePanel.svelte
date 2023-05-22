@@ -97,7 +97,7 @@
         </div>
         <div class="content">
             <p>
-                Please note that during the backup other concurrent write requrests may fail since the
+                Please note that during the backup other concurrent write requests may fail since the
                 database will be temporary "locked" (this usually happens only during the ZIP generation).
             </p>
             <p class="txt-bold">
