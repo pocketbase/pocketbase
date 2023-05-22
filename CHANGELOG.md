@@ -10,6 +10,8 @@
 
 - Removed unnecessary slice length check in `list.ExistInSlice` ([#2527](https://github.com/pocketbase/pocketbase/pull/2527); thanks @KunalSin9h).
 
+- Avoid mutating the cached request data on OAuth2 user create ([#2535](https://github.com/pocketbase/pocketbase/discussions/2535)).
+
 
 ## v0.16.0
 
