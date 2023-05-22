@@ -107,20 +107,18 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 //  1. Download the backup with the specified name in a temp location
 //     (this is in case of S3; otherwise it creates a temp copy of the zip)
 //
-//  2. Extract the backup in a temp directory next to the app "pb_data"
-//     (eg. "pb_data/../pb_data_to_restore").
+//  2. Extract the backup in a temp directory inside the app "pb_data"
+//     (eg. "pb_data/.pb_temp_to_delete/pb_restore").
 //
-//  3. Move the current app "pb_data" under a special sub temp dir that
-//     will be deleted on the next app start up (eg. "pb_data_to_restore/.pb_temp_to_delete/").
-//     This is because on some operating systems it may not be allowed
+//  3. Move the current app "pb_data" content (excluding the local backups and the special temp dir)
+//     under another temp sub dir that will be deleted on the next app start up
+//     (eg. "pb_data/.pb_temp_to_delete/old_pb_data").
+//     This is because on some environments it may not be allowed
 //     to delete the currently open "pb_data" files.
 //
-//  4. Rename the extracted dir from step 1 as the new "pb_data".
+//  4. Move the extracted dir content to the app "pb_data".
 //
-//  5. Move from the old "pb_data" any local backups that may have been
-//     created previously to the new "pb_data/backups".
-//
-//  6. Restart the app (on successfull app bootstap it will also remove the old pb_data).
+//  5. Restart the app (on successfull app bootstap it will also remove the old pb_data).
 //
 // If a failure occure during the restore process the dir changes are reverted.
 // If for whatever reason the revert is not possible, it panics.

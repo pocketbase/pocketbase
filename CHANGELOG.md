@@ -1,6 +1,6 @@
 ## v0.16.1-WIP
 
-_If you use the prebuilt executable, to update you can run `./pocketbase update`._
+> _To update the prebuilt executable you can run `./pocketbase update`._
 
 - Fixed backup restore not working in a container environment when `pb_data` is mounted as volume ([#2519](https://github.com/pocketbase/pocketbase/issues/2519)).
 
