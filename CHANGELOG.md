@@ -6,6 +6,10 @@
 
 - Fixed Dart SDK realtime API preview example ([#2523](https://github.com/pocketbase/pocketbase/pull/2523); thanks @xFrann).
 
+- Fixed typo in the backups create panel ([#2526](https://github.com/pocketbase/pocketbase/pull/2526); thanks @dschissler).
+
+- Removed unnecessary slice length check in `list.ExistInSlice` ([#2527](https://github.com/pocketbase/pocketbase/pull/2527); thanks @KunalSin9h).
+
 
 ## v0.16.0
 
