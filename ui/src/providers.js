@@ -111,4 +111,9 @@ export default [
         logo:  "oidc.svg",
         optionsComponent: OIDCOptions,
     },
+    {
+        key:   "instagramAuth",
+        title: "Instagram",
+        logo:  "instagram.svg",
+    },
 ];
