@@ -189,7 +189,7 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 	// move the current pb_data content to a special temp location
 	// that will hold the old data between dirs replace
 	// (the temp dir will be automatically removed on the next app start)
-	oldTempDataDir := filepath.Join(app.DataDir(), LocalTempDirName, "old_pb_data_" + security.PseudorandomString(4))
+	oldTempDataDir := filepath.Join(app.DataDir(), LocalTempDirName, "old_pb_data_"+security.PseudorandomString(4))
 	if err := osutils.MoveDirContent(app.DataDir(), oldTempDataDir, exclude...); err != nil {
 		return fmt.Errorf("failed to move the current pb_data content to a temp location: %w", err)
 	}
