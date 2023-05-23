@@ -1,4 +1,4 @@
-## v0.16.1-WIP
+## v0.16.1
 
 > _To update the prebuilt executable you can run `./pocketbase update`._
 
