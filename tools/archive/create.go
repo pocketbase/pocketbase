@@ -51,7 +51,7 @@ func zipAddFS(w *zip.Writer, fsys fs.FS, skipPaths ...string) error {
 		// skip
 		for _, ignore := range skipPaths {
 			if ignore == name ||
-				strings.HasPrefix(name+string(os.PathSeparator), filepath.Clean(ignore)+string(os.PathSeparator)) {
+				strings.HasPrefix(filepath.Clean(name)+string(os.PathSeparator), filepath.Clean(ignore)+string(os.PathSeparator)) {
 				return nil
 			}
 		}
