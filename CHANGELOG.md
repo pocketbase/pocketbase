@@ -12,7 +12,9 @@
 
 - Avoid mutating the cached request data on OAuth2 user create ([#2535](https://github.com/pocketbase/pocketbase/discussions/2535)).
 
-- Fixed Export Collection "Download as JSON" ([#2540](https://github.com/pocketbase/pocketbase/issues/2540)).
+- Fixed Export Collections "Download as JSON" ([#2540](https://github.com/pocketbase/pocketbase/issues/2540)).
+
+- Fixed file field drag and drop not working in Firefox and Safari ([#2541](https://github.com/pocketbase/pocketbase/issues/2541)).
 
 
 ## v0.16.0
