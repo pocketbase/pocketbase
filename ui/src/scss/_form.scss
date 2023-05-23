@@ -1144,7 +1144,7 @@ select {
             background: var(--baseAlt1Color);
         }
     }
-    &.dragover {
+    &.dragover:not(:has(.dragging)) {
         box-shadow: 0px 0px 0px 2px var(--warningColor);
     }
 }

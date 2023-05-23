@@ -1,3 +1,10 @@
+## v0.16.2-WIP
+
+- Fixed backups archive not excluding the local `backups` dir on Windows ([#2548](https://github.com/pocketbase/pocketbase/discussions/2548#discussioncomment-5979712)).
+
+- Changed file field to not use `dataTransfer.effectAllowed` when dropping files since it is not reliable and consistent across different OS and browsers ([#2541](https://github.com/pocketbase/pocketbase/issues/2541)).
+
+
 ## v0.16.1
 
 > _To update the prebuilt executable you can run `./pocketbase update`._
