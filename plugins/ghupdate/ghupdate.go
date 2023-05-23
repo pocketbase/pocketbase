@@ -138,6 +138,8 @@ func (p *plugin) update(withBackup bool) error {
 		return err
 	}
 
+	// @todo consider using an external library OR update to check
+	// to handle cases like v0.16.2 >= v0.16.10
 	if strings.TrimPrefix(p.currentVersion, "v") >= strings.TrimPrefix(latest.Tag, "v") {
 		color.Green("You already have the latest PocketBase %s.", p.currentVersion)
 		return nil
