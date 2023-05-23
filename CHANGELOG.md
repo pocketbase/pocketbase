@@ -1,3 +1,8 @@
+## v0.17.0-WIP
+
+- Added Instagram OAuth2 ([#2534](https://github.com/pocketbase/pocketbase/pull/2534); thanks @pnmcosta).
+
+
 ## v0.16.2-WIP
 
 - Fixed backups archive not excluding the local `backups` dir on Windows ([#2548](https://github.com/pocketbase/pocketbase/discussions/2548#discussioncomment-5979712)).

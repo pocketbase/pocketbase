@@ -26,15 +26,20 @@ export default [
         logo:  "google.svg",
     },
     {
+        key:   "microsoftAuth",
+        title: "Microsoft",
+        logo:  "microsoft.svg",
+        optionsComponent: MicrosoftOptions,
+    },
+    {
         key:   "facebookAuth",
         title: "Facebook",
         logo:  "facebook.svg",
     },
     {
-        key:   "microsoftAuth",
-        title: "Microsoft",
-        logo:  "microsoft.svg",
-        optionsComponent: MicrosoftOptions,
+        key:   "instagramAuth",
+        title: "Instagram",
+        logo:  "instagram.svg",
     },
     {
         key:   "githubAuth",
