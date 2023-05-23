@@ -779,7 +779,7 @@ export default class CommonHelper {
 
         name = name.endsWith(".json") ? name : (name + ".json");
 
-        download(encodedObj, name)
+        CommonHelper.download(encodedObj, name)
     }
 
     /**

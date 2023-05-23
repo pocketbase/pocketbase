@@ -12,6 +12,8 @@
 
 - Avoid mutating the cached request data on OAuth2 user create ([#2535](https://github.com/pocketbase/pocketbase/discussions/2535)).
 
+- Fixed Export Collection "Download as JSON" ([#2540](https://github.com/pocketbase/pocketbase/issues/2540)).
+
 
 ## v0.16.0
 
