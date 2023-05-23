@@ -14,6 +14,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/fatih/color"
@@ -138,7 +139,7 @@ func (p *plugin) update(withBackup bool) error {
 		return err
 	}
 
-	if strings.TrimPrefix(p.currentVersion, "v") >= strings.TrimPrefix(latest.Tag, "v") {
+	if compareVersions(strings.TrimPrefix(p.currentVersion, "v"), strings.TrimPrefix(latest.Tag, "v")) <= 0 {
 		color.Green("You already have the latest PocketBase %s.", p.currentVersion)
 		return nil
 	}
@@ -326,4 +327,39 @@ func archiveSuffix(goos, goarch string) string {
 	}
 
 	return ""
+}
+
+func compareVersions(a, b string) int {
+	aSplit := strings.Split(a, ".")
+	aTotal := len(aSplit)
+
+	bSplit := strings.Split(b, ".")
+	bTotal := len(bSplit)
+
+	limit := aTotal
+	if bTotal > aTotal {
+		limit = bTotal
+	}
+
+	for i := 0; i < limit; i++ {
+		var x, y int
+
+		if i < aTotal {
+			x, _ = strconv.Atoi(aSplit[i])
+		}
+
+		if i < bTotal {
+			y, _ = strconv.Atoi(bSplit[i])
+		}
+
+		if x < y {
+			return 1 // b is newer
+		}
+
+		if x > y {
+			return -1 // a is newer
+		}
+	}
+
+	return 0 // equal
 }
