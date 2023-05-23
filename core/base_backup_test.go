@@ -81,6 +81,12 @@ func TestRestoreBackup(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
+	// create a initial test backup to ensure that there are at least 1
+	// backup file and that the generated zip doesn't contain the backups dir
+	if err := app.CreateBackup(context.Background(), "initial"); err != nil {
+		t.Fatal("Failed to create test initial backup")
+	}
+
 	// create test backup
 	if err := app.CreateBackup(context.Background(), "test"); err != nil {
 		t.Fatal("Failed to create test backup")

@@ -20,8 +20,6 @@
     let isDragOver = false;
     let fileToken = "";
 
-    const dragEffectsAllowed = ["copy", "copyMove", "uninitialized"];
-
     // normalize uploadedFiles type
     $: if (!Array.isArray(uploadedFiles)) {
         uploadedFiles = CommonHelper.toArray(uploadedFiles);
@@ -82,7 +80,7 @@
 
         const files = e.dataTransfer?.files || [];
 
-        if (maxReached || !files.length || !dragEffectsAllowed.includes(e.dataTransfer?.effectAllowed)) {
+        if (maxReached || !files.length) {
             return;
         }
 
@@ -106,10 +104,7 @@
 
 <div
     class="block"
-    on:dragover|preventDefault={(e) => {
-        if (!dragEffectsAllowed.includes(e.dataTransfer.effectAllowed)) {
-            return; // not a file drag
-        }
+    on:dragover|preventDefault={() => {
         isDragOver = true;
     }}
     on:dragleave={() => {
@@ -186,7 +181,7 @@
                 </Draggable>
             {/each}
 
-            {#each uploadedFiles as file, i (file.name + record.id)}
+            {#each uploadedFiles as file, i (file.name + i)}
                 <Draggable
                     bind:list={uploadedFiles}
                     group={field.name + "_new"}
