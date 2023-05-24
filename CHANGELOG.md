@@ -1,6 +1,8 @@
 ## v0.17.0-WIP
 
-- Added Instagram OAuth2 ([#2534](https://github.com/pocketbase/pocketbase/pull/2534); thanks @pnmcosta).
+- Added Instagram OAuth2 provider ([#2534](https://github.com/pocketbase/pocketbase/pull/2534); thanks @pnmcosta).
+
+- Added VK OAuth2 provider ([#2533](https://github.com/pocketbase/pocketbase/pull/2533); thanks @imperatrona).
 
 
 ## v0.16.2

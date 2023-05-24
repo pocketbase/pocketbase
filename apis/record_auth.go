@@ -139,9 +139,14 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 			oauth2.SetAuthURLParam("code_challenge_method", codeChallengeMethod),
 		}
 
-		if name == auth.NameApple {
+		// custom providers url options
+		switch name {
+		case auth.NameApple:
 			// see https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/incorporating_sign_in_with_apple_into_other_platforms#3332113
 			urlOpts = append(urlOpts, oauth2.SetAuthURLParam("response_mode", "query"))
+		case auth.NameVK:
+			// vk currently doesn't support PKCE for server-side authorization
+			urlOpts = []oauth2.AuthCodeOption{}
 		}
 
 		result.AuthProviders = append(result.AuthProviders, providerInfo{

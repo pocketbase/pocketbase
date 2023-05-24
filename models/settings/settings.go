@@ -61,6 +61,7 @@ type Settings struct {
 	OIDC3Auth     AuthProviderConfig `form:"oidc3Auth" json:"oidc3Auth"`
 	AppleAuth     AuthProviderConfig `form:"appleAuth" json:"appleAuth"`
 	InstagramAuth AuthProviderConfig `form:"instagramAuth" json:"instagramAuth"`
+	VKAuth        AuthProviderConfig `form:"vkAuth" json:"vkAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -179,6 +180,9 @@ func New() *Settings {
 		InstagramAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		VKAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -220,6 +224,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.OIDC3Auth),
 		validation.Field(&s.AppleAuth),
 		validation.Field(&s.InstagramAuth),
+		validation.Field(&s.VKAuth),
 	)
 }
 
@@ -284,6 +289,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.OIDC3Auth.ClientSecret,
 		&clone.AppleAuth.ClientSecret,
 		&clone.InstagramAuth.ClientSecret,
+		&clone.VKAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -322,6 +328,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameOIDC + "3": s.OIDC3Auth,
 		auth.NameApple:      s.AppleAuth,
 		auth.NameInstagram:  s.InstagramAuth,
+		auth.NameVK:         s.VKAuth,
 	}
 }
 

@@ -131,6 +131,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewAppleProvider(), nil
 	case NameInstagram:
 		return NewInstagramProvider(), nil
+	case NameVK:
+		return NewVKProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}

@@ -79,6 +79,11 @@ export default [
         logo:  "kakao.svg",
     },
     {
+        key:   "vkAuth",
+        title: "VK",
+        logo:  "vk.svg"
+    },
+    {
         key:   "spotifyAuth",
         title: "Spotify",
         logo:  "spotify.svg",
