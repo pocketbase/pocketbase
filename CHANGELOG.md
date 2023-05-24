@@ -4,6 +4,8 @@
 
 - Changed file field to not use `dataTransfer.effectAllowed` when dropping files since it is not reliable and consistent across different OS and browsers ([#2541](https://github.com/pocketbase/pocketbase/issues/2541)).
 
+- Auto register the initial generated snapshot migration to prevent incorrectly reapplying the snapshot on container restart ([#2551](https://github.com/pocketbase/pocketbase/discussions/2551)).
+
 
 ## v0.16.1
 

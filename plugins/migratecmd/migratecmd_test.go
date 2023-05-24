@@ -6,11 +6,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/migrate"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -774,5 +777,38 @@ func TestAutomigrateCollectionNoChanges(t *testing.T) {
 		if total := len(files); total != 0 {
 			t.Fatalf("[%d] Expected 0 files to be generated, got %d", i, total)
 		}
+	}
+}
+
+func TestInitialAutoSnapshot(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	migrationsDir := filepath.Join(app.DataDir(), "_test_auto_snapshot_")
+
+	migratecmd.MustRegister(app, nil, &migratecmd.Options{
+		TemplateLang: migratecmd.TemplateLangJS,
+		Automigrate:  true,
+		Dir:          migrationsDir,
+	})
+
+	app.Bootstrap()
+
+	app.OnBeforeServe().Trigger(&core.ServeEvent{
+		App: app,
+	})
+
+	var foundFiles []string
+
+	err := app.Dao().NonconcurrentDB().Select("file").
+		From(migrate.DefaultMigrationsTable).
+		Where(dbx.NewExp("file like '%collections_snapshot.js'")).
+		Column(&foundFiles)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(foundFiles) != 1 {
+		t.Fatalf("Expected 1 collections_snapshot migration, found %v", foundFiles)
 	}
 }
