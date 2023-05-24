@@ -12,13 +12,6 @@
     import Toggler from "@/components/base/Toggler.svelte";
     import Field from "@/components/base/Field.svelte";
 
-    export let key = "";
-    export let field = new SchemaField();
-
-    let nameInput;
-    let isDragOver = false;
-    let showOptions = false;
-
     const componentId = "f_" + CommonHelper.randomString(8);
 
     const dispatch = createEventDispatcher();
@@ -28,6 +21,12 @@
         bool: "Nonfalsey",
         number: "Nonzero",
     };
+
+    export let key = "";
+    export let field = new SchemaField();
+
+    let nameInput;
+    let showOptions = false;
 
     $: if (field.toDelete) {
         // reset the name if it was previously deleted
@@ -117,46 +116,15 @@
 </script>
 
 <div
-    draggable={true}
     class="schema-field"
     class:required={field.required}
     class:expanded={interactive && showOptions}
     class:deleted={field.toDelete}
-    class:drag-over={isDragOver}
     transition:slide|local={{ duration: 150 }}
-    on:dragstart={(e) => {
-        if (!e.target.classList.contains("drag-handle-wrapper")) {
-            e.preventDefault();
-            return;
-        }
-
-        const blank = document.createElement("div");
-        e.dataTransfer.setDragImage(blank, 0, 0);
-        interactive && dispatch("dragstart", e);
-    }}
-    on:dragenter={(e) => {
-        if (interactive) {
-            isDragOver = true;
-            dispatch("dragenter", e);
-        }
-    }}
-    on:drop|preventDefault={(e) => {
-        if (interactive) {
-            isDragOver = false;
-            dispatch("drop", e);
-        }
-    }}
-    on:dragleave={(e) => {
-        if (interactive) {
-            isDragOver = false;
-            dispatch("dragleave", e);
-        }
-    }}
-    on:dragover|preventDefault
 >
     <div class="schema-field-header">
         {#if interactive}
-            <div class="drag-handle-wrapper" draggable="true" aria-label="Sort">
+            <div class="drag-handle-wrapper" draggable={true} aria-label="Sort">
                 <span class="drag-handle" />
             </div>
         {/if}

@@ -6,14 +6,4 @@
 </script>
 
 <!-- shares the same options with the email field -->
-<SchemaFieldEmail
-    bind:field
-    {key}
-    on:rename
-    on:remove
-    on:drop
-    on:dragstart
-    on:dragenter
-    on:dragleave
-    {...$$restProps}
-/>
+<SchemaFieldEmail bind:field {key} on:rename on:remove {...$$restProps} />

@@ -7,41 +7,52 @@
     export let list = [];
     export let group = "default";
     export let disabled = false;
+    export let dragHandleClass = ""; // by default the entire element
 
     let dragging = false;
     let dragover = false;
 
-    function onDrag(event, i) {
-        if (!event || disabled) {
+    function onDrag(e, i) {
+        if (!e || disabled) {
+            return;
+        }
+
+        if (dragHandleClass && !e.target.classList.contains(dragHandleClass)) {
+            // not the drag handle
+            dragover = false;
+            dragging = false;
+            e.preventDefault();
             return;
         }
 
         dragging = true;
 
-        event.dataTransfer.effectAllowed = "move";
-        event.dataTransfer.dropEffect = "move";
-        event.dataTransfer.setData(
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.dropEffect = "move";
+        e.dataTransfer.setData(
             "text/plain",
             JSON.stringify({
                 index: i,
                 group: group,
             })
         );
+
+        dispatch("drag", e);
     }
 
-    function onDrop(event, target) {
-        if (!event || disabled) {
-            return;
-        }
-
+    function onDrop(e, target) {
         dragover = false;
         dragging = false;
 
-        event.dataTransfer.dropEffect = "move";
+        if (!e || disabled) {
+            return;
+        }
+
+        e.dataTransfer.dropEffect = "move";
 
         let dragData = {};
         try {
-            dragData = JSON.parse(event.dataTransfer.getData("text/plain"));
+            dragData = JSON.parse(e.dataTransfer.getData("text/plain"));
         } catch (_) {}
 
         if (dragData.group != group) {

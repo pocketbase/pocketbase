@@ -6,17 +6,7 @@
     export let key = "";
 </script>
 
-<SchemaField
-    bind:field
-    {key}
-    on:rename
-    on:remove
-    on:drop
-    on:dragstart
-    on:dragenter
-    on:dragleave
-    {...$$restProps}
->
+<SchemaField bind:field {key} on:rename on:remove {...$$restProps}>
     <svelte:fragment slot="options">
         <div class="grid grid-sm">
             <div class="col-sm-6">

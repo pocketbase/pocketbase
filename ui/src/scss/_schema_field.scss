@@ -98,7 +98,8 @@
             @include show();
         }
     }
-    &.drag-over {
+    .dragover &,
+    &.dragover {
         opacity: 0.5;
     }
     &.expanded {
