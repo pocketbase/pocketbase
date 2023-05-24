@@ -89,17 +89,7 @@
     }
 </script>
 
-<SchemaField
-    bind:field
-    {key}
-    on:rename
-    on:remove
-    on:drop
-    on:dragstart
-    on:dragenter
-    on:dragleave
-    {...$$restProps}
->
+<SchemaField bind:field {key} on:rename on:remove {...$$restProps}>
     <svelte:fragment let:interactive>
         <div class="separator" />
 

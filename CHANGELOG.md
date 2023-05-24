@@ -5,6 +5,11 @@
 - Added VK OAuth2 provider ([#2533](https://github.com/pocketbase/pocketbase/pull/2533); thanks @imperatrona).
 
 
+## v0.16.3-WIP
+
+- Fixed schema fields sort not working on Safari/Gnome Web ([#2567](https://github.com/pocketbase/pocketbase/issues/2567)).
+
+
 ## v0.16.2
 
 - Fixed backups archive not excluding the local `backups` directory on Windows ([#2548](https://github.com/pocketbase/pocketbase/discussions/2548#discussioncomment-5979712)).
