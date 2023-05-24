@@ -3,16 +3,18 @@
 - Added Instagram OAuth2 ([#2534](https://github.com/pocketbase/pocketbase/pull/2534); thanks @pnmcosta).
 
 
-## v0.16.2-WIP
+## v0.16.2
 
-- Fixed backups archive not excluding the local `backups` dir on Windows ([#2548](https://github.com/pocketbase/pocketbase/discussions/2548#discussioncomment-5979712)).
+- Fixed backups archive not excluding the local `backups` directory on Windows ([#2548](https://github.com/pocketbase/pocketbase/discussions/2548#discussioncomment-5979712)).
 
 - Changed file field to not use `dataTransfer.effectAllowed` when dropping files since it is not reliable and consistent across different OS and browsers ([#2541](https://github.com/pocketbase/pocketbase/issues/2541)).
 
+- Auto register the initial generated snapshot migration to prevent incorrectly reapplying the snapshot on Docker restart ([#2551](https://github.com/pocketbase/pocketbase/discussions/2551)).
+
+- Fixed missing view id field error message typo.
+
 
 ## v0.16.1
-
-> _To update the prebuilt executable you can run `./pocketbase update`._
 
 - Fixed backup restore not working in a container environment when `pb_data` is mounted as volume ([#2519](https://github.com/pocketbase/pocketbase/issues/2519)).
 

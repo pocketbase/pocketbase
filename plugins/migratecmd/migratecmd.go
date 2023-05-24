@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/models"
@@ -102,7 +103,19 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 			// migrations but there is already at least 1 collection created,
 			// to ensure that the automigrate will work with up-to-date collections data
 			if !p.hasCustomMigrations() && len(cachedCollections) > 1 {
-				p.migrateCollectionsHandler(nil, false)
+				snapshotFile, err := p.migrateCollectionsHandler(nil, false)
+				if err != nil {
+					return err
+				}
+
+				// insert the snapshot migration entry
+				_, insertErr := p.app.Dao().NonconcurrentDB().Insert(migrate.DefaultMigrationsTable, dbx.Params{
+					"file":    snapshotFile,
+					"applied": time.Now().Unix(),
+				}).Execute()
+				if insertErr != nil {
+					return insertErr
+				}
 			}
 
 			return nil
@@ -141,11 +154,11 @@ func (p *plugin) createCommand() *cobra.Command {
 
 			switch cmd {
 			case "create":
-				if err := p.migrateCreateHandler("", args[1:], true); err != nil {
+				if _, err := p.migrateCreateHandler("", args[1:], true); err != nil {
 					return err
 				}
 			case "collections":
-				if err := p.migrateCollectionsHandler(args[1:], true); err != nil {
+				if _, err := p.migrateCollectionsHandler(args[1:], true); err != nil {
 					return err
 				}
 			default:
@@ -166,18 +179,17 @@ func (p *plugin) createCommand() *cobra.Command {
 	return command
 }
 
-func (p *plugin) migrateCreateHandler(template string, args []string, interactive bool) error {
+func (p *plugin) migrateCreateHandler(template string, args []string, interactive bool) (string, error) {
 	if len(args) < 1 {
-		return fmt.Errorf("Missing migration file name")
+		return "", fmt.Errorf("Missing migration file name")
 	}
 
 	name := args[0]
 	dir := p.options.Dir
 
-	resultFilePath := path.Join(
-		dir,
-		fmt.Sprintf("%d_%s.%s", time.Now().Unix(), inflector.Snakecase(name), p.options.TemplateLang),
-	)
+	filename := fmt.Sprintf("%d_%s.%s", time.Now().Unix(), inflector.Snakecase(name), p.options.TemplateLang)
+
+	resultFilePath := path.Join(dir, filename)
 
 	if interactive {
 		confirm := false
@@ -187,7 +199,7 @@ func (p *plugin) migrateCreateHandler(template string, args []string, interactiv
 		survey.AskOne(prompt, &confirm)
 		if !confirm {
 			fmt.Println("The command has been cancelled")
-			return nil
+			return "", nil
 		}
 	}
 
@@ -200,34 +212,34 @@ func (p *plugin) migrateCreateHandler(template string, args []string, interactiv
 			template, templateErr = p.goBlankTemplate()
 		}
 		if templateErr != nil {
-			return fmt.Errorf("Failed to resolve create template: %v\n", templateErr)
+			return "", fmt.Errorf("Failed to resolve create template: %v\n", templateErr)
 		}
 	}
 
 	// ensure that the migrations dir exist
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		return err
+		return "", err
 	}
 
 	// save the migration file
 	if err := os.WriteFile(resultFilePath, []byte(template), 0644); err != nil {
-		return fmt.Errorf("Failed to save migration file %q: %v\n", resultFilePath, err)
+		return "", fmt.Errorf("Failed to save migration file %q: %v\n", resultFilePath, err)
 	}
 
 	if interactive {
 		fmt.Printf("Successfully created file %q\n", resultFilePath)
 	}
 
-	return nil
+	return filename, nil
 }
 
-func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) error {
+func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) (string, error) {
 	createArgs := []string{"collections_snapshot"}
 	createArgs = append(createArgs, args...)
 
 	collections := []*models.Collection{}
 	if err := p.app.Dao().CollectionQuery().OrderBy("created ASC").All(&collections); err != nil {
-		return fmt.Errorf("Failed to fetch migrations list: %v", err)
+		return "", fmt.Errorf("Failed to fetch migrations list: %v", err)
 	}
 
 	var template string
@@ -238,7 +250,7 @@ func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) erro
 		template, templateErr = p.goSnapshotTemplate(collections)
 	}
 	if templateErr != nil {
-		return fmt.Errorf("Failed to resolve template: %v", templateErr)
+		return "", fmt.Errorf("Failed to resolve template: %v", templateErr)
 	}
 
 	return p.migrateCreateHandler(template, createArgs, interactive)
