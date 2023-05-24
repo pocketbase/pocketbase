@@ -6,6 +6,8 @@
 
 - Auto register the initial generated snapshot migration to prevent incorrectly reapplying the snapshot on container restart ([#2551](https://github.com/pocketbase/pocketbase/discussions/2551)).
 
+- Fixed missing view id field error message typo.
+
 
 ## v0.16.1
 

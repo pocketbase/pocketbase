@@ -127,7 +127,7 @@ func (dao *Dao) CreateViewSchema(selectQuery string) (schema.Schema, error) {
 		}
 
 		if !hasId {
-			return errors.New("missing required id column (you ca use `(ROW_NUMBER() OVER()) as id` if you don't have one)")
+			return errors.New("missing required id column (you can use `(ROW_NUMBER() OVER()) as id` if you don't have one)")
 		}
 
 		return nil
