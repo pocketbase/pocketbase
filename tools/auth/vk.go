@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -60,7 +61,7 @@ func (p *Vk) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	if len(extracted.Response) == 0 {
-		return nil, err
+		return nil, errors.New("missing response entry")
 	}
 
 	user := &AuthUser{
