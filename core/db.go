@@ -13,7 +13,7 @@ func initPragmas(db *dbx.DB) error {
 		PRAGMA journal_mode       = WAL;
 		PRAGMA journal_size_limit = 200000000;
 		PRAGMA synchronous        = NORMAL;
-		PRAGMA foreign_keys       = TRUE;
+		PRAGMA foreign_keys       = ON;
 	`).Execute()
 
 	return err
