@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
@@ -166,9 +167,9 @@ func TestDeleteCollection(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	colEmpty := &models.Collection{}
+	colUnsaved := &models.Collection{}
 
-	colAuth, err := app.Dao().FindCollectionByNameOrId("clients")
+	colAuth, err := app.Dao().FindCollectionByNameOrId("users")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,6 +188,11 @@ func TestDeleteCollection(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	colBase, err := app.Dao().FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	colView1, err := app.Dao().FindCollectionByNameOrId("view1")
 	if err != nil {
 		t.Fatal(err)
@@ -201,12 +207,14 @@ func TestDeleteCollection(t *testing.T) {
 		model       *models.Collection
 		expectError bool
 	}{
-		{colEmpty, true},
-		{colAuth, false},
+		{colUnsaved, true},
 		{colReferenced, true},
 		{colSystem, true},
 		{colView1, true}, // view2 depend on it
 		{colView2, false},
+		{colView1, false}, // no longer has dependent collections
+		{colBase, false},
+		{colAuth, false}, // should delete also its related external auths
 	}
 
 	for i, s := range scenarios {
@@ -224,6 +232,19 @@ func TestDeleteCollection(t *testing.T) {
 
 		if app.Dao().HasTable(s.model.Name) {
 			t.Errorf("[%d] Expected table/view %s to be deleted", i, s.model.Name)
+		}
+
+		// check if the external auths were deleted
+		if s.model.IsAuth() {
+			var total int
+			err := app.Dao().ExternalAuthQuery().
+				Select("count(*)").
+				AndWhere(dbx.HashExp{"collectionId": s.model.Id}).
+				Row(&total)
+
+			if err != nil || total > 0 {
+				t.Fatalf("[%d] Expected external auths to be deleted, got %v (%v)", i, total, err)
+			}
 		}
 	}
 }
