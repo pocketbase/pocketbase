@@ -98,6 +98,7 @@ type BaseApp struct {
 	onFileDownloadRequest    *hook.Hook[*FileDownloadEvent]
 	onFileBeforeTokenRequest *hook.Hook[*FileTokenEvent]
 	onFileAfterTokenRequest  *hook.Hook[*FileTokenEvent]
+	onFileBeforeUpload       *hook.Hook[*FileUploadEvent]
 
 	// admin api event hooks
 	onAdminsListRequest                      *hook.Hook[*AdminsListEvent]
@@ -236,6 +237,7 @@ func NewBaseApp(config *BaseAppConfig) *BaseApp {
 		onFileDownloadRequest:    &hook.Hook[*FileDownloadEvent]{},
 		onFileBeforeTokenRequest: &hook.Hook[*FileTokenEvent]{},
 		onFileAfterTokenRequest:  &hook.Hook[*FileTokenEvent]{},
+		onFileBeforeUpload:       &hook.Hook[*FileUploadEvent]{},
 
 		// admin API event hooks
 		onAdminsListRequest:                      &hook.Hook[*AdminsListEvent]{},
@@ -488,8 +490,11 @@ func (app *BaseApp) NewMailClient() mailer.Mailer {
 // NB! Make sure to call `Close()` on the returned result
 // after you are done working with it.
 func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
+	var fs = new(filesystem.System)
+	var err error
+
 	if app.settings != nil && app.settings.S3.Enabled {
-		return filesystem.NewS3(
+		fs, err = filesystem.NewS3(
 			app.settings.S3.Bucket,
 			app.settings.S3.Region,
 			app.settings.S3.Endpoint,
@@ -497,10 +502,23 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 			app.settings.S3.Secret,
 			app.settings.S3.ForcePathStyle,
 		)
+
+	} else {
+		// fallback to local filesystem
+		fs, err = filesystem.NewLocal(filepath.Join(app.DataDir(), LocalStorageDirName))
 	}
 
-	// fallback to local filesystem
-	return filesystem.NewLocal(filepath.Join(app.DataDir(), LocalStorageDirName))
+	if err != nil {
+		return nil, err
+	}
+
+	fs.OnFileBeforeUpload = func(fs *filesystem.System, path string) error {
+		e := &FileUploadEvent{*fs, path}
+
+		return app.OnFileBeforeUpload().Trigger(e)
+	}
+
+	return fs, err
 }
 
 // NewFilesystem creates a new local or S3 filesystem instance
@@ -726,6 +744,10 @@ func (app *BaseApp) OnFileBeforeTokenRequest(tags ...string) *hook.TaggedHook[*F
 
 func (app *BaseApp) OnFileAfterTokenRequest(tags ...string) *hook.TaggedHook[*FileTokenEvent] {
 	return hook.NewTaggedHook(app.onFileAfterTokenRequest, tags...)
+}
+
+func (app *BaseApp) OnFileBeforeUpload() *hook.Hook[*FileUploadEvent] {
+	return app.onFileBeforeUpload
 }
 
 // -------------------------------------------------------------------

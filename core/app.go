@@ -365,6 +365,14 @@ type App interface {
 	// triggered and called only if their event data origin matches the tags.
 	OnFileAfterTokenRequest(tags ...string) *hook.TaggedHook[*FileTokenEvent]
 
+	// OnFileBeforeUpload hook is triggered before each
+	// file upload
+	//
+	// If the optional "tags" list (Collection ids or names) is specified,
+	// then all event handlers registered via the created hook will be
+	// triggered and called only if their event data origin matches the tags.
+	OnFileBeforeUpload() *hook.Hook[*FileUploadEvent]
+
 	// ---------------------------------------------------------------
 	// Admin API event hooks
 	// ---------------------------------------------------------------

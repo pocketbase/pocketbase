@@ -28,6 +28,8 @@ import (
 type System struct {
 	ctx    context.Context
 	bucket *blob.Bucket
+
+	OnFileBeforeUpload func(fs *System, path string) error
 }
 
 // NewS3 initializes an S3 filesystem instance.
@@ -138,6 +140,13 @@ func (s *System) List(prefix string) ([]*blob.ListObject, error) {
 
 // Upload writes content into the fileKey location.
 func (s *System) Upload(content []byte, fileKey string) error {
+	if s.OnFileBeforeUpload != nil {
+		err := s.OnFileBeforeUpload(s, fileKey)
+		if err != nil {
+			return err
+		}
+	}
+
 	opts := &blob.WriterOptions{
 		ContentType: mimetype.Detect(content).String(),
 	}
@@ -157,6 +166,13 @@ func (s *System) Upload(content []byte, fileKey string) error {
 
 // UploadFile uploads the provided multipart file to the fileKey location.
 func (s *System) UploadFile(file *File, fileKey string) error {
+	if s.OnFileBeforeUpload != nil {
+		err := s.OnFileBeforeUpload(s, fileKey)
+		if err != nil {
+			return err
+		}
+	}
+
 	f, err := file.Reader.Open()
 	if err != nil {
 		return err
@@ -199,6 +215,13 @@ func (s *System) UploadFile(file *File, fileKey string) error {
 
 // UploadMultipart uploads the provided multipart file to the fileKey location.
 func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error {
+	if s.OnFileBeforeUpload != nil {
+		err := s.OnFileBeforeUpload(s, fileKey)
+		if err != nil {
+			return err
+		}
+	}
+
 	f, err := fh.Open()
 	if err != nil {
 		return err

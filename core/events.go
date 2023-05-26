@@ -407,3 +407,8 @@ type FileDownloadEvent struct {
 	ServedPath  string
 	ServedName  string
 }
+
+type FileUploadEvent struct {
+	Fs   filesystem.System
+	Path string
+}
