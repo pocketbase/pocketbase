@@ -22,7 +22,7 @@ func init() {
 	sql.Register("sqlite3_with_connect_hook",
 		&sqlite3.SQLiteDriver{
 			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
-				conn.Exec(`
+				_, err := conn.Exec(`
 					PRAGMA busy_timeout       = 10000;
 					PRAGMA journal_mode       = WAL;
 					PRAGMA journal_size_limit = 200000000;
@@ -30,7 +30,7 @@ func init() {
 					PRAGMA foreign_keys       = ON;
 				`, nil)
 
-				return nil
+				return err
 			},
 		},
 	)
