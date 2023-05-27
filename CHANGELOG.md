@@ -5,9 +5,11 @@
 - Added VK OAuth2 provider ([#2533](https://github.com/pocketbase/pocketbase/pull/2533); thanks @imperatrona).
 
 
-## v0.16.3-WIP
+## v0.16.3
 
 - Fixed schema fields sort not working on Safari/Gnome Web ([#2567](https://github.com/pocketbase/pocketbase/issues/2567)).
+
+- Fixed default `PRAGMA`s not being applied for new connections ([#2570](https://github.com/pocketbase/pocketbase/discussions/2570)).
 
 
 ## v0.16.2

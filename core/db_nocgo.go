@@ -8,13 +8,13 @@ import (
 )
 
 func connectDB(dbPath string) (*dbx.DB, error) {
-	db, err := dbx.Open("sqlite", dbPath)
-	if err != nil {
-		return nil, err
-	}
+	// Note: the busy_timeout pragma must be first because
+	// the connection needs to be set to block on busy before WAL mode
+	// is set in case it hasn't been already set by another connection.
+	pragmas := "?_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)&_pragma=journal_size_limit(200000000)&_pragma=synchronous(NORMAL)&_pragma=foreign_keys(ON)"
 
-	if err := initPragmas(db); err != nil {
-		db.Close()
+	db, err := dbx.Open("sqlite", dbPath+pragmas)
+	if err != nil {
 		return nil, err
 	}
 

@@ -105,6 +105,14 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil, err
 	}
 
+	// ensure that the Dao and DB configurations are properly loaded
+	if _, err := app.Dao().DB().NewQuery("Select 1").Execute(); err != nil {
+		return nil, err
+	}
+	if _, err := app.LogsDao().DB().NewQuery("Select 1").Execute(); err != nil {
+		return nil, err
+	}
+
 	// force disable request logs because the logs db call execute in a separate
 	// go routine and it is possible to panic due to earlier api test completion.
 	app.Settings().Logs.MaxDays = 0
