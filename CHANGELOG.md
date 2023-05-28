@@ -5,6 +5,11 @@
 - Added VK OAuth2 provider ([#2533](https://github.com/pocketbase/pocketbase/pull/2533); thanks @imperatrona).
 
 
+## v0.16.4-WIP
+
+- Fixed the selfupdate command not working on Windows due to missing `.exe` in the extracted binary path ([#2589](https://github.com/pocketbase/pocketbase/discussions/2589)).
+
+
 ## v0.16.3
 
 - Fixed schema fields sort not working on Safari/Gnome Web ([#2567](https://github.com/pocketbase/pocketbase/issues/2567)).
