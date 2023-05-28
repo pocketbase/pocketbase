@@ -25,6 +25,9 @@ func RequestData(c echo.Context) *models.RequestData {
 	// return cached to avoid copying the body multiple times
 	if v := c.Get(ContextRequestDataKey); v != nil {
 		if data, ok := v.(*models.RequestData); ok {
+			// refresh auth state
+			data.AuthRecord, _ = c.Get(ContextAuthRecordKey).(*models.Record)
+			data.Admin, _ = c.Get(ContextAdminKey).(*models.Admin)
 			return data
 		}
 	}
