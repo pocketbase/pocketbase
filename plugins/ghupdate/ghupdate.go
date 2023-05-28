@@ -187,8 +187,8 @@ func (p *plugin) update(withBackup bool) error {
 	if _, err := os.Stat(newExec); err != nil {
 		// try again with an .exe extension
 		newExec = newExec + ".exe"
-		if _, err := os.Stat(newExec); err != nil {
-			return fmt.Errorf("The executable in the extracted path is missing or it is inaccessible: %w", err)
+		if _, fallbackErr := os.Stat(newExec); fallbackErr != nil {
+			return fmt.Errorf("The executable in the extracted path is missing or it is inaccessible: %w, %w", err, fallbackErr)
 		}
 	}
 
