@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -38,7 +37,8 @@ type Options struct {
 	// Repo specifies the name of the repository (default to "pocketbase").
 	Repo string
 
-	// ArchiveExecutable specifies the name of the executable file in the release archive (default to "pocketbase").
+	// ArchiveExecutable specifies the name of the executable file in the release archive
+	// (default to "pocketbase"; an additional ".exe" check is also performed as a fallback).
 	ArchiveExecutable string
 
 	// Optional context to use when fetching and downloading the latest release.
@@ -154,20 +154,20 @@ func (p *plugin) update(withBackup bool) error {
 		return err
 	}
 
-	releaseDir := path.Join(p.app.DataDir(), core.LocalTempDirName)
+	releaseDir := filepath.Join(p.app.DataDir(), core.LocalTempDirName)
 	defer os.RemoveAll(releaseDir)
 
 	color.Yellow("Downloading %s...", asset.Name)
 
 	// download the release asset
-	assetZip := path.Join(releaseDir, asset.Name)
+	assetZip := filepath.Join(releaseDir, asset.Name)
 	if err := downloadFile(p.options.Context, p.options.HttpClient, asset.DownloadUrl, assetZip); err != nil {
 		return err
 	}
 
 	color.Yellow("Extracting %s...", asset.Name)
 
-	extractDir := path.Join(releaseDir, "extracted_"+asset.Name)
+	extractDir := filepath.Join(releaseDir, "extracted_"+asset.Name)
 	defer os.RemoveAll(extractDir)
 
 	if err := archive.Extract(assetZip, extractDir); err != nil {
@@ -183,7 +183,14 @@ func (p *plugin) update(withBackup bool) error {
 	renamedOldExec := oldExec + ".old"
 	defer os.Remove(renamedOldExec)
 
-	newExec := path.Join(extractDir, p.options.ArchiveExecutable)
+	newExec := filepath.Join(extractDir, p.options.ArchiveExecutable)
+	if _, err := os.Stat(newExec); err != nil {
+		// try again with an .exe extension
+		newExec = newExec + ".exe"
+		if _, err := os.Stat(newExec); err != nil {
+			return fmt.Errorf("The executable in the extracted path is missing or it is inaccessible: %w", err)
+		}
+	}
 
 	// rename the current executable
 	if err := os.Rename(oldExec, renamedOldExec); err != nil {
