@@ -35,6 +35,9 @@ type Client interface {
 	// Set stores any value to the client's context.
 	Set(key string, value any)
 
+	// Unset removes a single value from the client's context.
+	Unset(key string)
+
 	// Get retrieves the key value from the client's context.
 	Get(key string) any
 
@@ -155,6 +158,14 @@ func (c *DefaultClient) Set(key string, value any) {
 	defer c.mux.Unlock()
 
 	c.store[key] = value
+}
+
+// Unset implements the [Client.Unset] interface method.
+func (c *DefaultClient) Unset(key string) {
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	delete(c.store, key)
 }
 
 // Discard implements the [Client.Discard] interface method.

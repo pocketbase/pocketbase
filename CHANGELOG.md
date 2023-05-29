@@ -21,6 +21,10 @@
 
 - (@todo docs) Changed the After* hooks to be called right before writing the user response, allowing users to return response errors from the after hooks.
 
+- Fixed realtime delete event to be called after the record was deleted from the DB (_including transactions and cascade delete operations_).
+
+- Added `subscriptions.Client.Unset()` helper to remove a single cached item from the client store.
+
 
 ## v0.16.4-WIP
 
