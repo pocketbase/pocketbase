@@ -57,7 +57,13 @@ func RequestData(c echo.Context) *models.RequestData {
 	return result
 }
 
-func RecordAuthResponse(app core.App, c echo.Context, authRecord *models.Record, meta any) error {
+func RecordAuthResponse(
+	app core.App,
+	c echo.Context,
+	authRecord *models.Record,
+	meta any,
+	finalizers ...func(token string) error,
+) error {
 	token, tokenErr := tokens.NewRecordAuthToken(app, authRecord)
 	if tokenErr != nil {
 		return NewBadRequestError("Failed to create auth token.", tokenErr)
@@ -98,6 +104,12 @@ func RecordAuthResponse(app core.App, c echo.Context, authRecord *models.Record,
 
 		if e.Meta != nil {
 			result["meta"] = e.Meta
+		}
+
+		for _, f := range finalizers {
+			if err := f(e.Token); err != nil {
+				return err
+			}
 		}
 
 		return e.HttpContext.JSON(http.StatusOK, result)

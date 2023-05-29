@@ -220,7 +220,7 @@ func (api *recordApi) create(c echo.Context) error {
 	event.UploadedFiles = form.FilesToUpload()
 
 	// create the record
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+	return form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(m *models.Record) error {
 			event.Record = m
 
@@ -233,18 +233,14 @@ func (api *recordApi) create(c echo.Context) error {
 					log.Println(err)
 				}
 
+				if err := api.app.OnRecordAfterCreateRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.JSON(http.StatusOK, e.Record)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterCreateRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return submitErr
 }
 
 func (api *recordApi) update(c echo.Context) error {
@@ -309,7 +305,7 @@ func (api *recordApi) update(c echo.Context) error {
 	event.UploadedFiles = form.FilesToUpload()
 
 	// update the record
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+	return form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(m *models.Record) error {
 			event.Record = m
 
@@ -322,18 +318,14 @@ func (api *recordApi) update(c echo.Context) error {
 					log.Println(err)
 				}
 
+				if err := api.app.OnRecordAfterUpdateRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.JSON(http.StatusOK, e.Record)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterUpdateRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return submitErr
 }
 
 func (api *recordApi) delete(c echo.Context) error {
@@ -377,22 +369,18 @@ func (api *recordApi) delete(c echo.Context) error {
 	event.Collection = collection
 	event.Record = record
 
-	handlerErr := api.app.OnRecordBeforeDeleteRequest().Trigger(event, func(e *core.RecordDeleteEvent) error {
+	return api.app.OnRecordBeforeDeleteRequest().Trigger(event, func(e *core.RecordDeleteEvent) error {
 		// delete the record
 		if err := api.app.Dao().DeleteRecord(e.Record); err != nil {
 			return NewBadRequestError("Failed to delete record. Make sure that the record is not part of a required relation reference.", err)
 		}
 
+		if err := api.app.OnRecordAfterDeleteRequest().Trigger(event); err != nil {
+			return err
+		}
+
 		return e.HttpContext.NoContent(http.StatusNoContent)
 	})
-
-	if handlerErr == nil {
-		if err := api.app.OnRecordAfterDeleteRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return handlerErr
 }
 
 func (api *recordApi) checkForForbiddenQueryFields(c echo.Context) error {

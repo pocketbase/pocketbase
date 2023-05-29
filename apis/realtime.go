@@ -191,7 +191,7 @@ func (api *realtimeApi) setSubscriptions(c echo.Context) error {
 		Subscriptions: form.Subscriptions,
 	}
 
-	handlerErr := api.app.OnRealtimeBeforeSubscribeRequest().Trigger(event, func(e *core.RealtimeSubscribeEvent) error {
+	return api.app.OnRealtimeBeforeSubscribeRequest().Trigger(event, func(e *core.RealtimeSubscribeEvent) error {
 		// update auth state
 		e.Client.Set(ContextAdminKey, e.HttpContext.Get(ContextAdminKey))
 		e.Client.Set(ContextAuthRecordKey, e.HttpContext.Get(ContextAuthRecordKey))
@@ -202,14 +202,12 @@ func (api *realtimeApi) setSubscriptions(c echo.Context) error {
 		// subscribe to the new subscriptions
 		e.Client.Subscribe(e.Subscriptions...)
 
+		if err := api.app.OnRealtimeAfterSubscribeRequest().Trigger(event); err != nil {
+			return err
+		}
+
 		return e.HttpContext.NoContent(http.StatusNoContent)
 	})
-
-	if handlerErr == nil {
-		api.app.OnRealtimeAfterSubscribeRequest().Trigger(event)
-	}
-
-	return handlerErr
 }
 
 // updateClientsAuthModel updates the existing clients auth model with the new one (matched by ID).

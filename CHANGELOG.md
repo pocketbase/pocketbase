@@ -19,6 +19,9 @@
   }
   ```
 
+- (@todo docs) Changed the After* hooks to be called right before writing the user response, allowing users to return response errors from the after hooks.
+
+
 ## v0.16.4-WIP
 
 - Fixed the selfupdate command not working on Windows due to missing `.exe` in the extracted binary path ([#2589](https://github.com/pocketbase/pocketbase/discussions/2589)).

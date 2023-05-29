@@ -65,17 +65,11 @@ func (api *recordAuthApi) authRefresh(c echo.Context) error {
 	event.Collection = record.Collection()
 	event.Record = record
 
-	handlerErr := api.app.OnRecordBeforeAuthRefreshRequest().Trigger(event, func(e *core.RecordAuthRefreshEvent) error {
-		return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil)
+	return api.app.OnRecordBeforeAuthRefreshRequest().Trigger(event, func(e *core.RecordAuthRefreshEvent) error {
+		return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil, func(t string) error {
+			return api.app.OnRecordAfterAuthRefreshRequest().Trigger(event)
+		})
 	})
-
-	if handlerErr == nil {
-		if err := api.app.OnRecordAfterAuthRefreshRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return handlerErr
 }
 
 type providerInfo struct {
@@ -256,16 +250,12 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 					IsNew:    event.IsNewRecord,
 				}
 
-				return RecordAuthResponse(api.app, e.HttpContext, e.Record, meta)
+				return RecordAuthResponse(api.app, e.HttpContext, e.Record, meta, func(t string) error {
+					return api.app.OnRecordAfterAuthWithOAuth2Request().Trigger(event)
+				})
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterAuthWithOAuth2Request().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
 
 	return submitErr
 }
@@ -296,16 +286,12 @@ func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 					return NewBadRequestError("Failed to authenticate.", err)
 				}
 
-				return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil)
+				return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil, func(t string) error {
+					return api.app.OnRecordAfterAuthWithPasswordRequest().Trigger(event)
+				})
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterAuthWithPasswordRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
 
 	return submitErr
 }
@@ -346,25 +332,22 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 					}
 				})
 
+				if err := api.app.OnRecordAfterRequestPasswordResetRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.NoContent(http.StatusNoContent)
 			})
 		}
 	})
 
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterRequestPasswordResetRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	} else if api.app.IsDebug() {
-		log.Println(submitErr)
-	}
-
-	// don't return the response error to prevent emails enumeration
+	// eagerly write 204 response and skip submit errors
+	// as a measure against emails enumeration
 	if !c.Response().Committed {
 		c.NoContent(http.StatusNoContent)
 	}
 
-	return nil
+	return submitErr
 }
 
 func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
@@ -391,16 +374,14 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 					return NewBadRequestError("Failed to set new password.", err)
 				}
 
+				if err := api.app.OnRecordAfterConfirmPasswordResetRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.NoContent(http.StatusNoContent)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterConfirmPasswordResetRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
 
 	return submitErr
 }
@@ -436,25 +417,22 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 					}
 				})
 
+				if err := api.app.OnRecordAfterRequestVerificationRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.NoContent(http.StatusNoContent)
 			})
 		}
 	})
 
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterRequestVerificationRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	} else if api.app.IsDebug() {
-		log.Println(submitErr)
-	}
-
-	// don't return the response error to prevent emails enumeration
+	// eagerly write 204 response and skip submit errors
+	// as a measure against users enumeration
 	if !c.Response().Committed {
 		c.NoContent(http.StatusNoContent)
 	}
 
-	return nil
+	return submitErr
 }
 
 func (api *recordAuthApi) confirmVerification(c echo.Context) error {
@@ -481,16 +459,14 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 					return NewBadRequestError("An error occurred while submitting the form.", err)
 				}
 
+				if err := api.app.OnRecordAfterConfirmVerificationRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.NoContent(http.StatusNoContent)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterConfirmVerificationRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
 
 	return submitErr
 }
@@ -516,23 +492,21 @@ func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
 	event.Collection = collection
 	event.Record = record
 
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
+	return form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
 		return func(record *models.Record) error {
 			return api.app.OnRecordBeforeRequestEmailChangeRequest().Trigger(event, func(e *core.RecordRequestEmailChangeEvent) error {
 				if err := next(e.Record); err != nil {
 					return NewBadRequestError("Failed to request email change.", err)
 				}
 
+				if err := api.app.OnRecordAfterRequestEmailChangeRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.NoContent(http.StatusNoContent)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		api.app.OnRecordAfterRequestEmailChangeRequest().Trigger(event)
-	}
-
-	return submitErr
 }
 
 func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
@@ -559,16 +533,14 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 					return NewBadRequestError("Failed to confirm email change.", err)
 				}
 
+				if err := api.app.OnRecordAfterConfirmEmailChangeRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.NoContent(http.StatusNoContent)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnRecordAfterConfirmEmailChangeRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
 
 	return submitErr
 }
@@ -633,19 +605,17 @@ func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 	event.Record = record
 	event.ExternalAuth = externalAuth
 
-	handlerErr := api.app.OnRecordBeforeUnlinkExternalAuthRequest().Trigger(event, func(e *core.RecordUnlinkExternalAuthEvent) error {
+	return api.app.OnRecordBeforeUnlinkExternalAuthRequest().Trigger(event, func(e *core.RecordUnlinkExternalAuthEvent) error {
 		if err := api.app.Dao().DeleteExternalAuth(externalAuth); err != nil {
 			return NewBadRequestError("Cannot unlink the external auth provider.", err)
 		}
 
+		if err := api.app.OnRecordAfterUnlinkExternalAuthRequest().Trigger(event); err != nil {
+			return err
+		}
+
 		return e.HttpContext.NoContent(http.StatusNoContent)
 	})
-
-	if handlerErr == nil {
-		api.app.OnRecordAfterUnlinkExternalAuthRequest().Trigger(event)
-	}
-
-	return handlerErr
 }
 
 // -------------------------------------------------------------------

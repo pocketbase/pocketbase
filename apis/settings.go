@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"log"
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -55,13 +54,17 @@ func (api *settingsApi) set(c echo.Context) error {
 	event.OldSettings = api.app.Settings()
 
 	// update the settings
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*settings.Settings]) forms.InterceptorNextFunc[*settings.Settings] {
+	return form.Submit(func(next forms.InterceptorNextFunc[*settings.Settings]) forms.InterceptorNextFunc[*settings.Settings] {
 		return func(s *settings.Settings) error {
 			event.NewSettings = s
 
 			return api.app.OnSettingsBeforeUpdateRequest().Trigger(event, func(e *core.SettingsUpdateEvent) error {
 				if err := next(e.NewSettings); err != nil {
 					return NewBadRequestError("An error occurred while submitting the form.", err)
+				}
+
+				if err := api.app.OnSettingsAfterUpdateRequest().Trigger(event); err != nil {
+					return err
 				}
 
 				redactedSettings, err := api.app.Settings().RedactClone()
@@ -73,14 +76,6 @@ func (api *settingsApi) set(c echo.Context) error {
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnSettingsAfterUpdateRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return submitErr
 }
 
 func (api *settingsApi) testS3(c echo.Context) error {

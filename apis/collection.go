@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -83,7 +82,7 @@ func (api *collectionApi) create(c echo.Context) error {
 	event.Collection = collection
 
 	// create the collection
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
+	return form.Submit(func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
 		return func(m *models.Collection) error {
 			event.Collection = m
 
@@ -92,18 +91,14 @@ func (api *collectionApi) create(c echo.Context) error {
 					return NewBadRequestError("Failed to create the collection.", err)
 				}
 
+				if err := api.app.OnCollectionAfterCreateRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.JSON(http.StatusOK, e.Collection)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnCollectionAfterCreateRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return submitErr
 }
 
 func (api *collectionApi) update(c echo.Context) error {
@@ -124,7 +119,7 @@ func (api *collectionApi) update(c echo.Context) error {
 	event.Collection = collection
 
 	// update the collection
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
+	return form.Submit(func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
 		return func(m *models.Collection) error {
 			event.Collection = m
 
@@ -133,18 +128,14 @@ func (api *collectionApi) update(c echo.Context) error {
 					return NewBadRequestError("Failed to update the collection.", err)
 				}
 
+				if err := api.app.OnCollectionAfterUpdateRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.JSON(http.StatusOK, e.Collection)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnCollectionAfterUpdateRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return submitErr
 }
 
 func (api *collectionApi) delete(c echo.Context) error {
@@ -157,21 +148,17 @@ func (api *collectionApi) delete(c echo.Context) error {
 	event.HttpContext = c
 	event.Collection = collection
 
-	handlerErr := api.app.OnCollectionBeforeDeleteRequest().Trigger(event, func(e *core.CollectionDeleteEvent) error {
+	return api.app.OnCollectionBeforeDeleteRequest().Trigger(event, func(e *core.CollectionDeleteEvent) error {
 		if err := api.app.Dao().DeleteCollection(e.Collection); err != nil {
 			return NewBadRequestError("Failed to delete collection due to existing dependency.", err)
 		}
 
+		if err := api.app.OnCollectionAfterDeleteRequest().Trigger(event); err != nil {
+			return err
+		}
+
 		return e.HttpContext.NoContent(http.StatusNoContent)
 	})
-
-	if handlerErr == nil {
-		if err := api.app.OnCollectionAfterDeleteRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return handlerErr
 }
 
 func (api *collectionApi) bulkImport(c echo.Context) error {
@@ -187,7 +174,7 @@ func (api *collectionApi) bulkImport(c echo.Context) error {
 	event.Collections = form.Collections
 
 	// import collections
-	submitErr := form.Submit(func(next forms.InterceptorNextFunc[[]*models.Collection]) forms.InterceptorNextFunc[[]*models.Collection] {
+	return form.Submit(func(next forms.InterceptorNextFunc[[]*models.Collection]) forms.InterceptorNextFunc[[]*models.Collection] {
 		return func(imports []*models.Collection) error {
 			event.Collections = imports
 
@@ -196,16 +183,12 @@ func (api *collectionApi) bulkImport(c echo.Context) error {
 					return NewBadRequestError("Failed to import the submitted collections.", err)
 				}
 
+				if err := api.app.OnCollectionsAfterImportRequest().Trigger(event); err != nil {
+					return err
+				}
+
 				return e.HttpContext.NoContent(http.StatusNoContent)
 			})
 		}
 	})
-
-	if submitErr == nil {
-		if err := api.app.OnCollectionsAfterImportRequest().Trigger(event); err != nil && api.app.IsDebug() {
-			log.Println(err)
-		}
-	}
-
-	return submitErr
 }
