@@ -36,22 +36,56 @@ func TestHookAddAndPreAdd(t *testing.T) {
 	}
 }
 
-func TestHookReset(t *testing.T) {
+func TestHookRemove(t *testing.T) {
 	h := Hook[int]{}
 
-	h.Reset() // should do nothing and not panic
+	h1Called := false
+	h2Called := false
+
+	id1 := h.Add(func(data int) error { h1Called = true; return nil })
+	h.Add(func(data int) error { h2Called = true; return nil })
+
+	h.Remove("missing") // should do nothing and not panic
+
+	if total := len(h.handlers); total != 2 {
+		t.Fatalf("Expected %d handlers, got %d", 2, total)
+	}
+
+	h.Remove(id1)
+
+	if total := len(h.handlers); total != 1 {
+		t.Fatalf("Expected %d handlers, got %d", 1, total)
+	}
+
+	if err := h.Trigger(1); err != nil {
+		t.Fatal(err)
+	}
+
+	if h1Called {
+		t.Fatalf("Expected hook 1 to be removed and not called")
+	}
+
+	if !h2Called {
+		t.Fatalf("Expected hook 2 to be called")
+	}
+}
+
+func TestHookRemoveAll(t *testing.T) {
+	h := Hook[int]{}
+
+	h.RemoveAll() // should do nothing and not panic
 
 	h.Add(func(data int) error { return nil })
 	h.Add(func(data int) error { return nil })
 
 	if total := len(h.handlers); total != 2 {
-		t.Fatalf("Expected 2 handlers before Reset, found %d", total)
+		t.Fatalf("Expected 2 handlers before RemoveAll, found %d", total)
 	}
 
-	h.Reset()
+	h.RemoveAll()
 
 	if total := len(h.handlers); total != 0 {
-		t.Fatalf("Expected no handlers after Reset, found %d", total)
+		t.Fatalf("Expected no handlers after RemoveAll, found %d", total)
 	}
 }
 
