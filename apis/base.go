@@ -47,6 +47,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	e.Use(middleware.Recover())
 	e.Use(middleware.Secure())
 	e.Use(LoadAuthContext(app))
+	e.Use(eagerRequestDataCache(app))
 
 	// custom error handler
 	e.HTTPErrorHandler = func(c echo.Context, err error) {
@@ -115,20 +116,6 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	bindLogsApi(app, api)
 	bindHealthApi(app, api)
 	bindBackupApi(app, api)
-
-	// trigger the custom BeforeServe hook for the created api router
-	// allowing users to further adjust its options or register new routes
-	serveEvent := &core.ServeEvent{
-		App:    app,
-		Router: e,
-	}
-	if err := app.OnBeforeServe().Trigger(serveEvent); err != nil {
-		return nil, err
-	}
-
-	// note: it is after the OnBeforeServe hook to ensure that the implicit
-	// cache is after any user custom defined middlewares
-	e.Use(eagerRequestDataCache(app))
 
 	// catch all any route
 	api.Any("/*", func(c echo.Context) error {

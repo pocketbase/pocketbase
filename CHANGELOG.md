@@ -8,6 +8,16 @@
 
 - `Hook.Add()` and `Hook.PreAdd` now returns a unique string identifier that could be used to remove the registered hook handler via `Hook.Remove(handlerId)`.
 
+- Added new fields to `core.ServeEvent`:
+  ```
+  type ServeEvent struct {
+    App    App
+    Router *echo.Echo
+    // new fields
+    Server      *http.Server      // allows adjusting the HTTP server config (global timeouts, TLS options, etc.)
+    CertManager *autocert.Manager // allows adjusting the autocert options (cache dir, host policy, etc.)
+  }
+  ```
 
 ## v0.16.4-WIP
 

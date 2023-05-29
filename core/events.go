@@ -1,6 +1,8 @@
 package core
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
@@ -12,6 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 var (
@@ -70,8 +73,10 @@ type TerminateEvent struct {
 }
 
 type ServeEvent struct {
-	App    App
-	Router *echo.Echo
+	App         App
+	Router      *echo.Echo
+	Server      *http.Server
+	CertManager *autocert.Manager
 }
 
 type ApiErrorEvent struct {

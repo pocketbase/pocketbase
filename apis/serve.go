@@ -27,7 +27,6 @@ type ServeOptions struct {
 	HttpAddr        string
 	HttpsAddr       string
 	AllowedOrigins  []string // optional list of CORS origins (default to "*")
-	BeforeServeFunc func(server *http.Server) error
 }
 
 // Serve starts a new app web server.
@@ -75,7 +74,7 @@ func Serve(app core.App, options *ServeOptions) error {
 
 	mainHost, _, _ := net.SplitHostPort(mainAddr)
 
-	certManager := autocert.Manager{
+	certManager := &autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		Cache:      autocert.DirCache(filepath.Join(app.DataDir(), ".autocert_cache")),
 		HostPolicy: autocert.HostWhitelist(mainHost, "www."+mainHost),
@@ -93,10 +92,14 @@ func Serve(app core.App, options *ServeOptions) error {
 		Addr:    mainAddr,
 	}
 
-	if options.BeforeServeFunc != nil {
-		if err := options.BeforeServeFunc(serverConfig); err != nil {
-			return err
-		}
+	serveEvent := &core.ServeEvent{
+		App:         app,
+		Router:      router,
+		Server:      serverConfig,
+		CertManager: certManager,
+	}
+	if err := app.OnBeforeServe().Trigger(serveEvent); err != nil {
+		return err
 	}
 
 	if options.ShowStartBanner {
