@@ -78,7 +78,7 @@ func (d *DateTime) Scan(value any) error {
 		d.t = v.Time()
 	case time.Time:
 		d.t = v
-	case int:
+	case int, int64, int32, uint, uint64, uint32:
 		d.t = cast.ToTime(v)
 	case string:
 		if v == "" {

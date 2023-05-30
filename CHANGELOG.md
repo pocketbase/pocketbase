@@ -30,6 +30,8 @@
 
 - Fixed the selfupdate command not working on Windows due to missing `.exe` in the extracted binary path ([#2589](https://github.com/pocketbase/pocketbase/discussions/2589)).
 
+- Added `int64`, `int32`, `uint`, `uint64` and `uint32` support when scanning `types.DateTime` ([#2602](https://github.com/pocketbase/pocketbase/discussions/2602))
+
 
 ## v0.16.3
 
