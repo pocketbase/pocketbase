@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
@@ -8,8 +9,10 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
@@ -216,6 +219,92 @@ func (dao *Dao) FindFirstRecordByData(
 	}
 
 	return record, nil
+}
+
+// FindRecordsByFilter returns limit number of records matching the
+// provided string filter.
+//
+// The sort argument is optional and can be empty string OR the same format
+// used in the web APIs, eg. "-created,title".
+//
+// If the limit argument is <= 0, no limit is applied to the query and
+// all matching records are returned.
+//
+// Example:
+//
+//	dao.FindRecordsByFilter("posts", "title ~ 'lorem ipsum' && visible = true", "-created", 10)
+func (dao *Dao) FindRecordsByFilter(
+	collectionNameOrId string,
+	filter string,
+	sort string,
+	limit int,
+) ([]*models.Record, error) {
+	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)
+	if err != nil {
+		return nil, err
+	}
+
+	q := dao.RecordQuery(collection)
+
+	// build a fields resolver and attach the generated conditions to the query
+	// ---
+	resolver := resolvers.NewRecordFieldResolver(
+		dao,
+		collection, // the base collection
+		nil,        // no request data
+		true,       // allow searching hidden/protected fields like "email"
+	)
+
+	expr, err := search.FilterData(filter).BuildExpr(resolver)
+	if err != nil || expr == nil {
+		return nil, errors.New("invalid or empty filter expression")
+	}
+	q.AndWhere(expr)
+
+	if sort != "" {
+		for _, sortField := range search.ParseSortFromString(sort) {
+			expr, err := sortField.BuildExpr(resolver)
+			if err != nil {
+				return nil, err
+			}
+			if expr != "" {
+				q.AndOrderBy(expr)
+			}
+		}
+	}
+
+	resolver.UpdateQuery(q) // attaches any adhoc joins and aliases
+	// ---
+
+	if limit > 0 {
+		q.Limit(int64(limit))
+	}
+
+	records := []*models.Record{}
+
+	if err := q.All(&records); err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}
+
+// FindFirstRecordByFilter returns the first available record matching the provided filter.
+//
+// Example:
+//
+//	dao.FindFirstRecordByFilter("posts", "slug='test'")
+func (dao *Dao) FindFirstRecordByFilter(collectionNameOrId string, filter string) (*models.Record, error) {
+	result, err := dao.FindRecordsByFilter(collectionNameOrId, filter, "", 1)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return result[0], nil
 }
 
 // IsRecordValueUnique checks if the provided key-value pair is a unique Record value.

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/search"
@@ -39,6 +38,15 @@ var plainRequestAuthFields = []string{
 // ensure that `search.FieldResolver` interface is implemented
 var _ search.FieldResolver = (*RecordFieldResolver)(nil)
 
+// CollectionsFinder defines a common interface for retrieving
+// collections and other related models.
+//
+// The interface at the moment is primarily used to avoid circular
+// dependency with the daos.Dao package.
+type CollectionsFinder interface {
+	FindCollectionByNameOrId(collectionNameOrId string) (*models.Collection, error)
+}
+
 // RecordFieldResolver defines a custom search resolver struct for
 // managing Record model search fields.
 //
@@ -54,7 +62,7 @@ var _ search.FieldResolver = (*RecordFieldResolver)(nil)
 //	provider := search.NewProvider(resolver)
 //	...
 type RecordFieldResolver struct {
-	dao               *daos.Dao
+	dao               CollectionsFinder
 	baseCollection    *models.Collection
 	allowHiddenFields bool
 	allowedFields     []string
@@ -66,7 +74,7 @@ type RecordFieldResolver struct {
 
 // NewRecordFieldResolver creates and initializes a new `RecordFieldResolver`.
 func NewRecordFieldResolver(
-	dao *daos.Dao,
+	dao CollectionsFinder,
 	baseCollection *models.Collection,
 	requestData *models.RequestData,
 	allowHiddenFields bool,

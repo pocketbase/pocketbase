@@ -44,7 +44,7 @@ func (f FilterData) BuildExpr(fieldResolver FieldResolver) (dbx.Expression, erro
 
 func (f FilterData) build(data []fexpr.ExprGroup, fieldResolver FieldResolver) (dbx.Expression, error) {
 	if len(data) == 0 {
-		return nil, errors.New("Empty filter expression.")
+		return nil, errors.New("empty filter expression")
 	}
 
 	result := &concatExpr{separator: " "}
@@ -61,7 +61,7 @@ func (f FilterData) build(data []fexpr.ExprGroup, fieldResolver FieldResolver) (
 		case []fexpr.ExprGroup:
 			expr, exprErr = f.build(item, fieldResolver)
 		default:
-			exprErr = errors.New("Unsupported expression item.")
+			exprErr = errors.New("unsupported expression item")
 		}
 
 		if exprErr != nil {

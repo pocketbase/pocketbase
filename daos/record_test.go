@@ -405,6 +405,183 @@ func TestFindFirstRecordByData(t *testing.T) {
 	}
 }
 
+func TestFindRecordsByFilter(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	scenarios := []struct {
+		name               string
+		collectionIdOrName string
+		filter             string
+		sort               string
+		limit              int
+		expectError        bool
+		expectRecordIds    []string
+	}{
+		{
+			"missing collection",
+			"missing",
+			"id != ''",
+			"",
+			0,
+			true,
+			nil,
+		},
+		{
+			"missing filter",
+			"demo2",
+			"",
+			"",
+			0,
+			true,
+			nil,
+		},
+		{
+			"invalid filter",
+			"demo2",
+			"someMissingField > 1",
+			"",
+			0,
+			true,
+			nil,
+		},
+		{
+			"simple filter",
+			"demo2",
+			"id != ''",
+			"",
+			0,
+			false,
+			[]string{
+				"llvuca81nly1qls",
+				"achvryl401bhse3",
+				"0yxhwia2amd8gec",
+			},
+		},
+		{
+			"multi-condition filter with sort",
+			"demo2",
+			"id != '' && active=true",
+			"-created,title",
+			-1, // should behave the same as 0
+			false,
+			[]string{
+				"0yxhwia2amd8gec",
+				"achvryl401bhse3",
+			},
+		},
+		{
+			"with limit",
+			"demo2",
+			"id != ''",
+			"title",
+			2,
+			false,
+			[]string{
+				"llvuca81nly1qls",
+				"achvryl401bhse3",
+			},
+		},
+	}
+
+	for _, s := range scenarios {
+		records, err := app.Dao().FindRecordsByFilter(
+			s.collectionIdOrName,
+			s.filter,
+			s.sort,
+			s.limit,
+		)
+
+		hasErr := err != nil
+		if hasErr != s.expectError {
+			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", s.name, s.expectError, hasErr, err)
+			continue
+		}
+
+		if hasErr {
+			continue
+		}
+
+		if len(records) != len(s.expectRecordIds) {
+			t.Errorf("[%s] Expected %d records, got %d", s.name, len(s.expectRecordIds), len(records))
+			continue
+		}
+
+		for i, id := range s.expectRecordIds {
+			if id != records[i].Id {
+				t.Errorf("[%s] Expected record with id %q, got %q at index %d", s.name, id, records[i].Id, i)
+			}
+		}
+	}
+}
+
+func TestFindFirstRecordByFilter(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	scenarios := []struct {
+		name               string
+		collectionIdOrName string
+		filter             string
+		expectError        bool
+		expectRecordId     string
+	}{
+		{
+			"missing collection",
+			"missing",
+			"id != ''",
+			true,
+			"",
+		},
+		{
+			"missing filter",
+			"demo2",
+			"",
+			true,
+			"",
+		},
+		{
+			"invalid filter",
+			"demo2",
+			"someMissingField > 1",
+			true,
+			"",
+		},
+		{
+			"valid filter but no matches",
+			"demo2",
+			"id = 'test'",
+			true,
+			"",
+		},
+		{
+			"valid filter and multiple matches",
+			"demo2",
+			"id != ''",
+			false,
+			"llvuca81nly1qls",
+		},
+	}
+
+	for _, s := range scenarios {
+		record, err := app.Dao().FindFirstRecordByFilter(s.collectionIdOrName, s.filter)
+
+		hasErr := err != nil
+		if hasErr != s.expectError {
+			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", s.name, s.expectError, hasErr, err)
+			continue
+		}
+
+		if hasErr {
+			continue
+		}
+
+		if record.Id != s.expectRecordId {
+			t.Errorf("[%s] Expected record with id %q, got %q", s.name, s.expectRecordId, record.Id)
+		}
+	}
+}
+
 func TestIsRecordValueUnique(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
