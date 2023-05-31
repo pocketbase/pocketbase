@@ -25,7 +25,7 @@
 
 - Added `subscriptions.Client.Unset()` helper to remove a single cached item from the client store.
 
-- Added query by filter record `Dao` helpers:
+- (@todo docs) Added query by filter record `Dao` helpers:
   ```
   app.Dao().FindRecordsByFilter("posts", "title ~ 'lorem ipsum' && visible = true", "-created", 10)
   app.Dao().FindFirstRecordByFilter("posts", "slug='test' && active=true")
