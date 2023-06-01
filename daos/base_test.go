@@ -120,6 +120,72 @@ func TestDaoClone(t *testing.T) {
 	}
 }
 
+func TestDaoWithoutHooks(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	hookCalls := map[string]int{}
+
+	dao := daos.NewMultiDB(testApp.Dao().ConcurrentDB(), testApp.Dao().NonconcurrentDB())
+	dao.MaxLockRetries = 1
+	dao.ModelQueryTimeout = 2
+	dao.BeforeDeleteFunc = func(eventDao *daos.Dao, m models.Model) error {
+		hookCalls["BeforeDeleteFunc"]++
+		return nil
+	}
+	dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
+		hookCalls["BeforeUpdateFunc"]++
+		return nil
+	}
+	dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
+		hookCalls["BeforeCreateFunc"]++
+		return nil
+	}
+	dao.AfterDeleteFunc = func(eventDao *daos.Dao, m models.Model) {
+		hookCalls["AfterDeleteFunc"]++
+	}
+	dao.AfterUpdateFunc = func(eventDao *daos.Dao, m models.Model) {
+		hookCalls["AfterUpdateFunc"]++
+	}
+	dao.AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) {
+		hookCalls["AfterCreateFunc"]++
+	}
+
+	new := dao.WithoutHooks()
+
+	if new.MaxLockRetries != dao.MaxLockRetries {
+		t.Fatalf("Expected MaxLockRetries %d, got %d", new.Clone().MaxLockRetries, dao.MaxLockRetries)
+	}
+
+	if new.ModelQueryTimeout != dao.ModelQueryTimeout {
+		t.Fatalf("Expected ModelQueryTimeout %d, got %d", new.Clone().ModelQueryTimeout, dao.ModelQueryTimeout)
+	}
+
+	if new.BeforeDeleteFunc != nil {
+		t.Fatal("Expected BeforeDeleteFunc to be nil")
+	}
+
+	if new.BeforeUpdateFunc != nil {
+		t.Fatal("Expected BeforeUpdateFunc to be nil")
+	}
+
+	if new.BeforeCreateFunc != nil {
+		t.Fatal("Expected BeforeCreateFunc to be nil")
+	}
+
+	if new.AfterDeleteFunc != nil {
+		t.Fatal("Expected AfterDeleteFunc to be nil")
+	}
+
+	if new.AfterUpdateFunc != nil {
+		t.Fatal("Expected AfterUpdateFunc to be nil")
+	}
+
+	if new.AfterCreateFunc != nil {
+		t.Fatal("Expected AfterCreateFunc to be nil")
+	}
+}
+
 func TestDaoModelQuery(t *testing.T) {
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()

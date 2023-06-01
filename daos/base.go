@@ -29,7 +29,8 @@ func NewMultiDB(concurrentDB, nonconcurrentDB dbx.Builder) *Dao {
 }
 
 // Dao handles various db operations.
-// Think of Dao as a repository and service layer in one.
+//
+// You can think of Dao as a repository and service layer in one.
 type Dao struct {
 	// in a transaction both refer to the same *dbx.TX instance
 	concurrentDB    dbx.Builder
@@ -43,6 +44,7 @@ type Dao struct {
 	// This field has no effect if an explicit query context is already specified.
 	ModelQueryTimeout time.Duration
 
+	// write hooks
 	BeforeCreateFunc func(eventDao *Dao, m models.Model) error
 	AfterCreateFunc  func(eventDao *Dao, m models.Model)
 	BeforeUpdateFunc func(eventDao *Dao, m models.Model) error
@@ -79,6 +81,21 @@ func (dao *Dao) Clone() *Dao {
 	clone := *dao
 
 	return &clone
+}
+
+// WithoutHooks returns a new Dao with the same configuration options
+// as the current one, but without create/update/delete hooks.
+func (dao *Dao) WithoutHooks() *Dao {
+	new := dao.Clone()
+
+	new.BeforeCreateFunc = nil
+	new.AfterCreateFunc = nil
+	new.BeforeUpdateFunc = nil
+	new.AfterUpdateFunc = nil
+	new.BeforeDeleteFunc = nil
+	new.AfterDeleteFunc = nil
+
+	return new
 }
 
 // ModelQuery creates a new preconfigured select query with preset
