@@ -1,7 +1,5 @@
 ## v0.16.4
 
-> _To update the prebuilt executable on UNIX based systems you can run `./pocketbase update`._
-
 - Fixed the selfupdate command not working on Windows due to missing `.exe` in the extracted binary path ([#2589](https://github.com/pocketbase/pocketbase/discussions/2589)).
   _Note that the command on Windows will work on v0.16.4+ onwards, meaning that you still will have to update manually one more time to v0.16.4._
 
