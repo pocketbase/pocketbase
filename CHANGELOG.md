@@ -31,6 +31,8 @@
   app.Dao().FindFirstRecordByFilter("posts", "slug='test' && active=true")
   ```
 
+- (@todo docs) Added `Dao.WithoutHooks()` helper to create a new `Dao` from the current one but without the create/update/delete hooks.
+
 
 ## v0.16.4-WIP
 
