@@ -34,11 +34,14 @@
 - (@todo docs) Added `Dao.WithoutHooks()` helper to create a new `Dao` from the current one but without the create/update/delete hooks.
 
 
-## v0.16.4-WIP
+## v0.16.4
 
 - Fixed the selfupdate command not working on Windows due to missing `.exe` in the extracted binary path ([#2589](https://github.com/pocketbase/pocketbase/discussions/2589)).
+  _Note that the command on Windows will work from v0.16.4+ onwards, meaning that you still will have to update manually one more time to v0.16.4._
 
 - Added `int64`, `int32`, `uint`, `uint64` and `uint32` support when scanning `types.DateTime` ([#2602](https://github.com/pocketbase/pocketbase/discussions/2602))
+
+- Updated Go dependencies.
 
 
 ## v0.16.3
