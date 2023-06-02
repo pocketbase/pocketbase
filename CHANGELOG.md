@@ -5,7 +5,7 @@
 
 - Added `int64`, `int32`, `uint`, `uint64` and `uint32` support when scanning `types.DateTime` ([#2602](https://github.com/pocketbase/pocketbase/discussions/2602))
 
-- Updated Go dependencies.
+- Updated dependencies.
 
 
 ## v0.16.3
