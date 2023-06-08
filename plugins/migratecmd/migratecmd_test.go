@@ -134,7 +134,7 @@ func init() {
 
 		migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
 
-		migratecmd.MustRegister(app, nil, &migratecmd.Options{
+		migratecmd.MustRegister(app, nil, migratecmd.Config{
 			TemplateLang: s.lang,
 			Automigrate:  true,
 			Dir:          migrationsDir,
@@ -306,7 +306,7 @@ func init() {
 
 		migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
 
-		migratecmd.MustRegister(app, nil, &migratecmd.Options{
+		migratecmd.MustRegister(app, nil, migratecmd.Config{
 			TemplateLang: s.lang,
 			Automigrate:  true,
 			Dir:          migrationsDir,
@@ -630,7 +630,7 @@ func init() {
 
 		migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
 
-		migratecmd.MustRegister(app, nil, &migratecmd.Options{
+		migratecmd.MustRegister(app, nil, migratecmd.Config{
 			TemplateLang: s.lang,
 			Automigrate:  true,
 			Dir:          migrationsDir,
@@ -749,7 +749,7 @@ func TestAutomigrateCollectionNoChanges(t *testing.T) {
 
 		migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
 
-		migratecmd.MustRegister(app, nil, &migratecmd.Options{
+		migratecmd.MustRegister(app, nil, migratecmd.Config{
 			TemplateLang: s.lang,
 			Automigrate:  true,
 			Dir:          migrationsDir,
@@ -786,7 +786,7 @@ func TestInitialAutoSnapshot(t *testing.T) {
 
 	migrationsDir := filepath.Join(app.DataDir(), "_test_auto_snapshot_")
 
-	migratecmd.MustRegister(app, nil, &migratecmd.Options{
+	migratecmd.MustRegister(app, nil, migratecmd.Config{
 		TemplateLang: migratecmd.TemplateLangJS,
 		Automigrate:  true,
 		Dir:          migrationsDir,

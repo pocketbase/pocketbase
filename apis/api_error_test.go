@@ -37,10 +37,10 @@ func TestNewApiErrorWithValidationData(t *testing.T) {
 		300,
 		"message_test",
 		validation.Errors{
-			"err1": errors.New("test error"),
+			"err1": errors.New("test error"), // should be normalized
 			"err2": validation.ErrRequired,
 			"err3": validation.Errors{
-				"sub1": errors.New("test error"),
+				"sub1": errors.New("test error"), // should be normalized
 				"sub2": validation.ErrRequired,
 				"sub3": validation.Errors{
 					"sub11": validation.ErrRequired,
@@ -50,10 +50,10 @@ func TestNewApiErrorWithValidationData(t *testing.T) {
 	)
 
 	result, _ := json.Marshal(e)
-	expected := `{"code":300,"message":"Message_test.","data":{"err1":{"code":"validation_invalid_value","message":"Test error."},"err2":{"code":"validation_required","message":"Cannot be blank."},"err3":{"sub1":{"code":"validation_invalid_value","message":"Test error."},"sub2":{"code":"validation_required","message":"Cannot be blank."},"sub3":{"sub11":{"code":"validation_required","message":"Cannot be blank."}}}}}`
+	expected := `{"code":300,"message":"Message_test.","data":{"err1":{"code":"validation_invalid_value","message":"Invalid value."},"err2":{"code":"validation_required","message":"Cannot be blank."},"err3":{"sub1":{"code":"validation_invalid_value","message":"Invalid value."},"sub2":{"code":"validation_required","message":"Cannot be blank."},"sub3":{"sub11":{"code":"validation_required","message":"Cannot be blank."}}}}}`
 
 	if string(result) != expected {
-		t.Errorf("Expected %v, got %v", expected, string(result))
+		t.Errorf("Expected \n%v, \ngot \n%v", expected, string(result))
 	}
 
 	if e.Error() != "Message_test." {
@@ -73,7 +73,7 @@ func TestNewNotFoundError(t *testing.T) {
 	}{
 		{"", nil, `{"code":404,"message":"The requested resource wasn't found.","data":{}}`},
 		{"demo", "rawData_test", `{"code":404,"message":"Demo.","data":{}}`},
-		{"demo", validation.Errors{"err1": errors.New("test error")}, `{"code":404,"message":"Demo.","data":{"err1":{"code":"validation_invalid_value","message":"Test error."}}}`},
+		{"demo", validation.Errors{"err1": validation.NewError("test_code", "test_message")}, `{"code":404,"message":"Demo.","data":{"err1":{"code":"test_code","message":"Test_message."}}}`},
 	}
 
 	for i, scenario := range scenarios {
@@ -81,7 +81,7 @@ func TestNewNotFoundError(t *testing.T) {
 		result, _ := json.Marshal(e)
 
 		if string(result) != scenario.expected {
-			t.Errorf("(%d) Expected %v, got %v", i, scenario.expected, string(result))
+			t.Errorf("(%d) Expected \n%v, \ngot \n%v", i, scenario.expected, string(result))
 		}
 	}
 }
@@ -94,7 +94,7 @@ func TestNewBadRequestError(t *testing.T) {
 	}{
 		{"", nil, `{"code":400,"message":"Something went wrong while processing your request.","data":{}}`},
 		{"demo", "rawData_test", `{"code":400,"message":"Demo.","data":{}}`},
-		{"demo", validation.Errors{"err1": errors.New("test error")}, `{"code":400,"message":"Demo.","data":{"err1":{"code":"validation_invalid_value","message":"Test error."}}}`},
+		{"demo", validation.Errors{"err1": validation.NewError("test_code", "test_message")}, `{"code":400,"message":"Demo.","data":{"err1":{"code":"test_code","message":"Test_message."}}}`},
 	}
 
 	for i, scenario := range scenarios {
@@ -102,7 +102,7 @@ func TestNewBadRequestError(t *testing.T) {
 		result, _ := json.Marshal(e)
 
 		if string(result) != scenario.expected {
-			t.Errorf("(%d) Expected %v, got %v", i, scenario.expected, string(result))
+			t.Errorf("(%d) Expected \n%v, \ngot \n%v", i, scenario.expected, string(result))
 		}
 	}
 }
@@ -115,7 +115,7 @@ func TestNewForbiddenError(t *testing.T) {
 	}{
 		{"", nil, `{"code":403,"message":"You are not allowed to perform this request.","data":{}}`},
 		{"demo", "rawData_test", `{"code":403,"message":"Demo.","data":{}}`},
-		{"demo", validation.Errors{"err1": errors.New("test error")}, `{"code":403,"message":"Demo.","data":{"err1":{"code":"validation_invalid_value","message":"Test error."}}}`},
+		{"demo", validation.Errors{"err1": validation.NewError("test_code", "test_message")}, `{"code":403,"message":"Demo.","data":{"err1":{"code":"test_code","message":"Test_message."}}}`},
 	}
 
 	for i, scenario := range scenarios {
@@ -123,7 +123,7 @@ func TestNewForbiddenError(t *testing.T) {
 		result, _ := json.Marshal(e)
 
 		if string(result) != scenario.expected {
-			t.Errorf("(%d) Expected %v, got %v", i, scenario.expected, string(result))
+			t.Errorf("(%d) Expected \n%v, \ngot \n%v", i, scenario.expected, string(result))
 		}
 	}
 }
@@ -136,7 +136,7 @@ func TestNewUnauthorizedError(t *testing.T) {
 	}{
 		{"", nil, `{"code":401,"message":"Missing or invalid authentication token.","data":{}}`},
 		{"demo", "rawData_test", `{"code":401,"message":"Demo.","data":{}}`},
-		{"demo", validation.Errors{"err1": errors.New("test error")}, `{"code":401,"message":"Demo.","data":{"err1":{"code":"validation_invalid_value","message":"Test error."}}}`},
+		{"demo", validation.Errors{"err1": validation.NewError("test_code", "test_message")}, `{"code":403,"message":"Demo.","data":{"err1":{"code":"test_code","message":"Test_message."}}}`},
 	}
 
 	for i, scenario := range scenarios {
@@ -144,7 +144,7 @@ func TestNewUnauthorizedError(t *testing.T) {
 		result, _ := json.Marshal(e)
 
 		if string(result) != scenario.expected {
-			t.Errorf("(%d) Expected %v, got %v", i, scenario.expected, string(result))
+			t.Errorf("(%d) Expected \n%v, \ngot \n%v", i, scenario.expected, string(result))
 		}
 	}
 }
