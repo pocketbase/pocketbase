@@ -136,7 +136,7 @@ func TestNewUnauthorizedError(t *testing.T) {
 	}{
 		{"", nil, `{"code":401,"message":"Missing or invalid authentication token.","data":{}}`},
 		{"demo", "rawData_test", `{"code":401,"message":"Demo.","data":{}}`},
-		{"demo", validation.Errors{"err1": validation.NewError("test_code", "test_message")}, `{"code":403,"message":"Demo.","data":{"err1":{"code":"test_code","message":"Test_message."}}}`},
+		{"demo", validation.Errors{"err1": validation.NewError("test_code", "test_message")}, `{"code":401,"message":"Demo.","data":{"err1":{"code":"test_code","message":"Test_message."}}}`},
 	}
 
 	for i, scenario := range scenarios {
