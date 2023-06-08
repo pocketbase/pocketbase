@@ -180,7 +180,7 @@ type BaseAppConfig struct {
 // configured with the provided arguments.
 //
 // To initialize the app, you need to call `app.Bootstrap()`.
-func NewBaseApp(config *BaseAppConfig) *BaseApp {
+func NewBaseApp(config BaseAppConfig) *BaseApp {
 	app := &BaseApp{
 		dataDir:             config.DataDir,
 		isDebug:             config.IsDebug,

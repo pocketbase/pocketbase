@@ -7,15 +7,15 @@ import (
 
 // Message defines a generic email message struct.
 type Message struct {
-	From        mail.Address
-	To          []mail.Address
-	Bcc         []mail.Address
-	Cc          []mail.Address
-	Subject     string
-	HTML        string
-	Text        string
-	Headers     map[string]string
-	Attachments map[string]io.Reader
+	From        mail.Address         `json:"from"`
+	To          []mail.Address       `json:"to"`
+	Bcc         []mail.Address       `json:"bcc"`
+	Cc          []mail.Address       `json:"cc"`
+	Subject     string               `json:"subject"`
+	HTML        string               `json:"html"`
+	Text        string               `json:"text"`
+	Headers     map[string]string    `json:"headers"`
+	Attachments map[string]io.Reader `json:"attachments"`
 }
 
 // Mailer defines a base mail client interface.

@@ -66,43 +66,67 @@ func NewUnauthorizedError(message string, data any) *ApiError {
 
 // NewApiError creates and returns new normalized `ApiError` instance.
 func NewApiError(status int, message string, data any) *ApiError {
-	message = inflector.Sentenize(message)
-
-	formattedData := map[string]any{}
-
-	if v, ok := data.(validation.Errors); ok {
-		formattedData = resolveValidationErrors(v)
-	}
-
 	return &ApiError{
 		rawData: data,
-		Data:    formattedData,
+		Data:    safeErrorsData(data),
 		Code:    status,
-		Message: strings.TrimSpace(message),
+		Message: strings.TrimSpace(inflector.Sentenize(message)),
 	}
 }
 
-func resolveValidationErrors(validationErrors validation.Errors) map[string]any {
+func safeErrorsData(data any) map[string]any {
+	switch v := data.(type) {
+	case validation.Errors:
+		return resolveSafeErrorsData[error](v)
+	case map[string]validation.Error:
+		return resolveSafeErrorsData[validation.Error](v)
+	case map[string]error:
+		return resolveSafeErrorsData[error](v)
+	case map[string]any:
+		return resolveSafeErrorsData[any](v)
+	default:
+		return map[string]any{} // not nil to ensure that is json serialized as object
+	}
+}
+
+func resolveSafeErrorsData[T any](data map[string]T) map[string]any {
 	result := map[string]any{}
 
-	// extract from each validation error its error code and message.
-	for name, err := range validationErrors {
-		// check for nested errors
-		if nestedErrs, ok := err.(validation.Errors); ok {
-			result[name] = resolveValidationErrors(nestedErrs)
+	for name, err := range data {
+		if isNestedError(err) {
+			result[name] = safeErrorsData(err)
 			continue
 		}
-
-		errCode := "validation_invalid_value" // default
-		if errObj, ok := err.(validation.ErrorObject); ok {
-			errCode = errObj.Code()
-		}
-
-		result[name] = map[string]string{
-			"code":    errCode,
-			"message": inflector.Sentenize(err.Error()),
-		}
+		result[name] = resolveSafeErrorItem(err)
 	}
 
 	return result
+}
+
+func isNestedError(err any) bool {
+	switch err.(type) {
+	case validation.Errors, map[string]validation.Error, map[string]error, map[string]any:
+		return true
+	}
+
+	return false
+}
+
+// resolveSafeErrorItem extracts from each validation error its
+// public safe error code and message.
+func resolveSafeErrorItem(err any) map[string]string {
+	// default public safe error values
+	code := "validation_invalid_value"
+	msg := "Invalid value."
+
+	// only validation errors are public safe
+	if obj, ok := err.(validation.Error); ok {
+		code = obj.Code()
+		msg = inflector.Sentenize(obj.Error())
+	}
+
+	return map[string]string{
+		"code":    code,
+		"message": msg,
+	}
 }

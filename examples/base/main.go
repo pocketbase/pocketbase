@@ -22,6 +22,14 @@ func main() {
 	// Optional plugin flags:
 	// ---------------------------------------------------------------
 
+	var hooksDir string
+	app.RootCmd.PersistentFlags().StringVar(
+		&hooksDir,
+		"hooksDir",
+		"",
+		"the directory with the JS app hooks",
+	)
+
 	var migrationsDir string
 	app.RootCmd.PersistentFlags().StringVar(
 		&migrationsDir,
@@ -68,20 +76,25 @@ func main() {
 	// Plugins and hooks:
 	// ---------------------------------------------------------------
 
+	// load js pb_hooks
+	jsvm.MustRegisterHooks(app, jsvm.HooksConfig{
+		Dir: hooksDir,
+	})
+
 	// load js pb_migrations
-	jsvm.MustRegisterMigrations(app, &jsvm.MigrationsOptions{
+	jsvm.MustRegisterMigrations(app, jsvm.MigrationsConfig{
 		Dir: migrationsDir,
 	})
 
 	// migrate command (with js templates)
-	migratecmd.MustRegister(app, app.RootCmd, &migratecmd.Options{
+	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
 		TemplateLang: migratecmd.TemplateLangJS,
 		Automigrate:  automigrate,
 		Dir:          migrationsDir,
 	})
 
 	// GitHub selfupdate
-	ghupdate.MustRegister(app, app.RootCmd, nil)
+	ghupdate.MustRegister(app, app.RootCmd, ghupdate.Config{})
 
 	app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
 		app.Dao().ModelQueryTimeout = time.Duration(queryTimeout) * time.Second
@@ -105,5 +118,6 @@ func defaultPublicDir() string {
 		// most likely ran with go run
 		return "./pb_public"
 	}
+
 	return filepath.Join(os.Args[0], "../pb_public")
 }

@@ -1,5 +1,9 @@
 // Package ghupdate implements a new command to selfupdate the current
 // PocketBase executable with the latest GitHub release.
+//
+// Example usage:
+//
+//	ghupdate.MustRegister(app, app.RootCmd, ghupdate.Config{})
 package ghupdate
 
 import (
@@ -27,10 +31,10 @@ type HttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// Options defines optional struct to customize the default plugin behavior.
+// Config defines the config options of the ghupdate plugin.
 //
-// NB! This plugin is considered experimental and its options may change in the future.
-type Options struct {
+// NB! This plugin is considered experimental and its config options may change in the future.
+type Config struct {
 	// Owner specifies the account owner of the repository (default to "pocketbase").
 	Owner string
 
@@ -51,43 +55,38 @@ type Options struct {
 
 // MustRegister registers the ghupdate plugin to the provided app instance
 // and panic if it fails.
-func MustRegister(app core.App, rootCmd *cobra.Command, options *Options) {
-	if err := Register(app, rootCmd, options); err != nil {
+func MustRegister(app core.App, rootCmd *cobra.Command, config Config) {
+	if err := Register(app, rootCmd, config); err != nil {
 		panic(err)
 	}
 }
 
 // Register registers the ghupdate plugin to the provided app instance.
-func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
+func Register(app core.App, rootCmd *cobra.Command, config Config) error {
 	p := &plugin{
 		app:            app,
 		currentVersion: rootCmd.Version,
+		config:         config,
 	}
 
-	if options != nil {
-		p.options = options
-	} else {
-		p.options = &Options{}
+	if p.config.Owner == "" {
+		p.config.Owner = "pocketbase"
 	}
 
-	if p.options.Owner == "" {
-		p.options.Owner = "pocketbase"
+	if p.config.Repo == "" {
+		p.config.Repo = "pocketbase"
 	}
 
-	if p.options.Repo == "" {
-		p.options.Repo = "pocketbase"
+	if p.config.ArchiveExecutable == "" {
+		p.config.ArchiveExecutable = "pocketbase"
 	}
 
-	if p.options.ArchiveExecutable == "" {
-		p.options.ArchiveExecutable = "pocketbase"
+	if p.config.HttpClient == nil {
+		p.config.HttpClient = http.DefaultClient
 	}
 
-	if p.options.HttpClient == nil {
-		p.options.HttpClient = http.DefaultClient
-	}
-
-	if p.options.Context == nil {
-		p.options.Context = context.Background()
+	if p.config.Context == nil {
+		p.config.Context = context.Background()
 	}
 
 	rootCmd.AddCommand(p.updateCmd())
@@ -98,7 +97,7 @@ func Register(app core.App, rootCmd *cobra.Command, options *Options) error {
 type plugin struct {
 	app            core.App
 	currentVersion string
-	options        *Options
+	config         Config
 }
 
 func (p *plugin) updateCmd() *cobra.Command {
@@ -130,10 +129,10 @@ func (p *plugin) update(withBackup bool) error {
 	color.Yellow("Fetching release information...")
 
 	latest, err := fetchLatestRelease(
-		p.options.Context,
-		p.options.HttpClient,
-		p.options.Owner,
-		p.options.Repo,
+		p.config.Context,
+		p.config.HttpClient,
+		p.config.Owner,
+		p.config.Repo,
 	)
 	if err != nil {
 		return err
@@ -161,7 +160,7 @@ func (p *plugin) update(withBackup bool) error {
 
 	// download the release asset
 	assetZip := filepath.Join(releaseDir, asset.Name)
-	if err := downloadFile(p.options.Context, p.options.HttpClient, asset.DownloadUrl, assetZip); err != nil {
+	if err := downloadFile(p.config.Context, p.config.HttpClient, asset.DownloadUrl, assetZip); err != nil {
 		return err
 	}
 
@@ -183,7 +182,7 @@ func (p *plugin) update(withBackup bool) error {
 	renamedOldExec := oldExec + ".old"
 	defer os.Remove(renamedOldExec)
 
-	newExec := filepath.Join(extractDir, p.options.ArchiveExecutable)
+	newExec := filepath.Join(extractDir, p.config.ArchiveExecutable)
 	if _, err := os.Stat(newExec); err != nil {
 		// try again with an .exe extension
 		newExec = newExec + ".exe"
@@ -213,7 +212,7 @@ func (p *plugin) update(withBackup bool) error {
 		color.Yellow("Creating pb_data backup...")
 
 		backupName := fmt.Sprintf("@update_%s.zip", latest.Tag)
-		if err := p.app.CreateBackup(p.options.Context, backupName); err != nil {
+		if err := p.app.CreateBackup(p.config.Context, backupName); err != nil {
 			tryToRevertExecChanges()
 			return err
 		}

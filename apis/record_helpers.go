@@ -57,6 +57,8 @@ func RequestData(c echo.Context) *models.RequestData {
 	return result
 }
 
+// RecordAuthResponse generates and writes a properly formatted record
+// auth response into the specified request context.
 func RecordAuthResponse(
 	app core.App,
 	c echo.Context,

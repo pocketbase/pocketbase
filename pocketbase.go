@@ -68,7 +68,7 @@ type Config struct {
 func New() *PocketBase {
 	_, isUsingGoRun := inspectRuntime()
 
-	return NewWithConfig(&Config{
+	return NewWithConfig(Config{
 		DefaultDebug: isUsingGoRun,
 	})
 }
@@ -80,11 +80,7 @@ func New() *PocketBase {
 // Everything will be initialized when [Start()] is executed.
 // If you want to initialize the application before calling [Start()],
 // then you'll have to manually call [Bootstrap()].
-func NewWithConfig(config *Config) *PocketBase {
-	if config == nil {
-		panic("missing config")
-	}
-
+func NewWithConfig(config Config) *PocketBase {
 	// initialize a default data directory based on the executable baseDir
 	if config.DefaultDataDir == "" {
 		baseDir, _ := inspectRuntime()
@@ -112,10 +108,10 @@ func NewWithConfig(config *Config) *PocketBase {
 
 	// parse base flags
 	// (errors are ignored, since the full flags parsing happens on Execute())
-	pb.eagerParseFlags(config)
+	pb.eagerParseFlags(&config)
 
 	// initialize the app instance
-	pb.appWrapper = &appWrapper{core.NewBaseApp(&core.BaseAppConfig{
+	pb.appWrapper = &appWrapper{core.NewBaseApp(core.BaseAppConfig{
 		DataDir:          pb.dataDirFlag,
 		EncryptionEnv:    pb.encryptionEnvFlag,
 		IsDebug:          pb.debugFlag,

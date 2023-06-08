@@ -21,22 +21,25 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-// ServeOptions defines an optional struct for apis.Serve().
-type ServeOptions struct {
+// ServeConfig defines a configuration struct for apis.Serve().
+type ServeConfig struct {
+	// ShowStartBanner indicates whether to show or hide the server start console message.
 	ShowStartBanner bool
-	HttpAddr        string
-	HttpsAddr       string
-	AllowedOrigins  []string // optional list of CORS origins (default to "*")
+
+	// HttpAddr is the HTTP server address to bind (eg. `127.0.0.1:80`).
+	HttpAddr string
+
+	// HttpsAddr is the HTTPS server address to bind (eg. `127.0.0.1:443`).
+	HttpsAddr string
+
+	// AllowedOrigins is an optional list of CORS origins (default to "*").
+	AllowedOrigins []string
 }
 
 // Serve starts a new app web server.
-func Serve(app core.App, options *ServeOptions) error {
-	if options == nil {
-		options = &ServeOptions{}
-	}
-
-	if len(options.AllowedOrigins) == 0 {
-		options.AllowedOrigins = []string{"*"}
+func Serve(app core.App, config ServeConfig) error {
+	if len(config.AllowedOrigins) == 0 {
+		config.AllowedOrigins = []string{"*"}
 	}
 
 	// ensure that the latest migrations are applied before starting the server
@@ -61,15 +64,15 @@ func Serve(app core.App, options *ServeOptions) error {
 	// configure cors
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		Skipper:      middleware.DefaultSkipper,
-		AllowOrigins: options.AllowedOrigins,
+		AllowOrigins: config.AllowedOrigins,
 		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 	}))
 
 	// start http server
 	// ---
-	mainAddr := options.HttpAddr
-	if options.HttpsAddr != "" {
-		mainAddr = options.HttpsAddr
+	mainAddr := config.HttpAddr
+	if config.HttpsAddr != "" {
+		mainAddr = config.HttpsAddr
 	}
 
 	mainHost, _, _ := net.SplitHostPort(mainAddr)
@@ -80,7 +83,7 @@ func Serve(app core.App, options *ServeOptions) error {
 		HostPolicy: autocert.HostWhitelist(mainHost, "www."+mainHost),
 	}
 
-	serverConfig := &http.Server{
+	server := &http.Server{
 		TLSConfig: &tls.Config{
 			GetCertificate: certManager.GetCertificate,
 			NextProtos:     []string{acme.ALPNProto},
@@ -95,16 +98,16 @@ func Serve(app core.App, options *ServeOptions) error {
 	serveEvent := &core.ServeEvent{
 		App:         app,
 		Router:      router,
-		Server:      serverConfig,
+		Server:      server,
 		CertManager: certManager,
 	}
 	if err := app.OnBeforeServe().Trigger(serveEvent); err != nil {
 		return err
 	}
 
-	if options.ShowStartBanner {
+	if config.ShowStartBanner {
 		schema := "http"
-		if options.HttpsAddr != "" {
+		if config.HttpsAddr != "" {
 			schema = "https"
 		}
 
@@ -115,34 +118,34 @@ func Serve(app core.App, options *ServeOptions) error {
 		bold.Printf(
 			"%s Server started at %s\n",
 			strings.TrimSpace(date.String()),
-			color.CyanString("%s://%s", schema, serverConfig.Addr),
+			color.CyanString("%s://%s", schema, server.Addr),
 		)
 
 		regular := color.New()
-		regular.Printf(" ➜ REST API: %s\n", color.CyanString("%s://%s/api/", schema, serverConfig.Addr))
-		regular.Printf(" ➜ Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, serverConfig.Addr))
+		regular.Printf("├─ REST API: %s\n", color.CyanString("%s://%s/api/", schema, server.Addr))
+		regular.Printf("└─ Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, server.Addr))
 	}
 
 	// try to gracefully shutdown the server on app termination
 	app.OnTerminate().Add(func(e *core.TerminateEvent) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
-		serverConfig.Shutdown(ctx)
+		server.Shutdown(ctx)
 		return nil
 	})
 
 	// start HTTPS server
-	if options.HttpsAddr != "" {
+	if config.HttpsAddr != "" {
 		// if httpAddr is set, start an HTTP server to redirect the traffic to the HTTPS version
-		if options.HttpAddr != "" {
-			go http.ListenAndServe(options.HttpAddr, certManager.HTTPHandler(nil))
+		if config.HttpAddr != "" {
+			go http.ListenAndServe(config.HttpAddr, certManager.HTTPHandler(nil))
 		}
 
-		return serverConfig.ListenAndServeTLS("", "")
+		return server.ListenAndServeTLS("", "")
 	}
 
 	// OR start HTTP server
-	return serverConfig.ListenAndServe()
+	return server.ListenAndServe()
 }
 
 type migrationsConnection struct {

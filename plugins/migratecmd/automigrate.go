@@ -40,7 +40,7 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 
 		var template string
 		var templateErr error
-		if p.options.TemplateLang == TemplateLangJS {
+		if p.config.TemplateLang == TemplateLangJS {
 			template, templateErr = p.jsDiffTemplate(new, old)
 		} else {
 			template, templateErr = p.goDiffTemplate(new, old)
@@ -63,8 +63,8 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 		}
 
 		appliedTime := time.Now().Unix()
-		name := fmt.Sprintf("%d_%s.%s", appliedTime, action, p.options.TemplateLang)
-		filePath := filepath.Join(p.options.Dir, name)
+		name := fmt.Sprintf("%d_%s.%s", appliedTime, action, p.config.TemplateLang)
+		filePath := filepath.Join(p.config.Dir, name)
 
 		return p.app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
 			// insert the migration entry
@@ -77,7 +77,7 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 			}
 
 			// ensure that the local migrations dir exist
-			if err := os.MkdirAll(p.options.Dir, os.ModePerm); err != nil {
+			if err := os.MkdirAll(p.config.Dir, os.ModePerm); err != nil {
 				return fmt.Errorf("failed to create migration dir: %w", err)
 			}
 
@@ -138,7 +138,7 @@ func (p *plugin) getCachedCollections() (map[string]*models.Collection, error) {
 }
 
 func (p *plugin) hasCustomMigrations() bool {
-	files, err := os.ReadDir(p.options.Dir)
+	files, err := os.ReadDir(p.config.Dir)
 	if err != nil {
 		return false
 	}

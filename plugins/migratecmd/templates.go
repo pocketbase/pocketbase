@@ -343,7 +343,7 @@ func init() {
 }
 `
 
-	return fmt.Sprintf(template, filepath.Base(p.options.Dir)), nil
+	return fmt.Sprintf(template, filepath.Base(p.config.Dir)), nil
 }
 
 func (p *plugin) goSnapshotTemplate(collections []*models.Collection) (string, error) {
@@ -380,7 +380,7 @@ func init() {
 `
 	return fmt.Sprintf(
 		template,
-		filepath.Base(p.options.Dir),
+		filepath.Base(p.config.Dir),
 		escapeBacktick(string(jsonData)),
 	), nil
 }
@@ -427,7 +427,7 @@ func init() {
 
 	return fmt.Sprintf(
 		template,
-		filepath.Base(p.options.Dir),
+		filepath.Base(p.config.Dir),
 		escapeBacktick(string(jsonData)),
 		collection.Id,
 	), nil
@@ -475,7 +475,7 @@ func init() {
 
 	return fmt.Sprintf(
 		template,
-		filepath.Base(p.options.Dir),
+		filepath.Base(p.config.Dir),
 		collection.Id,
 		escapeBacktick(string(jsonData)),
 	), nil
@@ -745,7 +745,7 @@ func init() {
 
 	return fmt.Sprintf(
 		template,
-		filepath.Base(p.options.Dir),
+		filepath.Base(p.config.Dir),
 		imports,
 		old.Id, strings.TrimSpace(up),
 		new.Id, strings.TrimSpace(down),

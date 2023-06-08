@@ -54,7 +54,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewWithConfig(t *testing.T) {
-	app := NewWithConfig(&Config{
+	app := NewWithConfig(Config{
 		DefaultDebug:         true,
 		DefaultDataDir:       "test_dir",
 		DefaultEncryptionEnv: "test_encryption_env",
@@ -108,7 +108,7 @@ func TestNewWithConfigAndFlags(t *testing.T) {
 		"--debug=false",
 	)
 
-	app := NewWithConfig(&Config{
+	app := NewWithConfig(Config{
 		DefaultDebug:         true,
 		DefaultDataDir:       "test_dir",
 		DefaultEncryptionEnv: "test_encryption_env",
@@ -157,7 +157,7 @@ func TestSkipBootstrap(t *testing.T) {
 	defer os.RemoveAll(tempDir)
 
 	// already bootstrapped
-	app0 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+	app0 := NewWithConfig(Config{DefaultDataDir: tempDir})
 	app0.Bootstrap()
 	if v := app0.skipBootstrap(); !v {
 		t.Fatal("[bootstrapped] Expected true, got false")
@@ -166,7 +166,7 @@ func TestSkipBootstrap(t *testing.T) {
 	// unknown command
 	os.Args = os.Args[:1]
 	os.Args = append(os.Args, "demo")
-	app1 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+	app1 := NewWithConfig(Config{DefaultDataDir: tempDir})
 	app1.RootCmd.AddCommand(&cobra.Command{Use: "test"})
 	if v := app1.skipBootstrap(); !v {
 		t.Fatal("[unknown] Expected true, got false")
@@ -185,7 +185,7 @@ func TestSkipBootstrap(t *testing.T) {
 		// base flag
 		os.Args = os.Args[:1]
 		os.Args = append(os.Args, "--"+s.name)
-		app1 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+		app1 := NewWithConfig(Config{DefaultDataDir: tempDir})
 		if v := app1.skipBootstrap(); !v {
 			t.Fatalf("[--%s] Expected true, got false", s.name)
 		}
@@ -193,7 +193,7 @@ func TestSkipBootstrap(t *testing.T) {
 		// short flag
 		os.Args = os.Args[:1]
 		os.Args = append(os.Args, "-"+s.short)
-		app2 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+		app2 := NewWithConfig(Config{DefaultDataDir: tempDir})
 		if v := app2.skipBootstrap(); !v {
 			t.Fatalf("[-%s] Expected true, got false", s.short)
 		}
@@ -205,7 +205,7 @@ func TestSkipBootstrap(t *testing.T) {
 		os.Args = os.Args[:1]
 		os.Args = append(os.Args, "custom")
 		os.Args = append(os.Args, "--"+s.name)
-		app3 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+		app3 := NewWithConfig(Config{DefaultDataDir: tempDir})
 		app3.RootCmd.AddCommand(customCmd)
 		if v := app3.skipBootstrap(); v {
 			t.Fatalf("[--%s custom] Expected false, got true", s.name)
@@ -215,7 +215,7 @@ func TestSkipBootstrap(t *testing.T) {
 		os.Args = os.Args[:1]
 		os.Args = append(os.Args, "custom")
 		os.Args = append(os.Args, "-"+s.short)
-		app4 := NewWithConfig(&Config{DefaultDataDir: tempDir})
+		app4 := NewWithConfig(Config{DefaultDataDir: tempDir})
 		app4.RootCmd.AddCommand(customCmd)
 		if v := app4.skipBootstrap(); v {
 			t.Fatalf("[-%s custom] Expected false, got true", s.short)

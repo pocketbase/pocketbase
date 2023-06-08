@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dop251/goja"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/pocketbase/pocketbase/core"
@@ -34,6 +35,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	e.ResetRouterCreator(func(ec *echo.Echo) echo.Router {
 		return echo.NewRouter(echo.RouterConfig{
 			UnescapePathParamValues: true,
+			AllowOverwritingRoute:   true,
 		})
 	})
 
@@ -56,6 +58,14 @@ func InitApi(app core.App) (*echo.Echo, error) {
 				log.Println("HTTPErrorHandler response was already committed:", err)
 			}
 			return
+		}
+
+		// manually extract the goja exception error value for
+		// consistency when throwing or returning errors
+		if jsException, ok := err.(*goja.Exception); ok {
+			if wrapped, ok := jsException.Value().Export().(error); ok {
+				err = wrapped
+			}
 		}
 
 		var apiErr *ApiError

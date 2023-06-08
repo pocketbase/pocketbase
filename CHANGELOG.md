@@ -33,6 +33,36 @@
 
 - (@todo docs) Added `Dao.WithoutHooks()` helper to create a new `Dao` from the current one but without the create/update/delete hooks.
 
+- **!** Renamed `*Options` to `*Config` for consistency and replaced the unnecessary pointers with their value equivalent to keep the applied configuration defaults isolated within their function calls:
+  ```go
+  old: pocketbase.NewWithConfig(config *pocketbase.Config)
+  new: pocketbase.NewWithConfig(config pocketbase.Config)
+
+  old: core.NewBaseApp(config *core.BaseAppConfig)
+  new: core.NewBaseApp(config core.BaseAppConfig)
+
+  old: apis.Serve(app core.App, options *apis.ServeOptions)
+  new: apis.Serve(app core.App, config apis.ServeConfig)
+
+  old: jsvm.MustRegisterMigrations(app core.App, options *jsvm.MigrationsOptions)
+  new: jsvm.MustRegisterMigrations(app core.App, config jsvm.MigrationsConfig)
+
+  old: ghupdate.MustRegister(app core.App, rootCmd *cobra.Command, options *ghupdate.Options)
+  new: ghupdate.MustRegister(app core.App, rootCmd *cobra.Command, config ghupdate.Config)
+
+  old: migratecmd.MustRegister(app core.App, rootCmd *cobra.Command, options *migratecmd.Options)
+  new: migratecmd.MustRegister(app core.App, rootCmd *cobra.Command, config migratecmd.Config)
+  ```
+
+- (@todo docs) Added new optional JavaScript app hooks binding via [goja](https://github.com/dop251/goja).
+  There are available by default with the prebuilt executable if you add a `*.pb.js` file in `pb_hooks` directory.
+  To enable them as part of a custom Go build:
+  ```go
+  jsvm.MustRegisterHooks(app core.App, config jsvm.HooksConfig{})
+  ```
+
+- Refactored `apis.ApiError` validation errors serialization to allow `map[string]error` and `map[string]any` when generating the public safe formatted `ApiError.Data`.
+
 
 ## v0.16.4
 
