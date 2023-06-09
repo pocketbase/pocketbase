@@ -10,7 +10,7 @@
             <div class="block txt-center m-b-lg">
                 <figure class="logo">
                     <img
-                        src="{import.meta.env.BASE_URL}images/logo.svg"
+                        src="{import.meta.env.BASE_URL}images/glam.png"
                         alt="PocketBase logo"
                         width="40"
                         height="40"

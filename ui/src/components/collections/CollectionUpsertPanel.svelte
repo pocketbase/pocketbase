@@ -42,6 +42,8 @@
     let activeTab = TAB_SCHEMA;
     let initialFormHash = calculateFormHash(collection);
     let schemaTabError = "";
+    let isDuplicate = false;
+    let duplicateInitName = "";
 
     $: if ($errors.schema || $errors.options?.query) {
         // extract the direct schema field error, otherwise - return a generic message
@@ -144,6 +146,15 @@
 
                 addCollection(result);
 
+                if (isDuplicate) {
+                    request = ApiClient.collection(duplicateInitName).getList(1, 500);
+                    request.then((res) => {
+                        res.items.forEach(async (record) => {
+                            await ApiClient.collection(data.name).create(record, { "$autoCancel": false })
+                        })
+                    })
+                }
+
                 confirmClose = false;
                 hide();
 
@@ -226,6 +237,8 @@
         const clone = original?.$clone();
 
         if (clone) {
+            duplicateInitName = clone.name;
+
             clone.id = "";
             clone.created = "";
             clone.updated = "";
@@ -249,6 +262,7 @@
             }
         }
 
+        isDuplicate = true;
         show(clone);
 
         await tick();
