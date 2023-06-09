@@ -1417,16 +1417,9 @@ export default class CommonHelper {
                 continue
             }
 
-            if (CommonHelper.isEmpty(val)) {
-                result.push(missingValue);
-            } else if (typeof val === "boolean")  {
-                result.push(val ? "True" : "False");
-            } else if (typeof val === "string") {
-                val = val.indexOf("<") >= 0 ? CommonHelper.plainText(val) : val;
-                result.push(CommonHelper.truncate(val));
-            } else {
-                result.push(val);
-            }
+            val = CommonHelper.stringifyValue(val, missingValue)
+
+            result.push(val);
         }
 
         if (result.length > 0) {
@@ -1447,12 +1440,49 @@ export default class CommonHelper {
         ];
 
         for (const prop of fallbackProps) {
-            if (!CommonHelper.isEmpty(model[prop])) {
-                return model[prop];
+            let val = CommonHelper.stringifyValue(model[prop], "");
+            if (val) {
+                return val;
             }
         }
 
         return missingValue;
+    }
+
+    /**
+     * Stringifies the provided value or fallback to missingValue in case it is empty.
+     *
+     * @param  {Mixed}  val
+     * @param  {String} missingValue
+     * @return {String}
+     */
+    static stringifyValue(val, missingValue = "N/A") {
+        if (CommonHelper.isEmpty(val)) {
+            return missingValue;
+        }
+
+        if (typeof val === "boolean")  {
+            return val ? "True" : "False";
+        }
+
+        if (typeof val === "string") {
+            val = val.indexOf("<") >= 0 ? CommonHelper.plainText(val) : val;
+            return CommonHelper.truncate(val) || missingValue;
+        }
+
+        if (Array.isArray(val)) {
+            return val.join(",");
+        }
+
+        if (typeof val === "object") {
+            try {
+                return CommonHelper.truncate(JSON.stringify(val)) || missingValue;
+            } catch (_) {
+                return missingValue;
+            }
+        }
+
+        return "" + val;
     }
 
     /**

@@ -1,3 +1,10 @@
+## v0.16.5
+
+- Fixed the Admin UI serialization of implicit relation display fields ([#2675](https://github.com/pocketbase/pocketbase/issues/2675)).
+
+- Reset the Admin UI sort in case the active sort collection field is renamed or deleted.
+
+
 ## v0.16.4
 
 - Fixed the selfupdate command not working on Windows due to missing `.exe` in the extracted binary path ([#2589](https://github.com/pocketbase/pocketbase/discussions/2589)).
