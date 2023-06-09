@@ -28,8 +28,10 @@
     let recordPreviewPanel;
     let recordsList;
     let filter = queryParams.get("filter") || "";
-    let sort = queryParams.get("sort") || "";
+    let sort = queryParams.get("sort") || "-created";
     let selectedCollectionId = queryParams.get("collectionId") || $activeCollection?.id;
+
+    normalizeSort();
 
     $: reactiveParams = new URLSearchParams($querystring);
 

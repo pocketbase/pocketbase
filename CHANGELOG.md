@@ -1,6 +1,6 @@
 ## v0.16.5
 
-- Fixed the Admin UI serialization of implicit display fields ([#2675](https://github.com/pocketbase/pocketbase/issues/2675)).
+- Fixed the Admin UI serialization of implicit relation display fields ([#2675](https://github.com/pocketbase/pocketbase/issues/2675)).
 
 - Reset the Admin UI sort in case the active sort collection field is renamed or deleted.
 
