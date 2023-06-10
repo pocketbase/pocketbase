@@ -1,3 +1,8 @@
+## v0.16.6-WIP
+
+- Fixed collection index column sort normalization in the Admin UI ([#2681](https://github.com/pocketbase/pocketbase/pull/2681)).
+
+
 ## v0.16.5
 
 - Fixed the Admin UI serialization of implicit relation display fields ([#2675](https://github.com/pocketbase/pocketbase/issues/2675)).
