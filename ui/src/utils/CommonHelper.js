@@ -1698,7 +1698,7 @@ export default class CommonHelper {
                 }
 
                 if (col.sort) {
-                    item += (" " + c.sort.toUpperCase());
+                    item += (" " + col.sort.toUpperCase());
                 }
 
                 return item;

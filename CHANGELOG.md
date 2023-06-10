@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## v0.17.0-WIP
 
 - Added Instagram OAuth2 provider ([#2534](https://github.com/pocketbase/pocketbase/pull/2534); thanks @pnmcosta).
@@ -62,6 +63,11 @@
   ```
 
 - Refactored `apis.ApiError` validation errors serialization to allow `map[string]error` and `map[string]any` when generating the public safe formatted `ApiError.Data`.
+
+
+## v0.16.6-WIP
+
+- Fixed collection index column sort normalization in the Admin UI ([#2681](https://github.com/pocketbase/pocketbase/pull/2681); thanks @SimonLoir).
 
 
 ## v0.16.5
