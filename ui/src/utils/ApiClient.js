@@ -1,11 +1,11 @@
 import PocketBase, { LocalAuthStore, Admin, isTokenExpired } from "pocketbase";
 // ---
-import CommonHelper                     from "@/utils/CommonHelper";
-import { replace }                      from "svelte-spa-router";
-import { get }                          from "svelte/store";
-import { addErrorToast }                from "@/stores/toasts";
-import { setErrors }                    from "@/stores/errors";
-import { setAdmin }                     from "@/stores/admin";
+import CommonHelper from "@/utils/CommonHelper";
+import { replace } from "svelte-spa-router";
+import { get } from "svelte/store";
+import { addErrorToast } from "@/stores/toasts";
+import { setErrors } from "@/stores/errors";
+import { setAdmin } from "@/stores/admin";
 import { protectedFilesCollectionsCache } from "@/stores/collections";
 
 
@@ -16,7 +16,7 @@ const adminFileTokenKey = "pb_admin_file_token";
  *
  * @param {Boolean} [redirect] Whether to redirect to the login page.
  */
-PocketBase.prototype.logout = function(redirect = true) {
+PocketBase.prototype.logout = function (redirect = true) {
     this.authStore.clear();
 
     if (redirect) {
@@ -31,7 +31,7 @@ PocketBase.prototype.logout = function(redirect = true) {
  * @param  {Boolean} notify     Whether to add a toast notification.
  * @param  {String}  defaultMsg Default toast notification message if the error doesn't have one.
  */
-PocketBase.prototype.error = function(err, notify = true, defaultMsg = "") {
+PocketBase.prototype.error = function (err, notify = true, defaultMsg = "") {
     if (!err || !(err instanceof Error) || err.isAbort) {
         return;
     }
@@ -71,7 +71,7 @@ PocketBase.prototype.error = function(err, notify = true, defaultMsg = "") {
 /**
  * @return {Promise<String>}
  */
-PocketBase.prototype.getAdminFileToken = async function(collectionId = "") {
+PocketBase.prototype.getAdminFileToken = async function (collectionId = "") {
     let needToken = true;
 
     if (collectionId) {
@@ -102,6 +102,10 @@ PocketBase.prototype.getAdminFileToken = async function(collectionId = "") {
     }
 
     return token;
+}
+
+PocketBase.prototype.migrate = function (destination) {
+    return fetch(`${import.meta.env.PB_BACKEND_URL}api/glam/migrate/${destination}`, { method: "POST" })
 }
 
 // Custom auth store to sync the svelte admin store state with the authorized admin instance.

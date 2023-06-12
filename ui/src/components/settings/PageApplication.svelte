@@ -2,12 +2,12 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle, appName, hideControls } from "@/stores/app";
-    import { addSuccessToast } from "@/stores/toasts";
+    import { addSuccessToast, addErrorToast } from "@/stores/toasts";
     import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
-    import { confirm } from "@/stores/confirmation"
+    import { confirm } from "@/stores/confirmation";
 
     $pageTitle = "Application settings";
 
@@ -73,7 +73,16 @@
     function migrateData(destination) {
         // Destinations: beta, staging, production
         confirm(`Are you sure? This will overwrite all data in ${destination}`, () => {
-        })
+            ApiClient.migrate(destination)
+                .then((resp) => {
+                    if (resp.ok) {
+                        addSuccessToast("Successfully migrated data");
+                    } else {
+                        addErrorToast("There was an error");
+                    }
+                })
+                .catch((_) => addErrorToast("There was an error"));
+        });
     }
 </script>
 
@@ -94,10 +103,14 @@
             </div>
             <div class="grid">
                 <div class="col">
-                    <button class="btn btn-expanded" on:click={() => migrateData("staging")}>Beta -> Staging</button>
+                    <button class="btn btn-expanded" on:click={() => migrateData("staging")}
+                        >Beta -> Staging</button
+                    >
                 </div>
                 <div class="col">
-                    <button class="btn btn-expanded" on:click={() => migrateData("production")}>Staging -> Production</button>
+                    <button class="btn btn-expanded" on:click={() => migrateData("production")}
+                        >Staging -> Production</button
+                    >
                 </div>
             </div>
         </div>
