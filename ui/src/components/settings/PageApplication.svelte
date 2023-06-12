@@ -7,6 +7,7 @@
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import { confirm } from "@/stores/confirmation"
 
     $pageTitle = "Application settings";
 
@@ -68,6 +69,12 @@
     function reset() {
         formSettings = JSON.parse(JSON.stringify(originalFormSettings || {}));
     }
+
+    function migrateData(destination) {
+        // Destinations: beta, staging, production
+        confirm(`Are you sure? This will overwrite all data in ${destination}`, () => {
+        })
+    }
 </script>
 
 <SettingsSidebar />
@@ -81,6 +88,20 @@
     </header>
 
     <div class="wrapper">
+        <div class="panel top">
+            <div class="content txt-xl m-b-base">
+                <p>Migrations</p>
+            </div>
+            <div class="grid">
+                <div class="col">
+                    <button class="btn btn-expanded" on:click={() => migrateData("staging")}>Beta -> Staging</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-expanded" on:click={() => migrateData("production")}>Staging -> Production</button>
+                </div>
+            </div>
+        </div>
+
         <form class="panel" autocomplete="off" on:submit|preventDefault={save}>
             {#if isLoading}
                 <div class="loader" />
@@ -151,3 +172,9 @@
         </form>
     </div>
 </PageWrapper>
+
+<style>
+    .panel.top {
+        margin-bottom: 20px;
+    }
+</style>
