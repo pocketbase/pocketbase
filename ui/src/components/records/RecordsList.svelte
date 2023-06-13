@@ -248,12 +248,14 @@
         deselectAllRecords()
         ApiClient.migrateItems(Object.keys(bulkSelected), collection.id, destination)
             .then((resp) => {
-                addSuccessToast(`Successfully migrated items to ${destination}`)
-                console.log(resp)
+                if (resp.ok) {
+                    addSuccessToast(`Successfully migrated items to ${destination}`)
+                } else {
+                    addErrorToast("There was an error");
+                }
             })
             .catch((err) => {
                 addErrorToast(`Failed to migrate`)
-                console.log(err)
             })
     }
 </script>

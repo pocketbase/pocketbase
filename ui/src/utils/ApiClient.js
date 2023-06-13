@@ -110,7 +110,7 @@ PocketBase.prototype.migrate = function (destination) {
 
 PocketBase.prototype.migrateItems = async function (recordsIds, collectionName, destination) {
     let resp = await client.collection(collectionName).getFullList({filter: `${recordsIds.map((e) => 'id="' + e + '"').join(' || ')}`})
-    return await fetch(`${import.meta.env.PB_BACKEND_URL}/api/glam/migrateItems`, { 
+    return await fetch(`${import.meta.env.PB_BACKEND_URL}api/glam/migrateItems`, { 
         method: "POST", 
         body: JSON.stringify({
             collectionName: collectionName,
