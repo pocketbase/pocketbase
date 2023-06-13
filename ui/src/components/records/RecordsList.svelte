@@ -5,7 +5,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { confirm } from "@/stores/confirmation";
-    import { addSuccessToast } from "@/stores/toasts";
+    import { addSuccessToast, addErrorToast } from "@/stores/toasts";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import Field from "@/components/base/Field.svelte";
@@ -242,6 +242,19 @@
                 // always reload because some of the records may not be deletable
                 return reloadLoadedPages();
             });
+    }
+
+    function migrateSelectedRecords(destination) {
+        deselectAllRecords()
+        ApiClient.migrateItems(Object.keys(bulkSelected), collection.id, destination)
+            .then((resp) => {
+                addSuccessToast(`Successfully migrated items to ${destination}`)
+                console.log(resp)
+            })
+            .catch((err) => {
+                addErrorToast(`Failed to migrate`)
+                console.log(err)
+            })
     }
 </script>
 
@@ -531,6 +544,9 @@
             Selected <strong>{totalBulkSelected}</strong>
             {totalBulkSelected === 1 ? "record" : "records"}
         </div>
+        <button class="btn btn-xs btn-transparent" on:click={() => migrateSelectedRecords("staging")}> Migrate to staging </button>
+        <button class="btn btn-xs btn-transparent" on:click={() => migrateSelectedRecords("production")}> Migrate to prod </button>
+        <div class="flex-fill" />
         <button
             type="button"
             class="btn btn-xs btn-transparent btn-outline p-l-5 p-r-5"
@@ -539,7 +555,6 @@
         >
             <span class="txt">Reset</span>
         </button>
-        <div class="flex-fill" />
         <button
             type="button"
             class="btn btn-sm btn-transparent btn-danger"
