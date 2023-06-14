@@ -582,6 +582,129 @@ func TestFindFirstRecordByFilter(t *testing.T) {
 	}
 }
 
+func TestCanAccessRecord(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	admin, err := app.Dao().FindAdminByEmail("test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	authRecord, err := app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record, err := app.Dao().FindRecordById("demo1", "imy661ixudk5izi")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		name        string
+		record      *models.Record
+		requestData *models.RequestData
+		rule        *string
+		expected    bool
+	}{
+		{
+			"as admin with nil rule",
+			record,
+			&models.RequestData{
+				Admin: admin,
+			},
+			nil,
+			true,
+		},
+		{
+			"as admin with non-empty rule",
+			record,
+			&models.RequestData{
+				Admin: admin,
+			},
+			types.Pointer("id = ''"), // the filter rule should be ignored
+			true,
+		},
+		{
+			"as guest with nil rule",
+			record,
+			&models.RequestData{},
+			nil,
+			false,
+		},
+		{
+			"as guest with empty rule",
+			nil,
+			&models.RequestData{},
+			types.Pointer(""),
+			true,
+		},
+		{
+			"as guest with mismatched rule",
+			record,
+			&models.RequestData{},
+			types.Pointer("@request.auth.id != ''"),
+			false,
+		},
+		{
+			"as guest with matched rule",
+			record,
+			&models.RequestData{
+				Data: map[string]any{"test": 1},
+			},
+			types.Pointer("@request.auth.id != '' || @request.data.test = 1"),
+			true,
+		},
+		{
+			"as auth record with nil rule",
+			record,
+			&models.RequestData{
+				AuthRecord: authRecord,
+			},
+			nil,
+			false,
+		},
+		{
+			"as auth record with empty rule",
+			nil,
+			&models.RequestData{
+				AuthRecord: authRecord,
+			},
+			types.Pointer(""),
+			true,
+		},
+		{
+			"as auth record with mismatched rule",
+			record,
+			&models.RequestData{
+				AuthRecord: authRecord,
+				Data:       map[string]any{"test": 1},
+			},
+			types.Pointer("@request.auth.id != '' && @request.data.test > 1"),
+			false,
+		},
+		{
+			"as auth record with matched rule",
+			record,
+			&models.RequestData{
+				AuthRecord: authRecord,
+				Data:       map[string]any{"test": 2},
+			},
+			types.Pointer("@request.auth.id != '' && @request.data.test > 1"),
+			true,
+		},
+	}
+
+	for _, s := range scenarios {
+		result := app.Dao().CanAccessRecord(s.record, s.requestData, s.rule)
+
+		if result != s.expected {
+			t.Errorf("[%s] Expected %v, got %v", s.name, s.expected, result)
+		}
+	}
+}
+
 func TestIsRecordValueUnique(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

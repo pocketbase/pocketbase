@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ## v0.17.0-WIP
 
 - Added Instagram OAuth2 provider ([#2534](https://github.com/pocketbase/pocketbase/pull/2534); thanks @pnmcosta).
@@ -26,10 +25,11 @@
 
 - Added `subscriptions.Client.Unset()` helper to remove a single cached item from the client store.
 
-- (@todo docs) Added query by filter record `Dao` helpers:
+- (@todo docs) Added rule and filter record `Dao` helpers:
   ```
   app.Dao().FindRecordsByFilter("posts", "title ~ 'lorem ipsum' && visible = true", "-created", 10)
   app.Dao().FindFirstRecordByFilter("posts", "slug='test' && active=true")
+  app.Dao().CanAccessRecord(record, requestData, rule)
   ```
 
 - (@todo docs) Added `Dao.WithoutHooks()` helper to create a new `Dao` from the current one but without the create/update/delete hooks.

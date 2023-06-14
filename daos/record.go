@@ -475,6 +475,57 @@ func (dao *Dao) SuggestUniqueAuthRecordUsername(
 	return username
 }
 
+// CanAccessRecord checks if a record is allowed to be accessed by the
+// specified requestData and accessRule.
+//
+// Always return false on invalid access rule or db error.
+//
+// Example:
+//
+//	requestData := apis.RequestData(c /* echo.Context */)
+//	record, _ := dao.FindRecordById("example", "RECORD_ID")
+//	// custom rule
+//	// or use one of the record collection's, eg. record.Collection().ViewRule
+//	rule := types.Pointer("@request.auth.id != '' || status = 'public'")
+//
+//	canAccess := dao.CanAccessRecord(record, requestData, rule)
+func (dao *Dao) CanAccessRecord(record *models.Record, requestData *models.RequestData, accessRule *string) bool {
+	if requestData.Admin != nil {
+		// admins can access everything
+		return true
+	}
+
+	if accessRule == nil {
+		// only admins can access this record
+		return false
+	}
+
+	if *accessRule == "" {
+		return true // empty public rule, aka. everyone can access
+	}
+
+	var exists bool
+
+	query := dao.RecordQuery(record.Collection()).
+		Select("(1)").
+		AndWhere(dbx.HashExp{record.Collection().Name + ".id": record.Id})
+
+	// parse and apply the access rule filter
+	resolver := resolvers.NewRecordFieldResolver(dao, record.Collection(), requestData, true)
+	expr, err := search.FilterData(*accessRule).BuildExpr(resolver)
+	if err != nil {
+		return false
+	}
+	resolver.UpdateQuery(query)
+	query.AndWhere(expr)
+
+	if err := query.Limit(1).Row(&exists); err != nil {
+		return false
+	}
+
+	return exists
+}
+
 // SaveRecord persists the provided Record model in the database.
 //
 // If record.IsNew() is true, the method will perform a create, otherwise an update.
