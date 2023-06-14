@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/models"
@@ -93,27 +92,6 @@ func Register(app core.App, rootCmd *cobra.Command, config Config) error {
 		// when migrations are applied on server start
 		p.app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 			p.refreshCachedCollections()
-
-			cachedCollections, _ := p.getCachedCollections()
-			// create a full initial snapshot, if there are no custom
-			// migrations but there is already at least 1 collection created,
-			// to ensure that the automigrate will work with up-to-date collections data
-			if !p.hasCustomMigrations() && len(cachedCollections) > 1 {
-				snapshotFile, err := p.migrateCollectionsHandler(nil, false)
-				if err != nil {
-					return err
-				}
-
-				// insert the snapshot migration entry
-				_, insertErr := p.app.Dao().NonconcurrentDB().Insert(migrate.DefaultMigrationsTable, dbx.Params{
-					"file":    snapshotFile,
-					"applied": time.Now().Unix(),
-				}).Execute()
-				if insertErr != nil {
-					return insertErr
-				}
-			}
-
 			return nil
 		})
 
