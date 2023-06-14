@@ -203,7 +203,6 @@ func (api *recordApi) create(c echo.Context) error {
 			return NewBadRequestError("Failed to create record.", testErr)
 		}
 	}
-
 	record := models.NewRecord(collection)
 	form := forms.NewRecordUpsert(api.app, record)
 	form.SetFullManageAccess(hasFullManageAccess)
@@ -244,7 +243,7 @@ func (api *recordApi) create(c echo.Context) error {
 		}
 	}
 
-	return submitErr
+	return echo.NewHTTPError(http.StatusBadRequest, submitErr.Error())
 }
 
 func (api *recordApi) update(c echo.Context) error {
