@@ -108,7 +108,7 @@ func (s *Store[T]) Set(key string, value T) {
 //
 // This method is similar to Set() but **it will skip adding new elements**
 // to the store if the store length has reached the specified limit.
-// `false` is returned if maxAllowedElements limit is reached.
+// false is returned if maxAllowedElements limit is reached.
 func (s *Store[T]) SetIfLessThanLimit(key string, value T, maxAllowedElements int) bool {
 	s.mux.Lock()
 	defer s.mux.Unlock()

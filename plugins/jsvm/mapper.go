@@ -30,19 +30,32 @@ func (u FieldMapper) MethodName(_ reflect.Type, m reflect.Method) string {
 }
 
 func convertGoToJSName(name string) string {
-	allUppercase := true
+	startUppercase := make([]rune, 0, len(name))
+
 	for _, c := range name {
-		if c != '_' && !unicode.IsUpper(c) {
-			allUppercase = false
+		if c != '_' && !unicode.IsUpper(c) && !unicode.IsDigit(c) {
 			break
 		}
+
+		startUppercase = append(startUppercase, c)
 	}
 
-	// eg. "JSON" -> "json"
-	if allUppercase {
+	totalStartUppercase := len(startUppercase)
+
+	// all uppercase eg. "JSON" -> "json"
+	if len(name) == totalStartUppercase {
 		return strings.ToLower(name)
 	}
 
+	// eg. "JSONField" -> "jsonField"
+	if totalStartUppercase > 1 {
+		return strings.ToLower(name[0:totalStartUppercase-1]) + name[totalStartUppercase-1:]
+	}
+
 	// eg. "GetField" -> "getField"
-	return strings.ToLower(name[0:1]) + name[1:]
+	if totalStartUppercase == 1 {
+		return strings.ToLower(name[0:1]) + name[1:]
+	}
+
+	return name
 }

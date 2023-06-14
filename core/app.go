@@ -74,14 +74,14 @@ type App interface {
 	// NewFilesystem creates and returns a configured filesystem.System instance
 	// for managing regular app files (eg. collection uploads).
 	//
-	// NB! Make sure to call `Close()` on the returned result
+	// NB! Make sure to call Close() on the returned result
 	// after you are done working with it.
 	NewFilesystem() (*filesystem.System, error)
 
 	// NewBackupsFilesystem creates and returns a configured filesystem.System instance
 	// for managing app backups.
 	//
-	// NB! Make sure to call `Close()` on the returned result
+	// NB! Make sure to call Close() on the returned result
 	// after you are done working with it.
 	NewBackupsFilesystem() (*filesystem.System, error)
 

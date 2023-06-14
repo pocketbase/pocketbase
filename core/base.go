@@ -485,7 +485,7 @@ func (app *BaseApp) NewMailClient() mailer.Mailer {
 // for managing regular app files (eg. collection uploads)
 // based on the current app settings.
 //
-// NB! Make sure to call `Close()` on the returned result
+// NB! Make sure to call Close() on the returned result
 // after you are done working with it.
 func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 	if app.settings != nil && app.settings.S3.Enabled {
@@ -506,7 +506,7 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 // NewFilesystem creates a new local or S3 filesystem instance
 // for managing app backups based on the current app settings.
 //
-// NB! Make sure to call `Close()` on the returned result
+// NB! Make sure to call Close() on the returned result
 // after you are done working with it.
 func (app *BaseApp) NewBackupsFilesystem() (*filesystem.System, error) {
 	if app.settings != nil && app.settings.Backups.S3.Enabled {

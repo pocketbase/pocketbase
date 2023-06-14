@@ -22,8 +22,9 @@ func TestFieldMapper(t *testing.T) {
 		{"ResolveRequestAsJSON", "resolveRequestAsJSON"},
 		{"Variable_with_underscore", "variable_with_underscore"},
 		{"ALLCAPS", "allcaps"},
-		{"NOTALLCAPs", "nOTALLCAPs"},
 		{"ALL_CAPS_WITH_UNDERSCORE", "all_caps_with_underscore"},
+		{"OIDCMap", "oidcMap"},
+		{"MD5", "md5"},
 	}
 
 	for i, s := range scenarios {
