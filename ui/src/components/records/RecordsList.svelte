@@ -1,6 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
     import { fly } from "svelte/transition";
+    import { admin } from "@/stores/admin";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
@@ -245,18 +246,18 @@
     }
 
     function migrateSelectedRecords(destination) {
-        deselectAllRecords()
+        deselectAllRecords();
         ApiClient.migrateItems(Object.keys(bulkSelected), collection.id, destination)
             .then((resp) => {
                 if (resp.ok) {
-                    addSuccessToast(`Successfully migrated items to ${destination}`)
+                    addSuccessToast(`Successfully migrated items to ${destination}`);
                 } else {
                     addErrorToast("There was an error");
                 }
             })
             .catch((err) => {
-                addErrorToast(`Failed to migrate`)
-            })
+                addErrorToast(`Failed to migrate`);
+            });
     }
 </script>
 
@@ -546,8 +547,14 @@
             Selected <strong>{totalBulkSelected}</strong>
             {totalBulkSelected === 1 ? "record" : "records"}
         </div>
-        <button class="btn btn-xs btn-transparent" on:click={() => migrateSelectedRecords("staging")}> Migrate to staging </button>
-        <button class="btn btn-xs btn-transparent" on:click={() => migrateSelectedRecords("production")}> Migrate to prod </button>
+        {#if $admin?.email === "glam@glamlabs.app"}
+            <button class="btn btn-xs btn-transparent" on:click={() => migrateSelectedRecords("staging")}>
+                Migrate to staging
+            </button>
+            <button class="btn btn-xs btn-transparent" on:click={() => migrateSelectedRecords("production")}>
+                Migrate to prod
+            </button>
+        {/if}
         <div class="flex-fill" />
         <button
             type="button"
