@@ -129,14 +129,17 @@ func RequireAdminAuth() echo.MiddlewareFunc {
 func RequireAdminAuthOnlyIfAny(app core.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
+			if admin != nil {
+				return next(c)
+			}
+
 			totalAdmins, err := app.Dao().TotalAdmins()
 			if err != nil {
 				return NewBadRequestError("Failed to fetch admins info.", err)
 			}
 
-			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-
-			if admin != nil || totalAdmins == 0 {
+			if totalAdmins == 0 {
 				return next(c)
 			}
 
