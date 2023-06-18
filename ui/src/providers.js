@@ -94,6 +94,11 @@ export default [
         logo:  "livechat.svg",
     },
     {
+        key:   "yandexAuth",
+        title: "Yandex",
+        logo:  "yandex.svg",
+    },
+    {
         key:   "oidcAuth",
         title: "OpenID Connect",
         logo:  "oidc.svg",
