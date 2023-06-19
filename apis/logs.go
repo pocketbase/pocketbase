@@ -34,6 +34,8 @@ func (api *logsApi) requestsList(c echo.Context) error {
 	fieldResolver := search.NewSimpleFieldResolver(requestFilterFields...)
 
 	result, err := search.NewProvider(fieldResolver).
+		DefaultPerPage(api.app.Settings().Pagination.DefaultPerPage).
+		MaxPerPage(api.app.Settings().Pagination.MaxPerPage).
 		Query(api.app.LogsDao().RequestQuery()).
 		ParseAndExec(c.QueryParams().Encode(), &[]*models.Request{})
 

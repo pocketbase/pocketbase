@@ -36,6 +36,8 @@ func (api *collectionApi) list(c echo.Context) error {
 	collections := []*models.Collection{}
 
 	result, err := search.NewProvider(fieldResolver).
+		DefaultPerPage(api.app.Settings().Pagination.DefaultPerPage).
+		MaxPerPage(api.app.Settings().Pagination.MaxPerPage).
 		Query(api.app.Dao().CollectionQuery()).
 		ParseAndExec(c.QueryParams().Encode(), &collections)
 

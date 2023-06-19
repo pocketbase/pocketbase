@@ -24,11 +24,12 @@ const SecretMask string = "******"
 type Settings struct {
 	mux sync.RWMutex
 
-	Meta    MetaConfig    `form:"meta" json:"meta"`
-	Logs    LogsConfig    `form:"logs" json:"logs"`
-	Smtp    SmtpConfig    `form:"smtp" json:"smtp"`
-	S3      S3Config      `form:"s3" json:"s3"`
-	Backups BackupsConfig `form:"backups" json:"backups"`
+	Meta       MetaConfig       `form:"meta" json:"meta"`
+	Logs       LogsConfig       `form:"logs" json:"logs"`
+	Pagination PaginationConfig `form:"pagination" json:"pagination"`
+	Smtp       SmtpConfig       `form:"smtp" json:"smtp"`
+	S3         S3Config         `form:"s3" json:"s3"`
+	Backups    BackupsConfig    `form:"backups" json:"backups"`
 
 	AdminAuthToken           TokenConfig `form:"adminAuthToken" json:"adminAuthToken"`
 	AdminPasswordResetToken  TokenConfig `form:"adminPasswordResetToken" json:"adminPasswordResetToken"`
@@ -74,6 +75,10 @@ func New() *Settings {
 			VerificationTemplate:       defaultVerificationTemplate,
 			ResetPasswordTemplate:      defaultResetPasswordTemplate,
 			ConfirmEmailChangeTemplate: defaultConfirmEmailChangeTemplate,
+		},
+		Pagination: PaginationConfig{
+			MaxPerPage:     500,
+			DefaultPerPage: 30,
 		},
 		Logs: LogsConfig{
 			MaxDays: 5,
@@ -185,6 +190,7 @@ func (s *Settings) Validate() error {
 
 	return validation.ValidateStruct(s,
 		validation.Field(&s.Meta),
+		validation.Field(&s.Pagination),
 		validation.Field(&s.Logs),
 		validation.Field(&s.AdminAuthToken),
 		validation.Field(&s.AdminPasswordResetToken),
@@ -563,6 +569,26 @@ type LogsConfig struct {
 func (c LogsConfig) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.MaxDays, validation.Min(0)),
+	)
+}
+
+// -------------------------------------------------------------------
+
+type PaginationConfig struct {
+	MaxPerPage     int `form:"maxPerPage" json:"maxPerPage"`
+	DefaultPerPage int `form:"defaultPerPage" json:"defaultPerPage"`
+}
+
+// Validate makes PaginationConfig validatable by implementing [validation.Validatable] interface.
+func (c PaginationConfig) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.MaxPerPage, validation.Required, validation.Min(10), validation.By(func(value interface{}) error {
+			if value.(int) < c.DefaultPerPage {
+				return errors.New("MaxPerPage cannot be less than DefaultPerPage")
+			}
+			return nil
+		})),
+		validation.Field(&c.DefaultPerPage, validation.Required, validation.Min(10)),
 	)
 }
 

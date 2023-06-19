@@ -66,6 +66,8 @@ func (api *recordApi) list(c echo.Context) error {
 	)
 
 	searchProvider := search.NewProvider(fieldsResolver).
+		DefaultPerPage(api.app.Settings().Pagination.DefaultPerPage).
+		MaxPerPage(api.app.Settings().Pagination.MaxPerPage).
 		Query(api.app.Dao().RecordQuery(collection))
 
 	if requestData.Admin == nil && collection.ListRule != nil {

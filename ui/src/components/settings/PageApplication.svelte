@@ -60,6 +60,7 @@
         formSettings = {
             meta: settings?.meta || {},
             logs: settings?.logs || {},
+            pagination: settings?.pagination || {}
         };
 
         originalFormSettings = JSON.parse(JSON.stringify(formSettings));
@@ -108,6 +109,16 @@
                     <Field class="form-field required" name="logs.maxDays" let:uniqueId>
                         <label for={uniqueId}>Logs max days retention</label>
                         <input type="number" id={uniqueId} required bind:value={formSettings.logs.maxDays} />
+                    </Field>
+
+                    <Field class="form-field required" name="pagination.defaultPerPage" let:uniqueId>
+                        <label for={uniqueId}>Default per page count</label>
+                        <input type="number" id={uniqueId} required bind:value={formSettings.pagination.defaultPerPage} />
+                    </Field>
+
+                    <Field class="form-field required" name="pagination.maxPerPage" let:uniqueId>
+                        <label for={uniqueId}>Maximum per page count</label>
+                        <input type="number" id={uniqueId} required bind:value={formSettings.pagination.maxPerPage} />
                     </Field>
 
                     <Field class="form-field form-field-toggle" name="meta.hideControls" let:uniqueId>

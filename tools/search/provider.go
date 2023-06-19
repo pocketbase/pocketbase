@@ -34,12 +34,14 @@ type Result struct {
 
 // Provider represents a single configured search provider instance.
 type Provider struct {
-	fieldResolver FieldResolver
-	query         *dbx.SelectQuery
-	page          int
-	perPage       int
-	sort          []SortField
-	filter        []FilterData
+	fieldResolver  FieldResolver
+	query          *dbx.SelectQuery
+	page           int
+	perPage        int
+	maxPerPage     int
+	defaultPerPage int
+	sort           []SortField
+	filter         []FilterData
 }
 
 // NewProvider creates and returns a new search provider.
@@ -57,7 +59,7 @@ func NewProvider(fieldResolver FieldResolver) *Provider {
 	return &Provider{
 		fieldResolver: fieldResolver,
 		page:          1,
-		perPage:       DefaultPerPage,
+		maxPerPage:    MaxPerPage,
 		sort:          []SortField{},
 		filter:        []FilterData{},
 	}
@@ -66,6 +68,18 @@ func NewProvider(fieldResolver FieldResolver) *Provider {
 // Query sets the base query that will be used to fetch the search items.
 func (s *Provider) Query(query *dbx.SelectQuery) *Provider {
 	s.query = query
+	return s
+}
+
+// Set max how many records in pagination.
+func (s *Provider) MaxPerPage(maxPerPage int) *Provider {
+	s.maxPerPage = maxPerPage
+	return s
+}
+
+// Set default number of records that page contains.
+func (s *Provider) DefaultPerPage(defaultPerPage int) *Provider {
+	s.defaultPerPage = defaultPerPage
 	return s
 }
 
@@ -205,9 +219,9 @@ func (s *Provider) Exec(items any) (*Result, error) {
 
 	// normalize perPage
 	if s.perPage <= 0 {
-		s.perPage = DefaultPerPage
-	} else if s.perPage > MaxPerPage {
-		s.perPage = MaxPerPage
+		s.perPage = s.defaultPerPage
+	} else if s.perPage > s.maxPerPage {
+		s.perPage = s.maxPerPage
 	}
 
 	totalPages := int(math.Ceil(float64(totalCount) / float64(s.perPage)))
