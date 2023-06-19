@@ -95,6 +95,10 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 		// send error response
 		hookErr := app.OnBeforeApiError().Trigger(event, func(e *core.ApiErrorEvent) error {
+			if c.Response().Committed {
+				return nil
+			}
+
 			// @see https://github.com/labstack/echo/issues/608
 			if e.HttpContext.Request().Method == http.MethodHead {
 				return e.HttpContext.NoContent(apiErr.Code)
@@ -103,12 +107,14 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			return e.HttpContext.JSON(apiErr.Code, apiErr)
 		})
 
-		// truly rare case; eg. client already disconnected
-		if hookErr != nil && app.IsDebug() {
+		if hookErr == nil {
+			if err := app.OnAfterApiError().Trigger(event); err != nil && app.IsDebug() {
+				log.Println(hookErr)
+			}
+		} else if app.IsDebug() {
+			// truly rare case; eg. client already disconnected
 			log.Println(hookErr)
 		}
-
-		app.OnAfterApiError().Trigger(event)
 	}
 
 	// admin ui routes

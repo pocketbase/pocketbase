@@ -50,8 +50,8 @@ func (h *TaggedHook[T]) CanTriggerOn(tags []string) bool {
 // PreAdd registers a new handler to the hook by prepending it to the existing queue.
 //
 // The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
-func (h *TaggedHook[T]) PreAdd(fn Handler[T]) {
-	h.mainHook.PreAdd(func(e T) error {
+func (h *TaggedHook[T]) PreAdd(fn Handler[T]) string {
+	return h.mainHook.PreAdd(func(e T) error {
 		if h.CanTriggerOn(e.Tags()) {
 			return fn(e)
 		}
@@ -63,8 +63,8 @@ func (h *TaggedHook[T]) PreAdd(fn Handler[T]) {
 // Add registers a new handler to the hook by appending it to the existing queue.
 //
 // The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
-func (h *TaggedHook[T]) Add(fn Handler[T]) {
-	h.mainHook.Add(func(e T) error {
+func (h *TaggedHook[T]) Add(fn Handler[T]) string {
+	return h.mainHook.Add(func(e T) error {
 		if h.CanTriggerOn(e.Tags()) {
 			return fn(e)
 		}

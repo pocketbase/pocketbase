@@ -57,6 +57,7 @@ func (h *Hook[T]) Add(fn Handler[T]) string {
 	return id
 }
 
+// @todo add also to TaggedHook
 // Remove removes a single hook handler by its id.
 func (h *Hook[T]) Remove(id string) {
 	h.mux.Lock()
@@ -70,6 +71,7 @@ func (h *Hook[T]) Remove(id string) {
 	}
 }
 
+// @todo add also to TaggedHook
 // RemoveAll removes all registered handlers.
 func (h *Hook[T]) RemoveAll() {
 	h.mux.Lock()

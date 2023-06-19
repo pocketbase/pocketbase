@@ -163,6 +163,7 @@ func (pb *PocketBase) Execute() error {
 	go func() {
 		if err := pb.RootCmd.Execute(); err != nil {
 			// @todo replace with db log once generalized logs are added
+			// and maybe consider reorganizing the code to return os.Exit(1)
 			// (note may need to update the existing commands to not silence errors)
 			color.Red(err.Error())
 		}

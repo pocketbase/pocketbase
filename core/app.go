@@ -131,21 +131,21 @@ type App interface {
 	// App event hooks
 	// ---------------------------------------------------------------
 
-	// OnBeforeBootstrap hook is triggered before initializing the base
+	// OnBeforeBootstrap hook is triggered before initializing the main
 	// application resources (eg. before db open and initial settings load).
 	OnBeforeBootstrap() *hook.Hook[*BootstrapEvent]
 
-	// OnAfterBootstrap hook is triggered after initializing the base
+	// OnAfterBootstrap hook is triggered after initializing the main
 	// application resources (eg. after db open and initial settings load).
 	OnAfterBootstrap() *hook.Hook[*BootstrapEvent]
 
 	// OnBeforeServe hook is triggered before serving the internal router (echo),
-	// allowing you to adjust its options and attach new routes.
+	// allowing you to adjust its options and attach new routes or middlewares.
 	OnBeforeServe() *hook.Hook[*ServeEvent]
 
 	// OnBeforeApiError hook is triggered right before sending an error API
 	// response to the client, allowing you to further modify the error data
-	// or to return a completely different API response (using [hook.StopPropagation]).
+	// or to return a completely different API response.
 	OnBeforeApiError() *hook.Hook[*ApiErrorEvent]
 
 	// OnAfterApiError hook is triggered right after sending an error API
@@ -201,7 +201,7 @@ type App interface {
 	// will be triggered and called only if their event data origin matches the tags.
 	OnModelBeforeDelete(tags ...string) *hook.TaggedHook[*ModelEvent]
 
-	// OnModelAfterDelete is triggered after successfully deleting an
+	// OnModelAfterDelete hook is triggered after successfully deleting an
 	// existing entry from the DB.
 	//
 	// If the optional "tags" list (table names and/or the Collection id for Record models)
@@ -213,22 +213,18 @@ type App interface {
 	// Mailer event hooks
 	// ---------------------------------------------------------------
 
-	// OnMailerBeforeAdminResetPasswordSend hook is triggered right before
-	// sending a password reset email to an admin.
-	//
-	// Could be used to send your own custom email template if
-	// [hook.StopPropagation] is returned in one of its listeners.
+	// OnMailerBeforeAdminResetPasswordSend hook is triggered right
+	// before sending a password reset email to an admin, allowing you
+	// to inspect and customize the email message that is being sent.
 	OnMailerBeforeAdminResetPasswordSend() *hook.Hook[*MailerAdminEvent]
 
 	// OnMailerAfterAdminResetPasswordSend hook is triggered after
 	// admin password reset email was successfully sent.
 	OnMailerAfterAdminResetPasswordSend() *hook.Hook[*MailerAdminEvent]
 
-	// OnMailerBeforeRecordResetPasswordSend hook is triggered right before
-	// sending a password reset email to an auth record.
-	//
-	// Could be used to send your own custom email template if
-	// [hook.StopPropagation] is returned in one of its listeners.
+	// OnMailerBeforeRecordResetPasswordSend hook is triggered right
+	// before sending a password reset email to an auth record, allowing
+	// you to inspect and customize the email message that is being sent.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -243,11 +239,9 @@ type App interface {
 	// triggered and called only if their event data origin matches the tags.
 	OnMailerAfterRecordResetPasswordSend(tags ...string) *hook.TaggedHook[*MailerRecordEvent]
 
-	// OnMailerBeforeRecordVerificationSend hook is triggered right before
-	// sending a verification email to an auth record.
-	//
-	// Could be used to send your own custom email template if
-	// [hook.StopPropagation] is returned in one of its listeners.
+	// OnMailerBeforeRecordVerificationSend hook is triggered right
+	// before sending a verification email to an auth record, allowing
+	// you to inspect and customize the email message that is being sent.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -263,10 +257,8 @@ type App interface {
 	OnMailerAfterRecordVerificationSend(tags ...string) *hook.TaggedHook[*MailerRecordEvent]
 
 	// OnMailerBeforeRecordChangeEmailSend hook is triggered right before
-	// sending a confirmation new address email to an auth record.
-	//
-	// Could be used to send your own custom email template if
-	// [hook.StopPropagation] is returned in one of its listeners.
+	// sending a confirmation new address email to an auth record, allowing
+	// you to inspect and customize the email message that is being sent.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -328,8 +320,7 @@ type App interface {
 	// Settings update request (after request data load and before settings persistence).
 	//
 	// Could be used to additionally validate the request data or
-	// implement completely different persistence behavior
-	// (returning [hook.StopPropagation]).
+	// implement completely different persistence behavior.
 	OnSettingsBeforeUpdateRequest() *hook.Hook[*SettingsUpdateEvent]
 
 	// OnSettingsAfterUpdateRequest hook is triggered after each
@@ -383,7 +374,7 @@ type App interface {
 	// Admin create request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	OnAdminBeforeCreateRequest() *hook.Hook[*AdminCreateEvent]
 
 	// OnAdminAfterCreateRequest hook is triggered after each
@@ -394,7 +385,7 @@ type App interface {
 	// Admin update request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	OnAdminBeforeUpdateRequest() *hook.Hook[*AdminUpdateEvent]
 
 	// OnAdminAfterUpdateRequest hook is triggered after each
@@ -405,7 +396,7 @@ type App interface {
 	// Admin delete request (after model load and before actual deletion).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning [hook.StopPropagation]).
+	// completely different delete behavior.
 	OnAdminBeforeDeleteRequest() *hook.Hook[*AdminDeleteEvent]
 
 	// OnAdminAfterDeleteRequest hook is triggered after each
@@ -434,7 +425,7 @@ type App interface {
 	// auth refresh API request (right before generating a new auth token).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different auth refresh behavior (returning [hook.StopPropagation]).
+	// completely different auth refresh behavior.
 	OnAdminBeforeAuthRefreshRequest() *hook.Hook[*AdminAuthRefreshEvent]
 
 	// OnAdminAfterAuthRefreshRequest hook is triggered after each
@@ -445,7 +436,7 @@ type App interface {
 	// request password reset API request (after request data load and before sending the reset email).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different password reset behavior (returning [hook.StopPropagation]).
+	// completely different password reset behavior.
 	OnAdminBeforeRequestPasswordResetRequest() *hook.Hook[*AdminRequestPasswordResetEvent]
 
 	// OnAdminAfterRequestPasswordResetRequest hook is triggered after each
@@ -456,7 +447,7 @@ type App interface {
 	// confirm password reset API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	OnAdminBeforeConfirmPasswordResetRequest() *hook.Hook[*AdminConfirmPasswordResetEvent]
 
 	// OnAdminAfterConfirmPasswordResetRequest hook is triggered after each
@@ -482,7 +473,7 @@ type App interface {
 	// auth with password API request (after request data load and before password validation).
 	//
 	// Could be used to implement for example a custom password validation
-	// or to locate a different Record identity (by assigning [RecordAuthWithPasswordEvent.Record]).
+	// or to locate a different Record model (by reassigning [RecordAuthWithPasswordEvent.Record]).
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -500,11 +491,11 @@ type App interface {
 	// OnRecordBeforeAuthWithOAuth2Request hook is triggered before each Record
 	// OAuth2 sign-in/sign-up API request (after token exchange and before external provider linking).
 	//
-	// If the [RecordAuthWithOAuth2Event.Record] is nil, then the OAuth2
+	// If the [RecordAuthWithOAuth2Event.Record] is not set, then the OAuth2
 	// request will try to create a new auth Record.
 	//
 	// To assign or link a different existing record model you can
-	// overwrite/modify the [RecordAuthWithOAuth2Event.Record] field.
+	// change the [RecordAuthWithOAuth2Event.Record] field.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -523,7 +514,7 @@ type App interface {
 	// auth refresh API request (right before generating a new auth token).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different auth refresh behavior (returning [hook.StopPropagation]).
+	// completely different auth refresh behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -538,11 +529,39 @@ type App interface {
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordAfterAuthRefreshRequest(tags ...string) *hook.TaggedHook[*RecordAuthRefreshEvent]
 
+	// OnRecordListExternalAuthsRequest hook is triggered on each API record external auths list request.
+	//
+	// Could be used to validate or modify the response before returning it to the client.
+	//
+	// If the optional "tags" list (Collection ids or names) is specified,
+	// then all event handlers registered via the created hook will be
+	// triggered and called only if their event data origin matches the tags.
+	OnRecordListExternalAuthsRequest(tags ...string) *hook.TaggedHook[*RecordListExternalAuthsEvent]
+
+	// OnRecordBeforeUnlinkExternalAuthRequest hook is triggered before each API record
+	// external auth unlink request (after models load and before the actual relation deletion).
+	//
+	// Could be used to additionally validate the request data or implement
+	// completely different delete behavior.
+	//
+	// If the optional "tags" list (Collection ids or names) is specified,
+	// then all event handlers registered via the created hook will be
+	// triggered and called only if their event data origin matches the tags.
+	OnRecordBeforeUnlinkExternalAuthRequest(tags ...string) *hook.TaggedHook[*RecordUnlinkExternalAuthEvent]
+
+	// OnRecordAfterUnlinkExternalAuthRequest hook is triggered after each
+	// successful API record external auth unlink request.
+	//
+	// If the optional "tags" list (Collection ids or names) is specified,
+	// then all event handlers registered via the created hook will be
+	// triggered and called only if their event data origin matches the tags.
+	OnRecordAfterUnlinkExternalAuthRequest(tags ...string) *hook.TaggedHook[*RecordUnlinkExternalAuthEvent]
+
 	// OnRecordBeforeRequestPasswordResetRequest hook is triggered before each Record
 	// request password reset API request (after request data load and before sending the reset email).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different password reset behavior (returning [hook.StopPropagation]).
+	// completely different password reset behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -561,7 +580,7 @@ type App interface {
 	// confirm password reset API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -580,7 +599,7 @@ type App interface {
 	// request verification API request (after request data load and before sending the verification email).
 	//
 	// Could be used to additionally validate the loaded request data or implement
-	// completely different verification behavior (returning [hook.StopPropagation]).
+	// completely different verification behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -599,7 +618,7 @@ type App interface {
 	// confirm verification API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -618,7 +637,7 @@ type App interface {
 	// (after request data load and before sending the email link to confirm the change).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different request email change behavior (returning [hook.StopPropagation]).
+	// completely different request email change behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -637,7 +656,7 @@ type App interface {
 	// confirm email change API request (after request data load and before persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -651,34 +670,6 @@ type App interface {
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordAfterConfirmEmailChangeRequest(tags ...string) *hook.TaggedHook[*RecordConfirmEmailChangeEvent]
-
-	// OnRecordListExternalAuthsRequest hook is triggered on each API record external auths list request.
-	//
-	// Could be used to validate or modify the response before returning it to the client.
-	//
-	// If the optional "tags" list (Collection ids or names) is specified,
-	// then all event handlers registered via the created hook will be
-	// triggered and called only if their event data origin matches the tags.
-	OnRecordListExternalAuthsRequest(tags ...string) *hook.TaggedHook[*RecordListExternalAuthsEvent]
-
-	// OnRecordBeforeUnlinkExternalAuthRequest hook is triggered before each API record
-	// external auth unlink request (after models load and before the actual relation deletion).
-	//
-	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning [hook.StopPropagation]).
-	//
-	// If the optional "tags" list (Collection ids or names) is specified,
-	// then all event handlers registered via the created hook will be
-	// triggered and called only if their event data origin matches the tags.
-	OnRecordBeforeUnlinkExternalAuthRequest(tags ...string) *hook.TaggedHook[*RecordUnlinkExternalAuthEvent]
-
-	// OnRecordAfterUnlinkExternalAuthRequest hook is triggered after each
-	// successful API record external auth unlink request.
-	//
-	// If the optional "tags" list (Collection ids or names) is specified,
-	// then all event handlers registered via the created hook will be
-	// triggered and called only if their event data origin matches the tags.
-	OnRecordAfterUnlinkExternalAuthRequest(tags ...string) *hook.TaggedHook[*RecordUnlinkExternalAuthEvent]
 
 	// ---------------------------------------------------------------
 	// Record CRUD API event hooks
@@ -706,7 +697,7 @@ type App interface {
 	// create request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -725,7 +716,7 @@ type App interface {
 	// update request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -744,7 +735,7 @@ type App interface {
 	// delete request (after model load and before actual deletion).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning [hook.StopPropagation]).
+	// completely different delete behavior.
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -777,7 +768,7 @@ type App interface {
 	// create request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	OnCollectionBeforeCreateRequest() *hook.Hook[*CollectionCreateEvent]
 
 	// OnCollectionAfterCreateRequest hook is triggered after each
@@ -788,7 +779,7 @@ type App interface {
 	// update request (after request data load and before model persistence).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different persistence behavior (returning [hook.StopPropagation]).
+	// completely different persistence behavior.
 	OnCollectionBeforeUpdateRequest() *hook.Hook[*CollectionUpdateEvent]
 
 	// OnCollectionAfterUpdateRequest hook is triggered after each
@@ -799,7 +790,7 @@ type App interface {
 	// Collection delete request (after model load and before actual deletion).
 	//
 	// Could be used to additionally validate the request data or implement
-	// completely different delete behavior (returning [hook.StopPropagation]).
+	// completely different delete behavior.
 	OnCollectionBeforeDeleteRequest() *hook.Hook[*CollectionDeleteEvent]
 
 	// OnCollectionAfterDeleteRequest hook is triggered after each
@@ -810,7 +801,7 @@ type App interface {
 	// collections import request (after request data load and before the actual import).
 	//
 	// Could be used to additionally validate the imported collections or
-	// to implement completely different import behavior (returning [hook.StopPropagation]).
+	// to implement completely different import behavior.
 	OnCollectionsBeforeImportRequest() *hook.Hook[*CollectionsImportEvent]
 
 	// OnCollectionsAfterImportRequest hook is triggered after each
