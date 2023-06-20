@@ -24,7 +24,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 9, t)
+	testBindsCount(vm, "this", 12, t)
 }
 
 func TestBaseBindsUnmarshal(t *testing.T) {

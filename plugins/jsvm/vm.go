@@ -41,6 +41,29 @@ import (
 func baseBinds(vm *goja.Runtime) {
 	vm.SetFieldNameMapper(FieldMapper{})
 
+	// override primitive class constructors to return pointers
+	// (this is useful when unmarshaling or scaning a db result)
+	vm.Set("_numberPointer", func(arg float64) *float64 {
+		return &arg
+	})
+	vm.Set("_stringPointer", func(arg string) *string {
+		return &arg
+	})
+	vm.Set("_boolPointer", func(arg bool) *bool {
+		return &arg
+	})
+	vm.RunString(`
+		this.Number = function(arg) {
+			return _numberPointer(arg)
+		}
+		this.String = function(arg) {
+			return _stringPointer(arg)
+		}
+		this.Boolean = function(arg) {
+			return _boolPointer(arg)
+		}
+	`)
+
 	vm.Set("unmarshal", func(src map[string]any, dest any) (any, error) {
 		raw, err := json.Marshal(src)
 		if err != nil {
@@ -221,16 +244,9 @@ func formsBinds(vm *goja.Runtime) {
 
 func apisBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-
-	vm.Set("Route", func(call goja.ConstructorCall) *goja.Object {
-		instance := echo.Route{}
-		return structConstructor(vm, call, &instance)
-	})
-
 	vm.Set("$apis", obj)
 
 	// middlewares
-	obj.Set("requireRecordAuth", apis.RequireRecordAuth)
 	obj.Set("requireRecordAuth", apis.RequireRecordAuth)
 	obj.Set("requireSameContextRecordAuth", apis.RequireSameContextRecordAuth)
 	obj.Set("requireAdminAuth", apis.RequireAdminAuth)
@@ -261,6 +277,11 @@ func apisBinds(vm *goja.Runtime) {
 	obj.Set("badRequestError", apis.NewBadRequestError)
 	obj.Set("forbiddenError", apis.NewForbiddenError)
 	obj.Set("unauthorizedError", apis.NewUnauthorizedError)
+
+	vm.Set("Route", func(call goja.ConstructorCall) *goja.Object {
+		instance := echo.Route{}
+		return structConstructor(vm, call, &instance)
+	})
 }
 
 // -------------------------------------------------------------------

@@ -1,8 +1,11 @@
 package jsvm
 
 import (
+	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/dop251/goja"
@@ -12,8 +15,16 @@ import (
 	"github.com/dop251/goja_nodejs/require"
 	"github.com/fatih/color"
 	"github.com/fsnotify/fsnotify"
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/plugins/jsvm/internal/docs/generated"
+)
+
+const (
+	hooksExtension = ".pb.js"
+
+	typesFileName = ".types.d.ts"
+
+	typesReferenceDirective = `/// <reference path="./` + typesFileName + `" />`
 )
 
 // HooksConfig defines the config options of the JS app hooks plugin.
@@ -51,12 +62,21 @@ func RegisterHooks(app core.App, config HooksConfig) error {
 	}
 
 	// fetch all js hooks sorted by their filename
-	files, err := filesContent(p.config.Dir, `^.*\.pb\.js$`)
+	files, err := filesContent(p.config.Dir, `^.*`+regexp.QuoteMeta(hooksExtension)+`$`)
 	if err != nil {
 		return err
 	}
 
-	dbx.HashExp{}.Build(app.DB(), nil)
+	// prepend the types reference directive to empty files
+	for name, content := range files {
+		if len(content) != 0 {
+			continue
+		}
+		path := filepath.Join(p.config.Dir, name)
+		if err := prependToEmptyFile(path, typesReferenceDirective+"\n\n"); err != nil {
+			color.Yellow("Unable to prepend the types reference: %v", err)
+		}
+	}
 
 	registry := new(require.Registry) // this can be shared by multiple runtimes
 
@@ -82,13 +102,25 @@ func RegisterHooks(app core.App, config HooksConfig) error {
 				if p.config.Watch {
 					color.Red("Failed to execute %s: %v", file, err)
 				} else {
-					// return err
+					panic(err)
 				}
 			}
 		}
 	})
 
 	loop.Start()
+
+	app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
+		// always update the app types on start to ensure that
+		// the user has the latest generated declarations
+		if len(files) > 0 {
+			if err := p.saveTypesFile(); err != nil {
+				color.Yellow("Unable to save app types file: %v", err)
+			}
+		}
+
+		return nil
+	})
 
 	app.OnTerminate().Add(func(e *core.TerminateEvent) error {
 		loop.StopNoWait()
@@ -108,19 +140,27 @@ type hooks struct {
 	config HooksConfig
 }
 
-func (h *hooks) watchFiles() error {
+func (p *hooks) watchFiles() error {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err
 	}
 
-	h.app.OnTerminate().Add(func(e *core.TerminateEvent) error {
+	var debounceTimer *time.Timer
+
+	stopDebounceTimer := func() {
+		if debounceTimer != nil {
+			debounceTimer.Stop()
+		}
+	}
+
+	p.app.OnTerminate().Add(func(e *core.TerminateEvent) error {
 		watcher.Close()
+
+		stopDebounceTimer()
 
 		return nil
 	})
-
-	var debounceTimer *time.Timer
 
 	// start listening for events.
 	go func() {
@@ -128,25 +168,30 @@ func (h *hooks) watchFiles() error {
 			select {
 			case event, ok := <-watcher.Events:
 				if !ok {
+					stopDebounceTimer()
 					return
 				}
 
-				if debounceTimer != nil {
-					debounceTimer.Stop()
+				// skip TS declaration files change
+				if strings.HasSuffix(event.Name, ".d.ts") {
+					continue
 				}
-				debounceTimer = time.AfterFunc(100*time.Millisecond, func() {
+
+				stopDebounceTimer()
+				debounceTimer = time.AfterFunc(50*time.Millisecond, func() {
 					// app restart is currently not supported on Windows
 					if runtime.GOOS == "windows" {
 						color.Yellow("File %s changed, please restart the app", event.Name)
 					} else {
 						color.Yellow("File %s changed, restarting...", event.Name)
-						if err := h.app.Restart(); err != nil {
+						if err := p.app.Restart(); err != nil {
 							color.Red("Failed to restart the app:", err)
 						}
 					}
 				})
 			case err, ok := <-watcher.Errors:
 				if !ok {
+					stopDebounceTimer()
 					return
 				}
 				color.Red("Watch error:", err)
@@ -155,11 +200,34 @@ func (h *hooks) watchFiles() error {
 	}()
 
 	// add the directory to watch
-	err = watcher.Add(h.config.Dir)
+	err = watcher.Add(p.config.Dir)
 	if err != nil {
 		watcher.Close()
 		return err
 	}
 
 	return nil
+}
+
+func (p *hooks) saveTypesFile() error {
+	data, _ := generated.Types.ReadFile("types.d.ts")
+
+	if err := os.WriteFile(filepath.Join(p.config.Dir, typesFileName), data, 0644); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// prependToEmptyFile prepends the specified text to an empty file.
+//
+// If the file is not empty this method does nothing.
+func prependToEmptyFile(path, text string) error {
+	info, err := os.Stat(path)
+
+	if err == nil && info.Size() == 0 {
+		return os.WriteFile(path, []byte(text), 0644)
+	}
+
+	return err
 }
