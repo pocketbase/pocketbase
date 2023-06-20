@@ -21,6 +21,22 @@ func (m JsonMap) MarshalJSON() ([]byte, error) {
 	return json.Marshal(alias(m))
 }
 
+// Get retrieves a single value from the current JsonMap.
+//
+// This helper was added primarily to assist the goja integration since custom map types
+// don't have direct access to the map keys (https://pkg.go.dev/github.com/dop251/goja#hdr-Maps_with_methods).
+func (m JsonMap) Get(key string) any {
+	return m[key]
+}
+
+// Set sets a single value in the current JsonMap.
+//
+// This helper was added primarily to assist the goja integration since custom map types
+// don't have direct access to the map keys (https://pkg.go.dev/github.com/dop251/goja#hdr-Maps_with_methods).
+func (m JsonMap) Set(key string, value any) {
+	m[key] = value
+}
+
 // Value implements the [driver.Valuer] interface.
 func (m JsonMap) Value() (driver.Value, error) {
 	data, err := json.Marshal(m)
