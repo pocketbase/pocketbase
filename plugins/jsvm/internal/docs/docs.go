@@ -42,12 +42,12 @@ declare class SchemaField implements schema.SchemaField {
 }
 
 interface MailerMessage extends mailer.Message{} // merge
-declare class Mail implements mailer.Message {
+declare class MailerMessage implements mailer.Message {
   constructor(message?: Partial<mailer.Message>)
 }
 
 interface Command extends cobra.Command{} // merge
-declare class Mail implements cobra.Command {
+declare class Command implements cobra.Command {
   constructor(cmd?: Partial<cobra.Command>)
 }
 
