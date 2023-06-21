@@ -30,6 +30,14 @@ func main() {
 		"the directory with the JS app hooks",
 	)
 
+	var hooksWatch bool
+	app.RootCmd.PersistentFlags().BoolVar(
+		&hooksWatch,
+		"hooksWatch",
+		true,
+		"auto restart the app on pb_hooks file change",
+	)
+
 	var migrationsDir string
 	app.RootCmd.PersistentFlags().StringVar(
 		&migrationsDir,
@@ -78,7 +86,8 @@ func main() {
 
 	// load js pb_hooks
 	jsvm.MustRegisterHooks(app, jsvm.HooksConfig{
-		Dir: hooksDir,
+		Dir:   hooksDir,
+		Watch: hooksWatch,
 	})
 
 	// load js pb_migrations
