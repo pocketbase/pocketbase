@@ -24,7 +24,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 15, t)
+	testBindsCount(vm, "this", 14, t)
 }
 
 func TestBaseBindsUnmarshal(t *testing.T) {
@@ -706,7 +706,7 @@ func TestLoadingDynamicList(t *testing.T) {
 		    .orderBy("text ASC")
 		    .all(result)
 
-		if (len(result) != 2) {
+		if (result.length != 2) {
 			throw new Error('Expected 2 list items, got ' + result.length);
 		}
 

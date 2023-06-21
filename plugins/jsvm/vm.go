@@ -79,24 +79,6 @@ func baseBinds(vm *goja.Runtime) {
 		return dest, nil
 	})
 
-	// temporary helper to properly return the length of an array
-	// see https://github.com/dop251/goja/issues/521
-	vm.Set("len", func(val any) int {
-		rv := reflect.ValueOf(val)
-		rk := rv.Kind()
-
-		if rk == reflect.Ptr {
-			rv = rv.Elem()
-			rk = rv.Kind()
-		}
-
-		if rk == reflect.Slice || rk == reflect.Array {
-			return rv.Len()
-		}
-
-		return 0
-	})
-
 	vm.Set("DynamicModel", func(call goja.ConstructorCall) *goja.Object {
 		shape, ok := call.Argument(0).Export().(map[string]any)
 		if !ok || len(shape) == 0 {
