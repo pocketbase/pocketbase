@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -36,6 +37,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func baseBinds(vm *goja.Runtime) {
@@ -43,24 +45,24 @@ func baseBinds(vm *goja.Runtime) {
 
 	// override primitive class constructors to return pointers
 	// (this is useful when unmarshaling or scaning a db result)
-	vm.Set("_numberPointer", func(arg float64) *float64 {
+	vm.Set("__numberPointer", func(arg float64) *float64 {
 		return &arg
 	})
-	vm.Set("_stringPointer", func(arg string) *string {
+	vm.Set("__stringPointer", func(arg string) *string {
 		return &arg
 	})
-	vm.Set("_boolPointer", func(arg bool) *bool {
+	vm.Set("__boolPointer", func(arg bool) *bool {
 		return &arg
 	})
 	vm.RunString(`
 		this.Number = function(arg) {
-			return _numberPointer(arg)
+			return __numberPointer(arg)
 		}
 		this.String = function(arg) {
-			return _stringPointer(arg)
+			return __stringPointer(arg)
 		}
 		this.Boolean = function(arg) {
-			return _boolPointer(arg)
+			return __boolPointer(arg)
 		}
 	`)
 
@@ -75,6 +77,50 @@ func baseBinds(vm *goja.Runtime) {
 		}
 
 		return dest, nil
+	})
+
+	// temporary helper to properly return the length of an array
+	// see https://github.com/dop251/goja/issues/521
+	vm.Set("len", func(val any) int {
+		rv := reflect.ValueOf(val)
+		rk := rv.Kind()
+
+		if rk == reflect.Ptr {
+			rv = rv.Elem()
+			rk = rv.Kind()
+		}
+
+		if rk == reflect.Slice || rk == reflect.Array {
+			return rv.Len()
+		}
+
+		return 0
+	})
+
+	vm.Set("DynamicModel", func(call goja.ConstructorCall) *goja.Object {
+		shape, ok := call.Argument(0).Export().(map[string]any)
+		if !ok || len(shape) == 0 {
+			panic("missing shape data")
+		}
+
+		instance := newDynamicModel(shape)
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+
+		return instanceValue
+	})
+
+	vm.Set("DynamicList", func(call goja.ConstructorCall) *goja.Object {
+		shape, ok := call.Argument(0).Export().(map[string]any)
+		if !ok || len(shape) == 0 {
+			panic("missing shape data")
+		}
+
+		instance := newDynamicList(shape)
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+
+		return instanceValue
 	})
 
 	vm.Set("Record", func(call goja.ConstructorCall) *goja.Object {
@@ -363,4 +409,72 @@ func filesContent(dirPath string, pattern string) (map[string][]byte, error) {
 	}
 
 	return result, nil
+}
+
+// newDynamicList creates a new dynamic slice of structs with fields based
+// on the specified "shape".
+//
+// Example:
+//
+//	m := newDynamicList(map[string]any{
+//		"title": "",
+//		"total": 0,
+//	})
+func newDynamicList(shape map[string]any) any {
+	m := newDynamicModel(shape)
+	mt := reflect.TypeOf(m)
+	st := reflect.SliceOf(mt)
+	elem := reflect.New(st).Elem()
+
+	return elem.Addr().Interface()
+}
+
+// newDynamicModel creates a new dynamic struct with fields based
+// on the specified "shape".
+//
+// Example:
+//
+//	m := newDynamicModel(map[string]any{
+//		"title": "",
+//		"total": 0,
+//	})
+func newDynamicModel(shape map[string]any) any {
+	shapeValues := make([]reflect.Value, 0, len(shape))
+	structFields := make([]reflect.StructField, 0, len(shape))
+
+	for k, v := range shape {
+		vt := reflect.TypeOf(v)
+
+		switch kind := vt.Kind(); kind {
+		case reflect.Map:
+			raw, _ := json.Marshal(v)
+			newV := types.JsonMap{}
+			newV.Scan(raw)
+			v = newV
+			vt = reflect.TypeOf(v)
+		case reflect.Slice, reflect.Array:
+			raw, _ := json.Marshal(v)
+			newV := types.JsonArray[any]{}
+			newV.Scan(raw)
+			v = newV
+			vt = reflect.TypeOf(newV)
+		}
+
+		shapeValues = append(shapeValues, reflect.ValueOf(v))
+
+		structFields = append(structFields, reflect.StructField{
+			Name: strings.ToUpper(k), // ensures that the field is exportable
+			Type: vt,
+			Tag:  reflect.StructTag(`db:"` + k + `" json:"` + k + `"`),
+		})
+	}
+
+	st := reflect.StructOf(structFields)
+	elem := reflect.New(st).Elem()
+
+	for i, v := range shapeValues {
+		elem.Field(i).Set(v)
+	}
+
+	return elem.Addr().Interface()
 }

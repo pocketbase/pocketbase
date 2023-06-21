@@ -24,7 +24,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 12, t)
+	testBindsCount(vm, "this", 15, t)
 }
 
 func TestBaseBindsUnmarshal(t *testing.T) {
@@ -624,5 +624,107 @@ func testBindsCount(vm *goja.Runtime, namespace string, count int, t *testing.T)
 
 	if int(total) != count {
 		t.Fatalf("Expected %d %s binds, got %d", count, namespace, total)
+	}
+}
+
+func TestLoadingDynamicModel(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	baseBinds(vm)
+	dbxBinds(vm)
+	vm.Set("$app", app)
+
+	_, err := vm.RunString(`
+		let result = new DynamicModel({
+			text:        "",
+			bool:        false,
+			number:      0,
+			select_many: [],
+			json:        [],
+			// custom map-like field
+			obj: {},
+		})
+
+		$app.dao().db()
+		    .select("text", "bool", "number", "select_many", "json", "('{\"test\": 1}') as obj")
+		    .from("demo1")
+		    .where($dbx.hashExp({"id": "84nmscqy84lsi1t"}))
+		    .limit(1)
+		    .one(result)
+
+		if (result.text != "test") {
+			throw new Error('Expected text "test", got ' + result.text);
+		}
+
+		if (result.bool != true) {
+			throw new Error('Expected bool true, got ' + result.bool);
+		}
+
+		if (result.number != 123456) {
+			throw new Error('Expected number 123456, got ' + result.number);
+		}
+
+		if (result.select_many.length != 2 || result.select_many[0] != "optionB" || result.select_many[1] != "optionC") {
+			throw new Error('Expected select_many ["optionB", "optionC"], got ' + result.select_many);
+		}
+
+		if (result.json.length != 3 || result.json[0] != 1 || result.json[1] != 2 || result.json[2] != 3) {
+			throw new Error('Expected json [1, 2, 3], got ' + result.json);
+		}
+
+		if (result.obj.get("test") != 1) {
+			throw new Error('Expected obj.get("test") 1, got ' + JSON.stringify(result.obj));
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadingDynamicList(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	baseBinds(vm)
+	dbxBinds(vm)
+	vm.Set("$app", app)
+
+	_, err := vm.RunString(`
+		let result = new DynamicList({
+			id:   "",
+			text: "",
+		})
+
+		$app.dao().db()
+		    .select("id", "text")
+		    .from("demo1")
+		    .where($dbx.exp("id='84nmscqy84lsi1t' OR id='al1h9ijdeojtsjy'"))
+		    .limit(2)
+		    .orderBy("text ASC")
+		    .all(result)
+
+		if (len(result) != 2) {
+			throw new Error('Expected 2 list items, got ' + result.length);
+		}
+
+		if (result[0].id != "84nmscqy84lsi1t") {
+			throw new Error('Expected 0.id "84nmscqy84lsi1t", got ' + result[0].id);
+		}
+		if (result[0].text != "test") {
+			throw new Error('Expected 0.text "test", got ' + result[0].text);
+		}
+
+		if (result[1].id != "al1h9ijdeojtsjy") {
+			throw new Error('Expected 1.id "al1h9ijdeojtsjy", got ' + result[1].id);
+		}
+		if (result[1].text != "test2") {
+			throw new Error('Expected 1.text "test2", got ' + result[1].text);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
 	}
 }

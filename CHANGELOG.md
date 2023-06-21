@@ -55,14 +55,16 @@
   new: migratecmd.MustRegister(app core.App, rootCmd *cobra.Command, config migratecmd.Config)
   ```
 
-- (@todo docs) Added new optional JavaScript app hooks binding via [goja](https://github.com/dop251/goja).
-  There are available by default with the prebuilt executable if you add a `*.pb.js` file in `pb_hooks` directory.
+- (@todo docs) Added new experimental JavaScript app hooks binding via [goja](https://github.com/dop251/goja).
+  They are available by default with the prebuilt executable if you add a `*.pb.js` file in `pb_hooks` directory.
   To enable them as part of a custom Go build:
   ```go
   jsvm.MustRegisterHooks(app core.App, config jsvm.HooksConfig{})
   ```
 
 - Refactored `apis.ApiError` validation errors serialization to allow `map[string]error` and `map[string]any` when generating the public safe formatted `ApiError.Data`.
+
+- Added `types.JsonMap.Get(k)` and `types.JsonMap.Set(k, v)` helpers for the cases where the type aliased direct map access is not allowed (eg. in [goja](https://pkg.go.dev/github.com/dop251/goja#hdr-Maps_with_methods)).
 
 
 ## v0.16.6-WIP
