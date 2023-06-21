@@ -27,25 +27,6 @@ func TestBaseBindsCount(t *testing.T) {
 	testBindsCount(vm, "this", 14, t)
 }
 
-func TestBaseBindsUnmarshal(t *testing.T) {
-	vm := goja.New()
-	baseBinds(vm)
-
-	v, err := vm.RunString(`unmarshal({ name: "test" }, new Collection())`)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	m, ok := v.Export().(*models.Collection)
-	if !ok {
-		t.Fatalf("Expected models.Collection, got %v", m)
-	}
-
-	if m.Name != "test" {
-		t.Fatalf("Expected collection with name %q, got %q", "test", m.Name)
-	}
-}
-
 func TestBaseBindsRecord(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -168,11 +149,11 @@ func TestBaseBindsSchemaField(t *testing.T) {
 	}
 }
 
-func TestBaseBindsMail(t *testing.T) {
+func TestBaseBindsMailerMessage(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	v, err := vm.RunString(`new Mail({
+	v, err := vm.RunString(`new MailerMessage({
 		from: {name: "test_from", address: "test_from@example.com"},
 		to: [
 			{name: "test_to1", address: "test_to1@example.com"},
@@ -209,6 +190,35 @@ func TestBaseBindsMail(t *testing.T) {
 
 	if string(raw) != expected {
 		t.Fatalf("Expected \n%s, \ngot \n%s", expected, raw)
+	}
+}
+
+func TestBaseBindsCommand(t *testing.T) {
+	vm := goja.New()
+	baseBinds(vm)
+
+	_, err := vm.RunString(`
+		let runCalls = 0;
+
+		let cmd = new Command({
+			use: "test",
+			run: (c, args) => {
+				runCalls++;
+			}
+		});
+
+		cmd.run(null, []);
+
+		if (cmd.use != "test") {
+			throw new Error('Expected cmd.use "test", got: ' + cmd.use);
+		}
+
+		if (runCalls != 1) {
+			throw new Error('Expected runCalls 1, got: ' + runCalls);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

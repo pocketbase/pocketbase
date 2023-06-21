@@ -14,7 +14,7 @@ const heading = `
 // baseBinds
 // -------------------------------------------------------------------
 
-declare var $app: core.App
+declare var $app: pocketbase.PocketBase
 
 interface Record extends models.Record{} // merge
 declare class Record implements models.Record {
@@ -41,9 +41,14 @@ declare class SchemaField implements schema.SchemaField {
   constructor(data?: Partial<schema.SchemaField>)
 }
 
-interface Mail extends mailer.Message{} // merge
+interface MailerMessage extends mailer.Message{} // merge
 declare class Mail implements mailer.Message {
   constructor(message?: Partial<mailer.Message>)
+}
+
+interface Command extends cobra.Command{} // merge
+declare class Mail implements cobra.Command {
+  constructor(cmd?: Partial<cobra.Command>)
 }
 
 interface ValidationError extends ozzo_validation.Error{} // merge
@@ -270,7 +275,7 @@ func main() {
 			"github.com/pocketbase/pocketbase/tokens":           {"*"},
 			"github.com/pocketbase/pocketbase/apis":             {"*"},
 			"github.com/pocketbase/pocketbase/forms":            {"*"},
-			"github.com/pocketbase/pocketbase/core":             {"*"},
+			"github.com/pocketbase/pocketbase":                  {"*"},
 		},
 		FieldNameFormatter: func(s string) string {
 			return mapper.FieldName(nil, reflect.StructField{Name: s})

@@ -18,6 +18,7 @@ package jsvm
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -38,6 +39,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/spf13/cobra"
 )
 
 func baseBinds(vm *goja.Runtime) {
@@ -65,19 +67,6 @@ func baseBinds(vm *goja.Runtime) {
 			return __boolPointer(arg)
 		}
 	`)
-
-	vm.Set("unmarshal", func(src map[string]any, dest any) (any, error) {
-		raw, err := json.Marshal(src)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := json.Unmarshal(raw, &dest); err != nil {
-			return nil, err
-		}
-
-		return dest, nil
-	})
 
 	vm.Set("DynamicModel", func(call goja.ConstructorCall) *goja.Object {
 		shape, ok := call.Argument(0).Export().(map[string]any)
@@ -113,9 +102,7 @@ func baseBinds(vm *goja.Runtime) {
 			instance = models.NewRecord(collection)
 			data, ok := call.Argument(1).Export().(map[string]any)
 			if ok {
-				if raw, err := json.Marshal(data); err == nil {
-					json.Unmarshal(raw, instance)
-				}
+				instance.Load(data)
 			}
 		} else {
 			instance = &models.Record{}
@@ -129,26 +116,31 @@ func baseBinds(vm *goja.Runtime) {
 
 	vm.Set("Collection", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Collection{}
-		return structConstructor(vm, call, instance)
+		return structConstructorUnmarshal(vm, call, instance)
 	})
 
 	vm.Set("Admin", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Admin{}
-		return structConstructor(vm, call, instance)
+		return structConstructorUnmarshal(vm, call, instance)
 	})
 
 	vm.Set("Schema", func(call goja.ConstructorCall) *goja.Object {
 		instance := &schema.Schema{}
-		return structConstructor(vm, call, instance)
+		return structConstructorUnmarshal(vm, call, instance)
 	})
 
 	vm.Set("SchemaField", func(call goja.ConstructorCall) *goja.Object {
 		instance := &schema.SchemaField{}
+		return structConstructorUnmarshal(vm, call, instance)
+	})
+
+	vm.Set("MailerMessage", func(call goja.ConstructorCall) *goja.Object {
+		instance := &mailer.Message{}
 		return structConstructor(vm, call, instance)
 	})
 
-	vm.Set("Mail", func(call goja.ConstructorCall) *goja.Object {
-		instance := &mailer.Message{}
+	vm.Set("Command", func(call goja.ConstructorCall) *goja.Object {
+		instance := &cobra.Command{}
 		return structConstructor(vm, call, instance)
 	})
 
@@ -307,8 +299,8 @@ func apisBinds(vm *goja.Runtime) {
 	obj.Set("unauthorizedError", apis.NewUnauthorizedError)
 
 	vm.Set("Route", func(call goja.ConstructorCall) *goja.Object {
-		instance := echo.Route{}
-		return structConstructor(vm, call, &instance)
+		instance := &echo.Route{}
+		return structConstructor(vm, call, instance)
 	})
 }
 
@@ -339,7 +331,25 @@ func registerFactoryAsConstructor(vm *goja.Runtime, constructorName string, fact
 }
 
 // structConstructor wraps the provided struct with a native JS constructor.
+//
+// If the constructor argument is a map, each entry of the map will be loaded into the wrapped goja.Object.
 func structConstructor(vm *goja.Runtime, call goja.ConstructorCall, instance any) *goja.Object {
+	data, _ := call.Argument(0).Export().(map[string]any)
+
+	instanceValue := vm.ToValue(instance).(*goja.Object)
+	for k, v := range data {
+		instanceValue.Set(k, v)
+	}
+
+	instanceValue.SetPrototype(call.This.Prototype())
+
+	return instanceValue
+}
+
+// structConstructorUnmarshal wraps the provided struct with a native JS constructor.
+//
+// The constructor first argument will be loaded via json.Unmarshal into the instance.
+func structConstructorUnmarshal(vm *goja.Runtime, call goja.ConstructorCall, instance any) *goja.Object {
 	if data := call.Argument(0).Export(); data != nil {
 		if raw, err := json.Marshal(data); err == nil {
 			json.Unmarshal(raw, instance)
@@ -459,4 +469,43 @@ func newDynamicModel(shape map[string]any) any {
 	}
 
 	return elem.Addr().Interface()
+}
+
+func loadMapFields(data any, instance any) error {
+	if reflect.TypeOf(data).Kind() != reflect.Map {
+		return errors.New("data must be map")
+	}
+
+	if reflect.TypeOf(instance).Kind() != reflect.Pointer {
+		return errors.New("instance must be pointer")
+	}
+
+	iv := reflect.ValueOf(instance).Elem()
+	if iv.Kind() != reflect.Struct {
+		return errors.New("value must be a pointer to a struct/interface")
+	}
+
+	dv := reflect.ValueOf(data)
+
+	for _, k := range dv.MapKeys() {
+		name := strings.Title(k.String()) // @todo reverse mapping
+		field := iv.FieldByName(name)
+
+		if !field.CanSet() {
+			continue
+		}
+
+		v := dv.MapIndex(k)
+
+		if !v.CanInterface() {
+			continue
+		}
+
+		// if v.Type().Kind() == reflect.Func {
+		// }
+
+		// field.Set(reflect.ValueOf(v.Interface()))
+	}
+
+	return nil
 }
