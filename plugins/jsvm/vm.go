@@ -455,7 +455,7 @@ func newDynamicModel(shape map[string]any) any {
 		shapeValues = append(shapeValues, reflect.ValueOf(v))
 
 		structFields = append(structFields, reflect.StructField{
-			Name: strings.ToUpper(k), // ensures that the field is exportable
+			Name: strings.Title(k), // ensures that the field is exportable
 			Type: vt,
 			Tag:  reflect.StructTag(`db:"` + k + `" json:"` + k + `"`),
 		})
