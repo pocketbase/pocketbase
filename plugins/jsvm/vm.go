@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
-	"strings"
 
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -35,6 +34,7 @@ import (
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -454,7 +454,7 @@ func newDynamicModel(shape map[string]any) any {
 		shapeValues = append(shapeValues, reflect.ValueOf(v))
 
 		structFields = append(structFields, reflect.StructField{
-			Name: strings.Title(k), // ensures that the field is exportable
+			Name: inflector.UcFirst(k), // ensures that the field is exportable
 			Type: vt,
 			Tag:  reflect.StructTag(`db:"` + k + `" json:"` + k + `" form:"` + k + `"`),
 		})
