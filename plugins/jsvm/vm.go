@@ -18,7 +18,6 @@ package jsvm
 
 import (
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -457,7 +456,7 @@ func newDynamicModel(shape map[string]any) any {
 		structFields = append(structFields, reflect.StructField{
 			Name: strings.Title(k), // ensures that the field is exportable
 			Type: vt,
-			Tag:  reflect.StructTag(`db:"` + k + `" json:"` + k + `"`),
+			Tag:  reflect.StructTag(`db:"` + k + `" json:"` + k + `" form:"` + k + `"`),
 		})
 	}
 
@@ -469,43 +468,4 @@ func newDynamicModel(shape map[string]any) any {
 	}
 
 	return elem.Addr().Interface()
-}
-
-func loadMapFields(data any, instance any) error {
-	if reflect.TypeOf(data).Kind() != reflect.Map {
-		return errors.New("data must be map")
-	}
-
-	if reflect.TypeOf(instance).Kind() != reflect.Pointer {
-		return errors.New("instance must be pointer")
-	}
-
-	iv := reflect.ValueOf(instance).Elem()
-	if iv.Kind() != reflect.Struct {
-		return errors.New("value must be a pointer to a struct/interface")
-	}
-
-	dv := reflect.ValueOf(data)
-
-	for _, k := range dv.MapKeys() {
-		name := strings.Title(k.String()) // @todo reverse mapping
-		field := iv.FieldByName(name)
-
-		if !field.CanSet() {
-			continue
-		}
-
-		v := dv.MapIndex(k)
-
-		if !v.CanInterface() {
-			continue
-		}
-
-		// if v.Type().Kind() == reflect.Func {
-		// }
-
-		// field.Set(reflect.ValueOf(v.Interface()))
-	}
-
-	return nil
 }
