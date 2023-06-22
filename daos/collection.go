@@ -189,6 +189,8 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 				return err
 			}
 		default:
+			isNew := collection.IsNew()
+
 			// persist the collection model
 			if err := txDao.Save(collection); err != nil {
 				return err
@@ -197,6 +199,16 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 			// sync the changes with the related records table
 			if err := txDao.SyncRecordTableSchema(collection, oldCollection); err != nil {
 				return err
+			}
+
+			// create default record for singleton collection
+			if isNew && collection.IsSingleton() {
+				record := models.NewRecord(collection)
+				record.Set("id", "default")
+
+				if err := txDao.SaveRecord(record); err != nil {
+					return err
+				}
 			}
 		}
 

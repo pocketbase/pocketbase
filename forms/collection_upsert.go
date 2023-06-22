@@ -121,6 +121,7 @@ func (form *CollectionUpsert) Validate() error {
 				models.CollectionTypeBase,
 				models.CollectionTypeAuth,
 				models.CollectionTypeView,
+				models.CollectionTypeSingleton,
 			),
 			validation.By(form.ensureNoTypeChange),
 		),

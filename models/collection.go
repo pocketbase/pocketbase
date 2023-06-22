@@ -18,6 +18,7 @@ const (
 	CollectionTypeBase = "base"
 	CollectionTypeAuth = "auth"
 	CollectionTypeView = "view"
+	CollectionTypeSingleton = "singleton"
 )
 
 type Collection struct {
@@ -62,6 +63,11 @@ func (m *Collection) IsAuth() bool {
 // IsView checks if the current collection has "view" type.
 func (m *Collection) IsView() bool {
 	return m.Type == CollectionTypeView
+}
+
+// IsSingleton checks if the current collection has "singleton" type.
+func (m *Collection) IsSingleton() bool {
+	return m.Type == CollectionTypeSingleton
 }
 
 // MarshalJSON implements the [json.Marshaler] interface.
