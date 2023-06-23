@@ -32,6 +32,11 @@ export default [
         optionsComponent: MicrosoftOptions,
     },
     {
+        key:   "yandexAuth",
+        title: "Yandex",
+        logo:  "yandex.svg",
+    },
+    {
         key:   "facebookAuth",
         title: "Facebook",
         logo:  "facebook.svg",

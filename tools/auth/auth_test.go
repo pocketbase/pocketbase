@@ -198,4 +198,13 @@ func TestNewProviderByName(t *testing.T) {
 	if _, ok := p.(*auth.VK); !ok {
 		t.Error("Expected to be instance of *auth.VK")
 	}
+
+	// yandex
+	p, err = auth.NewProviderByName(auth.NameYandex)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Yandex); !ok {
+		t.Error("Expected to be instance of *auth.yandex")
+	}
 }
