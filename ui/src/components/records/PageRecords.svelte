@@ -19,6 +19,7 @@
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordPreviewPanel from "@/components/records/RecordPreviewPanel.svelte";
     import RecordsList from "@/components/records/RecordsList.svelte";
+    import RecordSingleton from "./RecordSingleton.svelte";
 
     const queryParams = new URLSearchParams($querystring);
 
@@ -149,7 +150,9 @@
                     </button>
                 {/if}
 
-                <RefreshButton on:refresh={() => recordsList?.load()} />
+                {#if $activeCollection.type !== "singleton"}
+                    <RefreshButton on:refresh={() => recordsList?.load()} />
+                {/if}
             </div>
 
             <div class="btns-group">
@@ -162,7 +165,7 @@
                     <span class="txt">API Preview</span>
                 </button>
 
-                {#if !$activeCollection.$isView}
+                {#if !$activeCollection.$isView && $activeCollection.type !== "singleton"}
                     <button type="button" class="btn btn-expanded" on:click={() => recordUpsertPanel?.show()}>
                         <i class="ri-add-line" />
                         <span class="txt">New record</span>
@@ -171,25 +174,31 @@
             </div>
         </header>
 
-        <Searchbar
-            value={filter}
-            autocompleteCollection={$activeCollection}
-            on:submit={(e) => (filter = e.detail)}
-        />
-        <div class="clearfix m-b-base" />
+        {#if $activeCollection.type !== "singleton"}
+            <Searchbar
+                value={filter}
+                autocompleteCollection={$activeCollection}
+                on:submit={(e) => (filter = e.detail)}
+            />
+            <div class="clearfix m-b-base" />
+        {/if}
 
-        <RecordsList
-            bind:this={recordsList}
-            collection={$activeCollection}
-            bind:filter
-            bind:sort
-            on:select={(e) => {
-                $activeCollection.$isView
-                    ? recordPreviewPanel.show(e?.detail)
-                    : recordUpsertPanel?.show(e?.detail);
-            }}
-            on:new={() => recordUpsertPanel?.show()}
-        />
+        {#if $activeCollection.type === "singleton"}
+            <RecordSingleton collection={$activeCollection} />
+        {:else}
+            <RecordsList
+                bind:this={recordsList}
+                collection={$activeCollection}
+                bind:filter
+                bind:sort
+                on:select={(e) => {
+                    $activeCollection.$isView
+                        ? recordPreviewPanel.show(e?.detail)
+                        : recordUpsertPanel?.show(e?.detail);
+                }}
+                on:new={() => recordUpsertPanel?.show()}
+            />
+        {/if}
     </PageWrapper>
 {/if}
 

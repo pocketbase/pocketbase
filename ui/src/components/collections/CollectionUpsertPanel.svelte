@@ -25,11 +25,13 @@
     const TYPE_BASE = "base";
     const TYPE_AUTH = "auth";
     const TYPE_VIEW = "view";
+    const TYPE_SINGLETON = "singleton";
 
     const collectionTypes = {};
     collectionTypes[TYPE_BASE] = "Base";
     collectionTypes[TYPE_VIEW] = "View";
     collectionTypes[TYPE_AUTH] = "Auth";
+    collectionTypes[TYPE_SINGLETON] = "Singleton";
 
     const dispatch = createEventDispatcher();
 

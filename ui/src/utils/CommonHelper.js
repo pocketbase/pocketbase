@@ -1066,6 +1066,8 @@ export default class CommonHelper {
                 return "ri-group-line";
             case "view":
                 return "ri-table-line";
+            case "singleton":
+                return "ri-article-line";
             default:
                 return "ri-folder-2-line";
         }

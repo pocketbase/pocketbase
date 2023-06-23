@@ -81,23 +81,27 @@
 <RuleField label="View rule" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
 {#if !collection?.$isView}
-    <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule}>
-        <svelte:fragment slot="afterLabel" let:isAdminOnly>
-            {#if !isAdminOnly}
-                <i
-                    class="ri-information-line link-hint"
-                    use:tooltip={{
-                        text: `The Create rule is executed after a "dry save" of the submitted data, giving you access to the main record fields as in every other rule.`,
-                        position: "top",
-                    }}
-                />
-            {/if}
-        </svelte:fragment>
-    </RuleField>
+    {#if collection.type !== "singleton"}
+        <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule}>
+            <svelte:fragment slot="afterLabel" let:isAdminOnly>
+                {#if !isAdminOnly}
+                    <i
+                        class="ri-information-line link-hint"
+                        use:tooltip={{
+                            text: `The Create rule is executed after a "dry save" of the submitted data, giving you access to the main record fields as in every other rule.`,
+                            position: "top",
+                        }}
+                    />
+                {/if}
+            </svelte:fragment>
+        </RuleField>
+    {/if}
 
     <RuleField label="Update rule" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
 
-    <RuleField label="Delete rule" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
+    {#if collection.type !== "singleton"}
+        <RuleField label="Delete rule" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
+    {/if}
 {/if}
 
 {#if collection?.$isAuth}
