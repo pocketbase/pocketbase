@@ -244,9 +244,28 @@ declare class ApiError implements apis.ApiError {
   constructor(status?: number, message?: string, data?: any)
 }
 
+interface NotFoundError extends apis.NotFoundError{} // merge
+declare class NotFoundError implements apis.NotFoundError {
+  constructor(message?: string, data?: any)
+}
+
+interface BadRequestError extends apis.BadRequestError{} // merge
+declare class BadRequestError implements apis.BadRequestError {
+  constructor(message?: string, data?: any)
+}
+
+interface ForbiddenError extends apis.ForbiddenError{} // merge
+declare class ForbiddenError implements apis.ForbiddenError {
+  constructor(message?: string, data?: any)
+}
+
+interface UnauthorizedError extends apis.UnauthorizedError{} // merge
+declare class UnauthorizedError implements apis.UnauthorizedError {
+  constructor(message?: string, data?: any)
+}
+
 declare namespace $apis {
   let requireRecordAuth:            apis.requireRecordAuth
-  let requireSameContextRecordAuth: apis.requireSameContextRecordAuth
   let requireAdminAuth:             apis.requireAdminAuth
   let requireAdminAuthOnlyIfAny:    apis.requireAdminAuthOnlyIfAny
   let requireAdminOrRecordAuth:     apis.requireAdminOrRecordAuth
@@ -256,10 +275,6 @@ declare namespace $apis {
   let recordAuthResponse:           apis.recordAuthResponse
   let enrichRecord:                 apis.enrichRecord
   let enrichRecords:                apis.enrichRecords
-  let notFoundError:                apis.newNotFoundError
-  let badRequestError:              apis.newBadRequestError
-  let forbiddenError:               apis.newForbiddenError
-  let unauthorizedError:            apis.newUnauthorizedError
 }
 `
 

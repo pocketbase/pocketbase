@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"mime/multipart"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
@@ -17,6 +19,19 @@ import (
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
+
+func testBindsCount(vm *goja.Runtime, namespace string, count int, t *testing.T) {
+	v, err := vm.RunString(`Object.keys(` + namespace + `).length`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	total, _ := v.Export().(int64)
+
+	if int(total) != count {
+		t.Fatalf("Expected %d %s binds, got %d", count, namespace, total)
+	}
+}
 
 // note: this test is useful as a reminder to update the tests in case
 // a new base binding is added.
@@ -624,16 +639,105 @@ func TestFormsBinds(t *testing.T) {
 	testBindsCount(vm, "this", 20, t)
 }
 
-func testBindsCount(vm *goja.Runtime, namespace string, count int, t *testing.T) {
-	v, err := vm.RunString(`Object.keys(` + namespace + `).length`)
+func TestApisBindsCount(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	apisBinds(vm)
+
+	testBindsCount(vm, "this", 7, t)
+	testBindsCount(vm, "$apis", 10, t)
+}
+
+func TestApisBindsRoute(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	baseBinds(vm)
+	apisBinds(vm)
+
+	_, err := vm.RunString(`
+		let handlerCalls = 0;
+
+		const route = new Route({
+			method: "test_method",
+			path: "test_path",
+			handler: () => {
+				handlerCalls++;
+			}
+		});
+
+		route.handler();
+
+		if (handlerCalls != 1) {
+			throw new Error('Expected handlerCalls 1, got ' + handlerCalls);
+		}
+
+		if (route.method != "test_method") {
+			throw new Error('Expected method "test_method", got ' + route.method);
+		}
+
+		if (route.path != "test_path") {
+			throw new Error('Expected method "test_path", got ' + route.path);
+		}
+	`)
 	if err != nil {
 		t.Fatal(err)
 	}
+}
 
-	total, _ := v.Export().(int64)
+func TestApisBindsApiError(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
 
-	if int(total) != count {
-		t.Fatalf("Expected %d %s binds, got %d", count, namespace, total)
+	vm := goja.New()
+	apisBinds(vm)
+
+	scenarios := []struct {
+		js            string
+		expectCode    int
+		expectMessage string
+		expectData    string
+	}{
+		{"new ApiError()", 0, "", "null"},
+		{"new ApiError(100, 'test', {'test': 1})", 100, "Test.", `{"test":1}`},
+		{"new NotFoundError()", 404, "The requested resource wasn't found.", "null"},
+		{"new NotFoundError('test', {'test': 1})", 404, "Test.", `{"test":1}`},
+		{"new BadRequestError()", 400, "Something went wrong while processing your request.", "null"},
+		{"new BadRequestError('test', {'test': 1})", 400, "Test.", `{"test":1}`},
+		{"new ForbiddenError()", 403, "You are not allowed to perform this request.", "null"},
+		{"new ForbiddenError('test', {'test': 1})", 403, "Test.", `{"test":1}`},
+		{"new UnauthorizedError()", 401, "Missing or invalid authentication token.", "null"},
+		{"new UnauthorizedError('test', {'test': 1})", 401, "Test.", `{"test":1}`},
+	}
+
+	for _, s := range scenarios {
+		v, err := vm.RunString(s.js)
+		if err != nil {
+			t.Errorf("[%s] %v", s.js, err)
+			continue
+		}
+
+		apiErr, ok := v.Export().(*apis.ApiError)
+		if !ok {
+			t.Errorf("[%s] Expected ApiError, got %v", s.js, v)
+			continue
+		}
+
+		if apiErr.Code != s.expectCode {
+			t.Errorf("[%s] Expected Code %d, got %d", s.js, s.expectCode, apiErr.Code)
+		}
+
+		if !strings.Contains(apiErr.Message, s.expectMessage) {
+			t.Errorf("[%s] Expected Message %q, got %q", s.js, s.expectMessage, apiErr.Message)
+		}
+
+		dataRaw, _ := json.Marshal(apiErr.RawData())
+		if string(dataRaw) != s.expectData {
+			t.Errorf("[%s] Expected Data %q, got %q", s.js, s.expectData, dataRaw)
+		}
 	}
 }
 

@@ -261,10 +261,14 @@ func formsBinds(vm *goja.Runtime) {
 	registerFactoryAsConstructor(vm, "TestS3FilesystemForm", forms.NewTestS3Filesystem)
 }
 
-// @todo add tests
 func apisBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$apis", obj)
+
+	vm.Set("Route", func(call goja.ConstructorCall) *goja.Object {
+		instance := &echo.Route{}
+		return structConstructor(vm, call, instance)
+	})
 
 	// middlewares
 	obj.Set("requireRecordAuth", apis.RequireRecordAuth)
@@ -281,42 +285,42 @@ func apisBinds(vm *goja.Runtime) {
 	obj.Set("enrichRecords", apis.EnrichRecords)
 
 	// api errors
-	vm.Set("ApiError", func(call goja.ConstructorCall) *goja.Object {
-		status, _ := call.Argument(0).Export().(int64)
-		message, _ := call.Argument(1).Export().(string)
-		data := call.Argument(2).Export()
-
-		instance := apis.NewApiError(int(status), message, data)
-		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
-
-		return instanceValue
-	})
-	obj.Set("notFoundError", apis.NewNotFoundError)
-	obj.Set("badRequestError", apis.NewBadRequestError)
-	obj.Set("forbiddenError", apis.NewForbiddenError)
-	obj.Set("unauthorizedError", apis.NewUnauthorizedError)
-
-	vm.Set("Route", func(call goja.ConstructorCall) *goja.Object {
-		instance := &echo.Route{}
-		return structConstructor(vm, call, instance)
-	})
+	registerFactoryAsConstructor(vm, "ApiError", apis.NewApiError)
+	registerFactoryAsConstructor(vm, "NotFoundError", apis.NewNotFoundError)
+	registerFactoryAsConstructor(vm, "BadRequestError", apis.NewBadRequestError)
+	registerFactoryAsConstructor(vm, "ForbiddenError", apis.NewForbiddenError)
+	registerFactoryAsConstructor(vm, "UnauthorizedError", apis.NewUnauthorizedError)
 }
 
 // -------------------------------------------------------------------
 
 // registerFactoryAsConstructor registers the factory function as native JS constructor.
+//
+// If there is missing or nil arguments, their type zero value is used.
 func registerFactoryAsConstructor(vm *goja.Runtime, constructorName string, factoryFunc any) {
+	rv := reflect.ValueOf(factoryFunc)
+	rt := reflect.TypeOf(factoryFunc)
+	totalArgs := rt.NumIn()
+
 	vm.Set(constructorName, func(call goja.ConstructorCall) *goja.Object {
-		f := reflect.ValueOf(factoryFunc)
+		args := make([]reflect.Value, totalArgs)
 
-		args := []reflect.Value{}
+		for i := 0; i < totalArgs; i++ {
+			v := call.Argument(i).Export()
 
-		for _, v := range call.Arguments {
-			args = append(args, reflect.ValueOf(v.Export()))
+			// use the arg type zero value
+			if v == nil {
+				args[i] = reflect.New(rt.In(i)).Elem()
+			} else if number, ok := v.(int64); ok {
+				// goja uses int64 for "int"-like numbers but we rarely do that and use int most of the times
+				// (at later stage we can use reflection on the arguments to validate the types in case this is not sufficient anymore)
+				args[i] = reflect.ValueOf(int(number))
+			} else {
+				args[i] = reflect.ValueOf(v)
+			}
 		}
 
-		result := f.Call(args)
+		result := rv.Call(args)
 
 		if len(result) != 1 {
 			panic("the factory function should return only 1 item")
