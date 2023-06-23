@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"mime/multipart"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/dop251/goja"
@@ -730,7 +729,7 @@ func TestApisBindsApiError(t *testing.T) {
 			t.Errorf("[%s] Expected Code %d, got %d", s.js, s.expectCode, apiErr.Code)
 		}
 
-		if !strings.Contains(apiErr.Message, s.expectMessage) {
+		if apiErr.Message != s.expectMessage {
 			t.Errorf("[%s] Expected Message %q, got %q", s.js, s.expectMessage, apiErr.Message)
 		}
 
