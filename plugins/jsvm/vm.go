@@ -261,13 +261,13 @@ func formsBinds(vm *goja.Runtime) {
 	registerFactoryAsConstructor(vm, "TestS3FilesystemForm", forms.NewTestS3Filesystem)
 }
 
+// @todo add tests
 func apisBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$apis", obj)
 
 	// middlewares
 	obj.Set("requireRecordAuth", apis.RequireRecordAuth)
-	obj.Set("requireSameContextRecordAuth", apis.RequireSameContextRecordAuth)
 	obj.Set("requireAdminAuth", apis.RequireAdminAuth)
 	obj.Set("requireAdminAuthOnlyIfAny", apis.RequireAdminAuthOnlyIfAny)
 	obj.Set("requireAdminOrRecordAuth", apis.RequireAdminOrRecordAuth)
