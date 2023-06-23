@@ -9,8 +9,9 @@ import (
 // RequestData defines a HTTP request data struct, usually used
 // as part of the `@request.*` filter resolver.
 type RequestData struct {
-	Method     string         `json:"method"`
-	Query      map[string]any `json:"query"`
+	Method string         `json:"method"`
+	Query  map[string]any `json:"query"`
+	// @todo consider changing to Body?
 	Data       map[string]any `json:"data"`
 	Headers    map[string]any `json:"headers"`
 	AuthRecord *Record        `json:"authRecord"`
