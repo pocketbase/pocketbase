@@ -16,6 +16,39 @@ const heading = `
 
 declare var $app: pocketbase.PocketBase
 
+/**
+ * $arrayOf creates a placeholder array of the specified models.
+ * Usually used to populate DB result into an array of models.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * const records = $arrayOf(new Record)
+ *
+ * $app.dao().recordQuery(collection).limit(10).all(records)
+ * ` + "```" + `
+ */
+declare function $arrayOf<T>(model: T): Array<T>;
+
+/**
+ * DynamicModel creates a new dynamic model with fields from the provided data shape.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * const model = new DynamicModel({
+ *     name:  ""
+ *     age:    0,
+ *     active: false,
+ *     roles:  [],
+ *     meta:   {}
+ * })
+ * ` + "```" + `
+ */
+declare class DynamicModel {
+  constructor(shape?: { [key:string]: any })
+}
+
 interface Record extends models.Record{} // merge
 declare class Record implements models.Record {
   constructor(collection?: models.Collection, data?: { [key:string]: any })
@@ -244,23 +277,23 @@ declare class ApiError implements apis.ApiError {
   constructor(status?: number, message?: string, data?: any)
 }
 
-interface NotFoundError extends apis.NotFoundError{} // merge
-declare class NotFoundError implements apis.NotFoundError {
+interface NotFoundError extends apis.ApiError{} // merge
+declare class NotFoundError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 
-interface BadRequestError extends apis.BadRequestError{} // merge
-declare class BadRequestError implements apis.BadRequestError {
+interface BadRequestError extends apis.ApiError{} // merge
+declare class BadRequestError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 
-interface ForbiddenError extends apis.ForbiddenError{} // merge
-declare class ForbiddenError implements apis.ForbiddenError {
+interface ForbiddenError extends apis.ApiError{} // merge
+declare class ForbiddenError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 
-interface UnauthorizedError extends apis.UnauthorizedError{} // merge
-declare class UnauthorizedError implements apis.UnauthorizedError {
+interface UnauthorizedError extends apis.ApiError{} // merge
+declare class UnauthorizedError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 

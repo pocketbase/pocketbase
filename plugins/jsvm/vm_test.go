@@ -91,7 +91,7 @@ func TestBaseBindsCollection(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	v, err := vm.RunString(`new Collection({ name: "test", schema: [{name: "title", "type": "text"}] })`)
+	v, err := vm.RunString(`new Collection({ name: "test", createRule: "@request.auth.id != ''", schema: [{name: "title", "type": "text"}] })`)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,6 +103,11 @@ func TestBaseBindsCollection(t *testing.T) {
 
 	if m.Name != "test" {
 		t.Fatalf("Expected collection with name %q, got %q", "test", m.Name)
+	}
+
+	expectedRule := "@request.auth.id != ''"
+	if m.CreateRule == nil || *m.CreateRule != expectedRule {
+		t.Fatalf("Expected create rule %q, got %v", "@request.auth.id != ''", m.CreateRule)
 	}
 
 	if f := m.Schema.GetFieldByName("title"); f == nil {
@@ -796,7 +801,7 @@ func TestLoadingDynamicModel(t *testing.T) {
 	}
 }
 
-func TestLoadingDynamicList(t *testing.T) {
+func TestLoadingArrayOf(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -806,10 +811,10 @@ func TestLoadingDynamicList(t *testing.T) {
 	vm.Set("$app", app)
 
 	_, err := vm.RunString(`
-		let result = new DynamicList({
+		let result = $arrayOf(new DynamicModel({
 			id:   "",
 			text: "",
-		})
+		}))
 
 		$app.dao().db()
 		    .select("id", "text")

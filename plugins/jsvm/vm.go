@@ -67,6 +67,14 @@ func baseBinds(vm *goja.Runtime) {
 		}
 	`)
 
+	vm.Set("$arrayOf", func(model any) any {
+		mt := reflect.TypeOf(model)
+		st := reflect.SliceOf(mt)
+		elem := reflect.New(st).Elem()
+
+		return elem.Addr().Interface()
+	})
+
 	vm.Set("DynamicModel", func(call goja.ConstructorCall) *goja.Object {
 		shape, ok := call.Argument(0).Export().(map[string]any)
 		if !ok || len(shape) == 0 {
@@ -74,19 +82,6 @@ func baseBinds(vm *goja.Runtime) {
 		}
 
 		instance := newDynamicModel(shape)
-		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
-
-		return instanceValue
-	})
-
-	vm.Set("DynamicList", func(call goja.ConstructorCall) *goja.Object {
-		shape, ok := call.Argument(0).Export().(map[string]any)
-		if !ok || len(shape) == 0 {
-			panic("missing shape data")
-		}
-
-		instance := newDynamicList(shape)
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())
 
@@ -404,24 +399,6 @@ func filesContent(dirPath string, pattern string) (map[string][]byte, error) {
 	}
 
 	return result, nil
-}
-
-// newDynamicList creates a new dynamic slice of structs with fields based
-// on the specified "shape".
-//
-// Example:
-//
-//	m := newDynamicList(map[string]any{
-//		"title": "",
-//		"total": 0,
-//	})
-func newDynamicList(shape map[string]any) any {
-	m := newDynamicModel(shape)
-	mt := reflect.TypeOf(m)
-	st := reflect.SliceOf(mt)
-	elem := reflect.New(st).Elem()
-
-	return elem.Addr().Interface()
 }
 
 // newDynamicModel creates a new dynamic struct with fields based
