@@ -62,15 +62,16 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 			action = "updated_" + old.Name
 		}
 
-		appliedTime := time.Now().Unix()
-		name := fmt.Sprintf("%d_%s.%s", appliedTime, action, p.config.TemplateLang)
+		name := fmt.Sprintf("%d_%s.%s", time.Now().Unix(), action, p.config.TemplateLang)
 		filePath := filepath.Join(p.config.Dir, name)
 
 		return p.app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
 			// insert the migration entry
 			_, err := txDao.DB().Insert(migrate.DefaultMigrationsTable, dbx.Params{
-				"file":    name,
-				"applied": appliedTime,
+				"file": name,
+				// use microseconds for more granular applied time in case
+				// multiple collection changes happens at the ~exact time
+				"applied": time.Now().UnixMicro(),
 			}).Execute()
 			if err != nil {
 				return err
