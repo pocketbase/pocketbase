@@ -113,6 +113,8 @@ func bindFormData(c echo.Context, i interface{}) error {
 // - any other string (empty string too) is left as it is
 func normalizeMultipartValue(raw string) any {
 	switch raw {
+	case "":
+		return raw
 	case "true":
 		return true
 	case "false":
