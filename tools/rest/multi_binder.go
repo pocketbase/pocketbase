@@ -92,7 +92,7 @@ func bindFormData(c echo.Context, i interface{}) error {
 			} else {
 				normalized := make([]any, total)
 				for i, vItem := range v {
-					normalized[i] = vItem
+					normalized[i] = normalizeMultipartValue(vItem)
 				}
 				rv.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(normalized))
 			}
