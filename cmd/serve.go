@@ -15,7 +15,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	var allowedOrigins []string
 	var httpAddr string
 	var httpsAddr string
-	var tlsDomain string
+	var tlsDomains string
 
 	command := &cobra.Command{
 		Use:   "serve",
@@ -24,7 +24,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 			err := apis.Serve(app, &apis.ServeOptions{
 				HttpAddr:        httpAddr,
 				HttpsAddr:       httpsAddr,
-				TlsDomain:       tlsDomain,
+				TlsDomains:      tlsDomains,
 				ShowStartBanner: showStartBanner,
 				AllowedOrigins:  allowedOrigins,
 			})
@@ -57,10 +57,10 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	)
 
 	command.PersistentFlags().StringVar(
-		&tlsDomain,
-		"tlsDomain",
+		&tlsDomains,
+		"tlsDomains",
 		"",
-		"domain name for TLS certificate (auto TLS via Let's Encrypt)",
+		"comma separated fully qualified domain names\n(facilitates Let's Encrypt domain verification when behind NAT)",
 	)
 
 	return command

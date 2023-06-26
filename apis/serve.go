@@ -26,7 +26,7 @@ type ServeOptions struct {
 	ShowStartBanner bool
 	HttpAddr        string
 	HttpsAddr       string
-	TlsDomain       string
+	TlsDomains      string
 	AllowedOrigins  []string // optional list of CORS origins (default to "*")
 	BeforeServeFunc func(server *http.Server) error
 }
@@ -76,9 +76,14 @@ func Serve(app core.App, options *ServeOptions) error {
 
 	mainHost, _, _ := net.SplitHostPort(mainAddr)
 
-	hostWhitelist := []string{mainHost, "www." + mainHost}
-	if options.TlsDomain != "" {
-		hostWhitelist = append(hostWhitelist, options.TlsDomain)
+	hostWhitelist := []string{mainHost}
+	if options.TlsDomains != "" {
+		tlsDomainsSplit := strings.Split(options.TlsDomains, ",")
+		hostWhitelist = append(hostWhitelist, tlsDomainsSplit...)
+	}
+
+	for _, host := range hostWhitelist {
+		hostWhitelist = append(hostWhitelist, "www."+host)
 	}
 
 	certManager := autocert.Manager{
