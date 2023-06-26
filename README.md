@@ -146,9 +146,9 @@ You could help continuing its development by:
 - [Suggest new features and report issues](https://github.com/pocketbase/pocketbase/issues)
 - [Donate a small amount](https://pocketbase.io/support-us)
 
-PRs for _small features_ (eg. adding new OAuth2 providers), bug and documentation fixes, etc. are more than welcome.
+PRs for _small features_ (eg. adding new OAuth2 providers), bug fixes, code and documentation improvements are more than welcome.
 
-But please refrain creating PRs for _big features_ without previously discussing the implementation details. Reviewing big PRs often requires a lot of time and tedious back-and-forth communication.
+But please refrain creating PRs for _new features_ without previously discussing the implementation details. Reviewing big PRs often requires a lot of time and tedious back-and-forth communication.
 PocketBase has a [roadmap](https://github.com/orgs/pocketbase/projects/2)
 and I try to work on issues in a specific order and such PRs often come in out of nowhere and skew all initial planning.
 
