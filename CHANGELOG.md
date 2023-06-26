@@ -69,11 +69,15 @@
 - Added `types.JsonMap.Get(k)` and `types.JsonMap.Set(k, v)` helpers for the cases where the type aliased direct map access is not allowed (eg. in [goja](https://pkg.go.dev/github.com/dop251/goja#hdr-Maps_with_methods)).
 
 
-## v0.16.6-WIP
+## v0.16.6
 
 - Fixed collection index column sort normalization in the Admin UI ([#2681](https://github.com/pocketbase/pocketbase/pull/2681); thanks @SimonLoir).
 
 - Removed unnecessary admins count in `apis.RequireAdminAuthOnlyIfAny()` middleware ([#2726](https://github.com/pocketbase/pocketbase/pull/2726); thanks @svekko).
+
+- Fixed `multipart/form-data` request bind not populating map array values ([#2763](https://github.com/pocketbase/pocketbase/discussions/2763#discussioncomment-6278902)).
+
+- Upgraded npm and Go dependencies.
 
 
 ## v0.16.5
