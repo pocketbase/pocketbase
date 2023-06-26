@@ -246,7 +246,9 @@ func (r *Runner) lastAppliedMigrations(limit int) ([]string, error) {
 	err := r.db.Select("file").
 		From(r.tableName).
 		Where(dbx.Not(dbx.HashExp{"applied": nil})).
-		OrderBy("applied DESC", "file DESC").
+		// unify microseconds and seconds applied time for backward compatibility
+		OrderBy("substr(applied||'0000000000000000', 0, 17) DESC").
+		AndOrderBy("file DESC").
 		Limit(int64(limit)).
 		Column(&files)
 
