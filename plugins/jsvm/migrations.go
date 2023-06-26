@@ -54,6 +54,7 @@ func RegisterMigrations(app core.App, config MigrationsConfig) error {
 		registry.Enable(vm)
 		console.Enable(vm)
 		process.Enable(vm)
+		baseBinds(vm)
 		dbxBinds(vm)
 		tokensBinds(vm)
 		securityBinds(vm)
