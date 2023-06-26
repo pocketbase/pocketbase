@@ -6,6 +6,8 @@
 
 - Fixed `multipart/form-data` request bind not populating map array values ([#2763](https://github.com/pocketbase/pocketbase/discussions/2763#discussioncomment-6278902)).
 
+- Upgraded Go dependencies.
+
 
 ## v0.16.5
 
