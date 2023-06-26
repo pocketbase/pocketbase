@@ -1,8 +1,10 @@
-## v0.16.6-WIP
+## v0.16.6
 
 - Fixed collection index column sort normalization in the Admin UI ([#2681](https://github.com/pocketbase/pocketbase/pull/2681); thanks @SimonLoir).
 
 - Removed unnecessary admins count in `apis.RequireAdminAuthOnlyIfAny()` middleware ([#2726](https://github.com/pocketbase/pocketbase/pull/2726); thanks @svekko).
+
+- Fixed `multipart/form-data` request bind not populating map array values ([#2763](https://github.com/pocketbase/pocketbase/discussions/2763#discussioncomment-6278902)).
 
 
 ## v0.16.5
