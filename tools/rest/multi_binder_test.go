@@ -43,14 +43,14 @@ func TestBindBody(t *testing.T) {
 				url.Values{
 					"string":  []string{"str"},
 					"stings":  []string{"str1", "str2"},
-					"number":  []string{"123"},
+					"number":  []string{"-123"},
 					"numbers": []string{"123", "456"},
 					"bool":    []string{"true"},
 					"bools":   []string{"true", "false"},
 				}.Encode(),
 			),
 			echo.MIMEApplicationForm,
-			`{"bool":true,"bools":["true","false"],"number":123,"numbers":["123","456"],"stings":["str1","str2"],"string":"str"}`,
+			`{"bool":true,"bools":["true","false"],"number":-123,"numbers":["123","456"],"stings":["str1","str2"],"string":"str"}`,
 			false,
 		},
 	}

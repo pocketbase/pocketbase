@@ -118,7 +118,7 @@ func normalizeMultipartValue(raw string) any {
 	case "false":
 		return false
 	default:
-		if raw[0] >= '0' && raw[0] <= '9' {
+		if raw[0] == '-' || (raw[0] >= '0' && raw[0] <= '9') {
 			if v, err := cast.ToFloat64E(raw); err == nil {
 				return v
 			}
