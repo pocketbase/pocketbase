@@ -58,7 +58,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 
 	command.PersistentFlags().StringVar(
 		&tlsDomain,
-		"tls-domain",
+		"tlsDomain",
 		"",
 		"domain name for TLS certificate (auto TLS via Let's Encrypt)",
 	)
