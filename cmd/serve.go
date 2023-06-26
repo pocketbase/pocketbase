@@ -15,6 +15,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	var allowedOrigins []string
 	var httpAddr string
 	var httpsAddr string
+	var tlsDomain string
 
 	command := &cobra.Command{
 		Use:   "serve",
@@ -23,6 +24,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 			err := apis.Serve(app, &apis.ServeOptions{
 				HttpAddr:        httpAddr,
 				HttpsAddr:       httpsAddr,
+				TlsDomain:       tlsDomain,
 				ShowStartBanner: showStartBanner,
 				AllowedOrigins:  allowedOrigins,
 			})
@@ -52,6 +54,13 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 		"https",
 		"",
 		"api HTTPS server address (auto TLS via Let's Encrypt)\nthe incoming --http address traffic also will be redirected to this address",
+	)
+
+	command.PersistentFlags().StringVar(
+		&tlsDomain,
+		"tls-domain",
+		"",
+		"domain name for TLS certificate (auto TLS via Let's Encrypt)",
 	)
 
 	return command
