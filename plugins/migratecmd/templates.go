@@ -15,6 +15,11 @@ import (
 const (
 	TemplateLangJS = "js"
 	TemplateLangGo = "go"
+
+	// note: this usually should be configurable similar to the jsvm plugin,
+	// but for simplicity is static as users can easily change the
+	// reference path if they use custom dirs structure
+	jsTypesDirective = `/// <reference path="../pb_data/types.d.ts" />` + "\n"
 )
 
 var emptyTemplateErr = errors.New("empty template")
@@ -24,7 +29,7 @@ var emptyTemplateErr = errors.New("empty template")
 // -------------------------------------------------------------------
 
 func (p *plugin) jsBlankTemplate() (string, error) {
-	const template = `migrate((db) => {
+	const template = jsTypesDirective + `migrate((db) => {
   // add up queries...
 }, (db) => {
   // add down queries...
@@ -40,7 +45,7 @@ func (p *plugin) jsSnapshotTemplate(collections []*models.Collection) (string, e
 		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
-	const template = `migrate((db) => {
+	const template = jsTypesDirective + `migrate((db) => {
   const snapshot = %s;
 
   const collections = snapshot.map((item) => new Collection(item));
@@ -60,7 +65,7 @@ func (p *plugin) jsCreateTemplate(collection *models.Collection) (string, error)
 		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
-	const template = `migrate((db) => {
+	const template = jsTypesDirective + `migrate((db) => {
   const collection = new Collection(%s);
 
   return Dao(db).saveCollection(collection);
@@ -81,7 +86,7 @@ func (p *plugin) jsDeleteTemplate(collection *models.Collection) (string, error)
 		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
-	const template = `migrate((db) => {
+	const template = jsTypesDirective + `migrate((db) => {
   const dao = new Dao(db);
   const collection = dao.findCollectionByNameOrId(%q);
 
@@ -294,7 +299,7 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	up := strings.Join(upParts, "\n  ")
 	down := strings.Join(downParts, "\n  ")
 
-	const template = `migrate((db) => {
+	const template = jsTypesDirective + `migrate((db) => {
   const dao = new Dao(db)
   const collection = dao.findCollectionByNameOrId(%q)
 

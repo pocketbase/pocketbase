@@ -22,6 +22,7 @@ func TestAutomigrateCollectionCreate(t *testing.T) {
 		{
 			migratecmd.TemplateLangJS,
 			`
+/// <reference path="../pb_data/types.d.ts" />
 migrate((db) => {
   const collection = new Collection({
     "id": "new_id",
@@ -194,6 +195,7 @@ func TestAutomigrateCollectionDelete(t *testing.T) {
 		{
 			migratecmd.TemplateLangJS,
 			`
+/// <reference path="../pb_data/types.d.ts" />
 migrate((db) => {
   const dao = new Dao(db);
   const collection = dao.findCollectionByNameOrId("test123");
@@ -372,6 +374,7 @@ func TestAutomigrateCollectionUpdate(t *testing.T) {
 		{
 			migratecmd.TemplateLangJS,
 			`
+/// <reference path="../pb_data/types.d.ts" />
 migrate((db) => {
   const dao = new Dao(db)
   const collection = dao.findCollectionByNameOrId("test123")

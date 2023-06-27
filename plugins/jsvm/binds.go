@@ -18,10 +18,7 @@ package jsvm
 
 import (
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"reflect"
-	"regexp"
 
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -358,47 +355,6 @@ func structConstructorUnmarshal(vm *goja.Runtime, call goja.ConstructorCall, ins
 	instanceValue.SetPrototype(call.This.Prototype())
 
 	return instanceValue
-}
-
-// filesContent returns a map with all direct files within the specified dir and their content.
-//
-// If directory with dirPath is missing or no files matching the pattern were found,
-// it returns an empty map and no error.
-//
-// If pattern is empty string it matches all root files.
-func filesContent(dirPath string, pattern string) (map[string][]byte, error) {
-	files, err := os.ReadDir(dirPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return map[string][]byte{}, nil
-		}
-		return nil, err
-	}
-
-	var exp *regexp.Regexp
-	if pattern != "" {
-		var err error
-		if exp, err = regexp.Compile(pattern); err != nil {
-			return nil, err
-		}
-	}
-
-	result := map[string][]byte{}
-
-	for _, f := range files {
-		if f.IsDir() || (exp != nil && !exp.MatchString(f.Name())) {
-			continue
-		}
-
-		raw, err := os.ReadFile(filepath.Join(dirPath, f.Name()))
-		if err != nil {
-			return nil, err
-		}
-
-		result[f.Name()] = raw
-	}
-
-	return result, nil
 }
 
 // newDynamicModel creates a new dynamic struct with fields based

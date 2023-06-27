@@ -84,15 +84,11 @@ func main() {
 	// Plugins and hooks:
 	// ---------------------------------------------------------------
 
-	// load js pb_hooks
-	jsvm.MustRegisterHooks(app, jsvm.HooksConfig{
-		Dir:   hooksDir,
-		Watch: hooksWatch,
-	})
-
-	// load js pb_migrations
-	jsvm.MustRegisterMigrations(app, jsvm.MigrationsConfig{
-		Dir: migrationsDir,
+	// load jsvm (hooks and migrations)
+	jsvm.MustRegister(app, jsvm.Config{
+		MigrationsDir: migrationsDir,
+		HooksDir:      hooksDir,
+		HooksWatch:    hooksWatch,
 	})
 
 	// migrate command (with js templates)

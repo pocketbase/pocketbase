@@ -298,17 +298,31 @@ declare class UnauthorizedError implements apis.ApiError {
 }
 
 declare namespace $apis {
-  let requireRecordAuth:            apis.requireRecordAuth
-  let requireAdminAuth:             apis.requireAdminAuth
-  let requireAdminAuthOnlyIfAny:    apis.requireAdminAuthOnlyIfAny
-  let requireAdminOrRecordAuth:     apis.requireAdminOrRecordAuth
-  let requireAdminOrOwnerAuth:      apis.requireAdminOrOwnerAuth
-  let activityLogger:               apis.activityLogger
-  let requestData:                  apis.requestData
-  let recordAuthResponse:           apis.recordAuthResponse
-  let enrichRecord:                 apis.enrichRecord
-  let enrichRecords:                apis.enrichRecords
+  let requireRecordAuth:         apis.requireRecordAuth
+  let requireAdminAuth:          apis.requireAdminAuth
+  let requireAdminAuthOnlyIfAny: apis.requireAdminAuthOnlyIfAny
+  let requireAdminOrRecordAuth:  apis.requireAdminOrRecordAuth
+  let requireAdminOrOwnerAuth:   apis.requireAdminOrOwnerAuth
+  let activityLogger:            apis.activityLogger
+  let requestData:               apis.requestData
+  let recordAuthResponse:        apis.recordAuthResponse
+  let enrichRecord:              apis.enrichRecord
+  let enrichRecords:             apis.enrichRecords
 }
+
+// -------------------------------------------------------------------
+// migrate only
+// -------------------------------------------------------------------
+
+/**
+ * Migrate defines a single migration upgrade/downgrade action.
+ *
+ * Note that this method is available only in pb_migrations context.
+ */
+declare function migrate(
+  up: (db: dbx.Builder) => void,
+  down?: (db: dbx.Builder) => void
+): void;
 `
 
 func main() {
