@@ -1,19 +1,3 @@
-// Package jsvm implements optional utilities for binding a JS goja runtime
-// to the PocketBase instance (loading migrations, attaching to app hooks, etc.).
-//
-// Currently it provides the following plugins:
-//
-// 1. JS Migrations loader:
-//
-//	jsvm.MustRegisterMigrations(app, jsvm.MigrationsConfig{
-//		Dir: "/custom/js/migrations/dir", // default to "pb_data/../pb_migrations"
-//	})
-//
-// 2. JS app hooks:
-//
-//	jsvm.MustRegisterHooks(app, jsvm.HooksConfig{
-//		Dir: "/custom/js/hooks/dir", // default to "pb_data/../pb_hooks"
-//	})
 package jsvm
 
 import (
@@ -216,9 +200,21 @@ func securityBinds(vm *goja.Runtime) {
 	obj.Set("pseudorandomStringWithAlphabet", security.PseudorandomStringWithAlphabet)
 
 	// jwt
-	obj.Set("parseUnverifiedToken", security.ParseUnverifiedJWT)
-	obj.Set("parseToken", security.ParseJWT)
-	obj.Set("createToken", security.NewToken)
+	obj.Set("parseUnverifiedJWT", security.ParseUnverifiedJWT)
+	obj.Set("parseJWT", security.ParseJWT)
+	obj.Set("createJWT", security.NewJWT)
+
+	// encryption
+	obj.Set("encrypt", security.Encrypt)
+	obj.Set("decrypt", func(cipherText, key string) (string, error) {
+		result, err := security.Decrypt(cipherText, key)
+
+		if err != nil {
+			return "", err
+		}
+
+		return string(result), err
+	})
 }
 
 func filesystemBinds(vm *goja.Runtime) {

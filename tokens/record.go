@@ -15,7 +15,7 @@ func NewRecordAuthToken(app core.App, record *models.Record) (string, error) {
 		return "", errors.New("The record is not from an auth collection.")
 	}
 
-	return security.NewToken(
+	return security.NewJWT(
 		jwt.MapClaims{
 			"id":           record.Id,
 			"type":         TypeAuthRecord,
@@ -32,7 +32,7 @@ func NewRecordVerifyToken(app core.App, record *models.Record) (string, error) {
 		return "", errors.New("The record is not from an auth collection.")
 	}
 
-	return security.NewToken(
+	return security.NewJWT(
 		jwt.MapClaims{
 			"id":           record.Id,
 			"type":         TypeAuthRecord,
@@ -50,7 +50,7 @@ func NewRecordResetPasswordToken(app core.App, record *models.Record) (string, e
 		return "", errors.New("The record is not from an auth collection.")
 	}
 
-	return security.NewToken(
+	return security.NewJWT(
 		jwt.MapClaims{
 			"id":           record.Id,
 			"type":         TypeAuthRecord,
@@ -64,7 +64,7 @@ func NewRecordResetPasswordToken(app core.App, record *models.Record) (string, e
 
 // NewRecordChangeEmailToken generates and returns a new auth record change email request token.
 func NewRecordChangeEmailToken(app core.App, record *models.Record, newEmail string) (string, error) {
-	return security.NewToken(
+	return security.NewJWT(
 		jwt.MapClaims{
 			"id":           record.Id,
 			"type":         TypeAuthRecord,
@@ -83,7 +83,7 @@ func NewRecordFileToken(app core.App, record *models.Record) (string, error) {
 		return "", errors.New("The record is not from an auth collection.")
 	}
 
-	return security.NewToken(
+	return security.NewJWT(
 		jwt.MapClaims{
 			"id":           record.Id,
 			"type":         TypeAuthRecord,

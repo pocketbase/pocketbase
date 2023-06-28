@@ -60,7 +60,6 @@ declare class DynamicModel {
   constructor(shape?: { [key:string]: any })
 }
 
-
 /**
  * Record model class.
  *
@@ -223,6 +222,9 @@ declare class Dao implements daos.Dao {
 // -------------------------------------------------------------------
 
 /**
+ * $dbx defines common utility for working with the DB abstraction.
+ * For examples and guides please check the [Database guide](https://pocketbase.io/docs/js-database).
+ *
  * @group PocketBase
  */
 declare namespace $dbx {
@@ -254,6 +256,11 @@ declare namespace $dbx {
 // -------------------------------------------------------------------
 
 /**
+ * ` + "`" + `$tokens` + "`" + ` defines high level helpers to generate
+ * various admins and auth records tokens (auth, forgotten password, etc.).
+ *
+ * For more control over the generated token, you can check ` + "`" + `$security` + "`" + `.
+ *
  * @group PocketBase
  */
 declare namespace $tokens {
@@ -272,6 +279,9 @@ declare namespace $tokens {
 // -------------------------------------------------------------------
 
 /**
+ * ` + "`" + `$security` + "`" + ` defines low level helpers for creating
+ * and parsing JWTs, random string generation, AES encryption, etc.
+ *
  * @group PocketBase
  */
 declare namespace $security {
@@ -279,9 +289,11 @@ declare namespace $security {
   let randomStringWithAlphabet:       security.randomStringWithAlphabet
   let pseudorandomString:             security.pseudorandomString
   let pseudorandomStringWithAlphabet: security.pseudorandomStringWithAlphabet
-  let parseUnverifiedToken:           security.parseUnverifiedJWT
-  let parseToken:                     security.parseJWT
-  let createToken:                    security.newToken
+  let parseUnverifiedJWT:             security.parseUnverifiedJWT
+  let parseJWT:                       security.parseJWT
+  let createJWT:                      security.newJWT
+  let encrypt:                        security.encrypt
+  let decrypt:                        security.decrypt
 }
 
 // -------------------------------------------------------------------
@@ -289,6 +301,9 @@ declare namespace $security {
 // -------------------------------------------------------------------
 
 /**
+ * ` + "`" + `$filesystem` + "`" + ` defines common helpers for working
+ * with the PocketBase filesystem abstraction.
+ *
  * @group PocketBase
  */
 declare namespace $filesystem {
@@ -506,6 +521,8 @@ declare class Route implements echo.Route {
 
 interface ApiError extends apis.ApiError{} // merge
 /**
+ * @inheritDoc
+ *
  * @group PocketBase
  */
 declare class ApiError implements apis.ApiError {
@@ -514,6 +531,8 @@ declare class ApiError implements apis.ApiError {
 
 interface NotFoundError extends apis.ApiError{} // merge
 /**
+ * NotFounderor returns 404 ApiError.
+ *
  * @group PocketBase
  */
 declare class NotFoundError implements apis.ApiError {
@@ -522,6 +541,8 @@ declare class NotFoundError implements apis.ApiError {
 
 interface BadRequestError extends apis.ApiError{} // merge
 /**
+ * BadRequestError returns 400 ApiError.
+ *
  * @group PocketBase
  */
 declare class BadRequestError implements apis.ApiError {
@@ -530,6 +551,8 @@ declare class BadRequestError implements apis.ApiError {
 
 interface ForbiddenError extends apis.ApiError{} // merge
 /**
+ * ForbiddenError returns 403 ApiError.
+ *
  * @group PocketBase
  */
 declare class ForbiddenError implements apis.ApiError {
@@ -538,6 +561,8 @@ declare class ForbiddenError implements apis.ApiError {
 
 interface UnauthorizedError extends apis.ApiError{} // merge
 /**
+ * UnauthorizedError returns 401 ApiError.
+ *
  * @group PocketBase
  */
 declare class UnauthorizedError implements apis.ApiError {
@@ -545,6 +570,8 @@ declare class UnauthorizedError implements apis.ApiError {
 }
 
 /**
+ * ` + "`" + `$apis` + "`" + ` defines commonly used PocketBase api helpers and middlewares.
+ *
  * @group PocketBase
  */
 declare namespace $apis {

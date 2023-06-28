@@ -71,6 +71,8 @@
 
 - Fixed `migrate down` not returning the correct `lastAppliedMigrations()` when the stored migration applied time is in seconds.
 
+- Soft-deprecated `security.NewToken()` in favor of `security.NewJWT()`.
+
 
 ## v0.16.6
 

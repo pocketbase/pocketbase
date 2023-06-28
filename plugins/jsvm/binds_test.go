@@ -430,6 +430,13 @@ func TestDbxBinds(t *testing.T) {
 	}
 }
 
+func TestTokensBindsCount(t *testing.T) {
+	vm := goja.New()
+	tokensBinds(vm)
+
+	testBindsCount(vm, "$tokens", 8, t)
+}
+
 func TestTokensBinds(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -450,8 +457,6 @@ func TestTokensBinds(t *testing.T) {
 	vm.Set("record", record)
 	baseBinds(vm)
 	tokensBinds(vm)
-
-	testBindsCount(vm, "$tokens", 8, t)
 
 	sceneraios := []struct {
 		js  string
@@ -505,6 +510,13 @@ func TestTokensBinds(t *testing.T) {
 	}
 }
 
+func TestSecurityBindsCount(t *testing.T) {
+	vm := goja.New()
+	securityBinds(vm)
+
+	testBindsCount(vm, "$security", 9, t)
+}
+
 func TestSecurityRandomStringBinds(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -512,8 +524,6 @@ func TestSecurityRandomStringBinds(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 	securityBinds(vm)
-
-	testBindsCount(vm, "$security", 7, t)
 
 	sceneraios := []struct {
 		js     string
@@ -539,7 +549,7 @@ func TestSecurityRandomStringBinds(t *testing.T) {
 	}
 }
 
-func TestSecurityTokenBinds(t *testing.T) {
+func TestSecurityJWTBinds(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -547,22 +557,20 @@ func TestSecurityTokenBinds(t *testing.T) {
 	baseBinds(vm)
 	securityBinds(vm)
 
-	testBindsCount(vm, "$security", 7, t)
-
 	sceneraios := []struct {
 		js       string
 		expected string
 	}{
 		{
-			`$security.parseUnverifiedToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.aXzC7q7z1lX_hxk5P0R368xEU7H1xRwnBQQcLAmG0EY")`,
+			`$security.parseUnverifiedJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.aXzC7q7z1lX_hxk5P0R368xEU7H1xRwnBQQcLAmG0EY")`,
 			`{"name":"John Doe","sub":"1234567890"}`,
 		},
 		{
-			`$security.parseToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.aXzC7q7z1lX_hxk5P0R368xEU7H1xRwnBQQcLAmG0EY", "test")`,
+			`$security.parseJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.aXzC7q7z1lX_hxk5P0R368xEU7H1xRwnBQQcLAmG0EY", "test")`,
 			`{"name":"John Doe","sub":"1234567890"}`,
 		},
 		{
-			`$security.createToken({"exp": 123}, "test", 0)`, // overwrite the exp claim for static token
+			`$security.createJWT({"exp": 123}, "test", 0)`, // overwrite the exp claim for static token
 			`"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjEyM30.7gbv7w672gApdBRASI6OniCtKwkKjhieSxsr6vxSrtw"`,
 		},
 	}
@@ -578,6 +586,30 @@ func TestSecurityTokenBinds(t *testing.T) {
 		if string(raw) != s.expected {
 			t.Fatalf("[%s] Expected \n%s, \ngot \n%s", s.js, s.expected, raw)
 		}
+	}
+}
+
+func TestSecurityEncryptAndDecryptBinds(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	baseBinds(vm)
+	securityBinds(vm)
+
+	_, err := vm.RunString(`
+		const key = "abcdabcdabcdabcdabcdabcdabcdabcd"
+
+		const encrypted = $security.encrypt("123", key)
+
+		const decrypted = $security.decrypt(encrypted, key)
+
+		if (decrypted != "123") {
+			throw new Error("Expected decrypted '123', got " + decrypted)
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 

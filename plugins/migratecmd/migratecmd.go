@@ -12,7 +12,7 @@
 //	})
 //
 //	Note: To allow running JS migrations you'll need to enable first
-//	[jsvm.MustRegisterMigrations].
+//	[jsvm.MustRegister()].
 package migratecmd
 
 import (

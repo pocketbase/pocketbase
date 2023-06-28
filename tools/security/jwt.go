@@ -42,8 +42,8 @@ func ParseJWT(token string, verificationKey string) (jwt.MapClaims, error) {
 	return nil, errors.New("Unable to parse token.")
 }
 
-// NewToken generates and returns new HS256 signed JWT token.
-func NewToken(payload jwt.MapClaims, signingKey string, secondsDuration int64) (string, error) {
+// NewJWT generates and returns new HS256 signed JWT token.
+func NewJWT(payload jwt.MapClaims, signingKey string, secondsDuration int64) (string, error) {
 	seconds := time.Duration(secondsDuration) * time.Second
 
 	claims := jwt.MapClaims{
@@ -55,4 +55,12 @@ func NewToken(payload jwt.MapClaims, signingKey string, secondsDuration int64) (
 	}
 
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(signingKey))
+}
+
+// Deprecated:
+// Consider replacing with NewJWT().
+//
+// NewToken is a legacy alias for NewJWT that generates a HS256 signed JWT token.
+func NewToken(payload jwt.MapClaims, signingKey string, secondsDuration int64) (string, error) {
+	return NewJWT(payload, signingKey, secondsDuration)
 }

@@ -1,3 +1,11 @@
+// Package jsvm implements pluggable utilities for binding a JS goja runtime
+// to the PocketBase instance (loading migrations, attaching to app hooks, etc.).
+//
+// Example:
+//
+//	jsvm.MustRegister(app, jsvm.Config{
+//		WatchHooks: true,
+//	})
 package jsvm
 
 import (
@@ -30,21 +38,21 @@ const (
 
 // Config defines the config options of the jsvm plugin.
 type Config struct {
-	// MigrationsDir specifies the JS migrations directory.
+	// HooksWatch enables auto app restarts when a JS app hook file changes.
 	//
-	// If not set it fallbacks to a relative "pb_data/../pb_migrations" directory.
-	MigrationsDir string
+	// Note that currently the application cannot be automatically restarted on Windows
+	// because the restart process relies on execve.
+	HooksWatch bool
 
 	// HooksDir specifies the JS app hooks directory.
 	//
 	// If not set it fallbacks to a relative "pb_data/../pb_hooks" directory.
 	HooksDir string
 
-	// HooksWatch enables auto app restarts when a JS app hook file changes.
+	// MigrationsDir specifies the JS migrations directory.
 	//
-	// Note that currently the application cannot be automatically restarted on Windows
-	// because the restart process relies on execve.
-	HooksWatch bool
+	// If not set it fallbacks to a relative "pb_data/../pb_migrations" directory.
+	MigrationsDir string
 
 	// TypesDir specifies the directory where to store the embedded
 	// TypeScript declarations file.
@@ -125,7 +133,6 @@ func (p *plugin) registerMigrations() error {
 		baseBinds(vm)
 		dbxBinds(vm)
 		filesystemBinds(vm)
-		tokensBinds(vm)
 		securityBinds(vm)
 
 		vm.Set("migrate", func(up, down func(db dbx.Builder) error) {
@@ -176,7 +183,6 @@ func (p *plugin) registerHooks() error {
 		baseBinds(vm)
 		dbxBinds(vm)
 		filesystemBinds(vm)
-		tokensBinds(vm)
 		securityBinds(vm)
 		formsBinds(vm)
 		apisBinds(vm)

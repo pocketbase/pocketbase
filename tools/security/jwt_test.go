@@ -125,7 +125,7 @@ func TestParseJWT(t *testing.T) {
 	}
 }
 
-func TestNewToken(t *testing.T) {
+func TestNewJWT(t *testing.T) {
 	scenarios := []struct {
 		claims      jwt.MapClaims
 		key         string
@@ -141,9 +141,9 @@ func TestNewToken(t *testing.T) {
 	}
 
 	for i, scenario := range scenarios {
-		token, tokenErr := security.NewToken(scenario.claims, scenario.key, scenario.duration)
+		token, tokenErr := security.NewJWT(scenario.claims, scenario.key, scenario.duration)
 		if tokenErr != nil {
-			t.Errorf("(%d) Expected NewToken to succeed, got error %v", i, tokenErr)
+			t.Errorf("(%d) Expected NewJWT to succeed, got error %v", i, tokenErr)
 			continue
 		}
 
