@@ -14,6 +14,13 @@ const heading = `
 // baseBinds
 // -------------------------------------------------------------------
 
+/**
+ * $app is the current running PocketBase instance that is globally
+ * available in each .pb.js file.
+ *
+ * @namespace
+ * @group PocketBase
+ */
 declare var $app: pocketbase.PocketBase
 
 /**
@@ -27,6 +34,8 @@ declare var $app: pocketbase.PocketBase
  *
  * $app.dao().recordQuery(collection).limit(10).all(records)
  * ` + "```" + `
+ *
+ * @group PocketBase
  */
 declare function $arrayOf<T>(model: T): Array<T>;
 
@@ -44,52 +53,167 @@ declare function $arrayOf<T>(model: T): Array<T>;
  *     meta:   {}
  * })
  * ` + "```" + `
+ *
+ * @group PocketBase
  */
 declare class DynamicModel {
   constructor(shape?: { [key:string]: any })
 }
 
-interface Record extends models.Record{} // merge
-declare class Record implements models.Record {
-  constructor(collection?: models.Collection, data?: { [key:string]: any })
+
+/**
+ * Record model class.
+ *
+ * ` + "```" + `js
+ * const collection = $app.dao().findCollectionByNameOrId("article")
+ *
+ * const record = new Record(collection, {
+ *     title: "Lorem ipsum"
+ * })
+ *
+ * // or set field values after the initialization
+ * record.set("description", "...")
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare const Record: {
+  new(collection?: models.Collection, data?: { [key:string]: any }): models.Record
+
+  // note: declare as "newable" const due to conflict with the Record TS utility type
 }
 
 interface Collection extends models.Collection{} // merge
+/**
+ * Collection model class.
+ *
+ * ` + "```" + `js
+ * const collection = new Collection({
+ *     name:       "article",
+ *     type:       "base",
+ *     listRule:   "@request.auth.id != '' || status = 'public'",
+ *     viewRule:   "@request.auth.id != '' || status = 'public'",
+ *     deleteRule: "@request.auth.id != ''",
+ *     schema: [
+ *         {
+ *             name: "title",
+ *             type: "text",
+ *             required: true,
+ *             options: { min: 6, max: 100 },
+ *         },
+ *         {
+ *             name: "description",
+ *             type: "text",
+ *         },
+ *     ]
+ * })
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
 declare class Collection implements models.Collection {
   constructor(data?: Partial<models.Collection>)
 }
 
 interface Admin extends models.Admin{} // merge
+/**
+ * Admin model class.
+ *
+ * ` + "```" + `js
+ * const admin = new Admin()
+ * admin.email = "test@example.com"
+ * admin.setPassword(1234567890)
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
 declare class Admin implements models.Admin {
   constructor(data?: Partial<models.Admin>)
 }
 
 interface Schema extends schema.Schema{} // merge
+/**
+ * Schema model class, usually used to define the Collection.schema field.
+ *
+ * @group PocketBase
+ */
 declare class Schema implements schema.Schema {
   constructor(data?: Partial<schema.Schema>)
 }
 
 interface SchemaField extends schema.SchemaField{} // merge
+/**
+ * SchemaField model class, usually used as part of the Schema model.
+ *
+ * @group PocketBase
+ */
 declare class SchemaField implements schema.SchemaField {
   constructor(data?: Partial<schema.SchemaField>)
 }
 
 interface MailerMessage extends mailer.Message{} // merge
+/**
+ * MailerMessage defines a single email message.
+ *
+ * ` + "```" + `js
+ * const message = new MailerMessage({
+ *     from: {
+ *         address: $app.settings().meta.senderAddress,
+ *         name:    $app.settings().meta.senderName,
+ *     },
+ *     to:      [{address: "test@example.com"}],
+ *     subject: "YOUR_SUBJECT...",
+ *     html:    "YOUR_HTML_BODY...",
+ * })
+ *
+ * $app.newMailClient().send(message)
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
 declare class MailerMessage implements mailer.Message {
   constructor(message?: Partial<mailer.Message>)
 }
 
 interface Command extends cobra.Command{} // merge
+/**
+ * Command defines a single console command.
+ *
+ * ` + "```" + `js
+ * const command = new Command({
+ *     use: "hello",
+ *     run: (cmd, args) => { console.log("Hello world!") },
+ * })
+ *
+ * $app.rootCmd.addCommand(command);
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
 declare class Command implements cobra.Command {
   constructor(cmd?: Partial<cobra.Command>)
 }
 
 interface ValidationError extends ozzo_validation.Error{} // merge
+/**
+ * ValidationError defines a single formatted data validation error,
+ * usually used as part of a error response.
+ *
+ * ` + "```" + `js
+ * new ValidationError("invalid_title", "Title is not valid")
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
 declare class ValidationError implements ozzo_validation.Error {
-  constructor(code?: number, message?: string)
+  constructor(code?: string, message?: string)
 }
 
 interface Dao extends daos.Dao{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class Dao implements daos.Dao {
   constructor(concurrentDB?: dbx.Builder, nonconcurrentDB?: dbx.Builder)
 }
@@ -98,6 +222,9 @@ declare class Dao implements daos.Dao {
 // dbxBinds
 // -------------------------------------------------------------------
 
+/**
+ * @group PocketBase
+ */
 declare namespace $dbx {
   /**
    * {@inheritDoc dbx.HashExp}
@@ -126,6 +253,9 @@ declare namespace $dbx {
 // tokensBinds
 // -------------------------------------------------------------------
 
+/**
+ * @group PocketBase
+ */
 declare namespace $tokens {
   let adminAuthToken:           tokens.newAdminAuthToken
   let adminResetPasswordToken:  tokens.newAdminResetPasswordToken
@@ -141,6 +271,9 @@ declare namespace $tokens {
 // securityBinds
 // -------------------------------------------------------------------
 
+/**
+ * @group PocketBase
+ */
 declare namespace $security {
   let randomString:                   security.randomString
   let randomStringWithAlphabet:       security.randomStringWithAlphabet
@@ -155,6 +288,9 @@ declare namespace $security {
 // filesystemBinds
 // -------------------------------------------------------------------
 
+/**
+ * @group PocketBase
+ */
 declare namespace $filesystem {
   let fileFromPath:      filesystem.newFileFromPath
   let fileFromBytes:     filesystem.newFileFromBytes
@@ -166,99 +302,179 @@ declare namespace $filesystem {
 // -------------------------------------------------------------------
 
 interface AdminLoginForm extends forms.AdminLogin{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class AdminLoginForm implements forms.AdminLogin {
   constructor(app: core.App)
 }
 
 interface AdminPasswordResetConfirmForm extends forms.AdminPasswordResetConfirm{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class AdminPasswordResetConfirmForm implements forms.AdminPasswordResetConfirm {
   constructor(app: core.App)
 }
 
 interface AdminPasswordResetRequestForm extends forms.AdminPasswordResetRequest{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class AdminPasswordResetRequestForm implements forms.AdminPasswordResetRequest {
   constructor(app: core.App)
 }
 
 interface AdminUpsertForm extends forms.AdminUpsert{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class AdminUpsertForm implements forms.AdminUpsert {
   constructor(app: core.App, admin: models.Admin)
 }
 
 interface AppleClientSecretCreateForm extends forms.AppleClientSecretCreate{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class AppleClientSecretCreateForm implements forms.AppleClientSecretCreate {
   constructor(app: core.App)
 }
 
 interface CollectionUpsertForm extends forms.CollectionUpsert{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class CollectionUpsertForm implements forms.CollectionUpsert {
   constructor(app: core.App, collection: models.Collection)
 }
 
 interface CollectionsImportForm extends forms.CollectionsImport{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class CollectionsImportForm implements forms.CollectionsImport {
   constructor(app: core.App)
 }
 
 interface RealtimeSubscribeForm extends forms.RealtimeSubscribe{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RealtimeSubscribeForm implements forms.RealtimeSubscribe {}
 
 interface RecordEmailChangeConfirmForm extends forms.RecordEmailChangeConfirm{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordEmailChangeConfirmForm implements forms.RecordEmailChangeConfirm {
   constructor(app: core.App, collection: models.Collection)
 }
 
 interface RecordEmailChangeRequestForm extends forms.RecordEmailChangeRequest{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordEmailChangeRequestForm implements forms.RecordEmailChangeRequest {
   constructor(app: core.App, record: models.Record)
 }
 
 interface RecordOAuth2LoginForm extends forms.RecordOAuth2Login{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordOAuth2LoginForm implements forms.RecordOAuth2Login {
   constructor(app: core.App, collection: models.Collection, optAuthRecord?: models.Record)
 }
 
 interface RecordPasswordLoginForm extends forms.RecordPasswordLogin{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordPasswordLoginForm implements forms.RecordPasswordLogin {
   constructor(app: core.App, collection: models.Collection)
 }
 
 interface RecordPasswordResetConfirmForm extends forms.RecordPasswordResetConfirm{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordPasswordResetConfirmForm implements forms.RecordPasswordResetConfirm {
   constructor(app: core.App, collection: models.Collection)
 }
 
 interface RecordPasswordResetRequestForm extends forms.RecordPasswordResetRequest{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordPasswordResetRequestForm implements forms.RecordPasswordResetRequest {
   constructor(app: core.App, collection: models.Collection)
 }
 
 interface RecordUpsertForm extends forms.RecordUpsert{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordUpsertForm implements forms.RecordUpsert {
   constructor(app: core.App, record: models.Record)
 }
 
 interface RecordVerificationConfirmForm extends forms.RecordVerificationConfirm{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordVerificationConfirmForm implements forms.RecordVerificationConfirm {
   constructor(app: core.App, collection: models.Collection)
 }
 
 interface RecordVerificationRequestForm extends forms.RecordVerificationRequest{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class RecordVerificationRequestForm implements forms.RecordVerificationRequest {
   constructor(app: core.App, collection: models.Collection)
 }
 
 interface SettingsUpsertForm extends forms.SettingsUpsert{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class SettingsUpsertForm implements forms.SettingsUpsert {
   constructor(app: core.App)
 }
 
 interface TestEmailSendForm extends forms.TestEmailSend{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class TestEmailSendForm implements forms.TestEmailSend {
   constructor(app: core.App)
 }
 
 interface TestS3FilesystemForm extends forms.TestS3Filesystem{} // merge
+/**
+ * @inheritDoc
+ * @group PocketBase
+ */
 declare class TestS3FilesystemForm implements forms.TestS3Filesystem {
   constructor(app: core.App)
 }
@@ -268,35 +484,69 @@ declare class TestS3FilesystemForm implements forms.TestS3Filesystem {
 // -------------------------------------------------------------------
 
 interface Route extends echo.Route{} // merge
+/**
+ * Route specifies a new route definition.
+ * This is usually used when registering routes with router.addRoute().
+ *
+ * ` + "```" + `js
+ * const route = new Route({
+ *     path: "/hello",
+ *     handler: (c) => {
+ *         c.string(200, "hello world!")
+ *     },
+ *     middlewares: [$apis.activityLogger($app)]
+ * })
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
 declare class Route implements echo.Route {
   constructor(data?: Partial<echo.Route>)
 }
 
 interface ApiError extends apis.ApiError{} // merge
+/**
+ * @group PocketBase
+ */
 declare class ApiError implements apis.ApiError {
   constructor(status?: number, message?: string, data?: any)
 }
 
 interface NotFoundError extends apis.ApiError{} // merge
+/**
+ * @group PocketBase
+ */
 declare class NotFoundError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 
 interface BadRequestError extends apis.ApiError{} // merge
+/**
+ * @group PocketBase
+ */
 declare class BadRequestError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 
 interface ForbiddenError extends apis.ApiError{} // merge
+/**
+ * @group PocketBase
+ */
 declare class ForbiddenError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 
 interface UnauthorizedError extends apis.ApiError{} // merge
+/**
+ * @group PocketBase
+ */
 declare class UnauthorizedError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 
+/**
+ * @group PocketBase
+ */
 declare namespace $apis {
   let requireRecordAuth:         apis.requireRecordAuth
   let requireAdminAuth:          apis.requireAdminAuth
@@ -318,6 +568,8 @@ declare namespace $apis {
  * Migrate defines a single migration upgrade/downgrade action.
  *
  * Note that this method is available only in pb_migrations context.
+ *
+ * @group PocketBase
  */
 declare function migrate(
   up: (db: dbx.Builder) => void,

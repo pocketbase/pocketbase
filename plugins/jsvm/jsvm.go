@@ -246,6 +246,7 @@ func (p *plugin) watchHooks() error {
 				}
 
 				stopDebounceTimer()
+
 				debounceTimer = time.AfterFunc(50*time.Millisecond, func() {
 					// app restart is currently not supported on Windows
 					if runtime.GOOS == "windows" {
