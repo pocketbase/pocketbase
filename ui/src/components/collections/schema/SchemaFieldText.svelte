@@ -35,7 +35,7 @@
                     <input
                         type="text"
                         id={uniqueId}
-                        placeholder={"Valid Go regular expression, eg. ^w+$"}
+                        placeholder={"Valid Go regular expression, eg. ^\\w+$"}
                         bind:value={field.options.pattern}
                     />
                 </Field>
