@@ -653,7 +653,7 @@ func (o RelationOptions) Validate() error {
 
 	return validation.ValidateStruct(&o,
 		validation.Field(&o.CollectionId, validation.Required),
-		validation.Field(&o.MinSelect, validation.NilOrNotEmpty, validation.Min(1)),
+		validation.Field(&o.MinSelect, validation.Min(0)),
 		validation.Field(&o.MaxSelect, validation.NilOrNotEmpty, validation.Min(minVal)),
 	)
 }

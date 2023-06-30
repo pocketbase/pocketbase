@@ -73,6 +73,8 @@
 
 - Soft-deprecated `security.NewToken()` in favor of `security.NewJWT()`.
 
+- Allowed `0` as `RelationOptions.MinSelect` value to avoid the ambiguity between 0 and non-filled input value ([#2817](https://github.com/pocketbase/pocketbase/discussions/2817)).
+
 
 ## v0.16.6
 

@@ -2113,6 +2113,22 @@ func TestRelationOptionsValidate(t *testing.T) {
 			[]string{"collectionId"},
 		},
 		{
+			"MinSelect < 0",
+			schema.RelationOptions{
+				CollectionId: "abc",
+				MinSelect:    types.Pointer(-1),
+			},
+			[]string{"minSelect"},
+		},
+		{
+			"MinSelect >= 0",
+			schema.RelationOptions{
+				CollectionId: "abc",
+				MinSelect:    types.Pointer(0),
+			},
+			[]string{},
+		},
+		{
 			"MaxSelect <= 0",
 			schema.RelationOptions{
 				CollectionId: "abc",
@@ -2127,6 +2143,42 @@ func TestRelationOptionsValidate(t *testing.T) {
 				MaxSelect:    types.Pointer(1),
 			},
 			[]string{},
+		},
+		{
+			"MinSelect < MaxSelect",
+			schema.RelationOptions{
+				CollectionId: "abc",
+				MinSelect:    nil,
+				MaxSelect:    types.Pointer(1),
+			},
+			[]string{},
+		},
+		{
+			"MinSelect = MaxSelect (non-zero)",
+			schema.RelationOptions{
+				CollectionId: "abc",
+				MinSelect:    types.Pointer(1),
+				MaxSelect:    types.Pointer(1),
+			},
+			[]string{},
+		},
+		{
+			"MinSelect = MaxSelect (both zero)",
+			schema.RelationOptions{
+				CollectionId: "abc",
+				MinSelect:    types.Pointer(0),
+				MaxSelect:    types.Pointer(0),
+			},
+			[]string{"maxSelect"},
+		},
+		{
+			"MinSelect > MaxSelect",
+			schema.RelationOptions{
+				CollectionId: "abc",
+				MinSelect:    types.Pointer(2),
+				MaxSelect:    types.Pointer(1),
+			},
+			[]string{"maxSelect"},
 		},
 	}
 
