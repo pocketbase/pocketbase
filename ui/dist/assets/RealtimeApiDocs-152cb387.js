@@ -1,4 +1,4 @@
-import{S as re,i as ae,s as be,M as pe,C as P,e as p,w as y,b as a,c as te,f as u,g as t,h as I,m as ne,x as ue,t as ie,a as ce,o as n,d as le,T as me,p as de}from"./index-3a85069e.js";import{S as fe}from"./SdkTabs-adb37d05.js";function $e(o){var B,U,W,T,A,H,L,M,q,j,J,N;let i,m,c=o[0].name+"",b,d,_,f,g,$,k,l,S,v,w,R,C,D,E,r,h;return l=new fe({props:{js:`
+import{S as re,i as ae,s as be,a9 as pe,C as P,e as p,w as y,b as a,c as te,f as u,g as t,h as I,m as ne,x as ue,t as ie,a as ce,o as n,d as le,ae as me,p as de}from"./index-197def9c.js";import{S as fe}from"./SdkTabs-e182a429.js";function $e(o){var B,U,W,A,H,L,T,q,M,j,J,N;let i,m,c=o[0].name+"",b,d,_,f,g,$,k,l,S,v,w,R,C,D,E,r,h;return l=new fe({props:{js:`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${o[1]}');
@@ -19,9 +19,9 @@ import{S as re,i as ae,s as be,M as pe,C as P,e as p,w as y,b as a,c as te,f as 
         });
 
         // Unsubscribe
-        pb.collection('${(T=o[0])==null?void 0:T.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
-        pb.collection('${(A=o[0])==null?void 0:A.name}').unsubscribe('*'); // remove all '*' topic subscriptions
-        pb.collection('${(H=o[0])==null?void 0:H.name}').unsubscribe(); // remove all subscriptions in the collection
+        pb.collection('${(A=o[0])==null?void 0:A.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${(H=o[0])==null?void 0:H.name}').unsubscribe('*'); // remove all '*' topic subscriptions
+        pb.collection('${(L=o[0])==null?void 0:L.name}').unsubscribe(); // remove all subscriptions in the collection
     `,dart:`
         import 'package:pocketbase/pocketbase.dart';
 
@@ -32,13 +32,13 @@ import{S as re,i as ae,s as be,M as pe,C as P,e as p,w as y,b as a,c as te,f as 
         // (Optionally) authenticate
         await pb.collection('users').authWithPassword('test@example.com', '123456');
 
-        // Subscribe to changes in any ${(L=o[0])==null?void 0:L.name} record
-        pb.collection('${(M=o[0])==null?void 0:M.name}').subscribe('*', (e) {
+        // Subscribe to changes in any ${(T=o[0])==null?void 0:T.name} record
+        pb.collection('${(q=o[0])==null?void 0:q.name}').subscribe('*', (e) {
             print(e.record);
         });
 
         // Subscribe to changes only in the specified record
-        pb.collection('${(q=o[0])==null?void 0:q.name}').subscribe('RECORD_ID', (e) {
+        pb.collection('${(M=o[0])==null?void 0:M.name}').subscribe('RECORD_ID', (e) {
             print(e.record);
         });
 
