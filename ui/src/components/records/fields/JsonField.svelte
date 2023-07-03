@@ -1,5 +1,7 @@
 <script>
     import { SchemaField } from "pocketbase";
+    import CodeMirror from "svelte-codemirror-editor"
+    import { javascript } from "@codemirror/lang-javascript";
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
 
@@ -19,14 +21,8 @@
         <i class={CommonHelper.getFieldTypeIcon(field.type)} />
         <span class="txt">{field.name}</span>
     </label>
-    <textarea
-        id={uniqueId}
-        class="txt-mono"
-        required={field.required}
-        value={serialized}
-        on:input={(e) => {
-            serialized = e.target.value;
-            value = e.target.value.trim(); // trim the submitted value
-        }}
-    />
+    <CodeMirror value={serialized} lang={javascript()} on:change={(e) => {
+        serialized = e.detail
+        value = e.detail.trim()
+    }}/>
 </Field>
