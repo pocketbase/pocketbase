@@ -190,7 +190,7 @@ func (f SchemaField) Validate() error {
 
 	excludeNames := BaseModelFieldNames()
 	// exclude special filter literals
-	excludeNames = append(excludeNames, "null", "true", "false")
+	excludeNames = append(excludeNames, "null", "true", "false", "_rowid_")
 	// exclude system literals
 	excludeNames = append(excludeNames, SystemFieldNames()...)
 

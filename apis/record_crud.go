@@ -68,6 +68,11 @@ func (api *recordApi) list(c echo.Context) error {
 	searchProvider := search.NewProvider(fieldsResolver).
 		Query(api.app.Dao().RecordQuery(collection))
 
+	// views don't have "rowid" so we fallback to "id"
+	if collection.IsView() {
+		searchProvider.CountCol("id")
+	}
+
 	if requestData.Admin == nil && collection.ListRule != nil {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}

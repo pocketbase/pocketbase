@@ -76,6 +76,12 @@
 - Allowed `0` as `RelationOptions.MinSelect` value to avoid the ambiguity between 0 and non-filled input value ([#2817](https://github.com/pocketbase/pocketbase/discussions/2817)).
 
 
+## v0.16.7
+
+- Minor optimization for the list/search queries to use `rowid` with the `COUNT` statement when available.
+  _This eliminates the temp B-TREE step when executing the query and for large datasets (eg. 150k) it could have 10x improvement (from ~580ms to ~60ms)._
+
+
 ## v0.16.6
 
 - Fixed collection index column sort normalization in the Admin UI ([#2681](https://github.com/pocketbase/pocketbase/pull/2681); thanks @SimonLoir).

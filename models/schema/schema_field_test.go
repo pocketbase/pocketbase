@@ -314,6 +314,15 @@ func TestSchemaFieldValidate(t *testing.T) {
 			[]string{"name"},
 		},
 		{
+			"reserved name (_rowid_)",
+			schema.SchemaField{
+				Type: schema.FieldTypeText,
+				Id:   "1234567890",
+				Name: "_rowid_",
+			},
+			[]string{"name"},
+		},
+		{
 			"reserved name (id)",
 			schema.SchemaField{
 				Type: schema.FieldTypeText,
