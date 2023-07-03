@@ -36,6 +36,7 @@ type Result struct {
 type Provider struct {
 	fieldResolver FieldResolver
 	query         *dbx.SelectQuery
+	countCol      string
 	page          int
 	perPage       int
 	sort          []SortField
@@ -56,6 +57,7 @@ type Provider struct {
 func NewProvider(fieldResolver FieldResolver) *Provider {
 	return &Provider{
 		fieldResolver: fieldResolver,
+		countCol:      "_rowid_",
 		page:          1,
 		perPage:       DefaultPerPage,
 		sort:          []SortField{},
@@ -66,6 +68,13 @@ func NewProvider(fieldResolver FieldResolver) *Provider {
 // Query sets the base query that will be used to fetch the search items.
 func (s *Provider) Query(query *dbx.SelectQuery) *Provider {
 	s.query = query
+	return s
+}
+
+// CountCol allows changing the default column (_rowid_) that is used
+// to generated the COUNT SQL query statement.
+func (s *Provider) CountCol(name string) *Provider {
+	s.countCol = name
 	return s
 }
 
@@ -198,7 +207,7 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		baseTable = queryInfo.From[0]
 	}
 	clone := modelsQuery
-	countQuery := clone.Select("COUNT(DISTINCT [[" + baseTable + ".id]])").OrderBy()
+	countQuery := clone.Distinct(false).Select("COUNT(DISTINCT [[" + baseTable + "." + s.countCol + "]])").OrderBy()
 	if err := countQuery.Row(&totalCount); err != nil {
 		return nil, err
 	}
