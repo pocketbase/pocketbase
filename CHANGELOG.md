@@ -1,6 +1,6 @@
 ## v0.16.7
 
-- Minor optimiaztion for the list/search queries to use `rowid` with the `COUNT` statement when available.
+- Minor optimization for the list/search queries to use `rowid` with the `COUNT` statement when available.
   _This eliminates the temp B-TREE step when executing the query and for large datasets (eg. 150k) it could have 10x improvement (from ~580ms to ~60ms)._
 
 
