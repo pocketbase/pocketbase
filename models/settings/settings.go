@@ -63,6 +63,7 @@ type Settings struct {
 	InstagramAuth AuthProviderConfig `form:"instagramAuth" json:"instagramAuth"`
 	VKAuth        AuthProviderConfig `form:"vkAuth" json:"vkAuth"`
 	YandexAuth    AuthProviderConfig `form:"yandexAuth" json:"yandexAuth"`
+	WeChatAuth    AuthProviderConfig `form:"wechatAuth" json:"wechatAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -187,6 +188,9 @@ func New() *Settings {
 		YandexAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		WeChatAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -230,6 +234,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.InstagramAuth),
 		validation.Field(&s.VKAuth),
 		validation.Field(&s.YandexAuth),
+		validation.Field(&s.WeChatAuth),
 	)
 }
 
@@ -296,6 +301,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.InstagramAuth.ClientSecret,
 		&clone.VKAuth.ClientSecret,
 		&clone.YandexAuth.ClientSecret,
+		&clone.WeChatAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -336,6 +342,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameInstagram:  s.InstagramAuth,
 		auth.NameVK:         s.VKAuth,
 		auth.NameYandex:     s.YandexAuth,
+		auth.NameWeChat:     s.WeChatAuth,
 	}
 }
 

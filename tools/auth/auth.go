@@ -135,6 +135,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewVKProvider(), nil
 	case NameYandex:
 		return NewYandexProvider(), nil
+	case NameWeChat:
+		return NewWeChatProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}

@@ -109,6 +109,11 @@ export default [
         logo:  "livechat.svg",
     },
     {
+        key:   "wechatAuth",
+        title: "WeChat",
+        logo:  "wechat.svg",
+    },
+    {
         key:   "oidcAuth",
         title: "OpenID Connect",
         logo:  "oidc.svg",
