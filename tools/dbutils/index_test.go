@@ -18,9 +18,20 @@ func TestParseIndex(t *testing.T) {
 			`invalid`,
 			dbutils.Index{},
 		},
-		// simple
+		// simple (multiple spaces between the table and columns list)
 		{
-			`create index indexname on tablename (col1)`,
+			`create index indexname on tablename   (col1)`,
+			dbutils.Index{
+				IndexName: "indexname",
+				TableName: "tablename",
+				Columns: []dbutils.IndexColumn{
+					{Name: "col1"},
+				},
+			},
+		},
+		// simple (no space between the table and the columns list)
+		{
+			`create index indexname on tablename(col1)`,
 			dbutils.Index{
 				IndexName: "indexname",
 				TableName: "tablename",

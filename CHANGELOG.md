@@ -1,3 +1,10 @@
+## v0.16.8-WIP
+
+- Fixed unique validator detailed error message not being returned when camelCase field name is used ([#2868](https://github.com/pocketbase/pocketbase/issues/2868)).
+
+- Updated the index parser to allow no space between the table name and the columns list ([#2864](https://github.com/pocketbase/pocketbase/discussions/2864#discussioncomment-6373736)).
+
+
 ## v0.16.7
 
 - Minor optimization for the list/search queries to use `rowid` with the `COUNT` statement when available.
