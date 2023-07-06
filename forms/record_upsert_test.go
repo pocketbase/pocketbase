@@ -12,14 +12,17 @@ import (
 	"strings"
 	"testing"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func hasRecordFile(app core.App, record *models.Record, filename string) bool {
@@ -712,8 +715,11 @@ func TestRecordUpsertWithCustomId(t *testing.T) {
 }
 
 func TestRecordUpsertAuthRecord(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
 	scenarios := []struct {
-		testName     string
+		name         string
 		existingId   string
 		data         map[string]any
 		manageAccess bool
@@ -907,9 +913,6 @@ func TestRecordUpsertAuthRecord(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		app, _ := tests.NewTestApp()
-		defer app.Cleanup()
-
 		collection, err := app.Dao().FindCollectionByNameOrId("users")
 		if err != nil {
 			t.Fatal(err)
@@ -920,7 +923,7 @@ func TestRecordUpsertAuthRecord(t *testing.T) {
 			var err error
 			record, err = app.Dao().FindRecordById(collection.Id, s.existingId)
 			if err != nil {
-				t.Errorf("[%s] Failed to fetch auth record with id %s", s.testName, s.existingId)
+				t.Errorf("[%s] Failed to fetch auth record with id %s", s.name, s.existingId)
 				continue
 			}
 		}
@@ -928,7 +931,7 @@ func TestRecordUpsertAuthRecord(t *testing.T) {
 		form := forms.NewRecordUpsert(app, record)
 		form.SetFullManageAccess(s.manageAccess)
 		if err := form.LoadData(s.data); err != nil {
-			t.Errorf("[%s] Failed to load form data", s.testName)
+			t.Errorf("[%s] Failed to load form data", s.name)
 			continue
 		}
 
@@ -936,11 +939,119 @@ func TestRecordUpsertAuthRecord(t *testing.T) {
 
 		hasErr := submitErr != nil
 		if hasErr != s.expectError {
-			t.Errorf("[%s] Expected hasErr %v, got %v (%v)", s.testName, s.expectError, hasErr, submitErr)
+			t.Errorf("[%s] Expected hasErr %v, got %v (%v)", s.name, s.expectError, hasErr, submitErr)
 		}
 
 		if !hasErr && record.Username() == "" {
-			t.Errorf("[%s] Expected username to be set, got empty string: \n%v", s.testName, record)
+			t.Errorf("[%s] Expected username to be set, got empty string: \n%v", s.name, record)
+		}
+	}
+}
+
+func TestRecordUpsertUniqueValidator(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	// create a dummy collection
+	collection := &models.Collection{
+		Name: "test",
+		Schema: schema.NewSchema(
+			&schema.SchemaField{
+				Type: "text",
+				Name: "fieldA",
+			},
+			&schema.SchemaField{
+				Type: "text",
+				Name: "fieldB",
+			},
+			&schema.SchemaField{
+				Type: "text",
+				Name: "fieldC",
+			},
+		),
+		Indexes: types.JsonArray[string]{
+			// the field case shouldn't matter
+			"create unique index unique_single_idx on test (fielda)",
+			"create unique index unique_combined_idx on test (fieldb, FIELDC)",
+		},
+	}
+	if err := app.Dao().SaveCollection(collection); err != nil {
+		t.Fatal(err)
+	}
+
+	dummyRecord := models.NewRecord(collection)
+	dummyRecord.Set("fieldA", "a")
+	dummyRecord.Set("fieldB", "b")
+	dummyRecord.Set("fieldC", "c")
+	if err := app.Dao().SaveRecord(dummyRecord); err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		name           string
+		data           map[string]any
+		expectedErrors []string
+	}{
+		{
+			"duplicated unique value",
+			map[string]any{
+				"fieldA": "a",
+			},
+			[]string{"fieldA"},
+		},
+		{
+			"duplicated combined unique value",
+			map[string]any{
+				"fieldB": "b",
+				"fieldC": "c",
+			},
+			[]string{"fieldB", "fieldC"},
+		},
+		{
+			"non-duplicated unique value",
+			map[string]any{
+				"fieldA": "a2",
+			},
+			nil,
+		},
+		{
+			"non-duplicated combined unique value",
+			map[string]any{
+				"fieldB": "b",
+				"fieldC": "d",
+			},
+			nil,
+		},
+	}
+
+	for _, s := range scenarios {
+		record := models.NewRecord(collection)
+
+		form := forms.NewRecordUpsert(app, record)
+		if err := form.LoadData(s.data); err != nil {
+			t.Errorf("[%s] Failed to load form data", s.name)
+			continue
+		}
+
+		result := form.Submit()
+
+		// parse errors
+		errs, ok := result.(validation.Errors)
+		if !ok && result != nil {
+			t.Errorf("[%s] Failed to parse errors %v", s.name, result)
+			continue
+		}
+
+		// check errors
+		if len(errs) > len(s.expectedErrors) {
+			t.Errorf("[%s] Expected error keys %v, got %v", s.name, s.expectedErrors, errs)
+			continue
+		}
+		for _, k := range s.expectedErrors {
+			if _, ok := errs[k]; !ok {
+				t.Errorf("[%s] Missing expected error key %q in %v", s.name, k, errs)
+				continue
+			}
 		}
 	}
 }
