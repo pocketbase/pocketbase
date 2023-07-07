@@ -246,7 +246,6 @@
     }
 
     function migrateSelectedRecords(destination) {
-        deselectAllRecords();
         ApiClient.migrateItems(Object.keys(bulkSelected), collection.id, destination)
             .then((resp) => {
                 if (resp.ok) {
@@ -256,8 +255,10 @@
                 }
             })
             .catch((err) => {
+                console.log(err)
                 addErrorToast(`Failed to migrate`);
             });
+        deselectAllRecords();
     }
 </script>
 
