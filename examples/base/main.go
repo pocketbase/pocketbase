@@ -38,6 +38,14 @@ func main() {
 		"auto restart the app on pb_hooks file change",
 	)
 
+	var hooksPool int
+	app.RootCmd.PersistentFlags().IntVar(
+		&hooksPool,
+		"hooksPool",
+		120,
+		"the total prewarm goja.Runtime instances for the JS app hooks execution",
+	)
+
 	var migrationsDir string
 	app.RootCmd.PersistentFlags().StringVar(
 		&migrationsDir,
@@ -89,6 +97,7 @@ func main() {
 		MigrationsDir: migrationsDir,
 		HooksDir:      hooksDir,
 		HooksWatch:    hooksWatch,
+		HooksPoolSize: hooksPool,
 	})
 
 	// migrate command (with js templates)

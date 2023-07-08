@@ -95,7 +95,7 @@ declare function routerPre(...middlewares: Array<string|echo.MiddlewareFunc>): v
 type appWithoutHooks = Omit<pocketbase.PocketBase, ` + "`on${string}`" + `>
 
 /**
- * $app is the current running PocketBase instance that is globally
+ * ` + "`$app`" + ` is the current running PocketBase instance that is globally
  * available in each .pb.js file.
  *
  * @namespace
@@ -302,7 +302,7 @@ declare class Dao implements daos.Dao {
 // -------------------------------------------------------------------
 
 /**
- * $dbx defines common utility for working with the DB abstraction.
+ * ` + "`$dbx`" + ` defines common utility for working with the DB abstraction.
  * For examples and guides please check the [Database guide](https://pocketbase.io/docs/js-database).
  *
  * @group PocketBase

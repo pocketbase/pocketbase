@@ -48,7 +48,7 @@ type Config struct {
 	// If not set it fallbacks to a relative "pb_data/../pb_hooks" directory.
 	HooksDir string
 
-	// HooksPoolSize specifies how many goja.Runtime instances to preinit
+	// HooksPoolSize specifies how many goja.Runtime instances to prewarm
 	// and keep for the JS app hooks gorotines execution.
 	//
 	// Zero or negative value means that it will create a new goja.Runtime
