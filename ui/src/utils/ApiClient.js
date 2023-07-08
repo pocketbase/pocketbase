@@ -39,14 +39,16 @@ PocketBase.prototype.error = function(err, notify = true, defaultMsg = "") {
     const statusCode = (err?.status << 0) || 400;
     const responseData = err?.data || {};
 
-    // add toast error notification
-    if (
-        notify &&          // notifications are enabled
-        statusCode !== 404 // is not 404
-    ) {
-        let msg = responseData.message || err.message || defaultMsg;
+    // add toast error notification if notifications are enabled
+    if (notify) {
+        let msg = responseData.message;
         if (msg) {
             addErrorToast(msg);
+        } else if (statusCode !== 404) {
+            msg = err.message || defaultMsg;
+            if (msg) {
+                addErrorToast(msg);
+            }
         }
     }
 
