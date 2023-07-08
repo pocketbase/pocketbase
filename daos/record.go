@@ -230,6 +230,9 @@ func (dao *Dao) FindFirstRecordByData(
 // If the limit argument is <= 0, no limit is applied to the query and
 // all matching records are returned.
 //
+// NB Don't put untrusted user input in the filter string as it
+// practically would allow the users to inject their own custom filter.
+//
 // Example:
 //
 //	dao.FindRecordsByFilter("posts", "title ~ 'lorem ipsum' && visible = true", "-created", 10)
@@ -290,6 +293,9 @@ func (dao *Dao) FindRecordsByFilter(
 }
 
 // FindFirstRecordByFilter returns the first available record matching the provided filter.
+//
+// NB Don't put untrusted user input in the filter string as it
+// practically would allow the users to inject their own custom filter.
 //
 // Example:
 //
