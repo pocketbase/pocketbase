@@ -4,15 +4,95 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/jsvm"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/tygoja"
 )
 
 const heading = `
 // -------------------------------------------------------------------
+// routerBinds
+// -------------------------------------------------------------------
+
+/**
+ * RouterAdd registers a new route definition.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * routerAdd("GET", "/hello", (c) => {
+ *     return c.json(200, {"message": "Hello!"})
+ * }, $apis.requireAdminOrRecordAuth())
+ * ` + "```" + `
+ *
+ * _Note that this method is available only in pb_hooks context._
+ *
+ * @group PocketBase
+ */
+declare function routerAdd(
+  method: string,
+  path: string,
+  handler: echo.HandlerFunc,
+  ...middlewares: Array<string|echo.MiddlewareFunc>,
+): void;
+
+/**
+ * RouterUse registers one or more global middlewares that are executed
+ * along the handler middlewares after a matching route is found.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * routerUse((next) => {
+ *     return (c) => {
+ *         console.log(c.Path())
+ *         return next(c)
+ *     }
+ * })
+ * ` + "```" + `
+ *
+ * _Note that this method is available only in pb_hooks context._
+ *
+ * @group PocketBase
+ */
+declare function routerUse(...middlewares: Array<string|echo.MiddlewareFunc>): void;
+
+/**
+ * RouterPre registers one or more global middlewares that are executed
+ * BEFORE the router processes the request. It is usually used for making
+ * changes to the request properties, for example, adding or removing
+ * a trailing slash or adding segments to a path so it matches a route.
+ *
+ * NB! Since the router will not have processed the request yet,
+ * middlewares registered at this level won't have access to any path
+ * related APIs from echo.Context.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * routerPre((next) => {
+ *     return (c) => {
+ *         console.log(c.request().url)
+ *         return next(c)
+ *     }
+ * })
+ * ` + "```" + `
+ *
+ * _Note that this method is available only in pb_hooks context._
+ *
+ * @group PocketBase
+ */
+declare function routerPre(...middlewares: Array<string|echo.MiddlewareFunc>): void;
+
+// -------------------------------------------------------------------
 // baseBinds
 // -------------------------------------------------------------------
+
+// skip on* hook methods as they are registered via the global on* method
+type appWithoutHooks = Omit<pocketbase.PocketBase, ` + "`on${string}`" + `>
 
 /**
  * $app is the current running PocketBase instance that is globally
@@ -21,23 +101,23 @@ const heading = `
  * @namespace
  * @group PocketBase
  */
-declare var $app: pocketbase.PocketBase
+declare var $app: appWithoutHooks
 
 /**
- * $arrayOf creates a placeholder array of the specified models.
+ * arrayOf creates a placeholder array of the specified models.
  * Usually used to populate DB result into an array of models.
  *
  * Example:
  *
  * ` + "```" + `js
- * const records = $arrayOf(new Record)
+ * const records = arrayOf(new Record)
  *
  * $app.dao().recordQuery(collection).limit(10).all(records)
  * ` + "```" + `
  *
  * @group PocketBase
  */
-declare function $arrayOf<T>(model: T): Array<T>;
+declare function arrayOf<T>(model: T): Array<T>;
 
 /**
  * DynamicModel creates a new dynamic model with fields from the provided data shape.
@@ -498,27 +578,6 @@ declare class TestS3FilesystemForm implements forms.TestS3Filesystem {
 // apisBinds
 // -------------------------------------------------------------------
 
-interface Route extends echo.Route{} // merge
-/**
- * Route specifies a new route definition.
- * This is usually used when registering routes with router.addRoute().
- *
- * ` + "```" + `js
- * const route = new Route({
- *     path: "/hello",
- *     handler: (c) => {
- *         c.string(200, "hello world!")
- *     },
- *     middlewares: [$apis.activityLogger($app)]
- * })
- * ` + "```" + `
- *
- * @group PocketBase
- */
-declare class Route implements echo.Route {
-  constructor(data?: Partial<echo.Route>)
-}
-
 interface ApiError extends apis.ApiError{} // merge
 /**
  * @inheritDoc
@@ -594,7 +653,7 @@ declare namespace $apis {
 /**
  * Migrate defines a single migration upgrade/downgrade action.
  *
- * Note that this method is available only in pb_migrations context.
+ * _Note that this method is available only in pb_migrations context._
  *
  * @group PocketBase
  */
@@ -604,8 +663,10 @@ declare function migrate(
 ): void;
 `
 
+var mapper = &jsvm.FieldMapper{}
+
 func main() {
-	mapper := &jsvm.FieldMapper{}
+	declarations := heading + hooksDeclarations()
 
 	gen := tygoja.New(tygoja.Config{
 		Packages: map[string][]string{
@@ -626,7 +687,7 @@ func main() {
 		},
 		Indent:               " ", // use only a single space to reduce slight the size
 		WithPackageFunctions: true,
-		Heading:              heading,
+		Heading:              declarations,
 	})
 
 	result, err := gen.Generate()
@@ -637,4 +698,46 @@ func main() {
 	if err := os.WriteFile("./generated/types.d.ts", []byte(result), 0644); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func hooksDeclarations() string {
+	var result strings.Builder
+
+	excluded := []string{"OnBeforeServe"}
+	appType := reflect.TypeOf(struct{ core.App }{})
+	totalMethods := appType.NumMethod()
+
+	for i := 0; i < totalMethods; i++ {
+		method := appType.Method(i)
+		if !strings.HasPrefix(method.Name, "On") || list.ExistInSlice(method.Name, excluded) {
+			continue // not a hook or excluded
+		}
+
+		hookType := method.Type.Out(0)
+
+		withTags := strings.HasPrefix(hookType.String(), "*hook.TaggedHook")
+
+		addMethod, ok := hookType.MethodByName("Add")
+		if !ok {
+			continue
+		}
+
+		addHanlder := addMethod.Type.In(1)
+		eventTypeName := strings.TrimPrefix(addHanlder.In(0).String(), "*")
+
+		jsName := mapper.MethodName(appType, method)
+		result.WriteString("/** @group PocketBase */")
+		result.WriteString("declare function ")
+		result.WriteString(jsName)
+		result.WriteString("(handler: (e: ")
+		result.WriteString(eventTypeName)
+		result.WriteString(") => void")
+		if withTags {
+			result.WriteString(", ...tags: string[]")
+		}
+		result.WriteString("): void")
+		result.WriteString("\n")
+	}
+
+	return result.String()
 }

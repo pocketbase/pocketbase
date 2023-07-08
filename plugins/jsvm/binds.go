@@ -2,25 +2,211 @@ package jsvm
 
 import (
 	"encoding/json"
+	"errors"
 	"reflect"
+	"strings"
 
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tokens"
+	"github.com/pocketbase/pocketbase/tools/cron"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/inflector"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cobra"
 )
+
+// hooksBinds adds wrapped "on*" hook methods by reflecting on core.App.
+func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
+	fm := FieldMapper{}
+
+	appType := reflect.TypeOf(app)
+	appValue := reflect.ValueOf(app)
+	totalMethods := appType.NumMethod()
+	excludeHooks := []string{"OnBeforeServe"}
+
+	for i := 0; i < totalMethods; i++ {
+		method := appType.Method(i)
+		if !strings.HasPrefix(method.Name, "On") || list.ExistInSlice(method.Name, excludeHooks) {
+			continue // not a hook or excluded
+		}
+
+		jsName := fm.MethodName(appType, method)
+
+		// register the hook to the loader
+		loader.Set(jsName, func(callback string, tags ...string) {
+			pr := goja.MustCompile("", "{("+callback+").apply(undefined, __args)}", true)
+
+			tagsAsValues := make([]reflect.Value, len(tags))
+			for i, tag := range tags {
+				tagsAsValues[i] = reflect.ValueOf(tag)
+			}
+
+			hookInstance := appValue.MethodByName(method.Name).Call(tagsAsValues)[0]
+			addFunc := hookInstance.MethodByName("Add")
+
+			handlerType := addFunc.Type().In(0)
+
+			handler := reflect.MakeFunc(handlerType, func(args []reflect.Value) (results []reflect.Value) {
+				handlerArgs := make([]any, len(args))
+				for i, arg := range args {
+					handlerArgs[i] = arg.Interface()
+				}
+
+				err := executors.run(func(executor *goja.Runtime) error {
+					executor.Set("__args", handlerArgs)
+					res, err := executor.RunProgram(pr)
+					executor.Set("__args", goja.Undefined())
+
+					// check for returned hook.StopPropagation
+					if res != nil {
+						if v, ok := res.Export().(error); ok {
+							return v
+						}
+					}
+
+					// check for throwed hook.StopPropagation
+					if err != nil {
+						exception, ok := err.(*goja.Exception)
+						if ok && errors.Is(exception.Value().Export().(error), hook.StopPropagation) {
+							return hook.StopPropagation
+						}
+					}
+
+					return err
+				})
+
+				return []reflect.Value{reflect.ValueOf(&err).Elem()}
+			})
+
+			// register the wrapped hook handler
+			addFunc.Call([]reflect.Value{handler})
+		})
+	}
+}
+
+func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
+	jobs := cron.New()
+
+	loader.Set("cronAdd", func(jobId, cronExpr, handler string) {
+		pr := goja.MustCompile("", "{("+handler+").apply(undefined)}", true)
+
+		err := jobs.Add(jobId, cronExpr, func() {
+			executors.run(func(executor *goja.Runtime) error {
+				_, err := executor.RunProgram(pr)
+				return err
+			})
+		})
+		if err != nil {
+			panic("[cronAdd] failed to register cron job " + jobId + ": " + err.Error())
+		}
+
+		// start the ticker (if not already)
+		if jobs.Total() > 0 && !jobs.HasStarted() {
+			jobs.Start()
+		}
+	})
+
+	loader.Set("cronRemove", func(jobId string) {
+		jobs.Remove(jobId)
+
+		// stop the ticker if there are no other jobs
+		if jobs.Total() == 0 {
+			jobs.Stop()
+		}
+	})
+}
+
+func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
+	loader.Set("routerAdd", func(method string, path string, handler string, middlewares ...goja.Value) {
+		wrappedMiddlewares, err := wrapMiddlewares(executors, middlewares...)
+		if err != nil {
+			panic("[routerAdd] failed to wrap middlewares: " + err.Error())
+		}
+
+		pr := goja.MustCompile("", "{("+handler+").apply(undefined, __args)}", true)
+
+		app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+			e.Router.Add(strings.ToUpper(method), path, func(c echo.Context) error {
+				return executors.run(func(executor *goja.Runtime) error {
+					executor.Set("__args", []any{c})
+					_, err := executor.RunProgram(pr)
+					executor.Set("__args", goja.Undefined())
+					return err
+				})
+			}, wrappedMiddlewares...)
+
+			return nil
+		})
+	})
+
+	loader.Set("routerUse", func(middlewares ...goja.Value) {
+		wrappedMiddlewares, err := wrapMiddlewares(executors, middlewares...)
+		if err != nil {
+			panic("[routerUse] failed to wrap middlewares: " + err.Error())
+		}
+
+		app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+			e.Router.Use(wrappedMiddlewares...)
+			return nil
+		})
+	})
+
+	loader.Set("routerPre", func(middlewares ...goja.Value) {
+		wrappedMiddlewares, err := wrapMiddlewares(executors, middlewares...)
+		if err != nil {
+			panic("[routerPre] failed to wrap middlewares: " + err.Error())
+		}
+
+		app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+			e.Router.Pre(wrappedMiddlewares...)
+			return nil
+		})
+	})
+}
+
+func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.MiddlewareFunc, error) {
+	wrappedMiddlewares := make([]echo.MiddlewareFunc, len(rawMiddlewares))
+
+	for i, m := range rawMiddlewares {
+		switch v := m.Export().(type) {
+		case echo.MiddlewareFunc:
+			// "native" middleware - no need to wrap
+			wrappedMiddlewares[i] = v
+		case func(goja.FunctionCall) goja.Value, string:
+			pr := goja.MustCompile("", "{(("+m.String()+").apply(undefined, __args)).apply(undefined, __args2)}", true)
+
+			wrappedMiddlewares[i] = func(next echo.HandlerFunc) echo.HandlerFunc {
+				return func(c echo.Context) error {
+					return executors.run(func(executor *goja.Runtime) error {
+						executor.Set("__args", []any{next})
+						executor.Set("__args2", []any{c})
+						_, err := executor.RunProgram(pr)
+						executor.Set("__args", goja.Undefined())
+						executor.Set("__args2", goja.Undefined())
+						return err
+					})
+				}
+			}
+		default:
+			return nil, errors.New("unsupported goja middleware type")
+		}
+	}
+
+	return wrappedMiddlewares, nil
+}
 
 func baseBinds(vm *goja.Runtime) {
 	vm.SetFieldNameMapper(FieldMapper{})
@@ -48,7 +234,7 @@ func baseBinds(vm *goja.Runtime) {
 		}
 	`)
 
-	vm.Set("$arrayOf", func(model any) any {
+	vm.Set("arrayOf", func(model any) any {
 		mt := reflect.TypeOf(model)
 		st := reflect.SliceOf(mt)
 		elem := reflect.New(st).Elem()
@@ -147,6 +333,8 @@ func baseBinds(vm *goja.Runtime) {
 
 		return instanceValue
 	})
+
+	vm.Set("$stopPropagation", hook.StopPropagation)
 }
 
 func dbxBinds(vm *goja.Runtime) {
@@ -252,11 +440,6 @@ func formsBinds(vm *goja.Runtime) {
 func apisBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$apis", obj)
-
-	vm.Set("Route", func(call goja.ConstructorCall) *goja.Object {
-		instance := &echo.Route{}
-		return structConstructor(vm, call, instance)
-	})
 
 	// middlewares
 	obj.Set("requireRecordAuth", apis.RequireRecordAuth)

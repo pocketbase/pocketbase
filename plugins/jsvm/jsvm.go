@@ -18,7 +18,6 @@ import (
 
 	"github.com/dop251/goja"
 	"github.com/dop251/goja_nodejs/console"
-	"github.com/dop251/goja_nodejs/eventloop"
 	"github.com/dop251/goja_nodejs/process"
 	"github.com/dop251/goja_nodejs/require"
 	"github.com/fatih/color"
@@ -48,6 +47,13 @@ type Config struct {
 	//
 	// If not set it fallbacks to a relative "pb_data/../pb_hooks" directory.
 	HooksDir string
+
+	// HooksPoolSize specifies how many goja.Runtime instances to preinit
+	// and keep for the JS app hooks gorotines execution.
+	//
+	// Zero or negative value means that it will create a new goja.Runtime
+	// on every fired goroutine.
+	HooksPoolSize int
 
 	// MigrationsDir specifies the JS migrations directory.
 	//
@@ -172,11 +178,10 @@ func (p *plugin) registerHooks() error {
 		}
 	}
 
-	registry := new(require.Registry) // this can be shared by multiple runtimes
+	// this is safe to be shared across multiple vms
+	registry := new(require.Registry)
 
-	loop := eventloop.NewEventLoop()
-
-	loop.Run(func(vm *goja.Runtime) {
+	sharedBinds := func(vm *goja.Runtime) {
 		registry.Enable(vm)
 		console.Enable(vm)
 		process.Enable(vm)
@@ -186,26 +191,35 @@ func (p *plugin) registerHooks() error {
 		securityBinds(vm)
 		formsBinds(vm)
 		apisBinds(vm)
-
 		vm.Set("$app", p.app)
+	}
 
-		for file, content := range files {
-			_, err := vm.RunString(string(content))
-			if err != nil {
-				if p.config.HooksWatch {
-					color.Red("Failed to execute %s: %v", file, err)
-				} else {
-					panic(err)
-				}
-			}
-		}
+	// initiliaze the executor vms
+	executors := newPool(p.config.HooksPoolSize, func() *goja.Runtime {
+		executor := goja.New()
+		sharedBinds(executor)
+		return executor
 	})
 
-	loop.Start()
+	// initialize the loader vm
+	loader := goja.New()
+	sharedBinds(loader)
+	hooksBinds(p.app, loader, executors)
+	cronBinds(p.app, loader, executors)
+	routerBinds(p.app, loader, executors)
+
+	for file, content := range files {
+		_, err := loader.RunString(string(content))
+		if err != nil {
+			if p.config.HooksWatch {
+				color.Red("Failed to execute %s: %v", file, err)
+			} else {
+				panic(err)
+			}
+		}
+	}
 
 	p.app.OnTerminate().Add(func(e *core.TerminateEvent) error {
-		loop.StopNoWait()
-
 		return nil
 	})
 
@@ -243,11 +257,12 @@ func (p *plugin) watchHooks() error {
 
 	// start listening for events.
 	go func() {
+		defer stopDebounceTimer()
+
 		for {
 			select {
 			case event, ok := <-watcher.Events:
 				if !ok {
-					stopDebounceTimer()
 					return
 				}
 
@@ -266,7 +281,6 @@ func (p *plugin) watchHooks() error {
 				})
 			case err, ok := <-watcher.Errors:
 				if !ok {
-					stopDebounceTimer()
 					return
 				}
 				color.Red("Watch error:", err)

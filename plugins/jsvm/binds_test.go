@@ -38,7 +38,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 14, t)
+	testBindsCount(vm, "this", 15, t)
 }
 
 func TestBaseBindsRecord(t *testing.T) {
@@ -682,46 +682,8 @@ func TestApisBindsCount(t *testing.T) {
 	vm := goja.New()
 	apisBinds(vm)
 
-	testBindsCount(vm, "this", 7, t)
+	testBindsCount(vm, "this", 6, t)
 	testBindsCount(vm, "$apis", 10, t)
-}
-
-func TestApisBindsRoute(t *testing.T) {
-	app, _ := tests.NewTestApp()
-	defer app.Cleanup()
-
-	vm := goja.New()
-	baseBinds(vm)
-	apisBinds(vm)
-
-	_, err := vm.RunString(`
-		let handlerCalls = 0;
-
-		const route = new Route({
-			method: "test_method",
-			path: "test_path",
-			handler: () => {
-				handlerCalls++;
-			}
-		});
-
-		route.handler();
-
-		if (handlerCalls != 1) {
-			throw new Error('Expected handlerCalls 1, got ' + handlerCalls);
-		}
-
-		if (route.method != "test_method") {
-			throw new Error('Expected method "test_method", got ' + route.method);
-		}
-
-		if (route.path != "test_path") {
-			throw new Error('Expected method "test_path", got ' + route.path);
-		}
-	`)
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func TestApisBindsApiError(t *testing.T) {
@@ -843,7 +805,7 @@ func TestLoadingArrayOf(t *testing.T) {
 	vm.Set("$app", app)
 
 	_, err := vm.RunString(`
-		let result = $arrayOf(new DynamicModel({
+		let result = arrayOf(new DynamicModel({
 			id:   "",
 			text: "",
 		}))
