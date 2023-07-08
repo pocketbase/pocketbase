@@ -169,6 +169,31 @@ func TestCronRemoveAll(t *testing.T) {
 	}
 }
 
+func TestCronTotal(t *testing.T) {
+	c := New()
+
+	if v := c.Total(); v != 0 {
+		t.Fatalf("Expected 0 jobs, got %v", v)
+	}
+
+	if err := c.Add("test1", "* * * * *", func() {}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := c.Add("test2", "* * * * *", func() {}); err != nil {
+		t.Fatal(err)
+	}
+
+	// overwrite
+	if err := c.Add("test1", "* * * * *", func() {}); err != nil {
+		t.Fatal(err)
+	}
+
+	if v := c.Total(); v != 2 {
+		t.Fatalf("Expected 2 jobs, got %v", v)
+	}
+}
+
 func TestCronStartStop(t *testing.T) {
 	c := New()
 

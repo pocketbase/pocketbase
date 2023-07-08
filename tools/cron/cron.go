@@ -117,6 +117,14 @@ func (c *Cron) RemoveAll() {
 	c.jobs = map[string]*job{}
 }
 
+// Total returns the current total number of registered cron jobs.
+func (c *Cron) Total() int {
+	c.RLock()
+	defer c.RUnlock()
+
+	return len(c.jobs)
+}
+
 // Stop stops the current cron ticker (if not already).
 //
 // You can resume the ticker by calling Start().
@@ -139,9 +147,8 @@ func (c *Cron) Start() {
 	c.Stop()
 
 	c.Lock()
-	defer c.Unlock()
-
 	c.ticker = time.NewTicker(c.interval)
+	c.Unlock()
 
 	go func() {
 		for t := range c.ticker.C {
