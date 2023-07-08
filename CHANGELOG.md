@@ -82,6 +82,8 @@
 
 - Updated the index parser to allow no space between the table name and the columns list ([#2864](https://github.com/pocketbase/pocketbase/discussions/2864#discussioncomment-6373736)).
 
+- Updated go deps.
+
 
 ## v0.16.7
 
