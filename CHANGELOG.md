@@ -1,8 +1,10 @@
-## v0.16.8-WIP
+## v0.16.8
 
 - Fixed unique validator detailed error message not being returned when camelCase field name is used ([#2868](https://github.com/pocketbase/pocketbase/issues/2868)).
 
 - Updated the index parser to allow no space between the table name and the columns list ([#2864](https://github.com/pocketbase/pocketbase/discussions/2864#discussioncomment-6373736)).
+
+- Updated go deps.
 
 
 ## v0.16.7
