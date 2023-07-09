@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.298
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.6.0
-	github.com/dop251/goja v0.0.0-20230621100801-7749907a8a20
+	github.com/dop251/goja v0.0.0-20230707174833-636fdf960de1
 	github.com/dop251/goja_nodejs v0.0.0-20230602164024-804a84515562
 	github.com/fatih/color v1.15.0
 	github.com/fsnotify/fsnotify v1.6.0
@@ -54,7 +54,7 @@ require (
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
+	github.com/google/pprof v0.0.0-20230705174524-200ffdc848b8 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/google/wire v0.5.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
