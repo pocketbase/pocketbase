@@ -285,7 +285,11 @@ func LoadCollectionContext(app core.App, optCollectionTypes ...string) echo.Midd
 func ActivityLogger(app core.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			start := time.Now()
+
 			err := next(c)
+
+			end := time.Now()
 
 			// no logs retention
 			if app.Settings().Logs.MaxDays == 0 {
@@ -312,6 +316,8 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 					meta["errorMessage"] = v.Error()
 				}
 			}
+
+			meta["responseTime"] = end.Sub(start).Milliseconds()
 
 			requestAuth := models.RequestAuthGuest
 			if c.Get(ContextAuthRecordKey) != nil {
