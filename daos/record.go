@@ -230,7 +230,7 @@ func (dao *Dao) FindFirstRecordByData(
 // If the limit argument is <= 0, no limit is applied to the query and
 // all matching records are returned.
 //
-// NB Don't put untrusted user input in the filter string as it
+// NB! Don't put untrusted user input in the filter string as it
 // practically would allow the users to inject their own custom filter.
 //
 // Example:
@@ -294,7 +294,7 @@ func (dao *Dao) FindRecordsByFilter(
 
 // FindFirstRecordByFilter returns the first available record matching the provided filter.
 //
-// NB Don't put untrusted user input in the filter string as it
+// NB! Don't put untrusted user input in the filter string as it
 // practically would allow the users to inject their own custom filter.
 //
 // Example:
@@ -484,30 +484,35 @@ func (dao *Dao) SuggestUniqueAuthRecordUsername(
 // CanAccessRecord checks if a record is allowed to be accessed by the
 // specified requestData and accessRule.
 //
-// Always return false on invalid access rule or db error.
+// Rule and db checks are ignored in case requestData.Admin is set.
+//
+// The returned error indicate that something unexpected happened during
+// the check (eg. invalid rule or db error).
+//
+// The method always return false on invalid access rule or db error.
 //
 // Example:
 //
 //	requestData := apis.RequestData(c /* echo.Context */)
 //	record, _ := dao.FindRecordById("example", "RECORD_ID")
-//	// custom rule
-//	// or use one of the record collection's, eg. record.Collection().ViewRule
 //	rule := types.Pointer("@request.auth.id != '' || status = 'public'")
+//	// ... or use one of the record collection's rule, eg. record.Collection().ViewRule
 //
-//	canAccess := dao.CanAccessRecord(record, requestData, rule)
-func (dao *Dao) CanAccessRecord(record *models.Record, requestData *models.RequestData, accessRule *string) bool {
+//	if ok, _ := dao.CanAccessRecord(record, requestData, rule); ok { ... }
+func (dao *Dao) CanAccessRecord(record *models.Record, requestData *models.RequestData, accessRule *string) (bool, error) {
 	if requestData.Admin != nil {
 		// admins can access everything
-		return true
+		return true, nil
 	}
 
 	if accessRule == nil {
 		// only admins can access this record
-		return false
+		return false, nil
 	}
 
 	if *accessRule == "" {
-		return true // empty public rule, aka. everyone can access
+		// empty public rule, aka. everyone can access
+		return true, nil
 	}
 
 	var exists bool
@@ -520,16 +525,16 @@ func (dao *Dao) CanAccessRecord(record *models.Record, requestData *models.Reque
 	resolver := resolvers.NewRecordFieldResolver(dao, record.Collection(), requestData, true)
 	expr, err := search.FilterData(*accessRule).BuildExpr(resolver)
 	if err != nil {
-		return false
+		return false, err
 	}
 	resolver.UpdateQuery(query)
 	query.AndWhere(expr)
 
-	if err := query.Limit(1).Row(&exists); err != nil {
-		return false
+	if err := query.Limit(1).Row(&exists); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return false, err
 	}
 
-	return exists
+	return exists, nil
 }
 
 // SaveRecord persists the provided Record model in the database.
