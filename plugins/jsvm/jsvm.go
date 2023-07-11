@@ -162,13 +162,14 @@ func (p *plugin) registerHooks() error {
 		return err
 	}
 
-	// prepend the types reference directive to empty files
+	// prepend the types reference directive
 	//
 	// note: it is loaded during startup to handle conveniently also
 	// the case when the HooksWatch option is enabled and the application
 	// restart on newly created file
 	for name, content := range files {
 		if len(content) != 0 {
+			// skip non-empty files for now to prevent accidental overwrite
 			continue
 		}
 		path := filepath.Join(p.config.HooksDir, name)
@@ -176,6 +177,18 @@ func (p *plugin) registerHooks() error {
 		if err := prependToEmptyFile(path, directive+"\n\n"); err != nil {
 			color.Yellow("Unable to prepend the types reference: %v", err)
 		}
+	}
+
+	// initialize the hooks dir watcher
+	if p.config.HooksWatch {
+		if err := p.watchHooks(); err != nil {
+			return err
+		}
+	}
+
+	if len(files) == 0 {
+		// no need to register the vms since there are no entrypoint files anyway
+		return nil
 	}
 
 	// this is safe to be shared across multiple vms
@@ -191,6 +204,7 @@ func (p *plugin) registerHooks() error {
 		securityBinds(vm)
 		formsBinds(vm)
 		apisBinds(vm)
+		httpClientBinds(vm)
 		vm.Set("$app", p.app)
 	}
 
@@ -219,20 +233,21 @@ func (p *plugin) registerHooks() error {
 		}
 	}
 
-	p.app.OnTerminate().Add(func(e *core.TerminateEvent) error {
-		return nil
-	})
-
-	if p.config.HooksWatch {
-		return p.watchHooks()
-	}
-
 	return nil
 }
 
 // watchHooks initializes a hooks file watcher that will restart the
 // application (*if possible) in case of a change in the hooks directory.
+//
+// This method does nothing if the hooks directory is missing.
 func (p *plugin) watchHooks() error {
+	if _, err := os.Stat(p.config.HooksDir); err != nil {
+		if os.IsNotExist(err) {
+			return nil // no hooks dir to watch
+		}
+		return err
+	}
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return err

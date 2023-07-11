@@ -1,10 +1,16 @@
 package jsvm
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -72,16 +78,21 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 
 					// check for returned hook.StopPropagation
 					if res != nil {
-						if v, ok := res.Export().(error); ok {
-							return v
+						exported := res.Export()
+						if exported != nil {
+							if v, ok := exported.(error); ok {
+								return v
+							}
 						}
 					}
 
 					// check for throwed hook.StopPropagation
 					if err != nil {
-						exception, ok := err.(*goja.Exception)
-						if ok && errors.Is(exception.Value().Export().(error), hook.StopPropagation) {
-							return hook.StopPropagation
+						if exception, ok := err.(*goja.Exception); ok {
+							v, ok := exception.Value().Export().(error)
+							if ok && errors.Is(v, hook.StopPropagation) {
+								return hook.StopPropagation
+							}
 						}
 					}
 
@@ -461,6 +472,100 @@ func apisBinds(vm *goja.Runtime) {
 	registerFactoryAsConstructor(vm, "BadRequestError", apis.NewBadRequestError)
 	registerFactoryAsConstructor(vm, "ForbiddenError", apis.NewForbiddenError)
 	registerFactoryAsConstructor(vm, "UnauthorizedError", apis.NewUnauthorizedError)
+}
+
+func httpClientBinds(vm *goja.Runtime) {
+	obj := vm.NewObject()
+	vm.Set("$http", obj)
+
+	type sendResult struct {
+		StatusCode int
+		Raw        string
+		Json       any
+	}
+
+	type sendConfig struct {
+		Method  string
+		Url     string
+		Data    map[string]any
+		Headers map[string]string
+		Timeout int // seconds (default to 120)
+	}
+
+	obj.Set("send", func(params map[string]any) (*sendResult, error) {
+		rawParams, err := json.Marshal(params)
+		if err != nil {
+			return nil, err
+		}
+
+		config := sendConfig{
+			Method: "GET",
+		}
+		if err := json.Unmarshal(rawParams, &config); err != nil {
+			return nil, err
+		}
+
+		if config.Timeout <= 0 {
+			config.Timeout = 120
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(config.Timeout)*time.Second)
+		defer cancel()
+
+		var reqBody io.Reader
+		if len(config.Data) != 0 {
+			encoded, err := json.Marshal(config.Data)
+			if err != nil {
+				return nil, err
+			}
+			reqBody = bytes.NewReader(encoded)
+		}
+
+		req, err := http.NewRequestWithContext(ctx, strings.ToUpper(config.Method), config.Url, reqBody)
+		if err != nil {
+			return nil, err
+		}
+
+		for k, v := range config.Headers {
+			req.Header.Add(k, v)
+		}
+
+		// set default content-type header (if missing)
+		if req.Header.Get("content-type") == "" {
+			req.Header.Set("content-type", "application/json")
+		}
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+
+		if res.StatusCode < 200 || res.StatusCode >= 400 {
+			return nil, fmt.Errorf("request failed with status %d", res.StatusCode)
+		}
+
+		bodyRaw, _ := io.ReadAll(res.Body)
+
+		result := &sendResult{
+			StatusCode: res.StatusCode,
+			Raw:        string(bodyRaw),
+		}
+
+		if len(result.Raw) != 0 {
+			// try as map
+			result.Json = map[string]any{}
+			if err := json.Unmarshal(bodyRaw, &result.Json); err != nil {
+				// try as slice
+				result.Json = []any{}
+				if err := json.Unmarshal(bodyRaw, &result.Json); err != nil {
+					result.Json = nil
+				}
+			}
+		}
+
+		return result, nil
+	})
 }
 
 // -------------------------------------------------------------------

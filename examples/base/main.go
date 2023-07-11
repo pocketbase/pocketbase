@@ -42,7 +42,7 @@ func main() {
 	app.RootCmd.PersistentFlags().IntVar(
 		&hooksPool,
 		"hooksPool",
-		120,
+		100,
 		"the total prewarm goja.Runtime instances for the JS app hooks execution",
 	)
 

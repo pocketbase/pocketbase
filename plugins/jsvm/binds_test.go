@@ -2,9 +2,15 @@ package jsvm
 
 import (
 	"encoding/json"
+	"io"
 	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -760,11 +766,11 @@ func TestLoadingDynamicModel(t *testing.T) {
 		})
 
 		$app.dao().db()
-		    .select("text", "bool", "number", "select_many", "json", "('{\"test\": 1}') as obj")
-		    .from("demo1")
-		    .where($dbx.hashExp({"id": "84nmscqy84lsi1t"}))
-		    .limit(1)
-		    .one(result)
+			.select("text", "bool", "number", "select_many", "json", "('{\"test\": 1}') as obj")
+			.from("demo1")
+			.where($dbx.hashExp({"id": "84nmscqy84lsi1t"}))
+			.limit(1)
+			.one(result)
 
 		if (result.text != "test") {
 			throw new Error('Expected text "test", got ' + result.text);
@@ -811,12 +817,12 @@ func TestLoadingArrayOf(t *testing.T) {
 		}))
 
 		$app.dao().db()
-		    .select("id", "text")
-		    .from("demo1")
-		    .where($dbx.exp("id='84nmscqy84lsi1t' OR id='al1h9ijdeojtsjy'"))
-		    .limit(2)
-		    .orderBy("text ASC")
-		    .all(result)
+			.select("id", "text")
+			.from("demo1")
+			.where($dbx.exp("id='84nmscqy84lsi1t' OR id='al1h9ijdeojtsjy'"))
+			.limit(2)
+			.orderBy("text ASC")
+			.all(result)
 
 		if (result.length != 2) {
 			throw new Error('Expected 2 list items, got ' + result.length);
@@ -834,6 +840,147 @@ func TestLoadingArrayOf(t *testing.T) {
 		}
 		if (result[1].text != "test2") {
 			throw new Error('Expected 1.text "test2", got ' + result[1].text);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestHttpClientBindsCount(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	httpClientBinds(vm)
+
+	testBindsCount(vm, "$http", 1, t)
+}
+
+func TestHttpClientBindsSend(t *testing.T) {
+	// start a test server
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		if req.URL.Query().Get("testError") != "" {
+			rw.WriteHeader(400)
+			return
+		}
+
+		timeoutStr := req.URL.Query().Get("testTimeout")
+		timeout, _ := strconv.Atoi(timeoutStr)
+		if timeout > 0 {
+			time.Sleep(time.Duration(timeout) * time.Second)
+		}
+
+		bodyRaw, _ := io.ReadAll(req.Body)
+		defer req.Body.Close()
+		body := map[string]any{}
+		json.Unmarshal(bodyRaw, &body)
+
+		// normalize headers
+		headers := make(map[string]string, len(req.Header))
+		for k, v := range req.Header {
+			if len(v) > 0 {
+				headers[strings.ToLower(strings.ReplaceAll(k, "-", "_"))] = v[0]
+			}
+		}
+
+		info := map[string]any{
+			"method":  req.Method,
+			"headers": headers,
+			"body":    body,
+		}
+
+		infoRaw, _ := json.Marshal(info)
+
+		// write back the submitted request
+		rw.Write(infoRaw)
+	}))
+	defer server.Close()
+
+	vm := goja.New()
+	baseBinds(vm)
+	httpClientBinds(vm)
+	vm.Set("testUrl", server.URL)
+
+	_, err := vm.RunString(`
+		function getNestedVal(data, path) {
+			let result = data || {};
+			let parts  = path.split(".");
+
+			for (const part of parts) {
+				if (
+					result == null ||
+					typeof result !== "object" ||
+					typeof result[part] === "undefined"
+				) {
+					return null;
+				}
+
+				result = result[part];
+			}
+
+			return result;
+		}
+
+		let testErr;
+		try {
+			$http.send({ url: testUrl + "?testError=1" })
+		} catch (err) {
+			testErr = err
+		}
+		if (!testErr) {
+			throw new Error("Expected an error")
+		}
+
+		let testTimeout;
+		try {
+			$http.send({
+				url:     testUrl + "?testTimeout=3",
+				timeout: 1
+			})
+		} catch (err) {
+			testTimeout = err
+		}
+		if (!testTimeout) {
+			throw new Error("Expected timeout error")
+		}
+
+		// basic fields check
+		const test1 = $http.send({
+			method:  "post",
+			url:     testUrl,
+			data:    {"data": "example"},
+			headers: {"header1": "123", "header2": "456"}
+		})
+
+		// with custom content-type header
+		const test2 = $http.send({
+			url: testUrl,
+			headers: {"content-type": "text/plain"}
+		})
+
+		const scenarios = [
+			[test1, {
+				"json.method":               "POST",
+				"json.headers.header1":      "123",
+				"json.headers.header2":      "456",
+				"json.headers.content_type": "application/json", // default
+			}],
+			[test2, {
+				"json.method":               "GET",
+				"json.headers.content_type": "text/plain",
+			}],
+		]
+
+		for (let scenario in scenarios) {
+			const result = scenario[0];
+			const expectations = scenario[1];
+
+			for (let key in expectations) {
+				if (getNestedVal(result, key) != expectations[key]) {
+					throw new Error('Expected ' + key + ' ' + expectations[key] + ', got: ' + result.raw);
+				}
+			}
 		}
 	`)
 	if err != nil {

@@ -75,6 +75,8 @@
 
 - Allowed `0` as `RelationOptions.MinSelect` value to avoid the ambiguity between 0 and non-filled input value ([#2817](https://github.com/pocketbase/pocketbase/discussions/2817)).
 
+- Minor Admin UI fixes (typos, grammar fixes, removed unnecessary 404 error check, etc.).
+
 
 ## v0.16.8
 

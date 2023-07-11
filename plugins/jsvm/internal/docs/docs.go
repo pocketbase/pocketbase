@@ -3,7 +3,9 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -647,6 +649,29 @@ declare namespace $apis {
 }
 
 // -------------------------------------------------------------------
+// httpClientBinds
+// -------------------------------------------------------------------
+
+declare namespace $http {
+  /**
+   * Sends a single HTTP request (_currently only json and plain text requests_).
+   *
+   * @group PocketBase
+   */
+  function send(params: {
+    url:     string,
+    method?:  string, // default to "GET"
+    data?:    { [key:string]: any },
+    headers?: { [key:string]: string },
+    timeout?: number // default to 120
+  }): {
+    statusCode: number
+    raw:        string
+    json:       any
+  };
+}
+
+// -------------------------------------------------------------------
 // migrate only
 // -------------------------------------------------------------------
 
@@ -695,7 +720,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := os.WriteFile("./generated/types.d.ts", []byte(result), 0644); err != nil {
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		log.Fatal("Failed to get the current docs directory")
+	}
+
+	parentDir := filepath.Dir(filename)
+	typesFile := filepath.Join(parentDir, "generated", "types.d.ts")
+
+	if err := os.WriteFile(typesFile, []byte(result), 0644); err != nil {
 		log.Fatal(err)
 	}
 }
