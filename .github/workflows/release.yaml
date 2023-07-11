@@ -32,7 +32,7 @@ jobs:
       # Similar to the above, the jsvm docs are pregenerated locally
       # but its here to ensure that it wasn't forgotten to be executed.
       - name: Generate jsvm types
-        run: go run ./plugins/jsvm/internal/docs.go
+        run: go run ./plugins/jsvm/internal/docs/docs.go
 
       # The prebuilt golangci-lint doesn't support go 1.18+ yet
       # https://github.com/golangci/golangci-lint/issues/2649
