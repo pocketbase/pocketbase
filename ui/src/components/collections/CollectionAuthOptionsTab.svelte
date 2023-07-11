@@ -50,7 +50,7 @@
             {#if hasUsernameErrors}
                 <i
                     class="ri-error-warning-fill txt-danger"
-                    transition:scale={{ duration: 150, start: 0.7 }}
+                    transition:scale|global={{ duration: 150, start: 0.7 }}
                     use:tooltip={{ text: "Has errors", position: "left" }}
                 />
             {/if}
@@ -80,7 +80,7 @@
             {#if hasEmailErrors}
                 <i
                     class="ri-error-warning-fill txt-danger"
-                    transition:scale={{ duration: 150, start: 0.7 }}
+                    transition:scale|global={{ duration: 150, start: 0.7 }}
                     use:tooltip={{ text: "Has errors", position: "left" }}
                 />
             {/if}
@@ -92,7 +92,7 @@
         </Field>
 
         {#if collection.options.allowEmailAuth}
-            <div class="grid grid-sm p-t-sm" transition:slide|local={{ duration: 150 }}>
+            <div class="grid grid-sm p-t-sm" transition:slide={{ duration: 150 }}>
                 <div class="col-lg-6">
                     <Field
                         class="form-field {!CommonHelper.isEmpty(collection.options.onlyEmailDomains)
@@ -167,7 +167,7 @@
             {#if hasOAuth2Errors}
                 <i
                     class="ri-error-warning-fill txt-danger"
-                    transition:scale={{ duration: 150, start: 0.7 }}
+                    transition:scale|global={{ duration: 150, start: 0.7 }}
                     use:tooltip={{ text: "Has errors", position: "left" }}
                 />
             {/if}
@@ -179,7 +179,7 @@
         </Field>
 
         {#if collection.options.allowOAuth2Auth}
-            <div class="block" transition:slide|local={{ duration: 150 }}>
+            <div class="block" transition:slide={{ duration: 150 }}>
                 <div class="flex p-t-base">
                     <a href="/_/#/settings/auth-providers" target="_blank" class="btn btn-sm btn-outline">
                         <span class="txt">Manage OAuth2 providers</span>

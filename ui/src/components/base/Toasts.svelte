@@ -12,8 +12,8 @@
             class:alert-success={toast.type == "success"}
             class:alert-danger={toast.type == "error"}
             class:alert-warning={toast.type == "warning"}
-            in:slide={{ duration: 150 }}
-            out:fade={{ duration: 150 }}
+            in:slide|global={{ duration: 150 }}
+            out:fade|global={{ duration: 150 }}
             animate:flip={{ duration: 150 }}
         >
             <div class="icon">

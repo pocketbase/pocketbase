@@ -165,7 +165,7 @@
             bind:this={containerChild}
             class={classes}
             class:active
-            transition:fly|local={{ duration: 150, y: 3 }}
+            transition:fly={{ duration: 150, y: 3 }}
         >
             <slot />
         </div>

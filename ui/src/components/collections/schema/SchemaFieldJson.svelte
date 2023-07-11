@@ -26,7 +26,7 @@
         </button>
 
         {#if showInfo}
-            <div class="block" transition:slide|local={{ duration: 150 }}>
+            <div class="block" transition:slide={{ duration: 150 }}>
                 <div class="alert alert-warning m-b-0 m-t-10">
                     <div class="content">
                         In order to support seamlessly both <code>application/json</code> and

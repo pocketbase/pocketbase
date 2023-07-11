@@ -120,7 +120,7 @@
     class:required={field.required}
     class:expanded={interactive && showOptions}
     class:deleted={field.toDelete}
-    transition:slide|local={{ duration: 150 }}
+    transition:slide={{ duration: 150 }}
 >
     <div class="schema-field-header">
         {#if interactive}
@@ -198,7 +198,7 @@
     </div>
 
     {#if interactive && showOptions}
-        <div class="schema-field-options" transition:slide|local={{ duration: 150 }}>
+        <div class="schema-field-options" transition:slide={{ duration: 150 }}>
             <div class="grid grid-sm">
                 <div class="col-sm-12 hidden-empty">
                     <slot name="options" {interactive} {hasErrors} />

@@ -173,7 +173,7 @@
                 </Field>
 
                 {#if formSettings.smtp.enabled}
-                    <div class="grid" transition:slide|local={{ duration: 150 }}>
+                    <div class="grid" transition:slide={{ duration: 150 }}>
                         <div class="col-lg-4">
                             <Field class="form-field required" name="smtp.host" let:uniqueId>
                                 <label for={uniqueId}>SMTP server host</label>

@@ -526,7 +526,7 @@
 {/if}
 
 {#if totalBulkSelected}
-    <div class="bulkbar" transition:fly|local={{ duration: 150, y: 5 }}>
+    <div class="bulkbar" transition:fly={{ duration: 150, y: 5 }}>
         <div class="txt">
             Selected <strong>{totalBulkSelected}</strong>
             {totalBulkSelected === 1 ? "record" : "records"}

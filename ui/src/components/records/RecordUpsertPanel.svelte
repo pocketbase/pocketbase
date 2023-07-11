@@ -467,7 +467,7 @@
             on:keydown={handleFormKeydown}
         >
             {#if !hasChanges && initialDraft}
-                <div class="block" out:slide={{ duration: 150 }}>
+                <div class="block" out:slide|global={{ duration: 150 }}>
                     <div class="alert alert-info m-0">
                         <div class="icon">
                             <i class="ri-information-line" />

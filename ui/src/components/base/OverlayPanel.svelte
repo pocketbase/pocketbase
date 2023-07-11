@@ -226,14 +226,14 @@
             <div
                 class="overlay"
                 on:click|preventDefault={() => (overlayClose ? hide() : true)}
-                transition:fade|local={{ duration: transitionSpeed, opacity: 0 }}
+                transition:fade={{ duration: transitionSpeed, opacity: 0 }}
             />
 
             <div
                 class="overlay-panel {classes} {contentScrollClass}"
                 class:popup
-                in:fly={popup ? { duration: transitionSpeed, y: -10 } : { duration: transitionSpeed, x: 50 }}
-                out:fly={popup ? { duration: transitionSpeed, y: 10 } : { duration: transitionSpeed, x: 50 }}
+                in:fly|global={popup ? { duration: transitionSpeed, y: -10 } : { duration: transitionSpeed, x: 50 }}
+                out:fly|global={popup ? { duration: transitionSpeed, y: 10 } : { duration: transitionSpeed, x: 50 }}
             >
                 <div class="overlay-panel-section panel-header">
                     {#if btnClose && !popup}
