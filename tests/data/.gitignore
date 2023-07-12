@@ -1,2 +1,3 @@
 *.db-shm
 *.db-wal
+types.d.ts
