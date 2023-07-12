@@ -16,6 +16,54 @@ import (
 
 const heading = `
 // -------------------------------------------------------------------
+// cronBinds
+// -------------------------------------------------------------------
+
+/**
+ * CronAdd registers a new cron job.
+ *
+ * If a cron job with the specified name already exist, it will be
+ * replaced with the new one.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * // prints "Hello world!" on every 30 minutes
+ * cronAdd("hello", "*/30 * * * *", (c) => {
+ *     console.log("Hello world!")
+ * })
+ * ` + "```" + `
+ *
+ * _Note that this method is available only in pb_hooks context._
+ *
+ * @group PocketBase
+ */
+declare function cronAdd(
+  jobId:    string,
+  cronExpr: string,
+  handler:  () => void,
+): void;
+
+/**
+ * CronRemove removes previously registerd cron job by its name.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * cronRemove("hello")
+ * ` + "```" + `
+ *
+ * _Note that this method is available only in pb_hooks context._
+ *
+ * @group PocketBase
+ */
+declare function cronAdd(
+  jobId:    string,
+  cronExpr: string,
+  handler:  () => void,
+): void;
+
+// -------------------------------------------------------------------
 // routerBinds
 // -------------------------------------------------------------------
 

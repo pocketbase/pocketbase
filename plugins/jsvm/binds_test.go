@@ -16,6 +16,7 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
@@ -985,5 +986,201 @@ func TestHttpClientBindsSend(t *testing.T) {
 	`)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestCronBindsCount(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	cronBinds(app, vm, nil)
+
+	testBindsCount(vm, "this", 2, t)
+}
+
+func TestHooksBindsCount(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	hooksBinds(app, vm, nil)
+
+	testBindsCount(vm, "this", 88, t)
+}
+
+func TestHooksBinds(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	result := &struct {
+		Called int
+	}{}
+
+	vmFactory := func() *goja.Runtime {
+		vm := goja.New()
+		baseBinds(vm)
+		vm.Set("$app", app)
+		vm.Set("result", result)
+		return vm
+	}
+
+	pool := newPool(1, vmFactory)
+
+	vm := vmFactory()
+	hooksBinds(app, vm, pool)
+
+	_, err := vm.RunString(`
+		onModelBeforeUpdate((e) => {
+			result.called++;
+		}, "demo1")
+
+		onModelBeforeUpdate((e) => {
+			throw new Error("example");
+		}, "demo1")
+
+		onModelBeforeUpdate((e) => {
+			result.called++;
+		}, "demo2")
+
+		onModelBeforeUpdate((e) => {
+			result.called++;
+		}, "demo2")
+
+		onModelBeforeUpdate((e) => {
+			return $stopPropagation
+		}, "demo2")
+
+		onModelBeforeUpdate((e) => {
+			result.called++;
+		}, "demo2")
+
+		onAfterBootstrap(() => {
+			// check hooks propagation and tags filtering
+			const recordA = $app.dao().findFirstRecordByFilter("demo2", "1=1")
+			recordA.set("title", "update")
+			$app.dao().saveRecord(recordA)
+			if (result.called != 2) {
+				throw new Error("Expected result.called to be 2, got " + result.called)
+			}
+
+			// reset
+			result.called = 0;
+
+			// check error handling
+			let hasErr = false
+			try {
+				const recordB = $app.dao().findFirstRecordByFilter("demo1", "1=1")
+				recordB.set("text", "update")
+				$app.dao().saveRecord(recordB)
+			} catch (err) {
+				hasErr = true
+			}
+			if (!hasErr) {
+				throw new Error("Expected an error to be thrown")
+			}
+			if (result.called != 1) {
+				throw new Error("Expected result.called to be 1, got " + result.called)
+			}
+		})
+
+		$app.bootstrap();
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRouterBindsCount(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	routerBinds(app, vm, nil)
+
+	testBindsCount(vm, "this", 3, t)
+}
+
+func TestRouterBinds(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	result := &struct {
+		AddCount int
+		UseCount int
+		PreCount int
+	}{}
+
+	vmFactory := func() *goja.Runtime {
+		vm := goja.New()
+		baseBinds(vm)
+		vm.Set("$app", app)
+		vm.Set("result", result)
+		return vm
+	}
+
+	pool := newPool(1, vmFactory)
+
+	vm := vmFactory()
+	routerBinds(app, vm, pool)
+
+	_, err := vm.RunString(`
+		routerAdd("GET", "/test", (e) => {
+			result.addCount++;
+		}, (next) => {
+			return (c) => {
+				result.addCount++;
+
+				return next(c);
+			}
+		})
+
+		routerUse((next) => {
+			return (c) => {
+				result.useCount++;
+
+				return next(c)
+			}
+		})
+
+		routerPre((next) => {
+			return (c) => {
+				result.preCount++;
+
+				return next(c)
+			}
+		})
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	e, err := apis.InitApi(app)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	serveEvent := &core.ServeEvent{
+		App:    app,
+		Router: e,
+	}
+	if err := app.OnBeforeServe().Trigger(serveEvent); err != nil {
+		t.Fatal(err)
+	}
+
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/test", nil)
+	e.ServeHTTP(rec, req)
+
+	if result.AddCount != 2 {
+		t.Fatalf("Expected AddCount %d, got %d", 2, result.AddCount)
+	}
+
+	if result.UseCount != 1 {
+		t.Fatalf("Expected UseCount %d, got %d", 1, result.UseCount)
+	}
+
+	if result.PreCount != 1 {
+		t.Fatalf("Expected PreCount %d, got %d", 1, result.PreCount)
 	}
 }

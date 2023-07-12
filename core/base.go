@@ -349,11 +349,7 @@ func (app *BaseApp) Bootstrap() error {
 	// cleanup the pb_data temp directory (if any)
 	os.RemoveAll(filepath.Join(app.DataDir(), LocalTempDirName))
 
-	if err := app.OnAfterBootstrap().Trigger(event); err != nil && app.IsDebug() {
-		log.Println(err)
-	}
-
-	return nil
+	return app.OnAfterBootstrap().Trigger(event)
 }
 
 // ResetBootstrapState takes care for releasing initialized app resources

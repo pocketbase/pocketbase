@@ -36,6 +36,8 @@ type ServeConfig struct {
 	AllowedOrigins []string
 }
 
+// @todo return the server instance to allow manual shutdowns
+//
 // Serve starts a new app web server.
 func Serve(app core.App, config ServeConfig) error {
 	if len(config.AllowedOrigins) == 0 {
