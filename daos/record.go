@@ -1,6 +1,7 @@
 package daos
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -18,79 +19,114 @@ import (
 	"github.com/spf13/cast"
 )
 
-// RecordQuery returns a new Record select query.
-func (dao *Dao) RecordQuery(collection *models.Collection) *dbx.SelectQuery {
-	tableName := collection.Name
+// RecordQuery returns a new Record select query from a collection model, id or name.
+//
+// In case a collection id or name is provided and that collection doesn't
+// actually exists, the generated query will be created with a cancelled context
+// and will fail once an executor (Row(), One(), All(), etc.) is called.
+func (dao *Dao) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuery {
+	var tableName string
+	var collection *models.Collection
+	var collectionErr error
+	switch c := collectionModelOrIdentifier.(type) {
+	case *models.Collection:
+		collection = c
+		tableName = collection.Name
+	case models.Collection:
+		collection = &c
+		tableName = collection.Name
+	case string:
+		collection, collectionErr = dao.FindCollectionByNameOrId(c)
+		if collection != nil {
+			tableName = collection.Name
+		} else {
+			// update with some fake table name for easier debugging
+			tableName = "@@__missing_" + c
+		}
+	default:
+		// update with some fake table name for easier debugging
+		tableName = "@@__invalidCollectionModelOrIdentifier"
+		collectionErr = errors.New("unsupported collection identifier, must be collection model, id or name")
+	}
+
 	selectCols := fmt.Sprintf("%s.*", dao.DB().QuoteSimpleColumnName(tableName))
 
-	return dao.DB().
-		Select(selectCols).
-		From(tableName).
-		WithBuildHook(func(query *dbx.Query) {
-			query.WithExecHook(execLockRetry(dao.ModelQueryTimeout, dao.MaxLockRetries)).
-				WithOneHook(func(q *dbx.Query, a any, op func(b any) error) error {
-					switch v := a.(type) {
-					case *models.Record:
-						if v == nil {
-							return op(a)
-						}
+	query := dao.DB().Select(selectCols).From(tableName)
 
-						row := dbx.NullStringMap{}
-						if err := op(&row); err != nil {
-							return err
-						}
+	// in case of an error attach a new context and cancel it immediately with the error
+	if collectionErr != nil {
+		// @todo consider changing to WithCancelCause when upgrading
+		// the min Go requirement to 1.20, so that we can pass the error
+		ctx, cancelFunc := context.WithCancel(context.Background())
+		query.WithContext(ctx)
+		cancelFunc()
+	}
 
-						record := models.NewRecordFromNullStringMap(collection, row)
-
-						*v = *record
-
-						return nil
-					default:
+	return query.WithBuildHook(func(q *dbx.Query) {
+		q.WithExecHook(execLockRetry(dao.ModelQueryTimeout, dao.MaxLockRetries)).
+			WithOneHook(func(q *dbx.Query, a any, op func(b any) error) error {
+				switch v := a.(type) {
+				case *models.Record:
+					if v == nil {
 						return op(a)
 					}
-				}).
-				WithAllHook(func(q *dbx.Query, sliceA any, op func(sliceB any) error) error {
-					switch v := sliceA.(type) {
-					case *[]*models.Record:
-						if v == nil {
-							return op(sliceA)
-						}
 
-						rows := []dbx.NullStringMap{}
-						if err := op(&rows); err != nil {
-							return err
-						}
+					row := dbx.NullStringMap{}
+					if err := op(&row); err != nil {
+						return err
+					}
 
-						records := models.NewRecordsFromNullStringMaps(collection, rows)
+					record := models.NewRecordFromNullStringMap(collection, row)
 
-						*v = records
+					*v = *record
 
-						return nil
-					case *[]models.Record:
-						if v == nil {
-							return op(sliceA)
-						}
-
-						rows := []dbx.NullStringMap{}
-						if err := op(&rows); err != nil {
-							return err
-						}
-
-						records := models.NewRecordsFromNullStringMaps(collection, rows)
-
-						nonPointers := make([]models.Record, len(records))
-						for i, r := range records {
-							nonPointers[i] = *r
-						}
-
-						*v = nonPointers
-
-						return nil
-					default:
+					return nil
+				default:
+					return op(a)
+				}
+			}).
+			WithAllHook(func(q *dbx.Query, sliceA any, op func(sliceB any) error) error {
+				switch v := sliceA.(type) {
+				case *[]*models.Record:
+					if v == nil {
 						return op(sliceA)
 					}
-				})
-		})
+
+					rows := []dbx.NullStringMap{}
+					if err := op(&rows); err != nil {
+						return err
+					}
+
+					records := models.NewRecordsFromNullStringMaps(collection, rows)
+
+					*v = records
+
+					return nil
+				case *[]models.Record:
+					if v == nil {
+						return op(sliceA)
+					}
+
+					rows := []dbx.NullStringMap{}
+					if err := op(&rows); err != nil {
+						return err
+					}
+
+					records := models.NewRecordsFromNullStringMaps(collection, rows)
+
+					nonPointers := make([]models.Record, len(records))
+					for i, r := range records {
+						nonPointers[i] = *r
+					}
+
+					*v = nonPointers
+
+					return nil
+				default:
+					return op(sliceA)
+				}
+			})
+	})
 }
 
 // FindRecordById finds the Record model by its id.

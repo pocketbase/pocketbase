@@ -77,6 +77,9 @@
 
 - Minor Admin UI fixes (typos, grammar fixes, removed unnecessary 404 error check, etc.).
 
+- (@todo docs) For consistency and convenience it is now possible to call `Dao.RecordQuery(collectionModelOrIdentifier)` with just the collection id or name.
+  In case an invalid collection id/name string is passed the query will be resolved with cancelled context error.
+
 
 ## v0.16.8
 

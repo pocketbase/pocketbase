@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -19,7 +18,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-func TestRecordQuery(t *testing.T) {
+func TestRecordQueryWithDifferentCollectionValues(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -28,11 +27,33 @@ func TestRecordQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := fmt.Sprintf("SELECT `%s`.* FROM `%s`", collection.Name, collection.Name)
+	scenarios := []struct {
+		name          any
+		collection    any
+		expectedTotal int
+		expectError   bool
+	}{
+		{"with nil value", nil, 0, true},
+		{"with invalid or missing collection id/name", "missing", 0, true},
+		{"with pointer model", collection, 3, false},
+		{"with value model", *collection, 3, false},
+		{"with name", "demo1", 3, false},
+		{"with id", "wsmn24bux7wo113", 3, false},
+	}
 
-	sql := app.Dao().RecordQuery(collection).Build().SQL()
-	if sql != expected {
-		t.Errorf("Expected sql %s, got %s", expected, sql)
+	for _, s := range scenarios {
+		var records []*models.Record
+		err := app.Dao().RecordQuery(s.collection).All(&records)
+
+		hasErr := err != nil
+		if hasErr != s.expectError {
+			t.Errorf("[%s] Expected hasError %v, got %v", s.name, s.expectError, hasErr)
+			continue
+		}
+
+		if total := len(records); total != s.expectedTotal {
+			t.Errorf("[%s] Expected %d records, got %d", s.name, s.expectedTotal, total)
+		}
 	}
 }
 
