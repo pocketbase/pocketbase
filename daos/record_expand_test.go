@@ -49,15 +49,6 @@ func TestExpandRecords(t *testing.T) {
 			0,
 		},
 		{
-			"empty fetchFunc",
-			"demo4",
-			[]string{"i9naidtvr6qsgb4", "qzaqccwrmva4o1n"},
-			[]string{"self_rel_one", "self_rel_many.self_rel_one"},
-			nil,
-			0,
-			2,
-		},
-		{
 			"fetchFunc with error",
 			"demo4",
 			[]string{"i9naidtvr6qsgb4", "qzaqccwrmva4o1n"},
@@ -102,6 +93,19 @@ func TestExpandRecords(t *testing.T) {
 			1,
 		},
 		{
+			"with nil fetchfunc",
+			"users",
+			[]string{
+				"bgs820n361vj1qd",
+				"4q1xlclmfloku33",
+				"oap640cot4yru2s", // no rels
+			},
+			[]string{"rel"},
+			nil,
+			2,
+			0,
+		},
+		{
 			"expand normalizations",
 			"demo4",
 			[]string{"i9naidtvr6qsgb4", "qzaqccwrmva4o1n"},
@@ -129,6 +133,19 @@ func TestExpandRecords(t *testing.T) {
 			func(c *models.Collection, ids []string) ([]*models.Record, error) {
 				return app.Dao().FindRecordsByIds(c.Id, ids, nil)
 			},
+			2,
+			0,
+		},
+		{
+			"with nil fetchfunc",
+			"users",
+			[]string{
+				"bgs820n361vj1qd",
+				"4q1xlclmfloku33",
+				"oap640cot4yru2s", // no rels
+			},
+			[]string{"rel"},
+			nil,
 			2,
 			0,
 		},
@@ -227,15 +244,6 @@ func TestExpandRecord(t *testing.T) {
 			},
 			0,
 			0,
-		},
-		{
-			"empty fetchFunc",
-			"demo4",
-			"i9naidtvr6qsgb4",
-			[]string{"self_rel_one", "self_rel_many.self_rel_one"},
-			nil,
-			0,
-			2,
 		},
 		{
 			"fetchFunc with error",

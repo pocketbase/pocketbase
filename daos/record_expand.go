@@ -1,7 +1,6 @@
 package daos
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -24,12 +23,18 @@ type ExpandFetchFunc func(relCollection *models.Collection, relIds []string) ([]
 
 // ExpandRecord expands the relations of a single Record model.
 //
+// If fetchFunc is not set, then a default function will be used that
+// returns all relation records.
+//
 // Returns a map with the failed expand parameters and their errors.
 func (dao *Dao) ExpandRecord(record *models.Record, expands []string, fetchFunc ExpandFetchFunc) map[string]error {
 	return dao.ExpandRecords([]*models.Record{record}, expands, fetchFunc)
 }
 
 // ExpandRecords expands the relations of the provided Record models list.
+//
+// If fetchFunc is not set, then a default function will be used that
+// returns all relation records.
 //
 // Returns a map with the failed expand parameters and their errors.
 func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, fetchFunc ExpandFetchFunc) map[string]error {
@@ -49,13 +54,16 @@ func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, fetchF
 var indirectExpandRegex = regexp.MustCompile(`^(\w+)\((\w+)\)$`)
 
 // notes:
-// - fetchFunc must be non-nil func
+// - if fetchFunc is nil, dao.FindRecordsByIds will be used
 // - all records are expected to be from the same collection
 // - if MaxExpandDepth is reached, the function returns nil ignoring the remaining expand path
 // - indirect expands are supported only with single relation fields
 func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetchFunc ExpandFetchFunc, recursionLevel int) error {
 	if fetchFunc == nil {
-		return errors.New("Relation records fetchFunc is not set.")
+		// load a default fetchFunc
+		fetchFunc = func(relCollection *models.Collection, relIds []string) ([]*models.Record, error) {
+			return dao.FindRecordsByIds(relCollection.Id, relIds)
+		}
 	}
 
 	if expandPath == "" || recursionLevel > MaxExpandDepth || len(records) == 0 {

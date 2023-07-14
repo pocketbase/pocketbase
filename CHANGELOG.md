@@ -80,6 +80,8 @@
 - (@todo docs) For consistency and convenience it is now possible to call `Dao.RecordQuery(collectionModelOrIdentifier)` with just the collection id or name.
   In case an invalid collection id/name string is passed the query will be resolved with cancelled context error.
 
+- (@todo docs) Use a default fetch function that will return all relations in case the fetchFunc argument of `Dao.ExpandRecord()` and `Dao.ExpandRecords()` is `nil`.
+
 
 ## v0.16.8
 
