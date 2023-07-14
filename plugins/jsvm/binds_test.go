@@ -45,7 +45,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 15, t)
+	testBindsCount(vm, "this", 14, t)
 }
 
 func TestBaseBindsRecord(t *testing.T) {
@@ -1048,7 +1048,7 @@ func TestHooksBinds(t *testing.T) {
 		}, "demo2")
 
 		onModelBeforeUpdate((e) => {
-			return $stopPropagation
+			return false
 		}, "demo2")
 
 		onModelBeforeUpdate((e) => {

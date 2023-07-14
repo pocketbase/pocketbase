@@ -76,22 +76,17 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 					res, err := executor.RunProgram(pr)
 					executor.Set("__args", goja.Undefined())
 
-					// check for returned hook.StopPropagation
+					// check for returned error or false
 					if res != nil {
 						exported := res.Export()
 						if exported != nil {
-							if v, ok := exported.(error); ok {
+							switch v := exported.(type) {
+							case error:
 								return v
-							}
-						}
-					}
-
-					// check for throwed hook.StopPropagation
-					if err != nil {
-						if exception, ok := err.(*goja.Exception); ok {
-							v, ok := exception.Value().Export().(error)
-							if ok && errors.Is(v, hook.StopPropagation) {
-								return hook.StopPropagation
+							case bool:
+								if !v {
+									return hook.StopPropagation
+								}
 							}
 						}
 					}
@@ -344,8 +339,6 @@ func baseBinds(vm *goja.Runtime) {
 
 		return instanceValue
 	})
-
-	vm.Set("$stopPropagation", hook.StopPropagation)
 }
 
 func dbxBinds(vm *goja.Runtime) {
