@@ -214,15 +214,16 @@ func TestRemoveTrailingSlashMiddleware(t *testing.T) {
 }
 
 func TestEagerRequestDataCache(t *testing.T) {
+
 	scenarios := []tests.ApiScenario{
 		{
-			Name:   "[UNKNOWN] unsupported eager cached request method",
-			Method: "UNKNOWN",
+			Name:   "custom non-api group route",
+			Method: "POST",
 			Url:    "/custom",
 			Body:   strings.NewReader(`{"name":"test123"}`),
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
-					Method: "UNKNOWN",
+					Method: "POST",
 					Path:   "/custom",
 					Handler: func(c echo.Context) error {
 						data := &struct {
@@ -240,52 +241,74 @@ func TestEagerRequestDataCache(t *testing.T) {
 							t.Fatalf("Expected empty request data body, got, %v", r.Data)
 						}
 
-						return c.String(200, data.Name)
+						return c.NoContent(200)
 					},
 				})
 			},
-			ExpectedStatus:  200,
-			ExpectedContent: []string{"test123"},
+			ExpectedStatus: 200,
 		},
-	}
+		{
+			Name:   "api group route with unsupported eager cache request method",
+			Method: "GET",
+			Url:    "/api/admins",
+			Body:   strings.NewReader(`{"name":"test123"}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+					return func(c echo.Context) error {
+						// it is not important whether the route handler return an error since
+						// we just need to ensure that the eagerRequestDataCache was registered
+						next(c)
 
-	// supported eager cache request methods
-	supportedMethods := []string{"POST", "PUT", "PATCH", "DELETE"}
-	for _, m := range supportedMethods {
-		scenarios = append(
-			scenarios,
-			tests.ApiScenario{
-				Name:   fmt.Sprintf("[%s] valid cached json body request", m),
-				Method: http.MethodPost,
-				Url:    "/custom",
-				Body:   strings.NewReader(`{"name":"test123"}`),
-				BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-					e.AddRoute(echo.Route{
-						Method: http.MethodPost,
-						Path:   "/custom",
-						Handler: func(c echo.Context) error {
-							data := &struct {
-								Name string `json:"name"`
-							}{}
+						// ensure that the body was read at least once
+						data := &struct {
+							Name string `json:"name"`
+						}{}
+						c.Bind(data)
 
-							if err := c.Bind(data); err != nil {
-								return err
-							}
+						// since the unknown method is not eager cache support
+						// it should fail reading the json body twice
+						r := apis.RequestData(c)
+						if v := cast.ToString(r.Data["name"]); v != "" {
+							t.Fatalf("Expected empty request data body, got, %v", r.Data)
+						}
 
-							// try to read the body again
-							r := apis.RequestData(c)
-							if v := cast.ToString(r.Data["name"]); v != "test123" {
-								t.Fatalf("Expected request data with name %q, got, %q", "test123", v)
-							}
-
-							return c.String(200, data.Name)
-						},
-					})
-				},
-				ExpectedStatus:  200,
-				ExpectedContent: []string{"test123"},
+						return nil
+					}
+				})
 			},
-		)
+			ExpectedStatus: 200,
+		},
+		{
+			Name:   "api group route with supported eager cache request method",
+			Method: "POST",
+			Url:    "/api/admins",
+			Body:   strings.NewReader(`{"name":"test123"}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+					return func(c echo.Context) error {
+						// it is not important whether the route handler return an error since
+						// we just need to ensure that the eagerRequestDataCache was registered
+						next(c)
+
+						// ensure that the body was read at least once
+						data := &struct {
+							Name string `json:"name"`
+						}{}
+						c.Bind(data)
+
+						// try to read the body again
+						r := apis.RequestData(c)
+						fmt.Println(r)
+						if v := cast.ToString(r.Data["name"]); v != "test123" {
+							t.Fatalf("Expected request data with name %q, got, %q", "test123", v)
+						}
+
+						return nil
+					}
+				})
+			},
+			ExpectedStatus: 200,
+		},
 	}
 
 	for _, scenario := range scenarios {

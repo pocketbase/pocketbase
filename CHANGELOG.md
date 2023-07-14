@@ -83,6 +83,11 @@
 - (@todo docs) Use a default fetch function that will return all relations in case the fetchFunc argument of `Dao.ExpandRecord()` and `Dao.ExpandRecords()` is `nil`.
 
 
+## v0.16.9
+
+- Register the `eagerRequestDataCache` middleware only for the internal `api` group routes to avoid conflicts with custom route handlers ([#2914](https://github.com/pocketbase/pocketbase/issues/2914)).
+
+
 ## v0.16.8
 
 - Fixed unique validator detailed error message not being returned when camelCase field name is used ([#2868](https://github.com/pocketbase/pocketbase/issues/2868)).
