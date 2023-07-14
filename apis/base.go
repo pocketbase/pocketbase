@@ -104,7 +104,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	bindStaticAdminUI(app, e)
 
 	// default routes
-	api := e.Group("/api")
+	api := e.Group("/api", eagerRequestDataCache(app))
 	bindSettingsApi(app, api)
 	bindAdminApi(app, api)
 	bindCollectionApi(app, api)
@@ -125,10 +125,6 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	if err := app.OnBeforeServe().Trigger(serveEvent); err != nil {
 		return nil, err
 	}
-
-	// note: it is after the OnBeforeServe hook to ensure that the implicit
-	// cache is after any user custom defined middlewares
-	e.Use(eagerRequestDataCache(app))
 
 	// catch all any route
 	api.Any("/*", func(c echo.Context) error {
