@@ -255,10 +255,11 @@ func TestEagerRequestDataCache(t *testing.T) {
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 					return func(c echo.Context) error {
+						// it is not important whether the route handler return an error since
+						// we just need to ensure that the eagerRequestDataCache was registered
 						next(c)
 
-						// ensure that the body is always read at least once
-						// (bind errors due to eof are not important)
+						// ensure that the body was read at least once
 						data := &struct {
 							Name string `json:"name"`
 						}{}
@@ -281,17 +282,15 @@ func TestEagerRequestDataCache(t *testing.T) {
 			Name:   "api group route with supported eager cache request method",
 			Method: "POST",
 			Url:    "/api/admins",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
-			},
-			Body: strings.NewReader(`{"name":"test123"}`),
+			Body:   strings.NewReader(`{"name":"test123"}`),
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 					return func(c echo.Context) error {
+						// it is not important whether the route handler return an error since
+						// we just need to ensure that the eagerRequestDataCache was registered
 						next(c)
 
-						// ensure that the body is always read at least once
-						// (bind errors due to eof are not important)
+						// ensure that the body was read at least once
 						data := &struct {
 							Name string `json:"name"`
 						}{}
