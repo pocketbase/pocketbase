@@ -541,6 +541,70 @@ func TestRecordMergeExpandNilCheck(t *testing.T) {
 	}
 }
 
+func TestRecordExpandedRel(t *testing.T) {
+	collection := &models.Collection{}
+
+	main := models.NewRecord(collection)
+
+	single := models.NewRecord(collection)
+	single.Id = "single"
+
+	multiple1 := models.NewRecord(collection)
+	multiple1.Id = "multiple1"
+
+	multiple2 := models.NewRecord(collection)
+	multiple2.Id = "multiple2"
+
+	main.SetExpand(map[string]any{
+		"single":   single,
+		"multiple": []*models.Record{multiple1, multiple2},
+	})
+
+	if v := main.ExpandedOne("missing"); v != nil {
+		t.Fatalf("Expected nil, got %v", v)
+	}
+
+	if v := main.ExpandedOne("single"); v == nil || v.Id != "single" {
+		t.Fatalf("Expected record with id %q, got %v", "single", v)
+	}
+
+	if v := main.ExpandedOne("multiple"); v == nil || v.Id != "multiple1" {
+		t.Fatalf("Expected record with id %q, got %v", "multiple1", v)
+	}
+}
+
+func TestRecordExpandedAll(t *testing.T) {
+	collection := &models.Collection{}
+
+	main := models.NewRecord(collection)
+
+	single := models.NewRecord(collection)
+	single.Id = "single"
+
+	multiple1 := models.NewRecord(collection)
+	multiple1.Id = "multiple1"
+
+	multiple2 := models.NewRecord(collection)
+	multiple2.Id = "multiple2"
+
+	main.SetExpand(map[string]any{
+		"single":   single,
+		"multiple": []*models.Record{multiple1, multiple2},
+	})
+
+	if v := main.ExpandedAll("missing"); v != nil {
+		t.Fatalf("Expected nil, got %v", v)
+	}
+
+	if v := main.ExpandedAll("single"); len(v) != 1 || v[0].Id != "single" {
+		t.Fatalf("Expected [single] slice, got %v", v)
+	}
+
+	if v := main.ExpandedAll("multiple"); len(v) != 2 || v[0].Id != "multiple1" || v[1].Id != "multiple2" {
+		t.Fatalf("Expected [multiple1, multiple2] slice, got %v", v)
+	}
+}
+
 func TestRecordSchemaData(t *testing.T) {
 	collection := &models.Collection{
 		Type: models.CollectionTypeAuth,

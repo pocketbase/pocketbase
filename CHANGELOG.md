@@ -82,6 +82,8 @@
 
 - (@todo docs) Use a default fetch function that will return all relations in case the fetchFunc argument of `Dao.ExpandRecord()` and `Dao.ExpandRecords()` is `nil`.
 
+- (@todo docs) Added `record.ExpandedOne(rel)` and `record.ExpandedAll(rel)` helpers to retrieve casted single or multiple expand relations from the already loaded "expand" Record data.
+
 
 ## v0.16.9
 
