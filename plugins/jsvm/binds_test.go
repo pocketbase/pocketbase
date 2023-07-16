@@ -923,16 +923,6 @@ func TestHttpClientBindsSend(t *testing.T) {
 			return result;
 		}
 
-		let testErr;
-		try {
-			$http.send({ url: testUrl + "?testError=1" })
-		} catch (err) {
-			testErr = err
-		}
-		if (!testErr) {
-			throw new Error("Expected an error")
-		}
-
 		let testTimeout;
 		try {
 			$http.send({
@@ -946,34 +936,44 @@ func TestHttpClientBindsSend(t *testing.T) {
 			throw new Error("Expected timeout error")
 		}
 
+		// error response check
+		const test0 = $http.send({
+			url: testUrl + "?testError=1",
+		})
+
 		// basic fields check
 		const test1 = $http.send({
 			method:  "post",
 			url:     testUrl,
 			data:    {"data": "example"},
-			headers: {"header1": "123", "header2": "456"}
+			headers: {"header1": "123", "header2": "456"},
 		})
 
 		// with custom content-type header
 		const test2 = $http.send({
 			url: testUrl,
-			headers: {"content-type": "text/plain"}
+			headers: {"content-type": "text/plain"},
 		})
 
 		const scenarios = [
+			[test0, {
+				"statusCode": "400",
+			}],
 			[test1, {
+				"statusCode":                "200",
 				"json.method":               "POST",
 				"json.headers.header1":      "123",
 				"json.headers.header2":      "456",
 				"json.headers.content_type": "application/json", // default
 			}],
 			[test2, {
+				"statusCode":                "200",
 				"json.method":               "GET",
 				"json.headers.content_type": "text/plain",
 			}],
 		]
 
-		for (let scenario in scenarios) {
+		for (let scenario of scenarios) {
 			const result = scenario[0];
 			const expectations = scenario[1];
 
