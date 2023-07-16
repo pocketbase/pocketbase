@@ -20,7 +20,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 		Use:   "serve",
 		Short: "Starts the web server (default to 127.0.0.1:8090)",
 		Run: func(command *cobra.Command, args []string) {
-			err := apis.Serve(app, apis.ServeConfig{
+			_, err := apis.Serve(app, apis.ServeConfig{
 				HttpAddr:        httpAddr,
 				HttpsAddr:       httpsAddr,
 				ShowStartBanner: showStartBanner,

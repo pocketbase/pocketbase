@@ -36,17 +36,15 @@ type ServeConfig struct {
 	AllowedOrigins []string
 }
 
-// @todo return the server instance to allow manual shutdowns
-//
 // Serve starts a new app web server.
-func Serve(app core.App, config ServeConfig) error {
+func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 	if len(config.AllowedOrigins) == 0 {
 		config.AllowedOrigins = []string{"*"}
 	}
 
 	// ensure that the latest migrations are applied before starting the server
 	if err := runMigrations(app); err != nil {
-		return err
+		return nil, err
 	}
 
 	// reload app settings in case a new default value was set with a migration
@@ -60,7 +58,7 @@ func Serve(app core.App, config ServeConfig) error {
 
 	router, err := InitApi(app)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// configure cors
@@ -104,7 +102,7 @@ func Serve(app core.App, config ServeConfig) error {
 		CertManager: certManager,
 	}
 	if err := app.OnBeforeServe().Trigger(serveEvent); err != nil {
-		return err
+		return nil, err
 	}
 
 	if config.ShowStartBanner {
@@ -143,11 +141,11 @@ func Serve(app core.App, config ServeConfig) error {
 			go http.ListenAndServe(config.HttpAddr, certManager.HTTPHandler(nil))
 		}
 
-		return server.ListenAndServeTLS("", "")
+		return server, server.ListenAndServeTLS("", "")
 	}
 
 	// OR start HTTP server
-	return server.ListenAndServe()
+	return server, server.ListenAndServe()
 }
 
 type migrationsConnection struct {
