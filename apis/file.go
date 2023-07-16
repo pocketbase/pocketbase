@@ -7,14 +7,11 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
 )
@@ -97,7 +94,17 @@ func (api *fileApi) download(c echo.Context) error {
 
 		adminOrAuthRecord, _ := api.findAdminOrAuthRecordByFileToken(token)
 
-		if !api.canAccessRecord(adminOrAuthRecord, record, record.Collection().ViewRule) {
+		// create a copy of the cached request data and adjust it to the current auth record
+		requestData := *RequestData(c)
+		if adminOrAuthRecord != nil {
+			if admin, _ := adminOrAuthRecord.(*models.Admin); admin != nil {
+				requestData.Admin = admin
+			} else if record, _ := adminOrAuthRecord.(*models.Record); record != nil {
+				requestData.AuthRecord = record
+			}
+		}
+
+		if ok, _ := api.app.Dao().CanAccessRecord(record, &requestData, record.Collection().ViewRule); !ok {
 			return NewForbiddenError("Insufficient permissions to access the file resource.", nil)
 		}
 	}
@@ -200,47 +207,4 @@ func (api *fileApi) findAdminOrAuthRecordByFileToken(fileToken string) (models.M
 	}
 
 	return nil, errors.New("missing or invalid file token")
-}
-
-// @todo move to a helper and maybe combine with the realtime checks when refactoring the realtime service
-func (api *fileApi) canAccessRecord(adminOrAuthRecord models.Model, record *models.Record, accessRule *string) bool {
-	admin, _ := adminOrAuthRecord.(*models.Admin)
-	if admin != nil {
-		// admins can access everything
-		return true
-	}
-
-	if accessRule == nil {
-		// only admins can access this record
-		return false
-	}
-
-	ruleFunc := func(q *dbx.SelectQuery) error {
-		if *accessRule == "" {
-			return nil // empty public rule
-		}
-
-		// mock request data
-		requestData := &models.RequestData{
-			Method: "GET",
-		}
-		requestData.AuthRecord, _ = adminOrAuthRecord.(*models.Record)
-
-		resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), record.Collection(), requestData, true)
-		expr, err := search.FilterData(*accessRule).BuildExpr(resolver)
-		if err != nil {
-			return err
-		}
-		resolver.UpdateQuery(q)
-		q.AndWhere(expr)
-
-		return nil
-	}
-
-	foundRecord, err := api.app.Dao().FindRecordById(record.Collection().Id, record.Id, ruleFunc)
-	if err == nil && foundRecord != nil {
-		return true
-	}
-
-	return false
 }
