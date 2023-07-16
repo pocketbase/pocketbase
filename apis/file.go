@@ -94,7 +94,7 @@ func (api *fileApi) download(c echo.Context) error {
 
 		adminOrAuthRecord, _ := api.findAdminOrAuthRecordByFileToken(token)
 
-		// create a copy of the cached request data and adjust it to the current auth record
+		// create a copy of the cached request data and adjust it for the current auth model
 		requestData := *RequestData(c)
 		requestData.Admin = nil
 		requestData.AuthRecord = nil
