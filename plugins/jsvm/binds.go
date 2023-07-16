@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -104,12 +103,12 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 }
 
 func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
-	jobs := cron.New()
+	scheduler := cron.New()
 
 	loader.Set("cronAdd", func(jobId, cronExpr, handler string) {
 		pr := goja.MustCompile("", "{("+handler+").apply(undefined)}", true)
 
-		err := jobs.Add(jobId, cronExpr, func() {
+		err := scheduler.Add(jobId, cronExpr, func() {
 			executors.run(func(executor *goja.Runtime) error {
 				_, err := executor.RunProgram(pr)
 				return err
@@ -120,18 +119,27 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		}
 
 		// start the ticker (if not already)
-		if jobs.Total() > 0 && !jobs.HasStarted() {
-			jobs.Start()
+		if app.IsBootstrapped() && scheduler.Total() > 0 && !scheduler.HasStarted() {
+			scheduler.Start()
 		}
 	})
 
 	loader.Set("cronRemove", func(jobId string) {
-		jobs.Remove(jobId)
+		scheduler.Remove(jobId)
 
 		// stop the ticker if there are no other jobs
-		if jobs.Total() == 0 {
-			jobs.Stop()
+		if scheduler.Total() == 0 {
+			scheduler.Stop()
 		}
+	})
+
+	app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
+		// start the ticker (if not already)
+		if scheduler.Total() > 0 && !scheduler.HasStarted() {
+			scheduler.Start()
+		}
+
+		return nil
 	})
 }
 
@@ -533,10 +541,6 @@ func httpClientBinds(vm *goja.Runtime) {
 			return nil, err
 		}
 		defer res.Body.Close()
-
-		if res.StatusCode < 200 || res.StatusCode >= 400 {
-			return nil, fmt.Errorf("request failed with status %d", res.StatusCode)
-		}
 
 		bodyRaw, _ := io.ReadAll(res.Body)
 

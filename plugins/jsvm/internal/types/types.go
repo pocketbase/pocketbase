@@ -29,7 +29,7 @@ const heading = `
  *
  * ` + "```" + `js
  * // prints "Hello world!" on every 30 minutes
- * cronAdd("hello", "*/30 * * * *", (c) => {
+ * cronAdd("hello", "*\/30 * * * *", (c) => {
  *     console.log("Hello world!")
  * })
  * ` + "```" + `
@@ -45,7 +45,7 @@ declare function cronAdd(
 ): void;
 
 /**
- * CronRemove removes previously registerd cron job by its name.
+ * CronRemove removes a single registered cron job by its name.
  *
  * Example:
  *
@@ -162,7 +162,7 @@ declare var $app: appWithoutHooks
  * ` + "```" + `js
  * const records = arrayOf(new Record)
  *
- * $app.dao().recordQuery(collection).limit(10).all(records)
+ * $app.dao().recordQuery("articles").limit(10).all(records)
  * ` + "```" + `
  *
  * @group PocketBase
@@ -700,13 +700,30 @@ declare namespace $apis {
 // httpClientBinds
 // -------------------------------------------------------------------
 
+/**
+ * ` + "`" + `$http` + "`" + ` defines common methods for working with HTTP requests.
+ *
+ * @group PocketBase
+ */
 declare namespace $http {
   /**
-   * Sends a single HTTP request (_currently only json and plain text requests_).
+   * Sends a single HTTP request.
    *
-   * @group PocketBase
+   * Example:
+   *
+   * ` + "```" + `js
+   * const res = $http.send({
+   *     url:    "https://example.com",
+   *     data:   {"title": "test"}
+   *     method: "post",
+   * })
+   *
+   * console.log(res.statusCode)
+   * console.log(res.raw)
+   * console.log(res.json)
+   * ` + "```" + `
    */
-  function send(params: {
+  function send(config: {
     url:     string,
     method?:  string, // default to "GET"
     data?:    { [key:string]: any },

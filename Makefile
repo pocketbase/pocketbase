@@ -4,8 +4,8 @@ lint:
 test:
 	go test ./... -v --cover
 
-jsvmdocs:
-	go run ./plugins/jsvm/internal/docs/docs.go
+jstypes:
+	go run ./plugins/jsvm/internal/types/types.go
 
 test-report:
 	go test ./... -v --cover -coverprofile=coverage.out

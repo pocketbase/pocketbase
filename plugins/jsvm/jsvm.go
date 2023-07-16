@@ -25,7 +25,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/plugins/jsvm/internal/docs/generated"
+	"github.com/pocketbase/pocketbase/plugins/jsvm/internal/types/generated"
 )
 
 const (

@@ -38,14 +38,14 @@
 
 - **!** Renamed `*Options` to `*Config` for consistency and replaced the unnecessary pointers with their value equivalent to keep the applied configuration defaults isolated within their function calls:
   ```go
-  old: pocketbase.NewWithConfig(config *pocketbase.Config)
-  new: pocketbase.NewWithConfig(config pocketbase.Config)
+  old: pocketbase.NewWithConfig(config *pocketbase.Config) *pocketbase.PocketBase
+  new: pocketbase.NewWithConfig(config pocketbase.Config) *pocketbase.PocketBase
 
-  old: core.NewBaseApp(config *core.BaseAppConfig)
-  new: core.NewBaseApp(config core.BaseAppConfig)
+  old: core.NewBaseApp(config *core.BaseAppConfig) *core.BaseApp
+  new: core.NewBaseApp(config core.BaseAppConfig) *core.BaseApp
 
-  old: apis.Serve(app core.App, options *apis.ServeOptions)
-  new: apis.Serve(app core.App, config apis.ServeConfig)
+  old: apis.Serve(app core.App, options *apis.ServeOptions) (*http.Server, error)
+  new: apis.Serve(app core.App, config apis.ServeConfig) error
 
   old: jsvm.MustRegisterMigrations(app core.App, options *jsvm.MigrationsOptions)
   new: jsvm.MustRegister(app core.App, config jsvm.Config)
