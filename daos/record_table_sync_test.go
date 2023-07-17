@@ -171,18 +171,31 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		opt := relManyField.Options.(*schema.RelationOptions)
 		opt.MaxSelect = types.Pointer(1)
 	}
+	{
+		// new multivaluer field to check whether the array normalization
+		// will be applied for already inserted data
+		collection.Schema.AddField(&schema.SchemaField{
+			Name: "new_multiple",
+			Type: schema.FieldTypeSelect,
+			Options: &schema.SelectOptions{
+				Values:    []string{"a", "b", "c"},
+				MaxSelect: 3,
+			},
+		})
+	}
 
 	if err := app.Dao().SaveCollection(collection); err != nil {
 		t.Fatal(err)
 	}
 
 	type expectation struct {
-		SelectOne  string `db:"select_one"`
-		SelectMany string `db:"select_many"`
-		FileOne    string `db:"file_one"`
-		FileMany   string `db:"file_many"`
-		RelOne     string `db:"rel_one"`
-		RelMany    string `db:"rel_many"`
+		SelectOne   string `db:"select_one"`
+		SelectMany  string `db:"select_many"`
+		FileOne     string `db:"file_one"`
+		FileMany    string `db:"file_many"`
+		RelOne      string `db:"rel_one"`
+		RelMany     string `db:"rel_many"`
+		NewMultiple string `db:"new_multiple"`
 	}
 
 	scenarios := []struct {
@@ -192,34 +205,37 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		{
 			"imy661ixudk5izi",
 			expectation{
-				SelectOne:  `[]`,
-				SelectMany: ``,
-				FileOne:    `[]`,
-				FileMany:   ``,
-				RelOne:     `[]`,
-				RelMany:    ``,
+				SelectOne:   `[]`,
+				SelectMany:  ``,
+				FileOne:     `[]`,
+				FileMany:    ``,
+				RelOne:      `[]`,
+				RelMany:     ``,
+				NewMultiple: `[]`,
 			},
 		},
 		{
 			"al1h9ijdeojtsjy",
 			expectation{
-				SelectOne:  `["optionB"]`,
-				SelectMany: `optionB`,
-				FileOne:    `["300_Jsjq7RdBgA.png"]`,
-				FileMany:   ``,
-				RelOne:     `["84nmscqy84lsi1t"]`,
-				RelMany:    `oap640cot4yru2s`,
+				SelectOne:   `["optionB"]`,
+				SelectMany:  `optionB`,
+				FileOne:     `["300_Jsjq7RdBgA.png"]`,
+				FileMany:    ``,
+				RelOne:      `["84nmscqy84lsi1t"]`,
+				RelMany:     `oap640cot4yru2s`,
+				NewMultiple: `[]`,
 			},
 		},
 		{
 			"84nmscqy84lsi1t",
 			expectation{
-				SelectOne:  `["optionB"]`,
-				SelectMany: `optionC`,
-				FileOne:    `["test_d61b33QdDU.txt"]`,
-				FileMany:   `test_tC1Yc87DfC.txt`,
-				RelOne:     `[]`,
-				RelMany:    `oap640cot4yru2s`,
+				SelectOne:   `["optionB"]`,
+				SelectMany:  `optionC`,
+				FileOne:     `["test_d61b33QdDU.txt"]`,
+				FileMany:    `test_tC1Yc87DfC.txt`,
+				RelOne:      `[]`,
+				RelMany:     `oap640cot4yru2s`,
+				NewMultiple: `[]`,
 			},
 		},
 	}
@@ -234,6 +250,7 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 			"file_many",
 			"rel_one",
 			"rel_many",
+			"new_multiple",
 		).From(collection.Name).Where(dbx.HashExp{"id": s.recordId}).One(result)
 		if err != nil {
 			t.Errorf("[%s] Failed to load record: %v", s.recordId, err)

@@ -1,3 +1,8 @@
+## v0.16.10
+
+- Added multiple valued fields (`relation`, `select`, `file`) normalizations to ensure that the zero-default value of a newly created multiple field is applied for already existing data ([#2930](https://github.com/pocketbase/pocketbase/issues/2930)).
+
+
 ## v0.16.9
 
 - Register the `eagerRequestDataCache` middleware only for the internal `api` group routes to avoid conflicts with custom route handlers ([#2914](https://github.com/pocketbase/pocketbase/issues/2914)).

@@ -174,19 +174,18 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
 		for _, newField := range newCollection.Schema.Fields() {
-			oldField := oldCollection.Schema.GetFieldById(newField.Id)
-			if oldField == nil {
-				continue
+			// allow to continue even if there is no old field for the cases
+			// when a new field is added and there are already inserted data
+			var isOldMultiple bool
+			if oldField := oldCollection.Schema.GetFieldById(newField.Id); oldField != nil {
+				if opt, ok := oldField.Options.(schema.MultiValuer); ok {
+					isOldMultiple = opt.IsMultiple()
+				}
 			}
 
 			var isNewMultiple bool
 			if opt, ok := newField.Options.(schema.MultiValuer); ok {
 				isNewMultiple = opt.IsMultiple()
-			}
-
-			var isOldMultiple bool
-			if opt, ok := oldField.Options.(schema.MultiValuer); ok {
-				isOldMultiple = opt.IsMultiple()
 			}
 
 			if isOldMultiple == isNewMultiple {
