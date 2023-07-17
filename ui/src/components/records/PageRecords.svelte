@@ -93,6 +93,10 @@
                 sort = "";
             }
         }
+
+        if (collectionFields.includes("weight")) {
+            sort = "-weight"
+        }
     }
 
     loadCollections(selectedCollectionId);
