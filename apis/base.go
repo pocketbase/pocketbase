@@ -120,7 +120,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	bindStaticAdminUI(app, e)
 
 	// default routes
-	api := e.Group("/api", eagerRequestDataCache(app))
+	api := e.Group("/api", eagerRequestInfoCache(app))
 	bindSettingsApi(app, api)
 	bindAdminApi(app, api)
 	bindCollectionApi(app, api)

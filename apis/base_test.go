@@ -213,7 +213,7 @@ func TestRemoveTrailingSlashMiddleware(t *testing.T) {
 	}
 }
 
-func TestEagerRequestDataCache(t *testing.T) {
+func TestEagerRequestInfoCache(t *testing.T) {
 
 	scenarios := []tests.ApiScenario{
 		{
@@ -236,7 +236,7 @@ func TestEagerRequestDataCache(t *testing.T) {
 
 						// since the unknown method is not eager cache support
 						// it should fail reading the json body twice
-						r := apis.RequestData(c)
+						r := apis.RequestInfo(c)
 						if v := cast.ToString(r.Data["name"]); v != "" {
 							t.Fatalf("Expected empty request data body, got, %v", r.Data)
 						}
@@ -256,7 +256,7 @@ func TestEagerRequestDataCache(t *testing.T) {
 				e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 					return func(c echo.Context) error {
 						// it is not important whether the route handler return an error since
-						// we just need to ensure that the eagerRequestDataCache was registered
+						// we just need to ensure that the eagerRequestInfoCache was registered
 						next(c)
 
 						// ensure that the body was read at least once
@@ -267,7 +267,7 @@ func TestEagerRequestDataCache(t *testing.T) {
 
 						// since the unknown method is not eager cache support
 						// it should fail reading the json body twice
-						r := apis.RequestData(c)
+						r := apis.RequestInfo(c)
 						if v := cast.ToString(r.Data["name"]); v != "" {
 							t.Fatalf("Expected empty request data body, got, %v", r.Data)
 						}
@@ -287,7 +287,7 @@ func TestEagerRequestDataCache(t *testing.T) {
 				e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 					return func(c echo.Context) error {
 						// it is not important whether the route handler return an error since
-						// we just need to ensure that the eagerRequestDataCache was registered
+						// we just need to ensure that the eagerRequestInfoCache was registered
 						next(c)
 
 						// ensure that the body was read at least once
@@ -297,7 +297,7 @@ func TestEagerRequestDataCache(t *testing.T) {
 						c.Bind(data)
 
 						// try to read the body again
-						r := apis.RequestData(c)
+						r := apis.RequestInfo(c)
 						fmt.Println(r)
 						if v := cast.ToString(r.Data["name"]); v != "test123" {
 							t.Fatalf("Expected request data with name %q, got, %q", "test123", v)

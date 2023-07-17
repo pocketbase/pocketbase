@@ -31,7 +31,7 @@
   ```
   app.Dao().FindRecordsByFilter("posts", "title ~ 'lorem ipsum' && visible = true", "-created", 10)
   app.Dao().FindFirstRecordByFilter("posts", "slug='test' && active=true")
-  app.Dao().CanAccessRecord(record, requestData, rule)
+  app.Dao().CanAccessRecord(record, requestInfo, rule)
   ```
 
 - (@todo docs) Added `Dao.WithoutHooks()` helper to create a new `Dao` from the current one but without the create/update/delete hooks.
@@ -84,6 +84,9 @@
 
 - (@todo docs) Added `record.ExpandedOne(rel)` and `record.ExpandedAll(rel)` helpers to retrieve casted single or multiple expand relations from the already loaded "expand" Record data.
 
+- **!** renamed `models.RequestData` to `models.RequestInfo` and soft-deprecated `apis.RequestData(c)` to `apis.RequestInfo(c)` to avoid the stuttering with the `Data` field.
+  _The old `apis.RequestData()` method still works to minimize the breaking changes but it is recommended to replace it with `apis.RequestInfo(c)`._
+
 
 ## v0.16.10
 
@@ -92,7 +95,7 @@
 
 ## v0.16.9
 
-- Register the `eagerRequestDataCache` middleware only for the internal `api` group routes to avoid conflicts with custom route handlers ([#2914](https://github.com/pocketbase/pocketbase/issues/2914)).
+- Register the `eagerRequestInfoCache` middleware only for the internal `api` group routes to avoid conflicts with custom route handlers ([#2914](https://github.com/pocketbase/pocketbase/issues/2914)).
 
 
 ## v0.16.8

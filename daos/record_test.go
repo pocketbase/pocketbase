@@ -625,7 +625,7 @@ func TestCanAccessRecord(t *testing.T) {
 	scenarios := []struct {
 		name        string
 		record      *models.Record
-		requestData *models.RequestData
+		requestInfo *models.RequestInfo
 		rule        *string
 		expected    bool
 		expectError bool
@@ -633,7 +633,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as admin with nil rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				Admin: admin,
 			},
 			nil,
@@ -643,7 +643,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as admin with non-empty rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				Admin: admin,
 			},
 			types.Pointer("id = ''"), // the filter rule should be ignored
@@ -653,7 +653,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as admin with invalid rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				Admin: admin,
 			},
 			types.Pointer("id ?!@ 1"), // the filter rule should be ignored
@@ -663,7 +663,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as guest with nil rule",
 			record,
-			&models.RequestData{},
+			&models.RequestInfo{},
 			nil,
 			false,
 			false,
@@ -671,7 +671,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as guest with empty rule",
 			record,
-			&models.RequestData{},
+			&models.RequestInfo{},
 			types.Pointer(""),
 			true,
 			false,
@@ -679,7 +679,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as guest with invalid rule",
 			record,
-			&models.RequestData{},
+			&models.RequestInfo{},
 			types.Pointer("id ?!@ 1"),
 			false,
 			true,
@@ -687,7 +687,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as guest with mismatched rule",
 			record,
-			&models.RequestData{},
+			&models.RequestInfo{},
 			types.Pointer("@request.auth.id != ''"),
 			false,
 			false,
@@ -695,7 +695,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as guest with matched rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				Data: map[string]any{"test": 1},
 			},
 			types.Pointer("@request.auth.id != '' || @request.data.test = 1"),
@@ -705,7 +705,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as auth record with nil rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				AuthRecord: authRecord,
 			},
 			nil,
@@ -715,7 +715,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as auth record with empty rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				AuthRecord: authRecord,
 			},
 			types.Pointer(""),
@@ -725,7 +725,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as auth record with invalid rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				AuthRecord: authRecord,
 			},
 			types.Pointer("id ?!@ 1"),
@@ -735,7 +735,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as auth record with mismatched rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				AuthRecord: authRecord,
 				Data:       map[string]any{"test": 1},
 			},
@@ -746,7 +746,7 @@ func TestCanAccessRecord(t *testing.T) {
 		{
 			"as auth record with matched rule",
 			record,
-			&models.RequestData{
+			&models.RequestInfo{
 				AuthRecord: authRecord,
 				Data:       map[string]any{"test": 2},
 			},
@@ -757,7 +757,7 @@ func TestCanAccessRecord(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		result, err := app.Dao().CanAccessRecord(s.record, s.requestData, s.rule)
+		result, err := app.Dao().CanAccessRecord(s.record, s.requestInfo, s.rule)
 
 		if result != s.expected {
 			t.Errorf("[%s] Expected %v, got %v", s.name, s.expected, result)

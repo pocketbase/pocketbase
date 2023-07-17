@@ -191,8 +191,8 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 		return createForm.DrySubmit(func(txDao *daos.Dao) error {
 			event.IsNewRecord = true
 			// clone the current request data and assign the form create data as its body data
-			requestData := *RequestData(c)
-			requestData.Data = form.CreateData
+			requestInfo := *RequestInfo(c)
+			requestInfo.Data = form.CreateData
 
 			createRuleFunc := func(q *dbx.SelectQuery) error {
 				admin, _ := c.Get(ContextAdminKey).(*models.Admin)
@@ -205,7 +205,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 				}
 
 				if *collection.CreateRule != "" {
-					resolver := resolvers.NewRecordFieldResolver(txDao, collection, &requestData, true)
+					resolver := resolvers.NewRecordFieldResolver(txDao, collection, &requestInfo, true)
 					expr, err := search.FilterData(*collection.CreateRule).BuildExpr(resolver)
 					if err != nil {
 						return err

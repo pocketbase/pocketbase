@@ -22,7 +22,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := &models.RequestData{
+	requestInfo := &models.RequestInfo{
 		Headers: map[string]any{
 			"a": "123",
 			"b": "456",
@@ -313,7 +313,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 
 		query := app.Dao().RecordQuery(collection)
 
-		r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData, s.allowHiddenFields)
+		r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestInfo, s.allowHiddenFields)
 
 		expr, err := search.FilterData(s.rule).BuildExpr(r)
 		if err != nil {
@@ -353,11 +353,11 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := &models.RequestData{
+	requestInfo := &models.RequestInfo{
 		AuthRecord: authRecord,
 	}
 
-	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData, true)
+	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestInfo, true)
 
 	scenarios := []struct {
 		fieldName   string
@@ -424,7 +424,7 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 	}
 }
 
-func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
+func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -438,7 +438,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	requestData := &models.RequestData{
+	requestInfo := &models.RequestInfo{
 		Method: "get",
 		Query: map[string]any{
 			"a": 123,
@@ -455,7 +455,7 @@ func TestRecordFieldResolverResolveStaticRequestDataFields(t *testing.T) {
 		AuthRecord: authRecord,
 	}
 
-	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestData, true)
+	r := resolvers.NewRecordFieldResolver(app.Dao(), collection, requestInfo, true)
 
 	scenarios := []struct {
 		fieldName        string

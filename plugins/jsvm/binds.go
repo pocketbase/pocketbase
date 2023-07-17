@@ -319,6 +319,25 @@ func baseBinds(vm *goja.Runtime) {
 		return structConstructor(vm, call, instance)
 	})
 
+	vm.Set("RequestInfo", func(call goja.ConstructorCall) *goja.Object {
+		instance := &models.RequestInfo{}
+		return structConstructor(vm, call, instance)
+	})
+
+	vm.Set("DateTime", func(call goja.ConstructorCall) *goja.Object {
+		instance := types.NowDateTime()
+
+		val, _ := call.Argument(0).Export().(string)
+		if val != "" {
+			instance, _ = types.ParseDateTime(val)
+		}
+
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+
+		return structConstructor(vm, call, instance)
+	})
+
 	vm.Set("ValidationError", func(call goja.ConstructorCall) *goja.Object {
 		code, _ := call.Argument(0).Export().(string)
 		message, _ := call.Argument(1).Export().(string)
@@ -462,7 +481,7 @@ func apisBinds(vm *goja.Runtime) {
 	obj.Set("activityLogger", apis.ActivityLogger)
 
 	// record helpers
-	obj.Set("requestData", apis.RequestData)
+	obj.Set("requestInfo", apis.RequestInfo)
 	obj.Set("recordAuthResponse", apis.RecordAuthResponse)
 	obj.Set("enrichRecord", apis.EnrichRecord)
 	obj.Set("enrichRecords", apis.EnrichRecords)

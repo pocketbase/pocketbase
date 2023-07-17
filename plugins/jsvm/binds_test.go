@@ -45,7 +45,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 14, t)
+	testBindsCount(vm, "this", 16, t)
 }
 
 func TestBaseBindsRecord(t *testing.T) {
@@ -241,6 +241,50 @@ func TestBaseBindsCommand(t *testing.T) {
 
 		if (runCalls != 1) {
 			throw new Error('Expected runCalls 1, got: ' + runCalls);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBaseBindsRequestInfo(t *testing.T) {
+	vm := goja.New()
+	baseBinds(vm)
+
+	_, err := vm.RunString(`
+		let info = new RequestInfo({
+			admin: new Admin({id: "test1"}),
+			data: {"name": "test2"}
+		});
+
+		if (info.admin?.id != "test1") {
+			throw new Error('Expected info.admin.id to be test1, got: ' + info.admin?.id);
+		}
+
+		if (info.data?.name != "test2") {
+			throw new Error('Expected info.data.name to be test2, got: ' + info.data?.name);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBaseBindsDateTime(t *testing.T) {
+	vm := goja.New()
+	baseBinds(vm)
+
+	_, err := vm.RunString(`
+		const v0 = new DateTime();
+		if (v0.isZero()) {
+			throw new Error('Expected to fallback to now, got zero value');
+		}
+
+		const v1 = new DateTime('2023-01-01 00:00:00.000Z');
+		const expected = "2023-01-01 00:00:00.000Z"
+		if (v1.string() != expected) {
+			throw new Error('Expected ' + expected + ', got ', v1.string());
 		}
 	`)
 	if err != nil {

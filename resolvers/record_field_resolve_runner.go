@@ -64,7 +64,7 @@ func (r *runner) run() (*search.ResolverResult, error) {
 	}
 
 	if r.activeProps[0] == "@request" {
-		if r.resolver.requestData == nil {
+		if r.resolver.requestInfo == nil {
 			return &search.ResolverResult{Identifier: "NULL"}, nil
 		}
 
@@ -87,17 +87,17 @@ func (r *runner) run() (*search.ResolverResult, error) {
 
 			// check for data relation field
 			if dataField.Type == schema.FieldTypeRelation && len(r.activeProps) > 3 {
-				return r.processRequestDataRelationField(dataField)
+				return r.processRequestInfoRelationField(dataField)
 			}
 
 			// check for select:each field
 			if modifier == eachModifier && dataField.Type == schema.FieldTypeSelect && len(r.activeProps) == 3 {
-				return r.processRequestDataSelectEachModifier(dataField)
+				return r.processRequestInfoSelectEachModifier(dataField)
 			}
 
 			// check for data arrayble fields ":length" modifier
 			if modifier == lengthModifier && list.ExistInSlice(dataField.Type, schema.ArraybleFieldTypes()) && len(r.activeProps) == 3 {
-				return r.processRequestDataLengthModifier(dataField)
+				return r.processRequestInfoLengthModifier(dataField)
 			}
 		}
 
@@ -177,11 +177,11 @@ func (r *runner) processRequestAuthField() (*search.ResolverResult, error) {
 
 	// resolve the auth collection field
 	// ---
-	if r.resolver.requestData == nil || r.resolver.requestData.AuthRecord == nil || r.resolver.requestData.AuthRecord.Collection() == nil {
+	if r.resolver.requestInfo == nil || r.resolver.requestInfo.AuthRecord == nil || r.resolver.requestInfo.AuthRecord.Collection() == nil {
 		return &search.ResolverResult{Identifier: "NULL"}, nil
 	}
 
-	collection := r.resolver.requestData.AuthRecord.Collection()
+	collection := r.resolver.requestInfo.AuthRecord.Collection()
 	r.resolver.loadedCollections = append(r.resolver.loadedCollections, collection)
 
 	r.activeCollectionName = collection.Name
@@ -193,7 +193,7 @@ func (r *runner) processRequestAuthField() (*search.ResolverResult, error) {
 		r.activeTableAlias,
 		dbx.HashExp{
 			// aka. __auth_users.id = :userId
-			(r.activeTableAlias + ".id"): r.resolver.requestData.AuthRecord.Id,
+			(r.activeTableAlias + ".id"): r.resolver.requestInfo.AuthRecord.Id,
 		},
 	)
 
@@ -205,7 +205,7 @@ func (r *runner) processRequestAuthField() (*search.ResolverResult, error) {
 			tableName:  inflector.Columnify(r.activeCollectionName),
 			tableAlias: r.multiMatchActiveTableAlias,
 			on: dbx.HashExp{
-				(r.multiMatchActiveTableAlias + ".id"): r.resolver.requestData.AuthRecord.Id,
+				(r.multiMatchActiveTableAlias + ".id"): r.resolver.requestInfo.AuthRecord.Id,
 			},
 		},
 	)
@@ -217,8 +217,8 @@ func (r *runner) processRequestAuthField() (*search.ResolverResult, error) {
 	return r.processActiveProps()
 }
 
-func (r *runner) processRequestDataLengthModifier(dataField *schema.SchemaField) (*search.ResolverResult, error) {
-	dataItems := list.ToUniqueStringSlice(r.resolver.requestData.Data[dataField.Name])
+func (r *runner) processRequestInfoLengthModifier(dataField *schema.SchemaField) (*search.ResolverResult, error) {
+	dataItems := list.ToUniqueStringSlice(r.resolver.requestInfo.Data[dataField.Name])
 
 	result := &search.ResolverResult{
 		Identifier: fmt.Sprintf("%d", len(dataItems)),
@@ -227,13 +227,13 @@ func (r *runner) processRequestDataLengthModifier(dataField *schema.SchemaField)
 	return result, nil
 }
 
-func (r *runner) processRequestDataSelectEachModifier(dataField *schema.SchemaField) (*search.ResolverResult, error) {
+func (r *runner) processRequestInfoSelectEachModifier(dataField *schema.SchemaField) (*search.ResolverResult, error) {
 	options, ok := dataField.Options.(*schema.SelectOptions)
 	if !ok {
 		return nil, fmt.Errorf("failed to initialize field %q options", dataField.Name)
 	}
 
-	dataItems := list.ToUniqueStringSlice(r.resolver.requestData.Data[dataField.Name])
+	dataItems := list.ToUniqueStringSlice(r.resolver.requestInfo.Data[dataField.Name])
 	rawJson, err := json.Marshal(dataItems)
 	if err != nil {
 		return nil, fmt.Errorf("cannot marshalize the data select item for field %q", r.activeProps[2])
@@ -272,7 +272,7 @@ func (r *runner) processRequestDataSelectEachModifier(dataField *schema.SchemaFi
 	return result, nil
 }
 
-func (r *runner) processRequestDataRelationField(dataField *schema.SchemaField) (*search.ResolverResult, error) {
+func (r *runner) processRequestInfoRelationField(dataField *schema.SchemaField) (*search.ResolverResult, error) {
 	options, ok := dataField.Options.(*schema.RelationOptions)
 	if !ok {
 		return nil, fmt.Errorf("failed to initialize data field %q options", dataField.Name)
@@ -284,8 +284,8 @@ func (r *runner) processRequestDataRelationField(dataField *schema.SchemaField) 
 	}
 
 	var dataRelIds []string
-	if r.resolver.requestData != nil && len(r.resolver.requestData.Data) != 0 {
-		dataRelIds = list.ToUniqueStringSlice(r.resolver.requestData.Data[dataField.Name])
+	if r.resolver.requestInfo != nil && len(r.resolver.requestInfo.Data) != 0 {
+		dataRelIds = list.ToUniqueStringSlice(r.resolver.requestInfo.Data[dataField.Name])
 	}
 	if len(dataRelIds) == 0 {
 		return &search.ResolverResult{Identifier: "NULL"}, nil

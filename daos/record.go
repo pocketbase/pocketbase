@@ -520,9 +520,9 @@ func (dao *Dao) SuggestUniqueAuthRecordUsername(
 }
 
 // CanAccessRecord checks if a record is allowed to be accessed by the
-// specified requestData and accessRule.
+// specified requestInfo and accessRule.
 //
-// Rule and db checks are ignored in case requestData.Admin is set.
+// Rule and db checks are ignored in case requestInfo.Admin is set.
 //
 // The returned error indicate that something unexpected happened during
 // the check (eg. invalid rule or db error).
@@ -531,14 +531,14 @@ func (dao *Dao) SuggestUniqueAuthRecordUsername(
 //
 // Example:
 //
-//	requestData := apis.RequestData(c /* echo.Context */)
+//	requestInfo := apis.RequestInfo(c /* echo.Context */)
 //	record, _ := dao.FindRecordById("example", "RECORD_ID")
 //	rule := types.Pointer("@request.auth.id != '' || status = 'public'")
 //	// ... or use one of the record collection's rule, eg. record.Collection().ViewRule
 //
-//	if ok, _ := dao.CanAccessRecord(record, requestData, rule); ok { ... }
-func (dao *Dao) CanAccessRecord(record *models.Record, requestData *models.RequestData, accessRule *string) (bool, error) {
-	if requestData.Admin != nil {
+//	if ok, _ := dao.CanAccessRecord(record, requestInfo, rule); ok { ... }
+func (dao *Dao) CanAccessRecord(record *models.Record, requestInfo *models.RequestInfo, accessRule *string) (bool, error) {
+	if requestInfo.Admin != nil {
 		// admins can access everything
 		return true, nil
 	}
@@ -560,7 +560,7 @@ func (dao *Dao) CanAccessRecord(record *models.Record, requestData *models.Reque
 		AndWhere(dbx.HashExp{record.Collection().Name + ".id": record.Id})
 
 	// parse and apply the access rule filter
-	resolver := resolvers.NewRecordFieldResolver(dao, record.Collection(), requestData, true)
+	resolver := resolvers.NewRecordFieldResolver(dao, record.Collection(), requestInfo, true)
 	expr, err := search.FilterData(*accessRule).BuildExpr(resolver)
 	if err != nil {
 		return false, err

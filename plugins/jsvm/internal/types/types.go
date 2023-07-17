@@ -308,6 +308,8 @@ interface Command extends cobra.Command{} // merge
 /**
  * Command defines a single console command.
  *
+ * Example:
+ *
  * ` + "```" + `js
  * const command = new Command({
  *     use: "hello",
@@ -321,6 +323,51 @@ interface Command extends cobra.Command{} // merge
  */
 declare class Command implements cobra.Command {
   constructor(cmd?: Partial<cobra.Command>)
+}
+
+interface RequestInfo extends models.RequestInfo{} // merge
+/**
+ * RequestInfo defines a single models.RequestInfo instance, usually used
+ * as part of various filter checks.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * const authRecord = $app.dao().findAuthRecordByEmail("users", "test@example.com")
+ *
+ * const info = new RequestInfo({
+ *     authRecord: authRecord,
+ *     data:       {"name": 123},
+ *     headers:    {"x-token": "..."},
+ * })
+ *
+ * const record = $app.dao().findFirstRecordByData("articles", "slug", "hello")
+ *
+ * const canAccess = $app.dao().canAccessRecord(record, info, "@request.auth.id != '' && @request.data.name = 123")
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare class RequestInfo implements models.RequestInfo {
+  constructor(date?: Partial<models.RequestInfo>)
+}
+
+interface DateTime extends types.DateTime{} // merge
+/**
+ * DateTime defines a single DateTime type instance.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * const dt0 = new DateTime() // now
+ *
+ * const dt1 = new DateTime('2023-07-01 00:00:00.000Z')
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare class DateTime implements types.DateTime {
+  constructor(date?: string)
 }
 
 interface ValidationError extends ozzo_validation.Error{} // merge
@@ -690,7 +737,7 @@ declare namespace $apis {
   let requireAdminOrRecordAuth:  apis.requireAdminOrRecordAuth
   let requireAdminOrOwnerAuth:   apis.requireAdminOrOwnerAuth
   let activityLogger:            apis.activityLogger
-  let requestData:               apis.requestData
+  let requestInfo:               apis.requestInfo
   let recordAuthResponse:        apis.recordAuthResponse
   let enrichRecord:              apis.enrichRecord
   let enrichRecords:             apis.enrichRecords

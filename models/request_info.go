@@ -6,12 +6,11 @@ import (
 	"github.com/pocketbase/pocketbase/models/schema"
 )
 
-// RequestData defines a HTTP request data struct, usually used
+// RequestInfo defines a HTTP request data struct, usually used
 // as part of the `@request.*` filter resolver.
-type RequestData struct {
-	Method string         `json:"method"`
-	Query  map[string]any `json:"query"`
-	// @todo consider changing to Body?
+type RequestInfo struct {
+	Method     string         `json:"method"`
+	Query      map[string]any `json:"query"`
 	Data       map[string]any `json:"data"`
 	Headers    map[string]any `json:"headers"`
 	AuthRecord *Record        `json:"authRecord"`
@@ -19,7 +18,7 @@ type RequestData struct {
 }
 
 // HasModifierDataKeys loosely checks if the current struct has any modifier Data keys.
-func (r *RequestData) HasModifierDataKeys() bool {
+func (r *RequestInfo) HasModifierDataKeys() bool {
 	allModifiers := schema.FieldValueModifiers()
 
 	for key := range r.Data {

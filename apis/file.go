@@ -95,18 +95,18 @@ func (api *fileApi) download(c echo.Context) error {
 		adminOrAuthRecord, _ := api.findAdminOrAuthRecordByFileToken(token)
 
 		// create a copy of the cached request data and adjust it for the current auth model
-		requestData := *RequestData(c)
-		requestData.Admin = nil
-		requestData.AuthRecord = nil
+		requestInfo := *RequestInfo(c)
+		requestInfo.Admin = nil
+		requestInfo.AuthRecord = nil
 		if adminOrAuthRecord != nil {
 			if admin, _ := adminOrAuthRecord.(*models.Admin); admin != nil {
-				requestData.Admin = admin
+				requestInfo.Admin = admin
 			} else if record, _ := adminOrAuthRecord.(*models.Record); record != nil {
-				requestData.AuthRecord = record
+				requestInfo.AuthRecord = record
 			}
 		}
 
-		if ok, _ := api.app.Dao().CanAccessRecord(record, &requestData, record.Collection().ViewRule); !ok {
+		if ok, _ := api.app.Dao().CanAccessRecord(record, &requestInfo, record.Collection().ViewRule); !ok {
 			return NewForbiddenError("Insufficient permissions to access the file resource.", nil)
 		}
 	}

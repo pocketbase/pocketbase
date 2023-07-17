@@ -347,12 +347,12 @@ func (api *realtimeApi) canAccessRecord(client subscriptions.Client, record *mod
 		}
 
 		// mock request data
-		requestData := &models.RequestData{
+		requestInfo := &models.RequestInfo{
 			Method: "GET",
 		}
-		requestData.AuthRecord, _ = client.Get(ContextAuthRecordKey).(*models.Record)
+		requestInfo.AuthRecord, _ = client.Get(ContextAuthRecordKey).(*models.Record)
 
-		resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), record.Collection(), requestData, true)
+		resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), record.Collection(), requestInfo, true)
 		expr, err := search.FilterData(*accessRule).BuildExpr(resolver)
 		if err != nil {
 			return err

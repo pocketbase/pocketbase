@@ -17,14 +17,20 @@ import (
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
-const ContextRequestDataKey = "requestData"
+const ContextRequestInfoKey = "requestInfo"
 
-// RequestData exports cached common request data fields
+// Deprecated: Use RequestInfo instead.
+func RequestData(c echo.Context) *models.RequestInfo {
+	log.Println("RequestInfo(c) is depracated and will be removed in the future! You can replace it with RequestInfo(c).")
+	return RequestInfo(c)
+}
+
+// RequestInfo exports cached common request data fields
 // (query, body, logged auth state, etc.) from the provided context.
-func RequestData(c echo.Context) *models.RequestData {
+func RequestInfo(c echo.Context) *models.RequestInfo {
 	// return cached to avoid copying the body multiple times
-	if v := c.Get(ContextRequestDataKey); v != nil {
-		if data, ok := v.(*models.RequestData); ok {
+	if v := c.Get(ContextRequestInfoKey); v != nil {
+		if data, ok := v.(*models.RequestInfo); ok {
 			// refresh auth state
 			data.AuthRecord, _ = c.Get(ContextAuthRecordKey).(*models.Record)
 			data.Admin, _ = c.Get(ContextAdminKey).(*models.Admin)
@@ -32,7 +38,7 @@ func RequestData(c echo.Context) *models.RequestData {
 		}
 	}
 
-	result := &models.RequestData{
+	result := &models.RequestInfo{
 		Method:  c.Request().Method,
 		Query:   map[string]any{},
 		Data:    map[string]any{},
@@ -52,7 +58,7 @@ func RequestData(c echo.Context) *models.RequestData {
 	echo.BindQueryParams(c, &result.Query)
 	rest.BindBody(c, &result.Data)
 
-	c.Set(ContextRequestDataKey, result)
+	c.Set(ContextRequestInfoKey, result)
 
 	return result
 }
@@ -86,13 +92,13 @@ func RecordAuthResponse(
 		expands := strings.Split(c.QueryParam(expandQueryParam), ",")
 		if len(expands) > 0 {
 			// create a copy of the cached request data and adjust it to the current auth record
-			requestData := *RequestData(e.HttpContext)
-			requestData.Admin = nil
-			requestData.AuthRecord = e.Record
+			requestInfo := *RequestInfo(e.HttpContext)
+			requestInfo.Admin = nil
+			requestInfo.AuthRecord = e.Record
 			failed := app.Dao().ExpandRecord(
 				e.Record,
 				expands,
-				expandFetch(app.Dao(), &requestData),
+				expandFetch(app.Dao(), &requestInfo),
 			)
 			if len(failed) > 0 && app.IsDebug() {
 				log.Println("Failed to expand relations: ", failed)
@@ -131,9 +137,9 @@ func EnrichRecord(c echo.Context, dao *daos.Dao, record *models.Record, defaultE
 //   - ensures that the emails of the auth records and their expanded auth relations
 //     are visibe only for the current logged admin, record owner or record with manage access
 func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defaultExpands ...string) error {
-	requestData := RequestData(c)
+	requestInfo := RequestInfo(c)
 
-	if err := autoIgnoreAuthRecordsEmailVisibility(dao, records, requestData); err != nil {
+	if err := autoIgnoreAuthRecordsEmailVisibility(dao, records, requestInfo); err != nil {
 		return fmt.Errorf("Failed to resolve email visibility: %w", err)
 	}
 
@@ -145,7 +151,7 @@ func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defa
 		return nil // nothing to expand
 	}
 
-	errs := dao.ExpandRecords(records, expands, expandFetch(dao, requestData))
+	errs := dao.ExpandRecords(records, expands, expandFetch(dao, requestInfo))
 	if len(errs) > 0 {
 		return fmt.Errorf("Failed to expand: %v", errs)
 	}
@@ -156,11 +162,11 @@ func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defa
 // expandFetch is the records fetch function that is used to expand related records.
 func expandFetch(
 	dao *daos.Dao,
-	requestData *models.RequestData,
+	requestInfo *models.RequestInfo,
 ) daos.ExpandFetchFunc {
 	return func(relCollection *models.Collection, relIds []string) ([]*models.Record, error) {
 		records, err := dao.FindRecordsByIds(relCollection.Id, relIds, func(q *dbx.SelectQuery) error {
-			if requestData.Admin != nil {
+			if requestInfo.Admin != nil {
 				return nil // admins can access everything
 			}
 
@@ -169,7 +175,7 @@ func expandFetch(
 			}
 
 			if *relCollection.ViewRule != "" {
-				resolver := resolvers.NewRecordFieldResolver(dao, relCollection, requestData, true)
+				resolver := resolvers.NewRecordFieldResolver(dao, relCollection, requestInfo, true)
 				expr, err := search.FilterData(*(relCollection.ViewRule)).BuildExpr(resolver)
 				if err != nil {
 					return err
@@ -182,7 +188,7 @@ func expandFetch(
 		})
 
 		if err == nil && len(records) > 0 {
-			autoIgnoreAuthRecordsEmailVisibility(dao, records, requestData)
+			autoIgnoreAuthRecordsEmailVisibility(dao, records, requestInfo)
 		}
 
 		return records, err
@@ -196,13 +202,13 @@ func expandFetch(
 func autoIgnoreAuthRecordsEmailVisibility(
 	dao *daos.Dao,
 	records []*models.Record,
-	requestData *models.RequestData,
+	requestInfo *models.RequestInfo,
 ) error {
 	if len(records) == 0 || !records[0].Collection().IsAuth() {
 		return nil // nothing to check
 	}
 
-	if requestData.Admin != nil {
+	if requestInfo.Admin != nil {
 		for _, rec := range records {
 			rec.IgnoreEmailVisibility(true)
 		}
@@ -218,8 +224,8 @@ func autoIgnoreAuthRecordsEmailVisibility(
 		recordIds[i] = rec.Id
 	}
 
-	if requestData != nil && requestData.AuthRecord != nil && mappedRecords[requestData.AuthRecord.Id] != nil {
-		mappedRecords[requestData.AuthRecord.Id].IgnoreEmailVisibility(true)
+	if requestInfo != nil && requestInfo.AuthRecord != nil && mappedRecords[requestInfo.AuthRecord.Id] != nil {
+		mappedRecords[requestInfo.AuthRecord.Id].IgnoreEmailVisibility(true)
 	}
 
 	authOptions := collection.AuthOptions()
@@ -235,7 +241,7 @@ func autoIgnoreAuthRecordsEmailVisibility(
 		Select(dao.DB().QuoteSimpleColumnName(collection.Name) + ".id").
 		AndWhere(dbx.In(dao.DB().QuoteSimpleColumnName(collection.Name)+".id", recordIds...))
 
-	resolver := resolvers.NewRecordFieldResolver(dao, collection, requestData, true)
+	resolver := resolvers.NewRecordFieldResolver(dao, collection, requestInfo, true)
 	expr, err := search.FilterData(*authOptions.ManageRule).BuildExpr(resolver)
 	if err != nil {
 		return err
@@ -264,7 +270,7 @@ func autoIgnoreAuthRecordsEmailVisibility(
 func hasAuthManageAccess(
 	dao *daos.Dao,
 	record *models.Record,
-	requestData *models.RequestData,
+	requestInfo *models.RequestInfo,
 ) bool {
 	if !record.Collection().IsAuth() {
 		return false
@@ -276,12 +282,12 @@ func hasAuthManageAccess(
 		return false // only for admins (manageRule can't be empty)
 	}
 
-	if requestData == nil || requestData.AuthRecord == nil {
+	if requestInfo == nil || requestInfo.AuthRecord == nil {
 		return false // no auth record
 	}
 
 	ruleFunc := func(q *dbx.SelectQuery) error {
-		resolver := resolvers.NewRecordFieldResolver(dao, record.Collection(), requestData, true)
+		resolver := resolvers.NewRecordFieldResolver(dao, record.Collection(), requestInfo, true)
 		expr, err := search.FilterData(*manageRule).BuildExpr(resolver)
 		if err != nil {
 			return err

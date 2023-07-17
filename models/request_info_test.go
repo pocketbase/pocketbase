@@ -6,20 +6,20 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 )
 
-func TestRequestDataHasModifierDataKeys(t *testing.T) {
+func TestRequestInfoHasModifierDataKeys(t *testing.T) {
 	scenarios := []struct {
 		name        string
-		requestData *models.RequestData
+		requestInfo *models.RequestInfo
 		expected    bool
 	}{
 		{
 			"empty",
-			&models.RequestData{},
+			&models.RequestInfo{},
 			false,
 		},
 		{
 			"Data with regular fields",
-			&models.RequestData{
+			&models.RequestInfo{
 				Query: map[string]any{"data+": "demo"}, // should be ignored
 				Data:  map[string]any{"a": 123, "b": "test", "c.d": false},
 			},
@@ -27,21 +27,21 @@ func TestRequestDataHasModifierDataKeys(t *testing.T) {
 		},
 		{
 			"Data with +modifier fields",
-			&models.RequestData{
+			&models.RequestInfo{
 				Data: map[string]any{"a+": 123, "b": "test", "c.d": false},
 			},
 			true,
 		},
 		{
 			"Data with -modifier fields",
-			&models.RequestData{
+			&models.RequestInfo{
 				Data: map[string]any{"a": 123, "b-": "test", "c.d": false},
 			},
 			true,
 		},
 		{
 			"Data with mixed modifier fields",
-			&models.RequestData{
+			&models.RequestInfo{
 				Data: map[string]any{"a": 123, "b-": "test", "c.d+": false},
 			},
 			true,
@@ -49,7 +49,7 @@ func TestRequestDataHasModifierDataKeys(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		result := s.requestData.HasModifierDataKeys()
+		result := s.requestInfo.HasModifierDataKeys()
 
 		if result != s.expected {
 			t.Fatalf("[%s] Expected %v, got %v", s.name, s.expected, result)
