@@ -91,11 +91,9 @@ func (api *collectionApi) create(c echo.Context) error {
 					return NewBadRequestError("Failed to create the collection.", err)
 				}
 
-				if err := api.app.OnCollectionAfterCreateRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.JSON(http.StatusOK, e.Collection)
+				return api.app.OnCollectionAfterCreateRequest().Trigger(event, func(e *core.CollectionCreateEvent) error {
+					return e.HttpContext.JSON(http.StatusOK, e.Collection)
+				})
 			})
 		}
 	})
@@ -128,11 +126,9 @@ func (api *collectionApi) update(c echo.Context) error {
 					return NewBadRequestError("Failed to update the collection.", err)
 				}
 
-				if err := api.app.OnCollectionAfterUpdateRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.JSON(http.StatusOK, e.Collection)
+				return api.app.OnCollectionAfterUpdateRequest().Trigger(event, func(e *core.CollectionUpdateEvent) error {
+					return e.HttpContext.JSON(http.StatusOK, e.Collection)
+				})
 			})
 		}
 	})
@@ -153,11 +149,9 @@ func (api *collectionApi) delete(c echo.Context) error {
 			return NewBadRequestError("Failed to delete collection due to existing dependency.", err)
 		}
 
-		if err := api.app.OnCollectionAfterDeleteRequest().Trigger(event); err != nil {
-			return err
-		}
-
-		return e.HttpContext.NoContent(http.StatusNoContent)
+		return api.app.OnCollectionAfterDeleteRequest().Trigger(event, func(e *core.CollectionDeleteEvent) error {
+			return e.HttpContext.NoContent(http.StatusNoContent)
+		})
 	})
 }
 
@@ -183,11 +177,9 @@ func (api *collectionApi) bulkImport(c echo.Context) error {
 					return NewBadRequestError("Failed to import the submitted collections.", err)
 				}
 
-				if err := api.app.OnCollectionsAfterImportRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnCollectionsAfterImportRequest().Trigger(event, func(e *core.CollectionsImportEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})

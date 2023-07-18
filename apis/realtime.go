@@ -142,8 +142,11 @@ func (api *realtimeApi) connect(c echo.Context) error {
 				return nil
 			}
 
-			if err := api.app.OnRealtimeAfterMessageSend().Trigger(msgEvent); err != nil && api.app.IsDebug() {
-				log.Println("OnRealtimeAfterMessageSend error:", err)
+			if err := api.app.OnRealtimeAfterMessageSend().Trigger(msgEvent); err != nil {
+				if api.app.IsDebug() {
+					log.Println("Realtime connection closed (OnRealtimeAfterMessageSend error):", client.Id(), err)
+				}
+				return nil
 			}
 
 			idleTimer.Stop()
@@ -202,11 +205,9 @@ func (api *realtimeApi) setSubscriptions(c echo.Context) error {
 		// subscribe to the new subscriptions
 		e.Client.Subscribe(e.Subscriptions...)
 
-		if err := api.app.OnRealtimeAfterSubscribeRequest().Trigger(event); err != nil {
-			return err
-		}
-
-		return e.HttpContext.NoContent(http.StatusNoContent)
+		return api.app.OnRealtimeAfterSubscribeRequest().Trigger(event, func(e *core.RealtimeSubscribeEvent) error {
+			return e.HttpContext.NoContent(http.StatusNoContent)
+		})
 	})
 }
 

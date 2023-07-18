@@ -50,12 +50,10 @@ func (api *fileApi) fileToken(c echo.Context) error {
 			return NewBadRequestError("Failed to generate file token.", nil)
 		}
 
-		if err := api.app.OnFileAfterTokenRequest().Trigger(event); err != nil {
-			return err
-		}
-
-		return e.HttpContext.JSON(http.StatusOK, map[string]string{
-			"token": e.Token,
+		return api.app.OnFileAfterTokenRequest().Trigger(event, func(e *core.FileTokenEvent) error {
+			return e.HttpContext.JSON(http.StatusOK, map[string]string{
+				"token": e.Token,
+			})
 		})
 	})
 }

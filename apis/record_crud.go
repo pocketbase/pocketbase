@@ -238,11 +238,9 @@ func (api *recordApi) create(c echo.Context) error {
 					log.Println(err)
 				}
 
-				if err := api.app.OnRecordAfterCreateRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.JSON(http.StatusOK, e.Record)
+				return api.app.OnRecordAfterCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
+					return e.HttpContext.JSON(http.StatusOK, e.Record)
+				})
 			})
 		}
 	})
@@ -323,11 +321,9 @@ func (api *recordApi) update(c echo.Context) error {
 					log.Println(err)
 				}
 
-				if err := api.app.OnRecordAfterUpdateRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.JSON(http.StatusOK, e.Record)
+				return api.app.OnRecordAfterUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
+					return e.HttpContext.JSON(http.StatusOK, e.Record)
+				})
 			})
 		}
 	})
@@ -380,11 +376,9 @@ func (api *recordApi) delete(c echo.Context) error {
 			return NewBadRequestError("Failed to delete record. Make sure that the record is not part of a required relation reference.", err)
 		}
 
-		if err := api.app.OnRecordAfterDeleteRequest().Trigger(event); err != nil {
-			return err
-		}
-
-		return e.HttpContext.NoContent(http.StatusNoContent)
+		return api.app.OnRecordAfterDeleteRequest().Trigger(event, func(e *core.RecordDeleteEvent) error {
+			return e.HttpContext.NoContent(http.StatusNoContent)
+		})
 	})
 }
 

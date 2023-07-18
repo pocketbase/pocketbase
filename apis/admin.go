@@ -69,11 +69,9 @@ func (api *adminApi) authRefresh(c echo.Context) error {
 	event.Admin = admin
 
 	return api.app.OnAdminBeforeAuthRefreshRequest().Trigger(event, func(e *core.AdminAuthRefreshEvent) error {
-		if err := api.app.OnAdminAfterAuthRefreshRequest().Trigger(event); err != nil {
-			return err
-		}
-
-		return api.authResponse(e.HttpContext, e.Admin)
+		return api.app.OnAdminAfterAuthRefreshRequest().Trigger(event, func(e *core.AdminAuthRefreshEvent) error {
+			return api.authResponse(e.HttpContext, e.Admin)
+		})
 	})
 }
 
@@ -97,11 +95,9 @@ func (api *adminApi) authWithPassword(c echo.Context) error {
 					return NewBadRequestError("Failed to authenticate.", err)
 				}
 
-				if err := api.app.OnAdminAfterAuthWithPasswordRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return api.authResponse(e.HttpContext, e.Admin)
+				return api.app.OnAdminAfterAuthWithPasswordRequest().Trigger(event, func(e *core.AdminAuthWithPasswordEvent) error {
+					return api.authResponse(e.HttpContext, e.Admin)
+				})
 			})
 		}
 	})
@@ -135,11 +131,9 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 					}
 				})
 
-				if err := api.app.OnAdminAfterRequestPasswordResetRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnAdminAfterRequestPasswordResetRequest().Trigger(event, func(e *core.AdminRequestPasswordResetEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})
@@ -171,11 +165,9 @@ func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 					return NewBadRequestError("Failed to set new password.", err)
 				}
 
-				if err := api.app.OnAdminAfterConfirmPasswordResetRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnAdminAfterConfirmPasswordResetRequest().Trigger(event, func(e *core.AdminConfirmPasswordResetEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})
@@ -252,11 +244,9 @@ func (api *adminApi) create(c echo.Context) error {
 					return NewBadRequestError("Failed to create admin.", err)
 				}
 
-				if err := api.app.OnAdminAfterCreateRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.JSON(http.StatusOK, e.Admin)
+				return api.app.OnAdminAfterCreateRequest().Trigger(event, func(e *core.AdminCreateEvent) error {
+					return e.HttpContext.JSON(http.StatusOK, e.Admin)
+				})
 			})
 		}
 	})
@@ -296,11 +286,9 @@ func (api *adminApi) update(c echo.Context) error {
 					return NewBadRequestError("Failed to update admin.", err)
 				}
 
-				if err := api.app.OnAdminAfterUpdateRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.JSON(http.StatusOK, e.Admin)
+				return api.app.OnAdminAfterUpdateRequest().Trigger(event, func(e *core.AdminUpdateEvent) error {
+					return e.HttpContext.JSON(http.StatusOK, e.Admin)
+				})
 			})
 		}
 	})
@@ -328,10 +316,8 @@ func (api *adminApi) delete(c echo.Context) error {
 			return NewBadRequestError("Failed to delete admin.", err)
 		}
 
-		if err := api.app.OnAdminAfterDeleteRequest().Trigger(event); err != nil {
-			return err
-		}
-
-		return e.HttpContext.NoContent(http.StatusNoContent)
+		return api.app.OnAdminAfterDeleteRequest().Trigger(event, func(e *core.AdminDeleteEvent) error {
+			return e.HttpContext.NoContent(http.StatusNoContent)
+		})
 	})
 }

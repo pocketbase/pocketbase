@@ -332,11 +332,9 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 					}
 				})
 
-				if err := api.app.OnRecordAfterRequestPasswordResetRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnRecordAfterRequestPasswordResetRequest().Trigger(event, func(e *core.RecordRequestPasswordResetEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})
@@ -374,11 +372,9 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 					return NewBadRequestError("Failed to set new password.", err)
 				}
 
-				if err := api.app.OnRecordAfterConfirmPasswordResetRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnRecordAfterConfirmPasswordResetRequest().Trigger(event, func(e *core.RecordConfirmPasswordResetEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})
@@ -417,11 +413,9 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 					}
 				})
 
-				if err := api.app.OnRecordAfterRequestVerificationRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnRecordAfterRequestVerificationRequest().Trigger(event, func(e *core.RecordRequestVerificationEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})
@@ -459,11 +453,9 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 					return NewBadRequestError("An error occurred while submitting the form.", err)
 				}
 
-				if err := api.app.OnRecordAfterConfirmVerificationRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnRecordAfterConfirmVerificationRequest().Trigger(event, func(e *core.RecordConfirmVerificationEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})
@@ -499,11 +491,9 @@ func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
 					return NewBadRequestError("Failed to request email change.", err)
 				}
 
-				if err := api.app.OnRecordAfterRequestEmailChangeRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnRecordAfterRequestEmailChangeRequest().Trigger(event, func(e *core.RecordRequestEmailChangeEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})
@@ -533,11 +523,9 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 					return NewBadRequestError("Failed to confirm email change.", err)
 				}
 
-				if err := api.app.OnRecordAfterConfirmEmailChangeRequest().Trigger(event); err != nil {
-					return err
-				}
-
-				return e.HttpContext.NoContent(http.StatusNoContent)
+				return api.app.OnRecordAfterConfirmEmailChangeRequest().Trigger(event, func(e *core.RecordConfirmEmailChangeEvent) error {
+					return e.HttpContext.NoContent(http.StatusNoContent)
+				})
 			})
 		}
 	})
@@ -610,11 +598,9 @@ func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 			return NewBadRequestError("Cannot unlink the external auth provider.", err)
 		}
 
-		if err := api.app.OnRecordAfterUnlinkExternalAuthRequest().Trigger(event); err != nil {
-			return err
-		}
-
-		return e.HttpContext.NoContent(http.StatusNoContent)
+		return api.app.OnRecordAfterUnlinkExternalAuthRequest().Trigger(event, func(e *core.RecordUnlinkExternalAuthEvent) error {
+			return e.HttpContext.NoContent(http.StatusNoContent)
+		})
 	})
 }
 

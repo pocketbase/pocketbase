@@ -63,16 +63,14 @@ func (api *settingsApi) set(c echo.Context) error {
 					return NewBadRequestError("An error occurred while submitting the form.", err)
 				}
 
-				if err := api.app.OnSettingsAfterUpdateRequest().Trigger(event); err != nil {
-					return err
-				}
+				return api.app.OnSettingsAfterUpdateRequest().Trigger(event, func(e *core.SettingsUpdateEvent) error {
+					redactedSettings, err := api.app.Settings().RedactClone()
+					if err != nil {
+						return NewBadRequestError("", err)
+					}
 
-				redactedSettings, err := api.app.Settings().RedactClone()
-				if err != nil {
-					return NewBadRequestError("", err)
-				}
-
-				return e.HttpContext.JSON(http.StatusOK, redactedSettings)
+					return e.HttpContext.JSON(http.StatusOK, redactedSettings)
+				})
 			})
 		}
 	})
