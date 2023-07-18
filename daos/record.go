@@ -211,12 +211,7 @@ func (dao *Dao) FindRecordsByIds(
 //	expr2 := dbx.NewExp("LOWER(username) = {:username}", dbx.Params{"username": "test"})
 //	dao.FindRecordsByExpr("example", expr1, expr2)
 func (dao *Dao) FindRecordsByExpr(collectionNameOrId string, exprs ...dbx.Expression) ([]*models.Record, error) {
-	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)
-	if err != nil {
-		return nil, err
-	}
-
-	query := dao.RecordQuery(collection)
+	query := dao.RecordQuery(collectionNameOrId)
 
 	// add only the non-nil expressions
 	for _, expr := range exprs {
@@ -241,14 +236,9 @@ func (dao *Dao) FindFirstRecordByData(
 	key string,
 	value any,
 ) (*models.Record, error) {
-	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)
-	if err != nil {
-		return nil, err
-	}
-
 	record := &models.Record{}
 
-	err = dao.RecordQuery(collection).
+	err := dao.RecordQuery(collectionNameOrId).
 		AndWhere(dbx.HashExp{inflector.Columnify(key): value}).
 		Limit(1).
 		One(record)
