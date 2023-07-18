@@ -2,6 +2,7 @@
 package apis
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -11,7 +12,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/dop251/goja"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/pocketbase/pocketbase/core"
@@ -59,14 +59,6 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			return
 		}
 
-		// manually extract the goja exception error value for
-		// consistency when throwing or returning errors
-		if jsException, ok := err.(*goja.Exception); ok {
-			if wrapped, ok := jsException.Value().Export().(error); ok {
-				err = wrapped
-			}
-		}
-
 		var apiErr *ApiError
 
 		switch v := err.(type) {
@@ -85,7 +77,12 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			if err != nil && app.IsDebug() {
 				log.Println(err)
 			}
-			apiErr = NewBadRequestError("", err)
+
+			if err != nil && errors.Is(err, sql.ErrNoRows) {
+				apiErr = NewNotFoundError("", err)
+			} else {
+				apiErr = NewBadRequestError("", err)
+			}
 		}
 
 		event := new(core.ApiErrorEvent)

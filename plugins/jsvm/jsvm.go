@@ -22,6 +22,7 @@ import (
 	"github.com/dop251/goja_nodejs/require"
 	"github.com/fatih/color"
 	"github.com/fsnotify/fsnotify"
+	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
@@ -191,6 +192,11 @@ func (p *plugin) registerHooks() error {
 		return nil
 	}
 
+	p.app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+		e.Router.HTTPErrorHandler = p.normalizeServeExceptions(e.Router.HTTPErrorHandler)
+		return nil
+	})
+
 	// this is safe to be shared across multiple vms
 	registry := new(require.Registry)
 
@@ -234,6 +240,34 @@ func (p *plugin) registerHooks() error {
 	}
 
 	return nil
+}
+
+// normalizeExceptions wraps the provided error handler and returns a new one
+// with extracted goja exception error value for consistency when throwing or returning errors.
+func (p *plugin) normalizeServeExceptions(oldErrorHandler echo.HTTPErrorHandler) echo.HTTPErrorHandler {
+	return func(c echo.Context, err error) {
+		defer func() {
+			oldErrorHandler(c, err)
+		}()
+
+		if err == nil || c.Response().Committed {
+			return // no error or already committed
+		}
+
+		jsException, ok := err.(*goja.Exception)
+		if !ok {
+			return // no exception
+		}
+
+		switch v := jsException.Value().Export().(type) {
+		case error:
+			err = v
+		case map[string]any: // goja.GoError
+			if vErr, ok := v["value"].(error); ok {
+				err = vErr
+			}
+		}
+	}
 }
 
 // watchHooks initializes a hooks file watcher that will restart the

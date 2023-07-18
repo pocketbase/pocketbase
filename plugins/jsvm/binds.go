@@ -77,15 +77,12 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 
 					// check for returned error or false
 					if res != nil {
-						exported := res.Export()
-						if exported != nil {
-							switch v := exported.(type) {
-							case error:
-								return v
-							case bool:
-								if !v {
-									return hook.StopPropagation
-								}
+						switch v := res.Export().(type) {
+						case error:
+							return v
+						case bool:
+							if !v {
+								return hook.StopPropagation
 							}
 						}
 					}
@@ -156,8 +153,16 @@ func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 			e.Router.Add(strings.ToUpper(method), path, func(c echo.Context) error {
 				return executors.run(func(executor *goja.Runtime) error {
 					executor.Set("__args", []any{c})
-					_, err := executor.RunProgram(pr)
+					res, err := executor.RunProgram(pr)
 					executor.Set("__args", goja.Undefined())
+
+					// check for returned error
+					if res != nil {
+						if v, ok := res.Export().(error); ok {
+							return v
+						}
+					}
+
 					return err
 				})
 			}, wrappedMiddlewares...)
@@ -207,9 +212,17 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.M
 					return executors.run(func(executor *goja.Runtime) error {
 						executor.Set("__args", []any{next})
 						executor.Set("__args2", []any{c})
-						_, err := executor.RunProgram(pr)
+						res, err := executor.RunProgram(pr)
 						executor.Set("__args", goja.Undefined())
 						executor.Set("__args2", goja.Undefined())
+
+						// check for returned error
+						if res != nil {
+							if v, ok := res.Export().(error); ok {
+								return v
+							}
+						}
+
 						return err
 					})
 				}

@@ -214,7 +214,6 @@ func TestRemoveTrailingSlashMiddleware(t *testing.T) {
 }
 
 func TestEagerRequestInfoCache(t *testing.T) {
-
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "custom non-api group route",
