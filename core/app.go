@@ -162,7 +162,7 @@ type App interface {
 	// ---------------------------------------------------------------
 
 	// OnModelBeforeCreate hook is triggered before inserting a new
-	// entry in the DB, allowing you to modify or validate the stored data.
+	// model in the DB, allowing you to modify or validate the stored data.
 	//
 	// If the optional "tags" list (table names and/or the Collection id for Record models)
 	// is specified, then all event handlers registered via the created hook
@@ -170,7 +170,7 @@ type App interface {
 	OnModelBeforeCreate(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelAfterCreate hook is triggered after successfully
-	// inserting a new entry in the DB.
+	// inserting a new model in the DB.
 	//
 	// If the optional "tags" list (table names and/or the Collection id for Record models)
 	// is specified, then all event handlers registered via the created hook
@@ -178,7 +178,7 @@ type App interface {
 	OnModelAfterCreate(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelBeforeUpdate hook is triggered before updating existing
-	// entry in the DB, allowing you to modify or validate the stored data.
+	// model in the DB, allowing you to modify or validate the stored data.
 	//
 	// If the optional "tags" list (table names and/or the Collection id for Record models)
 	// is specified, then all event handlers registered via the created hook
@@ -186,7 +186,7 @@ type App interface {
 	OnModelBeforeUpdate(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelAfterUpdate hook is triggered after successfully updating
-	// existing entry in the DB.
+	// existing model in the DB.
 	//
 	// If the optional "tags" list (table names and/or the Collection id for Record models)
 	// is specified, then all event handlers registered via the created hook
@@ -194,7 +194,7 @@ type App interface {
 	OnModelAfterUpdate(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelBeforeDelete hook is triggered before deleting an
-	// existing entry from the DB.
+	// existing model from the DB.
 	//
 	// If the optional "tags" list (table names and/or the Collection id for Record models)
 	// is specified, then all event handlers registered via the created hook
@@ -202,7 +202,7 @@ type App interface {
 	OnModelBeforeDelete(tags ...string) *hook.TaggedHook[*ModelEvent]
 
 	// OnModelAfterDelete hook is triggered after successfully deleting an
-	// existing entry from the DB.
+	// existing model from the DB.
 	//
 	// If the optional "tags" list (table names and/or the Collection id for Record models)
 	// is specified, then all event handlers registered via the created hook
