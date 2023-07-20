@@ -1362,7 +1362,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 
 							expectedParams := []string{`"state"`, `"code"`}
 							for _, p := range expectedParams {
-								if !strings.Contains(msg.Data, p) {
+								if !strings.Contains(string(msg.Data), p) {
 									t.Errorf("Couldn't find %s in \n%v", p, msg.Data)
 								}
 							}

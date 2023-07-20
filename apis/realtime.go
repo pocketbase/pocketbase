@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -83,14 +82,16 @@ func (api *realtimeApi) connect(c echo.Context) error {
 		Client:      client,
 		Message: &subscriptions.Message{
 			Name: "PB_CONNECT",
-			Data: `{"clientId":"` + client.Id() + `"}`,
+			Data: []byte(`{"clientId":"` + client.Id() + `"}`),
 		},
 	}
 	connectMsgErr := api.app.OnRealtimeBeforeMessageSend().Trigger(connectMsgEvent, func(e *core.RealtimeMessageEvent) error {
 		w := e.HttpContext.Response()
-		fmt.Fprint(w, "id:"+client.Id()+"\n")
-		fmt.Fprint(w, "event:"+e.Message.Name+"\n")
-		fmt.Fprint(w, "data:"+e.Message.Data+"\n\n")
+		w.Write([]byte("id:" + client.Id() + "\n"))
+		w.Write([]byte("event:" + e.Message.Name + "\n"))
+		w.Write([]byte("data:"))
+		w.Write(e.Message.Data)
+		w.Write([]byte("\n\n"))
 		w.Flush()
 		return api.app.OnRealtimeAfterMessageSend().Trigger(e)
 	})
@@ -126,9 +127,11 @@ func (api *realtimeApi) connect(c echo.Context) error {
 			}
 			msgErr := api.app.OnRealtimeBeforeMessageSend().Trigger(msgEvent, func(e *core.RealtimeMessageEvent) error {
 				w := e.HttpContext.Response()
-				fmt.Fprint(w, "id:"+e.Client.Id()+"\n")
-				fmt.Fprint(w, "event:"+e.Message.Name+"\n")
-				fmt.Fprint(w, "data:"+e.Message.Data+"\n\n")
+				w.Write([]byte("id:" + e.Client.Id() + "\n"))
+				w.Write([]byte("event:" + e.Message.Name + "\n"))
+				w.Write([]byte("data:"))
+				w.Write(e.Message.Data)
+				w.Write([]byte("\n\n"))
 				w.Flush()
 				return api.app.OnRealtimeAfterMessageSend().Trigger(msgEvent)
 			})
@@ -406,8 +409,6 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 		return err
 	}
 
-	encodedData := string(dataBytes)
-
 	for _, client := range clients {
 		client := client
 
@@ -422,7 +423,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 
 			msg := subscriptions.Message{
 				Name: subscription,
-				Data: encodedData,
+				Data: dataBytes,
 			}
 
 			// ignore the auth record email visibility checks for
@@ -433,7 +434,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 					api.canAccessRecord(client, data.Record, collection.AuthOptions().ManageRule) {
 					data.Record.IgnoreEmailVisibility(true) // ignore
 					if newData, err := json.Marshal(data); err == nil {
-						msg.Data = string(newData)
+						msg.Data = newData
 					}
 					data.Record.IgnoreEmailVisibility(false) // restore
 				}
@@ -443,9 +444,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 				client.Set(action+"/"+data.Record.Id, msg)
 			} else {
 				routine.FireAndForget(func() {
-					if !client.IsDiscarded() {
-						client.Channel() <- msg
-					}
+					client.Send(msg)
 				})
 			}
 		}
@@ -471,9 +470,7 @@ func (api *realtimeApi) broadcastDryCachedRecord(action string, record *models.R
 		client := client
 
 		routine.FireAndForget(func() {
-			if !client.IsDiscarded() {
-				client.Channel() <- msg
-			}
+			client.Send(msg)
 		})
 	}
 	return nil

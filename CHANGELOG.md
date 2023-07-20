@@ -87,6 +87,8 @@
 - **!** renamed `models.RequestData` to `models.RequestInfo` and soft-deprecated `apis.RequestData(c)` to `apis.RequestInfo(c)` to avoid the stuttering with the `Data` field.
   _The old `apis.RequestData()` method still works to minimize the breaking changes but it is recommended to replace it with `apis.RequestInfo(c)`._
 
+- **!** Changed the type of `subscriptions.Message.Data` from `string` to `[]byte` because `Data` usually is a json bytes slice anyway.
+
 - Added `?download` file query parameter option to instruct the browser to always download a file and not show a preview.
 
 

@@ -661,10 +661,10 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 
 	msg := subscriptions.Message{
 		Name: oauth2SubscriptionTopic,
-		Data: string(encodedData),
+		Data: encodedData,
 	}
 
-	client.Channel() <- msg
+	client.Send(msg)
 
 	return c.Redirect(http.StatusTemporaryRedirect, "../_/#/auth/oauth2-redirect")
 }

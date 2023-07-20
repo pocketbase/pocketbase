@@ -9,7 +9,7 @@ import (
 // Message defines a client's channel data.
 type Message struct {
 	Name string
-	Data string
+	Data []byte
 }
 
 // Client is an interface for a generic subscription client.
@@ -50,6 +50,9 @@ type Client interface {
 	// IsDiscarded indicates whether the client has been "discarded"
 	// and should no longer be used.
 	IsDiscarded() bool
+
+	// Send sends the specified message to the client's channel (if not discarded).
+	Send(m Message)
 }
 
 // ensures that DefaultClient satisfies the Client interface
@@ -182,4 +185,13 @@ func (c *DefaultClient) IsDiscarded() bool {
 	defer c.mux.RUnlock()
 
 	return c.isDiscarded
+}
+
+// Send sends the specified message to the client's channel (if not discarded).
+func (c *DefaultClient) Send(m Message) {
+	if c.IsDiscarded() {
+		return
+	}
+
+	c.Channel() <- m
 }

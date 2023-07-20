@@ -2,6 +2,7 @@ package subscriptions_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 )
@@ -141,5 +142,47 @@ func TestDiscard(t *testing.T) {
 
 	if v := c.IsDiscarded(); !v {
 		t.Fatal("Expected true, got false")
+	}
+}
+
+func TestSend(t *testing.T) {
+	c := subscriptions.NewDefaultClient()
+
+	received := []string{}
+	go func() {
+		for {
+			select {
+			case m, ok := <-c.Channel():
+				if !ok {
+					return
+				}
+				received = append(received, m.Name)
+			}
+		}
+	}()
+
+	c.Send(subscriptions.Message{Name: "m1"})
+	c.Send(subscriptions.Message{Name: "m2"})
+	c.Discard()
+	c.Send(subscriptions.Message{Name: "m3"})
+	c.Send(subscriptions.Message{Name: "m4"})
+	time.Sleep(5 * time.Millisecond)
+
+	expected := []string{"m1", "m2"}
+
+	if len(received) != len(expected) {
+		t.Fatalf("Expected %d messages, got %d", len(expected), len(received))
+	}
+	for _, name := range expected {
+		var exists bool
+		for _, n := range received {
+			if n == name {
+				exists = true
+				break
+			}
+		}
+		if !exists {
+			t.Fatalf("Missing expected %q message, got %v", name, received)
+		}
 	}
 }
