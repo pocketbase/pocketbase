@@ -59,19 +59,18 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 		var apiErr *ApiError
 
-		switch v := err.(type) {
-		case *echo.HTTPError:
+		if v := new(echo.HTTPError); errors.As(err, &v) {
 			if v.Internal != nil && app.IsDebug() {
 				log.Println(v.Internal)
 			}
 			msg := fmt.Sprintf("%v", v.Message)
 			apiErr = NewApiError(v.Code, msg, v)
-		case *ApiError:
+		} else if v := new(ApiError); errors.As(err, &v) {
 			if app.IsDebug() && v.RawData() != nil {
 				log.Println(v.RawData())
 			}
 			apiErr = v
-		default:
+		} else {
 			if err != nil && app.IsDebug() {
 				log.Println(err)
 			}
