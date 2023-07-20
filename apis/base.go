@@ -52,6 +52,10 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 	// custom error handler
 	e.HTTPErrorHandler = func(c echo.Context, err error) {
+		if err == nil {
+			return // no error
+		}
+
 		if c.Response().Committed {
 			if app.IsDebug() {
 				log.Println("HTTPErrorHandler response was already committed:", err)
@@ -61,24 +65,22 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 		var apiErr *ApiError
 
-		switch v := err.(type) {
-		case *echo.HTTPError:
+		if errors.As(err, &apiErr) {
+			if app.IsDebug() && apiErr.RawData() != nil {
+				log.Println(apiErr.RawData())
+			}
+		} else if v := new(echo.HTTPError); errors.As(err, &v) {
 			if v.Internal != nil && app.IsDebug() {
 				log.Println(v.Internal)
 			}
 			msg := fmt.Sprintf("%v", v.Message)
 			apiErr = NewApiError(v.Code, msg, v)
-		case *ApiError:
-			if app.IsDebug() && v.RawData() != nil {
-				log.Println(v.RawData())
-			}
-			apiErr = v
-		default:
-			if err != nil && app.IsDebug() {
+		} else {
+			if app.IsDebug() {
 				log.Println(err)
 			}
 
-			if err != nil && errors.Is(err, sql.ErrNoRows) {
+			if errors.Is(err, sql.ErrNoRows) {
 				apiErr = NewNotFoundError("", err)
 			} else {
 				apiErr = NewBadRequestError("", err)

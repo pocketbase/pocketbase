@@ -1,6 +1,7 @@
 package apis_test
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -307,6 +308,91 @@ func TestEagerRequestInfoCache(t *testing.T) {
 				})
 			},
 			ExpectedStatus: 200,
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestErrorHandler(t *testing.T) {
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "apis.ApiError",
+			Method: http.MethodGet,
+			Url:    "/test",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.GET("/test", func(c echo.Context) error {
+					return apis.NewApiError(418, "test", nil)
+				})
+			},
+			ExpectedStatus:  418,
+			ExpectedContent: []string{`"message":"Test."`},
+		},
+		{
+			Name:   "wrapped apis.ApiError",
+			Method: http.MethodGet,
+			Url:    "/test",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.GET("/test", func(c echo.Context) error {
+					return fmt.Errorf("example 123: %w", apis.NewApiError(418, "test", nil))
+				})
+			},
+			ExpectedStatus:     418,
+			ExpectedContent:    []string{`"message":"Test."`},
+			NotExpectedContent: []string{"example", "123"},
+		},
+		{
+			Name:   "echo.HTTPError",
+			Method: http.MethodGet,
+			Url:    "/test",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.GET("/test", func(c echo.Context) error {
+					return echo.NewHTTPError(418, "test")
+				})
+			},
+			ExpectedStatus:  418,
+			ExpectedContent: []string{`"message":"Test."`},
+		},
+		{
+			Name:   "wrapped echo.HTTPError",
+			Method: http.MethodGet,
+			Url:    "/test",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.GET("/test", func(c echo.Context) error {
+					return fmt.Errorf("example 123: %w", echo.NewHTTPError(418, "test"))
+				})
+			},
+			ExpectedStatus:     418,
+			ExpectedContent:    []string{`"message":"Test."`},
+			NotExpectedContent: []string{"example", "123"},
+		},
+		{
+			Name:   "wrapped sql.ErrNoRows",
+			Method: http.MethodGet,
+			Url:    "/test",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.GET("/test", func(c echo.Context) error {
+					return fmt.Errorf("example 123: %w", sql.ErrNoRows)
+				})
+			},
+			ExpectedStatus:     404,
+			ExpectedContent:    []string{`"data":{}`},
+			NotExpectedContent: []string{"example", "123"},
+		},
+		{
+			Name:   "custom error",
+			Method: http.MethodGet,
+			Url:    "/test",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.GET("/test", func(c echo.Context) error {
+					return fmt.Errorf("example 123")
+				})
+			},
+			ExpectedStatus:     400,
+			ExpectedContent:    []string{`"data":{}`},
+			NotExpectedContent: []string{"example", "123"},
 		},
 	}
 
