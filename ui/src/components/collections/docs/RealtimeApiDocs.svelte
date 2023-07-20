@@ -52,11 +52,13 @@
 
         // Subscribe to changes in any ${collection?.name} record
         pb.collection('${collection?.name}').subscribe('*', function (e) {
+            console.log(e.action);
             console.log(e.record);
         });
 
         // Subscribe to changes only in the specified record
         pb.collection('${collection?.name}').subscribe('RECORD_ID', function (e) {
+            console.log(e.action);
             console.log(e.record);
         });
 
@@ -77,11 +79,13 @@
 
         // Subscribe to changes in any ${collection?.name} record
         pb.collection('${collection?.name}').subscribe('*', (e) {
+            print(e.action);
             print(e.record);
         });
 
         // Subscribe to changes only in the specified record
         pb.collection('${collection?.name}').subscribe('RECORD_ID', (e) {
+            print(e.action);
             print(e.record);
         });
 
