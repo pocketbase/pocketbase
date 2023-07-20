@@ -6,12 +6,14 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 )
 
@@ -233,6 +235,28 @@ func TestSettingsSet(t *testing.T) {
 				`"clientSecret":"******"`,
 				`"appName":"update_test"`,
 			},
+			ExpectedEvents: map[string]int{
+				"OnModelBeforeUpdate":           1,
+				"OnModelAfterUpdate":            1,
+				"OnSettingsBeforeUpdateRequest": 1,
+				"OnSettingsAfterUpdateRequest":  1,
+			},
+		},
+		{
+			Name:   "OnSettingsAfterUpdateRequest error response",
+			Method: http.MethodPatch,
+			Url:    "/api/settings",
+			Body:   strings.NewReader(validData),
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnSettingsAfterUpdateRequest().Add(func(e *core.SettingsUpdateEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeUpdate":           1,
 				"OnModelAfterUpdate":            1,

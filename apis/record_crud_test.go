@@ -1,6 +1,7 @@
 package apis_test
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
 )
@@ -837,6 +839,27 @@ func TestRecordCrudDelete(t *testing.T) {
 			},
 		},
 		{
+			Name:   "OnRecordAfterDeleteRequest error response",
+			Method: http.MethodDelete,
+			Url:    "/api/collections/clients/records/o1y0dd0spd786md",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterDeleteRequest().Add(func(e *core.RecordDeleteEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnModelAfterDelete":          1,
+				"OnModelBeforeDelete":         1,
+				"OnRecordAfterDeleteRequest":  1,
+				"OnRecordBeforeDeleteRequest": 1,
+			},
+		},
+		{
 			Name:   "authenticated record that match the collection delete rule",
 			Method: http.MethodDelete,
 			Url:    "/api/collections/users/records/4q1xlclmfloku33",
@@ -1185,6 +1208,25 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"data":{`,
 				`"title":{`,
 				`"code":"validation_not_unique"`,
+			},
+		},
+		{
+			Name:   "OnRecordAfterCreateRequest error response",
+			Method: http.MethodPost,
+			Url:    "/api/collections/demo2/records",
+			Body:   strings.NewReader(`{"title":"new"}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterCreateRequest().Add(func(e *core.RecordCreateEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeCreateRequest": 1,
+				"OnRecordAfterCreateRequest":  1,
+				"OnModelBeforeCreate":         1,
+				"OnModelAfterCreate":          1,
 			},
 		},
 
@@ -1738,6 +1780,25 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"title":"title_test"`,
 				`"files":["`,
 			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeUpdateRequest": 1,
+				"OnRecordAfterUpdateRequest":  1,
+				"OnModelBeforeUpdate":         1,
+				"OnModelAfterUpdate":          1,
+			},
+		},
+		{
+			Name:   "OnRecordAfterUpdateRequest error response",
+			Method: http.MethodPatch,
+			Url:    "/api/collections/demo2/records/0yxhwia2amd8gec",
+			Body:   strings.NewReader(`{"title":"new"}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterUpdateRequest().Add(func(e *core.RecordUpdateEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeUpdateRequest": 1,
 				"OnRecordAfterUpdateRequest":  1,

@@ -2,12 +2,14 @@ package apis_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
@@ -280,6 +282,28 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				"OnRecordAuthRequest":                   1,
 			},
 		},
+
+		// after hooks error checks
+		{
+			Name:   "OnRecordAfterAuthWithPasswordRequest error response",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/auth-with-password",
+			Body: strings.NewReader(`{
+				"identity":"test2_username",
+				"password":"1234567890"
+			}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterAuthWithPasswordRequest().Add(func(e *core.RecordAuthWithPasswordEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+				"OnRecordAfterAuthWithPasswordRequest":  1,
+			},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -350,6 +374,25 @@ func TestRecordAuthRefresh(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeAuthRefreshRequest": 1,
 				"OnRecordAuthRequest":              1,
+				"OnRecordAfterAuthRefreshRequest":  1,
+			},
+		},
+		{
+			Name:   "OnRecordAfterAuthRefreshRequest error response",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/auth-refresh?expand=rel,missing",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterAuthRefreshRequest().Add(func(e *core.RecordAuthRefreshEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthRefreshRequest": 1,
 				"OnRecordAfterAuthRefreshRequest":  1,
 			},
 		},
@@ -494,10 +537,8 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 				"password":"12345678",
 				"passwordConfirm":"12345678"
 			}`),
-			ExpectedStatus: 400,
-			ExpectedContent: []string{
-				`"data":{}`,
-			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
 		},
 		{
 			Name:   "different auth collection",
@@ -523,6 +564,29 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 				"passwordConfirm":"12345678"
 			}`),
 			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"OnModelAfterUpdate":                        1,
+				"OnModelBeforeUpdate":                       1,
+				"OnRecordBeforeConfirmPasswordResetRequest": 1,
+				"OnRecordAfterConfirmPasswordResetRequest":  1,
+			},
+		},
+		{
+			Name:   "OnRecordAfterConfirmPasswordResetRequest error response",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/confirm-password-reset",
+			Body: strings.NewReader(`{
+				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.R_4FOSUHIuJQ5Crl3PpIPCXMsoHzuTaNlccpXg_3FOg",
+				"password":"12345678",
+				"passwordConfirm":"12345678"
+			}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterConfirmPasswordResetRequest().Add(func(e *core.RecordConfirmPasswordResetEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
 				"OnModelAfterUpdate":                        1,
 				"OnModelBeforeUpdate":                       1,
@@ -671,10 +735,8 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 			Body: strings.NewReader(`{
 				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.R_4FOSUHIuJQ5Crl3PpIPCXMsoHzuTaNlccpXg_3FOg"
 			}`),
-			ExpectedStatus: 400,
-			ExpectedContent: []string{
-				`"data":{}`,
-			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
 		},
 		{
 			Name:   "different auth collection",
@@ -725,6 +787,27 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 			}`),
 			ExpectedStatus:  204,
 			ExpectedContent: []string{},
+			ExpectedEvents: map[string]int{
+				"OnModelAfterUpdate":                       1,
+				"OnModelBeforeUpdate":                      1,
+				"OnRecordBeforeConfirmVerificationRequest": 1,
+				"OnRecordAfterConfirmVerificationRequest":  1,
+			},
+		},
+		{
+			Name:   "OnRecordAfterConfirmVerificationRequest error response",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/confirm-verification",
+			Body: strings.NewReader(`{
+				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.hL16TVmStHFdHLc4a860bRqJ3sFfzjv0_NRNzwsvsrc"
+			}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterConfirmVerificationRequest().Add(func(e *core.RecordConfirmVerificationEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
 				"OnModelAfterUpdate":                       1,
 				"OnModelBeforeUpdate":                      1,
@@ -930,6 +1013,28 @@ func TestRecordAuthConfirmEmailChange(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{`,
 				`"token":{"code":"validation_token_collection_mismatch"`,
+			},
+		},
+		{
+			Name:   "OnRecordAfterConfirmEmailChangeRequest error response",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/confirm-email-change",
+			Body: strings.NewReader(`{
+				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwibmV3RW1haWwiOiJjaGFuZ2VAZXhhbXBsZS5jb20iLCJleHAiOjIyMDg5ODUyNjF9.1sG6cL708pRXXjiHRZhG-in0X5fnttSf5nNcadKoYRs",
+				"password":"1234567890"
+			}`),
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterConfirmEmailChangeRequest().Add(func(e *core.RecordConfirmEmailChangeEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnModelAfterUpdate":                      1,
+				"OnModelBeforeUpdate":                     1,
+				"OnRecordBeforeConfirmEmailChangeRequest": 1,
+				"OnRecordAfterConfirmEmailChangeRequest":  1,
 			},
 		},
 	}
@@ -1138,6 +1243,27 @@ func TestRecordAuthUnlinkExternalsAuth(t *testing.T) {
 				if auth != nil {
 					t.Fatalf("Expected the google ExternalAuth to be deleted, got got \n%v", auth)
 				}
+			},
+		},
+		{
+			Name:   "OnRecordBeforeUnlinkExternalAuthRequest error response",
+			Method: http.MethodDelete,
+			Url:    "/api/collections/users/records/4q1xlclmfloku33/external-auths/google",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.OnRecordAfterUnlinkExternalAuthRequest().Add(func(e *core.RecordUnlinkExternalAuthEvent) error {
+					return errors.New("error")
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnModelAfterDelete":                      1,
+				"OnModelBeforeDelete":                     1,
+				"OnRecordAfterUnlinkExternalAuthRequest":  1,
+				"OnRecordBeforeUnlinkExternalAuthRequest": 1,
 			},
 		},
 	}
