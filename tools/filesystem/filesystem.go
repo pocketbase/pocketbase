@@ -321,7 +321,14 @@ var manualExtensionContentTypes = map[string]string{
 	".css": "text/css",      // (see https://github.com/gabriel-vasile/mimetype/pull/113)
 }
 
+// forceAttachmentParam is the name of the request query parameter to
+// force "Content-Disposition: attachment" header.
+const forceAttachmentParam = "download"
+
 // Serve serves the file at fileKey location to an HTTP response.
+//
+// If the `download` query parameter is used the file will be always served for
+// download no matter of its type (aka. with "Content-Disposition: attachment").
 func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey string, name string) error {
 	br, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
 	if readErr != nil {
@@ -329,9 +336,11 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 	}
 	defer br.Close()
 
+	forceAttachment := req.URL.Query().Has(forceAttachmentParam)
+
 	disposition := "attachment"
 	realContentType := br.ContentType()
-	if list.ExistInSlice(realContentType, inlineServeContentTypes) {
+	if !forceAttachment && list.ExistInSlice(realContentType, inlineServeContentTypes) {
 		disposition = "inline"
 	}
 

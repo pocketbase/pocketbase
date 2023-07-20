@@ -257,7 +257,8 @@ func TestFileSystemServe(t *testing.T) {
 	scenarios := []struct {
 		path          string
 		name          string
-		customHeaders map[string]string
+		query         map[string]string
+		headers       map[string]string
 		expectError   bool
 		expectHeaders map[string]string
 	}{
@@ -266,6 +267,7 @@ func TestFileSystemServe(t *testing.T) {
 			"missing.txt",
 			"test_name.txt",
 			nil,
+			nil,
 			true,
 			nil,
 		},
@@ -273,6 +275,7 @@ func TestFileSystemServe(t *testing.T) {
 			// existing regular file
 			"test/sub1.txt",
 			"test_name.txt",
+			nil,
 			nil,
 			false,
 			map[string]string{
@@ -288,6 +291,7 @@ func TestFileSystemServe(t *testing.T) {
 			"image.png",
 			"test_name.png",
 			nil,
+			nil,
 			false,
 			map[string]string{
 				"Content-Disposition":     "inline; filename=test_name.png",
@@ -298,9 +302,25 @@ func TestFileSystemServe(t *testing.T) {
 			},
 		},
 		{
+			// png with forced attachment
+			"image.png",
+			"test_name_download.png",
+			map[string]string{"download": "12"},
+			nil,
+			false,
+			map[string]string{
+				"Content-Disposition":     "attachment; filename=test_name_download.png",
+				"Content-Type":            "image/png",
+				"Content-Length":          "73",
+				"Content-Security-Policy": csp,
+				"Cache-Control":           cacheControl,
+			},
+		},
+		{
 			// svg exception
 			"image.svg",
 			"test_name.svg",
+			nil,
 			nil,
 			false,
 			map[string]string{
@@ -316,6 +336,7 @@ func TestFileSystemServe(t *testing.T) {
 			"style.css",
 			"test_name.css",
 			nil,
+			nil,
 			false,
 			map[string]string{
 				"Content-Disposition":     "attachment; filename=test_name.css",
@@ -329,6 +350,7 @@ func TestFileSystemServe(t *testing.T) {
 			// custom header
 			"test/sub2.txt",
 			"test_name.txt",
+			nil,
 			map[string]string{
 				"Content-Disposition":     "1",
 				"Content-Type":            "2",
@@ -353,7 +375,13 @@ func TestFileSystemServe(t *testing.T) {
 		res := httptest.NewRecorder()
 		req := httptest.NewRequest("GET", "/", nil)
 
-		for k, v := range s.customHeaders {
+		query := req.URL.Query()
+		for k, v := range s.query {
+			query.Set(k, v)
+		}
+		req.URL.RawQuery = query.Encode()
+
+		for k, v := range s.headers {
 			res.Header().Set(k, v)
 		}
 

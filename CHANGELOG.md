@@ -87,6 +87,8 @@
 - **!** renamed `models.RequestData` to `models.RequestInfo` and soft-deprecated `apis.RequestData(c)` to `apis.RequestInfo(c)` to avoid the stuttering with the `Data` field.
   _The old `apis.RequestData()` method still works to minimize the breaking changes but it is recommended to replace it with `apis.RequestInfo(c)`._
 
+- Added `?download` file query parameter option to instruct the browser to always download a file and not show a preview.
+
 
 ## v0.16.10
 
