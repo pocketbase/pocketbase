@@ -91,6 +91,10 @@ func (api *recordApi) list(c echo.Context) error {
 	event.Result = result
 
 	return api.app.OnRecordsListRequest().Trigger(event, func(e *core.RecordsListEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		if err := EnrichRecords(e.HttpContext, api.app.Dao(), e.Records); err != nil && api.app.IsDebug() {
 			log.Println(err)
 		}
@@ -141,6 +145,10 @@ func (api *recordApi) view(c echo.Context) error {
 	event.Record = record
 
 	return api.app.OnRecordViewRequest().Trigger(event, func(e *core.RecordViewEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
 			log.Println(err)
 		}
@@ -239,6 +247,10 @@ func (api *recordApi) create(c echo.Context) error {
 				}
 
 				return api.app.OnRecordAfterCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.JSON(http.StatusOK, e.Record)
 				})
 			})
@@ -322,6 +334,10 @@ func (api *recordApi) update(c echo.Context) error {
 				}
 
 				return api.app.OnRecordAfterUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.JSON(http.StatusOK, e.Record)
 				})
 			})
@@ -377,6 +393,10 @@ func (api *recordApi) delete(c echo.Context) error {
 		}
 
 		return api.app.OnRecordAfterDeleteRequest().Trigger(event, func(e *core.RecordDeleteEvent) error {
+			if e.HttpContext.Response().Committed {
+				return nil
+			}
+
 			return e.HttpContext.NoContent(http.StatusNoContent)
 		})
 	})

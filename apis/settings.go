@@ -37,6 +37,10 @@ func (api *settingsApi) list(c echo.Context) error {
 	event.RedactedSettings = settings
 
 	return api.app.OnSettingsListRequest().Trigger(event, func(e *core.SettingsListEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		return e.HttpContext.JSON(http.StatusOK, e.RedactedSettings)
 	})
 }
@@ -64,6 +68,10 @@ func (api *settingsApi) set(c echo.Context) error {
 				}
 
 				return api.app.OnSettingsAfterUpdateRequest().Trigger(event, func(e *core.SettingsUpdateEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					redactedSettings, err := api.app.Settings().RedactClone()
 					if err != nil {
 						return NewBadRequestError("", err)

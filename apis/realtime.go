@@ -92,16 +92,13 @@ func (api *realtimeApi) connect(c echo.Context) error {
 		fmt.Fprint(w, "event:"+e.Message.Name+"\n")
 		fmt.Fprint(w, "data:"+e.Message.Data+"\n\n")
 		w.Flush()
-		return nil
+		return api.app.OnRealtimeAfterMessageSend().Trigger(e)
 	})
 	if connectMsgErr != nil {
 		if api.app.IsDebug() {
 			log.Println("Realtime connection closed (failed to deliver PB_CONNECT):", client.Id(), connectMsgErr)
 		}
 		return nil
-	}
-	if err := api.app.OnRealtimeAfterMessageSend().Trigger(connectMsgEvent); err != nil && api.app.IsDebug() {
-		log.Println("OnRealtimeAfterMessageSend PB_CONNECT error:", err)
 	}
 
 	// start an idle timer to keep track of inactive/forgotten connections
@@ -133,18 +130,11 @@ func (api *realtimeApi) connect(c echo.Context) error {
 				fmt.Fprint(w, "event:"+e.Message.Name+"\n")
 				fmt.Fprint(w, "data:"+e.Message.Data+"\n\n")
 				w.Flush()
-				return nil
+				return api.app.OnRealtimeAfterMessageSend().Trigger(msgEvent)
 			})
 			if msgErr != nil {
 				if api.app.IsDebug() {
 					log.Println("Realtime connection closed (failed to deliver message):", client.Id(), msgErr)
-				}
-				return nil
-			}
-
-			if err := api.app.OnRealtimeAfterMessageSend().Trigger(msgEvent); err != nil {
-				if api.app.IsDebug() {
-					log.Println("Realtime connection closed (OnRealtimeAfterMessageSend error):", client.Id(), err)
 				}
 				return nil
 			}
@@ -206,6 +196,10 @@ func (api *realtimeApi) setSubscriptions(c echo.Context) error {
 		e.Client.Subscribe(e.Subscriptions...)
 
 		return api.app.OnRealtimeAfterSubscribeRequest().Trigger(event, func(e *core.RealtimeSubscribeEvent) error {
+			if e.HttpContext.Response().Committed {
+				return nil
+			}
+
 			return e.HttpContext.NoContent(http.StatusNoContent)
 		})
 	})

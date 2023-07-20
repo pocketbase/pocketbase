@@ -2,7 +2,6 @@ package mails
 
 import (
 	"html/template"
-	"log"
 	"net/mail"
 
 	"github.com/pocketbase/pocketbase/core"
@@ -44,17 +43,13 @@ func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
 	event.Record = authRecord
 	event.Meta = map[string]any{"token": token}
 
-	sendErr := app.OnMailerBeforeRecordResetPasswordSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		return e.MailClient.Send(e.Message)
-	})
-
-	if sendErr == nil {
-		if err := app.OnMailerAfterRecordResetPasswordSend().Trigger(event); err != nil && app.IsDebug() {
-			log.Println(err)
+	return app.OnMailerBeforeRecordResetPasswordSend().Trigger(event, func(e *core.MailerRecordEvent) error {
+		if err := e.MailClient.Send(e.Message); err != nil {
+			return err
 		}
-	}
 
-	return sendErr
+		return app.OnMailerAfterRecordResetPasswordSend().Trigger(e)
+	})
 }
 
 // SendRecordVerification sends a verification request email to the specified user.
@@ -88,17 +83,13 @@ func SendRecordVerification(app core.App, authRecord *models.Record) error {
 	event.Record = authRecord
 	event.Meta = map[string]any{"token": token}
 
-	sendErr := app.OnMailerBeforeRecordVerificationSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		return e.MailClient.Send(e.Message)
-	})
-
-	if sendErr == nil {
-		if err := app.OnMailerAfterRecordVerificationSend().Trigger(event); err != nil && app.IsDebug() {
-			log.Println(err)
+	return app.OnMailerBeforeRecordVerificationSend().Trigger(event, func(e *core.MailerRecordEvent) error {
+		if err := e.MailClient.Send(e.Message); err != nil {
+			return err
 		}
-	}
 
-	return sendErr
+		return app.OnMailerAfterRecordVerificationSend().Trigger(e)
+	})
 }
 
 // SendUserChangeEmail sends a change email confirmation email to the specified user.
@@ -135,17 +126,13 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 		"newEmail": newEmail,
 	}
 
-	sendErr := app.OnMailerBeforeRecordChangeEmailSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		return e.MailClient.Send(e.Message)
-	})
-
-	if sendErr == nil {
-		if err := app.OnMailerAfterRecordChangeEmailSend().Trigger(event); err != nil && app.IsDebug() {
-			log.Println(err)
+	return app.OnMailerBeforeRecordChangeEmailSend().Trigger(event, func(e *core.MailerRecordEvent) error {
+		if err := e.MailClient.Send(e.Message); err != nil {
+			return err
 		}
-	}
 
-	return sendErr
+		return app.OnMailerAfterRecordChangeEmailSend().Trigger(e)
+	})
 }
 
 func resolveEmailTemplate(

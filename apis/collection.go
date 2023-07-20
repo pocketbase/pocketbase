@@ -48,6 +48,10 @@ func (api *collectionApi) list(c echo.Context) error {
 	event.Result = result
 
 	return api.app.OnCollectionsListRequest().Trigger(event, func(e *core.CollectionsListEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		return e.HttpContext.JSON(http.StatusOK, e.Result)
 	})
 }
@@ -63,6 +67,10 @@ func (api *collectionApi) view(c echo.Context) error {
 	event.Collection = collection
 
 	return api.app.OnCollectionViewRequest().Trigger(event, func(e *core.CollectionViewEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		return e.HttpContext.JSON(http.StatusOK, e.Collection)
 	})
 }
@@ -92,6 +100,10 @@ func (api *collectionApi) create(c echo.Context) error {
 				}
 
 				return api.app.OnCollectionAfterCreateRequest().Trigger(event, func(e *core.CollectionCreateEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.JSON(http.StatusOK, e.Collection)
 				})
 			})
@@ -127,6 +139,10 @@ func (api *collectionApi) update(c echo.Context) error {
 				}
 
 				return api.app.OnCollectionAfterUpdateRequest().Trigger(event, func(e *core.CollectionUpdateEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.JSON(http.StatusOK, e.Collection)
 				})
 			})
@@ -150,6 +166,10 @@ func (api *collectionApi) delete(c echo.Context) error {
 		}
 
 		return api.app.OnCollectionAfterDeleteRequest().Trigger(event, func(e *core.CollectionDeleteEvent) error {
+			if e.HttpContext.Response().Committed {
+				return nil
+			}
+
 			return e.HttpContext.NoContent(http.StatusNoContent)
 		})
 	})
@@ -178,6 +198,10 @@ func (api *collectionApi) bulkImport(c echo.Context) error {
 				}
 
 				return api.app.OnCollectionsAfterImportRequest().Trigger(event, func(e *core.CollectionsImportEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})

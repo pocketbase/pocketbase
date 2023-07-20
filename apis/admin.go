@@ -51,6 +51,10 @@ func (api *adminApi) authResponse(c echo.Context, admin *models.Admin, finalizer
 	event.Token = token
 
 	return api.app.OnAdminAuthRequest().Trigger(event, func(e *core.AdminAuthEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		return e.HttpContext.JSON(200, map[string]any{
 			"token": e.Token,
 			"admin": e.Admin,
@@ -132,6 +136,10 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 				})
 
 				return api.app.OnAdminAfterRequestPasswordResetRequest().Trigger(event, func(e *core.AdminRequestPasswordResetEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})
@@ -166,6 +174,10 @@ func (api *adminApi) confirmPasswordReset(c echo.Context) error {
 				}
 
 				return api.app.OnAdminAfterConfirmPasswordResetRequest().Trigger(event, func(e *core.AdminConfirmPasswordResetEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})
@@ -196,6 +208,10 @@ func (api *adminApi) list(c echo.Context) error {
 	event.Result = result
 
 	return api.app.OnAdminsListRequest().Trigger(event, func(e *core.AdminsListEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		return e.HttpContext.JSON(http.StatusOK, e.Result)
 	})
 }
@@ -216,6 +232,10 @@ func (api *adminApi) view(c echo.Context) error {
 	event.Admin = admin
 
 	return api.app.OnAdminViewRequest().Trigger(event, func(e *core.AdminViewEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		return e.HttpContext.JSON(http.StatusOK, e.Admin)
 	})
 }
@@ -245,6 +265,10 @@ func (api *adminApi) create(c echo.Context) error {
 				}
 
 				return api.app.OnAdminAfterCreateRequest().Trigger(event, func(e *core.AdminCreateEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.JSON(http.StatusOK, e.Admin)
 				})
 			})
@@ -287,6 +311,10 @@ func (api *adminApi) update(c echo.Context) error {
 				}
 
 				return api.app.OnAdminAfterUpdateRequest().Trigger(event, func(e *core.AdminUpdateEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.JSON(http.StatusOK, e.Admin)
 				})
 			})
@@ -317,6 +345,10 @@ func (api *adminApi) delete(c echo.Context) error {
 		}
 
 		return api.app.OnAdminAfterDeleteRequest().Trigger(event, func(e *core.AdminDeleteEvent) error {
+			if e.HttpContext.Response().Committed {
+				return nil
+			}
+
 			return e.HttpContext.NoContent(http.StatusNoContent)
 		})
 	})

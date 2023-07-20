@@ -51,6 +51,10 @@ func (api *fileApi) fileToken(c echo.Context) error {
 		}
 
 		return api.app.OnFileAfterTokenRequest().Trigger(event, func(e *core.FileTokenEvent) error {
+			if e.HttpContext.Response().Committed {
+				return nil
+			}
+
 			return e.HttpContext.JSON(http.StatusOK, map[string]string{
 				"token": e.Token,
 			})
@@ -168,9 +172,11 @@ func (api *fileApi) download(c echo.Context) error {
 	c.Response().Header().Del("X-Frame-Options")
 
 	return api.app.OnFileDownloadRequest().Trigger(event, func(e *core.FileDownloadEvent) error {
-		res := e.HttpContext.Response()
-		req := e.HttpContext.Request()
-		if err := fs.Serve(res, req, e.ServedPath, e.ServedName); err != nil {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
+		if err := fs.Serve(e.HttpContext.Response(), e.HttpContext.Request(), e.ServedPath, e.ServedName); err != nil {
 			return NewNotFoundError("", err)
 		}
 

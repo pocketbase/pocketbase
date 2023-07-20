@@ -66,8 +66,8 @@ func (api *recordAuthApi) authRefresh(c echo.Context) error {
 	event.Record = record
 
 	return api.app.OnRecordBeforeAuthRefreshRequest().Trigger(event, func(e *core.RecordAuthRefreshEvent) error {
-		return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil, func(t string) error {
-			return api.app.OnRecordAfterAuthRefreshRequest().Trigger(event)
+		return api.app.OnRecordAfterAuthRefreshRequest().Trigger(event, func(e *core.RecordAuthRefreshEvent) error {
+			return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil)
 		})
 	})
 }
@@ -250,8 +250,8 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 					IsNew:    event.IsNewRecord,
 				}
 
-				return RecordAuthResponse(api.app, e.HttpContext, e.Record, meta, func(t string) error {
-					return api.app.OnRecordAfterAuthWithOAuth2Request().Trigger(event)
+				return api.app.OnRecordAfterAuthWithOAuth2Request().Trigger(event, func(e *core.RecordAuthWithOAuth2Event) error {
+					return RecordAuthResponse(api.app, e.HttpContext, e.Record, meta)
 				})
 			})
 		}
@@ -286,8 +286,8 @@ func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 					return NewBadRequestError("Failed to authenticate.", err)
 				}
 
-				return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil, func(t string) error {
-					return api.app.OnRecordAfterAuthWithPasswordRequest().Trigger(event)
+				return api.app.OnRecordAfterAuthWithPasswordRequest().Trigger(event, func(e *core.RecordAuthWithPasswordEvent) error {
+					return RecordAuthResponse(api.app, e.HttpContext, e.Record, nil)
 				})
 			})
 		}
@@ -333,6 +333,10 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 				})
 
 				return api.app.OnRecordAfterRequestPasswordResetRequest().Trigger(event, func(e *core.RecordRequestPasswordResetEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})
@@ -373,6 +377,10 @@ func (api *recordAuthApi) confirmPasswordReset(c echo.Context) error {
 				}
 
 				return api.app.OnRecordAfterConfirmPasswordResetRequest().Trigger(event, func(e *core.RecordConfirmPasswordResetEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})
@@ -414,6 +422,10 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 				})
 
 				return api.app.OnRecordAfterRequestVerificationRequest().Trigger(event, func(e *core.RecordRequestVerificationEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})
@@ -454,6 +466,10 @@ func (api *recordAuthApi) confirmVerification(c echo.Context) error {
 				}
 
 				return api.app.OnRecordAfterConfirmVerificationRequest().Trigger(event, func(e *core.RecordConfirmVerificationEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})
@@ -492,6 +508,10 @@ func (api *recordAuthApi) requestEmailChange(c echo.Context) error {
 				}
 
 				return api.app.OnRecordAfterRequestEmailChangeRequest().Trigger(event, func(e *core.RecordRequestEmailChangeEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})
@@ -524,6 +544,10 @@ func (api *recordAuthApi) confirmEmailChange(c echo.Context) error {
 				}
 
 				return api.app.OnRecordAfterConfirmEmailChangeRequest().Trigger(event, func(e *core.RecordConfirmEmailChangeEvent) error {
+					if e.HttpContext.Response().Committed {
+						return nil
+					}
+
 					return e.HttpContext.NoContent(http.StatusNoContent)
 				})
 			})
@@ -599,6 +623,10 @@ func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 		}
 
 		return api.app.OnRecordAfterUnlinkExternalAuthRequest().Trigger(event, func(e *core.RecordUnlinkExternalAuthEvent) error {
+			if e.HttpContext.Response().Committed {
+				return nil
+			}
+
 			return e.HttpContext.NoContent(http.StatusNoContent)
 		})
 	})

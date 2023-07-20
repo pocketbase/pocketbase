@@ -85,6 +85,10 @@ func RecordAuthResponse(
 	event.Meta = meta
 
 	return app.OnRecordAuthRequest().Trigger(event, func(e *core.RecordAuthEvent) error {
+		if e.HttpContext.Response().Committed {
+			return nil
+		}
+
 		// allow always returning the email address of the authenticated account
 		e.Record.IgnoreEmailVisibility(true)
 

@@ -72,7 +72,6 @@ func TestRealtimeConnect(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnRealtimeConnectRequest":    1,
 				"OnRealtimeBeforeMessageSend": 1,
-				"OnRealtimeAfterMessageSend":  1,
 				"OnRealtimeDisconnectRequest": 1,
 			},
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
