@@ -1229,7 +1229,7 @@ export default class CommonHelper {
     }
 
     /**
-     * Groups and sorts collections array by type (auth, base, view).
+     * Groups and sorts collections array by type (auth, base, view) and name.
      *
      * @param  {Array} collections
      * @return {Array}
@@ -1249,7 +1249,17 @@ export default class CommonHelper {
             }
         }
 
-        return [].concat(auth, base, view);
+        function sortNames(a, b) {
+            if (a.name > b.name) {
+                return 1
+            }
+            if (a.name < b.name) {
+                return -1
+            }
+            return 0;
+        }
+
+        return [].concat(auth.sort(sortNames), base.sort(sortNames), view.sort(sortNames));
     }
 
 
