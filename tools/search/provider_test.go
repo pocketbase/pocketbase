@@ -42,11 +42,25 @@ func TestProviderQuery(t *testing.T) {
 	}
 }
 
+func TestProviderSkipTotal(t *testing.T) {
+	p := NewProvider(&testFieldResolver{})
+
+	if p.skipTotal {
+		t.Fatalf("Expected the default skipTotal to be %v, got %v", false, p.skipTotal)
+	}
+
+	p.SkipTotal(true)
+
+	if !p.skipTotal {
+		t.Fatalf("Expected skipTotal to change to %v, got %v", true, p.skipTotal)
+	}
+}
+
 func TestProviderCountCol(t *testing.T) {
 	p := NewProvider(&testFieldResolver{})
 
-	if p.countCol != "_rowid_" {
-		t.Fatalf("Expected the default countCol to be %s, got %s", "_rowid_", p.countCol)
+	if p.countCol != "id" {
+		t.Fatalf("Expected the default countCol to be %s, got %s", "id", p.countCol)
 	}
 
 	p.CountCol("test")
@@ -229,6 +243,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 		perPage       int
 		sort          []SortField
 		filter        []FilterData
+		skipTotal     bool
 		expectError   bool
 		expectResult  string
 		expectQueries []string
@@ -240,23 +255,25 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			[]SortField{},
 			[]FilterData{},
 			false,
+			false,
 			`{"page":1,"perPage":10,"totalItems":2,"totalPages":1,"items":[{"test1":1,"test2":"test2.1","test3":""},{"test1":2,"test2":"test2.2","test3":""}]}`,
 			[]string{
-				"SELECT COUNT(DISTINCT [[test._rowid_]]) FROM `test` WHERE NOT (`test1` IS NULL)",
+				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE NOT (`test1` IS NULL)",
 				"SELECT * FROM `test` WHERE NOT (`test1` IS NULL) ORDER BY `test1` ASC LIMIT 10",
 			},
 		},
 		{
 			"perPage normalization",
-			10, // will be capped by total count
-			0,  // fallback to default
+			10,
+			0, // fallback to default
 			[]SortField{},
 			[]FilterData{},
 			false,
-			`{"page":1,"perPage":30,"totalItems":2,"totalPages":1,"items":[{"test1":1,"test2":"test2.1","test3":""},{"test1":2,"test2":"test2.2","test3":""}]}`,
+			false,
+			`{"page":10,"perPage":30,"totalItems":2,"totalPages":1,"items":[]}`,
 			[]string{
-				"SELECT COUNT(DISTINCT [[test._rowid_]]) FROM `test` WHERE NOT (`test1` IS NULL)",
-				"SELECT * FROM `test` WHERE NOT (`test1` IS NULL) ORDER BY `test1` ASC LIMIT 30",
+				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE NOT (`test1` IS NULL)",
+				"SELECT * FROM `test` WHERE NOT (`test1` IS NULL) ORDER BY `test1` ASC LIMIT 30 OFFSET 270",
 			},
 		},
 		{
@@ -265,6 +282,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			10,
 			[]SortField{{"unknown", SortAsc}},
 			[]FilterData{},
+			false,
 			true,
 			"",
 			nil,
@@ -275,6 +293,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			10,
 			[]SortField{},
 			[]FilterData{"test2 = 'test2.1'", "invalid"},
+			false,
 			true,
 			"",
 			nil,
@@ -286,10 +305,24 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			[]SortField{{"test2", SortDesc}},
 			[]FilterData{"test2 != null", "test1 >= 2"},
 			false,
+			false,
 			`{"page":1,"perPage":` + fmt.Sprint(MaxPerPage) + `,"totalItems":1,"totalPages":1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
 			[]string{
-				"SELECT COUNT(DISTINCT [[test._rowid_]]) FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 != '' AND test2 IS NOT NULL)))) AND (test1 >= 2)",
-				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 != '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT 500",
+				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 != '' AND test2 IS NOT NULL)))) AND (test1 >= 2)",
+				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 != '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT " + fmt.Sprint(MaxPerPage),
+			},
+		},
+		{
+			"valid sort and filter fields (skipTotal=1)",
+			1,
+			5555, // will be limited by MaxPerPage
+			[]SortField{{"test2", SortDesc}},
+			[]FilterData{"test2 != null", "test1 >= 2"},
+			true,
+			false,
+			`{"page":1,"perPage":` + fmt.Sprint(MaxPerPage) + `,"totalItems":-1,"totalPages":-1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
+			[]string{
+				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 != '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT " + fmt.Sprint(MaxPerPage),
 			},
 		},
 		{
@@ -299,22 +332,50 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			[]SortField{{"test3", SortAsc}},
 			[]FilterData{"test3 != ''"},
 			false,
+			false,
 			`{"page":1,"perPage":10,"totalItems":0,"totalPages":0,"items":[]}`,
 			[]string{
-				"SELECT COUNT(DISTINCT [[test._rowid_]]) FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 != '' AND test3 IS NOT NULL)))",
+				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 != '' AND test3 IS NOT NULL)))",
+				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 != '' AND test3 IS NOT NULL))) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
+			},
+		},
+		{
+			"valid sort and filter fields (zero results; skipTotal=1)",
+			1,
+			10,
+			[]SortField{{"test3", SortAsc}},
+			[]FilterData{"test3 != ''"},
+			true,
+			false,
+			`{"page":1,"perPage":10,"totalItems":-1,"totalPages":-1,"items":[]}`,
+			[]string{
 				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 != '' AND test3 IS NOT NULL))) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
 			},
 		},
 		{
 			"pagination test",
-			3,
+			2,
 			1,
 			[]SortField{},
 			[]FilterData{},
 			false,
+			false,
 			`{"page":2,"perPage":1,"totalItems":2,"totalPages":2,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
 			[]string{
-				"SELECT COUNT(DISTINCT [[test._rowid_]]) FROM `test` WHERE NOT (`test1` IS NULL)",
+				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE NOT (`test1` IS NULL)",
+				"SELECT * FROM `test` WHERE NOT (`test1` IS NULL) ORDER BY `test1` ASC LIMIT 1 OFFSET 1",
+			},
+		},
+		{
+			"pagination test (skipTotal=1)",
+			2,
+			1,
+			[]SortField{},
+			[]FilterData{},
+			true,
+			false,
+			`{"page":2,"perPage":1,"totalItems":-1,"totalPages":-1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
+			[]string{
 				"SELECT * FROM `test` WHERE NOT (`test1` IS NULL) ORDER BY `test1` ASC LIMIT 1 OFFSET 1",
 			},
 		},
@@ -329,6 +390,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			Page(s.page).
 			PerPage(s.perPage).
 			Sort(s.sort).
+			SkipTotal(s.skipTotal).
 			Filter(s.filter)
 
 		result, err := p.Exec(&[]testTableStruct{})
@@ -378,55 +440,74 @@ func TestProviderParseAndExec(t *testing.T) {
 		OrderBy("test1 ASC")
 
 	scenarios := []struct {
+		name         string
 		queryString  string
 		expectError  bool
 		expectResult string
 	}{
-		// empty
 		{
+			"no extra query params (aka. use the provider presets)",
 			"",
 			false,
-			`{"page":1,"perPage":123,"totalItems":2,"totalPages":1,"items":[{"test1":1,"test2":"test2.1","test3":""},{"test1":2,"test2":"test2.2","test3":""}]}`,
+			`{"page":2,"perPage":123,"totalItems":2,"totalPages":1,"items":[]}`,
 		},
-		// invalid query
 		{
+			"invalid query",
 			"invalid;",
 			true,
 			"",
 		},
-		// invalid page
 		{
+			"invalid page",
 			"page=a",
 			true,
 			"",
 		},
-		// invalid perPage
 		{
+			"invalid perPage",
 			"perPage=a",
 			true,
 			"",
 		},
-		// invalid sorting field
 		{
+			"invalid skipTotal",
+			"skipTotal=a",
+			true,
+			"",
+		},
+		{
+			"invalid sorting field",
 			"sort=-unknown",
 			true,
 			"",
 		},
-		// invalid filter field
 		{
+			"invalid filter field",
 			"filter=unknown>1",
 			true,
 			"",
 		},
-		// valid query params
 		{
-			"page=3&perPage=9999&filter=test1>1&sort=-test2,test3",
+			"page > existing",
+			"page=3&perPage=9999",
 			false,
-			`{"page":1,"perPage":500,"totalItems":1,"totalPages":1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
+			`{"page":3,"perPage":1000,"totalItems":2,"totalPages":1,"items":[]}`,
+		},
+		{
+			"valid query params",
+			"page=1&perPage=9999&filter=test1>1&sort=-test2,test3",
+			false,
+			`{"page":1,"perPage":1000,"totalItems":1,"totalPages":1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
+		},
+		{
+			"valid query params with skipTotal=1",
+			"page=1&perPage=9999&filter=test1>1&sort=-test2,test3&skipTotal=1",
+			false,
+			`{"page":1,"perPage":1000,"totalItems":-1,"totalPages":-1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
 		},
 	}
 
-	for i, s := range scenarios {
+	for _, s := range scenarios {
 		testDB.CalledQueries = []string{} // reset
 
 		testResolver := &testFieldResolver{}
@@ -441,7 +522,7 @@ func TestProviderParseAndExec(t *testing.T) {
 
 		hasErr := err != nil
 		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected hasErr %v, got %v (%v)", i, s.expectError, hasErr, err)
+			t.Errorf("[%s] Expected hasErr %v, got %v (%v)", s.name, s.expectError, hasErr, err)
 			continue
 		}
 
@@ -450,16 +531,21 @@ func TestProviderParseAndExec(t *testing.T) {
 		}
 
 		if testResolver.UpdateQueryCalls != 1 {
-			t.Errorf("(%d) Expected resolver.Update to be called %d, got %d", i, 1, testResolver.UpdateQueryCalls)
+			t.Errorf("[%s] Expected resolver.Update to be called %d, got %d", s.name, 1, testResolver.UpdateQueryCalls)
 		}
 
-		if len(testDB.CalledQueries) != 2 {
-			t.Errorf("(%d) Expected %d db queries, got %d: \n%v", i, 2, len(testDB.CalledQueries), testDB.CalledQueries)
+		expectedQueries := 2
+		if provider.skipTotal {
+			expectedQueries = 1
+		}
+
+		if len(testDB.CalledQueries) != expectedQueries {
+			t.Errorf("[%s] Expected %d db queries, got %d: \n%v", s.name, expectedQueries, len(testDB.CalledQueries), testDB.CalledQueries)
 		}
 
 		encoded, _ := json.Marshal(result)
 		if string(encoded) != s.expectResult {
-			t.Errorf("(%d) Expected result %v, got \n%v", i, s.expectResult, string(encoded))
+			t.Errorf("[%s] Expected result %v, got \n%v", s.name, s.expectResult, string(encoded))
 		}
 	}
 }
@@ -481,7 +567,9 @@ type testDB struct {
 
 // NB! Don't forget to call `db.Close()` at the end of the test.
 func createTestDB() (*testDB, error) {
-	sqlDB, err := sql.Open("sqlite", ":memory:")
+	// using a shared cache to allow multiple connections access to
+	// the same in memory database https://www.sqlite.org/inmemorydb.html
+	sqlDB, err := sql.Open("sqlite", "file::memory:?cache=shared")
 	if err != nil {
 		return nil, err
 	}

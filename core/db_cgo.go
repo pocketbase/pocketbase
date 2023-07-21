@@ -28,6 +28,7 @@ func init() {
 					PRAGMA journal_size_limit = 200000000;
 					PRAGMA synchronous        = NORMAL;
 					PRAGMA foreign_keys       = ON;
+					PRAGMA temp_store         = MEMORY;
 				`, nil)
 
 				return err

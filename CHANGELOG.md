@@ -93,6 +93,21 @@
 
 - Added support for wrapped API errors (_in case Go 1.20+ is used with multiple wrapped errors, `apis.ApiError` takes precedence_).
 
+- Changes to the List/Search APIs
+
+  - Increased the max allowed `?perPage` limit to 1000.
+
+  - Reverted the default `COUNT` column to `id` as there are some common situations where it can negatively impact the query performance.
+    Additionally, from this version we also set `PRAGMA temp_store = MEMORY` so that also helps with the temp B-TREE creation when `id` is used.
+    _There are still scenarios where `COUNT` queries with `rowid` executes faster, but the majority of the time when nested relations lookups are used it seems to have the opposite effect (at least based on the benchmarks dataset)._
+
+  - The count and regular select statements also now executes concurrently, meaning that we no longer perform normalization over the `page` parameter and in case the user
+    request a page that doesn't exist (eg. `?page=99999999`) we'll return empty `items` array.
+
+  - (@todo docs) Added new query parameter `?skipTotal=1` to skip the `COUNT` query performed with the list/search actions ([#2965](https://github.com/pocketbase/pocketbase/discussions/2965)).
+    If `?skipTotal=1` is set, the response fields `totalItems` and `totalPages` will have `-1` value (this is to avoid having different JSON responses and to differentiate from the zero default).
+    With the latest JS SDK 0.16+ and Dart SDK v0.11+ versions `skipTotal=1` is set by default for the `getFirstListItem()` and `getFullList()` requests.
+
 
 ## v0.16.10
 

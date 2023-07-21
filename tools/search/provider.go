@@ -7,20 +7,22 @@ import (
 	"strconv"
 
 	"github.com/pocketbase/dbx"
+	"golang.org/x/sync/errgroup"
 )
 
 // DefaultPerPage specifies the default returned search result items.
 const DefaultPerPage int = 30
 
 // MaxPerPage specifies the maximum allowed search result items returned in a single page.
-const MaxPerPage int = 500
+const MaxPerPage int = 1000
 
 // url search query params
 const (
-	PageQueryParam    string = "page"
-	PerPageQueryParam string = "perPage"
-	SortQueryParam    string = "sort"
-	FilterQueryParam  string = "filter"
+	PageQueryParam      string = "page"
+	PerPageQueryParam   string = "perPage"
+	SortQueryParam      string = "sort"
+	FilterQueryParam    string = "filter"
+	SkipTotalQueryParam string = "skipTotal"
 )
 
 // Result defines the returned search result structure.
@@ -36,6 +38,7 @@ type Result struct {
 type Provider struct {
 	fieldResolver FieldResolver
 	query         *dbx.SelectQuery
+	skipTotal     bool
 	countCol      string
 	page          int
 	perPage       int
@@ -57,7 +60,7 @@ type Provider struct {
 func NewProvider(fieldResolver FieldResolver) *Provider {
 	return &Provider{
 		fieldResolver: fieldResolver,
-		countCol:      "_rowid_",
+		countCol:      "id",
 		page:          1,
 		perPage:       DefaultPerPage,
 		sort:          []SortField{},
@@ -71,8 +74,16 @@ func (s *Provider) Query(query *dbx.SelectQuery) *Provider {
 	return s
 }
 
-// CountCol allows changing the default column (_rowid_) that is used
+// SkipTotal changes the `skipTotal` field of the current search provider.
+func (s *Provider) SkipTotal(skipTotal bool) *Provider {
+	s.skipTotal = skipTotal
+	return s
+}
+
+// CountCol allows changing the default column (id) that is used
 // to generated the COUNT SQL query statement.
+//
+// This field is ignored if skipTotal is true.
 func (s *Provider) CountCol(name string) *Provider {
 	s.countCol = name
 	return s
@@ -132,30 +143,38 @@ func (s *Provider) Parse(urlQuery string) error {
 		return err
 	}
 
-	if rawPage := params.Get(PageQueryParam); rawPage != "" {
-		page, err := strconv.Atoi(rawPage)
+	if raw := params.Get(SkipTotalQueryParam); raw != "" {
+		v, err := strconv.ParseBool(raw)
 		if err != nil {
 			return err
 		}
-		s.Page(page)
+		s.SkipTotal(v)
 	}
 
-	if rawPerPage := params.Get(PerPageQueryParam); rawPerPage != "" {
-		perPage, err := strconv.Atoi(rawPerPage)
+	if raw := params.Get(PageQueryParam); raw != "" {
+		v, err := strconv.Atoi(raw)
 		if err != nil {
 			return err
 		}
-		s.PerPage(perPage)
+		s.Page(v)
 	}
 
-	if rawSort := params.Get(SortQueryParam); rawSort != "" {
-		for _, sortField := range ParseSortFromString(rawSort) {
+	if raw := params.Get(PerPageQueryParam); raw != "" {
+		v, err := strconv.Atoi(raw)
+		if err != nil {
+			return err
+		}
+		s.PerPage(v)
+	}
+
+	if raw := params.Get(SortQueryParam); raw != "" {
+		for _, sortField := range ParseSortFromString(raw) {
 			s.AddSort(sortField)
 		}
 	}
 
-	if rawFilter := params.Get(FilterQueryParam); rawFilter != "" {
-		s.AddFilter(FilterData(rawFilter))
+	if raw := params.Get(FilterQueryParam); raw != "" {
+		s.AddFilter(FilterData(raw))
 	}
 
 	return nil
@@ -165,10 +184,10 @@ func (s *Provider) Parse(urlQuery string) error {
 // the provided `items` slice with the found models.
 func (s *Provider) Exec(items any) (*Result, error) {
 	if s.query == nil {
-		return nil, errors.New("Query is not set.")
+		return nil, errors.New("query is not set")
 	}
 
-	// clone provider's query
+	// shallow clone the provider's query
 	modelsQuery := *s.query
 
 	// build filters
@@ -198,18 +217,9 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		return nil, err
 	}
 
-	queryInfo := modelsQuery.Info()
-
-	// count
-	var totalCount int64
-	var baseTable string
-	if len(queryInfo.From) > 0 {
-		baseTable = queryInfo.From[0]
-	}
-	clone := modelsQuery
-	countQuery := clone.Distinct(false).Select("COUNT(DISTINCT [[" + baseTable + "." + s.countCol + "]])").OrderBy()
-	if err := countQuery.Row(&totalCount); err != nil {
-		return nil, err
+	// normalize page
+	if s.page <= 0 {
+		s.page = 1
 	}
 
 	// normalize perPage
@@ -219,31 +229,65 @@ func (s *Provider) Exec(items any) (*Result, error) {
 		s.perPage = MaxPerPage
 	}
 
-	totalPages := int(math.Ceil(float64(totalCount) / float64(s.perPage)))
+	// negative value to differentiate from the zero default
+	totalCount := -1
+	totalPages := -1
 
-	// normalize page according to the total count
-	if s.page <= 0 || totalCount == 0 {
-		s.page = 1
-	} else if s.page > totalPages {
-		s.page = totalPages
+	// prepare a count query from the base one
+	countQuery := modelsQuery // shallow clone
+	countExec := func() error {
+		queryInfo := countQuery.Info()
+		countCol := s.countCol
+		if len(queryInfo.From) > 0 {
+			countCol = queryInfo.From[0] + "." + countCol
+		}
+
+		// note: countQuery is shallow cloned and slice/map in-place modifications should be avoided
+		err := countQuery.Distinct(false).
+			Select("COUNT(DISTINCT [[" + countCol + "]])").
+			OrderBy( /* reset */ ).
+			Row(&totalCount)
+		if err != nil {
+			return err
+		}
+
+		totalPages = int(math.Ceil(float64(totalCount) / float64(s.perPage)))
+
+		return nil
 	}
 
-	// apply pagination
-	modelsQuery.Limit(int64(s.perPage))
-	modelsQuery.Offset(int64(s.perPage * (s.page - 1)))
+	// apply pagination to the original query and fetch the models
+	modelsExec := func() error {
+		modelsQuery.Limit(int64(s.perPage))
+		modelsQuery.Offset(int64(s.perPage * (s.page - 1)))
 
-	// fetch models
-	if err := modelsQuery.All(items); err != nil {
-		return nil, err
+		return modelsQuery.All(items)
 	}
 
-	return &Result{
+	if !s.skipTotal {
+		// execute the 2 queries concurrently
+		errg := new(errgroup.Group)
+		errg.SetLimit(2)
+		errg.Go(countExec)
+		errg.Go(modelsExec)
+		if err := errg.Wait(); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := modelsExec(); err != nil {
+			return nil, err
+		}
+	}
+
+	result := &Result{
 		Page:       s.page,
 		PerPage:    s.perPage,
-		TotalItems: int(totalCount),
+		TotalItems: totalCount,
 		TotalPages: totalPages,
 		Items:      items,
-	}, nil
+	}
+
+	return result, nil
 }
 
 // ParseAndExec is a short convenient method to trigger both
