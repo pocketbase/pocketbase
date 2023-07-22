@@ -89,7 +89,7 @@
 
 - **!** Changed the type of `subscriptions.Message.Data` from `string` to `[]byte` because `Data` usually is a json bytes slice anyway.
 
-- Added `?download` file query parameter option to instruct the browser to always download a file and not show a preview.
+- Added `?download=1` file query parameter option to instruct the browser to always download a file and not show a preview.
 
 - Added support for wrapped API errors (_in case Go 1.20+ is used with multiple wrapped errors, `apis.ApiError` takes precedence_).
 

@@ -305,7 +305,7 @@ func TestFileSystemServe(t *testing.T) {
 			// png with forced attachment
 			"image.png",
 			"test_name_download.png",
-			map[string]string{"download": "12"},
+			map[string]string{"download": "1"},
 			nil,
 			false,
 			map[string]string{

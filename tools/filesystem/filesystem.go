@@ -336,7 +336,10 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 	}
 	defer br.Close()
 
-	forceAttachment := req.URL.Query().Has(forceAttachmentParam)
+	var forceAttachment bool
+	if raw := req.URL.Query().Get(forceAttachmentParam); raw != "" {
+		forceAttachment, _ = strconv.ParseBool(raw)
+	}
 
 	disposition := "attachment"
 	realContentType := br.ContentType()
