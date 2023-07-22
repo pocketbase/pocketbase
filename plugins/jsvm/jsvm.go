@@ -9,7 +9,9 @@
 package jsvm
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -276,7 +278,7 @@ func (p *plugin) normalizeServeExceptions(oldErrorHandler echo.HTTPErrorHandler)
 // This method does nothing if the hooks directory is missing.
 func (p *plugin) watchHooks() error {
 	if _, err := os.Stat(p.config.HooksDir); err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return nil // no hooks dir to watch
 		}
 		return err
@@ -413,7 +415,7 @@ func prependToEmptyFile(path, text string) error {
 func filesContent(dirPath string, pattern string) (map[string][]byte, error) {
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return map[string][]byte{}, nil
 		}
 		return nil, err
