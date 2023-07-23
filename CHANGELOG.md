@@ -108,6 +108,8 @@
     If `?skipTotal=1` is set, the response fields `totalItems` and `totalPages` will have `-1` value (this is to avoid having different JSON responses and to differentiate from the zero default).
     With the latest JS SDK 0.16+ and Dart SDK v0.11+ versions `skipTotal=1` is set by default for the `getFirstListItem()` and `getFullList()` requests.
 
+- Added new utility `github.com/pocketbase/pocketbase/tools/template` package to assist with rendering HTML templates using the standard Go `html/template` and `text/template` syntax.
+
 
 ## v0.16.10
 

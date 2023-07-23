@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/dop251/goja"
@@ -342,14 +343,22 @@ func (p *plugin) watchHooks() error {
 		}
 	}()
 
-	// add the directory to watch
-	err = watcher.Add(p.config.HooksDir)
-	if err != nil {
+	// add directories to watch
+	//
+	// @todo replace once recursive watcher is added (https://github.com/fsnotify/fsnotify/issues/18)
+	dirsErr := filepath.Walk(p.config.HooksDir, func(path string, info fs.FileInfo, err error) error {
+		// ignore hidden directories and node_modules
+		if !info.IsDir() || info.Name() == "node_modules" || strings.HasPrefix(info.Name(), ".") {
+			return nil
+		}
+
+		return watcher.Add(path)
+	})
+	if dirsErr != nil {
 		watcher.Close()
-		return err
 	}
 
-	return nil
+	return dirsErr
 }
 
 // fullTypesPathReturns returns the full path to the generated TS file.
