@@ -84,3 +84,57 @@ func TestRegistryLoadFiles(t *testing.T) {
 		}
 	})
 }
+
+func TestRegistryLoadString(t *testing.T) {
+	r := NewRegistry()
+
+	t.Run("invalid template string", func(t *testing.T) {
+		txt := `test {{define "content"}}`
+
+		r.LoadString(txt)
+
+		renderer := r.cache.Get(txt)
+
+		if renderer == nil {
+			t.Fatal("Expected renderer to be initialized even if invalid, got nil")
+		}
+
+		if renderer.template != nil {
+			t.Fatalf("Expected renderer template to be nil, got %v", renderer.template)
+		}
+
+		if renderer.parseError == nil {
+			t.Fatalf("Expected renderer parseError to be set, got nil")
+		}
+	})
+
+	t.Run("valid template string", func(t *testing.T) {
+		txt := `test {{.}}`
+
+		r.LoadString(txt)
+
+		renderer := r.cache.Get(txt)
+
+		if renderer == nil {
+			t.Fatal("Expected renderer to be initialized even if invalid, got nil")
+		}
+
+		if renderer.template == nil {
+			t.Fatal("Expected renderer template to be set, got nil")
+		}
+
+		if renderer.parseError != nil {
+			t.Fatalf("Expected renderer parseError to be nil, got %v", renderer.parseError)
+		}
+
+		result, err := renderer.Render(123)
+		if err != nil {
+			t.Fatalf("Unexpected Render() error, got %v", err)
+		}
+
+		expected := "test 123"
+		if result != expected {
+			t.Fatalf("Expected Render() result %q, got %q", expected, result)
+		}
+	})
+}
