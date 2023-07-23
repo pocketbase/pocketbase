@@ -29,6 +29,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/plugins/jsvm/internal/types/generated"
+	"github.com/pocketbase/pocketbase/tools/template"
 )
 
 const (
@@ -199,11 +200,12 @@ func (p *plugin) registerHooks() error {
 		return nil
 	})
 
-	// this is safe to be shared across multiple vms
-	registry := new(require.Registry)
+	// safe to be shared across multiple vms
+	requireRegistry := new(require.Registry)
+	templateRegistry := template.NewRegistry()
 
 	sharedBinds := func(vm *goja.Runtime) {
-		registry.Enable(vm)
+		requireRegistry.Enable(vm)
 		console.Enable(vm)
 		process.Enable(vm)
 		baseBinds(vm)
@@ -214,6 +216,7 @@ func (p *plugin) registerHooks() error {
 		apisBinds(vm)
 		httpClientBinds(vm)
 		vm.Set("$app", p.app)
+		vm.Set("$template", templateRegistry)
 	}
 
 	// initiliaze the executor vms

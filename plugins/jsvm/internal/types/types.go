@@ -154,6 +154,32 @@ type appWithoutHooks = Omit<pocketbase.PocketBase, ` + "`on${string}`" + `>
 declare var $app: appWithoutHooks
 
 /**
+ * ` + "`$template`" + ` is a global helper to load and cache HTML templates on the fly.
+ *
+ * The templates uses the standard Go [html/template](https://pkg.go.dev/html/template)
+ * and [text/template](https://pkg.go.dev/text/template) package syntax.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * routerAdd("get", "/hello", (c) => {
+ *     const html = $template.loadFiles(
+ *         "views/layout.html",
+ *         "views/content.html",
+ *     ).render({"name": "John"})
+ *
+ *     return c.html(200, html)
+ * })
+ * ` + "```" + `
+ *
+ * _Note that this method is available only in pb_hooks context._
+ *
+ * @namespace
+ * @group PocketBase
+ */
+declare var $template: template.Registry
+
+/**
  * arrayOf creates a placeholder array of the specified models.
  * Usually used to populate DB result into an array of models.
  *
@@ -811,6 +837,7 @@ func main() {
 			"github.com/pocketbase/dbx":                         {"*"},
 			"github.com/pocketbase/pocketbase/tools/security":   {"*"},
 			"github.com/pocketbase/pocketbase/tools/filesystem": {"*"},
+			"github.com/pocketbase/pocketbase/tools/template":   {"*"},
 			"github.com/pocketbase/pocketbase/tokens":           {"*"},
 			"github.com/pocketbase/pocketbase/apis":             {"*"},
 			"github.com/pocketbase/pocketbase/forms":            {"*"},
