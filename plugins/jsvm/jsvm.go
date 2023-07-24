@@ -143,8 +143,13 @@ func (p *plugin) registerMigrations() error {
 		process.Enable(vm)
 		baseBinds(vm)
 		dbxBinds(vm)
-		filesystemBinds(vm)
 		securityBinds(vm)
+		// note: disallow for now and give the authors of custom SaaS offerings
+		// 		 some time to adjust their code to avoid eventual security issues
+		//
+		// osBinds(vm)
+		// filepathBinds(vm)
+		// httpClientBinds(vm)
 
 		vm.Set("migrate", func(up, down func(db dbx.Builder) error) {
 			m.AppMigrations.Register(up, down, file)
@@ -213,9 +218,11 @@ func (p *plugin) registerHooks() error {
 		dbxBinds(vm)
 		filesystemBinds(vm)
 		securityBinds(vm)
+		osBinds(vm)
+		filepathBinds(vm)
+		httpClientBinds(vm)
 		formsBinds(vm)
 		apisBinds(vm)
-		httpClientBinds(vm)
 		vm.Set("$app", p.app)
 		vm.Set("$template", templateRegistry)
 	}

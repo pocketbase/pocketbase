@@ -1229,6 +1229,16 @@ func TestRouterBinds(t *testing.T) {
 	}
 }
 
+func TestFilepathBindsCount(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	filepathBinds(vm)
+
+	testBindsCount(vm, "$filepath", 15, t)
+}
+
 func TestOsBindsCount(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -1236,5 +1246,5 @@ func TestOsBindsCount(t *testing.T) {
 	vm := goja.New()
 	osBinds(vm)
 
-	testBindsCount(vm, "$os", 15, t)
+	testBindsCount(vm, "$os", 16, t)
 }

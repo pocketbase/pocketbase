@@ -516,6 +516,34 @@ declare namespace $filesystem {
 }
 
 // -------------------------------------------------------------------
+// filepathBinds
+// -------------------------------------------------------------------
+
+/**
+ * ` + "`$filepath`" + ` defines common helpers for manipulating filename
+ * paths in a way compatible with the target operating system-defined file paths.
+ *
+ * @group PocketBase
+ */
+declare namespace $filepath {
+  export let base:      filepath.base
+  export let clean:     filepath.clean
+  export let dir:       filepath.dir
+  export let ext:       filepath.ext
+  export let fromSlash: filepath.fromSlash
+  export let glob:      filepath.glob
+  export let isAbs:     filepath.isAbs
+  export let join:      filepath.join
+  export let match:     filepath.match
+  export let rel:       filepath.rel
+  export let split:     filepath.split
+  export let splitList: filepath.splitList
+  export let toSlash:   filepath.toSlash
+  export let walk:      filepath.walk
+  export let walkDir:   filepath.walkDir
+}
+
+// -------------------------------------------------------------------
 // osBinds
 // -------------------------------------------------------------------
 
@@ -527,6 +555,7 @@ declare namespace $filesystem {
  */
 declare namespace $os {
   export let exec:      exec.command
+  export let args:      os.args
   export let exit:      os.exit
   export let getenv:    os.getenv
   export let dirFS:     os.dirFS
@@ -870,6 +899,7 @@ func main() {
 			"github.com/pocketbase/pocketbase/apis":             {"*"},
 			"github.com/pocketbase/pocketbase/forms":            {"*"},
 			"github.com/pocketbase/pocketbase":                  {"*"},
+			"path/filepath":                                     {"*"},
 			"os":                                                {"*"},
 			"os/exec":                                           {"Command"},
 		},

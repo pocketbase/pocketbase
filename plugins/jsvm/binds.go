@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -460,10 +461,32 @@ func filesystemBinds(vm *goja.Runtime) {
 	obj.Set("fileFromMultipart", filesystem.NewFileFromMultipart)
 }
 
+func filepathBinds(vm *goja.Runtime) {
+	obj := vm.NewObject()
+	vm.Set("$filepath", obj)
+
+	obj.Set("base", filepath.Base)
+	obj.Set("clean", filepath.Clean)
+	obj.Set("dir", filepath.Dir)
+	obj.Set("ext", filepath.Ext)
+	obj.Set("fromSlash", filepath.FromSlash)
+	obj.Set("glob", filepath.Glob)
+	obj.Set("isAbs", filepath.IsAbs)
+	obj.Set("join", filepath.Join)
+	obj.Set("match", filepath.Match)
+	obj.Set("rel", filepath.Rel)
+	obj.Set("split", filepath.Split)
+	obj.Set("splitList", filepath.SplitList)
+	obj.Set("toSlash", filepath.ToSlash)
+	obj.Set("walk", filepath.Walk)
+	obj.Set("walkDir", filepath.WalkDir)
+}
+
 func osBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$os", obj)
 
+	obj.Set("args", os.Args)
 	obj.Set("exec", exec.Command)
 	obj.Set("exit", os.Exit)
 	obj.Set("getenv", os.Getenv)
