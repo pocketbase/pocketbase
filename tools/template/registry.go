@@ -21,7 +21,9 @@
 package template
 
 import (
+	"fmt"
 	"html/template"
+	"io/fs"
 	"strings"
 
 	"github.com/pocketbase/pocketbase/tools/store"
@@ -43,16 +45,18 @@ type Registry struct {
 	cache *store.Store[*Renderer]
 }
 
-// LoadFiles caches (if not already) the specified files set as a
+// LoadFiles caches (if not already) the specified filenames set as a
 // single template and returns a ready to use Renderer instance.
-func (r *Registry) LoadFiles(files ...string) *Renderer {
-	key := strings.Join(files, ",")
+//
+// There must be at least 1 filename specified.
+func (r *Registry) LoadFiles(filenames ...string) *Renderer {
+	key := strings.Join(filenames, ",")
 
 	found := r.cache.Get(key)
 
 	if found == nil {
 		// parse and cache
-		tpl, err := template.ParseFiles(files...)
+		tpl, err := template.ParseFiles(filenames...)
 		found = &Renderer{template: tpl, parseError: err}
 		r.cache.Set(key, found)
 	}
@@ -70,6 +74,26 @@ func (r *Registry) LoadString(text string) *Renderer {
 		tpl, err := template.New("").Parse(text)
 		found = &Renderer{template: tpl, parseError: err}
 		r.cache.Set(text, found)
+	}
+
+	return found
+}
+
+// LoadString caches (if not already) the specified fs and globPatterns
+// pair as single template and returns a ready to use Renderer instance.
+//
+// There must be at least 1 file matching the provided globPattern(s)
+// (note that most file names serves as glob patterns matching themselves).
+func (r *Registry) LoadFS(fs fs.FS, globPatterns ...string) *Renderer {
+	key := fmt.Sprintf("%v%v", fs, globPatterns)
+
+	found := r.cache.Get(key)
+
+	if found == nil {
+		// parse and cache
+		tpl, err := template.ParseFS(fs, globPatterns...)
+		found = &Renderer{template: tpl, parseError: err}
+		r.cache.Set(key, found)
 	}
 
 	return found
