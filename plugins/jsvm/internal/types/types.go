@@ -814,6 +814,14 @@ declare class UnauthorizedError implements apis.ApiError {
  * @group PocketBase
  */
 declare namespace $apis {
+  /**
+   * Route handler to serve static directory content (html, js, css, etc.).
+   *
+   * If a file resource is missing and indexFallback is set, the request
+   * will be forwarded to the base index.html (useful for SPA).
+   */
+  export function staticDirectoryHandler(dir: string, indexFallback: boolean): echo.HandlerFunc
+
   let requireRecordAuth:         apis.requireRecordAuth
   let requireAdminAuth:          apis.requireAdminAuth
   let requireAdminAuthOnlyIfAny: apis.requireAdminAuthOnlyIfAny

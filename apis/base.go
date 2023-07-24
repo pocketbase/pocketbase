@@ -193,19 +193,6 @@ func bindStaticAdminUI(app core.App, e *echo.Echo) error {
 	return nil
 }
 
-const totalAdminsCacheKey = "@totalAdmins"
-
-func updateTotalAdminsCache(app core.App) error {
-	total, err := app.Dao().TotalAdmins()
-	if err != nil {
-		return err
-	}
-
-	app.Cache().Set(totalAdminsCacheKey, total)
-
-	return nil
-}
-
 func uiCacheControl() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -218,6 +205,19 @@ func uiCacheControl() echo.MiddlewareFunc {
 			return next(c)
 		}
 	}
+}
+
+const totalAdminsCacheKey = "@totalAdmins"
+
+func updateTotalAdminsCache(app core.App) error {
+	total, err := app.Dao().TotalAdmins()
+	if err != nil {
+		return err
+	}
+
+	app.Cache().Set(totalAdminsCacheKey, total)
+
+	return nil
 }
 
 // installerRedirect redirects the user to the installer admin UI page

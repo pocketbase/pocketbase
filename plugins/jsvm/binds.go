@@ -144,31 +144,19 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 }
 
 func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
-	loader.Set("routerAdd", func(method string, path string, handler string, middlewares ...goja.Value) {
+	loader.Set("routerAdd", func(method string, path string, handler goja.Value, middlewares ...goja.Value) {
 		wrappedMiddlewares, err := wrapMiddlewares(executors, middlewares...)
 		if err != nil {
 			panic("[routerAdd] failed to wrap middlewares: " + err.Error())
 		}
 
-		pr := goja.MustCompile("", "{("+handler+").apply(undefined, __args)}", true)
+		wrappedHandler, err := wrapHandler(executors, handler)
+		if err != nil {
+			panic("[routerAdd] failed to wrap handler: " + err.Error())
+		}
 
 		app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-			e.Router.Add(strings.ToUpper(method), path, func(c echo.Context) error {
-				return executors.run(func(executor *goja.Runtime) error {
-					executor.Set("__args", []any{c})
-					res, err := executor.RunProgram(pr)
-					executor.Set("__args", goja.Undefined())
-
-					// check for returned error
-					if res != nil {
-						if v, ok := res.Export().(error); ok {
-							return v
-						}
-					}
-
-					return err
-				})
-			}, wrappedMiddlewares...)
+			e.Router.Add(strings.ToUpper(method), path, wrappedHandler, wrappedMiddlewares...)
 
 			return nil
 		})
@@ -197,6 +185,37 @@ func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 			return nil
 		})
 	})
+}
+
+func wrapHandler(executors *vmsPool, handler goja.Value) (echo.HandlerFunc, error) {
+	switch h := handler.Export().(type) {
+	case echo.HandlerFunc:
+		// "native" handler - no need to wrap
+		return h, nil
+	case func(goja.FunctionCall) goja.Value, string:
+		pr := goja.MustCompile("", "{("+handler.String()+").apply(undefined, __args)}", true)
+
+		wrappedHandler := func(c echo.Context) error {
+			return executors.run(func(executor *goja.Runtime) error {
+				executor.Set("__args", []any{c})
+				res, err := executor.RunProgram(pr)
+				executor.Set("__args", goja.Undefined())
+
+				// check for returned error
+				if res != nil {
+					if v, ok := res.Export().(error); ok {
+						return v
+					}
+				}
+
+				return err
+			})
+		}
+
+		return wrappedHandler, nil
+	default:
+		return nil, errors.New("unsupported goja handler type")
+	}
 }
 
 func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.MiddlewareFunc, error) {
@@ -530,6 +549,10 @@ func formsBinds(vm *goja.Runtime) {
 func apisBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$apis", obj)
+
+	obj.Set("staticDirectoryHandler", func(dir string, indexFallback bool) echo.HandlerFunc {
+		return apis.StaticDirectoryHandler(os.DirFS(dir), indexFallback)
+	})
 
 	// middlewares
 	obj.Set("requireRecordAuth", apis.RequireRecordAuth)

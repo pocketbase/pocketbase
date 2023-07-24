@@ -734,7 +734,7 @@ func TestApisBindsCount(t *testing.T) {
 	apisBinds(vm)
 
 	testBindsCount(vm, "this", 6, t)
-	testBindsCount(vm, "$apis", 10, t)
+	testBindsCount(vm, "$apis", 11, t)
 }
 
 func TestApisBindsApiError(t *testing.T) {
