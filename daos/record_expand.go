@@ -23,27 +23,27 @@ type ExpandFetchFunc func(relCollection *models.Collection, relIds []string) ([]
 
 // ExpandRecord expands the relations of a single Record model.
 //
-// If fetchFunc is not set, then a default function will be used that
-// returns all relation records.
+// If optFetchFunc is not set, then a default function will be used
+// that returns all relation records.
 //
 // Returns a map with the failed expand parameters and their errors.
-func (dao *Dao) ExpandRecord(record *models.Record, expands []string, fetchFunc ExpandFetchFunc) map[string]error {
-	return dao.ExpandRecords([]*models.Record{record}, expands, fetchFunc)
+func (dao *Dao) ExpandRecord(record *models.Record, expands []string, optFetchFunc ExpandFetchFunc) map[string]error {
+	return dao.ExpandRecords([]*models.Record{record}, expands, optFetchFunc)
 }
 
 // ExpandRecords expands the relations of the provided Record models list.
 //
-// If fetchFunc is not set, then a default function will be used that
-// returns all relation records.
+// If optFetchFunc is not set, then a default function will be used
+// that returns all relation records.
 //
 // Returns a map with the failed expand parameters and their errors.
-func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, fetchFunc ExpandFetchFunc) map[string]error {
+func (dao *Dao) ExpandRecords(records []*models.Record, expands []string, optFetchFunc ExpandFetchFunc) map[string]error {
 	normalized := normalizeExpands(expands)
 
 	failed := map[string]error{}
 
 	for _, expand := range normalized {
-		if err := dao.expandRecords(records, expand, fetchFunc, 1); err != nil {
+		if err := dao.expandRecords(records, expand, optFetchFunc, 1); err != nil {
 			failed[expand] = err
 		}
 	}
