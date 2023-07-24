@@ -516,6 +516,34 @@ declare namespace $filesystem {
 }
 
 // -------------------------------------------------------------------
+// osBinds
+// -------------------------------------------------------------------
+
+/**
+ * ` + "`$os`" + ` defines common helpers for working with the OS level primitives
+ * (eg. deleting directories, executing shell commands, etc.).
+ *
+ * @group PocketBase
+ */
+declare namespace $os {
+  export let exec:      exec.command
+  export let exit:      os.exit
+  export let getenv:    os.getenv
+  export let dirFS:     os.dirFS
+  export let readFile:  os.readFile
+  export let writeFile: os.writeFile
+  export let readDir:   os.readDir
+  export let tempDir:   os.tempDir
+  export let truncate:  os.truncate
+  export let getwd:     os.getwd
+  export let mkdir:     os.mkdir
+  export let mkdirAll:  os.mkdirAll
+  export let rename:    os.rename
+  export let remove:    os.remove
+  export let removeAll: os.removeAll
+}
+
+// -------------------------------------------------------------------
 // formsBinds
 // -------------------------------------------------------------------
 
@@ -842,6 +870,8 @@ func main() {
 			"github.com/pocketbase/pocketbase/apis":             {"*"},
 			"github.com/pocketbase/pocketbase/forms":            {"*"},
 			"github.com/pocketbase/pocketbase":                  {"*"},
+			"os":                                                {"*"},
+			"os/exec":                                           {"Command"},
 		},
 		FieldNameFormatter: func(s string) string {
 			return mapper.FieldName(nil, reflect.StructField{Name: s})

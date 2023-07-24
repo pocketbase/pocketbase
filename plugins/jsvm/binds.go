@@ -7,6 +7,8 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
+	"os/exec"
 	"reflect"
 	"strings"
 	"time"
@@ -456,6 +458,27 @@ func filesystemBinds(vm *goja.Runtime) {
 	obj.Set("fileFromPath", filesystem.NewFileFromPath)
 	obj.Set("fileFromBytes", filesystem.NewFileFromBytes)
 	obj.Set("fileFromMultipart", filesystem.NewFileFromMultipart)
+}
+
+func osBinds(vm *goja.Runtime) {
+	obj := vm.NewObject()
+	vm.Set("$os", obj)
+
+	obj.Set("exec", exec.Command)
+	obj.Set("exit", os.Exit)
+	obj.Set("getenv", os.Getenv)
+	obj.Set("dirFS", os.DirFS)
+	obj.Set("readFile", os.ReadFile)
+	obj.Set("writeFile", os.WriteFile)
+	obj.Set("readDir", os.ReadDir)
+	obj.Set("tempDir", os.TempDir)
+	obj.Set("truncate", os.Truncate)
+	obj.Set("getwd", os.Getwd)
+	obj.Set("mkdir", os.Mkdir)
+	obj.Set("mkdirAll", os.MkdirAll)
+	obj.Set("rename", os.Rename)
+	obj.Set("remove", os.Remove)
+	obj.Set("removeAll", os.RemoveAll)
 }
 
 func formsBinds(vm *goja.Runtime) {

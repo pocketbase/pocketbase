@@ -1228,3 +1228,13 @@ func TestRouterBinds(t *testing.T) {
 		t.Fatalf("Expected PreCount %d, got %d", 1, result.PreCount)
 	}
 }
+
+func TestOsBindsCount(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	osBinds(vm)
+
+	testBindsCount(vm, "$os", 15, t)
+}
