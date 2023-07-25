@@ -110,6 +110,10 @@
 
 - Added new utility `github.com/pocketbase/pocketbase/tools/template` package to assist with rendering HTML templates using the standard Go `html/template` and `text/template` syntax.
 
+- Fixed zero-default value not being used if the field is not explicitly set when manually creating records ([#2992](https://github.com/pocketbase/pocketbase/issues/2992)).
+  Additionally, `record.Get(field)` will now always return normalized value (the same as in the json serialization) for consistency and to avoid ambiguities what is stored in the related DB table.
+  The schema fields columns `DEFAULT` definition was also updated for new collections to ensure that `NULL` values can't be accidentally inserted.
+
 
 ## v0.16.10
 

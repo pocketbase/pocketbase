@@ -201,6 +201,11 @@ func (p *plugin) registerHooks() error {
 		return nil
 	}
 
+	absHooksDir, err := filepath.Abs(p.config.HooksDir)
+	if err != nil {
+		return err
+	}
+
 	p.app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		e.Router.HTTPErrorHandler = p.normalizeServeExceptions(e.Router.HTTPErrorHandler)
 		return nil
@@ -225,6 +230,7 @@ func (p *plugin) registerHooks() error {
 		apisBinds(vm)
 		vm.Set("$app", p.app)
 		vm.Set("$template", templateRegistry)
+		vm.Set("__hooks", absHooksDir)
 	}
 
 	// initiliaze the executor vms

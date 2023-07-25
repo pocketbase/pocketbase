@@ -188,7 +188,51 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	type expectation struct {
+	// ensures that the writable schema was reverted to its expected default
+	var writableSchema bool
+	app.Dao().DB().NewQuery("PRAGMA writable_schema").Row(&writableSchema)
+	if writableSchema == true {
+		t.Fatalf("Expected writable_schema to be OFF, got %v", writableSchema)
+	}
+
+	// check whether the columns DEFAULT definition was updated
+	// ---------------------------------------------------------------
+	tableInfo, err := app.Dao().TableInfo(collection.Name)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tableInfoExpectations := map[string]string{
+		"select_one":   `'[]'`,
+		"select_many":  `''`,
+		"file_one":     `'[]'`,
+		"file_many":    `''`,
+		"rel_one":      `'[]'`,
+		"rel_many":     `''`,
+		"new_multiple": `'[]'`,
+	}
+	for col, dflt := range tableInfoExpectations {
+		t.Run("check default for "+col, func(t *testing.T) {
+			var row *models.TableInfoRow
+			for _, r := range tableInfo {
+				if r.Name == col {
+					row = r
+					break
+				}
+			}
+			if row == nil {
+				t.Fatalf("Missing info for column %q", col)
+			}
+
+			if v := row.DefaultValue.String(); v != dflt {
+				t.Fatalf("Expected default value %q, got %q", dflt, v)
+			}
+		})
+	}
+
+	// check whether the values were normalized
+	// ---------------------------------------------------------------
+	type fieldsExpectation struct {
 		SelectOne   string `db:"select_one"`
 		SelectMany  string `db:"select_many"`
 		FileOne     string `db:"file_one"`
@@ -198,13 +242,13 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		NewMultiple string `db:"new_multiple"`
 	}
 
-	scenarios := []struct {
+	fieldsScenarios := []struct {
 		recordId string
-		expected expectation
+		expected fieldsExpectation
 	}{
 		{
 			"imy661ixudk5izi",
-			expectation{
+			fieldsExpectation{
 				SelectOne:   `[]`,
 				SelectMany:  ``,
 				FileOne:     `[]`,
@@ -216,7 +260,7 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		},
 		{
 			"al1h9ijdeojtsjy",
-			expectation{
+			fieldsExpectation{
 				SelectOne:   `["optionB"]`,
 				SelectMany:  `optionB`,
 				FileOne:     `["300_Jsjq7RdBgA.png"]`,
@@ -228,7 +272,7 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		},
 		{
 			"84nmscqy84lsi1t",
-			expectation{
+			fieldsExpectation{
 				SelectOne:   `["optionB"]`,
 				SelectMany:  `optionC`,
 				FileOne:     `["test_d61b33QdDU.txt"]`,
@@ -240,37 +284,36 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		},
 	}
 
-	for _, s := range scenarios {
-		result := new(expectation)
+	for _, s := range fieldsScenarios {
+		t.Run("check fields for record "+s.recordId, func(t *testing.T) {
+			result := new(fieldsExpectation)
 
-		err := app.Dao().DB().Select(
-			"select_one",
-			"select_many",
-			"file_one",
-			"file_many",
-			"rel_one",
-			"rel_many",
-			"new_multiple",
-		).From(collection.Name).Where(dbx.HashExp{"id": s.recordId}).One(result)
-		if err != nil {
-			t.Errorf("[%s] Failed to load record: %v", s.recordId, err)
-			continue
-		}
+			err := app.Dao().DB().Select(
+				"select_one",
+				"select_many",
+				"file_one",
+				"file_many",
+				"rel_one",
+				"rel_many",
+				"new_multiple",
+			).From(collection.Name).Where(dbx.HashExp{"id": s.recordId}).One(result)
+			if err != nil {
+				t.Fatalf("Failed to load record: %v", err)
+			}
 
-		encodedResult, err := json.Marshal(result)
-		if err != nil {
-			t.Errorf("[%s] Failed to encode result: %v", s.recordId, err)
-			continue
-		}
+			encodedResult, err := json.Marshal(result)
+			if err != nil {
+				t.Fatalf("Failed to encode result: %v", err)
+			}
 
-		encodedExpectation, err := json.Marshal(s.expected)
-		if err != nil {
-			t.Errorf("[%s] Failed to encode expectation: %v", s.recordId, err)
-			continue
-		}
+			encodedExpectation, err := json.Marshal(s.expected)
+			if err != nil {
+				t.Fatalf("Failed to encode expectation: %v", err)
+			}
 
-		if !bytes.EqualFold(encodedExpectation, encodedResult) {
-			t.Errorf("[%s] Expected \n%s, \ngot \n%s", s.recordId, encodedExpectation, encodedResult)
-		}
+			if !bytes.EqualFold(encodedExpectation, encodedResult) {
+				t.Fatalf("Expected \n%s, \ngot \n%s", encodedExpectation, encodedResult)
+			}
+		})
 	}
 }

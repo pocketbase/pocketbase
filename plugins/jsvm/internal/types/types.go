@@ -141,12 +141,21 @@ declare function routerPre(...middlewares: Array<string|echo.MiddlewareFunc>): v
 // baseBinds
 // -------------------------------------------------------------------
 
+/**
+ * Global helper variable that contains the absolute path to the app pb_hooks directory.
+ *
+ * @group PocketBase
+ */
+declare var __hooks: string
+
 // skip on* hook methods as they are registered via the global on* method
 type appWithoutHooks = Omit<pocketbase.PocketBase, ` + "`on${string}`" + `>
 
 /**
  * ` + "`$app`" + ` is the current running PocketBase instance that is globally
  * available in each .pb.js file.
+ *
+ * _Note that this variable is available only in pb_hooks context._
  *
  * @namespace
  * @group PocketBase
@@ -162,14 +171,10 @@ declare var $app: appWithoutHooks
  * Example:
  *
  * ` + "```" + `js
- * routerAdd("get", "/hello", (c) => {
- *     const html = $template.loadFiles(
- *         "views/layout.html",
- *         "views/content.html",
- *     ).render({"name": "John"})
- *
- *     return c.html(200, html)
- * })
+ * const html = $template.loadFiles(
+ *     "views/layout.html",
+ *     "views/content.html",
+ * ).render({"name": "John"})
  * ` + "```" + `
  *
  * _Note that this method is available only in pb_hooks context._

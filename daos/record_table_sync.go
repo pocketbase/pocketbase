@@ -173,6 +173,15 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
+		// temporary disable the schema error checks to prevent view and trigger errors
+		// when "altering" (aka. deleting and recreating) the non-normalized columns
+		if _, err := txDao.DB().NewQuery("PRAGMA writable_schema = ON").Execute(); err != nil {
+			return err
+		}
+		// executed with defer to make sure that the pragma is always reverted
+		// in case of an error and when nested transactions are used
+		defer txDao.DB().NewQuery("PRAGMA writable_schema = RESET").Execute()
+
 		for _, newField := range newCollection.Schema.Fields() {
 			// allow to continue even if there is no old field for the cases
 			// when a new field is added and there are already inserted data
@@ -192,11 +201,26 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 				continue // no change
 			}
 
-			var updateQuery *dbx.Query
+			// update the column definition by:
+			// 1. inserting a new column with the new definition
+			// 2. copy normalized values from the original column to the new one
+			// 3. drop the original column
+			// 4. rename the new column to the original column
+			// -------------------------------------------------------
+
+			originalName := newField.Name
+			tempName := "_" + newField.Name + security.PseudorandomString(5)
+
+			_, err := txDao.DB().AddColumn(newCollection.Name, tempName, newField.ColDefinition()).Execute()
+			if err != nil {
+				return err
+			}
+
+			var copyQuery *dbx.Query
 
 			if !isOldMultiple && isNewMultiple {
 				// single -> multiple (convert to array)
-				updateQuery = txDao.DB().NewQuery(fmt.Sprintf(
+				copyQuery = txDao.DB().NewQuery(fmt.Sprintf(
 					`UPDATE {{%s}} set [[%s]] = (
 							CASE
 								WHEN COALESCE([[%s]], '') = ''
@@ -211,19 +235,19 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 							END
 						)`,
 					newCollection.Name,
-					newField.Name,
-					newField.Name,
-					newField.Name,
-					newField.Name,
-					newField.Name,
-					newField.Name,
+					tempName,
+					originalName,
+					originalName,
+					originalName,
+					originalName,
+					originalName,
 				))
 			} else {
 				// multiple -> single (keep only the last element)
 				//
-				// note: for file fields the actual files are not deleted
-				// allowing additional custom handling via migration.
-				updateQuery = txDao.DB().NewQuery(fmt.Sprintf(
+				// note: for file fields the actual file objects are not
+				// deleted allowing additional custom handling via migration
+				copyQuery = txDao.DB().NewQuery(fmt.Sprintf(
 					`UPDATE {{%s}} set [[%s]] = (
 						CASE
 							WHEN COALESCE([[%s]], '[]') = '[]'
@@ -238,21 +262,35 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 						END
 					)`,
 					newCollection.Name,
-					newField.Name,
-					newField.Name,
-					newField.Name,
-					newField.Name,
-					newField.Name,
-					newField.Name,
+					tempName,
+					originalName,
+					originalName,
+					originalName,
+					originalName,
+					originalName,
 				))
 			}
 
-			if _, err := updateQuery.Execute(); err != nil {
+			// copy the normalized values
+			if _, err := copyQuery.Execute(); err != nil {
+				return err
+			}
+
+			// drop the original column
+			if _, err := txDao.DB().DropColumn(newCollection.Name, originalName).Execute(); err != nil {
+				return err
+			}
+
+			// rename the new column back to the original
+			if _, err := txDao.DB().RenameColumn(newCollection.Name, tempName, originalName).Execute(); err != nil {
 				return err
 			}
 		}
 
-		return nil
+		// revert the pragma and reload the schema
+		_, revertErr := txDao.DB().NewQuery("PRAGMA writable_schema = RESET").Execute()
+
+		return revertErr
 	})
 }
 

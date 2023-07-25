@@ -324,7 +324,7 @@ func (m *Record) Set(key string, value any) {
 	}
 }
 
-// Get returns a single record model data value for "key".
+// Get returns a normalized single record model data value for "key".
 func (m *Record) Get(key string) any {
 	switch key {
 	case schema.FieldNameId:
@@ -334,11 +334,27 @@ func (m *Record) Get(key string) any {
 	case schema.FieldNameUpdated:
 		return m.Updated
 	default:
-		if m.data == nil {
-			return nil
+		var v any
+		if m.data != nil {
+			v = m.data.Get(key)
 		}
 
-		return m.data.Get(key)
+		// normalize the field value in case it is missing or an incorrect type was set
+		// to ensure that the DB will always have normalized columns value.
+		if field := m.Collection().Schema.GetFieldByName(key); field != nil {
+			v = field.PrepareValue(v)
+		} else if m.collection.IsAuth() {
+			switch key {
+			case schema.FieldNameEmailVisibility, schema.FieldNameVerified:
+				v = cast.ToBool(v)
+			case schema.FieldNameLastResetSentAt, schema.FieldNameLastVerificationSentAt:
+				v, _ = types.ParseDateTime(v)
+			case schema.FieldNameUsername, schema.FieldNameEmail, schema.FieldNameTokenKey, schema.FieldNamePasswordHash:
+				v = cast.ToString(v)
+			}
+		}
+
+		return v
 	}
 }
 

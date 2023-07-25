@@ -63,47 +63,59 @@ func TestSchemaFieldColDefinition(t *testing.T) {
 	}{
 		{
 			schema.SchemaField{Type: schema.FieldTypeText, Name: "test"},
-			"TEXT DEFAULT ''",
+			"TEXT DEFAULT '' NOT NULL",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeNumber, Name: "test"},
-			"NUMERIC DEFAULT 0",
+			"NUMERIC DEFAULT 0 NOT NULL",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeBool, Name: "test"},
-			"BOOLEAN DEFAULT FALSE",
+			"BOOLEAN DEFAULT FALSE NOT NULL",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeEmail, Name: "test"},
-			"TEXT DEFAULT ''",
+			"TEXT DEFAULT '' NOT NULL",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeUrl, Name: "test"},
-			"TEXT DEFAULT ''",
+			"TEXT DEFAULT '' NOT NULL",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeEditor, Name: "test"},
-			"TEXT DEFAULT ''",
+			"TEXT DEFAULT '' NOT NULL",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeDate, Name: "test"},
-			"TEXT DEFAULT ''",
-		},
-		{
-			schema.SchemaField{Type: schema.FieldTypeSelect, Name: "test"},
-			"TEXT DEFAULT ''",
+			"TEXT DEFAULT '' NOT NULL",
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeJson, Name: "test"},
 			"JSON DEFAULT NULL",
 		},
 		{
-			schema.SchemaField{Type: schema.FieldTypeFile, Name: "test"},
-			"TEXT DEFAULT ''",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Name: "test"},
+			"TEXT DEFAULT '' NOT NULL",
 		},
 		{
-			schema.SchemaField{Type: schema.FieldTypeRelation, Name: "test"},
-			"TEXT DEFAULT ''",
+			schema.SchemaField{Type: schema.FieldTypeSelect, Name: "test_multiple", Options: &schema.SelectOptions{MaxSelect: 2}},
+			"JSON DEFAULT '[]' NOT NULL",
+		},
+		{
+			schema.SchemaField{Type: schema.FieldTypeFile, Name: "test"},
+			"TEXT DEFAULT '' NOT NULL",
+		},
+		{
+			schema.SchemaField{Type: schema.FieldTypeFile, Name: "test_multiple", Options: &schema.FileOptions{MaxSelect: 2}},
+			"JSON DEFAULT '[]' NOT NULL",
+		},
+		{
+			schema.SchemaField{Type: schema.FieldTypeRelation, Name: "test", Options: &schema.RelationOptions{MaxSelect: types.Pointer(1)}},
+			"TEXT DEFAULT '' NOT NULL",
+		},
+		{
+			schema.SchemaField{Type: schema.FieldTypeRelation, Name: "test_multiple", Options: &schema.RelationOptions{MaxSelect: nil}},
+			"JSON DEFAULT '[]' NOT NULL",
 		},
 	}
 
