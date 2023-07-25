@@ -46,9 +46,9 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			return !strings.HasPrefix(c.Request().URL.Path, "/api/")
 		},
 	}))
+	e.Pre(LoadAuthContext(app))
 	e.Use(middleware.Recover())
 	e.Use(middleware.Secure())
-	e.Use(LoadAuthContext(app))
 
 	// custom error handler
 	e.HTTPErrorHandler = func(c echo.Context, err error) {
