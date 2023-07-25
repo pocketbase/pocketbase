@@ -41,8 +41,17 @@ type ApiScenario struct {
 	AfterTestFunc  func(t *testing.T, app *TestApp, e *echo.Echo)
 }
 
-// Test executes the test case/scenario.
+// Test executes the test scenario.
 func (scenario *ApiScenario) Test(t *testing.T) {
+	var name = scenario.Name
+	if name == "" {
+		name = fmt.Sprintf("%s:%s", scenario.Method, scenario.Url)
+	}
+
+	t.Run(name, scenario.test)
+}
+
+func (scenario *ApiScenario) test(t *testing.T) {
 	var testApp *TestApp
 	var testAppErr error
 	if scenario.TestAppFactory != nil {
@@ -90,13 +99,8 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 
 	res := recorder.Result()
 
-	var prefix = scenario.Name
-	if prefix == "" {
-		prefix = fmt.Sprintf("%s:%s", scenario.Method, scenario.Url)
-	}
-
 	if res.StatusCode != scenario.ExpectedStatus {
-		t.Errorf("[%s] Expected status code %d, got %d", prefix, scenario.ExpectedStatus, res.StatusCode)
+		t.Errorf("Expected status code %d, got %d", scenario.ExpectedStatus, res.StatusCode)
 	}
 
 	if scenario.Delay > 0 {
@@ -105,7 +109,7 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 
 	if len(scenario.ExpectedContent) == 0 && len(scenario.NotExpectedContent) == 0 {
 		if len(recorder.Body.Bytes()) != 0 {
-			t.Errorf("[%s] Expected empty body, got \n%v", prefix, recorder.Body.String())
+			t.Errorf("Expected empty body, got \n%v", recorder.Body.String())
 		}
 	} else {
 		// normalize json response format
@@ -121,14 +125,14 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 
 		for _, item := range scenario.ExpectedContent {
 			if !strings.Contains(normalizedBody, item) {
-				t.Errorf("[%s] Cannot find %v in response body \n%v", prefix, item, normalizedBody)
+				t.Errorf("Cannot find %v in response body \n%v", item, normalizedBody)
 				break
 			}
 		}
 
 		for _, item := range scenario.NotExpectedContent {
 			if strings.Contains(normalizedBody, item) {
-				t.Errorf("[%s] Didn't expect %v in response body \n%v", prefix, item, normalizedBody)
+				t.Errorf("Didn't expect %v in response body \n%v", item, normalizedBody)
 				break
 			}
 		}
@@ -149,13 +153,13 @@ func (scenario *ApiScenario) Test(t *testing.T) {
 	}
 
 	if len(testApp.EventCalls) > len(scenario.ExpectedEvents) {
-		t.Errorf("[%s] Expected events %v, got %v", prefix, scenario.ExpectedEvents, testApp.EventCalls)
+		t.Errorf("Expected events %v, got %v", scenario.ExpectedEvents, testApp.EventCalls)
 	}
 
 	for event, expectedCalls := range scenario.ExpectedEvents {
 		actualCalls := testApp.EventCalls[event]
 		if actualCalls != expectedCalls {
-			t.Errorf("[%s] Expected event %s to be called %d, got %d", prefix, event, expectedCalls, actualCalls)
+			t.Errorf("Expected event %s to be called %d, got %d", event, expectedCalls, actualCalls)
 		}
 	}
 
