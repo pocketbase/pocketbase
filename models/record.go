@@ -497,7 +497,8 @@ func (m *Record) ColumnValueMap() map[string]any {
 
 // PublicExport exports only the record fields that are safe to be public.
 //
-// Fields marked as hidden will be exported only if `m.IgnoreEmailVisibility(true)` is set.
+// For auth records, to force the export of the email field you need to set
+// `m.IgnoreEmailVisibility(true)`.
 func (m *Record) PublicExport() map[string]any {
 	result := make(map[string]any, len(m.collection.Schema.Fields())+5)
 
