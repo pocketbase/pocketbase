@@ -300,7 +300,7 @@ func TestBackupsDownload(t *testing.T) {
 		{
 			Name:   "with valid admin file token but missing backup name",
 			Method: http.MethodGet,
-			Url:    "/api/backups/mizzing?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsImV4cCI6MTg5MzQ1MjQ2MSwidHlwZSI6ImFkbWluIn0.LyAMpSfaHVsuUqIlqqEbhDQSdFzoPz_EIDcb2VJMBsU",
+			Url:    "/api/backups/missing?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsImV4cCI6MTg5MzQ1MjQ2MSwidHlwZSI6ImFkbWluIn0.LyAMpSfaHVsuUqIlqqEbhDQSdFzoPz_EIDcb2VJMBsU",
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if err := createTestBackups(app); err != nil {
 					t.Fatal(err)
@@ -313,6 +313,22 @@ func TestBackupsDownload(t *testing.T) {
 			Name:   "with valid admin file token",
 			Method: http.MethodGet,
 			Url:    "/api/backups/test1.zip?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsImV4cCI6MTg5MzQ1MjQ2MSwidHlwZSI6ImFkbWluIn0.LyAMpSfaHVsuUqIlqqEbhDQSdFzoPz_EIDcb2VJMBsU",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				if err := createTestBackups(app); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`storage/`,
+				`data.db`,
+				`logs.db`,
+			},
+		},
+		{
+			Name:   "with valid admin file token and backup name with escaped char",
+			Method: http.MethodGet,
+			Url:    "/api/backups/%40test4.zip?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsImV4cCI6MTg5MzQ1MjQ2MSwidHlwZSI6ImFkbWluIn0.LyAMpSfaHVsuUqIlqqEbhDQSdFzoPz_EIDcb2VJMBsU",
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				if err := createTestBackups(app); err != nil {
 					t.Fatal(err)
@@ -339,7 +355,7 @@ func TestBackupsDelete(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expected := 3
+		expected := 4
 		if total := len(files); total != expected {
 			t.Fatalf("Expected %d backup(s), got %d", expected, total)
 		}
@@ -440,11 +456,43 @@ func TestBackupsDelete(t *testing.T) {
 					t.Fatal(err)
 				}
 
-				if total := len(files); total != 2 {
-					t.Fatalf("Expected 2 backup files, got %d", total)
+				if total := len(files); total != 3 {
+					t.Fatalf("Expected %d backup files, got %d", 3, total)
 				}
 
 				deletedFile := "test1.zip"
+
+				for _, f := range files {
+					if f.Key == deletedFile {
+						t.Fatalf("Expected backup %q to be deleted", deletedFile)
+					}
+				}
+			},
+			ExpectedStatus: 204,
+		},
+		{
+			Name:   "authorized as admin (backup with escaped character)",
+			Method: http.MethodDelete,
+			Url:    "/api/backups/%40test4.zip",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				if err := createTestBackups(app); err != nil {
+					t.Fatal(err)
+				}
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				files, err := getBackupFiles(app)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if total := len(files); total != 3 {
+					t.Fatalf("Expected %d backup files, got %d", 3, total)
+				}
+
+				deletedFile := "@test4.zip"
 
 				for _, f := range files {
 					if f.Key == deletedFile {
@@ -543,6 +591,10 @@ func createTestBackups(app core.App) error {
 	}
 
 	if err := app.CreateBackup(ctx, "test3.zip"); err != nil {
+		return err
+	}
+
+	if err := app.CreateBackup(ctx, "@test4.zip"); err != nil {
 		return err
 	}
 

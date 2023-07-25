@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
-	github.com/aws/aws-sdk-go v1.44.306
+	github.com/aws/aws-sdk-go v1.44.307
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.6.0
 	github.com/dop251/goja v0.0.0-20230707174833-636fdf960de1
@@ -15,7 +15,7 @@ require (
 	github.com/ganigeorgiev/fexpr v0.3.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
-	github.com/labstack/echo/v5 v5.0.0-20220201181537-ed2888cfa198
+	github.com/labstack/echo/v5 v5.0.0-20230722203903-ec5b858dab61
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/pocketbase/dbx v1.10.0
 	github.com/pocketbase/tygoja v0.0.0-20230618203136-2f8d57768be1

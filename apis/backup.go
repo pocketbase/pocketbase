@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"net/url"
 	"path/filepath"
 	"time"
 
@@ -132,8 +131,7 @@ func (api *backupApi) restore(c echo.Context) error {
 		return NewBadRequestError("Try again later - another backup/restore process has already been started.", nil)
 	}
 
-	// @todo remove the extra unescape after https://github.com/labstack/echo/issues/2447
-	key, _ := url.PathUnescape(c.PathParam("key"))
+	key := c.PathParam("key")
 
 	existsCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
