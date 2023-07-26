@@ -922,6 +922,23 @@ func main() {
 		MethodNameFormatter: func(s string) string {
 			return mapper.MethodName(nil, reflect.Method{Name: s})
 		},
+		TypeMappings: map[string]string{
+			"crypto.*":    "any",
+			"acme.*":      "any",
+			"autocert.*":  "any",
+			"driver.*":    "any",
+			"reflect.*":   "any",
+			"fmt.*":       "any",
+			"rand.*":      "any",
+			"tls.*":       "any",
+			"asn1.*":      "any",
+			"pkix.*":      "any",
+			"x509.*":      "any",
+			"pflag.*":     "any",
+			"flag.*":      "any",
+			"log.*":       "any",
+			"http.Client": "any",
+		},
 		Indent:               " ", // use only a single space to reduce slight the size
 		WithPackageFunctions: true,
 		Heading:              declarations,
