@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/archive"
@@ -111,6 +112,29 @@ func (p *plugin) updateCmd() *cobra.Command {
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE: func(command *cobra.Command, args []string) error {
+			var needConfirm bool
+			if isMaybeRunningInDocker() {
+				needConfirm = true
+				color.Yellow("NB! It seems that you are in a Docker container.")
+				color.Yellow("The update command may not work as expected in this context because usually the version of the app is managed by the container image itself.")
+			} else if isMaybeRunningInNixOS() {
+				needConfirm = true
+				color.Yellow("NB! It seems that you are in a NixOS.")
+				color.Yellow("Due to the non-standard filesystem implementation of the environment, the update command may not work as expected.")
+			}
+
+			if needConfirm {
+				confirm := false
+				prompt := &survey.Confirm{
+					Message: "Do you want to proceed with the update?",
+				}
+				survey.AskOne(prompt, &confirm)
+				if !confirm {
+					fmt.Println("The command has been cancelled.")
+					return nil
+				}
+			}
+
 			return p.update(withBackup)
 		},
 	}
@@ -368,4 +392,17 @@ func compareVersions(a, b string) int {
 	}
 
 	return 0 // equal
+}
+
+// note: not completely reliable as it may not work on all platforms
+// but should at least provide a warning for the most common use cases
+func isMaybeRunningInDocker() bool {
+	_, err := os.Stat("/.dockerenv")
+	return err == nil
+}
+
+// note: untested
+func isMaybeRunningInNixOS() bool {
+	_, err := os.Stat("/etc/NIXOS")
+	return err == nil
 }
