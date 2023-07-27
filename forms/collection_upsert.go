@@ -268,10 +268,10 @@ func (form *CollectionUpsert) checkRelationFields(value any) error {
 			}
 		}
 
-		collection, err := form.dao.FindCollectionByNameOrId(options.CollectionId)
+		relCollection, _ := form.dao.FindCollectionByNameOrId(options.CollectionId)
 
 		// validate collectionId
-		if err != nil || collection.Id != options.CollectionId {
+		if relCollection == nil || relCollection.Id != options.CollectionId {
 			return validation.Errors{fmt.Sprint(i): validation.Errors{
 				"options": validation.Errors{
 					"collectionId": validation.NewError(
@@ -282,14 +282,27 @@ func (form *CollectionUpsert) checkRelationFields(value any) error {
 			}
 		}
 
+		// allow only views to have relations to other views
+		// (see https://github.com/pocketbase/pocketbase/issues/3000)
+		if form.Type != models.CollectionTypeView && relCollection.IsView() {
+			return validation.Errors{fmt.Sprint(i): validation.Errors{
+				"options": validation.Errors{
+					"collectionId": validation.NewError(
+						"validation_field_non_view_base_relation_collection",
+						"Non view collections are now allowed to have a view relation.",
+					),
+				}},
+			}
+		}
+
 		// validate displayFields (if any)
 		for _, name := range options.DisplayFields {
-			if collection.Schema.GetFieldByName(name) == nil && !list.ExistInSlice(name, systemDisplayFields) {
+			if relCollection.Schema.GetFieldByName(name) == nil && !list.ExistInSlice(name, systemDisplayFields) {
 				return validation.Errors{fmt.Sprint(i): validation.Errors{
 					"options": validation.Errors{
 						"displayFields": validation.NewError(
 							"validation_field_invalid_relation_displayFields",
-							fmt.Sprintf("%q does not exist in the related %q collection.", name, collection.Name),
+							fmt.Sprintf("%q does not exist in the related %q collection.", name, relCollection.Name),
 						),
 					}},
 				}

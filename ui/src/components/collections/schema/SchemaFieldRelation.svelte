@@ -31,6 +31,8 @@
     let isSingle = field.options?.maxSelect == 1;
     let oldIsSingle = isSingle;
 
+    $: selectCollections = $collections.filter((c) => c.type != "view");
+
     // load defaults
     $: if (CommonHelper.isEmpty(field.options)) {
         loadDefaults();
@@ -101,11 +103,11 @@
         >
             <ObjectSelect
                 id={uniqueId}
-                searchable={$collections.length > 5}
+                searchable={selectCollections.length > 5}
                 selectPlaceholder={"Select collection *"}
                 noOptionsText="No collections found"
                 selectionKey="id"
-                items={$collections}
+                items={selectCollections}
                 readonly={!interactive || field.id}
                 bind:keyOfSelected={field.options.collectionId}
             >
@@ -224,7 +226,7 @@
 <CollectionUpsertPanel
     bind:this={upsertPanel}
     on:save={(e) => {
-        if (e?.detail?.collection?.id) {
+        if (e?.detail?.collection?.id && e.detail.collection.type != "view") {
             field.options.collectionId = e.detail.collection.id;
         }
     }}

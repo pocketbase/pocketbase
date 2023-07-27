@@ -114,6 +114,11 @@
   Additionally, `record.Get(field)` will now always return normalized value (the same as in the json serialization) for consistency and to avoid ambiguities what is stored in the related DB table.
   The schema fields columns `DEFAULT` definition was also updated for new collections to ensure that `NULL` values can't be accidentally inserted.
 
+- **!** Disallowed relations to views from non-view collections ([#3000](https://github.com/pocketbase/pocketbase/issues/3000)).
+  The change was necessary because I wasn't able to find an efficient way to track view changes and the existing behavior could have too many unexpected side-effects (eg. view with computed ids).
+  There is a system migration that will convert the existing view `relation` fields to `json` (multiple) and `text` (single) fields.
+  This could be a breaking change if you have `relation` to view and use `expand` or some of the `relation` view fields as part of a collection rule.
+
 
 ## v0.16.10
 

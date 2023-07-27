@@ -401,6 +401,54 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 		// view tests
 		// -----------------------------------------------------------
 		{
+			"base->view relation",
+			"",
+			`{
+				"name": "test_view_relation",
+				"type": "base",
+				"schema": [
+					{
+						"name": "test",
+						"type": "relation",
+						"options":{
+							"collectionId": "v9gwnfh02gjq1q0"
+						}
+					}
+				]
+			}`,
+			[]string{"schema"}, // not allowed
+		},
+		{
+			"auth->view relation",
+			"",
+			`{
+				"name": "test_view_relation",
+				"type": "auth",
+				"schema": [
+					{
+						"name": "test",
+						"type": "relation",
+						"options": {
+							"collectionId": "v9gwnfh02gjq1q0"
+						}
+					}
+				]
+			}`,
+			[]string{"schema"}, // not allowed
+		},
+		{
+			"view->view relation",
+			"",
+			`{
+				"name": "test_view_relation",
+				"type": "view",
+				"options": {
+					"query": "select view1.id, view1.id as rel from view1"
+				}
+			}`,
+			[]string{}, // allowed
+		},
+		{
 			"view create failure",
 			"",
 			`{
@@ -495,137 +543,132 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		collection := &models.Collection{}
-		if s.existingName != "" {
-			var err error
-			collection, err = app.Dao().FindCollectionByNameOrId(s.existingName)
-			if err != nil {
-				t.Fatal(err)
-			}
-		}
-
-		form := forms.NewCollectionUpsert(app, collection)
-
-		// load data
-		loadErr := json.Unmarshal([]byte(s.jsonData), form)
-		if loadErr != nil {
-			t.Errorf("[%s] Failed to load form data: %v", s.testName, loadErr)
-			continue
-		}
-
-		interceptorCalls := 0
-		interceptor := func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
-			return func(c *models.Collection) error {
-				interceptorCalls++
-				return next(c)
-			}
-		}
-
-		// parse errors
-		result := form.Submit(interceptor)
-		errs, ok := result.(validation.Errors)
-		if !ok && result != nil {
-			t.Errorf("[%s] Failed to parse errors %v", s.testName, result)
-			continue
-		}
-
-		// check interceptor calls
-		expectInterceptorCalls := 1
-		if len(s.expectedErrors) > 0 {
-			expectInterceptorCalls = 0
-		}
-		if interceptorCalls != expectInterceptorCalls {
-			t.Errorf("[%s] Expected interceptor to be called %d, got %d", s.testName, expectInterceptorCalls, interceptorCalls)
-		}
-
-		// check errors
-		if len(errs) > len(s.expectedErrors) {
-			t.Errorf("[%s] Expected error keys %v, got %v", s.testName, s.expectedErrors, errs)
-		}
-		for _, k := range s.expectedErrors {
-			if _, ok := errs[k]; !ok {
-				t.Errorf("[%s] Missing expected error key %q in %v", s.testName, k, errs)
-			}
-		}
-
-		if len(s.expectedErrors) > 0 {
-			continue
-		}
-
-		collection, _ = app.Dao().FindCollectionByNameOrId(form.Name)
-		if collection == nil {
-			t.Errorf("[%s] Expected to find collection %q, got nil", s.testName, form.Name)
-			continue
-		}
-
-		if form.Name != collection.Name {
-			t.Errorf("[%s] Expected Name %q, got %q", s.testName, collection.Name, form.Name)
-		}
-
-		if form.Type != collection.Type {
-			t.Errorf("[%s] Expected Type %q, got %q", s.testName, collection.Type, form.Type)
-		}
-
-		if form.System != collection.System {
-			t.Errorf("[%s] Expected System %v, got %v", s.testName, collection.System, form.System)
-		}
-
-		if cast.ToString(form.ListRule) != cast.ToString(collection.ListRule) {
-			t.Errorf("[%s] Expected ListRule %v, got %v", s.testName, collection.ListRule, form.ListRule)
-		}
-
-		if cast.ToString(form.ViewRule) != cast.ToString(collection.ViewRule) {
-			t.Errorf("[%s] Expected ViewRule %v, got %v", s.testName, collection.ViewRule, form.ViewRule)
-		}
-
-		if cast.ToString(form.CreateRule) != cast.ToString(collection.CreateRule) {
-			t.Errorf("[%s] Expected CreateRule %v, got %v", s.testName, collection.CreateRule, form.CreateRule)
-		}
-
-		if cast.ToString(form.UpdateRule) != cast.ToString(collection.UpdateRule) {
-			t.Errorf("[%s] Expected UpdateRule %v, got %v", s.testName, collection.UpdateRule, form.UpdateRule)
-		}
-
-		if cast.ToString(form.DeleteRule) != cast.ToString(collection.DeleteRule) {
-			t.Errorf("[%s] Expected DeleteRule %v, got %v", s.testName, collection.DeleteRule, form.DeleteRule)
-		}
-
-		rawFormSchema, _ := form.Schema.MarshalJSON()
-		rawCollectionSchema, _ := collection.Schema.MarshalJSON()
-
-		if len(form.Schema.Fields()) != len(collection.Schema.Fields()) {
-			t.Errorf("[%s] Expected Schema \n%v, \ngot \n%v", s.testName, string(rawCollectionSchema), string(rawFormSchema))
-			continue
-		}
-
-		for _, f := range form.Schema.Fields() {
-			if collection.Schema.GetFieldByName(f.Name) == nil {
-				t.Errorf("[%s] Missing field %s \nin \n%v", s.testName, f.Name, string(rawFormSchema))
-				continue
-			}
-		}
-
-		// check indexes (if any)
-		allIndexes, _ := app.Dao().TableIndexes(form.Name)
-		for _, formIdx := range form.Indexes {
-			parsed := dbutils.ParseIndex(formIdx)
-			parsed.TableName = form.Name
-			normalizedIdx := parsed.Build()
-
-			var exists bool
-			for _, idx := range allIndexes {
-				if dbutils.ParseIndex(idx).Build() == normalizedIdx {
-					exists = true
-					continue
+		t.Run(s.testName, func(t *testing.T) {
+			collection := &models.Collection{}
+			if s.existingName != "" {
+				var err error
+				collection, err = app.Dao().FindCollectionByNameOrId(s.existingName)
+				if err != nil {
+					t.Fatal(err)
 				}
 			}
 
-			if !exists {
-				t.Errorf(
-					"[%s] Missing index %s \nin \n%v", s.testName, normalizedIdx, allIndexes)
-				continue
+			form := forms.NewCollectionUpsert(app, collection)
+
+			// load data
+			loadErr := json.Unmarshal([]byte(s.jsonData), form)
+			if loadErr != nil {
+				t.Fatalf("Failed to load form data: %v", loadErr)
 			}
-		}
+
+			interceptorCalls := 0
+			interceptor := func(next forms.InterceptorNextFunc[*models.Collection]) forms.InterceptorNextFunc[*models.Collection] {
+				return func(c *models.Collection) error {
+					interceptorCalls++
+					return next(c)
+				}
+			}
+
+			// parse errors
+			result := form.Submit(interceptor)
+			errs, ok := result.(validation.Errors)
+			if !ok && result != nil {
+				t.Fatalf("Failed to parse errors %v", result)
+			}
+
+			// check interceptor calls
+			expectInterceptorCalls := 1
+			if len(s.expectedErrors) > 0 {
+				expectInterceptorCalls = 0
+			}
+			if interceptorCalls != expectInterceptorCalls {
+				t.Fatalf("Expected interceptor to be called %d, got %d", expectInterceptorCalls, interceptorCalls)
+			}
+
+			// check errors
+			if len(errs) > len(s.expectedErrors) {
+				t.Fatalf("Expected error keys %v, got %v", s.expectedErrors, errs)
+			}
+			for _, k := range s.expectedErrors {
+				if _, ok := errs[k]; !ok {
+					t.Fatalf("Missing expected error key %q in %v", k, errs)
+				}
+			}
+
+			if len(s.expectedErrors) > 0 {
+				return
+			}
+
+			collection, _ = app.Dao().FindCollectionByNameOrId(form.Name)
+			if collection == nil {
+				t.Fatalf("Expected to find collection %q, got nil", form.Name)
+			}
+
+			if form.Name != collection.Name {
+				t.Errorf("Expected Name %q, got %q", collection.Name, form.Name)
+			}
+
+			if form.Type != collection.Type {
+				t.Fatalf("Expected Type %q, got %q", collection.Type, form.Type)
+			}
+
+			if form.System != collection.System {
+				t.Fatalf("Expected System %v, got %v", collection.System, form.System)
+			}
+
+			if cast.ToString(form.ListRule) != cast.ToString(collection.ListRule) {
+				t.Fatalf("Expected ListRule %v, got %v", collection.ListRule, form.ListRule)
+			}
+
+			if cast.ToString(form.ViewRule) != cast.ToString(collection.ViewRule) {
+				t.Fatalf("Expected ViewRule %v, got %v", collection.ViewRule, form.ViewRule)
+			}
+
+			if cast.ToString(form.CreateRule) != cast.ToString(collection.CreateRule) {
+				t.Fatalf("Expected CreateRule %v, got %v", collection.CreateRule, form.CreateRule)
+			}
+
+			if cast.ToString(form.UpdateRule) != cast.ToString(collection.UpdateRule) {
+				t.Fatalf("Expected UpdateRule %v, got %v", collection.UpdateRule, form.UpdateRule)
+			}
+
+			if cast.ToString(form.DeleteRule) != cast.ToString(collection.DeleteRule) {
+				t.Fatalf("Expected DeleteRule %v, got %v", collection.DeleteRule, form.DeleteRule)
+			}
+
+			rawFormSchema, _ := form.Schema.MarshalJSON()
+			rawCollectionSchema, _ := collection.Schema.MarshalJSON()
+
+			if len(form.Schema.Fields()) != len(collection.Schema.Fields()) {
+				t.Fatalf("Expected Schema \n%v, \ngot \n%v", string(rawCollectionSchema), string(rawFormSchema))
+			}
+
+			for _, f := range form.Schema.Fields() {
+				if collection.Schema.GetFieldByName(f.Name) == nil {
+					t.Fatalf("Missing field %s \nin \n%v", f.Name, string(rawFormSchema))
+				}
+			}
+
+			// check indexes (if any)
+			allIndexes, _ := app.Dao().TableIndexes(form.Name)
+			for _, formIdx := range form.Indexes {
+				parsed := dbutils.ParseIndex(formIdx)
+				parsed.TableName = form.Name
+				normalizedIdx := parsed.Build()
+
+				var exists bool
+				for _, idx := range allIndexes {
+					if dbutils.ParseIndex(idx).Build() == normalizedIdx {
+						exists = true
+						continue
+					}
+				}
+
+				if !exists {
+					t.Fatalf("Missing index %s \nin \n%v", normalizedIdx, allIndexes)
+				}
+			}
+		})
 	}
 }
 

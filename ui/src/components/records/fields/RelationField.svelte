@@ -27,12 +27,13 @@
     }
 
     $: if (needLoad(list, value)) {
+        isLoading = true;
         // Move the load function to the end of the execution queue.
         //
         // It helps reducing the layout shifts (the relation field has fixed height skeleton loader)
         // and allows the other form fields to load sooner.
         clearTimeout(loadTimeoutId);
-        loadTimeoutId = setTimeout(load, 0);
+        loadTimeoutId = setTimeout(load, 50);
     }
 
     function needLoad() {
@@ -91,6 +92,10 @@
             }
 
             list = list;
+
+            // ensure that any record that was deleted during the request
+            // is also removed from the relation value
+            listToValue();
         } catch (err) {
             ApiClient.error(err);
         }
