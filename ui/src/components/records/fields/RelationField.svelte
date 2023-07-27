@@ -33,7 +33,7 @@
         // It helps reducing the layout shifts (the relation field has fixed height skeleton loader)
         // and allows the other form fields to load sooner.
         clearTimeout(loadTimeoutId);
-        loadTimeoutId = setTimeout(load, 50);
+        loadTimeoutId = setTimeout(load, 0);
     }
 
     function needLoad() {
