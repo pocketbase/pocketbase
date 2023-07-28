@@ -208,7 +208,10 @@
                                             </button>
                                         </div>
                                         <div class="help-block">
-                                            Only numeric list, steps or ranges are supported.
+                                            <p>
+                                                Supports numeric list, steps and ranges. The timezone is in
+                                                UTC.
+                                            </p>
                                         </div>
                                     </Field>
                                 </div>
