@@ -744,36 +744,44 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 
 		// upload new files (if any)
 		//
-		// note: executed after the default BeforeCreateFunc and BeforeUpdateFunc hooks
+		// note: executed after the default BeforeCreateFunc and BeforeUpdateFunc hook actions
 		// to allow uploading AFTER the before app model hooks (eg. in case of an id change)
 		// but BEFORE the actual record db persistence
 		// ---
-		dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
-			if form.dao.BeforeCreateFunc != nil {
-				if err := form.dao.BeforeCreateFunc(eventDao, m); err != nil {
-					return err
+		dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model, action func() error) error {
+			newAction := func() error {
+				if m.TableName() == form.record.TableName() && m.GetId() == form.record.GetId() {
+					if err := form.processFilesToUpload(); err != nil {
+						return err
+					}
 				}
+
+				return action()
 			}
 
-			if m.TableName() == form.record.TableName() && m.GetId() == form.record.GetId() {
-				return form.processFilesToUpload()
+			if form.dao.BeforeCreateFunc != nil {
+				return form.dao.BeforeCreateFunc(eventDao, m, newAction)
 			}
 
-			return nil
+			return newAction()
 		}
 
-		dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
-			if form.dao.BeforeUpdateFunc != nil {
-				if err := form.dao.BeforeUpdateFunc(eventDao, m); err != nil {
-					return err
+		dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model, action func() error) error {
+			newAction := func() error {
+				if m.TableName() == form.record.TableName() && m.GetId() == form.record.GetId() {
+					if err := form.processFilesToUpload(); err != nil {
+						return err
+					}
 				}
+
+				return action()
 			}
 
-			if m.TableName() == form.record.TableName() && m.GetId() == form.record.GetId() {
-				return form.processFilesToUpload()
+			if form.dao.BeforeUpdateFunc != nil {
+				return form.dao.BeforeUpdateFunc(eventDao, m, newAction)
 			}
 
-			return nil
+			return newAction()
 		}
 		// ---
 

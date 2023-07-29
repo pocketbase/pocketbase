@@ -1049,58 +1049,58 @@ func (app *BaseApp) initDataDB() error {
 func (app *BaseApp) createDaoWithHooks(concurrentDB, nonconcurrentDB dbx.Builder) *daos.Dao {
 	dao := daos.NewMultiDB(concurrentDB, nonconcurrentDB)
 
-	dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
+	dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model, action func() error) error {
 		e := new(ModelEvent)
 		e.Dao = eventDao
 		e.Model = m
 
-		return app.OnModelBeforeCreate().Trigger(e)
+		return app.OnModelBeforeCreate().Trigger(e, func(e *ModelEvent) error {
+			return action()
+		})
 	}
 
-	dao.AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) {
+	dao.AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
 		e := new(ModelEvent)
 		e.Dao = eventDao
 		e.Model = m
 
-		if err := app.OnModelAfterCreate().Trigger(e); err != nil && app.isDebug {
-			log.Println(err)
-		}
+		return app.OnModelAfterCreate().Trigger(e)
 	}
 
-	dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
+	dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model, action func() error) error {
 		e := new(ModelEvent)
 		e.Dao = eventDao
 		e.Model = m
 
-		return app.OnModelBeforeUpdate().Trigger(e)
+		return app.OnModelBeforeUpdate().Trigger(e, func(e *ModelEvent) error {
+			return action()
+		})
 	}
 
-	dao.AfterUpdateFunc = func(eventDao *daos.Dao, m models.Model) {
+	dao.AfterUpdateFunc = func(eventDao *daos.Dao, m models.Model) error {
 		e := new(ModelEvent)
 		e.Dao = eventDao
 		e.Model = m
 
-		if err := app.OnModelAfterUpdate().Trigger(e); err != nil && app.isDebug {
-			log.Println(err)
-		}
+		return app.OnModelAfterUpdate().Trigger(e)
 	}
 
-	dao.BeforeDeleteFunc = func(eventDao *daos.Dao, m models.Model) error {
+	dao.BeforeDeleteFunc = func(eventDao *daos.Dao, m models.Model, action func() error) error {
 		e := new(ModelEvent)
 		e.Dao = eventDao
 		e.Model = m
 
-		return app.OnModelBeforeDelete().Trigger(e)
+		return app.OnModelBeforeDelete().Trigger(e, func(e *ModelEvent) error {
+			return action()
+		})
 	}
 
-	dao.AfterDeleteFunc = func(eventDao *daos.Dao, m models.Model) {
+	dao.AfterDeleteFunc = func(eventDao *daos.Dao, m models.Model) error {
 		e := new(ModelEvent)
 		e.Dao = eventDao
 		e.Model = m
 
-		if err := app.OnModelAfterDelete().Trigger(e); err != nil && app.isDebug {
-			log.Println(err)
-		}
+		return app.OnModelAfterDelete().Trigger(e)
 	}
 
 	return dao

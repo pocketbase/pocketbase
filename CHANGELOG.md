@@ -119,6 +119,7 @@
   There is a system migration that will convert the existing view `relation` fields to `json` (multiple) and `text` (single) fields.
   This could be a breaking change if you have `relation` to view and use `expand` or some of the `relation` view fields as part of a collection rule.
 
+- **!** (@todo docs) Added action argument to the Dao hooks to allow skipping the default persist behavior.
 
 ## v0.16.10
 
