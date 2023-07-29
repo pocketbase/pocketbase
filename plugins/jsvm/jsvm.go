@@ -143,6 +143,7 @@ func (p *plugin) registerMigrations() error {
 		process.Enable(vm)
 		baseBinds(vm)
 		dbxBinds(vm)
+		tokensBinds(vm)
 		securityBinds(vm)
 		// note: disallow for now and give the authors of custom SaaS offerings
 		// 		 some time to adjust their code to avoid eventual security issues
@@ -222,6 +223,7 @@ func (p *plugin) registerHooks() error {
 		baseBinds(vm)
 		dbxBinds(vm)
 		filesystemBinds(vm)
+		tokensBinds(vm)
 		securityBinds(vm)
 		osBinds(vm)
 		filepathBinds(vm)

@@ -260,29 +260,6 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.M
 func baseBinds(vm *goja.Runtime) {
 	vm.SetFieldNameMapper(FieldMapper{})
 
-	// override primitive class constructors to return pointers
-	// (this is useful when unmarshaling or scaning a db result)
-	vm.Set("__numberPointer", func(arg float64) *float64 {
-		return &arg
-	})
-	vm.Set("__stringPointer", func(arg string) *string {
-		return &arg
-	})
-	vm.Set("__boolPointer", func(arg bool) *bool {
-		return &arg
-	})
-	vm.RunString(`
-		this.Number = function(arg) {
-			return __numberPointer(arg)
-		}
-		this.String = function(arg) {
-			return __stringPointer(arg)
-		}
-		this.Boolean = function(arg) {
-			return __boolPointer(arg)
-		}
-	`)
-
 	vm.Set("arrayOf", func(model any) any {
 		mt := reflect.TypeOf(model)
 		st := reflect.SliceOf(mt)
