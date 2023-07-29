@@ -14,7 +14,7 @@ import (
 const DefaultPerPage int = 30
 
 // MaxPerPage specifies the maximum allowed search result items returned in a single page.
-const MaxPerPage int = 1000
+const MaxPerPage int = 500
 
 // url search query params
 const (
