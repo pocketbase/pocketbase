@@ -188,6 +188,10 @@ func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 }
 
 func wrapHandler(executors *vmsPool, handler goja.Value) (echo.HandlerFunc, error) {
+	if handler == nil {
+		return nil, errors.New("handler must be non-nil")
+	}
+
 	switch h := handler.Export().(type) {
 	case echo.HandlerFunc:
 		// "native" handler - no need to wrap
@@ -222,6 +226,10 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.M
 	wrappedMiddlewares := make([]echo.MiddlewareFunc, len(rawMiddlewares))
 
 	for i, m := range rawMiddlewares {
+		if m == nil {
+			return nil, errors.New("middleware func must be non-nil")
+		}
+
 		switch v := m.Export().(type) {
 		case echo.MiddlewareFunc:
 			// "native" middleware - no need to wrap
@@ -271,7 +279,7 @@ func baseBinds(vm *goja.Runtime) {
 	vm.Set("DynamicModel", func(call goja.ConstructorCall) *goja.Object {
 		shape, ok := call.Argument(0).Export().(map[string]any)
 		if !ok || len(shape) == 0 {
-			panic("missing shape data")
+			panic("[DynamicModel] missing shape data")
 		}
 
 		instance := newDynamicModel(shape)
@@ -364,7 +372,7 @@ func baseBinds(vm *goja.Runtime) {
 	vm.Set("Dao", func(call goja.ConstructorCall) *goja.Object {
 		concurrentDB, _ := call.Argument(0).Export().(dbx.Builder)
 		if concurrentDB == nil {
-			panic("missing required Dao(concurrentDB, [nonconcurrentDB]) argument")
+			panic("[Dao] missing required Dao(concurrentDB, [nonconcurrentDB]) argument")
 		}
 
 		nonConcurrentDB, _ := call.Argument(1).Export().(dbx.Builder)

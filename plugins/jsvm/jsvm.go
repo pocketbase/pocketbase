@@ -34,9 +34,6 @@ import (
 )
 
 const (
-	hooksExtension      = ".pb.js"
-	migrationsExtension = ".js"
-
 	typesFileName = "types.d.ts"
 )
 
@@ -53,6 +50,13 @@ type Config struct {
 	// If not set it fallbacks to a relative "pb_data/../pb_hooks" directory.
 	HooksDir string
 
+	// HooksFilesPattern specifies a regular expression pattern that
+	// identify which file to load by the hook vm(s).
+	//
+	// If not set it fallbacks to `^.*(\.pb\.js|\.pb\.ts)$`, aka. any
+	// HookdsDir file ending in ".pb.js" or ".pb.ts" (the last one is to enforce IDE linters).
+	HooksFilesPattern string
+
 	// HooksPoolSize specifies how many goja.Runtime instances to prewarm
 	// and keep for the JS app hooks gorotines execution.
 	//
@@ -64,6 +68,10 @@ type Config struct {
 	//
 	// If not set it fallbacks to a relative "pb_data/../pb_migrations" directory.
 	MigrationsDir string
+
+	// If not set it fallbacks to `^.*(\.js|\.ts)$`, aka. any MigrationDir file
+	// ending in ".js" or ".ts" (the last one is to enforce IDE linters).
+	MigrationsFilesPattern string
 
 	// TypesDir specifies the directory where to store the embedded
 	// TypeScript declarations file.
@@ -94,6 +102,14 @@ func Register(app core.App, config Config) error {
 
 	if p.config.MigrationsDir == "" {
 		p.config.MigrationsDir = filepath.Join(app.DataDir(), "../pb_migrations")
+	}
+
+	if p.config.HooksFilesPattern == "" {
+		p.config.HooksFilesPattern = `^.*(\.pb\.js|\.pb\.ts)$`
+	}
+
+	if p.config.MigrationsFilesPattern == "" {
+		p.config.MigrationsFilesPattern = `^.*(\.js|\.ts)$`
 	}
 
 	if p.config.TypesDir == "" {
@@ -129,7 +145,7 @@ type plugin struct {
 // registerMigrations registers the JS migrations loader.
 func (p *plugin) registerMigrations() error {
 	// fetch all js migrations sorted by their filename
-	files, err := filesContent(p.config.MigrationsDir, `^.*`+regexp.QuoteMeta(migrationsExtension)+`$`)
+	files, err := filesContent(p.config.MigrationsDir, p.config.MigrationsFilesPattern)
 	if err != nil {
 		return err
 	}
@@ -168,7 +184,7 @@ func (p *plugin) registerMigrations() error {
 // registerHooks registers the JS app hooks loader.
 func (p *plugin) registerHooks() error {
 	// fetch all js hooks sorted by their filename
-	files, err := filesContent(p.config.HooksDir, `^.*`+regexp.QuoteMeta(hooksExtension)+`$`)
+	files, err := filesContent(p.config.HooksDir, p.config.HooksFilesPattern)
 	if err != nil {
 		return err
 	}
@@ -250,14 +266,24 @@ func (p *plugin) registerHooks() error {
 	routerBinds(p.app, loader, executors)
 
 	for file, content := range files {
-		_, err := loader.RunString(string(content))
-		if err != nil {
-			if p.config.HooksWatch {
-				color.Red("Failed to execute %s: %v", file, err)
-			} else {
+		func() {
+			defer func() {
+				if err := recover(); err != nil {
+					fmtErr := fmt.Errorf("Failed to execute %s:\n - %v", file, err)
+
+					if p.config.HooksWatch {
+						color.Red("%v", fmtErr)
+					} else {
+						panic(fmtErr)
+					}
+				}
+			}()
+
+			_, err := loader.RunString(string(content))
+			if err != nil {
 				panic(err)
 			}
-		}
+		}()
 	}
 
 	return nil
