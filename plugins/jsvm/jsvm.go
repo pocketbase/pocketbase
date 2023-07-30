@@ -423,7 +423,7 @@ func (p *plugin) relativeTypesPath(basepath string) string {
 	return rel
 }
 
-// saveTypesFile saves the embeded TS declarations as a file on the disk.
+// saveTypesFile saves the embedded TS declarations as a file on the disk.
 func (p *plugin) saveTypesFile() error {
 	fullPath := p.fullTypesPath()
 

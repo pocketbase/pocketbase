@@ -121,7 +121,7 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 //
 //  4. Move the extracted dir content to the app "pb_data".
 //
-//  5. Restart the app (on successfull app bootstap it will also remove the old pb_data).
+//  5. Restart the app (on successful app bootstap it will also remove the old pb_data).
 //
 // If a failure occure during the restore process the dir changes are reverted.
 // If for whatever reason the revert is not possible, it panics.

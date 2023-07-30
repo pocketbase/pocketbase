@@ -243,7 +243,7 @@ func (p *plugin) update(withBackup bool) error {
 	}
 
 	color.HiBlack("---")
-	color.Green("Update completed sucessfully! You can start the executable as usual.")
+	color.Green("Update completed successfully! You can start the executable as usual.")
 
 	return nil
 }

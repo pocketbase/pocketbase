@@ -137,19 +137,3 @@ func (p *plugin) getCachedCollections() (map[string]*models.Collection, error) {
 
 	return result, nil
 }
-
-func (p *plugin) hasCustomMigrations() bool {
-	files, err := os.ReadDir(p.config.Dir)
-	if err != nil {
-		return false
-	}
-
-	for _, f := range files {
-		if f.IsDir() {
-			continue
-		}
-		return true
-	}
-
-	return false
-}

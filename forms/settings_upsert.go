@@ -58,7 +58,7 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc[*settings.Set
 	return runInterceptors(form.Settings, func(s *settings.Settings) error {
 		form.Settings = s
 
-		oldSettings, err := form.app.Settings().Clone();
+		oldSettings, err := form.app.Settings().Clone()
 		if err != nil {
 			return err
 		}

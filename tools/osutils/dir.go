@@ -34,11 +34,11 @@ func MoveDirContent(src string, dest string, rootExclude ...string) error {
 
 	moved := map[string]string{}
 
-	tryRollback := func() ([]error) {
+	tryRollback := func() []error {
 		errs := []error{}
 
 		for old, new := range moved {
-			if err := os.Rename(new, old); err != nil{
+			if err := os.Rename(new, old); err != nil {
 				errs = append(errs, err)
 			}
 		}
@@ -64,7 +64,7 @@ func MoveDirContent(src string, dest string, rootExclude ...string) error {
 		new := filepath.Join(dest, basename)
 
 		if err := os.Rename(old, new); err != nil {
-			if errs := tryRollback(); len(errs) > 0  {
+			if errs := tryRollback(); len(errs) > 0 {
 				// currently just log the rollback errors
 				// in the future we may require go 1.20+ to use errors.Join()
 				log.Println(errs)

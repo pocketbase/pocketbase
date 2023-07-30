@@ -73,7 +73,6 @@ func TestBindBody(t *testing.T) {
 		rawBody, err := json.Marshal(data)
 		if err != nil {
 			t.Errorf("[%d] Failed to marshal binded body: %v", i, err)
-
 		}
 
 		if scenario.expectBody != string(rawBody) {

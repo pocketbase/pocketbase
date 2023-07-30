@@ -427,7 +427,6 @@ func TestBackupsDelete(t *testing.T) {
 
 				// mock active backup with the same name to delete
 				app.Cache().Set(core.CacheKeyActiveBackup, "test1.zip")
-
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				noTestBackupFilesChanges(t, app)

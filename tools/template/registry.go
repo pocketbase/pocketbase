@@ -1,10 +1,11 @@
-// Package template is a thin wrapper arround the standard html/template
+// Package template is a thin wrapper around the standard html/template
 // and text/template packages that implements a convenient registry to
 // load and cache templates on the fly concurrently.
 //
 // It was created to assist the JSVM plugin HTML rendering, but could be used in other Go code.
 //
 // Example:
+//
 // 	registry := template.NewRegistry()
 //
 // 	html1, err := registry.LoadFiles(

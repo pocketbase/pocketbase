@@ -150,14 +150,8 @@ func TestSend(t *testing.T) {
 
 	received := []string{}
 	go func() {
-		for {
-			select {
-			case m, ok := <-c.Channel():
-				if !ok {
-					return
-				}
-				received = append(received, m.Name)
-			}
+		for m := range c.Channel() {
+			received = append(received, m.Name)
 		}
 	}()
 
