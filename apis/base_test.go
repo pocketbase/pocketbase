@@ -298,7 +298,6 @@ func TestEagerRequestInfoCache(t *testing.T) {
 
 						// try to read the body again
 						r := apis.RequestInfo(c)
-						fmt.Println(r)
 						if v := cast.ToString(r.Data["name"]); v != "test123" {
 							t.Fatalf("Expected request data with name %q, got, %q", "test123", v)
 						}

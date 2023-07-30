@@ -4,9 +4,9 @@
   _If you find any typos or issues with the docs please report them in https://github.com/pocketbase/site._
 
 - Added new experimental JavaScript app hooks binding via [goja](https://github.com/dop251/goja).
-  They are available by default with the prebuilt executable if you create a `*.pb.js` file in `pb_hooks` directory.
-  Lower your expectations because the integration comes with some limitations. For more details please check [Extend with JavaScript](https://pocketbase.io/docs/js-overview/) guide.
-  You can also enable the JS app hooks as part of a custom Go build for dynamic scripting but you need to register the `jsvm` plugin manually:
+  They are available by default with the prebuilt executable if you create `*.pb.js` file(s) in the `pb_hooks` directory.
+  Lower your expectations because the integration comes with some limitations. For more details please check the [Extend with JavaScript](https://pocketbase.io/docs/js-overview/) guide.
+  Optionally, you can also enable the JS app hooks as part of a custom Go build for dynamic scripting but you need to register the `jsvm` plugin manually:
   ```go
   jsvm.MustRegister(app core.App, config jsvm.Config{})
   ```
@@ -69,8 +69,8 @@
   old: core.NewBaseApp(config *core.BaseAppConfig) *core.BaseApp
   new: core.NewBaseApp(config core.BaseAppConfig) *core.BaseApp
 
-  old: apis.Serve(app core.App, options *apis.ServeOptions) (*http.Server, error)
-  new: apis.Serve(app core.App, config apis.ServeConfig) error
+  old: apis.Serve(app core.App, options *apis.ServeOptions) error
+  new: apis.Serve(app core.App, config apis.ServeConfig) (*http.Server, error)
 
   old: jsvm.MustRegisterMigrations(app core.App, options *jsvm.MigrationsOptions)
   new: jsvm.MustRegister(app core.App, config jsvm.Config)
@@ -87,7 +87,6 @@
 - ⚠️ Renamed `models.RequestData` to `models.RequestInfo` and soft-deprecated `apis.RequestData(c)` in favor of `apis.RequestInfo(c)` to avoid the stuttering with the `Data` field.
   _The old `apis.RequestData()` method still works to minimize the breaking changes but it is recommended to replace it with `apis.RequestInfo(c)`._
 
-
 - ⚠️ Changes to the List/Search APIs
     - Added new query parameter `?skipTotal=1` to skip the `COUNT` query performed with the list/search actions ([#2965](https://github.com/pocketbase/pocketbase/discussions/2965)).
       If `?skipTotal=1` is set, the response fields `totalItems` and `totalPages` will have `-1` value (this is to avoid having different JSON responses and to differentiate from the zero default).
@@ -101,7 +100,7 @@
       _There are still scenarios where `COUNT` queries with `rowid` executes faster, but the majority of the time when nested relations lookups are used it seems to have the opposite effect (at least based on the benchmarks dataset)._
 
 - ⚠️ Disallowed relations to views **from non-view** collections ([#3000](https://github.com/pocketbase/pocketbase/issues/3000)).
-  The change was necessary because I wasn't able to find an efficient way to track view changes and the existing behavior could have too many unexpected side-effects (eg. view with computed ids).
+  The change was necessary because I wasn't able to find an efficient way to track view changes and the previous behavior could have too many unexpected side-effects (eg. view with computed ids).
   There is a system migration that will convert the existing view `relation` fields to `json` (multiple) and `text` (single) fields.
   This could be a breaking change if you have `relation` to view and use `expand` or some of the `relation` view fields as part of a collection rule.
 
