@@ -59,7 +59,7 @@
 - `Hook.Add()` and `Hook.PreAdd` now returns a unique string identifier that could be used to remove the registered hook handler via `Hook.Remove(handlerId)`.
 
 - Changed the after* hooks to be called right before writing the user response, allowing users to return response errors from the after hooks.
-  There is also no longer need for returning explicitly `hook.StopPropagtion` when writing custom response body in a hook because.
+  There is also no longer need for returning explicitly `hook.StopPropagtion` when writing custom response body in a hook because we will skip the finalizer response body write if a response was already "committed".
 
 - ⚠️ Renamed `*Options{}` to `Config{}` for consistency and replaced the unnecessary pointers with their value equivalent to keep the applied configuration defaults isolated within their function calls:
   ```go
