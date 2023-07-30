@@ -57,11 +57,7 @@ declare function cronAdd(
  *
  * @group PocketBase
  */
-declare function cronAdd(
-  jobId:    string,
-  cronExpr: string,
-  handler:  () => void,
-): void;
+declare function cronRemove(jobId: string): void;
 
 // -------------------------------------------------------------------
 // routerBinds
