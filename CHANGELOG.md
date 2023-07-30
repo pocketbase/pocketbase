@@ -48,7 +48,7 @@
 
 - Added support for wrapped API errors (_in case Go 1.20+ is used with multiple wrapped errors, the first `apis.ApiError` takes precedence_).
 
-- Added `?download=1` file query parameter option to force the browser to always download the file and not show its preview.
+- Added `?download=1` file query parameter to the file serving endpoint to force the browser to always download the file and not show its preview.
 
 - Added new utility `github.com/pocketbase/pocketbase/tools/template` subpackage to assist with rendering HTML templates using the standard Go `html/template` and `text/template` syntax.
 
