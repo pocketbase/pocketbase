@@ -491,19 +491,19 @@ func TestProviderParseAndExec(t *testing.T) {
 			"page > existing",
 			"page=3&perPage=9999",
 			false,
-			`{"page":3,"perPage":1000,"totalItems":2,"totalPages":1,"items":[]}`,
+			`{"page":3,"perPage":500,"totalItems":2,"totalPages":1,"items":[]}`,
 		},
 		{
 			"valid query params",
 			"page=1&perPage=9999&filter=test1>1&sort=-test2,test3",
 			false,
-			`{"page":1,"perPage":1000,"totalItems":1,"totalPages":1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
+			`{"page":1,"perPage":500,"totalItems":1,"totalPages":1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
 		},
 		{
 			"valid query params with skipTotal=1",
 			"page=1&perPage=9999&filter=test1>1&sort=-test2,test3&skipTotal=1",
 			false,
-			`{"page":1,"perPage":1000,"totalItems":-1,"totalPages":-1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
+			`{"page":1,"perPage":500,"totalItems":-1,"totalPages":-1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
 		},
 	}
 

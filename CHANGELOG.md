@@ -95,8 +95,6 @@
 
 - Changes to the List/Search APIs
 
-  - Increased the max allowed `?perPage` limit to 1000.
-
   - Reverted the default `COUNT` column to `id` as there are some common situations where it can negatively impact the query performance.
     Additionally, from this version we also set `PRAGMA temp_store = MEMORY` so that also helps with the temp B-TREE creation when `id` is used.
     _There are still scenarios where `COUNT` queries with `rowid` executes faster, but the majority of the time when nested relations lookups are used it seems to have the opposite effect (at least based on the benchmarks dataset)._
