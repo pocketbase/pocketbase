@@ -13,6 +13,7 @@ import (
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
+	"github.com/pocketbase/pocketbase/core"
 )
 
 // ApiScenario defines a single api request test case/scenario.
@@ -55,6 +56,8 @@ func (scenario *ApiScenario) test(t *testing.T) {
 	var testApp *TestApp
 	var testAppErr error
 	if scenario.TestAppFactory != nil {
+		// @todo consider passing the testing instance to the factory and maybe remove the error from the declaration
+		// (see https://github.com/pocketbase/pocketbase/discussions/3025)
 		testApp, testAppErr = scenario.TestAppFactory()
 	} else {
 		testApp, testAppErr = NewTestApp()
@@ -68,6 +71,12 @@ func (scenario *ApiScenario) test(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	// manually trigger the serve event to ensure that custom app routes and middlewares are registered
+	testApp.OnBeforeServe().Trigger(&core.ServeEvent{
+		App:    testApp,
+		Router: e,
+	})
 
 	if scenario.BeforeTestFunc != nil {
 		scenario.BeforeTestFunc(t, testApp, e)
