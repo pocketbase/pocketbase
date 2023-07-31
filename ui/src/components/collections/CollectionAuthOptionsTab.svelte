@@ -181,7 +181,7 @@
         {#if collection.options.allowOAuth2Auth}
             <div class="block" transition:slide|local={{ duration: 150 }}>
                 <div class="flex p-t-base">
-                    <a href="/_/#/settings/auth-providers" target="_blank" class="btn btn-sm btn-outline">
+                    <a href="#/settings/auth-providers" target="_blank" class="btn btn-sm btn-outline">
                         <span class="txt">Manage OAuth2 providers</span>
                     </a>
                 </div>
