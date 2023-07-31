@@ -6,6 +6,8 @@
 
 - Trigger the JSVM `cronAdd()` handler only on app `serve` to prevent unexpected (and eventually duplicated) cron handler calls when custom console commands are used ([#3024](https://github.com/pocketbase/pocketbase/discussions/3024#discussioncomment-6592703)).
 
+- The `console.log()` messages are now written to the `stdout` instead of `stderr`.
+
 
 ## v0.17.0
 
