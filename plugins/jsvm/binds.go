@@ -105,6 +105,8 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 	scheduler := cron.New()
 
+	var hasServeInited bool
+
 	loader.Set("cronAdd", func(jobId, cronExpr, handler string) {
 		pr := goja.MustCompile("", "{("+handler+").apply(undefined)}", true)
 
@@ -119,7 +121,7 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		}
 
 		// start the ticker (if not already)
-		if app.IsBootstrapped() && scheduler.Total() > 0 && !scheduler.HasStarted() {
+		if hasServeInited && scheduler.Total() > 0 && !scheduler.HasStarted() {
 			scheduler.Start()
 		}
 	})
@@ -133,11 +135,13 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		}
 	})
 
-	app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
+	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		// start the ticker (if not already)
 		if scheduler.Total() > 0 && !scheduler.HasStarted() {
 			scheduler.Start()
 		}
+
+		hasServeInited = true
 
 		return nil
 	})
