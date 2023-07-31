@@ -50,7 +50,7 @@
             {#if hasUsernameErrors}
                 <i
                     class="ri-error-warning-fill txt-danger"
-                    transition:scale={{ duration: 150, start: 0.7 }}
+                    transition:scale|local={{ duration: 150, start: 0.7 }}
                     use:tooltip={{ text: "Has errors", position: "left" }}
                 />
             {/if}
@@ -80,7 +80,7 @@
             {#if hasEmailErrors}
                 <i
                     class="ri-error-warning-fill txt-danger"
-                    transition:scale={{ duration: 150, start: 0.7 }}
+                    transition:scale|local={{ duration: 150, start: 0.7 }}
                     use:tooltip={{ text: "Has errors", position: "left" }}
                 />
             {/if}
@@ -167,7 +167,7 @@
             {#if hasOAuth2Errors}
                 <i
                     class="ri-error-warning-fill txt-danger"
-                    transition:scale={{ duration: 150, start: 0.7 }}
+                    transition:scale|local={{ duration: 150, start: 0.7 }}
                     use:tooltip={{ text: "Has errors", position: "left" }}
                 />
             {/if}
@@ -181,7 +181,7 @@
         {#if collection.options.allowOAuth2Auth}
             <div class="block" transition:slide|local={{ duration: 150 }}>
                 <div class="flex p-t-base">
-                    <a href="/_/#/settings/auth-providers" target="_blank" class="btn btn-sm btn-outline">
+                    <a href="#/settings/auth-providers" target="_blank" class="btn btn-sm btn-outline">
                         <span class="txt">Manage OAuth2 providers</span>
                     </a>
                 </div>

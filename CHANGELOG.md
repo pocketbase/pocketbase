@@ -1,3 +1,10 @@
+## v0.17.1
+
+- Manually trigger the `OnBeforeServe` hook for `tests.ApiScenario` ([#3025](https://github.com/pocketbase/pocketbase/discussions/3025)).
+
+- Use relative path when redirecting to the OAuth2 providers page in the Admin UI to support subpath deployments ([#3026](https://github.com/pocketbase/pocketbase/pull/3026); thanks @sonyarianto).
+
+
 ## v0.17.0
 
 - New more detailed guides for using PocketBase as framework (both Go and JS).
