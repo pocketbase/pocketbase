@@ -4,6 +4,8 @@
   to allow sending non-JSON body with the request ([#3058](https://github.com/pocketbase/pocketbase/discussions/3058)).
   The existing `data` prop will still work, but it will be recommended to use `body` instead (_to send JSON you can use `JSON.stringify(...)` as body value_).
 
+- Added `core.RealtimeConnectEvent.IdleTimeout` field to allow specifying a different realtime idle timeout duration per client basis ([#3054](https://github.com/pocketbase/pocketbase/discussions/3054)).
+
 
 ## v0.17.1
 

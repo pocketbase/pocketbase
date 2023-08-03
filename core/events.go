@@ -2,6 +2,7 @@ package core
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/daos"
@@ -121,6 +122,7 @@ type MailerAdminEvent struct {
 type RealtimeConnectEvent struct {
 	HttpContext echo.Context
 	Client      subscriptions.Client
+	IdleTimeout time.Duration
 }
 
 type RealtimeDisconnectEvent struct {

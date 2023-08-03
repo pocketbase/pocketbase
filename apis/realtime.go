@@ -66,6 +66,7 @@ func (api *realtimeApi) connect(c echo.Context) error {
 	connectEvent := &core.RealtimeConnectEvent{
 		HttpContext: c,
 		Client:      client,
+		IdleTimeout: 5 * time.Minute,
 	}
 
 	if err := api.app.OnRealtimeConnectRequest().Trigger(connectEvent); err != nil {
@@ -103,8 +104,8 @@ func (api *realtimeApi) connect(c echo.Context) error {
 	}
 
 	// start an idle timer to keep track of inactive/forgotten connections
-	idleDuration := 5 * time.Minute
-	idleTimer := time.NewTimer(idleDuration)
+	idleTimeout := connectEvent.IdleTimeout
+	idleTimer := time.NewTimer(idleTimeout)
 	defer idleTimer.Stop()
 
 	for {
@@ -143,7 +144,7 @@ func (api *realtimeApi) connect(c echo.Context) error {
 			}
 
 			idleTimer.Stop()
-			idleTimer.Reset(idleDuration)
+			idleTimer.Reset(idleTimeout)
 		case <-c.Request().Context().Done():
 			// connection is closed
 			if api.app.IsDebug() {
