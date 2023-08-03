@@ -578,9 +578,10 @@ func httpClientBinds(vm *goja.Runtime) {
 	type sendConfig struct {
 		Method  string
 		Url     string
-		Data    map[string]any
+		Body    string
 		Headers map[string]string
-		Timeout int // seconds (default to 120)
+		Timeout int            // seconds (default to 120)
+		Data    map[string]any // deprecated, consider using Body instead
 	}
 
 	obj.Set("send", func(params map[string]any) (*sendResult, error) {
@@ -604,12 +605,18 @@ func httpClientBinds(vm *goja.Runtime) {
 		defer cancel()
 
 		var reqBody io.Reader
+
+		// legacy json body data
 		if len(config.Data) != 0 {
 			encoded, err := json.Marshal(config.Data)
 			if err != nil {
 				return nil, err
 			}
 			reqBody = bytes.NewReader(encoded)
+		}
+
+		if config.Body != "" {
+			reqBody = strings.NewReader(config.Body)
 		}
 
 		req, err := http.NewRequestWithContext(ctx, strings.ToUpper(config.Method), config.Url, reqBody)

@@ -863,11 +863,14 @@ declare namespace $http {
    * ` + "```" + `
    */
   function send(config: {
-    url:     string,
+    url:      string,
+    body?:    string,
     method?:  string, // default to "GET"
-    data?:    { [key:string]: any },
     headers?: { [key:string]: string },
-    timeout?: number // default to 120
+    timeout?: number, // default to 120
+
+    // deprecated, please use body instead
+    data?: { [key:string]: any },
   }): {
     statusCode: number
     raw:        string

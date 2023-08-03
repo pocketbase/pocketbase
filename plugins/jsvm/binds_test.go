@@ -921,8 +921,6 @@ func TestHttpClientBindsSend(t *testing.T) {
 
 		bodyRaw, _ := io.ReadAll(req.Body)
 		defer req.Body.Close()
-		body := map[string]any{}
-		json.Unmarshal(bodyRaw, &body)
 
 		// normalize headers
 		headers := make(map[string]string, len(req.Header))
@@ -935,7 +933,7 @@ func TestHttpClientBindsSend(t *testing.T) {
 		info := map[string]any{
 			"method":  req.Method,
 			"headers": headers,
-			"body":    body,
+			"body":    string(bodyRaw),
 		}
 
 		infoRaw, _ := json.Marshal(info)
@@ -992,8 +990,8 @@ func TestHttpClientBindsSend(t *testing.T) {
 		const test1 = $http.send({
 			method:  "post",
 			url:     testUrl,
-			data:    {"data": "example"},
 			headers: {"header1": "123", "header2": "456"},
+			body:    '789',
 		})
 
 		// with custom content-type header
@@ -1012,6 +1010,7 @@ func TestHttpClientBindsSend(t *testing.T) {
 				"json.headers.header1":      "123",
 				"json.headers.header2":      "456",
 				"json.headers.content_type": "application/json", // default
+				"json.body":                 "789",
 			}],
 			[test2, {
 				"statusCode":                "200",
