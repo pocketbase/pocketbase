@@ -21,7 +21,7 @@ const ContextRequestInfoKey = "requestInfo"
 
 // Deprecated: Use RequestInfo instead.
 func RequestData(c echo.Context) *models.RequestInfo {
-	log.Println("RequestInfo(c) is depracated and will be removed in the future! You can replace it with RequestInfo(c).")
+	log.Println("RequestData(c) is deprecated and will be removed in the future! You can replace it with RequestInfo(c).")
 	return RequestInfo(c)
 }
 
