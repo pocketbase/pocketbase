@@ -6,6 +6,8 @@
 
 - Added `core.RealtimeConnectEvent.IdleTimeout` field to allow specifying a different realtime idle timeout duration per client basis ([#3054](https://github.com/pocketbase/pocketbase/discussions/3054)).
 
+- Fixed `apis.RequestData` deprecation log note ([#3068](https://github.com/pocketbase/pocketbase/pull/3068); thanks @gungjodi).
+
 
 ## v0.17.1
 
