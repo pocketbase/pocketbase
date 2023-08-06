@@ -1,3 +1,8 @@
+## v0.17.3-WIP
+
+- Always reserve space for the scrollbar to reduce the layout shifts in the Admin UI table records listing due to the deprecated `overflow: overlay`.
+
+
 ## v0.17.2
 
 - Soft-deprecated `$http.send({ data: object, ... })` in favour of `$http.send({ body: rawString, ... })`

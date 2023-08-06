@@ -342,8 +342,8 @@
     flex-grow: 1;
     width: 100%;
     overflow-x: hidden;
-    overflow-y: auto; // fallback
-    overflow-y: overlay;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
     scroll-behavior: smooth;
     .overlay-active & {
         overflow-y: hidden; // prevent double scrollbar
