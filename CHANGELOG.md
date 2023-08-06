@@ -1,6 +1,8 @@
 ## v0.17.3-WIP
 
-- Always reserve space for the scrollbar to reduce the layout shifts in the Admin UI table records listing due to the deprecated `overflow: overlay`.
+- Always reserve space for the scrollbar to reduce the layout shifts in the Admin UI records listing due to the deprecated `overflow: overlay`.
+
+- Enabled lazy loading for the Admin UI thumb images.
 
 
 ## v0.17.2
