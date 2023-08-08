@@ -1,10 +1,12 @@
-## v0.17.3-WIP
+## v0.17.3
+
+- Fixed Docker `cross-device link` error when creating `pb_data` backups on a local mounted volume ([#3089](https://github.com/pocketbase/pocketbase/issues/3089)).
+
+- Fixed the error messages for relation to views ([#3090](https://github.com/pocketbase/pocketbase/issues/3090)).
 
 - Always reserve space for the scrollbar to reduce the layout shifts in the Admin UI records listing due to the deprecated `overflow: overlay`.
 
 - Enabled lazy loading for the Admin UI thumb images.
-
-- Fixed the error messages for relation to views ([#3090](https://github.com/pocketbase/pocketbase/issues/3090)).
 
 
 ## v0.17.2

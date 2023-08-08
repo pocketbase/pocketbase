@@ -57,16 +57,21 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 	app.Cache().Set(CacheKeyActiveBackup, name)
 	defer app.Cache().Remove(CacheKeyActiveBackup)
 
+	// make sure that the special temp directory exists
+	// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
+	localTempDir := filepath.Join(app.DataDir(), LocalTempDirName)
+	if err := os.MkdirAll(localTempDir, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create a temp dir: %w", err)
+	}
+
 	// Archive pb_data in a temp directory, exluding the "backups" dir itself (if exist).
 	//
 	// Run in transaction to temporary block other writes (transactions uses the NonconcurrentDB connection).
 	// ---
-	tempPath := filepath.Join(os.TempDir(), "pb_backup_"+security.PseudorandomString(4))
+	tempPath := filepath.Join(localTempDir, "pb_backup_"+security.PseudorandomString(4))
 	createErr := app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
-		if err := archive.Create(app.DataDir(), tempPath, LocalBackupsDirName); err != nil {
-			return err
-		}
-		return nil
+		// @todo consider experimenting with temp switching the readonly pragma after the db interface change
+		return archive.Create(app.DataDir(), tempPath, LocalBackupsDirName)
 	})
 	if createErr != nil {
 		return createErr
@@ -152,7 +157,15 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 	}
 	defer br.Close()
 
-	tempZip, err := os.CreateTemp(os.TempDir(), "pb_restore")
+	// make sure that the special temp directory exists
+	// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
+	localTempDir := filepath.Join(app.DataDir(), LocalTempDirName)
+	if err := os.MkdirAll(localTempDir, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create a temp dir: %w", err)
+	}
+
+	// create a temp zip file from the blob.Reader and try to extract it
+	tempZip, err := os.CreateTemp(localTempDir, "pb_restore_zip")
 	if err != nil {
 		return err
 	}
@@ -162,13 +175,7 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 		return err
 	}
 
-	// make sure that the special temp directory
-	if err := os.MkdirAll(filepath.Join(app.DataDir(), LocalTempDirName), os.ModePerm); err != nil {
-		return fmt.Errorf("failed to create a temp dir: %w", err)
-	}
-
-	// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
-	extractedDataDir := filepath.Join(app.DataDir(), LocalTempDirName, "pb_restore_"+security.PseudorandomString(4))
+	extractedDataDir := filepath.Join(localTempDir, "pb_restore_"+security.PseudorandomString(4))
 	defer os.RemoveAll(extractedDataDir)
 	if err := archive.Extract(tempZip.Name(), extractedDataDir); err != nil {
 		return err
@@ -192,7 +199,7 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 	// move the current pb_data content to a special temp location
 	// that will hold the old data between dirs replace
 	// (the temp dir will be automatically removed on the next app start)
-	oldTempDataDir := filepath.Join(app.DataDir(), LocalTempDirName, "old_pb_data_"+security.PseudorandomString(4))
+	oldTempDataDir := filepath.Join(localTempDir, "old_pb_data_"+security.PseudorandomString(4))
 	if err := osutils.MoveDirContent(app.DataDir(), oldTempDataDir, exclude...); err != nil {
 		return fmt.Errorf("failed to move the current pb_data content to a temp location: %w", err)
 	}
