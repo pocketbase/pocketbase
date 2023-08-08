@@ -4,6 +4,8 @@
 
 - Enabled lazy loading for the Admin UI thumb images.
 
+- Fixed the error messages for relation to views ([#3090](https://github.com/pocketbase/pocketbase/issues/3090)).
+
 
 ## v0.17.2
 

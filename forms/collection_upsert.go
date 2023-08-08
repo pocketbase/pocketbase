@@ -289,7 +289,7 @@ func (form *CollectionUpsert) checkRelationFields(value any) error {
 				"options": validation.Errors{
 					"collectionId": validation.NewError(
 						"validation_field_non_view_base_relation_collection",
-						"Non view collections are now allowed to have a view relation.",
+						"Non view collections are not allowed to have a view relation.",
 					),
 				}},
 			}
