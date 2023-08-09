@@ -127,7 +127,7 @@ func Register(app core.App, config Config) error {
 	})
 
 	if err := p.registerMigrations(); err != nil {
-		return fmt.Errorf("registerHooks: %w", err)
+		return fmt.Errorf("registerMigrations: %w", err)
 	}
 
 	if err := p.registerHooks(); err != nil {
