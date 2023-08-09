@@ -287,8 +287,10 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			err := next(c)
 
+			logsMaxDays := app.Settings().Logs.MaxDays
+
 			// no logs retention
-			if app.Settings().Logs.MaxDays == 0 {
+			if logsMaxDays == 0 {
 				return err
 			}
 
@@ -348,8 +350,8 @@ func ActivityLogger(app core.App) echo.MiddlewareFunc {
 				lastLogsDeletedAt := cast.ToTime(app.Cache().Get("lastLogsDeletedAt"))
 				daysDiff := now.Sub(lastLogsDeletedAt).Hours() * 24
 
-				if daysDiff > float64(app.Settings().Logs.MaxDays) {
-					deleteErr := app.LogsDao().DeleteOldRequests(now.AddDate(0, 0, -1*app.Settings().Logs.MaxDays))
+				if daysDiff > float64(logsMaxDays) {
+					deleteErr := app.LogsDao().DeleteOldRequests(now.AddDate(0, 0, -1*logsMaxDays))
 					if deleteErr == nil {
 						app.Cache().Set("lastLogsDeletedAt", now)
 					} else if app.IsDebug() {
