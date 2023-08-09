@@ -1,4 +1,4 @@
-import{S as re,i as ae,s as be,M as pe,C as P,e as p,w as y,b as a,c as te,f as u,g as t,h as I,m as ne,x as ue,t as ie,a as ce,o as n,d as le,T as me,p as de}from"./index-196ab9eb.js";import{S as fe}from"./SdkTabs-c435d4d9.js";function $e(s){var B,U,W,T,A,H,L,M,q,j,J,N;let i,m,c=s[0].name+"",b,d,h,f,_,$,k,l,S,v,w,R,C,g,E,r,D;return l=new fe({props:{js:`
+import{S as re,i as ae,s as be,M as pe,C as P,e as p,w as y,b as a,c as te,f as u,g as t,h as I,m as ne,x as ue,t as ie,a as ce,o as n,d as le,T as me,p as de}from"./index-18c37dd5.js";import{S as fe}from"./SdkTabs-dec7472f.js";function $e(s){var B,U,W,T,A,H,L,M,q,j,J,N;let i,m,c=s[0].name+"",b,d,h,f,_,$,k,l,S,v,w,R,C,g,E,r,D;return l=new fe({props:{js:`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${s[1]}');

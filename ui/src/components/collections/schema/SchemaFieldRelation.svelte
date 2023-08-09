@@ -6,7 +6,7 @@
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
-    import { collections, activeCollection } from "@/stores/collections";
+    import { collections } from "@/stores/collections";
 
     export let field;
     export let key = "";
@@ -200,14 +200,14 @@
                 <Field class="form-field" name="schema.{key}.options.cascadeDelete" let:uniqueId>
                     <label for={uniqueId}>
                         <span class="txt">Cascade delete</span>
+                        <!-- prettier-ignore -->
                         <i
                             class="ri-information-line link-hint"
                             use:tooltip={{
-                                text: `Whether on ${
-                                    selectedColection?.name || "relation"
-                                } record deletion to delete also the ${
-                                    $activeCollection?.name || "field"
-                                } associated records.`,
+                                text: [
+                                    `Whether on ${selectedColection?.name || "relation"} record deletion to delete also the corresponding current collection record(s).`,
+                                    !isSingle ? `For "Multiple" relation fields the cascade delete is triggered only when all ${selectedColection?.name || "relation"} ids are removed from the corresponding record.` : null
+                                ].filter(Boolean).join("\n\n"),
                                 position: "top",
                             }}
                         />
