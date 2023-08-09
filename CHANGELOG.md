@@ -1,3 +1,8 @@
+## v0.17.4-WIP
+
+- Fixed `relation` "Cascade delete" tooltip message ([#3098](https://github.com/pocketbase/pocketbase/issues/3098)).
+
+
 ## v0.17.3
 
 - Fixed Docker `cross-device link` error when creating `pb_data` backups on a local mounted volume ([#3089](https://github.com/pocketbase/pocketbase/issues/3089)).
