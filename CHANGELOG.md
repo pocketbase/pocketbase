@@ -2,7 +2,7 @@
 
 - Fixed `relation` "Cascade delete" tooltip message ([#3098](https://github.com/pocketbase/pocketbase/issues/3098)).
 
-- Fixed jsvm error message prefix on failed migrations ([#3103]https://github.com/pocketbase/pocketbase/pull/3103).
+- Fixed jsvm error message prefix on failed migrations ([#3103](https://github.com/pocketbase/pocketbase/pull/3103); thanks @nzhenev).
 
 - Disabled the initial Admin UI admins counter cache when there are no initial admins to allow detecting externally created accounts (eg. with the `admin` command) ([#3106](https://github.com/pocketbase/pocketbase/issues/3106)).
 
