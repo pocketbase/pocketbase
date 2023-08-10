@@ -21,7 +21,7 @@ require (
 	github.com/pocketbase/tygoja v0.0.0-20230618203136-2f8d57768be1
 	github.com/spf13/cast v1.5.1
 	github.com/spf13/cobra v1.7.0
-	gocloud.dev v0.33.0
+	gocloud.dev v0.32.0
 	golang.org/x/crypto v0.12.0
 	golang.org/x/net v0.14.0
 	golang.org/x/oauth2 v0.11.0
