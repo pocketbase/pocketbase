@@ -207,15 +207,15 @@ func uiCacheControl() echo.MiddlewareFunc {
 	}
 }
 
-const totalAdminsCacheKey = "@totalAdmins"
+const hasAdminsCacheKey = "@hasAdmins"
 
-func updateTotalAdminsCache(app core.App) error {
+func updateHasAdminsCache(app core.App) error {
 	total, err := app.Dao().TotalAdmins()
 	if err != nil {
 		return err
 	}
 
-	app.Cache().Set(totalAdminsCacheKey, total)
+	app.Cache().Set(hasAdminsCacheKey, total > 0)
 
 	return nil
 }
@@ -223,12 +223,13 @@ func updateTotalAdminsCache(app core.App) error {
 // installerRedirect redirects the user to the installer admin UI page
 // when the application needs some preliminary configurations to be done.
 func installerRedirect(app core.App) echo.MiddlewareFunc {
-	// keep totalAdminsCacheKey value up-to-date
+	// keep hasAdminsCacheKey value up-to-date
 	app.OnAdminAfterCreateRequest().Add(func(data *core.AdminCreateEvent) error {
-		return updateTotalAdminsCache(app)
+		return updateHasAdminsCache(app)
 	})
+
 	app.OnAdminAfterDeleteRequest().Add(func(data *core.AdminDeleteEvent) error {
-		return updateTotalAdminsCache(app)
+		return updateHasAdminsCache(app)
 	})
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -239,23 +240,24 @@ func installerRedirect(app core.App) echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			// load into cache (if not already)
-			if !app.Cache().Has(totalAdminsCacheKey) {
-				if err := updateTotalAdminsCache(app); err != nil {
+			hasAdmins := cast.ToBool(app.Cache().Get(hasAdminsCacheKey))
+
+			if !hasAdmins {
+				// update the cache to make sure that the admin wasn't created by another process
+				if err := updateHasAdminsCache(app); err != nil {
 					return err
 				}
+				hasAdmins = cast.ToBool(app.Cache().Get(hasAdminsCacheKey))
 			}
-
-			totalAdmins := cast.ToInt(app.Cache().Get(totalAdminsCacheKey))
 
 			_, hasInstallerParam := c.Request().URL.Query()["installer"]
 
-			if totalAdmins == 0 && !hasInstallerParam {
+			if !hasAdmins && !hasInstallerParam {
 				// redirect to the installer page
 				return c.Redirect(http.StatusTemporaryRedirect, "?installer#")
 			}
 
-			if totalAdmins != 0 && hasInstallerParam {
+			if hasAdmins && hasInstallerParam {
 				// clear the installer param
 				return c.Redirect(http.StatusTemporaryRedirect, "?")
 			}
