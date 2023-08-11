@@ -378,6 +378,12 @@ func (dao *Dao) saveViewCollection(newCollection, oldCollection *models.Collecti
 			}
 		}
 
+		// wrap view query if necessary
+		query, err = txDao.normalizeViewQueryId(query)
+		if err != nil {
+			return fmt.Errorf("failed to normalize view query id: %w", err)
+		}
+
 		// (re)create the view
 		if err := txDao.SaveView(newCollection.Name, query); err != nil {
 			return err
@@ -387,6 +393,52 @@ func (dao *Dao) saveViewCollection(newCollection, oldCollection *models.Collecti
 
 		return txDao.Save(newCollection)
 	})
+}
+
+// @todo consider removing once custom id types are supported
+//
+// normalizeViewQueryId wraps (if necessary) the provided view query
+// with a subselect to ensure that the id column is a text since
+// currently we don't support non-string model ids
+// (see https://github.com/pocketbase/pocketbase/issues/3110).
+func (dao *Dao) normalizeViewQueryId(query string) (string, error) {
+	parsed, err := dao.parseQueryToFields(query)
+	if err != nil {
+		return "", err
+	}
+
+	needWrapping := true
+
+	idField := parsed[schema.FieldNameId]
+	if idField != nil && idField.field != nil &&
+		idField.field.Type != schema.FieldTypeJson &&
+		idField.field.Type != schema.FieldTypeNumber &&
+		idField.field.Type != schema.FieldTypeBool {
+		needWrapping = false
+	}
+
+	if !needWrapping {
+		return query, nil // no changes needed
+	}
+
+	// raw parse to preserve the columns order
+	rawParsed := new(identifiersParser)
+	if err := rawParsed.parse(query); err != nil {
+		return "", err
+	}
+
+	columns := make([]string, 0, len(rawParsed.columns))
+	for _, col := range rawParsed.columns {
+		if col.alias == schema.FieldNameId {
+			columns = append(columns, fmt.Sprintf("cast(%s as text) %s", col.alias, col.alias))
+		} else {
+			columns = append(columns, col.alias)
+		}
+	}
+
+	query = fmt.Sprintf("SELECT %s FROM (%s)", strings.Join(columns, ","), query)
+
+	return query, nil
 }
 
 // resaveViewsWithChangedSchema updates all view collections with changed schemas.

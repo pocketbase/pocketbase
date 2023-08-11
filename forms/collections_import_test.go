@@ -38,7 +38,7 @@ func TestCollectionsImportValidate(t *testing.T) {
 }
 
 func TestCollectionsImportSubmit(t *testing.T) {
-	totalCollections := 10
+	totalCollections := 11
 
 	scenarios := []struct {
 		name                   string

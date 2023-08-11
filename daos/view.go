@@ -235,6 +235,8 @@ func defaultViewField(name string) *schema.SchemaField {
 	}
 }
 
+var castRegex = regexp.MustCompile(`(?i)^cast\s*\(.*\s+as\s+(\w+)\s*\)$`)
+
 func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, error) {
 	p := new(identifiersParser)
 	if err := p.parse(selectQuery); err != nil {
@@ -257,15 +259,8 @@ func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, 
 	for _, col := range p.columns {
 		colLower := strings.ToLower(col.original)
 
-		// numeric expression cast
-		if strings.Contains(colLower, "(") &&
-			(strings.HasPrefix(colLower, "count(") ||
-				strings.HasPrefix(colLower, "total(") ||
-				strings.Contains(colLower, " as numeric") ||
-				strings.Contains(colLower, " as real") ||
-				strings.Contains(colLower, " as int") ||
-				strings.Contains(colLower, " as integer") ||
-				strings.Contains(colLower, " as decimal")) {
+		// numeric aggregations
+		if strings.HasPrefix(colLower, "count(") || strings.HasPrefix(colLower, "total(") {
 			result[col.alias] = &queryField{
 				field: &schema.SchemaField{
 					Name: col.alias,
@@ -273,6 +268,38 @@ func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, 
 				},
 			}
 			continue
+		}
+
+		castMatch := castRegex.FindStringSubmatch(colLower)
+
+		// numeric casts
+		if len(castMatch) == 2 {
+			switch castMatch[1] {
+			case "real", "integer", "int", "decimal", "numeric":
+				result[col.alias] = &queryField{
+					field: &schema.SchemaField{
+						Name: col.alias,
+						Type: schema.FieldTypeNumber,
+					},
+				}
+				continue
+			case "text":
+				result[col.alias] = &queryField{
+					field: &schema.SchemaField{
+						Name: col.alias,
+						Type: schema.FieldTypeText,
+					},
+				}
+				continue
+			case "boolean", "bool":
+				result[col.alias] = &queryField{
+					field: &schema.SchemaField{
+						Name: col.alias,
+						Type: schema.FieldTypeBool,
+					},
+				}
+				continue
+			}
 		}
 
 		parts := strings.Split(col.original, ".")

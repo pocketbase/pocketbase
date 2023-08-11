@@ -210,11 +210,12 @@ func TestDeleteCollection(t *testing.T) {
 		{colUnsaved, true},
 		{colReferenced, true},
 		{colSystem, true},
+		{colBase, true},  // depend on view1, view2 and view2
 		{colView1, true}, // view2 depend on it
 		{colView2, false},
 		{colView1, false}, // no longer has dependent collections
-		{colBase, false},
-		{colAuth, false}, // should delete also its related external auths
+		{colBase, false},  // no longer has dependent views
+		{colAuth, false},  // should delete also its related external auths
 	}
 
 	for i, s := range scenarios {
@@ -393,8 +394,117 @@ func TestSaveCollectionIndirectViewsUpdate(t *testing.T) {
 	}
 }
 
+func TestSaveCollectionViewWrapping(t *testing.T) {
+	viewName := "test_wrapping"
+
+	scenarios := []struct {
+		name     string
+		query    string
+		expected string
+	}{
+		{
+			"no wrapping - text field",
+			"select text as id, bool from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select text as id, bool from demo1)",
+		},
+		{
+			"no wrapping - id field",
+			"select text as id, bool from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select text as id, bool from demo1)",
+		},
+		{
+			"no wrapping - relation field",
+			"select rel_one as id, bool from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select rel_one as id, bool from demo1)",
+		},
+		{
+			"no wrapping - select field",
+			"select select_many as id, bool from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select select_many as id, bool from demo1)",
+		},
+		{
+			"no wrapping - email field",
+			"select email as id, bool from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select email as id, bool from demo1)",
+		},
+		{
+			"no wrapping - datetime field",
+			"select datetime as id, bool from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select datetime as id, bool from demo1)",
+		},
+		{
+			"no wrapping - url field",
+			"select url as id, bool from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select url as id, bool from demo1)",
+		},
+		{
+			"wrapping - bool field",
+			"select bool as id, text as txt, url from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(id as text) id,txt,url FROM (select bool as id, text as txt, url from demo1))",
+		},
+		{
+			"wrapping - bool field (different order)",
+			"select text as txt, url, bool as id from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT txt,url,cast(id as text) id FROM (select text as txt, url, bool as id from demo1))",
+		},
+		{
+			"wrapping - json field",
+			"select json as id, text, url from demo1",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(id as text) id,text,url FROM (select json as id, text, url from demo1))",
+		},
+		{
+			"wrapping - numeric id",
+			"select 1 as id",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(id as text) id FROM (select 1 as id))",
+		},
+		{
+			"wrapping - expresion",
+			"select ('test') as id",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(id as text) id FROM (select ('test') as id))",
+		},
+		{
+			"no wrapping - cast as text",
+			"select cast('test' as text) as id",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select cast('test' as text) as id)",
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			app, _ := tests.NewTestApp()
+			defer app.Cleanup()
+
+			collection := &models.Collection{
+				Name: viewName,
+				Type: models.CollectionTypeView,
+				Options: types.JsonMap{
+					"query": s.query,
+				},
+			}
+
+			err := app.Dao().SaveCollection(collection)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var sql string
+
+			rowErr := app.Dao().DB().NewQuery("SELECT sql FROM sqlite_master WHERE type='view' AND name={:name}").
+				Bind(dbx.Params{"name": viewName}).
+				Row(&sql)
+			if rowErr != nil {
+				t.Fatalf("Failed to retrieve view sql: %v", rowErr)
+			}
+
+			if sql != s.expected {
+				t.Fatalf("Expected query \n%v, \ngot \n%v", s.expected, sql)
+			}
+		})
+	}
+}
+
 func TestImportCollections(t *testing.T) {
-	totalCollections := 10
+	totalCollections := 11
 
 	scenarios := []struct {
 		name                   string

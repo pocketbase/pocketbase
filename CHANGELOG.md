@@ -1,10 +1,15 @@
-## v0.17.4-WIP
+## v0.17.4
+
+- Fixed Views record retrieval when numeric id is used ([#3110](https://github.com/pocketbase/pocketbase/issues/3110)).
+  _With this fix we also now properly recognize `CAST(... as TEXT)` and `CAST(... as BOOLEAN)` as `text` and `bool` fields._
 
 - Fixed `relation` "Cascade delete" tooltip message ([#3098](https://github.com/pocketbase/pocketbase/issues/3098)).
 
 - Fixed jsvm error message prefix on failed migrations ([#3103](https://github.com/pocketbase/pocketbase/pull/3103); thanks @nzhenev).
 
 - Disabled the initial Admin UI admins counter cache when there are no initial admins to allow detecting externally created accounts (eg. with the `admin` command) ([#3106](https://github.com/pocketbase/pocketbase/issues/3106)).
+
+- Downgraded `google/go-cloud` dependency to v0.32.0 until v0.34.0 is released to prevent the `os.TempDir` `cross-device link` errors as too many users complained about it.
 
 
 ## v0.17.3

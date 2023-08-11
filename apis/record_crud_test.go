@@ -462,6 +462,22 @@ func TestRecordCrudList(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
 		},
+		{
+			Name:           "view collection with numeric ids",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/numeric_id_view/records",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":1`,
+				`"totalItems":2`,
+				`"items":[{`,
+				`"id":"1"`,
+				`"id":"2"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -728,6 +744,16 @@ func TestRecordCrudView(t *testing.T) {
 				`"id":"84nmscqy84lsi1t"`,
 				`"bool":true`,
 				`"text":"`,
+			},
+			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+		},
+		{
+			Name:           "view record with numeric id",
+			Method:         http.MethodGet,
+			Url:            "/api/collections/numeric_id_view/records/1",
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"1"`,
 			},
 			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
 		},

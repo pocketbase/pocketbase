@@ -330,7 +330,7 @@ func TestCreateViewSchema(t *testing.T) {
 			},
 		},
 		{
-			"query with numeric casts",
+			"query with casts",
 			`select
 				a.id,
 				count(a.id) count,
@@ -339,6 +339,9 @@ func TestCreateViewSchema(t *testing.T) {
 				cast(a.id as real) cast_real,
 				cast(a.id as decimal) cast_decimal,
 				cast(a.id as numeric) cast_numeric,
+				cast(a.id as text) cast_text,
+				cast(a.id as bool) cast_bool,
+				cast(a.id as boolean) cast_boolean,
 				avg(a.id) avg,
 				sum(a.id) sum,
 				total(a.id) total,
@@ -354,6 +357,9 @@ func TestCreateViewSchema(t *testing.T) {
 				"cast_real":    schema.FieldTypeNumber,
 				"cast_decimal": schema.FieldTypeNumber,
 				"cast_numeric": schema.FieldTypeNumber,
+				"cast_text":    schema.FieldTypeText,
+				"cast_bool":    schema.FieldTypeBool,
+				"cast_boolean": schema.FieldTypeBool,
 				// json because they are nullable
 				"sum": schema.FieldTypeJson,
 				"avg": schema.FieldTypeJson,

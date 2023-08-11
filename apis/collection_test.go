@@ -47,7 +47,7 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":1`,
 				`"perPage":30`,
-				`"totalItems":10`,
+				`"totalItems":11`,
 				`"items":[{`,
 				`"id":"_pb_users_auth_"`,
 				`"id":"v851q4r790rhknl"`,
@@ -57,6 +57,7 @@ func TestCollectionsList(t *testing.T) {
 				`"id":"wzlqyes4orhoygb"`,
 				`"id":"4d1blo5cuycfaca"`,
 				`"id":"9n89pl5vkct6330"`,
+				`"id":"ib3m2700k5hlsjz"`,
 				`"type":"auth"`,
 				`"type":"base"`,
 			},
@@ -75,9 +76,9 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"page":2`,
 				`"perPage":2`,
-				`"totalItems":10`,
+				`"totalItems":11`,
 				`"items":[{`,
-				`"id":"kpv709sk2lqbqk8"`,
+				`"id":"v9gwnfh02gjq1q0"`,
 				`"id":"9n89pl5vkct6330"`,
 			},
 			ExpectedEvents: map[string]int{
@@ -1164,7 +1165,7 @@ func TestCollectionUpdate(t *testing.T) {
 }
 
 func TestCollectionsImport(t *testing.T) {
-	totalCollections := 10
+	totalCollections := 11
 
 	scenarios := []tests.ApiScenario{
 		{
@@ -1421,8 +1422,8 @@ func TestCollectionsImport(t *testing.T) {
 			ExpectedEvents: map[string]int{
 				"OnCollectionsAfterImportRequest":  1,
 				"OnCollectionsBeforeImportRequest": 1,
-				"OnModelBeforeDelete":              8,
-				"OnModelAfterDelete":               8,
+				"OnModelBeforeDelete":              9,
+				"OnModelAfterDelete":               9,
 				"OnModelBeforeUpdate":              2,
 				"OnModelAfterUpdate":               2,
 				"OnModelBeforeCreate":              1,
