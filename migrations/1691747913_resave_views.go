@@ -20,7 +20,7 @@ func init() {
 		for _, collection := range collections {
 			// ignore errors to allow users to adjust
 			// the view queries after app start
-			dao.Save(collection)
+			dao.SaveCollection(collection)
 		}
 
 		return nil
