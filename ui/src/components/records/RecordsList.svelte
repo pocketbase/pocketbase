@@ -151,7 +151,7 @@
                 // optimize the records listing by rendering the rows in task batches
                 if (breakTasks) {
                     const currentYieldId = ++yieldedRecordsId;
-                    while (result.items.length) {
+                    while (result.items?.length) {
                         if (yieldedRecordsId != currentYieldId) {
                             break; // new yeild has been started
                         }
