@@ -1,5 +1,4 @@
 <script>
-    import { Collection, SchemaField } from "pocketbase";
     import { setErrors } from "@/stores/errors";
     import CommonHelper from "@/utils/CommonHelper";
     import IndexesList from "@/components/collections/IndexesList.svelte";
@@ -17,7 +16,7 @@
     import SchemaFieldRelation from "@/components/collections/schema/SchemaFieldRelation.svelte";
     import Draggable from "@/components/base/Draggable.svelte";
 
-    export let collection = new Collection();
+    export let collection;
 
     const fieldComponents = {
         text: SchemaFieldText,
@@ -34,7 +33,6 @@
     };
 
     $: if (typeof collection.schema === "undefined") {
-        collection = collection || new Collection();
         collection.schema = [];
     }
 
@@ -48,7 +46,7 @@
     }
 
     function newField(fieldType = "text") {
-        const field = new SchemaField({
+        const field = CommonHelper.initSchemaField({
             name: getUniqueFieldName(),
             type: fieldType,
         });
@@ -70,7 +68,7 @@
     }
 
     function hasFieldWithName(name) {
-        return !!collection.schema.find((field) => field.name === name);
+        return !!collection?.schema?.find((field) => field.name === name);
     }
 
     function getSchemaFieldIndex(field) {
@@ -95,7 +93,7 @@
         <code class="txt-sm">id</code> ,
         <code class="txt-sm">created</code> ,
         <code class="txt-sm">updated</code>
-        {#if collection.$isAuth}
+        {#if collection.type === "auth"}
             ,
             <code class="txt-sm">username</code> ,
             <code class="txt-sm">email</code> ,

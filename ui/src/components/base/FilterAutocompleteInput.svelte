@@ -268,7 +268,7 @@
         result.push("@request.auth.updated");
 
         // load auth collection fields
-        const authCollections = cachedCollections.filter((collection) => collection.$isAuth);
+        const authCollections = cachedCollections.filter((collection) => collection.type === "auth");
         for (const collection of authCollections) {
             const authKeys = getCollectionFieldKeys(collection.id, "@request.auth.");
             for (const k of authKeys) {

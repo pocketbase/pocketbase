@@ -72,7 +72,7 @@
             return;
         }
 
-        if (selectedColection.isAuth) {
+        if (selectedColection.type === "auth") {
             displayFieldsList = displayFieldsList.concat(authFields);
         }
 

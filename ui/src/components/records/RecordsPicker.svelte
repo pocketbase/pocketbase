@@ -40,6 +40,8 @@
         loadList(true); // reset list on filter change
     }
 
+    $: isView = collection?.type === "view";
+
     $: isLoading = isLoadingList || isLoadingSelected;
 
     $: canLoadMore = lastItemsCount == batchSize;
@@ -139,7 +141,7 @@
 
             const result = await ApiClient.collection(collectionId).getList(page, batchSize, {
                 filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
-                sort: !collection?.$isView ? "-created" : "",
+                sort: !isView ? "-created" : "",
                 skipTotal: 1,
                 $cancelKey: uniqueId + "loadList",
             });
@@ -208,7 +210,7 @@
             autocompleteCollection={collection}
             on:submit={(e) => (filter = e.detail)}
         />
-        {#if !collection?.$isView}
+        {#if !isView}
             <button
                 type="button"
                 class="btn btn-transparent btn-hint p-l-sm p-r-sm"
@@ -252,7 +254,7 @@
                 <div class="content">
                     <RecordInfo {record} {displayFields} />
                 </div>
-                {#if !collection?.$isView}
+                {#if !isView}
                     <div class="actions nonintrusive">
                         <button
                             type="button"

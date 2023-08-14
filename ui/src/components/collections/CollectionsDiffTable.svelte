@@ -1,9 +1,8 @@
 <script>
-    import { Collection } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
 
-    export let collectionA = new Collection();
-    export let collectionB = new Collection();
+    export let collectionA = CommonHelper.initCollection();
+    export let collectionB = CommonHelper.initCollection();
     export let deleteMissing = false;
     let schemaA = [];
     let schemaB = [];
@@ -39,7 +38,7 @@
 
     $: hasAnyChange = CommonHelper.hasCollectionChanges(collectionA, collectionB, deleteMissing);
 
-    const mainModelProps = Object.keys(new Collection().$export()).filter(
+    const mainModelProps = Object.keys(CommonHelper.initCollection()).filter(
         (key) => !["schema", "created", "updated"].includes(key)
     );
 

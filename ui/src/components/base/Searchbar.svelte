@@ -1,7 +1,6 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
     import { fly } from "svelte/transition";
-    import { Collection } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
 
     const dispatch = createEventDispatcher();
@@ -11,7 +10,7 @@
     export let placeholder = 'Search term or filter like created > "2022-01-01"...';
 
     // autocomplete filter component fields
-    export let autocompleteCollection = new Collection();
+    export let autocompleteCollection = CommonHelper.initCollection();
     export let extraAutocompleteKeys = [];
 
     let filterComponent;

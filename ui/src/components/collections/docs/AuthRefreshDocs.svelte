@@ -1,12 +1,11 @@
 <script>
-    import { Collection } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
     import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
-    export let collection = new Collection();
+    export let collection;
 
     let responseTab = 200;
     let responses = [];

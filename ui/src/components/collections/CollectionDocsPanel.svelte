@@ -1,5 +1,4 @@
 <script>
-    import { Collection } from "pocketbase";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
 
     const baseTabs = {
@@ -81,19 +80,19 @@
     };
 
     let docsPanel;
-    let collection = new Collection();
+    let collection = {};
     let activeTab;
     let tabs = [];
 
-    $: if (collection.$isAuth) {
+    $: if (collection.type === "auth") {
         tabs = Object.assign({}, baseTabs, authTabs);
-        if (!collection?.options.allowUsernameAuth && !collection?.options.allowEmailAuth) {
+        if (!collection.options.allowUsernameAuth && !collection.options.allowEmailAuth) {
             delete tabs["auth-with-password"];
         }
-        if (!collection?.options.allowOAuth2Auth) {
+        if (!collection.options.allowOAuth2Auth) {
             delete tabs["auth-with-oauth2"];
         }
-    } else if (collection.$isView) {
+    } else if (collection.type === "view") {
         tabs = Object.assign({}, baseTabs);
         delete tabs.create;
         delete tabs.update;
@@ -127,7 +126,7 @@
 
 <OverlayPanel bind:this={docsPanel} on:hide on:show class="docs-panel">
     <div class="docs-content-wrapper">
-        <aside class="docs-sidebar" class:compact={collection?.$isAuth}>
+        <aside class="docs-sidebar" class:compact={collection?.type === "auth"}>
             <nav class="sidebar-content">
                 {#each Object.entries(tabs) as [key, tab], i (key)}
                     <!-- add a separator before the first auth tab -->

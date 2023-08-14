@@ -1,16 +1,17 @@
 <script>
-    import { Collection } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
     import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
-    export let collection = new Collection();
+    export let collection;
 
     let responseTab = 200;
     let responses = [];
     let baseData = {};
+
+    $: isAuth = collection?.type === "auth";
 
     $: adminsOnly = collection?.updateRule === null;
 
@@ -58,7 +59,7 @@
         },
     ];
 
-    $: if (collection.$isAuth) {
+    $: if (collection.type === "auth") {
         baseData = {
             username: "test_username_update",
             emailVisibility: false,
@@ -159,7 +160,7 @@ final record = await pb.collection('${collection?.name}').update('RECORD_ID', bo
         </tr>
     </thead>
     <tbody>
-        {#if collection?.isAuth}
+        {#if isAuth}
             <tr>
                 <td colspan="3" class="txt-hint">Auth fields</td>
             </tr>

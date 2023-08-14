@@ -944,25 +944,28 @@ export default class CommonHelper {
     static dummyCollectionRecord(collection) {
         const fields = collection?.schema || [];
 
+        const isAuth = collection?.type === "auth";
+        const isView = collection?.type === "view";
+
         const dummy = {
             "id": "RECORD_ID",
             "collectionId": collection?.id,
             "collectionName": collection?.name,
         };
 
-        if (collection?.isAuth) {
+        if (isAuth) {
             dummy["username"] = "username123";
             dummy["verified"] = false;
             dummy["emailVisibility"] = true;
             dummy["email"] = "test@example.com";
         }
 
-        const hasCreated = !collection?.$isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("created");
+        const hasCreated = !isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("created");
         if (hasCreated) {
             dummy["created"] = "2022-01-01 01:00:00.123Z";
         }
 
-        const hasUpdated = !collection?.$isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("updated");
+        const hasUpdated = !isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("updated");
         if (hasUpdated) {
             dummy["updated"] = "2022-01-01 23:59:59.456Z";
         }
@@ -1542,11 +1545,11 @@ export default class CommonHelper {
 
         let result = [prefix + "id"];
 
-        if (collection.$isView) {
+        if (collection.type === "view") {
             for (let col of CommonHelper.extractColumnsFromQuery(collection.options.query)) {
                 CommonHelper.pushUnique(result, prefix + col);
             }
-        } else if (collection.$isAuth) {
+        } else if (collection.type === "auth") {
             result.push(prefix + "username");
             result.push(prefix + "email");
             result.push(prefix + "emailVisibility");
@@ -1799,5 +1802,47 @@ export default class CommonHelper {
             : searchTerm;
 
         return fallbackFields.map((f) => `${f}~${searchTerm}`).join("||");
+    }
+
+    /**
+     * Iniitialize a new blank Collection POJO and merge it with the provided data (if any).
+     *
+     * @param  {Object} [data]
+     * @return {Object}
+     */
+    static initCollection(data) {
+        return Object.assign({
+            id:         '',
+            created:    '',
+            updated:    '',
+            name:       '',
+            type:       'base',
+            system:     false,
+            listRule:   null,
+            viewRule:   null,
+            createRule: null,
+            updateRule: null,
+            deleteRule: null,
+            schema:     [],
+            indexes:    [],
+            options:    {},
+        }, data);
+    }
+
+    /**
+     * Iniitialize a new blank SchemaField POJO and merge it with the provided data (if any).
+     *
+     * @param  {Object} [data]
+     * @return {Object}
+     */
+    static initSchemaField(data) {
+        return Object.assign({
+            id:       '',
+            name:     '',
+            type:     'text',
+            system:   false,
+            required: false,
+            options:  {},
+        }, data);
     }
 }

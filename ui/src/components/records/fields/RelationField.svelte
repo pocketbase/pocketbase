@@ -1,6 +1,5 @@
 <script>
     import { onDestroy } from "svelte";
-    import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
     import tooltip from "@/actions/tooltip";
@@ -11,9 +10,9 @@
 
     const batchSize = 100;
 
+    export let field;
     export let value;
     export let picker;
-    export let field = new SchemaField();
 
     let fieldRef;
     let list = [];

@@ -10,6 +10,8 @@
 
     $: isCollectionRenamed = oldCollection?.name != newCollection?.name;
 
+    $: isNewCollectionView = newCollection?.type === "view";
+
     $: renamedFields =
         newCollection?.schema?.filter(
             (field) => field.id && !field.toDelete && field.originalName != field.name
@@ -26,7 +28,7 @@
             return old.options?.maxSelect != 1 && field.options?.maxSelect == 1;
         }) || [];
 
-    $: showChanges = !newCollection?.$isView || isCollectionRenamed;
+    $: showChanges = !isNewCollectionView || isCollectionRenamed;
 
     export async function show(original, changed) {
         oldCollection = original;
@@ -91,7 +93,7 @@
                 </li>
             {/if}
 
-            {#if !newCollection?.$isView}
+            {#if !isNewCollectionView}
                 {#each multipleToSingleFields as field}
                     <li>
                         Multiple to single value conversion of field

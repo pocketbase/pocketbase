@@ -162,7 +162,7 @@
                     <span class="txt">API Preview</span>
                 </button>
 
-                {#if !$activeCollection.$isView}
+                {#if $activeCollection.type !== "view"}
                     <button type="button" class="btn btn-expanded" on:click={() => recordUpsertPanel?.show()}>
                         <i class="ri-add-line" />
                         <span class="txt">New record</span>
@@ -184,7 +184,7 @@
             bind:filter
             bind:sort
             on:select={(e) => {
-                $activeCollection.$isView
+                $activeCollection.type === "view"
                     ? recordPreviewPanel.show(e?.detail)
                     : recordUpsertPanel?.show(e?.detail);
             }}

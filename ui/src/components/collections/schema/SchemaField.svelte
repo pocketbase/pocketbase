@@ -5,7 +5,6 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
     import { slide } from "svelte/transition";
-    import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { errors, setErrors } from "@/stores/errors";
@@ -23,7 +22,7 @@
     };
 
     export let key = "";
-    export let field = new SchemaField();
+    export let field = CommonHelper.initSchemaField();
 
     let nameInput;
     let showOptions = false;

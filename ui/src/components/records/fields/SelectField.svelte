@@ -1,10 +1,9 @@
 <script>
-    import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import Select from "@/components/base/Select.svelte";
     import Field from "@/components/base/Field.svelte";
 
-    export let field = new SchemaField();
+    export let field;
     export let value = undefined;
 
     $: isMultiple = field.options?.maxSelect > 1;

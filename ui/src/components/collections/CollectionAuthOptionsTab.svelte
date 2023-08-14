@@ -1,6 +1,5 @@
 <script>
     import { scale, slide } from "svelte/transition";
-    import { Collection } from "pocketbase";
     import { errors } from "@/stores/errors";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
@@ -8,9 +7,9 @@
     import MultipleValueInput from "@/components/base/MultipleValueInput.svelte";
     import Accordion from "@/components/base/Accordion.svelte";
 
-    export let collection = new Collection();
+    export let collection;
 
-    $: if (collection.$isAuth && CommonHelper.isEmpty(collection.options)) {
+    $: if (collection.type === "auth" && CommonHelper.isEmpty(collection.options)) {
         collection.options = {
             allowEmailAuth: true,
             allowUsernameAuth: true,

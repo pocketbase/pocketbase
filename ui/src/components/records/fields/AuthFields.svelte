@@ -1,15 +1,14 @@
 <script>
     import { slide } from "svelte/transition";
-    import { Collection, Record } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { confirm } from "@/stores/confirmation";
     import { removeError } from "@/stores/errors";
     import Field from "@/components/base/Field.svelte";
 
-    export let collection = new Collection();
-    export let record = new Record();
-    export let isNew = record.$isNew;
+    export let record;
+    export let collection;
+    export let isNew = !!record.id;
 
     let originalUsername = record.username || null;
 

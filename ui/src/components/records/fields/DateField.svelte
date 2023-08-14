@@ -1,11 +1,10 @@
 <script>
-    import { SchemaField } from "pocketbase";
     import Flatpickr from "svelte-flatpickr";
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import tooltip from "@/actions/tooltip";
 
-    export let field = new SchemaField();
+    export let field;
     export let value = undefined;
 
     let pickerValue = value;
