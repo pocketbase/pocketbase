@@ -430,9 +430,9 @@ func (dao *Dao) normalizeViewQueryId(query string) (string, error) {
 	columns := make([]string, 0, len(rawParsed.columns))
 	for _, col := range rawParsed.columns {
 		if col.alias == schema.FieldNameId {
-			columns = append(columns, fmt.Sprintf("cast(%s as text) %s", col.alias, col.alias))
+			columns = append(columns, fmt.Sprintf("cast([[%s]] as text) [[%s]]", col.alias, col.alias))
 		} else {
-			columns = append(columns, col.alias)
+			columns = append(columns, "[["+col.alias+"]]")
 		}
 	}
 
