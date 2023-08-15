@@ -1,3 +1,19 @@
+## v0.18.0 - WIP
+
+- Reflected the latest JS SDK changes in the Admin UI.
+
+- Added cron expression macros ([#3132](https://github.com/pocketbase/pocketbase/issues/3132)):
+  ```
+  "@yearly":   "0 0 1 1 *"
+  "@annually": "0 0 1 1 *"
+  "@monthly":  "0 0 1 * *"
+  "@weekly":   "0 0 * * 0"
+  "@daily":    "0 0 * * *"
+  "@midnight": "0 0 * * *"
+  "@hourly":   "0 * * * *"
+  ```
+
+
 ## v0.17.5
 
 - Added quotes around the wrapped view query columns introduced with v0.17.4.
