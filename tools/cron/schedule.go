@@ -74,15 +74,21 @@ var macros = map[string]string{
 
 // NewSchedule creates a new Schedule from a cron expression.
 //
-// A cron expression is consisted of 5 segments separated by space,
+// A cron expression could be a macro OR 5 segments separated by space,
 // representing: minute, hour, day of the month, month and day of the week.
 //
-// Each segment could be in the following formats:
+// The following segment formats are supported:
 //   - wildcard: *
 //   - range:    1-30
 //   - step:     */n or 1-30/n
 //   - list:     1,2,3,10-20/n
-//   - macros:   @yearly (or @annually), @monthly, @weekly, @daily (or @midnight), @hourly
+//
+// The following macros are supported:
+//  - @yearly (or @annually)
+//  - @monthly
+//  - @weekly
+//  - @daily (or @midnight)
+//  - @hourly
 func NewSchedule(cronExpr string) (*Schedule, error) {
 	if v, ok := macros[cronExpr]; ok {
 		cronExpr = v
