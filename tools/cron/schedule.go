@@ -84,11 +84,11 @@ var macros = map[string]string{
 //   - list:     1,2,3,10-20/n
 //
 // The following macros are supported:
-//  - @yearly (or @annually)
-//  - @monthly
-//  - @weekly
-//  - @daily (or @midnight)
-//  - @hourly
+//   - @yearly (or @annually)
+//   - @monthly
+//   - @weekly
+//   - @daily (or @midnight)
+//   - @hourly
 func NewSchedule(cronExpr string) (*Schedule, error) {
 	if v, ok := macros[cronExpr]; ok {
 		cronExpr = v
