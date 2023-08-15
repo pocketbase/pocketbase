@@ -440,27 +440,27 @@ func TestSaveCollectionViewWrapping(t *testing.T) {
 		{
 			"wrapping - bool field",
 			"select bool as id, text as txt, url from demo1",
-			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(id as text) id,txt,url FROM (select bool as id, text as txt, url from demo1))",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(`id` as text) `id`,`txt`,`url` FROM (select bool as id, text as txt, url from demo1))",
 		},
 		{
 			"wrapping - bool field (different order)",
 			"select text as txt, url, bool as id from demo1",
-			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT txt,url,cast(id as text) id FROM (select text as txt, url, bool as id from demo1))",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT `txt`,`url`,cast(`id` as text) `id` FROM (select text as txt, url, bool as id from demo1))",
 		},
 		{
 			"wrapping - json field",
 			"select json as id, text, url from demo1",
-			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(id as text) id,text,url FROM (select json as id, text, url from demo1))",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(`id` as text) `id`,`text`,`url` FROM (select json as id, text, url from demo1))",
 		},
 		{
 			"wrapping - numeric id",
 			"select 1 as id",
-			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(id as text) id FROM (select 1 as id))",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(`id` as text) `id` FROM (select 1 as id))",
 		},
 		{
 			"wrapping - expresion",
 			"select ('test') as id",
-			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(id as text) id FROM (select ('test') as id))",
+			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT cast(`id` as text) `id` FROM (select ('test') as id))",
 		},
 		{
 			"no wrapping - cast as text",

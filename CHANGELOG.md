@@ -1,3 +1,8 @@
+## v0.17.5
+
+- Added quotes around the wrapped view query columns introduced with v0.17.4.
+
+
 ## v0.17.4
 
 - Fixed Views record retrieval when numeric id is used ([#3110](https://github.com/pocketbase/pocketbase/issues/3110)).
