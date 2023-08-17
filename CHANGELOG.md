@@ -13,6 +13,8 @@
   "@hourly":   "0 * * * *"
   ```
 
+- Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send.
+
 
 ## v0.17.5
 
