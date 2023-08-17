@@ -484,6 +484,60 @@ func TestDbxBinds(t *testing.T) {
 	}
 }
 
+func TestMailsBindsCount(t *testing.T) {
+	vm := goja.New()
+	mailsBinds(vm)
+
+	testBindsCount(vm, "$mails", 4, t)
+}
+
+func TestMailsBinds(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	admin, err := app.Dao().FindAdminByEmail("test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record, err := app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	vm := goja.New()
+	baseBinds(vm)
+	mailsBinds(vm)
+	vm.Set("$app", app)
+	vm.Set("admin", admin)
+	vm.Set("record", record)
+
+	_, vmErr := vm.RunString(`
+		$mails.sendAdminPasswordReset($app, admin);
+		if (!$app.testMailer.lastMessage.html.includes("/_/#/confirm-password-reset/")) {
+			throw new Error("Expected admin password reset email")
+		}
+
+		$mails.sendRecordPasswordReset($app, record);
+		if (!$app.testMailer.lastMessage.html.includes("/_/#/auth/confirm-password-reset/")) {
+			throw new Error("Expected record password reset email")
+		}
+
+		$mails.sendRecordVerification($app, record);
+		if (!$app.testMailer.lastMessage.html.includes("/_/#/auth/confirm-verification/")) {
+			throw new Error("Expected record verification email")
+		}
+
+		$mails.sendRecordChangeEmail($app, record, "new@example.com");
+		if (!$app.testMailer.lastMessage.html.includes("/_/#/auth/confirm-email-change/")) {
+			throw new Error("Expected record email change email")
+		}
+	`)
+	if vmErr != nil {
+		t.Fatal(vmErr)
+	}
+}
+
 func TestTokensBindsCount(t *testing.T) {
 	vm := goja.New()
 	tokensBinds(vm)
@@ -506,11 +560,11 @@ func TestTokensBinds(t *testing.T) {
 	}
 
 	vm := goja.New()
+	baseBinds(vm)
+	tokensBinds(vm)
 	vm.Set("$app", app)
 	vm.Set("admin", admin)
 	vm.Set("record", record)
-	baseBinds(vm)
-	tokensBinds(vm)
 
 	sceneraios := []struct {
 		js  string

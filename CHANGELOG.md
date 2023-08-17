@@ -14,6 +14,8 @@
   "@hourly":   "0 * * * *"
   ```
 
+- Added JSVM `$mails.*` binds for sending.
+
 - Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send.
 
 - Reflected the latest JS SDK changes in the Admin UI.

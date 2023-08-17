@@ -22,6 +22,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms"
+	"github.com/pocketbase/pocketbase/mails"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tokens"
@@ -413,6 +414,19 @@ func dbxBinds(vm *goja.Runtime) {
 	obj.Set("notExists", dbx.NotExists)
 	obj.Set("between", dbx.Between)
 	obj.Set("notBetween", dbx.NotBetween)
+}
+
+func mailsBinds(vm *goja.Runtime) {
+	obj := vm.NewObject()
+	vm.Set("$mails", obj)
+
+	// admin
+	obj.Set("sendAdminPasswordReset", mails.SendAdminPasswordReset)
+
+	// record
+	obj.Set("sendRecordPasswordReset", mails.SendRecordPasswordReset)
+	obj.Set("sendRecordVerification", mails.SendRecordVerification)
+	obj.Set("sendRecordChangeEmail", mails.SendRecordChangeEmail)
 }
 
 func tokensBinds(vm *goja.Runtime) {
