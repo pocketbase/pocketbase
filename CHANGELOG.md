@@ -1,6 +1,7 @@
 ## v0.18.0 - WIP
 
-- Reflected the latest JS SDK changes in the Admin UI.
+- Added new `SmtpConfig.LocalName` option to specify a custom domain name (or IP address) for the initial EHLO/HELO exchange ([#3097](https://github.com/pocketbase/pocketbase/discussions/3097)).
+  _This is usually required for verification purposes only by some SMTP providers, such as Gmail SMTP-relay._
 
 - Added cron expression macros ([#3132](https://github.com/pocketbase/pocketbase/issues/3132)):
   ```
@@ -14,6 +15,8 @@
   ```
 
 - Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send.
+
+- Reflected the latest JS SDK changes in the Admin UI.
 
 
 ## v0.17.5

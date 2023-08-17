@@ -477,6 +477,26 @@ func TestSmtpConfigValidate(t *testing.T) {
 			},
 			false,
 		},
+		// invalid ehlo/helo name
+		{
+			settings.SmtpConfig{
+				Enabled:   true,
+				Host:      "example.com",
+				Port:      100,
+				LocalName: "invalid!",
+			},
+			true,
+		},
+		// valid ehlo/helo name
+		{
+			settings.SmtpConfig{
+				Enabled:   true,
+				Host:      "example.com",
+				Port:      100,
+				LocalName: "example.com",
+			},
+			false,
+		},
 	}
 
 	for i, scenario := range scenarios {

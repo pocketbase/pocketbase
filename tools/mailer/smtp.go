@@ -39,12 +39,21 @@ func NewSmtpClient(
 // SmtpClient defines a SMTP mail client structure that implements
 // `mailer.Mailer` interface.
 type SmtpClient struct {
-	Host       string
-	Port       int
-	Username   string
-	Password   string
-	Tls        bool
-	AuthMethod string // default to "PLAIN"
+	Host     string
+	Port     int
+	Username string
+	Password string
+	Tls      bool
+
+	// SMTP auth method to use
+	// (if not explicitly set, defaults to "PLAIN")
+	AuthMethod string
+
+	// LocalName is optional domain name used for the EHLO/HELO exchange
+	// (if not explicitly set, defaults to "localhost").
+	//
+	// This is required only by some SMTP servers, such as Gmail SMTP-relay.
+	LocalName string
 }
 
 // Send implements `mailer.Mailer` interface.
@@ -69,6 +78,10 @@ func (c *SmtpClient) Send(m *Message) error {
 		}
 	} else {
 		yak = mailyak.New(fmt.Sprintf("%s:%d", c.Host, c.Port), smtpAuth)
+	}
+
+	if c.LocalName != "" {
+		yak.LocalName(c.LocalName)
 	}
 
 	if m.From.Name != "" {

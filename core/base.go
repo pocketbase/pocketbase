@@ -471,6 +471,7 @@ func (app *BaseApp) NewMailClient() mailer.Mailer {
 			Password:   app.Settings().Smtp.Password,
 			Tls:        app.Settings().Smtp.Tls,
 			AuthMethod: app.Settings().Smtp.AuthMethod,
+			LocalName:  app.Settings().Smtp.LocalName,
 		}
 	}
 

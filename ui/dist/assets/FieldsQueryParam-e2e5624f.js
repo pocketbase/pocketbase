@@ -1,4 +1,4 @@
-import{S as d,i as n,s as i,e as l,g as o,y as s,o as p}from"./index-352a0704.js";function c(a){let e;return{c(){e=l("tr"),e.innerHTML=`<td id="query-page">fields</td> 
+import{S as d,i as n,s as i,e as l,g as o,y as s,o as p}from"./index-9c7ee037.js";function c(a){let e;return{c(){e=l("tr"),e.innerHTML=`<td id="query-page">fields</td> 
     <td><span class="label">String</span></td> 
     <td>Comma separated string of the fields to return in the JSON response
         <em>(by default returns all fields)</em>. For example:
