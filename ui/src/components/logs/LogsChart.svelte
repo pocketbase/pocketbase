@@ -59,7 +59,7 @@
                 if (!err?.isAbort) {
                     resetData();
                     console.warn(err);
-                    ApiClient.error(err, false);
+                    ApiClient.error(err, err?.status != 400); // silence filter errors
                 }
             })
             .finally(() => {

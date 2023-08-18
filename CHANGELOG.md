@@ -13,8 +13,8 @@
   @day        - @now day number
   @month      - @now month number
   @year       - @now year number
-  @todayStart - beginning of current day as datetime string
-  @todayEnd   - end of current day as datetime string
+  @todayStart - beginning of the current day as datetime string
+  @todayEnd   - end of the current day as datetime string
   @monthStart - beginning of the current month as datetime string
   @monthEnd   - end of the current month as datetime string
   @yearStart  - beginning of the current year as datetime string
