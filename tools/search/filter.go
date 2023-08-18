@@ -10,7 +10,6 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/store"
-	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 
@@ -206,21 +205,22 @@ func buildResolversExpr(
 	return expr, nil
 }
 
-var identifierMacros = map[string]func() string{
-	"@now": func() string { return types.NowDateTime().String() },
-}
-
 func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResult, error) {
 	switch token.Type {
 	case fexpr.TokenIdentifier:
 		// check for macros
 		// ---
-		if f, ok := identifierMacros[token.Literal]; ok {
+		if macroFunc, ok := identifierMacros[token.Literal]; ok {
 			placeholder := "t" + security.PseudorandomString(5)
+
+			macroValue, err := macroFunc()
+			if err != nil {
+				return nil, err
+			}
 
 			return &ResolverResult{
 				Identifier: "{:" + placeholder + "}",
-				Params:     dbx.Params{placeholder: f()},
+				Params:     dbx.Params{placeholder: macroValue},
 			}, nil
 		}
 

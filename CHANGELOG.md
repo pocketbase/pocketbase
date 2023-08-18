@@ -3,6 +3,24 @@
 - Added new `SmtpConfig.LocalName` option to specify a custom domain name (or IP address) for the initial EHLO/HELO exchange ([#3097](https://github.com/pocketbase/pocketbase/discussions/3097)).
   _This is usually required for verification purposes only by some SMTP providers, such as on-premise [Gmail SMTP-relay](https://support.google.com/a/answer/2956491)._
 
+- (@todo docs) Added datetime filter macros:
+  ```
+  // all macros are UTC based
+  @second     - @now second number (0-59)
+  @minute     - @now minute number (0-59)
+  @hour       - @now hour number (0-23)
+  @weekday    - @now weekday number (0-6)
+  @day        - @now day number
+  @month      - @now month number
+  @year       - @now year number
+  @todayStart - beginning of current day as datetime string
+  @todayEnd   - end of current day as datetime string
+  @monthStart - beginning of the current month as datetime string
+  @monthEnd   - end of the current month as datetime string
+  @yearStart  - beginning of the current year as datetime string
+  @yearEnd    - end of the current year as datetime string
+  ```
+
 - Added cron expression macros ([#3132](https://github.com/pocketbase/pocketbase/issues/3132)):
   ```
   "@yearly":   "0 0 1 1 *"
@@ -14,7 +32,7 @@
   "@hourly":   "0 * * * *"
   ```
 
-- To minimize the footguns with `Dao.FindFirstRecordByFilter()` and `Dao.FindRecordsByFilter()`, the functions now supports an optional placeholder params argument that is safe to be populated with untrusted user input.
+- (@todo update docs examples) To minimize the footguns with `Dao.FindFirstRecordByFilter()` and `Dao.FindRecordsByFilter()`, the functions now supports an optional placeholder params argument that is safe to be populated with untrusted user input.
   The placeholders are in the same format as when binding regular SQL parameters.
   ```go
   // unsanitized and untrusted filter variables

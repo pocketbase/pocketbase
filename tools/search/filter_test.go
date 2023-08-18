@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,7 +13,7 @@ import (
 )
 
 func TestFilterDataBuildExpr(t *testing.T) {
-	resolver := search.NewSimpleFieldResolver("test1", "test2", "test3", "test4.sub")
+	resolver := search.NewSimpleFieldResolver("test1", "test2", "test3", `^test4.\w+$`)
 
 	scenarios := []struct {
 		name          string
@@ -48,11 +49,7 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"simple expression",
 			"test1 > 1",
 			false,
-			"^" +
-				regexp.QuoteMeta("[[test1]] > {:") +
-				".+" +
-				regexp.QuoteMeta("}") +
-				"$",
+			"[[test1]] > {:TEST}",
 		},
 		{
 			"empty string vs null",
@@ -64,113 +61,76 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"like with 2 columns",
 			"test1 ~ test2",
 			false,
-			"^" +
-				regexp.QuoteMeta("[[test1]] LIKE ('%' || [[test2]] || '%') ESCAPE '\\'") +
-				"$",
+			"[[test1]] LIKE ('%' || [[test2]] || '%') ESCAPE '\\'",
 		},
 		{
 			"like with right column operand",
 			"'lorem' ~ test1",
 			false,
-			"^" +
-				regexp.QuoteMeta("{:") +
-				".+" +
-				regexp.QuoteMeta("} LIKE ('%' || [[test1]] || '%') ESCAPE '\\'") +
-				"$",
+			"{:TEST} LIKE ('%' || [[test1]] || '%') ESCAPE '\\'",
 		},
 		{
 			"like with left column operand and text as right operand",
 			"test1 ~ 'lorem'",
 			false,
-			"^" +
-				regexp.QuoteMeta("[[test1]] LIKE {:") +
-				".+" +
-				regexp.QuoteMeta("} ESCAPE '\\'") +
-				"$",
+			"[[test1]] LIKE {:TEST} ESCAPE '\\'",
 		},
 		{
 			"not like with 2 columns",
 			"test1 !~ test2",
 			false,
-			"^" +
-				regexp.QuoteMeta("[[test1]] NOT LIKE ('%' || [[test2]] || '%') ESCAPE '\\'") +
-				"$",
+			"[[test1]] NOT LIKE ('%' || [[test2]] || '%') ESCAPE '\\'",
 		},
 		{
 			"not like with right column operand",
 			"'lorem' !~ test1",
 			false,
-			"^" +
-				regexp.QuoteMeta("{:") +
-				".+" +
-				regexp.QuoteMeta("} NOT LIKE ('%' || [[test1]] || '%') ESCAPE '\\'") +
-				"$",
+			"{:TEST} NOT LIKE ('%' || [[test1]] || '%') ESCAPE '\\'",
 		},
 		{
 			"like with left column operand and text as right operand",
 			"test1 !~ 'lorem'",
 			false,
-			"^" +
-				regexp.QuoteMeta("[[test1]] NOT LIKE {:") +
-				".+" +
-				regexp.QuoteMeta("} ESCAPE '\\'") +
-				"$",
+			"[[test1]] NOT LIKE {:TEST} ESCAPE '\\'",
 		},
 		{
-			"current datetime constant",
-			"test1 > @now",
+			"macros",
+			`
+				test4.1 > @now &&
+				test4.2 > @second &&
+				test4.3 > @minute &&
+				test4.4 > @hour &&
+				test4.5 > @day &&
+				test4.6 > @year &&
+				test4.7 > @month &&
+				test4.9 > @weekday &&
+				test4.9 > @todayStart &&
+				test4.10 > @todayEnd &&
+				test4.11 > @monthStart &&
+				test4.12 > @monthEnd &&
+				test4.13 > @yearStart &&
+				test4.14 > @yearEnd
+			`,
 			false,
-			"^" +
-				regexp.QuoteMeta("[[test1]] > {:") +
-				".+" +
-				regexp.QuoteMeta("}") +
-				"$",
+			"([[test4.1]] > {:TEST} AND [[test4.2]] > {:TEST} AND [[test4.3]] > {:TEST} AND [[test4.4]] > {:TEST} AND [[test4.5]] > {:TEST} AND [[test4.6]] > {:TEST} AND [[test4.7]] > {:TEST} AND [[test4.9]] > {:TEST} AND [[test4.9]] > {:TEST} AND [[test4.10]] > {:TEST} AND [[test4.11]] > {:TEST} AND [[test4.12]] > {:TEST} AND [[test4.13]] > {:TEST} AND [[test4.14]] > {:TEST})",
 		},
 		{
 			"complex expression",
 			"((test1 > 1) || (test2 != 2)) && test3 ~ '%%example' && test4.sub = null",
 			false,
-			"^" +
-				regexp.QuoteMeta("(([[test1]] > {:") +
-				".+" +
-				regexp.QuoteMeta("} OR [[test2]] != {:") +
-				".+" +
-				regexp.QuoteMeta("}) AND [[test3]] LIKE {:") +
-				".+" +
-				regexp.QuoteMeta("} ESCAPE '\\' AND ([[test4.sub]] = '' OR [[test4.sub]] IS NULL))") +
-				"$",
+			"(([[test1]] > {:TEST} OR [[test2]] != {:TEST}) AND [[test3]] LIKE {:TEST} ESCAPE '\\' AND ([[test4.sub]] = '' OR [[test4.sub]] IS NULL))",
 		},
 		{
 			"combination of special literals (null, true, false)",
 			"test1=true && test2 != false && null = test3 || null != test4.sub",
 			false,
-			"^" + regexp.QuoteMeta("([[test1]] = 1 AND [[test2]] != 0 AND ('' = [[test3]] OR [[test3]] IS NULL) OR ('' != [[test4.sub]] AND [[test4.sub]] IS NOT NULL))") + "$",
+			"([[test1]] = 1 AND [[test2]] != 0 AND ('' = [[test3]] OR [[test3]] IS NULL) OR ('' != [[test4.sub]] AND [[test4.sub]] IS NOT NULL))",
 		},
 		{
 			"all operators",
 			"(test1 = test2 || test2 != test3) && (test2 ~ 'example' || test2 !~ '%%abc') && 'switch1%%' ~ test1 && 'switch2' !~ test2 && test3 > 1 && test3 >= 0 && test3 <= 4 && 2 < 5",
 			false,
-			"^" +
-				regexp.QuoteMeta("((COALESCE([[test1]], '') = COALESCE([[test2]], '') OR COALESCE([[test2]], '') != COALESCE([[test3]], '')) AND ([[test2]] LIKE {:") +
-				".+" +
-				regexp.QuoteMeta("} ESCAPE '\\' OR [[test2]] NOT LIKE {:") +
-				".+" +
-				regexp.QuoteMeta("} ESCAPE '\\') AND {:") +
-				".+" +
-				regexp.QuoteMeta("} LIKE ('%' || [[test1]] || '%') ESCAPE '\\' AND {:") +
-				".+" +
-				regexp.QuoteMeta("} NOT LIKE ('%' || [[test2]] || '%') ESCAPE '\\' AND [[test3]] > {:") +
-				".+" +
-				regexp.QuoteMeta("} AND [[test3]] >= {:") +
-				".+" +
-				regexp.QuoteMeta("} AND [[test3]] <= {:") +
-				".+" +
-				regexp.QuoteMeta("} AND {:") +
-				".+" +
-				regexp.QuoteMeta("} < {:") +
-				".+" +
-				regexp.QuoteMeta("})") +
-				"$",
+			"((COALESCE([[test1]], '') = COALESCE([[test2]], '') OR COALESCE([[test2]], '') != COALESCE([[test3]], '')) AND ([[test2]] LIKE {:TEST} ESCAPE '\\' OR [[test2]] NOT LIKE {:TEST} ESCAPE '\\') AND {:TEST} LIKE ('%' || [[test1]] || '%') ESCAPE '\\' AND {:TEST} NOT LIKE ('%' || [[test2]] || '%') ESCAPE '\\' AND [[test3]] > {:TEST} AND [[test3]] >= {:TEST} AND [[test3]] <= {:TEST} AND {:TEST} < {:TEST})",
 		},
 	}
 
@@ -191,9 +151,16 @@ func TestFilterDataBuildExpr(t *testing.T) {
 
 			rawSql := expr.Build(dummyDB, dbx.Params{})
 
-			pattern := regexp.MustCompile(s.expectPattern)
+			// replace TEST placeholder with .+ regex pattern
+			expectPattern := strings.ReplaceAll(
+				"^"+regexp.QuoteMeta(s.expectPattern)+"$",
+				"TEST",
+				`\w+`,
+			)
+
+			pattern := regexp.MustCompile(expectPattern)
 			if !pattern.MatchString(rawSql) {
-				t.Fatalf("[%s] Pattern %v don't match with expression: \n%v", s.name, s.expectPattern, rawSql)
+				t.Fatalf("[%s] Pattern %v don't match with expression: \n%v", s.name, expectPattern, rawSql)
 			}
 		})
 	}
