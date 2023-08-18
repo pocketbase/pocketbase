@@ -1,7 +1,7 @@
 ## v0.18.0 - WIP
 
 - Added new `SmtpConfig.LocalName` option to specify a custom domain name (or IP address) for the initial EHLO/HELO exchange ([#3097](https://github.com/pocketbase/pocketbase/discussions/3097)).
-  _This is usually required for verification purposes only by some SMTP providers, such as Gmail SMTP-relay._
+  _This is usually required for verification purposes only by some SMTP providers, such as on-premise [Gmail SMTP-relay](https://support.google.com/a/answer/2956491)._
 
 - Added cron expression macros ([#3132](https://github.com/pocketbase/pocketbase/issues/3132)):
   ```
@@ -14,9 +14,30 @@
   "@hourly":   "0 * * * *"
   ```
 
-- Added JSVM `$mails.*` binds for sending.
+- To minimize the footguns with `Dao.FindFirstRecordByFilter()` and `Dao.FindRecordsByFilter()`, the functions now supports an optional placeholder params argument that is safe to be populated with untrusted user input.
+  The placeholders are in the same format as when binding regular SQL parameters.
+  ```go
+  // unsanitized and untrusted filter variables
+  status := "..."
+  author := "..."
 
-- Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send.
+  app.Dao().FindFirstRecordByFilter("articles", "status={:status} && author={:author}", dbx.Params{
+    "status": status,
+    "author": author,
+  })
+
+  app.Dao().FindRecordsByFilter("articles", "status={:status} && author={:author}", "-created", 10, 0, dbx.Params{
+    "status": status,
+    "author": author,
+  })
+  ```
+
+- ⚠️ Added offset argument `Dao.FindRecordsByFilter(collection, filter, sort, limit, offset, [params...])`.
+  _If you don't need an offset, you can set it to `0`._
+
+- Added JSVM `$mails.*` binds for the corresponding Go [mails package](https://pkg.go.dev/github.com/pocketbase/pocketbase/mails) functions.
+
+- Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send ([#3121](https://github.com/pocketbase/pocketbase/issues/3121)).
 
 - Reflected the latest JS SDK changes in the Admin UI.
 
@@ -749,7 +770,7 @@
 
   _Note2: The old index (`"field.0":null`) and filename (`"field.filename.png":null`) based suffixed syntax for deleting files is still supported._
 
-- ! Added support for multi-match/match-all request data and collection multi-valued fields (`select`, `relation`) conditions.
+- ⚠️ Added support for multi-match/match-all request data and collection multi-valued fields (`select`, `relation`) conditions.
   If you want a "at least one of" type of condition, you can prefix the operator with `?`.
   ```js
   // for each someRelA.someRelB record require the "status" field to be "active"
@@ -829,7 +850,7 @@
 
 ## v0.10.3
 
-- ! Renamed the metadata key `original_filename` to `original-filename` due to an S3 file upload error caused by the underscore character ([#1343](https://github.com/pocketbase/pocketbase/pull/1343); thanks @yuxiang-gao).
+- ⚠️ Renamed the metadata key `original_filename` to `original-filename` due to an S3 file upload error caused by the underscore character ([#1343](https://github.com/pocketbase/pocketbase/pull/1343); thanks @yuxiang-gao).
 
 - Fixed request verification docs api url ([#1332](https://github.com/pocketbase/pocketbase/pull/1332); thanks @JoyMajumdar2001)
 
@@ -865,7 +886,7 @@
 
 - Refactored the `core.app.Bootstrap()` to be called before starting the cobra commands ([#1267](https://github.com/pocketbase/pocketbase/discussions/1267)).
 
-- ! Changed `pocketbase.NewWithConfig(config Config)` to `pocketbase.NewWithConfig(config *Config)` and added 4 new config settings:
+- ⚠️ Changed `pocketbase.NewWithConfig(config Config)` to `pocketbase.NewWithConfig(config *Config)` and added 4 new config settings:
   ```go
   DataMaxOpenConns int // default to core.DefaultDataMaxOpenConns
   DataMaxIdleConns int // default to core.DefaultDataMaxIdleConns
@@ -875,9 +896,9 @@
 
 - Added new helper method `core.App.IsBootstrapped()` to check the current app bootstrap state.
 
-- ! Changed `core.NewBaseApp(dir, encryptionEnv, isDebug)` to `NewBaseApp(config *BaseAppConfig)`.
+- ⚠️ Changed `core.NewBaseApp(dir, encryptionEnv, isDebug)` to `NewBaseApp(config *BaseAppConfig)`.
 
-- ! Removed `rest.UploadedFile` struct (see below `filesystem.File`).
+- ⚠️ Removed `rest.UploadedFile` struct (see below `filesystem.File`).
 
 - Added generic file resource struct that allows loading and uploading file content from
   different sources (at the moment multipart/form-data requests and from the local filesystem).

@@ -436,6 +436,8 @@ func TestFindRecordsByFilter(t *testing.T) {
 		filter             string
 		sort               string
 		limit              int
+		offset             int
+		params             []dbx.Params
 		expectError        bool
 		expectRecordIds    []string
 	}{
@@ -445,6 +447,8 @@ func TestFindRecordsByFilter(t *testing.T) {
 			"id != ''",
 			"",
 			0,
+			0,
+			nil,
 			true,
 			nil,
 		},
@@ -454,6 +458,8 @@ func TestFindRecordsByFilter(t *testing.T) {
 			"",
 			"",
 			0,
+			0,
+			nil,
 			true,
 			nil,
 		},
@@ -463,6 +469,8 @@ func TestFindRecordsByFilter(t *testing.T) {
 			"someMissingField > 1",
 			"",
 			0,
+			0,
+			nil,
 			true,
 			nil,
 		},
@@ -472,6 +480,8 @@ func TestFindRecordsByFilter(t *testing.T) {
 			"id != ''",
 			"",
 			0,
+			0,
+			nil,
 			false,
 			[]string{
 				"llvuca81nly1qls",
@@ -485,6 +495,8 @@ func TestFindRecordsByFilter(t *testing.T) {
 			"id != '' && active=true",
 			"-created,title",
 			-1, // should behave the same as 0
+			0,
+			nil,
 			false,
 			[]string{
 				"0yxhwia2amd8gec",
@@ -492,47 +504,64 @@ func TestFindRecordsByFilter(t *testing.T) {
 			},
 		},
 		{
-			"with limit",
+			"with limit and offset",
 			"demo2",
 			"id != ''",
 			"title",
 			2,
+			1,
+			nil,
+			false,
+			[]string{
+				"achvryl401bhse3",
+				"0yxhwia2amd8gec",
+			},
+		},
+		{
+			"with placeholder params",
+			"demo2",
+			"active = {:active}",
+			"",
+			10,
+			0,
+			[]dbx.Params{{"active": false}},
 			false,
 			[]string{
 				"llvuca81nly1qls",
-				"achvryl401bhse3",
 			},
 		},
 	}
 
 	for _, s := range scenarios {
-		records, err := app.Dao().FindRecordsByFilter(
-			s.collectionIdOrName,
-			s.filter,
-			s.sort,
-			s.limit,
-		)
+		t.Run(s.name, func(t *testing.T) {
+			records, err := app.Dao().FindRecordsByFilter(
+				s.collectionIdOrName,
+				s.filter,
+				s.sort,
+				s.limit,
+				s.offset,
+				s.params...,
+			)
 
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", s.name, s.expectError, hasErr, err)
-			continue
-		}
-
-		if hasErr {
-			continue
-		}
-
-		if len(records) != len(s.expectRecordIds) {
-			t.Errorf("[%s] Expected %d records, got %d", s.name, len(s.expectRecordIds), len(records))
-			continue
-		}
-
-		for i, id := range s.expectRecordIds {
-			if id != records[i].Id {
-				t.Errorf("[%s] Expected record with id %q, got %q at index %d", s.name, id, records[i].Id, i)
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("[%s] Expected hasErr to be %v, got %v (%v)", s.name, s.expectError, hasErr, err)
 			}
-		}
+
+			if hasErr {
+				return
+			}
+
+			if len(records) != len(s.expectRecordIds) {
+				t.Fatalf("[%s] Expected %d records, got %d", s.name, len(s.expectRecordIds), len(records))
+			}
+
+			for i, id := range s.expectRecordIds {
+				if id != records[i].Id {
+					t.Fatalf("[%s] Expected record with id %q, got %q at index %d", s.name, id, records[i].Id, i)
+				}
+			}
+		})
 	}
 }
 
@@ -544,6 +573,7 @@ func TestFindFirstRecordByFilter(t *testing.T) {
 		name               string
 		collectionIdOrName string
 		filter             string
+		params             []dbx.Params
 		expectError        bool
 		expectRecordId     string
 	}{
@@ -551,6 +581,7 @@ func TestFindFirstRecordByFilter(t *testing.T) {
 			"missing collection",
 			"missing",
 			"id != ''",
+			nil,
 			true,
 			"",
 		},
@@ -558,6 +589,7 @@ func TestFindFirstRecordByFilter(t *testing.T) {
 			"missing filter",
 			"demo2",
 			"",
+			nil,
 			true,
 			"",
 		},
@@ -565,6 +597,7 @@ func TestFindFirstRecordByFilter(t *testing.T) {
 			"invalid filter",
 			"demo2",
 			"someMissingField > 1",
+			nil,
 			true,
 			"",
 		},
@@ -572,6 +605,7 @@ func TestFindFirstRecordByFilter(t *testing.T) {
 			"valid filter but no matches",
 			"demo2",
 			"id = 'test'",
+			nil,
 			true,
 			"",
 		},
@@ -579,13 +613,22 @@ func TestFindFirstRecordByFilter(t *testing.T) {
 			"valid filter and multiple matches",
 			"demo2",
 			"id != ''",
+			nil,
+			false,
+			"llvuca81nly1qls",
+		},
+		{
+			"with placeholder params",
+			"demo2",
+			"active = {:active}",
+			[]dbx.Params{{"active": false}},
 			false,
 			"llvuca81nly1qls",
 		},
 	}
 
 	for _, s := range scenarios {
-		record, err := app.Dao().FindFirstRecordByFilter(s.collectionIdOrName, s.filter)
+		record, err := app.Dao().FindFirstRecordByFilter(s.collectionIdOrName, s.filter, s.params...)
 
 		hasErr := err != nil
 		if hasErr != s.expectError {
