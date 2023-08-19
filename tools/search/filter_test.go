@@ -200,7 +200,9 @@ func TestFilterDataBuildExprWithParams(t *testing.T) {
 		test7 = {:test7} ||
 		test8 = {:test8} ||
 		test9 = {:test9} ||
-		test10 = {:test10}
+		test10 = {:test10} ||
+		test11 = {:test11} ||
+		test12 = {:test12}
 	`)
 
 	replacements := []dbx.Params{
@@ -210,6 +212,8 @@ func TestFilterDataBuildExprWithParams(t *testing.T) {
 		{"test4": nil},
 		{"test5": "", "test6": "simple", "test7": `'single_quotes'`, "test8": `"double_quotes"`, "test9": `escape\"quote`},
 		{"test10": date},
+		{"test11": []string{"a", "b", `"quote`}},
+		{"test12": map[string]any{"a": 123, "b": `quote"`}},
 	}
 
 	expr, err := filter.BuildExpr(resolver, replacements...)
@@ -223,7 +227,7 @@ func TestFilterDataBuildExprWithParams(t *testing.T) {
 		t.Fatalf("Expected 1 query, got %d", len(calledQueries))
 	}
 
-	expectedQuery := `SELECT * WHERE ([[test1]] = 1 OR [[test2]] = 0 OR [[test3a]] = 123.456 OR [[test3b]] = 123.456 OR ([[test4]] = '' OR [[test4]] IS NULL) OR ([[test5]] = '' OR [[test5]] IS NULL) OR [[test6]] = 'simple' OR [[test7]] = '''single_quotes''' OR [[test8]] = '"double_quotes"' OR [[test9]] = 'escape\\"quote' OR [[test10]] = '2023-01-01 00:00:00 +0000 UTC')`
+	expectedQuery := `SELECT * WHERE ([[test1]] = 1 OR [[test2]] = 0 OR [[test3a]] = 123.456 OR [[test3b]] = 123.456 OR ([[test4]] = '' OR [[test4]] IS NULL) OR [[test5]] = '""' OR [[test6]] = 'simple' OR [[test7]] = '''single_quotes''' OR [[test8]] = '"double_quotes"' OR [[test9]] = 'escape\\"quote' OR [[test10]] = '2023-01-01 00:00:00 +0000 UTC' OR [[test11]] = '["a","b","\\"quote"]' OR [[test12]] = '{"a":123,"b":"quote\\""}')`
 	if expectedQuery != calledQueries[0] {
 		t.Fatalf("Expected query \n%s, \ngot \n%s", expectedQuery, calledQueries[0])
 	}

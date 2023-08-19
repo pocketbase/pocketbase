@@ -1,6 +1,7 @@
 package search
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -49,7 +50,15 @@ func (f FilterData) BuildExpr(
 			case bool, float64, float32, int, int64, int32, int16, int8, uint, uint64, uint32, uint16, uint8:
 				replacement = cast.ToString(v)
 			default:
-				replacement = strconv.Quote(cast.ToString(v))
+				replacement = cast.ToString(v)
+
+				// try to json serialize as fallback
+				if replacement == "" {
+					raw, _ := json.Marshal(v)
+					replacement = string(raw)
+				}
+
+				replacement = strconv.Quote(replacement)
 			}
 			raw = strings.ReplaceAll(raw, "{:"+key+"}", replacement)
 		}
