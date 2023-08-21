@@ -229,14 +229,6 @@ func (form *CollectionUpsert) ensureNoFieldsTypeChange(value any) error {
 func (form *CollectionUpsert) checkRelationFields(value any) error {
 	v, _ := value.(schema.Schema)
 
-	systemDisplayFields := schema.BaseModelFieldNames()
-	systemDisplayFields = append(systemDisplayFields,
-		schema.FieldNameUsername,
-		schema.FieldNameEmail,
-		schema.FieldNameEmailVisibility,
-		schema.FieldNameVerified,
-	)
-
 	for i, field := range v.Fields() {
 		if field.Type != schema.FieldTypeRelation {
 			continue
@@ -292,20 +284,6 @@ func (form *CollectionUpsert) checkRelationFields(value any) error {
 						"Non view collections are not allowed to have a view relation.",
 					),
 				}},
-			}
-		}
-
-		// validate displayFields (if any)
-		for _, name := range options.DisplayFields {
-			if relCollection.Schema.GetFieldByName(name) == nil && !list.ExistInSlice(name, systemDisplayFields) {
-				return validation.Errors{fmt.Sprint(i): validation.Errors{
-					"options": validation.Errors{
-						"displayFields": validation.NewError(
-							"validation_field_invalid_relation_displayFields",
-							fmt.Sprintf("%q does not exist in the related %q collection.", name, relCollection.Name),
-						),
-					}},
-				}
 			}
 		}
 	}

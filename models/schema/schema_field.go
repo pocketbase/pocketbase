@@ -132,6 +132,10 @@ type SchemaField struct {
 	Type     string `form:"type" json:"type"`
 	Required bool   `form:"required" json:"required"`
 
+	// Presentable indicates whether the field is suitable for
+	// visualization purposes (eg. in the Admin UI relation views).
+	Presentable bool `form:"presentable" json:"presentable"`
+
 	// Deprecated: This field is no-op and will be removed in future versions.
 	// Please use the collection.Indexes field to define a unique constraint.
 	Unique bool `form:"unique" json:"unique"`
@@ -645,7 +649,8 @@ type RelationOptions struct {
 	// If nil no limits are applied.
 	MaxSelect *int `form:"maxSelect" json:"maxSelect"`
 
-	// DisplayFields is optional slice of collection field names used for UI purposes.
+	// Deprecated: This field is no-op and will be removed in future versions.
+	// Instead use the individula SchemaField.Presentable option for each field in the relation collection.
 	DisplayFields []string `form:"displayFields" json:"displayFields"`
 }
 

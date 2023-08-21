@@ -12,7 +12,6 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
 )
@@ -401,7 +400,7 @@ func TestCollectionCreate(t *testing.T) {
 				`"name":"new"`,
 				`"type":"base"`,
 				`"system":false`,
-				`"schema":[{"system":false,"id":"12345789","name":"test","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`,
+				`"schema":[{"system":false,"id":"12345789","name":"test","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`,
 				`"options":{}`,
 			},
 			ExpectedEvents: map[string]int{
@@ -425,7 +424,7 @@ func TestCollectionCreate(t *testing.T) {
 				`"name":"new"`,
 				`"type":"auth"`,
 				`"system":false`,
-				`"schema":[{"system":false,"id":"12345789","name":"test","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`,
+				`"schema":[{"system":false,"id":"12345789","name":"test","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`,
 				`"options":{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":0,"onlyEmailDomains":null,"requireEmail":false}`,
 			},
 			ExpectedEvents: map[string]int{
@@ -957,88 +956,6 @@ func TestCollectionUpdate(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{`,
 				`"options":{"minPasswordLength":{"code":"validation_min_greater_equal_than_required"`,
-			},
-		},
-
-		// rel field change displayFields propagation
-		// -----------------------------------------------------------
-		{
-			Name:   "renaming a display field should also update the referenced displayFields value",
-			Method: http.MethodPatch,
-			Url:    "/api/collections/demo3",
-			Body: strings.NewReader(`{
-				"schema":[
-					{
-						"id": "w5z2x0nq",
-						"type": "text",
-						"name": "title_change"
-					}
-				]
-			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
-			},
-			ExpectedStatus: 200,
-			ExpectedContent: []string{
-				`"name":"title_change"`,
-			},
-			ExpectedEvents: map[string]int{
-				"OnModelBeforeUpdate":             2,
-				"OnModelAfterUpdate":              2,
-				"OnCollectionBeforeUpdateRequest": 1,
-				"OnCollectionAfterUpdateRequest":  1,
-			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				collection, err := app.Dao().FindCollectionByNameOrId("demo4")
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				relField := collection.Schema.GetFieldByName("rel_many_no_cascade_required")
-				options := relField.Options.(*schema.RelationOptions)
-				expectedDisplayFields := []string{"title_change", "id"}
-				if len(list.SubtractSlice(options.DisplayFields, expectedDisplayFields)) != 0 {
-					t.Fatalf("Expected displayFields %v, got %v", expectedDisplayFields, options.DisplayFields)
-				}
-			},
-		},
-		{
-			Name:   "deleting a display field should also update the referenced displayFields value",
-			Method: http.MethodPatch,
-			Url:    "/api/collections/demo3",
-			Body: strings.NewReader(`{
-				"schema":[
-					{
-						"type": "text",
-						"name": "new_field"
-					}
-				]
-			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
-			},
-			ExpectedStatus: 200,
-			ExpectedContent: []string{
-				`"name":"new_field"`,
-			},
-			ExpectedEvents: map[string]int{
-				"OnModelBeforeUpdate":             2,
-				"OnModelAfterUpdate":              2,
-				"OnCollectionBeforeUpdateRequest": 1,
-				"OnCollectionAfterUpdateRequest":  1,
-			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				collection, err := app.Dao().FindCollectionByNameOrId("demo4")
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				relField := collection.Schema.GetFieldByName("rel_many_no_cascade_required")
-				options := relField.Options.(*schema.RelationOptions)
-				expectedDisplayFields := []string{"id"}
-				if len(list.SubtractSlice(options.DisplayFields, expectedDisplayFields)) != 0 {
-					t.Fatalf("Expected displayFields %v, got %v", expectedDisplayFields, options.DisplayFields)
-				}
 			},
 		},
 

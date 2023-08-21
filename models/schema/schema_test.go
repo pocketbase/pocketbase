@@ -286,7 +286,7 @@ func TestSchemaMarshalJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `[{"system":false,"id":"f1id","name":"test1","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}},{"system":false,"id":"f2id","name":"test2","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":"test"}}]`
+	expected := `[{"system":false,"id":"f1id","name":"test1","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}},{"system":false,"id":"f2id","name":"test2","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":"test"}}]`
 
 	if string(result) != expected {
 		t.Fatalf("Expected %s, got %s", expected, string(result))
@@ -354,7 +354,7 @@ func TestSchemaValue(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected := `[{"system":false,"id":"f1id","name":"test1","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`
+	expected := `[{"system":false,"id":"f1id","name":"test1","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`
 
 	if v2 != expected {
 		t.Fatalf("Expected %v, got %v", expected, v2)
@@ -377,21 +377,21 @@ func TestSchemaScan(t *testing.T) {
 		{`[{}]`, true, `[]`},
 		// unknown field type
 		{
-			`[{"system":false,"id":"123","name":"test1","type":"unknown","required":false,"unique":false}]`,
+			`[{"system":false,"id":"123","name":"test1","type":"unknown","required":false,"presentable":false,"unique":false}]`,
 			true,
 			`[]`,
 		},
 		// without options
 		{
-			`[{"system":false,"id":"123","name":"test1","type":"text","required":false,"unique":false}]`,
+			`[{"system":false,"id":"123","name":"test1","type":"text","required":false,"presentable":false,"unique":false}]`,
 			false,
-			`[{"system":false,"id":"123","name":"test1","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`,
+			`[{"system":false,"id":"123","name":"test1","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`,
 		},
 		// with options
 		{
-			`[{"system":false,"id":"123","name":"test1","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":"test"}}]`,
+			`[{"system":false,"id":"123","name":"test1","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":"test"}}]`,
 			false,
-			`[{"system":false,"id":"123","name":"test1","type":"text","required":false,"unique":false,"options":{"min":null,"max":null,"pattern":"test"}}]`,
+			`[{"system":false,"id":"123","name":"test1","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":"test"}}]`,
 		},
 	}
 
