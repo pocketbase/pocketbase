@@ -5,19 +5,14 @@
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
 
     export let record;
-    export let displayFields = [];
 
     $: collection = $collections?.find((item) => item.id == record?.collectionId);
 
     $: fileDisplayFields =
-        displayFields?.filter((name) => {
-            return !!collection?.schema?.find((field) => field.name == name && field.type == "file");
-        }) || [];
+        collection?.schema?.filter((f) => f.presentable && f.type == "file")?.map((f) => f.name) || [];
 
     $: textDisplayFields =
-        (!fileDisplayFields.length
-            ? displayFields
-            : displayFields?.filter((name) => !fileDisplayFields.includes(name))) || [];
+        collection?.schema?.filter((f) => f.presentable && f.type != "file")?.map((f) => f.name) || [];
 </script>
 
 <div class="record-info">

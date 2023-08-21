@@ -32,8 +32,6 @@
 
     $: collectionId = field?.options?.collectionId;
 
-    $: displayFields = field?.options?.displayFields;
-
     $: collection = $collections.find((c) => c.id == collectionId) || null;
 
     $: if (typeof filter !== "undefined" && pickerPanel?.isActive()) {
@@ -252,7 +250,7 @@
                     <i class="ri-checkbox-blank-circle-line txt-disabled" />
                 {/if}
                 <div class="content">
-                    <RecordInfo {record} {displayFields} />
+                    <RecordInfo {record} />
                 </div>
                 {#if !isView}
                     <div class="actions nonintrusive">
@@ -301,7 +299,7 @@
             {#each selected as record, i}
                 <Draggable bind:list={selected} index={i} let:dragging let:dragover>
                     <span class="label" class:label-danger={dragging} class:label-warning={dragover}>
-                        <RecordInfo {record} {displayFields} />
+                        <RecordInfo {record} />
                         <button
                             type="button"
                             title="Remove"

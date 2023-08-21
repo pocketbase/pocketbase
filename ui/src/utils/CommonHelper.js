@@ -1414,8 +1414,10 @@ export default class CommonHelper {
     /**
      * Tries to output the first displayable field of the provided model.
      *
-     * @param  {Object} model
-     * @return {Any}
+     * @param  {Object}        model
+     * @param  {Array<string>} displayFields
+     * @param  {String}        [missingValue]
+     * @return {String}
      */
     static displayValue(model, displayFields, missingValue = "N/A") {
         model = model || {};
@@ -1423,8 +1425,8 @@ export default class CommonHelper {
 
         let result = [];
 
-        for (const field of displayFields) {
-            let val = model[field];
+        for (const prop of displayFields) {
+            let val = model[prop];
 
             if (typeof val === "undefined") {
                 continue
@@ -1445,10 +1447,12 @@ export default class CommonHelper {
             "slug",
             "email",
             "username",
+            "nickname",
             "label",
             "heading",
             "message",
             "key",
+            "identifier",
             "id",
         ];
 

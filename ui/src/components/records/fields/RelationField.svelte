@@ -149,7 +149,7 @@
                 >
                     <div class="list-item" class:dragging class:dragover>
                         <div class="content">
-                            <RecordInfo {record} displayFields={field.options?.displayFields} />
+                            <RecordInfo {record} />
                         </div>
                         <div class="actions">
                             <button

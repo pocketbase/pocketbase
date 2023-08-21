@@ -216,7 +216,21 @@
                                     text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
                                         field
                                     )}.`,
-                                    position: "right",
+                                }}
+                            />
+                        </label>
+                    </Field>
+                </div>
+
+                <div class="col-sm-4">
+                    <Field class="form-field form-field-toggle m-0" name="presentable" let:uniqueId>
+                        <input type="checkbox" id={uniqueId} bind:checked={field.presentable} />
+                        <label for={uniqueId}>
+                            <span class="txt">Presentable</span>
+                            <i
+                                class="ri-information-line link-hint"
+                                use:tooltip={{
+                                    text: `Whether the field should be preferred in the Admin UI relation listings.`,
                                 }}
                             />
                         </label>

@@ -89,7 +89,7 @@
         {#if expanded.length}
             {#each expanded.slice(0, relLimit) as item, i (i + item)}
                 <span class="label">
-                    <RecordInfo record={item} displayFields={field.options?.displayFields} />
+                    <RecordInfo record={item} />
                 </span>
             {/each}
         {:else}
