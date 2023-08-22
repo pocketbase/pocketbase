@@ -8,7 +8,7 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.6.2
 	github.com/dop251/goja v0.0.0-20230707174833-636fdf960de1
-	github.com/dop251/goja_nodejs v0.0.0-20230731184339-9ba67d720a81
+	github.com/dop251/goja_nodejs v0.0.0-20230821135201-94e508132562
 	github.com/fatih/color v1.15.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gabriel-vasile/mimetype v1.4.2

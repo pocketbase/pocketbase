@@ -60,6 +60,11 @@
 - Reflected the latest JS SDK changes in the Admin UI.
 
 
+## v0.17.6
+
+- Fixed JSVM `require()` file path error when using Windows-style path delimiters ([#3163](https://github.com/pocketbase/pocketbase/issues/3163#issuecomment-1685034438)).
+
+
 ## v0.17.5
 
 - Added quotes around the wrapped view query columns introduced with v0.17.4.
