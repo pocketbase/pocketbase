@@ -6,6 +6,7 @@
     import tooltip from "@/actions/tooltip";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
+    import { collections } from "@/stores/collections";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import Field from "@/components/base/Field.svelte";
@@ -121,12 +122,20 @@
         let listSort = sort;
         const sortMatch = listSort.match(sortRegex);
         const relField = sortMatch ? relFields.find((f) => f.name === sortMatch[2]) : null;
-        if (sortMatch && relField?.options?.displayFields?.length > 0) {
+        if (sortMatch && relField) {
+            const relPresentableFields =
+                $collections
+                    ?.find((c) => c.id == relField.options?.collectionId)
+                    ?.schema?.filter((f) => f.presentable)
+                    ?.map((f) => f.name) || [];
+
             const parts = [];
-            for (const displayField of relField.options.displayFields) {
-                parts.push((sortMatch[1] || "") + sortMatch[2] + "." + displayField);
+            for (const presentableField of relPresentableFields) {
+                parts.push((sortMatch[1] || "") + sortMatch[2] + "." + presentableField);
             }
-            listSort = parts.join(",");
+            if (parts.length > 0) {
+                listSort = parts.join(",");
+            }
         }
 
         const fallbackSearchFields = CommonHelper.getAllCollectionIdentifiers(collection);

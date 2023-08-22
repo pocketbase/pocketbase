@@ -22,7 +22,6 @@
     ];
 
     let upsertPanel = null;
-    let displayFieldsList = [];
     let isSingle = field.options?.maxSelect == 1;
     let oldIsSingle = isSingle;
 
