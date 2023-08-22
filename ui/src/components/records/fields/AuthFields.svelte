@@ -8,7 +8,7 @@
 
     export let record;
     export let collection;
-    export let isNew = !!record.id;
+    export let isNew = !record.id;
 
     let originalUsername = record.username || null;
 

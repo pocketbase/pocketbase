@@ -24,7 +24,7 @@
     let passwordConfirm = "";
     let changePasswordToggle = false;
 
-    $: isNew = !!admin?.id;
+    $: isNew = !admin?.id;
 
     $: hasChanges =
         (isNew && email != "") || changePasswordToggle || email !== admin.email || avatar !== admin.avatar;
