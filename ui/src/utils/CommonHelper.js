@@ -419,7 +419,7 @@ export default class CommonHelper {
     }
 
     /**
-     * Generates random string (suitable for elements id and keys).
+     * Generates pseudo-random string (suitable for elements id and keys).
      *
      * @param  {Number} [length] Results string length (default 10)
      * @return {String}
