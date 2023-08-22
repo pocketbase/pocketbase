@@ -59,6 +59,8 @@
 
 - (@todo docs) Added new "Strip urls domain" `editor` field option to allow controlling the default TinyMCE imported urls behavior (_default to `false` for new content_).
 
+- Reduced the default JSVM prewarmed pool size to 25 to reduce the initial memory consumptions (_you can manually adjust the pool size with `--hooksPool=50` if you need to, but the default should suffice for most cases_).
+
 - Reflected the latest JS SDK changes in the Admin UI.
 
 
