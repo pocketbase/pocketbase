@@ -198,49 +198,43 @@
 
     {#if interactive && showOptions}
         <div class="schema-field-options" transition:slide|local={{ duration: 150 }}>
-            <div class="grid grid-sm">
-                <div class="col-sm-12 hidden-empty">
-                    <slot name="options" {interactive} {hasErrors} />
-                </div>
+            <div class="hidden-empty m-b-sm">
+                <slot name="options" {interactive} {hasErrors} />
+            </div>
 
-                <slot name="beforeNonempty" {interactive} {hasErrors} />
+            <div class="schema-field-options-footer">
+                <Field class="form-field form-field-toggle" name="requried" let:uniqueId>
+                    <input type="checkbox" id={uniqueId} bind:checked={field.required} />
+                    <label for={uniqueId}>
+                        <span class="txt">{requiredLabel}</span>
+                        <i
+                            class="ri-information-line link-hint"
+                            use:tooltip={{
+                                text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
+                                    field
+                                )}.`,
+                            }}
+                        />
+                    </label>
+                </Field>
 
-                <div class="col-sm-4">
-                    <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
-                        <input type="checkbox" id={uniqueId} bind:checked={field.required} />
-                        <label for={uniqueId}>
-                            <span class="txt">{requiredLabel}</span>
-                            <i
-                                class="ri-information-line link-hint"
-                                use:tooltip={{
-                                    text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
-                                        field
-                                    )}.`,
-                                }}
-                            />
-                        </label>
-                    </Field>
-                </div>
+                <Field class="form-field form-field-toggle" name="presentable" let:uniqueId>
+                    <input type="checkbox" id={uniqueId} bind:checked={field.presentable} />
+                    <label for={uniqueId}>
+                        <span class="txt">Presentable</span>
+                        <i
+                            class="ri-information-line link-hint"
+                            use:tooltip={{
+                                text: `Whether the field should be preferred in the Admin UI relation listings.`,
+                            }}
+                        />
+                    </label>
+                </Field>
 
-                <div class="col-sm-4">
-                    <Field class="form-field form-field-toggle m-0" name="presentable" let:uniqueId>
-                        <input type="checkbox" id={uniqueId} bind:checked={field.presentable} />
-                        <label for={uniqueId}>
-                            <span class="txt">Presentable</span>
-                            <i
-                                class="ri-information-line link-hint"
-                                use:tooltip={{
-                                    text: `Whether the field should be preferred in the Admin UI relation listings.`,
-                                }}
-                            />
-                        </label>
-                    </Field>
-                </div>
-
-                <slot name="afterNonempty" {interactive} {hasErrors} />
+                <slot name="optionsFooter" {interactive} {hasErrors} />
 
                 {#if !field.toDelete}
-                    <div class="col-sm-4 m-l-auto txt-right">
+                    <div class="m-l-auto txt-right">
                         <div class="flex-fill" />
                         <div class="inline-flex flex-gap-sm flex-nowrap">
                             <button

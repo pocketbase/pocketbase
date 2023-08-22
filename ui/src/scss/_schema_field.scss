@@ -83,6 +83,19 @@
     border-bottom-right-radius: var(--baseRadius);
 }
 
+.schema-field-options-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: var(--baseSpacing);
+    .form-field {
+        margin: 0;
+        width: auto;
+    }
+}
+
 .schema-field {
     @extend %block;
     position: relative;

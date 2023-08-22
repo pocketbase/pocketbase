@@ -523,6 +523,12 @@ func (o UrlOptions) Validate() error {
 // -------------------------------------------------------------------
 
 type EditorOptions struct {
+	// ConvertUrls is usually used to instruct the editor whether to
+	// apply url conversion (eg. stripping the domain name in case the
+	// urls are using the same domain as the one where the editor is loaded).
+	//
+	// (see also https://www.tiny.cloud/docs/tinymce/6/url-handling/#convert_urls)
+	ConvertUrls bool `form:"convertUrls" json:"convertUrls"`
 }
 
 func (o EditorOptions) Validate() error {

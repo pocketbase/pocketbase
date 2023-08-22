@@ -57,6 +57,8 @@
 
 - Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send ([#3121](https://github.com/pocketbase/pocketbase/issues/3121)).
 
+- (@todo docs) Added new "Strip urls domain" `editor` field option to allow controlling the default TinyMCE imported urls behavior (_default to `false` for new content_).
+
 - Reflected the latest JS SDK changes in the Admin UI.
 
 

@@ -5,6 +5,11 @@
 
     export let field;
     export let value = undefined;
+
+    $: conf = Object.assign(CommonHelper.defaultEditorOptions(), {
+        convert_urls: field.options?.convertUrls,
+        relative_urls: false,
+    });
 </script>
 
 <Field class="form-field {field.required ? 'required' : ''}" name={field.name} let:uniqueId>
@@ -15,7 +20,7 @@
     <TinyMCE
         id={uniqueId}
         scriptSrc="{import.meta.env.BASE_URL}libs/tinymce/tinymce.min.js"
-        conf={CommonHelper.defaultEditorOptions()}
+        {conf}
         bind:value
     />
 </Field>
