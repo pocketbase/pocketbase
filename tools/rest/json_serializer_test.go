@@ -217,16 +217,16 @@ func TestSerialize(t *testing.T) {
 			c.Response().Status = s.statusCode
 
 			if err := s.serializer.Serialize(c, s.data, ""); err != nil {
-				t.Fatalf("[%s] Serialize failure: %v", s.name, err)
+				t.Fatalf("Serialize failure: %v", err)
 			}
 
 			rawBody, err := io.ReadAll(rec.Result().Body)
 			if err != nil {
-				t.Fatalf("[%s] Failed to read request body: %v", s.name, err)
+				t.Fatalf("Failed to read request body: %v", err)
 			}
 
 			if v := strings.TrimSpace(string(rawBody)); v != s.expected {
-				t.Fatalf("[%s] Expected body\n%v \ngot: \n%v", s.name, s.expected, v)
+				t.Fatalf("Expected body\n%v \ngot: \n%v", s.expected, v)
 			}
 		})
 	}
