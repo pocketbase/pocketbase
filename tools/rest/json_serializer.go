@@ -25,8 +25,10 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 		fieldsParam = "fields"
 	}
 
+	statusCode := c.Response().Status
+
 	param := c.QueryParam(fieldsParam)
-	if param == "" {
+	if param == "" || statusCode < 200 || statusCode > 299 {
 		return s.DefaultJSONSerializer.Serialize(c, i, indent)
 	}
 
