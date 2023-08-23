@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
@@ -92,6 +93,24 @@ func pickFields(data any, fields []string) {
 func pickMapFields(data map[string]any, fields []string) {
 	if len(fields) == 0 {
 		return // nothing to pick
+	}
+
+	if list.ExistInSlice("*", fields) {
+		// append all missing root level data keys
+		for k := range data {
+			var exists bool
+
+			for _, f := range fields {
+				if strings.HasPrefix(f+".", k+".") {
+					exists = true
+					break
+				}
+			}
+
+			if !exists {
+				fields = append(fields, k)
+			}
+		}
 	}
 
 DataLoop:

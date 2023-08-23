@@ -204,6 +204,76 @@ func TestSerialize(t *testing.T) {
 			"fields=a,c",
 			`{"items":[{"a":11,"c":"test1"},{"a":22,"c":"test2"}],"page":1,"perPage":10,"totalItems":20,"totalPages":30}`,
 		},
+		{
+			"root wildcard",
+			rest.Serializer{},
+			200,
+			&search.Result{
+				Page:       1,
+				PerPage:    10,
+				TotalItems: 20,
+				TotalPages: 30,
+				Items: []any{
+					map[string]any{"a": 11, "b": 11, "c": "test1"},
+					map[string]any{"a": 22, "b": 22, "c": "test2"},
+				},
+			},
+			"fields=*",
+			`{"items":[{"a":11,"b":11,"c":"test1"},{"a":22,"b":22,"c":"test2"}],"page":1,"perPage":10,"totalItems":20,"totalPages":30}`,
+		},
+		{
+			"root wildcard with nested exception",
+			rest.Serializer{},
+			200,
+			map[string]any{
+				"id":    "123",
+				"title": "lorem",
+				"rel": map[string]any{
+					"id":    "456",
+					"title": "rel_title",
+				},
+			},
+			"fields=*,rel.id",
+			`{"id":"123","rel":{"id":"456"},"title":"lorem"}`,
+		},
+		{
+			"sub wildcard",
+			rest.Serializer{},
+			200,
+			map[string]any{
+				"id":    "123",
+				"title": "lorem",
+				"rel": map[string]any{
+					"id":    "456",
+					"title": "rel_title",
+					"sub": map[string]any{
+						"id":    "789",
+						"title": "sub_title",
+					},
+				},
+			},
+			"fields=id,rel.*",
+			`{"id":"123","rel":{"id":"456","sub":{"id":"789","title":"sub_title"},"title":"rel_title"}}`,
+		},
+		{
+			"sub wildcard with nested exception",
+			rest.Serializer{},
+			200,
+			map[string]any{
+				"id":    "123",
+				"title": "lorem",
+				"rel": map[string]any{
+					"id":    "456",
+					"title": "rel_title",
+					"sub": map[string]any{
+						"id":    "789",
+						"title": "sub_title",
+					},
+				},
+			},
+			"fields=id,rel.*,rel.sub.id",
+			`{"id":"123","rel":{"id":"456","sub":{"id":"789"},"title":"rel_title"}}`,
+		},
 	}
 
 	for _, s := range scenarios {
