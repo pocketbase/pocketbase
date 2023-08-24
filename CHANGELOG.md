@@ -23,13 +23,13 @@
 
 - Added cron expression macros ([#3132](https://github.com/pocketbase/pocketbase/issues/3132)):
   ```
-  "@yearly":   "0 0 1 1 *"
-  "@annually": "0 0 1 1 *"
-  "@monthly":  "0 0 1 * *"
-  "@weekly":   "0 0 * * 0"
-  "@daily":    "0 0 * * *"
-  "@midnight": "0 0 * * *"
-  "@hourly":   "0 * * * *"
+  @yearly   - "0 0 1 1 *"
+  @annually - "0 0 1 1 *"
+  @monthly  - "0 0 1 * *"
+  @weekly   - "0 0 * * 0"
+  @daily    - "0 0 * * *"
+  @midnight - "0 0 * * *"
+  @hourly   - "0 * * * *"
   ```
 
 - (@todo update docs examples) To minimize the footguns with `Dao.FindFirstRecordByFilter()` and `Dao.FindRecordsByFilter()`, the functions now supports an optional placeholder params argument that is safe to be populated with untrusted user input.
@@ -54,6 +54,13 @@
   _If you don't need an offset, you can set it to `0`._
 
 - Added JSVM `$mails.*` binds for the corresponding Go [mails package](https://pkg.go.dev/github.com/pocketbase/pocketbase/mails) functions.
+
+- Added JSVM helper crypto primitives under the `$security.*` namespace:
+  ```js
+  $security.md5(text)
+  $security.sha256(text)
+  $security.sha512(text)
+  ```
 
 - Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send ([#3121](https://github.com/pocketbase/pocketbase/issues/3121)).
 

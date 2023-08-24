@@ -450,6 +450,11 @@ func securityBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$security", obj)
 
+	// crypto
+	obj.Set("md5", security.MD5)
+	obj.Set("sha256", security.SHA256)
+	obj.Set("sha512", security.SHA512)
+
 	// random
 	obj.Set("randomString", security.RandomString)
 	obj.Set("randomStringWithAlphabet", security.RandomStringWithAlphabet)

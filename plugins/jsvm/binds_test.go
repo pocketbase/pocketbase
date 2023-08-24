@@ -622,7 +622,40 @@ func TestSecurityBindsCount(t *testing.T) {
 	vm := goja.New()
 	securityBinds(vm)
 
-	testBindsCount(vm, "$security", 9, t)
+	testBindsCount(vm, "$security", 12, t)
+}
+
+func TestSecurityCryptoBinds(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	baseBinds(vm)
+	securityBinds(vm)
+
+	sceneraios := []struct {
+		js       string
+		expected string
+	}{
+		{`$security.md5("123")`, "202cb962ac59075b964b07152d234b70"},
+		{`$security.sha256("123")`, "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"},
+		{`$security.sha512("123")`, "3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1eb8b85103e3be7ba613b31bb5c9c36214dc9f14a42fd7a2fdb84856bca5c44c2"},
+	}
+
+	for _, s := range sceneraios {
+		t.Run(s.js, func(t *testing.T) {
+			result, err := vm.RunString(s.js)
+			if err != nil {
+				t.Fatalf("Failed to execute js script, got %v", err)
+			}
+
+			v, _ := result.Export().(string)
+
+			if v != s.expected {
+				t.Fatalf("Expected %v \ngot \n%v", s.expected, v)
+			}
+		})
+	}
 }
 
 func TestSecurityRandomStringBinds(t *testing.T) {
@@ -644,16 +677,18 @@ func TestSecurityRandomStringBinds(t *testing.T) {
 	}
 
 	for _, s := range sceneraios {
-		result, err := vm.RunString(s.js)
-		if err != nil {
-			t.Fatalf("[%s] Failed to execute js script, got %v", s.js, err)
-		}
+		t.Run(s.js, func(t *testing.T) {
+			result, err := vm.RunString(s.js)
+			if err != nil {
+				t.Fatalf("Failed to execute js script, got %v", err)
+			}
 
-		v, _ := result.Export().(string)
+			v, _ := result.Export().(string)
 
-		if len(v) != s.length {
-			t.Fatalf("[%s] Expected %d length string, \ngot \n%v", s.js, s.length, v)
-		}
+			if len(v) != s.length {
+				t.Fatalf("Expected %d length string, \ngot \n%v", s.length, v)
+			}
+		})
 	}
 }
 
@@ -684,16 +719,18 @@ func TestSecurityJWTBinds(t *testing.T) {
 	}
 
 	for _, s := range sceneraios {
-		result, err := vm.RunString(s.js)
-		if err != nil {
-			t.Fatalf("[%s] Failed to execute js script, got %v", s.js, err)
-		}
+		t.Run(s.js, func(t *testing.T) {
+			result, err := vm.RunString(s.js)
+			if err != nil {
+				t.Fatalf("Failed to execute js script, got %v", err)
+			}
 
-		raw, _ := json.Marshal(result.Export())
+			raw, _ := json.Marshal(result.Export())
 
-		if string(raw) != s.expected {
-			t.Fatalf("[%s] Expected \n%s, \ngot \n%s", s.js, s.expected, raw)
-		}
+			if string(raw) != s.expected {
+				t.Fatalf("Expected \n%s, \ngot \n%s", s.expected, raw)
+			}
+		})
 	}
 }
 
