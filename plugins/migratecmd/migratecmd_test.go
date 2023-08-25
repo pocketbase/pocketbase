@@ -381,7 +381,7 @@ migrate((db) => {
 
   collection.name = "test456_update"
   collection.type = "base"
-  collection.listRule = null
+  collection.listRule = "@request.auth.id != ''"
   collection.deleteRule = "updated > 0 && @request.auth.id != ''"
   collection.options = {}
   collection.indexes = [
@@ -503,7 +503,7 @@ func init() {
 
 		collection.Type = "base"
 
-		collection.ListRule = nil
+		collection.ListRule = types.Pointer("@request.auth.id != ''")
 
 		collection.DeleteRule = types.Pointer("updated > 0 && @request.auth.id != ''")
 
@@ -683,7 +683,7 @@ func init() {
 		collection.Name = "test456_update"
 		collection.Type = models.CollectionTypeBase
 		collection.DeleteRule = types.Pointer(`updated > 0 && @request.auth.id != ''`)
-		collection.ListRule = nil
+		collection.ListRule = types.Pointer("@request.auth.id != ''")
 		collection.Indexes = types.JsonArray[string]{
 			"create index test1 on test456_update (f1_name)",
 		}
