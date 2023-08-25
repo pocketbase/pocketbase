@@ -137,53 +137,61 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	// note: strconv.Quote is used because %q converts the rule operators in unicode char codes
 	// ---
 
+	formatRule := func(typ string, rule *string) string {
+		if rule == nil {
+			return fmt.Sprintf("%s.%sRule = null", varName, typ)
+		}
+
+		return fmt.Sprintf("%s.%sRule = %s", varName, typ, strconv.Quote(*rule))
+	}
+
 	if old.ListRule != new.ListRule {
-		if old.ListRule != nil && new.ListRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.listRule = null", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.listRule = %s", varName, strconv.Quote(*old.ListRule)))
-		} else if old.ListRule == nil && new.ListRule != nil || *old.ListRule != *new.ListRule {
-			upParts = append(upParts, fmt.Sprintf("%s.listRule = %s", varName, strconv.Quote(*new.ListRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.listRule = null", varName))
+		oldRule := formatRule("list", old.ListRule)
+		newRule := formatRule("list", new.ListRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
 	if old.ViewRule != new.ViewRule {
-		if old.ViewRule != nil && new.ViewRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.viewRule = null", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.viewRule = %s", varName, strconv.Quote(*old.ViewRule)))
-		} else if old.ViewRule == nil && new.ViewRule != nil || *old.ViewRule != *new.ViewRule {
-			upParts = append(upParts, fmt.Sprintf("%s.viewRule = %s", varName, strconv.Quote(*new.ViewRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.viewRule = null", varName))
+		oldRule := formatRule("view", old.ViewRule)
+		newRule := formatRule("view", new.ViewRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
 	if old.CreateRule != new.CreateRule {
-		if old.CreateRule != nil && new.CreateRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.createRule = null", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.createRule = %s", varName, strconv.Quote(*old.CreateRule)))
-		} else if old.CreateRule == nil && new.CreateRule != nil || *old.CreateRule != *new.CreateRule {
-			upParts = append(upParts, fmt.Sprintf("%s.createRule = %s", varName, strconv.Quote(*new.CreateRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.createRule = null", varName))
+		oldRule := formatRule("create", old.CreateRule)
+		newRule := formatRule("create", new.CreateRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
 	if old.UpdateRule != new.UpdateRule {
-		if old.UpdateRule != nil && new.UpdateRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.updateRule = null", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.updateRule = %s", varName, strconv.Quote(*old.UpdateRule)))
-		} else if old.UpdateRule == nil && new.UpdateRule != nil || *old.UpdateRule != *new.UpdateRule {
-			upParts = append(upParts, fmt.Sprintf("%s.updateRule = %s", varName, strconv.Quote(*new.UpdateRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.updateRule = null", varName))
+		oldRule := formatRule("update", old.UpdateRule)
+		newRule := formatRule("update", new.UpdateRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
 	if old.DeleteRule != new.DeleteRule {
-		if old.DeleteRule != nil && new.DeleteRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.deleteRule = null", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.deleteRule = %s", varName, strconv.Quote(*old.DeleteRule)))
-		} else if old.DeleteRule == nil && new.DeleteRule != nil || *old.DeleteRule != *new.DeleteRule {
-			upParts = append(upParts, fmt.Sprintf("%s.deleteRule = %s", varName, strconv.Quote(*new.DeleteRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.deleteRule = null", varName))
+		oldRule := formatRule("delete", old.DeleteRule)
+		newRule := formatRule("delete", new.DeleteRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
@@ -521,53 +529,61 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	// note: strconv.Quote is used because %q converts the rule operators in unicode char codes
 	// ---
 
+	formatRule := func(typ string, rule *string) string {
+		if rule == nil {
+			return fmt.Sprintf("%s.%sRule = nil\n", varName, typ)
+		}
+
+		return fmt.Sprintf("%s.%sRule = types.Pointer(%s)\n", varName, typ, strconv.Quote(*rule))
+	}
+
 	if old.ListRule != new.ListRule {
-		if old.ListRule != nil && new.ListRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.ListRule = nil\n", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.ListRule = types.Pointer(%s)\n", varName, strconv.Quote(*old.ListRule)))
-		} else if old.ListRule == nil && new.ListRule != nil || *old.ListRule != *new.ListRule {
-			upParts = append(upParts, fmt.Sprintf("%s.ListRule = types.Pointer(%s)\n", varName, strconv.Quote(*new.ListRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.ListRule = nil\n", varName))
+		oldRule := formatRule("List", old.ListRule)
+		newRule := formatRule("List", new.ListRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
 	if old.ViewRule != new.ViewRule {
-		if old.ViewRule != nil && new.ViewRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.ViewRule = nil\n", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.ViewRule = types.Pointer(%s)\n", varName, strconv.Quote(*old.ViewRule)))
-		} else if old.ViewRule == nil && new.ViewRule != nil || *old.ViewRule != *new.ViewRule {
-			upParts = append(upParts, fmt.Sprintf("%s.ViewRule = types.Pointer(%s)\n", varName, strconv.Quote(*new.ViewRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.ViewRule = nil\n", varName))
+		oldRule := formatRule("View", old.ViewRule)
+		newRule := formatRule("View", new.ViewRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
 	if old.CreateRule != new.CreateRule {
-		if old.CreateRule != nil && new.CreateRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.CreateRule = nil\n", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.CreateRule = types.Pointer(%s)\n", varName, strconv.Quote(*old.CreateRule)))
-		} else if old.CreateRule == nil && new.CreateRule != nil || *old.CreateRule != *new.CreateRule {
-			upParts = append(upParts, fmt.Sprintf("%s.CreateRule = types.Pointer(%s)\n", varName, strconv.Quote(*new.CreateRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.CreateRule = nil\n", varName))
+		oldRule := formatRule("Create", old.CreateRule)
+		newRule := formatRule("Create", new.CreateRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
 	if old.UpdateRule != new.UpdateRule {
-		if old.UpdateRule != nil && new.UpdateRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.UpdateRule = nil\n", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.UpdateRule = types.Pointer(%s)\n", varName, strconv.Quote(*old.UpdateRule)))
-		} else if old.UpdateRule == nil && new.UpdateRule != nil || *old.UpdateRule != *new.UpdateRule {
-			upParts = append(upParts, fmt.Sprintf("%s.UpdateRule = types.Pointer(%s)\n", varName, strconv.Quote(*new.UpdateRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.UpdateRule = nil\n", varName))
+		oldRule := formatRule("Update", old.UpdateRule)
+		newRule := formatRule("Update", new.UpdateRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
 	if old.DeleteRule != new.DeleteRule {
-		if old.DeleteRule != nil && new.DeleteRule == nil {
-			upParts = append(upParts, fmt.Sprintf("%s.DeleteRule = nil\n", varName))
-			downParts = append(downParts, fmt.Sprintf("%s.DeleteRule = types.Pointer(%s)\n", varName, strconv.Quote(*old.DeleteRule)))
-		} else if old.DeleteRule == nil && new.DeleteRule != nil || *old.DeleteRule != *new.DeleteRule {
-			upParts = append(upParts, fmt.Sprintf("%s.DeleteRule = types.Pointer(%s)\n", varName, strconv.Quote(*new.DeleteRule)))
-			downParts = append(downParts, fmt.Sprintf("%s.DeleteRule = nil\n", varName))
+		oldRule := formatRule("Delete", old.DeleteRule)
+		newRule := formatRule("Delete", new.DeleteRule)
+
+		if oldRule != newRule {
+			upParts = append(upParts, newRule)
+			downParts = append(downParts, oldRule)
 		}
 	}
 
