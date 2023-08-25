@@ -137,17 +137,17 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	// note: strconv.Quote is used because %q converts the rule operators in unicode char codes
 	// ---
 
-	formatRule := func(typ string, rule *string) string {
+	formatRule := func(prop string, rule *string) string {
 		if rule == nil {
-			return fmt.Sprintf("%s.%sRule = null", varName, typ)
+			return fmt.Sprintf("%s.%s = null", varName, prop)
 		}
 
-		return fmt.Sprintf("%s.%sRule = %s", varName, typ, strconv.Quote(*rule))
+		return fmt.Sprintf("%s.%s = %s", varName, prop, strconv.Quote(*rule))
 	}
 
 	if old.ListRule != new.ListRule {
-		oldRule := formatRule("list", old.ListRule)
-		newRule := formatRule("list", new.ListRule)
+		oldRule := formatRule("listRule", old.ListRule)
+		newRule := formatRule("listRule", new.ListRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -156,8 +156,8 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	if old.ViewRule != new.ViewRule {
-		oldRule := formatRule("view", old.ViewRule)
-		newRule := formatRule("view", new.ViewRule)
+		oldRule := formatRule("viewRule", old.ViewRule)
+		newRule := formatRule("viewRule", new.ViewRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -166,8 +166,8 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	if old.CreateRule != new.CreateRule {
-		oldRule := formatRule("create", old.CreateRule)
-		newRule := formatRule("create", new.CreateRule)
+		oldRule := formatRule("createRule", old.CreateRule)
+		newRule := formatRule("createRule", new.CreateRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -176,8 +176,8 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	if old.UpdateRule != new.UpdateRule {
-		oldRule := formatRule("update", old.UpdateRule)
-		newRule := formatRule("update", new.UpdateRule)
+		oldRule := formatRule("updateRule", old.UpdateRule)
+		newRule := formatRule("updateRule", new.UpdateRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -186,8 +186,8 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	if old.DeleteRule != new.DeleteRule {
-		oldRule := formatRule("delete", old.DeleteRule)
-		newRule := formatRule("delete", new.DeleteRule)
+		oldRule := formatRule("deleteRule", old.DeleteRule)
+		newRule := formatRule("deleteRule", new.DeleteRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -529,17 +529,17 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	// note: strconv.Quote is used because %q converts the rule operators in unicode char codes
 	// ---
 
-	formatRule := func(typ string, rule *string) string {
+	formatRule := func(prop string, rule *string) string {
 		if rule == nil {
-			return fmt.Sprintf("%s.%sRule = nil\n", varName, typ)
+			return fmt.Sprintf("%s.%s = nil\n", varName, prop)
 		}
 
-		return fmt.Sprintf("%s.%sRule = types.Pointer(%s)\n", varName, typ, strconv.Quote(*rule))
+		return fmt.Sprintf("%s.%s = types.Pointer(%s)\n", varName, prop, strconv.Quote(*rule))
 	}
 
 	if old.ListRule != new.ListRule {
-		oldRule := formatRule("List", old.ListRule)
-		newRule := formatRule("List", new.ListRule)
+		oldRule := formatRule("ListRule", old.ListRule)
+		newRule := formatRule("ListRule", new.ListRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -548,8 +548,8 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	if old.ViewRule != new.ViewRule {
-		oldRule := formatRule("View", old.ViewRule)
-		newRule := formatRule("View", new.ViewRule)
+		oldRule := formatRule("ViewRule", old.ViewRule)
+		newRule := formatRule("ViewRule", new.ViewRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -558,8 +558,8 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	if old.CreateRule != new.CreateRule {
-		oldRule := formatRule("Create", old.CreateRule)
-		newRule := formatRule("Create", new.CreateRule)
+		oldRule := formatRule("CreateRule", old.CreateRule)
+		newRule := formatRule("CreateRule", new.CreateRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -568,8 +568,8 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	if old.UpdateRule != new.UpdateRule {
-		oldRule := formatRule("Update", old.UpdateRule)
-		newRule := formatRule("Update", new.UpdateRule)
+		oldRule := formatRule("UpdateRule", old.UpdateRule)
+		newRule := formatRule("UpdateRule", new.UpdateRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
@@ -578,8 +578,8 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	if old.DeleteRule != new.DeleteRule {
-		oldRule := formatRule("Delete", old.DeleteRule)
-		newRule := formatRule("Delete", new.DeleteRule)
+		oldRule := formatRule("DeleteRule", old.DeleteRule)
+		newRule := formatRule("DeleteRule", new.DeleteRule)
 
 		if oldRule != newRule {
 			upParts = append(upParts, newRule)
