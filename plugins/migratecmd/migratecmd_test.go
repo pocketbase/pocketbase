@@ -381,8 +381,10 @@ migrate((db) => {
 
   collection.name = "test456_update"
   collection.type = "base"
-  collection.listRule = null
-  collection.deleteRule = "updated > 0 && @request.auth.id != ''"
+  collection.listRule = "@request.auth.id != ''"
+  collection.createRule = "id = \"nil_update\""
+  collection.updateRule = "id = \"2_update\""
+  collection.deleteRule = null
   collection.options = {}
   collection.indexes = [
     "create index test1 on test456_update (f1_name)"
@@ -430,7 +432,9 @@ migrate((db) => {
   collection.name = "test456"
   collection.type = "auth"
   collection.listRule = "@request.auth.id != '' && created > 0"
-  collection.deleteRule = null
+  collection.createRule = null
+  collection.updateRule = "id = \"2\""
+  collection.deleteRule = "id = \"3\""
   collection.options = {
     "allowEmailAuth": false,
     "allowOAuth2Auth": false,
@@ -507,9 +511,13 @@ func init() {
 
 		collection.Type = "base"
 
-		collection.ListRule = nil
+		collection.ListRule = types.Pointer("@request.auth.id != ''")
 
-		collection.DeleteRule = types.Pointer("updated > 0 && @request.auth.id != ''")
+		collection.CreateRule = types.Pointer("id = \"nil_update\"")
+
+		collection.UpdateRule = types.Pointer("id = \"2_update\"")
+
+		collection.DeleteRule = nil
 
 		options := map[string]any{}
 		json.Unmarshal([]byte(` + "`" + `{}` + "`" + `), &options)
@@ -572,7 +580,11 @@ func init() {
 
 		collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0")
 
-		collection.DeleteRule = nil
+		collection.CreateRule = nil
+
+		collection.UpdateRule = types.Pointer("id = \"2\"")
+
+		collection.DeleteRule = types.Pointer("id = \"3\"")
 
 		options := map[string]any{}
 		json.Unmarshal([]byte(` + "`" + `{
@@ -653,6 +665,9 @@ func init() {
 		collection.Updated = collection.Created
 		collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0")
 		collection.ViewRule = types.Pointer(`id = "1"`)
+		collection.UpdateRule = types.Pointer(`id = "2"`)
+		collection.CreateRule = nil
+		collection.DeleteRule = types.Pointer(`id = "3"`)
 		collection.Indexes = types.JsonArray[string]{"create index test1 on test456 (f1_name)"}
 		collection.SetOptions(models.CollectionAuthOptions{
 			ManageRule:        types.Pointer("created > 0"),
@@ -691,7 +706,11 @@ func init() {
 		collection.Name = "test456_update"
 		collection.Type = models.CollectionTypeBase
 		collection.DeleteRule = types.Pointer(`updated > 0 && @request.auth.id != ''`)
-		collection.ListRule = nil
+		collection.ListRule = types.Pointer("@request.auth.id != ''")
+		collection.ViewRule = types.Pointer(`id = "1"`) // no change
+		collection.UpdateRule = types.Pointer(`id = "2_update"`)
+		collection.CreateRule = types.Pointer(`id = "nil_update"`)
+		collection.DeleteRule = nil
 		collection.Indexes = types.JsonArray[string]{
 			"create index test1 on test456_update (f1_name)",
 		}
