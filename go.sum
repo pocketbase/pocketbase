@@ -187,6 +187,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pocketbase/dbx v1.10.0 h1:58VIT7r6T+BnVbYVosvGBsPjQEic3/VFRYGT823vWSQ=
 github.com/pocketbase/dbx v1.10.0/go.mod h1:xXRCIAKTHMgUCyCKZm55pUOdvFziJjQfXaWKhu2vhMs=
+github.com/pocketbase/dbx v1.10.1 h1:cw+vsyfCJD8YObOVeqb93YErnlxwYMkNZ4rwN0G0AaA=
+github.com/pocketbase/dbx v1.10.1/go.mod h1:xXRCIAKTHMgUCyCKZm55pUOdvFziJjQfXaWKhu2vhMs=
 github.com/pocketbase/tygoja v0.0.0-20230618203136-2f8d57768be1 h1:0FQXnhUhBeF/z6UDj9Zm8GQHFHJSUtqLr1h4/YXf3vc=
 github.com/pocketbase/tygoja v0.0.0-20230618203136-2f8d57768be1/go.mod h1:dOJ+pCyqm/jRn5kO/TX598J0e5xGDcJAZerK5atCrKI=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
