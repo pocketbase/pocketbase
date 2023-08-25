@@ -66,6 +66,27 @@
   $security.sha512(text)
   ```
 
+- ⚠️ Changes to `tests.ApiScenario` struct:
+
+    - The `ApiScenario.AfterTestFunc` now receive as 3rd argument `*http.Response` pointer instead of `*echo.Echo` as the latter is not really useful in this context.
+      ```go
+      // old
+      AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo)
+
+      // new
+      AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response)
+      ```
+
+    - The `ApiScenario.TestAppFactory` now accept the test instance as argument and no longer expect an error as return result ([#3025](https://github.com/pocketbase/pocketbase/discussions/3025#discussioncomment-6592272)).
+      ```go
+      // old
+      TestAppFactory: func() (*tests.TestApp, error)
+
+      // new
+      TestAppFactory: func(t *testing.T) *tests.TestApp
+      ```
+      _Returning a `nil` app instance from the factory results in test failure._
+
 - Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send ([#3121](https://github.com/pocketbase/pocketbase/issues/3121)).
 
 - Skip API `fields` json transformations for non 20x responses ([#3176](https://github.com/pocketbase/pocketbase/issues/3176)).
@@ -77,6 +98,7 @@
 - Reduced the default JSVM prewarmed pool size to 25 to reduce the initial memory consumptions (_you can manually adjust the pool size with `--hooksPool=50` if you need to, but the default should suffice for most cases_).
 
 - Reflected the latest JS SDK changes in the Admin UI.
+
 
 
 ## v0.17.7

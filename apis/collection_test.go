@@ -245,7 +245,7 @@ func TestCollectionDelete(t *testing.T) {
 				"OnCollectionBeforeDeleteRequest": 1,
 				"OnCollectionAfterDeleteRequest":  1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				ensureDeletedFiles(app, "9n89pl5vkct6330")
 			},
 		},
@@ -264,7 +264,7 @@ func TestCollectionDelete(t *testing.T) {
 				"OnCollectionBeforeDeleteRequest": 1,
 				"OnCollectionAfterDeleteRequest":  1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				ensureDeletedFiles(app, "9n89pl5vkct6330")
 			},
 		},
@@ -693,7 +693,7 @@ func TestCollectionCreate(t *testing.T) {
 				"OnCollectionBeforeCreateRequest": 1,
 				"OnCollectionAfterCreateRequest":  1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				indexes, err := app.Dao().TableIndexes("new")
 				if err != nil {
 					t.Fatal(err)
@@ -823,7 +823,7 @@ func TestCollectionUpdate(t *testing.T) {
 				"OnCollectionBeforeUpdateRequest": 1,
 				"OnCollectionAfterUpdateRequest":  1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				// check if the record table was renamed
 				if !app.Dao().HasTable("new") {
 					t.Fatal("Couldn't find record table 'new'.")
@@ -1060,7 +1060,7 @@ func TestCollectionUpdate(t *testing.T) {
 				"OnCollectionBeforeUpdateRequest": 1,
 				"OnCollectionAfterUpdateRequest":  1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				indexes, err := app.Dao().TableIndexes("new")
 				if err != nil {
 					t.Fatal(err)
@@ -1115,7 +1115,7 @@ func TestCollectionsImport(t *testing.T) {
 				`"data":{`,
 				`"collections":{"code":"validation_required"`,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
@@ -1143,7 +1143,7 @@ func TestCollectionsImport(t *testing.T) {
 				"OnCollectionsBeforeImportRequest": 1,
 				"OnModelBeforeDelete":              4,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
@@ -1185,7 +1185,7 @@ func TestCollectionsImport(t *testing.T) {
 				"OnCollectionsBeforeImportRequest": 1,
 				"OnModelBeforeCreate":              2,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
@@ -1241,7 +1241,7 @@ func TestCollectionsImport(t *testing.T) {
 				"OnModelBeforeCreate":              3,
 				"OnModelAfterCreate":               3,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)
@@ -1346,7 +1346,7 @@ func TestCollectionsImport(t *testing.T) {
 				"OnModelBeforeCreate":              1,
 				"OnModelAfterCreate":               1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				collections := []*models.Collection{}
 				if err := app.Dao().CollectionQuery().All(&collections); err != nil {
 					t.Fatal(err)

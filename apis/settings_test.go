@@ -400,7 +400,7 @@ func TestSettingsTestEmail(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				if app.TestMailer.TotalSend != 1 {
 					t.Fatalf("[verification] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
@@ -435,7 +435,7 @@ func TestSettingsTestEmail(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				if app.TestMailer.TotalSend != 1 {
 					t.Fatalf("[password-reset] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
@@ -470,7 +470,7 @@ func TestSettingsTestEmail(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				if app.TestMailer.TotalSend != 1 {
 					t.Fatalf("[email-change] Expected 1 sent email, got %d", app.TestMailer.TotalSend)
 				}
