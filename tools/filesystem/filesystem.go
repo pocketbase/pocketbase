@@ -74,7 +74,9 @@ func NewLocal(dirPath string) (*System, error) {
 		return nil, err
 	}
 
-	bucket, err := fileblob.OpenBucket(dirPath, nil)
+	bucket, err := fileblob.OpenBucket(dirPath, &fileblob.Options{
+		NoTempDir: true,
+	})
 	if err != nil {
 		return nil, err
 	}
