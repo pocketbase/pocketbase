@@ -29,7 +29,7 @@ const heading = `
  *
  * ` + "```" + `js
  * // prints "Hello world!" on every 30 minutes
- * cronAdd("hello", "*\/30 * * * *", (c) => {
+ * cronAdd("hello", "*\/30 * * * *", () => {
  *     console.log("Hello world!")
  * })
  * ` + "```" + `
