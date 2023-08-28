@@ -72,7 +72,7 @@
     on:hide
 >
     <svelte:fragment slot="header">
-        <h4 class="center txt-break">Restore <strong>{name}</strong></h4>
+        <h4 class="popup-title txt-ellipsis">Restore <strong>{name}</strong></h4>
     </svelte:fragment>
 
     <div class="alert alert-danger">
@@ -124,3 +124,9 @@
         </button>
     </svelte:fragment>
 </OverlayPanel>
+
+<style>
+    .popup-title {
+        max-width: 80%;
+    }
+</style>
