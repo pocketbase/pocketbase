@@ -19,6 +19,11 @@ func TestCreateBackup(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
+	// set some long app name with spaces and special characters
+	app.Settings().Meta.AppName = "test @! " + strings.Repeat("a", 100)
+
+	expectedAppNamePrefix := "test_" + strings.Repeat("a", 45)
+
 	// test pending error
 	app.Cache().Set(core.CacheKeyActiveBackup, "")
 	if err := app.CreateBackup(context.Background(), "test.zip"); err == nil {
@@ -49,8 +54,8 @@ func TestCreateBackup(t *testing.T) {
 	}
 
 	expectedFiles := []string{
-		`^pb_backup_\w+\.zip$`,
-		`^pb_backup_\w+\.zip.attrs$`,
+		`^pb_backup_` + expectedAppNamePrefix + `_\w+\.zip$`,
+		`^pb_backup_` + expectedAppNamePrefix + `_\w+\.zip.attrs$`,
 		"custom",
 		"custom.attrs",
 	}
