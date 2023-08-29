@@ -485,7 +485,7 @@ func TestSchemaFieldInitOptions(t *testing.T) {
 		{
 			schema.SchemaField{Type: schema.FieldTypeNumber},
 			false,
-			`{"system":false,"id":"","name":"","type":"number","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null}}`,
+			`{"system":false,"id":"","name":"","type":"number","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"noDecimals":false}}`,
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeBool},
@@ -1743,8 +1743,12 @@ func TestTextOptionsValidate(t *testing.T) {
 }
 
 func TestNumberOptionsValidate(t *testing.T) {
-	number1 := 10.0
-	number2 := 20.0
+	int1 := 10.0
+	int2 := 20.0
+
+	decimal1 := 10.5
+	decimal2 := 20.5
+
 	scenarios := []fieldOptionsScenario{
 		{
 			"empty",
@@ -1754,23 +1758,41 @@ func TestNumberOptionsValidate(t *testing.T) {
 		{
 			"max - without min",
 			schema.NumberOptions{
-				Max: &number1,
+				Max: &int1,
 			},
 			[]string{},
 		},
 		{
 			"max - failure with min",
 			schema.NumberOptions{
-				Min: &number2,
-				Max: &number1,
+				Min: &int2,
+				Max: &int1,
 			},
 			[]string{"max"},
 		},
 		{
 			"max - success with min",
 			schema.NumberOptions{
-				Min: &number1,
-				Max: &number2,
+				Min: &int1,
+				Max: &int2,
+			},
+			[]string{},
+		},
+		{
+			"NoDecimal range failure",
+			schema.NumberOptions{
+				Min:        &decimal1,
+				Max:        &decimal2,
+				NoDecimals: true,
+			},
+			[]string{"min", "max"},
+		},
+		{
+			"NoDecimal range success",
+			schema.NumberOptions{
+				Min:        &int1,
+				Max:        &int2,
+				NoDecimals: true,
 			},
 			[]string{},
 		},

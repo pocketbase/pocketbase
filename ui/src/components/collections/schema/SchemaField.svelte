@@ -225,7 +225,7 @@
                         <i
                             class="ri-information-line link-hint"
                             use:tooltip={{
-                                text: `Whether the field should be preferred in the Admin UI relation listings.`,
+                                text: `Whether the field should be preferred in the Admin UI relation listings (default to auto).`,
                             }}
                         />
                     </label>
