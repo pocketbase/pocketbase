@@ -10,6 +10,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/cmd"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/spf13/cobra"
 )
@@ -55,6 +56,9 @@ type Config struct {
 	DataMaxIdleConns int // default to core.DefaultDataMaxIdleConns
 	LogsMaxOpenConns int // default to core.DefaultLogsMaxOpenConns
 	LogsMaxIdleConns int // default to core.DefaultLogsMaxIdleConns
+
+	// optional Application configuration
+	ServiceSettings *settings.Settings
 }
 
 // New creates a new PocketBase instance with the default configuration.
@@ -85,6 +89,11 @@ func NewWithConfig(config Config) *PocketBase {
 	if config.DefaultDataDir == "" {
 		baseDir, _ := inspectRuntime()
 		config.DefaultDataDir = filepath.Join(baseDir, "pb_data")
+	}
+
+	// initialize a default setting
+	if config.ServiceSettings == nil {
+		config.ServiceSettings = settings.New()
 	}
 
 	pb := &PocketBase{
@@ -119,6 +128,7 @@ func NewWithConfig(config Config) *PocketBase {
 		DataMaxIdleConns: config.DataMaxIdleConns,
 		LogsMaxOpenConns: config.LogsMaxOpenConns,
 		LogsMaxIdleConns: config.LogsMaxIdleConns,
+		ServiceSettings:  config.ServiceSettings,
 	})}
 
 	// hide the default help command (allow only `--help` flag)
