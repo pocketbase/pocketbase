@@ -170,10 +170,11 @@ type BaseAppConfig struct {
 	DataDir          string
 	EncryptionEnv    string
 	IsDebug          bool
-	DataMaxOpenConns int // default to 500
-	DataMaxIdleConns int // default 20
-	LogsMaxOpenConns int // default to 100
-	LogsMaxIdleConns int // default to 5
+	DataMaxOpenConns int                // default to 500
+	DataMaxIdleConns int                // default 20
+	LogsMaxOpenConns int                // default to 100
+	LogsMaxIdleConns int                // default to 5
+	ServiceSettings  *settings.Settings // default settings.New()
 }
 
 // NewBaseApp creates and returns a new BaseApp instance
@@ -190,7 +191,7 @@ func NewBaseApp(config BaseAppConfig) *BaseApp {
 		logsMaxOpenConns:    config.LogsMaxOpenConns,
 		logsMaxIdleConns:    config.LogsMaxIdleConns,
 		cache:               store.New[any](nil),
-		settings:            settings.New(),
+		settings:            config.ServiceSettings,
 		subscriptionsBroker: subscriptions.NewBroker(),
 
 		// app event hooks
