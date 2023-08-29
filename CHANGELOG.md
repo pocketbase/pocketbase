@@ -11,7 +11,7 @@
 - Added new `SmtpConfig.LocalName` option to specify a custom domain name (or IP address) for the initial EHLO/HELO exchange ([#3097](https://github.com/pocketbase/pocketbase/discussions/3097)).
   _This is usually required for verification purposes only by some SMTP providers, such as on-premise [Gmail SMTP-relay](https://support.google.com/a/answer/2956491)._
 
-- Added `NoDecimals` `number` field option.
+- Added `NoDecimal` `number` field option.
 
 - (@todo docs) Added datetime filter macros:
   ```

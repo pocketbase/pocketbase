@@ -421,7 +421,7 @@ migrate((db) => {
     "options": {
       "min": 10,
       "max": null,
-      "noDecimals": false
+      "noDecimal": false
     }
   }))
 
@@ -477,7 +477,7 @@ migrate((db) => {
     "options": {
       "min": 10,
       "max": null,
-      "noDecimals": false
+      "noDecimal": false
     }
   }))
 
@@ -563,7 +563,7 @@ func init() {
 			"options": {
 				"min": 10,
 				"max": null,
-				"noDecimals": false
+				"noDecimal": false
 			}
 		}` + "`" + `), edit_f2_name_new)
 		collection.Schema.AddField(edit_f2_name_new)
@@ -636,7 +636,7 @@ func init() {
 			"options": {
 				"min": 10,
 				"max": null,
-				"noDecimals": false
+				"noDecimal": false
 			}
 		}` + "`" + `), edit_f2_name_new)
 		collection.Schema.AddField(edit_f2_name_new)

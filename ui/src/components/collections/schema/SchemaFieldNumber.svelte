@@ -32,14 +32,14 @@
     </svelte:fragment>
 
     <svelte:fragment slot="optionsFooter">
-        <Field class="form-field form-field-toggle" name="schema.{key}.options.noDecimals" let:uniqueId>
-            <input type="checkbox" id={uniqueId} bind:checked={field.options.noDecimals} />
+        <Field class="form-field form-field-toggle" name="schema.{key}.options.noDecimal" let:uniqueId>
+            <input type="checkbox" id={uniqueId} bind:checked={field.options.noDecimal} />
             <label for={uniqueId}>
                 <span class="txt">No decimals</span>
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
-                        text: `Existing decimal values will not be affected.`,
+                        text: `Existing decimal numbers will not be affected.`,
                     }}
                 />
             </label>

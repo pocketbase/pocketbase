@@ -184,7 +184,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			Name: "field4",
 			Type: schema.FieldTypeNumber,
 			Options: &schema.NumberOptions{
-				NoDecimals: true,
+				NoDecimal: true,
 			},
 		},
 	)
@@ -254,7 +254,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
-			"(number) check NoDecimals",
+			"(number) check NoDecimal",
 			map[string]any{
 				"field2": 1,
 				"field4": 456.789,

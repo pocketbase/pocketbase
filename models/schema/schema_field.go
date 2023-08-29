@@ -456,31 +456,31 @@ func (o *TextOptions) checkRegex(value any) error {
 // -------------------------------------------------------------------
 
 type NumberOptions struct {
-	Min        *float64 `form:"min" json:"min"`
-	Max        *float64 `form:"max" json:"max"`
-	NoDecimals bool     `form:"noDecimals" json:"noDecimals"`
+	Min       *float64 `form:"min" json:"min"`
+	Max       *float64 `form:"max" json:"max"`
+	NoDecimal bool     `form:"noDecimal" json:"noDecimal"`
 }
 
 func (o NumberOptions) Validate() error {
 	var maxRules []validation.Rule
 	if o.Min != nil && o.Max != nil {
-		maxRules = append(maxRules, validation.Min(*o.Min), validation.By(o.checkNoDecimals))
+		maxRules = append(maxRules, validation.Min(*o.Min), validation.By(o.checkNoDecimal))
 	}
 
 	return validation.ValidateStruct(&o,
-		validation.Field(&o.Min, validation.By(o.checkNoDecimals)),
+		validation.Field(&o.Min, validation.By(o.checkNoDecimal)),
 		validation.Field(&o.Max, maxRules...),
 	)
 }
 
-func (o *NumberOptions) checkNoDecimals(value any) error {
+func (o *NumberOptions) checkNoDecimal(value any) error {
 	v, _ := value.(*float64)
-	if v == nil || !o.NoDecimals {
+	if v == nil || !o.NoDecimal {
 		return nil // nothing to check
 	}
 
 	if *v != float64(int64(*v)) {
-		return validation.NewError("validation_no_decimals_constraint", "Decimal numbers are not allowed.")
+		return validation.NewError("validation_no_decimal_constraint", "Decimal numbers are not allowed.")
 	}
 
 	return nil
