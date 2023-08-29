@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 )
 
@@ -95,9 +96,10 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 	}
 
 	app := core.NewBaseApp(core.BaseAppConfig{
-		DataDir:       tempDir,
-		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
+		DataDir:         tempDir,
+		EncryptionEnv:   "pb_test_env",
+		IsDebug:         false,
+		ServiceSettings: settings.New(),
 	})
 
 	// load data dir and db connections

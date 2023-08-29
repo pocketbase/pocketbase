@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 )
 
@@ -12,9 +13,10 @@ func TestNewBaseApp(t *testing.T) {
 	defer os.RemoveAll(testDataDir)
 
 	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "test_env",
-		IsDebug:       true,
+		DataDir:         testDataDir,
+		EncryptionEnv:   "test_env",
+		IsDebug:         true,
+		ServiceSettings: settings.New(),
 	})
 
 	if app.dataDir != testDataDir {
@@ -47,9 +49,10 @@ func TestBaseAppBootstrap(t *testing.T) {
 	defer os.RemoveAll(testDataDir)
 
 	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
+		DataDir:         testDataDir,
+		EncryptionEnv:   "pb_test_env",
+		IsDebug:         false,
+		ServiceSettings: settings.New(),
 	})
 	defer app.ResetBootstrapState()
 
@@ -129,9 +132,10 @@ func TestBaseAppGetters(t *testing.T) {
 	defer os.RemoveAll(testDataDir)
 
 	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
+		DataDir:         testDataDir,
+		EncryptionEnv:   "pb_test_env",
+		IsDebug:         false,
+		ServiceSettings: settings.New(),
 	})
 	defer app.ResetBootstrapState()
 
@@ -189,9 +193,10 @@ func TestBaseAppNewMailClient(t *testing.T) {
 	defer os.RemoveAll(testDataDir)
 
 	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
+		DataDir:         testDataDir,
+		EncryptionEnv:   "pb_test_env",
+		IsDebug:         false,
+		ServiceSettings: settings.New(),
 	})
 
 	client1 := app.NewMailClient()
@@ -212,9 +217,10 @@ func TestBaseAppNewFilesystem(t *testing.T) {
 	defer os.RemoveAll(testDataDir)
 
 	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
+		DataDir:         testDataDir,
+		EncryptionEnv:   "pb_test_env",
+		IsDebug:         false,
+		ServiceSettings: settings.New(),
 	})
 
 	// local
@@ -242,9 +248,10 @@ func TestBaseAppNewBackupsFilesystem(t *testing.T) {
 	defer os.RemoveAll(testDataDir)
 
 	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
+		DataDir:         testDataDir,
+		EncryptionEnv:   "pb_test_env",
+		IsDebug:         false,
+		ServiceSettings: settings.New(),
 	})
 
 	// local
