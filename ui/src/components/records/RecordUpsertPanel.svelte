@@ -2,6 +2,7 @@
     import { createEventDispatcher, tick } from "svelte";
     import { slide } from "svelte/transition";
     import CommonHelper from "@/utils/CommonHelper";
+    import { ClientResponseError } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import tooltip from "@/actions/tooltip";
     import { setErrors } from "@/stores/errors";
@@ -174,43 +175,40 @@
         window.localStorage.removeItem(draftKey());
     }
 
-    function save(hidePanel = true) {
+    async function save(hidePanel = true) {
         if (isSaving || !canSave || !collection?.id) {
             return;
         }
 
         isSaving = true;
 
-        const data = exportFormData();
+        try {
+            const data = exportFormData();
 
-        let request;
-        if (isNew) {
-            request = ApiClient.collection(collection.id).create(data);
-        } else {
-            request = ApiClient.collection(collection.id).update(record.id, data);
+            let result;
+            if (isNew) {
+                result = await ApiClient.collection(collection.id).create(data);
+            } else {
+                result = await ApiClient.collection(collection.id).update(record.id, data);
+            }
+
+            addSuccessToast(isNew ? "Successfully created record." : "Successfully updated record.");
+
+            deleteDraft();
+
+            if (hidePanel) {
+                confirmClose = false;
+                hide();
+            } else {
+                replaceOriginal(result);
+            }
+
+            dispatch("save", result);
+        } catch (err) {
+            ApiClient.error(err);
         }
 
-        request
-            .then((result) => {
-                addSuccessToast(isNew ? "Successfully created record." : "Successfully updated record.");
-
-                deleteDraft();
-
-                if (hidePanel) {
-                    confirmClose = false;
-                    hide();
-                } else {
-                    replaceOriginal(result);
-                }
-
-                dispatch("save", result);
-            })
-            .catch((err) => {
-                ApiClient.error(err);
-            })
-            .finally(() => {
-                isSaving = false;
-            });
+        isSaving = false;
     }
 
     function deleteConfirm() {
@@ -240,8 +238,14 @@
             id: data.id,
         };
 
+        const jsonFields = {};
+
         for (const field of collection?.schema || []) {
             exportableFields[field.name] = true;
+
+            if (field.type == "json") {
+                jsonFields[field.name] = true;
+            }
         }
 
         if (isAuthCollection) {
@@ -263,6 +267,26 @@
             // normalize nullable values
             if (typeof data[key] === "undefined") {
                 data[key] = null;
+            }
+
+            // "validate" json fields
+            if (jsonFields[key] && data[key] !== "") {
+                try {
+                    JSON.parse(data[key]);
+                } catch (err) {
+                    const fieldErr = {};
+                    fieldErr[key] = {
+                        code: "invalid_json",
+                        message: err.toString(),
+                    };
+                    // emulate server error
+                    throw new ClientResponseError({
+                        status: 400,
+                        response: {
+                            data: fieldErr,
+                        },
+                    });
+                }
             }
 
             CommonHelper.addValueToFormData(formData, key, data[key]);

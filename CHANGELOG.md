@@ -13,6 +13,8 @@
 
 - Added `NoDecimal` `number` field option.
 
+- Added JSON validation and syntax highlight for the `json` field in the Admin UI ([#3191](https://github.com/pocketbase/pocketbase/issues/3191)).
+
 - (@todo docs) Added datetime filter macros:
   ```
   // all macros are UTC based
