@@ -64,7 +64,7 @@
             value={serialized}
             on:change={(e) => {
                 serialized = e.detail;
-                value = serialized.trim(); // trim the submitted value
+                value = serialized.trim();
             }}
         />
     {:else}
