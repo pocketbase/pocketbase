@@ -10,6 +10,7 @@
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import SecretGeneratorButton from "@/components/base/SecretGeneratorButton.svelte";
 
     const dispatch = createEventDispatcher();
     const formId = "admin_" + CommonHelper.randomString(5);
@@ -208,6 +209,9 @@
                                 required
                                 bind:value={password}
                             />
+                            <div class="form-field-addon">
+                                <SecretGeneratorButton />
+                            </div>
                         </Field>
                     </div>
                     <div class="col-sm-6">

@@ -21,10 +21,7 @@
                 if (secret) {
                     secret = undefined;
                 } else {
-                    secret =
-                        typeof crypto != "undefined" && crypto.randomUUID
-                            ? crypto.randomUUID() + CommonHelper.randomString(14)
-                            : CommonHelper.randomString(50);
+                    secret = CommonHelper.randomSecret(50);
                 }
             }}
         >

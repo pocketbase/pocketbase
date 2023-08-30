@@ -43,6 +43,9 @@ button {
         vertical-align: middle;
         display: inline-block;
     }
+    .dropdown {
+        user-select: text;
+    }
 
     // background layer
     &:before {
@@ -549,6 +552,7 @@ select {
     // hints
     .help-block {
         @extend .content;
+        position: relative;
         margin-top: 8px;
         font-size: var(--smFontSize);
         line-height: var(--smLineHeight);

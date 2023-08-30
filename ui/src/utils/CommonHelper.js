@@ -424,14 +424,38 @@ export default class CommonHelper {
      * @param  {Number} [length] Results string length (default 10)
      * @return {String}
      */
-    static randomString(length) {
-        length = length || 10;
-
+    static randomString(length = 10) {
         let result = "";
         let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
         for (let i = 0; i < length; i++) {
             result += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+        }
+
+        return result;
+    }
+
+    /**
+     * Generates cryptographically random secret string
+     * (if crypto is supported, otherwise fallback to randomString).
+     *
+     * @param  {Number} [length] Results string length (default 15)
+     * @return {String}
+     */
+    static randomSecret(length = 15) {
+        if (typeof crypto === "undefined") {
+            return CommonHelper.randomString(length)
+        }
+
+        const arr = new Uint8Array(length);
+        crypto.getRandomValues(arr);
+
+        const alphabet = "-_0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"; // 64 to devide "cleanly" 256
+
+        let result = "";
+
+        for (let i = 0; i < length; i++) {
+            result += alphabet.charAt(arr[i] % alphabet.length);
         }
 
         return result;

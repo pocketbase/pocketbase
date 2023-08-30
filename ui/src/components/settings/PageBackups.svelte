@@ -13,7 +13,7 @@
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import BackupsList from "@/components/settings/BackupsList.svelte";
     import S3Fields from "@/components/settings/S3Fields.svelte";
-    import BackupUploadBtn from "@/components/settings/BackupUploadBtn.svelte";
+    import BackupUploadButton from "@/components/settings/BackupUploadButton.svelte";
 
     $pageTitle = "Backups";
 
@@ -109,7 +109,7 @@
             <div class="flex m-b-sm flex-gap-10">
                 <span class="txt-xl">Backup and restore your PocketBase data</span>
                 <RefreshButton class="btn-sm" tooltip={"Refresh"} on:refresh={refreshList} />
-                <BackupUploadBtn class="btn-sm" on:success={refreshList} />
+                <BackupUploadButton class="btn-sm" on:success={refreshList} />
             </div>
 
             <BackupsList bind:this={backupsListComponent} />

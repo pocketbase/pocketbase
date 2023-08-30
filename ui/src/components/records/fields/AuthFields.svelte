@@ -5,6 +5,7 @@
     import { confirm } from "@/stores/confirmation";
     import { removeError } from "@/stores/errors";
     import Field from "@/components/base/Field.svelte";
+    import SecretGeneratorButton from "@/components/base/SecretGeneratorButton.svelte";
 
     export let record;
     export let collection;
@@ -102,6 +103,9 @@
                                 required
                                 bind:value={record.password}
                             />
+                            <div class="form-field-addon">
+                                <SecretGeneratorButton />
+                            </div>
                         </Field>
                     </div>
                     <div class="col-sm-6">
