@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -112,10 +113,14 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		pr := goja.MustCompile("", "{("+handler+").apply(undefined)}", true)
 
 		err := scheduler.Add(jobId, cronExpr, func() {
-			executors.run(func(executor *goja.Runtime) error {
+			err := executors.run(func(executor *goja.Runtime) error {
 				_, err := executor.RunProgram(pr)
 				return err
 			})
+
+			if err != nil && app.IsDebug() {
+				fmt.Println("[cronAdd] failed to execute cron job " + jobId + ": " + err.Error())
+			}
 		})
 		if err != nil {
 			panic("[cronAdd] failed to register cron job " + jobId + ": " + err.Error())
