@@ -47,7 +47,7 @@
   ```
 
 - Registered a custom Deflate compressor to speedup the backups generation.
-  _Based on several local tests, `pb_data` of ~500MB (from which ~350MB+ are several hundred small files) results in a ~280MB zip generated for ~11s (previously was ~250MB but for ~35s)._
+  _Based on several local tests, `pb_data` of ~500MB (from which ~350MB+ are several hundred small files) results in a ~280MB zip generated for ~11s (previously it resulted in ~250MB zip but for ~35s)._
 
 - (@todo update docs examples) To minimize the footguns with `Dao.FindFirstRecordByFilter()` and `Dao.FindRecordsByFilter()`, the functions now supports an optional placeholder params argument that is safe to be populated with untrusted user input.
   The placeholders are in the same format as when binding regular SQL parameters.
