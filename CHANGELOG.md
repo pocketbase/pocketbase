@@ -99,15 +99,15 @@
 
 - Fill the `LastVerificationSentAt` and `LastResetSentAt` fields only after a successfull email send ([#3121](https://github.com/pocketbase/pocketbase/issues/3121)).
 
-- Skip API `fields` json transformations for non 20x responses ([#3176](https://github.com/pocketbase/pocketbase/issues/3176)).
-
 - (@todo docs) Added `fields` wildcard (`*`) support.
+
+- Skip API `fields` json transformations for non 20x responses ([#3176](https://github.com/pocketbase/pocketbase/issues/3176)).
 
 - (@todo docs) Added new "Strip urls domain" `editor` field option to allow controlling the default TinyMCE imported urls behavior (_default to `false` for new content_).
 
 - Reduced the default JSVM prewarmed pool size to 25 to reduce the initial memory consumptions (_you can manually adjust the pool size with `--hooksPool=50` if you need to, but the default should suffice for most cases_).
 
-- Reflected the latest JS SDK changes in the Admin UI.
+- Other minor Admin UI improvements.
 
 
 ## v0.17.7

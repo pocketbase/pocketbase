@@ -338,7 +338,7 @@ final record = await pb.collection('${collection?.name}').update('RECORD_ID', bo
 
 <div class="section-title">Responses</div>
 <div class="tabs">
-    <div class="tabs-header compact glued left">
+    <div class="tabs-header compact combined left">
         {#each responses as response (response.code)}
             <button
                 class="tab-item"

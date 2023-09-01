@@ -104,7 +104,7 @@
                                 bind:value={record.password}
                             />
                             <div class="form-field-addon">
-                                <SecretGeneratorButton />
+                                <SecretGeneratorButton length={15} />
                             </div>
                         </Field>
                     </div>
