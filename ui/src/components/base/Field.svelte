@@ -52,7 +52,7 @@
         <div class="form-field-addon">
             <i
                 class="ri-error-warning-fill txt-danger"
-                transition:scale|local={{ duration: 150, start: 0.7 }}
+                transition:scale={{ duration: 150, start: 0.7 }}
                 use:tooltip={{
                     position: "left",
                     text: fieldErrors.map(getErrorMessage).join("\n"),
@@ -61,7 +61,7 @@
         </div>
     {:else}
         {#each fieldErrors as error}
-            <div class="help-block help-block-error" transition:slide|local={{ duration: 150 }}>
+            <div class="help-block help-block-error" transition:slide={{ duration: 150 }}>
                 <pre>{getErrorMessage(error)}</pre>
             </div>
         {/each}

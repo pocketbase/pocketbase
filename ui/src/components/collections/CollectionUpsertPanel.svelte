@@ -378,7 +378,7 @@
                 {#if !CommonHelper.isEmpty(schemaTabError)}
                     <i
                         class="ri-error-warning-fill txt-danger"
-                        transition:scale|local={{ duration: 150, start: 0.7 }}
+                        transition:scale={{ duration: 150, start: 0.7 }}
                         use:tooltip={schemaTabError}
                     />
                 {/if}
@@ -394,7 +394,7 @@
                 {#if !CommonHelper.isEmpty($errors?.listRule) || !CommonHelper.isEmpty($errors?.viewRule) || !CommonHelper.isEmpty($errors?.createRule) || !CommonHelper.isEmpty($errors?.updateRule) || !CommonHelper.isEmpty($errors?.deleteRule) || !CommonHelper.isEmpty($errors?.options?.manageRule)}
                     <i
                         class="ri-error-warning-fill txt-danger"
-                        transition:scale|local={{ duration: 150, start: 0.7 }}
+                        transition:scale={{ duration: 150, start: 0.7 }}
                         use:tooltip={"Has errors"}
                     />
                 {/if}
@@ -411,7 +411,7 @@
                     {#if !CommonHelper.isEmpty($errors?.options) && !$errors?.options?.manageRule}
                         <i
                             class="ri-error-warning-fill txt-danger"
-                            transition:scale|local={{ duration: 150, start: 0.7 }}
+                            transition:scale={{ duration: 150, start: 0.7 }}
                             use:tooltip={"Has errors"}
                         />
                     {/if}

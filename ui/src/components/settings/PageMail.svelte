@@ -174,7 +174,7 @@
                 </Field>
 
                 {#if formSettings.smtp.enabled}
-                    <div transition:slide|local={{ duration: 150 }}>
+                    <div transition:slide={{ duration: 150 }}>
                         <div class="grid">
                             <div class="col-lg-4">
                                 <Field class="form-field required" name="smtp.host" let:uniqueId>
@@ -236,7 +236,7 @@
                         </button>
 
                         {#if showMoreOptions}
-                            <div class="grid" transition:slide|local={{ duration: 150 }}>
+                            <div class="grid" transition:slide={{ duration: 150 }}>
                                 <div class="col-lg-3">
                                     <Field class="form-field" name="smtp.tls" let:uniqueId>
                                         <label for={uniqueId}>TLS encryption</label>

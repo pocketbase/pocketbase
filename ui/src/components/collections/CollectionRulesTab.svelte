@@ -29,7 +29,7 @@
     </div>
 
     {#if showFiltersInfo}
-        <div transition:slide|local={{ duration: 150 }}>
+        <div transition:slide={{ duration: 150 }}>
             <div class="alert alert-warning m-0">
                 <div class="content">
                     <p class="m-b-0">The following record fields are available:</p>

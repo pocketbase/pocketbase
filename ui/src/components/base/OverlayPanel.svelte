@@ -226,7 +226,7 @@
             <div
                 class="overlay"
                 on:click|preventDefault={() => (overlayClose ? hide() : true)}
-                transition:fade|local={{ duration: transitionSpeed, opacity: 0 }}
+                transition:fade={{ duration: transitionSpeed, opacity: 0 }}
             />
 
             <div

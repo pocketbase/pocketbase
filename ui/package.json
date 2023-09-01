@@ -32,8 +32,8 @@
     "pocketbase": "0.18.0-rc",
     "prismjs": "^1.28.0",
     "sass": "^1.45.0",
-    "svelte": "^3.44.0",
-    "svelte-flatpickr": "^3.2.6",
+    "svelte": "^4.0.0",
+    "svelte-flatpickr": "^3.3.3",
     "svelte-spa-router": "^3.2.0",
     "vite": "^4.0.4"
   }

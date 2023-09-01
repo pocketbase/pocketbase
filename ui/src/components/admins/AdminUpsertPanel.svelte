@@ -195,7 +195,7 @@
 
         {#if isNew || changePasswordToggle}
             <div class="col-12">
-                <div class="grid" transition:slide|local={{ duration: 150 }}>
+                <div class="grid" transition:slide={{ duration: 150 }}>
                     <div class="col-sm-6">
                         <Field class="form-field required" name="password" let:uniqueId>
                             <label for={uniqueId}>

@@ -136,7 +136,7 @@
                     class="block"
                     autocomplete="off"
                     on:submit|preventDefault={save}
-                    transition:slide|local={{ duration: 150 }}
+                    transition:slide={{ duration: 150 }}
                 >
                     <Field class="form-field form-field-toggle m-t-base m-b-0" let:uniqueId>
                         <input type="checkbox" id={uniqueId} required bind:checked={enableAutoBackups} />
@@ -144,7 +144,7 @@
                     </Field>
 
                     {#if enableAutoBackups}
-                        <div class="block" transition:slide|local={{ duration: 150 }}>
+                        <div class="block" transition:slide={{ duration: 150 }}>
                             <div class="grid p-t-base p-b-sm">
                                 <div class="col-lg-6">
                                     <Field class="form-field required" name="backups.cron" let:uniqueId>

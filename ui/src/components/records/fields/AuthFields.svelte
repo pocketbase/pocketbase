@@ -88,7 +88,7 @@
         {/if}
 
         {#if isNew || changePasswordToggle}
-            <div class="block" transition:slide|local={{ duration: 150 }}>
+            <div class="block" transition:slide={{ duration: 150 }}>
                 <div class="grid" class:p-t-xs={changePasswordToggle}>
                     <div class="col-sm-6">
                         <Field class="form-field required" name="password" let:uniqueId>

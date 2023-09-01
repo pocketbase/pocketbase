@@ -97,7 +97,7 @@
                     type="button"
                     class="unlock-overlay"
                     aria-label="Unlock and set custom rule"
-                    transition:scale|local={{ duration: 150, start: 0.98 }}
+                    transition:scale={{ duration: 150, start: 0.98 }}
                     on:click={unlock}
                 >
                     <small class="txt">Unlock and set custom rule</small>
