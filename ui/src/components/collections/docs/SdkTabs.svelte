@@ -33,7 +33,7 @@
 </script>
 
 <div class="tabs sdk-tabs {classes}">
-    <div class="tabs-header compact left">
+    <div class="tabs-header compact glued left">
         {#each sdkExamples as example (example.language)}
             <button
                 class="tab-item"

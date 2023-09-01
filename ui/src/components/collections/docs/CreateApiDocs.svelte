@@ -319,7 +319,7 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
 
 <div class="section-title">Responses</div>
 <div class="tabs">
-    <div class="tabs-header compact left">
+    <div class="tabs-header compact glued left">
         {#each responses as response (response.code)}
             <button
                 class="tab-item"
