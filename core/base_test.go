@@ -118,10 +118,6 @@ func TestBaseAppBootstrap(t *testing.T) {
 	if app.logsDao != nil {
 		t.Fatalf("Expected app.logsDao to be nil, got %v.", app.logsDao)
 	}
-
-	if app.settings != nil {
-		t.Fatalf("Expected app.settings to be nil, got %v.", app.settings)
-	}
 }
 
 func TestBaseAppGetters(t *testing.T) {

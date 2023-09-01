@@ -375,7 +375,6 @@ func (app *BaseApp) ResetBootstrapState() error {
 
 	app.dao = nil
 	app.logsDao = nil
-	app.settings = nil
 
 	return nil
 }
