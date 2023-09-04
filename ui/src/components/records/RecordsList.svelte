@@ -399,6 +399,7 @@
                     {#if !isView}
                         <td class="bulk-select-col min-width">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div class="form-field" on:click|stopPropagation>
                                 <input
                                     type="checkbox"
