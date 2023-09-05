@@ -1325,6 +1325,39 @@ export default class CommonHelper {
      * @return {Object}
      */
     static defaultEditorOptions() {
+        const allowedPasteNodes = [
+            "DIV", "P", "A", "EM", "B", "STRONG",
+            "H1", "H2", "H3", "H4", "H5", "H6",
+            "TABLE", "TR", "TD", "TH", "TBODY", "THEAD", "TFOOT",
+            "BR", "HR", "Q", "SUP", "SUB", "DEL",
+            "IMG", "OL", "UL", "LI", "CODE",
+        ];
+
+        function unwrap(node) {
+            let parent = node.parentNode;
+
+            // move children outside of the parent node
+            while (node.firstChild) {
+                parent.insertBefore(node.firstChild, node);
+            }
+
+            // remove the now empty parent element
+            parent.removeChild(node);
+        }
+
+        function cleanupPastedNode(node) {
+            for (const child of node.children) {
+                cleanupPastedNode(child);
+            }
+
+            if (!allowedPasteNodes.includes(node.tagName)) {
+                unwrap(node);
+            } else {
+                node.removeAttribute("style");
+                node.removeAttribute("class");
+            }
+        }
+
         return {
             branding: false,
             promotion: false,
@@ -1332,7 +1365,6 @@ export default class CommonHelper {
             min_height: 270,
             height: 270,
             max_height: 700,
-            paste_as_text: true,
             autoresize_bottom_margin: 30,
             skin: "pocketbase",
             content_style: "body { font-size: 14px }",
@@ -1351,6 +1383,9 @@ export default class CommonHelper {
                 "directionality",
             ],
             toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image table codesample direction | code fullscreen",
+            paste_postprocess: (editor, args) => {
+                cleanupPastedNode(args.node);
+            },
             file_picker_types: "image",
             // @see https://www.tiny.cloud/docs/tinymce/6/file-image-upload/#interactive-example
             file_picker_callback: (cb, value, meta) => {

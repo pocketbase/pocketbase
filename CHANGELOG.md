@@ -19,7 +19,9 @@
 
 - Added `NoDecimal` `number` field option.
 
-- Added new "Strip urls domain" `editor` field option to allow controlling the default TinyMCE urls behavior (_default to `false` for new content_).
+- `editor` field improvements
+    - Added new "Strip urls domain" option to allow controlling the default TinyMCE urls behavior (_default to `false` for new content_).
+    - Normalized pasted text, while still preserving links, lists, tables, etc. formatting ([#3257](https://github.com/pocketbase/pocketbase/issues/3257)).
 
 - Added option to auto generate admin and auth record passwords from the Admin UI.
 
@@ -110,7 +112,6 @@
       _Returning a `nil` app instance from the factory results in test failure. You can enforce a custom test failure by calling `t.Fatal(err)` inside the factory._
 
 - Bumped the min required TLS version to 1.2 in order to improve the cert reputation score.
-
 
 - Reduced the default JSVM prewarmed pool size to 25 to reduce the initial memory consumptions (_you can manually adjust the pool size with `--hooksPool=50` if you need to, but the default should suffice for most cases_).
 
