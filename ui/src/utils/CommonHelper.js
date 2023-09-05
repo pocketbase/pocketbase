@@ -1332,6 +1332,7 @@ export default class CommonHelper {
             min_height: 270,
             height: 270,
             max_height: 700,
+            paste_as_text: true,
             autoresize_bottom_margin: 30,
             skin: "pocketbase",
             content_style: "body { font-size: 14px }",

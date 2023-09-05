@@ -206,9 +206,15 @@
                                             </button>
                                         </div>
                                         <div class="help-block">
+                                            <!-- prettier-ignore -->
                                             <p>
-                                                Supports numeric list, steps and ranges. The timezone is in
-                                                UTC.
+                                                Supports numeric list, steps, ranges or
+                                                <span
+                                                    class="link-primary"
+                                                    use:tooltip={"@yearly\n@annually\n@monthly\n@weekly\n@daily\n@midnight\n@hourly"}
+                                                >macros</span>.
+                                                <br>
+                                                The timezone is in UTC.
                                             </p>
                                         </div>
                                     </Field>
