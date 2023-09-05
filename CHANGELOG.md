@@ -19,9 +19,9 @@
 
 - Added `NoDecimal` `number` field option.
 
-- `editor` field improvements
+- `editor` field improvements:
     - Added new "Strip urls domain" option to allow controlling the default TinyMCE urls behavior (_default to `false` for new content_).
-    - Normalized pasted text, while still preserving links, lists, tables, etc. formatting ([#3257](https://github.com/pocketbase/pocketbase/issues/3257)).
+    - Normalized pasted text while still preserving links, lists, tables, etc. formatting ([#3257](https://github.com/pocketbase/pocketbase/issues/3257)).
 
 - Added option to auto generate admin and auth record passwords from the Admin UI.
 

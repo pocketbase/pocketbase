@@ -1346,6 +1346,10 @@ export default class CommonHelper {
         }
 
         function cleanupPastedNode(node) {
+            if (!node) {
+                return; // nothing to cleanup
+            }
+
             for (const child of node.children) {
                 cleanupPastedNode(child);
             }
