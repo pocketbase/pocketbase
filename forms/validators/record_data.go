@@ -15,6 +15,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 var requiredErr = validation.NewError("validation_required", "Missing required value")
@@ -298,6 +299,33 @@ func (validator *RecordDataValidator) checkJsonValue(field *schema.SchemaField, 
 
 	if field.Required && list.ExistInSlice(rawStr, emptyJsonValues) {
 		return requiredErr
+	}
+
+	options, _ := field.Options.(*schema.JsonOptions)
+
+	if options.JsonSchema != nil {
+		schemaLoader := gojsonschema.NewStringLoader(*options.JsonSchema)
+		jsonLoader := gojsonschema.NewStringLoader(rawStr)
+		result, err := gojsonschema.Validate(schemaLoader, jsonLoader)
+
+		if err != nil {
+			return validation.NewError("validation_invalid_json", err.Error())
+		}
+
+		if !result.Valid() {
+			var errorMessages []string
+
+			// Collect error descriptions
+			for _, desc := range result.Errors() {
+				errorMessages = append(errorMessages, desc.String())
+			}
+
+			// Join error messages into a single string
+			errorMessage := strings.Join(errorMessages, "\n")
+
+			return validation.NewError("validation_invalid_json",
+				fmt.Sprintf("JSON Schema validation error: %s", errorMessage))
+		}
 	}
 
 	return nil

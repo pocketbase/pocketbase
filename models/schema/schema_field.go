@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 var schemaFieldNameRegex = regexp.MustCompile(`^\w+$`)
@@ -586,9 +587,28 @@ func (o SelectOptions) IsMultiple() bool {
 // -------------------------------------------------------------------
 
 type JsonOptions struct {
+	JsonSchema *string `form:"jsonSchema" json:"jsonSchema"`
 }
 
 func (o JsonOptions) Validate() error {
+	return validation.ValidateStruct(&o,
+		validation.Field(&o.JsonSchema, validation.By(o.checkJsonSchema)),
+	)
+}
+
+func (o *JsonOptions) checkJsonSchema(value any) error {
+	v, _ := value.(string)
+
+	if len(v) > 0 {
+		jsonSchemaLoader := gojsonschema.NewSchemaLoader()
+		jsonSchemaLoader.Validate = true
+		jsonSchemaLoader.Draft = gojsonschema.Draft7
+
+		err := jsonSchemaLoader.AddSchemas(gojsonschema.NewStringLoader(v))
+
+		return err
+	}
+
 	return nil
 }
 
