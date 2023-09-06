@@ -1,3 +1,8 @@
+## v0.18.2-WIP
+
+- Prevent breaking the record form in the Admin UI in case the browser's localStorage quote has been exceeded when uploading or storing large `editor` values ([#3265](https://github.com/pocketbase/pocketbase/issues/3265)).
+
+
 ## v0.18.1
 
 - Excluded the local temp dir from the backups ([#3261](https://github.com/pocketbase/pocketbase/issues/3261)).

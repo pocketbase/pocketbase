@@ -141,7 +141,13 @@
     }
 
     function updateDraft(newSerializedData) {
-        window.localStorage.setItem(draftKey(), newSerializedData);
+        try {
+            window.localStorage.setItem(draftKey(), newSerializedData);
+        } catch (e) {
+            // ignore local storage errors in case the serialized data
+            // exceed the browser localStorage single value quota
+            console.warn("updateDraft failure:", e)
+        }
     }
 
     function restoreDraft() {
@@ -484,6 +490,7 @@
     </svelte:fragment>
 
     <div class="tabs-content">
+        <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
         <form
             id={formId}
             class="tab-item"
