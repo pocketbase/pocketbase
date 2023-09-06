@@ -1,3 +1,8 @@
+## v0.18.1
+
+- Excluded the local temp dir from the backups ([#3261](https://github.com/pocketbase/pocketbase/issues/3261)).
+
+
 ## v0.18.0
 
 - Simplified the `serve` command to accept domain name(s) as argument to reduce any additional manual hosts setup that sometimes previously was needed when deploying on production ([#3190](https://github.com/pocketbase/pocketbase/discussions/3190)).

@@ -54,6 +54,9 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 	app.Cache().Set(CacheKeyActiveBackup, name)
 	defer app.Cache().Remove(CacheKeyActiveBackup)
 
+	// root dir entries to exclude from the backup generation
+	exclude := []string{LocalBackupsDirName, LocalTempDirName}
+
 	// make sure that the special temp directory exists
 	// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
 	localTempDir := filepath.Join(app.DataDir(), LocalTempDirName)
@@ -61,14 +64,14 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 		return fmt.Errorf("failed to create a temp dir: %w", err)
 	}
 
-	// Archive pb_data in a temp directory, exluding the "backups" dir itself (if exist).
+	// Archive pb_data in a temp directory, exluding the "backups" and the temp dirs.
 	//
 	// Run in transaction to temporary block other writes (transactions uses the NonconcurrentDB connection).
 	// ---
 	tempPath := filepath.Join(localTempDir, "pb_backup_"+security.PseudorandomString(4))
 	createErr := app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
 		// @todo consider experimenting with temp switching the readonly pragma after the db interface change
-		return archive.Create(app.DataDir(), tempPath, LocalBackupsDirName)
+		return archive.Create(app.DataDir(), tempPath, exclude...)
 	})
 	if createErr != nil {
 		return createErr

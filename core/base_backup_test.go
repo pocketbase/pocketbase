@@ -132,7 +132,6 @@ func verifyBackupContent(app core.App, path string) error {
 		"logs.db-shm",
 		"logs.db-wal",
 		".gitignore",
-		".pb_temp_to_delete",
 	}
 
 	entries, err := os.ReadDir(dir)
