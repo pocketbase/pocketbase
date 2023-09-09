@@ -24,6 +24,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/spf13/cast"
 )
 
 func testBindsCount(vm *goja.Runtime, namespace string, count int, t *testing.T) {
@@ -622,7 +623,7 @@ func TestSecurityBindsCount(t *testing.T) {
 	vm := goja.New()
 	securityBinds(vm)
 
-	testBindsCount(vm, "$security", 12, t)
+	testBindsCount(vm, "$security", 15, t)
 }
 
 func TestSecurityCryptoBinds(t *testing.T) {
@@ -640,6 +641,10 @@ func TestSecurityCryptoBinds(t *testing.T) {
 		{`$security.md5("123")`, "202cb962ac59075b964b07152d234b70"},
 		{`$security.sha256("123")`, "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3"},
 		{`$security.sha512("123")`, "3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1eb8b85103e3be7ba613b31bb5c9c36214dc9f14a42fd7a2fdb84856bca5c44c2"},
+		{`$security.hs256("hello", "test")`, "f151ea24bda91a18e89b8bb5793ef324b2a02133cce15a28a719acbd2e58a986"},
+		{`$security.hs512("hello", "test")`, "44f280e11103e295c26cd61dd1cdd8178b531b860466867c13b1c37a26b6389f8af110efbe0bb0717b9d9c87f6fe1c97b3b1690936578890e5669abf279fe7fd"},
+		{`$security.equal("abc", "abc")`, "true"},
+		{`$security.equal("abc", "abcd")`, "false"},
 	}
 
 	for _, s := range sceneraios {
@@ -649,7 +654,7 @@ func TestSecurityCryptoBinds(t *testing.T) {
 				t.Fatalf("Failed to execute js script, got %v", err)
 			}
 
-			v, _ := result.Export().(string)
+			v := cast.ToString(result.Export())
 
 			if v != s.expected {
 				t.Fatalf("Expected %v \ngot \n%v", s.expected, v)

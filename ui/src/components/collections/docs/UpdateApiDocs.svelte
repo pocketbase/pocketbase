@@ -87,6 +87,15 @@
             Files upload and handling docs
         </a>.
     </p>
+    {#if isAuth}
+        <p>
+            <em>
+                Note that in case of a password change all previously issued tokens for the current record
+                will be automatically invalidated and if you want your user to remain signed in you need to
+                reauthenticate manually after the update call.
+            </em>
+        </p>
+    {/if}
 </div>
 
 <!-- prettier-ignore -->

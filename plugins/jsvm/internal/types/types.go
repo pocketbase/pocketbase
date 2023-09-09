@@ -498,6 +498,12 @@ declare namespace $security {
   let createJWT:                      security.newJWT
   let encrypt:                        security.encrypt
   let decrypt:                        security.decrypt
+  let hs256:                          security.hs256
+  let hs512:                          security.hs512
+  let equal:                          security.equal
+  let md5:                            security.md5
+  let sha256:                         security.sha256
+  let sha512:                         security.sha512
 }
 
 // -------------------------------------------------------------------

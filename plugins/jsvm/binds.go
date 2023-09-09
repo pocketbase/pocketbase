@@ -459,6 +459,9 @@ func securityBinds(vm *goja.Runtime) {
 	obj.Set("md5", security.MD5)
 	obj.Set("sha256", security.SHA256)
 	obj.Set("sha512", security.SHA512)
+	obj.Set("hs256", security.HS256)
+	obj.Set("hs512", security.HS512)
+	obj.Set("equal", security.Equal)
 
 	// random
 	obj.Set("randomString", security.RandomString)

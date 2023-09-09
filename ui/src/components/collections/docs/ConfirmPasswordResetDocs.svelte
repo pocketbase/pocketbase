@@ -37,6 +37,10 @@
 <h3 class="m-b-sm">Confirm password reset ({collection.name})</h3>
 <div class="content txt-lg m-b-sm">
     <p>Confirms <strong>{collection.name}</strong> password reset request and sets a new password.</p>
+    <p>
+        After this request all previously issued tokens for the specific record will be automatically
+        invalidated.
+    </p>
 </div>
 
 <SdkTabs

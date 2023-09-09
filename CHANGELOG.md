@@ -1,6 +1,20 @@
-## v0.18.2-WIP
+## v0.18.2
 
 - Prevent breaking the record form in the Admin UI in case the browser's localStorage quote has been exceeded when uploading or storing large `editor` values ([#3265](https://github.com/pocketbase/pocketbase/issues/3265)).
+
+- Updated docs and missing JSVM typings.
+
+- Exposed additional crypto primitives under the `$security.*` JSVM namespace ([#3273](https://github.com/pocketbase/pocketbase/discussions/3273)):
+  ```
+  // HMAC with SHA256
+  $security.hs256("hello", "secret")
+
+  // HMAC with SHA512
+  $security.hs512("hello", "secret")
+
+  // compare 2 strings with a constant time
+  $security.equal(hash1, hash2)
+  ```
 
 
 ## v0.18.1
