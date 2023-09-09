@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -15,7 +16,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/types"
-	"github.com/xeipuuv/gojsonschema"
+	"github.com/santhosh-tekuri/jsonschema/v5"
 )
 
 var requiredErr = validation.NewError("validation_required", "Missing required value")
@@ -304,27 +305,20 @@ func (validator *RecordDataValidator) checkJsonValue(field *schema.SchemaField, 
 	options, _ := field.Options.(*schema.JsonOptions)
 
 	if options.JsonSchema != nil {
-		schemaLoader := gojsonschema.NewStringLoader(*options.JsonSchema)
-		jsonLoader := gojsonschema.NewStringLoader(rawStr)
-		result, err := gojsonschema.Validate(schemaLoader, jsonLoader)
-
+		schema, err := jsonschema.CompileString("jsonschema.json", *options.JsonSchema)
 		if err != nil {
 			return validation.NewError("validation_invalid_json", err.Error())
 		}
 
-		if !result.Valid() {
-			var errorMessages []string
+		var v interface{}
+		if err := json.Unmarshal([]byte(rawStr), &v); err != nil {
+			return validation.NewError("validation_invalid_json", err.Error())
+		}
 
-			// Collect error descriptions
-			for _, desc := range result.Errors() {
-				errorMessages = append(errorMessages, desc.String())
-			}
-
-			// Join error messages into a single string
-			errorMessage := strings.Join(errorMessages, "\n")
-
-			return validation.NewError("validation_invalid_json",
-				fmt.Sprintf("JSON Schema validation error: %s", errorMessage))
+		err = schema.Validate(v)
+		if err != nil {
+			errorBasicOutput, _ := json.MarshalIndent(err.(*jsonschema.ValidationError).BasicOutput(), "", "  ")
+			return validation.NewError("validation_invalid_json", string(errorBasicOutput))
 		}
 	}
 

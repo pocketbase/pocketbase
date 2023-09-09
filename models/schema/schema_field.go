@@ -11,8 +11,8 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/santhosh-tekuri/jsonschema/v5"
 	"github.com/spf13/cast"
-	"github.com/xeipuuv/gojsonschema"
 )
 
 var schemaFieldNameRegex = regexp.MustCompile(`^\w+$`)
@@ -597,16 +597,23 @@ func (o JsonOptions) Validate() error {
 }
 
 func (o *JsonOptions) checkJsonSchema(value any) error {
-	v, _ := value.(string)
+	v, _ := value.(*string)
 
-	if len(v) > 0 {
-		jsonSchemaLoader := gojsonschema.NewSchemaLoader()
-		jsonSchemaLoader.Validate = true
-		jsonSchemaLoader.Draft = gojsonschema.Draft7
+	if len(*v) > 0 {
+		compiler := jsonschema.NewCompiler()
+		schema, err := compiler.Compile(jsonschema.Draft2020.URL())
+		if err != nil {
+			return err
+		}
 
-		err := jsonSchemaLoader.AddSchemas(gojsonschema.NewStringLoader(v))
+		var parsedJsonSchema interface{}
+		if err := json.Unmarshal([]byte(*v), &parsedJsonSchema); err != nil {
+			return err
+		}
 
-		return err
+		if err = schema.Validate(parsedJsonSchema); err != nil {
+			return err
+		}
 	}
 
 	return nil
