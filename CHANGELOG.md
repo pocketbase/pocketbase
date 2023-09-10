@@ -1,3 +1,10 @@
+## v0.18.3
+
+- Exposed a global JSVM `readerToString(reader)` helper function to allow reading Go `io.Reader` values ([#3273](https://github.com/pocketbase/pocketbase/discussions/3273)).
+
+- Bumped the GitHub action to use [min Go 1.21.1](https://github.com/golang/go/issues?q=milestone%3AGo1.21.1+label%3ACherryPickApproved) for the prebuilt executable since it contains some minor `html/template` and `net/http` security fixes.
+
+
 ## v0.18.2
 
 - Prevent breaking the record form in the Admin UI in case the browser's localStorage quota has been exceeded when uploading or storing large `editor` values ([#3265](https://github.com/pocketbase/pocketbase/issues/3265)).

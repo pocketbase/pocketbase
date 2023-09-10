@@ -46,7 +46,27 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 13, t)
+	testBindsCount(vm, "this", 14, t)
+}
+
+func TestBaseBindsReaderToString(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	baseBinds(vm)
+	vm.Set("reader", strings.NewReader("test"))
+
+	_, err := vm.RunString(`
+		let result = readerToString(reader)
+
+		if (result != "test") {
+			throw new Error('Expected "test", got ' + result);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestBaseBindsRecord(t *testing.T) {

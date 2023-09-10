@@ -33,6 +33,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/mailer"
+	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cobra"
@@ -277,6 +278,21 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.M
 
 func baseBinds(vm *goja.Runtime) {
 	vm.SetFieldNameMapper(FieldMapper{})
+
+	vm.Set("readerToString", func(r io.Reader, maxBytes int) (string, error) {
+		if maxBytes == 0 {
+			maxBytes = rest.DefaultMaxMemory
+		}
+
+		limitReader := io.LimitReader(r, int64(maxBytes))
+
+		bodyBytes, readErr := io.ReadAll(limitReader)
+		if readErr != nil {
+			return "", readErr
+		}
+
+		return string(bodyBytes), nil
+	})
 
 	vm.Set("arrayOf", func(model any) any {
 		mt := reflect.TypeOf(model)

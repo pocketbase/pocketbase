@@ -133,7 +133,7 @@
         try {
             const raw = window.localStorage.getItem(draftKey());
             if (raw) {
-                return new Record(JSON.parse(raw));
+                return JSON.parse(raw);
             }
         } catch (_) {}
 
@@ -146,7 +146,7 @@
         } catch (e) {
             // ignore local storage errors in case the serialized data
             // exceed the browser localStorage single value quota
-            console.warn("updateDraft failure:", e)
+            console.warn("updateDraft failure:", e);
         }
     }
 

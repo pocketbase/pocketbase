@@ -181,6 +181,24 @@ declare var $app: appWithoutHooks
 declare var $template: template.Registry
 
 /**
+ * readerToString reads the content of the specified io.Reader until
+ * EOF or maxBytes are reached.
+ *
+ * If maxBytes is not specified it will read up to 32MB.
+ *
+ * Note that after this call the reader can't be used anymore.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * const rawBody = readerToString(c.request().body)
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare function readerToString(reader: any, maxBytes?: number): string;
+
+/**
  * arrayOf creates a placeholder array of the specified models.
  * Usually used to populate DB result into an array of models.
  *
