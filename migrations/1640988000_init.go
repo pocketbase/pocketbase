@@ -100,7 +100,7 @@ func init() {
 			return err
 		}
 
-		// inserts the system profiles collection
+		// inserts the system users collection
 		// -----------------------------------------------------------
 		usersCollection := &models.Collection{}
 		usersCollection.MarkAsNew()
