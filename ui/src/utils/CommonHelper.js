@@ -649,8 +649,14 @@ export default class CommonHelper {
      * @return {Array}
      */
     static splitNonEmpty(str, separator = ",") {
-        const items = (str || "").split(separator);
         const result = [];
+
+        const items = (str || "")
+            .replaceAll("\\" + separator, "{_PB_ESCAPED_}")
+            .split(separator)
+            .map((item) => {
+                return item.replaceAll("{_PB_ESCAPED_}", separator);
+            });
 
         for (let item of items) {
             item = item.trim();
@@ -672,10 +678,12 @@ export default class CommonHelper {
     static joinNonEmpty(items, separator = ", ") {
         const result = [];
 
+        const trimmedSeparator = separator.length > 1 ? separator.trim() : separator;
+
         for (let item of items) {
             item = typeof item === "string" ? item.trim() : "";
             if (!CommonHelper.isEmpty(item)) {
-                result.push(item);
+                result.push(item.replaceAll(trimmedSeparator, "\\" + trimmedSeparator));
             }
         }
 

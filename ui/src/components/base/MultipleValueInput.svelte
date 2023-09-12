@@ -6,7 +6,7 @@
     export let readonly = null;
     export let disabled = null;
 
-    $: valueStr = (value || []).join(", ");
+    $: valueStr = CommonHelper.joinNonEmpty(value, separator + " ");
 </script>
 
 <input
