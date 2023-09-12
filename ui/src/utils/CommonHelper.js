@@ -676,6 +676,8 @@ export default class CommonHelper {
      * @return {Array}
      */
     static joinNonEmpty(items, separator = ", ") {
+        items = items || [];
+
         const result = [];
 
         const trimmedSeparator = separator.length > 1 ? separator.trim() : separator;

@@ -1,3 +1,8 @@
+## v0.18.5
+
+- Fixed minor Admin UI JS error in the auth collection options panel introduced with the change from v0.18.4.
+
+
 ## v0.18.4
 
 - Added escape character (`\`) support in the Admin UI to allow using `select` field values with comma ([#2197](https://github.com/pocketbase/pocketbase/discussions/2197)).
