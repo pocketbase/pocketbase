@@ -613,9 +613,11 @@ func httpClientBinds(vm *goja.Runtime) {
 	vm.Set("$http", obj)
 
 	type sendResult struct {
-		StatusCode int
-		Raw        string
-		Json       any
+		StatusCode int                     `json:"statusCode"`
+		Headers    map[string][]string     `json:"headers"`
+		Cookies    map[string]*http.Cookie `json:"cookies"`
+		Raw        string                  `json:"raw"`
+		Json       any                     `json:"json"`
 	}
 
 	type sendConfig struct {
@@ -686,7 +688,17 @@ func httpClientBinds(vm *goja.Runtime) {
 
 		result := &sendResult{
 			StatusCode: res.StatusCode,
+			Headers:    map[string][]string{},
+			Cookies:    map[string]*http.Cookie{},
 			Raw:        string(bodyRaw),
+		}
+
+		for k, v := range res.Header {
+			result.Headers[k] = v
+		}
+
+		for _, v := range res.Cookies() {
+			result.Cookies[v.Name] = v
 		}
 
 		if len(result.Raw) != 0 {

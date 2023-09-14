@@ -1023,9 +1023,9 @@ func TestHttpClientBindsCount(t *testing.T) {
 
 func TestHttpClientBindsSend(t *testing.T) {
 	// start a test server
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		if req.URL.Query().Get("testError") != "" {
-			rw.WriteHeader(400)
+			res.WriteHeader(400)
 			return
 		}
 
@@ -1052,10 +1052,14 @@ func TestHttpClientBindsSend(t *testing.T) {
 			"body":    string(bodyRaw),
 		}
 
+		// add custom headers and cookies
+		res.Header().Add("X-Custom", "custom_header")
+		res.Header().Add("Set-Cookie", "sessionId=123456")
+
 		infoRaw, _ := json.Marshal(info)
 
 		// write back the submitted request
-		rw.Write(infoRaw)
+		res.Write(infoRaw)
 	}))
 	defer server.Close()
 
@@ -1122,6 +1126,8 @@ func TestHttpClientBindsSend(t *testing.T) {
 			}],
 			[test1, {
 				"statusCode":                "200",
+				"headers.X-Custom.0":        "custom_header",
+				"cookies.sessionId.value":   "123456",
 				"json.method":               "POST",
 				"json.headers.header1":      "123",
 				"json.headers.header2":      "456",
@@ -1130,6 +1136,8 @@ func TestHttpClientBindsSend(t *testing.T) {
 			}],
 			[test2, {
 				"statusCode":                "200",
+				"headers.X-Custom.0":        "custom_header",
+				"cookies.sessionId.value":   "123456",
 				"json.method":               "GET",
 				"json.headers.content_type": "text/plain",
 			}],

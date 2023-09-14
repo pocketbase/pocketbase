@@ -1,3 +1,8 @@
+## v0.18.6
+
+- Return the response headers and cookies in the `$http.send()` result ([#3310](https://github.com/pocketbase/pocketbase/discussions/3310)).
+
+
 ## v0.18.5
 
 - Fixed minor Admin UI JS error in the auth collection options panel introduced with the change from v0.18.4.

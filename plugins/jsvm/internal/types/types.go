@@ -896,9 +896,11 @@ declare namespace $http {
     // deprecated, please use body instead
     data?: { [key:string]: any },
   }): {
-    statusCode: number
-    raw:        string
-    json:       any
+    statusCode: number,
+    headers:    { [key:string]: Array<string> },
+    cookies:    { [key:string]: http.Cookie },
+    raw:        string,
+    json:       any,
   };
 }
 
