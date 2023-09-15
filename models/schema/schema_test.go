@@ -208,6 +208,9 @@ func TestSchemaValidate(t *testing.T) {
 	)
 	duplicatedIdsSchema.Fields()[1].Id = "id1" // manually set existing id
 
+	validJsonSchema := `{"type": "object"}`
+	invalidJsonSchema := `{"type": "invalidType"}`
+
 	scenarios := []struct {
 		schema      schema.Schema
 		expectError bool
@@ -255,6 +258,22 @@ func TestSchemaValidate(t *testing.T) {
 		{
 			schema.NewSchema(
 				&schema.SchemaField{Name: "test", Type: schema.FieldTypeFile, Options: &schema.FileOptions{MaxSelect: 1, MaxSize: 1}},
+			),
+			false,
+		},
+		// failure - json field with invalid JSON schema
+		{
+			schema.NewSchema(
+				&schema.SchemaField{Name: "test", Type: schema.FieldTypeJson,
+					Options: &schema.JsonOptions{JsonSchema: &invalidJsonSchema}},
+			),
+			true,
+		},
+		// success - json field with valid JSON schema
+		{
+			schema.NewSchema(
+				&schema.SchemaField{Name: "test", Type: schema.FieldTypeJson,
+					Options: &schema.JsonOptions{JsonSchema: &validJsonSchema}},
 			),
 			false,
 		},

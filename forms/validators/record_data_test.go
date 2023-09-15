@@ -814,6 +814,21 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
+	exampleJsonSchema := `{
+		"type": "object",
+		"properties": {
+			"latitude": {
+			"type": "number",
+			"minimum": -90,
+			"maximum": 90
+			},
+			"longitude": {
+			"type": "number",
+			"minimum": -180,
+			"maximum": 180
+			}
+		}
+	}`
 	// create new test collection
 	collection := &models.Collection{}
 	collection.Name = "validate_test"
@@ -832,6 +847,11 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			Unique: true,
 			Type:   schema.FieldTypeJson,
 		},
+		&schema.SchemaField{
+			Name:    "field4",
+			Type:    schema.FieldTypeJson,
+			Options: &schema.JsonOptions{JsonSchema: &exampleJsonSchema},
+		},
 	)
 	if err := app.Dao().SaveCollection(collection); err != nil {
 		t.Fatal(err)
@@ -842,6 +862,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 	dummy.Set("field1", `{"test":123}`)
 	dummy.Set("field2", `{"test":123}`)
 	dummy.Set("field3", `{"test":123}`)
+	dummy.Set("field4", `{ "latitude": 48.858093, "longitude": 2.294694 }`)
 	if err := app.Dao().SaveRecord(dummy); err != nil {
 		t.Fatal(err)
 	}
@@ -853,6 +874,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": nil,
 				"field2": nil,
 				"field3": nil,
+				"field4": nil,
 			},
 			nil,
 			[]string{"field2"},
@@ -863,6 +885,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": "",
 				"field2": "",
 				"field3": "",
+				"field4": "",
 			},
 			nil,
 			[]string{"field2"},
@@ -873,6 +896,8 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": 0,
 				"field2": 0,
 				"field3": 0,
+				// field4 cannot be a 0 number because of the jsonschema constraint placed upon it
+				"field4": nil,
 			},
 			nil,
 			[]string{},
@@ -883,6 +908,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": []string{},
 				"field2": []string{},
 				"field3": []string{},
+				"field4": []string{},
 			},
 			nil,
 			[]string{"field2"},
@@ -893,6 +919,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": map[string]string{},
 				"field2": map[string]string{},
 				"field3": map[string]string{},
+				"field4": map[string]string{},
 			},
 			nil,
 			[]string{"field2"},
@@ -903,6 +930,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": `[1 2 3]`,
 				"field2": `{a: 123}`,
 				"field3": `123.456 abc`,
+				"field4": nil,
 			},
 			nil,
 			[]string{},
@@ -913,6 +941,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": `true`,
 				"field2": `false`,
 				"field3": `null`,
+				"field4": nil,
 			},
 			nil,
 			[]string{},
@@ -931,9 +960,32 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": []string{"a", "b", "c"},
 				"field2": 123,
 				"field3": `"test"`,
+				"field4": `{ "latitude": 48.858093, "longitude": 2.294694 }`,
 			},
 			nil,
 			[]string{},
+		},
+		{
+			"(json) check JsonSchema option - with json that does not fit the jsonschema constraints",
+			map[string]any{
+				"field1": []string{"a", "b", "c"},
+				"field2": 123,
+				"field3": `"test"`,
+				"field4": `{ "latitude": 360.858093, "longitude": -360.294694 }`,
+			},
+			nil,
+			[]string{"field4"},
+		},
+		{
+			"(json) check JsonSchema option - with nonempty string",
+			map[string]any{
+				"field1": []string{"a", "b", "c"},
+				"field2": 123,
+				"field3": `"test"`,
+				"field4": `"test"`,
+			},
+			nil,
+			[]string{"field4"},
 		},
 	}
 
