@@ -2,6 +2,8 @@
 
 - Return the response headers and cookies in the `$http.send()` result ([#3310](https://github.com/pocketbase/pocketbase/discussions/3310)).
 
+- Added more descriptive internal error message for missing user/admin email on password reset requests.
+
 
 ## v0.18.5
 

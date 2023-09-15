@@ -2,6 +2,7 @@ package forms
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -66,7 +67,7 @@ func (form *AdminPasswordResetRequest) Submit(interceptors ...InterceptorFunc[*m
 
 	admin, err := form.dao.FindAdminByEmail(form.Email)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to fetch admin with email %s: %w", form.Email, err)
 	}
 
 	now := time.Now().UTC()
