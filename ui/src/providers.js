@@ -99,6 +99,11 @@ export default [
         logo:  "twitch.svg",
     },
     {
+        key: "patreonAuth",
+        title: "Patreon",
+        logo: "patreon.svg"
+    },
+    {
         key:   "stravaAuth",
         title: "Strava",
         logo:  "strava.svg",
