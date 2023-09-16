@@ -1,3 +1,8 @@
+## v0.19.0-WIP
+
+- Added Patreon OAuth2 provider ([#3323](https://github.com/pocketbase/pocketbase/pull/3323); thanks @ghostdevv).
+
+
 ## v0.18.6
 
 - Return the response headers and cookies in the `$http.send()` result ([#3310](https://github.com/pocketbase/pocketbase/discussions/3310)).

@@ -135,6 +135,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewVKProvider(), nil
 	case NameYandex:
 		return NewYandexProvider(), nil
+	case NamePatreon:
+		return NewPatreonProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
