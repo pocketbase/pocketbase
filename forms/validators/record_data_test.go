@@ -815,19 +815,8 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 	defer app.Cleanup()
 
 	exampleJsonSchema := `{
-		"type": "object",
-		"properties": {
-			"latitude": {
-			"type": "number",
-			"minimum": -90,
-			"maximum": 90
-			},
-			"longitude": {
-			"type": "number",
-			"minimum": -180,
-			"maximum": 180
-			}
-		}
+		"type": "string",
+		"maxLength": 4
 	}`
 	// create new test collection
 	collection := &models.Collection{}
@@ -862,7 +851,7 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 	dummy.Set("field1", `{"test":123}`)
 	dummy.Set("field2", `{"test":123}`)
 	dummy.Set("field3", `{"test":123}`)
-	dummy.Set("field4", `{ "latitude": 48.858093, "longitude": 2.294694 }`)
+	dummy.Set("field4", `test`)
 	if err := app.Dao().SaveRecord(dummy); err != nil {
 		t.Fatal(err)
 	}
@@ -896,8 +885,6 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": 0,
 				"field2": 0,
 				"field3": 0,
-				// field4 cannot be a 0 number because of the jsonschema constraint placed upon it
-				"field4": nil,
 			},
 			nil,
 			[]string{},
@@ -908,7 +895,6 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": []string{},
 				"field2": []string{},
 				"field3": []string{},
-				"field4": []string{},
 			},
 			nil,
 			[]string{"field2"},
@@ -919,7 +905,6 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": map[string]string{},
 				"field2": map[string]string{},
 				"field3": map[string]string{},
-				"field4": map[string]string{},
 			},
 			nil,
 			[]string{"field2"},
@@ -960,29 +945,18 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 				"field1": []string{"a", "b", "c"},
 				"field2": 123,
 				"field3": `"test"`,
-				"field4": `{ "latitude": 48.858093, "longitude": 2.294694 }`,
+				"field4": `test`,
 			},
 			nil,
 			[]string{},
 		},
 		{
-			"(json) check JsonSchema option - with json that does not fit the jsonschema constraints",
+			"(json) check JsonSchema option - with string that does not fit the jsonschema constraints",
 			map[string]any{
 				"field1": []string{"a", "b", "c"},
 				"field2": 123,
 				"field3": `"test"`,
-				"field4": `{ "latitude": 360.858093, "longitude": -360.294694 }`,
-			},
-			nil,
-			[]string{"field4"},
-		},
-		{
-			"(json) check JsonSchema option - with nonempty string",
-			map[string]any{
-				"field1": []string{"a", "b", "c"},
-				"field2": 123,
-				"field3": `"test"`,
-				"field4": `"test"`,
+				"field4": `testt`,
 			},
 			nil,
 			[]string{"field4"},

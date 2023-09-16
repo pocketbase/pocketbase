@@ -310,14 +310,15 @@ func (validator *RecordDataValidator) checkJsonValue(field *schema.SchemaField, 
 			return validation.NewError("validation_invalid_json", err.Error())
 		}
 
-		// If the value is an empty json or an empty string, validate it as `{}` so it can be correctly parsed
-		if list.ExistInSlice(rawStr, emptyJsonValues) || rawStr == "" {
-			rawStr = `{}`
-		}
-
 		var v interface{}
-		if err := json.Unmarshal([]byte(rawStr), &v); err != nil {
-			return validation.NewError("validation_invalid_json", err.Error())
+
+		// If value is an empty string, it can not be unmarshaled so just validate it directly
+		if rawStr == "" {
+			v = rawStr
+		} else {
+			if err := json.Unmarshal([]byte(rawStr), &v); err != nil {
+				return validation.NewError("validation_invalid_json", err.Error())
+			}
 		}
 
 		err = schema.Validate(v)

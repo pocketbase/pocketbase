@@ -599,21 +599,23 @@ func (o JsonOptions) Validate() error {
 func (o *JsonOptions) checkJsonSchema(value any) error {
 	v, _ := value.(*string)
 
-	if len(*v) > 0 {
-		compiler := jsonschema.NewCompiler()
-		schema, err := compiler.Compile(jsonschema.Draft2020.URL())
-		if err != nil {
-			return err
-		}
+	if v == nil {
+		return nil
+	}
 
-		var parsedJsonSchema interface{}
-		if err := json.Unmarshal([]byte(*v), &parsedJsonSchema); err != nil {
-			return err
-		}
+	compiler := jsonschema.NewCompiler()
+	schema, err := compiler.Compile(jsonschema.Draft2020.URL())
+	if err != nil {
+		return err
+	}
 
-		if err = schema.Validate(parsedJsonSchema); err != nil {
-			return err
-		}
+	var parsedJsonSchema interface{}
+	if err := json.Unmarshal([]byte(*v), &parsedJsonSchema); err != nil {
+		return err
+	}
+
+	if err = schema.Validate(parsedJsonSchema); err != nil {
+		return err
 	}
 
 	return nil
