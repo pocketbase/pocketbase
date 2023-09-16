@@ -4,6 +4,8 @@
 
 - Added more descriptive internal error message for missing user/admin email on password reset requests.
 
+- Updated Go deps.
+
 
 ## v0.18.5
 
