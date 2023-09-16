@@ -881,9 +881,11 @@ declare namespace $http {
    *     method: "post",
    * })
    *
-   * console.log(res.statusCode)
-   * console.log(res.raw)
-   * console.log(res.json)
+   * console.log(res.statusCode) // the response HTTP status code
+   * console.log(res.headers)    // the response headers (eg. res.headers['X-Custom'][0])
+   * console.log(res.cookies)    // the response cookies (eg. res.cookies.sessionId.value)
+   * console.log(res.raw)        // the response body as plain text
+   * console.log(res.json)       // the response body as parsed json array or map
    * ` + "```" + `
    */
   function send(config: {
