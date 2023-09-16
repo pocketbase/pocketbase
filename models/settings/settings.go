@@ -371,6 +371,12 @@ type SmtpConfig struct {
 	// When set to false StartTLS command is send, leaving the server
 	// to decide whether to upgrade the connection or not.
 	Tls bool `form:"tls" json:"tls"`
+
+	// LocalName is optional domain name or IP address used for the
+	// EHLO/HELO exchange (if not explicitly set, defaults to "localhost").
+	//
+	// This is required only by some SMTP servers, such as Gmail SMTP-relay.
+	LocalName string `form:"localName" json:"localName"`
 }
 
 // Validate makes SmtpConfig validatable by implementing [validation.Validatable] interface.
@@ -393,6 +399,7 @@ func (c SmtpConfig) Validate() error {
 			// validation.When(c.Enabled, validation.Required),
 			validation.In(mailer.SmtpAuthLogin, mailer.SmtpAuthPlain),
 		),
+		validation.Field(&c.LocalName, is.Host),
 	)
 }
 

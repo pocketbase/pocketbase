@@ -7,6 +7,7 @@ before:
     - go mod tidy
 
 builds:
+  # used only for tests
   - id: build_cgo
     main: ./examples/base
     binary: pocketbase
@@ -46,14 +47,6 @@ release:
   draft: true
 
 archives:
-  - id: archive_cgo
-    builds: [build_cgo]
-    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_cgo'
-    format: zip
-    files:
-      - LICENSE*
-      - CHANGELOG*
-
   - id: archive_noncgo
     builds: [build_noncgo]
     format: zip

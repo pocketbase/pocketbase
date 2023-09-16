@@ -17,14 +17,30 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	var httpsAddr string
 
 	command := &cobra.Command{
-		Use:   "serve",
-		Short: "Starts the web server (default to 127.0.0.1:8090)",
+		Use:   "serve [domain(s)]",
+		Args:  cobra.ArbitraryArgs,
+		Short: "Starts the web server (default to 127.0.0.1:8090 if no domain is specified)",
 		Run: func(command *cobra.Command, args []string) {
+			// set default listener addresses if at least one domain is specified
+			if len(args) > 0 {
+				if httpAddr == "" {
+					httpAddr = "0.0.0.0:80"
+				}
+				if httpsAddr == "" {
+					httpsAddr = "0.0.0.0:443"
+				}
+			} else {
+				if httpAddr == "" {
+					httpAddr = "127.0.0.1:8090"
+				}
+			}
+
 			_, err := apis.Serve(app, apis.ServeConfig{
-				HttpAddr:        httpAddr,
-				HttpsAddr:       httpsAddr,
-				ShowStartBanner: showStartBanner,
-				AllowedOrigins:  allowedOrigins,
+				HttpAddr:           httpAddr,
+				HttpsAddr:          httpsAddr,
+				ShowStartBanner:    showStartBanner,
+				AllowedOrigins:     allowedOrigins,
+				CertificateDomains: args,
 			})
 
 			if err != http.ErrServerClosed {
@@ -43,15 +59,15 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	command.PersistentFlags().StringVar(
 		&httpAddr,
 		"http",
-		"127.0.0.1:8090",
-		"api HTTP server address",
+		"",
+		"TCP address to listen for the HTTP server\n(if domain args are specified - default to 0.0.0.0:80, otherwise - default to 127.0.0.1:8090)",
 	)
 
 	command.PersistentFlags().StringVar(
 		&httpsAddr,
 		"https",
 		"",
-		"api HTTPS server address (auto TLS via Let's Encrypt)\nthe incoming --http address traffic also will be redirected to this address",
+		"TCP address to listen for the HTTPS server\n(if domain args are specified - default to 0.0.0.0:443, otherwise - default to empty string, aka. no TLS)\nThe incoming HTTP traffic also will be auto redirected to the HTTPS version",
 	)
 
 	return command

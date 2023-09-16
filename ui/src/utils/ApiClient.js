@@ -1,4 +1,4 @@
-import PocketBase, { LocalAuthStore, Admin, isTokenExpired } from "pocketbase";
+import PocketBase, { LocalAuthStore, isTokenExpired } from "pocketbase";
 // ---
 import CommonHelper                     from "@/utils/CommonHelper";
 import { replace }                      from "svelte-spa-router";
@@ -7,7 +7,6 @@ import { addErrorToast }                from "@/stores/toasts";
 import { setErrors }                    from "@/stores/errors";
 import { setAdmin }                     from "@/stores/admin";
 import { protectedFilesCollectionsCache } from "@/stores/collections";
-
 
 const adminFileTokenKey = "pb_admin_file_token";
 
@@ -107,7 +106,7 @@ class AppAuthStore extends LocalAuthStore {
     save(token, model) {
         super.save(token, model);
 
-        if (model instanceof Admin) {
+        if (model && !model.collectionId) { // not an auth record
             setAdmin(model);
         }
     }
@@ -122,13 +121,13 @@ class AppAuthStore extends LocalAuthStore {
     }
 }
 
-const client = new PocketBase(
+const pb = new PocketBase(
     import.meta.env.PB_BACKEND_URL,
     new AppAuthStore("pb_admin_auth")
 );
 
-if (client.authStore.model instanceof Admin) {
-    setAdmin(client.authStore.model);
+if (pb.authStore.model && !pb.authStore.model.collectionId) { // not an auth record
+    setAdmin(pb.authStore.model);
 }
 
-export default client;
+export default pb;

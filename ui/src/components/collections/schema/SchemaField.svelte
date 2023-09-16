@@ -5,7 +5,6 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
     import { slide } from "svelte/transition";
-    import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { errors, setErrors } from "@/stores/errors";
@@ -23,7 +22,7 @@
     };
 
     export let key = "";
-    export let field = new SchemaField();
+    export let field = CommonHelper.initSchemaField();
 
     let nameInput;
     let showOptions = false;
@@ -120,7 +119,7 @@
     class:required={field.required}
     class:expanded={interactive && showOptions}
     class:deleted={field.toDelete}
-    transition:slide|local={{ duration: 150 }}
+    transition:slide={{ duration: 150 }}
 >
     <div class="schema-field-header">
         {#if interactive}
@@ -198,36 +197,44 @@
     </div>
 
     {#if interactive && showOptions}
-        <div class="schema-field-options" transition:slide|local={{ duration: 150 }}>
-            <div class="grid grid-sm">
-                <div class="col-sm-12 hidden-empty">
-                    <slot name="options" {interactive} {hasErrors} />
-                </div>
+        <div class="schema-field-options" transition:slide={{ duration: 150 }}>
+            <div class="hidden-empty m-b-sm">
+                <slot name="options" {interactive} {hasErrors} />
+            </div>
 
-                <slot name="beforeNonempty" {interactive} {hasErrors} />
+            <div class="schema-field-options-footer">
+                <Field class="form-field form-field-toggle" name="requried" let:uniqueId>
+                    <input type="checkbox" id={uniqueId} bind:checked={field.required} />
+                    <label for={uniqueId}>
+                        <span class="txt">{requiredLabel}</span>
+                        <i
+                            class="ri-information-line link-hint"
+                            use:tooltip={{
+                                text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
+                                    field
+                                )}.`,
+                            }}
+                        />
+                    </label>
+                </Field>
 
-                <div class="col-sm-4">
-                    <Field class="form-field form-field-toggle m-0" name="requried" let:uniqueId>
-                        <input type="checkbox" id={uniqueId} bind:checked={field.required} />
-                        <label for={uniqueId}>
-                            <span class="txt">{requiredLabel}</span>
-                            <i
-                                class="ri-information-line link-hint"
-                                use:tooltip={{
-                                    text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
-                                        field
-                                    )}.`,
-                                    position: "right",
-                                }}
-                            />
-                        </label>
-                    </Field>
-                </div>
+                <Field class="form-field form-field-toggle" name="presentable" let:uniqueId>
+                    <input type="checkbox" id={uniqueId} bind:checked={field.presentable} />
+                    <label for={uniqueId}>
+                        <span class="txt">Presentable</span>
+                        <i
+                            class="ri-information-line link-hint"
+                            use:tooltip={{
+                                text: `Whether the field should be preferred in the Admin UI relation listings (default to auto).`,
+                            }}
+                        />
+                    </label>
+                </Field>
 
-                <slot name="afterNonempty" {interactive} {hasErrors} />
+                <slot name="optionsFooter" {interactive} {hasErrors} />
 
                 {#if !field.toDelete}
-                    <div class="col-sm-4 m-l-auto txt-right">
+                    <div class="m-l-auto txt-right">
                         <div class="flex-fill" />
                         <div class="inline-flex flex-gap-sm flex-nowrap">
                             <button

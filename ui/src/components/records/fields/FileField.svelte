@@ -1,5 +1,4 @@
 <script>
-    import { SchemaField } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
@@ -10,10 +9,10 @@
     import { onMount } from "svelte";
 
     export let record;
+    export let field;
     export let value = "";
     export let uploadedFiles = []; // Array<File> array
     export let deletedFileNames = []; // Array<string> array
-    export let field = new SchemaField();
 
     let fileInput;
     let filesListElem;

@@ -6,6 +6,7 @@
     import tooltip from "@/actions/tooltip";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
+    import { collections } from "@/stores/collections";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import Field from "@/components/base/Field.svelte";
@@ -37,6 +38,10 @@
         clearList();
     }
 
+    $: isView = collection?.type === "view";
+
+    $: isAuth = collection?.type === "auth";
+
     $: fields = collection?.schema || [];
 
     $: relFields = fields.filter((field) => field.type === "relation");
@@ -57,12 +62,12 @@
         updateStoredHiddenColumns();
     }
 
-    $: hasCreated = !collection?.$isView || (records.length > 0 && records[0].created != "");
+    $: hasCreated = !isView || (records.length > 0 && records[0].created != "");
 
-    $: hasUpdated = !collection?.$isView || (records.length > 0 && records[0].updated != "");
+    $: hasUpdated = !isView || (records.length > 0 && records[0].updated != "");
 
     $: collumnsToHide = [].concat(
-        collection.$isAuth
+        isAuth
             ? [
                   { id: "@username", name: "username" },
                   { id: "@email", name: "email" },
@@ -117,12 +122,20 @@
         let listSort = sort;
         const sortMatch = listSort.match(sortRegex);
         const relField = sortMatch ? relFields.find((f) => f.name === sortMatch[2]) : null;
-        if (sortMatch && relField?.options?.displayFields?.length > 0) {
+        if (sortMatch && relField) {
+            const relPresentableFields =
+                $collections
+                    ?.find((c) => c.id == relField.options?.collectionId)
+                    ?.schema?.filter((f) => f.presentable)
+                    ?.map((f) => f.name) || [];
+
             const parts = [];
-            for (const displayField of relField.options.displayFields) {
-                parts.push((sortMatch[1] || "") + sortMatch[2] + "." + displayField);
+            for (const presentableField of relPresentableFields) {
+                parts.push((sortMatch[1] || "") + sortMatch[2] + "." + presentableField);
             }
-            listSort = parts.join(",");
+            if (parts.length > 0) {
+                listSort = parts.join(",");
+            }
         }
 
         const fallbackSearchFields = CommonHelper.getAllCollectionIdentifiers(collection);
@@ -147,7 +160,7 @@
                 // optimize the records listing by rendering the rows in task batches
                 if (breakTasks) {
                     const currentYieldId = ++yieldedRecordsId;
-                    while (result.items.length) {
+                    while (result.items?.length) {
                         if (yieldedRecordsId != currentYieldId) {
                             break; // new yeild has been started
                         }
@@ -165,7 +178,7 @@
                     isLoading = false;
                     console.warn(err);
                     clearList();
-                    ApiClient.error(err, false);
+                    ApiClient.error(err, err?.status != 400); // silence filter errors
                 }
             });
     }
@@ -278,7 +291,7 @@
     <table class="table" class:table-loading={isLoading}>
         <thead>
             <tr>
-                {#if !collection.$isView}
+                {#if !isView}
                     <th class="bulk-select-col min-width">
                         {#if isLoading}
                             <span class="loader loader-sm" />
@@ -306,7 +319,7 @@
                     </SortHeader>
                 {/if}
 
-                {#if collection.$isAuth}
+                {#if isAuth}
                     {#if !hiddenColumns.includes("@username")}
                         <SortHeader class="col-type-text col-field-id" name="username" bind:sort>
                             <div class="col-header-content">
@@ -371,7 +384,7 @@
             </tr>
         </thead>
         <tbody>
-            {#each records as record (!collection.$isView ? record.id : record)}
+            {#each records as record (!isView ? record.id : record)}
                 <tr
                     tabindex="0"
                     class="row-handle"
@@ -383,9 +396,10 @@
                         }
                     }}
                 >
-                    {#if !collection.$isView}
+                    {#if !isView}
                         <td class="bulk-select-col min-width">
                             <!-- svelte-ignore a11y-click-events-have-key-events -->
+                            <!-- svelte-ignore a11y-no-static-element-interactions -->
                             <div class="form-field" on:click|stopPropagation>
                                 <input
                                     type="checkbox"
@@ -406,7 +420,7 @@
                                     <div class="txt">{record.id}</div>
                                 </div>
 
-                                {#if collection.$isAuth}
+                                {#if isAuth}
                                     {#if record.verified}
                                         <i
                                             class="ri-checkbox-circle-fill txt-sm txt-success"
@@ -423,7 +437,7 @@
                         </td>
                     {/if}
 
-                    {#if collection.$isAuth}
+                    {#if isAuth}
                         {#if !hiddenColumns.includes("@username")}
                             <td class="col-type-text col-field-username">
                                 {#if CommonHelper.isEmpty(record.username)}
@@ -489,7 +503,7 @@
                                 >
                                     <span class="txt">Clear filters</span>
                                 </button>
-                            {:else if !collection?.$isView}
+                            {:else if !isView}
                                 <button
                                     type="button"
                                     class="btn btn-secondary btn-expanded m-t-sm"
@@ -526,7 +540,7 @@
 {/if}
 
 {#if totalBulkSelected}
-    <div class="bulkbar" transition:fly|local={{ duration: 150, y: 5 }}>
+    <div class="bulkbar" transition:fly={{ duration: 150, y: 5 }}>
         <div class="txt">
             Selected <strong>{totalBulkSelected}</strong>
             {totalBulkSelected === 1 ? "record" : "records"}

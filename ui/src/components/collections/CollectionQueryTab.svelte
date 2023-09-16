@@ -1,11 +1,10 @@
 <script>
     import { onMount } from "svelte";
-    import { Collection } from "pocketbase";
     import { errors, removeError } from "@/stores/errors";
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
 
-    export let collection = new Collection();
+    export let collection;
 
     let codeEditorComponent;
     let isCodeEditorComponentLoading = false;

@@ -62,20 +62,41 @@ func (s *Schedule) IsDue(m *Moment) bool {
 	return true
 }
 
+var macros = map[string]string{
+	"@yearly":   "0 0 1 1 *",
+	"@annually": "0 0 1 1 *",
+	"@monthly":  "0 0 1 * *",
+	"@weekly":   "0 0 * * 0",
+	"@daily":    "0 0 * * *",
+	"@midnight": "0 0 * * *",
+	"@hourly":   "0 * * * *",
+}
+
 // NewSchedule creates a new Schedule from a cron expression.
 //
-// A cron expression is consisted of 5 segments separated by space,
+// A cron expression could be a macro OR 5 segments separated by space,
 // representing: minute, hour, day of the month, month and day of the week.
 //
-// Each segment could be in the following formats:
+// The following segment formats are supported:
 //   - wildcard: *
 //   - range:    1-30
 //   - step:     */n or 1-30/n
 //   - list:     1,2,3,10-20/n
+//
+// The following macros are supported:
+//   - @yearly (or @annually)
+//   - @monthly
+//   - @weekly
+//   - @daily (or @midnight)
+//   - @hourly
 func NewSchedule(cronExpr string) (*Schedule, error) {
+	if v, ok := macros[cronExpr]; ok {
+		cronExpr = v
+	}
+
 	segments := strings.Split(cronExpr, " ")
 	if len(segments) != 5 {
-		return nil, errors.New("invalid cron expression - must have exactly 5 space separated segments")
+		return nil, errors.New("invalid cron expression - must be a valid macro or to have exactly 5 space separated segments")
 	}
 
 	minutes, err := parseCronSegment(segments[0], 0, 59)

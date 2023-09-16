@@ -1,7 +1,11 @@
 package apis_test
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"strings"
 	"testing"
@@ -85,7 +89,7 @@ func TestBackupsCreate(t *testing.T) {
 			Name:   "unauthorized",
 			Method: http.MethodPost,
 			Url:    "/api/backups",
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				ensureNoBackups(t, app)
 			},
 			ExpectedStatus:  401,
@@ -98,7 +102,7 @@ func TestBackupsCreate(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				ensureNoBackups(t, app)
 			},
 			ExpectedStatus:  401,
@@ -114,7 +118,7 @@ func TestBackupsCreate(t *testing.T) {
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				app.Cache().Set(core.CacheKeyActiveBackup, "")
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				ensureNoBackups(t, app)
 			},
 			ExpectedStatus:  400,
@@ -127,7 +131,7 @@ func TestBackupsCreate(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				files, err := getBackupFiles(app)
 				if err != nil {
 					t.Fatal(err)
@@ -152,7 +156,7 @@ func TestBackupsCreate(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				ensureNoBackups(t, app)
 			},
 			ExpectedStatus: 400,
@@ -169,7 +173,7 @@ func TestBackupsCreate(t *testing.T) {
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				files, err := getBackupFiles(app)
 				if err != nil {
 					t.Fatal(err)
@@ -182,6 +186,138 @@ func TestBackupsCreate(t *testing.T) {
 				expected := "test.zip"
 				if files[0].Key != expected {
 					t.Fatalf("Expected backup file %q, got %q", expected, files[0].Key)
+				}
+			},
+			ExpectedStatus: 204,
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
+func TestBackupsUpload(t *testing.T) {
+	// create dummy form data bodies
+	type body struct {
+		buffer      io.Reader
+		contentType string
+	}
+	bodies := make([]body, 10)
+	for i := 0; i < 10; i++ {
+		func() {
+			zb := new(bytes.Buffer)
+			zw := zip.NewWriter(zb)
+			if err := zw.Close(); err != nil {
+				t.Fatal(err)
+			}
+
+			b := new(bytes.Buffer)
+			mw := multipart.NewWriter(b)
+
+			mfw, err := mw.CreateFormFile("file", "test")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := io.Copy(mfw, zb); err != nil {
+				t.Fatal(err)
+			}
+
+			mw.Close()
+
+			bodies[i] = body{
+				buffer:      b,
+				contentType: mw.FormDataContentType(),
+			}
+		}()
+	}
+	// ---
+
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "unauthorized",
+			Method: http.MethodPost,
+			Url:    "/api/backups/upload",
+			Body:   bodies[0].buffer,
+			RequestHeaders: map[string]string{
+				"Content-Type": bodies[0].contentType,
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				ensureNoBackups(t, app)
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as auth record",
+			Method: http.MethodPost,
+			Url:    "/api/backups/upload",
+			Body:   bodies[1].buffer,
+			RequestHeaders: map[string]string{
+				"Content-Type":  bodies[1].contentType,
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				ensureNoBackups(t, app)
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as admin (missing file)",
+			Method: http.MethodPost,
+			Url:    "/api/backups/upload",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				ensureNoBackups(t, app)
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{`},
+		},
+		{
+			Name:   "authorized as admin (existing backup name)",
+			Method: http.MethodPost,
+			Url:    "/api/backups/upload",
+			Body:   bodies[3].buffer,
+			RequestHeaders: map[string]string{
+				"Content-Type":  bodies[3].contentType,
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				fsys, err := app.NewBackupsFilesystem()
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer fsys.Close()
+				// create a dummy backup file to simulate existing backups
+				if err := fsys.Upload([]byte("123"), "test"); err != nil {
+					t.Fatal(err)
+				}
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				files, _ := getBackupFiles(app)
+				if total := len(files); total != 1 {
+					t.Fatalf("Expected %d backup file, got %d", 1, total)
+				}
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{"file":{`},
+		},
+		{
+			Name:   "authorized as admin (valid file)",
+			Method: http.MethodPost,
+			Url:    "/api/backups/upload",
+			Body:   bodies[4].buffer,
+			RequestHeaders: map[string]string{
+				"Content-Type":  bodies[4].contentType,
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				files, _ := getBackupFiles(app)
+				if total := len(files); total != 1 {
+					t.Fatalf("Expected %d backup file, got %d", 1, total)
 				}
 			},
 			ExpectedStatus: 204,
@@ -371,7 +507,7 @@ func TestBackupsDelete(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				noTestBackupFilesChanges(t, app)
 			},
 			ExpectedStatus:  401,
@@ -389,7 +525,7 @@ func TestBackupsDelete(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				noTestBackupFilesChanges(t, app)
 			},
 			ExpectedStatus:  401,
@@ -407,7 +543,7 @@ func TestBackupsDelete(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				noTestBackupFilesChanges(t, app)
 			},
 			ExpectedStatus:  400,
@@ -428,7 +564,7 @@ func TestBackupsDelete(t *testing.T) {
 				// mock active backup with the same name to delete
 				app.Cache().Set(core.CacheKeyActiveBackup, "test1.zip")
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				noTestBackupFilesChanges(t, app)
 			},
 			ExpectedStatus:  400,
@@ -449,7 +585,7 @@ func TestBackupsDelete(t *testing.T) {
 				// mock active backup with different name
 				app.Cache().Set(core.CacheKeyActiveBackup, "new.zip")
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				files, err := getBackupFiles(app)
 				if err != nil {
 					t.Fatal(err)
@@ -481,7 +617,7 @@ func TestBackupsDelete(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				files, err := getBackupFiles(app)
 				if err != nil {
 					t.Fatal(err)

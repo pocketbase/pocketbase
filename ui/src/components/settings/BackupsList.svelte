@@ -129,10 +129,10 @@
             {/each}
         {:else}
             {#each backups as backup (backup.key)}
-                <div class="list-item" transition:slide|local={{ duration: 150 }}>
+                <div class="list-item" transition:slide={{ duration: 150 }}>
                     <i class="ri-folder-zip-line" />
                     <div class="content">
-                        <span class="name backup-name">{backup.key}</span>
+                        <span class="name backup-name" title={backup.key}>{backup.key}</span>
                         <span class="size txt-hint txt-nowrap">
                             ({CommonHelper.formattedFileSize(backup.size)})
                         </span>

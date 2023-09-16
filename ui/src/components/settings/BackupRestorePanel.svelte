@@ -6,6 +6,7 @@
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import Field from "@/components/base/Field.svelte";
     import CopyIcon from "@/components/base/CopyIcon.svelte";
+    import { onDestroy } from "svelte";
 
     const formId = "backup_restore_" + CommonHelper.randomString(5);
 
@@ -13,6 +14,7 @@
     let name = "";
     let nameConfirm = "";
     let isSubmitting = false;
+    let reloadTimeoutId = null;
 
     $: canSubmit = nameConfirm != "" && name == nameConfirm;
 
@@ -33,22 +35,30 @@
             return;
         }
 
+        clearTimeout(reloadTimeoutId);
+
         isSubmitting = true;
 
         try {
             await ApiClient.backups.restore(name);
 
-            // slight delay just in case the application is still restarting
-            setTimeout(() => {
+            // optimistic restore page reload
+            reloadTimeoutId = setTimeout(() => {
                 window.location.reload();
-            }, 1000);
+            }, 2000);
         } catch (err) {
+            clearTimeout(reloadTimeoutId);
+
             if (!err?.isAbort) {
                 isSubmitting = false;
                 addErrorToast(err.response?.message || err.message);
             }
         }
     }
+
+    onDestroy(() => {
+        clearTimeout(reloadTimeoutId);
+    });
 </script>
 
 <OverlayPanel
@@ -62,7 +72,7 @@
     on:hide
 >
     <svelte:fragment slot="header">
-        <h4 class="center txt-break">Restore <strong>{name}</strong></h4>
+        <h4 class="popup-title txt-ellipsis">Restore <strong>{name}</strong></h4>
     </svelte:fragment>
 
     <div class="alert alert-danger">
@@ -70,14 +80,16 @@
             <i class="ri-alert-line" />
         </div>
         <div class="content">
-            <p>Please proceed with caution.</p>
-            <p>
-                The restore operation will replace your existing <code>pb_data</code> with the one from the backup
-                and will restart the application process!
-            </p>
             <p class="txt-bold">
+                Please proceed with caution.
+                <br />
                 Backup restore is still experimental and currently works only on UNIX based systems.
             </p>
+            <p>
+                The restore operation will attempt to replace your existing <code>pb_data</code> with the one from
+                the backup and will restart the application process.
+            </p>
+            <p>Nothing will happen if the backup file is invalid or incompatible.</p>
         </div>
     </div>
 
@@ -112,3 +124,9 @@
         </button>
     </svelte:fragment>
 </OverlayPanel>
+
+<style>
+    .popup-title {
+        max-width: 80%;
+    }
+</style>

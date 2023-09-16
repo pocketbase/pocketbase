@@ -82,9 +82,6 @@ func (form *RecordVerificationRequest) Submit(interceptors ...InterceptorFunc[*m
 		if (now.Sub(lastVerificationSentAt)).Seconds() < form.resendThreshold {
 			return errors.New("A verification email was already sent.")
 		}
-
-		// update last sent timestamp
-		record.SetLastVerificationSentAt(types.NowDateTime())
 	}
 
 	return runInterceptors(record, func(m *models.Record) error {
@@ -95,6 +92,9 @@ func (form *RecordVerificationRequest) Submit(interceptors ...InterceptorFunc[*m
 		if err := mails.SendRecordVerification(form.app, m); err != nil {
 			return err
 		}
+
+		// update last sent timestamp
+		m.SetLastVerificationSentAt(types.NowDateTime())
 
 		return form.dao.SaveRecord(m)
 	}, interceptors...)

@@ -1,16 +1,17 @@
 <script>
-    import { Collection } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
     import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
-    export let collection = new Collection();
+    export let collection;
 
     let responseTab = 200;
     let responses = [];
     let baseData = {};
+
+    $: isAuth = collection.type === "auth";
 
     $: adminsOnly = collection?.createRule === null;
 
@@ -48,7 +49,7 @@
         },
     ];
 
-    $: if (collection.$isAuth) {
+    $: if (isAuth) {
         baseData = {
             username: "test_username",
             email: "test@example.com",
@@ -91,7 +92,7 @@ const pb = new PocketBase('${backendAbsUrl}');
 const data = ${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection)), null, 4)};
 
 const record = await pb.collection('${collection?.name}').create(data);
-` + (collection?.isAuth ?
+` + (isAuth ?
 `
 // (optional) send an email verification request
 await pb.collection('${collection?.name}').requestVerification('test@example.com');
@@ -108,7 +109,7 @@ final pb = PocketBase('${backendAbsUrl}');
 final body = <String, dynamic>${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection)), null, 2)};
 
 final record = await pb.collection('${collection?.name}').create(body: body);
-` + (collection?.isAuth ?
+` + (isAuth ?
 `
 // (optional) send an email verification request
 await pb.collection('${collection?.name}').requestVerification('test@example.com');
@@ -156,7 +157,7 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
             </td>
         </tr>
 
-        {#if collection?.isAuth}
+        {#if isAuth}
             <tr>
                 <td colspan="3" class="txt-hint">Auth fields</td>
             </tr>
@@ -318,7 +319,7 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
 
 <div class="section-title">Responses</div>
 <div class="tabs">
-    <div class="tabs-header compact left">
+    <div class="tabs-header compact combined left">
         {#each responses as response (response.code)}
             <button
                 class="tab-item"

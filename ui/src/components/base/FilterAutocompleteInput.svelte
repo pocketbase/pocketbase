@@ -268,7 +268,7 @@
         result.push("@request.auth.updated");
 
         // load auth collection fields
-        const authCollections = cachedCollections.filter((collection) => collection.$isAuth);
+        const authCollections = cachedCollections.filter((collection) => collection.type === "auth");
         for (const collection of authCollections) {
             const authKeys = getCollectionFieldKeys(collection.id, "@request.auth.");
             for (const k of authKeys) {
@@ -348,7 +348,24 @@
             return null;
         }
 
-        let options = [{ label: "false" }, { label: "true" }, { label: "@now" }];
+        let options = [
+            { label: "false" },
+            { label: "true" },
+            { label: "@now" },
+            { label: "@second" },
+            { label: "@minute" },
+            { label: "@hour" },
+            { label: "@year" },
+            { label: "@day" },
+            { label: "@month" },
+            { label: "@weekday" },
+            { label: "@todayStart" },
+            { label: "@todayEnd" },
+            { label: "@monthStart" },
+            { label: "@monthEnd" },
+            { label: "@yearStart" },
+            { label: "@yearEnd" },
+        ];
 
         if (!disableIndirectCollectionsKeys) {
             options.push({ label: "@collection.*", apply: "@collection." });
@@ -399,6 +416,19 @@
                     // keywords
                     { regex: /\w+[\w\.]*\w+/, token: "keyword" },
                     { regex: CommonHelper.escapeRegExp("@now"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@second"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@minute"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@hour"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@year"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@day"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@month"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@weekday"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@todayStart"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@todayEnd"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@monthStart"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@monthEnd"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@yearStart"), token: "keyword" },
+                    { regex: CommonHelper.escapeRegExp("@yearEnd"), token: "keyword" },
                     { regex: CommonHelper.escapeRegExp("@request.method"), token: "keyword" },
                 ],
             })

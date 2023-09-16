@@ -1,10 +1,9 @@
 <script>
-    import { SchemaField } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import AutoExpandTextarea from "@/components/base/AutoExpandTextarea.svelte";
 
-    export let field = new SchemaField();
+    export let field;
     export let value = undefined;
 </script>
 

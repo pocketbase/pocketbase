@@ -21,7 +21,7 @@
                 if (secret) {
                     secret = undefined;
                 } else {
-                    secret = CommonHelper.randomString(50);
+                    secret = CommonHelper.randomSecret(50);
                 }
             }}
         >

@@ -180,6 +180,13 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 				Max: &max,
 			},
 		},
+		&schema.SchemaField{
+			Name: "field4",
+			Type: schema.FieldTypeNumber,
+			Options: &schema.NumberOptions{
+				NoDecimal: true,
+			},
+		},
 	)
 	if err := app.Dao().SaveCollection(collection); err != nil {
 		t.Fatal(err)
@@ -201,6 +208,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 				"field1": nil,
 				"field2": nil,
 				"field3": nil,
+				"field4": nil,
 			},
 			nil,
 			[]string{"field2"},
@@ -211,6 +219,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 				"field1": "invalid",
 				"field2": "invalid",
 				"field3": "invalid",
+				"field4": "invalid",
 			},
 			nil,
 			[]string{"field2"},
@@ -245,6 +254,15 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
+			"(number) check NoDecimal",
+			map[string]any{
+				"field2": 1,
+				"field4": 456.789,
+			},
+			nil,
+			[]string{"field4"},
+		},
+		{
 			"(number) valid data (only required)",
 			map[string]any{
 				"field2": 1,
@@ -258,6 +276,7 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 				"field1": nil,
 				"field2": 123, // test value cast
 				"field3": max,
+				"field4": 456,
 			},
 			nil,
 			[]string{},

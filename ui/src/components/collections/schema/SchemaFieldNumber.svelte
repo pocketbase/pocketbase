@@ -1,4 +1,5 @@
 <script>
+    import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
 
@@ -28,5 +29,20 @@
                 </Field>
             </div>
         </div>
+    </svelte:fragment>
+
+    <svelte:fragment slot="optionsFooter">
+        <Field class="form-field form-field-toggle" name="schema.{key}.options.noDecimal" let:uniqueId>
+            <input type="checkbox" id={uniqueId} bind:checked={field.options.noDecimal} />
+            <label for={uniqueId}>
+                <span class="txt">No decimals</span>
+                <i
+                    class="ri-information-line link-hint"
+                    use:tooltip={{
+                        text: `Existing decimal numbers will not be affected.`,
+                    }}
+                />
+            </label>
+        </Field>
     </svelte:fragment>
 </SchemaField>

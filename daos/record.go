@@ -252,23 +252,31 @@ func (dao *Dao) FindFirstRecordByData(
 // FindRecordsByFilter returns limit number of records matching the
 // provided string filter.
 //
+// NB! Use the last "params" argument to bind untrusted user variables!
+//
 // The sort argument is optional and can be empty string OR the same format
 // used in the web APIs, eg. "-created,title".
 //
 // If the limit argument is <= 0, no limit is applied to the query and
 // all matching records are returned.
 //
-// NB! Don't put untrusted user input in the filter string as it
-// practically would allow the users to inject their own custom filter.
-//
 // Example:
 //
-//	dao.FindRecordsByFilter("posts", "title ~ 'lorem ipsum' && visible = true", "-created", 10)
+//	dao.FindRecordsByFilter(
+//		"posts",
+//		"title ~ {:title} && visible = {:visible}",
+//		"-created",
+//		10,
+//		0,
+//		dbx.Params{"title": "lorem ipsum", "visible": true}
+//	)
 func (dao *Dao) FindRecordsByFilter(
 	collectionNameOrId string,
 	filter string,
 	sort string,
 	limit int,
+	offset int,
+	params ...dbx.Params,
 ) ([]*models.Record, error) {
 	collection, err := dao.FindCollectionByNameOrId(collectionNameOrId)
 	if err != nil {
@@ -286,7 +294,7 @@ func (dao *Dao) FindRecordsByFilter(
 		true,       // allow searching hidden/protected fields like "email"
 	)
 
-	expr, err := search.FilterData(filter).BuildExpr(resolver)
+	expr, err := search.FilterData(filter).BuildExpr(resolver, params...)
 	if err != nil || expr == nil {
 		return nil, errors.New("invalid or empty filter expression")
 	}
@@ -307,6 +315,10 @@ func (dao *Dao) FindRecordsByFilter(
 	resolver.UpdateQuery(q) // attaches any adhoc joins and aliases
 	// ---
 
+	if offset > 0 {
+		q.Offset(int64(offset))
+	}
+
 	if limit > 0 {
 		q.Limit(int64(limit))
 	}
@@ -322,14 +334,17 @@ func (dao *Dao) FindRecordsByFilter(
 
 // FindFirstRecordByFilter returns the first available record matching the provided filter.
 //
-// NB! Don't put untrusted user input in the filter string as it
-// practically would allow the users to inject their own custom filter.
+// NB! Use the last params argument to bind untrusted user variables!
 //
 // Example:
 //
-//	dao.FindFirstRecordByFilter("posts", "slug='test'")
-func (dao *Dao) FindFirstRecordByFilter(collectionNameOrId string, filter string) (*models.Record, error) {
-	result, err := dao.FindRecordsByFilter(collectionNameOrId, filter, "", 1)
+//	dao.FindFirstRecordByFilter("posts", "slug={:slug} && status='public'", dbx.Params{"slug": "test"})
+func (dao *Dao) FindFirstRecordByFilter(
+	collectionNameOrId string,
+	filter string,
+	params ...dbx.Params,
+) (*models.Record, error) {
+	result, err := dao.FindRecordsByFilter(collectionNameOrId, filter, "", 1, 0, params...)
 	if err != nil {
 		return nil, err
 	}

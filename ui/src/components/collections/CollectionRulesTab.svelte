@@ -1,11 +1,10 @@
 <script>
     import { slide } from "svelte/transition";
-    import { Collection } from "pocketbase";
     import tooltip from "@/actions/tooltip";
     import CommonHelper from "@/utils/CommonHelper";
     import RuleField from "@/components/collections/RuleField.svelte";
 
-    export let collection = new Collection();
+    export let collection;
 
     $: fields = CommonHelper.getAllCollectionIdentifiers(collection);
 
@@ -30,7 +29,7 @@
     </div>
 
     {#if showFiltersInfo}
-        <div transition:slide|local={{ duration: 150 }}>
+        <div transition:slide={{ duration: 150 }}>
             <div class="alert alert-warning m-0">
                 <div class="content">
                     <p class="m-b-0">The following record fields are available:</p>
@@ -80,7 +79,7 @@
 
 <RuleField label="View rule" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
-{#if !collection?.$isView}
+{#if collection?.type !== "view"}
     <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule}>
         <svelte:fragment slot="afterLabel" let:isAdminOnly>
             {#if !isAdminOnly}
@@ -100,7 +99,7 @@
     <RuleField label="Delete rule" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
 {/if}
 
-{#if collection?.$isAuth}
+{#if collection?.type === "auth"}
     <RuleField
         label="Manage rule"
         formKey="options.manageRule"

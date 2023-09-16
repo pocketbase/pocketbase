@@ -58,7 +58,7 @@
                     isLoading = false;
                     console.warn(err);
                     clearList();
-                    ApiClient.error(err, false);
+                    ApiClient.error(err, err?.status != 400); // silence filter errors
                 }
             });
     }
@@ -81,10 +81,12 @@
 
         <div class="flex-fill" />
 
-        <button type="button" class="btn btn-expanded" on:click={() => adminUpsertPanel?.show()}>
-            <i class="ri-add-line" />
-            <span class="txt">New admin</span>
-        </button>
+        <div class="btns-group">
+            <button type="button" class="btn btn-expanded" on:click={() => adminUpsertPanel?.show()}>
+                <i class="ri-add-line" />
+                <span class="txt">New admin</span>
+            </button>
+        </div>
     </header>
 
     <Searchbar

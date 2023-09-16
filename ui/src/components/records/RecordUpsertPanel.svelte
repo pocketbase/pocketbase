@@ -1,8 +1,8 @@
 <script>
     import { createEventDispatcher, tick } from "svelte";
     import { slide } from "svelte/transition";
-    import { Record } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
+    import { ClientResponseError } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
     import tooltip from "@/actions/tooltip";
     import { setErrors } from "@/stores/errors";
@@ -46,6 +46,8 @@
     let isNew = true;
     let isLoaded = false;
 
+    $: isAuthCollection = collection?.type === "auth";
+
     $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
 
     $: hasFileChanges =
@@ -55,7 +57,7 @@
 
     $: hasChanges = hasFileChanges || originalSerializedData != serializedData;
 
-    $: isNew = !original || original.$isNew;
+    $: isNew = !original || !original.id;
 
     $: canSave = isNew || hasChanges;
 
@@ -80,8 +82,8 @@
     async function load(model) {
         isLoaded = false;
         setErrors({}); // reset errors
-        original = model || new Record();
-        record = original.$clone();
+        original = model || {};
+        record = structuredClone(original);
         uploadedFilesMap = {};
         deletedFileNamesMap = {};
 
@@ -102,13 +104,13 @@
 
     async function replaceOriginal(newOriginal) {
         setErrors({}); // reset errors
-        original = newOriginal || new Record();
+        original = newOriginal || {};
         uploadedFilesMap = {};
         deletedFileNamesMap = {};
 
         // to avoid layout shifts we replace only the file and non-schema fields
         const skipFields = collection?.schema?.filter((f) => f.type != "file")?.map((f) => f.name) || [];
-        for (let k in newOriginal.$export()) {
+        for (let k in newOriginal) {
             if (skipFields.includes(k)) {
                 continue;
             }
@@ -150,20 +152,20 @@
     }
 
     function areRecordsEqual(recordA, recordB) {
-        const cloneA = recordA?.$clone();
-        const cloneB = recordB?.$clone();
+        const cloneA = structuredClone(recordA || {});
+        const cloneB = structuredClone(recordB || {});
 
         const fileFields = collection?.schema?.filter((f) => f.type === "file");
         for (let field of fileFields) {
-            delete cloneA?.[field.name];
-            delete cloneB?.[field.name];
+            delete cloneA[field.name];
+            delete cloneB[field.name];
         }
 
         // delete password props
-        delete cloneA?.password;
-        delete cloneA?.passwordConfirm;
-        delete cloneB?.password;
-        delete cloneB?.passwordConfirm;
+        delete cloneA.password;
+        delete cloneA.passwordConfirm;
+        delete cloneB.password;
+        delete cloneB.passwordConfirm;
 
         return JSON.stringify(cloneA) == JSON.stringify(cloneB);
     }
@@ -173,43 +175,40 @@
         window.localStorage.removeItem(draftKey());
     }
 
-    function save(hidePanel = true) {
+    async function save(hidePanel = true) {
         if (isSaving || !canSave || !collection?.id) {
             return;
         }
 
         isSaving = true;
 
-        const data = exportFormData();
+        try {
+            const data = exportFormData();
 
-        let request;
-        if (isNew) {
-            request = ApiClient.collection(collection.id).create(data);
-        } else {
-            request = ApiClient.collection(collection.id).update(record.id, data);
+            let result;
+            if (isNew) {
+                result = await ApiClient.collection(collection.id).create(data);
+            } else {
+                result = await ApiClient.collection(collection.id).update(record.id, data);
+            }
+
+            addSuccessToast(isNew ? "Successfully created record." : "Successfully updated record.");
+
+            deleteDraft();
+
+            if (hidePanel) {
+                confirmClose = false;
+                hide();
+            } else {
+                replaceOriginal(result);
+            }
+
+            dispatch("save", result);
+        } catch (err) {
+            ApiClient.error(err);
         }
 
-        request
-            .then((result) => {
-                addSuccessToast(isNew ? "Successfully created record." : "Successfully updated record.");
-
-                deleteDraft();
-
-                if (hidePanel) {
-                    confirmClose = false;
-                    hide();
-                } else {
-                    replaceOriginal(result);
-                }
-
-                dispatch("save", result);
-            })
-            .catch((err) => {
-                ApiClient.error(err);
-            })
-            .finally(() => {
-                isSaving = false;
-            });
+        isSaving = false;
     }
 
     function deleteConfirm() {
@@ -232,18 +231,24 @@
     }
 
     function exportFormData() {
-        const data = record?.$export() || {};
+        const data = structuredClone(record || {});
         const formData = new FormData();
 
         const exportableFields = {
             id: data.id,
         };
 
+        const jsonFields = {};
+
         for (const field of collection?.schema || []) {
             exportableFields[field.name] = true;
+
+            if (field.type == "json") {
+                jsonFields[field.name] = true;
+            }
         }
 
-        if (collection?.isAuth) {
+        if (isAuthCollection) {
             exportableFields["username"] = true;
             exportableFields["email"] = true;
             exportableFields["emailVisibility"] = true;
@@ -262,6 +267,26 @@
             // normalize nullable values
             if (typeof data[key] === "undefined") {
                 data[key] = null;
+            }
+
+            // "validate" json fields
+            if (jsonFields[key] && data[key] !== "") {
+                try {
+                    JSON.parse(data[key]);
+                } catch (err) {
+                    const fieldErr = {};
+                    fieldErr[key] = {
+                        code: "invalid_json",
+                        message: err.toString(),
+                    };
+                    // emulate server error
+                    throw new ClientResponseError({
+                        status: 400,
+                        response: {
+                            data: fieldErr,
+                        },
+                    });
+                }
             }
 
             CommonHelper.addValueToFormData(formData, key, data[key]);
@@ -331,7 +356,7 @@
     }
 
     async function duplicate() {
-        const clone = original?.$clone();
+        let clone = original ? structuredClone(original) : null;
 
         if (clone) {
             clone.id = "";
@@ -369,7 +394,7 @@
     class="
         record-panel
         {hasEditorField ? 'overlay-panel-xl' : 'overlay-panel-lg'}
-        {collection?.$isAuth && !isNew ? 'colored-header' : ''}
+        {isAuthCollection && !isNew ? 'colored-header' : ''}
     "
     beforeHide={() => {
         if (hasChanges && confirmClose) {
@@ -400,7 +425,7 @@
             <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
                 <i class="ri-more-line" />
                 <Toggler class="dropdown dropdown-right dropdown-nowrap">
-                    {#if collection.$isAuth && !original.verified && original.email}
+                    {#if isAuthCollection && !original.verified && original.email}
                         <button
                             type="button"
                             class="dropdown-item closable"
@@ -410,7 +435,7 @@
                             <span class="txt">Send verification email</span>
                         </button>
                     {/if}
-                    {#if collection.$isAuth && original.email}
+                    {#if isAuthCollection && original.email}
                         <button
                             type="button"
                             class="dropdown-item closable"
@@ -436,7 +461,7 @@
             </button>
         {/if}
 
-        {#if collection.$isAuth && !isNew}
+        {#if isAuthCollection && !isNew}
             <div class="tabs-header stretched">
                 <button
                     type="button"
@@ -523,7 +548,7 @@
                 />
             </Field>
 
-            {#if collection?.isAuth}
+            {#if isAuthCollection}
                 <AuthFields bind:record {isNew} {collection} />
 
                 {#if collection?.schema?.length}
@@ -564,7 +589,7 @@
             {/each}
         </form>
 
-        {#if collection.$isAuth && !isNew}
+        {#if isAuthCollection && !isNew}
             <div class="tab-item" class:active={activeTab === tabProviderKey}>
                 <ExternalAuthsList {record} />
             </div>

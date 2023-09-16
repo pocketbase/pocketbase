@@ -31,6 +31,7 @@
     let formSettings = {};
     let isLoading = false;
     let isSaving = false;
+    let showMoreOptions = false;
 
     $: initialHash = JSON.stringify(originalFormSettings);
 
@@ -173,66 +174,112 @@
                 </Field>
 
                 {#if formSettings.smtp.enabled}
-                    <div class="grid" transition:slide|local={{ duration: 150 }}>
-                        <div class="col-lg-4">
-                            <Field class="form-field required" name="smtp.host" let:uniqueId>
-                                <label for={uniqueId}>SMTP server host</label>
-                                <input
-                                    type="text"
-                                    id={uniqueId}
-                                    required
-                                    bind:value={formSettings.smtp.host}
-                                />
-                            </Field>
+                    <div transition:slide={{ duration: 150 }}>
+                        <div class="grid">
+                            <div class="col-lg-4">
+                                <Field class="form-field required" name="smtp.host" let:uniqueId>
+                                    <label for={uniqueId}>SMTP server host</label>
+                                    <input
+                                        type="text"
+                                        id={uniqueId}
+                                        required
+                                        bind:value={formSettings.smtp.host}
+                                    />
+                                </Field>
+                            </div>
+                            <div class="col-lg-2">
+                                <Field class="form-field required" name="smtp.port" let:uniqueId>
+                                    <label for={uniqueId}>Port</label>
+                                    <input
+                                        type="number"
+                                        id={uniqueId}
+                                        required
+                                        bind:value={formSettings.smtp.port}
+                                    />
+                                </Field>
+                            </div>
+                            <div class="col-lg-3">
+                                <Field class="form-field" name="smtp.username" let:uniqueId>
+                                    <label for={uniqueId}>Username</label>
+                                    <input
+                                        type="text"
+                                        id={uniqueId}
+                                        bind:value={formSettings.smtp.username}
+                                    />
+                                </Field>
+                            </div>
+                            <div class="col-lg-3">
+                                <Field class="form-field" name="smtp.password" let:uniqueId>
+                                    <label for={uniqueId}>Password</label>
+                                    <RedactedPasswordInput
+                                        id={uniqueId}
+                                        bind:value={formSettings.smtp.password}
+                                    />
+                                </Field>
+                            </div>
                         </div>
-                        <div class="col-lg-2">
-                            <Field class="form-field required" name="smtp.port" let:uniqueId>
-                                <label for={uniqueId}>Port</label>
-                                <input
-                                    type="number"
-                                    id={uniqueId}
-                                    required
-                                    bind:value={formSettings.smtp.port}
-                                />
-                            </Field>
-                        </div>
-                        <div class="col-lg-3">
-                            <Field class="form-field required" name="smtp.tls" let:uniqueId>
-                                <label for={uniqueId}>TLS encryption</label>
-                                <ObjectSelect
-                                    id={uniqueId}
-                                    items={tlsOptions}
-                                    bind:keyOfSelected={formSettings.smtp.tls}
-                                />
-                            </Field>
-                        </div>
-                        <div class="col-lg-3">
-                            <Field class="form-field" name="smtp.authMethod" let:uniqueId>
-                                <label for={uniqueId}>AUTH method</label>
-                                <ObjectSelect
-                                    id={uniqueId}
-                                    items={authMethods}
-                                    bind:keyOfSelected={formSettings.smtp.authMethod}
-                                />
-                            </Field>
-                        </div>
-                        <div class="col-lg-6">
-                            <Field class="form-field" name="smtp.username" let:uniqueId>
-                                <label for={uniqueId}>Username</label>
-                                <input type="text" id={uniqueId} bind:value={formSettings.smtp.username} />
-                            </Field>
-                        </div>
-                        <div class="col-lg-6">
-                            <Field class="form-field" name="smtp.password" let:uniqueId>
-                                <label for={uniqueId}>Password</label>
-                                <RedactedPasswordInput
-                                    id={uniqueId}
-                                    bind:value={formSettings.smtp.password}
-                                />
-                            </Field>
-                        </div>
-                        <!-- margin helper -->
-                        <div class="col-lg-12" />
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-secondary m-t-sm m-b-sm"
+                            on:click|preventDefault={() => {
+                                showMoreOptions = !showMoreOptions;
+                            }}
+                        >
+                            {#if showMoreOptions}
+                                <span class="txt">Hide more options</span>
+                                <i class="ri-arrow-up-s-line" />
+                            {:else}
+                                <span class="txt">Show more options</span>
+                                <i class="ri-arrow-down-s-line" />
+                            {/if}
+                        </button>
+
+                        {#if showMoreOptions}
+                            <div class="grid" transition:slide={{ duration: 150 }}>
+                                <div class="col-lg-3">
+                                    <Field class="form-field" name="smtp.tls" let:uniqueId>
+                                        <label for={uniqueId}>TLS encryption</label>
+                                        <ObjectSelect
+                                            id={uniqueId}
+                                            items={tlsOptions}
+                                            bind:keyOfSelected={formSettings.smtp.tls}
+                                        />
+                                    </Field>
+                                </div>
+                                <div class="col-lg-3">
+                                    <Field class="form-field" name="smtp.authMethod" let:uniqueId>
+                                        <label for={uniqueId}>AUTH method</label>
+                                        <ObjectSelect
+                                            id={uniqueId}
+                                            items={authMethods}
+                                            bind:keyOfSelected={formSettings.smtp.authMethod}
+                                        />
+                                    </Field>
+                                </div>
+                                <div class="col-lg-6">
+                                    <Field class="form-field" name="smtp.localName" let:uniqueId>
+                                        <label for={uniqueId}>
+                                            <span class="txt">EHLO/HELO domain</span>
+                                            <i
+                                                class="ri-information-line link-hint"
+                                                use:tooltip={{
+                                                    text: "Some SMTP servers, such as the Gmail SMTP-relay, requires a proper domain name in the inital EHLO/HELO exchange and will reject attempts to use localhost.",
+                                                    position: "top",
+                                                }}
+                                            />
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id={uniqueId}
+                                            placeholder="Default to localhost"
+                                            bind:value={formSettings.smtp.localName}
+                                        />
+                                    </Field>
+                                </div>
+                                <div class="col-lg-12" />
+                            </div>
+                        {/if}
                     </div>
                 {/if}
 

@@ -18,6 +18,7 @@
     "@codemirror/lang-html": "^6.1.0",
     "@codemirror/lang-javascript": "^6.0.2",
     "@codemirror/lang-sql": "^6.4.0",
+    "@codemirror/lang-json": "^6.0.0",
     "@codemirror/language": "^6.0.0",
     "@codemirror/legacy-modes": "^6.0.0",
     "@codemirror/search": "^6.0.0",
@@ -28,11 +29,11 @@
     "chart.js": "^3.7.1",
     "chartjs-adapter-luxon": "^1.2.0",
     "luxon": "^2.3.2",
-    "pocketbase": "^0.16.0",
+    "pocketbase": "^0.18.0",
     "prismjs": "^1.28.0",
     "sass": "^1.45.0",
-    "svelte": "^3.44.0",
-    "svelte-flatpickr": "^3.2.6",
+    "svelte": "^4.0.0",
+    "svelte-flatpickr": "^3.3.3",
     "svelte-spa-router": "^3.2.0",
     "vite": "^4.0.4"
   }

@@ -172,25 +172,6 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 			[]string{"schema"},
 		},
 		{
-			"create failure - missing relation display field",
-			"",
-			`{
-				"name": "test_new",
-				"type": "base",
-				"schema": [
-					{
-						"name":"test",
-						"type":"relation",
-						"options":{
-							"collectionId":"wsmn24bux7wo113",
-							"displayFields":["text", "missing"]
-						}
-					}
-				]
-			}`,
-			[]string{"schema"},
-		},
-		{
 			"create failure - check auth options validators",
 			"",
 			`{
@@ -605,7 +586,7 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 			}
 
 			if form.Name != collection.Name {
-				t.Errorf("Expected Name %q, got %q", collection.Name, form.Name)
+				t.Fatalf("Expected Name %q, got %q", collection.Name, form.Name)
 			}
 
 			if form.Type != collection.Type {

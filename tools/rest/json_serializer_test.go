@@ -16,6 +16,7 @@ func TestSerialize(t *testing.T) {
 	scenarios := []struct {
 		name       string
 		serializer rest.Serializer
+		statusCode int
 		data       any
 		query      string
 		expected   string
@@ -23,6 +24,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"empty query",
 			rest.Serializer{},
+			200,
 			map[string]any{"a": 1, "b": 2, "c": "test"},
 			"",
 			`{"a":1,"b":2,"c":"test"}`,
@@ -30,6 +32,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"empty fields",
 			rest.Serializer{},
+			200,
 			map[string]any{"a": 1, "b": 2, "c": "test"},
 			"fields=",
 			`{"a":1,"b":2,"c":"test"}`,
@@ -37,6 +40,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"missing fields",
 			rest.Serializer{},
+			200,
 			map[string]any{"a": 1, "b": 2, "c": "test"},
 			"fields=missing",
 			`{}`,
@@ -44,6 +48,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"non map response",
 			rest.Serializer{},
+			200,
 			"test",
 			"fields=a,b,test",
 			`"test"`,
@@ -51,13 +56,39 @@ func TestSerialize(t *testing.T) {
 		{
 			"non slice of map response",
 			rest.Serializer{},
+			200,
 			[]any{"a", "b", "test"},
 			"fields=a,test",
 			`["a","b","test"]`,
 		},
 		{
+			"map with no matching field",
+			rest.Serializer{},
+			200,
+			map[string]any{"a": 1, "b": 2, "c": "test"},
+			"fields=missing", // test individual fields trim
+			`{}`,
+		},
+		{
+			">299 response",
+			rest.Serializer{},
+			300,
+			map[string]any{"a": 1, "b": 2, "c": "test"},
+			"fields=missing",
+			`{"a":1,"b":2,"c":"test"}`,
+		},
+		{
+			"<200 response",
+			rest.Serializer{},
+			199,
+			map[string]any{"a": 1, "b": 2, "c": "test"},
+			"fields=missing",
+			`{"a":1,"b":2,"c":"test"}`,
+		},
+		{
 			"map with existing and missing fields",
 			rest.Serializer{},
+			200,
 			map[string]any{"a": 1, "b": 2, "c": "test"},
 			"fields=a,  c  ,missing", // test individual fields trim
 			`{"a":1,"c":"test"}`,
@@ -65,6 +96,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"custom fields param",
 			rest.Serializer{FieldsParam: "custom"},
+			200,
 			map[string]any{"a": 1, "b": 2, "c": "test"},
 			"custom=a,  c  ,missing", // test individual fields trim
 			`{"a":1,"c":"test"}`,
@@ -72,6 +104,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"slice of maps with existing and missing fields",
 			rest.Serializer{},
+			200,
 			[]any{
 				map[string]any{"a": 11, "b": 11, "c": "test1"},
 				map[string]any{"a": 22, "b": 22, "c": "test2"},
@@ -82,6 +115,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"nested fields with mixed map and any slices",
 			rest.Serializer{},
+			200,
 			map[string]any{
 				"a": 1,
 				"b": 2,
@@ -139,6 +173,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"SearchResult",
 			rest.Serializer{},
+			200,
 			search.Result{
 				Page:       1,
 				PerPage:    10,
@@ -155,6 +190,7 @@ func TestSerialize(t *testing.T) {
 		{
 			"*SearchResult",
 			rest.Serializer{},
+			200,
 			&search.Result{
 				Page:       1,
 				PerPage:    10,
@@ -168,28 +204,100 @@ func TestSerialize(t *testing.T) {
 			"fields=a,c",
 			`{"items":[{"a":11,"c":"test1"},{"a":22,"c":"test2"}],"page":1,"perPage":10,"totalItems":20,"totalPages":30}`,
 		},
+		{
+			"root wildcard",
+			rest.Serializer{},
+			200,
+			&search.Result{
+				Page:       1,
+				PerPage:    10,
+				TotalItems: 20,
+				TotalPages: 30,
+				Items: []any{
+					map[string]any{"a": 11, "b": 11, "c": "test1"},
+					map[string]any{"a": 22, "b": 22, "c": "test2"},
+				},
+			},
+			"fields=*",
+			`{"items":[{"a":11,"b":11,"c":"test1"},{"a":22,"b":22,"c":"test2"}],"page":1,"perPage":10,"totalItems":20,"totalPages":30}`,
+		},
+		{
+			"root wildcard with nested exception",
+			rest.Serializer{},
+			200,
+			map[string]any{
+				"id":    "123",
+				"title": "lorem",
+				"rel": map[string]any{
+					"id":    "456",
+					"title": "rel_title",
+				},
+			},
+			"fields=*,rel.id",
+			`{"id":"123","rel":{"id":"456"},"title":"lorem"}`,
+		},
+		{
+			"sub wildcard",
+			rest.Serializer{},
+			200,
+			map[string]any{
+				"id":    "123",
+				"title": "lorem",
+				"rel": map[string]any{
+					"id":    "456",
+					"title": "rel_title",
+					"sub": map[string]any{
+						"id":    "789",
+						"title": "sub_title",
+					},
+				},
+			},
+			"fields=id,rel.*",
+			`{"id":"123","rel":{"id":"456","sub":{"id":"789","title":"sub_title"},"title":"rel_title"}}`,
+		},
+		{
+			"sub wildcard with nested exception",
+			rest.Serializer{},
+			200,
+			map[string]any{
+				"id":    "123",
+				"title": "lorem",
+				"rel": map[string]any{
+					"id":    "456",
+					"title": "rel_title",
+					"sub": map[string]any{
+						"id":    "789",
+						"title": "sub_title",
+					},
+				},
+			},
+			"fields=id,rel.*,rel.sub.id",
+			`{"id":"123","rel":{"id":"456","sub":{"id":"789"},"title":"rel_title"}}`,
+		},
 	}
 
 	for _, s := range scenarios {
-		e := echo.New()
-		req := httptest.NewRequest(http.MethodPost, "/", nil)
-		req.URL.RawQuery = s.query
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		t.Run(s.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/", nil)
+			req.URL.RawQuery = s.query
+			rec := httptest.NewRecorder()
 
-		if err := s.serializer.Serialize(c, s.data, ""); err != nil {
-			t.Errorf("[%s] Serialize failure: %v", s.name, err)
-			continue
-		}
+			e := echo.New()
+			c := e.NewContext(req, rec)
+			c.Response().Status = s.statusCode
 
-		rawBody, err := io.ReadAll(rec.Result().Body)
-		if err != nil {
-			t.Errorf("[%s] Failed to read request body: %v", s.name, err)
-			continue
-		}
+			if err := s.serializer.Serialize(c, s.data, ""); err != nil {
+				t.Fatalf("Serialize failure: %v", err)
+			}
 
-		if v := strings.TrimSpace(string(rawBody)); v != s.expected {
-			t.Fatalf("[%s] Expected body\n%v \ngot: \n%v", s.name, s.expected, v)
-		}
+			rawBody, err := io.ReadAll(rec.Result().Body)
+			if err != nil {
+				t.Fatalf("Failed to read request body: %v", err)
+			}
+
+			if v := strings.TrimSpace(string(rawBody)); v != s.expected {
+				t.Fatalf("Expected body\n%v \ngot: \n%v", s.expected, v)
+			}
+		})
 	}
 }

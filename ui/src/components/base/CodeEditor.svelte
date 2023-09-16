@@ -53,6 +53,7 @@
         closeBracketsKeymap,
     } from "@codemirror/autocomplete";
     import { html as htmlLang } from "@codemirror/lang-html";
+    import { json as jsonLang } from "@codemirror/lang-json";
     import { sql, SQLDialect } from "@codemirror/lang-sql";
     import { javascript as javascriptLang } from "@codemirror/lang-javascript";
     // ---
@@ -160,6 +161,8 @@
         switch (language) {
             case "html":
                 return htmlLang();
+            case "json":
+                return jsonLang();
             case "sql-create-index":
                 return sql({
                     // lightweight sql dialect with mostly SELECT statements keywords

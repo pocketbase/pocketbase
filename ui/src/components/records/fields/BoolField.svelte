@@ -1,8 +1,7 @@
 <script>
-    import { SchemaField } from "pocketbase";
     import Field from "@/components/base/Field.svelte";
 
-    export let field = new SchemaField();
+    export let field;
     export let value = false;
 </script>
 

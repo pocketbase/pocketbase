@@ -6,24 +6,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-func TestS256Challenge(t *testing.T) {
-	scenarios := []struct {
-		code     string
-		expected string
-	}{
-		{"", "47DEQpj8HBSa-_TImW-5JCeuQeRkm5NMpJWZG3hSuFU"},
-		{"123", "pmWkWSBCL51Bfkhn79xPuKBKHz__H6B-mY6G9_eieuM"},
-	}
-
-	for i, scenario := range scenarios {
-		result := security.S256Challenge(scenario.code)
-
-		if result != scenario.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
-		}
-	}
-}
-
 func TestEncrypt(t *testing.T) {
 	scenarios := []struct {
 		data        string

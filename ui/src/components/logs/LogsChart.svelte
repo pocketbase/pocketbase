@@ -59,7 +59,7 @@
                 if (!err?.isAbort) {
                     resetData();
                     console.warn(err);
-                    ApiClient.error(err, false);
+                    ApiClient.error(err, err?.status != 400); // silence filter errors
                 }
             })
             .finally(() => {
@@ -147,7 +147,7 @@
 
 <div class="chart-wrapper" class:loading={isLoading}>
     {#if isLoading}
-        <div class="chart-loader loader" transition:scale|local={{ duration: 150 }} />
+        <div class="chart-loader loader" transition:scale={{ duration: 150 }} />
     {/if}
     <canvas bind:this={chartCanvas} class="chart-canvas" style="height: 250px; width: 100%;" />
 </div>

@@ -96,7 +96,7 @@
             <div class="content txt-xl m-b-base">
                 <p>By default PocketBase uses the local file system to store uploaded files.</p>
                 <p>
-                    If you have limited disk space, you could optionally connect to a S3 compatible storage.
+                    If you have limited disk space, you could optionally connect to an S3 compatible storage.
                 </p>
             </div>
 
@@ -111,7 +111,7 @@
                     bind:testError
                 >
                     {#if originalFormSettings.s3?.enabled != formSettings.s3.enabled}
-                        <div transition:slide|local={{ duration: 150 }}>
+                        <div transition:slide={{ duration: 150 }}>
                             <div class="alert alert-warning m-0">
                                 <div class="icon">
                                     <i class="ri-error-warning-line" />

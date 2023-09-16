@@ -1,5 +1,4 @@
 <script>
-    import { Record } from "pocketbase";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import RecordFieldValue from "./RecordFieldValue.svelte";
     import CopyIcon from "@/components/base/CopyIcon.svelte";
@@ -8,7 +7,7 @@
     export let collection;
 
     let recordPanel;
-    let record = new Record();
+    let record = {};
 
     $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
 

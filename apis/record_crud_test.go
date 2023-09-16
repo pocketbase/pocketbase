@@ -903,7 +903,7 @@ func TestRecordCrudDelete(t *testing.T) {
 				"OnRecordAfterDeleteRequest":  1,
 				"OnRecordBeforeDeleteRequest": 1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				ensureDeletedFiles(app, "_pb_users_auth_", "4q1xlclmfloku33")
 
 				// check if all the external auths records were deleted
@@ -990,7 +990,7 @@ func TestRecordCrudDelete(t *testing.T) {
 				"OnRecordBeforeDeleteRequest": 1,
 				"OnRecordAfterDeleteRequest":  1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				recId := "84nmscqy84lsi1t"
 				rec, _ := app.Dao().FindRecordById("demo1", recId, nil)
 				if rec != nil {
@@ -2032,7 +2032,7 @@ func TestRecordCrudUpdate(t *testing.T) {
 				"OnRecordAfterUpdateRequest":  1,
 				"OnRecordBeforeUpdateRequest": 1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				record, _ := app.Dao().FindRecordById("nologin", "phhq3wr65cap535")
 				if !record.ValidatePassword("12345678") {
 					t.Fatal("Password update failed.")
@@ -2075,7 +2075,7 @@ func TestRecordCrudUpdate(t *testing.T) {
 				"OnRecordAfterUpdateRequest":  1,
 				"OnRecordBeforeUpdateRequest": 1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				record, _ := app.Dao().FindRecordById("users", "oap640cot4yru2s")
 				if !record.ValidatePassword("12345678") {
 					t.Fatal("Password update failed.")
@@ -2137,7 +2137,7 @@ func TestRecordCrudUpdate(t *testing.T) {
 				"OnRecordAfterUpdateRequest":  1,
 				"OnRecordBeforeUpdateRequest": 1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				record, _ := app.Dao().FindRecordById("nologin", "dc49k6jgejn40h3")
 				if !record.ValidatePassword("123456789") {
 					t.Fatal("Password update failed.")

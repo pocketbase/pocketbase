@@ -32,13 +32,13 @@
 
     $: collectionId = field?.options?.collectionId;
 
-    $: displayFields = field?.options?.displayFields;
-
     $: collection = $collections.find((c) => c.id == collectionId) || null;
 
     $: if (typeof filter !== "undefined" && pickerPanel?.isActive()) {
         loadList(true); // reset list on filter change
     }
+
+    $: isView = collection?.type === "view";
 
     $: isLoading = isLoadingList || isLoadingSelected;
 
@@ -139,7 +139,7 @@
 
             const result = await ApiClient.collection(collectionId).getList(page, batchSize, {
                 filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
-                sort: !collection?.$isView ? "-created" : "",
+                sort: !isView ? "-created" : "",
                 skipTotal: 1,
                 $cancelKey: uniqueId + "loadList",
             });
@@ -208,7 +208,7 @@
             autocompleteCollection={collection}
             on:submit={(e) => (filter = e.detail)}
         />
-        {#if !collection?.$isView}
+        {#if !isView}
             <button
                 type="button"
                 class="btn btn-transparent btn-hint p-l-sm p-r-sm"
@@ -250,9 +250,9 @@
                     <i class="ri-checkbox-blank-circle-line txt-disabled" />
                 {/if}
                 <div class="content">
-                    <RecordInfo {record} {displayFields} />
+                    <RecordInfo {record} />
                 </div>
-                {#if !collection?.$isView}
+                {#if !isView}
                     <div class="actions nonintrusive">
                         <button
                             type="button"
@@ -299,7 +299,7 @@
             {#each selected as record, i}
                 <Draggable bind:list={selected} index={i} let:dragging let:dragover>
                     <span class="label" class:label-danger={dragging} class:label-warning={dragover}>
-                        <RecordInfo {record} {displayFields} />
+                        <RecordInfo {record} />
                         <button
                             type="button"
                             title="Remove"

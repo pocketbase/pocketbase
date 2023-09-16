@@ -38,7 +38,7 @@ func TestBackupCreateValidateAndSubmit(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		func() {
+		t.Run(s.name, func(t *testing.T) {
 			app, _ := tests.NewTestApp()
 			defer app.Cleanup()
 
@@ -56,47 +56,47 @@ func TestBackupCreateValidateAndSubmit(t *testing.T) {
 			// parse errors
 			errs, ok := result.(validation.Errors)
 			if !ok && result != nil {
-				t.Errorf("[%s] Failed to parse errors %v", s.name, result)
+				t.Fatalf("Failed to parse errors %v", result)
 				return
 			}
 
 			// check errors
 			if len(errs) > len(s.expectedErrors) {
-				t.Errorf("[%s] Expected error keys %v, got %v", s.name, s.expectedErrors, errs)
+				t.Fatalf("Expected error keys %v, got %v", s.expectedErrors, errs)
 			}
 			for _, k := range s.expectedErrors {
 				if _, ok := errs[k]; !ok {
-					t.Errorf("[%s] Missing expected error key %q in %v", s.name, k, errs)
+					t.Fatalf("Missing expected error key %q in %v", k, errs)
 				}
 			}
 
 			// retrieve all created backup files
 			files, err := fsys.List("")
 			if err != nil {
-				t.Errorf("[%s] Failed to retrieve backup files", s.name)
+				t.Fatal("Failed to retrieve backup files")
 				return
 			}
 
 			if result != nil {
 				if total := len(files); total != 0 {
-					t.Errorf("[%s] Didn't expected backup files, found %d", s.name, total)
+					t.Fatalf("Didn't expected backup files, found %d", total)
 				}
 				return
 			}
 
 			if total := len(files); total != 1 {
-				t.Errorf("[%s] Expected 1 backup file, got %d", s.name, total)
+				t.Fatalf("Expected 1 backup file, got %d", total)
 				return
 			}
 
 			if s.backupName == "" {
 				prefix := "pb_backup_"
 				if !strings.HasPrefix(files[0].Key, prefix) {
-					t.Errorf("[%s] Expected the backup file, to have prefix %q: %q", s.name, prefix, files[0].Key)
+					t.Fatalf("Expected the backup file, to have prefix %q: %q", prefix, files[0].Key)
 				}
 			} else if s.backupName != files[0].Key {
-				t.Errorf("[%s] Expected backup file %q, got %q", s.name, s.backupName, files[0].Key)
+				t.Fatalf("Expected backup file %q, got %q", s.backupName, files[0].Key)
 			}
-		}()
+		})
 	}
 }

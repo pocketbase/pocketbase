@@ -265,27 +265,21 @@
         </div>
     </svelte:fragment>
 
-    <svelte:fragment slot="afterNonempty">
-        <div class="col-sm-4">
-            <Field
-                class="form-field form-field-toggle m-0"
-                name="schema.{key}.options.protected"
-                let:uniqueId
+    <svelte:fragment slot="optionsFooter">
+        <Field class="form-field form-field-toggle" name="schema.{key}.options.protected" let:uniqueId>
+            <input type="checkbox" id={uniqueId} bind:checked={field.options.protected} />
+            <label for={uniqueId}>
+                <span class="txt">Protected</span>
+            </label>
+            <a
+                href={import.meta.env.PB_PROTECTED_FILE_DOCS}
+                class="toggle-info txt-sm txt-hint m-l-5"
+                target="_blank"
+                rel="noopener"
             >
-                <input type="checkbox" id={uniqueId} bind:checked={field.options.protected} />
-                <label for={uniqueId}>
-                    <span class="txt">Protected</span>
-                </label>
-                <a
-                    href={import.meta.env.PB_PROTECTED_FILE_DOCS}
-                    class="toggle-info txt-sm txt-hint m-l-5"
-                    target="_blank"
-                    rel="noopener"
-                >
-                    (Learn more)
-                </a>
-            </Field>
-        </div>
+                (Learn more)
+            </a>
+        </Field>
     </svelte:fragment>
 </SchemaField>
 

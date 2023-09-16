@@ -1,15 +1,15 @@
 <script>
     import { slide } from "svelte/transition";
-    import { Collection, Record } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import { confirm } from "@/stores/confirmation";
     import { removeError } from "@/stores/errors";
     import Field from "@/components/base/Field.svelte";
+    import SecretGeneratorButton from "@/components/base/SecretGeneratorButton.svelte";
 
-    export let collection = new Collection();
-    export let record = new Record();
-    export let isNew = record.$isNew;
+    export let record;
+    export let collection;
+    export let isNew = !record.id;
 
     let originalUsername = record.username || null;
 
@@ -88,7 +88,7 @@
         {/if}
 
         {#if isNew || changePasswordToggle}
-            <div class="block" transition:slide|local={{ duration: 150 }}>
+            <div class="block" transition:slide={{ duration: 150 }}>
                 <div class="grid" class:p-t-xs={changePasswordToggle}>
                     <div class="col-sm-6">
                         <Field class="form-field required" name="password" let:uniqueId>
@@ -103,6 +103,9 @@
                                 required
                                 bind:value={record.password}
                             />
+                            <div class="form-field-addon">
+                                <SecretGeneratorButton length={15} />
+                            </div>
                         </Field>
                     </div>
                     <div class="col-sm-6">

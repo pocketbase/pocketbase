@@ -91,7 +91,7 @@
 <slot {isTesting} {testError} enabled={config.enabled} />
 
 {#if config.enabled}
-    <div class="grid" transition:slide|local={{ duration: 150 }}>
+    <div class="grid" transition:slide={{ duration: 150 }}>
         <div class="col-lg-6">
             <Field class="form-field required" name="{configKey}.endpoint" let:uniqueId>
                 <label for={uniqueId}>Endpoint</label>

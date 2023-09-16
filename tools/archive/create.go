@@ -2,6 +2,7 @@ package archive
 
 import (
 	"archive/zip"
+	"compress/flate"
 	"io"
 	"io/fs"
 	"os"
@@ -26,6 +27,11 @@ func Create(src string, dest string, skipPaths ...string) error {
 
 	zw := zip.NewWriter(zf)
 	defer zw.Close()
+
+	// register a custom Deflate compressor
+	zw.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
+		return flate.NewWriter(out, flate.BestSpeed)
+	})
 
 	if err := zipAddFS(zw, os.DirFS(src), skipPaths...); err != nil {
 		// try to cleanup at least the created zip file

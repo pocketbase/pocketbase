@@ -89,7 +89,7 @@
         {#if expanded.length}
             {#each expanded.slice(0, relLimit) as item, i (i + item)}
                 <span class="label">
-                    <RecordInfo record={item} displayFields={field.options?.displayFields} />
+                    <RecordInfo record={item} />
                 </span>
             {/each}
         {:else}
@@ -104,7 +104,7 @@
 {:else if field.type === "file"}
     {@const files = CommonHelper.toArray(rawValue)}
     {@const filesLimit = short ? 10 : 500}
-    <div class="inline-flex">
+    <div class="inline-flex" class:multiple={field.options?.maxSelect != 1}>
         {#each files.slice(0, filesLimit) as filename, i (i + filename)}
             <RecordFileThumb {record} {filename} size="sm" />
         {/each}

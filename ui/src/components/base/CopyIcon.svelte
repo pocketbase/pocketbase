@@ -36,6 +36,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <i
     class={copyTimeout ? successClasses : idleClasses}
+    aria-label={"Copy"}
     use:tooltip={!copyTimeout ? "Copy" : ""}
     on:click|stopPropagation={copy}
 />

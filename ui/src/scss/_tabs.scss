@@ -101,6 +101,19 @@ $tabContentAnimationSpeed: 0.2s;
         min-height: 30px;
         margin-bottom: var(--smSpacing);
     }
+    &.combined {
+        border: 0;
+        margin-bottom: -2px;
+        .tab-item {
+            &:after {
+                content: none;
+                display: none;
+            }
+            &.active {
+                background: var(--baseAlt1Color);
+            }
+        }
+    }
 }
 
 .tabs-content {

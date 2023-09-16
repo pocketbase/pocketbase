@@ -400,6 +400,7 @@ migrate((db) => {
     "name": "f4_name",
     "type": "text",
     "required": false,
+    "presentable": false,
     "unique": false,
     "options": {
       "min": null,
@@ -415,10 +416,12 @@ migrate((db) => {
     "name": "f2_name_new",
     "type": "number",
     "required": false,
+    "presentable": false,
     "unique": true,
     "options": {
       "min": 10,
-      "max": null
+      "max": null,
+      "noDecimal": false
     }
   }))
 
@@ -454,6 +457,7 @@ migrate((db) => {
     "name": "f3_name",
     "type": "bool",
     "required": false,
+    "presentable": false,
     "unique": false,
     "options": {}
   }))
@@ -468,10 +472,12 @@ migrate((db) => {
     "name": "f2_name",
     "type": "number",
     "required": false,
+    "presentable": false,
     "unique": true,
     "options": {
       "min": 10,
-      "max": null
+      "max": null,
+      "noDecimal": false
     }
   }))
 
@@ -534,6 +540,7 @@ func init() {
 			"name": "f4_name",
 			"type": "text",
 			"required": false,
+			"presentable": false,
 			"unique": false,
 			"options": {
 				"min": null,
@@ -551,10 +558,12 @@ func init() {
 			"name": "f2_name_new",
 			"type": "number",
 			"required": false,
+			"presentable": false,
 			"unique": true,
 			"options": {
 				"min": 10,
-				"max": null
+				"max": null,
+				"noDecimal": false
 			}
 		}` + "`" + `), edit_f2_name_new)
 		collection.Schema.AddField(edit_f2_name_new)
@@ -605,6 +614,7 @@ func init() {
 			"name": "f3_name",
 			"type": "bool",
 			"required": false,
+			"presentable": false,
 			"unique": false,
 			"options": {}
 		}` + "`" + `), del_f3_name)
@@ -621,10 +631,12 @@ func init() {
 			"name": "f2_name",
 			"type": "number",
 			"required": false,
+			"presentable": false,
 			"unique": true,
 			"options": {
 				"min": 10,
-				"max": null
+				"max": null,
+				"noDecimal": false
 			}
 		}` + "`" + `), edit_f2_name_new)
 		collection.Schema.AddField(edit_f2_name_new)

@@ -106,7 +106,7 @@
     </button>
 
     {#if active}
-        <div class="accordion-content" transition:slide|local={{ duration: 150 }}>
+        <div class="accordion-content" transition:slide={{ duration: 150 }}>
             <slot />
         </div>
     {/if}

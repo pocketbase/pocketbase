@@ -13,6 +13,7 @@
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import BackupsList from "@/components/settings/BackupsList.svelte";
     import S3Fields from "@/components/settings/S3Fields.svelte";
+    import BackupUploadButton from "@/components/settings/BackupUploadButton.svelte";
 
     $pageTitle = "Backups";
 
@@ -89,7 +90,7 @@
     }
 
     async function refreshList() {
-        await backupsListComponent?.loadBackups();
+        return backupsListComponent?.loadBackups();
     }
 </script>
 
@@ -105,13 +106,10 @@
 
     <div class="wrapper">
         <div class="panel" autocomplete="off" on:submit|preventDefault={save}>
-            <div class="flex m-b-sm flex-gap-5">
+            <div class="flex m-b-sm flex-gap-10">
                 <span class="txt-xl">Backup and restore your PocketBase data</span>
-                <RefreshButton
-                    class="btn-sm"
-                    tooltip={"Reload backups list"}
-                    on:refresh={() => refreshList()}
-                />
+                <RefreshButton class="btn-sm" tooltip={"Refresh"} on:refresh={refreshList} />
+                <BackupUploadButton class="btn-sm" on:success={refreshList} />
             </div>
 
             <BackupsList bind:this={backupsListComponent} />
@@ -138,7 +136,7 @@
                     class="block"
                     autocomplete="off"
                     on:submit|preventDefault={save}
-                    transition:slide|local={{ duration: 150 }}
+                    transition:slide={{ duration: 150 }}
                 >
                     <Field class="form-field form-field-toggle m-t-base m-b-0" let:uniqueId>
                         <input type="checkbox" id={uniqueId} required bind:checked={enableAutoBackups} />
@@ -146,7 +144,7 @@
                     </Field>
 
                     {#if enableAutoBackups}
-                        <div class="block" transition:slide|local={{ duration: 150 }}>
+                        <div class="block" transition:slide={{ duration: 150 }}>
                             <div class="grid p-t-base p-b-sm">
                                 <div class="col-lg-6">
                                     <Field class="form-field required" name="backups.cron" let:uniqueId>
@@ -208,9 +206,15 @@
                                             </button>
                                         </div>
                                         <div class="help-block">
+                                            <!-- prettier-ignore -->
                                             <p>
-                                                Supports numeric list, steps and ranges. The timezone is in
-                                                UTC.
+                                                Supports numeric list, steps, ranges or
+                                                <span
+                                                    class="link-primary"
+                                                    use:tooltip={"@yearly\n@annually\n@monthly\n@weekly\n@daily\n@midnight\n@hourly"}
+                                                >macros</span>.
+                                                <br>
+                                                The timezone is in UTC.
                                             </p>
                                         </div>
                                     </Field>

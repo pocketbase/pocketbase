@@ -34,7 +34,7 @@ func TestRealtimeConnect(t *testing.T) {
 				"OnRealtimeAfterMessageSend":  1,
 				"OnRealtimeDisconnectRequest": 1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				if len(app.SubscriptionsBroker().Clients()) != 0 {
 					t.Errorf("Expected the subscribers to be removed after connection close, found %d", len(app.SubscriptionsBroker().Clients()))
 				}
@@ -58,7 +58,7 @@ func TestRealtimeConnect(t *testing.T) {
 					return nil
 				})
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				if len(app.SubscriptionsBroker().Clients()) != 0 {
 					t.Errorf("Expected the subscribers to be removed after connection close, found %d", len(app.SubscriptionsBroker().Clients()))
 				}
@@ -79,7 +79,7 @@ func TestRealtimeConnect(t *testing.T) {
 					return hook.StopPropagation
 				})
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				if len(app.SubscriptionsBroker().Clients()) != 0 {
 					t.Errorf("Expected the subscribers to be removed after connection close, found %d", len(app.SubscriptionsBroker().Clients()))
 				}
@@ -124,7 +124,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 				client.Subscribe("test0")
 				app.SubscriptionsBroker().Register(client)
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				if len(client.Subscriptions()) != 0 {
 					t.Errorf("Expected no subscriptions, got %v", client.Subscriptions())
 				}
@@ -145,7 +145,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 				client.Subscribe("test0")
 				app.SubscriptionsBroker().Register(client)
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				expectedSubs := []string{"test1", "test2"}
 				if len(expectedSubs) != len(client.Subscriptions()) {
 					t.Errorf("Expected subscriptions %v, got %v", expectedSubs, client.Subscriptions())
@@ -175,7 +175,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				app.SubscriptionsBroker().Register(client)
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				admin, _ := client.Get(apis.ContextAdminKey).(*models.Admin)
 				if admin == nil {
 					t.Errorf("Expected admin auth model, got nil")
@@ -199,7 +199,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				app.SubscriptionsBroker().Register(client)
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				authRecord, _ := client.Get(apis.ContextAuthRecordKey).(*models.Record)
 				if authRecord == nil {
 					t.Errorf("Expected auth record model, got nil")
@@ -224,7 +224,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 
 				app.SubscriptionsBroker().Register(client)
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				authRecord, _ := client.Get(apis.ContextAuthRecordKey).(*models.Record)
 				if authRecord == nil {
 					t.Errorf("Expected auth record model, got nil")

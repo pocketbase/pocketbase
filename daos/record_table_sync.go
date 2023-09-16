@@ -10,7 +10,6 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tools/dbutils"
-	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
@@ -159,10 +158,6 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 			return err
 		}
 
-		if err := txDao.syncRelationDisplayFieldsChanges(newCollection, renamedFieldNames, deletedFieldNames); err != nil {
-			return err
-		}
-
 		return txDao.createCollectionIndexes(newCollection)
 	})
 }
@@ -292,50 +287,6 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 
 		return revertErr
 	})
-}
-
-func (dao *Dao) syncRelationDisplayFieldsChanges(collection *models.Collection, renamedFieldNames map[string]string, deletedFieldNames []string) error {
-	if len(renamedFieldNames) == 0 && len(deletedFieldNames) == 0 {
-		return nil // nothing to sync
-	}
-
-	refs, err := dao.FindCollectionReferences(collection)
-	if err != nil {
-		return err
-	}
-
-	for refCollection, refFields := range refs {
-		for _, refField := range refFields {
-			options, _ := refField.Options.(*schema.RelationOptions)
-			if options == nil {
-				continue
-			}
-
-			// remove deleted (if any)
-			newDisplayFields := list.SubtractSlice(options.DisplayFields, deletedFieldNames)
-
-			for old, new := range renamedFieldNames {
-				for i, name := range newDisplayFields {
-					if name == old {
-						newDisplayFields[i] = new
-					}
-				}
-			}
-
-			// has changes
-			if len(list.SubtractSlice(options.DisplayFields, newDisplayFields)) > 0 {
-				options.DisplayFields = newDisplayFields
-
-				// direct collection save to prevent self-referencing
-				// recursion and unnecessary records table sync checks
-				if err := dao.Save(refCollection); err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func (dao *Dao) dropCollectionIndex(collection *models.Collection) error {

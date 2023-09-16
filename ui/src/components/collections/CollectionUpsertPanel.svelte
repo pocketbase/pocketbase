@@ -1,7 +1,6 @@
 <script>
     import { createEventDispatcher, tick } from "svelte";
     import { scale } from "svelte/transition";
-    import { Collection } from "pocketbase";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
     import { errors, setErrors, removeError } from "@/stores/errors";
@@ -36,12 +35,16 @@
     let collectionPanel;
     let confirmChangesPanel;
     let original = null;
-    let collection = new Collection();
+    let collection = CommonHelper.initCollection();
     let isSaving = false;
     let confirmClose = false; // prevent close recursion
     let activeTab = TAB_SCHEMA;
     let initialFormHash = calculateFormHash(collection);
     let schemaTabError = "";
+
+    $: isAuth = collection.type === TYPE_AUTH;
+
+    $: isView = collection.type === TYPE_VIEW;
 
     $: if ($errors.schema || $errors.options?.query) {
         // extract the direct schema field error, otherwise - return a generic message
@@ -50,18 +53,18 @@
         schemaTabError = "";
     }
 
-    $: isSystemUpdate = !collection.$isNew && collection.system;
+    $: isSystemUpdate = !!collection.id && collection.system;
 
     $: hasChanges = initialFormHash != calculateFormHash(collection);
 
-    $: canSave = collection.$isNew || hasChanges;
+    $: canSave = !collection.id || hasChanges;
 
-    $: if (activeTab === TAB_OPTIONS && collection.type !== TYPE_AUTH) {
+    $: if (activeTab === TAB_OPTIONS && collection.type !== "auth") {
         // reset selected tab
         changeTab(TAB_SCHEMA);
     }
 
-    $: if (collection.type === TYPE_VIEW) {
+    $: if (collection.type === "view") {
         // reset non-view fields
         collection.createRule = null;
         collection.updateRule = null;
@@ -70,7 +73,7 @@
     }
 
     // update indexes on collection rename
-    $: if (collection?.name && original?.name != collection?.name) {
+    $: if (collection.name && original?.name != collection.name && collection.indexes.length > 0) {
         collection.indexes = collection.indexes?.map((idx) =>
             CommonHelper.replaceIndexTableName(idx, collection.name)
         );
@@ -99,10 +102,10 @@
 
         if (typeof model !== "undefined") {
             original = model;
-            collection = model.$clone();
+            collection = structuredClone(model);
         } else {
             original = null;
-            collection = new Collection();
+            collection = CommonHelper.initCollection();
         }
 
         // normalize
@@ -115,7 +118,7 @@
     }
 
     function saveConfirm() {
-        if (collection.$isNew) {
+        if (!collection.id) {
             save();
         } else {
             confirmChangesPanel?.show(original, collection);
@@ -132,7 +135,7 @@
         const data = exportFormData();
 
         let request;
-        if (collection.$isNew) {
+        if (!collection.id) {
             request = ApiClient.collections.create(data);
         } else {
             request = ApiClient.collections.update(collection.id, data);
@@ -148,13 +151,11 @@
                 hide();
 
                 addSuccessToast(
-                    collection.$isNew
-                        ? "Successfully created collection."
-                        : "Successfully updated collection."
+                    !collection.id ? "Successfully created collection." : "Successfully updated collection."
                 );
 
                 dispatch("save", {
-                    isNew: collection.$isNew,
+                    isNew: !collection.id,
                     collection: result,
                 });
             })
@@ -167,7 +168,7 @@
     }
 
     function exportFormData() {
-        const data = collection.$export();
+        const data = Object.assign({}, collection);
         data.schema = data.schema.slice(0);
 
         // remove deleted fields
@@ -186,12 +187,12 @@
             return; // nothing to delete
         }
 
-        confirm(`Do you really want to delete collection "${original?.name}" and all its records?`, () => {
+        confirm(`Do you really want to delete collection "${original.name}" and all its records?`, () => {
             return ApiClient.collections
-                .delete(original?.id)
+                .delete(original.id)
                 .then(() => {
                     hide();
-                    addSuccessToast(`Successfully deleted collection "${original?.name}".`);
+                    addSuccessToast(`Successfully deleted collection "${original.name}".`);
                     dispatch("delete", original);
                     removeCollection(original);
                 })
@@ -223,7 +224,7 @@
     }
 
     async function duplicate() {
-        const clone = original?.$clone();
+        const clone = original ? structuredClone(original) : null;
 
         if (clone) {
             clone.id = "";
@@ -277,10 +278,10 @@
 >
     <svelte:fragment slot="header">
         <h4 class="upsert-panel-title">
-            {collection.$isNew ? "New collection" : "Edit collection"}
+            {!collection.id ? "New collection" : "Edit collection"}
         </h4>
 
-        {#if !collection.$isNew && !collection.system}
+        {#if !!collection.id && !collection.system}
             <div class="flex-fill" />
             <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
                 <i class="ri-more-line" />
@@ -321,8 +322,8 @@
                     required
                     disabled={isSystemUpdate}
                     spellcheck="false"
-                    autofocus={collection.$isNew}
-                    placeholder={collection.$isAuth ? `eg. "users"` : `eg. "posts"`}
+                    autofocus={!collection.id}
+                    placeholder={isAuth ? `eg. "users"` : `eg. "posts"`}
                     value={collection.name}
                     on:input={(e) => {
                         collection.name = CommonHelper.slugify(e.target.value);
@@ -333,15 +334,13 @@
                 <div class="form-field-addon">
                     <button
                         type="button"
-                        class="btn btn-sm p-r-10 p-l-10 {collection.$isNew
-                            ? 'btn-outline'
-                            : 'btn-transparent'}"
-                        disabled={!collection.$isNew}
+                        class="btn btn-sm p-r-10 p-l-10 {!collection.id ? 'btn-outline' : 'btn-transparent'}"
+                        disabled={!!collection.id}
                     >
                         <!-- empty span for alignment -->
                         <span />
                         <span class="txt">Type: {collectionTypes[collection.type] || "N/A"}</span>
-                        {#if collection.$isNew}
+                        {#if !collection.id}
                             <i class="ri-arrow-down-s-fill" />
                             <Toggler class="dropdown dropdown-right dropdown-nowrap m-t-5">
                                 {#each Object.entries(collectionTypes) as [type, label]}
@@ -375,11 +374,11 @@
                 class:active={activeTab === TAB_SCHEMA}
                 on:click={() => changeTab(TAB_SCHEMA)}
             >
-                <span class="txt">{collection?.$isView ? "Query" : "Fields"}</span>
+                <span class="txt">{isView ? "Query" : "Fields"}</span>
                 {#if !CommonHelper.isEmpty(schemaTabError)}
                     <i
                         class="ri-error-warning-fill txt-danger"
-                        transition:scale|local={{ duration: 150, start: 0.7 }}
+                        transition:scale={{ duration: 150, start: 0.7 }}
                         use:tooltip={schemaTabError}
                     />
                 {/if}
@@ -395,13 +394,13 @@
                 {#if !CommonHelper.isEmpty($errors?.listRule) || !CommonHelper.isEmpty($errors?.viewRule) || !CommonHelper.isEmpty($errors?.createRule) || !CommonHelper.isEmpty($errors?.updateRule) || !CommonHelper.isEmpty($errors?.deleteRule) || !CommonHelper.isEmpty($errors?.options?.manageRule)}
                     <i
                         class="ri-error-warning-fill txt-danger"
-                        transition:scale|local={{ duration: 150, start: 0.7 }}
+                        transition:scale={{ duration: 150, start: 0.7 }}
                         use:tooltip={"Has errors"}
                     />
                 {/if}
             </button>
 
-            {#if collection.$isAuth}
+            {#if isAuth}
                 <button
                     type="button"
                     class="tab-item"
@@ -412,7 +411,7 @@
                     {#if !CommonHelper.isEmpty($errors?.options) && !$errors?.options?.manageRule}
                         <i
                             class="ri-error-warning-fill txt-danger"
-                            transition:scale|local={{ duration: 150, start: 0.7 }}
+                            transition:scale={{ duration: 150, start: 0.7 }}
                             use:tooltip={"Has errors"}
                         />
                     {/if}
@@ -424,7 +423,7 @@
     <div class="tabs-content">
         <!-- avoid rerendering the fields tab -->
         <div class="tab-item" class:active={activeTab === TAB_SCHEMA}>
-            {#if collection.$isView}
+            {#if isView}
                 <CollectionQueryTab bind:collection />
             {:else}
                 <CollectionFieldsTab bind:collection />
@@ -437,7 +436,7 @@
             </div>
         {/if}
 
-        {#if collection.$isAuth}
+        {#if isAuth}
             <div class="tab-item" class:active={activeTab === TAB_OPTIONS}>
                 <CollectionAuthOptionsTab bind:collection />
             </div>
@@ -455,7 +454,7 @@
             disabled={!canSave || isSaving}
             on:click={() => saveConfirm()}
         >
-            <span class="txt">{collection.$isNew ? "Create" : "Save changes"}</span>
+            <span class="txt">{!collection.id ? "Create" : "Save changes"}</span>
         </button>
     </svelte:fragment>
 </OverlayPanel>

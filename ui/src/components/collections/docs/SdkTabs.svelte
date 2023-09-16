@@ -3,7 +3,7 @@
 
     const SDK_PREFERENCE_KEY = "pb_sdk_preference";
 
-    let classes = "m-b-base";
+    let classes = "m-b-sm";
     export { classes as class }; // export reserved keyword
 
     export let js = "";
@@ -33,7 +33,7 @@
 </script>
 
 <div class="tabs sdk-tabs {classes}">
-    <div class="tabs-header compact left">
+    <div class="tabs-header compact combined left">
         {#each sdkExamples as example (example.language)}
             <button
                 class="tab-item"

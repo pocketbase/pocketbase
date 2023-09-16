@@ -1188,7 +1188,7 @@ func TestRecordAuthUnlinkExternalsAuth(t *testing.T) {
 				"OnRecordAfterUnlinkExternalAuthRequest":  1,
 				"OnRecordBeforeUnlinkExternalAuthRequest": 1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				record, err := app.Dao().FindRecordById("users", "4q1xlclmfloku33")
 				if err != nil {
 					t.Fatal(err)
@@ -1234,7 +1234,7 @@ func TestRecordAuthUnlinkExternalsAuth(t *testing.T) {
 				"OnRecordAfterUnlinkExternalAuthRequest":  1,
 				"OnRecordBeforeUnlinkExternalAuthRequest": 1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				record, err := app.Dao().FindRecordById("users", "4q1xlclmfloku33")
 				if err != nil {
 					t.Fatal(err)
