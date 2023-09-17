@@ -28,32 +28,38 @@ func TestFactories(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		content, _ := s.tk.r.ReadString(0)
+		t.Run(s.name, func(t *testing.T) {
+			content, _ := s.tk.r.ReadString(0)
 
-		if content != expectedContent {
-			t.Fatalf("[%s] Expected reader with content %q, got %q", s.name, expectedContent, content)
-		}
+			if content != expectedContent {
+				t.Fatalf("Expected reader with content %q, got %q", expectedContent, content)
+			}
 
-		if s.tk.keepSeparator != false {
-			t.Fatalf("[%s] Expected false, got true", s.name)
-		}
+			if s.tk.keepSeparator != false {
+				t.Fatal("Expected keepSeparator false, got true")
+			}
 
-		if len(s.tk.separators) != len(DefaultSeparators) {
-			t.Fatalf("[%s] Expected \n%v, \ngot \n%v", s.name, DefaultSeparators, s.tk.separators)
-		}
+			if s.tk.ignoreParenthesis != false {
+				t.Fatal("Expected ignoreParenthesis false, got true")
+			}
 
-		for _, r := range s.tk.separators {
-			exists := false
-			for _, def := range s.tk.separators {
-				if r == def {
-					exists = true
-					break
+			if len(s.tk.separators) != len(DefaultSeparators) {
+				t.Fatalf("Expected \n%v, \ngot \n%v", DefaultSeparators, s.tk.separators)
+			}
+
+			for _, r := range s.tk.separators {
+				exists := false
+				for _, def := range s.tk.separators {
+					if r == def {
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					t.Fatalf("Unexpected sepator %s", string(r))
 				}
 			}
-			if !exists {
-				t.Fatalf("[%s] Unexpected sepator %s", s.name, string(r))
-			}
-		}
+		})
 	}
 }
 
@@ -85,54 +91,58 @@ func TestScan(t *testing.T) {
 
 func TestScanAll(t *testing.T) {
 	scenarios := []struct {
-		name          string
-		content       string
-		separators    []rune
-		keepSeparator bool
-		expectError   bool
-		expectTokens  []string
+		name              string
+		content           string
+		separators        []rune
+		keepSeparator     bool
+		ignoreParenthesis bool
+		expectError       bool
+		expectTokens      []string
 	}{
 		{
-			"empty string",
-			"",
-			DefaultSeparators,
-			false,
-			false,
-			nil,
+			name:              "empty string",
+			content:           "",
+			separators:        DefaultSeparators,
+			keepSeparator:     false,
+			ignoreParenthesis: false,
+			expectError:       false,
+			expectTokens:      nil,
 		},
 		{
-			"unbalanced parenthesis",
-			`(a,b() c`,
-			DefaultSeparators,
-			false,
-			true,
-			[]string{},
+			name:              "unbalanced parenthesis",
+			content:           `(a,b() c`,
+			separators:        DefaultSeparators,
+			keepSeparator:     false,
+			ignoreParenthesis: false,
+			expectError:       true,
+			expectTokens:      []string{},
 		},
 		{
-			"unmatching quotes",
-			`'asd"`,
-			DefaultSeparators,
-			false,
-			true,
-			[]string{},
+			name:              "unmatching quotes",
+			content:           `'asd"`,
+			separators:        DefaultSeparators,
+			keepSeparator:     false,
+			ignoreParenthesis: false,
+			expectError:       true,
+			expectTokens:      []string{},
 		},
 		{
-			"no separators",
-			`a, b, c, d, e 123, "abc"`,
-			nil,
-			false,
-			false,
-			[]string{
-				`a, b, c, d, e 123, "abc"`,
-			},
+			name:              "no separators",
+			content:           `a, b, c, d, e 123, "abc"`,
+			separators:        nil,
+			keepSeparator:     false,
+			ignoreParenthesis: false,
+			expectError:       false,
+			expectTokens:      []string{`a, b, c, d, e 123, "abc"`},
 		},
 		{
-			"default separators",
-			`a, b, c, d e, "a,b,  c  ", (123, 456)`,
-			DefaultSeparators,
-			false,
-			false,
-			[]string{
+			name:              "default separators",
+			content:           `a, b, c, d e, "a,b,  c  ", (123, 456)`,
+			separators:        DefaultSeparators,
+			keepSeparator:     false,
+			ignoreParenthesis: false,
+			expectError:       false,
+			expectTokens: []string{
 				"a",
 				"b",
 				"c",
@@ -142,12 +152,13 @@ func TestScanAll(t *testing.T) {
 			},
 		},
 		{
-			"default separators (with preserve)",
-			`a, b, c, d e, "a,b,  c  ", (123, 456)`,
-			DefaultSeparators,
-			true,
-			false,
-			[]string{
+			name:              "default separators (with preserve)",
+			content:           `a, b, c, d e, "a,b,  c  ", (123, 456)`,
+			separators:        DefaultSeparators,
+			keepSeparator:     true,
+			ignoreParenthesis: false,
+			expectError:       false,
+			expectTokens: []string{
 				"a,",
 				"b,",
 				"c,",
@@ -157,14 +168,15 @@ func TestScanAll(t *testing.T) {
 			},
 		},
 		{
-			"custom separators",
-			`   a   , 123.456, b, c d, (
+			name: "custom separators",
+			content: `   a   , 123.456, b, c d, (
 				test (a,b,c) " 123 "
 			),"(abc d", "abc) d", "(abc) d \" " 'abc "'`,
-			[]rune{',', ' ', '\t', '\n'},
-			false,
-			false,
-			[]string{
+			separators:        []rune{',', ' ', '\t', '\n'},
+			keepSeparator:     false,
+			ignoreParenthesis: false,
+			expectError:       false,
+			expectTokens: []string{
 				"a",
 				"123.456",
 				"b",
@@ -178,14 +190,15 @@ func TestScanAll(t *testing.T) {
 			},
 		},
 		{
-			"custom separators (with preserve)",
-			`   a   , 123.456, b, c d, (
+			name: "custom separators (with preserve)",
+			content: `   a   , 123.456, b, c d, (
 				test (a,b,c) " 123 "
 			),"(abc d", "abc) d", "(abc) d \" " 'abc "'`,
-			[]rune{',', ' ', '\t', '\n'},
-			true,
-			false,
-			[]string{
+			separators:        []rune{',', ' ', '\t', '\n'},
+			keepSeparator:     true,
+			ignoreParenthesis: false,
+			expectError:       false,
+			expectTokens: []string{
 				"a ",
 				"123.456,",
 				"b,",
@@ -198,36 +211,53 @@ func TestScanAll(t *testing.T) {
 				`'abc "'`,
 			},
 		},
+		{
+			name:              "ignoring parenthesis",
+			content:           `a, b, (c,d)`,
+			separators:        []rune{','},
+			keepSeparator:     false,
+			ignoreParenthesis: true,
+			expectError:       false,
+			expectTokens: []string{
+				"a",
+				"b",
+				"(c",
+				"d)",
+			},
+		},
 	}
 
 	for _, s := range scenarios {
-		tk := NewFromString(s.content)
+		t.Run(s.name, func(t *testing.T) {
+			tk := NewFromString(s.content)
 
-		tk.Separators(s.separators...)
-		tk.KeepSeparator(s.keepSeparator)
+			tk.Separators(s.separators...)
+			tk.KeepSeparator(s.keepSeparator)
+			tk.IgnoreParenthesis(s.ignoreParenthesis)
 
-		tokens, err := tk.ScanAll()
+			tokens, err := tk.ScanAll()
 
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Fatalf("[%s] Expected hasErr %v, got %v (%v)", s.name, s.expectError, hasErr, err)
-		}
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
+			}
 
-		if len(tokens) != len(s.expectTokens) {
-			t.Fatalf("[%s] Expected \n%v (%d), \ngot \n%v (%d)", s.name, s.expectTokens, len(s.expectTokens), tokens, len(tokens))
-		}
+			if len(tokens) != len(s.expectTokens) {
+				t.Fatalf("Expected \n%v (%d), \ngot \n%v (%d)", s.expectTokens, len(s.expectTokens), tokens, len(tokens))
+			}
 
-		for _, tok := range tokens {
-			exists := false
-			for _, def := range s.expectTokens {
-				if tok == def {
-					exists = true
-					break
+			for _, tok := range tokens {
+				exists := false
+				for _, def := range s.expectTokens {
+					if tok == def {
+						exists = true
+						break
+					}
+				}
+				if !exists {
+					t.Fatalf("Unexpected token %s", tok)
 				}
 			}
-			if !exists {
-				t.Fatalf("[%s] Unexpected token %s", s.name, tok)
-			}
-		}
+		})
 	}
 }

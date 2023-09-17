@@ -34,9 +34,10 @@ func NewFromBytes(b []byte) *Tokenizer {
 // New creates new Tokenizer from the provided reader with DefaultSeparators.
 func New(r io.Reader) *Tokenizer {
 	return &Tokenizer{
-		r:             bufio.NewReader(r),
-		separators:    DefaultSeparators,
-		keepSeparator: false,
+		r:                 bufio.NewReader(r),
+		separators:        DefaultSeparators,
+		keepSeparator:     false,
+		ignoreParenthesis: false,
 	}
 }
 
@@ -45,54 +46,61 @@ func New(r io.Reader) *Tokenizer {
 type Tokenizer struct {
 	r *bufio.Reader
 
-	separators    []rune
-	keepSeparator bool
+	separators        []rune
+	keepSeparator     bool
+	ignoreParenthesis bool
 }
 
 // Separators defines the provided separatos of the current Tokenizer.
-func (s *Tokenizer) Separators(separators ...rune) {
-	s.separators = separators
+func (t *Tokenizer) Separators(separators ...rune) {
+	t.separators = separators
 }
 
 // KeepSeparator defines whether to keep the separator rune as part
 // of the token (default to false).
-func (s *Tokenizer) KeepSeparator(state bool) {
-	s.keepSeparator = state
+func (t *Tokenizer) KeepSeparator(state bool) {
+	t.keepSeparator = state
+}
+
+// IgnoreParenthesis defines whether to ignore the parenthesis boundaries
+// and to treat the '(' and ')' as regular characters.
+func (t *Tokenizer) IgnoreParenthesis(state bool) {
+	t.ignoreParenthesis = state
 }
 
 // Scan reads and returns the next available token from the Tokenizer's buffer (trimmed).
 //
 // Returns [io.EOF] error when there are no more tokens to scan.
-func (s *Tokenizer) Scan() (string, error) {
-	ch := s.read()
+func (t *Tokenizer) Scan() (string, error) {
+	ch := t.read()
 
 	if ch == eof {
 		return "", io.EOF
 	}
 
 	if isWhitespaceRune(ch) {
-		s.readWhiteSpaces()
+		t.readWhiteSpaces()
 	} else {
-		s.unread()
+		t.unread()
 	}
 
-	token, err := s.readToken()
+	token, err := t.readToken()
 	if err != nil {
 		return "", err
 	}
 
 	// read all remaining whitespaces
-	s.readWhiteSpaces()
+	t.readWhiteSpaces()
 
 	return token, err
 }
 
 // ScanAll reads the entire Tokenizer's buffer and return all found tokens.
-func (s *Tokenizer) ScanAll() ([]string, error) {
+func (t *Tokenizer) ScanAll() ([]string, error) {
 	tokens := []string{}
 
 	for {
-		token, err := s.Scan()
+		token, err := t.Scan()
 		if err != nil {
 			if err == io.EOF {
 				break
@@ -108,35 +116,35 @@ func (s *Tokenizer) ScanAll() ([]string, error) {
 }
 
 // readToken reads a single token from the buffer and returns it.
-func (s *Tokenizer) readToken() (string, error) {
+func (t *Tokenizer) readToken() (string, error) {
 	var buf bytes.Buffer
 	var parenthesis int
 	var quoteCh rune
 	var prevCh rune
 
 	for {
-		ch := s.read()
+		ch := t.read()
 
 		if ch == eof {
 			break
 		}
 
 		if !isEscapeRune(prevCh) {
-			if ch == '(' && quoteCh == eof {
-				parenthesis++
-			} else if ch == ')' && parenthesis > 0 && quoteCh == eof {
-				parenthesis--
+			if !t.ignoreParenthesis && ch == '(' && quoteCh == eof {
+				parenthesis++ // opening parenthesis
+			} else if !t.ignoreParenthesis && ch == ')' && parenthesis > 0 && quoteCh == eof {
+				parenthesis-- // closing parenthesis
 			} else if isQuoteRune(ch) {
 				if quoteCh == ch {
-					quoteCh = eof // reached closing quote
+					quoteCh = eof // closing quote
 				} else if quoteCh == eof {
 					quoteCh = ch // opening quote
 				}
 			}
 		}
 
-		if s.isSeperatorRune(ch) && parenthesis == 0 && quoteCh == eof {
-			if s.keepSeparator {
+		if t.isSeperatorRune(ch) && parenthesis == 0 && quoteCh == eof {
+			if t.keepSeparator {
 				buf.WriteRune(ch)
 			}
 			break
@@ -154,16 +162,16 @@ func (s *Tokenizer) readToken() (string, error) {
 }
 
 // readWhiteSpaces consumes all contiguous whitespace runes.
-func (s *Tokenizer) readWhiteSpaces() {
+func (t *Tokenizer) readWhiteSpaces() {
 	for {
-		ch := s.read()
+		ch := t.read()
 
 		if ch == eof {
 			break
 		}
 
-		if !s.isSeperatorRune(ch) {
-			s.unread()
+		if !t.isSeperatorRune(ch) {
+			t.unread()
 			break
 		}
 	}
@@ -171,8 +179,8 @@ func (s *Tokenizer) readWhiteSpaces() {
 
 // read reads the next rune from the buffered reader.
 // Returns the `rune(0)` if an error or `io.EOF` occurs.
-func (s *Tokenizer) read() rune {
-	ch, _, err := s.r.ReadRune()
+func (t *Tokenizer) read() rune {
+	ch, _, err := t.r.ReadRune()
 	if err != nil {
 		return eof
 	}
@@ -181,13 +189,13 @@ func (s *Tokenizer) read() rune {
 }
 
 // unread places the previously read rune back on the reader.
-func (s *Tokenizer) unread() error {
-	return s.r.UnreadRune()
+func (t *Tokenizer) unread() error {
+	return t.r.UnreadRune()
 }
 
 // isSeperatorRune checks if a rune is a token part separator.
-func (s *Tokenizer) isSeperatorRune(ch rune) bool {
-	for _, r := range s.separators {
+func (t *Tokenizer) isSeperatorRune(ch rune) bool {
+	for _, r := range t.separators {
 		if ch == r {
 			return true
 		}
