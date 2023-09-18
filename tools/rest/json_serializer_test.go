@@ -274,6 +274,33 @@ func TestSerialize(t *testing.T) {
 			"fields=id,rel.*,rel.sub.id",
 			`{"id":"123","rel":{"id":"456","sub":{"id":"789"},"title":"rel_title"}}`,
 		},
+		{
+			"invalid excerpt modifier",
+			rest.Serializer{},
+			400,
+			map[string]any{"a": 1, "b": 2, "c": "test"},
+			"fields=*:excerpt",
+			`{"a":1,"b":2,"c":"test"}`,
+		},
+		{
+			"valid excerpt modifier",
+			rest.Serializer{},
+			200,
+			map[string]any{
+				"id":    "123",
+				"title": "lorem",
+				"rel": map[string]any{
+					"id":    "456",
+					"title": "<p>rel_title</p>",
+					"sub": map[string]any{
+						"id":    "789",
+						"title": "sub_title",
+					},
+				},
+			},
+			"fields=*:excerpt(2),rel.title:excerpt(3, true)",
+			`{"id":"12","rel":{"title":"rel..."},"title":"lo"}`,
+		},
 	}
 
 	for _, s := range scenarios {

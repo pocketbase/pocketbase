@@ -2,12 +2,18 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/search"
+	"github.com/pocketbase/pocketbase/tools/tokenizer"
 )
+
+type FieldModifier interface {
+	// Modify executes the modifier and returns a new modified value.
+	Modify(value any) (any, error)
+}
 
 // Serializer represents custom REST JSON serializer based on echo.DefaultJSONSerializer,
 // with support for additional generic response data transformation (eg. fields picker).
@@ -28,14 +34,14 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 
 	statusCode := c.Response().Status
 
-	param := c.QueryParam(fieldsParam)
-	if param == "" || statusCode < 200 || statusCode > 299 {
+	rawFields := c.QueryParam(fieldsParam)
+	if rawFields == "" || statusCode < 200 || statusCode > 299 {
 		return s.DefaultJSONSerializer.Serialize(c, i, indent)
 	}
 
-	fields := strings.Split(param, ",")
-	for i, f := range fields {
-		fields[i] = strings.TrimSpace(f)
+	parsedFields, err := parseFields(rawFields)
+	if err != nil {
+		return err
 	}
 
 	encoded, err := json.Marshal(i)
@@ -44,13 +50,11 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 	}
 
 	var decoded any
-
 	if err := json.Unmarshal(encoded, &decoded); err != nil {
 		return err
 	}
 
 	var isSearchResult bool
-
 	switch i.(type) {
 	case search.Result, *search.Result:
 		isSearchResult = true
@@ -58,49 +62,111 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 
 	if isSearchResult {
 		if decodedMap, ok := decoded.(map[string]any); ok {
-			pickFields(decodedMap["items"], fields)
+			pickFields(decodedMap["items"], parsedFields)
 		}
 	} else {
-		pickFields(decoded, fields)
+		pickFields(decoded, parsedFields)
 	}
 
 	return s.DefaultJSONSerializer.Serialize(c, decoded, indent)
 }
 
-func pickFields(data any, fields []string) {
+func parseFields(rawFields string) (map[string]FieldModifier, error) {
+	t := tokenizer.NewFromString(rawFields)
+
+	fields, err := t.ScanAll()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]FieldModifier, len(fields))
+
+	for _, f := range fields {
+		parts := strings.SplitN(strings.TrimSpace(f), ":", 2)
+
+		if len(parts) > 1 {
+			m, err := initModifer(parts[1])
+			if err != nil {
+				return nil, err
+			}
+			result[parts[0]] = m
+		} else {
+			result[parts[0]] = nil
+		}
+	}
+
+	return result, nil
+}
+
+func initModifer(rawModifier string) (FieldModifier, error) {
+	t := tokenizer.NewFromString(rawModifier)
+	t.Separators('(', ')', ',', ' ')
+	t.IgnoreParenthesis(true)
+
+	parts, err := t.ScanAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(parts) == 0 {
+		return nil, fmt.Errorf("invalid or empty modifier expression %q", rawModifier)
+	}
+
+	name := parts[0]
+	args := parts[1:]
+
+	switch name {
+	case "excerpt":
+		m, err := newExcerptModifier(args...)
+		if err != nil {
+			return nil, fmt.Errorf("invalid excerpt modifier: %w", err)
+		}
+		return m, nil
+	}
+
+	return nil, fmt.Errorf("missing or invalid modifier %q", name)
+}
+
+func pickFields(data any, fields map[string]FieldModifier) error {
 	switch v := data.(type) {
 	case map[string]any:
 		pickMapFields(v, fields)
 	case []map[string]any:
 		for _, item := range v {
-			pickMapFields(item, fields)
+			if err := pickMapFields(item, fields); err != nil {
+				return err
+			}
 		}
 	case []any:
 		if len(v) == 0 {
-			return // nothing to pick
+			return nil // nothing to pick
 		}
 
 		if _, ok := v[0].(map[string]any); !ok {
-			return // for now ignore non-map values
+			return nil // for now ignore non-map values
 		}
 
 		for _, item := range v {
-			pickMapFields(item.(map[string]any), fields)
+			if err := pickMapFields(item.(map[string]any), fields); err != nil {
+				return nil
+			}
 		}
 	}
+
+	return nil
 }
 
-func pickMapFields(data map[string]any, fields []string) {
+func pickMapFields(data map[string]any, fields map[string]FieldModifier) error {
 	if len(fields) == 0 {
-		return // nothing to pick
+		return nil // nothing to pick
 	}
 
-	if list.ExistInSlice("*", fields) {
+	if m, ok := fields["*"]; ok {
 		// append all missing root level data keys
 		for k := range data {
 			var exists bool
 
-			for _, f := range fields {
+			for f := range fields {
 				if strings.HasPrefix(f+".", k+".") {
 					exists = true
 					break
@@ -108,17 +174,17 @@ func pickMapFields(data map[string]any, fields []string) {
 			}
 
 			if !exists {
-				fields = append(fields, k)
+				fields[k] = m
 			}
 		}
 	}
 
 DataLoop:
 	for k := range data {
-		matchingFields := make([]string, 0, len(fields))
-		for _, f := range fields {
+		matchingFields := make(map[string]FieldModifier, len(fields))
+		for f, m := range fields {
 			if strings.HasPrefix(f+".", k+".") {
-				matchingFields = append(matchingFields, f)
+				matchingFields[f] = m
 				continue
 			}
 		}
@@ -128,15 +194,31 @@ DataLoop:
 			continue DataLoop
 		}
 
-		// trim the key from the fields
-		for i, v := range matchingFields {
-			trimmed := strings.TrimSuffix(strings.TrimPrefix(v+".", k+"."), ".")
-			if trimmed == "" {
+		// remove the current key from the matching fields path
+		for f, m := range matchingFields {
+			remains := strings.TrimSuffix(strings.TrimPrefix(f+".", k+"."), ".")
+
+			// final key
+			if remains == "" {
+				if m != nil {
+					var err error
+					data[k], err = m.Modify(data[k])
+					if err != nil {
+						return err
+					}
+				}
 				continue DataLoop
 			}
-			matchingFields[i] = trimmed
+
+			// cleanup the old field key and continue with the rest of the field path
+			delete(matchingFields, f)
+			matchingFields[remains] = m
 		}
 
-		pickFields(data[k], matchingFields)
+		if err := pickFields(data[k], matchingFields); err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
