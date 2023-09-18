@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	// experimental! (need more tests before replacing encoding/json entirely)
+	goccy "github.com/goccy/go-json"
+
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/tokenizer"
@@ -26,6 +29,9 @@ type Serializer struct {
 // Serialize converts an interface into a json and writes it to the response.
 //
 // It also provides a generic response data fields picker via the FieldsParam query parameter (default to "fields").
+//
+// Note: for the places where it is safe, the std encoding/json is replaced
+// with goccy due to its slightly better Unmarshal/Marshal performance.
 func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 	fieldsParam := s.FieldsParam
 	if fieldsParam == "" {
@@ -44,15 +50,22 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 		return err
 	}
 
-	encoded, err := json.Marshal(i)
+	// marshalize the provided data to ensure that the related json.Marshaler
+	// implementations are invoked, and then convert it back to a plain
+	// json value that we can further operate on.
+	//
+	// @todo research other approaches to avoid the double serialization
+	// ---
+	encoded, err := json.Marshal(i) // use the std json since goccy has several bugs reported with struct marshaling and it is not safe
 	if err != nil {
 		return err
 	}
 
 	var decoded any
-	if err := json.Unmarshal(encoded, &decoded); err != nil {
+	if err := goccy.Unmarshal(encoded, &decoded); err != nil {
 		return err
 	}
+	// ---
 
 	var isSearchResult bool
 	switch i.(type) {
@@ -68,7 +81,12 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 		pickFields(decoded, parsedFields)
 	}
 
-	return s.DefaultJSONSerializer.Serialize(c, decoded, indent)
+	enc := goccy.NewEncoder(c.Response())
+	if indent != "" {
+		enc.SetIndent("", indent)
+	}
+
+	return enc.Encode(decoded)
 }
 
 func parseFields(rawFields string) (map[string]FieldModifier, error) {
