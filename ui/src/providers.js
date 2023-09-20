@@ -109,6 +109,12 @@ export default [
         logo:  "livechat.svg",
     },
     {
+        key:   "mailcowAuth",
+        title: "Mailcow",
+        logo:  "mailcow.svg",
+        optionsComponent: OIDCOptions,
+    },
+    {
         key:   "oidcAuth",
         title: "OpenID Connect",
         logo:  "oidc.svg",

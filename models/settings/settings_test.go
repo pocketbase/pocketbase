@@ -73,6 +73,8 @@ func TestSettingsValidate(t *testing.T) {
 	s.VKAuth.ClientId = ""
 	s.YandexAuth.Enabled = true
 	s.YandexAuth.ClientId = ""
+	s.MailcowAuth.Enabled = true
+	s.MailcowAuth.ClientId = ""
 
 	// check if Validate() is triggering the members validate methods.
 	err := s.Validate()
@@ -114,6 +116,7 @@ func TestSettingsValidate(t *testing.T) {
 		`"instagramAuth":{`,
 		`"vkAuth":{`,
 		`"yandexAuth":{`,
+		`"mailcowAuth":{`,
 	}
 
 	errBytes, _ := json.Marshal(err)
@@ -187,6 +190,8 @@ func TestSettingsMerge(t *testing.T) {
 	s2.VKAuth.ClientId = "vk_test"
 	s2.YandexAuth.Enabled = true
 	s2.YandexAuth.ClientId = "yandex_test"
+	s2.MailcowAuth.Enabled = true
+	s2.MailcowAuth.ClientId = "mailcow_test"
 
 	if err := s1.Merge(s2); err != nil {
 		t.Fatal(err)
@@ -277,6 +282,7 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.InstagramAuth.ClientSecret = testSecret
 	s1.VKAuth.ClientSecret = testSecret
 	s1.YandexAuth.ClientSecret = testSecret
+	s1.MailcowAuth.ClientSecret = testSecret
 
 	s1Bytes, err := json.Marshal(s1)
 	if err != nil {
@@ -335,6 +341,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.InstagramAuth.ClientId = "instagram_test"
 	s.VKAuth.ClientId = "vk_test"
 	s.YandexAuth.ClientId = "yandex_test"
+	s.MailcowAuth.ClientId = "mailcow_test"
 
 	result := s.NamedAuthProviderConfigs()
 
@@ -366,6 +373,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		`"instagram":{"enabled":false,"clientId":"instagram_test"`,
 		`"vk":{"enabled":false,"clientId":"vk_test"`,
 		`"yandex":{"enabled":false,"clientId":"yandex_test"`,
+		`"mailcow":{"enabled":false,"clientId":"mailcow_test"`,
 	}
 	for _, p := range expectedParts {
 		if !strings.Contains(encodedStr, p) {
