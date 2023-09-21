@@ -1,12 +1,8 @@
 package auth
 
-/*
- *	https://mailcow.email/
- *  Mailcow is a self-hosted mailserver suite
- */
-
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"golang.org/x/oauth2"
@@ -14,7 +10,7 @@ import (
 
 var _ Provider = (*Mailcow)(nil)
 
-// Unique name of this authentification provider
+// NameMailcow is the unique name of this authentification provider
 const NameMailcow string = "mailcow"
 
 // Mailcow is a self-hosted mailserver suite
@@ -22,16 +18,13 @@ type Mailcow struct {
 	*baseProvider
 }
 
-// Create a new Mailcow provider instance with some defaults
+// NewMailcowProvider creates a new Mailcow provider instance with some defaults
 func NewMailcowProvider() *Mailcow {
 	return &Mailcow{&baseProvider{
 		// Default scopes provided to any oauth2 providers
 		scopes: []string{
 			"profile",
 		},
-		authUrl:    "",
-		tokenUrl:   "",
-		userApiUrl: "",
 	}}
 }
 
@@ -63,9 +56,8 @@ func (p *Mailcow) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		return nil, err
 	}
 
-	// Mailcow usernames are usually just the email adresses, so we just take the part in front of the @
-	if strings.Contains(extracted.Username, "@") {
-		extracted.Username = strings.Split(extracted.Username, "@")[0]
+	if extracted.Active != 1 {
+		return nil, errors.New("User is marked as not active!")
 	}
 
 	user := &AuthUser{
@@ -76,6 +68,11 @@ func (p *Mailcow) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
+	}
+
+	// Mailcow usernames are usually just the email adresses, so we just take the part in front of the @
+	if strings.Contains(user.Username, "@") {
+		user.Username = strings.Split(user.Username, "@")[0]
 	}
 
 	return user, nil
