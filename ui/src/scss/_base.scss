@@ -399,7 +399,7 @@ a,
     min-width: 0;
     gap: 10px;
 }
-@for $i from 0 through 6 {
+@for $i from 0 through 10 {
     .flex-order-#{$i} {
         order: $i;
     }
