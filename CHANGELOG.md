@@ -3,6 +3,8 @@
 - Fixed JS error in the Admin UI when listing records with invalid `relation` field value ([#3372](https://github.com/pocketbase/pocketbase/issues/3372)).
   _This could happen usually only during custom SQL import scripts or when directly modifying the record field value without data validations._
 
+- Updated Go deps and the generated JSVM types.
+
 
 ## v0.18.6
 
