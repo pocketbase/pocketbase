@@ -18,6 +18,8 @@
     let list = [];
     let isLoading = false;
     let loadTimeoutId;
+    let invalidIds = [];
+    let originalValue = value;
 
     $: isMultiple = field.options?.maxSelect != 1;
 
@@ -34,6 +36,8 @@
         clearTimeout(loadTimeoutId);
         loadTimeoutId = setTimeout(load, 0);
     }
+
+    $: invalidIds = CommonHelper.toArray(originalValue).filter((id) => !list.find((item) => item.id == id));
 
     function needLoad() {
         if (isLoading) {
@@ -131,6 +135,17 @@
     <label for={uniqueId}>
         <i class={CommonHelper.getFieldTypeIcon(field.type)} />
         <span class="txt">{field.name}</span>
+        {#if invalidIds.length}
+            <i
+                class="ri-error-warning-line link-hint m-l-auto flex-order-10"
+                use:tooltip={{
+                    position: "left",
+                    text:
+                        "The following relation ids were removed from the list because they are missing or invalid: " +
+                        invalidIds.join(", "),
+                }}
+            />
+        {/if}
     </label>
 
     <div class="list">

@@ -11,7 +11,7 @@
     export let field;
     export let short = false;
 
-    $: rawValue = record[field.name];
+    $: rawValue = record?.[field.name];
 </script>
 
 {#if field.type === "json"}
@@ -83,7 +83,7 @@
     </div>
 {:else if field.type === "relation"}
     {@const relations = CommonHelper.toArray(rawValue)}
-    {@const expanded = CommonHelper.toArray(record.expand[field.name])}
+    {@const expanded = CommonHelper.toArray(record?.expand?.[field.name])}
     {@const relLimit = short ? 20 : 500}
     <div class="inline-flex">
         {#if expanded.length}
