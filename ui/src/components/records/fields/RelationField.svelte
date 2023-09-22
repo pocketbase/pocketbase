@@ -19,7 +19,6 @@
     let isLoading = false;
     let loadTimeoutId;
     let invalidIds = [];
-    let originalValue = value;
 
     $: isMultiple = field.options?.maxSelect != 1;
 
@@ -37,8 +36,6 @@
         loadTimeoutId = setTimeout(load, 0);
     }
 
-    $: invalidIds = CommonHelper.toArray(originalValue).filter((id) => !list.find((item) => item.id == id));
-
     function needLoad() {
         if (isLoading) {
             return false;
@@ -54,7 +51,9 @@
     async function load() {
         const ids = CommonHelper.toArray(value);
 
-        list = []; // reset
+        // reset
+        list = [];
+        invalidIds = [];
 
         if (!field?.options?.collectionId || !ids.length) {
             isLoading = false;
@@ -91,6 +90,8 @@
                 const rel = CommonHelper.findByKey(loadedItems, "id", id);
                 if (rel) {
                     list.push(rel);
+                } else {
+                    invalidIds.push(id);
                 }
             }
 
