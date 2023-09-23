@@ -155,6 +155,18 @@ func (api *realtimeApi) connect(c echo.Context) error {
 	}
 }
 
+// extract the first value of all entries and normalizes the keys
+// ("X-Token" is converted to "x_token")
+func normalizeMap(input map[string][]string) map[string]any {
+	res := map[string]any{}
+	for k, v := range input {
+		if len(v) > 0 {
+			res[strings.ToLower(strings.ReplaceAll(k, "-", "_"))] = v[0]
+		}
+	}
+	return res
+}
+
 // note: in case of reconnect, clients will have to resubmit all subscriptions again
 func (api *realtimeApi) setSubscriptions(c echo.Context) error {
 	form := forms.NewRealtimeSubscribe()
@@ -192,6 +204,8 @@ func (api *realtimeApi) setSubscriptions(c echo.Context) error {
 		// update auth state
 		e.Client.Set(ContextAdminKey, e.HttpContext.Get(ContextAdminKey))
 		e.Client.Set(ContextAuthRecordKey, e.HttpContext.Get(ContextAuthRecordKey))
+		e.Client.Set(ContextHeadersKey, normalizeMap(e.HttpContext.Request().Header))
+		e.Client.Set(ContextQueryKey, normalizeMap(e.HttpContext.QueryParams()))
 
 		// unsubscribe from any previous existing subscriptions
 		e.Client.Unsubscribe()
@@ -350,6 +364,8 @@ func (api *realtimeApi) canAccessRecord(client subscriptions.Client, record *mod
 			Method: "GET",
 		}
 		requestInfo.AuthRecord, _ = client.Get(ContextAuthRecordKey).(*models.Record)
+		requestInfo.Query, _ = client.Get(ContextQueryKey).(map[string]any)
+		requestInfo.Headers, _ = client.Get(ContextHeadersKey).(map[string]any)
 
 		resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), record.Collection(), requestInfo, true)
 		expr, err := search.FilterData(*accessRule).BuildExpr(resolver)

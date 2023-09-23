@@ -24,6 +24,8 @@ const (
 	ContextAdminKey      string = "admin"
 	ContextAuthRecordKey string = "authRecord"
 	ContextCollectionKey string = "collection"
+	ContextQueryKey      string = "query"
+	ContextHeadersKey    string = "headers"
 )
 
 // RequireGuestOnly middleware requires a request to NOT have a valid
