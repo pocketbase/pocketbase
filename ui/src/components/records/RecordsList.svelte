@@ -62,9 +62,9 @@
         updateStoredHiddenColumns();
     }
 
-    $: hasCreated = !isView || (records.length > 0 && records[0].created != "");
+    $: hasCreated = !isView || (records.length > 0 && typeof records[0].created != "undefined");
 
-    $: hasUpdated = !isView || (records.length > 0 && records[0].updated != "");
+    $: hasUpdated = !isView || (records.length > 0 && typeof records[0].updated != "undefined");
 
     $: collumnsToHide = [].concat(
         isAuth
