@@ -209,7 +209,10 @@
                 replaceOriginal(result);
             }
 
-            dispatch("save", result);
+            dispatch("save", {
+                isNew: isNew,
+                record: result,
+            });
         } catch (err) {
             ApiClient.error(err);
         }

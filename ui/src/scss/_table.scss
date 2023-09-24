@@ -251,9 +251,11 @@ table {
 .table-wrapper {
     width: auto;
     padding: 0;
+    max-height: 100%;
     max-width: calc(100% + 2*var(--baseSpacing));
     margin-left: calc(var(--baseSpacing) * -1);
     margin-right: calc(var(--baseSpacing) * -1);
+    border-bottom: 1px solid var(--baseAlt2Color);
     .bulk-select-col {
         min-width: 70px;
     }
@@ -264,6 +266,20 @@ table {
         }
         &:last-child {
             padding-right: calc(var(--baseSpacing) + 3px);
+        }
+    }
+    thead {
+        position: sticky;
+        top: 0;
+        z-index: 99;
+        transition: box-shadow var(--baseAnimationSpeed);
+    }
+    tbody {
+        position: relative;
+        z-index: 0;
+        tr:last-child td,
+        tr:last-child th {
+            border-bottom: 0;
         }
     }
 
@@ -290,16 +306,21 @@ table {
     }
 
     // scrolling styles
-    &.scrollable {
+    &.h-scroll {
         .bulk-select-col {
             box-shadow: 3px 0px 5px 0px var(--shadowColor);
         }
         .col-type-action {
             box-shadow: -3px 0px 5px 0px var(--shadowColor);
         }
-        &.scroll-start .bulk-select-col,
-        &.scroll-end .col-type-action {
+        &.h-scroll-start .bulk-select-col,
+        &.h-scroll-end .col-type-action {
             box-shadow: none;
+        }
+    }
+    &.v-scroll:not(.v-scroll-start) {
+        thead {
+            box-shadow: 0px 2px 5px 0px var(--shadowColor);
         }
     }
 }

@@ -4,7 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
-    import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
+    import Scroller from "@/components/base/Scroller.svelte";
 
     const dispatch = createEventDispatcher();
     const labelMethodClass = {
@@ -82,7 +82,7 @@
     }
 </script>
 
-<HorizontalScroller class="table-wrapper">
+<Scroller class="table-wrapper">
     <table class="table" class:table-loading={isLoading}>
         <thead>
             <tr>
@@ -211,7 +211,7 @@
             {/each}
         </tbody>
     </table>
-</HorizontalScroller>
+</Scroller>
 
 {#if items.length}
     <small class="block txt-hint txt-right m-t-sm">Showing {items.length} of {totalItems}</small>

@@ -1,6 +1,7 @@
 .bulkbar {
-    position: sticky;
+    position: absolute;
     bottom: var(--baseSpacing);
+    left: 50%;
     z-index: 101;
     gap: 10px;
     display: flex;
@@ -8,10 +9,11 @@
     align-items: center;
     width: var(--smWrapperWidth);
     max-width: 100%;
-    margin: var(--smSpacing) auto;
+    margin-bottom: 10px;
     padding: 10px var(--smSpacing);
     border-radius: var(--btnHeight);
     background: var(--baseColor);
     border: 1px solid var(--baseAlt2Color);
     @include shadowize();
+    transform: translateX(-50%);
 }

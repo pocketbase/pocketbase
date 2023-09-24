@@ -12,19 +12,21 @@
     import Field from "@/components/base/Field.svelte";
     import CopyIcon from "@/components/base/CopyIcon.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
-    import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
+    import Scroller from "@/components/base/Scroller.svelte";
     import RecordFieldValue from "@/components/records/RecordFieldValue.svelte";
 
     const dispatch = createEventDispatcher();
     const sortRegex = /^([\+\-])?(\w+)$/;
+    const perPage = 40;
 
     export let collection;
     export let sort = "";
     export let filter = "";
 
+    let scrollWrapper;
     let records = [];
     let currentPage = 1;
-    let totalRecords = 0;
+    let lastTotal = 0;
     let bulkSelected = {};
     let isLoading = true;
     let isDeleting = false;
@@ -44,6 +46,8 @@
 
     $: fields = collection?.schema || [];
 
+    $: editorFields = fields.filter((field) => field.type === "editor");
+
     $: relFields = fields.filter((field) => field.type === "relation");
 
     $: visibleFields = fields.filter((field) => !hiddenColumns.includes(field.id));
@@ -52,7 +56,7 @@
         load(1);
     }
 
-    $: canLoadMore = totalRecords > records.length;
+    $: canLoadMore = lastTotal >= perPage;
 
     $: totalBulkSelected = Object.keys(bulkSelected).length;
 
@@ -121,11 +125,11 @@
         // allow sorting by the relation display fields
         let listSort = sort;
         const sortMatch = listSort.match(sortRegex);
-        const relField = sortMatch ? relFields.find((f) => f.name === sortMatch[2]) : null;
-        if (sortMatch && relField) {
+        const sortRelField = sortMatch ? relFields.find((f) => f.name === sortMatch[2]) : null;
+        if (sortMatch && sortRelField) {
             const relPresentableFields =
                 $collections
-                    ?.find((c) => c.id == relField.options?.collectionId)
+                    ?.find((c) => c.id == sortRelField.options?.collectionId)
                     ?.schema?.filter((f) => f.presentable)
                     ?.map((f) => f.name) || [];
 
@@ -140,12 +144,22 @@
 
         const fallbackSearchFields = CommonHelper.getAllCollectionIdentifiers(collection);
 
+        const listFields = editorFields
+            .map((f) => f.name + ":excerpt(200)")
+            .concat(relFields.map((field) => "expand." + field.name + ".*:excerpt(200)"));
+        if (listFields.length) {
+            listFields.unshift("*");
+        }
+
         return ApiClient.collection(collection.id)
-            .getList(page, 30, {
+            .getList(page, perPage, {
                 sort: listSort,
+                skipTotal: 1,
                 filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
                 expand: relFields.map((field) => field.name).join(","),
-                $cancelKey: "records_list",
+                // @todo temp disable the :excerpt fields until individual RecordUpsert loader is implemented
+                // fields: listFields.join(","),
+                requestKey: "records_list",
             })
             .then(async (result) => {
                 if (page <= 1) {
@@ -154,7 +168,7 @@
 
                 isLoading = false;
                 currentPage = result.page;
-                totalRecords = result.totalItems;
+                lastTotal = result.items.length;
                 dispatch("load", records.concat(result.items));
 
                 // optimize the records listing by rendering the rows in task batches
@@ -184,9 +198,10 @@
     }
 
     function clearList() {
+        scrollWrapper?.resetVerticalScroll();
         records = [];
         currentPage = 1;
-        totalRecords = 0;
+        lastTotal = 0;
         bulkSelected = {};
     }
 
@@ -244,6 +259,9 @@
                 addSuccessToast(
                     `Successfully deleted the selected ${totalBulkSelected === 1 ? "record" : "records"}.`
                 );
+
+                dispatch("delete", bulkSelected);
+
                 deselectAllRecords();
             })
             .catch((err) => {
@@ -258,7 +276,7 @@
     }
 </script>
 
-<HorizontalScroller class="table-wrapper">
+<Scroller bind:this={scrollWrapper} class="table-wrapper">
     <svelte:fragment slot="before">
         {#if columnsTrigger}
             <Toggler
@@ -517,27 +535,24 @@
                     </tr>
                 {/if}
             {/each}
+
+            {#if records.length && canLoadMore}
+                <tr>
+                    <td colspan="99" class="txt-center">
+                        <button
+                            class="btn btn-expanded-lg btn-secondary"
+                            disabled={isLoading}
+                            class:btn-loading={isLoading}
+                            on:click|preventDefault={() => load(currentPage + 1)}
+                        >
+                            <span class="txt">Load more</span>
+                        </button>
+                    </td>
+                </tr>
+            {/if}
         </tbody>
     </table>
-</HorizontalScroller>
-
-{#if records.length}
-    <small class="block txt-hint txt-right m-t-sm">Showing {records.length} of {totalRecords}</small>
-{/if}
-
-{#if records.length && canLoadMore}
-    <div class="block txt-center m-t-xs">
-        <button
-            type="button"
-            class="btn btn-lg btn-secondary btn-expanded"
-            class:btn-loading={isLoading}
-            class:btn-disabled={isLoading}
-            on:click={() => load(currentPage + 1)}
-        >
-            <span class="txt">Load more ({totalRecords - records.length})</span>
-        </button>
-    </div>
-{/if}
+</Scroller>
 
 {#if totalBulkSelected}
     <div class="bulkbar" transition:fly={{ duration: 150, y: 5 }}>

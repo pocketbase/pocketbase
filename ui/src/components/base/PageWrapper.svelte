@@ -11,6 +11,8 @@
     </main>
 
     <footer class="page-footer">
+        <slot name="footer" />
+
         <a href={import.meta.env.PB_DOCS_URL} target="_blank" rel="noopener noreferrer">
             <i class="ri-book-open-line txt-sm" />
             <span class="txt">Docs</span>

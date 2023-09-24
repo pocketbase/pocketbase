@@ -9,7 +9,7 @@
     import RefreshButton from "@/components/base/RefreshButton.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
-    import HorizontalScroller from "@/components/base/HorizontalScroller.svelte";
+    import Scroller from "@/components/base/Scroller.svelte";
     import CopyIcon from "@/components/base/CopyIcon.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import AdminUpsertPanel from "@/components/admins/AdminUpsertPanel.svelte";
@@ -97,7 +97,7 @@
     />
     <div class="clearfix m-b-base" />
 
-    <HorizontalScroller class="table-wrapper">
+    <Scroller class="table-wrapper">
         <table class="table" class:table-loading={isLoading}>
             <thead>
                 <tr>
@@ -211,11 +211,11 @@
                 {/each}
             </tbody>
         </table>
-    </HorizontalScroller>
+    </Scroller>
 
-    {#if admins.length}
-        <small class="block txt-hint txt-right m-t-sm">Showing {admins.length} of {admins.length}</small>
-    {/if}
+    <svelte:fragment slot="footer">
+        <div class="m-r-auto txt-sm txt-hint">Total found: {admins.length}</div>
+    </svelte:fragment>
 </PageWrapper>
 
 <AdminUpsertPanel bind:this={adminUpsertPanel} on:save={() => loadAdmins()} on:delete={() => loadAdmins()} />

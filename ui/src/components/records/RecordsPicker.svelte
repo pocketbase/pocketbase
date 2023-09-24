@@ -330,11 +330,11 @@
     bind:this={upsertPanel}
     {collection}
     on:save={(e) => {
-        CommonHelper.removeByKey(list, "id", e.detail.id);
-        list.unshift(e.detail);
+        CommonHelper.removeByKey(list, "id", e.detail.record.id);
+        list.unshift(e.detail.record);
         list = list;
 
-        select(e.detail);
+        select(e.detail.record);
     }}
     on:delete={(e) => {
         CommonHelper.removeByKey(list, "id", e.detail.id);

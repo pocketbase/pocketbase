@@ -19,6 +19,7 @@
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordPreviewPanel from "@/components/records/RecordPreviewPanel.svelte";
     import RecordsList from "@/components/records/RecordsList.svelte";
+    import RecordsCount from "@/components/records/RecordsCount.svelte";
 
     const queryParams = new URLSearchParams($querystring);
 
@@ -27,9 +28,11 @@
     let recordUpsertPanel;
     let recordPreviewPanel;
     let recordsList;
+    let recordsCount;
     let filter = queryParams.get("filter") || "";
     let sort = queryParams.get("sort") || "-created";
     let selectedCollectionId = queryParams.get("collectionId") || $activeCollection?.id;
+    let totalCount = 0; // used to manully change the count without the need of reloading the recordsCount component
 
     $: reactiveParams = new URLSearchParams($querystring);
 
@@ -129,7 +132,7 @@
 {:else}
     <CollectionsSidebar />
 
-    <PageWrapper>
+    <PageWrapper class="flex-content">
         <header class="page-header">
             <nav class="breadcrumbs">
                 <div class="breadcrumb-item">Collections</div>
@@ -176,7 +179,8 @@
             autocompleteCollection={$activeCollection}
             on:submit={(e) => (filter = e.detail)}
         />
-        <div class="clearfix m-b-base" />
+
+        <div class="clearfix m-b-sm" />
 
         <RecordsList
             bind:this={recordsList}
@@ -188,8 +192,21 @@
                     ? recordPreviewPanel.show(e?.detail)
                     : recordUpsertPanel?.show(e?.detail);
             }}
+            on:delete={() => {
+                recordsCount?.reload();
+            }}
             on:new={() => recordUpsertPanel?.show()}
         />
+
+        <svelte:fragment slot="footer">
+            <RecordsCount
+                bind:this={recordsCount}
+                class="m-r-auto txt-sm txt-hint"
+                collection={$activeCollection}
+                {filter}
+                bind:totalCount
+            />
+        </svelte:fragment>
     </PageWrapper>
 {/if}
 
@@ -200,8 +217,16 @@
 <RecordUpsertPanel
     bind:this={recordUpsertPanel}
     collection={$activeCollection}
-    on:save={() => recordsList?.reloadLoadedPages()}
-    on:delete={() => recordsList?.reloadLoadedPages()}
+    on:save={(e) => {
+        recordsList?.reloadLoadedPages();
+        if (e.detail?.isNew) {
+            totalCount++;
+        }
+    }}
+    on:delete={() => {
+        recordsList?.reloadLoadedPages();
+        totalCount--;
+    }}
 />
 
 <RecordPreviewPanel bind:this={recordPreviewPanel} collection={$activeCollection} />
