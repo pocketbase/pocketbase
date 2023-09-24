@@ -14,6 +14,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.2
 	github.com/ganigeorgiev/fexpr v0.3.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
+	github.com/goccy/go-json v0.10.2
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/labstack/echo/v5 v5.0.0-20230722203903-ec5b858dab61
 	github.com/mattn/go-sqlite3 v1.14.17
