@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -275,7 +276,7 @@ func (s *System) DeletePrefix(prefix string) []error {
 		if err := s.Delete(obj.Key); err != nil {
 			failed = append(failed, err)
 		} else {
-			dirsMap[filepath.Dir(obj.Key)] = struct{}{}
+			dirsMap[path.Dir(obj.Key)] = struct{}{}
 		}
 	}
 	// ---
