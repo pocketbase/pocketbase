@@ -144,8 +144,19 @@ declare function routerPre(...middlewares: Array<string|echo.MiddlewareFunc>): v
  */
 declare var __hooks: string
 
-// skip on* hook methods as they are registered via the global on* method
-type appWithoutHooks = Omit<pocketbase.PocketBase, ` + "`on${string}`" + `>
+// Utility type to exclude the on* hook methods from a type
+// (hooks are separately generated as global methods).
+//
+// See https://www.typescriptlang.org/docs/handbook/2/mapped-types.html#key-remapping-via-as
+type excludeHooks<Type> = {
+    [Property in keyof Type as Exclude<Property, ` + "`on${string}`" + `>]: Type[Property]
+};
+
+// core.App without the on* hook methods
+type CoreApp = excludeHooks<ORIGINAL_CORE_APP>
+
+// pocketbase.PocketBase without the on* hook methods
+type PocketBase = excludeHooks<ORIGINAL_POCKETBASE>
 
 /**
  * ` + "`$app`" + ` is the current running PocketBase instance that is globally
@@ -156,7 +167,7 @@ type appWithoutHooks = Omit<pocketbase.PocketBase, ` + "`on${string}`" + `>
  * @namespace
  * @group PocketBase
  */
-declare var $app: appWithoutHooks
+declare var $app: PocketBase
 
 /**
  * ` + "`$template`" + ` is a global helper to load and cache HTML templates on the fly.
@@ -607,7 +618,7 @@ interface AdminLoginForm extends forms.AdminLogin{} // merge
  * @group PocketBase
  */
 declare class AdminLoginForm implements forms.AdminLogin {
-  constructor(app: core.App)
+  constructor(app: CoreApp)
 }
 
 interface AdminPasswordResetConfirmForm extends forms.AdminPasswordResetConfirm{} // merge
@@ -616,7 +627,7 @@ interface AdminPasswordResetConfirmForm extends forms.AdminPasswordResetConfirm{
  * @group PocketBase
  */
 declare class AdminPasswordResetConfirmForm implements forms.AdminPasswordResetConfirm {
-  constructor(app: core.App)
+  constructor(app: CoreApp)
 }
 
 interface AdminPasswordResetRequestForm extends forms.AdminPasswordResetRequest{} // merge
@@ -625,7 +636,7 @@ interface AdminPasswordResetRequestForm extends forms.AdminPasswordResetRequest{
  * @group PocketBase
  */
 declare class AdminPasswordResetRequestForm implements forms.AdminPasswordResetRequest {
-  constructor(app: core.App)
+  constructor(app: CoreApp)
 }
 
 interface AdminUpsertForm extends forms.AdminUpsert{} // merge
@@ -634,7 +645,7 @@ interface AdminUpsertForm extends forms.AdminUpsert{} // merge
  * @group PocketBase
  */
 declare class AdminUpsertForm implements forms.AdminUpsert {
-  constructor(app: core.App, admin: models.Admin)
+  constructor(app: CoreApp, admin: models.Admin)
 }
 
 interface AppleClientSecretCreateForm extends forms.AppleClientSecretCreate{} // merge
@@ -643,7 +654,7 @@ interface AppleClientSecretCreateForm extends forms.AppleClientSecretCreate{} //
  * @group PocketBase
  */
 declare class AppleClientSecretCreateForm implements forms.AppleClientSecretCreate {
-  constructor(app: core.App)
+  constructor(app: CoreApp)
 }
 
 interface CollectionUpsertForm extends forms.CollectionUpsert{} // merge
@@ -652,7 +663,7 @@ interface CollectionUpsertForm extends forms.CollectionUpsert{} // merge
  * @group PocketBase
  */
 declare class CollectionUpsertForm implements forms.CollectionUpsert {
-  constructor(app: core.App, collection: models.Collection)
+  constructor(app: CoreApp, collection: models.Collection)
 }
 
 interface CollectionsImportForm extends forms.CollectionsImport{} // merge
@@ -661,7 +672,7 @@ interface CollectionsImportForm extends forms.CollectionsImport{} // merge
  * @group PocketBase
  */
 declare class CollectionsImportForm implements forms.CollectionsImport {
-  constructor(app: core.App)
+  constructor(app: CoreApp)
 }
 
 interface RealtimeSubscribeForm extends forms.RealtimeSubscribe{} // merge
@@ -677,7 +688,7 @@ interface RecordEmailChangeConfirmForm extends forms.RecordEmailChangeConfirm{} 
  * @group PocketBase
  */
 declare class RecordEmailChangeConfirmForm implements forms.RecordEmailChangeConfirm {
-  constructor(app: core.App, collection: models.Collection)
+  constructor(app: CoreApp, collection: models.Collection)
 }
 
 interface RecordEmailChangeRequestForm extends forms.RecordEmailChangeRequest{} // merge
@@ -686,7 +697,7 @@ interface RecordEmailChangeRequestForm extends forms.RecordEmailChangeRequest{} 
  * @group PocketBase
  */
 declare class RecordEmailChangeRequestForm implements forms.RecordEmailChangeRequest {
-  constructor(app: core.App, record: models.Record)
+  constructor(app: CoreApp, record: models.Record)
 }
 
 interface RecordOAuth2LoginForm extends forms.RecordOAuth2Login{} // merge
@@ -695,7 +706,7 @@ interface RecordOAuth2LoginForm extends forms.RecordOAuth2Login{} // merge
  * @group PocketBase
  */
 declare class RecordOAuth2LoginForm implements forms.RecordOAuth2Login {
-  constructor(app: core.App, collection: models.Collection, optAuthRecord?: models.Record)
+  constructor(app: CoreApp, collection: models.Collection, optAuthRecord?: models.Record)
 }
 
 interface RecordPasswordLoginForm extends forms.RecordPasswordLogin{} // merge
@@ -704,7 +715,7 @@ interface RecordPasswordLoginForm extends forms.RecordPasswordLogin{} // merge
  * @group PocketBase
  */
 declare class RecordPasswordLoginForm implements forms.RecordPasswordLogin {
-  constructor(app: core.App, collection: models.Collection)
+  constructor(app: CoreApp, collection: models.Collection)
 }
 
 interface RecordPasswordResetConfirmForm extends forms.RecordPasswordResetConfirm{} // merge
@@ -713,7 +724,7 @@ interface RecordPasswordResetConfirmForm extends forms.RecordPasswordResetConfir
  * @group PocketBase
  */
 declare class RecordPasswordResetConfirmForm implements forms.RecordPasswordResetConfirm {
-  constructor(app: core.App, collection: models.Collection)
+  constructor(app: CoreApp, collection: models.Collection)
 }
 
 interface RecordPasswordResetRequestForm extends forms.RecordPasswordResetRequest{} // merge
@@ -722,7 +733,7 @@ interface RecordPasswordResetRequestForm extends forms.RecordPasswordResetReques
  * @group PocketBase
  */
 declare class RecordPasswordResetRequestForm implements forms.RecordPasswordResetRequest {
-  constructor(app: core.App, collection: models.Collection)
+  constructor(app: CoreApp, collection: models.Collection)
 }
 
 interface RecordUpsertForm extends forms.RecordUpsert{} // merge
@@ -731,7 +742,7 @@ interface RecordUpsertForm extends forms.RecordUpsert{} // merge
  * @group PocketBase
  */
 declare class RecordUpsertForm implements forms.RecordUpsert {
-  constructor(app: core.App, record: models.Record)
+  constructor(app: CoreApp, record: models.Record)
 }
 
 interface RecordVerificationConfirmForm extends forms.RecordVerificationConfirm{} // merge
@@ -740,7 +751,7 @@ interface RecordVerificationConfirmForm extends forms.RecordVerificationConfirm{
  * @group PocketBase
  */
 declare class RecordVerificationConfirmForm implements forms.RecordVerificationConfirm {
-  constructor(app: core.App, collection: models.Collection)
+  constructor(app: CoreApp, collection: models.Collection)
 }
 
 interface RecordVerificationRequestForm extends forms.RecordVerificationRequest{} // merge
@@ -749,7 +760,7 @@ interface RecordVerificationRequestForm extends forms.RecordVerificationRequest{
  * @group PocketBase
  */
 declare class RecordVerificationRequestForm implements forms.RecordVerificationRequest {
-  constructor(app: core.App, collection: models.Collection)
+  constructor(app: CoreApp, collection: models.Collection)
 }
 
 interface SettingsUpsertForm extends forms.SettingsUpsert{} // merge
@@ -758,7 +769,7 @@ interface SettingsUpsertForm extends forms.SettingsUpsert{} // merge
  * @group PocketBase
  */
 declare class SettingsUpsertForm implements forms.SettingsUpsert {
-  constructor(app: core.App)
+  constructor(app: CoreApp)
 }
 
 interface TestEmailSendForm extends forms.TestEmailSend{} // merge
@@ -767,7 +778,7 @@ interface TestEmailSendForm extends forms.TestEmailSend{} // merge
  * @group PocketBase
  */
 declare class TestEmailSendForm implements forms.TestEmailSend {
-  constructor(app: core.App)
+  constructor(app: CoreApp)
 }
 
 interface TestS3FilesystemForm extends forms.TestS3Filesystem{} // merge
@@ -776,7 +787,7 @@ interface TestS3FilesystemForm extends forms.TestS3Filesystem{} // merge
  * @group PocketBase
  */
 declare class TestS3FilesystemForm implements forms.TestS3Filesystem {
-  constructor(app: core.App)
+  constructor(app: CoreApp)
 }
 
 // -------------------------------------------------------------------
@@ -980,6 +991,12 @@ func main() {
 	if !ok {
 		log.Fatal("Failed to get the current docs directory")
 	}
+
+	// replace the original app interfaces with their non-"on*"" hooks equivalents
+	result = strings.ReplaceAll(result, "core.App", "CoreApp")
+	result = strings.ReplaceAll(result, "pocketbase.PocketBase", "PocketBase")
+	result = strings.ReplaceAll(result, "ORIGINAL_CORE_APP", "core.App")
+	result = strings.ReplaceAll(result, "ORIGINAL_POCKETBASE", "pocketbase.PocketBase")
 
 	parentDir := filepath.Dir(filename)
 	typesFile := filepath.Join(parentDir, "generated", "types.d.ts")

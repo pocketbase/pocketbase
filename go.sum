@@ -186,8 +186,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pocketbase/dbx v1.10.1 h1:cw+vsyfCJD8YObOVeqb93YErnlxwYMkNZ4rwN0G0AaA=
 github.com/pocketbase/dbx v1.10.1/go.mod h1:xXRCIAKTHMgUCyCKZm55pUOdvFziJjQfXaWKhu2vhMs=
-github.com/pocketbase/tygoja v0.0.0-20230920202922-6d9f9488868c h1:VnvV4DsPKiKOgJm3tqOiqMxmS0ghU+Bb355jFR5f3h8=
-github.com/pocketbase/tygoja v0.0.0-20230920202922-6d9f9488868c/go.mod h1:dOJ+pCyqm/jRn5kO/TX598J0e5xGDcJAZerK5atCrKI=
+github.com/pocketbase/tygoja v0.0.0-20230927153855-adeeda907bc8 h1:52UxdJXNrH/PX+HUObEnfn7Z28m7pFXTq8K5156oJiU=
+github.com/pocketbase/tygoja v0.0.0-20230927153855-adeeda907bc8/go.mod h1:dOJ+pCyqm/jRn5kO/TX598J0e5xGDcJAZerK5atCrKI=
 github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:xMI15A0UPsDsEKsMN9yxemIoYk6Tm2C1GtYGdfGttqA=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94icq4NjY3clb7Lk8O1qJ8BdBEF8z0ibU0rE=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
