@@ -1,4 +1,4 @@
-## v0.18.9-WIP
+## v0.18.9
 
 - Fixed empty thumbs directories not getting deleted on Windows after deleting a record img file ([#3382](https://github.com/pocketbase/pocketbase/issues/3382)).
 
