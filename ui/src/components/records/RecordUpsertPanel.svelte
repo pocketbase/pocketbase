@@ -10,6 +10,7 @@
     import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
+    import ModelDateIcon from "@/components/base/ModelDateIcon.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import AuthFields from "@/components/records/fields/AuthFields.svelte";
     import TextField from "@/components/records/fields/TextField.svelte";
@@ -539,13 +540,7 @@
                 </label>
                 {#if !isNew}
                     <div class="form-field-addon">
-                        <i
-                            class="ri-calendar-event-line txt-disabled"
-                            use:tooltip={{
-                                text: `Created: ${record.created}\nUpdated: ${record.updated}`,
-                                position: "left",
-                            }}
-                        />
+                        <ModelDateIcon model={record} />
                     </div>
                 {/if}
                 <input

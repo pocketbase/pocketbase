@@ -3,12 +3,12 @@
     import { slide } from "svelte/transition";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
-    import tooltip from "@/actions/tooltip";
     import { setErrors } from "@/stores/errors";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
+    import ModelDateIcon from "@/components/base/ModelDateIcon.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import SecretGeneratorButton from "@/components/base/SecretGeneratorButton.svelte";
 
@@ -148,13 +148,7 @@
                     <span class="txt">id</span>
                 </label>
                 <div class="form-field-addon">
-                    <i
-                        class="ri-calendar-event-line txt-disabled"
-                        use:tooltip={{
-                            text: `Created: ${admin.created}\nUpdated: ${admin.updated}`,
-                            position: "left",
-                        }}
-                    />
+                    <ModelDateIcon model={admin} />
                 </div>
                 <input type="text" id={uniqueId} value={admin.id} readonly />
             </Field>
