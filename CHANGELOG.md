@@ -15,9 +15,11 @@
   - Fixed the scrolling area withing the table so that the horizontal scrollbar and table header are always reachable ([#2505](https://github.com/pocketbase/pocketbase/issues/2505)).
 
 
-## v0.18.9-WIP
+## v0.18.9
 
 - Fixed empty thumbs directories not getting deleted on Windows after deleting a record img file ([#3382](https://github.com/pocketbase/pocketbase/issues/3382)).
+
+- Updated the generated JSVM typings to silent the TS warnings when trying to access a field/method in a Go->TS interface.
 
 
 ## v0.18.8
