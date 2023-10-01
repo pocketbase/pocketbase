@@ -223,6 +223,7 @@
     {#if active}
         <div class="overlay-panel-container" class:padded={popup} class:active>
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <div
                 class="overlay"
                 on:click|preventDefault={() => (overlayClose ? hide() : true)}
@@ -237,7 +238,12 @@
             >
                 <div class="overlay-panel-section panel-header">
                     {#if btnClose && !popup}
-                        <button type="button" class="overlay-close" on:click|preventDefault={hide}>
+                        <button
+                            type="button"
+                            class="overlay-close"
+                            transition:fade={{ duration: transitionSpeed }}
+                            on:click|preventDefault={hide}
+                        >
                             <i class="ri-close-line" />
                         </button>
                     {/if}

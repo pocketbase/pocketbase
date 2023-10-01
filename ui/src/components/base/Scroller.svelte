@@ -145,7 +145,7 @@
     }
     :global(.scroller-wrapper .columns-dropdown) {
         top: 40px;
-        z-index: 100;
+        z-index: 101;
         max-height: 340px;
     }
 </style>

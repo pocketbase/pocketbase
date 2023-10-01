@@ -105,6 +105,10 @@
         } catch (_) {}
     }
 
+    export function hasRecord(id) {
+        return !!records.find((r) => r.id);
+    }
+
     export async function reloadLoadedPages() {
         const loadedPages = currentPage;
 
@@ -157,8 +161,7 @@
                 skipTotal: 1,
                 filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
                 expand: relFields.map((field) => field.name).join(","),
-                // @todo temp disable the :excerpt fields until individual RecordUpsert loader is implemented
-                // fields: listFields.join(","),
+                fields: listFields.join(","),
                 requestKey: "records_list",
             })
             .then(async (result) => {
@@ -170,6 +173,13 @@
                 currentPage = result.page;
                 lastTotal = result.items.length;
                 dispatch("load", records.concat(result.items));
+
+                // mark the records as "partial" because of the excerpt
+                if (editorFields.length) {
+                    for (let record of result.items) {
+                        record._partial = true;
+                    }
+                }
 
                 // optimize the records listing by rendering the rows in task batches
                 if (breakTasks) {

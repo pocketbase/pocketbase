@@ -74,7 +74,8 @@
             loadPromises.push(
                 ApiClient.collection(field?.options?.collectionId).getFullList(batchSize, {
                     filter: filters.join("||"),
-                    $autoCancel: false,
+                    fields: "*:excerpt(200)",
+                    requestKey: null,
                 })
             );
         }

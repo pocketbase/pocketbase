@@ -1,24 +1,57 @@
 <script>
+    import { addErrorToast } from "@/stores/toasts";
+    import ApiClient from "@/utils/ApiClient";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
-    import RecordFieldValue from "./RecordFieldValue.svelte";
     import CopyIcon from "@/components/base/CopyIcon.svelte";
     import FormattedDate from "@/components/base/FormattedDate.svelte";
+    import RecordFieldValue from "@/components/records/RecordFieldValue.svelte";
 
     export let collection;
 
     let recordPanel;
     let record = {};
+    let isLoading = false;
 
     $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
 
     export function show(model) {
-        record = model;
+        load(model);
 
         return recordPanel?.show();
     }
 
     export function hide() {
+        isLoading = false;
         return recordPanel?.hide();
+    }
+
+    async function load(model) {
+        record = {}; // reset
+
+        isLoading = true;
+
+        record = (await resolveModel(model)) || {};
+
+        isLoading = false;
+    }
+
+    async function resolveModel(model) {
+        if (model && typeof model === "string") {
+            // load from id
+            try {
+                return await ApiClient.collection(collection.id).getOne(model);
+            } catch (err) {
+                if (!err.isAbort) {
+                    hide();
+                    console.warn("resolveModel:", err);
+                    addErrorToast(`Unable to load record with id "${model}"`);
+                }
+            }
+
+            return null;
+        }
+
+        return model;
     }
 </script>
 
@@ -32,14 +65,14 @@
         <h4><strong>{collection?.name}</strong> record preview</h4>
     </svelte:fragment>
 
-    <table class="table-border preview-table">
+    <table class="table-border preview-table" class:table-loading={isLoading}>
         <tbody>
             <tr>
                 <td class="min-width txt-hint txt-bold">id</td>
                 <td class="col-field">
                     <div class="label">
                         <CopyIcon value={record.id} />
-                        <span class="txt">{record.id}</span>
+                        <span class="txt">{record.id || "..."}</span>
                     </div>
                 </td>
             </tr>

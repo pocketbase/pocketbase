@@ -1,5 +1,6 @@
 <script>
-    import { replace, querystring } from "svelte-spa-router";
+    import { tick } from "svelte";
+    import { querystring } from "svelte-spa-router";
     import CommonHelper from "@/utils/CommonHelper";
     import {
         collections,
@@ -21,7 +22,7 @@
     import RecordsList from "@/components/records/RecordsList.svelte";
     import RecordsCount from "@/components/records/RecordsCount.svelte";
 
-    const queryParams = new URLSearchParams($querystring);
+    const initialQueryParams = new URLSearchParams($querystring);
 
     let collectionUpsertPanel;
     let collectionDocsPanel;
@@ -29,10 +30,12 @@
     let recordPreviewPanel;
     let recordsList;
     let recordsCount;
-    let filter = queryParams.get("filter") || "";
-    let sort = queryParams.get("sort") || "-created";
-    let selectedCollectionId = queryParams.get("collectionId") || $activeCollection?.id;
+    let filter = initialQueryParams.get("filter") || "";
+    let sort = initialQueryParams.get("sort") || "-created";
+    let selectedCollectionId = initialQueryParams.get("collectionId") || $activeCollection?.id;
     let totalCount = 0; // used to manully change the count without the need of reloading the recordsCount component
+
+    loadCollections(selectedCollectionId);
 
     $: reactiveParams = new URLSearchParams($querystring);
 
@@ -53,22 +56,31 @@
         normalizeSort();
     }
 
+    $: if (!$isCollectionsLoading && initialQueryParams.get("recordId")) {
+        showRecordById(initialQueryParams.get("recordId"));
+    }
+
     // keep the url params in sync
-    $: if (sort || filter || $activeCollection?.id) {
-        const query = new URLSearchParams({
-            collectionId: $activeCollection?.id || "",
-            filter: filter,
-            sort: sort,
-        }).toString();
-        replace("/collections?" + query);
+    $: if (!$isCollectionsLoading && (sort || filter || $activeCollection?.id)) {
+        updateQueryParams();
     }
 
     $: $pageTitle = $activeCollection?.name || "Collections";
+
+    async function showRecordById(recordId) {
+        await tick(); // ensure that the reactive component params are resolved
+
+        $activeCollection?.type === "view"
+            ? recordPreviewPanel.show(recordId)
+            : recordUpsertPanel?.show(recordId);
+    }
 
     function reset() {
         selectedCollectionId = $activeCollection?.id;
         filter = "";
         sort = "-created";
+
+        updateQueryParams({ recordId: null });
 
         normalizeSort();
     }
@@ -98,7 +110,18 @@
         }
     }
 
-    loadCollections(selectedCollectionId);
+    function updateQueryParams(extra = {}) {
+        const query = Object.assign(
+            {
+                collectionId: $activeCollection?.id || "",
+                filter: filter,
+                sort: sort,
+            },
+            extra
+        );
+
+        CommonHelper.replaceQueryParams(query);
+    }
 </script>
 
 {#if $isCollectionsLoading && !$collections.length}
@@ -188,9 +211,15 @@
             bind:filter
             bind:sort
             on:select={(e) => {
+                updateQueryParams({
+                    recordId: e.detail.id,
+                });
+
+                let showModel = e.detail._partial ? e.detail.id : e.detail;
+
                 $activeCollection.type === "view"
-                    ? recordPreviewPanel.show(e?.detail)
-                    : recordUpsertPanel?.show(e?.detail);
+                    ? recordPreviewPanel?.show(showModel)
+                    : recordUpsertPanel?.show(showModel);
             }}
             on:delete={() => {
                 recordsCount?.reload();
@@ -217,16 +246,33 @@
 <RecordUpsertPanel
     bind:this={recordUpsertPanel}
     collection={$activeCollection}
+    on:hide={() => {
+        updateQueryParams({ recordId: null });
+    }}
     on:save={(e) => {
-        recordsList?.reloadLoadedPages();
-        if (e.detail?.isNew) {
+        if (filter) {
+            // if there is applied filter, reload the count since we
+            // don't know after the save whether the record satisfies it
+            recordsCount?.reload();
+        } else if (e.detail.isNew) {
             totalCount++;
         }
-    }}
-    on:delete={() => {
+
         recordsList?.reloadLoadedPages();
-        totalCount--;
+    }}
+    on:delete={(e) => {
+        if (!filter || recordsList?.hasRecord(e.detail.id)) {
+            totalCount--;
+        }
+
+        recordsList?.reloadLoadedPages();
     }}
 />
 
-<RecordPreviewPanel bind:this={recordPreviewPanel} collection={$activeCollection} />
+<RecordPreviewPanel
+    bind:this={recordPreviewPanel}
+    collection={$activeCollection}
+    on:hide={() => {
+        updateQueryParams({ recordId: null });
+    }}
+/>

@@ -59,14 +59,14 @@
     .markers {
         position: absolute;
         z-index: 1;
-        left: 4px;
-        top: 4px;
+        left: 3px;
+        top: 3px;
         display: inline-flex;
         flex-direction: column;
         align-items: center;
         gap: 5px;
         .marker {
-            $size: 4px;
+            $size: 5px;
             display: block;
             width: $size;
             height: $size;

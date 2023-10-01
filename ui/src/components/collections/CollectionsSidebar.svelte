@@ -50,7 +50,12 @@
                     <i class="ri-close-line" />
                 </button>
             </div>
-            <input type="text" placeholder="Search collections..." bind:value={searchTerm} />
+            <input
+                type="text"
+                placeholder="Search collections..."
+                name="collections-search"
+                bind:value={searchTerm}
+            />
         </div>
     </header>
 

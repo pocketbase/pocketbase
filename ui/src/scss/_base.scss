@@ -670,7 +670,7 @@ a.thumb:not(.thumb-active) {
         font-family: var(--iconFontFamily);
         color: inherit;
         text-align: center;
-        animation: loaderShow var(--baseAnimationSpeed),
+        animation: loaderShow var(--activeAnimationSpeed),
                    rotate 0.9s var(--baseAnimationSpeed) infinite linear;
     }
 
@@ -854,6 +854,9 @@ a.thumb:not(.thumb-active) {
 }
 .entrance-right {
     animation: entranceRight var(--entranceAnimationSpeed);
+}
+.entrance-fade {
+    animation: fadeIn var(--entranceAnimationSpeed);
 }
 
 .provider-logo {

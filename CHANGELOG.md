@@ -10,10 +10,12 @@
     })
     ```
 
-- Optimized the Admin UI records listing:
+- Various Admin UI improvements:
   - Count the total records separately to speed up the query execution for large datasets ([#3344](https://github.com/pocketbase/pocketbase/issues/3344)).
-  - Fixed the scrolling area withing the table so that the horizontal scrollbar and table header are always reachable ([#2505](https://github.com/pocketbase/pocketbase/issues/2505)).
-  - Show the local `date` field value on hover.
+  - Enclosed the listing scrolling area within the table so that the horizontal scrollbar and table header are always reachable ([#2505](https://github.com/pocketbase/pocketbase/issues/2505)).
+  - Allowed opening the record update form via direct URL ([#2682](https://github.com/pocketbase/pocketbase/discussions/2682)).
+  - Reintroduced the local `date` field tooltip on hover.
+  - Speed up the listing loading times for records with large `editor` field values by initially fetching only a partial of the records data (the complete record data is loaded on record preview/update).
 
 
 ## v0.18.9

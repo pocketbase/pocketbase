@@ -1923,4 +1923,63 @@ export default class CommonHelper {
             options:  {},
         }, data);
     }
+
+    /**
+     * Extracts the query parameters from the current url.
+     *
+     * @return {Object}
+     */
+    static getQueryParams() {
+        let query = "";
+
+        let url = window.location.href
+
+        const queryStart = url.indexOf("?");
+        if (queryStart > -1) {
+            query = url.substring(queryStart + 1);
+            url = url.substring(0, queryStart);
+        }
+
+        return Object.fromEntries(new URLSearchParams(query))
+    }
+
+    /**
+     * Replaces the current query parameters without triggering
+     * the router navigation.
+     *
+     * @param  {Object} params
+     */
+    static replaceQueryParams(params) {
+        params = params || {};
+
+        let query = "";
+
+        let url = window.location.href
+
+        const queryStart = url.indexOf("?");
+        if (queryStart > -1) {
+            query = url.substring(queryStart + 1);
+            url = url.substring(0, queryStart);
+        }
+
+        const parsed = new URLSearchParams(query)
+
+        for (let key in params) {
+            const val = params[key];
+
+            if (val === null) {
+                parsed.delete(key);
+            } else {
+                parsed.set(key, val);
+            }
+        }
+
+        query = parsed.toString();
+
+        if (query != "") {
+            url += ("?" + query);
+        }
+
+        window.location.replace(url);
+    }
 }

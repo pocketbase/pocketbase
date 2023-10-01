@@ -81,9 +81,11 @@
             }
 
             loadPromises.push(
-                ApiClient.collection(collectionId).getFullList(batchSize, {
+                ApiClient.collection(collectionId).getFullList({
+                    batch: batchSize,
                     filter: filters.join("||"),
-                    $autoCancel: false,
+                    fields: "*:excerpt(200)",
+                    requestKey: null,
                 })
             );
         }
@@ -140,8 +142,9 @@
             const result = await ApiClient.collection(collectionId).getList(page, batchSize, {
                 filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
                 sort: !isView ? "-created" : "",
+                fields: "*:excerpt(200)",
                 skipTotal: 1,
-                $cancelKey: uniqueId + "loadList",
+                requestKey: uniqueId + "loadList",
             });
 
             list = CommonHelper.filterDuplicatesByKey(list.concat(result.items));
