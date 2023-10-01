@@ -184,6 +184,7 @@
             // ignore local storage errors in case the serialized data
             // exceed the browser localStorage single value quota
             console.warn("updateDraft failure:", e);
+            window.localStorage.removeItem(draftKey());
         }
     }
 
@@ -535,11 +536,12 @@
         {/if}
     </svelte:fragment>
 
-    <div class="tabs-content">
+    <div class="tabs-content no-animations">
         <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
         <form
             id={formId}
             class="tab-item"
+            class:no-pointer-events={isLoading}
             class:active={activeTab === tabFormKey}
             on:submit|preventDefault={save}
             on:keydown={handleFormKeydown}

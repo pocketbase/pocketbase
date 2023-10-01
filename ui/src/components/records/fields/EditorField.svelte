@@ -5,7 +5,7 @@
     import { onMount } from "svelte";
 
     export let field;
-    export let value = undefined;
+    export let value = "";
 
     let mounted = false;
     let mountedTimeoutId = null;
@@ -22,6 +22,7 @@
     }
 
     onMount(() => {
+        // slight "offset" the editor mount to avoid blocking the rendering of the other fields
         mountedTimeoutId = setTimeout(() => {
             mounted = true;
         }, 100);

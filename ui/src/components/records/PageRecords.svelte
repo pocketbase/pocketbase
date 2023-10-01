@@ -175,7 +175,12 @@
                     </button>
                 {/if}
 
-                <RefreshButton on:refresh={() => recordsList?.load()} />
+                <RefreshButton
+                    on:refresh={() => {
+                        recordsList?.load();
+                        recordsCount?.reload();
+                    }}
+                />
             </div>
 
             <div class="btns-group">
