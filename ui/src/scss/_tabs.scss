@@ -134,6 +134,12 @@ $tabContentAnimationSpeed: 0.2s;
             margin-bottom: 0;
         }
     }
+    &.no-animations {
+        > .tab-item.active {
+            opacity: 1;
+            animation: none;
+        }
+    }
 }
 
 .tabs {
