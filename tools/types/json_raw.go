@@ -53,7 +53,7 @@ func (j JsonRaw) Value() (driver.Value, error) {
 
 // Scan implements [sql.Scanner] interface to scan the provided value
 // into the current JsonRaw instance.
-func (j *JsonRaw) Scan(value interface{}) error {
+func (j *JsonRaw) Scan(value any) error {
 	var data []byte
 
 	switch v := value.(type) {
