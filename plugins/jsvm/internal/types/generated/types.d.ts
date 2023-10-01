@@ -3851,7 +3851,7 @@ namespace dbx {
   * to the corresponding values. For example, HashExp{"level": 2, "dept": 10} will generate
   * the SQL: "level"=2 AND "dept"=10.
   * 
-  * HashExp also handles nil values and slice values. For example, HashExp{"level": []interface{}{1, 2}, "dept": nil}
+  * HashExp also handles nil values and slice values. For example, HashExp{"level": []any{1, 2}, "dept": nil}
   * will generate: "level" IN (1, 2) AND "dept" IS NULL.
   */
  interface HashExp extends _TygojaDict{}
@@ -7648,7 +7648,7 @@ namespace fs {
  */
 namespace jwt {
  /**
-  * MapClaims is a claims type that uses the map[string]interface{} for JSON decoding.
+  * MapClaims is a claims type that uses the map[string]any for JSON decoding.
   * This is the default claims type if you don't supply one
   */
  interface MapClaims extends _TygojaDict{}
@@ -9282,7 +9282,7 @@ namespace sql {
    *    *uint, *uint8, *uint16, *uint32, *uint64
    *    *bool
    *    *float32, *float64
-   *    *interface{}
+   *    *any
    *    *RawBytes
    *    *Rows (cursor value)
    *    any type implementing Scanner (see Scanner docs)
@@ -9308,17 +9308,17 @@ namespace sql {
    * using an argument of type *RawBytes instead; see the documentation
    * for RawBytes for restrictions on its use.
    * 
-   * If an argument has type *interface{}, Scan copies the value
+   * If an argument has type *any, Scan copies the value
    * provided by the underlying driver without conversion. When scanning
-   * from a source value of type []byte to *interface{}, a copy of the
+   * from a source value of type []byte to *any, a copy of the
    * slice is made and the caller owns the result.
    * 
    * Source values of type time.Time may be scanned into values of type
-   * *time.Time, *interface{}, *string, or *[]byte. When converting to
+   * *time.Time, *any, *string, or *[]byte. When converting to
    * the latter two, time.RFC3339Nano is used.
    * 
    * Source values of type bool may be scanned into types *bool,
-   * *interface{}, *string, *[]byte, or *RawBytes.
+   * *any, *string, *[]byte, or *RawBytes.
    * 
    * For scanning into *bool, the source may be true, false, 1, 0, or
    * string inputs parseable by strconv.ParseBool.

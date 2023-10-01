@@ -16,7 +16,7 @@ import (
 //
 // This is similar to `echo.BindBody()`, but for JSON requests uses
 // custom json reader that **copies** the request body, allowing multiple reads.
-func BindBody(c echo.Context, i interface{}) error {
+func BindBody(c echo.Context, i any) error {
 	req := c.Request()
 	if req.ContentLength == 0 {
 		return nil
@@ -40,7 +40,7 @@ func BindBody(c echo.Context, i interface{}) error {
 
 // CopyJsonBody reads the request body into i by
 // creating a copy of `r.Body` to allow multiple reads.
-func CopyJsonBody(r *http.Request, i interface{}) error {
+func CopyJsonBody(r *http.Request, i any) error {
 	body := r.Body
 
 	// this usually shouldn't be needed because the Server calls close for us
@@ -66,7 +66,7 @@ func CopyJsonBody(r *http.Request, i interface{}) error {
 // when a map destination is used.
 //
 // It should be replaced with echo.BindBody(c, i) once the issue is fixed in echo.
-func bindFormData(c echo.Context, i interface{}) error {
+func bindFormData(c echo.Context, i any) error {
 	if i == nil {
 		return nil
 	}
