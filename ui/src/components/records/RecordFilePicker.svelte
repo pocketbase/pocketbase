@@ -54,6 +54,11 @@
         refreshSizeOptions();
     }
 
+    // refresh the size options on selected file change
+    $: if (selectedFile?.name) {
+        refreshSizeOptions();
+    }
+
     // reset list on filter or collection change
     $: if (typeof filter !== "undefined" && selectedCollection?.id && pickerPanel?.isActive()) {
         loadList(true);
@@ -127,26 +132,30 @@
     }
 
     function refreshSizeOptions() {
-        let sizes = [];
+        let sizes = ["100x100"]; // default Admin UI thumb
 
-        for (const field of fileFields) {
-            const thumbs = CommonHelper.toArray(field.options?.thumbs);
-            for (const thumb of thumbs) {
-                if (!sizes.includes(thumb)) {
-                    sizes.push(thumb);
+        // extract the thumb sizes of the selected file field
+        if (selectedFile?.record?.id) {
+            for (const field of fileFields) {
+                if (CommonHelper.toArray(selectedFile.record[field.name]).includes(selectedFile.name)) {
+                    sizes = sizes.concat(CommonHelper.toArray(field.options?.thumbs));
+                    break;
                 }
             }
         }
 
-        sizeOptions = [
-            { label: "Original size", value: "" },
-            { label: "100x100 thumb", value: "100x100" },
-        ];
+        // constuct the dropdown options
+        sizeOptions = [{ label: "Original size", value: "" }];
         for (const size of sizes) {
             sizeOptions.push({
                 label: `${size} thumb`,
                 value: size,
             });
+        }
+
+        // reset selected size if missing
+        if (selectedSize && !sizes.includes(selectedSize)) {
+            selectedSize = "";
         }
     }
 
@@ -301,6 +310,7 @@
                     id={uniqueId}
                     items={sizeOptions}
                     disabled={!canSubmit}
+                    selectPlaceholder="Select size"
                     bind:keyOfSelected={selectedSize}
                 />
             </Field>
