@@ -46,7 +46,9 @@
     gap: var(--xsSpacing);
     flex-grow: 1;
     min-height: 0;
+    max-height: 100%;
     overflow: auto;
+    scrollbar-gutter: stable;
     .list-item {
         cursor: pointer;
         outline: 0;

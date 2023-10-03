@@ -2,13 +2,13 @@
     import { createEventDispatcher } from "svelte";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
-    import scrollend from "@/actions/scrollend";
     import tooltip from "@/actions/tooltip";
     import { collections } from "@/stores/collections";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import Field from "@/components/base/Field.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
+    import Scroller from "@/components/base/Scroller.svelte";
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
 
     const dispatch = createEventDispatcher();
@@ -110,8 +110,15 @@
 
             const fallbackSearchFields = CommonHelper.getAllCollectionIdentifiers(selectedCollection);
 
+            let normalizedFilter = CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields) || "";
+
+            if (normalizedFilter) {
+                normalizedFilter += " && ";
+            }
+            normalizedFilter += "(" + fileFields.map((f) => `${f.name}:length>0`).join("||") + ")";
+
             const result = await ApiClient.collection(selectedCollection.id).getList(page, batchSize, {
-                filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
+                filter: normalizedFilter,
                 sort: "-created",
                 fields: "*:excerpt(100)",
                 skipTotal: 1,
@@ -239,15 +246,13 @@
                         <div class="txt">New record</div>
                     </button>
                 </div>
-                <div
+                <Scroller
                     class="files-list"
-                    use:scrollend={{
-                        threshold: 150,
-                        callback: () => {
-                            if (canLoadMore) {
-                                loadList();
-                            }
-                        },
+                    vThreshold={100}
+                    on:vScrollEnd={() => {
+                        if (canLoadMore) {
+                            loadList();
+                        }
                     }}
                 >
                     {#if hasAtleastOneFile}
@@ -293,7 +298,7 @@
                             <span class="loader loader-sm active" />
                         </div>
                     {/if}
-                </div>
+                </Scroller>
             </div>
         </div>
     {/if}
