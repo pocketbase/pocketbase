@@ -75,11 +75,14 @@
     min-width: 0;
     min-height: 0;
     height: 100%;
+    .thumb {
+        --thumbSize: 14.6%;
+    }
 }
 
 .file-picker {
     display: flex;
-    height: 440px;
+    height: 420px;
     max-height: 100%;
     align-items: stretch;
     gap: var(--baseSpacing);

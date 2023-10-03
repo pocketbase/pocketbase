@@ -261,7 +261,7 @@
                             {#each names as name}
                                 <button
                                     type="button"
-                                    class="thumb thumb-xl handle"
+                                    class="thumb handle"
                                     use:tooltip={name + "\n(record: " + record.id + ")"}
                                     class:thumb-warning={isSelected(record, name)}
                                     on:click|preventDefault={select(record, name)}
