@@ -11,7 +11,7 @@
     let thumbUrl = "";
     let originalUrl = "";
     let token = "";
-    let isLoadingToken = false;
+    let isLoadingToken = true;
 
     loadFileToken();
 
@@ -76,4 +76,6 @@
     </a>
 {/if}
 
-<PreviewPopup bind:this={previewPopup} />
+{#if hasPreview}
+    <PreviewPopup bind:this={previewPopup} />
+{/if}

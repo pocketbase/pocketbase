@@ -160,7 +160,7 @@
                 {#each [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as index}
                     <button
                         type="button"
-                        class="link-fade thumb thumb-circle {index == avatar ? 'thumb-active' : 'thumb-sm'}"
+                        class="link-fade thumb thumb-circle {index == avatar ? 'thumb-primary' : 'thumb-sm'}"
                         on:click={() => (avatar = index)}
                     >
                         <img

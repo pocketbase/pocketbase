@@ -845,6 +845,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasImageExtension(filename) {
+        filename = filename || "";
         return !!imageExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
     }
 
@@ -855,6 +856,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasVideoExtension(filename) {
+        filename = filename || "";
         return !!videoExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
     }
 
@@ -865,6 +867,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasAudioExtension(filename) {
+        filename = filename || "";
         return !!audioExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
     }
 
@@ -875,6 +878,7 @@ export default class CommonHelper {
      * @return {Boolean}
      */
     static hasDocumentExtension(filename) {
+        filename = filename || "";
         return !!documentExtensions.find((ext) => filename.toLowerCase().endsWith(ext));
     }
 
@@ -1396,7 +1400,7 @@ export default class CommonHelper {
                 "codesample",
                 "directionality",
             ],
-            toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image table codesample direction | code fullscreen",
+            toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image_picker table codesample direction | code fullscreen",
             paste_postprocess: (editor, args) => {
                 cleanupPastedNode(args.node);
             },
@@ -1464,7 +1468,7 @@ export default class CommonHelper {
                                 icon: "ltr",
                                 onAction: () => {
                                     window?.localStorage?.setItem(lastDirectionKey, "ltr");
-                                    tinymce.activeEditor.execCommand("mceDirectionLTR");
+                                    editor.execCommand("mceDirectionLTR");
                                 }
                             },
                             {
@@ -1473,7 +1477,7 @@ export default class CommonHelper {
                                 icon: "rtl",
                                 onAction: () => {
                                     window?.localStorage?.setItem(lastDirectionKey, "rtl");
-                                    tinymce.activeEditor.execCommand("mceDirectionRTL");
+                                    editor.execCommand("mceDirectionRTL");
                                 }
                             }
                         ];
@@ -1481,6 +1485,32 @@ export default class CommonHelper {
                         callback(items);
                     }
                 });
+
+                editor.ui.registry.addMenuButton("image_picker", {
+                    icon: "image",
+                    fetch: (callback) => {
+                        const items = [
+                            {
+                                type: "menuitem",
+                                text: "From collection",
+                                icon: "gallery",
+                                onAction: () => {
+                                    editor.dispatch("collections_file_picker", {})
+                                }
+                            },
+                            {
+                                type: "menuitem",
+                                text: "Inline",
+                                icon: "browse",
+                                onAction: () => {
+                                    editor.execCommand("mceImage");
+                                }
+                            }
+                        ];
+
+                        callback(items);
+                    }
+                })
             },
         };
     }

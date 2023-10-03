@@ -48,7 +48,7 @@
 {:else if field.type === "editor"}
     {#if short}
         <span class="txt">
-            {CommonHelper.truncate(CommonHelper.plainText(rawValue), 250)}
+            {CommonHelper.truncate(CommonHelper.plainText(rawValue), 195)}
         </span>
     {:else}
         <TinyMCE

@@ -12,6 +12,7 @@
     export let multiple = false;
     export let disabled = false;
     export let readonly = false;
+    export let upside = false;
     export let selected = multiple ? [] : undefined;
     export let toggle = multiple; // toggle option on click
     export let closable = true; // close the dropdown on option select/deselect
@@ -199,7 +200,7 @@
     });
 </script>
 
-<div bind:this={container} class="select {classes}" class:multiple class:disabled class:readonly>
+<div bind:this={container} class="select {classes}" class:upside class:multiple class:disabled class:readonly>
     <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
     <div
         bind:this={labelDiv}
@@ -218,6 +219,7 @@
 
                 {#if multiple || toggle}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <span
                         class="clear"
                         use:tooltip={"Clear"}
@@ -237,7 +239,7 @@
     {#if !disabled && !readonly}
         <Toggler
             bind:this={toggler}
-            class="dropdown dropdown-block options-dropdown dropdown-left"
+            class="dropdown dropdown-block options-dropdown dropdown-left {upside ? 'dropdown-upside' : ''}"
             trigger={labelDiv}
             on:show={onDropdownShow}
             on:hide
@@ -276,6 +278,7 @@
             <div class="options-list">
                 {#each filteredItems as item}
                     <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
                         tabindex="0"
                         class="dropdown-item option"

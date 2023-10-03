@@ -219,7 +219,7 @@
 
         let result = CommonHelper.getAllCollectionIdentifiers(collection, prefix);
 
-        for (const field of collection.schema) {
+        for (const field of collection?.schema || []) {
             const key = prefix + field.name;
 
             // add relation fields

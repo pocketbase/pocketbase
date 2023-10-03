@@ -17,7 +17,7 @@
 
     const dispatch = createEventDispatcher();
     const sortRegex = /^([\+\-])?(\w+)$/;
-    const perPage = 45;
+    const perPage = 40;
 
     export let collection;
     export let sort = "";
@@ -186,10 +186,10 @@
                     const currentYieldId = ++yieldedRecordsId;
                     while (result.items?.length) {
                         if (yieldedRecordsId != currentYieldId) {
-                            break; // new yeild has been started
+                            break; // new yield has been started
                         }
 
-                        records = records.concat(result.items.splice(0, 15));
+                        records = records.concat(result.items.splice(0, 20));
 
                         await CommonHelper.yieldToMain();
                     }
@@ -550,7 +550,7 @@
                 <tr>
                     <td colspan="99" class="txt-center">
                         <button
-                            class="btn btn-expanded-lg btn-secondary"
+                            class="btn btn-expanded-lg btn-secondary btn-horizontal-sticky"
                             disabled={isLoading}
                             class:btn-loading={isLoading}
                             on:click|preventDefault={() => load(currentPage + 1)}

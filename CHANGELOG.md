@@ -16,6 +16,7 @@
   - Allowed opening the record preview/update form via direct URL ([#2682](https://github.com/pocketbase/pocketbase/discussions/2682)).
   - Reintroduced the local `date` field tooltip on hover.
   - Speed up the listing loading times for records with large `editor` field values by initially fetching only a partial of the records data (the complete record data is loaded on record preview/update).
+  - Added "Media library" (collection images picker) support for the TinyMCE `editor` field.
 
 
 ## v0.18.9

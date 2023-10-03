@@ -54,6 +54,7 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <form class="searchbar" on:click|stopPropagation on:submit|preventDefault={submit}>
     <label for={uniqueId} class="m-l-10 txt-xl">
         <i class="ri-search-line" />
@@ -85,7 +86,7 @@
     {#if (value.length || tempValue.length) && tempValue != value}
         <button
             type="submit"
-            class="btn btn-expanded btn-sm btn-warning"
+            class="btn btn-expanded-sm btn-sm btn-warning"
             transition:fly={{ duration: 150, x: 5 }}
         >
             <span class="txt">Search</span>

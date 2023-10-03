@@ -1,12 +1,16 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
-    import Field from "@/components/base/Field.svelte";
-    import TinyMCE from "@tinymce/tinymce-svelte";
     import { onMount } from "svelte";
+    import TinyMCE from "@tinymce/tinymce-svelte";
+    import CommonHelper from "@/utils/CommonHelper";
+    import ApiClient from "@/utils/ApiClient";
+    import Field from "@/components/base/Field.svelte";
+    import RecordFilePicker from "@/components/records/RecordFilePicker.svelte";
 
     export let field;
     export let value = "";
 
+    let picker;
+    let editor;
     let mounted = false;
     let mountedTimeoutId = null;
 
@@ -44,8 +48,29 @@
             scriptSrc="{import.meta.env.BASE_URL}libs/tinymce/tinymce.min.js"
             {conf}
             bind:value
+            on:init={(initEvent) => {
+                editor = initEvent.detail.editor;
+                editor.on("collections_file_picker", () => {
+                    picker?.show();
+                });
+            }}
         />
     {:else}
         <div class="tinymce-wrapper" />
     {/if}
 </Field>
+
+<RecordFilePicker
+    bind:this={picker}
+    title="Select an image"
+    fileTypes={["image"]}
+    on:submit={(e) => {
+        editor?.execCommand(
+            "InsertImage",
+            false,
+            ApiClient.files.getUrl(e.detail.record, e.detail.name, {
+                thumb: e.detail.size,
+            })
+        );
+    }}
+/>
