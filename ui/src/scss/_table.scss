@@ -157,6 +157,9 @@ table {
     .col-type-file {
         min-width: 100px;
     }
+    .col-type-number {
+        white-space: nowrap;
+    }
 
     // field name specific columns
     td.col-field-id,

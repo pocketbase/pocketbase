@@ -80,7 +80,7 @@ func (r *Registry) LoadString(text string) *Renderer {
 	return found
 }
 
-// LoadString caches (if not already) the specified fs and globPatterns
+// LoadFS caches (if not already) the specified fs and globPatterns
 // pair as single template and returns a ready to use Renderer instance.
 //
 // There must be at least 1 file matching the provided globPattern(s)
