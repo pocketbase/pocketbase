@@ -524,6 +524,7 @@ a,
     line-height: 1;
     width: var(--thumbSize);
     height: var(--thumbSize);
+    aspect-ratio: 1;
     background: var(--baseAlt2Color);
     border-radius: var(--baseRadius);
     color: var(--txtPrimaryColor);

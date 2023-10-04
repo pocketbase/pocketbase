@@ -45,11 +45,12 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div bind:this={container} class={classes} class:error={fieldErrors.length} on:click>
     <slot {uniqueId} />
 
     {#if inlineError && fieldErrors.length}
-        <div class="form-field-addon">
+        <div class="form-field-addon inline-error-icon">
             <i
                 class="ri-error-warning-fill txt-danger"
                 transition:scale={{ duration: 150, start: 0.7 }}

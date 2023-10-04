@@ -132,11 +132,11 @@
             name="schema.{key}.name"
             inlineError
         >
-            <div class="markers">
-                {#if field.required}
-                    <span class="marker marker-required" use:tooltip={requiredLabel} />
-                {/if}
-            </div>
+            {#if field.required}
+                <div class="field-labels">
+                    <span class="label label-success">{requiredLabel}</span>
+                </div>
+            {/if}
 
             <div
                 class="form-field-addon prefix no-pointer-events field-type-icon"
