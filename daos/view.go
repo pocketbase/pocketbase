@@ -43,10 +43,10 @@ func (dao *Dao) SaveView(name string, selectQuery string) error {
 			return err
 		}
 
-		trimmed := strings.Trim(selectQuery, ";")
+		selectQuery = strings.Trim(strings.TrimSpace(selectQuery), ";")
 
 		// try to eagerly detect multiple inline statements
-		tk := tokenizer.NewFromString(trimmed)
+		tk := tokenizer.NewFromString(selectQuery)
 		tk.Separators(';')
 		if queryParts, _ := tk.ScanAll(); len(queryParts) > 1 {
 			return errors.New("multiple statements are not supported")
@@ -56,7 +56,7 @@ func (dao *Dao) SaveView(name string, selectQuery string) error {
 		//
 		// note: the query is wrapped in a secondary SELECT as a rudimentary
 		// measure to discourage multiple inline sql statements execution.
-		viewQuery := fmt.Sprintf("CREATE VIEW {{%s}} AS SELECT * FROM (%s)", name, trimmed)
+		viewQuery := fmt.Sprintf("CREATE VIEW {{%s}} AS SELECT * FROM (%s)", name, selectQuery)
 		if _, err := txDao.DB().NewQuery(viewQuery).Execute(); err != nil {
 			return err
 		}
@@ -458,7 +458,7 @@ type identifiersParser struct {
 }
 
 func (p *identifiersParser) parse(selectQuery string) error {
-	str := strings.Trim(selectQuery, ";")
+	str := strings.Trim(strings.TrimSpace(selectQuery), ";")
 	str = joinReplaceRegex.ReplaceAllString(str, " _join_ ")
 	str = discardReplaceRegex.ReplaceAllString(str, " _discard_ ")
 	str = commentsReplaceRegex.ReplaceAllString(str, "")
@@ -599,13 +599,20 @@ func identifierFromParts(parts []string) (identifier, error) {
 	}
 
 	result.original = trimRawIdentifier(result.original)
-	result.alias = trimRawIdentifier(result.alias)
+
+	// we trim the single quote even though it is not a valid column quote character
+	// because SQLite allows it if the context expects an identifier and not string literal
+	// (https://www.sqlite.org/lang_keywords.html)
+	result.alias = trimRawIdentifier(result.alias, "'")
 
 	return result, nil
 }
 
-func trimRawIdentifier(rawIdentifier string) string {
-	const trimChars = "`\"[];"
+func trimRawIdentifier(rawIdentifier string, extraTrimChars ...string) string {
+	trimChars := "`\"[];"
+	if len(extraTrimChars) > 0 {
+		trimChars += strings.Join(extraTrimChars, "")
+	}
 
 	parts := strings.Split(rawIdentifier, ".")
 
