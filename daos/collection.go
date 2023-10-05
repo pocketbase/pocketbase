@@ -402,6 +402,8 @@ func (dao *Dao) saveViewCollection(newCollection, oldCollection *models.Collecti
 // currently we don't support non-string model ids
 // (see https://github.com/pocketbase/pocketbase/issues/3110).
 func (dao *Dao) normalizeViewQueryId(query string) (string, error) {
+	query = strings.Trim(strings.TrimSpace(query), ";")
+
 	parsed, err := dao.parseQueryToFields(query)
 	if err != nil {
 		return "", err
