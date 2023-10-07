@@ -412,6 +412,11 @@ func baseBinds(vm *goja.Runtime) {
 
 		return instanceValue
 	})
+
+	vm.Set("Cookie", func(call goja.ConstructorCall) *goja.Object {
+		instance := &http.Cookie{}
+		return structConstructor(vm, call, instance)
+	})
 }
 
 func dbxBinds(vm *goja.Runtime) {

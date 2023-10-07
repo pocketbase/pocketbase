@@ -450,6 +450,36 @@ declare class Dao implements daos.Dao {
   constructor(concurrentDB?: dbx.Builder, nonconcurrentDB?: dbx.Builder)
 }
 
+interface Cookie extends http.Cookie{} // merge
+/**
+ * A Cookie represents an HTTP cookie as sent in the Set-Cookie header of an
+ * HTTP response.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * routerAdd("POST", "/example", (c) => {
+ *     c.setCookie(new Cookie({
+ *         name:     "example_name",
+ *         value:    "example_value",
+ *         path:     "/",
+ *         domain:   "example.com",
+ *         maxAge:   10,
+ *         secure:   true,
+ *         httpOnly: true,
+ *         sameSite: 3,
+ *     }))
+ *
+ *     return c.redirect(200, "/");
+ * })
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare class Cookie implements http.Cookie {
+  constructor(options?: Partial<http.Cookie>)
+}
+
 // -------------------------------------------------------------------
 // dbxBinds
 // -------------------------------------------------------------------
