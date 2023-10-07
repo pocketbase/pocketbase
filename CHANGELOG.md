@@ -21,6 +21,10 @@
 - Removed the explicit charset from the realtime response due to compatability issues with IIS ([#3461](https://github.com/pocketbase/pocketbase/issues/3461)).
   _The `Connection:keep-alive` realtime response header was also removed as it is not really used with HTTP2 anyway._
 
+- Added new JSVM bindings:
+  - `new Cookie({ ... })` constructor for creating `*http.Cookie` equivalent value.
+  - `new SubscriptionMessage({ ... })` constructor for creating a realtime subscription payload.
+
 
 ## v0.18.9
 

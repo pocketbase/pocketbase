@@ -7,8 +7,8 @@ import (
 
 // Broker defines a struct for managing subscriptions clients.
 type Broker struct {
-	mux     sync.RWMutex
 	clients map[string]Client
+	mux     sync.RWMutex
 }
 
 // NewBroker initializes and returns a new Broker instance.
