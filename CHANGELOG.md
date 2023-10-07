@@ -18,6 +18,9 @@
   - Speed up the listing loading times for records with large `editor` field values by initially fetching only a partial of the records data (the complete record data is loaded on record preview/update).
   - Added "Media library" (collection images picker) support for the TinyMCE `editor` field.
 
+- Removed the explicit charset from the realtime response due to compatability issues with IIS ([#3461](https://github.com/pocketbase/pocketbase/issues/3461)).
+  _The `Connection:keep-alive` realtime response header was also removed as it is not really used with HTTP2 anyway._
+
 
 ## v0.18.9
 
