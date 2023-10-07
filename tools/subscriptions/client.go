@@ -60,12 +60,12 @@ var _ Client = (*DefaultClient)(nil)
 
 // DefaultClient defines a generic subscription client.
 type DefaultClient struct {
-	mux           sync.RWMutex
-	isDiscarded   bool
-	id            string
 	store         map[string]any
 	channel       chan Message
 	subscriptions map[string]struct{}
+	id            string
+	mux           sync.RWMutex
+	isDiscarded   bool
 }
 
 // NewDefaultClient creates and returns a new DefaultClient instance.
