@@ -205,11 +205,12 @@
             delete cloneB[field.name];
         }
 
-        // delete password props
-        delete cloneA.password;
-        delete cloneA.passwordConfirm;
-        delete cloneB.password;
-        delete cloneB.passwordConfirm;
+        // props to exclude from the checks
+        const excludeProps = ["expand", "password", "passwordConfirm"];
+        for (let prop of excludeProps) {
+            delete cloneA[prop];
+            delete cloneB[prop];
+        }
 
         return JSON.stringify(cloneA) == JSON.stringify(cloneB);
     }

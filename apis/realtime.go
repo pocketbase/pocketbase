@@ -370,8 +370,8 @@ func (api *realtimeApi) canAccessRecord(client subscriptions.Client, record *mod
 }
 
 type recordData struct {
-	Action string         `json:"action"`
 	Record *models.Record `json:"record"`
+	Action string         `json:"action"`
 }
 
 func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dryCache bool) error {
