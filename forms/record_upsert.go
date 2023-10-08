@@ -117,7 +117,7 @@ func (form *RecordUpsert) getContentType(r *http.Request) string {
 	return t
 }
 
-func (form *RecordUpsert) extractRequestInfo(
+func (form *RecordUpsert) extractRequestData(
 	r *http.Request,
 	keyPrefix string,
 ) (map[string]any, map[string][]*filesystem.File, error) {
@@ -219,12 +219,12 @@ func (form *RecordUpsert) extractMultipartFormData(
 //
 // File upload is supported only via multipart/form-data.
 func (form *RecordUpsert) LoadRequest(r *http.Request, keyPrefix string) error {
-	requestInfo, uploadedFiles, err := form.extractRequestInfo(r, keyPrefix)
+	requestData, uploadedFiles, err := form.extractRequestData(r, keyPrefix)
 	if err != nil {
 		return err
 	}
 
-	if err := form.LoadData(requestInfo); err != nil {
+	if err := form.LoadData(requestData); err != nil {
 		return err
 	}
 
@@ -349,39 +349,39 @@ func (form *RecordUpsert) RemoveFiles(key string, toDelete ...string) error {
 }
 
 // LoadData loads and normalizes the provided regular record data fields into the form.
-func (form *RecordUpsert) LoadData(requestInfo map[string]any) error {
+func (form *RecordUpsert) LoadData(requestData map[string]any) error {
 	// load base system fields
-	if v, ok := requestInfo[schema.FieldNameId]; ok {
+	if v, ok := requestData[schema.FieldNameId]; ok {
 		form.Id = cast.ToString(v)
 	}
 
 	// load auth system fields
 	if form.record.Collection().IsAuth() {
-		if v, ok := requestInfo[schema.FieldNameUsername]; ok {
+		if v, ok := requestData[schema.FieldNameUsername]; ok {
 			form.Username = cast.ToString(v)
 		}
-		if v, ok := requestInfo[schema.FieldNameEmail]; ok {
+		if v, ok := requestData[schema.FieldNameEmail]; ok {
 			form.Email = cast.ToString(v)
 		}
-		if v, ok := requestInfo[schema.FieldNameEmailVisibility]; ok {
+		if v, ok := requestData[schema.FieldNameEmailVisibility]; ok {
 			form.EmailVisibility = cast.ToBool(v)
 		}
-		if v, ok := requestInfo[schema.FieldNameVerified]; ok {
+		if v, ok := requestData[schema.FieldNameVerified]; ok {
 			form.Verified = cast.ToBool(v)
 		}
-		if v, ok := requestInfo["password"]; ok {
+		if v, ok := requestData["password"]; ok {
 			form.Password = cast.ToString(v)
 		}
-		if v, ok := requestInfo["passwordConfirm"]; ok {
+		if v, ok := requestData["passwordConfirm"]; ok {
 			form.PasswordConfirm = cast.ToString(v)
 		}
-		if v, ok := requestInfo["oldPassword"]; ok {
+		if v, ok := requestData["oldPassword"]; ok {
 			form.OldPassword = cast.ToString(v)
 		}
 	}
 
 	// replace modifiers (if any)
-	requestInfo = form.record.ReplaceModifers(requestInfo)
+	requestData = form.record.ReplaceModifers(requestData)
 
 	// create a shallow copy of form.data
 	var extendedData = make(map[string]any, len(form.data))
@@ -390,7 +390,7 @@ func (form *RecordUpsert) LoadData(requestInfo map[string]any) error {
 	}
 
 	// extend form.data with the request data
-	rawData, err := json.Marshal(requestInfo)
+	rawData, err := json.Marshal(requestData)
 	if err != nil {
 		return err
 	}
