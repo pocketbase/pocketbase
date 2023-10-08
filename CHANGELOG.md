@@ -1,3 +1,13 @@
+## v0.18.10
+
+- Added global `raw` template function to allow outputing raw/unescaped HTML content in the JSVM templates ([#3476](https://github.com/pocketbase/pocketbase/discussions/3476)).
+  ```
+  {{.description|raw}}
+  ```
+
+- Bumped the GitHub action to use [min Go 1.21.2](https://github.com/golang/go/issues?q=milestone%3AGo1.21.2) (_the fixed issues are not critical as they are mostly related to the compiler/build tools_).
+
+
 ## v0.18.9
 
 - Fixed empty thumbs directories not getting deleted on Windows after deleting a record img file ([#3382](https://github.com/pocketbase/pocketbase/issues/3382)).
