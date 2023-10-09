@@ -34,8 +34,10 @@
     let columnsTrigger;
     let hiddenColumns = [];
     let collumnsToHide = [];
+    let hiddenColumnsKey = "";
 
     $: if (collection?.id) {
+        hiddenColumnsKey = collection.id + "@hiddenColumns";
         loadStoredHiddenColumns();
         clearList();
     }
@@ -89,7 +91,11 @@
             return;
         }
 
-        localStorage.setItem(collection?.id + "@hiddenCollumns", JSON.stringify(hiddenColumns));
+        if (hiddenColumns.length) {
+            localStorage.setItem(hiddenColumnsKey, JSON.stringify(hiddenColumns));
+        } else {
+            localStorage.removeItem(hiddenColumnsKey);
+        }
     }
 
     function loadStoredHiddenColumns() {
@@ -100,8 +106,10 @@
         }
 
         try {
-            const encoded = localStorage.getItem(collection.id + "@hiddenCollumns");
-            if (encoded) hiddenColumns = JSON.parse(encoded) || [];
+            const encoded = localStorage.getItem(hiddenColumnsKey);
+            if (encoded) {
+                hiddenColumns = JSON.parse(encoded) || [];
+            }
         } catch (_) {}
     }
 

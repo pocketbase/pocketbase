@@ -112,7 +112,7 @@
     padding: calc(var(--baseSpacing) - 5px) 0 var(--smSpacing);
     border-right: 1px solid var(--baseAlt2Color);
     & > * {
-        padding: 0 var(--smSpacing);
+        padding: 0 var(--xsSpacing);
     }
     .sidebar-content {
         overflow-x: hidden;
@@ -162,7 +162,7 @@
         align-items: center;
         gap: 5px;
         width: 100%;
-        margin: var(--baseSpacing) 0 var(--xsSpacing);
+        margin: var(--baseSpacing) 5px var(--xsSpacing);
         font-weight: 600;
         font-size: 1rem;
         line-height: var(--smLineHeight);

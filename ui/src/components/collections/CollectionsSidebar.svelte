@@ -1,14 +1,22 @@
 <script>
     import { link } from "svelte-spa-router";
     import CommonHelper from "@/utils/CommonHelper";
+    import tooltip from "@/actions/tooltip";
     import { hideControls } from "@/stores/app";
     import { collections, activeCollection, isCollectionsLoading } from "@/stores/collections";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
+    import CollectionSidebarItem from "@/components/collections/CollectionSidebarItem.svelte";
+
+    const pinnedStorageKey = "@pinnedCollections";
 
     let collectionPanel;
     let searchTerm = "";
+    let pinnedIds = [];
+
+    loadPinned();
 
     $: if ($collections) {
+        syncPinned();
         scrollIntoView();
     }
 
@@ -16,12 +24,17 @@
 
     $: hasSearch = searchTerm !== "";
 
-    $: filtered = $collections.filter((collection) => {
-        return (
-            collection.id == searchTerm ||
-            collection.name.replace(/\s+/g, "").toLowerCase().includes(normalizedSearch)
-        );
+    $: if (pinnedIds) {
+        localStorage.setItem(pinnedStorageKey, JSON.stringify(pinnedIds));
+    }
+
+    $: filtered = $collections.filter((c) => {
+        return c.id == searchTerm || c.name.replace(/\s+/g, "").toLowerCase().includes(normalizedSearch);
     });
+
+    $: pinnedCollections = filtered.filter((c) => pinnedIds.includes(c.id));
+
+    $: unpinnedCollections = filtered.filter((c) => !pinnedIds.includes(c.id));
 
     function selectCollection(collection) {
         $activeCollection = collection;
@@ -34,6 +47,21 @@
                 activeItem?.scrollIntoView({ block: "nearest" });
             }
         }, 0);
+    }
+
+    function loadPinned() {
+        pinnedIds = [];
+
+        try {
+            const encoded = localStorage.getItem(pinnedStorageKey);
+            if (encoded) {
+                pinnedIds = JSON.parse(encoded) || [];
+            }
+        } catch (_) {}
+    }
+
+    function syncPinned() {
+        pinnedIds = pinnedIds.filter((id) => !!$collections.find((c) => c.id == id));
     }
 </script>
 
@@ -66,22 +94,25 @@
         class:fade={$isCollectionsLoading}
         class:sidebar-content-compact={filtered.length > 20}
     >
-        {#each filtered as collection (collection.id)}
-            <a
-                href="/collections?collectionId={collection.id}"
-                class="sidebar-list-item"
-                title={collection.name}
-                class:active={$activeCollection?.id === collection.id}
-                use:link
-            >
-                <i class={CommonHelper.getCollectionTypeIcon(collection.type)} />
-                <span class="txt">{collection.name}</span>
-            </a>
-        {:else}
-            {#if normalizedSearch.length}
-                <p class="txt-hint m-t-10 m-b-10 txt-center">No collections found.</p>
+        {#if pinnedCollections.length}
+            <div class="sidebar-title">Pinned</div>
+            {#each pinnedCollections as collection (collection.id)}
+                <CollectionSidebarItem {collection} bind:pinnedIds />
+            {/each}
+        {/if}
+
+        {#if unpinnedCollections.length}
+            {#if pinnedCollections.length}
+                <div class="sidebar-title">Others</div>
             {/if}
-        {/each}
+            {#each unpinnedCollections as collection (collection.id)}
+                <CollectionSidebarItem {collection} bind:pinnedIds />
+            {/each}
+        {/if}
+
+        {#if normalizedSearch.length && !filtered.length}
+            <p class="txt-hint m-t-10 m-b-10 txt-center">No collections found.</p>
+        {/if}
     </div>
 
     {#if !$hideControls}
