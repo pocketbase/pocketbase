@@ -8,6 +8,18 @@ import (
 	"testing"
 )
 
+func checkRegistryFuncs(t *testing.T, r *Registry, expectedFuncs ...string) {
+	if v := len(r.funcs); v != len(expectedFuncs) {
+		t.Fatalf("Expected total %d funcs, got %d", len(expectedFuncs), v)
+	}
+
+	for _, name := range expectedFuncs {
+		if _, ok := r.funcs[name]; !ok {
+			t.Fatalf("Missing %q func", name)
+		}
+	}
+}
+
 func TestNewRegistry(t *testing.T) {
 	r := NewRegistry()
 
@@ -17,6 +29,28 @@ func TestNewRegistry(t *testing.T) {
 
 	if v := r.cache.Length(); v != 0 {
 		t.Fatalf("Expected cache store length to be 0, got %d", v)
+	}
+
+	checkRegistryFuncs(t, r, "raw")
+}
+
+func TestRegistryAddFuncs(t *testing.T) {
+	r := NewRegistry()
+
+	r.AddFuncs(map[string]any{
+		"test": func(a string) string { return a + "-TEST" },
+	})
+
+	checkRegistryFuncs(t, r, "raw", "test")
+
+	result, err := r.LoadString(`{{.|test}}`).Render("example")
+	if err != nil {
+		t.Fatalf("Unexpected Render() error, got %v", err)
+	}
+
+	expected := "example-TEST"
+	if result != expected {
+		t.Fatalf("Expected Render() result %q, got %q", expected, result)
 	}
 }
 
@@ -48,10 +82,10 @@ func TestRegistryLoadFiles(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, "base.html"), []byte(`Base:{{template "content"}}`), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "base.html"), []byte(`Base:{{template "content" .}}`), 0644); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, "content.html"), []byte(`{{define "content"}}Content:123{{end}}`), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "content.html"), []byte(`{{define "content"}}Content:{{.|raw}}{{end}}`), 0644); err != nil {
 			t.Fatal(err)
 		}
 		defer os.RemoveAll(dir)
@@ -74,12 +108,12 @@ func TestRegistryLoadFiles(t *testing.T) {
 			t.Fatalf("Expected renderer parseError to be nil, got %v", renderer.parseError)
 		}
 
-		result, err := renderer.Render(nil)
+		result, err := renderer.Render("<h1>123</h1>")
 		if err != nil {
 			t.Fatalf("Unexpected Render() error, got %v", err)
 		}
 
-		expected := "Base:Content:123"
+		expected := "Base:Content:<h1>123</h1>"
 		if result != expected {
 			t.Fatalf("Expected Render() result %q, got %q", expected, result)
 		}
@@ -110,7 +144,7 @@ func TestRegistryLoadString(t *testing.T) {
 	})
 
 	t.Run("valid template string", func(t *testing.T) {
-		txt := `test {{.}}`
+		txt := `test {{.|raw}}`
 
 		r.LoadString(txt)
 
@@ -128,12 +162,12 @@ func TestRegistryLoadString(t *testing.T) {
 			t.Fatalf("Expected renderer parseError to be nil, got %v", renderer.parseError)
 		}
 
-		result, err := renderer.Render(123)
+		result, err := renderer.Render("<h1>123</h1>")
 		if err != nil {
 			t.Fatalf("Unexpected Render() error, got %v", err)
 		}
 
-		expected := "test 123"
+		expected := "test <h1>123</h1>"
 		if result != expected {
 			t.Fatalf("Expected Render() result %q, got %q", expected, result)
 		}
@@ -173,10 +207,10 @@ func TestRegistryLoadFS(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, "base.html"), []byte(`Base:{{template "content"}}`), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "base.html"), []byte(`Base:{{template "content" .}}`), 0644); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, "content.html"), []byte(`{{define "content"}}Content:123{{end}}`), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "content.html"), []byte(`{{define "content"}}Content:{{.|raw}}{{end}}`), 0644); err != nil {
 			t.Fatal(err)
 		}
 		defer os.RemoveAll(dir)
@@ -203,12 +237,12 @@ func TestRegistryLoadFS(t *testing.T) {
 			t.Fatalf("Expected renderer parseError to be nil, got %v", renderer.parseError)
 		}
 
-		result, err := renderer.Render(nil)
+		result, err := renderer.Render("<h1>123</h1>")
 		if err != nil {
 			t.Fatalf("Unexpected Render() error, got %v", err)
 		}
 
-		expected := "Base:Content:123"
+		expected := "Base:Content:<h1>123</h1>"
 		if result != expected {
 			t.Fatalf("Expected Render() result %q, got %q", expected, result)
 		}
