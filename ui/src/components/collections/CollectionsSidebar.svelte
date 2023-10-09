@@ -1,9 +1,8 @@
 <script>
-    import { link } from "svelte-spa-router";
-    import CommonHelper from "@/utils/CommonHelper";
-    import tooltip from "@/actions/tooltip";
     import { hideControls } from "@/stores/app";
     import { collections, activeCollection, isCollectionsLoading } from "@/stores/collections";
+    import CommonHelper from "@/utils/CommonHelper";
+    import Dragline from "@/components/base/Dragline.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import CollectionSidebarItem from "@/components/collections/CollectionSidebarItem.svelte";
 
@@ -12,8 +11,16 @@
     let collectionPanel;
     let searchTerm = "";
     let pinnedIds = [];
+    let sidebarElem;
+    let initialSidebarWidth;
+    let sidebarWidth = localStorage.getItem("adminSidebarWidth") || null;
 
     loadPinned();
+
+    $: if (sidebarWidth && sidebarElem) {
+        sidebarElem.style.width = sidebarWidth;
+        localStorage.setItem("adminSidebarWidth", sidebarWidth);
+    }
 
     $: if ($collections) {
         syncPinned();
@@ -65,7 +72,7 @@
     }
 </script>
 
-<aside class="page-sidebar collection-sidebar">
+<aside bind:this={sidebarElem} class="page-sidebar collection-sidebar">
     <header class="sidebar-header">
         <div class="form-field search" class:active={hasSearch}>
             <div class="form-field-addon">
@@ -124,6 +131,18 @@
         </footer>
     {/if}
 </aside>
+
+<Dragline
+    on:dragstart={() => {
+        initialSidebarWidth = sidebarElem.offsetWidth;
+    }}
+    on:dragging={(e) => {
+        sidebarWidth = initialSidebarWidth + e.detail.diffX + "px";
+    }}
+    on:dragstop={() => {
+        CommonHelper.triggerResize();
+    }}
+/>
 
 <CollectionUpsertPanel
     bind:this={collectionPanel}

@@ -1955,6 +1955,13 @@ export default class CommonHelper {
     }
 
     /**
+     * Triggers a window resize event.
+     */
+    static triggerResize() {
+        window.dispatchEvent(new Event("resize"))
+    }
+
+    /**
      * Extracts the query parameters from the current url.
      *
      * @return {Object}

@@ -51,7 +51,7 @@
     .pin-collection {
         margin: 0 -5px 0 -15px;
         opacity: 0;
-        transition: opacity 0.2s;
+        transition: opacity var(--baseAnimationSpeed);
         i {
             font-size: inherit;
         }

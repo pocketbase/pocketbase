@@ -98,12 +98,13 @@
 .page-sidebar {
     --sidebarListItemMargin: 10px;
 
+    position: relative;
     z-index: 0;
     display: flex;
     flex-direction: column;
     width: var(--pageSidebarWidth);
     min-width: 220px;
-    max-width: 265px;
+    max-width: 400px;
     flex-shrink: 0;
     flex-grow: 0;
     overflow-x: hidden;
@@ -221,7 +222,7 @@
         --sidebarListItemMargin: 5px;
     }
     @media screen and (max-width: 1100px) {
-        min-width: 190px;
+        min-width: 195px;
         & > * {
             padding-left: 10px;
             padding-right: 10px;

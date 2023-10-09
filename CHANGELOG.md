@@ -10,14 +10,15 @@
     })
     ```
 
-- Various Admin UI improvements:
+- Several Admin UI improvements:
   - Count the total records separately to speed up the query execution for large datasets ([#3344](https://github.com/pocketbase/pocketbase/issues/3344)).
   - Enclosed the listing scrolling area within the table so that the horizontal scrollbar and table header are always reachable ([#2505](https://github.com/pocketbase/pocketbase/issues/2505)).
   - Allowed opening the record preview/update form via direct URL ([#2682](https://github.com/pocketbase/pocketbase/discussions/2682)).
   - Reintroduced the local `date` field tooltip on hover.
   - Speed up the listing loading times for records with large `editor` field values by initially fetching only a partial of the records data (the complete record data is loaded on record preview/update).
   - Added "Media library" (collection images picker) support for the TinyMCE `editor` field.
-  - Added option to "pin" collections in the Admin UI sidebar.
+  - Added support to "pin" collections in the sidebar.
+  - Added support to manually resize the collections sidebar.
 
 - Removed the explicit charset from the realtime response due to compatability issues with IIS ([#3461](https://github.com/pocketbase/pocketbase/issues/3461)).
   _The `Connection:keep-alive` realtime response header was also removed as it is not really used with HTTP2 anyway._
