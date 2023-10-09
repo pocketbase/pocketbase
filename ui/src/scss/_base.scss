@@ -581,8 +581,8 @@ a.thumb:not(.thumb-active) {
         @include shadowize(0px 2px 4px 1px var(--shadowColor));
     }
     &:active {
-        transition-duration: 0s;
-        transform: scale(0.95);
+        transition-duration: var(--activeAnimationSpeed);
+        transform: scale(0.97);
     }
 }
 

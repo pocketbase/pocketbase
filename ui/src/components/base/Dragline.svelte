@@ -86,15 +86,13 @@
 <style lang="scss">
     .dragline {
         position: relative;
-        z-index: 99999;
+        z-index: 9;
         left: 0;
         top: 0;
         height: 100%;
         width: 5px;
         padding: 0;
-        margin: 0;
-        margin-left: -1px;
-        margin-right: -3px;
+        margin: 0 -3px 0 -1px;
         background: none;
         cursor: ew-resize;
         box-sizing: content-box;
