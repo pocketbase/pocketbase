@@ -2,7 +2,7 @@
 
 - Added Patreon OAuth2 provider ([#3323](https://github.com/pocketbase/pocketbase/pull/3323); thanks @ghostdevv).
 
-- (@todo docs) Added support for `:excerpt(max, withEllipsis?)` `fields` modifier that will return a short plain text version of any string value (html tags are stripped).
+- Added support for `:excerpt(max, withEllipsis?)` `fields` modifier that will return a short plain text version of any string value (html tags are stripped).
     This could be used to minimize the downloaded json data when listing records with large `editor` html values.
     ```js
     await pb.collection("example").getList(1, 20, {
