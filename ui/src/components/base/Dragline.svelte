@@ -86,7 +86,7 @@
 <style lang="scss">
     .dragline {
         position: relative;
-        z-index: 9;
+        z-index: 101;
         left: 0;
         top: 0;
         height: 100%;

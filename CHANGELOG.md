@@ -19,13 +19,14 @@
   - Added "Media library" (collection images picker) support for the TinyMCE `editor` field.
   - Added support to "pin" collections in the sidebar.
   - Added support to manually resize the collections sidebar.
+  - More clear "Nonempty" field label style.
 
-- Removed the explicit charset from the realtime response due to compatability issues with IIS ([#3461](https://github.com/pocketbase/pocketbase/issues/3461)).
+- Removed the explicit `Content-Type` charset from the realtime response due to compatability issues with IIS ([#3461](https://github.com/pocketbase/pocketbase/issues/3461)).
   _The `Connection:keep-alive` realtime response header was also removed as it is not really used with HTTP2 anyway._
 
 - Added new JSVM bindings:
   - `new Cookie({ ... })` constructor for creating `*http.Cookie` equivalent value.
-  - `new SubscriptionMessage({ ... })` constructor for creating a realtime subscription payload.
+  - `new SubscriptionMessage({ ... })` constructor for creating a custom realtime subscription payload.
 
 
 ## v0.18.10
