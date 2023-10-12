@@ -20,6 +20,7 @@
   - Added support to "pin" collections in the sidebar.
   - Added support to manually resize the collections sidebar.
   - More clear "Nonempty" field label style.
+  - Removed the legacy `.woff` and `.ttf` fonts and keep only `.woff2`.
 
 - Removed the explicit `Content-Type` charset from the realtime response due to compatability issues with IIS ([#3461](https://github.com/pocketbase/pocketbase/issues/3461)).
   _The `Connection:keep-alive` realtime response header was also removed as it is not really used with HTTP2 anyway._
