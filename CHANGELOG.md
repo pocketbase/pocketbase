@@ -32,6 +32,8 @@
   - `new SubscriptionMessage({ ... })` constructor for creating a custom realtime subscription payload.
   - Soft-deprecated `$os.exec()` in favour of `$os.cmd()` to make it more clear that the call only prepares the command and doesn't execute it.
 
+- ⚠️ Bumped the min required Go version to 1.19.
+
 
 ## v0.18.10
 
