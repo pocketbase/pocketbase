@@ -57,7 +57,7 @@
         }
     }
     a:hover .pin-collection {
-        opacity: 0.5;
+        opacity: 0.4;
         &:hover {
             opacity: 1;
         }

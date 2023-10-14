@@ -1962,43 +1962,39 @@ export default class CommonHelper {
     }
 
     /**
-     * Extracts the query parameters from the current url.
+     * Extracts the hash query parameters from the current url and
+     * returns them as plain object.
      *
      * @return {Object}
      */
-    static getQueryParams() {
+    static getHashQueryParams() {
         let query = "";
 
-        let url = window.location.href
-
-        // pick the last index to ensure that the correct ? is used even for hash-based routes
-        const queryStart = url.lastIndexOf("?");
+        const queryStart = window.location.hash.indexOf("?");
         if (queryStart > -1) {
-            query = url.substring(queryStart + 1);
-            url = url.substring(0, queryStart);
+            query = window.location.hash.substring(queryStart + 1);
         }
 
         return Object.fromEntries(new URLSearchParams(query))
     }
 
     /**
-     * Replaces the current query parameters without triggering
-     * the router navigation.
+     * Replaces the current hash query parameters with the provided `params`
+     * without adding new state to the browser history.
      *
-     * @param  {Object} params
+     * @param {Object} params
      */
-    static replaceQueryParams(params) {
+    static replaceHashQueryParams(params) {
         params = params || {};
 
         let query = "";
 
-        let url = window.location.href
+        let hash = window.location.hash
 
-        // pick the last index to ensure that the correct ? is used even for hash-based routes
-        const queryStart = url.lastIndexOf("?");
+        const queryStart = hash.indexOf("?");
         if (queryStart > -1) {
-            query = url.substring(queryStart + 1);
-            url = url.substring(0, queryStart);
+            query = hash.substring(queryStart + 1);
+            hash = hash.substring(0, queryStart);
         }
 
         const parsed = new URLSearchParams(query)
@@ -2014,11 +2010,16 @@ export default class CommonHelper {
         }
 
         query = parsed.toString();
-
         if (query != "") {
-            url += ("?" + query);
+            hash += ("?" + query);
         }
 
-        window.location.replace(url);
+        // replace the hash/fragment part with the updated one
+        let href = window.location.href;
+        const hashIndex = href.indexOf("#");
+        if (hashIndex > -1) {
+            href = href.substring(0, hashIndex);
+        }
+        window.location.replace(href + hash);
     }
 }

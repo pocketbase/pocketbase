@@ -111,7 +111,7 @@
     }
 
     function updateQueryParams(extra = {}) {
-        const query = Object.assign(
+        const queryParams = Object.assign(
             {
                 collectionId: $activeCollection?.id || "",
                 filter: filter,
@@ -120,7 +120,7 @@
             extra
         );
 
-        CommonHelper.replaceQueryParams(query);
+        CommonHelper.replaceHashQueryParams(queryParams);
     }
 </script>
 

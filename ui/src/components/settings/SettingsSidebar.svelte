@@ -1,9 +1,10 @@
 <script>
     import { link } from "svelte-spa-router";
     import active from "svelte-spa-router/active";
+    import PageSidebar from "@/components/base/PageSidebar.svelte";
 </script>
 
-<aside class="page-sidebar settings-sidebar">
+<PageSidebar class="settings-sidebar">
     <div class="sidebar-content">
         <div class="sidebar-title">System</div>
         <a href="/settings" class="sidebar-list-item" use:active={{ path: "/settings" }} use:link>
@@ -89,4 +90,4 @@
             <span class="txt">Admins</span>
         </a>
     </div>
-</aside>
+</PageSidebar>
