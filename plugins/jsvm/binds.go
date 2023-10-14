@@ -549,7 +549,8 @@ func osBinds(vm *goja.Runtime) {
 	vm.Set("$os", obj)
 
 	obj.Set("args", os.Args)
-	obj.Set("exec", exec.Command)
+	obj.Set("exec", exec.Command) // @deprecated
+	obj.Set("cmd", exec.Command)
 	obj.Set("exit", os.Exit)
 	obj.Set("getenv", os.Getenv)
 	obj.Set("dirFS", os.DirFS)
