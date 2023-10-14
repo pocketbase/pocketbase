@@ -1971,7 +1971,8 @@ export default class CommonHelper {
 
         let url = window.location.href
 
-        const queryStart = url.indexOf("?");
+        // pick the last index to ensure that the correct ? is used even for hash-based routes
+        const queryStart = url.lastIndexOf("?");
         if (queryStart > -1) {
             query = url.substring(queryStart + 1);
             url = url.substring(0, queryStart);
@@ -1993,7 +1994,8 @@ export default class CommonHelper {
 
         let url = window.location.href
 
-        const queryStart = url.indexOf("?");
+        // pick the last index to ensure that the correct ? is used even for hash-based routes
+        const queryStart = url.lastIndexOf("?");
         if (queryStart > -1) {
             query = url.substring(queryStart + 1);
             url = url.substring(0, queryStart);
