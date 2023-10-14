@@ -137,6 +137,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewYandexProvider(), nil
 	case NamePatreon:
 		return NewPatreonProvider(), nil
+	case NameMailcow:
+		return NewMailcowProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}

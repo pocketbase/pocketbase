@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 
 	"golang.org/x/oauth2"
@@ -22,6 +23,7 @@ type Yandex struct {
 // Docs: https://yandex.ru/dev/id/doc/en/
 func NewYandexProvider() *Yandex {
 	return &Yandex{&baseProvider{
+		ctx:        context.Background(),
 		scopes:     []string{"login:email", "login:avatar", "login:info"},
 		authUrl:    yandex.Endpoint.AuthURL,
 		tokenUrl:   yandex.Endpoint.TokenURL,

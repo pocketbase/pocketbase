@@ -102,7 +102,12 @@
 
         {#if provider.optionsComponent}
             <div class="col-lg-12">
-                <svelte:component this={provider.optionsComponent} key={provider.key} bind:config />
+                <svelte:component
+                    this={provider.optionsComponent}
+                    key={provider.key}
+                    bind:config
+                    {...provider.optionsComponentProps || {}}
+                />
             </div>
         {/if}
     </form>
