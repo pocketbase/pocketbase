@@ -1,4 +1,4 @@
-## v0.19.0-WIP
+## v0.19.0
 
 - Added Patreon OAuth2 provider ([#3323](https://github.com/pocketbase/pocketbase/pull/3323); thanks @ghostdevv).
 
@@ -24,7 +24,7 @@
   - More clear "Nonempty" field label style.
   - Removed the legacy `.woff` and `.ttf` fonts and keep only `.woff2`.
 
-- Removed the explicit `Content-Type` charset from the realtime response due to compatability issues with IIS ([#3461](https://github.com/pocketbase/pocketbase/issues/3461)).
+- Removed the explicit `Content-Type` charset from the realtime response due to compatibility issues with IIS ([#3461](https://github.com/pocketbase/pocketbase/issues/3461)).
   _The `Connection:keep-alive` realtime response header was also removed as it is not really used with HTTP2 anyway._
 
 - Added new JSVM bindings:
