@@ -37,7 +37,17 @@
     $: fileCollections = $collections.filter((c) => {
         return (
             c.type !== "view" &&
-            !!CommonHelper.toArray(c.schema).find((f) => f.type === "file" && !f.options?.protected)
+            !!CommonHelper.toArray(c.schema).find((f) => {
+                return (
+                    // is file field
+                    f.type === "file" &&
+                    // is public (aka. doesn't require file token)
+                    !f.options?.protected &&
+                    // allow any MIME type OR image/*
+                    (!f.options?.mimeTypes?.length ||
+                        !!f.options?.mimeTypes?.find((t) => t.startsWith("image/")))
+                );
+            })
         );
     });
 
@@ -280,7 +290,7 @@
                         {/each}
                     {:else if !isLoading}
                         <div class="inline-flex">
-                            <span class="txt txt-hint">No records found.</span>
+                            <span class="txt txt-hint">No records with images found.</span>
                             {#if filter?.length}
                                 <button
                                     type="button"

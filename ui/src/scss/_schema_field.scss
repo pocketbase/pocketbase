@@ -91,6 +91,8 @@
     padding: var(--xsSpacing);
     border-bottom-left-radius: var(--baseRadius);
     border-bottom-right-radius: var(--baseRadius);
+    border-top: 2px solid transparent;
+    transition: border-color var(--baseAnimationSpeed);
 }
 
 .schema-field-options-footer {
@@ -139,7 +141,7 @@
             }
         }
         .schema-field-options {
-            border-top: 2px solid var(--baseAlt2Color);
+            border-top-color: var(--baseAlt2Color);
         }
     }
     &.deleted {

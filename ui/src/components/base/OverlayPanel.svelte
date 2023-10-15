@@ -167,34 +167,34 @@
             contentScrollClass = "";
         }
 
-        if (!panel) {
+        if (!panel || contentScrollThrottle) {
             return;
         }
 
-        if (!contentScrollThrottle) {
-            contentScrollThrottle = setTimeout(() => {
-                clearTimeout(contentScrollThrottle);
-                contentScrollThrottle = null;
+        contentScrollThrottle = setTimeout(() => {
+            clearTimeout(contentScrollThrottle);
+            contentScrollThrottle = null;
 
-                if (!panel) {
-                    return; // deleted during timeout
-                }
+            console.log("here");
 
-                let heightDiff = panel.scrollHeight - panel.offsetHeight;
-                if (heightDiff > 0) {
-                    contentScrollClass = "scrollable";
-                } else {
-                    contentScrollClass = "";
-                    return; // no scroll
-                }
+            if (!panel) {
+                return; // deleted during timeout
+            }
 
-                if (panel.scrollTop == 0) {
-                    contentScrollClass += " scroll-top-reached";
-                } else if (panel.scrollTop + panel.offsetHeight == panel.scrollHeight) {
-                    contentScrollClass += " scroll-bottom-reached";
-                }
-            }, 100);
-        }
+            let heightDiff = panel.scrollHeight - panel.offsetHeight;
+            if (heightDiff > 0) {
+                contentScrollClass = "scrollable";
+            } else {
+                contentScrollClass = "";
+                return; // no scroll
+            }
+
+            if (panel.scrollTop == 0) {
+                contentScrollClass += " scroll-top-reached";
+            } else if (panel.scrollTop + panel.offsetHeight == panel.scrollHeight) {
+                contentScrollClass += " scroll-bottom-reached";
+            }
+        }, 100);
     }
 
     onMount(() => {
