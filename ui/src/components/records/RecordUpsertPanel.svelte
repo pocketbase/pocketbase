@@ -34,8 +34,8 @@
     export let collection;
 
     let recordPanel;
-    let original = null;
-    let record = null;
+    let original = {};
+    let record = {};
     let initialDraft = null;
     let isSaving = false;
     let confirmHide = false; // prevent close recursion
@@ -472,47 +472,55 @@
                 {isNew ? "New" : "Edit"}
                 <strong>{collection?.name}</strong> record
             </h4>
-        {/if}
 
-        {#if !isNew}
-            <div class="flex-fill" />
-            <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
-                <i class="ri-more-line" />
-                <Toggler class="dropdown dropdown-right dropdown-nowrap">
-                    {#if isAuthCollection && !original.verified && original.email}
+            {#if !isNew}
+                <div class="flex-fill" />
+                <button
+                    type="button"
+                    aria-label="More"
+                    class="btn btn-sm btn-circle btn-transparent flex-gap-0"
+                >
+                    <i class="ri-more-line" />
+                    <Toggler class="dropdown dropdown-right dropdown-nowrap">
+                        {#if isAuthCollection && !original.verified && original.email}
+                            <button
+                                type="button"
+                                class="dropdown-item closable"
+                                on:click={() => sendVerificationEmail()}
+                            >
+                                <i class="ri-mail-check-line" />
+                                <span class="txt">Send verification email</span>
+                            </button>
+                        {/if}
+                        {#if isAuthCollection && original.email}
+                            <button
+                                type="button"
+                                class="dropdown-item closable"
+                                on:click={() => sendPasswordResetEmail()}
+                            >
+                                <i class="ri-mail-lock-line" />
+                                <span class="txt">Send password reset email</span>
+                            </button>
+                        {/if}
                         <button
                             type="button"
                             class="dropdown-item closable"
-                            on:click={() => sendVerificationEmail()}
+                            on:click={() => duplicateConfirm()}
                         >
-                            <i class="ri-mail-check-line" />
-                            <span class="txt">Send verification email</span>
+                            <i class="ri-file-copy-line" />
+                            <span class="txt">Duplicate</span>
                         </button>
-                    {/if}
-                    {#if isAuthCollection && original.email}
                         <button
                             type="button"
-                            class="dropdown-item closable"
-                            on:click={() => sendPasswordResetEmail()}
+                            class="dropdown-item txt-danger closable"
+                            on:click|preventDefault|stopPropagation={() => deleteConfirm()}
                         >
-                            <i class="ri-mail-lock-line" />
-                            <span class="txt">Send password reset email</span>
+                            <i class="ri-delete-bin-7-line" />
+                            <span class="txt">Delete</span>
                         </button>
-                    {/if}
-                    <button type="button" class="dropdown-item closable" on:click={() => duplicateConfirm()}>
-                        <i class="ri-file-copy-line" />
-                        <span class="txt">Duplicate</span>
-                    </button>
-                    <button
-                        type="button"
-                        class="dropdown-item txt-danger closable"
-                        on:click|preventDefault|stopPropagation={() => deleteConfirm()}
-                    >
-                        <i class="ri-delete-bin-7-line" />
-                        <span class="txt">Delete</span>
-                    </button>
-                </Toggler>
-            </button>
+                    </Toggler>
+                </button>
+            {/if}
         {/if}
 
         {#if isAuthCollection && !isNew}

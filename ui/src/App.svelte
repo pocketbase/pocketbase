@@ -14,7 +14,7 @@
     import { admin } from "@/stores/admin";
     import { setErrors } from "@/stores/errors";
     import { resetConfirmation } from "@/stores/confirmation";
-    import TinyMCE from "@tinymce/tinymce-svelte";
+    import TinyMCE from "@/components/base/TinyMCE.svelte";
 
     let oldLocation = undefined;
 
@@ -149,7 +149,6 @@
 {#if showAppSidebar && !isTinyMCEPreloaded}
     <div class="tinymce-preloader hidden">
         <TinyMCE
-            scriptSrc="{import.meta.env.BASE_URL}libs/tinymce/tinymce.min.js"
             conf={CommonHelper.defaultEditorOptions()}
             on:init={() => {
                 isTinyMCEPreloaded = true;

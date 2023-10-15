@@ -175,8 +175,6 @@
             clearTimeout(contentScrollThrottle);
             contentScrollThrottle = null;
 
-            console.log("here");
-
             if (!panel) {
                 return; // deleted during timeout
             }

@@ -1,9 +1,9 @@
 <script>
     import { onMount } from "svelte";
-    import TinyMCE from "@tinymce/tinymce-svelte";
     import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
     import Field from "@/components/base/Field.svelte";
+    import TinyMCE from "@/components/base/TinyMCE.svelte";
     import RecordFilePicker from "@/components/records/RecordFilePicker.svelte";
 
     export let field;
@@ -25,7 +25,11 @@
         value = "";
     }
 
-    onMount(() => {
+    onMount(async () => {
+        if (typeof value == "undefined") {
+            value = "";
+        }
+
         // slight "offset" the editor mount to avoid blocking the rendering of the other fields
         mountedTimeoutId = setTimeout(() => {
             mounted = true;
@@ -45,7 +49,6 @@
     {#if mounted}
         <TinyMCE
             id={uniqueId}
-            scriptSrc="{import.meta.env.BASE_URL}libs/tinymce/tinymce.min.js"
             {conf}
             bind:value
             on:init={(initEvent) => {

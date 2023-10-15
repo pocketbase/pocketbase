@@ -79,7 +79,7 @@ export default class CommonHelper {
             tagName === "input" ||
             tagName === "select" ||
             tagName === "textarea" ||
-            element.isContentEditable
+            element?.isContentEditable
         )
     }
 
@@ -97,7 +97,7 @@ export default class CommonHelper {
             tagName === "button" ||
             tagName === "a" ||
             tagName === "details" ||
-            element.tabIndex >= 0
+            element?.tabIndex >= 0
         );
     }
 
