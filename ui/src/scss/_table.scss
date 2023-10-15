@@ -162,11 +162,14 @@ table {
     }
 
     // field name specific columns
-    td.col-field-id,
     td.col-field-username,
     .col-field-created,
     .col-field-updated {
         @extend %minColWidth;
+    }
+    td.col-field-id {
+        width: 175px;
+        white-space: nowrap;
     }
 
     tr {
