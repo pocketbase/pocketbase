@@ -19,9 +19,9 @@
 
 **For documentation and examples, please visit https://pocketbase.io/docs.**
 
-> ⚠️ Please keep in mind that PocketBase is still under active development
+> [!WARNING]
+> Please keep in mind that PocketBase is still under active development
 > and therefore full backward compatibility is not guaranteed before reaching v1.0.0.
-
 
 ## API SDK clients
 
@@ -29,7 +29,6 @@ The easiest way to interact with the API is to use one of the official SDK clien
 
 - **JavaScript - [pocketbase/js-sdk](https://github.com/pocketbase/js-sdk)** (_browser and node_)
 - **Dart - [pocketbase/dart-sdk](https://github.com/pocketbase/dart-sdk)** (_web, mobile, desktop_)
-
 
 ## Overview
 
@@ -98,10 +97,11 @@ To build the minimal standalone executable, like the prebuilt ones in the releas
 1. Clone/download the repo
 2. Navigate to `examples/base`
 3. Run `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`
-    (_https://go.dev/doc/install/source#environment_)
+   (_https://go.dev/doc/install/source#environment_)
 4. Start the created executable by running `./base serve`.
 
 The supported build targets by the non-cgo driver at the moment are:
+
 ```
 darwin  amd64
 darwin  arm64
@@ -121,6 +121,7 @@ windows arm64
 
 PocketBase comes with mixed bag of unit and integration tests.
 To run them, use the default `go test` command:
+
 ```sh
 go test ./...
 ```
@@ -132,7 +133,6 @@ Check also the [Testing guide](http://pocketbase.io/docs/testing) to learn how t
 If you discover a security vulnerability within PocketBase, please send an e-mail to **support at pocketbase.io**.
 
 All reports will be promptly addressed, and you'll be credited accordingly.
-
 
 ## Contributing
 
@@ -153,5 +153,6 @@ PocketBase has a [roadmap](https://github.com/orgs/pocketbase/projects/2) and I 
 Don't get upset if I close your PR, even if it is well executed and tested. This doesn't mean that it will never be merged.
 Later we can always refer to it and/or take pieces of your implementation when the time comes to work on the issue (don't worry you'll be credited in the release notes).
 
-_Please also note that PocketBase was initially created to serve as a new backend for my other open source project - [Presentator](https://presentator.io) (see [#183](https://github.com/presentator/presentator/issues/183)),
-so all feature requests will be first aligned with what we need for Presentator v3._
+> [!NOTE]
+> PocketBase was initially created to serve as a new backend for my other open source project - [Presentator](https://presentator.io) (see [#183](https://github.com/presentator/presentator/issues/183)),
+> so all feature requests will be first aligned with what we need for Presentator v3.
