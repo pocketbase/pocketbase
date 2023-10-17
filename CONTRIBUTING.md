@@ -70,13 +70,13 @@ To start the Admin UI:
    npm run dev
    ```
 
-You could open the browser and access the running Admin UI at `http://localhost:3000`.
+You could open the browser and access the running Admin UI at `http://localhost:8090/_/`.
 
 Since the Admin UI is just a client-side application, you need to have the PocketBase backend server also running in the background (either manually running the `examples/base/main.go` or download a prebuilt executable).
 
 > [!NOTE]
 > By default, the Admin UI is expecting the backend server to be started at `http://localhost:8090`, but you could change that by creating a new `ui/.env.development.local` file with `PB_BACKEND_URL = YOUR_ADDRESS` variable inside it.
 
-Every change you make in the Admin UI should be automatically reflected in the browser at `http://localhost:3000` without reloading the page.
+Every change you make in the Admin UI should be automatically reflected in the browser at `http://localhost:8090/_/` without reloading the page.
 
 Once you are done with your changes, you have to build the Admin UI with `npm run build`, so that it can be embedded in the go package. And that's it - you can make your PR to the main PocketBase repository.
