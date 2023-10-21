@@ -376,7 +376,7 @@ func (validator *RecordDataValidator) checkRelationValue(field *schema.SchemaFie
 		AndWhere(dbx.In("id", list.ToInterfaceSlice(ids)...)).
 		Row(&total)
 	if total != len(ids) {
-		return validation.NewError("validation_missing_rel_records", "Failed to fetch all relation records with the provided ids")
+		return validation.NewError("validation_missing_rel_records", "Failed to find all relation records with the provided ids")
 	}
 	// ---
 
