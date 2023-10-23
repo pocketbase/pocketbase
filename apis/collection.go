@@ -29,7 +29,7 @@ type collectionApi struct {
 
 func (api *collectionApi) list(c echo.Context) error {
 	fieldResolver := search.NewSimpleFieldResolver(
-		"id", "created", "updated", "name", "system", "type",
+		"id", "created", "updated", "name", "title", "system", "type",
 	)
 
 	collections := []*models.Collection{}

@@ -80,18 +80,29 @@
     </svelte:fragment>
 
     <svelte:fragment slot="options">
-        {#if !isSingle}
-            <Field class="form-field required" name="schema.{key}.options.maxSelect" let:uniqueId>
-                <label for={uniqueId}>Max select</label>
-                <input
-                    id={uniqueId}
-                    type="number"
-                    step="1"
-                    min="2"
-                    required
-                    bind:value={field.options.maxSelect}
-                />
-            </Field>
-        {/if}
+        <div class="grid grid-sm">
+            <div class="col-sm-12">
+                <Field class="form-field" name="schema.{key}.title" let:title>
+                    <label for={title}>Display Name</label>
+                    <input type="text" id={title} bind:value={field.title} />
+                </Field>
+            </div>
+
+            {#if !isSingle}
+                <div class="col-sm-12">
+                    <Field class="form-field required" name="schema.{key}.options.maxSelect" let:uniqueId>
+                        <label for={uniqueId}>Max select</label>
+                        <input
+                            id={uniqueId}
+                            type="number"
+                            step="1"
+                            min="2"
+                            required
+                            bind:value={field.options.maxSelect}
+                        />
+                    </Field>
+                </div>
+            {/if}
+        </div>
     </svelte:fragment>
 </SchemaField>

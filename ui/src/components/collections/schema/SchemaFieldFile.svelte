@@ -93,6 +93,13 @@
     <svelte:fragment slot="options">
         <div class="grid grid-sm">
             <div class="col-sm-12">
+                <Field class="form-field" name="schema.{key}.title" let:title>
+                    <label for={title}>Display Name</label>
+                    <input type="text" id={title} bind:value={field.title} />
+                </Field>
+            </div>
+
+            <div class="col-sm-12">
                 <Field class="form-field" name="schema.{key}.options.mimeTypes" let:uniqueId>
                     <label for={uniqueId}>
                         <span class="txt">Allowed mime types</span>
