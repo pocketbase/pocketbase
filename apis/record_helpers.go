@@ -13,11 +13,15 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tokens"
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
 const ContextRequestInfoKey = "requestInfo"
+
+const expandQueryParam = "expand"
+const fieldsQueryParam = "fields"
 
 // Deprecated: Use RequestInfo instead.
 func RequestData(c echo.Context) *models.RequestInfo {
@@ -49,7 +53,7 @@ func RequestInfo(c echo.Context) *models.RequestInfo {
 	// ("X-Token" is converted to "x_token")
 	for k, v := range c.Request().Header {
 		if len(v) > 0 {
-			result.Headers[strings.ToLower(strings.ReplaceAll(k, "-", "_"))] = v[0]
+			result.Headers[inflector.Snakecase(k)] = v[0]
 		}
 	}
 

@@ -1,15 +1,29 @@
 package subscriptions
 
 import (
+	"encoding/json"
+	"net/url"
+	"strings"
 	"sync"
 
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/spf13/cast"
 )
+
+const optionsParam = "options"
 
 // Message defines a client's channel data.
 type Message struct {
-	Name string
-	Data []byte
+	Name string `json:"name"`
+	Data []byte `json:"data"`
+}
+
+type SubscriptionOptions struct {
+	// @todo after the requests handling refactoring consider
+	// 		 changing to map[string]string or map[string][]string
+	Query   map[string]any `json:"query"`
+	Headers map[string]any `json:"headers"`
 }
 
 // Client is an interface for a generic subscription client.
@@ -20,10 +34,20 @@ type Client interface {
 	// Channel returns the client's communication channel.
 	Channel() chan Message
 
-	// Subscriptions returns all subscriptions to which the client has subscribed to.
-	Subscriptions() map[string]struct{}
+	// Subscriptions returns a shallow copy of the the client subscriptions matching the prefixes.
+	// If no prefix is specified, returns all subscriptions.
+	Subscriptions(prefixes ...string) map[string]SubscriptionOptions
 
 	// Subscribe subscribes the client to the provided subscriptions list.
+	//
+	// Each subscription can also have "options" (json serialized SubscriptionOptions) as query parameter.
+	//
+	// Example:
+	//
+	// 	Subscribe(
+	// 	    "subscriptionA",
+	// 	    `subscriptionB?options={"query":{"a":1},"headers":{"x_token":"abc"}}`,
+	// 	)
 	Subscribe(subs ...string)
 
 	// Unsubscribe unsubscribes the client from the provided subscriptions list.
@@ -61,8 +85,8 @@ var _ Client = (*DefaultClient)(nil)
 // DefaultClient defines a generic subscription client.
 type DefaultClient struct {
 	store         map[string]any
+	subscriptions map[string]SubscriptionOptions
 	channel       chan Message
-	subscriptions map[string]struct{}
 	id            string
 	mux           sync.RWMutex
 	isDiscarded   bool
@@ -74,7 +98,7 @@ func NewDefaultClient() *DefaultClient {
 		id:            security.RandomString(40),
 		store:         map[string]any{},
 		channel:       make(chan Message),
-		subscriptions: make(map[string]struct{}),
+		subscriptions: map[string]SubscriptionOptions{},
 	}
 }
 
@@ -95,11 +119,37 @@ func (c *DefaultClient) Channel() chan Message {
 }
 
 // Subscriptions implements the [Client.Subscriptions] interface method.
-func (c *DefaultClient) Subscriptions() map[string]struct{} {
+//
+// It returns a shallow copy of the the client subscriptions matching the prefixes.
+// If no prefix is specified, returns all subscriptions.
+func (c *DefaultClient) Subscriptions(prefixes ...string) map[string]SubscriptionOptions {
 	c.mux.RLock()
 	defer c.mux.RUnlock()
 
-	return c.subscriptions
+	// no prefix -> return copy of all subscriptions
+	if len(prefixes) == 0 {
+		result := make(map[string]SubscriptionOptions, len(c.subscriptions))
+
+		for s, options := range c.subscriptions {
+			result[s] = options
+		}
+
+		return result
+	}
+
+	result := make(map[string]SubscriptionOptions)
+
+	for _, prefix := range prefixes {
+		for s, options := range c.subscriptions {
+			// "?" ensures that the options query start character is always there
+			// so that it can be used as an end separator when looking only for the main subscription topic
+			if strings.HasPrefix(s+"?", prefix) {
+				result[s] = options
+			}
+		}
+	}
+
+	return result
 }
 
 // Subscribe implements the [Client.Subscribe] interface method.
@@ -114,7 +164,30 @@ func (c *DefaultClient) Subscribe(subs ...string) {
 			continue // skip empty
 		}
 
-		c.subscriptions[s] = struct{}{}
+		// extract subscription options (if any)
+		options := SubscriptionOptions{}
+		u, err := url.Parse(s)
+		if err == nil {
+			rawOptions := u.Query().Get(optionsParam)
+			if rawOptions != "" {
+				json.Unmarshal([]byte(rawOptions), &options)
+			}
+		}
+
+		// normalize query
+		// (currently only single string values are supported for consistency with the default routes handling)
+		for k, v := range options.Query {
+			options.Query[k] = cast.ToString(v)
+		}
+
+		// normalize headers name and values, eg. "X-Token" is converted to "x_token"
+		// (currently only single string values are supported for consistency with the default routes handling)
+		for k, v := range options.Headers {
+			delete(options.Headers, k)
+			options.Headers[inflector.Snakecase(k)] = cast.ToString(v)
+		}
+
+		c.subscriptions[s] = options
 	}
 }
 

@@ -64,12 +64,12 @@ type CollectionsFinder interface {
 type RecordFieldResolver struct {
 	dao               CollectionsFinder
 	baseCollection    *models.Collection
-	allowHiddenFields bool
-	allowedFields     []string
-	loadedCollections []*models.Collection
-	joins             []*join // we cannot use a map because the insertion order is not preserved
 	requestInfo       *models.RequestInfo
 	staticRequestInfo map[string]any
+	allowedFields     []string
+	loadedCollections []*models.Collection
+	joins             []*join
+	allowHiddenFields bool
 }
 
 // NewRecordFieldResolver creates and initializes a new `RecordFieldResolver`.
@@ -77,6 +77,7 @@ func NewRecordFieldResolver(
 	dao CollectionsFinder,
 	baseCollection *models.Collection,
 	requestInfo *models.RequestInfo,
+	// @todo consider moving per filter basis
 	allowHiddenFields bool,
 ) *RecordFieldResolver {
 	r := &RecordFieldResolver{

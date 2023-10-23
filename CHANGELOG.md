@@ -1,3 +1,31 @@
+## v0.20.0-rc
+
+- Added experimental `expand`, `filter`, `fields`, custom query and headers parameters support for the realtime subscriptions.
+    _Requires JS SDK v0.20.0-rc or Dart SDK v0.17.0-rc._
+
+    ```js
+    // JS SDK v0.20.0-rc
+    pb.collection("example").subscribe("*", (e) => {
+      ...
+    }, {
+      expand: "someRelField",
+      filter: "status = 'active'",
+      fields: "id,expand.someRelField.*:excerpt(100)",
+    })
+    ```
+
+    ```dart
+    // Dart SDK v0.17.0-rc
+    pb.collection("example").subscribe("*", (e) {
+        ...
+      },
+      expand: "someRelField",
+      filter: "status = 'active'",
+      fields: "id,expand.someRelField.*:excerpt(100)",
+    )
+    ```
+
+
 ## v0.19.0
 
 - Added Patreon OAuth2 provider ([#3323](https://github.com/pocketbase/pocketbase/pull/3323); thanks @ghostdevv).

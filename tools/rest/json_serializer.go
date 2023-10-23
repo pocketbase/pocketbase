@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	// experimental! (need more tests before replacing encoding/json entirely)
+	// Experimental!
+	//
+	// Need more tests before replacing encoding/json entirely.
+	// Test also encoding/json/v2 once released (see https://github.com/golang/go/discussions/63397)
 	goccy "github.com/goccy/go-json"
 
 	"github.com/labstack/echo/v5"
@@ -45,40 +48,9 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 		return s.DefaultJSONSerializer.Serialize(c, i, indent)
 	}
 
-	parsedFields, err := parseFields(rawFields)
+	decoded, err := PickFields(i, rawFields)
 	if err != nil {
 		return err
-	}
-
-	// marshalize the provided data to ensure that the related json.Marshaler
-	// implementations are invoked, and then convert it back to a plain
-	// json value that we can further operate on.
-	//
-	// @todo research other approaches to avoid the double serialization
-	// ---
-	encoded, err := json.Marshal(i) // use the std json since goccy has several bugs reported with struct marshaling and it is not safe
-	if err != nil {
-		return err
-	}
-
-	var decoded any
-	if err := goccy.Unmarshal(encoded, &decoded); err != nil {
-		return err
-	}
-	// ---
-
-	var isSearchResult bool
-	switch i.(type) {
-	case search.Result, *search.Result:
-		isSearchResult = true
-	}
-
-	if isSearchResult {
-		if decodedMap, ok := decoded.(map[string]any); ok {
-			pickFields(decodedMap["items"], parsedFields)
-		}
-	} else {
-		pickFields(decoded, parsedFields)
 	}
 
 	enc := goccy.NewEncoder(c.Response())
@@ -87,6 +59,56 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 	}
 
 	return enc.Encode(decoded)
+}
+
+// PickFields parses the provided fields string expression and
+// returns a new subset of data with only the requested fields.
+//
+// Fields transformations with modifiers are also supported (see initModifer()).
+//
+// Example:
+//
+// 	data := map[string]any{"a": 1, "b": 2, "c": map[string]any{"c1": 11, "c2": 22}}
+// 	PickFields(data, "a,c.c1") // map[string]any{"a": 1, "c": map[string]any{"c1": 11}}
+func PickFields(data any, rawFields string) (any, error) {
+	parsedFields, err := parseFields(rawFields)
+	if err != nil {
+		return nil, err
+	}
+
+	// marshalize the provided data to ensure that the related json.Marshaler
+	// implementations are invoked, and then convert it back to a plain
+	// json value that we can further operate on.
+	//
+	// @todo research other approaches to avoid the double serialization
+	// ---
+	encoded, err := json.Marshal(data) // use the std json since goccy has several bugs reported with struct marshaling and it is not safe
+	if err != nil {
+		return nil, err
+	}
+
+	var decoded any
+	if err := goccy.Unmarshal(encoded, &decoded); err != nil {
+		return nil, err
+	}
+	// ---
+
+	// special cases to preserve the same fields format when used with single item or array data.
+	var isSearchResult bool
+	switch data.(type) {
+	case search.Result, *search.Result:
+		isSearchResult = true
+	}
+
+	if isSearchResult {
+		if decodedMap, ok := decoded.(map[string]any); ok {
+			pickParsedFields(decodedMap["items"], parsedFields)
+		}
+	} else {
+		pickParsedFields(decoded, parsedFields)
+	}
+
+	return decoded, nil
 }
 
 func parseFields(rawFields string) (map[string]FieldModifier, error) {
@@ -145,7 +167,7 @@ func initModifer(rawModifier string) (FieldModifier, error) {
 	return nil, fmt.Errorf("missing or invalid modifier %q", name)
 }
 
-func pickFields(data any, fields map[string]FieldModifier) error {
+func pickParsedFields(data any, fields map[string]FieldModifier) error {
 	switch v := data.(type) {
 	case map[string]any:
 		pickMapFields(v, fields)
@@ -233,7 +255,7 @@ DataLoop:
 			matchingFields[remains] = m
 		}
 
-		if err := pickFields(data[k], matchingFields); err != nil {
+		if err := pickParsedFields(data[k], matchingFields); err != nil {
 			return err
 		}
 	}

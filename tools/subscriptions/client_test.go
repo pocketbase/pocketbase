@@ -1,6 +1,8 @@
 package subscriptions_test
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -51,7 +53,7 @@ func TestChannel(t *testing.T) {
 	c := subscriptions.NewDefaultClient()
 
 	if c.Channel() == nil {
-		t.Errorf("Expected channel to be initialized, got")
+		t.Fatalf("Expected channel to be initialized, got")
 	}
 }
 
@@ -59,13 +61,35 @@ func TestSubscriptions(t *testing.T) {
 	c := subscriptions.NewDefaultClient()
 
 	if len(c.Subscriptions()) != 0 {
-		t.Errorf("Expected subscriptions to be empty")
+		t.Fatalf("Expected subscriptions to be empty")
 	}
 
-	c.Subscribe("sub1", "sub2", "sub3")
+	c.Subscribe("sub1", "sub11", "sub2")
 
-	if len(c.Subscriptions()) != 3 {
-		t.Errorf("Expected 3 subscriptions, got %v", c.Subscriptions())
+	scenarios := []struct {
+		prefixes []string
+		expected []string
+	}{
+		{nil, []string{"sub1", "sub11", "sub2"}},
+		{[]string{"missing"}, nil},
+		{[]string{"sub1"}, []string{"sub1", "sub11"}},
+		{[]string{"sub2"}, []string{"sub2"}}, // with extra query start char
+	}
+
+	for _, s := range scenarios {
+		t.Run(strings.Join(s.prefixes, ","), func(t *testing.T) {
+			subs := c.Subscriptions(s.prefixes...)
+
+			if len(subs) != len(s.expected) {
+				t.Fatalf("Expected %d subscriptions, got %d", len(s.expected), len(subs))
+			}
+
+			for _, s := range s.expected {
+				if _, ok := subs[s]; !ok {
+					t.Fatalf("Missing subscription %q in \n%v", s, subs)
+				}
+			}
+		})
 	}
 }
 
@@ -78,13 +102,51 @@ func TestSubscribe(t *testing.T) {
 	c.Subscribe(subs...) // empty string should be skipped
 
 	if len(c.Subscriptions()) != 3 {
-		t.Errorf("Expected 3 subscriptions, got %v", c.Subscriptions())
+		t.Fatalf("Expected 3 subscriptions, got %v", c.Subscriptions())
 	}
 
 	for i, s := range expected {
 		if !c.HasSubscription(s) {
 			t.Errorf("(%d) Expected sub %s", i, s)
 		}
+	}
+}
+
+func TestSubscribeOptions(t *testing.T) {
+	c := subscriptions.NewDefaultClient()
+
+	sub1 := "test1"
+	sub2 := `test2?options={"query":{"name":123},"headers":{"X-Token":456}}`
+
+	c.Subscribe(sub1, sub2)
+
+	subs := c.Subscriptions()
+
+	scenarios := []struct {
+		name            string
+		expectedOptions string
+	}{
+		{sub1, `{"query":null,"headers":null}`},
+		{sub2, `{"query":{"name":"123"},"headers":{"x_token":"456"}}`},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			options, ok := subs[s.name]
+			if !ok {
+				t.Fatalf("Missing subscription \n%q \nin \n%v", s.name, subs)
+			}
+
+			rawBytes, err := json.Marshal(options)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rawStr := string(rawBytes)
+
+			if rawStr != s.expectedOptions {
+				t.Fatalf("Expected options \n%v \ngot \n%v", s.expectedOptions, rawStr)
+			}
+		})
 	}
 }
 
@@ -96,12 +158,12 @@ func TestUnsubscribe(t *testing.T) {
 	c.Unsubscribe("sub1")
 
 	if c.HasSubscription("sub1") {
-		t.Error("Expected sub1 to be removed")
+		t.Fatalf("Expected sub1 to be removed")
 	}
 
 	c.Unsubscribe( /* all */ )
 	if len(c.Subscriptions()) != 0 {
-		t.Errorf("Expected all subscriptions to be removed, got %v", c.Subscriptions())
+		t.Fatalf("Expected all subscriptions to be removed, got %v", c.Subscriptions())
 	}
 }
 

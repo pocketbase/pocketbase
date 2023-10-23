@@ -16,8 +16,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
-const expandQueryParam = "expand"
-
 // bindRecordCrudApi registers the record crud api endpoints and
 // the corresponding handlers.
 func bindRecordCrudApi(app core.App, rg *echo.Group) {

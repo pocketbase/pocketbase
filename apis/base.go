@@ -28,7 +28,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	e := echo.New()
 	e.Debug = app.IsDebug()
 	e.JSONSerializer = &rest.Serializer{
-		FieldsParam: "fields",
+		FieldsParam: fieldsQueryParam,
 	}
 
 	// configure a custom router
