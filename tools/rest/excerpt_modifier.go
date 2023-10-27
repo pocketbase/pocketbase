@@ -78,8 +78,7 @@ func (m *excerptModifier) Modify(value any) (any, error) {
 		return "", err
 	}
 
-	var isNotEmpty bool
-	var needSpace bool
+	var hasPrevSpace bool
 
 	// for all node types and more details check
 	// https://pkg.go.dev/golang.org/x/net/html#Parse
@@ -87,37 +86,47 @@ func (m *excerptModifier) Modify(value any) (any, error) {
 	stripTags = func(n *html.Node) {
 		switch n.Type {
 		case html.TextNode:
-			if txt := strings.TrimSpace(whitespaceRegex.ReplaceAllString(n.Data, " ")); txt != "" {
-				if isNotEmpty && needSpace {
-					needSpace = false
-					builder.WriteString(" ")
-				}
+			// collapse multiple spaces into one
+			txt := whitespaceRegex.ReplaceAllString(n.Data, " ")
+
+			if hasPrevSpace {
+				txt = strings.TrimLeft(txt, " ")
+			}
+
+			if txt != "" {
+				hasPrevSpace = strings.HasSuffix(txt, " ")
 
 				builder.WriteString(txt)
-
-				if !isNotEmpty {
-					isNotEmpty = true
-				}
-			}
-		case html.ElementNode:
-			if !needSpace && !list.ExistInSlice(n.Data, inlineTags) {
-				needSpace = true
 			}
 		}
 
-		if builder.Len() > m.max {
+		// excerpt max has been reached => no need to further iterate
+		// (+2 for the extra whitespace suffix/prefix that will be trimmed later)
+		if builder.Len() > m.max+2 {
 			return
 		}
 
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			if c.Type != html.ElementNode || !list.ExistInSlice(c.Data, excludeTags) {
+				isBlock := c.Type == html.ElementNode && !list.ExistInSlice(c.Data, inlineTags)
+
+				if isBlock && !hasPrevSpace {
+					builder.WriteString(" ")
+					hasPrevSpace = true
+				}
+
 				stripTags(c)
+
+				if isBlock && !hasPrevSpace {
+					builder.WriteString(" ")
+					hasPrevSpace = true
+				}
 			}
 		}
 	}
 	stripTags(doc)
 
-	result := builder.String()
+	result := strings.TrimSpace(builder.String())
 
 	if len(result) > m.max {
 		result = strings.TrimSpace(result[:m.max])

@@ -95,6 +95,7 @@ func TestScanAll(t *testing.T) {
 		content           string
 		separators        []rune
 		keepSeparator     bool
+		keepEmptyTokens   bool
 		ignoreParenthesis bool
 		expectError       bool
 		expectTokens      []string
@@ -104,6 +105,7 @@ func TestScanAll(t *testing.T) {
 			content:           "",
 			separators:        DefaultSeparators,
 			keepSeparator:     false,
+			keepEmptyTokens:   false,
 			ignoreParenthesis: false,
 			expectError:       false,
 			expectTokens:      nil,
@@ -113,6 +115,7 @@ func TestScanAll(t *testing.T) {
 			content:           `(a,b() c`,
 			separators:        DefaultSeparators,
 			keepSeparator:     false,
+			keepEmptyTokens:   false,
 			ignoreParenthesis: false,
 			expectError:       true,
 			expectTokens:      []string{},
@@ -122,6 +125,7 @@ func TestScanAll(t *testing.T) {
 			content:           `'asd"`,
 			separators:        DefaultSeparators,
 			keepSeparator:     false,
+			keepEmptyTokens:   false,
 			ignoreParenthesis: false,
 			expectError:       true,
 			expectTokens:      []string{},
@@ -131,15 +135,18 @@ func TestScanAll(t *testing.T) {
 			content:           `a, b, c, d, e 123, "abc"`,
 			separators:        nil,
 			keepSeparator:     false,
+			keepEmptyTokens:   false,
 			ignoreParenthesis: false,
 			expectError:       false,
 			expectTokens:      []string{`a, b, c, d, e 123, "abc"`},
 		},
 		{
-			name:              "default separators",
-			content:           `a, b, c, d e, "a,b,  c  ", (123, 456)`,
+			name: "default separators",
+			content: `a, b , c  , d e  , "a,b,  c  " , ,, ,	  (123, 456)
+			`,
 			separators:        DefaultSeparators,
 			keepSeparator:     false,
+			keepEmptyTokens:   false,
 			ignoreParenthesis: false,
 			expectError:       false,
 			expectTokens: []string{
@@ -152,70 +159,49 @@ func TestScanAll(t *testing.T) {
 			},
 		},
 		{
-			name:              "default separators (with preserve)",
-			content:           `a, b, c, d e, "a,b,  c  ", (123, 456)`,
-			separators:        DefaultSeparators,
+			name: "keep separators",
+			content: `a, b, c, d  e, "a,b,  c  ",	(123, 456)`,
+			separators:        []rune{',', ' '}, // the space should be removed from the cutset
 			keepSeparator:     true,
+			keepEmptyTokens:   true,
 			ignoreParenthesis: false,
 			expectError:       false,
 			expectTokens: []string{
 				"a,",
+				" ",
 				"b,",
+				" ",
 				"c,",
-				"d e,",
+				" ",
+				"d ",
+				" ",
+				"e,",
+				" ",
 				`"a,b,  c  ",`,
 				`(123, 456)`,
 			},
 		},
 		{
-			name: "custom separators",
-			content: `   a   , 123.456, b, c d, (
-				test (a,b,c) " 123 "
-			),"(abc d", "abc) d", "(abc) d \" " 'abc "'`,
-			separators:        []rune{',', ' ', '\t', '\n'},
+			name:              "custom separators",
+			content:           `a | b c  d &(e + f) &  "g & h" & & &`,
+			separators:        []rune{'|', '&'},
 			keepSeparator:     false,
+			keepEmptyTokens:   false,
 			ignoreParenthesis: false,
 			expectError:       false,
 			expectTokens: []string{
 				"a",
-				"123.456",
-				"b",
-				"c",
-				"d",
-				"(\n\t\t\t\ttest (a,b,c) \" 123 \"\n\t\t\t)",
-				`"(abc d"`,
-				`"abc) d"`,
-				`"(abc) d \" "`,
-				`'abc "'`,
-			},
-		},
-		{
-			name: "custom separators (with preserve)",
-			content: `   a   , 123.456, b, c d, (
-				test (a,b,c) " 123 "
-			),"(abc d", "abc) d", "(abc) d \" " 'abc "'`,
-			separators:        []rune{',', ' ', '\t', '\n'},
-			keepSeparator:     true,
-			ignoreParenthesis: false,
-			expectError:       false,
-			expectTokens: []string{
-				"a ",
-				"123.456,",
-				"b,",
-				"c ",
-				"d,",
-				"(\n\t\t\t\ttest (a,b,c) \" 123 \"\n\t\t\t),",
-				`"(abc d",`,
-				`"abc) d",`,
-				`"(abc) d \" " `,
-				`'abc "'`,
+				"b c  d",
+				"(e + f)",
+				`"g & h"`,
 			},
 		},
 		{
 			name:              "ignoring parenthesis",
 			content:           `a, b, (c,d)`,
-			separators:        []rune{','},
+			separators:        DefaultSeparators,
 			keepSeparator:     false,
+			keepEmptyTokens:   false,
 			ignoreParenthesis: true,
 			expectError:       false,
 			expectTokens: []string{
@@ -223,6 +209,26 @@ func TestScanAll(t *testing.T) {
 				"b",
 				"(c",
 				"d)",
+			},
+		},
+		{
+			name:              "keep empty tokens",
+			content:           `a, b, (c, d), ,, , e, , f`,
+			separators:        DefaultSeparators,
+			keepSeparator:     false,
+			keepEmptyTokens:   true,
+			ignoreParenthesis: false,
+			expectError:       false,
+			expectTokens: []string{
+				"a",
+				"b",
+				"(c, d)",
+				"",
+				"",
+				"",
+				"e",
+				"",
+				"f",
 			},
 		},
 	}
@@ -233,6 +239,7 @@ func TestScanAll(t *testing.T) {
 
 			tk.Separators(s.separators...)
 			tk.KeepSeparator(s.keepSeparator)
+			tk.KeepEmptyTokens(s.keepEmptyTokens)
 			tk.IgnoreParenthesis(s.ignoreParenthesis)
 
 			tokens, err := tk.ScanAll()
@@ -255,8 +262,41 @@ func TestScanAll(t *testing.T) {
 					}
 				}
 				if !exists {
-					t.Fatalf("Unexpected token %s", tok)
+					t.Fatalf("Unexpected token %q", tok)
 				}
+			}
+		})
+	}
+}
+
+func TestTrimCutset(t *testing.T) {
+	scenarios := []struct {
+		name           string
+		separators     []rune
+		expectedCutset string
+	}{
+		{
+			"default factory separators",
+			nil,
+			"\t\n\v\f\r \u0085\u00a0",
+		},
+		{
+			"custom separators",
+			[]rune{'\t', ' ', '\r', ','},
+			"\n\v\f\u0085\u00a0",
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			tk := NewFromString("")
+
+			if len(s.separators) > 0 {
+				tk.Separators(s.separators...)
+			}
+
+			if tk.trimCutset != s.expectedCutset {
+				t.Fatalf("Expected cutset %q, got %q", s.expectedCutset, tk.trimCutset)
 			}
 		})
 	}
