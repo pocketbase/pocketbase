@@ -27,6 +27,8 @@
     )
     ```
 
+- Other minor fixes and impovements (eg. added negative string number normalization support for the `json` field type)
+
 
 ## v0.19.1
 

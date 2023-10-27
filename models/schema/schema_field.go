@@ -310,6 +310,7 @@ func (f *SchemaField) PrepareValue(value any) any {
 			} else if str == "null" || str == "true" || str == "false" {
 				val = str
 			} else if ((str[0] >= '0' && str[0] <= '9') ||
+				str[0] == '-' ||
 				str[0] == '"' ||
 				str[0] == '[' ||
 				str[0] == '{') &&
