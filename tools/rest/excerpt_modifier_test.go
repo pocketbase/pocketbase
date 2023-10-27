@@ -84,7 +84,6 @@ func TestNewExcerptModifier(t *testing.T) {
 }
 
 func TestExcerptModifierModify(t *testing.T) {
-	// plain text value: "Hello t est12 3 word"
 	html := ` <script>var a = 123;</script>   <p>Hello</p><div id="test_id">t   est<b>12
 	3</b><span>456</span></div><span>word <b>7</b> 89<span>!<b>?</b><b> a </b><b>b </b>c</span>#<h1>title</h1>`
 
