@@ -1,5 +1,7 @@
 ## v0.20.0-rc
 
+**⚠️ This is a prerelease intended primarily for test purposes.**
+
 - Added experimental `expand`, `filter`, `fields`, custom query and headers parameters support for the realtime subscriptions.
     _Requires JS SDK v0.20.0-rc or Dart SDK v0.17.0-rc._
 
