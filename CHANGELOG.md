@@ -30,6 +30,11 @@
 - Other minor fixes and impovements (eg. added negative string number normalization support for the `json` field type)
 
 
+## v0.19.2
+
+- Updated the JSVM generated types ([#3627](https://github.com/pocketbase/pocketbase/issues/3627), [#3662](https://github.com/pocketbase/pocketbase/issues/3662)).
+
+
 ## v0.19.1
 
 - Fixed `tokenizer.Scan()/ScanAll()` to ignore the separators from the default trim cutset.
