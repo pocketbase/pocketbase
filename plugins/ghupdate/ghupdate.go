@@ -245,6 +245,16 @@ func (p *plugin) update(withBackup bool) error {
 	color.HiBlack("---")
 	color.Green("Update completed successfully! You can start the executable as usual.")
 
+	// print the release notes
+	if latest.Body != "" {
+		fmt.Print("\n")
+		color.Cyan("Here is a list with some of the %s changes:", latest.Tag)
+		// remove the update command note to avoid "stuttering"
+		releaseNotes := strings.TrimSpace(strings.Replace(latest.Body, "> _To update the prebuilt executable you can run `./pocketbase update`._", "", 1))
+		color.Cyan(releaseNotes)
+		fmt.Print("\n")
+	}
+
 	return nil
 }
 
