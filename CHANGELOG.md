@@ -1,3 +1,8 @@
+## v0.20.0-rc2
+
+- Synced with the recent fixes in v0.19.3.
+
+
 ## v0.20.0-rc
 
 **⚠️ This is a prerelease intended primarily for test purposes.**
@@ -28,6 +33,16 @@
     ```
 
 - Other minor fixes and impovements (eg. added negative string number normalization support for the `json` field type)
+
+
+## v0.19.3
+
+- Added the release notes to the console output of `./pocketbase update` ([#3685](https://github.com/pocketbase/pocketbase/discussions/3685)).
+
+- Added missing documention for the JSVM `$mails.*` bindings.
+
+- Relaxed the OAuth2 redirect url validation to allow any string value ([#3689](https://github.com/pocketbase/pocketbase/pull/3689); thanks @sergeypdev).
+  _Note that the redirect url format is still bound to the accepted values by the specific OAuth2 provider._
 
 
 ## v0.19.2

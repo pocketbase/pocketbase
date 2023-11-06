@@ -6,19 +6,20 @@ import (
 )
 
 type releaseAsset struct {
-	Id          int    `json:"id"`
 	Name        string `json:"name"`
-	Size        int    `json:"size"`
 	DownloadUrl string `json:"browser_download_url"`
+	Id          int    `json:"id"`
+	Size        int    `json:"size"`
 }
 
 type release struct {
-	Id        int             `json:"id"`
 	Name      string          `json:"name"`
 	Tag       string          `json:"tag_name"`
 	Published string          `json:"published_at"`
 	Url       string          `json:"html_url"`
+	Body      string          `json:"body"`
 	Assets    []*releaseAsset `json:"assets"`
+	Id        int             `json:"id"`
 }
 
 // findAssetBySuffix returns the first available asset containing the specified suffix.
