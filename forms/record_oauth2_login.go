@@ -7,7 +7,6 @@ import (
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
@@ -89,7 +88,7 @@ func (form *RecordOAuth2Login) Validate() error {
 		validation.Field(&form.Provider, validation.Required, validation.By(form.checkProviderName)),
 		validation.Field(&form.Code, validation.Required),
 		validation.Field(&form.CodeVerifier, validation.Required),
-		validation.Field(&form.RedirectUrl, validation.Required, is.URL),
+		validation.Field(&form.RedirectUrl, validation.Required),
 	)
 }
 

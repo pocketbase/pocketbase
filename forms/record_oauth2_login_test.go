@@ -49,6 +49,12 @@ func TestUserOauth2LoginValidate(t *testing.T) {
 			`{"provider":"gitlab","code":"123","codeVerifier":"123","redirectUrl":"https://example.com"}`,
 			[]string{},
 		},
+		{
+			"[#3689] any redirectUrl value",
+			"users",
+			`{"provider":"gitlab","code":"123","codeVerifier":"123","redirectUrl":"something"}`,
+			[]string{},
+		},
 	}
 
 	for _, s := range scenarios {
