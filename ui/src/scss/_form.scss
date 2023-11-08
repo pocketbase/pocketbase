@@ -1318,6 +1318,10 @@ body {
             display: none;
         }
     }
+    .tox .tox-textarea-wrap {
+        display: flex;
+        flex: 1;
+    }
     &.tox-fullscreen {
         .overlay-panel-section {
             overflow: hidden;

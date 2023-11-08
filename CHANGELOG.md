@@ -1,3 +1,8 @@
+## v0.19.4-WIP
+
+- Fixed TinyMCE source code viewer textarea styles ([#3715](https://github.com/pocketbase/pocketbase/issues/3715)).
+
+
 ## v0.19.3
 
 - Added the release notes to the console output of `./pocketbase update` ([#3685](https://github.com/pocketbase/pocketbase/discussions/3685)).
