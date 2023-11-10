@@ -63,15 +63,17 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			Name:     "field2",
 			Required: true,
 			Type:     schema.FieldTypeText,
+			Options: &schema.TextOptions{
+				Pattern: pattern,
+			},
 		},
 		&schema.SchemaField{
 			Name:   "field3",
 			Unique: true,
 			Type:   schema.FieldTypeText,
 			Options: &schema.TextOptions{
-				Min:     &min,
-				Max:     &max,
-				Pattern: pattern,
+				Min: &min,
+				Max: &max,
 			},
 		},
 	)
@@ -110,6 +112,16 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
+			"(text) check min constraint with multi-bytes char",
+			map[string]any{
+				"field1": "test",
+				"field2": "test",
+				"field3": "𝌆", // 4 bytes should be counted as 1 char
+			},
+			nil,
+			[]string{"field3"},
+		},
+		{
 			"(text) check max constraint",
 			map[string]any{
 				"field1": "test",
@@ -120,14 +132,24 @@ func TestRecordDataValidatorValidateText(t *testing.T) {
 			[]string{"field3"},
 		},
 		{
+			"(text) check max constraint with multi-bytes chars",
+			map[string]any{
+				"field1": "test",
+				"field2": "test",
+				"field3": strings.Repeat("𝌆", max), // shouldn't exceed the max limit even though max*4bytes chars are used
+			},
+			nil,
+			[]string{},
+		},
+		{
 			"(text) check pattern constraint",
 			map[string]any{
 				"field1": nil,
-				"field2": "test",
-				"field3": "test!",
+				"field2": "test!",
+				"field3": "test",
 			},
 			nil,
-			[]string{"field3"},
+			[]string{"field2"},
 		},
 		{
 			"(text) valid data (only required)",
