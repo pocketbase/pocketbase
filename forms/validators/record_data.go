@@ -132,11 +132,14 @@ func (validator *RecordDataValidator) checkTextValue(field *schema.SchemaField, 
 
 	options, _ := field.Options.(*schema.TextOptions)
 
-	if options.Min != nil && len(val) < *options.Min {
+	// note: casted to []rune to count multi-byte chars as one
+	length := len([]rune(val))
+
+	if options.Min != nil && length < *options.Min {
 		return validation.NewError("validation_min_text_constraint", fmt.Sprintf("Must be at least %d character(s)", *options.Min))
 	}
 
-	if options.Max != nil && len(val) > *options.Max {
+	if options.Max != nil && length > *options.Max {
 		return validation.NewError("validation_max_text_constraint", fmt.Sprintf("Must be less than %d character(s)", *options.Max))
 	}
 

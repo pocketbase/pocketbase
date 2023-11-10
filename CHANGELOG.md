@@ -35,6 +35,13 @@
 - Other minor fixes and impovements (eg. added negative string number normalization support for the `json` field type)
 
 
+## v0.19.4-WIP
+
+- Fixed TinyMCE source code viewer textarea styles ([#3715](https://github.com/pocketbase/pocketbase/issues/3715)).
+
+- Fixed `text` field min/max validators to properly count multi-byte characters ([#3735](https://github.com/pocketbase/pocketbase/issues/3735)).
+
+
 ## v0.19.3
 
 - Added the release notes to the console output of `./pocketbase update` ([#3685](https://github.com/pocketbase/pocketbase/discussions/3685)).
