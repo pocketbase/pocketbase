@@ -25,7 +25,7 @@ import (
 )
 
 // username value regex pattern
-var usernameRegex = regexp.MustCompile(`^[\w][\w\.]*$`)
+var usernameRegex = regexp.MustCompile(`^[\w][\w\.\-]*$`)
 
 // RecordUpsert is a [models.Record] upsert (create/update) form.
 type RecordUpsert struct {
