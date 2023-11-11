@@ -1,4 +1,4 @@
-## v0.19.4-WIP
+## v0.19.4
 
 - Fixed TinyMCE source code viewer textarea styles ([#3715](https://github.com/pocketbase/pocketbase/issues/3715)).
 
