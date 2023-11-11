@@ -753,7 +753,7 @@ func TestRecordUpsertAuthRecord(t *testing.T) {
 			"create with all allowed auth fields",
 			"",
 			map[string]any{
-				"username":        "test_new",
+				"username":        "test_new-a.b",
 				"email":           "test_new@example.com",
 				"emailVisibility": true,
 				"password":        "12345678",

@@ -1,3 +1,8 @@
+## v0.20.0-rc3
+
+- Synced with the recent fixes in v0.19.4.
+
+
 ## v0.20.0-rc2
 
 - Synced with the recent fixes in v0.19.3.
@@ -35,11 +40,16 @@
 - Other minor fixes and impovements (eg. added negative string number normalization support for the `json` field type)
 
 
-## v0.19.4-WIP
+## v0.19.4
 
 - Fixed TinyMCE source code viewer textarea styles ([#3715](https://github.com/pocketbase/pocketbase/issues/3715)).
 
 - Fixed `text` field min/max validators to properly count multi-byte characters ([#3735](https://github.com/pocketbase/pocketbase/issues/3735)).
+
+- Allowed hyphens in `username` ([#3697](https://github.com/pocketbase/pocketbase/issues/3697)).
+  _More control over the system fields settings will be available in the future._
+
+- Updated the JSVM generated types to use directly the value type instead of `* | undefined` union in functions/methods return declarations.
 
 
 ## v0.19.3
