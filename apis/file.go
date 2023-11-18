@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 	"strings"
 
 	"github.com/labstack/echo/v5"
@@ -15,6 +16,9 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
 )
+
+var maxConcurrThumbGen = runtime.NumCPU() * 2
+var thumbGenSem = make(chan struct{}, maxConcurrThumbGen)
 
 var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg", "image/gif"}
 var defaultThumbSizes = []string{"100x100"}
@@ -151,9 +155,18 @@ func (api *fileApi) download(c echo.Context) error {
 
 			// create a new thumb if it doesn exists
 			if exists, _ := fs.Exists(servedPath); !exists {
-				if err := fs.CreateThumb(originalPath, servedPath, thumbSize); err != nil {
-					servedPath = originalPath // fallback to the original
-				}
+				func() {
+					// limit maximum concurrent thumbnail generation
+					thumbGenSem <- struct{}{}
+					defer func() { <-thumbGenSem }()
+
+					if exists, _ := fs.Exists(servedPath); !exists {
+						if err := fs.CreateThumb(originalPath, servedPath, thumbSize); err != nil {
+							servedPath = originalPath // fallback to the original
+						}
+					}
+				}()
+
 			}
 		}
 	}
