@@ -124,6 +124,10 @@ PocketBase.prototype.migrateItems = async function (recordsIds, collectionName, 
         headers: { "Content-Type": "application/json" }
     })
 }
+PocketBase.prototype.beforeSend = function (url, options) {
+    // Disable caching
+    options.headers = Object.assign({}, options.headers, {"Cache-Control": "no-cache"})
+}
 
 // Custom auth store to sync the svelte admin store state with the authorized admin instance.
 class AppAuthStore extends LocalAuthStore {
