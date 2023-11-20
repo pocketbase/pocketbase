@@ -1,11 +1,13 @@
 package apis
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
@@ -15,10 +17,27 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
+	"golang.org/x/sync/semaphore"
 )
 
-var maxConcurrThumbGen = runtime.NumCPU() * 2
-var thumbGenSem = make(chan struct{}, maxConcurrThumbGen)
+// maxThumbConcurr specifies number of thumbnails that will be generated concurrently.
+//
+// It is advantages to limit concurrency to avoid high memory usage. This happens due to the
+// fact that full sized images have to be kept in memory to be resized. In case many thumbnails
+// are requested at the same time (e.g. listing collection in Web-UI) resizing many at the
+// same time will slow down the resizing process, causing full sized images to be kept in memory
+// even longer and making the problem even worse.
+//
+// The default value is 2x the number of CPUs. This is a pretty conservative value, assuming
+// that it is better to have a slower thumbnail generation than to run out of memory.
+// This value could be increased if high S3 latency is expected, full-size images are expected
+// to be small and/or the server has plenty of memory.
+var maxThumbConcurr = runtime.NumCPU() * 2
+var thumbGenSem = semaphore.NewWeighted(int64(maxThumbConcurr))
+
+// thumbGenTimeout specifies the maximum wait-time a request will be blocked waiting for the
+// thumbnail to be generated if it does not exist already.
+var thumbGenTimeout = 30 * time.Second
 
 var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg", "image/gif"}
 var defaultThumbSizes = []string{"100x100"}
@@ -153,20 +172,21 @@ func (api *fileApi) download(c echo.Context) error {
 			servedName = thumbSize + "_" + filename
 			servedPath = baseFilesPath + "/thumbs_" + filename + "/" + servedName
 
-			// create a new thumb if it doesn exists
+			// create a new thumb if it doesn't exist (with limited concurrency since this is a very resource intensive operation)
 			if exists, _ := fs.Exists(servedPath); !exists {
-				func() {
-					// limit maximum concurrent thumbnail generation
-					thumbGenSem <- struct{}{}
-					defer func() { <-thumbGenSem }()
+				ctx, cancel := context.WithTimeout(c.Request().Context(), thumbGenTimeout)
+				defer cancel()
+				err := thumbGenSem.Acquire(ctx, 1)
+				if err != nil {
+					return NewApiError(503, "Service Unavailable", errors.New("timeout error: thumbnail generation canceled due to high load, try again later"))
+				}
+				defer thumbGenSem.Release(1)
 
-					if exists, _ := fs.Exists(servedPath); !exists {
-						if err := fs.CreateThumb(originalPath, servedPath, thumbSize); err != nil {
-							servedPath = originalPath // fallback to the original
-						}
+				if exists, _ := fs.Exists(servedPath); !exists { // check again if thumbnail was generated in the meantime already by another request
+					if err := fs.CreateThumb(originalPath, servedPath, thumbSize); err != nil {
+						servedPath = originalPath // fallback to the original
 					}
-				}()
-
+				}
 			}
 		}
 	}

@@ -385,7 +385,3 @@ func TestFileDownload(t *testing.T) {
 		scenario.Test(t)
 	}
 }
-
-func BenchmarkThumbGen(b *testing.B) {
-
-}
