@@ -51,7 +51,7 @@
 
         ...
 
-        let oldAuth = await pb.authStore.model;
+        let oldAuth = pb.authStore.model;
 
         await pb.collection('${collection?.name}').confirmPasswordReset(
             'TOKEN',
@@ -70,7 +70,7 @@
 
         ...
 
-        final oldAuth = await pb.authStore.model;
+        final oldAuth = pb.authStore.model;
 
         await pb.collection('${collection?.name}').confirmPasswordReset(
           'TOKEN',
