@@ -1,7 +1,7 @@
 package osutils
 
 import (
-	"log"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -65,9 +65,8 @@ func MoveDirContent(src string, dest string, rootExclude ...string) error {
 
 		if err := os.Rename(old, new); err != nil {
 			if errs := tryRollback(); len(errs) > 0 {
-				// currently just log the rollback errors
-				// in the future we may require go 1.20+ to use errors.Join()
-				log.Println(errs)
+				errs = append(errs, err)
+				err = errors.Join(errs...)
 			}
 
 			return err

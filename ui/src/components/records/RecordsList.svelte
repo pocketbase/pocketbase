@@ -197,12 +197,19 @@
                             break; // new yield has been started
                         }
 
-                        records = records.concat(result.items.splice(0, 20));
+                        const subset = result.items.splice(0, 20);
+                        for (let item of subset) {
+                            CommonHelper.pushOrReplaceByKey(records, item);
+                        }
+                        records = records;
 
                         await CommonHelper.yieldToMain();
                     }
                 } else {
-                    records = records.concat(result.items);
+                    for (let item of result.items) {
+                        CommonHelper.pushOrReplaceByKey(records, item);
+                    }
+                    records = records;
                 }
             })
             .catch((err) => {
@@ -453,7 +460,7 @@
                             <div class="flex flex-gap-5">
                                 <div class="label">
                                     <CopyIcon value={record.id} />
-                                    <div class="txt">{record.id}</div>
+                                    <div class="txt txt-ellipsis">{record.id}</div>
                                 </div>
 
                                 {#if isAuth}

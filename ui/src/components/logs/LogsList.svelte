@@ -1,43 +1,47 @@
 <script>
     import { createEventDispatcher } from "svelte";
+    import { fly } from "svelte/transition";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import SortHeader from "@/components/base/SortHeader.svelte";
-    import FormattedDate from "@/components/base/FormattedDate.svelte";
     import Scroller from "@/components/base/Scroller.svelte";
+    import LogLevel from "@/components/logs/LogLevel.svelte";
+    import LogDate from "@/components/logs/LogDate.svelte";
 
     const dispatch = createEventDispatcher();
-    const labelMethodClass = {
-        get: "label-info",
-        post: "label-success",
-        patch: "label-warning",
-        delete: "label-danger",
-    };
+
+    const perPage = 50;
 
     export let filter = "";
     export let presets = "";
     export let sort = "-rowid";
 
-    let items = [];
+    let logs = [];
     let currentPage = 1;
-    let totalItems = 0;
+    let lastLoadCount = 0;
     let isLoading = false;
-    let yieldedItemsId = 0;
+    let yieldedId = 0;
+    let bulkSelected = {};
 
     $: if (typeof sort !== "undefined" || typeof filter !== "undefined" || typeof presets !== "undefined") {
         clearList();
         load(1);
     }
 
-    $: canLoadMore = totalItems > items.length;
+    $: canLoadMore = lastLoadCount >= perPage;
+
+    $: totalBulkSelected = Object.keys(bulkSelected).length;
+
+    $: areAllLogsSelected = logs.length && totalBulkSelected === logs.length;
 
     export async function load(page = 1, breakTasks = true) {
         isLoading = true;
 
         return ApiClient.logs
-            .getRequestsList(page, 30, {
+            .getList(page, perPage, {
                 sort: sort,
-                filter: [presets, filter].filter(Boolean).join("&&"),
+                skipTotal: 1,
+                filter: [presets, CommonHelper.normalizeLogsFilter(filter)].filter(Boolean).join("&&"),
             })
             .then(async (result) => {
                 if (page <= 1) {
@@ -46,23 +50,32 @@
 
                 isLoading = false;
                 currentPage = result.page;
-                totalItems = result.totalItems;
-                dispatch("load", items.concat(result.items));
+                lastLoadCount = result.items.length;
+                dispatch("load", logs.concat(result.items));
 
-                // optimize the items listing by rendering the rows in task batches
+                // optimize the logs listing by rendering the rows in task batches
                 if (breakTasks) {
-                    const currentYieldId = ++yieldedItemsId;
+                    const currentYieldId = ++yieldedId;
                     while (result.items.length) {
-                        if (yieldedItemsId != currentYieldId) {
+                        if (yieldedId != currentYieldId) {
                             break; // new yeild has been started
                         }
 
-                        items = items.concat(result.items.splice(0, 10));
+                        const subset = result.items.splice(0, 10);
+                        for (let item of subset) {
+                            CommonHelper.pushOrReplaceByKey(logs, item);
+                        }
+
+                        logs = logs;
 
                         await CommonHelper.yieldToMain();
                     }
                 } else {
-                    items = items.concat(result.items);
+                    for (let item of result.items) {
+                        CommonHelper.pushOrReplaceByKey(logs, item);
+                    }
+
+                    logs = logs;
                 }
             })
             .catch((err) => {
@@ -76,9 +89,73 @@
     }
 
     function clearList() {
-        items = [];
+        logs = [];
+        bulkSelected = {};
         currentPage = 1;
-        totalItems = 0;
+        lastLoadCount = 0;
+    }
+
+    function toggleSelectAllLogs() {
+        if (areAllLogsSelected) {
+            deselectAllLogs();
+        } else {
+            selectAllLogs();
+        }
+    }
+
+    function deselectAllLogs() {
+        bulkSelected = {};
+    }
+
+    function selectAllLogs() {
+        for (const log of logs) {
+            bulkSelected[log.id] = log;
+        }
+
+        bulkSelected = bulkSelected;
+    }
+
+    function toggleSelectLog(log) {
+        if (!bulkSelected[log.id]) {
+            bulkSelected[log.id] = log;
+        } else {
+            delete bulkSelected[log.id];
+        }
+
+        bulkSelected = bulkSelected; // trigger reactivity
+    }
+
+    const dateFilenameRegex = /[-:\. ]/gi;
+
+    function downloadSelected() {
+        // extract the bulk selected log objects sorted desc
+        const selected = Object.values(bulkSelected).sort((a, b) => {
+            if (a.created < b.created) {
+                return 1;
+            }
+
+            if (a.created > b.created) {
+                return -1;
+            }
+
+            return 0;
+        });
+
+        if (!selected.length) {
+            return; // nothing to download
+        }
+
+        if (selected.length == 1) {
+            return CommonHelper.downloadJson(
+                selected[0],
+                "log_" + selected[0].created.replaceAll(dateFilenameRegex, "") + ".json"
+            );
+        }
+
+        const to = selected[0].created.replaceAll(dateFilenameRegex, "");
+        const from = selected[selected.length - 1].created.replaceAll(dateFilenameRegex, "");
+
+        return CommonHelper.downloadJson(selected, `${selected.length}_logs_${from}_to_${to}.json`);
     }
 </script>
 
@@ -86,45 +163,41 @@
     <table class="table" class:table-loading={isLoading}>
         <thead>
             <tr>
-                <SortHeader disable class="col-field-method" name="method" bind:sort>
+                <th class="bulk-select-col min-width">
+                    {#if isLoading}
+                        <span class="loader loader-sm" />
+                    {:else}
+                        <div class="form-field">
+                            <input
+                                type="checkbox"
+                                id="checkbox_0"
+                                disabled={!logs.length}
+                                checked={areAllLogsSelected}
+                                on:change={() => toggleSelectAllLogs()}
+                            />
+                            <label for="checkbox_0" />
+                        </div>
+                    {/if}
+                </th>
+
+                <SortHeader disable class="col-field-level min-width" name="level" bind:sort>
                     <div class="col-header-content">
-                        <i class="ri-global-line" />
-                        <span class="txt">Method</span>
+                        <i class="ri-bookmark-line" />
+                        <span class="txt">level</span>
                     </div>
                 </SortHeader>
 
-                <SortHeader disable class="col-type-text col-field-url" name="url" bind:sort>
+                <SortHeader disable class="col-type-text col-field-data" name="data" bind:sort>
                     <div class="col-header-content">
-                        <i class={CommonHelper.getFieldTypeIcon("url")} />
-                        <span class="txt">URL</span>
-                    </div>
-                </SortHeader>
-
-                <SortHeader disable class="col-type-text col-field-referer" name="referer" bind:sort>
-                    <div class="col-header-content">
-                        <i class={CommonHelper.getFieldTypeIcon("url")} />
-                        <span class="txt">Referer</span>
-                    </div>
-                </SortHeader>
-
-                <SortHeader disable class="col-type-number col-field-userIp" name="userIp" bind:sort>
-                    <div class="col-header-content">
-                        <i class={CommonHelper.getFieldTypeIcon("number")} />
-                        <span class="txt">User IP</span>
-                    </div>
-                </SortHeader>
-
-                <SortHeader disable class="col-type-number col-field-status" name="status" bind:sort>
-                    <div class="col-header-content">
-                        <i class={CommonHelper.getFieldTypeIcon("number")} />
-                        <span class="txt">Status</span>
+                        <i class="ri-file-list-2-line" />
+                        <span class="txt">data</span>
                     </div>
                 </SortHeader>
 
                 <SortHeader disable class="col-type-date col-field-created" name="created" bind:sort>
                     <div class="col-header-content">
                         <i class={CommonHelper.getFieldTypeIcon("date")} />
-                        <span class="txt">Created</span>
+                        <span class="txt">created</span>
                     </div>
                 </SortHeader>
 
@@ -132,53 +205,78 @@
             </tr>
         </thead>
         <tbody>
-            {#each items as item (item.id)}
+            {#each logs as log (log.id)}
+                {@const hasData = log.data && CommonHelper.isObject(log.data)}
                 <tr
                     tabindex="0"
                     class="row-handle"
-                    on:click={() => dispatch("select", item)}
+                    on:click={() => dispatch("select", log)}
                     on:keydown={(e) => {
                         if (e.code === "Enter") {
                             e.preventDefault();
-                            dispatch("select", item);
+                            dispatch("select", log);
                         }
                     }}
                 >
-                    <td class="col-type-text col-field-method min-width">
-                        <span class="label txt-uppercase {labelMethodClass[item.method.toLowerCase()]}">
-                            {item.method?.toUpperCase()}
-                        </span>
+                    <td class="bulk-select-col min-width">
+                        <!-- svelte-ignore a11y-click-events-have-key-events -->
+                        <!-- svelte-ignore a11y-no-static-element-interactions -->
+                        <div class="form-field" on:click|stopPropagation>
+                            <input
+                                type="checkbox"
+                                id="checkbox_{log.id}"
+                                checked={bulkSelected[log.id]}
+                                on:change={() => toggleSelectLog(log)}
+                            />
+                            <label for="checkbox_{log.id}" />
+                        </div>
                     </td>
 
-                    <td class="col-type-text col-field-url">
-                        <span class="txt txt-ellipsis" title={item.url}>
-                            {item.url}
-                        </span>
-                        {#if item.meta?.errorMessage || item.meta?.errorData}
-                            <i class="ri-error-warning-line txt-danger m-l-5 m-r-5" title="Error" />
+                    <td class="col-type-text col-field-level min-width">
+                        <LogLevel level={log.level} />
+                    </td>
+
+                    <td class="col-type-text col-field-data">
+                        <div class="flex flex-gap-10">
+                            {#if log.message}
+                                <span class="txt-ellipsis">{log.message}</span>
+                            {/if}
+
+                            {#if hasData}
+                                {#if log.data.status}
+                                    <span class="label label-sm">{log.data.status}</span>
+                                {/if}
+                                {#if log.data.execTime}
+                                    <span class="label label-sm">{log.data.execTime}ms</span>
+                                {/if}
+                                {#if log.data.auth}
+                                    <span class="label label-sm">{log.data.auth}</span>
+                                {/if}
+                                {#if log.data.userIp}
+                                    <span class="label label-sm">{log.data.userIp}</span>
+                                {/if}
+                                {#if log.data.error}
+                                    <span class="label label-sm label-danger">
+                                        {CommonHelper.truncate(
+                                            typeof log.data.error === "string"
+                                                ? log.data.error
+                                                : JSON.stringify(log.data.error),
+                                            200
+                                        )}
+                                    </span>
+                                {/if}
+                            {/if}
+                        </div>
+
+                        {#if hasData}
+                            <div class="block txt-mono txt-xs txt-hint txt-ellipsis m-t-5">
+                                {CommonHelper.truncate(JSON.stringify(log.data), 350)}
+                            </div>
                         {/if}
                     </td>
 
-                    <td class="col-type-text col-field-referer">
-                        <span class="txt txt-ellipsis" class:txt-hint={!item.referer} title={item.referer}>
-                            {item.referer || "N/A"}
-                        </span>
-                    </td>
-
-                    <td class="col-type-number col-field-userIp">
-                        <span class="txt txt-ellipsis" class:txt-hint={!item.userIp} title={item.userIp}>
-                            {item.userIp || "N/A"}
-                        </span>
-                    </td>
-
-                    <td class="col-type-number col-field-status">
-                        <span class="label" class:label-danger={item.status >= 400}>
-                            {item.status}
-                        </span>
-                    </td>
-
                     <td class="col-type-date col-field-created">
-                        <FormattedDate date={item.created} />
+                        <LogDate date={log.created} />
                     </td>
 
                     <td class="col-type-action min-width">
@@ -213,12 +311,8 @@
     </table>
 </Scroller>
 
-{#if items.length}
-    <small class="block txt-hint txt-right m-t-sm">Showing {items.length} of {totalItems}</small>
-{/if}
-
-{#if items.length && canLoadMore}
-    <div class="block txt-center m-t-xs">
+{#if logs.length && canLoadMore}
+    <div class="block txt-center m-t-sm">
         <button
             type="button"
             class="btn btn-lg btn-secondary btn-expanded"
@@ -226,7 +320,35 @@
             class:btn-disabled={isLoading}
             on:click={() => load(currentPage + 1)}
         >
-            <span class="txt">Load more ({totalItems - items.length})</span>
+            <span class="txt">Load more</span>
         </button>
     </div>
 {/if}
+
+{#if totalBulkSelected}
+    <div class="bulkbar" transition:fly={{ duration: 150, y: 5 }}>
+        <div class="txt">
+            Selected <strong>{totalBulkSelected}</strong>
+            {totalBulkSelected === 1 ? "log" : "logs"}
+        </div>
+        <button
+            type="button"
+            class="btn btn-xs btn-transparent btn-outline p-l-5 p-r-5"
+            on:click={() => deselectAllLogs()}
+        >
+            <span class="txt">Reset</span>
+        </button>
+        <div class="flex-fill" />
+        <button type="button" class="btn btn-sm" on:click={downloadSelected}>
+            <span class="txt">Download as JSON</span>
+        </button>
+    </div>
+{/if}
+
+<style>
+    .bulkbar {
+        position: sticky;
+        margin-top: var(--smSpacing);
+        bottom: var(--baseSpacing);
+    }
+</style>

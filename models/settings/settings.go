@@ -82,6 +82,7 @@ func New() *Settings {
 		},
 		Logs: LogsConfig{
 			MaxDays: 5,
+			LogIp:   true,
 		},
 		Smtp: SmtpConfig{
 			Enabled:  false,
@@ -598,7 +599,9 @@ func (t EmailTemplate) Resolve(
 // -------------------------------------------------------------------
 
 type LogsConfig struct {
-	MaxDays int `form:"maxDays" json:"maxDays"`
+	MaxDays  int  `form:"maxDays" json:"maxDays"`
+	MinLevel int  `form:"minLevel" json:"minLevel"`
+	LogIp    bool `form:"logIp" json:"logIp"`
 }
 
 // Validate makes LogsConfig validatable by implementing [validation.Validatable] interface.

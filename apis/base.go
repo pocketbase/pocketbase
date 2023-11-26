@@ -6,11 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
@@ -26,7 +27,7 @@ const trailedAdminPath = "/_/"
 // system and app specific routes and middlewares.
 func InitApi(app core.App) (*echo.Echo, error) {
 	e := echo.New()
-	e.Debug = app.IsDebug()
+	e.Debug = false
 	e.JSONSerializer = &rest.Serializer{
 		FieldsParam: fieldsQueryParam,
 	}
@@ -49,6 +50,13 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	e.Pre(LoadAuthContext(app))
 	e.Use(middleware.Recover())
 	e.Use(middleware.Secure())
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set(ContextExecStartKey, time.Now())
+
+			return next(c)
+		}
+	})
 
 	// custom error handler
 	e.HTTPErrorHandler = func(c echo.Context, err error) {
@@ -56,35 +64,25 @@ func InitApi(app core.App) (*echo.Echo, error) {
 			return // no error
 		}
 
-		if c.Response().Committed {
-			if app.IsDebug() {
-				log.Println("HTTPErrorHandler response was already committed:", err)
-			}
-			return
-		}
-
 		var apiErr *ApiError
 
 		if errors.As(err, &apiErr) {
-			if app.IsDebug() && apiErr.RawData() != nil {
-				log.Println(apiErr.RawData())
-			}
+			// already an api error...
 		} else if v := new(echo.HTTPError); errors.As(err, &v) {
-			if v.Internal != nil && app.IsDebug() {
-				log.Println(v.Internal)
-			}
 			msg := fmt.Sprintf("%v", v.Message)
 			apiErr = NewApiError(v.Code, msg, v)
 		} else {
-			if app.IsDebug() {
-				log.Println(err)
-			}
-
 			if errors.Is(err, sql.ErrNoRows) {
 				apiErr = NewNotFoundError("", err)
 			} else {
 				apiErr = NewBadRequestError("", err)
 			}
+		}
+
+		logRequest(app, c, apiErr)
+
+		if c.Response().Committed {
+			return // already commited
 		}
 
 		event := new(core.ApiErrorEvent)
@@ -93,7 +91,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 		// send error response
 		hookErr := app.OnBeforeApiError().Trigger(event, func(e *core.ApiErrorEvent) error {
-			if c.Response().Committed {
+			if e.HttpContext.Response().Committed {
 				return nil
 			}
 
@@ -106,12 +104,11 @@ func InitApi(app core.App) (*echo.Echo, error) {
 		})
 
 		if hookErr == nil {
-			if err := app.OnAfterApiError().Trigger(event); err != nil && app.IsDebug() {
-				log.Println(hookErr)
+			if err := app.OnAfterApiError().Trigger(event); err != nil {
+				app.Logger().Debug("OnAfterApiError failure", slog.String("error", hookErr.Error()))
 			}
-		} else if app.IsDebug() {
-			// truly rare case; eg. client already disconnected
-			log.Println(hookErr)
+		} else {
+			app.Logger().Debug("OnBeforeApiError error (truly rare case, eg. client already disconnected)", slog.String("error", hookErr.Error()))
 		}
 	}
 
@@ -215,7 +212,7 @@ func updateHasAdminsCache(app core.App) error {
 		return err
 	}
 
-	app.Cache().Set(hasAdminsCacheKey, total > 0)
+	app.Store().Set(hasAdminsCacheKey, total > 0)
 
 	return nil
 }
@@ -240,14 +237,14 @@ func installerRedirect(app core.App) echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			hasAdmins := cast.ToBool(app.Cache().Get(hasAdminsCacheKey))
+			hasAdmins := cast.ToBool(app.Store().Get(hasAdminsCacheKey))
 
 			if !hasAdmins {
 				// update the cache to make sure that the admin wasn't created by another process
 				if err := updateHasAdminsCache(app); err != nil {
 					return err
 				}
-				hasAdmins = cast.ToBool(app.Cache().Get(hasAdminsCacheKey))
+				hasAdmins = cast.ToBool(app.Store().Get(hasAdminsCacheKey))
 			}
 
 			_, hasInstallerParam := c.Request().URL.Query()["installer"]

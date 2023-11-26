@@ -4,8 +4,8 @@ import "sync"
 
 // Store defines a concurrent safe in memory key-value data store.
 type Store[T any] struct {
-	mux  sync.RWMutex
 	data map[string]T
+	mux  sync.RWMutex
 }
 
 // New creates a new Store[T] instance with a shallow copy of the provided data (if any).

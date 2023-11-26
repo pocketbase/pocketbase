@@ -12,7 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -221,8 +221,13 @@ func (p *plugin) update(withBackup bool) error {
 	}
 
 	tryToRevertExecChanges := func() {
-		if revertErr := os.Rename(renamedOldExec, oldExec); revertErr != nil && p.app.IsDebug() {
-			log.Println(revertErr)
+		if revertErr := os.Rename(renamedOldExec, oldExec); revertErr != nil {
+			p.app.Logger().Debug(
+				"Failed to revert executable",
+				slog.String("old", renamedOldExec),
+				slog.String("new", oldExec),
+				slog.String("error", revertErr.Error()),
+			)
 		}
 	}
 

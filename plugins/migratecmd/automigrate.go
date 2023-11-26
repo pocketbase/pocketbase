@@ -15,7 +15,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/migrate"
 )
 
-const collectionsCacheKey = "migratecmd_collections"
+const collectionsStoreKey = "migratecmd_collections"
 
 // onCollectionChange handles the automigration snapshot generation on
 // collection change event (create/update/delete).
@@ -94,7 +94,7 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 }
 
 func (p *plugin) updateSingleCachedCollection(new, old *models.Collection) {
-	cached, _ := p.app.Cache().Get(collectionsCacheKey).(map[string]*models.Collection)
+	cached, _ := p.app.Store().Get(collectionsStoreKey).(map[string]*models.Collection)
 
 	switch {
 	case new == nil:
@@ -103,7 +103,7 @@ func (p *plugin) updateSingleCachedCollection(new, old *models.Collection) {
 		cached[new.Id] = new
 	}
 
-	p.app.Cache().Set(collectionsCacheKey, cached)
+	p.app.Store().Set(collectionsStoreKey, cached)
 }
 
 func (p *plugin) refreshCachedCollections() error {
@@ -121,19 +121,19 @@ func (p *plugin) refreshCachedCollections() error {
 		cached[c.Id] = c
 	}
 
-	p.app.Cache().Set(collectionsCacheKey, cached)
+	p.app.Store().Set(collectionsStoreKey, cached)
 
 	return nil
 }
 
 func (p *plugin) getCachedCollections() (map[string]*models.Collection, error) {
-	if !p.app.Cache().Has(collectionsCacheKey) {
+	if !p.app.Store().Has(collectionsStoreKey) {
 		if err := p.refreshCachedCollections(); err != nil {
 			return nil, err
 		}
 	}
 
-	result, _ := p.app.Cache().Get(collectionsCacheKey).(map[string]*models.Collection)
+	result, _ := p.app.Store().Get(collectionsStoreKey).(map[string]*models.Collection)
 
 	return result, nil
 }

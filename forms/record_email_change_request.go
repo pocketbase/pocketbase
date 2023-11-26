@@ -54,7 +54,7 @@ func (form *RecordEmailChangeRequest) checkUniqueEmail(value any) error {
 	v, _ := value.(string)
 
 	if !form.dao.IsRecordValueUnique(form.record.Collection().Id, schema.FieldNameEmail, v) {
-		return validation.NewError("validation_record_email_exists", "User email already exists.")
+		return validation.NewError("validation_record_email_invalid", "User email already exists or it is invalid.")
 	}
 
 	return nil

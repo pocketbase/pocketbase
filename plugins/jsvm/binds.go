@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/exec"
@@ -120,8 +120,12 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 				return err
 			})
 
-			if err != nil && app.IsDebug() {
-				fmt.Println("[cronAdd] failed to execute cron job " + jobId + ": " + err.Error())
+			if err != nil {
+				app.Logger().Debug(
+					"[cronAdd] failed to execute cron job",
+					slog.String("jobId", jobId),
+					slog.String("error", err.Error()),
+				)
 			}
 		})
 		if err != nil {

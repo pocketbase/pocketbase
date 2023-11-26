@@ -8,8 +8,8 @@ import (
 var LogsMigrations migrate.MigrationsList
 
 func init() {
-	LogsMigrations.Register(func(db dbx.Builder) (err error) {
-		_, err = db.NewQuery(`
+	LogsMigrations.Register(func(db dbx.Builder) error {
+		_, err := db.NewQuery(`
 			CREATE TABLE {{_requests}} (
 				[[id]]        TEXT PRIMARY KEY NOT NULL,
 				[[url]]       TEXT DEFAULT "" NOT NULL,

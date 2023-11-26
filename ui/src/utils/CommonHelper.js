@@ -20,6 +20,34 @@ const documentExtensions = [
     ".odt", ".ods", ".txt",
 ];
 
+export const logLevels = [
+    // {
+    //     level: -8,
+    //     label: "TRACE",
+    //     class: "",
+    // },
+    {
+        level: -4,
+        label: "DEBUG",
+        class: "",
+    },
+    {
+        level: 0,
+        label: "INFO",
+        class: "label-success",
+    },
+    {
+        level: 4,
+        label: "WARN",
+        class: "label-warning",
+    },
+    {
+        level: 8,
+        label: "ERROR",
+        class: "label-danger",
+    },
+];
+
 export default class CommonHelper {
     /**
      * Checks whether value is plain object.
@@ -536,7 +564,7 @@ export default class CommonHelper {
      * @return {String}
      */
     static truncate(str, length = 150, dots = true) {
-        str = str || "";
+        str = ("" + str);
 
         if (str.length <= length) {
             return str;
@@ -798,6 +826,7 @@ export default class CommonHelper {
         const tempLink = document.createElement("a");
         tempLink.setAttribute("href", url);
         tempLink.setAttribute("download", name);
+        tempLink.setAttribute("target", "_blank");
         tempLink.click();
         tempLink.remove();
     }
@@ -809,11 +838,15 @@ export default class CommonHelper {
      * @param {String} name The result file name.
      */
     static downloadJson(obj, name) {
-        const encodedObj = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obj, null, 2));
-
         name = name.endsWith(".json") ? name : (name + ".json");
 
-        CommonHelper.download(encodedObj, name)
+        const blob = new Blob([JSON.stringify(obj, null, 2)], {
+            type: "application/json"
+        });
+
+        const url = window.URL.createObjectURL(blob);
+
+        CommonHelper.download(url, name)
     }
 
     /**
@@ -1910,6 +1943,17 @@ export default class CommonHelper {
             : searchTerm;
 
         return fallbackFields.map((f) => `${f}~${searchTerm}`).join("||");
+    }
+
+    /**
+     * The same as normalizeSearchFilter() but with preset common logs fields.
+     *
+     * @param  {String} searchTerm
+     * @param  {Array}  fallbackFields
+     * @return {String}
+     */
+    static normalizeLogsFilter(searchTerm, extraFallbackFields = []) {
+        return CommonHelper.normalizeSearchFilter(searchTerm, ["level", "message", "data"].concat(extraFallbackFields));
     }
 
     /**

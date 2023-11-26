@@ -7,7 +7,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/cmd"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -31,7 +30,6 @@ type appWrapper struct {
 type PocketBase struct {
 	*appWrapper
 
-	debugFlag         bool
 	dataDirFlag       string
 	encryptionEnvFlag string
 	hideStartBanner   bool
@@ -43,7 +41,6 @@ type PocketBase struct {
 // Config is the PocketBase initialization config struct.
 type Config struct {
 	// optional default values for the console flags
-	DefaultDebug         bool
 	DefaultDataDir       string // if not set, it will fallback to "./pb_data"
 	DefaultEncryptionEnv string
 
@@ -66,11 +63,7 @@ type Config struct {
 // If you want to initialize the application before calling [Start()],
 // then you'll have to manually call [Bootstrap()].
 func New() *PocketBase {
-	_, isUsingGoRun := inspectRuntime()
-
-	return NewWithConfig(Config{
-		DefaultDebug: isUsingGoRun,
-	})
+	return NewWithConfig(Config{})
 }
 
 // NewWithConfig creates a new PocketBase instance with the provided config.
@@ -100,7 +93,6 @@ func NewWithConfig(config Config) *PocketBase {
 				DisableDefaultCmd: true,
 			},
 		},
-		debugFlag:         config.DefaultDebug,
 		dataDirFlag:       config.DefaultDataDir,
 		encryptionEnvFlag: config.DefaultEncryptionEnv,
 		hideStartBanner:   config.HideStartBanner,
@@ -114,7 +106,6 @@ func NewWithConfig(config Config) *PocketBase {
 	pb.appWrapper = &appWrapper{core.NewBaseApp(core.BaseAppConfig{
 		DataDir:          pb.dataDirFlag,
 		EncryptionEnv:    pb.encryptionEnvFlag,
-		IsDebug:          pb.debugFlag,
 		DataMaxOpenConns: config.DataMaxOpenConns,
 		DataMaxIdleConns: config.DataMaxIdleConns,
 		LogsMaxOpenConns: config.LogsMaxOpenConns,
@@ -162,10 +153,7 @@ func (pb *PocketBase) Execute() error {
 	// execute the root command
 	go func() {
 		if err := pb.RootCmd.Execute(); err != nil {
-			// @todo replace with db log once generalized logs are added
-			// and maybe consider reorganizing the code to return os.Exit(1)
-			// (note may need to update the existing commands to not silence errors)
-			color.Red(err.Error())
+			pb.Logger().Error("rootCmd.Execute error", "error", err)
 		}
 
 		done <- true
@@ -173,9 +161,12 @@ func (pb *PocketBase) Execute() error {
 
 	<-done
 
-	// trigger app cleanups
+	// trigger cleanups
 	return pb.OnTerminate().Trigger(&core.TerminateEvent{
 		App: pb,
+	}, func(e *core.TerminateEvent) error {
+		e.App.ResetBootstrapState()
+		return nil
 	})
 }
 
@@ -194,13 +185,6 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 		"encryptionEnv",
 		config.DefaultEncryptionEnv,
 		"the env variable whose value of 32 characters will be used \nas encryption key for the app settings (default none)",
-	)
-
-	pb.RootCmd.PersistentFlags().BoolVar(
-		&pb.debugFlag,
-		"debug",
-		config.DefaultDebug,
-		"enable debug mode, aka. showing more detailed logs",
 	)
 
 	return pb.RootCmd.ParseFlags(os.Args[1:])

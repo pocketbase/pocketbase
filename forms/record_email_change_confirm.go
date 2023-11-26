@@ -128,6 +128,8 @@ func (form *RecordEmailChangeConfirm) Submit(interceptors ...InterceptorFunc[*mo
 
 	authRecord.SetEmail(newEmail)
 	authRecord.SetVerified(true)
+
+	// @todo consider removing if not necessary anymore
 	authRecord.RefreshTokenKey() // invalidate old tokens
 
 	interceptorsErr := runInterceptors(authRecord, func(m *models.Record) error {

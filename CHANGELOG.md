@@ -1,3 +1,35 @@
+## v0.20.0-rc4
+
+- Bumped the minimum required Go version to 1.21.0 in order to integrate with the builtin `slog` package.
+
+- removed _requests table in favor of _logs
+
+- Renamed:
+  ```
+  Dao.RequestQuery(...)      -> Dao.LogQuery(...)
+  Dao.FindRequestById(...)   -> Dao.FindLogById(...)
+  Dao.RequestsStats(...)     -> Dao.LogsStats(...)
+  Dao.RequestsStats(...)     -> Dao.LogsStats(...)
+  Dao.DeleteOldRequests(...) -> Dao.DeleteOldLogs(...)
+  Dao.SaveRequest(...)       -> Dao.SaveLog(...)
+  ```
+
+- removed app.IsDebug() and the `--debug` flag
+
+- (@todo docs) Implemented `slog.Logger` via `app.Logger()`.
+  Logs db writes are debounced and batched. DB write happens on
+    - 3sec after the last debounced log write
+    - when the batch threshold, currently 200, is reached (this is primarily to prevent the memory to grow unrestricted)
+    - right before app termination to attempt saving the current logs queue
+  Several minor log improvements:
+    - Log the requests execution times.
+    - Added option to toggle IP request logging.
+    - Added option to specify a minimum log level.
+    - Added option to export individual or bulk selected logs as json.
+
+- Soft-deprecated and renamed `app.Cache()` with `app.Store()`.
+
+
 ## v0.20.0-rc3
 
 - Synced with the recent fixes in v0.19.4.

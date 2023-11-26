@@ -2,7 +2,6 @@ package apis
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -69,7 +68,7 @@ func (api *backupApi) list(c echo.Context) error {
 }
 
 func (api *backupApi) create(c echo.Context) error {
-	if api.app.Cache().Has(core.CacheKeyActiveBackup) {
+	if api.app.Store().Has(core.StoreKeyActiveBackup) {
 		return NewBadRequestError("Try again later - another backup/restore process has already been started", nil)
 	}
 
@@ -152,7 +151,7 @@ func (api *backupApi) download(c echo.Context) error {
 }
 
 func (api *backupApi) restore(c echo.Context) error {
-	if api.app.Cache().Has(core.CacheKeyActiveBackup) {
+	if api.app.Store().Has(core.StoreKeyActiveBackup) {
 		return NewBadRequestError("Try again later - another backup/restore process has already been started.", nil)
 	}
 
@@ -181,8 +180,8 @@ func (api *backupApi) restore(c echo.Context) error {
 		// give some optimistic time to write the response
 		time.Sleep(1 * time.Second)
 
-		if err := api.app.RestoreBackup(ctx, key); err != nil && api.app.IsDebug() {
-			log.Println(err)
+		if err := api.app.RestoreBackup(ctx, key); err != nil {
+			api.app.Logger().Error("Failed to restore backup", "key", key, "error", err.Error())
 		}
 	}()
 
@@ -203,7 +202,7 @@ func (api *backupApi) delete(c echo.Context) error {
 
 	key := c.PathParam("key")
 
-	if key != "" && cast.ToString(api.app.Cache().Get(core.CacheKeyActiveBackup)) == key {
+	if key != "" && cast.ToString(api.app.Store().Get(core.StoreKeyActiveBackup)) == key {
 		return NewBadRequestError("The backup is currently being used and cannot be deleted.", nil)
 	}
 

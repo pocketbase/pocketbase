@@ -32,7 +32,7 @@ func (api *healthApi) healthCheck(c echo.Context) error {
 	resp := new(healthCheckResponse)
 	resp.Code = http.StatusOK
 	resp.Message = "API is healthy."
-	resp.Data.CanBackup = !api.app.Cache().Has(core.CacheKeyActiveBackup)
+	resp.Data.CanBackup = !api.app.Store().Has(core.StoreKeyActiveBackup)
 
 	return c.JSON(http.StatusOK, resp)
 }

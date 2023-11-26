@@ -3,7 +3,6 @@ package forms
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
@@ -78,12 +77,9 @@ func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc[[]*models.
 			}
 
 			// generic/db failure
-			if form.app.IsDebug() {
-				log.Println("Internal import failure:", importErr)
-			}
 			return validation.Errors{"collections": validation.NewError(
 				"collections_import_failure",
-				"Failed to import the collections configuration.",
+				"Failed to import the collections configuration. Raw error:\n"+importErr.Error(),
 			)}
 		})
 	}, interceptors...)

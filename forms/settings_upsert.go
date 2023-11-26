@@ -4,9 +4,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/settings"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 // SettingsUpsert is a [settings.Settings] upsert (create/update) form.
@@ -58,32 +61,27 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc[*settings.Set
 	return runInterceptors(form.Settings, func(s *settings.Settings) error {
 		form.Settings = s
 
-		oldSettings, err := form.app.Settings().Clone()
-		if err != nil {
-			return err
-		}
-
-		// eagerly merge the application settings with the form ones
-		if err := form.app.Settings().Merge(form.Settings); err != nil {
-			return err
-		}
-
 		// persists settings change
 		encryptionKey := os.Getenv(form.app.EncryptionEnv())
 		if err := form.dao.SaveSettings(form.Settings, encryptionKey); err != nil {
-			// try to revert app settings
-			form.app.Settings().Merge(oldSettings)
-
 			return err
 		}
 
-		// explicitly trigger old logs deletion
-		form.app.LogsDao().DeleteOldRequests(
-			time.Now().AddDate(0, 0, -1*form.Settings.Logs.MaxDays),
-		)
+		// reload app settings
+		if err := form.app.RefreshSettings(); err != nil {
+			return err
+		}
 
+		// try to clear old logs not matching the new settings
+		createdBefore := time.Now().AddDate(0, 0, -1*form.Settings.Logs.MaxDays).UTC().Format(types.DefaultDateLayout)
+		expr := dbx.NewExp("[[created]] <= {:date} OR [[level]] < {:level}", dbx.Params{
+			"date":  createdBefore,
+			"level": form.Settings.Logs.MinLevel,
+		})
+		form.app.LogsDao().NonconcurrentDB().Delete((&models.Log{}).TableName(), expr).Execute()
+
+		// no logs are allowed -> try to reclaim preserved disk space after the previous delete operation
 		if form.Settings.Logs.MaxDays == 0 {
-			// no logs are allowed -> reclaim preserved disk space after the previous delete operation
 			form.app.LogsDao().Vacuum()
 		}
 

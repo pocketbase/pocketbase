@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"regexp"
 	"strings"
@@ -200,8 +200,12 @@ func (form *RecordUpsert) extractMultipartFormData(
 
 		files, err := rest.FindUploadedFiles(r, fullKey)
 		if err != nil || len(files) == 0 {
-			if err != nil && err != http.ErrMissingFile && form.app.IsDebug() {
-				log.Printf("%q uploaded file error: %v\n", fullKey, err)
+			if err != nil && err != http.ErrMissingFile {
+				form.app.Logger().Debug(
+					"Uploaded file error",
+					slog.String("key", fullKey),
+					slog.String("error", err.Error()),
+				)
 			}
 
 			// skip invalid or missing file(s)
@@ -794,8 +798,11 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 		//
 		// for now fail silently to avoid reupload when `form.Submit()`
 		// is called manually (aka. not from an api request)...
-		if err := form.processFilesToDelete(); err != nil && form.app.IsDebug() {
-			log.Println(err)
+		if err := form.processFilesToDelete(); err != nil {
+			form.app.Logger().Debug(
+				"Failed to delete old files",
+				slog.String("error", err.Error()),
+			)
 		}
 
 		return nil

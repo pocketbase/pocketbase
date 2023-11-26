@@ -2,7 +2,7 @@ package apis
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net"
 	"net/http"
 	"strings"
@@ -15,7 +15,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/security"
-	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 
@@ -24,6 +23,7 @@ const (
 	ContextAdminKey      string = "admin"
 	ContextAuthRecordKey string = "authRecord"
 	ContextCollectionKey string = "collection"
+	ContextExecStartKey  string = "execStart"
 )
 
 // RequireGuestOnly middleware requires a request to NOT have a valid
@@ -285,84 +285,83 @@ func LoadCollectionContext(app core.App, optCollectionTypes ...string) echo.Midd
 func ActivityLogger(app core.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			err := next(c)
-
-			logsMaxDays := app.Settings().Logs.MaxDays
-
-			// no logs retention
-			if logsMaxDays == 0 {
+			if err := next(c); err != nil {
 				return err
 			}
 
-			httpRequest := c.Request()
-			httpResponse := c.Response()
-			status := httpResponse.Status
-			meta := types.JsonMap{}
+			logRequest(app, c, nil)
 
-			if err != nil {
-				switch v := err.(type) {
-				case *echo.HTTPError:
-					status = v.Code
-					meta["errorMessage"] = v.Message
-					meta["errorDetails"] = fmt.Sprint(v.Internal)
-				case *ApiError:
-					status = v.Code
-					meta["errorMessage"] = v.Message
-					meta["errorDetails"] = fmt.Sprint(v.RawData())
-				default:
-					status = http.StatusBadRequest
-					meta["errorMessage"] = v.Error()
-				}
-			}
-
-			requestAuth := models.RequestAuthGuest
-			if c.Get(ContextAuthRecordKey) != nil {
-				requestAuth = models.RequestAuthRecord
-			} else if c.Get(ContextAdminKey) != nil {
-				requestAuth = models.RequestAuthAdmin
-			}
-
-			ip, _, _ := net.SplitHostPort(httpRequest.RemoteAddr)
-
-			model := &models.Request{
-				Url:       httpRequest.URL.RequestURI(),
-				Method:    strings.ToUpper(httpRequest.Method),
-				Status:    status,
-				Auth:      requestAuth,
-				UserIp:    realUserIp(httpRequest, ip),
-				RemoteIp:  ip,
-				Referer:   httpRequest.Referer(),
-				UserAgent: httpRequest.UserAgent(),
-				Meta:      meta,
-			}
-			// set timestamp fields before firing a new go routine
-			model.RefreshCreated()
-			model.RefreshUpdated()
-
-			routine.FireAndForget(func() {
-				if err := app.LogsDao().SaveRequest(model); err != nil && app.IsDebug() {
-					log.Println("Log save failed:", err)
-				}
-
-				// Delete old request logs
-				// ---
-				now := time.Now()
-				lastLogsDeletedAt := cast.ToTime(app.Cache().Get("lastLogsDeletedAt"))
-				daysDiff := now.Sub(lastLogsDeletedAt).Hours() * 24
-
-				if daysDiff > float64(logsMaxDays) {
-					deleteErr := app.LogsDao().DeleteOldRequests(now.AddDate(0, 0, -1*logsMaxDays))
-					if deleteErr == nil {
-						app.Cache().Set("lastLogsDeletedAt", now)
-					} else if app.IsDebug() {
-						log.Println("Logs delete failed:", deleteErr)
-					}
-				}
-			})
-
-			return err
+			return nil
 		}
 	}
+}
+
+func logRequest(app core.App, c echo.Context, err *ApiError) {
+	// no logs retention
+	if app.Settings().Logs.MaxDays == 0 {
+		return
+	}
+
+	attrs := make([]any, 0, 15)
+
+	attrs = append(attrs, slog.String("type", "request"))
+
+	started := cast.ToTime(c.Get(ContextExecStartKey))
+	if !started.IsZero() {
+		attrs = append(attrs, slog.Float64("execTime", float64(time.Since(started))/float64(time.Millisecond)))
+	}
+
+	httpRequest := c.Request()
+	httpResponse := c.Response()
+	method := strings.ToUpper(httpRequest.Method)
+	status := httpResponse.Status
+	url := httpRequest.URL.RequestURI()
+
+	// parse the request error
+	if err != nil {
+		status = err.Code
+		attrs = append(
+			attrs,
+			slog.String("error", err.Message),
+			slog.Any("details", err.RawData()),
+		)
+	}
+
+	requestAuth := models.RequestAuthGuest
+	if c.Get(ContextAuthRecordKey) != nil {
+		requestAuth = models.RequestAuthRecord
+	} else if c.Get(ContextAdminKey) != nil {
+		requestAuth = models.RequestAuthAdmin
+	}
+
+	attrs = append(
+		attrs,
+		slog.String("url", url),
+		slog.String("method", method),
+		slog.Int("status", status),
+		slog.String("auth", requestAuth),
+		slog.String("referer", httpRequest.Referer()),
+		slog.String("userAgent", httpRequest.UserAgent()),
+	)
+
+	if app.Settings().Logs.LogIp {
+		ip, _, _ := net.SplitHostPort(httpRequest.RemoteAddr)
+		attrs = append(
+			attrs,
+			slog.String("userIp", realUserIp(httpRequest, ip)),
+			slog.String("remoteIp", ip),
+		)
+	}
+
+	// don't block on logs write
+	routine.FireAndForget(func() {
+		message := method + " " + url
+		if err != nil {
+			app.Logger().Error("(Failed) "+message, attrs...)
+		} else {
+			app.Logger().Info(message, attrs...)
+		}
+	})
 }
 
 // Returns the "real" user IP from common proxy headers (or fallbackIp if none is found).

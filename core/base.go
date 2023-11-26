@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -18,10 +19,14 @@ import (
 	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
+	"github.com/pocketbase/pocketbase/tools/logger"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/routine"
+	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/store"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
+	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -39,8 +44,9 @@ var _ App = (*BaseApp)(nil)
 
 // BaseApp implements core.App and defines the base PocketBase app structure.
 type BaseApp struct {
+	// @todo consider introducing a mutex to allow safe concurrent config changes during runtime
+
 	// configurable parameters
-	isDebug          bool
 	dataDir          string
 	encryptionEnv    string
 	dataMaxOpenConns int
@@ -49,11 +55,12 @@ type BaseApp struct {
 	logsMaxIdleConns int
 
 	// internals
-	cache               *store.Store[any]
+	store               *store.Store[any]
 	settings            *settings.Settings
 	dao                 *daos.Dao
 	logsDao             *daos.Dao
 	subscriptionsBroker *subscriptions.Broker
+	logger              *slog.Logger
 
 	// app event hooks
 	onBeforeBootstrap *hook.Hook[*BootstrapEvent]
@@ -169,7 +176,6 @@ type BaseApp struct {
 type BaseAppConfig struct {
 	DataDir          string
 	EncryptionEnv    string
-	IsDebug          bool
 	DataMaxOpenConns int // default to 500
 	DataMaxIdleConns int // default 20
 	LogsMaxOpenConns int // default to 100
@@ -183,13 +189,12 @@ type BaseAppConfig struct {
 func NewBaseApp(config BaseAppConfig) *BaseApp {
 	app := &BaseApp{
 		dataDir:             config.DataDir,
-		isDebug:             config.IsDebug,
 		encryptionEnv:       config.EncryptionEnv,
 		dataMaxOpenConns:    config.DataMaxOpenConns,
 		dataMaxIdleConns:    config.DataMaxIdleConns,
 		logsMaxOpenConns:    config.LogsMaxOpenConns,
 		logsMaxIdleConns:    config.LogsMaxIdleConns,
-		cache:               store.New[any](nil),
+		store:               store.New[any](nil),
 		settings:            settings.New(),
 		subscriptionsBroker: subscriptions.NewBroker(),
 
@@ -314,6 +319,17 @@ func (app *BaseApp) IsBootstrapped() bool {
 	return app.dao != nil && app.logsDao != nil && app.settings != nil
 }
 
+// Logger returns the default app logger.
+//
+// If the application is not bootstrapped yet, fallbacks to slog.Default().
+func (app *BaseApp) Logger() *slog.Logger {
+	if app.logger == nil {
+		return slog.Default()
+	}
+
+	return app.logger
+}
+
 // Bootstrap initializes the application
 // (aka. create data dir, open db connections, load settings, etc.).
 //
@@ -340,6 +356,10 @@ func (app *BaseApp) Bootstrap() error {
 	}
 
 	if err := app.initLogsDB(); err != nil {
+		return err
+	}
+
+	if err := app.initLogger(); err != nil {
 		return err
 	}
 
@@ -438,20 +458,20 @@ func (app *BaseApp) EncryptionEnv() string {
 	return app.encryptionEnv
 }
 
-// IsDebug returns whether the app is in debug mode
-// (showing more detailed error logs, executed sql statements, etc.).
-func (app *BaseApp) IsDebug() bool {
-	return app.isDebug
-}
-
 // Settings returns the loaded app settings.
 func (app *BaseApp) Settings() *settings.Settings {
 	return app.settings
 }
 
-// Cache returns the app internal cache store.
+// Deprecated: Use app.Store() instead.
 func (app *BaseApp) Cache() *store.Store[any] {
-	return app.cache
+	color.Yellow("app.Store() is soft-deprecated. Please replace it with app.Store().")
+	return app.Store()
+}
+
+// Store returns the app internal runtime store.
+func (app *BaseApp) Store() *store.Store[any] {
+	return app.store
 }
 
 // SubscriptionsBroker returns the app realtime subscriptions broker instance.
@@ -567,6 +587,11 @@ func (app *BaseApp) RefreshSettings() error {
 	// load the settings from the stored param into the app ones
 	if err := app.settings.Merge(storedSettings); err != nil {
 		return err
+	}
+
+	// reload handler level (if initialized)
+	if h, ok := app.Logger().Handler().(*logger.BatchHandler); ok {
+		h.SetLevel(slog.Level(app.settings.Logs.MinLevel))
 	}
 
 	return nil
@@ -988,7 +1013,7 @@ func (app *BaseApp) initLogsDB() error {
 	}
 	concurrentDB.DB().SetMaxOpenConns(maxOpenConns)
 	concurrentDB.DB().SetMaxIdleConns(maxIdleConns)
-	concurrentDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+	concurrentDB.DB().SetConnMaxIdleTime(3 * time.Minute)
 
 	nonconcurrentDB, err := connectDB(filepath.Join(app.DataDir(), "logs.db"))
 	if err != nil {
@@ -996,7 +1021,7 @@ func (app *BaseApp) initLogsDB() error {
 	}
 	nonconcurrentDB.DB().SetMaxOpenConns(1)
 	nonconcurrentDB.DB().SetMaxIdleConns(1)
-	nonconcurrentDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+	nonconcurrentDB.DB().SetConnMaxIdleTime(3 * time.Minute)
 
 	app.logsDao = daos.NewMultiDB(concurrentDB, nonconcurrentDB)
 
@@ -1019,7 +1044,7 @@ func (app *BaseApp) initDataDB() error {
 	}
 	concurrentDB.DB().SetMaxOpenConns(maxOpenConns)
 	concurrentDB.DB().SetMaxIdleConns(maxIdleConns)
-	concurrentDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+	concurrentDB.DB().SetConnMaxIdleTime(3 * time.Minute)
 
 	nonconcurrentDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
 	if err != nil {
@@ -1027,19 +1052,17 @@ func (app *BaseApp) initDataDB() error {
 	}
 	nonconcurrentDB.DB().SetMaxOpenConns(1)
 	nonconcurrentDB.DB().SetMaxIdleConns(1)
-	nonconcurrentDB.DB().SetConnMaxIdleTime(5 * time.Minute)
+	nonconcurrentDB.DB().SetConnMaxIdleTime(3 * time.Minute)
 
-	if app.IsDebug() {
-		nonconcurrentDB.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
-			color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
-		}
-		concurrentDB.QueryLogFunc = nonconcurrentDB.QueryLogFunc
-
-		nonconcurrentDB.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
-			color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
-		}
-		concurrentDB.ExecLogFunc = nonconcurrentDB.ExecLogFunc
-	}
+	// @todo benchmark whether it will have an impact if always enabled as TRACE log
+	// 	nonconcurrentDB.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+	// 		color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
+	// 	}
+	// 	concurrentDB.QueryLogFunc = nonconcurrentDB.QueryLogFunc
+	// 	nonconcurrentDB.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+	// 		color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
+	// 	}
+	// 	concurrentDB.ExecLogFunc = nonconcurrentDB.ExecLogFunc
 
 	app.dao = app.createDaoWithHooks(concurrentDB, nonconcurrentDB)
 
@@ -1129,14 +1152,13 @@ func (app *BaseApp) registerDefaultHooks() {
 
 			// run in the background for "optimistic" delete to avoid
 			// blocking the delete transaction
-			//
-			// @todo consider creating a bg process queue so that the
-			// call could be "retried" in case of a failure.
 			routine.FireAndForget(func() {
-				if err := deletePrefix(prefix); err != nil && app.IsDebug() {
-					// non critical error - only log for debug
-					// (usually could happen because of S3 api limits)
-					log.Println(err)
+				if err := deletePrefix(prefix); err != nil {
+					app.Logger().Error(
+						"Failed to delete storage prefix (non critical error; usually could happen because of S3 api limits)",
+						slog.String("prefix", prefix),
+						slog.String("error", err.Error()),
+					)
 				}
 			})
 		}
@@ -1144,12 +1166,94 @@ func (app *BaseApp) registerDefaultHooks() {
 		return nil
 	})
 
-	app.OnTerminate().Add(func(e *TerminateEvent) error {
-		app.ResetBootstrapState()
+	if err := app.initAutobackupHooks(); err != nil {
+		app.Logger().Error("Failed to init auto backup hooks", slog.String("error", err.Error()))
+	}
+}
+
+func (app *BaseApp) initLogger() error {
+	duration := 3 * time.Second
+	ticker := time.NewTicker(duration)
+	done := make(chan bool)
+
+	level := slog.LevelInfo
+	if app.Settings() != nil {
+		level = slog.Level(app.Settings().Logs.MinLevel)
+	}
+
+	handler := logger.NewBatchHandler(logger.BatchOptions{
+		Level:     level,
+		BatchSize: 200,
+		BeforeAddFunc: func(ctx context.Context, log *logger.Log) bool {
+			ticker.Reset(duration)
+			return true
+		},
+		WriteFunc: func(ctx context.Context, logs []*logger.Log) error {
+			if !app.IsBootstrapped() {
+				return nil
+			}
+
+			// write the accumulated logs
+			// (note: based on several local tests there is no significant performance difference between small number of separate write queries vs 1 big INSERT)
+			app.LogsDao().RunInTransaction(func(txDao *daos.Dao) error {
+				model := &models.Log{}
+				for _, l := range logs {
+					model.MarkAsNew()
+					// note: using pseudorandom for a slightly better performance
+					model.Id = security.PseudorandomStringWithAlphabet(models.DefaultIdLength, models.DefaultIdAlphabet)
+					model.Level = int(l.Level)
+					model.Message = l.Message
+					model.Data = l.Data
+					model.Created, _ = types.ParseDateTime(l.Time)
+					model.Updated = model.Created
+
+					if err := txDao.SaveLog(model); err != nil {
+						log.Println("Failed to write log", model, err)
+					}
+				}
+
+				return nil
+			})
+
+			// delete old logs
+			// ---
+			logsMaxDays := app.Settings().Logs.MaxDays
+			now := time.Now()
+			lastLogsDeletedAt := cast.ToTime(app.Store().Get("lastLogsDeletedAt"))
+			daysDiff := now.Sub(lastLogsDeletedAt).Hours() * 24
+			if daysDiff > float64(logsMaxDays) {
+				deleteErr := app.LogsDao().DeleteOldLogs(now.AddDate(0, 0, -1*logsMaxDays))
+				if deleteErr == nil {
+					app.Store().Set("lastLogsDeletedAt", now)
+				} else {
+					log.Println("Logs delete failed", deleteErr)
+				}
+			}
+
+			return nil
+		},
+	})
+
+	ctx := context.Background()
+
+	go func() {
+		for {
+			select {
+			case <-done:
+				handler.WriteAll(ctx)
+			case <-ticker.C:
+				handler.WriteAll(ctx)
+			}
+		}
+	}()
+
+	app.logger = slog.New(handler)
+
+	app.OnTerminate().PreAdd(func(e *TerminateEvent) error {
+		ticker.Stop()
+		done <- true
 		return nil
 	})
 
-	if err := app.initAutobackupHooks(); err != nil && app.IsDebug() {
-		log.Println(err)
-	}
+	return nil
 }

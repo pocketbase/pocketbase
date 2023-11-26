@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -129,9 +128,8 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 			return api.app.OnAdminBeforeRequestPasswordResetRequest().Trigger(event, func(e *core.AdminRequestPasswordResetEvent) error {
 				// run in background because we don't need to show the result to the client
 				routine.FireAndForget(func() {
-					if err := next(e.Admin); err != nil && api.app.IsDebug() {
-						// @todo replace after logs generalization
-						log.Println(err)
+					if err := next(e.Admin); err != nil {
+						api.app.Logger().Error("Failed to send admin password reset request.", "error", err)
 					}
 				})
 

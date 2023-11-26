@@ -2,6 +2,8 @@ package search
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/inflector"
@@ -73,7 +75,34 @@ func (r *SimpleFieldResolver) Resolve(field string) (*ResolverResult, error) {
 		return nil, fmt.Errorf("Failed to resolve field %q.", field)
 	}
 
+	parts := strings.Split(field, ".")
+
+	// single regular field
+	if len(parts) == 1 {
+		return &ResolverResult{
+			Identifier: "[[" + inflector.Columnify(parts[0]) + "]]",
+		}, nil
+	}
+
+	// treat as json path
+	var jsonPath strings.Builder
+	jsonPath.WriteString("$")
+	for _, part := range parts[1:] {
+		if _, err := strconv.Atoi(part); err == nil {
+			jsonPath.WriteString("[")
+			jsonPath.WriteString(inflector.Columnify(part))
+			jsonPath.WriteString("]")
+		} else {
+			jsonPath.WriteString(".")
+			jsonPath.WriteString(inflector.Columnify(part))
+		}
+	}
+
 	return &ResolverResult{
-		Identifier: "[[" + inflector.Columnify(field) + "]]",
+		Identifier: fmt.Sprintf(
+			"JSON_EXTRACT([[%s]], '%s')",
+			inflector.Columnify(parts[0]),
+			jsonPath.String(),
+		),
 	}, nil
 }

@@ -3,8 +3,12 @@ package core
 import (
 	"os"
 	"testing"
+	"time"
 
+	"github.com/pocketbase/pocketbase/migrations/logs"
+	"github.com/pocketbase/pocketbase/tools/logger"
 	"github.com/pocketbase/pocketbase/tools/mailer"
+	"github.com/pocketbase/pocketbase/tools/migrate"
 )
 
 func TestNewBaseApp(t *testing.T) {
@@ -14,7 +18,6 @@ func TestNewBaseApp(t *testing.T) {
 	app := NewBaseApp(BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "test_env",
-		IsDebug:       true,
 	})
 
 	if app.dataDir != testDataDir {
@@ -25,12 +28,8 @@ func TestNewBaseApp(t *testing.T) {
 		t.Fatalf("expected encryptionEnv test_env, got %q", app.dataDir)
 	}
 
-	if !app.isDebug {
-		t.Fatalf("expected isDebug true, got %v", app.isDebug)
-	}
-
-	if app.cache == nil {
-		t.Fatal("expected cache to be set, got nil")
+	if app.store == nil {
+		t.Fatal("expected store to be set, got nil")
 	}
 
 	if app.settings == nil {
@@ -49,7 +48,6 @@ func TestBaseAppBootstrap(t *testing.T) {
 	app := NewBaseApp(BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
 	})
 	defer app.ResetBootstrapState()
 
@@ -57,7 +55,6 @@ func TestBaseAppBootstrap(t *testing.T) {
 		t.Fatal("Didn't expect the application to be bootstrapped.")
 	}
 
-	// bootstrap
 	if err := app.Bootstrap(); err != nil {
 		t.Fatal(err)
 	}
@@ -106,6 +103,14 @@ func TestBaseAppBootstrap(t *testing.T) {
 		t.Fatal("Expected app.settings to be initialized, got nil.")
 	}
 
+	if app.logger == nil {
+		t.Fatal("Expected app.logger to be initialized, got nil.")
+	}
+
+	if _, ok := app.logger.Handler().(*logger.BatchHandler); !ok {
+		t.Fatal("Expected app.logger handler to be initialized.")
+	}
+
 	// reset
 	if err := app.ResetBootstrapState(); err != nil {
 		t.Fatal(err)
@@ -127,7 +132,6 @@ func TestBaseAppGetters(t *testing.T) {
 	app := NewBaseApp(BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
 	})
 	defer app.ResetBootstrapState()
 
@@ -159,16 +163,16 @@ func TestBaseAppGetters(t *testing.T) {
 		t.Fatalf("Expected app.EncryptionEnv %v, got %v", app.EncryptionEnv(), app.encryptionEnv)
 	}
 
-	if app.isDebug != app.IsDebug() {
-		t.Fatalf("Expected app.IsDebug %v, got %v", app.IsDebug(), app.isDebug)
-	}
-
 	if app.settings != app.Settings() {
 		t.Fatalf("Expected app.Settings %v, got %v", app.Settings(), app.settings)
 	}
 
-	if app.cache != app.Cache() {
-		t.Fatalf("Expected app.Cache %v, got %v", app.Cache(), app.cache)
+	if app.store != app.Store() {
+		t.Fatalf("Expected app.Store %v, got %v", app.Store(), app.store)
+	}
+
+	if app.logger != app.Logger() {
+		t.Fatalf("Expected app.Logger %v, got %v", app.Logger(), app.logger)
 	}
 
 	if app.subscriptionsBroker != app.SubscriptionsBroker() {
@@ -187,7 +191,6 @@ func TestBaseAppNewMailClient(t *testing.T) {
 	app := NewBaseApp(BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
 	})
 
 	client1 := app.NewMailClient()
@@ -210,7 +213,6 @@ func TestBaseAppNewFilesystem(t *testing.T) {
 	app := NewBaseApp(BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
 	})
 
 	// local
@@ -240,7 +242,6 @@ func TestBaseAppNewBackupsFilesystem(t *testing.T) {
 	app := NewBaseApp(BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "pb_test_env",
-		IsDebug:       false,
 	})
 
 	// local
@@ -261,4 +262,69 @@ func TestBaseAppNewBackupsFilesystem(t *testing.T) {
 	if s3 != nil {
 		t.Fatalf("Expected nil s3 backups filesystem, got %v", s3)
 	}
+}
+
+func TestBaseAppLoggerWrites(t *testing.T) {
+	testDataDir, err := os.MkdirTemp("", "logger_writes")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(testDataDir)
+
+	app := NewBaseApp(BaseAppConfig{
+		DataDir: testDataDir,
+	})
+
+	if err := app.Bootstrap(); err != nil {
+		t.Fatal(err)
+	}
+
+	// init logs migrations
+	runner, err := migrate.NewRunner(app.LogsDB(), logs.LogsMigrations)
+	if err != nil {
+		t.Fatalf("Logs runner error: %v", err)
+	}
+	if _, err := runner.Up(); err != nil {
+		t.Fatalf("Logs migration execution error: %v", err)
+	}
+
+	// test batch logs writes
+	{
+		threshold := 200
+
+		for i := 0; i < threshold-1; i++ {
+			app.Logger().Error("test")
+		}
+
+		if total := totalLogs(app, t); total != 0 {
+			t.Fatalf("Expected %d logs, got %d", 0, total)
+		}
+
+		// should trigger batch write
+		app.Logger().Error("test")
+
+		// should be added for the next batch write
+		app.Logger().Error("test")
+
+		if total := totalLogs(app, t); total != threshold {
+			t.Fatalf("Expected %d logs, got %d", threshold, total)
+		}
+
+		// wait for ~3 secs to check the timer trigger
+		time.Sleep(3200 * time.Millisecond)
+		if total := totalLogs(app, t); total != threshold+1 {
+			t.Fatalf("Expected %d logs, got %d", threshold+1, total)
+		}
+	}
+}
+
+func totalLogs(app App, t *testing.T) int {
+	var total int
+
+	err := app.LogsDao().LogQuery().Select("count(*)").Row(&total)
+	if err != nil {
+		t.Fatalf("Failed to fetch total logs: %v", err)
+	}
+
+	return total
 }

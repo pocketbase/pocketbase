@@ -22,8 +22,8 @@ func FireAndForget(f func(), wg ...*sync.WaitGroup) {
 
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("RECOVERED FROM PANIC: %v", err)
-				log.Printf("%s\n", string(debug.Stack()))
+				log.Printf("RECOVERED FROM PANIC (safe to ignore): %v", err)
+				log.Println(string(debug.Stack()))
 			}
 		}()
 

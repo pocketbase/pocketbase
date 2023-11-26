@@ -6,7 +6,6 @@ package daos
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/pocketbase/dbx"
@@ -212,13 +211,7 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 			}
 		}
 		if len(errs) > 0 {
-			// @todo after go 1.20+ upgrade consider replacing with errors.Join()
-			var errsMsg strings.Builder
-			for _, err := range errs {
-				errsMsg.WriteString(err.Error())
-				errsMsg.WriteString("; ")
-			}
-			return fmt.Errorf("after transaction errors: %s", errsMsg.String())
+			return fmt.Errorf("after transaction errors: %w", errors.Join(errs...))
 		}
 
 		return nil

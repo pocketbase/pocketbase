@@ -15,27 +15,27 @@ func bindLogsApi(app core.App, rg *echo.Group) {
 	api := logsApi{app: app}
 
 	subGroup := rg.Group("/logs", RequireAdminAuth())
-	subGroup.GET("/requests", api.requestsList)
-	subGroup.GET("/requests/stats", api.requestsStats)
-	subGroup.GET("/requests/:id", api.requestView)
+	subGroup.GET("", api.list)
+	subGroup.GET("/stats", api.stats)
+	subGroup.GET("/:id", api.view)
 }
 
 type logsApi struct {
 	app core.App
 }
 
-var requestFilterFields = []string{
+var logFilterFields = []string{
 	"rowid", "id", "created", "updated",
-	"url", "method", "status", "auth",
-	"remoteIp", "userIp", "referer", "userAgent",
+	"level", "message", "data",
+	`^data\.[\w\.\:]*\w+$`,
 }
 
-func (api *logsApi) requestsList(c echo.Context) error {
-	fieldResolver := search.NewSimpleFieldResolver(requestFilterFields...)
+func (api *logsApi) list(c echo.Context) error {
+	fieldResolver := search.NewSimpleFieldResolver(logFilterFields...)
 
 	result, err := search.NewProvider(fieldResolver).
-		Query(api.app.LogsDao().RequestQuery()).
-		ParseAndExec(c.QueryParams().Encode(), &[]*models.Request{})
+		Query(api.app.LogsDao().LogQuery()).
+		ParseAndExec(c.QueryParams().Encode(), &[]*models.Log{})
 
 	if err != nil {
 		return NewBadRequestError("", err)
@@ -44,8 +44,8 @@ func (api *logsApi) requestsList(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func (api *logsApi) requestsStats(c echo.Context) error {
-	fieldResolver := search.NewSimpleFieldResolver(requestFilterFields...)
+func (api *logsApi) stats(c echo.Context) error {
+	fieldResolver := search.NewSimpleFieldResolver(logFilterFields...)
 
 	filter := c.QueryParam(search.FilterQueryParam)
 
@@ -58,24 +58,24 @@ func (api *logsApi) requestsStats(c echo.Context) error {
 		}
 	}
 
-	stats, err := api.app.LogsDao().RequestsStats(expr)
+	stats, err := api.app.LogsDao().LogsStats(expr)
 	if err != nil {
-		return NewBadRequestError("Failed to generate requests stats.", err)
+		return NewBadRequestError("Failed to generate logs stats.", err)
 	}
 
 	return c.JSON(http.StatusOK, stats)
 }
 
-func (api *logsApi) requestView(c echo.Context) error {
+func (api *logsApi) view(c echo.Context) error {
 	id := c.PathParam("id")
 	if id == "" {
 		return NewNotFoundError("", nil)
 	}
 
-	request, err := api.app.LogsDao().FindRequestById(id)
-	if err != nil || request == nil {
+	log, err := api.app.LogsDao().FindLogById(id)
+	if err != nil || log == nil {
 		return NewNotFoundError("", err)
 	}
 
-	return c.JSON(http.StatusOK, request)
+	return c.JSON(http.StatusOK, log)
 }

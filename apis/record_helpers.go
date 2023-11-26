@@ -3,6 +3,7 @@ package apis
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -108,8 +109,8 @@ func RecordAuthResponse(
 				expands,
 				expandFetch(app.Dao(), &requestInfo),
 			)
-			if len(failed) > 0 && app.IsDebug() {
-				log.Println("Failed to expand relations: ", failed)
+			if len(failed) > 0 {
+				app.Logger().Debug("[RecordAuthResponse] Failed to expand relations", slog.Any("errors", failed))
 			}
 		}
 

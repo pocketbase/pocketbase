@@ -898,7 +898,7 @@ func TestRecordAuthRequestEmailChange(t *testing.T) {
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":`,
-				`"newEmail":{"code":"validation_record_email_exists"`,
+				`"newEmail":{"code":"validation_record_email_invalid"`,
 			},
 		},
 		{

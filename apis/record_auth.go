@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -111,16 +111,16 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 
 		provider, err := auth.NewProviderByName(name)
 		if err != nil {
-			if api.app.IsDebug() {
-				log.Println(err)
-			}
+			api.app.Logger().Debug("Missing or invalid provier name", slog.String("name", name))
 			continue // skip provider
 		}
 
 		if err := config.SetupProvider(provider); err != nil {
-			if api.app.IsDebug() {
-				log.Println(err)
-			}
+			api.app.Logger().Debug(
+				"Failed to setup provider",
+				slog.String("name", name),
+				slog.String("error", err.Error()),
+			)
 			continue // skip provider
 		}
 
@@ -327,8 +327,11 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 			return api.app.OnRecordBeforeRequestPasswordResetRequest().Trigger(event, func(e *core.RecordRequestPasswordResetEvent) error {
 				// run in background because we don't need to show the result to the client
 				routine.FireAndForget(func() {
-					if err := next(e.Record); err != nil && api.app.IsDebug() {
-						log.Println(err)
+					if err := next(e.Record); err != nil {
+						api.app.Logger().Debug(
+							"Failed to send password reset email",
+							slog.String("error", err.Error()),
+						)
 					}
 				})
 
@@ -416,8 +419,11 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 			return api.app.OnRecordBeforeRequestVerificationRequest().Trigger(event, func(e *core.RecordRequestVerificationEvent) error {
 				// run in background because we don't need to show the result to the client
 				routine.FireAndForget(func() {
-					if err := next(e.Record); err != nil && api.app.IsDebug() {
-						log.Println(err)
+					if err := next(e.Record); err != nil {
+						api.app.Logger().Debug(
+							"Failed to send verification email",
+							slog.String("error", err.Error()),
+						)
 					}
 				})
 

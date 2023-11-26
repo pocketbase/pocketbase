@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -51,8 +51,12 @@ func (api *realtimeApi) connect(c echo.Context) error {
 			Client:      client,
 		}
 
-		if err := api.app.OnRealtimeDisconnectRequest().Trigger(disconnectEvent); err != nil && api.app.IsDebug() {
-			log.Println(err)
+		if err := api.app.OnRealtimeDisconnectRequest().Trigger(disconnectEvent); err != nil {
+			api.app.Logger().Debug(
+				"OnRealtimeDisconnectRequest error",
+				slog.String("clientId", client.Id()),
+				slog.String("error", err.Error()),
+			)
 		}
 
 		api.app.SubscriptionsBroker().Unregister(client.Id())
@@ -74,9 +78,7 @@ func (api *realtimeApi) connect(c echo.Context) error {
 		return err
 	}
 
-	if api.app.IsDebug() {
-		log.Printf("Realtime connection established: %s\n", client.Id())
-	}
+	api.app.Logger().Debug("Realtime connection established.", slog.String("clientId", client.Id()))
 
 	// signalize established connection (aka. fire "connect" message)
 	connectMsgEvent := &core.RealtimeMessageEvent{
@@ -98,9 +100,11 @@ func (api *realtimeApi) connect(c echo.Context) error {
 		return api.app.OnRealtimeAfterMessageSend().Trigger(e)
 	})
 	if connectMsgErr != nil {
-		if api.app.IsDebug() {
-			log.Println("Realtime connection closed (failed to deliver PB_CONNECT):", client.Id(), connectMsgErr)
-		}
+		api.app.Logger().Debug(
+			"Realtime connection closed (failed to deliver PB_CONNECT)",
+			slog.String("clientId", client.Id()),
+			slog.String("error", connectMsgErr.Error()),
+		)
 		return nil
 	}
 
@@ -116,9 +120,10 @@ func (api *realtimeApi) connect(c echo.Context) error {
 		case msg, ok := <-client.Channel():
 			if !ok {
 				// channel is closed
-				if api.app.IsDebug() {
-					log.Println("Realtime connection closed (closed channel):", client.Id())
-				}
+				api.app.Logger().Debug(
+					"Realtime connection closed (closed channel)",
+					slog.String("clientId", client.Id()),
+				)
 				return nil
 			}
 
@@ -138,9 +143,11 @@ func (api *realtimeApi) connect(c echo.Context) error {
 				return api.app.OnRealtimeAfterMessageSend().Trigger(msgEvent)
 			})
 			if msgErr != nil {
-				if api.app.IsDebug() {
-					log.Println("Realtime connection closed (failed to deliver message):", client.Id(), msgErr)
-				}
+				api.app.Logger().Debug(
+					"Realtime connection closed (failed to deliver message)",
+					slog.String("clientId", client.Id()),
+					slog.String("error", msgErr.Error()),
+				)
 				return nil
 			}
 
@@ -148,9 +155,10 @@ func (api *realtimeApi) connect(c echo.Context) error {
 			idleTimer.Reset(idleTimeout)
 		case <-c.Request().Context().Done():
 			// connection is closed
-			if api.app.IsDebug() {
-				log.Println("Realtime connection closed (cancelled request):", client.Id())
-			}
+			api.app.Logger().Debug(
+				"Realtime connection closed (cancelled request)",
+				slog.String("clientId", client.Id()),
+			)
 			return nil
 		}
 	}
@@ -267,8 +275,13 @@ func (api *realtimeApi) bindEvents() {
 
 	api.app.OnModelAfterCreate().PreAdd(func(e *core.ModelEvent) error {
 		if record := api.resolveRecord(e.Model); record != nil {
-			if err := api.broadcastRecord("create", record, false); err != nil && api.app.IsDebug() {
-				log.Println(err)
+			if err := api.broadcastRecord("create", record, false); err != nil {
+				api.app.Logger().Debug(
+					"Failed to broadcast record create",
+					slog.String("id", record.Id),
+					slog.String("collectionName", record.Collection().Name),
+					slog.String("error", err.Error()),
+				)
 			}
 		}
 		return nil
@@ -276,8 +289,13 @@ func (api *realtimeApi) bindEvents() {
 
 	api.app.OnModelAfterUpdate().PreAdd(func(e *core.ModelEvent) error {
 		if record := api.resolveRecord(e.Model); record != nil {
-			if err := api.broadcastRecord("update", record, false); err != nil && api.app.IsDebug() {
-				log.Println(err)
+			if err := api.broadcastRecord("update", record, false); err != nil {
+				api.app.Logger().Debug(
+					"Failed to broadcast record update",
+					slog.String("id", record.Id),
+					slog.String("collectionName", record.Collection().Name),
+					slog.String("error", err.Error()),
+				)
 			}
 		}
 		return nil
@@ -285,8 +303,13 @@ func (api *realtimeApi) bindEvents() {
 
 	api.app.OnModelBeforeDelete().Add(func(e *core.ModelEvent) error {
 		if record := api.resolveRecord(e.Model); record != nil {
-			if err := api.broadcastRecord("delete", record, true); err != nil && api.app.IsDebug() {
-				log.Println(err)
+			if err := api.broadcastRecord("delete", record, true); err != nil {
+				api.app.Logger().Debug(
+					"Failed to dry cache record delete",
+					slog.String("id", record.Id),
+					slog.String("collectionName", record.Collection().Name),
+					slog.String("error", err.Error()),
+				)
 			}
 		}
 		return nil
@@ -294,8 +317,13 @@ func (api *realtimeApi) bindEvents() {
 
 	api.app.OnModelAfterDelete().Add(func(e *core.ModelEvent) error {
 		if record := api.resolveRecord(e.Model); record != nil {
-			if err := api.broadcastDryCachedRecord("delete", record); err != nil && api.app.IsDebug() {
-				log.Println(err)
+			if err := api.broadcastDryCachedRecord("delete", record); err != nil {
+				api.app.Logger().Debug(
+					"Failed to broadcast record delete",
+					slog.String("id", record.Id),
+					slog.String("collectionName", record.Collection().Name),
+					slog.String("error", err.Error()),
+				)
 			}
 		}
 		return nil
@@ -389,8 +417,15 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 				rawExpand := cast.ToString(options.Query[expandQueryParam])
 				if rawExpand != "" {
 					expandErrs := api.app.Dao().ExpandRecord(cleanRecord, strings.Split(rawExpand, ","), expandFetch(api.app.Dao(), requestInfo))
-					if api.app.IsDebug() && len(expandErrs) > 0 {
-						log.Println("[broadcastRecord] expand errors", expandErrs)
+					if len(expandErrs) > 0 {
+						api.app.Logger().Debug(
+							"[broadcastRecord] expand errors",
+							slog.String("id", cleanRecord.Id),
+							slog.String("collectionName", cleanRecord.Collection().Name),
+							slog.String("sub", sub),
+							slog.String("expand", rawExpand),
+							slog.Any("errors", expandErrs),
+						)
 					}
 				}
 
@@ -416,14 +451,26 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 					decoded, err := rest.PickFields(cleanRecord, rawFields)
 					if err == nil {
 						data.Record = decoded
-					} else if api.app.IsDebug() {
-						log.Println(err)
+					} else {
+						api.app.Logger().Debug(
+							"[broadcastRecord] pick fields error",
+							slog.String("id", cleanRecord.Id),
+							slog.String("collectionName", cleanRecord.Collection().Name),
+							slog.String("sub", sub),
+							slog.String("fields", rawFields),
+							slog.String("error", err.Error()),
+						)
 					}
 				}
 
 				dataBytes, err := json.Marshal(data)
-				if err != nil && api.app.IsDebug() {
-					log.Println("[broadcastRecord] data marshal error", err)
+				if err != nil {
+					api.app.Logger().Debug(
+						"[broadcastRecord] data marshal error",
+						slog.String("id", cleanRecord.Id),
+						slog.String("collectionName", cleanRecord.Collection().Name),
+						slog.String("error", err.Error()),
+					)
 					continue
 				}
 

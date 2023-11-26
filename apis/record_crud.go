@@ -2,7 +2,7 @@ package apis
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -88,8 +88,8 @@ func (api *recordApi) list(c echo.Context) error {
 			return nil
 		}
 
-		if err := EnrichRecords(e.HttpContext, api.app.Dao(), e.Records); err != nil && api.app.IsDebug() {
-			log.Println(err)
+		if err := EnrichRecords(e.HttpContext, api.app.Dao(), e.Records); err != nil {
+			api.app.Logger().Debug("Failed to enrich list records", slog.String("error", err.Error()))
 		}
 
 		return e.HttpContext.JSON(http.StatusOK, e.Result)
@@ -142,8 +142,13 @@ func (api *recordApi) view(c echo.Context) error {
 			return nil
 		}
 
-		if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
-			log.Println(err)
+		if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil {
+			api.app.Logger().Debug(
+				"Failed to enrich view record",
+				slog.String("id", e.Record.Id),
+				slog.String("collectionName", e.Record.Collection().Name),
+				slog.String("error", err.Error()),
+			)
 		}
 
 		return e.HttpContext.JSON(http.StatusOK, e.Record)
@@ -235,8 +240,13 @@ func (api *recordApi) create(c echo.Context) error {
 					return NewBadRequestError("Failed to create record.", err)
 				}
 
-				if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
-					log.Println(err)
+				if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil {
+					api.app.Logger().Debug(
+						"Failed to enrich create record",
+						slog.String("id", e.Record.Id),
+						slog.String("collectionName", e.Record.Collection().Name),
+						slog.String("error", err.Error()),
+					)
 				}
 
 				return api.app.OnRecordAfterCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
@@ -322,8 +332,13 @@ func (api *recordApi) update(c echo.Context) error {
 					return NewBadRequestError("Failed to update record.", err)
 				}
 
-				if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil && api.app.IsDebug() {
-					log.Println(err)
+				if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil {
+					api.app.Logger().Debug(
+						"Failed to enrich update record",
+						slog.String("id", e.Record.Id),
+						slog.String("collectionName", e.Record.Collection().Name),
+						slog.String("error", err.Error()),
+					)
 				}
 
 				return api.app.OnRecordAfterUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {

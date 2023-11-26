@@ -13,7 +13,7 @@ import (
 )
 
 func TestFilterDataBuildExpr(t *testing.T) {
-	resolver := search.NewSimpleFieldResolver("test1", "test2", "test3", `^test4.\w+$`)
+	resolver := search.NewSimpleFieldResolver("test1", "test2", "test3", `^test4_\w+$`)
 
 	scenarios := []struct {
 		name          string
@@ -96,35 +96,35 @@ func TestFilterDataBuildExpr(t *testing.T) {
 		{
 			"macros",
 			`
-				test4.1 > @now &&
-				test4.2 > @second &&
-				test4.3 > @minute &&
-				test4.4 > @hour &&
-				test4.5 > @day &&
-				test4.6 > @year &&
-				test4.7 > @month &&
-				test4.9 > @weekday &&
-				test4.9 > @todayStart &&
-				test4.10 > @todayEnd &&
-				test4.11 > @monthStart &&
-				test4.12 > @monthEnd &&
-				test4.13 > @yearStart &&
-				test4.14 > @yearEnd
+				test4_1 > @now &&
+				test4_2 > @second &&
+				test4_3 > @minute &&
+				test4_4 > @hour &&
+				test4_5 > @day &&
+				test4_6 > @year &&
+				test4_7 > @month &&
+				test4_9 > @weekday &&
+				test4_9 > @todayStart &&
+				test4_10 > @todayEnd &&
+				test4_11 > @monthStart &&
+				test4_12 > @monthEnd &&
+				test4_13 > @yearStart &&
+				test4_14 > @yearEnd
 			`,
 			false,
-			"([[test4.1]] > {:TEST} AND [[test4.2]] > {:TEST} AND [[test4.3]] > {:TEST} AND [[test4.4]] > {:TEST} AND [[test4.5]] > {:TEST} AND [[test4.6]] > {:TEST} AND [[test4.7]] > {:TEST} AND [[test4.9]] > {:TEST} AND [[test4.9]] > {:TEST} AND [[test4.10]] > {:TEST} AND [[test4.11]] > {:TEST} AND [[test4.12]] > {:TEST} AND [[test4.13]] > {:TEST} AND [[test4.14]] > {:TEST})",
+			"([[test4_1]] > {:TEST} AND [[test4_2]] > {:TEST} AND [[test4_3]] > {:TEST} AND [[test4_4]] > {:TEST} AND [[test4_5]] > {:TEST} AND [[test4_6]] > {:TEST} AND [[test4_7]] > {:TEST} AND [[test4_9]] > {:TEST} AND [[test4_9]] > {:TEST} AND [[test4_10]] > {:TEST} AND [[test4_11]] > {:TEST} AND [[test4_12]] > {:TEST} AND [[test4_13]] > {:TEST} AND [[test4_14]] > {:TEST})",
 		},
 		{
 			"complex expression",
-			"((test1 > 1) || (test2 != 2)) && test3 ~ '%%example' && test4.sub = null",
+			"((test1 > 1) || (test2 != 2)) && test3 ~ '%%example' && test4_sub = null",
 			false,
-			"(([[test1]] > {:TEST} OR [[test2]] != {:TEST}) AND [[test3]] LIKE {:TEST} ESCAPE '\\' AND ([[test4.sub]] = '' OR [[test4.sub]] IS NULL))",
+			"(([[test1]] > {:TEST} OR [[test2]] != {:TEST}) AND [[test3]] LIKE {:TEST} ESCAPE '\\' AND ([[test4_sub]] = '' OR [[test4_sub]] IS NULL))",
 		},
 		{
 			"combination of special literals (null, true, false)",
-			"test1=true && test2 != false && null = test3 || null != test4.sub",
+			"test1=true && test2 != false && null = test3 || null != test4_sub",
 			false,
-			"([[test1]] = 1 AND [[test2]] != 0 AND ('' = [[test3]] OR [[test3]] IS NULL) OR ('' != [[test4.sub]] AND [[test4.sub]] IS NOT NULL))",
+			"([[test1]] = 1 AND [[test2]] != 0 AND ('' = [[test3]] OR [[test3]] IS NULL) OR ('' != [[test4_sub]] AND [[test4_sub]] IS NOT NULL))",
 		},
 		{
 			"all operators",

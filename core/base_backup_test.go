@@ -25,11 +25,11 @@ func TestCreateBackup(t *testing.T) {
 	expectedAppNamePrefix := "test_" + strings.Repeat("a", 45)
 
 	// test pending error
-	app.Cache().Set(core.CacheKeyActiveBackup, "")
+	app.Store().Set(core.StoreKeyActiveBackup, "")
 	if err := app.CreateBackup(context.Background(), "test.zip"); err == nil {
 		t.Fatal("Expected pending error, got nil")
 	}
-	app.Cache().Remove(core.CacheKeyActiveBackup)
+	app.Store().Remove(core.StoreKeyActiveBackup)
 
 	// create with auto generated name
 	if err := app.CreateBackup(context.Background(), ""); err != nil {
@@ -98,11 +98,11 @@ func TestRestoreBackup(t *testing.T) {
 	}
 
 	// test pending error
-	app.Cache().Set(core.CacheKeyActiveBackup, "")
+	app.Store().Set(core.StoreKeyActiveBackup, "")
 	if err := app.RestoreBackup(context.Background(), "test"); err == nil {
 		t.Fatal("Expected pending error, got nil")
 	}
-	app.Cache().Remove(core.CacheKeyActiveBackup)
+	app.Store().Remove(core.StoreKeyActiveBackup)
 
 	// missing backup
 	if err := app.RestoreBackup(context.Background(), "missing"); err == nil {

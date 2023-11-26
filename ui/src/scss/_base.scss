@@ -193,6 +193,7 @@ a {
     display: inline-block;
     vertical-align: top;
     flex-shrink: 1;
+    min-width: 0;
     max-width: 100%;
     overflow: hidden;
     white-space: nowrap;
@@ -321,6 +322,16 @@ a,
     &:empty {
         display: none !important;
     }
+}
+
+.v-align-top {
+    vertical-align: top;
+}
+.v-align-middle {
+    vertical-align: middle;
+}
+.v-align-bottom {
+    vertical-align: bottom;
 }
 
 .scrollbar-gutter-stable {

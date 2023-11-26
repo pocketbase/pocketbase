@@ -2,11 +2,12 @@
     import { onMount } from "svelte";
     import { scale } from "svelte/transition";
     import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
     import {
         Chart,
-        LineElement,
-        PointElement,
-        LineController,
+        BarController,
+        BarElement,
+        CategoryScale,
         LinearScale,
         TimeScale,
         Filler,
@@ -20,7 +21,7 @@
     let chartCanvas;
     let chartInst;
     let chartData = [];
-    let totalRequests = 0;
+    let totalLogs = 0;
     let isLoading = false;
 
     $: if (typeof filter !== "undefined" || typeof presets !== "undefined") {
@@ -36,24 +37,19 @@
         isLoading = true;
 
         return ApiClient.logs
-            .getRequestsStats({
-                filter: [presets, filter].filter(Boolean).join("&&"),
+            .getStats({
+                filter: [presets, CommonHelper.normalizeLogsFilter(filter)].filter(Boolean).join("&&"),
             })
             .then((result) => {
                 resetData();
+
                 for (let item of result) {
                     chartData.push({
                         x: new Date(item.date),
                         y: item.total,
                     });
-                    totalRequests += item.total;
+                    totalLogs += item.total;
                 }
-
-                // add current time marker to the chart
-                chartData.push({
-                    x: new Date(),
-                    y: undefined,
-                });
             })
             .catch((err) => {
                 if (!err?.isAbort) {
@@ -68,31 +64,31 @@
     }
 
     function resetData() {
-        totalRequests = 0;
         chartData = [];
+        totalLogs = 0;
     }
 
     onMount(() => {
-        Chart.register(LineElement, PointElement, LineController, LinearScale, TimeScale, Filler, Tooltip);
+        Chart.register(BarController, BarElement, CategoryScale, LinearScale, TimeScale, Filler, Tooltip);
 
         chartInst = new Chart(chartCanvas, {
-            type: "line",
+            type: "bar",
             data: {
                 datasets: [
                     {
                         label: "Total requests",
                         data: chartData,
-                        borderColor: "#ef4565",
-                        pointBackgroundColor: "#ef4565",
-                        backgroundColor: "rgb(239,69,101,0.05)",
-                        borderWidth: 2,
-                        pointRadius: 1,
-                        pointBorderWidth: 0,
-                        fill: true,
+                        backgroundColor: "#e34562",
+                        maxBarThickness: 40,
+                        borderRadius: 2,
+                        minBarLength: 7,
+                        hoverBackgroundColor: "#e34562",
                     },
                 ],
             },
             options: {
+                resizeDelay: 250,
+                maintainAspectRatio: false,
                 animation: false,
                 interaction: {
                     intersect: false,
@@ -103,25 +99,28 @@
                         beginAtZero: true,
                         grid: {
                             color: "#edf0f3",
-                            borderColor: "#dee3e8",
+                        },
+                        border: {
+                            color: "#e4e9ec",
                         },
                         ticks: {
                             precision: 0,
-                            maxTicksLimit: 6,
+                            maxTicksLimit: 4,
                             autoSkip: true,
                             color: "#666f75",
                         },
                     },
                     x: {
+                        // offset: false,
                         type: "time",
                         time: {
                             unit: "hour",
                             tooltipFormat: "DD h a",
                         },
                         grid: {
-                            borderColor: "#dee3e8",
-                            color: (c) => (c.tick.major ? "#edf0f3" : ""),
+                            color: (c) => (c.tick?.major ? "#edf0f3" : ""),
                         },
+                        color: "#e4e9ec",
                         ticks: {
                             maxTicksLimit: 15,
                             autoSkip: true,
@@ -129,7 +128,7 @@
                             major: {
                                 enabled: true,
                             },
-                            color: (c) => (c.tick.major ? "#16161a" : "#666f75"),
+                            color: (c) => (c.tick?.major ? "#16161a" : "#666f75"),
                         },
                     },
                 },
@@ -146,19 +145,14 @@
 </script>
 
 <div class="chart-wrapper" class:loading={isLoading}>
+    <div class="total-logs entrance-right" class:hidden={isLoading}>
+        Found {totalLogs}
+        {totalLogs == 1 ? "log" : "logs"}
+    </div>
     {#if isLoading}
         <div class="chart-loader loader" transition:scale={{ duration: 150 }} />
     {/if}
-    <canvas bind:this={chartCanvas} class="chart-canvas" style="height: 250px; width: 100%;" />
-</div>
-
-<div class="txt-hint m-t-xs txt-right">
-    {#if isLoading}
-        Loading...
-    {:else}
-        {totalRequests}
-        {totalRequests === 1 ? "log" : "logs"}
-    {/if}
+    <canvas bind:this={chartCanvas} class="chart-canvas" />
 </div>
 
 <style>
@@ -166,6 +160,7 @@
         position: relative;
         display: block;
         width: 100%;
+        height: 170px;
     }
     .chart-wrapper.loading .chart-canvas {
         pointer-events: none;
@@ -177,5 +172,12 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+    }
+    .total-logs {
+        position: absolute;
+        right: 0;
+        top: -50px;
+        font-size: var(--smFontSize);
+        color: var(--txtHintColor);
     }
 </style>
