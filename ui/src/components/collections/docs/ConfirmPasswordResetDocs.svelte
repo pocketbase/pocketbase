@@ -51,11 +51,17 @@
 
         ...
 
+        let oldAuth = await pb.authStore.model;
+
         await pb.collection('${collection?.name}').confirmPasswordReset(
             'TOKEN',
             'NEW_PASSWORD',
             'NEW_PASSWORD_CONFIRM',
         );
+
+        // reauthenticate if needed
+        // (after the above call all previously issued tokens are invalidated)
+        await pb.collection('${collection?.name}').authWithPassword(oldAuth.email, 'NEW_PASSWORD');
     `}
     dart={`
         import 'package:pocketbase/pocketbase.dart';
@@ -64,11 +70,17 @@
 
         ...
 
+        final oldAuth = await pb.authStore.model;
+
         await pb.collection('${collection?.name}').confirmPasswordReset(
           'TOKEN',
           'NEW_PASSWORD',
           'NEW_PASSWORD_CONFIRM',
         );
+
+        // reauthenticate if needed
+        // (after the above call all previously issued tokens are invalidated)
+        await pb.collection('${collection?.name}').authWithPassword(oldAuth.email, 'NEW_PASSWORD');
     `}
 />
 

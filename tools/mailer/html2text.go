@@ -91,6 +91,7 @@ func html2Text(htmlDocument string) (string, error) {
 			if linkTxt == "" {
 				linkTxt = "LINK"
 			}
+
 			builder.WriteString("[")
 			builder.WriteString(linkTxt)
 			builder.WriteString("]")
@@ -106,6 +107,7 @@ func html2Text(htmlDocument string) (string, error) {
 					break
 				}
 			}
+
 			activeBuilder.Reset()
 		}
 	}
