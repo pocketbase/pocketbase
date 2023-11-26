@@ -10,6 +10,16 @@ import (
 
 var whitespaceRegex = regexp.MustCompile(`\s+`)
 
+var tagsToSkip = []string{
+	"style", "script", "iframe", "applet", "object", "svg", "img",
+	"button", "form", "textarea", "input", "select", "option", "template",
+}
+
+var inlineTags = []string{
+	"a", "span", "small", "strike", "strong",
+	"sub", "sup", "em", "b", "u", "i",
+}
+
 // Very rudimentary auto HTML to Text mail body converter.
 //
 // Caveats:
@@ -20,32 +30,24 @@ var whitespaceRegex = regexp.MustCompile(`\s+`)
 // - Trailing spaces are preserved.
 // - Multiple consequence newlines are collapsed as one unless multiple <br> tags are used.
 func html2Text(htmlDocument string) (string, error) {
-	var builder strings.Builder
-
 	doc, err := html.Parse(strings.NewReader(htmlDocument))
 	if err != nil {
 		return "", err
 	}
 
-	tagsToSkip := []string{
-		"style", "script", "iframe", "applet", "object", "svg", "img",
-		"button", "form", "textarea", "input", "select", "option", "template",
-	}
-
-	inlineTags := []string{
-		"a", "span", "small", "strike", "strong",
-		"sub", "sup", "em", "b", "u", "i",
-	}
-
+	var builder strings.Builder
 	var canAddNewLine bool
 
 	// see https://pkg.go.dev/golang.org/x/net/html#Parse
-	var f func(*html.Node)
-	f = func(n *html.Node) {
-		// start link wrapping for producing "[text](link)" formatted string
+	var f func(*html.Node, *strings.Builder)
+	f = func(n *html.Node, activeBuilder *strings.Builder) {
 		isLink := n.Type == html.ElementNode && n.Data == "a"
+
 		if isLink {
-			builder.WriteString("[")
+			var linkBuilder strings.Builder
+			activeBuilder = &linkBuilder
+		} else if activeBuilder == nil {
+			activeBuilder = &builder
 		}
 
 		switch n.Type {
@@ -58,34 +60,42 @@ func html2Text(htmlDocument string) (string, error) {
 			}
 
 			if txt != "" {
-				builder.WriteString(txt)
+				activeBuilder.WriteString(txt)
 				canAddNewLine = true
 			}
 		case html.ElementNode:
 			if n.Data == "br" {
 				// always write new lines when <br> tag is used
-				builder.WriteString("\r\n")
+				activeBuilder.WriteString("\r\n")
 				canAddNewLine = false
 			} else if canAddNewLine && !list.ExistInSlice(n.Data, inlineTags) {
-				builder.WriteString("\r\n")
+				activeBuilder.WriteString("\r\n")
 				canAddNewLine = false
 			}
 
 			// prefix list items with dash
 			if n.Data == "li" {
-				builder.WriteString("- ")
+				activeBuilder.WriteString("- ")
 			}
 		}
 
 		for c := n.FirstChild; c != nil; c = c.NextSibling {
 			if c.Type != html.ElementNode || !list.ExistInSlice(c.Data, tagsToSkip) {
-				f(c)
+				f(c, activeBuilder)
 			}
 		}
 
-		// end link wrapping
+		// format links as [label](href)
 		if isLink {
+			linkTxt := strings.TrimSpace(activeBuilder.String())
+			if linkTxt == "" {
+				linkTxt = "LINK"
+			}
+			builder.WriteString("[")
+			builder.WriteString(linkTxt)
 			builder.WriteString("]")
+
+			// link href attr extraction
 			for _, a := range n.Attr {
 				if a.Key == "href" {
 					if a.Val != "" {
@@ -96,10 +106,11 @@ func html2Text(htmlDocument string) (string, error) {
 					break
 				}
 			}
+			activeBuilder.Reset()
 		}
 	}
 
-	f(doc)
+	f(doc, &builder)
 
 	return strings.TrimSpace(builder.String()), nil
 }
