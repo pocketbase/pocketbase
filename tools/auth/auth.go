@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 )
 
@@ -18,6 +19,7 @@ type AuthUser struct {
 	RawUser      map[string]any `json:"rawUser"`
 	AccessToken  string         `json:"accessToken"`
 	RefreshToken string         `json:"refreshToken"`
+	Expiry       types.DateTime `json:"expiry"`
 }
 
 // Provider defines a common interface for an OAuth2 client.

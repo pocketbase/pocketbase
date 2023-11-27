@@ -6,6 +6,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
@@ -66,6 +67,8 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
 	}
+
+	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	// in case user has set "Keep my email address private", send an
 	// **optional** API request to retrieve the verified primary email
