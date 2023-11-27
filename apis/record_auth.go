@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"sort"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -155,6 +156,11 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 			) + "&redirect_uri=", // empty redirect_uri so that users can append their redirect url
 		})
 	}
+
+	// sort providers
+	sort.SliceStable(result.AuthProviders, func(i, j int) bool {
+		return result.AuthProviders[i].Name < result.AuthProviders[j].Name
+	})
 
 	return c.JSON(http.StatusOK, result)
 }
