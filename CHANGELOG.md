@@ -33,6 +33,9 @@
 
 - Added `expiry` field to the OAuth2 user response containing the _optional_ expiration time of the OAuth2 access token ([#3617](https://github.com/pocketbase/pocketbase/discussions/3617)).
 
+- Added new `filesystem.Copy(src, dest)` method to copy existing files from one location to another.
+  _This is usually useful when duplicating records with file fields programmatically._
+
 
 ## v0.20.0-rc3
 

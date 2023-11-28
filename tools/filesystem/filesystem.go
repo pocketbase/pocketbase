@@ -117,6 +117,13 @@ func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
 	return br, nil
 }
 
+// Copy copies the file stored at srcKey to dstKey.
+//
+// If dstKey file already exists, it is overwritten.
+func (s *System) Copy(srcKey, dstKey string) error {
+	return s.bucket.Copy(s.ctx, dstKey, srcKey, nil)
+}
+
 // List returns a flat list with info for all files under the specified prefix.
 func (s *System) List(prefix string) ([]*blob.ListObject, error) {
 	files := []*blob.ListObject{}

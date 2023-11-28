@@ -429,6 +429,38 @@ func TestFileSystemGetFile(t *testing.T) {
 	}
 }
 
+func TestFileSystemCopy(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fs, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fs.Close()
+
+	src := "image.png"
+	dst := "image.png_copy"
+
+	// copy missing file
+	if err := fs.Copy(dst, src); err == nil {
+		t.Fatalf("Expected to fail copying %q to %q, got nil", dst, src)
+	}
+
+	// copy existing file
+	if err := fs.Copy(src, dst); err != nil {
+		t.Fatalf("Failed to copy %q to %q: %v", src, dst, err)
+	}
+	f, err := fs.GetFile(dst)
+	defer f.Close()
+	if err != nil {
+		t.Fatalf("Missing copied file %q: %v", dst, err)
+	}
+	if f.Size() != 73 {
+		t.Fatalf("Expected file size %d, got %d", 73, f.Size())
+	}
+}
+
 func TestFileSystemList(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
