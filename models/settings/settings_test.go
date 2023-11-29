@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/mailer"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestSettingsValidate(t *testing.T) {
@@ -941,6 +942,8 @@ func TestAuthProviderConfigValidate(t *testing.T) {
 				Enabled:      true,
 				ClientId:     "test",
 				ClientSecret: "test",
+				DisplayName:  "test",
+				PKCE:         types.Pointer(true),
 				AuthUrl:      "https://example.com",
 				TokenUrl:     "https://example.com",
 				UserApiUrl:   "https://example.com",
@@ -978,6 +981,8 @@ func TestAuthProviderConfigSetupProvider(t *testing.T) {
 		AuthUrl:      "test_AuthUrl",
 		UserApiUrl:   "test_UserApiUrl",
 		TokenUrl:     "test_TokenUrl",
+		DisplayName:  "test_DisplayName",
+		PKCE:         types.Pointer(true),
 	}
 	if err := c2.SetupProvider(provider); err != nil {
 		t.Error(err)
@@ -1001,5 +1006,13 @@ func TestAuthProviderConfigSetupProvider(t *testing.T) {
 
 	if provider.TokenUrl() != c2.TokenUrl {
 		t.Fatalf("Expected TokenUrl %s, got %s", c2.TokenUrl, provider.TokenUrl())
+	}
+
+	if provider.DisplayName() != c2.DisplayName {
+		t.Fatalf("Expected DisplayName %s, got %s", c2.DisplayName, provider.DisplayName())
+	}
+
+	if provider.PKCE() != *c2.PKCE {
+		t.Fatalf("Expected PKCE %v, got %v", *c2.PKCE, provider.PKCE())
 	}
 }

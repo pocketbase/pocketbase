@@ -22,7 +22,9 @@ type Strava struct {
 // NewStravaProvider creates new Strava provider instance with some defaults.
 func NewStravaProvider() *Strava {
 	return &Strava{&baseProvider{
-		ctx: context.Background(),
+		ctx:         context.Background(),
+		displayName: "Strava",
+		pkce:        true,
 		scopes: []string{
 			"profile:read_all",
 		},

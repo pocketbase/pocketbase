@@ -24,11 +24,13 @@ func NewDiscordProvider() *Discord {
 	// https://discord.com/developers/docs/topics/oauth2
 	// https://discord.com/developers/docs/resources/user#get-current-user
 	return &Discord{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"identify", "email"},
-		authUrl:    "https://discord.com/api/oauth2/authorize",
-		tokenUrl:   "https://discord.com/api/oauth2/token",
-		userApiUrl: "https://discord.com/api/users/@me",
+		ctx:         context.Background(),
+		displayName: "Discord",
+		pkce:        true,
+		scopes:      []string{"identify", "email"},
+		authUrl:     "https://discord.com/api/oauth2/authorize",
+		tokenUrl:    "https://discord.com/api/oauth2/token",
+		userApiUrl:  "https://discord.com/api/users/@me",
 	}}
 }
 
@@ -50,9 +52,9 @@ func (p *Discord) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id            string `json:"id"`
 		Username      string `json:"username"`
 		Discriminator string `json:"discriminator"`
+		Avatar        string `json:"avatar"`
 		Email         string `json:"email"`
 		Verified      bool   `json:"verified"`
-		Avatar        string `json:"avatar"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err

@@ -1,4 +1,5 @@
 import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
+import OIDCOptions       from "@/components/settings/providers/OIDCOptions.svelte";
 import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
 import AppleOptions      from "@/components/settings/providers/AppleOptions.svelte";
 
@@ -126,21 +127,18 @@ export default [
         key:   "oidcAuth",
         title: "OpenID Connect",
         logo:  "oidc.svg",
-        optionsComponent: SelfHostedOptions,
-        optionsComponentProps: { required: true },
+        optionsComponent: OIDCOptions,
     },
     {
         key:   "oidc2Auth",
         title: "(2) OpenID Connect",
         logo:  "oidc.svg",
-        optionsComponent: SelfHostedOptions,
-        optionsComponentProps: { required: true },
+        optionsComponent: OIDCOptions,
     },
     {
         key:   "oidc3Auth",
         title: "(3) OpenID Connect",
         logo:  "oidc.svg",
-        optionsComponent: SelfHostedOptions,
-        optionsComponentProps: { required: true },
+        optionsComponent: OIDCOptions,
     },
 ];

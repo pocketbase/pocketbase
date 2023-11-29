@@ -23,11 +23,13 @@ type Kakao struct {
 // NewKakaoProvider creates a new Kakao provider instance with some defaults.
 func NewKakaoProvider() *Kakao {
 	return &Kakao{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"account_email", "profile_nickname", "profile_image"},
-		authUrl:    kakao.Endpoint.AuthURL,
-		tokenUrl:   kakao.Endpoint.TokenURL,
-		userApiUrl: "https://kapi.kakao.com/v2/user/me",
+		ctx:         context.Background(),
+		displayName: "Kakao",
+		pkce:        true,
+		scopes:      []string{"account_email", "profile_nickname", "profile_image"},
+		authUrl:     kakao.Endpoint.AuthURL,
+		tokenUrl:    kakao.Endpoint.TokenURL,
+		userApiUrl:  "https://kapi.kakao.com/v2/user/me",
 	}}
 }
 

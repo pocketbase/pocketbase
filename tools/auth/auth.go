@@ -16,10 +16,10 @@ type AuthUser struct {
 	Username     string         `json:"username"`
 	Email        string         `json:"email"`
 	AvatarUrl    string         `json:"avatarUrl"`
-	RawUser      map[string]any `json:"rawUser"`
 	AccessToken  string         `json:"accessToken"`
 	RefreshToken string         `json:"refreshToken"`
 	Expiry       types.DateTime `json:"expiry"`
+	RawUser      map[string]any `json:"rawUser"`
 }
 
 // Provider defines a common interface for an OAuth2 client.
@@ -29,6 +29,19 @@ type Provider interface {
 
 	// SetContext assigns the specified context to the current provider.
 	SetContext(ctx context.Context)
+
+	// PKCE indicates whether the provider can use the PKCE flow.
+	PKCE() bool
+
+	// SetPKCE toggles the state whether the provider can use the PKCE flow or not.
+	SetPKCE(enable bool)
+
+	// DisplayName usually returns provider name as it is officially written
+	// and it could be used directly in the UI.
+	DisplayName() string
+
+	// SetDisplayName sets the provider's display name.
+	SetDisplayName(displayName string)
 
 	// Scopes returns the provider access permissions that will be requested.
 	Scopes() []string

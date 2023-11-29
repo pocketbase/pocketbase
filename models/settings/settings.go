@@ -620,6 +620,8 @@ type AuthProviderConfig struct {
 	AuthUrl      string `form:"authUrl" json:"authUrl"`
 	TokenUrl     string `form:"tokenUrl" json:"tokenUrl"`
 	UserApiUrl   string `form:"userApiUrl" json:"userApiUrl"`
+	DisplayName  string `form:"displayName" json:"displayName"`
+	PKCE         *bool  `form:"pkce" json:"pkce"`
 }
 
 // Validate makes `ProviderConfig` validatable by implementing [validation.Validatable] interface.
@@ -657,6 +659,14 @@ func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 
 	if c.TokenUrl != "" {
 		provider.SetTokenUrl(c.TokenUrl)
+	}
+
+	if c.DisplayName != "" {
+		provider.SetDisplayName(c.DisplayName)
+	}
+
+	if c.PKCE != nil {
+		provider.SetPKCE(*c.PKCE)
 	}
 
 	return nil

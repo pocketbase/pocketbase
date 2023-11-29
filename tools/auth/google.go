@@ -21,7 +21,9 @@ type Google struct {
 // NewGoogleProvider creates new Google provider instance with some defaults.
 func NewGoogleProvider() *Google {
 	return &Google{&baseProvider{
-		ctx: context.Background(),
+		ctx:         context.Background(),
+		displayName: "Google",
+		pkce:        true,
 		scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.profile",
 			"https://www.googleapis.com/auth/userinfo.email",

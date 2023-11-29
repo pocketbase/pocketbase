@@ -45,7 +45,7 @@ type RecordOAuth2Login struct {
 	// The authorization code returned from the initial request.
 	Code string `form:"code" json:"code"`
 
-	// The code verifier sent with the initial request as part of the code_challenge.
+	// The optional PKCE code verifier as part of the code_challenge sent with the initial request.
 	CodeVerifier string `form:"codeVerifier" json:"codeVerifier"`
 
 	// The redirect url sent with the initial request.
@@ -87,7 +87,6 @@ func (form *RecordOAuth2Login) Validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(&form.Provider, validation.Required, validation.By(form.checkProviderName)),
 		validation.Field(&form.Code, validation.Required),
-		validation.Field(&form.CodeVerifier, validation.Required),
 		validation.Field(&form.RedirectUrl, validation.Required),
 	)
 }
@@ -142,11 +141,14 @@ func (form *RecordOAuth2Login) Submit(
 
 	provider.SetRedirectUrl(form.RedirectUrl)
 
+	var opts []oauth2.AuthCodeOption
+
+	if provider.PKCE() {
+		opts = append(opts, oauth2.SetAuthURLParam("code_verifier", form.CodeVerifier))
+	}
+
 	// fetch token
-	token, err := provider.FetchToken(
-		form.Code,
-		oauth2.SetAuthURLParam("code_verifier", form.CodeVerifier),
-	)
+	token, err := provider.FetchToken(form.Code, opts...)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -22,11 +22,13 @@ type Gitlab struct {
 // NewGitlabProvider creates new Gitlab provider instance with some defaults.
 func NewGitlabProvider() *Gitlab {
 	return &Gitlab{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"read_user"},
-		authUrl:    "https://gitlab.com/oauth/authorize",
-		tokenUrl:   "https://gitlab.com/oauth/token",
-		userApiUrl: "https://gitlab.com/api/v4/user",
+		ctx:         context.Background(),
+		displayName: "GitLab",
+		pkce:        true,
+		scopes:      []string{"read_user"},
+		authUrl:     "https://gitlab.com/oauth/authorize",
+		tokenUrl:    "https://gitlab.com/oauth/token",
+		userApiUrl:  "https://gitlab.com/api/v4/user",
 	}}
 }
 

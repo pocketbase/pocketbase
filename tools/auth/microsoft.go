@@ -23,11 +23,13 @@ type Microsoft struct {
 func NewMicrosoftProvider() *Microsoft {
 	endpoints := microsoft.AzureADEndpoint("")
 	return &Microsoft{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"User.Read"},
-		authUrl:    endpoints.AuthURL,
-		tokenUrl:   endpoints.TokenURL,
-		userApiUrl: "https://graph.microsoft.com/v1.0/me",
+		ctx:         context.Background(),
+		displayName: "Microsoft",
+		pkce:        true,
+		scopes:      []string{"User.Read"},
+		authUrl:     endpoints.AuthURL,
+		tokenUrl:    endpoints.TokenURL,
+		userApiUrl:  "https://graph.microsoft.com/v1.0/me",
 	}}
 }
 

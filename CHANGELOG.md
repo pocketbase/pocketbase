@@ -14,7 +14,7 @@
   Dao.SaveRequest(...)       -> Dao.SaveLog(...)
   ```
 
-- removed app.IsDebug() and the `--debug` flag
+- removed `app.IsDebug()` and the `--debug` flag
 
 - (@todo docs) Implemented `slog.Logger` via `app.Logger()`.
   Logs db writes are debounced and batched. DB write happens on
@@ -35,6 +35,13 @@
 
 - Added new `filesystem.Copy(src, dest)` method to copy existing files from one location to another.
   _This is usually useful when duplicating records with file fields programmatically._
+
+- Added new `displayName` field for each `listAuthMethods()` OAuth2 provider item.
+  _The value of the `displayName` property is currently configurable from the UI only for the OIDC providers._
+
+- Added new `PKCE()` and `SetPKCE(enable)` OAuth2 methods to indicate whether the PKCE flow is supported or not.
+  _The PKCE value is currently configurable from the UI only for the OIDC providers._
+  _This was added to accommodate OIDC providers that may throw an error if unsupported PKCE params are submitted with the auth request (eg. LinkedIn; see [#3799](https://github.com/pocketbase/pocketbase/discussions/3799#discussioncomment-7640312))._
 
 
 ## v0.20.0-rc3

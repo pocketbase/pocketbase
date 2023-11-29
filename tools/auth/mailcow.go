@@ -23,8 +23,10 @@ type Mailcow struct {
 // NewMailcowProvider creates a new mailcow provider instance with some defaults.
 func NewMailcowProvider() *Mailcow {
 	return &Mailcow{&baseProvider{
-		ctx:    context.Background(),
-		scopes: []string{"profile"},
+		ctx:         context.Background(),
+		displayName: "mailcow",
+		pkce:        true,
+		scopes:      []string{"profile"},
 	}}
 }
 

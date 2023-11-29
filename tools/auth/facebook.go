@@ -22,11 +22,13 @@ type Facebook struct {
 // NewFacebookProvider creates new Facebook provider instance with some defaults.
 func NewFacebookProvider() *Facebook {
 	return &Facebook{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"email"},
-		authUrl:    facebook.Endpoint.AuthURL,
-		tokenUrl:   facebook.Endpoint.TokenURL,
-		userApiUrl: "https://graph.facebook.com/me?fields=name,email,picture.type(large)",
+		ctx:         context.Background(),
+		displayName: "Facebook",
+		pkce:        true,
+		scopes:      []string{"email"},
+		authUrl:     facebook.Endpoint.AuthURL,
+		tokenUrl:    facebook.Endpoint.TokenURL,
+		userApiUrl:  "https://graph.facebook.com/me?fields=name,email,picture.type(large)",
 	}}
 }
 

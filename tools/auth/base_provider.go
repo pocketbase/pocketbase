@@ -12,13 +12,15 @@ import (
 // baseProvider defines common fields and methods used by OAuth2 client providers.
 type baseProvider struct {
 	ctx          context.Context
-	scopes       []string
 	clientId     string
 	clientSecret string
+	displayName  string
 	redirectUrl  string
 	authUrl      string
 	tokenUrl     string
 	userApiUrl   string
+	scopes       []string
+	pkce         bool
 }
 
 // Context implements Provider.Context() interface method.
@@ -29,6 +31,26 @@ func (p *baseProvider) Context() context.Context {
 // SetContext implements Provider.SetContext() interface method.
 func (p *baseProvider) SetContext(ctx context.Context) {
 	p.ctx = ctx
+}
+
+// PKCE implements Provider.PKCE() interface method.
+func (p *baseProvider) PKCE() bool {
+	return p.pkce
+}
+
+// SetPKCE implements Provider.SetPKCE() interface method.
+func (p *baseProvider) SetPKCE(enable bool) {
+	p.pkce = enable
+}
+
+// DisplayName implements Provider.DisplayName() interface method.
+func (p *baseProvider) DisplayName() string {
+	return p.displayName
+}
+
+// SetDisplayName implements Provider.SetDisplayName() interface method.
+func (p *baseProvider) SetDisplayName(displayName string) {
+	p.displayName = displayName
 }
 
 // Scopes implements Provider.Scopes() interface method.

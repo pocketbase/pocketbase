@@ -21,11 +21,13 @@ type Patreon struct {
 // NewPatreonProvider creates new Patreon provider instance with some defaults.
 func NewPatreonProvider() *Patreon {
 	return &Patreon{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"identity", "identity[email]"},
-		authUrl:    "https://www.patreon.com/oauth2/authorize",
-		tokenUrl:   "https://www.patreon.com/api/oauth2/token",
-		userApiUrl: "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=full_name,email,vanity,image_url,is_email_verified",
+		ctx:         context.Background(),
+		displayName: "Patreon",
+		pkce:        true,
+		scopes:      []string{"identity", "identity[email]"},
+		authUrl:     "https://www.patreon.com/oauth2/authorize",
+		tokenUrl:    "https://www.patreon.com/api/oauth2/token",
+		userApiUrl:  "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=full_name,email,vanity,image_url,is_email_verified",
 	}}
 }
 

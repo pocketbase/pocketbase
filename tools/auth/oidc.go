@@ -21,7 +21,9 @@ type OIDC struct {
 // NewOIDCProvider creates new OpenID Connect (OIDC) provider instance with some defaults.
 func NewOIDCProvider() *OIDC {
 	return &OIDC{&baseProvider{
-		ctx: context.Background(),
+		ctx:         context.Background(),
+		displayName: "OIDC",
+		pkce:        true,
 		scopes: []string{
 			"openid", // minimal requirement to return the id
 			"email",

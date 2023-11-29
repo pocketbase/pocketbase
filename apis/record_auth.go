@@ -74,12 +74,15 @@ func (api *recordAuthApi) authRefresh(c echo.Context) error {
 }
 
 type providerInfo struct {
-	Name                string `json:"name"`
-	State               string `json:"state"`
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	State       string `json:"state"`
+	AuthUrl     string `json:"authUrl"`
+	// technically could be omitted if the provider doesn't support PKCE,
+	// but to avoid breaking existing typed clients we'll return them as empty string
 	CodeVerifier        string `json:"codeVerifier"`
 	CodeChallenge       string `json:"codeChallenge"`
 	CodeChallengeMethod string `json:"codeChallengeMethod"`
-	AuthUrl             string `json:"authUrl"`
 }
 
 func (api *recordAuthApi) authMethods(c echo.Context) error {
@@ -91,9 +94,9 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 	authOptions := collection.AuthOptions()
 
 	result := struct {
+		AuthProviders    []providerInfo `json:"authProviders"`
 		UsernamePassword bool           `json:"usernamePassword"`
 		EmailPassword    bool           `json:"emailPassword"`
-		AuthProviders    []providerInfo `json:"authProviders"`
 	}{
 		UsernamePassword: authOptions.AllowUsernameAuth,
 		EmailPassword:    authOptions.AllowEmailAuth,
@@ -125,36 +128,41 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 			continue // skip provider
 		}
 
-		state := security.RandomString(30)
-		codeVerifier := security.RandomString(43)
-		codeChallenge := security.S256Challenge(codeVerifier)
-		codeChallengeMethod := "S256"
-		urlOpts := []oauth2.AuthCodeOption{
-			oauth2.SetAuthURLParam("code_challenge", codeChallenge),
-			oauth2.SetAuthURLParam("code_challenge_method", codeChallengeMethod),
+		info := providerInfo{
+			Name:        name,
+			DisplayName: provider.DisplayName(),
+			State:       security.RandomString(30),
 		}
+
+		if info.DisplayName == "" {
+			info.DisplayName = name
+		}
+
+		urlOpts := []oauth2.AuthCodeOption{}
 
 		// custom providers url options
 		switch name {
 		case auth.NameApple:
 			// see https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/incorporating_sign_in_with_apple_into_other_platforms#3332113
 			urlOpts = append(urlOpts, oauth2.SetAuthURLParam("response_mode", "query"))
-		case auth.NameVK:
-			// vk currently doesn't support PKCE for server-side authorization
-			urlOpts = []oauth2.AuthCodeOption{}
 		}
 
-		result.AuthProviders = append(result.AuthProviders, providerInfo{
-			Name:                name,
-			State:               state,
-			CodeVerifier:        codeVerifier,
-			CodeChallenge:       codeChallenge,
-			CodeChallengeMethod: codeChallengeMethod,
-			AuthUrl: provider.BuildAuthUrl(
-				state,
-				urlOpts...,
-			) + "&redirect_uri=", // empty redirect_uri so that users can append their redirect url
-		})
+		if provider.PKCE() {
+			info.CodeVerifier = security.RandomString(43)
+			info.CodeChallenge = security.S256Challenge(info.CodeVerifier)
+			info.CodeChallengeMethod = "S256"
+			urlOpts = append(urlOpts,
+				oauth2.SetAuthURLParam("code_challenge", info.CodeChallenge),
+				oauth2.SetAuthURLParam("code_challenge_method", info.CodeChallengeMethod),
+			)
+		}
+
+		info.AuthUrl = provider.BuildAuthUrl(
+			info.State,
+			urlOpts...,
+		) + "&redirect_uri=" // empty redirect_uri so that users can append their redirect url
+
+		result.AuthProviders = append(result.AuthProviders, info)
 	}
 
 	// sort providers

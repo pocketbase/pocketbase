@@ -8,7 +8,7 @@ var _ Model = (*Request)(nil)
 const (
 	RequestAuthGuest  = "guest"
 	RequestAuthAdmin  = "admin"
-	RequestAuthRecord = "auth_record"
+	RequestAuthRecord = "authRecord"
 )
 
 type Request struct {

@@ -22,7 +22,9 @@ type Spotify struct {
 // NewSpotifyProvider creates a new Spotify provider instance with some defaults.
 func NewSpotifyProvider() *Spotify {
 	return &Spotify{&baseProvider{
-		ctx: context.Background(),
+		ctx:         context.Background(),
+		displayName: "Spotify",
+		pkce:        true,
 		scopes: []string{
 			"user-read-private",
 			// currently Spotify doesn't return information whether the email is verified or not

@@ -21,7 +21,9 @@ type Twitter struct {
 // NewTwitterProvider creates new Twitter provider instance with some defaults.
 func NewTwitterProvider() *Twitter {
 	return &Twitter{&baseProvider{
-		ctx: context.Background(),
+		ctx:         context.Background(),
+		displayName: "Twitter",
+		pkce:        true,
 		scopes: []string{
 			"users.read",
 

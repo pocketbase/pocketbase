@@ -24,11 +24,13 @@ type Github struct {
 // NewGithubProvider creates new Github provider instance with some defaults.
 func NewGithubProvider() *Github {
 	return &Github{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"read:user", "user:email"},
-		authUrl:    github.Endpoint.AuthURL,
-		tokenUrl:   github.Endpoint.TokenURL,
-		userApiUrl: "https://api.github.com/user",
+		ctx:         context.Background(),
+		displayName: "GitHub",
+		pkce:        true, // technically is not suppoted yet but it is safe as the PKCE params are just ignored
+		scopes:      []string{"read:user", "user:email"},
+		authUrl:     github.Endpoint.AuthURL,
+		tokenUrl:    github.Endpoint.TokenURL,
+		userApiUrl:  "https://api.github.com/user",
 	}}
 }
 

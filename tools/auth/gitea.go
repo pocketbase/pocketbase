@@ -22,11 +22,13 @@ type Gitea struct {
 // NewGiteaProvider creates new Gitea provider instance with some defaults.
 func NewGiteaProvider() *Gitea {
 	return &Gitea{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"read:user", "user:email"},
-		authUrl:    "https://gitea.com/login/oauth/authorize",
-		tokenUrl:   "https://gitea.com/login/oauth/access_token",
-		userApiUrl: "https://gitea.com/api/v1/user",
+		ctx:         context.Background(),
+		displayName: "Gitea",
+		pkce:        true,
+		scopes:      []string{"read:user", "user:email"},
+		authUrl:     "https://gitea.com/login/oauth/authorize",
+		tokenUrl:    "https://gitea.com/login/oauth/access_token",
+		userApiUrl:  "https://gitea.com/api/v1/user",
 	}}
 }
 

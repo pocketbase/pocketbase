@@ -28,11 +28,13 @@ type VK struct {
 // Docs: https://dev.vk.com/api/oauth-parameters
 func NewVKProvider() *VK {
 	return &VK{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"email"},
-		authUrl:    vk.Endpoint.AuthURL,
-		tokenUrl:   vk.Endpoint.TokenURL,
-		userApiUrl: "https://api.vk.com/method/users.get?fields=photo_max,screen_name&v=5.131",
+		ctx:         context.Background(),
+		displayName: "ВКонтакте",
+		pkce:        false, // VK currently doesn't support PKCE and throws an error if PKCE params are send
+		scopes:      []string{"email"},
+		authUrl:     vk.Endpoint.AuthURL,
+		tokenUrl:    vk.Endpoint.TokenURL,
+		userApiUrl:  "https://api.vk.com/method/users.get?fields=photo_max,screen_name&v=5.131",
 	}}
 }
 

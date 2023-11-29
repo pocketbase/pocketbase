@@ -24,11 +24,13 @@ type Yandex struct {
 // Docs: https://yandex.ru/dev/id/doc/en/
 func NewYandexProvider() *Yandex {
 	return &Yandex{&baseProvider{
-		ctx:        context.Background(),
-		scopes:     []string{"login:email", "login:avatar", "login:info"},
-		authUrl:    yandex.Endpoint.AuthURL,
-		tokenUrl:   yandex.Endpoint.TokenURL,
-		userApiUrl: "https://login.yandex.ru/info",
+		ctx:         context.Background(),
+		displayName: "Yandex",
+		pkce:        true,
+		scopes:      []string{"login:email", "login:avatar", "login:info"},
+		authUrl:     yandex.Endpoint.AuthURL,
+		tokenUrl:    yandex.Endpoint.TokenURL,
+		userApiUrl:  "https://login.yandex.ru/info",
 	}}
 }
 
