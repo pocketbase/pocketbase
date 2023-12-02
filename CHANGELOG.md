@@ -43,6 +43,9 @@
   _The PKCE value is currently configurable from the UI only for the OIDC providers._
   _This was added to accommodate OIDC providers that may throw an error if unsupported PKCE params are submitted with the auth request (eg. LinkedIn; see [#3799](https://github.com/pocketbase/pocketbase/discussions/3799#discussioncomment-7640312))._
 
+- Allow a single OAuth2 user to be used for authentication in multiple auth collection.
+  - ⚠️ Because now you can have more than one external provider with `collectionId-provider-providerId` pair, `Dao.FindExternalAuthByProvider(provider, providerId)` method was removed in favour of the more generic `Dao.FindFirstExternalAuthByExpr(expr)`.
+
 
 ## v0.20.0-rc3
 

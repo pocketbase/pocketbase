@@ -38,7 +38,7 @@ your own custom app specific business logic and still have a single portable exe
 ### Installation
 
 ```sh
-# go 1.19+
+# go 1.21+
 go get github.com/pocketbase/pocketbase
 ```
 
@@ -93,7 +93,7 @@ Enable CGO only if you really need to squeeze the read/write query performance a
 
 To build the minimal standalone executable, like the prebuilt ones in the releases page, you can simply run `go build` inside the `examples/base` directory:
 
-0. [Install Go 1.19+](https://go.dev/doc/install) (_if you haven't already_)
+0. [Install Go 1.21+](https://go.dev/doc/install) (_if you haven't already_)
 1. Clone/download the repo
 2. Navigate to `examples/base`
 3. Run `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`

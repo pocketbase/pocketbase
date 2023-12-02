@@ -32,27 +32,6 @@ func (dao *Dao) FindAllExternalAuthsByRecord(authRecord *models.Record) ([]*mode
 	return auths, nil
 }
 
-// FindExternalAuthByProvider returns the first available
-// ExternalAuth model for the specified provider and providerId.
-func (dao *Dao) FindExternalAuthByProvider(provider, providerId string) (*models.ExternalAuth, error) {
-	model := &models.ExternalAuth{}
-
-	err := dao.ExternalAuthQuery().
-		AndWhere(dbx.Not(dbx.HashExp{"providerId": ""})). // exclude empty providerIds
-		AndWhere(dbx.HashExp{
-			"provider":   provider,
-			"providerId": providerId,
-		}).
-		Limit(1).
-		One(model)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return model, nil
-}
-
 // FindExternalAuthByRecordAndProvider returns the first available
 // ExternalAuth model for the specified record data and provider.
 func (dao *Dao) FindExternalAuthByRecordAndProvider(authRecord *models.Record, provider string) (*models.ExternalAuth, error) {
@@ -64,6 +43,24 @@ func (dao *Dao) FindExternalAuthByRecordAndProvider(authRecord *models.Record, p
 			"recordId":     authRecord.Id,
 			"provider":     provider,
 		}).
+		Limit(1).
+		One(model)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return model, nil
+}
+
+// FindFirstExternalAuthByExpr returns the first available
+// ExternalAuth model that satisfies the non-nil expression.
+func (dao *Dao) FindFirstExternalAuthByExpr(expr dbx.Expression) (*models.ExternalAuth, error) {
+	model := &models.ExternalAuth{}
+
+	err := dao.ExternalAuthQuery().
+		AndWhere(dbx.Not(dbx.HashExp{"providerId": ""})). // exclude empty providerIds
+		AndWhere(expr).
 		Limit(1).
 		One(model)
 

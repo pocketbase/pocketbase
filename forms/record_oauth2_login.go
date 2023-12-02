@@ -7,6 +7,7 @@ import (
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
@@ -162,7 +163,11 @@ func (form *RecordOAuth2Login) Submit(
 	var authRecord *models.Record
 
 	// check for existing relation with the auth record
-	rel, _ := form.dao.FindExternalAuthByProvider(form.Provider, authUser.Id)
+	rel, _ := form.dao.FindFirstExternalAuthByExpr(dbx.HashExp{
+		"collectionId": form.collection.Id,
+		"provider":     form.Provider,
+		"providerId":   authUser.Id,
+	})
 	switch {
 	case rel != nil:
 		authRecord, err = form.dao.FindRecordById(form.collection.Id, rel.RecordId)

@@ -85,7 +85,7 @@ func init() {
 			);
 
 			CREATE UNIQUE INDEX _externalAuths_record_provider_idx on {{_externalAuths}} ([[collectionId]], [[recordId]], [[provider]]);
-			CREATE UNIQUE INDEX _externalAuths_provider_providerId_idx on {{_externalAuths}} ([[provider]], [[providerId]]);
+			CREATE UNIQUE INDEX _externalAuths_collection_provider_idx on {{_externalAuths}} ([[collectionId]], [[provider]], [[providerId]]);
 		`).Execute()
 		if tablesErr != nil {
 			return tablesErr

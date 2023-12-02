@@ -52,11 +52,11 @@ type ServeConfig struct {
 //
 // Example:
 //
-// 	app.Bootstrap()
-// 	apis.Serve(app, apis.ServeConfig{
-// 		HttpAddr:        "127.0.0.1:8080",
-// 		ShowStartBanner: false,
-// 	})
+//	app.Bootstrap()
+//	apis.Serve(app, apis.ServeConfig{
+//		HttpAddr:        "127.0.0.1:8080",
+//		ShowStartBanner: false,
+//	})
 func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 	if len(config.AllowedOrigins) == 0 {
 		config.AllowedOrigins = []string{"*"}
