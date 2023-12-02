@@ -40,7 +40,7 @@
         <i
             class="ri-information-line link-hint"
             use:tooltip={{
-                text: "Usually it should be safe to be always enabled as most providers will just ignore the extra query parameters if PKCE is not supported by their APIs.",
+                text: "Usually it should be safe to be always enabled as most providers will just ignore the extra query parameters if they don't support PKCE.",
                 position: "right",
             }}
         />

@@ -46,6 +46,8 @@
 - Allow a single OAuth2 user to be used for authentication in multiple auth collection.
   - ⚠️ Because now you can have more than one external provider with `collectionId-provider-providerId` pair, `Dao.FindExternalAuthByProvider(provider, providerId)` method was removed in favour of the more generic `Dao.FindFirstExternalAuthByExpr(expr)`.
 
+- Added support for comments in the API rules and filter expressions.
+
 
 ## v0.20.0-rc3
 

@@ -1,4 +1,4 @@
-import{S as L,i as S,s as k,N as E,e as s,b as o,w as $,c as F,f as H,g as M,h as e,m as T,y as q,t as N,a as B,o as I,d as J}from"./index-7b2303b6.js";function O(v){let t,i,x,p,g,n,a,h,c,_,r,b,f,y,u,C,m,d;return r=new E({props:{content:`
+import{S as L,i as S,s as k,N as E,e as s,b as o,w as $,c as F,f as H,g as M,h as e,m as T,y as q,t as N,a as B,o as I,d as J}from"./index-4f1d7166.js";function O(v){let t,i,x,p,g,n,a,h,c,_,r,b,f,y,u,C,m,d;return r=new E({props:{content:`
                     ?fields=*,expand.relField.name
                 `}}),{c(){t=s("tr"),i=s("td"),i.textContent="fields",x=o(),p=s("td"),p.innerHTML='<span class="label">String</span>',g=o(),n=s("td"),a=s("p"),h=$(`Comma separated string of the fields to return in the JSON response
             `),c=s("em"),c.textContent="(by default returns all fields)",_=$(`. Ex.:

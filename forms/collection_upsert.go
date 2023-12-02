@@ -370,7 +370,7 @@ func (form *CollectionUpsert) checkRule(value any) error {
 
 	_, err := search.FilterData(*v).BuildExpr(r)
 	if err != nil {
-		return validation.NewError("validation_invalid_rule", "Invalid filter rule.")
+		return validation.NewError("validation_invalid_rule", "Invalid filter rule. Raw error: "+err.Error())
 	}
 
 	return nil

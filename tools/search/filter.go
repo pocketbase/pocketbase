@@ -69,6 +69,13 @@ func (f FilterData) BuildExpr(
 	}
 	data, err := fexpr.Parse(raw)
 	if err != nil {
+		// depending on the users demand we may allow empty expressions
+		// (aka. expressions consisting only of whitespaces or comments)
+		// but for now disallow them as it seems unnecessary
+		// if errors.Is(err, fexpr.ErrEmpty) {
+		// return dbx.NewExp("1=1"), nil
+		// }
+
 		return nil, err
 	}
 	// store in cache
