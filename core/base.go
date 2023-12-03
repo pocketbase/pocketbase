@@ -553,17 +553,7 @@ func (app *BaseApp) Restart() error {
 		return err
 	}
 
-	// optimistically reset the app bootstrap state
-	app.ResetBootstrapState()
-
-	if err := syscall.Exec(execPath, os.Args, os.Environ()); err != nil {
-		// restart the app bootstrap state
-		app.Bootstrap()
-
-		return err
-	}
-
-	return nil
+	return syscall.Exec(execPath, os.Args, os.Environ())
 }
 
 // RefreshSettings reinitializes and reloads the stored application settings.
