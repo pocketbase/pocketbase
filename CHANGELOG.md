@@ -53,6 +53,8 @@
 - Added a default red colored Stderr output for the commands errors.
   You can now also silence individually custom commands errors using the `cobra.Command.SilenceErrors` field.
 
+- Slightly speed up (~10%) the thumbs generation by changing from cubic (`CatmullRom`) to bilinear (`Linear`) resampling filter (_the quality difference is very little_).
+
 
 ## v0.20.0-rc3
 

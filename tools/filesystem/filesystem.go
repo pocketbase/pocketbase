@@ -425,25 +425,26 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 		return decodeErr
 	}
 
+	r.Close()
 	var thumbImg *image.NRGBA
 
 	if width == 0 || height == 0 {
 		// force resize preserving aspect ratio
-		thumbImg = imaging.Resize(img, width, height, imaging.CatmullRom)
+		thumbImg = imaging.Resize(img, width, height, imaging.Linear)
 	} else {
 		switch resizeType {
 		case "f":
 			// fit
-			thumbImg = imaging.Fit(img, width, height, imaging.CatmullRom)
+			thumbImg = imaging.Fit(img, width, height, imaging.Linear)
 		case "t":
 			// fill and crop from top
-			thumbImg = imaging.Fill(img, width, height, imaging.Top, imaging.CatmullRom)
+			thumbImg = imaging.Fill(img, width, height, imaging.Top, imaging.Linear)
 		case "b":
 			// fill and crop from bottom
-			thumbImg = imaging.Fill(img, width, height, imaging.Bottom, imaging.CatmullRom)
+			thumbImg = imaging.Fill(img, width, height, imaging.Bottom, imaging.Linear)
 		default:
 			// fill and crop from center
-			thumbImg = imaging.Fill(img, width, height, imaging.Center, imaging.CatmullRom)
+			thumbImg = imaging.Fill(img, width, height, imaging.Center, imaging.Linear)
 		}
 	}
 
