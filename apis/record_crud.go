@@ -74,7 +74,7 @@ func (api *recordApi) list(c echo.Context) error {
 
 	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &records)
 	if err != nil {
-		return NewBadRequestError("Invalid filter parameters.", err)
+		return NewBadRequestError("", err)
 	}
 
 	event := new(core.RecordsListEvent)
