@@ -217,7 +217,7 @@
                     isLoading = false;
                     console.warn(err);
                     clearList();
-                    ApiClient.error(err, err?.status != 400); // silence filter errors
+                    ApiClient.error(err, !filter || err?.status != 400); // silence filter errors
                 }
             });
     }

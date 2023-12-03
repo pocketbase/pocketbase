@@ -37,11 +37,15 @@
     export async function load(page = 1, breakTasks = true) {
         isLoading = true;
 
+        const normalizedFilter = [presets, CommonHelper.normalizeLogsFilter(filter)]
+            .filter(Boolean)
+            .join("&&");
+
         return ApiClient.logs
             .getList(page, perPage, {
                 sort: sort,
                 skipTotal: 1,
-                filter: [presets, CommonHelper.normalizeLogsFilter(filter)].filter(Boolean).join("&&"),
+                filter: normalizedFilter,
             })
             .then(async (result) => {
                 if (page <= 1) {
@@ -83,7 +87,7 @@
                     isLoading = false;
                     console.warn(err);
                     clearList();
-                    ApiClient.error(err, err?.status != 400); // silence filter errors
+                    ApiClient.error(err, !normalizedFilter || err?.status != 400); // silence filter errors
                 }
             });
     }

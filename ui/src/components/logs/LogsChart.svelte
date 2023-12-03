@@ -36,9 +36,13 @@
     export async function load() {
         isLoading = true;
 
+        const normalizedFilter = [presets, CommonHelper.normalizeLogsFilter(filter)]
+            .filter(Boolean)
+            .join("&&");
+
         return ApiClient.logs
             .getStats({
-                filter: [presets, CommonHelper.normalizeLogsFilter(filter)].filter(Boolean).join("&&"),
+                filter: normalizedFilter,
             })
             .then((result) => {
                 resetData();
@@ -55,7 +59,7 @@
                 if (!err?.isAbort) {
                     resetData();
                     console.warn(err);
-                    ApiClient.error(err, err?.status != 400); // silence filter errors
+                    ApiClient.error(err, !normalizedFilter || err?.status != 400); // silence filter errors
                 }
             })
             .finally(() => {
