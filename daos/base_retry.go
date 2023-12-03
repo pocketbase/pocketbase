@@ -2,6 +2,7 @@ package daos
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -23,9 +24,14 @@ func execLockRetry(timeout time.Duration, maxRetries int) dbx.ExecHookFunc {
 			q.WithContext(cancelCtx)
 		}
 
-		return baseLockRetry(func(attempt int) error {
+		execErr := baseLockRetry(func(attempt int) error {
 			return op()
 		}, maxRetries)
+		if execErr != nil {
+			return fmt.Errorf("%w; failed query: %s", execErr, q.SQL())
+		}
+
+		return nil
 	}
 }
 
