@@ -50,6 +50,9 @@
 
 - Added support for specifying a collection alias in `@collection.someCollection:alias.*`.
 
+- Added a default red colored Stderr output for the commands errors.
+  You can now also silence individually custom commands errors using the `cobra.Command.SilenceErrors` field.
+
 
 ## v0.20.0-rc3
 

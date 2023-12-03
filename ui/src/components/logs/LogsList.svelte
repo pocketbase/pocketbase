@@ -351,4 +351,7 @@
         margin-top: var(--smSpacing);
         bottom: var(--baseSpacing);
     }
+    .col-field-data {
+        min-width: 450px;
+    }
 </style>
