@@ -10,8 +10,7 @@
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 400;
-  src: local(''),
-       url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-regular.woff2') format('woff2');
+  src: url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-regular.woff2') format('woff2');
 }
 
 /* source-sans-pro-italic - latin_cyrillic */
@@ -19,8 +18,7 @@
   font-family: 'Source Sans Pro';
   font-style: italic;
   font-weight: 400;
-  src: local(''),
-       url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-italic.woff2') format('woff2');
+  src: url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-italic.woff2') format('woff2');
 }
 
 /* source-sans-pro-600 - latin_cyrillic */
@@ -28,8 +26,7 @@
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 600;
-  src: local(''),
-       url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-600.woff2') format('woff2');
+  src: url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-600.woff2') format('woff2');
 }
 
 /* source-sans-pro-600italic - latin_cyrillic */
@@ -37,8 +34,7 @@
   font-family: 'Source Sans Pro';
   font-style: italic;
   font-weight: 600;
-  src: local(''),
-       url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-600italic.woff2') format('woff2');
+  src: url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-600italic.woff2') format('woff2');
 }
 
 /* source-sans-pro-700 - latin_cyrillic */
@@ -46,8 +42,7 @@
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 700;
-  src: local(''),
-       url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-700.woff2') format('woff2');
+  src: url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-700.woff2') format('woff2');
 }
 
 /* source-sans-pro-700italic - latin_cyrillic */
@@ -55,8 +50,7 @@
   font-family: 'Source Sans Pro';
   font-style: italic;
   font-weight: 700;
-  src: local(''),
-       url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-700italic.woff2') format('woff2');
+  src: url('/fonts/source-sans-pro/source-sans-pro-v18-latin_cyrillic-700italic.woff2') format('woff2');
 }
 
 /* jetbrains-mono-regular - latin */
@@ -64,8 +58,7 @@
   font-family: 'JetBrains Mono';
   font-style: normal;
   font-weight: 400;
-  src: local(''),
-       url('/fonts/jetbrains-mono/jetbrains-mono-v12-latin-regular.woff2') format('woff2');
+  src: url('/fonts/jetbrains-mono/jetbrains-mono-v12-latin-regular.woff2') format('woff2');
 }
 
 /* jetbrains-mono-600 - latin */
@@ -73,6 +66,5 @@
   font-family: 'JetBrains Mono';
   font-style: normal;
   font-weight: 600;
-  src: local(''),
-       url('/fonts/jetbrains-mono/jetbrains-mono-v12-latin-600.woff2') format('woff2');
+  src: url('/fonts/jetbrains-mono/jetbrains-mono-v12-latin-600.woff2') format('woff2');
 }
