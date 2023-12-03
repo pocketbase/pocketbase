@@ -1,12 +1,14 @@
 package pocketbase
 
 import (
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"strings"
 	"syscall"
 
+	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/cmd"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -98,6 +100,9 @@ func NewWithConfig(config Config) *PocketBase {
 		hideStartBanner:   config.HideStartBanner,
 	}
 
+	// replace with a colored stderr writer
+	pb.RootCmd.SetErr(newErrWriter())
+
 	// parse base flags
 	// (errors are ignored, since the full flags parsing happens on Execute())
 	pb.eagerParseFlags(&config)
@@ -152,9 +157,8 @@ func (pb *PocketBase) Execute() error {
 
 	// execute the root command
 	go func() {
-		if err := pb.RootCmd.Execute(); err != nil {
-			pb.Logger().Error("rootCmd.Execute error", "error", err)
-		}
+		// leave to the commands to decide whether to print their error or not
+		pb.RootCmd.Execute()
 
 		done <- true
 	}()
@@ -245,4 +249,26 @@ func inspectRuntime() (baseDir string, withGoRun bool) {
 		baseDir = filepath.Dir(os.Args[0])
 	}
 	return
+}
+
+// newErrWriter returns a red colored stderr writter.
+func newErrWriter() *coloredWriter {
+	return &coloredWriter{
+		w: os.Stderr,
+		c: color.New(color.FgRed),
+	}
+}
+
+// coloredWriter is a small wrapper struct to construct a [color.Color] writter.
+type coloredWriter struct {
+	w io.Writer
+	c *color.Color
+}
+
+// Write writes the p bytes using the colored writer.
+func (colored *coloredWriter) Write(p []byte) (n int, err error) {
+	colored.c.SetWriter(colored.w)
+	defer colored.c.UnsetWriter(colored.w)
+
+	return colored.c.Print(string(p))
 }

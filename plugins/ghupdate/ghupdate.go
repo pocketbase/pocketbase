@@ -105,12 +105,9 @@ func (p *plugin) updateCmd() *cobra.Command {
 	var withBackup bool
 
 	command := &cobra.Command{
-		Use:   "update",
-		Short: "Automatically updates the current PocketBase executable with the latest available version",
-		// @todo remove after logs generalization
-		// prevents printing the error log twice
-		SilenceErrors: true,
-		SilenceUsage:  true,
+		Use:          "update",
+		Short:        "Automatically updates the current PocketBase executable with the latest available version",
+		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			var needConfirm bool
 			if isMaybeRunningInDocker() {

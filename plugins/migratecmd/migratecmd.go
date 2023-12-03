@@ -118,13 +118,11 @@ func (p *plugin) createCommand() *cobra.Command {
 `
 
 	command := &cobra.Command{
-		Use:       "migrate",
-		Short:     "Executes app DB migration scripts",
-		Long:      cmdDesc,
-		ValidArgs: []string{"up", "down", "create", "collections"},
-		// prevents printing the error log twice
-		SilenceErrors: true,
-		SilenceUsage:  true,
+		Use:          "migrate",
+		Short:        "Executes app DB migration scripts",
+		Long:         cmdDesc,
+		ValidArgs:    []string{"up", "down", "create", "collections"},
+		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			cmd := ""
 			if len(args) > 0 {
