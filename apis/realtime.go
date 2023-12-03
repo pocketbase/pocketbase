@@ -26,9 +26,9 @@ import (
 func bindRealtimeApi(app core.App, rg *echo.Group) {
 	api := realtimeApi{app: app}
 
-	subGroup := rg.Group("/realtime", ActivityLogger(app))
+	subGroup := rg.Group("/realtime")
 	subGroup.GET("", api.connect)
-	subGroup.POST("", api.setSubscriptions)
+	subGroup.POST("", api.setSubscriptions, ActivityLogger(app))
 
 	api.bindEvents()
 }
@@ -207,6 +207,12 @@ func (api *realtimeApi) setSubscriptions(c echo.Context) error {
 
 		// subscribe to the new subscriptions
 		e.Client.Subscribe(e.Subscriptions...)
+
+		api.app.Logger().Debug(
+			"Realtime subscriptions updated.",
+			slog.String("clientId", e.Client.Id()),
+			slog.Any("subscriptions", e.Subscriptions),
+		)
 
 		return api.app.OnRealtimeAfterSubscribeRequest().Trigger(event, func(e *core.RealtimeSubscribeEvent) error {
 			if e.HttpContext.Response().Committed {
