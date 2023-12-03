@@ -356,6 +356,6 @@
         bottom: var(--baseSpacing);
     }
     .col-field-data {
-        min-width: 450px;
+        min-width: 600px;
     }
 </style>
