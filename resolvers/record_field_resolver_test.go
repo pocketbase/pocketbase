@@ -155,9 +155,9 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		{
 			"@collection join (opt/any operators)",
 			"demo4",
-			"@collection.demo1.text ?> true || @collection.demo2.active ?> true || @collection.demo1.file_one ?> true",
+			"@collection.demo1.text ?> true || @collection.demo2.active ?> true || @collection.demo1:demo1_alias.file_one ?> true",
 			false,
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo1` `__collection_demo1` LEFT JOIN `demo2` `__collection_demo2` WHERE ([[__collection_demo1.text]] > 1 OR [[__collection_demo2.active]] > 1 OR [[__collection_demo1.file_one]] > 1)",
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `demo1` `__collection_demo1` LEFT JOIN `demo2` `__collection_demo2` LEFT JOIN `demo1` `__collection_alias_demo1_alias` WHERE ([[__collection_demo1.text]] > 1 OR [[__collection_demo2.active]] > 1 OR [[__collection_alias_demo1_alias.file_one]] > 1)",
 		},
 		{
 			"@collection join (multi-match operators)",
@@ -391,8 +391,10 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		{"@collection.unknown", true, ""},
 		{"@collection.demo2", true, ""},
 		{"@collection.demo2.", true, ""},
+		{"@collection.demo2:someAlias", true, ""},
+		{"@collection.demo2:someAlias.", true, ""},
 		{"@collection.demo2.title", false, "[[__collection_demo2.title]]"},
-		{"@collection.demo4.title", false, "[[__collection_demo4.title]]"},
+		{"@collection.demo2:someAlias.title", false, "[[__collection_alias_someAlias.title]]"},
 		{"@collection.demo4.id", false, "[[__collection_demo4.id]]"},
 		{"@collection.demo4.created", false, "[[__collection_demo4.created]]"},
 		{"@collection.demo4.updated", false, "[[__collection_demo4.updated]]"},

@@ -141,13 +141,21 @@ func (r *runner) processCollectionField() (*search.ResolverResult, error) {
 		return nil, fmt.Errorf("invalid @collection field path in %q", r.fieldName)
 	}
 
-	collection, err := r.resolver.loadCollection(r.activeProps[1])
+	// nameOrId or nameOrId:alias
+	collectionParts := strings.SplitN(r.activeProps[1], ":", 2)
+
+	collection, err := r.resolver.loadCollection(collectionParts[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to load collection %q from field path %q", r.activeProps[1], r.fieldName)
 	}
 
 	r.activeCollectionName = collection.Name
-	r.activeTableAlias = inflector.Columnify("__collection_" + r.activeCollectionName)
+
+	if len(collectionParts) == 2 && collectionParts[1] != "" {
+		r.activeTableAlias = inflector.Columnify("__collection_alias_" + collectionParts[1])
+	} else {
+		r.activeTableAlias = inflector.Columnify("__collection_" + r.activeCollectionName)
+	}
 
 	r.withMultiMatch = true
 

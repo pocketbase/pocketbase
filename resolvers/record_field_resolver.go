@@ -94,7 +94,7 @@ func NewRecordFieldResolver(
 			`^\@request\.data\.[\w\.\:]*\w+$`,
 			`^\@request\.query\.[\w\.\:]*\w+$`,
 			`^\@request\.headers\.\w+$`,
-			`^\@collection\.\w+\.[\w\.\:]*\w+$`,
+			`^\@collection\.\w+(\:\w+)?\.[\w\.\:]*\w+$`,
 		},
 	}
 

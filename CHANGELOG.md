@@ -48,6 +48,8 @@
 
 - Added support for comments in the API rules and filter expressions.
 
+- Added support for specifying a collection alias in `@collection.someCollection:alias.*`.
+
 
 ## v0.20.0-rc3
 
