@@ -15,6 +15,7 @@
 
     $pageTitle = "Logs";
 
+    const LOG_QUERY_KEY = "logId";
     const ADMIN_REQUESTS_QUERY_KEY = "adminRequests";
     const ADMIN_REQUESTS_STORAGE_KEY = "adminLogRequests";
 
@@ -28,6 +29,10 @@
         (initialQueryParams.get(ADMIN_REQUESTS_QUERY_KEY) ||
             window.localStorage?.getItem(ADMIN_REQUESTS_STORAGE_KEY)) << 0;
     let initialWithAdminLogs = withAdminLogs;
+
+    $: if (initialQueryParams.get(LOG_QUERY_KEY) && logViewPanel) {
+        logViewPanel.show(initialQueryParams.get(LOG_QUERY_KEY));
+    }
 
     $: presets = !withAdminLogs ? 'data.auth!="admin"' : "";
 
@@ -100,6 +105,18 @@
     {/key}
 </PageWrapper>
 
-<LogViewPanel bind:this={logViewPanel} />
+<LogViewPanel
+    bind:this={logViewPanel}
+    on:show={(e) => {
+        let query = {};
+        query[LOG_QUERY_KEY] = e.detail?.id || null;
+        CommonHelper.replaceHashQueryParams(query);
+    }}
+    on:hide={() => {
+        let query = {};
+        query[LOG_QUERY_KEY] = null;
+        CommonHelper.replaceHashQueryParams(query);
+    }}
+/>
 
 <LogsSettingsPanel bind:this={logsSettingsPanel} on:save={refresh} />
