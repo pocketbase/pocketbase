@@ -55,6 +55,11 @@
 
 - Slightly speed up (~10%) the thumbs generation by changing from cubic (`CatmullRom`) to bilinear (`Linear`) resampling filter (_the quality difference is very little_).
 
+- Limit the concurrent thumbs generation to avoid high CPU and memory usage in spiky scenarios ([#3794](https://github.com/pocketbase/pocketbase/pull/3794); thanks @t-muehlberger).
+  _Currently the max concurrent thumbs generation processes are limited to "total of logical process CPUs + 1"._
+  _This is arbitrary chosen and may change in the future depending on the users feedback and usage patterns._
+  _If you are experiencing OOM errors during large image thumb generations, especially in container environment, you can try defining the `GOMEMLIMIT=500MiB` env variable before starting the executable._
+
 
 ## v0.20.0-rc3
 
