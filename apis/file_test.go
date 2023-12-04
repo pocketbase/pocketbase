@@ -2,15 +2,19 @@ package apis_test
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
+	"sync"
 	"testing"
 
 	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
@@ -383,5 +387,82 @@ func TestFileDownload(t *testing.T) {
 
 		// regular request test
 		scenario.Test(t)
+	}
+}
+
+func TestConcurrentThumbsGeneration(t *testing.T) {
+	app, err := tests.NewTestApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer app.Cleanup()
+
+	fsys, err := app.NewFilesystem()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fsys.Close()
+
+	// create a dummy file field collection
+	demo1, err := app.Dao().FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fileField := demo1.Schema.GetFieldByName("file_one")
+	fileField.Options = &schema.FileOptions{
+		Protected: false,
+		MaxSelect: 1,
+		MaxSize:   999999,
+		// new thumbs
+		Thumbs: []string{"111x111", "111x222", "111x333"},
+	}
+	demo1.Schema.AddField(fileField)
+	if err := app.Dao().SaveCollection(demo1); err != nil {
+		t.Fatal(err)
+	}
+
+	fileKey := "wsmn24bux7wo113/al1h9ijdeojtsjy/300_Jsjq7RdBgA.png"
+
+	e, err := apis.InitApi(app)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	urls := []string{
+		"/api/files/" + fileKey + "?thumb=111x111",
+		"/api/files/" + fileKey + "?thumb=111x111", // should still result in single thumb
+		"/api/files/" + fileKey + "?thumb=111x222",
+		"/api/files/" + fileKey + "?thumb=111x333",
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(len(urls))
+
+	for _, url := range urls {
+		url := url
+		go func() {
+			defer wg.Done()
+
+			recorder := httptest.NewRecorder()
+
+			req := httptest.NewRequest("GET", url, nil)
+
+			e.ServeHTTP(recorder, req)
+		}()
+	}
+
+	wg.Wait()
+
+	// ensure that all new requested thumbs were created
+	thumbKeys := []string{
+		"wsmn24bux7wo113/al1h9ijdeojtsjy/thumbs_300_Jsjq7RdBgA.png/111x111_" + filepath.Base(fileKey),
+		"wsmn24bux7wo113/al1h9ijdeojtsjy/thumbs_300_Jsjq7RdBgA.png/111x222_" + filepath.Base(fileKey),
+		"wsmn24bux7wo113/al1h9ijdeojtsjy/thumbs_300_Jsjq7RdBgA.png/111x333_" + filepath.Base(fileKey),
+	}
+	for _, k := range thumbKeys {
+		if exists, _ := fsys.Exists(k); !exists {
+			t.Fatalf("Missing thumb %q: %v", k, err)
+		}
 	}
 }

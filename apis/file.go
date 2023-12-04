@@ -1,19 +1,26 @@
 package apis
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"runtime"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/tokens"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
+	"golang.org/x/sync/semaphore"
+	"golang.org/x/sync/singleflight"
 )
 
 var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg", "image/gif"}
@@ -21,7 +28,12 @@ var defaultThumbSizes = []string{"100x100"}
 
 // bindFileApi registers the file api endpoints and the corresponding handlers.
 func bindFileApi(app core.App, rg *echo.Group) {
-	api := fileApi{app: app}
+	api := fileApi{
+		app:             app,
+		thumbGenSem:     semaphore.NewWeighted(int64(runtime.NumCPU() + 1)), // the value is arbitrary chosen and may change in the future
+		thumbGenPending: new(singleflight.Group),
+		thumbGenMaxWait: 60 * time.Second,
+	}
 
 	subGroup := rg.Group("/files", ActivityLogger(app))
 	subGroup.POST("/token", api.fileToken)
@@ -31,6 +43,18 @@ func bindFileApi(app core.App, rg *echo.Group) {
 
 type fileApi struct {
 	app core.App
+
+	// thumbGenSem is a semaphore to prevent too much concurrent
+	// requests generating new thumbs at the same time.
+	thumbGenSem *semaphore.Weighted
+
+	// thumbGenPending represents a group of currently pending
+	// thumb generation processes.
+	thumbGenPending *singleflight.Group
+
+	// thumbGenMaxWait is the maximum waiting time for starting a new
+	// thumb generation process.
+	thumbGenMaxWait time.Duration
 }
 
 func (api *fileApi) fileToken(c echo.Context) error {
@@ -124,11 +148,11 @@ func (api *fileApi) download(c echo.Context) error {
 		baseFilesPath = fileRecord.BaseFilesPath()
 	}
 
-	fs, err := api.app.NewFilesystem()
+	fsys, err := api.app.NewFilesystem()
 	if err != nil {
 		return NewBadRequestError("Filesystem initialization failure.", err)
 	}
-	defer fs.Close()
+	defer fsys.Close()
 
 	originalPath := baseFilesPath + "/" + filename
 	servedPath := originalPath
@@ -138,7 +162,7 @@ func (api *fileApi) download(c echo.Context) error {
 	thumbSize := c.QueryParam("thumb")
 	if thumbSize != "" && (list.ExistInSlice(thumbSize, defaultThumbSizes) || list.ExistInSlice(thumbSize, options.Thumbs)) {
 		// extract the original file meta attributes and check it existence
-		oAttrs, oAttrsErr := fs.Attributes(originalPath)
+		oAttrs, oAttrsErr := fsys.Attributes(originalPath)
 		if oAttrsErr != nil {
 			return NewNotFoundError("", err)
 		}
@@ -149,10 +173,19 @@ func (api *fileApi) download(c echo.Context) error {
 			servedName = thumbSize + "_" + filename
 			servedPath = baseFilesPath + "/thumbs_" + filename + "/" + servedName
 
-			// create a new thumb if it doesn exists
-			if exists, _ := fs.Exists(servedPath); !exists {
-				if err := fs.CreateThumb(originalPath, servedPath, thumbSize); err != nil {
-					servedPath = originalPath // fallback to the original
+			// create a new thumb if it doesn't exist
+			if exists, _ := fsys.Exists(servedPath); !exists {
+				if err := api.createThumb(c, fsys, originalPath, servedPath, thumbSize); err != nil {
+					api.app.Logger().Warn(
+						"Fallback to original - failed to create thumb "+servedName,
+						slog.Any("error", err),
+						slog.String("original", originalPath),
+						slog.String("thumb", servedPath),
+					)
+
+					// fallback to the original
+					servedName = filename
+					servedPath = originalPath
 				}
 			}
 		}
@@ -176,7 +209,7 @@ func (api *fileApi) download(c echo.Context) error {
 			return nil
 		}
 
-		if err := fs.Serve(e.HttpContext.Response(), e.HttpContext.Request(), e.ServedPath, e.ServedName); err != nil {
+		if err := fsys.Serve(e.HttpContext.Response(), e.HttpContext.Request(), e.ServedPath, e.ServedName); err != nil {
 			return NewNotFoundError("", err)
 		}
 
@@ -213,4 +246,30 @@ func (api *fileApi) findAdminOrAuthRecordByFileToken(fileToken string) (models.M
 	}
 
 	return nil, errors.New("missing or invalid file token")
+}
+
+func (api *fileApi) createThumb(
+	c echo.Context,
+	fsys *filesystem.System,
+	originalPath string,
+	thumbPath string,
+	thumbSize string,
+) error {
+	ch := api.thumbGenPending.DoChan(thumbPath, func() (any, error) {
+		ctx, cancel := context.WithTimeout(c.Request().Context(), api.thumbGenMaxWait)
+		defer cancel()
+
+		if err := api.thumbGenSem.Acquire(ctx, 1); err != nil {
+			return nil, err
+		}
+		defer api.thumbGenSem.Release(1)
+
+		return nil, fsys.CreateThumb(originalPath, thumbPath, thumbSize)
+	})
+
+	res := <-ch
+
+	api.thumbGenPending.Forget(thumbPath)
+
+	return res.Err
 }
