@@ -565,7 +565,7 @@ func (app *BaseApp) RefreshSettings() error {
 	encryptionKey := os.Getenv(app.EncryptionEnv())
 
 	storedSettings, err := app.Dao().FindSettings(encryptionKey)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 

@@ -20,7 +20,7 @@ func TestBaseAppRefreshSettings(t *testing.T) {
 	// check if the new settings are saved in the db
 	app.ResetEventCalls()
 	if err := app.RefreshSettings(); err != nil {
-		t.Fatal("Failed to refresh the settings after delete")
+		t.Fatalf("Failed to refresh the settings after delete: %v", err)
 	}
 	testEventCalls(t, app, map[string]int{
 		"OnModelBeforeCreate": 1,
