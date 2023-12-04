@@ -501,8 +501,12 @@ func securityBinds(vm *goja.Runtime) {
 	obj.Set("pseudorandomStringWithAlphabet", security.PseudorandomStringWithAlphabet)
 
 	// jwt
-	obj.Set("parseUnverifiedJWT", security.ParseUnverifiedJWT)
-	obj.Set("parseJWT", security.ParseJWT)
+	obj.Set("parseUnverifiedJWT", func(token string) (map[string]any, error) {
+		return security.ParseUnverifiedJWT(token)
+	})
+	obj.Set("parseJWT", func(token string, verificationKey string) (map[string]any, error) {
+		return security.ParseJWT(token, verificationKey)
+	})
 	obj.Set("createJWT", security.NewJWT)
 
 	// encryption

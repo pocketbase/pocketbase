@@ -60,6 +60,9 @@
   _This is arbitrary chosen and may change in the future depending on the users feedback and usage patterns._
   _If you are experiencing OOM errors during large image thumb generations, especially in container environment, you can try defining the `GOMEMLIMIT=500MiB` env variable before starting the executable._
 
+- Minor JSVM updates and fixes:
+  - updated `$security.parseUnverifiedJWT(token)` and `$security.parseJWT(token, key)` to return the payload result as plain object
+
 
 ## v0.20.0-rc3
 

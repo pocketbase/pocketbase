@@ -784,39 +784,57 @@ func TestSecurityJWTBinds(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	vm := goja.New()
-	baseBinds(vm)
-	securityBinds(vm)
-
 	sceneraios := []struct {
-		js       string
-		expected string
+		name string
+		js   string
 	}{
 		{
-			`$security.parseUnverifiedJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.aXzC7q7z1lX_hxk5P0R368xEU7H1xRwnBQQcLAmG0EY")`,
-			`{"name":"John Doe","sub":"1234567890"}`,
+			"$security.parseUnverifiedJWT",
+			`
+				const result = $security.parseUnverifiedJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.aXzC7q7z1lX_hxk5P0R368xEU7H1xRwnBQQcLAmG0EY")
+				if (result.name != "John Doe") {
+					throw new Error("Expected result.name 'John Doe', got " + result.name)
+				}
+				if (result.sub != "1234567890") {
+					throw new Error("Expected result.sub '1234567890', got " + result.sub)
+				}
+			`,
 		},
 		{
-			`$security.parseJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.aXzC7q7z1lX_hxk5P0R368xEU7H1xRwnBQQcLAmG0EY", "test")`,
-			`{"name":"John Doe","sub":"1234567890"}`,
+			"$security.parseJWT",
+			`
+				const result = $security.parseJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.aXzC7q7z1lX_hxk5P0R368xEU7H1xRwnBQQcLAmG0EY", "test")
+				if (result.name != "John Doe") {
+					throw new Error("Expected result.name 'John Doe', got " + result.name)
+				}
+				if (result.sub != "1234567890") {
+					throw new Error("Expected result.sub '1234567890', got " + result.sub)
+				}
+			`,
 		},
 		{
-			`$security.createJWT({"exp": 123}, "test", 0)`, // overwrite the exp claim for static token
-			`"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjEyM30.7gbv7w672gApdBRASI6OniCtKwkKjhieSxsr6vxSrtw"`,
+			"$security.createJWT",
+			`
+				// overwrite the exp claim for static token
+				const result = $security.createJWT({"exp": 123}, "test", 0)
+
+				const expected = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjEyM30.7gbv7w672gApdBRASI6OniCtKwkKjhieSxsr6vxSrtw";
+				if (result != expected) {
+					throw new Error("Expected token \n" + expected + ", got \n" + result)
+				}
+			`,
 		},
 	}
 
 	for _, s := range sceneraios {
-		t.Run(s.js, func(t *testing.T) {
-			result, err := vm.RunString(s.js)
+		t.Run(s.name, func(t *testing.T) {
+			vm := goja.New()
+			baseBinds(vm)
+			securityBinds(vm)
+
+			_, err := vm.RunString(s.js)
 			if err != nil {
 				t.Fatalf("Failed to execute js script, got %v", err)
-			}
-
-			raw, _ := json.Marshal(result.Export())
-
-			if string(raw) != s.expected {
-				t.Fatalf("Expected \n%s, \ngot \n%s", s.expected, raw)
 			}
 		})
 	}

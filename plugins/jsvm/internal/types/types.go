@@ -590,9 +590,6 @@ declare namespace $security {
   let randomStringWithAlphabet:       security.randomStringWithAlphabet
   let pseudorandomString:             security.pseudorandomString
   let pseudorandomStringWithAlphabet: security.pseudorandomStringWithAlphabet
-  let parseUnverifiedJWT:             security.parseUnverifiedJWT
-  let parseJWT:                       security.parseJWT
-  let createJWT:                      security.newJWT
   let encrypt:                        security.encrypt
   let decrypt:                        security.decrypt
   let hs256:                          security.hs256
@@ -601,6 +598,17 @@ declare namespace $security {
   let md5:                            security.md5
   let sha256:                         security.sha256
   let sha512:                         security.sha512
+  let createJWT:                      security.newJWT
+
+  /**
+   * {@inheritDoc security.parseUnverifiedJWT}
+   */
+  export function parseUnverifiedJWT(token: string): _TygojaDict
+
+  /**
+   * {@inheritDoc security.parseJWT}
+   */
+  export function parseJWT(token: string, verificationKey: string): _TygojaDict
 }
 
 // -------------------------------------------------------------------
