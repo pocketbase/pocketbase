@@ -45,7 +45,7 @@ func TestNew(t *testing.T) {
 	}
 
 	if app.EncryptionEnv() != "test_encryption_env" {
-		t.Fatalf("Expected app.DataDir() test_encryption_env, got %q", app.EncryptionEnv())
+		t.Fatalf("Expected app.EncryptionEnv() test_encryption_env, got %q", app.EncryptionEnv())
 	}
 
 	if app.IsDebug() != true {
