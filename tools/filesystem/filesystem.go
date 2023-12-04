@@ -425,7 +425,6 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 		return decodeErr
 	}
 
-	r.Close()
 	var thumbImg *image.NRGBA
 
 	if width == 0 || height == 0 {

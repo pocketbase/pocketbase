@@ -23,13 +23,14 @@ func (s *Store[T]) Reset(newData map[string]T) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
-	var clone = make(map[string]T, len(newData))
-
-	for k, v := range newData {
-		clone[k] = v
+	if len(newData) > 0 {
+		s.data = make(map[string]T, len(newData))
+		for k, v := range newData {
+			s.data[k] = v
+		}
+	} else {
+		s.data = make(map[string]T)
 	}
-
-	s.data = clone
 }
 
 // Length returns the current number of elements in the store.
