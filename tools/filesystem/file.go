@@ -2,11 +2,14 @@ package filesystem
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -25,10 +28,10 @@ type FileReader interface {
 //
 // The file could be from a local path, multipipart/formdata header, etc.
 type File struct {
+	Reader       FileReader
 	Name         string
 	OriginalName string
 	Size         int64
-	Reader       FileReader
 }
 
 // NewFileFromPath creates a new File instance from the provided local file path.
@@ -65,7 +68,7 @@ func NewFileFromBytes(b []byte, name string) (*File, error) {
 	return f, nil
 }
 
-// NewFileFromMultipart creates a new File instace from the provided multipart header.
+// NewFileFromMultipart creates a new File from the provided multipart header.
 func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 	f := &File{}
 
@@ -75,6 +78,45 @@ func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 	f.Name = normalizeName(f.Reader, f.OriginalName)
 
 	return f, nil
+}
+
+type UrlOptions struct {
+	Context context.Context
+	Url     string
+}
+
+// NewFileFromUrl creates a new File from the provided url by
+// downloading the resource and load it as BytesReader.
+//
+// Example
+//
+//	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+//	defer cancel()
+//
+//	file, err := filesystem.NewFileFromUrl(ctx, "https://example.com/image.png")
+func NewFileFromUrl(ctx context.Context, url string) (*File, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode < 200 || res.StatusCode > 399 {
+		return nil, fmt.Errorf("failed to download url %s (%d)", url, res.StatusCode)
+	}
+
+	var buf bytes.Buffer
+
+	if _, err = io.Copy(&buf, res.Body); err != nil {
+		return nil, err
+	}
+
+	return NewFileFromBytes(buf.Bytes(), path.Base(url))
 }
 
 // -------------------------------------------------------------------

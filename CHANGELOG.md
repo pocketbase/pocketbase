@@ -67,6 +67,8 @@
 
 - Added `onlyVerified` auth collection option to globally disallow authentication requests for unverified users.
 
+- Added `filesystem.NewFileFromUrl(ctx, url)` helper method to construct a `*filesystem.BytesReader` file from the specified url.
+
 
 ## v0.20.0-rc3
 

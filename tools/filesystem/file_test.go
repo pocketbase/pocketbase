@@ -1,6 +1,9 @@
 package filesystem_test
 
 import (
+	"context"
+	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -107,5 +110,72 @@ func TestNewFileFromMultipart(t *testing.T) {
 
 	if _, ok := f.Reader.(*filesystem.MultipartReader); !ok {
 		t.Fatalf("Expected Reader to be MultipartReader, got %v", f.Reader)
+	}
+}
+
+func TestNewFileFromUrlTimeout(t *testing.T) {
+	// timeout
+	// invalid response
+	// valid response
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/error" {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		fmt.Fprintf(w, "test")
+	}))
+	defer srv.Close()
+
+	// cancelled context
+	{
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		f, err := filesystem.NewFileFromUrl(ctx, srv.URL+"/cancel")
+		if err == nil {
+			t.Fatal("[ctx_cancel] Expected error, got nil")
+		}
+		if f != nil {
+			t.Fatalf("[ctx_cancel] Expected file to be nil, got %v", f)
+		}
+	}
+
+	// error response
+	{
+		f, err := filesystem.NewFileFromUrl(context.Background(), srv.URL+"/error")
+		if err == nil {
+			t.Fatal("[error_status] Expected error, got nil")
+		}
+		if f != nil {
+			t.Fatalf("[error_status] Expected file to be nil, got %v", f)
+		}
+	}
+
+	// valid response
+	{
+		originalName := "image_! noext"
+		normalizedNamePattern := regexp.QuoteMeta("image_noext_") + `\w{10}` + regexp.QuoteMeta(".txt")
+
+		f, err := filesystem.NewFileFromUrl(context.Background(), srv.URL+"/"+originalName)
+		if err != nil {
+			t.Fatalf("[valid] Unexpected error %v", err)
+		}
+		if f == nil {
+			t.Fatal("[valid] Expected non-nil file")
+		}
+
+		// check the created file fields
+		if f.OriginalName != originalName {
+			t.Fatalf("Expected OriginalName %q, got %q", originalName, f.OriginalName)
+		}
+		if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
+			t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
+		}
+		if f.Size != 4 {
+			t.Fatalf("Expected Size %v, got %v", 4, f.Size)
+		}
+		if _, ok := f.Reader.(*filesystem.BytesReader); !ok {
+			t.Fatalf("Expected Reader to be BytesReader, got %v", f.Reader)
+		}
 	}
 }
