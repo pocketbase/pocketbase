@@ -114,10 +114,6 @@ func TestNewFileFromMultipart(t *testing.T) {
 }
 
 func TestNewFileFromUrlTimeout(t *testing.T) {
-	// timeout
-	// invalid response
-	// valid response
-
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/error" {
 			w.WriteHeader(http.StatusInternalServerError)

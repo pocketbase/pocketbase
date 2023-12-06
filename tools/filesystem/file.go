@@ -80,11 +80,6 @@ func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 	return f, nil
 }
 
-type UrlOptions struct {
-	Context context.Context
-	Url     string
-}
-
 // NewFileFromUrl creates a new File from the provided url by
 // downloading the resource and load it as BytesReader.
 //
