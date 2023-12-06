@@ -40,6 +40,7 @@ func TestRecordAuthMethodsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"usernamePassword":true`,
 				`"emailPassword":true`,
+				`"onlyVerified":false`,
 				`"authProviders":[{`,
 				`"name":"gitlab"`,
 				`"state":`,
@@ -58,6 +59,7 @@ func TestRecordAuthMethodsList(t *testing.T) {
 			ExpectedContent: []string{
 				`"usernamePassword":false`,
 				`"emailPassword":true`,
+				`"onlyVerified":true`,
 				`"authProviders":[]`,
 			},
 		},

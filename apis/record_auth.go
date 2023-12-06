@@ -97,9 +97,11 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 		AuthProviders    []providerInfo `json:"authProviders"`
 		UsernamePassword bool           `json:"usernamePassword"`
 		EmailPassword    bool           `json:"emailPassword"`
+		OnlyVerified     bool           `json:"onlyVerified"`
 	}{
 		UsernamePassword: authOptions.AllowUsernameAuth,
 		EmailPassword:    authOptions.AllowEmailAuth,
+		OnlyVerified:     authOptions.OnlyVerified,
 		AuthProviders:    []providerInfo{},
 	}
 
