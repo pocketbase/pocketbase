@@ -218,3 +218,20 @@
         />
     </label>
 </Field>
+
+<Field class="form-field form-field-toggle m-b-sm" name="options.onlyVerified" let:uniqueId>
+    <input type="checkbox" id={uniqueId} bind:checked={collection.options.onlyVerified} />
+    <label for={uniqueId}>
+        <span class="txt">Forbid authentication for unverified users</span>
+        <i
+            class="ri-information-line txt-sm link-hint"
+            use:tooltip={{
+                text: [
+                    "If enabled, it returns 403 for new unverfied user authentication requests.",
+                    "If you need more granular control, don't enable this option and instead use the `@request.auth.verified = true` rule in the specific collection(s) you are targeting.",
+                ].join("\n"),
+                position: "right",
+            }}
+        />
+    </label>
+</Field>

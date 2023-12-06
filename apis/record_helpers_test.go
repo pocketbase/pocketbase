@@ -83,6 +83,11 @@ func TestRecordAuthResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	unverfiedAuthRecord, err := app.Dao().FindRecordById("clients", "o1y0dd0spd786md")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	scenarios := []struct {
 		name               string
 		record             *models.Record
@@ -95,6 +100,11 @@ func TestRecordAuthResponse(t *testing.T) {
 		{
 			name:        "non auth record",
 			record:      nonAuthRecord,
+			expectError: true,
+		},
+		{
+			name:        "valid auth record but with unverified email in onlyVerified collection",
+			record:      unverfiedAuthRecord,
 			expectError: true,
 		},
 		{

@@ -63,6 +63,10 @@
 - Minor JSVM updates and fixes:
   - updated `$security.parseUnverifiedJWT(token)` and `$security.parseJWT(token, key)` to return the payload result as plain object
 
+- Removed incorrectly imported empty `local('')` font-face declarations.
+
+- Added `onlyVerified` auth collection option to globally disallow authentication requests for unverified users.
+
 
 ## v0.20.0-rc3
 

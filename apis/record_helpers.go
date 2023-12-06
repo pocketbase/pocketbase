@@ -77,6 +77,10 @@ func RecordAuthResponse(
 	meta any,
 	finalizers ...func(token string) error,
 ) error {
+	if !authRecord.Verified() && authRecord.Collection().AuthOptions().OnlyVerified {
+		return NewForbiddenError("Please verify your email first.", nil)
+	}
+
 	token, tokenErr := tokens.NewRecordAuthToken(app, authRecord)
 	if tokenErr != nil {
 		return NewBadRequestError("Failed to create auth token.", tokenErr)

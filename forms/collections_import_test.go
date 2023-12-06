@@ -206,7 +206,7 @@ func TestCollectionsImportSubmit(t *testing.T) {
 			expectError:            true,
 			expectCollectionsCount: totalCollections,
 			expectEvents: map[string]int{
-				"OnModelBeforeDelete": 3,
+				"OnModelBeforeDelete": 2,
 			},
 		},
 		{
@@ -418,44 +418,45 @@ func TestCollectionsImportSubmit(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		testApp, _ := tests.NewTestApp()
-		defer testApp.Cleanup()
+		t.Run(s.name, func(t *testing.T) {
+			testApp, _ := tests.NewTestApp()
+			defer testApp.Cleanup()
 
-		form := forms.NewCollectionsImport(testApp)
+			form := forms.NewCollectionsImport(testApp)
 
-		// load data
-		loadErr := json.Unmarshal([]byte(s.jsonData), form)
-		if loadErr != nil {
-			t.Errorf("[%s] Failed to load form data: %v", s.name, loadErr)
-			continue
-		}
-
-		err := form.Submit()
-
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("[%s] Expected hasErr to be %v, got %v (%v)", s.name, s.expectError, hasErr, err)
-		}
-
-		// check collections count
-		collections := []*models.Collection{}
-		if err := testApp.Dao().CollectionQuery().All(&collections); err != nil {
-			t.Fatal(err)
-		}
-		if len(collections) != s.expectCollectionsCount {
-			t.Errorf("[%s] Expected %d collections, got %d", s.name, s.expectCollectionsCount, len(collections))
-		}
-
-		// check events
-		if len(testApp.EventCalls) > len(s.expectEvents) {
-			t.Errorf("[%s] Expected events %v, got %v", s.name, s.expectEvents, testApp.EventCalls)
-		}
-		for event, expectedCalls := range s.expectEvents {
-			actualCalls := testApp.EventCalls[event]
-			if actualCalls != expectedCalls {
-				t.Errorf("[%s] Expected event %s to be called %d, got %d", s.name, event, expectedCalls, actualCalls)
+			// load data
+			loadErr := json.Unmarshal([]byte(s.jsonData), form)
+			if loadErr != nil {
+				t.Fatalf("Failed to load form data: %v", loadErr)
 			}
-		}
+
+			err := form.Submit()
+
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr to be %v, got %v (%v)", s.expectError, hasErr, err)
+			}
+
+			// check collections count
+			collections := []*models.Collection{}
+			if err := testApp.Dao().CollectionQuery().All(&collections); err != nil {
+				t.Fatal(err)
+			}
+			if len(collections) != s.expectCollectionsCount {
+				t.Fatalf("Expected %d collections, got %d", s.expectCollectionsCount, len(collections))
+			}
+
+			// check events
+			if len(testApp.EventCalls) > len(s.expectEvents) {
+				t.Fatalf("Expected events %v, got %v", s.expectEvents, testApp.EventCalls)
+			}
+			for event, expectedCalls := range s.expectEvents {
+				actualCalls := testApp.EventCalls[event]
+				if actualCalls != expectedCalls {
+					t.Fatalf("Expected event %s to be called %d, got %d", event, expectedCalls, actualCalls)
+				}
+			}
+		})
 	}
 }
 

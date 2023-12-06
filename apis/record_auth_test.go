@@ -212,7 +212,7 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			},
 		},
 		{
-			Name:   "valid email and valid password in allowed collection",
+			Name:   "valid email (unverified) and valid password in allowed collection",
 			Method: http.MethodPost,
 			Url:    "/api/collections/users/auth-with-password",
 			Body: strings.NewReader(`{
@@ -225,6 +225,48 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				`"token":"`,
 				`"id":"4q1xlclmfloku33"`,
 				`"email":"test@example.com"`,
+				`"verified":false`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+				"OnRecordAfterAuthWithPasswordRequest":  1,
+				"OnRecordAuthRequest":                   1,
+			},
+		},
+
+		// onlyVerified collection check
+		{
+			Name:   "unverified user in onlyVerified collection",
+			Method: http.MethodPost,
+			Url:    "/api/collections/clients/auth-with-password",
+			Body: strings.NewReader(`{
+				"identity":"test2@example.com",
+				"password":"1234567890"
+			}`),
+			ExpectedStatus: 403,
+			ExpectedContent: []string{
+				`"data":{}`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthWithPasswordRequest": 1,
+				"OnRecordAfterAuthWithPasswordRequest":  1,
+			},
+		},
+		{
+			Name:   "verified user in onlyVerified collection",
+			Method: http.MethodPost,
+			Url:    "/api/collections/clients/auth-with-password",
+			Body: strings.NewReader(`{
+				"identity":"test@example.com",
+				"password":"1234567890"
+			}`),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"record":{`,
+				`"token":"`,
+				`"id":"gk390qegs4y47wn"`,
+				`"email":"test@example.com"`,
+				`"verified":true`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeAuthWithPasswordRequest": 1,
@@ -370,6 +412,41 @@ func TestRecordAuthRefresh(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"missing":`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthRefreshRequest": 1,
+				"OnRecordAuthRequest":              1,
+				"OnRecordAfterAuthRefreshRequest":  1,
+			},
+		},
+		{
+			Name:   "unverified auth record in onlyVerified collection",
+			Method: http.MethodPost,
+			Url:    "/api/collections/clients/auth-refresh",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6Im8xeTBkZDBzcGQ3ODZtZCIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyMjA4OTg1MjYxfQ.-JYlrz5DcGzvb0nYx-xqnSFMu9dupyKY7Vg_FUm0OaM",
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"OnRecordBeforeAuthRefreshRequest": 1,
+				"OnRecordAfterAuthRefreshRequest":  1,
+			},
+		},
+		{
+			Name:   "verified auth record in onlyVerified collection",
+			Method: http.MethodPost,
+			Url:    "/api/collections/clients/auth-refresh",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyMjA4OTg1MjYxfQ.q34IWXrRWsjLvbbVNRfAs_J4SoTHloNBfdGEiLmy-D8",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"token":`,
+				`"record":`,
+				`"id":"gk390qegs4y47wn"`,
+				`"verified":true`,
+				`"email":"test@example.com"`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnRecordBeforeAuthRefreshRequest": 1,

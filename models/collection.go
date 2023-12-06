@@ -179,6 +179,7 @@ type CollectionAuthOptions struct {
 	AllowEmailAuth     bool     `form:"allowEmailAuth" json:"allowEmailAuth"`
 	RequireEmail       bool     `form:"requireEmail" json:"requireEmail"`
 	ExceptEmailDomains []string `form:"exceptEmailDomains" json:"exceptEmailDomains"`
+	OnlyVerified       bool     `form:"onlyVerified" json:"onlyVerified"`
 	OnlyEmailDomains   []string `form:"onlyEmailDomains" json:"onlyEmailDomains"`
 	MinPasswordLength  int      `form:"minPasswordLength" json:"minPasswordLength"`
 }

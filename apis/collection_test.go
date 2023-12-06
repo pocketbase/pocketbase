@@ -425,7 +425,7 @@ func TestCollectionCreate(t *testing.T) {
 				`"type":"auth"`,
 				`"system":false`,
 				`"schema":[{"system":false,"id":"12345789","name":"test","type":"text","required":false,"presentable":false,"unique":false,"options":{"min":null,"max":null,"pattern":""}}]`,
-				`"options":{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":0,"onlyEmailDomains":null,"requireEmail":false}`,
+				`"options":{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":0,"onlyEmailDomains":null,"onlyVerified":false,"requireEmail":false}`,
 			},
 			ExpectedEvents: map[string]int{
 				"OnModelBeforeCreate":             1,
@@ -1141,7 +1141,7 @@ func TestCollectionsImport(t *testing.T) {
 			},
 			ExpectedEvents: map[string]int{
 				"OnCollectionsBeforeImportRequest": 1,
-				"OnModelBeforeDelete":              3,
+				"OnModelBeforeDelete":              2,
 			},
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				collections := []*models.Collection{}
