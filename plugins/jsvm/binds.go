@@ -607,6 +607,7 @@ func apisBinds(vm *goja.Runtime) {
 	})
 
 	// middlewares
+	obj.Set("requireGuestOnly", apis.RequireGuestOnly)
 	obj.Set("requireRecordAuth", apis.RequireRecordAuth)
 	obj.Set("requireAdminAuth", apis.RequireAdminAuth)
 	obj.Set("requireAdminAuthOnlyIfAny", apis.RequireAdminAuthOnlyIfAny)
