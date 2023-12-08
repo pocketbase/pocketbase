@@ -140,6 +140,11 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		HostPolicy: autocert.HostWhitelist(hostNames...),
 	}
 
+	// base request context used for cancelling long running requests
+	// like the SSE connections
+	baseCtx, cancelBaseCtx := context.WithCancel(context.Background())
+	defer cancelBaseCtx()
+
 	server := &http.Server{
 		TLSConfig: &tls.Config{
 			MinVersion:     tls.VersionTLS12,
@@ -151,6 +156,9 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		// WriteTimeout: 60 * time.Second, // breaks sse!
 		Handler: router,
 		Addr:    mainAddr,
+		BaseContext: func(l net.Listener) context.Context {
+			return baseCtx
+		},
 	}
 
 	serveEvent := &core.ServeEvent{
@@ -196,14 +204,16 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 
 	// try to gracefully shutdown the server on app termination
 	app.OnTerminate().Add(func(e *core.TerminateEvent) error {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		cancelBaseCtx()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 
 		wg.Add(1)
 		server.Shutdown(ctx)
 		if e.IsRestart {
-			// wait for execve up to 3 seconds before exit
-			time.AfterFunc(3*time.Second, func() {
+			// wait for execve and other handlers up to 5 seconds before exit
+			time.AfterFunc(5*time.Second, func() {
 				wg.Done()
 			})
 		} else {
