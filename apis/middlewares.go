@@ -357,7 +357,7 @@ func logRequest(app core.App, c echo.Context, err *ApiError) {
 	routine.FireAndForget(func() {
 		message := method + " " + url
 		if err != nil {
-			app.Logger().Error("(Failed) "+message, attrs...)
+			app.Logger().Error(message, attrs...)
 		} else {
 			app.Logger().Info(message, attrs...)
 		}

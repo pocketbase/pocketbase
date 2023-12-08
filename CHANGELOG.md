@@ -3,6 +3,7 @@
 - Bumped the minimum required Go version to 1.21.0 in order to integrate with the builtin `slog` package.
 
 - removed _requests_ table in favor of logs
+  (note: existing logs will be deleted!)
 
 - Renamed:
   ```
@@ -70,6 +71,9 @@
 - Added `filesystem.NewFileFromUrl(ctx, url)` helper method to construct a `*filesystem.BytesReader` file from the specified url.
 
 - Added `$apis.requireGuestOnly()` middleware JSVM binding ([#3896](https://github.com/pocketbase/pocketbase/issues/3896)).
+
+- Use `IS NOT` instead of `!=` as not-equal SQL query operator to handle the cases when comparing with nullable columns or expressions (eg. `json_extract` over `json` field).
+  _Based on my local dataset I wasn't able to find a significant difference in the performance between the 2 operators, but if you stumble on a query that you think may be affected negatively by this, please report it and I'll test it further._
 
 
 ## v0.20.0-rc3

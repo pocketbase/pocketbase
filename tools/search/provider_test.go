@@ -308,8 +308,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			false,
 			`{"page":1,"perPage":` + fmt.Sprint(MaxPerPage) + `,"totalItems":1,"totalPages":1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
 			[]string{
-				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 != '' AND test2 IS NOT NULL)))) AND (test1 >= 2)",
-				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 != '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT " + fmt.Sprint(MaxPerPage),
+				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 IS NOT '' AND test2 IS NOT NULL)))) AND (test1 >= 2)",
+				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 IS NOT '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT " + fmt.Sprint(MaxPerPage),
 			},
 		},
 		{
@@ -322,7 +322,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			false,
 			`{"page":1,"perPage":` + fmt.Sprint(MaxPerPage) + `,"totalItems":-1,"totalPages":-1,"items":[{"test1":2,"test2":"test2.2","test3":""}]}`,
 			[]string{
-				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 != '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT " + fmt.Sprint(MaxPerPage),
+				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 IS NOT '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT " + fmt.Sprint(MaxPerPage),
 			},
 		},
 		{
@@ -335,8 +335,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			false,
 			`{"page":1,"perPage":10,"totalItems":0,"totalPages":0,"items":[]}`,
 			[]string{
-				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 != '' AND test3 IS NOT NULL)))",
-				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 != '' AND test3 IS NOT NULL))) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
+				"SELECT COUNT(DISTINCT [[test.id]]) FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 IS NOT '' AND test3 IS NOT NULL)))",
+				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 IS NOT '' AND test3 IS NOT NULL))) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
 			},
 		},
 		{
@@ -349,7 +349,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 			false,
 			`{"page":1,"perPage":10,"totalItems":-1,"totalPages":-1,"items":[]}`,
 			[]string{
-				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 != '' AND test3 IS NOT NULL))) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
+				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 IS NOT '' AND test3 IS NOT NULL))) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
 			},
 		},
 		{
@@ -382,48 +382,48 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		testDB.CalledQueries = []string{} // reset
+		t.Run(s.name, func(t *testing.T) {
+			testDB.CalledQueries = []string{} // reset
 
-		testResolver := &testFieldResolver{}
-		p := NewProvider(testResolver).
-			Query(query).
-			Page(s.page).
-			PerPage(s.perPage).
-			Sort(s.sort).
-			SkipTotal(s.skipTotal).
-			Filter(s.filter)
+			testResolver := &testFieldResolver{}
+			p := NewProvider(testResolver).
+				Query(query).
+				Page(s.page).
+				PerPage(s.perPage).
+				Sort(s.sort).
+				SkipTotal(s.skipTotal).
+				Filter(s.filter)
 
-		result, err := p.Exec(&[]testTableStruct{})
+			result, err := p.Exec(&[]testTableStruct{})
 
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("[%s] Expected hasErr %v, got %v (%v)", s.name, s.expectError, hasErr, err)
-			continue
-		}
-
-		if hasErr {
-			continue
-		}
-
-		if testResolver.UpdateQueryCalls != 1 {
-			t.Errorf("[%s] Expected resolver.Update to be called %d, got %d", s.name, 1, testResolver.UpdateQueryCalls)
-		}
-
-		encoded, _ := json.Marshal(result)
-		if string(encoded) != s.expectResult {
-			t.Errorf("[%s] Expected result %v, got \n%v", s.name, s.expectResult, string(encoded))
-		}
-
-		if len(s.expectQueries) != len(testDB.CalledQueries) {
-			t.Errorf("[%s] Expected %d queries, got %d: \n%v", s.name, len(s.expectQueries), len(testDB.CalledQueries), testDB.CalledQueries)
-			continue
-		}
-
-		for _, q := range testDB.CalledQueries {
-			if !list.ExistInSliceWithRegex(q, s.expectQueries) {
-				t.Fatalf("[%s] Didn't expect query \n%v \nin \n%v", s.name, q, s.expectQueries)
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
 			}
-		}
+
+			if hasErr {
+				return
+			}
+
+			if testResolver.UpdateQueryCalls != 1 {
+				t.Fatalf("Expected resolver.Update to be called %d, got %d", 1, testResolver.UpdateQueryCalls)
+			}
+
+			encoded, _ := json.Marshal(result)
+			if string(encoded) != s.expectResult {
+				t.Fatalf("Expected result %v, got \n%v", s.expectResult, string(encoded))
+			}
+
+			if len(s.expectQueries) != len(testDB.CalledQueries) {
+				t.Fatalf("Expected %d queries, got %d: \n%v", len(s.expectQueries), len(testDB.CalledQueries), testDB.CalledQueries)
+			}
+
+			for _, q := range testDB.CalledQueries {
+				if !list.ExistInSliceWithRegex(q, s.expectQueries) {
+					t.Fatalf("Didn't expect query \n%v \nin \n%v", q, s.expectQueries)
+				}
+			}
+		})
 	}
 }
 

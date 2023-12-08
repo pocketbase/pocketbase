@@ -293,7 +293,10 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	concatOp := "OR"
 	nullExpr := "IS NULL"
 	if !equal {
-		equalOp = "!="
+		// use `IS NOT` instead of `!=` because direct non-equal comparisions
+		// to nullable column values that are actually NULL yields to NULL instead of TRUE, eg.:
+		// `'example' != nullableColumn` -> NULL even if nullableColumn row value is NULL
+		equalOp = "IS NOT"
 		concatOp = "AND"
 		nullExpr = "IS NOT NULL"
 	}
@@ -321,7 +324,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	}
 
 	// "" = b OR b IS NULL
-	// "" != b AND b IS NOT NULL
+	// "" IS NOT b AND b IS NOT NULL
 	if isLeftEmpty {
 		return dbx.NewExp(
 			fmt.Sprintf("('' %s %s %s %s %s)", equalOp, right.Identifier, concatOp, right.Identifier, nullExpr),
@@ -330,7 +333,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	}
 
 	// a = "" OR a IS NULL
-	// a != "" AND a IS NOT NULL
+	// a IS NOT "" AND a IS NOT NULL
 	if isRightEmpty {
 		return dbx.NewExp(
 			fmt.Sprintf("(%s %s '' %s %s %s)", left.Identifier, equalOp, concatOp, left.Identifier, nullExpr),
