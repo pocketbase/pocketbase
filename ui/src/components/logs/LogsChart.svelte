@@ -5,9 +5,9 @@
     import CommonHelper from "@/utils/CommonHelper";
     import {
         Chart,
-        BarController,
-        BarElement,
-        CategoryScale,
+        LineElement,
+        PointElement,
+        LineController,
         LinearScale,
         TimeScale,
         Filler,
@@ -73,20 +73,22 @@
     }
 
     onMount(() => {
-        Chart.register(BarController, BarElement, CategoryScale, LinearScale, TimeScale, Filler, Tooltip);
+        Chart.register(LineElement, PointElement, LineController, LinearScale, TimeScale, Filler, Tooltip);
 
         chartInst = new Chart(chartCanvas, {
-            type: "bar",
+            type: "line",
             data: {
                 datasets: [
                     {
                         label: "Total requests",
                         data: chartData,
-                        backgroundColor: "#e34562",
-                        maxBarThickness: 40,
-                        borderRadius: 2,
-                        minBarLength: 7,
-                        hoverBackgroundColor: "#e34562",
+                        borderColor: "#e34562",
+                        pointBackgroundColor: "#e34562",
+                        backgroundColor: "rgb(239,69,101,0.05)",
+                        borderWidth: 2,
+                        pointRadius: 1,
+                        pointBorderWidth: 0,
+                        fill: true,
                     },
                 ],
             },
@@ -115,7 +117,6 @@
                         },
                     },
                     x: {
-                        // offset: false,
                         type: "time",
                         time: {
                             unit: "hour",

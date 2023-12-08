@@ -7,6 +7,7 @@
     import Scroller from "@/components/base/Scroller.svelte";
     import LogLevel from "@/components/logs/LogLevel.svelte";
     import LogDate from "@/components/logs/LogDate.svelte";
+    import FormattedDate from "@/components/base/FormattedDate.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -211,6 +212,7 @@
         <tbody>
             {#each logs as log (log.id)}
                 {@const hasData = log.data && CommonHelper.isObject(log.data)}
+                {@const isRequest = log.data?.type == "request"}
                 <tr
                     tabindex="0"
                     class="row-handle"
@@ -242,25 +244,30 @@
 
                     <td class="col-type-text col-field-data">
                         <div class="flex flex-gap-10">
-                            {#if log.message}
-                                <span class="txt-ellipsis">{log.message}</span>
-                            {/if}
-
+                            <span class="txt-ellipsis">
+                                {isRequest ? decodeURIComponent(log.message) : log.message}
+                            </span>
+                        </div>
+                        <div class="flex flex-gap-10 m-t-10">
                             {#if hasData}
                                 {#if log.data.status}
-                                    <span class="label label-sm">{log.data.status}</span>
+                                    <span class="label label-sm">status: {log.data.status}</span>
                                 {/if}
                                 {#if log.data.execTime}
-                                    <span class="label label-sm">{log.data.execTime}ms</span>
+                                    <span class="label label-sm">execTime: {log.data.execTime}ms</span>
                                 {/if}
                                 {#if log.data.auth}
-                                    <span class="label label-sm">{log.data.auth}</span>
+                                    <span class="label label-sm">auth: {log.data.auth}</span>
+                                {/if}
+                                {#if log.data.clientId}
+                                    <span class="label label-sm">clientId: {log.data.clientId}</span>
                                 {/if}
                                 {#if log.data.userIp}
-                                    <span class="label label-sm">{log.data.userIp}</span>
+                                    <span class="label label-sm">userIp: {log.data.userIp}</span>
                                 {/if}
                                 {#if log.data.error}
                                     <span class="label label-sm label-danger">
+                                        error:
                                         {CommonHelper.truncate(
                                             typeof log.data.error === "string"
                                                 ? log.data.error
@@ -271,12 +278,6 @@
                                 {/if}
                             {/if}
                         </div>
-
-                        {#if hasData}
-                            <div class="block txt-mono txt-xs txt-hint txt-ellipsis m-t-5">
-                                {CommonHelper.truncate(JSON.stringify(log.data), 350)}
-                            </div>
-                        {/if}
                     </td>
 
                     <td class="col-type-date col-field-created">
@@ -354,6 +355,9 @@
         position: sticky;
         margin-top: var(--smSpacing);
         bottom: var(--baseSpacing);
+    }
+    .col-field-level {
+        min-width: 100px;
     }
     .col-field-data {
         min-width: 600px;

@@ -22,7 +22,6 @@ func init() {
 
 			CREATE INDEX _logs_level_idx on {{_logs}} ([[level]]);
 			CREATE INDEX _logs_message_idx on {{_logs}} ([[message]]);
-			CREATE INDEX _logs_data_auth_idx on {{_logs}} (JSON_EXTRACT([[data]], '$.auth'));
 			CREATE INDEX _logs_created_hour_idx on {{_logs}} (strftime('%Y-%m-%d %H:00:00', [[created]]));
 		`).Execute()
 

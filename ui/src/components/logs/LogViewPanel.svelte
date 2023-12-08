@@ -17,7 +17,7 @@
     let log = {};
     let isLoading = false;
 
-    $: hasData = !CommonHelper.isEmpty(log.data);
+    $: isRequest = log.data?.type == "request";
 
     export function show(modelOrId) {
         resolveModel(modelOrId).then((model) => {
@@ -72,6 +72,7 @@
         "referer",
         "remoteIp",
         "userIp",
+        "userAgent",
         "error",
         "details",
         //
@@ -148,7 +149,7 @@
                     <td class="min-width txt-hint txt-bold">created</td>
                     <td><LogDate date={log.created} /></td>
                 </tr>
-                {#if log.data?.type != "request"}
+                {#if !isRequest}
                     <tr>
                         <td class="min-width txt-hint txt-bold">message</td>
                         <td>
@@ -162,18 +163,25 @@
                 {/if}
                 {#each extractKeys(log.data) as key}
                     {@const value = log.data[key]}
+                    {@const isJson = value !== null && typeof value == "object"}
                     <tr>
-                        <td class="min-width txt-hint txt-bold" class:v-align-top={hasData}>
+                        <td class="min-width txt-hint txt-bold" class:v-align-top={isJson}>
                             data.{key}
                         </td>
                         <td>
-                            {#if value !== null && typeof value == "object"}
-                                <CodeBlock content={JSON.stringify(value, null, 2)} />
-                            {:else if CommonHelper.isEmpty(value)}
+                            {#if CommonHelper.isEmpty(value)}
                                 <span class="txt txt-hint">N/A</span>
+                            {:else if isJson}
+                                <CodeBlock content={JSON.stringify(value, null, 2)} />
+                            {:else if key == "error"}
+                                <span class="label label-danger">
+                                    {value}
+                                </span>
+                            {:else if key == "details"}
+                                <CodeBlock content={value} language="html" />
                             {:else}
                                 <span class="txt">
-                                    {value}{key == "execTime" ? "ms" : ""}
+                                    {value}{isRequest && key == "execTime" ? "ms" : ""}
                                 </span>
                             {/if}
                         </td>
