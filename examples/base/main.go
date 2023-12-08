@@ -110,7 +110,7 @@ func main() {
 	// GitHub selfupdate
 	ghupdate.MustRegister(app, app.RootCmd, ghupdate.Config{})
 
-	app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
+	app.OnAfterBootstrap().PreAdd(func(e *core.BootstrapEvent) error {
 		app.Dao().ModelQueryTimeout = time.Duration(queryTimeout) * time.Second
 		return nil
 	})

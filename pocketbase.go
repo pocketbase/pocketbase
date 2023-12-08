@@ -152,12 +152,13 @@ func (pb *PocketBase) Execute() error {
 		sigch := make(chan os.Signal, 1)
 		signal.Notify(sigch, os.Interrupt, syscall.SIGTERM)
 		<-sigch
+
 		done <- true
 	}()
 
 	// execute the root command
 	go func() {
-		// leave to the commands to decide whether to print their error or not
+		// note: leave to the commands to decide whether to print their error
 		pb.RootCmd.Execute()
 
 		done <- true

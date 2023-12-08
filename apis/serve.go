@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -189,13 +190,36 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		regular.Printf("└─ Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, addr))
 	}
 
+	// WaitGroup to block until server.ShutDown() returns because Serve and similar methods exit immediately.
+	// Note that the WaitGroup would not do anything if the app.OnTerminate() hook isn't triggered.
+	var wg sync.WaitGroup
+
 	// try to gracefully shutdown the server on app termination
 	app.OnTerminate().Add(func(e *core.TerminateEvent) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
+
+		wg.Add(1)
 		server.Shutdown(ctx)
+		if e.IsRestart {
+			// wait for execve up to 3 seconds before exit
+			time.AfterFunc(3*time.Second, func() {
+				wg.Done()
+			})
+		} else {
+			wg.Done()
+		}
+
 		return nil
 	})
+
+	// wait for the graceful shutdown to complete before exit
+	defer wg.Wait()
+
+	// ---
+	// @todo consider removing the server return value because it is
+	// not really useful when combined with the blocking serve calls
+	// ---
 
 	// start HTTPS server
 	if config.HttpsAddr != "" {

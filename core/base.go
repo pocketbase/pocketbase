@@ -553,20 +553,15 @@ func (app *BaseApp) Restart() error {
 		return err
 	}
 
-	// restart the app bootstrap as a fallback in case the
-	// terminate event or execve fails for some reason
-	defer app.Bootstrap()
-
-	// optimistically trigger the terminate event
-	terminateErr := app.OnTerminate().Trigger(&TerminateEvent{
+	return app.OnTerminate().Trigger(&TerminateEvent{
 		App:       app,
 		IsRestart: true,
-	})
-	if terminateErr != nil {
-		return terminateErr
-	}
+	}, func(e *TerminateEvent) error {
+		// attempt to restart the bootstrap process in case execve returns an error for some reason
+		defer app.Bootstrap()
 
-	return syscall.Exec(execPath, os.Args, os.Environ())
+		return syscall.Exec(execPath, os.Args, os.Environ())
+	})
 }
 
 // RefreshSettings reinitializes and reloads the stored application settings.

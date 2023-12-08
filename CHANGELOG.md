@@ -78,6 +78,8 @@
 - Trigger the `app.OnTerminate()` hook on `app.Restart()` call.
   _A new bool `IsRestart` field was also added to the `core.TerminateEvent` event._
 
+- Fixed the graceful shutdown handling.
+
 
 ## v0.20.0-rc3
 
