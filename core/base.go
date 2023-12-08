@@ -553,6 +553,21 @@ func (app *BaseApp) Restart() error {
 		return err
 	}
 
+	// restart the app bootstrap as a fallback in case the
+	// terminate event or execve fails for some reason
+	defer app.Bootstrap()
+
+	// optimistically trigger the terminate event
+	terminateErr := app.OnTerminate().Trigger(&TerminateEvent{
+		App:       app,
+		IsRestart: true,
+	}, func(e *TerminateEvent) error {
+		return e.App.ResetBootstrapState()
+	})
+	if terminateErr != nil {
+		return terminateErr
+	}
+
 	return syscall.Exec(execPath, os.Args, os.Environ())
 }
 

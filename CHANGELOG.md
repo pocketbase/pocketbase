@@ -75,6 +75,9 @@
 - Use `IS NOT` instead of `!=` as not-equal SQL query operator to handle the cases when comparing with nullable columns or expressions (eg. `json_extract` over `json` field).
   _Based on my local dataset I wasn't able to find a significant difference in the performance between the 2 operators, but if you stumble on a query that you think may be affected negatively by this, please report it and I'll test it further._
 
+- Trigger the `app.OnTerminate()` hook on `app.Restart()` call.
+  _A new bool `IsRestart` field was also added to the `core.TerminateEvent` event._
+
 
 ## v0.20.0-rc3
 

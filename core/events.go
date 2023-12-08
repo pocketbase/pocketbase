@@ -70,7 +70,8 @@ type BootstrapEvent struct {
 }
 
 type TerminateEvent struct {
-	App App
+	App       App
+	IsRestart bool
 }
 
 type ServeEvent struct {

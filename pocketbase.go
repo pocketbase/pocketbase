@@ -169,8 +169,7 @@ func (pb *PocketBase) Execute() error {
 	return pb.OnTerminate().Trigger(&core.TerminateEvent{
 		App: pb,
 	}, func(e *core.TerminateEvent) error {
-		e.App.ResetBootstrapState()
-		return nil
+		return e.App.ResetBootstrapState()
 	})
 }
 
