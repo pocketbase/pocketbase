@@ -168,8 +168,6 @@ func (pb *PocketBase) Execute() error {
 	// trigger cleanups
 	return pb.OnTerminate().Trigger(&core.TerminateEvent{
 		App: pb,
-	}, func(e *core.TerminateEvent) error {
-		return e.App.ResetBootstrapState()
 	})
 }
 

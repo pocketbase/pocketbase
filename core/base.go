@@ -561,8 +561,6 @@ func (app *BaseApp) Restart() error {
 	terminateErr := app.OnTerminate().Trigger(&TerminateEvent{
 		App:       app,
 		IsRestart: true,
-	}, func(e *TerminateEvent) error {
-		return e.App.ResetBootstrapState()
 	})
 	if terminateErr != nil {
 		return terminateErr
