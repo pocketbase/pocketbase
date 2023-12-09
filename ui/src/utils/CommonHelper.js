@@ -1610,33 +1610,40 @@ export default class CommonHelper {
      * @param  {String} missingValue
      * @return {String}
      */
-    static stringifyValue(val, missingValue = "N/A") {
+    static stringifyValue(val, missingValue = "N/A", truncateLength = 150) {
         if (CommonHelper.isEmpty(val)) {
             return missingValue;
         }
 
-        if (typeof val === "boolean")  {
+        if (typeof val == "number")  {
+            return "" + val;
+        }
+
+        if (typeof val == "boolean")  {
             return val ? "True" : "False";
         }
 
-        if (typeof val === "string") {
+        if (typeof val == "string") {
             val = val.indexOf("<") >= 0 ? CommonHelper.plainText(val) : val;
-            return CommonHelper.truncate(val) || missingValue;
+            return CommonHelper.truncate(val, truncateLength) || missingValue;
         }
 
-        if (Array.isArray(val)) {
-            return val.join(",");
+        // plain array
+        if (Array.isArray(val) && typeof val[0] != "object") {
+            return CommonHelper.truncate(val.join(","), truncateLength);
         }
 
-        if (typeof val === "object") {
+        // json
+        if (typeof val == "object") {
             try {
-                return CommonHelper.truncate(JSON.stringify(val)) || missingValue;
+                return CommonHelper.truncate(JSON.stringify(val), truncateLength) || missingValue;
             } catch (_) {
                 return missingValue;
             }
         }
 
-        return "" + val;
+        // return as it is
+        return val;
     }
 
     /**

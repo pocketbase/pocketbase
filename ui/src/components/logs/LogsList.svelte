@@ -7,7 +7,6 @@
     import Scroller from "@/components/base/Scroller.svelte";
     import LogLevel from "@/components/logs/LogLevel.svelte";
     import LogDate from "@/components/logs/LogDate.svelte";
-    import FormattedDate from "@/components/base/FormattedDate.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -162,6 +161,38 @@
 
         return CommonHelper.downloadJson(selected, `${selected.length}_logs_${from}_to_${to}.json`);
     }
+
+    function getLogPreviewKeys(log) {
+        let keys = [];
+
+        if (!log.data) {
+            return keys;
+        }
+
+        if (log.data.type == "request") {
+            const requestKeys = ["status", "execTime", "auth", "userIp"];
+            for (let key of requestKeys) {
+                if (typeof log.data[key] != "undefined") {
+                    keys.push(key);
+                }
+            }
+        } else {
+            // extract the first 6 keys (excluding the error one)
+            const allKeys = Object.keys(log.data);
+            for (const key of allKeys) {
+                if (key != "error" && keys.length < 6) {
+                    keys.push(key);
+                }
+            }
+        }
+
+        if (log.data.error) {
+            // ensure that the error key is last
+            keys.push("error");
+        }
+
+        return keys;
+    }
 </script>
 
 <Scroller class="table-wrapper">
@@ -192,10 +223,10 @@
                     </div>
                 </SortHeader>
 
-                <SortHeader disable class="col-type-text col-field-data" name="data" bind:sort>
+                <SortHeader disable class="col-type-text col-field-message" name="data" bind:sort>
                     <div class="col-header-content">
                         <i class="ri-file-list-2-line" />
-                        <span class="txt">data</span>
+                        <span class="txt">message</span>
                     </div>
                 </SortHeader>
 
@@ -211,8 +242,8 @@
         </thead>
         <tbody>
             {#each logs as log (log.id)}
-                {@const hasData = log.data && CommonHelper.isObject(log.data)}
                 {@const isRequest = log.data?.type == "request"}
+                {@const previewKeys = getLogPreviewKeys(log)}
                 <tr
                     tabindex="0"
                     class="row-handle"
@@ -242,42 +273,25 @@
                         <LogLevel level={log.level} />
                     </td>
 
-                    <td class="col-type-text col-field-data">
+                    <td class="col-type-text col-field-message">
                         <div class="flex flex-gap-10">
                             <span class="txt-ellipsis">
                                 {isRequest ? decodeURIComponent(log.message) : log.message}
                             </span>
                         </div>
-                        <div class="flex flex-gap-10 m-t-10">
-                            {#if hasData}
-                                {#if log.data.status}
-                                    <span class="label label-sm">status: {log.data.status}</span>
-                                {/if}
-                                {#if log.data.execTime}
-                                    <span class="label label-sm">execTime: {log.data.execTime}ms</span>
-                                {/if}
-                                {#if log.data.auth}
-                                    <span class="label label-sm">auth: {log.data.auth}</span>
-                                {/if}
-                                {#if log.data.clientId}
-                                    <span class="label label-sm">clientId: {log.data.clientId}</span>
-                                {/if}
-                                {#if log.data.userIp}
-                                    <span class="label label-sm">userIp: {log.data.userIp}</span>
-                                {/if}
-                                {#if log.data.error}
-                                    <span class="label label-sm label-danger">
-                                        error:
-                                        {CommonHelper.truncate(
-                                            typeof log.data.error === "string"
-                                                ? log.data.error
-                                                : JSON.stringify(log.data.error),
-                                            200
-                                        )}
-                                    </span>
-                                {/if}
-                            {/if}
-                        </div>
+                        {#if previewKeys.length}
+                            <div class="flex flex-wrap flex-gap-10 m-t-10">
+                                {#each previewKeys as key}
+                                    {#if isRequest && key == "execTime"}
+                                        <span class="label label-sm">{key}: {log.data[key]}ms</span>
+                                    {:else}
+                                        <span class="label label-sm" class:label-danger={key == "error"}>
+                                            {key}: {CommonHelper.stringifyValue(log.data[key], "-", 80)}
+                                        </span>
+                                    {/if}
+                                {/each}
+                            </div>
+                        {/if}
                     </td>
 
                     <td class="col-type-date col-field-created">
@@ -359,7 +373,7 @@
     .col-field-level {
         min-width: 100px;
     }
-    .col-field-data {
+    .col-field-message {
         min-width: 600px;
     }
 </style>
