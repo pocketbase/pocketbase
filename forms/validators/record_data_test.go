@@ -862,16 +862,25 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 		&schema.SchemaField{
 			Name: "field1",
 			Type: schema.FieldTypeJson,
+			Options: &schema.JsonOptions{
+				MaxSize: 10,
+			},
 		},
 		&schema.SchemaField{
 			Name:     "field2",
 			Required: true,
 			Type:     schema.FieldTypeJson,
+			Options: &schema.JsonOptions{
+				MaxSize: 9999,
+			},
 		},
 		&schema.SchemaField{
 			Name:   "field3",
 			Unique: true,
 			Type:   schema.FieldTypeJson,
+			Options: &schema.JsonOptions{
+				MaxSize: 9999,
+			},
 		},
 	)
 	if err := app.Dao().SaveCollection(collection); err != nil {
@@ -939,6 +948,15 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
+			"(json) check MaxSize constraint",
+			map[string]any{
+				"field1": `"123456789"`, // max 10bytes
+				"field2": 123,
+			},
+			nil,
+			[]string{"field1"},
+		},
+		{
 			"(json) check json text invalid obj, array and number normalizations",
 			map[string]any{
 				"field1": `[1 2 3]`,
@@ -969,9 +987,9 @@ func TestRecordDataValidatorValidateJson(t *testing.T) {
 		{
 			"(json) valid data - all fields with normalizations",
 			map[string]any{
-				"field1": []string{"a", "b", "c"},
+				"field1": `"12345678"`,
 				"field2": 123,
-				"field3": `"test"`,
+				"field3": []string{"a", "b", "c"},
 			},
 			nil,
 			[]string{},
@@ -1273,29 +1291,30 @@ func TestRecordDataValidatorValidateRelation(t *testing.T) {
 
 func checkValidatorErrors(t *testing.T, dao *daos.Dao, record *models.Record, scenarios []testDataFieldScenario) {
 	for i, s := range scenarios {
-		validator := validators.NewRecordDataValidator(dao, record, s.files)
-		result := validator.Validate(s.data)
-
-		prefix := fmt.Sprintf("%d", i)
-		if s.name != "" {
-			prefix = s.name
+		prefix := s.name
+		if prefix == "" {
+			prefix = fmt.Sprintf("%d", i)
 		}
 
-		// parse errors
-		errs, ok := result.(validation.Errors)
-		if !ok && result != nil {
-			t.Errorf("[%s] Failed to parse errors %v", prefix, result)
-			continue
-		}
+		t.Run(prefix, func(t *testing.T) {
+			validator := validators.NewRecordDataValidator(dao, record, s.files)
+			result := validator.Validate(s.data)
 
-		// check errors
-		if len(errs) > len(s.expectedErrors) {
-			t.Errorf("[%s] Expected error keys %v, got %v", prefix, s.expectedErrors, errs)
-		}
-		for _, k := range s.expectedErrors {
-			if _, ok := errs[k]; !ok {
-				t.Errorf("[%s] Missing expected error key %q in %v", prefix, k, errs)
+			// parse errors
+			errs, ok := result.(validation.Errors)
+			if !ok && result != nil {
+				t.Fatalf("Failed to parse errors %v", result)
 			}
-		}
+
+			// check errors
+			if len(errs) > len(s.expectedErrors) {
+				t.Fatalf("Expected error keys %v, got %v", s.expectedErrors, errs)
+			}
+			for _, k := range s.expectedErrors {
+				if _, ok := errs[k]; !ok {
+					t.Fatalf("Missing expected error key %q in %v", k, errs)
+				}
+			}
+		})
 	}
 }

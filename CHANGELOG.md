@@ -80,6 +80,9 @@
 
 - Fixed graceful shutdown handling and speed up a little the app termination time.
 
+- Added `MaxSize` `json` field option to prevent storing large json data in the db ([#3790](https://github.com/pocketbase/pocketbase/issues/3790)).
+  _Existing `json` fields are updated with a system migration to have a ~5MB size limit (it can be adjusted from the Admin UI)._
+
 
 ## v0.20.0-rc3
 

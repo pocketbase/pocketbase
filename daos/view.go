@@ -232,6 +232,9 @@ func defaultViewField(name string) *schema.SchemaField {
 	return &schema.SchemaField{
 		Name: name,
 		Type: schema.FieldTypeJson,
+		Options: &schema.JsonOptions{
+			MaxSize: 1, // the size doesn't matter in this case
+		},
 	}
 }
 

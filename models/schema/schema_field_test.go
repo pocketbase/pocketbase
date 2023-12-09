@@ -520,12 +520,12 @@ func TestSchemaFieldInitOptions(t *testing.T) {
 		{
 			schema.SchemaField{Type: schema.FieldTypeJson},
 			false,
-			`{"system":false,"id":"","name":"","type":"json","required":false,"presentable":false,"unique":false,"options":{}}`,
+			`{"system":false,"id":"","name":"","type":"json","required":false,"presentable":false,"unique":false,"options":{"maxSize":0}}`,
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeFile},
 			false,
-			`{"system":false,"id":"","name":"","type":"file","required":false,"presentable":false,"unique":false,"options":{"maxSelect":0,"maxSize":0,"mimeTypes":null,"thumbs":null,"protected":false}}`,
+			`{"system":false,"id":"","name":"","type":"file","required":false,"presentable":false,"unique":false,"options":{"mimeTypes":null,"thumbs":null,"maxSelect":0,"maxSize":0,"protected":false}}`,
 		},
 		{
 			schema.SchemaField{Type: schema.FieldTypeRelation},
@@ -548,16 +548,18 @@ func TestSchemaFieldInitOptions(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		err := s.field.InitOptions()
+		t.Run(fmt.Sprintf("s%d_%s", i, s.field.Type), func(t *testing.T) {
+			err := s.field.InitOptions()
 
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected %v, got %v (%v)", i, s.expectError, hasErr, err)
-		}
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected %v, got %v (%v)", s.expectError, hasErr, err)
+			}
 
-		if s.field.String() != s.expectJson {
-			t.Errorf("(%d), Expected %v, got %v", i, s.expectJson, s.field.String())
-		}
+			if s.field.String() != s.expectJson {
+				t.Fatalf(" Expected\n%v\ngot\n%v", s.expectJson, s.field.String())
+			}
+		})
 	}
 }
 
@@ -2058,6 +2060,16 @@ func TestJsonOptionsValidate(t *testing.T) {
 		{
 			"empty",
 			schema.JsonOptions{},
+			[]string{"maxSize"},
+		},
+		{
+			"MaxSize < 0",
+			schema.JsonOptions{MaxSize: -1},
+			[]string{"maxSize"},
+		},
+		{
+			"MaxSize > 0",
+			schema.JsonOptions{MaxSize: 1},
 			[]string{},
 		},
 	}

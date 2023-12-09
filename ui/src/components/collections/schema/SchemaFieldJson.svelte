@@ -1,18 +1,35 @@
 <script>
     import { slide } from "svelte/transition";
+    import CommonHelper from "@/utils/CommonHelper";
+    import Field from "@/components/base/Field.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
 
     export let field;
     export let key = "";
 
     let showInfo = false;
+
+    $: if (CommonHelper.isEmpty(field.options)) {
+        loadDefaults();
+    }
+
+    function loadDefaults() {
+        field.options = {
+            maxSize: 5242880,
+        };
+    }
 </script>
 
 <SchemaField bind:field {key} on:rename on:remove {...$$restProps}>
     <svelte:fragment slot="options">
+        <Field class="form-field required m-b-sm" name="schema.{key}.options.maxSize" let:uniqueId>
+            <label for={uniqueId}>Max size <small>(bytes)</small></label>
+            <input type="number" id={uniqueId} step="1" min="0" bind:value={field.options.maxSize} />
+        </Field>
+
         <button
             type="button"
-            class="inline-flex txt-sm flex-gap-5 link-hint"
+            class="btn btn-sm {showInfo ? 'btn-secondary' : 'btn-hint btn-transparent'}"
             on:click={() => {
                 showInfo = !showInfo;
             }}
@@ -24,7 +41,6 @@
                 <i class="ri-arrow-down-s-line txt-sm" />
             {/if}
         </button>
-
         {#if showInfo}
             <div class="block" transition:slide={{ duration: 150 }}>
                 <div class="alert alert-warning m-b-0 m-t-10">

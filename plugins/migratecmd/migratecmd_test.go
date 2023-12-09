@@ -167,11 +167,11 @@ func init() {
 
 			files, err := os.ReadDir(migrationsDir)
 			if err != nil {
-				t.Fatalf("Expected migrationsDir to be created, got: %v", err)
+				t.Fatalf("Expected migrationsDir to be created, got %v", err)
 			}
 
 			if total := len(files); total != 1 {
-				t.Fatalf("Expected 1 file to be generated, got %d", total)
+				t.Fatalf("Expected 1 file to be generated, got %d: %v", total, files)
 			}
 
 			expectedName := "_created_new_name." + s.lang
