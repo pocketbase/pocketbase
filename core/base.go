@@ -557,8 +557,10 @@ func (app *BaseApp) Restart() error {
 		App:       app,
 		IsRestart: true,
 	}, func(e *TerminateEvent) error {
+		e.App.ResetBootstrapState()
+
 		// attempt to restart the bootstrap process in case execve returns an error for some reason
-		defer app.Bootstrap()
+		defer e.App.Bootstrap()
 
 		return syscall.Exec(execPath, os.Args, os.Environ())
 	})
