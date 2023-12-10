@@ -38,36 +38,35 @@
 
     For better performance and to minimize blocking on hot paths, logs are currently written with
     debounce and on batches:
-
-      - 3 seconds after the last debounced log write
-      - when the batch threshold is reached (currently 200)
-      - right before app termination to attempt saving everything from the existing logs queue
+    - 3 seconds after the last debounced log write
+    - when the batch threshold is reached (currently 200)
+    - right before app termination to attempt saving everything from the existing logs queue
 
     Some notable log related changes:
 
-      - ⚠️ Bumped the minimum required Go version to 1.21.
+    - ⚠️ Bumped the minimum required Go version to 1.21.
 
-      - ⚠️ Removed `_requests` table in favor of the generalized `_logs`.
-        _Note that existing logs will be deleted!_
+    - ⚠️ Removed `_requests` table in favor of the generalized `_logs`.
+      _Note that existing logs will be deleted!_
 
-      - ⚠️ Renamed the following `Dao` log methods:
-        ```go
-        Dao.RequestQuery(...)      -> Dao.LogQuery(...)
-        Dao.FindRequestById(...)   -> Dao.FindLogById(...)
-        Dao.RequestsStats(...)     -> Dao.LogsStats(...)
-        Dao.DeleteOldRequests(...) -> Dao.DeleteOldLogs(...)
-        Dao.SaveRequest(...)       -> Dao.SaveLog(...)
-        ```
-      - ⚠️ Removed `app.IsDebug()` and the `--debug` flag.
-        This was done to avoid the confusion with the new logger and its debug severity level.
-        If you want to store debug logs you can set `-4` as min log level from the Admin UI.
+    - ⚠️ Renamed the following `Dao` log methods:
+      ```go
+      Dao.RequestQuery(...)      -> Dao.LogQuery(...)
+      Dao.FindRequestById(...)   -> Dao.FindLogById(...)
+      Dao.RequestsStats(...)     -> Dao.LogsStats(...)
+      Dao.DeleteOldRequests(...) -> Dao.DeleteOldLogs(...)
+      Dao.SaveRequest(...)       -> Dao.SaveLog(...)
+      ```
+    - ⚠️ Removed `app.IsDebug()` and the `--debug` flag.
+      This was done to avoid the confusion with the new logger and its debug severity level.
+      If you want to store debug logs you can set `-4` as min log level from the Admin UI.
 
-      - Refactored Admin UI Logs:
-        - Added new logs table listing.
-        - Added log settings option to toggle the IP logging for the activity logger.
-        - Added log settings option to specify a minimum log level.
-        - Added controls to export individual or bulk selected logs as json.
-        - Other minor improvements and fixes.
+    - Refactored Admin UI Logs:
+      - Added new logs table listing.
+      - Added log settings option to toggle the IP logging for the activity logger.
+      - Added log settings option to specify a minimum log level.
+      - Added controls to export individual or bulk selected logs as json.
+      - Other minor improvements and fixes.
 
 - Added new `filesystem/System.Copy(src, dest)` method to copy existing files from one location to another.
   _This is usually useful when duplicating records with `file` field(s) programmatically._

@@ -314,3 +314,31 @@ func hasAuthManageAccess(
 
 	return findErr == nil
 }
+
+var ruleQueryParams = []string{search.FilterQueryParam, search.SortQueryParam}
+var adminOnlyRuleFields = []string{"@collection.", "@request."}
+
+// @todo consider moving the rules check to the RecordFieldResolver.
+//
+// checkForAdminOnlyRuleFields loosely checks and returns an error if
+// the provided RequestInfo contains rule fields that only the admin can use.
+func checkForAdminOnlyRuleFields(requestInfo *models.RequestInfo) error {
+	if requestInfo.Admin != nil || len(requestInfo.Query) == 0 {
+		return nil // admin or nothing to check
+	}
+
+	for _, param := range ruleQueryParams {
+		v, _ := requestInfo.Query[param].(string)
+		if v == "" {
+			continue
+		}
+
+		for _, field := range adminOnlyRuleFields {
+			if strings.Contains(v, field) {
+				return NewForbiddenError("Only admins can filter by "+field, nil)
+			}
+		}
+	}
+
+	return nil
+}

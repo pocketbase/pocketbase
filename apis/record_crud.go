@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -43,12 +42,12 @@ func (api *recordApi) list(c echo.Context) error {
 		return NewNotFoundError("", "Missing collection context.")
 	}
 
+	requestInfo := RequestInfo(c)
+
 	// forbid users and guests to query special filter/sort fields
-	if err := api.checkForForbiddenQueryFields(c); err != nil {
+	if err := checkForAdminOnlyRuleFields(requestInfo); err != nil {
 		return err
 	}
-
-	requestInfo := RequestInfo(c)
 
 	if requestInfo.Admin == nil && collection.ListRule == nil {
 		// only admins can access if the rule is nil
@@ -408,22 +407,4 @@ func (api *recordApi) delete(c echo.Context) error {
 			return e.HttpContext.NoContent(http.StatusNoContent)
 		})
 	})
-}
-
-func (api *recordApi) checkForForbiddenQueryFields(c echo.Context) error {
-	admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-	if admin != nil {
-		return nil // admins are allowed to query everything
-	}
-
-	decodedQuery := c.QueryParam(search.FilterQueryParam) + c.QueryParam(search.SortQueryParam)
-	forbiddenFields := []string{"@collection.", "@request."}
-
-	for _, field := range forbiddenFields {
-		if strings.Contains(decodedQuery, field) {
-			return NewForbiddenError("Only admins can filter by @collection and @request query params", nil)
-		}
-	}
-
-	return nil
 }

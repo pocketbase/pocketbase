@@ -568,6 +568,10 @@ func (api *realtimeApi) canAccessRecord(
 		return true // no further checks needed
 	}
 
+	if err := checkForAdminOnlyRuleFields(requestInfo); err != nil {
+		return false
+	}
+
 	ruleFunc := func(q *dbx.SelectQuery) error {
 		resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), record.Collection(), requestInfo, false)
 

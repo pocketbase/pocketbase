@@ -43,9 +43,16 @@ func TestRecordCrudList(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:            "public collection but with admin only filter/sort (aka. @collection)",
+			Name:            "public collection but with admin only filter param (aka. @collection, @request, etc.)",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/demo2/records?filter=@collection.demo2.title='test1'",
+			Url:             "/api/collections/demo2/records?filter=%40collection.demo2.title='test1'",
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:            "public collection but with admin only sort param (aka. @collection, @request, etc.)",
+			Method:          http.MethodGet,
+			Url:             "/api/collections/demo2/records?sort=@request.auth.title",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
 		},
