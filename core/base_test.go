@@ -288,16 +288,31 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 		t.Fatalf("Logs migration execution error: %v", err)
 	}
 
+	threshold := 200
+
+	// disabled logs retention
+	{
+		app.Settings().Logs.MaxDays = 0
+
+		for i := 0; i < threshold+1; i++ {
+			app.Logger().Error("test")
+		}
+
+		if total := totalLogs(app, t); total != 0 {
+			t.Fatalf("Expected no logs, got %d", total)
+		}
+	}
+
 	// test batch logs writes
 	{
-		threshold := 200
+		app.Settings().Logs.MaxDays = 1
 
 		for i := 0; i < threshold-1; i++ {
 			app.Logger().Error("test")
 		}
 
 		if total := totalLogs(app, t); total != 0 {
-			t.Fatalf("Expected %d logs, got %d", 0, total)
+			t.Fatalf("Expected no logs, got %d", total)
 		}
 
 		// should trigger batch write

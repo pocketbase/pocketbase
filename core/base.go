@@ -1186,10 +1186,11 @@ func (app *BaseApp) initLogger() error {
 		BatchSize: 200,
 		BeforeAddFunc: func(ctx context.Context, log *logger.Log) bool {
 			ticker.Reset(duration)
-			return true
+
+			return app.Settings().Logs.MaxDays > 0
 		},
 		WriteFunc: func(ctx context.Context, logs []*logger.Log) error {
-			if !app.IsBootstrapped() {
+			if !app.IsBootstrapped() || app.Settings().Logs.MaxDays == 0 {
 				return nil
 			}
 
