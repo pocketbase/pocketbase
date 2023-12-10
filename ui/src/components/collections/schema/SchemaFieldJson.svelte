@@ -15,7 +15,7 @@
 
     function loadDefaults() {
         field.options = {
-            maxSize: 5242880,
+            maxSize: 2000000,
         };
     }
 </script>

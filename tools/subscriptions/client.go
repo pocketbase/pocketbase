@@ -19,9 +19,12 @@ type Message struct {
 	Data []byte `json:"data"`
 }
 
+// SubscriptionOptions defines the request options (query params, headers, etc.)
+// for a single subscription topic.
 type SubscriptionOptions struct {
 	// @todo after the requests handling refactoring consider
-	// 		 changing to map[string]string or map[string][]string
+	// changing to map[string]string or map[string][]string
+
 	Query   map[string]any `json:"query"`
 	Headers map[string]any `json:"headers"`
 }

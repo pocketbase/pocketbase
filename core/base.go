@@ -1234,9 +1234,9 @@ func (app *BaseApp) initLogger() error {
 		},
 	})
 
-	ctx := context.Background()
-
 	go func() {
+		ctx := context.Background()
+
 		for {
 			select {
 			case <-done:
