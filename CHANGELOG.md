@@ -1,3 +1,8 @@
+## v0.20.1
+
+- Removed the blank current time entry from the logs chart as it was causing confusion when used with custom time ranges.
+
+
 ## v0.20.0
 
 - Added `expand`, `filter`, `fields`, custom query and headers parameters support for the realtime subscriptions.

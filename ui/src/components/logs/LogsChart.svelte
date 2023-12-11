@@ -54,12 +54,6 @@
                     });
                     totalLogs += item.total;
                 }
-
-                // add current time marker to the chart
-                chartData.push({
-                    x: new Date(),
-                    y: undefined,
-                });
             })
             .catch((err) => {
                 if (!err?.isAbort) {
