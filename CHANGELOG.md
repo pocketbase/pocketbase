@@ -4,7 +4,7 @@
 
 - Removed the default Go API tests timeout and added a new`ApiScenario.Timeout` option ([#3930](https://github.com/pocketbase/pocketbase/issues/3930)).
   A negative or zero value means no tests timeout.
-  If a single API test that takes more than 3s to complete it will have a log message visible when the test fails or when [`go test -v`] flag is used.
+  If a single API test takes more than 3s to complete it will have a log message visible when the test fails or when [`go test -v`] flag is used.
 
 
 ## v0.20.0
