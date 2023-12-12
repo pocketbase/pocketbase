@@ -29,6 +29,11 @@ type ApiScenario struct {
 	// to ensure that all fired non-awaited go routines have finished
 	Delay time.Duration
 
+	// Timeout specifies how long to wait before cancelling the request context.
+	//
+	// A zero or negative value means that there will be no timeout.
+	Timeout time.Duration
+
 	// expectations
 	// ---
 	ExpectedStatus     int
@@ -90,9 +95,17 @@ func (scenario *ApiScenario) test(t *testing.T) {
 	// add middleware to timeout long-running requests (eg. keep-alive routes)
 	e.Pre(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			ctx, cancelFunc := context.WithTimeout(c.Request().Context(), 100*time.Millisecond)
-			defer cancelFunc()
-			c.SetRequest(c.Request().Clone(ctx))
+			slowTimer := time.AfterFunc(3*time.Second, func() {
+				t.Logf("[WARN] Long running test %q", scenario.Name)
+			})
+			defer slowTimer.Stop()
+
+			if scenario.Timeout > 0 {
+				ctx, cancelFunc := context.WithTimeout(c.Request().Context(), scenario.Timeout)
+				defer cancelFunc()
+				c.SetRequest(c.Request().Clone(ctx))
+			}
+
 			return next(c)
 		}
 	})

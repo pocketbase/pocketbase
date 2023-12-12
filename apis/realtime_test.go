@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -22,6 +23,7 @@ func TestRealtimeConnect(t *testing.T) {
 		{
 			Method:         http.MethodGet,
 			Url:            "/api/realtime",
+			Timeout:        100 * time.Millisecond,
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`id:`,
@@ -44,6 +46,7 @@ func TestRealtimeConnect(t *testing.T) {
 			Name:           "PB_CONNECT interrupt",
 			Method:         http.MethodGet,
 			Url:            "/api/realtime",
+			Timeout:        100 * time.Millisecond,
 			ExpectedStatus: 200,
 			ExpectedEvents: map[string]int{
 				"OnRealtimeConnectRequest":    1,
@@ -68,6 +71,7 @@ func TestRealtimeConnect(t *testing.T) {
 			Name:           "Skipping/ignoring messages",
 			Method:         http.MethodGet,
 			Url:            "/api/realtime",
+			Timeout:        100 * time.Millisecond,
 			ExpectedStatus: 200,
 			ExpectedEvents: map[string]int{
 				"OnRealtimeConnectRequest":    1,
