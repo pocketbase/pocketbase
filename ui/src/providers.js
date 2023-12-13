@@ -22,6 +22,11 @@ export default [
         optionsComponent: AppleOptions,
     },
     {
+        key:   "bitbucketAuth",
+        title: "Bitbucket",
+        logo:  "bitbucket.svg",  
+    },
+    {
         key:   "googleAuth",
         title: "Google",
         logo:  "google.svg",

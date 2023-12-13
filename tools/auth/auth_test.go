@@ -225,4 +225,13 @@ func TestNewProviderByName(t *testing.T) {
 	if _, ok := p.(*auth.Mailcow); !ok {
 		t.Error("Expected to be instance of *auth.Mailcow")
 	}
+
+	// bitbucket
+	p, err = auth.NewProviderByName(auth.NameBitbucket)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Bitbucket); !ok {
+		t.Error("Expected to be instance of *auth.Bitbucket")
+	}
 }
