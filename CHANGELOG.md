@@ -6,6 +6,8 @@
   A negative or zero value means no tests timeout.
   If a single API test takes more than 3s to complete it will have a log message visible when the test fails or when [`go test -v`] flag is used.
 
+- Updated the SQL syntax highligher and keywords autocompletion in the Admin UI to recognize `CAST(x as bool)` expressions.
+
 
 ## v0.20.0
 
