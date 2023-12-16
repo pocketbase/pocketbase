@@ -31,7 +31,7 @@ var printLog = func(log *logger.Log) {
 	switch log.Level {
 	case slog.LevelDebug:
 		str.WriteString(getColor(color.Bold, color.FgHiBlack).Sprint("DEBUG "))
-		str.WriteString(getColor(color.FgHiBlack).Sprint(log.Message))
+		str.WriteString(getColor(color.FgWhite).Sprint(log.Message))
 	case slog.LevelInfo:
 		str.WriteString(getColor(color.Bold, color.FgWhite).Sprint("INFO "))
 		str.WriteString(getColor(color.FgWhite).Sprint(log.Message))
@@ -63,5 +63,5 @@ var printLog = func(log *logger.Log) {
 		str.WriteString("\n")
 	}
 
-	fmt.Printf(str.String())
+	fmt.Print(str.String())
 }
