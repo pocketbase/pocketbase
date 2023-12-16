@@ -288,19 +288,17 @@
                         {#if previewKeys.length}
                             <div class="flex flex-wrap flex-gap-10 m-t-10">
                                 {#each previewKeys as keyItem}
-                                    {#if isRequest && keyItem.key == "execTime"}
-                                        <span class="label label-sm">
+                                    <span class="label label-sm {keyItem.label || ''}">
+                                        {#if isRequest && keyItem.key == "execTime"}
                                             {keyItem.key}: {log.data[keyItem.key]}ms
-                                        </span>
-                                    {:else}
-                                        <span class="label label-sm {keyItem.label}">
+                                        {:else}
                                             {keyItem.key}: {CommonHelper.stringifyValue(
                                                 log.data[keyItem.key],
                                                 "-",
                                                 80
                                             )}
-                                        </span>
-                                    {/if}
+                                        {/if}
+                                    </span>
                                 {/each}
                             </div>
                         {/if}
