@@ -173,22 +173,30 @@
             const requestKeys = ["status", "execTime", "auth", "userIp"];
             for (let key of requestKeys) {
                 if (typeof log.data[key] != "undefined") {
-                    keys.push(key);
+                    keys.push({ key });
                 }
             }
+
+            // add the referer if it is from a different source
+            if (log.data.referer && !log.data.referer.includes(window.location.host)) {
+                keys.push({ key: "referer" });
+            }
         } else {
-            // extract the first 6 keys (excluding the error one)
+            // extract the first 6 keys (excluding the error and details)
             const allKeys = Object.keys(log.data);
             for (const key of allKeys) {
-                if (key != "error" && keys.length < 6) {
-                    keys.push(key);
+                if (key != "error" && key != "details" && keys.length < 6) {
+                    keys.push({ key });
                 }
             }
         }
 
+        // ensure that the error and detail keys are last
         if (log.data.error) {
-            // ensure that the error key is last
-            keys.push("error");
+            keys.push({ key: "error", label: "label-danger" });
+        }
+        if (log.data.details) {
+            keys.push({ key: "details", label: "label-warning" });
         }
 
         return keys;
@@ -275,18 +283,22 @@
 
                     <td class="col-type-text col-field-message">
                         <div class="flex flex-gap-10">
-                            <span class="txt-ellipsis">
-                                {isRequest ? decodeURIComponent(log.message) : log.message}
-                            </span>
+                            <span class="txt-ellipsis">{log.message}</span>
                         </div>
                         {#if previewKeys.length}
                             <div class="flex flex-wrap flex-gap-10 m-t-10">
-                                {#each previewKeys as key}
-                                    {#if isRequest && key == "execTime"}
-                                        <span class="label label-sm">{key}: {log.data[key]}ms</span>
+                                {#each previewKeys as keyItem}
+                                    {#if isRequest && keyItem.key == "execTime"}
+                                        <span class="label label-sm">
+                                            {keyItem.key}: {log.data[keyItem.key]}ms
+                                        </span>
                                     {:else}
-                                        <span class="label label-sm" class:label-danger={key == "error"}>
-                                            {key}: {CommonHelper.stringifyValue(log.data[key], "-", 80)}
+                                        <span class="label label-sm {keyItem.label}">
+                                            {keyItem.key}: {CommonHelper.stringifyValue(
+                                                log.data[keyItem.key],
+                                                "-",
+                                                80
+                                            )}
                                         </span>
                                     {/if}
                                 {/each}

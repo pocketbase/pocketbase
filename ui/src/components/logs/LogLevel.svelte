@@ -8,7 +8,7 @@
 
 <div class="label log-level-label level-{level}">
     <span class="txt">
-        {label || "N/A"} ({level})
+        {label || "UNKN"} ({level})
     </span>
 </div>
 

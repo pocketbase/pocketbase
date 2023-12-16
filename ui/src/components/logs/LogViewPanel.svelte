@@ -174,7 +174,7 @@
                             {:else if isJson}
                                 <CodeBlock content={JSON.stringify(value, null, 2)} />
                             {:else if key == "error"}
-                                <span class="label label-danger">
+                                <span class="label label-danger log-error-label">
                                     {value}
                                 </span>
                             {:else if key == "details"}
@@ -202,3 +202,9 @@
         </button>
     </svelte:fragment>
 </OverlayPanel>
+
+<style>
+    .log-error-label {
+        white-space: normal;
+    }
+</style>

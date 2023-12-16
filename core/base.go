@@ -47,6 +47,7 @@ type BaseApp struct {
 	// @todo consider introducing a mutex to allow safe concurrent config changes during runtime
 
 	// configurable parameters
+	isDev            bool
 	dataDir          string
 	encryptionEnv    string
 	dataMaxOpenConns int
@@ -174,6 +175,7 @@ type BaseApp struct {
 
 // BaseAppConfig defines a BaseApp configuration option
 type BaseAppConfig struct {
+	IsDev            bool
 	DataDir          string
 	EncryptionEnv    string
 	DataMaxOpenConns int // default to 500
@@ -188,6 +190,7 @@ type BaseAppConfig struct {
 // To initialize the app, you need to call `app.Bootstrap()`.
 func NewBaseApp(config BaseAppConfig) *BaseApp {
 	app := &BaseApp{
+		isDev:               config.IsDev,
 		dataDir:             config.DataDir,
 		encryptionEnv:       config.EncryptionEnv,
 		dataMaxOpenConns:    config.DataMaxOpenConns,
@@ -458,6 +461,13 @@ func (app *BaseApp) EncryptionEnv() string {
 	return app.encryptionEnv
 }
 
+// IsDev returns whether the app is in dev mode.
+//
+// When enabled logs, executed sql statements, etc. are printed to the stderr.
+func (app *BaseApp) IsDev() bool {
+	return app.isDev
+}
+
 // Settings returns the loaded app settings.
 func (app *BaseApp) Settings() *settings.Settings {
 	return app.settings
@@ -589,9 +599,11 @@ func (app *BaseApp) RefreshSettings() error {
 		return err
 	}
 
-	// reload handler level (if initialized)
-	if h, ok := app.Logger().Handler().(*logger.BatchHandler); ok {
-		h.SetLevel(slog.Level(app.settings.Logs.MinLevel))
+	// reload handler level (if initialized and not in dev mode)
+	if !app.IsDev() && app.Logger() != nil {
+		if h, ok := app.Logger().Handler().(*logger.BatchHandler); ok {
+			h.SetLevel(slog.Level(app.settings.Logs.MinLevel))
+		}
 	}
 
 	return nil
@@ -1054,15 +1066,16 @@ func (app *BaseApp) initDataDB() error {
 	nonconcurrentDB.DB().SetMaxIdleConns(1)
 	nonconcurrentDB.DB().SetConnMaxIdleTime(3 * time.Minute)
 
-	// @todo benchmark whether it will have an impact if always enabled as TRACE log
-	// nonconcurrentDB.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
-	// 	color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
-	// }
-	// concurrentDB.QueryLogFunc = nonconcurrentDB.QueryLogFunc
-	// nonconcurrentDB.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
-	// 	color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
-	// }
-	// concurrentDB.ExecLogFunc = nonconcurrentDB.ExecLogFunc
+	if app.IsDev() {
+		nonconcurrentDB.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+			color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
+		}
+		nonconcurrentDB.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+			color.HiBlack("[%.2fms] %v\n", float64(t.Milliseconds()), sql)
+		}
+		concurrentDB.QueryLogFunc = nonconcurrentDB.QueryLogFunc
+		concurrentDB.ExecLogFunc = nonconcurrentDB.ExecLogFunc
+	}
 
 	app.dao = app.createDaoWithHooks(concurrentDB, nonconcurrentDB)
 
@@ -1176,15 +1189,31 @@ func (app *BaseApp) initLogger() error {
 	ticker := time.NewTicker(duration)
 	done := make(chan bool)
 
-	level := slog.LevelInfo
-	if app.Settings() != nil {
-		level = slog.Level(app.Settings().Logs.MinLevel)
+	// Apply the min level only if it is not in develop
+	// to allow printing the logs to the console.
+	//
+	// DB logs are still filtered but the checks for the min level are done
+	// in the BatchOptions.BeforeAddFunc instead of the slog.Handler.Enabled() method.
+	var minLevel slog.Level
+	if app.IsDev() {
+		minLevel = -9999
+	} else if app.Settings() != nil {
+		minLevel = slog.Level(app.Settings().Logs.MinLevel)
 	}
 
 	handler := logger.NewBatchHandler(logger.BatchOptions{
-		Level:     level,
+		Level:     minLevel,
 		BatchSize: 200,
 		BeforeAddFunc: func(ctx context.Context, log *logger.Log) bool {
+			if app.IsDev() {
+				printLog(log)
+
+				// manually check the log level and skip if necessary
+				if log.Level < slog.Level(app.Settings().Logs.MinLevel) {
+					return false
+				}
+			}
+
 			ticker.Reset(duration)
 
 			return app.Settings().Logs.MaxDays > 0

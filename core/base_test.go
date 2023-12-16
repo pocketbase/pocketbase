@@ -1,11 +1,17 @@
 package core
 
 import (
+	"fmt"
+	"log/slog"
 	"os"
 	"testing"
 	"time"
 
+	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/migrations/logs"
+	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/logger"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/migrate"
@@ -18,6 +24,7 @@ func TestNewBaseApp(t *testing.T) {
 	app := NewBaseApp(BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "test_env",
+		IsDev:         true,
 	})
 
 	if app.dataDir != testDataDir {
@@ -26,6 +33,10 @@ func TestNewBaseApp(t *testing.T) {
 
 	if app.encryptionEnv != "test_env" {
 		t.Fatalf("expected encryptionEnv test_env, got %q", app.dataDir)
+	}
+
+	if !app.isDev {
+		t.Fatalf("expected isDev true, got %v", app.isDev)
 	}
 
 	if app.store == nil {
@@ -132,6 +143,7 @@ func TestBaseAppGetters(t *testing.T) {
 	app := NewBaseApp(BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "pb_test_env",
+		IsDev:         true,
 	})
 	defer app.ResetBootstrapState()
 
@@ -163,6 +175,10 @@ func TestBaseAppGetters(t *testing.T) {
 		t.Fatalf("Expected app.EncryptionEnv %v, got %v", app.EncryptionEnv(), app.encryptionEnv)
 	}
 
+	if app.isDev != app.IsDev() {
+		t.Fatalf("Expected app.IsDev %v, got %v", app.IsDev(), app.isDev)
+	}
+
 	if app.settings != app.Settings() {
 		t.Fatalf("Expected app.Settings %v, got %v", app.Settings(), app.settings)
 	}
@@ -185,13 +201,11 @@ func TestBaseAppGetters(t *testing.T) {
 }
 
 func TestBaseAppNewMailClient(t *testing.T) {
-	const testDataDir = "./pb_base_app_test_data_dir/"
-	defer os.RemoveAll(testDataDir)
-
-	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-	})
+	app, cleanup, err := initTestBaseApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
 
 	client1 := app.NewMailClient()
 	if val, ok := client1.(*mailer.Sendmail); !ok {
@@ -207,13 +221,11 @@ func TestBaseAppNewMailClient(t *testing.T) {
 }
 
 func TestBaseAppNewFilesystem(t *testing.T) {
-	const testDataDir = "./pb_base_app_test_data_dir/"
-	defer os.RemoveAll(testDataDir)
-
-	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-	})
+	app, cleanup, err := initTestBaseApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
 
 	// local
 	local, localErr := app.NewFilesystem()
@@ -236,13 +248,11 @@ func TestBaseAppNewFilesystem(t *testing.T) {
 }
 
 func TestBaseAppNewBackupsFilesystem(t *testing.T) {
-	const testDataDir = "./pb_base_app_test_data_dir/"
-	defer os.RemoveAll(testDataDir)
-
-	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-	})
+	app, cleanup, err := initTestBaseApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
 
 	// local
 	local, localErr := app.NewBackupsFilesystem()
@@ -265,30 +275,24 @@ func TestBaseAppNewBackupsFilesystem(t *testing.T) {
 }
 
 func TestBaseAppLoggerWrites(t *testing.T) {
-	testDataDir, err := os.MkdirTemp("", "logger_writes")
+	app, cleanup, err := initTestBaseApp()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.RemoveAll(testDataDir)
-
-	app := NewBaseApp(BaseAppConfig{
-		DataDir: testDataDir,
-	})
-
-	if err := app.Bootstrap(); err != nil {
-		t.Fatal(err)
-	}
-
-	// init logs migrations
-	runner, err := migrate.NewRunner(app.LogsDB(), logs.LogsMigrations)
-	if err != nil {
-		t.Fatalf("Logs runner error: %v", err)
-	}
-	if _, err := runner.Up(); err != nil {
-		t.Fatalf("Logs migration execution error: %v", err)
-	}
+	defer cleanup()
 
 	threshold := 200
+
+	totalLogs := func(app App, t *testing.T) int {
+		var total int
+
+		err := app.LogsDao().LogQuery().Select("count(*)").Row(&total)
+		if err != nil {
+			t.Fatalf("Failed to fetch total logs: %v", err)
+		}
+
+		return total
+	}
 
 	// disabled logs retention
 	{
@@ -333,13 +337,216 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 	}
 }
 
-func totalLogs(app App, t *testing.T) int {
-	var total int
-
-	err := app.LogsDao().LogQuery().Select("count(*)").Row(&total)
+func TestBaseAppRefreshSettingsLoggerMinLevelEnabled(t *testing.T) {
+	app, cleanup, err := initTestBaseApp()
 	if err != nil {
-		t.Fatalf("Failed to fetch total logs: %v", err)
+		t.Fatal(err)
+	}
+	defer cleanup()
+
+	handler, ok := app.Logger().Handler().(*logger.BatchHandler)
+	if !ok {
+		t.Fatalf("Expected BatchHandler, got %v", app.Logger().Handler())
 	}
 
-	return total
+	scenarios := []struct {
+		name  string
+		isDev bool
+		level int
+		// level->enabled map
+		expectations map[int]bool
+	}{
+		{
+			"dev mode",
+			true,
+			4,
+			map[int]bool{
+				3: true,
+				4: true,
+				5: true,
+			},
+		},
+		{
+			"nondev mode",
+			false,
+			4,
+			map[int]bool{
+				3: false,
+				4: true,
+				5: true,
+			},
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			app.isDev = s.isDev
+
+			app.Settings().Logs.MinLevel = s.level
+
+			if err := app.Dao().SaveSettings(app.Settings()); err != nil {
+				t.Fatalf("Failed to save settings: %v", err)
+			}
+
+			if err := app.RefreshSettings(); err != nil {
+				t.Fatalf("Failed to refresh app settings: %v", err)
+			}
+
+			for level, enabled := range s.expectations {
+				if v := handler.Enabled(nil, slog.Level(level)); v != enabled {
+					t.Fatalf("Expected level %d Enabled() to be %v, got %v", level, enabled, v)
+				}
+			}
+		})
+	}
+}
+
+func TestBaseAppLoggerLevelDevPrint(t *testing.T) {
+	app, cleanup, err := initTestBaseApp()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+
+	testLogLevel := 4
+
+	app.Settings().Logs.MinLevel = testLogLevel
+	if err := app.Dao().SaveSettings(app.Settings()); err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		name            string
+		isDev           bool
+		levels          []int
+		printedLevels   []int
+		persistedLevels []int
+	}{
+		{
+			"dev mode",
+			true,
+			[]int{testLogLevel - 1, testLogLevel, testLogLevel + 1},
+			[]int{testLogLevel - 1, testLogLevel, testLogLevel + 1},
+			[]int{testLogLevel, testLogLevel + 1},
+		},
+		{
+			"nondev mode",
+			false,
+			[]int{testLogLevel - 1, testLogLevel, testLogLevel + 1},
+			[]int{},
+			[]int{testLogLevel, testLogLevel + 1},
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			var printedLevels []int
+			var persistedLevels []int
+
+			app.isDev = s.isDev
+
+			// trigger slog handler min level refresh
+			if err := app.RefreshSettings(); err != nil {
+				t.Fatal(err)
+			}
+
+			// track printed logs
+			originalPrintLog := printLog
+			defer func() {
+				printLog = originalPrintLog
+			}()
+			printLog = func(log *logger.Log) {
+				printedLevels = append(printedLevels, int(log.Level))
+			}
+
+			// track persisted logs
+			app.LogsDao().AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
+				l, ok := m.(*models.Log)
+				if ok {
+					persistedLevels = append(persistedLevels, l.Level)
+				}
+				return nil
+			}
+
+			// write and persist logs
+			for _, l := range s.levels {
+				app.Logger().Log(nil, slog.Level(l), "test")
+			}
+			handler, ok := app.Logger().Handler().(*logger.BatchHandler)
+			if !ok {
+				t.Fatalf("Expected BatchHandler, got %v", app.Logger().Handler())
+			}
+			if err := handler.WriteAll(nil); err != nil {
+				t.Fatalf("Failed to write all logs: %v", err)
+			}
+
+			// check persisted log levels
+			if len(s.persistedLevels) != len(persistedLevels) {
+				t.Fatalf("Expected persisted levels \n%v\ngot\n%v", s.persistedLevels, persistedLevels)
+			}
+			for _, l := range persistedLevels {
+				if !list.ExistInSlice(l, s.persistedLevels) {
+					t.Fatalf("Missing expected persisted level %v in %v", l, persistedLevels)
+				}
+			}
+
+			// check printed log levels
+			if len(s.printedLevels) != len(printedLevels) {
+				t.Fatalf("Expected printed levels \n%v\ngot\n%v", s.printedLevels, printedLevels)
+			}
+			for _, l := range printedLevels {
+				if !list.ExistInSlice(l, s.printedLevels) {
+					t.Fatalf("Missing expected printed level %v in %v", l, printedLevels)
+				}
+			}
+		})
+	}
+}
+
+// -------------------------------------------------------------------
+
+// note: make sure to call `defer cleanup()` when the app is no longer needed.
+func initTestBaseApp() (app *BaseApp, cleanup func(), err error) {
+	testDataDir, err := os.MkdirTemp("", "test_base_app")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cleanup = func() {
+		os.RemoveAll(testDataDir)
+	}
+
+	app = NewBaseApp(BaseAppConfig{
+		DataDir: testDataDir,
+	})
+
+	initErr := func() error {
+		if err := app.Bootstrap(); err != nil {
+			return fmt.Errorf("bootstrap error: %w", err)
+		}
+
+		logsRunner, err := migrate.NewRunner(app.LogsDB(), logs.LogsMigrations)
+		if err != nil {
+			return fmt.Errorf("logsRunner error: %w", err)
+		}
+		if _, err := logsRunner.Up(); err != nil {
+			return fmt.Errorf("logsRunner migrations execution error: %w", err)
+		}
+
+		dataRunner, err := migrate.NewRunner(app.DB(), migrations.AppMigrations)
+		if err != nil {
+			return fmt.Errorf("logsRunner error: %w", err)
+		}
+		if _, err := dataRunner.Up(); err != nil {
+			return fmt.Errorf("dataRunner migrations execution error: %w", err)
+		}
+
+		return nil
+	}()
+	if initErr != nil {
+		cleanup()
+		return nil, nil, initErr
+	}
+
+	return app, cleanup, nil
 }

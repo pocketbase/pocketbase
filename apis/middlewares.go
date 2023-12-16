@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -315,7 +316,7 @@ func logRequest(app core.App, c echo.Context, err *ApiError) {
 	httpResponse := c.Response()
 	method := strings.ToUpper(httpRequest.Method)
 	status := httpResponse.Status
-	url := httpRequest.URL.RequestURI()
+	requestUri := httpRequest.URL.RequestURI()
 
 	// parse the request error
 	if err != nil {
@@ -336,7 +337,7 @@ func logRequest(app core.App, c echo.Context, err *ApiError) {
 
 	attrs = append(
 		attrs,
-		slog.String("url", url),
+		slog.String("url", requestUri),
 		slog.String("method", method),
 		slog.Int("status", status),
 		slog.String("auth", requestAuth),
@@ -355,7 +356,14 @@ func logRequest(app core.App, c echo.Context, err *ApiError) {
 
 	// don't block on logs write
 	routine.FireAndForget(func() {
-		message := method + " " + url
+		message := method + " "
+
+		if escaped, err := url.PathUnescape(requestUri); err == nil {
+			message += escaped
+		} else {
+			message += requestUri
+		}
+
 		if err != nil {
 			app.Logger().Error(message, attrs...)
 		} else {

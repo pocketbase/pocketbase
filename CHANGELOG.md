@@ -1,12 +1,19 @@
 ## v0.20.1-WIP
 
-- Removed the blank current time entry from the logs chart as it was causing confusion when used with custom time ranges.
+- Added `--dev` flag and its accompanying `app.IsDev()` method (_in place of the previosly removed `--debug`_) to assist during development ([#3918](https://github.com/pocketbase/pocketbase/discussions/3918)).
+  The `--dev` flag prints in the console "everything" and more specifically:
+  - the data DB SQL statements
+  - all `app.Logger().*` logs (debug, info, warning, error, etc.), no matter of the logs persistence settings in the Admin UI
 
-- Removed the default Go API tests timeout and added a new`ApiScenario.Timeout` option ([#3930](https://github.com/pocketbase/pocketbase/issues/3930)).
+- Minor Admin UI fixes:
+  - Fixed the log `error` label text wrapping.
+  - Added the log `referer` (_when it is from a different source_) and `details` labels in the logs listing.
+  - Removed the blank current time entry from the logs chart because it was causing confusion when used with custom time ranges.
+  - Updated the SQL syntax highligher and keywords autocompletion in the Admin UI to recognize `CAST(x as bool)` expressions.
+
+- Replaced the default API tests timeout with a new `ApiScenario.Timeout` option ([#3930](https://github.com/pocketbase/pocketbase/issues/3930)).
   A negative or zero value means no tests timeout.
-  If a single API test takes more than 3s to complete it will have a log message visible when the test fails or when [`go test -v`] flag is used.
-
-- Updated the SQL syntax highligher and keywords autocompletion in the Admin UI to recognize `CAST(x as bool)` expressions.
+  If a single API test takes more than 3s to complete it will have a log message visible when the test fails or when `go test -v` flag is used.
 
 
 ## v0.20.0

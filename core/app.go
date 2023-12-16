@@ -59,6 +59,9 @@ type App interface {
 	// (used for settings encryption).
 	EncryptionEnv() string
 
+	// IsDev returns whether the app is in dev mode.
+	IsDev() bool
+
 	// Settings returns the loaded app settings.
 	Settings() *settings.Settings
 

@@ -32,6 +32,7 @@ type appWrapper struct {
 type PocketBase struct {
 	*appWrapper
 
+	devFlag           bool
 	dataDirFlag       string
 	encryptionEnvFlag string
 	hideStartBanner   bool
@@ -43,6 +44,7 @@ type PocketBase struct {
 // Config is the PocketBase initialization config struct.
 type Config struct {
 	// optional default values for the console flags
+	DefaultDev           bool
 	DefaultDataDir       string // if not set, it will fallback to "./pb_data"
 	DefaultEncryptionEnv string
 
@@ -65,7 +67,11 @@ type Config struct {
 // If you want to initialize the application before calling [Start()],
 // then you'll have to manually call [Bootstrap()].
 func New() *PocketBase {
-	return NewWithConfig(Config{})
+	_, isUsingGoRun := inspectRuntime()
+
+	return NewWithConfig(Config{
+		DefaultDev: isUsingGoRun,
+	})
 }
 
 // NewWithConfig creates a new PocketBase instance with the provided config.
@@ -95,6 +101,7 @@ func NewWithConfig(config Config) *PocketBase {
 				DisableDefaultCmd: true,
 			},
 		},
+		devFlag:           config.DefaultDev,
 		dataDirFlag:       config.DefaultDataDir,
 		encryptionEnvFlag: config.DefaultEncryptionEnv,
 		hideStartBanner:   config.HideStartBanner,
@@ -109,6 +116,7 @@ func NewWithConfig(config Config) *PocketBase {
 
 	// initialize the app instance
 	pb.appWrapper = &appWrapper{core.NewBaseApp(core.BaseAppConfig{
+		IsDev:            pb.devFlag,
 		DataDir:          pb.dataDirFlag,
 		EncryptionEnv:    pb.encryptionEnvFlag,
 		DataMaxOpenConns: config.DataMaxOpenConns,
@@ -189,6 +197,13 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 		"encryptionEnv",
 		config.DefaultEncryptionEnv,
 		"the env variable whose value of 32 characters will be used \nas encryption key for the app settings (default none)",
+	)
+
+	pb.RootCmd.PersistentFlags().BoolVar(
+		&pb.devFlag,
+		"dev",
+		config.DefaultDev,
+		"enable dev mode, aka. printing logs and sql statements",
 	)
 
 	return pb.RootCmd.ParseFlags(os.Args[1:])
