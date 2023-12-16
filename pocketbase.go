@@ -203,7 +203,7 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 		&pb.devFlag,
 		"dev",
 		config.DefaultDev,
-		"enable dev mode, aka. printing logs and sql statements",
+		"enable dev mode, aka. printing logs and sql statements to the console",
 	)
 
 	return pb.RootCmd.ParseFlags(os.Args[1:])

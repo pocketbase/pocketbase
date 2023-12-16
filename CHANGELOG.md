@@ -15,6 +15,8 @@
   A negative or zero value means no tests timeout.
   If a single API test takes more than 3s to complete it will have a log message visible when the test fails or when `go test -v` flag is used.
 
+- Added timestamp at the beginning of the generated JSVM types file to avoid creating it everytime with the app startup.
+
 
 ## v0.20.0
 
