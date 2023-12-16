@@ -1,4 +1,4 @@
-## v0.20.1-WIP
+## v0.20.1
 
 - Added `--dev` flag and its accompanying `app.IsDev()` method (_in place of the previosly removed `--debug`_) to assist during development ([#3918](https://github.com/pocketbase/pocketbase/discussions/3918)).
   The `--dev` flag prints in the console "everything" and more specifically:
