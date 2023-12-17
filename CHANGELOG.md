@@ -1,3 +1,8 @@
+## v0.21.0-WIP
+
+- Added Bitbucket OAuth2 provider ([#3948](https://github.com/pocketbase/pocketbase/pull/3948); thanks @aabajyan).
+
+
 ## v0.20.1
 
 - Added `--dev` flag and its accompanying `app.IsDev()` method (_in place of the previosly removed `--debug`_) to assist during development ([#3918](https://github.com/pocketbase/pocketbase/discussions/3918)).

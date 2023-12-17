@@ -65,6 +65,7 @@ type Settings struct {
 	YandexAuth    AuthProviderConfig `form:"yandexAuth" json:"yandexAuth"`
 	PatreonAuth   AuthProviderConfig `form:"patreonAuth" json:"patreonAuth"`
 	MailcowAuth   AuthProviderConfig `form:"mailcowAuth" json:"mailcowAuth"`
+	BitbucketAuth AuthProviderConfig `form:"bitbucketAuth" json:"bitbucketAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -196,6 +197,9 @@ func New() *Settings {
 		MailcowAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		BitbucketAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -241,6 +245,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.YandexAuth),
 		validation.Field(&s.PatreonAuth),
 		validation.Field(&s.MailcowAuth),
+		validation.Field(&s.BitbucketAuth),
 	)
 }
 
@@ -309,6 +314,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.YandexAuth.ClientSecret,
 		&clone.PatreonAuth.ClientSecret,
 		&clone.MailcowAuth.ClientSecret,
+		&clone.BitbucketAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -351,6 +357,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameYandex:     s.YandexAuth,
 		auth.NamePatreon:    s.PatreonAuth,
 		auth.NameMailcow:    s.MailcowAuth,
+		auth.NameBitbucket:  s.BitbucketAuth,
 	}
 }
 

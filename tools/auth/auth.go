@@ -154,6 +154,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewPatreonProvider(), nil
 	case NameMailcow:
 		return NewMailcowProvider(), nil
+	case NameBitbucket:
+		return NewBitbucketProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
