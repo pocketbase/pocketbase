@@ -62,10 +62,10 @@
         {#if type === "image"}
             <img
                 draggable={false}
+                loading="lazy"
                 src={thumbUrl}
                 alt={filename}
                 title="Preview {filename}"
-                loading="lazy"
                 on:error={onError}
             />
         {:else if type === "video" || type === "audio"}
