@@ -1,6 +1,7 @@
 .searchbar {
     --searchHeight: 44px;
 
+    flex-shrink: 0;
     outline: 0;
     display: flex;
     align-items: center;
@@ -34,6 +35,7 @@
         border: 0;
         background: none;
         min-height: 0;
+        max-height: 110px;
         padding-top: 0;
         padding-bottom: 0;
     }

@@ -494,7 +494,14 @@
                     readOnlyCompartment.of(EditorState.readOnly.of(disabled)),
                     langCompartment.of(ruleLang()),
                     EditorState.transactionFilter.of((tr) => {
-                        return singleLine && tr.newDoc.lines > 1 ? [] : tr;
+                        if (singleLine && tr.newDoc.lines > 1) {
+                            if (!tr.changes?.inserted?.filter((i) => !!i.text.find((t) => t))?.length) {
+                                return []; // only empty lines
+                            }
+                            // it is ok to mutate the current transaction as we don't change the doc length
+                            tr.newDoc.text = [tr.newDoc.text.join(" ")];
+                        }
+                        return tr;
                     }),
                     EditorView.updateListener.of((v) => {
                         if (!v.docChanged || disabled) {
