@@ -5012,7 +5012,7 @@ namespace security {
  }
  interface parseUnverifiedJWT {
   /**
-   * ParseUnverifiedJWT parses JWT token and returns its claims
+   * ParseUnverifiedJWT parses JWT and returns its claims
    * but DOES NOT verify the signature.
    * 
    * It verifies only the exp, iat and nbf claims.
@@ -5021,13 +5021,13 @@ namespace security {
  }
  interface parseJWT {
   /**
-   * ParseJWT verifies and parses JWT token and returns its claims.
+   * ParseJWT verifies and parses JWT and returns its claims.
    */
   (token: string, verificationKey: string): jwt.MapClaims
  }
  interface newJWT {
   /**
-   * NewJWT generates and returns new HS256 signed JWT token.
+   * NewJWT generates and returns new HS256 signed JWT.
    */
   (payload: jwt.MapClaims, signingKey: string, secondsDuration: number): string
  }
@@ -5036,7 +5036,7 @@ namespace security {
    * Deprecated:
    * Consider replacing with NewJWT().
    * 
-   * NewToken is a legacy alias for NewJWT that generates a HS256 signed JWT token.
+   * NewToken is a legacy alias for NewJWT that generates a HS256 signed JWT.
    */
   (payload: jwt.MapClaims, signingKey: string, secondsDuration: number): string
  }
@@ -5582,7 +5582,7 @@ namespace forms {
    */
   privateKey: string
   /**
-   * Duration specifies how long the generated JWT token should be considered valid.
+   * Duration specifies how long the generated JWT should be considered valid.
    * The specified value must be in seconds and max 15777000 (~6months).
    */
   duration: number
@@ -11820,9 +11820,9 @@ namespace daos {
  }
  interface Dao {
   /**
-   * FindAdminByToken finds the admin associated with the provided JWT token.
+   * FindAdminByToken finds the admin associated with the provided JWT.
    * 
-   * Returns an error if the JWT token is invalid or expired.
+   * Returns an error if the JWT is invalid or expired.
    */
   findAdminByToken(token: string, baseTokenKey: string): (models.Admin)
  }
@@ -12230,9 +12230,9 @@ namespace daos {
  }
  interface Dao {
   /**
-   * FindAuthRecordByToken finds the auth record associated with the provided JWT token.
+   * FindAuthRecordByToken finds the auth record associated with the provided JWT.
    * 
-   * Returns an error if the JWT token is invalid, expired or not associated to an auth collection record.
+   * Returns an error if the JWT is invalid, expired or not associated to an auth collection record.
    */
   findAuthRecordByToken(token: string, baseTokenKey: string): (models.Record)
  }
