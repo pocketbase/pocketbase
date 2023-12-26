@@ -33,7 +33,7 @@ type AppleClientSecretCreate struct {
 	// Usually wrapped within -----BEGIN PRIVATE KEY----- X -----END PRIVATE KEY-----.
 	PrivateKey string `form:"privateKey" json:"privateKey"`
 
-	// Duration specifies how long the generated JWT token should be considered valid.
+	// Duration specifies how long the generated JWT should be considered valid.
 	// The specified value must be in seconds and max 15777000 (~6months).
 	Duration int `form:"duration" json:"duration"`
 }

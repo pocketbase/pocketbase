@@ -46,9 +46,9 @@ func (dao *Dao) FindAdminByEmail(email string) (*models.Admin, error) {
 	return model, nil
 }
 
-// FindAdminByToken finds the admin associated with the provided JWT token.
+// FindAdminByToken finds the admin associated with the provided JWT.
 //
-// Returns an error if the JWT token is invalid or expired.
+// Returns an error if the JWT is invalid or expired.
 func (dao *Dao) FindAdminByToken(token string, baseTokenKey string) (*models.Admin, error) {
 	// @todo consider caching the unverified claims
 	unverifiedClaims, err := security.ParseUnverifiedJWT(token)

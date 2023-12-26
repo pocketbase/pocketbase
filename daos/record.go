@@ -409,9 +409,9 @@ func (dao *Dao) IsRecordValueUnique(
 	return query.Row(&exists) == nil && !exists
 }
 
-// FindAuthRecordByToken finds the auth record associated with the provided JWT token.
+// FindAuthRecordByToken finds the auth record associated with the provided JWT.
 //
-// Returns an error if the JWT token is invalid, expired or not associated to an auth collection record.
+// Returns an error if the JWT is invalid, expired or not associated to an auth collection record.
 func (dao *Dao) FindAuthRecordByToken(token string, baseTokenKey string) (*models.Record, error) {
 	unverifiedClaims, err := security.ParseUnverifiedJWT(token)
 	if err != nil {
