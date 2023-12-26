@@ -12,7 +12,7 @@ import (
 
 var privateKeyRegex = regexp.MustCompile(`(?m)-----BEGIN PRIVATE KEY----[\s\S]+-----END PRIVATE KEY-----`)
 
-// AppleClientSecretCreate is a [models.Admin] upsert (create/update) form.
+// AppleClientSecretCreate is a form struct to generate a new Apple Client Secret.
 //
 // Reference: https://developer.apple.com/documentation/sign_in_with_apple/generate_and_validate_tokens
 type AppleClientSecretCreate struct {
