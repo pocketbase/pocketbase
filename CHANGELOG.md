@@ -7,6 +7,8 @@
 
 - Fixed multi-line text paste in the Admin UI search bar ([#4022](https://github.com/pocketbase/pocketbase/discussions/4022)).
 
+- Fixed the monospace font loading in the Admin UI.
+
 
 ## v0.20.1
 
