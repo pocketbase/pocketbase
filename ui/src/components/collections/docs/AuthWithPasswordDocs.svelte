@@ -197,7 +197,7 @@
                 Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>
-        <FieldsQueryParam />
+        <FieldsQueryParam prefix="record." />
     </tbody>
 </table>
 

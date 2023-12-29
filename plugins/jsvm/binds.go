@@ -299,6 +299,10 @@ func baseBinds(vm *goja.Runtime) {
 		return string(bodyBytes), nil
 	})
 
+	vm.Set("sleep", func(milliseconds int64) {
+		time.Sleep(time.Duration(milliseconds) * time.Millisecond)
+	})
+
 	vm.Set("arrayOf", func(model any) any {
 		mt := reflect.TypeOf(model)
 		st := reflect.SliceOf(mt)

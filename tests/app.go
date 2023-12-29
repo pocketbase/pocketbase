@@ -38,18 +38,21 @@ type TestApp struct {
 func (t *TestApp) Cleanup() {
 	t.ResetEventCalls()
 	t.ResetBootstrapState()
+	t.TestMailer.Reset()
 
 	if t.DataDir() != "" {
 		os.RemoveAll(t.DataDir())
 	}
 }
 
-// NewMailClient initializes test app mail client.
+// NewMailClient initializes (if not already) a test app mail client.
 func (t *TestApp) NewMailClient() mailer.Mailer {
 	t.mux.Lock()
 	defer t.mux.Unlock()
 
-	t.TestMailer.Reset()
+	if t.TestMailer == nil {
+		t.TestMailer = &TestMailer{}
+	}
 
 	return t.TestMailer
 }
