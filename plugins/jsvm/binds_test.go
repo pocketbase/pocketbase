@@ -46,7 +46,29 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 16, t)
+	testBindsCount(vm, "this", 17, t)
+}
+
+func TestBaseBindsSleep(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	baseBinds(vm)
+	vm.Set("reader", strings.NewReader("test"))
+
+	start := time.Now()
+	_, err := vm.RunString(`
+		sleep(100);
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	lasted := time.Since(start).Milliseconds()
+	if lasted < 100 || lasted > 150 {
+		t.Fatalf("Expected to sleep for ~100ms, got %d", lasted)
+	}
 }
 
 func TestBaseBindsReaderToString(t *testing.T) {

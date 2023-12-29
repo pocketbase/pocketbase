@@ -212,6 +212,20 @@ declare var $template: template.Registry
 declare function readerToString(reader: any, maxBytes?: number): string;
 
 /**
+ * sleep pauses the current goroutine for at least the specified user duration (in ms).
+ * A zero or negative duration returns immediately.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * slee(250) // sleeps for 250ms
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare function sleep(milliseconds: number): void;
+
+/**
  * arrayOf creates a placeholder array of the specified models.
  * Usually used to populate DB result into an array of models.
  *

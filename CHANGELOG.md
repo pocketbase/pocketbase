@@ -1,13 +1,18 @@
-## v0.20.2-WIP
+## v0.20.2
+
+- Added `sleep(milliseconds)` JSVM binding.
+  _It works the same way as Go `time.Sleep()`, aka. it pauses the goroutine where the JSVM code is running._
 
 - Fixed multi-line text paste in the Admin UI search bar ([#4022](https://github.com/pocketbase/pocketbase/discussions/4022)).
 
 - Fixed the monospace font loading in the Admin UI.
 
+- Fixed various reported docs and code comment typos.
+
 
 ## v0.20.1
 
-- Added `--dev` flag and its accompanying `app.IsDev()` method (_in place of the previosly removed `--debug`_) to assist during development ([#3918](https://github.com/pocketbase/pocketbase/discussions/3918)).
+- Added `--dev` flag and its accompanying `app.IsDev()` method (_in place of the previously removed `--debug`_) to assist during development ([#3918](https://github.com/pocketbase/pocketbase/discussions/3918)).
   The `--dev` flag prints in the console "everything" and more specifically:
   - the data DB SQL statements
   - all `app.Logger().*` logs (debug, info, warning, error, etc.), no matter of the logs persistence settings in the Admin UI
@@ -16,7 +21,7 @@
   - Fixed the log `error` label text wrapping.
   - Added the log `referer` (_when it is from a different source_) and `details` labels in the logs listing.
   - Removed the blank current time entry from the logs chart because it was causing confusion when used with custom time ranges.
-  - Updated the SQL syntax highligher and keywords autocompletion in the Admin UI to recognize `CAST(x as bool)` expressions.
+  - Updated the SQL syntax highlighter and keywords autocompletion in the Admin UI to recognize `CAST(x as bool)` expressions.
 
 - Replaced the default API tests timeout with a new `ApiScenario.Timeout` option ([#3930](https://github.com/pocketbase/pocketbase/issues/3930)).
   A negative or zero value means no tests timeout.
@@ -172,7 +177,7 @@
 
 - Added the release notes to the console output of `./pocketbase update` ([#3685](https://github.com/pocketbase/pocketbase/discussions/3685)).
 
-- Added missing documention for the JSVM `$mails.*` bindings.
+- Added missing documentation for the JSVM `$mails.*` bindings.
 
 - Relaxed the OAuth2 redirect url validation to allow any string value ([#3689](https://github.com/pocketbase/pocketbase/pull/3689); thanks @sergeypdev).
   _Note that the redirect url format is still bound to the accepted values by the specific OAuth2 provider._
