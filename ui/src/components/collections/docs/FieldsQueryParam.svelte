@@ -1,5 +1,7 @@
 <script>
     import CodeBlock from "@/components/base/CodeBlock.svelte";
+
+    export let prefix = ""; // examples prefix (eg. "record.")
 </script>
 
 <tr>
@@ -11,11 +13,7 @@
         <p>
             Comma separated string of the fields to return in the JSON response
             <em>(by default returns all fields)</em>. Ex.:
-            <CodeBlock
-                content={`
-                    ?fields=*,expand.relField.name
-                `}
-            />
+            <CodeBlock content="?fields=*,{prefix}expand.relField.name" />
         </p>
         <p>
             <code>*</code> targets all keys from the specific depth level.
@@ -28,7 +26,7 @@
                 Returns a short plain text version of the field string value.
                 <br />
                 Ex.:
-                <code>?fields=*,description:excerpt(200,true)</code>
+                <code>?fields=*,{prefix}description:excerpt(200,true)</code>
             </li>
         </ul>
     </td>
