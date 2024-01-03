@@ -458,9 +458,9 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 			// (https://github.com/pocketbase/pocketbase/issues/4068)
 			if field.Type == schema.FieldTypeJson {
 				result.NoCoalesce = true
-				result.Identifier = "JSON_EXTRACT(" + result.Identifier + ", '$')"
+				result.Identifier = jsonExtract(r.activeTableAlias+"."+cleanFieldName, "")
 				if r.withMultiMatch {
-					r.multiMatch.valueIdentifier = "JSON_EXTRACT(" + r.multiMatch.valueIdentifier + ", '$')"
+					r.multiMatch.valueIdentifier = jsonExtract(r.multiMatchActiveTableAlias+"."+cleanFieldName, "")
 				}
 			}
 
@@ -478,7 +478,6 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 		// check if it is a json field
 		if field.Type == schema.FieldTypeJson {
 			var jsonPath strings.Builder
-			jsonPath.WriteString("$")
 			for _, p := range r.activeProps[i+1:] {
 				if _, err := strconv.Atoi(p); err == nil {
 					jsonPath.WriteString("[")
@@ -489,24 +488,15 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 					jsonPath.WriteString(inflector.Columnify(p))
 				}
 			}
+			jsonPathStr := jsonPath.String()
 
 			result := &search.ResolverResult{
 				NoCoalesce: true,
-				Identifier: fmt.Sprintf(
-					"JSON_EXTRACT([[%s.%s]], '%s')",
-					r.activeTableAlias,
-					inflector.Columnify(prop),
-					jsonPath.String(),
-				),
+				Identifier: jsonExtract(r.activeTableAlias+"."+inflector.Columnify(prop), jsonPathStr),
 			}
 
 			if r.withMultiMatch {
-				r.multiMatch.valueIdentifier = fmt.Sprintf(
-					"JSON_EXTRACT([[%s.%s]], '%s')",
-					r.multiMatchActiveTableAlias,
-					inflector.Columnify(prop),
-					jsonPath.String(),
-				)
+				r.multiMatch.valueIdentifier = jsonExtract(r.multiMatchActiveTableAlias+"."+inflector.Columnify(prop), jsonPathStr)
 				result.MultiMatchSubQuery = r.multiMatch
 			}
 
@@ -610,6 +600,18 @@ func jsonEach(tableColumnPair string) string {
 		// note: the case is used to normalize value access for single and multiple relations.
 		`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END)`,
 		tableColumnPair, tableColumnPair, tableColumnPair,
+	)
+}
+
+func jsonExtract(tableColumnPair string, path string) string {
+	return fmt.Sprintf(
+		// note: the extra object wrapping is needed to workaround the cases where a json_extract is used with non-json columns.
+		"(CASE WHEN json_valid([[%s]]) THEN JSON_EXTRACT([[%s]], '$%s') ELSE JSON_EXTRACT(json_object('pb', [[%s]]), '$.pb%s') END)",
+		tableColumnPair,
+		tableColumnPair,
+		path,
+		tableColumnPair,
+		path,
 	)
 }
 
