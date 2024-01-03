@@ -51,8 +51,8 @@ archives:
     builds: [build_noncgo]
     format: zip
     files:
-      - LICENSE*
-      - CHANGELOG*
+      - LICENSE.md
+      - CHANGELOG.md
 
 checksum:
   name_template: 'checksums.txt'
