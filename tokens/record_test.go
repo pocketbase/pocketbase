@@ -8,6 +8,8 @@ import (
 )
 
 func TestNewRecordAuthToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -31,6 +33,8 @@ func TestNewRecordAuthToken(t *testing.T) {
 }
 
 func TestNewRecordVerifyToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -54,6 +58,8 @@ func TestNewRecordVerifyToken(t *testing.T) {
 }
 
 func TestNewRecordResetPasswordToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -77,6 +83,8 @@ func TestNewRecordResetPasswordToken(t *testing.T) {
 }
 
 func TestNewRecordChangeEmailToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -100,6 +108,8 @@ func TestNewRecordChangeEmailToken(t *testing.T) {
 }
 
 func TestNewRecordFileToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

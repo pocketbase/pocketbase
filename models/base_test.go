@@ -7,6 +7,8 @@ import (
 )
 
 func TestBaseModelHasId(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		model    models.BaseModel
 		expected bool
@@ -34,6 +36,8 @@ func TestBaseModelHasId(t *testing.T) {
 }
 
 func TestBaseModelId(t *testing.T) {
+	t.Parallel()
+
 	m := models.BaseModel{}
 
 	if m.GetId() != "" {
@@ -54,6 +58,8 @@ func TestBaseModelId(t *testing.T) {
 }
 
 func TestBaseModelIsNew(t *testing.T) {
+	t.Parallel()
+
 	m0 := models.BaseModel{}
 	m1 := models.BaseModel{Id: ""}
 	m2 := models.BaseModel{Id: "test"}
@@ -96,6 +102,8 @@ func TestBaseModelIsNew(t *testing.T) {
 }
 
 func TestBaseModelCreated(t *testing.T) {
+	t.Parallel()
+
 	m := models.BaseModel{}
 
 	if !m.GetCreated().IsZero() {
@@ -110,6 +118,8 @@ func TestBaseModelCreated(t *testing.T) {
 }
 
 func TestBaseModelUpdated(t *testing.T) {
+	t.Parallel()
+
 	m := models.BaseModel{}
 
 	if !m.GetUpdated().IsZero() {

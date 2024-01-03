@@ -8,6 +8,8 @@ import (
 )
 
 func TestAdminTableName(t *testing.T) {
+	t.Parallel()
+
 	m := models.Admin{}
 	if m.TableName() != "_admins" {
 		t.Fatalf("Unexpected table name, got %q", m.TableName())
@@ -15,6 +17,8 @@ func TestAdminTableName(t *testing.T) {
 }
 
 func TestAdminValidatePassword(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		admin    models.Admin
 		password string
@@ -61,6 +65,8 @@ func TestAdminValidatePassword(t *testing.T) {
 }
 
 func TestAdminSetPassword(t *testing.T) {
+	t.Parallel()
+
 	m := models.Admin{
 		// 123456
 		PasswordHash:    "$2a$10$SKk/Y/Yc925PBtsSYBvq3Ous9Jy18m4KTn6b/PQQ.Y9QVjy3o/Fv.",
@@ -93,6 +99,8 @@ func TestAdminSetPassword(t *testing.T) {
 }
 
 func TestAdminRefreshTokenKey(t *testing.T) {
+	t.Parallel()
+
 	m := models.Admin{TokenKey: "test"}
 
 	m.RefreshTokenKey()
