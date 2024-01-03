@@ -14,6 +14,8 @@ import (
 )
 
 func TestNewSettingsUpsert(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -30,6 +32,8 @@ func TestNewSettingsUpsert(t *testing.T) {
 }
 
 func TestSettingsUpsertValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -127,6 +131,8 @@ func TestSettingsUpsertValidateAndSubmit(t *testing.T) {
 }
 
 func TestSettingsUpsertSubmitInterceptors(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

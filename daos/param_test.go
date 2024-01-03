@@ -11,6 +11,8 @@ import (
 )
 
 func TestParamQuery(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -23,6 +25,8 @@ func TestParamQuery(t *testing.T) {
 }
 
 func TestFindParamByKey(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -50,6 +54,8 @@ func TestFindParamByKey(t *testing.T) {
 }
 
 func TestSaveParam(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -92,6 +98,8 @@ func TestSaveParam(t *testing.T) {
 }
 
 func TestSaveParamEncrypted(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -126,6 +134,8 @@ func TestSaveParamEncrypted(t *testing.T) {
 }
 
 func TestDeleteParam(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

@@ -11,6 +11,8 @@ import (
 )
 
 func TestCollectionTableName(t *testing.T) {
+	t.Parallel()
+
 	m := models.Collection{}
 	if m.TableName() != "_collections" {
 		t.Fatalf("Unexpected table name, got %q", m.TableName())
@@ -18,6 +20,8 @@ func TestCollectionTableName(t *testing.T) {
 }
 
 func TestCollectionBaseFilesPath(t *testing.T) {
+	t.Parallel()
+
 	m := models.Collection{}
 
 	m.RefreshId()
@@ -29,6 +33,8 @@ func TestCollectionBaseFilesPath(t *testing.T) {
 }
 
 func TestCollectionIsBase(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		collection models.Collection
 		expected   bool
@@ -48,6 +54,8 @@ func TestCollectionIsBase(t *testing.T) {
 }
 
 func TestCollectionIsAuth(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		collection models.Collection
 		expected   bool
@@ -67,6 +75,8 @@ func TestCollectionIsAuth(t *testing.T) {
 }
 
 func TestCollectionMarshalJSON(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		name       string
 		collection models.Collection
@@ -109,6 +119,8 @@ func TestCollectionMarshalJSON(t *testing.T) {
 }
 
 func TestCollectionBaseOptions(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		name       string
 		collection models.Collection
@@ -153,6 +165,8 @@ func TestCollectionBaseOptions(t *testing.T) {
 }
 
 func TestCollectionAuthOptions(t *testing.T) {
+	t.Parallel()
+
 	options := types.JsonMap{"test": 123, "minPasswordLength": 4}
 	expectedSerialization := `{"manageRule":null,"allowOAuth2Auth":false,"allowUsernameAuth":false,"allowEmailAuth":false,"requireEmail":false,"exceptEmailDomains":null,"onlyVerified":false,"onlyEmailDomains":null,"minPasswordLength":4}`
 
@@ -200,6 +214,8 @@ func TestCollectionAuthOptions(t *testing.T) {
 }
 
 func TestCollectionViewOptions(t *testing.T) {
+	t.Parallel()
+
 	options := types.JsonMap{"query": "select id from demo1", "minPasswordLength": 4}
 	expectedSerialization := `{"query":"select id from demo1"}`
 
@@ -247,6 +263,8 @@ func TestCollectionViewOptions(t *testing.T) {
 }
 
 func TestNormalizeOptions(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		name       string
 		collection models.Collection
@@ -288,6 +306,8 @@ func TestNormalizeOptions(t *testing.T) {
 }
 
 func TestDecodeOptions(t *testing.T) {
+	t.Parallel()
+
 	m := models.Collection{
 		Options: types.JsonMap{"test": 123},
 	}
@@ -306,6 +326,8 @@ func TestDecodeOptions(t *testing.T) {
 }
 
 func TestSetOptions(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		name       string
 		collection models.Collection
@@ -357,6 +379,8 @@ func TestSetOptions(t *testing.T) {
 }
 
 func TestCollectionBaseOptionsValidate(t *testing.T) {
+	t.Parallel()
+
 	opt := models.CollectionBaseOptions{}
 	if err := opt.Validate(); err != nil {
 		t.Fatal(err)
@@ -364,6 +388,8 @@ func TestCollectionBaseOptionsValidate(t *testing.T) {
 }
 
 func TestCollectionAuthOptionsValidate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		name           string
 		options        models.CollectionAuthOptions
@@ -451,6 +477,8 @@ func TestCollectionAuthOptionsValidate(t *testing.T) {
 }
 
 func TestCollectionViewOptionsValidate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		name           string
 		options        models.CollectionViewOptions

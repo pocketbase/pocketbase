@@ -45,6 +45,8 @@ func TestRecordDataValidatorEmptyAndUnknown(t *testing.T) {
 }
 
 func TestRecordDataValidatorValidateText(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

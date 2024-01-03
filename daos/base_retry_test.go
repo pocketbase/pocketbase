@@ -6,6 +6,8 @@ import (
 )
 
 func TestGetDefaultRetryInterval(t *testing.T) {
+	t.Parallel()
+
 	if i := getDefaultRetryInterval(-1); i.Milliseconds() != 1000 {
 		t.Fatalf("Expected 1000ms, got %v", i)
 	}
@@ -20,6 +22,8 @@ func TestGetDefaultRetryInterval(t *testing.T) {
 }
 
 func TestBaseLockRetry(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		err              error
 		failUntilAttempt int

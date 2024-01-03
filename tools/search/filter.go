@@ -184,14 +184,15 @@ func buildResolversExpr(
 	if !isAnyMatchOp(op) {
 		if left.MultiMatchSubQuery != nil && right.MultiMatchSubQuery != nil {
 			mm := &manyVsManyExpr{
-				leftSubQuery:  left.MultiMatchSubQuery,
-				rightSubQuery: right.MultiMatchSubQuery,
-				op:            op,
+				left:  left,
+				right: right,
+				op:    op,
 			}
 
 			expr = dbx.Enclose(dbx.And(expr, mm))
 		} else if left.MultiMatchSubQuery != nil {
 			mm := &manyVsOneExpr{
+				noCoalesce:   left.NoCoalesce,
 				subQuery:     left.MultiMatchSubQuery,
 				op:           op,
 				otherOperand: right,
@@ -200,6 +201,7 @@ func buildResolversExpr(
 			expr = dbx.Enclose(dbx.And(expr, mm))
 		} else if right.MultiMatchSubQuery != nil {
 			mm := &manyVsOneExpr{
+				noCoalesce:   right.NoCoalesce,
 				subQuery:     right.MultiMatchSubQuery,
 				op:           op,
 				otherOperand: left,
@@ -290,15 +292,27 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	isRightEmpty := isEmptyIdentifier(right) || (len(right.Params) == 1 && hasEmptyParamValue(right))
 
 	equalOp := "="
+	nullEqualOp := "IS"
 	concatOp := "OR"
 	nullExpr := "IS NULL"
 	if !equal {
-		// use `IS NOT` instead of `!=` because direct non-equal comparisons
+		// always use `IS NOT` instead of `!=` because direct non-equal comparisons
 		// to nullable column values that are actually NULL yields to NULL instead of TRUE, eg.:
 		// `'example' != nullableColumn` -> NULL even if nullableColumn row value is NULL
 		equalOp = "IS NOT"
+		nullEqualOp = equalOp
 		concatOp = "AND"
 		nullExpr = "IS NOT NULL"
+	}
+
+	// no coalesce (eg. compare to a json field)
+	// a IS b
+	// a IS NOT b
+	if left.NoCoalesce || right.NoCoalesce {
+		return dbx.NewExp(
+			fmt.Sprintf("%s %s %s", left.Identifier, nullEqualOp, right.Identifier),
+			mergeParams(left.Params, right.Params),
+		)
 	}
 
 	// both operands are empty
@@ -459,8 +473,8 @@ var _ dbx.Expression = (*concatExpr)(nil)
 // concatExpr defines an expression that concatenates multiple
 // other expressions with a specified separator.
 type concatExpr struct {
-	parts     []dbx.Expression
 	separator string
+	parts     []dbx.Expression
 }
 
 // Build converts the expression into a SQL fragment.
@@ -503,16 +517,16 @@ var _ dbx.Expression = (*manyVsManyExpr)(nil)
 // Expects leftSubQuery and rightSubQuery to return a subquery with a
 // single "multiMatchValue" column.
 type manyVsManyExpr struct {
-	leftSubQuery  dbx.Expression
-	rightSubQuery dbx.Expression
-	op            fexpr.SignOp
+	left  *ResolverResult
+	right *ResolverResult
+	op    fexpr.SignOp
 }
 
 // Build converts the expression into a SQL fragment.
 //
 // Implements [dbx.Expression] interface.
 func (e *manyVsManyExpr) Build(db *dbx.DB, params dbx.Params) string {
-	if e.leftSubQuery == nil || e.rightSubQuery == nil {
+	if e.left.MultiMatchSubQuery == nil || e.right.MultiMatchSubQuery == nil {
 		return "0=1"
 	}
 
@@ -521,10 +535,12 @@ func (e *manyVsManyExpr) Build(db *dbx.DB, params dbx.Params) string {
 
 	whereExpr, buildErr := buildResolversExpr(
 		&ResolverResult{
+			NoCoalesce: e.left.NoCoalesce,
 			Identifier: "[[" + lAlias + ".multiMatchValue]]",
 		},
 		e.op,
 		&ResolverResult{
+			NoCoalesce: e.right.NoCoalesce,
 			Identifier: "[[" + rAlias + ".multiMatchValue]]",
 			// note: the AfterBuild needs to be handled only once and it
 			// doesn't matter whether it is applied on the left or right subquery operand
@@ -538,9 +554,9 @@ func (e *manyVsManyExpr) Build(db *dbx.DB, params dbx.Params) string {
 
 	return fmt.Sprintf(
 		"NOT EXISTS (SELECT 1 FROM (%s) {{%s}} LEFT JOIN (%s) {{%s}} WHERE %s)",
-		e.leftSubQuery.Build(db, params),
+		e.left.MultiMatchSubQuery.Build(db, params),
 		lAlias,
-		e.rightSubQuery.Build(db, params),
+		e.right.MultiMatchSubQuery.Build(db, params),
 		rAlias,
 		whereExpr.Build(db, params),
 	)
@@ -556,10 +572,11 @@ var _ dbx.Expression = (*manyVsOneExpr)(nil)
 //
 // You can set inverse=false to reverse the condition sides (aka. one<->many).
 type manyVsOneExpr struct {
+	otherOperand *ResolverResult
 	subQuery     dbx.Expression
 	op           fexpr.SignOp
-	otherOperand *ResolverResult
 	inverse      bool
+	noCoalesce   bool
 }
 
 // Build converts the expression into a SQL fragment.
@@ -573,6 +590,7 @@ func (e *manyVsOneExpr) Build(db *dbx.DB, params dbx.Params) string {
 	alias := "__sm" + security.PseudorandomString(5)
 
 	r1 := &ResolverResult{
+		NoCoalesce: e.noCoalesce,
 		Identifier: "[[" + alias + ".multiMatchValue]]",
 		AfterBuild: multiMatchAfterBuildFunc(e.op, alias),
 	}

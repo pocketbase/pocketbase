@@ -12,6 +12,8 @@ import (
 )
 
 func TestRecordVerificationConfirmValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
@@ -98,6 +100,8 @@ func TestRecordVerificationConfirmValidateAndSubmit(t *testing.T) {
 }
 
 func TestRecordVerificationConfirmInterceptors(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

@@ -14,6 +14,8 @@ import (
 )
 
 func TestExpandRecords(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -222,6 +224,8 @@ func TestExpandRecords(t *testing.T) {
 }
 
 func TestExpandRecord(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -372,6 +376,8 @@ func TestExpandRecord(t *testing.T) {
 }
 
 func TestIndirectExpandSingeVsArrayResult(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

@@ -16,6 +16,8 @@ import (
 )
 
 func TestNewCollectionUpsert(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -88,6 +90,8 @@ func TestNewCollectionUpsert(t *testing.T) {
 }
 
 func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -654,6 +658,8 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 }
 
 func TestCollectionUpsertSubmitInterceptors(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -704,6 +710,8 @@ func TestCollectionUpsertSubmitInterceptors(t *testing.T) {
 }
 
 func TestCollectionUpsertWithCustomId(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

@@ -8,6 +8,8 @@ import (
 )
 
 func TestAdminQuery(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -20,6 +22,8 @@ func TestAdminQuery(t *testing.T) {
 }
 
 func TestFindAdminById(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -47,6 +51,8 @@ func TestFindAdminById(t *testing.T) {
 }
 
 func TestFindAdminByEmail(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -76,6 +82,8 @@ func TestFindAdminByEmail(t *testing.T) {
 }
 
 func TestFindAdminByToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -131,6 +139,8 @@ func TestFindAdminByToken(t *testing.T) {
 }
 
 func TestTotalAdmins(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -155,6 +165,8 @@ func TestTotalAdmins(t *testing.T) {
 }
 
 func TestIsAdminEmailUnique(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -180,6 +192,8 @@ func TestIsAdminEmailUnique(t *testing.T) {
 }
 
 func TestDeleteAdmin(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -225,6 +239,8 @@ func TestDeleteAdmin(t *testing.T) {
 }
 
 func TestSaveAdmin(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

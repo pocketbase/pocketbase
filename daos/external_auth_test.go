@@ -9,6 +9,8 @@ import (
 )
 
 func TestExternalAuthQuery(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -21,6 +23,8 @@ func TestExternalAuthQuery(t *testing.T) {
 }
 
 func TestFindAllExternalAuthsByRecord(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -58,6 +62,8 @@ func TestFindAllExternalAuthsByRecord(t *testing.T) {
 }
 
 func TestFindFirstExternalAuthByExpr(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -89,6 +95,8 @@ func TestFindFirstExternalAuthByExpr(t *testing.T) {
 }
 
 func TestFindExternalAuthByRecordAndProvider(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -125,6 +133,8 @@ func TestFindExternalAuthByRecordAndProvider(t *testing.T) {
 }
 
 func TestSaveExternalAuth(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -161,6 +171,8 @@ func TestSaveExternalAuth(t *testing.T) {
 }
 
 func TestDeleteExternalAuth(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

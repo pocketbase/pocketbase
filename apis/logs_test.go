@@ -9,6 +9,8 @@ import (
 )
 
 func TestLogsList(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -78,6 +80,8 @@ func TestLogsList(t *testing.T) {
 }
 
 func TestLogView(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -136,6 +140,8 @@ func TestLogView(t *testing.T) {
 }
 
 func TestLogsStats(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",

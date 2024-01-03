@@ -15,6 +15,8 @@ import (
 )
 
 func TestAppleClientSecretCreateValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

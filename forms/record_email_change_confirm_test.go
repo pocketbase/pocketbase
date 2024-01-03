@@ -13,6 +13,8 @@ import (
 )
 
 func TestRecordEmailChangeConfirmValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
@@ -145,6 +147,8 @@ func TestRecordEmailChangeConfirmValidateAndSubmit(t *testing.T) {
 }
 
 func TestRecordEmailChangeConfirmInterceptors(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

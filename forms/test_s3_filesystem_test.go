@@ -9,6 +9,8 @@ import (
 )
 
 func TestS3FilesystemValidate(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -66,6 +68,8 @@ func TestS3FilesystemValidate(t *testing.T) {
 }
 
 func TestS3FilesystemSubmitFailure(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

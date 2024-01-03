@@ -10,6 +10,8 @@ import (
 )
 
 func TestAdminLoginValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -51,6 +53,8 @@ func TestAdminLoginValidateAndSubmit(t *testing.T) {
 }
 
 func TestAdminLoginInterceptors(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

@@ -13,6 +13,8 @@ import (
 )
 
 func TestRecordVerificationRequestSubmit(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
@@ -134,6 +136,8 @@ func TestRecordVerificationRequestSubmit(t *testing.T) {
 }
 
 func TestRecordVerificationRequestInterceptors(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

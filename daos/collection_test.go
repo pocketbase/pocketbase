@@ -16,6 +16,8 @@ import (
 )
 
 func TestCollectionQuery(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -28,6 +30,8 @@ func TestCollectionQuery(t *testing.T) {
 }
 
 func TestFindCollectionsByType(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -63,6 +67,8 @@ func TestFindCollectionsByType(t *testing.T) {
 }
 
 func TestFindCollectionByNameOrId(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -92,6 +98,8 @@ func TestFindCollectionByNameOrId(t *testing.T) {
 }
 
 func TestIsCollectionNameUnique(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -116,6 +124,8 @@ func TestIsCollectionNameUnique(t *testing.T) {
 }
 
 func TestFindCollectionReferences(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -164,6 +174,8 @@ func TestFindCollectionReferences(t *testing.T) {
 }
 
 func TestDeleteCollection(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -251,6 +263,8 @@ func TestDeleteCollection(t *testing.T) {
 }
 
 func TestSaveCollectionCreate(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -297,6 +311,8 @@ func TestSaveCollectionCreate(t *testing.T) {
 }
 
 func TestSaveCollectionUpdate(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -336,6 +352,8 @@ func TestSaveCollectionUpdate(t *testing.T) {
 
 // indirect update of a field used in view should cause view(s) update
 func TestSaveCollectionIndirectViewsUpdate(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -395,6 +413,8 @@ func TestSaveCollectionIndirectViewsUpdate(t *testing.T) {
 }
 
 func TestSaveCollectionViewWrapping(t *testing.T) {
+	t.Parallel()
+
 	viewName := "test_wrapping"
 
 	scenarios := []struct {
@@ -504,6 +524,8 @@ func TestSaveCollectionViewWrapping(t *testing.T) {
 }
 
 func TestImportCollections(t *testing.T) {
+	t.Parallel()
+
 	totalCollections := 11
 
 	scenarios := []struct {

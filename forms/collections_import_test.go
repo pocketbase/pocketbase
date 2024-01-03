@@ -11,6 +11,8 @@ import (
 )
 
 func TestCollectionsImportValidate(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -38,6 +40,8 @@ func TestCollectionsImportValidate(t *testing.T) {
 }
 
 func TestCollectionsImportSubmit(t *testing.T) {
+	t.Parallel()
+
 	totalCollections := 11
 
 	scenarios := []struct {
@@ -461,6 +465,8 @@ func TestCollectionsImportSubmit(t *testing.T) {
 }
 
 func TestCollectionsImportSubmitInterceptors(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

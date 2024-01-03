@@ -5,6 +5,25 @@
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
 
+## v0.20.3
+
+- Fixed the `json` field query comparisons to work correctly with plain JSON values like `null`, `bool` `number`, etc. ([#4068](https://github.com/pocketbase/pocketbase/issues/4068)).
+  Since there are plans in the future to allow custom SQLite builds and also in some situations it may be useful to be able to distinguish `NULL` from `''`,
+  for the `json` fields (and for any other future non-standard field) we no longer apply `COALESCE` by default, aka.:
+  ```
+  Dataset:
+  1) data: json(null)
+  2) data: json('')
+
+  For the filter "data = null" only 1) will resolve to TRUE.
+  For the filter "data = ''"   only 2) will resolve to TRUE.
+  ```
+
+- Minor Go tests improvements
+  - Sorted the record cascade delete references to ensure that the delete operation will preserve the order of the fired events when running the tests.
+  - Marked some of the tests as safe for parallel execution to speed up a little the GitHub action build times.
+
+
 ## v0.20.2
 
 - Added `sleep(milliseconds)` JSVM binding.

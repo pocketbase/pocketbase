@@ -9,6 +9,8 @@ import (
 )
 
 func TestSendRecordPasswordReset(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
@@ -37,6 +39,8 @@ func TestSendRecordPasswordReset(t *testing.T) {
 }
 
 func TestSendRecordVerification(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
@@ -62,6 +66,8 @@ func TestSendRecordVerification(t *testing.T) {
 }
 
 func TestSendRecordChangeEmail(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

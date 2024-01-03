@@ -17,6 +17,8 @@ import (
 )
 
 func TestAdminAuthWithPassword(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "empty data",
@@ -119,6 +121,8 @@ func TestAdminAuthWithPassword(t *testing.T) {
 }
 
 func TestAdminRequestPasswordReset(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "empty data",
@@ -188,6 +192,8 @@ func TestAdminRequestPasswordReset(t *testing.T) {
 }
 
 func TestAdminConfirmPasswordReset(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "empty data",
@@ -277,6 +283,8 @@ func TestAdminConfirmPasswordReset(t *testing.T) {
 }
 
 func TestAdminRefresh(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -350,6 +358,8 @@ func TestAdminRefresh(t *testing.T) {
 }
 
 func TestAdminsList(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -453,6 +463,8 @@ func TestAdminsList(t *testing.T) {
 }
 
 func TestAdminView(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -508,6 +520,8 @@ func TestAdminView(t *testing.T) {
 }
 
 func TestAdminDelete(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -603,6 +617,8 @@ func TestAdminDelete(t *testing.T) {
 }
 
 func TestAdminCreate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized (while having at least 1 existing admin)",
@@ -757,6 +773,8 @@ func TestAdminCreate(t *testing.T) {
 }
 
 func TestAdminUpdate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",

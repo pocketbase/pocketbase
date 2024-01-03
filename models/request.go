@@ -11,6 +11,7 @@ const (
 	RequestAuthRecord = "authRecord"
 )
 
+// Deprecated: Replaced by the Log model and will be removed in a future version.
 type Request struct {
 	BaseModel
 

@@ -7,6 +7,8 @@ import (
 )
 
 func TestRequestInfoHasModifierDataKeys(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		name        string
 		requestInfo *models.RequestInfo

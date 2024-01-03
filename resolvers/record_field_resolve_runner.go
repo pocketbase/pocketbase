@@ -453,6 +453,17 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 				result.MultiMatchSubQuery = r.multiMatch
 			}
 
+			// wrap in json_extract to ensure that top-level primitives
+			// stored as json work correctly when compared to their SQL equivalent
+			// (https://github.com/pocketbase/pocketbase/issues/4068)
+			if field.Type == schema.FieldTypeJson {
+				result.NoCoalesce = true
+				result.Identifier = "JSON_EXTRACT(" + result.Identifier + ", '$')"
+				if r.withMultiMatch {
+					r.multiMatch.valueIdentifier = "JSON_EXTRACT(" + r.multiMatch.valueIdentifier + ", '$')"
+				}
+			}
+
 			return result, nil
 		}
 
@@ -480,6 +491,7 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 			}
 
 			result := &search.ResolverResult{
+				NoCoalesce: true,
 				Identifier: fmt.Sprintf(
 					"JSON_EXTRACT([[%s.%s]], '%s')",
 					r.activeTableAlias,

@@ -9,6 +9,8 @@ import (
 )
 
 func TestSendAdminPasswordReset(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

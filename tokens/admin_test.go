@@ -8,6 +8,8 @@ import (
 )
 
 func TestNewAdminAuthToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -31,6 +33,8 @@ func TestNewAdminAuthToken(t *testing.T) {
 }
 
 func TestNewAdminResetPasswordToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -54,6 +58,8 @@ func TestNewAdminResetPasswordToken(t *testing.T) {
 }
 
 func TestNewAdminFileToken(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

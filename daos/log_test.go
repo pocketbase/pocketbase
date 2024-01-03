@@ -12,6 +12,8 @@ import (
 )
 
 func TestLogQuery(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -24,6 +26,8 @@ func TestLogQuery(t *testing.T) {
 }
 
 func TestFindLogById(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -54,6 +58,8 @@ func TestFindLogById(t *testing.T) {
 }
 
 func TestLogsStats(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -75,6 +81,8 @@ func TestLogsStats(t *testing.T) {
 }
 
 func TestDeleteOldLogs(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -115,6 +123,8 @@ func TestDeleteOldLogs(t *testing.T) {
 }
 
 func TestSaveLog(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

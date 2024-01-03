@@ -10,6 +10,8 @@ import (
 )
 
 func TestBackupCreateValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		name           string
 		backupName     string
