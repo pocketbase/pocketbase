@@ -12,6 +12,8 @@ import (
 )
 
 func TestBackupUploadValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	var zb bytes.Buffer
 	zw := zip.NewWriter(&zb)
 	if err := zw.Close(); err != nil {

@@ -15,6 +15,8 @@ import (
 )
 
 func Test404(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Method:          http.MethodGet,
@@ -53,6 +55,8 @@ func Test404(t *testing.T) {
 }
 
 func TestCustomRoutesAndErrorsHandling(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "custom route",
@@ -142,6 +146,8 @@ func TestCustomRoutesAndErrorsHandling(t *testing.T) {
 }
 
 func TestRemoveTrailingSlashMiddleware(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "non /api/* route (exact match)",
@@ -215,6 +221,8 @@ func TestRemoveTrailingSlashMiddleware(t *testing.T) {
 }
 
 func TestEagerRequestInfoCache(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "custom non-api group route",
@@ -316,6 +324,8 @@ func TestEagerRequestInfoCache(t *testing.T) {
 }
 
 func TestErrorHandler(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "apis.ApiError",

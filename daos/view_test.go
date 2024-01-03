@@ -33,6 +33,8 @@ func ensureNoTempViews(app core.App, t *testing.T) {
 }
 
 func TestDeleteView(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -60,6 +62,8 @@ func TestDeleteView(t *testing.T) {
 }
 
 func TestSaveView(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -180,6 +184,8 @@ func TestSaveView(t *testing.T) {
 }
 
 func TestCreateViewSchemaWithDiscardedNestedTransaction(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -196,6 +202,8 @@ func TestCreateViewSchemaWithDiscardedNestedTransaction(t *testing.T) {
 }
 
 func TestCreateViewSchema(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -486,6 +494,8 @@ func TestCreateViewSchema(t *testing.T) {
 }
 
 func TestFindRecordByViewFile(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

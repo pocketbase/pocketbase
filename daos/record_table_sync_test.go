@@ -14,6 +14,8 @@ import (
 )
 
 func TestSyncRecordTableSchema(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -132,6 +134,8 @@ func TestSyncRecordTableSchema(t *testing.T) {
 }
 
 func TestSingleVsMultipleValuesNormalization(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

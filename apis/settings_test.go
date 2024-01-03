@@ -18,6 +18,8 @@ import (
 )
 
 func TestSettingsList(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -97,6 +99,8 @@ func TestSettingsList(t *testing.T) {
 }
 
 func TestSettingsSet(t *testing.T) {
+	t.Parallel()
+
 	validData := `{"meta":{"appName":"update_test"}}`
 
 	scenarios := []tests.ApiScenario{
@@ -278,6 +282,8 @@ func TestSettingsSet(t *testing.T) {
 }
 
 func TestSettingsTestS3(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -344,6 +350,8 @@ func TestSettingsTestS3(t *testing.T) {
 }
 
 func TestSettingsTestEmail(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "unauthorized",
@@ -508,6 +516,8 @@ func TestSettingsTestEmail(t *testing.T) {
 }
 
 func TestGenerateAppleClientSecret(t *testing.T) {
+	t.Parallel()
+
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		t.Fatal(err)

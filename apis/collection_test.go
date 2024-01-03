@@ -17,6 +17,8 @@ import (
 )
 
 func TestCollectionsList(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -125,6 +127,8 @@ func TestCollectionsList(t *testing.T) {
 }
 
 func TestCollectionView(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -193,6 +197,8 @@ func TestCollectionView(t *testing.T) {
 }
 
 func TestCollectionDelete(t *testing.T) {
+	t.Parallel()
+
 	ensureDeletedFiles := func(app *tests.TestApp, collectionId string) {
 		storageDir := filepath.Join(app.DataDir(), "storage", collectionId)
 
@@ -338,6 +344,8 @@ func TestCollectionDelete(t *testing.T) {
 }
 
 func TestCollectionCreate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -715,6 +723,8 @@ func TestCollectionCreate(t *testing.T) {
 }
 
 func TestCollectionUpdate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -1082,6 +1092,8 @@ func TestCollectionUpdate(t *testing.T) {
 }
 
 func TestCollectionsImport(t *testing.T) {
+	t.Parallel()
+
 	totalCollections := 11
 
 	scenarios := []tests.ApiScenario{

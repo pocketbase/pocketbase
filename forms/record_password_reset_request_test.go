@@ -13,6 +13,8 @@ import (
 )
 
 func TestRecordPasswordResetRequestSubmit(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
@@ -116,6 +118,8 @@ func TestRecordPasswordResetRequestSubmit(t *testing.T) {
 }
 
 func TestRecordPasswordResetRequestInterceptors(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

@@ -10,6 +10,8 @@ import (
 )
 
 func TestRecordPasswordLoginValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
@@ -132,6 +134,8 @@ func TestRecordPasswordLoginValidateAndSubmit(t *testing.T) {
 }
 
 func TestRecordPasswordLoginInterceptors(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

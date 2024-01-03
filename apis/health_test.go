@@ -8,6 +8,8 @@ import (
 )
 
 func TestHealthAPI(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:           "health status returns 200",

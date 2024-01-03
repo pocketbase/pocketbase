@@ -8,6 +8,8 @@ import (
 )
 
 func TestRealtimeSubscribeValidate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		clientId    string
 		expectError bool

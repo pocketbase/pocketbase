@@ -17,6 +17,8 @@ import (
 )
 
 func TestRecordCrudList(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "missing collection",
@@ -493,6 +495,8 @@ func TestRecordCrudList(t *testing.T) {
 }
 
 func TestRecordCrudView(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "missing collection",
@@ -772,6 +776,8 @@ func TestRecordCrudView(t *testing.T) {
 }
 
 func TestRecordCrudDelete(t *testing.T) {
+	t.Parallel()
+
 	ensureDeletedFiles := func(app *tests.TestApp, collectionId string, recordId string) {
 		storageDir := filepath.Join(app.DataDir(), "storage", collectionId, recordId)
 
@@ -1015,6 +1021,8 @@ func TestRecordCrudDelete(t *testing.T) {
 }
 
 func TestRecordCrudCreate(t *testing.T) {
+	t.Parallel()
+
 	formData, mp, err := tests.MockMultipartData(map[string]string{
 		"title": "title_test",
 	}, "files")
@@ -1591,6 +1599,8 @@ func TestRecordCrudCreate(t *testing.T) {
 }
 
 func TestRecordCrudUpdate(t *testing.T) {
+	t.Parallel()
+
 	formData, mp, err := tests.MockMultipartData(map[string]string{
 		"title": "title_test",
 	}, "files")

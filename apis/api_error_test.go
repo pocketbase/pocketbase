@@ -10,6 +10,8 @@ import (
 )
 
 func TestNewApiErrorWithRawData(t *testing.T) {
+	t.Parallel()
+
 	e := apis.NewApiError(
 		300,
 		"message_test",
@@ -33,6 +35,8 @@ func TestNewApiErrorWithRawData(t *testing.T) {
 }
 
 func TestNewApiErrorWithValidationData(t *testing.T) {
+	t.Parallel()
+
 	e := apis.NewApiError(
 		300,
 		"message_test",
@@ -66,6 +70,8 @@ func TestNewApiErrorWithValidationData(t *testing.T) {
 }
 
 func TestNewNotFoundError(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		message  string
 		data     any
@@ -87,6 +93,8 @@ func TestNewNotFoundError(t *testing.T) {
 }
 
 func TestNewBadRequestError(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		message  string
 		data     any
@@ -108,6 +116,8 @@ func TestNewBadRequestError(t *testing.T) {
 }
 
 func TestNewForbiddenError(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		message  string
 		data     any
@@ -129,6 +139,8 @@ func TestNewForbiddenError(t *testing.T) {
 }
 
 func TestNewUnauthorizedError(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		message  string
 		data     any

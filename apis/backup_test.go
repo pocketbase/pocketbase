@@ -17,6 +17,8 @@ import (
 )
 
 func TestBackupsList(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "unauthorized",
@@ -84,6 +86,8 @@ func TestBackupsList(t *testing.T) {
 }
 
 func TestBackupsCreate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "unauthorized",
@@ -198,6 +202,8 @@ func TestBackupsCreate(t *testing.T) {
 }
 
 func TestBackupsUpload(t *testing.T) {
+	t.Parallel()
+
 	// create dummy form data bodies
 	type body struct {
 		buffer      io.Reader
@@ -330,6 +336,8 @@ func TestBackupsUpload(t *testing.T) {
 }
 
 func TestBackupsDownload(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "unauthorized",
@@ -485,6 +493,8 @@ func TestBackupsDownload(t *testing.T) {
 }
 
 func TestBackupsDelete(t *testing.T) {
+	t.Parallel()
+
 	noTestBackupFilesChanges := func(t *testing.T, app *tests.TestApp) {
 		files, err := getBackupFiles(app)
 		if err != nil {
@@ -645,6 +655,8 @@ func TestBackupsDelete(t *testing.T) {
 }
 
 func TestBackupsRestore(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "unauthorized",

@@ -20,6 +20,8 @@ import (
 )
 
 func TestFileToken(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -92,6 +94,8 @@ func TestFileToken(t *testing.T) {
 }
 
 func TestFileDownload(t *testing.T) {
+	t.Parallel()
+
 	_, currentFile, _, _ := runtime.Caller(0)
 	dataDirRelPath := "../tests/data/"
 
@@ -391,6 +395,8 @@ func TestFileDownload(t *testing.T) {
 }
 
 func TestConcurrentThumbsGeneration(t *testing.T) {
+	t.Parallel()
+
 	app, err := tests.NewTestApp()
 	if err != nil {
 		t.Fatal(err)

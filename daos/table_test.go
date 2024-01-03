@@ -12,6 +12,8 @@ import (
 )
 
 func TestHasTable(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -36,6 +38,8 @@ func TestHasTable(t *testing.T) {
 }
 
 func TestTableColumns(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -64,6 +68,8 @@ func TestTableColumns(t *testing.T) {
 }
 
 func TestTableInfo(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -92,6 +98,8 @@ func TestTableInfo(t *testing.T) {
 }
 
 func TestDeleteTable(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -116,6 +124,8 @@ func TestDeleteTable(t *testing.T) {
 }
 
 func TestVacuum(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -141,6 +151,8 @@ func TestVacuum(t *testing.T) {
 }
 
 func TestTableIndexes(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

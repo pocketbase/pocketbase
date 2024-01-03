@@ -12,6 +12,8 @@ import (
 )
 
 func TestNewAdminUpsert(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -31,6 +33,8 @@ func TestNewAdminUpsert(t *testing.T) {
 }
 
 func TestAdminUpsertValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -183,6 +187,8 @@ func TestAdminUpsertValidateAndSubmit(t *testing.T) {
 }
 
 func TestAdminUpsertSubmitInterceptors(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
@@ -231,6 +237,8 @@ func TestAdminUpsertSubmitInterceptors(t *testing.T) {
 }
 
 func TestAdminUpsertWithCustomId(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

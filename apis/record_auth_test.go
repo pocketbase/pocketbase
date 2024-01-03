@@ -17,6 +17,8 @@ import (
 )
 
 func TestRecordAuthMethodsList(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "missing collection",
@@ -71,6 +73,8 @@ func TestRecordAuthMethodsList(t *testing.T) {
 }
 
 func TestRecordAuthWithPassword(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "invalid body format",
@@ -356,6 +360,8 @@ func TestRecordAuthWithPassword(t *testing.T) {
 }
 
 func TestRecordAuthRefresh(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -483,6 +489,8 @@ func TestRecordAuthRefresh(t *testing.T) {
 }
 
 func TestRecordAuthRequestPasswordReset(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "not an auth collection",
@@ -568,6 +576,8 @@ func TestRecordAuthRequestPasswordReset(t *testing.T) {
 }
 
 func TestRecordAuthConfirmPasswordReset(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:           "empty data",
@@ -681,6 +691,8 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 }
 
 func TestRecordAuthRequestVerification(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "not an auth collection",
@@ -774,6 +786,8 @@ func TestRecordAuthRequestVerification(t *testing.T) {
 }
 
 func TestRecordAuthConfirmVerification(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:           "empty data",
@@ -902,6 +916,8 @@ func TestRecordAuthConfirmVerification(t *testing.T) {
 }
 
 func TestRecordAuthRequestEmailChange(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -1004,6 +1020,8 @@ func TestRecordAuthRequestEmailChange(t *testing.T) {
 }
 
 func TestRecordAuthConfirmEmailChange(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:           "not an auth collection",
@@ -1124,6 +1142,8 @@ func TestRecordAuthConfirmEmailChange(t *testing.T) {
 }
 
 func TestRecordAuthListExternalsAuths(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -1224,6 +1244,8 @@ func TestRecordAuthListExternalsAuths(t *testing.T) {
 }
 
 func TestRecordAuthUnlinkExternalsAuth(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:            "unauthorized",
@@ -1353,6 +1375,8 @@ func TestRecordAuthUnlinkExternalsAuth(t *testing.T) {
 }
 
 func TestRecordAuthOAuth2Redirect(t *testing.T) {
+	t.Parallel()
+
 	c1 := subscriptions.NewDefaultClient()
 
 	c2 := subscriptions.NewDefaultClient()

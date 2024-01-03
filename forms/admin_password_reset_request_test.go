@@ -10,6 +10,8 @@ import (
 )
 
 func TestAdminPasswordResetRequestValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 
@@ -74,6 +76,8 @@ func TestAdminPasswordResetRequestValidateAndSubmit(t *testing.T) {
 }
 
 func TestAdminPasswordResetRequestInterceptors(t *testing.T) {
+	t.Parallel()
+
 	testApp, _ := tests.NewTestApp()
 	defer testApp.Cleanup()
 

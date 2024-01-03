@@ -10,6 +10,8 @@ import (
 )
 
 func TestRequireGuestOnly(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "valid record token",
@@ -104,6 +106,8 @@ func TestRequireGuestOnly(t *testing.T) {
 }
 
 func TestRequireRecordAuth(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "guest",
@@ -242,6 +246,8 @@ func TestRequireRecordAuth(t *testing.T) {
 }
 
 func TestRequireSameContextRecordAuth(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "guest",
@@ -358,6 +364,8 @@ func TestRequireSameContextRecordAuth(t *testing.T) {
 }
 
 func TestRequireAdminAuth(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "guest",
@@ -452,6 +460,8 @@ func TestRequireAdminAuth(t *testing.T) {
 }
 
 func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "guest (while having at least 1 existing admin)",
@@ -571,6 +581,8 @@ func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 }
 
 func TestRequireAdminOrRecordAuth(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "guest",
@@ -731,6 +743,8 @@ func TestRequireAdminOrRecordAuth(t *testing.T) {
 }
 
 func TestRequireAdminOrOwnerAuth(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "guest",
@@ -869,6 +883,8 @@ func TestRequireAdminOrOwnerAuth(t *testing.T) {
 }
 
 func TestLoadCollectionContext(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []tests.ApiScenario{
 		{
 			Name:   "missing collection",

@@ -10,6 +10,8 @@ import (
 )
 
 func TestEmailSendValidateAndSubmit(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		template       string
 		email          string
