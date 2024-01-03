@@ -13,7 +13,7 @@ import (
 )
 
 func TestFilterDataBuildExpr(t *testing.T) {
-	resolver := search.NewSimpleFieldResolver("test1", "test2", "test3", `^test4_\w+$`)
+	resolver := search.NewSimpleFieldResolver("test1", "test2", "test3", `^test4_\w+$`, `^test5\.[\w\.\:]*\w+$`)
 
 	scenarios := []struct {
 		name          string
@@ -92,6 +92,12 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"test1 !~ 'lorem'",
 			false,
 			"[[test1]] NOT LIKE {:TEST} ESCAPE '\\'",
+		},
+		{
+			"nested json no coalesce",
+			"test5.a = test5.b || test5.c != test5.d",
+			false,
+			"(JSON_EXTRACT([[test5]], '$.a') IS JSON_EXTRACT([[test5]], '$.b') OR JSON_EXTRACT([[test5]], '$.c') IS NOT JSON_EXTRACT([[test5]], '$.d'))",
 		},
 		{
 			"macros",

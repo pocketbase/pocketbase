@@ -7,6 +7,8 @@ import (
 )
 
 func TestCompare(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		valA        string
 		valB        string

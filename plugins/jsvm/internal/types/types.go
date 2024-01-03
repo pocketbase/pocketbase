@@ -218,7 +218,7 @@ declare function readerToString(reader: any, maxBytes?: number): string;
  * Example:
  *
  * ` + "```" + `js
- * slee(250) // sleeps for 250ms
+ * sleep(250) // sleeps for 250ms
  * ` + "```" + `
  *
  * @group PocketBase

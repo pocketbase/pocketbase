@@ -16,6 +16,10 @@ type ResolverResult struct {
 	// in the final db expression as left or right operand.
 	Identifier string
 
+	// NoCoalesce instructs to not use COALESCE or NULL fallbacks
+	// when building the identifier expression.
+	NoCoalesce bool
+
 	// Params is a map with db placeholder->value pairs that will be added
 	// to the query when building both resolved operands/sides in a single expression.
 	Params dbx.Params
@@ -99,6 +103,7 @@ func (r *SimpleFieldResolver) Resolve(field string) (*ResolverResult, error) {
 	}
 
 	return &ResolverResult{
+		NoCoalesce: true,
 		Identifier: fmt.Sprintf(
 			"JSON_EXTRACT([[%s]], '%s')",
 			inflector.Columnify(parts[0]),

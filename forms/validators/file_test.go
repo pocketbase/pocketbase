@@ -12,6 +12,8 @@ import (
 )
 
 func TestUploadedFileSize(t *testing.T) {
+	t.Parallel()
+
 	data, mp, err := tests.MockMultipartData(nil, "test")
 	if err != nil {
 		t.Fatal(err)
@@ -52,6 +54,8 @@ func TestUploadedFileSize(t *testing.T) {
 }
 
 func TestUploadedFileMimeType(t *testing.T) {
+	t.Parallel()
+
 	data, mp, err := tests.MockMultipartData(nil, "test")
 	if err != nil {
 		t.Fatal(err)
