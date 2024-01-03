@@ -5,6 +5,11 @@
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
 
+## v0.20.4
+
+- Small fix for a regression introduced with the recent `json` field changes that was causing View collection column expressions recognized as `json` to fail to resolve ([#4072](https://github.com/pocketbase/pocketbase/issues/4072)).
+
+
 ## v0.20.3
 
 - Fixed the `json` field query comparisons to work correctly with plain JSON values like `null`, `bool` `number`, etc. ([#4068](https://github.com/pocketbase/pocketbase/issues/4068)).

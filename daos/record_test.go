@@ -546,6 +546,19 @@ func TestFindRecordsByFilter(t *testing.T) {
 				"llvuca81nly1qls",
 			},
 		},
+		{
+			"with json filter and sort",
+			"demo4",
+			"json_object != null && json_object.a.b = 'test'",
+			"-json_object.a",
+			10,
+			0,
+			[]dbx.Params{{"active": false}},
+			false,
+			[]string{
+				"i9naidtvr6qsgb4",
+			},
+		},
 	}
 
 	for _, s := range scenarios {
