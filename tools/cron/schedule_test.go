@@ -9,6 +9,8 @@ import (
 )
 
 func TestNewMoment(t *testing.T) {
+	t.Parallel()
+
 	date, err := time.Parse("2006-01-02 15:04", "2023-05-09 15:20")
 	if err != nil {
 		t.Fatal(err)
@@ -38,6 +40,8 @@ func TestNewMoment(t *testing.T) {
 }
 
 func TestNewSchedule(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		cronExpr       string
 		expectError    bool
@@ -272,6 +276,8 @@ func TestNewSchedule(t *testing.T) {
 }
 
 func TestScheduleIsDue(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		cronExpr string
 		moment   *cron.Moment

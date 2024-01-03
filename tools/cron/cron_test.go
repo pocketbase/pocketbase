@@ -7,6 +7,8 @@ import (
 )
 
 func TestCronNew(t *testing.T) {
+	t.Parallel()
+
 	c := New()
 
 	expectedInterval := 1 * time.Minute
@@ -29,6 +31,8 @@ func TestCronNew(t *testing.T) {
 }
 
 func TestCronSetInterval(t *testing.T) {
+	t.Parallel()
+
 	c := New()
 
 	interval := 2 * time.Minute
@@ -41,6 +45,8 @@ func TestCronSetInterval(t *testing.T) {
 }
 
 func TestCronSetTimezone(t *testing.T) {
+	t.Parallel()
+
 	c := New()
 
 	timezone, _ := time.LoadLocation("Asia/Tokyo")
@@ -53,6 +59,8 @@ func TestCronSetTimezone(t *testing.T) {
 }
 
 func TestCronAddAndRemove(t *testing.T) {
+	t.Parallel()
+
 	c := New()
 
 	if err := c.Add("test0", "* * * * *", nil); err == nil {
@@ -126,6 +134,8 @@ func TestCronAddAndRemove(t *testing.T) {
 }
 
 func TestCronMustAdd(t *testing.T) {
+	t.Parallel()
+
 	c := New()
 
 	defer func() {
@@ -144,6 +154,8 @@ func TestCronMustAdd(t *testing.T) {
 }
 
 func TestCronRemoveAll(t *testing.T) {
+	t.Parallel()
+
 	c := New()
 
 	if err := c.Add("test1", "* * * * *", func() {}); err != nil {
@@ -170,6 +182,8 @@ func TestCronRemoveAll(t *testing.T) {
 }
 
 func TestCronTotal(t *testing.T) {
+	t.Parallel()
+
 	c := New()
 
 	if v := c.Total(); v != 0 {
@@ -195,6 +209,8 @@ func TestCronTotal(t *testing.T) {
 }
 
 func TestCronStartStop(t *testing.T) {
+	t.Parallel()
+
 	c := New()
 
 	c.SetInterval(1 * time.Second)
