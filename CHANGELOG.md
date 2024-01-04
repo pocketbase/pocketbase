@@ -5,6 +5,11 @@
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
 
+## v0.20.5
+
+- Minor CSS fix for the Admin UI to prevent the searchbar within a popup from expanding too much and pushing the controls out of the visible area ([#4079](https://github.com/pocketbase/pocketbase/issues/4079#issuecomment-1876994116)).
+
+
 ## v0.20.4
 
 - Small fix for a regression introduced with the recent `json` field changes that was causing View collection column expressions recognized as `json` to fail to resolve ([#4072](https://github.com/pocketbase/pocketbase/issues/4072)).
