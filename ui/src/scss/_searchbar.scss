@@ -1,12 +1,11 @@
 .searchbar {
     --searchHeight: 44px;
 
-    flex-shrink: 0;
     outline: 0;
     display: flex;
     align-items: center;
-    min-height: var(--searchHeight);
     width: 100%;
+    min-height: var(--searchHeight);
     padding: 5px 7px;
     margin: 0;
     white-space: nowrap;
@@ -35,9 +34,15 @@
         border: 0;
         background: none;
         min-height: 0;
-        max-height: 110px;
+        height: 100%;
+        max-height: 100px;
         padding-top: 0;
         padding-bottom: 0;
+    }
+    .cm-editor {
+        flex-grow: 0;
+        margin-top: auto;
+        margin-bottom: auto;
     }
     label > i {
         line-height: inherit;
