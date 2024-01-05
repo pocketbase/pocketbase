@@ -28,7 +28,7 @@ func init() {
 				}
 
 				options, _ := f.Options.(*schema.JsonOptions)
-				if options != nil {
+				if options == nil {
 					options = &schema.JsonOptions{}
 				}
 				options.MaxSize = 2000000 // 2mb
