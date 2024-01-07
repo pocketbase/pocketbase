@@ -99,8 +99,8 @@ func TestCollectionMarshalJSON(t *testing.T) {
 		},
 		{
 			"auth type + non empty options",
-			models.Collection{BaseModel: models.BaseModel{Id: "test"}, Type: models.CollectionTypeAuth, Options: types.JsonMap{"test": 123, "allowOAuth2Auth": true, "minPasswordLength": 4, "onlyVerified": true}},
-			`{"id":"test","created":"","updated":"","name":"","type":"auth","system":false,"schema":[],"indexes":[],"listRule":null,"viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{"allowEmailAuth":false,"allowOAuth2Auth":true,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"onlyVerified":true,"requireEmail":false}}`,
+			models.Collection{BaseModel: models.BaseModel{Id: "test"}, Type: models.CollectionTypeAuth, Options: types.JsonMap{"test": 123, "allowOAuth2Auth": true, "minPasswordLength": 4, "onlyVerified": true, "verifyOnResetPassword": false}},
+			`{"id":"test","created":"","updated":"","name":"","type":"auth","system":false,"schema":[],"indexes":[],"listRule":null,"viewRule":null,"createRule":null,"updateRule":null,"deleteRule":null,"options":{"allowEmailAuth":false,"allowOAuth2Auth":true,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"onlyVerified":true,"requireEmail":false,"verifyOnResetPassword":false}}`,
 		},
 	}
 
@@ -168,7 +168,7 @@ func TestCollectionAuthOptions(t *testing.T) {
 	t.Parallel()
 
 	options := types.JsonMap{"test": 123, "minPasswordLength": 4}
-	expectedSerialization := `{"manageRule":null,"allowOAuth2Auth":false,"allowUsernameAuth":false,"allowEmailAuth":false,"requireEmail":false,"exceptEmailDomains":null,"onlyVerified":false,"onlyEmailDomains":null,"minPasswordLength":4}`
+	expectedSerialization := `{"manageRule":null,"allowOAuth2Auth":false,"allowUsernameAuth":false,"allowEmailAuth":false,"requireEmail":false,"exceptEmailDomains":null,"onlyVerified":false,"onlyEmailDomains":null,"minPasswordLength":4,"verifyOnResetPassword":false}`
 
 	scenarios := []struct {
 		name       string
@@ -283,7 +283,7 @@ func TestNormalizeOptions(t *testing.T) {
 		{
 			"auth type",
 			models.Collection{Type: models.CollectionTypeAuth, Options: types.JsonMap{"test": 123, "minPasswordLength": 4}},
-			`{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"onlyVerified":false,"requireEmail":false}`,
+			`{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"onlyVerified":false,"requireEmail":false,"verifyOnResetPassword":false}`,
 		},
 	}
 
@@ -355,8 +355,8 @@ func TestSetOptions(t *testing.T) {
 		{
 			"auth type",
 			models.Collection{Type: models.CollectionTypeAuth, Options: types.JsonMap{"test": 123}},
-			map[string]any{"test": 456, "minPasswordLength": 4},
-			`{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"onlyVerified":false,"requireEmail":false}`,
+			map[string]any{"test": 456, "minPasswordLength": 4, "verifyOnResetPassword": true},
+			`{"allowEmailAuth":false,"allowOAuth2Auth":false,"allowUsernameAuth":false,"exceptEmailDomains":null,"manageRule":null,"minPasswordLength":4,"onlyEmailDomains":null,"onlyVerified":false,"requireEmail":false,"verifyOnResetPassword":true}`,
 		},
 	}
 
@@ -440,14 +440,15 @@ func TestCollectionAuthOptionsValidate(t *testing.T) {
 		{
 			"all fields with valid data",
 			models.CollectionAuthOptions{
-				ManageRule:         types.Pointer("test"),
-				AllowOAuth2Auth:    true,
-				AllowUsernameAuth:  true,
-				AllowEmailAuth:     true,
-				RequireEmail:       true,
-				ExceptEmailDomains: []string{"example.com", "test.com"},
-				OnlyEmailDomains:   nil,
-				MinPasswordLength:  5,
+				ManageRule:            types.Pointer("test"),
+				AllowOAuth2Auth:       true,
+				AllowUsernameAuth:     true,
+				AllowEmailAuth:        true,
+				RequireEmail:          true,
+				ExceptEmailDomains:    []string{"example.com", "test.com"},
+				OnlyEmailDomains:      nil,
+				MinPasswordLength:     5,
+				VerifyOnResetPassword: true,
 			},
 			[]string{},
 		},

@@ -115,12 +115,13 @@ func init() {
 
 		// set auth options
 		usersCollection.SetOptions(models.CollectionAuthOptions{
-			ManageRule:        nil,
-			AllowOAuth2Auth:   true,
-			AllowUsernameAuth: true,
-			AllowEmailAuth:    true,
-			MinPasswordLength: 8,
-			RequireEmail:      false,
+			ManageRule:            nil,
+			AllowOAuth2Auth:       true,
+			AllowUsernameAuth:     true,
+			AllowEmailAuth:        true,
+			MinPasswordLength:     8,
+			RequireEmail:          false,
+			VerifyOnResetPassword: true,
 		})
 
 		// set optional default fields

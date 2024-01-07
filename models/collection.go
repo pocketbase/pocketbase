@@ -173,15 +173,16 @@ func (o CollectionBaseOptions) Validate() error {
 
 // CollectionAuthOptions defines the "auth" Collection.Options fields.
 type CollectionAuthOptions struct {
-	ManageRule         *string  `form:"manageRule" json:"manageRule"`
-	AllowOAuth2Auth    bool     `form:"allowOAuth2Auth" json:"allowOAuth2Auth"`
-	AllowUsernameAuth  bool     `form:"allowUsernameAuth" json:"allowUsernameAuth"`
-	AllowEmailAuth     bool     `form:"allowEmailAuth" json:"allowEmailAuth"`
-	RequireEmail       bool     `form:"requireEmail" json:"requireEmail"`
-	ExceptEmailDomains []string `form:"exceptEmailDomains" json:"exceptEmailDomains"`
-	OnlyVerified       bool     `form:"onlyVerified" json:"onlyVerified"`
-	OnlyEmailDomains   []string `form:"onlyEmailDomains" json:"onlyEmailDomains"`
-	MinPasswordLength  int      `form:"minPasswordLength" json:"minPasswordLength"`
+	ManageRule            *string  `form:"manageRule" json:"manageRule"`
+	AllowOAuth2Auth       bool     `form:"allowOAuth2Auth" json:"allowOAuth2Auth"`
+	AllowUsernameAuth     bool     `form:"allowUsernameAuth" json:"allowUsernameAuth"`
+	AllowEmailAuth        bool     `form:"allowEmailAuth" json:"allowEmailAuth"`
+	RequireEmail          bool     `form:"requireEmail" json:"requireEmail"`
+	ExceptEmailDomains    []string `form:"exceptEmailDomains" json:"exceptEmailDomains"`
+	OnlyVerified          bool     `form:"onlyVerified" json:"onlyVerified"`
+	OnlyEmailDomains      []string `form:"onlyEmailDomains" json:"onlyEmailDomains"`
+	MinPasswordLength     int      `form:"minPasswordLength" json:"minPasswordLength"`
+	VerifyOnResetPassword bool     `form:"verifyOnResetPassword" json:"verifyOnResetPassword"`
 }
 
 // Validate implements [validation.Validatable] interface.

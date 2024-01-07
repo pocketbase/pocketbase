@@ -91,6 +91,13 @@ func (form *RecordPasswordResetConfirm) Submit(interceptors ...InterceptorFunc[*
 		return nil, err
 	}
 
+	verifyOnResetPassword := form.collection.AuthOptions().VerifyOnResetPassword
+	if verifyOnResetPassword {
+		if err := authRecord.SetVerified(true); err != nil {
+			return nil, err
+		}
+	}
+
 	interceptorsErr := runInterceptors(authRecord, func(m *models.Record) error {
 		authRecord = m
 		return form.dao.SaveRecord(m)

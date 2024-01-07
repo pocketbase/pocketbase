@@ -15,6 +15,7 @@
             allowUsernameAuth: true,
             allowOAuth2Auth: true,
             minPasswordLength: 8,
+            verifyOnResetPassword: true,
         };
     }
 
@@ -229,6 +230,22 @@
                 text: [
                     "If enabled, it returns 403 for new unverfied user authentication requests.",
                     "If you need more granular control, don't enable this option and instead use the `@request.auth.verified = true` rule in the specific collection(s) you are targeting.",
+                ].join("\n"),
+                position: "right",
+            }}
+        />
+    </label>
+</Field>
+
+<Field class="form-field form-field-toggle m-b-sm" name="options.verifyOnResetPassword" let:uniqueId>
+    <input type="checkbox" id={uniqueId} bind:checked={collection.options.verifyOnResetPassword} />
+    <label for={uniqueId}>
+        <span class="txt">Automatically verify user on password reset</span>
+        <i
+            class="ri-information-line txt-sm link-hint"
+            use:tooltip={{
+                text: [
+                    "If enabled, it automatically marks the user as verified when they reset their password.",
                 ].join("\n"),
                 position: "right",
             }}

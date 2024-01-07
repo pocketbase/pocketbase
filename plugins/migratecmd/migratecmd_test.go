@@ -50,7 +50,8 @@ migrate((db) => {
       "minPasswordLength": 20,
       "onlyEmailDomains": null,
       "onlyVerified": false,
-      "requireEmail": false
+      "requireEmail": false,
+      "verifyOnResetPassword": false
     }
   });
 
@@ -104,7 +105,8 @@ func init() {
 				"minPasswordLength": 20,
 				"onlyEmailDomains": null,
 				"onlyVerified": false,
-				"requireEmail": false
+				"requireEmail": false,
+				"verifyOnResetPassword": false
 			}
 		}` + "`" + `
 
@@ -232,7 +234,8 @@ migrate((db) => {
       "minPasswordLength": 20,
       "onlyEmailDomains": null,
       "onlyVerified": false,
-      "requireEmail": false
+      "requireEmail": false,
+      "verifyOnResetPassword": false
     }
   });
 
@@ -290,7 +293,8 @@ func init() {
 				"minPasswordLength": 20,
 				"onlyEmailDomains": null,
 				"onlyVerified": false,
-				"requireEmail": false
+				"requireEmail": false,
+				"verifyOnResetPassword": false
 			}
 		}` + "`" + `
 
@@ -454,7 +458,8 @@ migrate((db) => {
     "minPasswordLength": 20,
     "onlyEmailDomains": null,
     "onlyVerified": false,
-    "requireEmail": false
+    "requireEmail": false,
+    "verifyOnResetPassword": false
   }
   collection.indexes = [
     "create index test1 on test456 (f1_name)"
@@ -609,7 +614,8 @@ func init() {
 			"minPasswordLength": 20,
 			"onlyEmailDomains": null,
 			"onlyVerified": false,
-			"requireEmail": false
+			"requireEmail": false,
+			"verifyOnResetPassword": false
 		}` + "`" + `), &options)
 		collection.SetOptions(options)
 
