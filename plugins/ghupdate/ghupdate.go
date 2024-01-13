@@ -106,7 +106,7 @@ func (p *plugin) updateCmd() *cobra.Command {
 
 	command := &cobra.Command{
 		Use:          "update",
-		Short:        "Automatically updates the current PocketBase executable with the latest available version",
+		Short:        "Automatically updates the current app executable with the latest available version",
 		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			var needConfirm bool
@@ -160,7 +160,7 @@ func (p *plugin) update(withBackup bool) error {
 	}
 
 	if compareVersions(strings.TrimPrefix(p.currentVersion, "v"), strings.TrimPrefix(latest.Tag, "v")) <= 0 {
-		color.Green("You already have the latest PocketBase %s.", p.currentVersion)
+		color.Green("You already have the latest version %s.", p.currentVersion)
 		return nil
 	}
 
