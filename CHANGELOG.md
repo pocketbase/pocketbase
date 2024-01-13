@@ -4,6 +4,8 @@
 
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
+- Minor Admin UI improvements (reduced the min table row height, added new TinyMCE codesample languages, etc.)
+
 
 ## v0.20.6
 
