@@ -644,7 +644,7 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 			},
 		},
 		{
-			Name:   "valid token and data",
+			Name:   "valid token and data (unverified user)",
 			Method: http.MethodPost,
 			Url:    "/api/collections/users/confirm-password-reset",
 			Body: strings.NewReader(`{
@@ -658,6 +658,132 @@ func TestRecordAuthConfirmPasswordReset(t *testing.T) {
 				"OnModelBeforeUpdate":                       1,
 				"OnRecordBeforeConfirmPasswordResetRequest": 1,
 				"OnRecordAfterConfirmPasswordResetRequest":  1,
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				user, err := app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatalf("Failed to fetch confirm password user: %v", err)
+				}
+
+				if user.Verified() {
+					t.Fatalf("Expected the user to be unverified")
+				}
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				user, err := app.Dao().FindAuthRecordByToken(
+					"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.R_4FOSUHIuJQ5Crl3PpIPCXMsoHzuTaNlccpXg_3FOg",
+					app.Settings().RecordPasswordResetToken.Secret,
+				)
+				if err == nil {
+					t.Fatalf("Expected the password reset token to be invalidated")
+				}
+
+				user, err = app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatalf("Failed to fetch confirm password user: %v", err)
+				}
+
+				if !user.Verified() {
+					t.Fatalf("Expected the user to be marked as verified")
+				}
+			},
+		},
+		{
+			Name:   "valid token and data (unverified user with different email from the one in the token)",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/confirm-password-reset",
+			Body: strings.NewReader(`{
+				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.R_4FOSUHIuJQ5Crl3PpIPCXMsoHzuTaNlccpXg_3FOg",
+				"password":"12345678",
+				"passwordConfirm":"12345678"
+			}`),
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"OnModelAfterUpdate":                        1,
+				"OnModelBeforeUpdate":                       1,
+				"OnRecordBeforeConfirmPasswordResetRequest": 1,
+				"OnRecordAfterConfirmPasswordResetRequest":  1,
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				user, err := app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatalf("Failed to fetch confirm password user: %v", err)
+				}
+
+				if user.Verified() {
+					t.Fatalf("Expected the user to be unverified")
+				}
+
+				// manually change the email to check whether the verified state will be updated
+				user.SetEmail("test_update@example.com")
+				if err := app.Dao().WithoutHooks().SaveRecord(user); err != nil {
+					t.Fatalf("Failed to update user test email")
+				}
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				user, err := app.Dao().FindAuthRecordByToken(
+					"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.R_4FOSUHIuJQ5Crl3PpIPCXMsoHzuTaNlccpXg_3FOg",
+					app.Settings().RecordPasswordResetToken.Secret,
+				)
+				if err == nil {
+					t.Fatalf("Expected the password reset token to be invalidated")
+				}
+
+				user, err = app.Dao().FindAuthRecordByEmail("users", "test_update@example.com")
+				if err != nil {
+					t.Fatalf("Failed to fetch confirm password user: %v", err)
+				}
+
+				if user.Verified() {
+					t.Fatalf("Expected the user to remain unverified")
+				}
+			},
+		},
+		{
+			Name:   "valid token and data (verified user)",
+			Method: http.MethodPost,
+			Url:    "/api/collections/users/confirm-password-reset",
+			Body: strings.NewReader(`{
+				"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.R_4FOSUHIuJQ5Crl3PpIPCXMsoHzuTaNlccpXg_3FOg",
+				"password":"12345678",
+				"passwordConfirm":"12345678"
+			}`),
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"OnModelAfterUpdate":                        1,
+				"OnModelBeforeUpdate":                       1,
+				"OnRecordBeforeConfirmPasswordResetRequest": 1,
+				"OnRecordAfterConfirmPasswordResetRequest":  1,
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				user, err := app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatalf("Failed to fetch confirm password user: %v", err)
+				}
+
+				// ensure that the user is already verified
+				user.SetVerified(true)
+				if err := app.Dao().WithoutHooks().SaveRecord(user); err != nil {
+					t.Fatalf("Failed to update user verified state")
+				}
+			},
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				user, err := app.Dao().FindAuthRecordByToken(
+					"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsImNvbGxlY3Rpb25JZCI6Il9wYl91c2Vyc19hdXRoXyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiZXhwIjoyMjA4OTg1MjYxfQ.R_4FOSUHIuJQ5Crl3PpIPCXMsoHzuTaNlccpXg_3FOg",
+					app.Settings().RecordPasswordResetToken.Secret,
+				)
+				if err == nil {
+					t.Fatalf("Expected the password reset token to be invalidated")
+				}
+
+				user, err = app.Dao().FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatalf("Failed to fetch confirm password user: %v", err)
+				}
+
+				if !user.Verified() {
+					t.Fatalf("Expected the user to remain verified")
+				}
 			},
 		},
 		{

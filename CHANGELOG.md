@@ -2,6 +2,9 @@
 
 - Added Bitbucket OAuth2 provider ([#3948](https://github.com/pocketbase/pocketbase/pull/3948); thanks @aabajyan).
 
+- Mark user as verified on confirm password reset ([#4066](https://github.com/pocketbase/pocketbase/issues/4066)).
+  _If the user email has changed after issuing the reset token (eg. updated from the Admin UI), then the `verified` user state remains unchanged._
+
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
 - Minor Admin UI improvements (reduced the min table row height, added new TinyMCE codesample languages, etc.)
