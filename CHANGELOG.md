@@ -5,6 +5,13 @@
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
 
+## v0.20.6
+
+- Fixed JSVM types generation for functions with omitted arg types ([#4145](https://github.com/pocketbase/pocketbase/issues/4145)).
+
+- Updated Go deps.
+
+
 ## v0.20.5
 
 - Minor CSS fix for the Admin UI to prevent the searchbar within a popup from expanding too much and pushing the controls out of the visible area ([#4079](https://github.com/pocketbase/pocketbase/issues/4079#issuecomment-1876994116)).
