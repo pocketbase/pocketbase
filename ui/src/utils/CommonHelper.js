@@ -1455,6 +1455,7 @@ export default class CommonHelper {
                 { text: 'Markdown', value: 'markdown' },
                 { text: 'Swift', value: 'swift' },
                 { text: 'Kotlin', value: 'kotlin' },
+                { text: 'Elixir', value: 'elixir' },
                 { text: 'Scala', value: 'scala' },
                 { text: 'Julia', value: 'julia' },
                 { text: 'Haskell', value: 'haskell' },
