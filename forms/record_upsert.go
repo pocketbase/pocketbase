@@ -165,7 +165,7 @@ func (form *RecordUpsert) extractMultipartFormData(
 
 	data := map[string]any{}
 	filesToUpload := map[string][]*filesystem.File{}
-	arrayValueSupportTypes := schema.ArraybleFieldTypes()
+	arraybleFieldTypes := schema.ArraybleFieldTypes()
 
 	for fullKey, values := range r.PostForm {
 		key := fullKey
@@ -178,8 +178,18 @@ func (form *RecordUpsert) extractMultipartFormData(
 			continue
 		}
 
+		// special case for multipart json encoded fields
+		if key == rest.MultipartJsonKey {
+			for _, v := range values {
+				if err := json.Unmarshal([]byte(v), &data); err != nil {
+					form.app.Logger().Debug("Failed to decode @json value into the data map", "error", err, "value", v)
+				}
+			}
+			continue
+		}
+
 		field := form.record.Collection().Schema.GetFieldByName(key)
-		if field != nil && list.ExistInSlice(field.Type, arrayValueSupportTypes) {
+		if field != nil && list.ExistInSlice(field.Type, arraybleFieldTypes) {
 			data[key] = values
 		} else {
 			data[key] = values[0]

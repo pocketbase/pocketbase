@@ -5,6 +5,9 @@
 - Mark user as verified on confirm password reset ([#4066](https://github.com/pocketbase/pocketbase/issues/4066)).
   _If the user email has changed after issuing the reset token (eg. updated by an admin), then the `verified` user state remains unchanged._
 
+- Added support for loading a serialized json payload for `multipart/form-data` requests using the special `@jsonPayload` key.
+  _This is intended to be used primarily by the SDKs to resolve [js-sdk#274](https://github.com/pocketbase/js-sdk/issues/274)._
+
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
 - Minor Admin UI improvements (reduced the min table row height, added new TinyMCE codesample plugin languages, etc.)

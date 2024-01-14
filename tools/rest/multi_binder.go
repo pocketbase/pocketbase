@@ -12,6 +12,10 @@ import (
 	"github.com/spf13/cast"
 )
 
+// MultipartJsonKey is the key for the special multipart/form-data
+// handling allowing reading serialized json payload without normalizations
+const MultipartJsonKey string = "@jsonPayload"
+
 // BindBody binds request body content to i.
 //
 // This is similar to `echo.BindBody()`, but for JSON requests uses
@@ -62,10 +66,8 @@ func CopyJsonBody(r *http.Request, i any) error {
 	return err
 }
 
-// This is temp hotfix for properly binding multipart/form-data array values
-// when a map destination is used.
-//
-// It should be replaced with echo.BindBody(c, i) once the issue is fixed in echo.
+// Custom multipart/form-data binder that implements an additional handling like
+// loading a serialized json payload or properly scan array values when a map destination is used.
 func bindFormData(c echo.Context, i any) error {
 	if i == nil {
 		return nil
@@ -80,6 +82,13 @@ func bindFormData(c echo.Context, i any) error {
 		return nil
 	}
 
+	// special case to allow submitting json without normalizations
+	// alongside the other multipart/form-data values
+	jsonPayloadValues := values[MultipartJsonKey]
+	for _, payload := range jsonPayloadValues {
+		json.Unmarshal([]byte(payload), i)
+	}
+
 	rt := reflect.TypeOf(i).Elem()
 
 	// map
@@ -87,6 +96,10 @@ func bindFormData(c echo.Context, i any) error {
 		rv := reflect.ValueOf(i).Elem()
 
 		for k, v := range values {
+			if k == MultipartJsonKey {
+				continue
+			}
+
 			if total := len(v); total == 1 {
 				rv.SetMapIndex(reflect.ValueOf(k), reflect.ValueOf(normalizeMultipartValue(v[0])))
 			} else {

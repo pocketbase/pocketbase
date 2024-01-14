@@ -41,16 +41,17 @@ func TestBindBody(t *testing.T) {
 		{
 			strings.NewReader(
 				url.Values{
-					"string":  []string{"str"},
-					"stings":  []string{"str1", "str2", ""},
-					"number":  []string{"-123"},
-					"numbers": []string{"123", "456.789"},
-					"bool":    []string{"true"},
-					"bools":   []string{"true", "false"},
+					"string":              []string{"str"},
+					"stings":              []string{"str1", "str2", ""},
+					"number":              []string{"-123"},
+					"numbers":             []string{"123", "456.789"},
+					"bool":                []string{"true"},
+					"bools":               []string{"true", "false"},
+					rest.MultipartJsonKey: []string{`invalid`, `{"a":123}`, `{"b":456}`},
 				}.Encode(),
 			),
 			echo.MIMEApplicationForm,
-			`{"bool":true,"bools":[true,false],"number":-123,"numbers":[123,456.789],"stings":["str1","str2",""],"string":"str"}`,
+			`{"a":123,"b":456,"bool":true,"bools":[true,false],"number":-123,"numbers":[123,456.789],"stings":["str1","str2",""],"string":"str"}`,
 			false,
 		},
 	}
