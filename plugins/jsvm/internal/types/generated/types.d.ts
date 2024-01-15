@@ -661,7 +661,7 @@ declare namespace $filepath {
 
 /**
  * `$os` defines common helpers for working with the OS level primitives
- * (eg. deleting directories, executing shell commands, etc.).
+ * (e.g. deleting directories, executing shell commands, etc.).
  *
  * @group PocketBase
  */
@@ -989,8 +989,8 @@ declare namespace $http {
    * })
    *
    * console.log(res.statusCode) // the response HTTP status code
-   * console.log(res.headers)    // the response headers (eg. res.headers['X-Custom'][0])
-   * console.log(res.cookies)    // the response cookies (eg. res.cookies.sessionId.value)
+   * console.log(res.headers)    // the response headers (e.g. res.headers['X-Custom'][0])
+   * console.log(res.cookies)    // the response cookies (e.g. res.cookies.sessionId.value)
    * console.log(res.raw)        // the response body as plain text
    * console.log(res.json)       // the response body as parsed json array or map
    * ```
@@ -5201,12 +5201,12 @@ namespace filesystem {
    * The new thumb file is stored at thumbKey location.
    * 
    * thumbSize is in the format:
-   * - 0xH  (eg. 0x100)    - resize to H height preserving the aspect ratio
-   * - Wx0  (eg. 300x0)    - resize to W width preserving the aspect ratio
-   * - WxH  (eg. 300x100)  - resize and crop to WxH viewbox (from center)
-   * - WxHt (eg. 300x100t) - resize and crop to WxH viewbox (from top)
-   * - WxHb (eg. 300x100b) - resize and crop to WxH viewbox (from bottom)
-   * - WxHf (eg. 300x100f) - fit inside a WxH viewbox (without cropping)
+   * - 0xH  (e.g. 0x100)    - resize to H height preserving the aspect ratio
+   * - Wx0  (e.g. 300x0)    - resize to W width preserving the aspect ratio
+   * - WxH  (e.g. 300x100)  - resize and crop to WxH viewbox (from center)
+   * - WxHt (e.g. 300x100t) - resize and crop to WxH viewbox (from top)
+   * - WxHb (e.g. 300x100b) - resize and crop to WxH viewbox (from bottom)
+   * - WxHf (e.g. 300x100f) - fit inside a WxH viewbox (without cropping)
    */
   createThumb(originalKey: string, thumbKey: string, thumbSize: string): void
  }
@@ -5805,7 +5805,7 @@ namespace forms {
   */
  interface RecordOAuth2Login {
   /**
-   * The name of the OAuth2 client provider (eg. "google")
+   * The name of the OAuth2 client provider (e.g. "google")
    */
   provider: string
   /**
@@ -6590,11 +6590,11 @@ namespace apis {
    */
   showStartBanner: boolean
   /**
-   * HttpAddr is the TCP address to listen for the HTTP server (eg. `127.0.0.1:80`).
+   * HttpAddr is the TCP address to listen for the HTTP server (e.g. `127.0.0.1:80`).
    */
   httpAddr: string
   /**
-   * HttpsAddr is the TCP address to listen for the HTTPS server (eg. `127.0.0.1:443`).
+   * HttpsAddr is the TCP address to listen for the HTTPS server (e.g. `127.0.0.1:443`).
    */
   httpsAddr: string
   /**
@@ -6666,7 +6666,7 @@ namespace template {
  interface newRegistry {
   /**
    * NewRegistry creates and initializes a new templates registry with
-   * some defaults (eg. global "raw" template function for unescaped HTML).
+   * some defaults (e.g. global "raw" template function for unescaped HTML).
    * 
    * Use the Registry.Load* methods to load templates into the registry.
    */
@@ -6753,7 +6753,7 @@ namespace pocketbase {
   * PocketBase defines a PocketBase app launcher.
   * 
   * It implements [CoreApp] via embedding and all of the app interface methods
-  * could be accessed directly through the instance (eg. PocketBase.DataDir()).
+  * could be accessed directly through the instance (e.g. PocketBase.DataDir()).
   */
  type _subGGohF = appWrapper
  interface PocketBase extends _subGGohF {
@@ -12709,7 +12709,7 @@ namespace models {
    * The resolved modifier keys will be removed.
    * 
    * Multiple modifiers will be applied one after another,
-   * while reusing the previous base key value result (eg. 1; -5; +2 => -2).
+   * while reusing the previous base key value result (e.g. 1; -5; +2 => -2).
    * 
    * Example usage:
    * 
@@ -13303,8 +13303,8 @@ namespace daos {
    * For correctness, if the collection is "auth" and the key is "username",
    * the unique check will be case insensitive.
    * 
-   * NB! Array values (eg. from multiple select fields) are matched
-   * as a serialized json strings (eg. `["a","b"]`), so the value uniqueness
+   * NB! Array values (e.g. from multiple select fields) are matched
+   * as a serialized json strings (e.g. `["a","b"]`), so the value uniqueness
    * depends on the elements order. Or in other words the following values
    * are considered different: `[]string{"a","b"}` and `[]string{"b","a"}`
    */
@@ -13338,7 +13338,7 @@ namespace daos {
   /**
    * SuggestUniqueAuthRecordUsername checks if the provided username is unique
    * and return a new "unique" username with appended random numeric part
-   * (eg. "existingName" -> "existingName583").
+   * (e.g. "existingName" -> "existingName583").
    * 
    * The same username will be returned if the provided string is already unique.
    */
@@ -13352,7 +13352,7 @@ namespace daos {
    * Rule and db checks are ignored in case requestInfo.Admin is set.
    * 
    * The returned error indicate that something unexpected happened during
-   * the check (eg. invalid rule or db error).
+   * the check (e.g. invalid rule or db error).
    * 
    * The method always return false on invalid access rule or db error.
    * 
@@ -13610,7 +13610,7 @@ namespace core {
   newMailClient(): mailer.Mailer
   /**
    * NewFilesystem creates and returns a configured filesystem.System instance
-   * for managing regular app files (eg. collection uploads).
+   * for managing regular app files (e.g. collection uploads).
    * 
    * NB! Make sure to call Close() on the returned result
    * after you are done working with it.
@@ -13642,7 +13642,7 @@ namespace core {
   bootstrap(): void
   /**
    * ResetBootstrapState takes care for releasing initialized app resources
-   * (eg. closing db connections).
+   * (e.g. closing db connections).
    */
   resetBootstrapState(): void
   /**
@@ -13675,12 +13675,12 @@ namespace core {
   restart(): void
   /**
    * OnBeforeBootstrap hook is triggered before initializing the main
-   * application resources (eg. before db open and initial settings load).
+   * application resources (e.g. before db open and initial settings load).
    */
   onBeforeBootstrap(): (hook.Hook<BootstrapEvent | undefined>)
   /**
    * OnAfterBootstrap hook is triggered after initializing the main
-   * application resources (eg. after db open and initial settings load).
+   * application resources (e.g. after db open and initial settings load).
    */
   onAfterBootstrap(): (hook.Hook<BootstrapEvent | undefined>)
   /**
@@ -13702,7 +13702,7 @@ namespace core {
   onAfterApiError(): (hook.Hook<ApiErrorEvent | undefined>)
   /**
    * OnTerminate hook is triggered when the app is in the process
-   * of being terminated (eg. on SIGTERM signal).
+   * of being terminated (e.g. on SIGTERM signal).
    */
   onTerminate(): (hook.Hook<TerminateEvent | undefined>)
   /**
@@ -16695,7 +16695,7 @@ namespace schema {
   required: boolean
   /**
    * Presentable indicates whether the field is suitable for
-   * visualization purposes (eg. in the Admin UI relation views).
+   * visualization purposes (e.g. in the Admin UI relation views).
    */
   presentable: boolean
   /**

@@ -147,7 +147,8 @@ func (api *adminApi) requestPasswordReset(c echo.Context) error {
 	// eagerly write 204 response and skip submit errors
 	// as a measure against admins enumeration
 	if !c.Response().Committed {
-		c.NoContent(http.StatusNoContent)
+		// TODO implement error
+		_ = c.NoContent(http.StatusNoContent)
 	}
 
 	return submitErr
@@ -190,7 +191,7 @@ func (api *adminApi) list(c echo.Context) error {
 		"id", "created", "updated", "name", "email",
 	)
 
-	admins := []*models.Admin{}
+	var admins []*models.Admin
 
 	result, err := search.NewProvider(fieldResolver).
 		Query(api.app.Dao().AdminQuery()).

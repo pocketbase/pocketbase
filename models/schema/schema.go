@@ -109,7 +109,7 @@ func (s *Schema) RemoveField(id string) {
 // If field with `newField.Id` already exist, the existing field is
 // replaced with the new one.
 //
-// Otherwise the new field is appended to the other schema fields.
+// Otherwise, the new field is appended to the other schema fields.
 func (s *Schema) AddField(newField *SchemaField) {
 	if newField.Id == "" {
 		// set default id
@@ -136,8 +136,8 @@ func (s Schema) Validate() error {
 	return validation.Validate(&s.fields, validation.By(func(value any) error {
 		fields := s.fields // use directly the schema value to avoid unnecessary interface casting
 
-		ids := []string{}
-		names := []string{}
+		var ids []string
+		var names []string
 		for i, field := range fields {
 			if list.ExistInSlice(field.Id, ids) {
 				return validation.Errors{
@@ -150,7 +150,7 @@ func (s Schema) Validate() error {
 				}
 			}
 
-			// field names are used as db columns and should be case insensitive
+			// field names are used as db columns and should be case-insensitive
 			nameLower := strings.ToLower(field.Name)
 
 			if list.ExistInSlice(nameLower, names) {
@@ -184,7 +184,7 @@ func (s Schema) MarshalJSON() ([]byte, error) {
 //
 // On success, all schema field options are auto initialized.
 func (s *Schema) UnmarshalJSON(data []byte) error {
-	fields := []*SchemaField{}
+	var fields []*SchemaField
 	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
@@ -229,7 +229,7 @@ func (s *Schema) Scan(value any) error {
 	case string:
 		data = []byte(v)
 	default:
-		return fmt.Errorf("Failed to unmarshal Schema value %q.", value)
+		return fmt.Errorf("failed to unmarshal Schema value %q", value)
 	}
 
 	if len(data) == 0 {

@@ -67,13 +67,13 @@ func (form *AdminPasswordResetRequest) Submit(interceptors ...InterceptorFunc[*m
 
 	admin, err := form.dao.FindAdminByEmail(form.Email)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch admin with email %s: %w", form.Email, err)
+		return fmt.Errorf("failed to fetch admin with email %s: %w", form.Email, err)
 	}
 
 	now := time.Now().UTC()
 	lastResetSentAt := admin.LastResetSentAt.Time()
 	if now.Sub(lastResetSentAt).Seconds() < form.resendThreshold {
-		return errors.New("You have already requested a password reset.")
+		return errors.New("you have already requested a password reset")
 	}
 
 	return runInterceptors(admin, func(m *models.Admin) error {

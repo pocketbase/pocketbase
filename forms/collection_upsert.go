@@ -97,6 +97,7 @@ func (form *CollectionUpsert) Validate() error {
 		if err := decodeOptions(form.Options, &options); err != nil {
 			return err
 		}
+		// TODO implement error
 		form.Schema, _ = form.dao.CreateViewSchema(options.Query)
 	}
 
@@ -400,7 +401,7 @@ func (form *CollectionUpsert) checkIndexes(value any) error {
 
 		// note: we don't check the index table because it is always
 		// overwritten by the daos.SyncRecordTableSchema to allow
-		// easier partial modifications (eg. changing only the collection name).
+		// easier partial modifications (e.g. changing only the collection name).
 		// if !strings.EqualFold(parsed.TableName, form.Name) {
 		// 	return validation.Errors{
 		// 		strconv.Itoa(i): validation.NewError(

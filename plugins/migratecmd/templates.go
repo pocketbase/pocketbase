@@ -114,8 +114,8 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 		return p.jsCreateTemplate(new)
 	}
 
-	upParts := []string{}
-	downParts := []string{}
+	var upParts []string
+	var downParts []string
 	varName := "collection"
 
 	if old.Name != new.Name {
@@ -507,8 +507,8 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 		return p.goCreateTemplate(new)
 	}
 
-	upParts := []string{}
-	downParts := []string{}
+	var upParts []string
+	var downParts []string
 	varName := "collection"
 	if old.Name != new.Name {
 		upParts = append(upParts, fmt.Sprintf("%s.Name = %q\n", varName, new.Name))

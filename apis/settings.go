@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"errors"
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -95,7 +96,8 @@ func (api *settingsApi) testS3(c echo.Context) error {
 	// send
 	if err := form.Submit(); err != nil {
 		// form error
-		if fErr, ok := err.(validation.Errors); ok {
+		var fErr validation.Errors
+		if errors.As(err, &fErr) {
 			return NewBadRequestError("Failed to test the S3 filesystem.", fErr)
 		}
 
@@ -117,7 +119,8 @@ func (api *settingsApi) testEmail(c echo.Context) error {
 	// send
 	if err := form.Submit(); err != nil {
 		// form error
-		if fErr, ok := err.(validation.Errors); ok {
+		var fErr validation.Errors
+		if errors.As(err, &fErr) {
 			return NewBadRequestError("Failed to send the test email.", fErr)
 		}
 
@@ -140,7 +143,8 @@ func (api *settingsApi) generateAppleClientSecret(c echo.Context) error {
 	secret, err := form.Submit()
 	if err != nil {
 		// form error
-		if fErr, ok := err.(validation.Errors); ok {
+		var fErr validation.Errors
+		if errors.As(err, &fErr) {
 			return NewBadRequestError("Invalid client secret data.", fErr)
 		}
 

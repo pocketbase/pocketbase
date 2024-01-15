@@ -14,6 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
+	"gocloud.dev/blob"
 )
 
 // bindBackupApi registers the file api endpoints and the corresponding handlers.
@@ -43,7 +44,10 @@ func (api *backupApi) list(c echo.Context) error {
 	if err != nil {
 		return NewBadRequestError("Failed to load backups filesystem.", err)
 	}
-	defer fsys.Close()
+	defer func(fsys *filesystem.System) {
+		// TODO implement error
+		_ = fsys.Close()
+	}(fsys)
 
 	fsys.SetContext(ctx)
 
@@ -130,7 +134,10 @@ func (api *backupApi) download(c echo.Context) error {
 	if err != nil {
 		return NewBadRequestError("Failed to load backups filesystem.", err)
 	}
-	defer fsys.Close()
+	defer func(fsys *filesystem.System) {
+		// TODO implement error
+		_ = fsys.Close()
+	}(fsys)
 
 	fsys.SetContext(ctx)
 
@@ -140,7 +147,10 @@ func (api *backupApi) download(c echo.Context) error {
 	if err != nil {
 		return NewBadRequestError("Failed to retrieve backup item. Raw error: \n"+err.Error(), nil)
 	}
-	defer br.Close()
+	defer func(br *blob.Reader) {
+		// TODO implement error
+		_ = br.Close()
+	}(br)
 
 	return fsys.Serve(
 		c.Response(),
@@ -164,7 +174,10 @@ func (api *backupApi) restore(c echo.Context) error {
 	if err != nil {
 		return NewBadRequestError("Failed to load backups filesystem.", err)
 	}
-	defer fsys.Close()
+	defer func(fsys *filesystem.System) {
+		// TODO implement error
+		_ = fsys.Close()
+	}(fsys)
 
 	fsys.SetContext(existsCtx)
 
@@ -196,7 +209,10 @@ func (api *backupApi) delete(c echo.Context) error {
 	if err != nil {
 		return NewBadRequestError("Failed to load backups filesystem.", err)
 	}
-	defer fsys.Close()
+	defer func(fsys *filesystem.System) {
+		// TODO implement error
+		_ = fsys.Close()
+	}(fsys)
 
 	fsys.SetContext(ctx)
 

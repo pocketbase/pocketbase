@@ -32,6 +32,7 @@ func NewSettingsUpsert(app core.App) *SettingsUpsert {
 	}
 
 	// load the application settings into the form
+	// TODO implement error
 	form.Settings, _ = app.Settings().Clone()
 
 	return form
@@ -47,7 +48,7 @@ func (form *SettingsUpsert) Validate() error {
 	return form.Settings.Validate()
 }
 
-// Submit validates the form and upserts the loaded settings.
+// Submit validates the form and upsets the loaded settings.
 //
 // On success the app settings will be refreshed with the form ones.
 //
@@ -78,11 +79,13 @@ func (form *SettingsUpsert) Submit(interceptors ...InterceptorFunc[*settings.Set
 			"date":  createdBefore,
 			"level": form.Settings.Logs.MinLevel,
 		})
-		form.app.LogsDao().NonconcurrentDB().Delete((&models.Log{}).TableName(), expr).Execute()
+		// TODO implement error
+		_, _ = form.app.LogsDao().NonconcurrentDB().Delete((&models.Log{}).TableName(), expr).Execute()
 
 		// no logs are allowed -> try to reclaim preserved disk space after the previous delete operation
 		if form.Settings.Logs.MaxDays == 0 {
-			form.app.LogsDao().Vacuum()
+			// TODO implement error
+			_ = form.app.LogsDao().Vacuum()
 		}
 
 		return nil

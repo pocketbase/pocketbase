@@ -76,6 +76,7 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		RefreshToken: token.RefreshToken,
 	}
 
+	// TODO implement error
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	return user, nil
@@ -83,7 +84,7 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 // FetchRawUserData implements Provider.FetchRawUserData interface.
 //
-// This differ from baseProvider because Twitch requires the `Client-Id` header.
+// This differs from baseProvider because Twitch requires the `Client-Id` header.
 func (p *Twitch) FetchRawUserData(token *oauth2.Token) ([]byte, error) {
 	req, err := http.NewRequest("GET", p.userApiUrl, nil)
 	if err != nil {

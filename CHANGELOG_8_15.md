@@ -132,7 +132,7 @@
 - Added new fields to the `core.RecordAuthWithOAuth2Event` struct:
     ```
     IsNewRecord     bool,          // boolean field indicating whether the OAuth2 action created a new auth record
-    ProviderName    string,        // the name of the OAuth2 provider (eg. "google")
+    ProviderName    string,        // the name of the OAuth2 provider (e.g. "google")
     ProviderClient  auth.Provider, // the loaded Provider client instance
     ```
 
@@ -147,7 +147,7 @@
 
 - ⚠️ Registered the `RemoveTrailingSlash` middleware only for the `/api/*` routes since it is causing issues with subpath file serving endpoints ([#2072](https://github.com/pocketbase/pocketbase/issues/2072)).
 
-- ⚠️ Changed the request logs `method` value to UPPERCASE, eg. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
+- ⚠️ Changed the request logs `method` value to UPPERCASE, e.g. "get" => "GET" ([#1956](https://github.com/pocketbase/pocketbase/discussions/1956)).
 
 - Other minor UI improvements.
 
@@ -181,7 +181,7 @@
   - column and table aliases
   - CTEs and subquery expressions
   - auto `relation` fields association
-  - `file` fields proxying (up to 5 linked relations, eg. view1->view2->...->base)
+  - `file` fields proxying (up to 5 linked relations, e.g. view1->view2->...->base)
   - `filter`, `sort` and `expand`
   - List and View API rules
 
@@ -587,7 +587,7 @@
 
 - `BaseModel.UnmarkAsNew()` method was renamed to `BaseModel.MarkAsNotNew()`.
   Additionally, to simplify the insert model queries with custom IDs, it is no longer required to call `MarkAsNew()` for manually initialized models with set ID since now this is the default state.
-  When the model is populated with values from the database (eg. after row `Scan`) it will be marked automatically as "not new".
+  When the model is populated with values from the database (e.g. after row `Scan`) it will be marked automatically as "not new".
 
 - Added `Record.OriginalCopy()` method that returns a new `Record` copy populated with the initially loaded record data (useful if you want to compare old and new field values).
 
@@ -624,7 +624,7 @@
   ```
 
 - Added support for `Partial/Range` file requests ([#1125](https://github.com/pocketbase/pocketbase/issues/1125)).
-  This is a minor breaking change if you are using `filesystem.Serve` (eg. as part of a custom `OnFileDownloadRequest` hook):
+  This is a minor breaking change if you are using `filesystem.Serve` (e.g. as part of a custom `OnFileDownloadRequest` hook):
   ```go
   // old
   filesystem.Serve(res, e.ServedPath, e.ServedName)
@@ -729,7 +729,7 @@
 
 The biggest change is the merge of the `User` models and the `profiles` collection per [#376](https://github.com/pocketbase/pocketbase/issues/376).
 There is no longer `user` type field and the users are just an "auth" collection (we now support **collection types**, currently only "base" and "auth").
-This should simplify the users management and at the same time allow us to have unlimited multiple "auth" collections each with their own custom fields and authentication options (eg. staff, client, etc.).
+This should simplify the users management and at the same time allow us to have unlimited multiple "auth" collections each with their own custom fields and authentication options (e.g. staff, client, etc.).
 
 In addition to the `Users` and `profiles` merge, this release comes with several other improvements:
 
@@ -1381,4 +1381,4 @@ Please check the individual SDK package changelog and apply the necessary change
     schema.UserOptions{}
     ```
 
-- The second argument of `apis.StaticDirectoryHandler(fileSystem, enableIndexFallback)` now is used to enable/disable index.html forwarding on missing file (eg. in case of SPA).
+- The second argument of `apis.StaticDirectoryHandler(fileSystem, enableIndexFallback)` now is used to enable/disable index.html forwarding on missing file (e.g. in case of SPA).

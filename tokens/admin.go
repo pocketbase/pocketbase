@@ -11,7 +11,7 @@ import (
 func NewAdminAuthToken(app core.App, admin *models.Admin) (string, error) {
 	return security.NewJWT(
 		jwt.MapClaims{"id": admin.Id, "type": TypeAdmin},
-		(admin.TokenKey + app.Settings().AdminAuthToken.Secret),
+		admin.TokenKey+app.Settings().AdminAuthToken.Secret,
 		app.Settings().AdminAuthToken.Duration,
 	)
 }
@@ -20,7 +20,7 @@ func NewAdminAuthToken(app core.App, admin *models.Admin) (string, error) {
 func NewAdminResetPasswordToken(app core.App, admin *models.Admin) (string, error) {
 	return security.NewJWT(
 		jwt.MapClaims{"id": admin.Id, "type": TypeAdmin, "email": admin.Email},
-		(admin.TokenKey + app.Settings().AdminPasswordResetToken.Secret),
+		admin.TokenKey+app.Settings().AdminPasswordResetToken.Secret,
 		app.Settings().AdminPasswordResetToken.Duration,
 	)
 }
@@ -29,7 +29,7 @@ func NewAdminResetPasswordToken(app core.App, admin *models.Admin) (string, erro
 func NewAdminFileToken(app core.App, admin *models.Admin) (string, error) {
 	return security.NewJWT(
 		jwt.MapClaims{"id": admin.Id, "type": TypeAdmin},
-		(admin.TokenKey + app.Settings().AdminFileToken.Secret),
+		admin.TokenKey+app.Settings().AdminFileToken.Secret,
 		app.Settings().AdminFileToken.Duration,
 	)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-var StopPropagation = errors.New("Event hook propagation stopped")
+var StopPropagation = errors.New("event hook propagation stopped")
 
 // Handler defines a hook handler function.
 type Handler[T any] func(e T) error
@@ -82,7 +82,7 @@ func (h *Hook[T]) RemoveAll() {
 // with the specified `data` as an argument.
 //
 // Optionally, this method allows also to register additional one off
-// handlers that will be temporary appended to the handlers queue.
+// handlers that will be temporarily appended to the handlers queue.
 //
 // The execution stops when:
 // - hook.StopPropagation is returned in one of the handlers
@@ -93,7 +93,7 @@ func (h *Hook[T]) Trigger(data T, oneOffHandlers ...Handler[T]) error {
 	handlers := make([]*handlerPair[T], 0, len(h.handlers)+len(oneOffHandlers))
 	handlers = append(handlers, h.handlers...)
 
-	// append the one off handlers
+	// append the one-off handlers
 	for i, oneOff := range oneOffHandlers {
 		handlers = append(handlers, &handlerPair[T]{
 			id:      fmt.Sprintf("@%d", i),

@@ -362,8 +362,8 @@ func (dao *Dao) FindFirstRecordByFilter(
 // For correctness, if the collection is "auth" and the key is "username",
 // the unique check will be case insensitive.
 //
-// NB! Array values (eg. from multiple select fields) are matched
-// as a serialized json strings (eg. `["a","b"]`), so the value uniqueness
+// NB! Array values (e.g. from multiple select fields) are matched
+// as a serialized json strings (e.g. `["a","b"]`), so the value uniqueness
 // depends on the elements order. Or in other words the following values
 // are considered different: `[]string{"a","b"}` and `[]string{"b","a"}`
 func (dao *Dao) IsRecordValueUnique(
@@ -499,7 +499,7 @@ func (dao *Dao) FindAuthRecordByUsername(collectionNameOrId string, username str
 
 // SuggestUniqueAuthRecordUsername checks if the provided username is unique
 // and return a new "unique" username with appended random numeric part
-// (eg. "existingName" -> "existingName583").
+// (e.g. "existingName" -> "existingName583").
 //
 // The same username will be returned if the provided string is already unique.
 func (dao *Dao) SuggestUniqueAuthRecordUsername(
@@ -531,7 +531,7 @@ func (dao *Dao) SuggestUniqueAuthRecordUsername(
 // Rule and db checks are ignored in case requestInfo.Admin is set.
 //
 // The returned error indicate that something unexpected happened during
-// the check (eg. invalid rule or db error).
+// the check (e.g. invalid rule or db error).
 //
 // The method always return false on invalid access rule or db error.
 //

@@ -43,9 +43,11 @@ func BindBody(c echo.Context, i any) error {
 func CopyJsonBody(r *http.Request, i any) error {
 	body := r.Body
 
-	// this usually shouldn't be needed because the Server calls close for us
+	// this usually shouldn't be needed because the Server calls close for us,
 	// but we are changing the request body with a new reader
-	defer body.Close()
+	defer func(body io.ReadCloser) {
+		_ = body.Close()
+	}(body)
 
 	limitReader := io.LimitReader(body, DefaultMaxMemory)
 

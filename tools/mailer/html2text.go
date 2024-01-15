@@ -50,11 +50,12 @@ func html2Text(htmlDocument string) (string, error) {
 			activeBuilder = &builder
 		}
 
+		// TODO implement default case
 		switch n.Type {
 		case html.TextNode:
 			txt := whitespaceRegex.ReplaceAllString(n.Data, " ")
 
-			// the prev node has new line so it is safe to trim the indentation
+			// the prev node has new line, so it is safe to trim the indentation
 			if !canAddNewLine {
 				txt = strings.TrimLeft(txt, " ")
 			}

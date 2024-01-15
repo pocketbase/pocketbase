@@ -36,21 +36,21 @@ type ResolverResult struct {
 // FieldResolver defines an interface for managing search fields.
 type FieldResolver interface {
 	// UpdateQuery allows to updated the provided db query based on the
-	// resolved search fields (eg. adding joins aliases, etc.).
+	// resolved search fields (e.g. adding joins aliases, etc.).
 	//
 	// Called internally by `search.Provider` before executing the search request.
 	UpdateQuery(query *dbx.SelectQuery) error
 
 	// Resolve parses the provided field and returns a properly
-	// formatted db identifier (eg. NULL, quoted column, placeholder parameter, etc.).
+	// formatted db identifier (e.g. NULL, quoted column, placeholder parameter, etc.).
 	Resolve(field string) (*ResolverResult, error)
 }
 
 // NewSimpleFieldResolver creates a new `SimpleFieldResolver` with the
 // provided `allowedFields`.
 //
-// Each `allowedFields` could be a plain string (eg. "name")
-// or a regexp pattern (eg. `^\w+[\w\.]*$`).
+// Each `allowedFields` could be a plain string (e.g. "name")
+// or a regexp pattern (e.g. `^\w+[\w\.]*$`).
 func NewSimpleFieldResolver(allowedFields ...string) *SimpleFieldResolver {
 	return &SimpleFieldResolver{
 		allowedFields: allowedFields,

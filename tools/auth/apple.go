@@ -194,7 +194,9 @@ func (p *Apple) fetchJWK(kid string) (*jwk, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	rawBody, err := io.ReadAll(res.Body)
 	if err != nil {

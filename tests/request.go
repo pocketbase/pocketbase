@@ -20,11 +20,15 @@ import (
 func MockMultipartData(data map[string]string, fileFields ...string) (*bytes.Buffer, *multipart.Writer, error) {
 	body := new(bytes.Buffer)
 	mp := multipart.NewWriter(body)
-	defer mp.Close()
+	defer func(mp *multipart.Writer) {
+		// TODO implement error
+		_ = mp.Close()
+	}(mp)
 
 	// write data fields
 	for k, v := range data {
-		mp.WriteField(k, v)
+		// TODO implement error
+		_ = mp.WriteField(k, v)
 	}
 
 	// write file fields
@@ -39,9 +43,15 @@ func MockMultipartData(data map[string]string, fileFields ...string) (*bytes.Buf
 			if _, err := tmpFile.Write([]byte("test")); err != nil {
 				return err
 			}
-			tmpFile.Seek(0, 0)
-			defer tmpFile.Close()
-			defer os.Remove(tmpFile.Name())
+			// TODO implement error
+			_, _ = tmpFile.Seek(0, 0)
+			defer func(tmpFile *os.File) {
+				// TODO implement error
+				_ = tmpFile.Close()
+			}(tmpFile)
+			defer func(name string) {
+				_ = os.Remove(name)
+			}(tmpFile.Name())
 
 			// stub uploaded file
 			w, err := mp.CreateFormFile(fileField, tmpFile.Name())

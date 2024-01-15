@@ -58,7 +58,7 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		jsName := fm.MethodName(appType, method)
 
 		// register the hook to the loader
-		loader.Set(jsName, func(callback string, tags ...string) {
+		_ = loader.Set(jsName, func(callback string, tags ...string) {
 			pr := goja.MustCompile("", "{("+callback+").apply(undefined, __args)}", true)
 
 			tagsAsValues := make([]reflect.Value, len(tags))
@@ -78,9 +78,9 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 				}
 
 				err := executors.run(func(executor *goja.Runtime) error {
-					executor.Set("__args", handlerArgs)
+					_ = executor.Set("__args", handlerArgs)
 					res, err := executor.RunProgram(pr)
-					executor.Set("__args", goja.Undefined())
+					_ = executor.Set("__args", goja.Undefined())
 
 					// check for returned error or false
 					if res != nil {
@@ -111,7 +111,7 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 
 	var wasServeTriggered bool
 
-	loader.Set("cronAdd", func(jobId, cronExpr, handler string) {
+	_ = loader.Set("cronAdd", func(jobId, cronExpr, handler string) {
 		pr := goja.MustCompile("", "{("+handler+").apply(undefined)}", true)
 
 		err := scheduler.Add(jobId, cronExpr, func() {
@@ -138,7 +138,7 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		}
 	})
 
-	loader.Set("cronRemove", func(jobId string) {
+	_ = loader.Set("cronRemove", func(jobId string) {
 		scheduler.Remove(jobId)
 
 		// stop the ticker if there are no other jobs
@@ -160,7 +160,7 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 }
 
 func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
-	loader.Set("routerAdd", func(method string, path string, handler goja.Value, middlewares ...goja.Value) {
+	_ = loader.Set("routerAdd", func(method string, path string, handler goja.Value, middlewares ...goja.Value) {
 		wrappedMiddlewares, err := wrapMiddlewares(executors, middlewares...)
 		if err != nil {
 			panic("[routerAdd] failed to wrap middlewares: " + err.Error())
@@ -178,7 +178,7 @@ func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		})
 	})
 
-	loader.Set("routerUse", func(middlewares ...goja.Value) {
+	_ = loader.Set("routerUse", func(middlewares ...goja.Value) {
 		wrappedMiddlewares, err := wrapMiddlewares(executors, middlewares...)
 		if err != nil {
 			panic("[routerUse] failed to wrap middlewares: " + err.Error())
@@ -190,7 +190,7 @@ func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		})
 	})
 
-	loader.Set("routerPre", func(middlewares ...goja.Value) {
+	_ = loader.Set("routerPre", func(middlewares ...goja.Value) {
 		wrappedMiddlewares, err := wrapMiddlewares(executors, middlewares...)
 		if err != nil {
 			panic("[routerPre] failed to wrap middlewares: " + err.Error())
@@ -217,9 +217,9 @@ func wrapHandler(executors *vmsPool, handler goja.Value) (echo.HandlerFunc, erro
 
 		wrappedHandler := func(c echo.Context) error {
 			return executors.run(func(executor *goja.Runtime) error {
-				executor.Set("__args", []any{c})
+				_ = executor.Set("__args", []any{c})
 				res, err := executor.RunProgram(pr)
-				executor.Set("__args", goja.Undefined())
+				_ = executor.Set("__args", goja.Undefined())
 
 				// check for returned error
 				if res != nil {
@@ -256,11 +256,11 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.M
 			wrappedMiddlewares[i] = func(next echo.HandlerFunc) echo.HandlerFunc {
 				return func(c echo.Context) error {
 					return executors.run(func(executor *goja.Runtime) error {
-						executor.Set("__args", []any{next})
-						executor.Set("__args2", []any{c})
+						_ = executor.Set("__args", []any{next})
+						_ = executor.Set("__args2", []any{c})
 						res, err := executor.RunProgram(pr)
-						executor.Set("__args", goja.Undefined())
-						executor.Set("__args2", goja.Undefined())
+						_ = executor.Set("__args", goja.Undefined())
+						_ = executor.Set("__args2", goja.Undefined())
 
 						// check for returned error
 						if res != nil {
@@ -284,7 +284,7 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.M
 func baseBinds(vm *goja.Runtime) {
 	vm.SetFieldNameMapper(FieldMapper{})
 
-	vm.Set("readerToString", func(r io.Reader, maxBytes int) (string, error) {
+	_ = vm.Set("readerToString", func(r io.Reader, maxBytes int) (string, error) {
 		if maxBytes == 0 {
 			maxBytes = rest.DefaultMaxMemory
 		}
@@ -299,11 +299,11 @@ func baseBinds(vm *goja.Runtime) {
 		return string(bodyBytes), nil
 	})
 
-	vm.Set("sleep", func(milliseconds int64) {
+	_ = vm.Set("sleep", func(milliseconds int64) {
 		time.Sleep(time.Duration(milliseconds) * time.Millisecond)
 	})
 
-	vm.Set("arrayOf", func(model any) any {
+	_ = vm.Set("arrayOf", func(model any) any {
 		mt := reflect.TypeOf(model)
 		st := reflect.SliceOf(mt)
 		elem := reflect.New(st).Elem()
@@ -311,7 +311,7 @@ func baseBinds(vm *goja.Runtime) {
 		return elem.Addr().Interface()
 	})
 
-	vm.Set("DynamicModel", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("DynamicModel", func(call goja.ConstructorCall) *goja.Object {
 		shape, ok := call.Argument(0).Export().(map[string]any)
 		if !ok || len(shape) == 0 {
 			panic("[DynamicModel] missing shape data")
@@ -319,12 +319,12 @@ func baseBinds(vm *goja.Runtime) {
 
 		instance := newDynamicModel(shape)
 		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
+		_ = instanceValue.SetPrototype(call.This.Prototype())
 
 		return instanceValue
 	})
 
-	vm.Set("Record", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("Record", func(call goja.ConstructorCall) *goja.Object {
 		var instance *models.Record
 
 		collection, ok := call.Argument(0).Export().(*models.Collection)
@@ -339,47 +339,47 @@ func baseBinds(vm *goja.Runtime) {
 		}
 
 		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
+		_ = instanceValue.SetPrototype(call.This.Prototype())
 
 		return instanceValue
 	})
 
-	vm.Set("Collection", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("Collection", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Collection{}
 		return structConstructorUnmarshal(vm, call, instance)
 	})
 
-	vm.Set("Admin", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("Admin", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.Admin{}
 		return structConstructorUnmarshal(vm, call, instance)
 	})
 
-	vm.Set("Schema", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("Schema", func(call goja.ConstructorCall) *goja.Object {
 		instance := &schema.Schema{}
 		return structConstructorUnmarshal(vm, call, instance)
 	})
 
-	vm.Set("SchemaField", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("SchemaField", func(call goja.ConstructorCall) *goja.Object {
 		instance := &schema.SchemaField{}
 		return structConstructorUnmarshal(vm, call, instance)
 	})
 
-	vm.Set("MailerMessage", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("MailerMessage", func(call goja.ConstructorCall) *goja.Object {
 		instance := &mailer.Message{}
 		return structConstructor(vm, call, instance)
 	})
 
-	vm.Set("Command", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("Command", func(call goja.ConstructorCall) *goja.Object {
 		instance := &cobra.Command{}
 		return structConstructor(vm, call, instance)
 	})
 
-	vm.Set("RequestInfo", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("RequestInfo", func(call goja.ConstructorCall) *goja.Object {
 		instance := &models.RequestInfo{}
 		return structConstructor(vm, call, instance)
 	})
 
-	vm.Set("DateTime", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("DateTime", func(call goja.ConstructorCall) *goja.Object {
 		instance := types.NowDateTime()
 
 		val, _ := call.Argument(0).Export().(string)
@@ -388,23 +388,23 @@ func baseBinds(vm *goja.Runtime) {
 		}
 
 		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
+		_ = instanceValue.SetPrototype(call.This.Prototype())
 
 		return structConstructor(vm, call, instance)
 	})
 
-	vm.Set("ValidationError", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("ValidationError", func(call goja.ConstructorCall) *goja.Object {
 		code, _ := call.Argument(0).Export().(string)
 		message, _ := call.Argument(1).Export().(string)
 
 		instance := validation.NewError(code, message)
 		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
+		_ = instanceValue.SetPrototype(call.This.Prototype())
 
 		return instanceValue
 	})
 
-	vm.Set("Dao", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("Dao", func(call goja.ConstructorCall) *goja.Object {
 		concurrentDB, _ := call.Argument(0).Export().(dbx.Builder)
 		if concurrentDB == nil {
 			panic("[Dao] missing required Dao(concurrentDB, [nonconcurrentDB]) argument")
@@ -417,17 +417,17 @@ func baseBinds(vm *goja.Runtime) {
 
 		instance := daos.NewMultiDB(concurrentDB, nonConcurrentDB)
 		instanceValue := vm.ToValue(instance).(*goja.Object)
-		instanceValue.SetPrototype(call.This.Prototype())
+		_ = instanceValue.SetPrototype(call.This.Prototype())
 
 		return instanceValue
 	})
 
-	vm.Set("Cookie", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("Cookie", func(call goja.ConstructorCall) *goja.Object {
 		instance := &http.Cookie{}
 		return structConstructor(vm, call, instance)
 	})
 
-	vm.Set("SubscriptionMessage", func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set("SubscriptionMessage", func(call goja.ConstructorCall) *goja.Object {
 		instance := &subscriptions.Message{}
 		return structConstructor(vm, call, instance)
 	})
@@ -435,87 +435,87 @@ func baseBinds(vm *goja.Runtime) {
 
 func dbxBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$dbx", obj)
+	_ = vm.Set("$dbx", obj)
 
-	obj.Set("exp", dbx.NewExp)
-	obj.Set("hashExp", func(data map[string]any) dbx.HashExp {
-		return dbx.HashExp(data)
+	_ = obj.Set("exp", dbx.NewExp)
+	_ = obj.Set("hashExp", func(data map[string]any) dbx.HashExp {
+		return data
 	})
-	obj.Set("not", dbx.Not)
-	obj.Set("and", dbx.And)
-	obj.Set("or", dbx.Or)
-	obj.Set("in", dbx.In)
-	obj.Set("notIn", dbx.NotIn)
-	obj.Set("like", dbx.Like)
-	obj.Set("orLike", dbx.OrLike)
-	obj.Set("notLike", dbx.NotLike)
-	obj.Set("orNotLike", dbx.OrNotLike)
-	obj.Set("exists", dbx.Exists)
-	obj.Set("notExists", dbx.NotExists)
-	obj.Set("between", dbx.Between)
-	obj.Set("notBetween", dbx.NotBetween)
+	_ = obj.Set("not", dbx.Not)
+	_ = obj.Set("and", dbx.And)
+	_ = obj.Set("or", dbx.Or)
+	_ = obj.Set("in", dbx.In)
+	_ = obj.Set("notIn", dbx.NotIn)
+	_ = obj.Set("like", dbx.Like)
+	_ = obj.Set("orLike", dbx.OrLike)
+	_ = obj.Set("notLike", dbx.NotLike)
+	_ = obj.Set("orNotLike", dbx.OrNotLike)
+	_ = obj.Set("exists", dbx.Exists)
+	_ = obj.Set("notExists", dbx.NotExists)
+	_ = obj.Set("between", dbx.Between)
+	_ = obj.Set("notBetween", dbx.NotBetween)
 }
 
 func mailsBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$mails", obj)
+	_ = vm.Set("$mails", obj)
 
 	// admin
-	obj.Set("sendAdminPasswordReset", mails.SendAdminPasswordReset)
+	_ = obj.Set("sendAdminPasswordReset", mails.SendAdminPasswordReset)
 
 	// record
-	obj.Set("sendRecordPasswordReset", mails.SendRecordPasswordReset)
-	obj.Set("sendRecordVerification", mails.SendRecordVerification)
-	obj.Set("sendRecordChangeEmail", mails.SendRecordChangeEmail)
+	_ = obj.Set("sendRecordPasswordReset", mails.SendRecordPasswordReset)
+	_ = obj.Set("sendRecordVerification", mails.SendRecordVerification)
+	_ = obj.Set("sendRecordChangeEmail", mails.SendRecordChangeEmail)
 }
 
 func tokensBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$tokens", obj)
+	_ = vm.Set("$tokens", obj)
 
 	// admin
-	obj.Set("adminAuthToken", tokens.NewAdminAuthToken)
-	obj.Set("adminResetPasswordToken", tokens.NewAdminResetPasswordToken)
-	obj.Set("adminFileToken", tokens.NewAdminFileToken)
+	_ = obj.Set("adminAuthToken", tokens.NewAdminAuthToken)
+	_ = obj.Set("adminResetPasswordToken", tokens.NewAdminResetPasswordToken)
+	_ = obj.Set("adminFileToken", tokens.NewAdminFileToken)
 
 	// record
-	obj.Set("recordAuthToken", tokens.NewRecordAuthToken)
-	obj.Set("recordVerifyToken", tokens.NewRecordVerifyToken)
-	obj.Set("recordResetPasswordToken", tokens.NewRecordResetPasswordToken)
-	obj.Set("recordChangeEmailToken", tokens.NewRecordChangeEmailToken)
-	obj.Set("recordFileToken", tokens.NewRecordFileToken)
+	_ = obj.Set("recordAuthToken", tokens.NewRecordAuthToken)
+	_ = obj.Set("recordVerifyToken", tokens.NewRecordVerifyToken)
+	_ = obj.Set("recordResetPasswordToken", tokens.NewRecordResetPasswordToken)
+	_ = obj.Set("recordChangeEmailToken", tokens.NewRecordChangeEmailToken)
+	_ = obj.Set("recordFileToken", tokens.NewRecordFileToken)
 }
 
 func securityBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$security", obj)
+	_ = vm.Set("$security", obj)
 
 	// crypto
-	obj.Set("md5", security.MD5)
-	obj.Set("sha256", security.SHA256)
-	obj.Set("sha512", security.SHA512)
-	obj.Set("hs256", security.HS256)
-	obj.Set("hs512", security.HS512)
-	obj.Set("equal", security.Equal)
+	_ = obj.Set("md5", security.MD5)
+	_ = obj.Set("sha256", security.SHA256)
+	_ = obj.Set("sha512", security.SHA512)
+	_ = obj.Set("hs256", security.HS256)
+	_ = obj.Set("hs512", security.HS512)
+	_ = obj.Set("equal", security.Equal)
 
 	// random
-	obj.Set("randomString", security.RandomString)
-	obj.Set("randomStringWithAlphabet", security.RandomStringWithAlphabet)
-	obj.Set("pseudorandomString", security.PseudorandomString)
-	obj.Set("pseudorandomStringWithAlphabet", security.PseudorandomStringWithAlphabet)
+	_ = obj.Set("randomString", security.RandomString)
+	_ = obj.Set("randomStringWithAlphabet", security.RandomStringWithAlphabet)
+	_ = obj.Set("pseudorandomString", security.PseudorandomString)
+	_ = obj.Set("pseudorandomStringWithAlphabet", security.PseudorandomStringWithAlphabet)
 
 	// jwt
-	obj.Set("parseUnverifiedJWT", func(token string) (map[string]any, error) {
+	_ = obj.Set("parseUnverifiedJWT", func(token string) (map[string]any, error) {
 		return security.ParseUnverifiedJWT(token)
 	})
-	obj.Set("parseJWT", func(token string, verificationKey string) (map[string]any, error) {
+	_ = obj.Set("parseJWT", func(token string, verificationKey string) (map[string]any, error) {
 		return security.ParseJWT(token, verificationKey)
 	})
-	obj.Set("createJWT", security.NewJWT)
+	_ = obj.Set("createJWT", security.NewJWT)
 
 	// encryption
-	obj.Set("encrypt", security.Encrypt)
-	obj.Set("decrypt", func(cipherText, key string) (string, error) {
+	_ = obj.Set("encrypt", security.Encrypt)
+	_ = obj.Set("decrypt", func(cipherText, key string) (string, error) {
 		result, err := security.Decrypt(cipherText, key)
 
 		if err != nil {
@@ -528,55 +528,55 @@ func securityBinds(vm *goja.Runtime) {
 
 func filesystemBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$filesystem", obj)
+	_ = vm.Set("$filesystem", obj)
 
-	obj.Set("fileFromPath", filesystem.NewFileFromPath)
-	obj.Set("fileFromBytes", filesystem.NewFileFromBytes)
-	obj.Set("fileFromMultipart", filesystem.NewFileFromMultipart)
+	_ = obj.Set("fileFromPath", filesystem.NewFileFromPath)
+	_ = obj.Set("fileFromBytes", filesystem.NewFileFromBytes)
+	_ = obj.Set("fileFromMultipart", filesystem.NewFileFromMultipart)
 }
 
 func filepathBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$filepath", obj)
+	_ = vm.Set("$filepath", obj)
 
-	obj.Set("base", filepath.Base)
-	obj.Set("clean", filepath.Clean)
-	obj.Set("dir", filepath.Dir)
-	obj.Set("ext", filepath.Ext)
-	obj.Set("fromSlash", filepath.FromSlash)
-	obj.Set("glob", filepath.Glob)
-	obj.Set("isAbs", filepath.IsAbs)
-	obj.Set("join", filepath.Join)
-	obj.Set("match", filepath.Match)
-	obj.Set("rel", filepath.Rel)
-	obj.Set("split", filepath.Split)
-	obj.Set("splitList", filepath.SplitList)
-	obj.Set("toSlash", filepath.ToSlash)
-	obj.Set("walk", filepath.Walk)
-	obj.Set("walkDir", filepath.WalkDir)
+	_ = obj.Set("base", filepath.Base)
+	_ = obj.Set("clean", filepath.Clean)
+	_ = obj.Set("dir", filepath.Dir)
+	_ = obj.Set("ext", filepath.Ext)
+	_ = obj.Set("fromSlash", filepath.FromSlash)
+	_ = obj.Set("glob", filepath.Glob)
+	_ = obj.Set("isAbs", filepath.IsAbs)
+	_ = obj.Set("join", filepath.Join)
+	_ = obj.Set("match", filepath.Match)
+	_ = obj.Set("rel", filepath.Rel)
+	_ = obj.Set("split", filepath.Split)
+	_ = obj.Set("splitList", filepath.SplitList)
+	_ = obj.Set("toSlash", filepath.ToSlash)
+	_ = obj.Set("walk", filepath.Walk)
+	_ = obj.Set("walkDir", filepath.WalkDir)
 }
 
 func osBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$os", obj)
+	_ = vm.Set("$os", obj)
 
-	obj.Set("args", os.Args)
-	obj.Set("exec", exec.Command) // @deprecated
-	obj.Set("cmd", exec.Command)
-	obj.Set("exit", os.Exit)
-	obj.Set("getenv", os.Getenv)
-	obj.Set("dirFS", os.DirFS)
-	obj.Set("readFile", os.ReadFile)
-	obj.Set("writeFile", os.WriteFile)
-	obj.Set("readDir", os.ReadDir)
-	obj.Set("tempDir", os.TempDir)
-	obj.Set("truncate", os.Truncate)
-	obj.Set("getwd", os.Getwd)
-	obj.Set("mkdir", os.Mkdir)
-	obj.Set("mkdirAll", os.MkdirAll)
-	obj.Set("rename", os.Rename)
-	obj.Set("remove", os.Remove)
-	obj.Set("removeAll", os.RemoveAll)
+	_ = obj.Set("args", os.Args)
+	_ = obj.Set("exec", exec.Command) // @deprecated
+	_ = obj.Set("cmd", exec.Command)
+	_ = obj.Set("exit", os.Exit)
+	_ = obj.Set("getenv", os.Getenv)
+	_ = obj.Set("dirFS", os.DirFS)
+	_ = obj.Set("readFile", os.ReadFile)
+	_ = obj.Set("writeFile", os.WriteFile)
+	_ = obj.Set("readDir", os.ReadDir)
+	_ = obj.Set("tempDir", os.TempDir)
+	_ = obj.Set("truncate", os.Truncate)
+	_ = obj.Set("getwd", os.Getwd)
+	_ = obj.Set("mkdir", os.Mkdir)
+	_ = obj.Set("mkdirAll", os.MkdirAll)
+	_ = obj.Set("rename", os.Rename)
+	_ = obj.Set("remove", os.Remove)
+	_ = obj.Set("removeAll", os.RemoveAll)
 }
 
 func formsBinds(vm *goja.Runtime) {
@@ -604,26 +604,26 @@ func formsBinds(vm *goja.Runtime) {
 
 func apisBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$apis", obj)
+	_ = vm.Set("$apis", obj)
 
-	obj.Set("staticDirectoryHandler", func(dir string, indexFallback bool) echo.HandlerFunc {
+	_ = obj.Set("staticDirectoryHandler", func(dir string, indexFallback bool) echo.HandlerFunc {
 		return apis.StaticDirectoryHandler(os.DirFS(dir), indexFallback)
 	})
 
 	// middlewares
-	obj.Set("requireGuestOnly", apis.RequireGuestOnly)
-	obj.Set("requireRecordAuth", apis.RequireRecordAuth)
-	obj.Set("requireAdminAuth", apis.RequireAdminAuth)
-	obj.Set("requireAdminAuthOnlyIfAny", apis.RequireAdminAuthOnlyIfAny)
-	obj.Set("requireAdminOrRecordAuth", apis.RequireAdminOrRecordAuth)
-	obj.Set("requireAdminOrOwnerAuth", apis.RequireAdminOrOwnerAuth)
-	obj.Set("activityLogger", apis.ActivityLogger)
+	_ = obj.Set("requireGuestOnly", apis.RequireGuestOnly)
+	_ = obj.Set("requireRecordAuth", apis.RequireRecordAuth)
+	_ = obj.Set("requireAdminAuth", apis.RequireAdminAuth)
+	_ = obj.Set("requireAdminAuthOnlyIfAny", apis.RequireAdminAuthOnlyIfAny)
+	_ = obj.Set("requireAdminOrRecordAuth", apis.RequireAdminOrRecordAuth)
+	_ = obj.Set("requireAdminOrOwnerAuth", apis.RequireAdminOrOwnerAuth)
+	_ = obj.Set("activityLogger", apis.ActivityLogger)
 
 	// record helpers
-	obj.Set("requestInfo", apis.RequestInfo)
-	obj.Set("recordAuthResponse", apis.RecordAuthResponse)
-	obj.Set("enrichRecord", apis.EnrichRecord)
-	obj.Set("enrichRecords", apis.EnrichRecords)
+	_ = obj.Set("requestInfo", apis.RequestInfo)
+	_ = obj.Set("recordAuthResponse", apis.RecordAuthResponse)
+	_ = obj.Set("enrichRecord", apis.EnrichRecord)
+	_ = obj.Set("enrichRecords", apis.EnrichRecords)
 
 	// api errors
 	registerFactoryAsConstructor(vm, "ApiError", apis.NewApiError)
@@ -635,7 +635,7 @@ func apisBinds(vm *goja.Runtime) {
 
 func httpClientBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
-	vm.Set("$http", obj)
+	_ = vm.Set("$http", obj)
 
 	type sendResult struct {
 		StatusCode int                     `json:"statusCode"`
@@ -654,7 +654,7 @@ func httpClientBinds(vm *goja.Runtime) {
 		Data    map[string]any // deprecated, consider using Body instead
 	}
 
-	obj.Set("send", func(params map[string]any) (*sendResult, error) {
+	_ = obj.Set("send", func(params map[string]any) (*sendResult, error) {
 		rawParams, err := json.Marshal(params)
 		if err != nil {
 			return nil, err
@@ -707,7 +707,9 @@ func httpClientBinds(vm *goja.Runtime) {
 		if err != nil {
 			return nil, err
 		}
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
 
 		bodyRaw, _ := io.ReadAll(res.Body)
 
@@ -752,7 +754,7 @@ func registerFactoryAsConstructor(vm *goja.Runtime, constructorName string, fact
 	rt := reflect.TypeOf(factoryFunc)
 	totalArgs := rt.NumIn()
 
-	vm.Set(constructorName, func(call goja.ConstructorCall) *goja.Object {
+	_ = vm.Set(constructorName, func(call goja.ConstructorCall) *goja.Object {
 		args := make([]reflect.Value, totalArgs)
 
 		for i := 0; i < totalArgs; i++ {
@@ -762,7 +764,7 @@ func registerFactoryAsConstructor(vm *goja.Runtime, constructorName string, fact
 			if v == nil {
 				args[i] = reflect.New(rt.In(i)).Elem()
 			} else if number, ok := v.(int64); ok {
-				// goja uses int64 for "int"-like numbers but we rarely do that and use int most of the times
+				// goja uses int64 for "int"-like numbers, but we rarely do that and use int most of the time
 				// (at later stage we can use reflection on the arguments to validate the types in case this is not sufficient anymore)
 				args[i] = reflect.ValueOf(int(number))
 			} else {
@@ -777,7 +779,7 @@ func registerFactoryAsConstructor(vm *goja.Runtime, constructorName string, fact
 		}
 
 		value := vm.ToValue(result[0].Interface()).(*goja.Object)
-		value.SetPrototype(call.This.Prototype())
+		_ = value.SetPrototype(call.This.Prototype())
 
 		return value
 	})
@@ -791,10 +793,10 @@ func structConstructor(vm *goja.Runtime, call goja.ConstructorCall, instance any
 
 	instanceValue := vm.ToValue(instance).(*goja.Object)
 	for k, v := range data {
-		instanceValue.Set(k, v)
+		_ = instanceValue.Set(k, v)
 	}
 
-	instanceValue.SetPrototype(call.This.Prototype())
+	_ = instanceValue.SetPrototype(call.This.Prototype())
 
 	return instanceValue
 }
@@ -805,12 +807,12 @@ func structConstructor(vm *goja.Runtime, call goja.ConstructorCall, instance any
 func structConstructorUnmarshal(vm *goja.Runtime, call goja.ConstructorCall, instance any) *goja.Object {
 	if data := call.Argument(0).Export(); data != nil {
 		if raw, err := json.Marshal(data); err == nil {
-			json.Unmarshal(raw, instance)
+			_ = json.Unmarshal(raw, instance)
 		}
 	}
 
 	instanceValue := vm.ToValue(instance).(*goja.Object)
-	instanceValue.SetPrototype(call.This.Prototype())
+	_ = instanceValue.SetPrototype(call.This.Prototype())
 
 	return instanceValue
 }
@@ -831,17 +833,19 @@ func newDynamicModel(shape map[string]any) any {
 	for k, v := range shape {
 		vt := reflect.TypeOf(v)
 
+		// TODO implement default case
 		switch kind := vt.Kind(); kind {
 		case reflect.Map:
 			raw, _ := json.Marshal(v)
 			newV := types.JsonMap{}
-			newV.Scan(raw)
+			_ = newV.Scan(raw)
 			v = newV
 			vt = reflect.TypeOf(v)
 		case reflect.Slice, reflect.Array:
 			raw, _ := json.Marshal(v)
 			newV := types.JsonArray[any]{}
-			newV.Scan(raw)
+			// TODO implement error
+			_ = newV.Scan(raw)
 			v = newV
 			vt = reflect.TypeOf(newV)
 		}

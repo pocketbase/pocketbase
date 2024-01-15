@@ -26,10 +26,10 @@ func RandomString(length int) string {
 // It panics if for some reason rand.Int returns a non-nil error.
 func RandomStringWithAlphabet(length int, alphabet string) string {
 	b := make([]byte, length)
-	max := big.NewInt(int64(len(alphabet)))
+	mx := big.NewInt(int64(len(alphabet)))
 
 	for i := range b {
-		n, err := cryptoRand.Int(cryptoRand.Reader, max)
+		n, err := cryptoRand.Int(cryptoRand.Reader, mx)
 		if err != nil {
 			panic(err)
 		}
@@ -54,10 +54,10 @@ func PseudorandomString(length int) string {
 // For a cryptographically random (but a little bit slower) use RandomStringWithAlphabet instead.
 func PseudorandomStringWithAlphabet(length int, alphabet string) string {
 	b := make([]byte, length)
-	max := len(alphabet)
+	mx := len(alphabet)
 
 	for i := range b {
-		b[i] = alphabet[mathRand.Intn(max)]
+		b[i] = alphabet[mathRand.Intn(mx)]
 	}
 
 	return string(b)

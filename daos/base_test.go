@@ -337,6 +337,7 @@ func TestDaoSaveCreate(t *testing.T) {
 	}
 
 	// refresh
+	// TODO implement error
 	model, _ = testApp.Dao().FindAdminByEmail("test_new@example.com")
 
 	if model.Avatar != 8 {
@@ -364,6 +365,7 @@ func TestDaoSaveWithInsertId(t *testing.T) {
 	}
 
 	// refresh
+	// TODO implement error
 	model, _ = testApp.Dao().FindAdminById("test")
 
 	if model == nil {
@@ -390,6 +392,7 @@ func TestDaoSaveUpdate(t *testing.T) {
 	}
 
 	// refresh
+	// TODO implement error
 	model, _ = testApp.Dao().FindAdminByEmail("test@example.com")
 
 	if model.Avatar != 8 {
@@ -469,6 +472,7 @@ func TestDaoDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// TODO implement error
 	model, _ = testApp.Dao().FindAdminByEmail("test@example.com")
 	if model != nil {
 		t.Fatalf("Expected model to be deleted, found %v", model)

@@ -26,7 +26,7 @@ type FileReader interface {
 
 // File defines a single file [io.ReadSeekCloser] resource.
 //
-// The file could be from a local path, multipipart/formdata header, etc.
+// The file could be from a local path, multipart/formdata header, etc.
 type File struct {
 	Reader       FileReader
 	Name         string
@@ -99,7 +99,9 @@ func NewFileFromUrl(ctx context.Context, url string) (*File, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	if res.StatusCode < 200 || res.StatusCode > 399 {
 		return nil, fmt.Errorf("failed to download url %s (%d)", url, res.StatusCode)
@@ -167,7 +169,7 @@ func (r *bytesReadSeekCloser) Close() error {
 
 // -------------------------------------------------------------------
 
-var extInvalidCharsRegex = regexp.MustCompile(`[^\w\.\*\-\+\=\#]+`)
+var extInvalidCharsRegex = regexp.MustCompile(`[^\w.*\-+=#]+`)
 
 func normalizeName(fr FileReader, name string) string {
 	// extension
@@ -183,7 +185,7 @@ func normalizeName(fr FileReader, name string) string {
 	// ---
 	cleanName := inflector.Snakecase(strings.TrimSuffix(name, originalExt))
 	if length := len(cleanName); length < 3 {
-		// the name is too short so we concatenate an additional random part
+		// the name is too short, so we concatenate an additional random part
 		cleanName += security.RandomString(10)
 	} else if length > 100 {
 		// keep only the first 100 characters (it is multibyte safe after Snakecase)
@@ -204,7 +206,9 @@ func detectExtension(fr FileReader) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer r.Close()
+	defer func(r io.ReadSeekCloser) {
+		_ = r.Close()
+	}(r)
 
 	mt, _ := mimetype.DetectReader(r)
 	if err != nil {

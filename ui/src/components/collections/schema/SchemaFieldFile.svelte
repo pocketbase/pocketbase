@@ -210,27 +210,27 @@
                                 <ul class="m-0">
                                     <li>
                                         <strong>WxH</strong>
-                                        (eg. 100x50) - crop to WxH viewbox (from center)
+                                        (e.g. 100x50) - crop to WxH viewbox (from center)
                                     </li>
                                     <li>
                                         <strong>WxHt</strong>
-                                        (eg. 100x50t) - crop to WxH viewbox (from top)
+                                        (e.g. 100x50t) - crop to WxH viewbox (from top)
                                     </li>
                                     <li>
                                         <strong>WxHb</strong>
-                                        (eg. 100x50b) - crop to WxH viewbox (from bottom)
+                                        (e.g. 100x50b) - crop to WxH viewbox (from bottom)
                                     </li>
                                     <li>
                                         <strong>WxHf</strong>
-                                        (eg. 100x50f) - fit inside a WxH viewbox (without cropping)
+                                        (e.g. 100x50f) - fit inside a WxH viewbox (without cropping)
                                     </li>
                                     <li>
                                         <strong>0xH</strong>
-                                        (eg. 0x50) - resize to H height preserving the aspect ratio
+                                        (e.g. 0x50) - resize to H height preserving the aspect ratio
                                     </li>
                                     <li>
                                         <strong>Wx0</strong>
-                                        (eg. 100x0) - resize to W width preserving the aspect ratio
+                                        (e.g. 100x0) - resize to W width preserving the aspect ratio
                                     </li>
                                 </ul>
                             </Toggler>

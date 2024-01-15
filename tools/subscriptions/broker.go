@@ -24,13 +24,13 @@ func (b *Broker) Clients() map[string]Client {
 	b.mux.RLock()
 	defer b.mux.RUnlock()
 
-	copy := make(map[string]Client, len(b.clients))
+	cp := make(map[string]Client, len(b.clients))
 
 	for id, c := range b.clients {
-		copy[id] = c
+		cp[id] = c
 	}
 
-	return copy
+	return cp
 }
 
 // ClientById finds a registered client by its id.
@@ -42,7 +42,7 @@ func (b *Broker) ClientById(clientId string) (Client, error) {
 
 	client, ok := b.clients[clientId]
 	if !ok {
-		return nil, fmt.Errorf("No client associated with connection ID %q", clientId)
+		return nil, fmt.Errorf("no client associated with connection ID %q", clientId)
 	}
 
 	return client, nil

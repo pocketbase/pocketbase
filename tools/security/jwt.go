@@ -39,7 +39,7 @@ func ParseJWT(token string, verificationKey string) (jwt.MapClaims, error) {
 		return claims, nil
 	}
 
-	return nil, errors.New("Unable to parse token.")
+	return nil, errors.New("unable to parse token")
 }
 
 // NewJWT generates and returns new HS256 signed JWT.

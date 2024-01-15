@@ -88,7 +88,7 @@ func (t *Tokenizer) Scan() (string, error) {
 	if ch == eof {
 		return "", io.EOF
 	}
-	t.unread()
+	_ = t.unread()
 
 	token, err := t.readToken()
 	if err != nil {
@@ -102,9 +102,9 @@ func (t *Tokenizer) Scan() (string, error) {
 	return token, err
 }
 
-// ScanAll reads the entire Tokenizer's buffer and return all found tokens.
+// ScanAll reads the entire Tokenizers buffer and return all found tokens.
 func (t *Tokenizer) ScanAll() ([]string, error) {
-	tokens := []string{}
+	var tokens []string
 
 	for {
 		token, err := t.Scan()
@@ -178,7 +178,7 @@ func (t *Tokenizer) readWhiteSpaces() {
 		}
 
 		if !t.isWhitespaceRune(ch) {
-			t.unread()
+			_ = t.unread()
 			break
 		}
 	}
@@ -225,7 +225,7 @@ func (t *Tokenizer) isSeperatorRune(ch rune) bool {
 	return false
 }
 
-// isWhitespaceRune checks if a rune is a space character (eg. space, tab, new line).
+// isWhitespaceRune checks if a rune is a space character (e.g. space, tab, new line).
 func (t *Tokenizer) isWhitespaceRune(ch rune) bool {
 	for _, c := range whitespaceChars {
 		if c == ch {

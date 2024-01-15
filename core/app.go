@@ -78,7 +78,7 @@ type App interface {
 	NewMailClient() mailer.Mailer
 
 	// NewFilesystem creates and returns a configured filesystem.System instance
-	// for managing regular app files (eg. collection uploads).
+	// for managing regular app files (e.g. collection uploads).
 	//
 	// NB! Make sure to call Close() on the returned result
 	// after you are done working with it.
@@ -105,7 +105,7 @@ type App interface {
 	Bootstrap() error
 
 	// ResetBootstrapState takes care for releasing initialized app resources
-	// (eg. closing db connections).
+	// (e.g. closing db connections).
 	ResetBootstrapState() error
 
 	// CreateBackup creates a new backup of the current app pb_data directory.
@@ -130,7 +130,7 @@ type App interface {
 
 	// Restart restarts the current running application process.
 	//
-	// Currently it is relying on execve so it is supported only on UNIX based systems.
+	// Currently, it is relying on execve, so it is supported only on UNIX based systems.
 	Restart() error
 
 	// ---------------------------------------------------------------
@@ -138,11 +138,11 @@ type App interface {
 	// ---------------------------------------------------------------
 
 	// OnBeforeBootstrap hook is triggered before initializing the main
-	// application resources (eg. before db open and initial settings load).
+	// application resources (e.g. before db open and initial settings load).
 	OnBeforeBootstrap() *hook.Hook[*BootstrapEvent]
 
 	// OnAfterBootstrap hook is triggered after initializing the main
-	// application resources (eg. after db open and initial settings load).
+	// application resources (e.g. after db open and initial settings load).
 	OnAfterBootstrap() *hook.Hook[*BootstrapEvent]
 
 	// OnBeforeServe hook is triggered before serving the internal router (echo),
@@ -160,7 +160,7 @@ type App interface {
 	OnAfterApiError() *hook.Hook[*ApiErrorEvent]
 
 	// OnTerminate hook is triggered when the app is in the process
-	// of being terminated (eg. on SIGTERM signal).
+	// of being terminated (e.g. on SIGTERM signal).
 	OnTerminate() *hook.Hook[*TerminateEvent]
 
 	// ---------------------------------------------------------------

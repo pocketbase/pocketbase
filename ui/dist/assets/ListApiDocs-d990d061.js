@@ -65,7 +65,7 @@ import{S as Ze,i as tl,s as el,e,b as s,E as sl,f as a,g as u,u as ll,y as Qe,o 
                 `),Qt(it.$$.fragment),Ht=_(`
                 Supports up to 6-levels depth nested relations expansion. `),be=e("br"),Mt=_(`
                 The expanded relations will be appended to each individual record under the
-                `),Zt=e("code"),Zt.textContent="expand",V=_(" property (eg. "),_t=e("code"),_t.textContent='"expand": {"relField1": {...}, ...}',ge=_(`).
+                `),Zt=e("code"),Zt.textContent="expand",V=_(" property (e.g. "),_t=e("code"),_t.textContent='"expand": {"relField1": {...}, ...}',ge=_(`).
                 `),It=e("br"),_e=_(`
                 Only the relations to which the request user has permissions to `),wt=e("strong"),wt.textContent="view",we=_(" will be expanded."),W=s(),Qt(G.$$.fragment),xe=s(),xt=e("tr"),xt.innerHTML=`<td id="query-page">skipTotal</td> <td><span class="label">Boolean</span></td> <td>If it is set the total counts query will be skipped and the response fields
                 <code>totalItems</code> and <code>totalPages</code> will have <code>-1</code> value.

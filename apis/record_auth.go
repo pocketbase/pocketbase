@@ -117,7 +117,7 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 
 		provider, err := auth.NewProviderByName(name)
 		if err != nil {
-			api.app.Logger().Debug("Missing or invalid provier name", slog.String("name", name))
+			api.app.Logger().Debug("Missing or invalid provider name", slog.String("name", name))
 			continue // skip provider
 		}
 
@@ -140,7 +140,7 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 			info.DisplayName = name
 		}
 
-		urlOpts := []oauth2.AuthCodeOption{}
+		var urlOpts []oauth2.AuthCodeOption
 
 		// custom providers url options
 		switch name {
@@ -217,7 +217,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 				}
 
 				if collection.CreateRule == nil {
-					return errors.New("Only admins can create new accounts with OAuth2")
+					return errors.New("only admins can create new accounts with OAuth2")
 				}
 
 				if *collection.CreateRule != "" {
@@ -226,7 +226,8 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 					if err != nil {
 						return err
 					}
-					resolver.UpdateQuery(q)
+					// TODO implement error
+					_ = resolver.UpdateQuery(q)
 					q.AndWhere(expr)
 				}
 
@@ -234,7 +235,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 			}
 
 			if _, err := txDao.FindRecordById(collection.Id, createForm.Id, createRuleFunc); err != nil {
-				return fmt.Errorf("Failed create rule constraint: %w", err)
+				return fmt.Errorf("failed create rule constraint: %w", err)
 			}
 
 			return nil
@@ -365,7 +366,8 @@ func (api *recordAuthApi) requestPasswordReset(c echo.Context) error {
 	// eagerly write 204 response and skip submit errors
 	// as a measure against emails enumeration
 	if !c.Response().Committed {
-		c.NoContent(http.StatusNoContent)
+		// TODO implement error
+		_ = c.NoContent(http.StatusNoContent)
 	}
 
 	return submitErr
@@ -457,7 +459,8 @@ func (api *recordAuthApi) requestVerification(c echo.Context) error {
 	// eagerly write 204 response and skip submit errors
 	// as a measure against users enumeration
 	if !c.Response().Committed {
-		c.NoContent(http.StatusNoContent)
+		// TODO implement error
+		_ = c.NoContent(http.StatusNoContent)
 	}
 
 	return submitErr
@@ -678,7 +681,7 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 
 	encodedData, err := json.Marshal(data)
 	if err != nil {
-		return NewBadRequestError("Failed to marshalize OAuth2 redirect data.", err)
+		return NewBadRequestError("Failed to marshaller OAuth2 redirect data.", err)
 	}
 
 	msg := subscriptions.Message{

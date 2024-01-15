@@ -17,7 +17,7 @@ import (
 
 const collectionsStoreKey = "migratecmd_collections"
 
-// onCollectionChange handles the automigration snapshot generation on
+// onCollectionChange handles the auto migration snapshot generation on
 // collection change event (create/update/delete).
 func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 	return func(e *core.ModelEvent) error {
@@ -33,7 +33,7 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 
 		old := oldCollections[e.Model.GetId()]
 
-		new, err := p.app.Dao().FindCollectionByNameOrId(e.Model.GetId())
+		collection, err := p.app.Dao().FindCollectionByNameOrId(e.Model.GetId())
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return err
 		}
@@ -41,9 +41,9 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 		var template string
 		var templateErr error
 		if p.config.TemplateLang == TemplateLangJS {
-			template, templateErr = p.jsDiffTemplate(new, old)
+			template, templateErr = p.jsDiffTemplate(collection, old)
 		} else {
-			template, templateErr = p.goDiffTemplate(new, old)
+			template, templateErr = p.goDiffTemplate(collection, old)
 		}
 		if templateErr != nil {
 			if errors.Is(templateErr, emptyTemplateErr) {
@@ -54,10 +54,10 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 
 		var action string
 		switch {
-		case new == nil:
+		case collection == nil:
 			action = "deleted_" + old.Name
 		case old == nil:
-			action = "created_" + new.Name
+			action = "created_" + collection.Name
 		default:
 			action = "updated_" + old.Name
 		}
@@ -86,7 +86,7 @@ func (p *plugin) afterCollectionChange() func(*core.ModelEvent) error {
 				return fmt.Errorf("failed to save automigrate file: %w", err)
 			}
 
-			p.updateSingleCachedCollection(new, old)
+			p.updateSingleCachedCollection(collection, old)
 
 			return nil
 		})

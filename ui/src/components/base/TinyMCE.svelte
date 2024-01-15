@@ -2,7 +2,7 @@
     /*
      * ---------------------------------------------------------------
      * The below component is similar to https://github.com/tinymce/tinymce-svelte
-     * but with removed unnecessary dependencies (eg. the TinyMCE cloud loading script)
+     * but with removed unnecessary dependencies (e.g. the TinyMCE cloud loading script)
      * and with extra error catching to handle the async edge-cases
      * when the init event is fired after the Svelte component was destroyed.
      * ---------------------------------------------------------------

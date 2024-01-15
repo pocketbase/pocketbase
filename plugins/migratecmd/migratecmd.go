@@ -84,14 +84,14 @@ func Register(app core.App, rootCmd *cobra.Command, config Config) error {
 	if p.config.Automigrate {
 		// refresh the cache right after app bootstap
 		p.app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
-			p.refreshCachedCollections()
+			_ = p.refreshCachedCollections()
 			return nil
 		})
 
 		// refresh the cache to ensure that it constains the latest changes
 		// when migrations are applied on server start
 		p.app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-			p.refreshCachedCollections()
+			_ = p.refreshCachedCollections()
 			return nil
 		})
 
@@ -158,7 +158,7 @@ func (p *plugin) createCommand() *cobra.Command {
 
 func (p *plugin) migrateCreateHandler(template string, args []string, interactive bool) (string, error) {
 	if len(args) < 1 {
-		return "", fmt.Errorf("Missing migration file name")
+		return "", fmt.Errorf("missing migration file name")
 	}
 
 	name := args[0]
@@ -173,7 +173,7 @@ func (p *plugin) migrateCreateHandler(template string, args []string, interactiv
 		prompt := &survey.Confirm{
 			Message: fmt.Sprintf("Do you really want to create migration %q?", resultFilePath),
 		}
-		survey.AskOne(prompt, &confirm)
+		_ = survey.AskOne(prompt, &confirm)
 		if !confirm {
 			fmt.Println("The command has been cancelled")
 			return "", nil
@@ -214,9 +214,9 @@ func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) (str
 	createArgs := []string{"collections_snapshot"}
 	createArgs = append(createArgs, args...)
 
-	collections := []*models.Collection{}
+	var collections []*models.Collection
 	if err := p.app.Dao().CollectionQuery().OrderBy("created ASC").All(&collections); err != nil {
-		return "", fmt.Errorf("Failed to fetch migrations list: %v", err)
+		return "", fmt.Errorf("failed to fetch migrations list: %v", err)
 	}
 
 	var template string
@@ -227,7 +227,7 @@ func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) (str
 		template, templateErr = p.goSnapshotTemplate(collections)
 	}
 	if templateErr != nil {
-		return "", fmt.Errorf("Failed to resolve template: %v", templateErr)
+		return "", fmt.Errorf("failed to resolve template: %v", templateErr)
 	}
 
 	return p.migrateCreateHandler(template, createArgs, interactive)

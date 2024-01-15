@@ -46,7 +46,7 @@ func (form *RecordPasswordResetRequest) SetDao(dao *daos.Dao) {
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 //
-// This method doesn't checks whether auth record with `form.Email` exists (this is done on Submit).
+// This method doesn't check whether auth record with `form.Email` exists (this is done on Submit).
 func (form *RecordPasswordResetRequest) Validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(
@@ -70,13 +70,13 @@ func (form *RecordPasswordResetRequest) Submit(interceptors ...InterceptorFunc[*
 
 	authRecord, err := form.dao.FindAuthRecordByEmail(form.collection.Id, form.Email)
 	if err != nil {
-		return fmt.Errorf("Failed to fetch %s record with email %s: %w", form.collection.Id, form.Email, err)
+		return fmt.Errorf("failed to fetch %s record with email %s: %w", form.collection.Id, form.Email, err)
 	}
 
 	now := time.Now().UTC()
 	lastResetSentAt := authRecord.LastResetSentAt().Time()
 	if now.Sub(lastResetSentAt).Seconds() < form.resendThreshold {
-		return errors.New("You've already requested a password reset.")
+		return errors.New("you've already requested a password reset")
 	}
 
 	return runInterceptors(authRecord, func(m *models.Record) error {

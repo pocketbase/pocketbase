@@ -449,7 +449,7 @@ type BackupsConfig struct {
 	// Leave it empty to disable the auto backups functionality.
 	Cron string `form:"cron" json:"cron"`
 
-	// CronMaxKeep is the the max number of cron generated backups to
+	// CronMaxKeep is the max number of cron generated backups to
 	// keep before removing older entries.
 	//
 	// This field works only when the cron config has valid cron expression.
@@ -638,7 +638,7 @@ func (c AuthProviderConfig) Validate() error {
 // SetupProvider loads the current AuthProviderConfig into the specified provider.
 func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 	if !c.Enabled {
-		return errors.New("The provider is not enabled.")
+		return errors.New("the provider is not enabled")
 	}
 
 	if c.ClientId != "" {

@@ -91,11 +91,12 @@ func (api *realtimeApi) connect(c echo.Context) error {
 	}
 	connectMsgErr := api.app.OnRealtimeBeforeMessageSend().Trigger(connectMsgEvent, func(e *core.RealtimeMessageEvent) error {
 		w := e.HttpContext.Response()
-		w.Write([]byte("id:" + client.Id() + "\n"))
-		w.Write([]byte("event:" + e.Message.Name + "\n"))
-		w.Write([]byte("data:"))
-		w.Write(e.Message.Data)
-		w.Write([]byte("\n\n"))
+		// TODO implement errors
+		_, _ = w.Write([]byte("id:" + client.Id() + "\n"))
+		_, _ = w.Write([]byte("event:" + e.Message.Name + "\n"))
+		_, _ = w.Write([]byte("data:"))
+		_, _ = w.Write(e.Message.Data)
+		_, _ = w.Write([]byte("\n\n"))
 		w.Flush()
 		return api.app.OnRealtimeAfterMessageSend().Trigger(e)
 	})
@@ -134,11 +135,12 @@ func (api *realtimeApi) connect(c echo.Context) error {
 			}
 			msgErr := api.app.OnRealtimeBeforeMessageSend().Trigger(msgEvent, func(e *core.RealtimeMessageEvent) error {
 				w := e.HttpContext.Response()
-				w.Write([]byte("id:" + e.Client.Id() + "\n"))
-				w.Write([]byte("event:" + e.Message.Name + "\n"))
-				w.Write([]byte("data:"))
-				w.Write(e.Message.Data)
-				w.Write([]byte("\n\n"))
+				// TODO implement errors
+				_, _ = w.Write([]byte("id:" + e.Client.Id() + "\n"))
+				_, _ = w.Write([]byte("event:" + e.Message.Name + "\n"))
+				_, _ = w.Write([]byte("data:"))
+				_, _ = w.Write(e.Message.Data)
+				_, _ = w.Write([]byte("\n\n"))
 				w.Flush()
 				return api.app.OnRealtimeAfterMessageSend().Trigger(msgEvent)
 			})
@@ -339,10 +341,12 @@ func (api *realtimeApi) bindEvents() {
 // resolveRecord converts *if possible* the provided model interface to a Record.
 // This is usually helpful if the provided model is a custom Record model struct.
 func (api *realtimeApi) resolveRecord(model models.Model) (record *models.Record) {
+	// TODO implement error
 	record, _ = model.(*models.Record)
 
 	// check if it is custom Record model struct (ignore "private" tables)
 	if record == nil && !strings.HasPrefix(model.TableName(), "_") {
+		// TODO implement error
 		record, _ = api.app.Dao().FindRecordById(model.TableName(), model.GetId())
 	}
 
@@ -356,13 +360,14 @@ func (api *realtimeApi) resolveRecordCollection(model models.Model) (collection 
 		collection = record.Collection()
 	} else if !strings.HasPrefix(model.TableName(), "_") {
 		// check if it is custom Record model struct (ignore "private" tables)
+		// TODO implement error
 		collection, _ = api.app.Dao().FindCollectionByNameOrId(model.TableName())
 	}
 
 	return collection
 }
 
-// recordData represents the broadcasted record subscrition message data.
+// recordData represents the broadcast record subscription message data.
 type recordData struct {
 	Record any    `json:"record"` /* map or models.Record */
 	Action string `json:"action"`
@@ -371,7 +376,7 @@ type recordData struct {
 func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dryCache bool) error {
 	collection := record.Collection()
 	if collection == nil {
-		return errors.New("[broadcastRecord] Record collection not set.")
+		return errors.New("[broadcastRecord] Record collection not set")
 	}
 
 	clients := api.app.SubscriptionsBroker().Clients()
@@ -380,13 +385,13 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 	}
 
 	subscriptionRuleMap := map[string]*string{
-		(collection.Name + "/" + record.Id + "?"): collection.ViewRule,
-		(collection.Id + "/" + record.Id + "?"):   collection.ViewRule,
-		(collection.Name + "/*?"):                 collection.ListRule,
-		(collection.Id + "/*?"):                   collection.ListRule,
+		collection.Name + "/" + record.Id + "?": collection.ViewRule,
+		collection.Id + "/" + record.Id + "?":   collection.ViewRule,
+		collection.Name + "/*?":                 collection.ListRule,
+		collection.Id + "/*?":                   collection.ListRule,
 		// @deprecated: the same      as the wildcard topic but kept for backward compatibility
-		(collection.Name + "?"): collection.ListRule,
-		(collection.Id + "?"):   collection.ListRule,
+		collection.Name + "?": collection.ListRule,
+		collection.Id + "?":   collection.ListRule,
 	}
 
 	dryCacheKey := action + "/" + record.Id
@@ -413,6 +418,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 					Query:   options.Query,
 					Headers: options.Headers,
 				}
+				// TODO implement error
 				requestInfo.Admin, _ = client.Get(ContextAdminKey).(*models.Admin)
 				requestInfo.AuthRecord, _ = client.Get(ContextAuthRecordKey).(*models.Record)
 
@@ -581,7 +587,8 @@ func (api *realtimeApi) canAccessRecord(
 		}
 		q.AndWhere(expr)
 
-		resolver.UpdateQuery(q)
+		// TODO implement error
+		_ = resolver.UpdateQuery(q)
 
 		return nil
 	}

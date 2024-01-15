@@ -22,7 +22,7 @@ type FieldModifier interface {
 }
 
 // Serializer represents custom REST JSON serializer based on echo.DefaultJSONSerializer,
-// with support for additional generic response data transformation (eg. fields picker).
+// with support for additional generic response data transformation (e.g. fields picker).
 type Serializer struct {
 	echo.DefaultJSONSerializer
 
@@ -68,8 +68,8 @@ func (s *Serializer) Serialize(c echo.Context, i any, indent string) error {
 //
 // Example:
 //
-// 	data := map[string]any{"a": 1, "b": 2, "c": map[string]any{"c1": 11, "c2": 22}}
-// 	PickFields(data, "a,c.c1") // map[string]any{"a": 1, "c": map[string]any{"c1": 11}}
+//	data := map[string]any{"a": 1, "b": 2, "c": map[string]any{"c1": 11, "c2": 22}}
+//	PickFields(data, "a,c.c1") // map[string]any{"a": 1, "c": map[string]any{"c1": 11}}
 func PickFields(data any, rawFields string) (any, error) {
 	parsedFields, err := parseFields(rawFields)
 	if err != nil {

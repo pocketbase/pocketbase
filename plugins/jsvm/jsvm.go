@@ -169,7 +169,7 @@ func (p *plugin) registerMigrations() error {
 		filepathBinds(vm)
 		httpClientBinds(vm)
 
-		vm.Set("migrate", func(up, down func(db dbx.Builder) error) {
+		_ = vm.Set("migrate", func(up, down func(db dbx.Builder) error) {
 			m.AppMigrations.Register(up, down, file)
 		})
 
@@ -250,9 +250,9 @@ func (p *plugin) registerHooks() error {
 		apisBinds(vm)
 		mailsBinds(vm)
 
-		vm.Set("$app", p.app)
-		vm.Set("$template", templateRegistry)
-		vm.Set("__hooks", absHooksDir)
+		_ = vm.Set("$app", p.app)
+		_ = vm.Set("$template", templateRegistry)
+		_ = vm.Set("__hooks", absHooksDir)
 	}
 
 	// initiliaze the executor vms
@@ -305,7 +305,8 @@ func (p *plugin) normalizeServeExceptions(oldErrorHandler echo.HTTPErrorHandler)
 			return // no error or already committed
 		}
 
-		jsException, ok := err.(*goja.Exception)
+		var jsException *goja.Exception
+		ok := errors.As(err, &jsException)
 		if !ok {
 			return // no exception
 		}
@@ -322,7 +323,7 @@ func (p *plugin) normalizeServeExceptions(oldErrorHandler echo.HTTPErrorHandler)
 }
 
 // watchHooks initializes a hooks file watcher that will restart the
-// application (*if possible) in case of a change in the hooks directory.
+// application (*if possible) in case of a change in the hooks' directory.
 //
 // This method does nothing if the hooks directory is missing.
 func (p *plugin) watchHooks() error {
@@ -348,7 +349,7 @@ func (p *plugin) watchHooks() error {
 	}
 
 	p.app.OnTerminate().Add(func(e *core.TerminateEvent) error {
-		watcher.Close()
+		_ = watcher.Close()
 
 		stopDebounceTimer()
 
@@ -400,7 +401,7 @@ func (p *plugin) watchHooks() error {
 		return watcher.Add(path)
 	})
 	if dirsErr != nil {
-		watcher.Close()
+		_ = watcher.Close()
 	}
 
 	return dirsErr
@@ -448,8 +449,8 @@ func (p *plugin) refreshTypesFile() error {
 	existingFile, err := os.Open(fullPath)
 	if err == nil {
 		timestamp := make([]byte, 13)
-		io.ReadFull(existingFile, timestamp)
-		existingFile.Close()
+		_, _ = io.ReadFull(existingFile, timestamp)
+		_ = existingFile.Close()
 
 		if len(data) >= len(timestamp) && bytes.Equal(data[:13], timestamp) {
 			return nil // nothing new to save

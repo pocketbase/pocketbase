@@ -132,7 +132,7 @@ func (validator *RecordDataValidator) checkTextValue(field *schema.SchemaField, 
 
 	options, _ := field.Options.(*schema.TextOptions)
 
-	// note: casted to []rune to count multi-byte chars as one
+	// note: cast to []rune to count multibyte chars as one
 	length := len([]rune(val))
 
 	if options.Min != nil && length < *options.Min {
@@ -176,7 +176,7 @@ func (validator *RecordDataValidator) checkNumberValue(field *schema.SchemaField
 	return nil
 }
 
-func (validator *RecordDataValidator) checkBoolValue(field *schema.SchemaField, value any) error {
+func (validator *RecordDataValidator) checkBoolValue(_ *schema.SchemaField, _ any) error {
 	return nil
 }
 
@@ -235,7 +235,7 @@ func (validator *RecordDataValidator) checkUrlValue(field *schema.SchemaField, v
 	return nil
 }
 
-func (validator *RecordDataValidator) checkEditorValue(field *schema.SchemaField, value any) error {
+func (validator *RecordDataValidator) checkEditorValue(_ *schema.SchemaField, _ any) error {
 	return nil
 }
 
@@ -380,10 +380,12 @@ func (validator *RecordDataValidator) checkRelationValue(field *schema.SchemaFie
 	}
 
 	var total int
-	validator.dao.RecordQuery(relCollection).
+	// TODO implement error
+	_ = validator.dao.RecordQuery(relCollection).
 		Select("count(*)").
 		AndWhere(dbx.In("id", list.ToInterfaceSlice(ids)...)).
 		Row(&total)
+
 	if total != len(ids) {
 		return validation.NewError("validation_missing_rel_records", "Failed to find all relation records with the provided ids")
 	}

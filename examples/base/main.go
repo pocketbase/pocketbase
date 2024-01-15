@@ -75,7 +75,7 @@ func main() {
 		&indexFallback,
 		"indexFallback",
 		true,
-		"fallback the request to index.html on missing static path (eg. when pretty urls are used with SPA)",
+		"fallback the request to index.html on missing static path (e.g. when pretty urls are used with SPA)",
 	)
 
 	var queryTimeout int
@@ -86,7 +86,7 @@ func main() {
 		"the default SELECT queries timeout in seconds",
 	)
 
-	app.RootCmd.ParseFlags(os.Args[1:])
+	_ = app.RootCmd.ParseFlags(os.Args[1:])
 
 	// ---------------------------------------------------------------
 	// Plugins and hooks:

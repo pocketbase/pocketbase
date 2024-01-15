@@ -337,7 +337,7 @@ final record = await pb.collection('${collection?.name}').update('RECORD_ID', bo
                 <CodeBlock content={`?expand=relField1,relField2.subRelField21`} />
                 Supports up to 6-levels depth nested relations expansion. <br />
                 The expanded relations will be appended to the record under the
-                <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>). Only
+                <code>expand</code> property (e.g. <code>{`"expand": {"relField1": {...}, ...}`}</code>). Only
                 the relations that the user has permissions to <strong>view</strong> will be expanded.
             </td>
         </tr>

@@ -6,19 +6,19 @@
 //
 // Example:
 //
-// 	registry := template.NewRegistry()
+//	registry := template.NewRegistry()
 //
-// 	html1, err := registry.LoadFiles(
-// 		// the files set wil be parsed only once and then cached
-// 		"layout.html",
-// 		"content.html",
-// 	).Render(map[string]any{"name": "John"})
+//	html1, err := registry.LoadFiles(
+//		// the files set wil be parsed only once and then cached
+//		"layout.html",
+//		"content.html",
+//	).Render(map[string]any{"name": "John"})
 //
-// 	html2, err := registry.LoadFiles(
-// 		// reuse the already parsed and cached files set
-// 		"layout.html",
-// 		"content.html",
-// 	).Render(map[string]any{"name": "Jane"})
+//	html2, err := registry.LoadFiles(
+//		// reuse the already parsed and cached files set
+//		"layout.html",
+//		"content.html",
+//	).Render(map[string]any{"name": "Jane"})
 package template
 
 import (
@@ -32,7 +32,7 @@ import (
 )
 
 // NewRegistry creates and initializes a new templates registry with
-// some defaults (eg. global "raw" template function for unescaped HTML).
+// some defaults (e.g. global "raw" template function for unescaped HTML).
 //
 // Use the Registry.Load* methods to load templates into the registry.
 func NewRegistry() *Registry {
@@ -64,12 +64,12 @@ type Registry struct {
 //
 // Example:
 //
-//  r.AddFuncs(map[string]any{
-//    "toUpper": func(str string) string {
-//        return strings.ToUppser(str)
-//    },
-//    ...
-//  })
+//	r.AddFuncs(map[string]any{
+//	  "toUpper": func(str string) string {
+//	      return strings.ToUppser(str)
+//	  },
+//	  ...
+//	})
 func (r *Registry) AddFuncs(funcs map[string]any) *Registry {
 	for name, f := range funcs {
 		r.funcs[name] = f

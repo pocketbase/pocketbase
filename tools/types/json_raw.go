@@ -69,7 +69,7 @@ func (j *JsonRaw) Scan(value any) error {
 		}
 	case JsonRaw:
 		if len(v) != 0 {
-			data = []byte(v)
+			data = v
 		}
 	default:
 		bytes, err := json.Marshal(v)

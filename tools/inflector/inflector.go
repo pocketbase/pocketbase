@@ -6,7 +6,7 @@ import (
 	"unicode"
 )
 
-var columnifyRemoveRegex = regexp.MustCompile(`[^\w\.\*\-\_\@\#]+`)
+var columnifyRemoveRegex = regexp.MustCompile(`[^\w.*\-_@#]+`)
 var snakecaseSplitRegex = regexp.MustCompile(`[\W_]+`)
 
 // UcFirst converts the first character of a string into uppercase.
@@ -54,7 +54,7 @@ func Sanitize(str string, removePattern string) (string, error) {
 }
 
 // Snakecase removes all non word characters and converts any english text into a snakecase.
-// "ABBREVIATIONS" are preserved, eg. "myTestDB" will become "my_test_db".
+// "ABBREVIATIONS" are preserved, e.g. "myTestDB" will become "my_test_db".
 func Snakecase(str string) string {
 	var result strings.Builder
 

@@ -18,7 +18,7 @@ func New(db dbx.Builder) *Dao {
 	return NewMultiDB(db, db)
 }
 
-// New creates a new Dao instance with the provided dedicated
+// NewMultiDB New creates a new Dao instance with the provided dedicated
 // async and sync db builders.
 func NewMultiDB(concurrentDB, nonconcurrentDB dbx.Builder) *Dao {
 	return &Dao{
@@ -56,7 +56,7 @@ type Dao struct {
 
 // DB returns the default dao db builder (*dbx.DB or *dbx.TX).
 //
-// Currently the default db builder is dao.concurrentDB but that may change in the future.
+// Currently, the default db builder is dao.concurrentDB but that may change in the future.
 func (dao *Dao) DB() dbx.Builder {
 	return dao.ConcurrentDB()
 }
@@ -87,16 +87,16 @@ func (dao *Dao) Clone() *Dao {
 // WithoutHooks returns a new Dao with the same configuration options
 // as the current one, but without create/update/delete hooks.
 func (dao *Dao) WithoutHooks() *Dao {
-	new := dao.Clone()
+	clone := dao.Clone()
 
-	new.BeforeCreateFunc = nil
-	new.AfterCreateFunc = nil
-	new.BeforeUpdateFunc = nil
-	new.AfterUpdateFunc = nil
-	new.BeforeDeleteFunc = nil
-	new.AfterDeleteFunc = nil
+	clone.BeforeCreateFunc = nil
+	clone.AfterCreateFunc = nil
+	clone.BeforeUpdateFunc = nil
+	clone.AfterUpdateFunc = nil
+	clone.BeforeDeleteFunc = nil
+	clone.AfterDeleteFunc = nil
 
-	return new
+	return clone
 }
 
 // ModelQuery creates a new preconfigured select query with preset
@@ -146,7 +146,7 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 
 		return fn(txDao)
 	case *dbx.DB:
-		afterCalls := []afterCallGroup{}
+		var afterCalls []afterCallGroup
 
 		txError := txOrDB.Transactional(func(tx *dbx.Tx) error {
 			txDao := New(tx)
@@ -233,7 +233,8 @@ func (dao *Dao) Delete(m models.Model) error {
 			}
 
 			if retryDao.AfterDeleteFunc != nil {
-				retryDao.AfterDeleteFunc(retryDao, m)
+				// TODO implement error
+				_ = retryDao.AfterDeleteFunc(retryDao, m)
 			}
 
 			return nil
@@ -249,7 +250,7 @@ func (dao *Dao) Delete(m models.Model) error {
 
 // Save persists the provided model in the database.
 //
-// If m.IsNew() is true, the method will perform a create, otherwise an update.
+// If m.IsNew() is true, the method will perform a creation, otherwise an update.
 // To explicitly mark a model for update you can use m.MarkAsNotNew().
 func (dao *Dao) Save(m models.Model) error {
 	if m.IsNew() {

@@ -267,6 +267,7 @@ func TestSaveAdmin(t *testing.T) {
 	if saveErr2 != nil {
 		t.Fatal(saveErr2)
 	}
+	// TODO implement error
 	existingAdmin, _ = app.Dao().FindAdminById(existingAdmin.Id)
 	if existingAdmin.Email != updatedEmail {
 		t.Fatalf("Expected admin email to be %s, got %s", updatedEmail, existingAdmin.Email)

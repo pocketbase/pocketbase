@@ -1,6 +1,6 @@
 package templates
 
-// Available variables:
+// HtmlBody Available variables:
 //
 // ```
 // HtmlContent template.HTML

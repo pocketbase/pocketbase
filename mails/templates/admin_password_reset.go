@@ -1,6 +1,6 @@
 package templates
 
-// Available variables:
+// AdminPasswordResetBody Available variables:
 //
 // ```
 // Admin     *models.Admin

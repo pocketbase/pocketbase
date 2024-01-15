@@ -23,20 +23,23 @@ func Create(src string, dest string, skipPaths ...string) error {
 	if err != nil {
 		return err
 	}
-	defer zf.Close()
+	defer func(zf *os.File) {
+		_ = zf.Close()
+	}(zf)
 
 	zw := zip.NewWriter(zf)
-	defer zw.Close()
+	defer func(zw *zip.Writer) {
+		_ = zw.Close()
+	}(zw)
 
 	// register a custom Deflate compressor
 	zw.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
 		return flate.NewWriter(out, flate.BestSpeed)
 	})
 
-	if err := zipAddFS(zw, os.DirFS(src), skipPaths...); err != nil {
-		// try to cleanup at least the created zip file
-		os.Remove(dest)
-
+	if err = zipAddFS(zw, os.DirFS(src), skipPaths...); err != nil {
+		// try to clean up at least the created zip file
+		_ = os.Remove(dest)
 		return err
 	}
 
@@ -84,7 +87,9 @@ func zipAddFS(w *zip.Writer, fsys fs.FS, skipPaths ...string) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer func(f fs.File) {
+			_ = f.Close()
+		}(f)
 
 		_, err = io.Copy(fw, f)
 

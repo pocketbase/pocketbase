@@ -125,7 +125,7 @@ func (p *plugin) updateCmd() *cobra.Command {
 				prompt := &survey.Confirm{
 					Message: "Do you want to proceed with the update?",
 				}
-				survey.AskOne(prompt, &confirm)
+				_ = survey.AskOne(prompt, &confirm)
 				if !confirm {
 					fmt.Println("The command has been cancelled.")
 					return nil
@@ -175,7 +175,9 @@ func (p *plugin) update(withBackup bool) error {
 	}
 
 	releaseDir := filepath.Join(p.app.DataDir(), core.LocalTempDirName)
-	defer os.RemoveAll(releaseDir)
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(releaseDir)
 
 	color.Yellow("Downloading %s...", asset.Name)
 
@@ -188,7 +190,9 @@ func (p *plugin) update(withBackup bool) error {
 	color.Yellow("Extracting %s...", asset.Name)
 
 	extractDir := filepath.Join(releaseDir, "extracted_"+asset.Name)
-	defer os.RemoveAll(extractDir)
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(extractDir)
 
 	if err := archive.Extract(assetZip, extractDir); err != nil {
 		return err
@@ -201,20 +205,22 @@ func (p *plugin) update(withBackup bool) error {
 		return err
 	}
 	renamedOldExec := oldExec + ".old"
-	defer os.Remove(renamedOldExec)
+	defer func(name string) {
+		_ = os.Remove(name)
+	}(renamedOldExec)
 
 	newExec := filepath.Join(extractDir, p.config.ArchiveExecutable)
 	if _, err := os.Stat(newExec); err != nil {
 		// try again with an .exe extension
 		newExec = newExec + ".exe"
 		if _, fallbackErr := os.Stat(newExec); fallbackErr != nil {
-			return fmt.Errorf("The executable in the extracted path is missing or it is inaccessible: %v, %v", err, fallbackErr)
+			return fmt.Errorf("the executable in the extracted path is missing or it is inaccessible: %v, %v", err, fallbackErr)
 		}
 	}
 
 	// rename the current executable
 	if err := os.Rename(oldExec, renamedOldExec); err != nil {
-		return fmt.Errorf("Failed to rename the current executable: %w", err)
+		return fmt.Errorf("failed to rename the current executable: %w", err)
 	}
 
 	tryToRevertExecChanges := func() {
@@ -231,7 +237,7 @@ func (p *plugin) update(withBackup bool) error {
 	// replace with the extracted binary
 	if err := os.Rename(newExec, oldExec); err != nil {
 		tryToRevertExecChanges()
-		return fmt.Errorf("Failed replacing the executable: %w", err)
+		return fmt.Errorf("failed replacing the executable: %w", err)
 	}
 
 	if withBackup {
@@ -277,7 +283,9 @@ func fetchLatestRelease(
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	rawBody, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -316,7 +324,9 @@ func downloadFile(
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	// http.Client doesn't treat non 2xx responses as error
 	if res.StatusCode >= 400 {
@@ -332,7 +342,9 @@ func downloadFile(
 	if err != nil {
 		return err
 	}
-	defer dest.Close()
+	defer func(dest *os.File) {
+		_ = dest.Close()
+	}(dest)
 
 	if _, err := io.Copy(dest, res.Body); err != nil {
 		return err
@@ -399,7 +411,7 @@ func compareVersions(a, b string) int {
 		}
 
 		if x > y {
-			return -1 // a is newer
+			return -1 // an is newer
 		}
 	}
 

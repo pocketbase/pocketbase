@@ -70,6 +70,7 @@ func (p *Yandex) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		RefreshToken: token.RefreshToken,
 	}
 
+	// TODO implement error
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	if !extracted.IsAvatarEmpty {

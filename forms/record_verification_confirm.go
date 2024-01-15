@@ -95,7 +95,8 @@ func (form *RecordVerificationConfirm) Submit(interceptors ...InterceptorFunc[*m
 	wasVerified := record.Verified()
 
 	if !wasVerified {
-		record.SetVerified(true)
+		// TODO implement error
+		_ = record.SetVerified(true)
 	}
 
 	interceptorsErr := runInterceptors(record, func(m *models.Record) error {

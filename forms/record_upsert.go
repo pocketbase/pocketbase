@@ -749,7 +749,7 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 		// upload new files (if any)
 		//
 		// note: executed after the default BeforeCreateFunc and BeforeUpdateFunc hook actions
-		// to allow uploading AFTER the before app model hooks (eg. in case of an id change)
+		// to allow uploading AFTER the before app model hooks (e.g. in case of an id change)
 		// but BEFORE the actual record db persistence
 		// ---
 		dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model, action func() error) error {

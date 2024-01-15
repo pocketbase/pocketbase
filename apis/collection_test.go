@@ -380,7 +380,7 @@ func TestCollectionCreate(t *testing.T) {
 			},
 		},
 		{
-			Name:   "authorized as admin + invalid data (eg. existing name)",
+			Name:   "authorized as admin + invalid data (e.g. existing name)",
 			Method: http.MethodPost,
 			Url:    "/api/collections",
 			Body:   strings.NewReader(`{"name":"demo1","type":"base","schema":[{"type":"text","name":""}]}`),
@@ -797,7 +797,7 @@ func TestCollectionUpdate(t *testing.T) {
 			},
 		},
 		{
-			Name:   "authorized as admin + invalid data (eg. existing name)",
+			Name:   "authorized as admin + invalid data (e.g. existing name)",
 			Method: http.MethodPatch,
 			Url:    "/api/collections/demo1",
 			Body: strings.NewReader(`{

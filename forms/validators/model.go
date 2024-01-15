@@ -9,11 +9,11 @@ import (
 	"github.com/pocketbase/pocketbase/daos"
 )
 
-// Compare checks whether the provided model id exists.
+// UniqueId Compare checks whether the provided model id exists.
 //
 // Example:
 //
-//	validation.Field(&form.Id, validation.By(validators.UniqueId(form.dao, tableName)))
+//	validation.Field(&form.id, validation.By(validators.UniqueId(form.dao, tableName)))
 func UniqueId(dao *daos.Dao, tableName string) validation.RuleFunc {
 	return func(value any) error {
 		v, _ := value.(string)

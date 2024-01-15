@@ -24,16 +24,16 @@ var identifierMacros = map[string]func() (any, error){
 		return d.String(), nil
 	},
 	"@second": func() (any, error) {
-		return int(timeNow().UTC().Second()), nil
+		return timeNow().UTC().Second(), nil
 	},
 	"@minute": func() (any, error) {
-		return int(timeNow().UTC().Minute()), nil
+		return timeNow().UTC().Minute(), nil
 	},
 	"@hour": func() (any, error) {
-		return int(timeNow().UTC().Hour()), nil
+		return timeNow().UTC().Hour(), nil
 	},
 	"@day": func() (any, error) {
-		return int(timeNow().UTC().Day()), nil
+		return timeNow().UTC().Day(), nil
 	},
 	"@month": func() (any, error) {
 		return int(timeNow().UTC().Month()), nil
@@ -42,7 +42,7 @@ var identifierMacros = map[string]func() (any, error){
 		return int(timeNow().UTC().Weekday()), nil
 	},
 	"@year": func() (any, error) {
-		return int(timeNow().UTC().Year()), nil
+		return timeNow().UTC().Year(), nil
 	},
 	"@todayStart": func() (any, error) {
 		today := timeNow().UTC()

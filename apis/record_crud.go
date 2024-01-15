@@ -69,7 +69,7 @@ func (api *recordApi) list(c echo.Context) error {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
-	records := []*models.Record{}
+	var records []*models.Record
 
 	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &records)
 	if err != nil {
@@ -120,7 +120,8 @@ func (api *recordApi) view(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			resolver.UpdateQuery(q)
+			// TODO implement error
+			_ = resolver.UpdateQuery(q)
 			q.AndWhere(expr)
 		}
 		return nil
@@ -169,7 +170,7 @@ func (api *recordApi) create(c echo.Context) error {
 
 	hasFullManageAccess := requestInfo.Admin != nil
 
-	// temporary save the record and check it against the create rule
+	// temporary save the record and check it against the creation rule
 	if requestInfo.Admin == nil && collection.CreateRule != nil {
 		testRecord := models.NewRecord(collection)
 
@@ -195,7 +196,8 @@ func (api *recordApi) create(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			resolver.UpdateQuery(q)
+			// TODO implement error
+			_ = resolver.UpdateQuery(q)
 			q.AndWhere(expr)
 			return nil
 		}
@@ -295,7 +297,8 @@ func (api *recordApi) update(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			resolver.UpdateQuery(q)
+			// TODO implement error
+			_ = resolver.UpdateQuery(q)
 			q.AndWhere(expr)
 		}
 		return nil
@@ -377,7 +380,8 @@ func (api *recordApi) delete(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			resolver.UpdateQuery(q)
+			// TODO implement error
+			_ = resolver.UpdateQuery(q)
 			q.AndWhere(expr)
 		}
 		return nil

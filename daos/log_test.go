@@ -151,6 +151,7 @@ func TestSaveLog(t *testing.T) {
 		t.Fatal(updateErr)
 	}
 	// refresh instance to check if it was really updated
+	// TODO implement error
 	existingLog, _ = app.LogsDao().FindLogById(existingLog.Id)
 	if existingLog.Level != 4 {
 		t.Fatalf("Expected log level to be %d, got %d", 4, existingLog.Level)

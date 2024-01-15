@@ -13,20 +13,20 @@ import (
 
 var _ Provider = (*Github)(nil)
 
-// NameGithub is the unique name of the Github provider.
+// NameGithub is the unique name of the GitHub provider.
 const NameGithub string = "github"
 
-// Github allows authentication via Github OAuth2.
+// Github GitHub allows authentication via GitHub OAuth2.
 type Github struct {
 	*baseProvider
 }
 
-// NewGithubProvider creates new Github provider instance with some defaults.
+// NewGithubProvider creates new GitHub provider instance with some defaults.
 func NewGithubProvider() *Github {
 	return &Github{&baseProvider{
 		ctx:         context.Background(),
 		displayName: "GitHub",
-		pkce:        true, // technically is not supported yet but it is safe as the PKCE params are just ignored
+		pkce:        true, // technically is not supported yet, but it is safe as the PKCE params are just ignored
 		scopes:      []string{"read:user", "user:email"},
 		authUrl:     github.Endpoint.AuthURL,
 		tokenUrl:    github.Endpoint.TokenURL,
@@ -34,7 +34,7 @@ func NewGithubProvider() *Github {
 	}}
 }
 
-// FetchAuthUser returns an AuthUser instance based the Github's user api.
+// FetchAuthUser returns an AuthUser instance based the GitHub's user api.
 //
 // API reference: https://docs.github.com/en/rest/reference/users#get-the-authenticated-user
 func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
@@ -70,6 +70,7 @@ func (p *Github) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		RefreshToken: token.RefreshToken,
 	}
 
+	// TODO implement error
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	// in case user has set "Keep my email address private", send an
@@ -99,7 +100,10 @@ func (p *Github) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		// TODO implement error
+		_ = Body.Close()
+	}(response.Body)
 
 	// ignore common http errors caused by insufficient scope permissions
 	// (the email field is optional, aka. return the auth user without it)
@@ -112,11 +116,11 @@ func (p *Github) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
 		return "", err
 	}
 
-	emails := []struct {
+	var emails []struct {
 		Email    string
 		Verified bool
 		Primary  bool
-	}{}
+	}
 	if err := json.Unmarshal(content, &emails); err != nil {
 		return "", err
 	}

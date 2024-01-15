@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// NormalizeUrl removes duplicated slashes from a url path.
+// NormalizeUrl removes duplicated slashes from an url path.
 func NormalizeUrl(originalUrl string) (string, error) {
 	u, err := url.Parse(originalUrl)
 	if err != nil {

@@ -112,7 +112,7 @@ func (c *SmtpClient) Send(m *Message) error {
 		yak.Cc(addressesToStrings(m.Cc, true)...)
 	}
 
-	// add attachements (if any)
+	// add attachments (if any)
 	for name, data := range m.Attachments {
 		yak.Attach(name, data)
 	}
@@ -151,7 +151,7 @@ var _ smtp.Auth = (*smtpLoginAuth)(nil)
 //
 // NB!
 // It will only send the credentials if the connection is using TLS or is connected to localhost.
-// Otherwise authentication will fail with an error, without sending the credentials.
+// Otherwise, authentication will fail with an error, without sending the credentials.
 //
 // [1]: https://github.com/golang/go/issues/40817
 // [2]: https://support.microsoft.com/en-us/office/outlook-com-no-longer-supports-auth-plain-authentication-07f7d5e9-1697-465f-84d2-4513d4ff0145?ui=en-us&rs=en-us&ad=us

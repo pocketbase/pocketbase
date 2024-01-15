@@ -66,7 +66,7 @@ func (form *AdminLogin) Submit(interceptors ...InterceptorFunc[*models.Admin]) (
 		admin = m
 
 		if admin == nil || !admin.ValidatePassword(form.Password) {
-			return errors.New("Invalid login credentials.")
+			return errors.New("invalid login credentials")
 		}
 
 		return nil

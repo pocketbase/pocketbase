@@ -222,7 +222,7 @@ func LoadAuthContext(app core.App) echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			// the schema is not required and it is only for
+			// the schema is not required, and it is only for
 			// compatibility with the defaults of some HTTP clients
 			token = strings.TrimPrefix(token, "Bearer ")
 
@@ -279,7 +279,7 @@ func LoadCollectionContext(app core.App, optCollectionTypes ...string) echo.Midd
 }
 
 // ActivityLogger middleware takes care to save the request information
-// into the logs database.
+// into the logs' database.
 //
 // The middleware does nothing if the app logs retention period is zero
 // (aka. app.Settings().Logs.MaxDays = 0).
@@ -404,7 +404,7 @@ func realUserIp(r *http.Request, fallbackIp string) string {
 
 // eagerRequestInfoCache ensures that the request data is cached in the request
 // context to allow reading for example the json request body data more than once.
-func eagerRequestInfoCache(app core.App) echo.MiddlewareFunc {
+func eagerRequestInfoCache(_ core.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			switch c.Request().Method {

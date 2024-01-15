@@ -16,7 +16,7 @@ import (
 
 // FilterData is a filter expression string following the `fexpr` package grammar.
 //
-// The filter string can also contain dbx placeholder parameters (eg. "title = {:name}"),
+// The filter string can also contain dbx placeholder parameters (e.g. "title = {:name}"),
 // that will be safely replaced and properly quoted inplace with the placeholderReplacements values.
 //
 // Example:
@@ -32,7 +32,7 @@ var parsedFilterData = store.New(make(map[string][]fexpr.ExprGroup, 50))
 
 // BuildExpr parses the current filter data and returns a new db WHERE expression.
 //
-// The filter string can also contain dbx placeholder parameters (eg. "title = {:name}"),
+// The filter string can also contain dbx placeholder parameters (e.g. "title = {:name}"),
 // that will be safely replaced and properly quoted inplace with the placeholderReplacements values.
 func (f FilterData) BuildExpr(
 	fieldResolver FieldResolver,
@@ -79,7 +79,7 @@ func (f FilterData) BuildExpr(
 		return nil, err
 	}
 	// store in cache
-	// (the limit size is arbitrary and it is there to prevent the cache growing too big)
+	// (the limit size is arbitrary, and it is there to prevent the cache growing too big)
 	parsedFilterData.SetIfLessThanLimit(raw, data, 500)
 	return buildParsedFilterExpr(data, fieldResolver)
 }
@@ -297,7 +297,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	nullExpr := "IS NULL"
 	if !equal {
 		// always use `IS NOT` instead of `!=` because direct non-equal comparisons
-		// to nullable column values that are actually NULL yields to NULL instead of TRUE, eg.:
+		// to nullable column values that are actually NULL yields to NULL instead of TRUE, e.g.:
 		// `'example' != nullableColumn` -> NULL even if nullableColumn row value is NULL
 		equalOp = "IS NOT"
 		nullEqualOp = equalOp
@@ -305,7 +305,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 		nullExpr = "IS NOT NULL"
 	}
 
-	// no coalesce (eg. compare to a json field)
+	// no coalesce (e.g. compare to a json field)
 	// a IS b
 	// a IS NOT b
 	if left.NoCoalesce || right.NoCoalesce {
@@ -347,7 +347,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	}
 
 	// a = "" OR a IS NULL
-	// a IS NOT "" AND a IS NOT NULL
+	// a IS NOT "" AND an IS NOT NULL
 	if isRightEmpty {
 		return dbx.NewExp(
 			fmt.Sprintf("(%s %s '' %s %s %s)", left.Identifier, equalOp, concatOp, left.Identifier, nullExpr),
@@ -432,7 +432,7 @@ func mergeParams(params ...dbx.Params) dbx.Params {
 }
 
 // wrapLikeParams wraps each provided param value string with `%`
-// if the string doesn't contains the `%` char (including its escape sequence).
+// if the string doesn't contain the `%` char (including its escape sequence).
 func wrapLikeParams(params dbx.Params) dbx.Params {
 	result := dbx.Params{}
 
@@ -462,7 +462,7 @@ type opExpr struct {
 // Build converts the expression into a SQL fragment.
 //
 // Implements [dbx.Expression] interface.
-func (e *opExpr) Build(db *dbx.DB, params dbx.Params) string {
+func (e *opExpr) Build(_ *dbx.DB, _ dbx.Params) string {
 	return e.op
 }
 
@@ -542,7 +542,7 @@ func (e *manyVsManyExpr) Build(db *dbx.DB, params dbx.Params) string {
 		&ResolverResult{
 			NoCoalesce: e.right.NoCoalesce,
 			Identifier: "[[" + rAlias + ".multiMatchValue]]",
-			// note: the AfterBuild needs to be handled only once and it
+			// note: the AfterBuild needs to be handled only once, and it
 			// doesn't matter whether it is applied on the left or right subquery operand
 			AfterBuild: multiMatchAfterBuildFunc(e.op, lAlias, rAlias),
 		},
@@ -635,12 +635,12 @@ func multiMatchAfterBuildFunc(op fexpr.SignOp, multiMatchAliases ...string) func
 		// Add an optional "IS NULL" condition(s) to handle the empty rows result.
 		//
 		// For example, let's assume that some "rel" field is [nonemptyRel1, nonemptyRel2, emptyRel3],
-		// The filter "rel.total > 0" will ensures that the above will return true only if all relations
+		// The filter "rel.total > 0" will ensure that the above will return true only if all relations
 		// are existing and match the condition.
 		//
 		// The "=" operator is excluded because it will never equal directly with NULL anyway
 		// and also because we want in case "rel.id = ''" is specified to allow
-		// matching the empty relations (they will match due to the applied COALESCE).
+		// matching the empty relations (they will match due to the applied to COALESCE).
 		for i, mAlias := range multiMatchAliases {
 			orExprs[i+1] = dbx.NewExp("[[" + mAlias + ".multiMatchValue]] IS NULL")
 		}

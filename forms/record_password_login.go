@@ -81,7 +81,7 @@ func (form *RecordPasswordLogin) Submit(interceptors ...InterceptorFunc[*models.
 		authRecord = m
 
 		if authRecord == nil || !authRecord.ValidatePassword(form.Password) {
-			return errors.New("Invalid login credentials.")
+			return errors.New("invalid login credentials")
 		}
 
 		return nil

@@ -15,7 +15,7 @@ var (
 // FieldMapper provides custom mapping between Go and JavaScript property names.
 //
 // It is similar to the builtin "uncapFieldNameMapper" but also converts
-// all uppercase identifiers to their lowercase equivalent (eg. "GET" -> "get").
+// all uppercase identifiers to their lowercase equivalent (e.g. "GET" -> "get").
 type FieldMapper struct {
 }
 

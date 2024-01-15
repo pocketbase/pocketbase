@@ -32,7 +32,7 @@ func (api *collectionApi) list(c echo.Context) error {
 		"id", "created", "updated", "name", "system", "type",
 	)
 
-	collections := []*models.Collection{}
+	var collections []*models.Collection
 
 	result, err := search.NewProvider(fieldResolver).
 		Query(api.app.Dao().CollectionQuery()).

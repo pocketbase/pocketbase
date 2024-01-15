@@ -245,7 +245,7 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 }
 
 // normalizeExpands normalizes expand strings and merges self containing paths
-// (eg. ["a.b.c", "a.b", "   test  ", "  ", "test"] -> ["a.b.c", "test"]).
+// (e.g. ["a.b.c", "a.b", "   test  ", "  ", "test"] -> ["a.b.c", "test"]).
 func normalizeExpands(paths []string) []string {
 	// normalize paths
 	normalized := make([]string, 0, len(paths))

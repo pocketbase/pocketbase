@@ -101,7 +101,9 @@ func (p *Gitee) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(response.Body)
 
 	// ignore common http errors caused by insufficient scope permissions
 	if response.StatusCode == 401 || response.StatusCode == 403 || response.StatusCode == 404 {
@@ -113,11 +115,11 @@ func (p *Gitee) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
 		return "", err
 	}
 
-	emails := []struct {
+	var emails []struct {
 		Email string
 		State string
 		Scope []string
-	}{}
+	}
 	if err := json.Unmarshal(content, &emails); err != nil {
 		// ignore unmarshal error in case "Keep my email address private"
 		// was set because response.Body will be something like:

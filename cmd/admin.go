@@ -36,23 +36,25 @@ func adminCreateCommand(app core.App) *cobra.Command {
 		SilenceUsage:  true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) != 2 {
-				return errors.New("Missing email and password arguments.")
+				return errors.New("missing email and password arguments")
 			}
 
 			if args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
-				return errors.New("Missing or invalid email address.")
+				return errors.New("missing or invalid email address")
 			}
 
 			if len(args[1]) < 8 {
-				return errors.New("The password must be at least 8 chars long.")
+				return errors.New("the password must be at least 8 chars long")
 			}
 
 			admin := &models.Admin{}
 			admin.Email = args[0]
-			admin.SetPassword(args[1])
+
+			// TODO implement error
+			_ = admin.SetPassword(args[1])
 
 			if err := app.Dao().SaveAdmin(admin); err != nil {
-				return fmt.Errorf("Failed to create new admin account: %v", err)
+				return fmt.Errorf("failed to create new admin account: %v", err)
 			}
 
 			color.Green("Successfully created new admin %s!", admin.Email)
@@ -73,26 +75,27 @@ func adminUpdateCommand(app core.App) *cobra.Command {
 		SilenceUsage:  true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) != 2 {
-				return errors.New("Missing email and password arguments.")
+				return errors.New("missing email and password arguments")
 			}
 
 			if args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
-				return errors.New("Missing or invalid email address.")
+				return errors.New("missing or invalid email address")
 			}
 
 			if len(args[1]) < 8 {
-				return errors.New("The new password must be at least 8 chars long.")
+				return errors.New("the new password must be at least 8 chars long")
 			}
 
 			admin, err := app.Dao().FindAdminByEmail(args[0])
 			if err != nil {
-				return fmt.Errorf("Admin with email %s doesn't exist.", args[0])
+				return fmt.Errorf("admin with email %s doesn't exist", args[0])
 			}
 
-			admin.SetPassword(args[1])
+			// TODO implement error
+			_ = admin.SetPassword(args[1])
 
 			if err := app.Dao().SaveAdmin(admin); err != nil {
-				return fmt.Errorf("Failed to change admin %s password: %v", admin.Email, err)
+				return fmt.Errorf("failed to change admin %s password: %v", admin.Email, err)
 			}
 
 			color.Green("Successfully changed admin %s password!", admin.Email)
@@ -113,7 +116,7 @@ func adminDeleteCommand(app core.App) *cobra.Command {
 		SilenceUsage:  true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
-				return errors.New("Invalid or missing email address.")
+				return errors.New("invalid or missing email address")
 			}
 
 			admin, err := app.Dao().FindAdminByEmail(args[0])
@@ -123,7 +126,7 @@ func adminDeleteCommand(app core.App) *cobra.Command {
 			}
 
 			if err := app.Dao().DeleteAdmin(admin); err != nil {
-				return fmt.Errorf("Failed to delete admin %s: %v", admin.Email, err)
+				return fmt.Errorf("failed to delete admin %s: %v", admin.Email, err)
 			}
 
 			color.Green("Successfully deleted admin %s!", admin.Email)

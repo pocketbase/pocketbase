@@ -145,7 +145,7 @@
 
     - Added new `PKCE()` and `SetPKCE(enable)` OAuth2 methods to indicate whether the PKCE flow is supported or not.
       _The PKCE value is currently configurable from the UI only for the OIDC providers._
-      _This was added to accommodate OIDC providers that may throw an error if unsupported PKCE params are submitted with the auth request (eg. LinkedIn; see [#3799](https://github.com/pocketbase/pocketbase/discussions/3799#discussioncomment-7640312))._
+      _This was added to accommodate OIDC providers that may throw an error if unsupported PKCE params are submitted with the auth request (e.g. LinkedIn; see [#3799](https://github.com/pocketbase/pocketbase/discussions/3799#discussioncomment-7640312))._
 
     - Added new `displayName` field for each `listAuthMethods()` OAuth2 provider item.
       _The value of the `displayName` property is currently configurable from the UI only for the OIDC providers._
@@ -169,7 +169,7 @@
 
     - Added `$apis.requireGuestOnly()` middleware JSVM binding ([#3896](https://github.com/pocketbase/pocketbase/issues/3896)).
 
-- Use `IS NOT` instead of `!=` as not-equal SQL query operator to handle the cases when comparing with nullable columns or expressions (eg. `json_extract` over `json` field).
+- Use `IS NOT` instead of `!=` as not-equal SQL query operator to handle the cases when comparing with nullable columns or expressions (e.g. `json_extract` over `json` field).
   _Based on my local dataset I wasn't able to find a significant difference in the performance between the 2 operators, but if you stumble on a query that you think may be affected negatively by this, please report it and I'll test it further._
 
 - Added `MaxSize` `json` field option to prevent storing large json data in the db ([#3790](https://github.com/pocketbase/pocketbase/issues/3790)).
@@ -504,7 +504,7 @@
 
 - Fixed jsvm error message prefix on failed migrations ([#3103](https://github.com/pocketbase/pocketbase/pull/3103); thanks @nzhenev).
 
-- Disabled the initial Admin UI admins counter cache when there are no initial admins to allow detecting externally created accounts (eg. with the `admin` command) ([#3106](https://github.com/pocketbase/pocketbase/issues/3106)).
+- Disabled the initial Admin UI admins counter cache when there are no initial admins to allow detecting externally created accounts (e.g. with the `admin` command) ([#3106](https://github.com/pocketbase/pocketbase/issues/3106)).
 
 - Downgraded `google/go-cloud` dependency to v0.32.0 until v0.34.0 is released to prevent the `os.TempDir` `cross-device link` errors as too many users complained about it.
 
@@ -596,7 +596,7 @@
 
 - Added new utility `github.com/pocketbase/pocketbase/tools/template` subpackage to assist with rendering HTML templates using the standard Go `html/template` and `text/template` syntax.
 
-- Added `types.JsonMap.Get(k)` and `types.JsonMap.Set(k, v)` helpers for the cases where the type aliased direct map access is not allowed (eg. in [goja](https://pkg.go.dev/github.com/dop251/goja#hdr-Maps_with_methods)).
+- Added `types.JsonMap.Get(k)` and `types.JsonMap.Set(k, v)` helpers for the cases where the type aliased direct map access is not allowed (e.g. in [goja](https://pkg.go.dev/github.com/dop251/goja#hdr-Maps_with_methods)).
 
 - Soft-deprecated `security.NewToken()` in favor of `security.NewJWT()`.
 
@@ -637,14 +637,14 @@
       With the latest JS SDK 0.16+ and Dart SDK v0.11+ versions `skipTotal=1` is set by default for the `getFirstListItem()` and `getFullList()` requests.
 
     - The count and regular select statements also now executes concurrently, meaning that we no longer perform normalization over the `page` parameter and in case the user
-      request a page that doesn't exist (eg. `?page=99999999`) we'll return empty `items` array.
+      request a page that doesn't exist (e.g. `?page=99999999`) we'll return empty `items` array.
 
     - Reverted the default `COUNT` column to `id` as there are some common situations where it can negatively impact the query performance.
       Additionally, from this version we also set `PRAGMA temp_store = MEMORY` so that also helps with the temp B-TREE creation when `id` is used.
       _There are still scenarios where `COUNT` queries with `rowid` executes faster, but the majority of the time when nested relations lookups are used it seems to have the opposite effect (at least based on the benchmarks dataset)._
 
 - ⚠️ Disallowed relations to views **from non-view** collections ([#3000](https://github.com/pocketbase/pocketbase/issues/3000)).
-  The change was necessary because I wasn't able to find an efficient way to track view changes and the previous behavior could have too many unexpected side-effects (eg. view with computed ids).
+  The change was necessary because I wasn't able to find an efficient way to track view changes and the previous behavior could have too many unexpected side-effects (e.g. view with computed ids).
   There is a system migration that will convert the existing view `relation` fields to `json` (multiple) and `text` (single) fields.
   This could be a breaking change if you have `relation` to view and use `expand` or some of the `relation` view fields as part of a collection rule.
 
@@ -686,7 +686,7 @@
 ## v0.16.7
 
 - Minor optimization for the list/search queries to use `rowid` with the `COUNT` statement when available.
-  _This eliminates the temp B-TREE step when executing the query and for large datasets (eg. 150k) it could have 10x improvement (from ~580ms to ~60ms)._
+  _This eliminates the temp B-TREE step when executing the query and for large datasets (e.g. 150k) it could have 10x improvement (from ~580ms to ~60ms)._
 
 
 ## v0.16.6
@@ -798,7 +798,7 @@
 
 - Added new `App.NewBackupsFilesystem()` helper to create a dedicated filesystem abstraction for managing app data backups.
 
-- Added new `App.OnTerminate()` hook (_executed right before app termination, eg. on `SIGTERM` signal_).
+- Added new `App.OnTerminate()` hook (_executed right before app termination, e.g. on `SIGTERM` signal_).
 
 - Added `accept` file field attribute with the field MIME types ([#2466](https://github.com/pocketbase/pocketbase/pull/2466); thanks @Nikhil1920).
 

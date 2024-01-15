@@ -133,7 +133,7 @@ type SchemaField struct {
 	Required bool   `form:"required" json:"required"`
 
 	// Presentable indicates whether the field is suitable for
-	// visualization purposes (eg. in the Admin UI relation views).
+	// visualization purposes (e.g. in the Admin UI relation views).
 	Presentable bool `form:"presentable" json:"presentable"`
 
 	// Deprecated: This field is no-op and will be removed in future versions.
@@ -412,7 +412,7 @@ func (f *SchemaField) PrepareValueWithModifier(baseValue any, modifier string, m
 
 // -------------------------------------------------------------------
 
-// MultiValuer defines common interface methods that every multi-valued (eg. with MaxSelect) field option struct has.
+// MultiValuer defines common interface methods that every multi-valued (e.g. with MaxSelect) field option struct has.
 type MultiValuer interface {
 	IsMultiple() bool
 }
@@ -540,7 +540,7 @@ func (o UrlOptions) Validate() error {
 
 type EditorOptions struct {
 	// ConvertUrls is usually used to instruct the editor whether to
-	// apply url conversion (eg. stripping the domain name in case the
+	// apply url conversion (e.g. stripping the domain name in case the
 	// urls are using the same domain as the one where the editor is loaded).
 	//
 	// (see also https://www.tiny.cloud/docs/tinymce/6/url-handling/#convert_urls)

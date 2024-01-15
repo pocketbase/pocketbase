@@ -81,7 +81,7 @@ func (s *Provider) SkipTotal(skipTotal bool) *Provider {
 }
 
 // CountCol allows changing the default column (id) that is used
-// to generated the COUNT SQL query statement.
+// to generate the COUNT SQL query statement.
 //
 // This field is ignored if skipTotal is true.
 func (s *Provider) CountCol(name string) *Provider {

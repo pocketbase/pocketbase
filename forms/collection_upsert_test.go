@@ -584,6 +584,7 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 				return
 			}
 
+			// TODO implement error
 			collection, _ = app.Dao().FindCollectionByNameOrId(form.Name)
 			if collection == nil {
 				t.Fatalf("Expected to find collection %q, got nil", form.Name)

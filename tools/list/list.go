@@ -37,7 +37,7 @@ func ExistInSlice[T comparable](item T, list []T) bool {
 }
 
 // ExistInSliceWithRegex checks whether a string exists in a slice
-// either by direct match, or by a regular expression (eg. `^\w+$`).
+// either by direct match, or by a regular expression (e.g. `^\w+$`).
 //
 // _Note: Only list items starting with '^' and ending with '$' are treated as regular expressions!_
 func ExistInSliceWithRegex(str string, list []string) bool {

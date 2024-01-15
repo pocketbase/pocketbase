@@ -82,7 +82,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 		logRequest(app, c, apiErr)
 
 		if c.Response().Committed {
-			return // already commited
+			return // already committed
 		}
 
 		event := new(core.ApiErrorEvent)
@@ -113,7 +113,8 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	}
 
 	// admin ui routes
-	bindStaticAdminUI(app, e)
+	// TODO implement error
+	_ = bindStaticAdminUI(app, e)
 
 	// default routes
 	api := e.Group("/api", eagerRequestInfoCache(app))

@@ -2,6 +2,7 @@ package forms
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -51,7 +52,7 @@ func (form *CollectionsImport) Validate() error {
 // - if [form.DeleteMissing] is set, deletes all local collections that are not found in the imports list
 //
 // All operations are wrapped in a single transaction that are
-// rollbacked on the first encountered error.
+// rollback on the first encountered error.
 //
 // You can optionally provide a list of InterceptorFunc to further
 // modify the form behavior before persisting it.
@@ -72,7 +73,8 @@ func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc[[]*models.
 			}
 
 			// validation failure
-			if err, ok := importErr.(validation.Errors); ok {
+			var err validation.Errors
+			if errors.As(importErr, &err) {
 				return err
 			}
 
@@ -85,9 +87,9 @@ func (form *CollectionsImport) Submit(interceptors ...InterceptorFunc[[]*models.
 	}, interceptors...)
 }
 
-func (form *CollectionsImport) afterSync(txDao *daos.Dao, mappedNew, mappedOld map[string]*models.Collection) error {
+func (form *CollectionsImport) afterSync(txDao *daos.Dao, _, mappedOld map[string]*models.Collection) error {
 	// refresh the actual persisted collections list
-	refreshedCollections := []*models.Collection{}
+	var refreshedCollections []*models.Collection
 	if err := txDao.CollectionQuery().OrderBy("updated ASC").All(&refreshedCollections); err != nil {
 		return err
 	}

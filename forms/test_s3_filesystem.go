@@ -55,7 +55,7 @@ func (form *TestS3Filesystem) Submit() error {
 	}
 
 	if !s3Config.Enabled {
-		return errors.New("S3 storage filesystem is not enabled")
+		return errors.New("s3 storage filesystem is not enabled")
 	}
 
 	fsys, err := filesystem.NewS3(
@@ -69,7 +69,10 @@ func (form *TestS3Filesystem) Submit() error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize the S3 filesystem: %w", err)
 	}
-	defer fsys.Close()
+	defer func(fsys *filesystem.System) {
+		// TODO implement error
+		_ = fsys.Close()
+	}(fsys)
 
 	testPrefix := "pb_settings_test_" + security.PseudorandomString(5)
 	testFileKey := testPrefix + "/test.txt"

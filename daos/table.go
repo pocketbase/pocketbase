@@ -23,7 +23,7 @@ func (dao *Dao) HasTable(tableName string) bool {
 
 // TableColumns returns all column names of a single table by its name.
 func (dao *Dao) TableColumns(tableName string) ([]string, error) {
-	columns := []string{}
+	var columns []string
 
 	err := dao.DB().NewQuery("SELECT name FROM PRAGMA_TABLE_INFO({:tableName})").
 		Bind(dbx.Params{"tableName": tableName}).
@@ -34,7 +34,7 @@ func (dao *Dao) TableColumns(tableName string) ([]string, error) {
 
 // TableInfo returns the `table_info` pragma result for the specified table.
 func (dao *Dao) TableInfo(tableName string) ([]*models.TableInfoRow, error) {
-	info := []*models.TableInfoRow{}
+	var info []*models.TableInfoRow
 
 	err := dao.DB().NewQuery("SELECT * FROM PRAGMA_TABLE_INFO({:tableName})").
 		Bind(dbx.Params{"tableName": tableName}).
@@ -43,7 +43,7 @@ func (dao *Dao) TableInfo(tableName string) ([]*models.TableInfoRow, error) {
 		return nil, err
 	}
 
-	// mattn/go-sqlite3 doesn't throw an error on invalid or missing table
+	// mattn/go-sqlite3 doesn't throw an error on invalid or missing table,
 	// so we additionally have to check whether the loaded info result is nonempty
 	if len(info) == 0 {
 		return nil, fmt.Errorf("empty table info probably due to invalid or missing table %s", tableName)
@@ -52,14 +52,14 @@ func (dao *Dao) TableInfo(tableName string) ([]*models.TableInfoRow, error) {
 	return info, nil
 }
 
-// TableIndexes returns a name grouped map with all non empty index of the specified table.
+// TableIndexes returns a name grouped map with all non-empty index of the specified table.
 //
-// Note: This method doesn't return an error on nonexisting table.
+// Note: This method doesn't return an error on nonexistent table.
 func (dao *Dao) TableIndexes(tableName string) (map[string]string, error) {
-	indexes := []struct {
+	var indexes []struct {
 		Name string
 		Sql  string
-	}{}
+	}
 
 	err := dao.DB().Select("name", "sql").
 		From("sqlite_master").

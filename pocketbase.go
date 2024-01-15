@@ -27,8 +27,8 @@ type appWrapper struct {
 
 // PocketBase defines a PocketBase app launcher.
 //
-// It implements [core.App] via embedding and all of the app interface methods
-// could be accessed directly through the instance (eg. PocketBase.DataDir()).
+// It implements [core.App] via embedding and all the app interface methods
+// could be accessed directly through the instance (e.g. PocketBase.DataDir()).
 type PocketBase struct {
 	*appWrapper
 
@@ -45,7 +45,7 @@ type PocketBase struct {
 type Config struct {
 	// optional default values for the console flags
 	DefaultDev           bool
-	DefaultDataDir       string // if not set, it will fallback to "./pb_data"
+	DefaultDataDir       string // if not set, it will fall back to "./pb_data"
 	DefaultEncryptionEnv string
 
 	// hide the default console server info on app startup
@@ -112,7 +112,8 @@ func NewWithConfig(config Config) *PocketBase {
 
 	// parse base flags
 	// (errors are ignored, since the full flags parsing happens on Execute())
-	pb.eagerParseFlags(&config)
+	// TODO implement error
+	_ = pb.eagerParseFlags(&config)
 
 	// initialize the app instance
 	pb.appWrapper = &appWrapper{core.NewBaseApp(core.BaseAppConfig{
@@ -155,7 +156,7 @@ func (pb *PocketBase) Execute() error {
 
 	done := make(chan bool, 1)
 
-	// listen for interrupt signal to gracefully shutdown the application
+	// listen for interrupt signal to gracefully shut down the application
 	go func() {
 		sigch := make(chan os.Signal, 1)
 		signal.Notify(sigch, os.Interrupt, syscall.SIGTERM)
@@ -167,7 +168,8 @@ func (pb *PocketBase) Execute() error {
 	// execute the root command
 	go func() {
 		// note: leave to the commands to decide whether to print their error
-		pb.RootCmd.Execute()
+		// TODO implement error
+		_ = pb.RootCmd.Execute()
 
 		done <- true
 	}()
@@ -229,7 +231,7 @@ func (pb *PocketBase) skipBootstrap() bool {
 		return true // already bootstrapped
 	}
 
-	cmd, _, err := pb.RootCmd.Find(os.Args[1:])
+	findCmd, _, err := pb.RootCmd.Find(os.Args[1:])
 	if err != nil {
 		return true // unknown command
 	}
@@ -241,10 +243,10 @@ func (pb *PocketBase) skipBootstrap() bool {
 
 		// ensure that there is no user defined flag with the same name/shorthand
 		trimmed := strings.TrimLeft(arg, "-")
-		if len(trimmed) > 1 && cmd.Flags().Lookup(trimmed) == nil {
+		if len(trimmed) > 1 && findCmd.Flags().Lookup(trimmed) == nil {
 			return true
 		}
-		if len(trimmed) == 1 && cmd.Flags().ShorthandLookup(trimmed) == nil {
+		if len(trimmed) == 1 && findCmd.Flags().ShorthandLookup(trimmed) == nil {
 			return true
 		}
 	}
@@ -257,6 +259,7 @@ func inspectRuntime() (baseDir string, withGoRun bool) {
 	if strings.HasPrefix(os.Args[0], os.TempDir()) {
 		// probably ran with go run
 		withGoRun = true
+		// TODO implement error
 		baseDir, _ = os.Getwd()
 	} else {
 		// probably ran with go build
@@ -266,7 +269,7 @@ func inspectRuntime() (baseDir string, withGoRun bool) {
 	return
 }
 
-// newErrWriter returns a red colored stderr writter.
+// newErrWriter returns a red colored stderr writer.
 func newErrWriter() *coloredWriter {
 	return &coloredWriter{
 		w: os.Stderr,
@@ -274,7 +277,7 @@ func newErrWriter() *coloredWriter {
 	}
 }
 
-// coloredWriter is a small wrapper struct to construct a [color.Color] writter.
+// coloredWriter is a small wrapper struct to construct a [color.Color] writer.
 type coloredWriter struct {
 	w io.Writer
 	c *color.Color

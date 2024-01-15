@@ -378,7 +378,7 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 	return nil
 }
 
-// note: expects key to be in a canonical form (eg. "accept-encoding" should be "Accept-Encoding").
+// note: expects key to be in a canonical form (e.g. "accept-encoding" should be "Accept-Encoding").
 func setHeaderIfMissing(res http.ResponseWriter, key string, value string) {
 	if _, ok := res.Header()[key]; !ok {
 		res.Header().Set(key, value)
@@ -391,12 +391,12 @@ var ThumbSizeRegex = regexp.MustCompile(`^(\d+)x(\d+)(t|b|f)?$`)
 // The new thumb file is stored at thumbKey location.
 //
 // thumbSize is in the format:
-// - 0xH  (eg. 0x100)    - resize to H height preserving the aspect ratio
-// - Wx0  (eg. 300x0)    - resize to W width preserving the aspect ratio
-// - WxH  (eg. 300x100)  - resize and crop to WxH viewbox (from center)
-// - WxHt (eg. 300x100t) - resize and crop to WxH viewbox (from top)
-// - WxHb (eg. 300x100b) - resize and crop to WxH viewbox (from bottom)
-// - WxHf (eg. 300x100f) - fit inside a WxH viewbox (without cropping)
+// - 0xH  (e.g. 0x100)    - resize to H height preserving the aspect ratio
+// - Wx0  (e.g. 300x0)    - resize to W width preserving the aspect ratio
+// - WxH  (e.g. 300x100)  - resize and crop to WxH viewbox (from center)
+// - WxHt (e.g. 300x100t) - resize and crop to WxH viewbox (from top)
+// - WxHb (e.g. 300x100b) - resize and crop to WxH viewbox (from bottom)
+// - WxHf (e.g. 300x100f) - fit inside a WxH viewbox (without cropping)
 func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) error {
 	sizeParts := ThumbSizeRegex.FindStringSubmatch(thumbSize)
 	if len(sizeParts) != 4 {

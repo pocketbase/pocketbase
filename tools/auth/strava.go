@@ -71,6 +71,7 @@ func (p *Strava) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		RefreshToken: token.RefreshToken,
 	}
 
+	// TODO implement error
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	if extracted.Id != 0 {

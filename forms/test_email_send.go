@@ -62,7 +62,8 @@ func (form *TestEmailSend) Submit() error {
 	record.Id = "__pb_test_id__"
 	record.Set(schema.FieldNameUsername, "pb_test")
 	record.Set(schema.FieldNameEmail, form.Email)
-	record.RefreshTokenKey()
+	// TODO implement error
+	_ = record.RefreshTokenKey()
 
 	switch form.Template {
 	case templateVerification:

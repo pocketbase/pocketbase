@@ -120,7 +120,7 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 			// Note:
 			// We are using a temporary column name when adding or renaming columns
 			// to ensure that there are no name collisions in case there is
-			// names switch/reuse of existing columns (eg. name, title -> title, name).
+			// names switch/reuse of existing columns (e.g. name, title -> title, name).
 			// This way we are always doing 1 more rename operation but it provides better dev experience.
 
 			if oldField == nil {

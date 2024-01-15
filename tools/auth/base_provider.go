@@ -156,7 +156,9 @@ func (p *baseProvider) sendRawUserDataRequest(req *http.Request, token *oauth2.T
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	result, err := io.ReadAll(res.Body)
 	if err != nil {
@@ -176,7 +178,7 @@ func (p *baseProvider) sendRawUserDataRequest(req *http.Request, token *oauth2.T
 	return result, nil
 }
 
-// oauth2Config constructs a oauth2.Config instance based on the provider settings.
+// oauth2Config constructs an oauth2.Config instance based on the provider settings.
 func (p *baseProvider) oauth2Config() *oauth2.Config {
 	return &oauth2.Config{
 		RedirectURL:  p.redirectUrl,

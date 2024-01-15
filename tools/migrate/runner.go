@@ -85,7 +85,7 @@ func (r *Runner) Run(args ...string) error {
 				toRevertCount,
 			),
 		}
-		survey.AskOne(prompt, &confirm)
+		_ = survey.AskOne(prompt, &confirm)
 		if !confirm {
 			fmt.Println("The command has been cancelled")
 			return nil
@@ -117,11 +117,11 @@ func (r *Runner) Run(args ...string) error {
 	}
 }
 
-// Up executes all unapplied migrations for the provided runner.
+// Up executes all unappeased migrations for the provided runner.
 //
 // On success returns list with the applied migrations file names.
 func (r *Runner) Up() ([]string, error) {
-	applied := []string{}
+	var applied []string
 
 	err := r.db.Transactional(func(tx *dbx.Tx) error {
 		for _, m := range r.migrationsList.Items() {
@@ -133,12 +133,12 @@ func (r *Runner) Up() ([]string, error) {
 			// ignore empty Up action
 			if m.Up != nil {
 				if err := m.Up(tx); err != nil {
-					return fmt.Errorf("Failed to apply migration %s: %w", m.File, err)
+					return fmt.Errorf("failed to apply migration %s: %w", m.File, err)
 				}
 			}
 
 			if err := r.saveAppliedMigration(tx, m.File); err != nil {
-				return fmt.Errorf("Failed to save applied migration info for %s: %w", m.File, err)
+				return fmt.Errorf("failed to save applied migration info for %s: %w", m.File, err)
 			}
 
 			applied = append(applied, m.File)
@@ -180,12 +180,12 @@ func (r *Runner) Down(toRevertCount int) ([]string, error) {
 				// ignore empty Down action
 				if m.Down != nil {
 					if err := m.Down(tx); err != nil {
-						return fmt.Errorf("Failed to revert migration %s: %w", m.File, err)
+						return fmt.Errorf("failed to revert migration %s: %w", m.File, err)
 					}
 				}
 
 				if err := r.saveRevertedMigration(tx, m.File); err != nil {
-					return fmt.Errorf("Failed to save reverted migration info for %s: %w", m.File, err)
+					return fmt.Errorf("failed to save reverted migration info for %s: %w", m.File, err)
 				}
 
 				reverted = append(reverted, m.File)

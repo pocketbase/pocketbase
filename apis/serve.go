@@ -29,10 +29,10 @@ type ServeConfig struct {
 	// ShowStartBanner indicates whether to show or hide the server start console message.
 	ShowStartBanner bool
 
-	// HttpAddr is the TCP address to listen for the HTTP server (eg. `127.0.0.1:80`).
+	// HttpAddr is the TCP address to listen for the HTTP server (e.g. `127.0.0.1:80`).
 	HttpAddr string
 
-	// HttpsAddr is the TCP address to listen for the HTTPS server (eg. `127.0.0.1:443`).
+	// HttpsAddr is the TCP address to listen for the HTTPS server (e.g. `127.0.0.1:443`).
 	HttpsAddr string
 
 	// Optional domains list to use when issuing the TLS certificate.
@@ -125,7 +125,7 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 				if strings.HasPrefix(host, "www.") && list.ExistInSlice(host, wwwRedirects) {
 					return c.Redirect(
 						http.StatusTemporaryRedirect,
-						(c.Scheme() + "://" + host[4:] + c.Request().RequestURI),
+						c.Scheme()+"://"+host[4:]+c.Request().RequestURI,
 					)
 				}
 
@@ -140,7 +140,7 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		HostPolicy: autocert.HostWhitelist(hostNames...),
 	}
 
-	// base request context used for cancelling long running requests
+	// base request context used for cancelling long-running requests
 	// like the SSE connections
 	baseCtx, cancelBaseCtx := context.WithCancel(context.Background())
 	defer cancelBaseCtx()
@@ -187,22 +187,24 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		log.New(date, "", log.LstdFlags).Print()
 
 		bold := color.New(color.Bold).Add(color.FgGreen)
-		bold.Printf(
+		// TODO implement error
+		_, _ = bold.Printf(
 			"%s Server started at %s\n",
 			strings.TrimSpace(date.String()),
 			color.CyanString("%s://%s", schema, addr),
 		)
 
 		regular := color.New()
-		regular.Printf("├─ REST API: %s\n", color.CyanString("%s://%s/api/", schema, addr))
-		regular.Printf("└─ Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, addr))
+		// TODO implement errors
+		_, _ = regular.Printf("├─ REST API: %s\n", color.CyanString("%s://%s/api/", schema, addr))
+		_, _ = regular.Printf("└─ Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, addr))
 	}
 
 	// WaitGroup to block until server.ShutDown() returns because Serve and similar methods exit immediately.
 	// Note that the WaitGroup would not do anything if the app.OnTerminate() hook isn't triggered.
 	var wg sync.WaitGroup
 
-	// try to gracefully shutdown the server on app termination
+	// try to gracefully shut down the server on app termination
 	app.OnTerminate().Add(func(e *core.TerminateEvent) error {
 		cancelBaseCtx()
 
@@ -210,7 +212,8 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		defer cancel()
 
 		wg.Add(1)
-		server.Shutdown(ctx)
+		// TODO implement error
+		_ = server.Shutdown(ctx)
 		if e.IsRestart {
 			// wait for execve and other handlers up to 5 seconds before exit
 			time.AfterFunc(5*time.Second, func() {

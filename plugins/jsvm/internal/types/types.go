@@ -677,7 +677,7 @@ declare namespace $filepath {
 
 /**
  * ` + "`$os`" + ` defines common helpers for working with the OS level primitives
- * (eg. deleting directories, executing shell commands, etc.).
+ * (e.g. deleting directories, executing shell commands, etc.).
  *
  * @group PocketBase
  */
@@ -1005,8 +1005,8 @@ declare namespace $http {
    * })
    *
    * console.log(res.statusCode) // the response HTTP status code
-   * console.log(res.headers)    // the response headers (eg. res.headers['X-Custom'][0])
-   * console.log(res.cookies)    // the response cookies (eg. res.cookies.sessionId.value)
+   * console.log(res.headers)    // the response headers (e.g. res.headers['X-Custom'][0])
+   * console.log(res.cookies)    // the response cookies (e.g. res.cookies.sessionId.value)
    * console.log(res.raw)        // the response body as plain text
    * console.log(res.json)       // the response body as parsed json array or map
    * ` + "```" + `

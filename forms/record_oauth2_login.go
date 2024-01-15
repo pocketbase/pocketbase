@@ -40,7 +40,7 @@ type RecordOAuth2Login struct {
 	// auth relation is found (if it is from the same collection)
 	loggedAuthRecord *models.Record
 
-	// The name of the OAuth2 client provider (eg. "google")
+	// The name of the OAuth2 client provider (e.g. "google")
 	Provider string `form:"provider" json:"provider"`
 
 	// The authorization code returned from the initial request.
@@ -179,6 +179,7 @@ func (form *RecordOAuth2Login) Submit(
 		authRecord = form.loggedAuthRecord
 	case authUser.Email != "":
 		// look for an existing auth record by the external auth record's email
+		// TODO implement error
 		authRecord, _ = form.dao.FindAuthRecordByEmail(form.collection.Id, authUser.Email)
 	}
 

@@ -37,6 +37,7 @@ func RequestInfo(c echo.Context) *models.RequestInfo {
 	if v := c.Get(ContextRequestInfoKey); v != nil {
 		if data, ok := v.(*models.RequestInfo); ok {
 			// refresh auth state
+			// TODO implement error
 			data.AuthRecord, _ = c.Get(ContextAuthRecordKey).(*models.Record)
 			data.Admin, _ = c.Get(ContextAdminKey).(*models.Admin)
 			return data
@@ -58,10 +59,11 @@ func RequestInfo(c echo.Context) *models.RequestInfo {
 		}
 	}
 
+	// TODO implement error
 	result.AuthRecord, _ = c.Get(ContextAuthRecordKey).(*models.Record)
 	result.Admin, _ = c.Get(ContextAdminKey).(*models.Admin)
-	echo.BindQueryParams(c, &result.Query)
-	rest.BindBody(c, &result.Data)
+	_ = echo.BindQueryParams(c, &result.Query)
+	_ = rest.BindBody(c, &result.Data)
 
 	c.Set(ContextRequestInfoKey, result)
 
@@ -140,7 +142,7 @@ func RecordAuthResponse(
 // EnrichRecord parses the request context and enrich the provided record:
 //   - expands relations (if defaultExpands and/or ?expand query param is set)
 //   - ensures that the emails of the auth record and its expanded auth relations
-//     are visibe only for the current logged admin, record owner or record with manage access
+//     are visible only for the current logged admin, record owner or record with manage access
 func EnrichRecord(c echo.Context, dao *daos.Dao, record *models.Record, defaultExpands ...string) error {
 	return EnrichRecords(c, dao, []*models.Record{record}, defaultExpands...)
 }
@@ -148,12 +150,12 @@ func EnrichRecord(c echo.Context, dao *daos.Dao, record *models.Record, defaultE
 // EnrichRecords parses the request context and enriches the provided records:
 //   - expands relations (if defaultExpands and/or ?expand query param is set)
 //   - ensures that the emails of the auth records and their expanded auth relations
-//     are visibe only for the current logged admin, record owner or record with manage access
+//     are visible only for the current logged admin, record owner or record with manage access
 func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defaultExpands ...string) error {
 	requestInfo := RequestInfo(c)
 
 	if err := autoIgnoreAuthRecordsEmailVisibility(dao, records, requestInfo); err != nil {
-		return fmt.Errorf("Failed to resolve email visibility: %w", err)
+		return fmt.Errorf("failed to resolve email visibility: %w", err)
 	}
 
 	expands := defaultExpands
@@ -166,7 +168,7 @@ func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defa
 
 	errs := dao.ExpandRecords(records, expands, expandFetch(dao, requestInfo))
 	if len(errs) > 0 {
-		return fmt.Errorf("Failed to expand: %v", errs)
+		return fmt.Errorf("failed to expand: %v", errs)
 	}
 
 	return nil
@@ -184,7 +186,7 @@ func expandFetch(
 			}
 
 			if relCollection.ViewRule == nil {
-				return fmt.Errorf("Only admins can view collection %q records", relCollection.Name)
+				return fmt.Errorf("only admins can view collection %q records", relCollection.Name)
 			}
 
 			if *relCollection.ViewRule != "" {
@@ -193,7 +195,8 @@ func expandFetch(
 				if err != nil {
 					return err
 				}
-				resolver.UpdateQuery(q)
+				// TODO implement error
+				_ = resolver.UpdateQuery(q)
 				q.AndWhere(expr)
 			}
 
@@ -201,7 +204,8 @@ func expandFetch(
 		})
 
 		if err == nil && len(records) > 0 {
-			autoIgnoreAuthRecordsEmailVisibility(dao, records, requestInfo)
+			// TODO implement error
+			_ = autoIgnoreAuthRecordsEmailVisibility(dao, records, requestInfo)
 		}
 
 		return records, err
@@ -248,7 +252,7 @@ func autoIgnoreAuthRecordsEmailVisibility(
 
 	// fetch the ids of the managed records
 	// ---
-	managedIds := []string{}
+	var managedIds []string
 
 	query := dao.RecordQuery(collection).
 		Select(dao.DB().QuoteSimpleColumnName(collection.Name) + ".id").
@@ -259,7 +263,8 @@ func autoIgnoreAuthRecordsEmailVisibility(
 	if err != nil {
 		return err
 	}
-	resolver.UpdateQuery(query)
+	// TODO implement error
+	_ = resolver.UpdateQuery(query)
 	query.AndWhere(expr)
 
 	if err := query.Column(&managedIds); err != nil {
@@ -305,7 +310,8 @@ func hasAuthManageAccess(
 		if err != nil {
 			return err
 		}
-		resolver.UpdateQuery(q)
+		// TODO implement error
+		_ = resolver.UpdateQuery(q)
 		q.AndWhere(expr)
 		return nil
 	}

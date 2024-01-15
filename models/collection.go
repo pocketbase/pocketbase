@@ -68,7 +68,7 @@ func (m *Collection) IsView() bool {
 func (m Collection) MarshalJSON() ([]byte, error) {
 	type alias Collection // prevent recursion
 
-	m.NormalizeOptions()
+	_ = m.NormalizeOptions()
 
 	return json.Marshal(alias(m))
 }
@@ -77,7 +77,7 @@ func (m Collection) MarshalJSON() ([]byte, error) {
 // as new [CollectionBaseOptions] instance.
 func (m *Collection) BaseOptions() CollectionBaseOptions {
 	result := CollectionBaseOptions{}
-	m.DecodeOptions(&result)
+	_ = m.DecodeOptions(&result)
 	return result
 }
 
@@ -85,7 +85,7 @@ func (m *Collection) BaseOptions() CollectionBaseOptions {
 // as new [CollectionAuthOptions] instance.
 func (m *Collection) AuthOptions() CollectionAuthOptions {
 	result := CollectionAuthOptions{}
-	m.DecodeOptions(&result)
+	_ = m.DecodeOptions(&result)
 	return result
 }
 
@@ -93,7 +93,7 @@ func (m *Collection) AuthOptions() CollectionAuthOptions {
 // as new [CollectionViewOptions] instance.
 func (m *Collection) ViewOptions() CollectionViewOptions {
 	result := CollectionViewOptions{}
-	m.DecodeOptions(&result)
+	_ = m.DecodeOptions(&result)
 	return result
 }
 

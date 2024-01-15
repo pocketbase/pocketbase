@@ -119,11 +119,11 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 //     (this is in case of S3; otherwise it creates a temp copy of the zip)
 //
 //  2. Extract the backup in a temp directory inside the app "pb_data"
-//     (eg. "pb_data/.pb_temp_to_delete/pb_restore").
+//     (e.g. "pb_data/.pb_temp_to_delete/pb_restore").
 //
 //  3. Move the current app "pb_data" content (excluding the local backups and the special temp dir)
 //     under another temp sub dir that will be deleted on the next app start up
-//     (eg. "pb_data/.pb_temp_to_delete/old_pb_data").
+//     (e.g. "pb_data/.pb_temp_to_delete/old_pb_data").
 //     This is because on some environments it may not be allowed
 //     to delete the currently open "pb_data" files.
 //

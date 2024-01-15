@@ -20,7 +20,7 @@ func (dao *Dao) CollectionQuery() *dbx.SelectQuery {
 
 // FindCollectionsByType finds all collections by the given type.
 func (dao *Dao) FindCollectionsByType(collectionType string) ([]*models.Collection, error) {
-	collections := []*models.Collection{}
+	var collections []*models.Collection
 
 	err := dao.CollectionQuery().
 		AndWhere(dbx.HashExp{"type": collectionType}).
@@ -34,7 +34,7 @@ func (dao *Dao) FindCollectionsByType(collectionType string) ([]*models.Collecti
 	return collections, nil
 }
 
-// FindCollectionByNameOrId finds a single collection by its name (case insensitive) or id.
+// FindCollectionByNameOrId finds a single collection by its name (case-insensitive) or id.
 func (dao *Dao) FindCollectionByNameOrId(nameOrId string) (*models.Collection, error) {
 	model := &models.Collection{}
 
@@ -83,7 +83,7 @@ func (dao *Dao) IsCollectionNameUnique(name string, excludeIds ...string) bool {
 // also included in the result. To exclude it, pass the collection id
 // as the excludeId argument.
 func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeIds ...string) (map[*models.Collection][]*schema.SchemaField, error) {
-	collections := []*models.Collection{}
+	var collections []*models.Collection
 
 	query := dao.CollectionQuery()
 
@@ -102,7 +102,8 @@ func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeI
 			if f.Type != schema.FieldTypeRelation {
 				continue
 			}
-			f.InitOptions()
+			// TODO implement error
+			_ = f.InitOptions()
 			options, _ := f.Options.(*schema.RelationOptions)
 			if options != nil && options.CollectionId == collection.Id {
 				result[c] = append(result[c], f)
@@ -121,11 +122,11 @@ func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeI
 // - is referenced as part of a relation field in another collection
 func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 	if collection.System {
-		return fmt.Errorf("System collection %q cannot be deleted.", collection.Name)
+		return fmt.Errorf("system collection %q cannot be deleted", collection.Name)
 	}
 
 	// ensure that there aren't any existing references.
-	// note: the select is outside of the transaction to prevent SQLITE_LOCKED error when mixing read&write in a single transaction
+	// note: the select is outside the transaction to prevent SQLITE_LOCKED error when mixing read&write in a single transaction
 	result, err := dao.FindCollectionReferences(collection, collection.Id)
 	if err != nil {
 		return err
@@ -135,7 +136,7 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 		for ref := range result {
 			names = append(names, ref.Name)
 		}
-		return fmt.Errorf("The collection %q has external relation field references (%s).", collection.Name, strings.Join(names, ", "))
+		return fmt.Errorf("the collection %q has external relation field references (%s)", collection.Name, strings.Join(names, ", "))
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
@@ -152,7 +153,7 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 
 		// trigger views resave to check for dependencies
 		if err := txDao.resaveViewsWithChangedSchema(collection.Id); err != nil {
-			return fmt.Errorf("The collection has a view dependency - %w", err)
+			return fmt.Errorf("the collection has a view dependency - %w", err)
 		}
 
 		return txDao.Delete(collection)
@@ -162,14 +163,14 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 // SaveCollection persists the provided Collection model and updates
 // its related records table schema.
 //
-// If collecction.IsNew() is true, the method will perform a create, otherwise an update.
-// To explicitly mark a collection for update you can use collecction.MarkAsNotNew().
+// If collection.IsNew() is true, the method will perform a creation, otherwise an update.
+// To explicitly mark a collection for update you can use collection.MarkAsNotNew().
 func (dao *Dao) SaveCollection(collection *models.Collection) error {
 	var oldCollection *models.Collection
 
 	if !collection.IsNew() {
 		// get the existing collection state to compare with the new one
-		// note: the select is outside of the transaction to prevent SQLITE_LOCKED error when mixing read&write in a single transaction
+		// note: the select is outside the transaction to prevent SQLITE_LOCKED error when mixing read&write in a single transaction
 		var findErr error
 		oldCollection, findErr = dao.FindCollectionByNameOrId(collection.Id)
 		if findErr != nil {
@@ -209,7 +210,8 @@ func (dao *Dao) SaveCollection(collection *models.Collection) error {
 
 	// trigger an update for all views with changed schema as a result of the current collection save
 	// (ignoring view errors to allow users to update the query from the UI)
-	dao.resaveViewsWithChangedSchema(collection.Id)
+	// TODO implement error
+	_ = dao.resaveViewsWithChangedSchema(collection.Id)
 
 	return nil
 }
@@ -227,11 +229,11 @@ func (dao *Dao) ImportCollections(
 	afterSync func(txDao *Dao, mappedImported, mappedExisting map[string]*models.Collection) error,
 ) error {
 	if len(importedCollections) == 0 {
-		return errors.New("No collections to import")
+		return errors.New("no collections to import")
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
-		existingCollections := []*models.Collection{}
+		var existingCollections []*models.Collection
 		if err := txDao.CollectionQuery().OrderBy("updated ASC").All(&existingCollections); err != nil {
 			return err
 		}
@@ -263,11 +265,11 @@ func (dao *Dao) ImportCollections(
 
 				// extend existing schema
 				if !deleteMissing {
-					schema, _ := existing.Schema.Clone()
+					schemaClone, _ := existing.Schema.Clone()
 					for _, f := range imported.Schema.Fields() {
-						schema.AddField(f) // add or replace
+						schemaClone.AddField(f) // add or replace
 					}
-					imported.Schema = *schema
+					imported.Schema = *schemaClone
 				}
 			} else {
 				imported.MarkAsNew()
@@ -285,7 +287,7 @@ func (dao *Dao) ImportCollections(
 				}
 
 				if existing.System {
-					return fmt.Errorf("System collection %q cannot be deleted.", existing.Name)
+					return fmt.Errorf("system collection %q cannot be deleted", existing.Name)
 				}
 
 				// delete the related records table or view

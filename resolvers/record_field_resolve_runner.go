@@ -35,7 +35,7 @@ type runner struct {
 	activeProps                []string            // holds the active props that remains to be processed
 	activeCollectionName       string              // the last used collection name
 	activeTableAlias           string              // the last used table alias
-	allowHiddenFields          bool                // indicates whether hidden fields (eg. email) should be allowed without extra conditions
+	allowHiddenFields          bool                // indicates whether hidden fields (e.g. email) should be allowed without extra conditions
 	nullifyMisingField         bool                // indicating whether to return null on missing field or return an error
 	withMultiMatch             bool                // indicates whether to attach a multiMatchSubquery condition to the ResolverResult
 	multiMatchActiveTableAlias string              // the last used multi-match table alias

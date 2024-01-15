@@ -80,7 +80,7 @@ func (form *RecordVerificationRequest) Submit(interceptors ...InterceptorFunc[*m
 		now := time.Now().UTC()
 		lastVerificationSentAt := record.LastVerificationSentAt().Time()
 		if (now.Sub(lastVerificationSentAt)).Seconds() < form.resendThreshold {
-			return errors.New("A verification email was already sent.")
+			return errors.New("a verification email was already sent")
 		}
 	}
 
@@ -94,7 +94,8 @@ func (form *RecordVerificationRequest) Submit(interceptors ...InterceptorFunc[*m
 		}
 
 		// update last sent timestamp
-		m.SetLastVerificationSentAt(types.NowDateTime())
+		// TODO implement error
+		_ = m.SetLastVerificationSentAt(types.NowDateTime())
 
 		return form.dao.SaveRecord(m)
 	}, interceptors...)

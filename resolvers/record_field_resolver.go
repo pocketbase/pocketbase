@@ -118,14 +118,14 @@ func NewRecordFieldResolver(
 // UpdateQuery implements `search.FieldResolver` interface.
 //
 // Conditionally updates the provided search query based on the
-// resolved fields (eg. dynamically joining relations).
+// resolved fields (e.g. dynamically joining relations).
 func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 	if len(r.joins) > 0 {
 		query.Distinct(true)
 
 		for _, join := range r.joins {
 			query.LeftJoin(
-				(join.tableName + " " + join.tableAlias),
+				join.tableName+" "+join.tableAlias,
 				join.on,
 			)
 		}

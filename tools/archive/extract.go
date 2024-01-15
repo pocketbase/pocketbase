@@ -15,7 +15,9 @@ func Extract(src, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer zr.Close()
+	defer func(zr *zip.ReadCloser) {
+		_ = zr.Close()
+	}(zr)
 
 	// normalize dest path to check later for Zip Slip
 	dest = filepath.Clean(dest) + string(os.PathSeparator)
@@ -44,7 +46,9 @@ func extractFile(zipFile *zip.File, basePath string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func(r io.ReadCloser) {
+		_ = r.Close()
+	}(r)
 
 	if zipFile.FileInfo().IsDir() {
 		if err := os.MkdirAll(path, os.ModePerm); err != nil {
@@ -60,7 +64,9 @@ func extractFile(zipFile *zip.File, basePath string) error {
 		if err != nil {
 			return err
 		}
-		defer f.Close()
+		defer func(f *os.File) {
+			_ = f.Close()
+		}(f)
 
 		_, err = io.Copy(f, r)
 		if err != nil {

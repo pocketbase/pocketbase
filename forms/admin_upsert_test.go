@@ -126,6 +126,7 @@ func TestAdminUpsertValidateAndSubmit(t *testing.T) {
 		admin := &models.Admin{}
 		if s.id != "" {
 			isCreate = false
+			// TODO implement error
 			admin, _ = app.Dao().FindAdminById(s.id)
 		}
 		initialTokenKey := admin.TokenKey

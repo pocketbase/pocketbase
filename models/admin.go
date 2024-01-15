@@ -41,10 +41,10 @@ func (m *Admin) ValidatePassword(password string) bool {
 
 // SetPassword sets cryptographically secure string to `model.Password`.
 //
-// Additionally this method also resets the LastResetSentAt and the TokenKey fields.
+// Additionally, this method also resets the LastResetSentAt and the TokenKey fields.
 func (m *Admin) SetPassword(password string) error {
 	if password == "" {
-		return errors.New("The provided plain password is empty")
+		return errors.New("the provided plain password is empty")
 	}
 
 	// hash the password

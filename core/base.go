@@ -376,7 +376,7 @@ func (app *BaseApp) Bootstrap() error {
 }
 
 // ResetBootstrapState takes care for releasing initialized app resources
-// (eg. closing db connections).
+// (e.g. closing db connections).
 func (app *BaseApp) ResetBootstrapState() error {
 	if app.Dao() != nil {
 		if err := app.Dao().ConcurrentDB().(*dbx.DB).Close(); err != nil {
@@ -508,7 +508,7 @@ func (app *BaseApp) NewMailClient() mailer.Mailer {
 }
 
 // NewFilesystem creates a new local or S3 filesystem instance
-// for managing regular app files (eg. collection uploads)
+// for managing regular app files (e.g. collection uploads)
 // based on the current app settings.
 //
 // NB! Make sure to call Close() on the returned result
@@ -1234,6 +1234,7 @@ func (app *BaseApp) initLogger() error {
 					model.Level = int(l.Level)
 					model.Message = l.Message
 					model.Data = l.Data
+					// TODO implement error
 					model.Created, _ = types.ParseDateTime(l.Time)
 					model.Updated = model.Created
 

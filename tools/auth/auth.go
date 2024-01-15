@@ -24,7 +24,7 @@ type AuthUser struct {
 
 // Provider defines a common interface for an OAuth2 client.
 type Provider interface {
-	// Scopes returns the context associated with the provider (if any).
+	// Context Scopes returns the context associated with the provider (if any).
 	Context() context.Context
 
 	// SetContext assigns the specified context to the current provider.
@@ -36,7 +36,7 @@ type Provider interface {
 	// SetPKCE toggles the state whether the provider can use the PKCE flow or not.
 	SetPKCE(enable bool)
 
-	// DisplayName usually returns provider name as it is officially written
+	// DisplayName usually returns provider name as it is officially written,
 	// and it could be used directly in the UI.
 	DisplayName() string
 
@@ -86,7 +86,7 @@ type Provider interface {
 	// SetUserApiUrl sets the provider's UserApiUrl.
 	SetUserApiUrl(url string)
 
-	// Client returns an http client using the provided token.
+	// Client returns a http client using the provided token.
 	Client(token *oauth2.Token) *http.Client
 
 	// BuildAuthUrl returns a URL to the provider's consent page
@@ -97,7 +97,7 @@ type Provider interface {
 	FetchToken(code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 
 	// FetchRawUserData requests and marshalizes into `result` the
-	// the OAuth user api response.
+	//  OAuth user api response.
 	FetchRawUserData(token *oauth2.Token) ([]byte, error)
 
 	// FetchAuthUser is similar to FetchRawUserData, but normalizes and

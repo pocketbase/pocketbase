@@ -722,7 +722,7 @@ export default class CommonHelper {
 
     /**
      * Extract the user initials from the provided username or email address
-     * (eg. converts "john.doe@example.com" to "JD").
+     * (e.g. converts "john.doe@example.com" to "JD").
      *
      * @param  {String} str
      * @return {String}

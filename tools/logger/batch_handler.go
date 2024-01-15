@@ -87,7 +87,7 @@ type BatchHandler struct {
 // Enabled reports whether the handler handles records at the given level.
 //
 // The handler ignores records whose level is lower.
-func (h *BatchHandler) Enabled(ctx context.Context, level slog.Level) bool {
+func (h *BatchHandler) Enabled(_ context.Context, level slog.Level) bool {
 	return level >= h.options.Level.Level()
 }
 
@@ -240,11 +240,11 @@ func (h *BatchHandler) resolveAttr(data map[string]any, attr slog.Attr) error {
 			return nil // ignore empty groups
 		}
 
-		// create a submap to wrap the resolved group attributes
+		// create a sub map to wrap the resolved group attributes
 		groupData := make(map[string]any, len(attrs))
 
 		for _, subAttr := range attrs {
-			h.resolveAttr(groupData, subAttr)
+			_ = h.resolveAttr(groupData, subAttr)
 		}
 
 		if len(groupData) > 0 {

@@ -66,7 +66,8 @@ func (dao *Dao) SaveView(name string, selectQuery string) error {
 		if _, err := txDao.TableInfo(name); err != nil {
 			// manually cleanup previously created view in case the func
 			// is called in a nested transaction and the error is discarded
-			txDao.DeleteView(name)
+			// TODO implement error
+			_ = txDao.DeleteView(name)
 
 			return err
 		}
@@ -96,7 +97,10 @@ func (dao *Dao) CreateViewSchema(selectQuery string) (schema.Schema, error) {
 		if err := txDao.SaveView(tempView, selectQuery); err != nil {
 			return err
 		}
-		defer txDao.DeleteView(tempView)
+		defer func(txDao *Dao, name string) {
+			// TODO implement error
+			_ = txDao.DeleteView(name)
+		}(txDao, tempView)
 
 		// extract the generated view table info
 		info, err := txDao.TableInfo(tempView)
@@ -330,7 +334,7 @@ func (dao *Dao) parseQueryToFields(selectQuery string) (map[string]*queryField, 
 			return nil, errors.New("dynamic column names are not supported")
 		}
 
-		// find the first field by name (case insensitive)
+		// find the first field by name (case-insensitive)
 		var field *schema.SchemaField
 		for _, f := range collection.Schema.Fields() {
 			if strings.EqualFold(f.Name, fieldName) {
@@ -448,7 +452,7 @@ func (dao *Dao) findCollectionsByIdentifiers(tables []identifier) (map[string]*m
 
 var joinReplaceRegex = regexp.MustCompile(`(?im)\s+(inner join|outer join|left join|right join|join)\s+?`)
 var discardReplaceRegex = regexp.MustCompile(`(?im)\s+(where|group by|having|order|limit|with)\s+?`)
-var commentsReplaceRegex = regexp.MustCompile(`(?m)(\/\*[\s\S]+\*\/)|(--.+$)`)
+var commentsReplaceRegex = regexp.MustCompile(`(?m)(/\*[\s\S]+\*/)|(--.+$)`)
 
 type identifier struct {
 	original string
@@ -531,7 +535,7 @@ func (p *identifiersParser) parse(selectQuery string) error {
 		return err
 	}
 
-	froms, err := extractIdentifiers(fromParts.String())
+	from, err := extractIdentifiers(fromParts.String())
 	if err != nil {
 		return err
 	}
@@ -542,7 +546,7 @@ func (p *identifiersParser) parse(selectQuery string) error {
 	}
 
 	p.columns = selects
-	p.tables = froms
+	p.tables = from
 	p.tables = append(p.tables, joins...)
 
 	return nil

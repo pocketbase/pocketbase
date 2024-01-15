@@ -54,7 +54,7 @@ func (p *vmsPool) run(call func(vm *goja.Runtime) error) error {
 
 	p.mux.RUnlock()
 
-	// create a new one-off item if of all of the pool items are currently busy
+	// create a new one-off item if of all the pool items are currently busy
 	//
 	// note: if turned out not efficient we may change this in the future
 	// by adding the created item in the pool with some timer for removal

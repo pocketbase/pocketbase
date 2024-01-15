@@ -2,6 +2,7 @@ package validators
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/gabriel-vasile/mimetype"
@@ -60,7 +61,10 @@ func UploadedFileMimeType(validTypes []string) validation.RuleFunc {
 		if err != nil {
 			return baseErr
 		}
-		defer f.Close()
+		defer func(f io.ReadSeekCloser) {
+			// TODO implement error
+			_ = f.Close()
+		}(f)
 
 		filetype, err := mimetype.DetectReader(f)
 		if err != nil {

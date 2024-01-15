@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// FireAndForget executes `f()` in a new go routine and auto recovers if panic.
+// FireAndForget executes `f()` in a new go routine and auto recovers if panicked.
 //
 // **Note:** Use this only if you are not interested in the result of `f()`
 // and don't want to block the parent go routine.

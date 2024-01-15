@@ -587,7 +587,7 @@ func (m *Record) UnmarshalJSON(data []byte) error {
 // The resolved modifier keys will be removed.
 //
 // Multiple modifiers will be applied one after another,
-// while reusing the previous base key value result (eg. 1; -5; +2 => -2).
+// while reusing the previous base key value result (e.g. 1; -5; +2 => -2).
 //
 // Example usage:
 //
@@ -645,7 +645,7 @@ func (m *Record) ReplaceModifers(data map[string]any) map[string]any {
 			oldNames = list.ToUniqueStringSlice(recordData()[key])
 		}
 
-		// search for individual file name to delete (eg. "file.test.png = null")
+		// search for individual file name to delete (e.g. "file.test.png = null")
 		for _, name := range oldNames {
 			suffixedKey := key + "." + name
 			if v, ok := clone[suffixedKey]; ok && cast.ToString(v) == "" {
@@ -655,7 +655,7 @@ func (m *Record) ReplaceModifers(data map[string]any) map[string]any {
 			}
 		}
 
-		// search for individual file index to delete (eg. "file.0 = null")
+		// search for individual file index to delete (e.g. "file.0 = null")
 		keyExp, _ := regexp.Compile(`^` + regexp.QuoteMeta(key) + `\.\d+$`)
 		for indexedKey := range clone {
 			if keyExp.MatchString(indexedKey) && cast.ToString(clone[indexedKey]) == "" {

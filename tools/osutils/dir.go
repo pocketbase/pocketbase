@@ -35,10 +35,10 @@ func MoveDirContent(src string, dest string, rootExclude ...string) error {
 	moved := map[string]string{}
 
 	tryRollback := func() []error {
-		errs := []error{}
+		var errs []error
 
-		for old, new := range moved {
-			if err := os.Rename(new, old); err != nil {
+		for old, mv := range moved {
+			if err := os.Rename(mv, old); err != nil {
 				errs = append(errs, err)
 			}
 		}
@@ -61,9 +61,9 @@ func MoveDirContent(src string, dest string, rootExclude ...string) error {
 		}
 
 		old := filepath.Join(src, basename)
-		new := filepath.Join(dest, basename)
+		join := filepath.Join(dest, basename)
 
-		if err := os.Rename(old, new); err != nil {
+		if err := os.Rename(old, join); err != nil {
 			if errs := tryRollback(); len(errs) > 0 {
 				errs = append(errs, err)
 				err = errors.Join(errs...)
@@ -72,7 +72,7 @@ func MoveDirContent(src string, dest string, rootExclude ...string) error {
 			return err
 		}
 
-		moved[old] = new
+		moved[old] = join
 	}
 
 	return nil

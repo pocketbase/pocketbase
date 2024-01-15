@@ -46,8 +46,8 @@ func newExcerptModifier(args ...string) (*excerptModifier, error) {
 		return nil, errors.New("too many arguments - expected (max, withEllipsis?)")
 	}
 
-	max := cast.ToInt(args[0])
-	if max == 0 {
+	mx := cast.ToInt(args[0])
+	if mx == 0 {
 		return nil, errors.New("max argument must be > 0")
 	}
 
@@ -56,7 +56,7 @@ func newExcerptModifier(args ...string) (*excerptModifier, error) {
 		withEllipsis = cast.ToBool(args[1])
 	}
 
-	return &excerptModifier{max, withEllipsis}, nil
+	return &excerptModifier{mx, withEllipsis}, nil
 }
 
 // Modify implements the [FieldModifier.Modify] interface method.
@@ -84,6 +84,7 @@ func (m *excerptModifier) Modify(value any) (any, error) {
 	// https://pkg.go.dev/golang.org/x/net/html#Parse
 	var stripTags func(*html.Node)
 	stripTags = func(n *html.Node) {
+		// TODO implement default state
 		switch n.Type {
 		case html.TextNode:
 			// collapse multiple spaces into one

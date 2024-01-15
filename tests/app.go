@@ -37,10 +37,12 @@ type TestApp struct {
 // After this call, the app instance shouldn't be used anymore.
 func (t *TestApp) Cleanup() {
 	t.ResetEventCalls()
-	t.ResetBootstrapState()
+	// TODO implement error
+	_ = t.ResetBootstrapState()
 
 	if t.DataDir() != "" {
-		os.RemoveAll(t.DataDir())
+		// TODO implement error
+		_ = os.RemoveAll(t.DataDir())
 	}
 }
 
@@ -497,7 +499,10 @@ func copyDir(src string, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer sourceDir.Close()
+	defer func(sourceDir *os.File) {
+		// TODO implement error
+		_ = sourceDir.Close()
+	}(sourceDir)
 
 	items, err := sourceDir.Readdir(-1)
 	if err != nil {
@@ -528,13 +533,19 @@ func copyFile(src string, dest string) error {
 	if err != nil {
 		return err
 	}
-	defer srcFile.Close()
+	defer func(srcFile *os.File) {
+		// TODO implement error
+		_ = srcFile.Close()
+	}(srcFile)
 
 	destFile, err := os.Create(dest)
 	if err != nil {
 		return err
 	}
-	defer destFile.Close()
+	defer func(destFile *os.File) {
+		// TODO implement error
+		_ = destFile.Close()
+	}(destFile)
 
 	if _, err := io.Copy(destFile, srcFile); err != nil {
 		return err
