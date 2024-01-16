@@ -523,6 +523,7 @@ type EmailTemplate struct {
 	Body      string `form:"body" json:"body"`
 	Subject   string `form:"subject" json:"subject"`
 	ActionUrl string `form:"actionUrl" json:"actionUrl"`
+	Hidden    bool   `form:"hidden" json:"hidden"`
 }
 
 // Validate makes EmailTemplate validatable by implementing [validation.Validatable] interface.

@@ -2,6 +2,7 @@
     import { link } from "svelte-spa-router";
     import active from "svelte-spa-router/active";
     import PageSidebar from "@/components/base/PageSidebar.svelte";
+    import { hideControls } from "@/stores/app";
 </script>
 
 <PageSidebar class="settings-sidebar">
@@ -39,27 +40,29 @@
             <span class="txt">Backups</span>
         </a>
 
-        <div class="sidebar-title">
-            <span class="txt">Sync</span>
-        </div>
-        <a
-            href="/settings/export-collections"
-            class="sidebar-list-item"
-            use:active={{ path: "/settings/export-collections/?.*" }}
-            use:link
-        >
-            <i class="ri-uninstall-line" />
-            <span class="txt">Export collections</span>
-        </a>
-        <a
-            href="/settings/import-collections"
-            class="sidebar-list-item"
-            use:active={{ path: "/settings/import-collections/?.*" }}
-            use:link
-        >
-            <i class="ri-install-line" />
-            <span class="txt">Import collections</span>
-        </a>
+        {#if !hideControls}
+            <div class="sidebar-title">
+                <span class="txt">Sync</span>
+            </div>
+            <a
+                href="/settings/export-collections"
+                class="sidebar-list-item"
+                use:active={{ path: "/settings/export-collections/?.*" }}
+                use:link
+            >
+                <i class="ri-uninstall-line" />
+                <span class="txt">Export collections</span>
+            </a>
+            <a
+                href="/settings/import-collections"
+                class="sidebar-list-item"
+                use:active={{ path: "/settings/import-collections/?.*" }}
+                use:link
+            >
+                <i class="ri-install-line" />
+                <span class="txt">Import collections</span>
+            </a>
+        {/if}
 
         <div class="sidebar-title">Authentication</div>
         <a

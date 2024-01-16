@@ -135,26 +135,32 @@
                 </div>
 
                 <div class="accordions">
-                    <EmailTemplateAccordion
-                        single
-                        key="meta.verificationTemplate"
-                        title={'Default "Verification" email template'}
-                        bind:config={formSettings.meta.verificationTemplate}
-                    />
+                    {#if !formSettings.meta.verificationTemplate.hidden}
+                        <EmailTemplateAccordion
+                            single
+                            key="meta.verificationTemplate"
+                            title={'Default "Verification" email template'}
+                            bind:config={formSettings.meta.verificationTemplate}
+                        />
+                    {/if}
 
-                    <EmailTemplateAccordion
-                        single
-                        key="meta.resetPasswordTemplate"
-                        title={'Default "Password reset" email template'}
-                        bind:config={formSettings.meta.resetPasswordTemplate}
-                    />
+                    {#if !formSettings.meta.resetPasswordTemplate.hidden}
+                        <EmailTemplateAccordion
+                            single
+                            key="meta.resetPasswordTemplate"
+                            title={'Default "Password reset" email template'}
+                            bind:config={formSettings.meta.resetPasswordTemplate}
+                        />
+                    {/if}
 
-                    <EmailTemplateAccordion
-                        single
-                        key="meta.confirmEmailChangeTemplate"
-                        title={'Default "Confirm email change" email template'}
-                        bind:config={formSettings.meta.confirmEmailChangeTemplate}
-                    />
+                    {#if !formSettings.meta.confirmEmailChangeTemplate.hidden}
+                        <EmailTemplateAccordion
+                            single
+                            key="meta.confirmEmailChangeTemplate"
+                            title={'Default "Confirm email change" email template'}
+                            bind:config={formSettings.meta.confirmEmailChangeTemplate}
+                        />
+                    {/if}
                 </div>
 
                 <hr />

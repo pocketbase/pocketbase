@@ -10,7 +10,7 @@
 
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
-- Minor Admin UI improvements (reduced the min table row height, added new TinyMCE codesample plugin languages, etc.)
+- Minor Admin UI improvements (reduced the min table row height, added new TinyMCE codesample plugin languages, hide the collection sync settings when the `Settings.Meta.HideControls` is enabled, etc.)
 
 
 ## v0.20.6
