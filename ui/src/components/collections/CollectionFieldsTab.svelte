@@ -80,9 +80,14 @@
             return;
         }
 
+        // field with the old name exists so there is no need to rename index columns
+        if (!!collection?.schema?.find((f) => f.name == oldName && !f.toDelete)) {
+            return;
+        }
+
         // update indexes on renamed fields
         collection.indexes = collection.indexes.map((idx) =>
-            CommonHelper.replaceIndexColumn(idx, oldName, newName)
+            CommonHelper.replaceIndexColumn(idx, oldName, newName),
         );
     }
 </script>

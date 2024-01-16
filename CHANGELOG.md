@@ -1,3 +1,8 @@
+## v0.20.7
+
+- Fixed the Admin UI auto indexes update when renaming fields with a common prefix ([#4160](https://github.com/pocketbase/pocketbase/issues/4160)).
+
+
 ## v0.20.6
 
 - Fixed JSVM types generation for functions with omitted arg types ([#4145](https://github.com/pocketbase/pocketbase/issues/4145)).
