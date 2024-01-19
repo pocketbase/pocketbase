@@ -656,29 +656,42 @@ func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 
 // -------------------------------------------------------------------
 
-const oauth2SubscriptionTopic = "@oauth2"
+const (
+	oauth2SubscriptionTopic   string = "@oauth2"
+	oauth2FailureRedirectPath string = "../_/#/auth/oauth2-redirect-failure"
+	oauth2SuccessRedirectPath string = "../_/#/auth/oauth2-redirect-success"
+)
+
+type oauth2EventMessage struct {
+	State string `json:"state"`
+	Code  string `json:"code"`
+	Error string `json:"error,omitempty"`
+}
 
 func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 	state := c.QueryParam("state")
-	code := c.QueryParam("code")
-
-	if code == "" || state == "" {
-		return NewBadRequestError("Invalid OAuth2 redirect parameters.", nil)
+	if state == "" {
+		api.app.Logger().Debug("Missing OAuth2 state parameter")
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2FailureRedirectPath)
 	}
 
 	client, err := api.app.SubscriptionsBroker().ClientById(state)
 	if err != nil || client.IsDiscarded() || !client.HasSubscription(oauth2SubscriptionTopic) {
-		return NewNotFoundError("Missing or invalid OAuth2 subscription client.", err)
+		api.app.Logger().Debug("Missing or invalid OAuth2 subscription client", "error", err, "clientId", state)
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2FailureRedirectPath)
 	}
+	defer client.Unsubscribe(oauth2SubscriptionTopic)
 
-	data := map[string]string{
-		"state": state,
-		"code":  code,
+	data := oauth2EventMessage{
+		State: state,
+		Code:  c.QueryParam("code"),
+		Error: c.QueryParam("error"),
 	}
 
 	encodedData, err := json.Marshal(data)
 	if err != nil {
-		return NewBadRequestError("Failed to marshalize OAuth2 redirect data.", err)
+		api.app.Logger().Debug("Failed to marshalize OAuth2 redirect data", "error", err)
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2FailureRedirectPath)
 	}
 
 	msg := subscriptions.Message{
@@ -688,5 +701,10 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 
 	client.Send(msg)
 
-	return c.Redirect(http.StatusTemporaryRedirect, "../_/#/auth/oauth2-redirect")
+	if data.Error != "" || data.Code == "" {
+		api.app.Logger().Debug("Failed OAuth2 redirect due to an error or missing code parameter", "error", data.Error, "clientId", data.State)
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2FailureRedirectPath)
+	}
+
+	return c.Redirect(http.StatusTemporaryRedirect, oauth2SuccessRedirectPath)
 }

@@ -152,8 +152,14 @@ const routes = {
         userData: { showAppSidebar: false },
     }),
 
-    "/auth/oauth2-redirect": wrap({
-        asyncComponent:  () => import("@/components/records/PageOAuth2Redirect.svelte"),
+    "/auth/oauth2-redirect-success": wrap({
+        asyncComponent:  () => import("@/components/records/PageOAuth2RedirectSuccess.svelte"),
+        conditions: baseConditions,
+        userData: { showAppSidebar: false },
+    }),
+
+    "/auth/oauth2-redirect-failure": wrap({
+        asyncComponent:  () => import("@/components/records/PageOAuth2RedirectFailure.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
