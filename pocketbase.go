@@ -34,6 +34,7 @@ type PocketBase struct {
 
 	devFlag           bool
 	dataDirFlag       string
+	dbFilenameFlag    string
 	encryptionEnvFlag string
 	hideStartBanner   bool
 
@@ -46,6 +47,7 @@ type Config struct {
 	// optional default values for the console flags
 	DefaultDev           bool
 	DefaultDataDir       string // if not set, it will fallback to "./pb_data"
+	DefaultDbFilename    string // if not set, it will fallback to "data.db"
 	DefaultEncryptionEnv string
 
 	// hide the default console server info on app startup
@@ -88,6 +90,11 @@ func NewWithConfig(config Config) *PocketBase {
 		config.DefaultDataDir = filepath.Join(baseDir, "pb_data")
 	}
 
+	// initialize a default db filename based on the executable name
+	if config.DefaultDbFilename == "" {
+		config.DefaultDbFilename = "data.db"
+	}
+
 	pb := &PocketBase{
 		RootCmd: &cobra.Command{
 			Use:     filepath.Base(os.Args[0]),
@@ -103,6 +110,7 @@ func NewWithConfig(config Config) *PocketBase {
 		},
 		devFlag:           config.DefaultDev,
 		dataDirFlag:       config.DefaultDataDir,
+		dbFilenameFlag:    config.DefaultDbFilename,
 		encryptionEnvFlag: config.DefaultEncryptionEnv,
 		hideStartBanner:   config.HideStartBanner,
 	}
@@ -118,6 +126,7 @@ func NewWithConfig(config Config) *PocketBase {
 	pb.appWrapper = &appWrapper{core.NewBaseApp(core.BaseAppConfig{
 		IsDev:            pb.devFlag,
 		DataDir:          pb.dataDirFlag,
+		DbFilename:       pb.dbFilenameFlag,
 		EncryptionEnv:    pb.encryptionEnvFlag,
 		DataMaxOpenConns: config.DataMaxOpenConns,
 		DataMaxIdleConns: config.DataMaxIdleConns,
@@ -190,6 +199,13 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 		"dir",
 		config.DefaultDataDir,
 		"the PocketBase data directory",
+	)
+
+	pb.RootCmd.PersistentFlags().StringVar(
+		&pb.dbFilenameFlag,
+		"db",
+		config.DefaultDbFilename,
+		"the PocketBase database filename",
 	)
 
 	pb.RootCmd.PersistentFlags().StringVar(
