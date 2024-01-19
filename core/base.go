@@ -49,6 +49,7 @@ type BaseApp struct {
 	// configurable parameters
 	isDev            bool
 	dataDir          string
+	dbFilename       string
 	encryptionEnv    string
 	dataMaxOpenConns int
 	dataMaxIdleConns int
@@ -177,6 +178,7 @@ type BaseApp struct {
 type BaseAppConfig struct {
 	IsDev            bool
 	DataDir          string
+	DbFilename       string
 	EncryptionEnv    string
 	DataMaxOpenConns int // default to 500
 	DataMaxIdleConns int // default 20
@@ -192,6 +194,7 @@ func NewBaseApp(config BaseAppConfig) *BaseApp {
 	app := &BaseApp{
 		isDev:               config.IsDev,
 		dataDir:             config.DataDir,
+		dbFilename:          config.DbFilename,
 		encryptionEnv:       config.EncryptionEnv,
 		dataMaxOpenConns:    config.DataMaxOpenConns,
 		dataMaxIdleConns:    config.DataMaxIdleConns,
@@ -453,6 +456,11 @@ func (app *BaseApp) LogsDao() *daos.Dao {
 // DataDir returns the app data directory path.
 func (app *BaseApp) DataDir() string {
 	return app.dataDir
+}
+
+// DBFilename returns the app database filename.
+func (app *BaseApp) DBFilename() string {
+	return app.dbFilename
 }
 
 // EncryptionEnv returns the name of the app secret env key
@@ -1050,7 +1058,7 @@ func (app *BaseApp) initDataDB() error {
 		maxIdleConns = app.dataMaxIdleConns
 	}
 
-	concurrentDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
+	concurrentDB, err := connectDB(filepath.Join(app.DataDir(), app.DBFilename()))
 	if err != nil {
 		return err
 	}
@@ -1058,7 +1066,7 @@ func (app *BaseApp) initDataDB() error {
 	concurrentDB.DB().SetMaxIdleConns(maxIdleConns)
 	concurrentDB.DB().SetConnMaxIdleTime(3 * time.Minute)
 
-	nonconcurrentDB, err := connectDB(filepath.Join(app.DataDir(), "data.db"))
+	nonconcurrentDB, err := connectDB(filepath.Join(app.DataDir(), app.DBFilename()))
 	if err != nil {
 		return err
 	}

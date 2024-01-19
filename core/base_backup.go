@@ -185,9 +185,9 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 	}
 
 	// ensure that a database file exists
-	extractedDB := filepath.Join(extractedDataDir, "data.db")
+	extractedDB := filepath.Join(extractedDataDir, app.DBFilename())
 	if _, err := os.Stat(extractedDB); err != nil {
-		return fmt.Errorf("data.db file is missing or invalid: %w", err)
+		return fmt.Errorf("%s file is missing or invalid: %w", app.DBFilename(), err)
 	}
 
 	// remove the extracted zip file since we no longer need it
