@@ -104,7 +104,9 @@
                                 bind:value={record.password}
                             />
                             <div class="form-field-addon">
-                                <SecretGeneratorButton length={15} />
+                                <SecretGeneratorButton
+                                    length={Math.max(15, collection?.options?.minPasswordLength || 0)}
+                                />
                             </div>
                         </Field>
                     </div>
@@ -143,7 +145,7 @@
                         () => {},
                         () => {
                             record.verified = !e.target.checked;
-                        }
+                        },
                     );
                 }}
             />
