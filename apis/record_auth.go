@@ -658,8 +658,8 @@ func (api *recordAuthApi) unlinkExternalAuth(c echo.Context) error {
 
 const (
 	oauth2SubscriptionTopic   string = "@oauth2"
-	oauth2FailureRedirectPath string = "../_/#/auth/oauth2-redirect-failure"
-	oauth2SuccessRedirectPath string = "../_/#/auth/oauth2-redirect-success"
+	oauth2RedirectFailurePath string = "../_/#/auth/oauth2-redirect-failure"
+	oauth2RedirectSuccessPath string = "../_/#/auth/oauth2-redirect-success"
 )
 
 type oauth2EventMessage struct {
@@ -672,13 +672,13 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 	state := c.QueryParam("state")
 	if state == "" {
 		api.app.Logger().Debug("Missing OAuth2 state parameter")
-		return c.Redirect(http.StatusTemporaryRedirect, oauth2FailureRedirectPath)
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2RedirectFailurePath)
 	}
 
 	client, err := api.app.SubscriptionsBroker().ClientById(state)
 	if err != nil || client.IsDiscarded() || !client.HasSubscription(oauth2SubscriptionTopic) {
 		api.app.Logger().Debug("Missing or invalid OAuth2 subscription client", "error", err, "clientId", state)
-		return c.Redirect(http.StatusTemporaryRedirect, oauth2FailureRedirectPath)
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2RedirectFailurePath)
 	}
 	defer client.Unsubscribe(oauth2SubscriptionTopic)
 
@@ -691,7 +691,7 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 	encodedData, err := json.Marshal(data)
 	if err != nil {
 		api.app.Logger().Debug("Failed to marshalize OAuth2 redirect data", "error", err)
-		return c.Redirect(http.StatusTemporaryRedirect, oauth2FailureRedirectPath)
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2RedirectFailurePath)
 	}
 
 	msg := subscriptions.Message{
@@ -703,8 +703,8 @@ func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
 
 	if data.Error != "" || data.Code == "" {
 		api.app.Logger().Debug("Failed OAuth2 redirect due to an error or missing code parameter", "error", data.Error, "clientId", data.State)
-		return c.Redirect(http.StatusTemporaryRedirect, oauth2FailureRedirectPath)
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2RedirectFailurePath)
 	}
 
-	return c.Redirect(http.StatusTemporaryRedirect, oauth2SuccessRedirectPath)
+	return c.Redirect(http.StatusTemporaryRedirect, oauth2RedirectSuccessPath)
 }
