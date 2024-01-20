@@ -28,6 +28,7 @@ const trailedAdminPath = "/_/"
 func InitApi(app core.App) (*echo.Echo, error) {
 	e := echo.New()
 	e.Debug = false
+	e.Binder = &rest.MultiBinder{}
 	e.JSONSerializer = &rest.Serializer{
 		FieldsParam: fieldsQueryParam,
 	}

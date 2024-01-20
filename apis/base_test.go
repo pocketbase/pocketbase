@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/spf13/cast"
 )
 
@@ -220,15 +221,24 @@ func TestRemoveTrailingSlashMiddleware(t *testing.T) {
 	}
 }
 
-func TestEagerRequestInfoCache(t *testing.T) {
+func TestMultiBinder(t *testing.T) {
 	t.Parallel()
+
+	rawJson := `{"name":"test123"}`
+
+	formData, mp, err := tests.MockMultipartData(map[string]string{
+		rest.MultipartJsonKey: rawJson,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	scenarios := []tests.ApiScenario{
 		{
-			Name:   "custom non-api group route",
+			Name:   "non-api group route",
 			Method: "POST",
 			Url:    "/custom",
-			Body:   strings.NewReader(`{"name":"test123"}`),
+			Body:   strings.NewReader(rawJson),
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.AddRoute(echo.Route{
 					Method: "POST",
@@ -242,11 +252,10 @@ func TestEagerRequestInfoCache(t *testing.T) {
 							return err
 						}
 
-						// since the unknown method is not eager cache support
-						// it should fail reading the json body twice
+						// try to read the body again
 						r := apis.RequestInfo(c)
-						if v := cast.ToString(r.Data["name"]); v != "" {
-							t.Fatalf("Expected empty request data body, got, %v", r.Data)
+						if v := cast.ToString(r.Data["name"]); v != "test123" {
+							t.Fatalf("Expected request data with name %q, got, %q", "test123", v)
 						}
 
 						return c.NoContent(200)
@@ -256,41 +265,10 @@ func TestEagerRequestInfoCache(t *testing.T) {
 			ExpectedStatus: 200,
 		},
 		{
-			Name:   "api group route with unsupported eager cache request method",
+			Name:   "api group route",
 			Method: "GET",
 			Url:    "/api/admins",
-			Body:   strings.NewReader(`{"name":"test123"}`),
-			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-					return func(c echo.Context) error {
-						// it is not important whether the route handler return an error since
-						// we just need to ensure that the eagerRequestInfoCache was registered
-						next(c)
-
-						// ensure that the body was read at least once
-						data := &struct {
-							Name string `json:"name"`
-						}{}
-						c.Bind(data)
-
-						// since the unknown method is not eager cache support
-						// it should fail reading the json body twice
-						r := apis.RequestInfo(c)
-						if v := cast.ToString(r.Data["name"]); v != "" {
-							t.Fatalf("Expected empty request data body, got, %v", r.Data)
-						}
-
-						return nil
-					}
-				})
-			},
-			ExpectedStatus: 200,
-		},
-		{
-			Name:   "api group route with supported eager cache request method",
-			Method: "POST",
-			Url:    "/api/admins",
-			Body:   strings.NewReader(`{"name":"test123"}`),
+			Body:   strings.NewReader(rawJson),
 			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
 				e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 					return func(c echo.Context) error {
@@ -312,6 +290,39 @@ func TestEagerRequestInfoCache(t *testing.T) {
 
 						return nil
 					}
+				})
+			},
+			ExpectedStatus: 200,
+		},
+		{
+			Name:   "custom route with @jsonPayload as multipart body",
+			Method: "POST",
+			Url:    "/custom",
+			Body:   formData,
+			RequestHeaders: map[string]string{
+				"Content-Type": mp.FormDataContentType(),
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: "POST",
+					Path:   "/custom",
+					Handler: func(c echo.Context) error {
+						data := &struct {
+							Name string `json:"name"`
+						}{}
+
+						if err := c.Bind(data); err != nil {
+							return err
+						}
+
+						// try to read the body again
+						r := apis.RequestInfo(c)
+						if v := cast.ToString(r.Data["name"]); v != "test123" {
+							t.Fatalf("Expected request data with name %q, got, %q", "test123", v)
+						}
+
+						return c.NoContent(200)
+					},
 				})
 			},
 			ExpectedStatus: 200,

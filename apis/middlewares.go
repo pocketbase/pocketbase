@@ -402,6 +402,8 @@ func realUserIp(r *http.Request, fallbackIp string) string {
 	return fallbackIp
 }
 
+// @todo consider removing as this may no longer be needed due to the custom rest.MultiBinder.
+//
 // eagerRequestInfoCache ensures that the request data is cached in the request
 // context to allow reading for example the json request body data more than once.
 func eagerRequestInfoCache(app core.App) echo.MiddlewareFunc {

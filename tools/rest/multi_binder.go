@@ -13,8 +13,34 @@ import (
 )
 
 // MultipartJsonKey is the key for the special multipart/form-data
-// handling allowing reading serialized json payload without normalizations
+// handling allowing reading serialized json payload without normalization.
 const MultipartJsonKey string = "@jsonPayload"
+
+// MultiBinder is similar to [echo.DefaultBinder] but uses slightly different
+// application/json and multipart/form-data bind methods to accommodate better
+// the PocketBase router needs.
+type MultiBinder struct{}
+
+// Bind implements the [Binder.Bind] method.
+//
+// Bind is almost identical to [echo.DefaultBinder.Bind] but uses the
+// [rest.BindBody] function for binding the request body.
+func (b *MultiBinder) Bind(c echo.Context, i interface{}) (err error) {
+	if err := echo.BindPathParams(c, i); err != nil {
+		return err
+	}
+
+	// Only bind query parameters for GET/DELETE/HEAD to avoid unexpected behavior with destination struct binding from body.
+	// For example a request URL `&id=1&lang=en` with body `{"id":100,"lang":"de"}` would lead to precedence issues.
+	method := c.Request().Method
+	if method == http.MethodGet || method == http.MethodDelete || method == http.MethodHead {
+		if err = echo.BindQueryParams(c, i); err != nil {
+			return err
+		}
+	}
+
+	return BindBody(c, i)
+}
 
 // BindBody binds request body content to i.
 //
@@ -47,8 +73,8 @@ func BindBody(c echo.Context, i any) error {
 func CopyJsonBody(r *http.Request, i any) error {
 	body := r.Body
 
-	// this usually shouldn't be needed because the Server calls close for us
-	// but we are changing the request body with a new reader
+	// this usually shouldn't be needed because the Server calls close
+	// for us but we are changing the request body with a new reader
 	defer body.Close()
 
 	limitReader := io.LimitReader(body, DefaultMaxMemory)
@@ -82,7 +108,7 @@ func bindFormData(c echo.Context, i any) error {
 		return nil
 	}
 
-	// special case to allow submitting json without normalizations
+	// special case to allow submitting json without normalization
 	// alongside the other multipart/form-data values
 	jsonPayloadValues := values[MultipartJsonKey]
 	for _, payload := range jsonPayloadValues {
