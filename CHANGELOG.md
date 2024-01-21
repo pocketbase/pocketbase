@@ -14,6 +14,8 @@
   _Previously on redirect error we were returning directly a standard json error response. Now on redirect error we'll redirect to a generic OAuth2 failure screen (similar to the success one) and will attempt to auto close the OAuth2 popup._
   _The SDKs are also updated to handle the OAuth2 redirect error and it will be returned as Promise rejection for the `authWithOAuth2()` call._
 
+- Exposed `$apis.gzip()` and `$apis.bodyLimit(bytes)` middlewares to the JSVM.
+
 - Minor Admin UI improvements (reduced the min table row height, added new TinyMCE codesample plugin languages, hide the collection sync settings when the `Settings.Meta.HideControls` is enabled, etc.)
 
 

@@ -18,6 +18,7 @@ import (
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -618,6 +619,8 @@ func apisBinds(vm *goja.Runtime) {
 	obj.Set("requireAdminOrRecordAuth", apis.RequireAdminOrRecordAuth)
 	obj.Set("requireAdminOrOwnerAuth", apis.RequireAdminOrOwnerAuth)
 	obj.Set("activityLogger", apis.ActivityLogger)
+	obj.Set("gzip", middleware.Gzip)
+	obj.Set("bodyLimit", middleware.BodyLimit)
 
 	// record helpers
 	obj.Set("requestInfo", apis.RequestInfo)
