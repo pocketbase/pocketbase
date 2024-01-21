@@ -8,13 +8,13 @@
 - Added support for loading a serialized json payload for `multipart/form-data` requests using the special `@jsonPayload` key.
   _This is intended to be used primarily by the SDKs to resolve [js-sdk#274](https://github.com/pocketbase/js-sdk/issues/274)._
 
-- Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
-
 - Added graceful OAuth2 redirect error handling ([#4177](https://github.com/pocketbase/pocketbase/issues/4177)).
   _Previously on redirect error we were returning directly a standard json error response. Now on redirect error we'll redirect to a generic OAuth2 failure screen (similar to the success one) and will attempt to auto close the OAuth2 popup._
   _The SDKs are also updated to handle the OAuth2 redirect error and it will be returned as Promise rejection for the `authWithOAuth2()` call._
 
 - Exposed `$apis.gzip()` and `$apis.bodyLimit(bytes)` middlewares to the JSVM.
+
+- Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
 - Minor Admin UI improvements (reduced the min table row height, added option to duplicate fields, added new TinyMCE codesample plugin languages, hide the collection sync settings when the `Settings.Meta.HideControls` is enabled, etc.)
 

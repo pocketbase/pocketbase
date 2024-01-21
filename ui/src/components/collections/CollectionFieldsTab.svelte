@@ -78,7 +78,7 @@
         let result = name;
         let counter = 2;
 
-        let suffix = name.match(/[123456789]+$/)?.[0] || ""; // extract numeric suffix
+        let suffix = name.match(/\d+$/)?.[0] || ""; // extract numeric suffix
 
         // name without the suffix
         let base = suffix ? name.substring(0, name.length - suffix.length) : name;
