@@ -16,7 +16,7 @@
 
 - Exposed `$apis.gzip()` and `$apis.bodyLimit(bytes)` middlewares to the JSVM.
 
-- Minor Admin UI improvements (reduced the min table row height, added new TinyMCE codesample plugin languages, hide the collection sync settings when the `Settings.Meta.HideControls` is enabled, etc.)
+- Minor Admin UI improvements (reduced the min table row height, added option to duplicate fields, added new TinyMCE codesample plugin languages, hide the collection sync settings when the `Settings.Meta.HideControls` is enabled, etc.)
 
 
 ## v0.20.7

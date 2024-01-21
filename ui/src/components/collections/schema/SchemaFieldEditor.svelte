@@ -18,7 +18,7 @@
     }
 </script>
 
-<SchemaField bind:field {key} on:rename on:remove {...$$restProps}>
+<SchemaField bind:field {key} on:rename on:remove on:duplicate {...$$restProps}>
     <svelte:fragment slot="optionsFooter">
         <Field class="form-field form-field-toggle" name="schema.{key}.options.convertUrls" let:uniqueId>
             <input type="checkbox" id={uniqueId} bind:checked={field.options.convertUrls} />

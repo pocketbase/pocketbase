@@ -26,7 +26,7 @@
     }
 </script>
 
-<SchemaField bind:field {key} on:rename on:remove {...$$restProps}>
+<SchemaField bind:field {key} on:rename on:remove on:duplicate {...$$restProps}>
     <svelte:fragment slot="options">
         <div class="grid grid-sm">
             <div class="col-sm-6">

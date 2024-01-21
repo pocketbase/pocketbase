@@ -45,6 +45,23 @@
         }
     }
 
+    function duplicateField(fieldIndex) {
+        const field = collection.schema[fieldIndex];
+        if (!field) {
+            return; // nothing to duplicate
+        }
+
+        field.onMountSelect = false;
+
+        const clone = structuredClone(field);
+        clone.id = "";
+        clone.name = getUniqueFieldName(clone.name + "_copy");
+        clone.onMountSelect = true;
+
+        collection.schema.splice(fieldIndex + 1, 0, clone);
+        collection.schema = collection.schema;
+    }
+
     function newField(fieldType = "text") {
         const field = CommonHelper.initSchemaField({
             name: getUniqueFieldName(),
@@ -57,14 +74,21 @@
         collection.schema = collection.schema;
     }
 
-    function getUniqueFieldName(base = "field") {
-        let counter = "";
+    function getUniqueFieldName(name = "field") {
+        let result = name;
+        let counter = 2;
 
-        while (hasFieldWithName(base + counter)) {
-            ++counter;
+        let suffix = name.match(/[123456789]+$/)?.[0] || ""; // extract numeric suffix
+
+        // name without the suffix
+        let base = suffix ? name.substring(0, name.length - suffix.length) : name;
+
+        while (hasFieldWithName(result)) {
+            result = base + ((suffix << 0) + counter);
+            counter++;
         }
 
-        return base + counter;
+        return result;
     }
 
     function hasFieldWithName(name) {
@@ -138,6 +162,7 @@
                 key={getSchemaFieldIndex(field)}
                 bind:field
                 on:remove={() => removeField(i)}
+                on:duplicate={() => duplicateField(i)}
                 on:rename={(e) => replaceIndexesColumn(e.detail.oldName, e.detail.newName)}
             />
         </Draggable>

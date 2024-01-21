@@ -40,7 +40,7 @@
     }
 </script>
 
-<SchemaField bind:field {key} on:rename on:remove {...$$restProps}>
+<SchemaField bind:field {key} on:rename on:remove on:duplicate {...$$restProps}>
     <svelte:fragment let:interactive>
         <div class="separator" />
 

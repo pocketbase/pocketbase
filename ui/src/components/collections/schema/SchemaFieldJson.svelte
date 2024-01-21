@@ -20,7 +20,7 @@
     }
 </script>
 
-<SchemaField bind:field {key} on:rename on:remove {...$$restProps}>
+<SchemaField bind:field {key} on:rename on:remove on:duplicate {...$$restProps}>
     <svelte:fragment slot="options">
         <Field class="form-field required m-b-sm" name="schema.{key}.options.maxSize" let:uniqueId>
             <label for={uniqueId}>Max size <small>(bytes)</small></label>

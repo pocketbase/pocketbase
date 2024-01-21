@@ -54,6 +54,7 @@
 
     function remove() {
         if (!field.id) {
+            collapse();
             dispatch("remove");
         } else {
             field.toDelete = true;
@@ -65,6 +66,13 @@
 
         // reset all errors since the error index key would have been changed
         setErrors({});
+    }
+
+    function duplicate() {
+        if (!field.toDelete) {
+            collapse();
+            dispatch("duplicate");
+        }
     }
 
     function normalizeFieldName(name) {
@@ -211,7 +219,7 @@
                             class="ri-information-line link-hint"
                             use:tooltip={{
                                 text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
-                                    field
+                                    field,
                                 )}.`,
                             }}
                         />
@@ -235,22 +243,29 @@
 
                 {#if !field.toDelete}
                     <div class="m-l-auto txt-right">
-                        <div class="flex-fill" />
                         <div class="inline-flex flex-gap-sm flex-nowrap">
-                            <button
-                                type="button"
-                                aria-label="More"
-                                class="btn btn-circle btn-sm btn-transparent"
-                            >
+                            <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+                            <div tabindex="0" aria-label="More" class="btn btn-circle btn-sm btn-transparent">
                                 <i class="ri-more-line" />
                                 <Toggler
                                     class="dropdown dropdown-sm dropdown-upside dropdown-right dropdown-nowrap no-min-width"
                                 >
-                                    <button type="button" class="dropdown-item txt-right" on:click={remove}>
+                                    <button
+                                        type="button"
+                                        class="dropdown-item txt-right"
+                                        on:click|preventDefault={duplicate}
+                                    >
+                                        <span class="txt">Duplicate</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="dropdown-item txt-right"
+                                        on:click|preventDefault={remove}
+                                    >
                                         <span class="txt">Remove</span>
                                     </button>
                                 </Toggler>
-                            </button>
+                            </div>
                         </div>
                     </div>
                 {/if}
