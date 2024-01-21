@@ -144,7 +144,6 @@ You could help continuing its development by:
 
 - [Contribute to the source code](CONTRIBUTING.md)
 - [Suggest new features and report issues](https://github.com/pocketbase/pocketbase/issues)
-- [Donate a small amount](https://pocketbase.io/support-us)
 
 PRs for new OAuth2 providers, bug fixes, code optimizations and documentation improvements are more than welcome.
 
