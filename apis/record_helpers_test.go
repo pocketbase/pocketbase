@@ -87,7 +87,7 @@ func TestRecordAuthResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	unverfiedAuthRecord, err := app.Dao().FindRecordById("clients", "o1y0dd0spd786md")
+	unverifiedAuthRecord, err := app.Dao().FindRecordById("clients", "o1y0dd0spd786md")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestRecordAuthResponse(t *testing.T) {
 		},
 		{
 			name:        "valid auth record but with unverified email in onlyVerified collection",
-			record:      unverfiedAuthRecord,
+			record:      unverifiedAuthRecord,
 			expectError: true,
 		},
 		{
