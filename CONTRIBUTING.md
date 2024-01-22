@@ -10,8 +10,8 @@ This document describes how to prepare a PR for a change in the main repository.
 
 ## Prerequisites
 
-- Go 1.19+ (for making changes in the Go code)
-- Node 16+ (for making changes in the Admin UI)
+- Go 1.21+ (for making changes in the Go code)
+- Node 18+ (for making changes in the Admin UI)
 
 If you haven't already, you can fork the main repository and clone your fork so that you can work locally:
 
