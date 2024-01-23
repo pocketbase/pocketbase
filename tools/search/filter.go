@@ -635,7 +635,7 @@ func multiMatchAfterBuildFunc(op fexpr.SignOp, multiMatchAliases ...string) func
 		// Add an optional "IS NULL" condition(s) to handle the empty rows result.
 		//
 		// For example, let's assume that some "rel" field is [nonemptyRel1, nonemptyRel2, emptyRel3],
-		// The filter "rel.total > 0" will ensures that the above will return true only if all relations
+		// The filter "rel.total > 0" ensures that the above will return true only if all relations
 		// are existing and match the condition.
 		//
 		// The "=" operator is excluded because it will never equal directly with NULL anyway

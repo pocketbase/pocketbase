@@ -18,7 +18,7 @@ func New(db dbx.Builder) *Dao {
 	return NewMultiDB(db, db)
 }
 
-// New creates a new Dao instance with the provided dedicated
+// NewMultiDB creates a new Dao instance with the provided dedicated
 // async and sync db builders.
 func NewMultiDB(concurrentDB, nonconcurrentDB dbx.Builder) *Dao {
 	return &Dao{
@@ -87,16 +87,16 @@ func (dao *Dao) Clone() *Dao {
 // WithoutHooks returns a new Dao with the same configuration options
 // as the current one, but without create/update/delete hooks.
 func (dao *Dao) WithoutHooks() *Dao {
-	new := dao.Clone()
+	clone := dao.Clone()
 
-	new.BeforeCreateFunc = nil
-	new.AfterCreateFunc = nil
-	new.BeforeUpdateFunc = nil
-	new.AfterUpdateFunc = nil
-	new.BeforeDeleteFunc = nil
-	new.AfterDeleteFunc = nil
+	clone.BeforeCreateFunc = nil
+	clone.AfterCreateFunc = nil
+	clone.BeforeUpdateFunc = nil
+	clone.AfterUpdateFunc = nil
+	clone.BeforeDeleteFunc = nil
+	clone.AfterDeleteFunc = nil
 
-	return new
+	return clone
 }
 
 // ModelQuery creates a new preconfigured select query with preset

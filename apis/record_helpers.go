@@ -140,7 +140,7 @@ func RecordAuthResponse(
 // EnrichRecord parses the request context and enrich the provided record:
 //   - expands relations (if defaultExpands and/or ?expand query param is set)
 //   - ensures that the emails of the auth record and its expanded auth relations
-//     are visibe only for the current logged admin, record owner or record with manage access
+//     are visible only for the current logged admin, record owner or record with manage access
 func EnrichRecord(c echo.Context, dao *daos.Dao, record *models.Record, defaultExpands ...string) error {
 	return EnrichRecords(c, dao, []*models.Record{record}, defaultExpands...)
 }
@@ -148,7 +148,7 @@ func EnrichRecord(c echo.Context, dao *daos.Dao, record *models.Record, defaultE
 // EnrichRecords parses the request context and enriches the provided records:
 //   - expands relations (if defaultExpands and/or ?expand query param is set)
 //   - ensures that the emails of the auth records and their expanded auth relations
-//     are visibe only for the current logged admin, record owner or record with manage access
+//     are visible only for the current logged admin, record owner or record with manage access
 func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defaultExpands ...string) error {
 	requestInfo := RequestInfo(c)
 

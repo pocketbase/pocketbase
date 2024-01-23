@@ -92,7 +92,7 @@ func SendRecordVerification(app core.App, authRecord *models.Record) error {
 	})
 }
 
-// SendUserChangeEmail sends a change email confirmation email to the specified user.
+// SendRecordChangeEmail sends a change email confirmation email to the specified user.
 func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string) error {
 	token, tokenErr := tokens.NewRecordChangeEmailToken(app, record, newEmail)
 	if tokenErr != nil {

@@ -117,7 +117,7 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 
 		provider, err := auth.NewProviderByName(name)
 		if err != nil {
-			api.app.Logger().Debug("Missing or invalid provier name", slog.String("name", name))
+			api.app.Logger().Debug("Missing or invalid provider name", slog.String("name", name))
 			continue // skip provider
 		}
 

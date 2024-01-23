@@ -83,7 +83,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 		logRequest(app, c, apiErr)
 
 		if c.Response().Committed {
-			return // already commited
+			return // already committed
 		}
 
 		event := new(core.ApiErrorEvent)

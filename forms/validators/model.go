@@ -9,7 +9,7 @@ import (
 	"github.com/pocketbase/pocketbase/daos"
 )
 
-// Compare checks whether the provided model id exists.
+// UniqueId checks whether the provided model id already exists.
 //
 // Example:
 //

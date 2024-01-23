@@ -16,17 +16,17 @@ type TestMailer struct {
 }
 
 // Reset clears any previously test collected data.
-func (m *TestMailer) Reset() {
-	m.TotalSend = 0
-	m.LastMessage = mailer.Message{}
-	m.SentMessages = nil
+func (tm *TestMailer) Reset() {
+	tm.TotalSend = 0
+	tm.LastMessage = mailer.Message{}
+	tm.SentMessages = nil
 }
 
 // Send implements `mailer.Mailer` interface.
-func (c *TestMailer) Send(m *mailer.Message) error {
-	c.TotalSend++
-	c.LastMessage = *m
-	c.SentMessages = append(c.SentMessages, c.LastMessage)
+func (tm *TestMailer) Send(m *mailer.Message) error {
+	tm.TotalSend++
+	tm.LastMessage = *m
+	tm.SentMessages = append(tm.SentMessages, tm.LastMessage)
 
 	return nil
 }

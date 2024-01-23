@@ -24,7 +24,7 @@ type AuthUser struct {
 
 // Provider defines a common interface for an OAuth2 client.
 type Provider interface {
-	// Scopes returns the context associated with the provider (if any).
+	// Context returns the context associated with the provider (if any).
 	Context() context.Context
 
 	// SetContext assigns the specified context to the current provider.

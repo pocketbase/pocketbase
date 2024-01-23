@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
@@ -43,7 +44,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 				CertificateDomains: args,
 			})
 
-			if err != http.ErrServerClosed {
+			if !errors.Is(err, http.ErrServerClosed) {
 				log.Fatalln(err)
 			}
 		},

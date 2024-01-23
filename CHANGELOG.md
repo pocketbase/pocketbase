@@ -16,6 +16,10 @@
 
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
+- Optimized the cascade delete of records with multiple `relation`.
+
+- Fixed the `admin` command error reporting.
+
 - Minor Admin UI improvements (reduced the min table row height, added option to duplicate fields, added new TinyMCE codesample plugin languages, hide the collection sync settings when the `Settings.Meta.HideControls` is enabled, etc.)
 
 

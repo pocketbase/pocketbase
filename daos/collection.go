@@ -162,8 +162,8 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 // SaveCollection persists the provided Collection model and updates
 // its related records table schema.
 //
-// If collecction.IsNew() is true, the method will perform a create, otherwise an update.
-// To explicitly mark a collection for update you can use collecction.MarkAsNotNew().
+// If collection.IsNew() is true, the method will perform a create, otherwise an update.
+// To explicitly mark a collection for update you can use collection.MarkAsNotNew().
 func (dao *Dao) SaveCollection(collection *models.Collection) error {
 	var oldCollection *models.Collection
 
@@ -263,11 +263,11 @@ func (dao *Dao) ImportCollections(
 
 				// extend existing schema
 				if !deleteMissing {
-					schema, _ := existing.Schema.Clone()
+					schemaClone, _ := existing.Schema.Clone()
 					for _, f := range imported.Schema.Fields() {
-						schema.AddField(f) // add or replace
+						schemaClone.AddField(f) // add or replace
 					}
-					imported.Schema = *schema
+					imported.Schema = *schemaClone
 				}
 			} else {
 				imported.MarkAsNew()

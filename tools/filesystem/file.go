@@ -26,7 +26,7 @@ type FileReader interface {
 
 // File defines a single file [io.ReadSeekCloser] resource.
 //
-// The file could be from a local path, multipipart/formdata header, etc.
+// The file could be from a local path, multipart/form-data header, etc.
 type File struct {
 	Reader       FileReader
 	Name         string

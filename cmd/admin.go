@@ -122,6 +122,10 @@ func adminDeleteCommand(app core.App) *cobra.Command {
 				return errors.New("Invalid or missing email address.")
 			}
 
+			if !app.Dao().HasTable((&models.Admin{}).TableName()) {
+				return errors.New("Migration are not initialized yet. Please run 'migrate up' and try again.")
+			}
+
 			admin, err := app.Dao().FindAdminByEmail(args[0])
 			if err != nil {
 				color.Yellow("Admin %s is already deleted.", args[0])

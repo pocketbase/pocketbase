@@ -46,7 +46,7 @@ func (form *RecordPasswordResetRequest) SetDao(dao *daos.Dao) {
 
 // Validate makes the form validatable by implementing [validation.Validatable] interface.
 //
-// This method doesn't checks whether auth record with `form.Email` exists (this is done on Submit).
+// This method doesn't check whether auth record with `form.Email` exists (this is done on Submit).
 func (form *RecordPasswordResetRequest) Validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(
