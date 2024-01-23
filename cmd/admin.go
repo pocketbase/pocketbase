@@ -28,12 +28,10 @@ func NewAdminCommand(app core.App) *cobra.Command {
 
 func adminCreateCommand(app core.App) *cobra.Command {
 	command := &cobra.Command{
-		Use:     "create",
-		Example: "admin create test@example.com 1234567890",
-		Short:   "Creates a new admin account",
-		// prevents printing the error log twice
-		SilenceErrors: true,
-		SilenceUsage:  true,
+		Use:          "create",
+		Example:      "admin create test@example.com 1234567890",
+		Short:        "Creates a new admin account",
+		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) != 2 {
 				return errors.New("Missing email and password arguments.")
@@ -50,6 +48,10 @@ func adminCreateCommand(app core.App) *cobra.Command {
 			admin := &models.Admin{}
 			admin.Email = args[0]
 			admin.SetPassword(args[1])
+
+			if !app.Dao().HasTable(admin.TableName()) {
+				return errors.New("Migration are not initialized yet. Please run 'migrate up' and try again.")
+			}
 
 			if err := app.Dao().SaveAdmin(admin); err != nil {
 				return fmt.Errorf("Failed to create new admin account: %v", err)
@@ -82,6 +84,10 @@ func adminUpdateCommand(app core.App) *cobra.Command {
 
 			if len(args[1]) < 8 {
 				return errors.New("The new password must be at least 8 chars long.")
+			}
+
+			if !app.Dao().HasTable((&models.Admin{}).TableName()) {
+				return errors.New("Migration are not initialized yet. Please run 'migrate up' and try again.")
 			}
 
 			admin, err := app.Dao().FindAdminByEmail(args[0])
