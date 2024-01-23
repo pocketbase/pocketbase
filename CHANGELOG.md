@@ -1,4 +1,4 @@
-## v0.21.0-WIP
+## v0.21.0
 
 - Added Bitbucket OAuth2 provider ([#3948](https://github.com/pocketbase/pocketbase/pull/3948); thanks @aabajyan).
 
@@ -10,13 +10,13 @@
 
 - Added graceful OAuth2 redirect error handling ([#4177](https://github.com/pocketbase/pocketbase/issues/4177)).
   _Previously on redirect error we were returning directly a standard json error response. Now on redirect error we'll redirect to a generic OAuth2 failure screen (similar to the success one) and will attempt to auto close the OAuth2 popup._
-  _The SDKs are also updated to handle the OAuth2 redirect error and it will be returned as Promise rejection for the `authWithOAuth2()` call._
+  _The SDKs are also updated to handle the OAuth2 redirect error and it will be returned as Promise rejection of the `authWithOAuth2()` call._
 
 - Exposed `$apis.gzip()` and `$apis.bodyLimit(bytes)` middlewares to the JSVM.
 
 - Added `TestMailer.SentMessages` field that holds all sent test app emails until cleanup.
 
-- Optimized the cascade delete of records with multiple `relation`.
+- Optimized the cascade delete of records with multiple `relation` fields.
 
 - Fixed the `admin` command error reporting.
 
