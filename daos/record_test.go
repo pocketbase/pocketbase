@@ -1205,11 +1205,11 @@ func TestDeleteRecord(t *testing.T) {
 	}
 	// ensure that the json rel fields were prefixed
 	joinedQueries := strings.Join(calledQueries, " ")
-	expectedRelManyPart := "`demo1` INNER JOIN json_each(CASE WHEN json_valid([[demo1.rel_many]]) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END)"
+	expectedRelManyPart := "SELECT `demo1`.* FROM `demo1` WHERE EXISTS (SELECT 1 FROM json_each(CASE WHEN json_valid([[demo1.rel_many]]) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END) {{__je__}} WHERE [[__je__.value]]='"
 	if !strings.Contains(joinedQueries, expectedRelManyPart) {
 		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelManyPart, calledQueries)
 	}
-	expectedRelOnePart := "SELECT DISTINCT `demo1`.* FROM `demo1` WHERE (`demo1`.`rel_one`="
+	expectedRelOnePart := "SELECT `demo1`.* FROM `demo1` WHERE (`demo1`.`rel_one`='"
 	if !strings.Contains(joinedQueries, expectedRelOnePart) {
 		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelOnePart, calledQueries)
 	}
