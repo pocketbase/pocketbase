@@ -18,7 +18,7 @@
 
 - Optimized the cascade delete of records with multiple `relation` fields.
 
-- Fixed the `admin` command error reporting.
+- Updated the `serve` and `admin` commands error reporting.
 
 - Minor Admin UI improvements (reduced the min table row height, added option to duplicate fields, added new TinyMCE codesample plugin languages, hide the collection sync settings when the `Settings.Meta.HideControls` is enabled, etc.)
 
