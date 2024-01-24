@@ -40,7 +40,7 @@
             <span class="txt">Backups</span>
         </a>
 
-        {#if !hideControls}
+        {#if !$hideControls}
             <div class="sidebar-title">
                 <span class="txt">Sync</span>
             </div>

@@ -1,3 +1,8 @@
+## v0.21.1
+
+- Small fix for the Admin UI related to the _Settings > Sync_ menu not being visible even when the "Hide controls" toggle is off.
+
+
 ## v0.21.0
 
 - Added Bitbucket OAuth2 provider ([#3948](https://github.com/pocketbase/pocketbase/pull/3948); thanks @aabajyan).
