@@ -30,7 +30,7 @@ var defaultThumbSizes = []string{"100x100"}
 func bindFileApi(app core.App, rg *echo.Group) {
 	api := fileApi{
 		app:             app,
-		thumbGenSem:     semaphore.NewWeighted(int64(runtime.NumCPU() + 1)), // the value is arbitrary chosen and may change in the future
+		thumbGenSem:     semaphore.NewWeighted(int64(runtime.NumCPU() + 2)), // the value is arbitrary chosen and may change in the future
 		thumbGenPending: new(singleflight.Group),
 		thumbGenMaxWait: 60 * time.Second,
 	}
