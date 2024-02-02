@@ -1,3 +1,8 @@
+## (WIP) v0.22.0
+
+- Other minor improvements (updated the `ghupdate` plugin to use the configured executable name, fixed Admin UI vertical image preview scroll, etc.)
+
+
 ## v0.21.1
 
 - Small fix for the Admin UI related to the _Settings > Sync_ menu not being visible even when the "Hide controls" toggle is off.
