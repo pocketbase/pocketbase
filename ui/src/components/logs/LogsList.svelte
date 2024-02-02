@@ -52,20 +52,24 @@
                     clearList();
                 }
 
+                const items = CommonHelper.toArray(result.items);
+
                 isLoading = false;
                 currentPage = result.page;
-                lastLoadCount = result.items.length;
-                dispatch("load", logs.concat(result.items));
+                lastLoadCount = result.items?.length || 0;
+
+                dispatch("load", logs.concat(items));
 
                 // optimize the logs listing by rendering the rows in task batches
                 if (breakTasks) {
                     const currentYieldId = ++yieldedId;
-                    while (result.items.length) {
+
+                    while (items.length) {
                         if (yieldedId != currentYieldId) {
                             break; // new yeild has been started
                         }
 
-                        const subset = result.items.splice(0, 10);
+                        const subset = items.splice(0, 10);
                         for (let item of subset) {
                             CommonHelper.pushOrReplaceByKey(logs, item);
                         }
@@ -75,7 +79,7 @@
                         await CommonHelper.yieldToMain();
                     }
                 } else {
-                    for (let item of result.items) {
+                    for (let item of items) {
                         CommonHelper.pushOrReplaceByKey(logs, item);
                     }
 
@@ -152,7 +156,7 @@
         if (selected.length == 1) {
             return CommonHelper.downloadJson(
                 selected[0],
-                "log_" + selected[0].created.replaceAll(dateFilenameRegex, "") + ".json"
+                "log_" + selected[0].created.replaceAll(dateFilenameRegex, "") + ".json",
             );
         }
 
@@ -295,7 +299,7 @@
                                             {keyItem.key}: {CommonHelper.stringifyValue(
                                                 log.data[keyItem.key],
                                                 "-",
-                                                80
+                                                80,
                                             )}
                                         {/if}
                                     </span>
