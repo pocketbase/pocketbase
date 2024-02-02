@@ -323,10 +323,10 @@ func (form *RecordUpsert) AddFiles(key string, files ...*filesystem.File) error 
 // Example
 //
 //	// mark only only 2 files for removal
-//	form.AddFiles("documents", "file1_aw4bdrvws6.txt", "file2_xwbs36bafv.txt")
+//	form.RemoveFiles("documents", "file1_aw4bdrvws6.txt", "file2_xwbs36bafv.txt")
 //
 //	// mark all "documents" files for removal
-//	form.AddFiles("documents")
+//	form.RemoveFiles("documents")
 func (form *RecordUpsert) RemoveFiles(key string, toDelete ...string) error {
 	field := form.record.Collection().Schema.GetFieldByName(key)
 	if field == nil || field.Type != schema.FieldTypeFile {
