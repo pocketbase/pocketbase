@@ -1,5 +1,7 @@
 ## (WIP) v0.22.0
 
+- Sync Admin UI collection changes across browser tabs.
+
 - Added `jsvm.Config.OnInit` optional config field to allow registering custom Go bindings to the JSVM.
 
 - Other minor improvements (updated the `ghupdate` plugin to use the configured executable name, fixed Admin UI vertical image preview scroll, etc.)

@@ -1,4 +1,4 @@
-import{S as re,i as ae,s as be,N as pe,C as P,e as p,w as y,b as a,c as se,f as u,g as s,h as I,m as ne,x as ue,t as ie,a as ce,o as n,d as le,p as me}from"./index-ohPVsOF0.js";import{S as de}from"./SdkTabs-ZFbexUF1.js";function he(t){var B,U,W,A,H,L,T,q,M,N,j,J;let i,m,c=t[0].name+"",b,d,k,h,D,f,_,l,S,$,C,g,w,v,E,r,R;return l=new de({props:{js:`
+import{S as re,i as ae,s as be,N as pe,C as P,e as p,v as y,b as a,c as se,f as u,g as s,h as I,m as ne,w as ue,t as ie,a as ce,o as n,d as le,A as me}from"./index-MkGUixqr.js";import{S as de}from"./SdkTabs-7yshYvVF.js";function he(t){var B,U,A,W,H,L,T,q,M,N,j,J;let i,m,c=t[0].name+"",b,d,k,h,D,f,_,l,C,$,S,g,w,v,E,r,R;return l=new de({props:{js:`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${t[1]}');
@@ -15,13 +15,13 @@ import{S as re,i as ae,s as be,N as pe,C as P,e as p,w as y,b as a,c as se,f as 
         }, { /* other options like expand, custom headers, etc. */ });
 
         // Subscribe to changes only in the specified record
-        pb.collection('${(W=t[0])==null?void 0:W.name}').subscribe('RECORD_ID', function (e) {
+        pb.collection('${(A=t[0])==null?void 0:A.name}').subscribe('RECORD_ID', function (e) {
             console.log(e.action);
             console.log(e.record);
         }, { /* other options like expand, custom headers, etc. */ });
 
         // Unsubscribe
-        pb.collection('${(A=t[0])==null?void 0:A.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
+        pb.collection('${(W=t[0])==null?void 0:W.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
         pb.collection('${(H=t[0])==null?void 0:H.name}').unsubscribe('*'); // remove all '*' topic subscriptions
         pb.collection('${(L=t[0])==null?void 0:L.name}').unsubscribe(); // remove all subscriptions in the collection
     `,dart:`
@@ -55,7 +55,7 @@ import{S as re,i as ae,s as be,N as pe,C as P,e as p,w as y,b as a,c as se,f as 
             <strong>ViewRule</strong> will be used to determine whether the subscriber has access to receive the
             event message.</p> <p>When you subscribe to an <strong>entire collection</strong>, the collection&#39;s
             <strong>ListRule</strong> will be used to determine whether the subscriber has access to receive the
-            event message.</p></div>`,_=a(),se(l.$$.fragment),S=a(),$=p("h6"),$.textContent="API details",C=a(),g=p("div"),g.innerHTML='<strong class="label label-primary">SSE</strong> <div class="content"><p>/api/realtime</p></div>',w=a(),v=p("div"),v.textContent="Event data format",E=a(),se(r.$$.fragment),u(i,"class","m-b-sm"),u(h,"class","content txt-lg m-b-sm"),u(f,"class","alert alert-info m-t-10 m-b-sm"),u($,"class","m-b-xs"),u(g,"class","alert"),u(v,"class","section-title")},m(e,o){s(e,i,o),I(i,m),I(i,b),I(i,d),s(e,k,o),s(e,h,o),s(e,D,o),s(e,f,o),s(e,_,o),ne(l,e,o),s(e,S,o),s(e,$,o),s(e,C,o),s(e,g,o),s(e,w,o),s(e,v,o),s(e,E,o),ne(r,e,o),R=!0},p(e,[o]){var Y,z,F,G,K,Q,X,Z,x,ee,oe,te;(!R||o&1)&&c!==(c=e[0].name+"")&&ue(b,c);const O={};o&3&&(O.js=`
+            event message.</p></div>`,_=a(),se(l.$$.fragment),C=a(),$=p("h6"),$.textContent="API details",S=a(),g=p("div"),g.innerHTML='<strong class="label label-primary">SSE</strong> <div class="content"><p>/api/realtime</p></div>',w=a(),v=p("div"),v.textContent="Event data format",E=a(),se(r.$$.fragment),u(i,"class","m-b-sm"),u(h,"class","content txt-lg m-b-sm"),u(f,"class","alert alert-info m-t-10 m-b-sm"),u($,"class","m-b-xs"),u(g,"class","alert"),u(v,"class","section-title")},m(e,o){s(e,i,o),I(i,m),I(i,b),I(i,d),s(e,k,o),s(e,h,o),s(e,D,o),s(e,f,o),s(e,_,o),ne(l,e,o),s(e,C,o),s(e,$,o),s(e,S,o),s(e,g,o),s(e,w,o),s(e,v,o),s(e,E,o),ne(r,e,o),R=!0},p(e,[o]){var Y,z,F,G,K,Q,X,Z,x,ee,oe,te;(!R||o&1)&&c!==(c=e[0].name+"")&&ue(b,c);const O={};o&3&&(O.js=`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${e[1]}');
@@ -107,4 +107,4 @@ import{S as re,i as ae,s as be,N as pe,C as P,e as p,w as y,b as a,c as se,f as 
         pb.collection('${(ee=e[0])==null?void 0:ee.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
         pb.collection('${(oe=e[0])==null?void 0:oe.name}').unsubscribe('*'); // remove all '*' topic subscriptions
         pb.collection('${(te=e[0])==null?void 0:te.name}').unsubscribe(); // remove all subscriptions in the collection
-    `),l.$set(O);const V={};o&1&&(V.content=JSON.stringify({action:"create",record:P.dummyCollectionRecord(e[0])},null,2).replace('"action": "create"','"action": "create" // create, update or delete')),r.$set(V)},i(e){R||(ie(l.$$.fragment,e),ie(r.$$.fragment,e),R=!0)},o(e){ce(l.$$.fragment,e),ce(r.$$.fragment,e),R=!1},d(e){e&&(n(i),n(k),n(h),n(D),n(f),n(_),n(S),n($),n(C),n(g),n(w),n(v),n(E)),le(l,e),le(r,e)}}}function fe(t,i,m){let c,{collection:b}=i;return t.$$set=d=>{"collection"in d&&m(0,b=d.collection)},m(1,c=P.getApiExampleUrl(me.baseUrl)),[b,c]}class ve extends re{constructor(i){super(),ae(this,i,fe,he,be,{collection:0})}}export{ve as default};
+    `),l.$set(O);const V={};o&1&&(V.content=JSON.stringify({action:"create",record:P.dummyCollectionRecord(e[0])},null,2).replace('"action": "create"','"action": "create" // create, update or delete')),r.$set(V)},i(e){R||(ie(l.$$.fragment,e),ie(r.$$.fragment,e),R=!0)},o(e){ce(l.$$.fragment,e),ce(r.$$.fragment,e),R=!1},d(e){e&&(n(i),n(k),n(h),n(D),n(f),n(_),n(C),n($),n(S),n(g),n(w),n(v),n(E)),le(l,e),le(r,e)}}}function fe(t,i,m){let c,{collection:b}=i;return t.$$set=d=>{"collection"in d&&m(0,b=d.collection)},m(1,c=P.getApiExampleUrl(me.baseUrl)),[b,c]}class ve extends re{constructor(i){super(),ae(this,i,fe,he,be,{collection:0})}}export{ve as default};
