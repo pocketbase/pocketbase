@@ -1,10 +1,16 @@
 ## (WIP) v0.22.0
 
-- Sync Admin UI collection changes across browser tabs.
+- Admin UI improvements:
+  - Sync collection changes across multiple opened tabs.
+  - Fixed vertical image popup preview scrolling.
 
-- Added `jsvm.Config.OnInit` optional config field to allow registering custom Go bindings to the JSVM.
+- Added `jsvm.Config.OnInit` optional config function to allow registering custom Go bindings to the JSVM.
 
-- Other minor improvements (updated the `ghupdate` plugin to use the configured executable name, fixed Admin UI vertical image preview scroll, etc.)
+- Upgraded (_again_) to `aws-sdk-go-v2` and added special handling for GCS to workaround the [headers signature issue](https://github.com/pocketbase/pocketbase/issues/2231) with v2.
+  _This should also fix the SVG/JSON zero response when using Cloudflare R2 ([#4287](https://github.com/pocketbase/pocketbase/issues/4287#issuecomment-1925168142), [#2068](https://github.com/pocketbase/pocketbase/discussions/2068), [#2952](https://github.com/pocketbase/pocketbase/discussions/2952))._
+  _If you are using S3, please verify that you have a green check in the Admin UI for your S3 configuration (I've tested the new version with GCS, MinIO, Cloudflare R2 and Wasabi)._
+
+- Other minor improvements (updated the `ghupdate` plugin to use the configured executable name when printing to the console, increased with +1 the `thumbGenSem` limit, etc.).
 
 
 ## v0.21.1
