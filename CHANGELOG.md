@@ -10,7 +10,7 @@
   _This should also fix the SVG/JSON zero response when using Cloudflare R2 ([#4287](https://github.com/pocketbase/pocketbase/issues/4287#issuecomment-1925168142), [#2068](https://github.com/pocketbase/pocketbase/discussions/2068), [#2952](https://github.com/pocketbase/pocketbase/discussions/2952))._
   _If you are using S3, please verify that you have a green check in the Admin UI for your S3 configuration (I've tested the new version with GCS, MinIO, Cloudflare R2 and Wasabi)._
 
-- Other minor improvements (updated the `ghupdate` plugin to use the configured executable name when printing to the console, increased with +1 the `thumbGenSem` limit, etc.).
+- Other minor improvements (updated the `ghupdate` plugin to use the configured executable name when printing to the console, increased with +1 the `thumbGenSem` limit, fixed the error reporting of `admin update/delete` commands, etc.).
 
 
 ## v0.21.1
