@@ -39,6 +39,7 @@ your own custom app specific business logic and still have a single portable exe
 
 ```sh
 # go 1.21+
+go mod init pocketbase
 go get github.com/pocketbase/pocketbase
 ```
 
