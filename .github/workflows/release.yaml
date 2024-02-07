@@ -14,9 +14,9 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20.8.1
+          node-version: 20.11.0
 
       - name: Set up Go
         uses: actions/setup-go@v3
