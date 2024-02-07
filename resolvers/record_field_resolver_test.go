@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -558,7 +559,7 @@ func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 	if authRecord.EmailVisibility() {
 		t.Fatal("Expected the original authRecord emailVisibility to remain unchanged")
 	}
-	if v, ok := authRecord.PublicExport()["email"]; ok {
+	if v, ok := authRecord.PublicExport()[schema.FieldNameEmail]; ok {
 		t.Fatalf("Expected the original authRecord email to not be exported, got %q", v)
 	}
 }
