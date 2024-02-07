@@ -32,64 +32,76 @@ The easiest way to interact with the API is to use one of the official SDK clien
 
 ## Overview
 
-PocketBase could be [downloaded directly as a standalone app](https://github.com/pocketbase/pocketbase/releases) or it could be used as a Go framework/toolkit which allows you to build
+### Use as standalone app
+
+You could download the prebuilt executable for your platform from the [Releases page](https://github.com/pocketbase/pocketbase/releases).
+Once downloaded, extract the archive and run `./pocketbase serve` in the extracted directory.
+
+The prebuilt executables are based on the [`examples/base/main.go` file](https://github.com/pocketbase/pocketbase/blob/master/examples/base/main.go) and comes with the JS VM plugin enabled by default which allows to extend PocketBase with JavaScript (_for more details please refer to [Extend with JavaScript](https://pocketbase.io/docs/js-overview/)_).
+
+### Use as a Go framework/toolkit
+
+PocketBase as distributed as a regular Go library package which allows you to build
 your own custom app specific business logic and still have a single portable executable at the end.
 
-### Installation
+Here is a minimal example:
 
-```sh
-# go 1.21+
-go get github.com/pocketbase/pocketbase
-```
+0. [Install Go 1.21+](https://go.dev/doc/install) (_if you haven't already_)
 
-### Example
+1. Create a new project directory with the following `main.go` file inside it:
+    ```go
+    package main
 
-```go
-package main
+    import (
+        "log"
+        "net/http"
 
-import (
-    "log"
-    "net/http"
+        "github.com/labstack/echo/v5"
+        "github.com/pocketbase/pocketbase"
+        "github.com/pocketbase/pocketbase/apis"
+        "github.com/pocketbase/pocketbase/core"
+    )
 
-    "github.com/labstack/echo/v5"
-    "github.com/pocketbase/pocketbase"
-    "github.com/pocketbase/pocketbase/apis"
-    "github.com/pocketbase/pocketbase/core"
-)
+    func main() {
+        app := pocketbase.New()
 
-func main() {
-    app := pocketbase.New()
+        app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+            // add new "GET /hello" route to the app router (echo)
+            e.Router.AddRoute(echo.Route{
+                Method: http.MethodGet,
+                Path:   "/hello",
+                Handler: func(c echo.Context) error {
+                    return c.String(200, "Hello world!")
+                },
+                Middlewares: []echo.MiddlewareFunc{
+                    apis.ActivityLogger(app),
+                },
+            })
 
-    app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-        // add new "GET /hello" route to the app router (echo)
-        e.Router.AddRoute(echo.Route{
-            Method: http.MethodGet,
-            Path:   "/hello",
-            Handler: func(c echo.Context) error {
-                return c.String(200, "Hello world!")
-            },
-            Middlewares: []echo.MiddlewareFunc{
-                apis.ActivityLogger(app),
-            },
+            return nil
         })
 
-        return nil
-    })
-
-    if err := app.Start(); err != nil {
-        log.Fatal(err)
+        if err := app.Start(); err != nil {
+            log.Fatal(err)
+        }
     }
-}
-```
+    ```
 
-### Running and building
+2. To init the dependencies, run `go mod init myapp && go mod tidy`.
 
-Running/building the application is the same as for any other Go program, aka. just `go run` and `go build`.
+3. To start the application, run `go run main.go serve`.
 
-**PocketBase embeds SQLite, but doesn't require CGO.**
+4. To build a statically linked executable, you can run `CGO_ENABLED=0 go build` and then start the created executable with `./myapp serve`.
 
-If CGO is enabled (aka. `CGO_ENABLED=1`), it will use [mattn/go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) driver, otherwise - [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite).
-Enable CGO only if you really need to squeeze the read/write query performance at the expense of complicating cross compilation.
+> [!NOTE]
+> PocketBase embeds SQLite, but doesn't require CGO.
+>
+> If CGO is enabled (aka. `CGO_ENABLED=1`), it will use [mattn/go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) driver, otherwise - [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite).
+> Enable CGO only if you really need to squeeze the read/write query performance at the expense of complicating cross compilation.
+
+_For more details please refer to [Extend with Go](https://pocketbase.io/docs/go-overview/)._
+
+### Building and running the repo main.go example
 
 To build the minimal standalone executable, like the prebuilt ones in the releases page, you can simply run `go build` inside the `examples/base` directory:
 
@@ -100,7 +112,7 @@ To build the minimal standalone executable, like the prebuilt ones in the releas
    (_https://go.dev/doc/install/source#environment_)
 4. Start the created executable by running `./base serve`.
 
-The supported build targets by the non-cgo driver at the moment are:
+Note that the supported build targets by the pure Go SQLite driver at the moment are:
 
 ```
 darwin  amd64
@@ -121,7 +133,7 @@ windows arm64
 ### Testing
 
 PocketBase comes with mixed bag of unit and integration tests.
-To run them, use the default `go test` command:
+To run them, use the standard `go test` command:
 
 ```sh
 go test ./...
