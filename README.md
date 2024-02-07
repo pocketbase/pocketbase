@@ -41,7 +41,7 @@ The prebuilt executables are based on the [`examples/base/main.go` file](https:/
 
 ### Use as a Go framework/toolkit
 
-PocketBase as distributed as a regular Go library package which allows you to build
+PocketBase is distributed as a regular Go library package which allows you to build
 your own custom app specific business logic and still have a single portable executable at the end.
 
 Here is a minimal example:
