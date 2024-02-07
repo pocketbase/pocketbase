@@ -501,56 +501,64 @@ func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 		{"@request.data.c", false, `"{\"sub\":1}"`},
 		{"@request.auth", true, ""},
 		{"@request.auth.id", false, `"4q1xlclmfloku33"`},
-		{"@request.auth.email", false, `"test@example.com"`},
 		{"@request.auth.username", false, `"users75657"`},
 		{"@request.auth.verified", false, `false`},
 		{"@request.auth.emailVisibility", false, `false`},
+		{"@request.auth.email", false, `"test@example.com"`}, // should always be returned no matter of the emailVisibility state
 		{"@request.auth.missing", false, `NULL`},
 	}
 
 	for i, s := range scenarios {
-		r, err := r.Resolve(s.fieldName)
+		t.Run(s.fieldName, func(t *testing.T) {
+			r, err := r.Resolve(s.fieldName)
 
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected hasErr %v, got %v (%v)", i, s.expectError, hasErr, err)
-			continue
-		}
-
-		if hasErr {
-			continue
-		}
-
-		// missing key
-		// ---
-		if len(r.Params) == 0 {
-			if r.Identifier != "NULL" {
-				t.Errorf("(%d) Expected 0 placeholder parameters for %v, got %v", i, r.Identifier, r.Params)
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("(%d) Expected hasErr %v, got %v (%v)", i, s.expectError, hasErr, err)
 			}
-			continue
-		}
 
-		// existing key
-		// ---
-		if len(r.Params) != 1 {
-			t.Errorf("(%d) Expected 1 placeholder parameter for %v, got %v", i, r.Identifier, r.Params)
-			continue
-		}
+			if hasErr {
+				return
+			}
 
-		var paramName string
-		var paramValue any
-		for k, v := range r.Params {
-			paramName = k
-			paramValue = v
-		}
+			// missing key
+			// ---
+			if len(r.Params) == 0 {
+				if r.Identifier != "NULL" {
+					t.Fatalf("(%d) Expected 0 placeholder parameters for %v, got %v", i, r.Identifier, r.Params)
+				}
+				return
+			}
 
-		if r.Identifier != ("{:" + paramName + "}") {
-			t.Errorf("(%d) Expected parameter r.Identifier %q, got %q", i, paramName, r.Identifier)
-		}
+			// existing key
+			// ---
+			if len(r.Params) != 1 {
+				t.Fatalf("(%d) Expected 1 placeholder parameter for %v, got %v", i, r.Identifier, r.Params)
+			}
 
-		encodedParamValue, _ := json.Marshal(paramValue)
-		if string(encodedParamValue) != s.expectParamValue {
-			t.Errorf("(%d) Expected r.Params %v for %v, got %v", i, s.expectParamValue, r.Identifier, string(encodedParamValue))
-		}
+			var paramName string
+			var paramValue any
+			for k, v := range r.Params {
+				paramName = k
+				paramValue = v
+			}
+
+			if r.Identifier != ("{:" + paramName + "}") {
+				t.Fatalf("(%d) Expected parameter r.Identifier %q, got %q", i, paramName, r.Identifier)
+			}
+
+			encodedParamValue, _ := json.Marshal(paramValue)
+			if string(encodedParamValue) != s.expectParamValue {
+				t.Fatalf("(%d) Expected r.Params %v for %v, got %v", i, s.expectParamValue, r.Identifier, string(encodedParamValue))
+			}
+		})
+	}
+
+	// ensure that the original email visibility was restored
+	if authRecord.EmailVisibility() {
+		t.Fatal("Expected the original authRecord emailVisibility to remain unchanged")
+	}
+	if v, ok := authRecord.PublicExport()["email"]; ok {
+		t.Fatalf("Expected the original authRecord email to not be exported, got %q", v)
 	}
 }

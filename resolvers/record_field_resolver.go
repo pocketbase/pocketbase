@@ -106,9 +106,10 @@ func NewRecordFieldResolver(
 		r.staticRequestInfo["data"] = r.requestInfo.Data
 		r.staticRequestInfo["auth"] = nil
 		if r.requestInfo.AuthRecord != nil {
-			r.requestInfo.AuthRecord.IgnoreEmailVisibility(true)
-			r.staticRequestInfo["auth"] = r.requestInfo.AuthRecord.PublicExport()
-			r.requestInfo.AuthRecord.IgnoreEmailVisibility(false)
+			authData := r.requestInfo.AuthRecord.PublicExport()
+			// always add the record email no matter of the emailVisibility field
+			authData[schema.FieldNameEmail] = r.requestInfo.AuthRecord.Email()
+			r.staticRequestInfo["auth"] = authData
 		}
 	}
 
