@@ -1,7 +1,11 @@
 ## v0.21.2
 
-- Fixed `@request.auth.*` initialization side-effect which caused the current authenticated user email to not being returned the user auth response ([#2173](https://github.com/pocketbase/pocketbase/issues/2173#issuecomment-1932332038)).
+- Fixed `@request.auth.*` initialization side-effect which caused the current authenticated user email to not being returned in the user auth response ([#2173](https://github.com/pocketbase/pocketbase/issues/2173#issuecomment-1932332038)).
   _The current authenticated user email should be accessible always no matter of the `emailVisibility` state._
+
+- Fixed `RecordUpsert.RemoveFiles` godoc example.
+
+- Bumped to `NumCPU()+2` the `thumbGenSem` limit as some users reported that it was too restrictive.
 
 
 ## v0.21.1
