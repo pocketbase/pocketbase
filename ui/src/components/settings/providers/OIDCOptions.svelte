@@ -6,6 +6,8 @@
     export let key = "";
     export let config = {};
 
+    $: isRequired = !!config.enabled;
+
     if (CommonHelper.isEmpty(config.pkce)) {
         config.pkce = true;
     }
@@ -15,24 +17,28 @@
     }
 </script>
 
-<Field class="form-field required" name="{key}.displayName" let:uniqueId>
+<Field class="form-field {isRequired ? 'required' : ''}" name="{key}.displayName" let:uniqueId>
     <label for={uniqueId}>Display name</label>
-    <input type="text" id={uniqueId} bind:value={config.displayName} required />
+    <input type="text" id={uniqueId} bind:value={config.displayName} required={isRequired} />
 </Field>
 
 <div class="section-title">Endpoints</div>
-<Field class="form-field required" name="{key}.authUrl" let:uniqueId>
+
+<Field class="form-field {isRequired ? 'required' : ''}" name="{key}.authUrl" let:uniqueId>
     <label for={uniqueId}>Auth URL</label>
-    <input type="url" id={uniqueId} bind:value={config.authUrl} required />
+    <input type="url" id={uniqueId} bind:value={config.authUrl} required={isRequired} />
 </Field>
-<Field class="form-field required" name="{key}.tokenUrl" let:uniqueId>
+
+<Field class="form-field {isRequired ? 'required' : ''}" name="{key}.tokenUrl" let:uniqueId>
     <label for={uniqueId}>Token URL</label>
-    <input type="url" id={uniqueId} bind:value={config.tokenUrl} required />
+    <input type="url" id={uniqueId} bind:value={config.tokenUrl} required={isRequired} />
 </Field>
-<Field class="form-field required" name="{key}.userApiUrl" let:uniqueId>
+
+<Field class="form-field {isRequired ? 'required' : ''}" name="{key}.userApiUrl" let:uniqueId>
     <label for={uniqueId}>User API URL</label>
-    <input type="url" id={uniqueId} bind:value={config.userApiUrl} required />
+    <input type="url" id={uniqueId} bind:value={config.userApiUrl} required={isRequired} />
 </Field>
+
 <Field class="form-field" name="{key}.pkce" let:uniqueId>
     <input type="checkbox" id={uniqueId} bind:checked={config.pkce} />
     <label for={uniqueId}>

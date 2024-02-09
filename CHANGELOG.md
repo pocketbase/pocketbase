@@ -1,3 +1,8 @@
+## (WIP) v0.21.3
+
+- Disable the JS required validations for disabled OIDC providers ([#4322](https://github.com/pocketbase/pocketbase/issues/4322)).
+
+
 ## v0.21.2
 
 - Fixed `@request.auth.*` initialization side-effect which caused the current authenticated user email to not being returned in the user auth response ([#2173](https://github.com/pocketbase/pocketbase/issues/2173#issuecomment-1932332038)).
