@@ -21,8 +21,8 @@ type healthApi struct {
 }
 
 type healthCheckResponse struct {
-	Code    int    `json:"code"`
 	Message string `json:"message"`
+	Code    int    `json:"code"`
 	Data    struct {
 		CanBackup bool `json:"canBackup"`
 	} `json:"data"`
