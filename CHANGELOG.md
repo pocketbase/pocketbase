@@ -19,6 +19,8 @@
 
 - Allow `HEAD` requests to the `/api/health` endpoint ([#4310](https://github.com/pocketbase/pocketbase/issues/4310)).
 
+- Manually clear all TinyMCE events on editor removal (_implemented as workaround for [tinymce#9377](https://github.com/tinymce/tinymce/issues/9377)_).
+
 
 ## v0.21.2
 
