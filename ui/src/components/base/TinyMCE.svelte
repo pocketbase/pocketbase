@@ -225,6 +225,9 @@
         return () => {
             try {
                 if (editorRef) {
+                    // temp workaround for https://github.com/tinymce/tinymce/issues/9377
+                    editorRef.dom?.unbind(document);
+
                     getTinymce()?.remove(editorRef);
                 }
             } catch (_) {}
