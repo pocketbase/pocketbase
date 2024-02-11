@@ -66,6 +66,7 @@
                 content_style: "body { font-size: 14px }",
                 toolbar: "",
                 plugins: ["autoresize"],
+                skin: "pocketbase",
             }}
             value={rawValue}
             disabled
