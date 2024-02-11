@@ -1,9 +1,10 @@
 <script>
     import { onMount } from "svelte";
     import CommonHelper from "@/utils/CommonHelper";
-    import tooltip from "@/actions/tooltip";
+    import tooltipAction from "@/actions/tooltip";
 
     export let value = "";
+    export let tooltip = "Copy";
     export let idleClasses = "ri-file-copy-line txt-sm link-hint";
     export let successClasses = "ri-check-line txt-sm txt-success";
     export let successDuration = 500; // ms
@@ -34,9 +35,10 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <i
     class={copyTimeout ? successClasses : idleClasses}
-    aria-label={"Copy"}
-    use:tooltip={!copyTimeout ? "Copy" : ""}
+    aria-label={"Copy to clipboard"}
+    use:tooltipAction={!copyTimeout ? tooltip : undefined}
     on:click|stopPropagation={copy}
 />

@@ -76,7 +76,7 @@
                     filter: filters.join("||"),
                     fields: "*:excerpt(200)",
                     requestKey: null,
-                })
+                }),
             );
         }
 
