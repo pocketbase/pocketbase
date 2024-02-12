@@ -297,15 +297,17 @@
                     {/if}
                 </Field>
 
-                <Field class="form-field form-field-toggle" let:uniqueId>
-                    <input
-                        type="checkbox"
-                        id={uniqueId}
-                        bind:checked={mergeWithOldCollections}
-                        disabled={!isValid}
-                    />
-                    <label for={uniqueId}>Merge with the existing collections</label>
-                </Field>
+                {#if newCollections.length}
+                    <Field class="form-field form-field-toggle" let:uniqueId>
+                        <input
+                            type="checkbox"
+                            id={uniqueId}
+                            bind:checked={mergeWithOldCollections}
+                            disabled={!isValid}
+                        />
+                        <label for={uniqueId}>Merge with the existing collections</label>
+                    </Field>
+                {/if}
 
                 {#if false}
                     <!-- for now hide the explicit delete control and eventually enable/remove based on the users feedback -->
