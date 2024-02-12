@@ -134,7 +134,7 @@
         newCollections = [];
 
         try {
-            newCollections = newCollections.concat(JSON.parse(schemas));
+            newCollections = JSON.parse(schemas);
         } catch (_) {}
 
         if (!Array.isArray(newCollections)) {
