@@ -22,8 +22,9 @@
     let deleteMissing = true;
     let collectionsToUpdate = [];
     let isLoadingOldCollections = false;
+    let mergeWithOldCollections = false; // an alternative to the default deleteMissing option
 
-    $: if (typeof schemas !== "undefined") {
+    $: if (typeof schemas !== "undefined" && mergeWithOldCollections !== null) {
         loadNewCollections(schemas);
     }
 
@@ -33,7 +34,12 @@
         newCollections.length === newCollections.filter((item) => !!item.id && !!item.name).length;
 
     $: collectionsToDelete = oldCollections.filter((collection) => {
-        return isValid && deleteMissing && !CommonHelper.findByKey(newCollections, "id", collection.id);
+        return (
+            isValid &&
+            !mergeWithOldCollections &&
+            deleteMissing &&
+            !CommonHelper.findByKey(newCollections, "id", collection.id)
+        );
     });
 
     $: collectionsToAdd = newCollections.filter((collection) => {
@@ -128,7 +134,7 @@
         newCollections = [];
 
         try {
-            newCollections = JSON.parse(schemas);
+            newCollections = newCollections.concat(JSON.parse(schemas));
         } catch (_) {}
 
         if (!Array.isArray(newCollections)) {
@@ -223,6 +229,14 @@
         fileInput.value = "";
         setErrors({});
     }
+
+    function review() {
+        const collectionsToImport = !mergeWithOldCollections
+            ? newCollections
+            : CommonHelper.filterDuplicatesByKey(oldCollections.concat(newCollections));
+
+        importPopup?.show(oldCollections, collectionsToImport, deleteMissing);
+    }
 </script>
 
 <SettingsSidebar />
@@ -283,8 +297,18 @@
                     {/if}
                 </Field>
 
+                <Field class="form-field form-field-toggle" let:uniqueId>
+                    <input
+                        type="checkbox"
+                        id={uniqueId}
+                        bind:checked={mergeWithOldCollections}
+                        disabled={!isValid}
+                    />
+                    <label for={uniqueId}>Merge with the existing collections</label>
+                </Field>
+
                 {#if false}
-                    <!-- for now hide the delete control and eventually enable/remove based on the users feedback -->
+                    <!-- for now hide the explicit delete control and eventually enable/remove based on the users feedback -->
                     <Field class="form-field form-field-toggle" let:uniqueId>
                         <input
                             type="checkbox"
@@ -391,7 +415,7 @@
                         type="button"
                         class="btn btn-expanded btn-warning m-l-auto"
                         disabled={!canImport}
-                        on:click={() => importPopup?.show(oldCollections, newCollections, deleteMissing)}
+                        on:click={review}
                     >
                         <span class="txt">Review</span>
                     </button>
@@ -401,7 +425,7 @@
     </div>
 </PageWrapper>
 
-<ImportPopup bind:this={importPopup} on:submit={() => clear()} />
+<ImportPopup bind:this={importPopup} on:submit={clear} />
 
 <style>
     .list-label {

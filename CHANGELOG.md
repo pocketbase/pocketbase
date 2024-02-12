@@ -3,6 +3,8 @@
 - Admin UI improvements:
   - Sync collection changes across multiple opened tabs.
   - Fixed vertical image popup preview scrolling.
+  - Added options to export a subset of collections.
+  - Added option to import a subset of collections without deleting the others ([#3403](https://github.com/pocketbase/pocketbase/issues/3403)).
 
 - Added `jsvm.Config.OnInit` optional config function to allow registering custom Go bindings to the JSVM.
 
