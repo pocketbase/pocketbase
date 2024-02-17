@@ -122,6 +122,7 @@ func (api *fileApi) download(c echo.Context) error {
 
 		// create a copy of the cached request data and adjust it for the current auth model
 		requestInfo := *RequestInfo(c)
+		requestInfo.Context = models.RequestInfoContextProtectedFile
 		requestInfo.Admin = nil
 		requestInfo.AuthRecord = nil
 		if adminOrAuthRecord != nil {

@@ -206,8 +206,10 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 	form.SetBeforeNewRecordCreateFunc(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
 		return createForm.DrySubmit(func(txDao *daos.Dao) error {
 			event.IsNewRecord = true
+
 			// clone the current request data and assign the form create data as its body data
 			requestInfo := *RequestInfo(c)
+			requestInfo.Context = models.RequestInfoContextOAuth2
 			requestInfo.Data = form.CreateData
 
 			createRuleFunc := func(q *dbx.SelectQuery) error {

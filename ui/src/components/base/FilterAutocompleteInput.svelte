@@ -254,6 +254,7 @@
     function getRequestKeys() {
         const result = [];
 
+        result.push("@request.context");
         result.push("@request.method");
         result.push("@request.query.");
         result.push("@request.data.");

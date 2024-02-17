@@ -24,6 +24,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 	}
 
 	requestInfo := &models.RequestInfo{
+		Context: "ctx",
 		Headers: map[string]any{
 			"a": "123",
 			"b": "456",
@@ -173,6 +174,13 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 			"@request.auth.id > true || @request.auth.username > true || @request.auth.rel.title > true || @request.data.demo > true",
 			false,
 			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `users` `__auth_users` ON `__auth_users`.`id`={:TEST} LEFT JOIN `demo2` `__auth_users_rel` ON [[__auth_users_rel.id]] = [[__auth_users.rel]] WHERE ({:TEST} > 1 OR {:TEST} > 1 OR [[__auth_users_rel.title]] > 1 OR NULL > 1)",
+		},
+		{
+			"@request.* static fields",
+			"demo4",
+			"@request.context = true || @request.query.a = true || @request.query.b = true || @request.query.missing = true || @request.headers.a = true || @request.headers.missing = true",
+			false,
+			"SELECT `demo4`.* FROM `demo4` WHERE ({:TEST} = 1 OR '' = 1 OR {:TEST} = 1 OR '' = 1 OR {:TEST} = 1 OR '' = 1)",
 		},
 		{
 			"hidden field with system filters (multi-match and ignore emailVisibility)",
@@ -459,7 +467,8 @@ func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 	}
 
 	requestInfo := &models.RequestInfo{
-		Method: "get",
+		Context: "ctx",
+		Method:  "get",
 		Query: map[string]any{
 			"a": 123,
 		},
@@ -486,6 +495,7 @@ func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 		{"@request.invalid format", true, ""},
 		{"@request.invalid_format2!", true, ""},
 		{"@request.missing", true, ""},
+		{"@request.context", false, `"ctx"`},
 		{"@request.method", false, `"get"`},
 		{"@request.query", true, ``},
 		{"@request.query.a", false, `123`},

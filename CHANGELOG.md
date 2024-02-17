@@ -8,11 +8,21 @@
 
 - Added `jsvm.Config.OnInit` optional config function to allow registering custom Go bindings to the JSVM.
 
-- Upgraded (_again_) to `aws-sdk-go-v2` and added special handling for GCS to workaround the [headers signature issue](https://github.com/pocketbase/pocketbase/issues/2231) with v2.
+- Added `@request.context` rule field that can be used to apply a different set of constrtaints based on the API rule execution context.
+  For example, to disallow user creation by an OAuth2 auth, you could set for the users Create API rule `@request.context != "oauth2"`.
+  The currently supported `@request.context` values are:
+  ```
+  default
+  realtime
+  protectedFile
+  oauth2
+  ```
+
+- Upgraded to `aws-sdk-go-v2` and added special handling for GCS to workaround the previous [headers signature issue](https://github.com/pocketbase/pocketbase/issues/2231) we had we v2.
   _This should also fix the SVG/JSON zero response when using Cloudflare R2 ([#4287](https://github.com/pocketbase/pocketbase/issues/4287#issuecomment-1925168142), [#2068](https://github.com/pocketbase/pocketbase/discussions/2068), [#2952](https://github.com/pocketbase/pocketbase/discussions/2952))._
   _If you are using S3, please verify that you have a green check in the Admin UI for your S3 configuration (I've tested the new version with GCS, MinIO, Cloudflare R2 and Wasabi)._
 
-- Other minor improvements (updated the `ghupdate` plugin to use the configured executable name when printing to the console, increased with +1 the `thumbGenSem` limit, fixed the error reporting of `admin update/delete` commands, etc.).
+- Other minor improvements (updated the `ghupdate` plugin to use the configured executable name when printing to the console, fixed the error reporting of `admin update/delete` commands, etc.).
 
 
 ## v0.21.3
