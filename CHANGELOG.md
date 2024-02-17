@@ -18,7 +18,7 @@
   oauth2
   ```
 
-- Upgraded to `aws-sdk-go-v2` and added special handling for GCS to workaround the previous [headers signature issue](https://github.com/pocketbase/pocketbase/issues/2231) we had we v2.
+- Upgraded to `aws-sdk-go-v2` and added special handling for GCS to workaround the previous [headers signature issue](https://github.com/pocketbase/pocketbase/issues/2231) that we had with v2.
   _This should also fix the SVG/JSON zero response when using Cloudflare R2 ([#4287](https://github.com/pocketbase/pocketbase/issues/4287#issuecomment-1925168142), [#2068](https://github.com/pocketbase/pocketbase/discussions/2068), [#2952](https://github.com/pocketbase/pocketbase/discussions/2952))._
   _If you are using S3, please verify that you have a green check in the Admin UI for your S3 configuration (I've tested the new version with GCS, MinIO, Cloudflare R2 and Wasabi)._
 
