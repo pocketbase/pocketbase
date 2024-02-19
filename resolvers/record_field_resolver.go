@@ -144,7 +144,8 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 //	id
 //	someSelect.each
 //	project.screen.status
-//	@request.status
+//	@request.context
+//	@request.method
 //	@request.query.filter
 //	@request.headers.x_token
 //	@request.auth.someRelation.name

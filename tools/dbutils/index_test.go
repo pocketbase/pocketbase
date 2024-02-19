@@ -3,6 +3,7 @@ package dbutils_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/dbutils"
@@ -68,21 +69,23 @@ func TestParseIndex(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		result := dbutils.ParseIndex(s.index)
+		t.Run(fmt.Sprintf("scenario_%d", i), func(t *testing.T) {
+			result := dbutils.ParseIndex(s.index)
 
-		resultRaw, err := json.Marshal(result)
-		if err != nil {
-			t.Fatalf("[%d] %v", i, err)
-		}
+			resultRaw, err := json.Marshal(result)
+			if err != nil {
+				t.Fatalf("Faild to marshalize parse result: %v", err)
+			}
 
-		expectedRaw, err := json.Marshal(s.expected)
-		if err != nil {
-			t.Fatalf("[%d] %v", i, err)
-		}
+			expectedRaw, err := json.Marshal(s.expected)
+			if err != nil {
+				t.Fatalf("Failed to marshalize expected index: %v", err)
+			}
 
-		if !bytes.Equal(resultRaw, expectedRaw) {
-			t.Errorf("[%d] Expected \n%s \ngot \n%s", i, expectedRaw, resultRaw)
-		}
+			if !bytes.Equal(resultRaw, expectedRaw) {
+				t.Errorf("Expected \n%s \ngot \n%s", expectedRaw, resultRaw)
+			}
+		})
 	}
 }
 
@@ -146,11 +149,12 @@ func TestIndexIsValid(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		result := s.index.IsValid()
-
-		if result != s.expected {
-			t.Errorf("[%s] Expected %v, got %v", s.name, s.expected, result)
-		}
+		t.Run(s.name, func(t *testing.T) {
+			result := s.index.IsValid()
+			if result != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, result)
+			}
+		})
 	}
 }
 
@@ -218,10 +222,93 @@ func TestIndexBuild(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		result := s.index.Build()
+		t.Run(s.name, func(t *testing.T) {
+			result := s.index.Build()
+			if result != s.expected {
+				t.Fatalf("Expected \n%v \ngot \n%v", s.expected, result)
+			}
+		})
+	}
+}
 
-		if result != s.expected {
-			t.Errorf("[%s] Expected \n%v \ngot \n%v", s.name, s.expected, result)
-		}
+func TestHasSingleColumnUniqueIndex(t *testing.T) {
+	scenarios := []struct {
+		name     string
+		column   string
+		indexes  []string
+		expected bool
+	}{
+		{
+			"empty indexes",
+			"test",
+			nil,
+			false,
+		},
+		{
+			"empty column",
+			"",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test`)",
+			},
+			false,
+		},
+		{
+			"mismatched column",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test2`)",
+			},
+			false,
+		},
+		{
+			"non unique index",
+			"test",
+			[]string{
+				"CREATE INDEX `index1` ON `example` (`test`)",
+			},
+			false,
+		},
+		{
+			"matching columnd and unique index",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test`)",
+			},
+			true,
+		},
+		{
+			"multiple columns",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test`, `test2`)",
+			},
+			false,
+		},
+		{
+			"multiple indexes",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test`, `test2`)",
+				"CREATE UNIQUE INDEX `index2` ON `example` (`test`)",
+			},
+			true,
+		},
+		{
+			"partial unique index",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index` ON `example` (`test`) where test != ''",
+			},
+			true,
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			result := dbutils.HasSingleColumnUniqueIndex(s.column, s.indexes)
+			if result != s.expected {
+				t.Fatalf("Expected %v got %v", s.expected, result)
+			}
+		})
 	}
 }
