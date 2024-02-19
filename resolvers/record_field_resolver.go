@@ -144,6 +144,7 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 //	id
 //	someSelect.each
 //	project.screen.status
+//	screen.project_via_prototype.name
 //	@request.context
 //	@request.method
 //	@request.query.filter

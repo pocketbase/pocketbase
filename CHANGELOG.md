@@ -4,8 +4,6 @@
   The syntax to reference back relation fields is `yourCollection_via_yourRelField.*`.
   ⚠️ To avoid excessive joins, the nested relations resolver is now limited to max 6 level depth (similar to `expand`).
   _Note that in the future there will be also more advanced and granular options to specify a subset of the fields that are filterable/sortable._
-  @todo add Admin UI autocomplete
-  @todo update "Working with relations" docs
 
 - Added support for multiple back/indirect relation `expand` and updated the keys to use the `_via_` reference syntax (`yourCollection_via_yourRelField`).
   _To minimize the breaking changes, the old parenthesis reference syntax (`yourCollection(yourRelField)`) will still continue to work but it is soft-deprecated and there will be a console log reminding you to change it to the new one._

@@ -515,10 +515,7 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 		if field == nil {
 			parts := viaRegex.FindStringSubmatch(prop)
 			if len(parts) != 3 {
-				if r.nullifyMisingField {
-					return &search.ResolverResult{Identifier: "NULL"}, nil
-				}
-				return nil, fmt.Errorf("unknown field %q", prop)
+				return nil, fmt.Errorf("field %q is not a valid back relation", prop)
 			}
 
 			backCollection, err := r.resolver.loadCollection(parts[1])

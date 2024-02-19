@@ -181,7 +181,7 @@
             new CustomEvent("change", {
                 detail: { value },
                 bubbles: true,
-            })
+            }),
         );
     }
 
@@ -217,10 +217,11 @@
         if (!collection || level >= 4) {
             return [];
         }
+        collection.schema = collection.schema || [];
 
         let result = CommonHelper.getAllCollectionIdentifiers(collection, prefix);
 
-        for (const field of collection?.schema || []) {
+        for (const field of collection.schema) {
             const key = prefix + field.name;
 
             // add relation fields
@@ -239,6 +240,20 @@
             // add ":length" field modifier to arrayble fields
             if (field.options?.maxSelect != 1 && ["select", "file", "relation"].includes(field.type)) {
                 result.push(key + ":length");
+            }
+        }
+
+        // add back relations
+        for (const ref of cachedCollections) {
+            ref.schema = ref.schema || [];
+            for (const field of ref.schema) {
+                if (field.type == "relation" && field.options?.collectionId == collection.id) {
+                    const key = prefix + ref.name + "_via_" + field.name;
+                    const subKeys = getCollectionFieldKeys(ref.id, key + ".", level + 2); // +2 to reduce the recursive results
+                    if (subKeys.length) {
+                        result = result.concat(subKeys);
+                    }
+                }
             }
         }
 
@@ -334,10 +349,9 @@
             result = result.concat(cachedIndirectCollectionKeys || []);
         }
 
-        // sort longer keys first because the highlighter will highlight
-        // the first match and stops until an operator is found
+        // sort shorter keys first
         result.sort(function (a, b) {
-            return b.length - a.length;
+            return a.length - b.length;
         });
 
         return result;
@@ -444,7 +458,7 @@
                 meta: {
                     lineComment: "//",
                 },
-            })
+            }),
         );
     }
 
