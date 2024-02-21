@@ -46,6 +46,8 @@ func TestSettingsValidate(t *testing.T) {
 	s.TwitterAuth.ClientId = ""
 	s.MicrosoftAuth.Enabled = true
 	s.MicrosoftAuth.ClientId = ""
+	s.PlanningcenterAuth.Enabled = true
+	s.PlanningcenterAuth.ClientId = ""
 	s.SpotifyAuth.Enabled = true
 	s.SpotifyAuth.ClientId = ""
 	s.KakaoAuth.Enabled = true
@@ -107,6 +109,7 @@ func TestSettingsValidate(t *testing.T) {
 		`"discordAuth":{`,
 		`"twitterAuth":{`,
 		`"microsoftAuth":{`,
+		`"planningcenterAuth":{`,
 		`"spotifyAuth":{`,
 		`"kakaoAuth":{`,
 		`"twitchAuth":{`,
@@ -169,6 +172,8 @@ func TestSettingsMerge(t *testing.T) {
 	s2.TwitterAuth.ClientId = "twitter_test"
 	s2.MicrosoftAuth.Enabled = true
 	s2.MicrosoftAuth.ClientId = "microsoft_test"
+	s2.PlanningcenterAuth.Enabled = true
+	s2.PlanningcenterAuth.ClientId = "planningcenter_test"
 	s2.SpotifyAuth.Enabled = true
 	s2.SpotifyAuth.ClientId = "spotify_test"
 	s2.KakaoAuth.Enabled = true
@@ -279,6 +284,7 @@ func TestSettingsRedactClone(t *testing.T) {
 	s1.DiscordAuth.ClientSecret = testSecret
 	s1.TwitterAuth.ClientSecret = testSecret
 	s1.MicrosoftAuth.ClientSecret = testSecret
+	s1.PlanningcenterAuth.ClientSecret = testSecret
 	s1.SpotifyAuth.ClientSecret = testSecret
 	s1.KakaoAuth.ClientSecret = testSecret
 	s1.TwitchAuth.ClientSecret = testSecret
@@ -340,6 +346,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 	s.DiscordAuth.ClientId = "discord_test"
 	s.TwitterAuth.ClientId = "twitter_test"
 	s.MicrosoftAuth.ClientId = "microsoft_test"
+	s.PlanningcenterAuth.ClientId = "planningcenter_test"
 	s.SpotifyAuth.ClientId = "spotify_test"
 	s.KakaoAuth.ClientId = "kakao_test"
 	s.TwitchAuth.ClientId = "twitch_test"
@@ -373,6 +380,7 @@ func TestNamedAuthProviderConfigs(t *testing.T) {
 		`"gitlab":{"enabled":true,"clientId":"gitlab_test"`,
 		`"google":{"enabled":false,"clientId":"google_test"`,
 		`"microsoft":{"enabled":false,"clientId":"microsoft_test"`,
+		`"planningcenter":{"enabled":false,"clientId":"planningcenter_test"`,
 		`"spotify":{"enabled":false,"clientId":"spotify_test"`,
 		`"twitter":{"enabled":false,"clientId":"twitter_test"`,
 		`"kakao":{"enabled":false,"clientId":"kakao_test"`,

@@ -122,6 +122,11 @@ export default [
         logo:  "livechat.svg",
     },
     {
+        key:   "planningcenterAuth",
+        title: "Planning Center",
+        logo:  "planningcenter.svg",
+    },
+    {
         key:   "mailcowAuth",
         title: "mailcow",
         logo:  "mailcow.svg",

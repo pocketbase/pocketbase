@@ -122,6 +122,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewTwitterProvider(), nil
 	case NameMicrosoft:
 		return NewMicrosoftProvider(), nil
+	case NamePlanningcenter:
+		return NewPlanningcenterProvider(), nil
 	case NameSpotify:
 		return NewSpotifyProvider(), nil
 	case NameKakao:
