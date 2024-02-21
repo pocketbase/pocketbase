@@ -157,6 +157,7 @@ func (c *Cron) Start() {
 	next := now.Add(c.interval).Truncate(c.interval)
 	delay := next.Sub(now)
 
+	c.Lock()
 	c.startTimer = time.AfterFunc(delay, func() {
 		c.Lock()
 		c.ticker = time.NewTicker(c.interval)
@@ -172,6 +173,7 @@ func (c *Cron) Start() {
 			}
 		}()
 	})
+	c.Unlock()
 }
 
 // HasStarted checks whether the current Cron ticker has been started.

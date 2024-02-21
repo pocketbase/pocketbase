@@ -1,4 +1,4 @@
-// 1708175102
+// 1708547740
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // -------------------------------------------------------------------
@@ -1644,8 +1644,8 @@ namespace os {
   * than ReadFrom. This is used to permit ReadFrom to call io.Copy
   * without leading to a recursive call to ReadFrom.
   */
- type _subddarQ = File
- interface fileWithoutReadFrom extends _subddarQ {
+ type _subvCCvT = File
+ interface fileWithoutReadFrom extends _subvCCvT {
  }
  interface fileWithoutReadFrom {
   /**
@@ -2302,8 +2302,8 @@ namespace os {
  /**
   * File represents an open file descriptor.
   */
- type _subQSbVk = file
- interface File extends _subQSbVk {
+ type _subWGTCD = file
+ interface File extends _subWGTCD {
  }
  /**
   * A FileInfo describes a file and is returned by Stat and Lstat.
@@ -2705,107 +2705,20 @@ namespace filepath {
 }
 
 /**
- * Package template is a thin wrapper around the standard html/template
- * and text/template packages that implements a convenient registry to
- * load and cache templates on the fly concurrently.
- * 
- * It was created to assist the JSVM plugin HTML rendering, but could be used in other Go code.
- * 
- * Example:
- * 
- * ```
- * 	registry := template.NewRegistry()
- * 
- * 	html1, err := registry.LoadFiles(
- * 		// the files set wil be parsed only once and then cached
- * 		"layout.html",
- * 		"content.html",
- * 	).Render(map[string]any{"name": "John"})
- * 
- * 	html2, err := registry.LoadFiles(
- * 		// reuse the already parsed and cached files set
- * 		"layout.html",
- * 		"content.html",
- * 	).Render(map[string]any{"name": "Jane"})
- * ```
+ * Package validation provides configurable and extensible rules for validating data of various types.
  */
-namespace template {
- interface newRegistry {
-  /**
-   * NewRegistry creates and initializes a new templates registry with
-   * some defaults (eg. global "raw" template function for unescaped HTML).
-   * 
-   * Use the Registry.Load* methods to load templates into the registry.
-   */
-  (): (Registry)
- }
+namespace ozzo_validation {
  /**
-  * Registry defines a templates registry that is safe to be used by multiple goroutines.
-  * 
-  * Use the Registry.Load* methods to load templates into the registry.
+  * Error interface represents an validation error
   */
- interface Registry {
- }
- interface Registry {
-  /**
-   * AddFuncs registers new global template functions.
-   * 
-   * The key of each map entry is the function name that will be used in the templates.
-   * If a function with the map entry name already exists it will be replaced with the new one.
-   * 
-   * The value of each map entry is a function that must have either a
-   * single return value, or two return values of which the second has type error.
-   * 
-   * Example:
-   * 
-   *  r.AddFuncs(map[string]any{
-   * ```
-   *    "toUpper": func(str string) string {
-   *        return strings.ToUppser(str)
-   *    },
-   *    ...
-   * ```
-   *  })
-   */
-  addFuncs(funcs: _TygojaDict): (Registry)
- }
- interface Registry {
-  /**
-   * LoadFiles caches (if not already) the specified filenames set as a
-   * single template and returns a ready to use Renderer instance.
-   * 
-   * There must be at least 1 filename specified.
-   */
-  loadFiles(...filenames: string[]): (Renderer)
- }
- interface Registry {
-  /**
-   * LoadString caches (if not already) the specified inline string as a
-   * single template and returns a ready to use Renderer instance.
-   */
-  loadString(text: string): (Renderer)
- }
- interface Registry {
-  /**
-   * LoadFS caches (if not already) the specified fs and globPatterns
-   * pair as single template and returns a ready to use Renderer instance.
-   * 
-   * There must be at least 1 file matching the provided globPattern(s)
-   * (note that most file names serves as glob patterns matching themselves).
-   */
-  loadFS(fsys: fs.FS, ...globPatterns: string[]): (Renderer)
- }
- /**
-  * Renderer defines a single parsed template.
-  */
- interface Renderer {
- }
- interface Renderer {
-  /**
-   * Render executes the template with the specified data as the dot object
-   * and returns the result as plain string.
-   */
-  render(data: any): string
+ interface Error {
+  [key:string]: any;
+  error(): string
+  code(): string
+  message(): string
+  setMessage(_arg0: string): Error
+  params(): _TygojaDict
+  setParams(_arg0: _TygojaDict): Error
  }
 }
 
@@ -3145,14 +3058,14 @@ namespace dbx {
  /**
   * MssqlBuilder is the builder for SQL Server databases.
   */
- type _subSrZev = BaseBuilder
- interface MssqlBuilder extends _subSrZev {
+ type _subxeEvx = BaseBuilder
+ interface MssqlBuilder extends _subxeEvx {
  }
  /**
   * MssqlQueryBuilder is the query builder for SQL Server databases.
   */
- type _subDMyAM = BaseQueryBuilder
- interface MssqlQueryBuilder extends _subDMyAM {
+ type _subiDShp = BaseQueryBuilder
+ interface MssqlQueryBuilder extends _subiDShp {
  }
  interface newMssqlBuilder {
   /**
@@ -3223,8 +3136,8 @@ namespace dbx {
  /**
   * MysqlBuilder is the builder for MySQL databases.
   */
- type _subhymMh = BaseBuilder
- interface MysqlBuilder extends _subhymMh {
+ type _subhGnTF = BaseBuilder
+ interface MysqlBuilder extends _subhGnTF {
  }
  interface newMysqlBuilder {
   /**
@@ -3299,14 +3212,14 @@ namespace dbx {
  /**
   * OciBuilder is the builder for Oracle databases.
   */
- type _subGIwEI = BaseBuilder
- interface OciBuilder extends _subGIwEI {
+ type _subjSlDc = BaseBuilder
+ interface OciBuilder extends _subjSlDc {
  }
  /**
   * OciQueryBuilder is the query builder for Oracle databases.
   */
- type _subNhnAm = BaseQueryBuilder
- interface OciQueryBuilder extends _subNhnAm {
+ type _subkzKsb = BaseQueryBuilder
+ interface OciQueryBuilder extends _subkzKsb {
  }
  interface newOciBuilder {
   /**
@@ -3369,8 +3282,8 @@ namespace dbx {
  /**
   * PgsqlBuilder is the builder for PostgreSQL databases.
   */
- type _subhibju = BaseBuilder
- interface PgsqlBuilder extends _subhibju {
+ type _subkHKlK = BaseBuilder
+ interface PgsqlBuilder extends _subkHKlK {
  }
  interface newPgsqlBuilder {
   /**
@@ -3437,8 +3350,8 @@ namespace dbx {
  /**
   * SqliteBuilder is the builder for SQLite databases.
   */
- type _subBUDpF = BaseBuilder
- interface SqliteBuilder extends _subBUDpF {
+ type _subfmMaf = BaseBuilder
+ interface SqliteBuilder extends _subfmMaf {
  }
  interface newSqliteBuilder {
   /**
@@ -3537,8 +3450,8 @@ namespace dbx {
  /**
   * StandardBuilder is the builder that is used by DB for an unknown driver.
   */
- type _subbiawe = BaseBuilder
- interface StandardBuilder extends _subbiawe {
+ type _subwBcKY = BaseBuilder
+ interface StandardBuilder extends _subwBcKY {
  }
  interface newStandardBuilder {
   /**
@@ -3604,8 +3517,8 @@ namespace dbx {
   * DB enhances sql.DB by providing a set of DB-agnostic query building methods.
   * DB allows easier query building and population of data into Go variables.
   */
- type _subyqigJ = Builder
- interface DB extends _subyqigJ {
+ type _subXAfBs = Builder
+ interface DB extends _subXAfBs {
   /**
    * FieldMapper maps struct fields to DB columns. Defaults to DefaultFieldMapFunc.
    */
@@ -4409,8 +4322,8 @@ namespace dbx {
   * Rows enhances sql.Rows by providing additional data query methods.
   * Rows can be obtained by calling Query.Rows(). It is mainly used to populate data row by row.
   */
- type _subyMArv = sql.Rows
- interface Rows extends _subyMArv {
+ type _subzNnMs = sql.Rows
+ interface Rows extends _subzNnMs {
  }
  interface Rows {
   /**
@@ -4772,8 +4685,8 @@ namespace dbx {
   }): string }
  interface structInfo {
  }
- type _subLVbhz = structInfo
- interface structValue extends _subLVbhz {
+ type _subvtUqp = structInfo
+ interface structValue extends _subvtUqp {
  }
  interface fieldInfo {
  }
@@ -4826,8 +4739,8 @@ namespace dbx {
  /**
   * Tx enhances sql.Tx with additional querying methods.
   */
- type _subpaSnC = Builder
- interface Tx extends _subpaSnC {
+ type _subtwCTX = Builder
+ interface Tx extends _subtwCTX {
  }
  interface Tx {
   /**
@@ -4840,24 +4753,6 @@ namespace dbx {
    * Rollback aborts the transaction.
    */
   rollback(): void
- }
-}
-
-/**
- * Package validation provides configurable and extensible rules for validating data of various types.
- */
-namespace ozzo_validation {
- /**
-  * Error interface represents an validation error
-  */
- interface Error {
-  [key:string]: any;
-  error(): string
-  code(): string
-  message(): string
-  setMessage(_arg0: string): Error
-  params(): _TygojaDict
-  setParams(_arg0: _TygojaDict): Error
  }
 }
 
@@ -5208,8 +5103,8 @@ namespace filesystem {
    */
   open(): io.ReadSeekCloser
  }
- type _subArWWs = bytes.Reader
- interface bytesReadSeekCloser extends _subArWWs {
+ type _subvccXY = bytes.Reader
+ interface bytesReadSeekCloser extends _subvccXY {
  }
  interface bytesReadSeekCloser {
   /**
@@ -6345,8 +6240,8 @@ namespace forms {
  /**
   * SettingsUpsert is a [settings.Settings] upsert (create/update) form.
   */
- type _suboMJxr = settings.Settings
- interface SettingsUpsert extends _suboMJxr {
+ type _subejzCw = settings.Settings
+ interface SettingsUpsert extends _subejzCw {
  }
  interface newSettingsUpsert {
   /**
@@ -6796,8 +6691,8 @@ namespace pocketbase {
  /**
   * appWrapper serves as a private CoreApp instance wrapper.
   */
- type _subzjpZI = CoreApp
- interface appWrapper extends _subzjpZI {
+ type _subfdLlU = CoreApp
+ interface appWrapper extends _subfdLlU {
  }
  /**
   * PocketBase defines a PocketBase app launcher.
@@ -6805,8 +6700,8 @@ namespace pocketbase {
   * It implements [CoreApp] via embedding and all of the app interface methods
   * could be accessed directly through the instance (eg. PocketBase.DataDir()).
   */
- type _subvNVUR = appWrapper
- interface PocketBase extends _subvNVUR {
+ type _subStrKG = appWrapper
+ interface PocketBase extends _subStrKG {
   /**
    * RootCmd is the main console command
    */
@@ -6890,6 +6785,111 @@ namespace pocketbase {
 }
 
 /**
+ * Package template is a thin wrapper around the standard html/template
+ * and text/template packages that implements a convenient registry to
+ * load and cache templates on the fly concurrently.
+ * 
+ * It was created to assist the JSVM plugin HTML rendering, but could be used in other Go code.
+ * 
+ * Example:
+ * 
+ * ```
+ * 	registry := template.NewRegistry()
+ * 
+ * 	html1, err := registry.LoadFiles(
+ * 		// the files set wil be parsed only once and then cached
+ * 		"layout.html",
+ * 		"content.html",
+ * 	).Render(map[string]any{"name": "John"})
+ * 
+ * 	html2, err := registry.LoadFiles(
+ * 		// reuse the already parsed and cached files set
+ * 		"layout.html",
+ * 		"content.html",
+ * 	).Render(map[string]any{"name": "Jane"})
+ * ```
+ */
+namespace template {
+ interface newRegistry {
+  /**
+   * NewRegistry creates and initializes a new templates registry with
+   * some defaults (eg. global "raw" template function for unescaped HTML).
+   * 
+   * Use the Registry.Load* methods to load templates into the registry.
+   */
+  (): (Registry)
+ }
+ /**
+  * Registry defines a templates registry that is safe to be used by multiple goroutines.
+  * 
+  * Use the Registry.Load* methods to load templates into the registry.
+  */
+ interface Registry {
+ }
+ interface Registry {
+  /**
+   * AddFuncs registers new global template functions.
+   * 
+   * The key of each map entry is the function name that will be used in the templates.
+   * If a function with the map entry name already exists it will be replaced with the new one.
+   * 
+   * The value of each map entry is a function that must have either a
+   * single return value, or two return values of which the second has type error.
+   * 
+   * Example:
+   * 
+   *  r.AddFuncs(map[string]any{
+   * ```
+   *    "toUpper": func(str string) string {
+   *        return strings.ToUppser(str)
+   *    },
+   *    ...
+   * ```
+   *  })
+   */
+  addFuncs(funcs: _TygojaDict): (Registry)
+ }
+ interface Registry {
+  /**
+   * LoadFiles caches (if not already) the specified filenames set as a
+   * single template and returns a ready to use Renderer instance.
+   * 
+   * There must be at least 1 filename specified.
+   */
+  loadFiles(...filenames: string[]): (Renderer)
+ }
+ interface Registry {
+  /**
+   * LoadString caches (if not already) the specified inline string as a
+   * single template and returns a ready to use Renderer instance.
+   */
+  loadString(text: string): (Renderer)
+ }
+ interface Registry {
+  /**
+   * LoadFS caches (if not already) the specified fs and globPatterns
+   * pair as single template and returns a ready to use Renderer instance.
+   * 
+   * There must be at least 1 file matching the provided globPattern(s)
+   * (note that most file names serves as glob patterns matching themselves).
+   */
+  loadFS(fsys: fs.FS, ...globPatterns: string[]): (Renderer)
+ }
+ /**
+  * Renderer defines a single parsed template.
+  */
+ interface Renderer {
+ }
+ interface Renderer {
+  /**
+   * Render executes the template with the specified data as the dot object
+   * and returns the result as plain string.
+   */
+  render(data: any): string
+ }
+}
+
+/**
  * Package io provides basic interfaces to I/O primitives.
  * Its primary job is to wrap existing implementations of such primitives,
  * such as those in package os, into shared public interfaces that
@@ -6943,91 +6943,6 @@ namespace io {
   */
  interface ReadSeekCloser {
   [key:string]: any;
- }
-}
-
-/**
- * Package bytes implements functions for the manipulation of byte slices.
- * It is analogous to the facilities of the [strings] package.
- */
-namespace bytes {
- /**
-  * A Reader implements the io.Reader, io.ReaderAt, io.WriterTo, io.Seeker,
-  * io.ByteScanner, and io.RuneScanner interfaces by reading from
-  * a byte slice.
-  * Unlike a Buffer, a Reader is read-only and supports seeking.
-  * The zero value for Reader operates like a Reader of an empty slice.
-  */
- interface Reader {
- }
- interface Reader {
-  /**
-   * Len returns the number of bytes of the unread portion of the
-   * slice.
-   */
-  len(): number
- }
- interface Reader {
-  /**
-   * Size returns the original length of the underlying byte slice.
-   * Size is the number of bytes available for reading via ReadAt.
-   * The result is unaffected by any method calls except Reset.
-   */
-  size(): number
- }
- interface Reader {
-  /**
-   * Read implements the io.Reader interface.
-   */
-  read(b: string|Array<number>): number
- }
- interface Reader {
-  /**
-   * ReadAt implements the io.ReaderAt interface.
-   */
-  readAt(b: string|Array<number>, off: number): number
- }
- interface Reader {
-  /**
-   * ReadByte implements the io.ByteReader interface.
-   */
-  readByte(): number
- }
- interface Reader {
-  /**
-   * UnreadByte complements ReadByte in implementing the io.ByteScanner interface.
-   */
-  unreadByte(): void
- }
- interface Reader {
-  /**
-   * ReadRune implements the io.RuneReader interface.
-   */
-  readRune(): [number, number]
- }
- interface Reader {
-  /**
-   * UnreadRune complements ReadRune in implementing the io.RuneScanner interface.
-   */
-  unreadRune(): void
- }
- interface Reader {
-  /**
-   * Seek implements the io.Seeker interface.
-   */
-  seek(offset: number, whence: number): number
- }
- interface Reader {
-  /**
-   * WriteTo implements the io.WriterTo interface.
-   */
-  writeTo(w: io.Writer): number
- }
- interface Reader {
-  /**
-   * Reset resets the Reader to be reading from b.
-   */
-  reset(b: string|Array<number>): void
  }
 }
 
@@ -7932,6 +7847,91 @@ namespace fs {
 }
 
 /**
+ * Package bytes implements functions for the manipulation of byte slices.
+ * It is analogous to the facilities of the [strings] package.
+ */
+namespace bytes {
+ /**
+  * A Reader implements the io.Reader, io.ReaderAt, io.WriterTo, io.Seeker,
+  * io.ByteScanner, and io.RuneScanner interfaces by reading from
+  * a byte slice.
+  * Unlike a Buffer, a Reader is read-only and supports seeking.
+  * The zero value for Reader operates like a Reader of an empty slice.
+  */
+ interface Reader {
+ }
+ interface Reader {
+  /**
+   * Len returns the number of bytes of the unread portion of the
+   * slice.
+   */
+  len(): number
+ }
+ interface Reader {
+  /**
+   * Size returns the original length of the underlying byte slice.
+   * Size is the number of bytes available for reading via ReadAt.
+   * The result is unaffected by any method calls except Reset.
+   */
+  size(): number
+ }
+ interface Reader {
+  /**
+   * Read implements the io.Reader interface.
+   */
+  read(b: string|Array<number>): number
+ }
+ interface Reader {
+  /**
+   * ReadAt implements the io.ReaderAt interface.
+   */
+  readAt(b: string|Array<number>, off: number): number
+ }
+ interface Reader {
+  /**
+   * ReadByte implements the io.ByteReader interface.
+   */
+  readByte(): number
+ }
+ interface Reader {
+  /**
+   * UnreadByte complements ReadByte in implementing the io.ByteScanner interface.
+   */
+  unreadByte(): void
+ }
+ interface Reader {
+  /**
+   * ReadRune implements the io.RuneReader interface.
+   */
+  readRune(): [number, number]
+ }
+ interface Reader {
+  /**
+   * UnreadRune complements ReadRune in implementing the io.RuneScanner interface.
+   */
+  unreadRune(): void
+ }
+ interface Reader {
+  /**
+   * Seek implements the io.Seeker interface.
+   */
+  seek(offset: number, whence: number): number
+ }
+ interface Reader {
+  /**
+   * WriteTo implements the io.WriterTo interface.
+   */
+  writeTo(w: io.Writer): number
+ }
+ interface Reader {
+  /**
+   * Reset resets the Reader to be reading from b.
+   */
+  reset(b: string|Array<number>): void
+ }
+}
+
+/**
  * Package context defines the Context type, which carries deadlines,
  * cancellation signals, and other request-scoped values across API boundaries
  * and between processes.
@@ -8095,59 +8095,46 @@ namespace context {
 }
 
 /**
- * Package jwt is a Go implementation of JSON Web Tokens: http://self-issued.info/docs/draft-jones-json-web-token.html
+ * Package multipart implements MIME multipart parsing, as defined in RFC
+ * 2046.
  * 
- * See README.md for more info.
+ * The implementation is sufficient for HTTP (RFC 2388) and the multipart
+ * bodies generated by popular browsers.
+ * 
+ * # Limits
+ * 
+ * To protect against malicious inputs, this package sets limits on the size
+ * of the MIME data it processes.
+ * 
+ * Reader.NextPart and Reader.NextRawPart limit the number of headers in a
+ * part to 10000 and Reader.ReadForm limits the total number of headers in all
+ * FileHeaders to 10000.
+ * These limits may be adjusted with the GODEBUG=multipartmaxheaders=<values>
+ * setting.
+ * 
+ * Reader.ReadForm further limits the number of parts in a form to 1000.
+ * This limit may be adjusted with the GODEBUG=multipartmaxparts=<value>
+ * setting.
  */
-namespace jwt {
+/**
+ * Copyright 2023 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+namespace multipart {
  /**
-  * MapClaims is a claims type that uses the map[string]interface{} for JSON decoding.
-  * This is the default claims type if you don't supply one
+  * A FileHeader describes a file part of a multipart request.
   */
- interface MapClaims extends _TygojaDict{}
- interface MapClaims {
-  /**
-   * VerifyAudience Compares the aud claim against cmp.
-   * If required is false, this method will return true if the value matches or is unset
-   */
-  verifyAudience(cmp: string, req: boolean): boolean
+ interface FileHeader {
+  filename: string
+  header: textproto.MIMEHeader
+  size: number
  }
- interface MapClaims {
+ interface FileHeader {
   /**
-   * VerifyExpiresAt compares the exp claim against cmp (cmp <= exp).
-   * If req is false, it will return true, if exp is unset.
+   * Open opens and returns the FileHeader's associated File.
    */
-  verifyExpiresAt(cmp: number, req: boolean): boolean
- }
- interface MapClaims {
-  /**
-   * VerifyIssuedAt compares the exp claim against cmp (cmp >= iat).
-   * If req is false, it will return true, if iat is unset.
-   */
-  verifyIssuedAt(cmp: number, req: boolean): boolean
- }
- interface MapClaims {
-  /**
-   * VerifyNotBefore compares the nbf claim against cmp (cmp >= nbf).
-   * If req is false, it will return true, if nbf is unset.
-   */
-  verifyNotBefore(cmp: number, req: boolean): boolean
- }
- interface MapClaims {
-  /**
-   * VerifyIssuer compares the iss claim against cmp.
-   * If required is false, this method will return true if the value matches or is unset
-   */
-  verifyIssuer(cmp: string, req: boolean): boolean
- }
- interface MapClaims {
-  /**
-   * Valid validates time based claims "exp, iat, nbf".
-   * There is no accounting for clock skew.
-   * As well, if any of the above claims are not in the token, it will still
-   * be considered a valid claim.
-   */
-  valid(): void
+  open(): File
  }
 }
 
@@ -8791,50 +8778,6 @@ namespace sql {
    * driver may support this.
    */
   rowsAffected(): number
- }
-}
-
-/**
- * Package multipart implements MIME multipart parsing, as defined in RFC
- * 2046.
- * 
- * The implementation is sufficient for HTTP (RFC 2388) and the multipart
- * bodies generated by popular browsers.
- * 
- * # Limits
- * 
- * To protect against malicious inputs, this package sets limits on the size
- * of the MIME data it processes.
- * 
- * Reader.NextPart and Reader.NextRawPart limit the number of headers in a
- * part to 10000 and Reader.ReadForm limits the total number of headers in all
- * FileHeaders to 10000.
- * These limits may be adjusted with the GODEBUG=multipartmaxheaders=<values>
- * setting.
- * 
- * Reader.ReadForm further limits the number of parts in a form to 1000.
- * This limit may be adjusted with the GODEBUG=multipartmaxparts=<value>
- * setting.
- */
-/**
- * Copyright 2023 The Go Authors. All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the LICENSE file.
- */
-namespace multipart {
- /**
-  * A FileHeader describes a file part of a multipart request.
-  */
- interface FileHeader {
-  filename: string
-  header: textproto.MIMEHeader
-  size: number
- }
- interface FileHeader {
-  /**
-   * Open opens and returns the FileHeader's associated File.
-   */
-  open(): File
  }
 }
 
@@ -10125,6 +10068,63 @@ namespace exec {
 }
 
 /**
+ * Package jwt is a Go implementation of JSON Web Tokens: http://self-issued.info/docs/draft-jones-json-web-token.html
+ * 
+ * See README.md for more info.
+ */
+namespace jwt {
+ /**
+  * MapClaims is a claims type that uses the map[string]interface{} for JSON decoding.
+  * This is the default claims type if you don't supply one
+  */
+ interface MapClaims extends _TygojaDict{}
+ interface MapClaims {
+  /**
+   * VerifyAudience Compares the aud claim against cmp.
+   * If required is false, this method will return true if the value matches or is unset
+   */
+  verifyAudience(cmp: string, req: boolean): boolean
+ }
+ interface MapClaims {
+  /**
+   * VerifyExpiresAt compares the exp claim against cmp (cmp <= exp).
+   * If req is false, it will return true, if exp is unset.
+   */
+  verifyExpiresAt(cmp: number, req: boolean): boolean
+ }
+ interface MapClaims {
+  /**
+   * VerifyIssuedAt compares the exp claim against cmp (cmp >= iat).
+   * If req is false, it will return true, if iat is unset.
+   */
+  verifyIssuedAt(cmp: number, req: boolean): boolean
+ }
+ interface MapClaims {
+  /**
+   * VerifyNotBefore compares the nbf claim against cmp (cmp >= nbf).
+   * If req is false, it will return true, if nbf is unset.
+   */
+  verifyNotBefore(cmp: number, req: boolean): boolean
+ }
+ interface MapClaims {
+  /**
+   * VerifyIssuer compares the iss claim against cmp.
+   * If required is false, this method will return true if the value matches or is unset
+   */
+  verifyIssuer(cmp: string, req: boolean): boolean
+ }
+ interface MapClaims {
+  /**
+   * Valid validates time based claims "exp, iat, nbf".
+   * There is no accounting for clock skew.
+   * As well, if any of the above claims are not in the token, it will still
+   * be considered a valid claim.
+   */
+  valid(): void
+ }
+}
+
+/**
  * Package blob provides an easy and portable way to interact with blobs
  * within a storage location. Subpackages contain driver implementations of
  * blob for supported services.
@@ -10536,8 +10536,8 @@ namespace schema {
  * Package models implements all PocketBase DB models and DTOs.
  */
 namespace models {
- type _subjixJs = BaseModel
- interface Admin extends _subjixJs {
+ type _subIIJFq = BaseModel
+ interface Admin extends _subIIJFq {
   avatar: number
   email: string
   tokenKey: string
@@ -10572,8 +10572,8 @@ namespace models {
  }
  // @ts-ignore
  import validation = ozzo_validation
- type _subjtXxZ = BaseModel
- interface Collection extends _subjtXxZ {
+ type _subidazc = BaseModel
+ interface Collection extends _subidazc {
   name: string
   type: string
   system: boolean
@@ -10666,8 +10666,8 @@ namespace models {
    */
   setOptions(typedOptions: any): void
  }
- type _subgbpwr = BaseModel
- interface ExternalAuth extends _subgbpwr {
+ type _subsiLMo = BaseModel
+ interface ExternalAuth extends _subsiLMo {
   collectionId: string
   recordId: string
   provider: string
@@ -10676,8 +10676,8 @@ namespace models {
  interface ExternalAuth {
   tableName(): string
  }
- type _subZRhjx = BaseModel
- interface Record extends _subZRhjx {
+ type _subOLAqq = BaseModel
+ interface Record extends _subOLAqq {
  }
  interface Record {
   /**
@@ -12216,8 +12216,6 @@ namespace daos {
  }
  interface Dao {
   /**
-   * @todo consider to depricate as it may be easier to just use dao.RecordQuery()
-   * 
    * FindRecordsByExpr finds all records by the specified db expression.
    * 
    * Returns all collection records if no expressions are provided.
@@ -13393,6 +13391,36 @@ namespace core {
  }
 }
 
+namespace migrate {
+ /**
+  * MigrationsList defines a list with migration definitions
+  */
+ interface MigrationsList {
+ }
+ interface MigrationsList {
+  /**
+   * Item returns a single migration from the list by its index.
+   */
+  item(index: number): (Migration)
+ }
+ interface MigrationsList {
+  /**
+   * Items returns the internal migrations list slice.
+   */
+  items(): Array<(Migration | undefined)>
+ }
+ interface MigrationsList {
+  /**
+   * Register adds new migration definition to the list.
+   * 
+   * If `optFilename` is not provided, it will try to get the name from its .go file.
+   * 
+   * The list will be sorted automatically based on the migrations file name.
+   */
+  register(up: (db: dbx.Builder) => void, down: (db: dbx.Builder) => void, ...optFilename: string[]): void
+ }
+}
+
 /**
  * Package cobra is a commander providing a simple interface to create powerful modern CLI interfaces.
  * In addition to providing an interface, Cobra simultaneously provides a controller to organize your application code.
@@ -14458,36 +14486,6 @@ namespace cobra {
  }
 }
 
-namespace migrate {
- /**
-  * MigrationsList defines a list with migration definitions
-  */
- interface MigrationsList {
- }
- interface MigrationsList {
-  /**
-   * Item returns a single migration from the list by its index.
-   */
-  item(index: number): (Migration)
- }
- interface MigrationsList {
-  /**
-   * Items returns the internal migrations list slice.
-   */
-  items(): Array<(Migration | undefined)>
- }
- interface MigrationsList {
-  /**
-   * Register adds new migration definition to the list.
-   * 
-   * If `optFilename` is not provided, it will try to get the name from its .go file.
-   * 
-   * The list will be sorted automatically based on the migrations file name.
-   */
-  register(up: (db: dbx.Builder) => void, down: (db: dbx.Builder) => void, ...optFilename: string[]): void
- }
-}
-
 /**
  * Package io provides basic interfaces to I/O primitives.
  * Its primary job is to wrap existing implementations of such primitives,
@@ -14703,14 +14701,6 @@ namespace time {
 }
 
 /**
- * Package fs defines basic interfaces to a file system.
- * A file system can be provided by the host operating system
- * but also by other packages.
- */
-namespace fs {
-}
-
-/**
  * Package context defines the Context type, which carries deadlines,
  * cancellation signals, and other request-scoped values across API boundaries
  * and between processes.
@@ -14764,6 +14754,14 @@ namespace fs {
  * Contexts.
  */
 namespace context {
+}
+
+/**
+ * Package fs defines basic interfaces to a file system.
+ * A file system can be provided by the host operating system
+ * but also by other packages.
+ */
+namespace fs {
 }
 
 /**
@@ -16227,6 +16225,65 @@ namespace echo {
 }
 
 /**
+ * Package types implements some commonly used db serializable types
+ * like datetime, json, etc.
+ */
+namespace types {
+ /**
+  * DateTime represents a [time.Time] instance in UTC that is wrapped
+  * and serialized using the app default date layout.
+  */
+ interface DateTime {
+ }
+ interface DateTime {
+  /**
+   * Time returns the internal [time.Time] instance.
+   */
+  time(): time.Time
+ }
+ interface DateTime {
+  /**
+   * IsZero checks whether the current DateTime instance has zero time value.
+   */
+  isZero(): boolean
+ }
+ interface DateTime {
+  /**
+   * String serializes the current DateTime instance into a formatted
+   * UTC date string.
+   * 
+   * The zero value is serialized to an empty string.
+   */
+  string(): string
+ }
+ interface DateTime {
+  /**
+   * MarshalJSON implements the [json.Marshaler] interface.
+   */
+  marshalJSON(): string|Array<number>
+ }
+ interface DateTime {
+  /**
+   * UnmarshalJSON implements the [json.Unmarshaler] interface.
+   */
+  unmarshalJSON(b: string|Array<number>): void
+ }
+ interface DateTime {
+  /**
+   * Value implements the [driver.Valuer] interface.
+   */
+  value(): any
+ }
+ interface DateTime {
+  /**
+   * Scan implements [sql.Scanner] interface to scan the provided value
+   * into the current DateTime instance.
+   */
+  scan(value: any): void
+ }
+}
+
+/**
  * Package slog provides structured logging,
  * in which log records include a message,
  * a severity level, and various other attributes
@@ -17002,65 +17059,6 @@ namespace store {
 }
 
 /**
- * Package types implements some commonly used db serializable types
- * like datetime, json, etc.
- */
-namespace types {
- /**
-  * DateTime represents a [time.Time] instance in UTC that is wrapped
-  * and serialized using the app default date layout.
-  */
- interface DateTime {
- }
- interface DateTime {
-  /**
-   * Time returns the internal [time.Time] instance.
-   */
-  time(): time.Time
- }
- interface DateTime {
-  /**
-   * IsZero checks whether the current DateTime instance has zero time value.
-   */
-  isZero(): boolean
- }
- interface DateTime {
-  /**
-   * String serializes the current DateTime instance into a formatted
-   * UTC date string.
-   * 
-   * The zero value is serialized to an empty string.
-   */
-  string(): string
- }
- interface DateTime {
-  /**
-   * MarshalJSON implements the [json.Marshaler] interface.
-   */
-  marshalJSON(): string|Array<number>
- }
- interface DateTime {
-  /**
-   * UnmarshalJSON implements the [json.Unmarshaler] interface.
-   */
-  unmarshalJSON(b: string|Array<number>): void
- }
- interface DateTime {
-  /**
-   * Value implements the [driver.Valuer] interface.
-   */
-  value(): any
- }
- interface DateTime {
-  /**
-   * Scan implements [sql.Scanner] interface to scan the provided value
-   * into the current DateTime instance.
-   */
-  scan(value: any): void
- }
-}
-
-/**
  * Package schema implements custom Schema and SchemaField datatypes
  * for handling the Collection schema definitions.
  */
@@ -17295,8 +17293,8 @@ namespace models {
    */
   validate(): void
  }
- type _subFLUQA = BaseModel
- interface Log extends _subFLUQA {
+ type _subFZqWb = BaseModel
+ interface Log extends _subFZqWb {
   data: types.JsonMap
   message: string
   level: number
@@ -17304,8 +17302,8 @@ namespace models {
  interface Log {
   tableName(): string
  }
- type _subisFNF = BaseModel
- interface Param extends _subisFNF {
+ type _subZeZZx = BaseModel
+ interface Param extends _subZeZZx {
   key: string
   value: types.JsonRaw
  }
@@ -17655,8 +17653,8 @@ namespace hook {
   * TaggedHook defines a proxy hook which register handlers that are triggered only
   * if the TaggedHook.tags are empty or includes at least one of the event data tag(s).
   */
- type _subkScqQ<T> = mainHook<T>
- interface TaggedHook<T> extends _subkScqQ<T> {
+ type _subSLCnj<T> = mainHook<T>
+ interface TaggedHook<T> extends _subSLCnj<T> {
  }
  interface TaggedHook<T> {
   /**
@@ -17721,6 +17719,256 @@ namespace subscriptions {
 }
 
 /**
+ * Package core is the backbone of PocketBase.
+ * 
+ * It defines the main PocketBase App interface and its base implementation.
+ */
+namespace core {
+ interface BootstrapEvent {
+  app: App
+ }
+ interface TerminateEvent {
+  app: App
+  isRestart: boolean
+ }
+ interface ServeEvent {
+  app: App
+  router?: echo.Echo
+  server?: http.Server
+  certManager?: any
+ }
+ interface ApiErrorEvent {
+  httpContext: echo.Context
+  error: Error
+ }
+ type _subBUiWR = BaseModelEvent
+ interface ModelEvent extends _subBUiWR {
+  dao?: daos.Dao
+ }
+ type _subtkWKY = BaseCollectionEvent
+ interface MailerRecordEvent extends _subtkWKY {
+  mailClient: mailer.Mailer
+  message?: mailer.Message
+  record?: models.Record
+  meta: _TygojaDict
+ }
+ interface MailerAdminEvent {
+  mailClient: mailer.Mailer
+  message?: mailer.Message
+  admin?: models.Admin
+  meta: _TygojaDict
+ }
+ interface RealtimeConnectEvent {
+  httpContext: echo.Context
+  client: subscriptions.Client
+  idleTimeout: time.Duration
+ }
+ interface RealtimeDisconnectEvent {
+  httpContext: echo.Context
+  client: subscriptions.Client
+ }
+ interface RealtimeMessageEvent {
+  httpContext: echo.Context
+  client: subscriptions.Client
+  message?: subscriptions.Message
+ }
+ interface RealtimeSubscribeEvent {
+  httpContext: echo.Context
+  client: subscriptions.Client
+  subscriptions: Array<string>
+ }
+ interface SettingsListEvent {
+  httpContext: echo.Context
+  redactedSettings?: settings.Settings
+ }
+ interface SettingsUpdateEvent {
+  httpContext: echo.Context
+  oldSettings?: settings.Settings
+  newSettings?: settings.Settings
+ }
+ type _subBJDnN = BaseCollectionEvent
+ interface RecordsListEvent extends _subBJDnN {
+  httpContext: echo.Context
+  records: Array<(models.Record | undefined)>
+  result?: search.Result
+ }
+ type _subhCdKe = BaseCollectionEvent
+ interface RecordViewEvent extends _subhCdKe {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subDMBJS = BaseCollectionEvent
+ interface RecordCreateEvent extends _subDMBJS {
+  httpContext: echo.Context
+  record?: models.Record
+  uploadedFiles: _TygojaDict
+ }
+ type _subZsYLI = BaseCollectionEvent
+ interface RecordUpdateEvent extends _subZsYLI {
+  httpContext: echo.Context
+  record?: models.Record
+  uploadedFiles: _TygojaDict
+ }
+ type _subofwGN = BaseCollectionEvent
+ interface RecordDeleteEvent extends _subofwGN {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subHqDXC = BaseCollectionEvent
+ interface RecordAuthEvent extends _subHqDXC {
+  httpContext: echo.Context
+  record?: models.Record
+  token: string
+  meta: any
+ }
+ type _subPujao = BaseCollectionEvent
+ interface RecordAuthWithPasswordEvent extends _subPujao {
+  httpContext: echo.Context
+  record?: models.Record
+  identity: string
+  password: string
+ }
+ type _subxhXlg = BaseCollectionEvent
+ interface RecordAuthWithOAuth2Event extends _subxhXlg {
+  httpContext: echo.Context
+  providerName: string
+  providerClient: auth.Provider
+  record?: models.Record
+  oAuth2User?: auth.AuthUser
+  isNewRecord: boolean
+ }
+ type _subgwYMB = BaseCollectionEvent
+ interface RecordAuthRefreshEvent extends _subgwYMB {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subHQqUY = BaseCollectionEvent
+ interface RecordRequestPasswordResetEvent extends _subHQqUY {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subyvoEK = BaseCollectionEvent
+ interface RecordConfirmPasswordResetEvent extends _subyvoEK {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subIabgq = BaseCollectionEvent
+ interface RecordRequestVerificationEvent extends _subIabgq {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subDRZhM = BaseCollectionEvent
+ interface RecordConfirmVerificationEvent extends _subDRZhM {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subZXqjw = BaseCollectionEvent
+ interface RecordRequestEmailChangeEvent extends _subZXqjw {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subbeYeY = BaseCollectionEvent
+ interface RecordConfirmEmailChangeEvent extends _subbeYeY {
+  httpContext: echo.Context
+  record?: models.Record
+ }
+ type _subYHsUT = BaseCollectionEvent
+ interface RecordListExternalAuthsEvent extends _subYHsUT {
+  httpContext: echo.Context
+  record?: models.Record
+  externalAuths: Array<(models.ExternalAuth | undefined)>
+ }
+ type _subCTvvD = BaseCollectionEvent
+ interface RecordUnlinkExternalAuthEvent extends _subCTvvD {
+  httpContext: echo.Context
+  record?: models.Record
+  externalAuth?: models.ExternalAuth
+ }
+ interface AdminsListEvent {
+  httpContext: echo.Context
+  admins: Array<(models.Admin | undefined)>
+  result?: search.Result
+ }
+ interface AdminViewEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+ }
+ interface AdminCreateEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+ }
+ interface AdminUpdateEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+ }
+ interface AdminDeleteEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+ }
+ interface AdminAuthEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+  token: string
+ }
+ interface AdminAuthWithPasswordEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+  identity: string
+  password: string
+ }
+ interface AdminAuthRefreshEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+ }
+ interface AdminRequestPasswordResetEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+ }
+ interface AdminConfirmPasswordResetEvent {
+  httpContext: echo.Context
+  admin?: models.Admin
+ }
+ interface CollectionsListEvent {
+  httpContext: echo.Context
+  collections: Array<(models.Collection | undefined)>
+  result?: search.Result
+ }
+ type _suboiAUo = BaseCollectionEvent
+ interface CollectionViewEvent extends _suboiAUo {
+  httpContext: echo.Context
+ }
+ type _subCWmMd = BaseCollectionEvent
+ interface CollectionCreateEvent extends _subCWmMd {
+  httpContext: echo.Context
+ }
+ type _subpTqml = BaseCollectionEvent
+ interface CollectionUpdateEvent extends _subpTqml {
+  httpContext: echo.Context
+ }
+ type _subQOLmx = BaseCollectionEvent
+ interface CollectionDeleteEvent extends _subQOLmx {
+  httpContext: echo.Context
+ }
+ interface CollectionsImportEvent {
+  httpContext: echo.Context
+  collections: Array<(models.Collection | undefined)>
+ }
+ type _subFwVAw = BaseModelEvent
+ interface FileTokenEvent extends _subFwVAw {
+  httpContext: echo.Context
+  token: string
+ }
+ type _subuQFTd = BaseCollectionEvent
+ interface FileDownloadEvent extends _subuQFTd {
+  httpContext: echo.Context
+  record?: models.Record
+  fileField?: schema.SchemaField
+  servedPath: string
+  servedName: string
+ }
+}
+
+/**
  * Package cobra is a commander providing a simple interface to create powerful modern CLI interfaces.
  * In addition to providing an interface, Cobra simultaneously provides a controller to organize your application code.
  */
@@ -17778,256 +18026,6 @@ namespace migrate {
 }
 
 /**
- * Package core is the backbone of PocketBase.
- * 
- * It defines the main PocketBase App interface and its base implementation.
- */
-namespace core {
- interface BootstrapEvent {
-  app: App
- }
- interface TerminateEvent {
-  app: App
-  isRestart: boolean
- }
- interface ServeEvent {
-  app: App
-  router?: echo.Echo
-  server?: http.Server
-  certManager?: any
- }
- interface ApiErrorEvent {
-  httpContext: echo.Context
-  error: Error
- }
- type _subCkVZY = BaseModelEvent
- interface ModelEvent extends _subCkVZY {
-  dao?: daos.Dao
- }
- type _subfHaby = BaseCollectionEvent
- interface MailerRecordEvent extends _subfHaby {
-  mailClient: mailer.Mailer
-  message?: mailer.Message
-  record?: models.Record
-  meta: _TygojaDict
- }
- interface MailerAdminEvent {
-  mailClient: mailer.Mailer
-  message?: mailer.Message
-  admin?: models.Admin
-  meta: _TygojaDict
- }
- interface RealtimeConnectEvent {
-  httpContext: echo.Context
-  client: subscriptions.Client
-  idleTimeout: time.Duration
- }
- interface RealtimeDisconnectEvent {
-  httpContext: echo.Context
-  client: subscriptions.Client
- }
- interface RealtimeMessageEvent {
-  httpContext: echo.Context
-  client: subscriptions.Client
-  message?: subscriptions.Message
- }
- interface RealtimeSubscribeEvent {
-  httpContext: echo.Context
-  client: subscriptions.Client
-  subscriptions: Array<string>
- }
- interface SettingsListEvent {
-  httpContext: echo.Context
-  redactedSettings?: settings.Settings
- }
- interface SettingsUpdateEvent {
-  httpContext: echo.Context
-  oldSettings?: settings.Settings
-  newSettings?: settings.Settings
- }
- type _subSuMyN = BaseCollectionEvent
- interface RecordsListEvent extends _subSuMyN {
-  httpContext: echo.Context
-  records: Array<(models.Record | undefined)>
-  result?: search.Result
- }
- type _subKfTrT = BaseCollectionEvent
- interface RecordViewEvent extends _subKfTrT {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subkFLwy = BaseCollectionEvent
- interface RecordCreateEvent extends _subkFLwy {
-  httpContext: echo.Context
-  record?: models.Record
-  uploadedFiles: _TygojaDict
- }
- type _subKROIb = BaseCollectionEvent
- interface RecordUpdateEvent extends _subKROIb {
-  httpContext: echo.Context
-  record?: models.Record
-  uploadedFiles: _TygojaDict
- }
- type _subXeciB = BaseCollectionEvent
- interface RecordDeleteEvent extends _subXeciB {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subEgHJP = BaseCollectionEvent
- interface RecordAuthEvent extends _subEgHJP {
-  httpContext: echo.Context
-  record?: models.Record
-  token: string
-  meta: any
- }
- type _subAlyOU = BaseCollectionEvent
- interface RecordAuthWithPasswordEvent extends _subAlyOU {
-  httpContext: echo.Context
-  record?: models.Record
-  identity: string
-  password: string
- }
- type _subPlPLI = BaseCollectionEvent
- interface RecordAuthWithOAuth2Event extends _subPlPLI {
-  httpContext: echo.Context
-  providerName: string
-  providerClient: auth.Provider
-  record?: models.Record
-  oAuth2User?: auth.AuthUser
-  isNewRecord: boolean
- }
- type _submwpxD = BaseCollectionEvent
- interface RecordAuthRefreshEvent extends _submwpxD {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subcwwXI = BaseCollectionEvent
- interface RecordRequestPasswordResetEvent extends _subcwwXI {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subqJPoz = BaseCollectionEvent
- interface RecordConfirmPasswordResetEvent extends _subqJPoz {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subdjxCi = BaseCollectionEvent
- interface RecordRequestVerificationEvent extends _subdjxCi {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subIQtNw = BaseCollectionEvent
- interface RecordConfirmVerificationEvent extends _subIQtNw {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subxjwcc = BaseCollectionEvent
- interface RecordRequestEmailChangeEvent extends _subxjwcc {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subGfLLR = BaseCollectionEvent
- interface RecordConfirmEmailChangeEvent extends _subGfLLR {
-  httpContext: echo.Context
-  record?: models.Record
- }
- type _subHnrkg = BaseCollectionEvent
- interface RecordListExternalAuthsEvent extends _subHnrkg {
-  httpContext: echo.Context
-  record?: models.Record
-  externalAuths: Array<(models.ExternalAuth | undefined)>
- }
- type _subXspgw = BaseCollectionEvent
- interface RecordUnlinkExternalAuthEvent extends _subXspgw {
-  httpContext: echo.Context
-  record?: models.Record
-  externalAuth?: models.ExternalAuth
- }
- interface AdminsListEvent {
-  httpContext: echo.Context
-  admins: Array<(models.Admin | undefined)>
-  result?: search.Result
- }
- interface AdminViewEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
- }
- interface AdminCreateEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
- }
- interface AdminUpdateEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
- }
- interface AdminDeleteEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
- }
- interface AdminAuthEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
-  token: string
- }
- interface AdminAuthWithPasswordEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
-  identity: string
-  password: string
- }
- interface AdminAuthRefreshEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
- }
- interface AdminRequestPasswordResetEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
- }
- interface AdminConfirmPasswordResetEvent {
-  httpContext: echo.Context
-  admin?: models.Admin
- }
- interface CollectionsListEvent {
-  httpContext: echo.Context
-  collections: Array<(models.Collection | undefined)>
-  result?: search.Result
- }
- type _subujIKm = BaseCollectionEvent
- interface CollectionViewEvent extends _subujIKm {
-  httpContext: echo.Context
- }
- type _subpoTtd = BaseCollectionEvent
- interface CollectionCreateEvent extends _subpoTtd {
-  httpContext: echo.Context
- }
- type _subtBeio = BaseCollectionEvent
- interface CollectionUpdateEvent extends _subtBeio {
-  httpContext: echo.Context
- }
- type _sublLkfc = BaseCollectionEvent
- interface CollectionDeleteEvent extends _sublLkfc {
-  httpContext: echo.Context
- }
- interface CollectionsImportEvent {
-  httpContext: echo.Context
-  collections: Array<(models.Collection | undefined)>
- }
- type _subkmxgj = BaseModelEvent
- interface FileTokenEvent extends _subkmxgj {
-  httpContext: echo.Context
-  token: string
- }
- type _subgAsjM = BaseCollectionEvent
- interface FileDownloadEvent extends _subgAsjM {
-  httpContext: echo.Context
-  record?: models.Record
-  fileField?: schema.SchemaField
-  servedPath: string
-  servedName: string
- }
-}
-
-/**
  * Package url parses URLs and implements query escaping.
  */
 namespace url {
@@ -18057,6 +18055,63 @@ namespace url {
    * of "username[:password]".
    */
   string(): string
+ }
+}
+
+/**
+ * Package types implements some commonly used db serializable types
+ * like datetime, json, etc.
+ */
+namespace types {
+ /**
+  * JsonRaw defines a json value type that is safe for db read/write.
+  */
+ interface JsonRaw extends Array<number>{}
+ interface JsonRaw {
+  /**
+   * String returns the current JsonRaw instance as a json encoded string.
+   */
+  string(): string
+ }
+ interface JsonRaw {
+  /**
+   * MarshalJSON implements the [json.Marshaler] interface.
+   */
+  marshalJSON(): string|Array<number>
+ }
+ interface JsonRaw {
+  /**
+   * UnmarshalJSON implements the [json.Unmarshaler] interface.
+   */
+  unmarshalJSON(b: string|Array<number>): void
+ }
+ interface JsonRaw {
+  /**
+   * Value implements the [driver.Valuer] interface.
+   */
+  value(): any
+ }
+ interface JsonRaw {
+  /**
+   * Scan implements [sql.Scanner] interface to scan the provided value
+   * into the current JsonRaw instance.
+   */
+  scan(value: any): void
+ }
+}
+
+/**
+ * Package bufio implements buffered I/O. It wraps an io.Reader or io.Writer
+ * object, creating another object (Reader or Writer) that also implements
+ * the interface but provides buffering and some help for textual I/O.
+ */
+namespace bufio {
+ /**
+  * ReadWriter stores pointers to a Reader and a Writer.
+  * It implements io.ReadWriter.
+  */
+ type _subTTuJP = Reader&Writer
+ interface ReadWriter extends _subTTuJP {
  }
 }
 
@@ -18156,63 +18211,6 @@ namespace net {
   [key:string]: any;
   network(): string // name of the network (for example, "tcp", "udp")
   string(): string // string form of address (for example, "192.0.2.1:25", "[2001:db8::1]:80")
- }
-}
-
-/**
- * Package types implements some commonly used db serializable types
- * like datetime, json, etc.
- */
-namespace types {
- /**
-  * JsonRaw defines a json value type that is safe for db read/write.
-  */
- interface JsonRaw extends Array<number>{}
- interface JsonRaw {
-  /**
-   * String returns the current JsonRaw instance as a json encoded string.
-   */
-  string(): string
- }
- interface JsonRaw {
-  /**
-   * MarshalJSON implements the [json.Marshaler] interface.
-   */
-  marshalJSON(): string|Array<number>
- }
- interface JsonRaw {
-  /**
-   * UnmarshalJSON implements the [json.Unmarshaler] interface.
-   */
-  unmarshalJSON(b: string|Array<number>): void
- }
- interface JsonRaw {
-  /**
-   * Value implements the [driver.Valuer] interface.
-   */
-  value(): any
- }
- interface JsonRaw {
-  /**
-   * Scan implements [sql.Scanner] interface to scan the provided value
-   * into the current JsonRaw instance.
-   */
-  scan(value: any): void
- }
-}
-
-/**
- * Package bufio implements buffered I/O. It wraps an io.Reader or io.Writer
- * object, creating another object (Reader or Writer) that also implements
- * the interface but provides buffering and some help for textual I/O.
- */
-namespace bufio {
- /**
-  * ReadWriter stores pointers to a Reader and a Writer.
-  * It implements io.ReadWriter.
-  */
- type _subBkzso = Reader&Writer
- interface ReadWriter extends _subBkzso {
  }
 }
 
@@ -18437,6 +18435,32 @@ namespace mailer {
  }
 }
 
+namespace hook {
+ /**
+  * Handler defines a hook handler function.
+  */
+ interface Handler<T> {(e: T): void }
+ /**
+  * wrapped local Hook embedded struct to limit the public API surface.
+  */
+ type _subowHsb<T> = Hook<T>
+ interface mainHook<T> extends _subowHsb<T> {
+ }
+}
+
+namespace search {
+ /**
+  * Result defines the returned search result structure.
+  */
+ interface Result {
+  page: number
+  perPage: number
+  totalItems: number
+  totalPages: number
+  items: any
+ }
+}
+
 /**
  * Package echo implements high performance, minimalist Go web framework.
  * 
@@ -18552,19 +18576,6 @@ namespace echo {
  }
 }
 
-namespace search {
- /**
-  * Result defines the returned search result structure.
-  */
- interface Result {
-  page: number
-  perPage: number
-  totalItems: number
-  totalPages: number
-  items: any
- }
-}
-
 namespace settings {
  // @ts-ignore
  import validation = ozzo_validation
@@ -18586,19 +18597,6 @@ namespace settings {
    * template and returns its components as ready-to-use strings.
    */
   resolve(appName: string, appUrl: string, token: string): string
- }
-}
-
-namespace hook {
- /**
-  * Handler defines a hook handler function.
-  */
- interface Handler<T> {(e: T): void }
- /**
-  * wrapped local Hook embedded struct to limit the public API surface.
-  */
- type _subzISid<T> = Hook<T>
- interface mainHook<T> extends _subzISid<T> {
  }
 }
 
