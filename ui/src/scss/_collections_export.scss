@@ -6,7 +6,7 @@
     min-height: 0;
     flex-shrink: 0;
     overflow: auto;
-    padding: 10px;
+    padding: var(--xsSpacing);
     background: var(--baseAlt1Color);
     border-radius: var(--baseRadius);
     .list-item {
