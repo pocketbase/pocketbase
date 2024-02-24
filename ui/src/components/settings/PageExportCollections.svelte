@@ -4,7 +4,6 @@
     import { pageTitle } from "@/stores/app";
     import { addInfoToast } from "@/stores/toasts";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
-    import CodeBlock from "@/components/base/CodeBlock.svelte";
     import Field from "@/components/base/Field.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
 
@@ -166,7 +165,7 @@
                             <span class="txt">Copy</span>
                         </button>
 
-                        <CodeBlock content={schema} />
+                        <pre class="code-wrapper">{@html schema}</pre>
                     </div>
                 </div>
 

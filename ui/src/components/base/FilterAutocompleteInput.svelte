@@ -365,6 +365,18 @@
 
         addLabelListeners();
 
+        let keybindings = [
+            submitShortcut,
+            ...closeBracketsKeymap,
+            ...defaultKeymap,
+            searchKeymap.find((item) => item.key === "Mod-d"),
+            ...historyKeymap,
+            ...completionKeymap,
+        ];
+        if (!singleLine) {
+            keybindings.push(indentWithTab);
+        }
+
         editor = new EditorView({
             parent: container,
             state: EditorState.create({
@@ -381,15 +393,7 @@
                     closeBrackets(),
                     rectangularSelection(),
                     highlightSelectionMatches(),
-                    keymap.of([
-                        submitShortcut,
-                        ...closeBracketsKeymap,
-                        ...defaultKeymap,
-                        searchKeymap.find((item) => item.key === "Mod-d"),
-                        ...historyKeymap,
-                        ...completionKeymap,
-                        indentWithTab,
-                    ]),
+                    keymap.of(keybindings),
                     EditorView.lineWrapping,
                     autocompletion({
                         override: [completions],
