@@ -1,5 +1,7 @@
 ## (WIP) v0.22.0
 
+- Added Planning Center OAuth2 provider (thanks @alxjsn).
+
 - Added support for back/indirect relation `filter`/`sort` (single and multiple).
   The syntax to reference back relation fields is `yourCollection_via_yourRelField.*`.
   ⚠️ To avoid excessive joins, the nested relations resolver is now limited to max 6 level depth (similar to `expand`).
