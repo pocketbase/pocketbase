@@ -1746,6 +1746,142 @@ export default class CommonHelper {
     }
 
     /**
+     * Generates recursively a list with all the autocomplete field keys
+     * for the collectionNameOrId collection.
+     *
+     * @param  {Array}  collections
+     * @param  {String} collectionNameOrId
+     * @param  {String} [prefix]
+     * @param  {Number} [level]
+     * @return {Array}
+     */
+    static getCollectionAutocompleteKeys(collections, collectionNameOrId, prefix = "", level = 0) {
+        let collection = collections.find((item) => item.name == collectionNameOrId || item.id == collectionNameOrId);
+        if (!collection || level >= 4) {
+            return [];
+        }
+        collection.schema = collection.schema || [];
+
+        let result = CommonHelper.getAllCollectionIdentifiers(collection, prefix);
+
+        for (const field of collection.schema) {
+            const key = prefix + field.name;
+
+            // add relation fields
+            if (field.type == "relation" && field.options?.collectionId) {
+                const subKeys = CommonHelper.getCollectionAutocompleteKeys(collections, field.options.collectionId, key + ".", level + 1);
+                if (subKeys.length) {
+                    result = result.concat(subKeys);
+                }
+            }
+
+            // add ":each" field modifier
+            if (field.type == "select" && field.options?.maxSelect != 1) {
+                result.push(key + ":each");
+            }
+
+            // add ":length" field modifier to arrayble fields
+            if (field.options?.maxSelect != 1 && ["select", "file", "relation"].includes(field.type)) {
+                result.push(key + ":length");
+            }
+        }
+
+        // add back relations
+        for (const ref of collections) {
+            ref.schema = ref.schema || [];
+            for (const field of ref.schema) {
+                if (field.type == "relation" && field.options?.collectionId == collection.id) {
+                    const key = prefix + ref.name + "_via_" + field.name;
+                    const subKeys = CommonHelper.getCollectionAutocompleteKeys(collections, ref.id, key + ".", level + 2); // +2 to reduce the recursive results
+                    if (subKeys.length) {
+                        result = result.concat(subKeys);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Generates a list with all @collection.* autocomplete field keys.
+     *
+     * @param  {Array} collections
+     * @return {Array}
+     */
+    static getCollectionJoinAutocompleteKeys(collections) {
+        const result = [];
+
+        for (const collection of collections) {
+            const prefix = "@collection." + collection.name + ".";
+            const keys = CommonHelper.getCollectionAutocompleteKeys(collections, collection.name, prefix);
+            for (const key of keys) {
+                result.push(key);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Generates a list with all @request.* autocomplete field keys.
+     *
+     * @param  {Array}  collections
+     * @param  {String} baseCollectionName (used for the `@request.data.*` fields)
+     * @return {Array}
+     */
+    static getRequestAutocompleteKeys(collections, baseCollectionName) {
+        const result = [];
+
+        result.push("@request.context");
+        result.push("@request.method");
+        result.push("@request.query.");
+        result.push("@request.data.");
+        result.push("@request.headers.");
+        result.push("@request.auth.id");
+        result.push("@request.auth.collectionId");
+        result.push("@request.auth.collectionName");
+        result.push("@request.auth.verified");
+        result.push("@request.auth.username");
+        result.push("@request.auth.email");
+        result.push("@request.auth.emailVisibility");
+        result.push("@request.auth.created");
+        result.push("@request.auth.updated");
+
+        // load auth collection fields
+        const authCollections = collections.filter((collection) => collection.type === "auth");
+        for (const collection of authCollections) {
+            const authKeys = CommonHelper.getCollectionAutocompleteKeys(collections, collection.id, "@request.auth.");
+            for (const k of authKeys) {
+                CommonHelper.pushUnique(result, k);
+            }
+        }
+
+        // load base collection fields into @request.data.*
+        if (baseCollectionName) {
+            const issetExcludeList = ["created", "updated"];
+            const keys = CommonHelper.getCollectionAutocompleteKeys(collections, baseCollectionName, "@request.data.");
+            for (const key of keys) {
+                result.push(key);
+
+                // add ":isset" modifier to non-base keys
+                const parts = key.split(".");
+                if (
+                    parts.length === 3 &&
+                    // doesn't contain another modifier
+                    parts[2].indexOf(":") === -1 &&
+                    // is not from the exclude list
+                    !issetExcludeList.includes(parts[2])
+                ) {
+                    result.push(key + ":isset");
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Parses the specified SQL index and returns an object with its components.
      *
      * For example:

@@ -66,7 +66,7 @@
             id={uniqueId}
             singleLine
             disableRequestKeys
-            disableIndirectCollectionsKeys
+            disableCollectionJoinKeys
             {extraAutocompleteKeys}
             baseCollection={autocompleteCollection}
             placeholder={value || placeholder}
