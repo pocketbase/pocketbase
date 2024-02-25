@@ -28,10 +28,12 @@
         isLoadingCollections = true;
 
         try {
-            collections = await ApiClient.collections.getFullList(100, {
+            collections = await ApiClient.collections.getFullList({
+                batch: 100,
                 $cancelKey: uniqueId,
-                sort: "updated",
             });
+
+            collections = CommonHelper.sortCollections(collections);
 
             // delete timestamps
             for (let collection of collections) {

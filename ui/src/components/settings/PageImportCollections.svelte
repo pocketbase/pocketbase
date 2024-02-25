@@ -341,10 +341,12 @@
                             {#each collectionsToDelete as collection (collection.id)}
                                 <div class="list-item">
                                     <span class="label label-danger list-label">Deleted</span>
-                                    <strong>{collection.name}</strong>
-                                    {#if collection.id}
-                                        <small class="txt-hint">({collection.id})</small>
-                                    {/if}
+                                    <div class="inline-flex flex-gap-5">
+                                        <strong>{collection.name}</strong>
+                                        {#if collection.id}
+                                            <small class="txt-hint">{collection.id}</small>
+                                        {/if}
+                                    </div>
                                 </div>
                             {/each}
                         {/if}
@@ -355,15 +357,14 @@
                                     <span class="label label-warning list-label">Changed</span>
                                     <div class="inline-flex flex-gap-5">
                                         {#if pair.old.name !== pair.new.name}
-                                            <strong class="txt-strikethrough txt-hint">{pair.old.name}</strong
-                                            >
+                                            <strong class="txt-strikethrough txt-hint">
+                                                {pair.old.name}
+                                            </strong>
                                             <i class="ri-arrow-right-line txt-sm" />
                                         {/if}
-                                        <strong>
-                                            {pair.new.name}
-                                        </strong>
+                                        <strong>{pair.new.name}</strong>
                                         {#if pair.new.id}
-                                            <small class="txt-hint">({pair.new.id})</small>
+                                            <small class="txt-hint">{pair.new.id}</small>
                                         {/if}
                                     </div>
                                 </div>
@@ -374,10 +375,12 @@
                             {#each collectionsToAdd as collection (collection.id)}
                                 <div class="list-item">
                                     <span class="label label-success list-label">Added</span>
-                                    <strong>{collection.name}</strong>
-                                    {#if collection.id}
-                                        <small class="txt-hint">({collection.id})</small>
-                                    {/if}
+                                    <div class="inline-flex flex-gap-5">
+                                        <strong>{collection.name}</strong>
+                                        {#if collection.id}
+                                            <small class="txt-hint">{collection.id}</small>
+                                        {/if}
+                                    </div>
                                 </div>
                             {/each}
                         {/if}
