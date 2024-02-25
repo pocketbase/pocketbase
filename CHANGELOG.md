@@ -2,6 +2,12 @@
 
 - Added Planning Center OAuth2 provider (thanks @alxjsn).
 
+- Admin UI improvements:
+  - Sync collection changes across multiple opened tabs.
+  - Fixed vertical image popup preview scrolling.
+  - Added options to export a subset of collections.
+  - Added option to import a subset of collections without deleting the others ([#3403](https://github.com/pocketbase/pocketbase/issues/3403)).
+
 - Added support for back/indirect relation `filter`/`sort` (single and multiple).
   The syntax to reference back relation fields is `yourCollection_via_yourRelField.*`.
   ⚠️ To avoid excessive joins, the nested relations resolver is now limited to max 6 level depth (similar to `expand`).
@@ -31,11 +37,7 @@
   _This should also fix the SVG/JSON zero response when using Cloudflare R2 ([#4287](https://github.com/pocketbase/pocketbase/issues/4287#issuecomment-1925168142), [#2068](https://github.com/pocketbase/pocketbase/discussions/2068), [#2952](https://github.com/pocketbase/pocketbase/discussions/2952))._
   _If you are using S3 for uploaded files or backups, please verify that you have a green check in the Admin UI for your S3 configuration (I've tested the new version with GCS, MinIO, Cloudflare R2 and Wasabi)._
 
-- Admin UI improvements:
-  - Sync collection changes across multiple opened tabs.
-  - Fixed vertical image popup preview scrolling.
-  - Added options to export a subset of collections.
-  - Added option to import a subset of collections without deleting the others ([#3403](https://github.com/pocketbase/pocketbase/issues/3403)).
+- Added `:each` modifier support for `file` and `relation` type fields (_previously it was supported only for `select` type fields_).
 
 - Other minor improvements (updated the `ghupdate` plugin to use the configured executable name when printing to the console, fixed the error reporting of `admin update/delete` commands, etc.).
 

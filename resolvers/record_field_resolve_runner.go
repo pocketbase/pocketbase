@@ -95,9 +95,9 @@ func (r *runner) run() (*search.ResolverResult, error) {
 				return r.processRequestInfoRelationField(dataField)
 			}
 
-			// check for select:each field
-			if modifier == eachModifier && dataField.Type == schema.FieldTypeSelect && len(r.activeProps) == 3 {
-				return r.processRequestInfoSelectEachModifier(dataField)
+			// check for data arrayble fields ":each" modifier
+			if modifier == eachModifier && list.ExistInSlice(dataField.Type, schema.ArraybleFieldTypes()) && len(r.activeProps) == 3 {
+				return r.processRequestInfoEachModifier(dataField)
 			}
 
 			// check for data arrayble fields ":length" modifier
@@ -240,22 +240,22 @@ func (r *runner) processRequestInfoLengthModifier(dataField *schema.SchemaField)
 	return result, nil
 }
 
-func (r *runner) processRequestInfoSelectEachModifier(dataField *schema.SchemaField) (*search.ResolverResult, error) {
-	options, ok := dataField.Options.(*schema.SelectOptions)
+func (r *runner) processRequestInfoEachModifier(dataField *schema.SchemaField) (*search.ResolverResult, error) {
+	options, ok := dataField.Options.(schema.MultiValuer)
 	if !ok {
-		return nil, fmt.Errorf("failed to initialize field %q options", dataField.Name)
+		return nil, fmt.Errorf("field %q options are not initialized or doesn't support multivaluer operations", dataField.Name)
 	}
 
 	dataItems := list.ToUniqueStringSlice(r.resolver.requestInfo.Data[dataField.Name])
 	rawJson, err := json.Marshal(dataItems)
 	if err != nil {
-		return nil, fmt.Errorf("cannot marshalize the data select item for field %q", r.activeProps[2])
+		return nil, fmt.Errorf("cannot serialize the data for field %q", r.activeProps[2])
 	}
 
-	placeholder := "dataSelect" + security.PseudorandomString(4)
+	placeholder := "dataEach" + security.PseudorandomString(4)
 	cleanFieldName := inflector.Columnify(dataField.Name)
 	jeTable := fmt.Sprintf("json_each({:%s})", placeholder)
-	jeAlias := "__dataSelect_" + cleanFieldName + "_je"
+	jeAlias := "__dataEach_" + cleanFieldName + "_je"
 	r.resolver.registerJoin(jeTable, jeAlias, nil)
 
 	result := &search.ResolverResult{
@@ -263,7 +263,7 @@ func (r *runner) processRequestInfoSelectEachModifier(dataField *schema.SchemaFi
 		Params:     dbx.Params{placeholder: rawJson},
 	}
 
-	if options.MaxSelect != 1 {
+	if options.IsMultiple() {
 		r.withMultiMatch = true
 	}
 
@@ -394,7 +394,7 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 
 			cleanFieldName := inflector.Columnify(field.Name)
 
-			// arrayble fields ":length" modifier
+			// arrayable fields with ":length" modifier
 			// -------------------------------------------------------
 			if modifier == lengthModifier && list.ExistInSlice(field.Type, schema.ArraybleFieldTypes()) {
 				jePair := r.activeTableAlias + "." + cleanFieldName
@@ -412,9 +412,9 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 				return result, nil
 			}
 
-			// select field with ":each" modifier
+			// arrayable fields with ":each" modifier
 			// -------------------------------------------------------
-			if field.Type == schema.FieldTypeSelect && modifier == eachModifier {
+			if modifier == eachModifier && list.ExistInSlice(field.Type, schema.ArraybleFieldTypes()) {
 				jePair := r.activeTableAlias + "." + cleanFieldName
 				jeAlias := r.activeTableAlias + "_" + cleanFieldName + "_je"
 				r.resolver.registerJoin(dbutils.JsonEach(jePair), jeAlias, nil)
@@ -423,13 +423,12 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 					Identifier: fmt.Sprintf("[[%s.value]]", jeAlias),
 				}
 
-				field.InitOptions()
-				options, ok := field.Options.(*schema.SelectOptions)
+				options, ok := field.Options.(schema.MultiValuer)
 				if !ok {
-					return nil, fmt.Errorf("failed to initialize field %q options", prop)
+					return nil, fmt.Errorf("field %q options are not initialized or doesn't multivaluer arrayable operations", prop)
 				}
 
-				if options.MaxSelect != 1 {
+				if options.IsMultiple() {
 					r.withMultiMatch = true
 				}
 

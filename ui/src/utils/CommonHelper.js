@@ -1775,13 +1775,9 @@ export default class CommonHelper {
                 }
             }
 
-            // add ":each" field modifier
-            if (field.type == "select" && field.options?.maxSelect != 1) {
-                result.push(key + ":each");
-            }
-
-            // add ":length" field modifier to arrayble fields
+            // add ":length" and ":each" field modifiers to arrayble fields
             if (field.options?.maxSelect != 1 && ["select", "file", "relation"].includes(field.type)) {
+                result.push(key + ":each");
                 result.push(key + ":length");
             }
         }

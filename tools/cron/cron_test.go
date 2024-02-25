@@ -228,40 +228,36 @@ func TestCronStartStop(t *testing.T) {
 
 	expectedCalls := 2
 
-	{
-		// call twice Start to check if the previous ticker will be reseted
-		c.Start()
-		c.Start()
+	// call twice Start to check if the previous ticker will be reseted
+	c.Start()
+	c.Start()
 
-		time.Sleep(1 * time.Second)
+	time.Sleep(1 * time.Second)
 
-		// call twice Stop to ensure that the second stop is no-op
-		c.Stop()
-		c.Stop()
+	// call twice Stop to ensure that the second stop is no-op
+	c.Stop()
+	c.Stop()
 
-		if test1 != expectedCalls {
-			t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
-		}
-		if test2 != expectedCalls {
-			t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
-		}
+	if test1 != expectedCalls {
+		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
+	}
+	if test2 != expectedCalls {
+		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
 	}
 
-	{
-		// resume for 2 seconds
-		c.Start()
+	// resume for 2 seconds
+	c.Start()
 
-		time.Sleep(2 * time.Second)
+	time.Sleep(2 * time.Second)
 
-		c.Stop()
+	c.Stop()
 
-		expectedCalls += 4
+	expectedCalls += 4
 
-		if test1 != expectedCalls {
-			t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
-		}
-		if test2 != expectedCalls {
-			t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
-		}
+	if test1 != expectedCalls {
+		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
+	}
+	if test2 != expectedCalls {
+		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
 	}
 }
