@@ -102,24 +102,26 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 	if len(matches) == 3 {
 		indirectRel, _ := dao.FindCollectionByNameOrId(matches[1])
 		if indirectRel == nil {
-			return fmt.Errorf("Couldn't find indirect related collection %q.", matches[1])
+			return fmt.Errorf("couldn't find back-related collection %q", matches[1])
 		}
 
 		indirectRelField := indirectRel.Schema.GetFieldByName(matches[2])
 		if indirectRelField == nil || indirectRelField.Type != schema.FieldTypeRelation {
-			return fmt.Errorf("Couldn't find indirect relation field %q in collection %q.", matches[2], mainCollection.Name)
+			return fmt.Errorf("couldn't find back-relation field %q in collection %q", matches[2], indirectRel.Name)
 		}
 
 		indirectRelField.InitOptions()
 		indirectRelFieldOptions, _ := indirectRelField.Options.(*schema.RelationOptions)
 		if indirectRelFieldOptions == nil || indirectRelFieldOptions.CollectionId != mainCollection.Id {
-			return fmt.Errorf("Invalid indirect relation field path %q.", parts[0])
+			return fmt.Errorf("invalid back-relation field path %q", parts[0])
 		}
 
 		// add the related id(s) as a dynamic relation field value to
 		// allow further expand checks at later stage in a more unified manner
 		prepErr := func() error {
-			q := dao.DB().Select("id").From(indirectRel.Name)
+			q := dao.DB().Select("id").
+				From(indirectRel.Name).
+				Limit(1000) // the limit is arbitrary chosen and may change in the future
 
 			if indirectRelFieldOptions.IsMultiple() {
 				q.AndWhere(dbx.Exists(dbx.NewExp(fmt.Sprintf(
@@ -158,9 +160,9 @@ func (dao *Dao) expandRecords(records []*models.Record, expandPath string, fetch
 		if dbutils.HasSingleColumnUniqueIndex(indirectRelField.Name, indirectRel.Indexes) {
 			relFieldOptions.MaxSelect = types.Pointer(1)
 		}
-		// indirect relation
+		// indirect/back relation
 		relField = &schema.SchemaField{
-			Id:      "indirect_" + security.PseudorandomString(5),
+			Id:      "_" + parts[0] + security.PseudorandomString(3),
 			Type:    schema.FieldTypeRelation,
 			Name:    parts[0],
 			Options: relFieldOptions,
