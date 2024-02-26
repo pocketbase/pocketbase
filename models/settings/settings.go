@@ -42,30 +42,31 @@ type Settings struct {
 	// Deprecated: Will be removed in v0.9+
 	EmailAuth EmailAuthConfig `form:"emailAuth" json:"emailAuth"`
 
-	GoogleAuth    AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
-	FacebookAuth  AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
-	GithubAuth    AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
-	GitlabAuth    AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
-	DiscordAuth   AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
-	TwitterAuth   AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
-	MicrosoftAuth AuthProviderConfig `form:"microsoftAuth" json:"microsoftAuth"`
-	SpotifyAuth   AuthProviderConfig `form:"spotifyAuth" json:"spotifyAuth"`
-	KakaoAuth     AuthProviderConfig `form:"kakaoAuth" json:"kakaoAuth"`
-	TwitchAuth    AuthProviderConfig `form:"twitchAuth" json:"twitchAuth"`
-	StravaAuth    AuthProviderConfig `form:"stravaAuth" json:"stravaAuth"`
-	GiteeAuth     AuthProviderConfig `form:"giteeAuth" json:"giteeAuth"`
-	LivechatAuth  AuthProviderConfig `form:"livechatAuth" json:"livechatAuth"`
-	GiteaAuth     AuthProviderConfig `form:"giteaAuth" json:"giteaAuth"`
-	OIDCAuth      AuthProviderConfig `form:"oidcAuth" json:"oidcAuth"`
-	OIDC2Auth     AuthProviderConfig `form:"oidc2Auth" json:"oidc2Auth"`
-	OIDC3Auth     AuthProviderConfig `form:"oidc3Auth" json:"oidc3Auth"`
-	AppleAuth     AuthProviderConfig `form:"appleAuth" json:"appleAuth"`
-	InstagramAuth AuthProviderConfig `form:"instagramAuth" json:"instagramAuth"`
-	VKAuth        AuthProviderConfig `form:"vkAuth" json:"vkAuth"`
-	YandexAuth    AuthProviderConfig `form:"yandexAuth" json:"yandexAuth"`
-	PatreonAuth   AuthProviderConfig `form:"patreonAuth" json:"patreonAuth"`
-	MailcowAuth   AuthProviderConfig `form:"mailcowAuth" json:"mailcowAuth"`
-	BitbucketAuth AuthProviderConfig `form:"bitbucketAuth" json:"bitbucketAuth"`
+	GoogleAuth         AuthProviderConfig `form:"googleAuth" json:"googleAuth"`
+	FacebookAuth       AuthProviderConfig `form:"facebookAuth" json:"facebookAuth"`
+	GithubAuth         AuthProviderConfig `form:"githubAuth" json:"githubAuth"`
+	GitlabAuth         AuthProviderConfig `form:"gitlabAuth" json:"gitlabAuth"`
+	DiscordAuth        AuthProviderConfig `form:"discordAuth" json:"discordAuth"`
+	TwitterAuth        AuthProviderConfig `form:"twitterAuth" json:"twitterAuth"`
+	MicrosoftAuth      AuthProviderConfig `form:"microsoftAuth" json:"microsoftAuth"`
+	SpotifyAuth        AuthProviderConfig `form:"spotifyAuth" json:"spotifyAuth"`
+	KakaoAuth          AuthProviderConfig `form:"kakaoAuth" json:"kakaoAuth"`
+	TwitchAuth         AuthProviderConfig `form:"twitchAuth" json:"twitchAuth"`
+	StravaAuth         AuthProviderConfig `form:"stravaAuth" json:"stravaAuth"`
+	GiteeAuth          AuthProviderConfig `form:"giteeAuth" json:"giteeAuth"`
+	LivechatAuth       AuthProviderConfig `form:"livechatAuth" json:"livechatAuth"`
+	GiteaAuth          AuthProviderConfig `form:"giteaAuth" json:"giteaAuth"`
+	OIDCAuth           AuthProviderConfig `form:"oidcAuth" json:"oidcAuth"`
+	OIDC2Auth          AuthProviderConfig `form:"oidc2Auth" json:"oidc2Auth"`
+	OIDC3Auth          AuthProviderConfig `form:"oidc3Auth" json:"oidc3Auth"`
+	AppleAuth          AuthProviderConfig `form:"appleAuth" json:"appleAuth"`
+	InstagramAuth      AuthProviderConfig `form:"instagramAuth" json:"instagramAuth"`
+	VKAuth             AuthProviderConfig `form:"vkAuth" json:"vkAuth"`
+	YandexAuth         AuthProviderConfig `form:"yandexAuth" json:"yandexAuth"`
+	PatreonAuth        AuthProviderConfig `form:"patreonAuth" json:"patreonAuth"`
+	MailcowAuth        AuthProviderConfig `form:"mailcowAuth" json:"mailcowAuth"`
+	BitbucketAuth      AuthProviderConfig `form:"bitbucketAuth" json:"bitbucketAuth"`
+	PlanningcenterAuth AuthProviderConfig `form:"planningcenterAuth" json:"planningcenterAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -200,6 +201,9 @@ func New() *Settings {
 		BitbucketAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		PlanningcenterAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -246,6 +250,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.PatreonAuth),
 		validation.Field(&s.MailcowAuth),
 		validation.Field(&s.BitbucketAuth),
+		validation.Field(&s.PlanningcenterAuth),
 	)
 }
 
@@ -315,6 +320,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.PatreonAuth.ClientSecret,
 		&clone.MailcowAuth.ClientSecret,
 		&clone.BitbucketAuth.ClientSecret,
+		&clone.PlanningcenterAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -334,30 +340,31 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 	defer s.mux.RUnlock()
 
 	return map[string]AuthProviderConfig{
-		auth.NameGoogle:     s.GoogleAuth,
-		auth.NameFacebook:   s.FacebookAuth,
-		auth.NameGithub:     s.GithubAuth,
-		auth.NameGitlab:     s.GitlabAuth,
-		auth.NameDiscord:    s.DiscordAuth,
-		auth.NameTwitter:    s.TwitterAuth,
-		auth.NameMicrosoft:  s.MicrosoftAuth,
-		auth.NameSpotify:    s.SpotifyAuth,
-		auth.NameKakao:      s.KakaoAuth,
-		auth.NameTwitch:     s.TwitchAuth,
-		auth.NameStrava:     s.StravaAuth,
-		auth.NameGitee:      s.GiteeAuth,
-		auth.NameLivechat:   s.LivechatAuth,
-		auth.NameGitea:      s.GiteaAuth,
-		auth.NameOIDC:       s.OIDCAuth,
-		auth.NameOIDC + "2": s.OIDC2Auth,
-		auth.NameOIDC + "3": s.OIDC3Auth,
-		auth.NameApple:      s.AppleAuth,
-		auth.NameInstagram:  s.InstagramAuth,
-		auth.NameVK:         s.VKAuth,
-		auth.NameYandex:     s.YandexAuth,
-		auth.NamePatreon:    s.PatreonAuth,
-		auth.NameMailcow:    s.MailcowAuth,
-		auth.NameBitbucket:  s.BitbucketAuth,
+		auth.NameGoogle:         s.GoogleAuth,
+		auth.NameFacebook:       s.FacebookAuth,
+		auth.NameGithub:         s.GithubAuth,
+		auth.NameGitlab:         s.GitlabAuth,
+		auth.NameDiscord:        s.DiscordAuth,
+		auth.NameTwitter:        s.TwitterAuth,
+		auth.NameMicrosoft:      s.MicrosoftAuth,
+		auth.NameSpotify:        s.SpotifyAuth,
+		auth.NameKakao:          s.KakaoAuth,
+		auth.NameTwitch:         s.TwitchAuth,
+		auth.NameStrava:         s.StravaAuth,
+		auth.NameGitee:          s.GiteeAuth,
+		auth.NameLivechat:       s.LivechatAuth,
+		auth.NameGitea:          s.GiteaAuth,
+		auth.NameOIDC:           s.OIDCAuth,
+		auth.NameOIDC + "2":     s.OIDC2Auth,
+		auth.NameOIDC + "3":     s.OIDC3Auth,
+		auth.NameApple:          s.AppleAuth,
+		auth.NameInstagram:      s.InstagramAuth,
+		auth.NameVK:             s.VKAuth,
+		auth.NameYandex:         s.YandexAuth,
+		auth.NamePatreon:        s.PatreonAuth,
+		auth.NameMailcow:        s.MailcowAuth,
+		auth.NameBitbucket:      s.BitbucketAuth,
+		auth.NamePlanningcenter: s.PlanningcenterAuth,
 	}
 }
 

@@ -41,6 +41,11 @@ const (
 
 // Config defines the config options of the jsvm plugin.
 type Config struct {
+	// OnInit is an optional function that will be called
+	// after a JS runtime is initialized, allowing you to
+	// attach custom Go variables and functions.
+	OnInit func(vm *goja.Runtime)
+
 	// HooksWatch enables auto app restarts when a JS app hook file changes.
 	//
 	// Note that currently the application cannot be automatically restarted on Windows
@@ -90,7 +95,12 @@ type Config struct {
 //
 // Example usage:
 //
-//	jsvm.MustRegister(app, jsvm.Config{})
+//	jsvm.MustRegister(app, jsvm.Config{
+//		OnInit: func(vm *goja.Runtime) {
+//			// register custom bindings
+//			vm.Set("myCustomVar", 123)
+//		}
+//	})
 func MustRegister(app core.App, config Config) {
 	if err := Register(app, config); err != nil {
 		panic(err)
@@ -173,6 +183,10 @@ func (p *plugin) registerMigrations() error {
 			m.AppMigrations.Register(up, down, file)
 		})
 
+		if p.config.OnInit != nil {
+			p.config.OnInit(vm)
+		}
+
 		_, err := vm.RunString(string(content))
 		if err != nil {
 			return fmt.Errorf("failed to run migration %s: %w", file, err)
@@ -253,6 +267,10 @@ func (p *plugin) registerHooks() error {
 		vm.Set("$app", p.app)
 		vm.Set("$template", templateRegistry)
 		vm.Set("__hooks", absHooksDir)
+
+		if p.config.OnInit != nil {
+			p.config.OnInit(vm)
+		}
 	}
 
 	// initiliaze the executor vms

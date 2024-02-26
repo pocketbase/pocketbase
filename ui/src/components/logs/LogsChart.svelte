@@ -47,6 +47,8 @@
             .then((result) => {
                 resetData();
 
+                result = CommonHelper.toArray(result);
+
                 for (let item of result) {
                     chartData.push({
                         x: new Date(item.date),

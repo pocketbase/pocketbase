@@ -376,7 +376,7 @@ func baseBinds(vm *goja.Runtime) {
 	})
 
 	vm.Set("RequestInfo", func(call goja.ConstructorCall) *goja.Object {
-		instance := &models.RequestInfo{}
+		instance := &models.RequestInfo{Context: models.RequestInfoContextDefault}
 		return structConstructor(vm, call, instance)
 	})
 

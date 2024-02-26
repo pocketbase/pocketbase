@@ -89,6 +89,7 @@ func NewRecordFieldResolver(
 		loadedCollections: []*models.Collection{baseCollection},
 		allowedFields: []string{
 			`^\w+[\w\.\:]*$`,
+			`^\@request\.context$`,
 			`^\@request\.method$`,
 			`^\@request\.auth\.[\w\.\:]*\w+$`,
 			`^\@request\.data\.[\w\.\:]*\w+$`,
@@ -100,6 +101,7 @@ func NewRecordFieldResolver(
 
 	r.staticRequestInfo = map[string]any{}
 	if r.requestInfo != nil {
+		r.staticRequestInfo["context"] = r.requestInfo.Context
 		r.staticRequestInfo["method"] = r.requestInfo.Method
 		r.staticRequestInfo["query"] = r.requestInfo.Query
 		r.staticRequestInfo["headers"] = r.requestInfo.Headers
@@ -142,7 +144,9 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 //	id
 //	someSelect.each
 //	project.screen.status
-//	@request.status
+//	screen.project_via_prototype.name
+//	@request.context
+//	@request.method
 //	@request.query.filter
 //	@request.headers.x_token
 //	@request.auth.someRelation.name

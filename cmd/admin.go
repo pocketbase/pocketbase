@@ -67,12 +67,10 @@ func adminCreateCommand(app core.App) *cobra.Command {
 
 func adminUpdateCommand(app core.App) *cobra.Command {
 	command := &cobra.Command{
-		Use:     "update",
-		Example: "admin update test@example.com 1234567890",
-		Short:   "Changes the password of a single admin account",
-		// prevents printing the error log twice
-		SilenceErrors: true,
-		SilenceUsage:  true,
+		Use:          "update",
+		Example:      "admin update test@example.com 1234567890",
+		Short:        "Changes the password of a single admin account",
+		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) != 2 {
 				return errors.New("Missing email and password arguments.")
@@ -111,12 +109,10 @@ func adminUpdateCommand(app core.App) *cobra.Command {
 
 func adminDeleteCommand(app core.App) *cobra.Command {
 	command := &cobra.Command{
-		Use:     "delete",
-		Example: "admin delete test@example.com",
-		Short:   "Deletes an existing admin account",
-		// prevents printing the error log twice
-		SilenceErrors: true,
-		SilenceUsage:  true,
+		Use:          "delete",
+		Example:      "admin delete test@example.com",
+		Short:        "Deletes an existing admin account",
+		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
 				return errors.New("Invalid or missing email address.")

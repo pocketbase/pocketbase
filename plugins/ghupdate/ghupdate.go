@@ -97,8 +97,8 @@ func Register(app core.App, rootCmd *cobra.Command, config Config) error {
 
 type plugin struct {
 	app            core.App
-	currentVersion string
 	config         Config
+	currentVersion string
 }
 
 func (p *plugin) updateCmd() *cobra.Command {
@@ -252,7 +252,7 @@ func (p *plugin) update(withBackup bool) error {
 		fmt.Print("\n")
 		color.Cyan("Here is a list with some of the %s changes:", latest.Tag)
 		// remove the update command note to avoid "stuttering"
-		releaseNotes := strings.TrimSpace(strings.Replace(latest.Body, "> _To update the prebuilt executable you can run `./pocketbase update`._", "", 1))
+		releaseNotes := strings.TrimSpace(strings.Replace(latest.Body, "> _To update the prebuilt executable you can run `./"+p.config.ArchiveExecutable+" update`._", "", 1))
 		color.Cyan(releaseNotes)
 		fmt.Print("\n")
 	}

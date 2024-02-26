@@ -1,3 +1,49 @@
+## v0.22.0
+
+- Added Planning Center OAuth2 provider (thanks @alxjsn).
+
+- Admin UI improvements:
+  - Autosync collection changes across multiple open browser tabs.
+  - Fixed vertical image popup preview scrolling.
+  - Added options to export a subset of collections.
+  - Added option to import a subset of collections without deleting the others ([#3403](https://github.com/pocketbase/pocketbase/issues/3403)).
+
+- Added support for back/indirect relation `filter`/`sort` (single and multiple).
+  The syntax to reference back relation fields is `yourCollection_via_yourRelField.*`.
+  ⚠️ To avoid excessive joins, the nested relations resolver is now limited to max 6 level depth (the same as `expand`).
+  _Note that in the future there will be also more advanced and granular options to specify a subset of the fields that are filterable/sortable._
+
+- Added support for multiple back/indirect relation `expand` and updated the keys to use the `_via_` reference syntax (`yourCollection_via_yourRelField`).
+  _To minimize the breaking changes, the old parenthesis reference syntax (`yourCollection(yourRelField)`) will still continue to work but it is soft-deprecated and there will be a console log reminding you to change it to the new one._
+
+- ⚠️ Collections and fields are no longer allowed to have `_via_` in their name to avoid collisions with the back/indirect relation reference syntax.
+
+- Added `jsvm.Config.OnInit` optional config function to allow registering custom Go bindings to the JSVM.
+
+- Added `@request.context` rule field that can be used to apply a different set of constrtaints based on the API rule execution context.
+  For example, to disallow user creation by an OAuth2 auth, you could set for the users Create API rule `@request.context != "oauth2"`.
+  The currently supported `@request.context` values are:
+  ```
+  default
+  realtime
+  protectedFile
+  oauth2
+  ```
+
+- Adjusted the `cron.Start()` to start the ticker at the `00` second of the cron interval ([#4394](https://github.com/pocketbase/pocketbase/discussions/4394)).
+  _Note that the cron format has only minute granularity and there is still no guarantee that the sheduled job will be always executed at the `00` second._
+
+- Fixed auto backups cron not reloading properly after app settings change ([#4431](https://github.com/pocketbase/pocketbase/discussions/4431)).
+
+- Upgraded to `aws-sdk-go-v2` and added special handling for GCS to workaround the previous [GCS headers signature issue](https://github.com/pocketbase/pocketbase/issues/2231) that we had with v2.
+  _This should also fix the SVG/JSON zero response when using Cloudflare R2 ([#4287](https://github.com/pocketbase/pocketbase/issues/4287#issuecomment-1925168142), [#2068](https://github.com/pocketbase/pocketbase/discussions/2068), [#2952](https://github.com/pocketbase/pocketbase/discussions/2952))._
+  _⚠️ If you are using S3 for uploaded files or backups, please verify that you have a green check in the Admin UI for your S3 configuration (I've tested the new version with GCS, MinIO, Cloudflare R2 and Wasabi)._
+
+- Added `:each` modifier support for `file` and `relation` type fields (_previously it was supported only for `select` type fields_).
+
+- Other minor improvements (updated the `ghupdate` plugin to use the configured executable name when printing to the console, fixed the error reporting of `admin update/delete` commands, etc.).
+
+
 ## v0.21.3
 
 - Ignore the JS required validations for disabled OIDC providers ([#4322](https://github.com/pocketbase/pocketbase/issues/4322)).

@@ -211,12 +211,12 @@ func TestCronTotal(t *testing.T) {
 func TestCronStartStop(t *testing.T) {
 	t.Parallel()
 
-	c := New()
-
-	c.SetInterval(1 * time.Second)
-
 	test1 := 0
 	test2 := 0
+
+	c := New()
+
+	c.SetInterval(500 * time.Millisecond)
 
 	c.Add("test1", "* * * * *", func() {
 		test1++
@@ -226,13 +226,13 @@ func TestCronStartStop(t *testing.T) {
 		test2++
 	})
 
-	expectedCalls := 3
+	expectedCalls := 2
 
 	// call twice Start to check if the previous ticker will be reseted
 	c.Start()
 	c.Start()
 
-	time.Sleep(3250 * time.Millisecond)
+	time.Sleep(1 * time.Second)
 
 	// call twice Stop to ensure that the second stop is no-op
 	c.Stop()
@@ -245,12 +245,14 @@ func TestCronStartStop(t *testing.T) {
 		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
 	}
 
-	// resume for ~5 seconds
+	// resume for 2 seconds
 	c.Start()
-	time.Sleep(5250 * time.Millisecond)
+
+	time.Sleep(2 * time.Second)
+
 	c.Stop()
 
-	expectedCalls += 5
+	expectedCalls += 4
 
 	if test1 != expectedCalls {
 		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)

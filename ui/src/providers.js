@@ -129,6 +129,11 @@ export default [
         optionsComponentProps: { required: true },
     },
     {
+        key:   "planningcenterAuth",
+        title: "Planning Center",
+        logo:  "planningcenter.svg",
+    },
+    {
         key:   "oidcAuth",
         title: "OpenID Connect",
         logo:  "oidc.svg",

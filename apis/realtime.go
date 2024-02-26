@@ -409,6 +409,7 @@ func (api *realtimeApi) broadcastRecord(action string, record *models.Record, dr
 
 				// mock request data
 				requestInfo := &models.RequestInfo{
+					Context: models.RequestInfoContextRealtime,
 					Method:  "GET",
 					Query:   options.Query,
 					Headers: options.Headers,

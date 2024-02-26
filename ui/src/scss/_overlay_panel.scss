@@ -264,6 +264,10 @@
             min-height: 300px;
             max-width: 75%;
             max-height: 90%;
+            img {
+                align-self: flex-start;
+                margin: auto;
+            }
         }
 
         &.preview-document,

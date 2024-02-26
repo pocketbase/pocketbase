@@ -106,6 +106,17 @@ func TestCollectionUpsertValidateAndSubmit(t *testing.T) {
 		{"empty create (view)", "", `{"type":"view"}`, []string{"name", "options"}},
 		{"empty update", "demo2", "{}", []string{}},
 		{
+			"collection and field with _via_ names",
+			"",
+			`{
+				"name": "a_via_b",
+				"schema": [
+					{"name":"c_via_d","type":"text"}
+				]
+			}`,
+			[]string{"name", "schema"},
+		},
+		{
 			"create failure",
 			"",
 			`{

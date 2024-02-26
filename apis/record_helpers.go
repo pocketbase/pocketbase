@@ -44,6 +44,7 @@ func RequestInfo(c echo.Context) *models.RequestInfo {
 	}
 
 	result := &models.RequestInfo{
+		Context: models.RequestInfoContextDefault,
 		Method:  c.Request().Method,
 		Query:   map[string]any{},
 		Data:    map[string]any{},

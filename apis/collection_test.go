@@ -893,7 +893,8 @@ func TestCollectionUpdate(t *testing.T) {
 					{"type":"text","name":"password"},
 					{"type":"text","name":"passwordConfirm"},
 					{"type":"text","name":"oldPassword"}
-				]
+				],
+				"indexes": []
 			}`),
 			RequestHeaders: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",

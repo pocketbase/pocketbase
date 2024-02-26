@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import ApiClient    from "@/utils/ApiClient";
 import CommonHelper from "@/utils/CommonHelper";
 
@@ -6,6 +6,20 @@ export const collections                    = writable([]);
 export const activeCollection               = writable({});
 export const isCollectionsLoading           = writable(false);
 export const protectedFilesCollectionsCache = writable({});
+
+let notifyChannel;
+
+if (typeof BroadcastChannel != "undefined") {
+    notifyChannel = new BroadcastChannel("collections");
+
+    notifyChannel.onmessage = () => {
+        loadCollections(get(activeCollection)?.id)
+    }
+}
+
+function notifyOtherTabs() {
+    notifyChannel?.postMessage("reload");
+}
 
 export function changeActiveCollectionById(collectionId) {
     collections.update((list) => {
@@ -32,6 +46,8 @@ export function addCollection(collection) {
 
         refreshProtectedFilesCollectionsCache();
 
+        notifyOtherTabs();
+
         return CommonHelper.sortCollections(list);
     });
 }
@@ -48,6 +64,8 @@ export function removeCollection(collection) {
         });
 
         refreshProtectedFilesCollectionsCache();
+
+        notifyOtherTabs();
 
         return list;
     });

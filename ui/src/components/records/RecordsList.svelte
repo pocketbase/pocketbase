@@ -83,7 +83,7 @@
             return { id: f.id, name: f.name };
         }),
         hasCreated ? { id: "@created", name: "created" } : [],
-        hasUpdated ? { id: "@updated", name: "updated" } : []
+        hasUpdated ? { id: "@updated", name: "updated" } : [],
     );
 
     function updateStoredHiddenColumns() {
@@ -282,7 +282,7 @@
         return Promise.all(promises)
             .then(() => {
                 addSuccessToast(
-                    `Successfully deleted the selected ${totalBulkSelected === 1 ? "record" : "records"}.`
+                    `Successfully deleted the selected ${totalBulkSelected === 1 ? "record" : "records"}.`,
                 );
 
                 dispatch("delete", bulkSelected);

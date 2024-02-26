@@ -198,8 +198,6 @@ func (dao *Dao) FindRecordsByIds(
 	return records, nil
 }
 
-// @todo consider to depricate as it may be easier to just use dao.RecordQuery()
-//
 // FindRecordsByExpr finds all records by the specified db expression.
 //
 // Returns all collection records if no expressions are provided.
