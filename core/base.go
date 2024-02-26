@@ -599,10 +599,10 @@ func (app *BaseApp) RefreshSettings() error {
 		return err
 	}
 
-	// reload handler level (if initialized and not in dev mode)
-	if !app.IsDev() && app.Logger() != nil {
+	// reload handler level (if initialized)
+	if app.Logger() != nil {
 		if h, ok := app.Logger().Handler().(*logger.BatchHandler); ok {
-			h.SetLevel(slog.Level(app.settings.Logs.MinLevel))
+			h.SetLevel(app.getLoggerMinLevel())
 		}
 	}
 
@@ -1184,25 +1184,34 @@ func (app *BaseApp) registerDefaultHooks() {
 	}
 }
 
-func (app *BaseApp) initLogger() error {
-	duration := 3 * time.Second
-	ticker := time.NewTicker(duration)
-	done := make(chan bool)
+// getLoggerMinLevel returns the logger min level based on the
+// app configurations (dev mode, settings, etc.).
 
-	// Apply the min level only if it is not in develop
-	// to allow printing the logs to the console.
-	//
-	// DB logs are still filtered but the checks for the min level are done
-	// in the BatchOptions.BeforeAddFunc instead of the slog.Handler.Enabled() method.
+// If not in dev mode - returns the level from the app settings.
+//
+// If the app is in dev mode it returns -9999 level allowing to print
+// practically all logs to the terminal.
+// In this case DB logs are still filtered but the checks for the min level are done
+// in the BatchOptions.BeforeAddFunc instead of the slog.Handler.Enabled() method.
+func (app *BaseApp) getLoggerMinLevel() slog.Level {
 	var minLevel slog.Level
+
 	if app.IsDev() {
 		minLevel = -9999
 	} else if app.Settings() != nil {
 		minLevel = slog.Level(app.Settings().Logs.MinLevel)
 	}
 
+	return minLevel
+}
+
+func (app *BaseApp) initLogger() error {
+	duration := 3 * time.Second
+	ticker := time.NewTicker(duration)
+	done := make(chan bool)
+
 	handler := logger.NewBatchHandler(logger.BatchOptions{
-		Level:     minLevel,
+		Level:     app.getLoggerMinLevel(),
 		BatchSize: 200,
 		BeforeAddFunc: func(ctx context.Context, log *logger.Log) bool {
 			if app.IsDev() {

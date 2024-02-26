@@ -33,6 +33,8 @@
 - Updated the `cron.Start()` to start the ticker at the `00` second of the cron interval ([#4394](https://github.com/pocketbase/pocketbase/discussions/4394)).
   _Note that the cron format has only minute granularity and there is still no guarantee that the sheduled job will be always executed at the `00` second._
 
+- Fixed cron auto backups not taking in consideration the latest settings change ([#4431](https://github.com/pocketbase/pocketbase/discussions/4431)).
+
 - Upgraded to `aws-sdk-go-v2` and added special handling for GCS to workaround the previous [GCS headers signature issue](https://github.com/pocketbase/pocketbase/issues/2231) that we had with v2.
   _This should also fix the SVG/JSON zero response when using Cloudflare R2 ([#4287](https://github.com/pocketbase/pocketbase/issues/4287#issuecomment-1925168142), [#2068](https://github.com/pocketbase/pocketbase/discussions/2068), [#2952](https://github.com/pocketbase/pocketbase/discussions/2952))._
   _If you are using S3 for uploaded files or backups, please verify that you have a green check in the Admin UI for your S3 configuration (I've tested the new version with GCS, MinIO, Cloudflare R2 and Wasabi)._
