@@ -248,6 +248,11 @@ func (app *BaseApp) initAutobackupHooks() error {
 	loadJob := func() {
 		c.Stop()
 
+		// make sure that app.Settings() is always up to date
+		//
+		// @todo remove with the refactoring as core.App and daos.Dao will be one.
+		app.RefreshSettings()
+
 		rawSchedule := app.Settings().Backups.Cron
 		if rawSchedule == "" || !isServe || !app.IsBootstrapped() {
 			return
