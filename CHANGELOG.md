@@ -1,6 +1,6 @@
 ## v0.22.0
 
-- Added Planning Center OAuth2 provider (thanks @alxjsn).
+- Added Planning Center OAuth2 provider ([#4393](https://github.com/pocketbase/pocketbase/pull/4393); thanks @alxjsn).
 
 - Admin UI improvements:
   - Autosync collection changes across multiple open browser tabs.
@@ -20,7 +20,7 @@
 
 - Added `jsvm.Config.OnInit` optional config function to allow registering custom Go bindings to the JSVM.
 
-- Added `@request.context` rule field that can be used to apply a different set of constrtaints based on the API rule execution context.
+- Added `@request.context` rule field that can be used to apply a different set of constraints based on the API rule execution context.
   For example, to disallow user creation by an OAuth2 auth, you could set for the users Create API rule `@request.context != "oauth2"`.
   The currently supported `@request.context` values are:
   ```
@@ -31,7 +31,7 @@
   ```
 
 - Adjusted the `cron.Start()` to start the ticker at the `00` second of the cron interval ([#4394](https://github.com/pocketbase/pocketbase/discussions/4394)).
-  _Note that the cron format has only minute granularity and there is still no guarantee that the sheduled job will be always executed at the `00` second._
+  _Note that the cron format has only minute granularity and there is still no guarantee that the scheduled job will be always executed at the `00` second._
 
 - Fixed auto backups cron not reloading properly after app settings change ([#4431](https://github.com/pocketbase/pocketbase/discussions/4431)).
 
