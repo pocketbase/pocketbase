@@ -1186,7 +1186,7 @@ func (app *BaseApp) registerDefaultHooks() {
 
 // getLoggerMinLevel returns the logger min level based on the
 // app configurations (dev mode, settings, etc.).
-
+//
 // If not in dev mode - returns the level from the app settings.
 //
 // If the app is in dev mode it returns -9999 level allowing to print
