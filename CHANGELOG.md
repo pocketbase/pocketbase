@@ -1,3 +1,8 @@
+## (WIP) v0.22.1
+
+- Initialize `RecordAuthWithOAuth2Event.IsNewRecord` for the `OnRecordBeforeAuthWithOAuth2Request` hook ([#4437](https://github.com/pocketbase/pocketbase/discussions/4437)).
+
+
 ## v0.22.0
 
 - Added Planning Center OAuth2 provider ([#4393](https://github.com/pocketbase/pocketbase/pull/4393); thanks @alxjsn).

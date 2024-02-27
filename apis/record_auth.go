@@ -201,7 +201,6 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 	event.HttpContext = c
 	event.Collection = collection
 	event.ProviderName = form.Provider
-	event.IsNewRecord = false
 
 	form.SetBeforeNewRecordCreateFunc(func(createForm *forms.RecordUpsert, authRecord *models.Record, authUser *auth.AuthUser) error {
 		return createForm.DrySubmit(func(txDao *daos.Dao) error {
@@ -248,6 +247,7 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 			event.Record = data.Record
 			event.OAuth2User = data.OAuth2User
 			event.ProviderClient = data.ProviderClient
+			event.IsNewRecord = data.Record == nil
 
 			return api.app.OnRecordBeforeAuthWithOAuth2Request().Trigger(event, func(e *core.RecordAuthWithOAuth2Event) error {
 				data.Record = e.Record
