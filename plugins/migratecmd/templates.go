@@ -598,11 +598,11 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 	if !bytes.Equal(rawNewOptions, rawOldOptions) {
 		upParts = append(upParts, "options := map[string]any{}")
-		upParts = append(upParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), &options)", escapeBacktick(string(rawNewOptions))))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &options)", escapeBacktick(string(rawNewOptions)))))
 		upParts = append(upParts, fmt.Sprintf("%s.SetOptions(options)\n", varName))
 		// ---
 		downParts = append(downParts, "options := map[string]any{}")
-		downParts = append(downParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), &options)", escapeBacktick(string(rawOldOptions))))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &options)", escapeBacktick(string(rawOldOptions)))))
 		downParts = append(downParts, fmt.Sprintf("%s.SetOptions(options)\n", varName))
 	}
 
@@ -616,9 +616,9 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 		return "", err
 	}
 	if !bytes.Equal(rawNewIndexes, rawOldIndexes) {
-		upParts = append(upParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s.Indexes)\n", escapeBacktick(string(rawNewIndexes)), varName))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s.Indexes)", escapeBacktick(string(rawNewIndexes)), varName))+"\n")
 		// ---
-		downParts = append(downParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s.Indexes)\n", escapeBacktick(string(rawOldIndexes)), varName))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s.Indexes)", escapeBacktick(string(rawOldIndexes)), varName))+"\n")
 	}
 
 	// Schema
@@ -641,7 +641,7 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 
 		downParts = append(downParts, "// add")
 		downParts = append(downParts, fmt.Sprintf("%s := &schema.SchemaField{}", fieldVar))
-		downParts = append(downParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawOldField)), fieldVar))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawOldField)), fieldVar)))
 		downParts = append(downParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
 	}
 
@@ -660,7 +660,7 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 
 		upParts = append(upParts, "// add")
 		upParts = append(upParts, fmt.Sprintf("%s := &schema.SchemaField{}", fieldVar))
-		upParts = append(upParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawNewField)), fieldVar))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawNewField)), fieldVar)))
 		upParts = append(upParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
 
 		downParts = append(downParts, "// remove")
@@ -692,12 +692,12 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 
 		upParts = append(upParts, "// update")
 		upParts = append(upParts, fmt.Sprintf("%s := &schema.SchemaField{}", fieldVar))
-		upParts = append(upParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawNewField)), fieldVar))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawNewField)), fieldVar)))
 		upParts = append(upParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
 
 		downParts = append(downParts, "// update")
 		downParts = append(downParts, fmt.Sprintf("%s := &schema.SchemaField{}", fieldVar))
-		downParts = append(downParts, fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawOldField)), fieldVar))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawOldField)), fieldVar)))
 		downParts = append(downParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
 	}
 	// ---------------------------------------------------------------
@@ -790,4 +790,8 @@ func marhshalWithoutEscape(v any, prefix string, indent string) ([]byte, error) 
 
 func escapeBacktick(v string) string {
 	return strings.ReplaceAll(v, "`", "` + \"`\" + `")
+}
+
+func goErrIf(v string) string {
+	return "if err := " + v + "; err != nil {\n\t\t\treturn err\n\t\t}"
 }

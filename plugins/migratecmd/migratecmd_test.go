@@ -532,19 +532,23 @@ func init() {
 		collection.DeleteRule = nil
 
 		options := map[string]any{}
-		json.Unmarshal([]byte(` + "`" + `{}` + "`" + `), &options)
+		if err := json.Unmarshal([]byte(` + "`" + `{}` + "`" + `), &options); err != nil {
+			return err
+		}
 		collection.SetOptions(options)
 
-		json.Unmarshal([]byte(` + "`" + `[
+		if err := json.Unmarshal([]byte(` + "`" + `[
 			"create index test1 on test456_update (f1_name)"
-		]` + "`" + `), &collection.Indexes)
+		]` + "`" + `), &collection.Indexes); err != nil {
+			return err
+		}
 
 		// remove
 		collection.Schema.RemoveField("f3_id")
 
 		// add
 		new_f4_name := &schema.SchemaField{}
-		json.Unmarshal([]byte(` + "`" + `{
+		if err := json.Unmarshal([]byte(` + "`" + `{
 			"system": false,
 			"id": "f4_id",
 			"name": "f4_name",
@@ -557,12 +561,14 @@ func init() {
 				"max": null,
 				"pattern": ` + "\"` + \"`\" + `test backtick` + \"`\" + `123\"" + `
 			}
-		}` + "`" + `), new_f4_name)
+		}` + "`" + `), new_f4_name); err != nil {
+			return err
+		}
 		collection.Schema.AddField(new_f4_name)
 
 		// update
 		edit_f2_name_new := &schema.SchemaField{}
-		json.Unmarshal([]byte(` + "`" + `{
+		if err := json.Unmarshal([]byte(` + "`" + `{
 			"system": false,
 			"id": "f2_id",
 			"name": "f2_name_new",
@@ -575,7 +581,9 @@ func init() {
 				"max": null,
 				"noDecimal": false
 			}
-		}` + "`" + `), edit_f2_name_new)
+		}` + "`" + `), edit_f2_name_new); err != nil {
+			return err
+		}
 		collection.Schema.AddField(edit_f2_name_new)
 
 		return dao.SaveCollection(collection)
@@ -600,7 +608,7 @@ func init() {
 		collection.DeleteRule = types.Pointer("id = \"3\"")
 
 		options := map[string]any{}
-		json.Unmarshal([]byte(` + "`" + `{
+		if err := json.Unmarshal([]byte(` + "`" + `{
 			"allowEmailAuth": false,
 			"allowOAuth2Auth": false,
 			"allowUsernameAuth": false,
@@ -610,16 +618,20 @@ func init() {
 			"onlyEmailDomains": null,
 			"onlyVerified": false,
 			"requireEmail": false
-		}` + "`" + `), &options)
+		}` + "`" + `), &options); err != nil {
+			return err
+		}
 		collection.SetOptions(options)
 
-		json.Unmarshal([]byte(` + "`" + `[
+		if err := json.Unmarshal([]byte(` + "`" + `[
 			"create index test1 on test456 (f1_name)"
-		]` + "`" + `), &collection.Indexes)
+		]` + "`" + `), &collection.Indexes); err != nil {
+			return err
+		}
 
 		// add
 		del_f3_name := &schema.SchemaField{}
-		json.Unmarshal([]byte(` + "`" + `{
+		if err := json.Unmarshal([]byte(` + "`" + `{
 			"system": false,
 			"id": "f3_id",
 			"name": "f3_name",
@@ -628,7 +640,9 @@ func init() {
 			"presentable": false,
 			"unique": false,
 			"options": {}
-		}` + "`" + `), del_f3_name)
+		}` + "`" + `), del_f3_name); err != nil {
+			return err
+		}
 		collection.Schema.AddField(del_f3_name)
 
 		// remove
@@ -636,7 +650,7 @@ func init() {
 
 		// update
 		edit_f2_name_new := &schema.SchemaField{}
-		json.Unmarshal([]byte(` + "`" + `{
+		if err := json.Unmarshal([]byte(` + "`" + `{
 			"system": false,
 			"id": "f2_id",
 			"name": "f2_name",
@@ -649,7 +663,9 @@ func init() {
 				"max": null,
 				"noDecimal": false
 			}
-		}` + "`" + `), edit_f2_name_new)
+		}` + "`" + `), edit_f2_name_new); err != nil {
+			return err
+		}
 		collection.Schema.AddField(edit_f2_name_new)
 
 		return dao.SaveCollection(collection)
