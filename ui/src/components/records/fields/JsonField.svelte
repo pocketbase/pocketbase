@@ -19,6 +19,10 @@
     $: isValid = isValidJson(serialized);
 
     function serialize(val) {
+        if (typeof val == "string" && isValidJson(val)) {
+            return val; // already serlialized
+        }
+
         return JSON.stringify(typeof val === "undefined" ? null : val, null, 2);
     }
 

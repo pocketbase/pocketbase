@@ -83,6 +83,10 @@
         updateQueryParams({ recordId: null });
 
         normalizeSort();
+
+        // close any open collection panels
+        collectionUpsertPanel?.forceHide();
+        collectionDocsPanel?.hide();
     }
 
     // ensures that the sort fields exist in the collection
@@ -117,7 +121,7 @@
                 filter: filter,
                 sort: sort,
             },
-            extra
+            extra,
         );
 
         CommonHelper.replaceHashQueryParams(queryParams);

@@ -75,7 +75,7 @@
     // update indexes on collection rename
     $: if (collection.name && original?.name != collection.name && collection.indexes.length > 0) {
         collection.indexes = collection.indexes?.map((idx) =>
-            CommonHelper.replaceIndexTableName(idx, collection.name)
+            CommonHelper.replaceIndexTableName(idx, collection.name),
         );
     }
 
@@ -95,6 +95,11 @@
 
     export function hide() {
         return collectionPanel?.hide();
+    }
+
+    export function forceHide() {
+        confirmClose = false;
+        hide();
     }
 
     async function load(model) {
@@ -151,7 +156,7 @@
                 hide();
 
                 addSuccessToast(
-                    !collection.id ? "Successfully created collection." : "Successfully updated collection."
+                    !collection.id ? "Successfully created collection." : "Successfully updated collection.",
                 );
 
                 dispatch("save", {

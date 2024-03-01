@@ -46,6 +46,7 @@
     let activeTab = tabFormKey;
     let isNew = true;
     let isLoading = true;
+    let initialCollection = collection;
 
     $: isAuthCollection = collection?.type === "auth";
 
@@ -66,6 +67,10 @@
         updateDraft(serializedData);
     }
 
+    $: if (collection && initialCollection?.id != collection?.id) {
+        onCollectionChange();
+    }
+
     export function show(model) {
         load(model);
 
@@ -83,6 +88,18 @@
     function forceHide() {
         confirmHide = false;
         hide();
+    }
+
+    function onCollectionChange() {
+        initialCollection = collection;
+
+        if (!recordPanel?.isActive()) {
+            return;
+        }
+
+        updateDraft(JSON.stringify(record));
+
+        forceHide();
     }
 
     async function resolveModel(model) {
