@@ -514,17 +514,31 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 		if field == nil {
 			parts := viaRegex.FindStringSubmatch(prop)
 			if len(parts) != 3 {
-				return nil, fmt.Errorf("field %q is not a valid back relation", prop)
+				if r.nullifyMisingField {
+					return &search.ResolverResult{Identifier: "NULL"}, nil
+				}
+				return nil, fmt.Errorf("failed to resolve field %q", prop)
 			}
 
 			backCollection, err := r.resolver.loadCollection(parts[1])
 			if err != nil {
-				return nil, fmt.Errorf("failed to resolve field %q", prop)
+				if r.nullifyMisingField {
+					return &search.ResolverResult{Identifier: "NULL"}, nil
+				}
+				return nil, fmt.Errorf("failed to load back relation field %q collection", prop)
 			}
+
 			backField := backCollection.Schema.GetFieldByName(parts[2])
-			if backField == nil || backField.Type != schema.FieldTypeRelation {
-				return nil, fmt.Errorf("invalid or missing back relation field %q", parts[2])
+			if backField == nil {
+				if r.nullifyMisingField {
+					return &search.ResolverResult{Identifier: "NULL"}, nil
+				}
+				return nil, fmt.Errorf("missing back relation field %q", parts[2])
 			}
+			if backField.Type != schema.FieldTypeRelation {
+				return nil, fmt.Errorf("invalid back relation field %q", parts[2])
+			}
+
 			backField.InitOptions()
 			backFieldOptions, ok := backField.Options.(*schema.RelationOptions)
 			if !ok {
@@ -629,7 +643,7 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 
 		relCollection, relErr := r.resolver.loadCollection(options.CollectionId)
 		if relErr != nil {
-			return nil, fmt.Errorf("failed to find field %q collection", prop)
+			return nil, fmt.Errorf("failed to load field %q collection", prop)
 		}
 
 		cleanFieldName := inflector.Columnify(field.Name)

@@ -213,9 +213,9 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		{
 			"@request.auth fields",
 			"demo4",
-			"@request.auth.id > true || @request.auth.username > true || @request.auth.rel.title > true || @request.data.demo > true",
+			"@request.auth.id > true || @request.auth.username > true || @request.auth.rel.title > true || @request.data.demo < true || @request.auth.missingA.missingB > false",
 			false,
-			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `users` `__auth_users` ON `__auth_users`.`id`={:TEST} LEFT JOIN `demo2` `__auth_users_rel` ON [[__auth_users_rel.id]] = [[__auth_users.rel]] WHERE ({:TEST} > 1 OR {:TEST} > 1 OR [[__auth_users_rel.title]] > 1 OR NULL > 1)",
+			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `users` `__auth_users` ON `__auth_users`.`id`={:p0} LEFT JOIN `demo2` `__auth_users_rel` ON [[__auth_users_rel.id]] = [[__auth_users.rel]] WHERE ({:TEST} > 1 OR {:TEST} > 1 OR [[__auth_users_rel.title]] > 1 OR NULL < 1 OR NULL > 0)",
 		},
 		{
 			"@request.* static fields",
@@ -477,6 +477,8 @@ func TestRecordFieldResolverResolveSchemaFields(t *testing.T) {
 		// @request.auth relation join
 		{"@request.auth.rel", false, "[[__auth_users.rel]]"},
 		{"@request.auth.rel.title", false, "[[__auth_users_rel.title]]"},
+		{"@request.auth.rel.missing", false, "NULL"},
+		{"@request.auth.missing_via_rel", false, "NULL"},
 
 		// @collection fieds
 		{"@collect", true, ""},

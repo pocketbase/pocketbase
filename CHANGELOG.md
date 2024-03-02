@@ -1,3 +1,8 @@
+## v0.22.2
+
+- Fixed a small regression introduced with v0.22.0 that was causing some missing unknown fields to always return an error instead of applying the specific `nullifyMisingField` resolver option to the query.
+
+
 ## v0.22.1
 
 - Fixed Admin UI record and collection panels not reinitializing properly on browser back/forward navigation ([#4462](https://github.com/pocketbase/pocketbase/issues/4462)).
