@@ -1,4 +1,4 @@
-## (WIP) v0.22.1
+## v0.22.1
 
 - Fixed Admin UI record and collection panels not reinitializing properly on browser back/forward navigation ([#4462](https://github.com/pocketbase/pocketbase/issues/4462)).
 
