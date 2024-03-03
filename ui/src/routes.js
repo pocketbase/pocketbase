@@ -14,6 +14,7 @@ import PageTokenOptions      from "@/components/settings/PageTokenOptions.svelte
 import PageExportCollections from "@/components/settings/PageExportCollections.svelte";
 import PageImportCollections from "@/components/settings/PageImportCollections.svelte";
 import PageBackups           from "@/components/settings/PageBackups.svelte";
+import PageGraph             from "@/components/graph/PageGraph.svelte";
 
 const baseConditions = [
     async (details) => {
@@ -108,6 +109,12 @@ const routes = {
 
     "/settings/backups": wrap({
         component:  PageBackups,
+        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
+        userData: { showAppSidebar: true },
+    }),
+
+    "/graph": wrap({
+        component:  PageGraph,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),

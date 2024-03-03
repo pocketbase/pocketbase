@@ -115,6 +115,16 @@
                 >
                     <i class="ri-tools-line" />
                 </a>
+                <a
+                    href="/graph"
+                    class="menu-item"
+                    aria-label="Graph"
+                    use:link
+                    use:active={{ path: "/graph/?.*", className: "current-route" }}
+                    use:tooltip={{ text: "Graph", position: "right" }}
+                >
+                    <i class="ri-bubble-chart-fill" />
+                </a>
             </nav>
 
             <figure class="thumb thumb-circle link-hint closable">
