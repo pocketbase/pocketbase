@@ -307,6 +307,7 @@
 
 .page-content {
     position: relative;
+    z-index: 0;
     display: block;
     width: 100%;
     flex-grow: 1;
