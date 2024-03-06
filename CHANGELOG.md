@@ -4,6 +4,8 @@
 
 - Fixed `OnAfterApiError` debug log `nil` error reference ([#4498](https://github.com/pocketbase/pocketbase/issues/4498)).
 
+- Updated Go deps and bumped the min Go version in the GitHub release action to Go 1.22.1 since it comes with [some security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.22.1).
+
 
 ## v0.22.2
 
