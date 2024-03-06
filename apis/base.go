@@ -106,7 +106,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 
 		if hookErr == nil {
 			if err := app.OnAfterApiError().Trigger(event); err != nil {
-				app.Logger().Debug("OnAfterApiError failure", slog.String("error", hookErr.Error()))
+				app.Logger().Debug("OnAfterApiError failure", slog.String("error", err.Error()))
 			}
 		} else {
 			app.Logger().Debug("OnBeforeApiError error (truly rare case, eg. client already disconnected)", slog.String("error", hookErr.Error()))
