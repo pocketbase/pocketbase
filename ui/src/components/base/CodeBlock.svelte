@@ -41,7 +41,6 @@
     .code-wrapper {
         display: block;
         width: 100%;
-        max-height: 100%;
         overflow: auto; /* fallback */
         overflow: overlay;
     }
