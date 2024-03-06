@@ -305,30 +305,33 @@ func (r *runner) processRequestInfoRelationField(dataField *schema.SchemaField) 
 	}
 
 	r.activeCollectionName = dataRelCollection.Name
-	r.activeTableAlias = inflector.Columnify("__data_" + dataRelCollection.Name)
+	r.activeTableAlias = inflector.Columnify("__data_" + dataRelCollection.Name + "_" + dataField.Name)
 
 	// join the data rel collection to the main collection
 	r.resolver.registerJoin(
-		inflector.Columnify(r.activeCollectionName),
+		r.activeCollectionName,
 		r.activeTableAlias,
 		dbx.In(
-			fmt.Sprintf("[[%s.id]]", inflector.Columnify(r.activeTableAlias)),
+			fmt.Sprintf("[[%s.id]]", r.activeTableAlias),
 			list.ToInterfaceSlice(dataRelIds)...,
 		),
 	)
 
-	if options.MaxSelect == nil || *options.MaxSelect != 1 {
+	if options.IsMultiple() {
 		r.withMultiMatch = true
 	}
 
 	// join the data rel collection to the multi-match subquery
-	r.multiMatchActiveTableAlias = inflector.Columnify("__data_mm_" + dataRelCollection.Name)
+	r.multiMatchActiveTableAlias = inflector.Columnify("__data_mm_" + dataRelCollection.Name + "_" + dataField.Name)
 	r.multiMatch.joins = append(
 		r.multiMatch.joins,
 		&join{
-			tableName:  inflector.Columnify(r.activeCollectionName),
+			tableName:  r.activeCollectionName,
 			tableAlias: r.multiMatchActiveTableAlias,
-			on:         dbx.In(r.multiMatchActiveTableAlias+".id", list.ToInterfaceSlice(dataRelIds)...),
+			on: dbx.In(
+				fmt.Sprintf("[[%s.id]]", r.multiMatchActiveTableAlias),
+				list.ToInterfaceSlice(dataRelIds)...,
+			),
 		},
 	)
 
