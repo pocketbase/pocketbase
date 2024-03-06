@@ -1,3 +1,8 @@
+## (WIP) v0.22.4
+
+- Removed conflicting styles causing the detailed codeblock log data preview to not be properly visualized ([#4505](https://github.com/pocketbase/pocketbase/pull/4505)).
+
+
 ## v0.22.3
 
 - Fixed the z-index of the current admin dropdown on Safari ([#4492](https://github.com/pocketbase/pocketbase/issues/4492)).
