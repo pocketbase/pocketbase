@@ -463,7 +463,7 @@ type BackupsConfig struct {
 	// Leave it empty to disable the auto backups functionality.
 	Cron string `form:"cron" json:"cron"`
 
-	// CronMaxKeep is the the max number of cron generated backups to
+	// CronMaxKeep is the max number of cron generated backups to
 	// keep before removing older entries.
 	//
 	// This field works only when the cron config has valid cron expression.
