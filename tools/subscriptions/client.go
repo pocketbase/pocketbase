@@ -37,7 +37,7 @@ type Client interface {
 	// Channel returns the client's communication channel.
 	Channel() chan Message
 
-	// Subscriptions returns a shallow copy of the the client subscriptions matching the prefixes.
+	// Subscriptions returns a shallow copy of the client subscriptions matching the prefixes.
 	// If no prefix is specified, returns all subscriptions.
 	Subscriptions(prefixes ...string) map[string]SubscriptionOptions
 
@@ -123,7 +123,7 @@ func (c *DefaultClient) Channel() chan Message {
 
 // Subscriptions implements the [Client.Subscriptions] interface method.
 //
-// It returns a shallow copy of the the client subscriptions matching the prefixes.
+// It returns a shallow copy of the client subscriptions matching the prefixes.
 // If no prefix is specified, returns all subscriptions.
 func (c *DefaultClient) Subscriptions(prefixes ...string) map[string]SubscriptionOptions {
 	c.mux.RLock()
