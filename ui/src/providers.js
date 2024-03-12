@@ -122,6 +122,11 @@ export default [
         logo:  "livechat.svg",
     },
     {
+        key:   "linkedinAuth",
+        title: "LinkedIn",
+        logo:  "linkedin.svg",
+    },
+    {
         key:   "mailcowAuth",
         title: "mailcow",
         logo:  "mailcow.svg",

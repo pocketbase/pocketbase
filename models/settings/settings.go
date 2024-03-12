@@ -61,6 +61,7 @@ type Settings struct {
 	OIDC3Auth          AuthProviderConfig `form:"oidc3Auth" json:"oidc3Auth"`
 	AppleAuth          AuthProviderConfig `form:"appleAuth" json:"appleAuth"`
 	InstagramAuth      AuthProviderConfig `form:"instagramAuth" json:"instagramAuth"`
+	LinkedInAuth       AuthProviderConfig `form:"linkedinAuth" json:"linkedinAuth"`
 	VKAuth             AuthProviderConfig `form:"vkAuth" json:"vkAuth"`
 	YandexAuth         AuthProviderConfig `form:"yandexAuth" json:"yandexAuth"`
 	PatreonAuth        AuthProviderConfig `form:"patreonAuth" json:"patreonAuth"`
@@ -201,6 +202,9 @@ func New() *Settings {
 		BitbucketAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		LinkedInAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 		PlanningcenterAuth: AuthProviderConfig{
 			Enabled: false,
 		},
@@ -244,6 +248,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.OIDC2Auth),
 		validation.Field(&s.OIDC3Auth),
 		validation.Field(&s.AppleAuth),
+		validation.Field(&s.LinkedInAuth),
 		validation.Field(&s.InstagramAuth),
 		validation.Field(&s.VKAuth),
 		validation.Field(&s.YandexAuth),
@@ -315,6 +320,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.OIDC3Auth.ClientSecret,
 		&clone.AppleAuth.ClientSecret,
 		&clone.InstagramAuth.ClientSecret,
+		&clone.LinkedInAuth.ClientSecret,
 		&clone.VKAuth.ClientSecret,
 		&clone.YandexAuth.ClientSecret,
 		&clone.PatreonAuth.ClientSecret,
@@ -359,6 +365,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameOIDC + "3":     s.OIDC3Auth,
 		auth.NameApple:          s.AppleAuth,
 		auth.NameInstagram:      s.InstagramAuth,
+		auth.NameLinkedIn:       s.LinkedInAuth,
 		auth.NameVK:             s.VKAuth,
 		auth.NameYandex:         s.YandexAuth,
 		auth.NamePatreon:        s.PatreonAuth,

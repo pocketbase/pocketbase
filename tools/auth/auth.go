@@ -156,6 +156,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewMailcowProvider(), nil
 	case NameBitbucket:
 		return NewBitbucketProvider(), nil
+	case NameLinkedIn:
+		return NewLinkedInProvider(), nil
 	case NamePlanningcenter:
 		return NewPlanningcenterProvider(), nil
 	default:
