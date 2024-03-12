@@ -13,7 +13,7 @@ import (
 //
 // The value of each FormData entry must be a string or [*filesystem.File] instance.
 //
-// It is intended to be used together by the JSVM `$http.send` for
+// It is intended to be used together with the JSVM `$http.send` when
 // sending multipart/form-data requests.
 //
 // [FormData]: https://developer.mozilla.org/en-US/docs/Web/API/FormData.
@@ -138,7 +138,9 @@ func (data FormData) toMultipart() (*bytes.Buffer, *multipart.Writer, error) {
 					return nil, nil, err
 				}
 			default:
-				mp.WriteField(k, cast.ToString(v))
+				if err := mp.WriteField(k, cast.ToString(v)); err != nil {
+					return nil, nil, err
+				}
 			}
 		}
 	}

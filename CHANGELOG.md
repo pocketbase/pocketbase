@@ -1,10 +1,10 @@
-## (WIP) v0.22.4
+## v0.22.4
 
-- Removed conflicting styles causing the detailed codeblock log data preview to not be properly visualized ([#4505](https://github.com/pocketbase/pocketbase/pull/4505)).
+- Removed conflicting styles causing the detailed codeblock log data preview to not visualize properly ([#4505](https://github.com/pocketbase/pocketbase/pull/4505)).
 
 - Minor JSVM improvements:
-  - Added `$filesystem.fileFromUrl(url, optSecTimeout)` helper (_similar to the Go `filesystem.NewFileFromUrl(ctx, url)`_).
-  - Implemented the `FormData` interface and added support for sending `multipart/form-data` requests with `$http.send()` when the body is `FormData` ([#4544](https://github.com/pocketbase/pocketbase/discussions/4544)).
+  - Added `$filesystem.fileFromUrl(url, optSecTimeout)` helper.
+  - Implemented the `FormData` interface and added support for sending `multipart/form-data` requests with `$http.send()` ([#4544](https://github.com/pocketbase/pocketbase/discussions/4544)).
 
 
 ## v0.22.3
