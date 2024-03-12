@@ -38,6 +38,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -534,6 +535,16 @@ func filesystemBinds(vm *goja.Runtime) {
 	obj.Set("fileFromPath", filesystem.NewFileFromPath)
 	obj.Set("fileFromBytes", filesystem.NewFileFromBytes)
 	obj.Set("fileFromMultipart", filesystem.NewFileFromMultipart)
+	obj.Set("fileFromUrl", func(url string, secTimeout int) (*filesystem.File, error) {
+		if secTimeout == 0 {
+			secTimeout = 120
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(secTimeout)*time.Second)
+		defer cancel()
+
+		return filesystem.NewFileFromUrl(ctx, url)
+	})
 }
 
 func filepathBinds(vm *goja.Runtime) {
@@ -640,34 +651,61 @@ func httpClientBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$http", obj)
 
+	vm.Set("FormData", func(call goja.ConstructorCall) *goja.Object {
+		instance := FormData{}
+
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+
+		return instanceValue
+	})
+
 	type sendResult struct {
-		StatusCode int                     `json:"statusCode"`
+		Json       any                     `json:"json"`
 		Headers    map[string][]string     `json:"headers"`
 		Cookies    map[string]*http.Cookie `json:"cookies"`
 		Raw        string                  `json:"raw"`
-		Json       any                     `json:"json"`
+		StatusCode int                     `json:"statusCode"`
 	}
 
 	type sendConfig struct {
+		// Deprecated: consider using Body instead
+		Data map[string]any
+
+		Body    any // raw string or FormData
+		Headers map[string]string
 		Method  string
 		Url     string
-		Body    string
-		Headers map[string]string
-		Timeout int            // seconds (default to 120)
-		Data    map[string]any // deprecated, consider using Body instead
+		Timeout int // seconds (default to 120)
 	}
 
 	obj.Set("send", func(params map[string]any) (*sendResult, error) {
-		rawParams, err := json.Marshal(params)
-		if err != nil {
-			return nil, err
-		}
-
 		config := sendConfig{
 			Method: "GET",
 		}
-		if err := json.Unmarshal(rawParams, &config); err != nil {
-			return nil, err
+
+		if v, ok := params["data"]; ok {
+			config.Data = cast.ToStringMap(v)
+		}
+
+		if v, ok := params["body"]; ok {
+			config.Body = v
+		}
+
+		if v, ok := params["headers"]; ok {
+			config.Headers = cast.ToStringMapString(v)
+		}
+
+		if v, ok := params["method"]; ok {
+			config.Method = cast.ToString(v)
+		}
+
+		if v, ok := params["url"]; ok {
+			config.Url = cast.ToString(v)
+		}
+
+		if v, ok := params["timeout"]; ok {
+			config.Timeout = cast.ToInt(v)
 		}
 
 		if config.Timeout <= 0 {
@@ -678,6 +716,7 @@ func httpClientBinds(vm *goja.Runtime) {
 		defer cancel()
 
 		var reqBody io.Reader
+		var contentType string
 
 		// legacy json body data
 		if len(config.Data) != 0 {
@@ -686,10 +725,19 @@ func httpClientBinds(vm *goja.Runtime) {
 				return nil, err
 			}
 			reqBody = bytes.NewReader(encoded)
-		}
+		} else {
+			switch v := config.Body.(type) {
+			case FormData:
+				body, mp, err := v.toMultipart()
+				if err != nil {
+					return nil, err
+				}
 
-		if config.Body != "" {
-			reqBody = strings.NewReader(config.Body)
+				reqBody = body
+				contentType = mp.FormDataContentType()
+			default:
+				reqBody = strings.NewReader(cast.ToString(config.Body))
+			}
 		}
 
 		req, err := http.NewRequestWithContext(ctx, strings.ToUpper(config.Method), config.Url, reqBody)
@@ -701,7 +749,15 @@ func httpClientBinds(vm *goja.Runtime) {
 			req.Header.Add(k, v)
 		}
 
-		// set default content-type header (if missing)
+		// set the explicit content type
+		// (overwriting the user provided header value if any)
+		if contentType != "" {
+			req.Header.Set("content-type", contentType)
+		}
+
+		// @todo consider removing during the refactoring
+		//
+		// fallback to json content-type
 		if req.Header.Get("content-type") == "" {
 			req.Header.Set("content-type", "application/json")
 		}

@@ -2,6 +2,7 @@ package jsvm
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -890,13 +891,23 @@ func TestFilesystemBinds(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/error" {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+
+		fmt.Fprintf(w, "test")
+	}))
+	defer srv.Close()
+
 	vm := goja.New()
 	vm.Set("mh", &multipart.FileHeader{Filename: "test"})
 	vm.Set("testFile", filepath.Join(app.DataDir(), "data.db"))
+	vm.Set("baseUrl", srv.URL)
 	baseBinds(vm)
 	filesystemBinds(vm)
 
-	testBindsCount(vm, "$filesystem", 3, t)
+	testBindsCount(vm, "$filesystem", 4, t)
 
 	// fileFromPath
 	{
@@ -937,6 +948,28 @@ func TestFilesystemBinds(t *testing.T) {
 
 		if file == nil || file.OriginalName != "test" {
 			t.Fatalf("[fileFromMultipart] Expected file with name %q, got %v", file.OriginalName, file)
+		}
+	}
+
+	// fileFromUrl (success)
+	{
+		v, err := vm.RunString(`$filesystem.fileFromUrl(baseUrl + "/test")`)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		file, _ := v.Export().(*filesystem.File)
+
+		if file == nil || file.OriginalName != "test" {
+			t.Fatalf("[fileFromUrl] Expected file with name %q, got %v", file.OriginalName, file)
+		}
+	}
+
+	// fileFromUrl (failure)
+	{
+		_, err := vm.RunString(`$filesystem.fileFromUrl(baseUrl + "/error")`)
+		if err == nil {
+			t.Fatal("Expected url fetch error")
 		}
 	}
 }
@@ -1121,6 +1154,7 @@ func TestHttpClientBindsCount(t *testing.T) {
 	vm := goja.New()
 	httpClientBinds(vm)
 
+	testBindsCount(vm, "this", 2, t) // + FormData
 	testBindsCount(vm, "$http", 1, t)
 }
 
@@ -1223,6 +1257,15 @@ func TestHttpClientBindsSend(t *testing.T) {
 			headers: {"content-type": "text/plain"},
 		})
 
+		// with FormData
+		const formData = new FormData()
+		formData.append("title", "123")
+		const test3 = $http.send({
+			url: testUrl,
+			body: formData,
+			headers: {"content-type": "text/plain"}, // should be ignored
+		})
+
 		const scenarios = [
 			[test0, {
 				"statusCode": "400",
@@ -1244,6 +1287,18 @@ func TestHttpClientBindsSend(t *testing.T) {
 				"json.method":               "GET",
 				"json.headers.content_type": "text/plain",
 			}],
+			[test3, {
+				"statusCode":                "200",
+				"headers.X-Custom.0":        "custom_header",
+				"cookies.sessionId.value":   "123456",
+				"json.method":               "GET",
+				"json.body": [
+					"\r\nContent-Disposition: form-data; name=\"title\"\r\n\r\n123\r\n--",
+				],
+				"json.headers.content_type": [
+					"multipart/form-data; boundary="
+				],
+			}],
 		]
 
 		for (let scenario of scenarios) {
@@ -1251,8 +1306,20 @@ func TestHttpClientBindsSend(t *testing.T) {
 			const expectations = scenario[1];
 
 			for (let key in expectations) {
-				if (getNestedVal(result, key) != expectations[key]) {
-					throw new Error('Expected ' + key + ' ' + expectations[key] + ', got: ' + result.raw);
+				const value = getNestedVal(result, key);
+				const expectation = expectations[key]
+				if (Array.isArray(expectation)) {
+					// check for partial match(es)
+					for (let exp of expectation) {
+						if (!value.includes(exp)) {
+							throw new Error('Expected ' + key + ' to contain ' + exp + ', got: ' + result.raw);
+						}
+					}
+				} else {
+					// check for direct match
+					if (value != expectation) {
+						throw new Error('Expected ' + key + ' ' + expectation + ', got: ' + result.raw);
+					}
 				}
 			}
 		}
