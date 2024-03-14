@@ -96,7 +96,7 @@ declare function routerAdd(
  * ` + "```" + `js
  * routerUse((next) => {
  *     return (c) => {
- *         console.log(c.Path())
+ *         console.log(c.path())
  *         return next(c)
  *     }
  * })
