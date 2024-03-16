@@ -34,7 +34,7 @@ func NewLinkedInProvider() *LinkedIn {
 
 // FetchAuthUser returns an AuthUser instance based on the LinkedIn's user api.
 //
-// API reference: https://developers.kakao.com/docs/latest/en/kakaologin/rest-api#req-user-info-response
+// API reference: https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2
 func (p *LinkedIn) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserData(token)
 	if err != nil {
