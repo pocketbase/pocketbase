@@ -47,16 +47,21 @@ func (p *LinkedIn) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	extracted := struct {
-		Id       string `json:"id"`
-		Username string `json:"username"`
+		Sub           string `json:"sub"`
+		Name          string `json:"name"`
+		Email         string `json:"email"`
+		Picture       string `json:"picture"`
+		EmailVerified bool   `json:"email_verified"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}
 
 	user := &AuthUser{
-		Id:           extracted.Id,
-		Username:     extracted.Username,
+		Id:						extract.Sub,
+		Name:     		extracted.Name,
+		Email:     		extracted.Email,
+		AvatarUrl:    extracted.Picture,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
