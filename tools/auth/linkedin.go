@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
@@ -23,11 +24,11 @@ func NewLinkedInProvider() *LinkedIn {
 	return &LinkedIn{&baseProvider{
 		ctx:         context.Background(),
 		displayName: "LinkedIn",
-		pkce:        true,
-		scopes: []string{"openid", "profile", "email" },
-		authUrl:    "https://www.linkedin.com/oauth/v2/authorization",
-		tokenUrl:   "https://www.linkedin.com/oauth/v2/accessToken",
-		userApiUrl: "https://api.linkedin.com/v2/me",
+		pkce:        false,
+		scopes: 		 []string{"openid", "profile", "email" },
+		authUrl:     "https://www.linkedin.com/oauth/v2/authorization",
+		tokenUrl:    "https://www.linkedin.com/oauth/v2/accessToken",
+		userApiUrl:  "https://api.linkedin.com/v2/userinfo",
 	}}
 }
 
