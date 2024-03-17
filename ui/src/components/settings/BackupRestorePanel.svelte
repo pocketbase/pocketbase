@@ -80,16 +80,16 @@
             <i class="ri-alert-line" />
         </div>
         <div class="content">
-            <p class="txt-bold">
-                Please proceed with caution.
-                <br />
-                Backup restore is still experimental and currently works only on UNIX based systems.
-            </p>
+            <p class="txt-bold">Please proceed with caution and use it only with trusted backup sources.</p>
+            <p>Backup restore is still experimental and currently works only on UNIX based systems.</p>
             <p>
                 The restore operation will attempt to replace your existing <code>pb_data</code> with the one from
                 the backup and will restart the application process.
             </p>
-            <p>Nothing will happen if the backup file is invalid or incompatible.</p>
+            <p>
+                Nothing will happen if the backup file is invalid or incompatible (ex. missing
+                <code>data.db</code> file).
+            </p>
         </div>
     </div>
 

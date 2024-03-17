@@ -9,7 +9,11 @@ import (
 	"strings"
 )
 
-// Extract extracts the zip archive at src to dest.
+// Extract extracts the zip archive at "src" to "dest".
+//
+// Note that only dirs and regular files will be extracted.
+// Symbolic links, named pipes, sockets, or any other irregular files
+// are skipped because they come with too many edge cases and ambiguities.
 func Extract(src, dest string) error {
 	zr, err := zip.OpenReader(src)
 	if err != nil {
@@ -46,11 +50,12 @@ func extractFile(zipFile *zip.File, basePath string) error {
 	}
 	defer r.Close()
 
+	// allow only dirs or regular files
 	if zipFile.FileInfo().IsDir() {
 		if err := os.MkdirAll(path, os.ModePerm); err != nil {
 			return err
 		}
-	} else {
+	} else if zipFile.FileInfo().Mode().IsRegular() {
 		// ensure that the file path directories are created
 		if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
 			return err

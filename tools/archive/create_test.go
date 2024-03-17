@@ -48,7 +48,7 @@ func TestCreateSuccess(t *testing.T) {
 		t.Fatalf("Expected zip with name %q, got %q", zipName, name)
 	}
 
-	expectedSize := int64(405)
+	expectedSize := int64(544)
 	if size := info.Size(); size != expectedSize {
 		t.Fatalf("Expected zip with size %d, got %d", expectedSize, size)
 	}
@@ -114,6 +114,11 @@ func createTestDir(t *testing.T) string {
 			t.Fatal(err)
 		}
 		f.Close()
+	}
+
+	// symbolic link
+	if err := os.Symlink(filepath.Join(dir, "test"), filepath.Join(dir, "test_symlink")); err != nil {
+		t.Fatal(err)
 	}
 
 	return dir

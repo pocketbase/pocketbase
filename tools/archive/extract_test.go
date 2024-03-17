@@ -37,7 +37,7 @@ func TestExtractSuccess(t *testing.T) {
 	defer os.RemoveAll(extractedPath)
 
 	// zip testDir content (with exclude)
-	if err := archive.Create(testDir, zipPath, "a/b/c", "test", "sub2"); err != nil {
+	if err := archive.Create(testDir, zipPath, "a/b/c", "test2", "sub2"); err != nil {
 		t.Fatalf("Failed to create archive: %v", err)
 	}
 
@@ -64,8 +64,9 @@ func TestExtractSuccess(t *testing.T) {
 		t.Fatalf("Failed to read the extracted dir: %v", walkErr)
 	}
 
+	// (note: symbolic links and other regular files should be missing)
 	expectedFiles := []string{
-		filepath.Join(extractedPath, "test2"),
+		filepath.Join(extractedPath, "test"),
 		filepath.Join(extractedPath, "a/test"),
 		filepath.Join(extractedPath, "a/b/sub1"),
 	}
