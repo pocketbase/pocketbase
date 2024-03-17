@@ -8,7 +8,9 @@ import (
 	"io"
 )
 
-// Encrypt encrypts data with key (must be valid 32 char aes key).
+// Encrypt encrypts "data" with the specified "key" (must be valid 32 char AES key).
+//
+// This method uses AES-256-GCM block cypher mode.
 func Encrypt(data []byte, key string) (string, error) {
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -34,7 +36,9 @@ func Encrypt(data []byte, key string) (string, error) {
 	return result, nil
 }
 
-// Decrypt decrypts encrypted text with key (must be valid 32 chars aes key).
+// Decrypt decrypts encrypted text with key (must be valid 32 chars AES key).
+//
+// This method uses AES-256-GCM block cypher mode.
 func Decrypt(cipherText string, key string) ([]byte, error) {
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
