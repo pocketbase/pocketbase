@@ -40,10 +40,13 @@ type TestApp struct {
 //
 // After this call, the app instance shouldn't be used anymore.
 func (t *TestApp) Cleanup() {
-	t.ResetEventCalls()
-	t.ResetBootstrapState()
-	t.TestMailer.Reset()
-	t.OnTerminate().Trigger(&core.TerminateEvent{App: t})
+	t.OnTerminate().Trigger(&core.TerminateEvent{App: t}, func(e *core.TerminateEvent) error {
+		t.TestMailer.Reset()
+		t.ResetEventCalls()
+		t.ResetBootstrapState()
+
+		return nil
+	})
 
 	if t.DataDir() != "" {
 		os.RemoveAll(t.DataDir())

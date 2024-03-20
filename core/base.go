@@ -1279,7 +1279,7 @@ func (app *BaseApp) initLogger() error {
 		for {
 			select {
 			case <-done:
-				handler.WriteAll(ctx)
+				return
 			case <-ticker.C:
 				handler.WriteAll(ctx)
 			}
@@ -1289,8 +1289,13 @@ func (app *BaseApp) initLogger() error {
 	app.logger = slog.New(handler)
 
 	app.OnTerminate().PreAdd(func(e *TerminateEvent) error {
+		// write all remaining logs before ticker.Stop to avoid races with ResetBootstrap user calls
+		handler.WriteAll(context.Background())
+
 		ticker.Stop()
+
 		done <- true
+
 		return nil
 	})
 
