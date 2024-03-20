@@ -27,6 +27,7 @@ type Cron struct {
 	startTimer *time.Timer
 	jobs       map[string]*job
 	interval   time.Duration
+	tickerDone chan bool
 
 	sync.RWMutex
 }
@@ -38,9 +39,10 @@ type Cron struct {
 // You can change the default timezone with Cron.SetTimezone().
 func New() *Cron {
 	return &Cron{
-		interval: 1 * time.Minute,
-		timezone: time.UTC,
-		jobs:     map[string]*job{},
+		interval:   1 * time.Minute,
+		timezone:   time.UTC,
+		jobs:       map[string]*job{},
+		tickerDone: make(chan bool),
 	}
 }
 
@@ -142,6 +144,7 @@ func (c *Cron) Stop() {
 		return // already stopped
 	}
 
+	c.tickerDone <- true
 	c.ticker.Stop()
 	c.ticker = nil
 }
@@ -168,8 +171,13 @@ func (c *Cron) Start() {
 
 		// run after each tick
 		go func() {
-			for t := range c.ticker.C {
-				c.runDue(t)
+			for {
+				select {
+				case <-c.tickerDone:
+					return
+				case t := <-c.ticker.C:
+					c.runDue(t)
+				}
 			}
 		}()
 	})
