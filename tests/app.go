@@ -9,8 +9,12 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/migrations"
+	"github.com/pocketbase/pocketbase/migrations/logs"
 	"github.com/pocketbase/pocketbase/tools/mailer"
+	"github.com/pocketbase/pocketbase/tools/migrate"
 )
 
 // TestApp is a wrapper app instance used for testing.
@@ -39,6 +43,7 @@ func (t *TestApp) Cleanup() {
 	t.ResetEventCalls()
 	t.ResetBootstrapState()
 	t.TestMailer.Reset()
+	t.OnTerminate().Trigger(&core.TerminateEvent{App: t})
 
 	if t.DataDir() != "" {
 		os.RemoveAll(t.DataDir())
@@ -112,6 +117,11 @@ func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 		return nil, err
 	}
 	if _, err := app.LogsDao().DB().NewQuery("Select 1").Execute(); err != nil {
+		return nil, err
+	}
+
+	// apply any missing migrations
+	if err := runMigrations(app); err != nil {
 		return nil, err
 	}
 
@@ -541,6 +551,36 @@ func copyFile(src string, dest string) error {
 
 	if _, err := io.Copy(destFile, srcFile); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// @todo replace with app.RunMigrations on merge with the refactoring.
+func runMigrations(app core.App) error {
+	connections := []struct {
+		db             *dbx.DB
+		migrationsList migrate.MigrationsList
+	}{
+		{
+			db:             app.DB(),
+			migrationsList: migrations.AppMigrations,
+		},
+		{
+			db:             app.LogsDB(),
+			migrationsList: logs.LogsMigrations,
+		},
+	}
+
+	for _, c := range connections {
+		runner, err := migrate.NewRunner(c.db, c.migrationsList)
+		if err != nil {
+			return err
+		}
+
+		if _, err := runner.Up(); err != nil {
+			return err
+		}
 	}
 
 	return nil
