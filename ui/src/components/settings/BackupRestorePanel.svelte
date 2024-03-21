@@ -80,20 +80,25 @@
             <i class="ri-alert-line" />
         </div>
         <div class="content">
-            <p class="txt-bold">Please proceed with caution and use it only with trusted backup sources.</p>
-            <p>Backup restore is still experimental and currently works only on UNIX based systems.</p>
+            <p class="txt-bold">Please proceed with caution and use it only with trusted backups!</p>
+
+            <p>Backup restore is experimental and works only on UNIX based systems.</p>
             <p>
                 The restore operation will attempt to replace your existing <code>pb_data</code> with the one from
                 the backup and will restart the application process.
             </p>
             <p>
-                Nothing will happen if the backup file is invalid or incompatible (ex. missing
+                This means that on success all of your data (including app settings, users, admins, etc.) will
+                be replaced with the ones from the backup.
+            </p>
+            <p>
+                Nothing will happen if the backup is invalid or incompatible (ex. missing
                 <code>data.db</code> file).
             </p>
         </div>
     </div>
 
-    <div class="content m-b-sm">
+    <div class="content m-b-xs">
         Type the backup name
         <div class="label">
             <span class="txt">{name}</span>

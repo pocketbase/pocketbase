@@ -1,4 +1,4 @@
-## (WIP) v0.22.5
+## v0.22.5
 
 - Minor test helpers fixes ([#4600](https://github.com/pocketbase/pocketbase/issues/4600)):
   - Call the `OnTerminate` hook on `TestApp.Cleanup()`.
@@ -8,15 +8,15 @@
 
 - Skip irregular files (symbolic links, sockets, etc.) when restoring a backup zip from the Admin UI or calling `archive.Extract(src, dst)` because they come with too many edge cases and ambiguities.
   <details>
-    <summary><b><i>More contex</i></b></summary>
+    <summary><b><i>More details</i></b></summary>
 
     This was initially reported as security issue (_thanks Harvey Spec_) but in the PocketBase context it is not something that can be exploited without an admin intervention and since the general expectations are that the PocketBase admins can do anything and they are the one who manage their server, this should be treated with the same diligence when using `scp`/`rsync`/`rclone`/etc. with untrusted file sources.
 
-    It is not possible (_or at least I'm not aware how to do that easily_) to perform virus/malicous content scanning on the uploaded backup archive files and some caution is always required when using the Admin UI or running shell commands, hence the backup-restore warning text.
+    It is not possible (_or at least I'm not aware how to do that easily_) to perform virus/malicious content scanning on the uploaded backup archive files and some caution is always required when using the Admin UI or running shell commands, hence the backup-restore warning text.
 
     **Or in other words, if someone sends you a file and tell you to upload it to your server (either as backup zip or manually via scp) obviously you shouldn't do that unless you really trust them.**
 
-    Keep in mind that there is no "sandbox" at the moment for what admins (or the PocketBase process in general) can execute. This is left to the developers to restrict on application or OS level depending on their needs. If you are self-hosting PocketBase you usually don't have to do that, but if you are offering PocketBase as a service and allow strangers to run their own PocketBase instances on your server then you'll need to implement the isolation mechanisms on your own.
+    PocketBase is like any other regular application that you run on your server and there is no builtin "sandbox" for what the PocketBase process can execute. This is left to the developers to restrict on application or OS level depending on their needs. If you are self-hosting PocketBase you usually don't have to do that, but if you are offering PocketBase as a service and allow strangers to run their own PocketBase instances on your server then you'll need to implement the isolation mechanisms on your own.
   </details>
 
 
