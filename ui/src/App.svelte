@@ -117,23 +117,29 @@
                 </a>
             </nav>
 
-            <figure class="thumb thumb-circle link-hint closable">
+            <div
+                tabindex="0"
+                role="button"
+                aria-label="Logged admin menu"
+                class="thumb thumb-circle link-hint closable"
+            >
                 <img
                     src="{import.meta.env.BASE_URL}images/avatars/avatar{$admin?.avatar || 0}.svg"
                     alt="Avatar"
+                    aria-hidden="true"
                 />
                 <Toggler class="dropdown dropdown-nowrap dropdown-upside dropdown-left">
-                    <a href="/settings/admins" class="dropdown-item closable" use:link>
-                        <i class="ri-shield-user-line" />
+                    <a href="/settings/admins" class="dropdown-item closable" role="menuitem" use:link>
+                        <i class="ri-shield-user-line" aria-hidden="true" />
                         <span class="txt">Manage admins</span>
                     </a>
                     <hr />
-                    <button type="button" class="dropdown-item closable" on:click={logout}>
-                        <i class="ri-logout-circle-line" />
+                    <button type="button" class="dropdown-item closable" role="menuitem" on:click={logout}>
+                        <i class="ri-logout-circle-line" aria-hidden="true" />
                         <span class="txt">Logout</span>
                     </button>
                 </Toggler>
-            </figure>
+            </div>
         </aside>
     {/if}
 

@@ -71,29 +71,18 @@
     }
 </script>
 
-<button type="button" class="field-types-btn {classes}" on:click={dispatch}>
-    <i class="ri-add-line" />
+<div tabindex="0" role="button" class="field-types-btn {classes}">
+    <i class="ri-add-line" aria-hidden="true" />
     <div class="txt">New field</div>
     <Toggler class="dropdown field-types-dropdown">
         {#each types as item}
-            <div
-                tabindex="0"
-                class="dropdown-item closable"
-                on:click|stopPropagation={() => {
-                    select(item.value);
-                }}
-                on:keydown|stopPropagation={(e) => {
-                    if (e.code === "Enter" || e.code === "Space") {
-                        select(item.value);
-                    }
-                }}
-            >
-                <i class="icon {item.icon}" />
+            <button type="button" role="menuitem" class="dropdown-item" on:click={() => select(item.value)}>
+                <i class="icon {item.icon}" aria-hidden="true" />
                 <span class="txt">{item.label}</span>
-            </div>
+            </button>
         {/each}
     </Toggler>
-</button>
+</div>
 
 <style lang="scss">
     .field-types-btn.active {

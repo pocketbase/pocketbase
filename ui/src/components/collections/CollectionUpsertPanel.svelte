@@ -263,6 +263,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <OverlayPanel
     bind:this={collectionPanel}
     class="overlay-panel-lg colored-header collection-panel"
@@ -288,23 +289,34 @@
 
         {#if !!collection.id && !collection.system}
             <div class="flex-fill" />
-            <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent flex-gap-0">
-                <i class="ri-more-line" />
+            <div
+                tabindex="0"
+                role="button"
+                aria-label="More collection options"
+                class="btn btn-sm btn-circle btn-transparent flex-gap-0"
+            >
+                <i class="ri-more-line" aria-hidden="true" />
                 <Toggler class="dropdown dropdown-right m-t-5">
-                    <button type="button" class="dropdown-item closable" on:click={() => duplicateConfirm()}>
-                        <i class="ri-file-copy-line" />
+                    <button
+                        type="button"
+                        class="dropdown-item"
+                        role="menuitem"
+                        on:click={() => duplicateConfirm()}
+                    >
+                        <i class="ri-file-copy-line" aria-hidden="true" />
                         <span class="txt">Duplicate</span>
                     </button>
                     <button
                         type="button"
-                        class="dropdown-item txt-danger closable"
+                        class="dropdown-item txt-danger"
+                        role="menuitem"
                         on:click|preventDefault|stopPropagation={() => deleteConfirm()}
                     >
-                        <i class="ri-delete-bin-7-line" />
+                        <i class="ri-delete-bin-7-line" aria-hidden="true" />
                         <span class="txt">Delete</span>
                     </button>
                 </Toggler>
-            </button>
+            </div>
         {/if}
 
         <form
@@ -337,31 +349,37 @@
                 />
 
                 <div class="form-field-addon">
-                    <button
-                        type="button"
+                    <div
+                        tabindex={!collection.id ? 0 : -1}
+                        role={!collection.id ? "button" : ""}
+                        aria-label="View types"
                         class="btn btn-sm p-r-10 p-l-10 {!collection.id ? 'btn-outline' : 'btn-transparent'}"
-                        disabled={!!collection.id}
+                        class:btn-disabled={!!collection.id}
                     >
                         <!-- empty span for alignment -->
-                        <span />
+                        <span aria-hidden="true" />
                         <span class="txt">Type: {collectionTypes[collection.type] || "N/A"}</span>
                         {#if !collection.id}
-                            <i class="ri-arrow-down-s-fill" />
+                            <i class="ri-arrow-down-s-fill" aria-hidden="true" />
                             <Toggler class="dropdown dropdown-right dropdown-nowrap m-t-5">
                                 {#each Object.entries(collectionTypes) as [type, label]}
                                     <button
                                         type="button"
+                                        role="menuitem"
                                         class="dropdown-item closable"
                                         class:selected={type == collection.type}
                                         on:click={() => setCollectionType(type)}
                                     >
-                                        <i class={CommonHelper.getCollectionTypeIcon(type)} />
+                                        <i
+                                            class={CommonHelper.getCollectionTypeIcon(type)}
+                                            aria-hidden="true"
+                                        />
                                         <span class="txt">{label} collection</span>
                                     </button>
                                 {/each}
                             </Toggler>
                         {/if}
-                    </button>
+                    </div>
                 </div>
 
                 {#if collection.system}

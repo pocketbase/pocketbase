@@ -117,13 +117,19 @@
                         bind:keyOfSelected={field.options.mimeTypes}
                     />
                     <div class="help-block">
-                        <button type="button" class="inline-flex flex-gap-0">
+                        <div
+                            tabindex="0"
+                            role="button"
+                            aria-label="More collection options"
+                            class="inline-flex flex-gap-0"
+                        >
                             <span class="txt link-primary">Choose presets</span>
-                            <i class="ri-arrow-drop-down-fill" />
+                            <i class="ri-arrow-drop-down-fill" aria-hidden="true" />
                             <Toggler class="dropdown dropdown-sm dropdown-nowrap dropdown-left">
                                 <button
                                     type="button"
                                     class="dropdown-item closable"
+                                    role="menuitem"
                                     on:click={() => {
                                         field.options.mimeTypes = [
                                             "image/jpeg",
@@ -139,6 +145,7 @@
                                 <button
                                     type="button"
                                     class="dropdown-item closable"
+                                    role="menuitem"
                                     on:click={() => {
                                         field.options.mimeTypes = [
                                             "application/pdf",
@@ -154,6 +161,7 @@
                                 <button
                                     type="button"
                                     class="dropdown-item closable"
+                                    role="menuitem"
                                     on:click={() => {
                                         field.options.mimeTypes = [
                                             "video/mp4",
@@ -168,6 +176,7 @@
                                 <button
                                     type="button"
                                     class="dropdown-item closable"
+                                    role="menuitem"
                                     on:click={() => {
                                         field.options.mimeTypes = [
                                             "application/zip",
@@ -179,7 +188,7 @@
                                     <span class="txt">Archives (zip, 7zip, rar)</span>
                                 </button>
                             </Toggler>
-                        </button>
+                        </div>
                     </div>
                 </Field>
             </div>
@@ -205,7 +214,7 @@
                         <span class="txt">Use comma as separator.</span>
                         <button type="button" class="inline-flex flex-gap-0">
                             <span class="txt link-primary">Supported formats</span>
-                            <i class="ri-arrow-drop-down-fill" />
+                            <i class="ri-arrow-drop-down-fill" aria-hidden="true" />
                             <Toggler class="dropdown dropdown-sm dropdown-center dropdown-nowrap p-r-10">
                                 <ul class="m-0">
                                     <li>

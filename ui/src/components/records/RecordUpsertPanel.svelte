@@ -492,17 +492,19 @@
 
             {#if !isNew}
                 <div class="flex-fill" />
-                <button
-                    type="button"
-                    aria-label="More"
+                <div
+                    tabindex="0"
+                    role="button"
+                    aria-label="More record options"
                     class="btn btn-sm btn-circle btn-transparent flex-gap-0"
                 >
-                    <i class="ri-more-line" />
+                    <i class="ri-more-line" aria-hidden="true" />
                     <Toggler class="dropdown dropdown-right dropdown-nowrap">
                         {#if isAuthCollection && !original.verified && original.email}
                             <button
                                 type="button"
                                 class="dropdown-item closable"
+                                role="menuitem"
                                 on:click={() => sendVerificationEmail()}
                             >
                                 <i class="ri-mail-check-line" />
@@ -513,6 +515,7 @@
                             <button
                                 type="button"
                                 class="dropdown-item closable"
+                                role="menuitem"
                                 on:click={() => sendPasswordResetEmail()}
                             >
                                 <i class="ri-mail-lock-line" />
@@ -522,6 +525,7 @@
                         <button
                             type="button"
                             class="dropdown-item closable"
+                            role="menuitem"
                             on:click={() => duplicateConfirm()}
                         >
                             <i class="ri-file-copy-line" />
@@ -530,13 +534,14 @@
                         <button
                             type="button"
                             class="dropdown-item txt-danger closable"
+                            role="menuitem"
                             on:click|preventDefault|stopPropagation={() => deleteConfirm()}
                         >
                             <i class="ri-delete-bin-7-line" />
                             <span class="txt">Delete</span>
                         </button>
                     </Toggler>
-                </button>
+                </div>
             {/if}
         {/if}
 

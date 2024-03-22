@@ -282,6 +282,7 @@
                     <div
                         tabindex="0"
                         class="dropdown-item option"
+                        role="menuitem"
                         class:closable
                         class:selected={isSelected(item)}
                         on:click={(e) => handleOptionSelect(e, item)}

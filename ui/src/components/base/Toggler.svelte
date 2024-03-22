@@ -14,6 +14,7 @@
     let containerChild;
     let activeTrigger;
     let scrollTimeoutId;
+    let hideTimeoutId;
     let isOutsideMouseDown = false;
 
     const dispatch = createEventDispatcher();
@@ -30,16 +31,41 @@
         dispatch("hide");
     }
 
+    export function hideWithDelay(delay = 0) {
+        if (!active) {
+            return;
+        }
+
+        clearTimeout(hideTimeoutId);
+        hideTimeoutId = setTimeout(hide, delay);
+    }
+
     export function hide() {
+        if (!active) {
+            return; // already hidden
+        }
+
         active = false;
         isOutsideMouseDown = false;
         clearTimeout(scrollTimeoutId);
+        clearTimeout(hideTimeoutId);
     }
 
     export function show() {
+        clearTimeout(hideTimeoutId);
+        clearTimeout(scrollTimeoutId);
+
+        if (active) {
+            return; // already active
+        }
+
         active = true;
 
-        clearTimeout(scrollTimeoutId);
+        // focus toggler container not nested into the trigger
+        if (!activeTrigger?.contains(container)) {
+            container?.focus();
+        }
+
         scrollTimeoutId = setTimeout(() => {
             if (!autoScroll) {
                 return;
@@ -68,29 +94,72 @@
         return (
             !container ||
             elem.classList.contains(closableClass) ||
-            // is the trigger itself (or a direct child)
-            (activeTrigger?.contains(elem) && !container.contains(elem)) ||
-            // is closable toggler child
             (container.contains(elem) && elem.closest && elem.closest("." + closableClass))
         );
     }
 
-    function handleClickToggle(e) {
-        if (!active || isClosable(e.target)) {
+    function bindTrigger(newTrigger) {
+        cleanup();
+
+        container?.addEventListener("click", handleContainerClick);
+        container?.addEventListener("keydown", handleContainerKeydown);
+
+        activeTrigger = newTrigger || container?.parentNode;
+        activeTrigger?.addEventListener("click", handleTriggerClick);
+        activeTrigger?.addEventListener("keydown", handleTriggerKeydown);
+    }
+
+    function cleanup() {
+        clearTimeout(scrollTimeoutId);
+        clearTimeout(hideTimeoutId);
+
+        container?.removeEventListener("click", handleContainerClick);
+        container?.removeEventListener("keydown", handleContainerKeydown);
+
+        activeTrigger?.removeEventListener("click", handleTriggerClick);
+        activeTrigger?.removeEventListener("keydown", handleTriggerKeydown);
+    }
+
+    // toggler container handlers
+    // ---------------------------------------------------------------
+    function handleContainerClick(e) {
+        e.stopPropagation(); // prevents firing the trigger click event in case it is nested
+
+        if (isClosable(e.target)) {
+            hide();
+        }
+    }
+
+    function handleContainerKeydown(e) {
+        if (e.code === "Enter" || e.code === "Space") {
+            e.stopPropagation(); // prevents firing the trigger keydown event in case it is nested
+
+            if (isClosable(e.target)) {
+                // hide with a short delay since the button on:click events
+                // doesn't fire if the element is not visible
+                hideWithDelay(150);
+            }
+        }
+    }
+
+    // trigger handlers
+    // ---------------------------------------------------------------
+    function handleTriggerClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggle();
+    }
+
+    function handleTriggerKeydown(e) {
+        if (e.code === "Enter" || e.code === "Space") {
             e.preventDefault();
             e.stopPropagation();
-
             toggle();
         }
     }
 
-    function handleKeydownToggle(e) {
-        if (
-            (e.code === "Enter" || e.code === "Space") && // enter or spacebar
-            (!active || isClosable(e.target))
-        ) {
-            e.preventDefault();
-            e.stopPropagation();
+    function handleFocusChange(e) {
+        if (active && !activeTrigger?.contains(e.target) && !container?.contains(e.target)) {
             toggle();
         }
     }
@@ -103,11 +172,11 @@
     }
 
     function handleOutsideMousedown(e) {
-        if (active && !container?.contains(e.target)) {
-            isOutsideMouseDown = true;
-        } else if (isOutsideMouseDown) {
-            isOutsideMouseDown = false;
+        if (!active) {
+            return;
         }
+
+        isOutsideMouseDown = !container?.contains(e.target);
     }
 
     function handleOutsideClick(e) {
@@ -122,29 +191,6 @@
         }
     }
 
-    function handleFocusChange(e) {
-        handleOutsideMousedown(e);
-        handleOutsideClick(e);
-    }
-
-    function bindTrigger(newTrigger) {
-        cleanup();
-
-        container?.addEventListener("click", handleClickToggle);
-
-        activeTrigger = newTrigger || container?.parentNode;
-        activeTrigger?.addEventListener("click", handleClickToggle);
-        activeTrigger?.addEventListener("keydown", handleKeydownToggle);
-    }
-
-    function cleanup() {
-        clearTimeout(scrollTimeoutId);
-
-        container?.removeEventListener("click", handleClickToggle);
-        activeTrigger?.removeEventListener("click", handleClickToggle);
-        activeTrigger?.removeEventListener("keydown", handleKeydownToggle);
-    }
-
     onMount(() => {
         bindTrigger();
 
@@ -153,20 +199,15 @@
 </script>
 
 <svelte:window
-    on:mousedown={handleOutsideMousedown}
     on:click={handleOutsideClick}
+    on:mousedown={handleOutsideMousedown}
     on:keydown={handleEscPress}
     on:focusin={handleFocusChange}
 />
 
-<div bind:this={container} class="toggler-container" tabindex="-1">
+<div bind:this={container} class="toggler-container" tabindex="-1" role="menu">
     {#if active}
-        <div
-            bind:this={containerChild}
-            class={classes}
-            class:active
-            transition:fly={{ duration: 150, y: 3 }}
-        >
+        <div bind:this={containerChild} class={classes} class:active transition:fly={{ duration: 150, y: 3 }}>
             <slot />
         </div>
     {/if}

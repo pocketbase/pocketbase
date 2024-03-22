@@ -230,17 +230,27 @@
 
     <svelte:fragment slot="footer">
         {#if !isNew}
-            <button type="button" aria-label="More" class="btn btn-sm btn-circle btn-transparent">
+            <div
+                tabindex="0"
+                role="button"
+                aria-label="More admin options"
+                class="btn btn-sm btn-circle btn-transparent"
+            >
                 <!-- empty span for alignment -->
-                <span />
-                <i class="ri-more-line" />
+                <span aria-hidden="true" />
+                <i class="ri-more-line" aria-hidden="true" />
                 <Toggler class="dropdown dropdown-upside dropdown-left dropdown-nowrap">
-                    <button type="button" class="dropdown-item txt-danger" on:click={() => deleteConfirm()}>
-                        <i class="ri-delete-bin-7-line" />
+                    <button
+                        type="button"
+                        class="dropdown-item txt-danger"
+                        role="menuitem"
+                        on:click={() => deleteConfirm()}
+                    >
+                        <i class="ri-delete-bin-7-line" aria-hidden="true" />
                         <span class="txt">Delete</span>
                     </button>
                 </Toggler>
-            </button>
+            </div>
             <div class="flex-fill" />
         {/if}
 

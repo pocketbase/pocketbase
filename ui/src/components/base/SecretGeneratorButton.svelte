@@ -36,10 +36,10 @@
     tabindex="-1"
     type="button"
     aria-label="Generate"
-    use:tooltip={togglerActive ? "" : "Generate"}
     class="btn btn-circle {classes}"
+    use:tooltip={togglerActive ? "" : "Generate"}
 >
-    <i class="ri-sparkling-line" />
+    <i class="ri-sparkling-line" aria-hidden="true" />
     <Toggler
         class="dropdown dropdown-upside dropdown-center dropdown-nowrap"
         bind:active={togglerActive}
@@ -49,6 +49,7 @@
             <span bind:this={secretElem} class="secret">{secret}</span>
             <CopyIcon value={secret} />
             <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
             <i
                 class="ri-refresh-line txt-sm link-hint"
                 use:tooltip={"Refresh"}

@@ -1,3 +1,8 @@
+## (WIP) v0.22.6
+
+- Fixed the keyboard-accebility of the Admin UI dropdowns ([#4607](https://github.com/pocketbase/pocketbase/issues/4607)).
+
+
 ## v0.22.5
 
 - Minor test helpers fixes ([#4600](https://github.com/pocketbase/pocketbase/issues/4600)):

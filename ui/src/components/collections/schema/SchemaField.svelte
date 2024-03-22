@@ -244,22 +244,28 @@
                 {#if !field.toDelete}
                     <div class="m-l-auto txt-right">
                         <div class="inline-flex flex-gap-sm flex-nowrap">
-                            <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-                            <div tabindex="0" aria-label="More" class="btn btn-circle btn-sm btn-transparent">
-                                <i class="ri-more-line" />
+                            <div
+                                tabindex="0"
+                                role="button"
+                                aria-label="More"
+                                class="btn btn-circle btn-sm btn-transparent"
+                            >
+                                <i class="ri-more-line" aria-hidden="true" />
                                 <Toggler
                                     class="dropdown dropdown-sm dropdown-upside dropdown-right dropdown-nowrap no-min-width"
                                 >
                                     <button
                                         type="button"
-                                        class="dropdown-item txt-right"
+                                        class="dropdown-item"
+                                        role="menuitem"
                                         on:click|preventDefault={duplicate}
                                     >
                                         <span class="txt">Duplicate</span>
                                     </button>
                                     <button
                                         type="button"
-                                        class="dropdown-item txt-right"
+                                        class="dropdown-item"
+                                        role="menuitem"
                                         on:click|preventDefault={remove}
                                     >
                                         <span class="txt">Remove</span>

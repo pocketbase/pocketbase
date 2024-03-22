@@ -35,8 +35,9 @@
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <i
+    tabindex="-1"
+    role="button"
     class={copyTimeout ? successClasses : idleClasses}
     aria-label={"Copy to clipboard"}
     use:tooltipAction={!copyTimeout ? tooltip : undefined}
