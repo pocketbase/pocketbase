@@ -1,6 +1,8 @@
-## (WIP) v0.22.6
+## v0.22.6
 
-- Fixed the keyboard-accebility of the Admin UI dropdowns ([#4607](https://github.com/pocketbase/pocketbase/issues/4607)).
+- Admin UI accessibility improvements:
+  - Fixed the dropdowns tab/enter/space keyboard navigation ([#4607](https://github.com/pocketbase/pocketbase/issues/4607)).
+  - Added `role`, `aria-label`, `aria-hidden` attributes to some of the elements in attempt to better assist screen readers.
 
 
 ## v0.22.5

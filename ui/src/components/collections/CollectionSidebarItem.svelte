@@ -27,13 +27,14 @@
     class:active={$activeCollection?.id === collection.id}
     use:link
 >
-    <i class={CommonHelper.getCollectionTypeIcon(collection.type)} />
+    <i class={CommonHelper.getCollectionTypeIcon(collection.type)} aria-hidden="true" />
     <span class="txt m-r-auto">{collection.name}</span>
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <span
         class="btn btn-xs btn-circle btn-hint btn-transparent pin-collection"
         aria-label={"Pin collection"}
+        aria-hidden="true"
         use:tooltip={{ position: "right", text: (isPinned ? "Unpin" : "Pin") + " collection" }}
         on:click|preventDefault|stopPropagation={() => toggleCollectionPin(collection)}
     >
