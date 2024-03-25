@@ -72,6 +72,34 @@
     accent-color: var(--primaryColor);
 }
 
+@media (prefers-color-scheme: dark) {
+    :root {
+        --txtPrimaryColor: #fff;
+
+        --txtHintColor: #666f75;
+        --txtDisabledColor: #a0a6ac;
+
+        --primaryColor: rgb(46, 46, 59);
+
+        --bodyColor: #081022;
+        --baseColor: var(--bodyColor);
+
+        --baseAlt1Color: #0b1732;
+        --baseAlt2Color: #17284e;
+        --baseAlt3Color: #253963;
+        --baseAlt4Color: #3e537f;
+
+        --infoColor: #3d6ea6;
+        --infoAltColor: #99a8b8;
+        --successColor: #227257;
+        --successAltColor: #8fac9f;
+        --dangerColor: #a93349;
+        --dangerAltColor: #af8f95;
+        --warningColor: #d37d43;
+        --warningAltColor: #c9a892;
+    }
+}
+
 
 // Maps
 // ----
