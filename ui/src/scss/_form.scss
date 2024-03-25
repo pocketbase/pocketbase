@@ -113,8 +113,8 @@ button {
 
     // secondary/bordered styles
     &.btn-outline {
-        border: 2px solid currentColor;
-        background: #fff;
+        border: 2px solid var(--baseAlt4Color);
+        background: var(--bodyColor);
     }
 
     @mixin btnOpacity($base: 1, $hover: 1, $active: 1) {
