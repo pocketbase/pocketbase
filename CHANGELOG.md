@@ -1,3 +1,8 @@
+## (WIP) v0.22.7
+
+- Minor Admin UI improvements (updated GitLab logo, npm depdencies, etc.)
+
+
 ## v0.22.6
 
 - Admin UI accessibility improvements:
