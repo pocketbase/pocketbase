@@ -1,9 +1,9 @@
 ## v0.22.7
 
 - Replaced the default `s3blob` driver with a trimmed vendored version to reduce the binary size with ~10MB.
-  _It can be further reduced with another ~10MB once we replace entirely the `aws-sdk-go-v2` dependency but I stumbled on some edge cases related to the header signing and for now is on hold._
+  _It can be further reduced with another ~10MB once we replace entirely the `aws-sdk-go-v2` dependency but I stumbled on some edge cases related to the headers signing and for now is on hold._
 
-- Other minor improvements (updated GitLab OAuth2 logo, updated npm depdencies, normalized error messages, etc.)
+- Other minor improvements (updated GitLab OAuth2 provider logo [#4650](https://github.com/pocketbase/pocketbase/pull/4650), normalized error messages, updated npm dependencies, etc.)
 
 
 ## v0.22.6
