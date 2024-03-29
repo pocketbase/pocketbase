@@ -24,7 +24,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/fileblob"
-	"gocloud.dev/blob/s3blob"
 )
 
 var gcpIgnoreHeaders = []string{"Accept-Encoding"}
@@ -78,7 +77,7 @@ func NewS3(
 		}
 	})
 
-	bucket, err := s3blob.OpenBucketV2(ctx, client, bucketName, nil)
+	bucket, err := OpenBucketV2(ctx, client, bucketName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +280,7 @@ func (s *System) DeletePrefix(prefix string) []error {
 	failed := []error{}
 
 	if prefix == "" {
-		failed = append(failed, errors.New("Prefix mustn't be empty."))
+		failed = append(failed, errors.New("prefix mustn't be empty"))
 		return failed
 	}
 
@@ -422,7 +421,7 @@ var ThumbSizeRegex = regexp.MustCompile(`^(\d+)x(\d+)(t|b|f)?$`)
 func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) error {
 	sizeParts := ThumbSizeRegex.FindStringSubmatch(thumbSize)
 	if len(sizeParts) != 4 {
-		return errors.New("Thumb size must be in WxH, WxHt, WxHb or WxHf format.")
+		return errors.New("thumb size must be in WxH, WxHt, WxHb or WxHf format")
 	}
 
 	width, _ := strconv.Atoi(sizeParts[1])
@@ -430,7 +429,7 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 	resizeType := sizeParts[3]
 
 	if width == 0 && height == 0 {
-		return errors.New("Thumb width and height cannot be zero at the same time.")
+		return errors.New("thumb width and height cannot be zero at the same time")
 	}
 
 	// fetch the original

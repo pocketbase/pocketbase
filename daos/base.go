@@ -119,9 +119,9 @@ func (dao *Dao) FindById(m models.Model, id string) error {
 }
 
 type afterCallGroup struct {
-	Action   string
-	EventDao *Dao
 	Model    models.Model
+	EventDao *Dao
+	Action   string
 }
 
 // RunInTransaction wraps fn into a transaction.
@@ -169,19 +169,19 @@ func (dao *Dao) RunInTransaction(fn func(txDao *Dao) error) error {
 
 			if dao.AfterCreateFunc != nil {
 				txDao.AfterCreateFunc = func(eventDao *Dao, m models.Model) error {
-					afterCalls = append(afterCalls, afterCallGroup{"create", eventDao, m})
+					afterCalls = append(afterCalls, afterCallGroup{m, eventDao, "create"})
 					return nil
 				}
 			}
 			if dao.AfterUpdateFunc != nil {
 				txDao.AfterUpdateFunc = func(eventDao *Dao, m models.Model) error {
-					afterCalls = append(afterCalls, afterCallGroup{"update", eventDao, m})
+					afterCalls = append(afterCalls, afterCallGroup{m, eventDao, "update"})
 					return nil
 				}
 			}
 			if dao.AfterDeleteFunc != nil {
 				txDao.AfterDeleteFunc = func(eventDao *Dao, m models.Model) error {
-					afterCalls = append(afterCalls, afterCallGroup{"delete", eventDao, m})
+					afterCalls = append(afterCalls, afterCallGroup{m, eventDao, "delete"})
 					return nil
 				}
 			}

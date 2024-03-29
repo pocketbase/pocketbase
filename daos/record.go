@@ -40,14 +40,14 @@ func (dao *Dao) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuery {
 		collection, collectionErr = dao.FindCollectionByNameOrId(c)
 		if collection != nil {
 			tableName = collection.Name
-		} else {
-			// update with some fake table name for easier debugging
-			tableName = "@@__missing_" + c
 		}
 	default:
-		// update with some fake table name for easier debugging
-		tableName = "@@__invalidCollectionModelOrIdentifier"
 		collectionErr = errors.New("unsupported collection identifier, must be collection model, id or name")
+	}
+
+	// update with some fake table name for easier debugging
+	if tableName == "" {
+		tableName = "@@__invalidCollectionModelOrIdentifier"
 	}
 
 	selectCols := fmt.Sprintf("%s.*", dao.DB().QuoteSimpleColumnName(tableName))
@@ -430,7 +430,7 @@ func (dao *Dao) FindAuthRecordByToken(token string, baseTokenKey string) (*model
 	}
 
 	if !record.Collection().IsAuth() {
-		return nil, errors.New("The token is not associated to an auth collection record.")
+		return nil, errors.New("the token is not associated to an auth collection record")
 	}
 
 	verificationKey := record.TokenKey() + baseTokenKey

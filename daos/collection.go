@@ -121,7 +121,7 @@ func (dao *Dao) FindCollectionReferences(collection *models.Collection, excludeI
 // - is referenced as part of a relation field in another collection
 func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 	if collection.System {
-		return fmt.Errorf("System collection %q cannot be deleted.", collection.Name)
+		return fmt.Errorf("system collection %q cannot be deleted", collection.Name)
 	}
 
 	// ensure that there aren't any existing references.
@@ -135,7 +135,7 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 		for ref := range result {
 			names = append(names, ref.Name)
 		}
-		return fmt.Errorf("The collection %q has external relation field references (%s).", collection.Name, strings.Join(names, ", "))
+		return fmt.Errorf("the collection %q has external relation field references (%s)", collection.Name, strings.Join(names, ", "))
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
@@ -152,7 +152,7 @@ func (dao *Dao) DeleteCollection(collection *models.Collection) error {
 
 		// trigger views resave to check for dependencies
 		if err := txDao.resaveViewsWithChangedSchema(collection.Id); err != nil {
-			return fmt.Errorf("The collection has a view dependency - %w", err)
+			return fmt.Errorf("the collection has a view dependency - %w", err)
 		}
 
 		return txDao.Delete(collection)
@@ -227,7 +227,7 @@ func (dao *Dao) ImportCollections(
 	afterSync func(txDao *Dao, mappedImported, mappedExisting map[string]*models.Collection) error,
 ) error {
 	if len(importedCollections) == 0 {
-		return errors.New("No collections to import")
+		return errors.New("no collections to import")
 	}
 
 	return dao.RunInTransaction(func(txDao *Dao) error {
@@ -285,7 +285,7 @@ func (dao *Dao) ImportCollections(
 				}
 
 				if existing.System {
-					return fmt.Errorf("System collection %q cannot be deleted.", existing.Name)
+					return fmt.Errorf("system collection %q cannot be deleted", existing.Name)
 				}
 
 				// delete the related records table or view

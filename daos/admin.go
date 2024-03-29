@@ -59,7 +59,7 @@ func (dao *Dao) FindAdminByToken(token string, baseTokenKey string) (*models.Adm
 	// check required claims
 	id, _ := unverifiedClaims["id"].(string)
 	if id == "" {
-		return nil, errors.New("Missing or invalid token claims.")
+		return nil, errors.New("missing or invalid token claims")
 	}
 
 	admin, err := dao.FindAdminById(id)
@@ -116,7 +116,7 @@ func (dao *Dao) DeleteAdmin(admin *models.Admin) error {
 	}
 
 	if total == 1 {
-		return errors.New("You cannot delete the only existing admin.")
+		return errors.New("you cannot delete the only existing admin")
 	}
 
 	return dao.Delete(admin)
