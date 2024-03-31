@@ -162,3 +162,9 @@
         />
     </div>
 {/if}
+
+<style>
+	:global(#svelte-inspector-toggle) {
+		z-index: 9999 !important;
+	}
+</style>
