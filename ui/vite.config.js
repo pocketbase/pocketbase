@@ -15,6 +15,7 @@ export default defineConfig({
     plugins: [
         svelte({
             preprocess: [vitePreprocess()],
+            inspector: { showToggleButton: 'always', toggleButtonPos: 'bottom-right' },
             onwarn: (warning, handler) => {
                 if (warning.code.startsWith('a11y-')) {
                     return; // silence a11y warnings
