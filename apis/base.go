@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"mime"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -158,13 +160,34 @@ func StaticDirectoryHandler(fileSystem fs.FS, indexFallback bool) echo.HandlerFu
 		// fs.FS.Open() already assumes that file names are relative to FS root path and considers name with prefix `/` as invalid
 		name := filepath.ToSlash(filepath.Clean(strings.TrimPrefix(p, "/")))
 
-		fileErr := c.FileFS(name, fileSystem)
-
-		if fileErr != nil && indexFallback && errors.Is(fileErr, echo.ErrNotFound) {
-			return c.FileFS("index.html", fileSystem)
+		f, err := fileSystem.Open(name)
+		if err != nil && indexFallback && errors.Is(err, os.ErrNotExist) {
+			f, err = fileSystem.Open("index.html")
 		}
 
-		return fileErr
+		if err != nil {
+			return err // Or set a specific error code like c.NoContent(404)
+		}
+		defer func(f fs.File) {
+			err := f.Close()
+			if err != nil {
+				_ = fmt.Errorf("failed to close file: %w", err)
+			}
+		}(f)
+
+		fi, err := f.Stat()
+		if err != nil {
+			return err
+		}
+
+		// Set Content-Type
+		c.Response().Header().Set(echo.HeaderContentType, mime.TypeByExtension(filepath.Ext(name)))
+
+		// Add caching headers (adjust as needed)
+		c.Response().Header().Set(echo.HeaderLastModified, fi.ModTime().UTC().Format(http.TimeFormat))
+
+		http.ServeContent(c.Response(), c.Request(), name, fi.ModTime(), f.(*os.File))
+		return nil
 	}
 }
 
