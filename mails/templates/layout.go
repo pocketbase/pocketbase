@@ -53,8 +53,7 @@ const Layout = `
         .btn {
             display: inline-block;
             vertical-align: top;
-            border: 0;
-            outline: 1px solid #e5e5e5;
+            border: 1px solid #e5e5e5;
             cursor: pointer;
             color: #fff !important;
             background: #16161a !important;
