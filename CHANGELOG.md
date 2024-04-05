@@ -1,4 +1,4 @@
-## (WIP) v0.22.8
+## v0.22.8
 
 - Fixed '~' auto wildcard wrapping when the param has escaped `%` character ([#4704](https://github.com/pocketbase/pocketbase/discussions/4704)).
 
