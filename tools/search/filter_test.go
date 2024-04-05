@@ -238,3 +238,68 @@ func TestFilterDataBuildExprWithParams(t *testing.T) {
 		t.Fatalf("Expected query \n%s, \ngot \n%s", expectedQuery, calledQueries[0])
 	}
 }
+
+func TestLikeParamsWrapping(t *testing.T) {
+	// create a dummy db
+	sqlDB, err := sql.Open("sqlite", "file::memory:?cache=shared")
+	if err != nil {
+		t.Fatal(err)
+	}
+	db := dbx.NewFromDB(sqlDB, "sqlite")
+
+	calledQueries := []string{}
+	db.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		calledQueries = append(calledQueries, sql)
+	}
+	db.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+		calledQueries = append(calledQueries, sql)
+	}
+
+	resolver := search.NewSimpleFieldResolver(`^test\w+$`)
+
+	filter := search.FilterData(`
+		test1 ~ {:p1} ||
+		test2 ~ {:p2} ||
+		test3 ~ {:p3} ||
+		test4 ~ {:p4} ||
+		test5 ~ {:p5} ||
+		test6 ~ {:p6} ||
+		test7 ~ {:p7} ||
+		test8 ~ {:p8} ||
+		test9 ~ {:p9} ||
+		test10 ~ {:p10} ||
+		test11 ~ {:p11} ||
+		test12 ~ {:p12}
+	`)
+
+	replacements := []dbx.Params{
+		{"p1": `abc`},
+		{"p2": `ab%c`},
+		{"p3": `ab\%c`},
+		{"p4": `%ab\%c`},
+		{"p5": `ab\\%c`},
+		{"p6": `ab\\\%c`},
+		{"p7": `ab_c`},
+		{"p8": `ab\_c`},
+		{"p9": `%ab_c`},
+		{"p10": `ab\c`},
+		{"p11": `_ab\c_`},
+		{"p12": `ab\c%`},
+	}
+
+	expr, err := filter.BuildExpr(resolver, replacements...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	db.Select().Where(expr).Build().Execute()
+
+	if len(calledQueries) != 1 {
+		t.Fatalf("Expected 1 query, got %d", len(calledQueries))
+	}
+
+	expectedQuery := `SELECT * WHERE ([[test1]] LIKE '%abc%' ESCAPE '\' OR [[test2]] LIKE 'ab%c' ESCAPE '\' OR [[test3]] LIKE 'ab\\%c' ESCAPE '\' OR [[test4]] LIKE '%ab\\%c' ESCAPE '\' OR [[test5]] LIKE 'ab\\\\%c' ESCAPE '\' OR [[test6]] LIKE 'ab\\\\\\%c' ESCAPE '\' OR [[test7]] LIKE '%ab\_c%' ESCAPE '\' OR [[test8]] LIKE '%ab\\\_c%' ESCAPE '\' OR [[test9]] LIKE '%ab_c' ESCAPE '\' OR [[test10]] LIKE '%ab\\c%' ESCAPE '\' OR [[test11]] LIKE '%\_ab\\c\_%' ESCAPE '\' OR [[test12]] LIKE 'ab\\c%' ESCAPE '\')`
+	if expectedQuery != calledQueries[0] {
+		t.Fatalf("Expected query \n%s, \ngot \n%s", expectedQuery, calledQueries[0])
+	}
+}

@@ -1,3 +1,8 @@
+## (WIP) v0.22.8
+
+- Fixed '~' auto wildcard wrapping when the param has escaped `%` character ([#4704](https://github.com/pocketbase/pocketbase/discussions/4704)).
+
+
 ## v0.22.7
 
 - Replaced the default `s3blob` driver with a trimmed vendored version to reduce the binary size with ~10MB.

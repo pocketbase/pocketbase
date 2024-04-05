@@ -432,22 +432,78 @@ func mergeParams(params ...dbx.Params) dbx.Params {
 }
 
 // wrapLikeParams wraps each provided param value string with `%`
-// if the string doesn't contains the `%` char (including its escape sequence).
+// if the param doesn't contain an explicit wildcard (`%`) character already.
 func wrapLikeParams(params dbx.Params) dbx.Params {
 	result := dbx.Params{}
 
 	for k, v := range params {
 		vStr := cast.ToString(v)
-		if !strings.Contains(vStr, "%") {
-			for i := 0; i < len(dbx.DefaultLikeEscape); i += 2 {
-				vStr = strings.ReplaceAll(vStr, dbx.DefaultLikeEscape[i], dbx.DefaultLikeEscape[i+1])
-			}
+		if !containsUnescapedChar(vStr, '%') {
+			// note: this is done to minimize the breaking changes and to preserve the original autoescape behavior
+			vStr = escapeUnescapedChars(vStr, '\\', '%', '_')
 			vStr = "%" + vStr + "%"
 		}
 		result[k] = vStr
 	}
 
 	return result
+}
+
+func escapeUnescapedChars(str string, escapeChars ...rune) string {
+	rs := []rune(str)
+	total := len(rs)
+	result := make([]rune, 0, total)
+
+	var match bool
+
+	for i := total - 1; i >= 0; i-- {
+		if match {
+			// check if already escaped
+			if rs[i] != '\\' {
+				result = append(result, '\\')
+			}
+			match = false
+		} else {
+			for _, ec := range escapeChars {
+				if rs[i] == ec {
+					match = true
+					break
+				}
+			}
+		}
+
+		result = append(result, rs[i])
+
+		// in case the matching char is at the beginning
+		if i == 0 && match {
+			result = append(result, '\\')
+		}
+	}
+
+	// reverse
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
+	}
+
+	return string(result)
+}
+
+func containsUnescapedChar(str string, ch rune) bool {
+	var prev rune
+
+	for _, c := range str {
+		if c == ch && prev != '\\' {
+			return true
+		}
+
+		if c == '\\' && prev == '\\' {
+			prev = rune(0) // reset escape sequence
+		} else {
+			prev = c
+		}
+	}
+
+	return false
 }
 
 // -------------------------------------------------------------------
