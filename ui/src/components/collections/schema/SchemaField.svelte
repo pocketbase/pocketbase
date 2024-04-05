@@ -3,13 +3,13 @@
 </script>
 
 <script>
+    import tooltip from "@/actions/tooltip";
+    import Field from "@/components/base/Field.svelte";
+    import Toggler from "@/components/base/Toggler.svelte";
+    import { errors, setErrors } from "@/stores/errors";
+    import CommonHelper from "@/utils/CommonHelper";
     import { createEventDispatcher, onMount } from "svelte";
     import { slide } from "svelte/transition";
-    import CommonHelper from "@/utils/CommonHelper";
-    import tooltip from "@/actions/tooltip";
-    import { errors, setErrors } from "@/stores/errors";
-    import Toggler from "@/components/base/Toggler.svelte";
-    import Field from "@/components/base/Field.svelte";
 
     const componentId = "f_" + CommonHelper.randomString(8);
 
@@ -198,6 +198,7 @@
                 class:btn-hint={!showOptions && !hasErrors}
                 class:btn-danger={hasErrors}
                 on:click={toggle}
+                aria-expanded={showOptions}
             >
                 <i class="ri-settings-3-line" />
             </button>

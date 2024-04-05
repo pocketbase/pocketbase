@@ -1,5 +1,5 @@
 <script>
-    import { onMount, createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { slide } from "svelte/transition";
 
     const dispatch = createEventDispatcher();
@@ -79,6 +79,7 @@
         class="accordion-header"
         {draggable}
         class:interactive
+        aria-expanded={active}
         on:click|preventDefault={() => interactive && toggle()}
         on:drop|preventDefault={(e) => {
             if (draggable) {

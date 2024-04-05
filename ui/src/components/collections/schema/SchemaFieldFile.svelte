@@ -1,13 +1,13 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
-    import Toggler from "@/components/base/Toggler.svelte";
-    import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import MimeTypeSelectOption from "@/components/base/MimeTypeSelectOption.svelte";
     import MultipleValueInput from "@/components/base/MultipleValueInput.svelte";
+    import ObjectSelect from "@/components/base/ObjectSelect.svelte";
+    import Toggler from "@/components/base/Toggler.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
     import baseMimeTypesList from "@/mimes.js";
+    import CommonHelper from "@/utils/CommonHelper";
 
     export let field;
     export let key = "";
@@ -117,12 +117,7 @@
                         bind:keyOfSelected={field.options.mimeTypes}
                     />
                     <div class="help-block">
-                        <div
-                            tabindex="0"
-                            role="button"
-                            aria-label="More collection options"
-                            class="inline-flex flex-gap-0"
-                        >
+                        <div tabindex="0" role="button" class="inline-flex flex-gap-0">
                             <span class="txt link-primary">Choose presets</span>
                             <i class="ri-arrow-drop-down-fill" aria-hidden="true" />
                             <Toggler class="dropdown dropdown-sm dropdown-nowrap dropdown-left">

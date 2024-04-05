@@ -2,7 +2,7 @@
 
 - Fixed '~' auto wildcard wrapping when the param has escaped `%` character ([#4704](https://github.com/pocketbase/pocketbase/discussions/4704)).
 
-- Added contrasting border around the default mail template btn style to make it slightly more visible in case the mail client renders the content on a dark background ([#4707](https://github.com/pocketbase/pocketbase/issues/4707)).
+- Other minor UI improvements (added `aria-expanded=true/false` to the dropdown triggers, added contrasting border around the default mail template btn style, etc.).
 
 - Updated Go deps and bumped the min Go version in the GitHub release action to Go 1.22.2 since it comes with [some `net/http` security and bug fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.22.2).
 

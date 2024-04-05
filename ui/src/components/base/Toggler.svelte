@@ -1,5 +1,5 @@
 <script>
-    import { onMount, createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { fly } from "svelte/transition";
 
     export let trigger = undefined;
@@ -25,9 +25,11 @@
 
     $: if (active) {
         activeTrigger?.classList?.add("active");
+        activeTrigger?.setAttribute("aria-expanded", true);
         dispatch("show");
     } else {
         activeTrigger?.classList?.remove("active");
+        activeTrigger?.setAttribute("aria-expanded", false);
         dispatch("hide");
     }
 

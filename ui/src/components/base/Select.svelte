@@ -1,8 +1,8 @@
 <script>
-    import { onMount } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import Toggler from "@/components/base/Toggler.svelte";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { onMount } from "svelte";
 
     export let id = "";
     export let noOptionsText = "No options found";
@@ -208,6 +208,7 @@
         class="selected-container"
         class:disabled
         class:readonly
+        role="button"
     >
         {#each CommonHelper.toArray(selected) as item, i}
             <div class="option">
