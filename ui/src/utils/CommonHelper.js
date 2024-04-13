@@ -93,7 +93,7 @@ export default class CommonHelper {
 
                 return {};
             case "undefined":
-                return val
+                return undefined;
             default:
                 return null;
         }
