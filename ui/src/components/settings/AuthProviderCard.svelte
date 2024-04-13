@@ -27,7 +27,8 @@
                 provider,
                 Object.assign({}, config, {
                     enabled: config.clientId ? config.enabled : true,
-                })
+                    pkce: config.clientId ? config.pkce : null,
+                }),
             );
         }}
     >

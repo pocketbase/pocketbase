@@ -1,7 +1,7 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
+    import CommonHelper from "@/utils/CommonHelper";
 
     export let key = "";
     export let config = {};

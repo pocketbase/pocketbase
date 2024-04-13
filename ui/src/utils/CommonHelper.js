@@ -1,8 +1,8 @@
 import { DateTime } from "luxon";
 
 const imageExtensions = [
-   ".jpg", ".jpeg", ".png", ".svg",
-   ".gif", ".jfif", ".webp", ".avif",
+    ".jpg", ".jpeg", ".png", ".svg",
+    ".gif", ".jfif", ".webp", ".avif",
 ];
 
 const videoExtensions = [
@@ -67,6 +67,36 @@ export default class CommonHelper {
      */
     static clone(value) {
         return typeof structuredClone !== "undefined" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+    }
+
+    /**
+     * Returns the zero/empty value of val (only primitive values are supported).
+     * @param  {Mixed} val
+     * @return {Mixed}
+     */
+    static zeroValue(val) {
+        switch (typeof val) {
+            case "string":
+                return "";
+            case "number":
+                return 0;
+            case "boolean":
+                return false;
+            case "object":
+                if (val === null) {
+                    return null;
+                }
+
+                if (Array.isArray(config[k])) {
+                    return [];
+                }
+
+                return {};
+            case "undefined":
+                return val
+            default:
+                return null;
+        }
     }
 
     /**
@@ -341,7 +371,7 @@ export default class CommonHelper {
      */
     static getNestedVal(data, path, defaultVal = null, delimiter = ".") {
         let result = data || {};
-        let parts  = (path || "").split(delimiter);
+        let parts = (path || "").split(delimiter);
 
         for (const part of parts) {
             if (
@@ -376,8 +406,8 @@ export default class CommonHelper {
             return
         }
 
-        let result   = data;
-        let parts    = path.split(delimiter);
+        let result = data;
+        let parts = path.split(delimiter);
         let lastPart = parts.pop();
 
         for (const part of parts) {
@@ -409,8 +439,8 @@ export default class CommonHelper {
      * @param  {String}       delimiter
      */
     static deleteByPath(data, path, delimiter = ".") {
-        let result   = data || {};
-        let parts    = (path || "").split(delimiter);
+        let result = data || {};
+        let parts = (path || "").split(delimiter);
         let lastPart = parts.pop();
 
         for (const part of parts) {
@@ -530,8 +560,8 @@ export default class CommonHelper {
     static trimQuotedValue(val) {
         if (
             typeof val == "string" &&
-            (val[0] == `"`  || val[0] == `'` || val[0] == "`") &&
-            val[0] == val[val.length-1]
+            (val[0] == `"` || val[0] == `'` || val[0] == "`") &&
+            val[0] == val[val.length - 1]
         ) {
             return val.slice(1, -1);
         }
@@ -666,7 +696,7 @@ export default class CommonHelper {
      * @return {String}
      */
     static escapeRegExp(str) {
-      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
     }
 
     /**
@@ -868,7 +898,7 @@ export default class CommonHelper {
             console.warn("Failed to parse JWT payload data.", err);
         }
 
-        return  {};
+        return {};
     }
 
     /**
@@ -942,10 +972,10 @@ export default class CommonHelper {
         return new Promise((resolve) => {
             let reader = new FileReader();
 
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 let img = new Image();
 
-                img.onload = function() {
+                img.onload = function () {
                     let canvas = document.createElement("canvas");
                     let ctx = canvas.getContext("2d");
                     let imgWidth = img.width;
@@ -1642,11 +1672,11 @@ export default class CommonHelper {
             return missingValue;
         }
 
-        if (typeof val == "number")  {
+        if (typeof val == "number") {
             return "" + val;
         }
 
-        if (typeof val == "boolean")  {
+        if (typeof val == "boolean") {
             return val ? "True" : "False";
         }
 
@@ -1901,17 +1931,17 @@ export default class CommonHelper {
      */
     static parseIndex(idx) {
         const result = {
-            unique:     false,
-            optional:   false,
+            unique: false,
+            optional: false,
             schemaName: "",
-            indexName:  "",
-            tableName:  "",
-            columns:    [],
-            where:      "",
+            indexName: "",
+            tableName: "",
+            columns: [],
+            where: "",
         };
 
         const indexRegex = /create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?(\S*)\s+on\s+(\S*)\s*\(([\s\S]*)\)(?:\s*where\s+([\s\S]*))?/gmi;
-        const matches    = indexRegex.exec((idx || "").trim())
+        const matches = indexRegex.exec((idx || "").trim())
 
         if (matches?.length != 7) {
             return result;
@@ -1957,9 +1987,9 @@ export default class CommonHelper {
                 continue;
             }
             result.columns.push({
-                name:    colOrExpr,
+                name: colOrExpr,
                 collate: colMatches[2] || "",
-                sort:    colMatches[3]?.toUpperCase() || "",
+                sort: colMatches[3]?.toUpperCase() || "",
             });
         }
 
@@ -2003,26 +2033,26 @@ export default class CommonHelper {
         }
 
         result += nonEmptyCols.map((col) => {
-                let item = "";
+            let item = "";
 
-                if (col.name.includes("(") || col.name.includes(" ")) {
-                    // most likely an expression
-                    item += col.name;
-                } else {
-                    // regular identifier
-                    item += ("`" + col.name + "`");
-                }
+            if (col.name.includes("(") || col.name.includes(" ")) {
+                // most likely an expression
+                item += col.name;
+            } else {
+                // regular identifier
+                item += ("`" + col.name + "`");
+            }
 
-                if (col.collate) {
-                    item += (" COLLATE " + col.collate);
-                }
+            if (col.collate) {
+                item += (" COLLATE " + col.collate);
+            }
 
-                if (col.sort) {
-                    item += (" " + col.sort.toUpperCase());
-                }
+            if (col.sort) {
+                item += (" " + col.sort.toUpperCase());
+            }
 
-                return item;
-            })
+            return item;
+        })
             .join(",\n  ");
 
         if (nonEmptyCols.length > 1) {
@@ -2130,20 +2160,20 @@ export default class CommonHelper {
      */
     static initCollection(data) {
         return Object.assign({
-            id:         '',
-            created:    '',
-            updated:    '',
-            name:       '',
-            type:       'base',
-            system:     false,
-            listRule:   null,
-            viewRule:   null,
+            id: '',
+            created: '',
+            updated: '',
+            name: '',
+            type: 'base',
+            system: false,
+            listRule: null,
+            viewRule: null,
             createRule: null,
             updateRule: null,
             deleteRule: null,
-            schema:     [],
-            indexes:    [],
-            options:    {},
+            schema: [],
+            indexes: [],
+            options: {},
         }, data);
     }
 
@@ -2155,12 +2185,12 @@ export default class CommonHelper {
      */
     static initSchemaField(data) {
         return Object.assign({
-            id:       '',
-            name:     '',
-            type:     'text',
-            system:   false,
+            id: '',
+            name: '',
+            type: 'text',
+            system: false,
             required: false,
-            options:  {},
+            options: {},
         }, data);
     }
 

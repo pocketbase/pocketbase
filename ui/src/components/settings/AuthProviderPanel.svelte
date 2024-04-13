@@ -1,12 +1,12 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
+    import Field from "@/components/base/Field.svelte";
+    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
-    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
-    import Field from "@/components/base/Field.svelte";
-    import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -59,9 +59,16 @@
 
     function clear() {
         for (let k in config) {
-            config[k] = "";
+            config[k] = CommonHelper.zeroValue(config[k]);
         }
-        config.enabled = false;
+
+        // set to false only for the oidc providers
+        // (@todo remove after the refactoring)
+        if (provider.key?.startsWith("oidc")) {
+            config[k].pkce = false;
+        } else {
+            config[k].pkce = null;
+        }
     }
 </script>
 
