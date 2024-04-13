@@ -87,7 +87,7 @@ export default class CommonHelper {
                     return null;
                 }
 
-                if (Array.isArray(config[k])) {
+                if (Array.isArray(val)) {
                     return [];
                 }
 
