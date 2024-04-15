@@ -45,7 +45,7 @@ jobs:
         run: go test ./...
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: latest
