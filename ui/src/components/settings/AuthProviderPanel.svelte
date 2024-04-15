@@ -65,9 +65,9 @@
         // set to false only for the oidc providers
         // (@todo remove after the refactoring)
         if (provider.key?.startsWith("oidc")) {
-            config[k].pkce = false;
+            config.pkce = false;
         } else {
-            config[k].pkce = null;
+            config.pkce = null;
         }
     }
 </script>

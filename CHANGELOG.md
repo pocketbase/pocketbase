@@ -1,6 +1,6 @@
-## (WIP) v0.22.9
+## v0.22.9
 
-- Fixed Admin UI OAuth2 "Clear all fields" btn action not properly unsetting all form fields ([#4737](https://github.com/pocketbase/pocketbase/issues/4737)).
+- Fixed Admin UI OAuth2 "Clear all fields" btn action to properly unset all form fields ([#4737](https://github.com/pocketbase/pocketbase/issues/4737)).
 
 
 ## v0.22.8
