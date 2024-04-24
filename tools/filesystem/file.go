@@ -177,6 +177,10 @@ func normalizeName(fr FileReader, name string) string {
 		// try to detect the extension from the file content
 		cleanExt, _ = detectExtension(fr)
 	}
+	if extLength := len(cleanExt); extLength > 20 {
+		// keep only the last 20 characters (it is multibyte safe after the regex replace)
+		cleanExt = "." + cleanExt[extLength-20:]
+	}
 
 	// name
 	// ---
