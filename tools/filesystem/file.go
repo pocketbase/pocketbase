@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -172,7 +171,7 @@ var extInvalidCharsRegex = regexp.MustCompile(`[^\w\.\*\-\+\=\#]+`)
 func normalizeName(fr FileReader, name string) string {
 	// extension
 	// ---
-	originalExt := filepath.Ext(name)
+	originalExt := extractExtension(name)
 	cleanExt := extInvalidCharsRegex.ReplaceAllString(originalExt, "")
 	if cleanExt == "" {
 		// try to detect the extension from the file content
@@ -198,15 +197,41 @@ func normalizeName(fr FileReader, name string) string {
 	)
 }
 
+// extractExtension extracts the extension (with leading dot) from name.
+//
+// This differ from filepath.Ext() by supporting double extensions (eg. ".tar.gz").
+//
+// Returns an empty string if no match is found.
+//
+// Example:
+// extractExtension("test.txt")      // .txt
+// extractExtension("test.tar.gz")   // .tar.gz
+// extractExtension("test.a.tar.gz") // .tar.gz
+func extractExtension(name string) string {
+	primaryDot := strings.LastIndex(name, ".")
+
+	if primaryDot == -1 {
+		return ""
+	}
+
+	// look for secondary extension
+	secondaryDot := strings.LastIndex(name[:primaryDot], ".")
+	if secondaryDot >= 0 {
+		return name[secondaryDot:]
+	}
+
+	return name[primaryDot:]
+}
+
+// detectExtension tries to detect the extension from file mime type.
 func detectExtension(fr FileReader) (string, error) {
-	// try to detect the extension from the mime type
 	r, err := fr.Open()
 	if err != nil {
 		return "", err
 	}
 	defer r.Close()
 
-	mt, _ := mimetype.DetectReader(r)
+	mt, err := mimetype.DetectReader(r)
 	if err != nil {
 		return "", err
 	}
