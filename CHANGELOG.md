@@ -1,3 +1,8 @@
+## v0.22.10
+
+- Updated the uploaded filename normalization to take double extensions in consideration ([#4824](https://github.com/pocketbase/pocketbase/issues/4824))
+
+
 ## v0.22.9
 
 - Fixed Admin UI OAuth2 "Clear all fields" btn action to properly unset all form fields ([#4737](https://github.com/pocketbase/pocketbase/issues/4737)).

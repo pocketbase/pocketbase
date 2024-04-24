@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/labstack/echo/v5"
@@ -35,7 +36,7 @@ func TestNewFileFromPath(t *testing.T) {
 	if f.OriginalName != originalName {
 		t.Fatalf("Expected OriginalName %q, got %q", originalName, f.OriginalName)
 	}
-	if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
+	if match, err := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
 		t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
 	}
 	if f.Size != 73 {
@@ -69,7 +70,7 @@ func TestNewFileFromBytes(t *testing.T) {
 	if f.OriginalName != originalName {
 		t.Fatalf("Expected OriginalName %q, got %q", originalName, f.OriginalName)
 	}
-	if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
+	if match, err := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
 		t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
 	}
 }
@@ -95,12 +96,12 @@ func TestNewFileFromMultipart(t *testing.T) {
 	}
 
 	originalNamePattern := regexp.QuoteMeta("tmpfile-") + `\w+` + regexp.QuoteMeta(".txt")
-	if match, _ := regexp.Match(originalNamePattern, []byte(f.OriginalName)); !match {
+	if match, err := regexp.Match(originalNamePattern, []byte(f.OriginalName)); !match {
 		t.Fatalf("Expected OriginalName to match %v, got %q (%v)", originalNamePattern, f.OriginalName, err)
 	}
 
 	normalizedNamePattern := regexp.QuoteMeta("tmpfile_") + `\w+\_\w{10}` + regexp.QuoteMeta(".txt")
-	if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
+	if match, err := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
 		t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
 	}
 
@@ -164,7 +165,7 @@ func TestNewFileFromUrlTimeout(t *testing.T) {
 		if f.OriginalName != originalName {
 			t.Fatalf("Expected OriginalName %q, got %q", originalName, f.OriginalName)
 		}
-		if match, _ := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
+		if match, err := regexp.Match(normalizedNamePattern, []byte(f.Name)); !match {
 			t.Fatalf("Expected Name to match %v, got %q (%v)", normalizedNamePattern, f.Name, err)
 		}
 		if f.Size != 4 {
@@ -173,5 +174,32 @@ func TestNewFileFromUrlTimeout(t *testing.T) {
 		if _, ok := f.Reader.(*filesystem.BytesReader); !ok {
 			t.Fatalf("Expected Reader to be BytesReader, got %v", f.Reader)
 		}
+	}
+}
+
+func TestFileNameNormalizations(t *testing.T) {
+	scenarios := []struct {
+		name    string
+		pattern string
+	}{
+		{"", `^\w{10}_\w{10}.txt$`},
+		{".png", `^\w{10}_\w{10}.png$`},
+		{".tar.gz", `^\w{10}_\w{10}.tar.gz$`},
+		{"a.tar.gz", `^a\w{10}_\w{10}.tar.gz$`},
+		{"a.b.c.d.tar.gz", `^a_b_c_d_\w{10}.tar.gz$`},
+		{"abcd", `^abcd_\w{10}.txt$`},
+		{"a  b! c d  . 456", `^a_b_c_d_\w{10}.456$`}, // normalize spaces
+	}
+
+	for i, s := range scenarios {
+		t.Run(strconv.Itoa(i)+"_"+s.name, func(t *testing.T) {
+			f, err := filesystem.NewFileFromBytes([]byte("abc"), s.name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if match, err := regexp.Match(s.pattern, []byte(f.Name)); !match {
+				t.Fatalf("Expected Name to match %v, got %q (%v)", s.pattern, f.Name, err)
+			}
+		})
 	}
 }
