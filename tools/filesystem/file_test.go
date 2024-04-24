@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v5"
@@ -182,13 +183,14 @@ func TestFileNameNormalizations(t *testing.T) {
 		name    string
 		pattern string
 	}{
-		{"", `^\w{10}_\w{10}.txt$`},
-		{".png", `^\w{10}_\w{10}.png$`},
-		{".tar.gz", `^\w{10}_\w{10}.tar.gz$`},
-		{"a.tar.gz", `^a\w{10}_\w{10}.tar.gz$`},
-		{"a.b.c.d.tar.gz", `^a_b_c_d_\w{10}.tar.gz$`},
-		{"abcd", `^abcd_\w{10}.txt$`},
-		{"a  b! c d  . 456", `^a_b_c_d_\w{10}.456$`}, // normalize spaces
+		{"", `^\w{10}_\w{10}\.txt$`},
+		{".png", `^\w{10}_\w{10}\.png$`},
+		{".tar.gz", `^\w{10}_\w{10}\.tar\.gz$`},
+		{"a.tar.gz", `^a\w{10}_\w{10}\.tar\.gz$`},
+		{"a.b.c.d.tar.gz", `^a_b_c_d_\w{10}\.tar\.gz$`},
+		{"abcd", `^abcd_\w{10}\.txt$`},
+		{"a  b! c d  . 456", `^a_b_c_d_\w{10}\.456$`},                                        // normalize spaces
+		{strings.Repeat("a", 101) + "." + strings.Repeat("b", 21), `^a{100}_\w{10}\.b{20}$`}, // name and extension length trim
 	}
 
 	for i, s := range scenarios {
