@@ -261,7 +261,7 @@ func LoadCollectionContext(app core.App, optCollectionTypes ...string) echo.Midd
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			if param := c.PathParam("collection"); param != "" {
-				collection, err := app.Dao().FindCollectionByNameOrId(param)
+				collection, err := core.FindCachedCollectionByNameOrId(app, param)
 				if err != nil || collection == nil {
 					return NewNotFoundError("", err)
 				}

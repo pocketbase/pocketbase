@@ -1270,6 +1270,7 @@ func TestRecordCrudCreate(t *testing.T) {
 				if err := app.Dao().WithoutHooks().SaveCollection(collection); err != nil {
 					t.Fatalf("failed to update demo3 collection create rule: %v", err)
 				}
+				core.ReloadCachedCollections(app)
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
@@ -1291,6 +1292,7 @@ func TestRecordCrudCreate(t *testing.T) {
 				if err := app.Dao().WithoutHooks().SaveCollection(collection); err != nil {
 					t.Fatalf("failed to update demo3 collection create rule: %v", err)
 				}
+				core.ReloadCachedCollections(app)
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1929,6 +1931,7 @@ func TestRecordCrudUpdate(t *testing.T) {
 				if err := app.Dao().WithoutHooks().SaveCollection(collection); err != nil {
 					t.Fatalf("failed to update demo3 collection update rule: %v", err)
 				}
+				core.ReloadCachedCollections(app)
 			},
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
@@ -1950,6 +1953,7 @@ func TestRecordCrudUpdate(t *testing.T) {
 				if err := app.Dao().WithoutHooks().SaveCollection(collection); err != nil {
 					t.Fatalf("failed to update demo3 collection update rule: %v", err)
 				}
+				core.ReloadCachedCollections(app)
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
