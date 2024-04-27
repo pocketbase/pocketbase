@@ -10,12 +10,12 @@
             <div class="block txt-center m-b-lg">
                 <figure class="logo">
                     <img
-                        src="{import.meta.env.BASE_URL}images/logo.svg"
-                        alt="PocketBase logo"
-                        width="40"
-                        height="40"
+                        src="{import.meta.env.BASE_URL}images/HaemIcon.png"
+                        alt="Haem logo"
+                        width="50"
+                        height="50"
                     />
-                    <span class="txt">Pocket<strong>Base</strong></span>
+                    <span class="txt"><strong style="color: #194aef">Haem</strong> Admin</span>
                 </figure>
             </div>
             <div class="clearfix" />
