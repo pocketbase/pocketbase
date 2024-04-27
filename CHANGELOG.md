@@ -1,3 +1,15 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### 1.0.1 (2024-04-27)
+
+
+### Bug Fixes
+
+* correcting package name mismatch ([7bfd481](https://github.com/Bankole2000/pocketbasecustom/commit/7bfd4817c6ff1765c95d937d946c35e428f71f58))
+* Typo in comments ([#25](https://github.com/Bankole2000/pocketbasecustom/issues/25)) ([d761fa1](https://github.com/Bankole2000/pocketbasecustom/commit/d761fa12af2447279c9f8eb189316cb4c1df7a78))
+
 ## v0.22.10
 
 - Updated the uploaded filename normalization to take double extensions in consideration ([#4824](https://github.com/pocketbase/pocketbase/issues/4824))
