@@ -1,15 +1,15 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
-    import ApiClient from "@/utils/ApiClient";
     import scrollend from "@/actions/scrollend";
     import tooltip from "@/actions/tooltip";
+    import Draggable from "@/components/base/Draggable.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
-    import Draggable from "@/components/base/Draggable.svelte";
     import RecordInfo from "@/components/records/RecordInfo.svelte";
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import { collections } from "@/stores/collections";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
     const uniqueId = "picker_" + CommonHelper.randomString(5);
@@ -86,7 +86,7 @@
                     filter: filters.join("||"),
                     fields: "*:excerpt(200)",
                     requestKey: null,
-                })
+                }),
             );
         }
 
@@ -262,7 +262,7 @@
                             class="btn btn-sm btn-circle btn-transparent btn-hint m-l-auto"
                             use:tooltip={"Edit"}
                             on:keydown|stopPropagation
-                            on:click|stopPropagation={() => upsertPanel?.show(record)}
+                            on:click|stopPropagation={() => upsertPanel?.show(record.id)}
                         >
                             <i class="ri-pencil-line" />
                         </button>
