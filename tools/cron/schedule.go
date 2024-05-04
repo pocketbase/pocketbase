@@ -10,6 +10,7 @@ import (
 
 // Moment represents a parsed single time moment.
 type Moment struct {
+	Second    int `json:"second"`
 	Minute    int `json:"minute"`
 	Hour      int `json:"hour"`
 	Day       int `json:"day"`
@@ -20,6 +21,7 @@ type Moment struct {
 // NewMoment creates a new Moment from the specified time.
 func NewMoment(t time.Time) *Moment {
 	return &Moment{
+		Second:    t.Second(),
 		Minute:    t.Minute(),
 		Hour:      t.Hour(),
 		Day:       t.Day(),
@@ -30,6 +32,7 @@ func NewMoment(t time.Time) *Moment {
 
 // Schedule stores parsed information for each time component when a cron job should run.
 type Schedule struct {
+	Seconds    map[int]struct{} `json:"seconds"`
 	Minutes    map[int]struct{} `json:"minutes"`
 	Hours      map[int]struct{} `json:"hours"`
 	Days       map[int]struct{} `json:"days"`
@@ -39,6 +42,11 @@ type Schedule struct {
 
 // IsDue checks whether the provided Moment satisfies the current Schedule.
 func (s *Schedule) IsDue(m *Moment) bool {
+
+	if _, ok := s.Seconds[m.Second]; !ok {
+		return false
+	}
+
 	if _, ok := s.Minutes[m.Minute]; !ok {
 		return false
 	}
@@ -58,23 +66,26 @@ func (s *Schedule) IsDue(m *Moment) bool {
 	if _, ok := s.Months[m.Month]; !ok {
 		return false
 	}
-
 	return true
 }
 
 var macros = map[string]string{
-	"@yearly":   "0 0 1 1 *",
-	"@annually": "0 0 1 1 *",
-	"@monthly":  "0 0 1 * *",
-	"@weekly":   "0 0 * * 0",
-	"@daily":    "0 0 * * *",
-	"@midnight": "0 0 * * *",
-	"@hourly":   "0 * * * *",
+	"@yearly":   "0 0 0 1 1 *",
+	"@annually": "0 0 0 1 1 *",
+	"@monthly":  "0 0 0 1 * *",
+	"@weekly":   "0 0 0 * * 0",
+	"@daily":    "0 0 0 * * *",
+	"@midnight": "0 0 0 * * *",
+	"@midday": 	 "0 0 12 * * *",
+	"@hourly":   "0 0 * * * *",
+	"@minutely": "0 * * * * *",
+	"@secondly": "* * * * * *",
+	"@tick":     "* * * * * *",
 }
 
 // NewSchedule creates a new Schedule from a cron expression.
 //
-// A cron expression could be a macro OR 5 segments separated by space,
+// A cron expression could be a macro OR 5/6 segments separated by space,
 // representing: minute, hour, day of the month, month and day of the week.
 //
 // The following segment formats are supported:
@@ -88,43 +99,81 @@ var macros = map[string]string{
 //   - @monthly
 //   - @weekly
 //   - @daily (or @midnight)
+//   - @midday (each 12h)
 //   - @hourly
+//   - @minutely
+//   - @secondly (or @tick)
 func NewSchedule(cronExpr string) (*Schedule, error) {
 	if v, ok := macros[cronExpr]; ok {
 		cronExpr = v
 	}
 
 	segments := strings.Split(cronExpr, " ")
-	if len(segments) != 5 {
-		return nil, errors.New("invalid cron expression - must be a valid macro or to have exactly 5 space separated segments")
-	}
 
-	minutes, err := parseCronSegment(segments[0], 0, 59)
+	if len(segments) == 5 {
+		segments = strings.Split("0 "+cronExpr, " ")
+	}
+	if len(segments) != 6 {
+		return nil, errors.New("invalid cron expression - must be a valid macro or to have exactly 5 or 6 space separated segments")
+	}
+	seconds, err := parseCronSegment(segments[0], 0, 59, map[string]string{
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	hours, err := parseCronSegment(segments[1], 0, 23)
+	minutes, err := parseCronSegment(segments[1], 0, 59, map[string]string{
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	days, err := parseCronSegment(segments[2], 1, 31)
+	hours, err := parseCronSegment(segments[2], 0, 23, map[string]string{
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	months, err := parseCronSegment(segments[3], 1, 12)
+	days, err := parseCronSegment(segments[3], 1, 31, map[string]string{
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	daysOfWeek, err := parseCronSegment(segments[4], 0, 6)
+	months, err := parseCronSegment(segments[4], 1, 12, map[string]string{
+		"JAN": "1",
+		"FEB": "2",
+		"MAR": "3",
+		"APR": "4",
+		"MAY": "5",
+		"JUN": "6",
+		"JUL": "7",
+		"AUG": "8",
+		"SEP": "9",
+		"OCT": "10",
+		"NOV": "11",
+		"DEC": "12",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	daysOfWeek, err := parseCronSegment(segments[5], 0, 6, map[string]string{
+		"SAT": "6",
+		"FRI": "5",
+		"THU": "4",
+		"WED": "3",
+		"TUE": "2",
+		"MON": "1",
+		"SUN": "0",
+		"7":   "0",
+	})
 	if err != nil {
 		return nil, err
 	}
 
 	return &Schedule{
+		Seconds:    seconds,
 		Minutes:    minutes,
 		Hours:      hours,
 		Days:       days,
@@ -135,9 +184,9 @@ func NewSchedule(cronExpr string) (*Schedule, error) {
 
 // parseCronSegment parses a single cron expression segment and
 // returns its time schedule slots.
-func parseCronSegment(segment string, min int, max int) (map[int]struct{}, error) {
+func parseCronSegment(segment string, min int, max int, extra map[string]string) (map[int]struct{}, error) {
 	slots := map[int]struct{}{}
-
+	segment = strings.ToUpper(strings.Trim(segment, " "))
 	list := strings.Split(segment, ",")
 	for _, p := range list {
 		stepParts := strings.Split(p, "/")
@@ -152,8 +201,9 @@ func parseCronSegment(segment string, min int, max int) (map[int]struct{}, error
 			if err != nil {
 				return nil, err
 			}
+
 			if parsedStep < 1 || parsedStep > max {
-				return nil, fmt.Errorf("invalid segment step boundary - the step must be between 1 and the %d", max)
+				return nil, fmt.Errorf("invalid segment step boundary - the step must be between %d and the %d", 1, max)
 			}
 			step = parsedStep
 		default:
@@ -173,6 +223,10 @@ func parseCronSegment(segment string, min int, max int) (map[int]struct{}, error
 				if step != 1 {
 					return nil, errors.New("invalid segement step - step > 1 could be used only with the wildcard or range format")
 				}
+				newValue, isExtraValue := extra[rangeParts[0]]
+				if isExtraValue {
+					rangeParts[0] = newValue
+				}
 				parsed, err := strconv.Atoi(rangeParts[0])
 				if err != nil {
 					return nil, err
@@ -183,6 +237,12 @@ func parseCronSegment(segment string, min int, max int) (map[int]struct{}, error
 				rangeMin = parsed
 				rangeMax = rangeMin
 			case 2:
+
+				newValue, isExtraValue := extra[rangeParts[0]]
+				if isExtraValue {
+					rangeParts[0] = newValue
+				}
+
 				parsedMin, err := strconv.Atoi(rangeParts[0])
 				if err != nil {
 					return nil, err
@@ -192,6 +252,10 @@ func parseCronSegment(segment string, min int, max int) (map[int]struct{}, error
 				}
 				rangeMin = parsedMin
 
+				newValue, isExtraValue = extra[rangeParts[1]]
+				if isExtraValue {
+					rangeParts[1] = newValue
+				}
 				parsedMax, err := strconv.Atoi(rangeParts[1])
 				if err != nil {
 					return nil, err

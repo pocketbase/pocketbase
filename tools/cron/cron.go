@@ -4,8 +4,11 @@
 // Example:
 //
 //	c := cron.New()
-//	c.MustAdd("dailyReport", "0 0 * * *", func() { ... })
+//	c.MustAdd("dailyReport", "@daily", func() { ... })
+//  // OR
+//	// c.MustAdd("dailyReport", "0 0 * * *", func() { ... })
 //	c.Start()
+
 package cron
 
 import (
@@ -39,7 +42,7 @@ type Cron struct {
 // You can change the default timezone with Cron.SetTimezone().
 func New() *Cron {
 	return &Cron{
-		interval:   1 * time.Minute,
+		interval:   1 * time.Second,
 		timezone:   time.UTC,
 		jobs:       map[string]*job{},
 		tickerDone: make(chan bool),
@@ -47,7 +50,7 @@ func New() *Cron {
 }
 
 // SetInterval changes the current cron tick interval
-// (it usually should be >= 1 minute).
+// (it usually should be >= 1 second).
 func (c *Cron) SetInterval(d time.Duration) {
 	// update interval
 	c.Lock()
