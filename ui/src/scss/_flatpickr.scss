@@ -440,6 +440,7 @@ span.flatpickr-weekday {
   flex-wrap: wrap;
   transform: translate3d(0px, 0px, 0px);
   opacity: 1;
+  gap: 2px;
 }
 .dayContainer + .dayContainer {
   -webkit-box-shadow: -1px 0 0 var(--baseAlt2Color);
@@ -456,7 +457,6 @@ span.flatpickr-weekday {
   width: calc(14.2857143% - 2px);
   flex-basis: calc(14.2857143% - 2px);
   height: 39px;
-  margin: 1px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

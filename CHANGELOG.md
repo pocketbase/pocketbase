@@ -1,3 +1,8 @@
+## (WIP) v0.22.12
+
+- Fixed Firefox calendar picker grid layout ([#4865](https://github.com/pocketbase/pocketbase/issues/4865)).
+
+
 ## v0.22.11
 
 - Load the full record in the relation picker edit panel ([#4857](https://github.com/pocketbase/pocketbase/issues/4857)).
