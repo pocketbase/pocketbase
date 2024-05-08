@@ -5,7 +5,7 @@ import (
 	"regexp"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/pocketbase/pocketbase/core"
+	"github.com/lilysnc/pocketbasepg/core"
 )
 
 var backupNameRegex = regexp.MustCompile(`^[a-z0-9_-]+\.zip$`)

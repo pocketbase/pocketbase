@@ -7,13 +7,13 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/models/schema"
+	"github.com/lilysnc/pocketbasepg/tools/dbutils"
+	"github.com/lilysnc/pocketbasepg/tools/list"
+	"github.com/lilysnc/pocketbasepg/tools/security"
+	"github.com/lilysnc/pocketbasepg/tools/types"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/tools/dbutils"
-	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/security"
-	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 // MaxExpandDepth specifies the max allowed nested expand depth path.

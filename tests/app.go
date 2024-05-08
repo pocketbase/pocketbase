@@ -9,12 +9,12 @@ import (
 	"runtime"
 	"sync"
 
+	"github.com/lilysnc/pocketbasepg/core"
+	"github.com/lilysnc/pocketbasepg/migrations"
+	"github.com/lilysnc/pocketbasepg/migrations/logs"
+	"github.com/lilysnc/pocketbasepg/tools/mailer"
+	"github.com/lilysnc/pocketbasepg/tools/migrate"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/migrations/logs"
-	"github.com/pocketbase/pocketbase/tools/mailer"
-	"github.com/pocketbase/pocketbase/tools/migrate"
 )
 
 // TestApp is a wrapper app instance used for testing.

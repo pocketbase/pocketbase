@@ -3,10 +3,10 @@ package migrations
 import (
 	"fmt"
 
+	"github.com/lilysnc/pocketbasepg/daos"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/models/schema"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
 )
 
 // Normalizes old single and multiple values of MultiValuer fields (file, select, relation).

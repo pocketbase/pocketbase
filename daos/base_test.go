@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tests"
+	"github.com/lilysnc/pocketbasepg/daos"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/tests"
 )
 
 func TestNew(t *testing.T) {

@@ -8,16 +8,16 @@ import (
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/forms/validators"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/resolvers"
-	"github.com/pocketbase/pocketbase/tools/dbutils"
-	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/search"
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/lilysnc/pocketbasepg/core"
+	"github.com/lilysnc/pocketbasepg/daos"
+	"github.com/lilysnc/pocketbasepg/forms/validators"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/models/schema"
+	"github.com/lilysnc/pocketbasepg/resolvers"
+	"github.com/lilysnc/pocketbasepg/tools/dbutils"
+	"github.com/lilysnc/pocketbasepg/tools/list"
+	"github.com/lilysnc/pocketbasepg/tools/search"
+	"github.com/lilysnc/pocketbasepg/tools/types"
 )
 
 var collectionNameRegex = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_]*$`)

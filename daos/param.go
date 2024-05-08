@@ -3,10 +3,10 @@ package daos
 import (
 	"encoding/json"
 
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/tools/security"
+	"github.com/lilysnc/pocketbasepg/tools/types"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tools/security"
-	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 // ParamQuery returns a new Param select query.

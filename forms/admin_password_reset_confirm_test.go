@@ -4,10 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/pocketbase/pocketbase/forms"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/lilysnc/pocketbasepg/forms"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/tests"
+	"github.com/lilysnc/pocketbasepg/tools/security"
 )
 
 func TestAdminPasswordResetConfirmValidateAndSubmit(t *testing.T) {

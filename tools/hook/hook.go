@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/lilysnc/pocketbasepg/tools/security"
 )
 
 var StopPropagation = errors.New("Event hook propagation stopped")

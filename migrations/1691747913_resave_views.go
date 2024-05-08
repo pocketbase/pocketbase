@@ -1,9 +1,9 @@
 package migrations
 
 import (
+	"github.com/lilysnc/pocketbasepg/daos"
+	"github.com/lilysnc/pocketbasepg/models"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
 )
 
 // Resave all view collections to ensure that the proper id normalization is applied.

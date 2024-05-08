@@ -4,9 +4,9 @@ import (
 	"errors"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/lilysnc/pocketbasepg/core"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/tools/security"
 )
 
 // NewRecordAuthToken generates and returns a new auth record authentication token.

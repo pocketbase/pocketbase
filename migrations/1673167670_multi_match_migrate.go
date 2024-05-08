@@ -4,10 +4,10 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/lilysnc/pocketbasepg/daos"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/models/schema"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
 )
 
 // This migration replaces for backward compatibility the default operators

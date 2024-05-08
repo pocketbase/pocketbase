@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/rest"
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/lilysnc/pocketbasepg/core"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/tests"
+	"github.com/lilysnc/pocketbasepg/tools/rest"
+	"github.com/lilysnc/pocketbasepg/tools/types"
 )
 
 func TestRecordCrudList(t *testing.T) {

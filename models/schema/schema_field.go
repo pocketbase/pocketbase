@@ -9,9 +9,9 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
-	"github.com/pocketbase/pocketbase/tools/filesystem"
-	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/lilysnc/pocketbasepg/tools/filesystem"
+	"github.com/lilysnc/pocketbasepg/tools/list"
+	"github.com/lilysnc/pocketbasepg/tools/types"
 	"github.com/spf13/cast"
 )
 

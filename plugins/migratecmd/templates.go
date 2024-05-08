@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/lilysnc/pocketbasepg/models"
 )
 
 const (
@@ -340,7 +340,7 @@ func (p *plugin) goBlankTemplate() (string, error) {
 
 import (
 	"github.com/pocketbase/dbx"
-	m "github.com/pocketbase/pocketbase/migrations"
+	m "github.com/lilysnc/pocketbasepg/migrations"
 )
 
 func init() {
@@ -371,9 +371,9 @@ import (
 	"encoding/json"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/lilysnc/pocketbasepg/daos"
+	m "github.com/lilysnc/pocketbasepg/migrations"
+	"github.com/lilysnc/pocketbasepg/models"
 )
 
 func init() {
@@ -410,9 +410,9 @@ import (
 	"encoding/json"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/lilysnc/pocketbasepg/daos"
+	m "github.com/lilysnc/pocketbasepg/migrations"
+	"github.com/lilysnc/pocketbasepg/models"
 )
 
 func init() {
@@ -458,9 +458,9 @@ import (
 	"encoding/json"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/lilysnc/pocketbasepg/daos"
+	m "github.com/lilysnc/pocketbasepg/migrations"
+	"github.com/lilysnc/pocketbasepg/models"
 )
 
 func init() {
@@ -720,15 +720,15 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	}
 
 	imports += "\n\t\"github.com/pocketbase/dbx\""
-	imports += "\n\t\"github.com/pocketbase/pocketbase/daos\""
-	imports += "\n\tm \"github.com/pocketbase/pocketbase/migrations\""
+	imports += "\n\t\"github.com/lilysnc/pocketbasepg/daos\""
+	imports += "\n\tm \"github.com/lilysnc/pocketbasepg/migrations\""
 
 	if strings.Contains(combined, "schema.SchemaField{") {
-		imports += "\n\t\"github.com/pocketbase/pocketbase/models/schema\""
+		imports += "\n\t\"github.com/lilysnc/pocketbasepg/models/schema\""
 	}
 
 	if strings.Contains(combined, "types.Pointer(") {
-		imports += "\n\t\"github.com/pocketbase/pocketbase/tools/types\""
+		imports += "\n\t\"github.com/lilysnc/pocketbasepg/tools/types\""
 	}
 	// ---
 

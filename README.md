@@ -57,9 +57,9 @@ Here is a minimal example:
         "net/http"
 
         "github.com/labstack/echo/v5"
-        "github.com/pocketbase/pocketbase"
-        "github.com/pocketbase/pocketbase/apis"
-        "github.com/pocketbase/pocketbase/core"
+        "github.com/lilysnc/pocketbasepg"
+        "github.com/lilysnc/pocketbasepg/apis"
+        "github.com/lilysnc/pocketbasepg/core"
     )
 
     func main() {

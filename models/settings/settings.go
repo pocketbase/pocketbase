@@ -9,11 +9,11 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
-	"github.com/pocketbase/pocketbase/tools/auth"
-	"github.com/pocketbase/pocketbase/tools/cron"
-	"github.com/pocketbase/pocketbase/tools/mailer"
-	"github.com/pocketbase/pocketbase/tools/rest"
-	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/lilysnc/pocketbasepg/tools/auth"
+	"github.com/lilysnc/pocketbasepg/tools/cron"
+	"github.com/lilysnc/pocketbasepg/tools/mailer"
+	"github.com/lilysnc/pocketbasepg/tools/rest"
+	"github.com/lilysnc/pocketbasepg/tools/security"
 )
 
 // SecretMask is the default settings secrets replacement value

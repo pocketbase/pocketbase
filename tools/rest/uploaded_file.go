@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/lilysnc/pocketbasepg/tools/filesystem"
 )
 
 // DefaultMaxMemory defines the default max memory bytes that

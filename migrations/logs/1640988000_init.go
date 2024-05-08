@@ -1,8 +1,8 @@
 package logs
 
 import (
+	"github.com/lilysnc/pocketbasepg/tools/migrate"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/tools/migrate"
 )
 
 var LogsMigrations migrate.MigrationsList

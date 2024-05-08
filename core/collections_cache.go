@@ -9,7 +9,7 @@ package core
 import (
 	"strings"
 
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/lilysnc/pocketbasepg/models"
 )
 
 const storeCachedCollectionsKey = "@cachedCollectionsContext"

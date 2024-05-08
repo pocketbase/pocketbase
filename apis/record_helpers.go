@@ -8,15 +8,15 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
+	"github.com/lilysnc/pocketbasepg/core"
+	"github.com/lilysnc/pocketbasepg/daos"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/resolvers"
+	"github.com/lilysnc/pocketbasepg/tokens"
+	"github.com/lilysnc/pocketbasepg/tools/inflector"
+	"github.com/lilysnc/pocketbasepg/tools/rest"
+	"github.com/lilysnc/pocketbasepg/tools/search"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/resolvers"
-	"github.com/pocketbase/pocketbase/tokens"
-	"github.com/pocketbase/pocketbase/tools/inflector"
-	"github.com/pocketbase/pocketbase/tools/rest"
-	"github.com/pocketbase/pocketbase/tools/search"
 )
 
 const ContextRequestInfoKey = "requestInfo"

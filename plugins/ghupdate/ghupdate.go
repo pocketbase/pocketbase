@@ -22,8 +22,8 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/archive"
+	"github.com/lilysnc/pocketbasepg/core"
+	"github.com/lilysnc/pocketbasepg/tools/archive"
 	"github.com/spf13/cobra"
 )
 

@@ -3,7 +3,7 @@ package dbutils_test
 import (
 	"testing"
 
-	"github.com/pocketbase/pocketbase/tools/dbutils"
+	"github.com/lilysnc/pocketbasepg/tools/dbutils"
 )
 
 func TestJsonEach(t *testing.T) {

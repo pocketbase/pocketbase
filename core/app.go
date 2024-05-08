@@ -7,14 +7,14 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/lilysnc/pocketbasepg/daos"
+	"github.com/lilysnc/pocketbasepg/models/settings"
+	"github.com/lilysnc/pocketbasepg/tools/filesystem"
+	"github.com/lilysnc/pocketbasepg/tools/hook"
+	"github.com/lilysnc/pocketbasepg/tools/mailer"
+	"github.com/lilysnc/pocketbasepg/tools/store"
+	"github.com/lilysnc/pocketbasepg/tools/subscriptions"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models/settings"
-	"github.com/pocketbase/pocketbase/tools/filesystem"
-	"github.com/pocketbase/pocketbase/tools/hook"
-	"github.com/pocketbase/pocketbase/tools/mailer"
-	"github.com/pocketbase/pocketbase/tools/store"
-	"github.com/pocketbase/pocketbase/tools/subscriptions"
 )
 
 // App defines the main PocketBase app interface.

@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/lilysnc/pocketbasepg/models"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/models"
 )
 
 // New creates a new Dao instance with the provided db builder

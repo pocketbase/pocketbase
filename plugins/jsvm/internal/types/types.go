@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/plugins/jsvm"
-	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/lilysnc/pocketbasepg/core"
+	"github.com/lilysnc/pocketbasepg/plugins/jsvm"
+	"github.com/lilysnc/pocketbasepg/tools/list"
 	"github.com/pocketbase/tygoja"
 )
 
@@ -1077,20 +1077,20 @@ func main() {
 
 	gen := tygoja.New(tygoja.Config{
 		Packages: map[string][]string{
-			"github.com/labstack/echo/v5/middleware":            {"Gzip", "BodyLimit"},
-			"github.com/go-ozzo/ozzo-validation/v4":             {"Error"},
-			"github.com/pocketbase/dbx":                         {"*"},
-			"github.com/pocketbase/pocketbase/tools/security":   {"*"},
-			"github.com/pocketbase/pocketbase/tools/filesystem": {"*"},
-			"github.com/pocketbase/pocketbase/tools/template":   {"*"},
-			"github.com/pocketbase/pocketbase/tokens":           {"*"},
-			"github.com/pocketbase/pocketbase/mails":            {"*"},
-			"github.com/pocketbase/pocketbase/apis":             {"*"},
-			"github.com/pocketbase/pocketbase/forms":            {"*"},
-			"github.com/pocketbase/pocketbase":                  {"*"},
-			"path/filepath":                                     {"*"},
-			"os":                                                {"*"},
-			"os/exec":                                           {"Command"},
+			"github.com/labstack/echo/v5/middleware":           {"Gzip", "BodyLimit"},
+			"github.com/go-ozzo/ozzo-validation/v4":            {"Error"},
+			"github.com/pocketbase/dbx":                        {"*"},
+			"github.com/lilysnc/pocketbasepg/tools/security":   {"*"},
+			"github.com/lilysnc/pocketbasepg/tools/filesystem": {"*"},
+			"github.com/lilysnc/pocketbasepg/tools/template":   {"*"},
+			"github.com/lilysnc/pocketbasepg/tokens":           {"*"},
+			"github.com/lilysnc/pocketbasepg/mails":            {"*"},
+			"github.com/lilysnc/pocketbasepg/apis":             {"*"},
+			"github.com/lilysnc/pocketbasepg/forms":            {"*"},
+			"github.com/lilysnc/pocketbasepg":                  {"*"},
+			"path/filepath":                                    {"*"},
+			"os":                                               {"*"},
+			"os/exec":                                          {"Command"},
 		},
 		FieldNameFormatter: func(s string) string {
 			return mapper.FieldName(nil, reflect.StructField{Name: s})

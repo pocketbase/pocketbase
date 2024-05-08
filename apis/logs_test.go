@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/tests"
+	"github.com/lilysnc/pocketbasepg/tests"
 )
 
 func TestLogsList(t *testing.T) {

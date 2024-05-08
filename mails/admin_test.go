@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pocketbase/pocketbase/mails"
-	"github.com/pocketbase/pocketbase/tests"
+	"github.com/lilysnc/pocketbasepg/mails"
+	"github.com/lilysnc/pocketbasepg/tests"
 )
 
 func TestSendAdminPasswordReset(t *testing.T) {

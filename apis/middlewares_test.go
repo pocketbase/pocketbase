@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/apis"
-	"github.com/pocketbase/pocketbase/tests"
+	"github.com/lilysnc/pocketbasepg/apis"
+	"github.com/lilysnc/pocketbasepg/tests"
 )
 
 func TestRequireGuestOnly(t *testing.T) {

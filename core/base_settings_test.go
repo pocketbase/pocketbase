@@ -3,9 +3,9 @@ package core_test
 import (
 	"testing"
 
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/lilysnc/pocketbasepg/models"
+	"github.com/lilysnc/pocketbasepg/tests"
+	"github.com/lilysnc/pocketbasepg/tools/types"
 )
 
 func TestBaseAppRefreshSettings(t *testing.T) {
