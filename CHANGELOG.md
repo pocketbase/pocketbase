@@ -1,6 +1,8 @@
-## (WIP) v0.22.12
+## v0.22.12
 
-- Fixed Firefox calendar picker grid layout ([#4865](https://github.com/pocketbase/pocketbase/issues/4865)).
+- Fixed calendar picker grid layout misalignment on Firefox ([#4865](https://github.com/pocketbase/pocketbase/issues/4865)).
+
+- Updated Go deps and bumped the min Go version in the GitHub release action to Go 1.22.3 since it comes with [some minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.22.3).
 
 
 ## v0.22.11
