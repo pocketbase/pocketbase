@@ -115,7 +115,7 @@ func init() {
 
 		return daos.New(db).SaveCollection(collection)
 	}, func(db dbx.Builder) error {
-		dao := daos.New(db);
+		dao := daos.New(db)
 
 		collection, err := dao.FindCollectionByNameOrId("new_id")
 		if err != nil {
@@ -256,7 +256,7 @@ import (
 
 func init() {
 	m.Register(func(db dbx.Builder) error {
-		dao := daos.New(db);
+		dao := daos.New(db)
 
 		collection, err := dao.FindCollectionByNameOrId("test123")
 		if err != nil {
@@ -512,7 +512,7 @@ import (
 
 func init() {
 	m.Register(func(db dbx.Builder) error {
-		dao := daos.New(db);
+		dao := daos.New(db)
 
 		collection, err := dao.FindCollectionByNameOrId("test123")
 		if err != nil {
@@ -588,7 +588,7 @@ func init() {
 
 		return dao.SaveCollection(collection)
 	}, func(db dbx.Builder) error {
-		dao := daos.New(db);
+		dao := daos.New(db)
 
 		collection, err := dao.FindCollectionByNameOrId("test123")
 		if err != nil {
