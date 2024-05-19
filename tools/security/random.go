@@ -9,9 +9,7 @@ import (
 
 const defaultRandomAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 
-func init() {
-	mathRand.Seed(time.Now().UnixNano())
-}
+
 
 // RandomString generates a cryptographically random string with the specified length.
 //
