@@ -52,7 +52,21 @@
             position: "left",
         }}
     />
-
+    {#if record && record.id && record.collectionId}
+        <a
+            href="/#/collections?collectionId={record.collectionId}&filter=&sort=-created&recordId={record.id}"
+            target="_blank"
+        >
+            <i
+                class="link-hint txt-sm ri-share-box-fill"
+                use:tooltip={{
+                    text: "Open Record In New Tab",
+                    class: "code",
+                    position: "top",
+                }}
+            />
+        </a>
+    {/if}
     {#each fileDisplayFields as name}
         {@const filenames = CommonHelper.toArray(record[name]).slice(0, 5)}
         {#each filenames as filename}

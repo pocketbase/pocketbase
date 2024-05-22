@@ -431,7 +431,9 @@
                 <tr
                     tabindex="0"
                     class="row-handle"
-                    on:click={() => dispatch("select", record)}
+                    on:click={(e) => {
+                        if (!e.target.classList.contains("ri-share-box-fill")) dispatch("select", record);
+                    }}
                     on:keydown={(e) => {
                         if (e.code === "Enter") {
                             e.preventDefault();
