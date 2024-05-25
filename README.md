@@ -164,3 +164,7 @@ PocketBase has a [roadmap](https://github.com/orgs/pocketbase/projects/2) and I 
 
 Don't get upset if I close your PR, even if it is well executed and tested. This doesn't mean that it will never be merged.
 Later we can always refer to it and/or take pieces of your implementation when the time comes to work on the issue (don't worry you'll be credited in the release notes).
+
+## One-Click Deployment
+
+[![Deploy to RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/?app_id=129)
