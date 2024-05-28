@@ -250,6 +250,6 @@ func TestNewProviderByName(t *testing.T) {
 		t.Errorf("Expected nil, got error %v", err)
 	}
 	if _, ok := p.(*auth.Notion); !ok {
-		t.Error("Expected to be instance of *auth.Planningcenter")
+		t.Error("Expected to be instance of *auth.Notion")
 	}
 }

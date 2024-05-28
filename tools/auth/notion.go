@@ -30,7 +30,7 @@ func NewNotionProvider() *Notion {
 // FetchAuthUser returns an AuthUser instance based on the Notion's User api.
 // API reference: https://developers.notion.com/reference/get-self
 func (p *Notion) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	req, err := http.NewRequest("GET", p.userApiUrl, nil)
+	req, err := http.NewRequestWithContext(p.ctx, "GET", p.userApiUrl, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -76,12 +76,13 @@ func (p *Notion) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:          extracted.Bot.Owner.User.Id,
-		Name:        extracted.Bot.Owner.User.Name,
-		Email:       extracted.Bot.Owner.User.Person.Email,
-		AvatarUrl:   extracted.Bot.Owner.User.AvatarUrl,
-		RawUser:     rawUser,
-		AccessToken: token.AccessToken,
+		Id:           extracted.Bot.Owner.User.Id,
+		Name:         extracted.Bot.Owner.User.Name,
+		Email:        extracted.Bot.Owner.User.Person.Email,
+		AvatarUrl:    extracted.Bot.Owner.User.AvatarUrl,
+		RawUser:      rawUser,
+		AccessToken:  token.AccessToken,
+		RefreshToken: token.RefreshToken,
 	}
 
 	return user, nil
