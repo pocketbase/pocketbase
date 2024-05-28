@@ -151,4 +151,9 @@ export default [
         logo:  "oidc.svg",
         optionsComponent: OIDCOptions,
     },
+    {
+        key:   "notionAuth",
+        title: "Notion",
+        logo:  "notion.svg",
+    },
 ];

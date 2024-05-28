@@ -243,4 +243,13 @@ func TestNewProviderByName(t *testing.T) {
 	if _, ok := p.(*auth.Planningcenter); !ok {
 		t.Error("Expected to be instance of *auth.Planningcenter")
 	}
+
+	// notion
+	p, err = auth.NewProviderByName(auth.NameNotion)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Notion); !ok {
+		t.Error("Expected to be instance of *auth.Planningcenter")
+	}
 }

@@ -67,6 +67,7 @@ type Settings struct {
 	MailcowAuth        AuthProviderConfig `form:"mailcowAuth" json:"mailcowAuth"`
 	BitbucketAuth      AuthProviderConfig `form:"bitbucketAuth" json:"bitbucketAuth"`
 	PlanningcenterAuth AuthProviderConfig `form:"planningcenterAuth" json:"planningcenterAuth"`
+	NotionAuth         AuthProviderConfig `form:"notionAuth" json:"notionAuth"`
 }
 
 // New creates and returns a new default Settings instance.
@@ -204,6 +205,9 @@ func New() *Settings {
 		PlanningcenterAuth: AuthProviderConfig{
 			Enabled: false,
 		},
+		NotionAuth: AuthProviderConfig{
+			Enabled: false,
+		},
 	}
 }
 
@@ -251,6 +255,7 @@ func (s *Settings) Validate() error {
 		validation.Field(&s.MailcowAuth),
 		validation.Field(&s.BitbucketAuth),
 		validation.Field(&s.PlanningcenterAuth),
+		validation.Field(&s.NotionAuth),
 	)
 }
 
@@ -321,6 +326,7 @@ func (s *Settings) RedactClone() (*Settings, error) {
 		&clone.MailcowAuth.ClientSecret,
 		&clone.BitbucketAuth.ClientSecret,
 		&clone.PlanningcenterAuth.ClientSecret,
+		&clone.NotionAuth.ClientSecret,
 	}
 
 	// mask all sensitive fields
@@ -365,6 +371,7 @@ func (s *Settings) NamedAuthProviderConfigs() map[string]AuthProviderConfig {
 		auth.NameMailcow:        s.MailcowAuth,
 		auth.NameBitbucket:      s.BitbucketAuth,
 		auth.NamePlanningcenter: s.PlanningcenterAuth,
+		auth.NameNotion:         s.NotionAuth,
 	}
 }
 
