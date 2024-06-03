@@ -1,3 +1,10 @@
+## v0.22.13
+
+- Fixed rules inconsistency for text literals when inside parenthesis ([#5017](https://github.com/pocketbase/pocketbase/issues/5017)).
+
+- Updated Go deps.
+
+
 ## v0.22.12
 
 - Fixed calendar picker grid layout misalignment on Firefox ([#4865](https://github.com/pocketbase/pocketbase/issues/4865)).
