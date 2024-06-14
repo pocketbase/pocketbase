@@ -39,7 +39,7 @@ func NewAppleProvider() *Apple {
 			ctx:         context.Background(),
 			displayName: "Apple",
 			pkce:        true,
-			scopes:      nil, // custom scopes are currently not supported since they require a POST redirect
+			scopes:      []string{"name", "email"},
 			authUrl:     "https://appleid.apple.com/auth/authorize",
 			tokenUrl:    "https://appleid.apple.com/auth/token",
 		},
@@ -63,6 +63,7 @@ func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	extracted := struct {
 		Id            string `json:"sub"`
+		Name          string `json:"name"`
 		Email         string `json:"email"`
 		EmailVerified any    `json:"email_verified"` // could be string or bool
 	}{}
@@ -72,6 +73,7 @@ func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	user := &AuthUser{
 		Id:           extracted.Id,
+		Name:         extracted.Name,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,

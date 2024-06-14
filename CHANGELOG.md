@@ -1,3 +1,8 @@
+## v0.22.14-rc
+
+- Added OAuth2 POST redirect support (in case of `response_mode=form_post`) to allow specifying scopes for the Apple OAuth2 integration.
+
+
 ## v0.22.13
 
 - Fixed rules inconsistency for text literals when inside parenthesis ([#5017](https://github.com/pocketbase/pocketbase/issues/5017)).

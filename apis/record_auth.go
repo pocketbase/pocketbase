@@ -30,6 +30,7 @@ func bindRecordAuthApi(app core.App, rg *echo.Group) {
 
 	// global oauth2 subscription redirect handler
 	rg.GET("/oauth2-redirect", api.oauth2SubscriptionRedirect)
+	rg.POST("/oauth2-redirect", api.oauth2SubscriptionRedirect) // needed in case of response_mode=form_post
 
 	// common collection record related routes
 	subGroup := rg.Group(
@@ -146,7 +147,7 @@ func (api *recordAuthApi) authMethods(c echo.Context) error {
 		switch name {
 		case auth.NameApple:
 			// see https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/incorporating_sign_in_with_apple_into_other_platforms#3332113
-			urlOpts = append(urlOpts, oauth2.SetAuthURLParam("response_mode", "query"))
+			urlOpts = append(urlOpts, oauth2.SetAuthURLParam("response_mode", "form_post"))
 		}
 
 		if provider.PKCE() {
@@ -664,31 +665,30 @@ const (
 	oauth2RedirectSuccessPath string = "../_/#/auth/oauth2-redirect-success"
 )
 
-type oauth2EventMessage struct {
-	State string `json:"state"`
-	Code  string `json:"code"`
-	Error string `json:"error,omitempty"`
+type oauth2RedirectData struct {
+	State string `form:"state" query:"state" json:"state"`
+	Code  string `form:"code" query:"code" json:"code"`
+	Error string `form:"error" query:"error" json:"error,omitempty"`
 }
 
 func (api *recordAuthApi) oauth2SubscriptionRedirect(c echo.Context) error {
-	state := c.QueryParam("state")
-	if state == "" {
+	data := oauth2RedirectData{}
+	if err := c.Bind(&data); err != nil {
+		api.app.Logger().Debug("Failed to read OAuth2 redirect data", "error", err)
+		return c.Redirect(http.StatusTemporaryRedirect, oauth2RedirectFailurePath)
+	}
+
+	if data.State == "" {
 		api.app.Logger().Debug("Missing OAuth2 state parameter")
 		return c.Redirect(http.StatusTemporaryRedirect, oauth2RedirectFailurePath)
 	}
 
-	client, err := api.app.SubscriptionsBroker().ClientById(state)
+	client, err := api.app.SubscriptionsBroker().ClientById(data.State)
 	if err != nil || client.IsDiscarded() || !client.HasSubscription(oauth2SubscriptionTopic) {
-		api.app.Logger().Debug("Missing or invalid OAuth2 subscription client", "error", err, "clientId", state)
+		api.app.Logger().Debug("Missing or invalid OAuth2 subscription client", "error", err, "clientId", data.State)
 		return c.Redirect(http.StatusTemporaryRedirect, oauth2RedirectFailurePath)
 	}
 	defer client.Unsubscribe(oauth2SubscriptionTopic)
-
-	data := oauth2EventMessage{
-		State: state,
-		Code:  c.QueryParam("code"),
-		Error: c.QueryParam("error"),
-	}
 
 	encodedData, err := json.Marshal(data)
 	if err != nil {
