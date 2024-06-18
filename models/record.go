@@ -309,7 +309,7 @@ func (m *Record) Set(key string, value any) {
 			switch key {
 			case schema.FieldNameEmailVisibility, schema.FieldNameVerified:
 				v = cast.ToBool(value)
-			case schema.FieldNameLastResetSentAt, schema.FieldNameLastVerificationSentAt:
+			case schema.FieldNameLastResetSentAt, schema.FieldNameLastVerificationSentAt, schema.FieldNameLastLoginAlertSentAt:
 				v, _ = types.ParseDateTime(value)
 			case schema.FieldNameUsername, schema.FieldNameEmail, schema.FieldNameTokenKey, schema.FieldNamePasswordHash:
 				v = cast.ToString(value)
@@ -347,7 +347,7 @@ func (m *Record) Get(key string) any {
 			switch key {
 			case schema.FieldNameEmailVisibility, schema.FieldNameVerified:
 				v = cast.ToBool(v)
-			case schema.FieldNameLastResetSentAt, schema.FieldNameLastVerificationSentAt:
+			case schema.FieldNameLastResetSentAt, schema.FieldNameLastVerificationSentAt, schema.FieldNameLastLoginAlertSentAt:
 				v, _ = types.ParseDateTime(v)
 			case schema.FieldNameUsername, schema.FieldNameEmail, schema.FieldNameTokenKey, schema.FieldNamePasswordHash:
 				v = cast.ToString(v)
@@ -685,7 +685,7 @@ func (m *Record) getNormalizeDataValueForDB(key string) any {
 		switch key {
 		case schema.FieldNameEmailVisibility, schema.FieldNameVerified:
 			return m.GetBool(key)
-		case schema.FieldNameLastResetSentAt, schema.FieldNameLastVerificationSentAt:
+		case schema.FieldNameLastResetSentAt, schema.FieldNameLastVerificationSentAt, schema.FieldNameLastLoginAlertSentAt:
 			return m.GetDateTime(key)
 		case schema.FieldNameUsername, schema.FieldNameEmail, schema.FieldNameTokenKey, schema.FieldNamePasswordHash:
 			return m.GetString(key)
@@ -894,6 +894,24 @@ func (m *Record) SetLastVerificationSentAt(dateTime types.DateTime) error {
 	}
 
 	m.Set(schema.FieldNameLastVerificationSentAt, dateTime)
+
+	return nil
+}
+
+// LastLoginAlertSentAt returns the "lastLoginAlertSentAt" auth record data value.
+func (m *Record) LastLoginAlertSentAt() types.DateTime {
+	return m.GetDateTime(schema.FieldNameLastLoginAlertSentAt)
+}
+
+// SetLastLoginAlertSentAt sets an "lastLoginAlertSentAt" auth record data value.
+//
+// Returns an error if the record is not from an auth collection.
+func (m *Record) SetLastLoginAlertSentAt(dateTime types.DateTime) error {
+	if !m.collection.IsAuth() {
+		return notAuthRecordErr
+	}
+
+	m.Set(schema.FieldNameLastLoginAlertSentAt, dateTime)
 
 	return nil
 }

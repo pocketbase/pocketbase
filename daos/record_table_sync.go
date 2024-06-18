@@ -37,6 +37,7 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 				cols[schema.FieldNamePasswordHash] = "TEXT NOT NULL"
 				cols[schema.FieldNameLastResetSentAt] = "TEXT DEFAULT '' NOT NULL"
 				cols[schema.FieldNameLastVerificationSentAt] = "TEXT DEFAULT '' NOT NULL"
+				cols[schema.FieldNameLastLoginAlertSentAt] = "TEXT DEFAULT '' NOT NULL"
 			}
 
 			// ensure that the new collection has an id

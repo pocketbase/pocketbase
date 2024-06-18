@@ -1328,7 +1328,7 @@ func TestRecordColumnValueMap(t *testing.T) {
 		},
 		{
 			models.CollectionTypeAuth,
-			`{"created":"2022-01-01 10:00:30.123Z","email":"test_email","emailVisibility":true,"field1":"test","field2":"test.png","field3":["test1","test2"],"field4":["test11","test12"],"id":"test_id","lastResetSentAt":"2022-01-02 10:00:30.123Z","lastVerificationSentAt":"","passwordHash":"test_passwordHash","tokenKey":"test_tokenKey","updated":"","username":"test_username","verified":false}`,
+			`{"created":"2022-01-01 10:00:30.123Z","email":"test_email","emailVisibility":true,"field1":"test","field2":"test.png","field3":["test1","test2"],"field4":["test11","test12"],"id":"test_id","lastLoginAlertSentAt":"","lastResetSentAt":"2022-01-02 10:00:30.123Z","lastVerificationSentAt":"","passwordHash":"test_passwordHash","tokenKey":"test_tokenKey","updated":"","username":"test_username","verified":false}`,
 		},
 	}
 
@@ -1970,6 +1970,52 @@ func TestRecordRefreshTokenKey(t *testing.T) {
 			// verify that the field is stored in the record data slice
 			if v := m.Get(schema.FieldNameTokenKey); v != m.TokenKey() {
 				t.Fatalf("(%d) Expected data field value %q, got %q", i, m.TokenKey(), v)
+			}
+		}
+	}
+}
+
+func TestRecordLastPasswordLoginAlertSentAt(t *testing.T) {
+	t.Parallel()
+
+	scenarios := []struct {
+		collectionType string
+		expectError    bool
+	}{
+		{models.CollectionTypeBase, true},
+		{models.CollectionTypeAuth, false},
+	}
+
+	testValue, err := types.ParseDateTime("2022-01-01 00:00:00.123Z")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, s := range scenarios {
+		collection := &models.Collection{Type: s.collectionType}
+		m := models.NewRecord(collection)
+
+		if s.expectError {
+			if err := m.SetLastLoginAlertSentAt(testValue); err == nil {
+				t.Errorf("(%d) Expected error, got nil", i)
+			}
+			if v := m.LastLoginAlertSentAt(); !v.IsZero() {
+				t.Fatalf("(%d) Expected empty value, got %v", i, v)
+			}
+			// verify that nothing is stored in the record data slice
+			if v := m.Get(schema.FieldNameLastLoginAlertSentAt); v != nil {
+				t.Fatalf("(%d) Didn't expect data field %q: %v", i, schema.FieldNameLastLoginAlertSentAt, v)
+			}
+		} else {
+			if err := m.SetLastLoginAlertSentAt(testValue); err != nil {
+				t.Fatalf("(%d) Expected nil, got error %v", i, err)
+			}
+			if v := m.LastLoginAlertSentAt(); v != testValue {
+				t.Fatalf("(%d) Expected %v, got %v", i, testValue, v)
+			}
+			// verify that the field is stored in the record data slice
+			if v := m.Get(schema.FieldNameLastLoginAlertSentAt); v != testValue {
+				t.Fatalf("(%d) Expected data field value %v, got %v", i, testValue, v)
 			}
 		}
 	}

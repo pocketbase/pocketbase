@@ -83,7 +83,7 @@ func TestSyncRecordTableSchema(t *testing.T) {
 			[]string{
 				"id", "created", "updated", "test",
 				"username", "email", "verified", "emailVisibility",
-				"tokenKey", "passwordHash", "lastResetSentAt", "lastVerificationSentAt",
+				"tokenKey", "passwordHash", "lastResetSentAt", "lastVerificationSentAt", "lastLoginAlertSentAt",
 			},
 			4,
 		},

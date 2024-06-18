@@ -161,7 +161,7 @@
             }
         }
 
-        // constuct the dropdown options
+        // construct the dropdown options
         sizeOptions = [{ label: "Original size", value: "" }];
         for (const size of sizes) {
             sizeOptions.push({

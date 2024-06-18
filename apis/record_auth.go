@@ -7,19 +7,23 @@ import (
 	"log/slog"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms"
+	"github.com/pocketbase/pocketbase/mails"
 	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/models/schema"
 	"github.com/pocketbase/pocketbase/resolvers"
 	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
+	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 )
 
@@ -270,6 +274,14 @@ func (api *recordAuthApi) authWithOAuth2(c echo.Context) error {
 				}
 
 				return api.app.OnRecordAfterAuthWithOAuth2Request().Trigger(event, func(e *core.RecordAuthWithOAuth2Event) error {
+					// clear the lastLoginAlertSentAt field so that we can enforce password auth notifications
+					if !e.Record.LastLoginAlertSentAt().IsZero() {
+						e.Record.Set(schema.FieldNameLastLoginAlertSentAt, "")
+						if err := api.app.Dao().SaveRecord(e.Record); err != nil {
+							api.app.Logger().Warn("Failed to reset lastLoginAlertSentAt", "error", err, "recordId", e.Record.Id)
+						}
+					}
+
 					return RecordAuthResponse(api.app, e.HttpContext, e.Record, meta)
 				})
 			})
@@ -303,6 +315,42 @@ func (api *recordAuthApi) authWithPassword(c echo.Context) error {
 			return api.app.OnRecordBeforeAuthWithPasswordRequest().Trigger(event, func(e *core.RecordAuthWithPasswordEvent) error {
 				if err := next(e.Record); err != nil {
 					return NewBadRequestError("Failed to authenticate.", err)
+				}
+
+				// @todo remove after the refactoring
+				if collection.AuthOptions().AllowOAuth2Auth && e.Record.Email() != "" {
+					externalAuths, err := api.app.Dao().FindAllExternalAuthsByRecord(e.Record)
+					if err != nil {
+						return NewBadRequestError("Failed to authenticate.", err)
+					}
+					if len(externalAuths) > 0 {
+						lastLoginAlert := e.Record.LastLoginAlertSentAt().Time()
+
+						// send an email alert if the password auth is after OAuth2 auth (lastLoginAlert will be empty)
+						// or if it has been ~7 days since the last alert
+						if lastLoginAlert.IsZero() || time.Now().UTC().Sub(lastLoginAlert).Hours() > 168 {
+							providerNames := make([]string, len(externalAuths))
+							for i, ea := range externalAuths {
+								var name string
+								if provider, err := auth.NewProviderByName(ea.Provider); err == nil {
+									name = provider.DisplayName()
+								}
+								if name == "" {
+									name = ea.Provider
+								}
+								providerNames[i] = name
+							}
+
+							if err := mails.SendRecordPasswordLoginAlert(api.app, e.Record, providerNames...); err != nil {
+								return NewBadRequestError("Failed to authenticate.", err)
+							}
+
+							e.Record.SetLastLoginAlertSentAt(types.NowDateTime())
+							if err := api.app.Dao().SaveRecord(e.Record); err != nil {
+								api.app.Logger().Warn("Failed to update lastLoginAlertSentAt", "error", err, "recordId", e.Record.Id)
+							}
+						}
+					}
 				}
 
 				return api.app.OnRecordAfterAuthWithPasswordRequest().Trigger(event, func(e *core.RecordAuthWithPasswordEvent) error {

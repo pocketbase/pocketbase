@@ -237,6 +237,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				"OnRecordBeforeAuthWithPasswordRequest": 1,
 				"OnRecordAfterAuthWithPasswordRequest":  1,
 				"OnRecordAuthRequest":                   1,
+				// lastLoginAlertSentAt update
+				"OnModelAfterUpdate":  1,
+				"OnModelBeforeUpdate": 1,
 			},
 		},
 
@@ -304,6 +307,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				"OnRecordBeforeAuthWithPasswordRequest": 1,
 				"OnRecordAfterAuthWithPasswordRequest":  1,
 				"OnRecordAuthRequest":                   1,
+				// lastLoginAlertSentAt update
+				"OnModelAfterUpdate":  1,
+				"OnModelBeforeUpdate": 1,
 			},
 		},
 		{
@@ -328,6 +334,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				"OnRecordBeforeAuthWithPasswordRequest": 1,
 				"OnRecordAfterAuthWithPasswordRequest":  1,
 				"OnRecordAuthRequest":                   1,
+				// lastLoginAlertSentAt update
+				"OnModelAfterUpdate":  1,
+				"OnModelBeforeUpdate": 1,
 			},
 		},
 

@@ -12,6 +12,43 @@ import (
 	"github.com/pocketbase/pocketbase/tools/mailer"
 )
 
+// @todo remove after the refactoring
+//
+// SendRecordPasswordLoginAlert sends a OAuth2 password login alert to the specified auth record.
+func SendRecordPasswordLoginAlert(app core.App, authRecord *models.Record, providerNames ...string) error {
+	params := struct {
+		AppName       string
+		AppUrl        string
+		Record        *models.Record
+		ProviderNames []string
+	}{
+		AppName:       app.Settings().Meta.AppName,
+		AppUrl:        app.Settings().Meta.AppUrl,
+		Record:        authRecord,
+		ProviderNames: providerNames,
+	}
+
+	mailClient := app.NewMailClient()
+
+	// resolve body template
+	body, renderErr := resolveTemplateContent(params, templates.Layout, templates.PasswordLoginAlertBody)
+	if renderErr != nil {
+		return renderErr
+	}
+
+	message := &mailer.Message{
+		From: mail.Address{
+			Name:    app.Settings().Meta.SenderName,
+			Address: app.Settings().Meta.SenderAddress,
+		},
+		To:      []mail.Address{{Address: authRecord.Email()}},
+		Subject: "Password login alert",
+		HTML:    body,
+	}
+
+	return mailClient.Send(message)
+}
+
 // SendRecordPasswordReset sends a password reset request email to the specified user.
 func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
 	token, tokenErr := tokens.NewRecordResetPasswordToken(app, authRecord)
