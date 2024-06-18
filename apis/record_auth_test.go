@@ -1714,7 +1714,7 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 			BeforeTestFunc: beforeTestFunc(clientStubs[7], map[string][]string{
 				"c3": {`"state":"` + clientStubs[7]["c3"].Id(), `"code":"123"`},
 			}),
-			ExpectedStatus: http.StatusTemporaryRedirect,
+			ExpectedStatus: http.StatusSeeOther,
 			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
 				app.Store().Get("cancelFunc").(context.CancelFunc)()
 
