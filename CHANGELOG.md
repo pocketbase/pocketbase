@@ -8,7 +8,7 @@
     Note 2: Existing users that have already logged in with Apple may need to revoke their access in order to see the email sharing options as shown in [this screenshot](https://github.com/pocketbase/pocketbase/discussions/5074#discussioncomment-9801855).
     If you want to force the new consent screen you could register a new Apple OAuth2 app.
 
-- ⚠️ Fixed a security vulnerability related to the OAuth2 email autolinking (thanks to D.Urness for reporting it).
+- ⚠️ Fixed a security vulnerability related to the OAuth2 email autolinking (thanks to @dalurness for reporting it).
 
     Just to be safe I've also published a [GitHub security advisory](https://github.com/pocketbase/pocketbase/security/advisories/GHSA-m93w-4fxv-r35v) (_may take some time to show up in the related security databases_).
 
