@@ -1,6 +1,37 @@
-## v0.22.14-rc
+## v0.22.14
 
 - Added OAuth2 POST redirect support (in case of `response_mode=form_post`) to allow specifying scopes for the Apple OAuth2 integration.
+
+    Note 1: If you are using the "Manual code exchange" flow with Apple (aka. `authWithOAuth2Code()`), you need to either update your custom
+    redirect handler to accept POST requests OR if you want to keep the old behavior and don't need the Apple user's email - replace in the Apple authorization url `response_mode=form_post` back to `response_mode=query`.
+
+    Note 2: Existing users that have already logged in with Apple may need to revoke their access in order to see the email sharing options as shown in [this screenshot](https://github.com/pocketbase/pocketbase/discussions/5074#discussioncomment-9801855).
+    If you want to force the new consent screen you could register a new Apple OAuth2 app.
+
+- ⚠️ Fixed a security vulnerability related to the OAuth2 email autolinking (thanks to D.Urness for reporting it).
+
+    Just to be safe I've also published a [GitHub security advisory](https://github.com/pocketbase/pocketbase/security/advisories/GHSA-m93w-4fxv-r35v) (_may take some time to show up in the related security databases_).
+
+    In order to be exploited you must have **both** OAuth2 and Password auth methods enabled.
+
+    A possible attack scenario could be:
+    - a malicious actor register with the targeted user's email (it is unverified)
+    - at some later point in time the targeted user stumble on your app and decides to sign-up with OAuth2 (_this step could be also initiated by the attacker by sending an invite email to the targeted user_)
+    - on successful OAuth2 auth we search for an existing PocketBase user matching with the OAuth2 user's email and associate them
+    - because we haven't changed the password of the existing PocketBase user during the linking, the malicious actor has access to the targeted user account and will be able to login with the initially created email/password
+
+    To prevent this for happening we now reset the password for this specific case if the previously created user wasn't verified (an exception to this is if the linking is explicit/manual, aka. when you send `Authorization:TOKEN` with the OAuth2 auth call).
+
+    Additionally to warn users we now send an email alert in case the user has logged in with password but has at least one OAuth2 account linked. It looks something like:
+
+    _Hello,
+    Just to let you know that someone has logged in to your Acme account using a password while you already have OAuth2 GitLab auth linked.
+    If you have recently signed in with a password, you may disregard this email.
+    **If you don't recognize the above action, you should immediately change your Acme account password.**
+    Thanks,
+    Acme team_
+
+    The flow will be further improved with the [ongoing refactoring](https://github.com/pocketbase/pocketbase/discussions/4355) and we will start sending emails for "unrecognized device" logins (OTP and MFA is already implemented and will be available with the next v0.23.0 release in the near future).
 
 
 ## v0.22.13
