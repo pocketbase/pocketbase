@@ -2,6 +2,8 @@
 
 - Added `tests.TestMailer` mutex to minimize the data race warnings during tests ([#5157](https://github.com/pocketbase/pocketbase/issues/5157)).
 
+- Updated Go dependencies.
+
 
 ## v0.22.14
 
