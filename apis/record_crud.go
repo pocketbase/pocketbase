@@ -185,6 +185,11 @@ func (api *recordApi) create(c echo.Context) error {
 			return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
 		}
 
+		// force unset the verified state to prevent ManageRule misuse
+		if !hasFullManageAccess {
+			testForm.Verified = false
+		}
+
 		createRuleFunc := func(q *dbx.SelectQuery) error {
 			if *collection.CreateRule == "" {
 				return nil // no create rule to resolve
