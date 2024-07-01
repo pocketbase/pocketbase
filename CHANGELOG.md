@@ -1,3 +1,8 @@
+## v0.22.15-WIP
+
+- Added `tests.TestMailer` mutex to minimize the data race warnings during tests ([#5157](https://github.com/pocketbase/pocketbase/issues/5157)).
+
+
 ## v0.22.14
 
 - Added OAuth2 POST redirect support (in case of `response_mode=form_post`) to allow specifying scopes for the Apple OAuth2 integration.
