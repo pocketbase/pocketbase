@@ -1,8 +1,10 @@
-## v0.22.15-WIP
+## v0.22.15
 
-- Added `tests.TestMailer` mutex to minimize the data race warnings during tests ([#5157](https://github.com/pocketbase/pocketbase/issues/5157)).
+- Added mutex to `tests.TestMailer()` to minimize tests data race warnings ([#5157](https://github.com/pocketbase/pocketbase/issues/5157)).
 
-- Updated Go dependencies.
+- Updated goja and the other Go dependencies.
+
+- Bumped the min Go version in the GitHub release action to Go 1.22.5 since it comes with [`net/http` security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.22.5).
 
 
 ## v0.22.14
