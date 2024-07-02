@@ -123,7 +123,7 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 			})
 
 			if err != nil {
-				app.Logger().Debug(
+				app.Logger().Error(
 					"[cronAdd] failed to execute cron job",
 					slog.String("jobId", jobId),
 					slog.String("error", err.Error()),
