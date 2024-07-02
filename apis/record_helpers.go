@@ -154,7 +154,7 @@ func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defa
 	requestInfo := RequestInfo(c)
 
 	if err := autoIgnoreAuthRecordsEmailVisibility(dao, records, requestInfo); err != nil {
-		return fmt.Errorf("Failed to resolve email visibility: %w", err)
+		return fmt.Errorf("failed to resolve email visibility: %w", err)
 	}
 
 	expands := defaultExpands
@@ -167,7 +167,7 @@ func EnrichRecords(c echo.Context, dao *daos.Dao, records []*models.Record, defa
 
 	errs := dao.ExpandRecords(records, expands, expandFetch(dao, requestInfo))
 	if len(errs) > 0 {
-		return fmt.Errorf("Failed to expand: %v", errs)
+		return fmt.Errorf("failed to expand: %v", errs)
 	}
 
 	return nil
@@ -185,7 +185,7 @@ func expandFetch(
 			}
 
 			if relCollection.ViewRule == nil {
-				return fmt.Errorf("Only admins can view collection %q records", relCollection.Name)
+				return fmt.Errorf("only admins can view collection %q records", relCollection.Name)
 			}
 
 			if *relCollection.ViewRule != "" {
