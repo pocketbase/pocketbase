@@ -180,6 +180,11 @@ func TestFileSystemUploadMultipart(t *testing.T) {
 	if name, ok := attrs.Metadata["original-filename"]; !ok || name != "test" {
 		t.Fatalf("Expected original-filename to be %q, got %q", "test", name)
 	}
+	// Verify if the Cache-Control header has the default directives defined in filesystem.go.
+	expectedDirectives := "max-age=2592000, stale-while-revalidate=86400"
+	if directives := attrs.CacheControl; directives != expectedDirectives {
+		t.Fatalf("Expected Cache-Control to be %q, got %q", expectedDirectives, directives)
+	}
 }
 
 func TestFileSystemUploadFile(t *testing.T) {
@@ -217,6 +222,11 @@ func TestFileSystemUploadFile(t *testing.T) {
 	if name, ok := attrs.Metadata["original-filename"]; !ok || name != file.OriginalName {
 		t.Fatalf("Expected original-filename to be %q, got %q", file.OriginalName, name)
 	}
+	// Verify if the Cache-Control header has the default directives defined in filesystem.go.
+	expectedDirectives := "max-age=2592000, stale-while-revalidate=86400"
+	if directives := attrs.CacheControl; directives != expectedDirectives {
+		t.Fatalf("Expected Cache-Control to be %q, got %q", expectedDirectives, directives)
+	}
 }
 
 func TestFileSystemUpload(t *testing.T) {
@@ -238,6 +248,16 @@ func TestFileSystemUpload(t *testing.T) {
 
 	if exists, _ := fs.Exists(fileKey); !exists {
 		t.Fatalf("Expected %s to exist", fileKey)
+	}
+
+	attrs, err := fs.Attributes(fileKey)
+	if err != nil {
+		t.Fatalf("Failed to fetch file attributes: %v", err)
+	}
+	// Verify if the Cache-Control header has the default directives defined in filesystem.go.
+	expectedDirectives := "max-age=2592000, stale-while-revalidate=86400"
+	if directives := attrs.CacheControl; directives != expectedDirectives {
+		t.Fatalf("Expected Cache-Control to be %q, got %q", expectedDirectives, directives)
 	}
 }
 

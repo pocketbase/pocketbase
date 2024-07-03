@@ -28,6 +28,10 @@ import (
 
 var gcpIgnoreHeaders = []string{"Accept-Encoding"}
 
+// (valid for 30 days but the cache is allowed to reuse the file for any requests
+// that are made in the last day while revalidating the res in the background)
+const defaultCachingDirectives = "max-age=2592000, stale-while-revalidate=86400"
+
 type System struct {
 	ctx    context.Context
 	bucket *blob.Bucket
@@ -170,7 +174,8 @@ func (s *System) List(prefix string) ([]*blob.ListObject, error) {
 // Upload writes content into the fileKey location.
 func (s *System) Upload(content []byte, fileKey string) error {
 	opts := &blob.WriterOptions{
-		ContentType: mimetype.Detect(content).String(),
+		ContentType:  mimetype.Detect(content).String(),
+		CacheControl: defaultCachingDirectives,
 	}
 
 	w, writerErr := s.bucket.NewWriter(s.ctx, fileKey, opts)
@@ -213,6 +218,7 @@ func (s *System) UploadFile(file *File, fileKey string) error {
 		Metadata: map[string]string{
 			"original-filename": originalName,
 		},
+		CacheControl: defaultCachingDirectives,
 	}
 
 	w, err := s.bucket.NewWriter(s.ctx, fileKey, opts)
@@ -255,6 +261,7 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 		Metadata: map[string]string{
 			"original-filename": originalName,
 		},
+		CacheControl: defaultCachingDirectives,
 	}
 
 	w, err := s.bucket.NewWriter(s.ctx, fileKey, opts)
@@ -392,7 +399,7 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 	// set a default cache-control header
 	// (valid for 30 days but the cache is allowed to reuse the file for any requests
 	// that are made in the last day while revalidating the res in the background)
-	setHeaderIfMissing(res, "Cache-Control", "max-age=2592000, stale-while-revalidate=86400")
+	setHeaderIfMissing(res, "Cache-Control", defaultCachingDirectives)
 
 	http.ServeContent(res, req, name, br.ModTime(), br)
 
