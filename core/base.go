@@ -1261,7 +1261,7 @@ func (app *BaseApp) initLogger() error {
 			logsMaxDays := app.Settings().Logs.MaxDays
 			now := time.Now()
 			lastLogsDeletedAt := cast.ToTime(app.Store().Get("lastLogsDeletedAt"))
-			daysDiff := now.Sub(lastLogsDeletedAt).Hours() * 24
+			daysDiff := now.Sub(lastLogsDeletedAt).Hours() / 24
 			if daysDiff > float64(logsMaxDays) {
 				deleteErr := app.LogsDao().DeleteOldLogs(now.AddDate(0, 0, -1*logsMaxDays))
 				if deleteErr == nil {
