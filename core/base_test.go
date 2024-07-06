@@ -1,12 +1,16 @@
 package core
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/migrations"
 	"github.com/pocketbase/pocketbase/migrations/logs"
@@ -15,6 +19,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/logger"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/migrate"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestNewBaseApp(t *testing.T) {
@@ -281,7 +286,7 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 	}
 	defer cleanup()
 
-	threshold := 200
+	const logsThreshold = 200
 
 	totalLogs := func(app App, t *testing.T) int {
 		var total int
@@ -294,24 +299,22 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 		return total
 	}
 
-	// disabled logs retention
-	{
+	t.Run("disabled logs retention", func(t *testing.T) {
 		app.Settings().Logs.MaxDays = 0
 
-		for i := 0; i < threshold+1; i++ {
+		for i := 0; i < logsThreshold+1; i++ {
 			app.Logger().Error("test")
 		}
 
 		if total := totalLogs(app, t); total != 0 {
 			t.Fatalf("Expected no logs, got %d", total)
 		}
-	}
+	})
 
-	// test batch logs writes
-	{
+	t.Run("test batch logs writes", func(t *testing.T) {
 		app.Settings().Logs.MaxDays = 1
 
-		for i := 0; i < threshold-1; i++ {
+		for i := 0; i < logsThreshold-1; i++ {
 			app.Logger().Error("test")
 		}
 
@@ -325,16 +328,72 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 		// should be added for the next batch write
 		app.Logger().Error("test")
 
-		if total := totalLogs(app, t); total != threshold {
-			t.Fatalf("Expected %d logs, got %d", threshold, total)
+		if total := totalLogs(app, t); total != logsThreshold {
+			t.Fatalf("Expected %d logs, got %d", logsThreshold, total)
 		}
 
 		// wait for ~3 secs to check the timer trigger
 		time.Sleep(3200 * time.Millisecond)
-		if total := totalLogs(app, t); total != threshold+1 {
-			t.Fatalf("Expected %d logs, got %d", threshold+1, total)
+		if total := totalLogs(app, t); total != logsThreshold+1 {
+			t.Fatalf("Expected %d logs, got %d", logsThreshold+1, total)
 		}
-	}
+	})
+
+	t.Run("test batch logs delete", func(t *testing.T) {
+		app.Settings().Logs.MaxDays = 2
+
+		deleteQueries := 0
+
+		// reset
+		app.Store().Set("lastLogsDeletedAt", time.Now())
+		if err := app.LogsDao().DeleteOldLogs(time.Now()); err != nil {
+			t.Fatal(err)
+		}
+
+		db := app.LogsDao().NonconcurrentDB().(*dbx.DB)
+		db.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+			if strings.Contains(sql, "DELETE") {
+				deleteQueries++
+			}
+		}
+
+		// trigger batch write
+		expectedLogs := logsThreshold
+		for i := 0; i < expectedLogs; i++ {
+			app.Logger().Error("test")
+		}
+
+		if total := totalLogs(app, t); total != expectedLogs {
+			t.Fatalf("[before delete] Expected %d logs, got %d", expectedLogs, total)
+		}
+
+		// mock expired
+		expiredDate, err := types.ParseDateTime(time.Now().AddDate(0, 0, -4))
+		if err != nil {
+			t.Fatal(err)
+		}
+		app.Store().Set("lastLogsDeletedAt", expiredDate)
+		_, err = app.LogsDao().NonconcurrentDB().NewQuery("UPDATE _logs SET created={:date}, updated={:date}").Bind(dbx.Params{
+			"date": expiredDate.String(),
+		}).Execute()
+		if err != nil {
+			t.Fatalf("Failed to mock logs timestamp fields: %v", err)
+		}
+
+		// trigger batch write (twice)
+		expectedLogs = 2 * logsThreshold
+		for i := 0; i < expectedLogs; i++ {
+			app.Logger().Error("test")
+		}
+
+		if total := totalLogs(app, t); total != expectedLogs {
+			t.Fatalf("[after delete] Expected %d logs, got %d", expectedLogs, total)
+		}
+
+		if deleteQueries != 1 {
+			t.Fatalf("Expected DeleteOldLogs to be called %d, got %d", 1, deleteQueries)
+		}
+	})
 }
 
 func TestBaseAppRefreshSettingsLoggerMinLevelEnabled(t *testing.T) {

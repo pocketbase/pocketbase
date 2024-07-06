@@ -1262,7 +1262,7 @@ func (app *BaseApp) initLogger() error {
 			now := time.Now()
 			lastLogsDeletedAt := cast.ToTime(app.Store().Get("lastLogsDeletedAt"))
 			daysDiff := now.Sub(lastLogsDeletedAt).Hours() / 24
-			if daysDiff > float64(logsMaxDays) {
+			if daysDiff >= float64(logsMaxDays) {
 				deleteErr := app.LogsDao().DeleteOldLogs(now.AddDate(0, 0, -1*logsMaxDays))
 				if deleteErr == nil {
 					app.Store().Set("lastLogsDeletedAt", now)
