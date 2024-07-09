@@ -96,6 +96,7 @@
         background: none;
         cursor: ew-resize;
         box-sizing: content-box;
+        user-select: none;
         transition: box-shadow var(--activeAnimationSpeed);
         box-shadow: inset 1px 0 0 0 var(--baseAlt2Color);
         &:hover,
