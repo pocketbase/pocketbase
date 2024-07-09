@@ -357,37 +357,67 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 			}
 		}
 
-		// trigger batch write
+		// trigger batch write (A)
 		expectedLogs := logsThreshold
 		for i := 0; i < expectedLogs; i++ {
-			app.Logger().Error("test")
+			app.Logger().Error("testA")
 		}
 
 		if total := totalLogs(app, t); total != expectedLogs {
-			t.Fatalf("[before delete] Expected %d logs, got %d", expectedLogs, total)
+			t.Fatalf("[batch write A] Expected %d logs, got %d", expectedLogs, total)
 		}
 
-		// mock expired
-		expiredDate, err := types.ParseDateTime(time.Now().AddDate(0, 0, -4))
+		// mark the A inserted logs as 2-day expired
+		aExpiredDate, err := types.ParseDateTime(time.Now().AddDate(0, 0, -2))
 		if err != nil {
 			t.Fatal(err)
 		}
-		app.Store().Set("lastLogsDeletedAt", expiredDate)
 		_, err = app.LogsDao().NonconcurrentDB().NewQuery("UPDATE _logs SET created={:date}, updated={:date}").Bind(dbx.Params{
-			"date": expiredDate.String(),
+			"date": aExpiredDate.String(),
 		}).Execute()
 		if err != nil {
 			t.Fatalf("Failed to mock logs timestamp fields: %v", err)
 		}
 
-		// trigger batch write (twice)
-		expectedLogs = 2 * logsThreshold
-		for i := 0; i < expectedLogs; i++ {
-			app.Logger().Error("test")
+		// simulate recently deleted logs
+		app.Store().Set("lastLogsDeletedAt", time.Now())
+
+		// trigger batch write (B)
+		for i := 0; i < logsThreshold; i++ {
+			app.Logger().Error("testB")
 		}
 
+		expectedLogs = 2 * logsThreshold
+
+		// note: even though there are expired logs it shouldn't perform the delete operation because of the lastLogsDeledAt time
 		if total := totalLogs(app, t); total != expectedLogs {
-			t.Fatalf("[after delete] Expected %d logs, got %d", expectedLogs, total)
+			t.Fatalf("[batch write B] Expected %d logs, got %d", expectedLogs, total)
+		}
+
+		// mark the B inserted logs as 1-day expired to ensure that they will not be deleted
+		bExpiredDate, err := types.ParseDateTime(time.Now().AddDate(0, 0, -1))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = app.LogsDao().NonconcurrentDB().NewQuery("UPDATE _logs SET created={:date}, updated={:date} where message='testB'").Bind(dbx.Params{
+			"date": bExpiredDate.String(),
+		}).Execute()
+		if err != nil {
+			t.Fatalf("Failed to mock logs timestamp fields: %v", err)
+		}
+
+		// should trigger delete on the next batch write
+		app.Store().Set("lastLogsDeletedAt", time.Now().AddDate(0, 0, -1))
+
+		// trigger batch write (C)
+		for i := 0; i < logsThreshold; i++ {
+			app.Logger().Error("testC")
+		}
+
+		expectedLogs = 2 * logsThreshold // only B and C logs should remain
+
+		if total := totalLogs(app, t); total != expectedLogs {
+			t.Fatalf("[batch write C] Expected %d logs, got %d", expectedLogs, total)
 		}
 
 		if deleteQueries != 1 {
