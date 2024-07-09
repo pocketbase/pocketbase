@@ -380,7 +380,7 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 		}
 
 		// simulate recently deleted logs
-		app.Store().Set("lastLogsDeletedAt", time.Now())
+		app.Store().Set("lastLogsDeletedAt", time.Now().Add(-5*time.Hour))
 
 		// trigger batch write (B)
 		for i := 0; i < logsThreshold; i++ {
@@ -407,7 +407,7 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 		}
 
 		// should trigger delete on the next batch write
-		app.Store().Set("lastLogsDeletedAt", time.Now().AddDate(0, 0, -1))
+		app.Store().Set("lastLogsDeletedAt", time.Now().Add(-6*time.Hour))
 
 		// trigger batch write (C)
 		for i := 0; i < logsThreshold; i++ {
