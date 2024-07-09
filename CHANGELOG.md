@@ -1,7 +1,7 @@
 ## v0.22.17
 
-- Updated the `editor` field to use the latest TinyMCE 6.8.4.
-  _Previous versions shouldn't be directly affected by the TinyMCE security issues because we don't use the vulnerable options/plugins and we have a default CSP in the Admin UI, but it is recommended to update even just for silencing the CI/CD warnings._
+- Updated the `editor` field to use the latest TinyMCE 6.8.4 since it comes with some minor security fixes.
+  _The Admin UI shouldn't be affected by the older TinyMCE because we don't use directly the vulnerable options/plugins and we have a default CSP, but it is recommended to update even just for silencing the CI/CD warnings._
 
 - Disabled mouse selection when changing the sidebar width.
   _This should also fix the reported Firefox issue when the sidebar width "resets" on mouse release out of the page window._
