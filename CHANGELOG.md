@@ -1,7 +1,10 @@
 ## v0.22.17
 
+- Updated the `editor` field to use the latest TinyMCE 6.8.4.
+  _Previous versions shouldn't be directly affected by the TinyMCE security issues because we don't use the vulnerable options/plugins and we have a default CSP in the Admin UI, but it is recommended to update even just for silencing the CI/CD warnings._
+
 - Disabled mouse selection when changing the sidebar width.
-  _This should also fix the reported Firefox issue where the sidebar width "resets" on mouse release out of the page window._
+  _This should also fix the reported Firefox issue when the sidebar width "resets" on mouse release out of the page window._
 
 - Updated the logs delete check and tests to prevent accumulating logs that needs to be deleted for more than a day.
   _With the upcoming v0.23.0 release this is changed to run as part of the new shared `app.Cron()` and not be dependent on the last logs batch write._

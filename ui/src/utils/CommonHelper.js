@@ -1447,6 +1447,7 @@ export default class CommonHelper {
             height: 270,
             max_height: 700,
             autoresize_bottom_margin: 30,
+            convert_unsafe_embeds: true, // GHSA-5359
             skin: "pocketbase",
             content_style: "body { font-size: 14px }",
             plugins: [
