@@ -4,7 +4,7 @@
   _This should also fix the reported Firefox issue where the sidebar width "resets" on mouse release out of the page window._
 
 - Updated the logs delete check and tests to prevent accumulating logs that needs to be deleted for more than a day.
-  _This is a side-effect introduced with the fix from the previous release. With the upcoming v0.23.0 it is changed to run as part of the new shared `app.Cron()` and not be dependent on the last logs batch write._
+  _With the upcoming v0.23.0 release this is changed to run as part of the new shared `app.Cron()` and not be dependent on the last logs batch write._
 
 
 ## v0.22.16
