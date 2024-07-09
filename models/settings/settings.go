@@ -653,7 +653,7 @@ func (c AuthProviderConfig) Validate() error {
 // SetupProvider loads the current AuthProviderConfig into the specified provider.
 func (c AuthProviderConfig) SetupProvider(provider auth.Provider) error {
 	if !c.Enabled {
-		return errors.New("The provider is not enabled.")
+		return errors.New("the provider is not enabled")
 	}
 
 	if c.ClientId != "" {

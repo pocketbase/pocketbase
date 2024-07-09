@@ -56,7 +56,7 @@ func (m *JsonMap) Scan(value any) error {
 	case string:
 		data = []byte(v)
 	default:
-		return fmt.Errorf("Failed to unmarshal JsonMap value: %q.", value)
+		return fmt.Errorf("failed to unmarshal JsonMap value: %q", value)
 	}
 
 	if len(data) == 0 {

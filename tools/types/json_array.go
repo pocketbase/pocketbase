@@ -41,7 +41,7 @@ func (m *JsonArray[T]) Scan(value any) error {
 	case string:
 		data = []byte(v)
 	default:
-		return fmt.Errorf("Failed to unmarshal JsonArray value: %q.", value)
+		return fmt.Errorf("failed to unmarshal JsonArray value: %q", value)
 	}
 
 	if len(data) == 0 {

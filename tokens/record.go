@@ -12,7 +12,7 @@ import (
 // NewRecordAuthToken generates and returns a new auth record authentication token.
 func NewRecordAuthToken(app core.App, record *models.Record) (string, error) {
 	if !record.Collection().IsAuth() {
-		return "", errors.New("The record is not from an auth collection.")
+		return "", errors.New("the record is not from an auth collection")
 	}
 
 	return security.NewJWT(
@@ -29,7 +29,7 @@ func NewRecordAuthToken(app core.App, record *models.Record) (string, error) {
 // NewRecordVerifyToken generates and returns a new record verification token.
 func NewRecordVerifyToken(app core.App, record *models.Record) (string, error) {
 	if !record.Collection().IsAuth() {
-		return "", errors.New("The record is not from an auth collection.")
+		return "", errors.New("the record is not from an auth collection")
 	}
 
 	return security.NewJWT(
@@ -47,7 +47,7 @@ func NewRecordVerifyToken(app core.App, record *models.Record) (string, error) {
 // NewRecordResetPasswordToken generates and returns a new auth record password reset request token.
 func NewRecordResetPasswordToken(app core.App, record *models.Record) (string, error) {
 	if !record.Collection().IsAuth() {
-		return "", errors.New("The record is not from an auth collection.")
+		return "", errors.New("the record is not from an auth collection")
 	}
 
 	return security.NewJWT(
@@ -80,7 +80,7 @@ func NewRecordChangeEmailToken(app core.App, record *models.Record, newEmail str
 // NewRecordFileToken generates and returns a new record private file access token.
 func NewRecordFileToken(app core.App, record *models.Record) (string, error) {
 	if !record.Collection().IsAuth() {
-		return "", errors.New("The record is not from an auth collection.")
+		return "", errors.New("the record is not from an auth collection")
 	}
 
 	return security.NewJWT(

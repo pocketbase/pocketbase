@@ -111,7 +111,7 @@ func (api *fileApi) download(c echo.Context) error {
 
 	options, ok := fileField.Options.(*schema.FileOptions)
 	if !ok {
-		return NewBadRequestError("", errors.New("Failed to load file options."))
+		return NewBadRequestError("", errors.New("failed to load file options"))
 	}
 
 	// check whether the request is authorized to view the protected file
