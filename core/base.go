@@ -1258,7 +1258,7 @@ func (app *BaseApp) initLogger() error {
 
 			// @todo replace with cron so that it doesn't rely on the logs write
 			//
-			// delete old logs (~ twice a day)
+			// delete old logs
 			// ---
 			now := time.Now()
 			lastLogsDeletedAt := cast.ToTime(app.Store().Get("lastLogsDeletedAt"))
