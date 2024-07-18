@@ -118,6 +118,20 @@
                         </label>
                     </Field>
 
+                    <Field class="form-field form-field-toggle" name="meta.publicSchemas" let:uniqueId>
+                      <input type="checkbox" id={uniqueId} bind:checked={formSettings.meta.publicSchemas} />
+                      <label for={uniqueId}>
+                          <span class="txt">Make Schema list public</span>
+                          <i
+                              class="ri-information-line link-hint"
+                              use:tooltip={{
+                                  text: `Enables the collection schema list for anyone who is somehow authorized. This might be useful if you want to keep client-side form validation in sync with the server-side validation.`,
+                                  position: "right",
+                              }}
+                          />
+                      </label>
+                  </Field>
+
                     <div class="col-lg-12 flex">
                         <div class="flex-fill" />
 

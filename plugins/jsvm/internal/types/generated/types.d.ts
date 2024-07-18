@@ -17129,6 +17129,7 @@ namespace settings {
   appName: string
   appUrl: string
   hideControls: boolean
+  publicSchemas: boolean
   senderName: string
   senderAddress: string
   verificationTemplate: EmailTemplate
