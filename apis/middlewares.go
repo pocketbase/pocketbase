@@ -124,6 +124,29 @@ func RequireAdminAuth() echo.MiddlewareFunc {
 	}
 }
 
+// RequireCollectionListAuth middleware requires a request to have
+// a valid admin Authorization header if the server have disabled public collection schemas.
+func RequireCollectionListAuth(app core.App) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
+			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
+
+			if !app.Settings().Meta.PublicSchemas {
+				if admin == nil {
+					return NewUnauthorizedError("The request requires valid admin authorization token to be set.", nil)
+				}
+			} else {
+				if record == nil && admin == nil {
+					return NewUnauthorizedError("The request requires valid authorization token to be set.", nil)
+				}
+			}
+
+			return next(c)
+		}
+	}
+}
+
 // RequireAdminAuthOnlyIfAny middleware requires a request to have
 // a valid admin Authorization header ONLY if the application has
 // at least 1 existing Admin model.
