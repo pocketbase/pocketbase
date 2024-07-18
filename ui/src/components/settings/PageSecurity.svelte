@@ -97,7 +97,7 @@
                     <Field class="form-field form-field-toggle" name="meta.publicSchemas" let:uniqueId>
                         <input type="checkbox" id={uniqueId} bind:checked={formSettings.meta.publicSchemas} />
                         <label for={uniqueId}>
-                            <span class="txt">Make Schema list public</span>
+                            <span class="txt">Make schema list public</span>
                         </label>
                     </Field>
 
