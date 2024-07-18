@@ -16,7 +16,7 @@ func bindCollectionApi(app core.App, rg *echo.Group) {
 
 	subGroup := rg.Group("/collections", ActivityLogger(app))
 	subGroup.GET("", api.list, RequireCollectionListAuth(app))
-	subGroup.GET("/:collection", api.view, RequireAdminAuth())
+	subGroup.GET("/:collection", api.view, RequireCollectionListAuth(app))
 
 	subAdminGroup := subGroup.Group("", RequireAdminAuth())
 	subAdminGroup.POST("", api.create)
