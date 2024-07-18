@@ -28,7 +28,7 @@ func TestCollectionsList(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "authorized as user",
+			Name:   "authorized as user and public schemas disabled",
 			Method: http.MethodGet,
 			Url:    "/api/collections",
 			RequestHeaders: map[string]string{
@@ -36,6 +36,38 @@ func TestCollectionsList(t *testing.T) {
 			},
 			ExpectedStatus:  401,
 			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as user and public schemas enabled",
+			Method: http.MethodGet,
+			Url:    "/api/collections",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.Settings().Meta.PublicSchemas = true
+			},
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalItems":11`,
+				`"items":[{`,
+				`"id":"_pb_users_auth_"`,
+				`"id":"v851q4r790rhknl"`,
+				`"id":"kpv709sk2lqbqk8"`,
+				`"id":"wsmn24bux7wo113"`,
+				`"id":"sz5l5z67tg7gku0"`,
+				`"id":"wzlqyes4orhoygb"`,
+				`"id":"4d1blo5cuycfaca"`,
+				`"id":"9n89pl5vkct6330"`,
+				`"id":"ib3m2700k5hlsjz"`,
+				`"type":"auth"`,
+				`"type":"base"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnCollectionsListRequest": 1,
+			},
 		},
 		{
 			Name:   "authorized as admin",
@@ -138,7 +170,7 @@ func TestCollectionView(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 		},
 		{
-			Name:   "authorized as user",
+			Name:   "authorized as user and public schemas disabled",
 			Method: http.MethodGet,
 			Url:    "/api/collections/demo1",
 			RequestHeaders: map[string]string{
@@ -146,6 +178,25 @@ func TestCollectionView(t *testing.T) {
 			},
 			ExpectedStatus:  401,
 			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "authorized as user and public schemas enabled",
+			Method: http.MethodGet,
+			Url:    "/api/collections/demo1",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.Settings().Meta.PublicSchemas = true
+			},
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"wsmn24bux7wo113"`,
+				`"name":"demo1"`,
+			},
+			ExpectedEvents: map[string]int{
+				"OnCollectionViewRequest": 1,
+			},
 		},
 		{
 			Name:   "authorized as admin + nonexisting collection identifier",
