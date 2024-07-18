@@ -14,13 +14,15 @@ import (
 func bindCollectionApi(app core.App, rg *echo.Group) {
 	api := collectionApi{app: app}
 
-	subGroup := rg.Group("/collections", ActivityLogger(app), RequireAdminAuth())
-	subGroup.GET("", api.list)
-	subGroup.POST("", api.create)
-	subGroup.GET("/:collection", api.view)
-	subGroup.PATCH("/:collection", api.update)
-	subGroup.DELETE("/:collection", api.delete)
-	subGroup.PUT("/import", api.bulkImport)
+	subGroup := rg.Group("/collections", ActivityLogger(app))
+	subGroup.GET("", api.list, RequireCollectionListAuth(app))
+	subGroup.GET("/:collection", api.view, RequireAdminAuth())
+
+	subAdminGroup := subGroup.Group("", RequireAdminAuth())
+	subAdminGroup.POST("", api.create)
+	subAdminGroup.PATCH("/:collection", api.update)
+	subAdminGroup.DELETE("/:collection", api.delete)
+	subAdminGroup.PUT("/import", api.bulkImport)
 }
 
 type collectionApi struct {
