@@ -20,6 +20,15 @@
         >
             <i class="ri-send-plane-2-line" aria-hidden="true" />
             <span class="txt">Mail settings</span>
+        </a>        
+        <a
+            href="/settings/security"
+            class="sidebar-list-item"
+            use:active={{ path: "/settings/security/?.*" }}
+            use:link
+        >
+            <i class="ri-door-lock-box-line" aria-hidden="true" />
+            <span class="txt">Security</span>
         </a>
         <a
             href="/settings/storage"

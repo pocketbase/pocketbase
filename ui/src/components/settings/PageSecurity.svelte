@@ -75,7 +75,7 @@
     <header class="page-header">
         <nav class="breadcrumbs">
             <div class="breadcrumb-item">Settings</div>
-            <div class="breadcrumb-item">Application</div>
+            <div class="breadcrumb-item">Security</div>
         </nav>
     </header>
 
@@ -84,37 +84,20 @@
             {#if isLoading}
                 <div class="loader" />
             {:else}
+                <h3 class="section-title">Public Schema Lists</h3>
+
+                <div class="content txt-xl m-b-base">
+                    <p>By default only admins can list and view the schemas and rules for collections.</p>
+                    <p>
+                        You can make this list public and let anyone see the collection schemas and rules. This is useful if you want to keep your client-side validation automatically in sync with the server-side validation.
+                    </p>
+                </div>
+
                 <div class="grid">
-                    <div class="col-lg-6">
-                        <Field class="form-field required" name="meta.appName" let:uniqueId>
-                            <label for={uniqueId}>Application name</label>
-                            <input
-                                type="text"
-                                id={uniqueId}
-                                required
-                                bind:value={formSettings.meta.appName}
-                            />
-                        </Field>
-                    </div>
-
-                    <div class="col-lg-6">
-                        <Field class="form-field required" name="meta.appUrl" let:uniqueId>
-                            <label for={uniqueId}>Application URL</label>
-                            <input type="text" id={uniqueId} required bind:value={formSettings.meta.appUrl} />
-                        </Field>
-                    </div>
-
-                    <Field class="form-field form-field-toggle" name="meta.hideControls" let:uniqueId>
-                        <input type="checkbox" id={uniqueId} bind:checked={formSettings.meta.hideControls} />
+                    <Field class="form-field form-field-toggle" name="meta.publicSchemas" let:uniqueId>
+                        <input type="checkbox" id={uniqueId} bind:checked={formSettings.meta.publicSchemas} />
                         <label for={uniqueId}>
-                            <span class="txt">Hide collection create and edit controls</span>
-                            <i
-                                class="ri-information-line link-hint"
-                                use:tooltip={{
-                                    text: `This could prevent making accidental schema changes when in production environment.`,
-                                    position: "right",
-                                }}
-                            />
+                            <span class="txt">Make Schema list public</span>
                         </label>
                     </Field>
 

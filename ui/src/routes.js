@@ -7,6 +7,7 @@ import PageRecords           from "@/components/records/PageRecords.svelte";
 import PageAdmins            from "@/components/admins/PageAdmins.svelte";
 import PageAdminLogin        from "@/components/admins/PageAdminLogin.svelte";
 import PageApplication       from "@/components/settings/PageApplication.svelte";
+import PageSecurity          from "@/components/settings/PageSecurity.svelte";
 import PageMail              from "@/components/settings/PageMail.svelte";
 import PageStorage           from "@/components/settings/PageStorage.svelte";
 import PageAuthProviders     from "@/components/settings/PageAuthProviders.svelte";
@@ -74,6 +75,12 @@ const routes = {
         component:  PageMail,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
+    }),
+
+    "/settings/security": wrap({
+      component:  PageSecurity,
+      conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
+      userData: { showAppSidebar: true },
     }),
 
     "/settings/storage": wrap({
