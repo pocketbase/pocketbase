@@ -76,6 +76,7 @@ func New() *Settings {
 			AppName:                    "Acme",
 			AppUrl:                     "http://localhost:8090",
 			HideControls:               false,
+			PublicSchemas:              false,
 			SenderName:                 "Support",
 			SenderAddress:              "support@example.com",
 			VerificationTemplate:       defaultVerificationTemplate,
@@ -506,6 +507,7 @@ type MetaConfig struct {
 	AppName                    string        `form:"appName" json:"appName"`
 	AppUrl                     string        `form:"appUrl" json:"appUrl"`
 	HideControls               bool          `form:"hideControls" json:"hideControls"`
+	PublicSchemas              bool          `form:"publicSchemas" json:"publicSchemas"`
 	SenderName                 string        `form:"senderName" json:"senderName"`
 	SenderAddress              string        `form:"senderAddress" json:"senderAddress"`
 	VerificationTemplate       EmailTemplate `form:"verificationTemplate" json:"verificationTemplate"`
