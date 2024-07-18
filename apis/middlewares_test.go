@@ -459,7 +459,7 @@ func TestRequireAdminAuth(t *testing.T) {
 	}
 }
 
-func RequireCollectionListAuth(t *testing.T) {
+func TestRequireCollectionListAuth(t *testing.T) {
 	t.Parallel()
 
 	scenarios := []tests.ApiScenario{
