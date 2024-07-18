@@ -459,6 +459,125 @@ func TestRequireAdminAuth(t *testing.T) {
 	}
 }
 
+func RequireCollectionListAuth(t *testing.T) {
+	t.Parallel()
+
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "guest",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireCollectionListAuth(app),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "expired/invalid token",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJiNGE5N2NjLTNmODMtNGQwMS1hMjZiLTNkNzdiYzg0MmQzYyIsInR5cGUiOiJhZG1pbiIsImV4cCI6MTY0MTAxMzIwMH0.Gp_1b5WVhqjj2o3nJhNUlJmpdiwFLXN72LbMP-26gjA",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireCollectionListAuth(app),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid record token and public schemas disabled",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireCollectionListAuth(app),
+					},
+				})
+			},
+			ExpectedStatus:  401,
+			ExpectedContent: []string{`"data":{}`},
+		},
+		{
+			Name:   "valid record token and public schemas enabled",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				app.Settings().Meta.PublicSchemas = true
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireCollectionListAuth(app),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "valid admin token",
+			Method: http.MethodGet,
+			Url:    "/my/test",
+			RequestHeaders: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			},
+			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
+				e.AddRoute(echo.Route{
+					Method: http.MethodGet,
+					Path:   "/my/test",
+					Handler: func(c echo.Context) error {
+						return c.String(200, "test123")
+					},
+					Middlewares: []echo.MiddlewareFunc{
+						apis.RequireCollectionListAuth(app),
+					},
+				})
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
 func TestRequireAdminAuthOnlyIfAny(t *testing.T) {
 	t.Parallel()
 
