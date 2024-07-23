@@ -1,3 +1,8 @@
+## v0.22.18
+
+- Improved files delete performance when using the local filesystem by adding a trailing slash to the `DeletePrefix` call to ensure that the list iterator will start "walking" from the prefix directory and not from its parent ([#5246](https://github.com/pocketbase/pocketbase/discussions/5246)).
+
+
 ## v0.22.17
 
 - Updated the `editor` field to use the latest TinyMCE 6.8.4 and enabled `convert_unsafe_embeds:true` by default per the security advisories.

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
@@ -1161,7 +1162,9 @@ func (app *BaseApp) registerDefaultHooks() {
 	// try to delete the storage files from deleted Collection, Records, etc. model
 	app.OnModelAfterDelete().Add(func(e *ModelEvent) error {
 		if m, ok := e.Model.(models.FilesManager); ok && m.BaseFilesPath() != "" {
-			prefix := m.BaseFilesPath()
+			// ensure that there is a trailing slash so that the list iterator could start walking from the prefix
+			// (https://github.com/pocketbase/pocketbase/discussions/5246#discussioncomment-10128955)
+			prefix := strings.TrimRight(m.BaseFilesPath(), "/") + "/"
 
 			// run in the background for "optimistic" delete to avoid
 			// blocking the delete transaction
