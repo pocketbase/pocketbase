@@ -8,7 +8,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -276,6 +275,8 @@ func (s *System) Delete(fileKey string) error {
 }
 
 // DeletePrefix deletes everything starting with the specified prefix.
+//
+// The prefix could be subpath (ex. "/a/b/") or filename prefix (ex. "/a/b/file_").
 func (s *System) DeletePrefix(prefix string) []error {
 	failed := []error{}
 
@@ -285,7 +286,14 @@ func (s *System) DeletePrefix(prefix string) []error {
 	}
 
 	dirsMap := map[string]struct{}{}
-	dirsMap[prefix] = struct{}{}
+
+	var isPrefixDir bool
+
+	// treat the prefix as directory only if it ends with trailing slash
+	if strings.HasSuffix(prefix, "/") {
+		isPrefixDir = true
+		dirsMap[strings.TrimRight(prefix, "/")] = struct{}{}
+	}
 
 	// delete all files with the prefix
 	// ---
@@ -303,8 +311,11 @@ func (s *System) DeletePrefix(prefix string) []error {
 
 		if err := s.Delete(obj.Key); err != nil {
 			failed = append(failed, err)
-		} else {
-			dirsMap[path.Dir(obj.Key)] = struct{}{}
+		} else if isPrefixDir {
+			slashIdx := strings.LastIndex(obj.Key, "/")
+			if slashIdx > -1 {
+				dirsMap[obj.Key[:slashIdx]] = struct{}{}
+			}
 		}
 	}
 	// ---

@@ -101,7 +101,7 @@ func TestFileSystemDelete(t *testing.T) {
 	}
 }
 
-func TestFileSystemDeletePrefix(t *testing.T) {
+func TestFileSystemDeletePrefixWithoutTrailingSlash(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -115,7 +115,7 @@ func TestFileSystemDeletePrefix(t *testing.T) {
 		t.Fatal("Expected error, got nil", errs)
 	}
 
-	if errs := fs.DeletePrefix("missing/"); len(errs) != 0 {
+	if errs := fs.DeletePrefix("missing"); len(errs) != 0 {
 		t.Fatalf("Not existing prefix shouldn't error, got %v", errs)
 	}
 
@@ -123,12 +123,49 @@ func TestFileSystemDeletePrefix(t *testing.T) {
 		t.Fatalf("Expected nil, got errors %v", errs)
 	}
 
-	// ensure that the test/ files are deleted
+	// ensure that the test/* files are deleted
 	if exists, _ := fs.Exists("test/sub1.txt"); exists {
 		t.Fatalf("Expected test/sub1.txt to be deleted")
 	}
 	if exists, _ := fs.Exists("test/sub2.txt"); exists {
 		t.Fatalf("Expected test/sub2.txt to be deleted")
+	}
+
+	// the test directory should remain since the prefix didn't have trailing slash
+	if _, err := os.Stat(filepath.Join(dir, "test")); os.IsNotExist(err) {
+		t.Fatal("Expected the prefix dir to remain")
+	}
+}
+
+func TestFileSystemDeletePrefixWithTrailingSlash(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fs, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fs.Close()
+
+	if errs := fs.DeletePrefix("missing/"); len(errs) != 0 {
+		t.Fatalf("Not existing prefix shouldn't error, got %v", errs)
+	}
+
+	if errs := fs.DeletePrefix("test/"); len(errs) != 0 {
+		t.Fatalf("Expected nil, got errors %v", errs)
+	}
+
+	// ensure that the test/* files are deleted
+	if exists, _ := fs.Exists("test/sub1.txt"); exists {
+		t.Fatalf("Expected test/sub1.txt to be deleted")
+	}
+	if exists, _ := fs.Exists("test/sub2.txt"); exists {
+		t.Fatalf("Expected test/sub2.txt to be deleted")
+	}
+
+	// the test directory should be also deleted since the prefix has trailing slash
+	if _, err := os.Stat(filepath.Join(dir, "test")); !os.IsNotExist(err) {
+		t.Fatal("Expected the prefix dir to be deleted")
 	}
 }
 
