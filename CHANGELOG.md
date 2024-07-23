@@ -2,6 +2,8 @@
 
 - Improved files delete performance when using the local filesystem by adding a trailing slash to the `DeletePrefix` call to ensure that the list iterator will start "walking" from the prefix directory and not from its parent ([#5246](https://github.com/pocketbase/pocketbase/discussions/5246)).
 
+- Updated Go deps.
+
 
 ## v0.22.17
 
