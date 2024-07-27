@@ -39,7 +39,7 @@
     function loadDefaults() {
         field.options = {
             maxSelect: 1,
-            maxSize: 5242880,
+            maxSize: 5000000,
             thumbs: [],
             mimeTypes: [],
         };
