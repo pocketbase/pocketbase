@@ -45,6 +45,9 @@ type ServeConfig struct {
 
 	// AllowedOrigins is an optional list of CORS origins (default to "*").
 	AllowedOrigins []string
+
+	// ServerCtx is an optional context to be used by the server.
+	ServerCtx context.Context
 }
 
 // Serve starts a new app web server.
@@ -142,7 +145,11 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 
 	// base request context used for cancelling long running requests
 	// like the SSE connections
-	baseCtx, cancelBaseCtx := context.WithCancel(context.Background())
+	ctx := context.Background()
+	if config.ServerCtx != nil {
+		ctx = config.ServerCtx
+	}
+	baseCtx, cancelBaseCtx := context.WithCancel(ctx)
 	defer cancelBaseCtx()
 
 	server := &http.Server{
@@ -157,6 +164,9 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		Handler: router,
 		Addr:    mainAddr,
 		BaseContext: func(l net.Listener) context.Context {
+			return baseCtx
+		},
+		ConnContext: func(ctx context.Context, c net.Conn) context.Context {
 			return baseCtx
 		},
 	}
@@ -223,6 +233,14 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		return nil
 	})
 
+	// stop the server gracefully on context cancellation
+	go func() {
+		wg.Add(1)
+		<-baseCtx.Done()
+		server.Shutdown(context.Background())
+		wg.Done()
+	}()
+
 	// wait for the graceful shutdown to complete before exit
 	defer wg.Wait()
 
@@ -230,6 +248,7 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 	// @todo consider removing the server return value because it is
 	// not really useful when combined with the blocking serve calls
 	// ---
+
 
 	// start HTTPS server
 	if config.HttpsAddr != "" {
