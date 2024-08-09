@@ -134,6 +134,11 @@ export default [
         logo:  "planningcenter.svg",
     },
     {
+        key:   "mondayAuth",
+        title: "monday.com",
+        logo:  "monday.svg",
+    },
+    {
         key:   "oidcAuth",
         title: "OpenID Connect",
         logo:  "oidc.svg",
