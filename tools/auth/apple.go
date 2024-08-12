@@ -66,6 +66,12 @@ func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Name          string `json:"name"`
 		Email         string `json:"email"`
 		EmailVerified any    `json:"email_verified"` // could be string or bool
+		User          struct {
+			Name struct {
+				FirstName string `json:"firstName"`
+				LastName  string `json:"lastName"`
+			} `json:"name"`
+		} `json:"user"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
@@ -85,6 +91,10 @@ func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		user.Email = extracted.Email
 	}
 
+	if user.Name == "" {
+		user.Name = strings.TrimSpace(extracted.User.Name.FirstName + " " + extracted.User.Name.LastName)
+	}
+
 	return user, nil
 }
 
@@ -98,6 +108,18 @@ func (p *Apple) FetchRawUserData(token *oauth2.Token) ([]byte, error) {
 	claims, err := p.parseAndVerifyIdToken(idToken)
 	if err != nil {
 		return nil, err
+	}
+
+	// Apple only returns the user object the first time the user authorizes the app
+	// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
+	rawUser, _ := token.Extra("user").(string)
+	if rawUser != "" {
+		user := map[string]any{}
+		err = json.Unmarshal([]byte(rawUser), &user)
+		if err != nil {
+			return nil, err
+		}
+		claims["user"] = user
 	}
 
 	return json.Marshal(claims)
