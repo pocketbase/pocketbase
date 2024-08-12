@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -51,6 +52,7 @@ func (p *Monday) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Data struct {
 			Me struct {
 				ID         string `json:"id"`
+				Enabled    bool   `json:"enabled"`
 				Name       string `json:"name"`
 				Email      string `json:"email"`
 				IsVerified bool   `json:"is_verified"`
@@ -60,6 +62,10 @@ func (p *Monday) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
+	}
+
+	if !extracted.Data.Me.Enabled {
+		return nil, errors.New("the monday.com user account is not enabled")
 	}
 
 	user := &AuthUser{
@@ -85,7 +91,7 @@ func (p *Monday) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 // monday.com doesn't have a UserInfo endpoint and information on the user
 // is retrieved using their GraphQL API (https://developer.monday.com/api-reference/reference/me#queries)
 func (p *Monday) FetchRawUserData(token *oauth2.Token) ([]byte, error) {
-	query := []byte(`{"query": "query { me { id name email is_verified photo_small }}"}`)
+	query := []byte(`{"query": "query { me { id enabled name email is_verified photo_small }}"}`)
 	bodyReader := bytes.NewReader(query)
 
 	req, err := http.NewRequestWithContext(p.ctx, "POST", p.userApiUrl, bodyReader)
