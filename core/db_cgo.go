@@ -9,6 +9,18 @@ import (
 	"github.com/pocketbase/dbx"
 )
 
+var DbCgoExtensions = []string{}
+
+var DbCgoPragma = `
+PRAGMA busy_timeout       = 10000;
+PRAGMA journal_mode       = WAL;
+PRAGMA journal_size_limit = 200000000;
+PRAGMA synchronous        = NORMAL;
+PRAGMA foreign_keys       = ON;
+PRAGMA temp_store         = MEMORY;
+PRAGMA cache_size         = -16000;
+`
+
 func init() {
 	// Registers the sqlite3 driver with a ConnectHook so that we can
 	// initialize the default PRAGMAs.
@@ -21,16 +33,9 @@ func init() {
 	// is set in case it hasn't been already set by another connection.
 	sql.Register("pb_sqlite3",
 		&sqlite3.SQLiteDriver{
+			Extensions: DbCgoExtensions,
 			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
-				_, err := conn.Exec(`
-					PRAGMA busy_timeout       = 10000;
-					PRAGMA journal_mode       = WAL;
-					PRAGMA journal_size_limit = 200000000;
-					PRAGMA synchronous        = NORMAL;
-					PRAGMA foreign_keys       = ON;
-					PRAGMA temp_store         = MEMORY;
-					PRAGMA cache_size         = -16000;
-				`, nil)
+				_, err := conn.Exec(DbCgoPragma, nil)
 
 				return err
 			},
