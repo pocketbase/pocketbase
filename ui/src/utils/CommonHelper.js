@@ -106,7 +106,6 @@ export default class CommonHelper {
      * - empty string
      * - empty array
      * - empty object
-     * - zero uuid, time and dates
      *
      * @param  {Mixed} value
      * @return {Boolean}
@@ -115,9 +114,6 @@ export default class CommonHelper {
         return (
             (value === "") ||
             (value === null) ||
-            (value === "00000000-0000-0000-0000-000000000000") || // zero uuid
-            (value === "0001-01-01 00:00:00.000Z") || // zero datetime
-            (value === "0001-01-01") || // zero date
             (typeof value === "undefined") ||
             (Array.isArray(value) && value.length === 0) ||
             (CommonHelper.isObject(value) && Object.keys(value).length === 0)

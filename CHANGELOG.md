@@ -1,3 +1,10 @@
+## v0.22.20
+
+- Fixed the Admin UI `isEmpty` check to allow submitting zero uuid, datetime and date strings ([#5398](https://github.com/pocketbase/pocketbase/issues/5398)).
+
+- Updated goja and the other Go deps.
+
+
 ## v0.22.19
 
 - Added additional parsing for the Apple OAuth2 `user` token response field to attempt returning the name of the authenticated user ([#5074](https://github.com/pocketbase/pocketbase/discussions/5074#discussioncomment-10317207)).
