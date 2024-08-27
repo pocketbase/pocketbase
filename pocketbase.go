@@ -167,7 +167,10 @@ func (pb *PocketBase) Execute() error {
 	// execute the root command
 	go func() {
 		// note: leave to the commands to decide whether to print their error
-		pb.RootCmd.Execute()
+		err := pb.RootCmd.Execute()
+		if err != nil {
+			os.Exit(1)
+		}
 
 		done <- true
 	}()
