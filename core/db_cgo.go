@@ -11,6 +11,8 @@ import (
 
 var DBExtensions = []string{}
 
+var DBConnectHooks = [](func(conn *sqlite3.SQLiteConn) error){}
+
 var DBPragma = `
 PRAGMA busy_timeout       = 10000;
 PRAGMA journal_mode       = WAL;
@@ -36,7 +38,10 @@ func init() {
 			Extensions: DBExtensions,
 			ConnectHook: func(conn *sqlite3.SQLiteConn) error {
 				_, err := conn.Exec(DBPragma, nil)
-
+				for i := 0; i < len(DBConnectHooks); i++ {
+					hook := DBConnectHooks[i]
+					hook(conn)
+				}
 				return err
 			},
 		},
