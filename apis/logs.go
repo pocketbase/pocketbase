@@ -25,7 +25,9 @@ type logsApi struct {
 }
 
 var logFilterFields = []string{
-	"rowid", "id", "created", "updated",
+	// !CHANGED: rowid changed to ctid due to postgres alias
+
+	"ctid", "id", "created", "updated",
 	"level", "message", "data",
 	`^data\.[\w\.\:]*\w+$`,
 }

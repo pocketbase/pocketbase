@@ -14,7 +14,7 @@
 
     export let filter = "";
     export let presets = "";
-    export let sort = "-rowid";
+    export let sort = "-ctid";
 
     let logs = [];
     let currentPage = 1;

@@ -22,10 +22,12 @@ func init() {
 		// errors during the indexes upsert
 		// ---
 		tempViews := []string{}
-		viewsErr := db.Select("name").
-			From("sqlite_schema").
-			AndWhere(dbx.HashExp{"type": "view"}).
-			AndWhere(dbx.NewExp(`[[name]] LIKE '\_temp\_%' ESCAPE '\'`)).
+		// !CHANGED: sqlite_schema changed to information_schema.views
+		viewsErr := db.Select("table_name").
+			// select table_name from INFORMATION_SCHEMA.views WHERE table_schema = ANY (current_schemas(false))
+			From("information_schema.views").
+			AndWhere(dbx.HashExp{"table_schema": "ANY (current_schemas(false))"}).
+			AndWhere(dbx.NewExp(`[[table_name]] LIKE '\_temp\_%' ESCAPE '\'`)).
 			Column(&tempViews)
 		if viewsErr != nil {
 			return viewsErr
@@ -52,7 +54,7 @@ func init() {
 		}
 
 		if !hasIndexesColumn {
-			if _, err := db.AddColumn("_collections", "indexes", `JSON DEFAULT "[]" NOT NULL`).Execute(); err != nil {
+			if _, err := db.AddColumn("_collections", "indexes", `JSON DEFAULT '[]' NOT NULL`).Execute(); err != nil {
 				return err
 			}
 		}
@@ -68,7 +70,8 @@ func init() {
 			TableName string `db:"tbl_name"`
 		}
 
-		indexesQuery := db.NewQuery(`SELECT * FROM sqlite_master WHERE type = "index" and sql is not null`)
+		// !CHANGED: sqlite_master changed to pg_indexes
+		indexesQuery := db.NewQuery(`SELECT * FROM pg_indexes WHERE schemaname = ANY (current_schemas(false))`)
 		rawIndexes := []indexInfo{}
 		if err := indexesQuery.All(&rawIndexes); err != nil {
 			return err
@@ -90,7 +93,8 @@ func init() {
 
 			// convert custom indexes into the related collections
 			for _, idx := range indexesByTableName[c.Name] {
-				if strings.Contains(idx.IndexName, "sqlite_autoindex_") ||
+				// !CHANGED: pg_ indexes are system indexes
+				if strings.Contains(idx.IndexName, "pg_") ||
 					list.ExistInSlice(idx.IndexName, excludeIndexes) {
 					continue
 				}

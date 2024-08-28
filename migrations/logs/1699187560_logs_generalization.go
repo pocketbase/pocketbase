@@ -12,17 +12,17 @@ func init() {
 
 		_, err := db.NewQuery(`
 			CREATE TABLE {{_logs}} (
-				[[id]]      TEXT PRIMARY KEY DEFAULT ('r'||lower(hex(randomblob(7)))) NOT NULL,
+				[[id]]        TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::TEXT,
 				[[level]]   INTEGER DEFAULT 0 NOT NULL,
-				[[message]] TEXT DEFAULT "" NOT NULL,
-				[[data]]    JSON DEFAULT "{}" NOT NULL,
-				[[created]] TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
-				[[updated]] TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
+				[[message]] TEXT DEFAULT '' NOT NULL,
+				[[data]]    JSON DEFAULT '{}' NOT NULL,
+				[[created]] TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+				[[updated]] TIMESTAMPTZ DEFAULT NOW() NOT NULL
 			);
 
 			CREATE INDEX _logs_level_idx on {{_logs}} ([[level]]);
 			CREATE INDEX _logs_message_idx on {{_logs}} ([[message]]);
-			CREATE INDEX _logs_created_hour_idx on {{_logs}} (strftime('%Y-%m-%d %H:00:00', [[created]]));
+			CREATE INDEX _logs_created_hour_idx on {{_logs}} (immutable_date_trunc('hour', [[created]]));
 		`).Execute()
 
 		return err
@@ -33,23 +33,23 @@ func init() {
 
 		_, err := db.NewQuery(`
 			CREATE TABLE {{_requests}} (
-				[[id]]        TEXT PRIMARY KEY NOT NULL,
-				[[url]]       TEXT DEFAULT "" NOT NULL,
-				[[method]]    TEXT DEFAULT "get" NOT NULL,
+				[[id]]        TEXT PRIMARY KEY ,
+				[[url]]       TEXT DEFAULT '' NOT NULL,
+				[[method]]    TEXT DEFAULT 'get' NOT NULL,
 				[[status]]    INTEGER DEFAULT 200 NOT NULL,
-				[[auth]]      TEXT DEFAULT "guest" NOT NULL,
+				[[auth]]      TEXT DEFAULT 'guest' NOT NULL,
 				[[ip]]        TEXT DEFAULT "127.0.0.1" NOT NULL,
-				[[referer]]   TEXT DEFAULT "" NOT NULL,
-				[[userAgent]] TEXT DEFAULT "" NOT NULL,
-				[[meta]]      JSON DEFAULT "{}" NOT NULL,
-				[[created]]   TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
-				[[updated]]   TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
+				[[referer]]   TEXT DEFAULT '' NOT NULL,
+				[[userAgent]] TEXT DEFAULT '' NOT NULL,
+				[[meta]]      JSON DEFAULT '{}' NOT NULL,
+				[[created]]   TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+				[[updated]]   TIMESTAMPTZ DEFAULT NOW() NOT NULL
 			);
 
 			CREATE INDEX _request_status_idx on {{_requests}} ([[status]]);
 			CREATE INDEX _request_auth_idx on {{_requests}} ([[auth]]);
 			CREATE INDEX _request_ip_idx on {{_requests}} ([[ip]]);
-			CREATE INDEX _request_created_hour_idx on {{_requests}} (strftime('%Y-%m-%d %H:00:00', [[created]]));
+			CREATE INDEX _request_created_hour_idx on {{_requests}} (date_trunc('hour', [[created]]));
 		`).Execute()
 
 		return err

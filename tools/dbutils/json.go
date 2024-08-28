@@ -8,6 +8,7 @@ import (
 // JsonEach returns JSON_EACH SQLite string expression with
 // some normalizations for non-json columns.
 func JsonEach(column string) string {
+	//TODO check if this still works
 	return fmt.Sprintf(
 		`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END)`,
 		column, column, column,

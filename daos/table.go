@@ -11,11 +11,20 @@ import (
 func (dao *Dao) HasTable(tableName string) bool {
 	var exists bool
 
+	// SQLITE
+	// err := dao.DB().Select("count(*)").
+	// 	From("sqlite_schema").
+	// 	AndWhere(dbx.HashExp{"type": []any{"table", "view"}}).
+	// 	AndWhere(dbx.NewExp("LOWER([[name]])=LOWER({:tableName})", dbx.Params{"tableName": tableName})).
+	// 	Limit(1).
+	// 	Row(&exists)
+
+	// postgres version
+	// !CHANGED: fetch table information from information_schema
 	err := dao.DB().Select("count(*)").
-		From("sqlite_schema").
-		AndWhere(dbx.HashExp{"type": []any{"table", "view"}}).
-		AndWhere(dbx.NewExp("LOWER([[name]])=LOWER({:tableName})", dbx.Params{"tableName": tableName})).
-		Limit(1).
+		From("information_schema.tables").
+		AndWhere(dbx.HashExp{"table_type": []any{"BASE TABLE", "VIEW"}}).
+		AndWhere(dbx.NewExp("LOWER([[table_name]])=LOWER({:tableName})", dbx.Params{"tableName": tableName})).
 		Row(&exists)
 
 	return err == nil && exists
@@ -25,7 +34,9 @@ func (dao *Dao) HasTable(tableName string) bool {
 func (dao *Dao) TableColumns(tableName string) ([]string, error) {
 	columns := []string{}
 
-	err := dao.DB().NewQuery("SELECT name FROM PRAGMA_TABLE_INFO({:tableName})").
+	// err := dao.DB().NewQuery("SELECT name FROM PRAGMA_TABLE_INFO({:tableName})").
+	// !CHANGED: sqlite pragma to postgres information_schema
+	err := dao.DB().NewQuery("SELECT column_name FROM information_schema.columns WHERE table_name = {:tableName}").
 		Bind(dbx.Params{"tableName": tableName}).
 		Column(&columns)
 
@@ -36,7 +47,9 @@ func (dao *Dao) TableColumns(tableName string) ([]string, error) {
 func (dao *Dao) TableInfo(tableName string) ([]*models.TableInfoRow, error) {
 	info := []*models.TableInfoRow{}
 
-	err := dao.DB().NewQuery("SELECT * FROM PRAGMA_TABLE_INFO({:tableName})").
+	// err := dao.DB().NewQuery("SELECT * FROM PRAGMA_TABLE_INFO({:tableName})").
+	// !CHANGED: sqlite pragma to postgres information_schema
+	err := dao.DB().NewQuery("SELECT * FROM information_schema.columns WHERE table_name = {:tableName}").
 		Bind(dbx.Params{"tableName": tableName}).
 		All(&info)
 	if err != nil {

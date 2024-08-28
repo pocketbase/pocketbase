@@ -48,9 +48,10 @@ func normalizeMultivaluerFields(db dbx.Builder) error {
 							THEN '[]'
 							ELSE (
 								CASE
-									WHEN json_valid([[%s]]) AND json_type([[%s]]) == 'array'
-									THEN [[%s]]
-									ELSE json_array([[%s]])
+	                            WHEN json_valid([[%s]]) = true AND json_array_length([[%s]]::json) > 0
+								 THEN [[%s]]
+							    ELSE 
+								   jsonb_build_array([[%s]])
 								END
 							)
 						END
@@ -71,8 +72,8 @@ func normalizeMultivaluerFields(db dbx.Builder) error {
 							THEN ''
 							ELSE (
 								CASE
-									WHEN json_valid([[%s]]) AND json_type([[%s]]) == 'array'
-									THEN COALESCE(json_extract([[%s]], '$[#-1]'), '')
+									WHEN json_valid([[%s]]) = true AND json_array_length([[%s]]::json) > 0
+									THEN (SELECT COALESCE([[%s]]::json->>0, '')::text)
 									ELSE [[%s]]
 								END
 							)

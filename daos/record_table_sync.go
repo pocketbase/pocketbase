@@ -23,9 +23,9 @@ func (dao *Dao) SyncRecordTableSchema(newCollection *models.Collection, oldColle
 		// -----------------------------------------------------------
 		if oldCollection == nil {
 			cols := map[string]string{
-				schema.FieldNameId:      "TEXT PRIMARY KEY DEFAULT ('r'||lower(hex(randomblob(7)))) NOT NULL",
-				schema.FieldNameCreated: "TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL",
-				schema.FieldNameUpdated: "TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL",
+				schema.FieldNameId:      "TEXT PRIMARY KEY DEFAULT uuid_generate_v4()::TEXT NOT NULL",
+				schema.FieldNameCreated: "TIMESTAMPTZ DEFAULT NOW() NOT NULL",
+				schema.FieldNameUpdated: "TIMESTAMPTZ DEFAULT NOW() NOT NULL",
 			}
 
 			if newCollection.IsAuth() {
@@ -171,12 +171,14 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 	return dao.RunInTransaction(func(txDao *Dao) error {
 		// temporary disable the schema error checks to prevent view and trigger errors
 		// when "altering" (aka. deleting and recreating) the non-normalized columns
-		if _, err := txDao.DB().NewQuery("PRAGMA writable_schema = ON").Execute(); err != nil {
-			return err
-		}
-		// executed with defer to make sure that the pragma is always reverted
-		// in case of an error and when nested transactions are used
-		defer txDao.DB().NewQuery("PRAGMA writable_schema = RESET").Execute()
+		// if _, err := txDao.DB().NewQuery("PRAGMA writable_schema = ON").Execute(); err != nil {
+		// 	return err
+		// }
+		// // executed with defer to make sure that the pragma is always reverted
+		// // in case of an error and when nested transactions are used
+		// defer txDao.DB().NewQuery("PRAGMA writable_schema = RESET").Execute()
+		// !CHANGED: sqlite transaction pragmas removed
+		// No equivalent pragma in PostgreSQL, so no changes needed.
 
 		for _, newField := range newCollection.Schema.Fields() {
 			// allow to continue even if there is no old field for the cases
@@ -283,10 +285,11 @@ func (dao *Dao) normalizeSingleVsMultipleFieldChanges(newCollection, oldCollecti
 			}
 		}
 
-		// revert the pragma and reload the schema
-		_, revertErr := txDao.DB().NewQuery("PRAGMA writable_schema = RESET").Execute()
+		// // revert the pragma and reload the schema
+		// _, revertErr := txDao.DB().NewQuery("PRAGMA writable_schema = RESET").Execute()
 
-		return revertErr
+		// return revertErr
+		return nil
 	})
 }
 
