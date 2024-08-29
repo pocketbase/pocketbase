@@ -68,7 +68,7 @@ func init() {
 			TableName string `db:"tbl_name"`
 		}
 
-		indexesQuery := db.NewQuery(`SELECT * FROM sqlite_master WHERE type = "index" and sql is not null`)
+		indexesQuery := db.NewQuery(`SELECT * FROM sqlite_master WHERE type = 'index' and sql is not null`)
 		rawIndexes := []indexInfo{}
 		if err := indexesQuery.All(&rawIndexes); err != nil {
 			return err
