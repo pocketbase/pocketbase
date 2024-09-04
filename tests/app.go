@@ -10,11 +10,11 @@ import (
 	"sync"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/migrations/logs"
-	"github.com/pocketbase/pocketbase/tools/mailer"
-	"github.com/pocketbase/pocketbase/tools/migrate"
+	"github.com/thinkonmay/pocketbase/core"
+	"github.com/thinkonmay/pocketbase/migrations"
+	"github.com/thinkonmay/pocketbase/migrations/logs"
+	"github.com/thinkonmay/pocketbase/tools/mailer"
+	"github.com/thinkonmay/pocketbase/tools/migrate"
 )
 
 // TestApp is a wrapper app instance used for testing.

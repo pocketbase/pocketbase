@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/apis"
-	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/rest"
 	"github.com/spf13/cast"
+	"github.com/thinkonmay/pocketbase/apis"
+	"github.com/thinkonmay/pocketbase/tests"
+	"github.com/thinkonmay/pocketbase/tools/rest"
 )
 
 func Test404(t *testing.T) {

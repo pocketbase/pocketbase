@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pocketbase/pocketbase/forms"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/thinkonmay/pocketbase/forms"
+	"github.com/thinkonmay/pocketbase/models"
+	"github.com/thinkonmay/pocketbase/tests"
+	"github.com/thinkonmay/pocketbase/tools/types"
 )
 
 func TestRecordPasswordResetRequestSubmit(t *testing.T) {

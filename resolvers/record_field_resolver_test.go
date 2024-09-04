@@ -6,12 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/resolvers"
-	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/search"
+	"github.com/thinkonmay/pocketbase/models"
+	"github.com/thinkonmay/pocketbase/models/schema"
+	"github.com/thinkonmay/pocketbase/resolvers"
+	"github.com/thinkonmay/pocketbase/tests"
+	"github.com/thinkonmay/pocketbase/tools/list"
+	"github.com/thinkonmay/pocketbase/tools/search"
 )
 
 func TestRecordFieldResolverUpdateQuery(t *testing.T) {

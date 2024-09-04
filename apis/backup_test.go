@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tests"
+	"github.com/thinkonmay/pocketbase/core"
+	"github.com/thinkonmay/pocketbase/tests"
 	"gocloud.dev/blob"
 )
 

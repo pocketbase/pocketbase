@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pocketbase/pocketbase/tools/archive"
+	"github.com/thinkonmay/pocketbase/tools/archive"
 )
 
 func TestCreateFailure(t *testing.T) {

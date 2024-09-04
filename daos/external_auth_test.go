@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tests"
+	"github.com/thinkonmay/pocketbase/models"
+	"github.com/thinkonmay/pocketbase/tests"
 )
 
 func TestExternalAuthQuery(t *testing.T) {

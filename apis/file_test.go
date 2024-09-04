@@ -11,12 +11,12 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/apis"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/thinkonmay/pocketbase/apis"
+	"github.com/thinkonmay/pocketbase/core"
+	"github.com/thinkonmay/pocketbase/daos"
+	"github.com/thinkonmay/pocketbase/models/schema"
+	"github.com/thinkonmay/pocketbase/tests"
+	"github.com/thinkonmay/pocketbase/tools/types"
 )
 
 func TestFileToken(t *testing.T) {
