@@ -120,7 +120,7 @@ func InitApi(app core.App, config ServeConfig) (*echo.Echo, error) {
 	bindStaticAdminUI(app, e)
 
 	// default routes
-	api := e.Group("/pocketbase", eagerRequestInfoCache(app))
+	api := e.Group("/api", eagerRequestInfoCache(app))
 	bindSettingsApi(app, api)
 	bindAdminApi(app, api)
 	bindCollectionApi(app, api)
