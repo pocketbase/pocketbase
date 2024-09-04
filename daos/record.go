@@ -9,14 +9,14 @@ import (
 	"strings"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/resolvers"
-	"github.com/pocketbase/pocketbase/tools/inflector"
-	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/search"
-	"github.com/pocketbase/pocketbase/tools/security"
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/thinkonmay/pocketbase/models"
+	"github.com/thinkonmay/pocketbase/models/schema"
+	"github.com/thinkonmay/pocketbase/resolvers"
+	"github.com/thinkonmay/pocketbase/tools/inflector"
+	"github.com/thinkonmay/pocketbase/tools/list"
+	"github.com/thinkonmay/pocketbase/tools/search"
+	"github.com/thinkonmay/pocketbase/tools/security"
+	"github.com/thinkonmay/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 

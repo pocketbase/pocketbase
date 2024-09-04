@@ -2,7 +2,7 @@ package logs
 
 import (
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/tools/migrate"
+	"github.com/thinkonmay/pocketbase/tools/migrate"
 )
 
 var LogsMigrations migrate.MigrationsList

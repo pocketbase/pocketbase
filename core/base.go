@@ -15,18 +15,18 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/settings"
-	"github.com/pocketbase/pocketbase/tools/filesystem"
-	"github.com/pocketbase/pocketbase/tools/hook"
-	"github.com/pocketbase/pocketbase/tools/logger"
-	"github.com/pocketbase/pocketbase/tools/mailer"
-	"github.com/pocketbase/pocketbase/tools/routine"
-	"github.com/pocketbase/pocketbase/tools/security"
-	"github.com/pocketbase/pocketbase/tools/store"
-	"github.com/pocketbase/pocketbase/tools/subscriptions"
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/thinkonmay/pocketbase/daos"
+	"github.com/thinkonmay/pocketbase/models"
+	"github.com/thinkonmay/pocketbase/models/settings"
+	"github.com/thinkonmay/pocketbase/tools/filesystem"
+	"github.com/thinkonmay/pocketbase/tools/hook"
+	"github.com/thinkonmay/pocketbase/tools/logger"
+	"github.com/thinkonmay/pocketbase/tools/mailer"
+	"github.com/thinkonmay/pocketbase/tools/routine"
+	"github.com/thinkonmay/pocketbase/tools/security"
+	"github.com/thinkonmay/pocketbase/tools/store"
+	"github.com/thinkonmay/pocketbase/tools/subscriptions"
+	"github.com/thinkonmay/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 
@@ -1163,7 +1163,7 @@ func (app *BaseApp) registerDefaultHooks() {
 	app.OnModelAfterDelete().Add(func(e *ModelEvent) error {
 		if m, ok := e.Model.(models.FilesManager); ok && m.BaseFilesPath() != "" {
 			// ensure that there is a trailing slash so that the list iterator could start walking from the prefix
-			// (https://github.com/pocketbase/pocketbase/discussions/5246#discussioncomment-10128955)
+			// (https://github.com/thinkonmay/pocketbase/discussions/5246#discussioncomment-10128955)
 			prefix := strings.TrimRight(m.BaseFilesPath(), "/") + "/"
 
 			// run in the background for "optimistic" delete to avoid

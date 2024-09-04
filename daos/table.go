@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/thinkonmay/pocketbase/models"
 )
 
 // HasTable checks if a table (or view) with the provided name exists (case insensitive).

@@ -15,9 +15,9 @@ import (
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
-	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/rest"
-	"github.com/pocketbase/pocketbase/ui"
+	"github.com/thinkonmay/pocketbase/core"
+	"github.com/thinkonmay/pocketbase/tools/rest"
+	"github.com/thinkonmay/pocketbase/ui"
 	"github.com/spf13/cast"
 )
 
@@ -45,7 +45,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	e.Pre(middleware.RemoveTrailingSlashWithConfig(middleware.RemoveTrailingSlashConfig{
 		Skipper: func(c echo.Context) bool {
 			// enable by default only for the API routes
-			return !strings.HasPrefix(c.Request().URL.Path, "/api/")
+			return !strings.HasPrefix(c.Request().URL.Path, "/pocketbase/")
 		},
 	}))
 	e.Pre(LoadAuthContext(app))
@@ -117,7 +117,7 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	bindStaticAdminUI(app, e)
 
 	// default routes
-	api := e.Group("/api", eagerRequestInfoCache(app))
+	api := e.Group("/pocketbase", eagerRequestInfoCache(app))
 	bindSettingsApi(app, api)
 	bindAdminApi(app, api)
 	bindCollectionApi(app, api)

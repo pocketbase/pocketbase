@@ -5,7 +5,7 @@ import (
 )
 
 // Cleanup dangling deleted collections references
-// (see https://github.com/pocketbase/pocketbase/discussions/2570).
+// (see https://github.com/thinkonmay/pocketbase/discussions/2570).
 func init() {
 	AppMigrations.Register(func(db dbx.Builder) error {
 		_, err := db.NewQuery(`

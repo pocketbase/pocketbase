@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/thinkonmay/pocketbase/models"
 )
 
 // ExternalAuthQuery returns a new ExternalAuth select query.

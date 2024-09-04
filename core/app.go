@@ -8,13 +8,13 @@ import (
 	"log/slog"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models/settings"
-	"github.com/pocketbase/pocketbase/tools/filesystem"
-	"github.com/pocketbase/pocketbase/tools/hook"
-	"github.com/pocketbase/pocketbase/tools/mailer"
-	"github.com/pocketbase/pocketbase/tools/store"
-	"github.com/pocketbase/pocketbase/tools/subscriptions"
+	"github.com/thinkonmay/pocketbase/daos"
+	"github.com/thinkonmay/pocketbase/models/settings"
+	"github.com/thinkonmay/pocketbase/tools/filesystem"
+	"github.com/thinkonmay/pocketbase/tools/hook"
+	"github.com/thinkonmay/pocketbase/tools/mailer"
+	"github.com/thinkonmay/pocketbase/tools/store"
+	"github.com/thinkonmay/pocketbase/tools/subscriptions"
 )
 
 // App defines the main PocketBase app interface.

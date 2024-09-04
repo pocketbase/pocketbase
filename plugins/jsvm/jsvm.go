@@ -29,10 +29,10 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/core"
-	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/plugins/jsvm/internal/types/generated"
-	"github.com/pocketbase/pocketbase/tools/template"
+	"github.com/thinkonmay/pocketbase/core"
+	m "github.com/thinkonmay/pocketbase/migrations"
+	"github.com/thinkonmay/pocketbase/plugins/jsvm/internal/types/generated"
+	"github.com/thinkonmay/pocketbase/tools/template"
 )
 
 const (

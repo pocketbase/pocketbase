@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/pocketbase/pocketbase/tools/types"
+	"github.com/thinkonmay/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 )
 

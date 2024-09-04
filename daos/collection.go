@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/thinkonmay/pocketbase/models"
+	"github.com/thinkonmay/pocketbase/models/schema"
+	"github.com/thinkonmay/pocketbase/tools/list"
 )
 
 // CollectionQuery returns a new Collection select query.
@@ -400,7 +400,7 @@ func (dao *Dao) saveViewCollection(newCollection, oldCollection *models.Collecti
 // normalizeViewQueryId wraps (if necessary) the provided view query
 // with a subselect to ensure that the id column is a text since
 // currently we don't support non-string model ids
-// (see https://github.com/pocketbase/pocketbase/issues/3110).
+// (see https://github.com/thinkonmay/pocketbase/issues/3110).
 func (dao *Dao) normalizeViewQueryId(query string) (string, error) {
 	query = strings.Trim(strings.TrimSpace(query), ";")
 

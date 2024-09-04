@@ -12,8 +12,8 @@ import (
 	goccy "github.com/goccy/go-json"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/tools/search"
-	"github.com/pocketbase/pocketbase/tools/tokenizer"
+	"github.com/thinkonmay/pocketbase/tools/search"
+	"github.com/thinkonmay/pocketbase/tools/tokenizer"
 )
 
 type FieldModifier interface {
