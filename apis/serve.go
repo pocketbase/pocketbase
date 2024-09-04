@@ -45,6 +45,8 @@ type ServeConfig struct {
 
 	// AllowedOrigins is an optional list of CORS origins (default to "*").
 	AllowedOrigins []string
+
+	PreMiddleware echo.MiddlewareFunc
 }
 
 // Serve starts a new app web server.
@@ -77,7 +79,7 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		color.Yellow("=====================================")
 	}
 
-	router, err := InitApi(app)
+	router, err := InitApi(app, config)
 	if err != nil {
 		return nil, err
 	}

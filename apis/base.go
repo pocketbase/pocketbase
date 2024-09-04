@@ -15,17 +15,17 @@ import (
 
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
+	"github.com/spf13/cast"
 	"github.com/thinkonmay/pocketbase/core"
 	"github.com/thinkonmay/pocketbase/tools/rest"
 	"github.com/thinkonmay/pocketbase/ui"
-	"github.com/spf13/cast"
 )
 
 const trailedAdminPath = "/_/"
 
 // InitApi creates a configured echo instance with registered
 // system and app specific routes and middlewares.
-func InitApi(app core.App) (*echo.Echo, error) {
+func InitApi(app core.App, config ServeConfig) (*echo.Echo, error) {
 	e := echo.New()
 	e.Debug = false
 	e.Binder = &rest.MultiBinder{}
@@ -42,10 +42,13 @@ func InitApi(app core.App) (*echo.Echo, error) {
 	})
 
 	// default middlewares
+	if config.PreMiddleware != nil {
+		e.Pre(config.PreMiddleware)
+	}
 	e.Pre(middleware.RemoveTrailingSlashWithConfig(middleware.RemoveTrailingSlashConfig{
 		Skipper: func(c echo.Context) bool {
 			// enable by default only for the API routes
-			return !strings.HasPrefix(c.Request().URL.Path, "/pocketbase/")
+			return !strings.HasPrefix(c.Request().URL.Path, "/api/")
 		},
 	}))
 	e.Pre(LoadAuthContext(app))
