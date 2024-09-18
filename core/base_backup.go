@@ -72,9 +72,11 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 	// Run in transaction to temporary block other writes (transactions uses the NonconcurrentDB connection).
 	// ---
 	tempPath := filepath.Join(localTempDir, "pb_backup_"+security.PseudorandomString(4))
-	createErr := app.Dao().RunInTransaction(func(txDao *daos.Dao) error {
-		// @todo consider experimenting with temp switching the readonly pragma after the db interface change
-		return archive.Create(app.DataDir(), tempPath, exclude...)
+	createErr := app.Dao().RunInTransaction(func(dataTXDao *daos.Dao) error {
+		return app.LogsDao().RunInTransaction(func(logsTXDao *daos.Dao) error {
+			// @todo consider experimenting with temp switching the readonly pragma after the db interface change
+			return archive.Create(app.DataDir(), tempPath, exclude...)
+		})
 	})
 	if createErr != nil {
 		return createErr
