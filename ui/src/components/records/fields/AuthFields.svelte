@@ -1,79 +1,65 @@
 <script>
-    import { slide } from "svelte/transition";
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
-    import { confirm } from "@/stores/confirmation";
-    import { removeError } from "@/stores/errors";
     import Field from "@/components/base/Field.svelte";
     import SecretGeneratorButton from "@/components/base/SecretGeneratorButton.svelte";
+    import { confirm } from "@/stores/confirmation";
+    import { removeError } from "@/stores/errors";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { slide } from "svelte/transition";
 
     export let record;
     export let collection;
     export let isNew = !record?.id;
 
-    let originalUsername = record.username || null;
+    $: isSuperusers = collection?.name == "_superusers";
+
+    $: emailField = collection?.fields?.find((f) => f.name == "email") || {};
+
+    $: passwordField = collection?.fields?.find((f) => f.name == "password") || {};
 
     let changePasswordToggle = false;
 
-    $: if (!record.username && record.username !== null) {
-        record.username = null;
-    }
-
     $: if (!changePasswordToggle) {
-        record.password = null;
-        record.passwordConfirm = null;
+        record.password = undefined;
+        record.passwordConfirm = undefined;
         removeError("password");
         removeError("passwordConfirm");
     }
 </script>
 
 <div class="grid m-b-base">
-    <div class="col-lg-6">
-        <Field class="form-field {!isNew ? 'required' : ''}" name="username" let:uniqueId>
-            <label for={uniqueId}>
-                <i class={CommonHelper.getFieldTypeIcon("user")} />
-                <span class="txt">Username</span>
-            </label>
-            <input
-                type="text"
-                requried={!isNew}
-                placeholder={isNew ? "Leave empty to auto generate..." : originalUsername}
-                id={uniqueId}
-                bind:value={record.username}
-            />
-        </Field>
-    </div>
-
-    <div class="col-lg-6">
-        <Field
-            class="form-field {collection.options?.requireEmail ? 'required' : ''}"
-            name="email"
-            let:uniqueId
-        >
+    <div class="col-lg-12">
+        <Field class="form-field {emailField?.required ? 'required' : ''}" name="email" let:uniqueId>
             <label for={uniqueId}>
                 <i class={CommonHelper.getFieldTypeIcon("email")} />
-                <span class="txt">Email</span>
+                <span class="txt">email</span>
             </label>
-            <div class="form-field-addon email-visibility-addon">
-                <button
-                    type="button"
-                    class="btn btn-sm btn-transparent {record.emailVisibility ? 'btn-success' : 'btn-hint'}"
-                    use:tooltip={{
-                        text: "Make email public or private",
-                        position: "top-right",
-                    }}
-                    on:click|preventDefault={() => (record.emailVisibility = !record.emailVisibility)}
-                >
-                    <span class="txt">Public: {record.emailVisibility ? "On" : "Off"}</span>
-                </button>
-            </div>
+
+            {#if !isSuperusers}
+                <div class="form-field-addon email-visibility-addon">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-transparent {record.emailVisibility
+                            ? 'btn-success'
+                            : 'btn-hint'}"
+                        use:tooltip={{
+                            text: "Make email public or private",
+                            position: "top-right",
+                        }}
+                        on:click|preventDefault={() => (record.emailVisibility = !record.emailVisibility)}
+                    >
+                        <span class="txt">Public: {record.emailVisibility ? "On" : "Off"}</span>
+                    </button>
+                </div>
+            {/if}
+
             <!-- svelte-ignore a11y-autofocus -->
             <input
                 type="email"
                 autofocus={isNew}
                 autocomplete="off"
                 id={uniqueId}
-                required={collection.options?.requireEmail}
+                required={emailField.required}
                 bind:value={record.email}
             />
         </Field>
@@ -104,9 +90,7 @@
                                 bind:value={record.password}
                             />
                             <div class="form-field-addon">
-                                <SecretGeneratorButton
-                                    length={Math.max(15, collection?.options?.minPasswordLength || 0)}
-                                />
+                                <SecretGeneratorButton length={Math.max(15, passwordField.min || 0)} />
                             </div>
                         </Field>
                     </div>
@@ -130,28 +114,30 @@
         {/if}
     </div>
 
-    <div class="col-lg-12">
-        <Field class="form-field form-field-toggle" name="verified" let:uniqueId>
-            <input
-                type="checkbox"
-                id={uniqueId}
-                bind:checked={record.verified}
-                on:change|preventDefault={(e) => {
-                    if (isNew) {
-                        return; // no confirmation required
-                    }
-                    confirm(
-                        `Do you really want to manually change the verified account state?`,
-                        () => {},
-                        () => {
-                            record.verified = !e.target.checked;
-                        },
-                    );
-                }}
-            />
-            <label for={uniqueId}>Verified</label>
-        </Field>
-    </div>
+    {#if !isSuperusers}
+        <div class="col-lg-12">
+            <Field class="form-field form-field-toggle" name="verified" let:uniqueId>
+                <input
+                    type="checkbox"
+                    id={uniqueId}
+                    bind:checked={record.verified}
+                    on:change|preventDefault={(e) => {
+                        if (isNew) {
+                            return; // no confirmation required
+                        }
+                        confirm(
+                            `Do you really want to manually change the verified account state?`,
+                            () => {},
+                            () => {
+                                record.verified = !e.target.checked;
+                            },
+                        );
+                    }}
+                />
+                <label for={uniqueId}>Verified</label>
+            </Field>
+        </div>
+    {/if}
 </div>
 
 <style>

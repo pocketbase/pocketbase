@@ -6,8 +6,8 @@ import (
 	"github.com/pocketbase/pocketbase/tools/dbutils"
 )
 
-func TestJsonEach(t *testing.T) {
-	result := dbutils.JsonEach("a.b")
+func TestJSONEach(t *testing.T) {
+	result := dbutils.JSONEach("a.b")
 
 	expected := "json_each(CASE WHEN json_valid([[a.b]]) THEN [[a.b]] ELSE json_array([[a.b]]) END)"
 
@@ -16,8 +16,8 @@ func TestJsonEach(t *testing.T) {
 	}
 }
 
-func TestJsonArrayLength(t *testing.T) {
-	result := dbutils.JsonArrayLength("a.b")
+func TestJSONArrayLength(t *testing.T) {
+	result := dbutils.JSONArrayLength("a.b")
 
 	expected := "json_array_length(CASE WHEN json_valid([[a.b]]) THEN [[a.b]] ELSE (CASE WHEN [[a.b]] = '' OR [[a.b]] IS NULL THEN json_array() ELSE json_array([[a.b]]) END) END)"
 
@@ -26,7 +26,7 @@ func TestJsonArrayLength(t *testing.T) {
 	}
 }
 
-func TestJsonExtract(t *testing.T) {
+func TestJSONExtract(t *testing.T) {
 	scenarios := []struct {
 		name     string
 		column   string
@@ -55,12 +55,11 @@ func TestJsonExtract(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			result := dbutils.JsonExtract(s.column, s.path)
+			result := dbutils.JSONExtract(s.column, s.path)
 
 			if result != s.expected {
 				t.Fatalf("Expected\n%v\ngot\n%v", s.expected, result)
 			}
 		})
 	}
-
 }

@@ -12,10 +12,34 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 )
+
+func TestFileAsMap(t *testing.T) {
+	file, err := filesystem.NewFileFromBytes([]byte("test"), "test123.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result := file.AsMap()
+
+	if len(result) != 3 {
+		t.Fatalf("Expected map with %d keys, got\n%v", 3, result)
+	}
+
+	if result["size"] != int64(4) {
+		t.Fatalf("Expected size %d, got %#v", 4, result["size"])
+	}
+
+	if str, ok := result["name"].(string); !ok || !strings.HasPrefix(str, "test123") {
+		t.Fatalf("Expected name to have prefix %q, got %#v", "test123", result["name"])
+	}
+
+	if result["originalName"] != "test123.txt" {
+		t.Fatalf("Expected originalName %q, got %#v", "test123.txt", result["originalName"])
+	}
+}
 
 func TestNewFileFromPath(t *testing.T) {
 	testDir := createTestDir(t)
@@ -83,7 +107,7 @@ func TestNewFileFromMultipart(t *testing.T) {
 	}
 
 	req := httptest.NewRequest("", "/", formData)
-	req.Header.Set(echo.HeaderContentType, mp.FormDataContentType())
+	req.Header.Set("Content-Type", mp.FormDataContentType())
 	req.ParseMultipartForm(32 << 20)
 
 	_, mh, err := req.FormFile("test")
@@ -115,7 +139,7 @@ func TestNewFileFromMultipart(t *testing.T) {
 	}
 }
 
-func TestNewFileFromUrlTimeout(t *testing.T) {
+func TestNewFileFromURLTimeout(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/error" {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -129,7 +153,7 @@ func TestNewFileFromUrlTimeout(t *testing.T) {
 	{
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		f, err := filesystem.NewFileFromUrl(ctx, srv.URL+"/cancel")
+		f, err := filesystem.NewFileFromURL(ctx, srv.URL+"/cancel")
 		if err == nil {
 			t.Fatal("[ctx_cancel] Expected error, got nil")
 		}
@@ -140,7 +164,7 @@ func TestNewFileFromUrlTimeout(t *testing.T) {
 
 	// error response
 	{
-		f, err := filesystem.NewFileFromUrl(context.Background(), srv.URL+"/error")
+		f, err := filesystem.NewFileFromURL(context.Background(), srv.URL+"/error")
 		if err == nil {
 			t.Fatal("[error_status] Expected error, got nil")
 		}
@@ -154,7 +178,7 @@ func TestNewFileFromUrlTimeout(t *testing.T) {
 		originalName := "image_! noext"
 		normalizedNamePattern := regexp.QuoteMeta("image_noext_") + `\w{10}` + regexp.QuoteMeta(".txt")
 
-		f, err := filesystem.NewFileFromUrl(context.Background(), srv.URL+"/"+originalName)
+		f, err := filesystem.NewFileFromURL(context.Background(), srv.URL+"/"+originalName)
 		if err != nil {
 			t.Fatalf("[valid] Unexpected error %v", err)
 		}

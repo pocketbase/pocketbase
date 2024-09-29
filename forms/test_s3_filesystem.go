@@ -6,7 +6,6 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
@@ -46,7 +45,7 @@ func (form *TestS3Filesystem) Submit() error {
 		return err
 	}
 
-	var s3Config settings.S3Config
+	var s3Config core.S3Config
 
 	if form.Filesystem == s3FilesystemBackups {
 		s3Config = form.app.Settings().Backups.S3

@@ -7,6 +7,8 @@ import (
 // Tagger defines an interface for event data structs that support tags/groups/categories/etc.
 // Usually used together with TaggedHook.
 type Tagger interface {
+	Resolver
+
 	Tags() []string
 }
 
@@ -33,12 +35,14 @@ type TaggedHook[T Tagger] struct {
 
 // CanTriggerOn checks if the current TaggedHook can be triggered with
 // the provided event data tags.
-func (h *TaggedHook[T]) CanTriggerOn(tags []string) bool {
+//
+// It returns always true if the hook doens't have any tags.
+func (h *TaggedHook[T]) CanTriggerOn(tagsToCheck []string) bool {
 	if len(h.tags) == 0 {
 		return true // match all
 	}
 
-	for _, t := range tags {
+	for _, t := range tagsToCheck {
 		if list.ExistInSlice(t, h.tags) {
 			return true
 		}
@@ -47,28 +51,34 @@ func (h *TaggedHook[T]) CanTriggerOn(tags []string) bool {
 	return false
 }
 
-// PreAdd registers a new handler to the hook by prepending it to the existing queue.
+// Bind registers the provided handler to the current hooks queue.
 //
-// The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
-func (h *TaggedHook[T]) PreAdd(fn Handler[T]) string {
-	return h.mainHook.PreAdd(func(e T) error {
+// It is similar to [Hook.Bind] with the difference that the handler
+// function is invoked only if the event data tags satisfy h.CanTriggerOn.
+func (h *TaggedHook[T]) Bind(handler *Handler[T]) string {
+	fn := handler.Func
+
+	handler.Func = func(e T) error {
 		if h.CanTriggerOn(e.Tags()) {
 			return fn(e)
 		}
 
-		return nil
-	})
+		return e.Next()
+	}
+
+	return h.mainHook.Bind(handler)
 }
 
-// Add registers a new handler to the hook by appending it to the existing queue.
+// BindFunc registers a new handler with the specified function.
 //
-// The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
-func (h *TaggedHook[T]) Add(fn Handler[T]) string {
-	return h.mainHook.Add(func(e T) error {
+// It is similar to [Hook.Bind] with the difference that the handler
+// function is invoked only if the event data tags satisfy h.CanTriggerOn.
+func (h *TaggedHook[T]) BindFunc(fn HandlerFunc[T]) string {
+	return h.mainHook.BindFunc(func(e T) error {
 		if h.CanTriggerOn(e.Tags()) {
 			return fn(e)
 		}
 
-		return nil
+		return e.Next()
 	})
 }

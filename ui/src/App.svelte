@@ -1,20 +1,20 @@
 <script>
     import "./scss/main.scss";
 
-    import Router, { replace, link } from "svelte-spa-router";
-    import active from "svelte-spa-router/active";
-    import routes from "./routes";
-    import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
+    import Confirmation from "@/components/base/Confirmation.svelte";
+    import TinyMCE from "@/components/base/TinyMCE.svelte";
     import Toasts from "@/components/base/Toasts.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
-    import Confirmation from "@/components/base/Confirmation.svelte";
-    import { pageTitle, appName, hideControls } from "@/stores/app";
-    import { admin } from "@/stores/admin";
-    import { setErrors } from "@/stores/errors";
+    import { appName, hideControls, pageTitle } from "@/stores/app";
     import { resetConfirmation } from "@/stores/confirmation";
-    import TinyMCE from "@/components/base/TinyMCE.svelte";
+    import { setErrors } from "@/stores/errors";
+    import { superuser } from "@/stores/superuser";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import Router, { link, replace } from "svelte-spa-router";
+    import active from "svelte-spa-router/active";
+    import routes from "./routes";
 
     let oldLocation = undefined;
 
@@ -22,7 +22,7 @@
 
     let isTinyMCEPreloaded = false;
 
-    $: if ($admin?.id) {
+    $: if ($superuser?.id) {
         loadSettings();
     }
 
@@ -46,7 +46,7 @@
     }
 
     async function loadSettings() {
-        if (!$admin?.id) {
+        if (!$superuser?.id) {
             return;
         }
 
@@ -70,10 +70,14 @@
 
 <svelte:head>
     <title>{CommonHelper.joinNonEmpty([$pageTitle, $appName, "PocketBase"], " - ")}</title>
+
+    {#if window.location.protocol == "https:"}
+        <link rel="shortcut icon" type="image/png" href="/images/favicon/favicon_prod.png" />
+    {/if}
 </svelte:head>
 
 <div class="app-layout">
-    {#if $admin?.id && showAppSidebar}
+    {#if $superuser?.id && showAppSidebar}
         <aside class="app-sidebar">
             <a href="/" class="logo logo-sm" use:link>
                 <img
@@ -120,20 +124,25 @@
             <div
                 tabindex="0"
                 role="button"
-                aria-label="Logged admin menu"
-                class="thumb thumb-circle link-hint closable"
+                aria-label="Logged superuser menu"
+                class="thumb thumb-circle link-hint"
+                title={$superuser.email}
             >
-                <img
-                    src="{import.meta.env.BASE_URL}images/avatars/avatar{$admin?.avatar || 0}.svg"
-                    alt="Avatar"
-                    aria-hidden="true"
-                />
+                <span class="initials">{CommonHelper.getInitials($superuser.email)}</span>
                 <Toggler class="dropdown dropdown-nowrap dropdown-upside dropdown-left">
-                    <a href="/settings/admins" class="dropdown-item closable" role="menuitem" use:link>
-                        <i class="ri-shield-user-line" aria-hidden="true" />
-                        <span class="txt">Manage admins</span>
-                    </a>
+                    <div class="txt-ellipsis current-superuser" title={$superuser.email}>
+                        {$superuser.email}
+                    </div>
                     <hr />
+                    <a
+                        href="/collections?collectionId=_pbc_3323866339"
+                        class="dropdown-item closable"
+                        role="menuitem"
+                        use:link
+                    >
+                        <i class="ri-shield-user-line" aria-hidden="true" />
+                        <span class="txt">Manage superusers</span>
+                    </a>
                     <button type="button" class="dropdown-item closable" role="menuitem" on:click={logout}>
                         <i class="ri-logout-circle-line" aria-hidden="true" />
                         <span class="txt">Logout</span>
@@ -162,3 +171,11 @@
         />
     </div>
 {/if}
+
+<style>
+    .current-superuser {
+        padding: 10px;
+        max-width: 200px;
+        color: var(--txtHintColor);
+    }
+</style>

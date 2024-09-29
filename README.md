@@ -10,7 +10,7 @@
     <a href="https://pkg.go.dev/github.com/pocketbase/pocketbase" target="_blank" rel="noopener"><img src="https://godoc.org/github.com/pocketbase/pocketbase?status.svg" alt="Go package documentation" /></a>
 </p>
 
-[PocketBase](https://pocketbase.io) is an open source Go backend, consisting of:
+[PocketBase](https://pocketbase.io) is an open source Go backend that includes:
 
 - embedded database (_SQLite_) with **realtime subscriptions**
 - built-in **files and users management**
@@ -46,7 +46,7 @@ your own custom app specific business logic and still have a single portable exe
 
 Here is a minimal example:
 
-0. [Install Go 1.21+](https://go.dev/doc/install) (_if you haven't already_)
+0. [Install Go 1.23+](https://go.dev/doc/install) (_if you haven't already_)
 
 1. Create a new project directory with the following `main.go` file inside it:
     ```go
@@ -56,29 +56,20 @@ Here is a minimal example:
         "log"
         "net/http"
 
-        "github.com/labstack/echo/v5"
         "github.com/pocketbase/pocketbase"
-        "github.com/pocketbase/pocketbase/apis"
         "github.com/pocketbase/pocketbase/core"
     )
 
     func main() {
         app := pocketbase.New()
 
-        app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-            // add new "GET /hello" route to the app router (echo)
-            e.Router.AddRoute(echo.Route{
-                Method: http.MethodGet,
-                Path:   "/hello",
-                Handler: func(c echo.Context) error {
-                    return c.String(200, "Hello world!")
-                },
-                Middlewares: []echo.MiddlewareFunc{
-                    apis.ActivityLogger(app),
-                },
+        app.OnServe().BindFunc(func(se *core.ServeEvent) error {
+            // registers new "GET /hello" route
+            se.Router.Get("/hello", func(re *core.RequestEvent) error {
+                return re.String(200, "Hello world!")
             })
 
-            return nil
+            return se.Next()
         })
 
         if err := app.Start(); err != nil {
@@ -145,7 +136,7 @@ Check also the [Testing guide](http://pocketbase.io/docs/testing) to learn how t
 
 If you discover a security vulnerability within PocketBase, please send an e-mail to **support at pocketbase.io**.
 
-All reports will be promptly addressed, and you'll be credited accordingly.
+All reports will be promptly addressed and you'll be credited in the fix release notes.
 
 ## Contributing
 

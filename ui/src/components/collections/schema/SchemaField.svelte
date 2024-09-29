@@ -21,34 +21,43 @@
         number: "Nonzero",
     };
 
+    // @todo refactor once the UI is dynamic
+    const authHideNonemptyToggle = ["password", "tokenKey", "id", "autodate"];
+    const authHideHiddenToggle = ["password", "tokenKey", "id", "email"];
+    const authHidePresentableToggle = ["password", "tokenKey"];
+
     export let key = "";
     export let field = CommonHelper.initSchemaField();
+    export let draggable = true;
+    export let collection = {};
 
     let nameInput;
     let showOptions = false;
 
-    $: if (field.toDelete) {
+    $: isAuthCollection = collection?.type == "auth";
+
+    $: if (field._toDelete) {
         // reset the name if it was previously deleted
-        if (field.originalName && field.name !== field.originalName) {
-            field.name = field.originalName;
+        if (field._originalName && field.name !== field._originalName) {
+            field.name = field._originalName;
         }
     }
 
-    $: if (!field.originalName && field.name) {
-        field.originalName = field.name;
+    $: if (!field._originalName && field.name) {
+        field._originalName = field.name;
     }
 
-    $: if (typeof field.toDelete === "undefined") {
-        field.toDelete = false; // normalize
+    $: if (typeof field._toDelete === "undefined") {
+        field._toDelete = false; // normalize
     }
 
     $: if (field.required) {
         field.nullable = false;
     }
 
-    $: interactive = !field.toDelete && !(field.id && field.system);
+    $: interactive = !field._toDelete;
 
-    $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `schema.${key}`));
+    $: hasErrors = !CommonHelper.isEmpty(CommonHelper.getNestedVal($errors, `fields.${key}`));
 
     $: requiredLabel = customRequiredLabels[field?.type] || "Nonempty";
 
@@ -57,19 +66,19 @@
             collapse();
             dispatch("remove");
         } else {
-            field.toDelete = true;
+            field._toDelete = true;
         }
     }
 
     function restore() {
-        field.toDelete = false;
+        field._toDelete = false;
 
         // reset all errors since the error index key would have been changed
         setErrors({});
     }
 
     function duplicate() {
-        if (!field.toDelete) {
+        if (!field._toDelete) {
             collapse();
             dispatch("duplicate");
         }
@@ -126,44 +135,49 @@
     class="schema-field"
     class:required={field.required}
     class:expanded={interactive && showOptions}
-    class:deleted={field.toDelete}
+    class:deleted={field._toDelete}
     transition:slide={{ duration: 150 }}
 >
     <div class="schema-field-header">
-        {#if interactive}
+        {#if interactive && draggable}
             <div class="drag-handle-wrapper" draggable={true} aria-label="Sort">
                 <span class="drag-handle" />
             </div>
         {/if}
         <Field
             class="form-field required m-0 {!interactive ? 'disabled' : ''}"
-            name="schema.{key}.name"
+            name="fields.{key}.name"
             inlineError
         >
-            {#if field.required}
-                <div class="field-labels">
+            <div class="field-labels">
+                {#if field.required}
                     <span class="label label-success">{requiredLabel}</span>
-                </div>
-            {/if}
+                {/if}
+                {#if field.hidden}
+                    <span class="label label-danger">Hidden</span>
+                {/if}
+            </div>
 
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
             <div
-                class="form-field-addon prefix no-pointer-events field-type-icon"
-                class:txt-disabled={!interactive}
+                class="form-field-addon prefix field-type-icon"
+                class:txt-disabled={!interactive || field.system}
+                use:tooltip={field.type + (field.system ? " (system)" : "")}
+                on:click={() => nameInput?.focus()}
             >
                 <i class={CommonHelper.getFieldTypeIcon(field.type)} />
             </div>
 
-            <!-- svelte-ignore a11y-autofocus -->
             <input
                 bind:this={nameInput}
                 type="text"
                 required
-                disabled={!interactive}
-                readonly={field.id && field.system}
+                disabled={!interactive || field.system}
                 spellcheck="false"
-                autofocus={!field.id}
                 placeholder="Field name"
                 value={field.name}
+                title="System field"
                 on:input={(e) => {
                     const oldName = field.name;
                     field.name = normalizeFieldName(e.target.value);
@@ -178,10 +192,10 @@
             <span class="separator" />
         </slot>
 
-        {#if field.toDelete}
+        {#if field._toDelete}
             <button
                 type="button"
-                class="btn btn-sm btn-circle btn-warning btn-transparent options-trigger"
+                class="btn btn-sm btn-circle btn-success btn-transparent options-trigger"
                 aria-label="Restore"
                 use:tooltip={"Restore"}
                 on:click={restore}
@@ -191,7 +205,7 @@
         {:else if interactive}
             <button
                 type="button"
-                aria-label="Toggle field options"
+                aria-label="Toggle {field.name} field options"
                 class="btn btn-sm btn-circle options-trigger {showOptions
                     ? 'btn-secondary'
                     : 'btn-transparent'}"
@@ -206,49 +220,83 @@
     </div>
 
     {#if interactive && showOptions}
-        <div class="schema-field-options" transition:slide={{ duration: 150 }}>
+        <div class="schema-field-options" transition:slide={{ delay: 10, duration: 150 }}>
             <div class="hidden-empty m-b-sm">
                 <slot name="options" {interactive} {hasErrors} />
             </div>
 
             <div class="schema-field-options-footer">
-                <Field class="form-field form-field-toggle" name="requried" let:uniqueId>
-                    <input type="checkbox" id={uniqueId} bind:checked={field.required} />
-                    <label for={uniqueId}>
-                        <span class="txt">{requiredLabel}</span>
-                        <i
-                            class="ri-information-line link-hint"
-                            use:tooltip={{
-                                text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
-                                    field,
-                                )}.`,
-                            }}
-                        />
-                    </label>
-                </Field>
+                <!-- @todo move to each field after the refactoring -->
+                {#if !field.primaryKey && field.type != "autodate" && (!isAuthCollection || !authHideNonemptyToggle.includes(field.name))}
+                    <Field class="form-field form-field-toggle" name="requried" let:uniqueId>
+                        <input type="checkbox" id={uniqueId} bind:checked={field.required} />
+                        <label for={uniqueId}>
+                            <span class="txt">{requiredLabel}</span>
+                            <i
+                                class="ri-information-line link-hint"
+                                use:tooltip={{
+                                    text: `Requires the field value NOT to be ${CommonHelper.zeroDefaultStr(
+                                        field,
+                                    )}.`,
+                                }}
+                            />
+                        </label>
+                    </Field>
+                {/if}
 
-                <Field class="form-field form-field-toggle" name="presentable" let:uniqueId>
-                    <input type="checkbox" id={uniqueId} bind:checked={field.presentable} />
-                    <label for={uniqueId}>
-                        <span class="txt">Presentable</span>
-                        <i
-                            class="ri-information-line link-hint"
-                            use:tooltip={{
-                                text: `Whether the field should be preferred in the Admin UI relation listings (default to auto).`,
+                {#if !field.primaryKey && (!isAuthCollection || !authHideHiddenToggle.includes(field.name))}
+                    <Field class="form-field form-field-toggle" name="hidden" let:uniqueId>
+                        <input
+                            type="checkbox"
+                            id={uniqueId}
+                            bind:checked={field.hidden}
+                            on:change={(e) => {
+                                if (e.target.checked) {
+                                    field.presentable = false;
+                                }
                             }}
                         />
-                    </label>
-                </Field>
+                        <label for={uniqueId}>
+                            <span class="txt">Hidden</span>
+                            <i
+                                class="ri-information-line link-hint"
+                                use:tooltip={{
+                                    text: `Hide from the JSON API response and filters.`,
+                                }}
+                            />
+                        </label>
+                    </Field>
+                {/if}
+
+                {#if !isAuthCollection || !authHidePresentableToggle.includes(field.name)}
+                    <Field class="form-field form-field-toggle m-0" name="presentable" let:uniqueId>
+                        <input
+                            type="checkbox"
+                            id={uniqueId}
+                            bind:checked={field.presentable}
+                            disabled={field.hidden}
+                        />
+                        <label for={uniqueId}>
+                            <span class="txt">Presentable</span>
+                            <i
+                                class="ri-information-line {field.hidden ? 'txt-disabled' : 'link-hint'}"
+                                use:tooltip={{
+                                    text: `Whether the field should be preferred in the Superuser UI relation listings (default to auto).`,
+                                }}
+                            />
+                        </label>
+                    </Field>
+                {/if}
 
                 <slot name="optionsFooter" {interactive} {hasErrors} />
 
-                {#if !field.toDelete}
+                {#if !field._toDelete && !field.primaryKey}
                     <div class="m-l-auto txt-right">
                         <div class="inline-flex flex-gap-sm flex-nowrap">
                             <div
                                 tabindex="0"
                                 role="button"
-                                aria-label="More"
+                                title="More field options"
                                 class="btn btn-circle btn-sm btn-transparent"
                             >
                                 <i class="ri-more-line" aria-hidden="true" />
@@ -263,14 +311,16 @@
                                     >
                                         <span class="txt">Duplicate</span>
                                     </button>
-                                    <button
-                                        type="button"
-                                        class="dropdown-item"
-                                        role="menuitem"
-                                        on:click|preventDefault={remove}
-                                    >
-                                        <span class="txt">Remove</span>
-                                    </button>
+                                    {#if !field.system}
+                                        <button
+                                            type="button"
+                                            class="dropdown-item"
+                                            role="menuitem"
+                                            on:click|preventDefault={remove}
+                                        >
+                                            <span class="txt">Remove</span>
+                                        </button>
+                                    {/if}
                                 </Toggler>
                             </div>
                         </div>

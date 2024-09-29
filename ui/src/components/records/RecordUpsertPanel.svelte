@@ -1,30 +1,32 @@
 <script>
     import { createEventDispatcher, tick } from "svelte";
     import { slide } from "svelte/transition";
-    import CommonHelper from "@/utils/CommonHelper";
     import { ClientResponseError } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
-    import { setErrors } from "@/stores/errors";
-    import { confirm } from "@/stores/confirmation";
-    import { addSuccessToast, addErrorToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
-    import Toggler from "@/components/base/Toggler.svelte";
-    import ModelDateIcon from "@/components/base/ModelDateIcon.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
-    import AuthFields from "@/components/records/fields/AuthFields.svelte";
-    import TextField from "@/components/records/fields/TextField.svelte";
-    import NumberField from "@/components/records/fields/NumberField.svelte";
-    import BoolField from "@/components/records/fields/BoolField.svelte";
-    import EmailField from "@/components/records/fields/EmailField.svelte";
-    import UrlField from "@/components/records/fields/UrlField.svelte";
-    import DateField from "@/components/records/fields/DateField.svelte";
-    import SelectField from "@/components/records/fields/SelectField.svelte";
-    import JsonField from "@/components/records/fields/JsonField.svelte";
-    import FileField from "@/components/records/fields/FileField.svelte";
-    import RelationField from "@/components/records/fields/RelationField.svelte";
-    import EditorField from "@/components/records/fields/EditorField.svelte";
+    import Toggler from "@/components/base/Toggler.svelte";
+    import AutodateIcon from "@/components/records/AutodateIcon.svelte";
     import ExternalAuthsList from "@/components/records/ExternalAuthsList.svelte";
+    import AuthFields from "@/components/records/fields/AuthFields.svelte";
+    import BoolField from "@/components/records/fields/BoolField.svelte";
+    import DateField from "@/components/records/fields/DateField.svelte";
+    import EditorField from "@/components/records/fields/EditorField.svelte";
+    import EmailField from "@/components/records/fields/EmailField.svelte";
+    import FileField from "@/components/records/fields/FileField.svelte";
+    import JsonField from "@/components/records/fields/JsonField.svelte";
+    import NumberField from "@/components/records/fields/NumberField.svelte";
+    import PasswordField from "@/components/records/fields/PasswordField.svelte";
+    import RelationField from "@/components/records/fields/RelationField.svelte";
+    import SelectField from "@/components/records/fields/SelectField.svelte";
+    import TextField from "@/components/records/fields/TextField.svelte";
+    import UrlField from "@/components/records/fields/UrlField.svelte";
+    import ImpersonatePopup from "@/components/records/ImpersonatePopup.svelte";
+    import { confirm } from "@/stores/confirmation";
+    import { setErrors } from "@/stores/errors";
+    import { addErrorToast, addSuccessToast } from "@/stores/toasts";
 
     const dispatch = createEventDispatcher();
     const formId = "record_" + CommonHelper.randomString(5);
@@ -34,6 +36,7 @@
     export let collection;
 
     let recordPanel;
+    let impersonatePopup;
     let original = {};
     let record = {};
     let initialDraft = null;
@@ -47,10 +50,15 @@
     let isNew = true;
     let isLoading = true;
     let initialCollection = collection;
+    let regularFields = [];
 
     $: isAuthCollection = collection?.type === "auth";
 
-    $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
+    $: isSuperusersCollection = collection?.name === "_superusers";
+
+    $: hasEditorField = !!collection?.fields?.find((f) => f.type === "editor");
+
+    $: idField = collection?.fields?.find((f) => f.name === "id");
 
     $: hasFileChanges =
         CommonHelper.hasNonEmptyProps(uploadedFilesMap) || CommonHelper.hasNonEmptyProps(deletedFileNamesMap);
@@ -70,6 +78,21 @@
     $: if (collection && initialCollection?.id != collection?.id) {
         onCollectionChange();
     }
+
+    const baseSkipFieldNames = ["id"];
+
+    const authSkipFieldNames = baseSkipFieldNames.concat(
+        "email",
+        "emailVisibility",
+        "verified",
+        "tokenKey",
+        "password",
+    );
+
+    $: skipFieldNames = isAuthCollection ? authSkipFieldNames : baseSkipFieldNames;
+
+    $: regularFields =
+        collection?.fields?.filter((f) => !skipFieldNames.includes(f.name) && f.type != "autodate") || [];
 
     export function show(model) {
         load(model);
@@ -162,8 +185,8 @@
         uploadedFilesMap = {};
         deletedFileNamesMap = {};
 
-        // to avoid layout shifts we replace only the file and non-schema fields
-        const skipFields = collection?.schema?.filter((f) => f.type != "file")?.map((f) => f.name) || [];
+        // to avoid layout shifts we replace only the file and non-collection fields
+        const skipFields = collection?.fields?.filter((f) => f.type != "file")?.map((f) => f.name) || [];
         for (let k in newOriginal) {
             if (skipFields.includes(k)) {
                 continue;
@@ -216,7 +239,7 @@
         const cloneA = structuredClone(recordA || {});
         const cloneB = structuredClone(recordB || {});
 
-        const fileFields = collection?.schema?.filter((f) => f.type === "file");
+        const fileFields = collection?.fields?.filter((f) => f.type === "file");
         for (let field of fileFields) {
             delete cloneA[field.name];
             delete cloneB[field.name];
@@ -258,6 +281,15 @@
 
             deleteDraft();
 
+            // logout on password change of the current logged in user
+            if (
+                isSuperusersCollection &&
+                record?.id == ApiClient.authStore.record?.id &&
+                !!data.get("password")
+            ) {
+                return ApiClient.logout();
+            }
+
             if (hidePanel) {
                 forceHide();
             } else {
@@ -284,7 +316,7 @@
             return ApiClient.collection(original.collectionId)
                 .delete(original.id)
                 .then(() => {
-                    hide();
+                    forceHide();
                     addSuccessToast("Successfully deleted record.");
                     dispatch("delete", original);
                 })
@@ -297,14 +329,14 @@
     function exportFormData() {
         const data = structuredClone(record || {});
         const formData = new FormData();
-
-        const exportableFields = {
-            id: data.id,
-        };
-
+        const exportableFields = {};
         const jsonFields = {};
 
-        for (const field of collection?.schema || []) {
+        for (const field of collection?.fields || []) {
+            if (field.type == "autodate" || (isAuthCollection && field.type == "password")) {
+                continue;
+            }
+
             exportableFields[field.name] = true;
 
             if (field.type == "json") {
@@ -312,18 +344,17 @@
             }
         }
 
-        if (isAuthCollection) {
-            exportableFields["username"] = true;
-            exportableFields["email"] = true;
-            exportableFields["emailVisibility"] = true;
+        // export the auth password fields only if explicitly set
+        if (isAuthCollection && data["password"]) {
             exportableFields["password"] = true;
+        }
+        if (isAuthCollection && data["passwordConfirm"]) {
             exportableFields["passwordConfirm"] = true;
-            exportableFields["verified"] = true;
         }
 
         // export base fields
         for (const key in data) {
-            // skip non-schema fields
+            // skip non-exportable fields
             if (!exportableFields[key]) {
                 continue;
             }
@@ -360,7 +391,7 @@
         for (const key in uploadedFilesMap) {
             const files = CommonHelper.toArray(uploadedFilesMap[key]);
             for (const file of files) {
-                formData.append(key, file);
+                formData.append(key + "+", file);
             }
         }
 
@@ -368,7 +399,7 @@
         for (const key in deletedFileNamesMap) {
             const names = CommonHelper.toArray(deletedFileNamesMap[key]);
             for (const name of names) {
-                formData.append(key + "." + name, "");
+                formData.append(key + "-", name);
             }
         }
 
@@ -423,17 +454,16 @@
         let clone = original ? structuredClone(original) : null;
 
         if (clone) {
-            clone.id = "";
-            clone.created = "";
-            clone.updated = "";
-
             // reset file fields
-            const fields = collection?.schema || [];
+            const resetTypes = ["file", "autodate"];
+            const fields = collection?.fields || [];
             for (const field of fields) {
-                if (field.type === "file") {
+                if (resetTypes.includes(field.type)) {
                     delete clone[field.name];
                 }
             }
+
+            clone.id = "";
         }
 
         deleteDraft();
@@ -458,7 +488,7 @@
     class="
         record-panel
         {hasEditorField ? 'overlay-panel-xl' : 'overlay-panel-lg'}
-        {isAuthCollection && !isNew ? 'colored-header' : ''}
+        {isAuthCollection && !isSuperusersCollection && !isNew ? 'colored-header' : ''}
     "
     btnClose={!isLoading}
     escClose={!isLoading}
@@ -507,7 +537,7 @@
                                 role="menuitem"
                                 on:click={() => sendVerificationEmail()}
                             >
-                                <i class="ri-mail-check-line" />
+                                <i class="ri-mail-check-line" aria-hidden="true" />
                                 <span class="txt">Send verification email</span>
                             </button>
                         {/if}
@@ -518,7 +548,7 @@
                                 role="menuitem"
                                 on:click={() => sendPasswordResetEmail()}
                             >
-                                <i class="ri-mail-lock-line" />
+                                <i class="ri-mail-lock-line" aria-hidden="true" />
                                 <span class="txt">Send password reset email</span>
                             </button>
                         {/if}
@@ -526,9 +556,18 @@
                             type="button"
                             class="dropdown-item closable"
                             role="menuitem"
+                            on:click={() => impersonatePopup?.show()}
+                        >
+                            <i class="ri-id-card-line" aria-hidden="true" />
+                            <span class="txt">Impersonate</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="dropdown-item closable"
+                            role="menuitem"
                             on:click={() => duplicateConfirm()}
                         >
-                            <i class="ri-file-copy-line" />
+                            <i class="ri-file-copy-line" aria-hidden="true" />
                             <span class="txt">Duplicate</span>
                         </button>
                         <button
@@ -537,7 +576,7 @@
                             role="menuitem"
                             on:click|preventDefault|stopPropagation={() => deleteConfirm()}
                         >
-                            <i class="ri-delete-bin-7-line" />
+                            <i class="ri-delete-bin-7-line" aria-hidden="true" />
                             <span class="txt">Delete</span>
                         </button>
                     </Toggler>
@@ -545,7 +584,7 @@
             {/if}
         {/if}
 
-        {#if isAuthCollection && !isNew}
+        {#if isAuthCollection && !isSuperusersCollection && !isNew}
             <div class="tabs-header stretched">
                 <button
                     type="button"
@@ -615,14 +654,16 @@
                 </label>
                 {#if !isNew}
                     <div class="form-field-addon">
-                        <ModelDateIcon model={record} />
+                        <AutodateIcon {record} />
                     </div>
                 {/if}
                 <input
                     type="text"
                     id={uniqueId}
-                    placeholder={!isLoading ? "Leave empty to auto generate..." : ""}
-                    minlength="15"
+                    placeholder={!isLoading && !CommonHelper.isEmpty(idField?.autogeneratePattern)
+                        ? "Leave empty to auto generate..."
+                        : ""}
+                    minlength={idField?.min}
                     readonly={!isNew}
                     bind:value={record.id}
                 />
@@ -631,45 +672,48 @@
             {#if isAuthCollection}
                 <AuthFields bind:record {isNew} {collection} />
 
-                {#if collection?.schema?.length}
+                {#if regularFields.length}
                     <hr />
                 {/if}
             {/if}
 
-            {#each collection?.schema || [] as field (field.name)}
+            {#each regularFields as field (field.name)}
                 {#if field.type === "text"}
-                    <TextField {field} bind:value={record[field.name]} />
+                    <TextField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "number"}
-                    <NumberField {field} bind:value={record[field.name]} />
+                    <NumberField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "bool"}
-                    <BoolField {field} bind:value={record[field.name]} />
+                    <BoolField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "email"}
-                    <EmailField {field} bind:value={record[field.name]} />
+                    <EmailField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "url"}
-                    <UrlField {field} bind:value={record[field.name]} />
+                    <UrlField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "editor"}
-                    <EditorField {field} bind:value={record[field.name]} />
+                    <EditorField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "date"}
-                    <DateField {field} bind:value={record[field.name]} />
+                    <DateField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "select"}
-                    <SelectField {field} bind:value={record[field.name]} />
+                    <SelectField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "json"}
-                    <JsonField {field} bind:value={record[field.name]} />
+                    <JsonField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "file"}
                     <FileField
                         {field}
+                        {original}
                         {record}
                         bind:value={record[field.name]}
                         bind:uploadedFiles={uploadedFilesMap[field.name]}
                         bind:deletedFileNames={deletedFileNamesMap[field.name]}
                     />
                 {:else if field.type === "relation"}
-                    <RelationField {field} bind:value={record[field.name]} />
+                    <RelationField {field} {original} {record} bind:value={record[field.name]} />
+                {:else if field.type === "password"}
+                    <PasswordField {field} {original} {record} bind:value={record[field.name]} />
                 {/if}
             {/each}
         </form>
 
-        {#if isAuthCollection && !isNew}
+        {#if isAuthCollection && !isSuperusersCollection && !isNew}
             <div class="tab-item" class:active={activeTab === tabProviderKey}>
                 <ExternalAuthsList {record} />
             </div>
@@ -686,17 +730,39 @@
             <span class="txt">Cancel</span>
         </button>
 
-        <button
-            type="submit"
-            form={formId}
-            class="btn btn-expanded"
-            class:btn-loading={isSaving || isLoading}
-            disabled={!canSave || isSaving}
-        >
-            <span class="txt">{isNew ? "Create" : "Save changes"}</span>
-        </button>
+        <div class="btns-group no-gap">
+            <button
+                type="submit"
+                form={formId}
+                title="Save and close"
+                class="btn btn-expanded"
+                class:btn-loading={isSaving || isLoading}
+                disabled={!canSave || isSaving}
+            >
+                <span class="txt">{isNew ? "Create" : "Save changes"}</span>
+            </button>
+
+            {#if !isNew}
+                <button type="button" class="btn p-l-5 p-r-5 flex-gap-0" disabled={!canSave || isSaving}>
+                    <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+
+                    <Toggler class="dropdown dropdown-upside dropdown-right dropdown-nowrap m-b-5">
+                        <button
+                            type="button"
+                            class="dropdown-item closable"
+                            role="menuitem"
+                            on:click={() => save(false)}
+                        >
+                            <span class="txt">Save and continue</span>
+                        </button>
+                    </Toggler>
+                </button>
+            {/if}
+        </div>
     </svelte:fragment>
 </OverlayPanel>
+
+<ImpersonatePopup bind:this={impersonatePopup} {record} {collection} />
 
 <style>
     .panel-title {

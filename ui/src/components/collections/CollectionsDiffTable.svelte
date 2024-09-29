@@ -1,11 +1,11 @@
 <script>
     import CommonHelper from "@/utils/CommonHelper";
 
-    export let collectionA = CommonHelper.initCollection();
-    export let collectionB = CommonHelper.initCollection();
+    export let collectionA = {};
+    export let collectionB = {};
     export let deleteMissing = false;
-    let schemaA = [];
-    let schemaB = [];
+    let fieldsListA = [];
+    let fieldsListB = [];
     let removedFields = [];
     let sharedFields = [];
     let addedFields = [];
@@ -14,50 +14,53 @@
 
     $: isCreateDiff = !isDeleteDiff && !collectionA?.id;
 
-    $: schemaA = Array.isArray(collectionA?.schema) ? collectionA?.schema.concat() : [];
+    $: fieldsListA = Array.isArray(collectionA?.fields) ? collectionA?.fields.concat() : [];
 
     $: if (
-        typeof collectionA?.schema !== "undefined" ||
-        typeof collectionB?.schema !== "undefined" ||
+        typeof collectionA?.fields !== "undefined" ||
+        typeof collectionB?.fields !== "undefined" ||
         typeof deleteMissing !== "undefined"
     ) {
-        setSchemaB();
+        setFieldsListB();
     }
 
-    $: removedFields = schemaA.filter((fieldA) => {
-        return !schemaB.find((fieldB) => fieldA.id == fieldB.id);
+    $: removedFields = fieldsListA.filter((fieldA) => {
+        return !fieldsListB.find((fieldB) => fieldA.id == fieldB.id);
     });
 
-    $: sharedFields = schemaB.filter((fieldB) => {
-        return schemaA.find((fieldA) => fieldA.id == fieldB.id);
+    $: sharedFields = fieldsListB.filter((fieldB) => {
+        return fieldsListA.find((fieldA) => fieldA.id == fieldB.id);
     });
 
-    $: addedFields = schemaB.filter((fieldB) => {
-        return !schemaA.find((fieldA) => fieldA.id == fieldB.id);
+    $: addedFields = fieldsListB.filter((fieldB) => {
+        return !fieldsListA.find((fieldA) => fieldA.id == fieldB.id);
     });
 
     $: hasAnyChange = CommonHelper.hasCollectionChanges(collectionA, collectionB, deleteMissing);
 
-    const mainModelProps = Object.keys(CommonHelper.initCollection()).filter(
-        (key) => !["schema", "created", "updated"].includes(key)
-    );
+    $: mainModelProps = CommonHelper.mergeUnique(
+        Object.keys(collectionA || {}),
+        Object.keys(collectionB || {}),
+    ).filter((key) => {
+        return !["fields", "created", "updated"].includes(key);
+    });
 
-    function setSchemaB() {
-        schemaB = Array.isArray(collectionB?.schema) ? collectionB?.schema.concat() : [];
+    function setFieldsListB() {
+        fieldsListB = Array.isArray(collectionB?.fields) ? collectionB?.fields.concat() : [];
 
         if (!deleteMissing) {
-            schemaB = schemaB.concat(
-                schemaA.filter((fieldA) => {
-                    return !schemaB.find((fieldB) => fieldA.id == fieldB.id);
-                })
+            fieldsListB = fieldsListB.concat(
+                fieldsListA.filter((fieldA) => {
+                    return !fieldsListB.find((fieldB) => fieldA.id == fieldB.id);
+                }),
             );
         }
     }
 
-    function getFieldById(schema, id) {
-        schema = schema || [];
+    function getFieldById(fields, id) {
+        fields = fields || [];
 
-        for (let field of schema) {
+        for (let field of fields) {
             if (field.id == id) {
                 return field;
             }
@@ -124,14 +127,14 @@
                         hasChanges(collectionA?.[prop], collectionB?.[prop])}
                     class:changed-none-col={isCreateDiff}
                 >
-                    <pre class="txt">{displayValue(collectionA?.[prop])}</pre>
+                    <pre class="txt diff-value">{displayValue(collectionA?.[prop])}</pre>
                 </td>
                 <td
                     class:changed-new-col={!isDeleteDiff &&
                         hasChanges(collectionA?.[prop], collectionB?.[prop])}
                     class:changed-none-col={isDeleteDiff}
                 >
-                    <pre class="txt">{displayValue(collectionB?.[prop])}</pre>
+                    <pre class="txt diff-value">{displayValue(collectionB?.[prop])}</pre>
                 </td>
             </tr>
         {/each}
@@ -165,19 +168,29 @@
             <tr>
                 <th class="min-width" colspan="3">
                     <span class="txt">field: {field.name}</span>
-                    {#if hasChanges(getFieldById(schemaA, field.id), getFieldById(schemaB, field.id))}
+                    {#if hasChanges(getFieldById(fieldsListA, field.id), getFieldById(fieldsListB, field.id))}
                         <span class="label label-warning m-l-5">Changed</span>
                     {/if}
                 </th>
             </tr>
 
             {#each Object.entries(field) as [key, newValue]}
-                <tr class:txt-primary={hasChanges(getFieldById(schemaA, field.id)?.[key], newValue)}>
+                <tr class:txt-primary={hasChanges(getFieldById(fieldsListA, field.id)?.[key], newValue)}>
                     <td class="min-width field-key-col">{key}</td>
-                    <td class:changed-old-col={hasChanges(getFieldById(schemaA, field.id)?.[key], newValue)}>
-                        <pre class="txt">{displayValue(getFieldById(schemaA, field.id)?.[key])}</pre>
+                    <td
+                        class:changed-old-col={hasChanges(
+                            getFieldById(fieldsListA, field.id)?.[key],
+                            newValue,
+                        )}
+                    >
+                        <pre class="txt">{displayValue(getFieldById(fieldsListA, field.id)?.[key])}</pre>
                     </td>
-                    <td class:changed-new-col={hasChanges(getFieldById(schemaA, field.id)?.[key], newValue)}>
+                    <td
+                        class:changed-new-col={hasChanges(
+                            getFieldById(fieldsListA, field.id)?.[key],
+                            newValue,
+                        )}
+                    >
                         <pre class="txt">{displayValue(newValue)}</pre>
                     </td>
                 </tr>
@@ -247,6 +260,9 @@
         }
         .field-key-col {
             padding-left: 30px;
+        }
+        .diff-value {
+            white-space: break-spaces;
         }
     }
 </style>

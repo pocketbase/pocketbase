@@ -1,9 +1,9 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import MultipleValueInput from "@/components/base/MultipleValueInput.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
+    import CommonHelper from "@/utils/CommonHelper";
 
     export let field;
     export let key = "";
@@ -13,7 +13,7 @@
     <svelte:fragment slot="options">
         <div class="grid grid-sm">
             <div class="col-sm-6">
-                <Field class="form-field" name="schema.{key}.options.exceptDomains" let:uniqueId>
+                <Field class="form-field" name="fields.{key}.exceptDomains" let:uniqueId>
                     <label for={uniqueId}>
                         <span class="txt">Except domains</span>
                         <i
@@ -26,16 +26,16 @@
                     </label>
                     <MultipleValueInput
                         id={uniqueId}
-                        disabled={!CommonHelper.isEmpty(field.options.onlyDomains)}
-                        bind:value={field.options.exceptDomains}
+                        disabled={!CommonHelper.isEmpty(field.onlyDomains)}
+                        bind:value={field.exceptDomains}
                     />
                     <div class="help-block">Use comma as separator.</div>
                 </Field>
             </div>
 
             <div class="col-sm-6">
-                <Field class="form-field" name="schema.{key}.options.onlyDomains" let:uniqueId>
-                    <label for="{uniqueId}.options.onlyDomains">
+                <Field class="form-field" name="fields.{key}.onlyDomains" let:uniqueId>
+                    <label for="{uniqueId}.onlyDomains">
                         <span class="txt">Only domains</span>
                         <i
                             class="ri-information-line link-hint"
@@ -46,9 +46,9 @@
                         />
                     </label>
                     <MultipleValueInput
-                        id="{uniqueId}.options.onlyDomains"
-                        disabled={!CommonHelper.isEmpty(field.options.exceptDomains)}
-                        bind:value={field.options.onlyDomains}
+                        id="{uniqueId}.onlyDomains"
+                        disabled={!CommonHelper.isEmpty(field.exceptDomains)}
+                        bind:value={field.onlyDomains}
                     />
                     <div class="help-block">Use comma as separator.</div>
                 </Field>

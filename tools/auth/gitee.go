@@ -11,6 +11,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func init() {
+	Providers[NameGitee] = wrapFactory(NewGiteeProvider)
+}
+
 var _ Provider = (*Gitee)(nil)
 
 // NameGitee is the unique name of the Gitee provider.
@@ -18,19 +22,19 @@ const NameGitee string = "gitee"
 
 // Gitee allows authentication via Gitee OAuth2.
 type Gitee struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewGiteeProvider creates new Gitee provider instance with some defaults.
 func NewGiteeProvider() *Gitee {
-	return &Gitee{&baseProvider{
+	return &Gitee{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Gitee",
 		pkce:        true,
 		scopes:      []string{"user_info", "emails"},
-		authUrl:     "https://gitee.com/oauth/authorize",
-		tokenUrl:    "https://gitee.com/oauth/token",
-		userApiUrl:  "https://gitee.com/api/v5/user",
+		authURL:     "https://gitee.com/oauth/authorize",
+		tokenURL:    "https://gitee.com/oauth/token",
+		userInfoURL: "https://gitee.com/api/v5/user",
 	}}
 }
 
@@ -38,7 +42,7 @@ func NewGiteeProvider() *Gitee {
 //
 // API reference: https://gitee.com/api/v5/swagger#/getV5User
 func (p *Gitee) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +57,7 @@ func (p *Gitee) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id        int    `json:"id"`
 		Name      string `json:"name"`
 		Email     string `json:"email"`
-		AvatarUrl string `json:"avatar_url"`
+		AvatarURL string `json:"avatar_url"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
@@ -63,7 +67,7 @@ func (p *Gitee) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id:           strconv.Itoa(extracted.Id),
 		Name:         extracted.Name,
 		Username:     extracted.Login,
-		AvatarUrl:    extracted.AvatarUrl,
+		AvatarURL:    extracted.AvatarURL,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,

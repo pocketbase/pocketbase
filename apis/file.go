@@ -7,18 +7,12 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime"
-	"strings"
 	"time"
 
-	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
-	"github.com/pocketbase/pocketbase/tools/security"
-	"github.com/spf13/cast"
+	"github.com/pocketbase/pocketbase/tools/router"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/sync/singleflight"
 )
@@ -27,23 +21,19 @@ var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg", "image/
 var defaultThumbSizes = []string{"100x100"}
 
 // bindFileApi registers the file api endpoints and the corresponding handlers.
-func bindFileApi(app core.App, rg *echo.Group) {
+func bindFileApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
 	api := fileApi{
-		app:             app,
 		thumbGenSem:     semaphore.NewWeighted(int64(runtime.NumCPU() + 2)), // the value is arbitrary chosen and may change in the future
 		thumbGenPending: new(singleflight.Group),
 		thumbGenMaxWait: 60 * time.Second,
 	}
 
-	subGroup := rg.Group("/files", ActivityLogger(app))
-	subGroup.POST("/token", api.fileToken)
-	subGroup.HEAD("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
-	subGroup.GET("/:collection/:recordId/:filename", api.download, LoadCollectionContext(api.app))
+	sub := rg.Group("/files")
+	sub.POST("/token", api.fileToken).Bind(RequireAuth())
+	sub.GET("/{collection}/{recordId}/{filename}", api.download).Bind(collectionPathRateLimit("", "file"))
 }
 
 type fileApi struct {
-	app core.App
-
 	// thumbGenSem is a semaphore to prevent too much concurrent
 	// requests generating new thumbs at the same time.
 	thumbGenSem *semaphore.Weighted
@@ -57,84 +47,67 @@ type fileApi struct {
 	thumbGenMaxWait time.Duration
 }
 
-func (api *fileApi) fileToken(c echo.Context) error {
-	event := new(core.FileTokenEvent)
-	event.HttpContext = c
-
-	if admin, _ := c.Get(ContextAdminKey).(*models.Admin); admin != nil {
-		event.Model = admin
-		event.Token, _ = tokens.NewAdminFileToken(api.app, admin)
-	} else if record, _ := c.Get(ContextAuthRecordKey).(*models.Record); record != nil {
-		event.Model = record
-		event.Token, _ = tokens.NewRecordFileToken(api.app, record)
+func (api *fileApi) fileToken(e *core.RequestEvent) error {
+	if e.Auth == nil {
+		return e.UnauthorizedError("Missing auth context.", nil)
 	}
 
-	return api.app.OnFileBeforeTokenRequest().Trigger(event, func(e *core.FileTokenEvent) error {
-		if e.Model == nil || e.Token == "" {
-			return NewBadRequestError("Failed to generate file token.", nil)
-		}
+	token, err := e.Auth.NewFileToken()
+	if err != nil {
+		return e.InternalServerError("Failed to generate file token", err)
+	}
 
-		return api.app.OnFileAfterTokenRequest().Trigger(event, func(e *core.FileTokenEvent) error {
-			if e.HttpContext.Response().Committed {
-				return nil
-			}
+	event := new(core.FileTokenRequestEvent)
+	event.RequestEvent = e
+	event.Token = token
 
-			return e.HttpContext.JSON(http.StatusOK, map[string]string{
-				"token": e.Token,
-			})
+	return e.App.OnFileTokenRequest().Trigger(event, func(e *core.FileTokenRequestEvent) error {
+		return e.JSON(http.StatusOK, map[string]string{
+			"token": e.Token,
 		})
 	})
 }
 
-func (api *fileApi) download(c echo.Context) error {
-	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
-	if collection == nil {
-		return NewNotFoundError("", nil)
-	}
-
-	recordId := c.PathParam("recordId")
-	if recordId == "" {
-		return NewNotFoundError("", nil)
-	}
-
-	record, err := api.app.Dao().FindRecordById(collection.Id, recordId)
+func (api *fileApi) download(e *core.RequestEvent) error {
+	collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
 	if err != nil {
-		return NewNotFoundError("", err)
+		return e.NotFoundError("", nil)
 	}
 
-	filename := c.PathParam("filename")
+	recordId := e.Request.PathValue("recordId")
+	if recordId == "" {
+		return e.NotFoundError("", nil)
+	}
+
+	record, err := e.App.FindRecordById(collection, recordId)
+	if err != nil {
+		return e.NotFoundError("", err)
+	}
+
+	filename := e.Request.PathValue("filename")
 
 	fileField := record.FindFileFieldByFile(filename)
 	if fileField == nil {
-		return NewNotFoundError("", nil)
-	}
-
-	options, ok := fileField.Options.(*schema.FileOptions)
-	if !ok {
-		return NewBadRequestError("", errors.New("failed to load file options"))
+		return e.NotFoundError("", nil)
 	}
 
 	// check whether the request is authorized to view the protected file
-	if options.Protected {
-		token := c.QueryParam("token")
-
-		adminOrAuthRecord, _ := api.findAdminOrAuthRecordByFileToken(token)
-
-		// create a copy of the cached request data and adjust it for the current auth model
-		requestInfo := *RequestInfo(c)
-		requestInfo.Context = models.RequestInfoContextProtectedFile
-		requestInfo.Admin = nil
-		requestInfo.AuthRecord = nil
-		if adminOrAuthRecord != nil {
-			if admin, _ := adminOrAuthRecord.(*models.Admin); admin != nil {
-				requestInfo.Admin = admin
-			} else if record, _ := adminOrAuthRecord.(*models.Record); record != nil {
-				requestInfo.AuthRecord = record
-			}
+	if fileField.Protected {
+		originalRequestInfo, err := e.RequestInfo()
+		if err != nil {
+			return e.InternalServerError("Failed to load request info", err)
 		}
 
-		if ok, _ := api.app.Dao().CanAccessRecord(record, &requestInfo, record.Collection().ViewRule); !ok {
-			return NewForbiddenError("Insufficient permissions to access the file resource.", nil)
+		token := e.Request.URL.Query().Get("token")
+		authRecord, _ := e.App.FindAuthRecordByToken(token, core.TokenTypeFile)
+
+		// create a shallow copy of the cached request data and adjust it to the current auth record (if any)
+		requestInfo := *originalRequestInfo
+		requestInfo.Context = core.RequestInfoContextProtectedFile
+		requestInfo.Auth = authRecord
+
+		if ok, _ := e.App.CanAccessRecord(record, &requestInfo, record.Collection().ViewRule); !ok {
+			return e.NotFoundError("", errors.New("insufficient permissions to access the file resource"))
 		}
 	}
 
@@ -142,16 +115,16 @@ func (api *fileApi) download(c echo.Context) error {
 
 	// fetch the original view file field related record
 	if collection.IsView() {
-		fileRecord, err := api.app.Dao().FindRecordByViewFile(collection.Id, fileField.Name, filename)
+		fileRecord, err := e.App.FindRecordByViewFile(collection.Id, fileField.Name, filename)
 		if err != nil {
-			return NewNotFoundError("", fmt.Errorf("Failed to fetch view file field record: %w", err))
+			return e.NotFoundError("", fmt.Errorf("failed to fetch view file field record: %w", err))
 		}
 		baseFilesPath = fileRecord.BaseFilesPath()
 	}
 
-	fsys, err := api.app.NewFilesystem()
+	fsys, err := e.App.NewFilesystem()
 	if err != nil {
-		return NewBadRequestError("Filesystem initialization failure.", err)
+		return e.InternalServerError("Filesystem initialization failure.", err)
 	}
 	defer fsys.Close()
 
@@ -160,12 +133,12 @@ func (api *fileApi) download(c echo.Context) error {
 	servedName := filename
 
 	// check for valid thumb size param
-	thumbSize := c.QueryParam("thumb")
-	if thumbSize != "" && (list.ExistInSlice(thumbSize, defaultThumbSizes) || list.ExistInSlice(thumbSize, options.Thumbs)) {
+	thumbSize := e.Request.URL.Query().Get("thumb")
+	if thumbSize != "" && (list.ExistInSlice(thumbSize, defaultThumbSizes) || list.ExistInSlice(thumbSize, fileField.Thumbs)) {
 		// extract the original file meta attributes and check it existence
 		oAttrs, oAttrsErr := fsys.Attributes(originalPath)
 		if oAttrsErr != nil {
-			return NewNotFoundError("", err)
+			return e.NotFoundError("", err)
 		}
 
 		// check if it is an image
@@ -176,8 +149,8 @@ func (api *fileApi) download(c echo.Context) error {
 
 			// create a new thumb if it doesn't exist
 			if exists, _ := fsys.Exists(servedPath); !exists {
-				if err := api.createThumb(c, fsys, originalPath, servedPath, thumbSize); err != nil {
-					api.app.Logger().Warn(
+				if err := api.createThumb(e, fsys, originalPath, servedPath, thumbSize); err != nil {
+					e.App.Logger().Warn(
 						"Fallback to original - failed to create thumb "+servedName,
 						slog.Any("error", err),
 						slog.String("original", originalPath),
@@ -192,8 +165,8 @@ func (api *fileApi) download(c echo.Context) error {
 		}
 	}
 
-	event := new(core.FileDownloadEvent)
-	event.HttpContext = c
+	event := new(core.FileDownloadRequestEvent)
+	event.RequestEvent = e
 	event.Collection = collection
 	event.Record = record
 	event.FileField = fileField
@@ -203,61 +176,26 @@ func (api *fileApi) download(c echo.Context) error {
 	// clickjacking shouldn't be a concern when serving uploaded files,
 	// so it safe to unset the global X-Frame-Options to allow files embedding
 	// (note: it is out of the hook to allow users to customize the behavior)
-	c.Response().Header().Del("X-Frame-Options")
+	e.Response.Header().Del("X-Frame-Options")
 
-	return api.app.OnFileDownloadRequest().Trigger(event, func(e *core.FileDownloadEvent) error {
-		if e.HttpContext.Response().Committed {
-			return nil
-		}
-
-		if err := fsys.Serve(e.HttpContext.Response(), e.HttpContext.Request(), e.ServedPath, e.ServedName); err != nil {
-			return NewNotFoundError("", err)
+	return e.App.OnFileDownloadRequest().Trigger(event, func(e *core.FileDownloadRequestEvent) error {
+		if err := fsys.Serve(e.Response, e.Request, e.ServedPath, e.ServedName); err != nil {
+			return e.NotFoundError("", err)
 		}
 
 		return nil
 	})
 }
 
-func (api *fileApi) findAdminOrAuthRecordByFileToken(fileToken string) (models.Model, error) {
-	fileToken = strings.TrimSpace(fileToken)
-	if fileToken == "" {
-		return nil, errors.New("missing file token")
-	}
-
-	claims, _ := security.ParseUnverifiedJWT(strings.TrimSpace(fileToken))
-	tokenType := cast.ToString(claims["type"])
-
-	switch tokenType {
-	case tokens.TypeAdmin:
-		admin, err := api.app.Dao().FindAdminByToken(
-			fileToken,
-			api.app.Settings().AdminFileToken.Secret,
-		)
-		if err == nil && admin != nil {
-			return admin, nil
-		}
-	case tokens.TypeAuthRecord:
-		record, err := api.app.Dao().FindAuthRecordByToken(
-			fileToken,
-			api.app.Settings().RecordFileToken.Secret,
-		)
-		if err == nil && record != nil {
-			return record, nil
-		}
-	}
-
-	return nil, errors.New("missing or invalid file token")
-}
-
 func (api *fileApi) createThumb(
-	c echo.Context,
+	e *core.RequestEvent,
 	fsys *filesystem.System,
 	originalPath string,
 	thumbPath string,
 	thumbSize string,
 ) error {
 	ch := api.thumbGenPending.DoChan(thumbPath, func() (any, error) {
-		ctx, cancel := context.WithTimeout(c.Request().Context(), api.thumbGenMaxWait)
+		ctx, cancel := context.WithTimeout(e.Request.Context(), api.thumbGenMaxWait)
 		defer cancel()
 
 		if err := api.thumbGenSem.Acquire(ctx, 1); err != nil {

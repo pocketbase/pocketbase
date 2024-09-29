@@ -9,7 +9,6 @@
     align-items: center;
     justify-content: stretch;
     background: var(--baseAlt1Color);
-    border-radius: var(--baseRadius);
     transition: border-radius var(--baseAnimationSpeed);
     .form-field {
         margin: 0;
@@ -30,7 +29,7 @@
     .separator {
         flex-shrink: 0;
         width: 1px;
-        height: $minHeight;
+        align-self: stretch;
         background: rgba(#000, 0.05);
     }
     .drag-handle-wrapper {
@@ -48,8 +47,11 @@
         @include hide();
     }
     .form-field-single-multiple-select {
-        width: 100px;
+        width: 135px;
         flex-shrink: 0;
+        .selected-container {
+            padding-left: 10px;
+        }
         .dropdown {
             min-width: 0;
         }
@@ -111,13 +113,12 @@
 .schema-field {
     @extend %block;
     position: relative;
-    margin: 0 0 var(--xsSpacing);
     border-radius: var(--baseRadius);
     background: var(--baseAlt1Color);
-    transition: border var(--baseAnimationSpeed),
-                box-shadow var(--baseAnimationSpeed);
-    border: 2px solid var(--baseAlt1Color);
-    // states
+    border: 1px solid var(--baseAlt1Color);
+    transition: border-radius var(--baseAnimationSpeed),
+                margin var(--baseAnimationSpeed);
+
     &:not(.deleted):hover {
         .drag-handle {
             transform: translateX(0px);
@@ -131,6 +132,9 @@
     &.expanded {
         @include shadowize();
         border-color: var(--baseAlt2Color);
+        .draggable:first-child & {
+            margin-top: 0;
+        }
         .schema-field-header {
             border-bottom-left-radius: 0;
             border-bottom-right-radius: 0;
@@ -149,12 +153,46 @@
             background: var(--bodyColor);
         }
         .markers,
-        .separator {
+        .separator,
+        .field-labels {
             opacity: 0.5;
         }
         %input {
             background: none;
             box-shadow: none;
         }
+    }
+}
+
+.schema-fields {
+    margin: 0 0 var(--xsSpacing);
+    .schema-field {
+        border-radius: 0;
+        box-shadow: 0px 0px 0px 1px var(--baseAlt2Color);
+    }
+    .draggable:has(+ .draggable .schema-field.expanded) .schema-field {
+       border-bottom-left-radius: var(--baseRadius);
+       border-bottom-right-radius: var(--baseRadius);
+    }
+    .draggable:has(.schema-field.expanded) + .draggable .schema-field {
+        border-top-left-radius: var(--baseRadius);
+        border-top-right-radius: var(--baseRadius);
+    }
+    & > .schema-field.expanded,
+    & > .draggable > .schema-field.expanded {
+        margin: var(--xsSpacing) 0;
+        border-radius: var(--baseRadius);
+    }
+    & > .schema-field:first-child,
+    & > .draggable:first-child > .schema-field {
+        margin-top: 0;
+        border-top-left-radius: var(--baseRadius);
+        border-top-right-radius: var(--baseRadius);
+    }
+    & > .schema-field:last-child,
+    & > .draggable:last-child > .schema-field{
+        margin-bottom: 0;
+        border-bottom-left-radius: var(--baseRadius);
+        border-bottom-right-radius: var(--baseRadius);
     }
 }

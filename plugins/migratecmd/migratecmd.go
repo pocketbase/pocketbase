@@ -16,6 +16,7 @@
 package migratecmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -24,10 +25,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/inflector"
-	"github.com/pocketbase/pocketbase/tools/migrate"
 	"github.com/spf13/cobra"
 )
 
@@ -82,22 +80,9 @@ func Register(app core.App, rootCmd *cobra.Command, config Config) error {
 
 	// watch for collection changes
 	if p.config.Automigrate {
-		// refresh the cache right after app bootstap
-		p.app.OnAfterBootstrap().Add(func(e *core.BootstrapEvent) error {
-			p.refreshCachedCollections()
-			return nil
-		})
-
-		// refresh the cache to ensure that it constains the latest changes
-		// when migrations are applied on server start
-		p.app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-			p.refreshCachedCollections()
-			return nil
-		})
-
-		p.app.OnModelAfterCreate().Add(p.afterCollectionChange())
-		p.app.OnModelAfterUpdate().Add(p.afterCollectionChange())
-		p.app.OnModelAfterDelete().Add(p.afterCollectionChange())
+		p.app.OnCollectionCreateRequest().BindFunc(p.automigrateOnCollectionChange)
+		p.app.OnCollectionUpdateRequest().BindFunc(p.automigrateOnCollectionChange)
+		p.app.OnCollectionDeleteRequest().BindFunc(p.automigrateOnCollectionChange)
 	}
 
 	return nil
@@ -139,10 +124,12 @@ func (p *plugin) createCommand() *cobra.Command {
 					return err
 				}
 			default:
-				runner, err := migrate.NewRunner(p.app.DB(), migrations.AppMigrations)
-				if err != nil {
-					return err
-				}
+				// note: system migrations are always applied as part of the bootstrap process
+				var list = core.MigrationsList{}
+				list.Copy(core.SystemMigrations)
+				list.Copy(core.AppMigrations)
+
+				runner := core.NewMigrationsRunner(p.app, list)
 
 				if err := runner.Run(args...); err != nil {
 					return err
@@ -158,7 +145,7 @@ func (p *plugin) createCommand() *cobra.Command {
 
 func (p *plugin) migrateCreateHandler(template string, args []string, interactive bool) (string, error) {
 	if len(args) < 1 {
-		return "", fmt.Errorf("Missing migration file name")
+		return "", errors.New("Missing migration file name")
 	}
 
 	name := args[0]
@@ -214,9 +201,9 @@ func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) (str
 	createArgs := []string{"collections_snapshot"}
 	createArgs = append(createArgs, args...)
 
-	collections := []*models.Collection{}
-	if err := p.app.Dao().CollectionQuery().OrderBy("created ASC").All(&collections); err != nil {
-		return "", fmt.Errorf("Failed to fetch migrations list: %v", err)
+	collections := []*core.Collection{}
+	if err := p.app.CollectionQuery().OrderBy("created ASC").All(&collections); err != nil {
+		return "", fmt.Errorf("Failed to fetch migrations list: %v\n", err)
 	}
 
 	var template string
@@ -227,7 +214,7 @@ func (p *plugin) migrateCollectionsHandler(args []string, interactive bool) (str
 		template, templateErr = p.goSnapshotTemplate(collections)
 	}
 	if templateErr != nil {
-		return "", fmt.Errorf("Failed to resolve template: %v", templateErr)
+		return "", fmt.Errorf("Failed to resolve template: %v\n", templateErr)
 	}
 
 	return p.migrateCreateHandler(template, createArgs, interactive)

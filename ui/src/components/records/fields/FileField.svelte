@@ -1,12 +1,13 @@
 <script>
+    import { onMount } from "svelte";
+    import tooltip from "@/actions/tooltip";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import tooltip from "@/actions/tooltip";
-    import Field from "@/components/base/Field.svelte";
     import Draggable from "@/components/base/Draggable.svelte";
+    import Field from "@/components/base/Field.svelte";
     import UploadedFilePreview from "@/components/base/UploadedFilePreview.svelte";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
-    import { onMount } from "svelte";
+    import FieldLabel from "@/components/records/fields/FieldLabel.svelte";
 
     export let record;
     export let field;
@@ -29,7 +30,7 @@
         deletedFileNames = CommonHelper.toArray(deletedFileNames);
     }
 
-    $: isMultiple = field.options?.maxSelect > 1;
+    $: isMultiple = field.maxSelect != 1;
 
     $: if (CommonHelper.isEmpty(value)) {
         value = isMultiple ? [] : "";
@@ -39,7 +40,7 @@
 
     $: maxReached =
         (valueAsArray.length || uploadedFiles.length) &&
-        field.options?.maxSelect <= valueAsArray.length + uploadedFiles.length - deletedFileNames.length;
+        field.maxSelect <= valueAsArray.length + uploadedFiles.length - deletedFileNames.length;
 
     $: if (uploadedFiles !== -1 || deletedFileNames !== -1) {
         triggerListChange();
@@ -68,7 +69,7 @@
             new CustomEvent("change", {
                 detail: { value, uploadedFiles, deletedFileNames },
                 bubbles: true,
-            })
+            }),
         );
     }
 
@@ -86,7 +87,7 @@
         for (const file of files) {
             const currentTotal = valueAsArray.length + uploadedFiles.length - deletedFileNames.length;
 
-            if (field.options?.maxSelect <= currentTotal) {
+            if (field.maxSelect <= currentTotal) {
                 break;
             }
 
@@ -97,7 +98,7 @@
     }
 
     onMount(async () => {
-        fileToken = await ApiClient.getAdminFileToken(record.collectionId);
+        fileToken = await ApiClient.getSuperuserFileToken(record.collectionId);
     });
 </script>
 
@@ -121,10 +122,7 @@
         name={field.name}
         let:uniqueId
     >
-        <label for={uniqueId}>
-            <i class={CommonHelper.getFieldTypeIcon(field.type)} />
-            <span class="txt">{field.name}</span>
-        </label>
+        <FieldLabel {uniqueId} {field} />
 
         <div bind:this={filesListElem} class="list">
             {#each valueAsArray as filename, i (filename + record.id)}
@@ -145,7 +143,7 @@
                         <div class="content">
                             <a
                                 draggable={false}
-                                href={ApiClient.files.getUrl(record, filename, { token: fileToken })}
+                                href={ApiClient.files.getURL(record, filename, { token: fileToken })}
                                 class="txt-ellipsis {isDeleted
                                     ? 'txt-strikethrough txt-hint'
                                     : 'link-primary'}"
@@ -215,7 +213,7 @@
                     bind:this={fileInput}
                     type="file"
                     class="hidden"
-                    accept={field.options?.mimeTypes?.join(",") || null}
+                    accept={field.mimeTypes?.join(",") || null}
                     multiple={isMultiple}
                     on:change={() => {
                         for (let file of fileInput.files) {

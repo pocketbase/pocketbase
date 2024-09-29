@@ -1,70 +1,43 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
-    import { collections } from "@/stores/collections";
-    import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
+    import RecordInfoContent from "@/components/records/RecordInfoContent.svelte";
+    import CommonHelper from "@/utils/CommonHelper";
 
     export let record;
 
-    let fileDisplayFields = [];
-    let nonFileDisplayFields = [];
-
-    $: collection = $collections?.find((item) => item.id == record?.collectionId);
-
-    $: if (collection) {
-        loadDisplayFields();
-    }
-
-    function loadDisplayFields() {
-        const fields = collection?.schema || [];
-
-        // reset
-        fileDisplayFields = fields.filter((f) => f.presentable && f.type == "file").map((f) => f.name);
-        nonFileDisplayFields = fields.filter((f) => f.presentable && f.type != "file").map((f) => f.name);
-
-        // fallback to the first single file field that accept images
-        // if no presentable field is available
-        if (!fileDisplayFields.length && !nonFileDisplayFields.length) {
-            const fallbackFileField = fields.find((f) => {
-                return (
-                    f.type == "file" &&
-                    f.options?.maxSelect == 1 &&
-                    f.options?.mimeTypes?.find((t) => t.startsWith("image/"))
-                );
-            });
-            if (fallbackFileField) {
-                fileDisplayFields.push(fallbackFileField.name);
-            }
+    function excludeProps(item, ...props) {
+        const result = Object.assign({}, item);
+        for (let prop of props) {
+            delete result[prop];
         }
+        return result;
     }
 </script>
 
 <div class="record-info">
-    <i
-        class="link-hint txt-sm ri-information-line"
+    <RecordInfoContent {record} />
+
+    <a
+        href="#/collections?collectionId={record.collectionId}&recordId={record.id}"
+        target="_blank"
+        class="inline-flex link-hint"
+        rel="noopener noreferrer"
         use:tooltip={{
-            text: CommonHelper.truncate(
-                JSON.stringify(CommonHelper.truncateObject(record), null, 2),
-                800,
-                true,
-            ),
+            text:
+                "Open relation record in new tab:\n" +
+                CommonHelper.truncate(
+                    JSON.stringify(CommonHelper.truncateObject(excludeProps(record, "expand")), null, 2),
+                    800,
+                    true,
+                ),
             class: "code",
             position: "left",
         }}
-    />
-
-    {#each fileDisplayFields as name}
-        {@const filenames = CommonHelper.toArray(record[name]).slice(0, 5)}
-        {#each filenames as filename}
-            {#if !CommonHelper.isEmpty(filename)}
-                <RecordFileThumb {record} {filename} size="xs" />
-            {/if}
-        {/each}
-    {/each}
-
-    <span class="txt txt-ellipsis">
-        {CommonHelper.truncate(CommonHelper.displayValue(record, nonFileDisplayFields), 70)}
-    </span>
+        on:click|stopPropagation
+        on:keydown|stopPropagation
+    >
+        <i class="ri-external-link-line txt-sm"></i>
+    </a>
 </div>
 
 <style lang="scss">
@@ -72,11 +45,10 @@
         display: inline-flex;
         vertical-align: top;
         align-items: center;
+        justify-content: center;
         max-width: 100%;
         min-width: 0;
         gap: 5px;
-        :global(.thumb) {
-            box-shadow: none;
-        }
+        padding-left: 1px; // for visual alignment with the new tab icon
     }
 </style>

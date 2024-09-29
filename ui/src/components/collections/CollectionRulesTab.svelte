@@ -1,14 +1,18 @@
 <script>
-    import { slide } from "svelte/transition";
     import tooltip from "@/actions/tooltip";
-    import CommonHelper from "@/utils/CommonHelper";
     import RuleField from "@/components/collections/RuleField.svelte";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { slide } from "svelte/transition";
 
     export let collection;
 
-    $: fields = CommonHelper.getAllCollectionIdentifiers(collection);
+    $: fieldNames = CommonHelper.getAllCollectionIdentifiers(collection);
+
+    $: hiddenFieldNames = collection.fields?.filter((f) => f.hidden).map((f) => f.name);
 
     let showFiltersInfo = false;
+
+    let showExtraRules = collection.manageRule !== null || collection.authRule !== "";
 </script>
 
 <div class="block m-b-sm handle">
@@ -34,8 +38,10 @@
                 <div class="content">
                     <p class="m-b-0">The following record fields are available:</p>
                     <div class="inline-flex flex-gap-5">
-                        {#each fields as name}
-                            <code>{name}</code>
+                        {#each fieldNames as name}
+                            {#if !hiddenFieldNames.includes(name)}
+                                <code>{name}</code>
+                            {/if}
                         {/each}
                     </div>
 
@@ -47,16 +53,15 @@
                     <div class="inline-flex flex-gap-5">
                         <code>@request.headers.*</code>
                         <code>@request.query.*</code>
-                        <code>@request.data.*</code>
+                        <code>@request.body.*</code>
                         <code>@request.auth.*</code>
                     </div>
 
                     <hr class="m-t-10 m-b-5" />
 
                     <p class="m-b-0">
-                        You could also add constraints and query other collections using the <em
-                            >@collection</em
-                        > filter:
+                        You could also add constraints and query other collections using the
+                        <em>@collection</em> filter:
                     </p>
                     <div class="inline-flex flex-gap-5">
                         <code>@collection.ANY_COLLECTION_NAME.*</code>
@@ -81,8 +86,8 @@
 
 {#if collection?.type !== "view"}
     <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule}>
-        <svelte:fragment slot="afterLabel" let:isAdminOnly>
-            {#if !isAdminOnly}
+        <svelte:fragment slot="afterLabel" let:isSuperuserOnly>
+            {#if !isSuperuserOnly}
                 <i
                     class="ri-information-line link-hint"
                     use:tooltip={{
@@ -100,23 +105,66 @@
 {/if}
 
 {#if collection?.type === "auth"}
-    <RuleField
-        label="Manage rule"
-        formKey="options.manageRule"
-        placeholder=""
-        required={collection.options.manageRule !== null}
-        {collection}
-        bind:rule={collection.options.manageRule}
+    <hr />
+
+    <button
+        type="button"
+        class="btn btn-sm m-b-sm {showExtraRules ? 'btn-secondary' : 'btn-hint btn-transparent'}"
+        on:click={() => {
+            showExtraRules = !showExtraRules;
+        }}
     >
-        <svelte:fragment>
-            <p>
-                This API rule gives admin-like permissions to allow fully managing the auth record(s), eg.
-                changing the password without requiring to enter the old one, directly updating the verified
-                state or email, etc.
-            </p>
-            <p>
-                This rule is executed in addition to the <code>create</code> and <code>update</code> API rules.
-            </p>
-        </svelte:fragment>
-    </RuleField>
+        <strong class="txt">Additional auth collection rules</strong>
+        {#if showExtraRules}
+            <i class="ri-arrow-up-s-line txt-sm" />
+        {:else}
+            <i class="ri-arrow-down-s-line txt-sm" />
+        {/if}
+    </button>
+
+    {#if showExtraRules}
+        <div class="block" transition:slide={{ duration: 150 }}>
+            <RuleField
+                label="Authentication rule"
+                formKey="authRule"
+                placeholder=""
+                {collection}
+                bind:rule={collection.authRule}
+            >
+                <svelte:fragment>
+                    <p>
+                        This rule is executed every time before authentication allowing you to restrict who
+                        can authenticate.
+                    </p>
+                    <p>
+                        For example, to allow only verified users you can set it to
+                        <code>verified = true</code>.
+                    </p>
+                    <p>Leave it empty to allow anyone with an account to authenticate.</p>
+                    <p>To disable authentication entirely you can change it to "Set superusers only".</p>
+                </svelte:fragment>
+            </RuleField>
+
+            <RuleField
+                label="Manage rule"
+                formKey="manageRule"
+                placeholder=""
+                required={collection.manageRule !== null}
+                {collection}
+                bind:rule={collection.manageRule}
+            >
+                <svelte:fragment>
+                    <p>
+                        This rule is executed in addition to the <code>create</code> and <code>update</code> API
+                        rules.
+                    </p>
+                    <p>
+                        It enables superuser-like permissions to allow fully managing the auth record(s), eg.
+                        changing the password without requiring to enter the old one, directly updating the
+                        verified state or email, etc.
+                    </p>
+                </svelte:fragment>
+            </RuleField>
+        </div>
+    {/if}
 {/if}

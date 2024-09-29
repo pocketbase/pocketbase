@@ -9,6 +9,10 @@ import (
 	"golang.org/x/oauth2/spotify"
 )
 
+func init() {
+	Providers[NameSpotify] = wrapFactory(NewSpotifyProvider)
+}
+
 var _ Provider = (*Spotify)(nil)
 
 // NameSpotify is the unique name of the Spotify provider.
@@ -16,12 +20,12 @@ const NameSpotify string = "spotify"
 
 // Spotify allows authentication via Spotify OAuth2.
 type Spotify struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewSpotifyProvider creates a new Spotify provider instance with some defaults.
 func NewSpotifyProvider() *Spotify {
-	return &Spotify{&baseProvider{
+	return &Spotify{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Spotify",
 		pkce:        true,
@@ -30,9 +34,9 @@ func NewSpotifyProvider() *Spotify {
 			// currently Spotify doesn't return information whether the email is verified or not
 			// "user-read-email",
 		},
-		authUrl:    spotify.Endpoint.AuthURL,
-		tokenUrl:   spotify.Endpoint.TokenURL,
-		userApiUrl: "https://api.spotify.com/v1/me",
+		authURL:     spotify.Endpoint.AuthURL,
+		tokenURL:    spotify.Endpoint.TokenURL,
+		userInfoURL: "https://api.spotify.com/v1/me",
 	}}
 }
 
@@ -40,7 +44,7 @@ func NewSpotifyProvider() *Spotify {
 //
 // API reference: https://developer.spotify.com/documentation/web-api/reference/#/operations/get-current-users-profile
 func (p *Spotify) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +58,7 @@ func (p *Spotify) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id     string `json:"id"`
 		Name   string `json:"display_name"`
 		Images []struct {
-			Url string `json:"url"`
+			URL string `json:"url"`
 		} `json:"images"`
 		// don't map the email because per the official docs
 		// the email field is "unverified" and there is no proof
@@ -76,7 +80,7 @@ func (p *Spotify) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	if len(extracted.Images) > 0 {
-		user.AvatarUrl = extracted.Images[0].Url
+		user.AvatarURL = extracted.Images[0].URL
 	}
 
 	return user, nil

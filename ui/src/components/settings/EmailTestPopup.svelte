@@ -1,11 +1,11 @@
 <script>
-    import { createEventDispatcher, tick } from "svelte";
+    import Field from "@/components/base/Field.svelte";
+    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import { setErrors } from "@/stores/errors";
+    import { addErrorToast, addSuccessToast } from "@/stores/toasts";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import { addErrorToast, addSuccessToast } from "@/stores/toasts";
-    import { setErrors } from "@/stores/errors";
-    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
-    import Field from "@/components/base/Field.svelte";
+    import { createEventDispatcher, tick } from "svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -14,12 +14,15 @@
     const testRequestKey = "email_test_request";
 
     const templateOptions = [
-        { label: '"Verification" template', value: "verification" },
-        { label: '"Password reset" template', value: "password-reset" },
-        { label: '"Confirm email change" template', value: "email-change" },
+        { label: "Verification", value: "verification" },
+        { label: "Password reset", value: "password-reset" },
+        { label: "Confirm email change", value: "email-change" },
+        { label: "OTP", value: "otp" },
+        { label: "Login alert", value: "login-alert" },
     ];
 
     let panel;
+    let collectionIdOrName = "";
     let email = localStorage.getItem(emailStorageKey);
     let template = templateOptions[0].value;
     let isSubmitting = false;
@@ -27,7 +30,8 @@
 
     $: canSubmit = !!email && !!template;
 
-    export function show(emailArg = "", templateArg = "") {
+    export function show(collectionArg = "", emailArg = "", templateArg = "") {
+        collectionIdOrName = collectionArg || "_superusers";
         email = emailArg || localStorage.getItem(emailStorageKey);
         template = templateArg || templateOptions[0].value;
 
@@ -59,7 +63,7 @@
         }, 30000);
 
         try {
-            await ApiClient.settings.testEmail(email, template, {
+            await ApiClient.settings.testEmail(collectionIdOrName, email, template, {
                 $cancelKey: testRequestKey,
             });
 

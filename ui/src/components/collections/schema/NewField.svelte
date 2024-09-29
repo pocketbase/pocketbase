@@ -1,7 +1,7 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
     import Toggler from "@/components/base/Toggler.svelte";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { createEventDispatcher } from "svelte";
 
     let classes = "";
     export { classes as class }; // export reserved keyword
@@ -35,7 +35,7 @@
             icon: CommonHelper.getFieldTypeIcon("email"),
         },
         {
-            label: "Url",
+            label: "URL",
             value: "url",
             icon: CommonHelper.getFieldTypeIcon("url"),
         },
@@ -43,6 +43,11 @@
             label: "DateTime",
             value: "date",
             icon: CommonHelper.getFieldTypeIcon("date"),
+        },
+        {
+            label: "Autodate",
+            value: "autodate",
+            icon: CommonHelper.getFieldTypeIcon("autodate"),
         },
         {
             label: "Select",
@@ -64,6 +69,11 @@
             value: "json",
             icon: CommonHelper.getFieldTypeIcon("json"),
         },
+        // {
+        //     label: "Password",
+        //     value: "password",
+        //     icon: CommonHelper.getFieldTypeIcon("password"),
+        // },
     ];
 
     function select(fieldType) {

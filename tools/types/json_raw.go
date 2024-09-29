@@ -6,24 +6,25 @@ import (
 	"errors"
 )
 
-// JsonRaw defines a json value type that is safe for db read/write.
-type JsonRaw []byte
+// JSONRaw defines a json value type that is safe for db read/write.
+type JSONRaw []byte
 
-// ParseJsonRaw creates a new JsonRaw instance from the provided value
-// (could be JsonRaw, int, float, string, []byte, etc.).
-func ParseJsonRaw(value any) (JsonRaw, error) {
-	result := JsonRaw{}
+// ParseJSONRaw creates a new JSONRaw instance from the provided value
+// (could be JSONRaw, int, float, string, []byte, etc.).
+func ParseJSONRaw(value any) (JSONRaw, error) {
+	result := JSONRaw{}
 	err := result.Scan(value)
 	return result, err
 }
 
-// String returns the current JsonRaw instance as a json encoded string.
-func (j JsonRaw) String() string {
-	return string(j)
+// String returns the current JSONRaw instance as a json encoded string.
+func (j JSONRaw) String() string {
+	raw, _ := j.MarshalJSON()
+	return string(raw)
 }
 
 // MarshalJSON implements the [json.Marshaler] interface.
-func (j JsonRaw) MarshalJSON() ([]byte, error) {
+func (j JSONRaw) MarshalJSON() ([]byte, error) {
 	if len(j) == 0 {
 		return []byte("null"), nil
 	}
@@ -32,9 +33,9 @@ func (j JsonRaw) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements the [json.Unmarshaler] interface.
-func (j *JsonRaw) UnmarshalJSON(b []byte) error {
+func (j *JSONRaw) UnmarshalJSON(b []byte) error {
 	if j == nil {
-		return errors.New("JsonRaw: UnmarshalJSON on nil pointer")
+		return errors.New("JSONRaw: UnmarshalJSON on nil pointer")
 	}
 
 	*j = append((*j)[0:0], b...)
@@ -43,7 +44,7 @@ func (j *JsonRaw) UnmarshalJSON(b []byte) error {
 }
 
 // Value implements the [driver.Valuer] interface.
-func (j JsonRaw) Value() (driver.Value, error) {
+func (j JSONRaw) Value() (driver.Value, error) {
 	if len(j) == 0 {
 		return nil, nil
 	}
@@ -52,8 +53,8 @@ func (j JsonRaw) Value() (driver.Value, error) {
 }
 
 // Scan implements [sql.Scanner] interface to scan the provided value
-// into the current JsonRaw instance.
-func (j *JsonRaw) Scan(value any) error {
+// into the current JSONRaw instance.
+func (j *JSONRaw) Scan(value any) error {
 	var data []byte
 
 	switch v := value.(type) {
@@ -67,7 +68,7 @@ func (j *JsonRaw) Scan(value any) error {
 		if v != "" {
 			data = []byte(v)
 		}
-	case JsonRaw:
+	case JSONRaw:
 		if len(v) != 0 {
 			data = []byte(v)
 		}

@@ -35,10 +35,13 @@
 
             collections = CommonHelper.sortCollections(collections);
 
-            // delete timestamps
             for (let collection of collections) {
+                // delete timestamps
                 delete collection.created;
                 delete collection.updated;
+
+                // unset oauth2 providers
+                delete collection.oauth2?.providers;
             }
 
             selectAll();
@@ -167,7 +170,7 @@
                             <span class="txt">Copy</span>
                         </button>
 
-                        <pre class="code-wrapper">{@html schema}</pre>
+                        <pre class="code-wrapper">{schema}</pre>
                     </div>
                 </div>
 

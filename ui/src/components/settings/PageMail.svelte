@@ -1,18 +1,17 @@
 <script>
-    import { slide } from "svelte/transition";
-    import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
+    import tooltip from "@/actions/tooltip";
+    import Field from "@/components/base/Field.svelte";
+    import ObjectSelect from "@/components/base/ObjectSelect.svelte";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
+    import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
+    import EmailTestPopup from "@/components/settings/EmailTestPopup.svelte";
+    import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
     import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
-    import tooltip from "@/actions/tooltip";
-    import PageWrapper from "@/components/base/PageWrapper.svelte";
-    import Field from "@/components/base/Field.svelte";
-    import ObjectSelect from "@/components/base/ObjectSelect.svelte";
-    import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
-    import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
-    import EmailTemplateAccordion from "@/components/settings/EmailTemplateAccordion.svelte";
-    import EmailTestPopup from "@/components/settings/EmailTestPopup.svelte";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { slide } from "svelte/transition";
 
     const tlsOptions = [
         { label: "Auto (StartTLS)", value: false },
@@ -31,6 +30,7 @@
     let formSettings = {};
     let isLoading = false;
     let isSaving = false;
+    let maskPassword = false;
     let showMoreOptions = false;
 
     $: initialHash = JSON.stringify(originalFormSettings);
@@ -82,6 +82,8 @@
         }
 
         originalFormSettings = JSON.parse(JSON.stringify(formSettings));
+
+        maskPassword = !!formSettings.smtp.username;
     }
 
     function reset() {
@@ -133,37 +135,6 @@
                         </Field>
                     </div>
                 </div>
-
-                <div class="accordions">
-                    {#if !formSettings.meta.verificationTemplate.hidden}
-                        <EmailTemplateAccordion
-                            single
-                            key="meta.verificationTemplate"
-                            title={'Default "Verification" email template'}
-                            bind:config={formSettings.meta.verificationTemplate}
-                        />
-                    {/if}
-
-                    {#if !formSettings.meta.resetPasswordTemplate.hidden}
-                        <EmailTemplateAccordion
-                            single
-                            key="meta.resetPasswordTemplate"
-                            title={'Default "Password reset" email template'}
-                            bind:config={formSettings.meta.resetPasswordTemplate}
-                        />
-                    {/if}
-
-                    {#if !formSettings.meta.confirmEmailChangeTemplate.hidden}
-                        <EmailTemplateAccordion
-                            single
-                            key="meta.confirmEmailChangeTemplate"
-                            title={'Default "Confirm email change" email template'}
-                            bind:config={formSettings.meta.confirmEmailChangeTemplate}
-                        />
-                    {/if}
-                </div>
-
-                <hr />
 
                 <Field class="form-field form-field-toggle m-b-sm" let:uniqueId>
                     <input type="checkbox" id={uniqueId} required bind:checked={formSettings.smtp.enabled} />
@@ -219,6 +190,7 @@
                                     <label for={uniqueId}>Password</label>
                                     <RedactedPasswordInput
                                         id={uniqueId}
+                                        bind:mask={maskPassword}
                                         bind:value={formSettings.smtp.password}
                                     />
                                 </Field>

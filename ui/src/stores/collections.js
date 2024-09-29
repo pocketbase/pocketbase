@@ -1,11 +1,12 @@
-import { writable, get } from "svelte/store";
-import ApiClient    from "@/utils/ApiClient";
+import ApiClient from "@/utils/ApiClient";
 import CommonHelper from "@/utils/CommonHelper";
+import { get, writable } from "svelte/store";
 
-export const collections                    = writable([]);
-export const activeCollection               = writable({});
-export const isCollectionsLoading           = writable(false);
+export const collections = writable([]);
+export const activeCollection = writable({});
+export const isCollectionsLoading = writable(false);
 export const protectedFilesCollectionsCache = writable({});
+export const scaffolds = writable({});
 
 let notifyChannel;
 
@@ -71,7 +72,7 @@ export function removeCollection(collection) {
     });
 }
 
-// load all collections (excluding the user profile)
+// load all collections
 export async function loadCollections(activeId = null) {
     isCollectionsLoading.set(true);
 
@@ -88,10 +89,12 @@ export async function loadCollections(activeId = null) {
         if (item) {
             activeCollection.set(item);
         } else if (items.length) {
-            activeCollection.set(items[0]);
+            activeCollection.set(items.find((f) => !f.system) || items[0]);
         }
 
         refreshProtectedFilesCollectionsCache();
+
+        scaffolds.set(await ApiClient.collections.getScaffolds());
     } catch (err) {
         ApiClient.error(err);
     }
@@ -103,7 +106,7 @@ function refreshProtectedFilesCollectionsCache() {
     protectedFilesCollectionsCache.update((cache) => {
         collections.update((current) => {
             for (let c of current) {
-                cache[c.id] = !!c.schema?.find((f) => f.type == "file" && f.options?.protected);
+                cache[c.id] = !!c.fields?.find((f) => f.type == "file" && f.protected);
             }
 
             return current;
@@ -112,3 +115,4 @@ function refreshProtectedFilesCollectionsCache() {
         return cache;
     });
 }
+

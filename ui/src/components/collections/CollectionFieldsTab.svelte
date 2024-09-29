@@ -1,22 +1,27 @@
 <script>
-    import { setErrors } from "@/stores/errors";
-    import CommonHelper from "@/utils/CommonHelper";
+    import Draggable from "@/components/base/Draggable.svelte";
     import IndexesList from "@/components/collections/IndexesList.svelte";
     import NewField from "@/components/collections/schema/NewField.svelte";
-    import SchemaFieldText from "@/components/collections/schema/SchemaFieldText.svelte";
-    import SchemaFieldNumber from "@/components/collections/schema/SchemaFieldNumber.svelte";
+    import SchemaFieldAutodate from "@/components/collections/schema/SchemaFieldAutodate.svelte";
     import SchemaFieldBool from "@/components/collections/schema/SchemaFieldBool.svelte";
-    import SchemaFieldEmail from "@/components/collections/schema/SchemaFieldEmail.svelte";
-    import SchemaFieldUrl from "@/components/collections/schema/SchemaFieldUrl.svelte";
-    import SchemaFieldEditor from "@/components/collections/schema/SchemaFieldEditor.svelte";
     import SchemaFieldDate from "@/components/collections/schema/SchemaFieldDate.svelte";
-    import SchemaFieldSelect from "@/components/collections/schema/SchemaFieldSelect.svelte";
-    import SchemaFieldJson from "@/components/collections/schema/SchemaFieldJson.svelte";
+    import SchemaFieldEditor from "@/components/collections/schema/SchemaFieldEditor.svelte";
+    import SchemaFieldEmail from "@/components/collections/schema/SchemaFieldEmail.svelte";
     import SchemaFieldFile from "@/components/collections/schema/SchemaFieldFile.svelte";
+    import SchemaFieldJson from "@/components/collections/schema/SchemaFieldJson.svelte";
+    import SchemaFieldNumber from "@/components/collections/schema/SchemaFieldNumber.svelte";
+    import SchemaFieldPassword from "@/components/collections/schema/SchemaFieldPassword.svelte";
     import SchemaFieldRelation from "@/components/collections/schema/SchemaFieldRelation.svelte";
-    import Draggable from "@/components/base/Draggable.svelte";
+    import SchemaFieldSelect from "@/components/collections/schema/SchemaFieldSelect.svelte";
+    import SchemaFieldText from "@/components/collections/schema/SchemaFieldText.svelte";
+    import SchemaFieldUrl from "@/components/collections/schema/SchemaFieldUrl.svelte";
+    import { scaffolds } from "@/stores/collections";
+    import { setErrors } from "@/stores/errors";
+    import CommonHelper from "@/utils/CommonHelper";
 
     export let collection;
+
+    let oldCollectionType;
 
     const fieldComponents = {
         text: SchemaFieldText,
@@ -30,23 +35,30 @@
         json: SchemaFieldJson,
         file: SchemaFieldFile,
         relation: SchemaFieldRelation,
+        password: SchemaFieldPassword,
+        autodate: SchemaFieldAutodate,
     };
 
-    $: if (typeof collection.schema === "undefined") {
-        collection.schema = [];
+    $: if (!collection.id && oldCollectionType != collection.type) {
+        oldCollectionType = collection.type;
+        onTypeCange();
     }
 
-    $: nonDeletedFields = collection.schema.filter((f) => !f.toDelete) || [];
+    $: if (typeof collection.fields === "undefined") {
+        collection.fields = [];
+    }
+
+    $: nonDeletedFields = collection.fields.filter((f) => !f._toDelete);
 
     function removeField(fieldIndex) {
-        if (collection.schema[fieldIndex]) {
-            collection.schema.splice(fieldIndex, 1);
-            collection.schema = collection.schema;
+        if (collection.fields[fieldIndex]) {
+            collection.fields.splice(fieldIndex, 1);
+            collection.fields = collection.fields;
         }
     }
 
     function duplicateField(fieldIndex) {
-        const field = collection.schema[fieldIndex];
+        const field = collection.fields[fieldIndex];
         if (!field) {
             return; // nothing to duplicate
         }
@@ -55,11 +67,12 @@
 
         const clone = structuredClone(field);
         clone.id = "";
+        clone.system = false;
         clone.name = getUniqueFieldName(clone.name + "_copy");
         clone.onMountSelect = true;
 
-        collection.schema.splice(fieldIndex + 1, 0, clone);
-        collection.schema = collection.schema;
+        collection.fields.splice(fieldIndex + 1, 0, clone);
+        collection.fields = collection.fields;
     }
 
     function newField(fieldType = "text") {
@@ -70,8 +83,16 @@
 
         field.onMountSelect = true;
 
-        collection.schema.push(field);
-        collection.schema = collection.schema;
+        // if the collection has created/updated last fields,
+        // insert before the first autodate field, otherwise - append
+        const idx = collection.fields.findLastIndex((f) => f.type != "autodate");
+        if (field.type != "autodate" && idx >= 0) {
+            collection.fields.splice(idx + 1, 0, field);
+        } else {
+            collection.fields.push(field);
+        }
+
+        collection.fields = collection.fields;
     }
 
     function getUniqueFieldName(name = "field") {
@@ -92,7 +113,7 @@
     }
 
     function hasFieldWithName(name) {
-        return !!collection?.schema?.find((field) => field.name === name);
+        return !!collection?.fields?.find((field) => field.name === name);
     }
 
     function getSchemaFieldIndex(field) {
@@ -100,12 +121,12 @@
     }
 
     function replaceIndexesColumn(oldName, newName) {
-        if (!collection?.schema?.length || oldName === newName || !newName) {
+        if (!collection?.fields?.length || oldName === newName || !newName) {
             return;
         }
 
         // field with the old name exists so there is no need to rename index columns
-        if (!!collection?.schema?.find((f) => f.name == oldName && !f.toDelete)) {
+        if (!!collection?.fields?.find((f) => f.name == oldName && !f._toDelete)) {
             return;
         }
 
@@ -114,31 +135,40 @@
             CommonHelper.replaceIndexColumn(idx, oldName, newName),
         );
     }
+
+    function onTypeCange() {
+        const oldFields = collection.fields || [];
+        const nonSystemFields = oldFields.filter((f) => !f.system);
+
+        const blank = structuredClone($scaffolds[collection.type]);
+        collection.fields = blank.fields;
+
+        for (let oldField of oldFields) {
+            if (!oldField.system) {
+                continue;
+            }
+
+            const idx = collection.fields.findIndex((f) => f.name == oldField.name);
+            if (idx < 0) {
+                continue;
+            }
+
+            // merge the default field with the existing one
+            collection.fields[idx] = Object.assign(collection.fields[idx], oldField);
+        }
+
+        for (let field of nonSystemFields) {
+            collection.fields.push(field);
+        }
+    }
 </script>
 
-<div class="block m-b-25">
-    <p class="txt-sm">
-        System fields:
-        <code class="txt-sm">id</code> ,
-        <code class="txt-sm">created</code> ,
-        <code class="txt-sm">updated</code>
-        {#if collection.type === "auth"}
-            ,
-            <code class="txt-sm">username</code> ,
-            <code class="txt-sm">email</code> ,
-            <code class="txt-sm">emailVisibility</code> ,
-            <code class="txt-sm">verified</code>
-        {/if}
-        .
-    </p>
-</div>
-
-<div class="schema-fields">
-    {#each collection.schema as field, i (field)}
+<div class="schema-fields total-{collection.fields.length}">
+    {#each collection.fields as field, i (field)}
         <Draggable
-            bind:list={collection.schema}
+            bind:list={collection.fields}
             index={i}
-            disabled={field.toDelete || (field.id && field.system)}
+            disabled={field._toDelete}
             dragHandleClass="drag-handle-wrapper"
             on:drag={(e) => {
                 // blank drag placeholder
@@ -160,6 +190,7 @@
             <svelte:component
                 this={fieldComponents[field.type]}
                 key={getSchemaFieldIndex(field)}
+                {collection}
                 bind:field
                 on:remove={() => removeField(i)}
                 on:duplicate={() => duplicateField(i)}

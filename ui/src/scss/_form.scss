@@ -433,6 +433,7 @@ button {
     }
 }
 
+
 input,
 select,
 textarea {
@@ -441,6 +442,9 @@ textarea {
 input {
     // Safari and GNOME Web has a default height and ignores the min-height
     height: var(--inputHeight);
+}
+input[list]::-webkit-calendar-picker-indicator {
+    display: none !important; // hide the default list input arrow
 }
 input:-webkit-autofill {
     -webkit-text-fill-color: var(--txtPrimaryColor);
@@ -508,7 +512,8 @@ select {
         border: 0;
         border-top-left-radius: var(--baseRadius);
         border-top-right-radius: var(--baseRadius);
-        & ~ %input {
+        & ~ %input,
+        & ~ div %input {
             border-top: 0;
             padding-top: 2px;
             padding-bottom: 8px;
@@ -761,6 +766,17 @@ select {
             }
         }
 
+        .form-field-addon {
+            position: relative;
+            right: auto;
+            left: auto;
+            top: auto;
+            bottom: auto;
+            min-height: 0;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
         input[type="radio"],
         input[type="checkbox"] {
             & ~ label {
@@ -831,22 +847,20 @@ select {
         &:not(:first-child) {
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
-            > label {
-                border-top-left-radius: 0;
-            }
+            > label,
             > %input,
             > .select .selected-container {
+                border-top-left-radius: 0;
                 border-bottom-left-radius: 0;
             }
         }
         &:not(:last-child) {
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
-            > label {
-                border-top-right-radius: 0;
-            }
+            > label,
             > %input,
             > .select .selected-container {
+                border-top-right-radius: 0;
                 border-bottom-right-radius: 0;
             }
         }

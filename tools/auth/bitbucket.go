@@ -10,6 +10,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func init() {
+	Providers[NameBitbucket] = wrapFactory(NewBitbucketProvider)
+}
+
 var _ Provider = (*Bitbucket)(nil)
 
 // NameBitbucket is the unique name of the Bitbucket provider.
@@ -17,19 +21,19 @@ const NameBitbucket = "bitbucket"
 
 // Bitbucket is an auth provider for Bitbucket.
 type Bitbucket struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewBitbucketProvider creates a new Bitbucket provider instance with some defaults.
 func NewBitbucketProvider() *Bitbucket {
-	return &Bitbucket{&baseProvider{
+	return &Bitbucket{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Bitbucket",
 		pkce:        false,
 		scopes:      []string{"account"},
-		authUrl:     "https://bitbucket.org/site/oauth2/authorize",
-		tokenUrl:    "https://bitbucket.org/site/oauth2/access_token",
-		userApiUrl:  "https://api.bitbucket.org/2.0/user",
+		authURL:     "https://bitbucket.org/site/oauth2/authorize",
+		tokenURL:    "https://bitbucket.org/site/oauth2/access_token",
+		userInfoURL: "https://api.bitbucket.org/2.0/user",
 	}}
 }
 
@@ -37,7 +41,7 @@ func NewBitbucketProvider() *Bitbucket {
 //
 // API reference: https://developer.atlassian.com/cloud/bitbucket/rest/api-group-users/#api-user-get
 func (p *Bitbucket) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +80,7 @@ func (p *Bitbucket) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Name:         extracted.DisplayName,
 		Username:     extracted.Username,
 		Email:        email,
-		AvatarUrl:    extracted.Links.Avatar.Href,
+		AvatarURL:    extracted.Links.Avatar.Href,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
@@ -95,7 +99,7 @@ func (p *Bitbucket) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 //
 // API reference: https://developer.atlassian.com/cloud/bitbucket/rest/api-group-users/#api-user-emails-get
 func (p *Bitbucket) fetchPrimaryEmail(token *oauth2.Token) (string, error) {
-	response, err := p.Client(token).Get(p.userApiUrl + "/emails")
+	response, err := p.Client(token).Get(p.userInfoURL + "/emails")
 	if err != nil {
 		return "", err
 	}

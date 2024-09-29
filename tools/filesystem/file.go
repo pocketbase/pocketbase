@@ -27,10 +27,20 @@ type FileReader interface {
 //
 // The file could be from a local path, multipart/form-data header, etc.
 type File struct {
-	Reader       FileReader
-	Name         string
-	OriginalName string
-	Size         int64
+	Reader       FileReader `form:"-" json:"-" xml:"-"`
+	Name         string     `form:"name" json:"name" xml:"name"`
+	OriginalName string     `form:"originalName" json:"originalName" xml:"originalName"`
+	Size         int64      `form:"size" json:"size" xml:"size"`
+}
+
+// AsMap implements [core.mapExtractor] and returns a value suitable
+// to be used in an API rule expression.
+func (f *File) AsMap() map[string]any {
+	return map[string]any{
+		"name":         f.Name,
+		"originalName": f.OriginalName,
+		"size":         f.Size,
+	}
 }
 
 // NewFileFromPath creates a new File instance from the provided local file path.
@@ -79,7 +89,7 @@ func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 	return f, nil
 }
 
-// NewFileFromUrl creates a new File from the provided url by
+// NewFileFromURL creates a new File from the provided url by
 // downloading the resource and load it as BytesReader.
 //
 // Example
@@ -87,8 +97,8 @@ func NewFileFromMultipart(mh *multipart.FileHeader) (*File, error) {
 //	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 //	defer cancel()
 //
-//	file, err := filesystem.NewFileFromUrl(ctx, "https://example.com/image.png")
-func NewFileFromUrl(ctx context.Context, url string) (*File, error) {
+//	file, err := filesystem.NewFileFromURL(ctx, "https://example.com/image.png")
+func NewFileFromURL(ctx context.Context, url string) (*File, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -168,6 +178,8 @@ func (r *bytesReadSeekCloser) Close() error {
 
 var extInvalidCharsRegex = regexp.MustCompile(`[^\w\.\*\-\+\=\#]+`)
 
+const randomAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+
 func normalizeName(fr FileReader, name string) string {
 	// extension
 	// ---
@@ -187,7 +199,7 @@ func normalizeName(fr FileReader, name string) string {
 	cleanName := inflector.Snakecase(strings.TrimSuffix(name, originalExt))
 	if length := len(cleanName); length < 3 {
 		// the name is too short so we concatenate an additional random part
-		cleanName += security.RandomString(10)
+		cleanName += security.RandomStringWithAlphabet(10, randomAlphabet)
 	} else if length > 100 {
 		// keep only the first 100 characters (it is multibyte safe after Snakecase)
 		cleanName = cleanName[:100]
@@ -196,7 +208,7 @@ func normalizeName(fr FileReader, name string) string {
 	return fmt.Sprintf(
 		"%s_%s%s",
 		cleanName,
-		security.RandomString(10), // ensure that there is always a random part
+		security.RandomStringWithAlphabet(10, randomAlphabet), // ensure that there is always a random part
 		cleanExt,
 	)
 }

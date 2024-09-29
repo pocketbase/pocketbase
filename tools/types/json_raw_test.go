@@ -2,21 +2,22 @@ package types_test
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-func TestParseJsonRaw(t *testing.T) {
+func TestParseJSONRaw(t *testing.T) {
 	scenarios := []struct {
 		value       any
 		expectError bool
-		expectJson  string
+		expectJSON  string
 	}{
 		{nil, false, `null`},
 		{``, false, `null`},
 		{[]byte{}, false, `null`},
-		{types.JsonRaw{}, false, `null`},
+		{types.JSONRaw{}, false, `null`},
 		{`{}`, false, `{}`},
 		{`[]`, false, `[]`},
 		{123, false, `123`},
@@ -30,70 +31,75 @@ func TestParseJsonRaw(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		raw, parseErr := types.ParseJsonRaw(s.value)
-		hasErr := parseErr != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected %v, got %v (%v)", i, s.expectError, hasErr, parseErr)
-			continue
-		}
+		t.Run(fmt.Sprintf("%d_%#v", i, s.value), func(t *testing.T) {
+			raw, parseErr := types.ParseJSONRaw(s.value)
 
-		result, _ := raw.MarshalJSON()
+			hasErr := parseErr != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected %v, got %v (%v)", s.expectError, hasErr, parseErr)
+			}
 
-		if string(result) != s.expectJson {
-			t.Errorf("(%d) Expected %s, got %v", i, s.expectJson, string(result))
-		}
+			result, _ := raw.MarshalJSON()
+
+			if string(result) != s.expectJSON {
+				t.Fatalf("Expected %s, got %s", s.expectJSON, string(result))
+			}
+		})
 	}
 }
 
-func TestJsonRawString(t *testing.T) {
+func TestJSONRawString(t *testing.T) {
 	scenarios := []struct {
-		json     types.JsonRaw
-		expected string
-	}{
-		{nil, ``},
-		{types.JsonRaw{}, ``},
-		{types.JsonRaw([]byte(`123`)), `123`},
-		{types.JsonRaw(`{"demo":123}`), `{"demo":123}`},
-	}
-
-	for i, s := range scenarios {
-		result := s.json.String()
-		if result != s.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, s.expected, result)
-		}
-	}
-}
-
-func TestJsonRawMarshalJSON(t *testing.T) {
-	scenarios := []struct {
-		json     types.JsonRaw
+		json     types.JSONRaw
 		expected string
 	}{
 		{nil, `null`},
-		{types.JsonRaw{}, `null`},
-		{types.JsonRaw([]byte(`123`)), `123`},
-		{types.JsonRaw(`{"demo":123}`), `{"demo":123}`},
+		{types.JSONRaw{}, `null`},
+		{types.JSONRaw([]byte(`123`)), `123`},
+		{types.JSONRaw(`{"demo":123}`), `{"demo":123}`},
 	}
 
 	for i, s := range scenarios {
-		result, err := s.json.MarshalJSON()
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-			continue
-		}
-
-		if string(result) != s.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, s.expected, string(result))
-		}
+		t.Run(fmt.Sprintf("%d_%s", i, s.expected), func(t *testing.T) {
+			result := s.json.String()
+			if result != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, result)
+			}
+		})
 	}
 }
 
-func TestJsonRawUnmarshalJSON(t *testing.T) {
+func TestJSONRawMarshalJSON(t *testing.T) {
+	scenarios := []struct {
+		json     types.JSONRaw
+		expected string
+	}{
+		{nil, `null`},
+		{types.JSONRaw{}, `null`},
+		{types.JSONRaw([]byte(`123`)), `123`},
+		{types.JSONRaw(`{"demo":123}`), `{"demo":123}`},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%s", i, s.expected), func(t *testing.T) {
+			result, err := s.json.MarshalJSON()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if string(result) != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, string(result))
+			}
+		})
+	}
+}
+
+func TestJSONRawUnmarshalJSON(t *testing.T) {
 	scenarios := []struct {
 		json         []byte
 		expectString string
 	}{
-		{nil, ""},
+		{nil, `null`},
 		{[]byte{0, 1, 2}, "\x00\x01\x02"},
 		{[]byte("123"), "123"},
 		{[]byte("test"), "test"},
@@ -101,53 +107,57 @@ func TestJsonRawUnmarshalJSON(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		raw := types.JsonRaw{}
-		err := raw.UnmarshalJSON(s.json)
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-			continue
-		}
+		t.Run(fmt.Sprintf("%d_%s", i, s.expectString), func(t *testing.T) {
+			raw := types.JSONRaw{}
 
-		if raw.String() != s.expectString {
-			t.Errorf("(%d) Expected %q, got %q", i, s.expectString, raw.String())
-		}
+			err := raw.UnmarshalJSON(s.json)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if raw.String() != s.expectString {
+				t.Fatalf("Expected %q, got %q", s.expectString, raw.String())
+			}
+		})
 	}
 }
 
-func TestJsonRawValue(t *testing.T) {
+func TestJSONRawValue(t *testing.T) {
 	scenarios := []struct {
-		json     types.JsonRaw
+		json     types.JSONRaw
 		expected driver.Value
 	}{
 		{nil, nil},
-		{types.JsonRaw{}, nil},
-		{types.JsonRaw(``), nil},
-		{types.JsonRaw(`test`), `test`},
+		{types.JSONRaw{}, nil},
+		{types.JSONRaw(``), nil},
+		{types.JSONRaw(`test`), `test`},
 	}
 
 	for i, s := range scenarios {
-		result, err := s.json.Value()
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-			continue
-		}
-		if result != s.expected {
-			t.Errorf("(%d) Expected %s, got %v", i, s.expected, result)
-		}
+		t.Run(fmt.Sprintf("%d_%#v", i, s.json), func(t *testing.T) {
+			result, err := s.json.Value()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if result != s.expected {
+				t.Fatalf("Expected %s, got %v", s.expected, result)
+			}
+		})
 	}
 }
 
-func TestJsonRawScan(t *testing.T) {
+func TestJSONRawScan(t *testing.T) {
 	scenarios := []struct {
 		value       any
 		expectError bool
-		expectJson  string
+		expectJSON  string
 	}{
 		{nil, false, `null`},
 		{``, false, `null`},
 		{[]byte{}, false, `null`},
-		{types.JsonRaw{}, false, `null`},
-		{types.JsonRaw(`test`), false, `test`},
+		{types.JSONRaw{}, false, `null`},
+		{types.JSONRaw(`test`), false, `test`},
 		{`{}`, false, `{}`},
 		{`[]`, false, `[]`},
 		{123, false, `123`},
@@ -161,18 +171,19 @@ func TestJsonRawScan(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		raw := types.JsonRaw{}
-		scanErr := raw.Scan(s.value)
-		hasErr := scanErr != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected %v, got %v (%v)", i, s.expectError, hasErr, scanErr)
-			continue
-		}
+		t.Run(fmt.Sprintf("%d_%#v", i, s.value), func(t *testing.T) {
+			raw := types.JSONRaw{}
+			scanErr := raw.Scan(s.value)
+			hasErr := scanErr != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected %v, got %v (%v)", s.expectError, hasErr, scanErr)
+			}
 
-		result, _ := raw.MarshalJSON()
+			result, _ := raw.MarshalJSON()
 
-		if string(result) != s.expectJson {
-			t.Errorf("(%d) Expected %s, got %v", i, s.expectJson, string(result))
-		}
+			if string(result) != s.expectJSON {
+				t.Fatalf("Expected %s, got %v", s.expectJSON, string(result))
+			}
+		})
 	}
 }

@@ -22,11 +22,8 @@ type Message struct {
 // SubscriptionOptions defines the request options (query params, headers, etc.)
 // for a single subscription topic.
 type SubscriptionOptions struct {
-	// @todo after the requests handling refactoring consider
-	// changing to map[string]string or map[string][]string
-
-	Query   map[string]any `json:"query"`
-	Headers map[string]any `json:"headers"`
+	Query   map[string]string `json:"query"`
+	Headers map[string]string `json:"headers"`
 }
 
 // Client is an interface for a generic subscription client.
@@ -168,25 +165,33 @@ func (c *DefaultClient) Subscribe(subs ...string) {
 		}
 
 		// extract subscription options (if any)
-		options := SubscriptionOptions{}
+		rawOptions := struct {
+			// note: any instead of string to minimize the breaking changes with earlier versions
+			Query   map[string]any `json:"query"`
+			Headers map[string]any `json:"headers"`
+		}{}
 		u, err := url.Parse(s)
 		if err == nil {
-			rawOptions := u.Query().Get(optionsParam)
-			if rawOptions != "" {
-				json.Unmarshal([]byte(rawOptions), &options)
+			raw := u.Query().Get(optionsParam)
+			if raw != "" {
+				json.Unmarshal([]byte(raw), &rawOptions)
 			}
+		}
+
+		options := SubscriptionOptions{
+			Query:   make(map[string]string, len(rawOptions.Query)),
+			Headers: make(map[string]string, len(rawOptions.Headers)),
 		}
 
 		// normalize query
 		// (currently only single string values are supported for consistency with the default routes handling)
-		for k, v := range options.Query {
+		for k, v := range rawOptions.Query {
 			options.Query[k] = cast.ToString(v)
 		}
 
 		// normalize headers name and values, eg. "X-Token" is converted to "x_token"
 		// (currently only single string values are supported for consistency with the default routes handling)
-		for k, v := range options.Headers {
-			delete(options.Headers, k)
+		for k, v := range rawOptions.Headers {
 			options.Headers[inflector.Snakecase(k)] = cast.ToString(v)
 		}
 

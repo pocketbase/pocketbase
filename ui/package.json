@@ -1,5 +1,5 @@
 {
-  "name": "pocketbase-admin",
+  "name": "pocketbase-superuser-ui",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -17,8 +17,8 @@
     "@codemirror/commands": "^6.0.0",
     "@codemirror/lang-html": "^6.1.0",
     "@codemirror/lang-javascript": "^6.0.2",
-    "@codemirror/lang-sql": "^6.4.0",
     "@codemirror/lang-json": "^6.0.0",
+    "@codemirror/lang-sql": "^6.4.0",
     "@codemirror/language": "^6.0.0",
     "@codemirror/legacy-modes": "^6.0.0",
     "@codemirror/search": "^6.0.0",
@@ -27,8 +27,9 @@
     "@sveltejs/vite-plugin-svelte": "^3.0.1",
     "chart.js": "^4.0.0",
     "chartjs-adapter-luxon": "^1.2.0",
+    "chartjs-plugin-zoom": "^2.0.1",
     "luxon": "^3.4.4",
-    "pocketbase": "^0.20.0",
+    "pocketbase": "^0.22.0-rc",
     "sass": "^1.45.0",
     "svelte": "^4.0.0",
     "svelte-flatpickr": "^3.3.3",

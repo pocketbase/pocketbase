@@ -1,6 +1,7 @@
 package inflector_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/inflector"
@@ -18,10 +19,13 @@ func TestUcFirst(t *testing.T) {
 		{"test test2", "Test test2"},
 	}
 
-	for i, scenario := range scenarios {
-		if result := inflector.UcFirst(scenario.val); result != scenario.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
-		}
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.val), func(t *testing.T) {
+			result := inflector.UcFirst(s.val)
+			if result != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, result)
+			}
+		})
 	}
 }
 
@@ -42,10 +46,13 @@ func TestColumnify(t *testing.T) {
 		{"test1--test2", "test1--test2"},
 	}
 
-	for i, scenario := range scenarios {
-		if result := inflector.Columnify(scenario.val); result != scenario.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
-		}
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.val), func(t *testing.T) {
+			result := inflector.Columnify(s.val)
+			if result != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, result)
+			}
+		})
 	}
 }
 
@@ -67,10 +74,13 @@ func TestSentenize(t *testing.T) {
 		{"hello world?", "Hello world?"},
 	}
 
-	for i, scenario := range scenarios {
-		if result := inflector.Sentenize(scenario.val); result != scenario.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
-		}
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.val), func(t *testing.T) {
+			result := inflector.Sentenize(s.val)
+			if result != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, result)
+			}
+		})
 	}
 }
 
@@ -89,21 +99,19 @@ func TestSanitize(t *testing.T) {
 		{"abcABC", `[A-Z`, "", true}, // invalid pattern
 	}
 
-	for i, scenario := range scenarios {
-		result, err := inflector.Sanitize(scenario.val, scenario.pattern)
-		hasErr := err != nil
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.val), func(t *testing.T) {
+			result, err := inflector.Sanitize(s.val, s.pattern)
+			hasErr := err != nil
 
-		if scenario.expectErr != hasErr {
-			if scenario.expectErr {
-				t.Errorf("(%d) Expected error, got nil", i)
-			} else {
-				t.Errorf("(%d) Didn't expect error, got", err)
+			if s.expectErr != hasErr {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectErr, hasErr, err)
 			}
-		}
 
-		if result != scenario.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
-		}
+			if result != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, result)
+			}
+		})
 	}
 }
 
@@ -126,9 +134,12 @@ func TestSnakecase(t *testing.T) {
 		{"testABR", "test_abr"},
 	}
 
-	for i, scenario := range scenarios {
-		if result := inflector.Snakecase(scenario.val); result != scenario.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, scenario.expected, result)
-		}
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.val), func(t *testing.T) {
+			result := inflector.Snakecase(s.val)
+			if result != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, result)
+			}
+		})
 	}
 }

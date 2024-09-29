@@ -1,14 +1,14 @@
 <script>
-    import { tick } from "svelte";
+    import Field from "@/components/base/Field.svelte";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
+    import ImportPopup from "@/components/settings/ImportPopup.svelte";
+    import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import { pageTitle } from "@/stores/app";
+    import { setErrors } from "@/stores/errors";
+    import { addErrorToast } from "@/stores/toasts";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import { pageTitle } from "@/stores/app";
-    import { addErrorToast } from "@/stores/toasts";
-    import { setErrors } from "@/stores/errors";
-    import PageWrapper from "@/components/base/PageWrapper.svelte";
-    import Field from "@/components/base/Field.svelte";
-    import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
-    import ImportPopup from "@/components/settings/ImportPopup.svelte";
+    import { tick } from "svelte";
 
     $pageTitle = "Import collections";
 
@@ -69,15 +69,15 @@
         }
 
         // check for matching schema fields
-        const oldSchema = Array.isArray(old.schema) ? old.schema : [];
-        const newSchema = Array.isArray(collection.schema) ? collection.schema : [];
-        for (const field of newSchema) {
-            const oldFieldById = CommonHelper.findByKey(oldSchema, "id", field.id);
+        const oldFields = Array.isArray(old.fields) ? old.fields : [];
+        const newFields = Array.isArray(collection.fields) ? collection.fields : [];
+        for (const field of newFields) {
+            const oldFieldById = CommonHelper.findByKey(oldFields, "id", field.id);
             if (oldFieldById) {
                 continue; // no need to do any replacements
             }
 
-            const oldFieldByName = CommonHelper.findByKey(oldSchema, "name", field.name);
+            const oldFieldByName = CommonHelper.findByKey(oldFields, "name", field.name);
             if (oldFieldByName && field.id != oldFieldByName.id) {
                 return true;
             }
@@ -93,10 +93,13 @@
 
         try {
             oldCollections = await ApiClient.collections.getFullList(200);
-            // delete timestamps
             for (let collection of oldCollections) {
+                // delete timestamps
                 delete collection.created;
                 delete collection.updated;
+
+                // unset oauth2 providers
+                delete collection.oauth2?.providers;
             }
         } catch (err) {
             ApiClient.error(err);
@@ -150,7 +153,7 @@
             delete collection.updated;
 
             // merge fields with duplicated ids
-            collection.schema = CommonHelper.filterDuplicatesByKey(collection.schema);
+            collection.fields = CommonHelper.filterDuplicatesByKey(collection.fields);
         }
     }
 
@@ -169,10 +172,10 @@
             collection.id = replacedId;
 
             // replace field ids
-            const oldSchema = Array.isArray(old.schema) ? old.schema : [];
-            const newSchema = Array.isArray(collection.schema) ? collection.schema : [];
-            for (const field of newSchema) {
-                const oldField = CommonHelper.findByKey(oldSchema, "name", field.name);
+            const oldFields = Array.isArray(old.fields) ? old.fields : [];
+            const newFields = Array.isArray(collection.fields) ? collection.fields : [];
+            for (const field of newFields) {
+                const oldField = CommonHelper.findByKey(oldFields, "name", field.name);
                 if (oldField && oldField.id) {
                     field.id = oldField.id;
                 }
@@ -180,12 +183,12 @@
 
             // update references
             for (let ref of newCollections) {
-                if (!Array.isArray(ref.schema)) {
+                if (!Array.isArray(ref.fields)) {
                     continue;
                 }
-                for (let field of ref.schema) {
-                    if (field.options?.collectionId && field.options?.collectionId === originalId) {
-                        field.options.collectionId = replacedId;
+                for (let field of ref.fields) {
+                    if (field.collectionId && field.collectionId === originalId) {
+                        field.collectionId = replacedId;
                     }
                 }
             }

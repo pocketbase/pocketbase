@@ -9,6 +9,10 @@ import (
 	"golang.org/x/oauth2/microsoft"
 )
 
+func init() {
+	Providers[NameMicrosoft] = wrapFactory(NewMicrosoftProvider)
+}
+
 var _ Provider = (*Microsoft)(nil)
 
 // NameMicrosoft is the unique name of the Microsoft provider.
@@ -16,20 +20,20 @@ const NameMicrosoft string = "microsoft"
 
 // Microsoft allows authentication via AzureADEndpoint OAuth2.
 type Microsoft struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewMicrosoftProvider creates new Microsoft AD provider instance with some defaults.
 func NewMicrosoftProvider() *Microsoft {
 	endpoints := microsoft.AzureADEndpoint("")
-	return &Microsoft{&baseProvider{
+	return &Microsoft{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Microsoft",
 		pkce:        true,
 		scopes:      []string{"User.Read"},
-		authUrl:     endpoints.AuthURL,
-		tokenUrl:    endpoints.TokenURL,
-		userApiUrl:  "https://graph.microsoft.com/v1.0/me",
+		authURL:     endpoints.AuthURL,
+		tokenURL:    endpoints.TokenURL,
+		userInfoURL: "https://graph.microsoft.com/v1.0/me",
 	}}
 }
 
@@ -38,7 +42,7 @@ func NewMicrosoftProvider() *Microsoft {
 // API reference:  https://learn.microsoft.com/en-us/azure/active-directory/develop/userinfo
 // Graph explorer: https://developer.microsoft.com/en-us/graph/graph-explorer
 func (p *Microsoft) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}

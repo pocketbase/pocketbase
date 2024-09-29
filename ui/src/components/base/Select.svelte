@@ -1,8 +1,8 @@
 <script>
+    import { onMount, createEventDispatcher } from "svelte";
     import tooltip from "@/actions/tooltip";
     import Toggler from "@/components/base/Toggler.svelte";
     import CommonHelper from "@/utils/CommonHelper";
-    import { onMount } from "svelte";
 
     export let id = "";
     export let noOptionsText = "No options found";
@@ -13,7 +13,8 @@
     export let disabled = false;
     export let readonly = false;
     export let upside = false;
-    export let selected = multiple ? [] : undefined;
+    export let zeroFunc = () => (multiple ? [] : undefined);
+    export let selected = zeroFunc();
     export let toggle = multiple; // toggle option on click
     export let closable = true; // close the dropdown on option select/deselect
     export let labelComponent = undefined; // custom component to use for each selected option label
@@ -22,6 +23,8 @@
     export let optionComponentProps = {}; // props to pass to the custom option component
     export let searchable = false; // whether to show the dropdown options search input
     export let searchFunc = undefined; // custom search option filter: `function(item, searchTerm):boolean`
+
+    const dispatch = createEventDispatcher();
 
     let classes = "";
     export { classes as class }; // export reserved keyword
@@ -54,8 +57,10 @@
         let normalized = CommonHelper.toArray(selected);
         if (CommonHelper.inArray(normalized, item)) {
             CommonHelper.removeByValue(normalized, item);
-            selected = normalized;
+            selected = multiple ? normalized : normalized?.[0] || zeroFunc();
         }
+
+        dispatch("change", { selected });
 
         // emulate native change event
         container?.dispatchEvent(new CustomEvent("change", { detail: selected, bubbles: true }));
@@ -71,6 +76,8 @@
             selected = item;
         }
 
+        dispatch("change", { selected });
+
         // emulate native change event
         container?.dispatchEvent(new CustomEvent("change", { detail: selected, bubbles: true }));
     }
@@ -80,7 +87,12 @@
     }
 
     export function reset() {
-        selected = multiple ? [] : undefined;
+        selected = zeroFunc();
+
+        dispatch("change", { selected });
+
+        // emulate native change event
+        container?.dispatchEvent(new CustomEvent("change", { detail: selected, bubbles: true }));
     }
 
     export function showDropdown() {

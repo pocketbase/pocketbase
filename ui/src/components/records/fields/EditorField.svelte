@@ -1,10 +1,11 @@
 <script>
     import { onMount } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
     import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import TinyMCE from "@/components/base/TinyMCE.svelte";
     import RecordFilePicker from "@/components/records/RecordFilePicker.svelte";
+    import FieldLabel from "@/components/records/fields/FieldLabel.svelte";
 
     export let field;
     export let value = "";
@@ -15,7 +16,7 @@
     let mountedTimeoutId = null;
 
     $: conf = Object.assign(CommonHelper.defaultEditorOptions(), {
-        convert_urls: field.options?.convertUrls,
+        convert_urls: field.convertURLs,
         relative_urls: false,
     });
 
@@ -42,10 +43,8 @@
 </script>
 
 <Field class="form-field form-field-editor {field.required ? 'required' : ''}" name={field.name} let:uniqueId>
-    <label for={uniqueId}>
-        <i class={CommonHelper.getFieldTypeIcon(field.type)} />
-        <span class="txt">{field.name}</span>
-    </label>
+    <FieldLabel {uniqueId} {field} />
+
     {#if mounted}
         <TinyMCE
             id={uniqueId}
@@ -71,9 +70,9 @@
         editor?.execCommand(
             "InsertImage",
             false,
-            ApiClient.files.getUrl(e.detail.record, e.detail.name, {
+            ApiClient.files.getURL(e.detail.record, e.detail.name, {
                 thumb: e.detail.size,
-            })
+            }),
         );
     }}
 />

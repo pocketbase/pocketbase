@@ -128,9 +128,9 @@ func verifyBackupContent(app core.App, path string) error {
 		"data.db",
 		"data.db-shm",
 		"data.db-wal",
-		"logs.db",
-		"logs.db-shm",
-		"logs.db-wal",
+		"aux.db",
+		"aux.db-shm",
+		"aux.db-wal",
 		".gitignore",
 	}
 

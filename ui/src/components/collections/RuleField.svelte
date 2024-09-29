@@ -6,12 +6,15 @@
     import { tick } from "svelte";
     import { scale } from "svelte/transition";
     import Field from "@/components/base/Field.svelte";
+    import tooltip from "@/actions/tooltip";
 
     export let collection = null;
     export let rule = null;
     export let label = "Rule";
     export let formKey = "rule";
     export let required = false;
+    export let disabled = false;
+    export let superuserToggle = true;
     export let placeholder = "Leave empty to grant everyone access...";
 
     let editorRef = null;
@@ -19,7 +22,9 @@
     let ruleInputComponent = cachedRuleComponent;
     let isRuleComponentLoading = false;
 
-    $: isAdminOnly = rule === null;
+    $: isSuperuserOnly = superuserToggle && rule === null;
+
+    $: isDisabled = disabled || collection.system;
 
     loadEditorComponent();
 
@@ -55,29 +60,36 @@
     </div>
 {:else}
     <Field
-        class="form-field rule-field {required ? 'requied' : ''} {isAdminOnly ? 'disabled' : ''}"
+        class="form-field rule-field {required ? 'requied' : ''} {isSuperuserOnly ? 'disabled' : ''}"
         name={formKey}
         let:uniqueId
     >
-        <div class="input-wrapper">
+        <div
+            class="input-wrapper"
+            use:tooltip={collection.system
+                ? { text: "System collection rule cannot be changed.", position: "top" }
+                : undefined}
+        >
             <label for={uniqueId}>
-                <slot name="beforeLabel" {isAdminOnly} />
+                <slot name="beforeLabel" {isSuperuserOnly} />
 
-                <span class="txt" class:txt-hint={isAdminOnly}>
+                <span class="txt" class:txt-hint={isSuperuserOnly}>
                     {label}
-                    {isAdminOnly ? "- Admins only" : ""}
+                    {isSuperuserOnly ? "- Superusers only" : ""}
                 </span>
 
-                <slot name="afterLabel" {isAdminOnly} />
+                <slot name="afterLabel" {isSuperuserOnly} />
 
-                {#if !isAdminOnly}
+                {#if superuserToggle && !isSuperuserOnly}
                     <button
                         type="button"
                         class="btn btn-sm btn-transparent btn-hint lock-toggle"
+                        aria-hidden={isDisabled}
+                        disabled={isDisabled}
                         on:click={lock}
                     >
-                        <i class="ri-lock-line" />
-                        <span class="txt">Set Admins only</span>
+                        <i class="ri-lock-line" aria-hidden="true" />
+                        <span class="txt">Set Superusers only</span>
                     </button>
                 {/if}
             </label>
@@ -88,20 +100,23 @@
                 bind:this={editorRef}
                 bind:value={rule}
                 baseCollection={collection}
-                disabled={isAdminOnly}
-                placeholder={!isAdminOnly ? placeholder : ""}
+                disabled={isDisabled}
+                placeholder={!isSuperuserOnly ? placeholder : ""}
             />
 
-            {#if isAdminOnly}
+            {#if superuserToggle && isSuperuserOnly}
                 <button
                     type="button"
                     class="unlock-overlay"
-                    aria-label="Unlock and set custom rule"
+                    disabled={isDisabled}
+                    aria-hidden={isDisabled}
                     transition:scale={{ duration: 150, start: 0.98 }}
                     on:click={unlock}
                 >
-                    <small class="txt">Unlock and set custom rule</small>
-                    <div class="icon">
+                    {#if !isDisabled}
+                        <small class="txt">Unlock and set custom rule</small>
+                    {/if}
+                    <div class="icon" aria-hidden="true">
                         <i class="ri-lock-unlock-line" />
                     </div>
                 </button>
@@ -109,7 +124,7 @@
         </div>
 
         <div class="help-block">
-            <slot {isAdminOnly} />
+            <slot {isSuperuserOnly} />
         </div>
     </Field>
 {/if}
@@ -146,7 +161,6 @@
         justify-content: end;
         text-align: center;
         border-radius: var(--baseRadius);
-        background: rgba(255, 255, 255, 0.2);
         outline: 0;
         cursor: pointer;
         text-decoration: none;
@@ -169,7 +183,9 @@
             font-weight: 600;
             line-height: var(--smLineHeight);
             transform: translateX(5px);
-            transition: transform var(--hoverAnimationSpeed), opacity var(--hoverAnimationSpeed);
+            transition:
+                transform var(--hoverAnimationSpeed),
+                opacity var(--hoverAnimationSpeed);
         }
         &:hover,
         &:focus-visible,
@@ -186,6 +202,9 @@
         &:active {
             transition-duration: var(--activeAnimationSpeed);
             border-color: var(--baseAlt3Color);
+        }
+        &[disabled] {
+            cursor: not-allowed;
         }
     }
 </style>

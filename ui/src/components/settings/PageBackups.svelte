@@ -3,7 +3,7 @@
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
-    import { removeError } from "@/stores/errors";
+    import { removeError, setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
     import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
@@ -61,6 +61,8 @@
 
         try {
             const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
+
+            setErrors({});
 
             await refreshList();
 
@@ -139,7 +141,7 @@
                     transition:slide={{ duration: 150 }}
                 >
                     <Field class="form-field form-field-toggle m-t-base m-b-0" let:uniqueId>
-                        <input type="checkbox" id={uniqueId} required bind:checked={enableAutoBackups} />
+                        <input type="checkbox" id={uniqueId} bind:checked={enableAutoBackups} />
                         <label for={uniqueId}>Enable auto backups</label>
                     </Field>
 
@@ -274,7 +276,7 @@
 
                         {#if hasChanges}
                             <button
-                                type="submit"
+                                type="button"
                                 class="btn btn-hint btn-transparent"
                                 disabled={!hasChanges || isSaving}
                                 on:click={() => reset()}

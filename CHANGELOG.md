@@ -1,3 +1,8 @@
+## v0.23.0-RC (WIP)
+
+...
+
+
 ## v0.22.21
 
 - Lock the logs database during backup to prevent `database disk image is malformed` errors in case there is a log write running in the background ([#5541](https://github.com/pocketbase/pocketbase/discussions/5541)).

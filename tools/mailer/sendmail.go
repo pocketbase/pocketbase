@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+
+	"github.com/pocketbase/pocketbase/tools/hook"
 )
 
 var _ Mailer = (*Sendmail)(nil)
@@ -16,10 +18,29 @@ var _ Mailer = (*Sendmail)(nil)
 //
 // This client is usually recommended only for development and testing.
 type Sendmail struct {
+	onSend *hook.Hook[*SendEvent]
 }
 
-// Send implements `mailer.Mailer` interface.
+// OnSend implements [mailer.SendInterceptor] interface.
+func (c *Sendmail) OnSend() *hook.Hook[*SendEvent] {
+	if c.onSend == nil {
+		c.onSend = &hook.Hook[*SendEvent]{}
+	}
+	return c.onSend
+}
+
+// Send implements [mailer.Mailer] interface.
 func (c *Sendmail) Send(m *Message) error {
+	if c.onSend != nil {
+		return c.onSend.Trigger(&SendEvent{Message: m}, func(e *SendEvent) error {
+			return c.send(e.Message)
+		})
+	}
+
+	return c.send(m)
+}
+
+func (c *Sendmail) send(m *Message) error {
 	toAddresses := addressesToStrings(m.To, false)
 
 	headers := make(http.Header)
@@ -74,5 +95,5 @@ func findSendmailPath() (string, error) {
 		}
 	}
 
-	return "", errors.New("failed to locate a sendmail executable path")
+	return "", errors.New("Failed to locate a sendmail executable path.")
 }

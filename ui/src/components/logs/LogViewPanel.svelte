@@ -66,12 +66,13 @@
         "execTime",
         "type",
         "auth",
+        "authId",
         "status",
         "method",
         "url",
         "referer",
-        "remoteIp",
-        "userIp",
+        "remoteIP",
+        "userIP",
         "userAgent",
         "error",
         "details",
@@ -135,19 +136,29 @@
                 <tr>
                     <td class="min-width txt-hint txt-bold">id</td>
                     <td>
-                        <div class="label">
+                        <span class="txt">{log.id}</span>
+                        <div class="copy-icon-wrapper">
                             <CopyIcon value={log.id} />
-                            <div class="txt">{log.id}</div>
                         </div>
                     </td>
                 </tr>
                 <tr>
                     <td class="min-width txt-hint txt-bold">level</td>
-                    <td><LogLevel level={log.level} /></td>
+                    <td>
+                        <LogLevel level={log.level} />
+                        <div class="copy-icon-wrapper">
+                            <CopyIcon value={log.level} />
+                        </div>
+                    </td>
                 </tr>
                 <tr>
                     <td class="min-width txt-hint txt-bold">created</td>
-                    <td><LogDate date={log.created} /></td>
+                    <td>
+                        <LogDate date={log.created} />
+                        <div class="copy-icon-wrapper">
+                            <CopyIcon value={log.created} />
+                        </div>
+                    </td>
                 </tr>
                 {#if !isRequest}
                     <tr>
@@ -155,6 +166,10 @@
                         <td>
                             {#if log.message}
                                 <span class="txt">{log.message}</span>
+
+                                <div class="copy-icon-wrapper">
+                                    <CopyIcon value={log.message} />
+                                </div>
                             {:else}
                                 <span class="txt txt-hint">N/A</span>
                             {/if}
@@ -163,13 +178,14 @@
                 {/if}
                 {#each extractKeys(log.data) as key}
                     {@const value = log.data[key]}
-                    {@const isJson = value !== null && typeof value == "object"}
+                    {@const isEmpty = CommonHelper.isEmpty(value)}
+                    {@const isJson = !isEmpty && value !== null && typeof value == "object"}
                     <tr>
                         <td class="min-width txt-hint txt-bold" class:v-align-top={isJson}>
                             data.{key}
                         </td>
                         <td>
-                            {#if CommonHelper.isEmpty(value)}
+                            {#if isEmpty}
                                 <span class="txt txt-hint">N/A</span>
                             {:else if isJson}
                                 <CodeBlock content={JSON.stringify(value, null, 2)} />
@@ -183,6 +199,12 @@
                                 <span class="txt">
                                     {value}{isRequest && key == "execTime" ? "ms" : ""}
                                 </span>
+                            {/if}
+
+                            {#if !isEmpty}
+                                <div class="copy-icon-wrapper">
+                                    <CopyIcon {value} />
+                                </div>
                             {/if}
                         </td>
                     </tr>
@@ -206,5 +228,18 @@
 <style>
     .log-error-label {
         white-space: normal;
+    }
+    .copy-icon-wrapper {
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        opacity: 0;
+        transition: opacity var(--baseAnimationSpeed);
+    }
+    tr:hover .copy-icon-wrapper {
+        opacity: 1;
+    }
+    td:has(.copy-icon-wrapper) {
+        padding-right: 30px;
     }
 </style>

@@ -21,7 +21,7 @@
 
         isLoading = true;
 
-        // init a custom client to avoid interfering with the admin state
+        // init a custom client to avoid interfering with the superuser state
         const client = new PocketBase(import.meta.env.PB_BACKEND_URL);
 
         try {

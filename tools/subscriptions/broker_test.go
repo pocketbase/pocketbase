@@ -36,6 +36,32 @@ func TestClients(t *testing.T) {
 	}
 }
 
+func TestChunkedClients(t *testing.T) {
+	b := subscriptions.NewBroker()
+
+	chunks := b.ChunkedClients(2)
+	if total := len(chunks); total != 0 {
+		t.Fatalf("Expected %d chunks, got %d", 0, total)
+	}
+
+	b.Register(subscriptions.NewDefaultClient())
+	b.Register(subscriptions.NewDefaultClient())
+	b.Register(subscriptions.NewDefaultClient())
+
+	chunks = b.ChunkedClients(2)
+	if total := len(chunks); total != 2 {
+		t.Fatalf("Expected %d chunks, got %d", 2, total)
+	}
+
+	if total := len(chunks[0]); total != 2 {
+		t.Fatalf("Expected the first chunk to have 2 clients, got %d", total)
+	}
+
+	if total := len(chunks[1]); total != 1 {
+		t.Fatalf("Expected the second chunk to have 1 client, got %d", total)
+	}
+}
+
 func TestClientById(t *testing.T) {
 	b := subscriptions.NewBroker()
 

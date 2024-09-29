@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	// @todo update to v5
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -43,11 +44,9 @@ func ParseJWT(token string, verificationKey string) (jwt.MapClaims, error) {
 }
 
 // NewJWT generates and returns new HS256 signed JWT.
-func NewJWT(payload jwt.MapClaims, signingKey string, secondsDuration int64) (string, error) {
-	seconds := time.Duration(secondsDuration) * time.Second
-
+func NewJWT(payload jwt.MapClaims, signingKey string, duration time.Duration) (string, error) {
 	claims := jwt.MapClaims{
-		"exp": time.Now().Add(seconds).Unix(),
+		"exp": time.Now().Add(duration).Unix(),
 	}
 
 	for k, v := range payload {
@@ -55,12 +54,4 @@ func NewJWT(payload jwt.MapClaims, signingKey string, secondsDuration int64) (st
 	}
 
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(signingKey))
-}
-
-// Deprecated:
-// Consider replacing with NewJWT().
-//
-// NewToken is a legacy alias for NewJWT that generates a HS256 signed JWT.
-func NewToken(payload jwt.MapClaims, signingKey string, secondsDuration int64) (string, error) {
-	return NewJWT(payload, signingKey, secondsDuration)
 }

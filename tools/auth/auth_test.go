@@ -6,6 +6,14 @@ import (
 	"github.com/pocketbase/pocketbase/tools/auth"
 )
 
+func TestProvidersCount(t *testing.T) {
+	expected := 25
+
+	if total := len(auth.Providers); total != expected {
+		t.Fatalf("Expected %d providers, got %d", expected, total)
+	}
+}
+
 func TestNewProviderByName(t *testing.T) {
 	var err error
 	var p auth.Provider

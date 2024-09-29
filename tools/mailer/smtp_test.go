@@ -56,24 +56,26 @@ func TestLoginAuthStart(t *testing.T) {
 	}
 
 	for _, s := range scenarios {
-		method, resp, err := auth.Start(s.serverInfo)
+		t.Run(s.name, func(t *testing.T) {
+			method, resp, err := auth.Start(s.serverInfo)
 
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Fatalf("[%s] Expected hasErr %v, got %v", s.name, s.expectError, hasErr)
-		}
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v", s.expectError, hasErr)
+			}
 
-		if hasErr {
-			continue
-		}
+			if hasErr {
+				return
+			}
 
-		if len(resp) != 0 {
-			t.Fatalf("[%s] Expected empty data response, got %v", s.name, resp)
-		}
+			if len(resp) != 0 {
+				t.Fatalf("Expected empty data response, got %v", resp)
+			}
 
-		if method != "LOGIN" {
-			t.Fatalf("[%s] Expected LOGIN, got %v", s.name, method)
-		}
+			if method != "LOGIN" {
+				t.Fatalf("Expected LOGIN, got %v", method)
+			}
+		})
 	}
 }
 

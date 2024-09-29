@@ -10,6 +10,10 @@ import (
 	"golang.org/x/oauth2/kakao"
 )
 
+func init() {
+	Providers[NameKakao] = wrapFactory(NewKakaoProvider)
+}
+
 var _ Provider = (*Kakao)(nil)
 
 // NameKakao is the unique name of the Kakao provider.
@@ -17,19 +21,19 @@ const NameKakao string = "kakao"
 
 // Kakao allows authentication via Kakao OAuth2.
 type Kakao struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewKakaoProvider creates a new Kakao provider instance with some defaults.
 func NewKakaoProvider() *Kakao {
-	return &Kakao{&baseProvider{
+	return &Kakao{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Kakao",
 		pkce:        true,
 		scopes:      []string{"account_email", "profile_nickname", "profile_image"},
-		authUrl:     kakao.Endpoint.AuthURL,
-		tokenUrl:    kakao.Endpoint.TokenURL,
-		userApiUrl:  "https://kapi.kakao.com/v2/user/me",
+		authURL:     kakao.Endpoint.AuthURL,
+		tokenURL:    kakao.Endpoint.TokenURL,
+		userInfoURL: "https://kapi.kakao.com/v2/user/me",
 	}}
 }
 
@@ -37,7 +41,7 @@ func NewKakaoProvider() *Kakao {
 //
 // API reference: https://developers.kakao.com/docs/latest/en/kakaologin/rest-api#req-user-info-response
 func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +55,7 @@ func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id      int `json:"id"`
 		Profile struct {
 			Nickname string `json:"nickname"`
-			ImageUrl string `json:"profile_image"`
+			ImageURL string `json:"profile_image"`
 		} `json:"properties"`
 		KakaoAccount struct {
 			Email           string `json:"email"`
@@ -66,7 +70,7 @@ func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:           strconv.Itoa(extracted.Id),
 		Username:     extracted.Profile.Nickname,
-		AvatarUrl:    extracted.Profile.ImageUrl,
+		AvatarURL:    extracted.Profile.ImageURL,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,

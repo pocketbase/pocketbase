@@ -1,6 +1,7 @@
 package security_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/security"
@@ -17,30 +18,30 @@ func TestEncrypt(t *testing.T) {
 		{"123", "abcdabcdabcdabcdabcdabcdabcdabcd", false},
 	}
 
-	for i, scenario := range scenarios {
-		result, err := security.Encrypt([]byte(scenario.data), scenario.key)
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%s", i, s.data), func(t *testing.T) {
+			result, err := security.Encrypt([]byte(s.data), s.key)
 
-		if scenario.expectError && err == nil {
-			t.Errorf("(%d) Expected error got nil", i)
-		}
-		if !scenario.expectError && err != nil {
-			t.Errorf("(%d) Expected nil got error %v", i, err)
-		}
+			hasErr := err != nil
 
-		if scenario.expectError && result != "" {
-			t.Errorf("(%d) Expected empty string, got %q", i, result)
-		}
-		if !scenario.expectError && result == "" {
-			t.Errorf("(%d) Expected non empty encrypted result string", i)
-		}
-
-		// try to decrypt
-		if result != "" {
-			decrypted, _ := security.Decrypt(result, scenario.key)
-			if string(decrypted) != scenario.data {
-				t.Errorf("(%d) Expected decrypted value to match with the data input, got %q", i, decrypted)
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
 			}
-		}
+
+			if hasErr {
+				if result != "" {
+					t.Fatalf("Expected empty Encrypt result on error, got %q", result)
+				}
+
+				return
+			}
+
+			// try to decrypt
+			decrypted, err := security.Decrypt(result, s.key)
+			if err != nil || string(decrypted) != s.data {
+				t.Fatalf("Expected decrypted value to match with the data input, got %q (%v)", decrypted, err)
+			}
+		})
 	}
 }
 
@@ -57,19 +58,23 @@ func TestDecrypt(t *testing.T) {
 		{"8kcEqilvv+YKYcfnSr0aSC54gmnQCsB02SaB8ATlnA==", "abcdabcdabcdabcdabcdabcdabcdabcd", false, "123"},
 	}
 
-	for i, scenario := range scenarios {
-		result, err := security.Decrypt(scenario.cipher, scenario.key)
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%s", i, s.key), func(t *testing.T) {
+			result, err := security.Decrypt(s.cipher, s.key)
 
-		if scenario.expectError && err == nil {
-			t.Errorf("(%d) Expected error got nil", i)
-		}
-		if !scenario.expectError && err != nil {
-			t.Errorf("(%d) Expected nil got error %v", i, err)
-		}
+			hasErr := err != nil
 
-		resultStr := string(result)
-		if resultStr != scenario.expectedData {
-			t.Errorf("(%d) Expected %q, got %q", i, scenario.expectedData, resultStr)
-		}
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
+			}
+
+			if hasErr {
+				return
+			}
+
+			if str := string(result); str != s.expectedData {
+				t.Fatalf("Expected %q, got %q", s.expectedData, str)
+			}
+		})
 	}
 }

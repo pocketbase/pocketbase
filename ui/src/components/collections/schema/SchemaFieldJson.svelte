@@ -1,30 +1,27 @@
 <script>
-    import { slide } from "svelte/transition";
-    import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
+    import { slide } from "svelte/transition";
 
     export let field;
     export let key = "";
 
     let showInfo = false;
-
-    $: if (CommonHelper.isEmpty(field.options)) {
-        loadDefaults();
-    }
-
-    function loadDefaults() {
-        field.options = {
-            maxSize: 2000000,
-        };
-    }
 </script>
 
 <SchemaField bind:field {key} on:rename on:remove on:duplicate {...$$restProps}>
     <svelte:fragment slot="options">
-        <Field class="form-field required m-b-sm" name="schema.{key}.options.maxSize" let:uniqueId>
+        <Field class="form-field m-b-sm" name="fields.{key}.maxSize" let:uniqueId>
             <label for={uniqueId}>Max size <small>(bytes)</small></label>
-            <input type="number" id={uniqueId} step="1" min="0" bind:value={field.options.maxSize} />
+            <input
+                type="number"
+                id={uniqueId}
+                step="1"
+                min="0"
+                value={field.maxSize || ""}
+                on:input={(e) => (field.maxSize = e.target.value << 0)}
+                placeholder="Default to max ~5MB"
+            />
         </Field>
 
         <button

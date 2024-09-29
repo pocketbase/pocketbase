@@ -7,12 +7,15 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/cmd"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/spf13/cobra"
+
+	_ "github.com/pocketbase/pocketbase/migrations"
 )
 
 var _ core.App = (*PocketBase)(nil)
@@ -20,21 +23,17 @@ var _ core.App = (*PocketBase)(nil)
 // Version of PocketBase
 var Version = "(untracked)"
 
-// appWrapper serves as a private core.App instance wrapper.
-type appWrapper struct {
-	core.App
-}
-
 // PocketBase defines a PocketBase app launcher.
 //
 // It implements [core.App] via embedding and all of the app interface methods
 // could be accessed directly through the instance (eg. PocketBase.DataDir()).
 type PocketBase struct {
-	*appWrapper
+	core.App
 
 	devFlag           bool
 	dataDirFlag       string
 	encryptionEnvFlag string
+	queryTimeout      int
 	hideStartBanner   bool
 
 	// RootCmd is the main console command
@@ -43,19 +42,21 @@ type PocketBase struct {
 
 // Config is the PocketBase initialization config struct.
 type Config struct {
+	// hide the default console server info on app startup
+	HideStartBanner bool
+
 	// optional default values for the console flags
 	DefaultDev           bool
 	DefaultDataDir       string // if not set, it will fallback to "./pb_data"
 	DefaultEncryptionEnv string
 
-	// hide the default console server info on app startup
-	HideStartBanner bool
-
 	// optional DB configurations
-	DataMaxOpenConns int // default to core.DefaultDataMaxOpenConns
-	DataMaxIdleConns int // default to core.DefaultDataMaxIdleConns
-	LogsMaxOpenConns int // default to core.DefaultLogsMaxOpenConns
-	LogsMaxIdleConns int // default to core.DefaultLogsMaxIdleConns
+	DataMaxOpenConns int                // default to core.DefaultDataMaxOpenConns
+	DataMaxIdleConns int                // default to core.DefaultDataMaxIdleConns
+	AuxMaxOpenConns  int                // default to core.DefaultAuxMaxOpenConns
+	AuxMaxIdleConns  int                // default to core.DefaultAuxMaxIdleConns
+	QueryTimeout     int                // default to core.DefaultQueryTimeout (in seconds)
+	DBConnect        core.DBConnectFunc // default to core.dbConnect
 }
 
 // New creates a new PocketBase instance with the default configuration.
@@ -88,10 +89,12 @@ func NewWithConfig(config Config) *PocketBase {
 		config.DefaultDataDir = filepath.Join(baseDir, "pb_data")
 	}
 
+	executableName := filepath.Base(os.Args[0])
+
 	pb := &PocketBase{
 		RootCmd: &cobra.Command{
-			Use:     filepath.Base(os.Args[0]),
-			Short:   "PocketBase CLI",
+			Use:     executableName,
+			Short:   executableName + " CLI",
 			Version: Version,
 			FParseErrWhitelist: cobra.FParseErrWhitelist{
 				UnknownFlags: true,
@@ -115,15 +118,17 @@ func NewWithConfig(config Config) *PocketBase {
 	pb.eagerParseFlags(&config)
 
 	// initialize the app instance
-	pb.appWrapper = &appWrapper{core.NewBaseApp(core.BaseAppConfig{
+	pb.App = core.NewBaseApp(core.BaseAppConfig{
 		IsDev:            pb.devFlag,
 		DataDir:          pb.dataDirFlag,
 		EncryptionEnv:    pb.encryptionEnvFlag,
 		DataMaxOpenConns: config.DataMaxOpenConns,
 		DataMaxIdleConns: config.DataMaxIdleConns,
-		LogsMaxOpenConns: config.LogsMaxOpenConns,
-		LogsMaxIdleConns: config.LogsMaxIdleConns,
-	})}
+		AuxMaxOpenConns:  config.AuxMaxOpenConns,
+		AuxMaxIdleConns:  config.AuxMaxIdleConns,
+		QueryTimeout:     time.Duration(config.QueryTimeout) * time.Second,
+		DBConnect:        config.DBConnect,
+	})
 
 	// hide the default help command (allow only `--help` flag)
 	pb.RootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
@@ -135,7 +140,7 @@ func NewWithConfig(config Config) *PocketBase {
 // commands (serve, migrate, version) and executes pb.RootCmd.
 func (pb *PocketBase) Start() error {
 	// register system commands
-	pb.RootCmd.AddCommand(cmd.NewAdminCommand(pb))
+	pb.RootCmd.AddCommand(cmd.NewSuperuserCommand(pb))
 	pb.RootCmd.AddCommand(cmd.NewServeCommand(pb, !pb.hideStartBanner))
 
 	return pb.Execute()
@@ -175,9 +180,9 @@ func (pb *PocketBase) Execute() error {
 	<-done
 
 	// trigger cleanups
-	return pb.OnTerminate().Trigger(&core.TerminateEvent{
-		App: pb,
-	}, func(e *core.TerminateEvent) error {
+	event := new(core.TerminateEvent)
+	event.App = pb
+	return pb.OnTerminate().Trigger(event, func(e *core.TerminateEvent) error {
 		return e.App.ResetBootstrapState()
 	})
 }
@@ -204,6 +209,13 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 		"dev",
 		config.DefaultDev,
 		"enable dev mode, aka. printing logs and sql statements to the console",
+	)
+
+	pb.RootCmd.PersistentFlags().IntVar(
+		&pb.queryTimeout,
+		"queryTimeout",
+		int(core.DefaultQueryTimeout.Seconds()),
+		"the default SELECT queries timeout in seconds",
 	)
 
 	return pb.RootCmd.ParseFlags(os.Args[1:])
@@ -253,6 +265,9 @@ func (pb *PocketBase) skipBootstrap() bool {
 }
 
 // inspectRuntime tries to find the base executable directory and how it was run.
+//
+// note: we are using os.Args[0] and not os.Executable() since it could
+// break existing aliased binaries (eg. the community maintained homebrew package)
 func inspectRuntime() (baseDir string, withGoRun bool) {
 	if strings.HasPrefix(os.Args[0], os.TempDir()) {
 		// probably ran with go run

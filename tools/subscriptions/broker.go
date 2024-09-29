@@ -2,47 +2,41 @@ package subscriptions
 
 import (
 	"fmt"
-	"sync"
+
+	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/store"
 )
 
 // Broker defines a struct for managing subscriptions clients.
 type Broker struct {
-	clients map[string]Client
-	mux     sync.RWMutex
+	store *store.Store[Client]
 }
 
 // NewBroker initializes and returns a new Broker instance.
 func NewBroker() *Broker {
 	return &Broker{
-		clients: make(map[string]Client),
+		store: store.New[Client](nil),
 	}
 }
 
 // Clients returns a shallow copy of all registered clients indexed
 // with their connection id.
 func (b *Broker) Clients() map[string]Client {
-	b.mux.RLock()
-	defer b.mux.RUnlock()
+	return b.store.GetAll()
+}
 
-	copy := make(map[string]Client, len(b.clients))
-
-	for id, c := range b.clients {
-		copy[id] = c
-	}
-
-	return copy
+// ChunkedClients splits the current clients into a chunked slice.
+func (b *Broker) ChunkedClients(chunkSize int) [][]Client {
+	return list.ToChunks(b.store.Values(), chunkSize)
 }
 
 // ClientById finds a registered client by its id.
 //
 // Returns non-nil error when client with clientId is not registered.
 func (b *Broker) ClientById(clientId string) (Client, error) {
-	b.mux.RLock()
-	defer b.mux.RUnlock()
-
-	client, ok := b.clients[clientId]
+	client, ok := b.store.GetOk(clientId)
 	if !ok {
-		return nil, fmt.Errorf("No client associated with connection ID %q", clientId)
+		return nil, fmt.Errorf("no client associated with connection ID %q", clientId)
 	}
 
 	return client, nil
@@ -50,21 +44,17 @@ func (b *Broker) ClientById(clientId string) (Client, error) {
 
 // Register adds a new client to the broker instance.
 func (b *Broker) Register(client Client) {
-	b.mux.Lock()
-	defer b.mux.Unlock()
-
-	b.clients[client.Id()] = client
+	b.store.Set(client.Id(), client)
 }
 
 // Unregister removes a single client by its id.
 //
 // If client with clientId doesn't exist, this method does nothing.
 func (b *Broker) Unregister(clientId string) {
-	b.mux.Lock()
-	defer b.mux.Unlock()
-
-	if client, ok := b.clients[clientId]; ok {
-		client.Discard()
-		delete(b.clients, clientId)
+	client := b.store.Get(clientId)
+	if client == nil {
+		return
 	}
+	client.Discard()
+	b.store.Remove(clientId)
 }

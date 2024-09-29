@@ -1,20 +1,21 @@
 package apis_test
 
 import (
+	"bytes"
 	"errors"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/labstack/echo/v5"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tests"
-	"github.com/pocketbase/pocketbase/tools/rest"
+	"github.com/pocketbase/pocketbase/tools/router"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -25,52 +26,58 @@ func TestRecordCrudList(t *testing.T) {
 		{
 			Name:            "missing collection",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/missing/records",
+			URL:             "/api/collections/missing/records",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:            "unauthenticated trying to access nil rule collection (aka. need admin auth)",
+			Name:            "unauthenticated trying to access nil rule collection (aka. need superuser auth)",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/demo1/records",
+			URL:             "/api/collections/demo1/records",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:   "authenticated record trying to access nil rule collection (aka. need admin auth)",
+			Name:   "authenticated record trying to access nil rule collection (aka. need superuser auth)",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo1/records",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+			URL:    "/api/collections/demo1/records",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:            "public collection but with admin only filter param (aka. @collection, @request, etc.)",
+			Name:            "public collection but with superuser only filter param (aka. @collection, @request, etc.)",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/demo2/records?filter=%40collection.demo2.title='test1'",
+			URL:             "/api/collections/demo2/records?filter=%40collection.demo2.title='test1'",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:            "public collection but with admin only sort param (aka. @collection, @request, etc.)",
+			Name:            "public collection but with superuser only sort param (aka. @collection, @request, etc.)",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/demo2/records?sort=@request.auth.title",
+			URL:             "/api/collections/demo2/records?sort=@request.auth.title",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:            "public collection but with ENCODED admin only filter/sort (aka. @collection)",
+			Name:            "public collection but with ENCODED superuser only filter/sort (aka. @collection)",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/demo2/records?filter=%40collection.demo2.title%3D%27test1%27",
+			URL:             "/api/collections/demo2/records?filter=%40collection.demo2.title%3D%27test1%27",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:           "public collection",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/demo2/records",
+			URL:            "/api/collections/demo2/records",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -82,12 +89,16 @@ func TestRecordCrudList(t *testing.T) {
 				`"id":"achvryl401bhse3"`,
 				`"id":"llvuca81nly1qls"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
 		},
 		{
 			Name:           "public collection (using the collection id)",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/sz5l5z67tg7gku0/records",
+			URL:            "/api/collections/sz5l5z67tg7gku0/records",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -99,14 +110,18 @@ func TestRecordCrudList(t *testing.T) {
 				`"id":"achvryl401bhse3"`,
 				`"id":"llvuca81nly1qls"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
 		},
 		{
-			Name:   "authorized as admin trying to access nil rule collection (aka. need admin auth)",
+			Name:   "authorized as superuser trying to access nil rule collection (aka. need superuser auth)",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo1/records",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/demo1/records",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -119,14 +134,18 @@ func TestRecordCrudList(t *testing.T) {
 				`"id":"84nmscqy84lsi1t"`,
 				`"id":"imy661ixudk5izi"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
 		},
 		{
 			Name:   "valid query params",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo1/records?filter=text~'test'&sort=-bool",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/demo1/records?filter=text~'test'&sort=-bool",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -137,24 +156,29 @@ func TestRecordCrudList(t *testing.T) {
 				`"id":"al1h9ijdeojtsjy"`,
 				`"id":"84nmscqy84lsi1t"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       2,
+			},
 		},
 		{
 			Name:   "invalid filter",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo1/records?filter=invalid~'test'",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/demo1/records?filter=invalid~'test'",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "expand relations",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo1/records?expand=rel_one,rel_many.rel,missing&perPage=2&sort=created",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/demo1/records?expand=rel_one,rel_many.rel,missing&perPage=2&sort=created",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -178,20 +202,24 @@ func TestRecordCrudList(t *testing.T) {
 				// subrel items
 				`"id":"0yxhwia2amd8gec"`,
 				`"id":"llvuca81nly1qls"`,
-				// email visibility should be ignored for admins even in expanded rels
+				// email visibility should be ignored for superusers even in expanded rels
 				`"email":"test@example.com"`,
 				`"email":"test2@example.com"`,
 				`"email":"test3@example.com"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       8,
+			},
 		},
 		{
 			Name:   "authenticated record model that DOESN'T match the collection list rule",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo3/records",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/demo3/records",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -200,15 +228,18 @@ func TestRecordCrudList(t *testing.T) {
 				`"totalItems":0`,
 				`"items":[]`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+			},
 		},
 		{
 			Name:   "authenticated record that matches the collection list rule",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo3/records",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/demo3/records",
+			Headers: map[string]string{
 				// clients, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyMjA4OTg1MjYxfQ.q34IWXrRWsjLvbbVNRfAs_J4SoTHloNBfdGEiLmy-D8",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.0ONnm_BsvPRZyDNT31GN1CKUB6uQRxvVvQ-Wc9AZfG0",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -222,12 +253,16 @@ func TestRecordCrudList(t *testing.T) {
 				`"id":"7nwo8tuiatetxdm"`,
 				`"id":"mk5fmymtx4wsprk"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       4,
+			},
 		},
 		{
 			Name:           ":rule modifer",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/demo5/records",
+			URL:            "/api/collections/demo5/records",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -237,12 +272,16 @@ func TestRecordCrudList(t *testing.T) {
 				`"items":[{`,
 				`"id":"qjeql998mtp1azp"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       1,
+			},
 		},
 		{
 			Name:           "multi-match - at least one of",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length?=2"),
+			URL:            "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length?=2"),
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -252,12 +291,16 @@ func TestRecordCrudList(t *testing.T) {
 				`"items":[{`,
 				`"id":"qzaqccwrmva4o1n"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       1,
+			},
 		},
 		{
 			Name:           "multi-match - all",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length=2"),
+			URL:            "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length=2"),
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -266,7 +309,10 @@ func TestRecordCrudList(t *testing.T) {
 				`"totalItems":0`,
 				`"items":[]`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+			},
 		},
 
 		// auth collection
@@ -274,7 +320,7 @@ func TestRecordCrudList(t *testing.T) {
 		{
 			Name:           "check email visibility as guest",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/nologin/records",
+			URL:            "/api/collections/nologin/records",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -291,19 +337,23 @@ func TestRecordCrudList(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"tokenKey"`,
-				`"passwordHash"`,
+				`"password"`,
 				`"email":"test@example.com"`,
 				`"email":"test3@example.com"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
 		},
 		{
 			Name:   "check email visibility as any authenticated record",
 			Method: http.MethodGet,
-			Url:    "/api/collections/nologin/records",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/nologin/records",
+			Headers: map[string]string{
 				// clients, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyMjA4OTg1MjYxfQ.q34IWXrRWsjLvbbVNRfAs_J4SoTHloNBfdGEiLmy-D8",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.0ONnm_BsvPRZyDNT31GN1CKUB6uQRxvVvQ-Wc9AZfG0",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -320,20 +370,24 @@ func TestRecordCrudList(t *testing.T) {
 				`"emailVisibility":false`,
 			},
 			NotExpectedContent: []string{
-				`"tokenKey"`,
-				`"passwordHash"`,
+				`"tokenKey":"`,
+				`"password":""`,
 				`"email":"test@example.com"`,
 				`"email":"test3@example.com"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
 		},
 		{
 			Name:   "check email visibility as manage auth record",
 			Method: http.MethodGet,
-			Url:    "/api/collections/nologin/records",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/nologin/records",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -353,16 +407,20 @@ func TestRecordCrudList(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"tokenKey"`,
-				`"passwordHash"`,
+				`"password"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
 		},
 		{
-			Name:   "check email visibility as admin",
+			Name:   "check email visibility as superuser",
 			Method: http.MethodGet,
-			Url:    "/api/collections/nologin/records",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/nologin/records",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -382,17 +440,21 @@ func TestRecordCrudList(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"tokenKey"`,
-				`"passwordHash"`,
+				`"password"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
 		},
 		{
 			Name:   "check self email visibility resolver",
 			Method: http.MethodGet,
-			Url:    "/api/collections/nologin/records",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/nologin/records",
+			Headers: map[string]string{
 				// nologin, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImRjNDlrNmpnZWpuNDBoMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoia3B2NzA5c2sybHFicWs4IiwiZXhwIjoyMjA4OTg1MjYxfQ.DOYSon3x1-C0hJbwjEU6dp2-6oLeEa8bOlkyP1CinyM",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImRjNDlrNmpnZWpuNDBoMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoia3B2NzA5c2sybHFicWs4IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.fdUPFLDx5b6RM_XFqnqsyiyNieyKA2HIIkRmUh9kIoY",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -411,10 +473,14 @@ func TestRecordCrudList(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"tokenKey"`,
-				`"passwordHash"`,
+				`"password"`,
 				`"email":"test3@example.com"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
 		},
 
 		// view collection
@@ -422,7 +488,7 @@ func TestRecordCrudList(t *testing.T) {
 		{
 			Name:           "public view records",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/view2/records?filter=state=false",
+			URL:            "/api/collections/view2/records?filter=state=false",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -437,12 +503,16 @@ func TestRecordCrudList(t *testing.T) {
 				`"created"`,
 				`"updated"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       2,
+			},
 		},
 		{
 			Name:           "guest that doesn't match the view collection list rule",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/view1/records",
+			URL:            "/api/collections/view1/records",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -451,15 +521,18 @@ func TestRecordCrudList(t *testing.T) {
 				`"totalItems":0`,
 				`"items":[]`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+			},
 		},
 		{
 			Name:   "authenticated record that matches the view collection list rule",
 			Method: http.MethodGet,
-			Url:    "/api/collections/view1/records",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/view1/records",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -471,12 +544,16 @@ func TestRecordCrudList(t *testing.T) {
 				`"id":"84nmscqy84lsi1t"`,
 				`"bool":true`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       1,
+			},
 		},
 		{
 			Name:           "view collection with numeric ids",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/numeric_id_view/records",
+			URL:            "/api/collections/numeric_id_view/records",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -487,7 +564,45 @@ func TestRecordCrudList(t *testing.T) {
 				`"id":"1"`,
 				`"id":"2"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordsListRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       2,
+			},
+		},
+
+		// rate limit checks
+		// -----------------------------------------------------------
+		{
+			Name:   "RateLimit rule - view2:list",
+			Method: http.MethodGet,
+			URL:    "/api/collections/view2/records",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 100, Label: "*:list"},
+					{MaxRequests: 0, Label: "view2:list"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "RateLimit rule - *:list",
+			Method: http.MethodGet,
+			URL:    "/api/collections/view2/records",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 0, Label: "*:list"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 	}
 
@@ -503,89 +618,106 @@ func TestRecordCrudView(t *testing.T) {
 		{
 			Name:            "missing collection",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/missing/records/0yxhwia2amd8gec",
+			URL:             "/api/collections/missing/records/0yxhwia2amd8gec",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:            "missing record",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/demo2/records/missing",
+			URL:             "/api/collections/demo2/records/missing",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:            "unauthenticated trying to access nil rule collection (aka. need admin auth)",
+			Name:            "unauthenticated trying to access nil rule collection (aka. need superuser auth)",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/demo1/records/imy661ixudk5izi",
+			URL:             "/api/collections/demo1/records/imy661ixudk5izi",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:   "authenticated record trying to access nil rule collection (aka. need admin auth)",
+			Name:   "authenticated record trying to access nil rule collection (aka. need superuser auth)",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo1/records/imy661ixudk5izi",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/demo1/records/imy661ixudk5izi",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "authenticated record that doesn't match the collection view rule",
 			Method: http.MethodGet,
-			Url:    "/api/collections/users/records/bgs820n361vj1qd",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/users/records/bgs820n361vj1qd",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:           "public collection view",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/demo2/records/0yxhwia2amd8gec",
+			URL:            "/api/collections/demo2/records/0yxhwia2amd8gec",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"0yxhwia2amd8gec"`,
 				`"collectionName":"demo2"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
 			Name:           "public collection view (using the collection id)",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/sz5l5z67tg7gku0/records/0yxhwia2amd8gec",
+			URL:            "/api/collections/sz5l5z67tg7gku0/records/0yxhwia2amd8gec",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"0yxhwia2amd8gec"`,
 				`"collectionName":"demo2"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
-			Name:   "authorized as admin trying to access nil rule collection view (aka. need admin auth)",
+			Name:   "authorized as superuser trying to access nil rule collection view (aka. need superuser auth)",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo1/records/imy661ixudk5izi",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/demo1/records/imy661ixudk5izi",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"imy661ixudk5izi"`,
 				`"collectionName":"demo1"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
 			Name:   "authenticated record that does match the collection view rule",
 			Method: http.MethodGet,
-			Url:    "/api/collections/users/records/4q1xlclmfloku33",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/users/records/4q1xlclmfloku33",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -595,14 +727,18 @@ func TestRecordCrudView(t *testing.T) {
 				`"emailVisibility":false`,
 				`"email":"test@example.com"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
 			Name:   "expand relations",
 			Method: http.MethodGet,
-			Url:    "/api/collections/demo1/records/al1h9ijdeojtsjy?expand=rel_one,rel_many.rel,missing&perPage=2&sort=created",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/demo1/records/al1h9ijdeojtsjy?expand=rel_one,rel_many.rel,missing&perPage=2&sort=created",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -616,7 +752,11 @@ func TestRecordCrudView(t *testing.T) {
 				`"id":"0yxhwia2amd8gec"`,
 				`"collectionName":"demo2"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      7,
+			},
 		},
 
 		// auth collection
@@ -624,7 +764,7 @@ func TestRecordCrudView(t *testing.T) {
 		{
 			Name:           "check email visibility as guest",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/nologin/records/oos036e9xvqeexy",
+			URL:            "/api/collections/nologin/records/oos036e9xvqeexy",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"oos036e9xvqeexy"`,
@@ -633,18 +773,22 @@ func TestRecordCrudView(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"tokenKey"`,
-				`"passwordHash"`,
+				`"password"`,
 				`"email":"test3@example.com"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
 			Name:   "check email visibility as any authenticated record",
 			Method: http.MethodGet,
-			Url:    "/api/collections/nologin/records/oos036e9xvqeexy",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/nologin/records/oos036e9xvqeexy",
+			Headers: map[string]string{
 				// clients, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyMjA4OTg1MjYxfQ.q34IWXrRWsjLvbbVNRfAs_J4SoTHloNBfdGEiLmy-D8",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.0ONnm_BsvPRZyDNT31GN1CKUB6uQRxvVvQ-Wc9AZfG0",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -654,18 +798,22 @@ func TestRecordCrudView(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"tokenKey"`,
-				`"passwordHash"`,
+				`"password"`,
 				`"email":"test3@example.com"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
 			Name:   "check email visibility as manage auth record",
 			Method: http.MethodGet,
-			Url:    "/api/collections/nologin/records/oos036e9xvqeexy",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/nologin/records/oos036e9xvqeexy",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -674,14 +822,18 @@ func TestRecordCrudView(t *testing.T) {
 				`"email":"test3@example.com"`,
 				`"verified":true`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
-			Name:   "check email visibility as admin",
+			Name:   "check email visibility as superuser",
 			Method: http.MethodGet,
-			Url:    "/api/collections/nologin/records/oos036e9xvqeexy",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/nologin/records/oos036e9xvqeexy",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -692,17 +844,21 @@ func TestRecordCrudView(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"tokenKey"`,
-				`"passwordHash"`,
+				`"password"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
 			Name:   "check self email visibility resolver",
 			Method: http.MethodGet,
-			Url:    "/api/collections/nologin/records/dc49k6jgejn40h3",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/nologin/records/dc49k6jgejn40h3",
+			Headers: map[string]string{
 				// nologin, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImRjNDlrNmpnZWpuNDBoMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoia3B2NzA5c2sybHFicWs4IiwiZXhwIjoyMjA4OTg1MjYxfQ.DOYSon3x1-C0hJbwjEU6dp2-6oLeEa8bOlkyP1CinyM",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImRjNDlrNmpnZWpuNDBoMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoia3B2NzA5c2sybHFicWs4IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.fdUPFLDx5b6RM_XFqnqsyiyNieyKA2HIIkRmUh9kIoY",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -713,9 +869,13 @@ func TestRecordCrudView(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"tokenKey"`,
-				`"passwordHash"`,
+				`"password"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 
 		// view collection
@@ -723,7 +883,7 @@ func TestRecordCrudView(t *testing.T) {
 		{
 			Name:           "public view record",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/view2/records/84nmscqy84lsi1t",
+			URL:            "/api/collections/view2/records/84nmscqy84lsi1t",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"84nmscqy84lsi1t"`,
@@ -735,22 +895,27 @@ func TestRecordCrudView(t *testing.T) {
 				`"created"`,
 				`"updated"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
 			Name:            "guest that doesn't match the view collection view rule",
 			Method:          http.MethodGet,
-			Url:             "/api/collections/view1/records/84nmscqy84lsi1t",
+			URL:             "/api/collections/view1/records/84nmscqy84lsi1t",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "authenticated record that matches the view collection view rule",
 			Method: http.MethodGet,
-			Url:    "/api/collections/view1/records/84nmscqy84lsi1t",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/view1/records/84nmscqy84lsi1t",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -758,17 +923,59 @@ func TestRecordCrudView(t *testing.T) {
 				`"bool":true`,
 				`"text":"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
 		},
 		{
 			Name:           "view record with numeric id",
 			Method:         http.MethodGet,
-			Url:            "/api/collections/numeric_id_view/records/1",
+			URL:            "/api/collections/numeric_id_view/records/1",
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"1"`,
 			},
-			ExpectedEvents: map[string]int{"OnRecordViewRequest": 1},
+			ExpectedEvents: map[string]int{
+				"*":                   0,
+				"OnRecordViewRequest": 1,
+				"OnRecordEnrich":      1,
+			},
+		},
+
+		// rate limit checks
+		// -----------------------------------------------------------
+		{
+			Name:   "RateLimit rule - numeric_id_view:view",
+			Method: http.MethodGet,
+			URL:    "/api/collections/numeric_id_view/records/1",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 100, Label: "*:view"},
+					{MaxRequests: 0, Label: "numeric_id_view:view"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "RateLimit rule - *:view",
+			Method: http.MethodGet,
+			URL:    "/api/collections/numeric_id_view/records/1",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 0, Label: "*:view"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 	}
 
@@ -785,7 +992,7 @@ func TestRecordCrudDelete(t *testing.T) {
 
 		entries, _ := os.ReadDir(storageDir)
 		if len(entries) != 0 {
-			t.Errorf("Expected empty/deleted dir, found %d", len(entries))
+			t.Errorf("Expected empty/deleted dir, found: %d\n%v", len(entries), entries)
 		}
 	}
 
@@ -793,139 +1000,163 @@ func TestRecordCrudDelete(t *testing.T) {
 		{
 			Name:            "missing collection",
 			Method:          http.MethodDelete,
-			Url:             "/api/collections/missing/records/0yxhwia2amd8gec",
+			URL:             "/api/collections/missing/records/0yxhwia2amd8gec",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:            "missing record",
 			Method:          http.MethodDelete,
-			Url:             "/api/collections/demo2/records/missing",
+			URL:             "/api/collections/demo2/records/missing",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:            "unauthenticated trying to delete nil rule collection (aka. need admin auth)",
+			Name:            "unauthenticated trying to delete nil rule collection (aka. need superuser auth)",
 			Method:          http.MethodDelete,
-			Url:             "/api/collections/demo1/records/imy661ixudk5izi",
+			URL:             "/api/collections/demo1/records/imy661ixudk5izi",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:   "authenticated record trying to delete nil rule collection (aka. need admin auth)",
+			Name:   "authenticated record trying to delete nil rule collection (aka. need superuser auth)",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/demo1/records/imy661ixudk5izi",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/demo1/records/imy661ixudk5izi",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "authenticated record that doesn't match the collection delete rule",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/users/records/bgs820n361vj1qd",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/users/records/bgs820n361vj1qd",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:            "trying to delete a view collection record",
 			Method:          http.MethodDelete,
-			Url:             "/api/collections/view1/records/imy661ixudk5izi",
+			URL:             "/api/collections/view1/records/imy661ixudk5izi",
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:           "public collection record delete",
 			Method:         http.MethodDelete,
-			Url:            "/api/collections/nologin/records/dc49k6jgejn40h3",
+			URL:            "/api/collections/nologin/records/dc49k6jgejn40h3",
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterDelete":          1,
-				"OnModelBeforeDelete":         1,
-				"OnRecordAfterDeleteRequest":  1,
-				"OnRecordBeforeDeleteRequest": 1,
+				"*":                          0,
+				"OnRecordDeleteRequest":      1,
+				"OnModelDelete":              1,
+				"OnModelDeleteExecute":       1,
+				"OnModelAfterDeleteSuccess":  1,
+				"OnRecordDelete":             1,
+				"OnRecordDeleteExecute":      1,
+				"OnRecordAfterDeleteSuccess": 1,
 			},
 		},
 		{
 			Name:           "public collection record delete (using the collection id as identifier)",
 			Method:         http.MethodDelete,
-			Url:            "/api/collections/kpv709sk2lqbqk8/records/dc49k6jgejn40h3",
+			URL:            "/api/collections/kpv709sk2lqbqk8/records/dc49k6jgejn40h3",
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterDelete":          1,
-				"OnModelBeforeDelete":         1,
-				"OnRecordAfterDeleteRequest":  1,
-				"OnRecordBeforeDeleteRequest": 1,
+				"*":                          0,
+				"OnRecordDeleteRequest":      1,
+				"OnModelDelete":              1,
+				"OnModelDeleteExecute":       1,
+				"OnModelAfterDeleteSuccess":  1,
+				"OnRecordDelete":             1,
+				"OnRecordDeleteExecute":      1,
+				"OnRecordAfterDeleteSuccess": 1,
 			},
 		},
 		{
-			Name:   "authorized as admin trying to delete nil rule collection view (aka. need admin auth)",
+			Name:   "authorized as superuser trying to delete nil rule collection view (aka. need superuser auth)",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/clients/records/o1y0dd0spd786md",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/clients/records/o1y0dd0spd786md",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterDelete":          1,
-				"OnModelBeforeDelete":         1,
-				"OnRecordAfterDeleteRequest":  1,
-				"OnRecordBeforeDeleteRequest": 1,
+				"*":                          0,
+				"OnRecordDeleteRequest":      1,
+				"OnModelDelete":              1,
+				"OnModelDeleteExecute":       1,
+				"OnModelAfterDeleteSuccess":  1,
+				"OnRecordDelete":             1,
+				"OnRecordDeleteExecute":      1,
+				"OnRecordAfterDeleteSuccess": 1,
 			},
 		},
 		{
-			Name:   "OnRecordAfterDeleteRequest error response",
+			Name:   "OnRecordAfterDeleteSuccessRequest error response",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/clients/records/o1y0dd0spd786md",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/clients/records/o1y0dd0spd786md",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
-			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				app.OnRecordAfterDeleteRequest().Add(func(e *core.RecordDeleteEvent) error {
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnRecordDeleteRequest().BindFunc(func(e *core.RecordRequestEvent) error {
 					return errors.New("error")
 				})
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterDelete":          1,
-				"OnModelBeforeDelete":         1,
-				"OnRecordAfterDeleteRequest":  1,
-				"OnRecordBeforeDeleteRequest": 1,
+				"*":                     0,
+				"OnRecordDeleteRequest": 1,
 			},
 		},
 		{
 			Name:   "authenticated record that match the collection delete rule",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/users/records/4q1xlclmfloku33",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/users/records/4q1xlclmfloku33",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterDelete":          3, // +2 because of the external auths
-				"OnModelBeforeDelete":         3, // +2 because of the external auths
-				"OnModelAfterUpdate":          1,
-				"OnModelBeforeUpdate":         1,
-				"OnRecordAfterDeleteRequest":  1,
-				"OnRecordBeforeDeleteRequest": 1,
+				"*":                          0,
+				"OnRecordDeleteRequest":      1,
+				"OnModelDelete":              3, // +2 for the externalAuths
+				"OnModelDeleteExecute":       3,
+				"OnModelAfterDeleteSuccess":  3,
+				"OnRecordDelete":             3,
+				"OnRecordDeleteExecute":      3,
+				"OnRecordAfterDeleteSuccess": 3,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnRecordUpdateExecute":      1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
 				ensureDeletedFiles(app, "_pb_users_auth_", "4q1xlclmfloku33")
 
 				// check if all the external auths records were deleted
-				collection, _ := app.Dao().FindCollectionByNameOrId("users")
-				record := models.NewRecord(collection)
-				record.Id = "4q1xlclmfloku33"
-				externalAuths, err := app.Dao().FindAllExternalAuthsByRecord(record)
+				collection, _ := app.FindCollectionByNameOrId("users")
+				record := core.NewRecord(collection)
+				record.Set("id", "4q1xlclmfloku33")
+				externalAuths, err := app.FindAllExternalAuthsByRecord(record)
 				if err != nil {
 					t.Errorf("Failed to fetch external auths: %v", err)
 				}
@@ -937,20 +1168,25 @@ func TestRecordCrudDelete(t *testing.T) {
 		{
 			Name:            "@request :isset (rule failure check)",
 			Method:          http.MethodDelete,
-			Url:             "/api/collections/demo5/records/la4y2w4o98acwuj",
+			URL:             "/api/collections/demo5/records/la4y2w4o98acwuj",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:           "@request :isset (rule pass check)",
 			Method:         http.MethodDelete,
-			Url:            "/api/collections/demo5/records/la4y2w4o98acwuj?test=1",
+			URL:            "/api/collections/demo5/records/la4y2w4o98acwuj?test=1",
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelAfterDelete":          1,
-				"OnModelBeforeDelete":         1,
-				"OnRecordAfterDeleteRequest":  1,
-				"OnRecordBeforeDeleteRequest": 1,
+				"*":                          0,
+				"OnRecordDeleteRequest":      1,
+				"OnModelDelete":              1,
+				"OnModelDeleteExecute":       1,
+				"OnModelAfterDeleteSuccess":  1,
+				"OnRecordDelete":             1,
+				"OnRecordDeleteExecute":      1,
+				"OnRecordAfterDeleteSuccess": 1,
 			},
 		},
 
@@ -959,61 +1195,122 @@ func TestRecordCrudDelete(t *testing.T) {
 		{
 			Name:   "trying to delete a record while being part of a non-cascade required relation",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/demo3/records/7nwo8tuiatetxdm",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/demo3/records/7nwo8tuiatetxdm",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeDeleteRequest": 1,
-				"OnModelBeforeUpdate":         2, // self_rel_many update of test1 record + rel_one_cascade demo4 cascaded in demo5
-				"OnModelBeforeDelete":         2, // the record itself + rel_one_cascade of test1 record
+				"*":                        0,
+				"OnRecordDeleteRequest":    1,
+				"OnModelDelete":            2, // the record itself + rel_one_cascade of test1 record
+				"OnModelDeleteExecute":     2,
+				"OnModelAfterDeleteError":  2,
+				"OnRecordDelete":           2,
+				"OnRecordDeleteExecute":    2,
+				"OnRecordAfterDeleteError": 2,
+				"OnModelUpdate":            2, // self_rel_many update of test1 record + rel_one_cascade demo4 cascaded in demo5
+				"OnModelUpdateExecute":     2,
+				"OnModelAfterUpdateError":  2,
+				"OnRecordUpdate":           2,
+				"OnRecordUpdateExecute":    2,
+				"OnRecordAfterUpdateError": 2,
 			},
 		},
 		{
 			Name:   "delete a record with non-cascade references",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/demo3/records/1tmknxy2868d869",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/demo3/records/1tmknxy2868d869",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelBeforeDelete":         1,
-				"OnModelAfterDelete":          1,
-				"OnModelBeforeUpdate":         2,
-				"OnModelAfterUpdate":          2,
-				"OnRecordBeforeDeleteRequest": 1,
-				"OnRecordAfterDeleteRequest":  1,
+				"*":                          0,
+				"OnRecordDeleteRequest":      1,
+				"OnModelDelete":              1,
+				"OnModelDeleteExecute":       1,
+				"OnModelAfterDeleteSuccess":  1,
+				"OnRecordDelete":             1,
+				"OnRecordDeleteExecute":      1,
+				"OnRecordAfterDeleteSuccess": 1,
+				"OnModelUpdate":              2,
+				"OnModelUpdateExecute":       2,
+				"OnModelAfterUpdateSuccess":  2,
+				"OnRecordUpdate":             2,
+				"OnRecordUpdateExecute":      2,
+				"OnRecordAfterUpdateSuccess": 2,
 			},
 		},
 		{
 			Name:   "delete a record with cascade references",
 			Method: http.MethodDelete,
-			Url:    "/api/collections/users/records/oap640cot4yru2s",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			URL:    "/api/collections/users/records/oap640cot4yru2s",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			Delay:          100 * time.Millisecond,
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{
-				"OnModelBeforeDelete":         2,
-				"OnModelAfterDelete":          2,
-				"OnModelBeforeUpdate":         2,
-				"OnModelAfterUpdate":          2,
-				"OnRecordBeforeDeleteRequest": 1,
-				"OnRecordAfterDeleteRequest":  1,
+				"*":                          0,
+				"OnRecordDeleteRequest":      1,
+				"OnModelDelete":              2,
+				"OnModelDeleteExecute":       2,
+				"OnModelAfterDeleteSuccess":  2,
+				"OnRecordDelete":             2,
+				"OnRecordDeleteExecute":      2,
+				"OnRecordAfterDeleteSuccess": 2,
+				"OnModelUpdate":              2,
+				"OnModelUpdateExecute":       2,
+				"OnModelAfterUpdateSuccess":  2,
+				"OnRecordUpdate":             2,
+				"OnRecordUpdateExecute":      2,
+				"OnRecordAfterUpdateSuccess": 2,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
 				recId := "84nmscqy84lsi1t"
-				rec, _ := app.Dao().FindRecordById("demo1", recId, nil)
+				rec, _ := app.FindRecordById("demo1", recId, nil)
 				if rec != nil {
 					t.Errorf("Expected record %s to be cascade deleted", recId)
 				}
 				ensureDeletedFiles(app, "wsmn24bux7wo113", recId)
 				ensureDeletedFiles(app, "_pb_users_auth_", "oap640cot4yru2s")
 			},
+		},
+
+		// rate limit checks
+		// -----------------------------------------------------------
+		{
+			Name:   "RateLimit rule - demo5:delete",
+			Method: http.MethodDelete,
+			URL:    "/api/collections/demo5/records/la4y2w4o98acwuj?test=1",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 100, Label: "*:delete"},
+					{MaxRequests: 0, Label: "demo5:delete"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "RateLimit rule - *:delete",
+			Method: http.MethodDelete,
+			URL:    "/api/collections/demo5/records/la4y2w4o98acwuj?test=1",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 0, Label: "*:delete"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 	}
 
@@ -1033,14 +1330,14 @@ func TestRecordCrudCreate(t *testing.T) {
 	}
 
 	formData2, mp2, err2 := tests.MockMultipartData(map[string]string{
-		rest.MultipartJsonKey: `{"title": "title_test2", "testPayload": 123}`,
+		router.JSONPayloadKey: `{"title": "title_test2", "testPayload": 123}`,
 	}, "files")
 	if err2 != nil {
 		t.Fatal(err2)
 	}
 
 	formData3, mp3, err3 := tests.MockMultipartData(map[string]string{
-		rest.MultipartJsonKey: `{"title": "title_test3", "testPayload": 123}`,
+		router.JSONPayloadKey: `{"title": "title_test3", "testPayload": 123}`,
 	}, "files")
 	if err3 != nil {
 		t.Fatal(err3)
@@ -1050,69 +1347,90 @@ func TestRecordCrudCreate(t *testing.T) {
 		{
 			Name:            "missing collection",
 			Method:          http.MethodPost,
-			Url:             "/api/collections/missing/records",
+			URL:             "/api/collections/missing/records",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:            "guest trying to access nil-rule collection",
 			Method:          http.MethodPost,
-			Url:             "/api/collections/demo1/records",
+			URL:             "/api/collections/demo1/records",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "auth record trying to access nil-rule collection",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo1/records",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/demo1/records",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:            "trying to create a new view collection record",
 			Method:          http.MethodPost,
-			Url:             "/api/collections/view1/records",
+			URL:             "/api/collections/view1/records",
 			Body:            strings.NewReader(`{"text":"new"}`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:            "submit nil body",
+			Name:            "submit invalid body",
 			Method:          http.MethodPost,
-			Url:             "/api/collections/demo2/records",
-			Body:            nil,
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-		},
-		{
-			Name:            "submit invalid format",
-			Method:          http.MethodPost,
-			Url:             "/api/collections/demo2/records",
+			URL:             "/api/collections/demo2/records",
 			Body:            strings.NewReader(`{"`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:           "submit nil body",
+			Method:         http.MethodPost,
+			URL:            "/api/collections/demo2/records",
+			Body:           nil,
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"title":{"code":"validation_required"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                        0,
+				"OnRecordCreateRequest":    1,
+				"OnModelCreate":            1,
+				"OnModelValidate":          1,
+				"OnModelAfterCreateError":  1,
+				"OnRecordCreate":           1,
+				"OnRecordValidate":         1,
+				"OnRecordAfterCreateError": 1,
+			},
 		},
 		{
 			Name:           "submit empty json body",
 			Method:         http.MethodPost,
-			Url:            "/api/collections/nologin/records",
+			URL:            "/api/collections/nologin/records",
 			Body:           strings.NewReader(`{}`),
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
-				`"email":{"code":"validation_required"`,
 				`"password":{"code":"validation_required"`,
 				`"passwordConfirm":{"code":"validation_required"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
 			},
 		},
 		{
 			Name:           "guest submit in public collection",
 			Method:         http.MethodPost,
-			Url:            "/api/collections/demo2/records",
+			URL:            "/api/collections/demo2/records",
 			Body:           strings.NewReader(`{"title":"new"}`),
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1121,36 +1439,51 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"active":false`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnModelBeforeCreate":         1,
-				"OnModelAfterCreate":          1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
 			Name:            "guest trying to submit in restricted collection",
 			Method:          http.MethodPost,
-			Url:             "/api/collections/demo3/records",
+			URL:             "/api/collections/demo3/records",
 			Body:            strings.NewReader(`{"title":"test123"}`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+			},
 		},
 		{
 			Name:   "auth record submit in restricted collection (rule failure check)",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo3/records",
+			URL:    "/api/collections/demo3/records",
 			Body:   strings.NewReader(`{"title":"test123"}`),
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+			},
 		},
 		{
 			Name:   "auth record submit in restricted collection (rule pass check) + expand relations",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo4/records?expand=missing,rel_one_no_cascade,rel_many_no_cascade_required",
+			URL:    "/api/collections/demo4/records?expand=missing,rel_one_no_cascade,rel_many_no_cascade_required",
 			Body: strings.NewReader(`{
 				"title":"test123",
 				"rel_one_no_cascade":"mk5fmymtx4wsprk",
@@ -1160,14 +1493,15 @@ func TestRecordCrudCreate(t *testing.T) {
 				"rel_many_no_cascade_required":["7nwo8tuiatetxdm","lcl9d87w22ml6jy"],
 				"rel_many_cascade":"lcl9d87w22ml6jy"
 			}`),
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":`,
 				`"title":"test123"`,
+				`"expand":{}`, // empty expand even because of the query param
 				`"rel_one_no_cascade":"mk5fmymtx4wsprk"`,
 				`"rel_one_no_cascade_required":"7nwo8tuiatetxdm"`,
 				`"rel_one_cascade":"mk5fmymtx4wsprk"`,
@@ -1177,23 +1511,29 @@ func TestRecordCrudCreate(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				// the users auth records don't have access to view the demo3 expands
-				`"expand":{`,
 				`"missing"`,
 				`"id":"mk5fmymtx4wsprk"`,
 				`"id":"7nwo8tuiatetxdm"`,
 				`"id":"lcl9d87w22ml6jy"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnModelBeforeCreate":         1,
-				"OnModelAfterCreate":          1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
-			Name:   "admin submit in restricted collection (rule skip check) + expand relations",
+			Name:   "superuser submit in restricted collection (rule skip check) + expand relations",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo4/records?expand=missing,rel_one_no_cascade,rel_many_no_cascade_required",
+			URL:    "/api/collections/demo4/records?expand=missing,rel_one_no_cascade,rel_many_no_cascade_required",
 			Body: strings.NewReader(`{
 				"title":"test123",
 				"rel_one_no_cascade":"mk5fmymtx4wsprk",
@@ -1203,8 +1543,8 @@ func TestRecordCrudCreate(t *testing.T) {
 				"rel_many_no_cascade_required":["7nwo8tuiatetxdm","lcl9d87w22ml6jy"],
 				"rel_many_cascade":"lcl9d87w22ml6jy"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1225,20 +1565,27 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"missing"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnModelBeforeCreate":         1,
-				"OnModelAfterCreate":          1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             4,
 			},
 		},
 		{
-			Name:   "submit via multipart form data",
+			Name:   "superuser submit via multipart form data",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo3/records",
+			URL:    "/api/collections/demo3/records",
 			Body:   formData,
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				"Content-Type":  mp.FormDataContentType(),
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1247,52 +1594,61 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"files":["`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnModelBeforeCreate":         1,
-				"OnModelAfterCreate":          1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
-			Name:   "submit via multipart form data with @jsonPayload key and unsatisfied @request.data rule",
+			Name:   "submit via multipart form data with @jsonPayload key and unsatisfied @request.body rule",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo3/records",
+			URL:    "/api/collections/demo3/records",
 			Body:   formData2,
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				"Content-Type": mp2.FormDataContentType(),
 			},
-			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				collection, err := app.Dao().FindCollectionByNameOrId("demo3")
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				collection, err := app.FindCollectionByNameOrId("demo3")
 				if err != nil {
 					t.Fatalf("failed to find demo3 collection: %v", err)
 				}
-				collection.CreateRule = types.Pointer("@request.data.testPayload != 123")
-				if err := app.Dao().WithoutHooks().SaveCollection(collection); err != nil {
+				collection.CreateRule = types.Pointer("@request.body.testPayload != 123")
+				if err := app.Save(collection); err != nil {
 					t.Fatalf("failed to update demo3 collection create rule: %v", err)
 				}
-				core.ReloadCachedCollections(app)
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+			},
 		},
 		{
-			Name:   "submit via multipart form data with @jsonPayload key and satisfied @request.data rule",
+			Name:   "submit via multipart form data with @jsonPayload key and satisfied @request.body rule",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo3/records",
+			URL:    "/api/collections/demo3/records",
 			Body:   formData3,
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				"Content-Type": mp3.FormDataContentType(),
 			},
-			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				collection, err := app.Dao().FindCollectionByNameOrId("demo3")
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				collection, err := app.FindCollectionByNameOrId("demo3")
 				if err != nil {
 					t.Fatalf("failed to find demo3 collection: %v", err)
 				}
-				collection.CreateRule = types.Pointer("@request.data.testPayload = 123")
-				if err := app.Dao().WithoutHooks().SaveCollection(collection); err != nil {
+				collection.CreateRule = types.Pointer("@request.body.testPayload = 123")
+				if err := app.Save(collection); err != nil {
 					t.Fatalf("failed to update demo3 collection create rule: %v", err)
 				}
-				core.ReloadCachedCollections(app)
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1301,16 +1657,23 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"files":["`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnModelBeforeCreate":         1,
-				"OnModelAfterCreate":          1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
 			Name:   "unique field error check",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo2/records",
+			URL:    "/api/collections/demo2/records",
 			Body: strings.NewReader(`{
 				"title":"test2"
 			}`),
@@ -1320,24 +1683,29 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"title":{`,
 				`"code":"validation_not_unique"`,
 			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+				// validate events are not fired because the unique check will fail during dry submit
+				// "OnModelValidate":  1,
+				// "OnRecordValidate": 1,
+			},
 		},
 		{
-			Name:   "OnRecordAfterCreateRequest error response",
+			Name:   "OnRecordAfterCreateSuccessRequest error response",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo2/records",
+			URL:    "/api/collections/demo2/records",
 			Body:   strings.NewReader(`{"title":"new"}`),
-			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				app.OnRecordAfterCreateRequest().Add(func(e *core.RecordCreateEvent) error {
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnRecordCreateRequest().BindFunc(func(e *core.RecordRequestEvent) error {
 					return errors.New("error")
 				})
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnModelBeforeCreate":         1,
-				"OnModelAfterCreate":          1,
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
 			},
 		},
 
@@ -1346,45 +1714,65 @@ func TestRecordCrudCreate(t *testing.T) {
 		{
 			Name:   "invalid custom insertion id (less than 15 chars)",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo3/records",
+			URL:    "/api/collections/demo3/records",
 			Body: strings.NewReader(`{
 				"id": "12345678901234",
 				"title": "test"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
-				`"id":{"code":"validation_length_invalid"`,
+				`"id":{"code":"validation_min_text_constraint"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                        0,
+				"OnRecordCreateRequest":    1,
+				"OnModelCreate":            1,
+				"OnModelValidate":          1,
+				"OnModelAfterCreateError":  1,
+				"OnRecordCreate":           1,
+				"OnRecordValidate":         1,
+				"OnRecordAfterCreateError": 1,
 			},
 		},
 		{
 			Name:   "invalid custom insertion id (more than 15 chars)",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo3/records",
+			URL:    "/api/collections/demo3/records",
 			Body: strings.NewReader(`{
 				"id": "1234567890123456",
 				"title": "test"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
-				`"id":{"code":"validation_length_invalid"`,
+				`"id":{"code":"validation_max_text_constraint"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                        0,
+				"OnRecordCreateRequest":    1,
+				"OnModelCreate":            1,
+				"OnModelValidate":          1,
+				"OnModelAfterCreateError":  1,
+				"OnRecordCreate":           1,
+				"OnRecordValidate":         1,
+				"OnRecordAfterCreateError": 1,
 			},
 		},
 		{
 			Name:   "valid custom insertion id (exactly 15 chars)",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo3/records",
+			URL:    "/api/collections/demo3/records",
 			Body: strings.NewReader(`{
 				"id": "123456789012345",
 				"title": "test"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1392,22 +1780,29 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"title":"test"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnModelBeforeCreate":         1,
-				"OnModelAfterCreate":          1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
 			Name:   "valid custom insertion id existing in another non-auth collection",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo3/records",
+			URL:    "/api/collections/demo3/records",
 			Body: strings.NewReader(`{
 				"id": "0yxhwia2amd8gec",
 				"title": "test"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1415,73 +1810,76 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"title":"test"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnModelBeforeCreate":         1,
-				"OnModelAfterCreate":          1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
 			Name:   "valid custom insertion auth id duplicating in another auth collection",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/records",
+			URL:    "/api/collections/users/records",
 			Body: strings.NewReader(`{
 				"id":"o1y0dd0spd786md",
 				"title":"test",
 				"password":"1234567890",
 				"passwordConfirm":"1234567890"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"id":{"code":"validation_invalid_auth_id"`,
+			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeCreateRequest": 1,
+				"*":                        0,
+				"OnRecordCreateRequest":    1,
+				"OnModelCreate":            1,
+				"OnModelCreateExecute":     1, // unique constraints are handled on db level
+				"OnModelAfterCreateError":  1,
+				"OnRecordCreate":           1,
+				"OnRecordCreateExecute":    1,
+				"OnRecordAfterCreateError": 1,
+				"OnModelValidate":          1,
+				"OnRecordValidate":         1,
 			},
 		},
 
-		// fields modifier checks
+		// check whether if @request.body modifer fields are properly resolved
 		// -----------------------------------------------------------
 		{
-			Name:   "trying to delete a record while being part of a non-cascade required relation",
-			Method: http.MethodDelete,
-			Url:    "/api/collections/demo3/records/7nwo8tuiatetxdm",
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
-			},
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"OnRecordBeforeDeleteRequest": 1,
-				"OnModelBeforeUpdate":         2, // self_rel_many update of test1 record + rel_one_cascade demo4 cascaded in demo5
-				"OnModelBeforeDelete":         2, // the record itself + rel_one_cascade of test1 record
-			},
-		},
-
-		// check whether if @request.data modifer fields are properly resolved
-		// -----------------------------------------------------------
-		{
-			Name:   "@request.data.field with compute modifers (rule failure check)",
+			Name:   "@request.body.field with compute modifers (rule failure check)",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo5/records",
+			URL:    "/api/collections/demo5/records",
 			Body: strings.NewReader(`{
-				"total":1,
 				"total+":4,
-				"total-":1
+				"total-":2
 			}`),
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{}`,
 			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+			},
 		},
 		{
-			Name:   "@request.data.field with compute modifers (rule pass check)",
+			Name:   "@request.body.field with compute modifers (rule pass check)",
 			Method: http.MethodPost,
-			Url:    "/api/collections/demo5/records",
+			URL:    "/api/collections/demo5/records",
 			Body: strings.NewReader(`{
-				"total":1,
-				"total+":3,
+				"total+":4,
 				"total-":1
 			}`),
 			ExpectedStatus: 200,
@@ -1491,65 +1889,83 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"total":3`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterCreate":          1,
-				"OnModelBeforeCreate":         1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnRecordBeforeCreateRequest": 1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 
 		// auth records
 		// -----------------------------------------------------------
 		{
-			Name:   "auth record with invalid data",
+			Name:   "auth record with invalid form data",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/records",
+			URL:    "/api/collections/users/records",
 			Body: strings.NewReader(`{
-				"id":"o1y0pd786mq",
-				"username":"Users75657",
-				"email":"invalid",
 				"password":"1234567",
-				"passwordConfirm":"1234560"
+				"passwordConfirm":"1234560",
+				"email":"invalid",
+				"username":"Users75657"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
-				`"id":{"code":"validation_length_invalid"`,
-				`"username":{"code":"validation_invalid_username"`, // for duplicated case-insensitive username
-				`"email":{"code":"validation_is_email"`,
-				`"password":{"code":"validation_length_out_of_range"`,
 				`"passwordConfirm":{"code":"validation_values_mismatch"`,
 			},
 			NotExpectedContent: []string{
-				// schema fields are not checked if the base fields has errors
-				`"rel":{"code":`,
+				// record fields are not checked if the base auth form fields have errors
+				`"rel":`,
+				`"email":`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
 			},
 		},
 		{
-			Name:   "auth record with valid base fields but invalid schema data",
+			Name:   "auth record with valid form data but invalid record fields",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/records",
+			URL:    "/api/collections/users/records",
 			Body: strings.NewReader(`{
-				"password":"12345678",
-				"passwordConfirm":"12345678",
+				"password":"1234567",
+				"passwordConfirm":"1234567",
 				"rel":"invalid"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
 				`"rel":{"code":`,
+				`"password":{"code":`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                        0,
+				"OnRecordCreateRequest":    1,
+				"OnModelCreate":            1,
+				"OnModelValidate":          1,
+				"OnModelAfterCreateError":  1,
+				"OnRecordCreate":           1,
+				"OnRecordValidate":         1,
+				"OnRecordAfterCreateError": 1,
 			},
 		},
 		{
 			Name:   "auth record with valid data and explicitly verified state by guest",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/records",
+			URL:    "/api/collections/users/records",
 			Body: strings.NewReader(`{
 				"password":"12345678",
 				"passwordConfirm":"12345678",
@@ -1560,14 +1976,19 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"data":{`,
 				`"verified":{"code":`,
 			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+				// no validation hooks because it should fail before save by the form auth fields validator
+			},
 		},
 		{
 			Name:   "auth record with valid data and explicitly verified state by random user",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/records",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/users/records",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			Body: strings.NewReader(`{
 				"password":"12345678",
@@ -1583,11 +2004,16 @@ func TestRecordCrudCreate(t *testing.T) {
 			NotExpectedContent: []string{
 				`"emailVisibility":{"code":`,
 			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+				// no validation hooks because it should fail before save by the form auth fields validator
+			},
 		},
 		{
-			Name:   "auth record with valid data by admin",
+			Name:   "auth record with valid data by superuser",
 			Method: http.MethodPost,
-			Url:    "/api/collections/users/records",
+			URL:    "/api/collections/users/records",
 			Body: strings.NewReader(`{
 				"id":"o1o1y0pd78686mq",
 				"username":"test.valid",
@@ -1598,8 +2024,8 @@ func TestRecordCrudCreate(t *testing.T) {
 				"emailVisibility":true,
 				"verified":true
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1614,19 +2040,25 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"tokenKey"`,
 				`"password"`,
 				`"passwordConfirm"`,
-				`"passwordHash"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterCreate":          1,
-				"OnModelBeforeCreate":         1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnRecordBeforeCreateRequest": 1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
 			Name:   "auth record with valid data by auth record with manage access",
 			Method: http.MethodPost,
-			Url:    "/api/collections/nologin/records",
+			URL:    "/api/collections/nologin/records",
 			Body: strings.NewReader(`{
 				"email":"new@example.com",
 				"password":"12345678",
@@ -1635,9 +2067,9 @@ func TestRecordCrudCreate(t *testing.T) {
 				"emailVisibility":true,
 				"verified":true
 			}`),
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1652,14 +2084,241 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"tokenKey"`,
 				`"password"`,
 				`"passwordConfirm"`,
-				`"passwordHash"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterCreate":          1,
-				"OnModelBeforeCreate":         1,
-				"OnRecordAfterCreateRequest":  1,
-				"OnRecordBeforeCreateRequest": 1,
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
+		},
+
+		// ensure that hidden fields cannot be set by non-superusers
+		// -----------------------------------------------------------
+		{
+			Name:   "create with hidden field as regular user",
+			Method: http.MethodPost,
+			URL:    "/api/collections/demo3/records",
+			Body: strings.NewReader(`{
+				"id": "abcde1234567890",
+				"title": "test_create"
+			}`),
+			Headers: map[string]string{
+				// clients, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.0ONnm_BsvPRZyDNT31GN1CKUB6uQRxvVvQ-Wc9AZfG0",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				col, err := app.FindCollectionByNameOrId("demo3")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// mock hidden field
+				col.Fields.GetByName("title").SetHidden(true)
+
+				if err = app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				record, err := app.FindRecordById("demo3", "abcde1234567890")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// ensure that the title wasn't saved
+				if v := record.GetString("title"); v != "" {
+					t.Fatalf("Expected empty title, got %q", v)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"abcde1234567890"`,
+			},
+			NotExpectedContent: []string{
+				`"title"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
+			},
+		},
+		{
+			Name:   "create with hidden field as superuser",
+			Method: http.MethodPost,
+			URL:    "/api/collections/demo3/records",
+			Body: strings.NewReader(`{
+				"id": "abcde1234567890",
+				"title": "test_create"
+			}`),
+			Headers: map[string]string{
+				// superusers, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				col, err := app.FindCollectionByNameOrId("demo3")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// mock hidden field
+				col.Fields.GetByName("title").SetHidden(true)
+
+				if err = app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				record, err := app.FindRecordById("demo3", "abcde1234567890")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// ensure that the title was saved
+				if v := record.GetString("title"); v != "test_create" {
+					t.Fatalf("Expected title %q, got %q", "test_create", v)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"abcde1234567890"`,
+				`"title":"test_create"`,
+			},
+			NotExpectedContent: []string{},
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRecordCreateRequest":      1,
+				"OnModelCreate":              1,
+				"OnModelCreateExecute":       1,
+				"OnModelAfterCreateSuccess":  1,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
+			},
+		},
+
+		// rate limit checks
+		// -----------------------------------------------------------
+		{
+			Name:   "RateLimit rule - demo2:create",
+			Method: http.MethodPost,
+			URL:    "/api/collections/demo2/records",
+			Body:   strings.NewReader(`{"title":"new"}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 100, Label: "*:create"},
+					{MaxRequests: 0, Label: "demo2:create"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "RateLimit rule - *:create",
+			Method: http.MethodPost,
+			URL:    "/api/collections/demo2/records",
+			Body:   strings.NewReader(`{"title":"new"}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 0, Label: "*:create"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+
+		// dynamic body limit checks
+		// -----------------------------------------------------------
+		{
+			Name:   "body > collection BodyLimit",
+			Method: http.MethodPost,
+			URL:    "/api/collections/demo1/records",
+			// the exact body doesn't matter as long as it returns 413
+			Body: bytes.NewReader(make([]byte, apis.DefaultMaxBodySize+5+20+2+1)),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				collection, err := app.FindCollectionByNameOrId("demo1")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// adjust field sizes for the test
+				// ---
+				fileOneField := collection.Fields.GetByName("file_one").(*core.FileField)
+				fileOneField.MaxSize = 5
+
+				fileManyField := collection.Fields.GetByName("file_many").(*core.FileField)
+				fileManyField.MaxSize = 10
+				fileManyField.MaxSelect = 2
+
+				jsonField := collection.Fields.GetByName("json").(*core.JSONField)
+				jsonField.MaxSize = 2
+
+				err = app.Save(collection)
+				if err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus:  413,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "body <= collection BodyLimit",
+			Method: http.MethodPost,
+			URL:    "/api/collections/demo1/records",
+			// the exact body doesn't matter as long as it doesn't return 413
+			Body: bytes.NewReader(make([]byte, apis.DefaultMaxBodySize+5+20+2)),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				collection, err := app.FindCollectionByNameOrId("demo1")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// adjust field sizes for the test
+				// ---
+				fileOneField := collection.Fields.GetByName("file_one").(*core.FileField)
+				fileOneField.MaxSize = 5
+
+				fileManyField := collection.Fields.GetByName("file_many").(*core.FileField)
+				fileManyField.MaxSize = 10
+				fileManyField.MaxSelect = 2
+
+				jsonField := collection.Fields.GetByName("json").(*core.JSONField)
+				jsonField.MaxSize = 2
+
+				err = app.Save(collection)
+				if err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 	}
 
@@ -1679,14 +2338,14 @@ func TestRecordCrudUpdate(t *testing.T) {
 	}
 
 	formData2, mp2, err2 := tests.MockMultipartData(map[string]string{
-		rest.MultipartJsonKey: `{"title": "title_test2", "testPayload": 123}`,
+		router.JSONPayloadKey: `{"title": "title_test2", "testPayload": 123}`,
 	}, "files")
 	if err2 != nil {
 		t.Fatal(err2)
 	}
 
 	formData3, mp3, err3 := tests.MockMultipartData(map[string]string{
-		rest.MultipartJsonKey: `{"title": "title_test3", "testPayload": 123}`,
+		router.JSONPayloadKey: `{"title": "title_test3", "testPayload": 123}`,
 	}, "files")
 	if err3 != nil {
 		t.Fatal(err3)
@@ -1696,56 +2355,77 @@ func TestRecordCrudUpdate(t *testing.T) {
 		{
 			Name:            "missing collection",
 			Method:          http.MethodPatch,
-			Url:             "/api/collections/missing/records/0yxhwia2amd8gec",
+			URL:             "/api/collections/missing/records/0yxhwia2amd8gec",
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:            "guest trying to access nil-rule collection record",
 			Method:          http.MethodPatch,
-			Url:             "/api/collections/demo1/records/imy661ixudk5izi",
+			URL:             "/api/collections/demo1/records/imy661ixudk5izi",
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "auth record trying to access nil-rule collection",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo1/records/imy661ixudk5izi",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/demo1/records/imy661ixudk5izi",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
-		},
-		{
-			Name:            "submit invalid body",
-			Method:          http.MethodPatch,
-			Url:             "/api/collections/demo2/records/0yxhwia2amd8gec",
-			Body:            strings.NewReader(`{"`),
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:            "trying to update a view collection record",
 			Method:          http.MethodPatch,
-			Url:             "/api/collections/view1/records/imy661ixudk5izi",
+			URL:             "/api/collections/view1/records/imy661ixudk5izi",
 			Body:            strings.NewReader(`{"text":"new"}`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:            "submit nil body",
+			Name:            "submit invalid body",
 			Method:          http.MethodPatch,
-			Url:             "/api/collections/demo2/records/0yxhwia2amd8gec",
-			Body:            nil,
+			URL:             "/api/collections/demo2/records/0yxhwia2amd8gec",
+			Body:            strings.NewReader(`{"`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:           "submit nil body (aka. no fields change)",
+			Method:         http.MethodPatch,
+			URL:            "/api/collections/demo2/records/0yxhwia2amd8gec",
+			Body:           nil,
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"collectionName":"demo2"`,
+				`"id":"0yxhwia2amd8gec"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
+			},
 		},
 		{
 			Name:           "submit empty body (aka. no fields change)",
 			Method:         http.MethodPatch,
-			Url:            "/api/collections/demo2/records/0yxhwia2amd8gec",
+			URL:            "/api/collections/demo2/records/0yxhwia2amd8gec",
 			Body:           strings.NewReader(`{}`),
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1753,27 +2433,44 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"id":"0yxhwia2amd8gec"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":          1,
-				"OnModelBeforeUpdate":         1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnRecordBeforeUpdateRequest": 1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
 			Name:           "trigger field validation",
 			Method:         http.MethodPatch,
-			Url:            "/api/collections/demo2/records/0yxhwia2amd8gec",
+			URL:            "/api/collections/demo2/records/0yxhwia2amd8gec",
 			Body:           strings.NewReader(`{"title":"a"}`),
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`data":{`,
 				`"title":{"code":"validation_min_text_constraint"`,
 			},
+			ExpectedEvents: map[string]int{
+				"*":                        0,
+				"OnRecordUpdateRequest":    1,
+				"OnModelUpdate":            1,
+				"OnModelValidate":          1,
+				"OnModelAfterUpdateError":  1,
+				"OnRecordUpdate":           1,
+				"OnRecordValidate":         1,
+				"OnRecordAfterUpdateError": 1,
+			},
 		},
 		{
 			Name:           "guest submit in public collection",
 			Method:         http.MethodPatch,
-			Url:            "/api/collections/demo2/records/0yxhwia2amd8gec",
+			URL:            "/api/collections/demo2/records/0yxhwia2amd8gec",
 			Body:           strings.NewReader(`{"title":"new"}`),
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1782,36 +2479,45 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"active":true`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeUpdateRequest": 1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnModelBeforeUpdate":         1,
-				"OnModelAfterUpdate":          1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
 			Name:            "guest trying to submit in restricted collection",
 			Method:          http.MethodPatch,
-			Url:             "/api/collections/demo3/records/mk5fmymtx4wsprk",
+			URL:             "/api/collections/demo3/records/mk5fmymtx4wsprk",
 			Body:            strings.NewReader(`{"title":"new"}`),
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "auth record submit in restricted collection (rule failure check)",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
+			URL:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
 			Body:   strings.NewReader(`{"title":"new"}`),
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "auth record submit in restricted collection (rule pass check) + expand relations",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo4/records/i9naidtvr6qsgb4?expand=missing,rel_one_no_cascade,rel_many_no_cascade_required",
+			URL:    "/api/collections/demo4/records/i9naidtvr6qsgb4?expand=missing,rel_one_no_cascade,rel_many_no_cascade_required",
 			Body: strings.NewReader(`{
 				"title":"test123",
 				"rel_one_no_cascade":"mk5fmymtx4wsprk",
@@ -1821,14 +2527,15 @@ func TestRecordCrudUpdate(t *testing.T) {
 				"rel_many_no_cascade_required":["7nwo8tuiatetxdm","lcl9d87w22ml6jy"],
 				"rel_many_cascade":"lcl9d87w22ml6jy"
 			}`),
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"i9naidtvr6qsgb4"`,
 				`"title":"test123"`,
+				`"expand":{}`, // empty expand even because of the query param
 				`"rel_one_no_cascade":"mk5fmymtx4wsprk"`,
 				`"rel_one_no_cascade_required":"7nwo8tuiatetxdm"`,
 				`"rel_one_cascade":"mk5fmymtx4wsprk"`,
@@ -1838,23 +2545,29 @@ func TestRecordCrudUpdate(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				// the users auth records don't have access to view the demo3 expands
-				`"expand":{`,
 				`"missing"`,
 				`"id":"mk5fmymtx4wsprk"`,
 				`"id":"7nwo8tuiatetxdm"`,
 				`"id":"lcl9d87w22ml6jy"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeUpdateRequest": 1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnModelBeforeUpdate":         1,
-				"OnModelAfterUpdate":          1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
-			Name:   "admin submit in restricted collection (rule skip check) + expand relations",
+			Name:   "superuser submit in restricted collection (rule skip check) + expand relations",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo4/records/i9naidtvr6qsgb4?expand=missing,rel_one_no_cascade,rel_many_no_cascade_required",
+			URL:    "/api/collections/demo4/records/i9naidtvr6qsgb4?expand=missing,rel_one_no_cascade,rel_many_no_cascade_required",
 			Body: strings.NewReader(`{
 				"title":"test123",
 				"rel_one_no_cascade":"mk5fmymtx4wsprk",
@@ -1864,8 +2577,8 @@ func TestRecordCrudUpdate(t *testing.T) {
 				"rel_many_no_cascade_required":["7nwo8tuiatetxdm","lcl9d87w22ml6jy"],
 				"rel_many_cascade":"lcl9d87w22ml6jy"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1886,20 +2599,27 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"missing"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeUpdateRequest": 1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnModelBeforeUpdate":         1,
-				"OnModelAfterUpdate":          1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             4,
 			},
 		},
 		{
-			Name:   "submit via multipart form data",
+			Name:   "superuser submit via multipart form data",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
+			URL:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
 			Body:   formData,
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				"Content-Type":  mp.FormDataContentType(),
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1908,52 +2628,58 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"files":["`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeUpdateRequest": 1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnModelBeforeUpdate":         1,
-				"OnModelAfterUpdate":          1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
-			Name:   "submit via multipart form data with @jsonPayload key and unsatisfied @request.data rule",
+			Name:   "submit via multipart form data with @jsonPayload key and unsatisfied @request.body rule",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
+			URL:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
 			Body:   formData2,
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				"Content-Type": mp2.FormDataContentType(),
 			},
-			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				collection, err := app.Dao().FindCollectionByNameOrId("demo3")
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				collection, err := app.FindCollectionByNameOrId("demo3")
 				if err != nil {
 					t.Fatalf("failed to find demo3 collection: %v", err)
 				}
-				collection.UpdateRule = types.Pointer("@request.data.testPayload != 123")
-				if err := app.Dao().WithoutHooks().SaveCollection(collection); err != nil {
+				collection.UpdateRule = types.Pointer("@request.body.testPayload != 123")
+				if err := app.Save(collection); err != nil {
 					t.Fatalf("failed to update demo3 collection update rule: %v", err)
 				}
-				core.ReloadCachedCollections(app)
 			},
 			ExpectedStatus:  404,
 			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:   "submit via multipart form data with @jsonPayload key and satisfied @request.data rule",
+			Name:   "submit via multipart form data with @jsonPayload key and satisfied @request.body rule",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
+			URL:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
 			Body:   formData3,
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				"Content-Type": mp3.FormDataContentType(),
 			},
-			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				collection, err := app.Dao().FindCollectionByNameOrId("demo3")
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				collection, err := app.FindCollectionByNameOrId("demo3")
 				if err != nil {
 					t.Fatalf("failed to find demo3 collection: %v", err)
 				}
-				collection.UpdateRule = types.Pointer("@request.data.testPayload = 123")
-				if err := app.Dao().WithoutHooks().SaveCollection(collection); err != nil {
+				collection.UpdateRule = types.Pointer("@request.body.testPayload = 123")
+				if err := app.Save(collection); err != nil {
 					t.Fatalf("failed to update demo3 collection update rule: %v", err)
 				}
-				core.ReloadCachedCollections(app)
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -1962,51 +2688,66 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"files":["`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeUpdateRequest": 1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnModelBeforeUpdate":         1,
-				"OnModelAfterUpdate":          1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 		{
-			Name:   "OnRecordAfterUpdateRequest error response",
+			Name:   "OnRecordAfterUpdateSuccessRequest error response",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo2/records/0yxhwia2amd8gec",
+			URL:    "/api/collections/demo2/records/0yxhwia2amd8gec",
 			Body:   strings.NewReader(`{"title":"new"}`),
-			BeforeTestFunc: func(t *testing.T, app *tests.TestApp, e *echo.Echo) {
-				app.OnRecordAfterUpdateRequest().Add(func(e *core.RecordUpdateEvent) error {
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnRecordUpdateRequest().BindFunc(func(e *core.RecordRequestEvent) error {
 					return errors.New("error")
 				})
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeUpdateRequest": 1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnModelBeforeUpdate":         1,
-				"OnModelAfterUpdate":          1,
+				"*":                     0,
+				"OnRecordUpdateRequest": 1,
 			},
 		},
 		{
 			Name:   "try to change the id of an existing record",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
+			URL:    "/api/collections/demo3/records/mk5fmymtx4wsprk",
 			Body: strings.NewReader(`{
 				"id": "mk5fmymtx4wspra"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
-				`"id":{"code":"validation_in_invalid"`,
+				`"id":{"code":"validation_pk_change"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                        0,
+				"OnRecordUpdateRequest":    1,
+				"OnModelUpdate":            1,
+				"OnModelValidate":          1,
+				"OnModelAfterUpdateError":  1,
+				"OnRecordUpdate":           1,
+				"OnRecordValidate":         1,
+				"OnRecordAfterUpdateError": 1,
 			},
 		},
 		{
 			Name:   "unique field error check",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo2/records/llvuca81nly1qls",
+			URL:    "/api/collections/demo2/records/llvuca81nly1qls",
 			Body: strings.NewReader(`{
 				"title":"test2"
 			}`),
@@ -2017,17 +2758,25 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"code":"validation_not_unique"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnRecordBeforeUpdateRequest": 1,
-				"OnModelBeforeUpdate":         1,
+				"*":                        0,
+				"OnRecordUpdateRequest":    1,
+				"OnModelUpdate":            1,
+				"OnModelUpdateExecute":     1,
+				"OnModelAfterUpdateError":  1,
+				"OnRecordUpdate":           1,
+				"OnRecordUpdateExecute":    1,
+				"OnRecordAfterUpdateError": 1,
+				"OnModelValidate":          1,
+				"OnRecordValidate":         1,
 			},
 		},
 
-		// check whether if @request.data modifer fields are properly resolved
+		// check whether if @request.body modifer fields are properly resolved
 		// -----------------------------------------------------------
 		{
-			Name:   "@request.data.field with compute modifers (rule failure check)",
+			Name:   "@request.body.field with compute modifers (rule failure check)",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo5/records/la4y2w4o98acwuj",
+			URL:    "/api/collections/demo5/records/la4y2w4o98acwuj",
 			Body: strings.NewReader(`{
 				"total+":3,
 				"total-":1
@@ -2036,11 +2785,12 @@ func TestRecordCrudUpdate(t *testing.T) {
 			ExpectedContent: []string{
 				`"data":{}`,
 			},
+			ExpectedEvents: map[string]int{"*": 0},
 		},
 		{
-			Name:   "@request.data.field with compute modifers (rule pass check)",
+			Name:   "@request.body.field with compute modifers (rule pass check)",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/demo5/records/la4y2w4o98acwuj",
+			URL:    "/api/collections/demo5/records/la4y2w4o98acwuj",
 			Body: strings.NewReader(`{
 				"total+":2,
 				"total-":1
@@ -2052,66 +2802,84 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"total":3`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":          1,
-				"OnModelBeforeUpdate":         1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnRecordBeforeUpdateRequest": 1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
 		},
 
 		// auth records
 		// -----------------------------------------------------------
 		{
-			Name:   "auth record with invalid data",
+			Name:   "auth record with invalid form data",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/users/records/bgs820n361vj1qd",
+			URL:    "/api/collections/users/records/bgs820n361vj1qd",
 			Body: strings.NewReader(`{
-				"username":"Users75657",
-				"email":"invalid",
-				"password":"1234567",
+				"password":"",
 				"passwordConfirm":"1234560",
+				"email":"invalid",
 				"verified":false
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
-				`"username":{"code":"validation_invalid_username"`, // for duplicated case-insensitive username
-				`"email":{"code":"validation_is_email"`,
-				`"password":{"code":"validation_length_out_of_range"`,
-				`"passwordConfirm":{"code":"validation_values_mismatch"`,
+				`"passwordConfirm":{`,
+				`"password":{`,
 			},
 			NotExpectedContent: []string{
-				// admins are allowed to change the verified state
-				`"verified"`,
-				// schema fields are not checked if the base fields has errors
-				`"rel":{"code":`,
+				// record fields are not checked if the base auth form fields have errors
+				`"email":`,
+				"verified", // superusers are allowed to change the verified state
+			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordUpdateRequest": 1,
 			},
 		},
 		{
-			Name:   "auth record with valid base fields but invalid schema data",
+			Name:   "auth record with valid form data but invalid record fields",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/users/records/bgs820n361vj1qd",
+			URL:    "/api/collections/users/records/bgs820n361vj1qd",
 			Body: strings.NewReader(`{
-				"password":"12345678",
-				"passwordConfirm":"12345678",
+				"password":"1234567",
+				"passwordConfirm":"1234567",
 				"rel":"invalid"
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
 				`"data":{`,
 				`"rel":{"code":`,
+				`"password":{"code":`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                        0,
+				"OnRecordUpdateRequest":    1,
+				"OnModelUpdate":            1,
+				"OnModelValidate":          1,
+				"OnModelAfterUpdateError":  1,
+				"OnRecordUpdate":           1,
+				"OnRecordValidate":         1,
+				"OnRecordAfterUpdateError": 1,
 			},
 		},
 		{
 			Name:   "try to change account managing fields by guest",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/nologin/records/phhq3wr65cap535",
+			URL:    "/api/collections/nologin/records/phhq3wr65cap535",
 			Body: strings.NewReader(`{
 				"password":"12345678",
 				"passwordConfirm":"12345678",
@@ -2126,15 +2894,19 @@ func TestRecordCrudUpdate(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"emailVisibility":{"code":`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordUpdateRequest": 1,
 			},
 		},
 		{
 			Name:   "try to change account managing fields by auth record (owner)",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/users/records/4q1xlclmfloku33",
-			RequestHeaders: map[string]string{
+			URL:    "/api/collections/users/records/4q1xlclmfloku33",
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			Body: strings.NewReader(`{
 				"password":"12345678",
@@ -2151,11 +2923,38 @@ func TestRecordCrudUpdate(t *testing.T) {
 			NotExpectedContent: []string{
 				`"emailVisibility":{"code":`,
 			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordUpdateRequest": 1,
+			},
+		},
+		{
+			Name:   "try to unset/downgrade email and verified fields (owner)",
+			Method: http.MethodPatch,
+			URL:    "/api/collections/users/records/oap640cot4yru2s",
+			Headers: map[string]string{
+				// users, test2@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6Im9hcDY0MGNvdDR5cnUycyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.GfJo6EHIobgas_AXt-M-tj5IoQendPnrkMSe9ExuSEY",
+			},
+			Body: strings.NewReader(`{
+				"email":"",
+				"verified":false
+			}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"email":{"code":`,
+				`"verified":{"code":`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordUpdateRequest": 1,
+			},
 		},
 		{
 			Name:   "try to change account managing fields by auth record with managing rights",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/nologin/records/phhq3wr65cap535",
+			URL:    "/api/collections/nologin/records/phhq3wr65cap535",
 			Body: strings.NewReader(`{
 				"email":"new@example.com",
 				"password":"12345678",
@@ -2164,9 +2963,9 @@ func TestRecordCrudUpdate(t *testing.T) {
 				"emailVisibility":true,
 				"verified":true
 			}`),
-			RequestHeaders: map[string]string{
+			Headers: map[string]string{
 				// users, test@example.com
-				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoUmVjb3JkIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyMjA4OTg1MjYxfQ.UwD8JvkbQtXpymT09d7J6fdA0aP9g4FJ1GPh_ggEkzc",
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -2179,25 +2978,31 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"tokenKey"`,
 				`"password"`,
 				`"passwordConfirm"`,
-				`"passwordHash"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":          1,
-				"OnModelBeforeUpdate":         1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnRecordBeforeUpdateRequest": 1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
-				record, _ := app.Dao().FindRecordById("nologin", "phhq3wr65cap535")
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				record, _ := app.FindRecordById("nologin", "phhq3wr65cap535")
 				if !record.ValidatePassword("12345678") {
 					t.Fatal("Password update failed.")
 				}
 			},
 		},
 		{
-			Name:   "update auth record with valid data by admin",
+			Name:   "update auth record with valid data by superuser",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/users/records/oap640cot4yru2s",
+			URL:    "/api/collections/users/records/oap640cot4yru2s",
 			Body: strings.NewReader(`{
 				"username":"test.valid",
 				"email":"new@example.com",
@@ -2207,8 +3012,8 @@ func TestRecordCrudUpdate(t *testing.T) {
 				"emailVisibility":true,
 				"verified":false
 			}`),
-			RequestHeaders: map[string]string{
-				"Authorization": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhZG1pbiIsImV4cCI6MjIwODk4NTI2MX0.M1m--VOqGyv0d23eeUc0r9xE8ZzHaYVmVFw1VZW6gT8",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
@@ -2221,31 +3026,53 @@ func TestRecordCrudUpdate(t *testing.T) {
 			NotExpectedContent: []string{
 				`"tokenKey"`,
 				`"password"`,
-				`"passwordConfirm"`,
-				`"passwordHash"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":          1,
-				"OnModelBeforeUpdate":         1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnRecordBeforeUpdateRequest": 1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
-				record, _ := app.Dao().FindRecordById("users", "oap640cot4yru2s")
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				record, _ := app.FindRecordById("users", "oap640cot4yru2s")
 				if !record.ValidatePassword("12345678") {
 					t.Fatal("Password update failed.")
 				}
 			},
 		},
 		{
-			Name:   "update auth record with valid data by guest (empty update filter)",
+			Name:   "update auth record with valid data by guest (empty update filter + auth origins check)",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/nologin/records/dc49k6jgejn40h3",
+			URL:    "/api/collections/nologin/records/dc49k6jgejn40h3",
 			Body: strings.NewReader(`{
 				"username":"test_new",
 				"emailVisibility":true,
 				"name":"test"
 			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				nologin, err := app.FindCollectionByNameOrId("nologin")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// add dummy auth origins for the record
+				for i := 0; i < 3; i++ {
+					d := core.NewAuthOrigin(app)
+					d.SetCollectionRef(nologin.Id)
+					d.SetRecordRef("dc49k6jgejn40h3")
+					d.SetFingerprint("abc_" + strconv.Itoa(i))
+					if err = app.Save(d); err != nil {
+						t.Fatalf("Failed to save dummy auth origin %d: %v", i, err)
+					}
+				}
+			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"username":"test_new"`,
@@ -2258,24 +3085,59 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"tokenKey"`,
 				`"password"`,
 				`"passwordConfirm"`,
-				`"passwordHash"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":          1,
-				"OnModelBeforeUpdate":         1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnRecordBeforeUpdateRequest": 1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				record, _ := app.FindRecordById("nologin", "dc49k6jgejn40h3")
+
+				// the dummy auth origins should NOT have been removed since we didn't change the password
+				devices, err := app.FindAllAuthOriginsByRecord(record)
+				if err != nil {
+					t.Fatalf("Failed to retrieve dummy auth origins: %v", err)
+				}
+				if len(devices) != 3 {
+					t.Fatalf("Expected %d auth origins, got %d", 3, len(devices))
+				}
 			},
 		},
 		{
-			Name:   "success password change with oldPassword",
+			Name:   "success password change with oldPassword (+authOrigins reset check)",
 			Method: http.MethodPatch,
-			Url:    "/api/collections/nologin/records/dc49k6jgejn40h3",
+			URL:    "/api/collections/nologin/records/dc49k6jgejn40h3",
 			Body: strings.NewReader(`{
 				"password":"123456789",
 				"passwordConfirm":"123456789",
 				"oldPassword":"1234567890"
 			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				nologin, err := app.FindCollectionByNameOrId("nologin")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// add dummy auth origins for the record
+				for i := 0; i < 3; i++ {
+					d := core.NewAuthOrigin(app)
+					d.SetCollectionRef(nologin.Id)
+					d.SetRecordRef("dc49k6jgejn40h3")
+					d.SetFingerprint("abc_" + strconv.Itoa(i))
+					if err = app.Save(d); err != nil {
+						t.Fatalf("Failed to save dummy auth origin %d: %v", i, err)
+					}
+				}
+			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"id":"dc49k6jgejn40h3"`,
@@ -2284,20 +3146,260 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"tokenKey"`,
 				`"password"`,
 				`"passwordConfirm"`,
-				`"passwordHash"`,
 			},
 			ExpectedEvents: map[string]int{
-				"OnModelAfterUpdate":          1,
-				"OnModelBeforeUpdate":         1,
-				"OnRecordAfterUpdateRequest":  1,
-				"OnRecordBeforeUpdateRequest": 1,
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
+				// auth origins
+				"OnModelDelete":              3,
+				"OnModelDeleteExecute":       3,
+				"OnModelAfterDeleteSuccess":  3,
+				"OnRecordDelete":             3,
+				"OnRecordDeleteExecute":      3,
+				"OnRecordAfterDeleteSuccess": 3,
 			},
-			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
-				record, _ := app.Dao().FindRecordById("nologin", "dc49k6jgejn40h3")
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				record, _ := app.FindRecordById("nologin", "dc49k6jgejn40h3")
 				if !record.ValidatePassword("123456789") {
 					t.Fatal("Password update failed.")
 				}
+
+				// the dummy auth origins should have been removed
+				devices, err := app.FindAllAuthOriginsByRecord(record)
+				if err != nil {
+					t.Fatalf("Failed to retrieve dummy auth origins: %v", err)
+				}
+				if len(devices) > 0 {
+					t.Fatalf("Expected auth origins to be removed, got %d", len(devices))
+				}
 			},
+		},
+
+		// ensure that hidden fields cannot be set by non-superusers
+		// -----------------------------------------------------------
+		{
+			Name:   "update with hidden field as regular user",
+			Method: http.MethodPatch,
+			URL:    "/api/collections/demo3/records/1tmknxy2868d869",
+			Body: strings.NewReader(`{
+				"title": "test_update"
+			}`),
+			Headers: map[string]string{
+				// clients, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.0ONnm_BsvPRZyDNT31GN1CKUB6uQRxvVvQ-Wc9AZfG0",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				col, err := app.FindCollectionByNameOrId("demo3")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// mock hidden field
+				col.Fields.GetByName("title").SetHidden(true)
+
+				if err = app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				record, err := app.FindRecordById("demo3", "1tmknxy2868d869")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// ensure that the title wasn't saved
+				if v := record.GetString("title"); v != "test1" {
+					t.Fatalf("Expected no title change, got %q", v)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"1tmknxy2868d869"`,
+			},
+			NotExpectedContent: []string{
+				`"title"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
+			},
+		},
+		{
+			Name:   "update with hidden field as superuser",
+			Method: http.MethodPatch,
+			URL:    "/api/collections/demo3/records/1tmknxy2868d869",
+			Body: strings.NewReader(`{
+				"title": "test_update"
+			}`),
+			Headers: map[string]string{
+				// superusers, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				col, err := app.FindCollectionByNameOrId("demo3")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// mock hidden field
+				col.Fields.GetByName("title").SetHidden(true)
+
+				if err = app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				record, err := app.FindRecordById("demo3", "1tmknxy2868d869")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// ensure that the title has been updated
+				if v := record.GetString("title"); v != "test_update" {
+					t.Fatalf("Expected title %q, got %q", "test_update", v)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"id":"1tmknxy2868d869"`,
+				`"title":"test_update"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRecordUpdateRequest":      1,
+				"OnModelUpdate":              1,
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				"OnModelValidate":            1,
+				"OnRecordValidate":           1,
+				"OnRecordEnrich":             1,
+			},
+		},
+
+		// rate limit checks
+		// -----------------------------------------------------------
+		{
+			Name:   "RateLimit rule - demo2:update",
+			Method: http.MethodPatch,
+			URL:    "/api/collections/demo2/records/0yxhwia2amd8gec",
+			Body:   strings.NewReader(`{"title":"new"}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 100, Label: "*:update"},
+					{MaxRequests: 0, Label: "demo2:update"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "RateLimit rule - *:update",
+			Method: http.MethodPatch,
+			URL:    "/api/collections/demo2/records/0yxhwia2amd8gec",
+			Body:   strings.NewReader(`{"title":"new"}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().RateLimits.Enabled = true
+				app.Settings().RateLimits.Rules = []core.RateLimitRule{
+					{MaxRequests: 100, Label: "abc"},
+					{MaxRequests: 0, Label: "*:update"},
+				}
+			},
+			ExpectedStatus:  429,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+
+		// dynamic body limit checks
+		// -----------------------------------------------------------
+		{
+			Name:   "body > collection BodyLimit",
+			Method: http.MethodPatch,
+			URL:    "/api/collections/demo1/records/imy661ixudk5izi",
+			// the exact body doesn't matter as long as it returns 413
+			Body: bytes.NewReader(make([]byte, apis.DefaultMaxBodySize+5+20+2+1)),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				collection, err := app.FindCollectionByNameOrId("demo1")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// adjust field sizes for the test
+				// ---
+				fileOneField := collection.Fields.GetByName("file_one").(*core.FileField)
+				fileOneField.MaxSize = 5
+
+				fileManyField := collection.Fields.GetByName("file_many").(*core.FileField)
+				fileManyField.MaxSize = 10
+				fileManyField.MaxSelect = 2
+
+				jsonField := collection.Fields.GetByName("json").(*core.JSONField)
+				jsonField.MaxSize = 2
+
+				err = app.Save(collection)
+				if err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus:  413,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "body <= collection BodyLimit",
+			Method: http.MethodPatch,
+			URL:    "/api/collections/demo1/records/imy661ixudk5izi",
+			// the exact body doesn't matter as long as it doesn't return 413
+			Body: bytes.NewReader(make([]byte, apis.DefaultMaxBodySize+5+20+2)),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				collection, err := app.FindCollectionByNameOrId("demo1")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// adjust field sizes for the test
+				// ---
+				fileOneField := collection.Fields.GetByName("file_one").(*core.FileField)
+				fileOneField.MaxSize = 5
+
+				fileManyField := collection.Fields.GetByName("file_many").(*core.FileField)
+				fileManyField.MaxSize = 10
+				fileManyField.MaxSelect = 2
+
+				jsonField := collection.Fields.GetByName("json").(*core.JSONField)
+				jsonField.MaxSize = 2
+
+				err = app.Save(collection)
+				if err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 	}
 

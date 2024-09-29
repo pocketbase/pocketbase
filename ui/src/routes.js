@@ -1,19 +1,16 @@
-import { replace }           from "svelte-spa-router";
-import { wrap }              from "svelte-spa-router/wrap";
-import ApiClient             from "@/utils/ApiClient";
-import PageIndex             from "@/components/PageIndex.svelte";
-import PageLogs              from "@/components/logs/PageLogs.svelte";
-import PageRecords           from "@/components/records/PageRecords.svelte";
-import PageAdmins            from "@/components/admins/PageAdmins.svelte";
-import PageAdminLogin        from "@/components/admins/PageAdminLogin.svelte";
-import PageApplication       from "@/components/settings/PageApplication.svelte";
-import PageMail              from "@/components/settings/PageMail.svelte";
-import PageStorage           from "@/components/settings/PageStorage.svelte";
-import PageAuthProviders     from "@/components/settings/PageAuthProviders.svelte";
-import PageTokenOptions      from "@/components/settings/PageTokenOptions.svelte";
+import PageIndex from "@/components/PageIndex.svelte";
+import PageLogs from "@/components/logs/PageLogs.svelte";
+import PageRecords from "@/components/records/PageRecords.svelte";
+import PageApplication from "@/components/settings/PageApplication.svelte";
+import PageBackups from "@/components/settings/PageBackups.svelte";
 import PageExportCollections from "@/components/settings/PageExportCollections.svelte";
 import PageImportCollections from "@/components/settings/PageImportCollections.svelte";
-import PageBackups           from "@/components/settings/PageBackups.svelte";
+import PageMail from "@/components/settings/PageMail.svelte";
+import PageStorage from "@/components/settings/PageStorage.svelte";
+import PageSuperuserLogin from "@/components/superusers/PageSuperuserLogin.svelte";
+import ApiClient from "@/utils/ApiClient";
+import { replace } from "svelte-spa-router";
+import { wrap } from "svelte-spa-router/wrap";
 
 const baseConditions = [
     async (details) => {
@@ -29,25 +26,25 @@ const baseConditions = [
 
 const routes = {
     "/login": wrap({
-        component:  PageAdminLogin,
+        component: PageSuperuserLogin,
         conditions: baseConditions.concat([(_) => !ApiClient.authStore.isValid]),
         userData: { showAppSidebar: false },
     }),
 
     "/request-password-reset": wrap({
-        asyncComponent:  () => import("@/components/admins/PageAdminRequestPasswordReset.svelte"),
+        asyncComponent: () => import("@/components/superusers/PageSuperuserRequestPasswordReset.svelte"),
         conditions: baseConditions.concat([(_) => !ApiClient.authStore.isValid]),
         userData: { showAppSidebar: false },
     }),
 
     "/confirm-password-reset/:token": wrap({
-        asyncComponent:  () => import("@/components/admins/PageAdminConfirmPasswordReset.svelte"),
+        asyncComponent: () => import("@/components/superusers/PageSuperuserConfirmPasswordReset.svelte"),
         conditions: baseConditions.concat([(_) => !ApiClient.authStore.isValid]),
         userData: { showAppSidebar: false },
     }),
 
     "/collections": wrap({
-        component:  PageRecords,
+        component: PageRecords,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
@@ -59,55 +56,37 @@ const routes = {
     }),
 
     "/settings": wrap({
-        component:  PageApplication,
-        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
-        userData: { showAppSidebar: true },
-    }),
-
-    "/settings/admins": wrap({
-        component:  PageAdmins,
+        component: PageApplication,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/mail": wrap({
-        component:  PageMail,
+        component: PageMail,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/storage": wrap({
-        component:  PageStorage,
-        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
-        userData: { showAppSidebar: true },
-    }),
-
-    "/settings/auth-providers": wrap({
-        component:  PageAuthProviders,
-        conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
-        userData: { showAppSidebar: true },
-    }),
-
-    "/settings/tokens": wrap({
-        component:  PageTokenOptions,
+        component: PageStorage,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/export-collections": wrap({
-        component:  PageExportCollections,
+        component: PageExportCollections,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/import-collections": wrap({
-        component:  PageImportCollections,
+        component: PageImportCollections,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
 
     "/settings/backups": wrap({
-        component:  PageBackups,
+        component: PageBackups,
         conditions: baseConditions.concat([(_) => ApiClient.authStore.isValid]),
         userData: { showAppSidebar: true },
     }),
@@ -118,48 +97,48 @@ const routes = {
 
     // @deprecated
     "/users/confirm-password-reset/:token": wrap({
-        asyncComponent:  () => import("@/components/records/PageRecordConfirmPasswordReset.svelte"),
+        asyncComponent: () => import("@/components/records/PageRecordConfirmPasswordReset.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
     "/auth/confirm-password-reset/:token": wrap({
-        asyncComponent:  () => import("@/components/records/PageRecordConfirmPasswordReset.svelte"),
+        asyncComponent: () => import("@/components/records/PageRecordConfirmPasswordReset.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
 
     // @deprecated
     "/users/confirm-verification/:token": wrap({
-        asyncComponent:  () => import("@/components/records/PageRecordConfirmVerification.svelte"),
+        asyncComponent: () => import("@/components/records/PageRecordConfirmVerification.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
     "/auth/confirm-verification/:token": wrap({
-        asyncComponent:  () => import("@/components/records/PageRecordConfirmVerification.svelte"),
+        asyncComponent: () => import("@/components/records/PageRecordConfirmVerification.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
 
     // @deprecated
     "/users/confirm-email-change/:token": wrap({
-        asyncComponent:  () => import("@/components/records/PageRecordConfirmEmailChange.svelte"),
+        asyncComponent: () => import("@/components/records/PageRecordConfirmEmailChange.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
     "/auth/confirm-email-change/:token": wrap({
-        asyncComponent:  () => import("@/components/records/PageRecordConfirmEmailChange.svelte"),
+        asyncComponent: () => import("@/components/records/PageRecordConfirmEmailChange.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
 
     "/auth/oauth2-redirect-success": wrap({
-        asyncComponent:  () => import("@/components/records/PageOAuth2RedirectSuccess.svelte"),
+        asyncComponent: () => import("@/components/records/PageOAuth2RedirectSuccess.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),
 
     "/auth/oauth2-redirect-failure": wrap({
-        asyncComponent:  () => import("@/components/records/PageOAuth2RedirectFailure.svelte"),
+        asyncComponent: () => import("@/components/records/PageOAuth2RedirectFailure.svelte"),
         conditions: baseConditions,
         userData: { showAppSidebar: false },
     }),

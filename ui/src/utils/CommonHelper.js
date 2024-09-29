@@ -235,6 +235,20 @@ export default class CommonHelper {
     }
 
     /**
+     * Merges all `valuesArr` items that don't exist in `targetArr`.
+     *
+     * @param {Array} targetArr
+     * @param {Array} valuesArr
+     */
+    static mergeUnique(targetArr, valuesArr) {
+        for (let v of valuesArr) {
+            CommonHelper.pushUnique(targetArr, v)
+        }
+
+        return targetArr;
+    }
+
+    /**
      * Returns single element from objects array by matching its key value.
      *
      * @param  {Array} objectsArr
@@ -782,9 +796,9 @@ export default class CommonHelper {
     }
 
     /**
-     * Returns a DateTime instance from a date object/string.
+     * Returns a DateTime instance from a date object, string or number (in ms).
      *
-     * @param  {String|Date} date
+     * @param  {String|Number|Date} date
      * @return {DateTime}
      */
     static getDateTime(date) {
@@ -797,6 +811,10 @@ export default class CommonHelper {
             }
             const format = formats[date.length] || formats[19];
             return DateTime.fromFormat(date, format, { zone: "UTC" });
+        }
+
+        if (typeof date == "number") {
+            return DateTime.fromMillis(date);
         }
 
         return DateTime.fromJSDate(date);
@@ -1039,109 +1057,63 @@ export default class CommonHelper {
      * @return {Object}
      */
     static dummyCollectionRecord(collection) {
-        const fields = collection?.schema || [];
-
-        const isAuth = collection?.type === "auth";
-        const isView = collection?.type === "view";
-
-        const dummy = {
-            "id": "RECORD_ID",
+        return Object.assign({
             "collectionId": collection?.id,
             "collectionName": collection?.name,
-        };
-
-        if (isAuth) {
-            dummy["username"] = "username123";
-            dummy["verified"] = false;
-            dummy["emailVisibility"] = true;
-            dummy["email"] = "test@example.com";
-        }
-
-        const hasCreated = !isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("created");
-        if (hasCreated) {
-            dummy["created"] = "2022-01-01 01:00:00.123Z";
-        }
-
-        const hasUpdated = !isView || CommonHelper.extractColumnsFromQuery(collection?.options?.query).includes("updated");
-        if (hasUpdated) {
-            dummy["updated"] = "2022-01-01 23:59:59.456Z";
-        }
-
-        for (const field of fields) {
-            let val = null;
-            if (field.type === "number") {
-                val = 123;
-            } else if (field.type === "date") {
-                val = "2022-01-01 10:00:00.123Z";
-            } else if (field.type === "bool") {
-                val = true;
-            } else if (field.type === "email") {
-                val = "test@example.com";
-            } else if (field.type === "url") {
-                val = "https://example.com";
-            } else if (field.type === "json") {
-                val = 'JSON';
-            } else if (field.type === "file") {
-                val = 'filename.jpg';
-                if (field.options?.maxSelect !== 1) {
-                    val = [val];
-                }
-            } else if (field.type === "select") {
-                val = field.options?.values?.[0];
-                if (field.options?.maxSelect !== 1) {
-                    val = [val];
-                }
-            } else if (field.type === "relation") {
-                val = 'RELATION_RECORD_ID';
-                if (field.options?.maxSelect !== 1) {
-                    val = [val];
-                }
-            } else {
-                val = "test";
-            }
-
-            dummy[field.name] = val;
-        }
-
-        return dummy;
+        }, CommonHelper.dummyCollectionSchemaData(collection));
     }
 
     /**
-     * Returns a dummy collection schema data object.
+     * Returns a dummy collection fields data object.
      *
      * @param  {Object} collection
      * @return {Object}
      */
-    static dummyCollectionSchemaData(collection) {
-        const fields = collection?.schema || [];
+    static dummyCollectionSchemaData(collection, forSubmit = false) {
+        const fields = collection?.fields || [];
 
         const dummy = {};
 
         for (const field of fields) {
+            if (
+                field.hidden ||
+                (forSubmit && field.primaryKey && field.autogeneratePattern)
+            ) {
+                continue
+            }
+
             let val = null;
 
             if (field.type === "number") {
                 val = 123;
-            } else if (field.type === "date") {
+            } else if (field.type === "date" || field.type === "autodate") {
                 val = "2022-01-01 10:00:00.123Z";
-            } else if (field.type === "bool") {
+            } else if (field.type == "bool") {
                 val = true;
-            } else if (field.type === "email") {
+            } else if (field.type == "email") {
                 val = "test@example.com";
-            } else if (field.type === "url") {
+            } else if (field.type == "url") {
                 val = "https://example.com";
-            } else if (field.type === "json") {
+            } else if (field.type == "json") {
                 val = 'JSON';
-            } else if (field.type === "file") {
-                continue; // currently file upload is supported only via FormData
-            } else if (field.type === "select") {
-                val = field.options?.values?.[0];
-                if (field.options?.maxSelect !== 1) {
+            } else if (field.type == "file") {
+                if (forSubmit) {
+                    // @todo add a File obj example after the refactoring
+                    continue
+                } else {
+                    val = "filename.jpg"
+                    if (field.maxSelect != 1) {
+                        val = [val];
+                    }
+                }
+            } else if (field.type == "select") {
+                val = field?.values?.[0];
+                if (field?.maxSelect != 1) {
                     val = [val];
                 }
-            } else if (field.type === "relation") {
+            } else if (field.type == "relation") {
                 val = 'RELATION_RECORD_ID';
-                if (field.options?.maxSelect !== 1) {
+                if (field?.maxSelect != 1) {
                     val = [val];
                 }
             } else {
@@ -1203,8 +1175,10 @@ export default class CommonHelper {
                 return "ri-image-line";
             case "relation":
                 return "ri-mind-map";
-            case "user":
-                return "ri-user-line";
+            case "password":
+                return "ri-lock-password-line";
+            case "autodate":
+                return "ri-calendar-check-line";
             default:
                 return "ri-star-s-line";
         }
@@ -1226,7 +1200,7 @@ export default class CommonHelper {
                 return 'File';
             case 'select':
             case 'relation':
-                if (field?.options?.maxSelect === 1) {
+                if (field?.maxSelect == 1) {
                     return 'String';
                 }
                 return 'Array<String>';
@@ -1255,7 +1229,7 @@ export default class CommonHelper {
         }
 
         // arrayable fields
-        if (["select", "relation", "file"].includes(field?.type) && field?.options?.maxSelect != 1) {
+        if (["select", "relation", "file"].includes(field?.type) && field?.maxSelect != 1) {
             return "[]";
         }
 
@@ -1277,11 +1251,11 @@ export default class CommonHelper {
     }
 
     /**
-     * Checks if the provided 2 collections has any change (ignoring root schema fields order).
+     * Checks if the provided 2 collections has any change (ignoring root fields order).
      *
      * @param  {Collection} oldCollection
      * @param  {Collection} newCollection
-     * @param  {Boolean}    withDeleteMissing Skip missing schema fields from the newCollection.
+     * @param  {Boolean}    withDeleteMissing Skip missing fields from the newCollection.
      * @return {Boolean}
      */
     static hasCollectionChanges(oldCollection, newCollection, withDeleteMissing = false) {
@@ -1293,21 +1267,21 @@ export default class CommonHelper {
         }
 
         for (let prop in oldCollection) {
-            if (prop !== 'schema' && JSON.stringify(oldCollection[prop]) !== JSON.stringify(newCollection[prop])) {
+            if (prop !== 'fields' && JSON.stringify(oldCollection[prop]) !== JSON.stringify(newCollection[prop])) {
                 return true;
             }
         }
 
-        const oldSchema = Array.isArray(oldCollection.schema) ? oldCollection.schema : [];
-        const newSchema = Array.isArray(newCollection.schema) ? newCollection.schema : [];
-        const removedFields = oldSchema.filter((oldField) => {
-            return oldField?.id && !CommonHelper.findByKey(newSchema, "id", oldField.id);
+        const oldFields = Array.isArray(oldCollection.fields) ? oldCollection.fields : [];
+        const newFields = Array.isArray(newCollection.fields) ? newCollection.fields : [];
+        const removedFields = oldFields.filter((oldField) => {
+            return oldField?.id && !CommonHelper.findByKey(newFields, "id", oldField.id);
         });
-        const addedFields = newSchema.filter((newField) => {
-            return newField?.id && !CommonHelper.findByKey(oldSchema, "id", newField.id);
+        const addedFields = newFields.filter((newField) => {
+            return newField?.id && !CommonHelper.findByKey(oldFields, "id", newField.id);
         });
-        const changedFields = newSchema.filter((newField) => {
-            const oldField = CommonHelper.isObject(newField) && CommonHelper.findByKey(oldSchema, "id", newField.id);
+        const changedFields = newFields.filter((newField) => {
+            const oldField = CommonHelper.isObject(newField) && CommonHelper.findByKey(oldFields, "id", newField.id);
             if (!oldField) {
                 return false;
             }
@@ -1362,6 +1336,40 @@ export default class CommonHelper {
         return [].concat(auth.sort(sortNames), base.sort(sortNames), view.sort(sortNames));
     }
 
+    /**
+     * Returns a combined expand string with the presentable nested relation fields (e.g. `base.sub1.sub2`).
+     *
+     * @param  {Object} baseRelField
+     * @param  {Array} collections
+     * @param  {Number} maxNestedLevel
+     * @return {String}
+     */
+    static getExpandPresentableRelField(baseRelField, collections, maxNestedLevel = 2) {
+        for (const collection of collections) {
+            if (baseRelField.collectionId != collection.id) {
+                continue;
+            }
+
+
+            let expandItem = baseRelField.name
+
+            for (const field of collection.fields) {
+                if (!field.presentable || field.type != "relation") {
+                    continue
+                }
+                if (maxNestedLevel > 0) {
+                    const nestedExpandItem = CommonHelper.getExpandPresentableRelField(field, collections, maxNestedLevel-1)
+                    if (nestedExpandItem) {
+                        expandItem += ("." + nestedExpandItem)
+                    }
+                }
+            }
+
+            return expandItem;
+        }
+
+        return "";
+    }
 
     /**
      * "Yield" to the main thread to break long runing task into smaller ones.
@@ -1734,7 +1742,7 @@ export default class CommonHelper {
     }
 
     /**
-     * Returns an array with all public collection identifiers (schema + type specific fields).
+     * Returns an array with all public collection identifiers (collection fields + type specific fields).
      *
      * @param  {[type]} collection The collection to extract identifiers from.
      * @param  {String} prefix     Optional prefix for each found identified.
@@ -1748,24 +1756,13 @@ export default class CommonHelper {
         let result = [prefix + "id"];
 
         if (collection.type === "view") {
-            for (let col of CommonHelper.extractColumnsFromQuery(collection.options.query)) {
+            for (let col of CommonHelper.extractColumnsFromQuery(collection.viewQuery)) {
                 CommonHelper.pushUnique(result, prefix + col);
             }
-        } else if (collection.type === "auth") {
-            result.push(prefix + "username");
-            result.push(prefix + "email");
-            result.push(prefix + "emailVisibility");
-            result.push(prefix + "verified");
-            result.push(prefix + "created");
-            result.push(prefix + "updated");
-        } else {
-            result.push(prefix + "created");
-            result.push(prefix + "updated");
         }
 
-        const schema = collection.schema || [];
-
-        for (const field of schema) {
+        const fields = collection.fields || [];
+        for (const field of fields) {
             CommonHelper.pushUnique(result, prefix + field.name);
         }
 
@@ -1787,23 +1784,23 @@ export default class CommonHelper {
         if (!collection || level >= 4) {
             return [];
         }
-        collection.schema = collection.schema || [];
+        collection.fields = collection.fields || [];
 
         let result = CommonHelper.getAllCollectionIdentifiers(collection, prefix);
 
-        for (const field of collection.schema) {
+        for (const field of collection.fields) {
             const key = prefix + field.name;
 
             // add relation fields
-            if (field.type == "relation" && field.options?.collectionId) {
-                const subKeys = CommonHelper.getCollectionAutocompleteKeys(collections, field.options.collectionId, key + ".", level + 1);
+            if (field.type == "relation" && field.collectionId) {
+                const subKeys = CommonHelper.getCollectionAutocompleteKeys(collections, field.collectionId, key + ".", level + 1);
                 if (subKeys.length) {
                     result = result.concat(subKeys);
                 }
             }
 
             // add ":length" and ":each" field modifiers to arrayble fields
-            if (field.options?.maxSelect != 1 && ["select", "file", "relation"].includes(field.type)) {
+            if (field.maxSelect != 1 && ["select", "file", "relation"].includes(field.type)) {
                 result.push(key + ":each");
                 result.push(key + ":length");
             }
@@ -1811,9 +1808,9 @@ export default class CommonHelper {
 
         // add back relations
         for (const ref of collections) {
-            ref.schema = ref.schema || [];
-            for (const field of ref.schema) {
-                if (field.type == "relation" && field.options?.collectionId == collection.id) {
+            ref.fields = ref.fields || [];
+            for (const field of ref.fields) {
+                if (field.type == "relation" && field.collectionId == collection.id) {
                     const key = prefix + ref.name + "_via_" + field.name;
                     const subKeys = CommonHelper.getCollectionAutocompleteKeys(collections, ref.id, key + ".", level + 2); // +2 to reduce the recursive results
                     if (subKeys.length) {
@@ -1835,9 +1832,15 @@ export default class CommonHelper {
     static getCollectionJoinAutocompleteKeys(collections) {
         const result = [];
 
+        let prefix, keys;
+
         for (const collection of collections) {
-            const prefix = "@collection." + collection.name + ".";
-            const keys = CommonHelper.getCollectionAutocompleteKeys(collections, collection.name, prefix);
+            if (collection.system) {
+                continue // skip system collections for now
+            }
+
+            prefix = "@collection." + collection.name + ".";
+            keys = CommonHelper.getCollectionAutocompleteKeys(collections, collection.name, prefix);
             for (const key of keys) {
                 result.push(key);
             }
@@ -1850,7 +1853,7 @@ export default class CommonHelper {
      * Generates a list with all @request.* autocomplete field keys.
      *
      * @param  {Array}  collections
-     * @param  {String} baseCollectionName (used for the `@request.data.*` fields)
+     * @param  {String} baseCollectionName (used for the `@request.body.*` fields)
      * @return {Array}
      */
     static getRequestAutocompleteKeys(collections, baseCollectionName) {
@@ -1859,31 +1862,26 @@ export default class CommonHelper {
         result.push("@request.context");
         result.push("@request.method");
         result.push("@request.query.");
-        result.push("@request.data.");
+        result.push("@request.body.");
         result.push("@request.headers.");
-        result.push("@request.auth.id");
         result.push("@request.auth.collectionId");
         result.push("@request.auth.collectionName");
-        result.push("@request.auth.verified");
-        result.push("@request.auth.username");
-        result.push("@request.auth.email");
-        result.push("@request.auth.emailVisibility");
-        result.push("@request.auth.created");
-        result.push("@request.auth.updated");
 
         // load auth collection fields
         const authCollections = collections.filter((collection) => collection.type === "auth");
         for (const collection of authCollections) {
+            if (collection.system) {
+                continue // skip system collections for now
+            }
             const authKeys = CommonHelper.getCollectionAutocompleteKeys(collections, collection.id, "@request.auth.");
             for (const k of authKeys) {
                 CommonHelper.pushUnique(result, k);
             }
         }
 
-        // load base collection fields into @request.data.*
+        // load base collection fields into @request.body.*
         if (baseCollectionName) {
-            const issetExcludeList = ["created", "updated"];
-            const keys = CommonHelper.getCollectionAutocompleteKeys(collections, baseCollectionName, "@request.data.");
+            const keys = CommonHelper.getCollectionAutocompleteKeys(collections, baseCollectionName, "@request.body.");
             for (const key of keys) {
                 result.push(key);
 
@@ -1892,9 +1890,7 @@ export default class CommonHelper {
                 if (
                     parts.length === 3 &&
                     // doesn't contain another modifier
-                    parts[2].indexOf(":") === -1 &&
-                    // is not from the exclude list
-                    !issetExcludeList.includes(parts[2])
+                    parts[2].indexOf(":") === -1
                 ) {
                     result.push(key + ":isset");
                 }
@@ -2019,7 +2015,7 @@ export default class CommonHelper {
             result += `\`${indexParts.schemaName}\`.`;
         }
 
-        result += `\`${indexParts.indexName || "idx_" + CommonHelper.randomString(7)}\` `;
+        result += `\`${indexParts.indexName || "idx_" + CommonHelper.randomString(10)}\` `;
 
         result += `ON \`${indexParts.tableName}\` (`;
 
@@ -2150,31 +2146,6 @@ export default class CommonHelper {
     }
 
     /**
-     * Iniitialize a new blank Collection POJO and merge it with the provided data (if any).
-     *
-     * @param  {Object} [data]
-     * @return {Object}
-     */
-    static initCollection(data) {
-        return Object.assign({
-            id: '',
-            created: '',
-            updated: '',
-            name: '',
-            type: 'base',
-            system: false,
-            listRule: null,
-            viewRule: null,
-            createRule: null,
-            updateRule: null,
-            deleteRule: null,
-            schema: [],
-            indexes: [],
-            options: {},
-        }, data);
-    }
-
-    /**
      * Iniitialize a new blank SchemaField POJO and merge it with the provided data (if any).
      *
      * @param  {Object} [data]
@@ -2186,8 +2157,8 @@ export default class CommonHelper {
             name: '',
             type: 'text',
             system: false,
+            hidden: false,
             required: false,
-            options: {},
         }, data);
     }
 

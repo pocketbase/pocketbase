@@ -6,59 +6,14 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/mails/templates"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/settings"
-	"github.com/pocketbase/pocketbase/tokens"
 	"github.com/pocketbase/pocketbase/tools/mailer"
 )
 
-// @todo remove after the refactoring
-//
-// SendRecordPasswordLoginAlert sends a OAuth2 password login alert to the specified auth record.
-func SendRecordPasswordLoginAlert(app core.App, authRecord *models.Record, providerNames ...string) error {
-	params := struct {
-		AppName       string
-		AppUrl        string
-		Record        *models.Record
-		ProviderNames []string
-	}{
-		AppName:       app.Settings().Meta.AppName,
-		AppUrl:        app.Settings().Meta.AppUrl,
-		Record:        authRecord,
-		ProviderNames: providerNames,
-	}
-
+// SendRecordAuthAlert sends a new device login alert to the specified auth record.
+func SendRecordAuthAlert(app core.App, authRecord *core.Record) error {
 	mailClient := app.NewMailClient()
 
-	// resolve body template
-	body, renderErr := resolveTemplateContent(params, templates.Layout, templates.PasswordLoginAlertBody)
-	if renderErr != nil {
-		return renderErr
-	}
-
-	message := &mailer.Message{
-		From: mail.Address{
-			Name:    app.Settings().Meta.SenderName,
-			Address: app.Settings().Meta.SenderAddress,
-		},
-		To:      []mail.Address{{Address: authRecord.Email()}},
-		Subject: "Password login alert",
-		HTML:    body,
-	}
-
-	return mailClient.Send(message)
-}
-
-// SendRecordPasswordReset sends a password reset request email to the specified user.
-func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
-	token, tokenErr := tokens.NewRecordResetPasswordToken(app, authRecord)
-	if tokenErr != nil {
-		return tokenErr
-	}
-
-	mailClient := app.NewMailClient()
-
-	subject, body, err := resolveEmailTemplate(app, token, app.Settings().Meta.ResetPasswordTemplate)
+	subject, body, err := resolveEmailTemplate(app, authRecord, authRecord.Collection().AuthAlert.EmailTemplate, nil)
 	if err != nil {
 		return err
 	}
@@ -74,31 +29,24 @@ func SendRecordPasswordReset(app core.App, authRecord *models.Record) error {
 	}
 
 	event := new(core.MailerRecordEvent)
-	event.MailClient = mailClient
+	event.App = app
+	event.Mailer = mailClient
 	event.Message = message
-	event.Collection = authRecord.Collection()
 	event.Record = authRecord
-	event.Meta = map[string]any{"token": token}
 
-	return app.OnMailerBeforeRecordResetPasswordSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		if err := e.MailClient.Send(e.Message); err != nil {
-			return err
-		}
-
-		return app.OnMailerAfterRecordResetPasswordSend().Trigger(e)
+	return app.OnMailerRecordAuthAlertSend().Trigger(event, func(e *core.MailerRecordEvent) error {
+		return e.Mailer.Send(e.Message)
 	})
 }
 
-// SendRecordVerification sends a verification request email to the specified user.
-func SendRecordVerification(app core.App, authRecord *models.Record) error {
-	token, tokenErr := tokens.NewRecordVerifyToken(app, authRecord)
-	if tokenErr != nil {
-		return tokenErr
-	}
-
+// SendRecordOTP sends OTP email to the specified auth record.
+func SendRecordOTP(app core.App, authRecord *core.Record, otpId string, pass string) error {
 	mailClient := app.NewMailClient()
 
-	subject, body, err := resolveEmailTemplate(app, token, app.Settings().Meta.VerificationTemplate)
+	subject, body, err := resolveEmailTemplate(app, authRecord, authRecord.Collection().OTP.EmailTemplate, map[string]any{
+		core.EmailPlaceholderOTPId: otpId,
+		core.EmailPlaceholderOTP:   pass,
+	})
 	if err != nil {
 		return err
 	}
@@ -114,31 +62,108 @@ func SendRecordVerification(app core.App, authRecord *models.Record) error {
 	}
 
 	event := new(core.MailerRecordEvent)
-	event.MailClient = mailClient
+	event.App = app
+	event.Mailer = mailClient
 	event.Message = message
-	event.Collection = authRecord.Collection()
 	event.Record = authRecord
-	event.Meta = map[string]any{"token": token}
+	event.Meta = map[string]any{
+		"otpId":    otpId,
+		"password": pass,
+	}
 
-	return app.OnMailerBeforeRecordVerificationSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		if err := e.MailClient.Send(e.Message); err != nil {
-			return err
-		}
-
-		return app.OnMailerAfterRecordVerificationSend().Trigger(e)
+	return app.OnMailerRecordOTPSend().Trigger(event, func(e *core.MailerRecordEvent) error {
+		return e.Mailer.Send(e.Message)
 	})
 }
 
-// SendRecordChangeEmail sends a change email confirmation email to the specified user.
-func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string) error {
-	token, tokenErr := tokens.NewRecordChangeEmailToken(app, record, newEmail)
+// SendRecordPasswordReset sends a password reset request email to the specified auth record.
+func SendRecordPasswordReset(app core.App, authRecord *core.Record) error {
+	token, tokenErr := authRecord.NewPasswordResetToken()
 	if tokenErr != nil {
 		return tokenErr
 	}
 
 	mailClient := app.NewMailClient()
 
-	subject, body, err := resolveEmailTemplate(app, token, app.Settings().Meta.ConfirmEmailChangeTemplate)
+	subject, body, err := resolveEmailTemplate(app, authRecord, authRecord.Collection().ResetPasswordTemplate, map[string]any{
+		core.EmailPlaceholderToken: token,
+	})
+	if err != nil {
+		return err
+	}
+
+	message := &mailer.Message{
+		From: mail.Address{
+			Name:    app.Settings().Meta.SenderName,
+			Address: app.Settings().Meta.SenderAddress,
+		},
+		To:      []mail.Address{{Address: authRecord.Email()}},
+		Subject: subject,
+		HTML:    body,
+	}
+
+	event := new(core.MailerRecordEvent)
+	event.App = app
+	event.Mailer = mailClient
+	event.Message = message
+	event.Record = authRecord
+	event.Meta = map[string]any{"token": token}
+
+	return app.OnMailerRecordPasswordResetSend().Trigger(event, func(e *core.MailerRecordEvent) error {
+		return e.Mailer.Send(e.Message)
+	})
+}
+
+// SendRecordVerification sends a verification request email to the specified auth record.
+func SendRecordVerification(app core.App, authRecord *core.Record) error {
+	token, tokenErr := authRecord.NewVerificationToken()
+	if tokenErr != nil {
+		return tokenErr
+	}
+
+	mailClient := app.NewMailClient()
+
+	subject, body, err := resolveEmailTemplate(app, authRecord, authRecord.Collection().VerificationTemplate, map[string]any{
+		core.EmailPlaceholderToken: token,
+	})
+	if err != nil {
+		return err
+	}
+
+	message := &mailer.Message{
+		From: mail.Address{
+			Name:    app.Settings().Meta.SenderName,
+			Address: app.Settings().Meta.SenderAddress,
+		},
+		To:      []mail.Address{{Address: authRecord.Email()}},
+		Subject: subject,
+		HTML:    body,
+	}
+
+	event := new(core.MailerRecordEvent)
+	event.App = app
+	event.Mailer = mailClient
+	event.Message = message
+	event.Record = authRecord
+	event.Meta = map[string]any{"token": token}
+
+	return app.OnMailerRecordVerificationSend().Trigger(event, func(e *core.MailerRecordEvent) error {
+		return e.Mailer.Send(e.Message)
+	})
+}
+
+// SendRecordChangeEmail sends a change email confirmation email to the specified auth record.
+func SendRecordChangeEmail(app core.App, authRecord *core.Record, newEmail string) error {
+	token, tokenErr := authRecord.NewEmailChangeToken(newEmail)
+	if tokenErr != nil {
+		return tokenErr
+	}
+
+	mailClient := app.NewMailClient()
+
+	subject, body, err := resolveEmailTemplate(app, authRecord, authRecord.Collection().ConfirmEmailChangeTemplate, map[string]any{
+		core.EmailPlaceholderToken: token,
+	})
 	if err != nil {
 		return err
 	}
@@ -154,42 +179,59 @@ func SendRecordChangeEmail(app core.App, record *models.Record, newEmail string)
 	}
 
 	event := new(core.MailerRecordEvent)
-	event.MailClient = mailClient
+	event.App = app
+	event.Mailer = mailClient
 	event.Message = message
-	event.Collection = record.Collection()
-	event.Record = record
+	event.Record = authRecord
 	event.Meta = map[string]any{
 		"token":    token,
 		"newEmail": newEmail,
 	}
 
-	return app.OnMailerBeforeRecordChangeEmailSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		if err := e.MailClient.Send(e.Message); err != nil {
-			return err
-		}
-
-		return app.OnMailerAfterRecordChangeEmailSend().Trigger(e)
+	return app.OnMailerRecordEmailChangeSend().Trigger(event, func(e *core.MailerRecordEvent) error {
+		return e.Mailer.Send(e.Message)
 	})
 }
 
 func resolveEmailTemplate(
 	app core.App,
-	token string,
-	emailTemplate settings.EmailTemplate,
+	authRecord *core.Record,
+	emailTemplate core.EmailTemplate,
+	placeholders map[string]any,
 ) (subject string, body string, err error) {
-	subject, rawBody, _ := emailTemplate.Resolve(
-		app.Settings().Meta.AppName,
-		app.Settings().Meta.AppUrl,
-		token,
-	)
-
-	params := struct {
-		HtmlContent template.HTML
-	}{
-		HtmlContent: template.HTML(rawBody),
+	if placeholders == nil {
+		placeholders = map[string]any{}
 	}
 
-	body, err = resolveTemplateContent(params, templates.Layout, templates.HtmlBody)
+	// register default system placeholders
+	if _, ok := placeholders[core.EmailPlaceholderAppName]; !ok {
+		placeholders[core.EmailPlaceholderAppName] = app.Settings().Meta.AppName
+	}
+	if _, ok := placeholders[core.EmailPlaceholderAppURL]; !ok {
+		placeholders[core.EmailPlaceholderAppURL] = app.Settings().Meta.AppURL
+	}
+
+	// register default auth record placeholders
+	for _, field := range authRecord.Collection().Fields {
+		if field.GetHidden() {
+			continue
+		}
+
+		fieldPlacehodler := "{RECORD:" + field.GetName() + "}"
+		if _, ok := placeholders[fieldPlacehodler]; !ok {
+			placeholders[fieldPlacehodler] = authRecord.Get(field.GetName())
+		}
+	}
+
+	subject, rawBody := emailTemplate.Resolve(placeholders)
+
+	params := struct {
+		HTMLContent template.HTML
+	}{
+		HTMLContent: template.HTML(rawBody),
+	}
+
+	body, err = resolveTemplateContent(params, templates.Layout, templates.HTMLBody)
 	if err != nil {
 		return "", "", err
 	}

@@ -159,8 +159,8 @@ func TestScanAll(t *testing.T) {
 			},
 		},
 		{
-			name: "keep separators",
-			content: `a, b, c, d  e, "a,b,  c  ",	(123, 456)`,
+			name:              "keep separators",
+			content:           `a, b, c, d  e, "a,b,  c  ",	(123, 456)`,
 			separators:        []rune{',', ' '}, // the space should be removed from the cutset
 			keepSeparator:     true,
 			keepEmptyTokens:   true,

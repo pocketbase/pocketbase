@@ -1,11 +1,12 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
-    import FormattedDate from "@/components/base/FormattedDate.svelte";
     import CopyIcon from "@/components/base/CopyIcon.svelte";
+    import FormattedDate from "@/components/base/FormattedDate.svelte";
+    import TinyMCE from "@/components/base/TinyMCE.svelte";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
     import RecordInfo from "@/components/records/RecordInfo.svelte";
-    import TinyMCE from "@/components/base/TinyMCE.svelte";
+    import { superuser } from "@/stores/superuser";
+    import CommonHelper from "@/utils/CommonHelper";
 
     export let record;
     export let field;
@@ -14,7 +15,15 @@
     $: rawValue = record?.[field.name];
 </script>
 
-{#if field.type === "json"}
+{#if field.primaryKey}
+    <div class="label">
+        <CopyIcon value={rawValue} />
+        <div class="txt txt-ellipsis">{rawValue}</div>
+    </div>
+    {#if record.collectionName == "_superusers" && record.id == $superuser.id}
+        <span class="label label-warning">You</span>
+    {/if}
+{:else if field.type === "json"}
     {@const stringifiedJson = CommonHelper.trimQuotedValue(JSON.stringify(rawValue)) || '""'}
     {#if short}
         <span class="txt txt-ellipsis">
@@ -31,7 +40,7 @@
 {:else if CommonHelper.isEmpty(rawValue)}
     <span class="txt-hint">N/A</span>
 {:else if field.type === "bool"}
-    <span class="txt">{rawValue ? "True" : "False"}</span>
+    <span class="label" class:label-success={!!rawValue}>{rawValue ? "True" : "False"}</span>
 {:else if field.type === "number"}
     <span class="txt">{rawValue}</span>
 {:else if field.type === "url"}
@@ -72,7 +81,7 @@
             disabled
         />
     {/if}
-{:else if field.type === "date"}
+{:else if field.type === "date" || field.type === "autodate"}
     <FormattedDate date={rawValue} />
 {:else if field.type === "select"}
     <div class="inline-flex">
@@ -103,7 +112,7 @@
 {:else if field.type === "file"}
     {@const files = CommonHelper.toArray(rawValue)}
     {@const filesLimit = short ? 10 : 500}
-    <div class="inline-flex" class:multiple={field.options?.maxSelect != 1}>
+    <div class="inline-flex" class:multiple={field.maxSelect != 1}>
         {#each files.slice(0, filesLimit) as filename, i (i + filename)}
             <RecordFileThumb {record} {filename} size="sm" />
         {/each}

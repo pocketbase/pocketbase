@@ -9,6 +9,10 @@ import (
 	"golang.org/x/oauth2/facebook"
 )
 
+func init() {
+	Providers[NameFacebook] = wrapFactory(NewFacebookProvider)
+}
+
 var _ Provider = (*Facebook)(nil)
 
 // NameFacebook is the unique name of the Facebook provider.
@@ -16,19 +20,19 @@ const NameFacebook string = "facebook"
 
 // Facebook allows authentication via Facebook OAuth2.
 type Facebook struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewFacebookProvider creates new Facebook provider instance with some defaults.
 func NewFacebookProvider() *Facebook {
-	return &Facebook{&baseProvider{
+	return &Facebook{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Facebook",
 		pkce:        true,
 		scopes:      []string{"email"},
-		authUrl:     facebook.Endpoint.AuthURL,
-		tokenUrl:    facebook.Endpoint.TokenURL,
-		userApiUrl:  "https://graph.facebook.com/me?fields=name,email,picture.type(large)",
+		authURL:     facebook.Endpoint.AuthURL,
+		tokenURL:    facebook.Endpoint.TokenURL,
+		userInfoURL: "https://graph.facebook.com/me?fields=name,email,picture.type(large)",
 	}}
 }
 
@@ -36,7 +40,7 @@ func NewFacebookProvider() *Facebook {
 //
 // API reference: https://developers.facebook.com/docs/graph-api/reference/user/
 func (p *Facebook) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +66,7 @@ func (p *Facebook) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Id:           extracted.Id,
 		Name:         extracted.Name,
 		Email:        extracted.Email,
-		AvatarUrl:    extracted.Picture.Data.Url,
+		AvatarURL:    extracted.Picture.Data.Url,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,

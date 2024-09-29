@@ -1,7 +1,7 @@
 <script>
+    import CommonHelper from "@/utils/CommonHelper";
     import { createEventDispatcher, onMount } from "svelte";
     import { fly } from "svelte/transition";
-    import CommonHelper from "@/utils/CommonHelper";
 
     const dispatch = createEventDispatcher();
     const uniqueId = "search_" + CommonHelper.randomString(7);
@@ -10,7 +10,7 @@
     export let placeholder = 'Search term or filter like created > "2022-01-01"...';
 
     // autocomplete filter component fields
-    export let autocompleteCollection = CommonHelper.initCollection();
+    export let autocompleteCollection = null;
     export let extraAutocompleteKeys = [];
 
     let filterComponent;

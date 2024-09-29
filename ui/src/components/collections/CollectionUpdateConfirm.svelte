@@ -1,38 +1,40 @@
 <script>
-    import { tick, createEventDispatcher } from "svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import { createEventDispatcher, tick } from "svelte";
 
     const dispatch = createEventDispatcher();
 
     let panel;
     let oldCollection;
     let newCollection;
+    let hideAfterSave;
 
     $: isCollectionRenamed = oldCollection?.name != newCollection?.name;
 
     $: isNewCollectionView = newCollection?.type === "view";
 
     $: renamedFields =
-        newCollection?.schema?.filter(
-            (field) => field.id && !field.toDelete && field.originalName != field.name
+        newCollection?.fields?.filter(
+            (field) => field.id && !field._toDelete && field._originalName != field.name,
         ) || [];
 
-    $: deletedFields = newCollection?.schema?.filter((field) => field.id && field.toDelete) || [];
+    $: deletedFields = newCollection?.fields?.filter((field) => field.id && field._toDelete) || [];
 
     $: multipleToSingleFields =
-        newCollection?.schema?.filter((field) => {
-            const old = oldCollection?.schema?.find((f) => f.id == field.id);
+        newCollection?.fields?.filter((field) => {
+            const old = oldCollection?.fields?.find((f) => f.id == field.id);
             if (!old) {
                 return false;
             }
-            return old.options?.maxSelect != 1 && field.options?.maxSelect == 1;
+            return old.maxSelect != 1 && field.maxSelect == 1;
         }) || [];
 
     $: showChanges = !isNewCollectionView || isCollectionRenamed;
 
-    export async function show(original, changed) {
+    export async function show(original, changed, hideAfterSaveArg = true) {
         oldCollection = original;
         newCollection = changed;
+        hideAfterSave = hideAfterSaveArg;
 
         await tick();
 
@@ -55,7 +57,7 @@
 
     function confirm() {
         hide();
-        dispatch("confirm");
+        dispatch("confirm", hideAfterSave);
     }
 </script>
 
@@ -106,7 +108,7 @@
                     <li>
                         <div class="inline-flex">
                             Renamed field
-                            <strong class="txt-strikethrough txt-hint">{field.originalName}</strong>
+                            <strong class="txt-strikethrough txt-hint">{field._originalName}</strong>
                             <i class="ri-arrow-right-line txt-sm" />
                             <strong class="txt"> {field.name}</strong>
                         </div>

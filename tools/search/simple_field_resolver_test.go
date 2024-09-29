@@ -1,6 +1,7 @@
 package search_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pocketbase/dbx"
@@ -23,22 +24,22 @@ func TestSimpleFieldResolverUpdateQuery(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		db := dbx.NewFromDB(nil, "")
-		query := db.Select("id").From("test")
+		t.Run(fmt.Sprintf("%d_%s", i, s.fieldName), func(t *testing.T) {
+			db := dbx.NewFromDB(nil, "")
+			query := db.Select("id").From("test")
 
-		r.Resolve(s.fieldName)
+			r.Resolve(s.fieldName)
 
-		if err := r.UpdateQuery(nil); err != nil {
-			t.Errorf("(%d) UpdateQuery failed with error %v", i, err)
-			continue
-		}
+			if err := r.UpdateQuery(nil); err != nil {
+				t.Fatalf("UpdateQuery failed with error %v", err)
+			}
 
-		rawQuery := query.Build().SQL()
-		// rawQuery := s.expectQuery
+			rawQuery := query.Build().SQL()
 
-		if rawQuery != s.expectQuery {
-			t.Errorf("(%d) Expected query %v, got \n%v", i, s.expectQuery, rawQuery)
-		}
+			if rawQuery != s.expectQuery {
+				t.Fatalf("Expected query %v, got \n%v", s.expectQuery, rawQuery)
+			}
+		})
 	}
 }
 
@@ -62,25 +63,25 @@ func TestSimpleFieldResolverResolve(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		r, err := r.Resolve(s.fieldName)
+		t.Run(fmt.Sprintf("%d_%s", i, s.fieldName), func(t *testing.T) {
+			r, err := r.Resolve(s.fieldName)
 
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected hasErr %v, got %v (%v)", i, s.expectError, hasErr, err)
-			continue
-		}
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
+			}
 
-		if hasErr {
-			continue
-		}
+			if hasErr {
+				return
+			}
 
-		if r.Identifier != s.expectName {
-			t.Errorf("(%d) Expected r.Identifier %q, got %q", i, s.expectName, r.Identifier)
-		}
+			if r.Identifier != s.expectName {
+				t.Fatalf("Expected r.Identifier %q, got %q", s.expectName, r.Identifier)
+			}
 
-		// params should be empty
-		if len(r.Params) != 0 {
-			t.Errorf("(%d) Expected 0 r.Params, got %v", i, r.Params)
-		}
+			if len(r.Params) != 0 {
+				t.Fatalf("r.Params should be empty, got %v", r.Params)
+			}
+		})
 	}
 }

@@ -1,27 +1,21 @@
 <script>
+    import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
+    import SdkTabs from "@/components/base/SdkTabs.svelte";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import CodeBlock from "@/components/base/CodeBlock.svelte";
-    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
-    import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
     export let collection;
 
     let responseTab = 200;
     let responses = [];
 
-    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseURL);
 
-    $: allowEmail = collection?.options?.allowEmailAuth;
-
-    $: allowUsername = collection?.options?.allowUsernameAuth;
+    $: identityFields = collection?.passwordAuth?.identityFields || [];
 
     $: exampleIdentityLabel =
-        allowUsername && allowEmail
-            ? "YOUR_USERNAME_OR_EMAIL"
-            : allowUsername
-            ? "YOUR_USERNAME"
-            : "YOUR_EMAIL";
+        identityFields.length == 0 ? "NONE" : "YOUR_" + identityFields.join("_OR_").toUpperCase();
 
     $: responses = [
         {
@@ -32,7 +26,7 @@
                     record: CommonHelper.dummyCollectionRecord(collection),
                 },
                 null,
-                2
+                2,
             ),
         },
         {
@@ -56,17 +50,8 @@
 <h3 class="m-b-sm">Auth with password ({collection.name})</h3>
 <div class="content txt-lg m-b-sm">
     <p>
-        Returns new auth token and account data by a combination of
-        <strong>
-            {#if allowUsername && allowEmail}
-                username/email
-            {:else if allowUsername}
-                username
-            {:else if allowEmail}
-                email
-            {/if}
-        </strong>
-        and <strong>password</strong>.
+        Authenticate with combination of
+        <strong>{identityFields.join("/")}</strong> and <strong>password</strong>.
     </p>
 </div>
 
@@ -86,9 +71,9 @@
         // after the above you can also access the auth data from the authStore
         console.log(pb.authStore.isValid);
         console.log(pb.authStore.token);
-        console.log(pb.authStore.model.id);
+        console.log(pb.authStore.record.id);
 
-        // "logout" the last authenticated account
+        // "logout"
         pb.authStore.clear();
     `}
     dart={`
@@ -106,9 +91,9 @@
         // after the above you can also access the auth data from the authStore
         print(pb.authStore.isValid);
         print(pb.authStore.token);
-        print(pb.authStore.model.id);
+        print(pb.authStore.record.id);
 
-        // "logout" the last authenticated account
+        // "logout"
         pb.authStore.clear();
     `}
 />
@@ -144,16 +129,10 @@
                 <span class="label">String</span>
             </td>
             <td>
-                The
-                {#if allowUsername}
-                    <strong>username</strong>
-                {/if}
-                {#if allowUsername && allowEmail}
-                    or
-                {/if}
-                {#if allowEmail}
-                    <strong>email</strong>
-                {/if}
+                {#each identityFields as name, i}
+                    {#if i > 0}or{/if}
+                    <strong>{name}</strong>
+                {/each}
                 of the record to authenticate.
             </td>
         </tr>

@@ -11,7 +11,7 @@ import (
 // preformatted JSON map.
 type Log struct {
 	Time    time.Time
+	Data    types.JSONMap[any]
 	Message string
 	Level   slog.Level
-	Data    types.JsonMap
 }

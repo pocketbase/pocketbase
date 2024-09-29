@@ -1,26 +1,29 @@
 package forms
 
 import (
+	"errors"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/mails"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
 )
 
 const (
-	templateVerification  = "verification"
-	templatePasswordReset = "password-reset"
-	templateEmailChange   = "email-change"
+	TestTemplateVerification  = "verification"
+	TestTemplatePasswordReset = "password-reset"
+	TestTemplateEmailChange   = "email-change"
+	TestTemplateOTP           = "otp"
+	TestTemplateAuthAlert     = "login-alert"
 )
 
 // TestEmailSend is a email template test request form.
 type TestEmailSend struct {
 	app core.App
 
-	Template string `form:"template" json:"template"`
-	Email    string `form:"email" json:"email"`
+	Email      string `form:"email" json:"email"`
+	Template   string `form:"template" json:"template"`
+	Collection string `form:"collection" json:"collection"` // optional, fallbacks to _superusers
 }
 
 // NewTestEmailSend creates and initializes new TestEmailSend form.
@@ -32,6 +35,11 @@ func NewTestEmailSend(app core.App) *TestEmailSend {
 func (form *TestEmailSend) Validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(
+			&form.Collection,
+			validation.Length(1, 255),
+			validation.By(form.checkAuthCollection),
+		),
+		validation.Field(
 			&form.Email,
 			validation.Required,
 			validation.Length(1, 255),
@@ -40,9 +48,29 @@ func (form *TestEmailSend) Validate() error {
 		validation.Field(
 			&form.Template,
 			validation.Required,
-			validation.In(templateVerification, templatePasswordReset, templateEmailChange),
+			validation.In(
+				TestTemplateVerification,
+				TestTemplatePasswordReset,
+				TestTemplateEmailChange,
+				TestTemplateOTP,
+				TestTemplateAuthAlert,
+			),
 		),
 	)
+}
+
+func (form *TestEmailSend) checkAuthCollection(value any) error {
+	v, _ := value.(string)
+	if v == "" {
+		return nil // nothing to check
+	}
+
+	c, _ := form.app.FindCollectionByNameOrId(v)
+	if c == nil || !c.IsAuth() {
+		return validation.NewError("validation_invalid_auth_collection", "Must be a valid auth collection id or name.")
+	}
+
+	return nil
 }
 
 // Submit validates and sends a test email to the form.Email address.
@@ -51,27 +79,38 @@ func (form *TestEmailSend) Submit() error {
 		return err
 	}
 
-	// create a test auth record
-	collection := &models.Collection{
-		BaseModel: models.BaseModel{Id: "__pb_test_collection_id__"},
-		Name:      "__pb_test_collection_name__",
-		Type:      models.CollectionTypeAuth,
+	collectionIdOrName := form.Collection
+	if collectionIdOrName == "" {
+		collectionIdOrName = core.CollectionNameSuperusers
 	}
 
-	record := models.NewRecord(collection)
-	record.Id = "__pb_test_id__"
-	record.Set(schema.FieldNameUsername, "pb_test")
-	record.Set(schema.FieldNameEmail, form.Email)
+	collection, err := form.app.FindCollectionByNameOrId(collectionIdOrName)
+	if err != nil {
+		return err
+	}
+
+	record := core.NewRecord(collection)
+	for _, field := range collection.Fields {
+		if field.GetHidden() {
+			continue
+		}
+		record.Set(field.GetName(), "__pb_test_"+field.GetName()+"__")
+	}
 	record.RefreshTokenKey()
+	record.SetEmail(form.Email)
 
 	switch form.Template {
-	case templateVerification:
+	case TestTemplateVerification:
 		return mails.SendRecordVerification(form.app, record)
-	case templatePasswordReset:
+	case TestTemplatePasswordReset:
 		return mails.SendRecordPasswordReset(form.app, record)
-	case templateEmailChange:
+	case TestTemplateEmailChange:
 		return mails.SendRecordChangeEmail(form.app, record, form.Email)
+	case TestTemplateOTP:
+		return mails.SendRecordOTP(form.app, record, "OTP_ID", "123456")
+	case TestTemplateAuthAlert:
+		return mails.SendRecordAuthAlert(form.app, record)
+	default:
+		return errors.New("unknown template " + form.Template)
 	}
-
-	return nil
 }

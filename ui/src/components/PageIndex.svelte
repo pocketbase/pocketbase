@@ -1,9 +1,9 @@
 <script>
-    import { tick } from "svelte";
-    import { replace } from "svelte-spa-router";
-    import ApiClient from "@/utils/ApiClient";
     import FullPage from "@/components/base/FullPage.svelte";
     import Installer from "@/components/base/Installer.svelte";
+    import ApiClient from "@/utils/ApiClient";
+    import { tick } from "svelte";
+    import { replace } from "svelte-spa-router";
 
     let showInstaller = false;
 

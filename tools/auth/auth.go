@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -9,17 +10,22 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// AuthUser defines a standardized oauth2 user data structure.
-type AuthUser struct {
-	Id           string         `json:"id"`
-	Name         string         `json:"name"`
-	Username     string         `json:"username"`
-	Email        string         `json:"email"`
-	AvatarUrl    string         `json:"avatarUrl"`
-	AccessToken  string         `json:"accessToken"`
-	RefreshToken string         `json:"refreshToken"`
-	Expiry       types.DateTime `json:"expiry"`
-	RawUser      map[string]any `json:"rawUser"`
+// ProviderFactoryFunc defines a function for initializing a new OAuth2 provider.
+type ProviderFactoryFunc func() Provider
+
+// Providers defines a map with all of the available OAuth2 providers.
+//
+// To register a new provider append a new entry in the map.
+var Providers = map[string]ProviderFactoryFunc{}
+
+// NewProviderByName returns a new preconfigured provider instance by its name identifier.
+func NewProviderByName(name string) (Provider, error) {
+	factory, ok := Providers[name]
+	if !ok {
+		return nil, errors.New("missing provider " + name)
+	}
+
+	return factory(), nil
 }
 
 // Provider defines a common interface for an OAuth2 client.
@@ -61,104 +67,84 @@ type Provider interface {
 	// SetClientSecret sets the provider client's app secret.
 	SetClientSecret(secret string)
 
-	// RedirectUrl returns the end address to redirect the user
+	// RedirectURL returns the end address to redirect the user
 	// going through the OAuth flow.
-	RedirectUrl() string
+	RedirectURL() string
 
-	// SetRedirectUrl sets the provider's RedirectUrl.
-	SetRedirectUrl(url string)
+	// SetRedirectURL sets the provider's RedirectURL.
+	SetRedirectURL(url string)
 
-	// AuthUrl returns the provider's authorization service url.
-	AuthUrl() string
+	// AuthURL returns the provider's authorization service url.
+	AuthURL() string
 
-	// SetAuthUrl sets the provider's AuthUrl.
-	SetAuthUrl(url string)
+	// SetAuthURL sets the provider's AuthURL.
+	SetAuthURL(url string)
 
-	// TokenUrl returns the provider's token exchange service url.
-	TokenUrl() string
+	// TokenURL returns the provider's token exchange service url.
+	TokenURL() string
 
-	// SetTokenUrl sets the provider's TokenUrl.
-	SetTokenUrl(url string)
+	// SetTokenURL sets the provider's TokenURL.
+	SetTokenURL(url string)
 
-	// UserApiUrl returns the provider's user info api url.
-	UserApiUrl() string
+	// UserInfoURL returns the provider's user info api url.
+	UserInfoURL() string
 
-	// SetUserApiUrl sets the provider's UserApiUrl.
-	SetUserApiUrl(url string)
+	// SetUserInfoURL sets the provider's UserInfoURL.
+	SetUserInfoURL(url string)
 
 	// Client returns an http client using the provided token.
 	Client(token *oauth2.Token) *http.Client
 
-	// BuildAuthUrl returns a URL to the provider's consent page
+	// BuildAuthURL returns a URL to the provider's consent page
 	// that asks for permissions for the required scopes explicitly.
-	BuildAuthUrl(state string, opts ...oauth2.AuthCodeOption) string
+	BuildAuthURL(state string, opts ...oauth2.AuthCodeOption) string
 
 	// FetchToken converts an authorization code to token.
 	FetchToken(code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error)
 
-	// FetchRawUserData requests and marshalizes into `result` the
+	// FetchRawUserInfo requests and marshalizes into `result` the
 	// the OAuth user api response.
-	FetchRawUserData(token *oauth2.Token) ([]byte, error)
+	FetchRawUserInfo(token *oauth2.Token) ([]byte, error)
 
-	// FetchAuthUser is similar to FetchRawUserData, but normalizes and
+	// FetchAuthUser is similar to FetchRawUserInfo, but normalizes and
 	// marshalizes the user api response into a standardized AuthUser struct.
 	FetchAuthUser(token *oauth2.Token) (user *AuthUser, err error)
 }
 
-// NewProviderByName returns a new preconfigured provider instance by its name identifier.
-func NewProviderByName(name string) (Provider, error) {
-	switch name {
-	case NameGoogle:
-		return NewGoogleProvider(), nil
-	case NameFacebook:
-		return NewFacebookProvider(), nil
-	case NameGithub:
-		return NewGithubProvider(), nil
-	case NameGitlab:
-		return NewGitlabProvider(), nil
-	case NameDiscord:
-		return NewDiscordProvider(), nil
-	case NameTwitter:
-		return NewTwitterProvider(), nil
-	case NameMicrosoft:
-		return NewMicrosoftProvider(), nil
-	case NameSpotify:
-		return NewSpotifyProvider(), nil
-	case NameKakao:
-		return NewKakaoProvider(), nil
-	case NameTwitch:
-		return NewTwitchProvider(), nil
-	case NameStrava:
-		return NewStravaProvider(), nil
-	case NameGitee:
-		return NewGiteeProvider(), nil
-	case NameLivechat:
-		return NewLivechatProvider(), nil
-	case NameGitea:
-		return NewGiteaProvider(), nil
-	case NameOIDC:
-		return NewOIDCProvider(), nil
-	case NameOIDC + "2":
-		return NewOIDCProvider(), nil
-	case NameOIDC + "3":
-		return NewOIDCProvider(), nil
-	case NameApple:
-		return NewAppleProvider(), nil
-	case NameInstagram:
-		return NewInstagramProvider(), nil
-	case NameVK:
-		return NewVKProvider(), nil
-	case NameYandex:
-		return NewYandexProvider(), nil
-	case NamePatreon:
-		return NewPatreonProvider(), nil
-	case NameMailcow:
-		return NewMailcowProvider(), nil
-	case NameBitbucket:
-		return NewBitbucketProvider(), nil
-	case NamePlanningcenter:
-		return NewPlanningcenterProvider(), nil
-	default:
-		return nil, errors.New("Missing provider " + name)
+// wrapFactory is a helper that wraps a Provider specific factory
+// function and returns its result as Provider interface.
+func wrapFactory[T Provider](factory func() T) ProviderFactoryFunc {
+	return func() Provider {
+		return factory()
 	}
+}
+
+// AuthUser defines a standardized OAuth2 user data structure.
+type AuthUser struct {
+	Expiry       types.DateTime `json:"expiry"`
+	RawUser      map[string]any `json:"rawUser"`
+	Id           string         `json:"id"`
+	Name         string         `json:"name"`
+	Username     string         `json:"username"`
+	Email        string         `json:"email"`
+	AvatarURL    string         `json:"avatarURL"`
+	AccessToken  string         `json:"accessToken"`
+	RefreshToken string         `json:"refreshToken"`
+
+	// @todo
+	// deprecated: use AvatarURL instead
+	// AvatarUrl will be removed after dropping v0.22 support
+	AvatarUrl string `json:"avatarUrl"`
+}
+
+// MarshalJSON implements the [json.Marshaler] interface.
+//
+// @todo remove after dropping v0.22 support
+func (au AuthUser) MarshalJSON() ([]byte, error) {
+	type alias AuthUser // prevent recursion
+
+	au2 := alias(au)
+	au2.AvatarURL = au.AvatarURL // ensure that the legacy field is populated
+
+	return json.Marshal(au2)
 }

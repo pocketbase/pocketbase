@@ -1,121 +1,123 @@
 package apis
 
 import (
+	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
+	"strings"
 
-	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/forms"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/resolvers"
+	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/router"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
 // bindRecordCrudApi registers the record crud api endpoints and
 // the corresponding handlers.
-func bindRecordCrudApi(app core.App, rg *echo.Group) {
-	api := recordApi{app: app}
-
-	subGroup := rg.Group(
-		"/collections/:collection",
-		ActivityLogger(app),
-	)
-
-	subGroup.GET("/records", api.list, LoadCollectionContext(app))
-	subGroup.GET("/records/:id", api.view, LoadCollectionContext(app))
-	subGroup.POST("/records", api.create, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
-	subGroup.PATCH("/records/:id", api.update, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
-	subGroup.DELETE("/records/:id", api.delete, LoadCollectionContext(app, models.CollectionTypeBase, models.CollectionTypeAuth))
+//
+// note: the rate limiter is "inlined" because some of the crud actions are also used in the batch APIs
+func bindRecordCrudApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
+	subGroup := rg.Group("/collections/{collection}/records").Unbind(DefaultRateLimitMiddlewareId)
+	subGroup.GET("", recordsList)
+	subGroup.GET("/{id}", recordView)
+	subGroup.POST("", recordCreate(nil)).Bind(dynamicCollectionBodyLimit(""))
+	subGroup.PATCH("/{id}", recordUpdate(nil)).Bind(dynamicCollectionBodyLimit(""))
+	subGroup.DELETE("/{id}", recordDelete(nil))
 }
 
-type recordApi struct {
-	app core.App
-}
-
-func (api *recordApi) list(c echo.Context) error {
-	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
-	if collection == nil {
-		return NewNotFoundError("", "Missing collection context.")
+func recordsList(e *core.RequestEvent) error {
+	collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
+	if err != nil || collection == nil {
+		return e.NotFoundError("Missing collection context.", err)
 	}
 
-	requestInfo := RequestInfo(c)
-
-	// forbid users and guests to query special filter/sort fields
-	if err := checkForAdminOnlyRuleFields(requestInfo); err != nil {
+	err = checkCollectionRateLimit(e, collection, "list")
+	if err != nil {
 		return err
 	}
 
-	if requestInfo.Admin == nil && collection.ListRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
+	requestInfo, err := e.RequestInfo()
+	if err != nil {
+		return firstApiError(err, e.BadRequestError("", err))
 	}
 
-	fieldsResolver := resolvers.NewRecordFieldResolver(
-		api.app.Dao(),
+	if collection.ListRule == nil && !requestInfo.HasSuperuserAuth() {
+		return e.ForbiddenError("Only superusers can perform this action.", nil)
+	}
+
+	// forbid users and guests to query special filter/sort fields
+	err = checkForSuperuserOnlyRuleFields(requestInfo)
+	if err != nil {
+		return err
+	}
+
+	fieldsResolver := core.NewRecordFieldResolver(
+		e.App,
 		collection,
 		requestInfo,
-		// hidden fields are searchable only by admins
-		requestInfo.Admin != nil,
+		// hidden fields are searchable only by superusers
+		requestInfo.HasSuperuserAuth(),
 	)
 
 	searchProvider := search.NewProvider(fieldsResolver).
-		Query(api.app.Dao().RecordQuery(collection))
+		Query(e.App.RecordQuery(collection))
 
-	if requestInfo.Admin == nil && collection.ListRule != nil {
+	if !requestInfo.HasSuperuserAuth() && collection.ListRule != nil {
 		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
 	}
 
-	records := []*models.Record{}
+	records := []*core.Record{}
 
-	result, err := searchProvider.ParseAndExec(c.QueryParams().Encode(), &records)
+	result, err := searchProvider.ParseAndExec(e.Request.URL.Query().Encode(), &records)
 	if err != nil {
-		return NewBadRequestError("", err)
+		return firstApiError(err, e.BadRequestError("", err))
 	}
 
-	event := new(core.RecordsListEvent)
-	event.HttpContext = c
+	event := new(core.RecordsListRequestEvent)
+	event.RequestEvent = e
 	event.Collection = collection
 	event.Records = records
 	event.Result = result
 
-	return api.app.OnRecordsListRequest().Trigger(event, func(e *core.RecordsListEvent) error {
-		if e.HttpContext.Response().Committed {
-			return nil
+	return e.App.OnRecordsListRequest().Trigger(event, func(e *core.RecordsListRequestEvent) error {
+		if err := EnrichRecords(e.RequestEvent, e.Records); err != nil {
+			return firstApiError(err, e.InternalServerError("Failed to enrich records", err))
 		}
 
-		if err := EnrichRecords(e.HttpContext, api.app.Dao(), e.Records); err != nil {
-			api.app.Logger().Debug("Failed to enrich list records", slog.String("error", err.Error()))
-		}
-
-		return e.HttpContext.JSON(http.StatusOK, e.Result)
+		return e.JSON(http.StatusOK, e.Result)
 	})
 }
 
-func (api *recordApi) view(c echo.Context) error {
-	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
-	if collection == nil {
-		return NewNotFoundError("", "Missing collection context.")
+func recordView(e *core.RequestEvent) error {
+	collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
+	if err != nil || collection == nil {
+		return e.NotFoundError("Missing collection context.", err)
 	}
 
-	recordId := c.PathParam("id")
+	err = checkCollectionRateLimit(e, collection, "view")
+	if err != nil {
+		return err
+	}
+
+	recordId := e.Request.PathValue("id")
 	if recordId == "" {
-		return NewNotFoundError("", nil)
+		return e.NotFoundError("", nil)
 	}
 
-	requestInfo := RequestInfo(c)
+	requestInfo, err := e.RequestInfo()
+	if err != nil {
+		return firstApiError(err, e.BadRequestError("", err))
+	}
 
-	if requestInfo.Admin == nil && collection.ViewRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
+	if collection.ViewRule == nil && !requestInfo.HasSuperuserAuth() {
+		return e.ForbiddenError("Only superusers can perform this action.", nil)
 	}
 
 	ruleFunc := func(q *dbx.SelectQuery) error {
-		if requestInfo.Admin == nil && collection.ViewRule != nil && *collection.ViewRule != "" {
-			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestInfo, true)
+		if !requestInfo.HasSuperuserAuth() && collection.ViewRule != nil && *collection.ViewRule != "" {
+			resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
 			expr, err := search.FilterData(*collection.ViewRule).BuildExpr(resolver)
 			if err != nil {
 				return err
@@ -126,290 +128,472 @@ func (api *recordApi) view(c echo.Context) error {
 		return nil
 	}
 
-	record, fetchErr := api.app.Dao().FindRecordById(collection.Id, recordId, ruleFunc)
+	record, fetchErr := e.App.FindRecordById(collection, recordId, ruleFunc)
 	if fetchErr != nil || record == nil {
-		return NewNotFoundError("", fetchErr)
+		return firstApiError(err, e.NotFoundError("", fetchErr))
 	}
 
-	event := new(core.RecordViewEvent)
-	event.HttpContext = c
+	event := new(core.RecordRequestEvent)
+	event.RequestEvent = e
 	event.Collection = collection
 	event.Record = record
 
-	return api.app.OnRecordViewRequest().Trigger(event, func(e *core.RecordViewEvent) error {
-		if e.HttpContext.Response().Committed {
-			return nil
+	return e.App.OnRecordViewRequest().Trigger(event, func(e *core.RecordRequestEvent) error {
+		if err := EnrichRecord(e.RequestEvent, e.Record); err != nil {
+			return firstApiError(err, e.InternalServerError("Failed to enrich record", err))
 		}
 
-		if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil {
-			api.app.Logger().Debug(
-				"Failed to enrich view record",
-				slog.String("id", e.Record.Id),
-				slog.String("collectionName", e.Record.Collection().Name),
-				slog.String("error", err.Error()),
-			)
-		}
-
-		return e.HttpContext.JSON(http.StatusOK, e.Record)
+		return e.JSON(http.StatusOK, e.Record)
 	})
 }
 
-func (api *recordApi) create(c echo.Context) error {
-	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
-	if collection == nil {
-		return NewNotFoundError("", "Missing collection context.")
-	}
+func recordCreate(optFinalizer func() error) func(e *core.RequestEvent) error {
+	return func(e *core.RequestEvent) error {
+		collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
+		if err != nil || collection == nil {
+			return e.NotFoundError("Missing collection context.", err)
+		}
 
-	requestInfo := RequestInfo(c)
+		if collection.IsView() {
+			return e.BadRequestError("Unsupported collection type.", nil)
+		}
 
-	if requestInfo.Admin == nil && collection.CreateRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
-	}
+		err = checkCollectionRateLimit(e, collection, "create")
+		if err != nil {
+			return err
+		}
 
-	hasFullManageAccess := requestInfo.Admin != nil
+		requestInfo, err := e.RequestInfo()
+		if err != nil {
+			return firstApiError(err, e.BadRequestError("", err))
+		}
 
-	// temporary save the record and check it against the create rule
-	if requestInfo.Admin == nil && collection.CreateRule != nil {
-		testRecord := models.NewRecord(collection)
+		hasSuperuserAuth := requestInfo.HasSuperuserAuth()
+		canSkipRuleCheck := hasSuperuserAuth
+
+		// special case for the first superuser creation
+		// ---
+		if !canSkipRuleCheck && collection.Name == core.CollectionNameSuperusers {
+			total, totalErr := e.App.CountRecords(core.CollectionNameSuperusers)
+			canSkipRuleCheck = totalErr == nil && total == 0
+		}
+		// ---
+
+		if !canSkipRuleCheck && collection.CreateRule == nil {
+			return e.ForbiddenError("Only superusers can perform this action.", nil)
+		}
+
+		record := core.NewRecord(collection)
+
+		data, err := recordDataFromRequest(e, record)
+		if err != nil {
+			return firstApiError(err, e.BadRequestError("Failed to read the submitted data.", err))
+		}
 
 		// replace modifiers fields so that the resolved value is always
-		// available when accessing requestInfo.Data using just the field name
-		if requestInfo.HasModifierDataKeys() {
-			requestInfo.Data = testRecord.ReplaceModifers(requestInfo.Data)
-		}
+		// available when accessing requestInfo.Body
+		requestInfo.Body = data
 
-		testForm := forms.NewRecordUpsert(api.app, testRecord)
-		testForm.SetFullManageAccess(true)
-		if err := testForm.LoadRequest(c.Request(), ""); err != nil {
-			return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
+		form := forms.NewRecordUpsert(e.App, record)
+		if hasSuperuserAuth {
+			form.GrantSuperuserAccess()
 		}
+		form.Load(data)
 
-		// force unset the verified state to prevent ManageRule misuse
-		if !hasFullManageAccess {
-			testForm.Verified = false
-		}
+		var isOptFinalizerCalled bool
 
-		createRuleFunc := func(q *dbx.SelectQuery) error {
-			if *collection.CreateRule == "" {
-				return nil // no create rule to resolve
+		event := new(core.RecordRequestEvent)
+		event.RequestEvent = e
+		event.Collection = collection
+		event.Record = record
+
+		hookErr := e.App.OnRecordCreateRequest().Trigger(event, func(e *core.RecordRequestEvent) error {
+			form.SetApp(e.App)
+			form.SetRecord(e.Record)
+
+			// temporary save the record and check it against the create and manage rules
+			if !canSkipRuleCheck && e.Collection.CreateRule != nil {
+				// temporary grant manager access level
+				form.GrantManagerAccess()
+
+				// manually unset the verified field to prevent manage API rule misuse in case the rule relies on it
+				initialVerified := e.Record.Verified()
+				if initialVerified {
+					e.Record.SetVerified(false)
+				}
+
+				createRuleFunc := func(q *dbx.SelectQuery) error {
+					if *e.Collection.CreateRule == "" {
+						return nil // no create rule to resolve
+					}
+
+					resolver := core.NewRecordFieldResolver(e.App, e.Collection, requestInfo, true)
+					expr, err := search.FilterData(*e.Collection.CreateRule).BuildExpr(resolver)
+					if err != nil {
+						return err
+					}
+					resolver.UpdateQuery(q)
+					q.AndWhere(expr)
+
+					return nil
+				}
+
+				testErr := form.DrySubmit(func(txApp core.App, drySavedRecord *core.Record) error {
+					foundRecord, err := txApp.FindRecordById(drySavedRecord.Collection(), drySavedRecord.Id, createRuleFunc)
+					if err != nil {
+						return fmt.Errorf("DrySubmit create rule failure: %w", err)
+					}
+
+					// reset the form access level in case it satisfies the Manage API rule
+					if !hasAuthManageAccess(txApp, requestInfo, foundRecord) {
+						form.ResetAccess()
+					}
+
+					return nil
+				})
+				if testErr != nil {
+					return e.BadRequestError("Failed to create record.", testErr)
+				}
+
+				// restore initial verified state (it will be further validated on submit)
+				if initialVerified != e.Record.Verified() {
+					e.Record.SetVerified(initialVerified)
+				}
 			}
 
-			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestInfo, true)
-			expr, err := search.FilterData(*collection.CreateRule).BuildExpr(resolver)
+			err := form.Submit()
+			if err != nil {
+				return firstApiError(err, e.BadRequestError("Failed to create record.", err))
+			}
+
+			err = EnrichRecord(e.RequestEvent, e.Record)
+			if err != nil {
+				return firstApiError(err, e.InternalServerError("Failed to enrich record", err))
+			}
+
+			err = e.JSON(http.StatusOK, e.Record)
 			if err != nil {
 				return err
 			}
-			resolver.UpdateQuery(q)
-			q.AndWhere(expr)
-			return nil
-		}
 
-		testErr := testForm.DrySubmit(func(txDao *daos.Dao) error {
-			foundRecord, err := txDao.FindRecordById(collection.Id, testRecord.Id, createRuleFunc)
-			if err != nil {
-				return fmt.Errorf("DrySubmit create rule failure: %w", err)
+			if optFinalizer != nil {
+				isOptFinalizerCalled = true
+				err = optFinalizer()
+				if err != nil {
+					return firstApiError(err, e.InternalServerError("", err))
+				}
 			}
-			hasFullManageAccess = hasAuthManageAccess(txDao, foundRecord, requestInfo)
+
 			return nil
 		})
-
-		if testErr != nil {
-			return NewBadRequestError("Failed to create record.", testErr)
+		if hookErr != nil {
+			return hookErr
 		}
-	}
 
-	record := models.NewRecord(collection)
-	form := forms.NewRecordUpsert(api.app, record)
-	form.SetFullManageAccess(hasFullManageAccess)
-
-	// load request
-	if err := form.LoadRequest(c.Request(), ""); err != nil {
-		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
-	}
-
-	event := new(core.RecordCreateEvent)
-	event.HttpContext = c
-	event.Collection = collection
-	event.Record = record
-	event.UploadedFiles = form.FilesToUpload()
-
-	// create the record
-	return form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
-		return func(m *models.Record) error {
-			event.Record = m
-
-			return api.app.OnRecordBeforeCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
-				if err := next(e.Record); err != nil {
-					return NewBadRequestError("Failed to create record.", err)
-				}
-
-				if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil {
-					api.app.Logger().Debug(
-						"Failed to enrich create record",
-						slog.String("id", e.Record.Id),
-						slog.String("collectionName", e.Record.Collection().Name),
-						slog.String("error", err.Error()),
-					)
-				}
-
-				return api.app.OnRecordAfterCreateRequest().Trigger(event, func(e *core.RecordCreateEvent) error {
-					if e.HttpContext.Response().Committed {
-						return nil
-					}
-
-					return e.HttpContext.JSON(http.StatusOK, e.Record)
-				})
-			})
+		// e.g. in case the regular hook chain was stopped and the finalizer cannot be executed as part of the last e.Next() task
+		if !isOptFinalizerCalled && optFinalizer != nil {
+			if err := optFinalizer(); err != nil {
+				return firstApiError(err, e.InternalServerError("", err))
+			}
 		}
-	})
+
+		return nil
+	}
 }
 
-func (api *recordApi) update(c echo.Context) error {
-	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
-	if collection == nil {
-		return NewNotFoundError("", "Missing collection context.")
+func recordUpdate(optFinalizer func() error) func(e *core.RequestEvent) error {
+	return func(e *core.RequestEvent) error {
+		collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
+		if err != nil || collection == nil {
+			return e.NotFoundError("Missing collection context.", err)
+		}
+
+		if collection.IsView() {
+			return e.BadRequestError("Unsupported collection type.", nil)
+		}
+
+		err = checkCollectionRateLimit(e, collection, "update")
+		if err != nil {
+			return err
+		}
+
+		recordId := e.Request.PathValue("id")
+		if recordId == "" {
+			return e.NotFoundError("", nil)
+		}
+
+		requestInfo, err := e.RequestInfo()
+		if err != nil {
+			return firstApiError(err, e.BadRequestError("", err))
+		}
+
+		hasSuperuserAuth := requestInfo.HasSuperuserAuth()
+
+		if !hasSuperuserAuth && collection.UpdateRule == nil {
+			return firstApiError(err, e.ForbiddenError("Only superusers can perform this action.", nil))
+		}
+
+		// eager fetch the record so that the modifiers field values can be resolved
+		record, err := e.App.FindRecordById(collection, recordId)
+		if err != nil {
+			return firstApiError(err, e.NotFoundError("", err))
+		}
+
+		data, err := recordDataFromRequest(e, record)
+		if err != nil {
+			return firstApiError(err, e.BadRequestError("Failed to read the submitted data.", err))
+		}
+
+		// replace modifiers fields so that the resolved value is always
+		// available when accessing requestInfo.Body
+		requestInfo.Body = data
+
+		ruleFunc := func(q *dbx.SelectQuery) error {
+			if !hasSuperuserAuth && collection.UpdateRule != nil && *collection.UpdateRule != "" {
+				resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
+				expr, err := search.FilterData(*collection.UpdateRule).BuildExpr(resolver)
+				if err != nil {
+					return err
+				}
+				resolver.UpdateQuery(q)
+				q.AndWhere(expr)
+			}
+			return nil
+		}
+
+		// refetch with access checks
+		record, err = e.App.FindRecordById(collection, recordId, ruleFunc)
+		if err != nil {
+			return firstApiError(err, e.NotFoundError("", err))
+		}
+
+		form := forms.NewRecordUpsert(e.App, record)
+		if hasSuperuserAuth {
+			form.GrantSuperuserAccess()
+		}
+		form.Load(data)
+
+		var isOptFinalizerCalled bool
+
+		event := new(core.RecordRequestEvent)
+		event.RequestEvent = e
+		event.Collection = collection
+		event.Record = record
+
+		hookErr := e.App.OnRecordUpdateRequest().Trigger(event, func(e *core.RecordRequestEvent) error {
+			form.SetApp(e.App)
+			form.SetRecord(e.Record)
+			if !form.HasManageAccess() && hasAuthManageAccess(e.App, requestInfo, e.Record) {
+				form.GrantManagerAccess()
+			}
+
+			err := form.Submit()
+			if err != nil {
+				return firstApiError(err, e.BadRequestError("Failed to update record.", err))
+			}
+
+			err = EnrichRecord(e.RequestEvent, e.Record)
+			if err != nil {
+				return firstApiError(err, e.InternalServerError("Failed to enrich record", err))
+			}
+
+			err = e.JSON(http.StatusOK, e.Record)
+			if err != nil {
+				return err
+			}
+
+			if optFinalizer != nil {
+				isOptFinalizerCalled = true
+				err = optFinalizer()
+				if err != nil {
+					return firstApiError(err, e.InternalServerError("", fmt.Errorf("update optFinalizer error: %w", err)))
+				}
+			}
+
+			return nil
+		})
+		if hookErr != nil {
+			return hookErr
+		}
+
+		// e.g. in case the regular hook chain was stopped and the finalizer cannot be executed as part of the last e.Next() task
+		if !isOptFinalizerCalled && optFinalizer != nil {
+			if err := optFinalizer(); err != nil {
+				return firstApiError(err, e.InternalServerError("", fmt.Errorf("update optFinalizer error: %w", err)))
+			}
+		}
+
+		return nil
 	}
+}
 
-	recordId := c.PathParam("id")
-	if recordId == "" {
-		return NewNotFoundError("", nil)
-	}
+func recordDelete(optFinalizer func() error) func(e *core.RequestEvent) error {
+	return func(e *core.RequestEvent) error {
+		collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
+		if err != nil || collection == nil {
+			return e.NotFoundError("Missing collection context.", err)
+		}
 
-	requestInfo := RequestInfo(c)
+		if collection.IsView() {
+			return e.BadRequestError("Unsupported collection type.", nil)
+		}
 
-	if requestInfo.Admin == nil && collection.UpdateRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
-	}
+		err = checkCollectionRateLimit(e, collection, "delete")
+		if err != nil {
+			return err
+		}
 
-	// eager fetch the record so that the modifier field values are replaced
-	// and available when accessing requestInfo.Data using just the field name
-	if requestInfo.HasModifierDataKeys() {
-		record, err := api.app.Dao().FindRecordById(collection.Id, recordId)
+		recordId := e.Request.PathValue("id")
+		if recordId == "" {
+			return e.NotFoundError("", nil)
+		}
+
+		requestInfo, err := e.RequestInfo()
+		if err != nil {
+			return firstApiError(err, e.BadRequestError("", err))
+		}
+
+		if !requestInfo.HasSuperuserAuth() && collection.DeleteRule == nil {
+			return e.ForbiddenError("Only superusers can perform this action.", nil)
+		}
+
+		ruleFunc := func(q *dbx.SelectQuery) error {
+			if !requestInfo.HasSuperuserAuth() && collection.DeleteRule != nil && *collection.DeleteRule != "" {
+				resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
+				expr, err := search.FilterData(*collection.DeleteRule).BuildExpr(resolver)
+				if err != nil {
+					return err
+				}
+				resolver.UpdateQuery(q)
+				q.AndWhere(expr)
+			}
+			return nil
+		}
+
+		record, err := e.App.FindRecordById(collection, recordId, ruleFunc)
 		if err != nil || record == nil {
-			return NewNotFoundError("", err)
+			return e.NotFoundError("", err)
 		}
-		requestInfo.Data = record.ReplaceModifers(requestInfo.Data)
-	}
 
-	ruleFunc := func(q *dbx.SelectQuery) error {
-		if requestInfo.Admin == nil && collection.UpdateRule != nil && *collection.UpdateRule != "" {
-			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestInfo, true)
-			expr, err := search.FilterData(*collection.UpdateRule).BuildExpr(resolver)
+		var isOptFinalizerCalled bool
+
+		event := new(core.RecordRequestEvent)
+		event.RequestEvent = e
+		event.Collection = collection
+		event.Record = record
+
+		hookErr := e.App.OnRecordDeleteRequest().Trigger(event, func(e *core.RecordRequestEvent) error {
+			if err := e.App.Delete(e.Record); err != nil {
+				return firstApiError(err, e.BadRequestError("Failed to delete record. Make sure that the record is not part of a required relation reference.", err))
+			}
+
+			err = e.NoContent(http.StatusNoContent)
 			if err != nil {
 				return err
 			}
-			resolver.UpdateQuery(q)
-			q.AndWhere(expr)
+
+			if optFinalizer != nil {
+				isOptFinalizerCalled = true
+				err = optFinalizer()
+				if err != nil {
+					return firstApiError(err, e.InternalServerError("", fmt.Errorf("delete optFinalizer error: %w", err)))
+				}
+			}
+
+			return nil
+		})
+		if hookErr != nil {
+			return hookErr
 		}
+
+		// e.g. in case the regular hook chain was stopped and the finalizer cannot be executed as part of the last e.Next() task
+		if !isOptFinalizerCalled && optFinalizer != nil {
+			if err := optFinalizer(); err != nil {
+				return firstApiError(err, e.InternalServerError("", fmt.Errorf("delete optFinalizer error: %w", err)))
+			}
+		}
+
 		return nil
 	}
-
-	// fetch record
-	record, fetchErr := api.app.Dao().FindRecordById(collection.Id, recordId, ruleFunc)
-	if fetchErr != nil || record == nil {
-		return NewNotFoundError("", fetchErr)
-	}
-
-	form := forms.NewRecordUpsert(api.app, record)
-	form.SetFullManageAccess(requestInfo.Admin != nil || hasAuthManageAccess(api.app.Dao(), record, requestInfo))
-
-	// load request
-	if err := form.LoadRequest(c.Request(), ""); err != nil {
-		return NewBadRequestError("Failed to load the submitted data due to invalid formatting.", err)
-	}
-
-	event := new(core.RecordUpdateEvent)
-	event.HttpContext = c
-	event.Collection = collection
-	event.Record = record
-	event.UploadedFiles = form.FilesToUpload()
-
-	// update the record
-	return form.Submit(func(next forms.InterceptorNextFunc[*models.Record]) forms.InterceptorNextFunc[*models.Record] {
-		return func(m *models.Record) error {
-			event.Record = m
-
-			return api.app.OnRecordBeforeUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
-				if err := next(e.Record); err != nil {
-					return NewBadRequestError("Failed to update record.", err)
-				}
-
-				if err := EnrichRecord(e.HttpContext, api.app.Dao(), e.Record); err != nil {
-					api.app.Logger().Debug(
-						"Failed to enrich update record",
-						slog.String("id", e.Record.Id),
-						slog.String("collectionName", e.Record.Collection().Name),
-						slog.String("error", err.Error()),
-					)
-				}
-
-				return api.app.OnRecordAfterUpdateRequest().Trigger(event, func(e *core.RecordUpdateEvent) error {
-					if e.HttpContext.Response().Committed {
-						return nil
-					}
-
-					return e.HttpContext.JSON(http.StatusOK, e.Record)
-				})
-			})
-		}
-	})
 }
 
-func (api *recordApi) delete(c echo.Context) error {
-	collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
-	if collection == nil {
-		return NewNotFoundError("", "Missing collection context.")
+// -------------------------------------------------------------------
+
+func recordDataFromRequest(e *core.RequestEvent, record *core.Record) (map[string]any, error) {
+	info, err := e.RequestInfo()
+	if err != nil {
+		return nil, err
 	}
 
-	recordId := c.PathParam("id")
-	if recordId == "" {
-		return NewNotFoundError("", nil)
+	// resolve regular fields
+	result := record.ReplaceModifiers(info.Body)
+
+	// resolve uploaded files
+	uploadedFiles, err := extractUploadedFiles(e.Request, record.Collection(), "")
+	if err != nil {
+		return nil, err
 	}
-
-	requestInfo := RequestInfo(c)
-
-	if requestInfo.Admin == nil && collection.DeleteRule == nil {
-		// only admins can access if the rule is nil
-		return NewForbiddenError("Only admins can perform this action.", nil)
-	}
-
-	ruleFunc := func(q *dbx.SelectQuery) error {
-		if requestInfo.Admin == nil && collection.DeleteRule != nil && *collection.DeleteRule != "" {
-			resolver := resolvers.NewRecordFieldResolver(api.app.Dao(), collection, requestInfo, true)
-			expr, err := search.FilterData(*collection.DeleteRule).BuildExpr(resolver)
-			if err != nil {
-				return err
-			}
-			resolver.UpdateQuery(q)
-			q.AndWhere(expr)
+	if len(uploadedFiles) > 0 {
+		for k, v := range uploadedFiles {
+			result[k] = v
 		}
-		return nil
+		result = record.ReplaceModifiers(result)
 	}
 
-	record, fetchErr := api.app.Dao().FindRecordById(collection.Id, recordId, ruleFunc)
-	if fetchErr != nil || record == nil {
-		return NewNotFoundError("", fetchErr)
+	isAuth := record.Collection().IsAuth()
+
+	// unset hidden fields for non-superusers
+	if !info.HasSuperuserAuth() {
+		for _, f := range record.Collection().Fields {
+			if f.GetHidden() {
+				// exception for the auth collection "password" field
+				if isAuth && f.GetName() == core.FieldNamePassword {
+					continue
+				}
+
+				delete(result, f.GetName())
+			}
+		}
 	}
 
-	event := new(core.RecordDeleteEvent)
-	event.HttpContext = c
-	event.Collection = collection
-	event.Record = record
+	return result, nil
+}
 
-	return api.app.OnRecordBeforeDeleteRequest().Trigger(event, func(e *core.RecordDeleteEvent) error {
-		// delete the record
-		if err := api.app.Dao().DeleteRecord(e.Record); err != nil {
-			return NewBadRequestError("Failed to delete record. Make sure that the record is not part of a required relation reference.", err)
+func extractUploadedFiles(request *http.Request, collection *core.Collection, prefix string) (map[string][]*filesystem.File, error) {
+	contentType := request.Header.Get("content-type")
+	if !strings.HasPrefix(contentType, "multipart/form-data") {
+		return nil, nil // not multipart/form-data request
+	}
+
+	result := map[string][]*filesystem.File{}
+
+	for _, field := range collection.Fields {
+		if field.Type() != core.FieldTypeFile {
+			continue
 		}
 
-		return api.app.OnRecordAfterDeleteRequest().Trigger(event, func(e *core.RecordDeleteEvent) error {
-			if e.HttpContext.Response().Committed {
-				return nil
-			}
+		baseKey := field.GetName()
 
-			return e.HttpContext.NoContent(http.StatusNoContent)
-		})
-	})
+		keys := []string{
+			baseKey,
+			// prepend and append modifiers
+			"+" + baseKey,
+			baseKey + "+",
+		}
+
+		for _, k := range keys {
+			if prefix != "" {
+				k = prefix + "." + k
+			}
+			files, err := FindUploadedFiles(request, k)
+			if err != nil && !errors.Is(err, http.ErrMissingFile) {
+				return nil, err
+			}
+			if len(files) > 0 {
+				result[k] = files
+			}
+		}
+	}
+
+	return result, nil
 }

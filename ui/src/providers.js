@@ -1,7 +1,7 @@
-import SelfHostedOptions from "@/components/settings/providers/SelfHostedOptions.svelte";
-import OIDCOptions       from "@/components/settings/providers/OIDCOptions.svelte";
-import MicrosoftOptions  from "@/components/settings/providers/MicrosoftOptions.svelte";
-import AppleOptions      from "@/components/settings/providers/AppleOptions.svelte";
+import AppleOptions from "@/components/collections/providers/AppleOptions.svelte";
+import MicrosoftOptions from "@/components/collections/providers/MicrosoftOptions.svelte";
+import OIDCOptions from "@/components/collections/providers/OIDCOptions.svelte";
+import SelfHostedOptions from "@/components/collections/providers/SelfHostedOptions.svelte";
 
 // Object list with all supported OAuth2 providers in the format:
 // ```
@@ -16,139 +16,139 @@ import AppleOptions      from "@/components/settings/providers/AppleOptions.svel
 // - any other prop from optionComponentProps
 export default [
     {
-        key:   "appleAuth",
+        key: "apple",
         title: "Apple",
-        logo:  "apple.svg",
+        logo: "apple.svg",
         optionsComponent: AppleOptions,
     },
     {
-        key:   "googleAuth",
+        key: "google",
         title: "Google",
-        logo:  "google.svg",
+        logo: "google.svg",
     },
     {
-        key:   "microsoftAuth",
+        key: "microsoft",
         title: "Microsoft",
-        logo:  "microsoft.svg",
+        logo: "microsoft.svg",
         optionsComponent: MicrosoftOptions,
     },
     {
-        key:   "yandexAuth",
+        key: "yandex",
         title: "Yandex",
-        logo:  "yandex.svg",
+        logo: "yandex.svg",
     },
     {
-        key:   "facebookAuth",
+        key: "facebook",
         title: "Facebook",
-        logo:  "facebook.svg",
+        logo: "facebook.svg",
     },
     {
-        key:   "instagramAuth",
+        key: "instagram",
         title: "Instagram",
-        logo:  "instagram.svg",
+        logo: "instagram.svg",
     },
     {
-        key:   "githubAuth",
+        key: "github",
         title: "GitHub",
-        logo:  "github.svg",
+        logo: "github.svg",
     },
     {
-        key:   "gitlabAuth",
+        key: "gitlab",
         title: "GitLab",
-        logo:  "gitlab.svg",
+        logo: "gitlab.svg",
         optionsComponent: SelfHostedOptions,
         optionsComponentProps: { title: "Self-hosted endpoints (optional)" },
     },
     {
-        key:   "bitbucketAuth",
+        key: "bitbucket",
         title: "Bitbucket",
-        logo:  "bitbucket.svg",
+        logo: "bitbucket.svg",
     },
     {
-        key:   "giteeAuth",
+        key: "gitee",
         title: "Gitee",
-        logo:  "gitee.svg",
+        logo: "gitee.svg",
     },
     {
-        key:   "giteaAuth",
+        key: "gitea",
         title: "Gitea",
-        logo:  "gitea.svg",
+        logo: "gitea.svg",
         optionsComponent: SelfHostedOptions,
         optionsComponentProps: { title: "Self-hosted endpoints (optional)" },
     },
     {
-        key:   "discordAuth",
+        key: "discord",
         title: "Discord",
-        logo:  "discord.svg",
+        logo: "discord.svg",
     },
     {
-        key:   "twitterAuth",
+        key: "twitter",
         title: "Twitter",
-        logo:  "twitter.svg",
+        logo: "twitter.svg",
     },
     {
-        key:   "kakaoAuth",
+        key: "kakao",
         title: "Kakao",
-        logo:  "kakao.svg",
+        logo: "kakao.svg",
     },
     {
-        key:   "vkAuth",
+        key: "vk",
         title: "VK",
-        logo:  "vk.svg"
+        logo: "vk.svg"
     },
     {
-        key:   "spotifyAuth",
+        key: "spotify",
         title: "Spotify",
-        logo:  "spotify.svg",
+        logo: "spotify.svg",
     },
     {
-        key:   "twitchAuth",
+        key: "twitch",
         title: "Twitch",
-        logo:  "twitch.svg",
+        logo: "twitch.svg",
     },
     {
-        key:   "patreonAuth",
+        key: "patreon",
         title: "Patreon (v2)",
-        logo:  "patreon.svg"
+        logo: "patreon.svg"
     },
     {
-        key:   "stravaAuth",
+        key: "strava",
         title: "Strava",
-        logo:  "strava.svg",
+        logo: "strava.svg",
     },
     {
-        key:   "livechatAuth",
+        key: "livechat",
         title: "LiveChat",
-        logo:  "livechat.svg",
+        logo: "livechat.svg",
     },
     {
-        key:   "mailcowAuth",
+        key: "mailcow",
         title: "mailcow",
-        logo:  "mailcow.svg",
+        logo: "mailcow.svg",
         optionsComponent: SelfHostedOptions,
         optionsComponentProps: { required: true },
     },
     {
-        key:   "planningcenterAuth",
+        key: "planningcenter",
         title: "Planning Center",
-        logo:  "planningcenter.svg",
+        logo: "planningcenter.svg",
     },
     {
-        key:   "oidcAuth",
+        key: "oidc",
         title: "OpenID Connect",
-        logo:  "oidc.svg",
+        logo: "oidc.svg",
         optionsComponent: OIDCOptions,
     },
     {
-        key:   "oidc2Auth",
+        key: "oidc2",
         title: "(2) OpenID Connect",
-        logo:  "oidc.svg",
+        logo: "oidc.svg",
         optionsComponent: OIDCOptions,
     },
     {
-        key:   "oidc3Auth",
+        key: "oidc3",
         title: "(3) OpenID Connect",
-        logo:  "oidc.svg",
+        logo: "oidc.svg",
         optionsComponent: OIDCOptions,
     },
 ];

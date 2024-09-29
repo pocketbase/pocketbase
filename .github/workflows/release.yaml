@@ -7,7 +7,14 @@ on:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    env:
+      flags: ""
     steps:
+      # re-enable auto-snapshot from goreleaser-action@v3
+      # (https://github.com/goreleaser/goreleaser-action-v4-auto-snapshot-example)
+      - if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: echo "flags=--snapshot" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -16,12 +23,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.11.0
+          node-version: 20.17.0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '>=1.22.5'
+          go-version: '>=1.23.0'
 
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
@@ -36,19 +43,14 @@ jobs:
       # - name: Generate jsvm types
       #   run: go run ./plugins/jsvm/internal/types/types.go
 
-      # The prebuilt golangci-lint doesn't support go 1.18+ yet
-      # https://github.com/golangci/golangci-lint/issues/2649
-      # - name: Run linter
-      #   uses: golangci/golangci-lint-action@v3
-
       - name: Run tests
         run: go test ./...
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v3
+        uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: latest
-          args: release --clean
+          version: '~> v2'
+          args: release --clean ${{ env.flags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

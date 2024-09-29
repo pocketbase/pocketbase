@@ -71,9 +71,9 @@ declare function cronRemove(jobId: string): void;
  * Example:
  *
  * ` + "```" + `js
- * routerAdd("GET", "/hello", (c) => {
- *     return c.json(200, {"message": "Hello!"})
- * }, $apis.requireAdminOrRecordAuth())
+ * routerAdd("GET", "/hello", (e) => {
+ *     return e.json(200, {"message": "Hello!"})
+ * }, $apis.requireAuth())
  * ` + "```" + `
  *
  * _Note that this method is available only in pb_hooks context._
@@ -83,8 +83,8 @@ declare function cronRemove(jobId: string): void;
 declare function routerAdd(
   method: string,
   path: string,
-  handler: echo.HandlerFunc,
-  ...middlewares: Array<string|echo.MiddlewareFunc>,
+  handler: (e: core.RequestEvent) => void,
+  ...middlewares: Array<string|((e: core.RequestEvent) => void)|Middleware>,
 ): void;
 
 /**
@@ -94,11 +94,9 @@ declare function routerAdd(
  * Example:
  *
  * ` + "```" + `js
- * routerUse((next) => {
- *     return (c) => {
- *         console.log(c.path())
- *         return next(c)
- *     }
+ * routerUse((e) => {
+ *   console.log(e.request.url.path)
+ *   return e.next()
  * })
  * ` + "```" + `
  *
@@ -106,34 +104,7 @@ declare function routerAdd(
  *
  * @group PocketBase
  */
-declare function routerUse(...middlewares: Array<string|echo.MiddlewareFunc>): void;
-
-/**
- * RouterPre registers one or more global middlewares that are executed
- * BEFORE the router processes the request. It is usually used for making
- * changes to the request properties, for example, adding or removing
- * a trailing slash or adding segments to a path so it matches a route.
- *
- * NB! Since the router will not have processed the request yet,
- * middlewares registered at this level won't have access to any path
- * related APIs from echo.Context.
- *
- * Example:
- *
- * ` + "```" + `js
- * routerPre((next) => {
- *     return (c) => {
- *         console.log(c.request().url)
- *         return next(c)
- *     }
- * })
- * ` + "```" + `
- *
- * _Note that this method is available only in pb_hooks context._
- *
- * @group PocketBase
- */
-declare function routerPre(...middlewares: Array<string|echo.MiddlewareFunc>): void;
+declare function routerUse(...middlewares: Array<string|((e: core.RequestEvent) => void)|Middleware): void;
 
 // -------------------------------------------------------------------
 // baseBinds
@@ -151,7 +122,7 @@ declare var __hooks: string
 //
 // See https://www.typescriptlang.org/docs/handbook/2/mapped-types.html#key-remapping-via-as
 type excludeHooks<Type> = {
-    [Property in keyof Type as Exclude<Property, ` + "`on${string}`" + `>]: Type[Property]
+    [Property in keyof Type as Exclude<Property, ` + "`on${string}`" + `|'cron'>]: Type[Property]
 };
 
 // core.App without the on* hook methods
@@ -194,22 +165,34 @@ declare var $app: PocketBase
 declare var $template: template.Registry
 
 /**
- * readerToString reads the content of the specified io.Reader until
- * EOF or maxBytes are reached.
+ * This method is superseded by toString.
  *
- * If maxBytes is not specified it will read up to 32MB.
+ * @deprecated
+ * @group PocketBase
+ */
+declare function readerToString(reader: any, maxBytes?: number): string;
+
+/**
+ * toString stringifies the specified value.
  *
- * Note that after this call the reader can't be used anymore.
+ * Support optional second maxBytes argument to limit the max read bytes
+ * when the value is a io.Reader (default to 32MB).
+ *
+ * Types that don't have explicit string representation are json serialized.
  *
  * Example:
  *
  * ` + "```" + `js
- * const rawBody = readerToString(c.request().body)
+ * // io.Reader
+ * const ex1 = toString(e.request.body)
+ *
+ * // slice of bytes ("hello")
+ * const ex2 = toString([104 101 108 108 111])
  * ` + "```" + `
  *
  * @group PocketBase
  */
-declare function readerToString(reader: any, maxBytes?: number): string;
+declare function toString(val: any, maxBytes?: number): string;
 
 /**
  * sleep pauses the current goroutine for at least the specified user duration (in ms).
@@ -244,15 +227,18 @@ declare function arrayOf<T>(model: T): Array<T>;
 /**
  * DynamicModel creates a new dynamic model with fields from the provided data shape.
  *
+ * Note that in order to use 0 as double/float initialization number you have to use negative zero (` + "`-0`" + `).
+ *
  * Example:
  *
  * ` + "```" + `js
  * const model = new DynamicModel({
- *     name:  ""
- *     age:    0,
- *     active: false,
- *     roles:  [],
- *     meta:   {}
+ *     name:       ""
+ *     age:        0,  // int64
+ *     totalSpent: -0, // float64
+ *     active:     false,
+ *     roles:      [],
+ *     meta:       {}
  * })
  * ` + "```" + `
  *
@@ -279,12 +265,12 @@ declare class DynamicModel {
  * @group PocketBase
  */
 declare const Record: {
-  new(collection?: models.Collection, data?: { [key:string]: any }): models.Record
+  new(collection?: core.Collection, data?: { [key:string]: any }): core.Record
 
   // note: declare as "newable" const due to conflict with the Record TS utility type
 }
 
-interface Collection extends models.Collection{} // merge
+interface Collection extends core.Collection{} // merge
 /**
  * Collection model class.
  *
@@ -295,12 +281,13 @@ interface Collection extends models.Collection{} // merge
  *     listRule:   "@request.auth.id != '' || status = 'public'",
  *     viewRule:   "@request.auth.id != '' || status = 'public'",
  *     deleteRule: "@request.auth.id != ''",
- *     schema: [
+ *     fields: [
  *         {
  *             name: "title",
  *             type: "text",
  *             required: true,
- *             options: { min: 6, max: 100 },
+ *             min: 6,
+ *             max: 100,
  *         },
  *         {
  *             name: "description",
@@ -312,44 +299,242 @@ interface Collection extends models.Collection{} // merge
  *
  * @group PocketBase
  */
-declare class Collection implements models.Collection {
-  constructor(data?: Partial<models.Collection>)
+declare class Collection implements core.Collection {
+  constructor(data?: Partial<core.Collection>)
 }
 
-interface Admin extends models.Admin{} // merge
+interface BaseCollection extends core.Collection{} // merge
 /**
- * Admin model class.
+ * Alias for a "base" collection class.
  *
  * ` + "```" + `js
- * const admin = new Admin()
- * admin.email = "test@example.com"
- * admin.setPassword(1234567890)
+ * const collection = new BaseCollection({
+ *     name:       "article",
+ *     listRule:   "@request.auth.id != '' || status = 'public'",
+ *     viewRule:   "@request.auth.id != '' || status = 'public'",
+ *     deleteRule: "@request.auth.id != ''",
+ *     fields: [
+ *         {
+ *             name: "title",
+ *             type: "text",
+ *             required: true,
+ *             min: 6,
+ *             max: 100,
+ *         },
+ *         {
+ *             name: "description",
+ *             type: "text",
+ *         },
+ *     ]
+ * })
  * ` + "```" + `
  *
  * @group PocketBase
  */
-declare class Admin implements models.Admin {
-  constructor(data?: Partial<models.Admin>)
+declare class BaseCollection implements core.Collection {
+  constructor(data?: Partial<core.Collection>)
 }
 
-interface Schema extends schema.Schema{} // merge
+interface AuthCollection extends core.Collection{} // merge
 /**
- * Schema model class, usually used to define the Collection.schema field.
+ * Alias for an "auth" collection class.
+ *
+ * ` + "```" + `js
+ * const collection = new AuthCollection({
+ *     name:       "clients",
+ *     listRule:   "@request.auth.id != '' || status = 'public'",
+ *     viewRule:   "@request.auth.id != '' || status = 'public'",
+ *     deleteRule: "@request.auth.id != ''",
+ *     fields: [
+ *         {
+ *             name: "title",
+ *             type: "text",
+ *             required: true,
+ *             min: 6,
+ *             max: 100,
+ *         },
+ *         {
+ *             name: "description",
+ *             type: "text",
+ *         },
+ *     ]
+ * })
+ * ` + "```" + `
  *
  * @group PocketBase
  */
-declare class Schema implements schema.Schema {
-  constructor(data?: Partial<schema.Schema>)
+declare class AuthCollection implements core.Collection {
+  constructor(data?: Partial<core.Collection>)
 }
 
-interface SchemaField extends schema.SchemaField{} // merge
+interface ViewCollection extends core.Collection{} // merge
 /**
- * SchemaField model class, usually used as part of the Schema model.
+ * Alias for a "view" collection class.
+ *
+ * ` + "```" + `js
+ * const collection = new ViewCollection({
+ *     name:       "clients",
+ *     listRule:   "@request.auth.id != '' || status = 'public'",
+ *     viewRule:   "@request.auth.id != '' || status = 'public'",
+ *     deleteRule: "@request.auth.id != ''",
+ *     viewQuery:  "SELECT id, title from posts",
+ * })
+ * ` + "```" + `
  *
  * @group PocketBase
  */
-declare class SchemaField implements schema.SchemaField {
-  constructor(data?: Partial<schema.SchemaField>)
+declare class ViewCollection implements core.Collection {
+  constructor(data?: Partial<core.Collection>)
+}
+
+interface FieldsList extends core.FieldsList{} // merge
+/**
+ * FieldsList model class, usually used to define the Collection.fields.
+ *
+ * @group PocketBase
+ */
+declare class FieldsList implements core.FieldsList {
+  constructor(data?: Partial<core.FieldsList>)
+}
+
+interface Field extends core.Field{} // merge
+/**
+ * Field model class, usually used as part of the FieldsList model.
+ *
+ * @group PocketBase
+ */
+declare class Field implements core.Field {
+  constructor(data?: Partial<core.Field>)
+}
+
+interface NumberField extends core.NumberField{} // merge
+/**
+ * NumberField class defines a single "number" collection field.
+ *
+ * @group PocketBase
+ */
+declare class NumberField implements core.NumberField {
+  constructor(data?: Partial<core.NumberField>)
+}
+
+interface BoolField extends core.BoolField{} // merge
+/**
+ * BoolField class defines a single "bool" collection field.
+ *
+ * @group PocketBase
+ */
+declare class BoolField implements core.BoolField {
+  constructor(data?: Partial<core.BoolField>)
+}
+
+interface TextField extends core.TextField{} // merge
+/**
+ * TextField class defines a single "text" collection field.
+ *
+ * @group PocketBase
+ */
+declare class TextField implements core.TextField {
+  constructor(data?: Partial<core.TextField>)
+}
+
+interface URLField extends core.URLField{} // merge
+/**
+ * URLField class defines a single "url" collection field.
+ *
+ * @group PocketBase
+ */
+declare class URLField implements core.URLField {
+  constructor(data?: Partial<core.URLField>)
+}
+
+interface EmailField extends core.EmailField{} // merge
+/**
+ * EmailField class defines a single "email" collection field.
+ *
+ * @group PocketBase
+ */
+declare class EmailField implements core.EmailField {
+  constructor(data?: Partial<core.EmailField>)
+}
+
+interface EditorField extends core.EditorField{} // merge
+/**
+ * EditorField class defines a single "editor" collection field.
+ *
+ * @group PocketBase
+ */
+declare class EditorField implements core.EditorField {
+  constructor(data?: Partial<core.EditorField>)
+}
+
+interface PasswordField extends core.PasswordField{} // merge
+/**
+ * PasswordField class defines a single "password" collection field.
+ *
+ * @group PocketBase
+ */
+declare class PasswordField implements core.PasswordField {
+  constructor(data?: Partial<core.PasswordField>)
+}
+
+interface DateField extends core.DateField{} // merge
+/**
+ * DateField class defines a single "date" collection field.
+ *
+ * @group PocketBase
+ */
+declare class DateField implements core.DateField {
+  constructor(data?: Partial<core.DateField>)
+}
+
+interface AutodateField extends core.AutodateField{} // merge
+/**
+ * AutodateField class defines a single "autodate" collection field.
+ *
+ * @group PocketBase
+ */
+declare class AutodateField implements core.AutodateField {
+  constructor(data?: Partial<core.AutodateField>)
+}
+
+interface JSONField extends core.JSONField{} // merge
+/**
+ * JSONField class defines a single "json" collection field.
+ *
+ * @group PocketBase
+ */
+declare class JSONField implements core.JSONField {
+  constructor(data?: Partial<core.JSONField>)
+}
+
+interface RelationField extends core.RelationField{} // merge
+/**
+ * RelationField class defines a single "relation" collection field.
+ *
+ * @group PocketBase
+ */
+declare class RelationField implements core.RelationField {
+  constructor(data?: Partial<core.RelationField>)
+}
+
+interface SelectField extends core.SelectField{} // merge
+/**
+ * SelectField class defines a single "select" collection field.
+ *
+ * @group PocketBase
+ */
+declare class SelectField implements core.SelectField {
+  constructor(data?: Partial<core.SelectField>)
+}
+
+interface FileField extends core.FileField{} // merge
+/**
+ * FileField class defines a single "file" collection field.
+ *
+ * @group PocketBase
+ */
+declare class FileField implements core.FileField {
+  constructor(data?: Partial<core.FileField>)
 }
 
 interface MailerMessage extends mailer.Message{} // merge
@@ -397,31 +582,55 @@ declare class Command implements cobra.Command {
   constructor(cmd?: Partial<cobra.Command>)
 }
 
-interface RequestInfo extends models.RequestInfo{} // merge
+interface RequestInfo extends core.RequestInfo{} // merge
 /**
- * RequestInfo defines a single models.RequestInfo instance, usually used
+ * RequestInfo defines a single core.RequestInfo instance, usually used
  * as part of various filter checks.
  *
  * Example:
  *
  * ` + "```" + `js
- * const authRecord = $app.dao().findAuthRecordByEmail("users", "test@example.com")
+ * const authRecord = $app.findAuthRecordByEmail("users", "test@example.com")
  *
  * const info = new RequestInfo({
- *     authRecord: authRecord,
- *     data:       {"name": 123},
- *     headers:    {"x-token": "..."},
+ *     auth:    authRecord,
+ *     body:    {"name": 123},
+ *     headers: {"x-token": "..."},
  * })
  *
- * const record = $app.dao().findFirstRecordByData("articles", "slug", "hello")
+ * const record = $app.findFirstRecordByData("articles", "slug", "hello")
  *
- * const canAccess = $app.dao().canAccessRecord(record, info, "@request.auth.id != '' && @request.data.name = 123")
+ * const canAccess = $app.canAccessRecord(record, info, "@request.auth.id != '' && @request.body.name = 123")
  * ` + "```" + `
  *
  * @group PocketBase
  */
-declare class RequestInfo implements models.RequestInfo {
-  constructor(date?: Partial<models.RequestInfo>)
+declare class RequestInfo implements core.RequestInfo {
+  constructor(info?: Partial<core.RequestInfo>)
+}
+
+/**
+ * Middleware defines a single request middleware handler.
+ *
+ * This class is usually used when you want to explicitly specify a priority to your custom route middleware.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * routerUse(new Middleware((e) => {
+ *   console.log(e.request.url.path)
+ *   return e.next()
+ * }, -10))
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare class Middleware {
+  constructor(
+    func: string|((e: core.RequestEvent) => void),
+    priority?: number,
+    id?: string,
+  )
 }
 
 interface DateTime extends types.DateTime{} // merge
@@ -455,15 +664,6 @@ interface ValidationError extends ozzo_validation.Error{} // merge
  */
 declare class ValidationError implements ozzo_validation.Error {
   constructor(code?: string, message?: string)
-}
-
-interface Dao extends daos.Dao{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class Dao implements daos.Dao {
-  constructor(concurrentDB?: dbx.Builder, nonconcurrentDB?: dbx.Builder)
 }
 
 interface Cookie extends http.Cookie{} // merge
@@ -552,43 +752,20 @@ declare namespace $dbx {
 }
 
 // -------------------------------------------------------------------
-// tokensBinds
-// -------------------------------------------------------------------
-
-/**
- * ` + "`" + `$tokens` + "`" + ` defines high level helpers to generate
- * various admins and auth records tokens (auth, forgotten password, etc.).
- *
- * For more control over the generated token, you can check ` + "`" + `$security` + "`" + `.
- *
- * @group PocketBase
- */
-declare namespace $tokens {
-  let adminAuthToken:           tokens.newAdminAuthToken
-  let adminResetPasswordToken:  tokens.newAdminResetPasswordToken
-  let adminFileToken:           tokens.newAdminFileToken
-  let recordAuthToken:          tokens.newRecordAuthToken
-  let recordVerifyToken:        tokens.newRecordVerifyToken
-  let recordResetPasswordToken: tokens.newRecordResetPasswordToken
-  let recordChangeEmailToken:   tokens.newRecordChangeEmailToken
-  let recordFileToken:          tokens.newRecordFileToken
-}
-
-// -------------------------------------------------------------------
 // mailsBinds
 // -------------------------------------------------------------------
 
 /**
  * ` + "`" + `$mails` + "`" + ` defines helpers to send common
- * admins and auth records emails like verification, password reset, etc.
+ * auth records emails like verification, password reset, etc.
  *
  * @group PocketBase
  */
 declare namespace $mails {
-  let sendAdminPasswordReset:  mails.sendAdminPasswordReset
   let sendRecordPasswordReset: mails.sendRecordPasswordReset
   let sendRecordVerification:  mails.sendRecordVerification
   let sendRecordChangeEmail:   mails.sendRecordChangeEmail
+  let sendRecordOTP:           mails.sendRecordOTP
 }
 
 // -------------------------------------------------------------------
@@ -604,6 +781,7 @@ declare namespace $mails {
 declare namespace $security {
   let randomString:                   security.randomString
   let randomStringWithAlphabet:       security.randomStringWithAlphabet
+  let randomStringByRegex:            security.randomStringByRegex
   let pseudorandomString:             security.pseudorandomString
   let pseudorandomStringWithAlphabet: security.pseudorandomStringWithAlphabet
   let encrypt:                        security.encrypt
@@ -614,7 +792,11 @@ declare namespace $security {
   let md5:                            security.md5
   let sha256:                         security.sha256
   let sha512:                         security.sha512
-  let createJWT:                      security.newJWT
+
+  /**
+   * {@inheritDoc security.newJWT}
+   */
+  export function createJWT(payload: { [key:string]: any }, signingKey: string, secDuration: number): string
 
   /**
    * {@inheritDoc security.parseUnverifiedJWT}
@@ -739,42 +921,6 @@ declare namespace $os {
 // formsBinds
 // -------------------------------------------------------------------
 
-interface AdminLoginForm extends forms.AdminLogin{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class AdminLoginForm implements forms.AdminLogin {
-  constructor(app: CoreApp)
-}
-
-interface AdminPasswordResetConfirmForm extends forms.AdminPasswordResetConfirm{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class AdminPasswordResetConfirmForm implements forms.AdminPasswordResetConfirm {
-  constructor(app: CoreApp)
-}
-
-interface AdminPasswordResetRequestForm extends forms.AdminPasswordResetRequest{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class AdminPasswordResetRequestForm implements forms.AdminPasswordResetRequest {
-  constructor(app: CoreApp)
-}
-
-interface AdminUpsertForm extends forms.AdminUpsert{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class AdminUpsertForm implements forms.AdminUpsert {
-  constructor(app: CoreApp, admin: models.Admin)
-}
-
 interface AppleClientSecretCreateForm extends forms.AppleClientSecretCreate{} // merge
 /**
  * @inheritDoc
@@ -784,119 +930,13 @@ declare class AppleClientSecretCreateForm implements forms.AppleClientSecretCrea
   constructor(app: CoreApp)
 }
 
-interface CollectionUpsertForm extends forms.CollectionUpsert{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class CollectionUpsertForm implements forms.CollectionUpsert {
-  constructor(app: CoreApp, collection: models.Collection)
-}
-
-interface CollectionsImportForm extends forms.CollectionsImport{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class CollectionsImportForm implements forms.CollectionsImport {
-  constructor(app: CoreApp)
-}
-
-interface RealtimeSubscribeForm extends forms.RealtimeSubscribe{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RealtimeSubscribeForm implements forms.RealtimeSubscribe {}
-
-interface RecordEmailChangeConfirmForm extends forms.RecordEmailChangeConfirm{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RecordEmailChangeConfirmForm implements forms.RecordEmailChangeConfirm {
-  constructor(app: CoreApp, collection: models.Collection)
-}
-
-interface RecordEmailChangeRequestForm extends forms.RecordEmailChangeRequest{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RecordEmailChangeRequestForm implements forms.RecordEmailChangeRequest {
-  constructor(app: CoreApp, record: models.Record)
-}
-
-interface RecordOAuth2LoginForm extends forms.RecordOAuth2Login{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RecordOAuth2LoginForm implements forms.RecordOAuth2Login {
-  constructor(app: CoreApp, collection: models.Collection, optAuthRecord?: models.Record)
-}
-
-interface RecordPasswordLoginForm extends forms.RecordPasswordLogin{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RecordPasswordLoginForm implements forms.RecordPasswordLogin {
-  constructor(app: CoreApp, collection: models.Collection)
-}
-
-interface RecordPasswordResetConfirmForm extends forms.RecordPasswordResetConfirm{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RecordPasswordResetConfirmForm implements forms.RecordPasswordResetConfirm {
-  constructor(app: CoreApp, collection: models.Collection)
-}
-
-interface RecordPasswordResetRequestForm extends forms.RecordPasswordResetRequest{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RecordPasswordResetRequestForm implements forms.RecordPasswordResetRequest {
-  constructor(app: CoreApp, collection: models.Collection)
-}
-
 interface RecordUpsertForm extends forms.RecordUpsert{} // merge
 /**
  * @inheritDoc
  * @group PocketBase
  */
 declare class RecordUpsertForm implements forms.RecordUpsert {
-  constructor(app: CoreApp, record: models.Record)
-}
-
-interface RecordVerificationConfirmForm extends forms.RecordVerificationConfirm{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RecordVerificationConfirmForm implements forms.RecordVerificationConfirm {
-  constructor(app: CoreApp, collection: models.Collection)
-}
-
-interface RecordVerificationRequestForm extends forms.RecordVerificationRequest{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class RecordVerificationRequestForm implements forms.RecordVerificationRequest {
-  constructor(app: CoreApp, collection: models.Collection)
-}
-
-interface SettingsUpsertForm extends forms.SettingsUpsert{} // merge
-/**
- * @inheritDoc
- * @group PocketBase
- */
-declare class SettingsUpsertForm implements forms.SettingsUpsert {
-  constructor(app: CoreApp)
+  constructor(app: CoreApp, record: core.Record)
 }
 
 interface TestEmailSendForm extends forms.TestEmailSend{} // merge
@@ -971,6 +1011,26 @@ declare class UnauthorizedError implements apis.ApiError {
   constructor(message?: string, data?: any)
 }
 
+interface TooManyRequestsError extends apis.ApiError{} // merge
+/**
+ * TooManyRequestsError returns 429 ApiError.
+ *
+ * @group PocketBase
+ */
+declare class TooManyRequestsError implements apis.ApiError {
+  constructor(message?: string, data?: any)
+}
+
+interface InternalServerError extends apis.ApiError{} // merge
+/**
+ * InternalServerError returns 429 ApiError.
+ *
+ * @group PocketBase
+ */
+declare class InternalServerError implements apis.ApiError {
+  constructor(message?: string, data?: any)
+}
+
 /**
  * ` + "`" + `$apis` + "`" + ` defines commonly used PocketBase api helpers and middlewares.
  *
@@ -983,21 +1043,19 @@ declare namespace $apis {
    * If a file resource is missing and indexFallback is set, the request
    * will be forwarded to the base index.html (useful for SPA).
    */
-  export function staticDirectoryHandler(dir: string, indexFallback: boolean): echo.HandlerFunc
+  export function static(dir: string, indexFallback: boolean): (e: core.RequestEvent) => void
 
-  let requireGuestOnly:          apis.requireGuestOnly
-  let requireRecordAuth:         apis.requireRecordAuth
-  let requireAdminAuth:          apis.requireAdminAuth
-  let requireAdminAuthOnlyIfAny: apis.requireAdminAuthOnlyIfAny
-  let requireAdminOrRecordAuth:  apis.requireAdminOrRecordAuth
-  let requireAdminOrOwnerAuth:   apis.requireAdminOrOwnerAuth
-  let activityLogger:            apis.activityLogger
-  let requestInfo:               apis.requestInfo
-  let recordAuthResponse:        apis.recordAuthResponse
-  let gzip:                      middleware.gzip
-  let bodyLimit:                 middleware.bodyLimit
-  let enrichRecord:              apis.enrichRecord
-  let enrichRecords:             apis.enrichRecords
+  let requireGuestOnly:              apis.requireGuestOnly
+  let requireAuth:                   apis.requireAuth
+  let requireSuperuserAuth:          apis.requireSuperuserAuth
+  let requireSuperuserAuthOnlyIfAny: apis.requireSuperuserAuthOnlyIfAny
+  let requireSuperuserOrOwnerAuth:   apis.requireSuperuserOrOwnerAuth
+  let skipSuccessActivityLog:        apis.skipSuccessActivityLog
+  let gzip:                          apis.gzip
+  let bodyLimit:                     apis.bodyLimit
+  let recordAuthResponse:            apis.recordAuthResponse
+  let enrichRecord:                  apis.enrichRecord
+  let enrichRecords:                 apis.enrichRecords
 }
 
 // -------------------------------------------------------------------
@@ -1023,9 +1081,10 @@ declare namespace $http {
    *
    * ` + "```" + `js
    * const res = $http.send({
-   *     url:    "https://example.com",
-   *     body:   JSON.stringify({"title": "test"})
-   *     method: "post",
+   *     method:  "POST",
+   *     url:     "https://example.com",
+   *     body:    JSON.stringify({"title": "test"}),
+   *     headers: { 'Content-Type': 'application/json' }
    * })
    *
    * console.log(res.statusCode) // the response HTTP status code
@@ -1042,7 +1101,7 @@ declare namespace $http {
     headers?: { [key:string]: string },
     timeout?: number, // default to 120
 
-    // deprecated, please use body instead
+    // @deprecated please use body instead
     data?: { [key:string]: any },
   }): {
     statusCode: number,
@@ -1065,8 +1124,8 @@ declare namespace $http {
  * @group PocketBase
  */
 declare function migrate(
-  up: (db: dbx.Builder) => void,
-  down?: (db: dbx.Builder) => void
+  up: (txApp: CoreApp) => void,
+  down?: (txApp: CoreApp) => void
 ): void;
 `
 
@@ -1077,13 +1136,11 @@ func main() {
 
 	gen := tygoja.New(tygoja.Config{
 		Packages: map[string][]string{
-			"github.com/labstack/echo/v5/middleware":            {"Gzip", "BodyLimit"},
 			"github.com/go-ozzo/ozzo-validation/v4":             {"Error"},
 			"github.com/pocketbase/dbx":                         {"*"},
 			"github.com/pocketbase/pocketbase/tools/security":   {"*"},
 			"github.com/pocketbase/pocketbase/tools/filesystem": {"*"},
 			"github.com/pocketbase/pocketbase/tools/template":   {"*"},
-			"github.com/pocketbase/pocketbase/tokens":           {"*"},
 			"github.com/pocketbase/pocketbase/mails":            {"*"},
 			"github.com/pocketbase/pocketbase/apis":             {"*"},
 			"github.com/pocketbase/pocketbase/forms":            {"*"},
@@ -1099,23 +1156,25 @@ func main() {
 			return mapper.MethodName(nil, reflect.Method{Name: s})
 		},
 		TypeMappings: map[string]string{
-			"crypto.*":    "any",
-			"acme.*":      "any",
-			"autocert.*":  "any",
-			"driver.*":    "any",
-			"reflect.*":   "any",
-			"fmt.*":       "any",
-			"rand.*":      "any",
-			"tls.*":       "any",
-			"asn1.*":      "any",
-			"pkix.*":      "any",
-			"x509.*":      "any",
-			"pflag.*":     "any",
-			"flag.*":      "any",
-			"log.*":       "any",
-			"http.Client": "any",
+			"crypto.*":     "any",
+			"acme.*":       "any",
+			"autocert.*":   "any",
+			"driver.*":     "any",
+			"reflect.*":    "any",
+			"fmt.*":        "any",
+			"rand.*":       "any",
+			"tls.*":        "any",
+			"asn1.*":       "any",
+			"pkix.*":       "any",
+			"x509.*":       "any",
+			"pflag.*":      "any",
+			"flag.*":       "any",
+			"log.*":        "any",
+			"aws.*":        "any",
+			"http.Client":  "any",
+			"mail.Address": "{ address: string; name?: string; }", // prevents the LSP to complain in case no name is provided
 		},
-		Indent:               " ", // use only a single space to reduce slight the size
+		Indent:               " ", // use only a single space to reduce slightly the size
 		WithPackageFunctions: true,
 		Heading:              declarations,
 	})
@@ -1151,7 +1210,7 @@ func main() {
 func hooksDeclarations() string {
 	var result strings.Builder
 
-	excluded := []string{"OnBeforeServe"}
+	excluded := []string{"OnServe"}
 	appType := reflect.TypeOf(struct{ core.App }{})
 	totalMethods := appType.NumMethod()
 
@@ -1165,7 +1224,7 @@ func hooksDeclarations() string {
 
 		withTags := strings.HasPrefix(hookType.String(), "*hook.TaggedHook")
 
-		addMethod, ok := hookType.MethodByName("Add")
+		addMethod, ok := hookType.MethodByName("BindFunc")
 		if !ok {
 			continue
 		}

@@ -1,5 +1,8 @@
 <script>
     import { onMount } from "svelte";
+    import { pageTitle } from "@/stores/app";
+
+    $pageTitle = "OAuth2 auth failed";
 
     onMount(() => {
         window.close();

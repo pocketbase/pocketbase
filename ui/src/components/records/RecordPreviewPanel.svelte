@@ -12,7 +12,7 @@
     let record = {};
     let isLoading = false;
 
-    $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
+    $: hasEditorField = !!collection?.fields?.find((f) => f.type === "editor");
 
     export function show(model) {
         load(model);
@@ -77,7 +77,7 @@
                 </td>
             </tr>
 
-            {#each collection?.schema as field}
+            {#each collection?.fields as field}
                 <tr>
                     <td class="min-width txt-hint txt-bold">{field.name}</td>
                     <td class="col-field">

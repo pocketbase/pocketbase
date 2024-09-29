@@ -1,12 +1,15 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import { pageTitle, appName, hideControls } from "@/stores/app";
-    import { addSuccessToast } from "@/stores/toasts";
     import tooltip from "@/actions/tooltip";
-    import PageWrapper from "@/components/base/PageWrapper.svelte";
+    import { addSuccessToast } from "@/stores/toasts";
+    import { appName, hideControls, pageTitle } from "@/stores/app";
     import Field from "@/components/base/Field.svelte";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
+    import BatchAccordion from "@/components/settings/BatchAccordion.svelte";
+    import TrustedProxyAccordion from "@/components/settings/TrustedProxyAccordion.svelte";
+    import RateLimitAccordion from "@/components/settings/RateLimitAccordion.svelte";
 
     $pageTitle = "Application settings";
 
@@ -15,6 +18,7 @@
     let isLoading = false;
     let isSaving = false;
     let initialHash = "";
+    let healthData = {};
 
     $: initialHash = JSON.stringify(originalFormSettings);
 
@@ -22,12 +26,22 @@
 
     loadSettings();
 
+    async function loadHealthData() {
+        try {
+            healthData = ((await ApiClient.health.check()) || {})?.data || {};
+        } catch (err) {
+            console.warn("Health check failed:", err);
+        }
+    }
+
     async function loadSettings() {
         isLoading = true;
 
         try {
             const settings = (await ApiClient.settings.getAll()) || {};
             init(settings);
+
+            await loadHealthData();
         } catch (err) {
             ApiClient.error(err);
         }
@@ -45,6 +59,9 @@
         try {
             const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             init(settings);
+
+            await loadHealthData();
+
             addSuccessToast("Successfully saved application settings.");
         } catch (err) {
             ApiClient.error(err);
@@ -59,6 +76,9 @@
 
         formSettings = {
             meta: settings?.meta || {},
+            batch: settings.batch || {},
+            trustedProxy: settings.trustedProxy || { headers: [] },
+            rateLimits: settings.rateLimits || { tags: [] },
         };
 
         originalFormSettings = JSON.parse(JSON.stringify(formSettings));
@@ -98,49 +118,62 @@
                     </div>
 
                     <div class="col-lg-6">
-                        <Field class="form-field required" name="meta.appUrl" let:uniqueId>
+                        <Field class="form-field required" name="meta.appURL" let:uniqueId>
                             <label for={uniqueId}>Application URL</label>
-                            <input type="text" id={uniqueId} required bind:value={formSettings.meta.appUrl} />
+                            <input type="text" id={uniqueId} required bind:value={formSettings.meta.appURL} />
                         </Field>
                     </div>
-
-                    <Field class="form-field form-field-toggle" name="meta.hideControls" let:uniqueId>
-                        <input type="checkbox" id={uniqueId} bind:checked={formSettings.meta.hideControls} />
-                        <label for={uniqueId}>
-                            <span class="txt">Hide collection create and edit controls</span>
-                            <i
-                                class="ri-information-line link-hint"
-                                use:tooltip={{
-                                    text: `This could prevent making accidental schema changes when in production environment.`,
-                                    position: "right",
-                                }}
-                            />
-                        </label>
-                    </Field>
-
-                    <div class="col-lg-12 flex">
-                        <div class="flex-fill" />
-
-                        {#if hasChanges}
-                            <button
-                                type="button"
-                                class="btn btn-transparent btn-hint"
-                                disabled={isSaving}
-                                on:click={() => reset()}
-                            >
-                                <span class="txt">Cancel</span>
-                            </button>
-                        {/if}
-                        <button
-                            type="submit"
-                            class="btn btn-expanded"
-                            class:btn-loading={isSaving}
-                            disabled={!hasChanges || isSaving}
-                            on:click={() => save()}
-                        >
-                            <span class="txt">Save changes</span>
-                        </button>
+                    <div class="col-lg-12">
+                        <div class="accordions">
+                            <TrustedProxyAccordion bind:formSettings {healthData} />
+                            <RateLimitAccordion bind:formSettings />
+                            <BatchAccordion bind:formSettings />
+                        </div>
                     </div>
+                    <div class="col-lg-12">
+                        <Field class="form-field form-field-toggle m-0" name="meta.hideControls" let:uniqueId>
+                            <input
+                                type="checkbox"
+                                id={uniqueId}
+                                bind:checked={formSettings.meta.hideControls}
+                            />
+                            <label for={uniqueId}>
+                                <span class="txt">Hide collection create and edit controls</span>
+                                <i
+                                    class="ri-information-line link-hint"
+                                    use:tooltip={{
+                                        text: `This could prevent making accidental schema changes when in production environment.`,
+                                        position: "right",
+                                    }}
+                                />
+                            </label>
+                        </Field>
+                    </div>
+                </div>
+
+                <div class="flex m-t-base">
+                    <div class="flex-fill" />
+
+                    {#if hasChanges}
+                        <button
+                            type="button"
+                            class="btn btn-transparent btn-hint"
+                            disabled={isSaving}
+                            on:click={() => reset()}
+                        >
+                            <span class="txt">Cancel</span>
+                        </button>
+                    {/if}
+
+                    <button
+                        type="submit"
+                        class="btn btn-expanded"
+                        class:btn-loading={isSaving}
+                        disabled={!hasChanges || isSaving}
+                        on:click={() => save()}
+                    >
+                        <span class="txt">Save changes</span>
+                    </button>
                 </div>
             {/if}
         </form>

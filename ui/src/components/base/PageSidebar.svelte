@@ -2,7 +2,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import Dragline from "@/components/base/Dragline.svelte";
 
-    const widthStorageKey = "@adminSidebarWidth";
+    const widthStorageKey = "@superuserSidebarWidth";
 
     let classes = "";
     export { classes as class }; // export reserved keyword

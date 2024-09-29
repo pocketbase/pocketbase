@@ -9,6 +9,10 @@ import (
 	"golang.org/x/oauth2/instagram"
 )
 
+func init() {
+	Providers[NameInstagram] = wrapFactory(NewInstagramProvider)
+}
+
 var _ Provider = (*Instagram)(nil)
 
 // NameInstagram is the unique name of the Instagram provider.
@@ -16,19 +20,19 @@ const NameInstagram string = "instagram"
 
 // Instagram allows authentication via Instagram OAuth2.
 type Instagram struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewInstagramProvider creates new Instagram provider instance with some defaults.
 func NewInstagramProvider() *Instagram {
-	return &Instagram{&baseProvider{
+	return &Instagram{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Instagram",
 		pkce:        true,
 		scopes:      []string{"user_profile"},
-		authUrl:     instagram.Endpoint.AuthURL,
-		tokenUrl:    instagram.Endpoint.TokenURL,
-		userApiUrl:  "https://graph.instagram.com/me?fields=id,username,account_type",
+		authURL:     instagram.Endpoint.AuthURL,
+		tokenURL:    instagram.Endpoint.TokenURL,
+		userInfoURL: "https://graph.instagram.com/me?fields=id,username,account_type",
 	}}
 }
 
@@ -36,7 +40,7 @@ func NewInstagramProvider() *Instagram {
 //
 // API reference: https://developers.facebook.com/docs/instagram-basic-display-api/reference/user#fields
 func (p *Instagram) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}

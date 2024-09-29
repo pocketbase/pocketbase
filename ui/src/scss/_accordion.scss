@@ -21,7 +21,7 @@
         align-items: center;
         row-gap: 10px;
         column-gap: var(--smSpacing);
-        padding: ($spacing - 8) $spacing ($spacing - 10);
+        padding: ($spacing - 8) $spacing ($spacing - 8);
         width: 100%;
         user-select: none;
         color: var(--txtPrimaryColor);
@@ -130,7 +130,7 @@
     }
     & > .accordion.active,
     & > .accordion-wrapper > .accordion.active {
-        margin: var(--smSpacing) 0;
+        margin: var(--xsSpacing) 0;
         border-radius: var(--baseRadius);
         + .accordion {
             border-top-left-radius: var(--baseRadius);

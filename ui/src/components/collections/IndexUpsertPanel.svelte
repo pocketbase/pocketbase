@@ -1,9 +1,9 @@
 <script>
-    import { onMount, createEventDispatcher } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
-    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import Field from "@/components/base/Field.svelte";
+    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { createEventDispatcher, onMount } from "svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -16,10 +16,8 @@
     let codeEditorComponent;
     let isCodeEditorComponentLoading = false;
 
-    $: presetColumns = (collection?.schema?.filter((f) => !f.toDelete)?.map((f) => f.name) || []).concat([
-        "created",
-        "updated",
-    ]);
+    $: presetColumns =
+        collection?.fields?.filter((f) => !f.toDelete && f.name != "id")?.map((f) => f.name) || [];
 
     $: indexParts = CommonHelper.parseIndex(index);
 

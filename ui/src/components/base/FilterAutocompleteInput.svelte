@@ -109,7 +109,7 @@
         addLabelListeners();
     }
 
-    $: if (editor && baseCollection?.schema) {
+    $: if (editor && baseCollection?.fields) {
         editor.dispatch({
             effects: [langCompartment.reconfigure(ruleLang())],
         });
@@ -172,7 +172,7 @@
 
     // Return a collection keys hash string that can be used to compare with previous states.
     function getCollectionKeysChangeHash(collection) {
-        return JSON.stringify([collection?.name, collection?.type, collection?.schema]);
+        return JSON.stringify([collection?.name, collection?.type, collection?.fields]);
     }
 
     // Merge the base collection in a new list with the provided collections.

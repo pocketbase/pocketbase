@@ -1,26 +1,26 @@
 <script>
-    import { tick } from "svelte";
-    import { querystring } from "svelte-spa-router";
-    import CommonHelper from "@/utils/CommonHelper";
+    import tooltip from "@/actions/tooltip";
+    import PageWrapper from "@/components/base/PageWrapper.svelte";
+    import RefreshButton from "@/components/base/RefreshButton.svelte";
+    import Searchbar from "@/components/base/Searchbar.svelte";
+    import CollectionDocsPanel from "@/components/collections/CollectionDocsPanel.svelte";
+    import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
+    import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
+    import RecordPreviewPanel from "@/components/records/RecordPreviewPanel.svelte";
+    import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
+    import RecordsCount from "@/components/records/RecordsCount.svelte";
+    import RecordsList from "@/components/records/RecordsList.svelte";
+    import { hideControls, pageTitle } from "@/stores/app";
     import {
-        collections,
         activeCollection,
+        changeActiveCollectionById,
+        collections,
         isCollectionsLoading,
         loadCollections,
-        changeActiveCollectionById,
     } from "@/stores/collections";
-    import tooltip from "@/actions/tooltip";
-    import { pageTitle, hideControls } from "@/stores/app";
-    import PageWrapper from "@/components/base/PageWrapper.svelte";
-    import Searchbar from "@/components/base/Searchbar.svelte";
-    import RefreshButton from "@/components/base/RefreshButton.svelte";
-    import CollectionsSidebar from "@/components/collections/CollectionsSidebar.svelte";
-    import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
-    import CollectionDocsPanel from "@/components/collections/CollectionDocsPanel.svelte";
-    import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
-    import RecordPreviewPanel from "@/components/records/RecordPreviewPanel.svelte";
-    import RecordsList from "@/components/records/RecordsList.svelte";
-    import RecordsCount from "@/components/records/RecordsCount.svelte";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { tick } from "svelte";
+    import { querystring } from "svelte-spa-router";
 
     const initialQueryParams = new URLSearchParams($querystring);
 
@@ -31,7 +31,7 @@
     let recordsList;
     let recordsCount;
     let filter = initialQueryParams.get("filter") || "";
-    let sort = initialQueryParams.get("sort") || "-created";
+    let sort = initialQueryParams.get("sort") || "-@rowid";
     let selectedCollectionId = initialQueryParams.get("collectionId") || $activeCollection?.id;
     let totalCount = 0; // used to manully change the count without the need of reloading the recordsCount component
 
@@ -78,7 +78,7 @@
     function reset() {
         selectedCollectionId = $activeCollection?.id;
         filter = "";
-        sort = "-created";
+        sort = "-@rowid";
 
         updateQueryParams({ recordId: null });
 
@@ -106,7 +106,10 @@
 
         // invalid sort expression or missing sort field
         if (sortFields.filter((f) => collectionFields.includes(f)).length != sortFields.length) {
-            if (collectionFields.includes("created")) {
+            if ($activeCollection?.type != "view") {
+                sort = "-@rowid"; // all collections with exception to the view has this field
+            } else if (collectionFields.includes("created")) {
+                // common autodate field
                 sort = "-created";
             } else {
                 sort = "";
@@ -248,7 +251,13 @@
     </PageWrapper>
 {/if}
 
-<CollectionUpsertPanel bind:this={collectionUpsertPanel} />
+<CollectionUpsertPanel
+    bind:this={collectionUpsertPanel}
+    on:truncate={() => {
+        recordsList?.load();
+        recordsCount?.reload();
+    }}
+/>
 
 <CollectionDocsPanel bind:this={collectionDocsPanel} />
 

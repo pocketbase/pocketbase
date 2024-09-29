@@ -1,12 +1,12 @@
 <script>
+    import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import SdkTabs from "@/components/base/SdkTabs.svelte";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import CodeBlock from "@/components/base/CodeBlock.svelte";
-    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
 
     export let collection;
 
-    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseURL);
 </script>
 
 <h3 class="m-b-sm">Realtime ({collection.name})</h3>
@@ -53,13 +53,13 @@
         pb.collection('${collection?.name}').subscribe('*', function (e) {
             console.log(e.action);
             console.log(e.record);
-        }, { /* other options like expand, custom headers, etc. */ });
+        }, { /* other options like: filter, expand, custom headers, etc. */ });
 
         // Subscribe to changes only in the specified record
         pb.collection('${collection?.name}').subscribe('RECORD_ID', function (e) {
             console.log(e.action);
             console.log(e.record);
-        }, { /* other options like expand, custom headers, etc. */ });
+        }, { /* other options like: filter, expand, custom headers, etc. */ });
 
         // Unsubscribe
         pb.collection('${collection?.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
@@ -80,13 +80,13 @@
         pb.collection('${collection?.name}').subscribe('*', (e) {
             print(e.action);
             print(e.record);
-        }, /* other options like expand, custom headers, etc. */);
+        }, /* other options like: filter, expand, custom headers, etc. */);
 
         // Subscribe to changes only in the specified record
         pb.collection('${collection?.name}').subscribe('RECORD_ID', (e) {
             print(e.action);
             print(e.record);
-        }, /* other options like expand, custom headers, etc. */);
+        }, /* other options like: filter, expand, custom headers, etc. */);
 
         // Unsubscribe
         pb.collection('${collection?.name}').unsubscribe('RECORD_ID'); // remove all 'RECORD_ID' subscriptions
@@ -111,6 +111,6 @@
             record: CommonHelper.dummyCollectionRecord(collection),
         },
         null,
-        2
+        2,
     ).replace('"action": "create"', '"action": "create" // create, update or delete')}
 />
