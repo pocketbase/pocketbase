@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/router"
 )
@@ -171,32 +170,4 @@ func safeRedirectPath(path string) string {
 		path = "/" + strings.TrimLeft(path, `/\`)
 	}
 	return path
-}
-
-// FindUploadedFiles extracts all form files of "key" from a http request
-// and returns a slice with filesystem.File instances (if any).
-func FindUploadedFiles(r *http.Request, key string) ([]*filesystem.File, error) {
-	if r.MultipartForm == nil {
-		err := r.ParseMultipartForm(router.DefaultMaxMemory)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if r.MultipartForm == nil || r.MultipartForm.File == nil || len(r.MultipartForm.File[key]) == 0 {
-		return nil, http.ErrMissingFile
-	}
-
-	result := make([]*filesystem.File, 0, len(r.MultipartForm.File[key]))
-
-	for _, fh := range r.MultipartForm.File[key] {
-		file, err := filesystem.NewFileFromMultipart(fh)
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, file)
-	}
-
-	return result, nil
 }

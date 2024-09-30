@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/picker"
 	"github.com/pocketbase/pocketbase/tools/store"
@@ -124,6 +125,34 @@ func (e *Event) UnsafeRealIP() string {
 	}
 
 	return e.RemoteIP()
+}
+
+// FindUploadedFiles extracts all form files of "key" from a http request
+// and returns a slice with filesystem.File instances (if any).
+func (e *Event) FindUploadedFiles(key string) ([]*filesystem.File, error) {
+	if e.Request.MultipartForm == nil {
+		err := e.Request.ParseMultipartForm(DefaultMaxMemory)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if e.Request.MultipartForm == nil || e.Request.MultipartForm.File == nil || len(e.Request.MultipartForm.File[key]) == 0 {
+		return nil, http.ErrMissingFile
+	}
+
+	result := make([]*filesystem.File, 0, len(e.Request.MultipartForm.File[key]))
+
+	for _, fh := range e.Request.MultipartForm.File[key] {
+		file, err := filesystem.NewFileFromMultipart(fh)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, file)
+	}
+
+	return result, nil
 }
 
 // Store

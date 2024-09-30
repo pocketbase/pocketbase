@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -274,6 +275,79 @@ func TestEventUnsafeRealIP(t *testing.T) {
 				t.Fatalf("Expected IP %q, got %q", s.expected, ip)
 			}
 		})
+	}
+}
+
+func TestFindUploadedFiles(t *testing.T) {
+	scenarios := []struct {
+		filename        string
+		expectedPattern string
+	}{
+		{"ab.png", `^ab\w{10}_\w{10}\.png$`},
+		{"test", `^test_\w{10}\.txt$`},
+		{"a b c d!@$.j!@$pg", `^a_b_c_d_\w{10}\.jpg$`},
+		{strings.Repeat("a", 150), `^a{100}_\w{10}\.txt$`},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.filename, func(t *testing.T) {
+			// create multipart form file body
+			body := new(bytes.Buffer)
+			mp := multipart.NewWriter(body)
+			w, err := mp.CreateFormFile("test", s.filename)
+			if err != nil {
+				t.Fatal(err)
+			}
+			w.Write([]byte("test"))
+			mp.Close()
+			// ---
+
+			req := httptest.NewRequest(http.MethodPost, "/", body)
+			req.Header.Add("Content-Type", mp.FormDataContentType())
+
+			event := router.Event{Request: req}
+
+			result, err := event.FindUploadedFiles("test")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if len(result) != 1 {
+				t.Fatalf("Expected 1 file, got %d", len(result))
+			}
+
+			if result[0].Size != 4 {
+				t.Fatalf("Expected the file size to be 4 bytes, got %d", result[0].Size)
+			}
+
+			pattern, err := regexp.Compile(s.expectedPattern)
+			if err != nil {
+				t.Fatalf("Invalid filename pattern %q: %v", s.expectedPattern, err)
+			}
+			if !pattern.MatchString(result[0].Name) {
+				t.Fatalf("Expected filename to match %s, got filename %s", s.expectedPattern, result[0].Name)
+			}
+		})
+	}
+}
+
+func TestFindUploadedFilesMissing(t *testing.T) {
+	body := new(bytes.Buffer)
+	mp := multipart.NewWriter(body)
+	mp.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/", body)
+	req.Header.Add("Content-Type", mp.FormDataContentType())
+
+	event := router.Event{Request: req}
+
+	result, err := event.FindUploadedFiles("test")
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+
+	if result != nil {
+		t.Errorf("Expected result to be nil, got %v", result)
 	}
 }
 

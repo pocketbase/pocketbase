@@ -18,7 +18,7 @@ func backupUpload(e *core.RequestEvent) error {
 
 	form := new(backupUploadForm)
 	form.fsys = fsys
-	files, _ := FindUploadedFiles(e.Request, "file")
+	files, _ := e.FindUploadedFiles("file")
 	if len(files) > 0 {
 		form.File = files[0]
 	}

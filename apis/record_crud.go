@@ -529,7 +529,7 @@ func recordDataFromRequest(e *core.RequestEvent, record *core.Record) (map[strin
 	result := record.ReplaceModifiers(info.Body)
 
 	// resolve uploaded files
-	uploadedFiles, err := extractUploadedFiles(e.Request, record.Collection(), "")
+	uploadedFiles, err := extractUploadedFiles(e, record.Collection(), "")
 	if err != nil {
 		return nil, err
 	}
@@ -559,8 +559,8 @@ func recordDataFromRequest(e *core.RequestEvent, record *core.Record) (map[strin
 	return result, nil
 }
 
-func extractUploadedFiles(request *http.Request, collection *core.Collection, prefix string) (map[string][]*filesystem.File, error) {
-	contentType := request.Header.Get("content-type")
+func extractUploadedFiles(re *core.RequestEvent, collection *core.Collection, prefix string) (map[string][]*filesystem.File, error) {
+	contentType := re.Request.Header.Get("content-type")
 	if !strings.HasPrefix(contentType, "multipart/form-data") {
 		return nil, nil // not multipart/form-data request
 	}
@@ -585,7 +585,7 @@ func extractUploadedFiles(request *http.Request, collection *core.Collection, pr
 			if prefix != "" {
 				k = prefix + "." + k
 			}
-			files, err := FindUploadedFiles(request, k)
+			files, err := re.FindUploadedFiles(k)
 			if err != nil && !errors.Is(err, http.ErrMissingFile) {
 				return nil, err
 			}
