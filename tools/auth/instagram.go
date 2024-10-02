@@ -6,7 +6,6 @@ import (
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/instagram"
 )
 
 var _ Provider = (*Instagram)(nil)
@@ -25,16 +24,16 @@ func NewInstagramProvider() *Instagram {
 		ctx:         context.Background(),
 		displayName: "Instagram",
 		pkce:        true,
-		scopes:      []string{"user_profile"},
-		authUrl:     instagram.Endpoint.AuthURL,
-		tokenUrl:    instagram.Endpoint.TokenURL,
-		userApiUrl:  "https://graph.instagram.com/me?fields=id,username,account_type",
+		scopes:      []string{"instagram_business_basic"},
+		authUrl:     "https://www.instagram.com/oauth/authorize",
+		tokenUrl:    "https://api.instagram.com/oauth/access_token",
+		userApiUrl:  "https://graph.instagram.com/me?fields=id,username,account_type,user_id,name,profile_picture_url,followers_count,follows_count,media_count",
 	}}
 }
 
-// FetchAuthUser returns an AuthUser instance based on the Instagram's user api.
+// FetchAuthUser returns an AuthUser instance based on the Instagram's login fields.
 //
-// API reference: https://developers.facebook.com/docs/instagram-basic-display-api/reference/user#fields
+// API reference: https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login/get-started#fields
 func (p *Instagram) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserData(token)
 	if err != nil {
@@ -46,6 +45,7 @@ func (p *Instagram) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		return nil, err
 	}
 
+	// @note the extracted "id" is a app scoped id, to get the actual IG ID use the RawUser's map key "user_id"
 	extracted := struct {
 		Id       string `json:"id"`
 		Username string `json:"username"`
