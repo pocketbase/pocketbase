@@ -45,6 +45,11 @@ func (p *Instagram) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		return nil, err
 	}
 
+	// include list of granted permissions to RawUser's payload
+	if permissions := token.Extra("permissions"); permissions != nil {
+		rawUser["permissions"] = permissions
+	}
+
 	// @note the extracted "id" is a app scoped id, to get the actual IG ID use the RawUser's map key "user_id"
 	extracted := struct {
 		Id       string `json:"id"`
