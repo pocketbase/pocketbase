@@ -248,6 +248,33 @@ declare class DynamicModel {
   constructor(shape?: { [key:string]: any })
 }
 
+interface Context extends context.Context{} // merge
+/**
+ * Context creates a new empty Go context.Context.
+ *
+ * This is usually used as part of some Go transitive bindings.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * const blank = new Context()
+ *
+ * // with single key-value pair
+ * const base = new Context(null, "a", 123)
+ * console.log(base.value("a")) // 123
+ *
+ * // extend with additional key-value pair
+ * const sub = new Context(base, "b", 456)
+ * console.log(sub.value("a")) // 123
+ * console.log(sub.value("b")) // 456
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare class Context implements context.Context {
+  constructor(parentCtx?: Context, key?: any, value?: any)
+}
+
 /**
  * Record model class.
  *

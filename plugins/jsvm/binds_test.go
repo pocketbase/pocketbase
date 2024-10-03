@@ -43,7 +43,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 34, t)
+	testBindsCount(vm, "this", 35, t)
 }
 
 func TestBaseBindsSleep(t *testing.T) {
@@ -131,6 +131,30 @@ func TestBaseBindsUnmarshal(t *testing.T) {
 
 		if (data.b != 456) {
 			throw new Error('Expected data.b 456, got ' + data.b);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBaseBindsContext(t *testing.T) {
+	vm := goja.New()
+	baseBinds(vm)
+
+	_, err := vm.RunString(`
+		const base = new Context(null, "a", 123);
+		const sub = new Context(base, "b", 456);
+
+		const scenarios = [
+			{key: "a", expected: 123},
+			{key: "b", expected: 456},
+		];
+
+		for (let s of scenarios) {
+			if (sub.value(s.key) != s.expected) {
+				throw new("Expected " +s.key + " value " + s.expected + ", got " + sub.value(s.key));
+			}
 		}
 	`)
 	if err != nil {

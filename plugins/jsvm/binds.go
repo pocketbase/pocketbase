@@ -357,6 +357,27 @@ func baseBinds(vm *goja.Runtime) {
 		return json.Unmarshal(raw, &dst)
 	})
 
+	vm.Set("Context", func(call goja.ConstructorCall) *goja.Object {
+		var instance context.Context
+
+		oldCtx, ok := call.Argument(0).Export().(context.Context)
+		if ok {
+			instance = oldCtx
+		} else {
+			instance = context.Background()
+		}
+
+		key := call.Argument(1).Export()
+		if key != nil {
+			instance = context.WithValue(instance, key, call.Argument(2).Export())
+		}
+
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+
+		return instanceValue
+	})
+
 	vm.Set("DynamicModel", func(call goja.ConstructorCall) *goja.Object {
 		shape, ok := call.Argument(0).Export().(map[string]any)
 		if !ok || len(shape) == 0 {
