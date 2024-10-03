@@ -10,7 +10,7 @@
         changeActiveCollectionById,
     } from "@/stores/collections";
     import tooltip from "@/actions/tooltip";
-    import { pageTitle, hideControls } from "@/stores/app";
+    import { pageTitle, hideControls, hideRecordControls } from "@/stores/app";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import Searchbar from "@/components/base/Searchbar.svelte";
     import RefreshButton from "@/components/base/RefreshButton.svelte";
@@ -70,7 +70,7 @@
     async function showRecordById(recordId) {
         await tick(); // ensure that the reactive component params are resolved
 
-        $activeCollection?.type === "view"
+        $activeCollection?.type === "view" || $hideRecordControls
             ? recordPreviewPanel.show(recordId)
             : recordUpsertPanel?.show(recordId);
     }
@@ -197,7 +197,7 @@
                     <span class="txt">API Preview</span>
                 </button>
 
-                {#if $activeCollection.type !== "view"}
+                {#if $activeCollection.type !== "view" && !$hideRecordControls}
                     <button type="button" class="btn btn-expanded" on:click={() => recordUpsertPanel?.show()}>
                         <i class="ri-add-line" />
                         <span class="txt">New record</span>
@@ -226,7 +226,7 @@
 
                 let showModel = e.detail._partial ? e.detail.id : e.detail;
 
-                $activeCollection.type === "view"
+                $activeCollection.type === "view" || $hideRecordControls
                     ? recordPreviewPanel?.show(showModel)
                     : recordUpsertPanel?.show(showModel);
             }}

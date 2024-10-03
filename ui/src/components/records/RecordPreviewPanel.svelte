@@ -1,5 +1,6 @@
 <script>
     import { addErrorToast } from "@/stores/toasts";
+    import { hideRecordControls } from "@/stores/app";
     import ApiClient from "@/utils/ApiClient";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import CopyIcon from "@/components/base/CopyIcon.svelte";
@@ -13,6 +14,8 @@
     let isLoading = false;
 
     $: hasEditorField = !!collection?.schema?.find((f) => f.type === "editor");
+
+    $: isView = collection?.type === "view";
 
     export function show(model) {
         load(model);
@@ -101,6 +104,19 @@
             {/if}
         </tbody>
     </table>
+
+    {#if !isView && $hideRecordControls}
+        <div class="alert alert-info m-t-10 m-b-sm">
+            <div class="icon">
+                <i class="ri-information-line" />
+            </div>
+            <div class="contet">
+                <p>
+                  Editing records is currently disabled due to the <strong>Hide Record Controls</strong> setting.
+                </p>
+            </div>
+        </div>
+    {/if}
 
     <svelte:fragment slot="footer">
         <button type="button" class="btn btn-transparent" on:click={() => hide()}>

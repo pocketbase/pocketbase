@@ -6,6 +6,7 @@
     import tooltip from "@/actions/tooltip";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
+    import { hideRecordControls } from "@/stores/app";
     import { collections } from "@/stores/collections";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
@@ -546,7 +547,7 @@
                                 >
                                     <span class="txt">Clear filters</span>
                                 </button>
-                            {:else if !isView}
+                            {:else if !isView && !$hideRecordControls}
                                 <button
                                     type="button"
                                     class="btn btn-secondary btn-expanded m-t-sm"
@@ -593,15 +594,17 @@
         >
             <span class="txt">Reset</span>
         </button>
-        <div class="flex-fill" />
-        <button
-            type="button"
-            class="btn btn-sm btn-transparent btn-danger"
-            class:btn-loading={isDeleting}
-            class:btn-disabled={isDeleting}
-            on:click={() => deleteSelectedConfirm()}
-        >
-            <span class="txt">Delete selected</span>
-        </button>
+        {#if !$hideRecordControls}
+            <div class="flex-fill" />
+            <button
+                type="button"
+                class="btn btn-sm btn-transparent btn-danger"
+                class:btn-loading={isDeleting}
+                class:btn-disabled={isDeleting}
+                on:click={() => deleteSelectedConfirm()}
+            >
+                <span class="txt">Delete selected</span>
+            </button>
+        {/if}
     </div>
 {/if}

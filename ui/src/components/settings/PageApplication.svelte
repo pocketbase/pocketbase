@@ -1,7 +1,7 @@
 <script>
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import { pageTitle, appName, hideControls } from "@/stores/app";
+    import { pageTitle, appName, hideControls, hideRecordControls } from "@/stores/app";
     import { addSuccessToast } from "@/stores/toasts";
     import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
@@ -56,6 +56,7 @@
     function init(settings = {}) {
         $appName = settings?.meta?.appName;
         $hideControls = !!settings?.meta?.hideControls;
+        $hideRecordControls = !!settings?.meta?.hideRecordControls;
 
         formSettings = {
             meta: settings?.meta || {},
@@ -112,6 +113,20 @@
                                 class="ri-information-line link-hint"
                                 use:tooltip={{
                                     text: `This could prevent making accidental schema changes when in production environment.`,
+                                    position: "right",
+                                }}
+                            />
+                        </label>
+                    </Field>
+
+                    <Field class="form-field form-field-toggle" name="meta.hideRecordControls" let:uniqueId>
+                        <input type="checkbox" id={uniqueId} bind:checked={formSettings.meta.hideRecordControls} />
+                        <label for={uniqueId}>
+                            <span class="txt">Hide record create and edit controls</span>
+                            <i
+                                class="ri-information-line link-hint"
+                                use:tooltip={{
+                                    text: `This could prevent accidental content changes when in production environment.`,
                                     position: "right",
                                 }}
                             />

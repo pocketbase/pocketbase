@@ -10,7 +10,7 @@
     import Toasts from "@/components/base/Toasts.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import Confirmation from "@/components/base/Confirmation.svelte";
-    import { pageTitle, appName, hideControls } from "@/stores/app";
+    import { pageTitle, appName, hideControls, hideRecordControls } from "@/stores/app";
     import { admin } from "@/stores/admin";
     import { setErrors } from "@/stores/errors";
     import { resetConfirmation } from "@/stores/confirmation";
@@ -56,6 +56,7 @@
             });
             $appName = settings?.meta?.appName || "";
             $hideControls = !!settings?.meta?.hideControls;
+            $hideRecordControls = !!settings?.meta?.hideRecordControls;
         } catch (err) {
             if (!err?.isAbort) {
                 console.warn("Failed to load app settings.", err);
