@@ -1143,6 +1143,7 @@ func main() {
 			"github.com/pocketbase/pocketbase/tools/template":   {"*"},
 			"github.com/pocketbase/pocketbase/mails":            {"*"},
 			"github.com/pocketbase/pocketbase/apis":             {"*"},
+			"github.com/pocketbase/pocketbase/core":             {"*"},
 			"github.com/pocketbase/pocketbase/forms":            {"*"},
 			"github.com/pocketbase/pocketbase":                  {"*"},
 			"path/filepath":                                     {"*"},
