@@ -52,6 +52,9 @@ func (app *BaseApp) LogsStats(expr dbx.Expression) ([]*LogsStatsItem, error) {
 }
 
 // DeleteOldLogs delete all requests that are created before createdBefore.
+//
+// For better performance the logs delete is executed as plain SQL statement,
+// aka. no delete model hook events will be fired.
 func (app *BaseApp) DeleteOldLogs(createdBefore time.Time) error {
 	formattedDate := createdBefore.UTC().Format(types.DefaultDateLayout)
 	expr := dbx.NewExp("[[created]] <= {:date}", dbx.Params{"date": formattedDate})

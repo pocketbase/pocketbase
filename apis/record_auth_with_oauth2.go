@@ -89,7 +89,7 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 
 	var authRecord *core.Record
 
-	// check for existing relation with the auth record
+	// check for existing relation with the auth collection
 	externalAuthRel, err := e.App.FindFirstExternalAuthByExpr(dbx.HashExp{
 		"collectionRef": form.collection.Id,
 		"provider":      form.Provider,
