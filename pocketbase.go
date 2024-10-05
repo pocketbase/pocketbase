@@ -49,13 +49,13 @@ type Config struct {
 	DefaultDev           bool
 	DefaultDataDir       string // if not set, it will fallback to "./pb_data"
 	DefaultEncryptionEnv string
+	DefaultQueryTimeout  time.Duration // default to core.DefaultQueryTimeout (in seconds)
 
 	// optional DB configurations
 	DataMaxOpenConns int                // default to core.DefaultDataMaxOpenConns
 	DataMaxIdleConns int                // default to core.DefaultDataMaxIdleConns
 	AuxMaxOpenConns  int                // default to core.DefaultAuxMaxOpenConns
 	AuxMaxIdleConns  int                // default to core.DefaultAuxMaxIdleConns
-	QueryTimeout     int                // default to core.DefaultQueryTimeout (in seconds)
 	DBConnect        core.DBConnectFunc // default to core.dbConnect
 }
 
@@ -87,6 +87,10 @@ func NewWithConfig(config Config) *PocketBase {
 	if config.DefaultDataDir == "" {
 		baseDir, _ := inspectRuntime()
 		config.DefaultDataDir = filepath.Join(baseDir, "pb_data")
+	}
+
+	if config.DefaultQueryTimeout == 0 {
+		config.DefaultQueryTimeout = core.DefaultQueryTimeout
 	}
 
 	executableName := filepath.Base(os.Args[0])
@@ -122,11 +126,11 @@ func NewWithConfig(config Config) *PocketBase {
 		IsDev:            pb.devFlag,
 		DataDir:          pb.dataDirFlag,
 		EncryptionEnv:    pb.encryptionEnvFlag,
+		QueryTimeout:     time.Duration(pb.queryTimeout) * time.Second,
 		DataMaxOpenConns: config.DataMaxOpenConns,
 		DataMaxIdleConns: config.DataMaxIdleConns,
 		AuxMaxOpenConns:  config.AuxMaxOpenConns,
 		AuxMaxIdleConns:  config.AuxMaxIdleConns,
-		QueryTimeout:     time.Duration(config.QueryTimeout) * time.Second,
 		DBConnect:        config.DBConnect,
 	})
 
@@ -214,7 +218,7 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 	pb.RootCmd.PersistentFlags().IntVar(
 		&pb.queryTimeout,
 		"queryTimeout",
-		int(core.DefaultQueryTimeout.Seconds()),
+		int(config.DefaultQueryTimeout.Seconds()),
 		"the default SELECT queries timeout in seconds",
 	)
 
