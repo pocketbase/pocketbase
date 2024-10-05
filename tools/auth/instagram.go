@@ -25,7 +25,7 @@ func NewInstagramProvider() *Instagram {
 		displayName: "Instagram",
 		pkce:        true,
 		scopes:      []string{"instagram_business_basic"},
-		authUrl:     "https://www.instagram.com/oauth/authorize",
+		authUrl:     "https://www.instagram.com/oauth/authorize?enable_fb_login=0&force_authentication=1",
 		tokenUrl:    "https://api.instagram.com/oauth/access_token",
 		userApiUrl:  "https://graph.instagram.com/me?fields=id,username,account_type,user_id,name,profile_picture_url,followers_count,follows_count,media_count",
 	}}
