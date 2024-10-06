@@ -381,7 +381,7 @@ func (app *BaseApp) Bootstrap() error {
 	event := &BootstrapEvent{}
 	event.App = app
 
-	return app.OnBootstrap().Trigger(event, func(e *BootstrapEvent) error {
+	err := app.OnBootstrap().Trigger(event, func(e *BootstrapEvent) error {
 		// clear resources of previous core state (if any)
 		if err := app.ResetBootstrapState(); err != nil {
 			return err
@@ -421,6 +421,14 @@ func (app *BaseApp) Bootstrap() error {
 
 		return nil
 	})
+
+	// add a more user friendly message in case users forgot to call
+	// e.Next() as part of their bootstrap hook
+	if err == nil && !app.IsBootstrapped() {
+		app.Logger().Warn("OnBootstrap hook didn't fail but the app is still not bootstrapped - maybe missing e.Next()?")
+	}
+
+	return err
 }
 
 type closer interface {
