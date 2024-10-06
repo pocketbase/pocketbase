@@ -3,7 +3,7 @@
 > **This is a prerelease intended for test and experimental purposes only!**
 
 - Small update to the earlier v0.23.0-rc that renames the new `pb_data/aux.db` to `pb_data/auxiliary.db` because it seems that on Windows `aux` is disallowed as file name ([#5607](https://github.com/pocketbase/pocketbase/issues/5607)).
-   _If you have already upgraded to v0.23.0-rc please rename manually your `pb_data/aux.db` file to `pb_data/auxiliry.db`._
+   _If you have already upgraded to v0.23.0-rc please rename manually your `pb_data/aux.db` file to `pb_data/auxiliary.db`._
 
 ## v0.23.0-rc
 
