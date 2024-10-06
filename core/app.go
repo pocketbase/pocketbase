@@ -157,10 +157,10 @@ type App interface {
 	// In a transaction the ConcurrentDB() and NonconcurrentDB() refer to the same *dbx.TX instance.
 	NonconcurrentDB() dbx.Builder
 
-	// AuxDB returns the default app auxiliary db instance (pb_data/aux.db).
+	// AuxDB returns the default app auxiliary db instance (pb_data/auxiliary.db).
 	AuxDB() dbx.Builder
 
-	// AuxNonconcurrentDB returns the nonconcurrent app auxiliary db instance (pb_data/aux.db)..
+	// AuxNonconcurrentDB returns the nonconcurrent app auxiliary db instance (pb_data/auxiliary.db)..
 	//
 	// The returned db instance is limited only to a single open connection,
 	// meaning that it can process only 1 db operation at a time (other operations will be queued up).

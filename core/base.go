@@ -481,12 +481,12 @@ func (app *BaseApp) NonconcurrentDB() dbx.Builder {
 	return app.nonconcurrentDB
 }
 
-// AuxDB returns the default app auxiliary db instance (pb_data/aux.db).
+// AuxDB returns the default app auxiliary db instance (pb_data/auxiliary.db).
 func (app *BaseApp) AuxDB() dbx.Builder {
 	return app.auxConcurrentDB
 }
 
-// AuxNonconcurrentDB returns the nonconcurrent app auxiliary db instance (pb_data/aux.db).
+// AuxNonconcurrentDB returns the nonconcurrent app auxiliary db instance (pb_data/auxiliary.db).
 //
 // The returned db instance is limited only to a single open connection,
 // meaning that it can process only 1 db operation at a time (other operations will be queued up).
@@ -1151,7 +1151,9 @@ func normalizeSQLLog(sql string) string {
 }
 
 func (app *BaseApp) initAuxDB() error {
-	dbPath := filepath.Join(app.DataDir(), "aux.db")
+	// note: renamed to "auxiliary" because "aux" is a reserved Windows filename
+	// (see https://github.com/pocketbase/pocketbase/issues/5607)
+	dbPath := filepath.Join(app.DataDir(), "auxiliary.db")
 
 	concurrentDB, err := app.config.DBConnect(dbPath)
 	if err != nil {

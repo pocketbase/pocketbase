@@ -517,7 +517,7 @@ func TestBackupsDownload(t *testing.T) {
 			ExpectedContent: []string{
 				"storage/",
 				"data.db",
-				"aux.db",
+				"auxiliary.db",
 			},
 			ExpectedEvents: map[string]int{"*": 0},
 		},
@@ -534,7 +534,7 @@ func TestBackupsDownload(t *testing.T) {
 			ExpectedContent: []string{
 				"storage/",
 				"data.db",
-				"aux.db",
+				"auxiliary.db",
 			},
 			ExpectedEvents: map[string]int{"*": 0},
 		},

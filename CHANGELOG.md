@@ -1,3 +1,10 @@
+## v0.23.0-rc2
+
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Small update to the earlier v0.23.0-rc that renames the new `pb_data/aux.db` to `pb_data/auxiliary.db` because it seems that on Windows `aux` is disallowed as file name ([#5607](https://github.com/pocketbase/pocketbase/issues/5607)).
+   _If you have already upgraded to v0.23.0-rc please rename manually your `pb_data/aux.db` file to `pb_data/auxiliry.db`._
+
 ## v0.23.0-rc
 
 > [!CAUTION]
@@ -27,7 +34,7 @@ There are many changes but to highlight some of the most notable ones:
 - New hooks allowing better control over the execution chain and error handling (_including wrapping an entire hook chain in a single DB transaction_).
 - Various `Record` model improvements (_support for get/set modifiers, simplfied file upload by treating the file(s) as regular field value like `record.Set("document", file)`, etc._).
 - Dedicated fields structs with safer defaults to make it easier creating/updating collections programmatically.
-- Option to mark field as Private/Hidden, disallowing regular users to read or modify it (_there is also a dedicated Record hook to hide/unhide Record fields progrommatically from a single place_).
+- Option to mark field as Private/Hidden, disallowing regular users to read or modify it (_there is also a dedicated Record hook to hide/unhide Record fields programmatically from a single place_).
 - Option to customize the default system collection fields (`id`, `email`, `password`, etc.).
 - Admins are now system `_superusers` auth records.
 - Builtin rate limiter (_supports tags, wildcards and exact routes matching_).
