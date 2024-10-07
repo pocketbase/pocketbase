@@ -72,7 +72,11 @@
     <title>{CommonHelper.joinNonEmpty([$pageTitle, $appName, "PocketBase"], " - ")}</title>
 
     {#if window.location.protocol == "https:"}
-        <link rel="shortcut icon" type="image/png" href="/images/favicon/favicon_prod.png" />
+        <link
+            rel="shortcut icon"
+            type="image/png"
+            href="{import.meta.env.BASE_URL}images/favicon/favicon_prod.png"
+        />
     {/if}
 </svelte:head>
 
