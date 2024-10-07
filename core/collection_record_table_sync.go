@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 
@@ -145,7 +146,7 @@ func (app *BaseApp) SyncRecordTableSchema(newCollection *Collection, oldCollecti
 	// (https://www.sqlite.org/pragma.html#pragma_optimize)
 	_, optimizeErr := app.DB().NewQuery("PRAGMA optimize").Execute()
 	if optimizeErr != nil {
-		return fmt.Errorf("failed to run optimize after the fields changes: %w", optimizeErr)
+		app.Logger().Warn("Failed to run PRAGMA optimize after record table sync", slog.String("error", optimizeErr.Error()))
 	}
 
 	return nil

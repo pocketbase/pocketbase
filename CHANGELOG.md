@@ -8,6 +8,8 @@
   func(T) error
   ```
 
+- Make `PRAGMA optimize` statement optional ([#5611](https://github.com/pocketbase/pocketbase/discussions/5611)).
+
 
 ## v0.23.0-rc2
 
