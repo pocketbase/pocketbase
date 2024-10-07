@@ -36,7 +36,7 @@ type Handler[T Resolver] struct {
 
 // Hook defines a generic concurrent safe structure for managing event hooks.
 //
-// When using custom a event it must embed the base [hook.Event].
+// When using custom event it must embed the base [hook.Event].
 //
 // Example:
 //
