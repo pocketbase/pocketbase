@@ -3,6 +3,8 @@
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
+- Fixed the UI input field type of the OTP.length field ([#5617](https://github.com/pocketbase/pocketbase/issues/5617)).
+
 - To avoid confusion and unnecessary casting, the `hook.HandlerFunc[T]` type has been removed and instead everywhere we now use directly the underlying function definition, aka.:
   ```go
   func(T) error

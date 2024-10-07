@@ -85,7 +85,7 @@
         <div class="col-sm-6">
             <Field class="form-field form-field-toggle required" name="otp.length" let:uniqueId>
                 <label for={uniqueId}>Generated password length</label>
-                <input type="text" id={uniqueId} bind:value={collection.otp.length} required />
+                <input type="number" id={uniqueId} bind:value={collection.otp.length} required />
             </Field>
         </div>
     </div>
