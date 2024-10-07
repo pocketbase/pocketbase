@@ -124,12 +124,12 @@ func TestHookTriggerErrorPropagation(t *testing.T) {
 
 	scenarios := []struct {
 		name          string
-		handlers      []HandlerFunc[*Event]
+		handlers      []func(*Event) error
 		expectedError error
 	}{
 		{
 			"without error",
-			[]HandlerFunc[*Event]{
+			[]func(*Event) error{
 				func(e *Event) error { return e.Next() },
 				func(e *Event) error { return e.Next() },
 			},
@@ -137,7 +137,7 @@ func TestHookTriggerErrorPropagation(t *testing.T) {
 		},
 		{
 			"with error",
-			[]HandlerFunc[*Event]{
+			[]func(*Event) error{
 				func(e *Event) error { return e.Next() },
 				func(e *Event) error { e.Next(); return err },
 				func(e *Event) error { return e.Next() },

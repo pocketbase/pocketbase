@@ -19,7 +19,6 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/hook"
 )
 
 const (
@@ -125,7 +124,7 @@ var DefaultCORSConfig = CORSConfig{
 }
 
 // CORSWithConfig returns a CORS middleware with config.
-func CORSWithConfig(config CORSConfig) hook.HandlerFunc[*core.RequestEvent] {
+func CORSWithConfig(config CORSConfig) func(e *core.RequestEvent) error {
 	// Defaults
 	if len(config.AllowOrigins) == 0 {
 		config.AllowOrigins = DefaultCORSConfig.AllowOrigins

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/router"
 )
 
@@ -21,7 +20,7 @@ func stripWildcard(pattern string) string {
 
 // installerRedirect redirects the user to the installer dashboard UI page
 // when the application needs some preliminary configurations to be done.
-func installerRedirect(app core.App, cpPath string) hook.HandlerFunc[*core.RequestEvent] {
+func installerRedirect(app core.App, cpPath string) func(*core.RequestEvent) error {
 	// note: to avoid locks contention it is not concurrent safe but it
 	// is expected to be updated only once during initialization
 	var hasSuperuser bool
@@ -108,7 +107,7 @@ func installerRedirect(app core.App, cpPath string) hook.HandlerFunc[*core.Reque
 //
 // Note: intended to be registered only for the dashboard route
 // to prevent excessive checks for every other route in installerRedirect.
-func dashboardRemoveInstallerParam() hook.HandlerFunc[*core.RequestEvent] {
+func dashboardRemoveInstallerParam() func(*core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		_, hasInstallerParam := e.Request.URL.Query()[installerParam]
 		if !hasInstallerParam {
@@ -127,7 +126,7 @@ func dashboardRemoveInstallerParam() hook.HandlerFunc[*core.RequestEvent] {
 
 // dashboardCacheControl adds default Cache-Control header for all
 // dashboard UI resources (ignoring the root index.html path)
-func dashboardCacheControl() hook.HandlerFunc[*core.RequestEvent] {
+func dashboardCacheControl() func(*core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		if e.Request.PathValue(StaticWildcardParam) != "" {
 			e.Response.Header().Set("Cache-Control", "max-age=1209600, stale-while-revalidate=86400")

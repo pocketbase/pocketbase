@@ -81,7 +81,7 @@ func RequireAuth(optCollectionNames ...string) *hook.Handler[*core.RequestEvent]
 	}
 }
 
-func requireAuth(optCollectionNames ...string) hook.HandlerFunc[*core.RequestEvent] {
+func requireAuth(optCollectionNames ...string) func(*core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		if e.Auth == nil {
 			return e.UnauthorizedError("The request requires valid record authorization token.", nil)

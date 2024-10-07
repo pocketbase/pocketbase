@@ -18,7 +18,6 @@ import (
 	"sync"
 
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/router"
 )
 
@@ -47,12 +46,12 @@ type GzipConfig struct {
 }
 
 // Gzip returns a middleware which compresses HTTP response using gzip compression scheme.
-func Gzip() hook.HandlerFunc[*core.RequestEvent] {
+func Gzip() func(*core.RequestEvent) error {
 	return GzipWithConfig(GzipConfig{})
 }
 
 // GzipWithConfig returns a middleware which compresses HTTP response using gzip compression scheme.
-func GzipWithConfig(config GzipConfig) hook.HandlerFunc[*core.RequestEvent] {
+func GzipWithConfig(config GzipConfig) func(*core.RequestEvent) error {
 	if config.Level < -2 || config.Level > 9 { // these are consts: gzip.HuffmanOnly and gzip.BestCompression
 		panic(errors.New("invalid gzip level"))
 	}

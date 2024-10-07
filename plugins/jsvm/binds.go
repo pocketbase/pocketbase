@@ -175,13 +175,13 @@ func routerBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 	})
 }
 
-func wrapHandlerFunc(executors *vmsPool, handler goja.Value) (hook.HandlerFunc[*core.RequestEvent], error) {
+func wrapHandlerFunc(executors *vmsPool, handler goja.Value) (func(*core.RequestEvent) error, error) {
 	if handler == nil {
 		return nil, errors.New("handler must be non-nil")
 	}
 
 	switch h := handler.Export().(type) {
-	case hook.HandlerFunc[*core.RequestEvent]:
+	case func(*core.RequestEvent) error:
 		// "native" handler func - no need to wrap
 		return h, nil
 	case func(goja.FunctionCall) goja.Value, string:
@@ -228,7 +228,7 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 		case *hook.Handler[*core.RequestEvent]:
 			// "native" middleware handler - no need to wrap
 			wrappedMiddlewares[i] = v
-		case hook.HandlerFunc[*core.RequestEvent]:
+		case func(*core.RequestEvent) error:
 			// "native" middleware func - wrap as handler
 			wrappedMiddlewares[i] = &hook.Handler[*core.RequestEvent]{
 				Func: v,
@@ -717,7 +717,7 @@ func apisBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$apis", obj)
 
-	obj.Set("static", func(dir string, indexFallback bool) hook.HandlerFunc[*core.RequestEvent] {
+	obj.Set("static", func(dir string, indexFallback bool) func(*core.RequestEvent) error {
 		return apis.Static(os.DirFS(dir), indexFallback)
 	})
 

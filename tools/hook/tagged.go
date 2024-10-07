@@ -73,7 +73,7 @@ func (h *TaggedHook[T]) Bind(handler *Handler[T]) string {
 //
 // It is similar to [Hook.Bind] with the difference that the handler
 // function is invoked only if the event data tags satisfy h.CanTriggerOn.
-func (h *TaggedHook[T]) BindFunc(fn HandlerFunc[T]) string {
+func (h *TaggedHook[T]) BindFunc(fn func(T) error) string {
 	return h.mainHook.BindFunc(func(e T) error {
 		if h.CanTriggerOn(e.Tags()) {
 			return fn(e)

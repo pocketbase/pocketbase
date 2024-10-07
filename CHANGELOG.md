@@ -1,5 +1,17 @@
+## v0.23.0-rc3 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- To avoid confusion and unnecessary casting, the `hook.HandlerFunc[T]` type has been removed and instead everywhere we now use directly the underlying function definition, aka.:
+  ```go
+  func(T) error
+  ```
+
+
 ## v0.23.0-rc2
 
+> [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
 - Small update to the earlier v0.23.0-rc that uses `pb_data/auxiliary.db` instead of `pb_data/aux.db` because it seems that on Windows `aux` is disallowed as file name ([#5607](https://github.com/pocketbase/pocketbase/issues/5607)).

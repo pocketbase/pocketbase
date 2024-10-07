@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/router"
 )
 
@@ -50,7 +49,7 @@ func NewRouter(app core.App) (*router.Router[*core.RequestEvent], error) {
 }
 
 // WrapStdHandler wraps Go [http.Handler] into a PocketBase handler func.
-func WrapStdHandler(h http.Handler) hook.HandlerFunc[*core.RequestEvent] {
+func WrapStdHandler(h http.Handler) func(*core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		h.ServeHTTP(e.Response, e.Request)
 		return nil
@@ -58,7 +57,7 @@ func WrapStdHandler(h http.Handler) hook.HandlerFunc[*core.RequestEvent] {
 }
 
 // WrapStdMiddleware wraps Go [func(http.Handler) http.Handle] into a PocketBase middleware func.
-func WrapStdMiddleware(m func(http.Handler) http.Handler) hook.HandlerFunc[*core.RequestEvent] {
+func WrapStdMiddleware(m func(http.Handler) http.Handler) func(*core.RequestEvent) error {
 	return func(e *core.RequestEvent) (err error) {
 		m(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			e.Response = w
@@ -99,7 +98,7 @@ func MustSubFS(fsys fs.FS, dir string) fs.FS {
 //
 //	fsys := os.DirFS("./pb_public")
 //	router.GET("/files/{path...}", apis.Static(fsys, false))
-func Static(fsys fs.FS, indexFallback bool) hook.HandlerFunc[*core.RequestEvent] {
+func Static(fsys fs.FS, indexFallback bool) func(*core.RequestEvent) error {
 	if fsys == nil {
 		panic("Static: the provided fs.FS argument is nil")
 	}
