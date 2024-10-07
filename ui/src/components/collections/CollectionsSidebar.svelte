@@ -29,7 +29,7 @@
     }
 
     $: filtered = $collections.filter((c) => {
-        return c.id == searchTerm || c.name.replace(/\s+/g, "").toLowerCase().includes(normalizedSearch);
+        return c.id == searchTerm || c.name?.replace(/\s+/g, "")?.toLowerCase()?.includes(normalizedSearch);
     });
 
     $: pinnedCollections = filtered.filter((c) => pinnedIds.includes(c.id));

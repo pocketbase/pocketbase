@@ -49,7 +49,7 @@
                 teamId,
                 keyId,
                 privateKey.trim(),
-                duration
+                duration,
             );
 
             isSubmitting = false;
@@ -114,7 +114,7 @@
                             }}
                         />
                     </label>
-                    <input type="text" id={uniqueId} max={maxDuration} bind:value={duration} required />
+                    <input type="number" id={uniqueId} max={maxDuration} bind:value={duration} required />
                 </Field>
             </div>
 

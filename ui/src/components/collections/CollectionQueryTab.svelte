@@ -92,8 +92,12 @@
                 <code>(ROW_NUMBER() OVER()) as id</code>.
             </li>
             <li>
-                Expressions must be aliased with a valid formatted field name (eg.
-                <code>MAX(balance) as maxBalance</code>).
+                Expressions must be aliased with a valid formatted field name, e.g.
+                <code>MAX(balance) as maxBalance</code>.
+            </li>
+            <li>
+                Combined/multi-spaced expressions must be wrapped in parenthesis, e.g.
+                <code>(MAX(balance) + 1) as maxBalance</code>.
             </li>
         </ul>
     </div>
