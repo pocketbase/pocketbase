@@ -145,16 +145,16 @@ func (h *Hook[T]) Length() int {
 // with the specified event as an argument.
 //
 // Optionally, this method allows also to register additional one off
-// handlers that will be temporary appended to the handlers queue.
+// handler funcs that will be temporary appended to the handlers queue.
 //
 // NB! Each hook handler must call event.Next() in order the hook chain to proceed.
-func (h *Hook[T]) Trigger(event T, oneOffHandlers ...func(T) error) error {
+func (h *Hook[T]) Trigger(event T, oneOffHandlerFuncs ...func(T) error) error {
 	h.mu.RLock()
-	handlers := make([]func(T) error, 0, len(h.handlers)+len(oneOffHandlers))
+	handlers := make([]func(T) error, 0, len(h.handlers)+len(oneOffHandlerFuncs))
 	for _, handler := range h.handlers {
 		handlers = append(handlers, handler.Func)
 	}
-	handlers = append(handlers, oneOffHandlers...)
+	handlers = append(handlers, oneOffHandlerFuncs...)
 	h.mu.RUnlock()
 
 	event.setNextFunc(nil) // reset in case the event is being reused
