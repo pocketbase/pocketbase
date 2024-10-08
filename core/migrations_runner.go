@@ -12,7 +12,6 @@ import (
 )
 
 var AppMigrations MigrationsList
-
 var SystemMigrations MigrationsList
 
 const DefaultMigrationsTable = "_migrations"
@@ -134,9 +133,23 @@ func (r *MigrationsRunner) Up() ([]string, error) {
 	err := r.app.AuxRunInTransaction(func(txApp App) error {
 		return txApp.RunInTransaction(func(txApp App) error {
 			for _, m := range r.migrationsList.Items() {
-				// skip applied
+				// applied migrations check
 				if r.isMigrationApplied(txApp, m.File) {
-					continue
+					if m.ReapplyCondition == nil {
+						continue // no need to reapply
+					}
+
+					shouldReapply, err := m.ReapplyCondition(txApp, r, m.File)
+					if err != nil {
+						return err
+					}
+					if !shouldReapply {
+						continue
+					}
+
+					// clear previous history stored entry
+					// (it will be recreated after successful execution)
+					r.saveRevertedMigration(txApp, m.File)
 				}
 
 				// ignore empty Up action

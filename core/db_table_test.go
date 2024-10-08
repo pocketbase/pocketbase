@@ -42,6 +42,31 @@ func TestHasTable(t *testing.T) {
 	}
 }
 
+func TestAuxHasTable(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	scenarios := []struct {
+		tableName string
+		expected  bool
+	}{
+		{"", false},
+		{"test", false},
+		{"_lOGS", true}, // table names are case insensitives by default
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.tableName, func(t *testing.T) {
+			result := app.AuxHasTable(s.tableName)
+			if result != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, result)
+			}
+		})
+	}
+}
+
 func TestTableColumns(t *testing.T) {
 	t.Parallel()
 

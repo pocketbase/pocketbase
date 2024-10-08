@@ -8,6 +8,8 @@ import (
 
 func TestMigrationsList(t *testing.T) {
 	l1 := core.MigrationsList{}
+	l1.Add(&core.Migration{File: "5_test.go"})
+	l1.Add(&core.Migration{ /* auto detect file name */ })
 	l1.Register(nil, nil, "3_test.go")
 	l1.Register(nil, nil, "1_test.go")
 	l1.Register(nil, nil, "2_test.go")
@@ -22,12 +24,19 @@ func TestMigrationsList(t *testing.T) {
 		"2_test.go",
 		"3_test.go",
 		"4_test.go",
+		"5_test.go",
+		// twice because there 2 test migrations with auto filename
+		"migrations_list_test.go",
 		"migrations_list_test.go",
 	}
 
 	items := l2.Items()
 	if len(items) != len(expected) {
-		t.Fatalf("Expected %d items, got %d: \n%#v", len(expected), len(items), items)
+		names := make([]string, len(items))
+		for i, item := range items {
+			names[i] = item.File
+		}
+		t.Fatalf("Expected %d items, got %d:\n%v", len(expected), len(names), names)
 	}
 
 	for i, name := range expected {

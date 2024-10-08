@@ -7,20 +7,6 @@ import (
 	"github.com/pocketbase/dbx"
 )
 
-// HasTable checks if a table (or view) with the provided name exists (case insensitive).
-func (app *BaseApp) HasTable(tableName string) bool {
-	var exists bool
-
-	err := app.DB().Select("(1)").
-		From("sqlite_schema").
-		AndWhere(dbx.HashExp{"type": []any{"table", "view"}}).
-		AndWhere(dbx.NewExp("LOWER([[name]])=LOWER({:tableName})", dbx.Params{"tableName": tableName})).
-		Limit(1).
-		Row(&exists)
-
-	return err == nil && exists
-}
-
 // TableColumns returns all column names of a single table by its name.
 func (app *BaseApp) TableColumns(tableName string) ([]string, error) {
 	columns := []string{}
@@ -107,6 +93,31 @@ func (app *BaseApp) DeleteTable(tableName string) error {
 	)).Execute()
 
 	return err
+}
+
+// HasTable checks if a table (or view) with the provided name exists (case insensitive).
+// in the current app.DB() instance.
+func (app *BaseApp) HasTable(tableName string) bool {
+	return app.hasTable(app.DB(), tableName)
+}
+
+// AuxHasTable checks if a table (or view) with the provided name exists (case insensitive)
+// in the current app.AuxDB() instance.
+func (app *BaseApp) AuxHasTable(tableName string) bool {
+	return app.hasTable(app.AuxDB(), tableName)
+}
+
+func (app *BaseApp) hasTable(db dbx.Builder, tableName string) bool {
+	var exists bool
+
+	err := db.Select("(1)").
+		From("sqlite_schema").
+		AndWhere(dbx.HashExp{"type": []any{"table", "view"}}).
+		AndWhere(dbx.NewExp("LOWER([[name]])=LOWER({:tableName})", dbx.Params{"tableName": tableName})).
+		Limit(1).
+		Row(&exists)
+
+	return err == nil && exists
 }
 
 // Vacuum executes VACUUM on the current app.DB() instance

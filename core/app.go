@@ -175,7 +175,12 @@ type App interface {
 	AuxNonconcurrentDB() dbx.Builder
 
 	// HasTable checks if a table (or view) with the provided name exists (case insensitive).
+	// in the current app.DB() instance.
 	HasTable(tableName string) bool
+
+	// AuxHasTable checks if a table (or view) with the provided name exists (case insensitive)
+	// in the current app.AuxDB() instance.
+	AuxHasTable(tableName string) bool
 
 	// TableColumns returns all column names of a single table by its name.
 	TableColumns(tableName string) ([]string, error)

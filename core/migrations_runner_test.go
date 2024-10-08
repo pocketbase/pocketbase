@@ -41,11 +41,51 @@ func TestMigrationsRunnerUpAndDown(t *testing.T) {
 		callsOrder = append(callsOrder, "down1")
 		return nil
 	}, "1_test")
+	l.Register(func(app core.App) error {
+		callsOrder = append(callsOrder, "up4")
+		return nil
+	}, func(app core.App) error {
+		callsOrder = append(callsOrder, "down4")
+		return nil
+	}, "4_test")
+	l.Add(&core.Migration{
+		Up: func(app core.App) error {
+			callsOrder = append(callsOrder, "up5")
+			return nil
+		},
+		Down: func(app core.App) error {
+			callsOrder = append(callsOrder, "down5")
+			return nil
+		},
+		File: "5_test",
+		ReapplyCondition: func(txApp core.App, runner *core.MigrationsRunner, fileName string) (bool, error) {
+			return true, nil
+		},
+	})
 
 	runner := core.NewMigrationsRunner(app, l)
 
-	// simulate partially out-of-order run migration
+	// ---------------------------------------------------------------
+	// simulate partially out-of-order applied migration
+	// ---------------------------------------------------------------
+
 	_, err := app.DB().Insert(core.DefaultMigrationsTable, dbx.Params{
+		"file":    "4_test",
+		"applied": time.Now().UnixMicro() - 2,
+	}).Execute()
+	if err != nil {
+		t.Fatalf("Failed to insert 5_test migration: %v", err)
+	}
+
+	_, err = app.DB().Insert(core.DefaultMigrationsTable, dbx.Params{
+		"file":    "5_test",
+		"applied": time.Now().UnixMicro() - 1,
+	}).Execute()
+	if err != nil {
+		t.Fatalf("Failed to insert 5_test migration: %v", err)
+	}
+
+	_, err = app.DB().Insert(core.DefaultMigrationsTable, dbx.Params{
 		"file":    "2_test",
 		"applied": time.Now().UnixMicro(),
 	}).Execute()
@@ -61,7 +101,7 @@ func TestMigrationsRunnerUpAndDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expectedUpCallsOrder := `["up1","up3"]` // skip up2 since it was applied previously
+	expectedUpCallsOrder := `["up1","up3","up5"]` // skip up2 and up4 since they were applied already (up5 has extra reapply condition)
 
 	upCallsOrder, err := json.Marshal(callsOrder)
 	if err != nil {
@@ -79,9 +119,9 @@ func TestMigrationsRunnerUpAndDown(t *testing.T) {
 
 	// simulate unrun migration
 	l.Register(nil, func(app core.App) error {
-		callsOrder = append(callsOrder, "down4")
+		callsOrder = append(callsOrder, "down6")
 		return nil
-	}, "4_test")
+	}, "6_test")
 
 	// simulate applied migrations from different migrations list
 	_, err = app.DB().Insert(core.DefaultMigrationsTable, dbx.Params{
@@ -102,7 +142,7 @@ func TestMigrationsRunnerUpAndDown(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expectedDownCallsOrder := `["down3","down1"]` // revert in the applied order
+	expectedDownCallsOrder := `["down5","down3"]` // revert in the applied order
 
 	downCallsOrder, err := json.Marshal(callsOrder)
 	if err != nil {

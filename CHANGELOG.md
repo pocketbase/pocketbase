@@ -1,18 +1,20 @@
-## v0.23.0-rc3 (WIP)
+## v0.23.0-rc3
 
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
-- Fixed the UI input field type of the OTP.length field ([#5617](https://github.com/pocketbase/pocketbase/issues/5617)).
+- Make `PRAGMA optimize` statement optional in case it is not supported by the driver ([#5611](https://github.com/pocketbase/pocketbase/discussions/5611)).
+
+- Reapply the minimum required `pb_data/auxiliary.db` migrations if the db file was manually deleted ([#5618](https://github.com/pocketbase/pocketbase/discussions/5618)).
 
 - To avoid confusion and unnecessary casting, the `hook.HandlerFunc[T]` type has been removed and instead everywhere we now use directly the underlying function definition, aka.:
   ```go
   func(T) error
   ```
 
-- Make `PRAGMA optimize` statement optional ([#5611](https://github.com/pocketbase/pocketbase/discussions/5611)).
+- Fixed the UI input field type of the OTP.length field ([#5617](https://github.com/pocketbase/pocketbase/issues/5617)).
 
-- Other minor UI fixes (fixed error message typo, better hint for combined/multi-spaced view query columns, fixed https green favicon path, etc.)
+- Other minor fixes (fixed API preview and examples error message typos, better hint for combined/multi-spaced view query columns, fixed the path for the HTTPS green favicon path, etc.).
 
 
 ## v0.23.0-rc2

@@ -28,10 +28,6 @@ func Register(
 
 func init() {
 	core.SystemMigrations.Register(func(txApp core.App) error {
-		if err := createLogsTable(txApp); err != nil {
-			return fmt.Errorf("_logs error: %w", err)
-		}
-
 		if err := createParamsTable(txApp); err != nil {
 			return fmt.Errorf("_params exec error: %w", err)
 		}
@@ -86,11 +82,6 @@ func init() {
 
 		return nil
 	}, func(txApp core.App) error {
-		_, err := txApp.AuxDB().DropTable("_logs").Execute()
-		if err != nil {
-			return err
-		}
-
 		tables := []string{
 			"users",
 			core.CollectionNameSuperusers,
@@ -119,24 +110,6 @@ func createParamsTable(txApp core.App) error {
 			[[created]] TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
 			[[updated]] TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
 		);
-	`).Execute()
-
-	return execErr
-}
-
-func createLogsTable(txApp core.App) error {
-	_, execErr := txApp.AuxDB().NewQuery(`
-		CREATE TABLE {{_logs}} (
-			[[id]]      TEXT PRIMARY KEY DEFAULT ('r'||lower(hex(randomblob(7)))) NOT NULL,
-			[[level]]   INTEGER DEFAULT 0 NOT NULL,
-			[[message]] TEXT DEFAULT "" NOT NULL,
-			[[data]]    JSON DEFAULT "{}" NOT NULL,
-			[[created]] TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
-		);
-
-		CREATE INDEX idx_logs_level on {{_logs}} ([[level]]);
-		CREATE INDEX idx_logs_message on {{_logs}} ([[message]]);
-		CREATE INDEX idx_logs_created_hour on {{_logs}} (strftime('%Y-%m-%d %H:00:00', [[created]]));
 	`).Execute()
 
 	return execErr

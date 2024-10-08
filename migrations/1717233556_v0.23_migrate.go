@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -58,12 +59,9 @@ func init() {
 			return fmt.Errorf("failed to create authOrigins collection: %w", err)
 		}
 
-		if err = createLogsTable(txApp); err != nil {
-			return fmt.Errorf("failed tocreate logs table: %w", err)
-		}
-
-		if err = os.Remove(filepath.Join(txApp.DataDir(), "logs.db")); err != nil {
-			txApp.Logger().Warn("Failed to delete old logs.db file")
+		err = os.Remove(filepath.Join(txApp.DataDir(), "logs.db"))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			txApp.Logger().Warn("Failed to delete old logs.db file", "error", err)
 		}
 
 		return nil
