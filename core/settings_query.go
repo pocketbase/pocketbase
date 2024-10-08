@@ -15,7 +15,7 @@ type Param struct {
 	BaseModel
 
 	Created types.DateTime `db:"created" json:"created"`
-	Updated types.DateTime `db:"Updated" json:"Updated"`
+	Updated types.DateTime `db:"updated" json:"updated"`
 	Value   types.JSONRaw  `db:"value" json:"value"`
 }
 
