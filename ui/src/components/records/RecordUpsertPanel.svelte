@@ -735,7 +735,9 @@
                 type="submit"
                 form={formId}
                 title="Save and close"
-                class="btn btn-expanded"
+                class="btn"
+                class:btn-expanded={isNew}
+                class:btn-expanded-sm={!isNew}
                 class:btn-loading={isSaving || isLoading}
                 disabled={!canSave || isSaving}
             >

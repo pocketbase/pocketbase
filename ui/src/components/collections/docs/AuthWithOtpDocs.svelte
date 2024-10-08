@@ -36,7 +36,7 @@
         // ... show a screen/popup to enter the password from the email ...
 
         // authenticate with the requested OTP id and the email password
-        const authData = await pb.collection('${collection?.name}').authWithOtp(
+        const authData = await pb.collection('${collection?.name}').authWithOTP(
             req.otpId,
             "YOUR_OTP",
         );
@@ -62,7 +62,7 @@
         // ... show a screen/popup to enter the password from the email ...
 
         // authenticate with the requested OTP id and the email password
-        final authData = await pb.collection('${collection?.name}').authWithOtp(
+        final authData = await pb.collection('${collection?.name}').authWithOTP(
             req.otpId,
             "YOUR_OTP",
         );

@@ -551,8 +551,10 @@
         <div class="btns-group no-gap">
             <button
                 type="button"
-                class="btn btn-expanded"
                 title="Save and close"
+                class="btn"
+                class:btn-expanded={!collection.id}
+                class:btn-expanded-sm={!!collection.id}
                 class:btn-loading={isSaving}
                 disabled={!canSave || isSaving}
                 on:click={() => saveConfirm()}
