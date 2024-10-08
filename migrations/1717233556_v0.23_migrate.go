@@ -588,7 +588,7 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 			}
 
 			// delete unnecessary auth columns
-			dropColumns := []string{"lastResetSentAt", "lastVerificationSentAt", "lastAuthAlertSentAt"}
+			dropColumns := []string{"lastResetSentAt", "lastVerificationSentAt", "lastLoginAlertSentAt"}
 			for _, drop := range dropColumns {
 				// ignore errors in case the columns don't exist
 				_, _ = txApp.DB().DropColumn(c.Name, drop).Execute()
