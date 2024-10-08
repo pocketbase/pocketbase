@@ -31,7 +31,7 @@
         ...
 
         // send OTP email to the provided auth record
-        const req = await pb.collection('${collection?.name}').requestOtp('test@example.com');
+        const req = await pb.collection('${collection?.name}').requestOTP('test@example.com');
 
         // ... show a screen/popup to enter the password from the email ...
 
@@ -57,7 +57,7 @@
         ...
 
         // send OTP email to the provided auth record
-        final req = await pb.collection('${collection?.name}').requestOtp('test@example.com');
+        final req = await pb.collection('${collection?.name}').requestOTP('test@example.com');
 
         // ... show a screen/popup to enter the password from the email ...
 
