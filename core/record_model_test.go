@@ -1841,9 +1841,21 @@ func TestRecordDelete(t *testing.T) {
 
 	// delete unsaved record
 	// ---
-	rec0 := core.NewRecord(demoCollection)
-	if err := app.Delete(rec0); err == nil {
-		t.Fatal("(rec0) Didn't expect to succeed deleting unsaved record")
+	newRec := core.NewRecord(demoCollection)
+	if err := app.Delete(newRec); err == nil {
+		t.Fatal("(newRec) Didn't expect to succeed deleting unsaved record")
+	}
+
+	// delete view record
+	// ---
+	viewRec, _ := app.FindRecordById("view2", "84nmscqy84lsi1t")
+	if err := app.Delete(viewRec); err == nil {
+		t.Fatal("(viewRec) Didn't expect to succeed deleting view record")
+	}
+	// check if it still exists
+	viewRec, _ = app.FindRecordById(viewRec.Collection().Id, viewRec.Id)
+	if viewRec == nil {
+		t.Fatal("(viewRec) Expected view record to still exists")
 	}
 
 	// delete existing record + external auths

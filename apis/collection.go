@@ -169,6 +169,10 @@ func collectionTruncate(e *core.RequestEvent) error {
 		return e.NotFoundError("", err)
 	}
 
+	if collection.IsView() {
+		return e.BadRequestError("View collections cannot be truncated since they don't store their own records.", nil)
+	}
+
 	err = e.App.TruncateCollection(collection)
 	if err != nil {
 		return e.BadRequestError("Failed to truncate collection (most likely due to required cascade delete record references).", err)

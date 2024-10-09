@@ -176,6 +176,10 @@ func (app *BaseApp) FindCollectionReferences(collection *Collection, excludeIds 
 // Note that this method will also trigger the records related
 // cascade and file delete actions.
 func (app *BaseApp) TruncateCollection(collection *Collection) error {
+	if collection.IsView() {
+		return errors.New("view collections cannot be truncated since they don't store their own records.")
+	}
+
 	return app.RunInTransaction(func(txApp App) error {
 		records := make([]*Record, 0, 500)
 

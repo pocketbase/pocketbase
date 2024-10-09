@@ -1,3 +1,11 @@
+## v0.23.0-rc4 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Added more user friendly view collection truncate error message.
+
+
 ## v0.23.0-rc3
 
 > [!CAUTION]

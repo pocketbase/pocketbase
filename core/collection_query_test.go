@@ -299,6 +299,18 @@ func TestFindCollectionTruncate(t *testing.T) {
 		return len(entries), err
 	}
 
+	t.Run("truncate view", func(t *testing.T) {
+		view2, err := app.FindCollectionByNameOrId("view2")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		err = app.TruncateCollection(view2)
+		if err == nil {
+			t.Fatalf("Expected truncate to fail because view collections can't be truncated")
+		}
+	})
+
 	t.Run("truncate failure", func(t *testing.T) {
 		demo3, err := app.FindCollectionByNameOrId("demo3")
 		if err != nil {

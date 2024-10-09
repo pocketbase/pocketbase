@@ -1493,6 +1493,17 @@ func TestCollectionTruncate(t *testing.T) {
 				"OnRecordAfterUpdateError": 2,
 			},
 		},
+		{
+			Name:   "authorized as superuser trying to truncate view collection",
+			Method: http.MethodDelete,
+			URL:    "/api/collections/view2/truncate",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
 	}
 
 	for _, scenario := range scenarios {

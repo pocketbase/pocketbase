@@ -378,7 +378,13 @@ func (app *BaseApp) registerRecordHooks() {
 				e.Context,
 				e.App,
 				InterceptorActionDelete,
-				e.Next,
+				func() error {
+					if e.Record.Collection().IsView() {
+						return errors.New("view records cannot be deleted")
+					}
+
+					return e.Next()
+				},
 			)
 		},
 		Priority: -99,
