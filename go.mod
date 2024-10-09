@@ -12,7 +12,7 @@ require (
 	github.com/aws/smithy-go v1.22.0
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.6.2
-	github.com/dop251/goja v0.0.0-20240927123429-241b342198c2
+	github.com/dop251/goja v0.0.0-20241009100908-5f46f2705ca3
 	github.com/dop251/goja_nodejs v0.0.0-20240728170619-29b559befffc
 	github.com/fatih/color v1.17.0
 	github.com/fsnotify/fsnotify v1.7.0

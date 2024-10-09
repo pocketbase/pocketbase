@@ -5,6 +5,12 @@
 
 - Fixed the UI settings update form to prevent sending empty string for the mail password or the S3 secret options on resave of the form.
 
+- ⚠️ Added an exception for the `OAuth2` field in the GO->JSVM name mapping rules:
+    ```
+    // old              -> new
+    collection.oAuth2.* -> collection.oauth2.*
+    ```
+
 - Added more user friendly view collection truncate error message.
 
 - Added `FieldsList.AddMarshaledJSON([]byte)` helper method to load a serialized json array of objects or a single json object into an existing collection fields list.
