@@ -94,7 +94,7 @@ type Config struct {
 //		OnInit: func(vm *goja.Runtime) {
 //			// register custom bindings
 //			vm.Set("myCustomVar", 123)
-//		}
+//		},
 //	})
 func MustRegister(app core.App, config Config) {
 	if err := Register(app, config); err != nil {
