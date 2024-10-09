@@ -2,8 +2,8 @@
     import { tick } from "svelte";
     import tooltip from "@/actions/tooltip";
 
+    export let value = undefined; // note must be undefined so that it can be skipped from the submit data
     export let mask = false;
-    export let value = "";
 
     let inputElem;
 
@@ -27,7 +27,7 @@
         </button>
     </div>
 
-    <input readonly type="text" placeholder="******" {...$$restProps} />
+    <input disabled type="text" placeholder="******" {...$$restProps} />
 {:else}
     <input bind:this={inputElem} bind:value type="password" autocomplete="new-password" {...$$restProps} />
 {/if}
