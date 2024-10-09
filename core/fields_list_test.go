@@ -201,6 +201,106 @@ func TestFieldsListAdd(t *testing.T) {
 	}
 }
 
+func TestFieldsListAddMarshaledJSON(t *testing.T) {
+	t.Parallel()
+
+	scenarios := []struct {
+		name           string
+		raw            []byte
+		expectError    bool
+		expectedFields map[string]string
+	}{
+		{
+			"nil",
+			nil,
+			false,
+			map[string]string{"abc": core.FieldTypeNumber},
+		},
+		{
+			"empty array",
+			[]byte(`[]`),
+			false,
+			map[string]string{"abc": core.FieldTypeNumber},
+		},
+		{
+			"empty object",
+			[]byte(`{}`),
+			true,
+			map[string]string{"abc": core.FieldTypeNumber},
+		},
+		{
+			"array with empty object",
+			[]byte(`[{}]`),
+			true,
+			map[string]string{"abc": core.FieldTypeNumber},
+		},
+		{
+			"single object with invalid type",
+			[]byte(`{"type":"missing","name":"test"}`),
+			true,
+			map[string]string{"abc": core.FieldTypeNumber},
+		},
+		{
+			"single object with valid type",
+			[]byte(`{"type":"text","name":"test"}`),
+			false,
+			map[string]string{
+				"abc":  core.FieldTypeNumber,
+				"test": core.FieldTypeText,
+			},
+		},
+		{
+			"array of object with valid types",
+			[]byte(`[{"type":"text","name":"test1"},{"type":"url","name":"test2"}]`),
+			false,
+			map[string]string{
+				"abc":   core.FieldTypeNumber,
+				"test1": core.FieldTypeText,
+				"test2": core.FieldTypeURL,
+			},
+		},
+		{
+			"fields with duplicated ids should replace existing fields",
+			[]byte(`[{"type":"text","name":"test1"},{"type":"url","name":"test2"},{"type":"text","name":"abc2", "id":"abc_id"}]`),
+			false,
+			map[string]string{
+				"abc2":  core.FieldTypeText,
+				"test1": core.FieldTypeText,
+				"test2": core.FieldTypeURL,
+			},
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			testList := core.NewFieldsList(&core.NumberField{Name: "abc", Id: "abc_id"})
+			err := testList.AddMarshaledJSON(s.raw)
+
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v", s.expectError, hasErr)
+			}
+
+			if len(s.expectedFields) != len(testList) {
+				t.Fatalf("Expected %d fields, got %d", len(s.expectedFields), len(testList))
+			}
+
+			for fieldName, typ := range s.expectedFields {
+				f := testList.GetByName(fieldName)
+
+				if f == nil {
+					t.Errorf("Missing expected field %q", fieldName)
+					continue
+				}
+
+				if f.Type() != typ {
+					t.Errorf("Expect field %q to has type %q, got %q", fieldName, typ, f.Type())
+				}
+			}
+		})
+	}
+}
+
 func TestFieldsListStringAndValue(t *testing.T) {
 	t.Run("empty list", func(t *testing.T) {
 		testFieldsList := core.NewFieldsList()

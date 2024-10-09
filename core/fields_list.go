@@ -10,21 +10,21 @@ import (
 
 // NewFieldsList creates a new FieldsList instance with the provided fields.
 func NewFieldsList(fields ...Field) FieldsList {
-	s := make(FieldsList, 0, len(fields))
+	l := make(FieldsList, 0, len(fields))
 
 	for _, f := range fields {
-		s.Add(f)
+		l.Add(f)
 	}
 
-	return s
+	return l
 }
 
 // FieldsList defines a Collection slice of fields.
 type FieldsList []Field
 
 // Clone creates a deep clone of the current list.
-func (s FieldsList) Clone() (FieldsList, error) {
-	copyRaw, err := json.Marshal(s)
+func (l FieldsList) Clone() (FieldsList, error) {
+	copyRaw, err := json.Marshal(l)
 	if err != nil {
 		return nil, err
 	}
@@ -38,10 +38,10 @@ func (s FieldsList) Clone() (FieldsList, error) {
 }
 
 // FieldNames returns a slice with the name of all list fields.
-func (s FieldsList) FieldNames() []string {
-	result := make([]string, len(s))
+func (l FieldsList) FieldNames() []string {
+	result := make([]string, len(l))
 
-	for i, field := range s {
+	for i, field := range l {
 		result[i] = field.GetName()
 	}
 
@@ -50,10 +50,10 @@ func (s FieldsList) FieldNames() []string {
 
 // AsMap returns a map with all registered list field.
 // The returned map is indexed with each field name.
-func (s FieldsList) AsMap() map[string]Field {
-	result := make(map[string]Field, len(s))
+func (l FieldsList) AsMap() map[string]Field {
+	result := make(map[string]Field, len(l))
 
-	for _, field := range s {
+	for _, field := range l {
 		result[field.GetName()] = field
 	}
 
@@ -61,8 +61,8 @@ func (s FieldsList) AsMap() map[string]Field {
 }
 
 // GetById returns a single field by its id.
-func (s FieldsList) GetById(fieldId string) Field {
-	for _, field := range s {
+func (l FieldsList) GetById(fieldId string) Field {
+	for _, field := range l {
 		if field.GetId() == fieldId {
 			return field
 		}
@@ -71,8 +71,8 @@ func (s FieldsList) GetById(fieldId string) Field {
 }
 
 // GetByName returns a single field by its name.
-func (s FieldsList) GetByName(fieldName string) Field {
-	for _, field := range s {
+func (l FieldsList) GetByName(fieldName string) Field {
+	for _, field := range l {
 		if field.GetName() == fieldName {
 			return field
 		}
@@ -83,11 +83,11 @@ func (s FieldsList) GetByName(fieldName string) Field {
 // RemoveById removes a single field by its id.
 //
 // This method does nothing if field with the specified id doesn't exist.
-func (s *FieldsList) RemoveById(fieldId string) {
-	fields := *s
+func (l *FieldsList) RemoveById(fieldId string) {
+	fields := *l
 	for i, field := range fields {
 		if field.GetId() == fieldId {
-			*s = append(fields[:i], fields[i+1:]...)
+			*l = append(fields[:i], fields[i+1:]...)
 			return
 		}
 	}
@@ -96,11 +96,11 @@ func (s *FieldsList) RemoveById(fieldId string) {
 // RemoveByName removes a single field by its name.
 //
 // This method does nothing if field with the specified name doesn't exist.
-func (s *FieldsList) RemoveByName(fieldName string) {
-	fields := *s
+func (l *FieldsList) RemoveByName(fieldName string) {
+	fields := *l
 	for i, field := range fields {
 		if field.GetName() == fieldName {
-			*s = append(fields[:i], fields[i+1:]...)
+			*l = append(fields[:i], fields[i+1:]...)
 			return
 		}
 	}
@@ -115,13 +115,51 @@ func (s *FieldsList) RemoveByName(fieldName string) {
 // then the existing field is replaced with the new one.
 //
 // Otherwise the new field is appended after the other list fields.
-func (s *FieldsList) Add(fields ...Field) {
+func (l *FieldsList) Add(fields ...Field) {
 	for _, f := range fields {
-		s.add(f)
+		l.add(f)
 	}
 }
 
-func (s *FieldsList) add(newField Field) {
+// AddMarshaledJSON parses the provided raw json data and adds the
+// found fields into the current list (following the same rule as the Add method).
+//
+// rawJSON could be either a serialized array of field objects or a single field object.
+//
+// Example:
+//
+//	l.AddMarshaledJSON([]byte{`{"type":"text", name: "test"}`})
+//	l.AddMarshaledJSON([]byte{`[{"type":"text", name: "test1"}, {"type":"text", name: "test2"}]`})
+func (l *FieldsList) AddMarshaledJSON(rawJSON []byte) error {
+	if len(rawJSON) == 0 {
+		return nil // nothing to add
+	}
+
+	// try to unmarshal first into a new fieds list
+	// (assuming that rawJSON is array of objects)
+	extractedFields := FieldsList{}
+	err := json.Unmarshal(rawJSON, &extractedFields)
+	if err != nil {
+		// try again but wrap the rawJSON in []
+		// (assuming that rawJSON is a single object)
+		wrapped := make([]byte, 0, len(rawJSON)+2)
+		wrapped = append(wrapped, '[')
+		wrapped = append(wrapped, rawJSON...)
+		wrapped = append(wrapped, ']')
+		err = json.Unmarshal(wrapped, &extractedFields)
+		if err != nil {
+			return fmt.Errorf("failed to unmarshal the provided JSON - expects array of objects or just single object: %w", err)
+		}
+	}
+
+	for _, f := range extractedFields {
+		l.add(f)
+	}
+
+	return nil
+}
+
+func (l *FieldsList) add(newField Field) {
 	newFieldId := newField.GetId()
 
 	// set default id
@@ -134,23 +172,23 @@ func (s *FieldsList) add(newField Field) {
 		newField.SetId(newFieldId)
 	}
 
-	fields := *s
+	fields := *l
 
 	for i, field := range fields {
 		// replace existing
 		if newFieldId != "" && field.GetId() == newFieldId {
-			(*s)[i] = newField
+			(*l)[i] = newField
 			return
 		}
 	}
 
 	// add new field
-	*s = append(fields, newField)
+	*l = append(fields, newField)
 }
 
 // String returns the string representation of the current list.
-func (s FieldsList) String() string {
-	v, _ := json.Marshal(s)
+func (l FieldsList) String() string {
+	v, _ := json.Marshal(l)
 	return string(v)
 }
 
@@ -188,31 +226,31 @@ func (fwt *fieldWithType) UnmarshalJSON(data []byte) error {
 
 // UnmarshalJSON implements [json.Unmarshaler] and
 // loads the provided json data into the current FieldsList.
-func (s *FieldsList) UnmarshalJSON(data []byte) error {
+func (l *FieldsList) UnmarshalJSON(data []byte) error {
 	fwts := []fieldWithType{}
 
 	if err := json.Unmarshal(data, &fwts); err != nil {
 		return err
 	}
 
-	*s = []Field{} // reset
+	*l = []Field{} // reset
 
 	for _, fwt := range fwts {
-		s.Add(fwt.Field)
+		l.Add(fwt.Field)
 	}
 
 	return nil
 }
 
 // MarshalJSON implements the [json.Marshaler] interface.
-func (s FieldsList) MarshalJSON() ([]byte, error) {
-	if s == nil {
-		s = []Field{} // always init to ensure that it is serialized as empty array
+func (l FieldsList) MarshalJSON() ([]byte, error) {
+	if l == nil {
+		l = []Field{} // always init to ensure that it is serialized as empty array
 	}
 
-	wrapper := make([]map[string]any, 0, len(s))
+	wrapper := make([]map[string]any, 0, len(l))
 
-	for _, f := range s {
+	for _, f := range l {
 		// precompute the json into a map so that we can append the type to a flatten object
 		raw, err := json.Marshal(f)
 		if err != nil {
@@ -232,15 +270,15 @@ func (s FieldsList) MarshalJSON() ([]byte, error) {
 }
 
 // Value implements the [driver.Valuer] interface.
-func (s FieldsList) Value() (driver.Value, error) {
-	data, err := json.Marshal(s)
+func (l FieldsList) Value() (driver.Value, error) {
+	data, err := json.Marshal(l)
 
 	return string(data), err
 }
 
 // Scan implements [sql.Scanner] interface to scan the provided value
 // into the current FieldsList instance.
-func (s *FieldsList) Scan(value any) error {
+func (l *FieldsList) Scan(value any) error {
 	var data []byte
 	switch v := value.(type) {
 	case nil:
@@ -257,5 +295,5 @@ func (s *FieldsList) Scan(value any) error {
 		data = []byte("[]")
 	}
 
-	return s.UnmarshalJSON(data)
+	return l.UnmarshalJSON(data)
 }

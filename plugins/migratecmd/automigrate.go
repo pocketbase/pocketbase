@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pocketbase/dbx"
@@ -59,11 +60,11 @@ func (p *plugin) automigrateOnCollectionChange(e *core.CollectionRequestEvent) e
 	var action string
 	switch {
 	case new == nil:
-		action = "deleted_" + old.Name
+		action = "deleted_" + normalizeCollectionName(old.Name)
 	case old == nil:
-		action = "created_" + new.Name
+		action = "created_" + normalizeCollectionName(new.Name)
 	default:
-		action = "updated_" + old.Name
+		action = "updated_" + normalizeCollectionName(old.Name)
 	}
 
 	name := fmt.Sprintf("%d_%s.%s", time.Now().Unix(), action, p.config.TemplateLang)
@@ -92,4 +93,14 @@ func (p *plugin) automigrateOnCollectionChange(e *core.CollectionRequestEvent) e
 
 		return nil
 	})
+}
+
+func normalizeCollectionName(name string) string {
+	// adds an extra "_" suffix to the name in case the collection ends
+	// with "test" to prevent accidentally resulting in "_test.go"/"_test.js" files
+	if strings.HasSuffix(strings.ToLower(name), "test") {
+		name += "_"
+	}
+
+	return name
 }

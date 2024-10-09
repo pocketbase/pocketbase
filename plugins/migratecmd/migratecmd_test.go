@@ -1036,7 +1036,7 @@ func init() {
 		collection.Fields.RemoveById("f3_id")
 
 		// add field
-		if err := json.Unmarshal([]byte(` + "`" + `[{
+		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
 			"autogeneratePattern": "",
 			"hidden": false,
 			"id": "f4_id",
@@ -1049,12 +1049,12 @@ func init() {
 			"required": false,
 			"system": false,
 			"type": "text"
-		}]` + "`" + `), &collection.Fields); err != nil {
+		}` + "`" + `)); err != nil {
 			return err
 		}
 
 		// update field
-		if err := json.Unmarshal([]byte(` + "`" + `[{
+		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
 			"hidden": false,
 			"id": "f2_id",
 			"max": null,
@@ -1065,7 +1065,7 @@ func init() {
 			"required": false,
 			"system": false,
 			"type": "number"
-		}]` + "`" + `), &collection.Fields); err != nil {
+		}` + "`" + `)); err != nil {
 			return err
 		}
 
@@ -1099,7 +1099,7 @@ func init() {
 		}
 
 		// add field
-		if err := json.Unmarshal([]byte(` + "`" + `[{
+		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
 			"hidden": false,
 			"id": "f3_id",
 			"name": "f3_name",
@@ -1107,7 +1107,7 @@ func init() {
 			"required": false,
 			"system": false,
 			"type": "bool"
-		}]` + "`" + `), &collection.Fields); err != nil {
+		}` + "`" + `)); err != nil {
 			return err
 		}
 
@@ -1115,7 +1115,7 @@ func init() {
 		collection.Fields.RemoveById("f4_id")
 
 		// update field
-		if err := json.Unmarshal([]byte(` + "`" + `[{
+		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
 			"hidden": false,
 			"id": "f2_id",
 			"max": null,
@@ -1126,7 +1126,7 @@ func init() {
 			"required": false,
 			"system": false,
 			"type": "number"
-		}]` + "`" + `), &collection.Fields); err != nil {
+		}` + "`" + `)); err != nil {
 			return err
 		}
 

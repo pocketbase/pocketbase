@@ -546,7 +546,7 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 		upParts = append(upParts, fmt.Sprintf("%s.Fields.RemoveById(%q)\n", varName, oldField.GetId()))
 
 		downParts = append(downParts, "// add field")
-		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`[%s]`), &%s.Fields)", escapeBacktick(string(rawOldField)), varName)))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawOldField)))))
 	}
 
 	// created fields
@@ -561,7 +561,7 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 		}
 
 		upParts = append(upParts, "// add field")
-		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`[%s]`), &%s.Fields)", escapeBacktick(string(rawNewField)), varName)))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawNewField)))))
 
 		downParts = append(downParts, "// remove field")
 		downParts = append(downParts, fmt.Sprintf("%s.Fields.RemoveById(%q)\n", varName, newField.GetId()))
@@ -591,10 +591,10 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 		}
 
 		upParts = append(upParts, "// update field")
-		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`[%s]`), &%s.Fields)", escapeBacktick(string(rawNewField)), varName)))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawNewField)))))
 
 		downParts = append(downParts, "// update field")
-		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`[%s]`), &%s.Fields)", escapeBacktick(string(rawOldField)), varName)))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawOldField)))))
 	}
 
 	// ---------------------------------------------------------------
