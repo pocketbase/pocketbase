@@ -375,15 +375,17 @@
                         <span class="txt">Duplicate</span>
                     </button>
                     <hr />
-                    <button
-                        type="button"
-                        class="dropdown-item txt-danger"
-                        role="menuitem"
-                        on:click={() => truncateConfirm()}
-                    >
-                        <i class="ri-eraser-line" aria-hidden="true"></i>
-                        <span class="txt">Truncate</span>
-                    </button>
+                    {#if !isView}
+                        <button
+                            type="button"
+                            class="dropdown-item txt-danger"
+                            role="menuitem"
+                            on:click={() => truncateConfirm()}
+                        >
+                            <i class="ri-eraser-line" aria-hidden="true"></i>
+                            <span class="txt">Truncate</span>
+                        </button>
+                    {/if}
                     <button
                         type="button"
                         class="dropdown-item txt-danger"
