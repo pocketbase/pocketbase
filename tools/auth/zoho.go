@@ -21,7 +21,8 @@ type Zoho struct {
 }
 
 // NewZohoProvider creates new Zoho provider instance with some defaults.
-// Zoho claims to support OIDC, but their userinfo endpoint (userApiUrl) https://accounts.zoho.com/oauth/v2/userinfo is not working
+// Zoho claims to support OIDC, but their UserInfo endpoint (userApiUrl)
+// https://accounts.zoho.com/oauth/v2/userinfo is broken
 func NewZohoProvider() *Zoho {
 	return &Zoho{&baseProvider{
 		ctx:         context.Background(),
@@ -38,8 +39,7 @@ func NewZohoProvider() *Zoho {
 // API reference:
 // https://www.zoho.com/accounts/protocol/oauth/sign-in-using-zoho.html
 func (p *Zoho) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	// Zoho's OIDC implementation is not a standard one, because
-	// it uses idToken instead of userApiUrl for user information.
+	// Zoho's OIDC uses idToken instead of userApiUrl for user information.
 
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok || rawIDToken == "" {
@@ -81,8 +81,27 @@ func (p *Zoho) parseIDToken(rawIDToken string) (jwt.MapClaims, error) {
 	}
 
 	// verify issuer
-	if !claims.VerifyIssuer("accounts.zoho.com", true) {
-		return nil, errors.New("invalid id_token issuer")
+	issuer, _ := claims["iss"].(string)
+	validIssuers := []string{
+		"https://accounts.zoho.com.au",
+		"https://accounts.zohocloud.ca",
+		"https://accounts.zoho.eu",
+		"https://accounts.zoho.com",
+		"https://accounts.zoho.in",
+		"https://accounts.zoho.jp",
+		"https://accounts.zoho.sa",
+		"https://accounts.zoho.uk",
+		"https://accounts.zoho.com.cn",
+	}
+	isValidIssuer := false
+	for _, validIssuer := range validIssuers {
+		if issuer == validIssuer {
+			isValidIssuer = true
+			break
+		}
+	}
+	if !isValidIssuer {
+		return nil, fmt.Errorf("invalid id_token issuer: %s", issuer)
 	}
 
 	// verify audience
