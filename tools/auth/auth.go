@@ -158,6 +158,8 @@ func NewProviderByName(name string) (Provider, error) {
 		return NewBitbucketProvider(), nil
 	case NamePlanningcenter:
 		return NewPlanningcenterProvider(), nil
+	case NameZoho:
+		return NewZohoProvider(), nil
 	default:
 		return nil, errors.New("Missing provider " + name)
 	}
