@@ -399,12 +399,16 @@ func TestRecordAuthResponseAuthAlertCheck(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			mockCreated := types.NowDateTime().Add(-time.Duration(len(s.devices)+1) * time.Second)
 			// insert the mock devices
 			for _, fingerprint := range s.devices {
+				mockCreated = mockCreated.Add(1 * time.Second)
 				d := core.NewAuthOrigin(app)
 				d.SetCollectionRef(user.Collection().Id)
 				d.SetRecordRef(user.Id)
 				d.SetFingerprint(fingerprint)
+				d.SetRaw("created", mockCreated)
+				d.SetRaw("updated", mockCreated)
 				if err = app.Save(d); err != nil {
 					t.Fatal(err)
 				}
