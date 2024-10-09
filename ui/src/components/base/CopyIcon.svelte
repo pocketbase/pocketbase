@@ -12,7 +12,7 @@
     let copyTimeout;
 
     function copy() {
-        if (!value) {
+        if (CommonHelper.isEmpty(value)) {
             return;
         }
 
