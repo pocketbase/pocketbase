@@ -7,6 +7,8 @@
 
 - Added monday.com OAuth2 provider ([#5346](https://github.com/pocketbase/pocketbase/pull/5346); thanks @Jaytpa01).
 
+- Fixed the relation record picker to sort by default by `@rowid` insetead of the `created` field as the latter is optional ([#5641](https://github.com/pocketbase/pocketbase/discussions/5641)).
+
 
 ## v0.23.0-rc4
 
