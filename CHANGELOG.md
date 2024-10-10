@@ -1,3 +1,11 @@
+## v0.23.0-rc5 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Added new Notion OAuth2 provider ([#4999](https://github.com/pocketbase/pocketbase/pull/4999); thanks @s-li1).
+
+
 ## v0.23.0-rc4
 
 > [!CAUTION]
@@ -58,6 +66,7 @@
     ```go
     go run . serve --dir="pb_data_temp"
     ```
+
 
 ## v0.23.0-rc3
 

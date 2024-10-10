@@ -144,7 +144,7 @@ func (au AuthUser) MarshalJSON() ([]byte, error) {
 	type alias AuthUser // prevent recursion
 
 	au2 := alias(au)
-	au2.AvatarURL = au.AvatarURL // ensure that the legacy field is populated
+	au2.AvatarUrl = au.AvatarURL // ensure that the legacy field is populated
 
 	return json.Marshal(au2)
 }

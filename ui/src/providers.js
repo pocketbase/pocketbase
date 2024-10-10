@@ -3,6 +3,8 @@ import MicrosoftOptions from "@/components/collections/providers/MicrosoftOption
 import OIDCOptions from "@/components/collections/providers/OIDCOptions.svelte";
 import SelfHostedOptions from "@/components/collections/providers/SelfHostedOptions.svelte";
 
+// @todo remove after allowing custom OAuth2 UI extendability
+//
 // Object list with all supported OAuth2 providers in the format:
 // ```
 // [ { key, title, logo, optionsComponent?, optionComponentProps? }, ... ]
@@ -95,6 +97,11 @@ export default [
         key: "vk",
         title: "VK",
         logo: "vk.svg"
+    },
+    {
+        key:   "notion",
+        title: "Notion",
+        logo:  "notion.svg",
     },
     {
         key: "spotify",
