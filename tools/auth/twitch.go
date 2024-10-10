@@ -87,9 +87,9 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 // FetchRawUserInfo implements Provider.FetchRawUserInfo interface.
 //
-// This differ from baseProvider because Twitch requires the `Client-Id` header.
+// This differ from BaseProvider because Twitch requires the Client-Id header.
 func (p *Twitch) FetchRawUserInfo(token *oauth2.Token) ([]byte, error) {
-	req, err := http.NewRequest("GET", p.userInfoURL, nil)
+	req, err := http.NewRequestWithContext(p.ctx, "GET", p.userInfoURL, nil)
 	if err != nil {
 		return nil, err
 	}
