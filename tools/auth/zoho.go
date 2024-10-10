@@ -10,6 +10,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func init() {
+	Providers[NameZoho] = wrapFactory(NewZohoProvider)
+}
+
 var _ Provider = (*Zoho)(nil)
 
 // NameZoho is the unique name of the Zoho provider.
@@ -17,20 +21,20 @@ const NameZoho string = "zoho"
 
 // Zoho allows authentication via Zoho OAuth2.
 type Zoho struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewZohoProvider creates new Zoho provider instance with some defaults.
 // Zoho claims to support OIDC, but their UserInfo endpoint (userApiUrl)
 // https://accounts.zoho.com/oauth/v2/userinfo is broken
 func NewZohoProvider() *Zoho {
-	return &Zoho{&baseProvider{
+	return &Zoho{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Zoho",
-		pkce:        false,
+		pkce:        true,
 		scopes:      []string{"profile", "email", "openid"},
-		authUrl:     "https://accounts.zoho.com/oauth/v2/auth",
-		tokenUrl:    "https://accounts.zoho.com/oauth/v2/token",
+		authURL:     "https://accounts.zoho.com/oauth/v2/auth",
+		tokenURL:    "https://accounts.zoho.com/oauth/v2/token",
 	}}
 }
 
