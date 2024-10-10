@@ -134,6 +134,11 @@ export default [
         logo: "planningcenter.svg",
     },
     {
+        key: "zoho",
+        title: "Zoho",
+        logo: "zoho.svg",
+    },
+    {
         key: "oidc",
         title: "OpenID Connect",
         logo: "oidc.svg",
