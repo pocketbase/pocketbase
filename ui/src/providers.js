@@ -104,6 +104,11 @@ export default [
         logo:  "notion.svg",
     },
     {
+        key:   "monday",
+        title: "monday.com",
+        logo:  "monday.svg",
+    },
+    {
         key: "spotify",
         title: "Spotify",
         logo: "spotify.svg",

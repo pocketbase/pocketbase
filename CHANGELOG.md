@@ -3,7 +3,9 @@
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
-- Added new Notion OAuth2 provider ([#4999](https://github.com/pocketbase/pocketbase/pull/4999); thanks @s-li1).
+- Added Notion OAuth2 provider ([#4999](https://github.com/pocketbase/pocketbase/pull/4999); thanks @s-li1).
+
+- Added monday.com OAuth2 provider ([#5346](https://github.com/pocketbase/pocketbase/pull/5346); thanks @Jaytpa01).
 
 
 ## v0.23.0-rc4
