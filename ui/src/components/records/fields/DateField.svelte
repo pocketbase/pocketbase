@@ -1,8 +1,9 @@
 <script>
     import Flatpickr from "svelte-flatpickr";
+    import tooltip from "@/actions/tooltip";
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
-    import tooltip from "@/actions/tooltip";
+    import FieldLabel from "@/components/records/fields/FieldLabel.svelte";
 
     export let field;
     export let value = undefined;
@@ -33,10 +34,7 @@
 </script>
 
 <Field class="form-field {field.required ? 'required' : ''}" name={field.name} let:uniqueId>
-    <label for={uniqueId}>
-        <i class={CommonHelper.getFieldTypeIcon(field.type)} />
-        <span class="txt">{field.name} (UTC)</span>
-    </label>
+    <FieldLabel {uniqueId} {field} />
 
     {#if value && !field.required}
         <div class="form-field-addon">

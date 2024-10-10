@@ -181,11 +181,8 @@ func TestBatchHandlerHandle(t *testing.T) {
 		BeforeAddFunc: func(_ context.Context, log *Log) bool {
 			beforeLogs = append(beforeLogs, log)
 
-			if log.Message == "test2" {
-				return false // skip test2 log
-			}
-
-			return true
+			// skip test2 log
+			return log.Message != "test2"
 		},
 		WriteFunc: func(_ context.Context, logs []*Log) error {
 			writeLogs = logs

@@ -1,49 +1,62 @@
 package core
 
 import (
+	"context"
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/tools/auth"
-	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/mailer"
+	"github.com/pocketbase/pocketbase/tools/router"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 	"golang.org/x/crypto/acme/autocert"
 )
 
-var (
-	_ hook.Tagger = (*BaseModelEvent)(nil)
-	_ hook.Tagger = (*BaseCollectionEvent)(nil)
-)
-
-type BaseModelEvent struct {
-	Model models.Model
+type HookTagger interface {
+	HookTags() []string
 }
 
-func (e *BaseModelEvent) Tags() []string {
+// -------------------------------------------------------------------
+
+type baseModelEventData struct {
+	Model Model
+}
+
+func (e *baseModelEventData) Tags() []string {
 	if e.Model == nil {
 		return nil
 	}
 
-	if r, ok := e.Model.(*models.Record); ok && r.Collection() != nil {
-		return []string{r.Collection().Id, r.Collection().Name}
+	if ht, ok := e.Model.(HookTagger); ok {
+		return ht.HookTags()
 	}
 
 	return []string{e.Model.TableName()}
 }
 
-type BaseCollectionEvent struct {
-	Collection *models.Collection
+// -------------------------------------------------------------------
+
+type baseRecordEventData struct {
+	Record *Record
 }
 
-func (e *BaseCollectionEvent) Tags() []string {
+func (e *baseRecordEventData) Tags() []string {
+	if e.Record == nil {
+		return nil
+	}
+
+	return e.Record.HookTags()
+}
+
+// -------------------------------------------------------------------
+
+type baseCollectionEventData struct {
+	Collection *Collection
+}
+
+func (e *baseCollectionEventData) Tags() []string {
 	if e.Collection == nil {
 		return nil
 	}
@@ -62,356 +75,466 @@ func (e *BaseCollectionEvent) Tags() []string {
 }
 
 // -------------------------------------------------------------------
-// Serve events data
+// App events data
 // -------------------------------------------------------------------
 
 type BootstrapEvent struct {
+	hook.Event
 	App App
 }
 
 type TerminateEvent struct {
+	hook.Event
 	App       App
 	IsRestart bool
 }
 
+type BackupEvent struct {
+	hook.Event
+	App     App
+	Context context.Context
+	Name    string   // the name of the backup to create/restore.
+	Exclude []string // list of dir entries to exclude from the backup create/restore.
+}
+
 type ServeEvent struct {
+	hook.Event
 	App         App
-	Router      *echo.Echo
+	Router      *router.Router[*RequestEvent]
 	Server      *http.Server
 	CertManager *autocert.Manager
 }
 
-type ApiErrorEvent struct {
-	HttpContext echo.Context
-	Error       error
+// -------------------------------------------------------------------
+// Settings events data
+// -------------------------------------------------------------------
+
+type SettingsListRequestEvent struct {
+	hook.Event
+	*RequestEvent
+
+	Settings *Settings
 }
 
-// -------------------------------------------------------------------
-// Model DAO events data
-// -------------------------------------------------------------------
+type SettingsUpdateRequestEvent struct {
+	hook.Event
+	*RequestEvent
 
-type ModelEvent struct {
-	BaseModelEvent
+	OldSettings *Settings
+	NewSettings *Settings
+}
 
-	Dao *daos.Dao
+type SettingsReloadEvent struct {
+	hook.Event
+	App App
 }
 
 // -------------------------------------------------------------------
 // Mailer events data
 // -------------------------------------------------------------------
 
+type MailerEvent struct {
+	hook.Event
+	App App
+
+	Mailer  mailer.Mailer
+	Message *mailer.Message
+}
+
 type MailerRecordEvent struct {
-	BaseCollectionEvent
-
-	MailClient mailer.Mailer
-	Message    *mailer.Message
-	Record     *models.Record
-	Meta       map[string]any
-}
-
-type MailerAdminEvent struct {
-	MailClient mailer.Mailer
-	Message    *mailer.Message
-	Admin      *models.Admin
-	Meta       map[string]any
+	MailerEvent
+	baseRecordEventData
+	Meta map[string]any
 }
 
 // -------------------------------------------------------------------
-// Realtime API events data
+// Model events data
 // -------------------------------------------------------------------
 
-type RealtimeConnectEvent struct {
-	HttpContext echo.Context
-	Client      subscriptions.Client
-	IdleTimeout time.Duration
+const (
+	ModelEventTypeCreate   = "create"
+	ModelEventTypeUpdate   = "update"
+	ModelEventTypeDelete   = "delete"
+	ModelEventTypeValidate = "validate"
+)
+
+type ModelEvent struct {
+	hook.Event
+	App App
+	baseModelEventData
+	Context context.Context
+
+	// Could be any of the ModelEventType* constants, like:
+	// - create
+	// - update
+	// - delete
+	// - validate
+	Type string
 }
 
-type RealtimeDisconnectEvent struct {
-	HttpContext echo.Context
-	Client      subscriptions.Client
-}
-
-type RealtimeMessageEvent struct {
-	HttpContext echo.Context
-	Client      subscriptions.Client
-	Message     *subscriptions.Message
-}
-
-type RealtimeSubscribeEvent struct {
-	HttpContext   echo.Context
-	Client        subscriptions.Client
-	Subscriptions []string
-}
-
-// -------------------------------------------------------------------
-// Settings API events data
-// -------------------------------------------------------------------
-
-type SettingsListEvent struct {
-	HttpContext      echo.Context
-	RedactedSettings *settings.Settings
-}
-
-type SettingsUpdateEvent struct {
-	HttpContext echo.Context
-	OldSettings *settings.Settings
-	NewSettings *settings.Settings
+type ModelErrorEvent struct {
+	ModelEvent
+	Error error
 }
 
 // -------------------------------------------------------------------
-// Record CRUD API events data
+// Record events data
 // -------------------------------------------------------------------
 
-type RecordsListEvent struct {
-	BaseCollectionEvent
+type RecordEvent struct {
+	hook.Event
+	App App
+	baseRecordEventData
+	Context context.Context
 
-	HttpContext echo.Context
-	Records     []*models.Record
-	Result      *search.Result
+	// Could be any of the ModelEventType* constants, like:
+	// - create
+	// - update
+	// - delete
+	// - validate
+	Type string
 }
 
-type RecordViewEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
+type RecordErrorEvent struct {
+	RecordEvent
+	Error error
 }
 
-type RecordCreateEvent struct {
-	BaseCollectionEvent
+func syncModelEventWithRecordEvent(me *ModelEvent, re *RecordEvent) {
+	me.App = re.App
+	me.Context = re.Context
+	me.Type = re.Type
 
-	HttpContext   echo.Context
-	Record        *models.Record
-	UploadedFiles map[string][]*filesystem.File
+	// @todo enable if after profiling doesn't have significant impact
+	// 		 skip for now to avoid excessive checks and assume that the
+	// 		 Model and the Record fields still points to the same instance
+	//
+	// if _, ok := me.Model.(*Record); ok {
+	// 	me.Model = re.Record
+	// } else if proxy, ok := me.Model.(RecordProxy); ok {
+	// 	proxy.SetProxyRecord(re.Record)
+	// }
 }
 
-type RecordUpdateEvent struct {
-	BaseCollectionEvent
+func newRecordEventFromModelEvent(me *ModelEvent) (*RecordEvent, bool) {
+	record, ok := me.Model.(*Record)
+	if !ok {
+		proxy, ok := me.Model.(RecordProxy)
+		if !ok {
+			return nil, false
+		}
+		record = proxy.ProxyRecord()
+	}
 
-	HttpContext   echo.Context
-	Record        *models.Record
-	UploadedFiles map[string][]*filesystem.File
+	re := new(RecordEvent)
+	re.App = me.App
+	re.Context = me.Context
+	re.Type = me.Type
+	re.Record = record
+
+	return re, true
 }
 
-type RecordDeleteEvent struct {
-	BaseCollectionEvent
+func newRecordErrorEventFromModelErrorEvent(me *ModelErrorEvent) (*RecordErrorEvent, bool) {
+	recordEvent, ok := newRecordEventFromModelEvent(&me.ModelEvent)
+	if !ok {
+		return nil, false
+	}
 
-	HttpContext echo.Context
-	Record      *models.Record
+	re := new(RecordErrorEvent)
+	re.RecordEvent = *recordEvent
+	re.Error = me.Error
+
+	return re, true
 }
 
-// -------------------------------------------------------------------
-// Auth Record API events data
-// -------------------------------------------------------------------
-
-type RecordAuthEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-	Token       string
-	Meta        any
-}
-
-type RecordAuthWithPasswordEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-	Identity    string
-	Password    string
-}
-
-type RecordAuthWithOAuth2Event struct {
-	BaseCollectionEvent
-
-	HttpContext    echo.Context
-	ProviderName   string
-	ProviderClient auth.Provider
-	Record         *models.Record
-	OAuth2User     *auth.AuthUser
-	IsNewRecord    bool
-}
-
-type RecordAuthRefreshEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-}
-
-type RecordRequestPasswordResetEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-}
-
-type RecordConfirmPasswordResetEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-}
-
-type RecordRequestVerificationEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-}
-
-type RecordConfirmVerificationEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-}
-
-type RecordRequestEmailChangeEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-}
-
-type RecordConfirmEmailChangeEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-	Record      *models.Record
-}
-
-type RecordListExternalAuthsEvent struct {
-	BaseCollectionEvent
-
-	HttpContext   echo.Context
-	Record        *models.Record
-	ExternalAuths []*models.ExternalAuth
-}
-
-type RecordUnlinkExternalAuthEvent struct {
-	BaseCollectionEvent
-
-	HttpContext  echo.Context
-	Record       *models.Record
-	ExternalAuth *models.ExternalAuth
+func syncModelErrorEventWithRecordErrorEvent(me *ModelErrorEvent, re *RecordErrorEvent) {
+	syncModelEventWithRecordEvent(&me.ModelEvent, &re.RecordEvent)
+	me.Error = re.Error
 }
 
 // -------------------------------------------------------------------
-// Admin API events data
+// Collection events data
 // -------------------------------------------------------------------
 
-type AdminsListEvent struct {
-	HttpContext echo.Context
-	Admins      []*models.Admin
-	Result      *search.Result
+type CollectionEvent struct {
+	hook.Event
+	App App
+	baseCollectionEventData
+	Context context.Context
+
+	// Could be any of the ModelEventType* constants, like:
+	// - create
+	// - update
+	// - delete
+	// - validate
+	Type string
 }
 
-type AdminViewEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
+type CollectionErrorEvent struct {
+	CollectionEvent
+	Error error
 }
 
-type AdminCreateEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
+func syncModelEventWithCollectionEvent(me *ModelEvent, ce *CollectionEvent) {
+	me.App = ce.App
+	me.Context = ce.Context
+	me.Type = ce.Type
+	me.Model = ce.Collection
 }
 
-type AdminUpdateEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
+func newCollectionEventFromModelEvent(me *ModelEvent) (*CollectionEvent, bool) {
+	record, ok := me.Model.(*Collection)
+	if !ok {
+		return nil, false
+	}
+
+	ce := new(CollectionEvent)
+	ce.App = me.App
+	ce.Context = me.Context
+	ce.Type = me.Type
+	ce.Collection = record
+
+	return ce, true
 }
 
-type AdminDeleteEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
+func newCollectionErrorEventFromModelErrorEvent(me *ModelErrorEvent) (*CollectionErrorEvent, bool) {
+	collectionevent, ok := newCollectionEventFromModelEvent(&me.ModelEvent)
+	if !ok {
+		return nil, false
+	}
+
+	ce := new(CollectionErrorEvent)
+	ce.CollectionEvent = *collectionevent
+	ce.Error = me.Error
+
+	return ce, true
 }
 
-type AdminAuthEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
-	Token       string
-}
-
-type AdminAuthWithPasswordEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
-	Identity    string
-	Password    string
-}
-
-type AdminAuthRefreshEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
-}
-
-type AdminRequestPasswordResetEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
-}
-
-type AdminConfirmPasswordResetEvent struct {
-	HttpContext echo.Context
-	Admin       *models.Admin
-}
-
-// -------------------------------------------------------------------
-// Collection API events data
-// -------------------------------------------------------------------
-
-type CollectionsListEvent struct {
-	HttpContext echo.Context
-	Collections []*models.Collection
-	Result      *search.Result
-}
-
-type CollectionViewEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-}
-
-type CollectionCreateEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-}
-
-type CollectionUpdateEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-}
-
-type CollectionDeleteEvent struct {
-	BaseCollectionEvent
-
-	HttpContext echo.Context
-}
-
-type CollectionsImportEvent struct {
-	HttpContext echo.Context
-	Collections []*models.Collection
+func syncModelErrorEventWithCollectionErrorEvent(me *ModelErrorEvent, ce *CollectionErrorEvent) {
+	syncModelEventWithCollectionEvent(&me.ModelEvent, &ce.CollectionEvent)
+	me.Error = ce.Error
 }
 
 // -------------------------------------------------------------------
 // File API events data
 // -------------------------------------------------------------------
 
-type FileTokenEvent struct {
-	BaseModelEvent
+type FileTokenRequestEvent struct {
+	hook.Event
+	*RequestEvent
 
-	HttpContext echo.Context
-	Token       string
+	Token string
 }
 
-type FileDownloadEvent struct {
-	BaseCollectionEvent
+type FileDownloadRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
 
-	HttpContext echo.Context
-	Record      *models.Record
-	FileField   *schema.SchemaField
-	ServedPath  string
-	ServedName  string
+	Record     *Record
+	FileField  *FileField
+	ServedPath string
+	ServedName string
+}
+
+// -------------------------------------------------------------------
+// Collection API events data
+// -------------------------------------------------------------------
+
+type CollectionsListRequestEvent struct {
+	hook.Event
+	*RequestEvent
+
+	Collections []*Collection
+	Result      *search.Result
+}
+
+type CollectionsImportRequestEvent struct {
+	hook.Event
+	*RequestEvent
+
+	CollectionsData []map[string]any
+	DeleteMissing   bool
+}
+
+type CollectionRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+}
+
+// -------------------------------------------------------------------
+// Realtime API events data
+// -------------------------------------------------------------------
+
+type RealtimeConnectRequestEvent struct {
+	hook.Event
+	*RequestEvent
+
+	Client subscriptions.Client
+
+	// note: modifying it after the connect has no effect
+	IdleTimeout time.Duration
+}
+
+type RealtimeMessageEvent struct {
+	hook.Event
+	*RequestEvent
+
+	Client  subscriptions.Client
+	Message *subscriptions.Message
+}
+
+type RealtimeSubscribeRequestEvent struct {
+	hook.Event
+	*RequestEvent
+
+	Client        subscriptions.Client
+	Subscriptions []string
+}
+
+// -------------------------------------------------------------------
+// Record CRUD API events data
+// -------------------------------------------------------------------
+
+type RecordsListRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	// @todo consider removing and maybe add as generic to the search.Result?
+	Records []*Record
+	Result  *search.Result
+}
+
+type RecordRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record *Record
+}
+
+type RecordEnrichEvent struct {
+	hook.Event
+	App App
+	baseRecordEventData
+
+	RequestInfo *RequestInfo
+}
+
+// -------------------------------------------------------------------
+// Auth Record API events data
+// -------------------------------------------------------------------
+
+type RecordCreateOTPRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record   *Record
+	Password string
+}
+
+type RecordAuthWithOTPRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record *Record
+	OTP    *OTP
+}
+
+type RecordAuthRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record     *Record
+	Token      string
+	Meta       any
+	AuthMethod string
+}
+
+type RecordAuthWithPasswordRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record        *Record
+	Identity      string
+	IdentityField string
+	Password      string
+}
+
+type RecordAuthWithOAuth2RequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	ProviderName   string
+	ProviderClient auth.Provider
+	Record         *Record
+	OAuth2User     *auth.AuthUser
+	CreateData     map[string]any
+	IsNewRecord    bool
+}
+
+type RecordAuthRefreshRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record *Record
+}
+
+type RecordRequestPasswordResetRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record *Record
+}
+
+type RecordConfirmPasswordResetRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record *Record
+}
+
+type RecordRequestVerificationRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record *Record
+}
+
+type RecordConfirmVerificationRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record *Record
+}
+
+type RecordRequestEmailChangeRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record   *Record
+	NewEmail string
+}
+
+type RecordConfirmEmailChangeRequestEvent struct {
+	hook.Event
+	*RequestEvent
+	baseCollectionEventData
+
+	Record   *Record
+	NewEmail string
 }

@@ -2,35 +2,32 @@
     import { tick } from "svelte";
     import tooltip from "@/actions/tooltip";
 
-    export let value = "";
-    export let mask = "******";
+    export let value = undefined; // note must be undefined so that it can be skipped from the submit data
+    export let mask = false;
 
     let inputElem;
-    let locked = false;
-
-    $: locked = value === mask;
 
     async function unlock() {
         value = "";
-        locked = false;
+        mask = false;
         await tick();
         inputElem?.focus();
     }
 </script>
 
-{#if locked}
+{#if mask}
     <div class="form-field-addon">
         <button
             type="button"
             class="btn btn-transparent btn-circle"
             use:tooltip={{ position: "left", text: "Set new value" }}
-            on:click={() => unlock()}
+            on:click|preventDefault={unlock}
         >
             <i class="ri-key-line" />
         </button>
     </div>
 
-    <input readonly type="text" placeholder={mask} {...$$restProps} />
+    <input disabled type="text" placeholder="******" {...$$restProps} />
 {:else}
     <input bind:this={inputElem} bind:value type="password" autocomplete="new-password" {...$$restProps} />
 {/if}

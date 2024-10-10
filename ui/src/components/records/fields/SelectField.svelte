@@ -1,37 +1,40 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
-    import Select from "@/components/base/Select.svelte";
     import Field from "@/components/base/Field.svelte";
+    import Select from "@/components/base/Select.svelte";
+    import FieldLabel from "@/components/records/fields/FieldLabel.svelte";
 
     export let field;
     export let value = undefined;
 
-    $: isMultiple = field.options?.maxSelect > 1;
+    $: isMultiple = field.maxSelect != 1;
 
     $: if (typeof value === "undefined") {
         value = isMultiple ? [] : "";
     }
 
-    $: if (isMultiple && Array.isArray(value) && value.length > field.options.maxSelect) {
-        value = value.slice(value.length - field.options.maxSelect);
+    $: maxSelect = field.maxSelect || field.values.length;
+
+    $: if (isMultiple && Array.isArray(value)) {
+        value = value.filter((v) => field.values.includes(v));
+        if (value.length > maxSelect) {
+            value = value.slice(value.length - maxSelect);
+        }
     }
 </script>
 
 <Field class="form-field {field.required ? 'required' : ''}" name={field.name} let:uniqueId>
-    <label for={uniqueId}>
-        <i class={CommonHelper.getFieldTypeIcon(field.type)} />
-        <span class="txt">{field.name}</span>
-    </label>
+    <FieldLabel {uniqueId} {field} />
+
     <Select
         id={uniqueId}
         toggle={!field.required || isMultiple}
         multiple={isMultiple}
-        closable={!isMultiple || value?.length >= field.options?.maxSelect}
-        items={field.options?.values}
-        searchable={field.options?.values?.length > 5}
+        closable={!isMultiple || value?.length >= field.maxSelect}
+        items={field.values}
+        searchable={field.values?.length > 5}
         bind:selected={value}
     />
-    {#if field.options?.maxSelect > 1}
-        <div class="help-block">Select up to {field.options.maxSelect} items.</div>
+    {#if field.maxSelect != 1}
+        <div class="help-block">Select up to {maxSelect} items.</div>
     {/if}
 </Field>

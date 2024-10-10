@@ -25,6 +25,7 @@ func TestFieldMapper(t *testing.T) {
 		{"ALL_CAPS_WITH_UNDERSCORE", "all_caps_with_underscore"},
 		{"OIDCMap", "oidcMap"},
 		{"MD5", "md5"},
+		{"OAuth2", "oauth2"},
 	}
 
 	for i, s := range scenarios {

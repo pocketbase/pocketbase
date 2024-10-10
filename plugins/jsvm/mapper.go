@@ -29,7 +29,13 @@ func (u FieldMapper) MethodName(_ reflect.Type, m reflect.Method) string {
 	return convertGoToJSName(m.Name)
 }
 
+var nameExceptions = map[string]string{"OAuth2": "oauth2"}
+
 func convertGoToJSName(name string) string {
+	if v, ok := nameExceptions[name]; ok {
+		return v
+	}
+
 	startUppercase := make([]rune, 0, len(name))
 
 	for _, c := range name {

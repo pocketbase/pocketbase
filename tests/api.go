@@ -6,24 +6,38 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/hook"
 )
 
 // ApiScenario defines a single api request test case/scenario.
 type ApiScenario struct {
-	Name           string
-	Method         string
-	Url            string
-	Body           io.Reader
-	RequestHeaders map[string]string
+	// Name is the test name.
+	Name string
+
+	// Method is the HTTP method of the test request to use.
+	Method string
+
+	// URL is the url/path of the endpoint you want to test.
+	URL string
+
+	// Body specifies the body to send with the request.
+	//
+	// For example:
+	//
+	//	strings.NewReader(`{"title":"abc"}`)
+	Body io.Reader
+
+	// Headers specifies the headers to send with the request (e.g. "Authorization": "abc")
+	Headers map[string]string
 
 	// Delay adds a delay before checking the expectations usually
 	// to ensure that all fired non-awaited go routines have finished
@@ -35,30 +49,116 @@ type ApiScenario struct {
 	Timeout time.Duration
 
 	// expectations
-	// ---
-	ExpectedStatus     int
-	ExpectedContent    []string
+	// ---------------------------------------------------------------
+
+	// ExpectedStatus specifies the expected response HTTP status code.
+	ExpectedStatus int
+
+	// List of keywords that MUST exist in the response body.
+	//
+	// Either ExpectedContent or NotExpectedContent must be set if the response body is non-empty.
+	// Leave both fields empty if you want to ensure that the response didn't have any body (e.g. 204).
+	ExpectedContent []string
+
+	// List of keywords that MUST NOT exist in the response body.
+	//
+	// Either ExpectedContent or NotExpectedContent must be set if the response body is non-empty.
+	// Leave both fields empty if you want to ensure that the response didn't have any body (e.g. 204).
 	NotExpectedContent []string
-	ExpectedEvents     map[string]int
+
+	// List of hook events to check whether they were fired or not.
+	//
+	// You can use the wildcard "*" event key if you want to ensure
+	// that no other hook events except those listed have been fired.
+	//
+	// For example:
+	//
+	//	map[string]int{ "*": 0 } // no hook events were fired
+	//	map[string]int{ "*": 0, "EventA": 2 } // no hook events, except EventA were fired
+	//	map[string]int{ EventA": 2, "EventB": 0 } // ensures that EventA was fired exactly 2 times and EventB exactly 0 times.
+	ExpectedEvents map[string]int
 
 	// test hooks
-	// ---
-	TestAppFactory func(t *testing.T) *TestApp
-	BeforeTestFunc func(t *testing.T, app *TestApp, e *echo.Echo)
-	AfterTestFunc  func(t *testing.T, app *TestApp, res *http.Response)
+	// ---------------------------------------------------------------
+
+	TestAppFactory func(t testing.TB) *TestApp
+	BeforeTestFunc func(t testing.TB, app *TestApp, e *core.ServeEvent)
+	AfterTestFunc  func(t testing.TB, app *TestApp, res *http.Response)
 }
 
 // Test executes the test scenario.
+//
+// Example:
+//
+//	func TestListExample(t *testing.T) {
+//	    scenario := tests.ApiScenario{
+//	        Name:           "list example collection",
+//	        Method:         http.MethodGet,
+//	        URL:            "/api/collections/example/records",
+//	        ExpectedStatus: 200,
+//	        ExpectedContent: []string{
+//	            `"totalItems":3`,
+//	            `"id":"0yxhwia2amd8gec"`,
+//	            `"id":"achvryl401bhse3"`,
+//	            `"id":"llvuca81nly1qls"`,
+//	        },
+//	        ExpectedEvents: map[string]int{
+//	            "OnRecordsListRequest": 1,
+//	            "OnRecordEnrich":       3,
+//	        },
+//	    }
+//
+//	    scenario.Test(t)
+//	}
 func (scenario *ApiScenario) Test(t *testing.T) {
-	var name = scenario.Name
-	if name == "" {
-		name = fmt.Sprintf("%s:%s", scenario.Method, scenario.Url)
-	}
-
-	t.Run(name, scenario.test)
+	t.Run(scenario.normalizedName(), func(t *testing.T) {
+		scenario.test(t)
+	})
 }
 
-func (scenario *ApiScenario) test(t *testing.T) {
+// Benchmark benchmarks the test scenario.
+//
+// Example:
+//
+//	func BenchmarkListExample(b *testing.B) {
+//	    scenario := tests.ApiScenario{
+//	        Name:           "list example collection",
+//	        Method:         http.MethodGet,
+//	        URL:            "/api/collections/example/records",
+//	        ExpectedStatus: 200,
+//	        ExpectedContent: []string{
+//	            `"totalItems":3`,
+//	            `"id":"0yxhwia2amd8gec"`,
+//	            `"id":"achvryl401bhse3"`,
+//	            `"id":"llvuca81nly1qls"`,
+//	        },
+//	        ExpectedEvents: map[string]int{
+//	            "OnRecordsListRequest": 1,
+//	            "OnRecordEnrich":       3,
+//	        },
+//	    }
+//
+//	    scenario.Benchmark(b)
+//	}
+func (scenario *ApiScenario) Benchmark(b *testing.B) {
+	b.Run(scenario.normalizedName(), func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			scenario.test(b)
+		}
+	})
+}
+
+func (scenario *ApiScenario) normalizedName() string {
+	var name = scenario.Name
+
+	if name == "" {
+		name = fmt.Sprintf("%s:%s", scenario.Method, scenario.URL)
+	}
+
+	return name
+}
+
+func (scenario *ApiScenario) test(t testing.TB) {
 	var testApp *TestApp
 	if scenario.TestAppFactory != nil {
 		testApp = scenario.TestAppFactory(t)
@@ -74,120 +174,131 @@ func (scenario *ApiScenario) test(t *testing.T) {
 	}
 	defer testApp.Cleanup()
 
-	e, err := apis.InitApi(testApp)
+	baseRouter, err := apis.NewRouter(testApp)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// manually trigger the serve event to ensure that custom app routes and middlewares are registered
-	testApp.OnBeforeServe().Trigger(&core.ServeEvent{
-		App:    testApp,
-		Router: e,
-	})
+	serveEvent := new(core.ServeEvent)
+	serveEvent.App = testApp
+	serveEvent.Router = baseRouter
 
-	if scenario.BeforeTestFunc != nil {
-		scenario.BeforeTestFunc(t, testApp, e)
-	}
-
-	recorder := httptest.NewRecorder()
-	req := httptest.NewRequest(scenario.Method, scenario.Url, scenario.Body)
-
-	// add middleware to timeout long-running requests (eg. keep-alive routes)
-	e.Pre(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			slowTimer := time.AfterFunc(3*time.Second, func() {
-				t.Logf("[WARN] Long running test %q", scenario.Name)
-			})
-			defer slowTimer.Stop()
-
-			if scenario.Timeout > 0 {
-				ctx, cancelFunc := context.WithTimeout(c.Request().Context(), scenario.Timeout)
-				defer cancelFunc()
-				c.SetRequest(c.Request().Clone(ctx))
-			}
-
-			return next(c)
+	serveErr := testApp.OnServe().Trigger(serveEvent, func(e *core.ServeEvent) error {
+		if scenario.BeforeTestFunc != nil {
+			scenario.BeforeTestFunc(t, testApp, e)
 		}
-	})
 
-	// set default header
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		// reset the event counters in case a hook was triggered from a before func (eg. db save)
+		testApp.ResetEventCalls()
 
-	// set scenario headers
-	for k, v := range scenario.RequestHeaders {
-		req.Header.Set(k, v)
-	}
+		// add middleware to timeout long-running requests (eg. keep-alive routes)
+		e.Router.Bind(&hook.Handler[*core.RequestEvent]{
+			Func: func(re *core.RequestEvent) error {
+				slowTimer := time.AfterFunc(3*time.Second, func() {
+					t.Logf("[WARN] Long running test %q", scenario.Name)
+				})
+				defer slowTimer.Stop()
 
-	// execute request
-	e.ServeHTTP(recorder, req)
+				if scenario.Timeout > 0 {
+					ctx, cancelFunc := context.WithTimeout(re.Request.Context(), scenario.Timeout)
+					defer cancelFunc()
+					re.Request = re.Request.Clone(ctx)
+				}
 
-	res := recorder.Result()
+				return re.Next()
+			},
+			Priority: -9999,
+		})
 
-	if res.StatusCode != scenario.ExpectedStatus {
-		t.Errorf("Expected status code %d, got %d", scenario.ExpectedStatus, res.StatusCode)
-	}
+		recorder := httptest.NewRecorder()
 
-	if scenario.Delay > 0 {
-		time.Sleep(scenario.Delay)
-	}
+		req := httptest.NewRequest(scenario.Method, scenario.URL, scenario.Body)
 
-	if len(scenario.ExpectedContent) == 0 && len(scenario.NotExpectedContent) == 0 {
-		if len(recorder.Body.Bytes()) != 0 {
-			t.Errorf("Expected empty body, got \n%v", recorder.Body.String())
+		// set default header
+		req.Header.Set("content-type", "application/json")
+
+		// set scenario headers
+		for k, v := range scenario.Headers {
+			req.Header.Set(k, v)
 		}
-	} else {
-		// normalize json response format
-		buffer := new(bytes.Buffer)
-		err := json.Compact(buffer, recorder.Body.Bytes())
-		var normalizedBody string
+
+		// execute request
+		mux, err := e.Router.BuildMux()
 		if err != nil {
-			// not a json...
-			normalizedBody = recorder.Body.String()
+			t.Fatalf("Failed to build router mux: %v", err)
+		}
+		mux.ServeHTTP(recorder, req)
+
+		res := recorder.Result()
+
+		if res.StatusCode != scenario.ExpectedStatus {
+			t.Errorf("Expected status code %d, got %d", scenario.ExpectedStatus, res.StatusCode)
+		}
+
+		if scenario.Delay > 0 {
+			time.Sleep(scenario.Delay)
+		}
+
+		if len(scenario.ExpectedContent) == 0 && len(scenario.NotExpectedContent) == 0 {
+			if len(recorder.Body.Bytes()) != 0 {
+				t.Errorf("Expected empty body, got \n%v", recorder.Body.String())
+			}
 		} else {
-			normalizedBody = buffer.String()
-		}
+			// normalize json response format
+			buffer := new(bytes.Buffer)
+			err := json.Compact(buffer, recorder.Body.Bytes())
+			var normalizedBody string
+			if err != nil {
+				// not a json...
+				normalizedBody = recorder.Body.String()
+			} else {
+				normalizedBody = buffer.String()
+			}
 
-		for _, item := range scenario.ExpectedContent {
-			if !strings.Contains(normalizedBody, item) {
-				t.Errorf("Cannot find %v in response body \n%v", item, normalizedBody)
-				break
+			for _, item := range scenario.ExpectedContent {
+				if !strings.Contains(normalizedBody, item) {
+					t.Errorf("Cannot find %v in response body \n%v", item, normalizedBody)
+					break
+				}
+			}
+
+			for _, item := range scenario.NotExpectedContent {
+				if strings.Contains(normalizedBody, item) {
+					t.Errorf("Didn't expect %v in response body \n%v", item, normalizedBody)
+					break
+				}
 			}
 		}
 
-		for _, item := range scenario.NotExpectedContent {
-			if strings.Contains(normalizedBody, item) {
-				t.Errorf("Didn't expect %v in response body \n%v", item, normalizedBody)
-				break
+		remainingEvents := maps.Clone(testApp.EventCalls)
+
+		var noOtherEventsShouldRemain bool
+		for event, expectedNum := range scenario.ExpectedEvents {
+			if event == "*" && expectedNum <= 0 {
+				noOtherEventsShouldRemain = true
+				continue
 			}
-		}
-	}
 
-	// to minimize the breaking changes we always expect the error
-	// events to be called on API error
-	if res.StatusCode >= 400 {
-		if scenario.ExpectedEvents == nil {
-			scenario.ExpectedEvents = map[string]int{}
-		}
-		if _, ok := scenario.ExpectedEvents["OnBeforeApiError"]; !ok {
-			scenario.ExpectedEvents["OnBeforeApiError"] = 1
-		}
-		if _, ok := scenario.ExpectedEvents["OnAfterApiError"]; !ok {
-			scenario.ExpectedEvents["OnAfterApiError"] = 1
-		}
-	}
+			actualNum := remainingEvents[event]
+			if actualNum != expectedNum {
+				t.Errorf("Expected event %s to be called %d, got %d", event, expectedNum, actualNum)
+			}
 
-	if len(testApp.EventCalls) > len(scenario.ExpectedEvents) {
-		t.Errorf("Expected events %v, got %v", scenario.ExpectedEvents, testApp.EventCalls)
-	}
-
-	for event, expectedCalls := range scenario.ExpectedEvents {
-		actualCalls := testApp.EventCalls[event]
-		if actualCalls != expectedCalls {
-			t.Errorf("Expected event %s to be called %d, got %d", event, expectedCalls, actualCalls)
+			delete(remainingEvents, event)
 		}
-	}
 
-	if scenario.AfterTestFunc != nil {
-		scenario.AfterTestFunc(t, testApp, res)
+		if noOtherEventsShouldRemain && len(remainingEvents) > 0 {
+			t.Errorf("Missing expected remaining events:\n%#v\nAll triggered app events are:\n%#v", remainingEvents, testApp.EventCalls)
+		}
+
+		if scenario.AfterTestFunc != nil {
+			scenario.AfterTestFunc(t, testApp, res)
+		}
+
+		return nil
+	})
+	if serveErr != nil {
+		t.Fatalf("Failed to trigger app serve hook: %v", serveErr)
 	}
 }

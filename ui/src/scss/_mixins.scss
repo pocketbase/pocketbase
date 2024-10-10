@@ -44,10 +44,12 @@
         }
 
         @if & {
-            // firefox scrollbar
-            scrollbar-color: $thumbColor $trackColor;
-            scrollbar-width: thin;
-            scroll-behavior: smooth;
+            & {
+                // firefox scrollbar
+                scrollbar-color: $thumbColor $trackColor;
+                scrollbar-width: thin;
+                scroll-behavior: smooth;
+            }
         } @else {
             html {
                 // firefox scrollbar

@@ -14,8 +14,10 @@
         Tooltip,
     } from "chart.js";
     import "chartjs-adapter-luxon";
+    import zoomPlugin from "chartjs-plugin-zoom";
 
     export let filter = "";
+    export let zoom = {};
     export let presets = "";
 
     let chartCanvas;
@@ -23,6 +25,7 @@
     let chartData = [];
     let totalLogs = 0;
     let isLoading = false;
+    let isZoomedOrPanned = false;
 
     $: if (typeof filter !== "undefined" || typeof presets !== "undefined") {
         load();
@@ -74,8 +77,13 @@
         totalLogs = 0;
     }
 
+    function resetZoom() {
+        chartInst?.resetZoom();
+    }
+
     onMount(() => {
         Chart.register(LineElement, PointElement, LineController, LinearScale, TimeScale, Filler, Tooltip);
+        Chart.register(zoomPlugin);
 
         chartInst = new Chart(chartCanvas, {
             type: "line",
@@ -143,6 +151,41 @@
                     legend: {
                         display: false,
                     },
+                    zoom: {
+                        enabled: true,
+                        zoom: {
+                            mode: "x",
+                            pinch: {
+                                enabled: true,
+                            },
+                            drag: {
+                                enabled: true,
+                                backgroundColor: "rgba(255, 99, 132, 0.2)",
+                                borderWidth: 0,
+                                threshold: 10,
+                            },
+                            limits: {
+                                x: { minRange: 100000000 },
+                                y: { minRange: 100000000 },
+                            },
+                            onZoomComplete: ({ chart }) => {
+                                isZoomedOrPanned = chart.isZoomedOrPanned();
+                                if (!isZoomedOrPanned) {
+                                    if (zoom.min || zoom.max) {
+                                        zoom = {}; // reset
+                                    }
+                                } else {
+                                    // trim minutes and seconds since the statistic is hourly based
+                                    zoom.min =
+                                        CommonHelper.formatToUTCDate(chart.scales.x.min, "yyyy-MM-dd HH") +
+                                        ":00:00.000Z";
+                                    zoom.max =
+                                        CommonHelper.formatToUTCDate(chart.scales.x.max, "yyyy-MM-dd HH") +
+                                        ":59:59.999Z";
+                                }
+                            },
+                        },
+                    },
                 },
             },
         });
@@ -156,10 +199,18 @@
         Found {totalLogs}
         {totalLogs == 1 ? "log" : "logs"}
     </div>
+
     {#if isLoading}
         <div class="chart-loader loader" transition:scale={{ duration: 150 }} />
     {/if}
-    <canvas bind:this={chartCanvas} class="chart-canvas" />
+
+    <canvas bind:this={chartCanvas} class="chart-canvas" on:dblclick={resetZoom} />
+
+    {#if isZoomedOrPanned}
+        <button type="button" class="btn btn-secondary btn-sm btn-chart-zoom" on:click={resetZoom}>
+            Reset zoom
+        </button>
+    {/if}
 </div>
 
 <style>
@@ -186,5 +237,10 @@
         top: -50px;
         font-size: var(--smFontSize);
         color: var(--txtHintColor);
+    }
+    .btn-chart-zoom {
+        position: absolute;
+        right: 10px;
+        top: 20px;
     }
 </style>

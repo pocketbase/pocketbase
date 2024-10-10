@@ -6,42 +6,37 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/forms"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tools/filesystem"
-	"github.com/pocketbase/pocketbase/tools/rest"
+	"github.com/pocketbase/pocketbase/tools/router"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 
 // bindBackupApi registers the file api endpoints and the corresponding handlers.
-//
-// @todo add hooks once the app hooks api restructuring is finalized
-func bindBackupApi(app core.App, rg *echo.Group) {
-	api := backupApi{app: app}
-
-	subGroup := rg.Group("/backups", ActivityLogger(app))
-	subGroup.GET("", api.list, RequireAdminAuth())
-	subGroup.POST("", api.create, RequireAdminAuth())
-	subGroup.POST("/upload", api.upload, RequireAdminAuth())
-	subGroup.GET("/:key", api.download)
-	subGroup.DELETE("/:key", api.delete, RequireAdminAuth())
-	subGroup.POST("/:key/restore", api.restore, RequireAdminAuth())
+func bindBackupApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
+	sub := rg.Group("/backups")
+	sub.GET("", backupsList).Bind(RequireSuperuserAuth())
+	sub.POST("", backupCreate).Bind(RequireSuperuserAuth())
+	sub.POST("/upload", backupUpload).Bind(RequireSuperuserAuthOnlyIfAny())
+	sub.GET("/{key}", backupDownload) // relies on superuser file token
+	sub.DELETE("/{key}", backupDelete).Bind(RequireSuperuserAuth())
+	sub.POST("/{key}/restore", backupRestore).Bind(RequireSuperuserAuthOnlyIfAny())
 }
 
-type backupApi struct {
-	app core.App
+type backupFileInfo struct {
+	Modified types.DateTime `json:"modified"`
+	Key      string         `json:"key"`
+	Size     int64          `json:"size"`
 }
 
-func (api *backupApi) list(c echo.Context) error {
+func backupsList(e *core.RequestEvent) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	fsys, err := api.app.NewBackupsFilesystem()
+	fsys, err := e.App.NewBackupsFilesystem()
 	if err != nil {
-		return NewBadRequestError("Failed to load backups filesystem.", err)
+		return e.BadRequestError("Failed to load backups filesystem.", err)
 	}
 	defer fsys.Close()
 
@@ -49,166 +44,112 @@ func (api *backupApi) list(c echo.Context) error {
 
 	backups, err := fsys.List("")
 	if err != nil {
-		return NewBadRequestError("Failed to retrieve backup items. Raw error: \n"+err.Error(), nil)
+		return e.BadRequestError("Failed to retrieve backup items. Raw error: \n"+err.Error(), nil)
 	}
 
-	result := make([]models.BackupFileInfo, len(backups))
+	result := make([]backupFileInfo, len(backups))
 
 	for i, obj := range backups {
 		modified, _ := types.ParseDateTime(obj.ModTime)
 
-		result[i] = models.BackupFileInfo{
+		result[i] = backupFileInfo{
 			Key:      obj.Key,
 			Size:     obj.Size,
 			Modified: modified,
 		}
 	}
 
-	return c.JSON(http.StatusOK, result)
+	return e.JSON(http.StatusOK, result)
 }
 
-func (api *backupApi) create(c echo.Context) error {
-	if api.app.Store().Has(core.StoreKeyActiveBackup) {
-		return NewBadRequestError("Try again later - another backup/restore process has already been started", nil)
-	}
+func backupDownload(e *core.RequestEvent) error {
+	fileToken := e.Request.URL.Query().Get("token")
 
-	form := forms.NewBackupCreate(api.app)
-	if err := c.Bind(form); err != nil {
-		return NewBadRequestError("An error occurred while loading the submitted data.", err)
-	}
-
-	return form.Submit(func(next forms.InterceptorNextFunc[string]) forms.InterceptorNextFunc[string] {
-		return func(name string) error {
-			if err := next(name); err != nil {
-				return NewBadRequestError("Failed to create backup.", err)
-			}
-
-			// we don't retrieve the generated backup file because it may not be
-			// available yet due to the eventually consistent nature of some S3 providers
-			return c.NoContent(http.StatusNoContent)
-		}
-	})
-}
-
-func (api *backupApi) upload(c echo.Context) error {
-	files, err := rest.FindUploadedFiles(c.Request(), "file")
-	if err != nil {
-		return NewBadRequestError("Missing or invalid uploaded file.", err)
-	}
-
-	form := forms.NewBackupUpload(api.app)
-	form.File = files[0]
-
-	return form.Submit(func(next forms.InterceptorNextFunc[*filesystem.File]) forms.InterceptorNextFunc[*filesystem.File] {
-		return func(file *filesystem.File) error {
-			if err := next(file); err != nil {
-				return NewBadRequestError("Failed to upload backup.", err)
-			}
-
-			// we don't retrieve the generated backup file because it may not be
-			// available yet due to the eventually consistent nature of some S3 providers
-			return c.NoContent(http.StatusNoContent)
-		}
-	})
-}
-
-func (api *backupApi) download(c echo.Context) error {
-	fileToken := c.QueryParam("token")
-
-	_, err := api.app.Dao().FindAdminByToken(
-		fileToken,
-		api.app.Settings().AdminFileToken.Secret,
-	)
-	if err != nil {
-		return NewForbiddenError("Insufficient permissions to access the resource.", err)
+	authRecord, err := e.App.FindAuthRecordByToken(fileToken, core.TokenTypeFile)
+	if err != nil || !authRecord.IsSuperuser() {
+		return e.ForbiddenError("Insufficient permissions to access the resource.", err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
-	fsys, err := api.app.NewBackupsFilesystem()
+	fsys, err := e.App.NewBackupsFilesystem()
 	if err != nil {
-		return NewBadRequestError("Failed to load backups filesystem.", err)
+		return e.InternalServerError("Failed to load backups filesystem.", err)
 	}
 	defer fsys.Close()
 
 	fsys.SetContext(ctx)
 
-	key := c.PathParam("key")
-
-	br, err := fsys.GetFile(key)
-	if err != nil {
-		return NewBadRequestError("Failed to retrieve backup item. Raw error: \n"+err.Error(), nil)
-	}
-	defer br.Close()
+	key := e.Request.PathValue("key")
 
 	return fsys.Serve(
-		c.Response(),
-		c.Request(),
+		e.Response,
+		e.Request,
 		key,
 		filepath.Base(key), // without the path prefix (if any)
 	)
 }
 
-func (api *backupApi) restore(c echo.Context) error {
-	if api.app.Store().Has(core.StoreKeyActiveBackup) {
-		return NewBadRequestError("Try again later - another backup/restore process has already been started.", nil)
+func backupDelete(e *core.RequestEvent) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	fsys, err := e.App.NewBackupsFilesystem()
+	if err != nil {
+		return e.InternalServerError("Failed to load backups filesystem.", err)
+	}
+	defer fsys.Close()
+
+	fsys.SetContext(ctx)
+
+	key := e.Request.PathValue("key")
+
+	if key != "" && cast.ToString(e.App.Store().Get(core.StoreKeyActiveBackup)) == key {
+		return e.BadRequestError("The backup is currently being used and cannot be deleted.", nil)
 	}
 
-	key := c.PathParam("key")
+	if err := fsys.Delete(key); err != nil {
+		return e.BadRequestError("Invalid or already deleted backup file. Raw error: \n"+err.Error(), nil)
+	}
+
+	return e.NoContent(http.StatusNoContent)
+}
+
+func backupRestore(e *core.RequestEvent) error {
+	if e.App.Store().Has(core.StoreKeyActiveBackup) {
+		return e.BadRequestError("Try again later - another backup/restore process has already been started.", nil)
+	}
+
+	key := e.Request.PathValue("key")
 
 	existsCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	fsys, err := api.app.NewBackupsFilesystem()
+	fsys, err := e.App.NewBackupsFilesystem()
 	if err != nil {
-		return NewBadRequestError("Failed to load backups filesystem.", err)
+		return e.InternalServerError("Failed to load backups filesystem.", err)
 	}
 	defer fsys.Close()
 
 	fsys.SetContext(existsCtx)
 
 	if exists, err := fsys.Exists(key); !exists {
-		return NewBadRequestError("Missing or invalid backup file.", err)
+		return e.BadRequestError("Missing or invalid backup file.", err)
 	}
 
-	go func() {
-		// wait max 15 minutes to fetch the backup
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
-		defer cancel()
-
-		// give some optimistic time to write the response
+	routine.FireAndForget(func() {
+		// give some optimistic time to write the response before restarting the app
 		time.Sleep(1 * time.Second)
 
-		if err := api.app.RestoreBackup(ctx, key); err != nil {
-			api.app.Logger().Error("Failed to restore backup", "key", key, "error", err.Error())
+		// wait max 10 minutes to fetch the backup
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+
+		if err := e.App.RestoreBackup(ctx, key); err != nil {
+			e.App.Logger().Error("Failed to restore backup", "key", key, "error", err.Error())
 		}
-	}()
+	})
 
-	return c.NoContent(http.StatusNoContent)
-}
-
-func (api *backupApi) delete(c echo.Context) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	fsys, err := api.app.NewBackupsFilesystem()
-	if err != nil {
-		return NewBadRequestError("Failed to load backups filesystem.", err)
-	}
-	defer fsys.Close()
-
-	fsys.SetContext(ctx)
-
-	key := c.PathParam("key")
-
-	if key != "" && cast.ToString(api.app.Store().Get(core.StoreKeyActiveBackup)) == key {
-		return NewBadRequestError("The backup is currently being used and cannot be deleted.", nil)
-	}
-
-	if err := fsys.Delete(key); err != nil {
-		return NewBadRequestError("Invalid or already deleted backup file. Raw error: \n"+err.Error(), nil)
-	}
-
-	return c.NoContent(http.StatusNoContent)
+	return e.NoContent(http.StatusNoContent)
 }

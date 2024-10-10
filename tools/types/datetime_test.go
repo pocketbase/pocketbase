@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -41,15 +42,16 @@ func TestParseDateTime(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		dt, err := types.ParseDateTime(s.value)
-		if err != nil {
-			t.Errorf("(%d) Failed to parse %v: %v", i, s.value, err)
-			continue
-		}
+		t.Run(fmt.Sprintf("%d_%#v", i, s.value), func(t *testing.T) {
+			dt, err := types.ParseDateTime(s.value)
+			if err != nil {
+				t.Fatalf("Failed to parse %v: %v", s.value, err)
+			}
 
-		if dt.String() != s.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, s.expected, dt.String())
-		}
+			if dt.String() != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, dt.String())
+			}
+		})
 	}
 }
 
@@ -69,7 +71,210 @@ func TestDateTimeTime(t *testing.T) {
 	result := dt.Time()
 
 	if !expected.Equal(result) {
-		t.Errorf("Expected time %v, got %v", expected, result)
+		t.Fatalf("Expected time %v, got %v", expected, result)
+	}
+}
+
+func TestDateTimeAdd(t *testing.T) {
+	t.Parallel()
+
+	d1, _ := types.ParseDateTime("2024-01-01 10:00:00.123Z")
+
+	d2 := d1.Add(1 * time.Hour)
+
+	if d1.String() != "2024-01-01 10:00:00.123Z" {
+		t.Fatalf("Expected d1 to remain unchanged, got %s", d1.String())
+	}
+
+	expected := "2024-01-01 11:00:00.123Z"
+	if d2.String() != expected {
+		t.Fatalf("Expected d2 %s, got %s", expected, d2.String())
+	}
+}
+
+func TestDateTimeSub(t *testing.T) {
+	t.Parallel()
+
+	d1, _ := types.ParseDateTime("2024-01-01 10:00:00.123Z")
+	d2, _ := types.ParseDateTime("2024-01-01 10:30:00.123Z")
+
+	result := d2.Sub(d1)
+
+	if result.Minutes() != 30 {
+		t.Fatalf("Expected %v minutes diff, got %v", 30, result.Minutes())
+	}
+}
+
+func TestDateTimeAddDate(t *testing.T) {
+	t.Parallel()
+
+	d1, _ := types.ParseDateTime("2024-01-01 10:00:00.123Z")
+
+	d2 := d1.AddDate(1, 2, 3)
+
+	if d1.String() != "2024-01-01 10:00:00.123Z" {
+		t.Fatalf("Expected d1 to remain unchanged, got %s", d1.String())
+	}
+
+	expected := "2025-03-04 10:00:00.123Z"
+	if d2.String() != expected {
+		t.Fatalf("Expected d2 %s, got %s", expected, d2.String())
+	}
+}
+
+func TestDateTimeAfter(t *testing.T) {
+	t.Parallel()
+
+	d1, _ := types.ParseDateTime("2024-01-01 10:00:00.123Z")
+	d2, _ := types.ParseDateTime("2024-01-02 10:00:00.123Z")
+	d3, _ := types.ParseDateTime("2024-01-03 10:00:00.123Z")
+
+	scenarios := []struct {
+		a      types.DateTime
+		b      types.DateTime
+		expect bool
+	}{
+		// d1
+		{d1, d1, false},
+		{d1, d2, false},
+		{d1, d3, false},
+		// d2
+		{d2, d1, true},
+		{d2, d2, false},
+		{d2, d3, false},
+		// d3
+		{d3, d1, true},
+		{d3, d2, true},
+		{d3, d3, false},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("after_%d", i), func(t *testing.T) {
+			if v := s.a.After(s.b); v != s.expect {
+				t.Fatalf("Expected %v, got %v", s.expect, v)
+			}
+		})
+	}
+}
+
+func TestDateTimeBefore(t *testing.T) {
+	t.Parallel()
+
+	d1, _ := types.ParseDateTime("2024-01-01 10:00:00.123Z")
+	d2, _ := types.ParseDateTime("2024-01-02 10:00:00.123Z")
+	d3, _ := types.ParseDateTime("2024-01-03 10:00:00.123Z")
+
+	scenarios := []struct {
+		a      types.DateTime
+		b      types.DateTime
+		expect bool
+	}{
+		// d1
+		{d1, d1, false},
+		{d1, d2, true},
+		{d1, d3, true},
+		// d2
+		{d2, d1, false},
+		{d2, d2, false},
+		{d2, d3, true},
+		// d3
+		{d3, d1, false},
+		{d3, d2, false},
+		{d3, d3, false},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("before_%d", i), func(t *testing.T) {
+			if v := s.a.Before(s.b); v != s.expect {
+				t.Fatalf("Expected %v, got %v", s.expect, v)
+			}
+		})
+	}
+}
+
+func TestDateTimeCompare(t *testing.T) {
+	t.Parallel()
+
+	d1, _ := types.ParseDateTime("2024-01-01 10:00:00.123Z")
+	d2, _ := types.ParseDateTime("2024-01-02 10:00:00.123Z")
+	d3, _ := types.ParseDateTime("2024-01-03 10:00:00.123Z")
+
+	scenarios := []struct {
+		a      types.DateTime
+		b      types.DateTime
+		expect int
+	}{
+		// d1
+		{d1, d1, 0},
+		{d1, d2, -1},
+		{d1, d3, -1},
+		// d2
+		{d2, d1, 1},
+		{d2, d2, 0},
+		{d2, d3, -1},
+		// d3
+		{d3, d1, 1},
+		{d3, d2, 1},
+		{d3, d3, 0},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("compare_%d", i), func(t *testing.T) {
+			if v := s.a.Compare(s.b); v != s.expect {
+				t.Fatalf("Expected %v, got %v", s.expect, v)
+			}
+		})
+	}
+}
+
+func TestDateTimeEqual(t *testing.T) {
+	t.Parallel()
+
+	d1, _ := types.ParseDateTime("2024-01-01 10:00:00.123Z")
+	d2, _ := types.ParseDateTime("2024-01-01 10:00:00.123Z")
+	d3, _ := types.ParseDateTime("2024-01-01 10:00:00.124Z")
+
+	scenarios := []struct {
+		a      types.DateTime
+		b      types.DateTime
+		expect bool
+	}{
+		{d1, d1, true},
+		{d1, d2, true},
+		{d1, d3, false},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("equal_%d", i), func(t *testing.T) {
+			if v := s.a.Equal(s.b); v != s.expect {
+				t.Fatalf("Expected %v, got %v", s.expect, v)
+			}
+		})
+	}
+}
+
+func TestDateTimeUnix(t *testing.T) {
+	scenarios := []struct {
+		date     string
+		expected int64
+	}{
+		{"", -62135596800},
+		{"2022-01-01 11:23:45.678Z", 1641036225},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%s", i, s.date), func(t *testing.T) {
+			dt, err := types.ParseDateTime(s.date)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			v := dt.Unix()
+
+			if v != s.expected {
+				t.Fatalf("Expected %d, got %d", s.expected, v)
+			}
+		})
 	}
 }
 
@@ -108,19 +313,21 @@ func TestDateTimeMarshalJSON(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		dt, err := types.ParseDateTime(s.date)
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-		}
+		t.Run(fmt.Sprintf("%d_%s", i, s.date), func(t *testing.T) {
+			dt, err := types.ParseDateTime(s.date)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		result, err := dt.MarshalJSON()
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-		}
+			result, err := dt.MarshalJSON()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		if string(result) != s.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, s.expected, string(result))
-		}
+			if string(result) != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, string(result))
+			}
+		})
 	}
 }
 
@@ -137,12 +344,14 @@ func TestDateTimeUnmarshalJSON(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		dt := types.DateTime{}
-		dt.UnmarshalJSON([]byte(s.date))
+		t.Run(fmt.Sprintf("%d_%s", i, s.date), func(t *testing.T) {
+			dt := types.DateTime{}
+			dt.UnmarshalJSON([]byte(s.date))
 
-		if dt.String() != s.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, s.expected, dt.String())
-		}
+			if dt.String() != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, dt.String())
+			}
+		})
 	}
 }
 
@@ -159,16 +368,18 @@ func TestDateTimeValue(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		dt, _ := types.ParseDateTime(s.value)
-		result, err := dt.Value()
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-			continue
-		}
+		t.Run(fmt.Sprintf("%d_%s", i, s.value), func(t *testing.T) {
+			dt, _ := types.ParseDateTime(s.value)
 
-		if result != s.expected {
-			t.Errorf("(%d) Expected %q, got %q", i, s.expected, result)
-		}
+			result, err := dt.Value()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if result != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, result)
+			}
+		})
 	}
 }
 
@@ -190,16 +401,17 @@ func TestDateTimeScan(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		dt := types.DateTime{}
+		t.Run(fmt.Sprintf("%d_%#v", i, s.value), func(t *testing.T) {
+			dt := types.DateTime{}
 
-		err := dt.Scan(s.value)
-		if err != nil {
-			t.Errorf("(%d) Failed to parse %v: %v", i, s.value, err)
-			continue
-		}
+			err := dt.Scan(s.value)
+			if err != nil {
+				t.Fatalf("Failed to parse %v: %v", s.value, err)
+			}
 
-		if !strings.Contains(dt.String(), s.expected) {
-			t.Errorf("(%d) Expected %q, got %q", i, s.expected, dt.String())
-		}
+			if !strings.Contains(dt.String(), s.expected) {
+				t.Fatalf("Expected %q, got %q", s.expected, dt.String())
+			}
+		})
 	}
 }

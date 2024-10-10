@@ -126,7 +126,7 @@ func TestSubscribeOptions(t *testing.T) {
 		name            string
 		expectedOptions string
 	}{
-		{sub1, `{"query":null,"headers":null}`},
+		{sub1, `{"query":{},"headers":{}}`},
 		{sub2, `{"query":{"name":"123"},"headers":{"x_token":"456"}}`},
 	}
 
@@ -144,7 +144,7 @@ func TestSubscribeOptions(t *testing.T) {
 			rawStr := string(rawBytes)
 
 			if rawStr != s.expectedOptions {
-				t.Fatalf("Expected options \n%v \ngot \n%v", s.expectedOptions, rawStr)
+				t.Fatalf("Expected options\n%v\ngot\n%v", s.expectedOptions, rawStr)
 			}
 		})
 	}

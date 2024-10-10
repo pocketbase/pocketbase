@@ -35,6 +35,59 @@ func (d DateTime) Time() time.Time {
 	return d.t
 }
 
+// Add returns a new DateTime based on the current DateTime + the specified duration.
+func (d DateTime) Add(duration time.Duration) DateTime {
+	d.t = d.t.Add(duration)
+	return d
+}
+
+// Sub returns a [time.Duration] by subtracting the specified DateTime from the current one.
+//
+// If the result exceeds the maximum (or minimum) value that can be stored in a [time.Duration],
+// the maximum (or minimum) duration will be returned.
+func (d DateTime) Sub(u DateTime) time.Duration {
+	return d.Time().Sub(u.Time())
+}
+
+// AddDate returns a new DateTime based on the current one + duration.
+//
+// It follows the same rules as [time.AddDate].
+func (d DateTime) AddDate(years, months, days int) DateTime {
+	d.t = d.t.AddDate(years, months, days)
+	return d
+}
+
+// After reports whether the current DateTime instance is after u.
+func (d DateTime) After(u DateTime) bool {
+	return d.Time().After(u.Time())
+}
+
+// Before reports whether the current DateTime instance is before u.
+func (d DateTime) Before(u DateTime) bool {
+	return d.Time().Before(u.Time())
+}
+
+// Compare compares the current DateTime instance with u.
+// If the current instance is before u, it returns -1.
+// If the current instance is after u, it returns +1.
+// If they're the same, it returns 0.
+func (d DateTime) Compare(u DateTime) int {
+	return d.Time().Compare(u.Time())
+}
+
+// Equal reports whether the current DateTime and u represent the same time instant.
+// Two DateTime can be equal even if they are in different locations.
+// For example, 6:00 +0200 and 4:00 UTC are Equal.
+func (d DateTime) Equal(u DateTime) bool {
+	return d.Time().Equal(u.Time())
+}
+
+// Unix returns the current DateTime as a Unix time, aka.
+// the number of seconds elapsed since January 1, 1970 UTC.
+func (d DateTime) Unix() int64 {
+	return d.Time().Unix()
+}
+
 // IsZero checks whether the current DateTime instance has zero time value.
 func (d DateTime) IsZero() bool {
 	return d.Time().IsZero()

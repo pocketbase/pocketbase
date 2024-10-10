@@ -252,6 +252,7 @@ func (p *plugin) update(withBackup bool) error {
 		fmt.Print("\n")
 		color.Cyan("Here is a list with some of the %s changes:", latest.Tag)
 		// remove the update command note to avoid "stuttering"
+		// (@todo consider moving to a config option)
 		releaseNotes := strings.TrimSpace(strings.Replace(latest.Body, "> _To update the prebuilt executable you can run `./"+p.config.ArchiveExecutable+" update`._", "", 1))
 		color.Cyan(releaseNotes)
 		fmt.Print("\n")

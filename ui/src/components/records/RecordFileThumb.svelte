@@ -1,7 +1,7 @@
 <script>
+    import PreviewPopup from "@/components/base/PreviewPopup.svelte";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import PreviewPopup from "@/components/base/PreviewPopup.svelte";
 
     export let record = null;
     export let filename = "";
@@ -19,17 +19,17 @@
 
     $: hasPreview = ["image", "audio", "video"].includes(type) || filename.endsWith(".pdf");
 
-    $: originalUrl = !isLoadingToken ? ApiClient.files.getUrl(record, filename, { token }) : "";
+    $: originalUrl = !isLoadingToken ? ApiClient.files.getURL(record, filename, { token }) : "";
 
     $: thumbUrl = !isLoadingToken
-        ? ApiClient.files.getUrl(record, filename, { thumb: "100x100", token: token })
+        ? ApiClient.files.getURL(record, filename, { thumb: "100x100", token: token })
         : "";
 
     async function loadFileToken() {
         isLoadingToken = true;
 
         try {
-            token = await ApiClient.getAdminFileToken(record.collectionId);
+            token = await ApiClient.getSuperuserFileToken(record.collectionId);
         } catch (err) {
             console.warn("File token failure:", err);
         }

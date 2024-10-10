@@ -1,14 +1,13 @@
 run:
-  go: 1.21
+  go: 1.23
   concurrency: 4
   timeout: 10m
 
 linters:
   disable-all: true
   enable:
+    - asasalint
     - asciicheck
-    - depguard
-    - exportloopref
     - gofmt
     - goimports
     - gomodguard
@@ -20,6 +19,8 @@ linters:
     - nakedret
     - nolintlint
     - prealloc
+    - prealloc
+    - reassign
     - staticcheck
     - typecheck
     - unconvert

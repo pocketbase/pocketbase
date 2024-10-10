@@ -20,12 +20,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/disintegration/imaging"
 	"github.com/gabriel-vasile/mimetype"
+	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3lite"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/fileblob"
+	"gocloud.dev/gcerrors"
 )
 
 var gcpIgnoreHeaders = []string{"Accept-Encoding"}
+
+var ErrNotFound = errors.New("blob not found")
 
 type System struct {
 	ctx    context.Context
@@ -47,25 +51,23 @@ func NewS3(
 
 	cred := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
 
-	cfg, err := config.LoadDefaultConfig(ctx,
+	cfg, err := config.LoadDefaultConfig(
+		ctx,
 		config.WithCredentialsProvider(cred),
 		config.WithRegion(region),
-		config.WithEndpointResolverWithOptions(aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			// ensure that the endpoint has url scheme for
-			// backward compatibility with v1 of the aws sdk
-			prefixedEndpoint := endpoint
-			if !strings.Contains(endpoint, "://") {
-				prefixedEndpoint = "https://" + endpoint
-			}
-
-			return aws.Endpoint{URL: prefixedEndpoint, SigningRegion: region}, nil
-		})),
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		// ensure that the endpoint has url scheme for
+		// backward compatibility with v1 of the aws sdk
+		if !strings.Contains(endpoint, "://") {
+			endpoint = "https://" + endpoint
+		}
+		o.BaseEndpoint = aws.String(endpoint)
+
 		o.UsePathStyle = s3ForcePathStyle
 
 		// Google Cloud Storage alters the Accept-Encoding header,
@@ -76,7 +78,7 @@ func NewS3(
 		}
 	})
 
-	bucket, err := OpenBucketV2(ctx, client, bucketName, nil)
+	bucket, err := s3lite.OpenBucketV2(ctx, client, bucketName, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -116,32 +118,59 @@ func (s *System) Close() error {
 }
 
 // Exists checks if file with fileKey path exists or not.
+//
+// If the file doesn't exist returns false and ErrNotFound.
 func (s *System) Exists(fileKey string) (bool, error) {
-	return s.bucket.Exists(s.ctx, fileKey)
+	exists, err := s.bucket.Exists(s.ctx, fileKey)
+
+	if gcerrors.Code(err) == gcerrors.NotFound {
+		err = ErrNotFound
+	}
+
+	return exists, err
 }
 
 // Attributes returns the attributes for the file with fileKey path.
+//
+// If the file doesn't exist it returns ErrNotFound.
 func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
-	return s.bucket.Attributes(s.ctx, fileKey)
+	attrs, err := s.bucket.Attributes(s.ctx, fileKey)
+
+	if gcerrors.Code(err) == gcerrors.NotFound {
+		err = ErrNotFound
+	}
+
+	return attrs, err
 }
 
 // GetFile returns a file content reader for the given fileKey.
 //
-// NB! Make sure to call `Close()` after you are done working with it.
+// NB! Make sure to call Close() on the file after you are done working with it.
+//
+// If the file doesn't exist returns ErrNotFound.
 func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
 	br, err := s.bucket.NewReader(s.ctx, fileKey, nil)
-	if err != nil {
-		return nil, err
+
+	if gcerrors.Code(err) == gcerrors.NotFound {
+		err = ErrNotFound
 	}
 
-	return br, nil
+	return br, err
 }
 
 // Copy copies the file stored at srcKey to dstKey.
 //
+// If srcKey file doesn't exist, it returns ErrNotFound.
+//
 // If dstKey file already exists, it is overwritten.
 func (s *System) Copy(srcKey, dstKey string) error {
-	return s.bucket.Copy(s.ctx, dstKey, srcKey, nil)
+	err := s.bucket.Copy(s.ctx, dstKey, srcKey, nil)
+
+	if gcerrors.Code(err) == gcerrors.NotFound {
+		err = ErrNotFound
+	}
+
+	return err
 }
 
 // List returns a flat list with info for all files under the specified prefix.
@@ -178,14 +207,13 @@ func (s *System) Upload(content []byte, fileKey string) error {
 	}
 
 	if _, err := w.Write(content); err != nil {
-		w.Close()
-		return err
+		return errors.Join(err, w.Close())
 	}
 
 	return w.Close()
 }
 
-// UploadFile uploads the provided multipart file to the fileKey location.
+// UploadFile uploads the provided File to the fileKey location.
 func (s *System) UploadFile(file *File, fileKey string) error {
 	f, err := file.Reader.Open()
 	if err != nil {
@@ -270,8 +298,16 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 }
 
 // Delete deletes stored file at fileKey location.
+//
+// If the file doesn't exist returns ErrNotFound.
 func (s *System) Delete(fileKey string) error {
-	return s.bucket.Delete(s.ctx, fileKey)
+	err := s.bucket.Delete(s.ctx, fileKey)
+
+	if gcerrors.Code(err) == gcerrors.NotFound {
+		return ErrNotFound
+	}
+
+	return err
 }
 
 // DeletePrefix deletes everything starting with the specified prefix.
@@ -345,6 +381,26 @@ func (s *System) DeletePrefix(prefix string) []error {
 	return failed
 }
 
+// Checks if the provided dir prefix doesn't have any files.
+//
+// A trailing slash will be appended to a non-empty dir string argument
+// to ensure that the checked prefix is a "directory".
+//
+// Returns "false" in case the has at least one file, otherwise - "true".
+func (s *System) IsEmptyDir(dir string) bool {
+	if dir != "" && !strings.HasSuffix(dir, "/") {
+		dir += "/"
+	}
+
+	iter := s.bucket.List(&blob.ListOptions{
+		Prefix: dir,
+	})
+
+	_, err := iter.Next(s.ctx)
+
+	return err == io.EOF
+}
+
 var inlineServeContentTypes = []string{
 	// image
 	"image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp", "image/x-icon", "image/bmp",
@@ -371,8 +427,11 @@ const forceAttachmentParam = "download"
 //
 // If the `download` query parameter is used the file will be always served for
 // download no matter of its type (aka. with "Content-Disposition: attachment").
+//
+// Internally this method uses [http.ServeContent] so Range requests,
+// If-Match, If-Unmodified-Since, etc. headers are handled transparently.
 func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey string, name string) error {
-	br, readErr := s.bucket.NewReader(s.ctx, fileKey, nil)
+	br, readErr := s.GetFile(fileKey)
 	if readErr != nil {
 		return readErr
 	}
@@ -444,7 +503,7 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 	}
 
 	// fetch the original
-	r, readErr := s.bucket.NewReader(s.ctx, originalKey, nil)
+	r, readErr := s.GetFile(originalKey)
 	if readErr != nil {
 		return readErr
 	}

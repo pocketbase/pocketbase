@@ -10,6 +10,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func init() {
+	Providers[NameMailcow] = wrapFactory(NewMailcowProvider)
+}
+
 var _ Provider = (*Mailcow)(nil)
 
 // NameMailcow is the unique name of the mailcow provider.
@@ -17,12 +21,12 @@ const NameMailcow string = "mailcow"
 
 // Mailcow allows authentication via mailcow OAuth2.
 type Mailcow struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewMailcowProvider creates a new mailcow provider instance with some defaults.
 func NewMailcowProvider() *Mailcow {
-	return &Mailcow{&baseProvider{
+	return &Mailcow{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "mailcow",
 		pkce:        true,
@@ -34,7 +38,7 @@ func NewMailcowProvider() *Mailcow {
 //
 // API reference: https://github.com/mailcow/mailcow-dockerized/blob/master/data/web/oauth/profile.php
 func (p *Mailcow) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}

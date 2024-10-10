@@ -3,7 +3,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import CodeBlock from "@/components/base/CodeBlock.svelte";
     import FilterSyntax from "@/components/collections/docs/FilterSyntax.svelte";
-    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
+    import SdkTabs from "@/components/base/SdkTabs.svelte";
     import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
     export let collection;
@@ -13,9 +13,9 @@
 
     $: fieldNames = CommonHelper.getAllCollectionIdentifiers(collection);
 
-    $: adminsOnly = collection?.listRule === null;
+    $: superusersOnly = collection?.listRule === null;
 
-    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseURL);
 
     $: if (collection?.id) {
         responses.push({
@@ -47,13 +47,13 @@
             `,
         });
 
-        if (adminsOnly) {
+        if (superusersOnly) {
             responses.push({
                 code: 403,
                 body: `
                     {
                       "code": 403,
-                      "message": "Only admins can access this action.",
+                      "message": "Only superusers can access this action.",
                       "data": {}
                     }
                 `,
@@ -127,8 +127,8 @@
             /api/collections/<strong>{collection.name}</strong>/records
         </p>
     </div>
-    {#if adminsOnly}
-        <p class="txt-hint txt-sm txt-right">Requires admin <code>Authorization:TOKEN</code> header</p>
+    {#if superusersOnly}
+        <p class="txt-hint txt-sm txt-right">Requires superuser <code>Authorization:TOKEN</code> header</p>
     {/if}
 </div>
 

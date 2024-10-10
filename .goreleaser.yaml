@@ -1,3 +1,5 @@
+version: 2
+
 project_name: pocketbase
 
 dist: .builds
@@ -58,7 +60,7 @@ checksum:
   name_template: 'checksums.txt'
 
 snapshot:
-  name_template: '{{ incpatch .Version }}-next'
+  version_template: '{{ incpatch .Version }}-next'
 
 changelog:
   sort: asc

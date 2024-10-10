@@ -1,9 +1,9 @@
 <script>
+    import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
+    import SdkTabs from "@/components/base/SdkTabs.svelte";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import CodeBlock from "@/components/base/CodeBlock.svelte";
-    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
-    import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
     export let collection;
 
@@ -13,9 +13,16 @@
 
     $: isAuth = collection.type === "auth";
 
-    $: adminsOnly = collection?.createRule === null;
+    $: superusersOnly = collection?.createRule === null;
 
-    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
+    $: excludedTableFields = isAuth ? ["password", "verified", "email", "emailVisibility"] : [];
+
+    $: tableFields =
+        collection?.fields?.filter((f) => {
+            return !f.hidden && f.type != "autodate" && !excludedTableFields.includes(f.name);
+        }) || [];
+
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseURL);
 
     $: responses = [
         {
@@ -29,7 +36,7 @@
                   "code": 400,
                   "message": "Failed to create record.",
                   "data": {
-                    "${collection?.schema?.[0]?.name}": {
+                    "${collection?.fields?.[0]?.name}": {
                       "code": "validation_required",
                       "message": "Missing required value."
                     }
@@ -51,9 +58,6 @@
 
     $: if (isAuth) {
         baseData = {
-            username: "test_username",
-            email: "test@example.com",
-            emailVisibility: true,
             password: "12345678",
             passwordConfirm: "12345678",
         };
@@ -89,7 +93,7 @@ const pb = new PocketBase('${backendAbsUrl}');
 ...
 
 // example create data
-const data = ${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection)), null, 4)};
+const data = ${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection, true)), null, 4)};
 
 const record = await pb.collection('${collection?.name}').create(data);
 ` + (isAuth ?
@@ -106,7 +110,7 @@ final pb = PocketBase('${backendAbsUrl}');
 ...
 
 // example create body
-final body = <String, dynamic>${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection)), null, 2)};
+final body = <String, dynamic>${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection, true)), null, 2)};
 
 final record = await pb.collection('${collection?.name}').create(body: body);
 ` + (isAuth ?
@@ -125,8 +129,8 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
             /api/collections/<strong>{collection.name}</strong>/records
         </p>
     </div>
-    {#if adminsOnly}
-        <p class="txt-hint txt-sm txt-right">Requires admin <code>Authorization:TOKEN</code> header</p>
+    {#if superusersOnly}
+        <p class="txt-hint txt-sm txt-right">Requires superuser <code>Authorization:TOKEN</code> header</p>
     {/if}
 </div>
 
@@ -140,47 +144,14 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>
-                <div class="inline-flex">
-                    <span class="label label-warning">Optional</span>
-                    <span>id</span>
-                </div>
-            </td>
-            <td>
-                <span class="label">String</span>
-            </td>
-            <td>
-                <strong>15 characters string</strong> to store as record ID.
-                <br />
-                If not set, it will be auto generated.
-            </td>
-        </tr>
-
         {#if isAuth}
             <tr>
-                <td colspan="3" class="txt-hint">Auth fields</td>
+                <td colspan="3" class="txt-hint txt-bold">Auth specific fields</td>
             </tr>
             <tr>
                 <td>
                     <div class="inline-flex">
-                        <span class="label label-warning">Optional</span>
-                        <span>username</span>
-                    </div>
-                </td>
-                <td>
-                    <span class="label">String</span>
-                </td>
-                <td>
-                    The username of the auth record.
-                    <br />
-                    If not set, it will be auto generated.
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="inline-flex">
-                        {#if collection?.options?.requireEmail}
+                        {#if collection?.fields?.find((f) => f.name == "email")?.required}
                             <span class="label label-success">Required</span>
                         {:else}
                             <span class="label label-warning">Optional</span>
@@ -196,7 +167,11 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
             <tr>
                 <td>
                     <div class="inline-flex">
-                        <span class="label label-warning">Optional</span>
+                        {#if collection?.fields?.find((f) => f.name == "emailVisibility")?.required}
+                            <span class="label label-success">Required</span>
+                        {:else}
+                            <span class="label label-warning">Optional</span>
+                        {/if}
                         <span>emailVisibility</span>
                     </div>
                 </td>
@@ -242,22 +217,22 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
                 <td>
                     Indicates whether the auth record is verified or not.
                     <br />
-                    This field can be set only by admins or auth records with "Manage" access.
+                    This field can be set only by superusers or auth records with "Manage" access.
                 </td>
             </tr>
             <tr>
-                <td colspan="3" class="txt-hint">Schema fields</td>
+                <td colspan="3" class="txt-hint txt-bold">Other fields</td>
             </tr>
         {/if}
 
-        {#each collection?.schema as field (field.name)}
+        {#each tableFields as field (field.name)}
             <tr>
                 <td>
                     <div class="inline-flex">
-                        {#if field.required}
-                            <span class="label label-success">Required</span>
-                        {:else}
+                        {#if !field.required || (field.type == "text" && field.autogeneratePattern)}
                             <span class="label label-warning">Optional</span>
+                        {:else}
+                            <span class="label label-success">Required</span>
                         {/if}
                         <span>{field.name}</span>
                     </div>
@@ -268,6 +243,9 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
                 <td>
                     {#if field.type === "text"}
                         Plain text value.
+                        {#if field.autogeneratePattern}
+                            It is autogenerated if not set.
+                        {/if}
                     {:else if field.type === "number"}
                         Number value.
                     {:else if field.type === "json"}
@@ -278,9 +256,10 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
                         URL address.
                     {:else if field.type === "file"}
                         File object.<br />
-                        Set to <code>null</code> to delete already uploaded file(s).
+                        Set to empty value (<code>null</code>, <code>""</code> or <code>[]</code>) to delete
+                        already uploaded file(s).
                     {:else if field.type === "relation"}
-                        Relation record {field.options?.maxSelect === 1 ? "id" : "ids"}.
+                        Relation record {field.maxSelect === 1 ? "id" : "ids"}.
                     {/if}
                 </td>
             </tr>

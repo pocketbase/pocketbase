@@ -18,10 +18,10 @@
     ];
 
     let mimeTypesList = baseMimeTypesList.slice();
-    let isSingle = field.options?.maxSelect <= 1;
+    let isSingle = field.maxSelect <= 1;
     let oldIsSingle = isSingle;
 
-    $: if (CommonHelper.isEmpty(field.options)) {
+    $: if (typeof field.maxSelect == "undefined") {
         loadDefaults();
     } else {
         appendMissingMimeTypes();
@@ -30,19 +30,17 @@
     $: if (oldIsSingle != isSingle) {
         oldIsSingle = isSingle;
         if (isSingle) {
-            field.options.maxSelect = 1;
+            field.maxSelect = 1;
         } else {
-            field.options.maxSelect = field.options?.values?.length || 99;
+            field.maxSelect = 99;
         }
     }
 
     function loadDefaults() {
-        field.options = {
-            maxSelect: 1,
-            maxSize: 5242880,
-            thumbs: [],
-            mimeTypes: [],
-        };
+        field.maxSelect = 1;
+        field.thumbs = [];
+        field.mimeTypes = [];
+
         isSingle = true;
         oldIsSingle = isSingle;
     }
@@ -50,13 +48,13 @@
     // append any previously set custom mime types to the predefined
     // list for backward compatibility
     function appendMissingMimeTypes() {
-        if (CommonHelper.isEmpty(field.options.mimeTypes)) {
+        if (CommonHelper.isEmpty(field.mimeTypes)) {
             return;
         }
 
         const missing = [];
 
-        for (const v of field.options.mimeTypes) {
+        for (const v of field.mimeTypes) {
             if (!!mimeTypesList.find((item) => item.mimeType === v)) {
                 continue; // exist
             }
@@ -93,7 +91,7 @@
     <svelte:fragment slot="options">
         <div class="grid grid-sm">
             <div class="col-sm-12">
-                <Field class="form-field" name="schema.{key}.options.mimeTypes" let:uniqueId>
+                <Field class="form-field" name="fields.{key}.mimeTypes" let:uniqueId>
                     <label for={uniqueId}>
                         <span class="txt">Allowed mime types</span>
                         <i
@@ -114,7 +112,7 @@
                         items={mimeTypesList}
                         labelComponent={MimeTypeSelectOption}
                         optionComponent={MimeTypeSelectOption}
-                        bind:keyOfSelected={field.options.mimeTypes}
+                        bind:keyOfSelected={field.mimeTypes}
                     />
                     <div class="help-block">
                         <div tabindex="0" role="button" class="inline-flex flex-gap-0">
@@ -126,7 +124,7 @@
                                     class="dropdown-item closable"
                                     role="menuitem"
                                     on:click={() => {
-                                        field.options.mimeTypes = [
+                                        field.mimeTypes = [
                                             "image/jpeg",
                                             "image/png",
                                             "image/svg+xml",
@@ -142,7 +140,7 @@
                                     class="dropdown-item closable"
                                     role="menuitem"
                                     on:click={() => {
-                                        field.options.mimeTypes = [
+                                        field.mimeTypes = [
                                             "application/pdf",
                                             "application/msword",
                                             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -158,7 +156,7 @@
                                     class="dropdown-item closable"
                                     role="menuitem"
                                     on:click={() => {
-                                        field.options.mimeTypes = [
+                                        field.mimeTypes = [
                                             "video/mp4",
                                             "video/x-ms-wmv",
                                             "video/quicktime",
@@ -173,7 +171,7 @@
                                     class="dropdown-item closable"
                                     role="menuitem"
                                     on:click={() => {
-                                        field.options.mimeTypes = [
+                                        field.mimeTypes = [
                                             "application/zip",
                                             "application/x-7z-compressed",
                                             "application/x-rar-compressed",
@@ -189,7 +187,7 @@
             </div>
 
             <div class={!isSingle ? "col-sm-6" : "col-sm-8"}>
-                <Field class="form-field" name="schema.{key}.options.thumbs" let:uniqueId>
+                <Field class="form-field" name="fields.{key}.thumbs" let:uniqueId>
                     <label for={uniqueId}>
                         <span class="txt">Thumb sizes</span>
                         <i
@@ -202,8 +200,8 @@
                     </label>
                     <MultipleValueInput
                         id={uniqueId}
-                        placeholder="eg. 50x50, 480x720"
-                        bind:value={field.options.thumbs}
+                        placeholder="e.g. 50x50, 480x720"
+                        bind:value={field.thumbs}
                     />
                     <div class="help-block">
                         <span class="txt">Use comma as separator.</span>
@@ -214,27 +212,27 @@
                                 <ul class="m-0">
                                     <li>
                                         <strong>WxH</strong>
-                                        (eg. 100x50) - crop to WxH viewbox (from center)
+                                        (e.g. 100x50) - crop to WxH viewbox (from center)
                                     </li>
                                     <li>
                                         <strong>WxHt</strong>
-                                        (eg. 100x50t) - crop to WxH viewbox (from top)
+                                        (e.g. 100x50t) - crop to WxH viewbox (from top)
                                     </li>
                                     <li>
                                         <strong>WxHb</strong>
-                                        (eg. 100x50b) - crop to WxH viewbox (from bottom)
+                                        (e.g. 100x50b) - crop to WxH viewbox (from bottom)
                                     </li>
                                     <li>
                                         <strong>WxHf</strong>
-                                        (eg. 100x50f) - fit inside a WxH viewbox (without cropping)
+                                        (e.g. 100x50f) - fit inside a WxH viewbox (without cropping)
                                     </li>
                                     <li>
                                         <strong>0xH</strong>
-                                        (eg. 0x50) - resize to H height preserving the aspect ratio
+                                        (e.g. 0x50) - resize to H height preserving the aspect ratio
                                     </li>
                                     <li>
                                         <strong>Wx0</strong>
-                                        (eg. 100x0) - resize to W width preserving the aspect ratio
+                                        (e.g. 100x0) - resize to W width preserving the aspect ratio
                                     </li>
                                 </ul>
                             </Toggler>
@@ -244,16 +242,24 @@
             </div>
 
             <div class={!isSingle ? "col-sm-3" : "col-sm-4"}>
-                <Field class="form-field required" name="schema.{key}.options.maxSize" let:uniqueId>
+                <Field class="form-field" name="fields.{key}.maxSize" let:uniqueId>
                     <label for={uniqueId}>Max file size</label>
-                    <input type="number" id={uniqueId} step="1" min="0" bind:value={field.options.maxSize} />
+                    <input
+                        type="number"
+                        id={uniqueId}
+                        step="1"
+                        min="0"
+                        value={field.maxSize || ""}
+                        on:input={(e) => (field.maxSize = e.target.value << 0)}
+                        placeholder="Default to max ~5MB"
+                    />
                     <div class="help-block">Must be in bytes.</div>
                 </Field>
             </div>
 
             {#if !isSingle}
                 <div class="col-sm-3">
-                    <Field class="form-field required" name="schema.{key}.options.maxSelect" let:uniqueId>
+                    <Field class="form-field" name="fields.{key}.maxSelect" let:uniqueId>
                         <label for={uniqueId}>Max select</label>
                         <input
                             id={uniqueId}
@@ -261,29 +267,31 @@
                             step="1"
                             min="2"
                             required
-                            bind:value={field.options.maxSelect}
+                            placeholder="Default to single"
+                            bind:value={field.maxSelect}
                         />
                     </Field>
                 </div>
             {/if}
-        </div>
-    </svelte:fragment>
 
-    <svelte:fragment slot="optionsFooter">
-        <Field class="form-field form-field-toggle" name="schema.{key}.options.protected" let:uniqueId>
-            <input type="checkbox" id={uniqueId} bind:checked={field.options.protected} />
-            <label for={uniqueId}>
-                <span class="txt">Protected</span>
-            </label>
-            <a
-                href={import.meta.env.PB_PROTECTED_FILE_DOCS}
-                class="toggle-info txt-sm txt-hint m-l-5"
-                target="_blank"
-                rel="noopener"
-            >
-                (Learn more)
-            </a>
-        </Field>
+            <Field class="form-field form-field-toggle" name="fields.{key}.protected" let:uniqueId>
+                <input type="checkbox" id={uniqueId} bind:checked={field.protected} />
+                <label for={uniqueId}>
+                    <span class="txt">Protected</span>
+                </label>
+                <small class="txt-hint">
+                    it will require View API rule permissions and file token to be accessible
+                    <a
+                        href={import.meta.env.PB_PROTECTED_FILE_DOCS}
+                        class="toggle-info"
+                        target="_blank"
+                        rel="noopener"
+                    >
+                        (Learn more)
+                    </a>
+                </small>
+            </Field>
+        </div>
     </svelte:fragment>
 </SchemaField>
 

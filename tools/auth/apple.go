@@ -18,6 +18,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func init() {
+	Providers[NameApple] = wrapFactory(NewAppleProvider)
+}
+
 var _ Provider = (*Apple)(nil)
 
 // NameApple is the unique name of the Apple provider.
@@ -27,23 +31,23 @@ const NameApple string = "apple"
 //
 // [OIDC differences]: https://bitbucket.org/openid/connect/src/master/How-Sign-in-with-Apple-differs-from-OpenID-Connect.md
 type Apple struct {
-	*baseProvider
+	BaseProvider
 
-	jwksUrl string
+	jwksURL string
 }
 
 // NewAppleProvider creates a new Apple provider instance with some defaults.
 func NewAppleProvider() *Apple {
 	return &Apple{
-		baseProvider: &baseProvider{
+		BaseProvider: BaseProvider{
 			ctx:         context.Background(),
 			displayName: "Apple",
 			pkce:        true,
 			scopes:      []string{"name", "email"},
-			authUrl:     "https://appleid.apple.com/auth/authorize",
-			tokenUrl:    "https://appleid.apple.com/auth/token",
+			authURL:     "https://appleid.apple.com/auth/authorize",
+			tokenURL:    "https://appleid.apple.com/auth/token",
 		},
-		jwksUrl: "https://appleid.apple.com/auth/keys",
+		jwksURL: "https://appleid.apple.com/auth/keys",
 	}
 }
 
@@ -51,7 +55,7 @@ func NewAppleProvider() *Apple {
 //
 // API reference: https://developer.apple.com/documentation/sign_in_with_apple/tokenresponse.
 func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +102,11 @@ func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	return user, nil
 }
 
-// FetchRawUserData implements Provider.FetchRawUserData interface.
+// FetchRawUserInfo implements Provider.FetchRawUserInfo interface.
 //
 // Apple doesn't have a UserInfo endpoint and claims about users
 // are instead included in the "id_token" (https://openid.net/specs/openid-connect-core-1_0.html#id_tokenExample)
-func (p *Apple) FetchRawUserData(token *oauth2.Token) ([]byte, error) {
+func (p *Apple) FetchRawUserInfo(token *oauth2.Token) ([]byte, error) {
 	idToken, _ := token.Extra("id_token").(string)
 
 	claims, err := p.parseAndVerifyIdToken(idToken)
@@ -209,7 +213,7 @@ type jwk struct {
 }
 
 func (p *Apple) fetchJWK(kid string) (*jwk, error) {
-	req, err := http.NewRequestWithContext(p.ctx, "GET", p.jwksUrl, nil)
+	req, err := http.NewRequestWithContext(p.ctx, "GET", p.jwksURL, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -5,16 +5,20 @@ import (
 	"math"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"golang.org/x/sync/errgroup"
 )
 
 // DefaultPerPage specifies the default returned search result items.
 const DefaultPerPage int = 30
 
+// @todo consider making it configurable
+//
 // MaxPerPage specifies the maximum allowed search result items returned in a single page.
-const MaxPerPage int = 500
+const MaxPerPage int = 1000
 
 // url search query params
 const (
@@ -27,23 +31,23 @@ const (
 
 // Result defines the returned search result structure.
 type Result struct {
+	Items      any `json:"items"`
 	Page       int `json:"page"`
 	PerPage    int `json:"perPage"`
 	TotalItems int `json:"totalItems"`
 	TotalPages int `json:"totalPages"`
-	Items      any `json:"items"`
 }
 
 // Provider represents a single configured search provider instance.
 type Provider struct {
 	fieldResolver FieldResolver
 	query         *dbx.SelectQuery
-	skipTotal     bool
 	countCol      string
-	page          int
-	perPage       int
 	sort          []SortField
 	filter        []FilterData
+	page          int
+	perPage       int
+	skipTotal     bool
 }
 
 // NewProvider creates and returns a new search provider.
@@ -208,6 +212,14 @@ func (s *Provider) Exec(items any) (*Result, error) {
 			return nil, err
 		}
 		if expr != "" {
+			// ensure that _rowid_ expressions are always prefixed with the first FROM table
+			if sortField.Name == rowidSortKey && !strings.Contains(expr, ".") {
+				queryInfo := modelsQuery.Info()
+				if len(queryInfo.From) > 0 {
+					expr = "[[" + inflector.Columnify(queryInfo.From[0]) + "]]." + expr
+				}
+			}
+
 			modelsQuery.AndOrderBy(expr)
 		}
 	}

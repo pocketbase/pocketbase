@@ -9,6 +9,10 @@ import (
 	"golang.org/x/oauth2"
 )
 
+func init() {
+	Providers[NamePlanningcenter] = wrapFactory(NewPlanningcenterProvider)
+}
+
 var _ Provider = (*Planningcenter)(nil)
 
 // NamePlanningcenter is the unique name of the Planningcenter provider.
@@ -16,19 +20,19 @@ const NamePlanningcenter string = "planningcenter"
 
 // Planningcenter allows authentication via Planningcenter OAuth2.
 type Planningcenter struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewPlanningcenterProvider creates a new Planningcenter provider instance with some defaults.
 func NewPlanningcenterProvider() *Planningcenter {
-	return &Planningcenter{&baseProvider{
+	return &Planningcenter{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Planning Center",
 		pkce:        true,
 		scopes:      []string{"people"},
-		authUrl:     "https://api.planningcenteronline.com/oauth/authorize",
-		tokenUrl:    "https://api.planningcenteronline.com/oauth/token",
-		userApiUrl:  "https://api.planningcenteronline.com/people/v2/me",
+		authURL:     "https://api.planningcenteronline.com/oauth/authorize",
+		tokenURL:    "https://api.planningcenteronline.com/oauth/token",
+		userInfoURL: "https://api.planningcenteronline.com/people/v2/me",
 	}}
 }
 
@@ -36,7 +40,7 @@ func NewPlanningcenterProvider() *Planningcenter {
 //
 // API reference: https://developer.planning.center/docs/#/overview/authentication
 func (p *Planningcenter) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +56,7 @@ func (p *Planningcenter) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			Attributes struct {
 				Status    string `json:"status"`
 				Name      string `json:"name"`
-				AvatarUrl string `json:"avatar"`
+				AvatarURL string `json:"avatar"`
 				// don't map the email because users can have multiple assigned
 				// and it's not clear if they are verified
 			}
@@ -69,7 +73,7 @@ func (p *Planningcenter) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:           extracted.Data.Id,
 		Name:         extracted.Data.Attributes.Name,
-		AvatarUrl:    extracted.Data.Attributes.AvatarUrl,
+		AvatarURL:    extracted.Data.Attributes.AvatarURL,
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,

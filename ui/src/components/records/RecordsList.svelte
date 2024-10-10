@@ -1,19 +1,16 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import { fly } from "svelte/transition";
-    import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
-    import tooltip from "@/actions/tooltip";
-    import { confirm } from "@/stores/confirmation";
-    import { addSuccessToast } from "@/stores/toasts";
-    import { collections } from "@/stores/collections";
+    import Field from "@/components/base/Field.svelte";
+    import Scroller from "@/components/base/Scroller.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
-    import Field from "@/components/base/Field.svelte";
-    import CopyIcon from "@/components/base/CopyIcon.svelte";
-    import FormattedDate from "@/components/base/FormattedDate.svelte";
-    import Scroller from "@/components/base/Scroller.svelte";
     import RecordFieldValue from "@/components/records/RecordFieldValue.svelte";
+    import { collections } from "@/stores/collections";
+    import { confirm } from "@/stores/confirmation";
+    import { addSuccessToast } from "@/stores/toasts";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { createEventDispatcher } from "svelte";
+    import { fly } from "svelte/transition";
 
     const dispatch = createEventDispatcher();
     const sortRegex = /^([\+\-])?(\w+)$/;
@@ -36,6 +33,8 @@
     let collumnsToHide = [];
     let hiddenColumnsKey = "";
 
+    const unusedSuperusersFields = ["verified", "emailVisibility"];
+
     $: if (collection?.id) {
         hiddenColumnsKey = collection.id + "@hiddenColumns";
         loadStoredHiddenColumns();
@@ -44,15 +43,18 @@
 
     $: isView = collection?.type === "view";
 
-    $: isAuth = collection?.type === "auth";
+    $: isSuperusers = collection?.type === "auth" && collection.name === "_superusers";
 
-    $: fields = collection?.schema || [];
+    // skip unused superusers fields
+    $: fields = (collection?.fields || []).filter(
+        (f) => !f.hidden && (!isSuperusers || !unusedSuperusersFields.includes(f.name)),
+    );
 
-    $: editorFields = fields.filter((field) => field.type === "editor");
+    $: editorFields = fields.filter((f) => f.type === "editor");
 
-    $: relFields = fields.filter((field) => field.type === "relation");
+    $: relFields = fields.filter((f) => f.type === "relation");
 
-    $: visibleFields = fields.filter((field) => !hiddenColumns.includes(field.id));
+    $: visibleFields = fields.filter((f) => !hiddenColumns.includes(f.id));
 
     $: if (collection?.id && sort !== -1 && filter !== -1) {
         load(1);
@@ -68,23 +70,11 @@
         updateStoredHiddenColumns();
     }
 
-    $: hasCreated = !isView || (records.length > 0 && typeof records[0].created != "undefined");
-
-    $: hasUpdated = !isView || (records.length > 0 && typeof records[0].updated != "undefined");
-
-    $: collumnsToHide = [].concat(
-        isAuth
-            ? [
-                  { id: "@username", name: "username" },
-                  { id: "@email", name: "email" },
-              ]
-            : [],
-        fields.map((f) => {
+    $: collumnsToHide = fields
+        .filter((f) => !f.primaryKey)
+        .map((f) => {
             return { id: f.id, name: f.name };
-        }),
-        hasCreated ? { id: "@created", name: "created" } : [],
-        hasUpdated ? { id: "@updated", name: "updated" } : [],
-    );
+        });
 
     function updateStoredHiddenColumns() {
         if (!collection?.id) {
@@ -114,7 +104,7 @@
     }
 
     export function hasRecord(id) {
-        return !!records.find((r) => r.id);
+        return !!records.find((r) => r.id == id);
     }
 
     export async function reloadLoadedPages() {
@@ -141,8 +131,8 @@
         if (sortMatch && sortRelField) {
             const relPresentableFields =
                 $collections
-                    ?.find((c) => c.id == sortRelField.options?.collectionId)
-                    ?.schema?.filter((f) => f.presentable)
+                    ?.find((c) => c.id == sortRelField.collectionId)
+                    ?.fields?.filter((f) => f.presentable)
                     ?.map((f) => f.name) || [];
 
             const parts = [];
@@ -163,12 +153,20 @@
             listFields.unshift("*");
         }
 
+        const expandFields = [];
+        for (const field of relFields) {
+            const expandItem = CommonHelper.getExpandPresentableRelField(field, $collections, 2);
+            if (expandItem) {
+                expandFields.push(expandItem);
+            }
+        }
+
         return ApiClient.collection(collection.id)
             .getList(page, perPage, {
                 sort: listSort,
                 skipTotal: 1,
                 filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
-                expand: relFields.map((field) => field.name).join(","),
+                expand: expandFields.join(","),
                 fields: listFields.join(","),
                 requestKey: "records_list",
             })
@@ -353,64 +351,22 @@
                     </th>
                 {/if}
 
-                {#if !hiddenColumns.includes("@id")}
-                    <SortHeader class="col-type-text col-field-id" name="id" bind:sort>
-                        <div class="col-header-content">
-                            <i class={CommonHelper.getFieldTypeIcon("primary")} />
-                            <span class="txt">id</span>
-                        </div>
-                    </SortHeader>
-                {/if}
-
-                {#if isAuth}
-                    {#if !hiddenColumns.includes("@username")}
-                        <SortHeader class="col-type-text col-field-id" name="username" bind:sort>
-                            <div class="col-header-content">
-                                <i class={CommonHelper.getFieldTypeIcon("user")} />
-                                <span class="txt">username</span>
-                            </div>
-                        </SortHeader>
-                    {/if}
-                    {#if !hiddenColumns.includes("@email")}
-                        <SortHeader class="col-type-email col-field-email" name="email" bind:sort>
-                            <div class="col-header-content">
-                                <i class={CommonHelper.getFieldTypeIcon("email")} />
-                                <span class="txt">email</span>
-                            </div>
-                        </SortHeader>
-                    {/if}
-                {/if}
-
-                {#each visibleFields as field (field.name)}
+                {#each visibleFields as field (field.id)}
                     <SortHeader
                         class="col-type-{field.type} col-field-{field.name}"
                         name={field.name}
                         bind:sort
                     >
                         <div class="col-header-content">
-                            <i class={CommonHelper.getFieldTypeIcon(field.type)} />
+                            {#if field.primaryKey}
+                                <i class={CommonHelper.getFieldTypeIcon("primary")} />
+                            {:else}
+                                <i class={CommonHelper.getFieldTypeIcon(field.type)} />
+                            {/if}
                             <span class="txt">{field.name}</span>
                         </div>
                     </SortHeader>
                 {/each}
-
-                {#if hasCreated && !hiddenColumns.includes("@created")}
-                    <SortHeader class="col-type-date col-field-created" name="created" bind:sort>
-                        <div class="col-header-content">
-                            <i class={CommonHelper.getFieldTypeIcon("date")} />
-                            <span class="txt">created</span>
-                        </div>
-                    </SortHeader>
-                {/if}
-
-                {#if hasUpdated && !hiddenColumns.includes("@updated")}
-                    <SortHeader class="col-type-date col-field-updated" name="updated" bind:sort>
-                        <div class="col-header-content">
-                            <i class={CommonHelper.getFieldTypeIcon("date")} />
-                            <span class="txt">updated</span>
-                        </div>
-                    </SortHeader>
-                {/if}
 
                 <th class="col-type-action min-width">
                     {#if collumnsToHide.length}
@@ -455,73 +411,11 @@
                         </td>
                     {/if}
 
-                    {#if !hiddenColumns.includes("@id")}
-                        <td class="col-type-text col-field-id">
-                            <div class="flex flex-gap-5">
-                                <div class="label">
-                                    <CopyIcon value={record.id} />
-                                    <div class="txt txt-ellipsis">{record.id}</div>
-                                </div>
-
-                                {#if isAuth}
-                                    {#if record.verified}
-                                        <i
-                                            class="ri-checkbox-circle-fill txt-sm txt-success"
-                                            use:tooltip={"Verified"}
-                                        />
-                                    {:else}
-                                        <i
-                                            class="ri-error-warning-fill txt-sm txt-hint"
-                                            use:tooltip={"Unverified"}
-                                        />
-                                    {/if}
-                                {/if}
-                            </div>
-                        </td>
-                    {/if}
-
-                    {#if isAuth}
-                        {#if !hiddenColumns.includes("@username")}
-                            <td class="col-type-text col-field-username">
-                                {#if CommonHelper.isEmpty(record.username)}
-                                    <span class="txt-hint">N/A</span>
-                                {:else}
-                                    <span class="txt txt-ellipsis" title={record.username}>
-                                        {record.username}
-                                    </span>
-                                {/if}
-                            </td>
-                        {/if}
-                        {#if !hiddenColumns.includes("@email")}
-                            <td class="col-type-text col-field-email">
-                                {#if CommonHelper.isEmpty(record.email)}
-                                    <span class="txt-hint">N/A</span>
-                                {:else}
-                                    <span class="txt txt-ellipsis" title={record.email}>
-                                        {record.email}
-                                    </span>
-                                {/if}
-                            </td>
-                        {/if}
-                    {/if}
-
-                    {#each visibleFields as field (field.name)}
+                    {#each visibleFields as field (field.id)}
                         <td class="col-type-{field.type} col-field-{field.name}">
                             <RecordFieldValue short {record} {field} />
                         </td>
                     {/each}
-
-                    {#if hasCreated && !hiddenColumns.includes("@created")}
-                        <td class="col-type-date col-field-created">
-                            <FormattedDate date={record.created} />
-                        </td>
-                    {/if}
-
-                    {#if hasUpdated && !hiddenColumns.includes("@updated")}
-                        <td class="col-type-date col-field-updated">
-                            <FormattedDate date={record.updated} />
-                        </td>
-                    {/if}
 
                     <td class="col-type-action min-width">
                         <i class="ri-arrow-right-line" />

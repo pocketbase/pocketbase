@@ -2,54 +2,81 @@ package types_test
 
 import (
 	"database/sql/driver"
+	"fmt"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-func TestJsonMapMarshalJSON(t *testing.T) {
+func TestJSONMapMarshalJSON(t *testing.T) {
 	scenarios := []struct {
-		json     types.JsonMap
+		json     types.JSONMap[any]
 		expected string
 	}{
 		{nil, "{}"},
-		{types.JsonMap{}, `{}`},
-		{types.JsonMap{"test1": 123, "test2": "lorem"}, `{"test1":123,"test2":"lorem"}`},
-		{types.JsonMap{"test": []int{1, 2, 3}}, `{"test":[1,2,3]}`},
+		{types.JSONMap[any]{}, `{}`},
+		{types.JSONMap[any]{"test1": 123, "test2": "lorem"}, `{"test1":123,"test2":"lorem"}`},
+		{types.JSONMap[any]{"test": []int{1, 2, 3}}, `{"test":[1,2,3]}`},
 	}
 
 	for i, s := range scenarios {
-		result, err := s.json.MarshalJSON()
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-			continue
-		}
-		if string(result) != s.expected {
-			t.Errorf("(%d) Expected %s, got %s", i, s.expected, string(result))
-		}
+		t.Run(fmt.Sprintf("%d_%#v", i, s.expected), func(t *testing.T) {
+			result, err := s.json.MarshalJSON()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if string(result) != s.expected {
+				t.Fatalf("Expected\n%s\ngot\n%s", s.expected, result)
+			}
+		})
 	}
 }
 
-func TestJsonMapGet(t *testing.T) {
+func TestJSONMapMarshalString(t *testing.T) {
 	scenarios := []struct {
-		json     types.JsonMap
+		json     types.JSONMap[any]
+		expected string
+	}{
+		{nil, "{}"},
+		{types.JSONMap[any]{}, `{}`},
+		{types.JSONMap[any]{"test1": 123, "test2": "lorem"}, `{"test1":123,"test2":"lorem"}`},
+		{types.JSONMap[any]{"test": []int{1, 2, 3}}, `{"test":[1,2,3]}`},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.expected), func(t *testing.T) {
+			result := s.json.String()
+
+			if result != s.expected {
+				t.Fatalf("Expected\n%s\ngot\n%s", s.expected, result)
+			}
+		})
+	}
+}
+
+func TestJSONMapGet(t *testing.T) {
+	scenarios := []struct {
+		json     types.JSONMap[any]
 		key      string
 		expected any
 	}{
 		{nil, "test", nil},
-		{types.JsonMap{"test": 123}, "test", 123},
-		{types.JsonMap{"test": 123}, "missing", nil},
+		{types.JSONMap[any]{"test": 123}, "test", 123},
+		{types.JSONMap[any]{"test": 123}, "missing", nil},
 	}
 
 	for i, s := range scenarios {
-		result := s.json.Get(s.key)
-		if result != s.expected {
-			t.Errorf("(%d) Expected %s, got %v", i, s.expected, result)
-		}
+		t.Run(fmt.Sprintf("%d_%s", i, s.key), func(t *testing.T) {
+			result := s.json.Get(s.key)
+			if result != s.expected {
+				t.Fatalf("Expected %s, got %#v", s.expected, result)
+			}
+		})
 	}
 }
 
-func TestJsonMapSet(t *testing.T) {
+func TestJSONMapSet(t *testing.T) {
 	scenarios := []struct {
 		key   string
 		value any
@@ -60,44 +87,48 @@ func TestJsonMapSet(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		j := types.JsonMap{}
+		t.Run(fmt.Sprintf("%d_%s", i, s.key), func(t *testing.T) {
+			j := types.JSONMap[any]{}
 
-		j.Set(s.key, s.value)
+			j.Set(s.key, s.value)
 
-		if v := j[s.key]; v != s.value {
-			t.Errorf("(%d) Expected %s, got %v", i, s.value, v)
-		}
+			if v := j[s.key]; v != s.value {
+				t.Fatalf("Expected %s, got %#v", s.value, v)
+			}
+		})
 	}
 }
 
-func TestJsonMapValue(t *testing.T) {
+func TestJSONMapValue(t *testing.T) {
 	scenarios := []struct {
-		json     types.JsonMap
+		json     types.JSONMap[any]
 		expected driver.Value
 	}{
 		{nil, `{}`},
-		{types.JsonMap{}, `{}`},
-		{types.JsonMap{"test1": 123, "test2": "lorem"}, `{"test1":123,"test2":"lorem"}`},
-		{types.JsonMap{"test": []int{1, 2, 3}}, `{"test":[1,2,3]}`},
+		{types.JSONMap[any]{}, `{}`},
+		{types.JSONMap[any]{"test1": 123, "test2": "lorem"}, `{"test1":123,"test2":"lorem"}`},
+		{types.JSONMap[any]{"test": []int{1, 2, 3}}, `{"test":[1,2,3]}`},
 	}
 
 	for i, s := range scenarios {
-		result, err := s.json.Value()
-		if err != nil {
-			t.Errorf("(%d) %v", i, err)
-			continue
-		}
-		if result != s.expected {
-			t.Errorf("(%d) Expected %s, got %v", i, s.expected, result)
-		}
+		t.Run(fmt.Sprintf("%d_%#v", i, s.expected), func(t *testing.T) {
+			result, err := s.json.Value()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if result != s.expected {
+				t.Fatalf("Expected %s, got %#v", s.expected, result)
+			}
+		})
 	}
 }
 
-func TestJsonArrayMapScan(t *testing.T) {
+func TestJSONArrayMapScan(t *testing.T) {
 	scenarios := []struct {
 		value       any
 		expectError bool
-		expectJson  string
+		expectJSON  string
 	}{
 		{``, false, `{}`},
 		{nil, false, `{}`},
@@ -114,19 +145,20 @@ func TestJsonArrayMapScan(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		arr := types.JsonMap{}
-		scanErr := arr.Scan(s.value)
+		t.Run(fmt.Sprintf("%d_%#v", i, s.value), func(t *testing.T) {
+			arr := types.JSONMap[any]{}
+			scanErr := arr.Scan(s.value)
 
-		hasErr := scanErr != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected %v, got %v (%v)", i, s.expectError, hasErr, scanErr)
-			continue
-		}
+			hasErr := scanErr != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected %v, got %v (%v)", s.expectError, hasErr, scanErr)
+			}
 
-		result, _ := arr.MarshalJSON()
+			result, _ := arr.MarshalJSON()
 
-		if string(result) != s.expectJson {
-			t.Errorf("(%d) Expected %s, got %v", i, s.expectJson, string(result))
-		}
+			if string(result) != s.expectJSON {
+				t.Fatalf("Expected %s, got %s", s.expectJSON, result)
+			}
+		})
 	}
 }

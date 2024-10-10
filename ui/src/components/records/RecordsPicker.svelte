@@ -28,9 +28,9 @@
     let isLoadingList = false;
     let isLoadingSelected = false;
 
-    $: maxSelect = field?.options?.maxSelect || null;
+    $: maxSelect = field?.maxSelect || null;
 
-    $: collectionId = field?.options?.collectionId;
+    $: collectionId = field?.collectionId;
 
     $: collection = $collections.find((c) => c.id == collectionId) || null;
 
@@ -44,7 +44,7 @@
 
     $: canLoadMore = lastItemsCount == batchSize;
 
-    $: canSelectMore = maxSelect === null || maxSelect > selected.length;
+    $: canSelectMore = maxSelect <= 0 || maxSelect > selected.length;
 
     export function show() {
         filter = "";
@@ -58,6 +58,25 @@
 
     export function hide() {
         return pickerPanel?.hide();
+    }
+
+    function getExpand() {
+        let expand = "";
+
+        const presentableRelFields = collection?.fields?.filter(
+            (f) => !f.hidden && f.presentable && f.type == "relation",
+        );
+        for (const field of presentableRelFields) {
+            const expandItem = CommonHelper.getExpandPresentableRelField(field, $collections, 2);
+            if (expandItem) {
+                if (expand != "") {
+                    expand += ",";
+                }
+                expand += expandItem;
+            }
+        }
+
+        return expand;
     }
 
     async function loadSelected() {
@@ -85,6 +104,7 @@
                     batch: batchSize,
                     filter: filters.join("||"),
                     fields: "*:excerpt(200)",
+                    expand: getExpand(),
                     requestKey: null,
                 }),
             );
@@ -144,6 +164,7 @@
                 sort: !isView ? "-created" : "",
                 fields: "*:excerpt(200)",
                 skipTotal: 1,
+                expand: getExpand(),
                 requestKey: uniqueId + "loadList",
             });
 

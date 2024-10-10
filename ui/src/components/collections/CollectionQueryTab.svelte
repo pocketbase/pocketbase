@@ -1,36 +1,36 @@
 <script>
-    import { onMount } from "svelte";
+    import Field from "@/components/base/Field.svelte";
     import { errors, removeError } from "@/stores/errors";
     import CommonHelper from "@/utils/CommonHelper";
-    import Field from "@/components/base/Field.svelte";
+    import { onMount } from "svelte";
 
     export let collection;
 
     let codeEditorComponent;
     let isCodeEditorComponentLoading = false;
-    let schemaErrors = [];
+    let fieldsErrors = [];
 
-    $: checkSchemaErrors($errors);
+    $: checkFieldsErrors($errors);
 
-    function checkSchemaErrors(errs) {
-        schemaErrors = [];
+    function checkFieldsErrors(errs) {
+        fieldsErrors = [];
 
-        const raw = CommonHelper.getNestedVal(errs, "schema", null);
+        const raw = CommonHelper.getNestedVal(errs, "fields", null);
 
         if (CommonHelper.isEmpty(raw)) {
             return;
         }
 
-        // generic schema error
+        // generic fields list error
         // ---
         if (raw?.message) {
-            schemaErrors.push(raw?.message);
+            fieldsErrors.push(raw?.message);
             return;
         }
 
-        // schema fields error
+        // individual field error
         // ---
-        const columns = CommonHelper.extractColumnsFromQuery(collection?.options?.query);
+        const columns = CommonHelper.extractColumnsFromQuery(collection?.viewQuery);
         // remove base system fields
         CommonHelper.removeByValue(columns, "id");
         CommonHelper.removeByValue(columns, "created");
@@ -41,7 +41,7 @@
                 const message = raw[idx][key].message;
                 const fieldName = columns[idx] || idx;
 
-                schemaErrors.push(CommonHelper.sentenize(fieldName + ": " + message));
+                fieldsErrors.push(CommonHelper.sentenize(fieldName + ": " + message));
             }
         }
     }
@@ -59,7 +59,7 @@
     });
 </script>
 
-<Field class="form-field required {schemaErrors.length ? 'error' : ''}" name="options.query" let:uniqueId>
+<Field class="form-field required {fieldsErrors.length ? 'error' : ''}" name="viewQuery" let:uniqueId>
     <label for={uniqueId}>
         <span class="txt">Select query</span>
     </label>
@@ -74,11 +74,11 @@
             language="sql-select"
             minHeight="150"
             on:change={() => {
-                if (schemaErrors.length) {
-                    removeError("schema");
+                if (fieldsErrors.length) {
+                    removeError("fields");
                 }
             }}
-            bind:value={collection.options.query}
+            bind:value={collection.viewQuery}
         />
     {/if}
 
@@ -92,16 +92,20 @@
                 <code>(ROW_NUMBER() OVER()) as id</code>.
             </li>
             <li>
-                Expressions must be aliased with a valid formatted field name (eg.
-                <code>MAX(balance) as maxBalance</code>).
+                Expressions must be aliased with a valid formatted field name, e.g.
+                <code>MAX(balance) as maxBalance</code>.
+            </li>
+            <li>
+                Combined/multi-spaced expressions must be wrapped in parenthesis, e.g.
+                <code>(MAX(balance) + 1) as maxBalance</code>.
             </li>
         </ul>
     </div>
 
-    {#if schemaErrors.length}
+    {#if fieldsErrors.length}
         <div class="help-block help-block-error">
             <div class="content">
-                {#each schemaErrors as err}
+                {#each fieldsErrors as err}
                     <p>{err}</p>
                 {/each}
             </div>

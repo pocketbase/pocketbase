@@ -1,15 +1,15 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
-    import ApiClient from "@/utils/ApiClient";
     import tooltip from "@/actions/tooltip";
-    import { collections } from "@/stores/collections";
-    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
-    import Searchbar from "@/components/base/Searchbar.svelte";
     import Field from "@/components/base/Field.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
+    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import Scroller from "@/components/base/Scroller.svelte";
+    import Searchbar from "@/components/base/Searchbar.svelte";
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
+    import { collections } from "@/stores/collections";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
     const uniqueId = "file_picker_" + CommonHelper.randomString(5);
@@ -37,15 +37,14 @@
     $: fileCollections = $collections.filter((c) => {
         return (
             c.type !== "view" &&
-            !!CommonHelper.toArray(c.schema).find((f) => {
+            !!CommonHelper.toArray(c.fields).find((f) => {
                 return (
                     // is file field
                     f.type === "file" &&
                     // is public (aka. doesn't require file token)
-                    !f.options?.protected &&
+                    !f.protected &&
                     // allow any MIME type OR image/*
-                    (!f.options?.mimeTypes?.length ||
-                        !!f.options?.mimeTypes?.find((t) => t.startsWith("image/")))
+                    (!f.mimeTypes?.length || !!f.mimeTypes?.find((t) => t.startsWith("image/")))
                 );
             })
         );
@@ -56,7 +55,7 @@
         selectedCollection = fileCollections[0];
     }
 
-    $: fileFields = selectedCollection?.schema?.filter((f) => f.type === "file" && !f.options?.protected);
+    $: fileFields = selectedCollection?.fields?.filter((f) => f.type === "file" && !f.protected);
 
     // reset filter on collection change
     $: if (selectedCollection?.id) {
@@ -149,13 +148,13 @@
     }
 
     function refreshSizeOptions() {
-        let sizes = ["100x100"]; // default Admin UI thumb
+        let sizes = ["100x100"]; // default Superuser UI thumb
 
         // extract the thumb sizes of the selected file field
         if (selectedFile?.record?.id) {
             for (const field of fileFields) {
                 if (CommonHelper.toArray(selectedFile.record[field.name]).includes(selectedFile.name)) {
-                    sizes = sizes.concat(CommonHelper.toArray(field.options?.thumbs));
+                    sizes = sizes.concat(CommonHelper.toArray(field.thumbs));
                     break;
                 }
             }
@@ -206,8 +205,8 @@
                 {
                     size: selectedSize,
                 },
-                selectedFile
-            )
+                selectedFile,
+            ),
         );
 
         hide();
@@ -279,7 +278,7 @@
                                     {#if CommonHelper.hasImageExtension(name)}
                                         <img
                                             loading="lazy"
-                                            src={ApiClient.files.getUrl(record, name, { thumb: "100x100" })}
+                                            src={ApiClient.files.getURL(record, name, { thumb: "100x100" })}
                                             alt={name}
                                         />
                                     {:else}

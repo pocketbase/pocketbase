@@ -88,7 +88,7 @@
                 the backup and will restart the application process.
             </p>
             <p>
-                This means that on success all of your data (including app settings, users, admins, etc.) will
+                This means that on success all of your data (including app settings, users, superusers, etc.) will
                 be replaced with the ones from the backup.
             </p>
             <p>

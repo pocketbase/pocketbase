@@ -1,10 +1,10 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
+    import providersList from "@/providers.js";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
-    import providersList from "@/providers.js";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -31,7 +31,12 @@
         isLoading = true;
 
         try {
-            externalAuths = await ApiClient.collection(record.collectionId).listExternalAuths(record.id);
+            externalAuths = await ApiClient.collection("_externalAuths").getFullList({
+                filter: ApiClient.filter("collectionRef = {:collectionId} && recordRef = {:recordId}", {
+                    collectionId: record.collectionId,
+                    recordId: record.id,
+                }),
+            });
         } catch (err) {
             ApiClient.error(err);
         }
@@ -39,23 +44,28 @@
         isLoading = false;
     }
 
-    function unlinkExternalAuth(provider) {
-        if (!record?.id || !provider) {
+    function unlinkExternalAuth(externalAuth) {
+        if (!record?.id || !externalAuth) {
             return; // nothing to unlink
         }
 
-        confirm(`Do you really want to unlink the ${getProviderTitle(provider)} provider?`, () => {
-            return ApiClient.collection(record.collectionId)
-                .unlinkExternalAuth(record.id, provider)
-                .then(() => {
-                    addSuccessToast(`Successfully unlinked the ${getProviderTitle(provider)} provider.`);
-                    dispatch("unlink", provider);
-                    loadExternalAuths(); // reload list
-                })
-                .catch((err) => {
-                    ApiClient.error(err);
-                });
-        });
+        confirm(
+            `Do you really want to unlink the ${getProviderTitle(externalAuth.provider)} provider?`,
+            () => {
+                return ApiClient.collection("_externalAuths")
+                    .delete(externalAuth.id)
+                    .then(() => {
+                        addSuccessToast(
+                            `Successfully unlinked the ${getProviderTitle(externalAuth.provider)} provider.`,
+                        );
+                        dispatch("unlink", externalAuth.provider);
+                        loadExternalAuths(); // reload list
+                    })
+                    .catch((err) => {
+                        ApiClient.error(err);
+                    });
+            },
+        );
     }
 
     loadExternalAuths();
@@ -80,7 +90,7 @@
                 <button
                     type="button"
                     class="btn btn-transparent link-hint btn-circle btn-sm m-l-auto"
-                    on:click={() => unlinkExternalAuth(auth.provider)}
+                    on:click={() => unlinkExternalAuth(auth)}
                 >
                     <i class="ri-close-line" />
                 </button>

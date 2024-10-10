@@ -3,6 +3,7 @@ package archive
 import (
 	"archive/zip"
 	"compress/flate"
+	"errors"
 	"io"
 	"io/fs"
 	"os"
@@ -23,24 +24,21 @@ func Create(src string, dest string, skipPaths ...string) error {
 	if err != nil {
 		return err
 	}
-	defer zf.Close()
 
 	zw := zip.NewWriter(zf)
-	defer zw.Close()
 
 	// register a custom Deflate compressor
 	zw.RegisterCompressor(zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
 		return flate.NewWriter(out, flate.BestSpeed)
 	})
 
-	if err := zipAddFS(zw, os.DirFS(src), skipPaths...); err != nil {
+	err = zipAddFS(zw, os.DirFS(src), skipPaths...)
+	if err != nil {
 		// try to cleanup at least the created zip file
-		os.Remove(dest)
-
-		return err
+		return errors.Join(err, zw.Close(), zf.Close(), os.Remove(dest))
 	}
 
-	return nil
+	return errors.Join(zw.Close(), zf.Close())
 }
 
 // note remove after similar method is added in the std lib (https://github.com/golang/go/issues/54898)

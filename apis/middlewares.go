@@ -3,303 +3,321 @@ package apis
 import (
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
-	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tokens"
+	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/router"
 	"github.com/pocketbase/pocketbase/tools/routine"
-	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
 )
 
-// Common request context keys used by the middlewares and api handlers.
+// Common request event store keys used by the middlewares and api handlers.
 const (
-	ContextAdminKey      string = "admin"
-	ContextAuthRecordKey string = "authRecord"
-	ContextCollectionKey string = "collection"
-	ContextExecStartKey  string = "execStart"
+	RequestEventKeyLogMeta = "pbLogMeta" // extra data to store with the request activity log
+
+	requestEventKeyExecStart              = "__execStart"                 // the value must be time.Time
+	requestEventKeySkipSuccessActivityLog = "__skipSuccessActivityLogger" // the value must be bool
+)
+
+const (
+	DefaultWWWRedirectMiddlewarePriority = -99999
+	DefaultWWWRedirectMiddlewareId       = "pbWWWRedirect"
+
+	DefaultActivityLoggerMiddlewarePriority   = DefaultRateLimitMiddlewarePriority - 30
+	DefaultActivityLoggerMiddlewareId         = "pbActivityLogger"
+	DefaultSkipSuccessActivityLogMiddlewareId = "pbSkipSuccessActivityLog"
+	DefaultEnableAuthIdActivityLog            = "pbEnableAuthIdActivityLog"
+
+	DefaultLoadAuthTokenMiddlewarePriority = DefaultRateLimitMiddlewarePriority - 20
+	DefaultLoadAuthTokenMiddlewareId       = "pbLoadAuthToken"
+
+	DefaultSecurityHeadersMiddlewarePriority = DefaultRateLimitMiddlewarePriority - 10
+	DefaultSecurityHeadersMiddlewareId       = "pbSecurityHeaders"
+
+	DefaultRequireGuestOnlyMiddlewareId                 = "pbRequireGuestOnly"
+	DefaultRequireAuthMiddlewareId                      = "pbRequireAuth"
+	DefaultRequireSuperuserAuthMiddlewareId             = "pbRequireSuperuserAuth"
+	DefaultRequireSuperuserAuthOnlyIfAnyMiddlewareId    = "pbRequireSuperuserAuthOnlyIfAny"
+	DefaultRequireSuperuserOrOwnerAuthMiddlewareId      = "pbRequireSuperuserOrOwnerAuth"
+	DefaultRequireSameCollectionContextAuthMiddlewareId = "pbRequireSameCollectionContextAuth"
 )
 
 // RequireGuestOnly middleware requires a request to NOT have a valid
 // Authorization header.
 //
-// This middleware is the opposite of [apis.RequireAdminOrRecordAuth()].
-func RequireGuestOnly() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			err := NewBadRequestError("The request can be accessed only by guests.", nil)
-
-			record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
-			if record != nil {
-				return err
+// This middleware is the opposite of [apis.RequireAuth()].
+func RequireGuestOnly() *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id: DefaultRequireGuestOnlyMiddlewareId,
+		Func: func(e *core.RequestEvent) error {
+			if e.Auth != nil {
+				return router.NewBadRequestError("The request can be accessed only by guests.", nil)
 			}
 
-			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-			if admin != nil {
-				return err
-			}
-
-			return next(c)
-		}
+			return e.Next()
+		},
 	}
 }
 
-// RequireRecordAuth middleware requires a request to have
-// a valid record auth Authorization header.
+// RequireAuth middleware requires a request to have a valid record Authorization header.
 //
 // The auth record could be from any collection.
-//
-// You can further filter the allowed record auth collections by
-// specifying their names.
+// You can further filter the allowed record auth collections by specifying their names.
 //
 // Example:
 //
-//	apis.RequireRecordAuth()
-//
-// Or:
-//
-//	apis.RequireRecordAuth("users", "supervisors")
-//
-// To restrict the auth record only to the loaded context collection,
-// use [apis.RequireSameContextRecordAuth()] instead.
-func RequireRecordAuth(optCollectionNames ...string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
-			if record == nil {
-				return NewUnauthorizedError("The request requires valid record authorization token to be set.", nil)
-			}
-
-			// check record collection name
-			if len(optCollectionNames) > 0 && !list.ExistInSlice(record.Collection().Name, optCollectionNames) {
-				return NewForbiddenError("The authorized record model is not allowed to perform this action.", nil)
-			}
-
-			return next(c)
-		}
+//	apis.RequireAuth()                      // any auth collection
+//	apis.RequireAuth("_superusers", "users") // only the listed auth collections
+func RequireAuth(optCollectionNames ...string) *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id:   DefaultRequireAuthMiddlewareId,
+		Func: requireAuth(optCollectionNames...),
 	}
 }
 
-// RequireSameContextRecordAuth middleware requires a request to have
-// a valid record Authorization header.
-//
-// The auth record must be from the same collection already loaded in the context.
-func RequireSameContextRecordAuth() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
-			if record == nil {
-				return NewUnauthorizedError("The request requires valid record authorization token to be set.", nil)
-			}
-
-			collection, _ := c.Get(ContextCollectionKey).(*models.Collection)
-			if collection == nil || record.Collection().Id != collection.Id {
-				return NewForbiddenError(fmt.Sprintf("The request requires auth record from %s collection.", record.Collection().Name), nil)
-			}
-
-			return next(c)
+func requireAuth(optCollectionNames ...string) func(*core.RequestEvent) error {
+	return func(e *core.RequestEvent) error {
+		if e.Auth == nil {
+			return e.UnauthorizedError("The request requires valid record authorization token.", nil)
 		}
+
+		// check record collection name
+		if len(optCollectionNames) > 0 && !slices.Contains(optCollectionNames, e.Auth.Collection().Name) {
+			return e.ForbiddenError("The authorized record is not allowed to perform this action.", nil)
+		}
+
+		return e.Next()
 	}
 }
 
-// RequireAdminAuth middleware requires a request to have
-// a valid admin Authorization header.
-func RequireAdminAuth() echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-			if admin == nil {
-				return NewUnauthorizedError("The request requires valid admin authorization token to be set.", nil)
-			}
-
-			return next(c)
-		}
+// RequireSuperuserAuth middleware requires a request to have
+// a valid superuser Authorization header.
+func RequireSuperuserAuth() *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id:   DefaultRequireSuperuserAuthMiddlewareId,
+		Func: requireAuth(core.CollectionNameSuperusers),
 	}
 }
 
-// RequireAdminAuthOnlyIfAny middleware requires a request to have
-// a valid admin Authorization header ONLY if the application has
-// at least 1 existing Admin model.
-func RequireAdminAuthOnlyIfAny(app core.App) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-			if admin != nil {
-				return next(c)
+// RequireSuperuserAuthOnlyIfAny middleware requires a request to have
+// a valid superuser Authorization header ONLY if the application has
+// at least 1 existing superuser.
+func RequireSuperuserAuthOnlyIfAny() *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id: DefaultRequireSuperuserAuthOnlyIfAnyMiddlewareId,
+		Func: func(e *core.RequestEvent) error {
+			if e.HasSuperuserAuth() {
+				return e.Next()
 			}
 
-			totalAdmins, err := app.Dao().TotalAdmins()
+			totalSuperusers, err := e.App.CountRecords(core.CollectionNameSuperusers)
 			if err != nil {
-				return NewBadRequestError("Failed to fetch admins info.", err)
+				return e.InternalServerError("Failed to fetch superusers info.", err)
 			}
 
-			if totalAdmins == 0 {
-				return next(c)
+			if totalSuperusers == 0 {
+				return e.Next()
 			}
 
-			return NewUnauthorizedError("The request requires valid admin authorization token to be set.", nil)
-		}
+			return requireAuth(core.CollectionNameSuperusers)(e)
+		},
 	}
 }
 
-// RequireAdminOrRecordAuth middleware requires a request to have
-// a valid admin or record Authorization header set.
+// RequireSuperuserOrOwnerAuth middleware requires a request to have
+// a valid superuser or regular record owner Authorization header set.
 //
-// You can further filter the allowed auth record collections by providing their names.
-//
-// This middleware is the opposite of [apis.RequireGuestOnly()].
-func RequireAdminOrRecordAuth(optCollectionNames ...string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-			record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
-
-			if admin == nil && record == nil {
-				return NewUnauthorizedError("The request requires admin or record authorization token to be set.", nil)
-			}
-
-			if record != nil && len(optCollectionNames) > 0 && !list.ExistInSlice(record.Collection().Name, optCollectionNames) {
-				return NewForbiddenError("The authorized record model is not allowed to perform this action.", nil)
-			}
-
-			return next(c)
-		}
-	}
-}
-
-// RequireAdminOrOwnerAuth middleware requires a request to have
-// a valid admin or auth record owner Authorization header set.
-//
-// This middleware is similar to [apis.RequireAdminOrRecordAuth()] but
+// This middleware is similar to [apis.RequireAuth()] but
 // for the auth record token expects to have the same id as the path
-// parameter ownerIdParam (default to "id" if empty).
-func RequireAdminOrOwnerAuth(ownerIdParam string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			admin, _ := c.Get(ContextAdminKey).(*models.Admin)
-			if admin != nil {
-				return next(c)
+// parameter ownerIdPathParam (default to "id" if empty).
+func RequireSuperuserOrOwnerAuth(ownerIdPathParam string) *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id: DefaultRequireSuperuserOrOwnerAuthMiddlewareId,
+		Func: func(e *core.RequestEvent) error {
+			if e.Auth == nil {
+				return e.UnauthorizedError("The request requires superuser or record authorization token.", nil)
 			}
 
-			record, _ := c.Get(ContextAuthRecordKey).(*models.Record)
-			if record == nil {
-				return NewUnauthorizedError("The request requires admin or record authorization token to be set.", nil)
+			if e.Auth.IsSuperuser() {
+				return e.Next()
 			}
 
-			if ownerIdParam == "" {
-				ownerIdParam = "id"
+			if ownerIdPathParam == "" {
+				ownerIdPathParam = "id"
 			}
-			ownerId := c.PathParam(ownerIdParam)
+			ownerId := e.Request.PathValue(ownerIdPathParam)
 
-			// note: it is "safe" to compare only the record id since the auth
-			// record ids are treated as unique across all auth collections
-			if record.Id != ownerId {
-				return NewForbiddenError("You are not allowed to perform this request.", nil)
+			// note: it is considered "safe" to compare only the record id
+			// since the auth record ids are treated as unique across all auth collections
+			if e.Auth.Id != ownerId {
+				return e.ForbiddenError("You are not allowed to perform this request.", nil)
 			}
 
-			return next(c)
-		}
+			return e.Next()
+		},
 	}
 }
 
-// LoadAuthContext middleware reads the Authorization request header
-// and loads the token related record or admin instance into the
-// request's context.
+// RequireSameCollectionContextAuth middleware requires a request to have
+// a valid record Authorization header and the auth record's collection to
+// match the one from the route path parameter (default to "collection" if collectionParam is empty).
+func RequireSameCollectionContextAuth(collectionPathParam string) *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id: DefaultRequireSameCollectionContextAuthMiddlewareId,
+		Func: func(e *core.RequestEvent) error {
+			if e.Auth == nil {
+				return e.UnauthorizedError("The request requires valid record authorization token.", nil)
+			}
+
+			if collectionPathParam == "" {
+				collectionPathParam = "collection"
+			}
+
+			collection, _ := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue(collectionPathParam))
+			if collection == nil || e.Auth.Collection().Id != collection.Id {
+				return e.ForbiddenError(fmt.Sprintf("The request requires auth record from %s collection.", e.Auth.Collection().Name), nil)
+			}
+
+			return e.Next()
+		},
+	}
+}
+
+// loadAuthToken attempts to load the auth context based on the "Authorization: TOKEN" header value.
 //
-// This middleware is expected to be already registered by default for all routes.
-func LoadAuthContext(app core.App) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			token := c.Request().Header.Get("Authorization")
+// This middleware does nothing in case of missing, invalid or expired token.
+//
+// This middleware is registered by default for all routes.
+//
+// Note: We don't throw an error on invalid or expired token to allow
+// users to extend with their own custom handling in external middleware(s).
+func loadAuthToken() *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id:       DefaultLoadAuthTokenMiddlewareId,
+		Priority: DefaultLoadAuthTokenMiddlewarePriority,
+		Func: func(e *core.RequestEvent) error {
+			token := getAuthTokenFromRequest(e)
 			if token == "" {
-				return next(c)
+				return e.Next()
 			}
 
-			// the schema is not required and it is only for
-			// compatibility with the defaults of some HTTP clients
-			token = strings.TrimPrefix(token, "Bearer ")
-
-			claims, _ := security.ParseUnverifiedJWT(token)
-			tokenType := cast.ToString(claims["type"])
-
-			switch tokenType {
-			case tokens.TypeAdmin:
-				admin, err := app.Dao().FindAdminByToken(
-					token,
-					app.Settings().AdminAuthToken.Secret,
-				)
-				if err == nil && admin != nil {
-					c.Set(ContextAdminKey, admin)
-				}
-			case tokens.TypeAuthRecord:
-				record, err := app.Dao().FindAuthRecordByToken(
-					token,
-					app.Settings().RecordAuthToken.Secret,
-				)
-				if err == nil && record != nil {
-					c.Set(ContextAuthRecordKey, record)
-				}
+			record, err := e.App.FindAuthRecordByToken(token, core.TokenTypeAuth)
+			if err != nil {
+				e.App.Logger().Debug("loadAuthToken failure", "error", err)
+			} else if record != nil {
+				e.Auth = record
 			}
 
-			return next(c)
-		}
+			return e.Next()
+		},
 	}
 }
 
-// LoadCollectionContext middleware finds the collection with related
-// path identifier and loads it into the request context.
+func getAuthTokenFromRequest(e *core.RequestEvent) string {
+	token := e.Request.Header.Get("Authorization")
+	if token != "" {
+		// the schema prefix is not required and it is only for
+		// compatibility with the defaults of some HTTP clients
+		token = strings.TrimPrefix(token, "Bearer ")
+	}
+	return token
+}
+
+// wwwRedirect performs www->non-www redirect(s) if the request host
+// matches with one of the values in redirectHosts.
 //
-// Set optCollectionTypes to further filter the found collection by its type.
-func LoadCollectionContext(app core.App, optCollectionTypes ...string) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			if param := c.PathParam("collection"); param != "" {
-				collection, err := core.FindCachedCollectionByNameOrId(app, param)
-				if err != nil || collection == nil {
-					return NewNotFoundError("", err)
-				}
+// This middleware is registered by default on Serve for all routes.
+func wwwRedirect(redirectHosts []string) *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id:       DefaultWWWRedirectMiddlewareId,
+		Priority: DefaultWWWRedirectMiddlewarePriority,
+		Func: func(e *core.RequestEvent) error {
+			host := e.Request.Host
 
-				if len(optCollectionTypes) > 0 && !list.ExistInSlice(collection.Type, optCollectionTypes) {
-					return NewBadRequestError("Unsupported collection type.", nil)
-				}
-
-				c.Set(ContextCollectionKey, collection)
+			if strings.HasPrefix(host, "www.") && list.ExistInSlice(host, redirectHosts) {
+				return e.Redirect(
+					http.StatusTemporaryRedirect,
+					(e.Request.URL.Scheme + "://" + host[4:] + e.Request.RequestURI),
+				)
 			}
 
-			return next(c)
-		}
+			return e.Next()
+		},
 	}
 }
 
-// ActivityLogger middleware takes care to save the request information
+// securityHeaders middleware adds common security headers to the response.
+//
+// This middleware is registered by default for all routes.
+func securityHeaders() *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id:       DefaultSecurityHeadersMiddlewareId,
+		Priority: DefaultSecurityHeadersMiddlewarePriority,
+		Func: func(e *core.RequestEvent) error {
+			e.Response.Header().Set("X-XSS-Protection", "1; mode=block")
+			e.Response.Header().Set("X-Content-Type-Options", "nosniff")
+			e.Response.Header().Set("X-Frame-Options", "SAMEORIGIN")
+
+			// @todo consider a default HSTS?
+			// (see also https://webkit.org/blog/8146/protecting-against-hsts-abuse/)
+
+			return e.Next()
+		},
+	}
+}
+
+// SkipSuccessActivityLog is a helper middleware that instructs the global
+// activity logger to log only requests that have failed/returned an error.
+func SkipSuccessActivityLog() *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id: DefaultSkipSuccessActivityLogMiddlewareId,
+		Func: func(e *core.RequestEvent) error {
+			e.Set(requestEventKeySkipSuccessActivityLog, true)
+			return e.Next()
+		},
+	}
+}
+
+// activityLogger middleware takes care to save the request information
 // into the logs database.
+//
+// This middleware is registered by default for all routes.
 //
 // The middleware does nothing if the app logs retention period is zero
 // (aka. app.Settings().Logs.MaxDays = 0).
-func ActivityLogger(app core.App) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			if err := next(c); err != nil {
-				return err
-			}
+//
+// Users can attach the [apis.SkipSuccessActivityLog()] middleware if
+// you want to log only the failed requests.
+func activityLogger() *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id:       DefaultActivityLoggerMiddlewareId,
+		Priority: DefaultActivityLoggerMiddlewarePriority,
+		Func: func(e *core.RequestEvent) error {
+			e.Set(requestEventKeyExecStart, time.Now())
 
-			logRequest(app, c, nil)
+			err := e.Next()
 
-			return nil
-		}
+			logRequest(e, err)
+
+			return err
+		},
 	}
 }
 
-func logRequest(app core.App, c echo.Context, err *ApiError) {
+func logRequest(event *core.RequestEvent, err error) {
 	// no logs retention
-	if app.Settings().Logs.MaxDays == 0 {
+	if event.App.Settings().Logs.MaxDays == 0 {
+		return
+	}
+
+	// the non-error route has explicitly disabled the activity logger
+	if err == nil && event.Get(requestEventKeySkipSuccessActivityLog) != nil {
 		return
 	}
 
@@ -307,32 +325,31 @@ func logRequest(app core.App, c echo.Context, err *ApiError) {
 
 	attrs = append(attrs, slog.String("type", "request"))
 
-	started := cast.ToTime(c.Get(ContextExecStartKey))
+	started := cast.ToTime(event.Get(requestEventKeyExecStart))
 	if !started.IsZero() {
 		attrs = append(attrs, slog.Float64("execTime", float64(time.Since(started))/float64(time.Millisecond)))
 	}
 
-	httpRequest := c.Request()
-	httpResponse := c.Response()
-	method := strings.ToUpper(httpRequest.Method)
-	status := httpResponse.Status
-	requestUri := httpRequest.URL.RequestURI()
+	if meta := event.Get(RequestEventKeyLogMeta); meta != nil {
+		attrs = append(attrs, slog.Any("meta", meta))
+	}
+
+	status := event.Status()
+	method := cutStr(strings.ToUpper(event.Request.Method), 50)
+	requestUri := cutStr(event.Request.URL.RequestURI(), 3000)
 
 	// parse the request error
 	if err != nil {
-		status = err.Code
-		attrs = append(
-			attrs,
-			slog.String("error", err.Message),
-			slog.Any("details", err.RawData()),
-		)
-	}
-
-	requestAuth := models.RequestAuthGuest
-	if c.Get(ContextAuthRecordKey) != nil {
-		requestAuth = models.RequestAuthRecord
-	} else if c.Get(ContextAdminKey) != nil {
-		requestAuth = models.RequestAuthAdmin
+		if apiErr, ok := err.(*router.ApiError); ok {
+			status = apiErr.Status
+			attrs = append(
+				attrs,
+				slog.String("error", apiErr.Message),
+				slog.Any("details", apiErr.RawData()),
+			)
+		} else {
+			attrs = append(attrs, slog.String("error", err.Error()))
+		}
 	}
 
 	attrs = append(
@@ -340,17 +357,33 @@ func logRequest(app core.App, c echo.Context, err *ApiError) {
 		slog.String("url", requestUri),
 		slog.String("method", method),
 		slog.Int("status", status),
-		slog.String("auth", requestAuth),
-		slog.String("referer", httpRequest.Referer()),
-		slog.String("userAgent", httpRequest.UserAgent()),
+		slog.String("referer", cutStr(event.Request.Referer(), 2000)),
+		slog.String("userAgent", cutStr(event.Request.UserAgent(), 2000)),
 	)
 
-	if app.Settings().Logs.LogIp {
-		ip, _, _ := net.SplitHostPort(httpRequest.RemoteAddr)
+	if event.Auth != nil {
+		attrs = append(attrs, slog.String("auth", event.Auth.Collection().Name))
+
+		if event.App.Settings().Logs.LogAuthId {
+			attrs = append(attrs, slog.String("authId", event.Auth.Id))
+		}
+	} else {
+		attrs = append(attrs, slog.String("auth", ""))
+	}
+
+	if event.App.Settings().Logs.LogIP {
+		var userIP string
+		if len(event.App.Settings().TrustedProxy.Headers) > 0 {
+			userIP = event.RealIP()
+		} else {
+			// fallback to the legacy behavior (it is "safe" since it is only for log purposes)
+			userIP = cutStr(event.UnsafeRealIP(), 50)
+		}
+
 		attrs = append(
 			attrs,
-			slog.String("userIp", realUserIp(httpRequest, ip)),
-			slog.String("remoteIp", ip),
+			slog.String("userIP", userIP),
+			slog.String("remoteIP", event.RemoteIP()),
 		)
 	}
 
@@ -358,64 +391,23 @@ func logRequest(app core.App, c echo.Context, err *ApiError) {
 	routine.FireAndForget(func() {
 		message := method + " "
 
-		if escaped, err := url.PathUnescape(requestUri); err == nil {
+		if escaped, unescapeErr := url.PathUnescape(requestUri); unescapeErr == nil {
 			message += escaped
 		} else {
 			message += requestUri
 		}
 
 		if err != nil {
-			app.Logger().Error(message, attrs...)
+			event.App.Logger().Error(message, attrs...)
 		} else {
-			app.Logger().Info(message, attrs...)
+			event.App.Logger().Info(message, attrs...)
 		}
 	})
 }
 
-// Returns the "real" user IP from common proxy headers (or fallbackIp if none is found).
-//
-// The returned IP value shouldn't be trusted if not behind a trusted reverse proxy!
-func realUserIp(r *http.Request, fallbackIp string) string {
-	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
-		return ip
+func cutStr(str string, max int) string {
+	if len(str) > max {
+		return str[:max] + "..."
 	}
-
-	if ip := r.Header.Get("Fly-Client-IP"); ip != "" {
-		return ip
-	}
-
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
-	}
-
-	if ipsList := r.Header.Get("X-Forwarded-For"); ipsList != "" {
-		// extract the first non-empty leftmost-ish ip
-		ips := strings.Split(ipsList, ",")
-		for _, ip := range ips {
-			ip = strings.TrimSpace(ip)
-			if ip != "" {
-				return ip
-			}
-		}
-	}
-
-	return fallbackIp
-}
-
-// @todo consider removing as this may no longer be needed due to the custom rest.MultiBinder.
-//
-// eagerRequestInfoCache ensures that the request data is cached in the request
-// context to allow reading for example the json request body data more than once.
-func eagerRequestInfoCache(app core.App) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			switch c.Request().Method {
-			// currently we are eagerly caching only the requests with body
-			case "POST", "PUT", "PATCH", "DELETE":
-				RequestInfo(c)
-			}
-
-			return next(c)
-		}
-	}
+	return str
 }

@@ -1,8 +1,8 @@
 <script>
-    import { link } from "svelte-spa-router";
-    import active from "svelte-spa-router/active";
     import PageSidebar from "@/components/base/PageSidebar.svelte";
     import { hideControls } from "@/stores/app";
+    import { link } from "svelte-spa-router";
+    import active from "svelte-spa-router/active";
 </script>
 
 <PageSidebar class="settings-sidebar">
@@ -63,34 +63,5 @@
                 <span class="txt">Import collections</span>
             </a>
         {/if}
-
-        <div class="sidebar-title">Authentication</div>
-        <a
-            href="/settings/auth-providers"
-            class="sidebar-list-item"
-            use:active={{ path: "/settings/auth-providers/?.*" }}
-            use:link
-        >
-            <i class="ri-lock-password-line" aria-hidden="true" />
-            <span class="txt">Auth providers</span>
-        </a>
-        <a
-            href="/settings/tokens"
-            class="sidebar-list-item"
-            use:active={{ path: "/settings/tokens/?.*" }}
-            use:link
-        >
-            <i class="ri-key-line" aria-hidden="true" />
-            <span class="txt">Token options</span>
-        </a>
-        <a
-            href="/settings/admins"
-            class="sidebar-list-item"
-            use:active={{ path: "/settings/admins/?.*" }}
-            use:link
-        >
-            <i class="ri-shield-user-line" aria-hidden="true" />
-            <span class="txt">Admins</span>
-        </a>
     </div>
 </PageSidebar>

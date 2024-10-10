@@ -19,14 +19,20 @@
 
     let testTimeoutId = null;
     let testDebounceId = null;
+    let maskSecret = false;
 
     $: if (originalConfig?.enabled) {
+        refreshMaskSecret();
         testConnectionWithDebounce(100);
     }
 
     // clear s3 errors on disable
     $: if (!config.enabled) {
         removeError(configKey);
+    }
+
+    function refreshMaskSecret() {
+        maskSecret = !!originalConfig?.accessKey;
     }
 
     function testConnectionWithDebounce(timeout) {
@@ -119,7 +125,12 @@
         <div class="col-lg-6">
             <Field class="form-field required" name="{configKey}.secret" let:uniqueId>
                 <label for={uniqueId}>Secret</label>
-                <RedactedPasswordInput id={uniqueId} required bind:value={config.secret} />
+                <RedactedPasswordInput
+                    required
+                    id={uniqueId}
+                    bind:mask={maskSecret}
+                    bind:value={config.secret}
+                />
             </Field>
         </div>
         <div class="col-lg-12">

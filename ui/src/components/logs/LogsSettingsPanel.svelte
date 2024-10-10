@@ -4,7 +4,6 @@
     import ApiClient from "@/utils/ApiClient";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
-    import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import LogsLevelsInfo from "@/components/logs/LogsLevelsInfo.svelte";
@@ -86,7 +85,7 @@
     }
 </script>
 
-<OverlayPanel bind:this={panel} popup class="admin-panel" beforeHide={() => !isSaving} on:hide on:show>
+<OverlayPanel bind:this={panel} popup class="superuser-panel" beforeHide={() => !isSaving} on:hide on:show>
     <svelte:fragment slot="header">
         <h4>Logs settings</h4>
     </svelte:fragment>
@@ -114,9 +113,14 @@
                 </div>
             </Field>
 
-            <Field class="form-field form-field-toggle" name="logs.logIp" let:uniqueId>
-                <input type="checkbox" id={uniqueId} bind:checked={formSettings.logs.logIp} />
+            <Field class="form-field form-field-toggle" name="logs.logIP" let:uniqueId>
+                <input type="checkbox" id={uniqueId} bind:checked={formSettings.logs.logIP} />
                 <label for={uniqueId}>Enable IP logging</label>
+            </Field>
+
+            <Field class="form-field form-field-toggle" name="logs.logAuthId" let:uniqueId>
+                <input type="checkbox" id={uniqueId} bind:checked={formSettings.logs.logAuthId} />
+                <label for={uniqueId}>Enable Auth Id logging</label>
             </Field>
         </form>
     {/if}

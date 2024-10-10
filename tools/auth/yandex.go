@@ -9,6 +9,10 @@ import (
 	"golang.org/x/oauth2/yandex"
 )
 
+func init() {
+	Providers[NameYandex] = wrapFactory(NewYandexProvider)
+}
+
 var _ Provider = (*Yandex)(nil)
 
 // NameYandex is the unique name of the Yandex provider.
@@ -16,21 +20,21 @@ const NameYandex string = "yandex"
 
 // Yandex allows authentication via Yandex OAuth2.
 type Yandex struct {
-	*baseProvider
+	BaseProvider
 }
 
 // NewYandexProvider creates new Yandex provider instance with some defaults.
 //
 // Docs: https://yandex.ru/dev/id/doc/en/
 func NewYandexProvider() *Yandex {
-	return &Yandex{&baseProvider{
+	return &Yandex{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Yandex",
 		pkce:        true,
 		scopes:      []string{"login:email", "login:avatar", "login:info"},
-		authUrl:     yandex.Endpoint.AuthURL,
-		tokenUrl:    yandex.Endpoint.TokenURL,
-		userApiUrl:  "https://login.yandex.ru/info",
+		authURL:     yandex.Endpoint.AuthURL,
+		tokenURL:    yandex.Endpoint.TokenURL,
+		userInfoURL: "https://login.yandex.ru/info",
 	}}
 }
 
@@ -38,7 +42,7 @@ func NewYandexProvider() *Yandex {
 //
 // API reference: https://yandex.ru/dev/id/doc/en/user-information#response-format
 func (p *Yandex) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +77,7 @@ func (p *Yandex) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	if !extracted.IsAvatarEmpty {
-		user.AvatarUrl = "https://avatars.yandex.net/get-yapic/" + extracted.AvatarId + "/islands-200"
+		user.AvatarURL = "https://avatars.yandex.net/get-yapic/" + extracted.AvatarId + "/islands-200"
 	}
 
 	return user, nil

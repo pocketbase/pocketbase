@@ -64,9 +64,10 @@ func (f FilterData) BuildExpr(
 		}
 	}
 
-	if parsedFilterData.Has(raw) {
-		return buildParsedFilterExpr(parsedFilterData.Get(raw), fieldResolver)
+	if data, ok := parsedFilterData.GetOk(raw); ok {
+		return buildParsedFilterExpr(data, fieldResolver)
 	}
+
 	data, err := fexpr.Parse(raw)
 	if err != nil {
 		// depending on the users demand we may allow empty expressions
@@ -78,9 +79,11 @@ func (f FilterData) BuildExpr(
 
 		return nil, err
 	}
+
 	// store in cache
 	// (the limit size is arbitrary and it is there to prevent the cache growing too big)
 	parsedFilterData.SetIfLessThanLimit(raw, data, 500)
+
 	return buildParsedFilterExpr(data, fieldResolver)
 }
 
@@ -431,6 +434,8 @@ func mergeParams(params ...dbx.Params) dbx.Params {
 	return result
 }
 
+// @todo consider adding support for custom single character wildcard
+//
 // wrapLikeParams wraps each provided param value string with `%`
 // if the param doesn't contain an explicit wildcard (`%`) character already.
 func wrapLikeParams(params dbx.Params) dbx.Params {

@@ -12,20 +12,16 @@ import (
 	"sort"
 	"time"
 
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
 	"github.com/pocketbase/pocketbase/tools/archive"
-	"github.com/pocketbase/pocketbase/tools/cron"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/osutils"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-// Deprecated: Replaced with StoreKeyActiveBackup.
-const CacheKeyActiveBackup string = "@activeBackup"
-
-const StoreKeyActiveBackup string = "@activeBackup"
+const (
+	StoreKeyActiveBackup = "@activeBackup"
+)
 
 // CreateBackup creates a new backup of the current app pb_data directory.
 //
@@ -50,61 +46,67 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 		return errors.New("try again later - another backup/restore operation has already been started")
 	}
 
-	if name == "" {
-		name = app.generateBackupName("pb_backup_")
-	}
-
 	app.Store().Set(StoreKeyActiveBackup, name)
 	defer app.Store().Remove(StoreKeyActiveBackup)
 
-	// root dir entries to exclude from the backup generation
-	exclude := []string{LocalBackupsDirName, LocalTempDirName}
+	event := new(BackupEvent)
+	event.App = app
+	event.Context = ctx
+	event.Name = name
+	// default root dir entries to exclude from the backup generation
+	event.Exclude = []string{LocalBackupsDirName, LocalTempDirName, LocalAutocertCacheDirName}
 
-	// make sure that the special temp directory exists
-	// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
-	localTempDir := filepath.Join(app.DataDir(), LocalTempDirName)
-	if err := os.MkdirAll(localTempDir, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to create a temp dir: %w", err)
-	}
+	return app.OnBackupCreate().Trigger(event, func(e *BackupEvent) error {
+		// generate a default name if missing
+		if e.Name == "" {
+			e.Name = generateBackupName(e.App, "pb_backup_")
+		}
 
-	// Archive pb_data in a temp directory, exluding the "backups" and the temp dirs.
-	//
-	// Run in transaction to temporary block other writes (transactions uses the NonconcurrentDB connection).
-	// ---
-	tempPath := filepath.Join(localTempDir, "pb_backup_"+security.PseudorandomString(4))
-	createErr := app.Dao().RunInTransaction(func(dataTXDao *daos.Dao) error {
-		return app.LogsDao().RunInTransaction(func(logsTXDao *daos.Dao) error {
-			// @todo consider experimenting with temp switching the readonly pragma after the db interface change
-			return archive.Create(app.DataDir(), tempPath, exclude...)
+		// make sure that the special temp directory exists
+		// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
+		localTempDir := filepath.Join(e.App.DataDir(), LocalTempDirName)
+		if err := os.MkdirAll(localTempDir, os.ModePerm); err != nil {
+			return fmt.Errorf("failed to create a temp dir: %w", err)
+		}
+
+		// archive pb_data in a temp directory, exluding the "backups" and the temp dirs
+		//
+		// Run in transaction to temporary block other writes (transactions uses the NonconcurrentDB connection).
+		// ---
+		tempPath := filepath.Join(localTempDir, "pb_backup_"+security.PseudorandomString(6))
+		createErr := e.App.RunInTransaction(func(txApp App) error {
+			return txApp.AuxRunInTransaction(func(txApp App) error {
+				return archive.Create(txApp.DataDir(), tempPath, e.Exclude...)
+			})
 		})
+		if createErr != nil {
+			return createErr
+		}
+		defer os.Remove(tempPath)
+
+		// persist the backup in the backups filesystem
+		// ---
+		fsys, err := e.App.NewBackupsFilesystem()
+		if err != nil {
+			return err
+		}
+		defer fsys.Close()
+
+		fsys.SetContext(e.Context)
+
+		file, err := filesystem.NewFileFromPath(tempPath)
+		if err != nil {
+			return err
+		}
+		file.OriginalName = e.Name
+		file.Name = file.OriginalName
+
+		if err := fsys.UploadFile(file, file.Name); err != nil {
+			return err
+		}
+
+		return nil
 	})
-	if createErr != nil {
-		return createErr
-	}
-	defer os.Remove(tempPath)
-
-	// Persist the backup in the backups filesystem.
-	// ---
-	fsys, err := app.NewBackupsFilesystem()
-	if err != nil {
-		return err
-	}
-	defer fsys.Close()
-
-	fsys.SetContext(ctx)
-
-	file, err := filesystem.NewFileFromPath(tempPath)
-	if err != nil {
-		return err
-	}
-	file.OriginalName = name
-	file.Name = file.OriginalName
-
-	if err := fsys.UploadFile(file, file.Name); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // RestoreBackup restores the backup with the specified name and restarts
@@ -136,10 +138,6 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 // If a failure occure during the restore process the dir changes are reverted.
 // If for whatever reason the revert is not possible, it panics.
 func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
-	if runtime.GOOS == "windows" {
-		return errors.New("restore is not supported on windows")
-	}
-
 	if app.Store().Has(StoreKeyActiveBackup) {
 		return errors.New("try again later - another backup/restore operation has already been started")
 	}
@@ -147,131 +145,129 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 	app.Store().Set(StoreKeyActiveBackup, name)
 	defer app.Store().Remove(StoreKeyActiveBackup)
 
-	fsys, err := app.NewBackupsFilesystem()
-	if err != nil {
-		return err
-	}
-	defer fsys.Close()
+	event := new(BackupEvent)
+	event.App = app
+	event.Context = ctx
+	event.Name = name
+	// default root dir entries to exclude from the backup restore
+	event.Exclude = []string{LocalBackupsDirName, LocalTempDirName, LocalAutocertCacheDirName}
 
-	fsys.SetContext(ctx)
-
-	// fetch the backup file in a temp location
-	br, err := fsys.GetFile(name)
-	if err != nil {
-		return err
-	}
-	defer br.Close()
-
-	// make sure that the special temp directory exists
-	// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
-	localTempDir := filepath.Join(app.DataDir(), LocalTempDirName)
-	if err := os.MkdirAll(localTempDir, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to create a temp dir: %w", err)
-	}
-
-	// create a temp zip file from the blob.Reader and try to extract it
-	tempZip, err := os.CreateTemp(localTempDir, "pb_restore_zip")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tempZip.Name())
-
-	if _, err := io.Copy(tempZip, br); err != nil {
-		return err
-	}
-
-	extractedDataDir := filepath.Join(localTempDir, "pb_restore_"+security.PseudorandomString(4))
-	defer os.RemoveAll(extractedDataDir)
-	if err := archive.Extract(tempZip.Name(), extractedDataDir); err != nil {
-		return err
-	}
-
-	// ensure that a database file exists
-	extractedDB := filepath.Join(extractedDataDir, "data.db")
-	if _, err := os.Stat(extractedDB); err != nil {
-		return fmt.Errorf("data.db file is missing or invalid: %w", err)
-	}
-
-	// remove the extracted zip file since we no longer need it
-	// (this is in case the app restarts and the defer calls are not called)
-	if err := os.Remove(tempZip.Name()); err != nil {
-		app.Logger().Debug(
-			"[RestoreBackup] Failed to remove the temp zip backup file",
-			slog.String("file", tempZip.Name()),
-			slog.String("error", err.Error()),
-		)
-	}
-
-	// root dir entries to exclude from the backup restore
-	exclude := []string{LocalBackupsDirName, LocalTempDirName}
-
-	// move the current pb_data content to a special temp location
-	// that will hold the old data between dirs replace
-	// (the temp dir will be automatically removed on the next app start)
-	oldTempDataDir := filepath.Join(localTempDir, "old_pb_data_"+security.PseudorandomString(4))
-	if err := osutils.MoveDirContent(app.DataDir(), oldTempDataDir, exclude...); err != nil {
-		return fmt.Errorf("failed to move the current pb_data content to a temp location: %w", err)
-	}
-
-	// move the extracted archive content to the app's pb_data
-	if err := osutils.MoveDirContent(extractedDataDir, app.DataDir(), exclude...); err != nil {
-		return fmt.Errorf("failed to move the extracted archive content to pb_data: %w", err)
-	}
-
-	revertDataDirChanges := func() error {
-		if err := osutils.MoveDirContent(app.DataDir(), extractedDataDir, exclude...); err != nil {
-			return fmt.Errorf("failed to revert the extracted dir change: %w", err)
+	return app.OnBackupRestore().Trigger(event, func(e *BackupEvent) error {
+		if runtime.GOOS == "windows" {
+			return errors.New("restore is not supported on Windows")
 		}
 
-		if err := osutils.MoveDirContent(oldTempDataDir, app.DataDir(), exclude...); err != nil {
-			return fmt.Errorf("failed to revert old pb_data dir change: %w", err)
+		fsys, err := e.App.NewBackupsFilesystem()
+		if err != nil {
+			return err
+		}
+		defer fsys.Close()
+
+		fsys.SetContext(e.Context)
+
+		// fetch the backup file in a temp location
+		br, err := fsys.GetFile(name)
+		if err != nil {
+			return err
+		}
+		defer br.Close()
+
+		// make sure that the special temp directory exists
+		// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
+		localTempDir := filepath.Join(e.App.DataDir(), LocalTempDirName)
+		if err := os.MkdirAll(localTempDir, os.ModePerm); err != nil {
+			return fmt.Errorf("failed to create a temp dir: %w", err)
 		}
 
-		return nil
-	}
+		// create a temp zip file from the blob.Reader and try to extract it
+		tempZip, err := os.CreateTemp(localTempDir, "pb_restore_zip")
+		if err != nil {
+			return err
+		}
+		defer os.Remove(tempZip.Name())
 
-	// restart the app
-	if err := app.Restart(); err != nil {
-		if revertErr := revertDataDirChanges(); revertErr != nil {
-			panic(revertErr)
+		if _, err := io.Copy(tempZip, br); err != nil {
+			return err
 		}
 
-		return fmt.Errorf("failed to restart the app process: %w", err)
-	}
+		extractedDataDir := filepath.Join(localTempDir, "pb_restore_"+security.PseudorandomString(4))
+		defer os.RemoveAll(extractedDataDir)
+		if err := archive.Extract(tempZip.Name(), extractedDataDir); err != nil {
+			return err
+		}
 
-	return nil
-}
+		// ensure that a database file exists
+		extractedDB := filepath.Join(extractedDataDir, "data.db")
+		if _, err := os.Stat(extractedDB); err != nil {
+			return fmt.Errorf("data.db file is missing or invalid: %w", err)
+		}
 
-// initAutobackupHooks registers the autobackup app serve hooks.
-func (app *BaseApp) initAutobackupHooks() error {
-	c := cron.New()
-	isServe := false
-
-	loadJob := func() {
-		c.Stop()
-
-		// make sure that app.Settings() is always up to date
-		//
-		// @todo remove with the refactoring as core.App and daos.Dao will be one.
-		if err := app.RefreshSettings(); err != nil {
-			app.Logger().Debug(
-				"[Backup cron] Failed to get the latest app settings",
+		// remove the extracted zip file since we no longer need it
+		// (this is in case the app restarts and the defer calls are not called)
+		if err := os.Remove(tempZip.Name()); err != nil {
+			e.App.Logger().Debug(
+				"[RestoreBackup] Failed to remove the temp zip backup file",
+				slog.String("file", tempZip.Name()),
 				slog.String("error", err.Error()),
 			)
 		}
 
+		// move the current pb_data content to a special temp location
+		// that will hold the old data between dirs replace
+		// (the temp dir will be automatically removed on the next app start)
+		oldTempDataDir := filepath.Join(localTempDir, "old_pb_data_"+security.PseudorandomString(4))
+		if err := osutils.MoveDirContent(e.App.DataDir(), oldTempDataDir, e.Exclude...); err != nil {
+			return fmt.Errorf("failed to move the current pb_data content to a temp location: %w", err)
+		}
+
+		// move the extracted archive content to the app's pb_data
+		if err := osutils.MoveDirContent(extractedDataDir, e.App.DataDir(), e.Exclude...); err != nil {
+			return fmt.Errorf("failed to move the extracted archive content to pb_data: %w", err)
+		}
+
+		revertDataDirChanges := func() error {
+			if err := osutils.MoveDirContent(e.App.DataDir(), extractedDataDir, e.Exclude...); err != nil {
+				return fmt.Errorf("failed to revert the extracted dir change: %w", err)
+			}
+
+			if err := osutils.MoveDirContent(oldTempDataDir, e.App.DataDir(), e.Exclude...); err != nil {
+				return fmt.Errorf("failed to revert old pb_data dir change: %w", err)
+			}
+
+			return nil
+		}
+
+		// restart the app
+		if err := e.App.Restart(); err != nil {
+			if revertErr := revertDataDirChanges(); revertErr != nil {
+				panic(revertErr)
+			}
+
+			return fmt.Errorf("failed to restart the app process: %w", err)
+		}
+
+		return nil
+	})
+}
+
+// registerAutobackupHooks registers the autobackup app serve hooks.
+func (app *BaseApp) registerAutobackupHooks() {
+	const jobId = "__auto_pb_backup__"
+
+	loadJob := func() {
 		rawSchedule := app.Settings().Backups.Cron
-		if rawSchedule == "" || !isServe || !app.IsBootstrapped() {
+		if rawSchedule == "" {
+			app.Cron().Remove(jobId)
 			return
 		}
 
-		c.Add("@autobackup", rawSchedule, func() {
+		app.Cron().Add(jobId, rawSchedule, func() {
 			const autoPrefix = "@auto_pb_backup_"
 
-			name := app.generateBackupName(autoPrefix)
+			name := generateBackupName(app, autoPrefix)
 
 			if err := app.CreateBackup(context.Background(), name); err != nil {
-				app.Logger().Debug(
+				app.Logger().Error(
 					"[Backup cron] Failed to create backup",
 					slog.String("name", name),
 					slog.String("error", err.Error()),
@@ -286,7 +282,7 @@ func (app *BaseApp) initAutobackupHooks() error {
 
 			fsys, err := app.NewBackupsFilesystem()
 			if err != nil {
-				app.Logger().Debug(
+				app.Logger().Error(
 					"[Backup cron] Failed to initialize the backup filesystem",
 					slog.String("error", err.Error()),
 				)
@@ -296,7 +292,7 @@ func (app *BaseApp) initAutobackupHooks() error {
 
 			files, err := fsys.List(autoPrefix)
 			if err != nil {
-				app.Logger().Debug(
+				app.Logger().Error(
 					"[Backup cron] Failed to list autogenerated backups",
 					slog.String("error", err.Error()),
 				)
@@ -317,7 +313,7 @@ func (app *BaseApp) initAutobackupHooks() error {
 
 			for _, f := range toRemove {
 				if err := fsys.Delete(f.Key); err != nil {
-					app.Logger().Debug(
+					app.Logger().Error(
 						"[Backup cron] Failed to remove old autogenerated backup",
 						slog.String("key", f.Key),
 						slog.String("error", err.Error()),
@@ -325,29 +321,11 @@ func (app *BaseApp) initAutobackupHooks() error {
 				}
 			}
 		})
-
-		// restart the ticker
-		c.Start()
 	}
 
-	// load on app serve
-	app.OnBeforeServe().Add(func(e *ServeEvent) error {
-		isServe = true
-		loadJob()
-		return nil
-	})
-
-	// stop the ticker on app termination
-	app.OnTerminate().Add(func(e *TerminateEvent) error {
-		c.Stop()
-		return nil
-	})
-
-	// reload on app settings change
-	app.OnModelAfterUpdate((&models.Param{}).TableName()).Add(func(e *ModelEvent) error {
-		p := e.Model.(*models.Param)
-		if p == nil || p.Key != models.ParamAppSettings {
-			return nil
+	app.OnBootstrap().BindFunc(func(e *BootstrapEvent) error {
+		if err := e.Next(); err != nil {
+			return err
 		}
 
 		loadJob()
@@ -355,10 +333,18 @@ func (app *BaseApp) initAutobackupHooks() error {
 		return nil
 	})
 
-	return nil
+	app.OnSettingsReload().BindFunc(func(e *SettingsReloadEvent) error {
+		if err := e.Next(); err != nil {
+			return err
+		}
+
+		loadJob()
+
+		return nil
+	})
 }
 
-func (app *BaseApp) generateBackupName(prefix string) string {
+func generateBackupName(app App, prefix string) string {
 	appName := inflector.Snakecase(app.Settings().Meta.AppName)
 	if len(appName) > 50 {
 		appName = appName[:50]

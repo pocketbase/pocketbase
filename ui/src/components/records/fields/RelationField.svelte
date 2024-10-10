@@ -1,12 +1,14 @@
 <script>
     import { onDestroy } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
-    import ApiClient from "@/utils/ApiClient";
     import tooltip from "@/actions/tooltip";
-    import Field from "@/components/base/Field.svelte";
+    import { collections } from "@/stores/collections";
     import Draggable from "@/components/base/Draggable.svelte";
-    import RecordsPicker from "@/components/records/RecordsPicker.svelte";
+    import Field from "@/components/base/Field.svelte";
     import RecordInfo from "@/components/records/RecordInfo.svelte";
+    import RecordsPicker from "@/components/records/RecordsPicker.svelte";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import FieldLabel from "@/components/records/fields/FieldLabel.svelte";
 
     const batchSize = 100;
 
@@ -20,7 +22,7 @@
     let loadTimeoutId;
     let invalidIds = [];
 
-    $: isMultiple = field.options?.maxSelect != 1;
+    $: isMultiple = field.maxSelect != 1;
 
     $: if (typeof value != "undefined") {
         fieldRef?.changed();
@@ -55,12 +57,26 @@
         list = [];
         invalidIds = [];
 
-        if (!field?.options?.collectionId || !ids.length) {
+        if (!field?.collectionId || !ids.length) {
             isLoading = false;
             return;
         }
 
         isLoading = true;
+
+        let expand = "";
+        const presentableRelFields = $collections
+            .find((c) => c.id == field.collectionId)
+            ?.fields?.filter((f) => !f.hidden && f.presentable && f.type == "relation");
+        for (const field of presentableRelFields) {
+            const expandItem = CommonHelper.getExpandPresentableRelField(field, $collections, 2);
+            if (expandItem) {
+                if (expand != "") {
+                    expand += ",";
+                }
+                expand += expandItem;
+            }
+        }
 
         // batch load all selected records to avoid parser stack overflow errors
         const filterIds = ids.slice();
@@ -72,9 +88,10 @@
             }
 
             loadPromises.push(
-                ApiClient.collection(field?.options?.collectionId).getFullList(batchSize, {
+                ApiClient.collection(field.collectionId).getFullList(batchSize, {
                     filter: filters.join("||"),
                     fields: "*:excerpt(200)",
+                    expand: expand,
                     requestKey: null,
                 }),
             );
@@ -134,9 +151,7 @@
     name={field.name}
     let:uniqueId
 >
-    <label for={uniqueId}>
-        <i class={CommonHelper.getFieldTypeIcon(field.type)} />
-        <span class="txt">{field.name}</span>
+    <FieldLabel {uniqueId} {field}>
         {#if invalidIds.length}
             <i
                 class="ri-error-warning-line link-hint m-l-auto flex-order-10"
@@ -148,7 +163,7 @@
                 }}
             />
         {/if}
-    </label>
+    </FieldLabel>
 
     <div class="list">
         <div class="relations-list">

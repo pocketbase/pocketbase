@@ -1,15 +1,17 @@
 <script>
-    import { hideControls } from "@/stores/app";
-    import { collections, activeCollection, isCollectionsLoading } from "@/stores/collections";
     import PageSidebar from "@/components/base/PageSidebar.svelte";
-    import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import CollectionSidebarItem from "@/components/collections/CollectionSidebarItem.svelte";
+    import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
+    import { hideControls } from "@/stores/app";
+    import { activeCollection, collections, isCollectionsLoading } from "@/stores/collections";
 
     const pinnedStorageKey = "@pinnedCollections";
 
     let collectionPanel;
     let searchTerm = "";
     let pinnedIds = [];
+    let showSystemSection = false;
+    let oldCollectionId;
 
     loadPinned();
 
@@ -27,15 +29,22 @@
     }
 
     $: filtered = $collections.filter((c) => {
-        return c.id == searchTerm || c.name.replace(/\s+/g, "").toLowerCase().includes(normalizedSearch);
+        return c.id == searchTerm || c.name?.replace(/\s+/g, "")?.toLowerCase()?.includes(normalizedSearch);
     });
 
     $: pinnedCollections = filtered.filter((c) => pinnedIds.includes(c.id));
 
-    $: unpinnedCollections = filtered.filter((c) => !pinnedIds.includes(c.id));
+    $: unpinnedRegularCollections = filtered.filter((c) => !c.system && !pinnedIds.includes(c.id));
 
-    function selectCollection(collection) {
-        $activeCollection = collection;
+    $: unpinnedSystemCollections = filtered.filter((c) => c.system && !pinnedIds.includes(c.id));
+
+    $: if ($activeCollection?.id && oldCollectionId != $activeCollection.id) {
+        oldCollectionId = $activeCollection.id;
+        if ($activeCollection.system && !pinnedCollections.find((c) => c.id == $activeCollection.id)) {
+            showSystemSection = true;
+        } else {
+            showSystemSection = false;
+        }
     }
 
     function scrollIntoView() {
@@ -99,13 +108,39 @@
             {/each}
         {/if}
 
-        {#if unpinnedCollections.length}
+        {#if unpinnedRegularCollections.length}
             {#if pinnedCollections.length}
                 <div class="sidebar-title">Others</div>
             {/if}
-            {#each unpinnedCollections as collection (collection.id)}
+            {#each unpinnedRegularCollections as collection (collection.id)}
                 <CollectionSidebarItem {collection} bind:pinnedIds />
             {/each}
+        {/if}
+
+        {#if unpinnedSystemCollections.length}
+            <button
+                type="button"
+                class="sidebar-title m-b-xs"
+                class:link-hint={!normalizedSearch.length}
+                aria-label={showSystemSection ? "Expand system collections" : "Collapse system collections"}
+                aria-expanded={showSystemSection || normalizedSearch.length}
+                disabled={normalizedSearch.length}
+                on:click={() => {
+                    if (!normalizedSearch.length) {
+                        showSystemSection = !showSystemSection;
+                    }
+                }}
+            >
+                <span class="txt">System</span>
+                {#if !normalizedSearch.length}
+                    <i class="ri-arrow-{showSystemSection ? 'up' : 'down'}-s-line" aria-hidden="true" />
+                {/if}
+            </button>
+            {#if showSystemSection || normalizedSearch.length}
+                {#each unpinnedSystemCollections as collection (collection.id)}
+                    <CollectionSidebarItem {collection} bind:pinnedIds />
+                {/each}
+            {/if}
         {/if}
 
         {#if normalizedSearch.length && !filtered.length}
@@ -123,11 +158,4 @@
     {/if}
 </PageSidebar>
 
-<CollectionUpsertPanel
-    bind:this={collectionPanel}
-    on:save={(e) => {
-        if (e.detail?.isNew && e.detail.collection) {
-            selectCollection(e.detail.collection);
-        }
-    }}
-/>
+<CollectionUpsertPanel bind:this={collectionPanel} />

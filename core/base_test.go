@@ -1,59 +1,56 @@
-package core
+package core_test
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/migrations/logs"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/tools/list"
+	_ "unsafe"
+
+	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/logger"
 	"github.com/pocketbase/pocketbase/tools/mailer"
-	"github.com/pocketbase/pocketbase/tools/migrate"
-	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestNewBaseApp(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
-	app := NewBaseApp(BaseAppConfig{
+	app := core.NewBaseApp(core.BaseAppConfig{
 		DataDir:       testDataDir,
 		EncryptionEnv: "test_env",
 		IsDev:         true,
 	})
 
-	if app.dataDir != testDataDir {
-		t.Fatalf("expected dataDir %q, got %q", testDataDir, app.dataDir)
+	if app.DataDir() != testDataDir {
+		t.Fatalf("expected DataDir %q, got %q", testDataDir, app.DataDir())
 	}
 
-	if app.encryptionEnv != "test_env" {
-		t.Fatalf("expected encryptionEnv test_env, got %q", app.dataDir)
+	if app.EncryptionEnv() != "test_env" {
+		t.Fatalf("expected EncryptionEnv test_env, got %q", app.EncryptionEnv())
 	}
 
-	if !app.isDev {
-		t.Fatalf("expected isDev true, got %v", app.isDev)
+	if !app.IsDev() {
+		t.Fatalf("expected IsDev true, got %v", app.IsDev())
 	}
 
-	if app.store == nil {
-		t.Fatal("expected store to be set, got nil")
+	if app.Store() == nil {
+		t.Fatal("expected Store to be set, got nil")
 	}
 
-	if app.settings == nil {
-		t.Fatal("expected settings to be set, got nil")
+	if app.Settings() == nil {
+		t.Fatal("expected Settings to be set, got nil")
 	}
 
-	if app.subscriptionsBroker == nil {
-		t.Fatal("expected subscriptionsBroker to be set, got nil")
+	if app.SubscriptionsBroker() == nil {
+		t.Fatal("expected SubscriptionsBroker to be set, got nil")
+	}
+
+	if app.Cron() == nil {
+		t.Fatal("expected Cron to be set, got nil")
 	}
 }
 
@@ -61,9 +58,8 @@ func TestBaseAppBootstrap(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
-	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
+	app := core.NewBaseApp(core.BaseAppConfig{
+		DataDir: testDataDir,
 	})
 	defer app.ResetBootstrapState()
 
@@ -83,72 +79,59 @@ func TestBaseAppBootstrap(t *testing.T) {
 		t.Fatal("Expected test data directory to be created.")
 	}
 
-	if app.dao == nil {
-		t.Fatal("Expected app.dao to be initialized, got nil.")
+	type nilCheck struct {
+		name      string
+		value     any
+		expectNil bool
 	}
 
-	if app.dao.BeforeCreateFunc == nil {
-		t.Fatal("Expected app.dao.BeforeCreateFunc to be set, got nil.")
+	runNilChecks := func(checks []nilCheck) {
+		for _, check := range checks {
+			t.Run(check.name, func(t *testing.T) {
+				isNil := check.value == nil
+				if isNil != check.expectNil {
+					t.Fatalf("Expected isNil %v, got %v", check.expectNil, isNil)
+				}
+			})
+		}
 	}
 
-	if app.dao.AfterCreateFunc == nil {
-		t.Fatal("Expected app.dao.AfterCreateFunc to be set, got nil.")
+	nilChecksBeforeReset := []nilCheck{
+		{"[before] concurrentDB", app.DB(), false},
+		{"[before] nonconcurrentDB", app.NonconcurrentDB(), false},
+		{"[before] auxConcurrentDB", app.AuxDB(), false},
+		{"[before] auxNonconcurrentDB", app.AuxNonconcurrentDB(), false},
+		{"[before] settings", app.Settings(), false},
+		{"[before] logger", app.Logger(), false},
+		{"[before] cached collections", app.Store().Get(core.StoreKeyCachedCollections), false},
 	}
 
-	if app.dao.BeforeUpdateFunc == nil {
-		t.Fatal("Expected app.dao.BeforeUpdateFunc to be set, got nil.")
-	}
-
-	if app.dao.AfterUpdateFunc == nil {
-		t.Fatal("Expected app.dao.AfterUpdateFunc to be set, got nil.")
-	}
-
-	if app.dao.BeforeDeleteFunc == nil {
-		t.Fatal("Expected app.dao.BeforeDeleteFunc to be set, got nil.")
-	}
-
-	if app.dao.AfterDeleteFunc == nil {
-		t.Fatal("Expected app.dao.AfterDeleteFunc to be set, got nil.")
-	}
-
-	if app.logsDao == nil {
-		t.Fatal("Expected app.logsDao to be initialized, got nil.")
-	}
-
-	if app.settings == nil {
-		t.Fatal("Expected app.settings to be initialized, got nil.")
-	}
-
-	if app.logger == nil {
-		t.Fatal("Expected app.logger to be initialized, got nil.")
-	}
-
-	if _, ok := app.logger.Handler().(*logger.BatchHandler); !ok {
-		t.Fatal("Expected app.logger handler to be initialized.")
-	}
+	runNilChecks(nilChecksBeforeReset)
 
 	// reset
 	if err := app.ResetBootstrapState(); err != nil {
 		t.Fatal(err)
 	}
 
-	if app.dao != nil {
-		t.Fatalf("Expected app.dao to be nil, got %v.", app.dao)
+	nilChecksAfterReset := []nilCheck{
+		{"[after] concurrentDB", app.DB(), true},
+		{"[after] nonconcurrentDB", app.NonconcurrentDB(), true},
+		{"[after] auxConcurrentDB", app.AuxDB(), true},
+		{"[after] auxNonconcurrentDB", app.AuxNonconcurrentDB(), true},
+		{"[after] settings", app.Settings(), false},
+		{"[after] logger", app.Logger(), false},
+		{"[after] cached collections", app.Store().Get(core.StoreKeyCachedCollections), false},
 	}
 
-	if app.logsDao != nil {
-		t.Fatalf("Expected app.logsDao to be nil, got %v.", app.logsDao)
-	}
+	runNilChecks(nilChecksAfterReset)
 }
 
-func TestBaseAppGetters(t *testing.T) {
+func TestNewBaseAppIsTransactional(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
-	app := NewBaseApp(BaseAppConfig{
-		DataDir:       testDataDir,
-		EncryptionEnv: "pb_test_env",
-		IsDev:         true,
+	app := core.NewBaseApp(core.BaseAppConfig{
+		DataDir: testDataDir,
 	})
 	defer app.ResetBootstrapState()
 
@@ -156,81 +139,58 @@ func TestBaseAppGetters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if app.dao != app.Dao() {
-		t.Fatalf("Expected app.Dao %v, got %v", app.Dao(), app.dao)
+	if app.IsTransactional() {
+		t.Fatalf("Didn't expect the app to be transactional")
 	}
 
-	if app.dao.ConcurrentDB() != app.DB() {
-		t.Fatalf("Expected app.DB %v, got %v", app.DB(), app.dao.ConcurrentDB())
-	}
+	app.RunInTransaction(func(txApp core.App) error {
+		if !txApp.IsTransactional() {
+			t.Fatalf("Expected the app to be transactional")
+		}
 
-	if app.logsDao != app.LogsDao() {
-		t.Fatalf("Expected app.LogsDao %v, got %v", app.LogsDao(), app.logsDao)
-	}
-
-	if app.logsDao.ConcurrentDB() != app.LogsDB() {
-		t.Fatalf("Expected app.LogsDB %v, got %v", app.LogsDB(), app.logsDao.ConcurrentDB())
-	}
-
-	if app.dataDir != app.DataDir() {
-		t.Fatalf("Expected app.DataDir %v, got %v", app.DataDir(), app.dataDir)
-	}
-
-	if app.encryptionEnv != app.EncryptionEnv() {
-		t.Fatalf("Expected app.EncryptionEnv %v, got %v", app.EncryptionEnv(), app.encryptionEnv)
-	}
-
-	if app.isDev != app.IsDev() {
-		t.Fatalf("Expected app.IsDev %v, got %v", app.IsDev(), app.isDev)
-	}
-
-	if app.settings != app.Settings() {
-		t.Fatalf("Expected app.Settings %v, got %v", app.Settings(), app.settings)
-	}
-
-	if app.store != app.Store() {
-		t.Fatalf("Expected app.Store %v, got %v", app.Store(), app.store)
-	}
-
-	if app.logger != app.Logger() {
-		t.Fatalf("Expected app.Logger %v, got %v", app.Logger(), app.logger)
-	}
-
-	if app.subscriptionsBroker != app.SubscriptionsBroker() {
-		t.Fatalf("Expected app.SubscriptionsBroker %v, got %v", app.SubscriptionsBroker(), app.subscriptionsBroker)
-	}
-
-	if app.onBeforeServe != app.OnBeforeServe() || app.OnBeforeServe() == nil {
-		t.Fatalf("Getter app.OnBeforeServe does not match or nil (%v vs %v)", app.OnBeforeServe(), app.onBeforeServe)
-	}
+		return nil
+	})
 }
 
 func TestBaseAppNewMailClient(t *testing.T) {
-	app, cleanup, err := initTestBaseApp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer cleanup()
+	const testDataDir = "./pb_base_app_test_data_dir/"
+	defer os.RemoveAll(testDataDir)
+
+	app := core.NewBaseApp(core.BaseAppConfig{
+		DataDir:       testDataDir,
+		EncryptionEnv: "pb_test_env",
+	})
+	defer app.ResetBootstrapState()
 
 	client1 := app.NewMailClient()
-	if val, ok := client1.(*mailer.Sendmail); !ok {
-		t.Fatalf("Expected mailer.Sendmail instance, got %v", val)
+	m1, ok := client1.(*mailer.Sendmail)
+	if !ok {
+		t.Fatalf("Expected mailer.Sendmail instance, got %v", m1)
+	}
+	if m1.OnSend() == nil || m1.OnSend().Length() == 0 {
+		t.Fatal("Expected OnSend hook to be registered")
 	}
 
-	app.Settings().Smtp.Enabled = true
+	app.Settings().SMTP.Enabled = true
 
 	client2 := app.NewMailClient()
-	if val, ok := client2.(*mailer.SmtpClient); !ok {
-		t.Fatalf("Expected mailer.SmtpClient instance, got %v", val)
+	m2, ok := client2.(*mailer.SMTPClient)
+	if !ok {
+		t.Fatalf("Expected mailer.SMTPClient instance, got %v", m2)
+	}
+	if m2.OnSend() == nil || m2.OnSend().Length() == 0 {
+		t.Fatal("Expected OnSend hook to be registered")
 	}
 }
 
 func TestBaseAppNewFilesystem(t *testing.T) {
-	app, cleanup, err := initTestBaseApp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer cleanup()
+	const testDataDir = "./pb_base_app_test_data_dir/"
+	defer os.RemoveAll(testDataDir)
+
+	app := core.NewBaseApp(core.BaseAppConfig{
+		DataDir: testDataDir,
+	})
+	defer app.ResetBootstrapState()
 
 	// local
 	local, localErr := app.NewFilesystem()
@@ -253,11 +213,13 @@ func TestBaseAppNewFilesystem(t *testing.T) {
 }
 
 func TestBaseAppNewBackupsFilesystem(t *testing.T) {
-	app, cleanup, err := initTestBaseApp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer cleanup()
+	const testDataDir = "./pb_base_app_test_data_dir/"
+	defer os.RemoveAll(testDataDir)
+
+	app := core.NewBaseApp(core.BaseAppConfig{
+		DataDir: testDataDir,
+	})
+	defer app.ResetBootstrapState()
 
 	// local
 	local, localErr := app.NewBackupsFilesystem()
@@ -280,18 +242,22 @@ func TestBaseAppNewBackupsFilesystem(t *testing.T) {
 }
 
 func TestBaseAppLoggerWrites(t *testing.T) {
-	app, cleanup, err := initTestBaseApp()
-	if err != nil {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	// reset
+	if err := app.DeleteOldLogs(time.Now()); err != nil {
 		t.Fatal(err)
 	}
-	defer cleanup()
 
 	const logsThreshold = 200
 
-	totalLogs := func(app App, t *testing.T) int {
+	totalLogs := func(app core.App, t *testing.T) int {
 		var total int
 
-		err := app.LogsDao().LogQuery().Select("count(*)").Row(&total)
+		err := app.LogQuery().Select("count(*)").Row(&total)
 		if err != nil {
 			t.Fatalf("Failed to fetch total logs: %v", err)
 		}
@@ -338,106 +304,9 @@ func TestBaseAppLoggerWrites(t *testing.T) {
 			t.Fatalf("Expected %d logs, got %d", logsThreshold+1, total)
 		}
 	})
-
-	t.Run("test batch logs delete", func(t *testing.T) {
-		app.Settings().Logs.MaxDays = 2
-
-		deleteQueries := 0
-
-		// reset
-		app.Store().Set("lastLogsDeletedAt", time.Now())
-		if err := app.LogsDao().DeleteOldLogs(time.Now()); err != nil {
-			t.Fatal(err)
-		}
-
-		db := app.LogsDao().NonconcurrentDB().(*dbx.DB)
-		db.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
-			if strings.Contains(sql, "DELETE") {
-				deleteQueries++
-			}
-		}
-
-		// trigger batch write (A)
-		expectedLogs := logsThreshold
-		for i := 0; i < expectedLogs; i++ {
-			app.Logger().Error("testA")
-		}
-
-		if total := totalLogs(app, t); total != expectedLogs {
-			t.Fatalf("[batch write A] Expected %d logs, got %d", expectedLogs, total)
-		}
-
-		// mark the A inserted logs as 2-day expired
-		aExpiredDate, err := types.ParseDateTime(time.Now().AddDate(0, 0, -2))
-		if err != nil {
-			t.Fatal(err)
-		}
-		_, err = app.LogsDao().NonconcurrentDB().NewQuery("UPDATE _logs SET created={:date}, updated={:date}").Bind(dbx.Params{
-			"date": aExpiredDate.String(),
-		}).Execute()
-		if err != nil {
-			t.Fatalf("Failed to mock logs timestamp fields: %v", err)
-		}
-
-		// simulate recently deleted logs
-		app.Store().Set("lastLogsDeletedAt", time.Now().Add(-5*time.Hour))
-
-		// trigger batch write (B)
-		for i := 0; i < logsThreshold; i++ {
-			app.Logger().Error("testB")
-		}
-
-		expectedLogs = 2 * logsThreshold
-
-		// note: even though there are expired logs it shouldn't perform the delete operation because of the lastLogsDeledAt time
-		if total := totalLogs(app, t); total != expectedLogs {
-			t.Fatalf("[batch write B] Expected %d logs, got %d", expectedLogs, total)
-		}
-
-		// mark the B inserted logs as 1-day expired to ensure that they will not be deleted
-		bExpiredDate, err := types.ParseDateTime(time.Now().AddDate(0, 0, -1))
-		if err != nil {
-			t.Fatal(err)
-		}
-		_, err = app.LogsDao().NonconcurrentDB().NewQuery("UPDATE _logs SET created={:date}, updated={:date} where message='testB'").Bind(dbx.Params{
-			"date": bExpiredDate.String(),
-		}).Execute()
-		if err != nil {
-			t.Fatalf("Failed to mock logs timestamp fields: %v", err)
-		}
-
-		// should trigger delete on the next batch write
-		app.Store().Set("lastLogsDeletedAt", time.Now().Add(-6*time.Hour))
-
-		// trigger batch write (C)
-		for i := 0; i < logsThreshold; i++ {
-			app.Logger().Error("testC")
-		}
-
-		expectedLogs = 2 * logsThreshold // only B and C logs should remain
-
-		if total := totalLogs(app, t); total != expectedLogs {
-			t.Fatalf("[batch write C] Expected %d logs, got %d", expectedLogs, total)
-		}
-
-		if deleteQueries != 1 {
-			t.Fatalf("Expected DeleteOldLogs to be called %d, got %d", 1, deleteQueries)
-		}
-	})
 }
 
 func TestBaseAppRefreshSettingsLoggerMinLevelEnabled(t *testing.T) {
-	app, cleanup, err := initTestBaseApp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer cleanup()
-
-	handler, ok := app.Logger().Handler().(*logger.BatchHandler)
-	if !ok {
-		t.Fatalf("Expected BatchHandler, got %v", app.Logger().Handler())
-	}
-
 	scenarios := []struct {
 		name  string
 		isDev bool
@@ -469,173 +338,35 @@ func TestBaseAppRefreshSettingsLoggerMinLevelEnabled(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			app.isDev = s.isDev
+			const testDataDir = "./pb_base_app_test_data_dir/"
+			defer os.RemoveAll(testDataDir)
+
+			app := core.NewBaseApp(core.BaseAppConfig{
+				DataDir: testDataDir,
+				IsDev:   s.isDev,
+			})
+			defer app.ResetBootstrapState()
+
+			if err := app.Bootstrap(); err != nil {
+				t.Fatal(err)
+			}
+
+			handler, ok := app.Logger().Handler().(*logger.BatchHandler)
+			if !ok {
+				t.Fatalf("Expected BatchHandler, got %v", app.Logger().Handler())
+			}
 
 			app.Settings().Logs.MinLevel = s.level
 
-			if err := app.Dao().SaveSettings(app.Settings()); err != nil {
+			if err := app.Save(app.Settings()); err != nil {
 				t.Fatalf("Failed to save settings: %v", err)
 			}
 
-			if err := app.RefreshSettings(); err != nil {
-				t.Fatalf("Failed to refresh app settings: %v", err)
-			}
-
 			for level, enabled := range s.expectations {
-				if v := handler.Enabled(nil, slog.Level(level)); v != enabled {
+				if v := handler.Enabled(context.Background(), slog.Level(level)); v != enabled {
 					t.Fatalf("Expected level %d Enabled() to be %v, got %v", level, enabled, v)
 				}
 			}
 		})
 	}
-}
-
-func TestBaseAppLoggerLevelDevPrint(t *testing.T) {
-	app, cleanup, err := initTestBaseApp()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer cleanup()
-
-	testLogLevel := 4
-
-	app.Settings().Logs.MinLevel = testLogLevel
-	if err := app.Dao().SaveSettings(app.Settings()); err != nil {
-		t.Fatal(err)
-	}
-
-	scenarios := []struct {
-		name            string
-		isDev           bool
-		levels          []int
-		printedLevels   []int
-		persistedLevels []int
-	}{
-		{
-			"dev mode",
-			true,
-			[]int{testLogLevel - 1, testLogLevel, testLogLevel + 1},
-			[]int{testLogLevel - 1, testLogLevel, testLogLevel + 1},
-			[]int{testLogLevel, testLogLevel + 1},
-		},
-		{
-			"nondev mode",
-			false,
-			[]int{testLogLevel - 1, testLogLevel, testLogLevel + 1},
-			[]int{},
-			[]int{testLogLevel, testLogLevel + 1},
-		},
-	}
-
-	for _, s := range scenarios {
-		t.Run(s.name, func(t *testing.T) {
-			var printedLevels []int
-			var persistedLevels []int
-
-			app.isDev = s.isDev
-
-			// trigger slog handler min level refresh
-			if err := app.RefreshSettings(); err != nil {
-				t.Fatal(err)
-			}
-
-			// track printed logs
-			originalPrintLog := printLog
-			defer func() {
-				printLog = originalPrintLog
-			}()
-			printLog = func(log *logger.Log) {
-				printedLevels = append(printedLevels, int(log.Level))
-			}
-
-			// track persisted logs
-			app.LogsDao().AfterCreateFunc = func(eventDao *daos.Dao, m models.Model) error {
-				l, ok := m.(*models.Log)
-				if ok {
-					persistedLevels = append(persistedLevels, l.Level)
-				}
-				return nil
-			}
-
-			// write and persist logs
-			for _, l := range s.levels {
-				app.Logger().Log(nil, slog.Level(l), "test")
-			}
-			handler, ok := app.Logger().Handler().(*logger.BatchHandler)
-			if !ok {
-				t.Fatalf("Expected BatchHandler, got %v", app.Logger().Handler())
-			}
-			if err := handler.WriteAll(nil); err != nil {
-				t.Fatalf("Failed to write all logs: %v", err)
-			}
-
-			// check persisted log levels
-			if len(s.persistedLevels) != len(persistedLevels) {
-				t.Fatalf("Expected persisted levels \n%v\ngot\n%v", s.persistedLevels, persistedLevels)
-			}
-			for _, l := range persistedLevels {
-				if !list.ExistInSlice(l, s.persistedLevels) {
-					t.Fatalf("Missing expected persisted level %v in %v", l, persistedLevels)
-				}
-			}
-
-			// check printed log levels
-			if len(s.printedLevels) != len(printedLevels) {
-				t.Fatalf("Expected printed levels \n%v\ngot\n%v", s.printedLevels, printedLevels)
-			}
-			for _, l := range printedLevels {
-				if !list.ExistInSlice(l, s.printedLevels) {
-					t.Fatalf("Missing expected printed level %v in %v", l, printedLevels)
-				}
-			}
-		})
-	}
-}
-
-// -------------------------------------------------------------------
-
-// note: make sure to call `defer cleanup()` when the app is no longer needed.
-func initTestBaseApp() (app *BaseApp, cleanup func(), err error) {
-	testDataDir, err := os.MkdirTemp("", "test_base_app")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	cleanup = func() {
-		os.RemoveAll(testDataDir)
-	}
-
-	app = NewBaseApp(BaseAppConfig{
-		DataDir: testDataDir,
-	})
-
-	initErr := func() error {
-		if err := app.Bootstrap(); err != nil {
-			return fmt.Errorf("bootstrap error: %w", err)
-		}
-
-		logsRunner, err := migrate.NewRunner(app.LogsDB(), logs.LogsMigrations)
-		if err != nil {
-			return fmt.Errorf("logsRunner error: %w", err)
-		}
-		if _, err := logsRunner.Up(); err != nil {
-			return fmt.Errorf("logsRunner migrations execution error: %w", err)
-		}
-
-		dataRunner, err := migrate.NewRunner(app.DB(), migrations.AppMigrations)
-		if err != nil {
-			return fmt.Errorf("logsRunner error: %w", err)
-		}
-		if _, err := dataRunner.Up(); err != nil {
-			return fmt.Errorf("dataRunner migrations execution error: %w", err)
-		}
-
-		return nil
-	}()
-	if initErr != nil {
-		cleanup()
-		return nil, nil, initErr
-	}
-
-	return app, cleanup, nil
 }

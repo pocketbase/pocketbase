@@ -1,12 +1,12 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import { fly } from "svelte/transition";
+    import Scroller from "@/components/base/Scroller.svelte";
+    import SortHeader from "@/components/base/SortHeader.svelte";
+    import LogDate from "@/components/logs/LogDate.svelte";
+    import LogLevel from "@/components/logs/LogLevel.svelte";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import SortHeader from "@/components/base/SortHeader.svelte";
-    import Scroller from "@/components/base/Scroller.svelte";
-    import LogLevel from "@/components/logs/LogLevel.svelte";
-    import LogDate from "@/components/logs/LogDate.svelte";
+    import { createEventDispatcher } from "svelte";
+    import { fly } from "svelte/transition";
 
     const dispatch = createEventDispatcher();
 
@@ -14,7 +14,8 @@
 
     export let filter = "";
     export let presets = "";
-    export let sort = "-rowid";
+    export let zoom = {};
+    export let sort = "-@rowid";
 
     let logs = [];
     let currentPage = 1;
@@ -23,7 +24,12 @@
     let yieldedId = 0;
     let bulkSelected = {};
 
-    $: if (typeof sort !== "undefined" || typeof filter !== "undefined" || typeof presets !== "undefined") {
+    $: if (
+        typeof sort !== "undefined" ||
+        typeof filter !== "undefined" ||
+        typeof presets !== "undefined" ||
+        typeof zoom !== "undefined"
+    ) {
         clearList();
         load(1);
     }
@@ -37,15 +43,17 @@
     export async function load(page = 1, breakTasks = true) {
         isLoading = true;
 
-        const normalizedFilter = [presets, CommonHelper.normalizeLogsFilter(filter)]
-            .filter(Boolean)
-            .join("&&");
+        const normalizedFilter = [presets, CommonHelper.normalizeLogsFilter(filter)];
+
+        if (zoom.min && zoom.max) {
+            normalizedFilter.push(`created >= "${zoom.min}" && created <= "${zoom.max}"`);
+        }
 
         return ApiClient.logs
             .getList(page, perPage, {
                 sort: sort,
                 skipTotal: 1,
-                filter: normalizedFilter,
+                filter: normalizedFilter.filter(Boolean).join("&&"),
             })
             .then(async (result) => {
                 if (page <= 1) {
@@ -174,7 +182,7 @@
         }
 
         if (log.data.type == "request") {
-            const requestKeys = ["status", "execTime", "auth", "userIp"];
+            const requestKeys = ["status", "execTime", "auth", "authId", "userIP"];
             for (let key of requestKeys) {
                 if (typeof log.data[key] != "undefined") {
                     keys.push({ key });
@@ -298,7 +306,7 @@
                                         {:else}
                                             {keyItem.key}: {CommonHelper.stringifyValue(
                                                 log.data[keyItem.key],
-                                                "-",
+                                                "N/A",
                                                 80,
                                             )}
                                         {/if}

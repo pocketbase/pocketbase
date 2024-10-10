@@ -6,10 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 
-	"github.com/pocketbase/pocketbase/models"
+	"github.com/pocketbase/pocketbase/core"
 )
 
 const (
@@ -22,16 +23,16 @@ const (
 	jsTypesDirective = `/// <reference path="../pb_data/types.d.ts" />` + "\n"
 )
 
-var emptyTemplateErr = errors.New("empty template")
+var ErrEmptyTemplate = errors.New("empty template")
 
 // -------------------------------------------------------------------
 // JavaScript templates
 // -------------------------------------------------------------------
 
 func (p *plugin) jsBlankTemplate() (string, error) {
-	const template = jsTypesDirective + `migrate((db) => {
+	const template = jsTypesDirective + `migrate((app) => {
   // add up queries...
-}, (db) => {
+}, (app) => {
   // add down queries...
 })
 `
@@ -39,19 +40,30 @@ func (p *plugin) jsBlankTemplate() (string, error) {
 	return template, nil
 }
 
-func (p *plugin) jsSnapshotTemplate(collections []*models.Collection) (string, error) {
-	jsonData, err := marhshalWithoutEscape(collections, "  ", "  ")
+func (p *plugin) jsSnapshotTemplate(collections []*core.Collection) (string, error) {
+	// unset timestamp fields
+	var collectionsData = make([]map[string]any, len(collections))
+	for i, c := range collections {
+		data, err := toMap(c)
+		if err != nil {
+			return "", fmt.Errorf("failed to serialize %q into a map: %w", c.Name, err)
+		}
+		delete(data, "created")
+		delete(data, "updated")
+		deleteNestedMapKey(data, "oauth2", "providers")
+		collectionsData[i] = data
+	}
+
+	jsonData, err := marhshalWithoutEscape(collectionsData, "  ", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
-	const template = jsTypesDirective + `migrate((db) => {
+	const template = jsTypesDirective + `migrate((app) => {
   const snapshot = %s;
 
-  const collections = snapshot.map((item) => new Collection(item));
-
-  return Dao(db).importCollections(collections, true, null);
-}, (db) => {
+  return app.importCollections(snapshot, true);
+}, (app) => {
   return null;
 })
 `
@@ -59,49 +71,65 @@ func (p *plugin) jsSnapshotTemplate(collections []*models.Collection) (string, e
 	return fmt.Sprintf(template, string(jsonData)), nil
 }
 
-func (p *plugin) jsCreateTemplate(collection *models.Collection) (string, error) {
-	jsonData, err := marhshalWithoutEscape(collection, "  ", "  ")
+func (p *plugin) jsCreateTemplate(collection *core.Collection) (string, error) {
+	// unset timestamp fields
+	collectionData, err := toMap(collection)
 	if err != nil {
-		return "", fmt.Errorf("failed to serialize collections list: %w", err)
+		return "", err
+	}
+	delete(collectionData, "created")
+	delete(collectionData, "updated")
+	deleteNestedMapKey(collectionData, "oauth2", "providers")
+
+	jsonData, err := marhshalWithoutEscape(collectionData, "  ", "  ")
+	if err != nil {
+		return "", fmt.Errorf("failed to serialize collection: %w", err)
 	}
 
-	const template = jsTypesDirective + `migrate((db) => {
+	const template = jsTypesDirective + `migrate((app) => {
   const collection = new Collection(%s);
 
-  return Dao(db).saveCollection(collection);
-}, (db) => {
-  const dao = new Dao(db);
-  const collection = dao.findCollectionByNameOrId(%q);
+  return app.save(collection);
+}, (app) => {
+  const collection = app.findCollectionByNameOrId(%q);
 
-  return dao.deleteCollection(collection);
+  return app.delete(collection);
 })
 `
 
 	return fmt.Sprintf(template, string(jsonData), collection.Id), nil
 }
 
-func (p *plugin) jsDeleteTemplate(collection *models.Collection) (string, error) {
-	jsonData, err := marhshalWithoutEscape(collection, "  ", "  ")
+func (p *plugin) jsDeleteTemplate(collection *core.Collection) (string, error) {
+	// unset timestamp fields
+	collectionData, err := toMap(collection)
+	if err != nil {
+		return "", err
+	}
+	delete(collectionData, "created")
+	delete(collectionData, "updated")
+	deleteNestedMapKey(collectionData, "oauth2", "providers")
+
+	jsonData, err := marhshalWithoutEscape(collectionData, "  ", "  ")
 	if err != nil {
 		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
 
-	const template = jsTypesDirective + `migrate((db) => {
-  const dao = new Dao(db);
-  const collection = dao.findCollectionByNameOrId(%q);
+	const template = jsTypesDirective + `migrate((app) => {
+  const collection = app.findCollectionByNameOrId(%q);
 
-  return dao.deleteCollection(collection);
-}, (db) => {
+  return app.delete(collection);
+}, (app) => {
   const collection = new Collection(%s);
 
-  return Dao(db).saveCollection(collection);
+  return app.save(collection);
 })
 `
 
 	return fmt.Sprintf(template, collection.Id, string(jsonData)), nil
 }
 
-func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) (string, error) {
+func (p *plugin) jsDiffTemplate(new *core.Collection, old *core.Collection) (string, error) {
 	if new == nil && old == nil {
 		return "", errors.New("the diff template require at least one of the collection to be non-nil")
 	}
@@ -118,209 +146,140 @@ func (p *plugin) jsDiffTemplate(new *models.Collection, old *models.Collection) 
 	downParts := []string{}
 	varName := "collection"
 
-	if old.Name != new.Name {
-		upParts = append(upParts, fmt.Sprintf("%s.name = %q", varName, new.Name))
-		downParts = append(downParts, fmt.Sprintf("%s.name = %q", varName, old.Name))
-	}
-
-	if old.Type != new.Type {
-		upParts = append(upParts, fmt.Sprintf("%s.type = %q", varName, new.Type))
-		downParts = append(downParts, fmt.Sprintf("%s.type = %q", varName, old.Type))
-	}
-
-	if old.System != new.System {
-		upParts = append(upParts, fmt.Sprintf("%s.system = %t", varName, new.System))
-		downParts = append(downParts, fmt.Sprintf("%s.system = %t", varName, old.System))
-	}
-
-	// ---
-	// note: strconv.Quote is used because %q converts the rule operators in unicode char codes
-	// ---
-
-	formatRule := func(prop string, rule *string) string {
-		if rule == nil {
-			return fmt.Sprintf("%s.%s = null", varName, prop)
-		}
-
-		return fmt.Sprintf("%s.%s = %s", varName, prop, strconv.Quote(*rule))
-	}
-
-	if old.ListRule != new.ListRule {
-		oldRule := formatRule("listRule", old.ListRule)
-		newRule := formatRule("listRule", new.ListRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	if old.ViewRule != new.ViewRule {
-		oldRule := formatRule("viewRule", old.ViewRule)
-		newRule := formatRule("viewRule", new.ViewRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	if old.CreateRule != new.CreateRule {
-		oldRule := formatRule("createRule", old.CreateRule)
-		newRule := formatRule("createRule", new.CreateRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	if old.UpdateRule != new.UpdateRule {
-		oldRule := formatRule("updateRule", old.UpdateRule)
-		newRule := formatRule("updateRule", new.UpdateRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	if old.DeleteRule != new.DeleteRule {
-		oldRule := formatRule("deleteRule", old.DeleteRule)
-		newRule := formatRule("deleteRule", new.DeleteRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	// Options
-	rawNewOptions, err := marhshalWithoutEscape(new.Options, "  ", "  ")
+	newMap, err := toMap(new)
 	if err != nil {
 		return "", err
 	}
-	rawOldOptions, err := marhshalWithoutEscape(old.Options, "  ", "  ")
+
+	oldMap, err := toMap(old)
 	if err != nil {
 		return "", err
 	}
-	if !bytes.Equal(rawNewOptions, rawOldOptions) {
-		upParts = append(upParts, fmt.Sprintf("%s.options = %s", varName, rawNewOptions))
-		downParts = append(downParts, fmt.Sprintf("%s.options = %s", varName, rawOldOptions))
-	}
 
-	// Indexes
-	rawNewIndexes, err := marhshalWithoutEscape(new.Indexes, "  ", "  ")
-	if err != nil {
-		return "", err
-	}
-	rawOldIndexes, err := marhshalWithoutEscape(old.Indexes, "  ", "  ")
-	if err != nil {
-		return "", err
-	}
-	if !bytes.Equal(rawNewIndexes, rawOldIndexes) {
-		upParts = append(upParts, fmt.Sprintf("%s.indexes = %s", varName, rawNewIndexes))
-		downParts = append(downParts, fmt.Sprintf("%s.indexes = %s", varName, rawOldIndexes))
-	}
-
-	// ensure new line between regular and collection fields
-	if len(upParts) > 0 {
-		upParts[len(upParts)-1] += "\n"
-	}
-	if len(downParts) > 0 {
-		downParts[len(downParts)-1] += "\n"
-	}
-
-	// Schema
+	// non-fields
 	// -----------------------------------------------------------------
 
-	// deleted fields
-	for _, oldField := range old.Schema.Fields() {
-		if new.Schema.GetFieldById(oldField.Id) != nil {
-			continue // exist
-		}
+	upDiff := diffMaps(oldMap, newMap, "fields", "created", "updated")
+	if len(upDiff) > 0 {
+		downDiff := diffMaps(newMap, oldMap, "fields", "created", "updated")
 
-		rawOldField, err := marhshalWithoutEscape(oldField, "  ", "  ")
+		rawUpDiff, err := marhshalWithoutEscape(upDiff, "  ", "  ")
 		if err != nil {
 			return "", err
 		}
 
-		upParts = append(upParts, "// remove")
-		upParts = append(upParts, fmt.Sprintf("%s.schema.removeField(%q)\n", varName, oldField.Id))
+		rawDownDiff, err := marhshalWithoutEscape(downDiff, "  ", "  ")
+		if err != nil {
+			return "", err
+		}
 
-		downParts = append(downParts, "// add")
-		downParts = append(downParts, fmt.Sprintf("%s.schema.addField(new SchemaField(%s))\n", varName, rawOldField))
+		upParts = append(upParts, "// update collection data")
+		upParts = append(upParts, fmt.Sprintf("unmarshal(%s, %s)", string(rawUpDiff), varName)+"\n")
+		// ---
+		downParts = append(downParts, "// update collection data")
+		downParts = append(downParts, fmt.Sprintf("unmarshal(%s, %s)", string(rawDownDiff), varName)+"\n")
+	}
+
+	// fields
+	// -----------------------------------------------------------------
+
+	oldFieldsSlice, ok := oldMap["fields"].([]any)
+	if !ok {
+		return "", errors.New(`oldMap["fields"] is not []any`)
+	}
+
+	newFieldsSlice, ok := newMap["fields"].([]any)
+	if !ok {
+		return "", errors.New(`newMap["fields"] is not []any`)
+	}
+
+	// deleted fields
+	for i, oldField := range old.Fields {
+		if new.Fields.GetById(oldField.GetId()) != nil {
+			continue // exist
+		}
+
+		rawOldField, err := marhshalWithoutEscape(oldFieldsSlice[i], "  ", "  ")
+		if err != nil {
+			return "", err
+		}
+
+		upParts = append(upParts, "// remove field")
+		upParts = append(upParts, fmt.Sprintf("%s.fields.removeById(%q)\n", varName, oldField.GetId()))
+
+		downParts = append(downParts, "// add field")
+		downParts = append(downParts, fmt.Sprintf("%s.fields.add(new Field(%s))\n", varName, rawOldField))
 	}
 
 	// created fields
-	for _, newField := range new.Schema.Fields() {
-		if old.Schema.GetFieldById(newField.Id) != nil {
+	for i, newField := range new.Fields {
+		if old.Fields.GetById(newField.GetId()) != nil {
 			continue // exist
 		}
 
-		rawNewField, err := marhshalWithoutEscape(newField, "  ", "  ")
+		rawNewField, err := marhshalWithoutEscape(newFieldsSlice[i], "  ", "  ")
 		if err != nil {
 			return "", err
 		}
 
-		upParts = append(upParts, "// add")
-		upParts = append(upParts, fmt.Sprintf("%s.schema.addField(new SchemaField(%s))\n", varName, rawNewField))
+		upParts = append(upParts, "// add field")
+		upParts = append(upParts, fmt.Sprintf("%s.fields.add(new Field(%s))\n", varName, rawNewField))
 
-		downParts = append(downParts, "// remove")
-		downParts = append(downParts, fmt.Sprintf("%s.schema.removeField(%q)\n", varName, newField.Id))
+		downParts = append(downParts, "// remove field")
+		downParts = append(downParts, fmt.Sprintf("%s.fields.removeById(%q)\n", varName, newField.GetId()))
 	}
 
 	// modified fields
-	for _, newField := range new.Schema.Fields() {
-		oldField := old.Schema.GetFieldById(newField.Id)
-		if oldField == nil {
-			continue
-		}
+	for i, newField := range new.Fields {
+		var rawNewField, rawOldField []byte
 
-		rawNewField, err := marhshalWithoutEscape(newField, "  ", "  ")
+		rawNewField, err = marhshalWithoutEscape(newFieldsSlice[i], "  ", "  ")
 		if err != nil {
 			return "", err
 		}
 
-		rawOldField, err := marhshalWithoutEscape(oldField, "  ", "  ")
-		if err != nil {
-			return "", err
+		for j, oldField := range old.Fields {
+			if oldField.GetId() == newField.GetId() {
+				rawOldField, err = marhshalWithoutEscape(oldFieldsSlice[j], "  ", "  ")
+				if err != nil {
+					return "", err
+				}
+				break
+			}
 		}
 
-		if bytes.Equal(rawNewField, rawOldField) {
-			continue // no change
+		if rawOldField == nil || bytes.Equal(rawNewField, rawOldField) {
+			continue // new field or no change
 		}
 
-		upParts = append(upParts, "// update")
-		upParts = append(upParts, fmt.Sprintf("%s.schema.addField(new SchemaField(%s))\n", varName, rawNewField))
+		upParts = append(upParts, "// update field")
+		upParts = append(upParts, fmt.Sprintf("%s.fields.add(new Field(%s))\n", varName, rawNewField))
 
-		downParts = append(downParts, "// update")
-		downParts = append(downParts, fmt.Sprintf("%s.schema.addField(new SchemaField(%s))\n", varName, rawOldField))
+		downParts = append(downParts, "// update field")
+		downParts = append(downParts, fmt.Sprintf("%s.fields.add(new Field(%s))\n", varName, rawOldField))
 	}
 
 	// -----------------------------------------------------------------
 
 	if len(upParts) == 0 && len(downParts) == 0 {
-		return "", emptyTemplateErr
+		return "", ErrEmptyTemplate
 	}
 
 	up := strings.Join(upParts, "\n  ")
 	down := strings.Join(downParts, "\n  ")
 
-	const template = jsTypesDirective + `migrate((db) => {
-  const dao = new Dao(db)
-  const collection = dao.findCollectionByNameOrId(%q)
+	const template = jsTypesDirective + `migrate((app) => {
+  const collection = app.findCollectionByNameOrId(%q)
 
   %s
 
-  return dao.saveCollection(collection)
-}, (db) => {
-  const dao = new Dao(db)
-  const collection = dao.findCollectionByNameOrId(%q)
+  return app.save(collection)
+}, (app) => {
+  const collection = app.findCollectionByNameOrId(%q)
 
   %s
 
-  return dao.saveCollection(collection)
+  return app.save(collection)
 })
 `
 
@@ -339,16 +298,16 @@ func (p *plugin) goBlankTemplate() (string, error) {
 	const template = `package %s
 
 import (
-	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
 )
 
 func init() {
-	m.Register(func(db dbx.Builder) error {
+	m.Register(func(app core.App) error {
 		// add up queries...
 
 		return nil
-	}, func(db dbx.Builder) error {
+	}, func(app core.App) error {
 		// add down queries...
 
 		return nil
@@ -359,8 +318,21 @@ func init() {
 	return fmt.Sprintf(template, filepath.Base(p.config.Dir)), nil
 }
 
-func (p *plugin) goSnapshotTemplate(collections []*models.Collection) (string, error) {
-	jsonData, err := marhshalWithoutEscape(collections, "\t\t", "\t")
+func (p *plugin) goSnapshotTemplate(collections []*core.Collection) (string, error) {
+	// unset timestamp fields
+	var collectionsData = make([]map[string]any, len(collections))
+	for i, c := range collections {
+		data, err := toMap(c)
+		if err != nil {
+			return "", fmt.Errorf("failed to serialize %q into a map: %w", c.Name, err)
+		}
+		delete(data, "created")
+		delete(data, "updated")
+		deleteNestedMapKey(data, "oauth2", "providers")
+		collectionsData[i] = data
+	}
+
+	jsonData, err := marhshalWithoutEscape(collectionsData, "\t\t", "\t")
 	if err != nil {
 		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
@@ -368,25 +340,16 @@ func (p *plugin) goSnapshotTemplate(collections []*models.Collection) (string, e
 	const template = `package %s
 
 import (
-	"encoding/json"
-
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
 )
 
 func init() {
-	m.Register(func(db dbx.Builder) error {
+	m.Register(func(app core.App) error {
 		jsonData := ` + "`%s`" + `
 
-		collections := []*models.Collection{}
-		if err := json.Unmarshal([]byte(jsonData), &collections); err != nil {
-			return err
-		}
-
-		return daos.New(db).ImportCollections(collections, true, nil)
-	}, func(db dbx.Builder) error {
+		return app.ImportCollectionsByMarshaledJSON([]byte(jsonData), true)
+	}, func(app core.App) error {
 		return nil
 	})
 }
@@ -398,8 +361,17 @@ func init() {
 	), nil
 }
 
-func (p *plugin) goCreateTemplate(collection *models.Collection) (string, error) {
-	jsonData, err := marhshalWithoutEscape(collection, "\t\t", "\t")
+func (p *plugin) goCreateTemplate(collection *core.Collection) (string, error) {
+	// unset timestamp fields
+	collectionData, err := toMap(collection)
+	if err != nil {
+		return "", err
+	}
+	delete(collectionData, "created")
+	delete(collectionData, "updated")
+	deleteNestedMapKey(collectionData, "oauth2", "providers")
+
+	jsonData, err := marhshalWithoutEscape(collectionData, "\t\t", "\t")
 	if err != nil {
 		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
@@ -409,31 +381,27 @@ func (p *plugin) goCreateTemplate(collection *models.Collection) (string, error)
 import (
 	"encoding/json"
 
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
 )
 
 func init() {
-	m.Register(func(db dbx.Builder) error {
+	m.Register(func(app core.App) error {
 		jsonData := ` + "`%s`" + `
 
-		collection := &models.Collection{}
+		collection := &core.Collection{}
 		if err := json.Unmarshal([]byte(jsonData), &collection); err != nil {
 			return err
 		}
 
-		return daos.New(db).SaveCollection(collection)
-	}, func(db dbx.Builder) error {
-		dao := daos.New(db);
-
-		collection, err := dao.FindCollectionByNameOrId(%q)
+		return app.Save(collection)
+	}, func(app core.App) error {
+		collection, err := app.FindCollectionByNameOrId(%q)
 		if err != nil {
 			return err
 		}
 
-		return dao.DeleteCollection(collection)
+		return app.Delete(collection)
 	})
 }
 `
@@ -446,8 +414,17 @@ func init() {
 	), nil
 }
 
-func (p *plugin) goDeleteTemplate(collection *models.Collection) (string, error) {
-	jsonData, err := marhshalWithoutEscape(collection, "\t\t", "\t")
+func (p *plugin) goDeleteTemplate(collection *core.Collection) (string, error) {
+	// unset timestamp fields
+	collectionData, err := toMap(collection)
+	if err != nil {
+		return "", err
+	}
+	delete(collectionData, "created")
+	delete(collectionData, "updated")
+	deleteNestedMapKey(collectionData, "oauth2", "providers")
+
+	jsonData, err := marhshalWithoutEscape(collectionData, "\t\t", "\t")
 	if err != nil {
 		return "", fmt.Errorf("failed to serialize collections list: %w", err)
 	}
@@ -457,31 +434,27 @@ func (p *plugin) goDeleteTemplate(collection *models.Collection) (string, error)
 import (
 	"encoding/json"
 
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
 )
 
 func init() {
-	m.Register(func(db dbx.Builder) error {
-		dao := daos.New(db);
-
-		collection, err := dao.FindCollectionByNameOrId(%q)
+	m.Register(func(app core.App) error {
+		collection, err := app.FindCollectionByNameOrId(%q)
 		if err != nil {
 			return err
 		}
 
-		return dao.DeleteCollection(collection)
-	}, func(db dbx.Builder) error {
+		return app.Delete(collection)
+	}, func(app core.App) error {
 		jsonData := ` + "`%s`" + `
 
-		collection := &models.Collection{}
+		collection := &core.Collection{}
 		if err := json.Unmarshal([]byte(jsonData), &collection); err != nil {
 			return err
 		}
 
-		return daos.New(db).SaveCollection(collection)
+		return app.Save(collection)
 	})
 }
 `
@@ -494,7 +467,7 @@ func init() {
 	), nil
 }
 
-func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) (string, error) {
+func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (string, error) {
 	if new == nil && old == nil {
 		return "", errors.New("the diff template require at least one of the collection to be non-nil")
 	}
@@ -510,200 +483,124 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 	upParts := []string{}
 	downParts := []string{}
 	varName := "collection"
-	if old.Name != new.Name {
-		upParts = append(upParts, fmt.Sprintf("%s.Name = %q\n", varName, new.Name))
-		downParts = append(downParts, fmt.Sprintf("%s.Name = %q\n", varName, old.Name))
-	}
 
-	if old.Type != new.Type {
-		upParts = append(upParts, fmt.Sprintf("%s.Type = %q\n", varName, new.Type))
-		downParts = append(downParts, fmt.Sprintf("%s.Type = %q\n", varName, old.Type))
-	}
-
-	if old.System != new.System {
-		upParts = append(upParts, fmt.Sprintf("%s.System = %t\n", varName, new.System))
-		downParts = append(downParts, fmt.Sprintf("%s.System = %t\n", varName, old.System))
-	}
-
-	// ---
-	// note: strconv.Quote is used because %q converts the rule operators in unicode char codes
-	// ---
-
-	formatRule := func(prop string, rule *string) string {
-		if rule == nil {
-			return fmt.Sprintf("%s.%s = nil\n", varName, prop)
-		}
-
-		return fmt.Sprintf("%s.%s = types.Pointer(%s)\n", varName, prop, strconv.Quote(*rule))
-	}
-
-	if old.ListRule != new.ListRule {
-		oldRule := formatRule("ListRule", old.ListRule)
-		newRule := formatRule("ListRule", new.ListRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	if old.ViewRule != new.ViewRule {
-		oldRule := formatRule("ViewRule", old.ViewRule)
-		newRule := formatRule("ViewRule", new.ViewRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	if old.CreateRule != new.CreateRule {
-		oldRule := formatRule("CreateRule", old.CreateRule)
-		newRule := formatRule("CreateRule", new.CreateRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	if old.UpdateRule != new.UpdateRule {
-		oldRule := formatRule("UpdateRule", old.UpdateRule)
-		newRule := formatRule("UpdateRule", new.UpdateRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	if old.DeleteRule != new.DeleteRule {
-		oldRule := formatRule("DeleteRule", old.DeleteRule)
-		newRule := formatRule("DeleteRule", new.DeleteRule)
-
-		if oldRule != newRule {
-			upParts = append(upParts, newRule)
-			downParts = append(downParts, oldRule)
-		}
-	}
-
-	// Options
-	rawNewOptions, err := marhshalWithoutEscape(new.Options, "\t\t", "\t")
+	newMap, err := toMap(new)
 	if err != nil {
 		return "", err
 	}
-	rawOldOptions, err := marhshalWithoutEscape(old.Options, "\t\t", "\t")
+
+	oldMap, err := toMap(old)
 	if err != nil {
 		return "", err
 	}
-	if !bytes.Equal(rawNewOptions, rawOldOptions) {
-		upParts = append(upParts, "options := map[string]any{}")
-		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &options)", escapeBacktick(string(rawNewOptions)))))
-		upParts = append(upParts, fmt.Sprintf("%s.SetOptions(options)\n", varName))
-		// ---
-		downParts = append(downParts, "options := map[string]any{}")
-		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &options)", escapeBacktick(string(rawOldOptions)))))
-		downParts = append(downParts, fmt.Sprintf("%s.SetOptions(options)\n", varName))
-	}
 
-	// Indexes
-	rawNewIndexes, err := marhshalWithoutEscape(new.Indexes, "\t\t", "\t")
-	if err != nil {
-		return "", err
-	}
-	rawOldIndexes, err := marhshalWithoutEscape(old.Indexes, "\t\t", "\t")
-	if err != nil {
-		return "", err
-	}
-	if !bytes.Equal(rawNewIndexes, rawOldIndexes) {
-		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s.Indexes)", escapeBacktick(string(rawNewIndexes)), varName))+"\n")
-		// ---
-		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s.Indexes)", escapeBacktick(string(rawOldIndexes)), varName))+"\n")
-	}
+	// non-fields
+	// -----------------------------------------------------------------
 
-	// Schema
-	// ---------------------------------------------------------------
-	// deleted fields
-	for _, oldField := range old.Schema.Fields() {
-		if new.Schema.GetFieldById(oldField.Id) != nil {
-			continue // exist
-		}
+	upDiff := diffMaps(oldMap, newMap, "fields", "created", "updated")
+	if len(upDiff) > 0 {
+		downDiff := diffMaps(newMap, oldMap, "fields", "created", "updated")
 
-		rawOldField, err := marhshalWithoutEscape(oldField, "\t\t", "\t")
+		rawUpDiff, err := marhshalWithoutEscape(upDiff, "\t\t", "\t")
 		if err != nil {
 			return "", err
 		}
 
-		fieldVar := fmt.Sprintf("del_%s", oldField.Name)
+		rawDownDiff, err := marhshalWithoutEscape(downDiff, "\t\t", "\t")
+		if err != nil {
+			return "", err
+		}
 
-		upParts = append(upParts, "// remove")
-		upParts = append(upParts, fmt.Sprintf("%s.Schema.RemoveField(%q)\n", varName, oldField.Id))
+		upParts = append(upParts, "// update collection data")
+		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s)", escapeBacktick(string(rawUpDiff)), varName)))
+		// ---
+		downParts = append(downParts, "// update collection data")
+		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), &%s)", escapeBacktick(string(rawDownDiff)), varName)))
+	}
 
-		downParts = append(downParts, "// add")
-		downParts = append(downParts, fmt.Sprintf("%s := &schema.SchemaField{}", fieldVar))
-		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawOldField)), fieldVar)))
-		downParts = append(downParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
+	// fields
+	// -----------------------------------------------------------------
+
+	oldFieldsSlice, ok := oldMap["fields"].([]any)
+	if !ok {
+		return "", errors.New(`oldMap["fields"] is not []any`)
+	}
+
+	newFieldsSlice, ok := newMap["fields"].([]any)
+	if !ok {
+		return "", errors.New(`newMap["fields"] is not []any`)
+	}
+
+	// deleted fields
+	for i, oldField := range old.Fields {
+		if new.Fields.GetById(oldField.GetId()) != nil {
+			continue // exist
+		}
+
+		rawOldField, err := marhshalWithoutEscape(oldFieldsSlice[i], "\t\t", "\t")
+		if err != nil {
+			return "", err
+		}
+
+		upParts = append(upParts, "// remove field")
+		upParts = append(upParts, fmt.Sprintf("%s.Fields.RemoveById(%q)\n", varName, oldField.GetId()))
+
+		downParts = append(downParts, "// add field")
+		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawOldField)))))
 	}
 
 	// created fields
-	for _, newField := range new.Schema.Fields() {
-		if old.Schema.GetFieldById(newField.Id) != nil {
+	for i, newField := range new.Fields {
+		if old.Fields.GetById(newField.GetId()) != nil {
 			continue // exist
 		}
 
-		rawNewField, err := marhshalWithoutEscape(newField, "\t\t", "\t")
+		rawNewField, err := marhshalWithoutEscape(newFieldsSlice[i], "\t\t", "\t")
 		if err != nil {
 			return "", err
 		}
 
-		fieldVar := fmt.Sprintf("new_%s", newField.Name)
+		upParts = append(upParts, "// add field")
+		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawNewField)))))
 
-		upParts = append(upParts, "// add")
-		upParts = append(upParts, fmt.Sprintf("%s := &schema.SchemaField{}", fieldVar))
-		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawNewField)), fieldVar)))
-		upParts = append(upParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
-
-		downParts = append(downParts, "// remove")
-		downParts = append(downParts, fmt.Sprintf("%s.Schema.RemoveField(%q)\n", varName, newField.Id))
+		downParts = append(downParts, "// remove field")
+		downParts = append(downParts, fmt.Sprintf("%s.Fields.RemoveById(%q)\n", varName, newField.GetId()))
 	}
 
 	// modified fields
-	for _, newField := range new.Schema.Fields() {
-		oldField := old.Schema.GetFieldById(newField.Id)
-		if oldField == nil {
-			continue
-		}
+	for i, newField := range new.Fields {
+		var rawNewField, rawOldField []byte
 
-		rawNewField, err := marhshalWithoutEscape(newField, "\t\t", "\t")
+		rawNewField, err = marhshalWithoutEscape(newFieldsSlice[i], "\t\t", "\t")
 		if err != nil {
 			return "", err
 		}
 
-		rawOldField, err := marhshalWithoutEscape(oldField, "\t\t", "\t")
-		if err != nil {
-			return "", err
+		for j, oldField := range old.Fields {
+			if oldField.GetId() == newField.GetId() {
+				rawOldField, err = marhshalWithoutEscape(oldFieldsSlice[j], "\t\t", "\t")
+				if err != nil {
+					return "", err
+				}
+				break
+			}
 		}
 
-		if bytes.Equal(rawNewField, rawOldField) {
-			continue // no change
+		if rawOldField == nil || bytes.Equal(rawNewField, rawOldField) {
+			continue // new field or no change
 		}
 
-		fieldVar := fmt.Sprintf("edit_%s", newField.Name)
+		upParts = append(upParts, "// update field")
+		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawNewField)))))
 
-		upParts = append(upParts, "// update")
-		upParts = append(upParts, fmt.Sprintf("%s := &schema.SchemaField{}", fieldVar))
-		upParts = append(upParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawNewField)), fieldVar)))
-		upParts = append(upParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
-
-		downParts = append(downParts, "// update")
-		downParts = append(downParts, fmt.Sprintf("%s := &schema.SchemaField{}", fieldVar))
-		downParts = append(downParts, goErrIf(fmt.Sprintf("json.Unmarshal([]byte(`%s`), %s)", escapeBacktick(string(rawOldField)), fieldVar)))
-		downParts = append(downParts, fmt.Sprintf("%s.Schema.AddField(%s)\n", varName, fieldVar))
+		downParts = append(downParts, "// update field")
+		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawOldField)))))
 	}
+
 	// ---------------------------------------------------------------
 
 	if len(upParts) == 0 && len(downParts) == 0 {
-		return "", emptyTemplateErr
+		return "", ErrEmptyTemplate
 	}
 
 	up := strings.Join(upParts, "\n\t\t")
@@ -719,17 +616,8 @@ func (p *plugin) goDiffTemplate(new *models.Collection, old *models.Collection) 
 		imports += "\n\t\"encoding/json\"\n"
 	}
 
-	imports += "\n\t\"github.com/pocketbase/dbx\""
-	imports += "\n\t\"github.com/pocketbase/pocketbase/daos\""
+	imports += "\n\t\"github.com/pocketbase/pocketbase/core\""
 	imports += "\n\tm \"github.com/pocketbase/pocketbase/migrations\""
-
-	if strings.Contains(combined, "schema.SchemaField{") {
-		imports += "\n\t\"github.com/pocketbase/pocketbase/models/schema\""
-	}
-
-	if strings.Contains(combined, "types.Pointer(") {
-		imports += "\n\t\"github.com/pocketbase/pocketbase/tools/types\""
-	}
 	// ---
 
 	const template = `package %s
@@ -738,28 +626,24 @@ import (%s
 )
 
 func init() {
-	m.Register(func(db dbx.Builder) error {
-		dao := daos.New(db);
-
-		collection, err := dao.FindCollectionByNameOrId(%q)
+	m.Register(func(app core.App) error {
+		collection, err := app.FindCollectionByNameOrId(%q)
 		if err != nil {
 			return err
 		}
 
 		%s
 
-		return dao.SaveCollection(collection)
-	}, func(db dbx.Builder) error {
-		dao := daos.New(db);
-
-		collection, err := dao.FindCollectionByNameOrId(%q)
+		return app.Save(collection)
+	}, func(app core.App) error {
+		collection, err := app.FindCollectionByNameOrId(%q)
 		if err != nil {
 			return err
 		}
 
 		%s
 
-		return dao.SaveCollection(collection)
+		return app.Save(collection)
 	})
 }
 `
@@ -793,5 +677,85 @@ func escapeBacktick(v string) string {
 }
 
 func goErrIf(v string) string {
-	return "if err := " + v + "; err != nil {\n\t\t\treturn err\n\t\t}"
+	return "if err := " + v + "; err != nil {\n\t\t\treturn err\n\t\t}\n"
+}
+
+func toMap(v any) (map[string]any, error) {
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	result := map[string]any{}
+
+	err = json.Unmarshal(raw, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func diffMaps(old, new map[string]any, excludeKeys ...string) map[string]any {
+	diff := map[string]any{}
+
+	for k, vNew := range new {
+		if slices.Contains(excludeKeys, k) {
+			continue
+		}
+
+		vOld, ok := old[k]
+		if !ok {
+			// new field
+			diff[k] = vNew
+			continue
+		}
+
+		// compare the serialized version of the values in case of slice or other custom type
+		rawOld, _ := json.Marshal(vOld)
+		rawNew, _ := json.Marshal(vNew)
+
+		if !bytes.Equal(rawOld, rawNew) {
+			// if both are maps add recursively only the changed fields
+			vOldMap, ok1 := vOld.(map[string]any)
+			vNewMap, ok2 := vNew.(map[string]any)
+			if ok1 && ok2 {
+				subDiff := diffMaps(vOldMap, vNewMap)
+				if len(subDiff) > 0 {
+					diff[k] = subDiff
+				}
+			} else {
+				diff[k] = vNew
+			}
+		}
+	}
+
+	// unset missing fields
+	for k := range old {
+		if _, ok := diff[k]; ok || slices.Contains(excludeKeys, k) {
+			continue // already added
+		}
+
+		if _, ok := new[k]; !ok {
+			diff[k] = nil
+		}
+	}
+
+	return diff
+}
+
+func deleteNestedMapKey(data map[string]any, parts ...string) {
+	if len(parts) == 0 {
+		return
+	}
+
+	if len(parts) == 1 {
+		delete(data, parts[0])
+		return
+	}
+
+	v, ok := data[parts[0]].(map[string]any)
+	if ok {
+		deleteNestedMapKey(v, parts[1:]...)
+	}
 }

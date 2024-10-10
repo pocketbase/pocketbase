@@ -1,8 +1,6 @@
 <script>
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
-    import Select from "@/components/base/Select.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import CollectionUpsertPanel from "@/components/collections/CollectionUpsertPanel.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
@@ -22,34 +20,32 @@
     ];
 
     let upsertPanel = null;
-    let isSingle = field.options?.maxSelect == 1;
+    let isSingle = field.maxSelect <= 1;
     let oldIsSingle = isSingle;
 
-    $: selectCollections = $collections.filter((c) => c.type != "view");
+    $: selectCollections = $collections.filter((c) => !c.system && c.type != "view");
 
     // load defaults
-    $: if (CommonHelper.isEmpty(field.options)) {
+    $: if (typeof field.maxSelect == "undefined") {
         loadDefaults();
     }
 
     $: if (oldIsSingle != isSingle) {
         oldIsSingle = isSingle;
         if (isSingle) {
-            field.options.minSelect = null;
-            field.options.maxSelect = 1;
+            field.minSelect = 0;
+            field.maxSelect = 1;
         } else {
-            field.options.maxSelect = null;
+            field.maxSelect = 999;
         }
     }
 
-    $: selectedColection = $collections.find((c) => c.id == field.options.collectionId) || null;
+    $: selectedColection = $collections.find((c) => c.id == field.collectionId) || null;
 
     function loadDefaults() {
-        field.options = {
-            maxSelect: 1,
-            collectionId: null,
-            cascadeDelete: false,
-        };
+        field.maxSelect = 1;
+        field.collectionId = null;
+        field.cascadeDelete = false;
         isSingle = true;
         oldIsSingle = isSingle;
     }
@@ -62,7 +58,7 @@
         <Field
             class="form-field required {!interactive ? 'readonly' : ''}"
             inlineError
-            name="schema.{key}.options.collectionId"
+            name="fields.{key}.collectionId"
             let:uniqueId
         >
             <ObjectSelect
@@ -73,7 +69,7 @@
                 selectionKey="id"
                 items={selectCollections}
                 readonly={!interactive || field.id}
-                bind:keyOfSelected={field.options.collectionId}
+                bind:keyOfSelected={field.collectionId}
             >
                 <svelte:fragment slot="afterOptions">
                     <hr />
@@ -111,35 +107,36 @@
         <div class="grid grid-sm">
             {#if !isSingle}
                 <div class="col-sm-6">
-                    <Field class="form-field" name="schema.{key}.options.minSelect" let:uniqueId>
+                    <Field class="form-field" name="fields.{key}.minSelect" let:uniqueId>
                         <label for={uniqueId}>Min select</label>
                         <input
                             type="number"
                             id={uniqueId}
                             step="1"
-                            min="1"
+                            min="0"
                             placeholder="No min limit"
-                            bind:value={field.options.minSelect}
+                            value={field.minSelect || ""}
+                            on:input={(e) => (field.minSelect = e.target.value << 0)}
                         />
                     </Field>
                 </div>
                 <div class="col-sm-6">
-                    <Field class="form-field" name="schema.{key}.options.maxSelect" let:uniqueId>
+                    <Field class="form-field" name="fields.{key}.maxSelect" let:uniqueId>
                         <label for={uniqueId}>Max select</label>
                         <input
                             type="number"
                             id={uniqueId}
                             step="1"
-                            placeholder="No max limit"
-                            min={field.options.minSelect || 2}
-                            bind:value={field.options.maxSelect}
+                            placeholder="Default to single"
+                            min={field.minSelect || 1}
+                            bind:value={field.maxSelect}
                         />
                     </Field>
                 </div>
             {/if}
 
             <div class="col-sm-12">
-                <Field class="form-field" name="schema.{key}.options.cascadeDelete" let:uniqueId>
+                <Field class="form-field" name="fields.{key}.cascadeDelete" let:uniqueId>
                     <label for={uniqueId}>
                         <span class="txt">Cascade delete</span>
                         <!-- prettier-ignore -->
@@ -157,7 +154,7 @@
                     <ObjectSelect
                         id={uniqueId}
                         items={defaultOptions}
-                        bind:keyOfSelected={field.options.cascadeDelete}
+                        bind:keyOfSelected={field.cascadeDelete}
                     />
                 </Field>
             </div>
@@ -169,7 +166,7 @@
     bind:this={upsertPanel}
     on:save={(e) => {
         if (e?.detail?.collection?.id && e.detail.collection.type != "view") {
-            field.options.collectionId = e.detail.collection.id;
+            field.collectionId = e.detail.collection.id;
         }
     }}
 />

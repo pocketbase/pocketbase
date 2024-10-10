@@ -36,8 +36,8 @@ func TestNew(t *testing.T) {
 		t.Fatal("Expected RootCmd to be initialized, got nil")
 	}
 
-	if app.appWrapper == nil {
-		t.Fatal("Expected appWrapper to be initialized, got nil")
+	if app.App == nil {
+		t.Fatal("Expected App to be initialized, got nil")
 	}
 
 	if app.DataDir() != "test_dir" {
@@ -64,8 +64,8 @@ func TestNewWithConfig(t *testing.T) {
 		t.Fatal("Expected RootCmd to be initialized, got nil")
 	}
 
-	if app.appWrapper == nil {
-		t.Fatal("Expected appWrapper to be initialized, got nil")
+	if app.App == nil {
+		t.Fatal("Expected App to be initialized, got nil")
 	}
 
 	if app.hideStartBanner != true {
@@ -113,8 +113,8 @@ func TestNewWithConfigAndFlags(t *testing.T) {
 		t.Fatal("Expected RootCmd to be initialized, got nil")
 	}
 
-	if app.appWrapper == nil {
-		t.Fatal("Expected appWrapper to be initialized, got nil")
+	if app.App == nil {
+		t.Fatal("Expected App to be initialized, got nil")
 	}
 
 	if app.hideStartBanner != true {

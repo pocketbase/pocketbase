@@ -16,8 +16,8 @@
     $pageTitle = "Logs";
 
     const LOG_QUERY_KEY = "logId";
-    const ADMIN_REQUESTS_QUERY_KEY = "adminRequests";
-    const ADMIN_REQUESTS_STORAGE_KEY = "adminLogRequests";
+    const ADMIN_REQUESTS_QUERY_KEY = "superuserRequests";
+    const ADMIN_REQUESTS_STORAGE_KEY = "superuserLogRequests";
 
     const initialQueryParams = new URLSearchParams($querystring);
 
@@ -25,20 +25,21 @@
     let logsSettingsPanel;
     let refreshKey = 1;
     let filter = initialQueryParams.get("filter") || "";
-    let withAdminLogs =
+    let zoom = {};
+    let withSuperuserLogs =
         (initialQueryParams.get(ADMIN_REQUESTS_QUERY_KEY) ||
             window.localStorage?.getItem(ADMIN_REQUESTS_STORAGE_KEY)) << 0;
-    let initialWithAdminLogs = withAdminLogs;
+    let initialWithSuperuserLogs = withSuperuserLogs;
 
     $: if (initialQueryParams.get(LOG_QUERY_KEY) && logViewPanel) {
         logViewPanel.show(initialQueryParams.get(LOG_QUERY_KEY));
     }
 
-    $: presets = !withAdminLogs ? 'data.auth!="admin"' : "";
+    $: presets = !withSuperuserLogs ? 'data.auth!="_superusers"' : "";
 
-    $: if (initialWithAdminLogs != withAdminLogs) {
-        initialWithAdminLogs = withAdminLogs;
-        window.localStorage?.setItem(ADMIN_REQUESTS_STORAGE_KEY, withAdminLogs << 0);
+    $: if (initialWithSuperuserLogs != withSuperuserLogs) {
+        initialWithSuperuserLogs = withSuperuserLogs;
+        window.localStorage?.setItem(ADMIN_REQUESTS_STORAGE_KEY, withSuperuserLogs << 0);
         updateQueryParams();
     }
 
@@ -53,7 +54,7 @@
     function updateQueryParams(extra = {}) {
         let queryParams = {};
         queryParams.filter = filter || null;
-        queryParams[ADMIN_REQUESTS_QUERY_KEY] = withAdminLogs << 0 || null;
+        queryParams[ADMIN_REQUESTS_QUERY_KEY] = withSuperuserLogs << 0 || null;
         CommonHelper.replaceHashQueryParams(Object.assign(queryParams, extra));
     }
 </script>
@@ -81,8 +82,8 @@
 
             <div class="inline-flex">
                 <Field class="form-field form-field-toggle m-0" let:uniqueId>
-                    <input type="checkbox" id={uniqueId} bind:checked={withAdminLogs} />
-                    <label for={uniqueId}>Include requests by admins</label>
+                    <input type="checkbox" id={uniqueId} bind:checked={withSuperuserLogs} />
+                    <label for={uniqueId}>Include requests by superusers</label>
                 </Field>
             </div>
         </header>
@@ -96,12 +97,12 @@
         <LogsLevelsInfo class="block txt-sm txt-hint m-t-xs m-b-base" />
 
         {#key refreshKey}
-            <LogsChart {filter} {presets} />
+            <LogsChart bind:zoom {filter} {presets} />
         {/key}
     </div>
 
     {#key refreshKey}
-        <LogsList bind:filter {presets} on:select={(e) => logViewPanel?.show(e?.detail)} />
+        <LogsList bind:filter bind:zoom {presets} on:select={(e) => logViewPanel?.show(e?.detail)} />
     {/key}
 </PageWrapper>
 

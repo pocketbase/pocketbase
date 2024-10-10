@@ -2,9 +2,11 @@ package logger
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"sync"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -160,7 +162,6 @@ func (h *BatchHandler) Handle(ctx context.Context, r slog.Record) error {
 		if err := h.resolveAttr(data, a); err != nil {
 			return false
 		}
-
 		return true
 	})
 
@@ -168,7 +169,7 @@ func (h *BatchHandler) Handle(ctx context.Context, r slog.Record) error {
 		Time:    r.Time,
 		Level:   r.Level,
 		Message: r.Message,
-		Data:    types.JsonMap(data),
+		Data:    types.JSONMap[any](data),
 	}
 
 	if h.options.BeforeAddFunc != nil && !h.options.BeforeAddFunc(ctx, log) {
@@ -251,11 +252,23 @@ func (h *BatchHandler) resolveAttr(data map[string]any, attr slog.Attr) error {
 			data[attr.Key] = groupData
 		}
 	default:
-		v := attr.Value.Any()
-
-		if err, ok := v.(error); ok {
-			data[attr.Key] = err.Error()
-		} else {
+		switch v := attr.Value.Any().(type) {
+		case validation.Errors:
+			data[attr.Key] = map[string]any{
+				"data": v,
+				"raw":  v.Error(),
+			}
+		case error:
+			var ve validation.Errors
+			if errors.As(v, &ve) {
+				data[attr.Key] = map[string]any{
+					"data": ve,
+					"raw":  v.Error(),
+				}
+			} else {
+				data[attr.Key] = v.Error()
+			}
+		default:
 			data[attr.Key] = v
 		}
 	}

@@ -84,9 +84,7 @@ func (data FormData) Values() []any {
 	result := make([]any, 0, len(data))
 
 	for _, values := range data {
-		for _, v := range values {
-			result = append(result, v)
-		}
+		result = append(result, values...)
 	}
 
 	return result

@@ -1,26 +1,19 @@
-// Package migrations contains the system PocketBase DB migrations.
 package migrations
 
 import (
+	"fmt"
 	"path/filepath"
 	"runtime"
 
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/models/settings"
-	"github.com/pocketbase/pocketbase/tools/migrate"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
-
-var AppMigrations migrate.MigrationsList
 
 // Register is a short alias for `AppMigrations.Register()`
 // that is usually used in external/user defined migrations.
 func Register(
-	up func(db dbx.Builder) error,
-	down func(db dbx.Builder) error,
+	up func(app core.App) error,
+	down func(app core.App) error,
 	optFilename ...string,
 ) {
 	var optFiles []string
@@ -30,29 +23,24 @@ func Register(
 		_, path, _, _ := runtime.Caller(1)
 		optFiles = append(optFiles, filepath.Base(path))
 	}
-	AppMigrations.Register(up, down, optFiles...)
+	core.AppMigrations.Register(up, down, optFiles...)
 }
 
 func init() {
-	AppMigrations.Register(func(db dbx.Builder) error {
-		_, tablesErr := db.NewQuery(`
-			CREATE TABLE {{_admins}} (
-				[[id]]              TEXT PRIMARY KEY NOT NULL,
-				[[avatar]]          INTEGER DEFAULT 0 NOT NULL,
-				[[email]]           TEXT UNIQUE NOT NULL,
-				[[tokenKey]]        TEXT UNIQUE NOT NULL,
-				[[passwordHash]]    TEXT NOT NULL,
-				[[lastResetSentAt]] TEXT DEFAULT "" NOT NULL,
-				[[created]]         TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
-				[[updated]]         TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
-			);
+	core.SystemMigrations.Register(func(txApp core.App) error {
+		if err := createParamsTable(txApp); err != nil {
+			return fmt.Errorf("_params exec error: %w", err)
+		}
 
+		// -----------------------------------------------------------
+
+		_, execerr := txApp.DB().NewQuery(`
 			CREATE TABLE {{_collections}} (
-				[[id]]         TEXT PRIMARY KEY NOT NULL,
+				[[id]]         TEXT PRIMARY KEY DEFAULT ('r'||lower(hex(randomblob(7)))) NOT NULL,
 				[[system]]     BOOLEAN DEFAULT FALSE NOT NULL,
 				[[type]]       TEXT DEFAULT "base" NOT NULL,
 				[[name]]       TEXT UNIQUE NOT NULL,
-				[[schema]]     JSON DEFAULT "[]" NOT NULL,
+				[[fields]]     JSON DEFAULT "[]" NOT NULL,
 				[[indexes]]    JSON DEFAULT "[]" NOT NULL,
 				[[listRule]]   TEXT DEFAULT NULL,
 				[[viewRule]]   TEXT DEFAULT NULL,
@@ -63,108 +51,284 @@ func init() {
 				[[created]]    TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
 				[[updated]]    TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
 			);
-
-			CREATE TABLE {{_params}} (
-				[[id]]      TEXT PRIMARY KEY NOT NULL,
-				[[key]]     TEXT UNIQUE NOT NULL,
-				[[value]]   JSON DEFAULT NULL,
-				[[created]] TEXT DEFAULT "" NOT NULL,
-				[[updated]] TEXT DEFAULT "" NOT NULL
-			);
-
-			CREATE TABLE {{_externalAuths}} (
-				[[id]]           TEXT PRIMARY KEY NOT NULL,
-				[[collectionId]] TEXT NOT NULL,
-				[[recordId]]     TEXT NOT NULL,
-				[[provider]]     TEXT NOT NULL,
-				[[providerId]]   TEXT NOT NULL,
-				[[created]]      TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
-				[[updated]]      TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
-				---
-				FOREIGN KEY ([[collectionId]]) REFERENCES {{_collections}} ([[id]]) ON UPDATE CASCADE ON DELETE CASCADE
-			);
-
-			CREATE UNIQUE INDEX _externalAuths_record_provider_idx on {{_externalAuths}} ([[collectionId]], [[recordId]], [[provider]]);
-			CREATE UNIQUE INDEX _externalAuths_collection_provider_idx on {{_externalAuths}} ([[collectionId]], [[provider]], [[providerId]]);
 		`).Execute()
-		if tablesErr != nil {
-			return tablesErr
+		if execerr != nil {
+			return fmt.Errorf("_collections exec error: %w", execerr)
 		}
 
-		dao := daos.New(db)
-
-		// inserts default settings
-		// -----------------------------------------------------------
-		defaultSettings := settings.New()
-		if err := dao.SaveSettings(defaultSettings); err != nil {
-			return err
+		if err := createMFAsCollection(txApp); err != nil {
+			return fmt.Errorf("_mfas error: %w", err)
 		}
 
-		// inserts the system users collection
-		// -----------------------------------------------------------
-		usersCollection := &models.Collection{}
-		usersCollection.MarkAsNew()
-		usersCollection.Id = "_pb_users_auth_"
-		usersCollection.Name = "users"
-		usersCollection.Type = models.CollectionTypeAuth
-		usersCollection.ListRule = types.Pointer("id = @request.auth.id")
-		usersCollection.ViewRule = types.Pointer("id = @request.auth.id")
-		usersCollection.CreateRule = types.Pointer("")
-		usersCollection.UpdateRule = types.Pointer("id = @request.auth.id")
-		usersCollection.DeleteRule = types.Pointer("id = @request.auth.id")
+		if err := createOTPsCollection(txApp); err != nil {
+			return fmt.Errorf("_otps error: %w", err)
+		}
 
-		// set auth options
-		usersCollection.SetOptions(models.CollectionAuthOptions{
-			ManageRule:        nil,
-			AllowOAuth2Auth:   true,
-			AllowUsernameAuth: true,
-			AllowEmailAuth:    true,
-			MinPasswordLength: 8,
-			RequireEmail:      false,
-		})
+		if err := createExternalAuthsCollection(txApp); err != nil {
+			return fmt.Errorf("_externalAuths error: %w", err)
+		}
 
-		// set optional default fields
-		usersCollection.Schema = schema.NewSchema(
-			&schema.SchemaField{
-				Id:      "users_name",
-				Type:    schema.FieldTypeText,
-				Name:    "name",
-				Options: &schema.TextOptions{},
-			},
-			&schema.SchemaField{
-				Id:   "users_avatar",
-				Type: schema.FieldTypeFile,
-				Name: "avatar",
-				Options: &schema.FileOptions{
-					MaxSelect: 1,
-					MaxSize:   5242880,
-					MimeTypes: []string{
-						"image/jpeg",
-						"image/png",
-						"image/svg+xml",
-						"image/gif",
-						"image/webp",
-					},
-				},
-			},
-		)
+		if err := createAuthOriginsCollection(txApp); err != nil {
+			return fmt.Errorf("_authOrigins error: %w", err)
+		}
 
-		return dao.SaveCollection(usersCollection)
-	}, func(db dbx.Builder) error {
+		if err := createSuperusersCollection(txApp); err != nil {
+			return fmt.Errorf("_superusers error: %w", err)
+		}
+
+		if err := createUsersCollection(txApp); err != nil {
+			return fmt.Errorf("users error: %w", err)
+		}
+
+		return nil
+	}, func(txApp core.App) error {
 		tables := []string{
 			"users",
-			"_externalAuths",
+			core.CollectionNameSuperusers,
+			core.CollectionNameMFAs,
+			core.CollectionNameOTPs,
+			core.CollectionNameAuthOrigins,
 			"_params",
 			"_collections",
-			"_admins",
 		}
 
 		for _, name := range tables {
-			if _, err := db.DropTable(name).Execute(); err != nil {
+			if _, err := txApp.DB().DropTable(name).Execute(); err != nil {
 				return err
 			}
 		}
 
 		return nil
 	})
+}
+
+func createParamsTable(txApp core.App) error {
+	_, execErr := txApp.DB().NewQuery(`
+		CREATE TABLE {{_params}} (
+			[[id]]      TEXT PRIMARY KEY DEFAULT ('r'||lower(hex(randomblob(7)))) NOT NULL,
+			[[value]]   JSON DEFAULT NULL,
+			[[created]] TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
+			[[updated]] TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
+		);
+	`).Execute()
+
+	return execErr
+}
+
+func createMFAsCollection(txApp core.App) error {
+	col := core.NewBaseCollection(core.CollectionNameMFAs)
+	col.System = true
+
+	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
+	col.ListRule = types.Pointer(ownerRule)
+	col.ViewRule = types.Pointer(ownerRule)
+	col.DeleteRule = types.Pointer(ownerRule)
+
+	col.Fields.Add(&core.TextField{
+		Name:     "collectionRef",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.TextField{
+		Name:     "recordRef",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.TextField{
+		Name:     "method",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.AutodateField{
+		Name:     "created",
+		System:   true,
+		OnCreate: true,
+	})
+	col.Fields.Add(&core.AutodateField{
+		Name:     "updated",
+		System:   true,
+		OnCreate: true,
+		OnUpdate: true,
+	})
+	col.AddIndex("idx_mfas_collectionRef_recordRef", false, "collectionRef,recordRef", "")
+
+	return txApp.Save(col)
+}
+
+func createOTPsCollection(txApp core.App) error {
+	col := core.NewBaseCollection(core.CollectionNameOTPs)
+	col.System = true
+
+	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
+	col.ListRule = types.Pointer(ownerRule)
+	col.ViewRule = types.Pointer(ownerRule)
+	col.DeleteRule = types.Pointer(ownerRule)
+
+	col.Fields.Add(&core.TextField{
+		Name:     "collectionRef",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.TextField{
+		Name:     "recordRef",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.PasswordField{
+		Name:     "password",
+		System:   true,
+		Hidden:   true,
+		Required: true,
+		Cost:     8, // low cost for better performce and because it is not critical
+	})
+	col.Fields.Add(&core.AutodateField{
+		Name:     "created",
+		System:   true,
+		OnCreate: true,
+	})
+	col.Fields.Add(&core.AutodateField{
+		Name:     "updated",
+		System:   true,
+		OnCreate: true,
+		OnUpdate: true,
+	})
+	col.AddIndex("idx_otps_collectionRef_recordRef", false, "collectionRef, recordRef", "")
+
+	return txApp.Save(col)
+}
+
+func createAuthOriginsCollection(txApp core.App) error {
+	col := core.NewBaseCollection(core.CollectionNameAuthOrigins)
+	col.System = true
+
+	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
+	col.ListRule = types.Pointer(ownerRule)
+	col.ViewRule = types.Pointer(ownerRule)
+	col.DeleteRule = types.Pointer(ownerRule)
+
+	col.Fields.Add(&core.TextField{
+		Name:     "collectionRef",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.TextField{
+		Name:     "recordRef",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.TextField{
+		Name:     "fingerprint",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.AutodateField{
+		Name:     "created",
+		System:   true,
+		OnCreate: true,
+	})
+	col.Fields.Add(&core.AutodateField{
+		Name:     "updated",
+		System:   true,
+		OnCreate: true,
+		OnUpdate: true,
+	})
+	col.AddIndex("idx_authOrigins_unique_pairs", true, "collectionRef, recordRef, fingerprint", "")
+
+	return txApp.Save(col)
+}
+
+func createExternalAuthsCollection(txApp core.App) error {
+	col := core.NewBaseCollection(core.CollectionNameExternalAuths)
+	col.System = true
+
+	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
+	col.ListRule = types.Pointer(ownerRule)
+	col.ViewRule = types.Pointer(ownerRule)
+	col.DeleteRule = types.Pointer(ownerRule)
+
+	col.Fields.Add(&core.TextField{
+		Name:     "collectionRef",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.TextField{
+		Name:     "recordRef",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.TextField{
+		Name:     "provider",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.TextField{
+		Name:     "providerId",
+		System:   true,
+		Required: true,
+	})
+	col.Fields.Add(&core.AutodateField{
+		Name:     "created",
+		System:   true,
+		OnCreate: true,
+	})
+	col.Fields.Add(&core.AutodateField{
+		Name:     "updated",
+		System:   true,
+		OnCreate: true,
+		OnUpdate: true,
+	})
+	col.AddIndex("idx_externalAuths_record_provider", true, "collectionRef, recordRef, provider", "")
+	col.AddIndex("idx_externalAuths_collection_provider", true, "collectionRef, provider, providerId", "")
+
+	return txApp.Save(col)
+}
+
+func createSuperusersCollection(txApp core.App) error {
+	superusers := core.NewAuthCollection(core.CollectionNameSuperusers)
+	superusers.System = true
+	superusers.Fields.Add(&core.EmailField{
+		Name:     "email",
+		System:   true,
+		Required: true,
+	})
+	superusers.Fields.Add(&core.AutodateField{
+		Name:     "created",
+		System:   true,
+		OnCreate: true,
+	})
+	superusers.Fields.Add(&core.AutodateField{
+		Name:     "updated",
+		System:   true,
+		OnCreate: true,
+		OnUpdate: true,
+	})
+	superusers.AuthToken.Duration = 86400 // 1 day
+
+	return txApp.Save(superusers)
+}
+
+func createUsersCollection(txApp core.App) error {
+	users := core.NewAuthCollection("users")
+	users.Fields.Add(&core.TextField{
+		Name: "name",
+		Max:  255,
+	})
+	users.Fields.Add(&core.FileField{
+		Name:      "avatar",
+		MaxSelect: 1,
+		MimeTypes: []string{"image/jpeg", "image/png", "image/svg+xml", "image/gif", "image/webp"},
+	})
+	users.Fields.Add(&core.AutodateField{
+		Name:     "created",
+		OnCreate: true,
+	})
+	users.Fields.Add(&core.AutodateField{
+		Name:     "updated",
+		OnCreate: true,
+		OnUpdate: true,
+	})
+	users.OAuth2.MappedFields.Name = "name"
+	users.OAuth2.MappedFields.AvatarURL = "avatar"
+
+	return txApp.Save(users)
 }

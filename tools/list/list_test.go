@@ -2,6 +2,7 @@ package list_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/list"
@@ -42,18 +43,20 @@ func TestSubtractSliceString(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		result := list.SubtractSlice(s.base, s.subtract)
+		t.Run(fmt.Sprintf("%d_%s", i, s.expected), func(t *testing.T) {
+			result := list.SubtractSlice(s.base, s.subtract)
 
-		raw, err := json.Marshal(result)
-		if err != nil {
-			t.Fatalf("(%d) Failed to serialize: %v", i, err)
-		}
+			raw, err := json.Marshal(result)
+			if err != nil {
+				t.Fatalf("Failed to serialize: %v", err)
+			}
 
-		strResult := string(raw)
+			strResult := string(raw)
 
-		if strResult != s.expected {
-			t.Fatalf("(%d) Expected %v, got %v", i, s.expected, strResult)
-		}
+			if strResult != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, strResult)
+			}
+		})
 	}
 }
 
@@ -91,18 +94,20 @@ func TestSubtractSliceInt(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		result := list.SubtractSlice(s.base, s.subtract)
+		t.Run(fmt.Sprintf("%d_%s", i, s.expected), func(t *testing.T) {
+			result := list.SubtractSlice(s.base, s.subtract)
 
-		raw, err := json.Marshal(result)
-		if err != nil {
-			t.Fatalf("(%d) Failed to serialize: %v", i, err)
-		}
+			raw, err := json.Marshal(result)
+			if err != nil {
+				t.Fatalf("Failed to serialize: %v", err)
+			}
 
-		strResult := string(raw)
+			strResult := string(raw)
 
-		if strResult != s.expected {
-			t.Fatalf("(%d) Expected %v, got %v", i, s.expected, strResult)
-		}
+			if strResult != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, strResult)
+			}
+		})
 	}
 }
 
@@ -120,15 +125,13 @@ func TestExistInSliceString(t *testing.T) {
 		{"test", []string{"1", "2", "test"}, true},
 	}
 
-	for i, scenario := range scenarios {
-		result := list.ExistInSlice(scenario.item, scenario.list)
-		if result != scenario.expected {
-			if scenario.expected {
-				t.Errorf("(%d) Expected to exist in the list", i)
-			} else {
-				t.Errorf("(%d) Expected NOT to exist in the list", i)
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%s", i, s.item), func(t *testing.T) {
+			result := list.ExistInSlice(s.item, s.list)
+			if result != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, result)
 			}
-		}
+		})
 	}
 }
 
@@ -146,15 +149,13 @@ func TestExistInSliceInt(t *testing.T) {
 		{-1, []int{0, -1, -2, -3, -4}, true},
 	}
 
-	for i, scenario := range scenarios {
-		result := list.ExistInSlice(scenario.item, scenario.list)
-		if result != scenario.expected {
-			if scenario.expected {
-				t.Errorf("(%d) Expected to exist in the list", i)
-			} else {
-				t.Errorf("(%d) Expected NOT to exist in the list", i)
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%d", i, s.item), func(t *testing.T) {
+			result := list.ExistInSlice(s.item, s.list)
+			if result != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, result)
 			}
-		}
+		})
 	}
 }
 
@@ -177,15 +178,13 @@ func TestExistInSliceWithRegex(t *testing.T) {
 		{"!?@test", []string{`^\W+$`, "test"}, false},
 	}
 
-	for i, scenario := range scenarios {
-		result := list.ExistInSliceWithRegex(scenario.item, scenario.list)
-		if result != scenario.expected {
-			if scenario.expected {
-				t.Errorf("(%d) Expected the string to exist in the list", i)
-			} else {
-				t.Errorf("(%d) Expected the string NOT to exist in the list", i)
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%s", i, s.item), func(t *testing.T) {
+			result := list.ExistInSliceWithRegex(s.item, s.list)
+			if result != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, result)
 			}
-		}
+		})
 	}
 }
 
@@ -196,21 +195,23 @@ func TestToInterfaceSlice(t *testing.T) {
 		{[]string{}},
 		{[]string{""}},
 		{[]string{"1", "test"}},
-		{[]string{"test1", "test2", "test3"}},
+		{[]string{"test1", "test1", "test2", "test3"}},
 	}
 
-	for i, scenario := range scenarios {
-		result := list.ToInterfaceSlice(scenario.items)
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.items), func(t *testing.T) {
+			result := list.ToInterfaceSlice(s.items)
 
-		if len(result) != len(scenario.items) {
-			t.Errorf("(%d) Result list length doesn't match with the original list", i)
-		}
-
-		for j, v := range result {
-			if v != scenario.items[j] {
-				t.Errorf("(%d:%d) Result list item should match with the original list item", i, j)
+			if len(result) != len(s.items) {
+				t.Fatalf("Expected length %d, got %d", len(s.items), len(result))
 			}
-		}
+
+			for j, v := range result {
+				if v != s.items[j] {
+					t.Fatalf("Result list item doesn't match with the original list item, got %v VS %v", v, s.items[j])
+				}
+			}
+		})
 	}
 }
 
@@ -225,18 +226,20 @@ func TestNonzeroUniquesString(t *testing.T) {
 		{[]string{"test1", "", "test2", "Test2", "test1", "test3"}, []string{"test1", "test2", "Test2", "test3"}},
 	}
 
-	for i, scenario := range scenarios {
-		result := list.NonzeroUniques(scenario.items)
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.items), func(t *testing.T) {
+			result := list.NonzeroUniques(s.items)
 
-		if len(result) != len(scenario.expected) {
-			t.Errorf("(%d) Result list length doesn't match with the expected list", i)
-		}
-
-		for j, v := range result {
-			if v != scenario.expected[j] {
-				t.Errorf("(%d:%d) Result list item should match with the expected list item", i, j)
+			if len(result) != len(s.expected) {
+				t.Fatalf("Expected length %d, got %d", len(s.expected), len(result))
 			}
-		}
+
+			for j, v := range result {
+				if v != s.expected[j] {
+					t.Fatalf("Result list item doesn't match with the expected list item, got %v VS %v", v, s.expected[j])
+				}
+			}
+		})
 	}
 }
 
@@ -254,20 +257,54 @@ func TestToUniqueStringSlice(t *testing.T) {
 		{[]any{0, 1, "test", ""}, []string{"0", "1", "test"}},
 		{[]string{"test1", "test2", "test1"}, []string{"test1", "test2"}},
 		{`["test1", "test2", "test2"]`, []string{"test1", "test2"}},
-		{types.JsonArray[string]{"test1", "test2", "test1"}, []string{"test1", "test2"}},
+		{types.JSONArray[string]{"test1", "test2", "test1"}, []string{"test1", "test2"}},
 	}
 
-	for i, scenario := range scenarios {
-		result := list.ToUniqueStringSlice(scenario.value)
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.value), func(t *testing.T) {
+			result := list.ToUniqueStringSlice(s.value)
 
-		if len(result) != len(scenario.expected) {
-			t.Errorf("(%d) Result list length doesn't match with the expected list", i)
-		}
-
-		for j, v := range result {
-			if v != scenario.expected[j] {
-				t.Errorf("(%d:%d) Result list item should match with the expected list item", i, j)
+			if len(result) != len(s.expected) {
+				t.Fatalf("Expected length %d, got %d", len(s.expected), len(result))
 			}
-		}
+
+			for j, v := range result {
+				if v != s.expected[j] {
+					t.Fatalf("Result list item doesn't match with the expected list item, got %v vs %v", v, s.expected[j])
+				}
+			}
+		})
+	}
+}
+
+func TestToChunks(t *testing.T) {
+	scenarios := []struct {
+		items     []any
+		chunkSize int
+		expected  string
+	}{
+		{nil, 2, "[]"},
+		{[]any{}, 2, "[]"},
+		{[]any{1, 2, 3, 4}, -1, "[[1],[2],[3],[4]]"},
+		{[]any{1, 2, 3, 4}, 0, "[[1],[2],[3],[4]]"},
+		{[]any{1, 2, 3, 4}, 2, "[[1,2],[3,4]]"},
+		{[]any{1, 2, 3, 4, 5}, 2, "[[1,2],[3,4],[5]]"},
+		{[]any{1, 2, 3, 4, 5}, 10, "[[1,2,3,4,5]]"},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.items), func(t *testing.T) {
+			result := list.ToChunks(s.items, s.chunkSize)
+
+			raw, err := json.Marshal(result)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rawStr := string(raw)
+
+			if rawStr != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, rawStr)
+			}
+		})
 	}
 }

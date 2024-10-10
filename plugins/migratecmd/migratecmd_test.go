@@ -1,21 +1,20 @@
 package migratecmd_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/pocketbase/pocketbase/daos"
-	"github.com/pocketbase/pocketbase/models"
-	"github.com/pocketbase/pocketbase/models/schema"
+	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestAutomigrateCollectionCreate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		lang             string
 		expectedTemplate string
@@ -24,42 +23,166 @@ func TestAutomigrateCollectionCreate(t *testing.T) {
 			migratecmd.TemplateLangJS,
 			`
 /// <reference path="../pb_data/types.d.ts" />
-migrate((db) => {
+migrate((app) => {
   const collection = new Collection({
-    "id": "new_id",
-    "created": "2022-01-01 00:00:00.000Z",
-    "updated": "2022-01-01 00:00:00.000Z",
-    "name": "new_name",
-    "type": "auth",
-    "system": true,
-    "schema": [],
-    "indexes": [
-      "create index test on new_name (id)"
-    ],
-    "listRule": "@request.auth.id != '' && created > 0 || 'backtick` + "`" + `test' = 0",
-    "viewRule": "id = \"1\"",
+    "authAlert": {
+      "emailTemplate": {
+        "body": "<p>Hello,</p>\n<p>We noticed a login to your {APP_NAME} account from a new location.</p>\n<p>If this was you, you may disregard this email.</p>\n<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+        "subject": "Login from a new location"
+      },
+      "enabled": true
+    },
+    "authRule": "",
+    "authToken": {
+      "duration": 604800
+    },
+    "confirmEmailChangeTemplate": {
+      "body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+      "subject": "Confirm your {APP_NAME} new email address"
+    },
     "createRule": null,
-    "updateRule": null,
     "deleteRule": null,
-    "options": {
-      "allowEmailAuth": false,
-      "allowOAuth2Auth": false,
-      "allowUsernameAuth": false,
-      "exceptEmailDomains": null,
-      "manageRule": "created > 0",
-      "minPasswordLength": 20,
-      "onlyEmailDomains": null,
-      "onlyVerified": false,
-      "requireEmail": false
-    }
+    "emailChangeToken": {
+      "duration": 1800
+    },
+    "fields": [
+      {
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "cost": 0,
+        "hidden": true,
+        "id": "password901924565",
+        "max": 0,
+        "min": 8,
+        "name": "password",
+        "pattern": "",
+        "presentable": false,
+        "required": true,
+        "system": true,
+        "type": "password"
+      },
+      {
+        "autogeneratePattern": "[a-zA-Z0-9]{50}",
+        "hidden": true,
+        "id": "text2504183744",
+        "max": 60,
+        "min": 30,
+        "name": "tokenKey",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "exceptDomains": null,
+        "hidden": false,
+        "id": "email3885137012",
+        "name": "email",
+        "onlyDomains": null,
+        "presentable": false,
+        "required": true,
+        "system": true,
+        "type": "email"
+      },
+      {
+        "hidden": false,
+        "id": "bool1547992806",
+        "name": "emailVisibility",
+        "presentable": false,
+        "required": false,
+        "system": true,
+        "type": "bool"
+      },
+      {
+        "hidden": false,
+        "id": "bool256245529",
+        "name": "verified",
+        "presentable": false,
+        "required": false,
+        "system": true,
+        "type": "bool"
+      }
+    ],
+    "fileToken": {
+      "duration": 180
+    },
+    "id": "_pbc_2865679067",
+    "indexes": [
+      "create index test on new_name (id)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey__pbc_2865679067` + "`" + ` ON ` + "`" + `new_name` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_email__pbc_2865679067` + "`" + ` ON ` + "`" + `new_name` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
+    ],
+    "listRule": "@request.auth.id != '' && 1 > 0 || 'backtick` + "`" + `test' = 0",
+    "manageRule": "1 != 2",
+    "mfa": {
+      "duration": 1800,
+      "enabled": false,
+      "rule": ""
+    },
+    "name": "new_name",
+    "oauth2": {
+      "enabled": false,
+      "mappedFields": {
+        "avatarURL": "",
+        "id": "",
+        "name": "",
+        "username": ""
+      }
+    },
+    "otp": {
+      "duration": 180,
+      "emailTemplate": {
+        "body": "<p>Hello,</p>\n<p>Your one-time password is: <strong>{OTP}</strong></p>\n<p><i>If you didn't ask for the one-time password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+        "subject": "OTP for {APP_NAME}"
+      },
+      "enabled": false,
+      "length": 8
+    },
+    "passwordAuth": {
+      "enabled": true,
+      "identityFields": [
+        "email"
+      ]
+    },
+    "passwordResetToken": {
+      "duration": 1800
+    },
+    "resetPasswordTemplate": {
+      "body": "<p>Hello,</p>\n<p>Click on the button below to reset your password.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Reset password</a>\n</p>\n<p><i>If you didn't ask to reset your password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+      "subject": "Reset your {APP_NAME} password"
+    },
+    "system": true,
+    "type": "auth",
+    "updateRule": null,
+    "verificationTemplate": {
+      "body": "<p>Hello,</p>\n<p>Thank you for joining us at {APP_NAME}.</p>\n<p>Click on the button below to verify your email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Verify</a>\n</p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+      "subject": "Verify your {APP_NAME} email"
+    },
+    "verificationToken": {
+      "duration": 259200
+    },
+    "viewRule": "id = \"1\""
   });
 
-  return Dao(db).saveCollection(collection);
-}, (db) => {
-  const dao = new Dao(db);
-  const collection = dao.findCollectionByNameOrId("new_id");
+  return app.save(collection);
+}, (app) => {
+  const collection = app.findCollectionByNameOrId("_pbc_2865679067");
 
-  return dao.deleteCollection(collection);
+  return app.delete(collection);
 })
 `,
 		},
@@ -71,66 +194,187 @@ package _test_migrations
 import (
 	"encoding/json"
 
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
 )
 
 func init() {
-	m.Register(func(db dbx.Builder) error {
+	m.Register(func(app core.App) error {
 		jsonData := ` + "`" + `{
-			"id": "new_id",
-			"created": "2022-01-01 00:00:00.000Z",
-			"updated": "2022-01-01 00:00:00.000Z",
-			"name": "new_name",
-			"type": "auth",
-			"system": true,
-			"schema": [],
-			"indexes": [
-				"create index test on new_name (id)"
-			],
-			"listRule": "@request.auth.id != '' && created > 0 || ` + "'backtick` + \"`\" + `test' = 0" + `",
-			"viewRule": "id = \"1\"",
+			"authAlert": {
+				"emailTemplate": {
+					"body": "<p>Hello,</p>\n<p>We noticed a login to your {APP_NAME} account from a new location.</p>\n<p>If this was you, you may disregard this email.</p>\n<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+					"subject": "Login from a new location"
+				},
+				"enabled": true
+			},
+			"authRule": "",
+			"authToken": {
+				"duration": 604800
+			},
+			"confirmEmailChangeTemplate": {
+				"body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+				"subject": "Confirm your {APP_NAME} new email address"
+			},
 			"createRule": null,
-			"updateRule": null,
 			"deleteRule": null,
-			"options": {
-				"allowEmailAuth": false,
-				"allowOAuth2Auth": false,
-				"allowUsernameAuth": false,
-				"exceptEmailDomains": null,
-				"manageRule": "created > 0",
-				"minPasswordLength": 20,
-				"onlyEmailDomains": null,
-				"onlyVerified": false,
-				"requireEmail": false
-			}
+			"emailChangeToken": {
+				"duration": 1800
+			},
+			"fields": [
+				{
+					"autogeneratePattern": "[a-z0-9]{15}",
+					"hidden": false,
+					"id": "text3208210256",
+					"max": 15,
+					"min": 15,
+					"name": "id",
+					"pattern": "^[a-z0-9]+$",
+					"presentable": false,
+					"primaryKey": true,
+					"required": true,
+					"system": true,
+					"type": "text"
+				},
+				{
+					"cost": 0,
+					"hidden": true,
+					"id": "password901924565",
+					"max": 0,
+					"min": 8,
+					"name": "password",
+					"pattern": "",
+					"presentable": false,
+					"required": true,
+					"system": true,
+					"type": "password"
+				},
+				{
+					"autogeneratePattern": "[a-zA-Z0-9]{50}",
+					"hidden": true,
+					"id": "text2504183744",
+					"max": 60,
+					"min": 30,
+					"name": "tokenKey",
+					"pattern": "",
+					"presentable": false,
+					"primaryKey": false,
+					"required": true,
+					"system": true,
+					"type": "text"
+				},
+				{
+					"exceptDomains": null,
+					"hidden": false,
+					"id": "email3885137012",
+					"name": "email",
+					"onlyDomains": null,
+					"presentable": false,
+					"required": true,
+					"system": true,
+					"type": "email"
+				},
+				{
+					"hidden": false,
+					"id": "bool1547992806",
+					"name": "emailVisibility",
+					"presentable": false,
+					"required": false,
+					"system": true,
+					"type": "bool"
+				},
+				{
+					"hidden": false,
+					"id": "bool256245529",
+					"name": "verified",
+					"presentable": false,
+					"required": false,
+					"system": true,
+					"type": "bool"
+				}
+			],
+			"fileToken": {
+				"duration": 180
+			},
+			"id": "_pbc_2865679067",
+			"indexes": [
+				"create index test on new_name (id)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey__pbc_2865679067` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `new_name` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email__pbc_2865679067` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `new_name` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
+			],
+			"listRule": "@request.auth.id != '' && 1 > 0 || 'backtick` + "` + \"`\" + `" + `test' = 0",
+			"manageRule": "1 != 2",
+			"mfa": {
+				"duration": 1800,
+				"enabled": false,
+				"rule": ""
+			},
+			"name": "new_name",
+			"oauth2": {
+				"enabled": false,
+				"mappedFields": {
+					"avatarURL": "",
+					"id": "",
+					"name": "",
+					"username": ""
+				}
+			},
+			"otp": {
+				"duration": 180,
+				"emailTemplate": {
+					"body": "<p>Hello,</p>\n<p>Your one-time password is: <strong>{OTP}</strong></p>\n<p><i>If you didn't ask for the one-time password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+					"subject": "OTP for {APP_NAME}"
+				},
+				"enabled": false,
+				"length": 8
+			},
+			"passwordAuth": {
+				"enabled": true,
+				"identityFields": [
+					"email"
+				]
+			},
+			"passwordResetToken": {
+				"duration": 1800
+			},
+			"resetPasswordTemplate": {
+				"body": "<p>Hello,</p>\n<p>Click on the button below to reset your password.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Reset password</a>\n</p>\n<p><i>If you didn't ask to reset your password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+				"subject": "Reset your {APP_NAME} password"
+			},
+			"system": true,
+			"type": "auth",
+			"updateRule": null,
+			"verificationTemplate": {
+				"body": "<p>Hello,</p>\n<p>Thank you for joining us at {APP_NAME}.</p>\n<p>Click on the button below to verify your email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Verify</a>\n</p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+				"subject": "Verify your {APP_NAME} email"
+			},
+			"verificationToken": {
+				"duration": 259200
+			},
+			"viewRule": "id = \"1\""
 		}` + "`" + `
 
-		collection := &models.Collection{}
+		collection := &core.Collection{}
 		if err := json.Unmarshal([]byte(jsonData), &collection); err != nil {
 			return err
 		}
 
-		return daos.New(db).SaveCollection(collection)
-	}, func(db dbx.Builder) error {
-		dao := daos.New(db);
-
-		collection, err := dao.FindCollectionByNameOrId("new_id")
+		return app.Save(collection)
+	}, func(app core.App) error {
+		collection, err := app.FindCollectionByNameOrId("_pbc_2865679067")
 		if err != nil {
 			return err
 		}
 
-		return dao.DeleteCollection(collection)
+		return app.Delete(collection)
 	})
 }
 `,
 		},
 	}
 
-	for i, s := range scenarios {
-		t.Run(fmt.Sprintf("s%d", i), func(t *testing.T) {
+	for _, s := range scenarios {
+		t.Run(s.lang, func(t *testing.T) {
 			app, _ := tests.NewTestApp()
 			defer app.Cleanup()
 
@@ -142,27 +386,33 @@ func init() {
 				Dir:          migrationsDir,
 			})
 
-			// @todo remove after collections cache is replaced
 			app.Bootstrap()
 
-			collection := &models.Collection{}
-			collection.Id = "new_id"
-			collection.Name = "new_name"
-			collection.Type = models.CollectionTypeAuth
+			collection := core.NewAuthCollection("new_name")
 			collection.System = true
-			collection.Created, _ = types.ParseDateTime("2022-01-01 00:00:00.000Z")
-			collection.Updated = collection.Created
-			collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0 || 'backtick`test' = 0")
+			collection.ListRule = types.Pointer("@request.auth.id != '' && 1 > 0 || 'backtick`test' = 0")
 			collection.ViewRule = types.Pointer(`id = "1"`)
-			collection.Indexes = types.JsonArray[string]{"create index test on new_name (id)"}
-			collection.SetOptions(models.CollectionAuthOptions{
-				ManageRule:        types.Pointer("created > 0"),
-				MinPasswordLength: 20,
-			})
-			collection.MarkAsNew()
+			collection.Indexes = types.JSONArray[string]{"create index test on new_name (id)"}
+			collection.ManageRule = types.Pointer("1 != 2")
+			//  should be ignored
+			collection.OAuth2.Providers = []core.OAuth2ProviderConfig{{Name: "gitlab", ClientId: "abc", ClientSecret: "123"}}
+			testSecret := strings.Repeat("a", 30)
+			collection.AuthToken.Secret = testSecret
+			collection.FileToken.Secret = testSecret
+			collection.EmailChangeToken.Secret = testSecret
+			collection.PasswordResetToken.Secret = testSecret
+			collection.VerificationToken.Secret = testSecret
 
-			if err := app.Dao().SaveCollection(collection); err != nil {
-				t.Fatalf("Failed to save collection, got %v", err)
+			// save the newly created dummy collection (with mock request event)
+			event := new(core.CollectionRequestEvent)
+			event.RequestEvent = &core.RequestEvent{}
+			event.App = app
+			event.Collection = collection
+			err := app.OnCollectionCreateRequest().Trigger(event, func(e *core.CollectionRequestEvent) error {
+				return e.App.Save(e.Collection)
+			})
+			if err != nil {
+				t.Fatalf("Failed to save the created dummy collection, got: %v", err)
 			}
 
 			files, err := os.ReadDir(migrationsDir)
@@ -193,6 +443,8 @@ func init() {
 }
 
 func TestAutomigrateCollectionDelete(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		lang             string
 		expectedTemplate string
@@ -201,42 +453,166 @@ func TestAutomigrateCollectionDelete(t *testing.T) {
 			migratecmd.TemplateLangJS,
 			`
 /// <reference path="../pb_data/types.d.ts" />
-migrate((db) => {
-  const dao = new Dao(db);
-  const collection = dao.findCollectionByNameOrId("test123");
+migrate((app) => {
+  const collection = app.findCollectionByNameOrId("_pbc_4032078523");
 
-  return dao.deleteCollection(collection);
-}, (db) => {
+  return app.delete(collection);
+}, (app) => {
   const collection = new Collection({
-    "id": "test123",
-    "created": "2022-01-01 00:00:00.000Z",
-    "updated": "2022-01-01 00:00:00.000Z",
-    "name": "test456",
-    "type": "auth",
-    "system": false,
-    "schema": [],
-    "indexes": [
-      "create index test on test456 (id)"
-    ],
-    "listRule": "@request.auth.id != '' && created > 0 || 'backtick` + "`" + `test' = 0",
-    "viewRule": "id = \"1\"",
+    "authAlert": {
+      "emailTemplate": {
+        "body": "<p>Hello,</p>\n<p>We noticed a login to your {APP_NAME} account from a new location.</p>\n<p>If this was you, you may disregard this email.</p>\n<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+        "subject": "Login from a new location"
+      },
+      "enabled": true
+    },
+    "authRule": "",
+    "authToken": {
+      "duration": 604800
+    },
+    "confirmEmailChangeTemplate": {
+      "body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+      "subject": "Confirm your {APP_NAME} new email address"
+    },
     "createRule": null,
-    "updateRule": null,
     "deleteRule": null,
-    "options": {
-      "allowEmailAuth": false,
-      "allowOAuth2Auth": false,
-      "allowUsernameAuth": false,
-      "exceptEmailDomains": null,
-      "manageRule": "created > 0",
-      "minPasswordLength": 20,
-      "onlyEmailDomains": null,
-      "onlyVerified": false,
-      "requireEmail": false
-    }
+    "emailChangeToken": {
+      "duration": 1800
+    },
+    "fields": [
+      {
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "cost": 0,
+        "hidden": true,
+        "id": "password901924565",
+        "max": 0,
+        "min": 8,
+        "name": "password",
+        "pattern": "",
+        "presentable": false,
+        "required": true,
+        "system": true,
+        "type": "password"
+      },
+      {
+        "autogeneratePattern": "[a-zA-Z0-9]{50}",
+        "hidden": true,
+        "id": "text2504183744",
+        "max": 60,
+        "min": 30,
+        "name": "tokenKey",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "exceptDomains": null,
+        "hidden": false,
+        "id": "email3885137012",
+        "name": "email",
+        "onlyDomains": null,
+        "presentable": false,
+        "required": true,
+        "system": true,
+        "type": "email"
+      },
+      {
+        "hidden": false,
+        "id": "bool1547992806",
+        "name": "emailVisibility",
+        "presentable": false,
+        "required": false,
+        "system": true,
+        "type": "bool"
+      },
+      {
+        "hidden": false,
+        "id": "bool256245529",
+        "name": "verified",
+        "presentable": false,
+        "required": false,
+        "system": true,
+        "type": "bool"
+      }
+    ],
+    "fileToken": {
+      "duration": 180
+    },
+    "id": "_pbc_4032078523",
+    "indexes": [
+      "create index test on test123 (id)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey__pbc_4032078523` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_email__pbc_4032078523` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
+    ],
+    "listRule": "@request.auth.id != '' && 1 > 0 || 'backtick` + "`" + `test' = 0",
+    "manageRule": "1 != 2",
+    "mfa": {
+      "duration": 1800,
+      "enabled": false,
+      "rule": ""
+    },
+    "name": "test123",
+    "oauth2": {
+      "enabled": false,
+      "mappedFields": {
+        "avatarURL": "",
+        "id": "",
+        "name": "",
+        "username": ""
+      }
+    },
+    "otp": {
+      "duration": 180,
+      "emailTemplate": {
+        "body": "<p>Hello,</p>\n<p>Your one-time password is: <strong>{OTP}</strong></p>\n<p><i>If you didn't ask for the one-time password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+        "subject": "OTP for {APP_NAME}"
+      },
+      "enabled": false,
+      "length": 8
+    },
+    "passwordAuth": {
+      "enabled": true,
+      "identityFields": [
+        "email"
+      ]
+    },
+    "passwordResetToken": {
+      "duration": 1800
+    },
+    "resetPasswordTemplate": {
+      "body": "<p>Hello,</p>\n<p>Click on the button below to reset your password.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Reset password</a>\n</p>\n<p><i>If you didn't ask to reset your password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+      "subject": "Reset your {APP_NAME} password"
+    },
+    "system": false,
+    "type": "auth",
+    "updateRule": null,
+    "verificationTemplate": {
+      "body": "<p>Hello,</p>\n<p>Thank you for joining us at {APP_NAME}.</p>\n<p>Click on the button below to verify your email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Verify</a>\n</p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+      "subject": "Verify your {APP_NAME} email"
+    },
+    "verificationToken": {
+      "duration": 259200
+    },
+    "viewRule": "id = \"1\""
   });
 
-  return Dao(db).saveCollection(collection);
+  return app.save(collection);
 })
 `,
 		},
@@ -248,70 +624,201 @@ package _test_migrations
 import (
 	"encoding/json"
 
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models"
 )
 
 func init() {
-	m.Register(func(db dbx.Builder) error {
-		dao := daos.New(db);
-
-		collection, err := dao.FindCollectionByNameOrId("test123")
+	m.Register(func(app core.App) error {
+		collection, err := app.FindCollectionByNameOrId("_pbc_4032078523")
 		if err != nil {
 			return err
 		}
 
-		return dao.DeleteCollection(collection)
-	}, func(db dbx.Builder) error {
+		return app.Delete(collection)
+	}, func(app core.App) error {
 		jsonData := ` + "`" + `{
-			"id": "test123",
-			"created": "2022-01-01 00:00:00.000Z",
-			"updated": "2022-01-01 00:00:00.000Z",
-			"name": "test456",
-			"type": "auth",
-			"system": false,
-			"schema": [],
-			"indexes": [
-				"create index test on test456 (id)"
-			],
-			"listRule": "@request.auth.id != '' && created > 0 || ` + "'backtick` + \"`\" + `test' = 0" + `",
-			"viewRule": "id = \"1\"",
+			"authAlert": {
+				"emailTemplate": {
+					"body": "<p>Hello,</p>\n<p>We noticed a login to your {APP_NAME} account from a new location.</p>\n<p>If this was you, you may disregard this email.</p>\n<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+					"subject": "Login from a new location"
+				},
+				"enabled": true
+			},
+			"authRule": "",
+			"authToken": {
+				"duration": 604800
+			},
+			"confirmEmailChangeTemplate": {
+				"body": "<p>Hello,</p>\n<p>Click on the button below to confirm your new email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-email-change/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Confirm new email</a>\n</p>\n<p><i>If you didn't ask to change your email address, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+				"subject": "Confirm your {APP_NAME} new email address"
+			},
 			"createRule": null,
-			"updateRule": null,
 			"deleteRule": null,
-			"options": {
-				"allowEmailAuth": false,
-				"allowOAuth2Auth": false,
-				"allowUsernameAuth": false,
-				"exceptEmailDomains": null,
-				"manageRule": "created > 0",
-				"minPasswordLength": 20,
-				"onlyEmailDomains": null,
-				"onlyVerified": false,
-				"requireEmail": false
-			}
+			"emailChangeToken": {
+				"duration": 1800
+			},
+			"fields": [
+				{
+					"autogeneratePattern": "[a-z0-9]{15}",
+					"hidden": false,
+					"id": "text3208210256",
+					"max": 15,
+					"min": 15,
+					"name": "id",
+					"pattern": "^[a-z0-9]+$",
+					"presentable": false,
+					"primaryKey": true,
+					"required": true,
+					"system": true,
+					"type": "text"
+				},
+				{
+					"cost": 0,
+					"hidden": true,
+					"id": "password901924565",
+					"max": 0,
+					"min": 8,
+					"name": "password",
+					"pattern": "",
+					"presentable": false,
+					"required": true,
+					"system": true,
+					"type": "password"
+				},
+				{
+					"autogeneratePattern": "[a-zA-Z0-9]{50}",
+					"hidden": true,
+					"id": "text2504183744",
+					"max": 60,
+					"min": 30,
+					"name": "tokenKey",
+					"pattern": "",
+					"presentable": false,
+					"primaryKey": false,
+					"required": true,
+					"system": true,
+					"type": "text"
+				},
+				{
+					"exceptDomains": null,
+					"hidden": false,
+					"id": "email3885137012",
+					"name": "email",
+					"onlyDomains": null,
+					"presentable": false,
+					"required": true,
+					"system": true,
+					"type": "email"
+				},
+				{
+					"hidden": false,
+					"id": "bool1547992806",
+					"name": "emailVisibility",
+					"presentable": false,
+					"required": false,
+					"system": true,
+					"type": "bool"
+				},
+				{
+					"hidden": false,
+					"id": "bool256245529",
+					"name": "verified",
+					"presentable": false,
+					"required": false,
+					"system": true,
+					"type": "bool"
+				}
+			],
+			"fileToken": {
+				"duration": 180
+			},
+			"id": "_pbc_4032078523",
+			"indexes": [
+				"create index test on test123 (id)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
+			],
+			"listRule": "@request.auth.id != '' && 1 > 0 || 'backtick` + "` + \"`\" + `" + `test' = 0",
+			"manageRule": "1 != 2",
+			"mfa": {
+				"duration": 1800,
+				"enabled": false,
+				"rule": ""
+			},
+			"name": "test123",
+			"oauth2": {
+				"enabled": false,
+				"mappedFields": {
+					"avatarURL": "",
+					"id": "",
+					"name": "",
+					"username": ""
+				}
+			},
+			"otp": {
+				"duration": 180,
+				"emailTemplate": {
+					"body": "<p>Hello,</p>\n<p>Your one-time password is: <strong>{OTP}</strong></p>\n<p><i>If you didn't ask for the one-time password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+					"subject": "OTP for {APP_NAME}"
+				},
+				"enabled": false,
+				"length": 8
+			},
+			"passwordAuth": {
+				"enabled": true,
+				"identityFields": [
+					"email"
+				]
+			},
+			"passwordResetToken": {
+				"duration": 1800
+			},
+			"resetPasswordTemplate": {
+				"body": "<p>Hello,</p>\n<p>Click on the button below to reset your password.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-password-reset/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Reset password</a>\n</p>\n<p><i>If you didn't ask to reset your password, you can ignore this email.</i></p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+				"subject": "Reset your {APP_NAME} password"
+			},
+			"system": false,
+			"type": "auth",
+			"updateRule": null,
+			"verificationTemplate": {
+				"body": "<p>Hello,</p>\n<p>Thank you for joining us at {APP_NAME}.</p>\n<p>Click on the button below to verify your email address.</p>\n<p>\n  <a class=\"btn\" href=\"{APP_URL}/_/#/auth/confirm-verification/{TOKEN}\" target=\"_blank\" rel=\"noopener\">Verify</a>\n</p>\n<p>\n  Thanks,<br/>\n  {APP_NAME} team\n</p>",
+				"subject": "Verify your {APP_NAME} email"
+			},
+			"verificationToken": {
+				"duration": 259200
+			},
+			"viewRule": "id = \"1\""
 		}` + "`" + `
 
-		collection := &models.Collection{}
+		collection := &core.Collection{}
 		if err := json.Unmarshal([]byte(jsonData), &collection); err != nil {
 			return err
 		}
 
-		return daos.New(db).SaveCollection(collection)
+		return app.Save(collection)
 	})
 }
 `,
 		},
 	}
 
-	for i, s := range scenarios {
-		t.Run(fmt.Sprintf("s%d", i), func(t *testing.T) {
+	for _, s := range scenarios {
+		t.Run(s.lang, func(t *testing.T) {
 			app, _ := tests.NewTestApp()
 			defer app.Cleanup()
 
 			migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
+
+			// create dummy collection
+			collection := core.NewAuthCollection("test123")
+			collection.ListRule = types.Pointer("@request.auth.id != '' && 1 > 0 || 'backtick`test' = 0")
+			collection.ViewRule = types.Pointer(`id = "1"`)
+			collection.Indexes = types.JSONArray[string]{"create index test on test123 (id)"}
+			collection.ManageRule = types.Pointer("1 != 2")
+			if err := app.Save(collection); err != nil {
+				t.Fatalf("Failed to save dummy collection, got: %v", err)
+			}
 
 			migratecmd.MustRegister(app, nil, migratecmd.Config{
 				TemplateLang: s.lang,
@@ -319,33 +826,18 @@ func init() {
 				Dir:          migrationsDir,
 			})
 
-			// create dummy collection
-			collection := &models.Collection{}
-			collection.Id = "test123"
-			collection.Name = "test456"
-			collection.Type = models.CollectionTypeAuth
-			collection.Created, _ = types.ParseDateTime("2022-01-01 00:00:00.000Z")
-			collection.Updated = collection.Created
-			collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0 || 'backtick`test' = 0")
-			collection.ViewRule = types.Pointer(`id = "1"`)
-			collection.Indexes = types.JsonArray[string]{"create index test on test456 (id)"}
-			collection.SetOptions(models.CollectionAuthOptions{
-				ManageRule:        types.Pointer("created > 0"),
-				MinPasswordLength: 20,
-			})
-			collection.MarkAsNew()
-
-			// use different dao to avoid triggering automigrate while saving the dummy collection
-			if err := daos.New(app.DB()).SaveCollection(collection); err != nil {
-				t.Fatalf("Failed to save dummy collection, got %v", err)
-			}
-
-			// @todo remove after collections cache is replaced
 			app.Bootstrap()
 
-			// delete the newly created dummy collection
-			if err := app.Dao().DeleteCollection(collection); err != nil {
-				t.Fatalf("Failed to delete dummy collection, got %v", err)
+			// delete the newly created dummy collection (with mock request event)
+			event := new(core.CollectionRequestEvent)
+			event.RequestEvent = &core.RequestEvent{}
+			event.App = app
+			event.Collection = collection
+			err := app.OnCollectionDeleteRequest().Trigger(event, func(e *core.CollectionRequestEvent) error {
+				return e.App.Delete(e.Collection)
+			})
+			if err != nil {
+				t.Fatalf("Failed to delete dummy collection, got: %v", err)
 			}
 
 			files, err := os.ReadDir(migrationsDir)
@@ -357,7 +849,7 @@ func init() {
 				t.Fatalf("Expected 1 file to be generated, got %d", total)
 			}
 
-			expectedName := "_deleted_test456." + s.lang
+			expectedName := "_deleted_test123." + s.lang
 			if !strings.Contains(files[0].Name(), expectedName) {
 				t.Fatalf("Expected filename to contains %q, got %q", expectedName, files[0].Name())
 			}
@@ -376,6 +868,8 @@ func init() {
 }
 
 func TestAutomigrateCollectionUpdate(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		lang             string
 		expectedTemplate string
@@ -384,115 +878,117 @@ func TestAutomigrateCollectionUpdate(t *testing.T) {
 			migratecmd.TemplateLangJS,
 			`
 /// <reference path="../pb_data/types.d.ts" />
-migrate((db) => {
-  const dao = new Dao(db)
-  const collection = dao.findCollectionByNameOrId("test123")
+migrate((app) => {
+  const collection = app.findCollectionByNameOrId("_pbc_4032078523")
 
-  collection.name = "test456_update"
-  collection.type = "base"
-  collection.listRule = "@request.auth.id != ''"
-  collection.createRule = "id = \"nil_update\""
-  collection.updateRule = "id = \"2_update\""
-  collection.deleteRule = null
-  collection.options = {}
-  collection.indexes = [
-    "create index test1 on test456_update (f1_name)"
-  ]
+  // update collection data
+  unmarshal({
+    "createRule": "id = \"nil_update\"",
+    "deleteRule": null,
+    "fileToken": {
+      "duration": 10
+    },
+    "indexes": [
+      "create index test1 on test123_update (f1_name)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey__pbc_4032078523` + "`" + ` ON ` + "`" + `test123_update` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_email__pbc_4032078523` + "`" + ` ON ` + "`" + `test123_update` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
+    ],
+    "listRule": "@request.auth.id != ''",
+    "name": "test123_update",
+    "oauth2": {
+      "enabled": true
+    },
+    "updateRule": "id = \"2_update\""
+  }, collection)
 
-  // remove
-  collection.schema.removeField("f3_id")
+  // remove field
+  collection.fields.removeById("f3_id")
 
-  // add
-  collection.schema.addField(new SchemaField({
-    "system": false,
+  // add field
+  collection.fields.add(new Field({
+    "autogeneratePattern": "",
+    "hidden": false,
     "id": "f4_id",
+    "max": 0,
+    "min": 0,
     "name": "f4_name",
-    "type": "text",
-    "required": false,
+    "pattern": "` + "`" + `test backtick` + "`" + `123",
     "presentable": false,
-    "unique": false,
-    "options": {
-      "min": null,
-      "max": null,
-      "pattern": "` + "`" + `test backtick` + "`" + `123"
-    }
+    "primaryKey": false,
+    "required": false,
+    "system": false,
+    "type": "text"
   }))
 
-  // update
-  collection.schema.addField(new SchemaField({
-    "system": false,
+  // update field
+  collection.fields.add(new Field({
+    "hidden": false,
     "id": "f2_id",
+    "max": null,
+    "min": 10,
     "name": "f2_name_new",
-    "type": "number",
-    "required": false,
+    "onlyInt": false,
     "presentable": false,
-    "unique": true,
-    "options": {
-      "min": 10,
-      "max": null,
-      "noDecimal": false
-    }
+    "required": false,
+    "system": false,
+    "type": "number"
   }))
 
-  return dao.saveCollection(collection)
-}, (db) => {
-  const dao = new Dao(db)
-  const collection = dao.findCollectionByNameOrId("test123")
+  return app.save(collection)
+}, (app) => {
+  const collection = app.findCollectionByNameOrId("_pbc_4032078523")
 
-  collection.name = "test456"
-  collection.type = "auth"
-  collection.listRule = "@request.auth.id != '' && created > 0"
-  collection.createRule = null
-  collection.updateRule = "id = \"2\""
-  collection.deleteRule = "id = \"3\""
-  collection.options = {
-    "allowEmailAuth": false,
-    "allowOAuth2Auth": false,
-    "allowUsernameAuth": false,
-    "exceptEmailDomains": null,
-    "manageRule": "created > 0",
-    "minPasswordLength": 20,
-    "onlyEmailDomains": null,
-    "onlyVerified": false,
-    "requireEmail": false
-  }
-  collection.indexes = [
-    "create index test1 on test456 (f1_name)"
-  ]
+  // update collection data
+  unmarshal({
+    "createRule": null,
+    "deleteRule": "id = \"3\"",
+    "fileToken": {
+      "duration": 180
+    },
+    "indexes": [
+      "create index test1 on test123 (f1_name)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey__pbc_4032078523` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_email__pbc_4032078523` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
+    ],
+    "listRule": "@request.auth.id != '' && 1 != 2",
+    "name": "test123",
+    "oauth2": {
+      "enabled": false
+    },
+    "updateRule": "id = \"2\""
+  }, collection)
 
-  // add
-  collection.schema.addField(new SchemaField({
-    "system": false,
+  // add field
+  collection.fields.add(new Field({
+    "hidden": false,
     "id": "f3_id",
     "name": "f3_name",
-    "type": "bool",
-    "required": false,
     "presentable": false,
-    "unique": false,
-    "options": {}
-  }))
-
-  // remove
-  collection.schema.removeField("f4_id")
-
-  // update
-  collection.schema.addField(new SchemaField({
+    "required": false,
     "system": false,
-    "id": "f2_id",
-    "name": "f2_name",
-    "type": "number",
-    "required": false,
-    "presentable": false,
-    "unique": true,
-    "options": {
-      "min": 10,
-      "max": null,
-      "noDecimal": false
-    }
+    "type": "bool"
   }))
 
-  return dao.saveCollection(collection)
+  // remove field
+  collection.fields.removeById("f4_id")
+
+  // update field
+  collection.fields.add(new Field({
+    "hidden": false,
+    "id": "f2_id",
+    "max": null,
+    "min": 10,
+    "name": "f2_name",
+    "onlyInt": false,
+    "presentable": false,
+    "required": false,
+    "system": false,
+    "type": "number"
+  }))
+
+  return app.save(collection)
 })
+
 `,
 		},
 		{
@@ -503,264 +999,225 @@ package _test_migrations
 import (
 	"encoding/json"
 
-	"github.com/pocketbase/dbx"
-	"github.com/pocketbase/pocketbase/daos"
+	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
-	"github.com/pocketbase/pocketbase/models/schema"
-	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func init() {
-	m.Register(func(db dbx.Builder) error {
-		dao := daos.New(db);
-
-		collection, err := dao.FindCollectionByNameOrId("test123")
+	m.Register(func(app core.App) error {
+		collection, err := app.FindCollectionByNameOrId("_pbc_4032078523")
 		if err != nil {
 			return err
 		}
 
-		collection.Name = "test456_update"
-
-		collection.Type = "base"
-
-		collection.ListRule = types.Pointer("@request.auth.id != ''")
-
-		collection.CreateRule = types.Pointer("id = \"nil_update\"")
-
-		collection.UpdateRule = types.Pointer("id = \"2_update\"")
-
-		collection.DeleteRule = nil
-
-		options := map[string]any{}
-		if err := json.Unmarshal([]byte(` + "`" + `{}` + "`" + `), &options); err != nil {
-			return err
-		}
-		collection.SetOptions(options)
-
-		if err := json.Unmarshal([]byte(` + "`" + `[
-			"create index test1 on test456_update (f1_name)"
-		]` + "`" + `), &collection.Indexes); err != nil {
-			return err
-		}
-
-		// remove
-		collection.Schema.RemoveField("f3_id")
-
-		// add
-		new_f4_name := &schema.SchemaField{}
+		// update collection data
 		if err := json.Unmarshal([]byte(` + "`" + `{
-			"system": false,
+			"createRule": "id = \"nil_update\"",
+			"deleteRule": null,
+			"fileToken": {
+				"duration": 10
+			},
+			"indexes": [
+				"create index test1 on test123_update (f1_name)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123_update` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123_update` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
+			],
+			"listRule": "@request.auth.id != ''",
+			"name": "test123_update",
+			"oauth2": {
+				"enabled": true
+			},
+			"updateRule": "id = \"2_update\""
+		}` + "`" + `), &collection); err != nil {
+			return err
+		}
+
+		// remove field
+		collection.Fields.RemoveById("f3_id")
+
+		// add field
+		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
+			"autogeneratePattern": "",
+			"hidden": false,
 			"id": "f4_id",
+			"max": 0,
+			"min": 0,
 			"name": "f4_name",
-			"type": "text",
-			"required": false,
+			"pattern": "` + "` + \"`\" + `" + `test backtick` + "` + \"`\" + `" + `123",
 			"presentable": false,
-			"unique": false,
-			"options": {
-				"min": null,
-				"max": null,
-				"pattern": ` + "\"` + \"`\" + `test backtick` + \"`\" + `123\"" + `
-			}
-		}` + "`" + `), new_f4_name); err != nil {
-			return err
-		}
-		collection.Schema.AddField(new_f4_name)
-
-		// update
-		edit_f2_name_new := &schema.SchemaField{}
-		if err := json.Unmarshal([]byte(` + "`" + `{
+			"primaryKey": false,
+			"required": false,
 			"system": false,
-			"id": "f2_id",
-			"name": "f2_name_new",
-			"type": "number",
-			"required": false,
-			"presentable": false,
-			"unique": true,
-			"options": {
-				"min": 10,
-				"max": null,
-				"noDecimal": false
-			}
-		}` + "`" + `), edit_f2_name_new); err != nil {
+			"type": "text"
+		}` + "`" + `)); err != nil {
 			return err
 		}
-		collection.Schema.AddField(edit_f2_name_new)
 
-		return dao.SaveCollection(collection)
-	}, func(db dbx.Builder) error {
-		dao := daos.New(db);
+		// update field
+		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
+			"hidden": false,
+			"id": "f2_id",
+			"max": null,
+			"min": 10,
+			"name": "f2_name_new",
+			"onlyInt": false,
+			"presentable": false,
+			"required": false,
+			"system": false,
+			"type": "number"
+		}` + "`" + `)); err != nil {
+			return err
+		}
 
-		collection, err := dao.FindCollectionByNameOrId("test123")
+		return app.Save(collection)
+	}, func(app core.App) error {
+		collection, err := app.FindCollectionByNameOrId("_pbc_4032078523")
 		if err != nil {
 			return err
 		}
 
-		collection.Name = "test456"
-
-		collection.Type = "auth"
-
-		collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0")
-
-		collection.CreateRule = nil
-
-		collection.UpdateRule = types.Pointer("id = \"2\"")
-
-		collection.DeleteRule = types.Pointer("id = \"3\"")
-
-		options := map[string]any{}
+		// update collection data
 		if err := json.Unmarshal([]byte(` + "`" + `{
-			"allowEmailAuth": false,
-			"allowOAuth2Auth": false,
-			"allowUsernameAuth": false,
-			"exceptEmailDomains": null,
-			"manageRule": "created > 0",
-			"minPasswordLength": 20,
-			"onlyEmailDomains": null,
-			"onlyVerified": false,
-			"requireEmail": false
-		}` + "`" + `), &options); err != nil {
-			return err
-		}
-		collection.SetOptions(options)
-
-		if err := json.Unmarshal([]byte(` + "`" + `[
-			"create index test1 on test456 (f1_name)"
-		]` + "`" + `), &collection.Indexes); err != nil {
+			"createRule": null,
+			"deleteRule": "id = \"3\"",
+			"fileToken": {
+				"duration": 180
+			},
+			"indexes": [
+				"create index test1 on test123 (f1_name)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
+			],
+			"listRule": "@request.auth.id != '' && 1 != 2",
+			"name": "test123",
+			"oauth2": {
+				"enabled": false
+			},
+			"updateRule": "id = \"2\""
+		}` + "`" + `), &collection); err != nil {
 			return err
 		}
 
-		// add
-		del_f3_name := &schema.SchemaField{}
-		if err := json.Unmarshal([]byte(` + "`" + `{
-			"system": false,
+		// add field
+		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
+			"hidden": false,
 			"id": "f3_id",
 			"name": "f3_name",
-			"type": "bool",
-			"required": false,
 			"presentable": false,
-			"unique": false,
-			"options": {}
-		}` + "`" + `), del_f3_name); err != nil {
-			return err
-		}
-		collection.Schema.AddField(del_f3_name)
-
-		// remove
-		collection.Schema.RemoveField("f4_id")
-
-		// update
-		edit_f2_name_new := &schema.SchemaField{}
-		if err := json.Unmarshal([]byte(` + "`" + `{
+			"required": false,
 			"system": false,
-			"id": "f2_id",
-			"name": "f2_name",
-			"type": "number",
-			"required": false,
-			"presentable": false,
-			"unique": true,
-			"options": {
-				"min": 10,
-				"max": null,
-				"noDecimal": false
-			}
-		}` + "`" + `), edit_f2_name_new); err != nil {
+			"type": "bool"
+		}` + "`" + `)); err != nil {
 			return err
 		}
-		collection.Schema.AddField(edit_f2_name_new)
 
-		return dao.SaveCollection(collection)
+		// remove field
+		collection.Fields.RemoveById("f4_id")
+
+		// update field
+		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
+			"hidden": false,
+			"id": "f2_id",
+			"max": null,
+			"min": 10,
+			"name": "f2_name",
+			"onlyInt": false,
+			"presentable": false,
+			"required": false,
+			"system": false,
+			"type": "number"
+		}` + "`" + `)); err != nil {
+			return err
+		}
+
+		return app.Save(collection)
 	})
 }
 `,
 		},
 	}
 
-	for i, s := range scenarios {
-		t.Run(fmt.Sprintf("s%d", i), func(t *testing.T) {
+	for _, s := range scenarios {
+		t.Run(s.lang, func(t *testing.T) {
 			app, _ := tests.NewTestApp()
 			defer app.Cleanup()
 
 			migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
 
+			// create dummy collection
+			collection := core.NewAuthCollection("test123")
+			collection.ListRule = types.Pointer("@request.auth.id != '' && 1 != 2")
+			collection.ViewRule = types.Pointer(`id = "1"`)
+			collection.UpdateRule = types.Pointer(`id = "2"`)
+			collection.CreateRule = nil
+			collection.DeleteRule = types.Pointer(`id = "3"`)
+			collection.Indexes = types.JSONArray[string]{"create index test1 on test123 (f1_name)"}
+			collection.ManageRule = types.Pointer("1 != 2")
+			collection.Fields.Add(&core.TextField{
+				Id:       "f1_id",
+				Name:     "f1_name",
+				Required: true,
+			})
+			collection.Fields.Add(&core.NumberField{
+				Id:   "f2_id",
+				Name: "f2_name",
+				Min:  types.Pointer(10.0),
+			})
+			collection.Fields.Add(&core.BoolField{
+				Id:   "f3_id",
+				Name: "f3_name",
+			})
+
+			if err := app.Save(collection); err != nil {
+				t.Fatalf("Failed to save dummy collection, got %v", err)
+			}
+
+			// init plugin
 			migratecmd.MustRegister(app, nil, migratecmd.Config{
 				TemplateLang: s.lang,
 				Automigrate:  true,
 				Dir:          migrationsDir,
 			})
-
-			// create dummy collection
-			collection := &models.Collection{}
-			collection.Id = "test123"
-			collection.Name = "test456"
-			collection.Type = models.CollectionTypeAuth
-			collection.Created, _ = types.ParseDateTime("2022-01-01 00:00:00.000Z")
-			collection.Updated = collection.Created
-			collection.ListRule = types.Pointer("@request.auth.id != '' && created > 0")
-			collection.ViewRule = types.Pointer(`id = "1"`)
-			collection.UpdateRule = types.Pointer(`id = "2"`)
-			collection.CreateRule = nil
-			collection.DeleteRule = types.Pointer(`id = "3"`)
-			collection.Indexes = types.JsonArray[string]{"create index test1 on test456 (f1_name)"}
-			collection.SetOptions(models.CollectionAuthOptions{
-				ManageRule:        types.Pointer("created > 0"),
-				MinPasswordLength: 20,
-			})
-			collection.MarkAsNew()
-			collection.Schema.AddField(&schema.SchemaField{
-				Id:       "f1_id",
-				Name:     "f1_name",
-				Type:     schema.FieldTypeText,
-				Required: true,
-			})
-			collection.Schema.AddField(&schema.SchemaField{
-				Id:     "f2_id",
-				Name:   "f2_name",
-				Type:   schema.FieldTypeNumber,
-				Unique: true,
-				Options: &schema.NumberOptions{
-					Min: types.Pointer(10.0),
-				},
-			})
-			collection.Schema.AddField(&schema.SchemaField{
-				Id:   "f3_id",
-				Name: "f3_name",
-				Type: schema.FieldTypeBool,
-			})
-
-			// use different dao to avoid triggering automigrate while saving the dummy collection
-			if err := daos.New(app.DB()).SaveCollection(collection); err != nil {
-				t.Fatalf("Failed to save dummy collection, got %v", err)
-			}
-
-			// @todo remove after collections cache is replaced
 			app.Bootstrap()
 
-			collection.Name = "test456_update"
-			collection.Type = models.CollectionTypeBase
-			collection.DeleteRule = types.Pointer(`updated > 0 && @request.auth.id != ''`)
+			// update the dummy collection
+			collection.Name = "test123_update"
 			collection.ListRule = types.Pointer("@request.auth.id != ''")
 			collection.ViewRule = types.Pointer(`id = "1"`) // no change
 			collection.UpdateRule = types.Pointer(`id = "2_update"`)
 			collection.CreateRule = types.Pointer(`id = "nil_update"`)
 			collection.DeleteRule = nil
-			collection.Indexes = types.JsonArray[string]{
-				"create index test1 on test456_update (f1_name)",
+			collection.Indexes = types.JSONArray[string]{
+				"create index test1 on test123_update (f1_name)",
 			}
-			collection.NormalizeOptions()
-			collection.Schema.RemoveField("f3_id")
-			collection.Schema.AddField(&schema.SchemaField{
-				Id:   "f4_id",
-				Name: "f4_name",
-				Type: schema.FieldTypeText,
-				Options: &schema.TextOptions{
-					Pattern: "`test backtick`123",
-				},
+			collection.Fields.RemoveById("f3_id")
+			collection.Fields.Add(&core.TextField{
+				Id:      "f4_id",
+				Name:    "f4_name",
+				Pattern: "`test backtick`123",
 			})
-			f := collection.Schema.GetFieldById("f2_id")
-			f.Name = "f2_name_new"
+			f := collection.Fields.GetById("f2_id")
+			f.SetName("f2_name_new")
+			collection.OAuth2.Enabled = true
+			collection.FileToken.Duration = 10
+			//  should be ignored
+			collection.OAuth2.Providers = []core.OAuth2ProviderConfig{{Name: "gitlab", ClientId: "abc", ClientSecret: "123"}}
+			testSecret := strings.Repeat("b", 30)
+			collection.AuthToken.Secret = testSecret
+			collection.FileToken.Secret = testSecret
+			collection.EmailChangeToken.Secret = testSecret
+			collection.PasswordResetToken.Secret = testSecret
+			collection.VerificationToken.Secret = testSecret
 
-			// save the changes and trigger automigrate
-			if err := app.Dao().SaveCollection(collection); err != nil {
+			// save the changes and trigger automigrate (with mock request event)
+			event := new(core.CollectionRequestEvent)
+			event.RequestEvent = &core.RequestEvent{}
+			event.App = app
+			event.Collection = collection
+			err := app.OnCollectionUpdateRequest().Trigger(event, func(e *core.CollectionRequestEvent) error {
+				return e.App.Save(e.Collection)
+			})
+			if err != nil {
 				t.Fatalf("Failed to save dummy collection changes, got %v", err)
 			}
 
@@ -773,7 +1230,7 @@ func init() {
 				t.Fatalf("Expected 1 file to be generated, got %d", total)
 			}
 
-			expectedName := "_updated_test456." + s.lang
+			expectedName := "_updated_test123." + s.lang
 			if !strings.Contains(files[0].Name(), expectedName) {
 				t.Fatalf("Expected filename to contains %q, got %q", expectedName, files[0].Name())
 			}
@@ -792,6 +1249,8 @@ func init() {
 }
 
 func TestAutomigrateCollectionNoChanges(t *testing.T) {
+	t.Parallel()
+
 	scenarios := []struct {
 		lang string
 	}{
@@ -803,39 +1262,53 @@ func TestAutomigrateCollectionNoChanges(t *testing.T) {
 		},
 	}
 
-	for i, s := range scenarios {
-		app, _ := tests.NewTestApp()
-		defer app.Cleanup()
+	for _, s := range scenarios {
+		t.Run(s.lang, func(t *testing.T) {
+			app, _ := tests.NewTestApp()
+			defer app.Cleanup()
 
-		migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
+			migrationsDir := filepath.Join(app.DataDir(), "_test_migrations")
 
-		migratecmd.MustRegister(app, nil, migratecmd.Config{
-			TemplateLang: s.lang,
-			Automigrate:  true,
-			Dir:          migrationsDir,
+			// create dummy collection
+			collection := core.NewAuthCollection("test123")
+
+			if err := app.Save(collection); err != nil {
+				t.Fatalf("Failed to save dummy collection, got %v", err)
+			}
+
+			// init plugin
+			migratecmd.MustRegister(app, nil, migratecmd.Config{
+				TemplateLang: s.lang,
+				Automigrate:  true,
+				Dir:          migrationsDir,
+			})
+			app.Bootstrap()
+
+			//  should be ignored
+			collection.OAuth2.Providers = []core.OAuth2ProviderConfig{{Name: "gitlab", ClientId: "abc", ClientSecret: "123"}}
+			testSecret := strings.Repeat("b", 30)
+			collection.AuthToken.Secret = testSecret
+			collection.FileToken.Secret = testSecret
+			collection.EmailChangeToken.Secret = testSecret
+			collection.PasswordResetToken.Secret = testSecret
+			collection.VerificationToken.Secret = testSecret
+
+			// resave without other changes and trigger automigrate (with mock request event)
+			event := new(core.CollectionRequestEvent)
+			event.RequestEvent = &core.RequestEvent{}
+			event.App = app
+			event.Collection = collection
+			err := app.OnCollectionUpdateRequest().Trigger(event, func(e *core.CollectionRequestEvent) error {
+				return e.App.Save(e.Collection)
+			})
+			if err != nil {
+				t.Fatalf("Failed to save dummy collection update, got %v", err)
+			}
+
+			files, _ := os.ReadDir(migrationsDir)
+			if total := len(files); total != 0 {
+				t.Fatalf("Expected 0 files to be generated, got %d", total)
+			}
 		})
-
-		// create dummy collection
-		collection := &models.Collection{}
-		collection.Name = "test123"
-		collection.Type = models.CollectionTypeAuth
-
-		// use different dao to avoid triggering automigrate while saving the dummy collection
-		if err := daos.New(app.DB()).SaveCollection(collection); err != nil {
-			t.Fatalf("[%d] Failed to save dummy collection, got %v", i, err)
-		}
-
-		// @todo remove after collections cache is replaced
-		app.Bootstrap()
-
-		// resave without changes and trigger automigrate
-		if err := app.Dao().SaveCollection(collection); err != nil {
-			t.Fatalf("[%d] Failed to save dummy collection update, got %v", i, err)
-		}
-
-		files, _ := os.ReadDir(migrationsDir)
-		if total := len(files); total != 0 {
-			t.Fatalf("[%d] Expected 0 files to be generated, got %d", i, total)
-		}
 	}
 }

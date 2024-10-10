@@ -2,6 +2,7 @@ package search_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/search"
@@ -29,27 +30,30 @@ func TestSortFieldBuildExpr(t *testing.T) {
 		{search.SortField{"test1", search.SortDesc}, false, "[[test1]] DESC"},
 		// special @random field (ignore direction)
 		{search.SortField{"@random", search.SortDesc}, false, "RANDOM()"},
+		// special _rowid_ field
+		{search.SortField{"@rowid", search.SortDesc}, false, "[[_rowid_]] DESC"},
 	}
 
-	for i, s := range scenarios {
-		result, err := s.sortField.BuildExpr(resolver)
+	for _, s := range scenarios {
+		t.Run(fmt.Sprintf("%s_%s", s.sortField.Name, s.sortField.Name), func(t *testing.T) {
+			result, err := s.sortField.BuildExpr(resolver)
 
-		hasErr := err != nil
-		if hasErr != s.expectError {
-			t.Errorf("(%d) Expected hasErr %v, got %v (%v)", i, s.expectError, hasErr, err)
-			continue
-		}
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
+			}
 
-		if result != s.expectExpression {
-			t.Errorf("(%d) Expected expression %v, got %v", i, s.expectExpression, result)
-		}
+			if result != s.expectExpression {
+				t.Fatalf("Expected expression %v, got %v", s.expectExpression, result)
+			}
+		})
 	}
 }
 
 func TestParseSortFromString(t *testing.T) {
 	scenarios := []struct {
-		value        string
-		expectedJson string
+		value    string
+		expected string
 	}{
 		{"", `[{"name":"","direction":"ASC"}]`},
 		{"test", `[{"name":"test","direction":"ASC"}]`},
@@ -57,14 +61,18 @@ func TestParseSortFromString(t *testing.T) {
 		{"-test", `[{"name":"test","direction":"DESC"}]`},
 		{"test1,-test2,+test3", `[{"name":"test1","direction":"ASC"},{"name":"test2","direction":"DESC"},{"name":"test3","direction":"ASC"}]`},
 		{"@random,-test", `[{"name":"@random","direction":"ASC"},{"name":"test","direction":"DESC"}]`},
+		{"-@rowid,-test", `[{"name":"@rowid","direction":"DESC"},{"name":"test","direction":"DESC"}]`},
 	}
 
-	for i, s := range scenarios {
-		result := search.ParseSortFromString(s.value)
-		encoded, _ := json.Marshal(result)
+	for _, s := range scenarios {
+		t.Run(s.value, func(t *testing.T) {
+			result := search.ParseSortFromString(s.value)
+			encoded, _ := json.Marshal(result)
+			encodedStr := string(encoded)
 
-		if string(encoded) != s.expectedJson {
-			t.Errorf("(%d) Expected expression %v, got %v", i, s.expectedJson, string(encoded))
-		}
+			if encodedStr != s.expected {
+				t.Fatalf("Expected expression %s, got %s", s.expected, encodedStr)
+			}
+		})
 	}
 }

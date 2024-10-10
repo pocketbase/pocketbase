@@ -9,147 +9,147 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// baseProvider defines common fields and methods used by OAuth2 client providers.
-type baseProvider struct {
+// BaseProvider defines common fields and methods used by OAuth2 client providers.
+type BaseProvider struct {
 	ctx          context.Context
 	clientId     string
 	clientSecret string
 	displayName  string
-	redirectUrl  string
-	authUrl      string
-	tokenUrl     string
-	userApiUrl   string
+	redirectURL  string
+	authURL      string
+	tokenURL     string
+	userInfoURL  string
 	scopes       []string
 	pkce         bool
 }
 
 // Context implements Provider.Context() interface method.
-func (p *baseProvider) Context() context.Context {
+func (p *BaseProvider) Context() context.Context {
 	return p.ctx
 }
 
 // SetContext implements Provider.SetContext() interface method.
-func (p *baseProvider) SetContext(ctx context.Context) {
+func (p *BaseProvider) SetContext(ctx context.Context) {
 	p.ctx = ctx
 }
 
 // PKCE implements Provider.PKCE() interface method.
-func (p *baseProvider) PKCE() bool {
+func (p *BaseProvider) PKCE() bool {
 	return p.pkce
 }
 
 // SetPKCE implements Provider.SetPKCE() interface method.
-func (p *baseProvider) SetPKCE(enable bool) {
+func (p *BaseProvider) SetPKCE(enable bool) {
 	p.pkce = enable
 }
 
 // DisplayName implements Provider.DisplayName() interface method.
-func (p *baseProvider) DisplayName() string {
+func (p *BaseProvider) DisplayName() string {
 	return p.displayName
 }
 
 // SetDisplayName implements Provider.SetDisplayName() interface method.
-func (p *baseProvider) SetDisplayName(displayName string) {
+func (p *BaseProvider) SetDisplayName(displayName string) {
 	p.displayName = displayName
 }
 
 // Scopes implements Provider.Scopes() interface method.
-func (p *baseProvider) Scopes() []string {
+func (p *BaseProvider) Scopes() []string {
 	return p.scopes
 }
 
 // SetScopes implements Provider.SetScopes() interface method.
-func (p *baseProvider) SetScopes(scopes []string) {
+func (p *BaseProvider) SetScopes(scopes []string) {
 	p.scopes = scopes
 }
 
 // ClientId implements Provider.ClientId() interface method.
-func (p *baseProvider) ClientId() string {
+func (p *BaseProvider) ClientId() string {
 	return p.clientId
 }
 
 // SetClientId implements Provider.SetClientId() interface method.
-func (p *baseProvider) SetClientId(clientId string) {
+func (p *BaseProvider) SetClientId(clientId string) {
 	p.clientId = clientId
 }
 
 // ClientSecret implements Provider.ClientSecret() interface method.
-func (p *baseProvider) ClientSecret() string {
+func (p *BaseProvider) ClientSecret() string {
 	return p.clientSecret
 }
 
 // SetClientSecret implements Provider.SetClientSecret() interface method.
-func (p *baseProvider) SetClientSecret(secret string) {
+func (p *BaseProvider) SetClientSecret(secret string) {
 	p.clientSecret = secret
 }
 
-// RedirectUrl implements Provider.RedirectUrl() interface method.
-func (p *baseProvider) RedirectUrl() string {
-	return p.redirectUrl
+// RedirectURL implements Provider.RedirectURL() interface method.
+func (p *BaseProvider) RedirectURL() string {
+	return p.redirectURL
 }
 
-// SetRedirectUrl implements Provider.SetRedirectUrl() interface method.
-func (p *baseProvider) SetRedirectUrl(url string) {
-	p.redirectUrl = url
+// SetRedirectURL implements Provider.SetRedirectURL() interface method.
+func (p *BaseProvider) SetRedirectURL(url string) {
+	p.redirectURL = url
 }
 
-// AuthUrl implements Provider.AuthUrl() interface method.
-func (p *baseProvider) AuthUrl() string {
-	return p.authUrl
+// AuthURL implements Provider.AuthURL() interface method.
+func (p *BaseProvider) AuthURL() string {
+	return p.authURL
 }
 
-// SetAuthUrl implements Provider.SetAuthUrl() interface method.
-func (p *baseProvider) SetAuthUrl(url string) {
-	p.authUrl = url
+// SetAuthURL implements Provider.SetAuthURL() interface method.
+func (p *BaseProvider) SetAuthURL(url string) {
+	p.authURL = url
 }
 
-// TokenUrl implements Provider.TokenUrl() interface method.
-func (p *baseProvider) TokenUrl() string {
-	return p.tokenUrl
+// TokenURL implements Provider.TokenURL() interface method.
+func (p *BaseProvider) TokenURL() string {
+	return p.tokenURL
 }
 
-// SetTokenUrl implements Provider.SetTokenUrl() interface method.
-func (p *baseProvider) SetTokenUrl(url string) {
-	p.tokenUrl = url
+// SetTokenURL implements Provider.SetTokenURL() interface method.
+func (p *BaseProvider) SetTokenURL(url string) {
+	p.tokenURL = url
 }
 
-// UserApiUrl implements Provider.UserApiUrl() interface method.
-func (p *baseProvider) UserApiUrl() string {
-	return p.userApiUrl
+// UserInfoURL implements Provider.UserInfoURL() interface method.
+func (p *BaseProvider) UserInfoURL() string {
+	return p.userInfoURL
 }
 
-// SetUserApiUrl implements Provider.SetUserApiUrl() interface method.
-func (p *baseProvider) SetUserApiUrl(url string) {
-	p.userApiUrl = url
+// SetUserInfoURL implements Provider.SetUserInfoURL() interface method.
+func (p *BaseProvider) SetUserInfoURL(url string) {
+	p.userInfoURL = url
 }
 
-// BuildAuthUrl implements Provider.BuildAuthUrl() interface method.
-func (p *baseProvider) BuildAuthUrl(state string, opts ...oauth2.AuthCodeOption) string {
+// BuildAuthURL implements Provider.BuildAuthURL() interface method.
+func (p *BaseProvider) BuildAuthURL(state string, opts ...oauth2.AuthCodeOption) string {
 	return p.oauth2Config().AuthCodeURL(state, opts...)
 }
 
 // FetchToken implements Provider.FetchToken() interface method.
-func (p *baseProvider) FetchToken(code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
+func (p *BaseProvider) FetchToken(code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
 	return p.oauth2Config().Exchange(p.ctx, code, opts...)
 }
 
 // Client implements Provider.Client() interface method.
-func (p *baseProvider) Client(token *oauth2.Token) *http.Client {
+func (p *BaseProvider) Client(token *oauth2.Token) *http.Client {
 	return p.oauth2Config().Client(p.ctx, token)
 }
 
-// FetchRawUserData implements Provider.FetchRawUserData() interface method.
-func (p *baseProvider) FetchRawUserData(token *oauth2.Token) ([]byte, error) {
-	req, err := http.NewRequestWithContext(p.ctx, "GET", p.userApiUrl, nil)
+// FetchRawUserInfo implements Provider.FetchRawUserInfo() interface method.
+func (p *BaseProvider) FetchRawUserInfo(token *oauth2.Token) ([]byte, error) {
+	req, err := http.NewRequestWithContext(p.ctx, "GET", p.userInfoURL, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return p.sendRawUserDataRequest(req, token)
+	return p.sendRawUserInfoRequest(req, token)
 }
 
-// sendRawUserDataRequest sends the specified user data request and return its raw response body.
-func (p *baseProvider) sendRawUserDataRequest(req *http.Request, token *oauth2.Token) ([]byte, error) {
+// sendRawUserInfoRequest sends the specified user info request and return its raw response body.
+func (p *BaseProvider) sendRawUserInfoRequest(req *http.Request, token *oauth2.Token) ([]byte, error) {
 	client := p.Client(token)
 
 	res, err := client.Do(req)
@@ -167,7 +167,7 @@ func (p *baseProvider) sendRawUserDataRequest(req *http.Request, token *oauth2.T
 	if res.StatusCode >= 400 {
 		return nil, fmt.Errorf(
 			"failed to fetch OAuth2 user profile via %s (%d):\n%s",
-			p.userApiUrl,
+			p.userInfoURL,
 			res.StatusCode,
 			string(result),
 		)
@@ -177,15 +177,15 @@ func (p *baseProvider) sendRawUserDataRequest(req *http.Request, token *oauth2.T
 }
 
 // oauth2Config constructs a oauth2.Config instance based on the provider settings.
-func (p *baseProvider) oauth2Config() *oauth2.Config {
+func (p *BaseProvider) oauth2Config() *oauth2.Config {
 	return &oauth2.Config{
-		RedirectURL:  p.redirectUrl,
+		RedirectURL:  p.redirectURL,
 		ClientID:     p.clientId,
 		ClientSecret: p.clientSecret,
 		Scopes:       p.scopes,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:  p.authUrl,
-			TokenURL: p.tokenUrl,
+			AuthURL:  p.authURL,
+			TokenURL: p.tokenURL,
 		},
 	}
 }

@@ -168,22 +168,6 @@ func (t *Tokenizer) readToken() (string, error) {
 	return strings.Trim(buf.String(), t.trimCutset), nil
 }
 
-// readWhiteSpaces consumes all contiguous whitespace runes.
-func (t *Tokenizer) readWhiteSpaces() {
-	for {
-		ch := t.read()
-
-		if ch == eof {
-			break
-		}
-
-		if !t.isWhitespaceRune(ch) {
-			t.unread()
-			break
-		}
-	}
-}
-
 // read reads the next rune from the buffered reader.
 // Returns the `rune(0)` if an error or `io.EOF` occurs.
 func (t *Tokenizer) read() rune {
@@ -218,17 +202,6 @@ func (t *Tokenizer) rebuildTrimCutset() {
 func (t *Tokenizer) isSeperatorRune(ch rune) bool {
 	for _, r := range t.separators {
 		if ch == r {
-			return true
-		}
-	}
-
-	return false
-}
-
-// isWhitespaceRune checks if a rune is a space character (eg. space, tab, new line).
-func (t *Tokenizer) isWhitespaceRune(ch rune) bool {
-	for _, c := range whitespaceChars {
-		if c == ch {
 			return true
 		}
 	}

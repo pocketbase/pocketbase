@@ -5,175 +5,157 @@ import (
 	"testing"
 )
 
-func TestHookAddAndPreAdd(t *testing.T) {
-	h := Hook[int]{}
+func TestHookAddHandlerAndAdd(t *testing.T) {
+	calls := ""
 
-	if total := len(h.handlers); total != 0 {
-		t.Fatalf("Expected no handlers, found %d", total)
+	h := Hook[*Event]{}
+
+	h.BindFunc(func(e *Event) error { calls += "1"; return e.Next() })
+	h.BindFunc(func(e *Event) error { calls += "2"; return e.Next() })
+	h3Id := h.BindFunc(func(e *Event) error { calls += "3"; return e.Next() })
+	h.Bind(&Handler[*Event]{
+		Id:   h3Id, // should replace 3
+		Func: func(e *Event) error { calls += "3'"; return e.Next() },
+	})
+	h.Bind(&Handler[*Event]{
+		Func:     func(e *Event) error { calls += "4"; return e.Next() },
+		Priority: -2,
+	})
+	h.Bind(&Handler[*Event]{
+		Func:     func(e *Event) error { calls += "5"; return e.Next() },
+		Priority: -1,
+	})
+	h.Bind(&Handler[*Event]{
+		Func: func(e *Event) error { calls += "6"; return e.Next() },
+	})
+	h.Bind(&Handler[*Event]{
+		Func: func(e *Event) error { calls += "7"; e.Next(); return errors.New("test") }, // error shouldn't stop the chain
+	})
+
+	h.Trigger(
+		&Event{},
+		func(e *Event) error { calls += "8"; return e.Next() },
+		func(e *Event) error { calls += "9"; return nil }, // skip next
+		func(e *Event) error { calls += "10"; return e.Next() },
+	)
+
+	if total := len(h.handlers); total != 7 {
+		t.Fatalf("Expected %d handlers, found %d", 7, total)
 	}
 
-	triggerSequence := ""
+	expectedCalls := "45123'6789"
 
-	f1 := func(data int) error { triggerSequence += "f1"; return nil }
-	f2 := func(data int) error { triggerSequence += "f2"; return nil }
-	f3 := func(data int) error { triggerSequence += "f3"; return nil }
-	f4 := func(data int) error { triggerSequence += "f4"; return nil }
-
-	h.Add(f1)
-	h.Add(f2)
-	h.PreAdd(f3)
-	h.PreAdd(f4)
-	h.Trigger(1)
-
-	if total := len(h.handlers); total != 4 {
-		t.Fatalf("Expected %d handlers, found %d", 4, total)
-	}
-
-	expectedTriggerSequence := "f4f3f1f2"
-
-	if triggerSequence != expectedTriggerSequence {
-		t.Fatalf("Expected trigger sequence %s, got %s", expectedTriggerSequence, triggerSequence)
+	if calls != expectedCalls {
+		t.Fatalf("Expected calls sequence %q, got %q", expectedCalls, calls)
 	}
 }
 
-func TestHookRemove(t *testing.T) {
-	h := Hook[int]{}
+func TestHookLength(t *testing.T) {
+	h := Hook[*Event]{}
 
-	h1Called := false
-	h2Called := false
+	if l := h.Length(); l != 0 {
+		t.Fatalf("Expected 0 hook handlers, got %d", l)
+	}
 
-	id1 := h.Add(func(data int) error { h1Called = true; return nil })
-	h.Add(func(data int) error { h2Called = true; return nil })
+	h.BindFunc(func(e *Event) error { return e.Next() })
+	h.BindFunc(func(e *Event) error { return e.Next() })
 
-	h.Remove("missing") // should do nothing and not panic
+	if l := h.Length(); l != 2 {
+		t.Fatalf("Expected 2 hook handlers, got %d", l)
+	}
+}
+
+func TestHookUnbind(t *testing.T) {
+	h := Hook[*Event]{}
+
+	calls := ""
+
+	id1 := h.BindFunc(func(e *Event) error { calls += "1"; return e.Next() })
+	h.BindFunc(func(e *Event) error { calls += "2"; return e.Next() })
+	h.Bind(&Handler[*Event]{
+		Func: func(e *Event) error { calls += "3"; return e.Next() },
+	})
+
+	h.Unbind("missing") // should do nothing and not panic
+
+	if total := len(h.handlers); total != 3 {
+		t.Fatalf("Expected %d handlers, got %d", 3, total)
+	}
+
+	h.Unbind(id1)
 
 	if total := len(h.handlers); total != 2 {
 		t.Fatalf("Expected %d handlers, got %d", 2, total)
 	}
 
-	h.Remove(id1)
-
-	if total := len(h.handlers); total != 1 {
-		t.Fatalf("Expected %d handlers, got %d", 1, total)
-	}
-
-	if err := h.Trigger(1); err != nil {
+	err := h.Trigger(&Event{}, func(e *Event) error { calls += "4"; return e.Next() })
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if h1Called {
-		t.Fatalf("Expected hook 1 to be removed and not called")
-	}
+	expectedCalls := "234"
 
-	if !h2Called {
-		t.Fatalf("Expected hook 2 to be called")
+	if calls != expectedCalls {
+		t.Fatalf("Expected calls sequence %q, got %q", expectedCalls, calls)
 	}
 }
 
-func TestHookRemoveAll(t *testing.T) {
-	h := Hook[int]{}
+func TestHookUnbindAll(t *testing.T) {
+	h := Hook[*Event]{}
 
-	h.RemoveAll() // should do nothing and not panic
+	h.UnbindAll() // should do nothing and not panic
 
-	h.Add(func(data int) error { return nil })
-	h.Add(func(data int) error { return nil })
+	h.BindFunc(func(e *Event) error { return nil })
+	h.BindFunc(func(e *Event) error { return nil })
 
 	if total := len(h.handlers); total != 2 {
-		t.Fatalf("Expected 2 handlers before RemoveAll, found %d", total)
+		t.Fatalf("Expected %d handlers before UnbindAll, found %d", 2, total)
 	}
 
-	h.RemoveAll()
+	h.UnbindAll()
 
 	if total := len(h.handlers); total != 0 {
-		t.Fatalf("Expected no handlers after RemoveAll, found %d", total)
+		t.Fatalf("Expected no handlers after UnbindAll, found %d", total)
 	}
 }
 
-func TestHookTrigger(t *testing.T) {
-	err1 := errors.New("demo")
-	err2 := errors.New("demo")
+func TestHookTriggerErrorPropagation(t *testing.T) {
+	err := errors.New("test")
 
 	scenarios := []struct {
-		handlers      []Handler[int]
+		name          string
+		handlers      []func(*Event) error
 		expectedError error
 	}{
 		{
-			[]Handler[int]{
-				func(data int) error { return nil },
-				func(data int) error { return nil },
+			"without error",
+			[]func(*Event) error{
+				func(e *Event) error { return e.Next() },
+				func(e *Event) error { return e.Next() },
 			},
 			nil,
 		},
 		{
-			[]Handler[int]{
-				func(data int) error { return nil },
-				func(data int) error { return err1 },
-				func(data int) error { return err2 },
+			"with error",
+			[]func(*Event) error{
+				func(e *Event) error { return e.Next() },
+				func(e *Event) error { e.Next(); return err },
+				func(e *Event) error { return e.Next() },
 			},
-			err1,
+			err,
 		},
 	}
 
-	for i, scenario := range scenarios {
-		h := Hook[int]{}
-		for _, handler := range scenario.handlers {
-			h.Add(handler)
-		}
-		result := h.Trigger(1)
-		if result != scenario.expectedError {
-			t.Fatalf("(%d) Expected %v, got %v", i, scenario.expectedError, result)
-		}
-	}
-}
-
-func TestHookTriggerStopPropagation(t *testing.T) {
-	called1 := false
-	f1 := func(data int) error { called1 = true; return nil }
-
-	called2 := false
-	f2 := func(data int) error { called2 = true; return nil }
-
-	called3 := false
-	f3 := func(data int) error { called3 = true; return nil }
-
-	called4 := false
-	f4 := func(data int) error { called4 = true; return StopPropagation }
-
-	called5 := false
-	f5 := func(data int) error { called5 = true; return nil }
-
-	called6 := false
-	f6 := func(data int) error { called6 = true; return nil }
-
-	h := Hook[int]{}
-	h.Add(f1)
-	h.Add(f2)
-
-	result := h.Trigger(123, f3, f4, f5, f6)
-
-	if result != nil {
-		t.Fatalf("Expected nil after StopPropagation, got %v", result)
-	}
-
-	// ensure that the trigger handler were not persisted
-	if total := len(h.handlers); total != 2 {
-		t.Fatalf("Expected 2 handlers, found %d", total)
-	}
-
-	scenarios := []struct {
-		called   bool
-		expected bool
-	}{
-		{called1, true},
-		{called2, true},
-		{called3, true},
-		{called4, true}, // StopPropagation
-		{called5, false},
-		{called6, false},
-	}
-	for i, scenario := range scenarios {
-		if scenario.called != scenario.expected {
-			t.Errorf("(%d) Expected %v, got %v", i, scenario.expected, scenario.called)
-		}
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			h := Hook[*Event]{}
+			for _, handler := range s.handlers {
+				h.BindFunc(handler)
+			}
+			result := h.Trigger(&Event{})
+			if result != s.expectedError {
+				t.Fatalf("Expected %v, got %v", s.expectedError, result)
+			}
+		})
 	}
 }

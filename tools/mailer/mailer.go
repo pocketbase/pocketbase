@@ -3,6 +3,8 @@ package mailer
 import (
 	"io"
 	"net/mail"
+
+	"github.com/pocketbase/pocketbase/tools/hook"
 )
 
 // Message defines a generic email message struct.
@@ -22,6 +24,16 @@ type Message struct {
 type Mailer interface {
 	// Send sends an email with the provided Message.
 	Send(message *Message) error
+}
+
+// SendInterceptor is optional interface for registering mail send hooks.
+type SendInterceptor interface {
+	OnSend() *hook.Hook[*SendEvent]
+}
+
+type SendEvent struct {
+	hook.Event
+	Message *Message
 }
 
 // addressesToStrings converts the provided address to a list of serialized RFC 5322 strings.

@@ -1,16 +1,16 @@
 <script>
+    import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
+    import SdkTabs from "@/components/base/SdkTabs.svelte";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
-    import CodeBlock from "@/components/base/CodeBlock.svelte";
-    import SdkTabs from "@/components/collections/docs/SdkTabs.svelte";
-    import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
     export let collection;
 
     let responseTab = 200;
     let responses = [];
 
-    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseUrl);
+    $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseURL);
 
     $: responses = [
         {
@@ -24,14 +24,14 @@
                         name: "John Doe",
                         username: "john.doe",
                         email: "test@example.com",
-                        avatarUrl: "https://example.com/avatar.png",
+                        avatarURL: "https://example.com/avatar.png",
                         accessToken: "...",
                         refreshToken: "...",
                         rawUser: {},
                     },
                 },
                 null,
-                2
+                2,
             ),
         },
         {
@@ -82,9 +82,9 @@
         // after the above you can also access the auth data from the authStore
         console.log(pb.authStore.isValid);
         console.log(pb.authStore.token);
-        console.log(pb.authStore.model.id);
+        console.log(pb.authStore.record.id);
 
-        // "logout" the last authenticated model
+        // "logout"
         pb.authStore.clear();
     `}
     dart={`
@@ -108,9 +108,9 @@
         // after the above you can also access the auth data from the authStore
         print(pb.authStore.isValid);
         print(pb.authStore.token);
-        print(pb.authStore.model.id);
+        print(pb.authStore.record.id);
 
-        // "logout" the last authenticated model
+        // "logout"
         pb.authStore.clear();
     `}
 />
@@ -175,7 +175,7 @@
             <td>
                 <div class="inline-flex">
                     <span class="label label-success">Required</span>
-                    <span>redirectUrl</span>
+                    <span>redirectURL</span>
                 </div>
             </td>
             <td>

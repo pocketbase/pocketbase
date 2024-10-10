@@ -34,7 +34,7 @@
             JSON.stringify({
                 index: i,
                 group: group,
-            })
+            }),
         );
 
         dispatch("drag", e);
@@ -79,6 +79,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
     draggable={!disabled}
     class="draggable"
@@ -102,7 +103,7 @@
 
 <style>
     .draggable {
-        user-select: none;
+        user-select: text;
         outline: 0;
         min-width: 0;
     }

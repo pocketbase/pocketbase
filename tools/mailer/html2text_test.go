@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestHtml2Text(t *testing.T) {
+func TestHTML2Text(t *testing.T) {
 	scenarios := []struct {
 		html     string
 		expected string
