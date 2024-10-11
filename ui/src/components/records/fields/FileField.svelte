@@ -30,7 +30,7 @@
         deletedFileNames = CommonHelper.toArray(deletedFileNames);
     }
 
-    $: isMultiple = field.maxSelect != 1;
+    $: isMultiple = field.maxSelect > 1;
 
     $: if (CommonHelper.isEmpty(value)) {
         value = isMultiple ? [] : "";

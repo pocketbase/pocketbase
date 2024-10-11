@@ -6,7 +6,7 @@
     export let field;
     export let value = undefined;
 
-    $: isMultiple = field.maxSelect != 1;
+    $: isMultiple = field.maxSelect > 1;
 
     $: if (typeof value === "undefined") {
         value = isMultiple ? [] : "";
@@ -34,7 +34,7 @@
         searchable={field.values?.length > 5}
         bind:selected={value}
     />
-    {#if field.maxSelect != 1}
+    {#if isMultiple}
         <div class="help-block">Select up to {maxSelect} items.</div>
     {/if}
 </Field>

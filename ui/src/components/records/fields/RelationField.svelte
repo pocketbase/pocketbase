@@ -22,7 +22,7 @@
     let loadTimeoutId;
     let invalidIds = [];
 
-    $: isMultiple = field.maxSelect != 1;
+    $: isMultiple = field.maxSelect > 1;
 
     $: if (typeof value != "undefined") {
         fieldRef?.changed();

@@ -9,7 +9,9 @@
 
 - Fixed the relation record picker to sort by default by `@rowid` insetead of the `created` field as the latter is optional ([#5641](https://github.com/pocketbase/pocketbase/discussions/5641)).
 
-- Fixed UI linked providers image path.
+- Fixed the OAuth2 providers logo path shown in the "Authorized providers" UI.
+
+- Fixed the single value UI for the `select`, `file` and `relation` fields ([#5646](https://github.com/pocketbase/pocketbase/discussions/5646))
 
 
 ## v0.23.0-rc4
