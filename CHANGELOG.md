@@ -1,3 +1,15 @@
+## v0.23.0-rc5 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Added Notion OAuth2 provider ([#4999](https://github.com/pocketbase/pocketbase/pull/4999); thanks @s-li1).
+
+- Added monday.com OAuth2 provider ([#5346](https://github.com/pocketbase/pocketbase/pull/5346); thanks @Jaytpa01).
+
+- Fixed the relation record picker to sort by default by `@rowid` insetead of the `created` field as the latter is optional ([#5641](https://github.com/pocketbase/pocketbase/discussions/5641)).
+
+
 ## v0.23.0-rc4
 
 > [!CAUTION]
@@ -58,6 +70,7 @@
     ```go
     go run . serve --dir="pb_data_temp"
     ```
+
 
 ## v0.23.0-rc3
 

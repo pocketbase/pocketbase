@@ -7,7 +7,7 @@ import (
 )
 
 func TestProvidersCount(t *testing.T) {
-	expected := 26
+	expected := 28
 
 	if total := len(auth.Providers); total != expected {
 		t.Fatalf("Expected %d providers, got %d", expected, total)
@@ -250,6 +250,24 @@ func TestNewProviderByName(t *testing.T) {
 	}
 	if _, ok := p.(*auth.Planningcenter); !ok {
 		t.Error("Expected to be instance of *auth.Planningcenter")
+	}
+
+	// notion
+	p, err = auth.NewProviderByName(auth.NameNotion)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Notion); !ok {
+		t.Error("Expected to be instance of *auth.Notion")
+	}
+
+	// monday
+	p, err = auth.NewProviderByName(auth.NameMonday)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Monday); !ok {
+		t.Error("Expected to be instance of *auth.Monday")
 	}
 
 	// zoho

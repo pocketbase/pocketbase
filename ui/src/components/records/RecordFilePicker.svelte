@@ -126,9 +126,14 @@
             }
             normalizedFilter += "(" + fileFields.map((f) => `${f.name}:length>0`).join("||") + ")";
 
+            let sort = "";
+            if (selectedCollection.type != "view") {
+                sort = "-@rowid"; // all collections with exception to the view has this field
+            }
+
             const result = await ApiClient.collection(selectedCollection.id).getList(page, batchSize, {
                 filter: normalizedFilter,
-                sort: "-created",
+                sort: sort,
                 fields: "*:excerpt(100)",
                 skipTotal: 1,
                 requestKey: uniqueId + "loadImagePicker",

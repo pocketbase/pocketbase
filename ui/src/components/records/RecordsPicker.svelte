@@ -159,9 +159,14 @@
 
             const fallbackSearchFields = CommonHelper.getAllCollectionIdentifiers(collection);
 
+            let sort = "";
+            if (!isView) {
+                sort = "-@rowid"; // all collections with exception to the view has this field
+            }
+
             const result = await ApiClient.collection(collectionId).getList(page, batchSize, {
                 filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
-                sort: !isView ? "-created" : "",
+                sort: sort,
                 fields: "*:excerpt(200)",
                 skipTotal: 1,
                 expand: getExpand(),
