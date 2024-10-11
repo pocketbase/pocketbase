@@ -14,7 +14,7 @@
     let isLoading = false;
 
     function getProviderConfig(provider) {
-        return providersList.find((p) => p.key == provider + "Auth") || {};
+        return providersList.find((p) => p.key == provider) || {};
     }
 
     function getProviderTitle(provider) {
