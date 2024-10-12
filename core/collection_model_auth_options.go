@@ -461,13 +461,14 @@ type OAuth2ProviderConfig struct {
 	// (https://github.com/pocketbase/pocketbase/discussions/3799#discussioncomment-7640312)
 	PKCE *bool `form:"pkce" json:"pkce"`
 
-	Name         string `form:"name" json:"name"`
-	ClientId     string `form:"clientId" json:"clientId"`
-	ClientSecret string `form:"clientSecret" json:"clientSecret,omitempty"`
-	AuthURL      string `form:"authURL" json:"authURL"`
-	TokenURL     string `form:"tokenURL" json:"tokenURL"`
-	UserInfoURL  string `form:"userInfoURL" json:"userInfoURL"`
-	DisplayName  string `form:"displayName" json:"displayName"`
+	Name         string         `form:"name" json:"name"`
+	ClientId     string         `form:"clientId" json:"clientId"`
+	ClientSecret string         `form:"clientSecret" json:"clientSecret,omitempty"`
+	AuthURL      string         `form:"authURL" json:"authURL"`
+	TokenURL     string         `form:"tokenURL" json:"tokenURL"`
+	UserInfoURL  string         `form:"userInfoURL" json:"userInfoURL"`
+	DisplayName  string         `form:"displayName" json:"displayName"`
+	Extra        map[string]any `form:"extra" json:"extra"`
 }
 
 // Validate makes OAuth2ProviderConfig validatable by implementing [validation.Validatable] interface.
@@ -529,6 +530,10 @@ func (c OAuth2ProviderConfig) InitProvider() (auth.Provider, error) {
 
 	if c.PKCE != nil {
 		provider.SetPKCE(*c.PKCE)
+	}
+
+	if c.Extra != nil {
+		provider.SetExtra(c.Extra)
 	}
 
 	return provider, nil

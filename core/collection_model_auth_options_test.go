@@ -1,6 +1,8 @@
 package core_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -942,6 +944,7 @@ func TestOAuth2ProviderConfigInitProvider(t *testing.T) {
 				UserInfoURL:  "test_UserInfoURL",
 				DisplayName:  "test_DisplayName",
 				PKCE:         types.Pointer(true),
+				Extra:        map[string]any{"a": 1},
 			},
 			core.OAuth2ProviderConfig{
 				Name:         "gitlab",
@@ -952,6 +955,7 @@ func TestOAuth2ProviderConfigInitProvider(t *testing.T) {
 				UserInfoURL:  "test_UserInfoURL",
 				DisplayName:  "test_DisplayName",
 				PKCE:         types.Pointer(true),
+				Extra:        map[string]any{"a": 1},
 			},
 			false,
 		},
@@ -1009,6 +1013,12 @@ func TestOAuth2ProviderConfigInitProvider(t *testing.T) {
 			}
 
 			if provider.PKCE() != *s.expectedConfig.PKCE {
+				t.Fatalf("Expected PKCE %v, got %v", *s.expectedConfig.PKCE, provider.PKCE())
+			}
+
+			rawMeta, _ := json.Marshal(provider.Extra())
+			expectedMeta, _ := json.Marshal(s.expectedConfig.Extra)
+			if !bytes.Equal(rawMeta, expectedMeta) {
 				t.Fatalf("Expected PKCE %v, got %v", *s.expectedConfig.PKCE, provider.PKCE())
 			}
 		})

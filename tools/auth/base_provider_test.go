@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"testing"
 
 	"golang.org/x/oauth2"
@@ -164,6 +166,41 @@ func TestUserInfoURL(t *testing.T) {
 	after := b.UserInfoURL()
 	if after != "test" {
 		t.Fatalf("Expected userInfoURL to be 'test', got %v", after)
+	}
+}
+
+func TestExtra(t *testing.T) {
+	b := BaseProvider{}
+
+	before := b.Extra()
+	if before != nil {
+		t.Fatalf("Expected extra to be empty, got %v", before)
+	}
+
+	extra := map[string]any{"a": 1, "b": 2}
+
+	b.SetExtra(extra)
+
+	after := b.Extra()
+
+	rawExtra, err := json.Marshal(extra)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rawAfter, err := json.Marshal(after)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !bytes.Equal(rawExtra, rawAfter) {
+		t.Fatalf("Expected extra to be\n%s\ngot\n%s", rawExtra, rawAfter)
+	}
+
+	// ensure that it was shallow copied
+	after["b"] = 3
+	if d := b.Extra(); d["b"] != 2 {
+		t.Fatalf("Expected extra to remain unchanged, got\n%v", d)
 	}
 }
 

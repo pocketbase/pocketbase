@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -21,6 +22,7 @@ type BaseProvider struct {
 	userInfoURL  string
 	scopes       []string
 	pkce         bool
+	extra        map[string]any
 }
 
 // Context implements Provider.Context() interface method.
@@ -121,6 +123,16 @@ func (p *BaseProvider) UserInfoURL() string {
 // SetUserInfoURL implements Provider.SetUserInfoURL() interface method.
 func (p *BaseProvider) SetUserInfoURL(url string) {
 	p.userInfoURL = url
+}
+
+// Extra implements Provider.Extra() interface method.
+func (p *BaseProvider) Extra() map[string]any {
+	return maps.Clone(p.extra)
+}
+
+// SetExtra implements Provider.SetExtra() interface method.
+func (p *BaseProvider) SetExtra(data map[string]any) {
+	p.extra = data
 }
 
 // BuildAuthURL implements Provider.BuildAuthURL() interface method.

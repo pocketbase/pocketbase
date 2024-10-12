@@ -7,6 +7,8 @@
 
 - Added monday.com OAuth2 provider ([#5346](https://github.com/pocketbase/pocketbase/pull/5346); thanks @Jaytpa01).
 
+- Added option to retrieve the OIDC OAuth2 user info from the `id_token` payload for the cases when the provider doesn't have a dedicated user info endpoint.
+
 - Fixed the relation record picker to sort by default by `@rowid` insetead of the `created` field as the latter is optional ([#5641](https://github.com/pocketbase/pocketbase/discussions/5641)).
 
 - Fixed the OAuth2 providers logo path shown in the "Authorized providers" UI.

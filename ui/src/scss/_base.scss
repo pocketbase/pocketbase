@@ -369,7 +369,7 @@ a,
     @extend .content;
     background: var(--baseColor);
     border-radius: var(--baseRadius);
-    padding: calc(var(--smSpacing) - 5px) var(--smSpacing);
+    padding: var(--xsSpacing);
     border: 1px solid var(--baseAlt1Color);
 }
 

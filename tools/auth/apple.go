@@ -2,14 +2,8 @@ package auth
 
 import (
 	"context"
-	"crypto/rsa"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
-	"math/big"
-	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -129,8 +123,6 @@ func (p *Apple) FetchRawUserInfo(token *oauth2.Token) ([]byte, error) {
 	return json.Marshal(claims)
 }
 
-// -------------------------------------------------------------------
-
 func (p *Apple) parseAndVerifyIdToken(idToken string) (jwt.MapClaims, error) {
 	if idToken == "" {
 		return nil, errors.New("empty id_token")
@@ -146,6 +138,11 @@ func (p *Apple) parseAndVerifyIdToken(idToken string) (jwt.MapClaims, error) {
 
 	// validate common claims per https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/verifying_a_user#3383769
 	// ---
+	err = claims.Valid() // exp, iat, etc.
+	if err != nil {
+		return nil, err
+	}
+
 	if !claims.VerifyIssuer("https://appleid.apple.com", true) {
 		return nil, errors.New("iss must be https://appleid.apple.com")
 	}
@@ -154,102 +151,17 @@ func (p *Apple) parseAndVerifyIdToken(idToken string) (jwt.MapClaims, error) {
 		return nil, errors.New("aud must be the developer's client_id")
 	}
 
-	// fetch the public key set
+	// validate id_token signature
+	//
+	// note: this step could be technically considered optional because we trust
+	// the token which is a result of direct TLS communication with the provider
+	// (see also https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation)
 	// ---
 	kid, _ := t.Header["kid"].(string)
-	if kid == "" {
-		return nil, errors.New("missing kid header value")
-	}
-
-	key, err := p.fetchJWK(kid)
+	err = validateIdTokenSignature(p.ctx, idToken, p.jwksURL, kid)
 	if err != nil {
 		return nil, err
 	}
 
-	// decode the key params per RFC 7518 (https://tools.ietf.org/html/rfc7518#section-6.3)
-	// and construct a valid publicKey from them
-	// ---
-	exponent, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.E, "="))
-	if err != nil {
-		return nil, err
-	}
-
-	modulus, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.N, "="))
-	if err != nil {
-		return nil, err
-	}
-
-	publicKey := &rsa.PublicKey{
-		// https://tools.ietf.org/html/rfc7517#appendix-A.1
-		E: int(big.NewInt(0).SetBytes(exponent).Uint64()),
-		N: big.NewInt(0).SetBytes(modulus),
-	}
-
-	// verify the id_token
-	// ---
-	parser := jwt.NewParser(jwt.WithValidMethods([]string{key.Alg}))
-
-	parsedToken, err := parser.Parse(idToken, func(t *jwt.Token) (any, error) {
-		return publicKey, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
-		return claims, nil
-	}
-
-	return nil, errors.New("the parsed id_token is invalid")
-}
-
-type jwk struct {
-	Kty string
-	Kid string
-	Use string
-	Alg string
-	N   string
-	E   string
-}
-
-func (p *Apple) fetchJWK(kid string) (*jwk, error) {
-	req, err := http.NewRequestWithContext(p.ctx, "GET", p.jwksURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	rawBody, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	// http.Client.Get doesn't treat non 2xx responses as error
-	if res.StatusCode >= 400 {
-		return nil, fmt.Errorf(
-			"failed to verify the provided id_token (%d):\n%s",
-			res.StatusCode,
-			string(rawBody),
-		)
-	}
-
-	jwks := struct {
-		Keys []*jwk
-	}{}
-	if err := json.Unmarshal(rawBody, &jwks); err != nil {
-		return nil, err
-	}
-
-	for _, key := range jwks.Keys {
-		if key.Kid == kid {
-			return key, nil
-		}
-	}
-
-	return nil, fmt.Errorf("jwk with kid %q was not found", kid)
+	return claims, nil
 }

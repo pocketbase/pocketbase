@@ -92,6 +92,13 @@ type Provider interface {
 	// SetUserInfoURL sets the provider's UserInfoURL.
 	SetUserInfoURL(url string)
 
+	// Extra returns a shallow copy of any custom config data
+	// that the provider may be need.
+	Extra() map[string]any
+
+	// SetExtra updates the provider's custom config data.
+	SetExtra(data map[string]any)
+
 	// Client returns an http client using the provided token.
 	Client(token *oauth2.Token) *http.Client
 

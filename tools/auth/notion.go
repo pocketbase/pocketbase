@@ -90,7 +90,7 @@ func (p *Notion) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	return user, nil
 }
 
-// FetchRawUserInfo implements Provider.FetchRawUserInfo interface.
+// FetchRawUserInfo implements Provider.FetchRawUserInfo interface method.
 //
 // This differ from BaseProvider because Notion requires a version header for all requests
 // (https://developers.notion.com/reference/versioning).
