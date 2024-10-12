@@ -9,7 +9,7 @@
 
 - Added option to retrieve the OIDC OAuth2 user info from the `id_token` payload for the cases when the provider doesn't have a dedicated user info endpoint.
 
-- Fixed the relation record picker to sort by default by `@rowid` insetead of the `created` field as the latter is optional ([#5641](https://github.com/pocketbase/pocketbase/discussions/5641)).
+- Fixed the relation record picker to sort by default by `@rowid` instead of the `created` field as the latter is optional ([#5641](https://github.com/pocketbase/pocketbase/discussions/5641)).
 
 - Fixed the UI "Set Superusers only" button click not properly resetting the input state.
 
