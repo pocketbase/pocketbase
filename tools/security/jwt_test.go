@@ -3,7 +3,7 @@ package security_test
 import (
 	"testing"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
