@@ -46,7 +46,7 @@ your own custom app specific business logic and still have a single portable exe
 
 Here is a minimal example:
 
-0. [Install Go 1.21+](https://go.dev/doc/install) (_if you haven't already_)
+0. [Install Go 1.22+](https://go.dev/doc/install) (_if you haven't already_)
 
 1. Create a new project directory with the following `main.go` file inside it:
     ```go
