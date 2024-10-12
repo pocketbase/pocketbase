@@ -48,7 +48,7 @@
         editorRef?.focus();
     }
 
-    async function lock() {
+    function lock() {
         tempValue = rule;
         rule = null;
     }
@@ -100,7 +100,7 @@
                 bind:this={editorRef}
                 bind:value={rule}
                 baseCollection={collection}
-                disabled={isDisabled}
+                disabled={isDisabled || isSuperuserOnly}
                 placeholder={!isSuperuserOnly ? placeholder : ""}
             />
 
