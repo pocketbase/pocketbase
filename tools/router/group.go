@@ -137,6 +137,11 @@ func (group *RouterGroup[T]) GET(path string, action func(T) error) *Route[T] {
 	return group.Route(http.MethodGet, path, action)
 }
 
+// SEARCH is a shorthand for [Group.AddRoute] with SEARCH as route method.
+func (group *RouterGroup[T]) SEARCH(path string, action func(T) error) *Route[T] {
+	return group.Route("SEARCH", path, action)
+}
+
 // POST is a shorthand for [Group.AddRoute] with POST as route method.
 func (group *RouterGroup[T]) POST(path string, action func(T) error) *Route[T] {
 	return group.Route(http.MethodPost, path, action)

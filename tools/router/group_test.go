@@ -261,6 +261,11 @@ func TestRouterGroupRouteAliases(t *testing.T) {
 			"/test",
 		},
 		{
+			group.SEARCH("/test", testAction),
+			"SEARCH",
+			"/test",
+		},
+		{
 			group.POST("/test", testAction),
 			http.MethodPost,
 			"/test",
