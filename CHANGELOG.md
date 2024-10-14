@@ -1,4 +1,4 @@
-## v0.23.0-rc6 (WIP)
+## v0.23.0-rc6
 
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
