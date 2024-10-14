@@ -78,8 +78,6 @@ github.com/dlclark/regexp2 v1.11.4 h1:rPYF9/LECdNymJufQKmri9gV604RvvABwgOA8un7yA
 github.com/dlclark/regexp2 v1.11.4/go.mod h1:DHkYz0B9wPfa6wondMfaivmHpzrQ3v9q8cnmRbL6yW8=
 github.com/domodwyer/mailyak/v3 v3.6.2 h1:x3tGMsyFhTCaxp6ycgR0FE/bu5QiNp+hetUuCOBXMn8=
 github.com/domodwyer/mailyak/v3 v3.6.2/go.mod h1:lOm/u9CyCVWHeaAmHIdF4RiKVxKUT/H5XX10lIKAL6c=
-github.com/dop251/goja v0.0.0-20240927123429-241b342198c2 h1:Ux9RXuPQmTB4C1MKagNLme0krvq8ulewfor+ORO/QL4=
-github.com/dop251/goja v0.0.0-20240927123429-241b342198c2/go.mod h1:MxLav0peU43GgvwVgNbLAj1s/bSGboKkhuULvq/7hx4=
 github.com/dop251/goja v0.0.0-20241009100908-5f46f2705ca3 h1:MXsAuToxwsTn5BEEYm2DheqIiC4jWGmkEJ1uy+KFhvQ=
 github.com/dop251/goja v0.0.0-20241009100908-5f46f2705ca3/go.mod h1:MxLav0peU43GgvwVgNbLAj1s/bSGboKkhuULvq/7hx4=
 github.com/dop251/goja_nodejs v0.0.0-20240728170619-29b559befffc h1:MKYt39yZJi0Z9xEeRmDX2L4ocE0ETKcHKw6MVL3R+co=
