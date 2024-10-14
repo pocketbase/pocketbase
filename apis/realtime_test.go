@@ -233,7 +233,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 			},
 		},
 		{
-			Name:   "existing client - authorized superuser",
+			Name:   "existing client - guest -> authorized superuser",
 			Method: http.MethodPost,
 			URL:    "/api/realtime",
 			Body:   strings.NewReader(`{"clientId":"` + client.Id() + `","subscriptions":["test1", "test2"]}`),
@@ -257,7 +257,7 @@ func TestRealtimeSubscribe(t *testing.T) {
 			},
 		},
 		{
-			Name:   "existing client - authorized regular record",
+			Name:   "existing client - guest -> authorized regular auth record",
 			Method: http.MethodPost,
 			URL:    "/api/realtime",
 			Body:   strings.NewReader(`{"clientId":"` + client.Id() + `","subscriptions":["test1", "test2"]}`),
@@ -276,6 +276,38 @@ func TestRealtimeSubscribe(t *testing.T) {
 				authRecord, _ := client.Get(apis.RealtimeClientAuthKey).(*core.Record)
 				if authRecord == nil {
 					t.Errorf("Expected regular user auth record, got %v", authRecord)
+				}
+				resetClient()
+			},
+		},
+		{
+			Name:   "existing client - same auth",
+			Method: http.MethodPost,
+			URL:    "/api/realtime",
+			Body:   strings.NewReader(`{"clientId":"` + client.Id() + `","subscriptions":["test1", "test2"]}`),
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
+			},
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRealtimeSubscribeRequest": 1,
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				// the same user as the auth token
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				client.Set(apis.RealtimeClientAuthKey, user)
+
+				app.SubscriptionsBroker().Register(client)
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				authRecord, _ := client.Get(apis.RealtimeClientAuthKey).(*core.Record)
+				if authRecord == nil {
+					t.Errorf("Expected auth record model, got nil")
 				}
 				resetClient()
 			},

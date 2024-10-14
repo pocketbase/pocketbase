@@ -3,6 +3,8 @@
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
+- Fixed realtime 403 API error on resubscribe ([#5674](https://github.com/pocketbase/pocketbase/issues/5674)).
+
 - Fixed the auto OAuth2 avatar mapped field assignment when the OAuth2 provider doesn't return an avatar URL ([#5673](https://github.com/pocketbase/pocketbase/pull/5673)).
   _In case the avatar retrieval fails and the mapped record field "Required" option is not set, the error is silenced and only logged with WARN level._
 

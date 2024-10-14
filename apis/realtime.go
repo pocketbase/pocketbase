@@ -185,10 +185,9 @@ func realtimeSetSubscriptions(e *core.RequestEvent) error {
 		return e.NotFoundError("Missing or invalid client id.", err)
 	}
 
-	// check if the previous request was authorized
-	oldAuthId := extractAuthIdFromGetter(client)
-	newAuthId := extractAuthIdFromGetter(e)
-	if oldAuthId != "" && oldAuthId != newAuthId {
+	// for now allow only guest->auth upgrades and any other auth change is forbidden
+	clientAuth, _ := client.Get(RealtimeClientAuthKey).(*core.Record)
+	if clientAuth != nil && !isSameAuth(clientAuth, e.Auth) {
 		return e.ForbiddenError("The current and the previous request authorization don't match.", nil)
 	}
 
@@ -535,8 +534,8 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 							// ignore the auth record email visibility checks
 							// for auth owner, superuser or manager
 							if collection.IsAuth() {
-								authId := extractAuthIdFromGetter(client)
-								if authId == cleanRecord.Id ||
+								clientAuth, _ := client.Get(RealtimeClientAuthKey).(*core.Record)
+								if isSameAuth(clientAuth, cleanRecord) ||
 									realtimeCanAccessRecord(app, cleanRecord, requestInfo, collection.ManageRule) {
 									cleanRecord.IgnoreEmailVisibility(true)
 								}
@@ -681,17 +680,16 @@ func realtimeUnsetDryCachedRecord(app core.App, action string, record *core.Reco
 	return group.Wait()
 }
 
-type getter interface {
-	Get(string) any
-}
-
-func extractAuthIdFromGetter(val getter) string {
-	record, _ := val.Get(RealtimeClientAuthKey).(*core.Record)
-	if record != nil {
-		return record.Id
+func isSameAuth(authA, authB *core.Record) bool {
+	if authA == nil {
+		return authB == nil
 	}
 
-	return ""
+	if authB == nil {
+		return false
+	}
+
+	return authA.Id == authB.Id && authA.Collection().Id == authB.Collection().Id
 }
 
 // realtimeCanAccessRecord checks if the subscription client has access to the specified record model.
