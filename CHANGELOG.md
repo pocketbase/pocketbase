@@ -4,9 +4,14 @@
 > **This is a prerelease intended for test and experimental purposes only!**
 
 - Fixed the auto OAuth2 avatar mapped field assignment when the OAuth2 provider doesn't return an avatar URL ([#5673](https://github.com/pocketbase/pocketbase/pull/5673)).
-  _In case the image retrieval fails and the mapped record field is not required, the error is silenced and only logged with WARN level._
+  _In case the avatar retrieval fails and the mapped record field "Required" option is not set, the error is silenced and only logged with WARN level._
 
-- Added `Router.SEARCH()` helper method.
+- Added `Router.SEARCH(path, action)` helper method for registering `SEARCH` endpoints.
+
+- Changed all builtin middlewares to return `*hook.Handler[*core.RequestEvent]` with a default middleware id for consistency and to allow removal.
+  Or in other words, replace `.BindFunc(apis.Gzip())` with `.Bind(apis.Gzip())`.
+
+- Updated the JSVM types to reflect the recent changes.
 
 
 ## v0.23.0-rc5
