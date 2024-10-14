@@ -236,7 +236,7 @@ func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *cor
 				oldCanAssignUsername(txApp, e.Collection, e.OAuth2User.Username) {
 				payload[e.Collection.OAuth2.MappedFields.Username] = e.OAuth2User.Username
 			}
-			if _, ok := payload[e.Collection.OAuth2.MappedFields.AvatarURL]; !ok && e.Collection.OAuth2.MappedFields.AvatarURL != "" {
+			if _, ok := payload[e.Collection.OAuth2.MappedFields.AvatarURL]; !ok && e.OAuth2User.AvatarURL != "" {
 				mappedField := e.Collection.Fields.GetByName(e.Collection.OAuth2.MappedFields.AvatarURL)
 				if mappedField != nil && mappedField.Type() == core.FieldTypeFile {
 					// download the avatar if the mapped field is a file
