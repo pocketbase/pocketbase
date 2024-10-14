@@ -18,7 +18,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
-	"github.com/spf13/cast"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -486,6 +485,8 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 
 	for _, chunk := range chunks {
 		group.Go(func() error {
+			var clientAuth *core.Record
+
 			for _, client := range chunk {
 				// note: not executed concurrently to avoid races and to ensure
 				// that the access checks are applied for the current record db state
@@ -494,6 +495,8 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 					if len(subs) == 0 {
 						continue
 					}
+
+					clientAuth, _ = client.Get(RealtimeClientAuthKey).(*core.Record)
 
 					for sub, options := range subs {
 						// create a clean record copy without expand and unknown fields
@@ -506,8 +509,8 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 							Method:  "GET",
 							Query:   options.Query,
 							Headers: options.Headers,
+							Auth:    clientAuth,
 						}
-						requestInfo.Auth, _ = client.Get(RealtimeClientAuthKey).(*core.Record)
 
 						if !realtimeCanAccessRecord(app, cleanRecord, requestInfo, rule) {
 							continue
@@ -534,7 +537,6 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 							// ignore the auth record email visibility checks
 							// for auth owner, superuser or manager
 							if collection.IsAuth() {
-								clientAuth, _ := client.Get(RealtimeClientAuthKey).(*core.Record)
 								if isSameAuth(clientAuth, cleanRecord) ||
 									realtimeCanAccessRecord(app, cleanRecord, requestInfo, collection.ManageRule) {
 									cleanRecord.IgnoreEmailVisibility(true)
@@ -707,7 +709,7 @@ func realtimeCanAccessRecord(
 
 	// check the subscription client-side filter (if any)
 	// ---
-	filter := cast.ToString(requestInfo.Query[search.FilterQueryParam])
+	filter := requestInfo.Query[search.FilterQueryParam]
 	if filter == "" {
 		return true // no further checks needed
 	}
