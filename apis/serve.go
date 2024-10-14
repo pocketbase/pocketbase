@@ -83,21 +83,17 @@ func Serve(app core.App, config ServeConfig) error {
 		return err
 	}
 
-	pbRouter.Bind(&hook.Handler[*core.RequestEvent]{
-		Id: DefaultCorsMiddlewareId,
-		Func: CORSWithConfig(CORSConfig{
-			AllowOrigins: config.AllowedOrigins,
-			AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
-		}),
-		Priority: DefaultCorsMiddlewarePriority,
-	})
+	pbRouter.Bind(CORSWithConfig(CORSConfig{
+		AllowOrigins: config.AllowedOrigins,
+		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+	}))
 
 	pbRouter.BindFunc(installerRedirect(app, config.DashboardPath))
 
 	pbRouter.GET(config.DashboardPath, Static(ui.DistDirFS, false)).
 		BindFunc(dashboardRemoveInstallerParam()).
 		BindFunc(dashboardCacheControl()).
-		BindFunc(Gzip())
+		Bind(Gzip())
 
 	// start http server
 	// ---

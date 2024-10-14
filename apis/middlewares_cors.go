@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/hook"
 )
 
 const (
@@ -124,7 +125,7 @@ var DefaultCORSConfig = CORSConfig{
 }
 
 // CORSWithConfig returns a CORS middleware with config.
-func CORSWithConfig(config CORSConfig) func(e *core.RequestEvent) error {
+func CORSWithConfig(config CORSConfig) *hook.Handler[*core.RequestEvent] {
 	// Defaults
 	if len(config.AllowOrigins) == 0 {
 		config.AllowOrigins = DefaultCORSConfig.AllowOrigins
@@ -151,108 +152,112 @@ func CORSWithConfig(config CORSConfig) func(e *core.RequestEvent) error {
 		maxAge = strconv.Itoa(config.MaxAge)
 	}
 
-	return func(e *core.RequestEvent) error {
-		req := e.Request
-		res := e.Response
-		origin := req.Header.Get("Origin")
-		allowOrigin := ""
+	return &hook.Handler[*core.RequestEvent]{
+		Id:       DefaultCorsMiddlewareId,
+		Priority: DefaultCorsMiddlewarePriority,
+		Func: func(e *core.RequestEvent) error {
+			req := e.Request
+			res := e.Response
+			origin := req.Header.Get("Origin")
+			allowOrigin := ""
 
-		res.Header().Add("Vary", "Origin")
+			res.Header().Add("Vary", "Origin")
 
-		// Preflight request is an OPTIONS request, using three HTTP request headers: Access-Control-Request-Method,
-		// Access-Control-Request-Headers, and the Origin header. See: https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
-		// For simplicity we just consider method type and later `Origin` header.
-		preflight := req.Method == http.MethodOptions
+			// Preflight request is an OPTIONS request, using three HTTP request headers: Access-Control-Request-Method,
+			// Access-Control-Request-Headers, and the Origin header. See: https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
+			// For simplicity we just consider method type and later `Origin` header.
+			preflight := req.Method == http.MethodOptions
 
-		// No Origin provided. This is (probably) not request from actual browser - proceed executing middleware chain
-		if origin == "" {
-			if !preflight {
-				return e.Next()
+			// No Origin provided. This is (probably) not request from actual browser - proceed executing middleware chain
+			if origin == "" {
+				if !preflight {
+					return e.Next()
+				}
+				return e.NoContent(http.StatusNoContent)
 			}
-			return e.NoContent(http.StatusNoContent)
-		}
 
-		if config.AllowOriginFunc != nil {
-			allowed, err := config.AllowOriginFunc(origin)
-			if err != nil {
-				return err
-			}
-			if allowed {
-				allowOrigin = origin
-			}
-		} else {
-			// Check allowed origins
-			for _, o := range config.AllowOrigins {
-				if o == "*" && config.AllowCredentials && config.UnsafeWildcardOriginWithAllowCredentials {
+			if config.AllowOriginFunc != nil {
+				allowed, err := config.AllowOriginFunc(origin)
+				if err != nil {
+					return err
+				}
+				if allowed {
 					allowOrigin = origin
-					break
 				}
-				if o == "*" || o == origin {
-					allowOrigin = o
-					break
-				}
-				if matchSubdomain(origin, o) {
-					allowOrigin = origin
-					break
-				}
-			}
-
-			checkPatterns := false
-			if allowOrigin == "" {
-				// to avoid regex cost by invalid (long) domains (253 is domain name max limit)
-				if len(origin) <= (253+3+5) && strings.Contains(origin, "://") {
-					checkPatterns = true
-				}
-			}
-			if checkPatterns {
-				for _, re := range allowOriginPatterns {
-					if match, _ := regexp.MatchString(re, origin); match {
+			} else {
+				// Check allowed origins
+				for _, o := range config.AllowOrigins {
+					if o == "*" && config.AllowCredentials && config.UnsafeWildcardOriginWithAllowCredentials {
+						allowOrigin = origin
+						break
+					}
+					if o == "*" || o == origin {
+						allowOrigin = o
+						break
+					}
+					if matchSubdomain(origin, o) {
 						allowOrigin = origin
 						break
 					}
 				}
-			}
-		}
 
-		// Origin not allowed
-		if allowOrigin == "" {
+				checkPatterns := false
+				if allowOrigin == "" {
+					// to avoid regex cost by invalid (long) domains (253 is domain name max limit)
+					if len(origin) <= (253+3+5) && strings.Contains(origin, "://") {
+						checkPatterns = true
+					}
+				}
+				if checkPatterns {
+					for _, re := range allowOriginPatterns {
+						if match, _ := regexp.MatchString(re, origin); match {
+							allowOrigin = origin
+							break
+						}
+					}
+				}
+			}
+
+			// Origin not allowed
+			if allowOrigin == "" {
+				if !preflight {
+					return e.Next()
+				}
+				return e.NoContent(http.StatusNoContent)
+			}
+
+			res.Header().Set("Access-Control-Allow-Origin", allowOrigin)
+			if config.AllowCredentials {
+				res.Header().Set("Access-Control-Allow-Credentials", "true")
+			}
+
+			// Simple request
 			if !preflight {
+				if exposeHeaders != "" {
+					res.Header().Set("Access-Control-Expose-Headers", exposeHeaders)
+				}
 				return e.Next()
 			}
+
+			// Preflight request
+			res.Header().Add("Vary", "Access-Control-Request-Method")
+			res.Header().Add("Vary", "Access-Control-Request-Headers")
+			res.Header().Set("Access-Control-Allow-Methods", allowMethods)
+
+			if allowHeaders != "" {
+				res.Header().Set("Access-Control-Allow-Headers", allowHeaders)
+			} else {
+				h := req.Header.Get("Access-Control-Request-Headers")
+				if h != "" {
+					res.Header().Set("Access-Control-Allow-Headers", h)
+				}
+			}
+			if config.MaxAge != 0 {
+				res.Header().Set("Access-Control-Max-Age", maxAge)
+			}
+
 			return e.NoContent(http.StatusNoContent)
-		}
-
-		res.Header().Set("Access-Control-Allow-Origin", allowOrigin)
-		if config.AllowCredentials {
-			res.Header().Set("Access-Control-Allow-Credentials", "true")
-		}
-
-		// Simple request
-		if !preflight {
-			if exposeHeaders != "" {
-				res.Header().Set("Access-Control-Expose-Headers", exposeHeaders)
-			}
-			return e.Next()
-		}
-
-		// Preflight request
-		res.Header().Add("Vary", "Access-Control-Request-Method")
-		res.Header().Add("Vary", "Access-Control-Request-Headers")
-		res.Header().Set("Access-Control-Allow-Methods", allowMethods)
-
-		if allowHeaders != "" {
-			res.Header().Set("Access-Control-Allow-Headers", allowHeaders)
-		} else {
-			h := req.Header.Get("Access-Control-Request-Headers")
-			if h != "" {
-				res.Header().Set("Access-Control-Allow-Headers", h)
-			}
-		}
-		if config.MaxAge != 0 {
-			res.Header().Set("Access-Control-Max-Age", maxAge)
-		}
-
-		return e.NoContent(http.StatusNoContent)
+		},
 	}
 }
 

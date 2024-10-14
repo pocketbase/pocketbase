@@ -18,11 +18,16 @@ import (
 	"sync"
 
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/router"
 )
 
 const (
 	gzipScheme = "gzip"
+)
+
+const (
+	DefaultGzipMiddlewareId = "pbGzip"
 )
 
 // GzipConfig defines the config for Gzip middleware.
@@ -46,12 +51,12 @@ type GzipConfig struct {
 }
 
 // Gzip returns a middleware which compresses HTTP response using Gzip compression scheme.
-func Gzip() func(*core.RequestEvent) error {
+func Gzip() *hook.Handler[*core.RequestEvent] {
 	return GzipWithConfig(GzipConfig{})
 }
 
 // GzipWithConfig returns a middleware which compresses HTTP response using gzip compression scheme.
-func GzipWithConfig(config GzipConfig) func(*core.RequestEvent) error {
+func GzipWithConfig(config GzipConfig) *hook.Handler[*core.RequestEvent] {
 	if config.Level < -2 || config.Level > 9 { // these are consts: gzip.HuffmanOnly and gzip.BestCompression
 		panic(errors.New("invalid gzip level"))
 	}
@@ -79,54 +84,57 @@ func GzipWithConfig(config GzipConfig) func(*core.RequestEvent) error {
 		},
 	}
 
-	return func(e *core.RequestEvent) error {
-		e.Response.Header().Add("Vary", "Accept-Encoding")
-		if strings.Contains(e.Request.Header.Get("Accept-Encoding"), gzipScheme) {
-			w, ok := pool.Get().(*gzip.Writer)
-			if !ok {
-				return e.InternalServerError("", errors.New("failed to get gzip.Writer"))
+	return &hook.Handler[*core.RequestEvent]{
+		Id: DefaultGzipMiddlewareId,
+		Func: func(e *core.RequestEvent) error {
+			e.Response.Header().Add("Vary", "Accept-Encoding")
+			if strings.Contains(e.Request.Header.Get("Accept-Encoding"), gzipScheme) {
+				w, ok := pool.Get().(*gzip.Writer)
+				if !ok {
+					return e.InternalServerError("", errors.New("failed to get gzip.Writer"))
+				}
+
+				rw := e.Response
+				w.Reset(rw)
+
+				buf := bpool.Get().(*bytes.Buffer)
+				buf.Reset()
+
+				grw := &gzipResponseWriter{Writer: w, ResponseWriter: rw, minLength: config.MinLength, buffer: buf}
+				defer func() {
+					// There are different reasons for cases when we have not yet written response to the client and now need to do so.
+					// a) handler response had only response code and no response body (ala 404 or redirects etc). Response code need to be written now.
+					// b) body is shorter than our minimum length threshold and being buffered currently and needs to be written
+					if !grw.wroteBody {
+						if rw.Header().Get("Content-Encoding") == gzipScheme {
+							rw.Header().Del("Content-Encoding")
+						}
+						if grw.wroteHeader {
+							rw.WriteHeader(grw.code)
+						}
+						// We have to reset response to it's pristine state when
+						// nothing is written to body or error is returned.
+						// See issue echo#424, echo#407.
+						e.Response = rw
+						w.Reset(io.Discard)
+					} else if !grw.minLengthExceeded {
+						// Write uncompressed response
+						e.Response = rw
+						if grw.wroteHeader {
+							rw.WriteHeader(grw.code)
+						}
+						grw.buffer.WriteTo(rw)
+						w.Reset(io.Discard)
+					}
+					w.Close()
+					bpool.Put(buf)
+					pool.Put(w)
+				}()
+				e.Response = grw
 			}
 
-			rw := e.Response
-			w.Reset(rw)
-
-			buf := bpool.Get().(*bytes.Buffer)
-			buf.Reset()
-
-			grw := &gzipResponseWriter{Writer: w, ResponseWriter: rw, minLength: config.MinLength, buffer: buf}
-			defer func() {
-				// There are different reasons for cases when we have not yet written response to the client and now need to do so.
-				// a) handler response had only response code and no response body (ala 404 or redirects etc). Response code need to be written now.
-				// b) body is shorter than our minimum length threshold and being buffered currently and needs to be written
-				if !grw.wroteBody {
-					if rw.Header().Get("Content-Encoding") == gzipScheme {
-						rw.Header().Del("Content-Encoding")
-					}
-					if grw.wroteHeader {
-						rw.WriteHeader(grw.code)
-					}
-					// We have to reset response to it's pristine state when
-					// nothing is written to body or error is returned.
-					// See issue echo#424, echo#407.
-					e.Response = rw
-					w.Reset(io.Discard)
-				} else if !grw.minLengthExceeded {
-					// Write uncompressed response
-					e.Response = rw
-					if grw.wroteHeader {
-						rw.WriteHeader(grw.code)
-					}
-					grw.buffer.WriteTo(rw)
-					w.Reset(io.Discard)
-				}
-				w.Close()
-				bpool.Put(buf)
-				pool.Put(w)
-			}()
-			e.Response = grw
-		}
-
-		return e.Next()
+			return e.Next()
+		},
 	}
 }
 
