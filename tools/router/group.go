@@ -45,8 +45,8 @@ func (group *RouterGroup[T]) Group(prefix string) *RouterGroup[T] {
 // aka. executes in the order they were registered.
 //
 // If you need to specify a named middleware (ex. so that it can be removed)
-// or middleware with custom exec prirority, use [Group.Bind] method.
-func (group *RouterGroup[T]) BindFunc(middlewareFuncs ...func(T) error) *RouterGroup[T] {
+// or middleware with custom exec prirority, use [RouterGroup.Bind] method.
+func (group *RouterGroup[T]) BindFunc(middlewareFuncs ...func(e T) error) *RouterGroup[T] {
 	for _, m := range middlewareFuncs {
 		group.Middlewares = append(group.Middlewares, &hook.Handler[T]{Func: m})
 	}
@@ -115,7 +115,7 @@ func (group *RouterGroup[T]) Unbind(middlewareIds ...string) *RouterGroup[T] {
 // meaning that only a top level group route could have HOST as part of the prefix.
 //
 // Returns the newly created route to allow attaching route-only middlewares.
-func (group *RouterGroup[T]) Route(method string, path string, action func(T) error) *Route[T] {
+func (group *RouterGroup[T]) Route(method string, path string, action func(e T) error) *Route[T] {
 	route := &Route[T]{
 		Method: method,
 		Path:   path,
@@ -127,48 +127,48 @@ func (group *RouterGroup[T]) Route(method string, path string, action func(T) er
 	return route
 }
 
-// Any is a shorthand for [Group.AddRoute] with "" as route method (aka. matches any method).
-func (group *RouterGroup[T]) Any(path string, action func(T) error) *Route[T] {
+// Any is a shorthand for [RouterGroup.AddRoute] with "" as route method (aka. matches any method).
+func (group *RouterGroup[T]) Any(path string, action func(e T) error) *Route[T] {
 	return group.Route("", path, action)
 }
 
-// GET is a shorthand for [Group.AddRoute] with GET as route method.
-func (group *RouterGroup[T]) GET(path string, action func(T) error) *Route[T] {
+// GET is a shorthand for [RouterGroup.AddRoute] with GET as route method.
+func (group *RouterGroup[T]) GET(path string, action func(e T) error) *Route[T] {
 	return group.Route(http.MethodGet, path, action)
 }
 
-// SEARCH is a shorthand for [Group.AddRoute] with SEARCH as route method.
-func (group *RouterGroup[T]) SEARCH(path string, action func(T) error) *Route[T] {
+// SEARCH is a shorthand for [RouterGroup.AddRoute] with SEARCH as route method.
+func (group *RouterGroup[T]) SEARCH(path string, action func(e T) error) *Route[T] {
 	return group.Route("SEARCH", path, action)
 }
 
-// POST is a shorthand for [Group.AddRoute] with POST as route method.
-func (group *RouterGroup[T]) POST(path string, action func(T) error) *Route[T] {
+// POST is a shorthand for [RouterGroup.AddRoute] with POST as route method.
+func (group *RouterGroup[T]) POST(path string, action func(e T) error) *Route[T] {
 	return group.Route(http.MethodPost, path, action)
 }
 
-// DELETE is a shorthand for [Group.AddRoute] with DELETE as route method.
-func (group *RouterGroup[T]) DELETE(path string, action func(T) error) *Route[T] {
+// DELETE is a shorthand for [RouterGroup.AddRoute] with DELETE as route method.
+func (group *RouterGroup[T]) DELETE(path string, action func(e T) error) *Route[T] {
 	return group.Route(http.MethodDelete, path, action)
 }
 
-// PATCH is a shorthand for [Group.AddRoute] with PATCH as route method.
-func (group *RouterGroup[T]) PATCH(path string, action func(T) error) *Route[T] {
+// PATCH is a shorthand for [RouterGroup.AddRoute] with PATCH as route method.
+func (group *RouterGroup[T]) PATCH(path string, action func(e T) error) *Route[T] {
 	return group.Route(http.MethodPatch, path, action)
 }
 
-// PUT is a shorthand for [Group.AddRoute] with PUT as route method.
-func (group *RouterGroup[T]) PUT(path string, action func(T) error) *Route[T] {
+// PUT is a shorthand for [RouterGroup.AddRoute] with PUT as route method.
+func (group *RouterGroup[T]) PUT(path string, action func(e T) error) *Route[T] {
 	return group.Route(http.MethodPut, path, action)
 }
 
-// HEAD is a shorthand for [Group.AddRoute] with HEAD as route method.
-func (group *RouterGroup[T]) HEAD(path string, action func(T) error) *Route[T] {
+// HEAD is a shorthand for [RouterGroup.AddRoute] with HEAD as route method.
+func (group *RouterGroup[T]) HEAD(path string, action func(e T) error) *Route[T] {
 	return group.Route(http.MethodHead, path, action)
 }
 
-// OPTIONS is a shorthand for [Group.AddRoute] with OPTIONS as route method.
-func (group *RouterGroup[T]) OPTIONS(path string, action func(T) error) *Route[T] {
+// OPTIONS is a shorthand for [RouterGroup.AddRoute] with OPTIONS as route method.
+func (group *RouterGroup[T]) OPTIONS(path string, action func(e T) error) *Route[T] {
 	return group.Route(http.MethodOptions, path, action)
 }
 

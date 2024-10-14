@@ -922,7 +922,7 @@ declare namespace $os {
    * const cmd = $os.cmd('ls', '-sl')
    *
    * // execute the command and return its standard output as string
-   * const output = String.fromCharCode(...cmd.output());
+   * const output = toString(cmd.output());
    * ` + "```" + `
    */
   export let cmd: exec.command

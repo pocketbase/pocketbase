@@ -5,7 +5,7 @@ import "github.com/pocketbase/pocketbase/tools/hook"
 type Route[T hook.Resolver] struct {
 	excludedMiddlewares map[string]struct{}
 
-	Action      func(T) error
+	Action      func(e T) error
 	Method      string
 	Path        string
 	Middlewares []*hook.Handler[T]
@@ -17,8 +17,8 @@ type Route[T hook.Resolver] struct {
 // aka. executes in the order they were registered.
 //
 // If you need to specify a named middleware (ex. so that it can be removed)
-// or middleware with custom exec prirority, use the [Bind] method.
-func (route *Route[T]) BindFunc(middlewareFuncs ...func(T) error) *Route[T] {
+// or middleware with custom exec prirority, use the [Route.Bind] method.
+func (route *Route[T]) BindFunc(middlewareFuncs ...func(e T) error) *Route[T] {
 	for _, m := range middlewareFuncs {
 		route.Middlewares = append(route.Middlewares, &hook.Handler[T]{Func: m})
 	}

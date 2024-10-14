@@ -45,7 +45,7 @@ type GzipConfig struct {
 	MinLength int
 }
 
-// Gzip returns a middleware which compresses HTTP response using gzip compression scheme.
+// Gzip returns a middleware which compresses HTTP response using Gzip compression scheme.
 func Gzip() func(*core.RequestEvent) error {
 	return GzipWithConfig(GzipConfig{})
 }

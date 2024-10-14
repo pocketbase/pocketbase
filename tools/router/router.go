@@ -44,6 +44,8 @@ type EventFactoryFunc[T hook.Resolver] func(w http.ResponseWriter, r *http.Reque
 //
 //	http.ListenAndServe("localhost:8090", mux)
 type Router[T hook.Resolver] struct {
+	// @todo consider renaming the type to just Group and replace the embed type
+	// with an alias after Go 1.24 adds support for generic type aliases
 	*RouterGroup[T]
 
 	eventFactory EventFactoryFunc[T]

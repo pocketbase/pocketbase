@@ -335,13 +335,13 @@ func (app *BaseApp) initHooks() {
 	app.onBatchRequest = &hook.Hook[*BatchRequestEvent]{}
 }
 
-// @todo consider caching the created instance?
-//
 // UnsafeWithoutHooks returns a shallow copy of the current app WITHOUT any registered hooks.
 //
 // NB! Note that using the returned app instance may cause data integrity errors
 // since the Record validations and data normalizations (including files uploads)
 // rely on the app hooks to work.
+//
+// @todo consider caching the created instance?
 func (app *BaseApp) UnsafeWithoutHooks() App {
 	clone := *app
 

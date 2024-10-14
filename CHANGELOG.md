@@ -1,3 +1,14 @@
+## v0.23.0-rc6 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Fixed the auto OAuth2 avatar mapped field assignment when the OAuth2 provider doesn't return an avatar URL ([#5673](https://github.com/pocketbase/pocketbase/pull/5673)).
+  _In case the image retrieval fails and the mapped record field is not required, the error is silenced and only logged with WARN level._
+
+- Added `Router.SEARCH()` helper method.
+
+
 ## v0.23.0-rc5
 
 > [!CAUTION]

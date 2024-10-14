@@ -20,9 +20,6 @@ const (
 
 // BodyLimit returns a middleware function that changes the default request body size limit.
 //
-// Note that in order to have effect this middleware should be registered
-// before other middlewares that reads the request body.
-//
 // If limitBytes <= 0, no limit is applied.
 //
 // Otherwise, if the request body size exceeds the configured limitBytes,
