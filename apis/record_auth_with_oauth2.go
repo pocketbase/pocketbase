@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"maps"
 	"net/http"
 	"time"
@@ -236,7 +237,11 @@ func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *cor
 				oldCanAssignUsername(txApp, e.Collection, e.OAuth2User.Username) {
 				payload[e.Collection.OAuth2.MappedFields.Username] = e.OAuth2User.Username
 			}
-			if _, ok := payload[e.Collection.OAuth2.MappedFields.AvatarURL]; !ok && e.Collection.OAuth2.MappedFields.AvatarURL != "" {
+			if _, ok := payload[e.Collection.OAuth2.MappedFields.AvatarURL]; !ok &&
+				// no existing OAuth2 mapping
+				e.Collection.OAuth2.MappedFields.AvatarURL != "" &&
+				// non-empty OAuth2 avatar url
+				e.OAuth2User.AvatarURL != "" {
 				mappedField := e.Collection.Fields.GetByName(e.Collection.OAuth2.MappedFields.AvatarURL)
 				if mappedField != nil && mappedField.Type() == core.FieldTypeFile {
 					// download the avatar if the mapped field is a file
@@ -246,9 +251,10 @@ func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *cor
 						return filesystem.NewFileFromURL(ctx, e.OAuth2User.AvatarURL)
 					}()
 					if err != nil {
-						return err
+						txApp.Logger().Warn("Failed to retrieve OAuth2 avatar", slog.String("error", err.Error()))
+					} else {
+						payload[e.Collection.OAuth2.MappedFields.AvatarURL] = avatarFile
 					}
-					payload[e.Collection.OAuth2.MappedFields.AvatarURL] = avatarFile
 				} else {
 					// otherwise - assign the url string
 					payload[e.Collection.OAuth2.MappedFields.AvatarURL] = e.OAuth2User.AvatarURL

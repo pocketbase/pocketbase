@@ -1110,6 +1110,85 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 			},
 		},
 		{
+			Name:   "creating user (with mapped OAuth2 avatarURL field but empty OAuth2User.avatarURL value)",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/auth-with-oauth2",
+			Body: strings.NewReader(`{
+				"provider": "test",
+				"code":"123",
+				"redirectURL": "https://example.com"
+			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				usersCol, err := app.FindCollectionByNameOrId("users")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// register the test provider
+				auth.Providers["test"] = func() auth.Provider {
+					return &oauth2MockProvider{
+						AuthUser: &auth.AuthUser{
+							Id:        "oauth2_id",
+							Email:     "oauth2@example.com",
+							AvatarURL: "",
+						},
+						Token: &oauth2.Token{AccessToken: "abc"},
+					}
+				}
+
+				// add the test provider in the collection
+				usersCol.MFA.Enabled = false
+				usersCol.OAuth2.Enabled = true
+				usersCol.OAuth2.Providers = []core.OAuth2ProviderConfig{{
+					Name:         "test",
+					ClientId:     "123",
+					ClientSecret: "456",
+				}}
+				usersCol.OAuth2.MappedFields = core.OAuth2KnownFields{
+					AvatarURL: "avatar",
+				}
+				if err := app.Save(usersCol); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"email":"oauth2@example.com"`,
+				`"emailVisibility":false`,
+				`"verified":true`,
+				`"avatar":""`,
+			},
+			NotExpectedContent: []string{
+				// hidden fields
+				`"tokenKey"`,
+				`"password"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                             0,
+				"OnRecordAuthWithOAuth2Request": 1,
+				"OnRecordAuthRequest":           1,
+				"OnRecordCreateRequest":         1,
+				"OnRecordEnrich":                2, // the auth response and from the create request
+				// ---
+				"OnModelCreate":              3, // record + authOrigins + externalAuths
+				"OnModelCreateExecute":       3,
+				"OnModelAfterCreateSuccess":  3,
+				"OnRecordCreate":             3,
+				"OnRecordCreateExecute":      3,
+				"OnRecordAfterCreateSuccess": 3,
+				// ---
+				"OnModelUpdate":              1, // created record verified state change
+				"OnModelUpdateExecute":       1,
+				"OnModelAfterUpdateSuccess":  1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+				// ---
+				"OnModelValidate":  4,
+				"OnRecordValidate": 4,
+			},
+		},
+		{
 			Name:   "creating user (with mapped OAuth2 fields and avatarURL->non-file field)",
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/auth-with-oauth2",
