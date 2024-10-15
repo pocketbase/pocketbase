@@ -18678,9 +18678,10 @@ namespace settings {
  interface EmailTemplate {
   /**
    * Resolve replaces the placeholder parameters in the current email
-   * template and returns its components as ready-to-use strings.
+   * template and returns its components as ready-to-use strings in an array. The first element 
+   * being the subject, second the body, and third the action URL.
    */
-  resolve(appName: string, appUrl: string, token: string): string
+  resolve(appName: string, appUrl: string, token: string): Array<string>
  }
 }
 
