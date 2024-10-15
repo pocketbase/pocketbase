@@ -26,6 +26,7 @@
 
     if (!config.extra) {
         config.extra = {};
+        hasUserInfoURL = true;
     }
 
     $: if (typeof hasUserInfoURL !== undefined) {

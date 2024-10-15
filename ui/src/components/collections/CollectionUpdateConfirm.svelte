@@ -1,6 +1,7 @@
 <script>
-    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import { createEventDispatcher, tick } from "svelte";
+    import ApiClient from "@/utils/ApiClient";
+    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -8,6 +9,7 @@
     let oldCollection;
     let newCollection;
     let hideAfterSave;
+    let conflictingOIDCs = [];
 
     $: isCollectionRenamed = oldCollection?.name != newCollection?.name;
 
@@ -36,13 +38,16 @@
         newCollection = changed;
         hideAfterSave = hideAfterSaveArg;
 
+        await detectConflictingOIDCs();
+
         await tick();
 
         if (
             isCollectionRenamed ||
             renamedFields.length ||
             deletedFields.length ||
-            multipleToSingleFields.length
+            multipleToSingleFields.length ||
+            conflictingOIDCs.length
         ) {
             panel?.show();
         } else {
@@ -59,6 +64,50 @@
         hide();
         dispatch("confirm", hideAfterSave);
     }
+
+    const oidcProviders = ["oidc", "oidc2", "oidc3"];
+
+    async function detectConflictingOIDCs() {
+        conflictingOIDCs = [];
+
+        for (let name of oidcProviders) {
+            let oldProvider = oldCollection?.oauth2?.providers?.find((p) => p.name == name);
+            let newProvider = newCollection?.oauth2?.providers?.find((p) => p.name == name);
+
+            if (!oldProvider || !newProvider) {
+                continue;
+            }
+
+            let oldHost = new URL(oldProvider.authURL).host;
+            let newHost = new URL(newProvider.authURL).host;
+            if (oldHost == newHost) {
+                continue;
+            }
+
+            // check if there are existing externalAuths
+            if (await haveExternalAuths(name)) {
+                conflictingOIDCs.push({ name, oldHost, newHost });
+            }
+        }
+    }
+
+    async function haveExternalAuths(provider) {
+        try {
+            await ApiClient.collection("_externalAuths").getFirstListItem(
+                ApiClient.filter("collectionRef={:collectionId} && provider={:provider}", {
+                    collectionId: newCollection?.id,
+                    provider: provider,
+                }),
+            );
+            return true;
+        } catch {}
+
+        return false;
+    }
+
+    function getExternalAuthsFilterLink(provider) {
+        return `#/collections?collectionId=_pbc_2951383030&filter=collectionRef%3D%22${newCollection?.id}%22+%26%26+provider%3D%22${provider}%22`;
+    }
 </script>
 
 <OverlayPanel bind:this={panel} class="confirm-changes-panel" popup on:hide on:show>
@@ -66,20 +115,22 @@
         <h4>Confirm collection changes</h4>
     </svelte:fragment>
 
-    <div class="alert alert-warning">
-        <div class="icon">
-            <i class="ri-error-warning-line" />
+    {#if isCollectionRenamed || deletedFields.length || renamedFields.length}
+        <div class="alert alert-warning">
+            <div class="icon">
+                <i class="ri-error-warning-line" />
+            </div>
+            <div class="content txt-bold">
+                <p>
+                    If any of the collection changes is part of another collection rule, filter or view query,
+                    you'll have to update it manually!
+                </p>
+                {#if deletedFields.length}
+                    <p>All data associated with the removed fields will be permanently deleted!</p>
+                {/if}
+            </div>
         </div>
-        <div class="content txt-bold">
-            <p>
-                If any of the collection changes is part of another collection rule, filter or view query,
-                you'll have to update it manually!
-            </p>
-            {#if deletedFields.length}
-                <p>All data associated with the removed fields will be permanently deleted!</p>
-            {/if}
-        </div>
-    </div>
+    {/if}
 
     {#if showChanges}
         <h6>Changes:</h6>
@@ -121,6 +172,27 @@
                     </li>
                 {/each}
             {/if}
+
+            {#each conflictingOIDCs as oidc}
+                <li>
+                    Changed <code>{oidc.name}</code> host
+                    <div class="inline-flex m-l-5">
+                        <strong class="txt-strikethrough txt-hint">{oidc.oldHost}</strong>
+                        <i class="ri-arrow-right-line txt-sm" />
+                        <strong class="txt">{oidc.newHost}</strong>
+                    </div>
+                    <br />
+                    <em class="txt-hint">
+                        If the old and new OIDC configuration is not for the same provider consider deleting
+                        all old <code class="txt-sm">_externalAuths</code> records associated to the current
+                        collection and provider, otherwise it may result in account linking errors.
+                        <a href={getExternalAuthsFilterLink(oidc.name)} target="_blank">
+                            Review existing <code class="txt-sm">_externalAuths</code> records
+                            <i class="ri-external-link-line txt-sm"></i>
+                        </a>.
+                    </em>
+                </li>
+            {/each}
         </ul>
     {/if}
 

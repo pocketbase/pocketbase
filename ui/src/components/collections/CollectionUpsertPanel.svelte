@@ -37,6 +37,7 @@
     let original = null;
     let collection = {};
     let isSaving = false;
+    let isLoadingConfirmation = false;
     let confirmClose = false; // prevent close recursion
     let activeTab = TAB_SCHEMA;
     let initialFormHash = calculateFormHash(collection);
@@ -49,7 +50,7 @@
 
     $: isView = collection.type === TYPE_VIEW;
 
-    $: if ($errors.fields || $errors.viewQuery) {
+    $: if ($errors.fields || $errors.viewQuery || $errors.indexes) {
         // extract the direct fields list error, otherwise - return a generic message
         fieldsTabError = CommonHelper.getNestedVal($errors, "fields.message") || "Has errors";
     } else {
@@ -92,6 +93,8 @@
         load(model);
 
         confirmClose = true;
+        isLoadingConfirmation = false;
+        isSaving = false;
 
         changeTab(TAB_SCHEMA);
 
@@ -140,12 +143,22 @@
         initialFormHash = calculateFormHash(collection);
     }
 
-    function saveConfirm(hideAfterSave = true) {
-        if (!collection.id) {
-            save(hideAfterSave);
-        } else {
-            confirmChangesPanel?.show(original, collection, hideAfterSave);
+    async function saveConfirm(hideAfterSave = true) {
+        if (isLoadingConfirmation) {
+            return;
         }
+
+        isLoadingConfirmation = true;
+
+        try {
+            if (!collection.id) {
+                await save(hideAfterSave);
+            } else {
+                await confirmChangesPanel?.show(original, collection, hideAfterSave);
+            }
+        } catch {}
+
+        isLoadingConfirmation = false;
     }
 
     function save(hideAfterSave = true) {
@@ -165,7 +178,7 @@
             request = ApiClient.collections.update(collection.id, data);
         }
 
-        request
+        return request
             .then((result) => {
                 removeAllToasts();
 
@@ -557,15 +570,19 @@
                 class="btn"
                 class:btn-expanded={!collection.id}
                 class:btn-expanded-sm={!!collection.id}
-                class:btn-loading={isSaving}
-                disabled={!canSave || isSaving}
+                class:btn-loading={isSaving || isLoadingConfirmation}
+                disabled={!canSave || isSaving || isLoadingConfirmation}
                 on:click={() => saveConfirm()}
             >
                 <span class="txt">{!collection.id ? "Create" : "Save changes"}</span>
             </button>
 
             {#if collection.id}
-                <button type="button" class="btn p-l-5 p-r-5 flex-gap-0" disabled={!canSave || isSaving}>
+                <button
+                    type="button"
+                    class="btn p-l-5 p-r-5 flex-gap-0"
+                    disabled={!canSave || isSaving || isLoadingConfirmation}
+                >
                     <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
 
                     <Toggler class="dropdown dropdown-upside dropdown-right dropdown-nowrap m-b-5">

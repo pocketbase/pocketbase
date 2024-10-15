@@ -161,6 +161,25 @@
             collection.fields.push(field);
         }
     }
+
+    function replaceIdentityFields(oldName, newName) {
+        if (oldName === newName || !newName) {
+            return;
+        }
+
+        let identityFields = collection.passwordAuth?.identityFields || [];
+
+        for (let i = 0; i < identityFields.length; i++) {
+            if (identityFields[i] == oldName) {
+                identityFields[i] = newName;
+            }
+        }
+    }
+
+    function onFieldRename(oldName, newName) {
+        replaceIndexesColumn(oldName, newName);
+        replaceIdentityFields(oldName, newName);
+    }
 </script>
 
 <div class="schema-fields total-{collection.fields.length}">
@@ -194,7 +213,7 @@
                 bind:field
                 on:remove={() => removeField(i)}
                 on:duplicate={() => duplicateField(i)}
-                on:rename={(e) => replaceIndexesColumn(e.detail.oldName, e.detail.newName)}
+                on:rename={(e) => onFieldRename(e.detail.oldName, e.detail.newName)}
             />
         </Draggable>
     {/each}

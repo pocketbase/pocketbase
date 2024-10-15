@@ -1,12 +1,11 @@
 <script>
+    import { scale } from "svelte/transition";
     import tooltip from "@/actions/tooltip";
     import Accordion from "@/components/base/Accordion.svelte";
     import Field from "@/components/base/Field.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import { errors } from "@/stores/errors";
     import CommonHelper from "@/utils/CommonHelper";
-    import { onMount } from "svelte";
-    import { scale } from "svelte/transition";
 
     export let collection;
 
@@ -14,7 +13,7 @@
 
     $: isSuperusers = collection?.system && collection?.name === "_superusers";
 
-    $: if (CommonHelper.isEmpty(collection.passwordAuth)) {
+    $: if (CommonHelper.isEmpty(collection?.passwordAuth)) {
         collection.passwordAuth = {
             enabled: true,
             identityFields: ["email"],
@@ -46,13 +45,14 @@
 
         return result;
     }
-
-    onMount(() => {
-        identityFieldsOptions = extractUniqueFields(collection);
-    });
 </script>
 
-<Accordion single>
+<Accordion
+    single
+    on:expand={() => {
+        identityFieldsOptions = extractUniqueFields(collection);
+    }}
+>
     <svelte:fragment slot="header">
         <div class="inline-flex">
             <i class="ri-lock-password-line"></i>

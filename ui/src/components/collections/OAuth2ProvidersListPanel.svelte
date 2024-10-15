@@ -19,6 +19,7 @@
     }
 
     export function show() {
+        clearSearch();
         panel?.show();
     }
 
