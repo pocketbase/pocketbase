@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"regexp"
 	"strconv"
 )
 
@@ -302,12 +303,16 @@ func setRegularReflectedValue(rv reflect.Value, value string) error {
 	return nil
 }
 
+var inferNumberCharsRegex = regexp.MustCompile(`^[\-\.\d]+$`)
+
 // In order to support more seamlessly both json and multipart/form-data requests,
 // the following normalization rules are applied for plain multipart string values:
-// - "true" is converted to the json `true`
-// - "false" is converted to the json `false`
-// - numeric (non-scientific) strings are converted to json number
-// - any other string (empty string too) is left as it is
+//   - "true" is converted to the json "true"
+//   - "false" is converted to the json "false"
+//   - numeric strings are converted to json number ONLY if the resulted
+//     minimal number string representation is the same as the provided raw string
+//     (aka. scientific notations, "Infinity", "0.0", "0001", etc. are kept as string)
+//   - any other string (empty string too) is left as it is
 func inferValue(raw string) any {
 	switch raw {
 	case "":
@@ -318,9 +323,11 @@ func inferValue(raw string) any {
 		return false
 	default:
 		// try to convert to number
-		if raw[0] == '-' || (raw[0] >= '0' && raw[0] <= '9') {
+		//
+		// note: expects the provided raw string to match exactly with the minimal string representation of the parsed float
+		if raw[0] == '-' || (raw[0] >= '0' && raw[0] <= '9') && inferNumberCharsRegex.Match([]byte(raw)) {
 			v, err := strconv.ParseFloat(raw, 64)
-			if err == nil {
+			if err == nil && strconv.FormatFloat(v, 'f', -1, 64) == raw {
 				return v
 			}
 		}

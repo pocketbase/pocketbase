@@ -1,3 +1,13 @@
+## v0.23.0-rc7 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Updated the `BindBody` FormData type inferring rules to convert numeric strings into float64 only if the resulting minimal number string representation matches the initial FormData string value ([#5687](https://github.com/pocketbase/pocketbase/issues/5687)).
+
+- Fixed the JSVM types to include properly generated function declarations when the related Go functions have shortened/combined return values.
+
+
 ## v0.23.0-rc6
 
 > [!CAUTION]
