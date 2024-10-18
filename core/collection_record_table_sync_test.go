@@ -115,6 +115,18 @@ func TestSyncRecordTableSchema(t *testing.T) {
 	}
 }
 
+func getTotalViews(app core.App) (int, error) {
+	var total int
+
+	err := app.DB().Select("count(*)").
+		From("sqlite_master").
+		AndWhere(dbx.NewExp("sql is not null")).
+		AndWhere(dbx.HashExp{"type": "view"}).
+		Row(&total)
+
+	return total, err
+}
+
 func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 	t.Parallel()
 
@@ -122,6 +134,11 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 	defer app.Cleanup()
 
 	collection, err := app.FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	beforeTotalViews, err := getTotalViews(app)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,11 +163,13 @@ func TestSingleVsMultipleValuesNormalization(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// ensures that the writable schema was reverted to its expected default
-	var writableSchema bool
-	app.DB().NewQuery("PRAGMA writable_schema").Row(&writableSchema)
-	if writableSchema == true {
-		t.Fatalf("Expected writable_schema to be OFF, got %v", writableSchema)
+	// ensure that the views were reinserted
+	afterTotalViews, err := getTotalViews(app)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if afterTotalViews != beforeTotalViews {
+		t.Fatalf("Expected total views %d, got %d", beforeTotalViews, afterTotalViews)
 	}
 
 	// check whether the columns DEFAULT definition was updated
