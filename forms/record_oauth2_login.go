@@ -129,6 +129,10 @@ func (form *RecordOAuth2Login) Submit(
 		return nil, nil, err
 	}
 
+	if form.Provider == auth.NameInstagram {
+		form.app.Logger().Warn("Instagram OAuth2 provider is deprecated and will stop working after December 4th. For more details please check https://github.com/pocketbase/pocketbase/discussions/5652.")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
