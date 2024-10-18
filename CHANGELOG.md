@@ -1,3 +1,20 @@
+## v0.22.22
+
+- Added deprecation log in case Instagram OAuth2 is used (_related to [#5652](https://github.com/pocketbase/pocketbase/discussions/5652)_).
+
+- Added `update` command warning to prevent unnecessary downloading PocketBase v0.23.0 since it will contain breaking changes and it will fail anyway.
+
+- Added global JSVM `toString()` helper (_successor of `readerToString()`_) to stringify any value (bool, number, multi-byte array, io.Reader, etc.).
+  _`readerToString` is still available but it is marked as deprecated. You can also use `toString` as replacement for  of `String.fromCharCode` to properly stringify multi-byte unicode characters like emojis._
+    ```js
+    decodeURIComponent(escape(String.fromCharCode(...bytes))) -> toString(bytes)
+    ```
+
+- Backported some of the v0.23.0-rc form validators, fixes and tests.
+
+- Bumped GitHub action min Go version and dependencies.
+
+
 ## v0.22.21
 
 - Lock the logs database during backup to prevent `database disk image is malformed` errors in case there is a log write running in the background ([#5541](https://github.com/pocketbase/pocketbase/discussions/5541)).
