@@ -47,7 +47,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 17, t)
+	testBindsCount(vm, "this", 18, t)
 }
 
 func TestBaseBindsSleep(t *testing.T) {
@@ -85,6 +85,41 @@ func TestBaseBindsReaderToString(t *testing.T) {
 
 		if (result != "test") {
 			throw new Error('Expected "test", got ' + result);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBaseBindsToString(t *testing.T) {
+	vm := goja.New()
+	baseBinds(vm)
+	vm.Set("scenarios", []struct {
+		Name     string
+		Value    any
+		Expected string
+	}{
+		{"null", nil, ""},
+		{"string", "test", "test"},
+		{"number", -12.4, "-12.4"},
+		{"bool", true, "true"},
+		{"arr", []int{1, 2, 3}, `[1,2,3]`},
+		{"obj", map[string]any{"test": 123}, `{"test":123}`},
+		{"reader", strings.NewReader("test"), "test"},
+		{"struct", struct {
+			Name    string
+			private string
+		}{Name: "123", private: "456"}, `{"Name":"123"}`},
+	})
+
+	_, err := vm.RunString(`
+		for (let s of scenarios) {
+			let result = toString(s.value)
+
+			if (result != s.expected) {
+				throw new Error('[' + s.name + '] Expected string ' + s.expected + ', got ' + result);
+			}
 		}
 	`)
 	if err != nil {

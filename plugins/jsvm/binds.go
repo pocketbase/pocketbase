@@ -301,6 +301,34 @@ func baseBinds(vm *goja.Runtime) {
 		return string(bodyBytes), nil
 	})
 
+	vm.Set("toString", func(raw any, maxReaderBytes int) (string, error) {
+		switch v := raw.(type) {
+		case io.Reader:
+			if maxReaderBytes == 0 {
+				maxReaderBytes = rest.DefaultMaxMemory
+			}
+
+			limitReader := io.LimitReader(v, int64(maxReaderBytes))
+
+			bodyBytes, readErr := io.ReadAll(limitReader)
+			if readErr != nil {
+				return "", readErr
+			}
+
+			return string(bodyBytes), nil
+		default:
+			str, err := cast.ToStringE(v)
+			if err == nil {
+				return str, nil
+			}
+
+			// as a last attempt try to json encode the value
+			rawBytes, _ := json.Marshal(raw)
+
+			return string(rawBytes), nil
+		}
+	})
+
 	vm.Set("sleep", func(milliseconds int64) {
 		time.Sleep(time.Duration(milliseconds) * time.Millisecond)
 	})

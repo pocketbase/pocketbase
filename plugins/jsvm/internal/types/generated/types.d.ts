@@ -1,4 +1,4 @@
-// 1729250457
+// 1729258253
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
 // -------------------------------------------------------------------
@@ -178,22 +178,34 @@ declare var $app: PocketBase
 declare var $template: template.Registry
 
 /**
- * readerToString reads the content of the specified io.Reader until
- * EOF or maxBytes are reached.
+ * This method is superseded by toString.
  *
- * If maxBytes is not specified it will read up to 32MB.
+ * @deprecated
+ * @group PocketBase
+ */
+declare function readerToString(reader: any, maxBytes?: number): string;
+
+/**
+ * toString stringifies the specified value.
  *
- * Note that after this call the reader can't be used anymore.
+ * Support optional second maxBytes argument to limit the max read bytes
+ * when the value is a io.Reader (default to 32MB).
+ *
+ * Types that don't have explicit string representation are json serialized.
  *
  * Example:
  *
  * ```js
- * const rawBody = readerToString(c.request().body)
+ * // io.Reader
+ * const ex1 = toString(e.request.body)
+ *
+ * // slice of bytes ("hello")
+ * const ex2 = toString([104 101 108 108 111])
  * ```
  *
  * @group PocketBase
  */
-declare function readerToString(reader: any, maxBytes?: number): string;
+declare function toString(val: any, maxBytes?: number): string;
 
 /**
  * sleep pauses the current goroutine for at least the specified user duration (in ms).
@@ -697,7 +709,7 @@ declare namespace $os {
    * const cmd = $os.cmd('ls', '-sl')
    *
    * // execute the command and return its standard output as string
-   * const output = String.fromCharCode(...cmd.output());
+   * const output = toString(cmd.output());
    * ```
    */
   export let cmd: exec.command
@@ -1709,8 +1721,8 @@ namespace os {
   * than ReadFrom. This is used to permit ReadFrom to call io.Copy
   * without leading to a recursive call to ReadFrom.
   */
- type _subomlSs = noReadFrom&File
- interface fileWithoutReadFrom extends _subomlSs {
+ type _subGmEUB = noReadFrom&File
+ interface fileWithoutReadFrom extends _subGmEUB {
  }
  interface File {
   /**
@@ -1754,8 +1766,8 @@ namespace os {
   * than WriteTo. This is used to permit WriteTo to call io.Copy
   * without leading to a recursive call to WriteTo.
   */
- type _subTMSnU = noWriteTo&File
- interface fileWithoutWriteTo extends _subTMSnU {
+ type _subnBkIH = noWriteTo&File
+ interface fileWithoutWriteTo extends _subnBkIH {
  }
  interface File {
   /**
@@ -2399,8 +2411,8 @@ namespace os {
   * 
   * The methods of File are safe for concurrent use.
   */
- type _subOKBJQ = file
- interface File extends _subOKBJQ {
+ type _subQXiyH = file
+ interface File extends _subQXiyH {
  }
  /**
   * A FileInfo describes a file and is returned by [Stat] and [Lstat].
@@ -2792,132 +2804,6 @@ namespace filepath {
  }
 }
 
-/**
- * Package exec runs external commands. It wraps os.StartProcess to make it
- * easier to remap stdin and stdout, connect I/O with pipes, and do other
- * adjustments.
- * 
- * Unlike the "system" library call from C and other languages, the
- * os/exec package intentionally does not invoke the system shell and
- * does not expand any glob patterns or handle other expansions,
- * pipelines, or redirections typically done by shells. The package
- * behaves more like C's "exec" family of functions. To expand glob
- * patterns, either call the shell directly, taking care to escape any
- * dangerous input, or use the [path/filepath] package's Glob function.
- * To expand environment variables, use package os's ExpandEnv.
- * 
- * Note that the examples in this package assume a Unix system.
- * They may not run on Windows, and they do not run in the Go Playground
- * used by golang.org and godoc.org.
- * 
- * # Executables in the current directory
- * 
- * The functions [Command] and [LookPath] look for a program
- * in the directories listed in the current path, following the
- * conventions of the host operating system.
- * Operating systems have for decades included the current
- * directory in this search, sometimes implicitly and sometimes
- * configured explicitly that way by default.
- * Modern practice is that including the current directory
- * is usually unexpected and often leads to security problems.
- * 
- * To avoid those security problems, as of Go 1.19, this package will not resolve a program
- * using an implicit or explicit path entry relative to the current directory.
- * That is, if you run [LookPath]("go"), it will not successfully return
- * ./go on Unix nor .\go.exe on Windows, no matter how the path is configured.
- * Instead, if the usual path algorithms would result in that answer,
- * these functions return an error err satisfying [errors.Is](err, [ErrDot]).
- * 
- * For example, consider these two program snippets:
- * 
- * ```
- * 	path, err := exec.LookPath("prog")
- * 	if err != nil {
- * 		log.Fatal(err)
- * 	}
- * 	use(path)
- * ```
- * 
- * and
- * 
- * ```
- * 	cmd := exec.Command("prog")
- * 	if err := cmd.Run(); err != nil {
- * 		log.Fatal(err)
- * 	}
- * ```
- * 
- * These will not find and run ./prog or .\prog.exe,
- * no matter how the current path is configured.
- * 
- * Code that always wants to run a program from the current directory
- * can be rewritten to say "./prog" instead of "prog".
- * 
- * Code that insists on including results from relative path entries
- * can instead override the error using an errors.Is check:
- * 
- * ```
- * 	path, err := exec.LookPath("prog")
- * 	if errors.Is(err, exec.ErrDot) {
- * 		err = nil
- * 	}
- * 	if err != nil {
- * 		log.Fatal(err)
- * 	}
- * 	use(path)
- * ```
- * 
- * and
- * 
- * ```
- * 	cmd := exec.Command("prog")
- * 	if errors.Is(cmd.Err, exec.ErrDot) {
- * 		cmd.Err = nil
- * 	}
- * 	if err := cmd.Run(); err != nil {
- * 		log.Fatal(err)
- * 	}
- * ```
- * 
- * Setting the environment variable GODEBUG=execerrdot=0
- * disables generation of ErrDot entirely, temporarily restoring the pre-Go 1.19
- * behavior for programs that are unable to apply more targeted fixes.
- * A future version of Go may remove support for this variable.
- * 
- * Before adding such overrides, make sure you understand the
- * security implications of doing so.
- * See https://go.dev/blog/path-security for more information.
- */
-namespace exec {
- interface command {
-  /**
-   * Command returns the [Cmd] struct to execute the named program with
-   * the given arguments.
-   * 
-   * It sets only the Path and Args in the returned structure.
-   * 
-   * If name contains no path separators, Command uses [LookPath] to
-   * resolve name to a complete path if possible. Otherwise it uses name
-   * directly as Path.
-   * 
-   * The returned Cmd's Args field is constructed from the command name
-   * followed by the elements of arg, so arg should not include the
-   * command name itself. For example, Command("echo", "hello").
-   * Args[0] is always name, not the possibly resolved Path.
-   * 
-   * On Windows, processes receive the whole command line as a single string
-   * and do their own parsing. Command combines and quotes Args into a command
-   * line string with an algorithm compatible with applications using
-   * CommandLineToArgvW (which is the most common way). Notable exceptions are
-   * msiexec.exe and cmd.exe (and thus, all batch files), which have a different
-   * unquoting algorithm. In these or other similar cases, you can do the
-   * quoting yourself and provide the full command line in SysProcAttr.CmdLine,
-   * leaving Args empty.
-   */
-  (name: string, ...arg: string[]): (Cmd)
- }
-}
-
 namespace security {
  interface s256Challenge {
   /**
@@ -3054,481 +2940,6 @@ namespace security {
  }
 }
 
-namespace filesystem {
- /**
-  * FileReader defines an interface for a file resource reader.
-  */
- interface FileReader {
-  [key:string]: any;
-  open(): io.ReadSeekCloser
- }
- /**
-  * File defines a single file [io.ReadSeekCloser] resource.
-  * 
-  * The file could be from a local path, multipart/form-data header, etc.
-  */
- interface File {
-  reader: FileReader
-  name: string
-  originalName: string
-  size: number
- }
- interface newFileFromPath {
-  /**
-   * NewFileFromPath creates a new File instance from the provided local file path.
-   */
-  (path: string): (File)
- }
- interface newFileFromBytes {
-  /**
-   * NewFileFromBytes creates a new File instance from the provided byte slice.
-   */
-  (b: string|Array<number>, name: string): (File)
- }
- interface newFileFromMultipart {
-  /**
-   * NewFileFromMultipart creates a new File from the provided multipart header.
-   */
-  (mh: multipart.FileHeader): (File)
- }
- interface newFileFromUrl {
-  /**
-   * NewFileFromUrl creates a new File from the provided url by
-   * downloading the resource and load it as BytesReader.
-   * 
-   * Example
-   * 
-   * ```
-   * 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-   * 	defer cancel()
-   * 
-   * 	file, err := filesystem.NewFileFromUrl(ctx, "https://example.com/image.png")
-   * ```
-   */
-  (ctx: context.Context, url: string): (File)
- }
- /**
-  * MultipartReader defines a FileReader from [multipart.FileHeader].
-  */
- interface MultipartReader {
-  header?: multipart.FileHeader
- }
- interface MultipartReader {
-  /**
-   * Open implements the [filesystem.FileReader] interface.
-   */
-  open(): io.ReadSeekCloser
- }
- /**
-  * PathReader defines a FileReader from a local file path.
-  */
- interface PathReader {
-  path: string
- }
- interface PathReader {
-  /**
-   * Open implements the [filesystem.FileReader] interface.
-   */
-  open(): io.ReadSeekCloser
- }
- /**
-  * BytesReader defines a FileReader from bytes content.
-  */
- interface BytesReader {
-  bytes: string|Array<number>
- }
- interface BytesReader {
-  /**
-   * Open implements the [filesystem.FileReader] interface.
-   */
-  open(): io.ReadSeekCloser
- }
- type _subShExs = bytes.Reader
- interface bytesReadSeekCloser extends _subShExs {
- }
- interface bytesReadSeekCloser {
-  /**
-   * Close implements the [io.ReadSeekCloser] interface.
-   */
-  close(): void
- }
- interface System {
- }
- interface newS3 {
-  /**
-   * NewS3 initializes an S3 filesystem instance.
-   * 
-   * NB! Make sure to call `Close()` after you are done working with it.
-   */
-  (bucketName: string, region: string, endpoint: string, accessKey: string, secretKey: string, s3ForcePathStyle: boolean): (System)
- }
- interface newLocal {
-  /**
-   * NewLocal initializes a new local filesystem instance.
-   * 
-   * NB! Make sure to call `Close()` after you are done working with it.
-   */
-  (dirPath: string): (System)
- }
- interface System {
-  /**
-   * SetContext assigns the specified context to the current filesystem.
-   */
-  setContext(ctx: context.Context): void
- }
- interface System {
-  /**
-   * Close releases any resources used for the related filesystem.
-   */
-  close(): void
- }
- interface System {
-  /**
-   * Exists checks if file with fileKey path exists or not.
-   */
-  exists(fileKey: string): boolean
- }
- interface System {
-  /**
-   * Attributes returns the attributes for the file with fileKey path.
-   */
-  attributes(fileKey: string): (blob.Attributes)
- }
- interface System {
-  /**
-   * GetFile returns a file content reader for the given fileKey.
-   * 
-   * NB! Make sure to call `Close()` after you are done working with it.
-   */
-  getFile(fileKey: string): (blob.Reader)
- }
- interface System {
-  /**
-   * Copy copies the file stored at srcKey to dstKey.
-   * 
-   * If dstKey file already exists, it is overwritten.
-   */
-  copy(srcKey: string, dstKey: string): void
- }
- interface System {
-  /**
-   * List returns a flat list with info for all files under the specified prefix.
-   */
-  list(prefix: string): Array<(blob.ListObject | undefined)>
- }
- interface System {
-  /**
-   * Upload writes content into the fileKey location.
-   */
-  upload(content: string|Array<number>, fileKey: string): void
- }
- interface System {
-  /**
-   * UploadFile uploads the provided multipart file to the fileKey location.
-   */
-  uploadFile(file: File, fileKey: string): void
- }
- interface System {
-  /**
-   * UploadMultipart uploads the provided multipart file to the fileKey location.
-   */
-  uploadMultipart(fh: multipart.FileHeader, fileKey: string): void
- }
- interface System {
-  /**
-   * Delete deletes stored file at fileKey location.
-   */
-  delete(fileKey: string): void
- }
- interface System {
-  /**
-   * DeletePrefix deletes everything starting with the specified prefix.
-   * 
-   * The prefix could be subpath (ex. "/a/b/") or filename prefix (ex. "/a/b/file_").
-   */
-  deletePrefix(prefix: string): Array<Error>
- }
- interface System {
-  /**
-   * Serve serves the file at fileKey location to an HTTP response.
-   * 
-   * If the `download` query parameter is used the file will be always served for
-   * download no matter of its type (aka. with "Content-Disposition: attachment").
-   */
-  serve(res: http.ResponseWriter, req: http.Request, fileKey: string, name: string): void
- }
- interface System {
-  /**
-   * CreateThumb creates a new thumb image for the file at originalKey location.
-   * The new thumb file is stored at thumbKey location.
-   * 
-   * thumbSize is in the format:
-   * - 0xH  (eg. 0x100)    - resize to H height preserving the aspect ratio
-   * - Wx0  (eg. 300x0)    - resize to W width preserving the aspect ratio
-   * - WxH  (eg. 300x100)  - resize and crop to WxH viewbox (from center)
-   * - WxHt (eg. 300x100t) - resize and crop to WxH viewbox (from top)
-   * - WxHb (eg. 300x100b) - resize and crop to WxH viewbox (from bottom)
-   * - WxHf (eg. 300x100f) - fit inside a WxH viewbox (without cropping)
-   */
-  createThumb(originalKey: string, thumbKey: string, thumbSize: string): void
- }
- // @ts-ignore
- import v4 = signer
- // @ts-ignore
- import smithyhttp = http
- interface ignoredHeadersKey {
- }
- // @ts-ignore
- import awsv2 = aws
- // @ts-ignore
- import awsv2cfg = config
- // @ts-ignore
- import s3managerv2 = manager
- // @ts-ignore
- import s3v2 = s3
- // @ts-ignore
- import typesv2 = types
- interface hexEscape {
-  /**
-   * HexEscape returns s, with all runes for which shouldEscape returns true
-   * escaped to "__0xXXX__", where XXX is the hex representation of the rune
-   * value. For example, " " would escape to "__0x20__".
-   * 
-   * Non-UTF-8 strings will have their non-UTF-8 characters escaped to
-   * unicode.ReplacementChar; the original value is lost. Please file an
-   * issue if you need non-UTF8 support.
-   * 
-   * Note: shouldEscape takes the whole string as a slice of runes and an
-   * index. Passing it a single byte or a single rune doesn't provide
-   * enough context for some escape decisions; for example, the caller might
-   * want to escape the second "/" in "//" but not the first one.
-   * We pass a slice of runes instead of the string or a slice of bytes
-   * because some decisions will be made on a rune basis (e.g., encode
-   * all non-ASCII runes).
-   */
-  (s: string, shouldEscape: (s: Array<number>, i: number) => boolean): string
- }
- interface hexUnescape {
-  /**
-   * HexUnescape reverses HexEscape.
-   */
-  (s: string): string
- }
- interface urlEscape {
-  /**
-   * URLEscape uses url.PathEscape to escape s.
-   */
-  (s: string): string
- }
- interface urlUnescape {
-  /**
-   * URLUnescape reverses URLEscape using url.PathUnescape. If the unescape
-   * returns an error, it returns s.
-   */
-  (s: string): string
- }
- interface useV2 {
-  /**
-   * UseV2 returns true iff the URL parameters indicate that the provider
-   * should use the AWS SDK v2.
-   * 
-   * "awssdk=v1" will force V1.
-   * "awssdk=v2" will force V2.
-   * No "awssdk" parameter (or any other value) will return the default, currently V1.
-   * Note that the default may change in the future.
-   */
-  (q: url.Values): boolean
- }
- interface newDefaultV2Config {
-  /**
-   * NewDefaultV2Config returns a aws.Config for AWS SDK v2, using the default options.
-   */
-  (ctx: context.Context): awsv2.Config
- }
- interface v2ConfigFromURLParams {
-  /**
-   * V2ConfigFromURLParams returns an aws.Config for AWS SDK v2 initialized based on the URL
-   * parameters in q. It is intended to be used by URLOpeners for AWS services if
-   * UseV2 returns true.
-   * 
-   * https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/aws#Config
-   * 
-   * It returns an error if q contains any unknown query parameters; callers
-   * should remove any query parameters they know about from q before calling
-   * V2ConfigFromURLParams.
-   * 
-   * The following query options are supported:
-   * ```
-   *   - region: The AWS region for requests; sets WithRegion.
-   *   - profile: The shared config profile to use; sets SharedConfigProfile.
-   *   - endpoint: The AWS service endpoint to send HTTP request.
-   * ```
-   */
-  (ctx: context.Context, q: url.Values): awsv2.Config
- }
- interface urlSessionOpener {
- }
- interface urlSessionOpener {
-  openBucketURL(ctx: context.Context, u: url.URL): (blob.Bucket)
- }
- /**
-  * URLOpener opens S3 URLs like "s3://mybucket".
-  * 
-  * The URL host is used as the bucket name.
-  * 
-  * Use "awssdk=v1" to force using AWS SDK v1, "awssdk=v2" to force using AWS SDK v2,
-  * or anything else to accept the default.
-  * 
-  * For V1, see gocloud.dev/aws/ConfigFromURLParams for supported query parameters
-  * for overriding the aws.Session from the URL.
-  * For V2, see gocloud.dev/aws/V2ConfigFromURLParams.
-  */
- interface URLOpener {
-  /**
-   * UseV2 indicates whether the AWS SDK V2 should be used.
-   */
-  useV2: boolean
-  /**
-   * Options specifies the options to pass to OpenBucket.
-   */
-  options: Options
- }
- interface URLOpener {
-  /**
-   * OpenBucketURL opens a blob.Bucket based on u.
-   */
-  openBucketURL(ctx: context.Context, u: url.URL): (blob.Bucket)
- }
- /**
-  * Options sets options for constructing a *blob.Bucket backed by fileblob.
-  */
- interface Options {
-  /**
-   * UseLegacyList forces the use of ListObjects instead of ListObjectsV2.
-   * Some S3-compatible services (like CEPH) do not currently support
-   * ListObjectsV2.
-   */
-  useLegacyList: boolean
- }
- interface openBucketV2 {
-  /**
-   * OpenBucketV2 returns a *blob.Bucket backed by S3, using AWS SDK v2.
-   */
-  (ctx: context.Context, client: s3v2.Client, bucketName: string, opts: Options): (blob.Bucket)
- }
- /**
-  * reader reads an S3 object. It implements io.ReadCloser.
-  */
- interface reader {
- }
- interface reader {
-  read(p: string|Array<number>): number
- }
- interface reader {
-  /**
-   * Close closes the reader itself. It must be called when done reading.
-   */
-  close(): void
- }
- interface reader {
-  as(i: {
-   }): boolean
- }
- interface reader {
-  attributes(): (any)
- }
- /**
-  * writer writes an S3 object, it implements io.WriteCloser.
-  */
- interface writer {
- }
- interface writer {
-  /**
-   * Write appends p to w.pw. User must call Close to close the w after done writing.
-   */
-  write(p: string|Array<number>): number
- }
- interface writer {
-  /**
-   * Upload reads from r. Per the driver, it is guaranteed to be the only
-   * write call for this writer.
-   */
-  upload(r: io.Reader): void
- }
- interface writer {
-  /**
-   * Close completes the writer and closes it. Any error occurring during write
-   * will be returned. If a writer is closed before any Write is called, Close
-   * will create an empty file at the given key.
-   */
-  close(): void
- }
- /**
-  * bucket represents an S3 bucket and handles read, write and delete operations.
-  */
- interface bucket {
- }
- interface bucket {
-  close(): void
- }
- interface bucket {
-  errorCode(err: Error): gcerrors.ErrorCode
- }
- interface bucket {
-  /**
-   * ListPaged implements driver.ListPaged.
-   */
-  listPaged(ctx: context.Context, opts: any): (any)
- }
- interface bucket {
-  /**
-   * As implements driver.As.
-   */
-  as(i: {
-   }): boolean
- }
- interface bucket {
-  /**
-   * As implements driver.ErrorAs.
-   */
-  errorAs(err: Error, i: {
-   }): boolean
- }
- interface bucket {
-  /**
-   * Attributes implements driver.Attributes.
-   */
-  attributes(ctx: context.Context, key: string): (any)
- }
- interface bucket {
-  /**
-   * NewRangeReader implements driver.NewRangeReader.
-   */
-  newRangeReader(ctx: context.Context, key: string, offset: number, length: number, opts: any): any
- }
- interface bucket {
-  /**
-   * NewTypedWriter implements driver.NewTypedWriter.
-   */
-  newTypedWriter(ctx: context.Context, key: string, contentType: string, opts: any): any
- }
- interface bucket {
-  /**
-   * Copy implements driver.Copy.
-   */
-  copy(ctx: context.Context, dstKey: string, srcKey: string, opts: any): void
- }
- interface bucket {
-  /**
-   * Delete implements driver.Delete.
-   */
-  delete(ctx: context.Context, key: string): void
- }
- interface bucket {
-  signedURL(ctx: context.Context, key: string, opts: any): string
- }
-}
-
 /**
  * Package validation provides configurable and extensible rules for validating data of various types.
  */
@@ -3544,25 +2955,6 @@ namespace ozzo_validation {
   setMessage(_arg0: string): Error
   params(): _TygojaDict
   setParams(_arg0: _TygojaDict): Error
- }
-}
-
-namespace middleware {
- interface bodyLimit {
-  /**
-   * BodyLimit returns a BodyLimit middleware.
-   * 
-   * BodyLimit middleware sets the maximum allowed size for a request body, if the size exceeds the configured limit, it
-   * sends "413 - Request Entity Too Large" response. The BodyLimit is determined based on both `Content-Length` request
-   * header and actual content read, which makes it super secure.
-   */
-  (limitBytes: number): echo.MiddlewareFunc
- }
- interface gzip {
-  /**
-   * Gzip returns a middleware which compresses HTTP response using gzip compression scheme.
-   */
-  (): echo.MiddlewareFunc
  }
 }
 
@@ -3902,14 +3294,14 @@ namespace dbx {
  /**
   * MssqlBuilder is the builder for SQL Server databases.
   */
- type _subHvLxi = BaseBuilder
- interface MssqlBuilder extends _subHvLxi {
+ type _subycxul = BaseBuilder
+ interface MssqlBuilder extends _subycxul {
  }
  /**
   * MssqlQueryBuilder is the query builder for SQL Server databases.
   */
- type _subVtFMi = BaseQueryBuilder
- interface MssqlQueryBuilder extends _subVtFMi {
+ type _subxozvl = BaseQueryBuilder
+ interface MssqlQueryBuilder extends _subxozvl {
  }
  interface newMssqlBuilder {
   /**
@@ -3980,8 +3372,8 @@ namespace dbx {
  /**
   * MysqlBuilder is the builder for MySQL databases.
   */
- type _subcGgwD = BaseBuilder
- interface MysqlBuilder extends _subcGgwD {
+ type _subuBlWt = BaseBuilder
+ interface MysqlBuilder extends _subuBlWt {
  }
  interface newMysqlBuilder {
   /**
@@ -4056,14 +3448,14 @@ namespace dbx {
  /**
   * OciBuilder is the builder for Oracle databases.
   */
- type _subPThpx = BaseBuilder
- interface OciBuilder extends _subPThpx {
+ type _submEsSq = BaseBuilder
+ interface OciBuilder extends _submEsSq {
  }
  /**
   * OciQueryBuilder is the query builder for Oracle databases.
   */
- type _subNOiLF = BaseQueryBuilder
- interface OciQueryBuilder extends _subNOiLF {
+ type _subSwOZs = BaseQueryBuilder
+ interface OciQueryBuilder extends _subSwOZs {
  }
  interface newOciBuilder {
   /**
@@ -4126,8 +3518,8 @@ namespace dbx {
  /**
   * PgsqlBuilder is the builder for PostgreSQL databases.
   */
- type _subwdQYB = BaseBuilder
- interface PgsqlBuilder extends _subwdQYB {
+ type _subJVUHR = BaseBuilder
+ interface PgsqlBuilder extends _subJVUHR {
  }
  interface newPgsqlBuilder {
   /**
@@ -4194,8 +3586,8 @@ namespace dbx {
  /**
   * SqliteBuilder is the builder for SQLite databases.
   */
- type _subuwoLq = BaseBuilder
- interface SqliteBuilder extends _subuwoLq {
+ type _subRxOcr = BaseBuilder
+ interface SqliteBuilder extends _subRxOcr {
  }
  interface newSqliteBuilder {
   /**
@@ -4294,8 +3686,8 @@ namespace dbx {
  /**
   * StandardBuilder is the builder that is used by DB for an unknown driver.
   */
- type _subQKHka = BaseBuilder
- interface StandardBuilder extends _subQKHka {
+ type _subNMrLZ = BaseBuilder
+ interface StandardBuilder extends _subNMrLZ {
  }
  interface newStandardBuilder {
   /**
@@ -4361,8 +3753,8 @@ namespace dbx {
   * DB enhances sql.DB by providing a set of DB-agnostic query building methods.
   * DB allows easier query building and population of data into Go variables.
   */
- type _subDKzjR = Builder
- interface DB extends _subDKzjR {
+ type _subGFJZU = Builder
+ interface DB extends _subGFJZU {
   /**
    * FieldMapper maps struct fields to DB columns. Defaults to DefaultFieldMapFunc.
    */
@@ -5166,8 +4558,8 @@ namespace dbx {
   * Rows enhances sql.Rows by providing additional data query methods.
   * Rows can be obtained by calling Query.Rows(). It is mainly used to populate data row by row.
   */
- type _subnAbdX = sql.Rows
- interface Rows extends _subnAbdX {
+ type _submSehx = sql.Rows
+ interface Rows extends _submSehx {
  }
  interface Rows {
   /**
@@ -5525,8 +4917,8 @@ namespace dbx {
   }): string }
  interface structInfo {
  }
- type _subxLLPJ = structInfo
- interface structValue extends _subxLLPJ {
+ type _subLIODH = structInfo
+ interface structValue extends _subLIODH {
  }
  interface fieldInfo {
  }
@@ -5565,8 +4957,8 @@ namespace dbx {
  /**
   * Tx enhances sql.Tx with additional querying methods.
   */
- type _subqhOLL = Builder
- interface Tx extends _subqhOLL {
+ type _subYHNBD = Builder
+ interface Tx extends _subYHNBD {
  }
  interface Tx {
   /**
@@ -5579,6 +4971,607 @@ namespace dbx {
    * Rollback aborts the transaction.
    */
   rollback(): void
+ }
+}
+
+/**
+ * Package exec runs external commands. It wraps os.StartProcess to make it
+ * easier to remap stdin and stdout, connect I/O with pipes, and do other
+ * adjustments.
+ * 
+ * Unlike the "system" library call from C and other languages, the
+ * os/exec package intentionally does not invoke the system shell and
+ * does not expand any glob patterns or handle other expansions,
+ * pipelines, or redirections typically done by shells. The package
+ * behaves more like C's "exec" family of functions. To expand glob
+ * patterns, either call the shell directly, taking care to escape any
+ * dangerous input, or use the [path/filepath] package's Glob function.
+ * To expand environment variables, use package os's ExpandEnv.
+ * 
+ * Note that the examples in this package assume a Unix system.
+ * They may not run on Windows, and they do not run in the Go Playground
+ * used by golang.org and godoc.org.
+ * 
+ * # Executables in the current directory
+ * 
+ * The functions [Command] and [LookPath] look for a program
+ * in the directories listed in the current path, following the
+ * conventions of the host operating system.
+ * Operating systems have for decades included the current
+ * directory in this search, sometimes implicitly and sometimes
+ * configured explicitly that way by default.
+ * Modern practice is that including the current directory
+ * is usually unexpected and often leads to security problems.
+ * 
+ * To avoid those security problems, as of Go 1.19, this package will not resolve a program
+ * using an implicit or explicit path entry relative to the current directory.
+ * That is, if you run [LookPath]("go"), it will not successfully return
+ * ./go on Unix nor .\go.exe on Windows, no matter how the path is configured.
+ * Instead, if the usual path algorithms would result in that answer,
+ * these functions return an error err satisfying [errors.Is](err, [ErrDot]).
+ * 
+ * For example, consider these two program snippets:
+ * 
+ * ```
+ * 	path, err := exec.LookPath("prog")
+ * 	if err != nil {
+ * 		log.Fatal(err)
+ * 	}
+ * 	use(path)
+ * ```
+ * 
+ * and
+ * 
+ * ```
+ * 	cmd := exec.Command("prog")
+ * 	if err := cmd.Run(); err != nil {
+ * 		log.Fatal(err)
+ * 	}
+ * ```
+ * 
+ * These will not find and run ./prog or .\prog.exe,
+ * no matter how the current path is configured.
+ * 
+ * Code that always wants to run a program from the current directory
+ * can be rewritten to say "./prog" instead of "prog".
+ * 
+ * Code that insists on including results from relative path entries
+ * can instead override the error using an errors.Is check:
+ * 
+ * ```
+ * 	path, err := exec.LookPath("prog")
+ * 	if errors.Is(err, exec.ErrDot) {
+ * 		err = nil
+ * 	}
+ * 	if err != nil {
+ * 		log.Fatal(err)
+ * 	}
+ * 	use(path)
+ * ```
+ * 
+ * and
+ * 
+ * ```
+ * 	cmd := exec.Command("prog")
+ * 	if errors.Is(cmd.Err, exec.ErrDot) {
+ * 		cmd.Err = nil
+ * 	}
+ * 	if err := cmd.Run(); err != nil {
+ * 		log.Fatal(err)
+ * 	}
+ * ```
+ * 
+ * Setting the environment variable GODEBUG=execerrdot=0
+ * disables generation of ErrDot entirely, temporarily restoring the pre-Go 1.19
+ * behavior for programs that are unable to apply more targeted fixes.
+ * A future version of Go may remove support for this variable.
+ * 
+ * Before adding such overrides, make sure you understand the
+ * security implications of doing so.
+ * See https://go.dev/blog/path-security for more information.
+ */
+namespace exec {
+ interface command {
+  /**
+   * Command returns the [Cmd] struct to execute the named program with
+   * the given arguments.
+   * 
+   * It sets only the Path and Args in the returned structure.
+   * 
+   * If name contains no path separators, Command uses [LookPath] to
+   * resolve name to a complete path if possible. Otherwise it uses name
+   * directly as Path.
+   * 
+   * The returned Cmd's Args field is constructed from the command name
+   * followed by the elements of arg, so arg should not include the
+   * command name itself. For example, Command("echo", "hello").
+   * Args[0] is always name, not the possibly resolved Path.
+   * 
+   * On Windows, processes receive the whole command line as a single string
+   * and do their own parsing. Command combines and quotes Args into a command
+   * line string with an algorithm compatible with applications using
+   * CommandLineToArgvW (which is the most common way). Notable exceptions are
+   * msiexec.exe and cmd.exe (and thus, all batch files), which have a different
+   * unquoting algorithm. In these or other similar cases, you can do the
+   * quoting yourself and provide the full command line in SysProcAttr.CmdLine,
+   * leaving Args empty.
+   */
+  (name: string, ...arg: string[]): (Cmd)
+ }
+}
+
+namespace filesystem {
+ /**
+  * FileReader defines an interface for a file resource reader.
+  */
+ interface FileReader {
+  [key:string]: any;
+  open(): io.ReadSeekCloser
+ }
+ /**
+  * File defines a single file [io.ReadSeekCloser] resource.
+  * 
+  * The file could be from a local path, multipart/form-data header, etc.
+  */
+ interface File {
+  reader: FileReader
+  name: string
+  originalName: string
+  size: number
+ }
+ interface newFileFromPath {
+  /**
+   * NewFileFromPath creates a new File instance from the provided local file path.
+   */
+  (path: string): (File)
+ }
+ interface newFileFromBytes {
+  /**
+   * NewFileFromBytes creates a new File instance from the provided byte slice.
+   */
+  (b: string|Array<number>, name: string): (File)
+ }
+ interface newFileFromMultipart {
+  /**
+   * NewFileFromMultipart creates a new File from the provided multipart header.
+   */
+  (mh: multipart.FileHeader): (File)
+ }
+ interface newFileFromUrl {
+  /**
+   * NewFileFromUrl creates a new File from the provided url by
+   * downloading the resource and load it as BytesReader.
+   * 
+   * Example
+   * 
+   * ```
+   * 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+   * 	defer cancel()
+   * 
+   * 	file, err := filesystem.NewFileFromUrl(ctx, "https://example.com/image.png")
+   * ```
+   */
+  (ctx: context.Context, url: string): (File)
+ }
+ /**
+  * MultipartReader defines a FileReader from [multipart.FileHeader].
+  */
+ interface MultipartReader {
+  header?: multipart.FileHeader
+ }
+ interface MultipartReader {
+  /**
+   * Open implements the [filesystem.FileReader] interface.
+   */
+  open(): io.ReadSeekCloser
+ }
+ /**
+  * PathReader defines a FileReader from a local file path.
+  */
+ interface PathReader {
+  path: string
+ }
+ interface PathReader {
+  /**
+   * Open implements the [filesystem.FileReader] interface.
+   */
+  open(): io.ReadSeekCloser
+ }
+ /**
+  * BytesReader defines a FileReader from bytes content.
+  */
+ interface BytesReader {
+  bytes: string|Array<number>
+ }
+ interface BytesReader {
+  /**
+   * Open implements the [filesystem.FileReader] interface.
+   */
+  open(): io.ReadSeekCloser
+ }
+ type _subVzkKp = bytes.Reader
+ interface bytesReadSeekCloser extends _subVzkKp {
+ }
+ interface bytesReadSeekCloser {
+  /**
+   * Close implements the [io.ReadSeekCloser] interface.
+   */
+  close(): void
+ }
+ interface System {
+ }
+ interface newS3 {
+  /**
+   * NewS3 initializes an S3 filesystem instance.
+   * 
+   * NB! Make sure to call `Close()` after you are done working with it.
+   */
+  (bucketName: string, region: string, endpoint: string, accessKey: string, secretKey: string, s3ForcePathStyle: boolean): (System)
+ }
+ interface newLocal {
+  /**
+   * NewLocal initializes a new local filesystem instance.
+   * 
+   * NB! Make sure to call `Close()` after you are done working with it.
+   */
+  (dirPath: string): (System)
+ }
+ interface System {
+  /**
+   * SetContext assigns the specified context to the current filesystem.
+   */
+  setContext(ctx: context.Context): void
+ }
+ interface System {
+  /**
+   * Close releases any resources used for the related filesystem.
+   */
+  close(): void
+ }
+ interface System {
+  /**
+   * Exists checks if file with fileKey path exists or not.
+   */
+  exists(fileKey: string): boolean
+ }
+ interface System {
+  /**
+   * Attributes returns the attributes for the file with fileKey path.
+   */
+  attributes(fileKey: string): (blob.Attributes)
+ }
+ interface System {
+  /**
+   * GetFile returns a file content reader for the given fileKey.
+   * 
+   * NB! Make sure to call `Close()` after you are done working with it.
+   */
+  getFile(fileKey: string): (blob.Reader)
+ }
+ interface System {
+  /**
+   * Copy copies the file stored at srcKey to dstKey.
+   * 
+   * If dstKey file already exists, it is overwritten.
+   */
+  copy(srcKey: string, dstKey: string): void
+ }
+ interface System {
+  /**
+   * List returns a flat list with info for all files under the specified prefix.
+   */
+  list(prefix: string): Array<(blob.ListObject | undefined)>
+ }
+ interface System {
+  /**
+   * Upload writes content into the fileKey location.
+   */
+  upload(content: string|Array<number>, fileKey: string): void
+ }
+ interface System {
+  /**
+   * UploadFile uploads the provided multipart file to the fileKey location.
+   */
+  uploadFile(file: File, fileKey: string): void
+ }
+ interface System {
+  /**
+   * UploadMultipart uploads the provided multipart file to the fileKey location.
+   */
+  uploadMultipart(fh: multipart.FileHeader, fileKey: string): void
+ }
+ interface System {
+  /**
+   * Delete deletes stored file at fileKey location.
+   */
+  delete(fileKey: string): void
+ }
+ interface System {
+  /**
+   * DeletePrefix deletes everything starting with the specified prefix.
+   * 
+   * The prefix could be subpath (ex. "/a/b/") or filename prefix (ex. "/a/b/file_").
+   */
+  deletePrefix(prefix: string): Array<Error>
+ }
+ interface System {
+  /**
+   * Serve serves the file at fileKey location to an HTTP response.
+   * 
+   * If the `download` query parameter is used the file will be always served for
+   * download no matter of its type (aka. with "Content-Disposition: attachment").
+   */
+  serve(res: http.ResponseWriter, req: http.Request, fileKey: string, name: string): void
+ }
+ interface System {
+  /**
+   * CreateThumb creates a new thumb image for the file at originalKey location.
+   * The new thumb file is stored at thumbKey location.
+   * 
+   * thumbSize is in the format:
+   * - 0xH  (eg. 0x100)    - resize to H height preserving the aspect ratio
+   * - Wx0  (eg. 300x0)    - resize to W width preserving the aspect ratio
+   * - WxH  (eg. 300x100)  - resize and crop to WxH viewbox (from center)
+   * - WxHt (eg. 300x100t) - resize and crop to WxH viewbox (from top)
+   * - WxHb (eg. 300x100b) - resize and crop to WxH viewbox (from bottom)
+   * - WxHf (eg. 300x100f) - fit inside a WxH viewbox (without cropping)
+   */
+  createThumb(originalKey: string, thumbKey: string, thumbSize: string): void
+ }
+ // @ts-ignore
+ import v4 = signer
+ // @ts-ignore
+ import smithyhttp = http
+ interface ignoredHeadersKey {
+ }
+ // @ts-ignore
+ import awsv2 = aws
+ // @ts-ignore
+ import awsv2cfg = config
+ // @ts-ignore
+ import s3managerv2 = manager
+ // @ts-ignore
+ import s3v2 = s3
+ // @ts-ignore
+ import typesv2 = types
+ interface hexEscape {
+  /**
+   * HexEscape returns s, with all runes for which shouldEscape returns true
+   * escaped to "__0xXXX__", where XXX is the hex representation of the rune
+   * value. For example, " " would escape to "__0x20__".
+   * 
+   * Non-UTF-8 strings will have their non-UTF-8 characters escaped to
+   * unicode.ReplacementChar; the original value is lost. Please file an
+   * issue if you need non-UTF8 support.
+   * 
+   * Note: shouldEscape takes the whole string as a slice of runes and an
+   * index. Passing it a single byte or a single rune doesn't provide
+   * enough context for some escape decisions; for example, the caller might
+   * want to escape the second "/" in "//" but not the first one.
+   * We pass a slice of runes instead of the string or a slice of bytes
+   * because some decisions will be made on a rune basis (e.g., encode
+   * all non-ASCII runes).
+   */
+  (s: string, shouldEscape: (s: Array<number>, i: number) => boolean): string
+ }
+ interface hexUnescape {
+  /**
+   * HexUnescape reverses HexEscape.
+   */
+  (s: string): string
+ }
+ interface urlEscape {
+  /**
+   * URLEscape uses url.PathEscape to escape s.
+   */
+  (s: string): string
+ }
+ interface urlUnescape {
+  /**
+   * URLUnescape reverses URLEscape using url.PathUnescape. If the unescape
+   * returns an error, it returns s.
+   */
+  (s: string): string
+ }
+ interface useV2 {
+  /**
+   * UseV2 returns true iff the URL parameters indicate that the provider
+   * should use the AWS SDK v2.
+   * 
+   * "awssdk=v1" will force V1.
+   * "awssdk=v2" will force V2.
+   * No "awssdk" parameter (or any other value) will return the default, currently V1.
+   * Note that the default may change in the future.
+   */
+  (q: url.Values): boolean
+ }
+ interface newDefaultV2Config {
+  /**
+   * NewDefaultV2Config returns a aws.Config for AWS SDK v2, using the default options.
+   */
+  (ctx: context.Context): awsv2.Config
+ }
+ interface v2ConfigFromURLParams {
+  /**
+   * V2ConfigFromURLParams returns an aws.Config for AWS SDK v2 initialized based on the URL
+   * parameters in q. It is intended to be used by URLOpeners for AWS services if
+   * UseV2 returns true.
+   * 
+   * https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/aws#Config
+   * 
+   * It returns an error if q contains any unknown query parameters; callers
+   * should remove any query parameters they know about from q before calling
+   * V2ConfigFromURLParams.
+   * 
+   * The following query options are supported:
+   * ```
+   *   - region: The AWS region for requests; sets WithRegion.
+   *   - profile: The shared config profile to use; sets SharedConfigProfile.
+   *   - endpoint: The AWS service endpoint to send HTTP request.
+   * ```
+   */
+  (ctx: context.Context, q: url.Values): awsv2.Config
+ }
+ interface urlSessionOpener {
+ }
+ interface urlSessionOpener {
+  openBucketURL(ctx: context.Context, u: url.URL): (blob.Bucket)
+ }
+ /**
+  * URLOpener opens S3 URLs like "s3://mybucket".
+  * 
+  * The URL host is used as the bucket name.
+  * 
+  * Use "awssdk=v1" to force using AWS SDK v1, "awssdk=v2" to force using AWS SDK v2,
+  * or anything else to accept the default.
+  * 
+  * For V1, see gocloud.dev/aws/ConfigFromURLParams for supported query parameters
+  * for overriding the aws.Session from the URL.
+  * For V2, see gocloud.dev/aws/V2ConfigFromURLParams.
+  */
+ interface URLOpener {
+  /**
+   * UseV2 indicates whether the AWS SDK V2 should be used.
+   */
+  useV2: boolean
+  /**
+   * Options specifies the options to pass to OpenBucket.
+   */
+  options: Options
+ }
+ interface URLOpener {
+  /**
+   * OpenBucketURL opens a blob.Bucket based on u.
+   */
+  openBucketURL(ctx: context.Context, u: url.URL): (blob.Bucket)
+ }
+ /**
+  * Options sets options for constructing a *blob.Bucket backed by fileblob.
+  */
+ interface Options {
+  /**
+   * UseLegacyList forces the use of ListObjects instead of ListObjectsV2.
+   * Some S3-compatible services (like CEPH) do not currently support
+   * ListObjectsV2.
+   */
+  useLegacyList: boolean
+ }
+ interface openBucketV2 {
+  /**
+   * OpenBucketV2 returns a *blob.Bucket backed by S3, using AWS SDK v2.
+   */
+  (ctx: context.Context, client: s3v2.Client, bucketName: string, opts: Options): (blob.Bucket)
+ }
+ /**
+  * reader reads an S3 object. It implements io.ReadCloser.
+  */
+ interface reader {
+ }
+ interface reader {
+  read(p: string|Array<number>): number
+ }
+ interface reader {
+  /**
+   * Close closes the reader itself. It must be called when done reading.
+   */
+  close(): void
+ }
+ interface reader {
+  as(i: {
+   }): boolean
+ }
+ interface reader {
+  attributes(): (any)
+ }
+ /**
+  * writer writes an S3 object, it implements io.WriteCloser.
+  */
+ interface writer {
+ }
+ interface writer {
+  /**
+   * Write appends p to w.pw. User must call Close to close the w after done writing.
+   */
+  write(p: string|Array<number>): number
+ }
+ interface writer {
+  /**
+   * Upload reads from r. Per the driver, it is guaranteed to be the only
+   * write call for this writer.
+   */
+  upload(r: io.Reader): void
+ }
+ interface writer {
+  /**
+   * Close completes the writer and closes it. Any error occurring during write
+   * will be returned. If a writer is closed before any Write is called, Close
+   * will create an empty file at the given key.
+   */
+  close(): void
+ }
+ /**
+  * bucket represents an S3 bucket and handles read, write and delete operations.
+  */
+ interface bucket {
+ }
+ interface bucket {
+  close(): void
+ }
+ interface bucket {
+  errorCode(err: Error): gcerrors.ErrorCode
+ }
+ interface bucket {
+  /**
+   * ListPaged implements driver.ListPaged.
+   */
+  listPaged(ctx: context.Context, opts: any): (any)
+ }
+ interface bucket {
+  /**
+   * As implements driver.As.
+   */
+  as(i: {
+   }): boolean
+ }
+ interface bucket {
+  /**
+   * As implements driver.ErrorAs.
+   */
+  errorAs(err: Error, i: {
+   }): boolean
+ }
+ interface bucket {
+  /**
+   * Attributes implements driver.Attributes.
+   */
+  attributes(ctx: context.Context, key: string): (any)
+ }
+ interface bucket {
+  /**
+   * NewRangeReader implements driver.NewRangeReader.
+   */
+  newRangeReader(ctx: context.Context, key: string, offset: number, length: number, opts: any): any
+ }
+ interface bucket {
+  /**
+   * NewTypedWriter implements driver.NewTypedWriter.
+   */
+  newTypedWriter(ctx: context.Context, key: string, contentType: string, opts: any): any
+ }
+ interface bucket {
+  /**
+   * Copy implements driver.Copy.
+   */
+  copy(ctx: context.Context, dstKey: string, srcKey: string, opts: any): void
+ }
+ interface bucket {
+  /**
+   * Delete implements driver.Delete.
+   */
+  delete(ctx: context.Context, key: string): void
+ }
+ interface bucket {
+  signedURL(ctx: context.Context, key: string, opts: any): string
  }
 }
 
@@ -6592,8 +6585,8 @@ namespace forms {
  /**
   * SettingsUpsert is a [settings.Settings] upsert (create/update) form.
   */
- type _subIwjtv = settings.Settings
- interface SettingsUpsert extends _subIwjtv {
+ type _subWkaUd = settings.Settings
+ interface SettingsUpsert extends _subWkaUd {
  }
  interface newSettingsUpsert {
   /**
@@ -6679,6 +6672,25 @@ namespace forms {
    * Submit validates and performs a S3 filesystem connection test.
    */
   submit(): void
+ }
+}
+
+namespace middleware {
+ interface bodyLimit {
+  /**
+   * BodyLimit returns a BodyLimit middleware.
+   * 
+   * BodyLimit middleware sets the maximum allowed size for a request body, if the size exceeds the configured limit, it
+   * sends "413 - Request Entity Too Large" response. The BodyLimit is determined based on both `Content-Length` request
+   * header and actual content read, which makes it super secure.
+   */
+  (limitBytes: number): echo.MiddlewareFunc
+ }
+ interface gzip {
+  /**
+   * Gzip returns a middleware which compresses HTTP response using gzip compression scheme.
+   */
+  (): echo.MiddlewareFunc
  }
 }
 
@@ -7024,8 +7036,8 @@ namespace pocketbase {
  /**
   * appWrapper serves as a private CoreApp instance wrapper.
   */
- type _subRaHzg = CoreApp
- interface appWrapper extends _subRaHzg {
+ type _subVcKSq = CoreApp
+ interface appWrapper extends _subVcKSq {
  }
  /**
   * PocketBase defines a PocketBase app launcher.
@@ -7033,8 +7045,8 @@ namespace pocketbase {
   * It implements [CoreApp] via embedding and all of the app interface methods
   * could be accessed directly through the instance (eg. PocketBase.DataDir()).
   */
- type _subNtXmf = appWrapper
- interface PocketBase extends _subNtXmf {
+ type _subOvaiK = appWrapper
+ interface PocketBase extends _subOvaiK {
   /**
    * RootCmd is the main console command
    */
@@ -7291,91 +7303,6 @@ namespace io {
   */
  interface ReadSeekCloser {
   [key:string]: any;
- }
-}
-
-/**
- * Package bytes implements functions for the manipulation of byte slices.
- * It is analogous to the facilities of the [strings] package.
- */
-namespace bytes {
- /**
-  * A Reader implements the [io.Reader], [io.ReaderAt], [io.WriterTo], [io.Seeker],
-  * [io.ByteScanner], and [io.RuneScanner] interfaces by reading from
-  * a byte slice.
-  * Unlike a [Buffer], a Reader is read-only and supports seeking.
-  * The zero value for Reader operates like a Reader of an empty slice.
-  */
- interface Reader {
- }
- interface Reader {
-  /**
-   * Len returns the number of bytes of the unread portion of the
-   * slice.
-   */
-  len(): number
- }
- interface Reader {
-  /**
-   * Size returns the original length of the underlying byte slice.
-   * Size is the number of bytes available for reading via [Reader.ReadAt].
-   * The result is unaffected by any method calls except [Reader.Reset].
-   */
-  size(): number
- }
- interface Reader {
-  /**
-   * Read implements the [io.Reader] interface.
-   */
-  read(b: string|Array<number>): number
- }
- interface Reader {
-  /**
-   * ReadAt implements the [io.ReaderAt] interface.
-   */
-  readAt(b: string|Array<number>, off: number): number
- }
- interface Reader {
-  /**
-   * ReadByte implements the [io.ByteReader] interface.
-   */
-  readByte(): number
- }
- interface Reader {
-  /**
-   * UnreadByte complements [Reader.ReadByte] in implementing the [io.ByteScanner] interface.
-   */
-  unreadByte(): void
- }
- interface Reader {
-  /**
-   * ReadRune implements the [io.RuneReader] interface.
-   */
-  readRune(): [number, number]
- }
- interface Reader {
-  /**
-   * UnreadRune complements [Reader.ReadRune] in implementing the [io.RuneScanner] interface.
-   */
-  unreadRune(): void
- }
- interface Reader {
-  /**
-   * Seek implements the [io.Seeker] interface.
-   */
-  seek(offset: number, whence: number): number
- }
- interface Reader {
-  /**
-   * WriteTo implements the [io.WriterTo] interface.
-   */
-  writeTo(w: io.Writer): number
- }
- interface Reader {
-  /**
-   * Reset resets the [Reader] to be reading from b.
-   */
-  reset(b: string|Array<number>): void
  }
 }
 
@@ -8313,6 +8240,91 @@ namespace fs {
 }
 
 /**
+ * Package bytes implements functions for the manipulation of byte slices.
+ * It is analogous to the facilities of the [strings] package.
+ */
+namespace bytes {
+ /**
+  * A Reader implements the [io.Reader], [io.ReaderAt], [io.WriterTo], [io.Seeker],
+  * [io.ByteScanner], and [io.RuneScanner] interfaces by reading from
+  * a byte slice.
+  * Unlike a [Buffer], a Reader is read-only and supports seeking.
+  * The zero value for Reader operates like a Reader of an empty slice.
+  */
+ interface Reader {
+ }
+ interface Reader {
+  /**
+   * Len returns the number of bytes of the unread portion of the
+   * slice.
+   */
+  len(): number
+ }
+ interface Reader {
+  /**
+   * Size returns the original length of the underlying byte slice.
+   * Size is the number of bytes available for reading via [Reader.ReadAt].
+   * The result is unaffected by any method calls except [Reader.Reset].
+   */
+  size(): number
+ }
+ interface Reader {
+  /**
+   * Read implements the [io.Reader] interface.
+   */
+  read(b: string|Array<number>): number
+ }
+ interface Reader {
+  /**
+   * ReadAt implements the [io.ReaderAt] interface.
+   */
+  readAt(b: string|Array<number>, off: number): number
+ }
+ interface Reader {
+  /**
+   * ReadByte implements the [io.ByteReader] interface.
+   */
+  readByte(): number
+ }
+ interface Reader {
+  /**
+   * UnreadByte complements [Reader.ReadByte] in implementing the [io.ByteScanner] interface.
+   */
+  unreadByte(): void
+ }
+ interface Reader {
+  /**
+   * ReadRune implements the [io.RuneReader] interface.
+   */
+  readRune(): [number, number]
+ }
+ interface Reader {
+  /**
+   * UnreadRune complements [Reader.ReadRune] in implementing the [io.RuneScanner] interface.
+   */
+  unreadRune(): void
+ }
+ interface Reader {
+  /**
+   * Seek implements the [io.Seeker] interface.
+   */
+  seek(offset: number, whence: number): number
+ }
+ interface Reader {
+  /**
+   * WriteTo implements the [io.WriterTo] interface.
+   */
+  writeTo(w: io.Writer): number
+ }
+ interface Reader {
+  /**
+   * Reset resets the [Reader] to be reading from b.
+   */
+  reset(b: string|Array<number>): void
+ }
+}
+
+/**
  * Package context defines the Context type, which carries deadlines,
  * cancellation signals, and other request-scoped values across API boundaries
  * and between processes.
@@ -8710,649 +8722,6 @@ namespace url {
    * Any sequences of multiple / characters will be reduced to a single /.
    */
   joinPath(...elem: string[]): (URL)
- }
-}
-
-/**
- * Package sql provides a generic interface around SQL (or SQL-like)
- * databases.
- * 
- * The sql package must be used in conjunction with a database driver.
- * See https://golang.org/s/sqldrivers for a list of drivers.
- * 
- * Drivers that do not support context cancellation will not return until
- * after the query is completed.
- * 
- * For usage examples, see the wiki page at
- * https://golang.org/s/sqlwiki.
- */
-namespace sql {
- /**
-  * TxOptions holds the transaction options to be used in [DB.BeginTx].
-  */
- interface TxOptions {
-  /**
-   * Isolation is the transaction isolation level.
-   * If zero, the driver or database's default level is used.
-   */
-  isolation: IsolationLevel
-  readOnly: boolean
- }
- /**
-  * DB is a database handle representing a pool of zero or more
-  * underlying connections. It's safe for concurrent use by multiple
-  * goroutines.
-  * 
-  * The sql package creates and frees connections automatically; it
-  * also maintains a free pool of idle connections. If the database has
-  * a concept of per-connection state, such state can be reliably observed
-  * within a transaction ([Tx]) or connection ([Conn]). Once [DB.Begin] is called, the
-  * returned [Tx] is bound to a single connection. Once [Tx.Commit] or
-  * [Tx.Rollback] is called on the transaction, that transaction's
-  * connection is returned to [DB]'s idle connection pool. The pool size
-  * can be controlled with [DB.SetMaxIdleConns].
-  */
- interface DB {
- }
- interface DB {
-  /**
-   * PingContext verifies a connection to the database is still alive,
-   * establishing a connection if necessary.
-   */
-  pingContext(ctx: context.Context): void
- }
- interface DB {
-  /**
-   * Ping verifies a connection to the database is still alive,
-   * establishing a connection if necessary.
-   * 
-   * Ping uses [context.Background] internally; to specify the context, use
-   * [DB.PingContext].
-   */
-  ping(): void
- }
- interface DB {
-  /**
-   * Close closes the database and prevents new queries from starting.
-   * Close then waits for all queries that have started processing on the server
-   * to finish.
-   * 
-   * It is rare to Close a [DB], as the [DB] handle is meant to be
-   * long-lived and shared between many goroutines.
-   */
-  close(): void
- }
- interface DB {
-  /**
-   * SetMaxIdleConns sets the maximum number of connections in the idle
-   * connection pool.
-   * 
-   * If MaxOpenConns is greater than 0 but less than the new MaxIdleConns,
-   * then the new MaxIdleConns will be reduced to match the MaxOpenConns limit.
-   * 
-   * If n <= 0, no idle connections are retained.
-   * 
-   * The default max idle connections is currently 2. This may change in
-   * a future release.
-   */
-  setMaxIdleConns(n: number): void
- }
- interface DB {
-  /**
-   * SetMaxOpenConns sets the maximum number of open connections to the database.
-   * 
-   * If MaxIdleConns is greater than 0 and the new MaxOpenConns is less than
-   * MaxIdleConns, then MaxIdleConns will be reduced to match the new
-   * MaxOpenConns limit.
-   * 
-   * If n <= 0, then there is no limit on the number of open connections.
-   * The default is 0 (unlimited).
-   */
-  setMaxOpenConns(n: number): void
- }
- interface DB {
-  /**
-   * SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
-   * 
-   * Expired connections may be closed lazily before reuse.
-   * 
-   * If d <= 0, connections are not closed due to a connection's age.
-   */
-  setConnMaxLifetime(d: time.Duration): void
- }
- interface DB {
-  /**
-   * SetConnMaxIdleTime sets the maximum amount of time a connection may be idle.
-   * 
-   * Expired connections may be closed lazily before reuse.
-   * 
-   * If d <= 0, connections are not closed due to a connection's idle time.
-   */
-  setConnMaxIdleTime(d: time.Duration): void
- }
- interface DB {
-  /**
-   * Stats returns database statistics.
-   */
-  stats(): DBStats
- }
- interface DB {
-  /**
-   * PrepareContext creates a prepared statement for later queries or executions.
-   * Multiple queries or executions may be run concurrently from the
-   * returned statement.
-   * The caller must call the statement's [*Stmt.Close] method
-   * when the statement is no longer needed.
-   * 
-   * The provided context is used for the preparation of the statement, not for the
-   * execution of the statement.
-   */
-  prepareContext(ctx: context.Context, query: string): (Stmt)
- }
- interface DB {
-  /**
-   * Prepare creates a prepared statement for later queries or executions.
-   * Multiple queries or executions may be run concurrently from the
-   * returned statement.
-   * The caller must call the statement's [*Stmt.Close] method
-   * when the statement is no longer needed.
-   * 
-   * Prepare uses [context.Background] internally; to specify the context, use
-   * [DB.PrepareContext].
-   */
-  prepare(query: string): (Stmt)
- }
- interface DB {
-  /**
-   * ExecContext executes a query without returning any rows.
-   * The args are for any placeholder parameters in the query.
-   */
-  execContext(ctx: context.Context, query: string, ...args: any[]): Result
- }
- interface DB {
-  /**
-   * Exec executes a query without returning any rows.
-   * The args are for any placeholder parameters in the query.
-   * 
-   * Exec uses [context.Background] internally; to specify the context, use
-   * [DB.ExecContext].
-   */
-  exec(query: string, ...args: any[]): Result
- }
- interface DB {
-  /**
-   * QueryContext executes a query that returns rows, typically a SELECT.
-   * The args are for any placeholder parameters in the query.
-   */
-  queryContext(ctx: context.Context, query: string, ...args: any[]): (Rows)
- }
- interface DB {
-  /**
-   * Query executes a query that returns rows, typically a SELECT.
-   * The args are for any placeholder parameters in the query.
-   * 
-   * Query uses [context.Background] internally; to specify the context, use
-   * [DB.QueryContext].
-   */
-  query(query: string, ...args: any[]): (Rows)
- }
- interface DB {
-  /**
-   * QueryRowContext executes a query that is expected to return at most one row.
-   * QueryRowContext always returns a non-nil value. Errors are deferred until
-   * [Row]'s Scan method is called.
-   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
-   * Otherwise, [*Row.Scan] scans the first selected row and discards
-   * the rest.
-   */
-  queryRowContext(ctx: context.Context, query: string, ...args: any[]): (Row)
- }
- interface DB {
-  /**
-   * QueryRow executes a query that is expected to return at most one row.
-   * QueryRow always returns a non-nil value. Errors are deferred until
-   * [Row]'s Scan method is called.
-   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
-   * Otherwise, [*Row.Scan] scans the first selected row and discards
-   * the rest.
-   * 
-   * QueryRow uses [context.Background] internally; to specify the context, use
-   * [DB.QueryRowContext].
-   */
-  queryRow(query: string, ...args: any[]): (Row)
- }
- interface DB {
-  /**
-   * BeginTx starts a transaction.
-   * 
-   * The provided context is used until the transaction is committed or rolled back.
-   * If the context is canceled, the sql package will roll back
-   * the transaction. [Tx.Commit] will return an error if the context provided to
-   * BeginTx is canceled.
-   * 
-   * The provided [TxOptions] is optional and may be nil if defaults should be used.
-   * If a non-default isolation level is used that the driver doesn't support,
-   * an error will be returned.
-   */
-  beginTx(ctx: context.Context, opts: TxOptions): (Tx)
- }
- interface DB {
-  /**
-   * Begin starts a transaction. The default isolation level is dependent on
-   * the driver.
-   * 
-   * Begin uses [context.Background] internally; to specify the context, use
-   * [DB.BeginTx].
-   */
-  begin(): (Tx)
- }
- interface DB {
-  /**
-   * Driver returns the database's underlying driver.
-   */
-  driver(): any
- }
- interface DB {
-  /**
-   * Conn returns a single connection by either opening a new connection
-   * or returning an existing connection from the connection pool. Conn will
-   * block until either a connection is returned or ctx is canceled.
-   * Queries run on the same Conn will be run in the same database session.
-   * 
-   * Every Conn must be returned to the database pool after use by
-   * calling [Conn.Close].
-   */
-  conn(ctx: context.Context): (Conn)
- }
- /**
-  * Tx is an in-progress database transaction.
-  * 
-  * A transaction must end with a call to [Tx.Commit] or [Tx.Rollback].
-  * 
-  * After a call to [Tx.Commit] or [Tx.Rollback], all operations on the
-  * transaction fail with [ErrTxDone].
-  * 
-  * The statements prepared for a transaction by calling
-  * the transaction's [Tx.Prepare] or [Tx.Stmt] methods are closed
-  * by the call to [Tx.Commit] or [Tx.Rollback].
-  */
- interface Tx {
- }
- interface Tx {
-  /**
-   * Commit commits the transaction.
-   */
-  commit(): void
- }
- interface Tx {
-  /**
-   * Rollback aborts the transaction.
-   */
-  rollback(): void
- }
- interface Tx {
-  /**
-   * PrepareContext creates a prepared statement for use within a transaction.
-   * 
-   * The returned statement operates within the transaction and will be closed
-   * when the transaction has been committed or rolled back.
-   * 
-   * To use an existing prepared statement on this transaction, see [Tx.Stmt].
-   * 
-   * The provided context will be used for the preparation of the context, not
-   * for the execution of the returned statement. The returned statement
-   * will run in the transaction context.
-   */
-  prepareContext(ctx: context.Context, query: string): (Stmt)
- }
- interface Tx {
-  /**
-   * Prepare creates a prepared statement for use within a transaction.
-   * 
-   * The returned statement operates within the transaction and will be closed
-   * when the transaction has been committed or rolled back.
-   * 
-   * To use an existing prepared statement on this transaction, see [Tx.Stmt].
-   * 
-   * Prepare uses [context.Background] internally; to specify the context, use
-   * [Tx.PrepareContext].
-   */
-  prepare(query: string): (Stmt)
- }
- interface Tx {
-  /**
-   * StmtContext returns a transaction-specific prepared statement from
-   * an existing statement.
-   * 
-   * Example:
-   * 
-   * ```
-   * 	updateMoney, err := db.Prepare("UPDATE balance SET money=money+? WHERE id=?")
-   * 	...
-   * 	tx, err := db.Begin()
-   * 	...
-   * 	res, err := tx.StmtContext(ctx, updateMoney).Exec(123.45, 98293203)
-   * ```
-   * 
-   * The provided context is used for the preparation of the statement, not for the
-   * execution of the statement.
-   * 
-   * The returned statement operates within the transaction and will be closed
-   * when the transaction has been committed or rolled back.
-   */
-  stmtContext(ctx: context.Context, stmt: Stmt): (Stmt)
- }
- interface Tx {
-  /**
-   * Stmt returns a transaction-specific prepared statement from
-   * an existing statement.
-   * 
-   * Example:
-   * 
-   * ```
-   * 	updateMoney, err := db.Prepare("UPDATE balance SET money=money+? WHERE id=?")
-   * 	...
-   * 	tx, err := db.Begin()
-   * 	...
-   * 	res, err := tx.Stmt(updateMoney).Exec(123.45, 98293203)
-   * ```
-   * 
-   * The returned statement operates within the transaction and will be closed
-   * when the transaction has been committed or rolled back.
-   * 
-   * Stmt uses [context.Background] internally; to specify the context, use
-   * [Tx.StmtContext].
-   */
-  stmt(stmt: Stmt): (Stmt)
- }
- interface Tx {
-  /**
-   * ExecContext executes a query that doesn't return rows.
-   * For example: an INSERT and UPDATE.
-   */
-  execContext(ctx: context.Context, query: string, ...args: any[]): Result
- }
- interface Tx {
-  /**
-   * Exec executes a query that doesn't return rows.
-   * For example: an INSERT and UPDATE.
-   * 
-   * Exec uses [context.Background] internally; to specify the context, use
-   * [Tx.ExecContext].
-   */
-  exec(query: string, ...args: any[]): Result
- }
- interface Tx {
-  /**
-   * QueryContext executes a query that returns rows, typically a SELECT.
-   */
-  queryContext(ctx: context.Context, query: string, ...args: any[]): (Rows)
- }
- interface Tx {
-  /**
-   * Query executes a query that returns rows, typically a SELECT.
-   * 
-   * Query uses [context.Background] internally; to specify the context, use
-   * [Tx.QueryContext].
-   */
-  query(query: string, ...args: any[]): (Rows)
- }
- interface Tx {
-  /**
-   * QueryRowContext executes a query that is expected to return at most one row.
-   * QueryRowContext always returns a non-nil value. Errors are deferred until
-   * [Row]'s Scan method is called.
-   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
-   * Otherwise, the [*Row.Scan] scans the first selected row and discards
-   * the rest.
-   */
-  queryRowContext(ctx: context.Context, query: string, ...args: any[]): (Row)
- }
- interface Tx {
-  /**
-   * QueryRow executes a query that is expected to return at most one row.
-   * QueryRow always returns a non-nil value. Errors are deferred until
-   * [Row]'s Scan method is called.
-   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
-   * Otherwise, the [*Row.Scan] scans the first selected row and discards
-   * the rest.
-   * 
-   * QueryRow uses [context.Background] internally; to specify the context, use
-   * [Tx.QueryRowContext].
-   */
-  queryRow(query: string, ...args: any[]): (Row)
- }
- /**
-  * Stmt is a prepared statement.
-  * A Stmt is safe for concurrent use by multiple goroutines.
-  * 
-  * If a Stmt is prepared on a [Tx] or [Conn], it will be bound to a single
-  * underlying connection forever. If the [Tx] or [Conn] closes, the Stmt will
-  * become unusable and all operations will return an error.
-  * If a Stmt is prepared on a [DB], it will remain usable for the lifetime of the
-  * [DB]. When the Stmt needs to execute on a new underlying connection, it will
-  * prepare itself on the new connection automatically.
-  */
- interface Stmt {
- }
- interface Stmt {
-  /**
-   * ExecContext executes a prepared statement with the given arguments and
-   * returns a [Result] summarizing the effect of the statement.
-   */
-  execContext(ctx: context.Context, ...args: any[]): Result
- }
- interface Stmt {
-  /**
-   * Exec executes a prepared statement with the given arguments and
-   * returns a [Result] summarizing the effect of the statement.
-   * 
-   * Exec uses [context.Background] internally; to specify the context, use
-   * [Stmt.ExecContext].
-   */
-  exec(...args: any[]): Result
- }
- interface Stmt {
-  /**
-   * QueryContext executes a prepared query statement with the given arguments
-   * and returns the query results as a [*Rows].
-   */
-  queryContext(ctx: context.Context, ...args: any[]): (Rows)
- }
- interface Stmt {
-  /**
-   * Query executes a prepared query statement with the given arguments
-   * and returns the query results as a *Rows.
-   * 
-   * Query uses [context.Background] internally; to specify the context, use
-   * [Stmt.QueryContext].
-   */
-  query(...args: any[]): (Rows)
- }
- interface Stmt {
-  /**
-   * QueryRowContext executes a prepared query statement with the given arguments.
-   * If an error occurs during the execution of the statement, that error will
-   * be returned by a call to Scan on the returned [*Row], which is always non-nil.
-   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
-   * Otherwise, the [*Row.Scan] scans the first selected row and discards
-   * the rest.
-   */
-  queryRowContext(ctx: context.Context, ...args: any[]): (Row)
- }
- interface Stmt {
-  /**
-   * QueryRow executes a prepared query statement with the given arguments.
-   * If an error occurs during the execution of the statement, that error will
-   * be returned by a call to Scan on the returned [*Row], which is always non-nil.
-   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
-   * Otherwise, the [*Row.Scan] scans the first selected row and discards
-   * the rest.
-   * 
-   * Example usage:
-   * 
-   * ```
-   * 	var name string
-   * 	err := nameByUseridStmt.QueryRow(id).Scan(&name)
-   * ```
-   * 
-   * QueryRow uses [context.Background] internally; to specify the context, use
-   * [Stmt.QueryRowContext].
-   */
-  queryRow(...args: any[]): (Row)
- }
- interface Stmt {
-  /**
-   * Close closes the statement.
-   */
-  close(): void
- }
- /**
-  * Rows is the result of a query. Its cursor starts before the first row
-  * of the result set. Use [Rows.Next] to advance from row to row.
-  */
- interface Rows {
- }
- interface Rows {
-  /**
-   * Next prepares the next result row for reading with the [Rows.Scan] method. It
-   * returns true on success, or false if there is no next result row or an error
-   * happened while preparing it. [Rows.Err] should be consulted to distinguish between
-   * the two cases.
-   * 
-   * Every call to [Rows.Scan], even the first one, must be preceded by a call to [Rows.Next].
-   */
-  next(): boolean
- }
- interface Rows {
-  /**
-   * NextResultSet prepares the next result set for reading. It reports whether
-   * there is further result sets, or false if there is no further result set
-   * or if there is an error advancing to it. The [Rows.Err] method should be consulted
-   * to distinguish between the two cases.
-   * 
-   * After calling NextResultSet, the [Rows.Next] method should always be called before
-   * scanning. If there are further result sets they may not have rows in the result
-   * set.
-   */
-  nextResultSet(): boolean
- }
- interface Rows {
-  /**
-   * Err returns the error, if any, that was encountered during iteration.
-   * Err may be called after an explicit or implicit [Rows.Close].
-   */
-  err(): void
- }
- interface Rows {
-  /**
-   * Columns returns the column names.
-   * Columns returns an error if the rows are closed.
-   */
-  columns(): Array<string>
- }
- interface Rows {
-  /**
-   * ColumnTypes returns column information such as column type, length,
-   * and nullable. Some information may not be available from some drivers.
-   */
-  columnTypes(): Array<(ColumnType | undefined)>
- }
- interface Rows {
-  /**
-   * Scan copies the columns in the current row into the values pointed
-   * at by dest. The number of values in dest must be the same as the
-   * number of columns in [Rows].
-   * 
-   * Scan converts columns read from the database into the following
-   * common Go types and special types provided by the sql package:
-   * 
-   * ```
-   * 	*string
-   * 	*[]byte
-   * 	*int, *int8, *int16, *int32, *int64
-   * 	*uint, *uint8, *uint16, *uint32, *uint64
-   * 	*bool
-   * 	*float32, *float64
-   * 	*interface{}
-   * 	*RawBytes
-   * 	*Rows (cursor value)
-   * 	any type implementing Scanner (see Scanner docs)
-   * ```
-   * 
-   * In the most simple case, if the type of the value from the source
-   * column is an integer, bool or string type T and dest is of type *T,
-   * Scan simply assigns the value through the pointer.
-   * 
-   * Scan also converts between string and numeric types, as long as no
-   * information would be lost. While Scan stringifies all numbers
-   * scanned from numeric database columns into *string, scans into
-   * numeric types are checked for overflow. For example, a float64 with
-   * value 300 or a string with value "300" can scan into a uint16, but
-   * not into a uint8, though float64(255) or "255" can scan into a
-   * uint8. One exception is that scans of some float64 numbers to
-   * strings may lose information when stringifying. In general, scan
-   * floating point columns into *float64.
-   * 
-   * If a dest argument has type *[]byte, Scan saves in that argument a
-   * copy of the corresponding data. The copy is owned by the caller and
-   * can be modified and held indefinitely. The copy can be avoided by
-   * using an argument of type [*RawBytes] instead; see the documentation
-   * for [RawBytes] for restrictions on its use.
-   * 
-   * If an argument has type *interface{}, Scan copies the value
-   * provided by the underlying driver without conversion. When scanning
-   * from a source value of type []byte to *interface{}, a copy of the
-   * slice is made and the caller owns the result.
-   * 
-   * Source values of type [time.Time] may be scanned into values of type
-   * *time.Time, *interface{}, *string, or *[]byte. When converting to
-   * the latter two, [time.RFC3339Nano] is used.
-   * 
-   * Source values of type bool may be scanned into types *bool,
-   * *interface{}, *string, *[]byte, or [*RawBytes].
-   * 
-   * For scanning into *bool, the source may be true, false, 1, 0, or
-   * string inputs parseable by [strconv.ParseBool].
-   * 
-   * Scan can also convert a cursor returned from a query, such as
-   * "select cursor(select * from my_table) from dual", into a
-   * [*Rows] value that can itself be scanned from. The parent
-   * select query will close any cursor [*Rows] if the parent [*Rows] is closed.
-   * 
-   * If any of the first arguments implementing [Scanner] returns an error,
-   * that error will be wrapped in the returned error.
-   */
-  scan(...dest: any[]): void
- }
- interface Rows {
-  /**
-   * Close closes the [Rows], preventing further enumeration. If [Rows.Next] is called
-   * and returns false and there are no further result sets,
-   * the [Rows] are closed automatically and it will suffice to check the
-   * result of [Rows.Err]. Close is idempotent and does not affect the result of [Rows.Err].
-   */
-  close(): void
- }
- /**
-  * A Result summarizes an executed SQL command.
-  */
- interface Result {
-  [key:string]: any;
-  /**
-   * LastInsertId returns the integer generated by the database
-   * in response to a command. Typically this will be from an
-   * "auto increment" column when inserting a new row. Not all
-   * databases support this feature, and the syntax of such
-   * statements varies.
-   */
-  lastInsertId(): number
-  /**
-   * RowsAffected returns the number of rows affected by an
-   * update, insert, or delete. Not every database or database
-   * driver may support this.
-   */
-  rowsAffected(): number
  }
 }
 
@@ -10334,6 +9703,649 @@ namespace http {
    * [Server.Close], the returned error is [ErrServerClosed].
    */
   listenAndServeTLS(certFile: string, keyFile: string): void
+ }
+}
+
+/**
+ * Package sql provides a generic interface around SQL (or SQL-like)
+ * databases.
+ * 
+ * The sql package must be used in conjunction with a database driver.
+ * See https://golang.org/s/sqldrivers for a list of drivers.
+ * 
+ * Drivers that do not support context cancellation will not return until
+ * after the query is completed.
+ * 
+ * For usage examples, see the wiki page at
+ * https://golang.org/s/sqlwiki.
+ */
+namespace sql {
+ /**
+  * TxOptions holds the transaction options to be used in [DB.BeginTx].
+  */
+ interface TxOptions {
+  /**
+   * Isolation is the transaction isolation level.
+   * If zero, the driver or database's default level is used.
+   */
+  isolation: IsolationLevel
+  readOnly: boolean
+ }
+ /**
+  * DB is a database handle representing a pool of zero or more
+  * underlying connections. It's safe for concurrent use by multiple
+  * goroutines.
+  * 
+  * The sql package creates and frees connections automatically; it
+  * also maintains a free pool of idle connections. If the database has
+  * a concept of per-connection state, such state can be reliably observed
+  * within a transaction ([Tx]) or connection ([Conn]). Once [DB.Begin] is called, the
+  * returned [Tx] is bound to a single connection. Once [Tx.Commit] or
+  * [Tx.Rollback] is called on the transaction, that transaction's
+  * connection is returned to [DB]'s idle connection pool. The pool size
+  * can be controlled with [DB.SetMaxIdleConns].
+  */
+ interface DB {
+ }
+ interface DB {
+  /**
+   * PingContext verifies a connection to the database is still alive,
+   * establishing a connection if necessary.
+   */
+  pingContext(ctx: context.Context): void
+ }
+ interface DB {
+  /**
+   * Ping verifies a connection to the database is still alive,
+   * establishing a connection if necessary.
+   * 
+   * Ping uses [context.Background] internally; to specify the context, use
+   * [DB.PingContext].
+   */
+  ping(): void
+ }
+ interface DB {
+  /**
+   * Close closes the database and prevents new queries from starting.
+   * Close then waits for all queries that have started processing on the server
+   * to finish.
+   * 
+   * It is rare to Close a [DB], as the [DB] handle is meant to be
+   * long-lived and shared between many goroutines.
+   */
+  close(): void
+ }
+ interface DB {
+  /**
+   * SetMaxIdleConns sets the maximum number of connections in the idle
+   * connection pool.
+   * 
+   * If MaxOpenConns is greater than 0 but less than the new MaxIdleConns,
+   * then the new MaxIdleConns will be reduced to match the MaxOpenConns limit.
+   * 
+   * If n <= 0, no idle connections are retained.
+   * 
+   * The default max idle connections is currently 2. This may change in
+   * a future release.
+   */
+  setMaxIdleConns(n: number): void
+ }
+ interface DB {
+  /**
+   * SetMaxOpenConns sets the maximum number of open connections to the database.
+   * 
+   * If MaxIdleConns is greater than 0 and the new MaxOpenConns is less than
+   * MaxIdleConns, then MaxIdleConns will be reduced to match the new
+   * MaxOpenConns limit.
+   * 
+   * If n <= 0, then there is no limit on the number of open connections.
+   * The default is 0 (unlimited).
+   */
+  setMaxOpenConns(n: number): void
+ }
+ interface DB {
+  /**
+   * SetConnMaxLifetime sets the maximum amount of time a connection may be reused.
+   * 
+   * Expired connections may be closed lazily before reuse.
+   * 
+   * If d <= 0, connections are not closed due to a connection's age.
+   */
+  setConnMaxLifetime(d: time.Duration): void
+ }
+ interface DB {
+  /**
+   * SetConnMaxIdleTime sets the maximum amount of time a connection may be idle.
+   * 
+   * Expired connections may be closed lazily before reuse.
+   * 
+   * If d <= 0, connections are not closed due to a connection's idle time.
+   */
+  setConnMaxIdleTime(d: time.Duration): void
+ }
+ interface DB {
+  /**
+   * Stats returns database statistics.
+   */
+  stats(): DBStats
+ }
+ interface DB {
+  /**
+   * PrepareContext creates a prepared statement for later queries or executions.
+   * Multiple queries or executions may be run concurrently from the
+   * returned statement.
+   * The caller must call the statement's [*Stmt.Close] method
+   * when the statement is no longer needed.
+   * 
+   * The provided context is used for the preparation of the statement, not for the
+   * execution of the statement.
+   */
+  prepareContext(ctx: context.Context, query: string): (Stmt)
+ }
+ interface DB {
+  /**
+   * Prepare creates a prepared statement for later queries or executions.
+   * Multiple queries or executions may be run concurrently from the
+   * returned statement.
+   * The caller must call the statement's [*Stmt.Close] method
+   * when the statement is no longer needed.
+   * 
+   * Prepare uses [context.Background] internally; to specify the context, use
+   * [DB.PrepareContext].
+   */
+  prepare(query: string): (Stmt)
+ }
+ interface DB {
+  /**
+   * ExecContext executes a query without returning any rows.
+   * The args are for any placeholder parameters in the query.
+   */
+  execContext(ctx: context.Context, query: string, ...args: any[]): Result
+ }
+ interface DB {
+  /**
+   * Exec executes a query without returning any rows.
+   * The args are for any placeholder parameters in the query.
+   * 
+   * Exec uses [context.Background] internally; to specify the context, use
+   * [DB.ExecContext].
+   */
+  exec(query: string, ...args: any[]): Result
+ }
+ interface DB {
+  /**
+   * QueryContext executes a query that returns rows, typically a SELECT.
+   * The args are for any placeholder parameters in the query.
+   */
+  queryContext(ctx: context.Context, query: string, ...args: any[]): (Rows)
+ }
+ interface DB {
+  /**
+   * Query executes a query that returns rows, typically a SELECT.
+   * The args are for any placeholder parameters in the query.
+   * 
+   * Query uses [context.Background] internally; to specify the context, use
+   * [DB.QueryContext].
+   */
+  query(query: string, ...args: any[]): (Rows)
+ }
+ interface DB {
+  /**
+   * QueryRowContext executes a query that is expected to return at most one row.
+   * QueryRowContext always returns a non-nil value. Errors are deferred until
+   * [Row]'s Scan method is called.
+   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
+   * Otherwise, [*Row.Scan] scans the first selected row and discards
+   * the rest.
+   */
+  queryRowContext(ctx: context.Context, query: string, ...args: any[]): (Row)
+ }
+ interface DB {
+  /**
+   * QueryRow executes a query that is expected to return at most one row.
+   * QueryRow always returns a non-nil value. Errors are deferred until
+   * [Row]'s Scan method is called.
+   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
+   * Otherwise, [*Row.Scan] scans the first selected row and discards
+   * the rest.
+   * 
+   * QueryRow uses [context.Background] internally; to specify the context, use
+   * [DB.QueryRowContext].
+   */
+  queryRow(query: string, ...args: any[]): (Row)
+ }
+ interface DB {
+  /**
+   * BeginTx starts a transaction.
+   * 
+   * The provided context is used until the transaction is committed or rolled back.
+   * If the context is canceled, the sql package will roll back
+   * the transaction. [Tx.Commit] will return an error if the context provided to
+   * BeginTx is canceled.
+   * 
+   * The provided [TxOptions] is optional and may be nil if defaults should be used.
+   * If a non-default isolation level is used that the driver doesn't support,
+   * an error will be returned.
+   */
+  beginTx(ctx: context.Context, opts: TxOptions): (Tx)
+ }
+ interface DB {
+  /**
+   * Begin starts a transaction. The default isolation level is dependent on
+   * the driver.
+   * 
+   * Begin uses [context.Background] internally; to specify the context, use
+   * [DB.BeginTx].
+   */
+  begin(): (Tx)
+ }
+ interface DB {
+  /**
+   * Driver returns the database's underlying driver.
+   */
+  driver(): any
+ }
+ interface DB {
+  /**
+   * Conn returns a single connection by either opening a new connection
+   * or returning an existing connection from the connection pool. Conn will
+   * block until either a connection is returned or ctx is canceled.
+   * Queries run on the same Conn will be run in the same database session.
+   * 
+   * Every Conn must be returned to the database pool after use by
+   * calling [Conn.Close].
+   */
+  conn(ctx: context.Context): (Conn)
+ }
+ /**
+  * Tx is an in-progress database transaction.
+  * 
+  * A transaction must end with a call to [Tx.Commit] or [Tx.Rollback].
+  * 
+  * After a call to [Tx.Commit] or [Tx.Rollback], all operations on the
+  * transaction fail with [ErrTxDone].
+  * 
+  * The statements prepared for a transaction by calling
+  * the transaction's [Tx.Prepare] or [Tx.Stmt] methods are closed
+  * by the call to [Tx.Commit] or [Tx.Rollback].
+  */
+ interface Tx {
+ }
+ interface Tx {
+  /**
+   * Commit commits the transaction.
+   */
+  commit(): void
+ }
+ interface Tx {
+  /**
+   * Rollback aborts the transaction.
+   */
+  rollback(): void
+ }
+ interface Tx {
+  /**
+   * PrepareContext creates a prepared statement for use within a transaction.
+   * 
+   * The returned statement operates within the transaction and will be closed
+   * when the transaction has been committed or rolled back.
+   * 
+   * To use an existing prepared statement on this transaction, see [Tx.Stmt].
+   * 
+   * The provided context will be used for the preparation of the context, not
+   * for the execution of the returned statement. The returned statement
+   * will run in the transaction context.
+   */
+  prepareContext(ctx: context.Context, query: string): (Stmt)
+ }
+ interface Tx {
+  /**
+   * Prepare creates a prepared statement for use within a transaction.
+   * 
+   * The returned statement operates within the transaction and will be closed
+   * when the transaction has been committed or rolled back.
+   * 
+   * To use an existing prepared statement on this transaction, see [Tx.Stmt].
+   * 
+   * Prepare uses [context.Background] internally; to specify the context, use
+   * [Tx.PrepareContext].
+   */
+  prepare(query: string): (Stmt)
+ }
+ interface Tx {
+  /**
+   * StmtContext returns a transaction-specific prepared statement from
+   * an existing statement.
+   * 
+   * Example:
+   * 
+   * ```
+   * 	updateMoney, err := db.Prepare("UPDATE balance SET money=money+? WHERE id=?")
+   * 	...
+   * 	tx, err := db.Begin()
+   * 	...
+   * 	res, err := tx.StmtContext(ctx, updateMoney).Exec(123.45, 98293203)
+   * ```
+   * 
+   * The provided context is used for the preparation of the statement, not for the
+   * execution of the statement.
+   * 
+   * The returned statement operates within the transaction and will be closed
+   * when the transaction has been committed or rolled back.
+   */
+  stmtContext(ctx: context.Context, stmt: Stmt): (Stmt)
+ }
+ interface Tx {
+  /**
+   * Stmt returns a transaction-specific prepared statement from
+   * an existing statement.
+   * 
+   * Example:
+   * 
+   * ```
+   * 	updateMoney, err := db.Prepare("UPDATE balance SET money=money+? WHERE id=?")
+   * 	...
+   * 	tx, err := db.Begin()
+   * 	...
+   * 	res, err := tx.Stmt(updateMoney).Exec(123.45, 98293203)
+   * ```
+   * 
+   * The returned statement operates within the transaction and will be closed
+   * when the transaction has been committed or rolled back.
+   * 
+   * Stmt uses [context.Background] internally; to specify the context, use
+   * [Tx.StmtContext].
+   */
+  stmt(stmt: Stmt): (Stmt)
+ }
+ interface Tx {
+  /**
+   * ExecContext executes a query that doesn't return rows.
+   * For example: an INSERT and UPDATE.
+   */
+  execContext(ctx: context.Context, query: string, ...args: any[]): Result
+ }
+ interface Tx {
+  /**
+   * Exec executes a query that doesn't return rows.
+   * For example: an INSERT and UPDATE.
+   * 
+   * Exec uses [context.Background] internally; to specify the context, use
+   * [Tx.ExecContext].
+   */
+  exec(query: string, ...args: any[]): Result
+ }
+ interface Tx {
+  /**
+   * QueryContext executes a query that returns rows, typically a SELECT.
+   */
+  queryContext(ctx: context.Context, query: string, ...args: any[]): (Rows)
+ }
+ interface Tx {
+  /**
+   * Query executes a query that returns rows, typically a SELECT.
+   * 
+   * Query uses [context.Background] internally; to specify the context, use
+   * [Tx.QueryContext].
+   */
+  query(query: string, ...args: any[]): (Rows)
+ }
+ interface Tx {
+  /**
+   * QueryRowContext executes a query that is expected to return at most one row.
+   * QueryRowContext always returns a non-nil value. Errors are deferred until
+   * [Row]'s Scan method is called.
+   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
+   * Otherwise, the [*Row.Scan] scans the first selected row and discards
+   * the rest.
+   */
+  queryRowContext(ctx: context.Context, query: string, ...args: any[]): (Row)
+ }
+ interface Tx {
+  /**
+   * QueryRow executes a query that is expected to return at most one row.
+   * QueryRow always returns a non-nil value. Errors are deferred until
+   * [Row]'s Scan method is called.
+   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
+   * Otherwise, the [*Row.Scan] scans the first selected row and discards
+   * the rest.
+   * 
+   * QueryRow uses [context.Background] internally; to specify the context, use
+   * [Tx.QueryRowContext].
+   */
+  queryRow(query: string, ...args: any[]): (Row)
+ }
+ /**
+  * Stmt is a prepared statement.
+  * A Stmt is safe for concurrent use by multiple goroutines.
+  * 
+  * If a Stmt is prepared on a [Tx] or [Conn], it will be bound to a single
+  * underlying connection forever. If the [Tx] or [Conn] closes, the Stmt will
+  * become unusable and all operations will return an error.
+  * If a Stmt is prepared on a [DB], it will remain usable for the lifetime of the
+  * [DB]. When the Stmt needs to execute on a new underlying connection, it will
+  * prepare itself on the new connection automatically.
+  */
+ interface Stmt {
+ }
+ interface Stmt {
+  /**
+   * ExecContext executes a prepared statement with the given arguments and
+   * returns a [Result] summarizing the effect of the statement.
+   */
+  execContext(ctx: context.Context, ...args: any[]): Result
+ }
+ interface Stmt {
+  /**
+   * Exec executes a prepared statement with the given arguments and
+   * returns a [Result] summarizing the effect of the statement.
+   * 
+   * Exec uses [context.Background] internally; to specify the context, use
+   * [Stmt.ExecContext].
+   */
+  exec(...args: any[]): Result
+ }
+ interface Stmt {
+  /**
+   * QueryContext executes a prepared query statement with the given arguments
+   * and returns the query results as a [*Rows].
+   */
+  queryContext(ctx: context.Context, ...args: any[]): (Rows)
+ }
+ interface Stmt {
+  /**
+   * Query executes a prepared query statement with the given arguments
+   * and returns the query results as a *Rows.
+   * 
+   * Query uses [context.Background] internally; to specify the context, use
+   * [Stmt.QueryContext].
+   */
+  query(...args: any[]): (Rows)
+ }
+ interface Stmt {
+  /**
+   * QueryRowContext executes a prepared query statement with the given arguments.
+   * If an error occurs during the execution of the statement, that error will
+   * be returned by a call to Scan on the returned [*Row], which is always non-nil.
+   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
+   * Otherwise, the [*Row.Scan] scans the first selected row and discards
+   * the rest.
+   */
+  queryRowContext(ctx: context.Context, ...args: any[]): (Row)
+ }
+ interface Stmt {
+  /**
+   * QueryRow executes a prepared query statement with the given arguments.
+   * If an error occurs during the execution of the statement, that error will
+   * be returned by a call to Scan on the returned [*Row], which is always non-nil.
+   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
+   * Otherwise, the [*Row.Scan] scans the first selected row and discards
+   * the rest.
+   * 
+   * Example usage:
+   * 
+   * ```
+   * 	var name string
+   * 	err := nameByUseridStmt.QueryRow(id).Scan(&name)
+   * ```
+   * 
+   * QueryRow uses [context.Background] internally; to specify the context, use
+   * [Stmt.QueryRowContext].
+   */
+  queryRow(...args: any[]): (Row)
+ }
+ interface Stmt {
+  /**
+   * Close closes the statement.
+   */
+  close(): void
+ }
+ /**
+  * Rows is the result of a query. Its cursor starts before the first row
+  * of the result set. Use [Rows.Next] to advance from row to row.
+  */
+ interface Rows {
+ }
+ interface Rows {
+  /**
+   * Next prepares the next result row for reading with the [Rows.Scan] method. It
+   * returns true on success, or false if there is no next result row or an error
+   * happened while preparing it. [Rows.Err] should be consulted to distinguish between
+   * the two cases.
+   * 
+   * Every call to [Rows.Scan], even the first one, must be preceded by a call to [Rows.Next].
+   */
+  next(): boolean
+ }
+ interface Rows {
+  /**
+   * NextResultSet prepares the next result set for reading. It reports whether
+   * there is further result sets, or false if there is no further result set
+   * or if there is an error advancing to it. The [Rows.Err] method should be consulted
+   * to distinguish between the two cases.
+   * 
+   * After calling NextResultSet, the [Rows.Next] method should always be called before
+   * scanning. If there are further result sets they may not have rows in the result
+   * set.
+   */
+  nextResultSet(): boolean
+ }
+ interface Rows {
+  /**
+   * Err returns the error, if any, that was encountered during iteration.
+   * Err may be called after an explicit or implicit [Rows.Close].
+   */
+  err(): void
+ }
+ interface Rows {
+  /**
+   * Columns returns the column names.
+   * Columns returns an error if the rows are closed.
+   */
+  columns(): Array<string>
+ }
+ interface Rows {
+  /**
+   * ColumnTypes returns column information such as column type, length,
+   * and nullable. Some information may not be available from some drivers.
+   */
+  columnTypes(): Array<(ColumnType | undefined)>
+ }
+ interface Rows {
+  /**
+   * Scan copies the columns in the current row into the values pointed
+   * at by dest. The number of values in dest must be the same as the
+   * number of columns in [Rows].
+   * 
+   * Scan converts columns read from the database into the following
+   * common Go types and special types provided by the sql package:
+   * 
+   * ```
+   * 	*string
+   * 	*[]byte
+   * 	*int, *int8, *int16, *int32, *int64
+   * 	*uint, *uint8, *uint16, *uint32, *uint64
+   * 	*bool
+   * 	*float32, *float64
+   * 	*interface{}
+   * 	*RawBytes
+   * 	*Rows (cursor value)
+   * 	any type implementing Scanner (see Scanner docs)
+   * ```
+   * 
+   * In the most simple case, if the type of the value from the source
+   * column is an integer, bool or string type T and dest is of type *T,
+   * Scan simply assigns the value through the pointer.
+   * 
+   * Scan also converts between string and numeric types, as long as no
+   * information would be lost. While Scan stringifies all numbers
+   * scanned from numeric database columns into *string, scans into
+   * numeric types are checked for overflow. For example, a float64 with
+   * value 300 or a string with value "300" can scan into a uint16, but
+   * not into a uint8, though float64(255) or "255" can scan into a
+   * uint8. One exception is that scans of some float64 numbers to
+   * strings may lose information when stringifying. In general, scan
+   * floating point columns into *float64.
+   * 
+   * If a dest argument has type *[]byte, Scan saves in that argument a
+   * copy of the corresponding data. The copy is owned by the caller and
+   * can be modified and held indefinitely. The copy can be avoided by
+   * using an argument of type [*RawBytes] instead; see the documentation
+   * for [RawBytes] for restrictions on its use.
+   * 
+   * If an argument has type *interface{}, Scan copies the value
+   * provided by the underlying driver without conversion. When scanning
+   * from a source value of type []byte to *interface{}, a copy of the
+   * slice is made and the caller owns the result.
+   * 
+   * Source values of type [time.Time] may be scanned into values of type
+   * *time.Time, *interface{}, *string, or *[]byte. When converting to
+   * the latter two, [time.RFC3339Nano] is used.
+   * 
+   * Source values of type bool may be scanned into types *bool,
+   * *interface{}, *string, *[]byte, or [*RawBytes].
+   * 
+   * For scanning into *bool, the source may be true, false, 1, 0, or
+   * string inputs parseable by [strconv.ParseBool].
+   * 
+   * Scan can also convert a cursor returned from a query, such as
+   * "select cursor(select * from my_table) from dual", into a
+   * [*Rows] value that can itself be scanned from. The parent
+   * select query will close any cursor [*Rows] if the parent [*Rows] is closed.
+   * 
+   * If any of the first arguments implementing [Scanner] returns an error,
+   * that error will be wrapped in the returned error.
+   */
+  scan(...dest: any[]): void
+ }
+ interface Rows {
+  /**
+   * Close closes the [Rows], preventing further enumeration. If [Rows.Next] is called
+   * and returns false and there are no further result sets,
+   * the [Rows] are closed automatically and it will suffice to check the
+   * result of [Rows.Err]. Close is idempotent and does not affect the result of [Rows.Err].
+   */
+  close(): void
+ }
+ /**
+  * A Result summarizes an executed SQL command.
+  */
+ interface Result {
+  [key:string]: any;
+  /**
+   * LastInsertId returns the integer generated by the database
+   * in response to a command. Typically this will be from an
+   * "auto increment" column when inserting a new row. Not all
+   * databases support this feature, and the syntax of such
+   * statements varies.
+   */
+  lastInsertId(): number
+  /**
+   * RowsAffected returns the number of rows affected by an
+   * update, insert, or delete. Not every database or database
+   * driver may support this.
+   */
+  rowsAffected(): number
  }
 }
 
@@ -17574,8 +17586,8 @@ namespace schema {
  * Package models implements all PocketBase DB models and DTOs.
  */
 namespace models {
- type _subTPaAx = BaseModel
- interface Admin extends _subTPaAx {
+ type _subqleDw = BaseModel
+ interface Admin extends _subqleDw {
   avatar: number
   email: string
   tokenKey: string
@@ -17610,8 +17622,8 @@ namespace models {
  }
  // @ts-ignore
  import validation = ozzo_validation
- type _subxVwLG = BaseModel
- interface Collection extends _subxVwLG {
+ type _subEjuzK = BaseModel
+ interface Collection extends _subEjuzK {
   name: string
   type: string
   system: boolean
@@ -17704,8 +17716,8 @@ namespace models {
    */
   setOptions(typedOptions: any): void
  }
- type _subnirpX = BaseModel
- interface ExternalAuth extends _subnirpX {
+ type _subbugzZ = BaseModel
+ interface ExternalAuth extends _subbugzZ {
   collectionId: string
   recordId: string
   provider: string
@@ -17714,8 +17726,8 @@ namespace models {
  interface ExternalAuth {
   tableName(): string
  }
- type _subbYdTV = BaseModel
- interface Record extends _subbYdTV {
+ type _subZiwqQ = BaseModel
+ interface Record extends _subZiwqQ {
  }
  interface Record {
   /**
@@ -18125,6 +18137,134 @@ namespace models {
    * HasModifierDataKeys loosely checks if the current struct has any modifier Data keys.
    */
   hasModifierDataKeys(): boolean
+ }
+}
+
+namespace auth {
+ /**
+  * AuthUser defines a standardized oauth2 user data structure.
+  */
+ interface AuthUser {
+  id: string
+  name: string
+  username: string
+  email: string
+  avatarUrl: string
+  accessToken: string
+  refreshToken: string
+  expiry: types.DateTime
+  rawUser: _TygojaDict
+ }
+ /**
+  * Provider defines a common interface for an OAuth2 client.
+  */
+ interface Provider {
+  [key:string]: any;
+  /**
+   * Context returns the context associated with the provider (if any).
+   */
+  context(): context.Context
+  /**
+   * SetContext assigns the specified context to the current provider.
+   */
+  setContext(ctx: context.Context): void
+  /**
+   * PKCE indicates whether the provider can use the PKCE flow.
+   */
+  pkce(): boolean
+  /**
+   * SetPKCE toggles the state whether the provider can use the PKCE flow or not.
+   */
+  setPKCE(enable: boolean): void
+  /**
+   * DisplayName usually returns provider name as it is officially written
+   * and it could be used directly in the UI.
+   */
+  displayName(): string
+  /**
+   * SetDisplayName sets the provider's display name.
+   */
+  setDisplayName(displayName: string): void
+  /**
+   * Scopes returns the provider access permissions that will be requested.
+   */
+  scopes(): Array<string>
+  /**
+   * SetScopes sets the provider access permissions that will be requested later.
+   */
+  setScopes(scopes: Array<string>): void
+  /**
+   * ClientId returns the provider client's app ID.
+   */
+  clientId(): string
+  /**
+   * SetClientId sets the provider client's ID.
+   */
+  setClientId(clientId: string): void
+  /**
+   * ClientSecret returns the provider client's app secret.
+   */
+  clientSecret(): string
+  /**
+   * SetClientSecret sets the provider client's app secret.
+   */
+  setClientSecret(secret: string): void
+  /**
+   * RedirectUrl returns the end address to redirect the user
+   * going through the OAuth flow.
+   */
+  redirectUrl(): string
+  /**
+   * SetRedirectUrl sets the provider's RedirectUrl.
+   */
+  setRedirectUrl(url: string): void
+  /**
+   * AuthUrl returns the provider's authorization service url.
+   */
+  authUrl(): string
+  /**
+   * SetAuthUrl sets the provider's AuthUrl.
+   */
+  setAuthUrl(url: string): void
+  /**
+   * TokenUrl returns the provider's token exchange service url.
+   */
+  tokenUrl(): string
+  /**
+   * SetTokenUrl sets the provider's TokenUrl.
+   */
+  setTokenUrl(url: string): void
+  /**
+   * UserApiUrl returns the provider's user info api url.
+   */
+  userApiUrl(): string
+  /**
+   * SetUserApiUrl sets the provider's UserApiUrl.
+   */
+  setUserApiUrl(url: string): void
+  /**
+   * Client returns an http client using the provided token.
+   */
+  client(token: oauth2.Token): (any)
+  /**
+   * BuildAuthUrl returns a URL to the provider's consent page
+   * that asks for permissions for the required scopes explicitly.
+   */
+  buildAuthUrl(state: string, ...opts: oauth2.AuthCodeOption[]): string
+  /**
+   * FetchToken converts an authorization code to token.
+   */
+  fetchToken(code: string, ...opts: oauth2.AuthCodeOption[]): (oauth2.Token)
+  /**
+   * FetchRawUserData requests and marshalizes into `result` the
+   * the OAuth user api response.
+   */
+  fetchRawUserData(token: oauth2.Token): string|Array<number>
+  /**
+   * FetchAuthUser is similar to FetchRawUserData, but normalizes and
+   * marshalizes the user api response into a standardized AuthUser struct.
+   */
+  fetchAuthUser(token: oauth2.Token): (AuthUser)
  }
 }
 
@@ -18701,134 +18841,6 @@ namespace echo {
    * ```
    */
   start(address: string): void
- }
-}
-
-namespace auth {
- /**
-  * AuthUser defines a standardized oauth2 user data structure.
-  */
- interface AuthUser {
-  id: string
-  name: string
-  username: string
-  email: string
-  avatarUrl: string
-  accessToken: string
-  refreshToken: string
-  expiry: types.DateTime
-  rawUser: _TygojaDict
- }
- /**
-  * Provider defines a common interface for an OAuth2 client.
-  */
- interface Provider {
-  [key:string]: any;
-  /**
-   * Context returns the context associated with the provider (if any).
-   */
-  context(): context.Context
-  /**
-   * SetContext assigns the specified context to the current provider.
-   */
-  setContext(ctx: context.Context): void
-  /**
-   * PKCE indicates whether the provider can use the PKCE flow.
-   */
-  pkce(): boolean
-  /**
-   * SetPKCE toggles the state whether the provider can use the PKCE flow or not.
-   */
-  setPKCE(enable: boolean): void
-  /**
-   * DisplayName usually returns provider name as it is officially written
-   * and it could be used directly in the UI.
-   */
-  displayName(): string
-  /**
-   * SetDisplayName sets the provider's display name.
-   */
-  setDisplayName(displayName: string): void
-  /**
-   * Scopes returns the provider access permissions that will be requested.
-   */
-  scopes(): Array<string>
-  /**
-   * SetScopes sets the provider access permissions that will be requested later.
-   */
-  setScopes(scopes: Array<string>): void
-  /**
-   * ClientId returns the provider client's app ID.
-   */
-  clientId(): string
-  /**
-   * SetClientId sets the provider client's ID.
-   */
-  setClientId(clientId: string): void
-  /**
-   * ClientSecret returns the provider client's app secret.
-   */
-  clientSecret(): string
-  /**
-   * SetClientSecret sets the provider client's app secret.
-   */
-  setClientSecret(secret: string): void
-  /**
-   * RedirectUrl returns the end address to redirect the user
-   * going through the OAuth flow.
-   */
-  redirectUrl(): string
-  /**
-   * SetRedirectUrl sets the provider's RedirectUrl.
-   */
-  setRedirectUrl(url: string): void
-  /**
-   * AuthUrl returns the provider's authorization service url.
-   */
-  authUrl(): string
-  /**
-   * SetAuthUrl sets the provider's AuthUrl.
-   */
-  setAuthUrl(url: string): void
-  /**
-   * TokenUrl returns the provider's token exchange service url.
-   */
-  tokenUrl(): string
-  /**
-   * SetTokenUrl sets the provider's TokenUrl.
-   */
-  setTokenUrl(url: string): void
-  /**
-   * UserApiUrl returns the provider's user info api url.
-   */
-  userApiUrl(): string
-  /**
-   * SetUserApiUrl sets the provider's UserApiUrl.
-   */
-  setUserApiUrl(url: string): void
-  /**
-   * Client returns an http client using the provided token.
-   */
-  client(token: oauth2.Token): (any)
-  /**
-   * BuildAuthUrl returns a URL to the provider's consent page
-   * that asks for permissions for the required scopes explicitly.
-   */
-  buildAuthUrl(state: string, ...opts: oauth2.AuthCodeOption[]): string
-  /**
-   * FetchToken converts an authorization code to token.
-   */
-  fetchToken(code: string, ...opts: oauth2.AuthCodeOption[]): (oauth2.Token)
-  /**
-   * FetchRawUserData requests and marshalizes into `result` the
-   * the OAuth user api response.
-   */
-  fetchRawUserData(token: oauth2.Token): string|Array<number>
-  /**
-   * FetchAuthUser is similar to FetchRawUserData, but normalizes and
-   * marshalizes the user api response into a standardized AuthUser struct.
-   */
-  fetchAuthUser(token: oauth2.Token): (AuthUser)
  }
 }
 
@@ -20444,36 +20456,6 @@ namespace core {
  }
 }
 
-namespace migrate {
- /**
-  * MigrationsList defines a list with migration definitions
-  */
- interface MigrationsList {
- }
- interface MigrationsList {
-  /**
-   * Item returns a single migration from the list by its index.
-   */
-  item(index: number): (Migration)
- }
- interface MigrationsList {
-  /**
-   * Items returns the internal migrations list slice.
-   */
-  items(): Array<(Migration | undefined)>
- }
- interface MigrationsList {
-  /**
-   * Register adds new migration definition to the list.
-   * 
-   * If `optFilename` is not provided, it will try to get the name from its .go file.
-   * 
-   * The list will be sorted automatically based on the migrations file name.
-   */
-  register(up: (db: dbx.Builder) => void, down: (db: dbx.Builder) => void, ...optFilename: string[]): void
- }
-}
-
 /**
  * Package cobra is a commander providing a simple interface to create powerful modern CLI interfaces.
  * In addition to providing an interface, Cobra simultaneously provides a controller to organize your application code.
@@ -21542,6 +21524,61 @@ namespace cobra {
  }
 }
 
+namespace migrate {
+ /**
+  * MigrationsList defines a list with migration definitions
+  */
+ interface MigrationsList {
+ }
+ interface MigrationsList {
+  /**
+   * Item returns a single migration from the list by its index.
+   */
+  item(index: number): (Migration)
+ }
+ interface MigrationsList {
+  /**
+   * Items returns the internal migrations list slice.
+   */
+  items(): Array<(Migration | undefined)>
+ }
+ interface MigrationsList {
+  /**
+   * Register adds new migration definition to the list.
+   * 
+   * If `optFilename` is not provided, it will try to get the name from its .go file.
+   * 
+   * The list will be sorted automatically based on the migrations file name.
+   */
+  register(up: (db: dbx.Builder) => void, down: (db: dbx.Builder) => void, ...optFilename: string[]): void
+ }
+}
+
+/**
+ * Package io provides basic interfaces to I/O primitives.
+ * Its primary job is to wrap existing implementations of such primitives,
+ * such as those in package os, into shared public interfaces that
+ * abstract the functionality, plus some other related primitives.
+ * 
+ * Because these interfaces and primitives wrap lower-level operations with
+ * various implementations, unless otherwise informed clients should not
+ * assume they are safe for parallel execution.
+ */
+namespace io {
+ /**
+  * ReadCloser is the interface that groups the basic Read and Close methods.
+  */
+ interface ReadCloser {
+  [key:string]: any;
+ }
+ /**
+  * WriteCloser is the interface that groups the basic Write and Close methods.
+  */
+ interface WriteCloser {
+  [key:string]: any;
+ }
+}
+
 /**
  * Package syscall contains an interface to the low-level operating system
  * primitives. The details vary depending on the underlying system, and
@@ -21739,6 +21776,17 @@ namespace time {
 }
 
 /**
+ * Package fs defines basic interfaces to a file system.
+ * A file system can be provided by the host operating system
+ * but also by other packages.
+ * 
+ * See the [testing/fstest] package for support with testing
+ * implementations of file systems.
+ */
+namespace fs {
+}
+
+/**
  * Package context defines the Context type, which carries deadlines,
  * cancellation signals, and other request-scoped values across API boundaries
  * and between processes.
@@ -21795,42 +21843,6 @@ namespace context {
 }
 
 /**
- * Package io provides basic interfaces to I/O primitives.
- * Its primary job is to wrap existing implementations of such primitives,
- * such as those in package os, into shared public interfaces that
- * abstract the functionality, plus some other related primitives.
- * 
- * Because these interfaces and primitives wrap lower-level operations with
- * various implementations, unless otherwise informed clients should not
- * assume they are safe for parallel execution.
- */
-namespace io {
- /**
-  * ReadCloser is the interface that groups the basic Read and Close methods.
-  */
- interface ReadCloser {
-  [key:string]: any;
- }
- /**
-  * WriteCloser is the interface that groups the basic Write and Close methods.
-  */
- interface WriteCloser {
-  [key:string]: any;
- }
-}
-
-/**
- * Package fs defines basic interfaces to a file system.
- * A file system can be provided by the host operating system
- * but also by other packages.
- * 
- * See the [testing/fstest] package for support with testing
- * implementations of file systems.
- */
-namespace fs {
-}
-
-/**
  * Package url parses URLs and implements query escaping.
  */
 namespace url {
@@ -21860,136 +21872,6 @@ namespace url {
    * of "username[:password]".
    */
   string(): string
- }
-}
-
-/**
- * Package types implements some commonly used db serializable types
- * like datetime, json, etc.
- */
-namespace types {
- /**
-  * DateTime represents a [time.Time] instance in UTC that is wrapped
-  * and serialized using the app default date layout.
-  */
- interface DateTime {
- }
- interface DateTime {
-  /**
-   * Time returns the internal [time.Time] instance.
-   */
-  time(): time.Time
- }
- interface DateTime {
-  /**
-   * IsZero checks whether the current DateTime instance has zero time value.
-   */
-  isZero(): boolean
- }
- interface DateTime {
-  /**
-   * String serializes the current DateTime instance into a formatted
-   * UTC date string.
-   * 
-   * The zero value is serialized to an empty string.
-   */
-  string(): string
- }
- interface DateTime {
-  /**
-   * MarshalJSON implements the [json.Marshaler] interface.
-   */
-  marshalJSON(): string|Array<number>
- }
- interface DateTime {
-  /**
-   * UnmarshalJSON implements the [json.Unmarshaler] interface.
-   */
-  unmarshalJSON(b: string|Array<number>): void
- }
- interface DateTime {
-  /**
-   * Value implements the [driver.Valuer] interface.
-   */
-  value(): any
- }
- interface DateTime {
-  /**
-   * Scan implements [sql.Scanner] interface to scan the provided value
-   * into the current DateTime instance.
-   */
-  scan(value: any): void
- }
-}
-
-namespace store {
- /**
-  * Store defines a concurrent safe in memory key-value data store.
-  */
- interface Store<T> {
- }
- interface Store<T> {
-  /**
-   * Reset clears the store and replaces the store data with a
-   * shallow copy of the provided newData.
-   */
-  reset(newData: _TygojaDict): void
- }
- interface Store<T> {
-  /**
-   * Length returns the current number of elements in the store.
-   */
-  length(): number
- }
- interface Store<T> {
-  /**
-   * RemoveAll removes all the existing store entries.
-   */
-  removeAll(): void
- }
- interface Store<T> {
-  /**
-   * Remove removes a single entry from the store.
-   * 
-   * Remove does nothing if key doesn't exist in the store.
-   */
-  remove(key: string): void
- }
- interface Store<T> {
-  /**
-   * Has checks if element with the specified key exist or not.
-   */
-  has(key: string): boolean
- }
- interface Store<T> {
-  /**
-   * Get returns a single element value from the store.
-   * 
-   * If key is not set, the zero T value is returned.
-   */
-  get(key: string): T
- }
- interface Store<T> {
-  /**
-   * GetAll returns a shallow copy of the current store data.
-   */
-  getAll(): _TygojaDict
- }
- interface Store<T> {
-  /**
-   * Set sets (or overwrite if already exist) a new value for key.
-   */
-  set(key: string, value: T): void
- }
- interface Store<T> {
-  /**
-   * SetIfLessThanLimit sets (or overwrite if already exist) a new value for key.
-   * 
-   * This method is similar to Set() but **it will skip adding new elements**
-   * to the store if the store length has reached the specified limit.
-   * false is returned if maxAllowedElements limit is reached.
-   */
-  setIfLessThanLimit(key: string, value: T, maxAllowedElements: number): boolean
  }
 }
 
@@ -22181,98 +22063,62 @@ namespace net {
  }
 }
 
-namespace hook {
+/**
+ * Package types implements some commonly used db serializable types
+ * like datetime, json, etc.
+ */
+namespace types {
  /**
-  * Hook defines a concurrent safe structure for handling event hooks
-  * (aka. callbacks propagation).
+  * DateTime represents a [time.Time] instance in UTC that is wrapped
+  * and serialized using the app default date layout.
   */
- interface Hook<T> {
+ interface DateTime {
  }
- interface Hook<T> {
+ interface DateTime {
   /**
-   * PreAdd registers a new handler to the hook by prepending it to the existing queue.
+   * Time returns the internal [time.Time] instance.
+   */
+  time(): time.Time
+ }
+ interface DateTime {
+  /**
+   * IsZero checks whether the current DateTime instance has zero time value.
+   */
+  isZero(): boolean
+ }
+ interface DateTime {
+  /**
+   * String serializes the current DateTime instance into a formatted
+   * UTC date string.
    * 
-   * Returns an autogenerated hook id that could be used later to remove the hook with Hook.Remove(id).
+   * The zero value is serialized to an empty string.
    */
-  preAdd(fn: Handler<T>): string
+  string(): string
  }
- interface Hook<T> {
+ interface DateTime {
   /**
-   * Add registers a new handler to the hook by appending it to the existing queue.
-   * 
-   * Returns an autogenerated hook id that could be used later to remove the hook with Hook.Remove(id).
+   * MarshalJSON implements the [json.Marshaler] interface.
    */
-  add(fn: Handler<T>): string
+  marshalJSON(): string|Array<number>
  }
- interface Hook<T> {
+ interface DateTime {
   /**
-   * Remove removes a single hook handler by its id.
+   * UnmarshalJSON implements the [json.Unmarshaler] interface.
    */
-  remove(id: string): void
+  unmarshalJSON(b: string|Array<number>): void
  }
- interface Hook<T> {
+ interface DateTime {
   /**
-   * RemoveAll removes all registered handlers.
+   * Value implements the [driver.Valuer] interface.
    */
-  removeAll(): void
+  value(): any
  }
- interface Hook<T> {
+ interface DateTime {
   /**
-   * Trigger executes all registered hook handlers one by one
-   * with the specified `data` as an argument.
-   * 
-   * Optionally, this method allows also to register additional one off
-   * handlers that will be temporary appended to the handlers queue.
-   * 
-   * The execution stops when:
-   * - hook.StopPropagation is returned in one of the handlers
-   * - any non-nil error is returned in one of the handlers
+   * Scan implements [sql.Scanner] interface to scan the provided value
+   * into the current DateTime instance.
    */
-  trigger(data: T, ...oneOffHandlers: Handler<T>[]): void
- }
- /**
-  * TaggedHook defines a proxy hook which register handlers that are triggered only
-  * if the TaggedHook.tags are empty or includes at least one of the event data tag(s).
-  */
- type _subbFzXR<T> = mainHook<T>
- interface TaggedHook<T> extends _subbFzXR<T> {
- }
- interface TaggedHook<T> {
-  /**
-   * CanTriggerOn checks if the current TaggedHook can be triggered with
-   * the provided event data tags.
-   */
-  canTriggerOn(tags: Array<string>): boolean
- }
- interface TaggedHook<T> {
-  /**
-   * PreAdd registers a new handler to the hook by prepending it to the existing queue.
-   * 
-   * The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
-   */
-  preAdd(fn: Handler<T>): string
- }
- interface TaggedHook<T> {
-  /**
-   * Add registers a new handler to the hook by appending it to the existing queue.
-   * 
-   * The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
-   */
-  add(fn: Handler<T>): string
- }
-}
-
-namespace logging {
- /**
-  * Logger is an interface for logging entries at certain classifications.
-  */
- interface Logger {
-  [key:string]: any;
-  /**
-   * Logf is expected to support the standard fmt package "verbs".
-   */
-  logf(classification: Classification, format: string, ...v: {
-  }[]): void
+  scan(value: any): void
  }
 }
 
@@ -22868,548 +22714,659 @@ namespace http {
 }
 
 /**
- * Package gcerr provides an error type for Go CDK APIs.
+ * Package oauth2 provides support for making
+ * OAuth2 authorized and authenticated HTTP requests,
+ * as specified in RFC 6749.
+ * It can additionally grant authorization with Bearer JWT.
  */
-namespace gcerr {
- interface ErrorCode {
-  string(): string
+/**
+ * Copyright 2023 The Go Authors. All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+namespace oauth2 {
+ /**
+  * An AuthCodeOption is passed to Config.AuthCodeURL.
+  */
+ interface AuthCodeOption {
+  [key:string]: any;
  }
  /**
-  * An ErrorCode describes the error's category.
+  * Token represents the credentials used to authorize
+  * the requests to access protected resources on the OAuth 2.0
+  * provider's backend.
+  * 
+  * Most users of this package should not access fields of Token
+  * directly. They're exported mostly for use by related packages
+  * implementing derivative OAuth2 flows.
   */
- interface ErrorCode extends Number{}
+ interface Token {
+  /**
+   * AccessToken is the token that authorizes and authenticates
+   * the requests.
+   */
+  accessToken: string
+  /**
+   * TokenType is the type of token.
+   * The Type method returns either this or "Bearer", the default.
+   */
+  tokenType: string
+  /**
+   * RefreshToken is a token that's used by the application
+   * (as opposed to the user) to refresh the access token
+   * if it expires.
+   */
+  refreshToken: string
+  /**
+   * Expiry is the optional expiration time of the access token.
+   * 
+   * If zero, TokenSource implementations will reuse the same
+   * token forever and RefreshToken or equivalent
+   * mechanisms for that TokenSource will not be used.
+   */
+  expiry: time.Time
+  /**
+   * ExpiresIn is the OAuth2 wire format "expires_in" field,
+   * which specifies how many seconds later the token expires,
+   * relative to an unknown time base approximately around "now".
+   * It is the application's responsibility to populate
+   * `Expiry` from `ExpiresIn` when required.
+   */
+  expiresIn: number
+ }
+ interface Token {
+  /**
+   * Type returns t.TokenType if non-empty, else "Bearer".
+   */
+  type(): string
+ }
+ interface Token {
+  /**
+   * SetAuthHeader sets the Authorization header to r using the access
+   * token in t.
+   * 
+   * This method is unnecessary when using Transport or an HTTP Client
+   * returned by this package.
+   */
+  setAuthHeader(r: http.Request): void
+ }
+ interface Token {
+  /**
+   * WithExtra returns a new Token that's a clone of t, but using the
+   * provided raw extra map. This is only intended for use by packages
+   * implementing derivative OAuth2 flows.
+   */
+  withExtra(extra: {
+   }): (Token)
+ }
+ interface Token {
+  /**
+   * Extra returns an extra field.
+   * Extra fields are key-value pairs returned by the server as a
+   * part of the token retrieval response.
+   */
+  extra(key: string): {
+ }
+ }
+ interface Token {
+  /**
+   * Valid reports whether t is non-nil, has an AccessToken, and is not expired.
+   */
+  valid(): boolean
+ }
+}
+
+namespace store {
+ /**
+  * Store defines a concurrent safe in memory key-value data store.
+  */
+ interface Store<T> {
+ }
+ interface Store<T> {
+  /**
+   * Reset clears the store and replaces the store data with a
+   * shallow copy of the provided newData.
+   */
+  reset(newData: _TygojaDict): void
+ }
+ interface Store<T> {
+  /**
+   * Length returns the current number of elements in the store.
+   */
+  length(): number
+ }
+ interface Store<T> {
+  /**
+   * RemoveAll removes all the existing store entries.
+   */
+  removeAll(): void
+ }
+ interface Store<T> {
+  /**
+   * Remove removes a single entry from the store.
+   * 
+   * Remove does nothing if key doesn't exist in the store.
+   */
+  remove(key: string): void
+ }
+ interface Store<T> {
+  /**
+   * Has checks if element with the specified key exist or not.
+   */
+  has(key: string): boolean
+ }
+ interface Store<T> {
+  /**
+   * Get returns a single element value from the store.
+   * 
+   * If key is not set, the zero T value is returned.
+   */
+  get(key: string): T
+ }
+ interface Store<T> {
+  /**
+   * GetAll returns a shallow copy of the current store data.
+   */
+  getAll(): _TygojaDict
+ }
+ interface Store<T> {
+  /**
+   * Set sets (or overwrite if already exist) a new value for key.
+   */
+  set(key: string, value: T): void
+ }
+ interface Store<T> {
+  /**
+   * SetIfLessThanLimit sets (or overwrite if already exist) a new value for key.
+   * 
+   * This method is similar to Set() but **it will skip adding new elements**
+   * to the store if the store length has reached the specified limit.
+   * false is returned if maxAllowedElements limit is reached.
+   */
+  setIfLessThanLimit(key: string, value: T, maxAllowedElements: number): boolean
+ }
+}
+
+namespace mailer {
+ /**
+  * Mailer defines a base mail client interface.
+  */
+ interface Mailer {
+  [key:string]: any;
+  /**
+   * Send sends an email with the provided Message.
+   */
+  send(message: Message): void
+ }
 }
 
 /**
- * Package blob provides an easy and portable way to interact with blobs
- * within a storage location. Subpackages contain driver implementations of
- * blob for supported services.
+ * Package echo implements high performance, minimalist Go web framework.
  * 
- * See https://gocloud.dev/howto/blob/ for a detailed how-to guide.
+ * Example:
  * 
- * *blob.Bucket implements io/fs.FS and io/fs.SubFS, so it can be used with
- * functions in that package.
- * 
- * # Errors
- * 
- * The errors returned from this package can be inspected in several ways:
- * 
- * The Code function from gocloud.dev/gcerrors will return an error code, also
- * defined in that package, when invoked on an error.
- * 
- * The Bucket.ErrorAs method can retrieve the driver error underlying the returned
- * error.
- * 
- * # OpenCensus Integration
- * 
- * OpenCensus supports tracing and metric collection for multiple languages and
- * backend providers. See https://opencensus.io.
- * 
- * This API collects OpenCensus traces and metrics for the following methods:
  * ```
- *   - Attributes
- *   - Copy
- *   - Delete
- *   - ListPage
- *   - NewRangeReader, from creation until the call to Close. (NewReader and ReadAll
- *     are included because they call NewRangeReader.)
- *   - NewWriter, from creation until the call to Close.
- * ```
+ * 	  package main
  * 
- * All trace and metric names begin with the package import path.
- * The traces add the method name.
- * For example, "gocloud.dev/blob/Attributes".
- * The metrics are "completed_calls", a count of completed method calls by driver,
- * method and status (error code); and "latency", a distribution of method latency
- * by driver and method.
- * For example, "gocloud.dev/blob/latency".
+ * 		import (
+ * 			"github.com/labstack/echo/v5"
+ * 			"github.com/labstack/echo/v5/middleware"
+ * 			"log"
+ * 			"net/http"
+ * 		)
  * 
- * It also collects the following metrics:
- * ```
- *   - gocloud.dev/blob/bytes_read: the total number of bytes read, by driver.
- *   - gocloud.dev/blob/bytes_written: the total number of bytes written, by driver.
+ * 	  // Handler
+ * 	  func hello(c echo.Context) error {
+ * 	    return c.String(http.StatusOK, "Hello, World!")
+ * 	  }
+ * 
+ * 	  func main() {
+ * 	    // Echo instance
+ * 	    e := echo.New()
+ * 
+ * 	    // Middleware
+ * 	    e.Use(middleware.Logger())
+ * 	    e.Use(middleware.Recover())
+ * 
+ * 	    // Routes
+ * 	    e.GET("/", hello)
+ * 
+ * 	    // Start server
+ * 	    if err := e.Start(":8080"); err != http.ErrServerClosed {
+ * 			  log.Fatal(err)
+ * 		  }
+ * 	  }
  * ```
  * 
- * To enable trace collection in your application, see "Configure Exporter" at
- * https://opencensus.io/quickstart/go/tracing.
- * To enable metric collection in your application, see "Exporting stats" at
- * https://opencensus.io/quickstart/go/metrics.
+ * Learn more at https://echo.labstack.com
  */
-namespace blob {
+namespace echo {
  /**
-  * Writer writes bytes to a blob.
-  * 
-  * It implements io.WriteCloser (https://golang.org/pkg/io/#Closer), and must be
-  * closed after all writes are done.
+  * Binder is the interface that wraps the Bind method.
   */
- interface Writer {
+ interface Binder {
+  [key:string]: any;
+  bind(c: Context, i: {
+  }): void
  }
- interface Writer {
+ /**
+  * ServableContext is interface that Echo context implementation must implement to be usable in middleware/handlers and
+  * be able to be routed by Router.
+  */
+ interface ServableContext {
+  [key:string]: any;
   /**
-   * Write implements the io.Writer interface (https://golang.org/pkg/io/#Writer).
+   * Reset resets the context after request completes. It must be called along
+   * with `Echo#AcquireContext()` and `Echo#ReleaseContext()`.
+   * See `Echo#ServeHTTP()`
+   */
+  reset(r: http.Request, w: http.ResponseWriter): void
+ }
+ // @ts-ignore
+ import stdContext = context
+ /**
+  * JSONSerializer is the interface that encodes and decodes JSON to and from interfaces.
+  */
+ interface JSONSerializer {
+  [key:string]: any;
+  serialize(c: Context, i: {
+  }, indent: string): void
+  deserialize(c: Context, i: {
+  }): void
+ }
+ /**
+  * HTTPErrorHandler is a centralized HTTP error handler.
+  */
+ interface HTTPErrorHandler {(c: Context, err: Error): void }
+ /**
+  * Validator is the interface that wraps the Validate function.
+  */
+ interface Validator {
+  [key:string]: any;
+  validate(i: {
+  }): void
+ }
+ /**
+  * Renderer is the interface that wraps the Render function.
+  */
+ interface Renderer {
+  [key:string]: any;
+  render(_arg0: io.Writer, _arg1: string, _arg2: {
+  }, _arg3: Context): void
+ }
+ /**
+  * Group is a set of sub-routes for a specified route. It can be used for inner
+  * routes that share a common middleware or functionality that should be separate
+  * from the parent echo instance while still inheriting from it.
+  */
+ interface Group {
+ }
+ interface Group {
+  /**
+   * Use implements `Echo#Use()` for sub-routes within the Group.
+   * Group middlewares are not executed on request when there is no matching route found.
+   */
+  use(...middleware: MiddlewareFunc[]): void
+ }
+ interface Group {
+  /**
+   * CONNECT implements `Echo#CONNECT()` for sub-routes within the Group. Panics on error.
+   */
+  connect(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * DELETE implements `Echo#DELETE()` for sub-routes within the Group. Panics on error.
+   */
+  delete(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * GET implements `Echo#GET()` for sub-routes within the Group. Panics on error.
+   */
+  get(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * HEAD implements `Echo#HEAD()` for sub-routes within the Group. Panics on error.
+   */
+  head(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * OPTIONS implements `Echo#OPTIONS()` for sub-routes within the Group. Panics on error.
+   */
+  options(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * PATCH implements `Echo#PATCH()` for sub-routes within the Group. Panics on error.
+   */
+  patch(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * POST implements `Echo#POST()` for sub-routes within the Group. Panics on error.
+   */
+  post(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * PUT implements `Echo#PUT()` for sub-routes within the Group. Panics on error.
+   */
+  put(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * TRACE implements `Echo#TRACE()` for sub-routes within the Group. Panics on error.
+   */
+  trace(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * Any implements `Echo#Any()` for sub-routes within the Group. Panics on error.
+   */
+  any(path: string, handler: HandlerFunc, ...middleware: MiddlewareFunc[]): Routes
+ }
+ interface Group {
+  /**
+   * Match implements `Echo#Match()` for sub-routes within the Group. Panics on error.
+   */
+  match(methods: Array<string>, path: string, handler: HandlerFunc, ...middleware: MiddlewareFunc[]): Routes
+ }
+ interface Group {
+  /**
+   * Group creates a new sub-group with prefix and optional sub-group-level middleware.
+   * Important! Group middlewares are only executed in case there was exact route match and not
+   * for 404 (not found) or 405 (method not allowed) cases. If this kind of behaviour is needed then add
+   * a catch-all route `/*` for the group which handler returns always 404
+   */
+  group(prefix: string, ...middleware: MiddlewareFunc[]): (Group)
+ }
+ interface Group {
+  /**
+   * Static implements `Echo#Static()` for sub-routes within the Group.
+   */
+  static(pathPrefix: string, fsRoot: string): RouteInfo
+ }
+ interface Group {
+  /**
+   * StaticFS implements `Echo#StaticFS()` for sub-routes within the Group.
    * 
-   * Writes may happen asynchronously, so the returned error can be nil
-   * even if the actual write eventually fails. The write is only guaranteed to
-   * have succeeded if Close returns no error.
+   * When dealing with `embed.FS` use `fs := echo.MustSubFS(fs, "rootDirectory") to create sub fs which uses necessary
+   * prefix for directory path. This is necessary as `//go:embed assets/images` embeds files with paths
+   * including `assets/images` as their prefix.
+   */
+  staticFS(pathPrefix: string, filesystem: fs.FS): RouteInfo
+ }
+ interface Group {
+  /**
+   * FileFS implements `Echo#FileFS()` for sub-routes within the Group.
+   */
+  fileFS(path: string, file: string, filesystem: fs.FS, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * File implements `Echo#File()` for sub-routes within the Group. Panics on error.
+   */
+  file(path: string, file: string, ...middleware: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * RouteNotFound implements `Echo#RouteNotFound()` for sub-routes within the Group.
+   * 
+   * Example: `g.RouteNotFound("/*", func(c echo.Context) error { return c.NoContent(http.StatusNotFound) })`
+   */
+  routeNotFound(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * Add implements `Echo#Add()` for sub-routes within the Group. Panics on error.
+   */
+  add(method: string, path: string, handler: HandlerFunc, ...middleware: MiddlewareFunc[]): RouteInfo
+ }
+ interface Group {
+  /**
+   * AddRoute registers a new Routable with Router
+   */
+  addRoute(route: Routable): RouteInfo
+ }
+ /**
+  * IPExtractor is a function to extract IP addr from http.Request.
+  * Set appropriate one to Echo#IPExtractor.
+  * See https://echo.labstack.com/guide/ip-address for more details.
+  */
+ interface IPExtractor {(_arg0: http.Request): string }
+ /**
+  * Logger defines the logging interface that Echo uses internally in few places.
+  * For logging in handlers use your own logger instance (dependency injected or package/public variable) from logging framework of your choice.
+  */
+ interface Logger {
+  [key:string]: any;
+  /**
+   * Write provides writer interface for http.Server `ErrorLog` and for logging startup messages.
+   * `http.Server.ErrorLog` logs errors from accepting connections, unexpected behavior from handlers,
+   * and underlying FileSystem errors.
+   * `logger` middleware will use this method to write its JSON payload.
    */
   write(p: string|Array<number>): number
- }
- interface Writer {
   /**
-   * Close closes the blob writer. The write operation is not guaranteed to have succeeded until
-   * Close returns with no error.
-   * Close may return an error if the context provided to create the Writer is
-   * canceled or reaches its deadline.
+   * Error logs the error
    */
-  close(): void
- }
- interface Writer {
-  /**
-   * ReadFrom reads from r and writes to w until EOF or error.
-   * The return value is the number of bytes read from r.
-   * 
-   * It implements the io.ReaderFrom interface.
-   */
-  readFrom(r: io.Reader): number
+  error(err: Error): void
  }
  /**
-  * ListOptions sets options for listing blobs via Bucket.List.
+  * Response wraps an http.ResponseWriter and implements its interface to be used
+  * by an HTTP handler to construct an HTTP response.
+  * See: https://golang.org/pkg/net/http/#ResponseWriter
   */
- interface ListOptions {
+ interface Response {
+  writer: http.ResponseWriter
+  status: number
+  size: number
+  committed: boolean
+ }
+ interface Response {
   /**
-   * Prefix indicates that only blobs with a key starting with this prefix
-   * should be returned.
+   * Header returns the header map for the writer that will be sent by
+   * WriteHeader. Changing the header after a call to WriteHeader (or Write) has
+   * no effect unless the modified headers were declared as trailers by setting
+   * the "Trailer" header before the call to WriteHeader (see example)
+   * To suppress implicit response headers, set their value to nil.
+   * Example: https://golang.org/pkg/net/http/#example_ResponseWriter_trailers
    */
-  prefix: string
+  header(): http.Header
+ }
+ interface Response {
   /**
-   * Delimiter sets the delimiter used to define a hierarchical namespace,
-   * like a filesystem with "directories". It is highly recommended that you
-   * use "" or "/" as the Delimiter. Other values should work through this API,
-   * but service UIs generally assume "/".
-   * 
-   * An empty delimiter means that the bucket is treated as a single flat
-   * namespace.
-   * 
-   * A non-empty delimiter means that any result with the delimiter in its key
-   * after Prefix is stripped will be returned with ListObject.IsDir = true,
-   * ListObject.Key truncated after the delimiter, and zero values for other
-   * ListObject fields. These results represent "directories". Multiple results
-   * in a "directory" are returned as a single result.
+   * Before registers a function which is called just before the response is written.
    */
-  delimiter: string
+  before(fn: () => void): void
+ }
+ interface Response {
   /**
-   * BeforeList is a callback that will be called before each call to the
-   * the underlying service's list functionality.
-   * asFunc converts its argument to driver-specific types.
-   * See https://gocloud.dev/concepts/as/ for background information.
+   * After registers a function which is called just after the response is written.
+   * If the `Content-Length` is unknown, none of the after function is executed.
    */
-  beforeList: (asFunc: (_arg0: {
-  }) => boolean) => void
+  after(fn: () => void): void
+ }
+ interface Response {
+  /**
+   * WriteHeader sends an HTTP response header with status code. If WriteHeader is
+   * not called explicitly, the first call to Write will trigger an implicit
+   * WriteHeader(http.StatusOK). Thus explicit calls to WriteHeader are mainly
+   * used to send error codes.
+   */
+  writeHeader(code: number): void
+ }
+ interface Response {
+  /**
+   * Write writes the data to the connection as part of an HTTP reply.
+   */
+  write(b: string|Array<number>): number
+ }
+ interface Response {
+  /**
+   * Flush implements the http.Flusher interface to allow an HTTP handler to flush
+   * buffered data to the client.
+   * See [http.Flusher](https://golang.org/pkg/net/http/#Flusher)
+   */
+  flush(): void
+ }
+ interface Response {
+  /**
+   * Hijack implements the http.Hijacker interface to allow an HTTP handler to
+   * take over the connection.
+   * See [http.Hijacker](https://golang.org/pkg/net/http/#Hijacker)
+   */
+  hijack(): [net.Conn, (bufio.ReadWriter)]
+ }
+ interface Response {
+  /**
+   * Unwrap returns the original http.ResponseWriter.
+   * ResponseController can be used to access the original http.ResponseWriter.
+   * See [https://go.dev/blog/go1.20]
+   */
+  unwrap(): http.ResponseWriter
+ }
+ interface Routes {
+  /**
+   * Reverse reverses route to URL string by replacing path parameters with given params values.
+   */
+  reverse(name: string, ...params: {
+   }[]): string
+ }
+ interface Routes {
+  /**
+   * FindByMethodPath searched for matching route info by method and path
+   */
+  findByMethodPath(method: string, path: string): RouteInfo
+ }
+ interface Routes {
+  /**
+   * FilterByMethod searched for matching route info by method
+   */
+  filterByMethod(method: string): Routes
+ }
+ interface Routes {
+  /**
+   * FilterByPath searched for matching route info by path
+   */
+  filterByPath(path: string): Routes
+ }
+ interface Routes {
+  /**
+   * FilterByName searched for matching route info by name
+   */
+  filterByName(name: string): Routes
  }
  /**
-  * ListIterator iterates over List results.
-  */
- interface ListIterator {
- }
- interface ListIterator {
-  /**
-   * Next returns a *ListObject for the next blob. It returns (nil, io.EOF) if
-   * there are no more.
-   */
-  next(ctx: context.Context): (ListObject)
- }
- /**
-  * SignedURLOptions sets options for SignedURL.
-  */
- interface SignedURLOptions {
-  /**
-   * Expiry sets how long the returned URL is valid for.
-   * Defaults to DefaultSignedURLExpiry.
-   */
-  expiry: time.Duration
-  /**
-   * Method is the HTTP method that can be used on the URL; one of "GET", "PUT",
-   * or "DELETE". Defaults to "GET".
-   */
-  method: string
-  /**
-   * ContentType specifies the Content-Type HTTP header the user agent is
-   * permitted to use in the PUT request. It must match exactly. See
-   * EnforceAbsentContentType for behavior when ContentType is the empty string.
-   * If a bucket does not implement this verification, then it returns an
-   * Unimplemented error.
-   * 
-   * Must be empty for non-PUT requests.
-   */
-  contentType: string
-  /**
-   * If EnforceAbsentContentType is true and ContentType is the empty string,
-   * then PUTing to the signed URL will fail if the Content-Type header is
-   * present. Not all buckets support this: ones that do not will return an
-   * Unimplemented error.
-   * 
-   * If EnforceAbsentContentType is false and ContentType is the empty string,
-   * then PUTing without a Content-Type header will succeed, but it is
-   * implementation-specific whether providing a Content-Type header will fail.
-   * 
-   * Must be false for non-PUT requests.
-   */
-  enforceAbsentContentType: boolean
-  /**
-   * BeforeSign is a callback that will be called before each call to the
-   * the underlying service's sign functionality.
-   * asFunc converts its argument to driver-specific types.
-   * See https://gocloud.dev/concepts/as/ for background information.
-   */
-  beforeSign: (asFunc: (_arg0: {
-  }) => boolean) => void
- }
- /**
-  * ReaderOptions sets options for NewReader and NewRangeReader.
-  */
- interface ReaderOptions {
-  /**
-   * BeforeRead is a callback that will be called before
-   * any data is read (unless NewReader returns an error before then, in which
-   * case it may not be called at all).
-   * 
-   * Calling Seek may reset the underlying reader, and result in BeforeRead
-   * getting called again with a different underlying provider-specific reader..
-   * 
-   * asFunc converts its argument to driver-specific types.
-   * See https://gocloud.dev/concepts/as/ for background information.
-   */
-  beforeRead: (asFunc: (_arg0: {
-  }) => boolean) => void
- }
- /**
-  * WriterOptions sets options for NewWriter.
-  */
- interface WriterOptions {
-  /**
-   * BufferSize changes the default size in bytes of the chunks that
-   * Writer will upload in a single request; larger blobs will be split into
-   * multiple requests.
-   * 
-   * This option may be ignored by some drivers.
-   * 
-   * If 0, the driver will choose a reasonable default.
-   * 
-   * If the Writer is used to do many small writes concurrently, using a
-   * smaller BufferSize may reduce memory usage.
-   */
-  bufferSize: number
-  /**
-   * MaxConcurrency changes the default concurrency for parts of an upload.
-   * 
-   * This option may be ignored by some drivers.
-   * 
-   * If 0, the driver will choose a reasonable default.
-   */
-  maxConcurrency: number
-  /**
-   * CacheControl specifies caching attributes that services may use
-   * when serving the blob.
-   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-   */
-  cacheControl: string
-  /**
-   * ContentDisposition specifies whether the blob content is expected to be
-   * displayed inline or as an attachment.
-   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
-   */
-  contentDisposition: string
-  /**
-   * ContentEncoding specifies the encoding used for the blob's content, if any.
-   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding
-   */
-  contentEncoding: string
-  /**
-   * ContentLanguage specifies the language used in the blob's content, if any.
-   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Language
-   */
-  contentLanguage: string
-  /**
-   * ContentType specifies the MIME type of the blob being written. If not set,
-   * it will be inferred from the content using the algorithm described at
-   * http://mimesniff.spec.whatwg.org/.
-   * Set DisableContentTypeDetection to true to disable the above and force
-   * the ContentType to stay empty.
-   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
-   */
-  contentType: string
-  /**
-   * When true, if ContentType is the empty string, it will stay the empty
-   * string rather than being inferred from the content.
-   * Note that while the blob will be written with an empty string ContentType,
-   * most providers will fill one in during reads, so don't expect an empty
-   * ContentType if you read the blob back.
-   */
-  disableContentTypeDetection: boolean
-  /**
-   * ContentMD5 is used as a message integrity check.
-   * If len(ContentMD5) > 0, the MD5 hash of the bytes written must match
-   * ContentMD5, or Close will return an error without completing the write.
-   * https://tools.ietf.org/html/rfc1864
-   */
-  contentMD5: string|Array<number>
-  /**
-   * Metadata holds key/value strings to be associated with the blob, or nil.
-   * Keys may not be empty, and are lowercased before being written.
-   * Duplicate case-insensitive keys (e.g., "foo" and "FOO") will result in
-   * an error.
-   */
-  metadata: _TygojaDict
-  /**
-   * BeforeWrite is a callback that will be called exactly once, before
-   * any data is written (unless NewWriter returns an error, in which case
-   * it will not be called at all). Note that this is not necessarily during
-   * or after the first Write call, as drivers may buffer bytes before
-   * sending an upload request.
-   * 
-   * asFunc converts its argument to driver-specific types.
-   * See https://gocloud.dev/concepts/as/ for background information.
-   */
-  beforeWrite: (asFunc: (_arg0: {
-  }) => boolean) => void
- }
- /**
-  * CopyOptions sets options for Copy.
-  */
- interface CopyOptions {
-  /**
-   * BeforeCopy is a callback that will be called before the copy is
-   * initiated.
-   * 
-   * asFunc converts its argument to driver-specific types.
-   * See https://gocloud.dev/concepts/as/ for background information.
-   */
-  beforeCopy: (asFunc: (_arg0: {
-  }) => boolean) => void
- }
-}
-
-/**
- * Package sql provides a generic interface around SQL (or SQL-like)
- * databases.
- * 
- * The sql package must be used in conjunction with a database driver.
- * See https://golang.org/s/sqldrivers for a list of drivers.
- * 
- * Drivers that do not support context cancellation will not return until
- * after the query is completed.
- * 
- * For usage examples, see the wiki page at
- * https://golang.org/s/sqlwiki.
- */
-namespace sql {
- /**
-  * IsolationLevel is the transaction isolation level used in [TxOptions].
-  */
- interface IsolationLevel extends Number{}
- interface IsolationLevel {
-  /**
-   * String returns the name of the transaction isolation level.
-   */
-  string(): string
- }
- /**
-  * DBStats contains database statistics.
-  */
- interface DBStats {
-  maxOpenConnections: number // Maximum number of open connections to the database.
-  /**
-   * Pool Status
-   */
-  openConnections: number // The number of established connections both in use and idle.
-  inUse: number // The number of connections currently in use.
-  idle: number // The number of idle connections.
-  /**
-   * Counters
-   */
-  waitCount: number // The total number of connections waited for.
-  waitDuration: time.Duration // The total time blocked waiting for a new connection.
-  maxIdleClosed: number // The total number of connections closed due to SetMaxIdleConns.
-  maxIdleTimeClosed: number // The total number of connections closed due to SetConnMaxIdleTime.
-  maxLifetimeClosed: number // The total number of connections closed due to SetConnMaxLifetime.
- }
- /**
-  * Conn represents a single database connection rather than a pool of database
-  * connections. Prefer running queries from [DB] unless there is a specific
-  * need for a continuous single database connection.
+  * Router is interface for routing request contexts to registered routes.
   * 
-  * A Conn must call [Conn.Close] to return the connection to the database pool
-  * and may do so concurrently with a running query.
-  * 
-  * After a call to [Conn.Close], all operations on the
-  * connection fail with [ErrConnDone].
+  * Contract between Echo/Context instance and the router:
+  * ```
+  *   - all routes must be added through methods on echo.Echo instance.
+  *     Reason: Echo instance uses RouteInfo.Params() length to allocate slice for paths parameters (see `Echo.contextPathParamAllocSize`).
+  *   - Router must populate Context during Router.Route call with:
+  *   - RoutableContext.SetPath
+  *   - RoutableContext.SetRawPathParams (IMPORTANT! with same slice pointer that c.RawPathParams() returns)
+  *   - RoutableContext.SetRouteInfo
+  *     And optionally can set additional information to Context with RoutableContext.Set
+  * ```
   */
- interface Conn {
- }
- interface Conn {
+ interface Router {
+  [key:string]: any;
   /**
-   * PingContext verifies the connection to the database is still alive.
+   * Add registers Routable with the Router and returns registered RouteInfo
    */
-  pingContext(ctx: context.Context): void
- }
- interface Conn {
+  add(routable: Routable): RouteInfo
   /**
-   * ExecContext executes a query without returning any rows.
-   * The args are for any placeholder parameters in the query.
+   * Remove removes route from the Router
    */
-  execContext(ctx: context.Context, query: string, ...args: any[]): Result
- }
- interface Conn {
+  remove(method: string, path: string): void
   /**
-   * QueryContext executes a query that returns rows, typically a SELECT.
-   * The args are for any placeholder parameters in the query.
+   * Routes returns information about all registered routes
    */
-  queryContext(ctx: context.Context, query: string, ...args: any[]): (Rows)
- }
- interface Conn {
+  routes(): Routes
   /**
-   * QueryRowContext executes a query that is expected to return at most one row.
-   * QueryRowContext always returns a non-nil value. Errors are deferred until
-   * the [*Row.Scan] method is called.
-   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
-   * Otherwise, the [*Row.Scan] scans the first selected row and discards
-   * the rest.
+   * Route searches Router for matching route and applies it to the given context. In case when no matching method
+   * was not found (405) or no matching route exists for path (404), router will return its implementation of 405/404
+   * handler function.
    */
-  queryRowContext(ctx: context.Context, query: string, ...args: any[]): (Row)
- }
- interface Conn {
-  /**
-   * PrepareContext creates a prepared statement for later queries or executions.
-   * Multiple queries or executions may be run concurrently from the
-   * returned statement.
-   * The caller must call the statement's [*Stmt.Close] method
-   * when the statement is no longer needed.
-   * 
-   * The provided context is used for the preparation of the statement, not for the
-   * execution of the statement.
-   */
-  prepareContext(ctx: context.Context, query: string): (Stmt)
- }
- interface Conn {
-  /**
-   * Raw executes f exposing the underlying driver connection for the
-   * duration of f. The driverConn must not be used outside of f.
-   * 
-   * Once f returns and err is not [driver.ErrBadConn], the [Conn] will continue to be usable
-   * until [Conn.Close] is called.
-   */
-  raw(f: (driverConn: any) => void): void
- }
- interface Conn {
-  /**
-   * BeginTx starts a transaction.
-   * 
-   * The provided context is used until the transaction is committed or rolled back.
-   * If the context is canceled, the sql package will roll back
-   * the transaction. [Tx.Commit] will return an error if the context provided to
-   * BeginTx is canceled.
-   * 
-   * The provided [TxOptions] is optional and may be nil if defaults should be used.
-   * If a non-default isolation level is used that the driver doesn't support,
-   * an error will be returned.
-   */
-  beginTx(ctx: context.Context, opts: TxOptions): (Tx)
- }
- interface Conn {
-  /**
-   * Close returns the connection to the connection pool.
-   * All operations after a Close will return with [ErrConnDone].
-   * Close is safe to call concurrently with other operations and will
-   * block until all other operations finish. It may be useful to first
-   * cancel any used context and then call close directly after.
-   */
-  close(): void
+  route(c: RoutableContext): HandlerFunc
  }
  /**
-  * ColumnType contains the name and type of a column.
+  * Routable is interface for registering Route with Router. During route registration process the Router will
+  * convert Routable to RouteInfo with ToRouteInfo method. By creating custom implementation of Routable additional
+  * information about registered route can be stored in Routes (i.e. privileges used with route etc.)
   */
- interface ColumnType {
- }
- interface ColumnType {
+ interface Routable {
+  [key:string]: any;
   /**
-   * Name returns the name or alias of the column.
+   * ToRouteInfo converts Routable to RouteInfo
+   * 
+   * This method is meant to be used by Router after it parses url for path parameters, to store information about
+   * route just added.
    */
+  toRouteInfo(params: Array<string>): RouteInfo
+  /**
+   * ToRoute converts Routable to Route which Router uses to register the method handler for path.
+   * 
+   * This method is meant to be used by Router to get fields (including handler and middleware functions) needed to
+   * add Route to Router.
+   */
+  toRoute(): Route
+  /**
+   * ForGroup recreates routable with added group prefix and group middlewares it is grouped to.
+   * 
+   * Is necessary for Echo.Group to be able to add/register Routable with Router and having group prefix and group
+   * middlewares included in actually registered Route.
+   */
+  forGroup(pathPrefix: string, middlewares: Array<MiddlewareFunc>): Routable
+ }
+ /**
+  * Routes is collection of RouteInfo instances with various helper methods.
+  */
+ interface Routes extends Array<RouteInfo>{}
+ /**
+  * RouteInfo describes registered route base fields.
+  * Method+Path pair uniquely identifies the Route. Name can have duplicates.
+  */
+ interface RouteInfo {
+  [key:string]: any;
+  method(): string
+  path(): string
   name(): string
- }
- interface ColumnType {
+  params(): Array<string>
   /**
-   * Length returns the column type length for variable length column types such
-   * as text and binary field types. If the type length is unbounded the value will
-   * be [math.MaxInt64] (any database limits will still apply).
-   * If the column type is not variable length, such as an int, or if not supported
-   * by the driver ok is false.
+   * Reverse reverses route to URL string by replacing path parameters with given params values.
    */
-  length(): [number, boolean]
- }
- interface ColumnType {
-  /**
-   * DecimalSize returns the scale and precision of a decimal type.
-   * If not applicable or if not supported ok is false.
-   */
-  decimalSize(): [number, number, boolean]
- }
- interface ColumnType {
-  /**
-   * ScanType returns a Go type suitable for scanning into using [Rows.Scan].
-   * If a driver does not support this property ScanType will return
-   * the type of an empty interface.
-   */
-  scanType(): any
- }
- interface ColumnType {
-  /**
-   * Nullable reports whether the column may be null.
-   * If a driver does not support this property ok will be false.
-   */
-  nullable(): [boolean, boolean]
- }
- interface ColumnType {
-  /**
-   * DatabaseTypeName returns the database system name of the column type. If an empty
-   * string is returned, then the driver type name is not supported.
-   * Consult your driver documentation for a list of driver data types. [ColumnType.Length] specifiers
-   * are not included.
-   * Common type names include "VARCHAR", "TEXT", "NVARCHAR", "DECIMAL", "BOOL",
-   * "INT", and "BIGINT".
-   */
-  databaseTypeName(): string
+  reverse(...params: {
+  }[]): string
  }
  /**
-  * Row is the result of calling [DB.QueryRow] to select a single row.
+  * PathParams is collections of PathParam instances with various helper methods
   */
- interface Row {
- }
- interface Row {
+ interface PathParams extends Array<PathParam>{}
+ interface PathParams {
   /**
-   * Scan copies the columns from the matched row into the values
-   * pointed at by dest. See the documentation on [Rows.Scan] for details.
-   * If more than one row matches the query,
-   * Scan uses the first row and discards the rest. If no row matches
-   * the query, Scan returns [ErrNoRows].
+   * Get returns path parameter value for given name or default value.
    */
-  scan(...dest: any[]): void
- }
- interface Row {
-  /**
-   * Err provides a way for wrapping packages to check for
-   * query errors without calling [Row.Scan].
-   * Err returns the error, if any, that was encountered while running the query.
-   * If this error is not nil, this error will also be returned from [Row.Scan].
-   */
-  err(): void
+  get(name: string, defaultValue: string): string
  }
 }
 
-namespace migrate {
- interface Migration {
-  file: string
-  up: (db: dbx.Builder) => void
-  down: (db: dbx.Builder) => void
+namespace logging {
+ /**
+  * Logger is an interface for logging entries at certain classifications.
+  */
+ interface Logger {
+  [key:string]: any;
+  /**
+   * Logf is expected to support the standard fmt package "verbs".
+   */
+  logf(classification: Classification, format: string, ...v: {
+  }[]): void
  }
 }
 
@@ -23976,8 +23933,8 @@ namespace s3 {
  import smithydocument = document
  // @ts-ignore
  import smithyhttp = http
- type _subdoBVF = noSmithyDocumentSerde
- interface AbortMultipartUploadInput extends _subdoBVF {
+ type _subQQXwh = noSmithyDocumentSerde
+ interface AbortMultipartUploadInput extends _subQQXwh {
   /**
    * The bucket name to which the upload was taking place.
    * 
@@ -24048,8 +24005,8 @@ namespace s3 {
    */
   requestPayer: types.RequestPayer
  }
- type _subAhzcd = noSmithyDocumentSerde
- interface AbortMultipartUploadOutput extends _subAhzcd {
+ type _subsLqIT = noSmithyDocumentSerde
+ interface AbortMultipartUploadOutput extends _subsLqIT {
   /**
    * If present, indicates that the requester was successfully charged for the
    * request.
@@ -24062,8 +24019,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subRygdJ = noSmithyDocumentSerde
- interface CompleteMultipartUploadInput extends _subRygdJ {
+ type _subiloAc = noSmithyDocumentSerde
+ interface CompleteMultipartUploadInput extends _subiloAc {
   /**
    * Name of the bucket to which the multipart upload was initiated.
    * 
@@ -24222,8 +24179,8 @@ namespace s3 {
    */
   sseCustomerKeyMD5?: string
  }
- type _subopwgM = noSmithyDocumentSerde
- interface CompleteMultipartUploadOutput extends _subopwgM {
+ type _subllseS = noSmithyDocumentSerde
+ interface CompleteMultipartUploadOutput extends _subllseS {
   /**
    * The name of the bucket that contains the newly created object. Does not return
    * the access point ARN or access point alias if used.
@@ -24339,8 +24296,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subzVCbd = noSmithyDocumentSerde
- interface CopyObjectInput extends _subzVCbd {
+ type _subysoCn = noSmithyDocumentSerde
+ interface CopyObjectInput extends _subysoCn {
   /**
    * The name of the destination bucket.
    * 
@@ -25042,8 +24999,8 @@ namespace s3 {
    */
   websiteRedirectLocation?: string
  }
- type _subMUDlx = noSmithyDocumentSerde
- interface CopyObjectOutput extends _subMUDlx {
+ type _subWpKZz = noSmithyDocumentSerde
+ interface CopyObjectOutput extends _subWpKZz {
   /**
    * Indicates whether the copied object uses an S3 Bucket Key for server-side
    * encryption with Key Management Service (KMS) keys (SSE-KMS).
@@ -25115,8 +25072,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subFvUAF = noSmithyDocumentSerde
- interface CreateBucketInput extends _subFvUAF {
+ type _subrFiLm = noSmithyDocumentSerde
+ interface CreateBucketInput extends _subrFiLm {
   /**
    * The name of the bucket to create.
    * 
@@ -25217,8 +25174,8 @@ namespace s3 {
    */
   objectOwnership: types.ObjectOwnership
  }
- type _subVPZab = noSmithyDocumentSerde
- interface CreateBucketOutput extends _subVPZab {
+ type _subMLVEG = noSmithyDocumentSerde
+ interface CreateBucketOutput extends _subMLVEG {
   /**
    * A forward slash followed by the name of the bucket.
    */
@@ -25228,8 +25185,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subcEoRi = noSmithyDocumentSerde
- interface CreateMultipartUploadInput extends _subcEoRi {
+ type _subMkBpH = noSmithyDocumentSerde
+ interface CreateMultipartUploadInput extends _subMkBpH {
   /**
    * The name of the bucket where the multipart upload is initiated and where the
    * object is uploaded.
@@ -25791,8 +25748,8 @@ namespace s3 {
    */
   websiteRedirectLocation?: string
  }
- type _subHZuFd = noSmithyDocumentSerde
- interface CreateMultipartUploadOutput extends _subHZuFd {
+ type _subIspSp = noSmithyDocumentSerde
+ interface CreateMultipartUploadOutput extends _subIspSp {
   /**
    * If the bucket has a lifecycle rule configured with an action to abort
    * incomplete multipart uploads and the prefix in the lifecycle rule matches the
@@ -25883,8 +25840,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subNnMiF = noSmithyDocumentSerde
- interface CreateSessionInput extends _subNnMiF {
+ type _subsHwVy = noSmithyDocumentSerde
+ interface CreateSessionInput extends _subsHwVy {
   /**
    * The name of the bucket that you create a session for.
    * 
@@ -25966,8 +25923,8 @@ namespace s3 {
    */
   sessionMode: types.SessionMode
  }
- type _subKUQZg = noSmithyDocumentSerde
- interface CreateSessionOutput extends _subKUQZg {
+ type _subZmyqj = noSmithyDocumentSerde
+ interface CreateSessionOutput extends _subZmyqj {
   /**
    * The established temporary security credentials for the created session.
    * 
@@ -26003,8 +25960,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subWWBVW = noSmithyDocumentSerde
- interface DeleteBucketInput extends _subWWBVW {
+ type _subMzCGg = noSmithyDocumentSerde
+ interface DeleteBucketInput extends _subMzCGg {
   /**
    * Specifies the bucket being deleted.
    * 
@@ -26033,15 +25990,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subKOrqE = noSmithyDocumentSerde
- interface DeleteBucketOutput extends _subKOrqE {
+ type _subhCCMG = noSmithyDocumentSerde
+ interface DeleteBucketOutput extends _subhCCMG {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subPauEn = noSmithyDocumentSerde
- interface DeleteBucketAnalyticsConfigurationInput extends _subPauEn {
+ type _subrMhZl = noSmithyDocumentSerde
+ interface DeleteBucketAnalyticsConfigurationInput extends _subrMhZl {
   /**
    * The name of the bucket from which an analytics configuration is deleted.
    * 
@@ -26061,15 +26018,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subyOGOJ = noSmithyDocumentSerde
- interface DeleteBucketAnalyticsConfigurationOutput extends _subyOGOJ {
+ type _subLRBxi = noSmithyDocumentSerde
+ interface DeleteBucketAnalyticsConfigurationOutput extends _subLRBxi {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subKrJPX = noSmithyDocumentSerde
- interface DeleteBucketCorsInput extends _subKrJPX {
+ type _subMlAuW = noSmithyDocumentSerde
+ interface DeleteBucketCorsInput extends _subMlAuW {
   /**
    * Specifies the bucket whose cors configuration is being deleted.
    * 
@@ -26083,15 +26040,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subUJnEh = noSmithyDocumentSerde
- interface DeleteBucketCorsOutput extends _subUJnEh {
+ type _subOiuSW = noSmithyDocumentSerde
+ interface DeleteBucketCorsOutput extends _subOiuSW {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subSOoKo = noSmithyDocumentSerde
- interface DeleteBucketEncryptionInput extends _subSOoKo {
+ type _subZwZga = noSmithyDocumentSerde
+ interface DeleteBucketEncryptionInput extends _subZwZga {
   /**
    * The name of the bucket containing the server-side encryption configuration to
    * delete.
@@ -26121,15 +26078,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subfyfpN = noSmithyDocumentSerde
- interface DeleteBucketEncryptionOutput extends _subfyfpN {
+ type _subObZOa = noSmithyDocumentSerde
+ interface DeleteBucketEncryptionOutput extends _subObZOa {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _submCnCq = noSmithyDocumentSerde
- interface DeleteBucketIntelligentTieringConfigurationInput extends _submCnCq {
+ type _subZcJsr = noSmithyDocumentSerde
+ interface DeleteBucketIntelligentTieringConfigurationInput extends _subZcJsr {
   /**
    * The name of the Amazon S3 bucket whose configuration you want to modify or
    * retrieve.
@@ -26144,15 +26101,15 @@ namespace s3 {
    */
   id?: string
  }
- type _subKbBci = noSmithyDocumentSerde
- interface DeleteBucketIntelligentTieringConfigurationOutput extends _subKbBci {
+ type _subxQKpF = noSmithyDocumentSerde
+ interface DeleteBucketIntelligentTieringConfigurationOutput extends _subxQKpF {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subJcILg = noSmithyDocumentSerde
- interface DeleteBucketInventoryConfigurationInput extends _subJcILg {
+ type _subpDwgQ = noSmithyDocumentSerde
+ interface DeleteBucketInventoryConfigurationInput extends _subpDwgQ {
   /**
    * The name of the bucket containing the inventory configuration to delete.
    * 
@@ -26172,15 +26129,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subUovMy = noSmithyDocumentSerde
- interface DeleteBucketInventoryConfigurationOutput extends _subUovMy {
+ type _subKYyoo = noSmithyDocumentSerde
+ interface DeleteBucketInventoryConfigurationOutput extends _subKYyoo {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subNuiWc = noSmithyDocumentSerde
- interface DeleteBucketLifecycleInput extends _subNuiWc {
+ type _suboMivD = noSmithyDocumentSerde
+ interface DeleteBucketLifecycleInput extends _suboMivD {
   /**
    * The bucket name of the lifecycle to delete.
    * 
@@ -26194,15 +26151,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subacBoP = noSmithyDocumentSerde
- interface DeleteBucketLifecycleOutput extends _subacBoP {
+ type _subOAFze = noSmithyDocumentSerde
+ interface DeleteBucketLifecycleOutput extends _subOAFze {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subBqDnL = noSmithyDocumentSerde
- interface DeleteBucketMetricsConfigurationInput extends _subBqDnL {
+ type _submHPbK = noSmithyDocumentSerde
+ interface DeleteBucketMetricsConfigurationInput extends _submHPbK {
   /**
    * The name of the bucket containing the metrics configuration to delete.
    * 
@@ -26223,15 +26180,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subRTqPc = noSmithyDocumentSerde
- interface DeleteBucketMetricsConfigurationOutput extends _subRTqPc {
+ type _subrBtWw = noSmithyDocumentSerde
+ interface DeleteBucketMetricsConfigurationOutput extends _subrBtWw {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subpReTa = noSmithyDocumentSerde
- interface DeleteBucketOwnershipControlsInput extends _subpReTa {
+ type _subQLiKn = noSmithyDocumentSerde
+ interface DeleteBucketOwnershipControlsInput extends _subQLiKn {
   /**
    * The Amazon S3 bucket whose OwnershipControls you want to delete.
    * 
@@ -26245,15 +26202,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subomweP = noSmithyDocumentSerde
- interface DeleteBucketOwnershipControlsOutput extends _subomweP {
+ type _subarfSr = noSmithyDocumentSerde
+ interface DeleteBucketOwnershipControlsOutput extends _subarfSr {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subYpTYR = noSmithyDocumentSerde
- interface DeleteBucketPolicyInput extends _subYpTYR {
+ type _subSdVFp = noSmithyDocumentSerde
+ interface DeleteBucketPolicyInput extends _subSdVFp {
   /**
    * The bucket name.
    * 
@@ -26282,15 +26239,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subSarex = noSmithyDocumentSerde
- interface DeleteBucketPolicyOutput extends _subSarex {
+ type _subQIzev = noSmithyDocumentSerde
+ interface DeleteBucketPolicyOutput extends _subQIzev {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subyoKUU = noSmithyDocumentSerde
- interface DeleteBucketReplicationInput extends _subyoKUU {
+ type _subbHFLQ = noSmithyDocumentSerde
+ interface DeleteBucketReplicationInput extends _subbHFLQ {
   /**
    *  The bucket name.
    * 
@@ -26304,15 +26261,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subcFLBG = noSmithyDocumentSerde
- interface DeleteBucketReplicationOutput extends _subcFLBG {
+ type _subDVhHx = noSmithyDocumentSerde
+ interface DeleteBucketReplicationOutput extends _subDVhHx {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subFkuCR = noSmithyDocumentSerde
- interface DeleteBucketTaggingInput extends _subFkuCR {
+ type _subeSpxr = noSmithyDocumentSerde
+ interface DeleteBucketTaggingInput extends _subeSpxr {
   /**
    * The bucket that has the tag set to be removed.
    * 
@@ -26326,15 +26283,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subXaBzc = noSmithyDocumentSerde
- interface DeleteBucketTaggingOutput extends _subXaBzc {
+ type _subdiYxH = noSmithyDocumentSerde
+ interface DeleteBucketTaggingOutput extends _subdiYxH {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subfMerk = noSmithyDocumentSerde
- interface DeleteBucketWebsiteInput extends _subfMerk {
+ type _subPaZot = noSmithyDocumentSerde
+ interface DeleteBucketWebsiteInput extends _subPaZot {
   /**
    * The bucket name for which you want to remove the website configuration.
    * 
@@ -26348,15 +26305,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subGWwIc = noSmithyDocumentSerde
- interface DeleteBucketWebsiteOutput extends _subGWwIc {
+ type _subUVfOt = noSmithyDocumentSerde
+ interface DeleteBucketWebsiteOutput extends _subUVfOt {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subkIyTL = noSmithyDocumentSerde
- interface DeleteObjectInput extends _subkIyTL {
+ type _subIJNwZ = noSmithyDocumentSerde
+ interface DeleteObjectInput extends _subIJNwZ {
   /**
    * The bucket name of the bucket containing the object.
    * 
@@ -26445,8 +26402,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subynbWF = noSmithyDocumentSerde
- interface DeleteObjectOutput extends _subynbWF {
+ type _subfOOIN = noSmithyDocumentSerde
+ interface DeleteObjectOutput extends _subfOOIN {
   /**
    * Indicates whether the specified object version that was permanently deleted was
    * (true) or was not (false) a delete marker before deletion. In a simple DELETE,
@@ -26475,8 +26432,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subUIqMT = noSmithyDocumentSerde
- interface DeleteObjectTaggingInput extends _subUIqMT {
+ type _subAuQXB = noSmithyDocumentSerde
+ interface DeleteObjectTaggingInput extends _subAuQXB {
   /**
    * The bucket name containing the objects from which to remove the tags.
    * 
@@ -26520,8 +26477,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subhfXHb = noSmithyDocumentSerde
- interface DeleteObjectTaggingOutput extends _subhfXHb {
+ type _subZcXxD = noSmithyDocumentSerde
+ interface DeleteObjectTaggingOutput extends _subZcXxD {
   /**
    * The versionId of the object the tag-set was removed from.
    */
@@ -26531,8 +26488,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subUILFI = noSmithyDocumentSerde
- interface DeleteObjectsInput extends _subUILFI {
+ type _subFyijG = noSmithyDocumentSerde
+ interface DeleteObjectsInput extends _subFyijG {
   /**
    * The bucket name containing the objects to delete.
    * 
@@ -26658,8 +26615,8 @@ namespace s3 {
    */
   requestPayer: types.RequestPayer
  }
- type _subDrSEi = noSmithyDocumentSerde
- interface DeleteObjectsOutput extends _subDrSEi {
+ type _subkBpHA = noSmithyDocumentSerde
+ interface DeleteObjectsOutput extends _subkBpHA {
   /**
    * Container element for a successful delete. It identifies the object that was
    * successfully deleted.
@@ -26682,8 +26639,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subdkKfs = noSmithyDocumentSerde
- interface DeletePublicAccessBlockInput extends _subdkKfs {
+ type _subRaypk = noSmithyDocumentSerde
+ interface DeletePublicAccessBlockInput extends _subRaypk {
   /**
    * The Amazon S3 bucket whose PublicAccessBlock configuration you want to delete.
    * 
@@ -26697,15 +26654,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subbnEep = noSmithyDocumentSerde
- interface DeletePublicAccessBlockOutput extends _subbnEep {
+ type _subYJcGi = noSmithyDocumentSerde
+ interface DeletePublicAccessBlockOutput extends _subYJcGi {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subxadmv = noSmithyDocumentSerde
- interface GetBucketAccelerateConfigurationInput extends _subxadmv {
+ type _subpwmKr = noSmithyDocumentSerde
+ interface GetBucketAccelerateConfigurationInput extends _subpwmKr {
   /**
    * The name of the bucket for which the accelerate configuration is retrieved.
    * 
@@ -26732,8 +26689,8 @@ namespace s3 {
    */
   requestPayer: types.RequestPayer
  }
- type _subMJXUk = noSmithyDocumentSerde
- interface GetBucketAccelerateConfigurationOutput extends _subMJXUk {
+ type _subTsvha = noSmithyDocumentSerde
+ interface GetBucketAccelerateConfigurationOutput extends _subTsvha {
   /**
    * If present, indicates that the requester was successfully charged for the
    * request.
@@ -26750,8 +26707,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subymWaB = noSmithyDocumentSerde
- interface GetBucketAclInput extends _subymWaB {
+ type _subqWjbv = noSmithyDocumentSerde
+ interface GetBucketAclInput extends _subqWjbv {
   /**
    * Specifies the S3 bucket whose ACL is being requested.
    * 
@@ -26776,8 +26733,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subZjWFl = noSmithyDocumentSerde
- interface GetBucketAclOutput extends _subZjWFl {
+ type _subuvftD = noSmithyDocumentSerde
+ interface GetBucketAclOutput extends _subuvftD {
   /**
    * A list of grants.
    */
@@ -26791,8 +26748,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subSTUzj = noSmithyDocumentSerde
- interface GetBucketAnalyticsConfigurationInput extends _subSTUzj {
+ type _subCGWlj = noSmithyDocumentSerde
+ interface GetBucketAnalyticsConfigurationInput extends _subCGWlj {
   /**
    * The name of the bucket from which an analytics configuration is retrieved.
    * 
@@ -26812,8 +26769,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subGjmkO = noSmithyDocumentSerde
- interface GetBucketAnalyticsConfigurationOutput extends _subGjmkO {
+ type _subOLpbm = noSmithyDocumentSerde
+ interface GetBucketAnalyticsConfigurationOutput extends _subOLpbm {
   /**
    * The configuration and any analyses for the analytics filter.
    */
@@ -26823,8 +26780,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subBAguP = noSmithyDocumentSerde
- interface GetBucketCorsInput extends _subBAguP {
+ type _subsnxdu = noSmithyDocumentSerde
+ interface GetBucketCorsInput extends _subsnxdu {
   /**
    * The bucket name for which to get the cors configuration.
    * 
@@ -26849,8 +26806,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subaoqvd = noSmithyDocumentSerde
- interface GetBucketCorsOutput extends _subaoqvd {
+ type _subpeDCa = noSmithyDocumentSerde
+ interface GetBucketCorsOutput extends _subpeDCa {
   /**
    * A set of origins and methods (cross-origin access that you want to allow). You
    * can add up to 100 rules to the configuration.
@@ -26861,8 +26818,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subGSqbe = noSmithyDocumentSerde
- interface GetBucketEncryptionInput extends _subGSqbe {
+ type _subHQfZu = noSmithyDocumentSerde
+ interface GetBucketEncryptionInput extends _subHQfZu {
   /**
    * The name of the bucket from which the server-side encryption configuration is
    * retrieved.
@@ -26892,8 +26849,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subWdusS = noSmithyDocumentSerde
- interface GetBucketEncryptionOutput extends _subWdusS {
+ type _subcUJIz = noSmithyDocumentSerde
+ interface GetBucketEncryptionOutput extends _subcUJIz {
   /**
    * Specifies the default server-side-encryption configuration.
    */
@@ -26903,8 +26860,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subZxizZ = noSmithyDocumentSerde
- interface GetBucketIntelligentTieringConfigurationInput extends _subZxizZ {
+ type _subhJfTf = noSmithyDocumentSerde
+ interface GetBucketIntelligentTieringConfigurationInput extends _subhJfTf {
   /**
    * The name of the Amazon S3 bucket whose configuration you want to modify or
    * retrieve.
@@ -26919,8 +26876,8 @@ namespace s3 {
    */
   id?: string
  }
- type _subeeKSR = noSmithyDocumentSerde
- interface GetBucketIntelligentTieringConfigurationOutput extends _subeeKSR {
+ type _subqAeZc = noSmithyDocumentSerde
+ interface GetBucketIntelligentTieringConfigurationOutput extends _subqAeZc {
   /**
    * Container for S3 Intelligent-Tiering configuration.
    */
@@ -26930,8 +26887,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _submQByk = noSmithyDocumentSerde
- interface GetBucketInventoryConfigurationInput extends _submQByk {
+ type _subkwWWN = noSmithyDocumentSerde
+ interface GetBucketInventoryConfigurationInput extends _subkwWWN {
   /**
    * The name of the bucket containing the inventory configuration to retrieve.
    * 
@@ -26951,8 +26908,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _sublBZFv = noSmithyDocumentSerde
- interface GetBucketInventoryConfigurationOutput extends _sublBZFv {
+ type _subWHLLo = noSmithyDocumentSerde
+ interface GetBucketInventoryConfigurationOutput extends _subWHLLo {
   /**
    * Specifies the inventory configuration.
    */
@@ -26962,8 +26919,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _sublFvsi = noSmithyDocumentSerde
- interface GetBucketLifecycleConfigurationInput extends _sublFvsi {
+ type _subnArOC = noSmithyDocumentSerde
+ interface GetBucketLifecycleConfigurationInput extends _subnArOC {
   /**
    * The name of the bucket for which to get the lifecycle information.
    * 
@@ -26977,8 +26934,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subkQQAq = noSmithyDocumentSerde
- interface GetBucketLifecycleConfigurationOutput extends _subkQQAq {
+ type _subXUZyS = noSmithyDocumentSerde
+ interface GetBucketLifecycleConfigurationOutput extends _subXUZyS {
   /**
    * Container for a lifecycle rule.
    */
@@ -27011,8 +26968,8 @@ namespace s3 {
  import smithyxml = xml
  // @ts-ignore
  import smithyio = io
- type _subtPYNo = noSmithyDocumentSerde
- interface GetBucketLocationInput extends _subtPYNo {
+ type _subAUxmS = noSmithyDocumentSerde
+ interface GetBucketLocationInput extends _subAUxmS {
   /**
    * The name of the bucket for which to get the location.
    * 
@@ -27037,8 +26994,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subYSLff = noSmithyDocumentSerde
- interface GetBucketLocationOutput extends _subYSLff {
+ type _subJGlUu = noSmithyDocumentSerde
+ interface GetBucketLocationOutput extends _subJGlUu {
   /**
    * Specifies the Region where the bucket resides. For a list of all the Amazon S3
    * supported location constraints by Region, see [Regions and Endpoints]. Buckets in Region us-east-1
@@ -27052,8 +27009,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subffqWS = noSmithyDocumentSerde
- interface GetBucketLoggingInput extends _subffqWS {
+ type _subtfoeZ = noSmithyDocumentSerde
+ interface GetBucketLoggingInput extends _subtfoeZ {
   /**
    * The bucket name for which to get the logging information.
    * 
@@ -27067,8 +27024,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subLKFCe = noSmithyDocumentSerde
- interface GetBucketLoggingOutput extends _subLKFCe {
+ type _subbusuo = noSmithyDocumentSerde
+ interface GetBucketLoggingOutput extends _subbusuo {
   /**
    * Describes where logs are stored and the prefix that Amazon S3 assigns to all
    * log object keys for a bucket. For more information, see [PUT Bucket logging]in the Amazon S3 API
@@ -27082,8 +27039,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subXnQXI = noSmithyDocumentSerde
- interface GetBucketMetricsConfigurationInput extends _subXnQXI {
+ type _subdtlCW = noSmithyDocumentSerde
+ interface GetBucketMetricsConfigurationInput extends _subdtlCW {
   /**
    * The name of the bucket containing the metrics configuration to retrieve.
    * 
@@ -27104,8 +27061,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subPlbFZ = noSmithyDocumentSerde
- interface GetBucketMetricsConfigurationOutput extends _subPlbFZ {
+ type _subDLNIq = noSmithyDocumentSerde
+ interface GetBucketMetricsConfigurationOutput extends _subDLNIq {
   /**
    * Specifies the metrics configuration.
    */
@@ -27115,8 +27072,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subtoemD = noSmithyDocumentSerde
- interface GetBucketNotificationConfigurationInput extends _subtoemD {
+ type _subIuYNe = noSmithyDocumentSerde
+ interface GetBucketNotificationConfigurationInput extends _subIuYNe {
   /**
    * The name of the bucket for which to get the notification configuration.
    * 
@@ -27145,8 +27102,8 @@ namespace s3 {
   * A container for specifying the notification configuration of the bucket. If
   * this element is empty, notifications are turned off for the bucket.
   */
- type _subMPMnb = noSmithyDocumentSerde
- interface GetBucketNotificationConfigurationOutput extends _subMPMnb {
+ type _subBVyDh = noSmithyDocumentSerde
+ interface GetBucketNotificationConfigurationOutput extends _subBVyDh {
   /**
    * Enables delivery of events to Amazon EventBridge.
    */
@@ -27171,8 +27128,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subuEFGJ = noSmithyDocumentSerde
- interface GetBucketOwnershipControlsInput extends _subuEFGJ {
+ type _subpwbTf = noSmithyDocumentSerde
+ interface GetBucketOwnershipControlsInput extends _subpwbTf {
   /**
    * The name of the Amazon S3 bucket whose OwnershipControls you want to retrieve.
    * 
@@ -27186,8 +27143,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subgMVIl = noSmithyDocumentSerde
- interface GetBucketOwnershipControlsOutput extends _subgMVIl {
+ type _subFQhUc = noSmithyDocumentSerde
+ interface GetBucketOwnershipControlsOutput extends _subFQhUc {
   /**
    * The OwnershipControls (BucketOwnerEnforced, BucketOwnerPreferred, or
    * ObjectWriter) currently in effect for this Amazon S3 bucket.
@@ -27198,8 +27155,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subJDaPJ = noSmithyDocumentSerde
- interface GetBucketPolicyInput extends _subJDaPJ {
+ type _subYRXXj = noSmithyDocumentSerde
+ interface GetBucketPolicyInput extends _subYRXXj {
   /**
    * The bucket name to get the bucket policy for.
    * 
@@ -27241,8 +27198,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subtdLaI = noSmithyDocumentSerde
- interface GetBucketPolicyOutput extends _subtdLaI {
+ type _subkZmkL = noSmithyDocumentSerde
+ interface GetBucketPolicyOutput extends _subkZmkL {
   /**
    * The bucket policy as a JSON document.
    */
@@ -27252,8 +27209,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subbnuMF = noSmithyDocumentSerde
- interface GetBucketPolicyStatusInput extends _subbnuMF {
+ type _subOvbfe = noSmithyDocumentSerde
+ interface GetBucketPolicyStatusInput extends _subOvbfe {
   /**
    * The name of the Amazon S3 bucket whose policy status you want to retrieve.
    * 
@@ -27267,8 +27224,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subBRLkC = noSmithyDocumentSerde
- interface GetBucketPolicyStatusOutput extends _subBRLkC {
+ type _subcEEzY = noSmithyDocumentSerde
+ interface GetBucketPolicyStatusOutput extends _subcEEzY {
   /**
    * The policy status for the specified bucket.
    */
@@ -27278,8 +27235,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subUECqT = noSmithyDocumentSerde
- interface GetBucketReplicationInput extends _subUECqT {
+ type _subfJyle = noSmithyDocumentSerde
+ interface GetBucketReplicationInput extends _subfJyle {
   /**
    * The bucket name for which to get the replication information.
    * 
@@ -27293,8 +27250,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subirNjO = noSmithyDocumentSerde
- interface GetBucketReplicationOutput extends _subirNjO {
+ type _subemVJG = noSmithyDocumentSerde
+ interface GetBucketReplicationOutput extends _subemVJG {
   /**
    * A container for replication rules. You can add up to 1,000 rules. The maximum
    * size of a replication configuration is 2 MB.
@@ -27305,8 +27262,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subItMYt = noSmithyDocumentSerde
- interface GetBucketRequestPaymentInput extends _subItMYt {
+ type _subPHmQJ = noSmithyDocumentSerde
+ interface GetBucketRequestPaymentInput extends _subPHmQJ {
   /**
    * The name of the bucket for which to get the payment request configuration
    * 
@@ -27320,8 +27277,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subvFcwV = noSmithyDocumentSerde
- interface GetBucketRequestPaymentOutput extends _subvFcwV {
+ type _subobmEb = noSmithyDocumentSerde
+ interface GetBucketRequestPaymentOutput extends _subobmEb {
   /**
    * Specifies who pays for the download and request fees.
    */
@@ -27331,8 +27288,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subpdzhk = noSmithyDocumentSerde
- interface GetBucketTaggingInput extends _subpdzhk {
+ type _subbPTIW = noSmithyDocumentSerde
+ interface GetBucketTaggingInput extends _subbPTIW {
   /**
    * The name of the bucket for which to get the tagging information.
    * 
@@ -27346,8 +27303,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subcxgba = noSmithyDocumentSerde
- interface GetBucketTaggingOutput extends _subcxgba {
+ type _subRiRIO = noSmithyDocumentSerde
+ interface GetBucketTaggingOutput extends _subRiRIO {
   /**
    * Contains the tag set.
    * 
@@ -27359,8 +27316,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subckrrF = noSmithyDocumentSerde
- interface GetBucketVersioningInput extends _subckrrF {
+ type _subjaJnG = noSmithyDocumentSerde
+ interface GetBucketVersioningInput extends _subjaJnG {
   /**
    * The name of the bucket for which to get the versioning information.
    * 
@@ -27374,8 +27331,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subZmfqn = noSmithyDocumentSerde
- interface GetBucketVersioningOutput extends _subZmfqn {
+ type _subJFesj = noSmithyDocumentSerde
+ interface GetBucketVersioningOutput extends _subJFesj {
   /**
    * Specifies whether MFA delete is enabled in the bucket versioning configuration.
    * This element is only returned if the bucket has been configured with MFA delete.
@@ -27391,8 +27348,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subpcLqO = noSmithyDocumentSerde
- interface GetBucketWebsiteInput extends _subpcLqO {
+ type _subirskq = noSmithyDocumentSerde
+ interface GetBucketWebsiteInput extends _subirskq {
   /**
    * The bucket name for which to get the website configuration.
    * 
@@ -27406,8 +27363,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subpWjbK = noSmithyDocumentSerde
- interface GetBucketWebsiteOutput extends _subpWjbK {
+ type _subiABkf = noSmithyDocumentSerde
+ interface GetBucketWebsiteOutput extends _subiABkf {
   /**
    * The object key name of the website error document to use for 4XX class errors.
    */
@@ -27430,8 +27387,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subrfljy = noSmithyDocumentSerde
- interface GetObjectInput extends _subrfljy {
+ type _subyxkEG = noSmithyDocumentSerde
+ interface GetObjectInput extends _subyxkEG {
   /**
    * The bucket name containing the object.
    * 
@@ -27705,8 +27662,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subaoaMd = noSmithyDocumentSerde
- interface GetObjectOutput extends _subaoaMd {
+ type _subpBNvB = noSmithyDocumentSerde
+ interface GetObjectOutput extends _subpBNvB {
   /**
    * Indicates that a range of bytes was specified in the request.
    */
@@ -27960,8 +27917,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subcSmrI = noSmithyDocumentSerde
- interface GetObjectAclInput extends _subcSmrI {
+ type _subEUnnZ = noSmithyDocumentSerde
+ interface GetObjectAclInput extends _subEUnnZ {
   /**
    * The bucket name that contains the object for which to get the ACL information.
    * 
@@ -28011,8 +27968,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subAcamt = noSmithyDocumentSerde
- interface GetObjectAclOutput extends _subAcamt {
+ type _subagcvo = noSmithyDocumentSerde
+ interface GetObjectAclOutput extends _subagcvo {
   /**
    * A list of grants.
    */
@@ -28033,8 +27990,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subxCSXH = noSmithyDocumentSerde
- interface GetObjectAttributesInput extends _subxCSXH {
+ type _subSSgpw = noSmithyDocumentSerde
+ interface GetObjectAttributesInput extends _subSSgpw {
   /**
    * The name of the bucket that contains the object.
    * 
@@ -28148,8 +28105,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subtJwoC = noSmithyDocumentSerde
- interface GetObjectAttributesOutput extends _subtJwoC {
+ type _subYfQeA = noSmithyDocumentSerde
+ interface GetObjectAttributesOutput extends _subYfQeA {
   /**
    * The checksum or digest of the object.
    */
@@ -28208,8 +28165,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subyrFaW = noSmithyDocumentSerde
- interface GetObjectLegalHoldInput extends _subyrFaW {
+ type _subCrIAi = noSmithyDocumentSerde
+ interface GetObjectLegalHoldInput extends _subCrIAi {
   /**
    * The bucket name containing the object whose legal hold status you want to
    * retrieve.
@@ -28258,8 +28215,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subYTMHo = noSmithyDocumentSerde
- interface GetObjectLegalHoldOutput extends _subYTMHo {
+ type _subgtndl = noSmithyDocumentSerde
+ interface GetObjectLegalHoldOutput extends _subgtndl {
   /**
    * The current legal hold status for the specified object.
    */
@@ -28269,8 +28226,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _suboPiwy = noSmithyDocumentSerde
- interface GetObjectLockConfigurationInput extends _suboPiwy {
+ type _subwElMD = noSmithyDocumentSerde
+ interface GetObjectLockConfigurationInput extends _subwElMD {
   /**
    * The bucket whose Object Lock configuration you want to retrieve.
    * 
@@ -28295,8 +28252,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subGRZzR = noSmithyDocumentSerde
- interface GetObjectLockConfigurationOutput extends _subGRZzR {
+ type _subrkmid = noSmithyDocumentSerde
+ interface GetObjectLockConfigurationOutput extends _subrkmid {
   /**
    * The specified bucket's Object Lock configuration.
    */
@@ -28306,8 +28263,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subBxtRy = noSmithyDocumentSerde
- interface GetObjectRetentionInput extends _subBxtRy {
+ type _subBTEov = noSmithyDocumentSerde
+ interface GetObjectRetentionInput extends _subBTEov {
   /**
    * The bucket name containing the object whose retention settings you want to
    * retrieve.
@@ -28356,8 +28313,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subdWwqE = noSmithyDocumentSerde
- interface GetObjectRetentionOutput extends _subdWwqE {
+ type _subFNcgn = noSmithyDocumentSerde
+ interface GetObjectRetentionOutput extends _subFNcgn {
   /**
    * The container element for an object's retention settings.
    */
@@ -28367,8 +28324,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subMZCpC = noSmithyDocumentSerde
- interface GetObjectTaggingInput extends _subMZCpC {
+ type _subxvHff = noSmithyDocumentSerde
+ interface GetObjectTaggingInput extends _subxvHff {
   /**
    * The bucket name containing the object for which to get the tagging information.
    * 
@@ -28425,8 +28382,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subZcjmo = noSmithyDocumentSerde
- interface GetObjectTaggingOutput extends _subZcjmo {
+ type _subuqYCt = noSmithyDocumentSerde
+ interface GetObjectTaggingOutput extends _subuqYCt {
   /**
    * Contains the tag set.
    * 
@@ -28442,8 +28399,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subpvHHG = noSmithyDocumentSerde
- interface GetObjectTorrentInput extends _subpvHHG {
+ type _subkOzNf = noSmithyDocumentSerde
+ interface GetObjectTorrentInput extends _subkOzNf {
   /**
    * The name of the bucket containing the object for which to get the torrent files.
    * 
@@ -28476,8 +28433,8 @@ namespace s3 {
    */
   requestPayer: types.RequestPayer
  }
- type _subDeCIU = noSmithyDocumentSerde
- interface GetObjectTorrentOutput extends _subDeCIU {
+ type _subkuRvp = noSmithyDocumentSerde
+ interface GetObjectTorrentOutput extends _subkuRvp {
   /**
    * A Bencoded dictionary as defined by the BitTorrent specification
    */
@@ -28494,8 +28451,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subwDirT = noSmithyDocumentSerde
- interface GetPublicAccessBlockInput extends _subwDirT {
+ type _subRuXex = noSmithyDocumentSerde
+ interface GetPublicAccessBlockInput extends _subRuXex {
   /**
    * The name of the Amazon S3 bucket whose PublicAccessBlock configuration you want
    * to retrieve.
@@ -28510,8 +28467,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subLleHs = noSmithyDocumentSerde
- interface GetPublicAccessBlockOutput extends _subLleHs {
+ type _subGopXJ = noSmithyDocumentSerde
+ interface GetPublicAccessBlockOutput extends _subGopXJ {
   /**
    * The PublicAccessBlock configuration currently in effect for this Amazon S3
    * bucket.
@@ -28526,8 +28483,8 @@ namespace s3 {
  import smithytime = time
  // @ts-ignore
  import smithywaiter = waiter
- type _subTJcNB = noSmithyDocumentSerde
- interface HeadBucketInput extends _subTJcNB {
+ type _subBOqiz = noSmithyDocumentSerde
+ interface HeadBucketInput extends _subBOqiz {
   /**
    * The bucket name.
    * 
@@ -28580,8 +28537,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _submwZVR = noSmithyDocumentSerde
- interface HeadBucketOutput extends _submwZVR {
+ type _suboEBLa = noSmithyDocumentSerde
+ interface HeadBucketOutput extends _suboEBLa {
   /**
    * Indicates whether the bucket name used in the request is an access point alias.
    * 
@@ -28612,8 +28569,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subaRmfR = noSmithyDocumentSerde
- interface HeadObjectInput extends _subaRmfR {
+ type _subOUwOk = noSmithyDocumentSerde
+ interface HeadObjectInput extends _subOUwOk {
   /**
    * The name of the bucket that contains the object.
    * 
@@ -28842,8 +28799,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subFwlXE = noSmithyDocumentSerde
- interface HeadObjectOutput extends _subFwlXE {
+ type _subhWMmV = noSmithyDocumentSerde
+ interface HeadObjectOutput extends _subhWMmV {
   /**
    * Indicates that a range of bytes was specified.
    */
@@ -29154,8 +29111,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subdNWQa = noSmithyDocumentSerde
- interface ListBucketAnalyticsConfigurationsInput extends _subdNWQa {
+ type _subgVQvH = noSmithyDocumentSerde
+ interface ListBucketAnalyticsConfigurationsInput extends _subgVQvH {
   /**
    * The name of the bucket from which analytics configurations are retrieved.
    * 
@@ -29174,8 +29131,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subaBiJF = noSmithyDocumentSerde
- interface ListBucketAnalyticsConfigurationsOutput extends _subaBiJF {
+ type _subSyBid = noSmithyDocumentSerde
+ interface ListBucketAnalyticsConfigurationsOutput extends _subSyBid {
   /**
    * The list of analytics configurations for a bucket.
    */
@@ -29202,8 +29159,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subdKGaA = noSmithyDocumentSerde
- interface ListBucketIntelligentTieringConfigurationsInput extends _subdKGaA {
+ type _subKEOAP = noSmithyDocumentSerde
+ interface ListBucketIntelligentTieringConfigurationsInput extends _subKEOAP {
   /**
    * The name of the Amazon S3 bucket whose configuration you want to modify or
    * retrieve.
@@ -29217,8 +29174,8 @@ namespace s3 {
    */
   continuationToken?: string
  }
- type _subnzypp = noSmithyDocumentSerde
- interface ListBucketIntelligentTieringConfigurationsOutput extends _subnzypp {
+ type _subNsryO = noSmithyDocumentSerde
+ interface ListBucketIntelligentTieringConfigurationsOutput extends _subNsryO {
   /**
    * The ContinuationToken that represents a placeholder from where this request
    * should begin.
@@ -29245,8 +29202,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subBEkvG = noSmithyDocumentSerde
- interface ListBucketInventoryConfigurationsInput extends _subBEkvG {
+ type _subJIdrm = noSmithyDocumentSerde
+ interface ListBucketInventoryConfigurationsInput extends _subJIdrm {
   /**
    * The name of the bucket containing the inventory configurations to retrieve.
    * 
@@ -29267,8 +29224,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subNlUiN = noSmithyDocumentSerde
- interface ListBucketInventoryConfigurationsOutput extends _subNlUiN {
+ type _subzajyU = noSmithyDocumentSerde
+ interface ListBucketInventoryConfigurationsOutput extends _subzajyU {
   /**
    * If sent in the request, the marker that is used as a starting point for this
    * inventory configuration list response.
@@ -29295,8 +29252,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subuBMnM = noSmithyDocumentSerde
- interface ListBucketMetricsConfigurationsInput extends _subuBMnM {
+ type _subxcLXa = noSmithyDocumentSerde
+ interface ListBucketMetricsConfigurationsInput extends _subxcLXa {
   /**
    * The name of the bucket containing the metrics configurations to retrieve.
    * 
@@ -29317,8 +29274,8 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subWAvdQ = noSmithyDocumentSerde
- interface ListBucketMetricsConfigurationsOutput extends _subWAvdQ {
+ type _subMszAf = noSmithyDocumentSerde
+ interface ListBucketMetricsConfigurationsOutput extends _subMszAf {
   /**
    * The marker that is used as a starting point for this metrics configuration list
    * response. This value is present if it was sent in the request.
@@ -29346,8 +29303,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subDHJJR = noSmithyDocumentSerde
- interface ListBucketsInput extends _subDHJJR {
+ type _subTphwv = noSmithyDocumentSerde
+ interface ListBucketsInput extends _subTphwv {
   /**
    * ContinuationToken indicates to Amazon S3 that the list is being continued on
    * this bucket with a token. ContinuationToken is obfuscated and is not a real
@@ -29365,8 +29322,8 @@ namespace s3 {
    */
   maxBuckets?: number
  }
- type _subZmNtO = noSmithyDocumentSerde
- interface ListBucketsOutput extends _subZmNtO {
+ type _subHwIvk = noSmithyDocumentSerde
+ interface ListBucketsOutput extends _subHwIvk {
   /**
    * The list of buckets owned by the requester.
    */
@@ -29387,8 +29344,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subymSpX = noSmithyDocumentSerde
- interface ListDirectoryBucketsInput extends _subymSpX {
+ type _subQszFC = noSmithyDocumentSerde
+ interface ListDirectoryBucketsInput extends _subQszFC {
   /**
    * ContinuationToken indicates to Amazon S3 that the list is being continued on
    * buckets in this account with a token. ContinuationToken is obfuscated and is
@@ -29403,8 +29360,8 @@ namespace s3 {
    */
   maxDirectoryBuckets?: number
  }
- type _subHVtMn = noSmithyDocumentSerde
- interface ListDirectoryBucketsOutput extends _subHVtMn {
+ type _subPQBWD = noSmithyDocumentSerde
+ interface ListDirectoryBucketsOutput extends _subPQBWD {
   /**
    * The list of buckets owned by the requester.
    */
@@ -29419,8 +29376,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subZXicn = noSmithyDocumentSerde
- interface ListMultipartUploadsInput extends _subZXicn {
+ type _subsUpLq = noSmithyDocumentSerde
+ interface ListMultipartUploadsInput extends _subsUpLq {
   /**
    * The name of the bucket to which the multipart upload was initiated.
    * 
@@ -29566,8 +29523,8 @@ namespace s3 {
    */
   uploadIdMarker?: string
  }
- type _subopNEP = noSmithyDocumentSerde
- interface ListMultipartUploadsOutput extends _subopNEP {
+ type _subESnvi = noSmithyDocumentSerde
+ interface ListMultipartUploadsOutput extends _subESnvi {
   /**
    * The name of the bucket to which the multipart upload was initiated. Does not
    * return the access point ARN or access point alias if used.
@@ -29662,8 +29619,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subYLZDQ = noSmithyDocumentSerde
- interface ListObjectVersionsInput extends _subYLZDQ {
+ type _submRLUM = noSmithyDocumentSerde
+ interface ListObjectVersionsInput extends _submRLUM {
   /**
    * The bucket name that contains the objects.
    * 
@@ -29744,8 +29701,8 @@ namespace s3 {
    */
   versionIdMarker?: string
  }
- type _subHQVKY = noSmithyDocumentSerde
- interface ListObjectVersionsOutput extends _subHQVKY {
+ type _subIJpmm = noSmithyDocumentSerde
+ interface ListObjectVersionsOutput extends _subIJpmm {
   /**
    * All of the keys rolled up into a common prefix count as a single return when
    * calculating the number of returns.
@@ -29830,8 +29787,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subpZPkc = noSmithyDocumentSerde
- interface ListObjectsInput extends _subpZPkc {
+ type _subzfSDR = noSmithyDocumentSerde
+ interface ListObjectsInput extends _subzfSDR {
   /**
    * The name of the bucket containing the objects.
    * 
@@ -29924,8 +29881,8 @@ namespace s3 {
    */
   requestPayer: types.RequestPayer
  }
- type _subOSJeO = noSmithyDocumentSerde
- interface ListObjectsOutput extends _subOSJeO {
+ type _subiNexF = noSmithyDocumentSerde
+ interface ListObjectsOutput extends _subiNexF {
   /**
    * All of the keys (up to 1,000) rolled up in a common prefix count as a single
    * return when calculating the number of returns.
@@ -30019,8 +29976,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subYNZGG = noSmithyDocumentSerde
- interface ListObjectsV2Input extends _subYNZGG {
+ type _subjIzNE = noSmithyDocumentSerde
+ interface ListObjectsV2Input extends _subjIzNE {
   /**
    *  Directory buckets - When you use this operation with a directory bucket, you
    * must use virtual-hosted-style requests in the format
@@ -30146,8 +30103,8 @@ namespace s3 {
    */
   startAfter?: string
  }
- type _subMMqpa = noSmithyDocumentSerde
- interface ListObjectsV2Output extends _subMMqpa {
+ type _subwzDqH = noSmithyDocumentSerde
+ interface ListObjectsV2Output extends _subwzDqH {
   /**
    * All of the keys (up to 1,000) that share the same prefix are grouped together.
    * When counting the total numbers of returns by this API operation, this group of
@@ -30264,8 +30221,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subLIeSp = noSmithyDocumentSerde
- interface ListPartsInput extends _subLIeSp {
+ type _subyXYCR = noSmithyDocumentSerde
+ interface ListPartsInput extends _subyXYCR {
   /**
    * The name of the bucket to which the parts are being uploaded.
    * 
@@ -30375,8 +30332,8 @@ namespace s3 {
    */
   sseCustomerKeyMD5?: string
  }
- type _subVoJFh = noSmithyDocumentSerde
- interface ListPartsOutput extends _subVoJFh {
+ type _subflroF = noSmithyDocumentSerde
+ interface ListPartsOutput extends _subflroF {
   /**
    * If the bucket has a lifecycle rule configured with an action to abort
    * incomplete multipart uploads and the prefix in the lifecycle rule matches the
@@ -30478,8 +30435,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subdvmub = noSmithyDocumentSerde
- interface PutBucketAccelerateConfigurationInput extends _subdvmub {
+ type _subtigAb = noSmithyDocumentSerde
+ interface PutBucketAccelerateConfigurationInput extends _subtigAb {
   /**
    * Container for setting the transfer acceleration state.
    * 
@@ -30513,15 +30470,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subIvJxE = noSmithyDocumentSerde
- interface PutBucketAccelerateConfigurationOutput extends _subIvJxE {
+ type _subQbWOK = noSmithyDocumentSerde
+ interface PutBucketAccelerateConfigurationOutput extends _subQbWOK {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subYpAFl = noSmithyDocumentSerde
- interface PutBucketAclInput extends _subYpAFl {
+ type _subSjgdG = noSmithyDocumentSerde
+ interface PutBucketAclInput extends _subSjgdG {
   /**
    * The bucket to which to apply the ACL.
    * 
@@ -30592,15 +30549,15 @@ namespace s3 {
    */
   grantWriteACP?: string
  }
- type _sublhrtH = noSmithyDocumentSerde
- interface PutBucketAclOutput extends _sublhrtH {
+ type _subcbxne = noSmithyDocumentSerde
+ interface PutBucketAclOutput extends _subcbxne {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subZSIfw = noSmithyDocumentSerde
- interface PutBucketAnalyticsConfigurationInput extends _subZSIfw {
+ type _subsMlet = noSmithyDocumentSerde
+ interface PutBucketAnalyticsConfigurationInput extends _subsMlet {
   /**
    * The configuration and any analyses for the analytics filter.
    * 
@@ -30626,15 +30583,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subRNcDs = noSmithyDocumentSerde
- interface PutBucketAnalyticsConfigurationOutput extends _subRNcDs {
+ type _subHOpFQ = noSmithyDocumentSerde
+ interface PutBucketAnalyticsConfigurationOutput extends _subHOpFQ {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subMrBSr = noSmithyDocumentSerde
- interface PutBucketCorsInput extends _subMrBSr {
+ type _subSWBAD = noSmithyDocumentSerde
+ interface PutBucketCorsInput extends _subSWBAD {
   /**
    * Specifies the bucket impacted by the cors configuration.
    * 
@@ -30682,15 +30639,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subGcPQY = noSmithyDocumentSerde
- interface PutBucketCorsOutput extends _subGcPQY {
+ type _subjWSXi = noSmithyDocumentSerde
+ interface PutBucketCorsOutput extends _subjWSXi {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subWpkys = noSmithyDocumentSerde
- interface PutBucketEncryptionInput extends _subWpkys {
+ type _subZrxRN = noSmithyDocumentSerde
+ interface PutBucketEncryptionInput extends _subZrxRN {
   /**
    * Specifies default encryption for a bucket using server-side encryption with
    * different key options.
@@ -30753,15 +30710,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subQzgEL = noSmithyDocumentSerde
- interface PutBucketEncryptionOutput extends _subQzgEL {
+ type _submGsGB = noSmithyDocumentSerde
+ interface PutBucketEncryptionOutput extends _submGsGB {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subusqpL = noSmithyDocumentSerde
- interface PutBucketIntelligentTieringConfigurationInput extends _subusqpL {
+ type _subJmtZy = noSmithyDocumentSerde
+ interface PutBucketIntelligentTieringConfigurationInput extends _subJmtZy {
   /**
    * The name of the Amazon S3 bucket whose configuration you want to modify or
    * retrieve.
@@ -30782,15 +30739,15 @@ namespace s3 {
    */
   intelligentTieringConfiguration?: types.IntelligentTieringConfiguration
  }
- type _subCYkED = noSmithyDocumentSerde
- interface PutBucketIntelligentTieringConfigurationOutput extends _subCYkED {
+ type _subzegRn = noSmithyDocumentSerde
+ interface PutBucketIntelligentTieringConfigurationOutput extends _subzegRn {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subEDQDU = noSmithyDocumentSerde
- interface PutBucketInventoryConfigurationInput extends _subEDQDU {
+ type _subFOyUH = noSmithyDocumentSerde
+ interface PutBucketInventoryConfigurationInput extends _subFOyUH {
   /**
    * The name of the bucket where the inventory configuration will be stored.
    * 
@@ -30816,15 +30773,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subrBuEk = noSmithyDocumentSerde
- interface PutBucketInventoryConfigurationOutput extends _subrBuEk {
+ type _subFUOFd = noSmithyDocumentSerde
+ interface PutBucketInventoryConfigurationOutput extends _subFUOFd {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subNvNOa = noSmithyDocumentSerde
- interface PutBucketLifecycleConfigurationInput extends _subNvNOa {
+ type _subILaTt = noSmithyDocumentSerde
+ interface PutBucketLifecycleConfigurationInput extends _subILaTt {
   /**
    * The name of the bucket for which to set the configuration.
    * 
@@ -30875,8 +30832,8 @@ namespace s3 {
    */
   transitionDefaultMinimumObjectSize: types.TransitionDefaultMinimumObjectSize
  }
- type _subGWwQT = noSmithyDocumentSerde
- interface PutBucketLifecycleConfigurationOutput extends _subGWwQT {
+ type _subwdllN = noSmithyDocumentSerde
+ interface PutBucketLifecycleConfigurationOutput extends _subwdllN {
   /**
    * Indicates which default minimum object size behavior is applied to the
    * lifecycle configuration.
@@ -30901,8 +30858,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subuRdDU = noSmithyDocumentSerde
- interface PutBucketLoggingInput extends _subuRdDU {
+ type _subMirfx = noSmithyDocumentSerde
+ interface PutBucketLoggingInput extends _subMirfx {
   /**
    * The name of the bucket for which to set the logging parameters.
    * 
@@ -30943,15 +30900,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subVqzPz = noSmithyDocumentSerde
- interface PutBucketLoggingOutput extends _subVqzPz {
+ type _subIGUPl = noSmithyDocumentSerde
+ interface PutBucketLoggingOutput extends _subIGUPl {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subAuGIi = noSmithyDocumentSerde
- interface PutBucketMetricsConfigurationInput extends _subAuGIi {
+ type _subqnExZ = noSmithyDocumentSerde
+ interface PutBucketMetricsConfigurationInput extends _subqnExZ {
   /**
    * The name of the bucket for which the metrics configuration is set.
    * 
@@ -30978,15 +30935,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subZZnAv = noSmithyDocumentSerde
- interface PutBucketMetricsConfigurationOutput extends _subZZnAv {
+ type _subkJTeS = noSmithyDocumentSerde
+ interface PutBucketMetricsConfigurationOutput extends _subkJTeS {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subVChPt = noSmithyDocumentSerde
- interface PutBucketNotificationConfigurationInput extends _subVChPt {
+ type _subZxDVa = noSmithyDocumentSerde
+ interface PutBucketNotificationConfigurationInput extends _subZxDVa {
   /**
    * The name of the bucket.
    * 
@@ -31012,15 +30969,15 @@ namespace s3 {
    */
   skipDestinationValidation?: boolean
  }
- type _subzhWTS = noSmithyDocumentSerde
- interface PutBucketNotificationConfigurationOutput extends _subzhWTS {
+ type _subyIqiK = noSmithyDocumentSerde
+ interface PutBucketNotificationConfigurationOutput extends _subyIqiK {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subUkynR = noSmithyDocumentSerde
- interface PutBucketOwnershipControlsInput extends _subUkynR {
+ type _subKxghv = noSmithyDocumentSerde
+ interface PutBucketOwnershipControlsInput extends _subKxghv {
   /**
    * The name of the Amazon S3 bucket whose OwnershipControls you want to set.
    * 
@@ -31048,15 +31005,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subgncqn = noSmithyDocumentSerde
- interface PutBucketOwnershipControlsOutput extends _subgncqn {
+ type _subNDidY = noSmithyDocumentSerde
+ interface PutBucketOwnershipControlsOutput extends _subNDidY {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subfjRvj = noSmithyDocumentSerde
- interface PutBucketPolicyInput extends _subfjRvj {
+ type _subkSYiw = noSmithyDocumentSerde
+ interface PutBucketPolicyInput extends _subkSYiw {
   /**
    * The name of the bucket.
    * 
@@ -31144,15 +31101,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subJNMQZ = noSmithyDocumentSerde
- interface PutBucketPolicyOutput extends _subJNMQZ {
+ type _subiLJek = noSmithyDocumentSerde
+ interface PutBucketPolicyOutput extends _subiLJek {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subhBUWh = noSmithyDocumentSerde
- interface PutBucketReplicationInput extends _subhBUWh {
+ type _subOPvAT = noSmithyDocumentSerde
+ interface PutBucketReplicationInput extends _subOPvAT {
   /**
    * The name of the bucket
    * 
@@ -31202,15 +31159,15 @@ namespace s3 {
    */
   token?: string
  }
- type _subhwzAr = noSmithyDocumentSerde
- interface PutBucketReplicationOutput extends _subhwzAr {
+ type _subxOphO = noSmithyDocumentSerde
+ interface PutBucketReplicationOutput extends _subxOphO {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subyrzSF = noSmithyDocumentSerde
- interface PutBucketRequestPaymentInput extends _subyrzSF {
+ type _subGtezW = noSmithyDocumentSerde
+ interface PutBucketRequestPaymentInput extends _subGtezW {
   /**
    * The bucket name.
    * 
@@ -31255,15 +31212,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _sublqlWX = noSmithyDocumentSerde
- interface PutBucketRequestPaymentOutput extends _sublqlWX {
+ type _subgDjyR = noSmithyDocumentSerde
+ interface PutBucketRequestPaymentOutput extends _subgDjyR {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subsIsNs = noSmithyDocumentSerde
- interface PutBucketTaggingInput extends _subsIsNs {
+ type _subyNhEL = noSmithyDocumentSerde
+ interface PutBucketTaggingInput extends _subyNhEL {
   /**
    * The bucket name.
    * 
@@ -31308,15 +31265,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subJklpP = noSmithyDocumentSerde
- interface PutBucketTaggingOutput extends _subJklpP {
+ type _subgDkcm = noSmithyDocumentSerde
+ interface PutBucketTaggingOutput extends _subgDkcm {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subZTOJl = noSmithyDocumentSerde
- interface PutBucketVersioningInput extends _subZTOJl {
+ type _subLQukt = noSmithyDocumentSerde
+ interface PutBucketVersioningInput extends _subLQukt {
   /**
    * The bucket name.
    * 
@@ -31366,15 +31323,15 @@ namespace s3 {
    */
   mfa?: string
  }
- type _subGTuLM = noSmithyDocumentSerde
- interface PutBucketVersioningOutput extends _subGTuLM {
+ type _subpbotJ = noSmithyDocumentSerde
+ interface PutBucketVersioningOutput extends _subpbotJ {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subnRJwE = noSmithyDocumentSerde
- interface PutBucketWebsiteInput extends _subnRJwE {
+ type _subNROnV = noSmithyDocumentSerde
+ interface PutBucketWebsiteInput extends _subNROnV {
   /**
    * The bucket name.
    * 
@@ -31419,15 +31376,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _submkdXl = noSmithyDocumentSerde
- interface PutBucketWebsiteOutput extends _submkdXl {
+ type _subVBInS = noSmithyDocumentSerde
+ interface PutBucketWebsiteOutput extends _subVBInS {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subeJRpI = noSmithyDocumentSerde
- interface PutObjectInput extends _subeJRpI {
+ type _subIjPul = noSmithyDocumentSerde
+ interface PutObjectInput extends _subIjPul {
   /**
    * The bucket name to which the PUT action was initiated.
    * 
@@ -31944,8 +31901,8 @@ namespace s3 {
    */
   websiteRedirectLocation?: string
  }
- type _subPlEPr = noSmithyDocumentSerde
- interface PutObjectOutput extends _subPlEPr {
+ type _subjaEwo = noSmithyDocumentSerde
+ interface PutObjectOutput extends _subjaEwo {
   /**
    * Indicates whether the uploaded object uses an S3 Bucket Key for server-side
    * encryption with Key Management Service (KMS) keys (SSE-KMS).
@@ -32083,8 +32040,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subGFZDA = noSmithyDocumentSerde
- interface PutObjectAclInput extends _subGFZDA {
+ type _subVpPqA = noSmithyDocumentSerde
+ interface PutObjectAclInput extends _subVpPqA {
   /**
    * The bucket name that contains the object to which you want to attach the ACL.
    * 
@@ -32210,8 +32167,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subhYLJz = noSmithyDocumentSerde
- interface PutObjectAclOutput extends _subhYLJz {
+ type _subVxRKD = noSmithyDocumentSerde
+ interface PutObjectAclOutput extends _subVxRKD {
   /**
    * If present, indicates that the requester was successfully charged for the
    * request.
@@ -32224,8 +32181,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subyfpPe = noSmithyDocumentSerde
- interface PutObjectLegalHoldInput extends _subyfpPe {
+ type _subbvBPU = noSmithyDocumentSerde
+ interface PutObjectLegalHoldInput extends _subbvBPU {
   /**
    * The bucket name containing the object that you want to place a legal hold on.
    * 
@@ -32299,8 +32256,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subPWMsH = noSmithyDocumentSerde
- interface PutObjectLegalHoldOutput extends _subPWMsH {
+ type _subDzyOS = noSmithyDocumentSerde
+ interface PutObjectLegalHoldOutput extends _subDzyOS {
   /**
    * If present, indicates that the requester was successfully charged for the
    * request.
@@ -32313,8 +32270,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subpFViB = noSmithyDocumentSerde
- interface PutObjectLockConfigurationInput extends _subpFViB {
+ type _subWezci = noSmithyDocumentSerde
+ interface PutObjectLockConfigurationInput extends _subWezci {
   /**
    * The bucket whose Object Lock configuration you want to create or replace.
    * 
@@ -32370,8 +32327,8 @@ namespace s3 {
    */
   token?: string
  }
- type _subCfBIC = noSmithyDocumentSerde
- interface PutObjectLockConfigurationOutput extends _subCfBIC {
+ type _subarufO = noSmithyDocumentSerde
+ interface PutObjectLockConfigurationOutput extends _subarufO {
   /**
    * If present, indicates that the requester was successfully charged for the
    * request.
@@ -32384,8 +32341,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subQDqpO = noSmithyDocumentSerde
- interface PutObjectRetentionInput extends _subQDqpO {
+ type _subGRszz = noSmithyDocumentSerde
+ interface PutObjectRetentionInput extends _subGRszz {
   /**
    * The bucket name that contains the object you want to apply this Object
    * Retention configuration to.
@@ -32465,8 +32422,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subditGI = noSmithyDocumentSerde
- interface PutObjectRetentionOutput extends _subditGI {
+ type _subrNawZ = noSmithyDocumentSerde
+ interface PutObjectRetentionOutput extends _subrNawZ {
   /**
    * If present, indicates that the requester was successfully charged for the
    * request.
@@ -32479,8 +32436,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _suboiOeh = noSmithyDocumentSerde
- interface PutObjectTaggingInput extends _suboiOeh {
+ type _subMqnHb = noSmithyDocumentSerde
+ interface PutObjectTaggingInput extends _subMqnHb {
   /**
    * The bucket name containing the object.
    * 
@@ -32564,8 +32521,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subuVSga = noSmithyDocumentSerde
- interface PutObjectTaggingOutput extends _subuVSga {
+ type _subTwuto = noSmithyDocumentSerde
+ interface PutObjectTaggingOutput extends _subTwuto {
   /**
    * The versionId of the object the tag-set was added to.
    */
@@ -32575,8 +32532,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subwMCvj = noSmithyDocumentSerde
- interface PutPublicAccessBlockInput extends _subwMCvj {
+ type _subkucAm = noSmithyDocumentSerde
+ interface PutPublicAccessBlockInput extends _subkucAm {
   /**
    * The name of the Amazon S3 bucket whose PublicAccessBlock configuration you want
    * to set.
@@ -32623,15 +32580,15 @@ namespace s3 {
    */
   expectedBucketOwner?: string
  }
- type _subKeqew = noSmithyDocumentSerde
- interface PutPublicAccessBlockOutput extends _subKeqew {
+ type _subTHBGk = noSmithyDocumentSerde
+ interface PutPublicAccessBlockOutput extends _subTHBGk {
   /**
    * Metadata pertaining to the operation's result.
    */
   resultMetadata: middleware.Metadata
  }
- type _subkObCn = noSmithyDocumentSerde
- interface RestoreObjectInput extends _subkObCn {
+ type _subBLDTT = noSmithyDocumentSerde
+ interface RestoreObjectInput extends _subBLDTT {
   /**
    * The bucket name containing the object to restore.
    * 
@@ -32706,8 +32663,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subHBstk = noSmithyDocumentSerde
- interface RestoreObjectOutput extends _subHBstk {
+ type _submerZr = noSmithyDocumentSerde
+ interface RestoreObjectOutput extends _submerZr {
   /**
    * If present, indicates that the requester was successfully charged for the
    * request.
@@ -32741,8 +32698,8 @@ namespace s3 {
   * [Learn more]: http://aws.amazon.com/blogs/storage/how-to-optimize-querying-your-data-in-amazon-s3/
   * [S3Select API Documentation]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectSELECTContent.html
   */
- type _subjzKEZ = noSmithyDocumentSerde
- interface SelectObjectContentInput extends _subjzKEZ {
+ type _subSsfuY = noSmithyDocumentSerde
+ interface SelectObjectContentInput extends _subSsfuY {
   /**
    * The S3 bucket.
    * 
@@ -32832,8 +32789,8 @@ namespace s3 {
    */
   scanRange?: types.ScanRange
  }
- type _subGliMM = noSmithyDocumentSerde
- interface SelectObjectContentOutput extends _subGliMM {
+ type _subWVucK = noSmithyDocumentSerde
+ interface SelectObjectContentOutput extends _subWVucK {
   /**
    * Metadata pertaining to the operation's result.
    */
@@ -32845,8 +32802,8 @@ namespace s3 {
    */
   getStream(): (SelectObjectContentEventStream)
  }
- type _subXWhvG = noSmithyDocumentSerde
- interface UploadPartInput extends _subXWhvG {
+ type _subFirAv = noSmithyDocumentSerde
+ interface UploadPartInput extends _subFirAv {
   /**
    * The name of the bucket to which the multipart upload was initiated.
    * 
@@ -33019,8 +32976,8 @@ namespace s3 {
    */
   sseCustomerKeyMD5?: string
  }
- type _subuZGom = noSmithyDocumentSerde
- interface UploadPartOutput extends _subuZGom {
+ type _subcuUYr = noSmithyDocumentSerde
+ interface UploadPartOutput extends _subcuUYr {
   /**
    * Indicates whether the multipart upload uses an S3 Bucket Key for server-side
    * encryption with Key Management Service (KMS) keys (SSE-KMS).
@@ -33115,8 +33072,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subIrsiu = noSmithyDocumentSerde
- interface UploadPartCopyInput extends _subIrsiu {
+ type _subdnmpc = noSmithyDocumentSerde
+ interface UploadPartCopyInput extends _subdnmpc {
   /**
    * The bucket name.
    * 
@@ -33377,8 +33334,8 @@ namespace s3 {
    */
   sseCustomerKeyMD5?: string
  }
- type _subCjJBx = noSmithyDocumentSerde
- interface UploadPartCopyOutput extends _subCjJBx {
+ type _subCujVN = noSmithyDocumentSerde
+ interface UploadPartCopyOutput extends _subCujVN {
   /**
    * Indicates whether the multipart upload uses an S3 Bucket Key for server-side
    * encryption with Key Management Service (KMS) keys (SSE-KMS).
@@ -33433,8 +33390,8 @@ namespace s3 {
    */
   resultMetadata: middleware.Metadata
  }
- type _subPezLW = noSmithyDocumentSerde
- interface WriteGetObjectResponseInput extends _subPezLW {
+ type _subzKJfa = noSmithyDocumentSerde
+ interface WriteGetObjectResponseInput extends _subzKJfa {
   /**
    * Route prefix to the HTTP URL generated.
    * 
@@ -33716,8 +33673,8 @@ namespace s3 {
    */
   versionId?: string
  }
- type _subqFpGs = noSmithyDocumentSerde
- interface WriteGetObjectResponseOutput extends _subqFpGs {
+ type _subVwCeO = noSmithyDocumentSerde
+ interface WriteGetObjectResponseOutput extends _subVwCeO {
   /**
    * Metadata pertaining to the operation's result.
    */
@@ -33912,840 +33869,540 @@ namespace s3 {
 }
 
 /**
- * Package schema implements custom Schema and SchemaField datatypes
- * for handling the Collection schema definitions.
+ * Package gcerr provides an error type for Go CDK APIs.
  */
-namespace schema {
- // @ts-ignore
- import validation = ozzo_validation
+namespace gcerr {
+ interface ErrorCode {
+  string(): string
+ }
  /**
-  * SchemaField defines a single schema field structure.
+  * An ErrorCode describes the error's category.
   */
- interface SchemaField {
-  system: boolean
-  id: string
-  name: string
-  type: string
-  required: boolean
-  /**
-   * Presentable indicates whether the field is suitable for
-   * visualization purposes (eg. in the Admin UI relation views).
-   */
-  presentable: boolean
-  /**
-   * Deprecated: This field is no-op and will be removed in future versions.
-   * Please use the collection.Indexes field to define a unique constraint.
-   */
-  unique: boolean
-  options: any
+ interface ErrorCode extends Number{}
+}
+
+/**
+ * Package blob provides an easy and portable way to interact with blobs
+ * within a storage location. Subpackages contain driver implementations of
+ * blob for supported services.
+ * 
+ * See https://gocloud.dev/howto/blob/ for a detailed how-to guide.
+ * 
+ * *blob.Bucket implements io/fs.FS and io/fs.SubFS, so it can be used with
+ * functions in that package.
+ * 
+ * # Errors
+ * 
+ * The errors returned from this package can be inspected in several ways:
+ * 
+ * The Code function from gocloud.dev/gcerrors will return an error code, also
+ * defined in that package, when invoked on an error.
+ * 
+ * The Bucket.ErrorAs method can retrieve the driver error underlying the returned
+ * error.
+ * 
+ * # OpenCensus Integration
+ * 
+ * OpenCensus supports tracing and metric collection for multiple languages and
+ * backend providers. See https://opencensus.io.
+ * 
+ * This API collects OpenCensus traces and metrics for the following methods:
+ * ```
+ *   - Attributes
+ *   - Copy
+ *   - Delete
+ *   - ListPage
+ *   - NewRangeReader, from creation until the call to Close. (NewReader and ReadAll
+ *     are included because they call NewRangeReader.)
+ *   - NewWriter, from creation until the call to Close.
+ * ```
+ * 
+ * All trace and metric names begin with the package import path.
+ * The traces add the method name.
+ * For example, "gocloud.dev/blob/Attributes".
+ * The metrics are "completed_calls", a count of completed method calls by driver,
+ * method and status (error code); and "latency", a distribution of method latency
+ * by driver and method.
+ * For example, "gocloud.dev/blob/latency".
+ * 
+ * It also collects the following metrics:
+ * ```
+ *   - gocloud.dev/blob/bytes_read: the total number of bytes read, by driver.
+ *   - gocloud.dev/blob/bytes_written: the total number of bytes written, by driver.
+ * ```
+ * 
+ * To enable trace collection in your application, see "Configure Exporter" at
+ * https://opencensus.io/quickstart/go/tracing.
+ * To enable metric collection in your application, see "Exporting stats" at
+ * https://opencensus.io/quickstart/go/metrics.
+ */
+namespace blob {
+ /**
+  * Writer writes bytes to a blob.
+  * 
+  * It implements io.WriteCloser (https://golang.org/pkg/io/#Closer), and must be
+  * closed after all writes are done.
+  */
+ interface Writer {
  }
- interface SchemaField {
+ interface Writer {
   /**
-   * ColDefinition returns the field db column type definition as string.
+   * Write implements the io.Writer interface (https://golang.org/pkg/io/#Writer).
+   * 
+   * Writes may happen asynchronously, so the returned error can be nil
+   * even if the actual write eventually fails. The write is only guaranteed to
+   * have succeeded if Close returns no error.
    */
-  colDefinition(): string
+  write(p: string|Array<number>): number
  }
- interface SchemaField {
+ interface Writer {
   /**
-   * String serializes and returns the current field as string.
+   * Close closes the blob writer. The write operation is not guaranteed to have succeeded until
+   * Close returns with no error.
+   * Close may return an error if the context provided to create the Writer is
+   * canceled or reaches its deadline.
+   */
+  close(): void
+ }
+ interface Writer {
+  /**
+   * ReadFrom reads from r and writes to w until EOF or error.
+   * The return value is the number of bytes read from r.
+   * 
+   * It implements the io.ReaderFrom interface.
+   */
+  readFrom(r: io.Reader): number
+ }
+ /**
+  * ListOptions sets options for listing blobs via Bucket.List.
+  */
+ interface ListOptions {
+  /**
+   * Prefix indicates that only blobs with a key starting with this prefix
+   * should be returned.
+   */
+  prefix: string
+  /**
+   * Delimiter sets the delimiter used to define a hierarchical namespace,
+   * like a filesystem with "directories". It is highly recommended that you
+   * use "" or "/" as the Delimiter. Other values should work through this API,
+   * but service UIs generally assume "/".
+   * 
+   * An empty delimiter means that the bucket is treated as a single flat
+   * namespace.
+   * 
+   * A non-empty delimiter means that any result with the delimiter in its key
+   * after Prefix is stripped will be returned with ListObject.IsDir = true,
+   * ListObject.Key truncated after the delimiter, and zero values for other
+   * ListObject fields. These results represent "directories". Multiple results
+   * in a "directory" are returned as a single result.
+   */
+  delimiter: string
+  /**
+   * BeforeList is a callback that will be called before each call to the
+   * the underlying service's list functionality.
+   * asFunc converts its argument to driver-specific types.
+   * See https://gocloud.dev/concepts/as/ for background information.
+   */
+  beforeList: (asFunc: (_arg0: {
+  }) => boolean) => void
+ }
+ /**
+  * ListIterator iterates over List results.
+  */
+ interface ListIterator {
+ }
+ interface ListIterator {
+  /**
+   * Next returns a *ListObject for the next blob. It returns (nil, io.EOF) if
+   * there are no more.
+   */
+  next(ctx: context.Context): (ListObject)
+ }
+ /**
+  * SignedURLOptions sets options for SignedURL.
+  */
+ interface SignedURLOptions {
+  /**
+   * Expiry sets how long the returned URL is valid for.
+   * Defaults to DefaultSignedURLExpiry.
+   */
+  expiry: time.Duration
+  /**
+   * Method is the HTTP method that can be used on the URL; one of "GET", "PUT",
+   * or "DELETE". Defaults to "GET".
+   */
+  method: string
+  /**
+   * ContentType specifies the Content-Type HTTP header the user agent is
+   * permitted to use in the PUT request. It must match exactly. See
+   * EnforceAbsentContentType for behavior when ContentType is the empty string.
+   * If a bucket does not implement this verification, then it returns an
+   * Unimplemented error.
+   * 
+   * Must be empty for non-PUT requests.
+   */
+  contentType: string
+  /**
+   * If EnforceAbsentContentType is true and ContentType is the empty string,
+   * then PUTing to the signed URL will fail if the Content-Type header is
+   * present. Not all buckets support this: ones that do not will return an
+   * Unimplemented error.
+   * 
+   * If EnforceAbsentContentType is false and ContentType is the empty string,
+   * then PUTing without a Content-Type header will succeed, but it is
+   * implementation-specific whether providing a Content-Type header will fail.
+   * 
+   * Must be false for non-PUT requests.
+   */
+  enforceAbsentContentType: boolean
+  /**
+   * BeforeSign is a callback that will be called before each call to the
+   * the underlying service's sign functionality.
+   * asFunc converts its argument to driver-specific types.
+   * See https://gocloud.dev/concepts/as/ for background information.
+   */
+  beforeSign: (asFunc: (_arg0: {
+  }) => boolean) => void
+ }
+ /**
+  * ReaderOptions sets options for NewReader and NewRangeReader.
+  */
+ interface ReaderOptions {
+  /**
+   * BeforeRead is a callback that will be called before
+   * any data is read (unless NewReader returns an error before then, in which
+   * case it may not be called at all).
+   * 
+   * Calling Seek may reset the underlying reader, and result in BeforeRead
+   * getting called again with a different underlying provider-specific reader..
+   * 
+   * asFunc converts its argument to driver-specific types.
+   * See https://gocloud.dev/concepts/as/ for background information.
+   */
+  beforeRead: (asFunc: (_arg0: {
+  }) => boolean) => void
+ }
+ /**
+  * WriterOptions sets options for NewWriter.
+  */
+ interface WriterOptions {
+  /**
+   * BufferSize changes the default size in bytes of the chunks that
+   * Writer will upload in a single request; larger blobs will be split into
+   * multiple requests.
+   * 
+   * This option may be ignored by some drivers.
+   * 
+   * If 0, the driver will choose a reasonable default.
+   * 
+   * If the Writer is used to do many small writes concurrently, using a
+   * smaller BufferSize may reduce memory usage.
+   */
+  bufferSize: number
+  /**
+   * MaxConcurrency changes the default concurrency for parts of an upload.
+   * 
+   * This option may be ignored by some drivers.
+   * 
+   * If 0, the driver will choose a reasonable default.
+   */
+  maxConcurrency: number
+  /**
+   * CacheControl specifies caching attributes that services may use
+   * when serving the blob.
+   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+   */
+  cacheControl: string
+  /**
+   * ContentDisposition specifies whether the blob content is expected to be
+   * displayed inline or as an attachment.
+   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
+   */
+  contentDisposition: string
+  /**
+   * ContentEncoding specifies the encoding used for the blob's content, if any.
+   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding
+   */
+  contentEncoding: string
+  /**
+   * ContentLanguage specifies the language used in the blob's content, if any.
+   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Language
+   */
+  contentLanguage: string
+  /**
+   * ContentType specifies the MIME type of the blob being written. If not set,
+   * it will be inferred from the content using the algorithm described at
+   * http://mimesniff.spec.whatwg.org/.
+   * Set DisableContentTypeDetection to true to disable the above and force
+   * the ContentType to stay empty.
+   * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+   */
+  contentType: string
+  /**
+   * When true, if ContentType is the empty string, it will stay the empty
+   * string rather than being inferred from the content.
+   * Note that while the blob will be written with an empty string ContentType,
+   * most providers will fill one in during reads, so don't expect an empty
+   * ContentType if you read the blob back.
+   */
+  disableContentTypeDetection: boolean
+  /**
+   * ContentMD5 is used as a message integrity check.
+   * If len(ContentMD5) > 0, the MD5 hash of the bytes written must match
+   * ContentMD5, or Close will return an error without completing the write.
+   * https://tools.ietf.org/html/rfc1864
+   */
+  contentMD5: string|Array<number>
+  /**
+   * Metadata holds key/value strings to be associated with the blob, or nil.
+   * Keys may not be empty, and are lowercased before being written.
+   * Duplicate case-insensitive keys (e.g., "foo" and "FOO") will result in
+   * an error.
+   */
+  metadata: _TygojaDict
+  /**
+   * BeforeWrite is a callback that will be called exactly once, before
+   * any data is written (unless NewWriter returns an error, in which case
+   * it will not be called at all). Note that this is not necessarily during
+   * or after the first Write call, as drivers may buffer bytes before
+   * sending an upload request.
+   * 
+   * asFunc converts its argument to driver-specific types.
+   * See https://gocloud.dev/concepts/as/ for background information.
+   */
+  beforeWrite: (asFunc: (_arg0: {
+  }) => boolean) => void
+ }
+ /**
+  * CopyOptions sets options for Copy.
+  */
+ interface CopyOptions {
+  /**
+   * BeforeCopy is a callback that will be called before the copy is
+   * initiated.
+   * 
+   * asFunc converts its argument to driver-specific types.
+   * See https://gocloud.dev/concepts/as/ for background information.
+   */
+  beforeCopy: (asFunc: (_arg0: {
+  }) => boolean) => void
+ }
+}
+
+/**
+ * Package sql provides a generic interface around SQL (or SQL-like)
+ * databases.
+ * 
+ * The sql package must be used in conjunction with a database driver.
+ * See https://golang.org/s/sqldrivers for a list of drivers.
+ * 
+ * Drivers that do not support context cancellation will not return until
+ * after the query is completed.
+ * 
+ * For usage examples, see the wiki page at
+ * https://golang.org/s/sqlwiki.
+ */
+namespace sql {
+ /**
+  * IsolationLevel is the transaction isolation level used in [TxOptions].
+  */
+ interface IsolationLevel extends Number{}
+ interface IsolationLevel {
+  /**
+   * String returns the name of the transaction isolation level.
    */
   string(): string
  }
- interface SchemaField {
-  /**
-   * MarshalJSON implements the [json.Marshaler] interface.
-   */
-  marshalJSON(): string|Array<number>
- }
- interface SchemaField {
-  /**
-   * UnmarshalJSON implements the [json.Unmarshaler] interface.
-   * 
-   * The schema field options are auto initialized on success.
-   */
-  unmarshalJSON(data: string|Array<number>): void
- }
- interface SchemaField {
-  /**
-   * Validate makes `SchemaField` validatable by implementing [validation.Validatable] interface.
-   */
-  validate(): void
- }
- interface SchemaField {
-  /**
-   * InitOptions initializes the current field options based on its type.
-   * 
-   * Returns error on unknown field type.
-   */
-  initOptions(): void
- }
- interface SchemaField {
-  /**
-   * PrepareValue returns normalized and properly formatted field value.
-   */
-  prepareValue(value: any): any
- }
- interface SchemaField {
-  /**
-   * PrepareValueWithModifier returns normalized and properly formatted field value
-   * by "merging" baseValue with the modifierValue based on the specified modifier (+ or -).
-   */
-  prepareValueWithModifier(baseValue: any, modifier: string, modifierValue: any): any
- }
-}
-
-/**
- * Package models implements all PocketBase DB models and DTOs.
- */
-namespace models {
  /**
-  * Model defines an interface with common methods that all db models should have.
+  * DBStats contains database statistics.
   */
- interface Model {
-  [key:string]: any;
-  tableName(): string
-  isNew(): boolean
-  markAsNew(): void
-  markAsNotNew(): void
-  hasId(): boolean
-  getId(): string
-  setId(id: string): void
-  getCreated(): types.DateTime
-  getUpdated(): types.DateTime
-  refreshId(): void
-  refreshCreated(): void
-  refreshUpdated(): void
+ interface DBStats {
+  maxOpenConnections: number // Maximum number of open connections to the database.
+  /**
+   * Pool Status
+   */
+  openConnections: number // The number of established connections both in use and idle.
+  inUse: number // The number of connections currently in use.
+  idle: number // The number of idle connections.
+  /**
+   * Counters
+   */
+  waitCount: number // The total number of connections waited for.
+  waitDuration: time.Duration // The total time blocked waiting for a new connection.
+  maxIdleClosed: number // The total number of connections closed due to SetMaxIdleConns.
+  maxIdleTimeClosed: number // The total number of connections closed due to SetConnMaxIdleTime.
+  maxLifetimeClosed: number // The total number of connections closed due to SetConnMaxLifetime.
  }
  /**
-  * BaseModel defines common fields and methods used by all other models.
-  */
- interface BaseModel {
-  id: string
-  created: types.DateTime
-  updated: types.DateTime
- }
- interface BaseModel {
-  /**
-   * HasId returns whether the model has a nonzero id.
-   */
-  hasId(): boolean
- }
- interface BaseModel {
-  /**
-   * GetId returns the model id.
-   */
-  getId(): string
- }
- interface BaseModel {
-  /**
-   * SetId sets the model id to the provided string value.
-   */
-  setId(id: string): void
- }
- interface BaseModel {
-  /**
-   * MarkAsNew marks the model as "new" (aka. enforces m.IsNew() to be true).
-   */
-  markAsNew(): void
- }
- interface BaseModel {
-  /**
-   * MarkAsNotNew marks the model as "not new" (aka. enforces m.IsNew() to be false)
-   */
-  markAsNotNew(): void
- }
- interface BaseModel {
-  /**
-   * IsNew indicates what type of db query (insert or update)
-   * should be used with the model instance.
-   */
-  isNew(): boolean
- }
- interface BaseModel {
-  /**
-   * GetCreated returns the model Created datetime.
-   */
-  getCreated(): types.DateTime
- }
- interface BaseModel {
-  /**
-   * GetUpdated returns the model Updated datetime.
-   */
-  getUpdated(): types.DateTime
- }
- interface BaseModel {
-  /**
-   * RefreshId generates and sets a new model id.
-   * 
-   * The generated id is a cryptographically random 15 characters length string.
-   */
-  refreshId(): void
- }
- interface BaseModel {
-  /**
-   * RefreshCreated updates the model Created field with the current datetime.
-   */
-  refreshCreated(): void
- }
- interface BaseModel {
-  /**
-   * RefreshUpdated updates the model Updated field with the current datetime.
-   */
-  refreshUpdated(): void
- }
- interface BaseModel {
-  /**
-   * PostScan implements the [dbx.PostScanner] interface.
-   * 
-   * It is executed right after the model was populated with the db row values.
-   */
-  postScan(): void
- }
- // @ts-ignore
- import validation = ozzo_validation
- /**
-  * CollectionBaseOptions defines the "base" Collection.Options fields.
-  */
- interface CollectionBaseOptions {
- }
- interface CollectionBaseOptions {
-  /**
-   * Validate implements [validation.Validatable] interface.
-   */
-  validate(): void
- }
- /**
-  * CollectionAuthOptions defines the "auth" Collection.Options fields.
-  */
- interface CollectionAuthOptions {
-  manageRule?: string
-  allowOAuth2Auth: boolean
-  allowUsernameAuth: boolean
-  allowEmailAuth: boolean
-  requireEmail: boolean
-  exceptEmailDomains: Array<string>
-  onlyVerified: boolean
-  onlyEmailDomains: Array<string>
-  minPasswordLength: number
- }
- interface CollectionAuthOptions {
-  /**
-   * Validate implements [validation.Validatable] interface.
-   */
-  validate(): void
- }
- /**
-  * CollectionViewOptions defines the "view" Collection.Options fields.
-  */
- interface CollectionViewOptions {
-  query: string
- }
- interface CollectionViewOptions {
-  /**
-   * Validate implements [validation.Validatable] interface.
-   */
-  validate(): void
- }
- type _subOHEED = BaseModel
- interface Log extends _subOHEED {
-  data: types.JsonMap
-  message: string
-  level: number
- }
- interface Log {
-  tableName(): string
- }
- type _subpuOmJ = BaseModel
- interface Param extends _subpuOmJ {
-  key: string
-  value: types.JsonRaw
- }
- interface Param {
-  tableName(): string
- }
- interface TableInfoRow {
-  /**
-   * the `db:"pk"` tag has special semantic so we cannot rename
-   * the original field without specifying a custom mapper
-   */
-  pk: number
-  index: number
-  name: string
-  type: string
-  notNull: boolean
-  defaultValue: types.JsonRaw
- }
-}
-
-/**
- * Package echo implements high performance, minimalist Go web framework.
- * 
- * Example:
- * 
- * ```
- * 	  package main
- * 
- * 		import (
- * 			"github.com/labstack/echo/v5"
- * 			"github.com/labstack/echo/v5/middleware"
- * 			"log"
- * 			"net/http"
- * 		)
- * 
- * 	  // Handler
- * 	  func hello(c echo.Context) error {
- * 	    return c.String(http.StatusOK, "Hello, World!")
- * 	  }
- * 
- * 	  func main() {
- * 	    // Echo instance
- * 	    e := echo.New()
- * 
- * 	    // Middleware
- * 	    e.Use(middleware.Logger())
- * 	    e.Use(middleware.Recover())
- * 
- * 	    // Routes
- * 	    e.GET("/", hello)
- * 
- * 	    // Start server
- * 	    if err := e.Start(":8080"); err != http.ErrServerClosed {
- * 			  log.Fatal(err)
- * 		  }
- * 	  }
- * ```
- * 
- * Learn more at https://echo.labstack.com
- */
-namespace echo {
- /**
-  * Binder is the interface that wraps the Bind method.
-  */
- interface Binder {
-  [key:string]: any;
-  bind(c: Context, i: {
-  }): void
- }
- /**
-  * ServableContext is interface that Echo context implementation must implement to be usable in middleware/handlers and
-  * be able to be routed by Router.
-  */
- interface ServableContext {
-  [key:string]: any;
-  /**
-   * Reset resets the context after request completes. It must be called along
-   * with `Echo#AcquireContext()` and `Echo#ReleaseContext()`.
-   * See `Echo#ServeHTTP()`
-   */
-  reset(r: http.Request, w: http.ResponseWriter): void
- }
- // @ts-ignore
- import stdContext = context
- /**
-  * JSONSerializer is the interface that encodes and decodes JSON to and from interfaces.
-  */
- interface JSONSerializer {
-  [key:string]: any;
-  serialize(c: Context, i: {
-  }, indent: string): void
-  deserialize(c: Context, i: {
-  }): void
- }
- /**
-  * HTTPErrorHandler is a centralized HTTP error handler.
-  */
- interface HTTPErrorHandler {(c: Context, err: Error): void }
- /**
-  * Validator is the interface that wraps the Validate function.
-  */
- interface Validator {
-  [key:string]: any;
-  validate(i: {
-  }): void
- }
- /**
-  * Renderer is the interface that wraps the Render function.
-  */
- interface Renderer {
-  [key:string]: any;
-  render(_arg0: io.Writer, _arg1: string, _arg2: {
-  }, _arg3: Context): void
- }
- /**
-  * Group is a set of sub-routes for a specified route. It can be used for inner
-  * routes that share a common middleware or functionality that should be separate
-  * from the parent echo instance while still inheriting from it.
-  */
- interface Group {
- }
- interface Group {
-  /**
-   * Use implements `Echo#Use()` for sub-routes within the Group.
-   * Group middlewares are not executed on request when there is no matching route found.
-   */
-  use(...middleware: MiddlewareFunc[]): void
- }
- interface Group {
-  /**
-   * CONNECT implements `Echo#CONNECT()` for sub-routes within the Group. Panics on error.
-   */
-  connect(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * DELETE implements `Echo#DELETE()` for sub-routes within the Group. Panics on error.
-   */
-  delete(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * GET implements `Echo#GET()` for sub-routes within the Group. Panics on error.
-   */
-  get(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * HEAD implements `Echo#HEAD()` for sub-routes within the Group. Panics on error.
-   */
-  head(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * OPTIONS implements `Echo#OPTIONS()` for sub-routes within the Group. Panics on error.
-   */
-  options(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * PATCH implements `Echo#PATCH()` for sub-routes within the Group. Panics on error.
-   */
-  patch(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * POST implements `Echo#POST()` for sub-routes within the Group. Panics on error.
-   */
-  post(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * PUT implements `Echo#PUT()` for sub-routes within the Group. Panics on error.
-   */
-  put(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * TRACE implements `Echo#TRACE()` for sub-routes within the Group. Panics on error.
-   */
-  trace(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * Any implements `Echo#Any()` for sub-routes within the Group. Panics on error.
-   */
-  any(path: string, handler: HandlerFunc, ...middleware: MiddlewareFunc[]): Routes
- }
- interface Group {
-  /**
-   * Match implements `Echo#Match()` for sub-routes within the Group. Panics on error.
-   */
-  match(methods: Array<string>, path: string, handler: HandlerFunc, ...middleware: MiddlewareFunc[]): Routes
- }
- interface Group {
-  /**
-   * Group creates a new sub-group with prefix and optional sub-group-level middleware.
-   * Important! Group middlewares are only executed in case there was exact route match and not
-   * for 404 (not found) or 405 (method not allowed) cases. If this kind of behaviour is needed then add
-   * a catch-all route `/*` for the group which handler returns always 404
-   */
-  group(prefix: string, ...middleware: MiddlewareFunc[]): (Group)
- }
- interface Group {
-  /**
-   * Static implements `Echo#Static()` for sub-routes within the Group.
-   */
-  static(pathPrefix: string, fsRoot: string): RouteInfo
- }
- interface Group {
-  /**
-   * StaticFS implements `Echo#StaticFS()` for sub-routes within the Group.
-   * 
-   * When dealing with `embed.FS` use `fs := echo.MustSubFS(fs, "rootDirectory") to create sub fs which uses necessary
-   * prefix for directory path. This is necessary as `//go:embed assets/images` embeds files with paths
-   * including `assets/images` as their prefix.
-   */
-  staticFS(pathPrefix: string, filesystem: fs.FS): RouteInfo
- }
- interface Group {
-  /**
-   * FileFS implements `Echo#FileFS()` for sub-routes within the Group.
-   */
-  fileFS(path: string, file: string, filesystem: fs.FS, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * File implements `Echo#File()` for sub-routes within the Group. Panics on error.
-   */
-  file(path: string, file: string, ...middleware: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * RouteNotFound implements `Echo#RouteNotFound()` for sub-routes within the Group.
-   * 
-   * Example: `g.RouteNotFound("/*", func(c echo.Context) error { return c.NoContent(http.StatusNotFound) })`
-   */
-  routeNotFound(path: string, h: HandlerFunc, ...m: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * Add implements `Echo#Add()` for sub-routes within the Group. Panics on error.
-   */
-  add(method: string, path: string, handler: HandlerFunc, ...middleware: MiddlewareFunc[]): RouteInfo
- }
- interface Group {
-  /**
-   * AddRoute registers a new Routable with Router
-   */
-  addRoute(route: Routable): RouteInfo
- }
- /**
-  * IPExtractor is a function to extract IP addr from http.Request.
-  * Set appropriate one to Echo#IPExtractor.
-  * See https://echo.labstack.com/guide/ip-address for more details.
-  */
- interface IPExtractor {(_arg0: http.Request): string }
- /**
-  * Logger defines the logging interface that Echo uses internally in few places.
-  * For logging in handlers use your own logger instance (dependency injected or package/public variable) from logging framework of your choice.
-  */
- interface Logger {
-  [key:string]: any;
-  /**
-   * Write provides writer interface for http.Server `ErrorLog` and for logging startup messages.
-   * `http.Server.ErrorLog` logs errors from accepting connections, unexpected behavior from handlers,
-   * and underlying FileSystem errors.
-   * `logger` middleware will use this method to write its JSON payload.
-   */
-  write(p: string|Array<number>): number
-  /**
-   * Error logs the error
-   */
-  error(err: Error): void
- }
- /**
-  * Response wraps an http.ResponseWriter and implements its interface to be used
-  * by an HTTP handler to construct an HTTP response.
-  * See: https://golang.org/pkg/net/http/#ResponseWriter
-  */
- interface Response {
-  writer: http.ResponseWriter
-  status: number
-  size: number
-  committed: boolean
- }
- interface Response {
-  /**
-   * Header returns the header map for the writer that will be sent by
-   * WriteHeader. Changing the header after a call to WriteHeader (or Write) has
-   * no effect unless the modified headers were declared as trailers by setting
-   * the "Trailer" header before the call to WriteHeader (see example)
-   * To suppress implicit response headers, set their value to nil.
-   * Example: https://golang.org/pkg/net/http/#example_ResponseWriter_trailers
-   */
-  header(): http.Header
- }
- interface Response {
-  /**
-   * Before registers a function which is called just before the response is written.
-   */
-  before(fn: () => void): void
- }
- interface Response {
-  /**
-   * After registers a function which is called just after the response is written.
-   * If the `Content-Length` is unknown, none of the after function is executed.
-   */
-  after(fn: () => void): void
- }
- interface Response {
-  /**
-   * WriteHeader sends an HTTP response header with status code. If WriteHeader is
-   * not called explicitly, the first call to Write will trigger an implicit
-   * WriteHeader(http.StatusOK). Thus explicit calls to WriteHeader are mainly
-   * used to send error codes.
-   */
-  writeHeader(code: number): void
- }
- interface Response {
-  /**
-   * Write writes the data to the connection as part of an HTTP reply.
-   */
-  write(b: string|Array<number>): number
- }
- interface Response {
-  /**
-   * Flush implements the http.Flusher interface to allow an HTTP handler to flush
-   * buffered data to the client.
-   * See [http.Flusher](https://golang.org/pkg/net/http/#Flusher)
-   */
-  flush(): void
- }
- interface Response {
-  /**
-   * Hijack implements the http.Hijacker interface to allow an HTTP handler to
-   * take over the connection.
-   * See [http.Hijacker](https://golang.org/pkg/net/http/#Hijacker)
-   */
-  hijack(): [net.Conn, (bufio.ReadWriter)]
- }
- interface Response {
-  /**
-   * Unwrap returns the original http.ResponseWriter.
-   * ResponseController can be used to access the original http.ResponseWriter.
-   * See [https://go.dev/blog/go1.20]
-   */
-  unwrap(): http.ResponseWriter
- }
- interface Routes {
-  /**
-   * Reverse reverses route to URL string by replacing path parameters with given params values.
-   */
-  reverse(name: string, ...params: {
-   }[]): string
- }
- interface Routes {
-  /**
-   * FindByMethodPath searched for matching route info by method and path
-   */
-  findByMethodPath(method: string, path: string): RouteInfo
- }
- interface Routes {
-  /**
-   * FilterByMethod searched for matching route info by method
-   */
-  filterByMethod(method: string): Routes
- }
- interface Routes {
-  /**
-   * FilterByPath searched for matching route info by path
-   */
-  filterByPath(path: string): Routes
- }
- interface Routes {
-  /**
-   * FilterByName searched for matching route info by name
-   */
-  filterByName(name: string): Routes
- }
- /**
-  * Router is interface for routing request contexts to registered routes.
+  * Conn represents a single database connection rather than a pool of database
+  * connections. Prefer running queries from [DB] unless there is a specific
+  * need for a continuous single database connection.
   * 
-  * Contract between Echo/Context instance and the router:
-  * ```
-  *   - all routes must be added through methods on echo.Echo instance.
-  *     Reason: Echo instance uses RouteInfo.Params() length to allocate slice for paths parameters (see `Echo.contextPathParamAllocSize`).
-  *   - Router must populate Context during Router.Route call with:
-  *   - RoutableContext.SetPath
-  *   - RoutableContext.SetRawPathParams (IMPORTANT! with same slice pointer that c.RawPathParams() returns)
-  *   - RoutableContext.SetRouteInfo
-  *     And optionally can set additional information to Context with RoutableContext.Set
-  * ```
+  * A Conn must call [Conn.Close] to return the connection to the database pool
+  * and may do so concurrently with a running query.
+  * 
+  * After a call to [Conn.Close], all operations on the
+  * connection fail with [ErrConnDone].
   */
- interface Router {
-  [key:string]: any;
+ interface Conn {
+ }
+ interface Conn {
   /**
-   * Add registers Routable with the Router and returns registered RouteInfo
+   * PingContext verifies the connection to the database is still alive.
    */
-  add(routable: Routable): RouteInfo
+  pingContext(ctx: context.Context): void
+ }
+ interface Conn {
   /**
-   * Remove removes route from the Router
+   * ExecContext executes a query without returning any rows.
+   * The args are for any placeholder parameters in the query.
    */
-  remove(method: string, path: string): void
+  execContext(ctx: context.Context, query: string, ...args: any[]): Result
+ }
+ interface Conn {
   /**
-   * Routes returns information about all registered routes
+   * QueryContext executes a query that returns rows, typically a SELECT.
+   * The args are for any placeholder parameters in the query.
    */
-  routes(): Routes
+  queryContext(ctx: context.Context, query: string, ...args: any[]): (Rows)
+ }
+ interface Conn {
   /**
-   * Route searches Router for matching route and applies it to the given context. In case when no matching method
-   * was not found (405) or no matching route exists for path (404), router will return its implementation of 405/404
-   * handler function.
+   * QueryRowContext executes a query that is expected to return at most one row.
+   * QueryRowContext always returns a non-nil value. Errors are deferred until
+   * the [*Row.Scan] method is called.
+   * If the query selects no rows, the [*Row.Scan] will return [ErrNoRows].
+   * Otherwise, the [*Row.Scan] scans the first selected row and discards
+   * the rest.
    */
-  route(c: RoutableContext): HandlerFunc
+  queryRowContext(ctx: context.Context, query: string, ...args: any[]): (Row)
+ }
+ interface Conn {
+  /**
+   * PrepareContext creates a prepared statement for later queries or executions.
+   * Multiple queries or executions may be run concurrently from the
+   * returned statement.
+   * The caller must call the statement's [*Stmt.Close] method
+   * when the statement is no longer needed.
+   * 
+   * The provided context is used for the preparation of the statement, not for the
+   * execution of the statement.
+   */
+  prepareContext(ctx: context.Context, query: string): (Stmt)
+ }
+ interface Conn {
+  /**
+   * Raw executes f exposing the underlying driver connection for the
+   * duration of f. The driverConn must not be used outside of f.
+   * 
+   * Once f returns and err is not [driver.ErrBadConn], the [Conn] will continue to be usable
+   * until [Conn.Close] is called.
+   */
+  raw(f: (driverConn: any) => void): void
+ }
+ interface Conn {
+  /**
+   * BeginTx starts a transaction.
+   * 
+   * The provided context is used until the transaction is committed or rolled back.
+   * If the context is canceled, the sql package will roll back
+   * the transaction. [Tx.Commit] will return an error if the context provided to
+   * BeginTx is canceled.
+   * 
+   * The provided [TxOptions] is optional and may be nil if defaults should be used.
+   * If a non-default isolation level is used that the driver doesn't support,
+   * an error will be returned.
+   */
+  beginTx(ctx: context.Context, opts: TxOptions): (Tx)
+ }
+ interface Conn {
+  /**
+   * Close returns the connection to the connection pool.
+   * All operations after a Close will return with [ErrConnDone].
+   * Close is safe to call concurrently with other operations and will
+   * block until all other operations finish. It may be useful to first
+   * cancel any used context and then call close directly after.
+   */
+  close(): void
  }
  /**
-  * Routable is interface for registering Route with Router. During route registration process the Router will
-  * convert Routable to RouteInfo with ToRouteInfo method. By creating custom implementation of Routable additional
-  * information about registered route can be stored in Routes (i.e. privileges used with route etc.)
+  * ColumnType contains the name and type of a column.
   */
- interface Routable {
-  [key:string]: any;
-  /**
-   * ToRouteInfo converts Routable to RouteInfo
-   * 
-   * This method is meant to be used by Router after it parses url for path parameters, to store information about
-   * route just added.
-   */
-  toRouteInfo(params: Array<string>): RouteInfo
-  /**
-   * ToRoute converts Routable to Route which Router uses to register the method handler for path.
-   * 
-   * This method is meant to be used by Router to get fields (including handler and middleware functions) needed to
-   * add Route to Router.
-   */
-  toRoute(): Route
-  /**
-   * ForGroup recreates routable with added group prefix and group middlewares it is grouped to.
-   * 
-   * Is necessary for Echo.Group to be able to add/register Routable with Router and having group prefix and group
-   * middlewares included in actually registered Route.
-   */
-  forGroup(pathPrefix: string, middlewares: Array<MiddlewareFunc>): Routable
+ interface ColumnType {
  }
- /**
-  * Routes is collection of RouteInfo instances with various helper methods.
-  */
- interface Routes extends Array<RouteInfo>{}
- /**
-  * RouteInfo describes registered route base fields.
-  * Method+Path pair uniquely identifies the Route. Name can have duplicates.
-  */
- interface RouteInfo {
-  [key:string]: any;
-  method(): string
-  path(): string
+ interface ColumnType {
+  /**
+   * Name returns the name or alias of the column.
+   */
   name(): string
-  params(): Array<string>
+ }
+ interface ColumnType {
   /**
-   * Reverse reverses route to URL string by replacing path parameters with given params values.
+   * Length returns the column type length for variable length column types such
+   * as text and binary field types. If the type length is unbounded the value will
+   * be [math.MaxInt64] (any database limits will still apply).
+   * If the column type is not variable length, such as an int, or if not supported
+   * by the driver ok is false.
    */
-  reverse(...params: {
-  }[]): string
+  length(): [number, boolean]
+ }
+ interface ColumnType {
+  /**
+   * DecimalSize returns the scale and precision of a decimal type.
+   * If not applicable or if not supported ok is false.
+   */
+  decimalSize(): [number, number, boolean]
+ }
+ interface ColumnType {
+  /**
+   * ScanType returns a Go type suitable for scanning into using [Rows.Scan].
+   * If a driver does not support this property ScanType will return
+   * the type of an empty interface.
+   */
+  scanType(): any
+ }
+ interface ColumnType {
+  /**
+   * Nullable reports whether the column may be null.
+   * If a driver does not support this property ok will be false.
+   */
+  nullable(): [boolean, boolean]
+ }
+ interface ColumnType {
+  /**
+   * DatabaseTypeName returns the database system name of the column type. If an empty
+   * string is returned, then the driver type name is not supported.
+   * Consult your driver documentation for a list of driver data types. [ColumnType.Length] specifiers
+   * are not included.
+   * Common type names include "VARCHAR", "TEXT", "NVARCHAR", "DECIMAL", "BOOL",
+   * "INT", and "BIGINT".
+   */
+  databaseTypeName(): string
  }
  /**
-  * PathParams is collections of PathParam instances with various helper methods
+  * Row is the result of calling [DB.QueryRow] to select a single row.
   */
- interface PathParams extends Array<PathParam>{}
- interface PathParams {
-  /**
-   * Get returns path parameter value for given name or default value.
-   */
-  get(name: string, defaultValue: string): string
+ interface Row {
  }
-}
-
-/**
- * Package oauth2 provides support for making
- * OAuth2 authorized and authenticated HTTP requests,
- * as specified in RFC 6749.
- * It can additionally grant authorization with Bearer JWT.
- */
-/**
- * Copyright 2023 The Go Authors. All rights reserved.
- * Use of this source code is governed by a BSD-style
- * license that can be found in the LICENSE file.
- */
-namespace oauth2 {
- /**
-  * An AuthCodeOption is passed to Config.AuthCodeURL.
-  */
- interface AuthCodeOption {
-  [key:string]: any;
+ interface Row {
+  /**
+   * Scan copies the columns from the matched row into the values
+   * pointed at by dest. See the documentation on [Rows.Scan] for details.
+   * If more than one row matches the query,
+   * Scan uses the first row and discards the rest. If no row matches
+   * the query, Scan returns [ErrNoRows].
+   */
+  scan(...dest: any[]): void
  }
- /**
-  * Token represents the credentials used to authorize
-  * the requests to access protected resources on the OAuth 2.0
-  * provider's backend.
-  * 
-  * Most users of this package should not access fields of Token
-  * directly. They're exported mostly for use by related packages
-  * implementing derivative OAuth2 flows.
-  */
- interface Token {
+ interface Row {
   /**
-   * AccessToken is the token that authorizes and authenticates
-   * the requests.
+   * Err provides a way for wrapping packages to check for
+   * query errors without calling [Row.Scan].
+   * Err returns the error, if any, that was encountered while running the query.
+   * If this error is not nil, this error will also be returned from [Row.Scan].
    */
-  accessToken: string
-  /**
-   * TokenType is the type of token.
-   * The Type method returns either this or "Bearer", the default.
-   */
-  tokenType: string
-  /**
-   * RefreshToken is a token that's used by the application
-   * (as opposed to the user) to refresh the access token
-   * if it expires.
-   */
-  refreshToken: string
-  /**
-   * Expiry is the optional expiration time of the access token.
-   * 
-   * If zero, TokenSource implementations will reuse the same
-   * token forever and RefreshToken or equivalent
-   * mechanisms for that TokenSource will not be used.
-   */
-  expiry: time.Time
-  /**
-   * ExpiresIn is the OAuth2 wire format "expires_in" field,
-   * which specifies how many seconds later the token expires,
-   * relative to an unknown time base approximately around "now".
-   * It is the application's responsibility to populate
-   * `Expiry` from `ExpiresIn` when required.
-   */
-  expiresIn: number
- }
- interface Token {
-  /**
-   * Type returns t.TokenType if non-empty, else "Bearer".
-   */
-  type(): string
- }
- interface Token {
-  /**
-   * SetAuthHeader sets the Authorization header to r using the access
-   * token in t.
-   * 
-   * This method is unnecessary when using Transport or an HTTP Client
-   * returned by this package.
-   */
-  setAuthHeader(r: http.Request): void
- }
- interface Token {
-  /**
-   * WithExtra returns a new Token that's a clone of t, but using the
-   * provided raw extra map. This is only intended for use by packages
-   * implementing derivative OAuth2 flows.
-   */
-  withExtra(extra: {
-   }): (Token)
- }
- interface Token {
-  /**
-   * Extra returns an extra field.
-   * Extra fields are key-value pairs returned by the server as a
-   * part of the token retrieval response.
-   */
-  extra(key: string): {
- }
- }
- interface Token {
-  /**
-   * Valid reports whether t is non-nil, has an AccessToken, and is not expired.
-   */
-  valid(): boolean
- }
-}
-
-namespace mailer {
- /**
-  * Mailer defines a base mail client interface.
-  */
- interface Mailer {
-  [key:string]: any;
-  /**
-   * Send sends an email with the provided Message.
-   */
-  send(message: Message): void
+  err(): void
  }
 }
 
@@ -34899,22 +34556,41 @@ namespace settings {
  }
 }
 
-/**
- * Package daos handles common PocketBase DB model manipulations.
- * 
- * Think of daos as DB repository and service layer in one.
- */
-namespace daos {
- interface LogsStatsItem {
-  total: number
-  date: types.DateTime
- }
+namespace subscriptions {
  /**
-  * ExpandFetchFunc defines the function that is used to fetch the expanded relation records.
+  * Broker defines a struct for managing subscriptions clients.
   */
- interface ExpandFetchFunc {(relCollection: models.Collection, relIds: Array<string>): Array<(models.Record | undefined)> }
- // @ts-ignore
- import validation = ozzo_validation
+ interface Broker {
+ }
+ interface Broker {
+  /**
+   * Clients returns a shallow copy of all registered clients indexed
+   * with their connection id.
+   */
+  clients(): _TygojaDict
+ }
+ interface Broker {
+  /**
+   * ClientById finds a registered client by its id.
+   * 
+   * Returns non-nil error when client with clientId is not registered.
+   */
+  clientById(clientId: string): Client
+ }
+ interface Broker {
+  /**
+   * Register adds a new client to the broker instance.
+   */
+  register(client: Client): void
+ }
+ interface Broker {
+  /**
+   * Unregister removes a single client by its id.
+   * 
+   * If client with clientId doesn't exist, this method does nothing.
+   */
+  unregister(clientId: string): void
+ }
 }
 
 /**
@@ -35407,40 +35083,425 @@ namespace slog {
  }
 }
 
-namespace subscriptions {
+/**
+ * Package schema implements custom Schema and SchemaField datatypes
+ * for handling the Collection schema definitions.
+ */
+namespace schema {
+ // @ts-ignore
+ import validation = ozzo_validation
  /**
-  * Broker defines a struct for managing subscriptions clients.
+  * SchemaField defines a single schema field structure.
   */
- interface Broker {
- }
- interface Broker {
+ interface SchemaField {
+  system: boolean
+  id: string
+  name: string
+  type: string
+  required: boolean
   /**
-   * Clients returns a shallow copy of all registered clients indexed
-   * with their connection id.
+   * Presentable indicates whether the field is suitable for
+   * visualization purposes (eg. in the Admin UI relation views).
    */
-  clients(): _TygojaDict
- }
- interface Broker {
+  presentable: boolean
   /**
-   * ClientById finds a registered client by its id.
+   * Deprecated: This field is no-op and will be removed in future versions.
+   * Please use the collection.Indexes field to define a unique constraint.
+   */
+  unique: boolean
+  options: any
+ }
+ interface SchemaField {
+  /**
+   * ColDefinition returns the field db column type definition as string.
+   */
+  colDefinition(): string
+ }
+ interface SchemaField {
+  /**
+   * String serializes and returns the current field as string.
+   */
+  string(): string
+ }
+ interface SchemaField {
+  /**
+   * MarshalJSON implements the [json.Marshaler] interface.
+   */
+  marshalJSON(): string|Array<number>
+ }
+ interface SchemaField {
+  /**
+   * UnmarshalJSON implements the [json.Unmarshaler] interface.
    * 
-   * Returns non-nil error when client with clientId is not registered.
+   * The schema field options are auto initialized on success.
    */
-  clientById(clientId: string): Client
+  unmarshalJSON(data: string|Array<number>): void
  }
- interface Broker {
+ interface SchemaField {
   /**
-   * Register adds a new client to the broker instance.
+   * Validate makes `SchemaField` validatable by implementing [validation.Validatable] interface.
    */
-  register(client: Client): void
+  validate(): void
  }
- interface Broker {
+ interface SchemaField {
   /**
-   * Unregister removes a single client by its id.
+   * InitOptions initializes the current field options based on its type.
    * 
-   * If client with clientId doesn't exist, this method does nothing.
+   * Returns error on unknown field type.
    */
-  unregister(clientId: string): void
+  initOptions(): void
+ }
+ interface SchemaField {
+  /**
+   * PrepareValue returns normalized and properly formatted field value.
+   */
+  prepareValue(value: any): any
+ }
+ interface SchemaField {
+  /**
+   * PrepareValueWithModifier returns normalized and properly formatted field value
+   * by "merging" baseValue with the modifierValue based on the specified modifier (+ or -).
+   */
+  prepareValueWithModifier(baseValue: any, modifier: string, modifierValue: any): any
+ }
+}
+
+/**
+ * Package models implements all PocketBase DB models and DTOs.
+ */
+namespace models {
+ /**
+  * Model defines an interface with common methods that all db models should have.
+  */
+ interface Model {
+  [key:string]: any;
+  tableName(): string
+  isNew(): boolean
+  markAsNew(): void
+  markAsNotNew(): void
+  hasId(): boolean
+  getId(): string
+  setId(id: string): void
+  getCreated(): types.DateTime
+  getUpdated(): types.DateTime
+  refreshId(): void
+  refreshCreated(): void
+  refreshUpdated(): void
+ }
+ /**
+  * BaseModel defines common fields and methods used by all other models.
+  */
+ interface BaseModel {
+  id: string
+  created: types.DateTime
+  updated: types.DateTime
+ }
+ interface BaseModel {
+  /**
+   * HasId returns whether the model has a nonzero id.
+   */
+  hasId(): boolean
+ }
+ interface BaseModel {
+  /**
+   * GetId returns the model id.
+   */
+  getId(): string
+ }
+ interface BaseModel {
+  /**
+   * SetId sets the model id to the provided string value.
+   */
+  setId(id: string): void
+ }
+ interface BaseModel {
+  /**
+   * MarkAsNew marks the model as "new" (aka. enforces m.IsNew() to be true).
+   */
+  markAsNew(): void
+ }
+ interface BaseModel {
+  /**
+   * MarkAsNotNew marks the model as "not new" (aka. enforces m.IsNew() to be false)
+   */
+  markAsNotNew(): void
+ }
+ interface BaseModel {
+  /**
+   * IsNew indicates what type of db query (insert or update)
+   * should be used with the model instance.
+   */
+  isNew(): boolean
+ }
+ interface BaseModel {
+  /**
+   * GetCreated returns the model Created datetime.
+   */
+  getCreated(): types.DateTime
+ }
+ interface BaseModel {
+  /**
+   * GetUpdated returns the model Updated datetime.
+   */
+  getUpdated(): types.DateTime
+ }
+ interface BaseModel {
+  /**
+   * RefreshId generates and sets a new model id.
+   * 
+   * The generated id is a cryptographically random 15 characters length string.
+   */
+  refreshId(): void
+ }
+ interface BaseModel {
+  /**
+   * RefreshCreated updates the model Created field with the current datetime.
+   */
+  refreshCreated(): void
+ }
+ interface BaseModel {
+  /**
+   * RefreshUpdated updates the model Updated field with the current datetime.
+   */
+  refreshUpdated(): void
+ }
+ interface BaseModel {
+  /**
+   * PostScan implements the [dbx.PostScanner] interface.
+   * 
+   * It is executed right after the model was populated with the db row values.
+   */
+  postScan(): void
+ }
+ // @ts-ignore
+ import validation = ozzo_validation
+ /**
+  * CollectionBaseOptions defines the "base" Collection.Options fields.
+  */
+ interface CollectionBaseOptions {
+ }
+ interface CollectionBaseOptions {
+  /**
+   * Validate implements [validation.Validatable] interface.
+   */
+  validate(): void
+ }
+ /**
+  * CollectionAuthOptions defines the "auth" Collection.Options fields.
+  */
+ interface CollectionAuthOptions {
+  manageRule?: string
+  allowOAuth2Auth: boolean
+  allowUsernameAuth: boolean
+  allowEmailAuth: boolean
+  requireEmail: boolean
+  exceptEmailDomains: Array<string>
+  onlyVerified: boolean
+  onlyEmailDomains: Array<string>
+  minPasswordLength: number
+ }
+ interface CollectionAuthOptions {
+  /**
+   * Validate implements [validation.Validatable] interface.
+   */
+  validate(): void
+ }
+ /**
+  * CollectionViewOptions defines the "view" Collection.Options fields.
+  */
+ interface CollectionViewOptions {
+  query: string
+ }
+ interface CollectionViewOptions {
+  /**
+   * Validate implements [validation.Validatable] interface.
+   */
+  validate(): void
+ }
+ type _subfMtQV = BaseModel
+ interface Log extends _subfMtQV {
+  data: types.JsonMap
+  message: string
+  level: number
+ }
+ interface Log {
+  tableName(): string
+ }
+ type _subFKVHZ = BaseModel
+ interface Param extends _subFKVHZ {
+  key: string
+  value: types.JsonRaw
+ }
+ interface Param {
+  tableName(): string
+ }
+ interface TableInfoRow {
+  /**
+   * the `db:"pk"` tag has special semantic so we cannot rename
+   * the original field without specifying a custom mapper
+   */
+  pk: number
+  index: number
+  name: string
+  type: string
+  notNull: boolean
+  defaultValue: types.JsonRaw
+ }
+}
+
+/**
+ * Package daos handles common PocketBase DB model manipulations.
+ * 
+ * Think of daos as DB repository and service layer in one.
+ */
+namespace daos {
+ interface LogsStatsItem {
+  total: number
+  date: types.DateTime
+ }
+ /**
+  * ExpandFetchFunc defines the function that is used to fetch the expanded relation records.
+  */
+ interface ExpandFetchFunc {(relCollection: models.Collection, relIds: Array<string>): Array<(models.Record | undefined)> }
+ // @ts-ignore
+ import validation = ozzo_validation
+}
+
+namespace migrate {
+ interface Migration {
+  file: string
+  up: (db: dbx.Builder) => void
+  down: (db: dbx.Builder) => void
+ }
+}
+
+/**
+ * Package cobra is a commander providing a simple interface to create powerful modern CLI interfaces.
+ * In addition to providing an interface, Cobra simultaneously provides a controller to organize your application code.
+ */
+namespace cobra {
+ interface PositionalArgs {(cmd: Command, args: Array<string>): void }
+ // @ts-ignore
+ import flag = pflag
+ /**
+  * FParseErrWhitelist configures Flag parse errors to be ignored
+  */
+ interface FParseErrWhitelist extends _TygojaAny{}
+ /**
+  * Group Structure to manage groups for commands
+  */
+ interface Group {
+  id: string
+  title: string
+ }
+ /**
+  * ShellCompDirective is a bit map representing the different behaviors the shell
+  * can be instructed to have once completions have been provided.
+  */
+ interface ShellCompDirective extends Number{}
+ /**
+  * CompletionOptions are the options to control shell completion
+  */
+ interface CompletionOptions {
+  /**
+   * DisableDefaultCmd prevents Cobra from creating a default 'completion' command
+   */
+  disableDefaultCmd: boolean
+  /**
+   * DisableNoDescFlag prevents Cobra from creating the '--no-descriptions' flag
+   * for shells that support completion descriptions
+   */
+  disableNoDescFlag: boolean
+  /**
+   * DisableDescriptions turns off all completion descriptions for shells
+   * that support them
+   */
+  disableDescriptions: boolean
+  /**
+   * HiddenDefaultCmd makes the default 'completion' command hidden
+   */
+  hiddenDefaultCmd: boolean
+ }
+}
+
+namespace hook {
+ /**
+  * Hook defines a concurrent safe structure for handling event hooks
+  * (aka. callbacks propagation).
+  */
+ interface Hook<T> {
+ }
+ interface Hook<T> {
+  /**
+   * PreAdd registers a new handler to the hook by prepending it to the existing queue.
+   * 
+   * Returns an autogenerated hook id that could be used later to remove the hook with Hook.Remove(id).
+   */
+  preAdd(fn: Handler<T>): string
+ }
+ interface Hook<T> {
+  /**
+   * Add registers a new handler to the hook by appending it to the existing queue.
+   * 
+   * Returns an autogenerated hook id that could be used later to remove the hook with Hook.Remove(id).
+   */
+  add(fn: Handler<T>): string
+ }
+ interface Hook<T> {
+  /**
+   * Remove removes a single hook handler by its id.
+   */
+  remove(id: string): void
+ }
+ interface Hook<T> {
+  /**
+   * RemoveAll removes all registered handlers.
+   */
+  removeAll(): void
+ }
+ interface Hook<T> {
+  /**
+   * Trigger executes all registered hook handlers one by one
+   * with the specified `data` as an argument.
+   * 
+   * Optionally, this method allows also to register additional one off
+   * handlers that will be temporary appended to the handlers queue.
+   * 
+   * The execution stops when:
+   * - hook.StopPropagation is returned in one of the handlers
+   * - any non-nil error is returned in one of the handlers
+   */
+  trigger(data: T, ...oneOffHandlers: Handler<T>[]): void
+ }
+ /**
+  * TaggedHook defines a proxy hook which register handlers that are triggered only
+  * if the TaggedHook.tags are empty or includes at least one of the event data tag(s).
+  */
+ type _subODnSY<T> = mainHook<T>
+ interface TaggedHook<T> extends _subODnSY<T> {
+ }
+ interface TaggedHook<T> {
+  /**
+   * CanTriggerOn checks if the current TaggedHook can be triggered with
+   * the provided event data tags.
+   */
+  canTriggerOn(tags: Array<string>): boolean
+ }
+ interface TaggedHook<T> {
+  /**
+   * PreAdd registers a new handler to the hook by prepending it to the existing queue.
+   * 
+   * The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
+   */
+  preAdd(fn: Handler<T>): string
+ }
+ interface TaggedHook<T> {
+  /**
+   * Add registers a new handler to the hook by appending it to the existing queue.
+   * 
+   * The fn handler will be called only if the event data tags satisfy h.CanTriggerOn.
+   */
+  add(fn: Handler<T>): string
  }
 }
 
@@ -35467,12 +35528,12 @@ namespace core {
   httpContext: echo.Context
   error: Error
  }
- type _subyaEim = BaseModelEvent
- interface ModelEvent extends _subyaEim {
+ type _subStmDG = BaseModelEvent
+ interface ModelEvent extends _subStmDG {
   dao?: daos.Dao
  }
- type _subskeUa = BaseCollectionEvent
- interface MailerRecordEvent extends _subskeUa {
+ type _subQpmjZ = BaseCollectionEvent
+ interface MailerRecordEvent extends _subQpmjZ {
   mailClient: mailer.Mailer
   message?: mailer.Message
   record?: models.Record
@@ -35512,50 +35573,50 @@ namespace core {
   oldSettings?: settings.Settings
   newSettings?: settings.Settings
  }
- type _subwpEYD = BaseCollectionEvent
- interface RecordsListEvent extends _subwpEYD {
+ type _subelpWh = BaseCollectionEvent
+ interface RecordsListEvent extends _subelpWh {
   httpContext: echo.Context
   records: Array<(models.Record | undefined)>
   result?: search.Result
  }
- type _subtaOqT = BaseCollectionEvent
- interface RecordViewEvent extends _subtaOqT {
+ type _subLvPKS = BaseCollectionEvent
+ interface RecordViewEvent extends _subLvPKS {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subxKFWr = BaseCollectionEvent
- interface RecordCreateEvent extends _subxKFWr {
-  httpContext: echo.Context
-  record?: models.Record
-  uploadedFiles: _TygojaDict
- }
- type _subciQwE = BaseCollectionEvent
- interface RecordUpdateEvent extends _subciQwE {
+ type _subZtOqS = BaseCollectionEvent
+ interface RecordCreateEvent extends _subZtOqS {
   httpContext: echo.Context
   record?: models.Record
   uploadedFiles: _TygojaDict
  }
- type _sublAvhJ = BaseCollectionEvent
- interface RecordDeleteEvent extends _sublAvhJ {
+ type _subAjkWJ = BaseCollectionEvent
+ interface RecordUpdateEvent extends _subAjkWJ {
+  httpContext: echo.Context
+  record?: models.Record
+  uploadedFiles: _TygojaDict
+ }
+ type _subkZlEQ = BaseCollectionEvent
+ interface RecordDeleteEvent extends _subkZlEQ {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subxEibi = BaseCollectionEvent
- interface RecordAuthEvent extends _subxEibi {
+ type _subeuCow = BaseCollectionEvent
+ interface RecordAuthEvent extends _subeuCow {
   httpContext: echo.Context
   record?: models.Record
   token: string
   meta: any
  }
- type _subVKrAt = BaseCollectionEvent
- interface RecordAuthWithPasswordEvent extends _subVKrAt {
+ type _subviYXC = BaseCollectionEvent
+ interface RecordAuthWithPasswordEvent extends _subviYXC {
   httpContext: echo.Context
   record?: models.Record
   identity: string
   password: string
  }
- type _subZBmyR = BaseCollectionEvent
- interface RecordAuthWithOAuth2Event extends _subZBmyR {
+ type _subFmeZh = BaseCollectionEvent
+ interface RecordAuthWithOAuth2Event extends _subFmeZh {
   httpContext: echo.Context
   providerName: string
   providerClient: auth.Provider
@@ -35563,49 +35624,49 @@ namespace core {
   oAuth2User?: auth.AuthUser
   isNewRecord: boolean
  }
- type _subhzcxC = BaseCollectionEvent
- interface RecordAuthRefreshEvent extends _subhzcxC {
+ type _subpoJmu = BaseCollectionEvent
+ interface RecordAuthRefreshEvent extends _subpoJmu {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subiLmJt = BaseCollectionEvent
- interface RecordRequestPasswordResetEvent extends _subiLmJt {
+ type _subHkEeE = BaseCollectionEvent
+ interface RecordRequestPasswordResetEvent extends _subHkEeE {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subGFxjK = BaseCollectionEvent
- interface RecordConfirmPasswordResetEvent extends _subGFxjK {
+ type _subYEJqc = BaseCollectionEvent
+ interface RecordConfirmPasswordResetEvent extends _subYEJqc {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subzficU = BaseCollectionEvent
- interface RecordRequestVerificationEvent extends _subzficU {
+ type _subbBUmy = BaseCollectionEvent
+ interface RecordRequestVerificationEvent extends _subbBUmy {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subohIST = BaseCollectionEvent
- interface RecordConfirmVerificationEvent extends _subohIST {
+ type _subtMtnn = BaseCollectionEvent
+ interface RecordConfirmVerificationEvent extends _subtMtnn {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subCykoA = BaseCollectionEvent
- interface RecordRequestEmailChangeEvent extends _subCykoA {
+ type _subnkOlf = BaseCollectionEvent
+ interface RecordRequestEmailChangeEvent extends _subnkOlf {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subnopwl = BaseCollectionEvent
- interface RecordConfirmEmailChangeEvent extends _subnopwl {
+ type _subUjcfa = BaseCollectionEvent
+ interface RecordConfirmEmailChangeEvent extends _subUjcfa {
   httpContext: echo.Context
   record?: models.Record
  }
- type _subFAnbA = BaseCollectionEvent
- interface RecordListExternalAuthsEvent extends _subFAnbA {
+ type _subYEmXT = BaseCollectionEvent
+ interface RecordListExternalAuthsEvent extends _subYEmXT {
   httpContext: echo.Context
   record?: models.Record
   externalAuths: Array<(models.ExternalAuth | undefined)>
  }
- type _subfYBlb = BaseCollectionEvent
- interface RecordUnlinkExternalAuthEvent extends _subfYBlb {
+ type _subqoOQW = BaseCollectionEvent
+ interface RecordUnlinkExternalAuthEvent extends _subqoOQW {
   httpContext: echo.Context
   record?: models.Record
   externalAuth?: models.ExternalAuth
@@ -35659,33 +35720,33 @@ namespace core {
   collections: Array<(models.Collection | undefined)>
   result?: search.Result
  }
- type _subjPeMq = BaseCollectionEvent
- interface CollectionViewEvent extends _subjPeMq {
+ type _subeGmmK = BaseCollectionEvent
+ interface CollectionViewEvent extends _subeGmmK {
   httpContext: echo.Context
  }
- type _subXjljn = BaseCollectionEvent
- interface CollectionCreateEvent extends _subXjljn {
+ type _subIzYYM = BaseCollectionEvent
+ interface CollectionCreateEvent extends _subIzYYM {
   httpContext: echo.Context
  }
- type _subnVfEX = BaseCollectionEvent
- interface CollectionUpdateEvent extends _subnVfEX {
+ type _subkgZTc = BaseCollectionEvent
+ interface CollectionUpdateEvent extends _subkgZTc {
   httpContext: echo.Context
  }
- type _subMtvMx = BaseCollectionEvent
- interface CollectionDeleteEvent extends _subMtvMx {
+ type _subLSHMR = BaseCollectionEvent
+ interface CollectionDeleteEvent extends _subLSHMR {
   httpContext: echo.Context
  }
  interface CollectionsImportEvent {
   httpContext: echo.Context
   collections: Array<(models.Collection | undefined)>
  }
- type _subzChAu = BaseModelEvent
- interface FileTokenEvent extends _subzChAu {
+ type _subwfGve = BaseModelEvent
+ interface FileTokenEvent extends _subwfGve {
   httpContext: echo.Context
   token: string
  }
- type _subKnVrU = BaseCollectionEvent
- interface FileDownloadEvent extends _subKnVrU {
+ type _subENXIg = BaseCollectionEvent
+ interface FileDownloadEvent extends _subENXIg {
   httpContext: echo.Context
   record?: models.Record
   fileField?: schema.SchemaField
@@ -35694,68 +35755,7 @@ namespace core {
  }
 }
 
-/**
- * Package cobra is a commander providing a simple interface to create powerful modern CLI interfaces.
- * In addition to providing an interface, Cobra simultaneously provides a controller to organize your application code.
- */
-namespace cobra {
- interface PositionalArgs {(cmd: Command, args: Array<string>): void }
- // @ts-ignore
- import flag = pflag
- /**
-  * FParseErrWhitelist configures Flag parse errors to be ignored
-  */
- interface FParseErrWhitelist extends _TygojaAny{}
- /**
-  * Group Structure to manage groups for commands
-  */
- interface Group {
-  id: string
-  title: string
- }
- /**
-  * ShellCompDirective is a bit map representing the different behaviors the shell
-  * can be instructed to have once completions have been provided.
-  */
- interface ShellCompDirective extends Number{}
- /**
-  * CompletionOptions are the options to control shell completion
-  */
- interface CompletionOptions {
-  /**
-   * DisableDefaultCmd prevents Cobra from creating a default 'completion' command
-   */
-  disableDefaultCmd: boolean
-  /**
-   * DisableNoDescFlag prevents Cobra from creating the '--no-descriptions' flag
-   * for shells that support completion descriptions
-   */
-  disableNoDescFlag: boolean
-  /**
-   * DisableDescriptions turns off all completion descriptions for shells
-   * that support them
-   */
-  disableDescriptions: boolean
-  /**
-   * HiddenDefaultCmd makes the default 'completion' command hidden
-   */
-  hiddenDefaultCmd: boolean
- }
-}
-
-/**
- * Package bufio implements buffered I/O. It wraps an io.Reader or io.Writer
- * object, creating another object (Reader or Writer) that also implements
- * the interface but provides buffering and some help for textual I/O.
- */
-namespace bufio {
- /**
-  * ReadWriter stores pointers to a [Reader] and a [Writer].
-  * It implements [io.ReadWriter].
-  */
- type _subNCmDN = Reader&Writer
- interface ReadWriter extends _subNCmDN {
- }
+namespace store {
 }
 
 /**
@@ -35866,297 +35866,6 @@ namespace net {
  }
 }
 
-/**
- * Package multipart implements MIME multipart parsing, as defined in RFC
- * 2046.
- * 
- * The implementation is sufficient for HTTP (RFC 2388) and the multipart
- * bodies generated by popular browsers.
- * 
- * # Limits
- * 
- * To protect against malicious inputs, this package sets limits on the size
- * of the MIME data it processes.
- * 
- * [Reader.NextPart] and [Reader.NextRawPart] limit the number of headers in a
- * part to 10000 and [Reader.ReadForm] limits the total number of headers in all
- * FileHeaders to 10000.
- * These limits may be adjusted with the GODEBUG=multipartmaxheaders=<values>
- * setting.
- * 
- * Reader.ReadForm further limits the number of parts in a form to 1000.
- * This limit may be adjusted with the GODEBUG=multipartmaxparts=<value>
- * setting.
- */
-namespace multipart {
- /**
-  * A Part represents a single part in a multipart body.
-  */
- interface Part {
-  /**
-   * The headers of the body, if any, with the keys canonicalized
-   * in the same fashion that the Go http.Request headers are.
-   * For example, "foo-bar" changes case to "Foo-Bar"
-   */
-  header: textproto.MIMEHeader
- }
- interface Part {
-  /**
-   * FormName returns the name parameter if p has a Content-Disposition
-   * of type "form-data".  Otherwise it returns the empty string.
-   */
-  formName(): string
- }
- interface Part {
-  /**
-   * FileName returns the filename parameter of the [Part]'s Content-Disposition
-   * header. If not empty, the filename is passed through filepath.Base (which is
-   * platform dependent) before being returned.
-   */
-  fileName(): string
- }
- interface Part {
-  /**
-   * Read reads the body of a part, after its headers and before the
-   * next part (if any) begins.
-   */
-  read(d: string|Array<number>): number
- }
- interface Part {
-  close(): void
- }
-}
-
-/**
- * Package http provides HTTP client and server implementations.
- * 
- * [Get], [Head], [Post], and [PostForm] make HTTP (or HTTPS) requests:
- * 
- * ```
- * 	resp, err := http.Get("http://example.com/")
- * 	...
- * 	resp, err := http.Post("http://example.com/upload", "image/jpeg", &buf)
- * 	...
- * 	resp, err := http.PostForm("http://example.com/form",
- * 		url.Values{"key": {"Value"}, "id": {"123"}})
- * ```
- * 
- * The caller must close the response body when finished with it:
- * 
- * ```
- * 	resp, err := http.Get("http://example.com/")
- * 	if err != nil {
- * 		// handle error
- * 	}
- * 	defer resp.Body.Close()
- * 	body, err := io.ReadAll(resp.Body)
- * 	// ...
- * ```
- * 
- * # Clients and Transports
- * 
- * For control over HTTP client headers, redirect policy, and other
- * settings, create a [Client]:
- * 
- * ```
- * 	client := &http.Client{
- * 		CheckRedirect: redirectPolicyFunc,
- * 	}
- * 
- * 	resp, err := client.Get("http://example.com")
- * 	// ...
- * 
- * 	req, err := http.NewRequest("GET", "http://example.com", nil)
- * 	// ...
- * 	req.Header.Add("If-None-Match", `W/"wyzzy"`)
- * 	resp, err := client.Do(req)
- * 	// ...
- * ```
- * 
- * For control over proxies, TLS configuration, keep-alives,
- * compression, and other settings, create a [Transport]:
- * 
- * ```
- * 	tr := &http.Transport{
- * 		MaxIdleConns:       10,
- * 		IdleConnTimeout:    30 * time.Second,
- * 		DisableCompression: true,
- * 	}
- * 	client := &http.Client{Transport: tr}
- * 	resp, err := client.Get("https://example.com")
- * ```
- * 
- * Clients and Transports are safe for concurrent use by multiple
- * goroutines and for efficiency should only be created once and re-used.
- * 
- * # Servers
- * 
- * ListenAndServe starts an HTTP server with a given address and handler.
- * The handler is usually nil, which means to use [DefaultServeMux].
- * [Handle] and [HandleFunc] add handlers to [DefaultServeMux]:
- * 
- * ```
- * 	http.Handle("/foo", fooHandler)
- * 
- * 	http.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
- * 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
- * 	})
- * 
- * 	log.Fatal(http.ListenAndServe(":8080", nil))
- * ```
- * 
- * More control over the server's behavior is available by creating a
- * custom Server:
- * 
- * ```
- * 	s := &http.Server{
- * 		Addr:           ":8080",
- * 		Handler:        myHandler,
- * 		ReadTimeout:    10 * time.Second,
- * 		WriteTimeout:   10 * time.Second,
- * 		MaxHeaderBytes: 1 << 20,
- * 	}
- * 	log.Fatal(s.ListenAndServe())
- * ```
- * 
- * # HTTP/2
- * 
- * Starting with Go 1.6, the http package has transparent support for the
- * HTTP/2 protocol when using HTTPS. Programs that must disable HTTP/2
- * can do so by setting [Transport.TLSNextProto] (for clients) or
- * [Server.TLSNextProto] (for servers) to a non-nil, empty
- * map. Alternatively, the following GODEBUG settings are
- * currently supported:
- * 
- * ```
- * 	GODEBUG=http2client=0  # disable HTTP/2 client support
- * 	GODEBUG=http2server=0  # disable HTTP/2 server support
- * 	GODEBUG=http2debug=1   # enable verbose HTTP/2 debug logs
- * 	GODEBUG=http2debug=2   # ... even more verbose, with frame dumps
- * ```
- * 
- * Please report any issues before disabling HTTP/2 support: https://golang.org/s/http2bug
- * 
- * The http package's [Transport] and [Server] both automatically enable
- * HTTP/2 support for simple configurations. To enable HTTP/2 for more
- * complex configurations, to use lower-level HTTP/2 features, or to use
- * a newer version of Go's http2 package, import "golang.org/x/net/http2"
- * directly and use its ConfigureTransport and/or ConfigureServer
- * functions. Manually configuring HTTP/2 via the golang.org/x/net/http2
- * package takes precedence over the net/http package's built-in HTTP/2
- * support.
- */
-namespace http {
- /**
-  * SameSite allows a server to define a cookie attribute making it impossible for
-  * the browser to send this cookie along with cross-site requests. The main
-  * goal is to mitigate the risk of cross-origin information leakage, and provide
-  * some protection against cross-site request forgery attacks.
-  * 
-  * See https://tools.ietf.org/html/draft-ietf-httpbis-cookie-same-site-00 for details.
-  */
- interface SameSite extends Number{}
- // @ts-ignore
- import mathrand = rand
- // @ts-ignore
- import urlpkg = url
-}
-
-namespace store {
-}
-
-namespace mailer {
- /**
-  * Message defines a generic email message struct.
-  */
- interface Message {
-  from: mail.Address
-  to: Array<mail.Address>
-  bcc: Array<mail.Address>
-  cc: Array<mail.Address>
-  subject: string
-  html: string
-  text: string
-  headers: _TygojaDict
-  attachments: _TygojaDict
- }
-}
-
-namespace logging {
- /**
-  * Classification is the type of the log entry's classification name.
-  */
- interface Classification extends String{}
-}
-
-/**
- * Package tracing defines tracing APIs to be used by Smithy clients.
- */
-namespace tracing {
- /**
-  * TracerProvider is the entry point for creating client traces.
-  */
- interface TracerProvider {
-  [key:string]: any;
-  tracer(scope: string, ...opts: TracerOption[]): Tracer
- }
-}
-
-/**
- * Package types implements some commonly used db serializable types
- * like datetime, json, etc.
- */
-namespace types {
- /**
-  * JsonRaw defines a json value type that is safe for db read/write.
-  */
- interface JsonRaw extends Array<number>{}
- interface JsonRaw {
-  /**
-   * String returns the current JsonRaw instance as a json encoded string.
-   */
-  string(): string
- }
- interface JsonRaw {
-  /**
-   * MarshalJSON implements the [json.Marshaler] interface.
-   */
-  marshalJSON(): string|Array<number>
- }
- interface JsonRaw {
-  /**
-   * UnmarshalJSON implements the [json.Unmarshaler] interface.
-   */
-  unmarshalJSON(b: string|Array<number>): void
- }
- interface JsonRaw {
-  /**
-   * Value implements the [driver.Valuer] interface.
-   */
-  value(): any
- }
- interface JsonRaw {
-  /**
-   * Scan implements [sql.Scanner] interface to scan the provided value
-   * into the current JsonRaw instance.
-   */
-  scan(value: any): void
- }
-}
-
-namespace search {
- /**
-  * Result defines the returned search result structure.
-  */
- interface Result {
-  page: number
-  perPage: number
-  totalItems: number
-  totalPages: number
-  items: any
- }
-}
-
 namespace hook {
  /**
   * Handler defines a hook handler function.
@@ -36165,37 +35874,16 @@ namespace hook {
  /**
   * wrapped local Hook embedded struct to limit the public API surface.
   */
- type _suboKSlp<T> = Hook<T>
- interface mainHook<T> extends _suboKSlp<T> {
+ type _subFoqDt<T> = Hook<T>
+ interface mainHook<T> extends _subFoqDt<T> {
  }
 }
 
-/**
- * Package metrics defines the metrics APIs used by Smithy clients.
- */
-namespace metrics {
+namespace logging {
  /**
-  * MeterProvider is the entry point for creating a Meter.
+  * Classification is the type of the log entry's classification name.
   */
- interface MeterProvider {
-  [key:string]: any;
-  meter(scope: string, ...opts: MeterOption[]): Meter
- }
-}
-
-/**
- * Package auth defines protocol-agnostic authentication types for smithy
- * clients.
- */
-namespace auth {
- /**
-  * IdentityResolver defines the interface through which an Identity is
-  * retrieved.
-  */
- interface IdentityResolver {
-  [key:string]: any;
-  getIdentity(_arg0: context.Context, _arg1: smithy.Properties): Identity
- }
+ interface Classification extends String{}
 }
 
 /**
@@ -36694,6 +36382,258 @@ namespace middleware {
 }
 
 /**
+ * Package auth defines protocol-agnostic authentication types for smithy
+ * clients.
+ */
+namespace auth {
+ /**
+  * IdentityResolver defines the interface through which an Identity is
+  * retrieved.
+  */
+ interface IdentityResolver {
+  [key:string]: any;
+  getIdentity(_arg0: context.Context, _arg1: smithy.Properties): Identity
+ }
+}
+
+/**
+ * Package metrics defines the metrics APIs used by Smithy clients.
+ */
+namespace metrics {
+ /**
+  * MeterProvider is the entry point for creating a Meter.
+  */
+ interface MeterProvider {
+  [key:string]: any;
+  meter(scope: string, ...opts: MeterOption[]): Meter
+ }
+}
+
+/**
+ * Package tracing defines tracing APIs to be used by Smithy clients.
+ */
+namespace tracing {
+ /**
+  * TracerProvider is the entry point for creating client traces.
+  */
+ interface TracerProvider {
+  [key:string]: any;
+  tracer(scope: string, ...opts: TracerOption[]): Tracer
+ }
+}
+
+/**
+ * Package bufio implements buffered I/O. It wraps an io.Reader or io.Writer
+ * object, creating another object (Reader or Writer) that also implements
+ * the interface but provides buffering and some help for textual I/O.
+ */
+namespace bufio {
+ /**
+  * ReadWriter stores pointers to a [Reader] and a [Writer].
+  * It implements [io.ReadWriter].
+  */
+ type _sububutk = Reader&Writer
+ interface ReadWriter extends _sububutk {
+ }
+}
+
+/**
+ * Package multipart implements MIME multipart parsing, as defined in RFC
+ * 2046.
+ * 
+ * The implementation is sufficient for HTTP (RFC 2388) and the multipart
+ * bodies generated by popular browsers.
+ * 
+ * # Limits
+ * 
+ * To protect against malicious inputs, this package sets limits on the size
+ * of the MIME data it processes.
+ * 
+ * [Reader.NextPart] and [Reader.NextRawPart] limit the number of headers in a
+ * part to 10000 and [Reader.ReadForm] limits the total number of headers in all
+ * FileHeaders to 10000.
+ * These limits may be adjusted with the GODEBUG=multipartmaxheaders=<values>
+ * setting.
+ * 
+ * Reader.ReadForm further limits the number of parts in a form to 1000.
+ * This limit may be adjusted with the GODEBUG=multipartmaxparts=<value>
+ * setting.
+ */
+namespace multipart {
+ /**
+  * A Part represents a single part in a multipart body.
+  */
+ interface Part {
+  /**
+   * The headers of the body, if any, with the keys canonicalized
+   * in the same fashion that the Go http.Request headers are.
+   * For example, "foo-bar" changes case to "Foo-Bar"
+   */
+  header: textproto.MIMEHeader
+ }
+ interface Part {
+  /**
+   * FormName returns the name parameter if p has a Content-Disposition
+   * of type "form-data".  Otherwise it returns the empty string.
+   */
+  formName(): string
+ }
+ interface Part {
+  /**
+   * FileName returns the filename parameter of the [Part]'s Content-Disposition
+   * header. If not empty, the filename is passed through filepath.Base (which is
+   * platform dependent) before being returned.
+   */
+  fileName(): string
+ }
+ interface Part {
+  /**
+   * Read reads the body of a part, after its headers and before the
+   * next part (if any) begins.
+   */
+  read(d: string|Array<number>): number
+ }
+ interface Part {
+  close(): void
+ }
+}
+
+/**
+ * Package http provides HTTP client and server implementations.
+ * 
+ * [Get], [Head], [Post], and [PostForm] make HTTP (or HTTPS) requests:
+ * 
+ * ```
+ * 	resp, err := http.Get("http://example.com/")
+ * 	...
+ * 	resp, err := http.Post("http://example.com/upload", "image/jpeg", &buf)
+ * 	...
+ * 	resp, err := http.PostForm("http://example.com/form",
+ * 		url.Values{"key": {"Value"}, "id": {"123"}})
+ * ```
+ * 
+ * The caller must close the response body when finished with it:
+ * 
+ * ```
+ * 	resp, err := http.Get("http://example.com/")
+ * 	if err != nil {
+ * 		// handle error
+ * 	}
+ * 	defer resp.Body.Close()
+ * 	body, err := io.ReadAll(resp.Body)
+ * 	// ...
+ * ```
+ * 
+ * # Clients and Transports
+ * 
+ * For control over HTTP client headers, redirect policy, and other
+ * settings, create a [Client]:
+ * 
+ * ```
+ * 	client := &http.Client{
+ * 		CheckRedirect: redirectPolicyFunc,
+ * 	}
+ * 
+ * 	resp, err := client.Get("http://example.com")
+ * 	// ...
+ * 
+ * 	req, err := http.NewRequest("GET", "http://example.com", nil)
+ * 	// ...
+ * 	req.Header.Add("If-None-Match", `W/"wyzzy"`)
+ * 	resp, err := client.Do(req)
+ * 	// ...
+ * ```
+ * 
+ * For control over proxies, TLS configuration, keep-alives,
+ * compression, and other settings, create a [Transport]:
+ * 
+ * ```
+ * 	tr := &http.Transport{
+ * 		MaxIdleConns:       10,
+ * 		IdleConnTimeout:    30 * time.Second,
+ * 		DisableCompression: true,
+ * 	}
+ * 	client := &http.Client{Transport: tr}
+ * 	resp, err := client.Get("https://example.com")
+ * ```
+ * 
+ * Clients and Transports are safe for concurrent use by multiple
+ * goroutines and for efficiency should only be created once and re-used.
+ * 
+ * # Servers
+ * 
+ * ListenAndServe starts an HTTP server with a given address and handler.
+ * The handler is usually nil, which means to use [DefaultServeMux].
+ * [Handle] and [HandleFunc] add handlers to [DefaultServeMux]:
+ * 
+ * ```
+ * 	http.Handle("/foo", fooHandler)
+ * 
+ * 	http.HandleFunc("/bar", func(w http.ResponseWriter, r *http.Request) {
+ * 		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+ * 	})
+ * 
+ * 	log.Fatal(http.ListenAndServe(":8080", nil))
+ * ```
+ * 
+ * More control over the server's behavior is available by creating a
+ * custom Server:
+ * 
+ * ```
+ * 	s := &http.Server{
+ * 		Addr:           ":8080",
+ * 		Handler:        myHandler,
+ * 		ReadTimeout:    10 * time.Second,
+ * 		WriteTimeout:   10 * time.Second,
+ * 		MaxHeaderBytes: 1 << 20,
+ * 	}
+ * 	log.Fatal(s.ListenAndServe())
+ * ```
+ * 
+ * # HTTP/2
+ * 
+ * Starting with Go 1.6, the http package has transparent support for the
+ * HTTP/2 protocol when using HTTPS. Programs that must disable HTTP/2
+ * can do so by setting [Transport.TLSNextProto] (for clients) or
+ * [Server.TLSNextProto] (for servers) to a non-nil, empty
+ * map. Alternatively, the following GODEBUG settings are
+ * currently supported:
+ * 
+ * ```
+ * 	GODEBUG=http2client=0  # disable HTTP/2 client support
+ * 	GODEBUG=http2server=0  # disable HTTP/2 server support
+ * 	GODEBUG=http2debug=1   # enable verbose HTTP/2 debug logs
+ * 	GODEBUG=http2debug=2   # ... even more verbose, with frame dumps
+ * ```
+ * 
+ * Please report any issues before disabling HTTP/2 support: https://golang.org/s/http2bug
+ * 
+ * The http package's [Transport] and [Server] both automatically enable
+ * HTTP/2 support for simple configurations. To enable HTTP/2 for more
+ * complex configurations, to use lower-level HTTP/2 features, or to use
+ * a newer version of Go's http2 package, import "golang.org/x/net/http2"
+ * directly and use its ConfigureTransport and/or ConfigureServer
+ * functions. Manually configuring HTTP/2 via the golang.org/x/net/http2
+ * package takes precedence over the net/http package's built-in HTTP/2
+ * support.
+ */
+namespace http {
+ /**
+  * SameSite allows a server to define a cookie attribute making it impossible for
+  * the browser to send this cookie along with cross-site requests. The main
+  * goal is to mitigate the risk of cross-origin information leakage, and provide
+  * some protection against cross-site request forgery attacks.
+  * 
+  * See https://tools.ietf.org/html/draft-ietf-httpbis-cookie-same-site-00 for details.
+  */
+ interface SameSite extends Number{}
+ // @ts-ignore
+ import mathrand = rand
+ // @ts-ignore
+ import urlpkg = url
+}
+
+/**
  * Package http provides the HTTP transport client and request/response types
  * needed to round trip API operation calls with an service.
  */
@@ -36715,84 +36655,949 @@ namespace http {
  import smithytime = time
 }
 
-namespace subscriptions {
+/**
+ * Package bearer provides middleware and utilities for authenticating API
+ * operation calls with a Bearer Token.
+ */
+namespace bearer {
+ // @ts-ignore
+ import smithyhttp = http
  /**
-  * Message defines a client's channel data.
+  * Token provides a type wrapping a bearer token and expiration metadata.
+  */
+ interface Token {
+  value: string
+  canExpire: boolean
+  expires: time.Time
+ }
+ interface Token {
+  /**
+   * Expired returns if the token's Expires time is before or equal to the time
+   * provided. If CanExpires is false, Expired will always return false.
+   */
+  expired(now: time.Time): boolean
+ }
+ // @ts-ignore
+ import smithycontext = context
+}
+
+namespace mailer {
+ /**
+  * Message defines a generic email message struct.
   */
  interface Message {
-  name: string
-  data: string|Array<number>
+  from: mail.Address
+  to: Array<mail.Address>
+  bcc: Array<mail.Address>
+  cc: Array<mail.Address>
+  subject: string
+  html: string
+  text: string
+  headers: _TygojaDict
+  attachments: _TygojaDict
+ }
+}
+
+/**
+ * Package slog provides structured logging,
+ * in which log records include a message,
+ * a severity level, and various other attributes
+ * expressed as key-value pairs.
+ * 
+ * It defines a type, [Logger],
+ * which provides several methods (such as [Logger.Info] and [Logger.Error])
+ * for reporting events of interest.
+ * 
+ * Each Logger is associated with a [Handler].
+ * A Logger output method creates a [Record] from the method arguments
+ * and passes it to the Handler, which decides how to handle it.
+ * There is a default Logger accessible through top-level functions
+ * (such as [Info] and [Error]) that call the corresponding Logger methods.
+ * 
+ * A log record consists of a time, a level, a message, and a set of key-value
+ * pairs, where the keys are strings and the values may be of any type.
+ * As an example,
+ * 
+ * ```
+ * 	slog.Info("hello", "count", 3)
+ * ```
+ * 
+ * creates a record containing the time of the call,
+ * a level of Info, the message "hello", and a single
+ * pair with key "count" and value 3.
+ * 
+ * The [Info] top-level function calls the [Logger.Info] method on the default Logger.
+ * In addition to [Logger.Info], there are methods for Debug, Warn and Error levels.
+ * Besides these convenience methods for common levels,
+ * there is also a [Logger.Log] method which takes the level as an argument.
+ * Each of these methods has a corresponding top-level function that uses the
+ * default logger.
+ * 
+ * The default handler formats the log record's message, time, level, and attributes
+ * as a string and passes it to the [log] package.
+ * 
+ * ```
+ * 	2022/11/08 15:28:26 INFO hello count=3
+ * ```
+ * 
+ * For more control over the output format, create a logger with a different handler.
+ * This statement uses [New] to create a new logger with a [TextHandler]
+ * that writes structured records in text form to standard error:
+ * 
+ * ```
+ * 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
+ * ```
+ * 
+ * [TextHandler] output is a sequence of key=value pairs, easily and unambiguously
+ * parsed by machine. This statement:
+ * 
+ * ```
+ * 	logger.Info("hello", "count", 3)
+ * ```
+ * 
+ * produces this output:
+ * 
+ * ```
+ * 	time=2022-11-08T15:28:26.000-05:00 level=INFO msg=hello count=3
+ * ```
+ * 
+ * The package also provides [JSONHandler], whose output is line-delimited JSON:
+ * 
+ * ```
+ * 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+ * 	logger.Info("hello", "count", 3)
+ * ```
+ * 
+ * produces this output:
+ * 
+ * ```
+ * 	{"time":"2022-11-08T15:28:26.000000000-05:00","level":"INFO","msg":"hello","count":3}
+ * ```
+ * 
+ * Both [TextHandler] and [JSONHandler] can be configured with [HandlerOptions].
+ * There are options for setting the minimum level (see Levels, below),
+ * displaying the source file and line of the log call, and
+ * modifying attributes before they are logged.
+ * 
+ * Setting a logger as the default with
+ * 
+ * ```
+ * 	slog.SetDefault(logger)
+ * ```
+ * 
+ * will cause the top-level functions like [Info] to use it.
+ * [SetDefault] also updates the default logger used by the [log] package,
+ * so that existing applications that use [log.Printf] and related functions
+ * will send log records to the logger's handler without needing to be rewritten.
+ * 
+ * Some attributes are common to many log calls.
+ * For example, you may wish to include the URL or trace identifier of a server request
+ * with all log events arising from the request.
+ * Rather than repeat the attribute with every log call, you can use [Logger.With]
+ * to construct a new Logger containing the attributes:
+ * 
+ * ```
+ * 	logger2 := logger.With("url", r.URL)
+ * ```
+ * 
+ * The arguments to With are the same key-value pairs used in [Logger.Info].
+ * The result is a new Logger with the same handler as the original, but additional
+ * attributes that will appear in the output of every call.
+ * 
+ * # Levels
+ * 
+ * A [Level] is an integer representing the importance or severity of a log event.
+ * The higher the level, the more severe the event.
+ * This package defines constants for the most common levels,
+ * but any int can be used as a level.
+ * 
+ * In an application, you may wish to log messages only at a certain level or greater.
+ * One common configuration is to log messages at Info or higher levels,
+ * suppressing debug logging until it is needed.
+ * The built-in handlers can be configured with the minimum level to output by
+ * setting [HandlerOptions.Level].
+ * The program's `main` function typically does this.
+ * The default value is LevelInfo.
+ * 
+ * Setting the [HandlerOptions.Level] field to a [Level] value
+ * fixes the handler's minimum level throughout its lifetime.
+ * Setting it to a [LevelVar] allows the level to be varied dynamically.
+ * A LevelVar holds a Level and is safe to read or write from multiple
+ * goroutines.
+ * To vary the level dynamically for an entire program, first initialize
+ * a global LevelVar:
+ * 
+ * ```
+ * 	var programLevel = new(slog.LevelVar) // Info by default
+ * ```
+ * 
+ * Then use the LevelVar to construct a handler, and make it the default:
+ * 
+ * ```
+ * 	h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: programLevel})
+ * 	slog.SetDefault(slog.New(h))
+ * ```
+ * 
+ * Now the program can change its logging level with a single statement:
+ * 
+ * ```
+ * 	programLevel.Set(slog.LevelDebug)
+ * ```
+ * 
+ * # Groups
+ * 
+ * Attributes can be collected into groups.
+ * A group has a name that is used to qualify the names of its attributes.
+ * How this qualification is displayed depends on the handler.
+ * [TextHandler] separates the group and attribute names with a dot.
+ * [JSONHandler] treats each group as a separate JSON object, with the group name as the key.
+ * 
+ * Use [Group] to create a Group attribute from a name and a list of key-value pairs:
+ * 
+ * ```
+ * 	slog.Group("request",
+ * 	    "method", r.Method,
+ * 	    "url", r.URL)
+ * ```
+ * 
+ * TextHandler would display this group as
+ * 
+ * ```
+ * 	request.method=GET request.url=http://example.com
+ * ```
+ * 
+ * JSONHandler would display it as
+ * 
+ * ```
+ * 	"request":{"method":"GET","url":"http://example.com"}
+ * ```
+ * 
+ * Use [Logger.WithGroup] to qualify all of a Logger's output
+ * with a group name. Calling WithGroup on a Logger results in a
+ * new Logger with the same Handler as the original, but with all
+ * its attributes qualified by the group name.
+ * 
+ * This can help prevent duplicate attribute keys in large systems,
+ * where subsystems might use the same keys.
+ * Pass each subsystem a different Logger with its own group name so that
+ * potential duplicates are qualified:
+ * 
+ * ```
+ * 	logger := slog.Default().With("id", systemID)
+ * 	parserLogger := logger.WithGroup("parser")
+ * 	parseInput(input, parserLogger)
+ * ```
+ * 
+ * When parseInput logs with parserLogger, its keys will be qualified with "parser",
+ * so even if it uses the common key "id", the log line will have distinct keys.
+ * 
+ * # Contexts
+ * 
+ * Some handlers may wish to include information from the [context.Context] that is
+ * available at the call site. One example of such information
+ * is the identifier for the current span when tracing is enabled.
+ * 
+ * The [Logger.Log] and [Logger.LogAttrs] methods take a context as a first
+ * argument, as do their corresponding top-level functions.
+ * 
+ * Although the convenience methods on Logger (Info and so on) and the
+ * corresponding top-level functions do not take a context, the alternatives ending
+ * in "Context" do. For example,
+ * 
+ * ```
+ * 	slog.InfoContext(ctx, "message")
+ * ```
+ * 
+ * It is recommended to pass a context to an output method if one is available.
+ * 
+ * # Attrs and Values
+ * 
+ * An [Attr] is a key-value pair. The Logger output methods accept Attrs as well as
+ * alternating keys and values. The statement
+ * 
+ * ```
+ * 	slog.Info("hello", slog.Int("count", 3))
+ * ```
+ * 
+ * behaves the same as
+ * 
+ * ```
+ * 	slog.Info("hello", "count", 3)
+ * ```
+ * 
+ * There are convenience constructors for [Attr] such as [Int], [String], and [Bool]
+ * for common types, as well as the function [Any] for constructing Attrs of any
+ * type.
+ * 
+ * The value part of an Attr is a type called [Value].
+ * Like an [any], a Value can hold any Go value,
+ * but it can represent typical values, including all numbers and strings,
+ * without an allocation.
+ * 
+ * For the most efficient log output, use [Logger.LogAttrs].
+ * It is similar to [Logger.Log] but accepts only Attrs, not alternating
+ * keys and values; this allows it, too, to avoid allocation.
+ * 
+ * The call
+ * 
+ * ```
+ * 	logger.LogAttrs(ctx, slog.LevelInfo, "hello", slog.Int("count", 3))
+ * ```
+ * 
+ * is the most efficient way to achieve the same output as
+ * 
+ * ```
+ * 	slog.InfoContext(ctx, "hello", "count", 3)
+ * ```
+ * 
+ * # Customizing a type's logging behavior
+ * 
+ * If a type implements the [LogValuer] interface, the [Value] returned from its LogValue
+ * method is used for logging. You can use this to control how values of the type
+ * appear in logs. For example, you can redact secret information like passwords,
+ * or gather a struct's fields in a Group. See the examples under [LogValuer] for
+ * details.
+ * 
+ * A LogValue method may return a Value that itself implements [LogValuer]. The [Value.Resolve]
+ * method handles these cases carefully, avoiding infinite loops and unbounded recursion.
+ * Handler authors and others may wish to use [Value.Resolve] instead of calling LogValue directly.
+ * 
+ * # Wrapping output methods
+ * 
+ * The logger functions use reflection over the call stack to find the file name
+ * and line number of the logging call within the application. This can produce
+ * incorrect source information for functions that wrap slog. For instance, if you
+ * define this function in file mylog.go:
+ * 
+ * ```
+ * 	func Infof(logger *slog.Logger, format string, args ...any) {
+ * 	    logger.Info(fmt.Sprintf(format, args...))
+ * 	}
+ * ```
+ * 
+ * and you call it like this in main.go:
+ * 
+ * ```
+ * 	Infof(slog.Default(), "hello, %s", "world")
+ * ```
+ * 
+ * then slog will report the source file as mylog.go, not main.go.
+ * 
+ * A correct implementation of Infof will obtain the source location
+ * (pc) and pass it to NewRecord.
+ * The Infof function in the package-level example called "wrapping"
+ * demonstrates how to do this.
+ * 
+ * # Working with Records
+ * 
+ * Sometimes a Handler will need to modify a Record
+ * before passing it on to another Handler or backend.
+ * A Record contains a mixture of simple public fields (e.g. Time, Level, Message)
+ * and hidden fields that refer to state (such as attributes) indirectly. This
+ * means that modifying a simple copy of a Record (e.g. by calling
+ * [Record.Add] or [Record.AddAttrs] to add attributes)
+ * may have unexpected effects on the original.
+ * Before modifying a Record, use [Record.Clone] to
+ * create a copy that shares no state with the original,
+ * or create a new Record with [NewRecord]
+ * and build up its Attrs by traversing the old ones with [Record.Attrs].
+ * 
+ * # Performance considerations
+ * 
+ * If profiling your application demonstrates that logging is taking significant time,
+ * the following suggestions may help.
+ * 
+ * If many log lines have a common attribute, use [Logger.With] to create a Logger with
+ * that attribute. The built-in handlers will format that attribute only once, at the
+ * call to [Logger.With]. The [Handler] interface is designed to allow that optimization,
+ * and a well-written Handler should take advantage of it.
+ * 
+ * The arguments to a log call are always evaluated, even if the log event is discarded.
+ * If possible, defer computation so that it happens only if the value is actually logged.
+ * For example, consider the call
+ * 
+ * ```
+ * 	slog.Info("starting request", "url", r.URL.String())  // may compute String unnecessarily
+ * ```
+ * 
+ * The URL.String method will be called even if the logger discards Info-level events.
+ * Instead, pass the URL directly:
+ * 
+ * ```
+ * 	slog.Info("starting request", "url", &r.URL) // calls URL.String only if needed
+ * ```
+ * 
+ * The built-in [TextHandler] will call its String method, but only
+ * if the log event is enabled.
+ * Avoiding the call to String also preserves the structure of the underlying value.
+ * For example [JSONHandler] emits the components of the parsed URL as a JSON object.
+ * If you want to avoid eagerly paying the cost of the String call
+ * without causing the handler to potentially inspect the structure of the value,
+ * wrap the value in a fmt.Stringer implementation that hides its Marshal methods.
+ * 
+ * You can also use the [LogValuer] interface to avoid unnecessary work in disabled log
+ * calls. Say you need to log some expensive value:
+ * 
+ * ```
+ * 	slog.Debug("frobbing", "value", computeExpensiveValue(arg))
+ * ```
+ * 
+ * Even if this line is disabled, computeExpensiveValue will be called.
+ * To avoid that, define a type implementing LogValuer:
+ * 
+ * ```
+ * 	type expensive struct { arg int }
+ * 
+ * 	func (e expensive) LogValue() slog.Value {
+ * 	    return slog.AnyValue(computeExpensiveValue(e.arg))
+ * 	}
+ * ```
+ * 
+ * Then use a value of that type in log calls:
+ * 
+ * ```
+ * 	slog.Debug("frobbing", "value", expensive{arg})
+ * ```
+ * 
+ * Now computeExpensiveValue will only be called when the line is enabled.
+ * 
+ * The built-in handlers acquire a lock before calling [io.Writer.Write]
+ * to ensure that exactly one [Record] is written at a time in its entirety.
+ * Although each log record has a timestamp,
+ * the built-in handlers do not use that time to sort the written records.
+ * User-defined handlers are responsible for their own locking and sorting.
+ * 
+ * # Writing a handler
+ * 
+ * For a guide to writing a custom handler, see https://golang.org/s/slog-handler-guide.
+ */
+namespace slog {
+ /**
+  * An Attr is a key-value pair.
+  */
+ interface Attr {
+  key: string
+  value: Value
+ }
+ interface Attr {
+  /**
+   * Equal reports whether a and b have equal keys and values.
+   */
+  equal(b: Attr): boolean
+ }
+ interface Attr {
+  string(): string
  }
  /**
-  * Client is an interface for a generic subscription client.
+  * A Handler handles log records produced by a Logger.
+  * 
+  * A typical handler may print log records to standard error,
+  * or write them to a file or database, or perhaps augment them
+  * with additional attributes and pass them on to another handler.
+  * 
+  * Any of the Handler's methods may be called concurrently with itself
+  * or with other methods. It is the responsibility of the Handler to
+  * manage this concurrency.
+  * 
+  * Users of the slog package should not invoke Handler methods directly.
+  * They should use the methods of [Logger] instead.
   */
- interface Client {
+ interface Handler {
   [key:string]: any;
   /**
-   * Id Returns the unique id of the client.
+   * Enabled reports whether the handler handles records at the given level.
+   * The handler ignores records whose level is lower.
+   * It is called early, before any arguments are processed,
+   * to save effort if the log event should be discarded.
+   * If called from a Logger method, the first argument is the context
+   * passed to that method, or context.Background() if nil was passed
+   * or the method does not take a context.
+   * The context is passed so Enabled can use its values
+   * to make a decision.
    */
-  id(): string
+  enabled(_arg0: context.Context, _arg1: Level): boolean
   /**
-   * Channel returns the client's communication channel.
-   */
-  channel(): undefined
-  /**
-   * Subscriptions returns a shallow copy of the client subscriptions matching the prefixes.
-   * If no prefix is specified, returns all subscriptions.
-   */
-  subscriptions(...prefixes: string[]): _TygojaDict
-  /**
-   * Subscribe subscribes the client to the provided subscriptions list.
+   * Handle handles the Record.
+   * It will only be called when Enabled returns true.
+   * The Context argument is as for Enabled.
+   * It is present solely to provide Handlers access to the context's values.
+   * Canceling the context should not affect record processing.
+   * (Among other things, log messages may be necessary to debug a
+   * cancellation-related problem.)
    * 
-   * Each subscription can also have "options" (json serialized SubscriptionOptions) as query parameter.
+   * Handle methods that produce output should observe the following rules:
+   * ```
+   *   - If r.Time is the zero time, ignore the time.
+   *   - If r.PC is zero, ignore it.
+   *   - Attr's values should be resolved.
+   *   - If an Attr's key and value are both the zero value, ignore the Attr.
+   *     This can be tested with attr.Equal(Attr{}).
+   *   - If a group's key is empty, inline the group's Attrs.
+   *   - If a group has no Attrs (even if it has a non-empty key),
+   *     ignore it.
+   * ```
+   */
+  handle(_arg0: context.Context, _arg1: Record): void
+  /**
+   * WithAttrs returns a new Handler whose attributes consist of
+   * both the receiver's attributes and the arguments.
+   * The Handler owns the slice: it may retain, modify or discard it.
+   */
+  withAttrs(attrs: Array<Attr>): Handler
+  /**
+   * WithGroup returns a new Handler with the given group appended to
+   * the receiver's existing groups.
+   * The keys of all subsequent attributes, whether added by With or in a
+   * Record, should be qualified by the sequence of group names.
    * 
-   * Example:
+   * How this qualification happens is up to the Handler, so long as
+   * this Handler's attribute keys differ from those of another Handler
+   * with a different sequence of group names.
+   * 
+   * A Handler should treat WithGroup as starting a Group of Attrs that ends
+   * at the end of the log event. That is,
    * 
    * ```
-   * 	Subscribe(
-   * 	    "subscriptionA",
-   * 	    `subscriptionB?options={"query":{"a":1},"headers":{"x_token":"abc"}}`,
-   * 	)
+   *     logger.WithGroup("s").LogAttrs(ctx, level, msg, slog.Int("a", 1), slog.Int("b", 2))
    * ```
-   */
-  subscribe(...subs: string[]): void
-  /**
-   * Unsubscribe unsubscribes the client from the provided subscriptions list.
-   */
-  unsubscribe(...subs: string[]): void
-  /**
-   * HasSubscription checks if the client is subscribed to `sub`.
-   */
-  hasSubscription(sub: string): boolean
-  /**
-   * Set stores any value to the client's context.
-   */
-  set(key: string, value: any): void
-  /**
-   * Unset removes a single value from the client's context.
-   */
-  unset(key: string): void
-  /**
-   * Get retrieves the key value from the client's context.
-   */
-  get(key: string): any
-  /**
-   * Discard marks the client as "discarded", meaning that it
-   * shouldn't be used anymore for sending new messages.
    * 
-   * It is safe to call Discard() multiple times.
+   * should behave like
+   * 
+   * ```
+   *     logger.LogAttrs(ctx, level, msg, slog.Group("s", slog.Int("a", 1), slog.Int("b", 2)))
+   * ```
+   * 
+   * If the name is empty, WithGroup returns the receiver.
    */
-  discard(): void
-  /**
-   * IsDiscarded indicates whether the client has been "discarded"
-   * and should no longer be used.
-   */
-  isDiscarded(): boolean
-  /**
-   * Send sends the specified message to the client's channel (if not discarded).
-   */
-  send(m: Message): void
+  withGroup(name: string): Handler
  }
+ /**
+  * A Level is the importance or severity of a log event.
+  * The higher the level, the more important or severe the event.
+  */
+ interface Level extends Number{}
+ interface Level {
+  /**
+   * String returns a name for the level.
+   * If the level has a name, then that name
+   * in uppercase is returned.
+   * If the level is between named values, then
+   * an integer is appended to the uppercased name.
+   * Examples:
+   * 
+   * ```
+   * 	LevelWarn.String() => "WARN"
+   * 	(LevelInfo+2).String() => "INFO+2"
+   * ```
+   */
+  string(): string
+ }
+ interface Level {
+  /**
+   * MarshalJSON implements [encoding/json.Marshaler]
+   * by quoting the output of [Level.String].
+   */
+  marshalJSON(): string|Array<number>
+ }
+ interface Level {
+  /**
+   * UnmarshalJSON implements [encoding/json.Unmarshaler]
+   * It accepts any string produced by [Level.MarshalJSON],
+   * ignoring case.
+   * It also accepts numeric offsets that would result in a different string on
+   * output. For example, "Error-8" would marshal as "INFO".
+   */
+  unmarshalJSON(data: string|Array<number>): void
+ }
+ interface Level {
+  /**
+   * MarshalText implements [encoding.TextMarshaler]
+   * by calling [Level.String].
+   */
+  marshalText(): string|Array<number>
+ }
+ interface Level {
+  /**
+   * UnmarshalText implements [encoding.TextUnmarshaler].
+   * It accepts any string produced by [Level.MarshalText],
+   * ignoring case.
+   * It also accepts numeric offsets that would result in a different string on
+   * output. For example, "Error-8" would marshal as "INFO".
+   */
+  unmarshalText(data: string|Array<number>): void
+ }
+ interface Level {
+  /**
+   * Level returns the receiver.
+   * It implements [Leveler].
+   */
+  level(): Level
+ }
+ // @ts-ignore
+ import loginternal = internal
+}
+
+/**
+ * Package types implements some commonly used db serializable types
+ * like datetime, json, etc.
+ */
+namespace types {
+ /**
+  * JsonRaw defines a json value type that is safe for db read/write.
+  */
+ interface JsonRaw extends Array<number>{}
+ interface JsonRaw {
+  /**
+   * String returns the current JsonRaw instance as a json encoded string.
+   */
+  string(): string
+ }
+ interface JsonRaw {
+  /**
+   * MarshalJSON implements the [json.Marshaler] interface.
+   */
+  marshalJSON(): string|Array<number>
+ }
+ interface JsonRaw {
+  /**
+   * UnmarshalJSON implements the [json.Unmarshaler] interface.
+   */
+  unmarshalJSON(b: string|Array<number>): void
+ }
+ interface JsonRaw {
+  /**
+   * Value implements the [driver.Valuer] interface.
+   */
+  value(): any
+ }
+ interface JsonRaw {
+  /**
+   * Scan implements [sql.Scanner] interface to scan the provided value
+   * into the current JsonRaw instance.
+   */
+  scan(value: any): void
+ }
+}
+
+namespace search {
+ /**
+  * Result defines the returned search result structure.
+  */
+ interface Result {
+  page: number
+  perPage: number
+  totalItems: number
+  totalPages: number
+  items: any
+ }
+}
+
+/**
+ * Package echo implements high performance, minimalist Go web framework.
+ * 
+ * Example:
+ * 
+ * ```
+ * 	  package main
+ * 
+ * 		import (
+ * 			"github.com/labstack/echo/v5"
+ * 			"github.com/labstack/echo/v5/middleware"
+ * 			"log"
+ * 			"net/http"
+ * 		)
+ * 
+ * 	  // Handler
+ * 	  func hello(c echo.Context) error {
+ * 	    return c.String(http.StatusOK, "Hello, World!")
+ * 	  }
+ * 
+ * 	  func main() {
+ * 	    // Echo instance
+ * 	    e := echo.New()
+ * 
+ * 	    // Middleware
+ * 	    e.Use(middleware.Logger())
+ * 	    e.Use(middleware.Recover())
+ * 
+ * 	    // Routes
+ * 	    e.GET("/", hello)
+ * 
+ * 	    // Start server
+ * 	    if err := e.Start(":8080"); err != http.ErrServerClosed {
+ * 			  log.Fatal(err)
+ * 		  }
+ * 	  }
+ * ```
+ * 
+ * Learn more at https://echo.labstack.com
+ */
+namespace echo {
+ // @ts-ignore
+ import stdContext = context
+ /**
+  * Route contains information to adding/registering new route with the router.
+  * Method+Path pair uniquely identifies the Route. It is mandatory to provide Method+Path+Handler fields.
+  */
+ interface Route {
+  method: string
+  path: string
+  handler: HandlerFunc
+  middlewares: Array<MiddlewareFunc>
+  name: string
+ }
+ interface Route {
+  /**
+   * ToRouteInfo converts Route to RouteInfo
+   */
+  toRouteInfo(params: Array<string>): RouteInfo
+ }
+ interface Route {
+  /**
+   * ToRoute returns Route which Router uses to register the method handler for path.
+   */
+  toRoute(): Route
+ }
+ interface Route {
+  /**
+   * ForGroup recreates Route with added group prefix and group middlewares it is grouped to.
+   */
+  forGroup(pathPrefix: string, middlewares: Array<MiddlewareFunc>): Routable
+ }
+ /**
+  * RoutableContext is additional interface that structures implementing Context must implement. Methods inside this
+  * interface are meant for request routing purposes and should not be used in middlewares.
+  */
+ interface RoutableContext {
+  [key:string]: any;
+  /**
+   * Request returns `*http.Request`.
+   */
+  request(): (http.Request)
+  /**
+   * RawPathParams returns raw path pathParams value. Allocation of PathParams is handled by Context.
+   */
+  rawPathParams(): (PathParams)
+  /**
+   * SetRawPathParams replaces any existing param values with new values for this context lifetime (request).
+   * Do not set any other value than what you got from RawPathParams as allocation of PathParams is handled by Context.
+   */
+  setRawPathParams(params: PathParams): void
+  /**
+   * SetPath sets the registered path for the handler.
+   */
+  setPath(p: string): void
+  /**
+   * SetRouteInfo sets the route info of this request to the context.
+   */
+  setRouteInfo(ri: RouteInfo): void
+  /**
+   * Set saves data in the context. Allows router to store arbitrary (that only router has access to) data in context
+   * for later use in middlewares/handler.
+   */
+  set(key: string, val: {
+  }): void
+ }
+ /**
+  * PathParam is tuple pf path parameter name and its value in request path
+  */
+ interface PathParam {
+  name: string
+  value: string
+ }
+}
+
+/**
+ * Package aws provides the core SDK's utilities and shared types. Use this package's
+ * utilities to simplify setting and reading API operations parameters.
+ * 
+ * # Value and Pointer Conversion Utilities
+ * 
+ * This package includes a helper conversion utility for each scalar type the SDK's
+ * API use. These utilities make getting a pointer of the scalar, and dereferencing
+ * a pointer easier.
+ * 
+ * Each conversion utility comes in two forms. Value to Pointer and Pointer to Value.
+ * The Pointer to value will safely dereference the pointer and return its value.
+ * If the pointer was nil, the scalar's zero value will be returned.
+ * 
+ * The value to pointer functions will be named after the scalar type. So get a
+ * *string from a string value use the "String" function. This makes it easy to
+ * to get pointer of a literal string value, because getting the address of a
+ * literal requires assigning the value to a variable first.
+ * 
+ * ```
+ * 	var strPtr *string
+ * 
+ * 	// Without the SDK's conversion functions
+ * 	str := "my string"
+ * 	strPtr = &str
+ * 
+ * 	// With the SDK's conversion functions
+ * 	strPtr = aws.String("my string")
+ * 
+ * 	// Convert *string to string value
+ * 	str = aws.ToString(strPtr)
+ * ```
+ * 
+ * In addition to scalars the aws package also includes conversion utilities for
+ * map and slice for commonly types used in API parameters. The map and slice
+ * conversion functions use similar naming pattern as the scalar conversion
+ * functions.
+ * 
+ * ```
+ * 	var strPtrs []*string
+ * 	var strs []string = []string{"Go", "Gophers", "Go"}
+ * 
+ * 	// Convert []string to []*string
+ * 	strPtrs = aws.StringSlice(strs)
+ * 
+ * 	// Convert []*string to []string
+ * 	strs = aws.ToStringSlice(strPtrs)
+ * ```
+ * 
+ * # SDK Default HTTP Client
+ * 
+ * The SDK will use the http.DefaultClient if a HTTP client is not provided to
+ * the SDK's Session, or service client constructor. This means that if the
+ * http.DefaultClient is modified by other components of your application the
+ * modifications will be picked up by the SDK as well.
+ * 
+ * In some cases this might be intended, but it is a better practice to create
+ * a custom HTTP Client to share explicitly through your application. You can
+ * configure the SDK to use the custom HTTP Client by setting the HTTPClient
+ * value of the SDK's Config type when creating a Session or service client.
+ */
+/**
+ * Package aws provides core functionality for making requests to AWS services.
+ */
+namespace aws {
+ // @ts-ignore
+ import smithybearer = bearer
+ // @ts-ignore
+ import sdkrand = rand
+ /**
+  * A Credentials is the AWS credentials value for individual credential fields.
+  */
+ interface Credentials {
+  /**
+   * AWS Access key ID
+   */
+  accessKeyID: string
+  /**
+   * AWS Secret Access Key
+   */
+  secretAccessKey: string
+  /**
+   * AWS Session Token
+   */
+  sessionToken: string
+  /**
+   * Source of the credentials
+   */
+  source: string
+  /**
+   * States if the credentials can expire or not.
+   */
+  canExpire: boolean
+  /**
+   * The time the credentials will expire at. Should be ignored if CanExpire
+   * is false.
+   */
+  expires: time.Time
+  /**
+   * The ID of the account for the credentials.
+   */
+  accountID: string
+ }
+ interface Credentials {
+  /**
+   * Expired returns if the credentials have expired.
+   */
+  expired(): boolean
+ }
+ interface Credentials {
+  /**
+   * HasKeys returns if the credentials keys are set.
+   */
+  hasKeys(): boolean
+ }
+ /**
+  * Endpoint represents the endpoint a service client should make API operation
+  * calls to.
+  * 
+  * The SDK will automatically resolve these endpoints per API client using an
+  * internal endpoint resolvers. If you'd like to provide custom endpoint
+  * resolving behavior you can implement the EndpointResolver interface.
+  * 
+  * Deprecated: This structure was used with the global [EndpointResolver]
+  * interface, which has been deprecated in favor of service-specific endpoint
+  * resolution. See the deprecation docs on that interface for more information.
+  */
+ interface Endpoint {
+  /**
+   * The base URL endpoint the SDK API clients will use to make API calls to.
+   * The SDK will suffix URI path and query elements to this endpoint.
+   */
+  url: string
+  /**
+   * Specifies if the endpoint's hostname can be modified by the SDK's API
+   * client.
+   * 
+   * If the hostname is mutable the SDK API clients may modify any part of
+   * the hostname based on the requirements of the API, (e.g. adding, or
+   * removing content in the hostname). Such as, Amazon S3 API client
+   * prefixing "bucketname" to the hostname, or changing the
+   * hostname service name component from "s3." to "s3-accesspoint.dualstack."
+   * for the dualstack endpoint of an S3 Accesspoint resource.
+   * 
+   * Care should be taken when providing a custom endpoint for an API. If the
+   * endpoint hostname is mutable, and the client cannot modify the endpoint
+   * correctly, the operation call will most likely fail, or have undefined
+   * behavior.
+   * 
+   * If hostname is immutable, the SDK API clients will not modify the
+   * hostname of the URL. This may cause the API client not to function
+   * correctly if the API requires the operation specific hostname values
+   * to be used by the client.
+   * 
+   * This flag does not modify the API client's behavior if this endpoint
+   * will be used instead of Endpoint Discovery, or if the endpoint will be
+   * used to perform Endpoint Discovery. That behavior is configured via the
+   * API Client's Options.
+   */
+  hostnameImmutable: boolean
+  /**
+   * The AWS partition the endpoint belongs to.
+   */
+  partitionID: string
+  /**
+   * The service name that should be used for signing the requests to the
+   * endpoint.
+   */
+  signingName: string
+  /**
+   * The region that should be used for signing the request to the endpoint.
+   */
+  signingRegion: string
+  /**
+   * The signing method that should be used for signing the requests to the
+   * endpoint.
+   */
+  signingMethod: string
+  /**
+   * The source of the Endpoint. By default, this will be EndpointSourceServiceMetadata.
+   * When providing a custom endpoint, you should set the source as EndpointSourceCustom.
+   * If source is not provided when providing a custom endpoint, the SDK may not
+   * perform required host mutations correctly. Source should be used along with
+   * HostnameImmutable property as per the usage requirement.
+   */
+  source: EndpointSource
+ }
+ /**
+  * ExecutionEnvironmentID is the AWS execution environment runtime identifier.
+  */
+ interface ExecutionEnvironmentID extends String{}
 }
 
 namespace types {
@@ -37077,8 +37882,8 @@ namespace types {
   * 
   * [Amazon S3 Transfer Acceleration]: https://docs.aws.amazon.com/AmazonS3/latest/dev/transfer-acceleration.html
   */
- type _subAdQMO = noSmithyDocumentSerde
- interface AccelerateConfiguration extends _subAdQMO {
+ type _suboupbj = noSmithyDocumentSerde
+ interface AccelerateConfiguration extends _suboupbj {
   /**
    * Specifies the transfer acceleration status of the bucket.
    */
@@ -37087,8 +37892,8 @@ namespace types {
  /**
   * Contains the elements that set the ACL permissions for an object per grantee.
   */
- type _subvBLGU = noSmithyDocumentSerde
- interface AccessControlPolicy extends _subvBLGU {
+ type _subSPxyB = noSmithyDocumentSerde
+ interface AccessControlPolicy extends _subSPxyB {
   /**
    * A list of grants.
    */
@@ -37102,8 +37907,8 @@ namespace types {
   * Specifies the configuration and any analyses for the analytics filter of an
   * Amazon S3 bucket.
   */
- type _subgdymU = noSmithyDocumentSerde
- interface AnalyticsConfiguration extends _subgdymU {
+ type _subtcBQi = noSmithyDocumentSerde
+ interface AnalyticsConfiguration extends _subtcBQi {
   /**
    * The ID that identifies the analytics configuration.
    * 
@@ -37127,8 +37932,8 @@ namespace types {
  /**
   * In terms of implementation, a Bucket is a resource.
   */
- type _subnVWkk = noSmithyDocumentSerde
- interface Bucket extends _subnVWkk {
+ type _subnHRrx = noSmithyDocumentSerde
+ interface Bucket extends _subnHRrx {
   /**
    * Date the bucket was created. This date can change when making changes to your
    * bucket, such as editing its bucket policy.
@@ -37145,8 +37950,8 @@ namespace types {
   * 
   * [Object Lifecycle Management]: https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html
   */
- type _subJAxMi = noSmithyDocumentSerde
- interface BucketLifecycleConfiguration extends _subJAxMi {
+ type _subYkJsN = noSmithyDocumentSerde
+ interface BucketLifecycleConfiguration extends _subYkJsN {
   /**
    * A lifecycle rule for individual objects in an Amazon S3 bucket.
    * 
@@ -37157,8 +37962,8 @@ namespace types {
  /**
   * Container for logging status information.
   */
- type _subednLl = noSmithyDocumentSerde
- interface BucketLoggingStatus extends _subednLl {
+ type _subBBxuR = noSmithyDocumentSerde
+ interface BucketLoggingStatus extends _subBBxuR {
   /**
    * Describes where logs are stored and the prefix that Amazon S3 assigns to all
    * log object keys for a bucket. For more information, see [PUT Bucket logging]in the Amazon S3 API
@@ -37171,8 +37976,8 @@ namespace types {
  /**
   * Contains all the possible checksum or digest values for an object.
   */
- type _subwHZAb = noSmithyDocumentSerde
- interface Checksum extends _subwHZAb {
+ type _subIqiaI = noSmithyDocumentSerde
+ interface Checksum extends _subIqiaI {
   /**
    * The base64-encoded, 32-bit CRC-32 checksum of the object. This will only be
    * present if it was uploaded with the object. When you use an API operation on an
@@ -37229,8 +38034,8 @@ namespace types {
   * if the prefix is notes/ and the delimiter is a slash (/) as in
   * notes/summer/july, the common prefix is notes/summer/.
   */
- type _subatVOG = noSmithyDocumentSerde
- interface CommonPrefix extends _subatVOG {
+ type _subnfYXQ = noSmithyDocumentSerde
+ interface CommonPrefix extends _subnfYXQ {
   /**
    * Container for the specified common prefix.
    */
@@ -37239,8 +38044,8 @@ namespace types {
  /**
   * The container for the completed multipart upload details.
   */
- type _subSccUS = noSmithyDocumentSerde
- interface CompletedMultipartUpload extends _subSccUS {
+ type _sublPvcF = noSmithyDocumentSerde
+ interface CompletedMultipartUpload extends _sublPvcF {
   /**
    * Array of CompletedPart data types.
    * 
@@ -37252,8 +38057,8 @@ namespace types {
  /**
   * Container for all response elements.
   */
- type _subIajoo = noSmithyDocumentSerde
- interface CopyObjectResult extends _subIajoo {
+ type _subHUIMd = noSmithyDocumentSerde
+ interface CopyObjectResult extends _subHUIMd {
   /**
    * The base64-encoded, 32-bit CRC-32 checksum of the object. This will only be
    * present if it was uploaded with the object. For more information, see [Checking object integrity]in the
@@ -37299,8 +38104,8 @@ namespace types {
  /**
   * Container for all response elements.
   */
- type _subOurrh = noSmithyDocumentSerde
- interface CopyPartResult extends _subOurrh {
+ type _subVgsnT = noSmithyDocumentSerde
+ interface CopyPartResult extends _subVgsnT {
   /**
    * The base64-encoded, 32-bit CRC-32 checksum of the object. This will only be
    * present if it was uploaded with the object. When you use an API operation on an
@@ -37364,8 +38169,8 @@ namespace types {
   * 
   * [Enabling Cross-Origin Resource Sharing]: https://docs.aws.amazon.com/AmazonS3/latest/dev/cors.html
   */
- type _submJiRs = noSmithyDocumentSerde
- interface CORSConfiguration extends _submJiRs {
+ type _subxlNzL = noSmithyDocumentSerde
+ interface CORSConfiguration extends _subxlNzL {
   /**
    * A set of origins and methods (cross-origin access that you want to allow). You
    * can add up to 100 rules to the configuration.
@@ -37377,8 +38182,8 @@ namespace types {
  /**
   * Specifies a cross-origin access rule for an Amazon S3 bucket.
   */
- type _subXkLgD = noSmithyDocumentSerde
- interface CORSRule extends _subXkLgD {
+ type _subvJddm = noSmithyDocumentSerde
+ interface CORSRule extends _subvJddm {
   /**
    * An HTTP method that you allow the origin to execute. Valid values are GET , PUT
    * , HEAD , POST , and DELETE .
@@ -37417,8 +38222,8 @@ namespace types {
  /**
   * The configuration information for the bucket.
   */
- type _subUJNvK = noSmithyDocumentSerde
- interface CreateBucketConfiguration extends _subUJNvK {
+ type _subDqXck = noSmithyDocumentSerde
+ interface CreateBucketConfiguration extends _subDqXck {
   /**
    * Specifies the information about the bucket that will be created.
    * 
@@ -37452,8 +38257,8 @@ namespace types {
  /**
   * Container for the objects to delete.
   */
- type _subTMlPO = noSmithyDocumentSerde
- interface Delete extends _subTMlPO {
+ type _subVsMDX = noSmithyDocumentSerde
+ interface Delete extends _subVsMDX {
   /**
    * The object to delete.
    * 
@@ -37474,8 +38279,8 @@ namespace types {
  /**
   * Information about the deleted object.
   */
- type _submlJyi = noSmithyDocumentSerde
- interface DeletedObject extends _submlJyi {
+ type _subdPtrS = noSmithyDocumentSerde
+ interface DeletedObject extends _subdPtrS {
   /**
    * Indicates whether the specified object version that was permanently deleted was
    * (true) or was not (false) a delete marker before deletion. In a simple DELETE,
@@ -37507,8 +38312,8 @@ namespace types {
  /**
   * Information about the delete marker.
   */
- type _submPJJq = noSmithyDocumentSerde
- interface DeleteMarkerEntry extends _submPJJq {
+ type _subPAfKs = noSmithyDocumentSerde
+ interface DeleteMarkerEntry extends _subPAfKs {
   /**
    * Specifies whether the object is (true) or is not (false) the latest version of
    * an object.
@@ -37534,8 +38339,8 @@ namespace types {
  /**
   * Container for all error elements.
   */
- type _subIGHMu = noSmithyDocumentSerde
- interface Error extends _subIGHMu {
+ type _subHZsof = noSmithyDocumentSerde
+ interface Error extends _subHZsof {
   /**
    * The error code is a string that uniquely identifies an error condition. It is
    * meant to be read and understood by programs that detect and handle errors by
@@ -38327,8 +39132,8 @@ namespace types {
  /**
   * The error information.
   */
- type _subQUEOW = noSmithyDocumentSerde
- interface ErrorDocument extends _subQUEOW {
+ type _subqXSdr = noSmithyDocumentSerde
+ interface ErrorDocument extends _subqXSdr {
   /**
    * The object key name to use when a 4XX class error occurs.
    * 
@@ -38344,14 +39149,14 @@ namespace types {
  /**
   * A container for specifying the configuration for Amazon EventBridge.
   */
- type _subUGNlL = noSmithyDocumentSerde
- interface EventBridgeConfiguration extends _subUGNlL {
+ type _subOMMVt = noSmithyDocumentSerde
+ interface EventBridgeConfiguration extends _subOMMVt {
  }
  /**
   * A collection of parts associated with a multipart upload.
   */
- type _subblghU = noSmithyDocumentSerde
- interface GetObjectAttributesParts extends _subblghU {
+ type _subZajtR = noSmithyDocumentSerde
+ interface GetObjectAttributesParts extends _subZajtR {
   /**
    * Indicates whether the returned list of parts is truncated. A value of true
    * indicates that the list was truncated. A list can be truncated if the number of
@@ -38396,8 +39201,8 @@ namespace types {
  /**
   * Container for grant information.
   */
- type _subwnudN = noSmithyDocumentSerde
- interface Grant extends _subwnudN {
+ type _subIsxyk = noSmithyDocumentSerde
+ interface Grant extends _subIsxyk {
   /**
    * The person being granted permissions.
    */
@@ -38410,8 +39215,8 @@ namespace types {
  /**
   * Container for the Suffix element.
   */
- type _subEyvCu = noSmithyDocumentSerde
- interface IndexDocument extends _subEyvCu {
+ type _subWouSZ = noSmithyDocumentSerde
+ interface IndexDocument extends _subWouSZ {
   /**
    * A suffix that is appended to a request that is for a directory on the website
    * endpoint. (For example, if the suffix is index.html and you make a request to
@@ -38431,8 +39236,8 @@ namespace types {
  /**
   * Container element that identifies who initiated the multipart upload.
   */
- type _sublRNgr = noSmithyDocumentSerde
- interface Initiator extends _sublRNgr {
+ type _subhONmI = noSmithyDocumentSerde
+ interface Initiator extends _subhONmI {
   /**
    * Name of the Principal.
    * 
@@ -38452,8 +39257,8 @@ namespace types {
  /**
   * Describes the serialization format of the object.
   */
- type _subfCWeH = noSmithyDocumentSerde
- interface InputSerialization extends _subfCWeH {
+ type _subzrXpB = noSmithyDocumentSerde
+ interface InputSerialization extends _subzrXpB {
   /**
    * Describes the serialization of a CSV-encoded object.
    */
@@ -38479,8 +39284,8 @@ namespace types {
   * 
   * [Storage class for automatically optimizing frequently and infrequently accessed objects]: https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html#sc-dynamic-data-access
   */
- type _subtWzGE = noSmithyDocumentSerde
- interface IntelligentTieringConfiguration extends _subtWzGE {
+ type _subICxld = noSmithyDocumentSerde
+ interface IntelligentTieringConfiguration extends _subICxld {
   /**
    * The ID used to identify the S3 Intelligent-Tiering configuration.
    * 
@@ -38511,8 +39316,8 @@ namespace types {
   * 
   * [GET Bucket inventory]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETInventoryConfig.html
   */
- type _subrcUOK = noSmithyDocumentSerde
- interface InventoryConfiguration extends _subrcUOK {
+ type _subYZjch = noSmithyDocumentSerde
+ interface InventoryConfiguration extends _subYZjch {
   /**
    * Contains information about where to publish the inventory results.
    * 
@@ -38560,8 +39365,8 @@ namespace types {
  /**
   * A container for specifying the configuration for Lambda notifications.
   */
- type _subyrYtM = noSmithyDocumentSerde
- interface LambdaFunctionConfiguration extends _subyrYtM {
+ type _sublzkaU = noSmithyDocumentSerde
+ interface LambdaFunctionConfiguration extends _sublzkaU {
   /**
    * The Amazon S3 bucket event for which to invoke the Lambda function. For more
    * information, see [Supported Event Types]in the Amazon S3 User Guide.
@@ -38598,8 +39403,8 @@ namespace types {
   * 
   * [Managing your storage lifecycle]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
   */
- type _subjZLim = noSmithyDocumentSerde
- interface LifecycleRule extends _subjZLim {
+ type _subAkDst = noSmithyDocumentSerde
+ interface LifecycleRule extends _subAkDst {
   /**
    * If 'Enabled', the rule is currently being applied. If 'Disabled', the rule is
    * not currently being applied.
@@ -38670,8 +39475,8 @@ namespace types {
   * 
   * [PUT Bucket logging]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTlogging.html
   */
- type _subkbPlf = noSmithyDocumentSerde
- interface LoggingEnabled extends _subkbPlf {
+ type _subcqzdK = noSmithyDocumentSerde
+ interface LoggingEnabled extends _subcqzdK {
   /**
    * Specifies the bucket where you want Amazon S3 to store server access logs. You
    * can have your logs delivered to any bucket that you own, including the same
@@ -38714,8 +39519,8 @@ namespace types {
   * 
   * [PutBucketMetricsConfiguration]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTMetricConfiguration.html
   */
- type _subVyqCh = noSmithyDocumentSerde
- interface MetricsConfiguration extends _subVyqCh {
+ type _subsQNZP = noSmithyDocumentSerde
+ interface MetricsConfiguration extends _subsQNZP {
   /**
    * The ID used to identify the metrics configuration. The ID has a 64 character
    * limit and can only contain letters, numbers, periods, dashes, and underscores.
@@ -38733,8 +39538,8 @@ namespace types {
  /**
   * Container for the MultipartUpload for the Amazon S3 object.
   */
- type _subJfQNT = noSmithyDocumentSerde
- interface MultipartUpload extends _subJfQNT {
+ type _subgrMIB = noSmithyDocumentSerde
+ interface MultipartUpload extends _subgrMIB {
   /**
    * The algorithm that was used to create a checksum of the object.
    */
@@ -38774,8 +39579,8 @@ namespace types {
   * A container for specifying the notification configuration of the bucket. If
   * this element is empty, notifications are turned off for the bucket.
   */
- type _submfUYx = noSmithyDocumentSerde
- interface NotificationConfiguration extends _submfUYx {
+ type _subORLDi = noSmithyDocumentSerde
+ interface NotificationConfiguration extends _subORLDi {
   /**
    * Enables delivery of events to Amazon EventBridge.
    */
@@ -38799,8 +39604,8 @@ namespace types {
  /**
   * An object consists of data and its descriptive metadata.
   */
- type _subKzNJK = noSmithyDocumentSerde
- interface Object extends _subKzNJK {
+ type _subygDwi = noSmithyDocumentSerde
+ interface Object extends _subygDwi {
   /**
    * The algorithm that was used to create a checksum of the object.
    */
@@ -38872,8 +39677,8 @@ namespace types {
  /**
   * The container element for Object Lock configuration parameters.
   */
- type _subslJnE = noSmithyDocumentSerde
- interface ObjectLockConfiguration extends _subslJnE {
+ type _subPmUFU = noSmithyDocumentSerde
+ interface ObjectLockConfiguration extends _subPmUFU {
   /**
    * Indicates whether this bucket has an Object Lock configuration enabled. Enable
    * ObjectLockEnabled when you apply ObjectLockConfiguration to a bucket.
@@ -38890,8 +39695,8 @@ namespace types {
  /**
   * A legal hold configuration for an object.
   */
- type _subQNweC = noSmithyDocumentSerde
- interface ObjectLockLegalHold extends _subQNweC {
+ type _subRuoIU = noSmithyDocumentSerde
+ interface ObjectLockLegalHold extends _subRuoIU {
   /**
    * Indicates whether the specified object has a legal hold in place.
    */
@@ -38900,8 +39705,8 @@ namespace types {
  /**
   * A Retention configuration for an object.
   */
- type _sublHSUJ = noSmithyDocumentSerde
- interface ObjectLockRetention extends _sublHSUJ {
+ type _subeRKwD = noSmithyDocumentSerde
+ interface ObjectLockRetention extends _subeRKwD {
   /**
    * Indicates the Retention mode for the specified object.
    */
@@ -38914,8 +39719,8 @@ namespace types {
  /**
   * The version of an object.
   */
- type _subuWjvD = noSmithyDocumentSerde
- interface ObjectVersion extends _subuWjvD {
+ type _subMRzMq = noSmithyDocumentSerde
+ interface ObjectVersion extends _subMRzMq {
   /**
    * The algorithm that was used to create a checksum of the object.
    */
@@ -38966,8 +39771,8 @@ namespace types {
  /**
   * Describes how results of the Select job are serialized.
   */
- type _subgSPBp = noSmithyDocumentSerde
- interface OutputSerialization extends _subgSPBp {
+ type _submqdFf = noSmithyDocumentSerde
+ interface OutputSerialization extends _submqdFf {
   /**
    * Describes the serialization of CSV-encoded Select results.
    */
@@ -38980,8 +39785,8 @@ namespace types {
  /**
   * Container for the owner's display name and ID.
   */
- type _subEdbjx = noSmithyDocumentSerde
- interface Owner extends _subEdbjx {
+ type _subbNdPB = noSmithyDocumentSerde
+ interface Owner extends _subbNdPB {
   /**
    * Container for the display name of the owner. This value is only supported in
    * the following Amazon Web Services Regions:
@@ -39015,8 +39820,8 @@ namespace types {
  /**
   * The container element for a bucket's ownership controls.
   */
- type _subpHgpP = noSmithyDocumentSerde
- interface OwnershipControls extends _subpHgpP {
+ type _subaEOKu = noSmithyDocumentSerde
+ interface OwnershipControls extends _subaEOKu {
   /**
    * The container element for an ownership control rule.
    * 
@@ -39027,8 +39832,8 @@ namespace types {
  /**
   * Container for elements related to a part.
   */
- type _subhxloO = noSmithyDocumentSerde
- interface Part extends _subhxloO {
+ type _subboIgG = noSmithyDocumentSerde
+ interface Part extends _subboIgG {
   /**
    * This header can be used as a data integrity check to verify that the data
    * received is the same data that was originally sent. This header specifies the
@@ -39092,8 +39897,8 @@ namespace types {
  /**
   * The container element for a bucket's policy status.
   */
- type _subodOuo = noSmithyDocumentSerde
- interface PolicyStatus extends _subodOuo {
+ type _subSlORQ = noSmithyDocumentSerde
+ interface PolicyStatus extends _subSlORQ {
   /**
    * The policy status for this bucket. TRUE indicates that this bucket is public.
    * FALSE indicates that the bucket is not public.
@@ -39108,8 +39913,8 @@ namespace types {
   * 
   * [The Meaning of "Public"]: https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html#access-control-block-public-access-policy-status
   */
- type _subabDMY = noSmithyDocumentSerde
- interface PublicAccessBlockConfiguration extends _subabDMY {
+ type _subfBNiK = noSmithyDocumentSerde
+ interface PublicAccessBlockConfiguration extends _subfBNiK {
   /**
    * Specifies whether Amazon S3 should block public access control lists (ACLs) for
    * this bucket and objects in this bucket. Setting this element to TRUE causes the
@@ -39159,8 +39964,8 @@ namespace types {
   * Specifies the configuration for publishing messages to an Amazon Simple Queue
   * Service (Amazon SQS) queue when Amazon S3 detects specified events.
   */
- type _subtAqlQ = noSmithyDocumentSerde
- interface QueueConfiguration extends _subtAqlQ {
+ type _subYmItT = noSmithyDocumentSerde
+ interface QueueConfiguration extends _subYmItT {
   /**
    * A collection of bucket events for which to send notifications
    * 
@@ -39191,8 +39996,8 @@ namespace types {
   * Specifies the redirect behavior of all requests to a website endpoint of an
   * Amazon S3 bucket.
   */
- type _subTXThv = noSmithyDocumentSerde
- interface RedirectAllRequestsTo extends _subTXThv {
+ type _subrdDeP = noSmithyDocumentSerde
+ interface RedirectAllRequestsTo extends _subrdDeP {
   /**
    * Name of the host where requests are redirected.
    * 
@@ -39209,8 +40014,8 @@ namespace types {
   * A container for replication rules. You can add up to 1,000 rules. The maximum
   * size of a replication configuration is 2 MB.
   */
- type _subiVRed = noSmithyDocumentSerde
- interface ReplicationConfiguration extends _subiVRed {
+ type _subhluIr = noSmithyDocumentSerde
+ interface ReplicationConfiguration extends _subhluIr {
   /**
    * The Amazon Resource Name (ARN) of the Identity and Access Management (IAM) role
    * that Amazon S3 assumes when replicating objects. For more information, see [How to Set Up Replication]in
@@ -39232,8 +40037,8 @@ namespace types {
  /**
   * Container for Payer.
   */
- type _subsnwVf = noSmithyDocumentSerde
- interface RequestPaymentConfiguration extends _subsnwVf {
+ type _subAbWTq = noSmithyDocumentSerde
+ interface RequestPaymentConfiguration extends _subAbWTq {
   /**
    * Specifies who pays for the download and request fees.
    * 
@@ -39244,8 +40049,8 @@ namespace types {
  /**
   * Container for specifying if periodic QueryProgress messages should be sent.
   */
- type _subefJEa = noSmithyDocumentSerde
- interface RequestProgress extends _subefJEa {
+ type _subfVUrc = noSmithyDocumentSerde
+ interface RequestProgress extends _subfVUrc {
   /**
    * Specifies whether periodic QueryProgress frames should be sent. Valid values:
    * TRUE, FALSE. Default value: FALSE.
@@ -39255,8 +40060,8 @@ namespace types {
  /**
   * Container for restore job parameters.
   */
- type _subiBseV = noSmithyDocumentSerde
- interface RestoreRequest extends _subiBseV {
+ type _subpgvbW = noSmithyDocumentSerde
+ interface RestoreRequest extends _subpgvbW {
   /**
    * Lifetime of the active copy in days. Do not use with restores that specify
    * OutputLocation .
@@ -39307,8 +40112,8 @@ namespace types {
   * 
   * [Configuring advanced conditional redirects]: https://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html#advanced-conditional-redirects
   */
- type _submoxtI = noSmithyDocumentSerde
- interface RoutingRule extends _submoxtI {
+ type _subgmBiz = noSmithyDocumentSerde
+ interface RoutingRule extends _subgmBiz {
   /**
    * Container for redirect information. You can redirect requests to another host,
    * to another page, or with another protocol. In the event of an error, you can
@@ -39331,8 +40136,8 @@ namespace types {
   * optional, but when specified, it must not be empty. See RFC 2616, Section
   * 14.35.1 about how to specify the start and end of the range.
   */
- type _subRivjC = noSmithyDocumentSerde
- interface ScanRange extends _subRivjC {
+ type _subkqDeR = noSmithyDocumentSerde
+ interface ScanRange extends _subkqDeR {
   /**
    * Specifies the end of the byte range. This parameter is optional. Valid values:
    * non-negative integers. The default value is one less than the size of the object
@@ -39351,8 +40156,8 @@ namespace types {
  /**
   * Specifies the default server-side-encryption configuration.
   */
- type _subVPqsj = noSmithyDocumentSerde
- interface ServerSideEncryptionConfiguration extends _subVPqsj {
+ type _subULGqH = noSmithyDocumentSerde
+ interface ServerSideEncryptionConfiguration extends _subULGqH {
   /**
    * Container for information about a particular server-side encryption
    * configuration rule.
@@ -39368,8 +40173,8 @@ namespace types {
   * authentication and authorization of Zonal endpoint API operations on directory
   * buckets.
   */
- type _subCZMxI = noSmithyDocumentSerde
- interface SessionCredentials extends _subCZMxI {
+ type _subBNDTI = noSmithyDocumentSerde
+ interface SessionCredentials extends _subBNDTI {
   /**
    * A unique identifier that's associated with a secret access key. The access key
    * ID and the secret access key are used together to sign programmatic Amazon Web
@@ -39407,8 +40212,8 @@ namespace types {
  /**
   * A container of a key value name pair.
   */
- type _sublEKMb = noSmithyDocumentSerde
- interface Tag extends _sublEKMb {
+ type _subcoyTd = noSmithyDocumentSerde
+ interface Tag extends _subcoyTd {
   /**
    * Name of the object key.
    * 
@@ -39425,8 +40230,8 @@ namespace types {
  /**
   * Container for TagSet elements.
   */
- type _subDFXKG = noSmithyDocumentSerde
- interface Tagging extends _subDFXKG {
+ type _subTATMo = noSmithyDocumentSerde
+ interface Tagging extends _subTATMo {
   /**
    * A collection for a set of tags
    * 
@@ -39439,8 +40244,8 @@ namespace types {
   * Amazon Simple Notification Service (Amazon SNS) topic when Amazon S3 detects
   * specified events.
   */
- type _subBtArW = noSmithyDocumentSerde
- interface TopicConfiguration extends _subBtArW {
+ type _subHWkEl = noSmithyDocumentSerde
+ interface TopicConfiguration extends _subHWkEl {
   /**
    * The Amazon S3 bucket event about which to send notifications. For more
    * information, see [Supported Event Types]in the Amazon S3 User Guide.
@@ -39476,8 +40281,8 @@ namespace types {
   * 
   * [PUT Bucket versioning]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTVersioningStatus.html
   */
- type _subVyFBK = noSmithyDocumentSerde
- interface VersioningConfiguration extends _subVyFBK {
+ type _subIcZDf = noSmithyDocumentSerde
+ interface VersioningConfiguration extends _subIcZDf {
   /**
    * Specifies whether MFA delete is enabled in the bucket versioning configuration.
    * This element is only returned if the bucket has been configured with MFA delete.
@@ -39492,8 +40297,8 @@ namespace types {
  /**
   * Specifies website configuration parameters for an Amazon S3 bucket.
   */
- type _submmRKx = noSmithyDocumentSerde
- interface WebsiteConfiguration extends _submmRKx {
+ type _subtLumZ = noSmithyDocumentSerde
+ interface WebsiteConfiguration extends _subtLumZ {
   /**
    * The name of the error document for the website.
    */
@@ -39513,340 +40318,6 @@ namespace types {
    */
   routingRules: Array<RoutingRule>
  }
-}
-
-/**
- * Package echo implements high performance, minimalist Go web framework.
- * 
- * Example:
- * 
- * ```
- * 	  package main
- * 
- * 		import (
- * 			"github.com/labstack/echo/v5"
- * 			"github.com/labstack/echo/v5/middleware"
- * 			"log"
- * 			"net/http"
- * 		)
- * 
- * 	  // Handler
- * 	  func hello(c echo.Context) error {
- * 	    return c.String(http.StatusOK, "Hello, World!")
- * 	  }
- * 
- * 	  func main() {
- * 	    // Echo instance
- * 	    e := echo.New()
- * 
- * 	    // Middleware
- * 	    e.Use(middleware.Logger())
- * 	    e.Use(middleware.Recover())
- * 
- * 	    // Routes
- * 	    e.GET("/", hello)
- * 
- * 	    // Start server
- * 	    if err := e.Start(":8080"); err != http.ErrServerClosed {
- * 			  log.Fatal(err)
- * 		  }
- * 	  }
- * ```
- * 
- * Learn more at https://echo.labstack.com
- */
-namespace echo {
- // @ts-ignore
- import stdContext = context
- /**
-  * Route contains information to adding/registering new route with the router.
-  * Method+Path pair uniquely identifies the Route. It is mandatory to provide Method+Path+Handler fields.
-  */
- interface Route {
-  method: string
-  path: string
-  handler: HandlerFunc
-  middlewares: Array<MiddlewareFunc>
-  name: string
- }
- interface Route {
-  /**
-   * ToRouteInfo converts Route to RouteInfo
-   */
-  toRouteInfo(params: Array<string>): RouteInfo
- }
- interface Route {
-  /**
-   * ToRoute returns Route which Router uses to register the method handler for path.
-   */
-  toRoute(): Route
- }
- interface Route {
-  /**
-   * ForGroup recreates Route with added group prefix and group middlewares it is grouped to.
-   */
-  forGroup(pathPrefix: string, middlewares: Array<MiddlewareFunc>): Routable
- }
- /**
-  * RoutableContext is additional interface that structures implementing Context must implement. Methods inside this
-  * interface are meant for request routing purposes and should not be used in middlewares.
-  */
- interface RoutableContext {
-  [key:string]: any;
-  /**
-   * Request returns `*http.Request`.
-   */
-  request(): (http.Request)
-  /**
-   * RawPathParams returns raw path pathParams value. Allocation of PathParams is handled by Context.
-   */
-  rawPathParams(): (PathParams)
-  /**
-   * SetRawPathParams replaces any existing param values with new values for this context lifetime (request).
-   * Do not set any other value than what you got from RawPathParams as allocation of PathParams is handled by Context.
-   */
-  setRawPathParams(params: PathParams): void
-  /**
-   * SetPath sets the registered path for the handler.
-   */
-  setPath(p: string): void
-  /**
-   * SetRouteInfo sets the route info of this request to the context.
-   */
-  setRouteInfo(ri: RouteInfo): void
-  /**
-   * Set saves data in the context. Allows router to store arbitrary (that only router has access to) data in context
-   * for later use in middlewares/handler.
-   */
-  set(key: string, val: {
-  }): void
- }
- /**
-  * PathParam is tuple pf path parameter name and its value in request path
-  */
- interface PathParam {
-  name: string
-  value: string
- }
-}
-
-/**
- * Package bearer provides middleware and utilities for authenticating API
- * operation calls with a Bearer Token.
- */
-namespace bearer {
- // @ts-ignore
- import smithyhttp = http
- /**
-  * Token provides a type wrapping a bearer token and expiration metadata.
-  */
- interface Token {
-  value: string
-  canExpire: boolean
-  expires: time.Time
- }
- interface Token {
-  /**
-   * Expired returns if the token's Expires time is before or equal to the time
-   * provided. If CanExpires is false, Expired will always return false.
-   */
-  expired(now: time.Time): boolean
- }
- // @ts-ignore
- import smithycontext = context
-}
-
-/**
- * Package aws provides the core SDK's utilities and shared types. Use this package's
- * utilities to simplify setting and reading API operations parameters.
- * 
- * # Value and Pointer Conversion Utilities
- * 
- * This package includes a helper conversion utility for each scalar type the SDK's
- * API use. These utilities make getting a pointer of the scalar, and dereferencing
- * a pointer easier.
- * 
- * Each conversion utility comes in two forms. Value to Pointer and Pointer to Value.
- * The Pointer to value will safely dereference the pointer and return its value.
- * If the pointer was nil, the scalar's zero value will be returned.
- * 
- * The value to pointer functions will be named after the scalar type. So get a
- * *string from a string value use the "String" function. This makes it easy to
- * to get pointer of a literal string value, because getting the address of a
- * literal requires assigning the value to a variable first.
- * 
- * ```
- * 	var strPtr *string
- * 
- * 	// Without the SDK's conversion functions
- * 	str := "my string"
- * 	strPtr = &str
- * 
- * 	// With the SDK's conversion functions
- * 	strPtr = aws.String("my string")
- * 
- * 	// Convert *string to string value
- * 	str = aws.ToString(strPtr)
- * ```
- * 
- * In addition to scalars the aws package also includes conversion utilities for
- * map and slice for commonly types used in API parameters. The map and slice
- * conversion functions use similar naming pattern as the scalar conversion
- * functions.
- * 
- * ```
- * 	var strPtrs []*string
- * 	var strs []string = []string{"Go", "Gophers", "Go"}
- * 
- * 	// Convert []string to []*string
- * 	strPtrs = aws.StringSlice(strs)
- * 
- * 	// Convert []*string to []string
- * 	strs = aws.ToStringSlice(strPtrs)
- * ```
- * 
- * # SDK Default HTTP Client
- * 
- * The SDK will use the http.DefaultClient if a HTTP client is not provided to
- * the SDK's Session, or service client constructor. This means that if the
- * http.DefaultClient is modified by other components of your application the
- * modifications will be picked up by the SDK as well.
- * 
- * In some cases this might be intended, but it is a better practice to create
- * a custom HTTP Client to share explicitly through your application. You can
- * configure the SDK to use the custom HTTP Client by setting the HTTPClient
- * value of the SDK's Config type when creating a Session or service client.
- */
-/**
- * Package aws provides core functionality for making requests to AWS services.
- */
-namespace aws {
- // @ts-ignore
- import smithybearer = bearer
- // @ts-ignore
- import sdkrand = rand
- /**
-  * A Credentials is the AWS credentials value for individual credential fields.
-  */
- interface Credentials {
-  /**
-   * AWS Access key ID
-   */
-  accessKeyID: string
-  /**
-   * AWS Secret Access Key
-   */
-  secretAccessKey: string
-  /**
-   * AWS Session Token
-   */
-  sessionToken: string
-  /**
-   * Source of the credentials
-   */
-  source: string
-  /**
-   * States if the credentials can expire or not.
-   */
-  canExpire: boolean
-  /**
-   * The time the credentials will expire at. Should be ignored if CanExpire
-   * is false.
-   */
-  expires: time.Time
-  /**
-   * The ID of the account for the credentials.
-   */
-  accountID: string
- }
- interface Credentials {
-  /**
-   * Expired returns if the credentials have expired.
-   */
-  expired(): boolean
- }
- interface Credentials {
-  /**
-   * HasKeys returns if the credentials keys are set.
-   */
-  hasKeys(): boolean
- }
- /**
-  * Endpoint represents the endpoint a service client should make API operation
-  * calls to.
-  * 
-  * The SDK will automatically resolve these endpoints per API client using an
-  * internal endpoint resolvers. If you'd like to provide custom endpoint
-  * resolving behavior you can implement the EndpointResolver interface.
-  * 
-  * Deprecated: This structure was used with the global [EndpointResolver]
-  * interface, which has been deprecated in favor of service-specific endpoint
-  * resolution. See the deprecation docs on that interface for more information.
-  */
- interface Endpoint {
-  /**
-   * The base URL endpoint the SDK API clients will use to make API calls to.
-   * The SDK will suffix URI path and query elements to this endpoint.
-   */
-  url: string
-  /**
-   * Specifies if the endpoint's hostname can be modified by the SDK's API
-   * client.
-   * 
-   * If the hostname is mutable the SDK API clients may modify any part of
-   * the hostname based on the requirements of the API, (e.g. adding, or
-   * removing content in the hostname). Such as, Amazon S3 API client
-   * prefixing "bucketname" to the hostname, or changing the
-   * hostname service name component from "s3." to "s3-accesspoint.dualstack."
-   * for the dualstack endpoint of an S3 Accesspoint resource.
-   * 
-   * Care should be taken when providing a custom endpoint for an API. If the
-   * endpoint hostname is mutable, and the client cannot modify the endpoint
-   * correctly, the operation call will most likely fail, or have undefined
-   * behavior.
-   * 
-   * If hostname is immutable, the SDK API clients will not modify the
-   * hostname of the URL. This may cause the API client not to function
-   * correctly if the API requires the operation specific hostname values
-   * to be used by the client.
-   * 
-   * This flag does not modify the API client's behavior if this endpoint
-   * will be used instead of Endpoint Discovery, or if the endpoint will be
-   * used to perform Endpoint Discovery. That behavior is configured via the
-   * API Client's Options.
-   */
-  hostnameImmutable: boolean
-  /**
-   * The AWS partition the endpoint belongs to.
-   */
-  partitionID: string
-  /**
-   * The service name that should be used for signing the requests to the
-   * endpoint.
-   */
-  signingName: string
-  /**
-   * The region that should be used for signing the request to the endpoint.
-   */
-  signingRegion: string
-  /**
-   * The signing method that should be used for signing the requests to the
-   * endpoint.
-   */
-  signingMethod: string
-  /**
-   * The source of the Endpoint. By default, this will be EndpointSourceServiceMetadata.
-   * When providing a custom endpoint, you should set the source as EndpointSourceCustom.
-   * If source is not provided when providing a custom endpoint, the SDK may not
-   * perform required host mutations correctly. Source should be used along with
-   * HostnameImmutable property as per the usage requirement.
-   */
-  source: EndpointSource
- }
- /**
-  * ExecutionEnvironmentID is the AWS execution environment runtime identifier.
-  */
- interface ExecutionEnvironmentID extends String{}
 }
 
 /**
@@ -40016,543 +40487,84 @@ namespace settings {
  }
 }
 
-/**
- * Package slog provides structured logging,
- * in which log records include a message,
- * a severity level, and various other attributes
- * expressed as key-value pairs.
- * 
- * It defines a type, [Logger],
- * which provides several methods (such as [Logger.Info] and [Logger.Error])
- * for reporting events of interest.
- * 
- * Each Logger is associated with a [Handler].
- * A Logger output method creates a [Record] from the method arguments
- * and passes it to the Handler, which decides how to handle it.
- * There is a default Logger accessible through top-level functions
- * (such as [Info] and [Error]) that call the corresponding Logger methods.
- * 
- * A log record consists of a time, a level, a message, and a set of key-value
- * pairs, where the keys are strings and the values may be of any type.
- * As an example,
- * 
- * ```
- * 	slog.Info("hello", "count", 3)
- * ```
- * 
- * creates a record containing the time of the call,
- * a level of Info, the message "hello", and a single
- * pair with key "count" and value 3.
- * 
- * The [Info] top-level function calls the [Logger.Info] method on the default Logger.
- * In addition to [Logger.Info], there are methods for Debug, Warn and Error levels.
- * Besides these convenience methods for common levels,
- * there is also a [Logger.Log] method which takes the level as an argument.
- * Each of these methods has a corresponding top-level function that uses the
- * default logger.
- * 
- * The default handler formats the log record's message, time, level, and attributes
- * as a string and passes it to the [log] package.
- * 
- * ```
- * 	2022/11/08 15:28:26 INFO hello count=3
- * ```
- * 
- * For more control over the output format, create a logger with a different handler.
- * This statement uses [New] to create a new logger with a [TextHandler]
- * that writes structured records in text form to standard error:
- * 
- * ```
- * 	logger := slog.New(slog.NewTextHandler(os.Stderr, nil))
- * ```
- * 
- * [TextHandler] output is a sequence of key=value pairs, easily and unambiguously
- * parsed by machine. This statement:
- * 
- * ```
- * 	logger.Info("hello", "count", 3)
- * ```
- * 
- * produces this output:
- * 
- * ```
- * 	time=2022-11-08T15:28:26.000-05:00 level=INFO msg=hello count=3
- * ```
- * 
- * The package also provides [JSONHandler], whose output is line-delimited JSON:
- * 
- * ```
- * 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
- * 	logger.Info("hello", "count", 3)
- * ```
- * 
- * produces this output:
- * 
- * ```
- * 	{"time":"2022-11-08T15:28:26.000000000-05:00","level":"INFO","msg":"hello","count":3}
- * ```
- * 
- * Both [TextHandler] and [JSONHandler] can be configured with [HandlerOptions].
- * There are options for setting the minimum level (see Levels, below),
- * displaying the source file and line of the log call, and
- * modifying attributes before they are logged.
- * 
- * Setting a logger as the default with
- * 
- * ```
- * 	slog.SetDefault(logger)
- * ```
- * 
- * will cause the top-level functions like [Info] to use it.
- * [SetDefault] also updates the default logger used by the [log] package,
- * so that existing applications that use [log.Printf] and related functions
- * will send log records to the logger's handler without needing to be rewritten.
- * 
- * Some attributes are common to many log calls.
- * For example, you may wish to include the URL or trace identifier of a server request
- * with all log events arising from the request.
- * Rather than repeat the attribute with every log call, you can use [Logger.With]
- * to construct a new Logger containing the attributes:
- * 
- * ```
- * 	logger2 := logger.With("url", r.URL)
- * ```
- * 
- * The arguments to With are the same key-value pairs used in [Logger.Info].
- * The result is a new Logger with the same handler as the original, but additional
- * attributes that will appear in the output of every call.
- * 
- * # Levels
- * 
- * A [Level] is an integer representing the importance or severity of a log event.
- * The higher the level, the more severe the event.
- * This package defines constants for the most common levels,
- * but any int can be used as a level.
- * 
- * In an application, you may wish to log messages only at a certain level or greater.
- * One common configuration is to log messages at Info or higher levels,
- * suppressing debug logging until it is needed.
- * The built-in handlers can be configured with the minimum level to output by
- * setting [HandlerOptions.Level].
- * The program's `main` function typically does this.
- * The default value is LevelInfo.
- * 
- * Setting the [HandlerOptions.Level] field to a [Level] value
- * fixes the handler's minimum level throughout its lifetime.
- * Setting it to a [LevelVar] allows the level to be varied dynamically.
- * A LevelVar holds a Level and is safe to read or write from multiple
- * goroutines.
- * To vary the level dynamically for an entire program, first initialize
- * a global LevelVar:
- * 
- * ```
- * 	var programLevel = new(slog.LevelVar) // Info by default
- * ```
- * 
- * Then use the LevelVar to construct a handler, and make it the default:
- * 
- * ```
- * 	h := slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: programLevel})
- * 	slog.SetDefault(slog.New(h))
- * ```
- * 
- * Now the program can change its logging level with a single statement:
- * 
- * ```
- * 	programLevel.Set(slog.LevelDebug)
- * ```
- * 
- * # Groups
- * 
- * Attributes can be collected into groups.
- * A group has a name that is used to qualify the names of its attributes.
- * How this qualification is displayed depends on the handler.
- * [TextHandler] separates the group and attribute names with a dot.
- * [JSONHandler] treats each group as a separate JSON object, with the group name as the key.
- * 
- * Use [Group] to create a Group attribute from a name and a list of key-value pairs:
- * 
- * ```
- * 	slog.Group("request",
- * 	    "method", r.Method,
- * 	    "url", r.URL)
- * ```
- * 
- * TextHandler would display this group as
- * 
- * ```
- * 	request.method=GET request.url=http://example.com
- * ```
- * 
- * JSONHandler would display it as
- * 
- * ```
- * 	"request":{"method":"GET","url":"http://example.com"}
- * ```
- * 
- * Use [Logger.WithGroup] to qualify all of a Logger's output
- * with a group name. Calling WithGroup on a Logger results in a
- * new Logger with the same Handler as the original, but with all
- * its attributes qualified by the group name.
- * 
- * This can help prevent duplicate attribute keys in large systems,
- * where subsystems might use the same keys.
- * Pass each subsystem a different Logger with its own group name so that
- * potential duplicates are qualified:
- * 
- * ```
- * 	logger := slog.Default().With("id", systemID)
- * 	parserLogger := logger.WithGroup("parser")
- * 	parseInput(input, parserLogger)
- * ```
- * 
- * When parseInput logs with parserLogger, its keys will be qualified with "parser",
- * so even if it uses the common key "id", the log line will have distinct keys.
- * 
- * # Contexts
- * 
- * Some handlers may wish to include information from the [context.Context] that is
- * available at the call site. One example of such information
- * is the identifier for the current span when tracing is enabled.
- * 
- * The [Logger.Log] and [Logger.LogAttrs] methods take a context as a first
- * argument, as do their corresponding top-level functions.
- * 
- * Although the convenience methods on Logger (Info and so on) and the
- * corresponding top-level functions do not take a context, the alternatives ending
- * in "Context" do. For example,
- * 
- * ```
- * 	slog.InfoContext(ctx, "message")
- * ```
- * 
- * It is recommended to pass a context to an output method if one is available.
- * 
- * # Attrs and Values
- * 
- * An [Attr] is a key-value pair. The Logger output methods accept Attrs as well as
- * alternating keys and values. The statement
- * 
- * ```
- * 	slog.Info("hello", slog.Int("count", 3))
- * ```
- * 
- * behaves the same as
- * 
- * ```
- * 	slog.Info("hello", "count", 3)
- * ```
- * 
- * There are convenience constructors for [Attr] such as [Int], [String], and [Bool]
- * for common types, as well as the function [Any] for constructing Attrs of any
- * type.
- * 
- * The value part of an Attr is a type called [Value].
- * Like an [any], a Value can hold any Go value,
- * but it can represent typical values, including all numbers and strings,
- * without an allocation.
- * 
- * For the most efficient log output, use [Logger.LogAttrs].
- * It is similar to [Logger.Log] but accepts only Attrs, not alternating
- * keys and values; this allows it, too, to avoid allocation.
- * 
- * The call
- * 
- * ```
- * 	logger.LogAttrs(ctx, slog.LevelInfo, "hello", slog.Int("count", 3))
- * ```
- * 
- * is the most efficient way to achieve the same output as
- * 
- * ```
- * 	slog.InfoContext(ctx, "hello", "count", 3)
- * ```
- * 
- * # Customizing a type's logging behavior
- * 
- * If a type implements the [LogValuer] interface, the [Value] returned from its LogValue
- * method is used for logging. You can use this to control how values of the type
- * appear in logs. For example, you can redact secret information like passwords,
- * or gather a struct's fields in a Group. See the examples under [LogValuer] for
- * details.
- * 
- * A LogValue method may return a Value that itself implements [LogValuer]. The [Value.Resolve]
- * method handles these cases carefully, avoiding infinite loops and unbounded recursion.
- * Handler authors and others may wish to use [Value.Resolve] instead of calling LogValue directly.
- * 
- * # Wrapping output methods
- * 
- * The logger functions use reflection over the call stack to find the file name
- * and line number of the logging call within the application. This can produce
- * incorrect source information for functions that wrap slog. For instance, if you
- * define this function in file mylog.go:
- * 
- * ```
- * 	func Infof(logger *slog.Logger, format string, args ...any) {
- * 	    logger.Info(fmt.Sprintf(format, args...))
- * 	}
- * ```
- * 
- * and you call it like this in main.go:
- * 
- * ```
- * 	Infof(slog.Default(), "hello, %s", "world")
- * ```
- * 
- * then slog will report the source file as mylog.go, not main.go.
- * 
- * A correct implementation of Infof will obtain the source location
- * (pc) and pass it to NewRecord.
- * The Infof function in the package-level example called "wrapping"
- * demonstrates how to do this.
- * 
- * # Working with Records
- * 
- * Sometimes a Handler will need to modify a Record
- * before passing it on to another Handler or backend.
- * A Record contains a mixture of simple public fields (e.g. Time, Level, Message)
- * and hidden fields that refer to state (such as attributes) indirectly. This
- * means that modifying a simple copy of a Record (e.g. by calling
- * [Record.Add] or [Record.AddAttrs] to add attributes)
- * may have unexpected effects on the original.
- * Before modifying a Record, use [Record.Clone] to
- * create a copy that shares no state with the original,
- * or create a new Record with [NewRecord]
- * and build up its Attrs by traversing the old ones with [Record.Attrs].
- * 
- * # Performance considerations
- * 
- * If profiling your application demonstrates that logging is taking significant time,
- * the following suggestions may help.
- * 
- * If many log lines have a common attribute, use [Logger.With] to create a Logger with
- * that attribute. The built-in handlers will format that attribute only once, at the
- * call to [Logger.With]. The [Handler] interface is designed to allow that optimization,
- * and a well-written Handler should take advantage of it.
- * 
- * The arguments to a log call are always evaluated, even if the log event is discarded.
- * If possible, defer computation so that it happens only if the value is actually logged.
- * For example, consider the call
- * 
- * ```
- * 	slog.Info("starting request", "url", r.URL.String())  // may compute String unnecessarily
- * ```
- * 
- * The URL.String method will be called even if the logger discards Info-level events.
- * Instead, pass the URL directly:
- * 
- * ```
- * 	slog.Info("starting request", "url", &r.URL) // calls URL.String only if needed
- * ```
- * 
- * The built-in [TextHandler] will call its String method, but only
- * if the log event is enabled.
- * Avoiding the call to String also preserves the structure of the underlying value.
- * For example [JSONHandler] emits the components of the parsed URL as a JSON object.
- * If you want to avoid eagerly paying the cost of the String call
- * without causing the handler to potentially inspect the structure of the value,
- * wrap the value in a fmt.Stringer implementation that hides its Marshal methods.
- * 
- * You can also use the [LogValuer] interface to avoid unnecessary work in disabled log
- * calls. Say you need to log some expensive value:
- * 
- * ```
- * 	slog.Debug("frobbing", "value", computeExpensiveValue(arg))
- * ```
- * 
- * Even if this line is disabled, computeExpensiveValue will be called.
- * To avoid that, define a type implementing LogValuer:
- * 
- * ```
- * 	type expensive struct { arg int }
- * 
- * 	func (e expensive) LogValue() slog.Value {
- * 	    return slog.AnyValue(computeExpensiveValue(e.arg))
- * 	}
- * ```
- * 
- * Then use a value of that type in log calls:
- * 
- * ```
- * 	slog.Debug("frobbing", "value", expensive{arg})
- * ```
- * 
- * Now computeExpensiveValue will only be called when the line is enabled.
- * 
- * The built-in handlers acquire a lock before calling [io.Writer.Write]
- * to ensure that exactly one [Record] is written at a time in its entirety.
- * Although each log record has a timestamp,
- * the built-in handlers do not use that time to sort the written records.
- * User-defined handlers are responsible for their own locking and sorting.
- * 
- * # Writing a handler
- * 
- * For a guide to writing a custom handler, see https://golang.org/s/slog-handler-guide.
- */
-namespace slog {
+namespace subscriptions {
  /**
-  * An Attr is a key-value pair.
+  * Message defines a client's channel data.
   */
- interface Attr {
-  key: string
-  value: Value
- }
- interface Attr {
-  /**
-   * Equal reports whether a and b have equal keys and values.
-   */
-  equal(b: Attr): boolean
- }
- interface Attr {
-  string(): string
+ interface Message {
+  name: string
+  data: string|Array<number>
  }
  /**
-  * A Handler handles log records produced by a Logger.
-  * 
-  * A typical handler may print log records to standard error,
-  * or write them to a file or database, or perhaps augment them
-  * with additional attributes and pass them on to another handler.
-  * 
-  * Any of the Handler's methods may be called concurrently with itself
-  * or with other methods. It is the responsibility of the Handler to
-  * manage this concurrency.
-  * 
-  * Users of the slog package should not invoke Handler methods directly.
-  * They should use the methods of [Logger] instead.
+  * Client is an interface for a generic subscription client.
   */
- interface Handler {
+ interface Client {
   [key:string]: any;
   /**
-   * Enabled reports whether the handler handles records at the given level.
-   * The handler ignores records whose level is lower.
-   * It is called early, before any arguments are processed,
-   * to save effort if the log event should be discarded.
-   * If called from a Logger method, the first argument is the context
-   * passed to that method, or context.Background() if nil was passed
-   * or the method does not take a context.
-   * The context is passed so Enabled can use its values
-   * to make a decision.
+   * Id Returns the unique id of the client.
    */
-  enabled(_arg0: context.Context, _arg1: Level): boolean
+  id(): string
   /**
-   * Handle handles the Record.
-   * It will only be called when Enabled returns true.
-   * The Context argument is as for Enabled.
-   * It is present solely to provide Handlers access to the context's values.
-   * Canceling the context should not affect record processing.
-   * (Among other things, log messages may be necessary to debug a
-   * cancellation-related problem.)
-   * 
-   * Handle methods that produce output should observe the following rules:
-   * ```
-   *   - If r.Time is the zero time, ignore the time.
-   *   - If r.PC is zero, ignore it.
-   *   - Attr's values should be resolved.
-   *   - If an Attr's key and value are both the zero value, ignore the Attr.
-   *     This can be tested with attr.Equal(Attr{}).
-   *   - If a group's key is empty, inline the group's Attrs.
-   *   - If a group has no Attrs (even if it has a non-empty key),
-   *     ignore it.
-   * ```
+   * Channel returns the client's communication channel.
    */
-  handle(_arg0: context.Context, _arg1: Record): void
+  channel(): undefined
   /**
-   * WithAttrs returns a new Handler whose attributes consist of
-   * both the receiver's attributes and the arguments.
-   * The Handler owns the slice: it may retain, modify or discard it.
+   * Subscriptions returns a shallow copy of the client subscriptions matching the prefixes.
+   * If no prefix is specified, returns all subscriptions.
    */
-  withAttrs(attrs: Array<Attr>): Handler
+  subscriptions(...prefixes: string[]): _TygojaDict
   /**
-   * WithGroup returns a new Handler with the given group appended to
-   * the receiver's existing groups.
-   * The keys of all subsequent attributes, whether added by With or in a
-   * Record, should be qualified by the sequence of group names.
+   * Subscribe subscribes the client to the provided subscriptions list.
    * 
-   * How this qualification happens is up to the Handler, so long as
-   * this Handler's attribute keys differ from those of another Handler
-   * with a different sequence of group names.
+   * Each subscription can also have "options" (json serialized SubscriptionOptions) as query parameter.
    * 
-   * A Handler should treat WithGroup as starting a Group of Attrs that ends
-   * at the end of the log event. That is,
+   * Example:
    * 
    * ```
-   *     logger.WithGroup("s").LogAttrs(ctx, level, msg, slog.Int("a", 1), slog.Int("b", 2))
+   * 	Subscribe(
+   * 	    "subscriptionA",
+   * 	    `subscriptionB?options={"query":{"a":1},"headers":{"x_token":"abc"}}`,
+   * 	)
    * ```
-   * 
-   * should behave like
-   * 
-   * ```
-   *     logger.LogAttrs(ctx, level, msg, slog.Group("s", slog.Int("a", 1), slog.Int("b", 2)))
-   * ```
-   * 
-   * If the name is empty, WithGroup returns the receiver.
    */
-  withGroup(name: string): Handler
+  subscribe(...subs: string[]): void
+  /**
+   * Unsubscribe unsubscribes the client from the provided subscriptions list.
+   */
+  unsubscribe(...subs: string[]): void
+  /**
+   * HasSubscription checks if the client is subscribed to `sub`.
+   */
+  hasSubscription(sub: string): boolean
+  /**
+   * Set stores any value to the client's context.
+   */
+  set(key: string, value: any): void
+  /**
+   * Unset removes a single value from the client's context.
+   */
+  unset(key: string): void
+  /**
+   * Get retrieves the key value from the client's context.
+   */
+  get(key: string): any
+  /**
+   * Discard marks the client as "discarded", meaning that it
+   * shouldn't be used anymore for sending new messages.
+   * 
+   * It is safe to call Discard() multiple times.
+   */
+  discard(): void
+  /**
+   * IsDiscarded indicates whether the client has been "discarded"
+   * and should no longer be used.
+   */
+  isDiscarded(): boolean
+  /**
+   * Send sends the specified message to the client's channel (if not discarded).
+   */
+  send(m: Message): void
  }
- /**
-  * A Level is the importance or severity of a log event.
-  * The higher the level, the more important or severe the event.
-  */
- interface Level extends Number{}
- interface Level {
-  /**
-   * String returns a name for the level.
-   * If the level has a name, then that name
-   * in uppercase is returned.
-   * If the level is between named values, then
-   * an integer is appended to the uppercased name.
-   * Examples:
-   * 
-   * ```
-   * 	LevelWarn.String() => "WARN"
-   * 	(LevelInfo+2).String() => "INFO+2"
-   * ```
-   */
-  string(): string
- }
- interface Level {
-  /**
-   * MarshalJSON implements [encoding/json.Marshaler]
-   * by quoting the output of [Level.String].
-   */
-  marshalJSON(): string|Array<number>
- }
- interface Level {
-  /**
-   * UnmarshalJSON implements [encoding/json.Unmarshaler]
-   * It accepts any string produced by [Level.MarshalJSON],
-   * ignoring case.
-   * It also accepts numeric offsets that would result in a different string on
-   * output. For example, "Error-8" would marshal as "INFO".
-   */
-  unmarshalJSON(data: string|Array<number>): void
- }
- interface Level {
-  /**
-   * MarshalText implements [encoding.TextMarshaler]
-   * by calling [Level.String].
-   */
-  marshalText(): string|Array<number>
- }
- interface Level {
-  /**
-   * UnmarshalText implements [encoding.TextUnmarshaler].
-   * It accepts any string produced by [Level.MarshalText],
-   * ignoring case.
-   * It also accepts numeric offsets that would result in a different string on
-   * output. For example, "Error-8" would marshal as "INFO".
-   */
-  unmarshalText(data: string|Array<number>): void
- }
- interface Level {
-  /**
-   * Level returns the receiver.
-   * It implements [Leveler].
-   */
-  level(): Level
- }
- // @ts-ignore
- import loginternal = internal
 }
 
 /**
@@ -40572,279 +40584,6 @@ namespace core {
  }
  interface BaseCollectionEvent {
   tags(): Array<string>
- }
-}
-
-namespace subscriptions {
-}
-
-/**
- * Package middleware provides transport agnostic middleware for decorating SDK
- * handlers.
- * 
- * The Smithy middleware stack provides ordered behavior to be invoked on an
- * underlying handler. The stack is separated into steps that are invoked in a
- * static order. A step is a collection of middleware that are injected into a
- * ordered list defined by the user. The user may add, insert, swap, and remove a
- * step's middleware. When the stack is invoked the step middleware become static,
- * and their order cannot be modified.
- * 
- * A stack and its step middleware are **not** safe to modify concurrently.
- * 
- * A stack will use the ordered list of middleware to decorate a underlying
- * handler. A handler could be something like an HTTP Client that round trips an
- * API operation over HTTP.
- * 
- * Smithy Middleware Stack
- * 
- * A Stack is a collection of middleware that wrap a handler. The stack can be
- * broken down into discreet steps. Each step may contain zero or more middleware
- * specific to that stack's step.
- * 
- * A Stack Step is a predefined set of middleware that are invoked in a static
- * order by the Stack. These steps represent fixed points in the middleware stack
- * for organizing specific behavior, such as serialize and build. A Stack Step is
- * composed of zero or more middleware that are specific to that step. A step may
- * define its own set of input/output parameters the generic input/output
- * parameters are cast from. A step calls its middleware recursively, before
- * calling the next step in the stack returning the result or error of the step
- * middleware decorating the underlying handler.
- * 
- * * Initialize: Prepares the input, and sets any default parameters as needed,
- * (e.g. idempotency token, and presigned URLs).
- * 
- * * Serialize: Serializes the prepared input into a data structure that can be
- * consumed by the target transport's message, (e.g. REST-JSON serialization).
- * 
- * * Build: Adds additional metadata to the serialized transport message, (e.g.
- * HTTP's Content-Length header, or body checksum). Decorations and
- * modifications to the message should be copied to all message attempts.
- * 
- * * Finalize: Performs final preparations needed before sending the message. The
- * message should already be complete by this stage, and is only alternated to
- * meet the expectations of the recipient, (e.g. Retry and AWS SigV4 request
- * signing).
- * 
- * * Deserialize: Reacts to the handler's response returned by the recipient of
- * the request message. Deserializes the response into a structured type or
- * error above stacks can react to.
- * 
- * Adding Middleware to a Stack Step
- * 
- * Middleware can be added to a step front or back, or relative, by name, to an
- * existing middleware in that stack. If a middleware does not have a name, a
- * unique name will be generated at the middleware and be added to the step.
- * 
- * ```
- *     // Create middleware stack
- *     stack := middleware.NewStack()
- * 
- *     // Add middleware to stack steps
- *     stack.Initialize.Add(paramValidationMiddleware, middleware.After)
- *     stack.Serialize.Add(marshalOperationFoo, middleware.After)
- *     stack.Deserialize.Add(unmarshalOperationFoo, middleware.After)
- * 
- *     // Invoke middleware on handler.
- *     resp, err := stack.HandleMiddleware(ctx, req.Input, clientHandler)
- * ```
- */
-namespace middleware {
- /**
-  * RelativePosition provides specifying the relative position of a middleware
-  * in an ordered group.
-  */
- interface RelativePosition extends Number{}
- /**
-  * BuildMiddleware provides the interface for middleware specific to the
-  * serialize step. Delegates to the next BuildHandler for further
-  * processing.
-  */
- interface BuildMiddleware {
-  [key:string]: any;
-  /**
-   * Unique ID for the middleware in theBuildStep. The step does not allow
-   * duplicate IDs.
-   */
-  id(): string
-  /**
-   * Invokes the middleware behavior which must delegate to the next handler
-   * for the middleware chain to continue. The method must return a result or
-   * error to its caller.
-   */
-  handleBuild(ctx: context.Context, _arg10: BuildInput, next: BuildHandler): [BuildOutput, Metadata]
- }
- /**
-  * DeserializeMiddleware provides the interface for middleware specific to the
-  * serialize step. Delegates to the next DeserializeHandler for further
-  * processing.
-  */
- interface DeserializeMiddleware {
-  [key:string]: any;
-  /**
-   * ID returns a unique ID for the middleware in the DeserializeStep. The step does not
-   * allow duplicate IDs.
-   */
-  id(): string
-  /**
-   * HandleDeserialize invokes the middleware behavior which must delegate to the next handler
-   * for the middleware chain to continue. The method must return a result or
-   * error to its caller.
-   */
-  handleDeserialize(ctx: context.Context, _arg10: DeserializeInput, next: DeserializeHandler): [DeserializeOutput, Metadata]
- }
- /**
-  * FinalizeMiddleware provides the interface for middleware specific to the
-  * serialize step. Delegates to the next FinalizeHandler for further
-  * processing.
-  */
- interface FinalizeMiddleware {
-  [key:string]: any;
-  /**
-   * ID returns a unique ID for the middleware in the FinalizeStep. The step does not
-   * allow duplicate IDs.
-   */
-  id(): string
-  /**
-   * HandleFinalize invokes the middleware behavior which must delegate to the next handler
-   * for the middleware chain to continue. The method must return a result or
-   * error to its caller.
-   */
-  handleFinalize(ctx: context.Context, _arg10: FinalizeInput, next: FinalizeHandler): [FinalizeOutput, Metadata]
- }
- /**
-  * InitializeMiddleware provides the interface for middleware specific to the
-  * initialize step. Delegates to the next InitializeHandler for further
-  * processing.
-  */
- interface InitializeMiddleware {
-  [key:string]: any;
-  /**
-   * ID returns a unique ID for the middleware in the InitializeStep. The step does not
-   * allow duplicate IDs.
-   */
-  id(): string
-  /**
-   * HandleInitialize invokes the middleware behavior which must delegate to the next handler
-   * for the middleware chain to continue. The method must return a result or
-   * error to its caller.
-   */
-  handleInitialize(ctx: context.Context, _arg10: InitializeInput, next: InitializeHandler): [InitializeOutput, Metadata]
- }
- /**
-  * SerializeMiddleware provides the interface for middleware specific to the
-  * serialize step. Delegates to the next SerializeHandler for further
-  * processing.
-  */
- interface SerializeMiddleware {
-  [key:string]: any;
-  /**
-   * ID returns a unique ID for the middleware in the SerializeStep. The step does not
-   * allow duplicate IDs.
-   */
-  id(): string
-  /**
-   * HandleSerialize invokes the middleware behavior which must delegate to the next handler
-   * for the middleware chain to continue. The method must return a result or
-   * error to its caller.
-   */
-  handleSerialize(ctx: context.Context, _arg10: SerializeInput, next: SerializeHandler): [SerializeOutput, Metadata]
- }
-}
-
-/**
- * Package auth defines protocol-agnostic authentication types for smithy
- * clients.
- */
-namespace auth {
- /**
-  * Identity contains information that identifies who the user making the
-  * request is.
-  */
- interface Identity {
-  [key:string]: any;
-  expiration(): time.Time
- }
- /**
-  * IdentityResolverOptions defines the interface through which an entity can be
-  * queried to retrieve an IdentityResolver for a given auth scheme.
-  */
- interface IdentityResolverOptions {
-  [key:string]: any;
-  getIdentityResolver(schemeID: string): IdentityResolver
- }
- /**
-  * Option represents a possible authentication method for an operation.
-  */
- interface Option {
-  schemeID: string
-  identityProperties: smithy.Properties
-  signerProperties: smithy.Properties
- }
-}
-
-/**
- * Package metrics defines the metrics APIs used by Smithy clients.
- */
-namespace metrics {
- /**
-  * MeterOption applies configuration to a Meter.
-  */
- interface MeterOption {(o: MeterOptions): void }
- /**
-  * Meter is the entry point for creation of measurement instruments.
-  */
- interface Meter {
-  [key:string]: any;
-  /**
-   * integer/synchronous
-   */
-  int64Counter(name: string, ...opts: InstrumentOption[]): Int64Counter
-  int64UpDownCounter(name: string, ...opts: InstrumentOption[]): Int64UpDownCounter
-  int64Gauge(name: string, ...opts: InstrumentOption[]): Int64Gauge
-  int64Histogram(name: string, ...opts: InstrumentOption[]): Int64Histogram
-  /**
-   * integer/asynchronous
-   */
-  int64AsyncCounter(name: string, callback: Int64Callback, ...opts: InstrumentOption[]): AsyncInstrument
-  int64AsyncUpDownCounter(name: string, callback: Int64Callback, ...opts: InstrumentOption[]): AsyncInstrument
-  int64AsyncGauge(name: string, callback: Int64Callback, ...opts: InstrumentOption[]): AsyncInstrument
-  /**
-   * floating-point/synchronous
-   */
-  float64Counter(name: string, ...opts: InstrumentOption[]): Float64Counter
-  float64UpDownCounter(name: string, ...opts: InstrumentOption[]): Float64UpDownCounter
-  float64Gauge(name: string, ...opts: InstrumentOption[]): Float64Gauge
-  float64Histogram(name: string, ...opts: InstrumentOption[]): Float64Histogram
-  /**
-   * floating-point/asynchronous
-   */
-  float64AsyncCounter(name: string, callback: Float64Callback, ...opts: InstrumentOption[]): AsyncInstrument
-  float64AsyncUpDownCounter(name: string, callback: Float64Callback, ...opts: InstrumentOption[]): AsyncInstrument
-  float64AsyncGauge(name: string, callback: Float64Callback, ...opts: InstrumentOption[]): AsyncInstrument
- }
-}
-
-/**
- * Package tracing defines tracing APIs to be used by Smithy clients.
- */
-namespace tracing {
- /**
-  * TracerOption applies configuration to a tracer.
-  */
- interface TracerOption {(o: TracerOptions): void }
- /**
-  * Tracer is the entry point for creating observed client Spans.
-  * 
-  * Spans created by tracers propagate by existing on the Context. Consumers of
-  * the API can use [GetSpan] to pull the active Span from a Context.
-  * 
-  * Creation of child Spans is implicit through Context persistence. If
-  * CreateSpan is called with a Context that holds a Span, the result will be a
-  * child of that Span.
-  */
- interface Tracer {
-  [key:string]: any;
-  startSpan(ctx: context.Context, name: string, ...opts: SpanOption[]): [context.Context, Span]
  }
 }
 
@@ -41240,6 +40979,276 @@ namespace http {
 }
 
 /**
+ * Package middleware provides transport agnostic middleware for decorating SDK
+ * handlers.
+ * 
+ * The Smithy middleware stack provides ordered behavior to be invoked on an
+ * underlying handler. The stack is separated into steps that are invoked in a
+ * static order. A step is a collection of middleware that are injected into a
+ * ordered list defined by the user. The user may add, insert, swap, and remove a
+ * step's middleware. When the stack is invoked the step middleware become static,
+ * and their order cannot be modified.
+ * 
+ * A stack and its step middleware are **not** safe to modify concurrently.
+ * 
+ * A stack will use the ordered list of middleware to decorate a underlying
+ * handler. A handler could be something like an HTTP Client that round trips an
+ * API operation over HTTP.
+ * 
+ * Smithy Middleware Stack
+ * 
+ * A Stack is a collection of middleware that wrap a handler. The stack can be
+ * broken down into discreet steps. Each step may contain zero or more middleware
+ * specific to that stack's step.
+ * 
+ * A Stack Step is a predefined set of middleware that are invoked in a static
+ * order by the Stack. These steps represent fixed points in the middleware stack
+ * for organizing specific behavior, such as serialize and build. A Stack Step is
+ * composed of zero or more middleware that are specific to that step. A step may
+ * define its own set of input/output parameters the generic input/output
+ * parameters are cast from. A step calls its middleware recursively, before
+ * calling the next step in the stack returning the result or error of the step
+ * middleware decorating the underlying handler.
+ * 
+ * * Initialize: Prepares the input, and sets any default parameters as needed,
+ * (e.g. idempotency token, and presigned URLs).
+ * 
+ * * Serialize: Serializes the prepared input into a data structure that can be
+ * consumed by the target transport's message, (e.g. REST-JSON serialization).
+ * 
+ * * Build: Adds additional metadata to the serialized transport message, (e.g.
+ * HTTP's Content-Length header, or body checksum). Decorations and
+ * modifications to the message should be copied to all message attempts.
+ * 
+ * * Finalize: Performs final preparations needed before sending the message. The
+ * message should already be complete by this stage, and is only alternated to
+ * meet the expectations of the recipient, (e.g. Retry and AWS SigV4 request
+ * signing).
+ * 
+ * * Deserialize: Reacts to the handler's response returned by the recipient of
+ * the request message. Deserializes the response into a structured type or
+ * error above stacks can react to.
+ * 
+ * Adding Middleware to a Stack Step
+ * 
+ * Middleware can be added to a step front or back, or relative, by name, to an
+ * existing middleware in that stack. If a middleware does not have a name, a
+ * unique name will be generated at the middleware and be added to the step.
+ * 
+ * ```
+ *     // Create middleware stack
+ *     stack := middleware.NewStack()
+ * 
+ *     // Add middleware to stack steps
+ *     stack.Initialize.Add(paramValidationMiddleware, middleware.After)
+ *     stack.Serialize.Add(marshalOperationFoo, middleware.After)
+ *     stack.Deserialize.Add(unmarshalOperationFoo, middleware.After)
+ * 
+ *     // Invoke middleware on handler.
+ *     resp, err := stack.HandleMiddleware(ctx, req.Input, clientHandler)
+ * ```
+ */
+namespace middleware {
+ /**
+  * RelativePosition provides specifying the relative position of a middleware
+  * in an ordered group.
+  */
+ interface RelativePosition extends Number{}
+ /**
+  * BuildMiddleware provides the interface for middleware specific to the
+  * serialize step. Delegates to the next BuildHandler for further
+  * processing.
+  */
+ interface BuildMiddleware {
+  [key:string]: any;
+  /**
+   * Unique ID for the middleware in theBuildStep. The step does not allow
+   * duplicate IDs.
+   */
+  id(): string
+  /**
+   * Invokes the middleware behavior which must delegate to the next handler
+   * for the middleware chain to continue. The method must return a result or
+   * error to its caller.
+   */
+  handleBuild(ctx: context.Context, _arg10: BuildInput, next: BuildHandler): [BuildOutput, Metadata]
+ }
+ /**
+  * DeserializeMiddleware provides the interface for middleware specific to the
+  * serialize step. Delegates to the next DeserializeHandler for further
+  * processing.
+  */
+ interface DeserializeMiddleware {
+  [key:string]: any;
+  /**
+   * ID returns a unique ID for the middleware in the DeserializeStep. The step does not
+   * allow duplicate IDs.
+   */
+  id(): string
+  /**
+   * HandleDeserialize invokes the middleware behavior which must delegate to the next handler
+   * for the middleware chain to continue. The method must return a result or
+   * error to its caller.
+   */
+  handleDeserialize(ctx: context.Context, _arg10: DeserializeInput, next: DeserializeHandler): [DeserializeOutput, Metadata]
+ }
+ /**
+  * FinalizeMiddleware provides the interface for middleware specific to the
+  * serialize step. Delegates to the next FinalizeHandler for further
+  * processing.
+  */
+ interface FinalizeMiddleware {
+  [key:string]: any;
+  /**
+   * ID returns a unique ID for the middleware in the FinalizeStep. The step does not
+   * allow duplicate IDs.
+   */
+  id(): string
+  /**
+   * HandleFinalize invokes the middleware behavior which must delegate to the next handler
+   * for the middleware chain to continue. The method must return a result or
+   * error to its caller.
+   */
+  handleFinalize(ctx: context.Context, _arg10: FinalizeInput, next: FinalizeHandler): [FinalizeOutput, Metadata]
+ }
+ /**
+  * InitializeMiddleware provides the interface for middleware specific to the
+  * initialize step. Delegates to the next InitializeHandler for further
+  * processing.
+  */
+ interface InitializeMiddleware {
+  [key:string]: any;
+  /**
+   * ID returns a unique ID for the middleware in the InitializeStep. The step does not
+   * allow duplicate IDs.
+   */
+  id(): string
+  /**
+   * HandleInitialize invokes the middleware behavior which must delegate to the next handler
+   * for the middleware chain to continue. The method must return a result or
+   * error to its caller.
+   */
+  handleInitialize(ctx: context.Context, _arg10: InitializeInput, next: InitializeHandler): [InitializeOutput, Metadata]
+ }
+ /**
+  * SerializeMiddleware provides the interface for middleware specific to the
+  * serialize step. Delegates to the next SerializeHandler for further
+  * processing.
+  */
+ interface SerializeMiddleware {
+  [key:string]: any;
+  /**
+   * ID returns a unique ID for the middleware in the SerializeStep. The step does not
+   * allow duplicate IDs.
+   */
+  id(): string
+  /**
+   * HandleSerialize invokes the middleware behavior which must delegate to the next handler
+   * for the middleware chain to continue. The method must return a result or
+   * error to its caller.
+   */
+  handleSerialize(ctx: context.Context, _arg10: SerializeInput, next: SerializeHandler): [SerializeOutput, Metadata]
+ }
+}
+
+/**
+ * Package auth defines protocol-agnostic authentication types for smithy
+ * clients.
+ */
+namespace auth {
+ /**
+  * Identity contains information that identifies who the user making the
+  * request is.
+  */
+ interface Identity {
+  [key:string]: any;
+  expiration(): time.Time
+ }
+ /**
+  * IdentityResolverOptions defines the interface through which an entity can be
+  * queried to retrieve an IdentityResolver for a given auth scheme.
+  */
+ interface IdentityResolverOptions {
+  [key:string]: any;
+  getIdentityResolver(schemeID: string): IdentityResolver
+ }
+ /**
+  * Option represents a possible authentication method for an operation.
+  */
+ interface Option {
+  schemeID: string
+  identityProperties: smithy.Properties
+  signerProperties: smithy.Properties
+ }
+}
+
+/**
+ * Package metrics defines the metrics APIs used by Smithy clients.
+ */
+namespace metrics {
+ /**
+  * MeterOption applies configuration to a Meter.
+  */
+ interface MeterOption {(o: MeterOptions): void }
+ /**
+  * Meter is the entry point for creation of measurement instruments.
+  */
+ interface Meter {
+  [key:string]: any;
+  /**
+   * integer/synchronous
+   */
+  int64Counter(name: string, ...opts: InstrumentOption[]): Int64Counter
+  int64UpDownCounter(name: string, ...opts: InstrumentOption[]): Int64UpDownCounter
+  int64Gauge(name: string, ...opts: InstrumentOption[]): Int64Gauge
+  int64Histogram(name: string, ...opts: InstrumentOption[]): Int64Histogram
+  /**
+   * integer/asynchronous
+   */
+  int64AsyncCounter(name: string, callback: Int64Callback, ...opts: InstrumentOption[]): AsyncInstrument
+  int64AsyncUpDownCounter(name: string, callback: Int64Callback, ...opts: InstrumentOption[]): AsyncInstrument
+  int64AsyncGauge(name: string, callback: Int64Callback, ...opts: InstrumentOption[]): AsyncInstrument
+  /**
+   * floating-point/synchronous
+   */
+  float64Counter(name: string, ...opts: InstrumentOption[]): Float64Counter
+  float64UpDownCounter(name: string, ...opts: InstrumentOption[]): Float64UpDownCounter
+  float64Gauge(name: string, ...opts: InstrumentOption[]): Float64Gauge
+  float64Histogram(name: string, ...opts: InstrumentOption[]): Float64Histogram
+  /**
+   * floating-point/asynchronous
+   */
+  float64AsyncCounter(name: string, callback: Float64Callback, ...opts: InstrumentOption[]): AsyncInstrument
+  float64AsyncUpDownCounter(name: string, callback: Float64Callback, ...opts: InstrumentOption[]): AsyncInstrument
+  float64AsyncGauge(name: string, callback: Float64Callback, ...opts: InstrumentOption[]): AsyncInstrument
+ }
+}
+
+/**
+ * Package tracing defines tracing APIs to be used by Smithy clients.
+ */
+namespace tracing {
+ /**
+  * TracerOption applies configuration to a tracer.
+  */
+ interface TracerOption {(o: TracerOptions): void }
+ /**
+  * Tracer is the entry point for creating observed client Spans.
+  * 
+  * Spans created by tracers propagate by existing on the Context. Consumers of
+  * the API can use [GetSpan] to pull the active Span from a Context.
+  * 
+  * Creation of child Spans is implicit through Context persistence. If
+  * CreateSpan is called with a Context that holds a Span, the result will be a
+  * child of that Span.
+  */
+ interface Tracer {
+  [key:string]: any;
+  startSpan(ctx: context.Context, name: string, ...opts: SpanOption[]): [context.Context, Span]
+ }
+}
+
+/**
  * Package http provides the HTTP transport client and request/response types
  * needed to round trip API operation calls with an service.
  */
@@ -41258,6 +41267,179 @@ namespace http {
  import iointernal = io
  // @ts-ignore
  import smithytime = time
+}
+
+/**
+ * Package aws provides the core SDK's utilities and shared types. Use this package's
+ * utilities to simplify setting and reading API operations parameters.
+ * 
+ * # Value and Pointer Conversion Utilities
+ * 
+ * This package includes a helper conversion utility for each scalar type the SDK's
+ * API use. These utilities make getting a pointer of the scalar, and dereferencing
+ * a pointer easier.
+ * 
+ * Each conversion utility comes in two forms. Value to Pointer and Pointer to Value.
+ * The Pointer to value will safely dereference the pointer and return its value.
+ * If the pointer was nil, the scalar's zero value will be returned.
+ * 
+ * The value to pointer functions will be named after the scalar type. So get a
+ * *string from a string value use the "String" function. This makes it easy to
+ * to get pointer of a literal string value, because getting the address of a
+ * literal requires assigning the value to a variable first.
+ * 
+ * ```
+ * 	var strPtr *string
+ * 
+ * 	// Without the SDK's conversion functions
+ * 	str := "my string"
+ * 	strPtr = &str
+ * 
+ * 	// With the SDK's conversion functions
+ * 	strPtr = aws.String("my string")
+ * 
+ * 	// Convert *string to string value
+ * 	str = aws.ToString(strPtr)
+ * ```
+ * 
+ * In addition to scalars the aws package also includes conversion utilities for
+ * map and slice for commonly types used in API parameters. The map and slice
+ * conversion functions use similar naming pattern as the scalar conversion
+ * functions.
+ * 
+ * ```
+ * 	var strPtrs []*string
+ * 	var strs []string = []string{"Go", "Gophers", "Go"}
+ * 
+ * 	// Convert []string to []*string
+ * 	strPtrs = aws.StringSlice(strs)
+ * 
+ * 	// Convert []*string to []string
+ * 	strs = aws.ToStringSlice(strPtrs)
+ * ```
+ * 
+ * # SDK Default HTTP Client
+ * 
+ * The SDK will use the http.DefaultClient if a HTTP client is not provided to
+ * the SDK's Session, or service client constructor. This means that if the
+ * http.DefaultClient is modified by other components of your application the
+ * modifications will be picked up by the SDK as well.
+ * 
+ * In some cases this might be intended, but it is a better practice to create
+ * a custom HTTP Client to share explicitly through your application. You can
+ * configure the SDK to use the custom HTTP Client by setting the HTTPClient
+ * value of the SDK's Config type when creating a Session or service client.
+ */
+/**
+ * Package aws provides core functionality for making requests to AWS services.
+ */
+namespace aws {
+ // @ts-ignore
+ import smithybearer = bearer
+ // @ts-ignore
+ import sdkrand = rand
+ /**
+  * EndpointSource is the endpoint source type.
+  * 
+  * Deprecated: The global [Endpoint] structure is deprecated.
+  */
+ interface EndpointSource extends Number{}
+}
+
+/**
+ * Package v4 implements the AWS signature version 4 algorithm (commonly known
+ * as SigV4).
+ * 
+ * For more information about SigV4, see [Signing AWS API requests] in the IAM
+ * user guide.
+ * 
+ * While this implementation CAN work in an external context, it is developed
+ * primarily for SDK use and you may encounter fringe behaviors around header
+ * canonicalization.
+ * 
+ * # Pre-escaping a request URI
+ * 
+ * AWS v4 signature validation requires that the canonical string's URI path
+ * component must be the escaped form of the HTTP request's path.
+ * 
+ * The Go HTTP client will perform escaping automatically on the HTTP request.
+ * This may cause signature validation errors because the request differs from
+ * the URI path or query from which the signature was generated.
+ * 
+ * Because of this, we recommend that you explicitly escape the request when
+ * using this signer outside of the SDK to prevent possible signature mismatch.
+ * This can be done by setting URL.Opaque on the request. The signer will
+ * prefer that value, falling back to the return of URL.EscapedPath if unset.
+ * 
+ * When setting URL.Opaque you must do so in the form of:
+ * 
+ * ```
+ * 	"//<hostname>/<path>"
+ * 
+ * 	// e.g.
+ * 	"//example.com/some/path"
+ * ```
+ * 
+ * The leading "//" and hostname are required or the escaping will not work
+ * correctly.
+ * 
+ * The TestStandaloneSign unit test provides a complete example of using the
+ * signer outside of the SDK and pre-escaping the URI path.
+ * 
+ * [Signing AWS API requests]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_aws-signing.html
+ */
+namespace signer {
+ // @ts-ignore
+ import awsmiddleware = middleware
+ // @ts-ignore
+ import v4Internal = internal
+ // @ts-ignore
+ import internalauth = auth
+ // @ts-ignore
+ import smithyhttp = http
+ // @ts-ignore
+ import smithyHTTP = http
+ /**
+  * SignerOptions is the SigV4 Signer options.
+  */
+ interface SignerOptions {
+  /**
+   * Disables the Signer's moving HTTP header key/value pairs from the HTTP
+   * request header to the request's query string. This is most commonly used
+   * with pre-signed requests preventing headers from being added to the
+   * request's query string.
+   */
+  disableHeaderHoisting: boolean
+  /**
+   * Disables the automatic escaping of the URI path of the request for the
+   * siganture's canonical string's path. For services that do not need additional
+   * escaping then use this to disable the signer escaping the path.
+   * 
+   * S3 is an example of a service that does not need additional escaping.
+   * 
+   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
+   */
+  disableURIPathEscaping: boolean
+  /**
+   * The logger to send log messages to.
+   */
+  logger: logging.Logger
+  /**
+   * Enable logging of signed requests.
+   * This will enable logging of the canonical request, the string to sign, and for presigning the subsequent
+   * presigned URL.
+   */
+  logSigning: boolean
+  /**
+   * Disables setting the session token on the request as part of signing
+   * through X-Amz-Security-Token. This is needed for variations of v4 that
+   * present the token elsewhere.
+   */
+  disableSessionToken: boolean
+ }
+}
+
+namespace subscriptions {
 }
 
 /**
@@ -41805,83 +41987,6 @@ namespace slog {
  }
 }
 
-/**
- * Package aws provides the core SDK's utilities and shared types. Use this package's
- * utilities to simplify setting and reading API operations parameters.
- * 
- * # Value and Pointer Conversion Utilities
- * 
- * This package includes a helper conversion utility for each scalar type the SDK's
- * API use. These utilities make getting a pointer of the scalar, and dereferencing
- * a pointer easier.
- * 
- * Each conversion utility comes in two forms. Value to Pointer and Pointer to Value.
- * The Pointer to value will safely dereference the pointer and return its value.
- * If the pointer was nil, the scalar's zero value will be returned.
- * 
- * The value to pointer functions will be named after the scalar type. So get a
- * *string from a string value use the "String" function. This makes it easy to
- * to get pointer of a literal string value, because getting the address of a
- * literal requires assigning the value to a variable first.
- * 
- * ```
- * 	var strPtr *string
- * 
- * 	// Without the SDK's conversion functions
- * 	str := "my string"
- * 	strPtr = &str
- * 
- * 	// With the SDK's conversion functions
- * 	strPtr = aws.String("my string")
- * 
- * 	// Convert *string to string value
- * 	str = aws.ToString(strPtr)
- * ```
- * 
- * In addition to scalars the aws package also includes conversion utilities for
- * map and slice for commonly types used in API parameters. The map and slice
- * conversion functions use similar naming pattern as the scalar conversion
- * functions.
- * 
- * ```
- * 	var strPtrs []*string
- * 	var strs []string = []string{"Go", "Gophers", "Go"}
- * 
- * 	// Convert []string to []*string
- * 	strPtrs = aws.StringSlice(strs)
- * 
- * 	// Convert []*string to []string
- * 	strs = aws.ToStringSlice(strPtrs)
- * ```
- * 
- * # SDK Default HTTP Client
- * 
- * The SDK will use the http.DefaultClient if a HTTP client is not provided to
- * the SDK's Session, or service client constructor. This means that if the
- * http.DefaultClient is modified by other components of your application the
- * modifications will be picked up by the SDK as well.
- * 
- * In some cases this might be intended, but it is a better practice to create
- * a custom HTTP Client to share explicitly through your application. You can
- * configure the SDK to use the custom HTTP Client by setting the HTTPClient
- * value of the SDK's Config type when creating a Session or service client.
- */
-/**
- * Package aws provides core functionality for making requests to AWS services.
- */
-namespace aws {
- // @ts-ignore
- import smithybearer = bearer
- // @ts-ignore
- import sdkrand = rand
- /**
-  * EndpointSource is the endpoint source type.
-  * 
-  * Deprecated: The global [Endpoint] structure is deprecated.
-  */
- interface EndpointSource extends Number{}
-}
-
 namespace endpoints {
  // @ts-ignore
  import endpoints = endpoints
@@ -41934,99 +42039,6 @@ namespace endpoints {
 }
 
 /**
- * Package v4 implements the AWS signature version 4 algorithm (commonly known
- * as SigV4).
- * 
- * For more information about SigV4, see [Signing AWS API requests] in the IAM
- * user guide.
- * 
- * While this implementation CAN work in an external context, it is developed
- * primarily for SDK use and you may encounter fringe behaviors around header
- * canonicalization.
- * 
- * # Pre-escaping a request URI
- * 
- * AWS v4 signature validation requires that the canonical string's URI path
- * component must be the escaped form of the HTTP request's path.
- * 
- * The Go HTTP client will perform escaping automatically on the HTTP request.
- * This may cause signature validation errors because the request differs from
- * the URI path or query from which the signature was generated.
- * 
- * Because of this, we recommend that you explicitly escape the request when
- * using this signer outside of the SDK to prevent possible signature mismatch.
- * This can be done by setting URL.Opaque on the request. The signer will
- * prefer that value, falling back to the return of URL.EscapedPath if unset.
- * 
- * When setting URL.Opaque you must do so in the form of:
- * 
- * ```
- * 	"//<hostname>/<path>"
- * 
- * 	// e.g.
- * 	"//example.com/some/path"
- * ```
- * 
- * The leading "//" and hostname are required or the escaping will not work
- * correctly.
- * 
- * The TestStandaloneSign unit test provides a complete example of using the
- * signer outside of the SDK and pre-escaping the URI path.
- * 
- * [Signing AWS API requests]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_aws-signing.html
- */
-namespace signer {
- // @ts-ignore
- import awsmiddleware = middleware
- // @ts-ignore
- import v4Internal = internal
- // @ts-ignore
- import internalauth = auth
- // @ts-ignore
- import smithyhttp = http
- // @ts-ignore
- import smithyHTTP = http
- /**
-  * SignerOptions is the SigV4 Signer options.
-  */
- interface SignerOptions {
-  /**
-   * Disables the Signer's moving HTTP header key/value pairs from the HTTP
-   * request header to the request's query string. This is most commonly used
-   * with pre-signed requests preventing headers from being added to the
-   * request's query string.
-   */
-  disableHeaderHoisting: boolean
-  /**
-   * Disables the automatic escaping of the URI path of the request for the
-   * siganture's canonical string's path. For services that do not need additional
-   * escaping then use this to disable the signer escaping the path.
-   * 
-   * S3 is an example of a service that does not need additional escaping.
-   * 
-   * http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
-   */
-  disableURIPathEscaping: boolean
-  /**
-   * The logger to send log messages to.
-   */
-  logger: logging.Logger
-  /**
-   * Enable logging of signed requests.
-   * This will enable logging of the canonical request, the string to sign, and for presigning the subsequent
-   * presigned URL.
-   */
-  logSigning: boolean
-  /**
-   * Disables setting the session token on the request as part of signing
-   * through X-Amz-Security-Token. This is needed for variations of v4 that
-   * present the token elsewhere.
-   */
-  disableSessionToken: boolean
- }
-}
-
-/**
  * Package document provides interface definitions and error types for document types.
  * 
  * A document is a protocol-agnostic type which supports a JSON-like data-model. You can use this type to send
@@ -42053,6 +42065,180 @@ namespace document {
  * like datetime, json, etc.
  */
 namespace types {
+}
+
+/**
+ * Package customizations provides customizations for the Amazon S3 API client.
+ * 
+ * This package provides support for following S3 customizations
+ * 
+ * ```
+ * 	ProcessARN Middleware: processes an ARN if provided as input and updates the endpoint as per the arn type
+ * 
+ * 	UpdateEndpoint Middleware: resolves a custom endpoint as per s3 config options
+ * 
+ * 	RemoveBucket Middleware: removes a serialized bucket name from request url path
+ * 
+ * 	processResponseWith200Error Middleware: Deserializing response error with 200 status code
+ * ```
+ * 
+ * # Virtual Host style url addressing
+ * 
+ * Since serializers serialize by default as path style url, we use customization
+ * to modify the endpoint url when `UsePathStyle` option on S3Client is unset or
+ * false. This flag will be ignored if `UseAccelerate` option is set to true.
+ * 
+ * If UseAccelerate is not enabled, and the bucket name is not a valid hostname
+ * label, they SDK will fallback to forcing the request to be made as if
+ * UsePathStyle was enabled. This behavior is also used if UseDualStackEndpoint is enabled.
+ * 
+ * https://docs.aws.amazon.com/AmazonS3/latest/dev/dual-stack-endpoints.html#dual-stack-endpoints-description
+ * 
+ * # Transfer acceleration
+ * 
+ * By default S3 Transfer acceleration support is disabled. By enabling `UseAccelerate`
+ * option on S3Client, one can enable s3 transfer acceleration support. Transfer
+ * acceleration only works with Virtual Host style addressing, and thus `UsePathStyle`
+ * option if set is ignored. Transfer acceleration is not supported for S3 operations
+ * DeleteBucket, ListBuckets, and CreateBucket.
+ * 
+ * # Dualstack support
+ * 
+ * By default dualstack support for s3 client is disabled. By enabling `UseDualstack`
+ * option on s3 client, you can enable dualstack endpoint support.
+ * 
+ * # Endpoint customizations
+ * 
+ * Customizations to lookup ARN, process ARN needs to happen before request serialization.
+ * UpdateEndpoint middleware which mutates resources based on Options such as
+ * UseDualstack, UseAccelerate for modifying resolved endpoint are executed after
+ * request serialization. Remove bucket middleware is executed after
+ * an request is serialized, and removes the serialized bucket name from request path
+ * 
+ * ```
+ * 	Middleware layering:
+ * 
+ * 	Initialize : HTTP Request -> ARN Lookup -> Input-Validation -> Serialize step
+ * 
+ * 	Serialize : HTTP Request -> Process ARN -> operation serializer -> Update-Endpoint customization -> Remove-Bucket -> next middleware
+ * ```
+ * 
+ * Customization options:
+ * 
+ * ```
+ * 	UseARNRegion (Disabled by Default)
+ * 
+ * 	UsePathStyle (Disabled by Default)
+ * 
+ * 	UseAccelerate (Disabled by Default)
+ * 
+ * 	UseDualstack (Disabled by Default)
+ * ```
+ * 
+ * # Handle Error response with 200 status code
+ * 
+ * S3 operations: CopyObject, CompleteMultipartUpload, UploadPartCopy can have an
+ * error Response with status code 2xx. The processResponseWith200Error middleware
+ * customizations enables SDK to check for an error within response body prior to
+ * deserialization.
+ * 
+ * As the check for 2xx response containing an error needs to be performed earlier
+ * than response deserialization. Since the behavior of Deserialization is in
+ * reverse order to the other stack steps its easier to consider that "after" means
+ * "before".
+ * 
+ * ```
+ * 	Middleware layering:
+ * 
+ * 	HTTP Response -> handle 200 error customization -> deserialize
+ * ```
+ */
+namespace customizations {
+ // @ts-ignore
+ import internalauthsmithy = smithy
+ /**
+  * S3ExpressCredentialsProvider retrieves credentials for the S3Express storage
+  * class.
+  */
+ interface S3ExpressCredentialsProvider {
+  [key:string]: any;
+  retrieve(ctx: context.Context, bucket: string): aws.Credentials
+ }
+ // @ts-ignore
+ import ictx = context
+ // @ts-ignore
+ import v4 = signer
+ // @ts-ignore
+ import smithyhttp = http
+ // @ts-ignore
+ import smithyxml = xml
+ // @ts-ignore
+ import awsmiddleware = middleware
+ // @ts-ignore
+ import s3arn = arn
+ // @ts-ignore
+ import internalendpoints = endpoints
+}
+
+/**
+ * Package mail implements parsing of mail messages.
+ * 
+ * For the most part, this package follows the syntax as specified by RFC 5322 and
+ * extended by RFC 6532.
+ * Notable divergences:
+ * ```
+ *   - Obsolete address formats are not parsed, including addresses with
+ *     embedded route information.
+ *   - The full range of spacing (the CFWS syntax element) is not supported,
+ *     such as breaking addresses across lines.
+ *   - No unicode normalization is performed.
+ *   - A leading From line is permitted, as in mbox format (RFC 4155).
+ * ```
+ */
+namespace mail {
+ /**
+  * Address represents a single mail address.
+  * An address such as "Barry Gibbs <bg@example.com>" is represented
+  * as Address{Name: "Barry Gibbs", Address: "bg@example.com"}.
+  */
+ interface Address {
+  name: string // Proper name; may be empty.
+  address: string // user@domain
+ }
+ interface Address {
+  /**
+   * String formats the address as a valid RFC 5322 address.
+   * If the address's name contains non-ASCII characters
+   * the name will be rendered according to RFC 2047.
+   */
+  string(): string
+ }
+}
+
+namespace search {
+}
+
+namespace endpoints {
+ /**
+  * Endpoint is the endpoint object returned by Endpoint resolution V2
+  */
+ interface Endpoint {
+  /**
+   * The complete URL minimally specfiying the scheme and host.
+   * May optionally specify the port and base path component.
+   */
+  uri: url.URL
+  /**
+   * An optional set of headers to be sent using transport layer headers.
+   */
+  headers: http.Header
+  /**
+   * A grab-bag property map of endpoint attributes. The
+   * values present here are subject to change, or being add/removed at any
+   * time.
+   */
+  properties: smithy.Properties
+ }
 }
 
 namespace types {
@@ -42218,8 +42404,8 @@ namespace types {
   * 
   * [Aborting Incomplete Multipart Uploads Using a Bucket Lifecycle Configuration]: https://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html#mpu-abort-incomplete-mpu-lifecycle-config
   */
- type _subTtsCE = noSmithyDocumentSerde
- interface AbortIncompleteMultipartUpload extends _subTtsCE {
+ type _subTGUuf = noSmithyDocumentSerde
+ interface AbortIncompleteMultipartUpload extends _subTGUuf {
   /**
    * Specifies the number of days after which Amazon S3 aborts an incomplete
    * multipart upload.
@@ -42250,8 +42436,8 @@ namespace types {
   * 
   * [Directory buckets]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/directory-buckets-overview.html
   */
- type _suboDMoj = noSmithyDocumentSerde
- interface BucketInfo extends _suboDMoj {
+ type _subwsyMZ = noSmithyDocumentSerde
+ interface BucketInfo extends _subwsyMZ {
   /**
    * The number of Availability Zone that's used for redundancy for the bucket.
    */
@@ -42264,8 +42450,8 @@ namespace types {
  /**
   * Details of the parts that were uploaded.
   */
- type _subThMsH = noSmithyDocumentSerde
- interface CompletedPart extends _subThMsH {
+ type _subgUiBN = noSmithyDocumentSerde
+ interface CompletedPart extends _subgUiBN {
   /**
    * The base64-encoded, 32-bit CRC-32 checksum of the object. This will only be
    * present if it was uploaded with the object. When you use an API operation on an
@@ -42342,8 +42528,8 @@ namespace types {
   * redirect to the /documents folder. 2. If request results in HTTP error 4xx,
   * redirect request to another host where you might process the error.
   */
- type _subslzCU = noSmithyDocumentSerde
- interface Condition extends _subslzCU {
+ type _subdiwoz = noSmithyDocumentSerde
+ interface Condition extends _subdiwoz {
   /**
    * The HTTP error code when the redirect is applied. In the event of an error, if
    * the error code equals this value, then the specified redirect is applied.
@@ -42372,8 +42558,8 @@ namespace types {
   * Describes how an uncompressed comma-separated values (CSV)-formatted input
   * object is formatted.
   */
- type _subpoDVL = noSmithyDocumentSerde
- interface CSVInput extends _subpoDVL {
+ type _subArRzr = noSmithyDocumentSerde
+ interface CSVInput extends _subArRzr {
   /**
    * Specifies that CSV field values may contain quoted record delimiters and such
    * records should be allowed. Default value is FALSE. Setting this value to TRUE
@@ -42436,8 +42622,8 @@ namespace types {
   * Describes how uncompressed comma-separated values (CSV)-formatted results are
   * formatted.
   */
- type _subADOJI = noSmithyDocumentSerde
- interface CSVOutput extends _subADOJI {
+ type _subtiTxV = noSmithyDocumentSerde
+ interface CSVOutput extends _subtiTxV {
   /**
    * The value used to separate individual fields in a record. You can specify an
    * arbitrary delimiter.
@@ -42473,8 +42659,8 @@ namespace types {
  /**
   * Container for S3 Glacier job parameters.
   */
- type _subdFnGf = noSmithyDocumentSerde
- interface GlacierJobParameters extends _subdFnGf {
+ type _sublYhOb = noSmithyDocumentSerde
+ interface GlacierJobParameters extends _sublYhOb {
   /**
    * Retrieval tier at which the restore will be processed.
    * 
@@ -42485,8 +42671,8 @@ namespace types {
  /**
   * Container for the person being granted permissions.
   */
- type _subWGHQu = noSmithyDocumentSerde
- interface Grantee extends _subWGHQu {
+ type _subBVJYu = noSmithyDocumentSerde
+ interface Grantee extends _subBVJYu {
   /**
    * Type of grantee
    * 
@@ -42540,8 +42726,8 @@ namespace types {
   * The Filter is used to identify objects that the S3 Intelligent-Tiering
   * configuration applies to.
   */
- type _subjMqFn = noSmithyDocumentSerde
- interface IntelligentTieringFilter extends _subjMqFn {
+ type _subRvWPi = noSmithyDocumentSerde
+ interface IntelligentTieringFilter extends _subRvWPi {
   /**
    * A conjunction (logical AND) of predicates, which is used in evaluating a
    * metrics filter. The operator must have at least two predicates, and an object
@@ -42566,8 +42752,8 @@ namespace types {
  /**
   * Specifies the inventory configuration for an Amazon S3 bucket.
   */
- type _subNhQFG = noSmithyDocumentSerde
- interface InventoryDestination extends _subNhQFG {
+ type _subSNUXZ = noSmithyDocumentSerde
+ interface InventoryDestination extends _subSNUXZ {
   /**
    * Contains the bucket name, file format, bucket owner (optional), and prefix
    * (optional) where inventory results are published.
@@ -42580,8 +42766,8 @@ namespace types {
   * Specifies an inventory filter. The inventory only includes objects that meet
   * the filter's criteria.
   */
- type _subaXFzR = noSmithyDocumentSerde
- interface InventoryFilter extends _subaXFzR {
+ type _subITVSf = noSmithyDocumentSerde
+ interface InventoryFilter extends _subITVSf {
   /**
    * The prefix that an object must have to be included in the inventory results.
    * 
@@ -42592,8 +42778,8 @@ namespace types {
  /**
   * Specifies the schedule for generating inventory results.
   */
- type _subApprQ = noSmithyDocumentSerde
- interface InventorySchedule extends _subApprQ {
+ type _subjrnpt = noSmithyDocumentSerde
+ interface InventorySchedule extends _subjrnpt {
   /**
    * Specifies how frequently inventory results are produced.
    * 
@@ -42604,8 +42790,8 @@ namespace types {
  /**
   * Specifies JSON as object's input serialization format.
   */
- type _subNlzgt = noSmithyDocumentSerde
- interface JSONInput extends _subNlzgt {
+ type _subSpwfD = noSmithyDocumentSerde
+ interface JSONInput extends _subSpwfD {
   /**
    * The type of JSON. Valid values: Document, Lines.
    */
@@ -42614,8 +42800,8 @@ namespace types {
  /**
   * Specifies JSON as request's output serialization format.
   */
- type _subQMtYm = noSmithyDocumentSerde
- interface JSONOutput extends _subQMtYm {
+ type _subkIKSy = noSmithyDocumentSerde
+ interface JSONOutput extends _subkIKSy {
   /**
    * The value used to separate individual records in the output. If no value is
    * specified, Amazon S3 uses a newline character ('\n').
@@ -42629,8 +42815,8 @@ namespace types {
   * 
   * [Managing your storage lifecycle]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lifecycle-mgmt.html
   */
- type _subvVmSu = noSmithyDocumentSerde
- interface LifecycleExpiration extends _subvVmSu {
+ type _subIwqVo = noSmithyDocumentSerde
+ interface LifecycleExpiration extends _subIwqVo {
   /**
    * Indicates at what date the object is to be moved or deleted. The date value
    * must conform to the ISO 8601 format. The time is always midnight UTC.
@@ -42678,8 +42864,8 @@ namespace types {
   * 
   * [Directory buckets]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/directory-buckets-overview.html
   */
- type _subGUAJG = noSmithyDocumentSerde
- interface LocationInfo extends _subGUAJG {
+ type _subpgwtx = noSmithyDocumentSerde
+ interface LocationInfo extends _subpgwtx {
   /**
    * The name of the location where the bucket will be created.
    * 
@@ -42720,8 +42906,8 @@ namespace types {
   * request that Amazon S3 delete noncurrent object versions at a specific period in
   * the object's lifetime.
   */
- type _subPKzco = noSmithyDocumentSerde
- interface NoncurrentVersionExpiration extends _subPKzco {
+ type _subOkXCM = noSmithyDocumentSerde
+ interface NoncurrentVersionExpiration extends _subOkXCM {
   /**
    * Specifies how many noncurrent versions Amazon S3 will retain. You can specify
    * up to 100 noncurrent versions to retain. Amazon S3 will permanently delete any
@@ -42750,8 +42936,8 @@ namespace types {
   * INTELLIGENT_TIERING , GLACIER_IR , GLACIER , or DEEP_ARCHIVE storage class at a
   * specific period in the object's lifetime.
   */
- type _subDHdHp = noSmithyDocumentSerde
- interface NoncurrentVersionTransition extends _subDHdHp {
+ type _subxybkO = noSmithyDocumentSerde
+ interface NoncurrentVersionTransition extends _subxybkO {
   /**
    * Specifies how many noncurrent versions Amazon S3 will retain in the same
    * storage class before transitioning objects. You can specify up to 100 noncurrent
@@ -42781,8 +42967,8 @@ namespace types {
   * 
   * [Configuring event notifications using object key name filtering]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/notification-how-to-filtering.html
   */
- type _sublsXwL = noSmithyDocumentSerde
- interface NotificationConfigurationFilter extends _sublsXwL {
+ type _subqUNze = noSmithyDocumentSerde
+ interface NotificationConfigurationFilter extends _subqUNze {
   /**
    * A container for object key name prefix and suffix filtering rules.
    */
@@ -42791,8 +42977,8 @@ namespace types {
  /**
   * Object Identifier is unique value to identify objects.
   */
- type _subUoIpQ = noSmithyDocumentSerde
- interface ObjectIdentifier extends _subUoIpQ {
+ type _subwqbXl = noSmithyDocumentSerde
+ interface ObjectIdentifier extends _subwqbXl {
   /**
    * Key name of the object.
    * 
@@ -42814,8 +43000,8 @@ namespace types {
  /**
   * The container element for an Object Lock rule.
   */
- type _subBMdqo = noSmithyDocumentSerde
- interface ObjectLockRule extends _subBMdqo {
+ type _subsFmDf = noSmithyDocumentSerde
+ interface ObjectLockRule extends _subsFmDf {
   /**
    * The default Object Lock retention mode and period that you want to apply to new
    * objects placed in the specified bucket. Bucket settings require both a mode and
@@ -42827,8 +43013,8 @@ namespace types {
  /**
   * A container for elements related to an individual part.
   */
- type _subfIADH = noSmithyDocumentSerde
- interface ObjectPart extends _subfIADH {
+ type _subZzZHD = noSmithyDocumentSerde
+ interface ObjectPart extends _subZzZHD {
   /**
    * This header can be used as a data integrity check to verify that the data
    * received is the same data that was originally sent. This header specifies the
@@ -42887,8 +43073,8 @@ namespace types {
  /**
   * Describes the location where the restore job's output is stored.
   */
- type _subPZwEh = noSmithyDocumentSerde
- interface OutputLocation extends _subPZwEh {
+ type _subSpKZD = noSmithyDocumentSerde
+ interface OutputLocation extends _subSpKZD {
   /**
    * Describes an S3 location that will receive the results of the restore request.
    */
@@ -42897,8 +43083,8 @@ namespace types {
  /**
   * The container element for an ownership control rule.
   */
- type _subfpwaA = noSmithyDocumentSerde
- interface OwnershipControlsRule extends _subfpwaA {
+ type _subDWjeb = noSmithyDocumentSerde
+ interface OwnershipControlsRule extends _subDWjeb {
   /**
    * The container element for object ownership for a bucket's ownership controls.
    * 
@@ -42933,15 +43119,15 @@ namespace types {
  /**
   * Container for Parquet.
   */
- type _subpytOv = noSmithyDocumentSerde
- interface ParquetInput extends _subpytOv {
+ type _subEjLVy = noSmithyDocumentSerde
+ interface ParquetInput extends _subEjLVy {
  }
  /**
   * Specifies how requests are redirected. In the event of an error, you can
   * specify a different error code to return.
   */
- type _subJWrUl = noSmithyDocumentSerde
- interface Redirect extends _subJWrUl {
+ type _subtBJpK = noSmithyDocumentSerde
+ interface Redirect extends _subtBJpK {
   /**
    * The host name to use in the redirect request.
    */
@@ -42985,8 +43171,8 @@ namespace types {
  /**
   * Specifies which Amazon S3 objects to replicate and where to store the replicas.
   */
- type _subXbQuq = noSmithyDocumentSerde
- interface ReplicationRule extends _subXbQuq {
+ type _subpkUOi = noSmithyDocumentSerde
+ interface ReplicationRule extends _subpkUOi {
   /**
    * A container for information about the replication destination and its
    * configurations including enabling the S3 Replication Time Control (S3 RTC).
@@ -43081,8 +43267,8 @@ namespace types {
   * 
   * [Working with archived objects]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/archived-objects.html
   */
- type _subFCSIN = noSmithyDocumentSerde
- interface RestoreStatus extends _subFCSIN {
+ type _suboDeJO = noSmithyDocumentSerde
+ interface RestoreStatus extends _suboDeJO {
   /**
    * Specifies whether the object is currently being restored. If the object
    * restoration is in progress, the header returns the value TRUE . For example:
@@ -43126,8 +43312,8 @@ namespace types {
   * [Amazon Athena]: https://docs.aws.amazon.com/athena/latest/ug/what-is.html
   * [S3 Object Lambda]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/transforming-objects.html
   */
- type _subrGrMG = noSmithyDocumentSerde
- interface SelectParameters extends _subrGrMG {
+ type _subLvMOu = noSmithyDocumentSerde
+ interface SelectParameters extends _subLvMOu {
   /**
    * Amazon S3 Select is no longer available to new customers. Existing customers of
    * Amazon S3 Select can continue to use the feature as usual. [Learn more]
@@ -43175,8 +43361,8 @@ namespace types {
   * 
   * [KMS customer managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#customer-cmk
   */
- type _subdvukF = noSmithyDocumentSerde
- interface ServerSideEncryptionRule extends _subdvukF {
+ type _subsAkJx = noSmithyDocumentSerde
+ interface ServerSideEncryptionRule extends _subsAkJx {
   /**
    * Specifies the default server-side encryption to apply to new objects in the
    * bucket. If a PUT Object request doesn't specify any server-side encryption, this
@@ -43213,8 +43399,8 @@ namespace types {
   * Specifies data related to access patterns to be collected and made available to
   * analyze the tradeoffs between different storage classes for an Amazon S3 bucket.
   */
- type _subsJjAW = noSmithyDocumentSerde
- interface StorageClassAnalysis extends _subsJjAW {
+ type _subqvUbE = noSmithyDocumentSerde
+ interface StorageClassAnalysis extends _subqvUbE {
   /**
    * Specifies how data related to the storage class analysis for an Amazon S3
    * bucket should be exported.
@@ -43229,8 +43415,8 @@ namespace types {
   * 
   * [Permissions server access log delivery]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/enable-server-access-logging.html#grant-log-delivery-permissions-general
   */
- type _subZctQi = noSmithyDocumentSerde
- interface TargetGrant extends _subZctQi {
+ type _subUKRbv = noSmithyDocumentSerde
+ interface TargetGrant extends _subUKRbv {
   /**
    * Container for the person being granted permissions.
    */
@@ -43244,8 +43430,8 @@ namespace types {
   * Amazon S3 key format for log objects. Only one format, PartitionedPrefix or
   * SimplePrefix, is allowed.
   */
- type _subGqccM = noSmithyDocumentSerde
- interface TargetObjectKeyFormat extends _subGqccM {
+ type _subQKjZL = noSmithyDocumentSerde
+ interface TargetObjectKeyFormat extends _subQKjZL {
   /**
    * Partitioned S3 key for log objects.
    */
@@ -43261,8 +43447,8 @@ namespace types {
   * by automatically moving data to the most cost-effective storage access tier,
   * without additional operational overhead.
   */
- type _subpntPW = noSmithyDocumentSerde
- interface Tiering extends _subpntPW {
+ type _subQJvwL = noSmithyDocumentSerde
+ interface Tiering extends _subQJvwL {
   /**
    * S3 Intelligent-Tiering access tier. See [Storage class for automatically optimizing frequently and infrequently accessed objects] for a list of access tiers in the S3
    * Intelligent-Tiering storage class.
@@ -43290,8 +43476,8 @@ namespace types {
   * 
   * [Transitioning Objects Using Amazon S3 Lifecycle]: https://docs.aws.amazon.com/AmazonS3/latest/dev/lifecycle-transition-general-considerations.html
   */
- type _subTFGzr = noSmithyDocumentSerde
- interface Transition extends _subTFGzr {
+ type _sublHufA = noSmithyDocumentSerde
+ interface Transition extends _sublHufA {
   /**
    * Indicates when objects are transitioned to the specified storage class. The
    * date value must be in ISO 8601 format. The time is always midnight UTC.
@@ -43308,177 +43494,6 @@ namespace types {
   storageClass: TransitionStorageClass
  }
  interface noSmithyDocumentSerde extends smithydocument.NoSerde{}
-}
-
-/**
- * Package customizations provides customizations for the Amazon S3 API client.
- * 
- * This package provides support for following S3 customizations
- * 
- * ```
- * 	ProcessARN Middleware: processes an ARN if provided as input and updates the endpoint as per the arn type
- * 
- * 	UpdateEndpoint Middleware: resolves a custom endpoint as per s3 config options
- * 
- * 	RemoveBucket Middleware: removes a serialized bucket name from request url path
- * 
- * 	processResponseWith200Error Middleware: Deserializing response error with 200 status code
- * ```
- * 
- * # Virtual Host style url addressing
- * 
- * Since serializers serialize by default as path style url, we use customization
- * to modify the endpoint url when `UsePathStyle` option on S3Client is unset or
- * false. This flag will be ignored if `UseAccelerate` option is set to true.
- * 
- * If UseAccelerate is not enabled, and the bucket name is not a valid hostname
- * label, they SDK will fallback to forcing the request to be made as if
- * UsePathStyle was enabled. This behavior is also used if UseDualStackEndpoint is enabled.
- * 
- * https://docs.aws.amazon.com/AmazonS3/latest/dev/dual-stack-endpoints.html#dual-stack-endpoints-description
- * 
- * # Transfer acceleration
- * 
- * By default S3 Transfer acceleration support is disabled. By enabling `UseAccelerate`
- * option on S3Client, one can enable s3 transfer acceleration support. Transfer
- * acceleration only works with Virtual Host style addressing, and thus `UsePathStyle`
- * option if set is ignored. Transfer acceleration is not supported for S3 operations
- * DeleteBucket, ListBuckets, and CreateBucket.
- * 
- * # Dualstack support
- * 
- * By default dualstack support for s3 client is disabled. By enabling `UseDualstack`
- * option on s3 client, you can enable dualstack endpoint support.
- * 
- * # Endpoint customizations
- * 
- * Customizations to lookup ARN, process ARN needs to happen before request serialization.
- * UpdateEndpoint middleware which mutates resources based on Options such as
- * UseDualstack, UseAccelerate for modifying resolved endpoint are executed after
- * request serialization. Remove bucket middleware is executed after
- * an request is serialized, and removes the serialized bucket name from request path
- * 
- * ```
- * 	Middleware layering:
- * 
- * 	Initialize : HTTP Request -> ARN Lookup -> Input-Validation -> Serialize step
- * 
- * 	Serialize : HTTP Request -> Process ARN -> operation serializer -> Update-Endpoint customization -> Remove-Bucket -> next middleware
- * ```
- * 
- * Customization options:
- * 
- * ```
- * 	UseARNRegion (Disabled by Default)
- * 
- * 	UsePathStyle (Disabled by Default)
- * 
- * 	UseAccelerate (Disabled by Default)
- * 
- * 	UseDualstack (Disabled by Default)
- * ```
- * 
- * # Handle Error response with 200 status code
- * 
- * S3 operations: CopyObject, CompleteMultipartUpload, UploadPartCopy can have an
- * error Response with status code 2xx. The processResponseWith200Error middleware
- * customizations enables SDK to check for an error within response body prior to
- * deserialization.
- * 
- * As the check for 2xx response containing an error needs to be performed earlier
- * than response deserialization. Since the behavior of Deserialization is in
- * reverse order to the other stack steps its easier to consider that "after" means
- * "before".
- * 
- * ```
- * 	Middleware layering:
- * 
- * 	HTTP Response -> handle 200 error customization -> deserialize
- * ```
- */
-namespace customizations {
- // @ts-ignore
- import internalauthsmithy = smithy
- /**
-  * S3ExpressCredentialsProvider retrieves credentials for the S3Express storage
-  * class.
-  */
- interface S3ExpressCredentialsProvider {
-  [key:string]: any;
-  retrieve(ctx: context.Context, bucket: string): aws.Credentials
- }
- // @ts-ignore
- import ictx = context
- // @ts-ignore
- import v4 = signer
- // @ts-ignore
- import smithyhttp = http
- // @ts-ignore
- import smithyxml = xml
- // @ts-ignore
- import awsmiddleware = middleware
- // @ts-ignore
- import s3arn = arn
- // @ts-ignore
- import internalendpoints = endpoints
-}
-
-/**
- * Package mail implements parsing of mail messages.
- * 
- * For the most part, this package follows the syntax as specified by RFC 5322 and
- * extended by RFC 6532.
- * Notable divergences:
- * ```
- *   - Obsolete address formats are not parsed, including addresses with
- *     embedded route information.
- *   - The full range of spacing (the CFWS syntax element) is not supported,
- *     such as breaking addresses across lines.
- *   - No unicode normalization is performed.
- *   - A leading From line is permitted, as in mbox format (RFC 4155).
- * ```
- */
-namespace mail {
- /**
-  * Address represents a single mail address.
-  * An address such as "Barry Gibbs <bg@example.com>" is represented
-  * as Address{Name: "Barry Gibbs", Address: "bg@example.com"}.
-  */
- interface Address {
-  name: string // Proper name; may be empty.
-  address: string // user@domain
- }
- interface Address {
-  /**
-   * String formats the address as a valid RFC 5322 address.
-   * If the address's name contains non-ASCII characters
-   * the name will be rendered according to RFC 2047.
-   */
-  string(): string
- }
-}
-
-namespace endpoints {
- /**
-  * Endpoint is the endpoint object returned by Endpoint resolution V2
-  */
- interface Endpoint {
-  /**
-   * The complete URL minimally specfiying the scheme and host.
-   * May optionally specify the port and base path component.
-   */
-  uri: url.URL
-  /**
-   * An optional set of headers to be sent using transport layer headers.
-   */
-  headers: http.Header
-  /**
-   * A grab-bag property map of endpoint attributes. The
-   * values present here are subject to change, or being add/removed at any
-   * time.
-   */
-  properties: smithy.Properties
- }
 }
 
 /**
@@ -43729,7 +43744,597 @@ namespace s3 {
  import v4 = signer
 }
 
-namespace search {
+/**
+ * Package smithy provides the core components for a Smithy SDK.
+ */
+namespace smithy_go {
+ /**
+  * Properties provides storing and reading metadata values. Keys may be any
+  * comparable value type. Get and Set will panic if a key is not comparable.
+  * 
+  * The zero value for a Properties instance is ready for reads/writes without
+  * any additional initialization.
+  */
+ interface Properties {
+ }
+ interface Properties {
+  /**
+   * Get attempts to retrieve the value the key points to. Returns nil if the
+   * key was not found.
+   * 
+   * Panics if key type is not comparable.
+   */
+  get(key: any): any
+ }
+ interface Properties {
+  /**
+   * Set stores the value pointed to by the key. If a value already exists at
+   * that key it will be replaced with the new value.
+   * 
+   * Panics if the key type is not comparable.
+   */
+  set(key: any, value: any): void
+ }
+ interface Properties {
+  /**
+   * Has returns whether the key exists in the metadata.
+   * 
+   * Panics if the key type is not comparable.
+   */
+  has(key: any): boolean
+ }
+ interface Properties {
+  /**
+   * SetAll accepts all of the given Properties into the receiver, overwriting
+   * any existing keys in the case of conflicts.
+   */
+  setAll(other: Properties): void
+ }
+ interface Properties {
+  /**
+   * Values returns a shallow clone of the property set's values.
+   */
+  values(): _TygojaDict
+ }
+}
+
+namespace types {
+ interface BucketLogsPermission extends String{}
+ interface BucketLogsPermission {
+  /**
+   * Values returns all known values for BucketLogsPermission. Note that this can be
+   * expanded in the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<BucketLogsPermission>
+ }
+ interface BucketType extends String{}
+ interface BucketType {
+  /**
+   * Values returns all known values for BucketType. Note that this can be expanded
+   * in the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<BucketType>
+ }
+ interface DataRedundancy extends String{}
+ interface DataRedundancy {
+  /**
+   * Values returns all known values for DataRedundancy. Note that this can be
+   * expanded in the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<DataRedundancy>
+ }
+ interface FileHeaderInfo extends String{}
+ interface FileHeaderInfo {
+  /**
+   * Values returns all known values for FileHeaderInfo. Note that this can be
+   * expanded in the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<FileHeaderInfo>
+ }
+ interface IntelligentTieringAccessTier extends String{}
+ interface IntelligentTieringAccessTier {
+  /**
+   * Values returns all known values for IntelligentTieringAccessTier. Note that
+   * this can be expanded in the future, and so it is only as up to date as the
+   * client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<IntelligentTieringAccessTier>
+ }
+ interface InventoryFrequency extends String{}
+ interface InventoryFrequency {
+  /**
+   * Values returns all known values for InventoryFrequency. Note that this can be
+   * expanded in the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<InventoryFrequency>
+ }
+ interface JSONType extends String{}
+ interface JSONType {
+  /**
+   * Values returns all known values for JSONType. Note that this can be expanded in
+   * the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<JSONType>
+ }
+ interface QuoteFields extends String{}
+ interface QuoteFields {
+  /**
+   * Values returns all known values for QuoteFields. Note that this can be expanded
+   * in the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<QuoteFields>
+ }
+ interface ReplicationRuleStatus extends String{}
+ interface ReplicationRuleStatus {
+  /**
+   * Values returns all known values for ReplicationRuleStatus. Note that this can
+   * be expanded in the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<ReplicationRuleStatus>
+ }
+ interface TransitionStorageClass extends String{}
+ interface TransitionStorageClass {
+  /**
+   * Values returns all known values for TransitionStorageClass. Note that this can
+   * be expanded in the future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<TransitionStorageClass>
+ }
+ interface Type extends String{}
+ interface Type {
+  /**
+   * Values returns all known values for Type. Note that this can be expanded in the
+   * future, and so it is only as up to date as the client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<Type>
+ }
+ // @ts-ignore
+ import smithy = smithy_go
+ // @ts-ignore
+ import smithydocument = document
+ /**
+  * The container element for optionally specifying the default Object Lock
+  * retention settings for new objects placed in the specified bucket.
+  * 
+  * ```
+  *   - The DefaultRetention settings require both a mode and a period.
+  * 
+  *   - The DefaultRetention period can be either Days or Years but you must select
+  *     one. You cannot specify Days and Years at the same time.
+  * ```
+  */
+ type _subYowwS = noSmithyDocumentSerde
+ interface DefaultRetention extends _subYowwS {
+  /**
+   * The number of days that you want to specify for the default retention period.
+   * Must be used with Mode .
+   */
+  days?: number
+  /**
+   * The default Object Lock retention mode you want to apply to new objects placed
+   * in the specified bucket. Must be used with either Days or Years .
+   */
+  mode: ObjectLockRetentionMode
+  /**
+   * The number of years that you want to specify for the default retention period.
+   * Must be used with Mode .
+   */
+  years?: number
+ }
+ /**
+  * Specifies whether Amazon S3 replicates delete markers. If you specify a Filter
+  * in your replication configuration, you must also include a
+  * DeleteMarkerReplication element. If your Filter includes a Tag element, the
+  * DeleteMarkerReplication Status must be set to Disabled, because Amazon S3 does
+  * not support replicating delete markers for tag-based rules. For an example
+  * configuration, see [Basic Rule Configuration].
+  * 
+  * For more information about delete marker replication, see [Basic Rule Configuration].
+  * 
+  * If you are using an earlier version of the replication configuration, Amazon S3
+  * handles replication of delete markers differently. For more information, see [Backward Compatibility].
+  * 
+  * [Basic Rule Configuration]: https://docs.aws.amazon.com/AmazonS3/latest/dev/delete-marker-replication.html
+  * [Backward Compatibility]: https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-add-config.html#replication-backward-compat-considerations
+  */
+ type _subuQntD = noSmithyDocumentSerde
+ interface DeleteMarkerReplication extends _subuQntD {
+  /**
+   * Indicates whether to replicate delete markers.
+   * 
+   * Indicates whether to replicate delete markers.
+   */
+  status: DeleteMarkerReplicationStatus
+ }
+ /**
+  * Specifies information about where to publish analysis or configuration results
+  * for an Amazon S3 bucket and S3 Replication Time Control (S3 RTC).
+  */
+ type _subrhMEC = noSmithyDocumentSerde
+ interface Destination extends _subrhMEC {
+  /**
+   *  The Amazon Resource Name (ARN) of the bucket where you want Amazon S3 to store
+   * the results.
+   * 
+   * This member is required.
+   */
+  bucket?: string
+  /**
+   * Specify this only in a cross-account scenario (where source and destination
+   * bucket owners are not the same), and you want to change replica ownership to the
+   * Amazon Web Services account that owns the destination bucket. If this is not
+   * specified in the replication configuration, the replicas are owned by same
+   * Amazon Web Services account that owns the source object.
+   */
+  accessControlTranslation?: AccessControlTranslation
+  /**
+   * Destination bucket owner account ID. In a cross-account scenario, if you direct
+   * Amazon S3 to change replica ownership to the Amazon Web Services account that
+   * owns the destination bucket by specifying the AccessControlTranslation
+   * property, this is the account ID of the destination bucket owner. For more
+   * information, see [Replication Additional Configuration: Changing the Replica Owner]in the Amazon S3 User Guide.
+   * 
+   * [Replication Additional Configuration: Changing the Replica Owner]: https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-change-owner.html
+   */
+  account?: string
+  /**
+   * A container that provides information about encryption. If
+   * SourceSelectionCriteria is specified, you must specify this element.
+   */
+  encryptionConfiguration?: EncryptionConfiguration
+  /**
+   *  A container specifying replication metrics-related settings enabling
+   * replication metrics and events.
+   */
+  metrics?: Metrics
+  /**
+   *  A container specifying S3 Replication Time Control (S3 RTC), including whether
+   * S3 RTC is enabled and the time when all objects and operations on objects must
+   * be replicated. Must be specified together with a Metrics block.
+   */
+  replicationTime?: ReplicationTime
+  /**
+   *  The storage class to use when replicating objects, such as S3 Standard or
+   * reduced redundancy. By default, Amazon S3 uses the storage class of the source
+   * object to create the object replica.
+   * 
+   * For valid values, see the StorageClass element of the [PUT Bucket replication] action in the Amazon S3
+   * API Reference.
+   * 
+   * [PUT Bucket replication]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTreplication.html
+   */
+  storageClass: StorageClass
+ }
+ /**
+  * Optional configuration to replicate existing source bucket objects.
+  * 
+  * This parameter is no longer supported. To replicate existing objects, see [Replicating existing objects with S3 Batch Replication] in
+  * the Amazon S3 User Guide.
+  * 
+  * [Replicating existing objects with S3 Batch Replication]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-batch-replication-batch.html
+  */
+ type _subNbEDs = noSmithyDocumentSerde
+ interface ExistingObjectReplication extends _subNbEDs {
+  /**
+   * Specifies whether Amazon S3 replicates existing source bucket objects.
+   * 
+   * This member is required.
+   */
+  status: ExistingObjectReplicationStatus
+ }
+ /**
+  * A container for specifying S3 Intelligent-Tiering filters. The filters
+  * determine the subset of objects to which the rule applies.
+  */
+ type _subABktB = noSmithyDocumentSerde
+ interface IntelligentTieringAndOperator extends _subABktB {
+  /**
+   * An object key name prefix that identifies the subset of objects to which the
+   * configuration applies.
+   */
+  prefix?: string
+  /**
+   * All of these tags must exist in the object's tag set in order for the
+   * configuration to apply.
+   */
+  tags: Array<Tag>
+ }
+ /**
+  * Contains the bucket name, file format, bucket owner (optional), and prefix
+  * (optional) where inventory results are published.
+  */
+ type _subaMwDp = noSmithyDocumentSerde
+ interface InventoryS3BucketDestination extends _subaMwDp {
+  /**
+   * The Amazon Resource Name (ARN) of the bucket where inventory results will be
+   * published.
+   * 
+   * This member is required.
+   */
+  bucket?: string
+  /**
+   * Specifies the output format of the inventory results.
+   * 
+   * This member is required.
+   */
+  format: InventoryFormat
+  /**
+   * The account ID that owns the destination S3 bucket. If no account ID is
+   * provided, the owner is not validated before exporting data.
+   * 
+   * Although this value is optional, we strongly recommend that you set it to help
+   * prevent problems if the destination bucket ownership changes.
+   */
+  accountId?: string
+  /**
+   * Contains the type of server-side encryption used to encrypt the inventory
+   * results.
+   */
+  encryption?: InventoryEncryption
+  /**
+   * The prefix that is prepended to all inventory results.
+   */
+  prefix?: string
+ }
+ /**
+  * Amazon S3 keys for log objects are partitioned in the following format:
+  * 
+  * ```
+  * 	[DestinationPrefix][SourceAccountId]/[SourceRegion]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]
+  * ```
+  * 
+  * PartitionedPrefix defaults to EventTime delivery when server access logs are
+  * delivered.
+  */
+ type _subaPbjW = noSmithyDocumentSerde
+ interface PartitionedPrefix extends _subaPbjW {
+  /**
+   * Specifies the partition date source for the partitioned prefix.
+   * PartitionDateSource can be EventTime or DeliveryTime .
+   * 
+   * For DeliveryTime , the time in the log file names corresponds to the delivery
+   * time for the log files.
+   * 
+   * For EventTime , The logs delivered are for a specific day only. The year, month,
+   * and day correspond to the day on which the event occurred, and the hour, minutes
+   * and seconds are set to 00 in the key.
+   */
+  partitionDateSource: PartitionDateSource
+ }
+ /**
+  * A filter that identifies the subset of objects to which the replication rule
+  * applies. A Filter must specify exactly one Prefix , Tag , or an And child
+  * element.
+  * 
+  * The following types satisfy this interface:
+  * 
+  * ```
+  * 	ReplicationRuleFilterMemberAnd
+  * 	ReplicationRuleFilterMemberPrefix
+  * 	ReplicationRuleFilterMemberTag
+  * ```
+  */
+ interface ReplicationRuleFilter {
+  [key:string]: any;
+ }
+ /**
+  * A container for object key name prefix and suffix filtering rules.
+  */
+ type _subaAyWd = noSmithyDocumentSerde
+ interface S3KeyFilter extends _subaAyWd {
+  /**
+   * A list of containers for the key-value pair that defines the criteria for the
+   * filter rule.
+   */
+  filterRules: Array<FilterRule>
+ }
+ /**
+  * Describes an Amazon S3 location that will receive the results of the restore
+  * request.
+  */
+ type _subKPOOV = noSmithyDocumentSerde
+ interface S3Location extends _subKPOOV {
+  /**
+   * The name of the bucket where the restore results will be placed.
+   * 
+   * This member is required.
+   */
+  bucketName?: string
+  /**
+   * The prefix that is prepended to the restore results for this request.
+   * 
+   * This member is required.
+   */
+  prefix?: string
+  /**
+   * A list of grants that control access to the staged results.
+   */
+  accessControlList: Array<Grant>
+  /**
+   * The canned ACL to apply to the restore results.
+   */
+  cannedACL: ObjectCannedACL
+  /**
+   * Contains the type of server-side encryption used.
+   */
+  encryption?: Encryption
+  /**
+   * The class of storage used to store the restore results.
+   */
+  storageClass: StorageClass
+  /**
+   * The tag-set that is applied to the restore results.
+   */
+  tagging?: Tagging
+  /**
+   * A list of metadata to store with the restore results in S3.
+   */
+  userMetadata: Array<MetadataEntry>
+ }
+ /**
+  * Describes the default server-side encryption to apply to new objects in the
+  * bucket. If a PUT Object request doesn't specify any server-side encryption, this
+  * default encryption will be applied. For more information, see [PutBucketEncryption].
+  * 
+  * ```
+  *   - General purpose buckets - If you don't specify a customer managed key at
+  *     configuration, Amazon S3 automatically creates an Amazon Web Services KMS key (
+  *     aws/s3 ) in your Amazon Web Services account the first time that you add an
+  *     object encrypted with SSE-KMS to a bucket. By default, Amazon S3 uses this KMS
+  *     key for SSE-KMS.
+  * 
+  *   - Directory buckets - Your SSE-KMS configuration can only support 1 [customer managed key]per
+  *     directory bucket for the lifetime of the bucket. [Amazon Web Services managed key]( aws/s3 ) isn't supported.
+  * 
+  *   - Directory buckets - For directory buckets, there are only two supported
+  *     options for server-side encryption: SSE-S3 and SSE-KMS.
+  * ```
+  * 
+  * [PutBucketEncryption]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTencryption.html
+  * [customer managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#customer-cmk
+  * [Amazon Web Services managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk
+  */
+ type _subrVhbL = noSmithyDocumentSerde
+ interface ServerSideEncryptionByDefault extends _subrVhbL {
+  /**
+   * Server-side encryption algorithm to use for the default encryption.
+   * 
+   * For directory buckets, there are only two supported values for server-side
+   * encryption: AES256 and aws:kms .
+   * 
+   * This member is required.
+   */
+  sseAlgorithm: ServerSideEncryption
+  /**
+   * Amazon Web Services Key Management Service (KMS) customer managed key ID to use
+   * for the default encryption.
+   * 
+   * ```
+   *   - General purpose buckets - This parameter is allowed if and only if
+   *   SSEAlgorithm is set to aws:kms or aws:kms:dsse .
+   * 
+   *   - Directory buckets - This parameter is allowed if and only if SSEAlgorithm is
+   *   set to aws:kms .
+   * ```
+   * 
+   * You can specify the key ID, key alias, or the Amazon Resource Name (ARN) of the
+   * KMS key.
+   * 
+   * ```
+   *   - Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
+   * 
+   *   - Key ARN:
+   *   arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
+   * 
+   *   - Key Alias: alias/alias-name
+   * ```
+   * 
+   * If you are using encryption with cross-account or Amazon Web Services service
+   * operations, you must use a fully qualified KMS key ARN. For more information,
+   * see [Using encryption for cross-account operations].
+   * 
+   * ```
+   *   - General purpose buckets - If you're specifying a customer managed KMS key,
+   *   we recommend using a fully qualified KMS key ARN. If you use a KMS key alias
+   *   instead, then KMS resolves the key within the requester’s account. This behavior
+   *   can result in data that's encrypted with a KMS key that belongs to the
+   *   requester, and not the bucket owner. Also, if you use a key ID, you can run into
+   *   a LogDestination undeliverable error when creating a VPC flow log.
+   * 
+   *   - Directory buckets - When you specify an [KMS customer managed key]for encryption in your directory
+   *   bucket, only use the key ID or key ARN. The key alias format of the KMS key
+   *   isn't supported.
+   * ```
+   * 
+   * Amazon S3 only supports symmetric encryption KMS keys. For more information,
+   * see [Asymmetric keys in Amazon Web Services KMS]in the Amazon Web Services Key Management Service Developer Guide.
+   * 
+   * [Using encryption for cross-account operations]: https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html#bucket-encryption-update-bucket-policy
+   * [KMS customer managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#customer-cmk
+   * [Asymmetric keys in Amazon Web Services KMS]: https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html
+   */
+  kmsMasterKeyID?: string
+ }
+ /**
+  * To use simple format for S3 keys for log objects, set SimplePrefix to an empty
+  * object.
+  * 
+  * ```
+  * 	[DestinationPrefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]
+  * ```
+  */
+ type _subwIMUw = noSmithyDocumentSerde
+ interface SimplePrefix extends _subwIMUw {
+ }
+ /**
+  * A container that describes additional filters for identifying the source
+  * objects that you want to replicate. You can choose to enable or disable the
+  * replication of these objects. Currently, Amazon S3 supports only the filter that
+  * you can specify for objects created with server-side encryption using a customer
+  * managed key stored in Amazon Web Services Key Management Service (SSE-KMS).
+  */
+ type _subnEjxu = noSmithyDocumentSerde
+ interface SourceSelectionCriteria extends _subnEjxu {
+  /**
+   * A filter that you can specify for selections for modifications on replicas.
+   * Amazon S3 doesn't replicate replica modifications by default. In the latest
+   * version of replication configuration (when Filter is specified), you can
+   * specify this element and set the status to Enabled to replicate modifications
+   * on replicas.
+   * 
+   * If you don't specify the Filter element, Amazon S3 assumes that the replication
+   * configuration is the earlier version, V1. In the earlier version, this element
+   * is not allowed
+   */
+  replicaModifications?: ReplicaModifications
+  /**
+   *  A container for filter information for the selection of Amazon S3 objects
+   * encrypted with Amazon Web Services KMS. If you include SourceSelectionCriteria
+   * in the replication configuration, this element is required.
+   */
+  sseKmsEncryptedObjects?: SseKmsEncryptedObjects
+ }
+ /**
+  * Container for data related to the storage class analysis for an Amazon S3
+  * bucket for export.
+  */
+ type _subiipYU = noSmithyDocumentSerde
+ interface StorageClassAnalysisDataExport extends _subiipYU {
+  /**
+   * The place to store the data for an analysis.
+   * 
+   * This member is required.
+   */
+  destination?: AnalyticsExportDestination
+  /**
+   * The version of the output schema to use when exporting data. Must be V_1 .
+   * 
+   * This member is required.
+   */
+  outputSchemaVersion: StorageClassAnalysisSchemaVersion
+ }
 }
 
 /**
@@ -43935,60 +44540,6 @@ namespace middleware {
 }
 
 /**
- * Package smithy provides the core components for a Smithy SDK.
- */
-namespace smithy_go {
- /**
-  * Properties provides storing and reading metadata values. Keys may be any
-  * comparable value type. Get and Set will panic if a key is not comparable.
-  * 
-  * The zero value for a Properties instance is ready for reads/writes without
-  * any additional initialization.
-  */
- interface Properties {
- }
- interface Properties {
-  /**
-   * Get attempts to retrieve the value the key points to. Returns nil if the
-   * key was not found.
-   * 
-   * Panics if key type is not comparable.
-   */
-  get(key: any): any
- }
- interface Properties {
-  /**
-   * Set stores the value pointed to by the key. If a value already exists at
-   * that key it will be replaced with the new value.
-   * 
-   * Panics if the key type is not comparable.
-   */
-  set(key: any, value: any): void
- }
- interface Properties {
-  /**
-   * Has returns whether the key exists in the metadata.
-   * 
-   * Panics if the key type is not comparable.
-   */
-  has(key: any): boolean
- }
- interface Properties {
-  /**
-   * SetAll accepts all of the given Properties into the receiver, overwriting
-   * any existing keys in the case of conflicts.
-   */
-  setAll(other: Properties): void
- }
- interface Properties {
-  /**
-   * Values returns a shallow clone of the property set's values.
-   */
-  values(): _TygojaDict
- }
-}
-
-/**
  * Package metrics defines the metrics APIs used by Smithy clients.
  */
 namespace metrics {
@@ -44123,8 +44674,8 @@ namespace http {
   * Request provides the HTTP specific request structure for HTTP specific
   * middleware steps to use to serialize input, and send an operation's request.
   */
- type _subOtvso = http.Request
- interface Request extends _subOtvso {
+ type _subwSKDK = http.Request
+ interface Request extends _subwSKDK {
  }
  interface Request {
   /**
@@ -44661,549 +45212,284 @@ namespace aws {
  interface FIPSEndpointState extends Number{}
 }
 
+/**
+ * Package smithy provides the core components for a Smithy SDK.
+ */
+namespace smithy_go {
+}
+
 namespace types {
- interface BucketLogsPermission extends String{}
- interface BucketLogsPermission {
+ interface DeleteMarkerReplicationStatus extends String{}
+ interface DeleteMarkerReplicationStatus {
   /**
-   * Values returns all known values for BucketLogsPermission. Note that this can be
-   * expanded in the future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<BucketLogsPermission>
- }
- interface BucketType extends String{}
- interface BucketType {
-  /**
-   * Values returns all known values for BucketType. Note that this can be expanded
-   * in the future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<BucketType>
- }
- interface DataRedundancy extends String{}
- interface DataRedundancy {
-  /**
-   * Values returns all known values for DataRedundancy. Note that this can be
-   * expanded in the future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<DataRedundancy>
- }
- interface FileHeaderInfo extends String{}
- interface FileHeaderInfo {
-  /**
-   * Values returns all known values for FileHeaderInfo. Note that this can be
-   * expanded in the future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<FileHeaderInfo>
- }
- interface IntelligentTieringAccessTier extends String{}
- interface IntelligentTieringAccessTier {
-  /**
-   * Values returns all known values for IntelligentTieringAccessTier. Note that
+   * Values returns all known values for DeleteMarkerReplicationStatus. Note that
    * this can be expanded in the future, and so it is only as up to date as the
    * client.
    * 
    * The ordering of this slice is not guaranteed to be stable across updates.
    */
-  values(): Array<IntelligentTieringAccessTier>
+  values(): Array<DeleteMarkerReplicationStatus>
  }
- interface InventoryFrequency extends String{}
- interface InventoryFrequency {
+ interface ExistingObjectReplicationStatus extends String{}
+ interface ExistingObjectReplicationStatus {
   /**
-   * Values returns all known values for InventoryFrequency. Note that this can be
+   * Values returns all known values for ExistingObjectReplicationStatus. Note that
+   * this can be expanded in the future, and so it is only as up to date as the
+   * client.
+   * 
+   * The ordering of this slice is not guaranteed to be stable across updates.
+   */
+  values(): Array<ExistingObjectReplicationStatus>
+ }
+ interface InventoryFormat extends String{}
+ interface InventoryFormat {
+  /**
+   * Values returns all known values for InventoryFormat. Note that this can be
    * expanded in the future, and so it is only as up to date as the client.
    * 
    * The ordering of this slice is not guaranteed to be stable across updates.
    */
-  values(): Array<InventoryFrequency>
+  values(): Array<InventoryFormat>
  }
- interface JSONType extends String{}
- interface JSONType {
+ interface PartitionDateSource extends String{}
+ interface PartitionDateSource {
   /**
-   * Values returns all known values for JSONType. Note that this can be expanded in
-   * the future, and so it is only as up to date as the client.
+   * Values returns all known values for PartitionDateSource. Note that this can be
+   * expanded in the future, and so it is only as up to date as the client.
    * 
    * The ordering of this slice is not guaranteed to be stable across updates.
    */
-  values(): Array<JSONType>
+  values(): Array<PartitionDateSource>
  }
- interface QuoteFields extends String{}
- interface QuoteFields {
+ interface StorageClassAnalysisSchemaVersion extends String{}
+ interface StorageClassAnalysisSchemaVersion {
   /**
-   * Values returns all known values for QuoteFields. Note that this can be expanded
-   * in the future, and so it is only as up to date as the client.
+   * Values returns all known values for StorageClassAnalysisSchemaVersion. Note
+   * that this can be expanded in the future, and so it is only as up to date as the
+   * client.
    * 
    * The ordering of this slice is not guaranteed to be stable across updates.
    */
-  values(): Array<QuoteFields>
- }
- interface ReplicationRuleStatus extends String{}
- interface ReplicationRuleStatus {
-  /**
-   * Values returns all known values for ReplicationRuleStatus. Note that this can
-   * be expanded in the future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<ReplicationRuleStatus>
- }
- interface TransitionStorageClass extends String{}
- interface TransitionStorageClass {
-  /**
-   * Values returns all known values for TransitionStorageClass. Note that this can
-   * be expanded in the future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<TransitionStorageClass>
- }
- interface Type extends String{}
- interface Type {
-  /**
-   * Values returns all known values for Type. Note that this can be expanded in the
-   * future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<Type>
+  values(): Array<StorageClassAnalysisSchemaVersion>
  }
  // @ts-ignore
  import smithy = smithy_go
  // @ts-ignore
  import smithydocument = document
  /**
-  * The container element for optionally specifying the default Object Lock
-  * retention settings for new objects placed in the specified bucket.
-  * 
-  * ```
-  *   - The DefaultRetention settings require both a mode and a period.
-  * 
-  *   - The DefaultRetention period can be either Days or Years but you must select
-  *     one. You cannot specify Days and Years at the same time.
-  * ```
+  * A container for information about access control for replicas.
   */
- type _subrbktc = noSmithyDocumentSerde
- interface DefaultRetention extends _subrbktc {
+ type _subqSeRK = noSmithyDocumentSerde
+ interface AccessControlTranslation extends _subqSeRK {
   /**
-   * The number of days that you want to specify for the default retention period.
-   * Must be used with Mode .
-   */
-  days?: number
-  /**
-   * The default Object Lock retention mode you want to apply to new objects placed
-   * in the specified bucket. Must be used with either Days or Years .
-   */
-  mode: ObjectLockRetentionMode
-  /**
-   * The number of years that you want to specify for the default retention period.
-   * Must be used with Mode .
-   */
-  years?: number
- }
- /**
-  * Specifies whether Amazon S3 replicates delete markers. If you specify a Filter
-  * in your replication configuration, you must also include a
-  * DeleteMarkerReplication element. If your Filter includes a Tag element, the
-  * DeleteMarkerReplication Status must be set to Disabled, because Amazon S3 does
-  * not support replicating delete markers for tag-based rules. For an example
-  * configuration, see [Basic Rule Configuration].
-  * 
-  * For more information about delete marker replication, see [Basic Rule Configuration].
-  * 
-  * If you are using an earlier version of the replication configuration, Amazon S3
-  * handles replication of delete markers differently. For more information, see [Backward Compatibility].
-  * 
-  * [Basic Rule Configuration]: https://docs.aws.amazon.com/AmazonS3/latest/dev/delete-marker-replication.html
-  * [Backward Compatibility]: https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-add-config.html#replication-backward-compat-considerations
-  */
- type _subFrndK = noSmithyDocumentSerde
- interface DeleteMarkerReplication extends _subFrndK {
-  /**
-   * Indicates whether to replicate delete markers.
+   * Specifies the replica ownership. For default and valid values, see [PUT bucket replication] in the
+   * Amazon S3 API Reference.
    * 
-   * Indicates whether to replicate delete markers.
-   */
-  status: DeleteMarkerReplicationStatus
- }
- /**
-  * Specifies information about where to publish analysis or configuration results
-  * for an Amazon S3 bucket and S3 Replication Time Control (S3 RTC).
-  */
- type _subOaKdq = noSmithyDocumentSerde
- interface Destination extends _subOaKdq {
-  /**
-   *  The Amazon Resource Name (ARN) of the bucket where you want Amazon S3 to store
-   * the results.
+   * [PUT bucket replication]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTreplication.html
    * 
    * This member is required.
    */
-  bucket?: string
-  /**
-   * Specify this only in a cross-account scenario (where source and destination
-   * bucket owners are not the same), and you want to change replica ownership to the
-   * Amazon Web Services account that owns the destination bucket. If this is not
-   * specified in the replication configuration, the replicas are owned by same
-   * Amazon Web Services account that owns the source object.
-   */
-  accessControlTranslation?: AccessControlTranslation
-  /**
-   * Destination bucket owner account ID. In a cross-account scenario, if you direct
-   * Amazon S3 to change replica ownership to the Amazon Web Services account that
-   * owns the destination bucket by specifying the AccessControlTranslation
-   * property, this is the account ID of the destination bucket owner. For more
-   * information, see [Replication Additional Configuration: Changing the Replica Owner]in the Amazon S3 User Guide.
-   * 
-   * [Replication Additional Configuration: Changing the Replica Owner]: https://docs.aws.amazon.com/AmazonS3/latest/dev/replication-change-owner.html
-   */
-  account?: string
-  /**
-   * A container that provides information about encryption. If
-   * SourceSelectionCriteria is specified, you must specify this element.
-   */
-  encryptionConfiguration?: EncryptionConfiguration
-  /**
-   *  A container specifying replication metrics-related settings enabling
-   * replication metrics and events.
-   */
-  metrics?: Metrics
-  /**
-   *  A container specifying S3 Replication Time Control (S3 RTC), including whether
-   * S3 RTC is enabled and the time when all objects and operations on objects must
-   * be replicated. Must be specified together with a Metrics block.
-   */
-  replicationTime?: ReplicationTime
-  /**
-   *  The storage class to use when replicating objects, such as S3 Standard or
-   * reduced redundancy. By default, Amazon S3 uses the storage class of the source
-   * object to create the object replica.
-   * 
-   * For valid values, see the StorageClass element of the [PUT Bucket replication] action in the Amazon S3
-   * API Reference.
-   * 
-   * [PUT Bucket replication]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTreplication.html
-   */
-  storageClass: StorageClass
+  owner: OwnerOverride
  }
  /**
-  * Optional configuration to replicate existing source bucket objects.
-  * 
-  * This parameter is no longer supported. To replicate existing objects, see [Replicating existing objects with S3 Batch Replication] in
-  * the Amazon S3 User Guide.
-  * 
-  * [Replicating existing objects with S3 Batch Replication]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/s3-batch-replication-batch.html
+  * Where to publish the analytics results.
   */
- type _subVHygh = noSmithyDocumentSerde
- interface ExistingObjectReplication extends _subVHygh {
+ type _subNGQDq = noSmithyDocumentSerde
+ interface AnalyticsExportDestination extends _subNGQDq {
   /**
-   * Specifies whether Amazon S3 replicates existing source bucket objects.
+   * A destination signifying output to an S3 bucket.
    * 
    * This member is required.
    */
-  status: ExistingObjectReplicationStatus
+  s3BucketDestination?: AnalyticsS3BucketDestination
  }
  /**
-  * A container for specifying S3 Intelligent-Tiering filters. The filters
-  * determine the subset of objects to which the rule applies.
+  * Contains the type of server-side encryption used.
   */
- type _subocteQ = noSmithyDocumentSerde
- interface IntelligentTieringAndOperator extends _subocteQ {
+ type _subhslTa = noSmithyDocumentSerde
+ interface Encryption extends _subhslTa {
   /**
-   * An object key name prefix that identifies the subset of objects to which the
-   * configuration applies.
-   */
-  prefix?: string
-  /**
-   * All of these tags must exist in the object's tag set in order for the
-   * configuration to apply.
-   */
-  tags: Array<Tag>
- }
- /**
-  * Contains the bucket name, file format, bucket owner (optional), and prefix
-  * (optional) where inventory results are published.
-  */
- type _subPmIjs = noSmithyDocumentSerde
- interface InventoryS3BucketDestination extends _subPmIjs {
-  /**
-   * The Amazon Resource Name (ARN) of the bucket where inventory results will be
-   * published.
+   * The server-side encryption algorithm used when storing job results in Amazon S3
+   * (for example, AES256, aws:kms ).
    * 
    * This member is required.
    */
-  bucket?: string
+  encryptionType: ServerSideEncryption
   /**
-   * Specifies the output format of the inventory results.
+   * If the encryption type is aws:kms , this optional value can be used to specify
+   * the encryption context for the restore results.
+   */
+  kmsContext?: string
+  /**
+   * If the encryption type is aws:kms , this optional value specifies the ID of the
+   * symmetric encryption customer managed key to use for encryption of job results.
+   * Amazon S3 only supports symmetric encryption KMS keys. For more information, see
+   * [Asymmetric keys in KMS]in the Amazon Web Services Key Management Service Developer Guide.
    * 
-   * This member is required.
+   * [Asymmetric keys in KMS]: https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html
    */
-  format: InventoryFormat
-  /**
-   * The account ID that owns the destination S3 bucket. If no account ID is
-   * provided, the owner is not validated before exporting data.
-   * 
-   * Although this value is optional, we strongly recommend that you set it to help
-   * prevent problems if the destination bucket ownership changes.
-   */
-  accountId?: string
-  /**
-   * Contains the type of server-side encryption used to encrypt the inventory
-   * results.
-   */
-  encryption?: InventoryEncryption
-  /**
-   * The prefix that is prepended to all inventory results.
-   */
-  prefix?: string
+  kmsKeyId?: string
  }
  /**
-  * Amazon S3 keys for log objects are partitioned in the following format:
+  * Specifies encryption-related information for an Amazon S3 bucket that is a
+  * destination for replicated objects.
   * 
-  * ```
-  * 	[DestinationPrefix][SourceAccountId]/[SourceRegion]/[SourceBucket]/[YYYY]/[MM]/[DD]/[YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]
-  * ```
-  * 
-  * PartitionedPrefix defaults to EventTime delivery when server access logs are
-  * delivered.
+  * If you're specifying a customer managed KMS key, we recommend using a fully
+  * qualified KMS key ARN. If you use a KMS key alias instead, then KMS resolves the
+  * key within the requester’s account. This behavior can result in data that's
+  * encrypted with a KMS key that belongs to the requester, and not the bucket
+  * owner.
   */
- type _subyQbYy = noSmithyDocumentSerde
- interface PartitionedPrefix extends _subyQbYy {
+ type _subQHKNO = noSmithyDocumentSerde
+ interface EncryptionConfiguration extends _subQHKNO {
   /**
-   * Specifies the partition date source for the partitioned prefix.
-   * PartitionDateSource can be EventTime or DeliveryTime .
+   * Specifies the ID (Key ARN or Alias ARN) of the customer managed Amazon Web
+   * Services KMS key stored in Amazon Web Services Key Management Service (KMS) for
+   * the destination bucket. Amazon S3 uses this key to encrypt replica objects.
+   * Amazon S3 only supports symmetric encryption KMS keys. For more information, see
+   * [Asymmetric keys in Amazon Web Services KMS]in the Amazon Web Services Key Management Service Developer Guide.
    * 
-   * For DeliveryTime , the time in the log file names corresponds to the delivery
-   * time for the log files.
-   * 
-   * For EventTime , The logs delivered are for a specific day only. The year, month,
-   * and day correspond to the day on which the event occurred, and the hour, minutes
-   * and seconds are set to 00 in the key.
-   */
-  partitionDateSource: PartitionDateSource
- }
- /**
-  * A filter that identifies the subset of objects to which the replication rule
-  * applies. A Filter must specify exactly one Prefix , Tag , or an And child
-  * element.
-  * 
-  * The following types satisfy this interface:
-  * 
-  * ```
-  * 	ReplicationRuleFilterMemberAnd
-  * 	ReplicationRuleFilterMemberPrefix
-  * 	ReplicationRuleFilterMemberTag
-  * ```
-  */
- interface ReplicationRuleFilter {
-  [key:string]: any;
- }
- /**
-  * A container for object key name prefix and suffix filtering rules.
-  */
- type _subADdoW = noSmithyDocumentSerde
- interface S3KeyFilter extends _subADdoW {
-  /**
-   * A list of containers for the key-value pair that defines the criteria for the
-   * filter rule.
-   */
-  filterRules: Array<FilterRule>
- }
- /**
-  * Describes an Amazon S3 location that will receive the results of the restore
-  * request.
-  */
- type _subKacLP = noSmithyDocumentSerde
- interface S3Location extends _subKacLP {
-  /**
-   * The name of the bucket where the restore results will be placed.
-   * 
-   * This member is required.
-   */
-  bucketName?: string
-  /**
-   * The prefix that is prepended to the restore results for this request.
-   * 
-   * This member is required.
-   */
-  prefix?: string
-  /**
-   * A list of grants that control access to the staged results.
-   */
-  accessControlList: Array<Grant>
-  /**
-   * The canned ACL to apply to the restore results.
-   */
-  cannedACL: ObjectCannedACL
-  /**
-   * Contains the type of server-side encryption used.
-   */
-  encryption?: Encryption
-  /**
-   * The class of storage used to store the restore results.
-   */
-  storageClass: StorageClass
-  /**
-   * The tag-set that is applied to the restore results.
-   */
-  tagging?: Tagging
-  /**
-   * A list of metadata to store with the restore results in S3.
-   */
-  userMetadata: Array<MetadataEntry>
- }
- /**
-  * Describes the default server-side encryption to apply to new objects in the
-  * bucket. If a PUT Object request doesn't specify any server-side encryption, this
-  * default encryption will be applied. For more information, see [PutBucketEncryption].
-  * 
-  * ```
-  *   - General purpose buckets - If you don't specify a customer managed key at
-  *     configuration, Amazon S3 automatically creates an Amazon Web Services KMS key (
-  *     aws/s3 ) in your Amazon Web Services account the first time that you add an
-  *     object encrypted with SSE-KMS to a bucket. By default, Amazon S3 uses this KMS
-  *     key for SSE-KMS.
-  * 
-  *   - Directory buckets - Your SSE-KMS configuration can only support 1 [customer managed key]per
-  *     directory bucket for the lifetime of the bucket. [Amazon Web Services managed key]( aws/s3 ) isn't supported.
-  * 
-  *   - Directory buckets - For directory buckets, there are only two supported
-  *     options for server-side encryption: SSE-S3 and SSE-KMS.
-  * ```
-  * 
-  * [PutBucketEncryption]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTencryption.html
-  * [customer managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#customer-cmk
-  * [Amazon Web Services managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#aws-managed-cmk
-  */
- type _subTvCNQ = noSmithyDocumentSerde
- interface ServerSideEncryptionByDefault extends _subTvCNQ {
-  /**
-   * Server-side encryption algorithm to use for the default encryption.
-   * 
-   * For directory buckets, there are only two supported values for server-side
-   * encryption: AES256 and aws:kms .
-   * 
-   * This member is required.
-   */
-  sseAlgorithm: ServerSideEncryption
-  /**
-   * Amazon Web Services Key Management Service (KMS) customer managed key ID to use
-   * for the default encryption.
-   * 
-   * ```
-   *   - General purpose buckets - This parameter is allowed if and only if
-   *   SSEAlgorithm is set to aws:kms or aws:kms:dsse .
-   * 
-   *   - Directory buckets - This parameter is allowed if and only if SSEAlgorithm is
-   *   set to aws:kms .
-   * ```
-   * 
-   * You can specify the key ID, key alias, or the Amazon Resource Name (ARN) of the
-   * KMS key.
-   * 
-   * ```
-   *   - Key ID: 1234abcd-12ab-34cd-56ef-1234567890ab
-   * 
-   *   - Key ARN:
-   *   arn:aws:kms:us-east-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab
-   * 
-   *   - Key Alias: alias/alias-name
-   * ```
-   * 
-   * If you are using encryption with cross-account or Amazon Web Services service
-   * operations, you must use a fully qualified KMS key ARN. For more information,
-   * see [Using encryption for cross-account operations].
-   * 
-   * ```
-   *   - General purpose buckets - If you're specifying a customer managed KMS key,
-   *   we recommend using a fully qualified KMS key ARN. If you use a KMS key alias
-   *   instead, then KMS resolves the key within the requester’s account. This behavior
-   *   can result in data that's encrypted with a KMS key that belongs to the
-   *   requester, and not the bucket owner. Also, if you use a key ID, you can run into
-   *   a LogDestination undeliverable error when creating a VPC flow log.
-   * 
-   *   - Directory buckets - When you specify an [KMS customer managed key]for encryption in your directory
-   *   bucket, only use the key ID or key ARN. The key alias format of the KMS key
-   *   isn't supported.
-   * ```
-   * 
-   * Amazon S3 only supports symmetric encryption KMS keys. For more information,
-   * see [Asymmetric keys in Amazon Web Services KMS]in the Amazon Web Services Key Management Service Developer Guide.
-   * 
-   * [Using encryption for cross-account operations]: https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html#bucket-encryption-update-bucket-policy
-   * [KMS customer managed key]: https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#customer-cmk
    * [Asymmetric keys in Amazon Web Services KMS]: https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html
    */
-  kmsMasterKeyID?: string
+  replicaKmsKeyID?: string
  }
  /**
-  * To use simple format for S3 keys for log objects, set SimplePrefix to an empty
-  * object.
+  * Specifies the Amazon S3 object key name to filter on. An object key name is the
+  * name assigned to an object in your Amazon S3 bucket. You specify whether to
+  * filter on the suffix or prefix of the object key name. A prefix is a specific
+  * string of characters at the beginning of an object key name, which you can use
+  * to organize objects. For example, you can start the key names of related objects
+  * with a prefix, such as 2023- or engineering/ . Then, you can use FilterRule to
+  * find objects in a bucket with key names that have the same prefix. A suffix is
+  * similar to a prefix, but it is at the end of the object key name instead of at
+  * the beginning.
+  */
+ type _subZWWhB = noSmithyDocumentSerde
+ interface FilterRule extends _subZWWhB {
+  /**
+   * The object key name prefix or suffix identifying one or more objects to which
+   * the filtering rule applies. The maximum length is 1,024 characters. Overlapping
+   * prefixes and suffixes are not supported. For more information, see [Configuring Event Notifications]in the
+   * Amazon S3 User Guide.
+   * 
+   * [Configuring Event Notifications]: https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html
+   */
+  name: FilterRuleName
+  /**
+   * The value that the filter searches for in object key names.
+   */
+  value?: string
+ }
+ /**
+  * Contains the type of server-side encryption used to encrypt the inventory
+  * results.
+  */
+ type _submkDBV = noSmithyDocumentSerde
+ interface InventoryEncryption extends _submkDBV {
+  /**
+   * Specifies the use of SSE-KMS to encrypt delivered inventory reports.
+   */
+  ssekms?: SSEKMS
+  /**
+   * Specifies the use of SSE-S3 to encrypt delivered inventory reports.
+   */
+  sses3?: SSES3
+ }
+ /**
+  * A metadata key-value pair to store with an object.
+  */
+ type _subiEQYR = noSmithyDocumentSerde
+ interface MetadataEntry extends _subiEQYR {
+  /**
+   * Name of the object.
+   */
+  name?: string
+  /**
+   * Value of the object.
+   */
+  value?: string
+ }
+ /**
+  * ```
+  * 	A container specifying replication metrics-related settings enabling
+  * ```
   * 
-  * ```
-  * 	[DestinationPrefix][YYYY]-[MM]-[DD]-[hh]-[mm]-[ss]-[UniqueString]
-  * ```
+  * replication metrics and events.
   */
- type _subXYSdU = noSmithyDocumentSerde
- interface SimplePrefix extends _subXYSdU {
- }
- /**
-  * A container that describes additional filters for identifying the source
-  * objects that you want to replicate. You can choose to enable or disable the
-  * replication of these objects. Currently, Amazon S3 supports only the filter that
-  * you can specify for objects created with server-side encryption using a customer
-  * managed key stored in Amazon Web Services Key Management Service (SSE-KMS).
-  */
- type _subhEJDM = noSmithyDocumentSerde
- interface SourceSelectionCriteria extends _subhEJDM {
+ type _subWYKpu = noSmithyDocumentSerde
+ interface Metrics extends _subWYKpu {
   /**
-   * A filter that you can specify for selections for modifications on replicas.
-   * Amazon S3 doesn't replicate replica modifications by default. In the latest
-   * version of replication configuration (when Filter is specified), you can
-   * specify this element and set the status to Enabled to replicate modifications
-   * on replicas.
-   * 
-   * If you don't specify the Filter element, Amazon S3 assumes that the replication
-   * configuration is the earlier version, V1. In the earlier version, this element
-   * is not allowed
-   */
-  replicaModifications?: ReplicaModifications
-  /**
-   *  A container for filter information for the selection of Amazon S3 objects
-   * encrypted with Amazon Web Services KMS. If you include SourceSelectionCriteria
-   * in the replication configuration, this element is required.
-   */
-  sseKmsEncryptedObjects?: SseKmsEncryptedObjects
- }
- /**
-  * Container for data related to the storage class analysis for an Amazon S3
-  * bucket for export.
-  */
- type _subaCjhj = noSmithyDocumentSerde
- interface StorageClassAnalysisDataExport extends _subaCjhj {
-  /**
-   * The place to store the data for an analysis.
+   *  Specifies whether the replication metrics are enabled.
    * 
    * This member is required.
    */
-  destination?: AnalyticsExportDestination
+  status: MetricsStatus
   /**
-   * The version of the output schema to use when exporting data. Must be V_1 .
+   *  A container specifying the time threshold for emitting the
+   * s3:Replication:OperationMissedThreshold event.
+   */
+  eventThreshold?: ReplicationTimeValue
+ }
+ /**
+  * A filter that you can specify for selection for modifications on replicas.
+  * Amazon S3 doesn't replicate replica modifications by default. In the latest
+  * version of replication configuration (when Filter is specified), you can
+  * specify this element and set the status to Enabled to replicate modifications
+  * on replicas.
+  * 
+  * If you don't specify the Filter element, Amazon S3 assumes that the replication
+  * configuration is the earlier version, V1. In the earlier version, this element
+  * is not allowed.
+  */
+ type _subCFAvR = noSmithyDocumentSerde
+ interface ReplicaModifications extends _subCFAvR {
+  /**
+   * Specifies whether Amazon S3 replicates modifications on replicas.
    * 
    * This member is required.
    */
-  outputSchemaVersion: StorageClassAnalysisSchemaVersion
+  status: ReplicaModificationsStatus
  }
-}
-
-/**
- * Package smithy provides the core components for a Smithy SDK.
- */
-namespace smithy_go {
+ /**
+  * ```
+  * 	A container specifying S3 Replication Time Control (S3 RTC) related
+  * ```
+  * 
+  * information, including whether S3 RTC is enabled and the time when all objects
+  * and operations on objects must be replicated. Must be specified together with a
+  * Metrics block.
+  */
+ type _sublFYgy = noSmithyDocumentSerde
+ interface ReplicationTime extends _sublFYgy {
+  /**
+   *  Specifies whether the replication time is enabled.
+   * 
+   * This member is required.
+   */
+  status: ReplicationTimeStatus
+  /**
+   *  A container specifying the time by which replication should be complete for
+   * all objects and operations on objects.
+   * 
+   * This member is required.
+   */
+  time?: ReplicationTimeValue
+ }
+ /**
+  * A container for filter information for the selection of S3 objects encrypted
+  * with Amazon Web Services KMS.
+  */
+ type _suboeYHh = noSmithyDocumentSerde
+ interface SseKmsEncryptedObjects extends _suboeYHh {
+  /**
+   * Specifies whether Amazon S3 replicates objects created with server-side
+   * encryption using an Amazon Web Services KMS key stored in Amazon Web Services
+   * Key Management Service.
+   * 
+   * This member is required.
+   */
+  status: SseKmsEncryptedObjectsStatus
+ }
 }
 
 /**
@@ -45279,296 +45565,6 @@ namespace tracing {
 }
 
 namespace types {
- interface DeleteMarkerReplicationStatus extends String{}
- interface DeleteMarkerReplicationStatus {
-  /**
-   * Values returns all known values for DeleteMarkerReplicationStatus. Note that
-   * this can be expanded in the future, and so it is only as up to date as the
-   * client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<DeleteMarkerReplicationStatus>
- }
- interface ExistingObjectReplicationStatus extends String{}
- interface ExistingObjectReplicationStatus {
-  /**
-   * Values returns all known values for ExistingObjectReplicationStatus. Note that
-   * this can be expanded in the future, and so it is only as up to date as the
-   * client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<ExistingObjectReplicationStatus>
- }
- interface InventoryFormat extends String{}
- interface InventoryFormat {
-  /**
-   * Values returns all known values for InventoryFormat. Note that this can be
-   * expanded in the future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<InventoryFormat>
- }
- interface PartitionDateSource extends String{}
- interface PartitionDateSource {
-  /**
-   * Values returns all known values for PartitionDateSource. Note that this can be
-   * expanded in the future, and so it is only as up to date as the client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<PartitionDateSource>
- }
- interface StorageClassAnalysisSchemaVersion extends String{}
- interface StorageClassAnalysisSchemaVersion {
-  /**
-   * Values returns all known values for StorageClassAnalysisSchemaVersion. Note
-   * that this can be expanded in the future, and so it is only as up to date as the
-   * client.
-   * 
-   * The ordering of this slice is not guaranteed to be stable across updates.
-   */
-  values(): Array<StorageClassAnalysisSchemaVersion>
- }
- // @ts-ignore
- import smithy = smithy_go
- // @ts-ignore
- import smithydocument = document
- /**
-  * A container for information about access control for replicas.
-  */
- type _subRSwvp = noSmithyDocumentSerde
- interface AccessControlTranslation extends _subRSwvp {
-  /**
-   * Specifies the replica ownership. For default and valid values, see [PUT bucket replication] in the
-   * Amazon S3 API Reference.
-   * 
-   * [PUT bucket replication]: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUTreplication.html
-   * 
-   * This member is required.
-   */
-  owner: OwnerOverride
- }
- /**
-  * Where to publish the analytics results.
-  */
- type _subEfedq = noSmithyDocumentSerde
- interface AnalyticsExportDestination extends _subEfedq {
-  /**
-   * A destination signifying output to an S3 bucket.
-   * 
-   * This member is required.
-   */
-  s3BucketDestination?: AnalyticsS3BucketDestination
- }
- /**
-  * Contains the type of server-side encryption used.
-  */
- type _subMKWRi = noSmithyDocumentSerde
- interface Encryption extends _subMKWRi {
-  /**
-   * The server-side encryption algorithm used when storing job results in Amazon S3
-   * (for example, AES256, aws:kms ).
-   * 
-   * This member is required.
-   */
-  encryptionType: ServerSideEncryption
-  /**
-   * If the encryption type is aws:kms , this optional value can be used to specify
-   * the encryption context for the restore results.
-   */
-  kmsContext?: string
-  /**
-   * If the encryption type is aws:kms , this optional value specifies the ID of the
-   * symmetric encryption customer managed key to use for encryption of job results.
-   * Amazon S3 only supports symmetric encryption KMS keys. For more information, see
-   * [Asymmetric keys in KMS]in the Amazon Web Services Key Management Service Developer Guide.
-   * 
-   * [Asymmetric keys in KMS]: https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html
-   */
-  kmsKeyId?: string
- }
- /**
-  * Specifies encryption-related information for an Amazon S3 bucket that is a
-  * destination for replicated objects.
-  * 
-  * If you're specifying a customer managed KMS key, we recommend using a fully
-  * qualified KMS key ARN. If you use a KMS key alias instead, then KMS resolves the
-  * key within the requester’s account. This behavior can result in data that's
-  * encrypted with a KMS key that belongs to the requester, and not the bucket
-  * owner.
-  */
- type _subYdcWm = noSmithyDocumentSerde
- interface EncryptionConfiguration extends _subYdcWm {
-  /**
-   * Specifies the ID (Key ARN or Alias ARN) of the customer managed Amazon Web
-   * Services KMS key stored in Amazon Web Services Key Management Service (KMS) for
-   * the destination bucket. Amazon S3 uses this key to encrypt replica objects.
-   * Amazon S3 only supports symmetric encryption KMS keys. For more information, see
-   * [Asymmetric keys in Amazon Web Services KMS]in the Amazon Web Services Key Management Service Developer Guide.
-   * 
-   * [Asymmetric keys in Amazon Web Services KMS]: https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html
-   */
-  replicaKmsKeyID?: string
- }
- /**
-  * Specifies the Amazon S3 object key name to filter on. An object key name is the
-  * name assigned to an object in your Amazon S3 bucket. You specify whether to
-  * filter on the suffix or prefix of the object key name. A prefix is a specific
-  * string of characters at the beginning of an object key name, which you can use
-  * to organize objects. For example, you can start the key names of related objects
-  * with a prefix, such as 2023- or engineering/ . Then, you can use FilterRule to
-  * find objects in a bucket with key names that have the same prefix. A suffix is
-  * similar to a prefix, but it is at the end of the object key name instead of at
-  * the beginning.
-  */
- type _subhdpnQ = noSmithyDocumentSerde
- interface FilterRule extends _subhdpnQ {
-  /**
-   * The object key name prefix or suffix identifying one or more objects to which
-   * the filtering rule applies. The maximum length is 1,024 characters. Overlapping
-   * prefixes and suffixes are not supported. For more information, see [Configuring Event Notifications]in the
-   * Amazon S3 User Guide.
-   * 
-   * [Configuring Event Notifications]: https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html
-   */
-  name: FilterRuleName
-  /**
-   * The value that the filter searches for in object key names.
-   */
-  value?: string
- }
- /**
-  * Contains the type of server-side encryption used to encrypt the inventory
-  * results.
-  */
- type _subCOgLz = noSmithyDocumentSerde
- interface InventoryEncryption extends _subCOgLz {
-  /**
-   * Specifies the use of SSE-KMS to encrypt delivered inventory reports.
-   */
-  ssekms?: SSEKMS
-  /**
-   * Specifies the use of SSE-S3 to encrypt delivered inventory reports.
-   */
-  sses3?: SSES3
- }
- /**
-  * A metadata key-value pair to store with an object.
-  */
- type _subEsbzQ = noSmithyDocumentSerde
- interface MetadataEntry extends _subEsbzQ {
-  /**
-   * Name of the object.
-   */
-  name?: string
-  /**
-   * Value of the object.
-   */
-  value?: string
- }
- /**
-  * ```
-  * 	A container specifying replication metrics-related settings enabling
-  * ```
-  * 
-  * replication metrics and events.
-  */
- type _subvDzQN = noSmithyDocumentSerde
- interface Metrics extends _subvDzQN {
-  /**
-   *  Specifies whether the replication metrics are enabled.
-   * 
-   * This member is required.
-   */
-  status: MetricsStatus
-  /**
-   *  A container specifying the time threshold for emitting the
-   * s3:Replication:OperationMissedThreshold event.
-   */
-  eventThreshold?: ReplicationTimeValue
- }
- /**
-  * A filter that you can specify for selection for modifications on replicas.
-  * Amazon S3 doesn't replicate replica modifications by default. In the latest
-  * version of replication configuration (when Filter is specified), you can
-  * specify this element and set the status to Enabled to replicate modifications
-  * on replicas.
-  * 
-  * If you don't specify the Filter element, Amazon S3 assumes that the replication
-  * configuration is the earlier version, V1. In the earlier version, this element
-  * is not allowed.
-  */
- type _subtrUmI = noSmithyDocumentSerde
- interface ReplicaModifications extends _subtrUmI {
-  /**
-   * Specifies whether Amazon S3 replicates modifications on replicas.
-   * 
-   * This member is required.
-   */
-  status: ReplicaModificationsStatus
- }
- /**
-  * ```
-  * 	A container specifying S3 Replication Time Control (S3 RTC) related
-  * ```
-  * 
-  * information, including whether S3 RTC is enabled and the time when all objects
-  * and operations on objects must be replicated. Must be specified together with a
-  * Metrics block.
-  */
- type _subozwUW = noSmithyDocumentSerde
- interface ReplicationTime extends _subozwUW {
-  /**
-   *  Specifies whether the replication time is enabled.
-   * 
-   * This member is required.
-   */
-  status: ReplicationTimeStatus
-  /**
-   *  A container specifying the time by which replication should be complete for
-   * all objects and operations on objects.
-   * 
-   * This member is required.
-   */
-  time?: ReplicationTimeValue
- }
- /**
-  * A container for filter information for the selection of S3 objects encrypted
-  * with Amazon Web Services KMS.
-  */
- type _subEQxoY = noSmithyDocumentSerde
- interface SseKmsEncryptedObjects extends _subEQxoY {
-  /**
-   * Specifies whether Amazon S3 replicates objects created with server-side
-   * encryption using an Amazon Web Services KMS key stored in Amazon Web Services
-   * Key Management Service.
-   * 
-   * This member is required.
-   */
-  status: SseKmsEncryptedObjectsStatus
- }
-}
-
-/**
- * Package tracing defines tracing APIs to be used by Smithy clients.
- */
-namespace tracing {
- /**
-  * SpanKind indicates the nature of the work being performed.
-  */
- interface SpanKind extends Number{}
- /**
-  * EventOptions represent configuration for span events.
-  */
- interface EventOptions {
-  properties: smithy.Properties
- }
-}
-
-namespace types {
  interface FilterRuleName extends String{}
  interface FilterRuleName {
   /**
@@ -45637,8 +45633,8 @@ namespace types {
  /**
   * Contains information about where to publish the analytics results.
   */
- type _subFeyfr = noSmithyDocumentSerde
- interface AnalyticsS3BucketDestination extends _subFeyfr {
+ type _subDFCCP = noSmithyDocumentSerde
+ interface AnalyticsS3BucketDestination extends _subDFCCP {
   /**
    * The Amazon Resource Name (ARN) of the bucket to which data is exported.
    * 
@@ -45671,8 +45667,8 @@ namespace types {
   * 
   * and replication metrics EventThreshold .
   */
- type _subSvvgY = noSmithyDocumentSerde
- interface ReplicationTimeValue extends _subSvvgY {
+ type _subkIxFQ = noSmithyDocumentSerde
+ interface ReplicationTimeValue extends _subkIxFQ {
   /**
    *  Contains an integer specifying time in minutes.
    * 
@@ -45683,8 +45679,8 @@ namespace types {
  /**
   * Specifies the use of SSE-KMS to encrypt delivered inventory reports.
   */
- type _subtGWME = noSmithyDocumentSerde
- interface SSEKMS extends _subtGWME {
+ type _subelKLl = noSmithyDocumentSerde
+ interface SSEKMS extends _subelKLl {
   /**
    * Specifies the ID of the Key Management Service (KMS) symmetric encryption
    * customer managed key to use for encrypting inventory reports.
@@ -45696,8 +45692,8 @@ namespace types {
  /**
   * Specifies the use of SSE-S3 to encrypt delivered inventory reports.
   */
- type _subfwKrU = noSmithyDocumentSerde
- interface SSES3 extends _subfwKrU {
+ type _subyycin = noSmithyDocumentSerde
+ interface SSES3 extends _subyycin {
  }
 }
 
@@ -45709,6 +45705,22 @@ namespace metrics {
   * RecordMetricOptions represents configuration for a recorded metric.
   */
  interface RecordMetricOptions {
+  properties: smithy.Properties
+ }
+}
+
+/**
+ * Package tracing defines tracing APIs to be used by Smithy clients.
+ */
+namespace tracing {
+ /**
+  * SpanKind indicates the nature of the work being performed.
+  */
+ interface SpanKind extends Number{}
+ /**
+  * EventOptions represent configuration for span events.
+  */
+ interface EventOptions {
   properties: smithy.Properties
  }
 }

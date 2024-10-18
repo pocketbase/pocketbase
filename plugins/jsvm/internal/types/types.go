@@ -194,22 +194,34 @@ declare var $app: PocketBase
 declare var $template: template.Registry
 
 /**
- * readerToString reads the content of the specified io.Reader until
- * EOF or maxBytes are reached.
+ * This method is superseded by toString.
  *
- * If maxBytes is not specified it will read up to 32MB.
+ * @deprecated
+ * @group PocketBase
+ */
+declare function readerToString(reader: any, maxBytes?: number): string;
+
+/**
+ * toString stringifies the specified value.
  *
- * Note that after this call the reader can't be used anymore.
+ * Support optional second maxBytes argument to limit the max read bytes
+ * when the value is a io.Reader (default to 32MB).
+ *
+ * Types that don't have explicit string representation are json serialized.
  *
  * Example:
  *
  * ` + "```" + `js
- * const rawBody = readerToString(c.request().body)
+ * // io.Reader
+ * const ex1 = toString(e.request.body)
+ *
+ * // slice of bytes ("hello")
+ * const ex2 = toString([104 101 108 108 111])
  * ` + "```" + `
  *
  * @group PocketBase
  */
-declare function readerToString(reader: any, maxBytes?: number): string;
+declare function toString(val: any, maxBytes?: number): string;
 
 /**
  * sleep pauses the current goroutine for at least the specified user duration (in ms).
@@ -713,7 +725,7 @@ declare namespace $os {
    * const cmd = $os.cmd('ls', '-sl')
    *
    * // execute the command and return its standard output as string
-   * const output = String.fromCharCode(...cmd.output());
+   * const output = toString(cmd.output());
    * ` + "```" + `
    */
   export let cmd: exec.command
