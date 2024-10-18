@@ -66,7 +66,7 @@
 //     (V1) *s3.PutObjectInput; (V2) *s3v2.PutObjectInput, when Options.Method == http.MethodPut, or
 //     (V1) *s3.DeleteObjectInput; (V2) [not supported] when Options.Method == http.MethodDelete
 
-package filesystem
+package s3lite
 
 import (
 	"context"
@@ -82,7 +82,6 @@ import (
 	"strings"
 
 	awsv2 "github.com/aws/aws-sdk-go-v2/aws"
-	awsv2cfg "github.com/aws/aws-sdk-go-v2/config"
 	s3managerv2 "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	s3v2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	typesv2 "github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -244,115 +243,7 @@ func URLUnescape(s string) string {
 
 // -------------------------------------------------------------------
 
-// UseV2 returns true iff the URL parameters indicate that the provider
-// should use the AWS SDK v2.
-//
-// "awssdk=v1" will force V1.
-// "awssdk=v2" will force V2.
-// No "awssdk" parameter (or any other value) will return the default, currently V1.
-// Note that the default may change in the future.
-func UseV2(q url.Values) bool {
-	if values, ok := q["awssdk"]; ok {
-		if values[0] == "v2" || values[0] == "V2" {
-			return true
-		}
-	}
-	return false
-}
-
-// NewDefaultV2Config returns a aws.Config for AWS SDK v2, using the default options.
-func NewDefaultV2Config(ctx context.Context) (awsv2.Config, error) {
-	return awsv2cfg.LoadDefaultConfig(ctx)
-}
-
-// V2ConfigFromURLParams returns an aws.Config for AWS SDK v2 initialized based on the URL
-// parameters in q. It is intended to be used by URLOpeners for AWS services if
-// UseV2 returns true.
-//
-// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/aws#Config
-//
-// It returns an error if q contains any unknown query parameters; callers
-// should remove any query parameters they know about from q before calling
-// V2ConfigFromURLParams.
-//
-// The following query options are supported:
-//   - region: The AWS region for requests; sets WithRegion.
-//   - profile: The shared config profile to use; sets SharedConfigProfile.
-//   - endpoint: The AWS service endpoint to send HTTP request.
-func V2ConfigFromURLParams(ctx context.Context, q url.Values) (awsv2.Config, error) {
-	var opts []func(*awsv2cfg.LoadOptions) error
-	for param, values := range q {
-		value := values[0]
-		switch param {
-		case "region":
-			opts = append(opts, awsv2cfg.WithRegion(value))
-		case "endpoint":
-			customResolver := awsv2.EndpointResolverWithOptionsFunc(
-				func(service, region string, options ...interface{}) (awsv2.Endpoint, error) {
-					return awsv2.Endpoint{
-						PartitionID:   "aws",
-						URL:           value,
-						SigningRegion: region,
-					}, nil
-				})
-			opts = append(opts, awsv2cfg.WithEndpointResolverWithOptions(customResolver))
-		case "profile":
-			opts = append(opts, awsv2cfg.WithSharedConfigProfile(value))
-		case "awssdk":
-			// ignore, should be handled before this
-		default:
-			return awsv2.Config{}, fmt.Errorf("unknown query parameter %q", param)
-		}
-	}
-	return awsv2cfg.LoadDefaultConfig(ctx, opts...)
-}
-
-// -------------------------------------------------------------------
-
 const defaultPageSize = 1000
-
-func init() {
-	blob.DefaultURLMux().RegisterBucket(Scheme, new(urlSessionOpener))
-}
-
-type urlSessionOpener struct{}
-
-func (o *urlSessionOpener) OpenBucketURL(ctx context.Context, u *url.URL) (*blob.Bucket, error) {
-	opener := &URLOpener{UseV2: true}
-	return opener.OpenBucketURL(ctx, u)
-}
-
-// Scheme is the URL scheme s3blob registers its URLOpener under on
-// blob.DefaultMux.
-const Scheme = "s3"
-
-// URLOpener opens S3 URLs like "s3://mybucket".
-//
-// The URL host is used as the bucket name.
-//
-// Use "awssdk=v1" to force using AWS SDK v1, "awssdk=v2" to force using AWS SDK v2,
-// or anything else to accept the default.
-//
-// For V1, see gocloud.dev/aws/ConfigFromURLParams for supported query parameters
-// for overriding the aws.Session from the URL.
-// For V2, see gocloud.dev/aws/V2ConfigFromURLParams.
-type URLOpener struct {
-	// UseV2 indicates whether the AWS SDK V2 should be used.
-	UseV2 bool
-
-	// Options specifies the options to pass to OpenBucket.
-	Options Options
-}
-
-// OpenBucketURL opens a blob.Bucket based on u.
-func (o *URLOpener) OpenBucketURL(ctx context.Context, u *url.URL) (*blob.Bucket, error) {
-	cfg, err := V2ConfigFromURLParams(ctx, u.Query())
-	if err != nil {
-		return nil, fmt.Errorf("open bucket %v: %v", u, err)
-	}
-	clientV2 := s3v2.NewFromConfig(cfg)
-	return OpenBucketV2(ctx, clientV2, u.Host, &o.Options)
-}
 
 // Options sets options for constructing a *blob.Bucket backed by fileblob.
 type Options struct {
@@ -675,64 +566,6 @@ func (b *bucket) listObjectsV2(ctx context.Context, in *s3v2.ListObjectsV2Input,
 		NextContinuationToken: nextContinuationToken,
 	}, nil
 }
-
-// func (b *bucket) listObjects(ctx context.Context, in *s3.ListObjectsV2Input, opts *driver.ListOptions) (*s3.ListObjectsV2Output, error) {
-//  if !b.useLegacyList {
-//      if opts.BeforeList != nil {
-//          asFunc := func(i interface{}) bool {
-//              if p, ok := i.(**s3.ListObjectsV2Input); ok {
-//                  *p = in
-//                  return true
-//              }
-//              return false
-//          }
-//          if err := opts.BeforeList(asFunc); err != nil {
-//              return nil, err
-//          }
-//      }
-//      return b.client.ListObjectsV2WithContext(ctx, in)
-//  }
-
-//  // Use the legacy ListObjects request.
-//  legacyIn := &s3.ListObjectsInput{
-//      Bucket:       in.Bucket,
-//      Delimiter:    in.Delimiter,
-//      EncodingType: in.EncodingType,
-//      Marker:       in.ContinuationToken,
-//      MaxKeys:      in.MaxKeys,
-//      Prefix:       in.Prefix,
-//      RequestPayer: in.RequestPayer,
-//  }
-//  if opts.BeforeList != nil {
-//      asFunc := func(i interface{}) bool {
-//          p, ok := i.(**s3.ListObjectsInput)
-//          if !ok {
-//              return false
-//          }
-//          *p = legacyIn
-//          return true
-//      }
-//      if err := opts.BeforeList(asFunc); err != nil {
-//          return nil, err
-//      }
-//  }
-//  legacyResp, err := b.client.ListObjectsWithContext(ctx, legacyIn)
-//  if err != nil {
-//      return nil, err
-//  }
-
-//  var nextContinuationToken *string
-//  if legacyResp.NextMarker != nil {
-//      nextContinuationToken = legacyResp.NextMarker
-//  } else if awsv2.ToBool(legacyResp.IsTruncated) {
-//      nextContinuationToken = awsv2.String(awsv2.ToString(legacyResp.Contents[len(legacyResp.Contents)-1].Key))
-//  }
-//  return &s3.ListObjectsV2Output{
-//      CommonPrefixes:        legacyResp.CommonPrefixes,
-//      Contents:              legacyResp.Contents,
-//      NextContinuationToken: nextContinuationToken,
-//  }, nil
-// }
 
 // As implements driver.As.
 func (b *bucket) As(i interface{}) bool {
