@@ -2,6 +2,7 @@ package validators
 
 import (
 	"fmt"
+	"math"
 	"net/url"
 	"regexp"
 	"strings"
@@ -157,6 +158,10 @@ func (validator *RecordDataValidator) checkNumberValue(field *schema.SchemaField
 	val, _ := value.(float64)
 	if val == 0 {
 		return nil // nothing to check (skip zero-defaults)
+	}
+
+	if math.IsInf(val, 0) || math.IsNaN(val) {
+		return validation.NewError("validation_nan", "The submitted number is not properly formatted")
 	}
 
 	options, _ := field.Options.(*schema.NumberOptions)

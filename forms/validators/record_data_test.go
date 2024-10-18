@@ -249,6 +249,16 @@ func TestRecordDataValidatorValidateNumber(t *testing.T) {
 			[]string{"field2"},
 		},
 		{
+			"(number) check infinities and NaN",
+			map[string]any{
+				"field1": "Inf",
+				"field2": "-Inf",
+				"field4": "NaN",
+			},
+			nil,
+			[]string{"field1", "field2", "field4"},
+		},
+		{
 			"(number) check min constraint",
 			map[string]any{
 				"field1": 0.5,

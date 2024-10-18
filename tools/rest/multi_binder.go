@@ -6,10 +6,11 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/labstack/echo/v5"
-	"github.com/spf13/cast"
 )
 
 // MultipartJsonKey is the key for the special multipart/form-data
@@ -144,12 +145,16 @@ func bindFormData(c echo.Context, i any) error {
 	return echo.BindBody(c, i)
 }
 
+var inferNumberCharsRegex = regexp.MustCompile(`^[\-\.\d]+$`)
+
 // In order to support more seamlessly both json and multipart/form-data requests,
 // the following normalization rules are applied for plain multipart string values:
-// - "true" is converted to the json `true`
-// - "false" is converted to the json `false`
-// - numeric (non-scientific) strings are converted to json number
-// - any other string (empty string too) is left as it is
+//   - "true" is converted to the json "true"
+//   - "false" is converted to the json "false"
+//   - numeric strings are converted to json number ONLY if the resulted
+//     minimal number string representation is the same as the provided raw string
+//     (aka. scientific notations, "Infinity", "0.0", "0001", etc. are kept as string)
+//   - any other string (empty string too) is left as it is
 func normalizeMultipartValue(raw string) any {
 	switch raw {
 	case "":
@@ -159,8 +164,12 @@ func normalizeMultipartValue(raw string) any {
 	case "false":
 		return false
 	default:
-		if raw[0] == '-' || (raw[0] >= '0' && raw[0] <= '9') {
-			if v, err := cast.ToFloat64E(raw); err == nil {
+		// try to convert to number
+		//
+		// note: expects the provided raw string to match exactly with the minimal string representation of the parsed float
+		if raw[0] == '-' || (raw[0] >= '0' && raw[0] <= '9') && inferNumberCharsRegex.Match([]byte(raw)) {
+			v, err := strconv.ParseFloat(raw, 64)
+			if err == nil && strconv.FormatFloat(v, 'f', -1, 64) == raw {
 				return v
 			}
 		}
