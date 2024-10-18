@@ -158,15 +158,6 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 	}
 
 	return app.RunInTransaction(func(txApp App) error {
-		// temporary disable the schema error checks to prevent view and trigger errors
-		// when "altering" (aka. deleting and recreating) the non-normalized columns
-		if _, err := txApp.DB().NewQuery("PRAGMA writable_schema = ON").Execute(); err != nil {
-			return err
-		}
-		// executed with defer to make sure that the pragma is always reverted
-		// in case of an error and when nested transactions are used
-		defer txApp.DB().NewQuery("PRAGMA writable_schema = RESET").Execute()
-
 		for _, newField := range newCollection.Fields {
 			// allow to continue even if there is no old field for the cases
 			// when a new field is added and there are already inserted data
@@ -186,17 +177,42 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 				continue // no change
 			}
 
-			// update the column definition by:
-			// 1. inserting a new column with the new definition
-			// 2. copy normalized values from the original column to the new one
-			// 3. drop the original column
-			// 4. rename the new column to the original column
+			// -------------------------------------------------------
+			// update the field column definition
 			// -------------------------------------------------------
 
-			originalName := newField.GetName()
-			tempName := "_" + newField.GetName() + security.PseudorandomString(5)
+			// temporary drop all views to prevent reference errors during the columns renaming
+			// (this is used as an "alternative" to the writable_schema PRAGMA)
+			views := []struct {
+				Name string `db:"name"`
+				SQL  string `db:"sql"`
+			}{}
+			err := txApp.DB().Select("name", "sql").
+				From("sqlite_master").
+				AndWhere(dbx.NewExp("sql is not null")).
+				AndWhere(dbx.HashExp{"type": "view"}).
+				All(&views)
+			if err != nil {
+				return err
+			}
+			for _, view := range views {
+				err = txApp.DeleteView(view.Name)
+				if err != nil {
+					return err
+				}
+			}
 
-			_, err := txApp.DB().AddColumn(newCollection.Name, tempName, newField.ColumnType(txApp)).Execute()
+			originalName := newField.GetName()
+			oldTempName := "_" + newField.GetName() + security.PseudorandomString(5)
+
+			// rename temporary the original column to something else to allow inserting a new one in its place
+			_, err = txApp.DB().RenameColumn(newCollection.Name, originalName, oldTempName).Execute()
+			if err != nil {
+				return err
+			}
+
+			// reinsert the field column with the new type
+			_, err = txApp.DB().AddColumn(newCollection.Name, originalName, newField.ColumnType(txApp)).Execute()
 			if err != nil {
 				return err
 			}
@@ -220,12 +236,12 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 							END
 						)`,
 					newCollection.Name,
-					tempName,
 					originalName,
-					originalName,
-					originalName,
-					originalName,
-					originalName,
+					oldTempName,
+					oldTempName,
+					oldTempName,
+					oldTempName,
+					oldTempName,
 				))
 			} else {
 				// multiple -> single (keep only the last element)
@@ -247,35 +263,37 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 						END
 					)`,
 					newCollection.Name,
-					tempName,
 					originalName,
-					originalName,
-					originalName,
-					originalName,
-					originalName,
+					oldTempName,
+					oldTempName,
+					oldTempName,
+					oldTempName,
+					oldTempName,
 				))
 			}
 
 			// copy the normalized values
-			if _, err := copyQuery.Execute(); err != nil {
+			_, err = copyQuery.Execute()
+			if err != nil {
 				return err
 			}
 
 			// drop the original column
-			if _, err := txApp.DB().DropColumn(newCollection.Name, originalName).Execute(); err != nil {
+			_, err = txApp.DB().DropColumn(newCollection.Name, oldTempName).Execute()
+			if err != nil {
 				return err
 			}
 
-			// rename the new column back to the original
-			if _, err := txApp.DB().RenameColumn(newCollection.Name, tempName, originalName).Execute(); err != nil {
-				return err
+			// restore views
+			for _, view := range views {
+				_, err = txApp.DB().NewQuery(view.SQL).Execute()
+				if err != nil {
+					return err
+				}
 			}
 		}
 
-		// revert the pragma and reload the schema
-		_, revertErr := txApp.DB().NewQuery("PRAGMA writable_schema = RESET").Execute()
-
-		return revertErr
+		return nil
 	})
 }
 

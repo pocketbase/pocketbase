@@ -265,7 +265,7 @@ func (app *BaseApp) registerCollectionHooks() {
 	// ---
 	onErrorReloadCachedCollections := func(ce *CollectionErrorEvent) error {
 		if err := ce.App.ReloadCachedCollections(); err != nil {
-			ce.App.Logger().Warn("Failed to reload collections cache", "error", err)
+			ce.App.Logger().Warn("Failed to reload collections cache after collection change error", "error", err)
 		}
 
 		return ce.Next()

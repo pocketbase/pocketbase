@@ -7,6 +7,8 @@
 
 - Fixed the JSVM types to include properly generated function declarations when the related Go functions have shortened/combined return values.
 
+- Reorganized the record table fields<->columns syncing to remove the `PRAGMA writable_schema` usage.
+
 
 ## v0.23.0-rc6
 

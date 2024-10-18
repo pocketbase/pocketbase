@@ -140,10 +140,9 @@ func (app *BaseApp) delete(ctx context.Context, model Model, isForAuxDB bool) er
 		})
 	})
 	if deleteErr != nil {
-		hookErr := app.OnModelAfterDeleteError().Trigger(&ModelErrorEvent{
-			ModelEvent: *event,
-			Error:      deleteErr,
-		})
+		errEvent := &ModelErrorEvent{ModelEvent: *event, Error: deleteErr}
+		errEvent.App = app
+		hookErr := app.OnModelAfterDeleteError().Trigger(errEvent)
 		if hookErr != nil {
 			return errors.Join(deleteErr, hookErr)
 		}
@@ -332,10 +331,9 @@ func (app *BaseApp) create(ctx context.Context, model Model, withValidations boo
 	if saveErr != nil {
 		event.Model.MarkAsNew() // reset "new" state
 
-		hookErr := app.OnModelAfterCreateError().Trigger(&ModelErrorEvent{
-			ModelEvent: *event,
-			Error:      saveErr,
-		})
+		errEvent := &ModelErrorEvent{ModelEvent: *event, Error: saveErr}
+		errEvent.App = app
+		hookErr := app.OnModelAfterCreateError().Trigger(errEvent)
 		if hookErr != nil {
 			return errors.Join(saveErr, hookErr)
 		}
@@ -417,10 +415,9 @@ func (app *BaseApp) update(ctx context.Context, model Model, withValidations boo
 		})
 	})
 	if saveErr != nil {
-		hookErr := app.OnModelAfterUpdateError().Trigger(&ModelErrorEvent{
-			ModelEvent: *event,
-			Error:      saveErr,
-		})
+		errEvent := &ModelErrorEvent{ModelEvent: *event, Error: saveErr}
+		errEvent.App = app
+		hookErr := app.OnModelAfterUpdateError().Trigger(errEvent)
 		if hookErr != nil {
 			return errors.Join(saveErr, hookErr)
 		}
