@@ -3,7 +3,7 @@
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
-- Attach the default panic-recover middleware after the activity logger so that we can log the error.
+- Register the default panic-recover middleware after the activity logger so that we can log the error.
 
 - Updated the `RequestEvent.BindBody` FormData type inferring rules to convert numeric strings into float64 only if the resulting minimal number string representation matches the initial FormData string value ([#5687](https://github.com/pocketbase/pocketbase/issues/5687)).
 
