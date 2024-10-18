@@ -164,6 +164,11 @@ func (p *plugin) update(withBackup bool) error {
 		return nil
 	}
 
+	if compareVersions(strings.TrimPrefix(latest.Tag, "v"), "0.23.0") <= 0 {
+		color.Green("%s contains breaking changes and cannot be updated directly from v0.22.x. Please check the releases CHANGELOG for more details.", latest.Tag)
+		return nil
+	}
+
 	suffix := archiveSuffix(runtime.GOOS, runtime.GOARCH)
 	if suffix == "" {
 		return errors.New("unsupported platform")
