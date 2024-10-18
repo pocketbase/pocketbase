@@ -2,13 +2,15 @@
 
 - Added deprecation log in case Instagram OAuth2 is used (_related to [#5652](https://github.com/pocketbase/pocketbase/discussions/5652)_).
 
-- Added `update` command warning to prevent unnecessary downloading PocketBase v0.23.0 since it will contain breaking changes and it will fail anyway.
+- Added `update` command warning to prevent unnecessary downloading PocketBase v0.23.0 since it will contain breaking changes.
 
 - Added global JSVM `toString()` helper (_successor of `readerToString()`_) to stringify any value (bool, number, multi-byte array, io.Reader, etc.).
   _`readerToString` is still available but it is marked as deprecated. You can also use `toString` as replacement for  of `String.fromCharCode` to properly stringify multi-byte unicode characters like emojis._
     ```js
     decodeURIComponent(escape(String.fromCharCode(...bytes))) -> toString(bytes)
     ```
+
+- Updated `aws-sdk-go-v2` and removed deprecated `WithEndpointResolverWithOptions`.
 
 - Backported some of the v0.23.0-rc form validators, fixes and tests.
 
