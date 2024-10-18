@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"math"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core/validators"
@@ -116,6 +117,10 @@ func (f *NumberField) ValidateValue(ctx context.Context, app App, record *Record
 	val, ok := record.GetRaw(f.Name).(float64)
 	if !ok {
 		return validators.ErrUnsupportedValueType
+	}
+
+	if math.IsInf(val, 0) || math.IsNaN(val) {
+		return validation.NewError("validation_not_a_number", "The submitted number is not properly formatted")
 	}
 
 	if val == 0 {

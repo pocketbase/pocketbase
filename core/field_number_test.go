@@ -177,6 +177,26 @@ func TestNumberFieldValidateValue(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"infinitiy",
+			&core.NumberField{Name: "test"},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.Set("test", "Inf")
+				return record
+			},
+			true,
+		},
+		{
+			"NaN",
+			&core.NumberField{Name: "test"},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.Set("test", "NaN")
+				return record
+			},
+			true,
+		},
 	}
 
 	for _, s := range scenarios {
