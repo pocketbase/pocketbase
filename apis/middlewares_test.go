@@ -9,6 +9,45 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 )
 
+func TestPanicRecover(t *testing.T) {
+	t.Parallel()
+
+	scenarios := []tests.ApiScenario{
+		{
+			Name:   "panic from route",
+			Method: http.MethodGet,
+			URL:    "/my/test",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				e.Router.GET("/my/test", func(e *core.RequestEvent) error {
+					panic("123")
+				})
+			},
+			ExpectedStatus:  500,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "panic from middleware",
+			Method: http.MethodGet,
+			URL:    "/my/test",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				e.Router.GET("/my/test", func(e *core.RequestEvent) error {
+					return e.String(http.StatusOK, "test")
+				}).BindFunc(func(e *core.RequestEvent) error {
+					panic(123)
+				})
+			},
+			ExpectedStatus:  500,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		scenario.Test(t)
+	}
+}
+
 func TestRequireGuestOnly(t *testing.T) {
 	t.Parallel()
 

@@ -28,9 +28,10 @@ func NewRouter(app core.App) (*router.Router[*core.RequestEvent], error) {
 
 	// register default middlewares
 	pbRouter.Bind(activityLogger())
+	pbRouter.Bind(panicRecover())
+	pbRouter.Bind(rateLimit())
 	pbRouter.Bind(loadAuthToken())
 	pbRouter.Bind(securityHeaders())
-	pbRouter.Bind(rateLimit())
 	pbRouter.Bind(BodyLimit(DefaultMaxBodySize))
 
 	apiGroup := pbRouter.Group("/api")

@@ -64,10 +64,6 @@ func TestRouter(t *testing.T) {
 		calls += "/" + e.Request.PathValue("param")
 		return errors.New("test") // should be normalized to an ApiError
 	})
-	g1.GET("/panic", func(e *router.Event) error {
-		calls += "/panic"
-		panic("test")
-	})
 
 	mux, err := r.BuildMux()
 	if err != nil {
@@ -98,7 +94,6 @@ func TestRouter(t *testing.T) {
 		{http.MethodHead, "/a/b/1", "root_m:a_b_group_m:1_get_m:/1_get:cleanup"},
 		{http.MethodPost, "/a/b/1", "root_m:a_b_group_m:/1_post:cleanup"},
 		{http.MethodGet, "/a/b/456", "root_m:a_b_group_m:/456/error:cleanup"},
-		{http.MethodGet, "/a/b/panic", "root_m:a_b_group_m:/panic:cleanup"},
 	}
 
 	for _, s := range scenarios {

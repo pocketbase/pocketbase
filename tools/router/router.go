@@ -4,12 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net"
 	"net/http"
-	"runtime"
 
 	"github.com/pocketbase/pocketbase/tools/hook"
 )
@@ -129,12 +127,6 @@ func (r *Router[T]) loadMux(mux *http.ServeMux, group *RouterGroup[T], parents [
 				}
 			}
 
-			// add global panic-recover middleware
-			routeHook.Bind(&hook.Handler[T]{
-				Func:     r.panicHandler,
-				Priority: -9999999, // before everything else
-			})
-
 			mux.HandleFunc(pattern, func(resp http.ResponseWriter, req *http.Request) {
 				// wrap the response to add write and status tracking
 				resp = &ResponseWriter{ResponseWriter: resp}
@@ -160,33 +152,6 @@ func (r *Router[T]) loadMux(mux *http.ServeMux, group *RouterGroup[T], parents [
 	}
 
 	return nil
-}
-
-// panicHandler registers a default panic-recover handling.
-func (r *Router[T]) panicHandler(event T) (err error) {
-	// panic-recover
-	defer func() {
-		recoverResult := recover()
-		if recoverResult == nil {
-			return
-		}
-
-		recoverErr, ok := recoverResult.(error)
-		if !ok {
-			recoverErr = fmt.Errorf("%v", recoverResult)
-		} else if errors.Is(recoverErr, http.ErrAbortHandler) {
-			// don't recover ErrAbortHandler so the response to the client can be aborted
-			panic(recoverResult)
-		}
-
-		stack := make([]byte, 2<<10) // 2 KB
-		length := runtime.Stack(stack, true)
-		err = NewInternalServerError("", fmt.Errorf("[PANIC RECOVER] %w %s", recoverErr, stack[:length]))
-	}()
-
-	err = event.Next()
-
-	return err
 }
 
 func ErrorHandler(resp http.ResponseWriter, req *http.Request, err error) {

@@ -1,10 +1,12 @@
 package apis
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -29,10 +31,13 @@ const (
 	DefaultWWWRedirectMiddlewarePriority = -99999
 	DefaultWWWRedirectMiddlewareId       = "pbWWWRedirect"
 
-	DefaultActivityLoggerMiddlewarePriority   = DefaultRateLimitMiddlewarePriority - 30
+	DefaultActivityLoggerMiddlewarePriority   = DefaultRateLimitMiddlewarePriority - 40
 	DefaultActivityLoggerMiddlewareId         = "pbActivityLogger"
 	DefaultSkipSuccessActivityLogMiddlewareId = "pbSkipSuccessActivityLog"
 	DefaultEnableAuthIdActivityLog            = "pbEnableAuthIdActivityLog"
+
+	DefaultPanicRecoverMiddlewarePriority = DefaultRateLimitMiddlewarePriority - 30
+	DefaultPanicRecoverMiddlewareId       = "pbPanicRecover"
 
 	DefaultLoadAuthTokenMiddlewarePriority = DefaultRateLimitMiddlewarePriority - 20
 	DefaultLoadAuthTokenMiddlewareId       = "pbLoadAuthToken"
@@ -248,6 +253,39 @@ func wwwRedirect(redirectHosts []string) *hook.Handler[*core.RequestEvent] {
 			}
 
 			return e.Next()
+		},
+	}
+}
+
+// panicRecover returns a default panic-recover handler.
+func panicRecover() *hook.Handler[*core.RequestEvent] {
+	return &hook.Handler[*core.RequestEvent]{
+		Id:       DefaultPanicRecoverMiddlewareId,
+		Priority: DefaultPanicRecoverMiddlewarePriority,
+		Func: func(e *core.RequestEvent) (err error) {
+			// panic-recover
+			defer func() {
+				recoverResult := recover()
+				if recoverResult == nil {
+					return
+				}
+
+				recoverErr, ok := recoverResult.(error)
+				if !ok {
+					recoverErr = fmt.Errorf("%v", recoverResult)
+				} else if errors.Is(recoverErr, http.ErrAbortHandler) {
+					// don't recover ErrAbortHandler so the response to the client can be aborted
+					panic(recoverResult)
+				}
+
+				stack := make([]byte, 2<<10) // 2 KB
+				length := runtime.Stack(stack, true)
+				err = e.InternalServerError("", fmt.Errorf("[PANIC RECOVER] %w %s", recoverErr, stack[:length]))
+			}()
+
+			err = e.Next()
+
+			return err
 		},
 	}
 }
