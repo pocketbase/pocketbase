@@ -325,9 +325,12 @@ type baseCollection struct {
 	Type    string                  `db:"type" json:"type" form:"type"`
 	Fields  FieldsList              `db:"fields" json:"fields" form:"fields"`
 	Indexes types.JSONArray[string] `db:"indexes" json:"indexes" form:"indexes"`
-	System  bool                    `db:"system" json:"system" form:"system"`
 	Created types.DateTime          `db:"created" json:"created"`
 	Updated types.DateTime          `db:"updated" json:"updated"`
+
+	// System prevents the collection rename, deletion and rules change.
+	// It is used primarily for internal purposes for collections like "_superusers", "_externalAuths", etc.
+	System bool `db:"system" json:"system" form:"system"`
 }
 
 // Collection defines the table, fields and various options related to a set of records.

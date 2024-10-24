@@ -553,7 +553,7 @@ func (app *BaseApp) FindAuthRecordByEmail(collectionModelOrIdentifier any, email
 // CanAccessRecord checks if a record is allowed to be accessed by the
 // specified requestInfo and accessRule.
 //
-// Rule and db checks are ignored in case requestInfo.AuthRecord is a superuser.
+// Rule and db checks are ignored in case requestInfo.Auth is a superuser.
 //
 // The returned error indicate that something unexpected happened during
 // the check (eg. invalid rule or db query error).

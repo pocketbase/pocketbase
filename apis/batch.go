@@ -29,14 +29,14 @@ func bindBatchApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
 
 type HandleFunc func(e *core.RequestEvent) error
 
-type BatchActionHandlerFunc func(app core.App, ir *core.InternalRequest, params map[string]string, next func() error) HandleFunc
+type BatchActionHandlerFunc func(app core.App, ir *core.InternalRequest, params map[string]string, next func(data any) error) HandleFunc
 
 // ValidBatchActions defines a map with the supported batch InternalRequest actions.
 //
 // Note: when adding new routes make sure that their middlewares are inlined!
 var ValidBatchActions = map[*regexp.Regexp]BatchActionHandlerFunc{
 	// "upsert" handler
-	regexp.MustCompile(`^PUT /api/collections/(?P<collection>[^\/\?]+)/records(?P<query>\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func() error) HandleFunc {
+	regexp.MustCompile(`^PUT /api/collections/(?P<collection>[^\/\?]+)/records(?P<query>\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func(any) error) HandleFunc {
 		var id string
 		if len(ir.Body) > 0 && ir.Body["id"] != "" {
 			id = cast.ToString(ir.Body["id"])
@@ -59,13 +59,13 @@ var ValidBatchActions = map[*regexp.Regexp]BatchActionHandlerFunc{
 		ir.URL = "/api/collections/" + params["collection"] + "/records" + params["query"]
 		return recordCreate(next)
 	},
-	regexp.MustCompile(`^POST /api/collections/(?P<collection>[^\/\?]+)/records(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func() error) HandleFunc {
+	regexp.MustCompile(`^POST /api/collections/(?P<collection>[^\/\?]+)/records(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func(any) error) HandleFunc {
 		return recordCreate(next)
 	},
-	regexp.MustCompile(`^PATCH /api/collections/(?P<collection>[^\/\?]+)/records/(?P<id>[^\/\?]+)(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func() error) HandleFunc {
+	regexp.MustCompile(`^PATCH /api/collections/(?P<collection>[^\/\?]+)/records/(?P<id>[^\/\?]+)(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func(any) error) HandleFunc {
 		return recordUpdate(next)
 	},
-	regexp.MustCompile(`^DELETE /api/collections/(?P<collection>[^\/\?]+)/records/(?P<id>[^\/\?]+)(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func() error) HandleFunc {
+	regexp.MustCompile(`^DELETE /api/collections/(?P<collection>[^\/\?]+)/records/(?P<id>[^\/\?]+)(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func(any) error) HandleFunc {
 		return recordDelete(next)
 	},
 }
@@ -246,7 +246,7 @@ func (p *batchProcessor) process(activeApp core.App, batch []*core.InternalReque
 			p.baseEvent,
 			batch[0],
 			p.infoContext,
-			func() error {
+			func(_ any) error {
 				if len(batch) == 1 {
 					return nil
 				}
@@ -277,7 +277,7 @@ func processInternalRequest(
 	baseEvent *core.RequestEvent,
 	ir *core.InternalRequest,
 	infoContext string,
-	optNext func() error,
+	optNext func(data any) error,
 ) (*BatchRequestResult, error) {
 	handle, params, ok := prepareInternalAction(activeApp, ir, optNext)
 	if !ok {
@@ -475,7 +475,7 @@ func extractPrefixedFiles(request *http.Request, prefixes ...string) (map[string
 	return result, nil
 }
 
-func prepareInternalAction(activeApp core.App, ir *core.InternalRequest, optNext func() error) (HandleFunc, map[string]string, bool) {
+func prepareInternalAction(activeApp core.App, ir *core.InternalRequest, optNext func(data any) error) (HandleFunc, map[string]string, bool) {
 	full := strings.ToUpper(ir.Method) + " " + ir.URL
 
 	for re, actionFactory := range ValidBatchActions {

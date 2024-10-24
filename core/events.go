@@ -323,6 +323,7 @@ func syncModelErrorEventWithCollectionErrorEvent(me *ModelErrorEvent, ce *Collec
 type FileTokenRequestEvent struct {
 	hook.Event
 	*RequestEvent
+	baseRecordEventData
 
 	Token string
 }

@@ -60,13 +60,13 @@ type Config struct {
 }
 
 // New creates a new PocketBase instance with the default configuration.
-// Use [NewWithConfig()] if you want to provide a custom configuration.
+// Use [NewWithConfig] if you want to provide a custom configuration.
 //
 // Note that the application will not be initialized/bootstrapped yet,
 // aka. DB connections, migrations, app settings, etc. will not be accessible.
-// Everything will be initialized when [Start()] is executed.
-// If you want to initialize the application before calling [Start()],
-// then you'll have to manually call [Bootstrap()].
+// Everything will be initialized when [PocketBase.Start()] is executed.
+// If you want to initialize the application before calling [PocketBase.Start()],
+// then you'll have to manually call [PocketBase.Bootstrap()].
 func New() *PocketBase {
 	_, isUsingGoRun := inspectRuntime()
 
@@ -79,9 +79,9 @@ func New() *PocketBase {
 //
 // Note that the application will not be initialized/bootstrapped yet,
 // aka. DB connections, migrations, app settings, etc. will not be accessible.
-// Everything will be initialized when [Start()] is executed.
-// If you want to initialize the application before calling [Start()],
-// then you'll have to manually call [Bootstrap()].
+// Everything will be initialized when [PocketBase.Start()] is executed.
+// If you want to initialize the application before calling [PocketBase..Start()],
+// then you'll have to manually call [PocketBase.Bootstrap()].
 func NewWithConfig(config Config) *PocketBase {
 	// initialize a default data directory based on the executable baseDir
 	if config.DefaultDataDir == "" {

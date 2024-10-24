@@ -436,7 +436,7 @@ declare class Field implements core.Field {
 
 interface NumberField extends core.NumberField{} // merge
 /**
- * NumberField class defines a single "number" collection field.
+ * {@inheritDoc core.NumberField}
  *
  * @group PocketBase
  */
@@ -446,7 +446,7 @@ declare class NumberField implements core.NumberField {
 
 interface BoolField extends core.BoolField{} // merge
 /**
- * BoolField class defines a single "bool" collection field.
+ * {@inheritDoc core.BoolField}
  *
  * @group PocketBase
  */
@@ -456,7 +456,7 @@ declare class BoolField implements core.BoolField {
 
 interface TextField extends core.TextField{} // merge
 /**
- * TextField class defines a single "text" collection field.
+ * {@inheritDoc core.TextField}
  *
  * @group PocketBase
  */
@@ -466,7 +466,7 @@ declare class TextField implements core.TextField {
 
 interface URLField extends core.URLField{} // merge
 /**
- * URLField class defines a single "url" collection field.
+ * {@inheritDoc core.URLField}
  *
  * @group PocketBase
  */
@@ -476,7 +476,7 @@ declare class URLField implements core.URLField {
 
 interface EmailField extends core.EmailField{} // merge
 /**
- * EmailField class defines a single "email" collection field.
+ * {@inheritDoc core.EmailField}
  *
  * @group PocketBase
  */
@@ -486,7 +486,7 @@ declare class EmailField implements core.EmailField {
 
 interface EditorField extends core.EditorField{} // merge
 /**
- * EditorField class defines a single "editor" collection field.
+ * {@inheritDoc core.EditorField}
  *
  * @group PocketBase
  */
@@ -496,7 +496,7 @@ declare class EditorField implements core.EditorField {
 
 interface PasswordField extends core.PasswordField{} // merge
 /**
- * PasswordField class defines a single "password" collection field.
+ * {@inheritDoc core.PasswordField}
  *
  * @group PocketBase
  */
@@ -506,7 +506,7 @@ declare class PasswordField implements core.PasswordField {
 
 interface DateField extends core.DateField{} // merge
 /**
- * DateField class defines a single "date" collection field.
+ * {@inheritDoc core.DateField}
  *
  * @group PocketBase
  */
@@ -516,7 +516,7 @@ declare class DateField implements core.DateField {
 
 interface AutodateField extends core.AutodateField{} // merge
 /**
- * AutodateField class defines a single "autodate" collection field.
+ * {@inheritDoc core.AutodateField}
  *
  * @group PocketBase
  */
@@ -526,7 +526,7 @@ declare class AutodateField implements core.AutodateField {
 
 interface JSONField extends core.JSONField{} // merge
 /**
- * JSONField class defines a single "json" collection field.
+ * {@inheritDoc core.JSONField}
  *
  * @group PocketBase
  */
@@ -536,7 +536,7 @@ declare class JSONField implements core.JSONField {
 
 interface RelationField extends core.RelationField{} // merge
 /**
- * RelationField class defines a single "relation" collection field.
+ * {@inheritDoc core.RelationField}
  *
  * @group PocketBase
  */
@@ -546,7 +546,7 @@ declare class RelationField implements core.RelationField {
 
 interface SelectField extends core.SelectField{} // merge
 /**
- * SelectField class defines a single "select" collection field.
+ * {@inheritDoc core.SelectField}
  *
  * @group PocketBase
  */
@@ -556,7 +556,7 @@ declare class SelectField implements core.SelectField {
 
 interface FileField extends core.FileField{} // merge
 /**
- * FileField class defines a single "file" collection field.
+ * {@inheritDoc core.FileField}
  *
  * @group PocketBase
  */

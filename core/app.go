@@ -596,7 +596,7 @@ type App interface {
 	// CanAccessRecord checks if a record is allowed to be accessed by the
 	// specified requestInfo and accessRule.
 	//
-	// Rule and db checks are ignored in case requestInfo.AuthRecord is a superuser.
+	// Rule and db checks are ignored in case requestInfo.Auth is a superuser.
 	//
 	// The returned error indicate that something unexpected happened during
 	// the check (eg. invalid rule or db query error).
@@ -633,17 +633,19 @@ type App interface {
 	// App event hooks
 	// ---------------------------------------------------------------
 
-	// OnBootstrap hook is triggered on initializing the main application
+	// OnBootstrap hook is triggered when initializing the main application
 	// resources (db, app settings, etc).
 	OnBootstrap() *hook.Hook[*BootstrapEvent]
 
-	// OnServe hook is triggered on when the app web server is started
-	// (after starting the tcp listener but before initializing the blocking serve task),
+	// OnServe hook is triggered when the app web server is started
+	// (after starting the TCP listener but before initializing the blocking serve task),
 	// allowing you to adjust its options and attach new routes or middlewares.
 	OnServe() *hook.Hook[*ServeEvent]
 
 	// OnTerminate hook is triggered when the app is in the process
 	// of being terminated (ex. on SIGTERM signal).
+	//
+	// Note that the app could be terminated abruptly without awaiting the hook completion.
 	OnTerminate() *hook.Hook[*TerminateEvent]
 
 	// OnBackupCreate hook is triggered on each [App.CreateBackup] call.
@@ -660,6 +662,9 @@ type App interface {
 
 	// OnModelValidate is triggered every time when a model is being validated
 	// (e.g. triggered by App.Validate() or App.Save()).
+	//
+	// For convenience, if you want to listen to only the Record models
+	// events without doing manual type assertion, you can attach to the OnRecord* proxy hooks.
 	//
 	// If the optional "tags" list (Collection id/name, Model table name, etc.) is specified,
 	// then all event handlers registered via the created hook will be
@@ -680,7 +685,7 @@ type App interface {
 	// Note that successful execution doesn't guarantee that the model
 	// is persisted in the database since its wrapping transaction may
 	// not have been committed yet.
-	// If you wan to listen to only the actual persisted events, you can
+	// If you want to listen to only the actual persisted events, you can
 	// bind to [OnModelAfterCreateSuccess] or [OnModelAfterCreateError] hooks.
 	//
 	// For convenience, if you want to listen to only the Record models
@@ -703,7 +708,7 @@ type App interface {
 	// Note that successful execution doesn't guarantee that the model
 	// is persisted in the database since its wrapping transaction may have been
 	// committed yet.
-	// If you wan to listen to only the actual persisted events,
+	// If you want to listen to only the actual persisted events,
 	// you can bind to [OnModelAfterCreateSuccess] or [OnModelAfterCreateError] hooks.
 	//
 	// For convenience, if you want to listen to only the Record models
@@ -718,7 +723,7 @@ type App interface {
 	// Model DB create persistence.
 	//
 	// Note that when a Model is persisted as part of a transaction,
-	// this hook is triggered AFTER the transaction has been committed.
+	// this hook is delayed and executed only AFTER the transaction has been committed.
 	// This hook is NOT triggered in case the transaction rollbacks
 	// (aka. when the model wasn't persisted).
 	//
@@ -732,10 +737,11 @@ type App interface {
 
 	// OnModelAfterCreateError is triggered after each failed
 	// Model DB create persistence.
-	// Note that when a Model is persisted as part of a transaction,
-	// this hook is triggered in one of the following cases:
-	//   - immediately after App.Save() failure
-	//   - on transaction rollback
+	//
+	// Note that the execution of this hook is either immediate or delayed
+	// depending on the error:
+	//   - "immediate" on App.Save() failure
+	//   - "delayed" on transaction rollback
 	//
 	// For convenience, if you want to listen to only the Record models
 	// events without doing manual type assertion, you can attach to the OnRecord* proxy hooks.
@@ -759,7 +765,7 @@ type App interface {
 	// Note that successful execution doesn't guarantee that the model
 	// is persisted in the database since its wrapping transaction may
 	// not have been committed yet.
-	// If you wan to listen to only the actual persisted events, you can
+	// If you want to listen to only the actual persisted events, you can
 	// bind to [OnModelAfterUpdateSuccess] or [OnModelAfterUpdateError] hooks.
 	//
 	// For convenience, if you want to listen to only the Record models
@@ -782,7 +788,7 @@ type App interface {
 	// Note that successful execution doesn't guarantee that the model
 	// is persisted in the database since its wrapping transaction may have been
 	// committed yet.
-	// If you wan to listen to only the actual persisted events,
+	// If you want to listen to only the actual persisted events,
 	// you can bind to [OnModelAfterUpdateSuccess] or [OnModelAfterUpdateError] hooks.
 	//
 	// For convenience, if you want to listen to only the Record models
@@ -797,7 +803,7 @@ type App interface {
 	// Model DB update persistence.
 	//
 	// Note that when a Model is persisted as part of a transaction,
-	// this hook is triggered AFTER the transaction has been committed.
+	// this hook is delayed and executed only AFTER the transaction has been committed.
 	// This hook is NOT triggered in case the transaction rollbacks
 	// (aka. when the model changes weren't persisted).
 	//
@@ -812,10 +818,10 @@ type App interface {
 	// OnModelAfterUpdateError is triggered after each failed
 	// Model DB update persistence.
 	//
-	// Note that when a Model is persisted as part of a transaction,
-	// this hook is triggered in one of the following cases:
-	//   - immediately after App.Save() failure
-	//   - on transaction rollback
+	// Note that the execution of this hook is either immediate or delayed
+	// depending on the error:
+	//   - "immediate" on App.Save() failure
+	//   - "delayed" on transaction rollback
 	//
 	// For convenience, if you want to listen to only the Record models
 	// events without doing manual type assertion, you can attach to the OnRecord* proxy hooks.
@@ -833,7 +839,7 @@ type App interface {
 	// Note that successful execution doesn't guarantee that the model
 	// is deleted from the database since its wrapping transaction may
 	// not have been committed yet.
-	// If you wan to listen to only the actual persisted deleted events, you can
+	// If you want to listen to only the actual persisted deleted events, you can
 	// bind to [OnModelAfterDeleteSuccess] or [OnModelAfterDeleteError] hooks.
 	//
 	// For convenience, if you want to listen to only the Record models
@@ -856,7 +862,7 @@ type App interface {
 	// Note that successful execution doesn't guarantee that the model
 	// is deleted from the database since its wrapping transaction may
 	// not have been committed yet.
-	// If you wan to listen to only the actual persisted deleted events, you can
+	// If you want to listen to only the actual persisted deleted events, you can
 	// bind to [OnModelAfterDeleteSuccess] or [OnModelAfterDeleteError] hooks.
 	//
 	// For convenience, if you want to listen to only the Record models
@@ -871,7 +877,7 @@ type App interface {
 	// Model DB delete persistence.
 	//
 	// Note that when a Model is deleted as part of a transaction,
-	// this hook is triggered AFTER the transaction has been committed.
+	// this hook is delayed and executed only AFTER the transaction has been committed.
 	// This hook is NOT triggered in case the transaction rollbacks
 	// (aka. when the model delete wasn't persisted).
 	//
@@ -886,10 +892,10 @@ type App interface {
 	// OnModelAfterDeleteError is triggered after each failed
 	// Model DB delete persistence.
 	//
-	// Note that when a Model is deleted as part of a transaction,
-	// this hook is triggered in one of the following cases:
-	//   - immediately after App.Delete() failure
-	//   - on transaction rollback
+	// Note that the execution of this hook is either immediate or delayed
+	// depending on the error:
+	//   - "immediate" on App.Delete() failure
+	//   - "delayed" on transaction rollback
 	//
 	// For convenience, if you want to listen to only the Record models
 	// events without doing manual type assertion, you can attach to the OnRecord* proxy hooks.
@@ -904,10 +910,9 @@ type App interface {
 	// ---------------------------------------------------------------
 
 	// OnRecordEnrich is triggered every time when a record is enriched
-	// (during realtime message seriazation, as part of the builtin Record
-	// responses, or when [apis.EnrichRecord] is invoked).
+	// (as part of the builtin Record responses, during realtime message seriazation, or when [apis.EnrichRecord] is invoked).
 	//
-	// It could be used for example to redact/hide or add computed temp
+	// It could be used for example to redact/hide or add computed temporary
 	// Record model props only for the specific request info. For example:
 	//
 	//  app.OnRecordEnrich("posts").BindFunc(func(e core.*RecordEnrichEvent) {
@@ -928,7 +933,7 @@ type App interface {
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordEnrich(tags ...string) *hook.TaggedHook[*RecordEnrichEvent]
 
-	// OnRecordValidate is a proxy Record model hook for [OnModelValidate].
+	// OnRecordValidate is a Record proxy model hook of [OnModelValidate].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -937,28 +942,28 @@ type App interface {
 
 	// ---------------------------------------------------------------
 
-	// OnRecordCreate is a proxy Record model hook for [OnModelCreate].
+	// OnRecordCreate is a Record proxy model hook of [OnModelCreate].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordCreate(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordCreateExecute is a proxy Record model hook for [OnModelCreateExecute].
+	// OnRecordCreateExecute is a Record proxy model hook of [OnModelCreateExecute].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordCreateExecute(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordAfterCreateSuccess is a proxy Record model hook for [OnModelAfterCreateSuccess].
+	// OnRecordAfterCreateSuccess is a Record proxy model hook of [OnModelAfterCreateSuccess].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordAfterCreateSuccess(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordAfterCreateError is a proxy Record model hook for [OnModelAfterCreateError].
+	// OnRecordAfterCreateError is a Record proxy model hook of [OnModelAfterCreateError].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -967,28 +972,28 @@ type App interface {
 
 	// ---------------------------------------------------------------
 
-	// OnRecordUpdate is a proxy Record model hook for [OnModelUpdate].
+	// OnRecordUpdate is a Record proxy model hook of [OnModelUpdate].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordUpdate(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordUpdateExecute is a proxy Record model hook for [OnModelUpdateExecute].
+	// OnRecordUpdateExecute is a Record proxy model hook of [OnModelUpdateExecute].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordUpdateExecute(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordAfterUpdateSuccess is a proxy Record model hook for [OnModelAfterUpdateSuccess].
+	// OnRecordAfterUpdateSuccess is a Record proxy model hook of [OnModelAfterUpdateSuccess].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordAfterUpdateSuccess(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordAfterUpdateError is a proxy Record model hook for [OnModelAfterUpdateError].
+	// OnRecordAfterUpdateError is a Record proxy model hook of [OnModelAfterUpdateError].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -997,28 +1002,28 @@ type App interface {
 
 	// ---------------------------------------------------------------
 
-	// OnRecordDelete is a proxy Record model hook for [OnModelDelete].
+	// OnRecordDelete is a Record proxy model hook of [OnModelDelete].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordDelete(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordDeleteExecute is a proxy Record model hook for [OnModelDeleteExecute].
+	// OnRecordDeleteExecute is a Record proxy model hook of [OnModelDeleteExecute].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordDeleteExecute(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordAfterDeleteSuccess is a proxy Record model hook for [OnModelAfterDeleteSuccess].
+	// OnRecordAfterDeleteSuccess is a Record proxy model hook of [OnModelAfterDeleteSuccess].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnRecordAfterDeleteSuccess(tags ...string) *hook.TaggedHook[*RecordEvent]
 
-	// OnRecordAfterDeleteError is a proxy Record model hook for [OnModelAfterDeleteError].
+	// OnRecordAfterDeleteError is a Record proxy model hook of [OnModelAfterDeleteError].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -1029,7 +1034,7 @@ type App interface {
 	// Collection models event hooks
 	// ---------------------------------------------------------------
 
-	// OnCollectionValidate is a proxy Collection model hook for [OnModelValidate].
+	// OnCollectionValidate is a Collection proxy model hook of [OnModelValidate].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -1038,28 +1043,28 @@ type App interface {
 
 	// ---------------------------------------------------------------
 
-	// OnCollectionCreate is a proxy Collection model hook for [OnModelCreate].
+	// OnCollectionCreate is a Collection proxy model hook of [OnModelCreate].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionCreate(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionCreateExecute is a proxy Collection model hook for [OnModelCreateExecute].
+	// OnCollectionCreateExecute is a Collection proxy model hook of [OnModelCreateExecute].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionCreateExecute(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionAfterCreateSuccess is a proxy Collection model hook for [OnModelAfterCreateSuccess].
+	// OnCollectionAfterCreateSuccess is a Collection proxy model hook of [OnModelAfterCreateSuccess].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionAfterCreateSuccess(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionAfterCreateError is a proxy Collection model hook for [OnModelAfterCreateError].
+	// OnCollectionAfterCreateError is a Collection proxy model hook of [OnModelAfterCreateError].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -1068,28 +1073,28 @@ type App interface {
 
 	// ---------------------------------------------------------------
 
-	// OnCollectionUpdate is a proxy Collection model hook for [OnModelUpdate].
+	// OnCollectionUpdate is a Collection proxy model hook of [OnModelUpdate].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionUpdate(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionUpdateExecute is a proxy Collection model hook for [OnModelUpdateExecute].
+	// OnCollectionUpdateExecute is a Collection proxy model hook of [OnModelUpdateExecute].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionUpdateExecute(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionAfterUpdateSuccess is a proxy Collection model hook for [OnModelAfterUpdateSuccess].
+	// OnCollectionAfterUpdateSuccess is a Collection proxy model hook of [OnModelAfterUpdateSuccess].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionAfterUpdateSuccess(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionAfterUpdateError is a proxy Collection model hook for [OnModelAfterUpdateError].
+	// OnCollectionAfterUpdateError is a Collection proxy model hook of [OnModelAfterUpdateError].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -1098,28 +1103,28 @@ type App interface {
 
 	// ---------------------------------------------------------------
 
-	// OnCollectionDelete is a proxy Collection model hook for [OnModelDelete].
+	// OnCollectionDelete is a Collection proxy model hook of [OnModelDelete].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionDelete(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionDeleteExecute is a proxy Collection model hook for [OnModelDeleteExecute].
+	// OnCollectionDeleteExecute is a Collection proxy model hook of [OnModelDeleteExecute].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionDeleteExecute(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionAfterDeleteSuccess is a proxy Collection model hook for [OnModelAfterDeleteSuccess].
+	// OnCollectionAfterDeleteSuccess is a Collection proxy model hook of [OnModelAfterDeleteSuccess].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.
 	OnCollectionAfterDeleteSuccess(tags ...string) *hook.TaggedHook[*CollectionEvent]
 
-	// OnCollectionAfterDeleteError is a proxy Collection model hook for [OnModelAfterDeleteError].
+	// OnCollectionAfterDeleteError is a Collection proxy model hook of [OnModelAfterDeleteError].
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -1131,7 +1136,7 @@ type App interface {
 	// ---------------------------------------------------------------
 
 	// OnMailerSend hook is triggered every time when a new email is
-	// being send using the App.NewMailClient() instance.
+	// being send using the [App.NewMailClient()] instance.
 	//
 	// It allows intercepting the email message or to use a custom mailer client.
 	OnMailerSend() *hook.Hook[*MailerEvent]
@@ -1187,7 +1192,7 @@ type App interface {
 
 	// OnRealtimeConnectRequest hook is triggered when establishing the SSE client connection.
 	//
-	// Any execution after [e.Next()] of a hook handler happens after the client disconnects.
+	// Any execution after e.Next() of a hook handler happens after the client disconnects.
 	OnRealtimeConnectRequest() *hook.Hook[*RealtimeConnectRequestEvent]
 
 	// OnRealtimeMessageSend hook is triggered when sending an SSE message to a client.
@@ -1216,7 +1221,7 @@ type App interface {
 	// OnSettingsReload hook is triggered every time when the App.Settings()
 	// is being replaced with a new state.
 	//
-	// Calling App.Settings() after e.Next() should return the new state.
+	// Calling App.Settings() after e.Next() returns the new state.
 	OnSettingsReload() *hook.Hook[*SettingsReloadEvent]
 
 	// ---------------------------------------------------------------
@@ -1229,8 +1234,12 @@ type App interface {
 	// returning it to the client.
 	OnFileDownloadRequest(tags ...string) *hook.TaggedHook[*FileDownloadRequestEvent]
 
-	// OnFileBeforeTokenRequest hook is triggered on each file token API request.
-	OnFileTokenRequest() *hook.Hook[*FileTokenRequestEvent]
+	// OnFileBeforeTokenRequest hook is triggered on each auth file token API request.
+	//
+	// If the optional "tags" list (Collection ids or names) is specified,
+	// then all event handlers registered via the created hook will be
+	// triggered and called only if their event data origin matches the tags.
+	OnFileTokenRequest(tags ...string) *hook.TaggedHook[*FileTokenRequestEvent]
 
 	// ---------------------------------------------------------------
 	// Record Auth API event hooks
@@ -1250,9 +1259,8 @@ type App interface {
 	// OnRecordAuthWithPasswordRequest hook is triggered on each
 	// Record auth with password API request.
 	//
-	// RecordAuthWithPasswordRequestEvent.Record could be nil if no
-	// matching identity is found, allowing you to manually locate a different
-	// Record model (by reassigning [RecordAuthWithPasswordRequestEvent.Record]).
+	// [RecordAuthWithPasswordRequestEvent.Record] could be nil if no matching identity is found, allowing
+	// you to manually locate a different Record model (by reassigning [RecordAuthWithPasswordRequestEvent.Record]).
 	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
@@ -1262,7 +1270,7 @@ type App interface {
 	// OnRecordAuthWithOAuth2Request hook is triggered on each Record
 	// OAuth2 sign-in/sign-up API request (after token exchange and before external provider linking).
 	//
-	// If the [RecordAuthWithOAuth2RequestEvent.Record] is not set, then the OAuth2
+	// If [RecordAuthWithOAuth2RequestEvent.Record] is not set, then the OAuth2
 	// request will try to create a new auth Record.
 	//
 	// To assign or link a different existing record model you can

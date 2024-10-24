@@ -147,7 +147,7 @@ func recordView(e *core.RequestEvent) error {
 	})
 }
 
-func recordCreate(optFinalizer func() error) func(e *core.RequestEvent) error {
+func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
 		if err != nil || collection == nil {
@@ -278,7 +278,7 @@ func recordCreate(optFinalizer func() error) func(e *core.RequestEvent) error {
 
 			if optFinalizer != nil {
 				isOptFinalizerCalled = true
-				err = optFinalizer()
+				err = optFinalizer(e.Record)
 				if err != nil {
 					return firstApiError(err, e.InternalServerError("", err))
 				}
@@ -292,7 +292,7 @@ func recordCreate(optFinalizer func() error) func(e *core.RequestEvent) error {
 
 		// e.g. in case the regular hook chain was stopped and the finalizer cannot be executed as part of the last e.Next() task
 		if !isOptFinalizerCalled && optFinalizer != nil {
-			if err := optFinalizer(); err != nil {
+			if err := optFinalizer(event.Record); err != nil {
 				return firstApiError(err, e.InternalServerError("", err))
 			}
 		}
@@ -301,7 +301,7 @@ func recordCreate(optFinalizer func() error) func(e *core.RequestEvent) error {
 	}
 }
 
-func recordUpdate(optFinalizer func() error) func(e *core.RequestEvent) error {
+func recordUpdate(optFinalizer func(data any) error) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
 		if err != nil || collection == nil {
@@ -404,7 +404,7 @@ func recordUpdate(optFinalizer func() error) func(e *core.RequestEvent) error {
 
 			if optFinalizer != nil {
 				isOptFinalizerCalled = true
-				err = optFinalizer()
+				err = optFinalizer(e.Record)
 				if err != nil {
 					return firstApiError(err, e.InternalServerError("", fmt.Errorf("update optFinalizer error: %w", err)))
 				}
@@ -418,7 +418,7 @@ func recordUpdate(optFinalizer func() error) func(e *core.RequestEvent) error {
 
 		// e.g. in case the regular hook chain was stopped and the finalizer cannot be executed as part of the last e.Next() task
 		if !isOptFinalizerCalled && optFinalizer != nil {
-			if err := optFinalizer(); err != nil {
+			if err := optFinalizer(event.Record); err != nil {
 				return firstApiError(err, e.InternalServerError("", fmt.Errorf("update optFinalizer error: %w", err)))
 			}
 		}
@@ -427,7 +427,7 @@ func recordUpdate(optFinalizer func() error) func(e *core.RequestEvent) error {
 	}
 }
 
-func recordDelete(optFinalizer func() error) func(e *core.RequestEvent) error {
+func recordDelete(optFinalizer func(data any) error) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
 		if err != nil || collection == nil {
@@ -494,7 +494,7 @@ func recordDelete(optFinalizer func() error) func(e *core.RequestEvent) error {
 
 			if optFinalizer != nil {
 				isOptFinalizerCalled = true
-				err = optFinalizer()
+				err = optFinalizer(e.Record)
 				if err != nil {
 					return firstApiError(err, e.InternalServerError("", fmt.Errorf("delete optFinalizer error: %w", err)))
 				}
@@ -508,7 +508,7 @@ func recordDelete(optFinalizer func() error) func(e *core.RequestEvent) error {
 
 		// e.g. in case the regular hook chain was stopped and the finalizer cannot be executed as part of the last e.Next() task
 		if !isOptFinalizerCalled && optFinalizer != nil {
-			if err := optFinalizer(); err != nil {
+			if err := optFinalizer(event.Record); err != nil {
 				return firstApiError(err, e.InternalServerError("", fmt.Errorf("delete optFinalizer error: %w", err)))
 			}
 		}

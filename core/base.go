@@ -981,8 +981,8 @@ func (app *BaseApp) OnFileDownloadRequest(tags ...string) *hook.TaggedHook[*File
 	return hook.NewTaggedHook(app.onFileDownloadRequest, tags...)
 }
 
-func (app *BaseApp) OnFileTokenRequest() *hook.Hook[*FileTokenRequestEvent] {
-	return app.onFileTokenRequest
+func (app *BaseApp) OnFileTokenRequest(tags ...string) *hook.TaggedHook[*FileTokenRequestEvent] {
+	return hook.NewTaggedHook(app.onFileTokenRequest, tags...)
 }
 
 // -------------------------------------------------------------------

@@ -2,7 +2,6 @@ package apis
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -335,27 +334,19 @@ func sendOAuth2RecordCreateRequest(txApp core.App, e *core.RecordAuthWithOAuth2R
 		Body:   payload,
 	}
 
-	response, err := processInternalRequest(txApp, e.RequestEvent, ir, core.RequestInfoContextOAuth2, nil)
+	var createdRecord *core.Record
+	response, err := processInternalRequest(txApp, e.RequestEvent, ir, core.RequestInfoContextOAuth2, func(data any) error {
+		createdRecord, _ = data.(*core.Record)
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	if response.Status != http.StatusOK {
+	if response.Status != http.StatusOK || createdRecord == nil {
 		return nil, errors.New("failed to create OAuth2 auth record")
 	}
 
-	recordResponse := struct {
-		Id string `json:"id"`
-	}{}
-
-	raw, err := json.Marshal(response.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = json.Unmarshal(raw, &recordResponse); err != nil {
-		return nil, err
-	}
-
-	return txApp.FindRecordById(e.Collection, recordResponse.Id)
+	return createdRecord, nil
 }

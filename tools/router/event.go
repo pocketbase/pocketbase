@@ -345,12 +345,33 @@ func (e *Event) InternalServerError(message string, errData any) *ApiError {
 
 const DefaultMaxMemory = 32 << 20 // 32mb
 
-// Supports the following content-types:
+// BindBody unmarshal the request body into the provided dst.
 //
+// dst must be either a struct pointer or map[string]any.
+//
+// The rules how the body will be scanned depends on the request Content-Type.
+//
+// Currently the following Content-Types are supported:
 //   - application/json
-//   - multipart/form-data
-//   - application/x-www-form-urlencoded
 //   - text/xml, application/xml
+//   - multipart/form-data, application/x-www-form-urlencoded
+//
+// Respectively the following struct tags are supported (again, which one will be used depends on the Content-Type):
+//   - "json" (json body)- uses the builtin Go json package for unmarshaling.
+//   - "xml" (xml body) - uses the builtin Go xml package for unmarshaling.
+//   - "form" (form data) - utilizes the custom [router.UnmarshalRequestData] method.
+//
+// NB! When dst is a struct make sure that it doesn't have public fields
+// that shouldn't be bindable and it is advisible such fields to be unexported
+// or have a separate struct just for the binding. For example:
+//
+//	data := struct{
+//	   somethingPrivate string
+//
+//	   Title string `json:"title" form:"title"`
+//	   Total int    `json:"total" form:"total"`
+//	}
+//	err := e.BindBody(&data)
 func (e *Event) BindBody(dst any) error {
 	if e.Request.ContentLength == 0 {
 		return nil

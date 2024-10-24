@@ -60,6 +60,7 @@ func (api *fileApi) fileToken(e *core.RequestEvent) error {
 	event := new(core.FileTokenRequestEvent)
 	event.RequestEvent = e
 	event.Token = token
+	event.Record = e.Auth
 
 	return e.App.OnFileTokenRequest().Trigger(event, func(e *core.FileTokenRequestEvent) error {
 		return e.JSON(http.StatusOK, map[string]string{

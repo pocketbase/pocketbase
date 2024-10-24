@@ -152,6 +152,7 @@ func TestEnrichRecords(t *testing.T) {
 				`"test@example.com"`,
 				`"expand":{"rel_many"`,
 				`"id":"bgs820n361vj1qd"`,
+				`"id":"4q1xlclmfloku33"`,
 				`"id":"oap640cot4yru2s"`,
 			},
 			notExpected: []string{

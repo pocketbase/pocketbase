@@ -22,12 +22,26 @@ const FieldTypeURL = "url"
 var _ Field = (*URLField)(nil)
 
 // URLField defines "url" type field for storing URL string value.
+//
+// The respective zero record field value is empty string.
 type URLField struct {
-	Id          string `form:"id" json:"id"`
-	Name        string `form:"name" json:"name"`
-	System      bool   `form:"system" json:"system"`
-	Hidden      bool   `form:"hidden" json:"hidden"`
-	Presentable bool   `form:"presentable" json:"presentable"`
+	// Name (required) is the unique name of the field.
+	Name string `form:"name" json:"name"`
+
+	// Id is the unique stable field identifier.
+	//
+	// It is automatically generated from the name when adding to a collection FieldsList.
+	Id string `form:"id" json:"id"`
+
+	// System prevents the renaming and removal of the field.
+	System bool `form:"system" json:"system"`
+
+	// Hidden hides the field from the API response.
+	Hidden bool `form:"hidden" json:"hidden"`
+
+	// Presentable hints the Dashboard UI to use the underlying
+	// field record value in the relation preview label.
+	Presentable bool `form:"presentable" json:"presentable"`
 
 	// ---
 
