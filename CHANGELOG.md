@@ -1,4 +1,4 @@
-## v0.23.0-rc8 (WIP)
+## v0.23.0-rc8
 
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
@@ -11,7 +11,7 @@
 
 - Added tags support for the `OnRecordFileToken` hook.
 
-- Added more detailed godoc for the collection fields and `core.App`.
+- Other minor changes (added index for the `_collections` type column, added more detailed godoc for the collection fields and `core.App` methods, fixed flaky record enrich tests, etc.).
 
 
 ## v0.23.0-rc7
