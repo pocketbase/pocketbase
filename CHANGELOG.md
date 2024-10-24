@@ -1,3 +1,19 @@
+## v0.23.0-rc8 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Lock the `_otps` and `_mfas` system collections Delete API rule for superusers only.
+
+- Reassign in the JSVM executors the global `$app` variable with the hook scoped `e.app` value to minimize the risk of a deadlock when a hook or middleware is wrapped in a transaction.
+
+- Reuse the OAuth2 created user record pointer to ensure that all its following hooks operate on the same record instance.
+
+- Added tags support for the `OnRecordFileToken` hook.
+
+- Added more detailed godoc for the collection fields and `core.App`.
+
+
 ## v0.23.0-rc7
 
 > [!CAUTION]

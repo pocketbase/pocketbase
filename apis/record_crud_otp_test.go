@@ -170,12 +170,12 @@ func TestRecordCrudOTPDelete(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			ExpectedStatus:  404,
+			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:   "non-owner",
+			Name:   "non-owner auth",
 			Method: http.MethodDelete,
 			URL:    "/api/collections/" + core.CollectionNameOTPs + "/records/user1_0",
 			Headers: map[string]string{
@@ -187,17 +187,34 @@ func TestRecordCrudOTPDelete(t *testing.T) {
 					t.Fatal(err)
 				}
 			},
-			ExpectedStatus:  404,
+			ExpectedStatus:  403,
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:   "owner",
+			Name:   "owner regular auth",
 			Method: http.MethodDelete,
 			URL:    "/api/collections/" + core.CollectionNameOTPs + "/records/user1_0",
 			Headers: map[string]string{
 				// users, test@example.com
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				if err := tests.StubOTPRecords(app); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "superusers auth",
+			Method: http.MethodDelete,
+			URL:    "/api/collections/" + core.CollectionNameOTPs + "/records/user1_0",
+			Headers: map[string]string{
+				// superusers, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiY18zMzIzODY2MzM5IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.v_bMAygr6hXPwD2DpPrFpNQ7dd68Q3pGstmYAsvNBJg",
 			},
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				if err := tests.StubOTPRecords(app); err != nil {

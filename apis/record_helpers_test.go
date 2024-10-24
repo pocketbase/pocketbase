@@ -23,6 +23,14 @@ func TestEnrichRecords(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
+	freshRecords := func(records []*core.Record) []*core.Record {
+		result := make([]*core.Record, len(records))
+		for i, r := range records {
+			result[i] = r.Fresh()
+		}
+		return result
+	}
+
 	user, err := app.FindAuthRecordByEmail("users", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
@@ -77,7 +85,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[emailVisibility] guest",
 			auth:           nil,
-			records:        usersRecords,
+			records:        freshRecords(usersRecords),
 			queryExpand:    "",
 			defaultExpands: nil,
 			expected: []string{
@@ -91,7 +99,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[emailVisibility] owner",
 			auth:           user,
-			records:        usersRecords,
+			records:        freshRecords(usersRecords),
 			queryExpand:    "",
 			defaultExpands: nil,
 			expected: []string{
@@ -103,7 +111,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[emailVisibility] manager",
 			auth:           user,
-			records:        nologinRecords,
+			records:        freshRecords(nologinRecords),
 			queryExpand:    "",
 			defaultExpands: nil,
 			expected: []string{
@@ -115,7 +123,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[emailVisibility] superuser",
 			auth:           superuser,
-			records:        nologinRecords,
+			records:        freshRecords(nologinRecords),
 			queryExpand:    "",
 			defaultExpands: nil,
 			expected: []string{
@@ -127,7 +135,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[emailVisibility + expand] recursive auth rule checks (regular user)",
 			auth:           user,
-			records:        demo1Records,
+			records:        freshRecords(demo1Records),
 			queryExpand:    "",
 			defaultExpands: []string{"rel_many"},
 			expected: []string{
@@ -144,7 +152,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[emailVisibility + expand] recursive auth rule checks (superuser)",
 			auth:           superuser,
-			records:        demo1Records,
+			records:        freshRecords(demo1Records),
 			queryExpand:    "",
 			defaultExpands: []string{"rel_many"},
 			expected: []string{
@@ -164,7 +172,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[expand] guest (query)",
 			auth:           nil,
-			records:        usersRecords,
+			records:        freshRecords(usersRecords),
 			queryExpand:    "rel",
 			defaultExpands: nil,
 			expected: []string{
@@ -180,7 +188,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[expand] guest (default expands)",
 			auth:           nil,
-			records:        usersRecords,
+			records:        freshRecords(usersRecords),
 			queryExpand:    "",
 			defaultExpands: []string{"rel"},
 			expected: []string{
@@ -193,7 +201,7 @@ func TestEnrichRecords(t *testing.T) {
 		{
 			name:           "[expand] @request.context=expand check",
 			auth:           nil,
-			records:        demo5Records,
+			records:        freshRecords(demo5Records),
 			queryExpand:    "rel_one",
 			defaultExpands: []string{"rel_many"},
 			expected: []string{

@@ -217,7 +217,7 @@ declare function sleep(milliseconds: number): void;
  * ` + "```" + `js
  * const records = arrayOf(new Record)
  *
- * $app.dao().recordQuery("articles").limit(10).all(records)
+ * $app.recordQuery("articles").limit(10).all(records)
  * ` + "```" + `
  *
  * @group PocketBase
@@ -279,7 +279,7 @@ declare class Context implements context.Context {
  * Record model class.
  *
  * ` + "```" + `js
- * const collection = $app.dao().findCollectionByNameOrId("article")
+ * const collection = $app.findCollectionByNameOrId("article")
  *
  * const record = new Record(collection, {
  *     title: "Lorem ipsum"

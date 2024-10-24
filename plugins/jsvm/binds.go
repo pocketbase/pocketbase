@@ -55,6 +55,8 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 
 		// register the hook to the loader
 		loader.Set(jsName, func(callback string, tags ...string) {
+			// overwrite the global $app with the hook scoped instance
+			callback = `function(e) { $app = e.app; return (` + callback + `).call(undefined, e) }`
 			pr := goja.MustCompile("", "{("+callback+").apply(undefined, __args)}", true)
 
 			tagsAsValues := make([]reflect.Value, len(tags))
@@ -74,6 +76,7 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 				}
 
 				err := executors.run(func(executor *goja.Runtime) error {
+					executor.Set("$app", goja.Undefined())
 					executor.Set("__args", handlerArgs)
 					res, err := executor.RunProgram(pr)
 					executor.Set("__args", goja.Undefined())
@@ -189,6 +192,7 @@ func wrapHandlerFunc(executors *vmsPool, handler goja.Value) (func(*core.Request
 
 		wrappedHandler := func(e *core.RequestEvent) error {
 			return executors.run(func(executor *goja.Runtime) error {
+				executor.Set("$app", e.App) // overwrite the global $app with the hook scoped instance
 				executor.Set("__args", []any{e})
 				res, err := executor.RunProgram(pr)
 				executor.Set("__args", goja.Undefined())
@@ -245,6 +249,7 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 				Priority: v.priority,
 				Func: func(e *core.RequestEvent) error {
 					return executors.run(func(executor *goja.Runtime) error {
+						executor.Set("$app", e.App) // overwrite the global $app with the hook scoped instance
 						executor.Set("__args", []any{e})
 						res, err := executor.RunProgram(pr)
 						executor.Set("__args", goja.Undefined())
@@ -266,6 +271,7 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 			wrappedMiddlewares[i] = &hook.Handler[*core.RequestEvent]{
 				Func: func(e *core.RequestEvent) error {
 					return executors.run(func(executor *goja.Runtime) error {
+						executor.Set("$app", e.App) // overwrite the global $app with the hook scoped instance
 						executor.Set("__args", []any{e})
 						res, err := executor.RunProgram(pr)
 						executor.Set("__args", goja.Undefined())

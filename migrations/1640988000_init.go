@@ -51,6 +51,8 @@ func init() {
 				[[created]]    TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
 				[[updated]]    TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
 			);
+
+			CREATE INDEX IF NOT EXISTS idx__collections_type on {{_collections}} ([[type]]);
 		`).Execute()
 		if execerr != nil {
 			return fmt.Errorf("_collections exec error: %w", execerr)
@@ -122,7 +124,6 @@ func createMFAsCollection(txApp core.App) error {
 	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
 	col.ListRule = types.Pointer(ownerRule)
 	col.ViewRule = types.Pointer(ownerRule)
-	col.DeleteRule = types.Pointer(ownerRule)
 
 	col.Fields.Add(&core.TextField{
 		Name:     "collectionRef",
@@ -162,7 +163,6 @@ func createOTPsCollection(txApp core.App) error {
 	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
 	col.ListRule = types.Pointer(ownerRule)
 	col.ViewRule = types.Pointer(ownerRule)
-	col.DeleteRule = types.Pointer(ownerRule)
 
 	col.Fields.Add(&core.TextField{
 		Name:     "collectionRef",

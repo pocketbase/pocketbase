@@ -256,21 +256,19 @@ func EnrichRecords(e *core.RequestEvent, records []*core.Record, defaultExpands 
 
 	return triggerRecordEnrichHooks(e.App, info, records, func() error {
 		expands := defaultExpands
-		if param := e.Request.URL.Query().Get(expandQueryParam); param != "" {
+		if param := info.Query[expandQueryParam]; param != "" {
 			expands = append(expands, strings.Split(param, ",")...)
 		}
 
 		err := defaultEnrichRecords(e.App, info, records, expands...)
 		if err != nil {
-			// only log as it is not critical
+			// only log because it is not critical
 			e.App.Logger().Warn("failed to apply default enriching", "error", err)
 		}
 
 		return nil
 	})
 }
-
-var iterate func(record *core.Record) error
 
 type iterator[T any] struct {
 	items []T
@@ -297,6 +295,7 @@ func triggerRecordEnrichHooks(app core.App, requestInfo *core.RequestInfo, recor
 	event.App = app
 	event.RequestInfo = requestInfo
 
+	var iterate func(record *core.Record) error
 	iterate = func(record *core.Record) error {
 		if record == nil {
 			return nil
@@ -350,6 +349,7 @@ func defaultEnrichRecords(app core.App, requestInfo *core.RequestInfo, records [
 
 // expandFetch is the records fetch function that is used to expand related records.
 func expandFetch(app core.App, originalRequestInfo *core.RequestInfo) core.ExpandFetchFunc {
+	// shallow clone the provided request info to set an "expand" context
 	requestInfoClone := *originalRequestInfo
 	requestInfoPtr := &requestInfoClone
 	requestInfoPtr.Context = core.RequestInfoContextExpand
