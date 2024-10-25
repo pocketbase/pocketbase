@@ -9,7 +9,7 @@
 
 - Reuse the OAuth2 created user record pointer to ensure that all its following hooks operate on the same record instance.
 
-- Added tags support for the `OnRecordFileToken` hook.
+- Added tags support for the `OnFileTokenRequest` hook.
 
 - Other minor changes (added index for the `_collections` type column, added more detailed godoc for the collection fields and `core.App` methods, fixed flaky record enrich tests, etc.).
 
