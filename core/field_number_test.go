@@ -178,7 +178,7 @@ func TestNumberFieldValidateValue(t *testing.T) {
 			false,
 		},
 		{
-			"infinitiy",
+			"infinity",
 			&core.NumberField{Name: "test"},
 			func() *core.Record {
 				record := core.NewRecord(collection)
