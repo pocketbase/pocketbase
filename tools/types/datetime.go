@@ -29,11 +29,6 @@ func ParseDateTime(value any) (DateTime, error) {
 	return d, err
 }
 
-// ParseTime creates a new DateTime from the provided time.Time
-func ParseTime(t time.Time) DateTime {
-	return DateTime{t: t}
-}
-
 // DateTime represents a [time.Time] instance in UTC that is wrapped
 // and serialized using the app default date layout.
 type DateTime struct {
