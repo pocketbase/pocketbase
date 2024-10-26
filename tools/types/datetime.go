@@ -16,12 +16,22 @@ func NowDateTime() DateTime {
 	return DateTime{t: time.Now()}
 }
 
+// NewDateTime creates a new DateTime from the provided time.Time
+func NewDateTime(t time.Time) DateTime {
+	return DateTime{t: t}
+}
+
 // ParseDateTime creates a new DateTime from the provided value
 // (could be [cast.ToTime] supported string, [time.Time], etc.).
 func ParseDateTime(value any) (DateTime, error) {
 	d := DateTime{}
 	err := d.Scan(value)
 	return d, err
+}
+
+// ParseTime creates a new DateTime from the provided time.Time
+func ParseTime(t time.Time) DateTime {
+	return DateTime{t: t}
 }
 
 // DateTime represents a [time.Time] instance in UTC that is wrapped
