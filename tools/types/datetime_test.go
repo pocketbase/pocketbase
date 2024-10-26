@@ -17,6 +17,15 @@ func TestNowDateTime(t *testing.T) {
 	}
 }
 
+func TestNewDatetime(t *testing.T) {
+	nowTime := time.Now()
+	nowFormated := nowTime.UTC().Format("2006-01-02 15:04:05")
+	dt := db.NewDateTime(nowTime)
+	if !strings.Contains(dt.String(), nowFormated) {
+		t.Fatalf("Expected %q, got %q", nowFormated, dt.String())
+	}
+}
+
 func TestParseDateTime(t *testing.T) {
 	nowTime := time.Now().UTC()
 	nowDateTime, _ := types.ParseDateTime(nowTime)
