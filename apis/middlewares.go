@@ -246,9 +246,15 @@ func wwwRedirect(redirectHosts []string) *hook.Handler[*core.RequestEvent] {
 			host := e.Request.Host
 
 			if strings.HasPrefix(host, "www.") && list.ExistInSlice(host, redirectHosts) {
+				// note: e.Request.URL.Scheme would be empty
+				schema := "http://"
+				if e.IsTLS() {
+					schema = "https://"
+				}
+
 				return e.Redirect(
 					http.StatusTemporaryRedirect,
-					(e.Request.URL.Scheme + "://" + host[4:] + e.Request.RequestURI),
+					(schema + host[4:] + e.Request.RequestURI),
 				)
 			}
 
