@@ -1,4 +1,5 @@
 <script>
+    import tooltip from "@/actions/tooltip";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
 
     const baseTabs = {
@@ -26,16 +27,16 @@
             label: "Realtime",
             component: import("@/components/collections/docs/RealtimeApiDocs.svelte"),
         },
+        batch: {
+            label: "Batch",
+            component: import("@/components/collections/docs/BatchApiDocs.svelte"),
+        },
     };
 
     const authTabs = {
         "list-auth-methods": {
             label: "List auth methods",
             component: import("@/components/collections/docs/AuthMethodsDocs.svelte"),
-        },
-        refresh: {
-            label: "Auth refresh",
-            component: import("@/components/collections/docs/AuthRefreshDocs.svelte"),
         },
         "auth-with-password": {
             label: "Auth with password",
@@ -48,6 +49,10 @@
         "auth-with-otp": {
             label: "Auth with OTP",
             component: import("@/components/collections/docs/AuthWithOtpDocs.svelte"),
+        },
+        refresh: {
+            label: "Auth refresh",
+            component: import("@/components/collections/docs/AuthRefreshDocs.svelte"),
         },
         verification: {
             label: "Verification",
@@ -71,13 +76,13 @@
     $: if (collection.type === "auth") {
         tabs = Object.assign({}, baseTabs, authTabs);
         if (!collection.passwordAuth.enabled) {
-            delete tabs["auth-with-password"];
+            tabs["auth-with-password"].disabled = true;
         }
         if (!collection.oauth2.enabled) {
-            delete tabs["auth-with-oauth2"];
+            tabs["auth-with-oauth2"].disabled = true;
         }
         if (!collection.otp.enabled) {
-            delete tabs["auth-with-otp"];
+            tabs["auth-with-otp"].disabled = true;
         }
     } else if (collection.type === "view") {
         tabs = Object.assign({}, baseTabs);
@@ -121,14 +126,23 @@
                         <hr class="m-t-sm m-b-sm" />
                     {/if}
 
-                    <button
-                        type="button"
-                        class="sidebar-item"
-                        class:active={activeTab === key}
-                        on:click={() => changeTab(key)}
-                    >
-                        {tab.label}
-                    </button>
+                    {#if tab.disabled}
+                        <div
+                            class="sidebar-item disabled"
+                            use:tooltip={{ position: "left", text: "Not enabled for the collection" }}
+                        >
+                            {tab.label}
+                        </div>
+                    {:else}
+                        <button
+                            type="button"
+                            class="sidebar-item"
+                            class:active={activeTab === key}
+                            on:click={() => changeTab(key)}
+                        >
+                            {tab.label}
+                        </button>
+                    {/if}
                 {/each}
             </nav>
         </aside>

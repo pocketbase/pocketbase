@@ -54,6 +54,11 @@
             background: var(--baseAlt2Color);
             transition-duration: var(--activeAnimationSpeed);
         }
+        &.disabled {
+            cursor: not-allowed;
+            background: none;
+            color: var(--txtDisabledColor);
+        }
     }
 
     &.compact {

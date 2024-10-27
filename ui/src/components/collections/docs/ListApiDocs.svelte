@@ -17,6 +17,8 @@
 
     $: backendAbsUrl = CommonHelper.getApiExampleUrl(ApiClient.baseURL);
 
+    $: dummyRecord = CommonHelper.dummyCollectionRecord(collection);
+
     $: if (collection?.id) {
         responses.push({
             code: 200,
@@ -26,13 +28,10 @@
                     perPage: 30,
                     totalPages: 1,
                     totalItems: 2,
-                    items: [
-                        CommonHelper.dummyCollectionRecord(collection),
-                        CommonHelper.dummyCollectionRecord(collection),
-                    ],
+                    items: [dummyRecord, Object.assign({}, dummyRecord, { id: dummyRecord + "2" })],
                 },
                 null,
-                2
+                2,
             ),
         });
 

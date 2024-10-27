@@ -20,6 +20,10 @@
 <h3 class="m-b-sm">Auth with OTP ({collection.name})</h3>
 <div class="content txt-lg m-b-sm">
     <p>Authenticate with an one-time password (OTP).</p>
+    <p>
+        Note that when requesting an OTP we return an <code>otpId</code> even if a user with the provided email
+        doesn't exist as a very basic enumeration protection.
+    </p>
 </div>
 
 <SdkTabs

@@ -16,7 +16,7 @@
             body: `
                 {
                   "code": 400,
-                  "message": "Failed to authenticate.",
+                  "message": "An error occurred while validating the submitted data.",
                   "data": {
                     "token": {
                       "code": "validation_required",

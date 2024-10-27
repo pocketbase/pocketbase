@@ -16,7 +16,7 @@
             body: `
                 {
                   "code": 400,
-                  "message": "Failed to authenticate.",
+                  "message": "An error occurred while validating the submitted data.",
                   "data": {
                     "newEmail": {
                       "code": "validation_required",
@@ -56,7 +56,7 @@
             /api/collections/<strong>{collection.name}</strong>/request-email-change
         </p>
     </div>
-    <p class="txt-hint txt-sm txt-right">Requires <code>Authorization:TOKEN</code> header</p>
+    <p class="txt-hint txt-sm txt-right">Requires <code>Authorization:TOKEN</code></p>
 </div>
 
 <div class="section-title">Body Parameters</div>

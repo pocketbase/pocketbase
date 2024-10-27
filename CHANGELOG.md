@@ -1,3 +1,13 @@
+## v0.23.0-rc9 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Fixed auto `www.` redirect due to missing schema.
+
+- Update the "API preview" section to include information about the batch api.
+
+
 ## v0.23.0-rc8
 
 > [!CAUTION]

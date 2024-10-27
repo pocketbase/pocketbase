@@ -19,6 +19,16 @@
             code: 200,
             body: isLoading ? "..." : JSON.stringify(authMethods, null, 2),
         },
+        {
+            code: 404,
+            body: `
+                {
+                  "code": 404,
+                  "message": "Missing collection context.",
+                  "data": {}
+                }
+            `,
+        },
     ];
 
     listAuthMethods();

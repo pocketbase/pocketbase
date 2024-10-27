@@ -122,10 +122,13 @@ type collectionAuthOptions struct {
 	// and which OAuth2 providers are allowed.
 	OAuth2 OAuth2Config `form:"oauth2" json:"oauth2"`
 
+	// PasswordAuth defines options related to the collection password authentication.
 	PasswordAuth PasswordAuthConfig `form:"passwordAuth" json:"passwordAuth"`
 
+	// MFA defines options related to the Multi-factor authentication (MFA).
 	MFA MFAConfig `form:"mfa" json:"mfa"`
 
+	// OTP defines options related to the One-time password authentication (OTP).
 	OTP OTPConfig `form:"otp" json:"otp"`
 
 	// Various token configurations
@@ -136,7 +139,7 @@ type collectionAuthOptions struct {
 	VerificationToken  TokenConfig `form:"verificationToken" json:"verificationToken"`
 	FileToken          TokenConfig `form:"fileToken" json:"fileToken"`
 
-	// default email templates
+	// Default email templates
 	// ---
 	VerificationTemplate       EmailTemplate `form:"verificationTemplate" json:"verificationTemplate"`
 	ResetPasswordTemplate      EmailTemplate `form:"resetPasswordTemplate" json:"resetPasswordTemplate"`
