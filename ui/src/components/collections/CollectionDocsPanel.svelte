@@ -75,15 +75,9 @@
 
     $: if (collection.type === "auth") {
         tabs = Object.assign({}, baseTabs, authTabs);
-        if (!collection.passwordAuth.enabled) {
-            tabs["auth-with-password"].disabled = true;
-        }
-        if (!collection.oauth2.enabled) {
-            tabs["auth-with-oauth2"].disabled = true;
-        }
-        if (!collection.otp.enabled) {
-            tabs["auth-with-otp"].disabled = true;
-        }
+        tabs["auth-with-password"].disabled = !collection.passwordAuth.enabled;
+        tabs["auth-with-oauth2"].disabled = !collection.oauth2.enabled;
+        tabs["auth-with-otp"].disabled = !collection.otp.enabled;
     } else if (collection.type === "view") {
         tabs = Object.assign({}, baseTabs);
         delete tabs.create;
