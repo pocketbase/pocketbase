@@ -69,7 +69,7 @@ var (
 //     // []string{"new1_ajkvass.txt", "new2_klhfnwd.txt", "old1.txt", "old2.txt",}
 //     record.Set("+documents", []*filesystem.File{new1, new2})
 //
-//   - "fieldName-" - subtract one or more files from the existing record one. For example:
+//   - "fieldName-" - subtract/delete one or more files from the existing record one. For example:
 //
 //     // []string{"old2.txt",}
 //     record.Set("documents-", "old1.txt")

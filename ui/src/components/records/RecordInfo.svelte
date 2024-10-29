@@ -18,7 +18,7 @@
     <RecordInfoContent {record} />
 
     <a
-        href="#/collections?collectionId={record.collectionId}&recordId={record.id}"
+        href="#/collections?collection={record.collectionId}&recordId={record.id}"
         target="_blank"
         class="inline-flex link-hint"
         rel="noopener noreferrer"

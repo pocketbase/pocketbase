@@ -21,7 +21,7 @@ const FieldTypeEmail = "email"
 
 var _ Field = (*EmailField)(nil)
 
-// EmailField defines "email" type field for storing single email string address.
+// EmailField defines "email" type field for storing a single email string address.
 //
 // The respective zero record field value is empty string.
 type EmailField struct {

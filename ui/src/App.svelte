@@ -139,7 +139,7 @@
                     </div>
                     <hr />
                     <a
-                        href="/collections?collectionId=_pbc_3323866339"
+                        href="/collections?collection=_superusers"
                         class="dropdown-item closable"
                         role="menuitem"
                         use:link

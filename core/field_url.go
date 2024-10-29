@@ -21,7 +21,7 @@ const FieldTypeURL = "url"
 
 var _ Field = (*URLField)(nil)
 
-// URLField defines "url" type field for storing URL string value.
+// URLField defines "url" type field for storing a single URL string value.
 //
 // The respective zero record field value is empty string.
 type URLField struct {

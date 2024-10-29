@@ -22,10 +22,9 @@ function notifyOtherTabs() {
     notifyChannel?.postMessage("reload");
 }
 
-export function changeActiveCollectionById(collectionId) {
+export function changeActiveCollectionByIdOrName(collectionIdOrName) {
     collections.update((list) => {
-        const found = CommonHelper.findByKey(list, "id", collectionId);
-
+        const found = list.find((c) => c.id == collectionIdOrName || c.name == collectionIdOrName);
         if (found) {
             activeCollection.set(found);
         } else if (list.length) {
@@ -73,7 +72,7 @@ export function removeCollection(collection) {
 }
 
 // load all collections
-export async function loadCollections(activeId = null) {
+export async function loadCollections(activeIdOrName = null) {
     isCollectionsLoading.set(true);
 
     try {
@@ -85,11 +84,11 @@ export async function loadCollections(activeId = null) {
 
         collections.set(items);
 
-        const item = activeId && CommonHelper.findByKey(items, "id", activeId);
+        const item = activeIdOrName && items.find((c) => c.id == activeIdOrName || c.name == activeIdOrName);
         if (item) {
             activeCollection.set(item);
         } else if (items.length) {
-            activeCollection.set(items.find((f) => !f.system) || items[0]);
+            activeCollection.set(items.find((c) => !c.system) || items[0]);
         }
 
         refreshProtectedFilesCollectionsCache();

@@ -106,7 +106,7 @@
     }
 
     function getExternalAuthsFilterLink(provider) {
-        return `#/collections?collectionId=_pbc_2951383030&filter=collectionRef%3D%22${newCollection?.id}%22+%26%26+provider%3D%22${provider}%22`;
+        return `#/collections?collection=_externalAuths&filter=collectionRef%3D%22${newCollection?.id}%22+%26%26+provider%3D%22${provider}%22`;
     }
 </script>
 

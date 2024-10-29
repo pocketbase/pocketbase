@@ -13,7 +13,7 @@
     import { hideControls, pageTitle } from "@/stores/app";
     import {
         activeCollection,
-        changeActiveCollectionById,
+        changeActiveCollectionByIdOrName,
         collections,
         isCollectionsLoading,
         loadCollections,
@@ -32,23 +32,31 @@
     let recordsCount;
     let filter = initialQueryParams.get("filter") || "";
     let sort = initialQueryParams.get("sort") || "-@rowid";
-    let selectedCollectionId = initialQueryParams.get("collectionId") || $activeCollection?.id;
+    let selectedCollectionIdOrName = initialQueryParams.get("collection") || $activeCollection?.id;
     let totalCount = 0; // used to manully change the count without the need of reloading the recordsCount component
 
-    loadCollections(selectedCollectionId);
+    loadCollections(selectedCollectionIdOrName);
 
     $: reactiveParams = new URLSearchParams($querystring);
 
+    $: collectionQueryParam = reactiveParams.get("collection");
+
     $: if (
         !$isCollectionsLoading &&
-        reactiveParams.get("collectionId") &&
-        reactiveParams.get("collectionId") != selectedCollectionId
+        collectionQueryParam &&
+        collectionQueryParam != selectedCollectionIdOrName &&
+        collectionQueryParam != $activeCollection?.id &&
+        collectionQueryParam != $activeCollection?.name
     ) {
-        changeActiveCollectionById(reactiveParams.get("collectionId"));
+        changeActiveCollectionByIdOrName(collectionQueryParam);
     }
 
     // reset filter and sort on collection change
-    $: if ($activeCollection?.id && selectedCollectionId != $activeCollection.id) {
+    $: if (
+        $activeCollection?.id &&
+        selectedCollectionIdOrName != $activeCollection.id &&
+        selectedCollectionIdOrName != $activeCollection.name
+    ) {
         reset();
     }
 
@@ -76,7 +84,7 @@
     }
 
     function reset() {
-        selectedCollectionId = $activeCollection?.id;
+        selectedCollectionIdOrName = $activeCollection?.id;
         filter = "";
         sort = "-@rowid";
 
@@ -120,7 +128,7 @@
     function updateQueryParams(extra = {}) {
         const queryParams = Object.assign(
             {
-                collectionId: $activeCollection?.id || "",
+                collection: $activeCollection?.id || "",
                 filter: filter,
                 sort: sort,
             },
