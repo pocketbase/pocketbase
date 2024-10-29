@@ -988,73 +988,73 @@ declare class TestS3FilesystemForm implements forms.TestS3Filesystem {
 // apisBinds
 // -------------------------------------------------------------------
 
-interface ApiError extends apis.ApiError{} // merge
+interface ApiError extends router.ApiError{} // merge
 /**
  * @inheritDoc
  *
  * @group PocketBase
  */
-declare class ApiError implements apis.ApiError {
+declare class ApiError implements router.ApiError {
   constructor(status?: number, message?: string, data?: any)
 }
 
-interface NotFoundError extends apis.ApiError{} // merge
+interface NotFoundError extends router.ApiError{} // merge
 /**
  * NotFounderor returns 404 ApiError.
  *
  * @group PocketBase
  */
-declare class NotFoundError implements apis.ApiError {
+declare class NotFoundError implements router.ApiError {
   constructor(message?: string, data?: any)
 }
 
-interface BadRequestError extends apis.ApiError{} // merge
+interface BadRequestError extends router.ApiError{} // merge
 /**
  * BadRequestError returns 400 ApiError.
  *
  * @group PocketBase
  */
-declare class BadRequestError implements apis.ApiError {
+declare class BadRequestError implements router.ApiError {
   constructor(message?: string, data?: any)
 }
 
-interface ForbiddenError extends apis.ApiError{} // merge
+interface ForbiddenError extends router.ApiError{} // merge
 /**
  * ForbiddenError returns 403 ApiError.
  *
  * @group PocketBase
  */
-declare class ForbiddenError implements apis.ApiError {
+declare class ForbiddenError implements router.ApiError {
   constructor(message?: string, data?: any)
 }
 
-interface UnauthorizedError extends apis.ApiError{} // merge
+interface UnauthorizedError extends router.ApiError{} // merge
 /**
  * UnauthorizedError returns 401 ApiError.
  *
  * @group PocketBase
  */
-declare class UnauthorizedError implements apis.ApiError {
+declare class UnauthorizedError implements router.ApiError {
   constructor(message?: string, data?: any)
 }
 
-interface TooManyRequestsError extends apis.ApiError{} // merge
+interface TooManyRequestsError extends router.ApiError{} // merge
 /**
  * TooManyRequestsError returns 429 ApiError.
  *
  * @group PocketBase
  */
-declare class TooManyRequestsError implements apis.ApiError {
+declare class TooManyRequestsError implements router.ApiError {
   constructor(message?: string, data?: any)
 }
 
-interface InternalServerError extends apis.ApiError{} // merge
+interface InternalServerError extends router.ApiError{} // merge
 /**
  * InternalServerError returns 429 ApiError.
  *
  * @group PocketBase
  */
-declare class InternalServerError implements apis.ApiError {
+declare class InternalServerError implements router.ApiError {
   constructor(message?: string, data?: any)
 }
 

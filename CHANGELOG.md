@@ -9,6 +9,62 @@
 
 - Update the "API preview" section to include information about the batch api.
 
+- Exported `core.DefaultDBConnect` function that could be used as a fallback when initializing custom SQLite drivers and builds.
+
+- ⚠️ No longer loads the `mattn/go-sqlite3` driver by default when building with `CGO_ENABLED=1` to avoid `multiple definition ...` linker errors in case different CGO SQLite drivers or builds are used.
+    This means that no matter of the `CGO_ENABLED` value, now out of the box PocketBase will always use only the pure Go driver ([`modernc.org/sqlite`](https://pkg.go.dev/modernc.org/sqlite)).
+    This will be documented properly in the new website but if you want to continue using `mattn/go-sqlite3` (e.g. because of the icu or other builtin extension) you could register it as follow:
+    ```go
+    package main
+
+    import (
+        "database/sql"
+        "log"
+
+        "github.com/mattn/go-sqlite3"
+        "github.com/pocketbase/dbx"
+        "github.com/pocketbase/pocketbase"
+    )
+
+    func init() {
+        // initialize default PRAGMAs for each new connection
+        sql.Register("pb_sqlite3",
+            &sqlite3.SQLiteDriver{
+                ConnectHook: func(conn *sqlite3.SQLiteConn) error {
+                    _, err := conn.Exec(`
+                        PRAGMA busy_timeout       = 10000;
+                        PRAGMA journal_mode       = WAL;
+                        PRAGMA journal_size_limit = 200000000;
+                        PRAGMA synchronous        = NORMAL;
+                        PRAGMA foreign_keys       = ON;
+                        PRAGMA temp_store         = MEMORY;
+                        PRAGMA cache_size         = -16000;
+                    `, nil)
+
+                    return err
+                },
+            },
+        )
+
+        dbx.BuilderFuncMap["pb_sqlite3"] = dbx.BuilderFuncMap["sqlite3"]
+    }
+
+    func main() {
+        app := pocketbase.NewWithConfig(pocketbase.Config{
+            DBConnect: func(dbPath string) (*dbx.DB, error) {
+                return dbx.Open("pb_sqlite3", dbPath)
+            },
+        })
+
+        // custom hooks and plugins...
+
+        if err := app.Start(); err != nil {
+            log.Fatal(err)
+        }
+    }
+    ```
+    Also note that if you are not planning to use the `core.DefaultDBConnect` fallback as part of your custom driver registration you can exclude the default pure Go driver from the build with the `-tags nodefaultdriver` build tag to reduce the binary size a little.
+
 
 ## v0.23.0-rc8
 

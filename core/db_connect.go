@@ -1,4 +1,4 @@
-//go:build !cgo
+//go:build !nodefaultdriver
 
 package core
 
@@ -7,7 +7,7 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-func dbConnect(dbPath string) (*dbx.DB, error) {
+func DefaultDBConnect(dbPath string) (*dbx.DB, error) {
 	// Note: the busy_timeout pragma must be first because
 	// the connection needs to be set to block on busy before WAL mode
 	// is set in case it hasn't been already set by another connection.

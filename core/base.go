@@ -202,7 +202,7 @@ func NewBaseApp(config BaseAppConfig) *BaseApp {
 
 	// apply config defaults
 	if app.config.DBConnect == nil {
-		app.config.DBConnect = dbConnect
+		app.config.DBConnect = DefaultDBConnect
 	}
 	if app.config.DataMaxOpenConns <= 0 {
 		app.config.DataMaxOpenConns = DefaultDataMaxOpenConns
