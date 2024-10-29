@@ -503,7 +503,7 @@ func TestCollectionCreate(t *testing.T) {
 				"emailChangeToken":{"duration":123},
 				"fields":[
 					{"type":"text","id":"12345789","name":"test"},
-					{"type":"text","name":"tokenKey","required":false,"min":10}
+					{"type":"text","name":"tokenKey","system":true,"required":false,"min":10}
 				]
 			}`),
 			Headers: map[string]string{
@@ -1409,6 +1409,8 @@ func TestCollectionScaffolds(t *testing.T) {
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
+				`"id":""`,
+				`"name":""`,
 				`"auth":{`,
 				`"base":{`,
 				`"view":{`,

@@ -660,8 +660,13 @@ func onCollectionDeleteExecute(e *CollectionEvent) error {
 // -------------------------------------------------------------------
 
 func (c *Collection) initDefaultId() {
-	if c.Id == "" && c.Name != "" {
-		c.Id = "_pbc_" + crc32Checksum(c.Name)
+	if c.Id == "" {
+		if c.System && c.Name != "" {
+			// for system collections we use crc32 checksum for consistency because they cannot be renamed
+			c.Id = "_pbc_" + crc32Checksum(c.Name)
+		} else {
+			c.Id = "_pbc_" + security.RandomStringWithAlphabet(10, DefaultIdAlphabet)
+		}
 	}
 }
 

@@ -26,7 +26,7 @@ func TestNewCollection(t *testing.T) {
 			"",
 			"",
 			[]string{
-				`"id":""`,
+				`"id":"_pbc_`,
 				`"name":""`,
 				`"type":"base"`,
 				`"system":false`,
@@ -45,7 +45,7 @@ func TestNewCollection(t *testing.T) {
 			"unknown",
 			"test",
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"base"`,
 				`"system":false`,
@@ -64,7 +64,7 @@ func TestNewCollection(t *testing.T) {
 			"base",
 			"test",
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"base"`,
 				`"system":false`,
@@ -83,7 +83,7 @@ func TestNewCollection(t *testing.T) {
 			"view",
 			"test",
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"view"`,
 				`"indexes":[]`,
@@ -100,7 +100,7 @@ func TestNewCollection(t *testing.T) {
 			"auth",
 			"test",
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"auth"`,
 				`"fields":[{`,
@@ -148,7 +148,7 @@ func TestNewBaseCollection(t *testing.T) {
 		{
 			"",
 			[]string{
-				`"id":""`,
+				`"id":"_pbc_`,
 				`"name":""`,
 				`"type":"base"`,
 				`"system":false`,
@@ -166,7 +166,7 @@ func TestNewBaseCollection(t *testing.T) {
 		{
 			"test",
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"base"`,
 				`"system":false`,
@@ -206,7 +206,7 @@ func TestNewViewCollection(t *testing.T) {
 		{
 			"",
 			[]string{
-				`"id":""`,
+				`"id":"_pbc_`,
 				`"name":""`,
 				`"type":"view"`,
 				`"indexes":[]`,
@@ -222,7 +222,7 @@ func TestNewViewCollection(t *testing.T) {
 		{
 			"test",
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"view"`,
 				`"indexes":[]`,
@@ -286,7 +286,7 @@ func TestNewAuthCollection(t *testing.T) {
 		{
 			"test",
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"auth"`,
 				`"fields":[{`,
@@ -498,10 +498,11 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 	defer app.Cleanup()
 
 	scenarios := []struct {
-		name               string
-		raw                string
-		collection         func() *core.Collection
-		expectedCollection func() *core.Collection
+		name        string
+		raw         string
+		collection  func() *core.Collection
+		expected    []string
+		notExpected []string
 	}{
 		{
 			"base new empty",
@@ -509,12 +510,18 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 			func() *core.Collection {
 				return &core.Collection{}
 			},
-			func() *core.Collection {
-				c := core.NewBaseCollection("test")
-				c.ListRule = types.Pointer("1=2")
-				c.AuthRule = types.Pointer("1=3")
-				c.ViewQuery = "abc"
-				return c
+			[]string{
+				`"type":"base"`,
+				`"id":"_pbc_`,
+				`"name":"test"`,
+				`"listRule":"1=2"`,
+				`"fields":[`,
+				`"name":"id"`,
+				`"indexes":[]`,
+			},
+			[]string{
+				`"authRule":"1=3"`,
+				`"viewQuery":"abc"`,
 			},
 		},
 		{
@@ -523,12 +530,17 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 			func() *core.Collection {
 				return &core.Collection{}
 			},
-			func() *core.Collection {
-				c := core.NewViewCollection("test")
-				c.ListRule = types.Pointer("1=2")
-				c.AuthRule = types.Pointer("1=3")
-				c.ViewQuery = "abc"
-				return c
+			[]string{
+				`"type":"view"`,
+				`"id":"_pbc_`,
+				`"name":"test"`,
+				`"listRule":"1=2"`,
+				`"fields":[]`,
+				`"viewQuery":"abc"`,
+				`"indexes":[]`,
+			},
+			[]string{
+				`"authRule":"1=3"`,
 			},
 		},
 		{
@@ -537,12 +549,18 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 			func() *core.Collection {
 				return &core.Collection{}
 			},
-			func() *core.Collection {
-				c := core.NewAuthCollection("test")
-				c.ListRule = types.Pointer("1=2")
-				c.AuthRule = types.Pointer("1=3")
-				c.ViewQuery = "abc"
-				return c
+			[]string{
+				`"type":"auth"`,
+				`"id":"_pbc_`,
+				`"name":"test"`,
+				`"listRule":"1=2"`,
+				`"authRule":"1=3"`,
+				`"fields":[`,
+				`"name":"id"`,
+			},
+			[]string{
+				`"indexes":[]`,
+				`"viewQuery":"abc"`,
 			},
 		},
 		{
@@ -553,14 +571,16 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 				c.Type = core.CollectionTypeBase
 				return c
 			},
-			func() *core.Collection {
-				c := &core.Collection{}
-				c.Type = core.CollectionTypeBase
-				c.Name = "test"
-				c.ListRule = types.Pointer("1=2")
-				c.AuthRule = types.Pointer("1=3")
-				c.ViewQuery = "abc"
-				return c
+			[]string{
+				`"type":"base"`,
+				`"id":""`,
+				`"name":"test"`,
+				`"listRule":"1=2"`,
+				`"fields":[]`,
+			},
+			[]string{
+				`"authRule":"1=3"`,
+				`"viewQuery":"abc"`,
 			},
 		},
 		{
@@ -570,14 +590,17 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 				c, _ := app.FindCollectionByNameOrId("demo1")
 				return c
 			},
-			func() *core.Collection {
-				c, _ := app.FindCollectionByNameOrId("demo1")
-				c.Type = core.CollectionTypeAuth
-				c.Name = "test"
-				c.ListRule = types.Pointer("1=2")
-				c.AuthRule = types.Pointer("1=3")
-				c.ViewQuery = "abc"
-				return c
+			[]string{
+				`"type":"auth"`,
+				`"name":"test"`,
+				`"listRule":"1=2"`,
+				`"authRule":"1=3"`,
+				`"fields":[`,
+				`"name":"id"`,
+			},
+			[]string{
+				`"name":"tokenKey"`,
+				`"viewQuery":"abc"`,
 			},
 		},
 	}
@@ -597,14 +620,16 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 			}
 			rawResultStr := string(rawResult)
 
-			rawExpected, err := json.Marshal(s.expectedCollection())
-			if err != nil {
-				t.Fatal(err)
+			for _, part := range s.expected {
+				if !strings.Contains(rawResultStr, part) {
+					t.Fatalf("Missing expected %q in\n%v", part, rawResultStr)
+				}
 			}
-			rawExpectedStr := string(rawExpected)
 
-			if rawResultStr != rawExpectedStr {
-				t.Fatalf("Expected collection\n%s\ngot\n%s", rawExpectedStr, rawResultStr)
+			for _, part := range s.notExpected {
+				if strings.Contains(rawResultStr, part) {
+					t.Fatalf("Didn't expected %q in\n%v", part, rawResultStr)
+				}
 			}
 		})
 	}
@@ -630,7 +655,7 @@ func TestCollectionSerialize(t *testing.T) {
 				return c
 			},
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"base"`,
 			},
@@ -658,7 +683,7 @@ func TestCollectionSerialize(t *testing.T) {
 				return c
 			},
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"view"`,
 				`"viewQuery":"1=1"`,
@@ -686,7 +711,7 @@ func TestCollectionSerialize(t *testing.T) {
 				return c
 			},
 			[]string{
-				`"id":"_pbc_3632233996"`,
+				`"id":"_pbc_`,
 				`"name":"test"`,
 				`"type":"auth"`,
 				`"oauth2":{`,
@@ -748,19 +773,19 @@ func TestCollectionDBExport(t *testing.T) {
 	}{
 		{
 			"unknown",
-			`{"createRule":"1=3","created":"2024-07-01 01:02:03.456Z","deleteRule":"1=5","fields":[{"hidden":false,"id":"bool597745380","name":"f1","presentable":false,"required":false,"system":true,"type":"bool"},{"hidden":false,"id":"bool3131674462","name":"f2","presentable":false,"required":true,"system":false,"type":"bool"}],"id":"test_id","indexes":["CREATE INDEX idx1 on test_name(id)","CREATE INDEX idx2 on test_name(id)"],"listRule":"1=1","name":"test_name","options":"{}","system":true,"type":"unknown","updateRule":"1=4","updated":"2024-07-01 01:02:03.456Z","viewRule":"1=7"}`,
+			`{"createRule":"1=3","created":"2024-07-01 01:02:03.456Z","deleteRule":"1=5","fields":[{"hidden":false,"id":"f1_id","name":"f1","presentable":false,"required":false,"system":true,"type":"bool"},{"hidden":false,"id":"f2_id","name":"f2","presentable":false,"required":true,"system":false,"type":"bool"}],"id":"test_id","indexes":["CREATE INDEX idx1 on test_name(id)","CREATE INDEX idx2 on test_name(id)"],"listRule":"1=1","name":"test_name","options":"{}","system":true,"type":"unknown","updateRule":"1=4","updated":"2024-07-01 01:02:03.456Z","viewRule":"1=7"}`,
 		},
 		{
 			core.CollectionTypeBase,
-			`{"createRule":"1=3","created":"2024-07-01 01:02:03.456Z","deleteRule":"1=5","fields":[{"hidden":false,"id":"bool597745380","name":"f1","presentable":false,"required":false,"system":true,"type":"bool"},{"hidden":false,"id":"bool3131674462","name":"f2","presentable":false,"required":true,"system":false,"type":"bool"}],"id":"test_id","indexes":["CREATE INDEX idx1 on test_name(id)","CREATE INDEX idx2 on test_name(id)"],"listRule":"1=1","name":"test_name","options":"{}","system":true,"type":"base","updateRule":"1=4","updated":"2024-07-01 01:02:03.456Z","viewRule":"1=7"}`,
+			`{"createRule":"1=3","created":"2024-07-01 01:02:03.456Z","deleteRule":"1=5","fields":[{"hidden":false,"id":"f1_id","name":"f1","presentable":false,"required":false,"system":true,"type":"bool"},{"hidden":false,"id":"f2_id","name":"f2","presentable":false,"required":true,"system":false,"type":"bool"}],"id":"test_id","indexes":["CREATE INDEX idx1 on test_name(id)","CREATE INDEX idx2 on test_name(id)"],"listRule":"1=1","name":"test_name","options":"{}","system":true,"type":"base","updateRule":"1=4","updated":"2024-07-01 01:02:03.456Z","viewRule":"1=7"}`,
 		},
 		{
 			core.CollectionTypeView,
-			`{"createRule":"1=3","created":"2024-07-01 01:02:03.456Z","deleteRule":"1=5","fields":[{"hidden":false,"id":"bool597745380","name":"f1","presentable":false,"required":false,"system":true,"type":"bool"},{"hidden":false,"id":"bool3131674462","name":"f2","presentable":false,"required":true,"system":false,"type":"bool"}],"id":"test_id","indexes":["CREATE INDEX idx1 on test_name(id)","CREATE INDEX idx2 on test_name(id)"],"listRule":"1=1","name":"test_name","options":{"viewQuery":"select 1"},"system":true,"type":"view","updateRule":"1=4","updated":"2024-07-01 01:02:03.456Z","viewRule":"1=7"}`,
+			`{"createRule":"1=3","created":"2024-07-01 01:02:03.456Z","deleteRule":"1=5","fields":[{"hidden":false,"id":"f1_id","name":"f1","presentable":false,"required":false,"system":true,"type":"bool"},{"hidden":false,"id":"f2_id","name":"f2","presentable":false,"required":true,"system":false,"type":"bool"}],"id":"test_id","indexes":["CREATE INDEX idx1 on test_name(id)","CREATE INDEX idx2 on test_name(id)"],"listRule":"1=1","name":"test_name","options":{"viewQuery":"select 1"},"system":true,"type":"view","updateRule":"1=4","updated":"2024-07-01 01:02:03.456Z","viewRule":"1=7"}`,
 		},
 		{
 			core.CollectionTypeAuth,
-			`{"createRule":"1=3","created":"2024-07-01 01:02:03.456Z","deleteRule":"1=5","fields":[{"hidden":false,"id":"bool597745380","name":"f1","presentable":false,"required":false,"system":true,"type":"bool"},{"hidden":false,"id":"bool3131674462","name":"f2","presentable":false,"required":true,"system":false,"type":"bool"}],"id":"test_id","indexes":["CREATE INDEX idx1 on test_name(id)","CREATE INDEX idx2 on test_name(id)"],"listRule":"1=1","name":"test_name","options":{"authRule":null,"manageRule":"1=6","authAlert":{"enabled":false,"emailTemplate":{"subject":"","body":""}},"oauth2":{"providers":null,"mappedFields":{"id":"","name":"","username":"","avatarURL":""},"enabled":false},"passwordAuth":{"enabled":false,"identityFields":null},"mfa":{"enabled":false,"duration":0,"rule":""},"otp":{"enabled":false,"duration":0,"length":0,"emailTemplate":{"subject":"","body":""}},"authToken":{"duration":0},"passwordResetToken":{"duration":0},"emailChangeToken":{"duration":0},"verificationToken":{"duration":0},"fileToken":{"duration":0},"verificationTemplate":{"subject":"","body":""},"resetPasswordTemplate":{"subject":"","body":""},"confirmEmailChangeTemplate":{"subject":"","body":""}},"system":true,"type":"auth","updateRule":"1=4","updated":"2024-07-01 01:02:03.456Z","viewRule":"1=7"}`,
+			`{"createRule":"1=3","created":"2024-07-01 01:02:03.456Z","deleteRule":"1=5","fields":[{"hidden":false,"id":"f1_id","name":"f1","presentable":false,"required":false,"system":true,"type":"bool"},{"hidden":false,"id":"f2_id","name":"f2","presentable":false,"required":true,"system":false,"type":"bool"}],"id":"test_id","indexes":["CREATE INDEX idx1 on test_name(id)","CREATE INDEX idx2 on test_name(id)"],"listRule":"1=1","name":"test_name","options":{"authRule":null,"manageRule":"1=6","authAlert":{"enabled":false,"emailTemplate":{"subject":"","body":""}},"oauth2":{"providers":null,"mappedFields":{"id":"","name":"","username":"","avatarURL":""},"enabled":false},"passwordAuth":{"enabled":false,"identityFields":null},"mfa":{"enabled":false,"duration":0,"rule":""},"otp":{"enabled":false,"duration":0,"length":0,"emailTemplate":{"subject":"","body":""}},"authToken":{"duration":0},"passwordResetToken":{"duration":0},"emailChangeToken":{"duration":0},"verificationToken":{"duration":0},"fileToken":{"duration":0},"verificationTemplate":{"subject":"","body":""},"resetPasswordTemplate":{"subject":"","body":""},"confirmEmailChangeTemplate":{"subject":"","body":""}},"system":true,"type":"auth","updateRule":"1=4","updated":"2024-07-01 01:02:03.456Z","viewRule":"1=7"}`,
 		},
 	}
 
@@ -782,8 +807,8 @@ func TestCollectionDBExport(t *testing.T) {
 			c.Updated = date
 			c.Indexes = types.JSONArray[string]{"CREATE INDEX idx1 on test_name(id)", "CREATE INDEX idx2 on test_name(id)"}
 			c.ViewQuery = "select 1"
-			c.Fields.Add(&core.BoolField{Name: "f1", System: true})
-			c.Fields.Add(&core.BoolField{Name: "f2", Required: true})
+			c.Fields.Add(&core.BoolField{Id: "f1_id", Name: "f1", System: true})
+			c.Fields.Add(&core.BoolField{Id: "f2_id", Name: "f2", Required: true})
 			c.RawOptions = types.JSONRaw(`{"viewQuery": "select 2"}`) // should be ignored
 
 			result, err := c.DBExport(app)

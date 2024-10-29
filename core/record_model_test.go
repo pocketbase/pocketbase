@@ -414,6 +414,8 @@ func TestRecordMergeExpand(t *testing.T) {
 	t.Parallel()
 
 	collection := core.NewBaseCollection("test")
+	collection.Id = "_pbc_123"
+
 	m := core.NewRecord(collection)
 	m.Id = "m"
 
@@ -497,7 +499,7 @@ func TestRecordMergeExpand(t *testing.T) {
 	}
 	rawStr := string(raw)
 
-	expected := `{"a":{"collectionId":"_pbc_3632233996","collectionName":"test","expand":{"a1":{"collectionId":"_pbc_3632233996","collectionName":"test","id":"a1"},"a23":[{"collectionId":"_pbc_3632233996","collectionName":"test","id":"a2"},{"collectionId":"_pbc_3632233996","collectionName":"test","expand":{"a31":{"collectionId":"_pbc_3632233996","collectionName":"test","id":"a31"},"a32":[{"collectionId":"_pbc_3632233996","collectionName":"test","id":"a32"},{"collectionId":"_pbc_3632233996","collectionName":"test","id":"a32New"}],"a33New":{"collectionId":"_pbc_3632233996","collectionName":"test","id":"a33New"}},"id":"a3"}]},"id":"a"},"b":[{"collectionId":"_pbc_3632233996","collectionName":"test","expand":{"b1":{"collectionId":"_pbc_3632233996","collectionName":"test","id":"b1"}},"id":"b"},{"collectionId":"_pbc_3632233996","collectionName":"test","id":"bNew"}],"c":[{"collectionId":"_pbc_3632233996","collectionName":"test","id":"c"}],"dNew":{"collectionId":"_pbc_3632233996","collectionName":"test","id":"dNew"}}`
+	expected := `{"a":{"collectionId":"_pbc_123","collectionName":"test","expand":{"a1":{"collectionId":"_pbc_123","collectionName":"test","id":"a1"},"a23":[{"collectionId":"_pbc_123","collectionName":"test","id":"a2"},{"collectionId":"_pbc_123","collectionName":"test","expand":{"a31":{"collectionId":"_pbc_123","collectionName":"test","id":"a31"},"a32":[{"collectionId":"_pbc_123","collectionName":"test","id":"a32"},{"collectionId":"_pbc_123","collectionName":"test","id":"a32New"}],"a33New":{"collectionId":"_pbc_123","collectionName":"test","id":"a33New"}},"id":"a3"}]},"id":"a"},"b":[{"collectionId":"_pbc_123","collectionName":"test","expand":{"b1":{"collectionId":"_pbc_123","collectionName":"test","id":"b1"}},"id":"b"},{"collectionId":"_pbc_123","collectionName":"test","id":"bNew"}],"c":[{"collectionId":"_pbc_123","collectionName":"test","id":"c"}],"dNew":{"collectionId":"_pbc_123","collectionName":"test","id":"dNew"}}`
 
 	if expected != rawStr {
 		t.Fatalf("Expected \n%v, \ngot \n%v", expected, rawStr)
@@ -508,6 +510,7 @@ func TestRecordMergeExpandNilCheck(t *testing.T) {
 	t.Parallel()
 
 	collection := core.NewBaseCollection("test")
+	collection.Id = "_pbc_123"
 
 	scenarios := []struct {
 		name     string
@@ -517,17 +520,17 @@ func TestRecordMergeExpandNilCheck(t *testing.T) {
 		{
 			"nil expand",
 			nil,
-			`{"collectionId":"_pbc_3632233996","collectionName":"test","id":""}`,
+			`{"collectionId":"_pbc_123","collectionName":"test","id":""}`,
 		},
 		{
 			"empty expand",
 			map[string]any{},
-			`{"collectionId":"_pbc_3632233996","collectionName":"test","id":""}`,
+			`{"collectionId":"_pbc_123","collectionName":"test","id":""}`,
 		},
 		{
 			"non-empty expand",
 			map[string]any{"test": core.NewRecord(collection)},
-			`{"collectionId":"_pbc_3632233996","collectionName":"test","expand":{"test":{"collectionId":"_pbc_3632233996","collectionName":"test","id":""}},"id":""}`,
+			`{"collectionId":"_pbc_123","collectionName":"test","expand":{"test":{"collectionId":"_pbc_123","collectionName":"test","id":""}},"id":""}`,
 		},
 	}
 
@@ -1308,9 +1311,11 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 	f5 := &core.TextField{Name: "field5", Hidden: true}
 
 	colBase := core.NewBaseCollection("test_base")
+	colBase.Id = "_pbc_base_123"
 	colBase.Fields.Add(f1, f2, f3, f4, f5)
 
 	colAuth := core.NewAuthCollection("test_auth")
+	colAuth.Id = "_pbc_auth_123"
 	colAuth.Fields.Add(f1, f2, f3, f4, f5)
 
 	scenarios := []struct {
@@ -1330,7 +1335,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			false,
 			nil,
 			nil,
-			`{"collectionId":"_pbc_3318600878","collectionName":"test_base","expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id"}`,
+			`{"collectionId":"_pbc_base_123","collectionName":"test_base","expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id"}`,
 		},
 		{
 			"[base] with email visibility",
@@ -1339,7 +1344,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			false,
 			nil,
 			nil,
-			`{"collectionId":"_pbc_3318600878","collectionName":"test_base","expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id"}`,
+			`{"collectionId":"_pbc_base_123","collectionName":"test_base","expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id"}`,
 		},
 		{
 			"[base] with custom data",
@@ -1348,7 +1353,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			true,
 			nil,
 			nil,
-			`{"collectionId":"_pbc_3318600878","collectionName":"test_base","email":"test_email","emailVisibility":"test_invalid","expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id","password":"test_passwordHash","tokenKey":"test_tokenKey","unknown":"test_unknown","verified":true}`,
+			`{"collectionId":"_pbc_base_123","collectionName":"test_base","email":"test_email","emailVisibility":"test_invalid","expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id","password":"test_passwordHash","tokenKey":"test_tokenKey","unknown":"test_unknown","verified":true}`,
 		},
 		{
 			"[base] with explicit hide and unhide fields",
@@ -1366,7 +1371,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			true,
 			nil,
 			[]string{"field5", "@pbInternalAbc", "email", "tokenKey", "unknown"},
-			`{"collectionId":"_pbc_3318600878","collectionName":"test_base","email":"test_email","emailVisibility":"test_invalid","expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"field5":"field_5","id":"test_id","password":"test_passwordHash","tokenKey":"test_tokenKey","unknown":"test_unknown","verified":true}`,
+			`{"collectionId":"_pbc_base_123","collectionName":"test_base","email":"test_email","emailVisibility":"test_invalid","expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"field5":"field_5","id":"test_id","password":"test_passwordHash","tokenKey":"test_tokenKey","unknown":"test_unknown","verified":true}`,
 		},
 
 		// auth
@@ -1377,7 +1382,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			false,
 			nil,
 			nil,
-			`{"collectionId":"_pbc_4255619734","collectionName":"test_auth","emailVisibility":false,"expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id","verified":true}`,
+			`{"collectionId":"_pbc_auth_123","collectionName":"test_auth","emailVisibility":false,"expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id","verified":true}`,
 		},
 		{
 			"[auth] with email visibility",
@@ -1386,7 +1391,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			false,
 			nil,
 			nil,
-			`{"collectionId":"_pbc_4255619734","collectionName":"test_auth","email":"test_email","emailVisibility":false,"expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id","verified":true}`,
+			`{"collectionId":"_pbc_auth_123","collectionName":"test_auth","email":"test_email","emailVisibility":false,"expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id","verified":true}`,
 		},
 		{
 			"[auth] with custom data",
@@ -1395,7 +1400,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			true,
 			nil,
 			nil,
-			`{"collectionId":"_pbc_4255619734","collectionName":"test_auth","emailVisibility":false,"expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id","unknown":"test_unknown","verified":true}`,
+			`{"collectionId":"_pbc_auth_123","collectionName":"test_auth","emailVisibility":false,"expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"id":"test_id","unknown":"test_unknown","verified":true}`,
 		},
 		{
 			"[auth] with explicit hide and unhide fields",
@@ -1413,7 +1418,7 @@ func TestRecordPublicExportAndMarshalJSON(t *testing.T) {
 			true,
 			nil,
 			[]string{"field5", "@pbInternalAbc", "tokenKey", "unknown", "email"}, // emailVisibility:false has higher priority
-			`{"collectionId":"_pbc_4255619734","collectionName":"test_auth","emailVisibility":false,"expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"field5":"field_5","id":"test_id","unknown":"test_unknown","verified":true}`,
+			`{"collectionId":"_pbc_auth_123","collectionName":"test_auth","emailVisibility":false,"expand":{"test":123},"field1":"field_1","field2":"field_2.png","field3":["test1","test2"],"field5":"field_5","id":"test_id","unknown":"test_unknown","verified":true}`,
 		},
 	}
 

@@ -108,13 +108,13 @@ func (l *FieldsList) RemoveByName(fieldName string) {
 
 // Add adds one or more fields to the current list.
 //
-// If any of the new fields doesn't have an id it will try to set a
-// default one based on its type and name.
+// By default this method will try to REPLACE existing fields with
+// the new ones by their id or by their name if the new field doesn't have an explicit id.
 //
-// If the list already has a field with the same id,
-// then the existing field is replaced with the new one.
+// If no matching existing field is found, it will APPEND the field to the end of the list.
 //
-// Otherwise the new field is appended after the other list fields.
+// In all cases, if any of the new fields don't have an explicit id it will auto generate a default one for them
+// (the id value doesn't really matter and it is mostly used as a stable identifier in case of a field rename).
 func (l *FieldsList) Add(fields ...Field) {
 	for _, f := range fields {
 		l.add(f)
@@ -124,7 +124,9 @@ func (l *FieldsList) Add(fields ...Field) {
 // AddMarshaledJSON parses the provided raw json data and adds the
 // found fields into the current list (following the same rule as the Add method).
 //
-// rawJSON could be either a serialized array of field objects or a single field object.
+// The rawJSON argument could be one of:
+//   - serialized array of field objects
+//   - single field object.
 //
 // Example:
 //
@@ -160,29 +162,41 @@ func (l *FieldsList) AddMarshaledJSON(rawJSON []byte) error {
 }
 
 func (l *FieldsList) add(newField Field) {
+	fields := *l
+
+	var replaceByName bool
+
 	newFieldId := newField.GetId()
 
 	// set default id
 	if newFieldId == "" {
-		if newField.GetName() != "" {
+		replaceByName = true
+		if newField.GetSystem() && newField.GetName() != "" {
+			// for system fields we use crc32 checksum for consistency because they cannot be renamed
 			newFieldId = newField.Type() + crc32Checksum(newField.GetName())
 		} else {
-			newFieldId = newField.Type() + security.RandomString(5)
+			newFieldId = newField.Type() + security.RandomString(7)
 		}
-		newField.SetId(newFieldId)
 	}
 
-	fields := *l
-
+	// replace existing
 	for i, field := range fields {
-		// replace existing
-		if newFieldId != "" && field.GetId() == newFieldId {
-			(*l)[i] = newField
-			return
+		if replaceByName {
+			if name := newField.GetName(); name != "" && field.GetName() == name {
+				newField.SetId(field.GetId())
+				(*l)[i] = newField
+				return
+			}
+		} else {
+			if field.GetId() == newFieldId {
+				(*l)[i] = newField
+				return
+			}
 		}
 	}
 
 	// add new field
+	newField.SetId(newFieldId)
 	*l = append(fields, newField)
 }
 

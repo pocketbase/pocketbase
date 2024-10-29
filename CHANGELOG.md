@@ -3,7 +3,9 @@
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
-- Fixed auto `www.` redirect due to missing schema.
+- Fixed auto `www.` redirect due to missing URI schema.
+
+- Fixed collection and field renaming when reusing an old collection/field name ([#5741](https://github.com/pocketbase/pocketbase/issues/5741)).
 
 - Update the "API preview" section to include information about the batch api.
 

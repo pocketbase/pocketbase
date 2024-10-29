@@ -3,12 +3,14 @@ package migratecmd_test
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -49,7 +51,7 @@ migrate((app) => {
       {
         "autogeneratePattern": "[a-z0-9]{15}",
         "hidden": false,
-        "id": "text3208210256",
+        "id": "text@TEST_RANDOM",
         "max": 15,
         "min": 15,
         "name": "id",
@@ -63,7 +65,7 @@ migrate((app) => {
       {
         "cost": 0,
         "hidden": true,
-        "id": "password901924565",
+        "id": "password@TEST_RANDOM",
         "max": 0,
         "min": 8,
         "name": "password",
@@ -76,7 +78,7 @@ migrate((app) => {
       {
         "autogeneratePattern": "[a-zA-Z0-9]{50}",
         "hidden": true,
-        "id": "text2504183744",
+        "id": "text@TEST_RANDOM",
         "max": 60,
         "min": 30,
         "name": "tokenKey",
@@ -90,7 +92,7 @@ migrate((app) => {
       {
         "exceptDomains": null,
         "hidden": false,
-        "id": "email3885137012",
+        "id": "email@TEST_RANDOM",
         "name": "email",
         "onlyDomains": null,
         "presentable": false,
@@ -100,7 +102,7 @@ migrate((app) => {
       },
       {
         "hidden": false,
-        "id": "bool1547992806",
+        "id": "bool@TEST_RANDOM",
         "name": "emailVisibility",
         "presentable": false,
         "required": false,
@@ -109,7 +111,7 @@ migrate((app) => {
       },
       {
         "hidden": false,
-        "id": "bool256245529",
+        "id": "bool@TEST_RANDOM",
         "name": "verified",
         "presentable": false,
         "required": false,
@@ -120,11 +122,11 @@ migrate((app) => {
     "fileToken": {
       "duration": 180
     },
-    "id": "_pbc_2865679067",
+    "id": "@TEST_RANDOM",
     "indexes": [
       "create index test on new_name (id)",
-      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey__pbc_2865679067` + "`" + ` ON ` + "`" + `new_name` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
-      "CREATE UNIQUE INDEX ` + "`" + `idx_email__pbc_2865679067` + "`" + ` ON ` + "`" + `new_name` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
+      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey_@TEST_RANDOM` + "`" + ` ON ` + "`" + `new_name` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_email_@TEST_RANDOM` + "`" + ` ON ` + "`" + `new_name` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
     ],
     "listRule": "@request.auth.id != '' && 1 > 0 || 'backtick` + "`" + `test' = 0",
     "manageRule": "1 != 2",
@@ -180,7 +182,7 @@ migrate((app) => {
 
   return app.save(collection);
 }, (app) => {
-  const collection = app.findCollectionByNameOrId("_pbc_2865679067");
+  const collection = app.findCollectionByNameOrId("@TEST_RANDOM");
 
   return app.delete(collection);
 })
@@ -225,7 +227,7 @@ func init() {
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
 					"hidden": false,
-					"id": "text3208210256",
+					"id": "text@TEST_RANDOM",
 					"max": 15,
 					"min": 15,
 					"name": "id",
@@ -239,7 +241,7 @@ func init() {
 				{
 					"cost": 0,
 					"hidden": true,
-					"id": "password901924565",
+					"id": "password@TEST_RANDOM",
 					"max": 0,
 					"min": 8,
 					"name": "password",
@@ -252,7 +254,7 @@ func init() {
 				{
 					"autogeneratePattern": "[a-zA-Z0-9]{50}",
 					"hidden": true,
-					"id": "text2504183744",
+					"id": "text@TEST_RANDOM",
 					"max": 60,
 					"min": 30,
 					"name": "tokenKey",
@@ -266,7 +268,7 @@ func init() {
 				{
 					"exceptDomains": null,
 					"hidden": false,
-					"id": "email3885137012",
+					"id": "email@TEST_RANDOM",
 					"name": "email",
 					"onlyDomains": null,
 					"presentable": false,
@@ -276,7 +278,7 @@ func init() {
 				},
 				{
 					"hidden": false,
-					"id": "bool1547992806",
+					"id": "bool@TEST_RANDOM",
 					"name": "emailVisibility",
 					"presentable": false,
 					"required": false,
@@ -285,7 +287,7 @@ func init() {
 				},
 				{
 					"hidden": false,
-					"id": "bool256245529",
+					"id": "bool@TEST_RANDOM",
 					"name": "verified",
 					"presentable": false,
 					"required": false,
@@ -296,11 +298,11 @@ func init() {
 			"fileToken": {
 				"duration": 180
 			},
-			"id": "_pbc_2865679067",
+			"id": "@TEST_RANDOM",
 			"indexes": [
 				"create index test on new_name (id)",
-				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey__pbc_2865679067` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `new_name` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
-				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email__pbc_2865679067` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `new_name` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey_@TEST_RANDOM` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `new_name` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email_@TEST_RANDOM` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `new_name` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
 			],
 			"listRule": "@request.auth.id != '' && 1 > 0 || 'backtick` + "` + \"`\" + `" + `test' = 0",
 			"manageRule": "1 != 2",
@@ -361,7 +363,7 @@ func init() {
 
 		return app.Save(collection)
 	}, func(app core.App) error {
-		collection, err := app.FindCollectionByNameOrId("_pbc_2865679067")
+		collection, err := app.FindCollectionByNameOrId("@TEST_RANDOM")
 		if err != nil {
 			return err
 		}
@@ -434,9 +436,16 @@ func init() {
 			if err != nil {
 				t.Fatalf("Failed to read the generated migration file: %v", err)
 			}
+			contentStr := strings.TrimSpace(string(content))
 
-			if v := strings.TrimSpace(string(content)); v != strings.TrimSpace(s.expectedTemplate) {
-				t.Fatalf("Expected template \n%v \ngot \n%v", s.expectedTemplate, v)
+			// replace @TEST_RANDOM placeholder with a regex pattern
+			expectedTemplate := strings.ReplaceAll(
+				"^"+regexp.QuoteMeta(strings.TrimSpace(s.expectedTemplate))+"$",
+				"@TEST_RANDOM",
+				`\w+`,
+			)
+			if !list.ExistInSliceWithRegex(contentStr, []string{expectedTemplate}) {
+				t.Fatalf("Expected template \n%v \ngot \n%v", s.expectedTemplate, contentStr)
 			}
 		})
 	}
@@ -454,7 +463,7 @@ func TestAutomigrateCollectionDelete(t *testing.T) {
 			`
 /// <reference path="../pb_data/types.d.ts" />
 migrate((app) => {
-  const collection = app.findCollectionByNameOrId("_pbc_4032078523");
+  const collection = app.findCollectionByNameOrId("@TEST_RANDOM");
 
   return app.delete(collection);
 }, (app) => {
@@ -483,7 +492,7 @@ migrate((app) => {
       {
         "autogeneratePattern": "[a-z0-9]{15}",
         "hidden": false,
-        "id": "text3208210256",
+        "id": "text@TEST_RANDOM",
         "max": 15,
         "min": 15,
         "name": "id",
@@ -497,7 +506,7 @@ migrate((app) => {
       {
         "cost": 0,
         "hidden": true,
-        "id": "password901924565",
+        "id": "password@TEST_RANDOM",
         "max": 0,
         "min": 8,
         "name": "password",
@@ -510,7 +519,7 @@ migrate((app) => {
       {
         "autogeneratePattern": "[a-zA-Z0-9]{50}",
         "hidden": true,
-        "id": "text2504183744",
+        "id": "text@TEST_RANDOM",
         "max": 60,
         "min": 30,
         "name": "tokenKey",
@@ -534,7 +543,7 @@ migrate((app) => {
       },
       {
         "hidden": false,
-        "id": "bool1547992806",
+        "id": "bool@TEST_RANDOM",
         "name": "emailVisibility",
         "presentable": false,
         "required": false,
@@ -554,11 +563,11 @@ migrate((app) => {
     "fileToken": {
       "duration": 180
     },
-    "id": "_pbc_4032078523",
+    "id": "@TEST_RANDOM",
     "indexes": [
       "create index test on test123 (id)",
-      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey__pbc_4032078523` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
-      "CREATE UNIQUE INDEX ` + "`" + `idx_email__pbc_4032078523` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
+      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey_@TEST_RANDOM` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_email_@TEST_RANDOM` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
     ],
     "listRule": "@request.auth.id != '' && 1 > 0 || 'backtick` + "`" + `test' = 0",
     "manageRule": "1 != 2",
@@ -630,7 +639,7 @@ import (
 
 func init() {
 	m.Register(func(app core.App) error {
-		collection, err := app.FindCollectionByNameOrId("_pbc_4032078523")
+		collection, err := app.FindCollectionByNameOrId("@TEST_RANDOM")
 		if err != nil {
 			return err
 		}
@@ -662,7 +671,7 @@ func init() {
 				{
 					"autogeneratePattern": "[a-z0-9]{15}",
 					"hidden": false,
-					"id": "text3208210256",
+					"id": "text@TEST_RANDOM",
 					"max": 15,
 					"min": 15,
 					"name": "id",
@@ -676,7 +685,7 @@ func init() {
 				{
 					"cost": 0,
 					"hidden": true,
-					"id": "password901924565",
+					"id": "password@TEST_RANDOM",
 					"max": 0,
 					"min": 8,
 					"name": "password",
@@ -689,7 +698,7 @@ func init() {
 				{
 					"autogeneratePattern": "[a-zA-Z0-9]{50}",
 					"hidden": true,
-					"id": "text2504183744",
+					"id": "text@TEST_RANDOM",
 					"max": 60,
 					"min": 30,
 					"name": "tokenKey",
@@ -713,7 +722,7 @@ func init() {
 				},
 				{
 					"hidden": false,
-					"id": "bool1547992806",
+					"id": "bool@TEST_RANDOM",
 					"name": "emailVisibility",
 					"presentable": false,
 					"required": false,
@@ -733,11 +742,11 @@ func init() {
 			"fileToken": {
 				"duration": 180
 			},
-			"id": "_pbc_4032078523",
+			"id": "@TEST_RANDOM",
 			"indexes": [
 				"create index test on test123 (id)",
-				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
-				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey_@TEST_RANDOM` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email_@TEST_RANDOM` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
 			],
 			"listRule": "@request.auth.id != '' && 1 > 0 || 'backtick` + "` + \"`\" + `" + `test' = 0",
 			"manageRule": "1 != 2",
@@ -859,9 +868,16 @@ func init() {
 			if err != nil {
 				t.Fatalf("Failed to read the generated migration file: %v", err)
 			}
+			contentStr := strings.TrimSpace(string(content))
 
-			if v := strings.TrimSpace(string(content)); v != strings.TrimSpace(s.expectedTemplate) {
-				t.Fatalf("Expected template \n%v \ngot \n%v", s.expectedTemplate, v)
+			// replace @TEST_RANDOM placeholder with a regex pattern
+			expectedTemplate := strings.ReplaceAll(
+				"^"+regexp.QuoteMeta(strings.TrimSpace(s.expectedTemplate))+"$",
+				"@TEST_RANDOM",
+				`\w+`,
+			)
+			if !list.ExistInSliceWithRegex(contentStr, []string{expectedTemplate}) {
+				t.Fatalf("Expected template \n%v \ngot \n%v", s.expectedTemplate, contentStr)
 			}
 		})
 	}
@@ -879,7 +895,7 @@ func TestAutomigrateCollectionUpdate(t *testing.T) {
 			`
 /// <reference path="../pb_data/types.d.ts" />
 migrate((app) => {
-  const collection = app.findCollectionByNameOrId("_pbc_4032078523")
+  const collection = app.findCollectionByNameOrId("@TEST_RANDOM")
 
   // update collection data
   unmarshal({
@@ -890,8 +906,8 @@ migrate((app) => {
     },
     "indexes": [
       "create index test1 on test123_update (f1_name)",
-      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey__pbc_4032078523` + "`" + ` ON ` + "`" + `test123_update` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
-      "CREATE UNIQUE INDEX ` + "`" + `idx_email__pbc_4032078523` + "`" + ` ON ` + "`" + `test123_update` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
+      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey_@TEST_RANDOM` + "`" + ` ON ` + "`" + `test123_update` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_email_@TEST_RANDOM` + "`" + ` ON ` + "`" + `test123_update` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
     ],
     "listRule": "@request.auth.id != ''",
     "name": "test123_update",
@@ -936,7 +952,7 @@ migrate((app) => {
 
   return app.save(collection)
 }, (app) => {
-  const collection = app.findCollectionByNameOrId("_pbc_4032078523")
+  const collection = app.findCollectionByNameOrId("@TEST_RANDOM")
 
   // update collection data
   unmarshal({
@@ -947,8 +963,8 @@ migrate((app) => {
     },
     "indexes": [
       "create index test1 on test123 (f1_name)",
-      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey__pbc_4032078523` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
-      "CREATE UNIQUE INDEX ` + "`" + `idx_email__pbc_4032078523` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
+      "CREATE UNIQUE INDEX ` + "`" + `idx_tokenKey_@TEST_RANDOM` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `tokenKey` + "`" + `)",
+      "CREATE UNIQUE INDEX ` + "`" + `idx_email_@TEST_RANDOM` + "`" + ` ON ` + "`" + `test123` + "`" + ` (` + "`" + `email` + "`" + `) WHERE ` + "`" + `email` + "`" + ` != ''"
     ],
     "listRule": "@request.auth.id != '' && 1 != 2",
     "name": "test123",
@@ -1005,7 +1021,7 @@ import (
 
 func init() {
 	m.Register(func(app core.App) error {
-		collection, err := app.FindCollectionByNameOrId("_pbc_4032078523")
+		collection, err := app.FindCollectionByNameOrId("@TEST_RANDOM")
 		if err != nil {
 			return err
 		}
@@ -1019,8 +1035,8 @@ func init() {
 			},
 			"indexes": [
 				"create index test1 on test123_update (f1_name)",
-				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123_update` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
-				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123_update` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey_@TEST_RANDOM` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123_update` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email_@TEST_RANDOM` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123_update` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
 			],
 			"listRule": "@request.auth.id != ''",
 			"name": "test123_update",
@@ -1071,7 +1087,7 @@ func init() {
 
 		return app.Save(collection)
 	}, func(app core.App) error {
-		collection, err := app.FindCollectionByNameOrId("_pbc_4032078523")
+		collection, err := app.FindCollectionByNameOrId("@TEST_RANDOM")
 		if err != nil {
 			return err
 		}
@@ -1085,8 +1101,8 @@ func init() {
 			},
 			"indexes": [
 				"create index test1 on test123 (f1_name)",
-				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
-				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email__pbc_4032078523` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_tokenKey_@TEST_RANDOM` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `tokenKey` + "` + \"`\" + `" + `)",
+				"CREATE UNIQUE INDEX ` + "` + \"`\" + `" + `idx_email_@TEST_RANDOM` + "` + \"`\" + `" + ` ON ` + "` + \"`\" + `" + `test123` + "` + \"`\" + `" + ` (` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + `) WHERE ` + "` + \"`\" + `" + `email` + "` + \"`\" + `" + ` != ''"
 			],
 			"listRule": "@request.auth.id != '' && 1 != 2",
 			"name": "test123",
@@ -1240,9 +1256,16 @@ func init() {
 			if err != nil {
 				t.Fatalf("Failed to read the generated migration file: %v", err)
 			}
+			contentStr := strings.TrimSpace(string(content))
 
-			if v := strings.TrimSpace(string(content)); v != strings.TrimSpace(s.expectedTemplate) {
-				t.Fatalf("Expected template \n%v \ngot \n%v", s.expectedTemplate, v)
+			// replace @TEST_RANDOM placeholder with a regex pattern
+			expectedTemplate := strings.ReplaceAll(
+				"^"+regexp.QuoteMeta(strings.TrimSpace(s.expectedTemplate))+"$",
+				"@TEST_RANDOM",
+				`\w+`,
+			)
+			if !list.ExistInSliceWithRegex(contentStr, []string{expectedTemplate}) {
+				t.Fatalf("Expected template \n%v \ngot \n%v", s.expectedTemplate, contentStr)
 			}
 		})
 	}

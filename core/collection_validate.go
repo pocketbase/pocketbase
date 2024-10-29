@@ -416,6 +416,10 @@ func (validator *collectionValidator) ensureNoSystemFieldsChange(value any) erro
 		return validators.ErrUnsupportedValueType
 	}
 
+	if validator.original.IsNew() {
+		return nil // not an update
+	}
+
 	for _, oldField := range validator.original.Fields {
 		if !oldField.GetSystem() {
 			continue
