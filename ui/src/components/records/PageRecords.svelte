@@ -88,9 +88,9 @@
         filter = "";
         sort = "-@rowid";
 
-        updateQueryParams({ recordId: null });
-
         normalizeSort();
+
+        updateQueryParams({ recordId: null });
 
         // close any open collection panels
         collectionUpsertPanel?.forceHide();

@@ -4,7 +4,7 @@
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import RecordFieldValue from "@/components/records/RecordFieldValue.svelte";
-    import { collections } from "@/stores/collections";
+    import { collections, isCollectionsLoading } from "@/stores/collections";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
     import ApiClient from "@/utils/ApiClient";
@@ -56,7 +56,7 @@
 
     $: visibleFields = fields.filter((f) => !hiddenColumns.includes(f.id));
 
-    $: if (collection?.id && sort !== -1 && filter !== -1) {
+    $: if (!$isCollectionsLoading && collection?.id && sort !== -1 && filter !== -1) {
         load(1);
     }
 
