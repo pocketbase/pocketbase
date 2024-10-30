@@ -28,7 +28,7 @@ export function changeActiveCollectionByIdOrName(collectionIdOrName) {
         if (found) {
             activeCollection.set(found);
         } else if (list.length) {
-            activeCollection.set(list[0]);
+            activeCollection.set(list.find((c) => !c.system) || list[0]);
         }
 
         return list;
@@ -58,7 +58,7 @@ export function removeCollection(collection) {
 
         activeCollection.update((current) => {
             if (current.id === collection.id) {
-                return list[0];
+                return list.find((c) => !c.system) || list[0];
             }
             return current;
         });
