@@ -25,6 +25,7 @@
         if (!record) {
             return;
         }
+        reset();
         panel?.show();
     }
 
@@ -81,6 +82,7 @@
         </div>
 
         <SdkTabs
+            class="m-b-0"
             js={`
                 import PocketBase from 'pocketbase';
 
@@ -102,12 +104,14 @@
         />
     {:else}
         <form id={formId} on:submit|preventDefault={submit}>
-            <p>
-                Generate a non-refreshable auth token for
-                <strong>{CommonHelper.displayValue(record)}:</strong>
-            </p>
+            <div class="content">
+                <p>
+                    Generate a non-refreshable auth token for
+                    <strong>{CommonHelper.displayValue(record)}:</strong>
+                </p>
+            </div>
 
-            <Field class="form-field m-b-0 m-t-sm" name="duration" let:uniqueId>
+            <Field class="form-field m-b-xs m-t-sm" name="duration" let:uniqueId>
                 <label for={uniqueId}>Token duration (in seconds)</label>
                 <input
                     type="number"
