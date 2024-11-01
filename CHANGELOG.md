@@ -63,7 +63,7 @@
         }
     }
     ```
-    Also note that if you are not planning to use the `core.DefaultDBConnect` fallback as part of your custom driver registration you can exclude the default pure Go driver from the build with the `-tags nodefaultdriver` build tag to reduce the binary size a little.
+    Also note that if you are not planning to use the `core.DefaultDBConnect` fallback as part of your custom driver registration you can exclude the default pure Go driver from the build with the build tag `-tags no_default_driver` to reduce the binary size a little.
 
 - Other minor UI improvements (updated the impersonate popup styles, added query param support for loading a collection based on its name, etc.).
 
