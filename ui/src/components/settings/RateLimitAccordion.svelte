@@ -1,12 +1,13 @@
 <script>
+    import { scale } from "svelte/transition";
     import tooltip from "@/actions/tooltip";
+    import CommonHelper from "@/utils/CommonHelper";
     import Accordion from "@/components/base/Accordion.svelte";
     import Field from "@/components/base/Field.svelte";
     import AutocompleteInput from "@/components/base/AutocompleteInput.svelte";
+    import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import { errors, setErrors } from "@/stores/errors";
     import { collections, loadCollections } from "@/stores/collections";
-    import CommonHelper from "@/utils/CommonHelper";
-    import { scale } from "svelte/transition";
 
     export let formSettings;
 
@@ -16,10 +17,10 @@
         { value: "*:create" },
         { value: "*:update" },
         { value: "*:delete" },
-        { value: "*:file" },
+        { value: "*:file", description: "targets the files download endpoint" },
         { value: "*:listAuthMethods" },
         { value: "*:authRefresh" },
-        { value: "*:auth" },
+        { value: "*:auth", description: "targets all auth methods" },
         { value: "*:authWithPassword" },
         { value: "*:authWithOAuth2" },
         { value: "*:authWithOTP" },
@@ -33,6 +34,8 @@
     ];
 
     let predefinedTags = basePredefinedTags;
+
+    let formatInfoPanel;
 
     $: hasErrors = !CommonHelper.isEmpty($errors?.rateLimits);
 
@@ -225,13 +228,69 @@
             <span class="txt">Add rate limit rule</span>
         </button>
 
-        <a
-            href={import.meta.env.PB_RATE_LIMIT_DOCS}
-            class="txt-nowrap txt-sm link-hint"
-            target="_blank"
-            rel="noopener noreferrer"
-        >
+        <button type="button" class="txt-nowrap txt-sm link-hint" on:click={() => formatInfoPanel?.show()}>
             <em>Learn more about the rate limit rules</em>
-        </a>
+        </button>
     </div>
 </Accordion>
+
+<OverlayPanel bind:this={formatInfoPanel}>
+    <svelte:fragment slot="header">
+        <h4 class="center txt-break">Rate limit label format</h4>
+    </svelte:fragment>
+
+    <p>The rate limit label could be in one of the following formats:</p>
+    <ul>
+        <li class="m-b-sm">
+            <code>[METHOD ]/my/path</code> - full exact route match (
+            <strong>must be without trailing slash </strong>; "METHOD" is optional).
+            <br /> For example:
+            <ul class="m-0">
+                <li class="m-0">
+                    <code>/hello</code> - matches <code>GET /hello</code>, <code>POST /hello</code>, etc.
+                </li>
+                <li class="m-0">
+                    <code>POST /hello</code> - matches only <code>POST /hello</code>
+                </li>
+            </ul>
+        </li>
+        <li class="m-b-sm">
+            <code>[METHOD ]/my/prefix<strong>/</strong></code> - path prefix (
+            <strong>must end with trailing slash;</strong>
+            "METHOD" is optional). For example:
+            <ul class="m-0">
+                <li class="m-0">
+                    <code>/hello/</code> - matches <code>GET /hello</code>,
+                    <code>POST /hello/a/b/c</code>, etc.
+                </li>
+                <li class="m-0">
+                    <code>POST /hello/</code> - matches <code>POST /hello</code>,
+                    <code>POST /hello/a/b/c</code>, etc.
+                </li>
+            </ul>
+        </li>
+        <li>
+            <code>collectionName:predefinedTag</code> - targets a specific action of a single collection. To
+            apply the rule for all collections you can use the <code>*</code> wildcard. For example:
+            <code>posts:create</code>, <code>users:listAuthMethods</code>, <code>*:auth</code>.
+            <br />
+            The predifined collection tags are (<em>there should be autocomplete once you start typing</em>):
+            <ul>
+                {#each basePredefinedTags as tag}
+                    <li class="m-0">
+                        {tag.value.replace("*:", ":")}
+                        {#if tag.description}
+                            <em class="txt-hint">({tag.description})</em>
+                        {/if}
+                    </li>
+                {/each}
+            </ul>
+        </li>
+    </ul>
+
+    <svelte:fragment slot="footer">
+        <button type="button" class="btn btn-transparent" on:click={() => formatInfoPanel?.hide()}>
+            Close
+        </button>
+    </svelte:fragment>
+</OverlayPanel>
