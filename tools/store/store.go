@@ -151,17 +151,19 @@ func (s *Store[T]) Set(key string, value T) {
 // GetOrSet retrieves a single existing value for the provided key
 // or stores a new one if it doesn't exist.
 func (s *Store[T]) GetOrSet(key string, setFunc func() T) T {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if s.data == nil {
-		s.data = make(map[string]T)
-	}
-
+	// lock only reads to minimize locks contention
+	s.mu.RLock()
 	v, ok := s.data[key]
+	s.mu.RUnlock()
+
 	if !ok {
+		s.mu.Lock()
 		v = setFunc()
+		if s.data == nil {
+			s.data = make(map[string]T)
+		}
 		s.data[key] = v
+		s.mu.Unlock()
 	}
 
 	return v
