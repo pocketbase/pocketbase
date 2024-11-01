@@ -236,6 +236,10 @@ func Serve(app core.App, config ServeConfig) error {
 		return serveHookErr
 	}
 
+	if listener == nil {
+		return errors.New("The OnServe finalizer wasn't invoked. Did you forget to call the ServeEvent.Next() method?")
+	}
+
 	if config.ShowStartBanner {
 		schema := "http"
 		addr := server.Addr
