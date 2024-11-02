@@ -343,11 +343,21 @@ func (p *plugin) normalizeServeExceptions(e *core.RequestEvent) error {
 //
 // This method does nothing if the hooks directory is missing.
 func (p *plugin) watchHooks() error {
-	if _, err := os.Stat(p.config.HooksDir); err != nil {
+	watchDir := p.config.HooksDir
+
+	hooksDirInfo, err := os.Lstat(p.config.HooksDir)
+	if err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
 			return nil // no hooks dir to watch
 		}
 		return err
+	}
+
+	if hooksDirInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
+		watchDir, err = filepath.EvalSymlinks(p.config.HooksDir)
+		if err != nil {
+			return err
+		}
 	}
 
 	watcher, err := fsnotify.NewWatcher()
@@ -408,9 +418,9 @@ func (p *plugin) watchHooks() error {
 	// add directories to watch
 	//
 	// @todo replace once recursive watcher is added (https://github.com/fsnotify/fsnotify/issues/18)
-	dirsErr := filepath.Walk(p.config.HooksDir, func(path string, info fs.FileInfo, err error) error {
-		// ignore hidden directories and node_modules
-		if !info.IsDir() || info.Name() == "node_modules" || strings.HasPrefix(info.Name(), ".") {
+	dirsErr := filepath.WalkDir(watchDir, func(path string, entry fs.DirEntry, err error) error {
+		// ignore hidden directories, node_modules, symlinks, sockets, etc.
+		if !entry.IsDir() || entry.Name() == "node_modules" || strings.HasPrefix(entry.Name(), ".") {
 			return nil
 		}
 
