@@ -192,6 +192,14 @@
                     }
                 }
             }
+
+            // update index names that contains the collection id
+            for (let i = 0; i < collection.indexes?.length; i++) {
+                collection.indexes[i] = collection.indexes[i].replace(
+                    /create\s+(?:unique\s+)?\s*index\s*(?:if\s+not\s+exists\s+)?(\S*)\s+on/gim,
+                    (v) => v.replace(originalId, replacedId),
+                );
+            }
         }
 
         schemas = JSON.stringify(newCollections, null, 4);

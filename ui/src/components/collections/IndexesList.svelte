@@ -1,7 +1,8 @@
 <script>
+    import { scale } from "svelte/transition";
     import CommonHelper from "@/utils/CommonHelper";
-    import { errors, removeError } from "@/stores/errors";
     import tooltip from "@/actions/tooltip";
+    import { errors, removeError } from "@/stores/errors";
     import IndexUpsertPanel from "@/components/collections/IndexUpsertPanel.svelte";
 
     export let collection;
@@ -26,6 +27,13 @@
 
 <div class="section-title">
     Unique constraints and indexes ({collection?.indexes?.length || 0})
+    {#if $errors?.indexes?.message}
+        <i
+            class="ri-error-warning-fill txt-danger"
+            transition:scale={{ duration: 150 }}
+            use:tooltip={$errors?.indexes.message}
+        />
+    {/if}
 </div>
 <div class="indexes-list">
     {#each collection?.indexes || [] as rawIndex, i}
@@ -68,6 +76,11 @@
         collection.indexes = collection.indexes;
     }}
     on:submit={(e) => {
+        // clear generic error
+        if ($errors.indexes?.message) {
+            removeError("indexes");
+        }
+
         pushOrReplace(e.detail.old, e.detail.new);
     }}
 />
