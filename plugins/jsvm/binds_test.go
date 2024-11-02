@@ -43,7 +43,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 35, t)
+	testBindsCount(vm, "this", 32, t)
 }
 
 func TestBaseBindsSleep(t *testing.T) {
@@ -290,42 +290,6 @@ func TestBaseBindsCollection(t *testing.T) {
 
 	if f := m.Fields.GetByName("title"); f == nil {
 		t.Fatalf("Expected fields to be set, got %v", m.Fields)
-	}
-}
-
-func TestBaseBindsCollectionFactories(t *testing.T) {
-	vm := goja.New()
-	baseBinds(vm)
-
-	scenarios := []struct {
-		js           string
-		expectedType string
-	}{
-		{"new BaseCollection('test')", core.CollectionTypeBase},
-		{"new ViewCollection('test')", core.CollectionTypeView},
-		{"new AuthCollection('test')", core.CollectionTypeAuth},
-	}
-
-	for _, s := range scenarios {
-		t.Run(s.js, func(t *testing.T) {
-			v, err := vm.RunString(s.js)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			c, ok := v.Export().(*core.Collection)
-			if !ok {
-				t.Fatalf("Expected *core.Collection instance, got %T (%v)", c, c)
-			}
-
-			if c.Name != "test" {
-				t.Fatalf("Expected collection name %q, got %v", "test", c.Name)
-			}
-
-			if c.Type != s.expectedType {
-				t.Fatalf("Expected collection type %q, got %v", s.expectedType, c.Type)
-			}
-		})
 	}
 }
 

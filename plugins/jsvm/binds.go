@@ -421,9 +421,6 @@ func baseBinds(vm *goja.Runtime) {
 		instance := &core.Collection{}
 		return structConstructorUnmarshal(vm, call, instance)
 	})
-	registerFactoryAsConstructor(vm, "BaseCollection", core.NewBaseCollection)
-	registerFactoryAsConstructor(vm, "AuthCollection", core.NewAuthCollection)
-	registerFactoryAsConstructor(vm, "ViewCollection", core.NewViewCollection)
 
 	vm.Set("FieldsList", func(call goja.ConstructorCall) *goja.Object {
 		instance := &core.FieldsList{}

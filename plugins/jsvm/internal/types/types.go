@@ -297,14 +297,16 @@ declare const Record: {
   // note: declare as "newable" const due to conflict with the Record TS utility type
 }
 
-interface Collection extends core.Collection{} // merge
+interface Collection extends core.Collection{
+  type: "base" | "view" | "auth"
+} // merge
 /**
  * Collection model class.
  *
  * ` + "```" + `js
  * const collection = new Collection({
- *     name:       "article",
  *     type:       "base",
+ *     name:       "article",
  *     listRule:   "@request.auth.id != '' || status = 'public'",
  *     viewRule:   "@request.auth.id != '' || status = 'public'",
  *     deleteRule: "@request.auth.id != ''",
@@ -327,91 +329,7 @@ interface Collection extends core.Collection{} // merge
  * @group PocketBase
  */
 declare class Collection implements core.Collection {
-  constructor(data?: Partial<core.Collection>)
-}
-
-interface BaseCollection extends core.Collection{} // merge
-/**
- * Alias for a "base" collection class.
- *
- * ` + "```" + `js
- * const collection = new BaseCollection({
- *     name:       "article",
- *     listRule:   "@request.auth.id != '' || status = 'public'",
- *     viewRule:   "@request.auth.id != '' || status = 'public'",
- *     deleteRule: "@request.auth.id != ''",
- *     fields: [
- *         {
- *             name: "title",
- *             type: "text",
- *             required: true,
- *             min: 6,
- *             max: 100,
- *         },
- *         {
- *             name: "description",
- *             type: "text",
- *         },
- *     ]
- * })
- * ` + "```" + `
- *
- * @group PocketBase
- */
-declare class BaseCollection implements core.Collection {
-  constructor(data?: Partial<core.Collection>)
-}
-
-interface AuthCollection extends core.Collection{} // merge
-/**
- * Alias for an "auth" collection class.
- *
- * ` + "```" + `js
- * const collection = new AuthCollection({
- *     name:       "clients",
- *     listRule:   "@request.auth.id != '' || status = 'public'",
- *     viewRule:   "@request.auth.id != '' || status = 'public'",
- *     deleteRule: "@request.auth.id != ''",
- *     fields: [
- *         {
- *             name: "title",
- *             type: "text",
- *             required: true,
- *             min: 6,
- *             max: 100,
- *         },
- *         {
- *             name: "description",
- *             type: "text",
- *         },
- *     ]
- * })
- * ` + "```" + `
- *
- * @group PocketBase
- */
-declare class AuthCollection implements core.Collection {
-  constructor(data?: Partial<core.Collection>)
-}
-
-interface ViewCollection extends core.Collection{} // merge
-/**
- * Alias for a "view" collection class.
- *
- * ` + "```" + `js
- * const collection = new ViewCollection({
- *     name:       "clients",
- *     listRule:   "@request.auth.id != '' || status = 'public'",
- *     viewRule:   "@request.auth.id != '' || status = 'public'",
- *     deleteRule: "@request.auth.id != ''",
- *     viewQuery:  "SELECT id, title from posts",
- * })
- * ` + "```" + `
- *
- * @group PocketBase
- */
-declare class ViewCollection implements core.Collection {
-  constructor(data?: Partial<core.Collection>)
+  constructor(data?: Partial<Collection>)
 }
 
 interface FieldsList extends core.FieldsList{} // merge
