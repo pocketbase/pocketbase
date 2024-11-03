@@ -224,7 +224,7 @@ func (p *plugin) registerHooks() error {
 	// initialize the hooks dir watcher
 	if p.config.HooksWatch {
 		if err := p.watchHooks(); err != nil {
-			return err
+			color.Yellow("Unable to init hooks watcher: %v", err)
 		}
 	}
 
@@ -356,7 +356,7 @@ func (p *plugin) watchHooks() error {
 	if hooksDirInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 		watchDir, err = filepath.EvalSymlinks(p.config.HooksDir)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to resolve hooksDir symink: %w", err)
 		}
 	}
 
