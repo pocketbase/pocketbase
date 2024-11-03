@@ -184,6 +184,54 @@ func TestRealtimeSubscribe(t *testing.T) {
 			},
 		},
 		{
+			Name:   "existing client with invalid topic length",
+			Method: http.MethodPost,
+			URL:    "/api/realtime",
+			Body: strings.NewReader(`{
+				"clientId": "` + client.Id() + `",
+				"subscriptions": ["abc", "` + strings.Repeat("a", 2501) + `"]
+			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.SubscriptionsBroker().Register(client)
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				resetClient()
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"subscriptions":{"1":{"code":"validation_length_too_long"`,
+			},
+			ExpectedEvents: map[string]int{"*": 0},
+		},
+		{
+			Name:   "existing client with valid topic length",
+			Method: http.MethodPost,
+			URL:    "/api/realtime",
+			Body: strings.NewReader(`{
+				"clientId": "` + client.Id() + `",
+				"subscriptions": ["abc", "` + strings.Repeat("a", 2500) + `"]
+			}`),
+			ExpectedStatus: 204,
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRealtimeSubscribeRequest": 1,
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				client.Subscribe("test0")
+				app.SubscriptionsBroker().Register(client)
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				if len(client.Subscriptions()) != 2 {
+					t.Errorf("Expected %d subscriptions, got %d", 2, len(client.Subscriptions()))
+				}
+				if client.HasSubscription("test0") {
+					t.Errorf("Expected old subscriptions to be replaced")
+				}
+				resetClient()
+			},
+		},
+		{
 			Name:           "existing client - empty subscriptions",
 			Method:         http.MethodPost,
 			URL:            "/api/realtime",

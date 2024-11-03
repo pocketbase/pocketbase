@@ -160,7 +160,10 @@ type realtimeSubscribeForm struct {
 func (form *realtimeSubscribeForm) validate() error {
 	return validation.ValidateStruct(form,
 		validation.Field(&form.ClientId, validation.Required, validation.Length(1, 255)),
-		validation.Field(&form.Subscriptions, validation.Length(0, 1000)),
+		validation.Field(&form.Subscriptions,
+			validation.Length(0, 1000),
+			validation.Each(validation.Length(0, 2500)),
+		),
 	)
 }
 
