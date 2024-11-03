@@ -435,6 +435,18 @@ func TestCollectionValidate(t *testing.T) {
 			expectedErrors: []string{"indexes"},
 		},
 		{
+			name: "duplicated index definitions",
+			collection: func(app core.App) (*core.Collection, error) {
+				c, _ := app.FindCollectionByNameOrId("demo1")
+				c.Indexes = []string{
+					"create index idx_test_demo1 on demo1 (id)",
+					"create index idx_test_demo2 on demo1 (id)",
+				}
+				return c, nil
+			},
+			expectedErrors: []string{"indexes"},
+		},
+		{
 			name: "try to add index to a view collection",
 			collection: func(app core.App) (*core.Collection, error) {
 				c, _ := app.FindCollectionByNameOrId("view1")

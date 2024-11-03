@@ -800,7 +800,7 @@ func TestCollectionCreate(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				demo1.AddIndex("exist_test", false, "created", "")
+				demo1.AddIndex("exist_test", false, "updated", "")
 				if err = app.Save(demo1); err != nil {
 					t.Fatal(err)
 				}
@@ -1268,7 +1268,7 @@ func TestCollectionUpdate(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				demo1.AddIndex("exist_test", false, "created", "")
+				demo1.AddIndex("exist_test", false, "updated", "")
 				if err = app.Save(demo1); err != nil {
 					t.Fatal(err)
 				}

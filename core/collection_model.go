@@ -341,45 +341,75 @@ type Collection struct {
 }
 
 // NewCollection initializes and returns a new Collection model with the specified type and name.
-func NewCollection(typ, name string) *Collection {
+//
+// It also loads the minimal default configuration for the collection
+// (eg. system fields, indexes, type specific options, etc.).
+func NewCollection(typ, name string, optId ...string) *Collection {
 	switch typ {
 	case CollectionTypeAuth:
-		return NewAuthCollection(name)
+		return NewAuthCollection(name, optId...)
 	case CollectionTypeView:
-		return NewViewCollection(name)
+		return NewViewCollection(name, optId...)
 	default:
-		return NewBaseCollection(name)
+		return NewBaseCollection(name, optId...)
 	}
 }
 
 // NewBaseCollection initializes and returns a new "base" Collection model.
-func NewBaseCollection(name string) *Collection {
+//
+// It also loads the minimal default configuration for the collection
+// (eg. system fields, indexes, type specific options, etc.).
+func NewBaseCollection(name string, optId ...string) *Collection {
 	m := &Collection{}
 	m.Name = name
 	m.Type = CollectionTypeBase
+
+	if len(optId) > 0 {
+		m.Id = optId[0]
+	}
+
 	m.initDefaultId()
 	m.initDefaultFields()
+
 	return m
 }
 
 // NewViewCollection initializes and returns a new "view" Collection model.
-func NewViewCollection(name string) *Collection {
+//
+// It also loads the minimal default configuration for the collection
+// (eg. system fields, indexes, type specific options, etc.).
+func NewViewCollection(name string, optId ...string) *Collection {
 	m := &Collection{}
 	m.Name = name
 	m.Type = CollectionTypeView
+
+	if len(optId) > 0 {
+		m.Id = optId[0]
+	}
+
 	m.initDefaultId()
 	m.initDefaultFields()
+
 	return m
 }
 
 // NewAuthCollection initializes and returns a new "auth" Collection model.
-func NewAuthCollection(name string) *Collection {
+//
+// It also loads the minimal default configuration for the collection
+// (eg. system fields, indexes, type specific options, etc.).
+func NewAuthCollection(name string, optId ...string) *Collection {
 	m := &Collection{}
 	m.Name = name
 	m.Type = CollectionTypeAuth
+
+	if len(optId) > 0 {
+		m.Id = optId[0]
+	}
+
 	m.initDefaultId()
 	m.initDefaultFields()
 	m.setDefaultAuthOptions()
+
 	return m
 }
 
@@ -666,9 +696,9 @@ func (c *Collection) initDefaultId() {
 
 	if c.System && c.Name != "" {
 		// for system collections we use crc32 checksum for consistency because they cannot be renamed
-		c.Id = "_pbc_" + crc32Checksum(c.Name)
+		c.Id = "pbc_" + crc32Checksum(c.Name)
 	} else {
-		c.Id = "_pbc_" + security.RandomStringWithAlphabet(10, DefaultIdAlphabet)
+		c.Id = "pbc_" + security.RandomStringWithAlphabet(11, DefaultIdAlphabet)
 	}
 }
 

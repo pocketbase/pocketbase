@@ -118,7 +118,7 @@ func createParamsTable(txApp core.App) error {
 }
 
 func createMFAsCollection(txApp core.App) error {
-	col := core.NewBaseCollection(core.CollectionNameMFAs)
+	col := core.NewBaseCollection(core.CollectionNameMFAs, "_pbc"+core.CollectionNameMFAs)
 	col.System = true
 
 	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
@@ -157,7 +157,7 @@ func createMFAsCollection(txApp core.App) error {
 }
 
 func createOTPsCollection(txApp core.App) error {
-	col := core.NewBaseCollection(core.CollectionNameOTPs)
+	col := core.NewBaseCollection(core.CollectionNameOTPs, "_pbc"+core.CollectionNameOTPs)
 	col.System = true
 
 	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
@@ -198,7 +198,7 @@ func createOTPsCollection(txApp core.App) error {
 }
 
 func createAuthOriginsCollection(txApp core.App) error {
-	col := core.NewBaseCollection(core.CollectionNameAuthOrigins)
+	col := core.NewBaseCollection(core.CollectionNameAuthOrigins, "_pbc"+core.CollectionNameAuthOrigins)
 	col.System = true
 
 	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
@@ -238,7 +238,7 @@ func createAuthOriginsCollection(txApp core.App) error {
 }
 
 func createExternalAuthsCollection(txApp core.App) error {
-	col := core.NewBaseCollection(core.CollectionNameExternalAuths)
+	col := core.NewBaseCollection(core.CollectionNameExternalAuths, "_pbc"+core.CollectionNameExternalAuths)
 	col.System = true
 
 	ownerRule := "@request.auth.id != '' && recordRef = @request.auth.id && collectionRef = @request.auth.collectionId"
@@ -284,7 +284,7 @@ func createExternalAuthsCollection(txApp core.App) error {
 }
 
 func createSuperusersCollection(txApp core.App) error {
-	superusers := core.NewAuthCollection(core.CollectionNameSuperusers)
+	superusers := core.NewAuthCollection(core.CollectionNameSuperusers, "_pbc"+core.CollectionNameSuperusers)
 	superusers.System = true
 	superusers.Fields.Add(&core.EmailField{
 		Name:     "email",
@@ -308,7 +308,7 @@ func createSuperusersCollection(txApp core.App) error {
 }
 
 func createUsersCollection(txApp core.App) error {
-	users := core.NewAuthCollection("users")
+	users := core.NewAuthCollection("users", "_pb_users_auth_")
 	users.Fields.Add(&core.TextField{
 		Name: "name",
 		Max:  255,

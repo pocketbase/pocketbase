@@ -65,7 +65,9 @@
     ```
     Also note that if you are not planning to use the `core.DefaultDBConnect` fallback as part of your custom driver registration you can exclude the default pure Go driver from the build with the build tag `-tags no_default_driver` to reduce the binary size a little.
 
-- Other minor UI improvements (updated the impersonate popup styles, added query param support for loading a collection based on its name, etc.).
+- ⚠️ Removed JSVM `BaseCollection()`, `AuthCollection()`, `ViewCollection()` class aliases for simplicity and to avoid confusion with the accepted constructor arguments (_you can simply use as before `new Collection({ type: "base", ... })`; this will also initialize the default type specific options_).
+
+- Other minor improvements (added validator for duplicated index definitions, updated the impersonate popup styles, added query param support for loading a collection based on its name, etc.).
 
 
 ## v0.23.0-rc8

@@ -26,7 +26,7 @@ func TestNewCollection(t *testing.T) {
 			"",
 			"",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":""`,
 				`"type":"base"`,
 				`"system":false`,
@@ -45,7 +45,7 @@ func TestNewCollection(t *testing.T) {
 			"unknown",
 			"test",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"base"`,
 				`"system":false`,
@@ -64,7 +64,7 @@ func TestNewCollection(t *testing.T) {
 			"base",
 			"test",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"base"`,
 				`"system":false`,
@@ -83,7 +83,7 @@ func TestNewCollection(t *testing.T) {
 			"view",
 			"test",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"view"`,
 				`"indexes":[]`,
@@ -100,7 +100,7 @@ func TestNewCollection(t *testing.T) {
 			"auth",
 			"test",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"auth"`,
 				`"fields":[{`,
@@ -148,7 +148,7 @@ func TestNewBaseCollection(t *testing.T) {
 		{
 			"",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":""`,
 				`"type":"base"`,
 				`"system":false`,
@@ -166,7 +166,7 @@ func TestNewBaseCollection(t *testing.T) {
 		{
 			"test",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"base"`,
 				`"system":false`,
@@ -206,7 +206,7 @@ func TestNewViewCollection(t *testing.T) {
 		{
 			"",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":""`,
 				`"type":"view"`,
 				`"indexes":[]`,
@@ -222,7 +222,7 @@ func TestNewViewCollection(t *testing.T) {
 		{
 			"test",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"view"`,
 				`"indexes":[]`,
@@ -286,7 +286,7 @@ func TestNewAuthCollection(t *testing.T) {
 		{
 			"test",
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"auth"`,
 				`"fields":[{`,
@@ -512,7 +512,7 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 			},
 			[]string{
 				`"type":"base"`,
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"listRule":"1=2"`,
 				`"fields":[`,
@@ -532,7 +532,7 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 			},
 			[]string{
 				`"type":"view"`,
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"listRule":"1=2"`,
 				`"fields":[]`,
@@ -551,7 +551,7 @@ func TestCollectionUnmarshalJSON(t *testing.T) {
 			},
 			[]string{
 				`"type":"auth"`,
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"listRule":"1=2"`,
 				`"authRule":"1=3"`,
@@ -655,7 +655,7 @@ func TestCollectionSerialize(t *testing.T) {
 				return c
 			},
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"base"`,
 			},
@@ -683,7 +683,7 @@ func TestCollectionSerialize(t *testing.T) {
 				return c
 			},
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"view"`,
 				`"viewQuery":"1=1"`,
@@ -711,7 +711,7 @@ func TestCollectionSerialize(t *testing.T) {
 				return c
 			},
 			[]string{
-				`"id":"_pbc_`,
+				`"id":"pbc_`,
 				`"name":"test"`,
 				`"type":"auth"`,
 				`"oauth2":{`,

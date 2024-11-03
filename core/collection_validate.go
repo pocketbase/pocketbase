@@ -520,7 +520,8 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 		)
 	}
 
-	indexNames := make(map[string]struct{}, len(indexes))
+	duplicatedNames := make(map[string]struct{}, len(indexes))
+	duplicatedDefinitions := make(map[string]struct{}, len(indexes))
 
 	for i, rawIndex := range indexes {
 		parsed := dbutils.ParseIndex(rawIndex)
@@ -537,15 +538,15 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 			}
 		}
 
-		_, isDuplicated := indexNames[strings.ToLower(parsed.IndexName)]
-		if isDuplicated {
+		if _, isDuplicated := duplicatedNames[strings.ToLower(parsed.IndexName)]; isDuplicated {
 			return validation.Errors{
 				strconv.Itoa(i): validation.NewError(
 					"validation_duplicated_index_name",
-					"The index name must be unique.",
+					"The index name already exists.",
 				),
 			}
 		}
+		duplicatedNames[strings.ToLower(parsed.IndexName)] = struct{}{}
 
 		// ensure that the index name is not used in another collection
 		var usedTblName string
@@ -562,9 +563,24 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 				strconv.Itoa(i): validation.NewError(
 					"validation_existing_index_name",
 					"The index name is already used in "+usedTblName+" collection.",
+				).SetParams(map[string]any{"usedTableName": usedTblName}),
+			}
+		}
+
+		// reset non-important identifiers
+		parsed.SchemaName = "validator"
+		parsed.IndexName = "validator"
+		parsedDef := parsed.Build()
+
+		if _, isDuplicated := duplicatedDefinitions[parsedDef]; isDuplicated {
+			return validation.Errors{
+				strconv.Itoa(i): validation.NewError(
+					"validation_duplicated_index_definition",
+					"The index definition already exists.",
 				),
 			}
 		}
+		duplicatedDefinitions[parsedDef] = struct{}{}
 
 		// note: we don't check the index table name because it is always
 		// overwritten by the SyncRecordTableSchema to allow
@@ -577,15 +593,18 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 		// 		),
 		// 	}
 		// }
-
-		indexNames[strings.ToLower(parsed.IndexName)] = struct{}{}
 	}
 
-	// ensure that indexes on system fields are not deleted or changed
+	// ensure that unique indexes on system fields are not changed or removed
 	if !cv.original.IsNew() {
 	OLD_INDEXES_LOOP:
 		for _, oldIndex := range cv.original.Indexes {
 			oldParsed := dbutils.ParseIndex(oldIndex)
+			if !oldParsed.Unique {
+				continue
+			}
+
+			oldParsedStr := oldParsed.Build()
 
 			for _, column := range oldParsed.Columns {
 				for _, f := range cv.original.Fields {
@@ -593,36 +612,25 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 						continue
 					}
 
-					var exists bool
-
-					for i, newIndex := range cv.new.Indexes {
+					var hasMatch bool
+					for _, newIndex := range cv.new.Indexes {
 						newParsed := dbutils.ParseIndex(newIndex)
-						if !strings.EqualFold(newParsed.IndexName, oldParsed.IndexName) {
+
+						// exclude the non-important identifiers from the check
+						newParsed.IndexName = oldParsed.IndexName
+						newParsed.TableName = oldParsed.TableName
+
+						if oldParsedStr == newParsed.Build() {
+							hasMatch = true
 							continue
 						}
-
-						// normalize table names of both indexes
-						oldParsed.TableName = "validator"
-						newParsed.TableName = "validator"
-
-						if oldParsed.Build() != newParsed.Build() {
-							return validation.Errors{
-								strconv.Itoa(i): validation.NewError(
-									"validation_system_index_change",
-									"Indexes on system fields cannot change.",
-								),
-							}
-						}
-
-						exists = true
-						break
 					}
 
-					if !exists {
+					if !hasMatch {
 						return validation.NewError(
-							"validation_missing_system_index",
-							fmt.Sprintf("Missing system index %q.", oldParsed.IndexName),
-						).SetParams(map[string]any{"name": oldParsed.IndexName})
+							"validation_unique_system_field_index_change",
+							fmt.Sprintf("Unique index definition on system fields (%q) cannot be changed.", f.GetName()),
+						).SetParams(map[string]any{"fieldName": f.GetName()})
 					}
 
 					continue OLD_INDEXES_LOOP
@@ -634,7 +642,7 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 	// check for required indexes
 	//
 	// note: this is in case the indexes were removed manually when creating/importing new auth collections
-	// and technically is not necessary since on app.Save the missing index will be reinserted by the system collection hook
+	// and technically it is not necessary because on app.Save() the missing indexes will be reinserted by the system collection hook
 	if cv.new.IsAuth() {
 		requiredNames := []string{FieldNameTokenKey, FieldNameEmail}
 		for _, name := range requiredNames {
@@ -642,7 +650,7 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 				return validation.NewError(
 					"validation_missing_required_unique_index",
 					`Missing required unique index for field "`+name+`".`,
-				)
+				).SetParams(map[string]any{"fieldName": name})
 			}
 		}
 	}
