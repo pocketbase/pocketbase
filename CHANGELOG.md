@@ -1,8 +1,8 @@
 ## v0.22.23
 
--
+- Updated the hooks watcher to account for the case when hooksDir is a symlink ([#5789](https://github.com/pocketbase/pocketbase/issues/5789)).
 
-- Other minor fixes (updated npm deps to fix the vulnerabilities warning, more user friendly realtime topic length error, regenerated JSVM types, etc.)
+- Other minor fixes (updated npm dev deps to fix the vulnerabilities warning, added more user friendly realtime topic length error, regenerated JSVM types, etc.)
 
 
 ## v0.22.22
