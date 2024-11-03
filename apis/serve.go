@@ -159,6 +159,7 @@ func Serve(app core.App, config ServeConfig) (*http.Server, error) {
 		BaseContext: func(l net.Listener) context.Context {
 			return baseCtx
 		},
+		ErrorLog: log.New(&serverErrorLogWriter{app: app}, "", 0),
 	}
 
 	serveEvent := &core.ServeEvent{
@@ -274,4 +275,14 @@ func runMigrations(app core.App) error {
 	}
 
 	return nil
+}
+
+type serverErrorLogWriter struct {
+	app core.App
+}
+
+func (s *serverErrorLogWriter) Write(p []byte) (int, error) {
+	s.app.Logger().Debug(strings.TrimSpace(string(p)))
+
+	return len(p), nil
 }
