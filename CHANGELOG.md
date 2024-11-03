@@ -1,3 +1,10 @@
+## v0.22.23
+
+-
+
+- Other minor fixes (updated npm deps to fix the vulnerabilities warning, more user friendly realtime topic length error, regenerated JSVM types, etc.)
+
+
 ## v0.22.22
 
 - Added deprecation log in case Instagram OAuth2 is used (_related to [#5652](https://github.com/pocketbase/pocketbase/discussions/5652)_).

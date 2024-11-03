@@ -43,13 +43,23 @@ func TestRealtimeSubscribeValidate(t *testing.T) {
 			[]string{},
 		},
 		{
-			"subscriptions > max limit",
+			"total subscriptions > max limit",
 			`{"clientId":"test", "subscriptions":[` + strings.Join(invalidSubscriptionsLimit, ",") + `]}`,
 			[]string{"subscriptions"},
 		},
 		{
-			"subscriptions <= max limit",
+			"total subscriptions <= max limit",
 			`{"clientId":"test", "subscriptions":[` + strings.Join(validSubscriptionsLimit, ",") + `]}`,
+			[]string{},
+		},
+		{
+			"single subscription > max limit",
+			`{"clientId":"test", "subscriptions":["abc", "` + strings.Repeat("a", 2501) + `"]}`,
+			[]string{"subscriptions"},
+		},
+		{
+			"single subscription <= max limit",
+			`{"clientId":"test", "subscriptions":["abc", "` + strings.Repeat("a", 2500) + `"]}`,
 			[]string{},
 		},
 	}
