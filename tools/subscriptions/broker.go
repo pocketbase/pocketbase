@@ -30,6 +30,11 @@ func (b *Broker) ChunkedClients(chunkSize int) [][]Client {
 	return list.ToChunks(b.store.Values(), chunkSize)
 }
 
+// TotalClients returns the total number of registered clients.
+func (b *Broker) TotalClients() int {
+	return b.store.Length()
+}
+
 // ClientById finds a registered client by its id.
 //
 // Returns non-nil error when client with clientId is not registered.

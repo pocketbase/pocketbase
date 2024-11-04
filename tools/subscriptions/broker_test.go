@@ -62,6 +62,21 @@ func TestChunkedClients(t *testing.T) {
 	}
 }
 
+func TestTotalClients(t *testing.T) {
+	b := subscriptions.NewBroker()
+
+	if total := b.TotalClients(); total != 0 {
+		t.Fatalf("Expected no clients, got %d", total)
+	}
+
+	b.Register(subscriptions.NewDefaultClient())
+	b.Register(subscriptions.NewDefaultClient())
+
+	if total := b.TotalClients(); total != 2 {
+		t.Fatalf("Expected %d clients, got %d", 2, total)
+	}
+}
+
 func TestClientById(t *testing.T) {
 	b := subscriptions.NewBroker()
 

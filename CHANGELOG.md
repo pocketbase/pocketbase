@@ -9,6 +9,8 @@
 - Change the behavior of the default generated collections snapshot migration to act as "extend" instead of "replace" to prevent accidental data deletion.
   _I think this would be rare but if you want the old behaviour you can edit the generated snapshot file and replace the second argument (`deleteMissing`) of `App.ImportCollection/App.ImportCollectionsByMarshaledJSON` from `false` to `true`._
 
+- Added `app.SubscriptionsBroker().TotalClients()` helper method to return the total registered realtime clients ([#5793](https://github.com/pocketbase/pocketbase/issues/5793)).
+
 
 ## v0.23.0-rc9
 
