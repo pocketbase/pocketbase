@@ -1,3 +1,11 @@
+## v0.23.0-rc11 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Fixed JSVM types errors ([#5797](https://github.com/pocketbase/pocketbase/issues/5797)).
+
+
 ## v0.23.0-rc10
 
 > [!CAUTION]

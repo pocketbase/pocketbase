@@ -104,7 +104,7 @@ declare function routerAdd(
  *
  * @group PocketBase
  */
-declare function routerUse(...middlewares: Array<string|((e: core.RequestEvent) => void)|Middleware): void;
+declare function routerUse(...middlewares: Array<string|((e: core.RequestEvent) => void)|Middleware>): void;
 
 // -------------------------------------------------------------------
 // baseBinds
@@ -527,7 +527,6 @@ declare class Command implements cobra.Command {
   constructor(cmd?: Partial<cobra.Command>)
 }
 
-interface RequestInfo extends core.RequestInfo{} // merge
 /**
  * RequestInfo defines a single core.RequestInfo instance, usually used
  * as part of various filter checks.
@@ -550,8 +549,10 @@ interface RequestInfo extends core.RequestInfo{} // merge
  *
  * @group PocketBase
  */
-declare class RequestInfo implements core.RequestInfo {
-  constructor(info?: Partial<core.RequestInfo>)
+declare const RequestInfo: {
+  new(info?: Partial<core.RequestInfo>): core.RequestInfo
+
+ // note: declare as "newable" const due to conflict with the RequestInfo TS utility type
 }
 
 /**
@@ -845,7 +846,11 @@ declare namespace $os {
    */
   export let cmd: exec.command
 
-  export let args:      os.args
+  /**
+   * Args hold the command-line arguments, starting with the program name.
+   */
+  export let args: Array<string>
+
   export let exit:      os.exit
   export let getenv:    os.getenv
   export let dirFS:     os.dirFS
