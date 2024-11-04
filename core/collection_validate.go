@@ -65,6 +65,10 @@ type optionsValidator interface {
 }
 
 func (validator *collectionValidator) run() error {
+	if validator.original.IsNew() {
+		validator.new.updateGeneratedIdIfExists(validator.app)
+	}
+
 	// generate fields from the query (overwriting any explicit user defined fields)
 	if validator.new.IsView() {
 		validator.new.Fields, _ = validator.app.CreateViewFields(validator.new.ViewQuery)

@@ -4,8 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-
-	"github.com/pocketbase/pocketbase/tools/security"
+	"strconv"
 )
 
 // NewFieldsList creates a new FieldsList instance with the provided fields.
@@ -171,12 +170,16 @@ func (l *FieldsList) add(newField Field) {
 	// set default id
 	if newFieldId == "" {
 		replaceByName = true
-		if newField.GetSystem() && newField.GetName() != "" {
-			// for system fields we use crc32 checksum for consistency because they cannot be renamed
-			newFieldId = newField.Type() + crc32Checksum(newField.GetName())
-		} else {
-			newFieldId = newField.Type() + security.RandomString(7)
+
+		baseId := newField.Type() + crc32Checksum(newField.GetName())
+		newFieldId = baseId
+		for i := 2; i < 1000; i++ {
+			if l.GetById(newFieldId) == nil {
+				break // already unique
+			}
+			newFieldId = baseId + strconv.Itoa(i)
 		}
+		newField.SetId(newFieldId)
 	}
 
 	// replace existing
@@ -196,7 +199,6 @@ func (l *FieldsList) add(newField Field) {
 	}
 
 	// add new field
-	newField.SetId(newFieldId)
 	*l = append(fields, newField)
 }
 
