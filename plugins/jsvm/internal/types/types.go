@@ -552,7 +552,7 @@ declare class Command implements cobra.Command {
 declare const RequestInfo: {
   new(info?: Partial<core.RequestInfo>): core.RequestInfo
 
- // note: declare as "newable" const due to conflict with the RequestInfo TS utility type
+ // note: declare as "newable" const due to conflict with the RequestInfo TS node type
 }
 
 /**
