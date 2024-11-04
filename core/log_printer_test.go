@@ -2,10 +2,13 @@ package core
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/logger"
 )
@@ -50,6 +53,12 @@ func TestBaseAppLoggerLevelDevPrint(t *testing.T) {
 			if err := app.Bootstrap(); err != nil {
 				t.Fatal(err)
 			}
+
+			// silence query logs
+			app.DB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {}
+			app.DB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {}
+			app.NonconcurrentDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {}
+			app.NonconcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {}
 
 			app.Settings().Logs.MinLevel = testLogLevel
 			if err := app.Save(app.Settings()); err != nil {

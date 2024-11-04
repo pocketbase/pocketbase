@@ -1,3 +1,15 @@
+## v0.23.0-rc10
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Restore the CRC32 checksum autogeneration for the collection/field ids in order to maintain deterministic default identifier value and minimize conflicts between custom migrations and full collections snapshots.
+  _There is a system migration that will attempt to normalize existing system collections ids, but if you already migrated to v0.23.0-rc and have generated a full collections snapshot migration, you have to delete it and regenerate a new one._
+
+- Change the behavior of the default generated collections snapshot migration to act as "extend" instead of "replace" to prevent accidental data deletion.
+  _I think this would be rare but if you want the old behaviour you can edit the generated snapshot file and replace the second argument (`deleteMissing`) of `App.ImportCollection/App.ImportCollectionsByMarshaledJSON` from `false` to `true`._
+
+
 ## v0.23.0-rc9
 
 > [!CAUTION]

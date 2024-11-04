@@ -488,12 +488,13 @@ func (m *Collection) UnmarshalJSON(b []byte) error {
 		minimal := &struct {
 			Type string `json:"type"`
 			Name string `json:"name"`
+			Id   string `json:"id"`
 		}{}
 		if err := json.Unmarshal(b, minimal); err != nil {
 			return err
 		}
 
-		blank := NewCollection(minimal.Type, minimal.Name)
+		blank := NewCollection(minimal.Type, minimal.Name, minimal.Id)
 		*m = *blank
 	}
 

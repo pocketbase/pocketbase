@@ -62,7 +62,7 @@ func (p *plugin) jsSnapshotTemplate(collections []*core.Collection) (string, err
 	const template = jsTypesDirective + `migrate((app) => {
   const snapshot = %s;
 
-  return app.importCollections(snapshot, true);
+  return app.importCollections(snapshot, false);
 }, (app) => {
   return null;
 })
@@ -348,7 +348,7 @@ func init() {
 	m.Register(func(app core.App) error {
 		jsonData := ` + "`%s`" + `
 
-		return app.ImportCollectionsByMarshaledJSON([]byte(jsonData), true)
+		return app.ImportCollectionsByMarshaledJSON([]byte(jsonData), false)
 	}, func(app core.App) error {
 		return nil
 	})

@@ -2,6 +2,7 @@ package core_test
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"os"
 	"testing"
@@ -9,6 +10,7 @@ import (
 
 	_ "unsafe"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/logger"
@@ -350,6 +352,12 @@ func TestBaseAppRefreshSettingsLoggerMinLevelEnabled(t *testing.T) {
 			if err := app.Bootstrap(); err != nil {
 				t.Fatal(err)
 			}
+
+			// silence query logs
+			app.DB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {}
+			app.DB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {}
+			app.NonconcurrentDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {}
+			app.NonconcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {}
 
 			handler, ok := app.Logger().Handler().(*logger.BatchHandler)
 			if !ok {
