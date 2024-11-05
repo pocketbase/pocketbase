@@ -96,37 +96,6 @@ func (e *Event) RemoteIP() string {
 	return parsed.StringExpanded()
 }
 
-// UnsafeRealIP returns the "real" client IP from common proxy headers
-// OR fallbacks to the RemoteIP if none is found.
-//
-// NB! The returned IP value could be anything and it shouldn't be trusted if not behind a trusted reverse proxy!
-func (e *Event) UnsafeRealIP() string {
-	if ip := e.Request.Header.Get("CF-Connecting-IP"); ip != "" {
-		return ip
-	}
-
-	if ip := e.Request.Header.Get("Fly-Client-IP"); ip != "" {
-		return ip
-	}
-
-	if ip := e.Request.Header.Get("X-Real-IP"); ip != "" {
-		return ip
-	}
-
-	if ipsList := e.Request.Header.Get("X-Forwarded-For"); ipsList != "" {
-		// extract the first non-empty leftmost-ish ip
-		ips := strings.Split(ipsList, ",")
-		for _, ip := range ips {
-			ip = strings.TrimSpace(ip)
-			if ip != "" {
-				return ip
-			}
-		}
-	}
-
-	return e.RemoteIP()
-}
-
 // FindUploadedFiles extracts all form files of "key" from a http request
 // and returns a slice with filesystem.File instances (if any).
 func (e *Event) FindUploadedFiles(key string) ([]*filesystem.File, error) {

@@ -5,11 +5,13 @@
 
 - Fixed JSVM types errors ([#5797](https://github.com/pocketbase/pocketbase/issues/5797)).
 
-- Skip default `loadAuthToken` middleware if `e.Auth` is already loaded ([#5800](https://github.com/pocketbase/pocketbase/discussions/5800)).
+- Skip the default `loadAuthToken` middleware if `e.Auth` is already loaded ([#5800](https://github.com/pocketbase/pocketbase/discussions/5800)).
 
-- Changed the initial startup to generate a superuser with a random password if such no already exists. The installer is accessible with the link that would be printed in the terminal (it will attempt to auto open the browser).
+- ⚠️ Changed the initial PocketBase startup behavior based on @todo.
 
 - ⚠️ Removed `apis.RequireSuperuserAuthOnlyIfAny()` middleware.
+
+- ⚠️ Removed `RequestEvent.UnsafeRealIP()` to prevent misuse and confusion with `RequestEvent.RealIP()` (_the latter is considered safer because it checks the trusted proxy headers settings_).
 
 
 ## v0.23.0-rc10

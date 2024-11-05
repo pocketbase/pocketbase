@@ -219,65 +219,6 @@ func TestEventRemoteIP(t *testing.T) {
 	}
 }
 
-func TestEventUnsafeRealIP(t *testing.T) {
-	t.Parallel()
-
-	scenarios := []struct {
-		headers  map[string]string
-		expected string
-	}{
-		{nil, "1.2.3.4"},
-		{
-			map[string]string{"CF-Connecting-IP": "test"},
-			"test",
-		},
-		{
-			map[string]string{"Fly-Client-IP": "test"},
-			"test",
-		},
-		{
-			map[string]string{"X-Real-IP": "test"},
-			"test",
-		},
-		{
-			map[string]string{"X-Forwarded-For": "test1,test2,test3"},
-			"test1",
-		},
-	}
-
-	for i, s := range scenarios {
-		keys := make([]string, 0, len(s.headers))
-		for h := range s.headers {
-			keys = append(keys, h)
-		}
-
-		testName := strings.Join(keys, "_")
-		if testName == "" {
-			testName = "no_headers" + strconv.Itoa(i)
-		}
-
-		t.Run(testName, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, "/", nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-			req.RemoteAddr = "1.2.3.4:80" // fallback
-
-			for k, v := range s.headers {
-				req.Header.Set(k, v)
-			}
-
-			event := router.Event{Request: req}
-
-			ip := event.UnsafeRealIP()
-
-			if ip != s.expected {
-				t.Fatalf("Expected IP %q, got %q", s.expected, ip)
-			}
-		})
-	}
-}
-
 func TestFindUploadedFiles(t *testing.T) {
 	scenarios := []struct {
 		filename        string

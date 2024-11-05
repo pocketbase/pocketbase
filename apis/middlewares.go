@@ -397,17 +397,9 @@ func logRequest(event *core.RequestEvent, err error) {
 	}
 
 	if event.App.Settings().Logs.LogIP {
-		var userIP string
-		if len(event.App.Settings().TrustedProxy.Headers) > 0 {
-			userIP = event.RealIP()
-		} else {
-			// fallback to the legacy behavior (it is "safe" since it is only for log purposes)
-			userIP = cutStr(event.UnsafeRealIP(), 50)
-		}
-
 		attrs = append(
 			attrs,
-			slog.String("userIP", userIP),
+			slog.String("userIP", event.RealIP()),
 			slog.String("remoteIP", event.RemoteIP()),
 		)
 	}
