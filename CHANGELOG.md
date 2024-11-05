@@ -5,6 +5,8 @@
 
 - Fixed JSVM types errors ([#5797](https://github.com/pocketbase/pocketbase/issues/5797)).
 
+- Skip default `loadAuthToken` middleware if `e.Auth` is already loaded ([#5800](https://github.com/pocketbase/pocketbase/discussions/5800)).
+
 
 ## v0.23.0-rc10
 

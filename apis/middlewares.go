@@ -196,7 +196,9 @@ func RequireSameCollectionContextAuth(collectionPathParam string) *hook.Handler[
 
 // loadAuthToken attempts to load the auth context based on the "Authorization: TOKEN" header value.
 //
-// This middleware does nothing in case of missing, invalid or expired token.
+// This middleware does nothing in case of:
+//   - missing, invalid or expired token
+//   - e.Auth is already loaded by another middleware
 //
 // This middleware is registered by default for all routes.
 //
@@ -207,6 +209,11 @@ func loadAuthToken() *hook.Handler[*core.RequestEvent] {
 		Id:       DefaultLoadAuthTokenMiddlewareId,
 		Priority: DefaultLoadAuthTokenMiddlewarePriority,
 		Func: func(e *core.RequestEvent) error {
+			// already loaded by another middleware
+			if e.Auth != nil {
+				return e.Next()
+			}
+
 			token := getAuthTokenFromRequest(e)
 			if token == "" {
 				return e.Next()
