@@ -18,10 +18,10 @@ func bindBackupApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
 	sub := rg.Group("/backups")
 	sub.GET("", backupsList).Bind(RequireSuperuserAuth())
 	sub.POST("", backupCreate).Bind(RequireSuperuserAuth())
-	sub.POST("/upload", backupUpload).Bind(RequireSuperuserAuthOnlyIfAny())
+	sub.POST("/upload", backupUpload).Bind(RequireSuperuserAuth())
 	sub.GET("/{key}", backupDownload) // relies on superuser file token
 	sub.DELETE("/{key}", backupDelete).Bind(RequireSuperuserAuth())
-	sub.POST("/{key}/restore", backupRestore).Bind(RequireSuperuserAuthOnlyIfAny())
+	sub.POST("/{key}/restore", backupRestore).Bind(RequireSuperuserAuth())
 }
 
 type backupFileInfo struct {

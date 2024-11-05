@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -88,11 +89,14 @@ func Serve(app core.App, config ServeConfig) error {
 		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 	}))
 
-	pbRouter.BindFunc(installerRedirect(app, config.DashboardPath))
-
 	pbRouter.GET(config.DashboardPath, Static(ui.DistDirFS, false)).
-		BindFunc(dashboardRemoveInstallerParam()).
-		BindFunc(dashboardCacheControl()).
+		BindFunc(func(e *core.RequestEvent) error {
+			// ingore root path
+			if e.Request.PathValue(StaticWildcardParam) != "" {
+				e.Response.Header().Set("Cache-Control", "max-age=1209600, stale-while-revalidate=86400")
+			}
+			return e.Next()
+		}).
 		Bind(Gzip())
 
 	// start http server
@@ -240,18 +244,17 @@ func Serve(app core.App, config ServeConfig) error {
 		return errors.New("The OnServe finalizer wasn't invoked. Did you forget to call the ServeEvent.Next() method?")
 	}
 
-	if config.ShowStartBanner {
-		schema := "http"
-		addr := server.Addr
-
-		if config.HttpsAddr != "" {
-			schema = "https"
-
-			if len(config.CertificateDomains) > 0 {
-				addr = config.CertificateDomains[0]
-			}
+	schema := "http"
+	addr := server.Addr
+	if config.HttpsAddr != "" {
+		schema = "https"
+		if len(config.CertificateDomains) > 0 {
+			addr = config.CertificateDomains[0]
 		}
+	}
+	fullAddr := fmt.Sprintf("%s://%s", schema, addr)
 
+	if config.ShowStartBanner {
 		date := new(strings.Builder)
 		log.New(date, "", log.LstdFlags).Print()
 
@@ -259,13 +262,15 @@ func Serve(app core.App, config ServeConfig) error {
 		bold.Printf(
 			"%s Server started at %s\n",
 			strings.TrimSpace(date.String()),
-			color.CyanString("%s://%s", schema, addr),
+			color.CyanString("%s", fullAddr),
 		)
 
 		regular := color.New()
-		regular.Printf("├─ REST API: %s\n", color.CyanString("%s://%s/api/", schema, addr))
-		regular.Printf("└─ Admin UI: %s\n", color.CyanString("%s://%s/_/", schema, addr))
+		regular.Printf("├─ REST API:  %s\n", color.CyanString("%s/api/", fullAddr))
+		regular.Printf("└─ Dashboard: %s\n", color.CyanString("%s/_/", fullAddr))
 	}
+
+	go loadInstaller(app, fullAddr)
 
 	var serveErr error
 	if config.HttpsAddr != "" {

@@ -230,41 +230,6 @@ func TestRecordCrudSuperuserCreate(t *testing.T) {
 			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:   "guest creating first superuser",
-			Method: http.MethodPost,
-			URL:    "/api/collections/" + core.CollectionNameSuperusers + "/records",
-			Body:   body(),
-			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
-				// delete all superusers
-				_, err := app.DB().NewQuery("DELETE FROM {{" + core.CollectionNameSuperusers + "}}").Execute()
-				if err != nil {
-					t.Fatal(err)
-				}
-			},
-			ExpectedContent: []string{
-				`"collectionName":"_superusers"`,
-				`"verified":true`,
-			},
-			NotExpectedContent: []string{
-				// because the action has no auth the email field shouldn't be returned if emailVisibility is not set
-				`"email"`,
-			},
-			ExpectedStatus: 200,
-			ExpectedEvents: map[string]int{
-				"*":                          0,
-				"OnRecordCreateRequest":      1,
-				"OnRecordEnrich":             1,
-				"OnModelCreate":              1,
-				"OnModelCreateExecute":       1,
-				"OnModelAfterCreateSuccess":  1,
-				"OnModelValidate":            1,
-				"OnRecordCreate":             1,
-				"OnRecordCreateExecute":      1,
-				"OnRecordAfterCreateSuccess": 1,
-				"OnRecordValidate":           1,
-			},
-		},
-		{
 			Name:   "superusers auth",
 			Method: http.MethodPost,
 			URL:    "/api/collections/" + core.CollectionNameSuperusers + "/records",

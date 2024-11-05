@@ -7,6 +7,10 @@
 
 - Skip default `loadAuthToken` middleware if `e.Auth` is already loaded ([#5800](https://github.com/pocketbase/pocketbase/discussions/5800)).
 
+- Changed the initial startup to generate a superuser with a random password if such no already exists. The installer is accessible with the link that would be printed in the terminal (it will attempt to auto open the browser).
+
+- ⚠️ Removed `apis.RequireSuperuserAuthOnlyIfAny()` middleware.
+
 
 ## v0.23.0-rc10
 

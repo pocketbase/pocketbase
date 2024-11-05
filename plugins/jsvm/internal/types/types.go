@@ -998,7 +998,6 @@ declare namespace $apis {
   let requireGuestOnly:              apis.requireGuestOnly
   let requireAuth:                   apis.requireAuth
   let requireSuperuserAuth:          apis.requireSuperuserAuth
-  let requireSuperuserAuthOnlyIfAny: apis.requireSuperuserAuthOnlyIfAny
   let requireSuperuserOrOwnerAuth:   apis.requireSuperuserOrOwnerAuth
   let skipSuccessActivityLog:        apis.skipSuccessActivityLog
   let gzip:                          apis.gzip

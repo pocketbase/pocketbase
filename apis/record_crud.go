@@ -169,17 +169,7 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 		}
 
 		hasSuperuserAuth := requestInfo.HasSuperuserAuth()
-		canSkipRuleCheck := hasSuperuserAuth
-
-		// special case for the first superuser creation
-		// ---
-		if !canSkipRuleCheck && collection.Name == core.CollectionNameSuperusers {
-			total, totalErr := e.App.CountRecords(core.CollectionNameSuperusers)
-			canSkipRuleCheck = totalErr == nil && total == 0
-		}
-		// ---
-
-		if !canSkipRuleCheck && collection.CreateRule == nil {
+		if !hasSuperuserAuth && collection.CreateRule == nil {
 			return e.ForbiddenError("Only superusers can perform this action.", nil)
 		}
 
@@ -212,7 +202,7 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 			form.SetRecord(e.Record)
 
 			// temporary save the record and check it against the create and manage rules
-			if !canSkipRuleCheck && e.Collection.CreateRule != nil {
+			if !hasSuperuserAuth && e.Collection.CreateRule != nil {
 				// temporary grant manager access level
 				form.GrantManagerAccess()
 

@@ -346,30 +346,6 @@ func TestBackupUpload(t *testing.T) {
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{"*": 0},
 		},
-		{
-			Name:   "unauthorized with 0 superusers (valid file)",
-			Method: http.MethodPost,
-			URL:    "/api/backups/upload",
-			Body:   bodies[5].buffer,
-			Headers: map[string]string{
-				"Content-Type": bodies[5].contentType,
-			},
-			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
-				// delete all superusers
-				_, err := app.DB().NewQuery("DELETE FROM {{" + core.CollectionNameSuperusers + "}}").Execute()
-				if err != nil {
-					t.Fatal(err)
-				}
-			},
-			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
-				files, _ := getBackupFiles(app)
-				if total := len(files); total != 1 {
-					t.Fatalf("Expected %d backup file, got %d", 1, total)
-				}
-			},
-			ExpectedStatus: 204,
-			ExpectedEvents: map[string]int{"*": 0},
-		},
 	}
 
 	for _, scenario := range scenarios {
@@ -775,25 +751,6 @@ func TestBackupsRestore(t *testing.T) {
 				}
 
 				app.Store().Set(core.StoreKeyActiveBackup, "")
-			},
-			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents:  map[string]int{"*": 0},
-		},
-		{
-			Name:   "unauthorized with no superusers (checks only access)",
-			Method: http.MethodPost,
-			URL:    "/api/backups/missing.zip/restore",
-			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
-				// delete all superusers
-				_, err := app.DB().NewQuery("DELETE FROM {{" + core.CollectionNameSuperusers + "}}").Execute()
-				if err != nil {
-					t.Fatal(err)
-				}
-
-				if err := createTestBackups(app); err != nil {
-					t.Fatal(err)
-				}
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},

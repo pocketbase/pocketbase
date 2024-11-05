@@ -728,7 +728,6 @@ func apisBinds(vm *goja.Runtime) {
 	obj.Set("requireGuestOnly", apis.RequireGuestOnly)
 	obj.Set("requireAuth", apis.RequireAuth)
 	obj.Set("requireSuperuserAuth", apis.RequireSuperuserAuth)
-	obj.Set("requireSuperuserAuthOnlyIfAny", apis.RequireSuperuserAuthOnlyIfAny)
 	obj.Set("requireSuperuserOrOwnerAuth", apis.RequireSuperuserOrOwnerAuth)
 	obj.Set("skipSuccessActivityLog", apis.SkipSuccessActivityLog)
 	obj.Set("gzip", apis.Gzip)

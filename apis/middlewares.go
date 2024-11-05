@@ -48,7 +48,6 @@ const (
 	DefaultRequireGuestOnlyMiddlewareId                 = "pbRequireGuestOnly"
 	DefaultRequireAuthMiddlewareId                      = "pbRequireAuth"
 	DefaultRequireSuperuserAuthMiddlewareId             = "pbRequireSuperuserAuth"
-	DefaultRequireSuperuserAuthOnlyIfAnyMiddlewareId    = "pbRequireSuperuserAuthOnlyIfAny"
 	DefaultRequireSuperuserOrOwnerAuthMiddlewareId      = "pbRequireSuperuserOrOwnerAuth"
 	DefaultRequireSameCollectionContextAuthMiddlewareId = "pbRequireSameCollectionContextAuth"
 )
@@ -107,31 +106,6 @@ func RequireSuperuserAuth() *hook.Handler[*core.RequestEvent] {
 	return &hook.Handler[*core.RequestEvent]{
 		Id:   DefaultRequireSuperuserAuthMiddlewareId,
 		Func: requireAuth(core.CollectionNameSuperusers),
-	}
-}
-
-// RequireSuperuserAuthOnlyIfAny middleware requires a request to have
-// a valid superuser Authorization header ONLY if the application has
-// at least 1 existing superuser.
-func RequireSuperuserAuthOnlyIfAny() *hook.Handler[*core.RequestEvent] {
-	return &hook.Handler[*core.RequestEvent]{
-		Id: DefaultRequireSuperuserAuthOnlyIfAnyMiddlewareId,
-		Func: func(e *core.RequestEvent) error {
-			if e.HasSuperuserAuth() {
-				return e.Next()
-			}
-
-			totalSuperusers, err := e.App.CountRecords(core.CollectionNameSuperusers)
-			if err != nil {
-				return e.InternalServerError("Failed to fetch superusers info.", err)
-			}
-
-			if totalSuperusers == 0 {
-				return e.Next()
-			}
-
-			return requireAuth(core.CollectionNameSuperusers)(e)
-		},
 	}
 }
 
