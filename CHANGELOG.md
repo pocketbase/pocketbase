@@ -7,7 +7,7 @@
 
 - Skip the default `loadAuthToken` middleware if `e.Auth` is already loaded ([#5800](https://github.com/pocketbase/pocketbase/discussions/5800)).
 
-- ⚠️ Changed the initial PocketBase startup behavior based on @todo.
+- ⚠️ Changes regarding the first superuser creation based on [#5814](https://github.com/pocketbase/pocketbase/discussions/5814).
 
 - ⚠️ Removed `apis.RequireSuperuserAuthOnlyIfAny()` middleware.
 
