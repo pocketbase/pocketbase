@@ -38,7 +38,7 @@ func loadInstaller(app core.App, dashboardURL string) error {
 	_ = launchURL(url)
 	color.Magenta("\n(!) Launch the URL below in the browser if it hasn't been open already to create your first superuser account:")
 	color.New(color.Bold).Add(color.FgCyan).Println(url)
-	color.New(color.FgHiBlack, color.Italic).Printf("(you can also create your first superuser account by running '%s superuser upsert test@example.com yourpass')\n", os.Args[0])
+	color.New(color.FgHiBlack, color.Italic).Printf("(you can also create your first superuser account by running: %s superuser upsert EMAIL PASS)\n", os.Args[0])
 
 	return nil
 }
