@@ -11,7 +11,7 @@ import (
 )
 
 // NewSuperuserCommand creates and returns new command for managing
-// superuser accounts (create, update, delete).
+// superuser accounts (create, update, upsert, delete).
 func NewSuperuserCommand(app core.App) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "superuser",

@@ -27,10 +27,9 @@ type ServeConfig struct {
 	// ShowStartBanner indicates whether to show or hide the server start console message.
 	ShowStartBanner bool
 
-	// DashboardPath specifies the route path to the superusers dashboard interface
-	// (default to "/_/{path...}").
+	// DashboardPath specifies the route path to the superusers dashboard (default to "_").
 	//
-	// Note: Must include the "{path...}" wildcard parameter.
+	// Currently it is limited to a single path segment (this is because the UI is not extendable at the moment).
 	DashboardPath string
 
 	// HttpAddr is the TCP address to listen for the HTTP server (eg. "127.0.0.1:80").
@@ -68,9 +67,12 @@ func Serve(app core.App, config ServeConfig) error {
 	}
 
 	if config.DashboardPath == "" {
-		config.DashboardPath = "/_/{path...}"
-	} else if !strings.HasSuffix(config.DashboardPath, "{path...}") {
-		return errors.New("invalid dashboard path - missing {path...} wildcard")
+		config.DashboardPath = "_"
+	} else {
+		config.DashboardPath = strings.Trim(config.DashboardPath, "/")
+		if strings.Contains(config.DashboardPath, "/") {
+			return errors.New("the dashboard path must be single path segment: _, admin, etc.")
+		}
 	}
 
 	// ensure that the latest migrations are applied before starting the server
@@ -89,7 +91,7 @@ func Serve(app core.App, config ServeConfig) error {
 		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 	}))
 
-	pbRouter.GET(config.DashboardPath, Static(ui.DistDirFS, false)).
+	pbRouter.GET("/"+config.DashboardPath+"/{path...}", Static(ui.DistDirFS, false)).
 		BindFunc(func(e *core.RequestEvent) error {
 			// ingore root path
 			if e.Request.PathValue(StaticWildcardParam) != "" {
@@ -252,7 +254,8 @@ func Serve(app core.App, config ServeConfig) error {
 			addr = config.CertificateDomains[0]
 		}
 	}
-	fullAddr := fmt.Sprintf("%s://%s", schema, addr)
+	baseURL := fmt.Sprintf("%s://%s", schema, addr)
+	dashboardURL := fmt.Sprintf("%s/%s", baseURL, config.DashboardPath)
 
 	if config.ShowStartBanner {
 		date := new(strings.Builder)
@@ -262,16 +265,16 @@ func Serve(app core.App, config ServeConfig) error {
 		bold.Printf(
 			"%s Server started at %s\n",
 			strings.TrimSpace(date.String()),
-			color.CyanString("%s", fullAddr),
+			color.CyanString("%s", baseURL),
 		)
 
 		regular := color.New()
-		regular.Printf("├─ REST API:  %s\n", color.CyanString("%s/api/", fullAddr))
-		regular.Printf("└─ Dashboard: %s\n", color.CyanString("%s/_/", fullAddr))
+		regular.Printf("├─ REST API:  %s\n", color.CyanString("%s/api/", baseURL))
+		regular.Printf("└─ Dashboard: %s\n", color.CyanString("%s/", dashboardURL))
 	}
 
 	go func() {
-		installerErr := loadInstaller(app, fullAddr)
+		installerErr := loadInstaller(app, dashboardURL)
 		if installerErr != nil {
 			app.Logger().Warn("Failed to initialize installer", "error", installerErr)
 		}

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -16,9 +17,8 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-const installerHookId = "__pbinstallerHook"
-
-func loadInstaller(app core.App, hostURL string) error {
+// @todo consider combining with the installer specific hooks after refactoring cmd
+func loadInstaller(app core.App, dashboardURL string) error {
 	if !needInstallerSuperuser(app) {
 		return nil
 	}
@@ -34,11 +34,11 @@ func loadInstaller(app core.App, hostURL string) error {
 	}
 
 	// launch url (ignore errors and always print a help text as fallback)
-	url := fmt.Sprintf("%s/_/#/pbinstal/%s", hostURL, token)
+	url := fmt.Sprintf("%s/#/pbinstal/%s", strings.TrimRight(dashboardURL, "/"), token)
 	_ = launchURL(url)
 	color.Magenta("\n(!) Launch the URL below in the browser if it hasn't been open already to create your first superuser account:")
 	color.New(color.Bold).Add(color.FgCyan).Println(url)
-	color.New(color.FgHiBlack, color.Italic).Printf("(you can also create your first superuser account by running '%s superuser upsert test@example.com yourpass' and restart the server)\n", os.Args[0])
+	color.New(color.FgHiBlack, color.Italic).Printf("(you can also create your first superuser account by running '%s superuser upsert test@example.com yourpass')\n", os.Args[0])
 
 	return nil
 }
@@ -47,6 +47,7 @@ func needInstallerSuperuser(app core.App) bool {
 	total, err := app.CountRecords(core.CollectionNameSuperusers, dbx.Not(dbx.HashExp{
 		"email": core.DefaultInstallerEmail,
 	}))
+
 	return err == nil && total == 0
 }
 

@@ -78,8 +78,8 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	command.PersistentFlags().StringVar(
 		&dashboardPath,
 		"dashboard",
-		"/_/{path...}",
-		"The route path to the superusers dashboard; must include the '{path...}' wildcard parameter",
+		"_",
+		"The route path to the superusers dashboard (currently limited to a single path segment)",
 	)
 
 	return command
