@@ -270,7 +270,12 @@ func Serve(app core.App, config ServeConfig) error {
 		regular.Printf("└─ Dashboard: %s\n", color.CyanString("%s/_/", fullAddr))
 	}
 
-	go loadInstaller(app, fullAddr)
+	go func() {
+		installerErr := loadInstaller(app, fullAddr)
+		if installerErr != nil {
+			app.Logger().Warn("Failed to initialize installer", "error", installerErr)
+		}
+	}()
 
 	var serveErr error
 	if config.HttpsAddr != "" {

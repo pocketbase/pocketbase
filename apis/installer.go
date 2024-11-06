@@ -13,11 +13,9 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-const installerEmail = "__pbinstaller@example.com"
 const installerHookId = "__pbinstallerHook"
 
 func loadInstaller(app core.App, hostURL string) error {
@@ -35,39 +33,6 @@ func loadInstaller(app core.App, hostURL string) error {
 		return err
 	}
 
-	// prevent sending password reset emails to the installer address
-	app.OnMailerRecordPasswordResetSend(core.CollectionNameSuperusers).Bind(&hook.Handler[*core.MailerRecordEvent]{
-		Id: installerHookId,
-		Func: func(e *core.MailerRecordEvent) error {
-			if e.Record.Email() == installerEmail {
-				return errors.New("cannot reset the password for the installer account")
-			}
-
-			return e.Next()
-		},
-	})
-
-	// cleanup the installer account after the first superuser creation
-	app.OnRecordCreate(core.CollectionNameSuperusers).Bind(&hook.Handler[*core.RecordEvent]{
-		Id: installerHookId,
-		Func: func(e *core.RecordEvent) error {
-			if err := e.Next(); err != nil {
-				return err
-			}
-
-			color.Green("Successfully created superuser %s! This message will no longer show on the next startup.\n\n", e.Record.Email())
-
-			if err = e.App.Delete(installerRecord); err != nil {
-				e.App.Logger().Error("Failed to remove installer superuser", "error", err)
-			}
-
-			app.OnRecordCreate().Unbind(installerHookId)
-			app.OnMailerRecordPasswordResetSend().Unbind(installerHookId)
-
-			return nil
-		},
-	})
-
 	// launch url (ignore errors and always print a help text as fallback)
 	url := fmt.Sprintf("%s/_/#/pbinstal/%s", hostURL, token)
 	_ = launchURL(url)
@@ -80,7 +45,7 @@ func loadInstaller(app core.App, hostURL string) error {
 
 func needInstallerSuperuser(app core.App) bool {
 	total, err := app.CountRecords(core.CollectionNameSuperusers, dbx.Not(dbx.HashExp{
-		"email": installerEmail,
+		"email": core.DefaultInstallerEmail,
 	}))
 	return err == nil && total == 0
 }
@@ -91,14 +56,14 @@ func findOrCreateInstallerSuperuser(app core.App) (*core.Record, error) {
 		return nil, err
 	}
 
-	record, err := app.FindAuthRecordByEmail(col, installerEmail)
+	record, err := app.FindAuthRecordByEmail(col, core.DefaultInstallerEmail)
 	if err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			return nil, err
 		}
 
 		record = core.NewRecord(col)
-		record.SetEmail(installerEmail)
+		record.SetEmail(core.DefaultInstallerEmail)
 		record.SetPassword(security.RandomString(30))
 
 		err = app.Save(record)
