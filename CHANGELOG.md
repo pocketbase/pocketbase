@@ -7,6 +7,11 @@
 
 - Skip the default `loadAuthToken` middleware if `e.Auth` is already loaded ([#5800](https://github.com/pocketbase/pocketbase/discussions/5800)).
 
+- Restored the API rules for the default initial "users" collection migration to be the same as in <= v0.22.x.
+
+- ⚠️ Replaced the old Instagram provider with a new one that is compatible with the new Instagram Login APIs ([#5588](https://github.com/pocketbase/pocketbase/pull/5588); thanks @pnmcosta).
+    _The provider key is `instagram2` to prevent conflicts with existing linked users._
+
 - ⚠️ Changes regarding the first superuser creation based on [#5814](https://github.com/pocketbase/pocketbase/discussions/5814).
 
 - ⚠️ Removed `apis.RequireSuperuserAuthOnlyIfAny()` middleware.

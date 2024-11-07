@@ -45,7 +45,7 @@ export default [
         logo: "facebook.svg",
     },
     {
-        key: "instagram",
+        key: "instagram2",
         title: "Instagram",
         logo: "instagram.svg",
     },
