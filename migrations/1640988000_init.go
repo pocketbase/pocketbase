@@ -309,6 +309,14 @@ func createSuperusersCollection(txApp core.App) error {
 
 func createUsersCollection(txApp core.App) error {
 	users := core.NewAuthCollection("users", "_pb_users_auth_")
+
+	ownerRule := "id = @request.auth.id"
+	users.ListRule = types.Pointer(ownerRule)
+	users.ViewRule = types.Pointer(ownerRule)
+	users.CreateRule = types.Pointer("")
+	users.UpdateRule = types.Pointer(ownerRule)
+	users.DeleteRule = types.Pointer(ownerRule)
+
 	users.Fields.Add(&core.TextField{
 		Name: "name",
 		Max:  255,
