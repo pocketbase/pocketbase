@@ -2,6 +2,15 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.23
+
+- Updated the hooks watcher to account for the case when hooksDir is a symlink ([#5789](https://github.com/pocketbase/pocketbase/issues/5789)).
+
+- _(Backported from v0.23.0-rc)_ Registered a default `http.Server.ErrorLog` handler to report general server connection errors as app Debug level logs (e.g. invalid TLS handshakes caused by bots trying to access your server via its IP or other similar errors).
+
+- Other minor fixes (updated npm dev deps to fix the vulnerabilities warning, added more user friendly realtime topic length error, regenerated JSVM types, etc.)
+
+
 ## v0.22.22
 
 - Added deprecation log in case Instagram OAuth2 is used (_related to [#5652](https://github.com/pocketbase/pocketbase/discussions/5652)_).
