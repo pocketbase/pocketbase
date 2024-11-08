@@ -539,6 +539,86 @@ func TestRateLimitsConfigValidate(t *testing.T) {
 			},
 			[]string{},
 		},
+		{
+			"duplicated rules with the same audience",
+			core.RateLimitsConfig{
+				Enabled: true,
+				Rules: []core.RateLimitRule{
+					{
+						Label:       "/a",
+						Duration:    1,
+						MaxRequests: 2,
+					},
+					{
+						Label:       "/a",
+						Duration:    2,
+						MaxRequests: 3,
+					},
+				},
+			},
+			[]string{"rules"},
+		},
+		{
+			"duplicated rule with conflicting audience (A)",
+			core.RateLimitsConfig{
+				Enabled: true,
+				Rules: []core.RateLimitRule{
+					{
+						Label:       "/a",
+						Duration:    1,
+						MaxRequests: 2,
+					},
+					{
+						Label:       "/a",
+						Duration:    1,
+						MaxRequests: 2,
+						Audience:    core.RateLimitRuleAudienceGuest,
+					},
+				},
+			},
+			[]string{"rules"},
+		},
+		{
+			"duplicated rule with conflicting audience (B)",
+			core.RateLimitsConfig{
+				Enabled: true,
+				Rules: []core.RateLimitRule{
+					{
+						Label:       "/a",
+						Duration:    1,
+						MaxRequests: 2,
+						Audience:    core.RateLimitRuleAudienceAuth,
+					},
+					{
+						Label:       "/a",
+						Duration:    1,
+						MaxRequests: 2,
+					},
+				},
+			},
+			[]string{"rules"},
+		},
+		{
+			"duplicated rule with non-conflicting audience",
+			core.RateLimitsConfig{
+				Enabled: true,
+				Rules: []core.RateLimitRule{
+					{
+						Label:       "/a",
+						Duration:    1,
+						MaxRequests: 2,
+						Audience:    core.RateLimitRuleAudienceAuth,
+					},
+					{
+						Label:       "/a",
+						Duration:    1,
+						MaxRequests: 2,
+						Audience:    core.RateLimitRuleAudienceGuest,
+					},
+				},
+			},
+			[]string{},
+		},
 	}
 
 	for _, s := range scenarios {
@@ -611,8 +691,9 @@ func TestRateLimitRuleValidate(t *testing.T) {
 				Label:       "@abc",
 				Duration:    -1,
 				MaxRequests: -1,
+				Audience:    "invalid",
 			},
-			[]string{"label", "duration", "maxRequests"},
+			[]string{"label", "duration", "maxRequests", "audience"},
 		},
 		{
 			"valid data (name)",
@@ -656,6 +737,36 @@ func TestRateLimitRuleValidate(t *testing.T) {
 				Label:       "POST /a/b/",
 				Duration:    1,
 				MaxRequests: 1,
+			},
+			[]string{},
+		},
+		{
+			"invalid audience",
+			core.RateLimitRule{
+				Label:       "/a/b/",
+				Duration:    1,
+				MaxRequests: 1,
+				Audience:    "invalid",
+			},
+			[]string{"audience"},
+		},
+		{
+			"valid audience - " + core.RateLimitRuleAudienceGuest,
+			core.RateLimitRule{
+				Label:       "POST /a/b/",
+				Duration:    1,
+				MaxRequests: 1,
+				Audience:    core.RateLimitRuleAudienceGuest,
+			},
+			[]string{},
+		},
+		{
+			"valid audience - " + core.RateLimitRuleAudienceAuth,
+			core.RateLimitRule{
+				Label:       "POST /a/b/",
+				Duration:    1,
+				MaxRequests: 1,
+				Audience:    core.RateLimitRuleAudienceAuth,
 			},
 			[]string{},
 		},

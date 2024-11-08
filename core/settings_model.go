@@ -617,19 +617,28 @@ func checkUniqueRuleLabel(value any) error {
 		return validators.ErrUnsupportedValueType
 	}
 
-	labels := make(map[string]struct{}, len(rules))
+	existing := make([]string, 0, len(rules))
 
 	for i, rule := range rules {
-		_, ok := labels[rule.Label]
-		if ok {
+		fullKey := rule.Label + "@@" + rule.Audience
+
+		var conflicts bool
+		for _, key := range existing {
+			if strings.HasPrefix(key, fullKey) || strings.HasPrefix(fullKey, key) {
+				conflicts = true
+				break
+			}
+		}
+
+		if conflicts {
 			return validation.Errors{
 				strconv.Itoa(i): validation.Errors{
-					"label": validation.NewError("validation_duplicated_rate_limit_tag", "Rate limit tag with label "+rule.Label+" already exists.").
+					"label": validation.NewError("validation_conflcting_rate_limit_rule", "Rate limit rule configuration with label "+rule.Label+" already exists or conflicts with another rule.").
 						SetParams(map[string]any{"label": rule.Label}),
 				},
 			}
 		} else {
-			labels[rule.Label] = struct{}{}
+			existing = append(existing, fullKey)
 		}
 	}
 
@@ -637,6 +646,13 @@ func checkUniqueRuleLabel(value any) error {
 }
 
 var rateLimitRuleLabelRegex = regexp.MustCompile(`^(\w+\ \/[\w\/-]*|\/[\w\/-]*|^\w+\:\w+|\*\:\w+|\w+)$`)
+
+// The allowed RateLimitRule.Audience values
+const (
+	RateLimitRuleAudienceAll   = ""
+	RateLimitRuleAudienceGuest = "@guest"
+	RateLimitRuleAudienceAuth  = "@auth"
+)
 
 type RateLimitRule struct {
 	// Label is the identifier of the current rule.
@@ -652,12 +668,18 @@ type RateLimitRule struct {
 	//   - POST /api/collections/
 	Label string `form:"label" json:"label"`
 
-	// MaxRequests is the max allowed number of requests per Duration.
-	MaxRequests int `form:"maxRequests" json:"maxRequests"`
+	// Audience specifies the auth group the rule should apply for:
+	//   - ""      - both guests and authenticated users (default)
+	//   - "guest" - only for guests
+	//   - "auth"  - only for authenticated users
+	Audience string `form:"audience" json:"audience"`
 
 	// Duration specifies the interval (in seconds) per which to reset
 	// the counted/accumulated rate limiter tokens.
 	Duration int64 `form:"duration" json:"duration"`
+
+	// MaxRequests is the max allowed number of requests per Duration.
+	MaxRequests int `form:"maxRequests" json:"maxRequests"`
 }
 
 // Validate makes RateLimitRule validatable by implementing [validation.Validatable] interface.
@@ -666,6 +688,9 @@ func (c RateLimitRule) Validate() error {
 		validation.Field(&c.Label, validation.Required, validation.Match(rateLimitRuleLabelRegex)),
 		validation.Field(&c.MaxRequests, validation.Required, validation.Min(1)),
 		validation.Field(&c.Duration, validation.Required, validation.Min(1)),
+		validation.Field(&c.Audience,
+			validation.In(RateLimitRuleAudienceAll, RateLimitRuleAudienceGuest, RateLimitRuleAudienceAuth),
+		),
 	)
 }
 

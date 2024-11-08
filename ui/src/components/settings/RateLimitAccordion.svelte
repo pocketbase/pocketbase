@@ -5,11 +5,18 @@
     import Accordion from "@/components/base/Accordion.svelte";
     import Field from "@/components/base/Field.svelte";
     import AutocompleteInput from "@/components/base/AutocompleteInput.svelte";
+    import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
-    import { errors, setErrors } from "@/stores/errors";
+    import { errors, setErrors, removeError } from "@/stores/errors";
     import { collections, loadCollections } from "@/stores/collections";
 
     export let formSettings;
+
+    const audienceOptions = [
+        { value: "", label: "All" },
+        { value: "@guest", label: "Guest only" },
+        { value: "@auth", label: "Auth only" },
+    ];
 
     const basePredefinedTags = [
         { value: "*:list" },
@@ -95,6 +102,7 @@
             label: "",
             maxRequests: 300,
             duration: 10,
+            audience: "",
         });
 
         formSettings.rateLimits.rules = formSettings.rateLimits.rules;
@@ -149,16 +157,17 @@
         <table class="rate-limit-table">
             <thead>
                 <tr>
-                    <th>Rate limit label</th>
-                    <th>Max requests (per IP)</th>
-                    <th>Interval (in seconds)</th>
+                    <th class="col-label">Rate limit label</th>
+                    <th class="col-requests">Max requests<br /><small>(per IP)</small></th>
+                    <th class="col-duration">Interval<br /><small>(in seconds)</small></th>
+                    <th class="col-audience">Targetted users</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 {#each formSettings.rateLimits.rules || [] as rule, i}
                     <tr class="rate-limit-row">
-                        <td class="col-tag">
+                        <td class="col-label">
                             <Field class="form-field" name={"rateLimits.rules." + i + ".label"} inlineError>
                                 <AutocompleteInput
                                     required
@@ -184,7 +193,7 @@
                                 />
                             </Field>
                         </td>
-                        <td class="col-burst">
+                        <td class="col-duration">
                             <Field
                                 class="form-field"
                                 name={"rateLimits.rules." + i + ".duration"}
@@ -197,6 +206,21 @@
                                     min="1"
                                     step="1"
                                     bind:value={rule.duration}
+                                />
+                            </Field>
+                        </td>
+                        <td class="col-audience">
+                            <Field
+                                class="form-field"
+                                name={"rateLimits.rules." + i + ".audience"}
+                                inlineError
+                            >
+                                <ObjectSelect
+                                    items={audienceOptions}
+                                    bind:keyOfSelected={rule.audience}
+                                    on:change={() => {
+                                        removeError("rateLimits.rules." + i); // reset rule errors
+                                    }}
                                 />
                             </Field>
                         </td>

@@ -58,17 +58,21 @@
     }
 
     // cols
-    .col-tag {
-        width: 50%;
+    .col-label {
+        width: 60%;
     }
     .col-requests,
-    .col-burst {
-        width: 25%;
+    .col-duration {
+        width: 15%;
+    }
+    .col-audience {
+        width: 1px;
+        min-width: 120px;
+        white-space: nowrap;
     }
     .col-action {
         width: 1px;
         min-width: 0;
-        white-space: nowrap;
         padding: 0 5px !important;
     }
 }

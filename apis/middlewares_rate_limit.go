@@ -106,6 +106,19 @@ func checkCollectionRateLimit(e *core.RequestEvent, collection *core.Collection,
 
 // @todo consider exporting as RateLimit helper?
 func checkRateLimit(e *core.RequestEvent, rtId string, rule core.RateLimitRule) error {
+	switch rule.Audience {
+	case core.RateLimitRuleAudienceAll:
+		// valid for both guest and regular users
+	case core.RateLimitRuleAudienceGuest:
+		if e.Auth != nil {
+			return nil
+		}
+	case core.RateLimitRuleAudienceAuth:
+		if e.Auth == nil {
+			return nil
+		}
+	}
+
 	rateLimiters := e.App.Store().GetOrSet(rateLimitersStoreKey, func() any {
 		return initRateLimitersStore(e.App)
 	}).(*store.Store[*rateLimiter])

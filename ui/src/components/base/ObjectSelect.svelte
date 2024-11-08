@@ -50,7 +50,17 @@
     }
 </script>
 
-<Select bind:selected {items} {multiple} {labelComponent} {optionComponent} on:show on:hide {...$$restProps}>
+<Select
+    bind:selected
+    {items}
+    {multiple}
+    {labelComponent}
+    {optionComponent}
+    on:show
+    on:hide
+    on:change
+    {...$$restProps}
+>
     <svelte:fragment slot="afterOptions">
         <slot name="afterOptions" />
     </svelte:fragment>

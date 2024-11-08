@@ -4,6 +4,7 @@
     import tooltip from "@/actions/tooltip";
     import { addSuccessToast } from "@/stores/toasts";
     import { appName, hideControls, pageTitle } from "@/stores/app";
+    import { setErrors } from "@/stores/errors";
     import Field from "@/components/base/Field.svelte";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
@@ -61,6 +62,8 @@
             init(settings);
 
             await loadHealthData();
+
+            setErrors({});
 
             addSuccessToast("Successfully saved application settings.");
         } catch (err) {
