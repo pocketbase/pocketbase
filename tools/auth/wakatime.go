@@ -66,7 +66,7 @@ func (p *Wakatime) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:           extracted.Data.Id,
 		Name:         extracted.Data.DisplayName,
-		Username:     *extracted.Data.Username,
+		Username:     extracted.Data.DisplayName,
 		Email:        extracted.Data.Email,
 		AvatarURL:    extracted.Data.Photo,
 
