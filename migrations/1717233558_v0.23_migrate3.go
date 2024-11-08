@@ -93,6 +93,13 @@ func init() {
 				return err
 			}
 
+			// make sure that the cached collection id is also updated
+			cached, err := txApp.FindCachedCollectionByNameOrId(c.Name)
+			if err != nil {
+				return err
+			}
+			cached.Id = c.Id
+
 			// update collection references
 			for refCollection, fields := range references {
 				for _, f := range fields {
@@ -103,7 +110,7 @@ func init() {
 
 					relationField.CollectionId = c.Id
 				}
-				if err = txApp.Save(refCollection); err != nil {
+				if err = txApp.SaveNoValidate(refCollection); err != nil {
 					return err
 				}
 			}
@@ -111,7 +118,7 @@ func init() {
 			// update mfas references
 			for _, item := range mfas {
 				item.SetCollectionRef(c.Id)
-				if err = txApp.Save(item); err != nil {
+				if err = txApp.SaveNoValidate(item); err != nil {
 					return err
 				}
 			}
@@ -119,7 +126,7 @@ func init() {
 			// update otps references
 			for _, item := range otps {
 				item.SetCollectionRef(c.Id)
-				if err = txApp.Save(item); err != nil {
+				if err = txApp.SaveNoValidate(item); err != nil {
 					return err
 				}
 			}
@@ -127,7 +134,7 @@ func init() {
 			// update authOrigins references
 			for _, item := range authOrigins {
 				item.SetCollectionRef(c.Id)
-				if err = txApp.Save(item); err != nil {
+				if err = txApp.SaveNoValidate(item); err != nil {
 					return err
 				}
 			}

@@ -1,3 +1,11 @@
+## v0.23.0-rc12
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Fixed validation error caused by the id change in v0.23.0-rc10 migration ([#5820](https://github.com/pocketbase/pocketbase/discussions/5820)).
+
+
 ## v0.23.0-rc11
 
 > [!CAUTION]
