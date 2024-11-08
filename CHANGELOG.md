@@ -1,3 +1,13 @@
+## v0.23.0-rc13 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Added `superuser otp EMAIL` command as fallback for generating superuser OTPs from the command line in case OTP has been enabled for the `_superusers` but the SMTP server has deliverability issues.
+
+- Added `RateLimitRule.Audience` optional field for restricting a rate limit rule for `"@guest"`-only, `"@auth"`-only, `""`-any (default).
+
+
 ## v0.23.0-rc12
 
 > [!CAUTION]
@@ -341,6 +351,8 @@ For upgrading to PocketBase v0.23.0, please refer to:
 - New `POST /api/collections/{collection}/auth-with-otp` endpoint.
 
 - New `POST /api/collections/{collection}/impersonate/{id}` endpoint.
+
+- ⚠️ Removed `/api/admins/*` endpoints because admins are converted to `_superusers` auth collection records.
 
 - ⚠️ Previously when uploading new files to a multiple `file` field, new files were automatically appended to the existing field values.
      This behaviour has changed with v0.23+ and for consistency with the other multi-valued fields when uploading new files they will replace the old ones. If you want to prepend or append new files to an existing multiple `file` field value you can use the `+` prefix or suffix:

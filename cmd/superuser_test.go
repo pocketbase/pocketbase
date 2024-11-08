@@ -308,3 +308,96 @@ func TestSuperuserDeleteCommand(t *testing.T) {
 		})
 	}
 }
+
+func TestSuperuserOTPCommand(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	superusersCollection, err := app.FindCollectionByNameOrId(core.CollectionNameSuperusers)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// remove all existing otps
+	otps, err := app.FindAllOTPsByCollection(superusersCollection)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, otp := range otps {
+		err = app.Delete(otp)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	scenarios := []struct {
+		name        string
+		email       string
+		enabled     bool
+		expectError bool
+	}{
+		{
+			"empty email",
+			"",
+			true,
+			true,
+		},
+		{
+			"invalid email",
+			"invalid",
+			true,
+			true,
+		},
+		{
+			"nonexisting superuser",
+			"test_missing@example.com",
+			true,
+			true,
+		},
+		{
+			"existing superuser",
+			"test@example.com",
+			true,
+			false,
+		},
+		{
+			"existing superuser with disabled OTP",
+			"test@example.com",
+			false,
+			true,
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			command := cmd.NewSuperuserCommand(app)
+			command.SetArgs([]string{"otp", s.email})
+
+			superusersCollection.OTP.Enabled = s.enabled
+			if err = app.SaveNoValidate(superusersCollection); err != nil {
+				t.Fatal(err)
+			}
+
+			err := command.Execute()
+
+			hasErr := err != nil
+			if s.expectError != hasErr {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
+			}
+
+			if hasErr {
+				return
+			}
+
+			superuser, err := app.FindAuthRecordByEmail(superusersCollection, s.email)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			otps, _ := app.FindAllOTPsByRecord(superuser)
+			if total := len(otps); total != 1 {
+				t.Fatalf("Expected 1 OTP, got %d", total)
+			}
+		})
+	}
+}
