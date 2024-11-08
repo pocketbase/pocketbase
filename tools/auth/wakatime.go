@@ -28,9 +28,9 @@ func NewWakatimeProvider() *Wakatime {
 		ctx:         context.Background(),
 		displayName: "Wakatime",
 		pkce:        false,
-		scopes:      []string{"account"},
-		authURL:     "https://wakatime.com/oauth/oauth",
-		tokenURL:    "https://wakatime.com/oauth/authorize",
+		scopes:      []string{"read_summaries","email"},
+		authURL:     "https://wakatime.com/oauth/authorize",
+		tokenURL:    "https://wakatime.com/oauth/token",
 		userInfoURL: "https://wakatime.com/api/v1/users/current",
 	}}
 }
