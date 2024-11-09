@@ -51,7 +51,7 @@ func (p *Wakatime) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	type Data struct {
 		Id                      string    `json:"id"`
 		DisplayName             string    `json:"display_name"`
-		Username                *string   `json:"username"`
+		Username                string   `json:"username"`
 		Email                   string    `json:"email"`
 		Photo                   string    `json:"photo"`
 	}
@@ -66,7 +66,7 @@ func (p *Wakatime) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user := &AuthUser{
 		Id:           extracted.Data.Id,
 		Name:         extracted.Data.DisplayName,
-		Username:     extracted.Data.DisplayName,
+		Username:     extracted.Data.Username,
 		Email:        extracted.Data.Email,
 		AvatarURL:    extracted.Data.Photo,
 
