@@ -52,7 +52,7 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 	}
 
 	// since otps are usually simple digit numbers we enforce an extra rate limit rule to prevent enumerations
-	err = checkRateLimit(e, "@pb_otp_"+event.OTP.Id+event.Record.Id, core.RateLimitRule{MaxRequests: 4, Duration: 180})
+	err = checkRateLimit(e, "@pb_otp_"+event.Record.Id, core.RateLimitRule{MaxRequests: 5, Duration: 180})
 	if err != nil {
 		return e.TooManyRequestsError("Too many attempts, please try again later with a new OTP.", nil)
 	}

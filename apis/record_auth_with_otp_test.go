@@ -387,11 +387,13 @@ func TestRecordAuthWithOTPManualRateLimiterCheck(t *testing.T) {
 	}{
 		{otpAId, "12345", 400},
 		{otpAId, "12345", 400},
-		{otpAId, "12345", 400},
-		{otpAId, "12345", 400},
-		{otpAId, "123456", 429},
 		{otpBId, "12345", 400},
-		{otpBId, "123456", 200},
+		{otpBId, "12345", 400},
+		{otpBId, "12345", 400},
+		{otpAId, "12345", 429},
+		{otpAId, "123456", 429}, // reject even if it is correct
+		{otpAId, "123456", 429},
+		{otpBId, "123456", 429},
 	}
 
 	for _, s := range scenarios {
