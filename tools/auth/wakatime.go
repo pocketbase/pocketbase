@@ -27,8 +27,8 @@ func NewWakatimeProvider() *Wakatime {
 	return &Wakatime{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Wakatime",
-		pkce:        false,
-		scopes:      []string{"read_summaries","email"},
+		pkce:        true,
+		scopes:      []string{"email"},
 		authURL:     "https://wakatime.com/oauth/authorize",
 		tokenURL:    "https://wakatime.com/oauth/token",
 		userInfoURL: "https://wakatime.com/api/v1/users/current",
@@ -37,7 +37,7 @@ func NewWakatimeProvider() *Wakatime {
 
 // FetchAuthUser returns an AuthUser instance based on the Wakatime's user API.
 //
-// API reference: https://wakatime.com/developers#authentication
+// API reference: https://wakatime.com/developers#users
 func (p *Wakatime) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
@@ -48,15 +48,17 @@ func (p *Wakatime) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	if err := json.Unmarshal(data, &rawUser); err != nil {
 		return nil, err
 	}
-	type Data struct {
-		Id                      string    `json:"id"`
-		DisplayName             string    `json:"display_name"`
-		Username                string   `json:"username"`
-		Email                   string    `json:"email"`
-		Photo                   string    `json:"photo"`
-	}
+	
 	extracted := struct {
-		Data Data `json:"data"`
+		Data struct {
+		Id               string `json:"id"`
+		DisplayName      string `json:"display_name"`
+		Username         string `json:"username"`
+		Email            string `json:"email"`
+		IsEmailConfirmed bool   `json:"is_email_confirmed"`
+		IsEmailPublic    bool   `json:"is_email_public"`
+		Photo            string `json:"photo"`
+	} `json:"data"`
 	}{}
 
 	if err := json.Unmarshal(data, &extracted); err != nil {
@@ -64,20 +66,21 @@ func (p *Wakatime) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:           extracted.Data.Id,
-		Name:         extracted.Data.DisplayName,
-		Username:     extracted.Data.Username,
-		Email:        extracted.Data.Email,
-		AvatarURL:    extracted.Data.Photo,
+		Id:        extracted.Data.Id,
+		Name:      extracted.Data.DisplayName,
+		Username:  extracted.Data.Username,
+		AvatarURL: extracted.Data.Photo,
 
 		RawUser:      rawUser,
 		AccessToken:  token.AccessToken,
 		RefreshToken: token.RefreshToken,
 	}
 
+    if extracted.Data.IsEmailConfirmed && extracted.Data.Email != "" {
+        user.Email = extracted.Data.Email
+    }
+
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	return user, nil
 }
-
-
