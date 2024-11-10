@@ -739,14 +739,14 @@ func (f *FileField) toSliceValue(raw any) []any {
 }
 
 func (f *FileField) uniqueFiles(files []any) []any {
-	existing := make(map[string]struct{}, len(files))
+	found := make(map[string]struct{}, len(files))
 	result := make([]any, 0, len(files))
 
 	for _, fv := range files {
 		name := f.getFileName(fv)
-		if _, ok := existing[name]; !ok {
+		if _, ok := found[name]; !ok {
 			result = append(result, fv)
-			existing[name] = struct{}{}
+			found[name] = struct{}{}
 		}
 	}
 
