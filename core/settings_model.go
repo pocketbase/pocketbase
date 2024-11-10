@@ -123,10 +123,10 @@ type settings struct {
 	Backups      BackupsConfig      `form:"backups" json:"backups"`
 	S3           S3Config           `form:"s3" json:"s3"`
 	Meta         MetaConfig         `form:"meta" json:"meta"`
-	Logs         LogsConfig         `form:"logs" json:"logs"`
-	Batch        BatchConfig        `form:"batch" json:"batch"`
 	RateLimits   RateLimitsConfig   `form:"rateLimits" json:"rateLimits"`
 	TrustedProxy TrustedProxyConfig `form:"trustedProxy" json:"trustedProxy"`
+	Batch        BatchConfig        `form:"batch" json:"batch"`
+	Logs         LogsConfig         `form:"logs" json:"logs"`
 }
 
 // Settings defines the PocketBase app settings.
