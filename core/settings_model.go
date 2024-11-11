@@ -633,7 +633,7 @@ func checkUniqueRuleLabel(value any) error {
 		if conflicts {
 			return validation.Errors{
 				strconv.Itoa(i): validation.Errors{
-					"label": validation.NewError("validation_conflcting_rate_limit_rule", "Rate limit rule configuration with label "+rule.Label+" already exists or conflicts with another rule.").
+					"label": validation.NewError("validation_conflicting_rate_limit_rule", "Rate limit rule configuration with label "+rule.Label+" already exists or conflicts with another rule.").
 						SetParams(map[string]any{"label": rule.Label}),
 				},
 			}
