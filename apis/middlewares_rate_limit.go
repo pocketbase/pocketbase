@@ -104,7 +104,29 @@ func checkCollectionRateLimit(e *core.RequestEvent, collection *core.Collection,
 
 // -------------------------------------------------------------------
 
-// @todo consider exporting as RateLimit helper?
+// @todo consider exporting as helper?
+//
+//nolint:unused
+func isClientRateLimited(e *core.RequestEvent, rtId string) bool {
+	rateLimiters, ok := e.App.Store().Get(rateLimitersStoreKey).(*store.Store[*rateLimiter])
+	if !ok || rateLimiters == nil {
+		return false
+	}
+
+	rt, ok := rateLimiters.GetOk(rtId)
+	if !ok || rt == nil {
+		return false
+	}
+
+	client, ok := rt.getClient(e.RealIP())
+	if !ok || client == nil {
+		return false
+	}
+
+	return client.available <= 0 && time.Now().Unix()-client.lastConsume < client.interval
+}
+
+// @todo consider exporting as helper?
 func checkRateLimit(e *core.RequestEvent, rtId string, rule core.RateLimitRule) error {
 	switch rule.Audience {
 	case core.RateLimitRuleAudienceAll:
@@ -210,6 +232,15 @@ type rateLimiter struct {
 	totalDeleted      int64
 
 	sync.RWMutex
+}
+
+//nolint:unused
+func (rt *rateLimiter) getClient(key string) (*fixedWindow, bool) {
+	rt.RLock()
+	client, ok := rt.clients[key]
+	rt.RUnlock()
+
+	return client, ok
 }
 
 func (rt *rateLimiter) isAllowed(key string) bool {
