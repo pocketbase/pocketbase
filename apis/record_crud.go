@@ -1,10 +1,13 @@
 package apis
 
 import (
+	cryptoRand "crypto/rand"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
@@ -86,8 +89,42 @@ func recordsList(e *core.RequestEvent) error {
 			return firstApiError(err, e.InternalServerError("Failed to enrich records", err))
 		}
 
+		// Add a randomized throttle in case of too many empty search filter attempts.
+		//
+		// This is just for extra precaution since security researches raised concern regarding the possibity of eventual
+		// timing attacks because the List API rule acts also as filter and executes in a single run with the client-side filters.
+		// This is by design and it is an accepted tradeoff between performance, usability and correctness.
+		//
+		// While technically the below doesn't fully guarantee protection against filter timing attacks, in practice combined with the network latency it makes them even less feasible.
+		// A properly configured rate limiter or individual fields Hidden checks are better suited if you are really concerned about eventual information disclosure by side-channel attacks.
+		//
+		// In all cases it doesn't really matter that much because it doesn't affect the builtin PocketBase security sensitive fields (e.g. password and tokenKey) since they
+		// are not client-side filterable and in the few places where they need to be compared against an external value, a constant time check is used.
+		if !e.HasSuperuserAuth() &&
+			(collection.ListRule != nil && *collection.ListRule != "") &&
+			(requestInfo.Query["filter"] != "") &&
+			len(e.Records) == 0 &&
+			checkRateLimit(e.RequestEvent, "@pb_list_timing_check_"+collection.Id, listTimingRateLimitRule) != nil {
+			e.App.Logger().Debug("Randomized throttle because of too many failed searches", "collectionId", collection.Id)
+			randomizedThrottle(100)
+		}
+
 		return e.JSON(http.StatusOK, e.Result)
 	})
+}
+
+var listTimingRateLimitRule = core.RateLimitRule{MaxRequests: 3, Duration: 3}
+
+func randomizedThrottle(softMax int64) {
+	var timeout int64
+	randRange, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(softMax))
+	if err == nil {
+		timeout = randRange.Int64()
+	} else {
+		timeout = softMax
+	}
+
+	time.Sleep(time.Duration(timeout) * time.Millisecond)
 }
 
 func recordView(e *core.RequestEvent) error {
