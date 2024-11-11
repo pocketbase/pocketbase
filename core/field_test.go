@@ -91,7 +91,7 @@ func testDefaultFieldIdValidation(t *testing.T, fieldType string) {
 			"invalid length",
 			func() core.Field {
 				f := core.Fields[fieldType]()
-				f.SetId(strings.Repeat("a", 256))
+				f.SetId(strings.Repeat("a", 101))
 				return f
 			},
 			true,
@@ -100,7 +100,7 @@ func testDefaultFieldIdValidation(t *testing.T, fieldType string) {
 			"valid length",
 			func() core.Field {
 				f := core.Fields[fieldType]()
-				f.SetId(strings.Repeat("a", 255))
+				f.SetId(strings.Repeat("a", 100))
 				return f
 			},
 			false,
@@ -142,7 +142,7 @@ func testDefaultFieldNameValidation(t *testing.T, fieldType string) {
 			"invalid length",
 			func() core.Field {
 				f := core.Fields[fieldType]()
-				f.SetName(strings.Repeat("a", 256))
+				f.SetName(strings.Repeat("a", 101))
 				return f
 			},
 			true,
@@ -151,7 +151,7 @@ func testDefaultFieldNameValidation(t *testing.T, fieldType string) {
 			"valid length",
 			func() core.Field {
 				f := core.Fields[fieldType]()
-				f.SetName(strings.Repeat("a", 255))
+				f.SetName(strings.Repeat("a", 100))
 				return f
 			},
 			false,

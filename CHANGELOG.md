@@ -12,7 +12,7 @@
 - Added default max limits for the expressions count and length of the search filter and sort params.
     _This is just an extra measure mostly for the case when the filter and sort parameters are resolved outside of the request context since the request size limits won't apply._
 
-- Other minor changes (better error in case of duplicated rate limit rule, fixed typos, updated Go deps, etc.).
+- Other minor changes (better error in case of duplicated rate limit rule, fixed typos, changed field id and name length validator to max 100, updated Go deps, etc.).
 
 
 ## v0.23.0-rc12

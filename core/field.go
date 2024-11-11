@@ -191,7 +191,7 @@ func DefaultFieldIdValidationRule(value any) error {
 
 	rules := []validation.Rule{
 		validation.Required,
-		validation.Length(1, 255),
+		validation.Length(1, 100),
 	}
 
 	for _, r := range rules {
@@ -217,7 +217,7 @@ func DefaultFieldNameValidationRule(value any) error {
 
 	rules := []validation.Rule{
 		validation.Required,
-		validation.Length(1, 255),
+		validation.Length(1, 100),
 		validation.Match(fieldNameRegex),
 		validation.NotIn(excludeNames...),
 		validation.By(checkForVia),
