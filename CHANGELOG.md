@@ -3,6 +3,8 @@
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
+- Added WakaTime OAuth2 provider ([#5829](https://github.com/pocketbase/pocketbase/pull/5829); thanks @tigawanna).
+
 - Added `superuser otp EMAIL` command as fallback for generating superuser OTPs from the command line in case OTP has been enabled for the `_superusers` but the SMTP server has deliverability issues.
 
 - Added `RateLimitRule.Audience` optional field for restricting a rate limit rule for `"@guest"`-only, `"@auth"`-only, `""`-any (default).
@@ -10,7 +12,7 @@
 - Added default max limits for the expressions count and length of the search filter and sort params.
     _This is just an extra measure mostly for the case when the filter and sort parameters are resolved outside of the request context since the request size limits won't apply._
 
-- Other minor improvements (better error in case of duplicated rate limit rule, fixed typos, resolved lint warnings, etc.).
+- Other minor changes (better error in case of duplicated rate limit rule, fixed typos, updated Go deps, etc.).
 
 
 ## v0.23.0-rc12

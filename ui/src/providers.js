@@ -129,6 +129,11 @@ export default [
         logo: "strava.svg",
     },
     {
+        key: "wakatime",
+        title: "WakaTime",
+        logo: "wakatime.svg",
+    },
+    {
         key: "livechat",
         title: "LiveChat",
         logo: "livechat.svg",
