@@ -160,7 +160,7 @@
                     <th class="col-label">Rate limit label</th>
                     <th class="col-requests">Max requests<br /><small>(per IP)</small></th>
                     <th class="col-duration">Interval<br /><small>(in seconds)</small></th>
-                    <th class="col-audience">Targetted users</th>
+                    <th class="col-audience">Targeted users</th>
                     <th></th>
                 </tr>
             </thead>
