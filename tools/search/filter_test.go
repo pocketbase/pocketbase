@@ -3,6 +3,7 @@ package search_test
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -236,6 +237,35 @@ func TestFilterDataBuildExprWithParams(t *testing.T) {
 	expectedQuery := `SELECT * WHERE ([[test1]] = 1 OR [[test2]] = 0 OR [[test3a]] = 123.456 OR [[test3b]] = 123.456 OR ([[test4]] = '' OR [[test4]] IS NULL) OR [[test5]] = '""' OR [[test6]] = 'simple' OR [[test7]] = '''single_quotes''' OR [[test8]] = '"double_quotes"' OR [[test9]] = 'escape\\"quote' OR [[test10]] = '2023-01-01 00:00:00 +0000 UTC' OR [[test11]] = '["a","b","\\"quote"]' OR [[test12]] = '{"a":123,"b":"quote\\""}')`
 	if expectedQuery != calledQueries[0] {
 		t.Fatalf("Expected query \n%s, \ngot \n%s", expectedQuery, calledQueries[0])
+	}
+}
+
+func TestFilterDataBuildExprWithLimit(t *testing.T) {
+	resolver := search.NewSimpleFieldResolver(`^\w+$`)
+
+	scenarios := []struct {
+		limit       int
+		filter      search.FilterData
+		expectError bool
+	}{
+		{1, "1 = 1", false},
+		{0, "1 = 1", true}, // new cache entry should be created
+		{2, "1 = 1 || 1 = 1", false},
+		{1, "1 = 1 || 1 = 1", true},
+		{3, "1 = 1 || 1 = 1", false},
+		{6, "(1=1 || 1=1) && (1=1 || (1=1 || 1=1)) && (1=1)", false},
+		{5, "(1=1 || 1=1) && (1=1 || (1=1 || 1=1)) && (1=1)", true},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("limit_%d:%d", i, s.limit), func(t *testing.T) {
+			_, err := s.filter.BuildExprWithLimit(resolver, s.limit)
+
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v", s.expectError, hasErr)
+			}
+		})
 	}
 }
 

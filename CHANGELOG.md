@@ -7,6 +7,11 @@
 
 - Added `RateLimitRule.Audience` optional field for restricting a rate limit rule for `"@guest"`-only, `"@auth"`-only, `""`-any (default).
 
+- Added default max limits for the expressions count and length of the search filter and sort params.
+    _This is just an extra measure mostly for the case when the filter and sort parameters are resolved outside of the request context since the request size limits won't apply._
+
+- Other minor improvements (better error in case of duplicated rate limit rule, fixed typos, resolved lint warnings, etc.).
+
 
 ## v0.23.0-rc12
 

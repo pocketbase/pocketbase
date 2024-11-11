@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,6 +26,46 @@ func TestNewProvider(t *testing.T) {
 
 	if p.perPage != DefaultPerPage {
 		t.Fatalf("Expected perPage %d, got %d", DefaultPerPage, p.perPage)
+	}
+
+	if p.maxFilterExprLimit != DefaultFilterExprLimit {
+		t.Fatalf("Expected maxFilterExprLimit %d, got %d", DefaultFilterExprLimit, p.maxFilterExprLimit)
+	}
+
+	if p.maxSortExprLimit != DefaultSortExprLimit {
+		t.Fatalf("Expected maxSortExprLimit %d, got %d", DefaultSortExprLimit, p.maxSortExprLimit)
+	}
+}
+
+func TestMaxFilterExprLimit(t *testing.T) {
+	p := NewProvider(&testFieldResolver{})
+
+	testVals := []int{0, -10, 10}
+
+	for _, val := range testVals {
+		t.Run("max_"+strconv.Itoa(val), func(t *testing.T) {
+			p.MaxFilterExprLimit(val)
+
+			if p.maxFilterExprLimit != val {
+				t.Fatalf("Expected maxFilterExprLimit to change to %d, got %d", val, p.maxFilterExprLimit)
+			}
+		})
+	}
+}
+
+func TestMaxSortExprLimit(t *testing.T) {
+	p := NewProvider(&testFieldResolver{})
+
+	testVals := []int{0, -10, 10}
+
+	for _, val := range testVals {
+		t.Run("max_"+strconv.Itoa(val), func(t *testing.T) {
+			p.MaxSortExprLimit(val)
+
+			if p.maxSortExprLimit != val {
+				t.Fatalf("Expected maxSortExprLimit to change to %d, got %d", val, p.maxSortExprLimit)
+			}
+		})
 	}
 }
 
@@ -428,6 +470,141 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 	}
 }
 
+func TestProviderFilterAndSortLimits(t *testing.T) {
+	testDB, err := createTestDB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer testDB.Close()
+
+	query := testDB.Select("*").
+		From("test").
+		Where(dbx.Not(dbx.HashExp{"test1": nil})).
+		OrderBy("test1 ASC")
+
+	scenarios := []struct {
+		name               string
+		filter             []FilterData
+		sort               []SortField
+		maxFilterExprLimit int
+		maxSortExprLimit   int
+		expectError        bool
+	}{
+		// filter
+		{
+			"<= max filter length",
+			[]FilterData{
+				"1=2",
+				FilterData("1='" + strings.Repeat("a", MaxFilterLength-4) + "'"),
+			},
+			[]SortField{},
+			1,
+			0,
+			false,
+		},
+		{
+			"> max filter length",
+			[]FilterData{
+				"1=2",
+				FilterData("1='" + strings.Repeat("a", MaxFilterLength-3) + "'"),
+			},
+			[]SortField{},
+			1,
+			0,
+			true,
+		},
+		{
+			"<= max filter exprs",
+			[]FilterData{
+				"1=2",
+				"(1=1 || 1=1) && (1=1 || (1=1 || 1=1)) && (1=1)",
+			},
+			[]SortField{},
+			6,
+			0,
+			false,
+		},
+		{
+			"> max filter exprs",
+			[]FilterData{
+				"1=2",
+				"(1=1 || 1=1) && (1=1 || (1=1 || 1=1)) && (1=1)",
+			},
+			[]SortField{},
+			5,
+			0,
+			true,
+		},
+
+		// sort
+		{
+			"<= max sort field length",
+			[]FilterData{},
+			[]SortField{
+				{"id", SortAsc},
+				{"test1", SortDesc},
+				{strings.Repeat("a", MaxSortFieldLength), SortDesc},
+			},
+			0,
+			10,
+			false,
+		},
+		{
+			"> max sort field length",
+			[]FilterData{},
+			[]SortField{
+				{"id", SortAsc},
+				{"test1", SortDesc},
+				{strings.Repeat("b", MaxSortFieldLength+1), SortDesc},
+			},
+			0,
+			10,
+			true,
+		},
+		{
+			"<= max sort exprs",
+			[]FilterData{},
+			[]SortField{
+				{"id", SortAsc},
+				{"test1", SortDesc},
+			},
+			0,
+			2,
+			false,
+		},
+		{
+			"> max sort exprs",
+			[]FilterData{},
+			[]SortField{
+				{"id", SortAsc},
+				{"test1", SortDesc},
+			},
+			0,
+			1,
+			true,
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			testResolver := &testFieldResolver{}
+			p := NewProvider(testResolver).
+				Query(query).
+				Sort(s.sort).
+				Filter(s.filter).
+				MaxFilterExprLimit(s.maxFilterExprLimit).
+				MaxSortExprLimit(s.maxSortExprLimit)
+
+			_, err := p.Exec(&[]testTableStruct{})
+
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v", s.expectError, hasErr)
+			}
+		})
+	}
+}
+
 func TestProviderParseAndExec(t *testing.T) {
 	testDB, err := createTestDB()
 	if err != nil {
@@ -577,7 +754,14 @@ func createTestDB() (*testDB, error) {
 	}
 
 	db := testDB{DB: dbx.NewFromDB(sqlDB, "sqlite")}
-	db.CreateTable("test", map[string]string{"id": "int default 0", "test1": "int default 0", "test2": "text default ''", "test3": "text default ''"}).Execute()
+	db.CreateTable("test", map[string]string{
+		"id":                                    "int default 0",
+		"test1":                                 "int default 0",
+		"test2":                                 "text default ''",
+		"test3":                                 "text default ''",
+		strings.Repeat("a", MaxSortFieldLength): "text default ''",
+		strings.Repeat("b", MaxSortFieldLength+1): "text default ''",
+	}).Execute()
 	db.Insert("test", dbx.Params{"id": 1, "test1": 1, "test2": "test2.1"}).Execute()
 	db.Insert("test", dbx.Params{"id": 2, "test1": 2, "test2": "test2.2"}).Execute()
 	db.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {

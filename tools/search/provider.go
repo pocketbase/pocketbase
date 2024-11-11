@@ -12,15 +12,36 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// DefaultPerPage specifies the default returned search result items.
-const DefaultPerPage int = 30
+const (
+	// DefaultPerPage specifies the default number of returned search result items.
+	DefaultPerPage int = 30
 
-// @todo consider making it configurable
-//
-// MaxPerPage specifies the maximum allowed search result items returned in a single page.
-const MaxPerPage int = 1000
+	// DefaultFilterExprLimit specifies the default filter expressions limit.
+	DefaultFilterExprLimit int = 200
 
-// url search query params
+	// DefaultSortExprLimit specifies the default sort expressions limit.
+	DefaultSortExprLimit int = 8
+
+	// MaxPerPage specifies the max allowed search result items returned in a single page.
+	MaxPerPage int = 1000
+
+	// MaxFilterLength specifies the max allowed individual search filter parsable length.
+	MaxFilterLength int = 3500
+
+	// MaxSortFieldLength specifies the max allowed individual sort field parsable length.
+	MaxSortFieldLength int = 255
+)
+
+// Common search errors.
+var (
+	ErrEmptyQuery           = errors.New("search query is not set")
+	ErrSortExprLimit        = errors.New("max sort expressions limit reached")
+	ErrFilterExprLimit      = errors.New("max filter expressions limit reached")
+	ErrFilterLengthLimit    = errors.New("max filter length limit reached")
+	ErrSortFieldLengthLimit = errors.New("max sort field length limit reached")
+)
+
+// URL search query params
 const (
 	PageQueryParam      string = "page"
 	PerPageQueryParam   string = "perPage"
@@ -40,17 +61,19 @@ type Result struct {
 
 // Provider represents a single configured search provider instance.
 type Provider struct {
-	fieldResolver FieldResolver
-	query         *dbx.SelectQuery
-	countCol      string
-	sort          []SortField
-	filter        []FilterData
-	page          int
-	perPage       int
-	skipTotal     bool
+	fieldResolver      FieldResolver
+	query              *dbx.SelectQuery
+	countCol           string
+	sort               []SortField
+	filter             []FilterData
+	page               int
+	perPage            int
+	skipTotal          bool
+	maxFilterExprLimit int
+	maxSortExprLimit   int
 }
 
-// NewProvider creates and returns a new search provider.
+// NewProvider initializes and returns a new search provider.
 //
 // Example:
 //
@@ -63,13 +86,29 @@ type Provider struct {
 //		ParseAndExec("page=2&filter=id>0&sort=-email", &models)
 func NewProvider(fieldResolver FieldResolver) *Provider {
 	return &Provider{
-		fieldResolver: fieldResolver,
-		countCol:      "id",
-		page:          1,
-		perPage:       DefaultPerPage,
-		sort:          []SortField{},
-		filter:        []FilterData{},
+		fieldResolver:      fieldResolver,
+		countCol:           "id",
+		page:               1,
+		perPage:            DefaultPerPage,
+		sort:               []SortField{},
+		filter:             []FilterData{},
+		maxFilterExprLimit: DefaultFilterExprLimit,
+		maxSortExprLimit:   DefaultSortExprLimit,
 	}
+}
+
+// MaxFilterExpressions changes the default max allowed filter expressions.
+//
+// Note that currently the limit is applied individually for each separate filter.
+func (s *Provider) MaxFilterExprLimit(max int) *Provider {
+	s.maxFilterExprLimit = max
+	return s
+}
+
+// MaxSortExpressions changes the default max allowed sort expressions.
+func (s *Provider) MaxSortExprLimit(max int) *Provider {
+	s.maxSortExprLimit = max
+	return s
 }
 
 // Query sets the base query that will be used to fetch the search items.
@@ -188,7 +227,7 @@ func (s *Provider) Parse(urlQuery string) error {
 // the provided `items` slice with the found models.
 func (s *Provider) Exec(items any) (*Result, error) {
 	if s.query == nil {
-		return nil, errors.New("query is not set")
+		return nil, ErrEmptyQuery
 	}
 
 	// shallow clone the provider's query
@@ -196,7 +235,10 @@ func (s *Provider) Exec(items any) (*Result, error) {
 
 	// build filters
 	for _, f := range s.filter {
-		expr, err := f.BuildExpr(s.fieldResolver)
+		if len(f) > MaxFilterLength {
+			return nil, ErrFilterLengthLimit
+		}
+		expr, err := f.BuildExprWithLimit(s.fieldResolver, s.maxFilterExprLimit)
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +248,13 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	}
 
 	// apply sorting
+	if len(s.sort) > s.maxSortExprLimit {
+		return nil, ErrSortExprLimit
+	}
 	for _, sortField := range s.sort {
+		if len(sortField.Name) > MaxSortFieldLength {
+			return nil, ErrSortFieldLengthLimit
+		}
 		expr, err := sortField.BuildExpr(s.fieldResolver)
 		if err != nil {
 			return nil, err

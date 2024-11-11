@@ -34,8 +34,23 @@ var parsedFilterData = store.New(make(map[string][]fexpr.ExprGroup, 50))
 //
 // The filter string can also contain dbx placeholder parameters (eg. "title = {:name}"),
 // that will be safely replaced and properly quoted inplace with the placeholderReplacements values.
+//
+// The parsed expressions are limited up to DefaultFilterExprLimit.
+// Use [FilterData.BuildExprWithLimit] if you want to set a custom limit.
 func (f FilterData) BuildExpr(
 	fieldResolver FieldResolver,
+	placeholderReplacements ...dbx.Params,
+) (dbx.Expression, error) {
+	return f.BuildExprWithLimit(fieldResolver, DefaultFilterExprLimit, placeholderReplacements...)
+}
+
+// BuildExpr parses the current filter data and returns a new db WHERE expression.
+//
+// The filter string can also contain dbx placeholder parameters (eg. "title = {:name}"),
+// that will be safely replaced and properly quoted inplace with the placeholderReplacements values.
+func (f FilterData) BuildExprWithLimit(
+	fieldResolver FieldResolver,
+	maxExpressions int,
 	placeholderReplacements ...dbx.Params,
 ) (dbx.Expression, error) {
 	raw := string(f)
@@ -64,8 +79,10 @@ func (f FilterData) BuildExpr(
 		}
 	}
 
-	if data, ok := parsedFilterData.GetOk(raw); ok {
-		return buildParsedFilterExpr(data, fieldResolver)
+	cacheKey := raw + "/" + strconv.Itoa(maxExpressions)
+
+	if data, ok := parsedFilterData.GetOk(cacheKey); ok {
+		return buildParsedFilterExpr(data, fieldResolver, &maxExpressions)
 	}
 
 	data, err := fexpr.Parse(raw)
@@ -82,14 +99,14 @@ func (f FilterData) BuildExpr(
 
 	// store in cache
 	// (the limit size is arbitrary and it is there to prevent the cache growing too big)
-	parsedFilterData.SetIfLessThanLimit(raw, data, 500)
+	parsedFilterData.SetIfLessThanLimit(cacheKey, data, 500)
 
-	return buildParsedFilterExpr(data, fieldResolver)
+	return buildParsedFilterExpr(data, fieldResolver, &maxExpressions)
 }
 
-func buildParsedFilterExpr(data []fexpr.ExprGroup, fieldResolver FieldResolver) (dbx.Expression, error) {
+func buildParsedFilterExpr(data []fexpr.ExprGroup, fieldResolver FieldResolver, maxExpressions *int) (dbx.Expression, error) {
 	if len(data) == 0 {
-		return nil, errors.New("empty filter expression")
+		return nil, fexpr.ErrEmpty
 	}
 
 	result := &concatExpr{separator: " "}
@@ -100,11 +117,17 @@ func buildParsedFilterExpr(data []fexpr.ExprGroup, fieldResolver FieldResolver) 
 
 		switch item := group.Item.(type) {
 		case fexpr.Expr:
+			if *maxExpressions <= 0 {
+				return nil, ErrFilterExprLimit
+			}
+
+			*maxExpressions--
+
 			expr, exprErr = resolveTokenizedExpr(item, fieldResolver)
 		case fexpr.ExprGroup:
-			expr, exprErr = buildParsedFilterExpr([]fexpr.ExprGroup{item}, fieldResolver)
+			expr, exprErr = buildParsedFilterExpr([]fexpr.ExprGroup{item}, fieldResolver, maxExpressions)
 		case []fexpr.ExprGroup:
-			expr, exprErr = buildParsedFilterExpr(item, fieldResolver)
+			expr, exprErr = buildParsedFilterExpr(item, fieldResolver, maxExpressions)
 		default:
 			exprErr = errors.New("unsupported expression item")
 		}
