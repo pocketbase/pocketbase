@@ -151,10 +151,10 @@ declare var $app: PocketBase
  * Example:
  *
  * ` + "```" + `js
- * const html = $template.loadFiles(
+ * const html = $template.loadFiles([
  *     "views/layout.html",
  *     "views/content.html",
- * ).render({"name": "John"})
+ * ]).render({"name": "John"})
  * ` + "```" + `
  *
  * _Note that this method is available only in pb_hooks context._
