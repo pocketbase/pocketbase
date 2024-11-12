@@ -32,6 +32,10 @@ The easiest way to interact with the API is to use one of the official SDK clien
 
 ## Overview
 
+<a href="https://idx.google.com/new?template=https://github.com/project-idx/community-templates/tree/main/pocketbase">
+  <img height="32" alt="Try in IDX" src="https://cdn.idx.dev/btn/try_dark_32.svg">
+</a>
+
 ### Use as standalone app
 
 You could download the prebuilt executable for your platform from the [Releases page](https://github.com/pocketbase/pocketbase/releases).
