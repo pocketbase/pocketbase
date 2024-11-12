@@ -1,3 +1,8 @@
+## v0.22.24
+
+- Delete new uploaded record files in case of record DB persist error ([#5845](https://github.com/pocketbase/pocketbase/issues/5845)).
+
+
 ## v0.22.23
 
 - Updated the hooks watcher to account for the case when hooksDir is a symlink ([#5789](https://github.com/pocketbase/pocketbase/issues/5789)).

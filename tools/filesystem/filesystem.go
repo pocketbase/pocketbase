@@ -344,6 +344,26 @@ func (s *System) DeletePrefix(prefix string) []error {
 	return failed
 }
 
+// Checks if the provided dir prefix doesn't have any files.
+//
+// A trailing slash will be appended to a non-empty dir string argument
+// to ensure that the checked prefix is a "directory".
+//
+// Returns "false" in case the has at least one file, otherwise - "true".
+func (s *System) IsEmptyDir(dir string) bool {
+	if dir != "" && !strings.HasSuffix(dir, "/") {
+		dir += "/"
+	}
+
+	iter := s.bucket.List(&blob.ListOptions{
+		Prefix: dir,
+	})
+
+	_, err := iter.Next(s.ctx)
+
+	return err == io.EOF
+}
+
 var inlineServeContentTypes = []string{
 	// image
 	"image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp", "image/x-icon", "image/bmp",

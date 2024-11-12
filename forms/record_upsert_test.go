@@ -619,6 +619,94 @@ func TestRecordUpsertSubmitInterceptors(t *testing.T) {
 	}
 }
 
+func TestRecordUpsertSubmitFailureFilesCleanup(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.Dao().FindCollectionByNameOrId("demo3")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// ensure that there is a unique index constraint
+	collection.Indexes = append(collection.Indexes, `CREATE UNIQUE INDEX "idx_unique_demo3_title" on "demo3" ("title")`)
+	if err := app.Dao().SaveCollection(collection); err != nil {
+		t.Fatal(err)
+	}
+
+	f1, err := filesystem.NewFileFromBytes([]byte("test1"), "new_test1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	f2, err := filesystem.NewFileFromBytes([]byte("test1"), "new_test2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	uploadedFiles := []string{f1.Name, f2.Name}
+
+	existing, err := app.Dao().FindRecordById(collection.Id, "mk5fmymtx4wsprk")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		recordId string
+	}{
+		{""},
+		{"7nwo8tuiatetxdm"},
+		{"1tmknxy2868d869"},
+	}
+
+	for _, s := range scenarios {
+		sname := s.recordId
+		if sname == "" {
+			sname = "new"
+		}
+
+		t.Run(sname, func(t *testing.T) {
+			var originalFiles []string
+
+			var record *models.Record
+			if s.recordId == "" {
+				record = models.NewRecord(collection)
+			} else {
+				record, err = app.Dao().FindRecordById(collection.Id, s.recordId)
+				if err != nil {
+					t.Fatal(err)
+				}
+				originalFiles = record.GetStringSlice("files")
+			}
+
+			record.Set("title", existing.GetString("title"))
+
+			form := forms.NewRecordUpsert(app, record)
+
+			form.AddFiles("files", f1, f2)
+
+			err := form.Submit()
+			if err == nil {
+				t.Fatal("Expected form submit to fail")
+			}
+
+			// ensure that the original files still exists
+			for _, name := range originalFiles {
+				if !hasRecordFile(app, record, name) {
+					t.Fatalf("Missing original file %q", name)
+				}
+			}
+
+			// ensure that the new uploaded files were deleted
+			for _, name := range uploadedFiles {
+				if hasRecordFile(app, record, name) {
+					t.Fatalf("Expected file %q to be deleted", name)
+				}
+			}
+		})
+	}
+}
+
 func TestRecordUpsertWithCustomId(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()

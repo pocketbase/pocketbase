@@ -756,6 +756,8 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 
 		dao := form.dao.Clone()
 
+		var uploaded []string
+
 		// upload new files (if any)
 		//
 		// note: executed after the default BeforeCreateFunc and BeforeUpdateFunc hook actions
@@ -765,7 +767,9 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 		dao.BeforeCreateFunc = func(eventDao *daos.Dao, m models.Model, action func() error) error {
 			newAction := func() error {
 				if m.TableName() == form.record.TableName() && m.GetId() == form.record.GetId() {
-					if err := form.processFilesToUpload(); err != nil {
+					var err error
+					uploaded, err = form.processFilesToUpload()
+					if err != nil {
 						return err
 					}
 				}
@@ -783,7 +787,9 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 		dao.BeforeUpdateFunc = func(eventDao *daos.Dao, m models.Model, action func() error) error {
 			newAction := func() error {
 				if m.TableName() == form.record.TableName() && m.GetId() == form.record.GetId() {
-					if err := form.processFilesToUpload(); err != nil {
+					var err error
+					uploaded, err = form.processFilesToUpload()
+					if err != nil {
 						return err
 					}
 				}
@@ -801,6 +807,9 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 
 		// persist the record model
 		if err := dao.SaveRecord(form.record); err != nil {
+			// cleanup - try to delete only the successfully uploaded files
+			form.deleteFilesByNamesList(uploaded)
+
 			return form.prepareError(err)
 		}
 
@@ -819,30 +828,30 @@ func (form *RecordUpsert) Submit(interceptors ...InterceptorFunc[*models.Record]
 	}, interceptors...)
 }
 
-func (form *RecordUpsert) processFilesToUpload() error {
+func (form *RecordUpsert) processFilesToUpload() ([]string, error) {
 	if len(form.filesToUpload) == 0 {
-		return nil // no parsed file fields
+		return nil, nil // no parsed file fields
 	}
 
 	if !form.record.HasId() {
-		return errors.New("the record doesn't have an id")
+		return nil, errors.New("the record doesn't have an id")
 	}
 
-	fs, err := form.app.NewFilesystem()
+	fsys, err := form.app.NewFilesystem()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer fs.Close()
+	defer fsys.Close()
 
 	var uploadErrors []error // list of upload errors
-	var uploaded []string    // list of uploaded file paths
+	var uploaded []string    // list of uploaded file names
 
 	for fieldKey := range form.filesToUpload {
 		for i, file := range form.filesToUpload[fieldKey] {
 			path := form.record.BaseFilesPath() + "/" + file.Name
-			if err := fs.UploadFile(file, path); err == nil {
+			if err := fsys.UploadFile(file, path); err == nil {
 				// keep track of the already uploaded file
-				uploaded = append(uploaded, path)
+				uploaded = append(uploaded, file.Name)
 			} else {
 				// store the upload error
 				uploadErrors = append(uploadErrors, fmt.Errorf("file %d: %v", i, err))
@@ -854,10 +863,10 @@ func (form *RecordUpsert) processFilesToUpload() error {
 		// cleanup - try to delete the successfully uploaded files (if any)
 		form.deleteFilesByNamesList(uploaded)
 
-		return fmt.Errorf("failed to upload all files: %v", uploadErrors)
+		return nil, fmt.Errorf("failed to upload all files: %v", uploadErrors)
 	}
 
-	return nil
+	return uploaded, nil
 }
 
 func (form *RecordUpsert) processFilesToDelete() (err error) {
@@ -876,24 +885,28 @@ func (form *RecordUpsert) deleteFilesByNamesList(filenames []string) ([]string, 
 		return filenames, errors.New("the record doesn't have an id")
 	}
 
-	fs, err := form.app.NewFilesystem()
+	isNew := form.record.IsNew()
+
+	baseDir := form.record.BaseFilesPath()
+
+	fsys, err := form.app.NewFilesystem()
 	if err != nil {
 		return filenames, err
 	}
-	defer fs.Close()
+	defer fsys.Close()
 
 	var deleteErrors []error
 
 	for i := len(filenames) - 1; i >= 0; i-- {
 		filename := filenames[i]
-		path := form.record.BaseFilesPath() + "/" + filename
+		path := baseDir + "/" + filename
 
-		if err := fs.Delete(path); err == nil {
+		if err := fsys.Delete(path); err == nil {
 			// remove the deleted file from the list
 			filenames = append(filenames[:i], filenames[i+1:]...)
 
 			// try to delete the related file thumbs (if any)
-			fs.DeletePrefix(form.record.BaseFilesPath() + "/thumbs_" + filename + "/")
+			fsys.DeletePrefix(baseDir + "/thumbs_" + filename + "/")
 		} else {
 			// store the delete error
 			deleteErrors = append(deleteErrors, fmt.Errorf("file %d: %v", i, err))
@@ -902,6 +915,11 @@ func (form *RecordUpsert) deleteFilesByNamesList(filenames []string) ([]string, 
 
 	if len(deleteErrors) > 0 {
 		return filenames, fmt.Errorf("failed to delete all files: %v", deleteErrors)
+	}
+
+	// cleanup empty dir for new records if there are no other files
+	if isNew && fsys.IsEmptyDir(baseDir) {
+		_ = fsys.Delete(baseDir)
 	}
 
 	return filenames, nil

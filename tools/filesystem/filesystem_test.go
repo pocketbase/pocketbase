@@ -169,6 +169,41 @@ func TestFileSystemDeletePrefixWithTrailingSlash(t *testing.T) {
 	}
 }
 
+func TestFileSystemIsEmptyDir(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fsys, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fsys.Close()
+
+	scenarios := []struct {
+		dir      string
+		expected bool
+	}{
+		{"", false}, // special case that shouldn't be suffixed with delimiter to search for any files within the bucket
+		{"/", true},
+		{"missing", true},
+		{"missing/", true},
+		{"test", false},
+		{"test/", false},
+		{"empty", true},
+		{"empty/", true},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.dir, func(t *testing.T) {
+			result := fsys.IsEmptyDir(s.dir)
+
+			if result != s.expected {
+				t.Fatalf("Expected %v, got %v", s.expected, result)
+			}
+		})
+	}
+}
+
 func TestFileSystemUploadMultipart(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
