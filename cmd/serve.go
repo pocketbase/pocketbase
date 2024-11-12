@@ -15,7 +15,6 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 	var allowedOrigins []string
 	var httpAddr string
 	var httpsAddr string
-	var dashboardPath string
 
 	command := &cobra.Command{
 		Use:          "serve [domain(s)]",
@@ -40,7 +39,6 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 			err := apis.Serve(app, apis.ServeConfig{
 				HttpAddr:           httpAddr,
 				HttpsAddr:          httpsAddr,
-				DashboardPath:      dashboardPath,
 				ShowStartBanner:    showStartBanner,
 				AllowedOrigins:     allowedOrigins,
 				CertificateDomains: args,
@@ -73,13 +71,6 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 		"https",
 		"",
 		"TCP address to listen for the HTTPS server\n(if domain args are specified - default to 0.0.0.0:443, otherwise - default to empty string, aka. no TLS)\nThe incoming HTTP traffic also will be auto redirected to the HTTPS version",
-	)
-
-	command.PersistentFlags().StringVar(
-		&dashboardPath,
-		"dashboard",
-		"_",
-		"The route path to the superusers dashboard (currently limited to a single path segment)",
 	)
 
 	return command

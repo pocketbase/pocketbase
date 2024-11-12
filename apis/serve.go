@@ -27,11 +27,6 @@ type ServeConfig struct {
 	// ShowStartBanner indicates whether to show or hide the server start console message.
 	ShowStartBanner bool
 
-	// DashboardPath specifies the route path to the superusers dashboard (default to "_").
-	//
-	// Currently it is limited to a single path segment (this is because the UI is not extendable at the moment).
-	DashboardPath string
-
 	// HttpAddr is the TCP address to listen for the HTTP server (eg. "127.0.0.1:80").
 	HttpAddr string
 
@@ -66,15 +61,6 @@ func Serve(app core.App, config ServeConfig) error {
 		config.AllowedOrigins = []string{"*"}
 	}
 
-	if config.DashboardPath == "" {
-		config.DashboardPath = "_"
-	} else {
-		config.DashboardPath = strings.Trim(config.DashboardPath, "/")
-		if strings.Contains(config.DashboardPath, "/") {
-			return errors.New("the dashboard path must be single path segment: _, admin, etc.")
-		}
-	}
-
 	// ensure that the latest migrations are applied before starting the server
 	err := app.RunAllMigrations()
 	if err != nil {
@@ -91,7 +77,7 @@ func Serve(app core.App, config ServeConfig) error {
 		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 	}))
 
-	pbRouter.GET("/"+config.DashboardPath+"/{path...}", Static(ui.DistDirFS, false)).
+	pbRouter.GET("/_/{path...}", Static(ui.DistDirFS, false)).
 		BindFunc(func(e *core.RequestEvent) error {
 			// ingore root path
 			if e.Request.PathValue(StaticWildcardParam) != "" {
@@ -255,7 +241,7 @@ func Serve(app core.App, config ServeConfig) error {
 		}
 	}
 	baseURL := fmt.Sprintf("%s://%s", schema, addr)
-	dashboardURL := fmt.Sprintf("%s/%s", baseURL, config.DashboardPath)
+	dashboardURL := fmt.Sprintf("%s/_", baseURL)
 
 	if config.ShowStartBanner {
 		date := new(strings.Builder)
