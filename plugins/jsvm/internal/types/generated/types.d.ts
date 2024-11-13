@@ -3332,17 +3332,17 @@ namespace filesystem {
  * ```
  * 	registry := template.NewRegistry()
  * 
- * 	html1, err := registry.LoadFiles([
+ * 	html1, err := registry.LoadFiles([]string{
  * 		// the files set wil be parsed only once and then cached
  * 		"layout.html",
  * 		"content.html",
- * 	]).Render(map[string]any{"name": "John"})
+ * 	}).Render(map[string]any{"name": "John"})
  * 
- * 	html2, err := registry.LoadFiles([
+ * 	html2, err := registry.LoadFiles([]string{
  * 		// reuse the already parsed and cached files set
  * 		"layout.html",
  * 		"content.html",
- * 	]).Render(map[string]any{"name": "Jane"})
+ * 	}).Render(map[string]any{"name": "Jane"})
  * ```
  */
 namespace template {

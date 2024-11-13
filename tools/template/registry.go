@@ -8,23 +8,23 @@
 //
 //	registry := template.NewRegistry()
 //
-//	html1, err := registry.LoadFiles([
+//	html1, err := registry.LoadFiles([]string{
 //		// the files set will be parsed only once and then cached
 //		"layout.html",
 //		"content.html",
-//	]).Render(map[string]any{"name": "John"})
+//	}).Render(map[string]any{"name": "John"})
 //
-//	html2, err := registry.LoadFiles([
+//	html2, err := registry.LoadFiles([]string{
 //		// reuse the already parsed and cached files set
 //		"layout.html",
 //		"content.html",
-//	]).Render(map[string]any{"name": "Jane"})
+//	}).Render(map[string]any{"name": "Jane"})
 //
-//	html3, err := registry.LoadFiles([
+//	html3, err := registry.LoadFiles([]string{
 //		// newly parsed files with cache update
 //		"layout.html",
 //		"content.html",
-//	], false).Render(map[string]any{"name": "Juan"})
+//	}, false).Render(map[string]any{"name": "Juan"})
 package template
 
 import (
