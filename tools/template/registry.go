@@ -8,17 +8,23 @@
 //
 //	registry := template.NewRegistry()
 //
-//	html1, err := registry.LoadFiles(
-//		// the files set wil be parsed only once and then cached
+//	html1, err := registry.LoadFiles([
+//		// the files set will be parsed only once and then cached
 //		"layout.html",
 //		"content.html",
-//	).Render(map[string]any{"name": "John"})
+//	]).Render(map[string]any{"name": "John"})
 //
-//	html2, err := registry.LoadFiles(
+//	html2, err := registry.LoadFiles([
 //		// reuse the already parsed and cached files set
 //		"layout.html",
 //		"content.html",
-//	).Render(map[string]any{"name": "Jane"})
+//	]).Render(map[string]any{"name": "Jane"})
+//
+//	html3, err := registry.LoadFiles([
+//		// newly parsed files with cache update
+//		"layout.html",
+//		"content.html",
+//	], false).Render(map[string]any{"name": "Juan"})
 package template
 
 import (
@@ -38,6 +44,7 @@ import (
 func NewRegistry() *Registry {
 	return &Registry{
 		cache: store.New[*Renderer](nil),
+		forceCache: true,
 		funcs: template.FuncMap{
 			"raw": func(str string) template.HTML {
 				return template.HTML(str)
@@ -46,11 +53,13 @@ func NewRegistry() *Registry {
 	}
 }
 
+
 // Registry defines a templates registry that is safe to be used by multiple goroutines.
 //
 // Use the Registry.Load* methods to load templates into the registry.
 type Registry struct {
 	cache *store.Store[*Renderer]
+	forceCache bool
 	funcs template.FuncMap
 }
 
@@ -78,14 +87,39 @@ func (r *Registry) AddFuncs(funcs map[string]any) *Registry {
 	return r
 }
 
+// ForceCache allows to turn on/off systematic reuse from cache.
+// Default Registry forceCache state is true.
+// 
+// In any case cache is updated on each Registry.Load* methods invocation.
+func (r *Registry) ForceCache(state bool) *Registry {
+	r.forceCache = state
+	return r
+}
+
+// ClearCache clears Registry cache
+func (r *Registry) ClearCache() *Registry {
+	r.cache = store.New[*Renderer](nil)
+	return r
+}
+
 // LoadFiles caches (if not already) the specified filenames set as a
 // single template and returns a ready to use Renderer instance.
 //
 // There must be at least 1 filename specified.
-func (r *Registry) LoadFiles(filenames ...string) *Renderer {
+func (r *Registry) LoadFiles(filenames []string, requestCache ...bool) *Renderer {
 	key := strings.Join(filenames, ",")
 
-	found := r.cache.Get(key)
+	requestFromCache := r.forceCache
+
+	if len(requestCache) > 0 {
+			requestFromCache = requestCache[0]
+	}
+
+	var found *Renderer
+
+	if requestFromCache {
+		found = r.cache.Get(key)
+	}
 
 	if found == nil {
 		// parse and cache
@@ -99,8 +133,18 @@ func (r *Registry) LoadFiles(filenames ...string) *Renderer {
 
 // LoadString caches (if not already) the specified inline string as a
 // single template and returns a ready to use Renderer instance.
-func (r *Registry) LoadString(text string) *Renderer {
-	found := r.cache.Get(text)
+func (r *Registry) LoadString(text string, requestCache ...bool) *Renderer {
+	requestFromCache := r.forceCache
+
+	if len(requestCache) > 0 {
+		requestFromCache = requestCache[0]
+	}
+
+	var found *Renderer
+
+	if requestFromCache {
+		found = r.cache.Get(text)
+	}
 
 	if found == nil {
 		// parse and cache (using the text as key)
@@ -117,10 +161,20 @@ func (r *Registry) LoadString(text string) *Renderer {
 //
 // There must be at least 1 file matching the provided globPattern(s)
 // (note that most file names serves as glob patterns matching themselves).
-func (r *Registry) LoadFS(fsys fs.FS, globPatterns ...string) *Renderer {
+func (r *Registry) LoadFS(fsys fs.FS, globPatterns []string, requestCache ...bool) *Renderer {
 	key := fmt.Sprintf("%v%v", fsys, globPatterns)
 
-	found := r.cache.Get(key)
+	requestFromCache := r.forceCache
+
+	if len(requestCache) > 0 {
+		requestFromCache = requestCache[0]
+	}
+
+	var found *Renderer
+
+	if requestFromCache {
+		found = r.cache.Get(key)
+	}
 
 	if found == nil {
 		// find the first file to use as template name (it is required when specifying Funcs)

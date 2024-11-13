@@ -31,7 +31,27 @@ func TestNewRegistry(t *testing.T) {
 		t.Fatalf("Expected cache store length to be 0, got %d", v)
 	}
 
+	if !r.forceCache {
+		t.Fatalf("Expected cache force option to be true")
+	}
+
 	checkRegistryFuncs(t, r, "raw")
+}
+
+func TestRegistryForceCache(t *testing.T) {
+	r := NewRegistry()
+
+	r.ForceCache(false)
+
+	if r.forceCache {
+		t.Fatal("Expected cache force option to be false")
+	}
+
+	r.ForceCache(true)
+
+	if !r.forceCache {
+		t.Fatal("Expected cache force option to be true")
+	}
 }
 
 func TestRegistryAddFuncs(t *testing.T) {
@@ -58,10 +78,11 @@ func TestRegistryLoadFiles(t *testing.T) {
 	r := NewRegistry()
 
 	t.Run("invalid or missing files", func(t *testing.T) {
-		r.LoadFiles("file1.missing", "file2.missing")
+		filenames := []string{"file1.missing", "file2.missing"}
 
-		key := "file1.missing,file2.missing"
-		renderer := r.cache.Get(key)
+		r.LoadFiles(filenames)
+
+		renderer := r.cache.Get(strings.Join(filenames, ","))
 
 		if renderer == nil {
 			t.Fatal("Expected renderer to be initialized even if invalid, got nil")
@@ -90,11 +111,11 @@ func TestRegistryLoadFiles(t *testing.T) {
 		}
 		defer os.RemoveAll(dir)
 
-		files := []string{filepath.Join(dir, "base.html"), filepath.Join(dir, "content.html")}
+		filenames := []string{filepath.Join(dir, "base.html"), filepath.Join(dir, "content.html")}
 
-		r.LoadFiles(files...)
+		r.LoadFiles(filenames)
 
-		renderer := r.cache.Get(strings.Join(files, ","))
+		renderer := r.cache.Get(strings.Join(filenames, ","))
 
 		if renderer == nil {
 			t.Fatal("Expected renderer to be initialized even if invalid, got nil")
@@ -184,7 +205,7 @@ func TestRegistryLoadFS(t *testing.T) {
 
 		key := fmt.Sprintf("%v%v", fs, files)
 
-		r.LoadFS(fs, files...)
+		r.LoadFS(fs, files)
 
 		renderer := r.cache.Get(key)
 
@@ -221,7 +242,7 @@ func TestRegistryLoadFS(t *testing.T) {
 
 		key := fmt.Sprintf("%v%v", fs, files)
 
-		r.LoadFS(fs, files...)
+		r.LoadFS(fs, files)
 
 		renderer := r.cache.Get(key)
 
@@ -247,4 +268,24 @@ func TestRegistryLoadFS(t *testing.T) {
 			t.Fatalf("Expected Render() result %q, got %q", expected, result)
 		}
 	})
+}
+
+func TestRegistryClearCache(t *testing.T) {
+	r := NewRegistry()
+
+	r.LoadString(`test {{.|raw}}`)
+
+	if v := r.cache.Length(); v == 0 {
+		t.Fatalf("Expected cache store length to be greater than 0, got %d", v)
+	}
+
+	r.ClearCache()
+
+	if r.cache == nil {
+		t.Fatalf("Expected cache store to be initialized, got nil")
+	}
+
+	if v := r.cache.Length(); v != 0 {
+		t.Fatalf("Expected cache store length to be 0, got %d", v)
+	}
 }

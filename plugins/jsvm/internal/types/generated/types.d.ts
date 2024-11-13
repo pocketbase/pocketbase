@@ -135,10 +135,10 @@ declare var $app: PocketBase
  * Example:
  *
  * ```js
- * const html = $template.loadFiles(
+ * const html = $template.loadFiles([
  *     "views/layout.html",
  *     "views/content.html",
- * ).render({"name": "John"})
+ * ]).render({"name": "John"})
  * ```
  *
  * _Note that this method is available only in pb_hooks context._
@@ -3332,17 +3332,17 @@ namespace filesystem {
  * ```
  * 	registry := template.NewRegistry()
  * 
- * 	html1, err := registry.LoadFiles(
+ * 	html1, err := registry.LoadFiles([
  * 		// the files set wil be parsed only once and then cached
  * 		"layout.html",
  * 		"content.html",
- * 	).Render(map[string]any{"name": "John"})
+ * 	]).Render(map[string]any{"name": "John"})
  * 
- * 	html2, err := registry.LoadFiles(
+ * 	html2, err := registry.LoadFiles([
  * 		// reuse the already parsed and cached files set
  * 		"layout.html",
  * 		"content.html",
- * 	).Render(map[string]any{"name": "Jane"})
+ * 	]).Render(map[string]any{"name": "Jane"})
  * ```
  */
 namespace template {
@@ -3392,14 +3392,14 @@ namespace template {
    * 
    * There must be at least 1 filename specified.
    */
-  loadFiles(...filenames: string[]): (Renderer)
+  loadFiles(filenames: string[], requestCache?: boolean): (Renderer)
  }
  interface Registry {
   /**
    * LoadString caches (if not already) the specified inline string as a
    * single template and returns a ready to use Renderer instance.
    */
-  loadString(text: string): (Renderer)
+  loadString(text: string, requestCache?: boolean): (Renderer)
  }
  interface Registry {
   /**
@@ -3409,7 +3409,7 @@ namespace template {
    * There must be at least 1 file matching the provided globPattern(s)
    * (note that most file names serves as glob patterns matching themselves).
    */
-  loadFS(fsys: fs.FS, ...globPatterns: string[]): (Renderer)
+  loadFS(fsys: fs.FS, globPatterns: string[], requestCache?: boolean): (Renderer)
  }
  /**
   * Renderer defines a single parsed template.
