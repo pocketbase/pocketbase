@@ -424,6 +424,10 @@ func (p *plugin) watchHooks() error {
 			return nil
 		}
 
+		if p.app.IsDev() && entry.Name() == "views" {
+			return nil
+		}
+
 		return watcher.Add(path)
 	})
 	if dirsErr != nil {
