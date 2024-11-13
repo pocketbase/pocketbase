@@ -190,7 +190,7 @@ func TestRecordAuthWithOTP(t *testing.T) {
 			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
-			Name:   "valid otp with valid password",
+			Name:   "valid otp with valid password (enabled MFA)",
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/auth-with-otp",
 			Body: strings.NewReader(`{
@@ -236,7 +236,7 @@ func TestRecordAuthWithOTP(t *testing.T) {
 			},
 		},
 		{
-			Name:   "valid otp with valid password (disabled MFA)",
+			Name:   "valid otp with valid password and empty sentTo (disabled MFA)",
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/auth-with-otp",
 			Body: strings.NewReader(`{
@@ -249,8 +249,15 @@ func TestRecordAuthWithOTP(t *testing.T) {
 					t.Fatal(err)
 				}
 
+				// ensure that the user is unverified
+				user.SetVerified(false)
+				if err = app.Save(user); err != nil {
+					t.Fatal(err)
+				}
+
+				// disable MFA
 				user.Collection().MFA.Enabled = false
-				if err := app.Save(user.Collection()); err != nil {
+				if err = app.Save(user.Collection()); err != nil {
 					t.Fatal(err)
 				}
 
@@ -296,6 +303,106 @@ func TestRecordAuthWithOTP(t *testing.T) {
 				"OnRecordDelete":             1,
 				"OnRecordDeleteExecute":      1,
 				"OnRecordAfterDeleteSuccess": 1,
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if user.Verified() {
+					t.Fatal("Expected the user to remain unverified because sentTo != email")
+				}
+			},
+		},
+		{
+			Name:   "valid otp with valid password and nonempty sentTo=email (disabled MFA)",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/auth-with-otp",
+			Body: strings.NewReader(`{
+				"otpId":"` + strings.Repeat("a", 15) + `",
+				"password":"123456"
+			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// ensure that the user is unverified
+				user.SetVerified(false)
+				if err = app.Save(user); err != nil {
+					t.Fatal(err)
+				}
+
+				// disable MFA
+				user.Collection().MFA.Enabled = false
+				if err = app.Save(user.Collection()); err != nil {
+					t.Fatal(err)
+				}
+
+				otp := core.NewOTP(app)
+				otp.Id = strings.Repeat("a", 15)
+				otp.SetCollectionRef(user.Collection().Id)
+				otp.SetRecordRef(user.Id)
+				otp.SetPassword("123456")
+				otp.SetSentTo(user.Email())
+				if err := app.Save(otp); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"token":"`,
+				`"record":{`,
+				`"email":"test@example.com"`,
+			},
+			NotExpectedContent: []string{
+				`"meta":`,
+				// hidden fields
+				`"tokenKey"`,
+				`"password"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRecordAuthWithOTPRequest": 1,
+				"OnRecordAuthRequest":        1,
+				"OnRecordEnrich":             1,
+				// ---
+				"OnModelValidate": 2, // +1 because of the verified user update
+				// authOrigin create
+				"OnModelCreate":             1,
+				"OnModelCreateExecute":      1,
+				"OnModelAfterCreateSuccess": 1,
+				// OTP delete
+				"OnModelDelete":             1,
+				"OnModelDeleteExecute":      1,
+				"OnModelAfterDeleteSuccess": 1,
+				// user verified update
+				"OnModelUpdate":             1,
+				"OnModelUpdateExecute":      1,
+				"OnModelAfterUpdateSuccess": 1,
+				// ---
+				"OnRecordValidate":           2,
+				"OnRecordCreate":             1,
+				"OnRecordCreateExecute":      1,
+				"OnRecordAfterCreateSuccess": 1,
+				"OnRecordDelete":             1,
+				"OnRecordDeleteExecute":      1,
+				"OnRecordAfterDeleteSuccess": 1,
+				"OnRecordUpdate":             1,
+				"OnRecordUpdateExecute":      1,
+				"OnRecordAfterUpdateSuccess": 1,
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !user.Verified() {
+					t.Fatal("Expected the user to be marked as verified")
+				}
 			},
 		},
 

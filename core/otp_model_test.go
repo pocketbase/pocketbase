@@ -85,6 +85,30 @@ func TestOTPCollectionRef(t *testing.T) {
 	}
 }
 
+func TestOTPSentTo(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	otp := core.NewOTP(app)
+
+	testValues := []string{"test_1", "test2", ""}
+	for i, testValue := range testValues {
+		t.Run(fmt.Sprintf("%d_%q", i, testValue), func(t *testing.T) {
+			otp.SetSentTo(testValue)
+
+			if v := otp.SentTo(); v != testValue {
+				t.Fatalf("Expected getter %q, got %q", testValue, v)
+			}
+
+			if v := otp.GetString("sentTo"); v != testValue {
+				t.Fatalf("Expected field value %q, got %q", testValue, v)
+			}
+		})
+	}
+}
+
 func TestOTPCreated(t *testing.T) {
 	t.Parallel()
 

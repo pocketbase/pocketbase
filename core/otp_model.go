@@ -85,6 +85,20 @@ func (m *OTP) SetRecordRef(recordId string) {
 	m.Set("recordRef", recordId)
 }
 
+// SentTo returns the "sentTo" record field value.
+//
+// It could be any string value (email, phone, message app id, etc.)
+// and usually is used as part of the auth flow to update the verified
+// user state in case for example the sentTo value matches with the user record email.
+func (m *OTP) SentTo() string {
+	return m.GetString("sentTo")
+}
+
+// SetSentTo updates the "sentTo" record field value.
+func (m *OTP) SetSentTo(val string) {
+	m.Set("sentTo", val)
+}
+
 // Created returns the "created" record field value.
 func (m *OTP) Created() types.DateTime {
 	return m.GetDateTime("created")

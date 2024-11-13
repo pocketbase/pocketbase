@@ -1361,6 +1361,9 @@ type App interface {
 	// OnRecordRequestOTPRequest hook is triggered on each Record
 	// request OTP API request.
 	//
+	// [RecordCreateOTPRequestEvent.Record] could be nil if no matching identity is found, allowing
+	// you to manually create or locate a different Record model (by reassigning [RecordCreateOTPRequestEvent.Record]).
+	//
 	// If the optional "tags" list (Collection ids or names) is specified,
 	// then all event handlers registered via the created hook will be
 	// triggered and called only if their event data origin matches the tags.

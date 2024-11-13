@@ -7,6 +7,12 @@
 
 - Added `superuser otp EMAIL` command as fallback for generating superuser OTPs from the command line in case OTP has been enabled for the `_superusers` but the SMTP server has deliverability issues.
 
+- ⚠️ Changed `OnRecordRequestOTPRequest` hook to be triggered even if there is no record matching the email (aka. `e.Record` could be `nil`), allowing you to manually create a new user with the OTP request and assigning it to `e.Record`.
+
+- Added new `sentTo` system field to the `_otps` collection (it is managed programmatically or by superusers; it could be anything - email, phone, messanger app id, etc.).
+    By default when the OTP is submitted via email it is automatically populated with the user email address (via the `OnMailerRecordOTPSend` hook's finalizer).
+    This allow us on valid `auth-with-otp` request to automatically mark the user email as verified.
+
 - Added `RateLimitRule.Audience` optional field for restricting a rate limit rule for `"@guest"`-only, `"@auth"`-only, `""`-any (default).
 
 - Added default max limits for the expressions count and length of the search filter and sort params.

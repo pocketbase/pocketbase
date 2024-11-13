@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,12 +33,10 @@ func recordRequestOTP(e *core.RequestEvent) error {
 	}
 
 	record, err := e.App.FindAuthRecordByEmail(collection, form.Email)
-	if err != nil {
-		// eagerly write a dummy 200 response as a very rudimentary user emails enumeration protection
-		e.JSON(http.StatusOK, map[string]string{
-			"otpId": core.GenerateDefaultRandomId(),
-		})
-		return fmt.Errorf("failed to fetch %s record with email %s: %w", collection.Name, form.Email, err)
+
+	// ignore not found errors to allow custom record find implementations
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return e.InternalServerError("", err)
 	}
 
 	event := new(core.RecordCreateOTPRequestEvent)
@@ -46,7 +45,18 @@ func recordRequestOTP(e *core.RequestEvent) error {
 	event.Collection = collection
 	event.Record = record
 
+	originalApp := e.App
+
 	return e.App.OnRecordRequestOTPRequest().Trigger(event, func(e *core.RecordCreateOTPRequestEvent) error {
+		if e.Record == nil {
+			// write a dummy 200 response as a very rudimentary user emails enumeration protection
+			e.JSON(http.StatusOK, map[string]string{
+				"otpId": core.GenerateDefaultRandomId(),
+			})
+
+			return fmt.Errorf("failed to fetch %s record with email %s: %w", collection.Name, form.Email, err)
+		}
+
 		var otp *core.OTP
 
 		// limit the new OTP creations for a single user
@@ -90,11 +100,10 @@ func recordRequestOTP(e *core.RequestEvent) error {
 			// send OTP email
 			// (in the background as a very basic timing attacks and emails enumeration protection)
 			// ---
-			app := e.App
 			routine.FireAndForget(func() {
-				err = mails.SendRecordOTP(app, e.Record, otp.Id, e.Password)
+				err = mails.SendRecordOTP(originalApp, e.Record, otp.Id, e.Password)
 				if err != nil {
-					app.Logger().Error("Failed to send OTP email", "error", errors.Join(err, e.App.Delete(otp)))
+					originalApp.Logger().Error("Failed to send OTP email", "error", errors.Join(err, originalApp.Delete(otp)))
 				}
 			})
 		}

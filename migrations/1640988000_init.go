@@ -179,7 +179,12 @@ func createOTPsCollection(txApp core.App) error {
 		System:   true,
 		Hidden:   true,
 		Required: true,
-		Cost:     8, // low cost for better performce and because it is not critical
+		Cost:     8, // low cost for better performance and because it is not critical
+	})
+	col.Fields.Add(&core.TextField{
+		Name:   "sentTo",
+		System: true,
+		Hidden: true,
 	})
 	col.Fields.Add(&core.AutodateField{
 		Name:     "created",

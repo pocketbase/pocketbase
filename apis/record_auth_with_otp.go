@@ -51,7 +51,7 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 		return e.BadRequestError("Invalid or expired OTP", fmt.Errorf("missing auth record: %w", err))
 	}
 
-	// since otps are usually simple digit numbers we enforce an extra rate limit rule to prevent enumerations
+	// since otps are usually simple digit numbers, enforce an extra rate limit rule as basic enumaration protection
 	err = checkRateLimit(e, "@pb_otp_"+event.Record.Id, core.RateLimitRule{MaxRequests: 5, Duration: 180})
 	if err != nil {
 		return e.TooManyRequestsError("Too many attempts, please try again later with a new OTP.", nil)
@@ -63,22 +63,32 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 	// ---
 
 	return e.App.OnRecordAuthWithOTPRequest().Trigger(event, func(e *core.RecordAuthWithOTPRequestEvent) error {
+		// update the user email verified state in case the OTP originate from an email address matching the current record one
+		//
+		// note: don't wait for success auth response (it could fail because of MFA) and because we already validated the OTP above
+		otpSentTo := e.OTP.SentTo()
+		if !e.Record.Verified() && otpSentTo != "" && e.Record.Email() == otpSentTo {
+			e.Record.SetVerified(true)
+			err = e.App.Save(e.Record)
+			if err != nil {
+				e.App.Logger().Error("Failed to update record verified state after successful OTP validation",
+					"error", err,
+					"otpId", e.OTP.Id,
+					"recordId", e.Record.Id,
+				)
+			}
+		}
+
 		err = RecordAuthResponse(e.RequestEvent, e.Record, core.MFAMethodOTP, nil)
 		if err != nil {
 			return err
 		}
 
 		// try to delete the used otp
-		if e.OTP != nil {
-			err = e.App.Delete(e.OTP)
-			if err != nil {
-				e.App.Logger().Error("Failed to delete used OTP", "error", err, "otpId", e.OTP.Id)
-			}
+		err = e.App.Delete(e.OTP)
+		if err != nil {
+			e.App.Logger().Error("Failed to delete used OTP", "error", err, "otpId", e.OTP.Id)
 		}
-
-		// note: we don't update the user verified state the same way as in the password reset confirmation
-		// at the moment because it is not clear whether the otp confirmation came from the user email
-		// (e.g. it could be from an sms or some other channel)
 
 		return nil
 	})

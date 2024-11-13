@@ -40,6 +40,8 @@ func SendRecordAuthAlert(app core.App, authRecord *core.Record) error {
 }
 
 // SendRecordOTP sends OTP email to the specified auth record.
+//
+// This method will also update the "sentTo" field of the related OTP record to the mail sent To address (if the OTP exists and not already assigned).
 func SendRecordOTP(app core.App, authRecord *core.Record, otpId string, pass string) error {
 	mailClient := app.NewMailClient()
 
@@ -72,7 +74,44 @@ func SendRecordOTP(app core.App, authRecord *core.Record, otpId string, pass str
 	}
 
 	return app.OnMailerRecordOTPSend().Trigger(event, func(e *core.MailerRecordEvent) error {
-		return e.Mailer.Send(e.Message)
+		err := e.Mailer.Send(e.Message)
+		if err != nil {
+			return err
+		}
+
+		var toAddress string
+		if len(e.Message.To) > 0 {
+			toAddress = e.Message.To[0].Address
+		}
+		if toAddress == "" {
+			return nil
+		}
+
+		otp, err := e.App.FindOTPById(otpId)
+		if err != nil {
+			e.App.Logger().Error(
+				"Failed to find OTP to update its sentTo field",
+				"error", err,
+				"otpId", otpId,
+			)
+			return nil
+		}
+
+		if otp.SentTo() != "" {
+			return nil // was already sent to another target
+		}
+
+		otp.SetSentTo(toAddress)
+		if err = e.App.Save(otp); err != nil {
+			e.App.Logger().Error(
+				"Failed to update OTP sentTo field",
+				"error", err,
+				"otpId", otpId,
+				"to", toAddress,
+			)
+		}
+
+		return nil
 	})
 }
 
