@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -149,7 +150,7 @@ func wantsMFA(e *core.RequestEvent, record *core.Record) (bool, error) {
 	resolver.UpdateQuery(query)
 
 	err = query.AndWhere(expr).Limit(1).Row(&exists)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return true, err
 	}
 
