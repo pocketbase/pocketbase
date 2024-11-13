@@ -84,13 +84,13 @@
     </div>
 </h4>
 <div class="accordions m-b-35">
-    <OTPAccordion bind:collection />
-
     <PasswordAuthAccordion bind:collection />
 
     {#if !isSuperusers}
         <OAuth2Accordion bind:collection />
     {/if}
+
+    <OTPAccordion bind:collection />
 
     <MFAAccordion bind:collection />
 </div>

@@ -1,16 +1,16 @@
 <script>
+    import { createEventDispatcher } from "svelte";
+    import { fly } from "svelte/transition";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { collections, isCollectionsLoading } from "@/stores/collections";
+    import { confirm } from "@/stores/confirmation";
+    import { addSuccessToast } from "@/stores/toasts";
     import Field from "@/components/base/Field.svelte";
     import Scroller from "@/components/base/Scroller.svelte";
     import SortHeader from "@/components/base/SortHeader.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import RecordFieldValue from "@/components/records/RecordFieldValue.svelte";
-    import { collections, isCollectionsLoading } from "@/stores/collections";
-    import { confirm } from "@/stores/confirmation";
-    import { addSuccessToast } from "@/stores/toasts";
-    import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
-    import { createEventDispatcher } from "svelte";
-    import { fly } from "svelte/transition";
 
     const dispatch = createEventDispatcher();
     const sortRegex = /^([\+\-])?(\w+)$/;

@@ -126,22 +126,24 @@
     }
 
     async function resolveModel(model) {
-        if (model && typeof model === "string") {
-            // load from id
-            try {
-                return await ApiClient.collection(collection.id).getOne(model);
-            } catch (err) {
-                if (!err.isAbort) {
-                    forceHide();
-                    console.warn("resolveModel:", err);
-                    addErrorToast(`Unable to load record with id "${model}"`);
-                }
-            }
-
+        if (!model) {
             return null;
         }
 
-        return model;
+        let id = typeof model === "string" ? model : model?.id;
+
+        // load the full record
+        try {
+            return await ApiClient.collection(collection.id).getOne(id);
+        } catch (err) {
+            if (!err.isAbort) {
+                forceHide();
+                console.warn("resolveModel:", err);
+                addErrorToast(`Unable to load record with id "${id}"`);
+            }
+        }
+
+        return null;
     }
 
     async function load(model) {
