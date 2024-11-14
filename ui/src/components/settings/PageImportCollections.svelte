@@ -441,7 +441,13 @@
     </div>
 </PageWrapper>
 
-<ImportPopup bind:this={importPopup} on:submit={clear} />
+<ImportPopup
+    bind:this={importPopup}
+    on:submit={() => {
+        clear();
+        loadOldCollections();
+    }}
+/>
 
 <style>
     .list-label {
