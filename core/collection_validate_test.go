@@ -550,7 +550,7 @@ func TestCollectionValidate(t *testing.T) {
 			expectedErrors: []string{"indexes"},
 		},
 		{
-			name: "changing index on system field",
+			name: "changing partial constraint of existing index on system field",
 			collection: func(app core.App) (*core.Collection, error) {
 				demo2, err := app.FindCollectionByNameOrId("demo2")
 				if err != nil {
@@ -571,7 +571,91 @@ func TestCollectionValidate(t *testing.T) {
 
 				// replace the index with a partial one
 				demo2.RemoveIndex("idx_unique_demo2_title")
-				demo2.AddIndex("idx_unique_demo2_title", true, "title", "1 = 1")
+				demo2.AddIndex("idx_new_demo2_title", true, "title", "1 = 1")
+
+				return demo2, nil
+			},
+			expectedErrors: []string{},
+		},
+		{
+			name: "changing column sort and collate of existing index on system field",
+			collection: func(app core.App) (*core.Collection, error) {
+				demo2, err := app.FindCollectionByNameOrId("demo2")
+				if err != nil {
+					return nil, err
+				}
+
+				// mark the title field as system
+				demo2.Fields.GetByName("title").SetSystem(true)
+				if err = app.Save(demo2); err != nil {
+					return nil, err
+				}
+
+				// refresh
+				demo2, err = app.FindCollectionByNameOrId("demo2")
+				if err != nil {
+					return nil, err
+				}
+
+				// replace the index with a new one for the same column but with collate and sort
+				demo2.RemoveIndex("idx_unique_demo2_title")
+				demo2.AddIndex("idx_new_demo2_title", true, "title COLLATE test ASC", "")
+
+				return demo2, nil
+			},
+			expectedErrors: []string{},
+		},
+		{
+			name: "adding new column to index on system field",
+			collection: func(app core.App) (*core.Collection, error) {
+				demo2, err := app.FindCollectionByNameOrId("demo2")
+				if err != nil {
+					return nil, err
+				}
+
+				// mark the title field as system
+				demo2.Fields.GetByName("title").SetSystem(true)
+				if err = app.Save(demo2); err != nil {
+					return nil, err
+				}
+
+				// refresh
+				demo2, err = app.FindCollectionByNameOrId("demo2")
+				if err != nil {
+					return nil, err
+				}
+
+				// replace the index with a non-unique one
+				demo2.RemoveIndex("idx_unique_demo2_title")
+				demo2.AddIndex("idx_new_title", false, "title, id", "")
+
+				return demo2, nil
+			},
+			expectedErrors: []string{"indexes"},
+		},
+		{
+			name: "changing index type on system field",
+			collection: func(app core.App) (*core.Collection, error) {
+				demo2, err := app.FindCollectionByNameOrId("demo2")
+				if err != nil {
+					return nil, err
+				}
+
+				// mark the title field as system
+				demo2.Fields.GetByName("title").SetSystem(true)
+				if err = app.Save(demo2); err != nil {
+					return nil, err
+				}
+
+				// refresh
+				demo2, err = app.FindCollectionByNameOrId("demo2")
+				if err != nil {
+					return nil, err
+				}
+
+				// replace the index with a non-unique one (partial constraints are ignored)
+				demo2.RemoveIndex("idx_unique_demo2_title")
+				demo2.AddIndex("idx_new_title", false, "title", "1=1")
 
 				return demo2, nil
 			},

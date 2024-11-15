@@ -1,3 +1,11 @@
+## v0.23.0-rc14 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Allow changing collate, sort and partial constraints for indexes on system fields.
+
+
 ## v0.23.0-rc13
 
 > [!CAUTION]

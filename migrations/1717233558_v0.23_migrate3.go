@@ -10,12 +10,12 @@ import (
 
 // note: this migration will be deleted in future version
 
-func collectionIdChecksum(c *core.Collection) string {
-	return "pbc_" + strconv.Itoa(int(crc32.ChecksumIEEE([]byte(c.Type+c.Name))))
+func collectionIdChecksum(typ, name string) string {
+	return "pbc_" + strconv.Itoa(int(crc32.ChecksumIEEE([]byte(typ+name))))
 }
 
-func fieldIdChecksum(f core.Field) string {
-	return f.Type() + strconv.Itoa(int(crc32.ChecksumIEEE([]byte(f.GetName()))))
+func fieldIdChecksum(typ, name string) string {
+	return typ + strconv.Itoa(int(crc32.ChecksumIEEE([]byte(name))))
 }
 
 // normalize system collection and field ids
@@ -62,7 +62,7 @@ func init() {
 			originalId := c.Id
 
 			// normalize collection id
-			if checksum := collectionIdChecksum(c); c.Id != checksum {
+			if checksum := collectionIdChecksum(c.Type, c.Name); c.Id != checksum {
 				c.Id = checksum
 				needUpdate = true
 			}
@@ -73,7 +73,7 @@ func init() {
 					continue
 				}
 
-				if checksum := fieldIdChecksum(f); f.GetId() != checksum {
+				if checksum := fieldIdChecksum(f.Type(), f.GetName()); f.GetId() != checksum {
 					f.SetId(checksum)
 					needUpdate = true
 				}

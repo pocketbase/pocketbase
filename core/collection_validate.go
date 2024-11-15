@@ -608,6 +608,12 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 				continue
 			}
 
+			// reset collate and sort since they are not important for the unique constraint
+			for i := range oldParsed.Columns {
+				oldParsed.Columns[i].Collate = ""
+				oldParsed.Columns[i].Sort = ""
+			}
+
 			oldParsedStr := oldParsed.Build()
 
 			for _, column := range oldParsed.Columns {
@@ -621,19 +627,29 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 						newParsed := dbutils.ParseIndex(newIndex)
 
 						// exclude the non-important identifiers from the check
+						newParsed.SchemaName = oldParsed.SchemaName
 						newParsed.IndexName = oldParsed.IndexName
 						newParsed.TableName = oldParsed.TableName
 
+						// exclude partial constraints
+						newParsed.Where = oldParsed.Where
+
+						// reset collate and sort
+						for i := range newParsed.Columns {
+							newParsed.Columns[i].Collate = ""
+							newParsed.Columns[i].Sort = ""
+						}
+
 						if oldParsedStr == newParsed.Build() {
 							hasMatch = true
-							continue
+							break
 						}
 					}
 
 					if !hasMatch {
 						return validation.NewError(
-							"validation_unique_system_field_index_change",
-							fmt.Sprintf("Unique index definition on system fields (%q) cannot be changed.", f.GetName()),
+							"validation_invalid_unique_system_field_index",
+							fmt.Sprintf("Unique index definition on system fields (%q) is invalid or missing.", f.GetName()),
 						).SetParams(map[string]any{"fieldName": f.GetName()})
 					}
 

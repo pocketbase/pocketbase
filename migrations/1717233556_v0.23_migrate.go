@@ -365,8 +365,10 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 
 			c.Options["manageRule"] = nil
 			if options["manageRule"] != nil {
-				manageRule := cast.ToString(options["manageRule"])
-				c.Options["manageRule"] = &manageRule
+				manageRule, err := cast.ToStringE(options["manageRule"])
+				if err == nil && manageRule != "" {
+					c.Options["manageRule"] = migrateRule(&manageRule)
+				}
 			}
 
 			// passwordAuth
@@ -494,15 +496,15 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 			// ---
 			c.Indexes = append(types.JSONArray[string]{
 				fmt.Sprintf("CREATE UNIQUE INDEX `_%s_username_idx` ON `%s` (username COLLATE NOCASE)", c.Id, c.Name),
-				fmt.Sprintf("CREATE UNIQUE INDEX `_%s_email_idx` ON `%s` (email) WHERE email != ''", c.Id, c.Name),
-				fmt.Sprintf("CREATE UNIQUE INDEX `_%s_tokenKey_idx` ON `%s` (tokenKey)", c.Id, c.Name),
+				fmt.Sprintf("CREATE UNIQUE INDEX `_%s_email_idx` ON `%s` (`email`) WHERE `email` != ''", c.Id, c.Name),
+				fmt.Sprintf("CREATE UNIQUE INDEX `_%s_tokenKey_idx` ON `%s` (`tokenKey`)", c.Id, c.Name),
 			}, c.Indexes...)
 
 			// prepend the auth system fields
 			// ---
 			tokenKeyField := map[string]any{
+				"id":                  fieldIdChecksum("text", "tokenKey"),
 				"type":                "text",
-				"id":                  "_pbf_auth_tokenKey_",
 				"name":                "tokenKey",
 				"system":              true,
 				"hidden":              true,
@@ -515,8 +517,8 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 				"autogeneratePattern": "[a-zA-Z0-9_]{50}",
 			}
 			passwordField := map[string]any{
+				"id":          fieldIdChecksum("password", "password"),
 				"type":        "password",
-				"id":          "_pbf_auth_password_",
 				"name":        "password",
 				"presentable": false,
 				"system":      true,
@@ -527,8 +529,8 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 				"cost":        bcrypt.DefaultCost, // new default
 			}
 			emailField := map[string]any{
+				"id":            fieldIdChecksum("email", "email"),
 				"type":          "email",
-				"id":            "_pbf_auth_email_",
 				"name":          "email",
 				"system":        true,
 				"hidden":        false,
@@ -538,8 +540,8 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 				"onlyDomains":   cast.ToStringSlice(options["onlyEmailDomains"]),
 			}
 			emailVisibilityField := map[string]any{
+				"id":          fieldIdChecksum("bool", "emailVisibility"),
 				"type":        "bool",
-				"id":          "_pbf_auth_emailVisibility_",
 				"name":        "emailVisibility",
 				"system":      true,
 				"hidden":      false,
@@ -547,8 +549,8 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 				"required":    false,
 			}
 			verifiedField := map[string]any{
+				"id":          fieldIdChecksum("bool", "verified"),
 				"type":        "bool",
-				"id":          "_pbf_auth_verified_",
 				"name":        "verified",
 				"system":      true,
 				"hidden":      false,
@@ -556,8 +558,8 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 				"required":    false,
 			}
 			usernameField := map[string]any{
+				"id":                  fieldIdChecksum("text", "username"),
 				"type":                "text",
-				"id":                  "_pbf_auth_username_",
 				"name":                "username",
 				"system":              false,
 				"hidden":              false,
@@ -597,8 +599,8 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 
 		// prepend the id field
 		idField := map[string]any{
+			"id":                  fieldIdChecksum("text", "id"),
 			"type":                "text",
-			"id":                  "_pbf_text_id_",
 			"name":                "id",
 			"system":              true,
 			"required":            true,
@@ -631,8 +633,8 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 
 		if addCreated {
 			createdField := map[string]any{
+				"id":          fieldIdChecksum("autodate", "created"),
 				"type":        "autodate",
-				"id":          "_pbf_autodate_created_",
 				"name":        "created",
 				"system":      false,
 				"presentable": false,
@@ -645,8 +647,8 @@ func migrateOldCollections(txApp core.App, oldSettings *oldSettingsModel) error 
 
 		if addUpdated {
 			updatedField := map[string]any{
+				"id":          fieldIdChecksum("autodate", "updated"),
 				"type":        "autodate",
-				"id":          "_pbf_autodate_updated_",
 				"name":        "updated",
 				"system":      false,
 				"presentable": false,

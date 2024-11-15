@@ -86,6 +86,12 @@ func (app *BaseApp) ImportCollections(toImport []map[string]any, deleteMissing b
 					continue
 				}
 				if imported.Fields.GetById(f.GetId()) == nil {
+					// replace with the existing id to prevent accidental column deletion
+					// since otherwise the imported field will be treated as a new one
+					found := imported.Fields.GetByName(f.GetName())
+					if found != nil && found.Type() == f.Type() {
+						found.SetId(f.GetId())
+					}
 					imported.Fields.Add(f)
 				}
 			}
