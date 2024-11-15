@@ -46,14 +46,16 @@ func baseLockRetry(op func(attempt int) error, maxRetries int) error {
 Retry:
 	err := op(attempt)
 
-	if err != nil &&
-		attempt <= maxRetries &&
-		// we are checking the plain error text to handle both cgo and noncgo errors
-		strings.Contains(err.Error(), "database is locked") {
-		// wait and retry
-		time.Sleep(getDefaultRetryInterval(attempt))
-		attempt++
-		goto Retry
+	if err != nil && attempt <= maxRetries {
+		errStr := err.Error()
+		// we are checking the error against the plain error texts since the codes could vary between drivers
+		if strings.Contains(errStr, "database is locked") ||
+			strings.Contains(errStr, "table is locked") {
+			// wait and retry
+			time.Sleep(getDefaultRetryInterval(attempt))
+			attempt++
+			goto Retry
+		}
 	}
 
 	return err
