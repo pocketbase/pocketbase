@@ -76,6 +76,11 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 		tempPath := filepath.Join(localTempDir, "pb_backup_"+security.PseudorandomString(6))
 		createErr := e.App.RunInTransaction(func(txApp App) error {
 			return txApp.AuxRunInTransaction(func(txApp App) error {
+				// run manual checkpoint and truncate the WAL files
+				// (errors are ignored because it is not that important and the PRAGMA may not be supported by the used driver)
+				txApp.DB().NewQuery("PRAGMA wal_checkpoint(TRUNCATE)").Execute()
+				txApp.AuxDB().NewQuery("PRAGMA wal_checkpoint(TRUNCATE)").Execute()
+
 				return archive.Create(txApp.DataDir(), tempPath, e.Exclude...)
 			})
 		})
