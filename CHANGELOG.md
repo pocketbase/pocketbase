@@ -1,9 +1,12 @@
-## v0.23.0-rc14 (WIP)
+## v0.23.0-rc14
 
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
 - Allow changing collate, sort and partial constraints for indexes on system fields.
+
+- Added system cron to run once a day `PRAGMA wal_checkpoint(TRUNCATE)` as a fallback to assist in high traffic applications where the autocheckpoint may not be able to take its turn.
+    _Similar to the `PRAGMA optimize`, its execution is optional and even if it is not supported by a custom driver it will result only in a WARN app log._
 
 
 ## v0.23.0-rc13
