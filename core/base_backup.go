@@ -74,7 +74,11 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 	tempPath := filepath.Join(localTempDir, "pb_backup_"+security.PseudorandomString(4))
 	createErr := app.Dao().RunInTransaction(func(dataTXDao *daos.Dao) error {
 		return app.LogsDao().RunInTransaction(func(logsTXDao *daos.Dao) error {
-			// @todo consider experimenting with temp switching the readonly pragma after the db interface change
+			// run manual checkpoint and truncate the WAL files
+			// (errors are ignored because it is not that important and the PRAGMA may not be supported by the used driver)
+			dataTXDao.DB().NewQuery("PRAGMA wal_checkpoint(TRUNCATE)").Execute()
+			logsTXDao.DB().NewQuery("PRAGMA wal_checkpoint(TRUNCATE)").Execute()
+
 			return archive.Create(app.DataDir(), tempPath, exclude...)
 		})
 	})

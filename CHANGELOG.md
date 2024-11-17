@@ -1,3 +1,8 @@
+## v0.22.26
+
+- (_Backported from v0.23.0-rc_) Added manual WAL checkpoints before creating the zip backup to minimize copying unnecessary data.
+
+
 ## v0.22.25
 
 - Refresh the old collections state in the Import UI after successful import submission ([#5861](https://github.com/pocketbase/pocketbase/issues/5861)).
