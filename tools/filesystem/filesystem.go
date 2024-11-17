@@ -322,6 +322,32 @@ func (s *System) DeletePrefix(prefix string) []error {
 	// try to delete the empty remaining dir objects
 	// (this operation usually is optional and there is no need to strictly check the result)
 	// ---
+	
+	// If a directory contains only subdirectories and no other files, it might be skipped in certain cases.
+	// This logic ensures that all intermediate subdirectories are explicitly included in the `dirsMap`.
+
+	// Trim the trailing slash from the prefix to standardize paths for comparison.
+	_prefix := strings.TrimRight(prefix, "/")
+
+	// Iterate through each directory in `dirsMap`.
+	for d := range dirsMap {
+		// Extract the relative path of the directory by removing the `_prefix`.
+		// Split this relative path into its components (subdirectory levels).
+		parts := strings.Split(d[len(_prefix):], "/")
+
+		// Loop through the components to recreate all possible intermediate subpaths.
+		for i := 1; i < len(parts); i++ {
+			// Reconstruct the subpath up to the current component (level).
+			subPath := strings.Join(parts[:i], "/")
+
+			// If the subpath is non-empty, add it to `dirsMap` with the `_prefix` prepended.
+			// This ensures that all intermediate directories are accounted for.
+			if subPath != "" {
+				dirsMap[_prefix+subPath] = struct{}{}
+			}
+		}
+	}
+	
 	// fill dirs slice
 	dirs := make([]string, 0, len(dirsMap))
 	for d := range dirsMap {
