@@ -1238,8 +1238,18 @@ func (app *BaseApp) registerBaseHooks() {
 		Priority: 999,
 	})
 
-	app.Cron().Add("__pbPragmaOptimize__", "0 0 * * *", func() {
-		_, execErr := app.DB().NewQuery("PRAGMA optimize").Execute()
+	app.Cron().Add("__pbDBOptimize__", "0 0 * * *", func() {
+		_, execErr := app.NonconcurrentDB().NewQuery("PRAGMA wal_checkpoint(TRUNCATE)").Execute()
+		if execErr != nil {
+			app.Logger().Warn("Failed to run periodic PRAGMA wal_checkpoint for the main DB", slog.String("error", execErr.Error()))
+		}
+
+		_, execErr = app.AuxNonconcurrentDB().NewQuery("PRAGMA wal_checkpoint(TRUNCATE)").Execute()
+		if execErr != nil {
+			app.Logger().Warn("Failed to run periodic PRAGMA wal_checkpoint for the auxiliary DB", slog.String("error", execErr.Error()))
+		}
+
+		_, execErr = app.DB().NewQuery("PRAGMA optimize").Execute()
 		if execErr != nil {
 			app.Logger().Warn("Failed to run periodic PRAGMA optimize", slog.String("error", execErr.Error()))
 		}
