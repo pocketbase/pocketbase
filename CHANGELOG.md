@@ -8,6 +8,11 @@
 - Added system cron to run once a day `PRAGMA wal_checkpoint(TRUNCATE)` as a fallback to assist in high traffic applications where the autocheckpoint may not be able to take its turn.
     _Similar to the `PRAGMA optimize`, its execution is optional and even if it is not supported by a custom driver it will result only in a WARN app log._
 
+---
+
+_Unless something else show up, this is expected to be the last release candidate before the final v0.23.0, planned to be released in the next 1-2 weeks.
+Because there were several experiments and changes in the rc versions regarding the migrations, if you had a v0.22.x app that you've migrated already to some of the other rc versions and have a full collections snapshot generated for it, note that you may have to regenerate the snapshot again (hopefully this would be the last time)._
+
 
 ## v0.23.0-rc13
 

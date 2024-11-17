@@ -2,6 +2,18 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.26
+
+- (_Backported from v0.23.0-rc_) Added manual WAL checkpoints before creating the zip backup to minimize copying unnecessary data.
+
+
+## v0.22.25
+
+- Refresh the old collections state in the Import UI after successful import submission ([#5861](https://github.com/pocketbase/pocketbase/issues/5861)).
+
+- Added randomized throttle on failed filter list requests as a very rudimentary measure since some security researches raised concern regarding the possibity of eventual side-channel attacks.
+
+
 ## v0.22.24
 
 - Delete new uploaded record files in case of DB persist error ([#5845](https://github.com/pocketbase/pocketbase/issues/5845)).
