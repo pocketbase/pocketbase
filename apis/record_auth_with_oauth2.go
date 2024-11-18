@@ -2,6 +2,7 @@ package apis
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -95,6 +96,10 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 		"provider":      form.Provider,
 		"providerId":    authUser.Id,
 	})
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return e.InternalServerError("Failed OAuth2 relation check.", err)
+	}
+
 	switch {
 	case err == nil && externalAuthRel != nil:
 		authRecord, err = e.App.FindRecordById(form.collection, externalAuthRel.RecordRef())
@@ -106,7 +111,10 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 		authRecord = fallbackAuthRecord
 	case authUser.Email != "":
 		// look for an existing auth record by the external auth record's email
-		authRecord, _ = e.App.FindAuthRecordByEmail(form.collection.Id, authUser.Email)
+		authRecord, err = e.App.FindAuthRecordByEmail(form.collection.Id, authUser.Email)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return e.InternalServerError("Failed OAuth2 auth record check.", err)
+		}
 	}
 
 	// ---------------------------------------------------------------
@@ -237,7 +245,7 @@ func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *cor
 				payload[e.Collection.OAuth2.MappedFields.Username] = e.OAuth2User.Username
 			}
 			if _, ok := payload[e.Collection.OAuth2.MappedFields.AvatarURL]; !ok &&
-				// no existing OAuth2 mapping
+				// no explicit avatar payload value and existing OAuth2 mapping
 				e.Collection.OAuth2.MappedFields.AvatarURL != "" &&
 				// non-empty OAuth2 avatar url
 				e.OAuth2User.AvatarURL != "" {

@@ -109,13 +109,17 @@ func recordAuthResponse(e *core.RequestEvent, authRecord *core.Record, token str
 			}
 		}
 
-		result := map[string]any{
-			"token":  e.Token,
-			"record": e.Record,
+		result := struct {
+			Meta   any          `json:"meta,omitempty"`
+			Record *core.Record `json:"record"`
+			Token  string       `json:"token"`
+		}{
+			Token:  e.Token,
+			Record: e.Record,
 		}
 
 		if e.Meta != nil {
-			result["meta"] = e.Meta
+			result.Meta = e.Meta
 		}
 
 		return e.JSON(http.StatusOK, result)
