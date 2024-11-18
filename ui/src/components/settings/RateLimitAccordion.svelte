@@ -150,7 +150,7 @@
 
     <Field class="form-field form-field-toggle m-b-xs" name="rateLimits.enabled" let:uniqueId>
         <input type="checkbox" id={uniqueId} bind:checked={formSettings.rateLimits.enabled} />
-        <label for={uniqueId}>Enable</label>
+        <label for={uniqueId}>Enable <small class="txt-hint">(experimental)</small></label>
     </Field>
 
     {#if !CommonHelper.isEmpty(formSettings.rateLimits.rules)}
@@ -262,6 +262,22 @@
     <svelte:fragment slot="header">
         <h4 class="center txt-break">Rate limit label format</h4>
     </svelte:fragment>
+
+    <p>The rate limit rules are resolved in the following order (stops on the first match):</p>
+    <ol>
+        <li>exact tag (e.g. <code>users:create</code>)</li>
+        <li>wildcard tag (e.g. <code>*:create</code>)</li>
+        <li>METHOD + exact path (e.g. <code>POST /a/b</code>)</li>
+        <li>METHOD + prefix path (e.g. <code>POST /a/b<strong>/</strong></code>)</li>
+        <li>exact path (e.g. <code>/a/b</code>)</li>
+        <li>prefix path (e.g. <code>/a/b<strong>/</strong></code>)</li>
+    </ol>
+    <p>
+        In case of multiple rules with the same label but different target user audience (e.g. "guest" vs
+        "auth"), only the matching audience rule is taken in consideration.
+    </p>
+
+    <hr class="m-t-xs m-b-xs" />
 
     <p>The rate limit label could be in one of the following formats:</p>
     <ul>

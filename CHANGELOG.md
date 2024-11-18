@@ -3,6 +3,8 @@
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
+- Fixed rate limiter rules matching to acount for the `Audience` field.
+
 - Minor UI fixes (fixed duplicate record control, removed duplicated id field in the record preview, hide Impersonate button for non-auth records, etc.).
 
 

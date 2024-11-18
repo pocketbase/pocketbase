@@ -101,27 +101,27 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 		{"/rate/b", 0, false, 200},
 		{"/rate/b", 0, false, 429},
 
-		// "auth" with guest (should be ignored)
+		// "auth" with guest (should fallback to the /rate/ rule)
 		{"/rate/auth", 0, false, 200},
 		{"/rate/auth", 0, false, 200},
-		{"/rate/auth", 0, false, 200},
-		{"/rate/auth", 0, false, 200},
+		{"/rate/auth", 0, false, 429},
+		{"/rate/auth", 0, false, 429},
 
-		// "auth" rule with regular user
+		// "auth" rule with regular user (should match the /rate/auth rule)
 		{"/rate/auth", 0, true, 200},
 		{"/rate/auth", 0, true, 429},
 		{"/rate/auth", 0, true, 429},
 
-		// "guest" with guest
+		// "guest" with guest (should match the /rate/guest rule)
 		{"/rate/guest", 0, false, 200},
 		{"/rate/guest", 0, false, 429},
 		{"/rate/guest", 0, false, 429},
 
-		// "guest" rule with regular user (should be ignored)
+		// "guest" rule with regular user (should fallback to the /rate/ rule)
+		{"/rate/guest", 1, true, 200},
 		{"/rate/guest", 0, true, 200},
-		{"/rate/guest", 0, true, 200},
-		{"/rate/guest", 0, true, 200},
-		{"/rate/guest", 0, true, 200},
+		{"/rate/guest", 0, true, 429},
+		{"/rate/guest", 0, true, 429},
 	}
 
 	for _, s := range scenarios {

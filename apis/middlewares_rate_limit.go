@@ -32,9 +32,12 @@ func rateLimit() *hook.Handler[*core.RequestEvent] {
 				return e.Next()
 			}
 
-			rule, ok := e.App.Settings().RateLimits.FindRateLimitRule(defaultRateLimitLabels(e))
+			rule, ok := e.App.Settings().RateLimits.FindRateLimitRule(
+				defaultRateLimitLabels(e),
+				defaultRateLimitAudience(e)...,
+			)
 			if ok {
-				err := checkRateLimit(e, e.Request.Pattern, rule)
+				err := checkRateLimit(e, rule.Label+rule.Audience, rule)
 				if err != nil {
 					return err
 				}
@@ -94,9 +97,9 @@ func checkCollectionRateLimit(e *core.RequestEvent, collection *core.Collection,
 	}
 	labels = append(labels, defaultRateLimitLabels(e)...)
 
-	rule, ok := e.App.Settings().RateLimits.FindRateLimitRule(labels)
+	rule, ok := e.App.Settings().RateLimits.FindRateLimitRule(labels, defaultRateLimitAudience(e)...)
 	if ok {
-		return checkRateLimit(e, rtId, rule)
+		return checkRateLimit(e, rtId+rule.Audience, rule)
 	}
 
 	return nil
@@ -172,6 +175,17 @@ func checkRateLimit(e *core.RequestEvent, rtId string, rule core.RateLimitRule) 
 
 func skipRateLimit(e *core.RequestEvent) bool {
 	return !e.App.Settings().RateLimits.Enabled || e.HasSuperuserAuth()
+}
+
+var defaultAuthAudience = []string{core.RateLimitRuleAudienceAll, core.RateLimitRuleAudienceAuth}
+var defaultGuestAudience = []string{core.RateLimitRuleAudienceAll, core.RateLimitRuleAudienceGuest}
+
+func defaultRateLimitAudience(e *core.RequestEvent) []string {
+	if e.Auth != nil {
+		return defaultAuthAudience
+	}
+
+	return defaultGuestAudience
 }
 
 func defaultRateLimitLabels(e *core.RequestEvent) []string {

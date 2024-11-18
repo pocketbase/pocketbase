@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -560,13 +561,17 @@ type RateLimitsConfig struct {
 }
 
 // FindRateLimitRule returns the first matching rule based on the provided labels.
-func (c *RateLimitsConfig) FindRateLimitRule(searchLabels []string) (RateLimitRule, bool) {
+//
+// Optionally you can further specify a list of valid RateLimitRule.Audience values to further filter the matching rule
+// (aka. the rule Audience will have to exist in one of the specified options).
+func (c *RateLimitsConfig) FindRateLimitRule(searchLabels []string, optOnlyAudience ...string) (RateLimitRule, bool) {
 	var prefixRules []int
 
 	for i, label := range searchLabels {
 		// check for direct match
 		for j := range c.Rules {
-			if label == c.Rules[j].Label {
+			if label == c.Rules[j].Label &&
+				(len(optOnlyAudience) == 0 || slices.Contains(optOnlyAudience, c.Rules[j].Audience)) {
 				return c.Rules[j], true
 			}
 
@@ -578,7 +583,8 @@ func (c *RateLimitsConfig) FindRateLimitRule(searchLabels []string) (RateLimitRu
 		// check for prefix match
 		if len(prefixRules) > 0 {
 			for j := range prefixRules {
-				if strings.HasPrefix(label+"/", c.Rules[prefixRules[j]].Label) {
+				if strings.HasPrefix(label+"/", c.Rules[prefixRules[j]].Label) &&
+					(len(optOnlyAudience) == 0 || slices.Contains(optOnlyAudience, c.Rules[prefixRules[j]].Audience)) {
 					return c.Rules[prefixRules[j]], true
 				}
 			}

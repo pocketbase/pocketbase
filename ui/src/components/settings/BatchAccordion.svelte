@@ -39,7 +39,7 @@
 
     <Field class="form-field form-field-toggle m-b-sm" name="batch.enabled" let:uniqueId>
         <input type="checkbox" id={uniqueId} bind:checked={formSettings.batch.enabled} />
-        <label for={uniqueId}>Enable</label>
+        <label for={uniqueId}>Enable <small class="txt-hint">(experimental)</small></label>
     </Field>
 
     <div class="grid">

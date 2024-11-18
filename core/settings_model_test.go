@@ -634,33 +634,43 @@ func TestRateLimitsFindRateLimitRule(t *testing.T) {
 	limits := core.RateLimitsConfig{
 		Rules: []core.RateLimitRule{
 			{Label: "abc"},
-			{Label: "POST /test/a/"},
-			{Label: "/test/a/"},
+			{Label: "def", Audience: core.RateLimitRuleAudienceGuest},
+			{Label: "/test/a", Audience: core.RateLimitRuleAudienceGuest},
 			{Label: "POST /test/a"},
-			{Label: "/test/a"},
+			{Label: "/test/a/", Audience: core.RateLimitRuleAudienceAuth},
+			{Label: "POST /test/a/"},
 		},
 	}
 
 	scenarios := []struct {
 		labels   []string
+		audience []string
 		expected string
 	}{
-		{[]string{}, ""},
-		{[]string{"missing"}, ""},
-		{[]string{"abc"}, "abc"},
-		{[]string{"/test"}, ""},
-		{[]string{"/test/a"}, "/test/a"},
-		{[]string{"GET /test/a"}, ""},
-		{[]string{"POST /test/a"}, "POST /test/a"},
-		{[]string{"/test/a/b/c"}, "/test/a/"},
-		{[]string{"GET /test/a/b/c"}, ""},
-		{[]string{"POST /test/a/b/c"}, "POST /test/a/"},
-		{[]string{"/test/a", "abc"}, "/test/a"}, // priority checks
+		{[]string{}, []string{}, ""},
+		{[]string{"missing"}, []string{}, ""},
+		{[]string{"abc"}, []string{}, "abc"},
+		{[]string{"abc"}, []string{core.RateLimitRuleAudienceGuest}, ""},
+		{[]string{"abc"}, []string{core.RateLimitRuleAudienceAuth}, ""},
+		{[]string{"def"}, []string{core.RateLimitRuleAudienceGuest}, "def"},
+		{[]string{"def"}, []string{core.RateLimitRuleAudienceAuth}, ""},
+		{[]string{"/test"}, []string{}, ""},
+		{[]string{"/test/a"}, []string{}, "/test/a"},
+		{[]string{"/test/a"}, []string{core.RateLimitRuleAudienceAuth}, "/test/a/"},
+		{[]string{"/test/a"}, []string{core.RateLimitRuleAudienceGuest}, "/test/a"},
+		{[]string{"GET /test/a"}, []string{}, ""},
+		{[]string{"POST /test/a"}, []string{}, "POST /test/a"},
+		{[]string{"/test/a/b/c"}, []string{}, "/test/a/"},
+		{[]string{"/test/a/b/c"}, []string{core.RateLimitRuleAudienceAuth}, "/test/a/"},
+		{[]string{"/test/a/b/c"}, []string{core.RateLimitRuleAudienceGuest}, ""},
+		{[]string{"GET /test/a/b/c"}, []string{}, ""},
+		{[]string{"POST /test/a/b/c"}, []string{}, "POST /test/a/"},
+		{[]string{"/test/a", "abc"}, []string{}, "/test/a"}, // priority checks
 	}
 
 	for _, s := range scenarios {
-		t.Run(strings.Join(s.labels, ""), func(t *testing.T) {
-			rule, ok := limits.FindRateLimitRule(s.labels)
+		t.Run(strings.Join(s.labels, "_")+":"+strings.Join(s.audience, "_"), func(t *testing.T) {
+			rule, ok := limits.FindRateLimitRule(s.labels, s.audience...)
 
 			hasLabel := rule.Label != ""
 			if hasLabel != ok {
