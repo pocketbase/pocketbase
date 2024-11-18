@@ -75,20 +75,6 @@
                     </td>
                 </tr>
             {/each}
-
-            {#if record.created}
-                <tr>
-                    <td class="min-width txt-hint txt-bold">created</td>
-                    <td class="col-field"><FormattedDate date={record.created} /></td>
-                </tr>
-            {/if}
-
-            {#if record.updated}
-                <tr>
-                    <td class="min-width txt-hint txt-bold">updated</td>
-                    <td class="col-field"><FormattedDate date={record.updated} /></td>
-                </tr>
-            {/if}
         </tbody>
     </table>
 
