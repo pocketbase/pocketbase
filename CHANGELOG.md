@@ -5,7 +5,7 @@
 
 - Fixed rate limiter rules matching to acount for the `Audience` field.
 
-- Minor UI fixes (fixed duplicate record control, removed duplicated id field in the record preview, hide Impersonate button for non-auth records, etc.).
+- Minor UI fixes (fixed duplicate record control, removed duplicated id field in the record preview, hide Impersonate button for non-auth records, auto sort rate limit rules, etc.).
 
 
 ## v0.23.0-rc14

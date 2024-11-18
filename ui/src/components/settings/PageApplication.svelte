@@ -58,6 +58,8 @@
         isSaving = true;
 
         try {
+            sortRules(formSettings.rateLimits.rules);
+
             const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             init(settings);
 
@@ -81,14 +83,85 @@
             meta: settings?.meta || {},
             batch: settings.batch || {},
             trustedProxy: settings.trustedProxy || { headers: [] },
-            rateLimits: settings.rateLimits || { tags: [] },
+            rateLimits: settings.rateLimits || { rules: [] },
         };
+
+        sortRules(formSettings.rateLimits.rules);
 
         originalFormSettings = JSON.parse(JSON.stringify(formSettings));
     }
 
     function reset() {
         formSettings = JSON.parse(JSON.stringify(originalFormSettings || {}));
+    }
+
+    function sortRules(rules) {
+        if (!rules) {
+            return;
+        }
+
+        let compare = [{}, {}];
+
+        rules.sort((a, b) => {
+            compare[0].length = a.label.length;
+            compare[0].isTag = a.label.includes(":");
+            compare[0].isWildcardTag = compare[0].isTag && a.label.startsWith("*");
+            compare[0].isExactTag = compare[0].isTag && !compare[0].isWildcardTag;
+            compare[0].isPrefix = !compare[0].isTag && a.label.endsWith("/");
+            compare[0].hasMethod = !compare[0].isTag && a.label.includes(" /");
+
+            compare[1].length = b.label.length;
+            compare[1].isTag = b.label.includes(":");
+            compare[1].isWildcardTag = compare[1].isTag && b.label.startsWith("*");
+            compare[1].isExactTag = compare[1].isTag && !compare[1].isWildcardTag;
+            compare[1].isPrefix = !compare[1].isTag && b.label.endsWith("/");
+            compare[1].hasMethod = !compare[1].isTag && b.label.includes(" /");
+
+            for (let item of compare) {
+                item.priority = 0; // reset
+
+                if (item.isTag) {
+                    item.priority += 1000;
+
+                    if (item.isExactTag) {
+                        item.priority += 10;
+                    } else {
+                        item.priority += 5;
+                    }
+                } else {
+                    if (item.hasMethod) {
+                        item.priority += 10;
+                    }
+
+                    if (!item.isPrefix) {
+                        item.priority += 5;
+                    }
+                }
+            }
+            // sort additionally prefix paths based on their length
+            if (
+                compare[0].isPrefix &&
+                compare[1].isPrefix &&
+                ((compare[0].hasMethod && compare[1].hasMethod) ||
+                    (!compare[0].hasMethod && !compare[1].hasMethod))
+            ) {
+                if (compare[0].length > compare[1].length) {
+                    compare[0].priority += 1;
+                } else if (compare[0].length < compare[1].length) {
+                    compare[1].priority += 1;
+                }
+            }
+
+            if (compare[0].priority > compare[1].priority) {
+                return -1;
+            }
+
+            if (compare[0].priority < compare[1].priority) {
+                return 1;
+            }
+
+            return 0;
+        });
     }
 </script>
 
