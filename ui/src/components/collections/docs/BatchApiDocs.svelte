@@ -81,7 +81,7 @@
             <a href="/settings" use:link>Dashboard settings</a>.
         </p>
         <p>
-            Because this endpoint process the requests in a single transaction, it could degrade the
+            Because this endpoint process the requests in a single transaction it could degrade the
             performance of your application if not used with proper care and configuration (e.g. too large
             allowed execution timeout, large body size limit, etc.).
         </p>

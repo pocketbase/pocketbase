@@ -199,18 +199,14 @@
         // move outside of its current parent
         getHolder().appendChild(wrapper);
 
+        let wrapperCopy = wrapper;
+
         return () => {
             clearTimeout(contentScrollThrottle);
 
             unregisterActivePanel();
 
-            // ensures that no artifacts remains
-            // (currently there is a bug with svelte transition)
-            wrapper?.classList?.add("hidden");
-
-            setTimeout(() => {
-                wrapper?.remove();
-            }, 0);
+            wrapperCopy?.remove();
         };
     });
 </script>
