@@ -34,7 +34,6 @@
     {#if collection.type == "auth" && collection.oauth2?.enabled && !collection.oauth2.providers?.length}
         <i
             class="ri-alert-line txt-sm link-hint"
-            title=""
             aria-hidden="true"
             use:tooltip={"OAuth2 auth is enabled but the collection doesn't have any registered providers"}
         />

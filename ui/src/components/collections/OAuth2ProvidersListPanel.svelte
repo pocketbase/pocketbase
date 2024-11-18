@@ -73,7 +73,7 @@
 
     <div class="grid grid-sm">
         {#each filteredProviders as provider (provider.key)}
-            <div class="col-lg-6">
+            <div class="col-6">
                 <button type="button" class="provider-card handle" on:click={() => select(provider)}>
                     <figure class="provider-logo">
                         {#if provider.logo}
