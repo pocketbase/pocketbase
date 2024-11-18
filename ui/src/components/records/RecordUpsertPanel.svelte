@@ -130,20 +130,21 @@
             return null;
         }
 
-        let id = typeof model === "string" ? model : model?.id;
-
-        // load the full record
-        try {
-            return await ApiClient.collection(collection.id).getOne(id);
-        } catch (err) {
-            if (!err.isAbort) {
-                forceHide();
-                console.warn("resolveModel:", err);
-                addErrorToast(`Unable to load record with id "${id}"`);
+        let id = typeof model == "string" ? model : model?.id;
+        if (id) {
+            // load the full record
+            try {
+                return await ApiClient.collection(collection.id).getOne(id);
+            } catch (err) {
+                if (!err.isAbort) {
+                    forceHide();
+                    console.warn("resolveModel:", err);
+                    addErrorToast(`Unable to load record with id "${id}"`);
+                }
             }
         }
 
-        return null;
+        return typeof model == "object" ? model : null;
     }
 
     async function load(model) {
@@ -554,15 +555,17 @@
                                 <span class="txt">Send password reset email</span>
                             </button>
                         {/if}
-                        <button
-                            type="button"
-                            class="dropdown-item closable"
-                            role="menuitem"
-                            on:click={() => impersonatePopup?.show()}
-                        >
-                            <i class="ri-id-card-line" aria-hidden="true" />
-                            <span class="txt">Impersonate</span>
-                        </button>
+                        {#if isAuthCollection}
+                            <button
+                                type="button"
+                                class="dropdown-item closable"
+                                role="menuitem"
+                                on:click={() => impersonatePopup?.show()}
+                            >
+                                <i class="ri-id-card-line" aria-hidden="true" />
+                                <span class="txt">Impersonate</span>
+                            </button>
+                        {/if}
                         <button
                             type="button"
                             class="dropdown-item closable"
@@ -766,7 +769,9 @@
     </svelte:fragment>
 </OverlayPanel>
 
-<ImpersonatePopup bind:this={impersonatePopup} {record} {collection} />
+{#if isAuthCollection}
+    <ImpersonatePopup bind:this={impersonatePopup} {record} {collection} />
+{/if}
 
 <style>
     .panel-title {

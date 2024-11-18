@@ -1,3 +1,11 @@
+## v0.23.0-rc15 (WIP)
+
+> [!CAUTION]
+> **This is a prerelease intended for test and experimental purposes only!**
+
+- Minor UI fixes (fixed duplicate record control, removed duplicated id field in the record preview, hide Impersonate button for non-auth records, etc.).
+
+
 ## v0.23.0-rc14
 
 > [!CAUTION]

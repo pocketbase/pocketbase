@@ -67,16 +67,6 @@
 
     <table class="table-border preview-table" class:table-loading={isLoading}>
         <tbody>
-            <tr>
-                <td class="min-width txt-hint txt-bold">id</td>
-                <td class="col-field">
-                    <div class="label">
-                        <CopyIcon value={record.id} />
-                        <span class="txt">{record.id || "..."}</span>
-                    </div>
-                </td>
-            </tr>
-
             {#each collection?.fields as field}
                 <tr>
                     <td class="min-width txt-hint txt-bold">{field.name}</td>
