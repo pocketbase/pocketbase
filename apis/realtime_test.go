@@ -427,26 +427,51 @@ func TestRealtimeAuthRecordDeleteEvent(t *testing.T) {
 	// init realtime handlers
 	apis.NewRouter(testApp)
 
-	authRecord, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
+	authRecord1, err := testApp.FindFirstRecordByData("users", "email", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client := subscriptions.NewDefaultClient()
-	client.Set(apis.RealtimeClientAuthKey, authRecord)
-	testApp.SubscriptionsBroker().Register(client)
+	authRecord2, err := testApp.FindFirstRecordByData("users", "email", "test2@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client1 := subscriptions.NewDefaultClient()
+	client1.Set(apis.RealtimeClientAuthKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client1)
+
+	client2 := subscriptions.NewDefaultClient()
+	client2.Set(apis.RealtimeClientAuthKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client2)
+
+	client3 := subscriptions.NewDefaultClient()
+	client3.Set(apis.RealtimeClientAuthKey, authRecord2)
+	testApp.SubscriptionsBroker().Register(client3)
 
 	// mock delete event
 	e := new(core.ModelEvent)
 	e.App = testApp
 	e.Type = core.ModelEventTypeDelete
 	e.Context = context.Background()
-	e.Model = authRecord
+	e.Model = authRecord1
 
 	testApp.OnModelAfterDeleteSuccess().Trigger(e)
 
-	if total := len(testApp.SubscriptionsBroker().Clients()); total != 0 {
-		t.Fatalf("Expected no subscription clients, found %d", total)
+	if total := len(testApp.SubscriptionsBroker().Clients()); total != 3 {
+		t.Fatalf("Expected %d subscription clients, found %d", 3, total)
+	}
+
+	if auth := client1.Get(apis.RealtimeClientAuthKey); auth != nil {
+		t.Fatalf("[client1] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client2.Get(apis.RealtimeClientAuthKey); auth != nil {
+		t.Fatalf("[client2] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client3.Get(apis.RealtimeClientAuthKey); auth == nil || auth.(*core.Record).Id != authRecord2.Id {
+		t.Fatalf("[client3] Expected the auth state to be left unchanged, found %#v", auth)
 	}
 }
 
@@ -524,17 +549,30 @@ func TestRealtimeCustomAuthModelDeleteEvent(t *testing.T) {
 	// init realtime handlers
 	apis.NewRouter(testApp)
 
-	authRecord, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
+	authRecord1, err := testApp.FindFirstRecordByData("users", "email", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client := subscriptions.NewDefaultClient()
-	client.Set(apis.RealtimeClientAuthKey, authRecord)
-	testApp.SubscriptionsBroker().Register(client)
+	authRecord2, err := testApp.FindFirstRecordByData("users", "email", "test2@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	client1 := subscriptions.NewDefaultClient()
+	client1.Set(apis.RealtimeClientAuthKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client1)
+
+	client2 := subscriptions.NewDefaultClient()
+	client2.Set(apis.RealtimeClientAuthKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client2)
+
+	client3 := subscriptions.NewDefaultClient()
+	client3.Set(apis.RealtimeClientAuthKey, authRecord2)
+	testApp.SubscriptionsBroker().Register(client3)
 
 	// refetch the authRecord as CustomUser
-	customUser, err := findCustomUserByEmail(testApp, "test@example.com")
+	customUser, err := findCustomUserByEmail(testApp, authRecord1.Email())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -544,8 +582,20 @@ func TestRealtimeCustomAuthModelDeleteEvent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if total := len(testApp.SubscriptionsBroker().Clients()); total != 0 {
-		t.Fatalf("Expected no subscription clients, found %d", total)
+	if total := len(testApp.SubscriptionsBroker().Clients()); total != 3 {
+		t.Fatalf("Expected %d subscription clients, found %d", 3, total)
+	}
+
+	if auth := client1.Get(apis.RealtimeClientAuthKey); auth != nil {
+		t.Fatalf("[client1] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client2.Get(apis.RealtimeClientAuthKey); auth != nil {
+		t.Fatalf("[client2] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client3.Get(apis.RealtimeClientAuthKey); auth == nil || auth.(*core.Record).Id != authRecord2.Id {
+		t.Fatalf("[client3] Expected the auth state to be left unchanged, found %#v", auth)
 	}
 }
 

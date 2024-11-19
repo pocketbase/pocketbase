@@ -2,6 +2,11 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.27
+
+- Instead of unregistering the realtime clients, we now just unset their auth state on delete of the related auth record so that the clients can receive the `delete` event ([#5898](https://github.com/pocketbase/pocketbase/issues/5898)).
+
+
 ## v0.22.26
 
 - (_Backported from v0.23.0-rc_) Added manual WAL checkpoints before creating the zip backup to minimize copying unnecessary data.

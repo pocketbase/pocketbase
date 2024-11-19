@@ -242,8 +242,8 @@ func realtimeUpdateClientsAuth(app core.App, newAuthRecord *core.Record) error {
 	return group.Wait()
 }
 
-// unregisterClientsByAuthModel unregister all clients that has the provided auth model.
-func realtimeUnregisterClientsByAuth(app core.App, authModel core.Model) error {
+// realtimeUnsetClientsAuthState unsets the auth state of all clients that have the provided auth model.
+func realtimeUnsetClientsAuthState(app core.App, authModel core.Model) error {
 	chunks := app.SubscriptionsBroker().ChunkedClients(clientsChunkSize)
 
 	group := new(errgroup.Group)
@@ -255,7 +255,7 @@ func realtimeUnregisterClientsByAuth(app core.App, authModel core.Model) error {
 				if clientAuth != nil &&
 					clientAuth.Id == authModel.PK() &&
 					clientAuth.Collection().Name == authModel.TableName() {
-					app.SubscriptionsBroker().Unregister(client.Id())
+					client.Unset(RealtimeClientAuthKey)
 				}
 			}
 
@@ -293,7 +293,7 @@ func bindRealtimeEvents(app core.App) {
 		Func: func(e *core.ModelEvent) error {
 			collection := realtimeResolveRecordCollection(e.App, e.Model)
 			if collection != nil && collection.IsAuth() {
-				if err := realtimeUnregisterClientsByAuth(e.App, e.Model); err != nil {
+				if err := realtimeUnsetClientsAuthState(e.App, e.Model); err != nil {
 					app.Logger().Warn(
 						"Failed to remove client(s) associated to the deleted auth model",
 						slog.Any("id", e.Model.PK()),
