@@ -188,8 +188,8 @@ func (f *TextField) ValidateValue(ctx context.Context, app App, record *Record) 
 			}
 
 			// this technically shouldn't be necessarily but again to
-			// prevent minimize misuse of the Pattern validator that could
-			// cause side-effects on some platforms check for duplicates in a case-insensitive manner
+			// minimize misuse of the Pattern validator that could cause
+			// side-effects on some platforms check for duplicates in a case-insensitive manner
 			var exists bool
 			err := app.DB().
 				Select("(1)").
