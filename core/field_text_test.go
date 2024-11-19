@@ -68,7 +68,15 @@ func TestTextFieldValidateValue(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	collection := core.NewBaseCollection("test_collection")
+	collection, err := app.FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	existingRecord, err := app.FindFirstRecordByFilter(collection, "id != ''")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	scenarios := []struct {
 		name        string
@@ -117,6 +125,46 @@ func TestTextFieldValidateValue(t *testing.T) {
 			false,
 		},
 		{
+			"special forbidden character / (non-primaryKey)",
+			&core.TextField{Name: "test", PrimaryKey: false},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.SetRaw("test", "/")
+				return record
+			},
+			false,
+		},
+		{
+			"special forbidden character \\ (non-primaryKey)",
+			&core.TextField{Name: "test", PrimaryKey: false},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.SetRaw("test", "\\")
+				return record
+			},
+			false,
+		},
+		{
+			"special forbidden character / (primaryKey)",
+			&core.TextField{Name: "test", PrimaryKey: true},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.SetRaw("test", "/")
+				return record
+			},
+			true,
+		},
+		{
+			"special forbidden character \\ (primaryKey)",
+			&core.TextField{Name: "test", PrimaryKey: true},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.SetRaw("test", "\\")
+				return record
+			},
+			true,
+		},
+		{
 			"zero field value (primaryKey)",
 			&core.TextField{Name: "test", PrimaryKey: true},
 			func() *core.Record {
@@ -131,10 +179,20 @@ func TestTextFieldValidateValue(t *testing.T) {
 			&core.TextField{Name: "test", PrimaryKey: true},
 			func() *core.Record {
 				record := core.NewRecord(collection)
-				record.SetRaw("test", "abc")
+				record.SetRaw("test", "abcd")
 				return record
 			},
 			false,
+		},
+		{
+			"case-insensitive duplicated primary key check",
+			&core.TextField{Name: "test", PrimaryKey: true},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.SetRaw("test", strings.ToUpper(existingRecord.Id))
+				return record
+			},
+			true,
 		},
 		{
 			"< min",

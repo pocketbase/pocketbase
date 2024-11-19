@@ -2,10 +2,14 @@ package core
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core/validators"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/spf13/cast"
@@ -151,6 +155,8 @@ func (f *TextField) PrepareValue(record *Record, raw any) (any, error) {
 	return cast.ToString(raw), nil
 }
 
+var forbiddenPKChars = []string{"/", "\\"}
+
 // ValidateValue implements [Field.ValidateValue] interface method.
 func (f *TextField) ValidateValue(ctx context.Context, app App, record *Record) error {
 	newVal, ok := record.GetRaw(f.Name).(string)
@@ -158,14 +164,42 @@ func (f *TextField) ValidateValue(ctx context.Context, app App, record *Record) 
 		return validators.ErrUnsupportedValueType
 	}
 
-	// disallow PK change
-	if f.PrimaryKey && !record.IsNew() {
-		oldVal := record.LastSavedPK()
-		if oldVal != newVal {
-			return validation.NewError("validation_pk_change", "The record primary key cannot be changed.")
-		}
-		if oldVal != "" {
-			return nil // no need to further validate since the id can't be updated anyway
+	if f.PrimaryKey {
+		// disallow PK change
+		if !record.IsNew() {
+			oldVal := record.LastSavedPK()
+			if oldVal != newVal {
+				return validation.NewError("validation_pk_change", "The record primary key cannot be changed.")
+			}
+			if oldVal != "" {
+				// no need to further validate because the id can't be updated
+				// and because the id could have been inserted manually by migration from another system
+				// that may not comply with the user defined PocketBase validations
+				return nil
+			}
+		} else {
+			// disallow PK special characters no matter of the Pattern validator to minimize
+			// side-effects when the primary key is used for example in a directory path
+			for _, c := range forbiddenPKChars {
+				if strings.Contains(newVal, c) {
+					return validation.NewError("validation_pk_forbidden", "The record primary key contains forbidden characters.").
+						SetParams(map[string]any{"forbidden": c})
+				}
+			}
+
+			// this technically shouldn't be necessarily but again to
+			// prevent minimize misuse of the Pattern validator that could
+			// cause side-effects on some platforms check for duplicates in a case-insensitive manner
+			var exists bool
+			err := app.DB().
+				Select("(1)").
+				From(record.TableName()).
+				Where(dbx.NewExp("LOWER(id) = {:id}", dbx.Params{"id": strings.ToLower(newVal)})).
+				Limit(1).
+				Row(&exists)
+			if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
+				return validation.NewError("validation_pk_invalid", "The record primary key is invalid or already exists.")
+			}
 		}
 	}
 

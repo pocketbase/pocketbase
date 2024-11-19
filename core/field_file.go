@@ -391,7 +391,7 @@ func (f *FileField) Intercept(
 }
 func (f *FileField) getLatestOldValue(app App, record *Record) any {
 	if !record.IsNew() {
-		latestOriginal, err := app.FindRecordById(record.Collection(), record.Id)
+		latestOriginal, err := app.FindRecordById(record.Collection(), record.Original().Id)
 		if err == nil {
 			return latestOriginal.GetRaw(f.Name)
 		}
