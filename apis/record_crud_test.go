@@ -2345,7 +2345,7 @@ func TestRecordCrudUpdate(t *testing.T) {
 	}
 
 	formData3, mp3, err3 := tests.MockMultipartData(map[string]string{
-		router.JSONPayloadKey: `{"title": "title_test3", "testPayload": 123}`,
+		router.JSONPayloadKey: `{"title": "title_test3", "testPayload": 123, "files":"300_JdfBOieXAW.png"}`,
 	}, "files")
 	if err3 != nil {
 		t.Fatal(err3)
@@ -2686,6 +2686,8 @@ func TestRecordCrudUpdate(t *testing.T) {
 				`"id":"mk5fmymtx4wsprk"`,
 				`"title":"title_test3"`,
 				`"files":["`,
+				`"300_JdfBOieXAW.png"`,
+				`"tmpfile_`,
 			},
 			ExpectedEvents: map[string]int{
 				"*":                          0,

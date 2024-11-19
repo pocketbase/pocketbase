@@ -13,6 +13,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/router"
 	"github.com/pocketbase/pocketbase/tools/search"
 )
@@ -561,9 +562,28 @@ func recordDataFromRequest(e *core.RequestEvent, record *core.Record) (map[strin
 		return nil, err
 	}
 	if len(uploadedFiles) > 0 {
-		for k, v := range uploadedFiles {
-			result[k] = v
+		for k, files := range uploadedFiles {
+			uploaded := make([]any, 0, len(files))
+
+			// if not remove/prepend/append -> merge with the submitted
+			// info.Body values to prevent accidental old files deletion
+			if info.Body[k] != nil &&
+				!strings.HasPrefix(k, "+") &&
+				!strings.HasSuffix(k, "+") &&
+				!strings.HasSuffix(k, "-") {
+				existing := list.ToUniqueStringSlice(info.Body[k])
+				for _, name := range existing {
+					uploaded = append(uploaded, name)
+				}
+			}
+
+			for _, file := range files {
+				uploaded = append(uploaded, file)
+			}
+
+			result[k] = uploaded
 		}
+
 		result = record.ReplaceModifiers(result)
 	}
 
