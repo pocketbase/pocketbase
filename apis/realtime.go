@@ -245,7 +245,7 @@ func (api *realtimeApi) unregisterClientsByAuthModel(contextKey string, model mo
 		if clientModel != nil &&
 			clientModel.TableName() == model.TableName() &&
 			clientModel.GetId() == model.GetId() {
-			api.app.SubscriptionsBroker().Unregister(client.Id())
+			client.Unset(contextKey)
 		}
 	}
 

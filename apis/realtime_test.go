@@ -249,22 +249,48 @@ func TestRealtimeAuthRecordDeleteEvent(t *testing.T) {
 
 	apis.InitApi(testApp)
 
-	authRecord, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
+	authRecord1, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client := subscriptions.NewDefaultClient()
-	client.Set(apis.ContextAuthRecordKey, authRecord)
-	testApp.SubscriptionsBroker().Register(client)
+	authRecord2, err := testApp.Dao().FindFirstRecordByData("users", "email", "test2@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	client1 := subscriptions.NewDefaultClient()
+	client1.Set(apis.ContextAuthRecordKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client1)
+
+	client2 := subscriptions.NewDefaultClient()
+	client2.Set(apis.ContextAuthRecordKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client2)
+
+	client3 := subscriptions.NewDefaultClient()
+	client3.Set(apis.ContextAuthRecordKey, authRecord2)
+	testApp.SubscriptionsBroker().Register(client3)
+
+	// "delete" authRecord1
 	e := new(core.ModelEvent)
 	e.Dao = testApp.Dao()
-	e.Model = authRecord
+	e.Model = authRecord1
 	testApp.OnModelAfterDelete().Trigger(e)
 
-	if len(testApp.SubscriptionsBroker().Clients()) != 0 {
-		t.Fatalf("Expected no subscription clients, found %d", len(testApp.SubscriptionsBroker().Clients()))
+	if total := len(testApp.SubscriptionsBroker().Clients()); total != 3 {
+		t.Fatalf("Expected %d subscription clients, found %d", 3, total)
+	}
+
+	if auth := client1.Get(apis.ContextAuthRecordKey); auth != nil {
+		t.Fatalf("[client1] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client2.Get(apis.ContextAuthRecordKey); auth != nil {
+		t.Fatalf("[client2] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client3.Get(apis.ContextAuthRecordKey); auth == nil || auth.(*models.Record).Id != authRecord2.Id {
+		t.Fatalf("[client3] Expected the auth state to be left unchanged, found %#v", auth)
 	}
 }
 
@@ -307,22 +333,48 @@ func TestRealtimeAdminDeleteEvent(t *testing.T) {
 
 	apis.InitApi(testApp)
 
-	admin, err := testApp.Dao().FindAdminByEmail("test@example.com")
+	admin1, err := testApp.Dao().FindAdminByEmail("test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client := subscriptions.NewDefaultClient()
-	client.Set(apis.ContextAdminKey, admin)
-	testApp.SubscriptionsBroker().Register(client)
+	admin2, err := testApp.Dao().FindAdminByEmail("test2@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	client1 := subscriptions.NewDefaultClient()
+	client1.Set(apis.ContextAdminKey, admin1)
+	testApp.SubscriptionsBroker().Register(client1)
+
+	client2 := subscriptions.NewDefaultClient()
+	client2.Set(apis.ContextAdminKey, admin1)
+	testApp.SubscriptionsBroker().Register(client2)
+
+	client3 := subscriptions.NewDefaultClient()
+	client3.Set(apis.ContextAdminKey, admin2)
+	testApp.SubscriptionsBroker().Register(client3)
+
+	// "delete" admin1
 	e := new(core.ModelEvent)
 	e.Dao = testApp.Dao()
-	e.Model = admin
+	e.Model = admin1
 	testApp.OnModelAfterDelete().Trigger(e)
 
-	if len(testApp.SubscriptionsBroker().Clients()) != 0 {
-		t.Fatalf("Expected no subscription clients, found %d", len(testApp.SubscriptionsBroker().Clients()))
+	if total := len(testApp.SubscriptionsBroker().Clients()); total != 3 {
+		t.Fatalf("Expected %d subscription clients, found %d", 3, total)
+	}
+
+	if auth := client1.Get(apis.ContextAdminKey); auth != nil {
+		t.Fatalf("[client1] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client2.Get(apis.ContextAdminKey); auth != nil {
+		t.Fatalf("[client2] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client3.Get(apis.ContextAdminKey); auth == nil || auth.(*models.Admin).Id != admin2.Id {
+		t.Fatalf("[client3] Expected the auth state to be left unchanged, found %#v", auth)
 	}
 }
 
@@ -394,16 +446,29 @@ func TestRealtimeCustomAuthModelDeleteEvent(t *testing.T) {
 
 	apis.InitApi(testApp)
 
-	authRecord, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
+	authRecord1, err := testApp.Dao().FindFirstRecordByData("users", "email", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	client := subscriptions.NewDefaultClient()
-	client.Set(apis.ContextAuthRecordKey, authRecord)
-	testApp.SubscriptionsBroker().Register(client)
+	authRecord2, err := testApp.Dao().FindFirstRecordByData("users", "email", "test2@example.com")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	// refetch the authRecord as CustomUser
+	client1 := subscriptions.NewDefaultClient()
+	client1.Set(apis.ContextAuthRecordKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client1)
+
+	client2 := subscriptions.NewDefaultClient()
+	client2.Set(apis.ContextAuthRecordKey, authRecord1)
+	testApp.SubscriptionsBroker().Register(client2)
+
+	client3 := subscriptions.NewDefaultClient()
+	client3.Set(apis.ContextAuthRecordKey, authRecord2)
+	testApp.SubscriptionsBroker().Register(client3)
+
+	// refetch authRecord1 as CustomUser
 	customUser, err := findCustomUserByEmail(testApp.Dao(), "test@example.com")
 	if err != nil {
 		t.Fatal(err)
@@ -414,8 +479,20 @@ func TestRealtimeCustomAuthModelDeleteEvent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(testApp.SubscriptionsBroker().Clients()) != 0 {
-		t.Fatalf("Expected no subscription clients, found %d", len(testApp.SubscriptionsBroker().Clients()))
+	if total := len(testApp.SubscriptionsBroker().Clients()); total != 3 {
+		t.Fatalf("Expected %d subscription clients, found %d", 3, total)
+	}
+
+	if auth := client1.Get(apis.ContextAuthRecordKey); auth != nil {
+		t.Fatalf("[client1] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client2.Get(apis.ContextAuthRecordKey); auth != nil {
+		t.Fatalf("[client2] Expected the auth state to be unset, found %#v", auth)
+	}
+
+	if auth := client3.Get(apis.ContextAuthRecordKey); auth == nil || auth.(*models.Record).Id != authRecord2.Id {
+		t.Fatalf("[client3] Expected the auth state to be left unchanged, found %#v", auth)
 	}
 }
 
