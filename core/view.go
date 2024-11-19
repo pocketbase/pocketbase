@@ -247,6 +247,7 @@ func parseQueryToFields(app App, selectQuery string) (map[string]*queryField, er
 					System:     true,
 					Required:   true,
 					PrimaryKey: true,
+					Pattern:    `^[a-z0-9]+$`,
 				},
 			}
 			continue

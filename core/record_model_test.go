@@ -1564,13 +1564,15 @@ func TestRecordValidate(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	collection := core.NewBaseCollection("test")
-
+	// dummy collection to ensure that the specified field validators are triggered
+	collection := core.NewBaseCollection("validate_test")
 	collection.Fields.Add(
-		// dummy fields to ensure that its validators are triggered
 		&core.TextField{Name: "f1", Min: 3},
 		&core.NumberField{Name: "f2", Required: true},
 	)
+	if err := app.Save(collection); err != nil {
+		t.Fatal(err)
+	}
 
 	record := core.NewRecord(collection)
 	record.Id = "!invalid"
@@ -1585,7 +1587,7 @@ func TestRecordValidate(t *testing.T) {
 	})
 
 	t.Run("satisfying the fields validations", func(t *testing.T) {
-		record.Id = strings.Repeat("a", 15)
+		record.Id = strings.Repeat("b", 15)
 		record.Set("f1", "abc")
 		record.Set("f2", 1)
 		tests.TestValidationErrors(t, app.Validate(record), nil)

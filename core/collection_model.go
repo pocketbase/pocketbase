@@ -902,6 +902,9 @@ func (c *Collection) initIdField() {
 		field.Required = true
 		field.PrimaryKey = true
 		field.Hidden = false
+		if field.Pattern == "" {
+			field.Pattern = `^[a-z0-9]+$`
+		}
 	}
 }
 

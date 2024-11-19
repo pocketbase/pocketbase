@@ -724,7 +724,7 @@ func TestCollectionCreate(t *testing.T) {
 			ExpectedContent: []string{
 				`"name":"new"`,
 				`"type":"view"`,
-				`"fields":[{"autogeneratePattern":"","hidden":false,"id":"text3208210256","max":0,"min":0,"name":"id","pattern":"","presentable":false,"primaryKey":true,"required":true,"system":true,"type":"text"}]`,
+				`"fields":[{"autogeneratePattern":"","hidden":false,"id":"text3208210256","max":0,"min":0,"name":"id","pattern":"^[a-z0-9]+$","presentable":false,"primaryKey":true,"required":true,"system":true,"type":"text"}]`,
 			},
 			ExpectedEvents: map[string]int{
 				"*":                              0,

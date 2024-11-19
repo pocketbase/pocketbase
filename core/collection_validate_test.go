@@ -704,7 +704,7 @@ func TestCollectionValidate(t *testing.T) {
 			collection: func(app core.App) (*core.Collection, error) {
 				c := core.NewBaseCollection("new_auth")
 				c.Fields = core.NewFieldsList(
-					&core.TextField{Name: "id", PrimaryKey: true, Required: true},
+					&core.TextField{Name: "id", PrimaryKey: true, Required: true, Pattern: `\w+`},
 				)
 				return c, nil
 			},
@@ -715,7 +715,7 @@ func TestCollectionValidate(t *testing.T) {
 			collection: func(app core.App) (*core.Collection, error) {
 				c := core.NewBaseCollection("new_auth")
 				c.Fields = core.NewFieldsList(
-					&core.TextField{Name: "id", PrimaryKey: true, Required: true},
+					&core.TextField{Name: "id", PrimaryKey: true, Required: true, Pattern: `\w+`},
 					&core.TextField{Id: "f1", Name: "Test"}, // case-insensitive
 					&core.BoolField{Id: "f2", Name: "test"},
 				)

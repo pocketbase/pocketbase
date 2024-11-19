@@ -317,9 +317,22 @@ func TestTextFieldValidateSettings(t *testing.T) {
 					Id:         "test",
 					Name:       "id",
 					PrimaryKey: true,
+					Pattern:    `\d+`,
 				}
 			},
 			[]string{"required"},
+		},
+		{
+			"primaryKey without pattern",
+			func() *core.TextField {
+				return &core.TextField{
+					Id:         "test",
+					Name:       "id",
+					PrimaryKey: true,
+					Required:   true,
+				}
+			},
+			[]string{"pattern"},
 		},
 		{
 			"primaryKey with hidden",
@@ -330,6 +343,7 @@ func TestTextFieldValidateSettings(t *testing.T) {
 					Required:   true,
 					PrimaryKey: true,
 					Hidden:     true,
+					Pattern:    `\d+`,
 				}
 			},
 			[]string{"hidden"},
@@ -342,6 +356,7 @@ func TestTextFieldValidateSettings(t *testing.T) {
 					Name:       "test",
 					PrimaryKey: true,
 					Required:   true,
+					Pattern:    `\d+`,
 				}
 			},
 			[]string{"name"},
@@ -353,6 +368,7 @@ func TestTextFieldValidateSettings(t *testing.T) {
 					Id:         "test2",
 					Name:       "id",
 					PrimaryKey: true,
+					Pattern:    `\d+`,
 					Required:   true,
 				}
 			},

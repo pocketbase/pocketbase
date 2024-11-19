@@ -257,7 +257,7 @@ func (f *TextField) ValidateSettings(ctx context.Context, app App, collection *C
 		validation.Field(&f.PrimaryKey, validation.By(f.checkOtherFieldsForPK(collection))),
 		validation.Field(&f.Min, validation.Min(0)),
 		validation.Field(&f.Max, validation.Min(f.Min)),
-		validation.Field(&f.Pattern, validation.By(validators.IsRegex)),
+		validation.Field(&f.Pattern, validation.When(f.PrimaryKey, validation.Required), validation.By(validators.IsRegex)),
 		validation.Field(&f.Hidden, validation.When(f.PrimaryKey, validation.Empty)),
 		validation.Field(&f.Required, validation.When(f.PrimaryKey, validation.Required)),
 		validation.Field(&f.AutogeneratePattern, validation.By(validators.IsRegex), validation.By(f.checkAutogeneratePattern)),
