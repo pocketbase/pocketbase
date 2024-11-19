@@ -427,12 +427,12 @@ func TestRealtimeAuthRecordDeleteEvent(t *testing.T) {
 	// init realtime handlers
 	apis.NewRouter(testApp)
 
-	authRecord1, err := testApp.FindFirstRecordByData("users", "email", "test@example.com")
+	authRecord1, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	authRecord2, err := testApp.FindFirstRecordByData("users", "email", "test2@example.com")
+	authRecord2, err := testApp.FindAuthRecordByEmail("users", "test2@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -549,12 +549,12 @@ func TestRealtimeCustomAuthModelDeleteEvent(t *testing.T) {
 	// init realtime handlers
 	apis.NewRouter(testApp)
 
-	authRecord1, err := testApp.FindFirstRecordByData("users", "email", "test@example.com")
+	authRecord1, err := testApp.FindAuthRecordByEmail("users", "test@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	authRecord2, err := testApp.FindFirstRecordByData("users", "email", "test2@example.com")
+	authRecord2, err := testApp.FindAuthRecordByEmail("users", "test2@example.com")
 	if err != nil {
 		t.Fatal(err)
 	}
