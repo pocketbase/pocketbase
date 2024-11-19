@@ -32,6 +32,8 @@ type Client interface {
 	Id() string
 
 	// Channel returns the client's communication channel.
+	//
+	// NB! The channel shouldn't be used after calling Discard().
 	Channel() chan Message
 
 	// Subscriptions returns a shallow copy of the client subscriptions matching the prefixes.
@@ -65,8 +67,8 @@ type Client interface {
 	// Get retrieves the key value from the client's context.
 	Get(key string) any
 
-	// Discard marks the client as "discarded", meaning that it
-	// shouldn't be used anymore for sending new messages.
+	// Discard marks the client as "discarded" (and closes its channel),
+	// meaning that it shouldn't be used anymore for sending new messages.
 	//
 	// It is safe to call Discard() multiple times.
 	Discard()
@@ -257,7 +259,13 @@ func (c *DefaultClient) Discard() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
+	if c.isDiscarded {
+		return
+	}
+
 	c.isDiscarded = true
+
+	close(c.channel)
 }
 
 // IsDiscarded implements the [Client.IsDiscarded] interface method.

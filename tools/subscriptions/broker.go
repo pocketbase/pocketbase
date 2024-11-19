@@ -52,7 +52,7 @@ func (b *Broker) Register(client Client) {
 	b.store.Set(client.Id(), client)
 }
 
-// Unregister removes a single client by its id.
+// Unregister removes a single client by its id and marks it as discarded.
 //
 // If client with clientId doesn't exist, this method does nothing.
 func (b *Broker) Unregister(clientId string) {

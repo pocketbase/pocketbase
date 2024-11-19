@@ -5,6 +5,8 @@
 
 - Fixed rate limiter rules matching to acount for the `Audience` field.
 
+- Force closing the realtime connection on unregistering a client (aka. on `app.SubscriptionsBroker().Unregister(clientId)`)
+
 - Minor UI fixes (fixed duplicate record control, removed duplicated id field in the record preview, hide Impersonate button for non-auth records, auto sort rate limit rules, etc.).
 
 
