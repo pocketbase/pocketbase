@@ -1,6 +1,6 @@
 ## v0.22.27
 
-- Instead of unregistering the related realtime client(s), just unset their auth state on delete of their their related auth record so that the client(s) can receive the `delete` event ([#5898](https://github.com/pocketbase/pocketbase/issues/5898)).
+- Instead of unregistering the realtime client(s), just unset their auth state on delete of their related auth record so that the client(s) can receive the `delete` event ([#5898](https://github.com/pocketbase/pocketbase/issues/5898)).
 
 
 ## v0.22.26
