@@ -26,7 +26,7 @@
     import ImpersonatePopup from "@/components/records/ImpersonatePopup.svelte";
     import { confirm } from "@/stores/confirmation";
     import { setErrors } from "@/stores/errors";
-    import { addErrorToast, addSuccessToast } from "@/stores/toasts";
+    import { addErrorToast, addInfoToast, addSuccessToast } from "@/stores/toasts";
 
     const dispatch = createEventDispatcher();
     const formId = "record_" + CommonHelper.randomString(5);
@@ -484,6 +484,11 @@
             save(false);
         }
     }
+
+    function copyJSON() {
+        CommonHelper.copyToClipboard(JSON.stringify(original, null, 2));
+        addInfoToast("The record JSON was copied to your clipboard!", 3000);
+    }
 </script>
 
 <OverlayPanel
@@ -570,11 +575,21 @@
                             type="button"
                             class="dropdown-item closable"
                             role="menuitem"
+                            on:click={() => copyJSON()}
+                        >
+                            <i class="ri-braces-line" aria-hidden="true" />
+                            <span class="txt">Copy raw JSON</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="dropdown-item closable"
+                            role="menuitem"
                             on:click={() => duplicateConfirm()}
                         >
                             <i class="ri-file-copy-line" aria-hidden="true" />
                             <span class="txt">Duplicate</span>
                         </button>
+                        <hr />
                         <button
                             type="button"
                             class="dropdown-item txt-danger closable"

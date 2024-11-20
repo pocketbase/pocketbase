@@ -78,12 +78,12 @@
 
         // fetch a paginated records list
         const resultList = await pb.collection('${collection?.name}').getList(1, 50, {
-            filter: 'created >= "2022-01-01 00:00:00" && someField1 != someField2',
+            filter: 'someField1 != someField2',
         });
 
         // you can also fetch all records at once via getFullList
         const records = await pb.collection('${collection?.name}').getFullList({
-            sort: '-created',
+            sort: '-someField',
         });
 
         // or fetch only the first record that matches the specified filter
@@ -102,12 +102,12 @@
         final resultList = await pb.collection('${collection?.name}').getList(
           page: 1,
           perPage: 50,
-          filter: 'created >= "2022-01-01 00:00:00" && someField1 != someField2',
+          filter: 'someField1 != someField2',
         );
 
         // you can also fetch all records at once via getFullList
         final records = await pb.collection('${collection?.name}').getFullList(
-          sort: '-created',
+          sort: '-someField',
         );
 
         // or fetch only the first record that matches the specified filter
@@ -173,6 +173,7 @@
                 <p>
                     <strong>Supported record sort fields:</strong> <br />
                     <code>@random</code>,
+                    <code>@rowid</code>,
                     {#each fieldNames as name, i}
                         <code>{name}</code>{i < fieldNames.length - 1 ? ", " : ""}
                     {/each}

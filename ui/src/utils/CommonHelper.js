@@ -1077,7 +1077,8 @@ export default class CommonHelper {
         for (const field of fields) {
             if (
                 field.hidden ||
-                (forSubmit && field.primaryKey && field.autogeneratePattern)
+                (forSubmit && field.primaryKey && field.autogeneratePattern) ||
+                (forSubmit && field.type === "autodate")
             ) {
                 continue
             }
