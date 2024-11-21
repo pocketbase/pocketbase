@@ -18,7 +18,7 @@ const (
 	DefaultBodyLimitMiddlewarePriority = DefaultRateLimitMiddlewarePriority + 10
 )
 
-// BodyLimit returns a middleware function that changes the default request body size limit.
+// BodyLimit returns a middleware handler that changes the default request body size limit.
 //
 // If limitBytes <= 0, no limit is applied.
 //

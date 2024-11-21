@@ -72,7 +72,7 @@ func Serve(app core.App, config ServeConfig) error {
 		return err
 	}
 
-	pbRouter.Bind(CORSWithConfig(CORSConfig{
+	pbRouter.Bind(CORS(CORSConfig{
 		AllowOrigins: config.AllowedOrigins,
 		AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 	}))

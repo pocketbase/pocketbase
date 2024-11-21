@@ -124,8 +124,8 @@ var DefaultCORSConfig = CORSConfig{
 	AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
 }
 
-// CORSWithConfig returns a CORS middleware with config.
-func CORSWithConfig(config CORSConfig) *hook.Handler[*core.RequestEvent] {
+// CORS returns a CORS middleware.
+func CORS(config CORSConfig) *hook.Handler[*core.RequestEvent] {
 	// Defaults
 	if len(config.AllowOrigins) == 0 {
 		config.AllowOrigins = DefaultCORSConfig.AllowOrigins
@@ -272,6 +272,7 @@ func matchSubdomain(domain, pattern string) bool {
 	if !matchScheme(domain, pattern) {
 		return false
 	}
+
 	didx := strings.Index(domain, "://")
 	pidx := strings.Index(pattern, "://")
 	if didx == -1 || pidx == -1 {
@@ -307,5 +308,6 @@ func matchSubdomain(domain, pattern string) bool {
 			return false
 		}
 	}
+
 	return false
 }
