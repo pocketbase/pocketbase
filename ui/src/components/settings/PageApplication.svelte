@@ -57,9 +57,9 @@
 
         isSaving = true;
 
-        try {
-            sortRules(formSettings.rateLimits.rules);
+        formSettings.rateLimits.rules = sortRules(formSettings.rateLimits.rules);
 
+        try {
             const settings = await ApiClient.settings.update(CommonHelper.filterRedactedProps(formSettings));
             init(settings);
 
@@ -95,6 +95,7 @@
         formSettings = JSON.parse(JSON.stringify(originalFormSettings || {}));
     }
 
+    // sort the specified rules list in place
     function sortRules(rules) {
         if (!rules) {
             return;
@@ -104,14 +105,14 @@
 
         rules.sort((a, b) => {
             compare[0].length = a.label.length;
-            compare[0].isTag = a.label.includes(":");
+            compare[0].isTag = a.label.includes(":") || !a.label.includes("/");
             compare[0].isWildcardTag = compare[0].isTag && a.label.startsWith("*");
             compare[0].isExactTag = compare[0].isTag && !compare[0].isWildcardTag;
             compare[0].isPrefix = !compare[0].isTag && a.label.endsWith("/");
             compare[0].hasMethod = !compare[0].isTag && a.label.includes(" /");
 
             compare[1].length = b.label.length;
-            compare[1].isTag = b.label.includes(":");
+            compare[1].isTag = b.label.includes(":") || !b.label.includes("/");
             compare[1].isWildcardTag = compare[1].isTag && b.label.startsWith("*");
             compare[1].isExactTag = compare[1].isTag && !compare[1].isWildcardTag;
             compare[1].isPrefix = !compare[1].isTag && b.label.endsWith("/");
@@ -162,6 +163,8 @@
 
             return 0;
         });
+
+        return rules;
     }
 </script>
 
