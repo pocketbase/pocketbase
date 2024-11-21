@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
@@ -29,7 +31,7 @@ func NewLinearProvider() *Linear {
 	return &Linear{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Linear",
-		pkce:        true,
+		pkce:        false,
 		scopes:      []string{"read"},
 		authURL:     "https://linear.app/oauth/authorize",
 		tokenURL:    "https://api.linear.app/oauth/token",
@@ -41,7 +43,7 @@ func NewLinearProvider() *Linear {
 //
 // API reference: https://developers.linear.app/docs/graphql/working-with-the-graphql-api#authentication
 func (p *Linear) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserInfo(token)
+	data, err := p.FetchRawUserData(token)
 	if err != nil {
 		return nil, err
 	}
@@ -83,4 +85,19 @@ func (p *Linear) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	return user, nil
+}
+
+// FetchRawUserData implements Provider.FetchRawUserData interface
+// To retrieve user data using Linear GraphQL API
+func (p *Linear) FetchRawUserData(token *oauth2.Token) ([]byte, error) {
+	query := []byte(`{"query": "query Me { viewer { id displayName name email avatarUrl } }"}`)
+	bodyReader := bytes.NewReader(query)
+
+	req, err := http.NewRequestWithContext(p.ctx, "POST", p.userInfoURL, bodyReader)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	return p.sendRawUserInfoRequest(req, token)
 }
