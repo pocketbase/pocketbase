@@ -79,6 +79,11 @@ export default [
         optionsComponentProps: { title: "Self-hosted endpoints (optional)" },
     },
     {
+        key: "linear",
+        title: "Linear",
+        logo: "linear.svg",
+    },
+    {
         key: "discord",
         title: "Discord",
         logo: "discord.svg",
