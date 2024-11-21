@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/dop251/goja"
+	"github.com/dop251/goja_nodejs/buffer"
 	"github.com/dop251/goja_nodejs/console"
 	"github.com/dop251/goja_nodejs/process"
 	"github.com/dop251/goja_nodejs/require"
@@ -169,9 +170,12 @@ func (p *plugin) registerMigrations() error {
 
 	for file, content := range files {
 		vm := goja.New()
+
 		registry.Enable(vm)
 		console.Enable(vm)
 		process.Enable(vm)
+		buffer.Enable(vm)
+
 		baseBinds(vm)
 		dbxBinds(vm)
 		securityBinds(vm)
@@ -252,6 +256,7 @@ func (p *plugin) registerHooks() error {
 		requireRegistry.Enable(vm)
 		console.Enable(vm)
 		process.Enable(vm)
+		buffer.Enable(vm)
 
 		baseBinds(vm)
 		dbxBinds(vm)
