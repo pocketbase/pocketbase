@@ -20,6 +20,8 @@ const (
 	fieldsQueryParam = "fields"
 )
 
+var ErrMFA = errors.New("mfa required")
+
 // RecordAuthResponse writes standardized json record auth response
 // into the specified request context.
 //
@@ -70,9 +72,12 @@ func recordAuthResponse(e *core.RequestEvent, authRecord *core.Record, token str
 
 		// require additional authentication
 		if mfaId != "" {
-			return e.JSON(http.StatusUnauthorized, map[string]string{
+			// eagerly write the mfa response and return an err so that
+			// external middlewars are aware that the auth response requires an extra step
+			e.JSON(http.StatusUnauthorized, map[string]string{
 				"mfaId": mfaId,
 			})
+			return ErrMFA
 		}
 		// ---
 

@@ -2,6 +2,7 @@ package apis_test
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -584,8 +585,8 @@ func TestRecordAuthResponseMFACheck(t *testing.T) {
 		user.Collection().MFA.Rule = "1=1"
 
 		err = apis.RecordAuthResponse(event, user, "example", nil)
-		if err != nil {
-			t.Fatalf("Expected nil, got error: %v", err)
+		if !errors.Is(err, apis.ErrMFA) {
+			t.Fatalf("Expected ErrMFA, got: %v", err)
 		}
 
 		body := rec.Body.String()
@@ -602,8 +603,8 @@ func TestRecordAuthResponseMFACheck(t *testing.T) {
 		resetMFAs(user)
 
 		err = apis.RecordAuthResponse(event, user, "example", nil)
-		if err != nil {
-			t.Fatalf("Expected nil, got error: %v", err)
+		if !errors.Is(err, apis.ErrMFA) {
+			t.Fatalf("Expected ErrMFA, got: %v", err)
 		}
 
 		body := rec.Body.String()
