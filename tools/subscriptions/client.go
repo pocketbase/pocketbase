@@ -263,9 +263,9 @@ func (c *DefaultClient) Discard() {
 		return
 	}
 
-	c.isDiscarded = true
-
 	close(c.channel)
+
+	c.isDiscarded = true
 }
 
 // IsDiscarded implements the [Client.IsDiscarded] interface method.
