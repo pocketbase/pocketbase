@@ -34,7 +34,7 @@ func NewGoogleProvider() *Google {
 		},
 		authURL:     "https://accounts.google.com/o/oauth2/auth",
 		tokenURL:    "https://accounts.google.com/o/oauth2/token",
-		userInfoURL: "https://www.googleapis.com/oauth2/v1/userinfo",
+		userInfoURL: "https://www.googleapis.com/userinfo/v2/me",
 	}}
 }
 
