@@ -6,6 +6,11 @@ import "github.com/pocketbase/pocketbase/tools/router"
 // and for consistency with the JSVM binds.
 // -------------------------------------------------------------------
 
+// ToApiError wraps err into ApiError instance (if not already).
+func ToApiError(err error) *router.ApiError {
+	return router.ToApiError(err)
+}
+
 // NewApiError is an alias for [router.NewApiError].
 func NewApiError(status int, message string, errData any) *router.ApiError {
 	return router.NewApiError(status, message, errData)
