@@ -3,6 +3,8 @@
 > [!CAUTION]
 > **This is a prerelease intended for test and experimental purposes only!**
 
+- Added Linear OAuth2 provider ([#5909](https://github.com/pocketbase/pocketbase/pull/5909); thanks @chnfyi).
+
 - Fixed rate limiter rules matching to acount for the `Audience` field.
 
 - Force closing the realtime connection on unregistering a client (aka. on `app.SubscriptionsBroker().Unregister(clientId)`)
