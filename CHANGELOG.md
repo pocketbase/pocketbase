@@ -9,6 +9,8 @@
 
 - Minor UI fixes (fixed duplicate record control, removed duplicated id field in the record preview, hide Impersonate button for non-auth records, auto sort rate limit rules, etc.).
 
+- Fixed do not show batch tab in view docs panel (API Preview).
+
 
 ## v0.23.0-rc14
 

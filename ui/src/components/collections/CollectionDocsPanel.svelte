@@ -84,6 +84,7 @@
         delete tabs.update;
         delete tabs.delete;
         delete tabs.realtime;
+        delete tabs.batch;
     } else {
         tabs = Object.assign({}, baseTabs);
     }
