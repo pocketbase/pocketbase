@@ -42,7 +42,7 @@ func NewMondayProvider() *Monday {
 //
 // API reference: https://developer.monday.com/api-reference/reference/me
 func (p *Monday) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
-	data, err := p.FetchRawUserData(token)
+	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
 		return nil, err
 	}
@@ -90,11 +90,11 @@ func (p *Monday) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	return user, nil
 }
 
-// FetchRawUserData implements Provider.FetchRawUserData interface.
+// FetchRawUserInfo implements Provider.FetchRawUserInfo interface.
 //
 // monday.com doesn't have a UserInfo endpoint and information on the user
 // is retrieved using their GraphQL API (https://developer.monday.com/api-reference/reference/me#queries)
-func (p *Monday) FetchRawUserData(token *oauth2.Token) ([]byte, error) {
+func (p *Monday) FetchRawUserInfo(token *oauth2.Token) ([]byte, error) {
 	query := []byte(`{"query": "query { me { id enabled name email is_verified photo_small }}"}`)
 	bodyReader := bytes.NewReader(query)
 
