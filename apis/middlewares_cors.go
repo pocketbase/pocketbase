@@ -13,6 +13,7 @@ package apis
 // -------------------------------------------------------------------
 
 import (
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -150,6 +151,7 @@ func CORS(config CORSConfig) *hook.Handler[*core.RequestEvent] {
 			// This is to preserve previous behaviour - invalid patterns were just ignored.
 			// If we would turn this to panic, users with invalid patterns
 			// would have applications crashing in production due unrecovered panic.
+			log.Println("invalid AllowOrigins pattern", origin)
 			continue
 		}
 		allowOriginPatterns = append(allowOriginPatterns, re)
