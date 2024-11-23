@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
 	"runtime"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/router"
+	"github.com/spf13/cast"
 	"golang.org/x/sync/semaphore"
 	"golang.org/x/sync/singleflight"
 )
@@ -22,10 +24,20 @@ var defaultThumbSizes = []string{"100x100"}
 
 // bindFileApi registers the file api endpoints and the corresponding handlers.
 func bindFileApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
+	maxWorkers := cast.ToInt64(os.Getenv("PB_THUMBS_MAX_WORKERS"))
+	if maxWorkers <= 0 {
+		maxWorkers = int64(runtime.NumCPU() + 2) // the value is arbitrary chosen and may change in the future
+	}
+
+	maxWait := cast.ToInt64(os.Getenv("PB_THUMBS_MAX_WAIT"))
+	if maxWait <= 0 {
+		maxWait = 60
+	}
+
 	api := fileApi{
-		thumbGenSem:     semaphore.NewWeighted(int64(runtime.NumCPU() + 2)), // the value is arbitrary chosen and may change in the future
 		thumbGenPending: new(singleflight.Group),
-		thumbGenMaxWait: 60 * time.Second,
+		thumbGenSem:     semaphore.NewWeighted(maxWorkers),
+		thumbGenMaxWait: time.Duration(maxWait) * time.Second,
 	}
 
 	sub := rg.Group("/files")
