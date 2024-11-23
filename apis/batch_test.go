@@ -294,9 +294,9 @@ func TestBatchRequest(t *testing.T) {
 			},
 			Body: strings.NewReader(`{
 				"requests": [
-					{"method":"POST", "url":"/api/collections/demo2/records", "body": {"title": "batch_create"}},
-					{"method":"DELETE", "url":"/api/collections/demo2/records/achvryl401bhse3"},
-					{"method":"PATCH", "url":"/api/collections/demo3/records/1tmknxy2868d869", "body": {"title": "batch_update"}}
+					{"method":"POST", "url":"/api/collections/demo2/records", "body": {"title": "batch_create"}, "headers": {"Authorization": "ignored"}},
+					{"method":"DELETE", "url":"/api/collections/demo2/records/achvryl401bhse3", "headers": {"Authorization": "ignored"}},
+					{"method":"PATCH", "url":"/api/collections/demo3/records/1tmknxy2868d869", "body": {"title": "batch_update"}, "headers": {"Authorization": "ignored"}}
 				]
 			}`),
 			ExpectedStatus: 200,

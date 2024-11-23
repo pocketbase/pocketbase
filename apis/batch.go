@@ -338,6 +338,12 @@ func processInternalRequest(
 	// apply batch request specific headers
 	// ---
 	for k, v := range ir.Headers {
+		// individual Authorization header keys don't have affect
+		// because the auth state is populated from the base event
+		if strings.EqualFold(k, "authorization") {
+			continue
+		}
+
 		r.Header.Set(k, v)
 	}
 	r.Header.Set("Content-Type", mw.FormDataContentType())

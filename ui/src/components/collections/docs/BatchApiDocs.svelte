@@ -180,8 +180,8 @@
                         <code>headers</code>
                         <br />
                         <em>
-                            (if the <code>POST /api/batch</code> call has <code>Authorization</code> header it
-                            is forwarded to all batch requests automatically)
+                            (custom per-request <code>Authorization</code> header is not supported at the moment,
+                            aka. all batch requests have the same auth state)
                         </em>
                     </li>
                     <li><code>body</code></li>
