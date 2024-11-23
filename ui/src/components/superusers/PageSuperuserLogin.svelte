@@ -236,9 +236,15 @@
 
             <!-- auth with otp -->
             <form class="block" on:submit|preventDefault={authWithOTP}>
+                <Field class="form-field required" name="otpId" let:uniqueId>
+                    <label for={uniqueId}>Id</label>
+                    <input type="text" id={uniqueId} bind:value={otpId} required />
+                </Field>
+
                 <Field class="form-field required" name="password" let:uniqueId>
                     <label for={uniqueId}>One-time password</label>
-                    <input type="password" id={uniqueId} bind:value={otpPassword} required />
+                    <!-- svelte-ignore a11y-autofocus -->
+                    <input type="password" id={uniqueId} bind:value={otpPassword} required autofocus />
                 </Field>
 
                 <button

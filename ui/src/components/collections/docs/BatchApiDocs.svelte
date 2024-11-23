@@ -99,8 +99,8 @@
         const batch = pb.createBatch();
 
         batch.collection('${collection?.name}').create({ ... });
-        batch.collection('${collection?.name}').update("RECORD_ID", { ... });
-        batch.collection('${collection?.name}').delete("RECORD_ID");
+        batch.collection('${collection?.name}').update('RECORD_ID', { ... });
+        batch.collection('${collection?.name}').delete('RECORD_ID');
         batch.collection('${collection?.name}').upsert({ ... });
 
         const result = await batch.send();

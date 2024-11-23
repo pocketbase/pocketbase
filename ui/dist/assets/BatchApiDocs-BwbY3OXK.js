@@ -1,4 +1,4 @@
-import{S as St,i as Lt,s as jt,U as At,V as Ht,W as Z,f as o,y as _,h as i,c as Re,j as b,l as d,n as t,m as Te,B as Mt,C as Nt,G as Ut,X as Pt,Y as zt,D as Jt,Z as Wt,E as Gt,t as Q,a as x,u,d as Pe,I as Ft,p as Kt,k as ee,o as Vt}from"./index-CZozWHMv.js";function Bt(a,s,n){const c=a.slice();return c[6]=s[n],c}function Et(a,s,n){const c=a.slice();return c[6]=s[n],c}function Ot(a,s){let n,c,y;function f(){return s[5](s[6])}return{key:a,first:null,c(){n=o("button"),n.textContent=`${s[6].code} `,b(n,"class","tab-item"),ee(n,"active",s[1]===s[6].code),this.first=n},m(r,h){d(r,n,h),c||(y=Vt(n,"click",f),c=!0)},p(r,h){s=r,h&10&&ee(n,"active",s[1]===s[6].code)},d(r){r&&u(n),c=!1,y()}}}function It(a,s){let n,c,y,f;return c=new Ht({props:{content:s[6].body}}),{key:a,first:null,c(){n=o("div"),Re(c.$$.fragment),y=i(),b(n,"class","tab-item"),ee(n,"active",s[1]===s[6].code),this.first=n},m(r,h){d(r,n,h),Te(c,n,null),t(n,y),f=!0},p(r,h){s=r,(!f||h&10)&&ee(n,"active",s[1]===s[6].code)},i(r){f||(Q(c.$$.fragment,r),f=!0)},o(r){x(c.$$.fragment,r),f=!1},d(r){r&&u(n),Pe(c)}}}function Xt(a){var pt,mt,bt,ht,ft,_t,yt,kt;let s,n,c=a[0].name+"",y,f,r,h,F,g,U,Fe,P,B,Be,E,Ee,Oe,te,le,q,oe,O,ae,I,se,H,ne,z,ie,w,ce,Ie,re,S,J,He,k,W,Se,de,Le,D,G,je,ue,Ae,K,Me,pe,Ne,v,Ue,me,ze,Je,We,V,Ge,X,Ke,be,Ve,he,Xe,fe,Ye,p,_e,Ze,ye,Qe,ke,xe,$e,et,ge,tt,Ce,lt,ot,at,De,st,R,ve,L,qe,T,j,C=[],nt=new Map,it,A,$=[],ct=new Map,M,we,rt;q=new At({props:{js:`
+import{S as St,i as Lt,s as jt,U as At,V as Ht,W as Z,f as o,y as _,h as i,c as Re,j as b,l as d,n as t,m as Te,B as Mt,C as Nt,G as Ut,X as Pt,Y as zt,D as Jt,Z as Wt,E as Gt,t as Q,a as x,u,d as Pe,I as Ft,p as Kt,k as ee,o as Vt}from"./index-CLxoVhGV.js";function Bt(a,s,n){const c=a.slice();return c[6]=s[n],c}function Et(a,s,n){const c=a.slice();return c[6]=s[n],c}function Ot(a,s){let n,c,y;function f(){return s[5](s[6])}return{key:a,first:null,c(){n=o("button"),n.textContent=`${s[6].code} `,b(n,"class","tab-item"),ee(n,"active",s[1]===s[6].code),this.first=n},m(r,h){d(r,n,h),c||(y=Vt(n,"click",f),c=!0)},p(r,h){s=r,h&10&&ee(n,"active",s[1]===s[6].code)},d(r){r&&u(n),c=!1,y()}}}function It(a,s){let n,c,y,f;return c=new Ht({props:{content:s[6].body}}),{key:a,first:null,c(){n=o("div"),Re(c.$$.fragment),y=i(),b(n,"class","tab-item"),ee(n,"active",s[1]===s[6].code),this.first=n},m(r,h){d(r,n,h),Te(c,n,null),t(n,y),f=!0},p(r,h){s=r,(!f||h&10)&&ee(n,"active",s[1]===s[6].code)},i(r){f||(Q(c.$$.fragment,r),f=!0)},o(r){x(c.$$.fragment,r),f=!1},d(r){r&&u(n),Pe(c)}}}function Xt(a){var pt,mt,bt,ht,ft,_t,yt,kt;let s,n,c=a[0].name+"",y,f,r,h,F,g,U,Fe,P,B,Be,E,Ee,Oe,te,le,q,oe,O,ae,I,se,H,ne,z,ie,w,ce,Ie,re,S,J,He,k,W,Se,de,Le,D,G,je,ue,Ae,K,Me,pe,Ne,v,Ue,me,ze,Je,We,V,Ge,X,Ke,be,Ve,he,Xe,fe,Ye,p,_e,Ze,ye,Qe,ke,xe,$e,et,ge,tt,Ce,lt,ot,at,De,st,R,ve,L,qe,T,j,C=[],nt=new Map,it,A,$=[],ct=new Map,M,we,rt;q=new At({props:{js:`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${a[2]}');
@@ -8,8 +8,8 @@ import{S as St,i as Lt,s as jt,U as At,V as Ht,W as Z,f as o,y as _,h as i,c as 
         const batch = pb.createBatch();
 
         batch.collection('${(pt=a[0])==null?void 0:pt.name}').create({ ... });
-        batch.collection('${(mt=a[0])==null?void 0:mt.name}').update("RECORD_ID", { ... });
-        batch.collection('${(bt=a[0])==null?void 0:bt.name}').delete("RECORD_ID");
+        batch.collection('${(mt=a[0])==null?void 0:mt.name}').update('RECORD_ID', { ... });
+        batch.collection('${(bt=a[0])==null?void 0:bt.name}').delete('RECORD_ID');
         batch.collection('${(ht=a[0])==null?void 0:ht.name}').upsert({ ... });
 
         const result = await batch.send();
@@ -81,8 +81,8 @@ import{S as St,i as Lt,s as jt,U as At,V as Ht,W as Z,f as o,y as _,h as i,c as 
         const batch = pb.createBatch();
 
         batch.collection('${(gt=e[0])==null?void 0:gt.name}').create({ ... });
-        batch.collection('${(Ct=e[0])==null?void 0:Ct.name}').update("RECORD_ID", { ... });
-        batch.collection('${(Dt=e[0])==null?void 0:Dt.name}').delete("RECORD_ID");
+        batch.collection('${(Ct=e[0])==null?void 0:Ct.name}').update('RECORD_ID', { ... });
+        batch.collection('${(Dt=e[0])==null?void 0:Dt.name}').delete('RECORD_ID');
         batch.collection('${(vt=e[0])==null?void 0:vt.name}').upsert({ ... });
 
         const result = await batch.send();
