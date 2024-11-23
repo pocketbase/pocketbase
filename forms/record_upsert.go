@@ -193,9 +193,9 @@ func (form *RecordUpsert) validateFormFields() error {
 }
 
 func (form *RecordUpsert) checkOldPassword(value any) error {
-	v, _ := value.(string)
-	if v == "" || form.record.IsNew() {
-		return nil // nothing to check
+	v, ok := value.(string)
+	if !ok {
+		return validators.ErrUnsupportedValueType
 	}
 
 	if !form.record.Original().ValidatePassword(v) {
