@@ -368,7 +368,7 @@
             {!collection.id ? "New collection" : "Edit collection"}
         </h4>
 
-        {#if !!collection.id && !collection.system}
+        {#if !!collection.id && (!collection.system || !isView)}
             <div class="flex-fill" />
             <div
                 tabindex="0"
@@ -378,16 +378,18 @@
             >
                 <i class="ri-more-line" aria-hidden="true" />
                 <Toggler class="dropdown dropdown-right m-t-5">
-                    <button
-                        type="button"
-                        class="dropdown-item"
-                        role="menuitem"
-                        on:click={() => duplicateConfirm()}
-                    >
-                        <i class="ri-file-copy-line" aria-hidden="true" />
-                        <span class="txt">Duplicate</span>
-                    </button>
-                    <hr />
+                    {#if !collection.system}
+                        <button
+                            type="button"
+                            class="dropdown-item"
+                            role="menuitem"
+                            on:click={() => duplicateConfirm()}
+                        >
+                            <i class="ri-file-copy-line" aria-hidden="true" />
+                            <span class="txt">Duplicate</span>
+                        </button>
+                        <hr />
+                    {/if}
                     {#if !isView}
                         <button
                             type="button"
@@ -399,15 +401,17 @@
                             <span class="txt">Truncate</span>
                         </button>
                     {/if}
-                    <button
-                        type="button"
-                        class="dropdown-item txt-danger"
-                        role="menuitem"
-                        on:click|preventDefault|stopPropagation={() => deleteConfirm()}
-                    >
-                        <i class="ri-delete-bin-7-line" aria-hidden="true" />
-                        <span class="txt">Delete</span>
-                    </button>
+                    {#if !collection.system}
+                        <button
+                            type="button"
+                            class="dropdown-item txt-danger"
+                            role="menuitem"
+                            on:click|preventDefault|stopPropagation={() => deleteConfirm()}
+                        >
+                            <i class="ri-delete-bin-7-line" aria-hidden="true" />
+                            <span class="txt">Delete</span>
+                        </button>
+                    {/if}
                 </Toggler>
             </div>
         {/if}
