@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 )
 
@@ -12,7 +13,7 @@ func NewFieldsList(fields ...Field) FieldsList {
 	l := make(FieldsList, 0, len(fields))
 
 	for _, f := range fields {
-		l.Add(f)
+		l.add(-1, f)
 	}
 
 	return l
@@ -116,7 +117,26 @@ func (l *FieldsList) RemoveByName(fieldName string) {
 // (the id value doesn't really matter and it is mostly used as a stable identifier in case of a field rename).
 func (l *FieldsList) Add(fields ...Field) {
 	for _, f := range fields {
-		l.add(f)
+		l.add(-1, f)
+	}
+}
+
+// AddAt is the same as Add but insert/move the fields at the specific position.
+//
+// If pos < 0, then this method acts the same as calling Add.
+//
+// If pos > FieldsList total items, then the specified fields are inserted/moved at the end of the list.
+func (l *FieldsList) AddAt(pos int, fields ...Field) {
+	total := len(*l)
+
+	for i, f := range fields {
+		if pos < 0 {
+			l.add(-1, f)
+		} else if pos > total {
+			l.add(total+i, f)
+		} else {
+			l.add(pos+i, f)
+		}
 	}
 }
 
@@ -132,13 +152,42 @@ func (l *FieldsList) Add(fields ...Field) {
 //	l.AddMarshaledJSON([]byte{`{"type":"text", name: "test"}`})
 //	l.AddMarshaledJSON([]byte{`[{"type":"text", name: "test1"}, {"type":"text", name: "test2"}]`})
 func (l *FieldsList) AddMarshaledJSON(rawJSON []byte) error {
+	extractedFields, err := marshaledJSONtoFieldsList(rawJSON)
+	if err != nil {
+		return err
+	}
+
+	l.Add(extractedFields...)
+
+	return nil
+}
+
+// AddMarshaledJSONAt is the same as AddMarshaledJSON but insert/move the fields at the specific position.
+//
+// If pos < 0, then this method acts the same as calling AddMarshaledJSON.
+//
+// If pos > FieldsList total items, then the specified fields are inserted/moved at the end of the list.
+func (l *FieldsList) AddMarshaledJSONAt(pos int, rawJSON []byte) error {
+	extractedFields, err := marshaledJSONtoFieldsList(rawJSON)
+	if err != nil {
+		return err
+	}
+
+	l.AddAt(pos, extractedFields...)
+
+	return nil
+}
+
+func marshaledJSONtoFieldsList(rawJSON []byte) (FieldsList, error) {
+	extractedFields := FieldsList{}
+
+	// nothing to add
 	if len(rawJSON) == 0 {
-		return nil // nothing to add
+		return extractedFields, nil
 	}
 
 	// try to unmarshal first into a new fieds list
 	// (assuming that rawJSON is array of objects)
-	extractedFields := FieldsList{}
 	err := json.Unmarshal(rawJSON, &extractedFields)
 	if err != nil {
 		// try again but wrap the rawJSON in []
@@ -149,21 +198,25 @@ func (l *FieldsList) AddMarshaledJSON(rawJSON []byte) error {
 		wrapped = append(wrapped, ']')
 		err = json.Unmarshal(wrapped, &extractedFields)
 		if err != nil {
-			return fmt.Errorf("failed to unmarshal the provided JSON - expects array of objects or just single object: %w", err)
+			return nil, fmt.Errorf("failed to unmarshal the provided JSON - expects array of objects or just single object: %w", err)
 		}
 	}
 
-	for _, f := range extractedFields {
-		l.add(f)
-	}
-
-	return nil
+	return extractedFields, nil
 }
 
-func (l *FieldsList) add(newField Field) {
+func (l *FieldsList) add(pos int, newField Field) {
 	fields := *l
 
 	var replaceByName bool
+	var replaceInPlace bool
+
+	if pos < 0 {
+		replaceInPlace = true
+		pos = len(fields)
+	} else if pos > len(fields) {
+		pos = len(fields)
+	}
 
 	newFieldId := newField.GetId()
 
@@ -182,24 +235,44 @@ func (l *FieldsList) add(newField Field) {
 		newField.SetId(newFieldId)
 	}
 
-	// replace existing
+	// try to replace existing
 	for i, field := range fields {
 		if replaceByName {
 			if name := newField.GetName(); name != "" && field.GetName() == name {
+				// reuse the original id
 				newField.SetId(field.GetId())
-				(*l)[i] = newField
-				return
+
+				if replaceInPlace {
+					(*l)[i] = newField
+					return
+				} else {
+					// remove the current field and insert it later at the specific position
+					*l = slices.Delete(*l, i, i+1)
+					if total := len(*l); pos > total {
+						pos = total
+					}
+					break
+				}
 			}
 		} else {
 			if field.GetId() == newFieldId {
-				(*l)[i] = newField
-				return
+				if replaceInPlace {
+					(*l)[i] = newField
+					return
+				} else {
+					// remove the current field and insert it later at the specific position
+					*l = slices.Delete(*l, i, i+1)
+					if total := len(*l); pos > total {
+						pos = total
+					}
+					break
+				}
 			}
 		}
 	}
 
-	// add new field
-	*l = append(fields, newField)
+	// insert the new field
+	*l = slices.Insert(*l, pos, newField)
 }
 
 // String returns the string representation of the current list.
@@ -252,7 +325,7 @@ func (l *FieldsList) UnmarshalJSON(data []byte) error {
 	*l = []Field{} // reset
 
 	for _, fwt := range fwts {
-		l.Add(fwt.Field)
+		l.add(-1, fwt.Field)
 	}
 
 	return nil

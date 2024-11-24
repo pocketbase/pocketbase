@@ -921,7 +921,7 @@ migrate((app) => {
   collection.fields.removeById("f3_id")
 
   // add field
-  collection.fields.add(new Field({
+  collection.fields.addAt(8, new Field({
     "autogeneratePattern": "",
     "hidden": false,
     "id": "f4_id",
@@ -975,7 +975,7 @@ migrate((app) => {
   }, collection)
 
   // add field
-  collection.fields.add(new Field({
+  collection.fields.addAt(8, new Field({
     "hidden": false,
     "id": "f3_id",
     "name": "f3_name",
@@ -1052,7 +1052,7 @@ func init() {
 		collection.Fields.RemoveById("f3_id")
 
 		// add field
-		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
+		if err := collection.Fields.AddMarshaledJSONAt(8, []byte(` + "`" + `{
 			"autogeneratePattern": "",
 			"hidden": false,
 			"id": "f4_id",
@@ -1115,7 +1115,7 @@ func init() {
 		}
 
 		// add field
-		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
+		if err := collection.Fields.AddMarshaledJSONAt(8, []byte(` + "`" + `{
 			"hidden": false,
 			"id": "f3_id",
 			"name": "f3_name",

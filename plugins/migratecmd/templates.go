@@ -208,7 +208,7 @@ func (p *plugin) jsDiffTemplate(new *core.Collection, old *core.Collection) (str
 		upParts = append(upParts, fmt.Sprintf("%s.fields.removeById(%q)\n", varName, oldField.GetId()))
 
 		downParts = append(downParts, "// add field")
-		downParts = append(downParts, fmt.Sprintf("%s.fields.add(new Field(%s))\n", varName, rawOldField))
+		downParts = append(downParts, fmt.Sprintf("%s.fields.addAt(%d, new Field(%s))\n", varName, i, rawOldField))
 	}
 
 	// created fields
@@ -223,13 +223,14 @@ func (p *plugin) jsDiffTemplate(new *core.Collection, old *core.Collection) (str
 		}
 
 		upParts = append(upParts, "// add field")
-		upParts = append(upParts, fmt.Sprintf("%s.fields.add(new Field(%s))\n", varName, rawNewField))
+		upParts = append(upParts, fmt.Sprintf("%s.fields.addAt(%d, new Field(%s))\n", varName, i, rawNewField))
 
 		downParts = append(downParts, "// remove field")
 		downParts = append(downParts, fmt.Sprintf("%s.fields.removeById(%q)\n", varName, newField.GetId()))
 	}
 
 	// modified fields
+	// (note currently ignoring order-only changes as it comes with too many edge-cases)
 	for i, newField := range new.Fields {
 		var rawNewField, rawOldField []byte
 
@@ -546,7 +547,7 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 		upParts = append(upParts, fmt.Sprintf("%s.Fields.RemoveById(%q)\n", varName, oldField.GetId()))
 
 		downParts = append(downParts, "// add field")
-		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawOldField)))))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSONAt(%d, []byte(`%s`))", varName, i, escapeBacktick(string(rawOldField)))))
 	}
 
 	// created fields
@@ -561,13 +562,14 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 		}
 
 		upParts = append(upParts, "// add field")
-		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSON([]byte(`%s`))", varName, escapeBacktick(string(rawNewField)))))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSONAt(%d, []byte(`%s`))", varName, i, escapeBacktick(string(rawNewField)))))
 
 		downParts = append(downParts, "// remove field")
 		downParts = append(downParts, fmt.Sprintf("%s.Fields.RemoveById(%q)\n", varName, newField.GetId()))
 	}
 
 	// modified fields
+	// (note currently ignoring order-only changes as it comes with too many edge-cases)
 	for i, newField := range new.Fields {
 		var rawNewField, rawOldField []byte
 

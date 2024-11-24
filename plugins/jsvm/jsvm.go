@@ -4,7 +4,7 @@
 // Example:
 //
 //	jsvm.MustRegister(app, jsvm.Config{
-//		WatchHooks: true,
+//		HooksWatch: true,
 //	})
 package jsvm
 

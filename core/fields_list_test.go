@@ -1,7 +1,10 @@
 package core_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -296,6 +299,96 @@ func TestFieldsListAddMarshaledJSON(t *testing.T) {
 				if f.Type() != typ {
 					t.Errorf("Expect field %q to has type %q, got %q", fieldName, typ, f.Type())
 				}
+			}
+		})
+	}
+}
+
+func TestFieldsListAddAt(t *testing.T) {
+	scenarios := []struct {
+		position int
+		expected []string
+	}{
+		{-2, []string{"test1", "test2_new", "test3", "test4"}},
+		{-1, []string{"test1", "test2_new", "test3", "test4"}},
+		{0, []string{"test2_new", "test4", "test1", "test3"}},
+		{1, []string{"test1", "test2_new", "test4", "test3"}},
+		{2, []string{"test1", "test3", "test2_new", "test4"}},
+		{3, []string{"test1", "test3", "test2_new", "test4"}},
+		{4, []string{"test1", "test3", "test2_new", "test4"}},
+		{5, []string{"test1", "test3", "test2_new", "test4"}},
+	}
+
+	for _, s := range scenarios {
+		t.Run(strconv.Itoa(s.position), func(t *testing.T) {
+			f1 := &core.TextField{Id: "f1Id", Name: "test1"}
+			f2 := &core.TextField{Id: "f2Id", Name: "test2"}
+			f3 := &core.TextField{Id: "f3Id", Name: "test3"}
+			testFieldsList := core.NewFieldsList(f1, f2, f3)
+
+			f2New := &core.EmailField{Id: "f2Id", Name: "test2_new"}
+			f4 := &core.URLField{Name: "test4"}
+			testFieldsList.AddAt(s.position, f2New, f4)
+
+			rawNames, err := json.Marshal(testFieldsList.FieldNames())
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rawExpected, err := json.Marshal(s.expected)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !bytes.Equal(rawNames, rawExpected) {
+				t.Fatalf("Expected fields\n%s\ngot\n%s", rawExpected, rawNames)
+			}
+		})
+	}
+}
+
+func TestFieldsListAddMarshaledJSONAt(t *testing.T) {
+	scenarios := []struct {
+		position int
+		expected []string
+	}{
+		{-2, []string{"test1", "test2_new", "test3", "test4"}},
+		{-1, []string{"test1", "test2_new", "test3", "test4"}},
+		{0, []string{"test2_new", "test4", "test1", "test3"}},
+		{1, []string{"test1", "test2_new", "test4", "test3"}},
+		{2, []string{"test1", "test3", "test2_new", "test4"}},
+		{3, []string{"test1", "test3", "test2_new", "test4"}},
+		{4, []string{"test1", "test3", "test2_new", "test4"}},
+		{5, []string{"test1", "test3", "test2_new", "test4"}},
+	}
+
+	for _, s := range scenarios {
+		t.Run(strconv.Itoa(s.position), func(t *testing.T) {
+			f1 := &core.TextField{Id: "f1Id", Name: "test1"}
+			f2 := &core.TextField{Id: "f2Id", Name: "test2"}
+			f3 := &core.TextField{Id: "f3Id", Name: "test3"}
+			testFieldsList := core.NewFieldsList(f1, f2, f3)
+
+			err := testFieldsList.AddMarshaledJSONAt(s.position, []byte(`[
+				{"id":"f2Id", "name":"test2_new", "type": "text"},
+				{"name": "test4", "type": "text"}
+			]`))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rawNames, err := json.Marshal(testFieldsList.FieldNames())
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rawExpected, err := json.Marshal(s.expected)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !bytes.Equal(rawNames, rawExpected) {
+				t.Fatalf("Expected fields\n%s\ngot\n%s", rawExpected, rawNames)
 			}
 		})
 	}
