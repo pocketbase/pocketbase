@@ -1,5 +1,5 @@
 <script>
-    import { createEventDispatcher } from "svelte";
+    import { tick } from "svelte";
     import { replace } from "svelte-spa-router";
     import { getTokenPayload } from "pocketbase";
     import ApiClient from "@/utils/ApiClient";
@@ -16,6 +16,7 @@
     let isLoading = false;
     let isUploading = false;
 
+    let emailInput;
     let backupFileInput;
 
     $: isBusy = isLoading || isUploading;
@@ -45,6 +46,10 @@
         }
 
         isLoading = false;
+
+        await tick();
+
+        emailInput?.focus();
     }
 
     async function submit() {
@@ -55,13 +60,16 @@
         isLoading = true;
 
         try {
-            await ApiClient.collection("_superusers").create({
-                email,
-                password,
-                passwordConfirm,
-            }, {
-                headers: { Authorization: params?.token },
-            });
+            await ApiClient.collection("_superusers").create(
+                {
+                    email,
+                    password,
+                    passwordConfirm,
+                },
+                {
+                    headers: { Authorization: params?.token },
+                },
+            );
 
             await ApiClient.collection("_superusers").authWithPassword(email, password);
 
@@ -104,9 +112,12 @@
         isUploading = true;
 
         try {
-            await ApiClient.backups.upload({ file: file }, {
-                headers: { Authorization: params?.token },
-            });
+            await ApiClient.backups.upload(
+                { file: file },
+                {
+                    headers: { Authorization: params?.token },
+                },
+            );
 
             await ApiClient.backups.restore(file.name, {
                 headers: { Authorization: params?.token },
@@ -129,7 +140,6 @@
 </script>
 
 <FullPage>
-
     <form class="block" autocomplete="off" on:submit|preventDefault={submit}>
         <div class="content txt-center m-b-base">
             <h4>Create your first superuser account in order to continue</h4>
@@ -137,8 +147,15 @@
 
         <Field class="form-field required" name="email" let:uniqueId>
             <label for={uniqueId}>Email</label>
-            <!-- svelte-ignore a11y-autofocus -->
-            <input type="email" autocomplete="off" id={uniqueId} disabled={isBusy} bind:value={email} required autofocus />
+            <input
+                bind:this={emailInput}
+                type="email"
+                autocomplete="off"
+                id={uniqueId}
+                disabled={isBusy}
+                bind:value={email}
+                required
+            />
         </Field>
 
         <Field class="form-field required" name="password" let:uniqueId>
@@ -157,7 +174,14 @@
 
         <Field class="form-field required" name="passwordConfirm" let:uniqueId>
             <label for={uniqueId}>Password confirm</label>
-            <input type="password" minlength="10" id={uniqueId} disabled={isBusy} bind:value={passwordConfirm} required />
+            <input
+                type="password"
+                minlength="10"
+                id={uniqueId}
+                disabled={isBusy}
+                bind:value={passwordConfirm}
+                required
+            />
         </Field>
 
         <button
