@@ -937,7 +937,7 @@ migrate((app) => {
   }))
 
   // update field
-  collection.fields.add(new Field({
+  collection.fields.addAt(7, new Field({
     "hidden": false,
     "id": "f2_id",
     "max": null,
@@ -989,7 +989,7 @@ migrate((app) => {
   collection.fields.removeById("f4_id")
 
   // update field
-  collection.fields.add(new Field({
+  collection.fields.addAt(7, new Field({
     "hidden": false,
     "id": "f2_id",
     "max": null,
@@ -1070,7 +1070,7 @@ func init() {
 		}
 
 		// update field
-		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
+		if err := collection.Fields.AddMarshaledJSONAt(7, []byte(` + "`" + `{
 			"hidden": false,
 			"id": "f2_id",
 			"max": null,
@@ -1131,7 +1131,7 @@ func init() {
 		collection.Fields.RemoveById("f4_id")
 
 		// update field
-		if err := collection.Fields.AddMarshaledJSON([]byte(` + "`" + `{
+		if err := collection.Fields.AddMarshaledJSONAt(7, []byte(` + "`" + `{
 			"hidden": false,
 			"id": "f2_id",
 			"max": null,
