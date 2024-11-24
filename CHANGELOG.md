@@ -29,7 +29,7 @@ There are a lot of changes but to highlight some of the most notable ones:
 - Replaced `echo` with a new router built on top of the Go 1.22 `net/http` mux enhancements.
 - Merged `daos` packages in `core.App` to simplify the DB operations (_the `models` package structs are also migrated in `core`_).
 - Option to specify custom `DBConnect` function as part of the app configuration to allow different `database/sql` SQLite drivers (_turso/libsql, sqlcipher, etc._) and custom builds.
-  _Note that we no longer loads the `mattn/go-sqlite3` driver by default when building with `CGO_ENABLED=1` to avoid `multiple definition` linker errors in case different CGO SQLite drivers or builds are used. You can find an example how to enable it back if you want to in the [new documentation](http://localhost:5173/docs/go-overview/#github-commattngo-sqlite3)._
+  _Note that we no longer loads the `mattn/go-sqlite3` driver by default when building with `CGO_ENABLED=1` to avoid `multiple definition` linker errors in case different CGO SQLite drivers or builds are used. You can find an example how to enable it back if you want to in the [new documentation](https://pocketbase.io/docs/go-overview/#github-commattngo-sqlite3)._
 - New hooks allowing better control over the execution chain and error handling (_including wrapping an entire hook chain in a single DB transaction_).
 - Various `Record` model improvements (_support for get/set modifiers, simplfied file upload by treating the file(s) as regular field value like `record.Set("document", file)`, etc._).
 - Dedicated fields structs with safer defaults to make it easier creating/updating collections programmatically.
@@ -60,8 +60,8 @@ There are a lot of changes but to highlight some of the most notable ones:
 
 #### SDKs changes
 
-- [JS SDK v0.22.0](https://github.com/pocketbase/js-sdk/blob/develop/CHANGELOG.md)
-- [Dart SDK v0.19.0](https://github.com/pocketbase/dart-sdk/blob/develop/CHANGELOG.md)
+- [JS SDK v0.22.0](https://github.com/pocketbase/js-sdk/blob/master/CHANGELOG.md)
+- [Dart SDK v0.19.0](https://github.com/pocketbase/dart-sdk/blob/master/CHANGELOG.md)
 
 #### Web APIs changes
 
