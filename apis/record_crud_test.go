@@ -260,6 +260,69 @@ func TestRecordCrudList(t *testing.T) {
 			},
 		},
 		{
+			Name:   "authenticated regular record filtering with a hidden field",
+			Method: http.MethodGet,
+			URL:    "/api/collections/demo3/records?filter=title~'test'",
+			Headers: map[string]string{
+				// clients, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.0ONnm_BsvPRZyDNT31GN1CKUB6uQRxvVvQ-Wc9AZfG0",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				col, err := app.FindCollectionByNameOrId("demo3")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// mock hidden field
+				col.Fields.GetByName("title").SetHidden(true)
+
+				if err = app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "superuser filtering with a hidden field",
+			Method: http.MethodGet,
+			URL:    "/api/collections/demo3/records?filter=title~'test'",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				col, err := app.FindCollectionByNameOrId("demo3")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// mock hidden field
+				col.Fields.GetByName("title").SetHidden(true)
+
+				if err = app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":1`,
+				`"totalItems":4`,
+				`"items":[{`,
+				`"id":"1tmknxy2868d869"`,
+				`"id":"lcl9d87w22ml6jy"`,
+				`"id":"7nwo8tuiatetxdm"`,
+				`"id":"mk5fmymtx4wsprk"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       4,
+			},
+		},
+		{
 			Name:           ":rule modifer",
 			Method:         http.MethodGet,
 			URL:            "/api/collections/demo5/records",
