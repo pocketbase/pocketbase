@@ -77,6 +77,8 @@ There are a lot of changes but to highlight some of the most notable ones:
 
 - New `POST /api/collections/{collection}/impersonate/{id}` endpoint.
 
+- ⚠️ If you are constructing requests to `/api/*` routes manually remove the trailing slash (_there is no longer trailing slash removal middleware registered by default_).
+
 - ⚠️ Removed `/api/admins/*` endpoints because admins are converted to `_superusers` auth collection records.
 
 - ⚠️ Previously when uploading new files to a multiple `file` field, new files were automatically appended to the existing field values.
