@@ -156,6 +156,11 @@ export default [
         logo: "planningcenter.svg",
     },
     {
+        key: "webex",
+        title: "Webex",
+        logo: "webex.svg",
+    },
+    {
         key: "oidc",
         title: "OpenID Connect",
         logo: "oidc.svg",
