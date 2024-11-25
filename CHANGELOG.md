@@ -1,4 +1,4 @@
-## v0.23.1 (WIP)
+## v0.23.1
 
 - Added `RequestEvent.Blob(status, contentType string, bytes)` response write helper ([#5940](https://github.com/pocketbase/pocketbase/discussions/5940)).
 
