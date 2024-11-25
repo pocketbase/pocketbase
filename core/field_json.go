@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -160,7 +159,7 @@ func (f *JSONField) ValidateValue(ctx context.Context, app App, record *Record) 
 	if int64(len(raw)) > maxSize {
 		return validation.NewError(
 			"validation_json_size_limit",
-			fmt.Sprintf("The maximum allowed JSON size is %v bytes", maxSize),
+			"The maximum allowed JSON size is {{.maxSize}} bytes",
 		).SetParams(map[string]any{"maxSize": maxSize})
 	}
 

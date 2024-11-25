@@ -445,7 +445,7 @@ func checkForDuplicatedProviders(value any) error {
 		if _, ok := existing[c.Name]; ok {
 			return validation.Errors{
 				strconv.Itoa(i): validation.Errors{
-					"name": validation.NewError("validation_duplicated_provider", "The provider "+c.Name+" is already registered.").
+					"name": validation.NewError("validation_duplicated_provider", "The provider {{.name}} is already registered.").
 						SetParams(map[string]any{"name": c.Name}),
 				},
 			}
@@ -493,7 +493,7 @@ func checkProviderName(value any) error {
 	}
 
 	if _, err := auth.NewProviderByName(name); err != nil {
-		return validation.NewError("validation_missing_provider", "Invalid or missing provider with name "+name+".").
+		return validation.NewError("validation_missing_provider", "Invalid or missing provider with name {{.name}}.").
 			SetParams(map[string]any{"name": name})
 	}
 

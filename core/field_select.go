@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"database/sql/driver"
-	"fmt"
 	"slices"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -192,14 +191,14 @@ func (f *SelectField) ValidateValue(ctx context.Context, app App, record *Record
 
 	// check max selected items
 	if len(normalizedVal) > maxSelect {
-		return validation.NewError("validation_too_many_values", fmt.Sprintf("Select no more than %d", maxSelect)).
+		return validation.NewError("validation_too_many_values", "Select no more than {{.maxSelect}}").
 			SetParams(map[string]any{"maxSelect": maxSelect})
 	}
 
 	// check against the allowed values
 	for _, val := range normalizedVal {
 		if !slices.Contains(f.Values, val) {
-			return validation.NewError("validation_invalid_value", "Invalid value "+val).
+			return validation.NewError("validation_invalid_value", "Invalid value {{.value}}").
 				SetParams(map[string]any{"value": val})
 		}
 	}

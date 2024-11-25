@@ -29,7 +29,7 @@ func UploadedFileSize(maxBytes int64) validation.RuleFunc {
 		if v.Size > maxBytes {
 			return validation.NewError(
 				"validation_file_size_limit",
-				fmt.Sprintf("Failed to upload %q - the maximum allowed file size is %v bytes.", v.OriginalName, maxBytes),
+				"Failed to upload {{.file}} - the maximum allowed file size is {{.maxSize}} bytes.",
 			).SetParams(map[string]any{
 				"file":    v.OriginalName,
 				"maxSize": maxBytes,

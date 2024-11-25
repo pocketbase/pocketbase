@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"database/sql/driver"
-	"fmt"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/dbx"
@@ -202,13 +201,13 @@ func (f *RelationField) ValidateValue(ctx context.Context, app App, record *Reco
 	}
 
 	if f.MinSelect > 0 && len(ids) < f.MinSelect {
-		return validation.NewError("validation_not_enough_values", fmt.Sprintf("Select at least %d", f.MinSelect)).
+		return validation.NewError("validation_not_enough_values", "Select at least {{.minSelect}}").
 			SetParams(map[string]any{"minSelect": f.MinSelect})
 	}
 
 	maxSelect := max(f.MaxSelect, 1)
 	if len(ids) > maxSelect {
-		return validation.NewError("validation_too_many_values", fmt.Sprintf("Select no more than %d", maxSelect)).
+		return validation.NewError("validation_too_many_values", "Select no more than {{.maxSelect}}").
 			SetParams(map[string]any{"maxSelect": maxSelect})
 	}
 

@@ -175,7 +175,7 @@ type recordOAuth2LoginForm struct {
 
 func (form *recordOAuth2LoginForm) validate() error {
 	return validation.ValidateStruct(form,
-		validation.Field(&form.Provider, validation.Required, validation.By(form.checkProviderName)),
+		validation.Field(&form.Provider, validation.Required, validation.Length(0, 100), validation.By(form.checkProviderName)),
 		validation.Field(&form.Code, validation.Required),
 		validation.Field(&form.RedirectURL, validation.Required),
 	)
@@ -186,7 +186,7 @@ func (form *recordOAuth2LoginForm) checkProviderName(value any) error {
 
 	_, ok := form.collection.OAuth2.GetProviderConfig(name)
 	if !ok {
-		return validation.NewError("validation_invalid_provider", fmt.Sprintf("Provider with name %q is missing or is not enabled.", name)).
+		return validation.NewError("validation_invalid_provider", "Provider with name {{.name}} is missing or is not enabled.").
 			SetParams(map[string]any{"name": name})
 	}
 

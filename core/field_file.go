@@ -250,13 +250,22 @@ func (f *FileField) ValidateValue(ctx context.Context, app App, record *Record) 
 	addedStrings := f.excludeFiles(existingStrings, oldExistingStrings)
 
 	if len(addedStrings) > 0 {
-		return validation.NewError("validation_invalid_file", "Invalid files:"+strings.Join(cast.ToStringSlice(addedStrings), ", ")).
-			SetParams(map[string]any{"invalidFiles": addedStrings})
+		invalidFiles := make([]string, len(addedStrings))
+		for i, invalid := range addedStrings {
+			invalidStr := cast.ToString(invalid)
+			if len(invalidStr) > 250 {
+				invalidStr = invalidStr[:250]
+			}
+			invalidFiles[i] = invalidStr
+		}
+
+		return validation.NewError("validation_invalid_file", "Invalid new files: {{.invalidFiles}}.").
+			SetParams(map[string]any{"invalidFiles": invalidFiles})
 	}
 
 	maxSelect := f.maxSelect()
 	if len(files) > maxSelect {
-		return validation.NewError("validation_too_many_files", fmt.Sprintf("The maximum allowed files is %d", maxSelect)).
+		return validation.NewError("validation_too_many_files", "The maximum allowed files is {{.maxSelect}}").
 			SetParams(map[string]any{"maxSelect": maxSelect})
 	}
 

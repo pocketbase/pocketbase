@@ -349,9 +349,7 @@ func createCollectionIndexes(app App, collection *Collection) error {
 				errs[strconv.Itoa(i)] = validation.NewError(
 					"validation_invalid_index_expression",
 					fmt.Sprintf("Failed to create index %s - %v.", parsed.IndexName, err.Error()),
-				).SetParams(map[string]any{
-					"indexName": parsed.IndexName,
-				})
+				)
 				continue
 			}
 		}

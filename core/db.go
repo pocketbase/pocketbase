@@ -464,7 +464,7 @@ func validateCollectionId(app App, optTypes ...string) validation.RuleFunc {
 			return validation.NewError(
 				"validation_invalid_collection_type",
 				fmt.Sprintf("Invalid collection type - must be %s.", strings.Join(optTypes, ", ")),
-			).SetParams(map[string]any{"types": optTypes})
+			)
 		}
 
 		return nil

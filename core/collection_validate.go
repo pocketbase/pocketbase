@@ -268,7 +268,7 @@ func (validator *collectionValidator) checkFieldDuplicates(value any) error {
 				strconv.Itoa(i): validation.Errors{
 					"name": validation.NewError(
 						"validation_duplicated_field_name",
-						fmt.Sprintf("Duplicated or invalid field name %q", field.GetName()),
+						"Duplicated or invalid field name {{.fieldName}}",
 					).SetParams(map[string]any{
 						"fieldName": field.GetName(),
 					}),
@@ -452,12 +452,12 @@ func (cv *collectionValidator) checkFieldsForUniqueIndex(value any) error {
 	for _, name := range names {
 		field := cv.new.Fields.GetByName(name)
 		if field == nil {
-			return validation.NewError("validation_missing_field", fmt.Sprintf("Invalid or missing field %q", name)).
+			return validation.NewError("validation_missing_field", "Invalid or missing field {{.fieldName}}").
 				SetParams(map[string]any{"fieldName": name})
 		}
 
 		if !dbutils.HasSingleColumnUniqueIndex(name, cv.new.Indexes) {
-			return validation.NewError("validation_missing_unique_constraint", fmt.Sprintf("The field %q doesn't have a UNIQUE constraint.", name)).
+			return validation.NewError("validation_missing_unique_constraint", "The field {{.fieldName}} doesn't have a UNIQUE constraint.").
 				SetParams(map[string]any{"fieldName": name})
 		}
 	}
@@ -566,7 +566,7 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 			return validation.Errors{
 				strconv.Itoa(i): validation.NewError(
 					"validation_existing_index_name",
-					"The index name is already used in "+usedTblName+" collection.",
+					"The index name is already used in {{.usedTableName}} collection.",
 				).SetParams(map[string]any{"usedTableName": usedTblName}),
 			}
 		}
@@ -649,7 +649,7 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 					if !hasMatch {
 						return validation.NewError(
 							"validation_invalid_unique_system_field_index",
-							fmt.Sprintf("Unique index definition on system fields (%q) is invalid or missing.", f.GetName()),
+							"Unique index definition on system fields ({{.fieldName}}) is invalid or missing.",
 						).SetParams(map[string]any{"fieldName": f.GetName()})
 					}
 
@@ -669,7 +669,7 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 			if !dbutils.HasSingleColumnUniqueIndex(name, indexes) {
 				return validation.NewError(
 					"validation_missing_required_unique_index",
-					`Missing required unique index for field "`+name+`".`,
+					`Missing required unique index for field "{{.fieldName}}".`,
 				).SetParams(map[string]any{"fieldName": name})
 			}
 		}

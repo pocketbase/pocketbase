@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"fmt"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core/validators"
@@ -137,7 +136,7 @@ func (f *EditorField) ValidateValue(ctx context.Context, app App, record *Record
 	if int64(len(val)) > maxSize {
 		return validation.NewError(
 			"validation_content_size_limit",
-			fmt.Sprintf("The maximum allowed content size is %v bytes", maxSize),
+			"The maximum allowed content size is {{.maxSize}} bytes",
 		).SetParams(map[string]any{"maxSize": maxSize})
 	}
 

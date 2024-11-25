@@ -222,7 +222,7 @@ func (f *TextField) ValidatePlainValue(value string) error {
 	length := len([]rune(value))
 
 	if f.Min > 0 && length < f.Min {
-		return validation.NewError("validation_min_text_constraint", fmt.Sprintf("Must be at least %d character(s)", f.Min)).
+		return validation.NewError("validation_min_text_constraint", "Must be at least {{.min}} character(s)").
 			SetParams(map[string]any{"min": f.Min})
 	}
 
@@ -232,7 +232,7 @@ func (f *TextField) ValidatePlainValue(value string) error {
 	}
 
 	if max > 0 && length > max {
-		return validation.NewError("validation_max_text_constraint", fmt.Sprintf("Must be less than %d character(s)", max)).
+		return validation.NewError("validation_max_text_constraint", "Must be less than {{.max}} character(s)").
 			SetParams(map[string]any{"max": f.Max})
 	}
 
