@@ -500,6 +500,26 @@ func TestEventStream(t *testing.T) {
 	}
 }
 
+func TestEventBlob(t *testing.T) {
+	scenarios := []testResponseWriteScenario[[]byte]{
+		{
+			name:            "blob",
+			status:          234,
+			headers:         map[string]string{"content-type": "text/test"},
+			body:            []byte("test"),
+			expectedStatus:  234,
+			expectedHeaders: map[string]string{"content-type": "text/test"},
+			expectedBody:    "test",
+		},
+	}
+
+	for _, s := range scenarios {
+		testEventResponseWrite(t, s, func(e *router.Event) error {
+			return e.Blob(s.status, s.headers["content-type"], s.body)
+		})
+	}
+}
+
 func TestEventNoContent(t *testing.T) {
 	s := testResponseWriteScenario[any]{
 		name:            "no content",

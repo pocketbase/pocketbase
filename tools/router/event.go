@@ -221,6 +221,14 @@ func (e *Event) Stream(status int, contentType string, reader io.Reader) error {
 	return err
 }
 
+// Blob writes a blob (bytes slice) response.
+func (e *Event) Blob(status int, contentType string, b []byte) error {
+	e.setResponseHeaderIfEmpty(headerContentType, contentType)
+	e.Response.WriteHeader(status)
+	_, err := e.Response.Write(b)
+	return err
+}
+
 // FileFS serves the specified filename from fsys.
 //
 // It is similar to [echo.FileFS] for consistency with earlier versions.
