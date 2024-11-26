@@ -2,12 +2,12 @@
 
 - Fixed `RecordQuery()` custom struct scanning ([#5958](https://github.com/pocketbase/pocketbase/discussions/5958)).
 
+- Fixed `--dev` log query print formatting.
+
 - Added support for passing more than one id in the `Hook.Unbind` method for consistency with the router.
 
 - Added collection rules change list in the confirmation popup
   (_to avoid getting anoying during development, the rules confirmation currently is enabled only when using https_).
-
-- Fixed `--dev` log query print formatting.
 
 
 ## v0.23.1
