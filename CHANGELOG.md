@@ -1,3 +1,8 @@
+## (WIP)
+
+- Added support for passing more than one id in the `Hook.Unbind` method for consistency with the router.
+
+
 ## v0.23.1
 
 - Added `RequestEvent.Blob(status, contentType, bytes)` response write helper ([#5940](https://github.com/pocketbase/pocketbase/discussions/5940)).

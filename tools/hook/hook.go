@@ -112,15 +112,17 @@ func (h *Hook[T]) BindFunc(fn func(e T) error) string {
 	return h.Bind(&Handler[T]{Func: fn})
 }
 
-// Unbind removes a single hook handler by its id.
-func (h *Hook[T]) Unbind(id string) {
+// Unbind removes one or many hook handler by their id.
+func (h *Hook[T]) Unbind(idsToRemove ...string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	for i := len(h.handlers) - 1; i >= 0; i-- {
-		if h.handlers[i].Id == id {
-			h.handlers = append(h.handlers[:i], h.handlers[i+1:]...)
-			break // for now stop on the first occurrence since we don't allow handlers with duplicated ids
+	for _, id := range idsToRemove {
+		for i := len(h.handlers) - 1; i >= 0; i-- {
+			if h.handlers[i].Id == id {
+				h.handlers = append(h.handlers[:i], h.handlers[i+1:]...)
+				break // for now stop on the first occurrence since we don't allow handlers with duplicated ids
+			}
 		}
 	}
 }

@@ -70,6 +70,7 @@ func TestHookUnbind(t *testing.T) {
 
 	calls := ""
 
+	id0 := h.BindFunc(func(e *Event) error { calls += "0"; return e.Next() })
 	id1 := h.BindFunc(func(e *Event) error { calls += "1"; return e.Next() })
 	h.BindFunc(func(e *Event) error { calls += "2"; return e.Next() })
 	h.Bind(&Handler[*Event]{
@@ -78,11 +79,11 @@ func TestHookUnbind(t *testing.T) {
 
 	h.Unbind("missing") // should do nothing and not panic
 
-	if total := len(h.handlers); total != 3 {
-		t.Fatalf("Expected %d handlers, got %d", 3, total)
+	if total := len(h.handlers); total != 4 {
+		t.Fatalf("Expected %d handlers, got %d", 4, total)
 	}
 
-	h.Unbind(id1)
+	h.Unbind(id1, id0)
 
 	if total := len(h.handlers); total != 2 {
 		t.Fatalf("Expected %d handlers, got %d", 2, total)
