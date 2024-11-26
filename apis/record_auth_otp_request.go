@@ -49,12 +49,12 @@ func recordRequestOTP(e *core.RequestEvent) error {
 
 	return e.App.OnRecordRequestOTPRequest().Trigger(event, func(e *core.RecordCreateOTPRequestEvent) error {
 		if e.Record == nil {
-			// write a dummy 200 response as a very rudimentary user emails enumeration protection
+			// write a dummy 200 response as a very rudimentary emails enumeration "protection"
 			e.JSON(http.StatusOK, map[string]string{
 				"otpId": core.GenerateDefaultRandomId(),
 			})
 
-			return fmt.Errorf("failed to fetch %s record with email %s: %w", collection.Name, form.Email, err)
+			return fmt.Errorf("missing or invalid %s OTP auth record with email %s", collection.Name, form.Email)
 		}
 
 		var otp *core.OTP
