@@ -66,7 +66,7 @@ func TestRecordQueryOne(t *testing.T) {
 		name       string
 		collection string
 		recordId   string
-		model      core.Model
+		model      any
 	}{
 		{
 			"record model",
@@ -80,6 +80,14 @@ func TestRecordQueryOne(t *testing.T) {
 			"84nmscqy84lsi1t",
 			&struct {
 				core.BaseRecordProxy
+			}{},
+		},
+		{
+			"custom struct",
+			"demo1",
+			"84nmscqy84lsi1t",
+			&struct {
+				Id string `db:"id" json:"id"`
 			}{},
 		},
 	}
@@ -98,8 +106,14 @@ func TestRecordQueryOne(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if s.model.PK() != s.recordId {
-				t.Fatalf("Expected record with id %q, got %q", s.recordId, s.model.PK())
+			raw, err := json.Marshal(s.model)
+			if err != nil {
+				t.Fatal(err)
+			}
+			rawStr := string(raw)
+
+			if !strings.Contains(rawStr, fmt.Sprintf(`"id":%q`, s.recordId)) {
+				t.Fatalf("Missing id %q in\n%s", s.recordId, rawStr)
 			}
 		})
 	}
@@ -110,6 +124,10 @@ func TestRecordQueryAll(t *testing.T) {
 
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
+
+	type customStructs struct {
+		Id string `db:"id" json:"id"`
+	}
 
 	type mockRecordProxy struct {
 		core.BaseRecordProxy
@@ -144,6 +162,18 @@ func TestRecordQueryAll(t *testing.T) {
 			"demo1",
 			[]any{"84nmscqy84lsi1t", "al1h9ijdeojtsjy"},
 			&[]mockRecordProxy{},
+		},
+		{
+			"slice of custom structs",
+			"demo1",
+			[]any{"84nmscqy84lsi1t", "al1h9ijdeojtsjy"},
+			&[]customStructs{},
+		},
+		{
+			"slice of pointer custom structs",
+			"demo1",
+			[]any{"84nmscqy84lsi1t", "al1h9ijdeojtsjy"},
+			&[]customStructs{},
 		},
 	}
 

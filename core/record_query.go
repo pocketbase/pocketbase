@@ -102,11 +102,6 @@ func (app *BaseApp) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuer
 
 					return nil
 				default: // expects []RecordProxy slice
-					records, err := resolveRecordAllHook(collection, op)
-					if err != nil {
-						return err
-					}
-
 					rv := reflect.ValueOf(v)
 					if rv.Kind() != reflect.Ptr || rv.IsNil() {
 						return errors.New("must be a pointer")
@@ -116,11 +111,6 @@ func (app *BaseApp) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuer
 
 					if rv.Kind() != reflect.Slice {
 						return errors.New("must be a slice of RecordSetters")
-					}
-
-					// create an empty slice
-					if rv.IsNil() {
-						rv.Set(reflect.MakeSlice(rv.Type(), 0, len(records)))
 					}
 
 					et := rv.Type().Elem()
@@ -133,6 +123,16 @@ func (app *BaseApp) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuer
 
 					if !reflect.PointerTo(et).Implements(recordProxyType) {
 						return op(sliceA)
+					}
+
+					records, err := resolveRecordAllHook(collection, op)
+					if err != nil {
+						return err
+					}
+
+					// create an empty slice
+					if rv.IsNil() {
+						rv.Set(reflect.MakeSlice(rv.Type(), 0, len(records)))
 					}
 
 					for _, record := range records {

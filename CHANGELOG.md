@@ -1,6 +1,9 @@
-## (WIP)
+## v0.23.2 (WIP)
+
+- Fixed `RecordQuery()` custom struct scanning ([#5958](https://github.com/pocketbase/pocketbase/discussions/5958)).
 
 - Added support for passing more than one id in the `Hook.Unbind` method for consistency with the router.
+
 
 
 ## v0.23.1
