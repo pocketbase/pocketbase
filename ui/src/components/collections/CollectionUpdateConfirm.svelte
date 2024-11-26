@@ -118,7 +118,7 @@
         return `#/collections?collection=_externalAuths&filter=collectionRef%3D%22${newCollection?.id}%22+%26%26+provider%3D%22${provider}%22`;
     }
 
-    async function detectRulesChange() {
+    function detectRulesChange() {
         changedRules = [];
 
         // for now enable only for "production"
