@@ -1138,8 +1138,8 @@ var sqlLogReplacements = map[string]string{
 	"]]":    "`",
 	"<nil>": "NULL",
 }
-var sqlLogPrefixedTableIdentifierPattern = regexp.MustCompile(`\[\[(.+)\.(.+)\]\]`)
-var sqlLogPrefixedColumnIdentifierPattern = regexp.MustCompile(`\{\{(.+)\.(.+)\}\}`)
+var sqlLogPrefixedTableIdentifierPattern = regexp.MustCompile(`\[\[([^\[\]\{\}\.]+)\.([^\[\]\{\}\.]+)\]\]`)
+var sqlLogPrefixedColumnIdentifierPattern = regexp.MustCompile(`\{\{([^\[\]\{\}\.]+)\.([^\[\]\{\}\.]+)\}\}`)
 
 // normalizeSQLLog replaces common query builder charactes with their plain SQL version for easier debugging.
 // The query is still not suitable for execution and should be used only for log and debug purposes

@@ -4,6 +4,7 @@
 
 - Added support for passing more than one id in the `Hook.Unbind` method for consistency with the router.
 
+- Fixed `--dev` log query print formatting.
 
 
 ## v0.23.1
