@@ -186,6 +186,9 @@ a {
 .txt-mono {
     font-family: var(--monospaceFontFamily);
 }
+.txt-preline {
+    white-space: pre-line;
+}
 .txt-nowrap {
     white-space: nowrap;
 }

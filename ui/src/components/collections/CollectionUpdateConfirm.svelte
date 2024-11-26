@@ -10,17 +10,23 @@
     let newCollection;
     let hideAfterSave;
     let conflictingOIDCs = [];
+    let changedRules = [];
 
     $: isCollectionRenamed = oldCollection?.name != newCollection?.name;
 
     $: isNewCollectionView = newCollection?.type === "view";
 
-    $: renamedFields =
-        newCollection?.fields?.filter(
-            (field) => field.id && !field._toDelete && field._originalName != field.name,
-        ) || [];
+    $: isNewCollectionAuth = newCollection?.type === "auth";
 
-    $: deletedFields = newCollection?.fields?.filter((field) => field.id && field._toDelete) || [];
+    $: renamedFields =
+        (!isNewCollectionView &&
+            newCollection?.fields?.filter(
+                (field) => field.id && !field._toDelete && field._originalName != field.name,
+            )) ||
+        [];
+
+    $: deletedFields =
+        (!isNewCollectionView && newCollection?.fields?.filter((field) => field.id && field._toDelete)) || [];
 
     $: multipleToSingleFields =
         newCollection?.fields?.filter((field) => {
@@ -31,7 +37,7 @@
             return old.maxSelect != 1 && field.maxSelect == 1;
         }) || [];
 
-    $: showChanges = !isNewCollectionView || isCollectionRenamed;
+    $: showChanges = !isNewCollectionView || isCollectionRenamed || changedRules.length;
 
     export async function show(original, changed, hideAfterSaveArg = true) {
         oldCollection = original;
@@ -40,6 +46,8 @@
 
         await detectConflictingOIDCs();
 
+        detectRulesChange();
+
         await tick();
 
         if (
@@ -47,7 +55,8 @@
             renamedFields.length ||
             deletedFields.length ||
             multipleToSingleFields.length ||
-            conflictingOIDCs.length
+            conflictingOIDCs.length ||
+            changedRules.length
         ) {
             panel?.show();
         } else {
@@ -108,6 +117,34 @@
     function getExternalAuthsFilterLink(provider) {
         return `#/collections?collection=_externalAuths&filter=collectionRef%3D%22${newCollection?.id}%22+%26%26+provider%3D%22${provider}%22`;
     }
+
+    async function detectRulesChange() {
+        changedRules = [];
+
+        // for now enable only for "production"
+        if (window.location.protocol != "https:") {
+            return;
+        }
+
+        const ruleProps = ["listRule", "viewRule"];
+        if (!isNewCollectionView) {
+            ruleProps.push("createRule", "updateRule", "deleteRule");
+        }
+        if (isNewCollectionAuth) {
+            ruleProps.push("manageRule", "authRule");
+        }
+
+        let oldRule, newRule;
+        for (let prop of ruleProps) {
+            oldRule = oldCollection?.[prop];
+            newRule = newCollection?.[prop];
+            if (oldRule === newRule) {
+                continue;
+            }
+
+            changedRules.push({ prop, oldRule, newRule });
+        }
+    }
 </script>
 
 <OverlayPanel bind:this={panel} class="confirm-changes-panel" popup on:hide on:show>
@@ -161,7 +198,7 @@
                             Renamed field
                             <strong class="txt-strikethrough txt-hint">{field._originalName}</strong>
                             <i class="ri-arrow-right-line txt-sm" />
-                            <strong class="txt"> {field.name}</strong>
+                            <strong class="txt">{field.name}</strong>
                         </div>
                     </li>
                 {/each}
@@ -172,6 +209,30 @@
                     </li>
                 {/each}
             {/if}
+
+            {#each changedRules as ruleChange}
+                <li>
+                    Changed API rule <code class="txt-sm">{ruleChange.prop}</code>:
+                    <br />
+                    <small class="txt-mono txt-hint">
+                        <strong>Old</strong>:
+                        <span class="txt-preline">
+                            {ruleChange.oldRule === null
+                                ? "null (superusers only)"
+                                : ruleChange.oldRule || '""'}
+                        </span>
+                    </small>
+                    <br />
+                    <small class="txt-mono txt-success">
+                        <strong>New</strong>:
+                        <span class="txt-preline">
+                            {ruleChange.newRule === null
+                                ? "null (superusers only)"
+                                : ruleChange.newRule || '""'}
+                        </span>
+                    </small>
+                </li>
+            {/each}
 
             {#each conflictingOIDCs as oidc}
                 <li>
