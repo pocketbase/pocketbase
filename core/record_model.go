@@ -589,8 +589,10 @@ func (m *Record) Original() *Record {
 func (m *Record) Fresh() *Record {
 	newRecord := m.Original()
 
-	// note: this will also load the Id field though m.Get
-	newRecord.Load(m.FieldsData())
+	// note: this will also load the Id field through m.GetRaw
+	for _, field := range m.collection.Fields {
+		newRecord.SetRaw(field.GetName(), m.GetRaw(field.GetName()))
+	}
 
 	return newRecord
 }
@@ -609,7 +611,10 @@ func (m *Record) Clone() *Record {
 	newRecord.ignoreUnchangedFields = m.ignoreUnchangedFields
 	newRecord.customVisibility.Reset(m.customVisibility.GetAll())
 
-	newRecord.Load(m.data.GetAll())
+	data := m.data.GetAll()
+	for k, v := range data {
+		newRecord.SetRaw(k, v)
+	}
 
 	if m.expand != nil {
 		newRecord.SetExpand(m.expand.GetAll())
