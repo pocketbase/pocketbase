@@ -221,23 +221,26 @@ func (w *gzipResponseWriter) Push(target string, opts *http.PushOptions) error {
 	}
 }
 
-func (w *gzipResponseWriter) ReadFrom(r io.Reader) (n int64, err error) {
-	if w.wroteHeader {
-		w.ResponseWriter.WriteHeader(w.code)
-	}
-
-	rw := w.ResponseWriter
-	for {
-		switch rf := rw.(type) {
-		case io.ReaderFrom:
-			return rf.ReadFrom(r)
-		case router.RWUnwrapper:
-			rw = rf.Unwrap()
-		default:
-			return io.Copy(w.ResponseWriter, r)
-		}
-	}
-}
+// Note: Disable the implementation for now because in case the platform
+// supports the sendfile fast-path it won't run gzipResponseWriter.Write,
+// preventing compression on the fly.
+//
+// func (w *gzipResponseWriter) ReadFrom(r io.Reader) (n int64, err error) {
+// 	if w.wroteHeader {
+// 		w.ResponseWriter.WriteHeader(w.code)
+// 	}
+// 	rw := w.ResponseWriter
+// 	for {
+// 		switch rf := rw.(type) {
+// 		case io.ReaderFrom:
+// 			return rf.ReadFrom(r)
+// 		case router.RWUnwrapper:
+// 			rw = rf.Unwrap()
+// 		default:
+// 			return io.Copy(w.ResponseWriter, r)
+// 		}
+// 	}
+// }
 
 func (w *gzipResponseWriter) Unwrap() http.ResponseWriter {
 	return w.ResponseWriter

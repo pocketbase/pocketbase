@@ -1,3 +1,9 @@
+## v0.23.3 (WIP)
+
+- Fixed Gzip middleware not applying when serving static files.
+
+
+
 ## v0.23.2
 
 - Fixed `RecordQuery()` custom struct scanning ([#5958](https://github.com/pocketbase/pocketbase/discussions/5958)).
