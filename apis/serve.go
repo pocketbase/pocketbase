@@ -79,7 +79,7 @@ func Serve(app core.App, config ServeConfig) error {
 
 	pbRouter.GET("/_/{path...}", Static(ui.DistDirFS, false)).
 		BindFunc(func(e *core.RequestEvent) error {
-			// ingore root path
+			// ignore root path
 			if e.Request.PathValue(StaticWildcardParam) != "" {
 				e.Response.Header().Set("Cache-Control", "max-age=1209600, stale-while-revalidate=86400")
 			}
