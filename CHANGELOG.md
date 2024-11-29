@@ -1,7 +1,8 @@
-## v0.23.3 (WIP)
+## v0.23.3
 
 - Fixed Gzip middleware not applying when serving static files.
 
+- Fixed `Record.Fresh()`/`Record.Clone()` methods not properly cloning `autodate` fields ([#5973](https://github.com/pocketbase/pocketbase/discussions/5973)).
 
 
 ## v0.23.2
