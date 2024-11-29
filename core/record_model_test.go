@@ -244,10 +244,13 @@ func TestRecordFresh(t *testing.T) {
 
 	extraFieldsCheck := []string{`"email":`, `"custom":`}
 
+	autodateTest := types.NowDateTime()
+
 	// change the fields
 	record.Id = "changed"
 	record.Set("name", "name_new")
 	record.Set("custom", "test_custom")
+	record.SetRaw("created", autodateTest)
 	record.SetExpand(map[string]any{"test": 123})
 	record.IgnoreEmailVisibility(true)
 	record.IgnoreUnchangedFields(true)
@@ -270,6 +273,9 @@ func TestRecordFresh(t *testing.T) {
 	if v := record.GetString("name"); v != "name_new" {
 		t.Fatalf("Expected name to be %q, got %q", "name_new", v)
 	}
+	if v := record.GetDateTime("created").String(); v != autodateTest.String() {
+		t.Fatalf("Expected created to be %q, got %q", autodateTest.String(), v)
+	}
 	if v := record.GetString("custom"); v != "test_custom" {
 		t.Fatalf("Expected custom to be %q, got %q", "test_custom", v)
 	}
@@ -286,6 +292,12 @@ func TestRecordFresh(t *testing.T) {
 	}
 	if v := record.Fresh().GetString("name"); v != record.GetString("name") {
 		t.Fatalf("Expected the fresh name to be %q, got %q", record.GetString("name"), v)
+	}
+	if v := record.Fresh().GetDateTime("created").String(); v != autodateTest.String() {
+		t.Fatalf("Expected the fresh created to be %q, got %q", autodateTest.String(), v)
+	}
+	if v := record.Fresh().GetDateTime("updated").String(); v != record.GetDateTime("updated").String() {
+		t.Fatalf("Expected the fresh updated to be %q, got %q", record.GetDateTime("updated").String(), v)
 	}
 	if v := record.Fresh().GetString("custom"); v != "" {
 		t.Fatalf("Expected the fresh custom to be %q, got %q", "", v)
@@ -321,10 +333,13 @@ func TestRecordClone(t *testing.T) {
 
 	extraFieldsCheck := []string{`"email":`, `"custom":`}
 
+	autodateTest := types.NowDateTime()
+
 	// change the fields
 	record.Id = "changed"
 	record.Set("name", "name_new")
 	record.Set("custom", "test_custom")
+	record.SetRaw("created", autodateTest)
 	record.SetExpand(map[string]any{"test": 123})
 	record.IgnoreEmailVisibility(true)
 	record.WithCustomData(true)
@@ -346,6 +361,9 @@ func TestRecordClone(t *testing.T) {
 	if v := record.GetString("name"); v != "name_new" {
 		t.Fatalf("Expected name to be %q, got %q", "name_new", v)
 	}
+	if v := record.GetDateTime("created").String(); v != autodateTest.String() {
+		t.Fatalf("Expected created to be %q, got %q", autodateTest.String(), v)
+	}
 	if v := record.GetString("custom"); v != "test_custom" {
 		t.Fatalf("Expected custom to be %q, got %q", "test_custom", v)
 	}
@@ -362,6 +380,12 @@ func TestRecordClone(t *testing.T) {
 	}
 	if v := record.Clone().GetString("name"); v != record.GetString("name") {
 		t.Fatalf("Expected the clone name to be %q, got %q", record.GetString("name"), v)
+	}
+	if v := record.Clone().GetDateTime("created").String(); v != autodateTest.String() {
+		t.Fatalf("Expected the clone created to be %q, got %q", autodateTest.String(), v)
+	}
+	if v := record.Clone().GetDateTime("updated").String(); v != record.GetDateTime("updated").String() {
+		t.Fatalf("Expected the clone updated to be %q, got %q", record.GetDateTime("updated").String(), v)
 	}
 	if v := record.Clone().GetString("custom"); v != "test_custom" {
 		t.Fatalf("Expected the clone custom to be %q, got %q", "test_custom", v)
