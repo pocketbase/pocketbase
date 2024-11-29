@@ -504,12 +504,16 @@ func NewRecord(collection *Collection) *Record {
 	}
 
 	// initialize default field values
+	var fieldName string
 	for _, field := range collection.Fields {
-		if field.GetName() == FieldNameId {
+		fieldName = field.GetName()
+
+		if fieldName == FieldNameId {
 			continue
 		}
+
 		value, _ := field.PrepareValue(record, nil)
-		record.originalData[field.GetName()] = value
+		record.originalData[fieldName] = value
 	}
 
 	return record
@@ -590,8 +594,10 @@ func (m *Record) Fresh() *Record {
 	newRecord := m.Original()
 
 	// note: this will also load the Id field through m.GetRaw
+	var fieldName string
 	for _, field := range m.collection.Fields {
-		newRecord.SetRaw(field.GetName(), m.GetRaw(field.GetName()))
+		fieldName = field.GetName()
+		newRecord.SetRaw(fieldName, m.GetRaw(fieldName))
 	}
 
 	return newRecord
@@ -727,8 +733,10 @@ func (m *Record) MergeExpand(expand map[string]any) {
 func (m *Record) FieldsData() map[string]any {
 	result := make(map[string]any, len(m.collection.Fields))
 
+	var fieldName string
 	for _, field := range m.collection.Fields {
-		result[field.GetName()] = m.Get(field.GetName())
+		fieldName = field.GetName()
+		result[fieldName] = m.Get(fieldName)
 	}
 
 	return result
@@ -1062,15 +1070,18 @@ func (m *Record) dbExport() (map[string]any, error) {
 
 	result := make(map[string]any, len(fields))
 
+	var fieldName string
 	for _, field := range fields {
+		fieldName = field.GetName()
+
 		if f, ok := field.(DriverValuer); ok {
 			v, err := f.DriverValue(m)
 			if err != nil {
 				return nil, err
 			}
-			result[field.GetName()] = v
+			result[fieldName] = v
 		} else {
-			result[field.GetName()] = m.GetRaw(field.GetName())
+			result[fieldName] = m.GetRaw(fieldName)
 		}
 	}
 
@@ -1196,8 +1207,11 @@ func (record *Record) PublicExport() map[string]any {
 	customVisibility := record.customVisibility.GetAll()
 
 	// export schema fields
+	var fieldName string
 	for _, f := range record.collection.Fields {
-		isVisible, hasCustomVisibility = customVisibility[f.GetName()]
+		fieldName = f.GetName()
+
+		isVisible, hasCustomVisibility = customVisibility[fieldName]
 		if !hasCustomVisibility {
 			isVisible = !f.GetHidden()
 		}
@@ -1206,7 +1220,7 @@ func (record *Record) PublicExport() map[string]any {
 			continue
 		}
 
-		export[f.GetName()] = record.Get(f.GetName())
+		export[fieldName] = record.Get(fieldName)
 	}
 
 	// export custom fields
