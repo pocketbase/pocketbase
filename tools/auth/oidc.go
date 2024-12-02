@@ -129,23 +129,20 @@ func (p *OIDC) parseIdToken(token *oauth2.Token) (jwt.MapClaims, error) {
 	}
 
 	// validate common claims like exp, iat, etc.
-	err = claims.Valid()
+	validator := jwt.NewValidator(jwt.WithIssuedAt(), jwt.WithAudience(p.clientId))
+	err = validator.Validate(claims)
 	if err != nil {
 		return nil, err
-	}
-
-	// validate aud
-	if !claims.VerifyAudience(p.clientId, true) {
-		return nil, errors.New("aud must be the developer's client_id")
 	}
 
 	// validate iss (if "issuers" extra config is set)
 	issuers := cast.ToStringSlice(p.Extra()["issuers"])
 	if len(issuers) > 0 {
 		var isIssValid bool
+		claimIssuer, _ := claims.GetIssuer()
 
 		for _, issuer := range issuers {
-			if claims.VerifyIssuer(issuer, true) {
+			if claimIssuer == issuer {
 				isIssValid = true
 				break
 			}
