@@ -6,6 +6,8 @@
 
 - Moved the default UI CSP from meta tag to response header ([#5995](https://github.com/pocketbase/pocketbase/discussions/5995)).
 
+- Updated Go and npm dependencies.
+
 
 ## v0.23.3
 
