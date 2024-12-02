@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/cast"
 )
 
 // ParsePoint creates a new Point from the provided value
@@ -18,8 +20,9 @@ func ParsePoint(value any) (Point, error) {
 // Point represents a geographic point on Earth,
 // serialized as a comma-separated pair of float64s.
 type Point struct {
-	lat  float64
-	long float64
+	lat   float64
+	long  float64
+	unset bool
 }
 
 // Lat returns the internal latitude value.
@@ -29,7 +32,7 @@ func (p Point) Lat() float64 {
 
 // Long returns the internal longitude value.
 func (p Point) Long() float64 {
-	return p.lat
+	return p.long
 }
 
 // Equal reports whether the two points are equal.
@@ -42,14 +45,12 @@ func (p Point) Equal(u Point) bool {
 
 // String serializes the current point instance into a formatted coordinate pair.
 //
-// The zero value is serialized to `0.0,0.0` (latitude,longitude).
+// The zero value is serialized to an empty string.
 func (p Point) String() string {
-	lat := p.Lat()
-	long := p.Long()
-	if lat == 0 && long == 0 {
-		return "0.0,0.0"
+	if p.unset {
+		return ""
 	}
-	return fmt.Sprintf("%f,%f", lat, long)
+	return fmt.Sprintf("%f, %f", p.lat, p.long)
 }
 
 // MarshalJSON implements the [json.Marshaler] interface.
@@ -71,43 +72,48 @@ func (p Point) Value() (driver.Value, error) {
 	return p.String(), nil
 }
 
-// Scan implements [sql.Scanner] interface to scan the provided value
-// into the current DateTime instance.
-func (p *Point) Scan(value any) error {
-	switch v := value.(type) {
-	case []byte:
-		pair, err := parsePointString(string(v))
-		if err != nil {
-			return err
-		}
-		p.lat = pair[0]
-		p.lat = pair[1]
-	case string:
-		pair, err := parsePointString(string(v))
-		if err != nil {
-			return err
-		}
-		p.lat = pair[0]
-		p.lat = pair[1]
-	default:
-	}
-	return nil
+// IsEmpty checks whether the current Point instance has been set.
+func (p Point) IsEmpty() bool {
+	return p.unset
 }
 
-func parsePointString(value string) ([2]float64, error) {
-	coords := strings.Split(value, ",")
-	if len(coords) != 2 {
-		return [2]float64{}, fmt.Errorf("improperly formed point, need length 2 got length %d", len(coords))
+// Scan implements [sql.Scanner] interface to scan the provided value
+// into the current Point instance.
+func (p *Point) Scan(value any) error {
+	switch v := value.(type) {
+	case Point:
+		*p = v
+		return nil
+	case string:
+		return p.parsePointString(v)
+	case []byte:
+		return p.parsePointString(string(v))
+	default:
+		return p.parsePointString(cast.ToString(v))
 	}
-	latString := coords[0]
-	longString := coords[1]
-	lat, err := strconv.ParseFloat(latString, 64)
+}
+
+func (p *Point) parsePointString(pair string) error {
+	if pair == "" {
+		*p = Point{lat: 0, long: 0, unset: true}
+		return nil
+	}
+	latStr, longStr, found := strings.Cut(pair, ",")
+	if !found {
+		return fmt.Errorf("point must have a comma-separated latitude and longitude, got: %s", pair)
+	}
+
+	latStr = strings.TrimSpace(latStr)
+	longStr = strings.TrimSpace(longStr)
+
+	lat, err := strconv.ParseFloat(latStr, 64)
 	if err != nil {
-		return [2]float64{}, err
+		return err
 	}
-	long, err := strconv.ParseFloat(longString, 64)
+	long, err := strconv.ParseFloat(longStr, 64)
 	if err != nil {
-		return [2]float64{}, err
+		return err
 	}
-	return [2]float64{lat, long}, nil
+	*p = Point{lat: lat, long: long, unset: false}
+	return nil
 }

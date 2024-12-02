@@ -40,6 +40,11 @@ type PointField struct {
 	// Presentable hints the Dashboard UI to use the underlying
 	// field record value in the relation preview label.
 	Presentable bool `form:"presentable" json:"presentable"`
+
+	// ---
+
+	// Required will require the field value to be non-empty coordinate pair.
+	Required bool `form:"required" json:"required"`
 }
 
 // Type implements [Field.Type] interface method.
@@ -105,6 +110,15 @@ func (f *PointField) ValidateValue(ctx context.Context, app App, record *Record)
 	val, ok := record.GetRaw(f.Name).(types.Point)
 	if !ok {
 		return validators.ErrUnsupportedValueType
+	}
+
+	if val.IsEmpty() {
+		if f.Required {
+			if err := validation.Required.Validate(val); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 
 	lat := val.Lat()
