@@ -83,6 +83,12 @@ func Serve(app core.App, config ServeConfig) error {
 			if e.Request.PathValue(StaticWildcardParam) != "" {
 				e.Response.Header().Set("Cache-Control", "max-age=1209600, stale-while-revalidate=86400")
 			}
+
+			// add a default CSP
+			if e.Response.Header().Get("Content-Security-Policy") == "" {
+				e.Response.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' http://127.0.0.1:* data: blob:; connect-src 'self' http://127.0.0.1:*; script-src 'self' 'sha256-GRUzBA7PzKYug7pqxv5rJaec5bwDCw1Vo6/IXwvD3Tc='")
+			}
+
 			return e.Next()
 		}).
 		Bind(Gzip())
