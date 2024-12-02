@@ -264,7 +264,7 @@ func TestAutodateFieldIntercept(t *testing.T) {
 		},
 		{
 			"create with zero value (disabled onCreate)",
-			core.InterceptorActionCreate,
+			core.InterceptorActionCreateExecute,
 			&core.AutodateField{Name: "test", OnCreate: false, OnUpdate: true},
 			func() *core.Record {
 				return core.NewRecord(collection)
@@ -273,7 +273,7 @@ func TestAutodateFieldIntercept(t *testing.T) {
 		},
 		{
 			"create with zero value",
-			core.InterceptorActionCreate,
+			core.InterceptorActionCreateExecute,
 			&core.AutodateField{Name: "test", OnCreate: true, OnUpdate: true},
 			func() *core.Record {
 				return core.NewRecord(collection)
@@ -282,7 +282,7 @@ func TestAutodateFieldIntercept(t *testing.T) {
 		},
 		{
 			"create with non-zero value",
-			core.InterceptorActionCreate,
+			core.InterceptorActionCreateExecute,
 			&core.AutodateField{Name: "test", OnCreate: true, OnUpdate: true},
 			func() *core.Record {
 				record := core.NewRecord(collection)
@@ -293,7 +293,7 @@ func TestAutodateFieldIntercept(t *testing.T) {
 		},
 		{
 			"update with zero value (disabled onUpdate)",
-			core.InterceptorActionUpdate,
+			core.InterceptorActionUpdateExecute,
 			&core.AutodateField{Name: "test", OnCreate: true, OnUpdate: false},
 			func() *core.Record {
 				return core.NewRecord(collection)
@@ -302,7 +302,7 @@ func TestAutodateFieldIntercept(t *testing.T) {
 		},
 		{
 			"update with zero value",
-			core.InterceptorActionUpdate,
+			core.InterceptorActionUpdateExecute,
 			&core.AutodateField{Name: "test", OnCreate: true, OnUpdate: true},
 			func() *core.Record {
 				return core.NewRecord(collection)
@@ -311,7 +311,7 @@ func TestAutodateFieldIntercept(t *testing.T) {
 		},
 		{
 			"update with non-zero value",
-			core.InterceptorActionUpdate,
+			core.InterceptorActionUpdateExecute,
 			&core.AutodateField{Name: "test", OnCreate: true, OnUpdate: true},
 			func() *core.Record {
 				record := core.NewRecord(collection)
