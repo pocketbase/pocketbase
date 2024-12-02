@@ -244,7 +244,6 @@
                         value={otpId}
                         placeholder={lastOTPId}
                         on:change={(e) => {
-                            console.log("change");
                             otpId = e.target.value || lastOTPId;
                             e.target.value = otpId;
                         }}
