@@ -48,7 +48,7 @@ This will start a web server on `http://localhost:8090` with the embedded prebui
   make test
   ```
 
-- Run the linter - **golangci** ([see how to install](https://golangci-lint.run/usage/install/#local-installation)):
+- Run the linter - **golangci** ([see how to install](https://golangci-lint.run/welcome/install/#local-installation)):
 
   ```sh
   golangci-lint run -c ./golangci.yml ./...
