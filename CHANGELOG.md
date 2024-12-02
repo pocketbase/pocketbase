@@ -1,3 +1,8 @@
+## v0.23.4
+
+- Fixed `autodate` fields not refreshing when calling `Save` multiple times on the same `Record` instance ([#6000](https://github.com/pocketbase/pocketbase/issues/6000)).
+
+
 ## v0.23.3
 
 - Fixed Gzip middleware not applying when serving static files.

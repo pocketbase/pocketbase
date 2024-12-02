@@ -16,6 +16,9 @@ func init() {
 
 const FieldTypeAutodate = "autodate"
 
+// used to keep track of the last set autodate value
+const autodateLastKnownPrefix = internalCustomFieldKeyPrefix + "_last_autodate_"
+
 var (
 	_ Field             = (*AutodateField)(nil)
 	_ SetterFinder      = (*AutodateField)(nil)
@@ -167,24 +170,46 @@ func (f *AutodateField) Intercept(
 	actionFunc func() error,
 ) error {
 	switch actionName {
-	case InterceptorActionCreate:
-		// ignore for custom date manually set with record.SetRaw()
-		if f.OnCreate && !f.hasBeenManuallyChanged(record) {
-			record.SetRaw(f.Name, types.NowDateTime())
+	case InterceptorActionCreateExecute:
+		// ignore if a date different from the old one was manually set with SetRaw
+		if f.OnCreate && record.GetDateTime(f.Name).Equal(f.getLastKnownValue(record)) {
+			now := types.NowDateTime()
+			record.SetRaw(f.Name, now)
+			record.SetRaw(autodateLastKnownPrefix+f.Name, now) // eagerly set so that it can be renewed on resave after failure
 		}
-	case InterceptorActionUpdate:
-		// ignore for custom date manually set with record.SetRaw()
-		if f.OnUpdate && !f.hasBeenManuallyChanged(record) {
-			record.SetRaw(f.Name, types.NowDateTime())
-		}
-	}
 
-	return actionFunc()
+		if err := actionFunc(); err != nil {
+			return err
+		}
+
+		record.SetRaw(autodateLastKnownPrefix+f.Name, record.GetRaw(f.Name))
+
+		return nil
+	case InterceptorActionUpdateExecute:
+		// ignore if a date different from the old one was manually set with SetRaw
+		if f.OnUpdate && record.GetDateTime(f.Name).Equal(f.getLastKnownValue(record)) {
+			now := types.NowDateTime()
+			record.SetRaw(f.Name, now)
+			record.SetRaw(autodateLastKnownPrefix+f.Name, now) // eagerly set so that it can be renewed on resave after failure
+		}
+
+		if err := actionFunc(); err != nil {
+			return err
+		}
+
+		record.SetRaw(autodateLastKnownPrefix+f.Name, record.GetRaw(f.Name))
+
+		return nil
+	default:
+		return actionFunc()
+	}
 }
 
-func (f *AutodateField) hasBeenManuallyChanged(record *Record) bool {
-	vNew, _ := record.GetRaw(f.Name).(types.DateTime)
-	vOld, _ := record.Original().GetRaw(f.Name).(types.DateTime)
+func (f *AutodateField) getLastKnownValue(record *Record) types.DateTime {
+	v := record.GetDateTime(autodateLastKnownPrefix + f.Name)
+	if !v.IsZero() {
+		return v
+	}
 
-	return vNew.String() != vOld.String()
+	return record.Original().GetDateTime(f.Name)
 }
