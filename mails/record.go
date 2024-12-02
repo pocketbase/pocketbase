@@ -89,8 +89,8 @@ func SendRecordOTP(app core.App, authRecord *core.Record, otpId string, pass str
 
 		otp, err := e.App.FindOTPById(otpId)
 		if err != nil {
-			e.App.Logger().Error(
-				"Failed to find OTP to update its sentTo field",
+			e.App.Logger().Warn(
+				"Unabled to find OTP to update its sentTo field (either it was already deleted or the id is nonexisting)",
 				"error", err,
 				"otpId", otpId,
 			)

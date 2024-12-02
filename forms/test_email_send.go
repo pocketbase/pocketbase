@@ -107,7 +107,7 @@ func (form *TestEmailSend) Submit() error {
 	case TestTemplateEmailChange:
 		return mails.SendRecordChangeEmail(form.app, record, form.Email)
 	case TestTemplateOTP:
-		return mails.SendRecordOTP(form.app, record, "OTP_ID", "123456")
+		return mails.SendRecordOTP(form.app, record, "_PB_TEST_OTP_ID_", "123456")
 	case TestTemplateAuthAlert:
 		return mails.SendRecordAuthAlert(form.app, record)
 	default:
