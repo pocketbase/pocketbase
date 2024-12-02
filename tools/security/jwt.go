@@ -4,8 +4,7 @@ import (
 	"errors"
 	"time"
 
-	// @todo update to v5
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // ParseUnverifiedJWT parses JWT and returns its claims
