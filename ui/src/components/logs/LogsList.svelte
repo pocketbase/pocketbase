@@ -53,7 +53,10 @@
             .getList(page, perPage, {
                 sort: sort,
                 skipTotal: 1,
-                filter: normalizedFilter.filter(Boolean).join("&&"),
+                filter: normalizedFilter
+                    .filter(Boolean)
+                    .map((f) => "(" + f + ")")
+                    .join("&&"),
             })
             .then(async (result) => {
                 if (page <= 1) {

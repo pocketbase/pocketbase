@@ -41,6 +41,7 @@
 
         const normalizedFilter = [presets, CommonHelper.normalizeLogsFilter(filter)]
             .filter(Boolean)
+            .map((f) => "(" + f + ")")
             .join("&&");
 
         return ApiClient.logs

@@ -1,3 +1,8 @@
+## v0.23.5 (WIP)
+
+- Fixed UI logs search not properly accounting for the "Include requests by superusers" toggle when multiple search expressions are used.
+
+
 ## v0.23.4
 
 - Fixed `autodate` fields not refreshing when calling `Save` multiple times on the same `Record` instance ([#6000](https://github.com/pocketbase/pocketbase/issues/6000)).
