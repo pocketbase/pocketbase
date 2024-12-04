@@ -54,7 +54,6 @@ Here is a minimal example:
 
     import (
         "log"
-        "net/http"
 
         "github.com/pocketbase/pocketbase"
         "github.com/pocketbase/pocketbase/core"
@@ -65,7 +64,7 @@ Here is a minimal example:
 
         app.OnServe().BindFunc(func(se *core.ServeEvent) error {
             // registers new "GET /hello" route
-            se.Router.Get("/hello", func(re *core.RequestEvent) error {
+            se.Router.GET("/hello", func(re *core.RequestEvent) error {
                 return re.String(200, "Hello world!")
             })
 
