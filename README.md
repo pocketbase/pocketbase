@@ -65,7 +65,7 @@ Here is a minimal example:
 
         app.OnServe().BindFunc(func(se *core.ServeEvent) error {
             // registers new "GET /hello" route
-            se.Router.Get("/hello", func(re *core.RequestEvent) error {
+            se.Router.GET("/hello", func(re *core.RequestEvent) error {
                 return re.String(200, "Hello world!")
             })
 
