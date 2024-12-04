@@ -20,9 +20,10 @@ func ParsePoint(value any) (Point, error) {
 // Point represents a geographic point on Earth,
 // serialized as a comma-separated pair of float64s.
 type Point struct {
-	lat   float64
-	long  float64
-	unset bool
+	lat  float64
+	long float64
+	// if set is true, the point is not the zero value
+	set bool
 }
 
 // Lat returns the internal latitude value.
@@ -36,21 +37,18 @@ func (p Point) Long() float64 {
 }
 
 // Equal reports whether the two points are equal.
-func (p Point) Equal(u Point) bool {
-	if p.lat == u.lat && p.long == u.long {
-		return true
-	}
-	return false
+func (a Point) Equal(b Point) bool {
+	return a.lat == b.lat && a.long == b.long && a.set == b.set
 }
 
 // String serializes the current point instance into a formatted coordinate pair.
 //
 // The zero value is serialized to an empty string.
 func (p Point) String() string {
-	if p.unset {
+	if !p.set {
 		return ""
 	}
-	return fmt.Sprintf("%f, %f", p.lat, p.long)
+	return fmt.Sprintf("%s, %s", strconv.FormatFloat(p.lat, "f"[0], -1, 64), strconv.FormatFloat(p.long, "f"[0], -1, 64))
 }
 
 // MarshalJSON implements the [json.Marshaler] interface.
@@ -74,7 +72,7 @@ func (p Point) Value() (driver.Value, error) {
 
 // IsEmpty checks whether the current Point instance has been set.
 func (p Point) IsEmpty() bool {
-	return p.unset
+	return !p.set
 }
 
 // Scan implements [sql.Scanner] interface to scan the provided value
@@ -95,11 +93,12 @@ func (p *Point) Scan(value any) error {
 
 func (p *Point) parsePointString(pair string) error {
 	if pair == "" {
-		*p = Point{lat: 0, long: 0, unset: true}
+		*p = Point{}
 		return nil
 	}
 	latStr, longStr, found := strings.Cut(pair, ",")
 	if !found {
+		*p = Point{}
 		return fmt.Errorf("point must have a comma-separated latitude and longitude, got: %s", pair)
 	}
 
@@ -114,6 +113,6 @@ func (p *Point) parsePointString(pair string) error {
 	if err != nil {
 		return err
 	}
-	*p = Point{lat: lat, long: long, unset: false}
+	*p = Point{lat: lat, long: long, set: true}
 	return nil
 }
