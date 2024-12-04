@@ -54,7 +54,6 @@ Here is a minimal example:
 
     import (
         "log"
-        "net/http"
 
         "github.com/pocketbase/pocketbase"
         "github.com/pocketbase/pocketbase/core"
@@ -84,19 +83,13 @@ Here is a minimal example:
 
 4. To build a statically linked executable, you can run `CGO_ENABLED=0 go build` and then start the created executable with `./myapp serve`.
 
-> [!NOTE]
-> PocketBase embeds SQLite, but doesn't require CGO.
->
-> If CGO is enabled (aka. `CGO_ENABLED=1`), it will use [mattn/go-sqlite3](https://pkg.go.dev/github.com/mattn/go-sqlite3) driver, otherwise - [modernc.org/sqlite](https://pkg.go.dev/modernc.org/sqlite).
-> Enable CGO only if you really need to squeeze the read/write query performance at the expense of complicating cross compilation.
-
 _For more details please refer to [Extend with Go](https://pocketbase.io/docs/go-overview/)._
 
 ### Building and running the repo main.go example
 
 To build the minimal standalone executable, like the prebuilt ones in the releases page, you can simply run `go build` inside the `examples/base` directory:
 
-0. [Install Go 1.21+](https://go.dev/doc/install) (_if you haven't already_)
+0. [Install Go 1.23+](https://go.dev/doc/install) (_if you haven't already_)
 1. Clone/download the repo
 2. Navigate to `examples/base`
 3. Run `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`
