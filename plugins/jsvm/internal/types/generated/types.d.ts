@@ -13591,7 +13591,7 @@ namespace apis {
    * Set authMethod to empty string if you want to ignore the MFA checks and the login alerts
    * (can be also adjusted additionally via the OnRecordAuthRequest hook).
    */
-  (e: core.RequestEvent, authRecord: core.Record, authMethod: string, meta: any): void
+  (e: core.RequestEvent, authRecord: core.Record, authMethod: string, meta?: any): void
  }
  interface enrichRecord {
   /**
