@@ -23,6 +23,26 @@ var identifierMacros = map[string]func() (any, error){
 
 		return d.String(), nil
 	},
+	"@yesterday": func() (any, error) {
+		yesterday := timeNow().UTC().AddDate(0, 0, -1)
+
+		d, err := types.ParseDateTime(yesterday)
+		if err != nil {
+			return "", fmt.Errorf("@yesterday: %w", err)
+		}
+
+		return d.String(), nil
+	},
+	"@tomorrow": func() (any, error) {
+		tomorrow := timeNow().UTC().AddDate(0, 0, 1)
+
+		d, err := types.ParseDateTime(tomorrow)
+		if err != nil {
+			return "", fmt.Errorf("@tomorrow: %w", err)
+		}
+
+		return d.String(), nil
+	},
 	"@second": func() (any, error) {
 		return timeNow().UTC().Second(), nil
 	},

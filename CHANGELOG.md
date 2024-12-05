@@ -1,3 +1,8 @@
+## v0.24.0 (WIP)
+
+- Added `@yesterday` and `@tomorrow` date filter macros (@todo docs).
+
+
 ## v0.23.5 (WIP)
 
 - Fixed UI logs search not properly accounting for the "Include requests by superusers" toggle when multiple search expressions are used.

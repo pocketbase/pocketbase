@@ -14,6 +14,8 @@ func TestIdentifierMacros(t *testing.T) {
 
 	testMacros := map[string]any{
 		"@now":        "2023-02-03 04:05:06.000Z",
+		"@yesterday":  "2023-02-02 04:05:06.000Z",
+		"@tomorrow":   "2023-02-04 04:05:06.000Z",
 		"@second":     6,
 		"@minute":     5,
 		"@hour":       4,
