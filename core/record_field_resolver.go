@@ -18,6 +18,7 @@ const (
 	eachModifier   string = "each"
 	issetModifier  string = "isset"
 	lengthModifier string = "length"
+	lowerModifier  string = "lower"
 )
 
 // ensure that `search.FieldResolver` interface is implemented
@@ -195,6 +196,13 @@ func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (*search
 
 	placeholder := "f" + security.PseudorandomString(6)
 
+	if modifier == lowerModifier {
+		return &search.ResolverResult{
+			Identifier: "LOWER({:" + placeholder + "})",
+			Params:     dbx.Params{placeholder: resultVal},
+		}, nil
+	}
+
 	return &search.ResolverResult{
 		Identifier: "{:" + placeholder + "}",
 		Params:     dbx.Params{placeholder: resultVal},
@@ -355,7 +363,8 @@ func splitModifier(combined string) (string, string, error) {
 	switch parts[1] {
 	case issetModifier,
 		eachModifier,
-		lengthModifier:
+		lengthModifier,
+		lowerModifier:
 		return parts[0], parts[1], nil
 	}
 

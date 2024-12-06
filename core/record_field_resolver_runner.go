@@ -15,6 +15,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/spf13/cast"
 )
 
 // maxNestedRels defines the max allowed nested relations depth.
@@ -112,6 +113,11 @@ func (r *runner) run() (*search.ResolverResult, error) {
 			// check for body arrayble fields ":length" modifier
 			if modifier == lengthModifier && len(r.activeProps) == 3 {
 				return r.processRequestInfoLengthModifier(bodyField)
+			}
+
+			// check for body arrayble fields ":lower" modifier
+			if modifier == lowerModifier && len(r.activeProps) == 3 {
+				return r.processRequestInfoLowerModifier(bodyField)
 			}
 		}
 
@@ -260,6 +266,19 @@ func toSlice(value any) []any {
 	}
 
 	return result
+}
+
+func (r *runner) processRequestInfoLowerModifier(bodyField Field) (*search.ResolverResult, error) {
+	rawValue := cast.ToString(r.resolver.requestInfo.Body[bodyField.GetName()])
+
+	placeholder := "infoLower" + bodyField.GetName() + security.PseudorandomString(6)
+
+	result := &search.ResolverResult{
+		Identifier: "LOWER({:" + placeholder + "})",
+		Params:     dbx.Params{placeholder: rawValue},
+	}
+
+	return result, nil
 }
 
 func (r *runner) processRequestInfoLengthModifier(bodyField Field) (*search.ResolverResult, error) {
@@ -660,6 +679,21 @@ func (r *runner) processLastProp(collection *Collection, prop string) (*search.R
 	multvaluer, isMultivaluer := field.(MultiValuer)
 
 	cleanFieldName := inflector.Columnify(field.GetName())
+
+	// field with ":lower" modifier
+	// -------------------------------------------------------
+	if modifier == lowerModifier {
+		result := &search.ResolverResult{
+			Identifier: "LOWER([[" + r.activeTableAlias + "." + cleanFieldName + "]])",
+		}
+
+		if r.withMultiMatch {
+			r.multiMatch.valueIdentifier = "LOWER([[" + r.multiMatchActiveTableAlias + "." + cleanFieldName + "]])"
+			result.MultiMatchSubQuery = r.multiMatch
+		}
+
+		return result, nil
+	}
 
 	// arrayable fields with ":length" modifier
 	// -------------------------------------------------------

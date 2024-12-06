@@ -20,6 +20,10 @@ const documentExtensions = [
     ".odt", ".ods", ".txt",
 ];
 
+const arraybleFields = ["relation", "file", "select"]
+
+const stringFields = ["text", "email", "url", "editor"]
+
 export const logLevels = [
     // {
     //     level: -8,
@@ -1800,10 +1804,13 @@ export default class CommonHelper {
                 }
             }
 
-            // add ":length" and ":each" field modifiers to arrayble fields
-            if (field.maxSelect != 1 && ["select", "file", "relation"].includes(field.type)) {
+            if (field.maxSelect != 1 && arraybleFields.includes(field.type)) {
+                // add ":length" and ":each" field modifiers to arrayble fields
                 result.push(key + ":each");
                 result.push(key + ":length");
+            } else if (stringFields.includes(field.type)) {
+                // add ":lower" field modifier to string fields
+                result.push(key + ":lower");
             }
         }
 
@@ -1886,7 +1893,7 @@ export default class CommonHelper {
             for (const key of keys) {
                 result.push(key);
 
-                // add ":isset" modifier to non-base keys
+                // add ":isset" and ":lower" modifiers to non-base keys
                 const parts = key.split(".");
                 if (
                     parts.length === 3 &&

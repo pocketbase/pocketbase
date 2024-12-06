@@ -274,7 +274,45 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 			"SELECT `users`.* FROM `users` WHERE [[users.email]] > 1",
 		},
 		{
-			"isset key",
+			"static @request fields with :lower modifier",
+			"demo1",
+			"@request.body.a:lower > true ||" +
+				"@request.body.b:lower > true ||" +
+				"@request.body.c:lower > true ||" +
+				"@request.query.a:lower > true ||" +
+				"@request.query.b:lower > true ||" +
+				"@request.query.c:lower > true ||" +
+				"@request.headers.a:lower > true ||" +
+				"@request.headers.c:lower > true",
+			false,
+			"SELECT `demo1`.* FROM `demo1` WHERE (NULL > 1 OR LOWER({:TEST}) > 1 OR NULL > 1 OR LOWER({:TEST}) > 1 OR LOWER({:TEST}) > 1 OR NULL > 1 OR LOWER({:TEST}) > 1 OR NULL > 1)",
+		},
+		{
+			"collection fields with :lower modifier",
+			"demo1",
+			"@request.body.rel_one:lower > true ||" +
+				"@request.body.rel_many:lower > true ||" +
+				"@request.body.rel_many.email:lower > true ||" +
+				"text:lower > true ||" +
+				"bool:lower > true ||" +
+				"url:lower > true ||" +
+				"select_one:lower > true ||" +
+				"select_many:lower > true ||" +
+				"file_one:lower > true ||" +
+				"file_many:lower > true ||" +
+				"number:lower > true ||" +
+				"email:lower > true ||" +
+				"datetime:lower > true ||" +
+				"json:lower > true ||" +
+				"rel_one:lower > true ||" +
+				"rel_many:lower > true ||" +
+				"rel_many.name:lower > true ||" +
+				"created:lower > true",
+			false,
+			"SELECT DISTINCT `demo1`.* FROM `demo1` LEFT JOIN `users` `__data_users_rel_many` ON [[__data_users_rel_many.id]] IN ({:p0}, {:p1}) LEFT JOIN json_each(CASE WHEN json_valid([[demo1.rel_many]]) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END) `demo1_rel_many_je` LEFT JOIN `users` `demo1_rel_many` ON [[demo1_rel_many.id]] = [[demo1_rel_many_je.value]] WHERE (LOWER({:infoLowerrel_oneTEST}) > 1 OR LOWER({:infoLowerrel_manyTEST}) > 1 OR ((LOWER([[__data_users_rel_many.email]]) > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT LOWER([[__data_mm_users_rel_many.email]]) as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN `users` `__data_mm_users_rel_many` ON [[__data_mm_users_rel_many.id]] IN ({:p4}, {:p5}) WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE ((NOT ([[__smTEST.multiMatchValue]] > 1)) OR ([[__smTEST.multiMatchValue]] IS NULL))))) OR LOWER([[demo1.text]]) > 1 OR LOWER([[demo1.bool]]) > 1 OR LOWER([[demo1.url]]) > 1 OR LOWER([[demo1.select_one]]) > 1 OR LOWER([[demo1.select_many]]) > 1 OR LOWER([[demo1.file_one]]) > 1 OR LOWER([[demo1.file_many]]) > 1 OR LOWER([[demo1.number]]) > 1 OR LOWER([[demo1.email]]) > 1 OR LOWER([[demo1.datetime]]) > 1 OR LOWER([[demo1.json]]) > 1 OR LOWER([[demo1.rel_one]]) > 1 OR LOWER([[demo1.rel_many]]) > 1 OR ((LOWER([[demo1_rel_many.name]]) > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT LOWER([[__mm_demo1_rel_many.name]]) as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN json_valid([[__mm_demo1.rel_many]]) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE ((NOT ([[__smTEST.multiMatchValue]] > 1)) OR ([[__smTEST.multiMatchValue]] IS NULL))))) OR LOWER([[demo1.created]]) > 1)",
+		},
+		{
+			"isset modifier",
 			"demo1",
 			"@request.body.a:isset > true ||" +
 				"@request.body.b:isset > true ||" +
