@@ -70,27 +70,43 @@ func (t *TestApp) registerEventCall(name string) {
 
 // NewTestApp creates and initializes a test application instance.
 //
-// It is the caller's responsibility to call `app.Cleanup()`
-// when the app is no longer needed.
+// It is the caller's responsibility to call app.Cleanup() when the app is no longer needed.
 func NewTestApp(optTestDataDir ...string) (*TestApp, error) {
 	var testDataDir string
-	if len(optTestDataDir) == 0 || optTestDataDir[0] == "" {
-		// fallback to the default test data directory
-		_, currentFile, _, _ := runtime.Caller(0)
-		testDataDir = filepath.Join(path.Dir(currentFile), "data")
-	} else {
+	if len(optTestDataDir) > 0 {
 		testDataDir = optTestDataDir[0]
 	}
 
-	tempDir, err := TempDirClone(testDataDir)
+	return NewTestAppWithConfig(core.BaseAppConfig{
+		DataDir:       testDataDir,
+		EncryptionEnv: "pb_test_env",
+	})
+}
+
+// NewTestAppWithConfig creates and initializes a test application instance
+// from the provided config.
+//
+// If config.DataDir is not set it fallbacks to the default internal test data directory.
+//
+// config.DataDir is cloned for each new test application instance.
+//
+// It is the caller's responsibility to call app.Cleanup() when the app is no longer needed.
+func NewTestAppWithConfig(config core.BaseAppConfig) (*TestApp, error) {
+	if config.DataDir == "" {
+		// fallback to the default test data directory
+		_, currentFile, _, _ := runtime.Caller(0)
+		config.DataDir = filepath.Join(path.Dir(currentFile), "data")
+	}
+
+	tempDir, err := TempDirClone(config.DataDir)
 	if err != nil {
 		return nil, err
 	}
 
-	app := core.NewBaseApp(core.BaseAppConfig{
-		DataDir:       tempDir,
-		EncryptionEnv: "pb_test_env",
-	})
+	// replace with the clone
+	config.DataDir = tempDir
+
+	app := core.NewBaseApp(config)
 
 	// load data dir and db connections
 	if err := app.Bootstrap(); err != nil {
