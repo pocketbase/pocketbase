@@ -1002,9 +1002,20 @@ declare namespace $apis {
   let skipSuccessActivityLog:        apis.skipSuccessActivityLog
   let gzip:                          apis.gzip
   let bodyLimit:                     apis.bodyLimit
-  let recordAuthResponse:            apis.recordAuthResponse
   let enrichRecord:                  apis.enrichRecord
   let enrichRecords:                 apis.enrichRecords
+
+  /**
+   * RecordAuthResponse writes standardized json record auth response
+   * into the specified request event.
+   *
+   * The authMethod argument specify the name of the current authentication method (eg. password, oauth2, etc.)
+   * that it is used primarily as an auth identifier during MFA and for login alerts.
+   *
+   * Set authMethod to empty string if you want to ignore the MFA checks and the login alerts
+   * (can be also adjusted additionally via the onRecordAuthRequest hook).
+   */
+  export function recordAuthResponse(e: core.RequestEvent, authRecord: core.Record, authMethod: string, meta?: any): void
 }
 
 // -------------------------------------------------------------------
