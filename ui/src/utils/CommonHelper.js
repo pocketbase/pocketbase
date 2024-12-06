@@ -1893,7 +1893,7 @@ export default class CommonHelper {
             for (const key of keys) {
                 result.push(key);
 
-                // add ":isset" and ":lower" modifiers to non-base keys
+                // add ":isset" modifier to non-base keys
                 const parts = key.split(".");
                 if (
                     parts.length === 3 &&

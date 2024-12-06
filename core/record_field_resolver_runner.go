@@ -680,21 +680,6 @@ func (r *runner) processLastProp(collection *Collection, prop string) (*search.R
 
 	cleanFieldName := inflector.Columnify(field.GetName())
 
-	// field with ":lower" modifier
-	// -------------------------------------------------------
-	if modifier == lowerModifier {
-		result := &search.ResolverResult{
-			Identifier: "LOWER([[" + r.activeTableAlias + "." + cleanFieldName + "]])",
-		}
-
-		if r.withMultiMatch {
-			r.multiMatch.valueIdentifier = "LOWER([[" + r.multiMatchActiveTableAlias + "." + cleanFieldName + "]])"
-			result.MultiMatchSubQuery = r.multiMatch
-		}
-
-		return result, nil
-	}
-
 	// arrayable fields with ":length" modifier
 	// -------------------------------------------------------
 	if modifier == lengthModifier && isMultivaluer {
@@ -747,11 +732,11 @@ func (r *runner) processLastProp(collection *Collection, prop string) (*search.R
 	// default
 	// -------------------------------------------------------
 	result := &search.ResolverResult{
-		Identifier: fmt.Sprintf("[[%s.%s]]", r.activeTableAlias, cleanFieldName),
+		Identifier: "[[" + r.activeTableAlias + "." + cleanFieldName + "]]",
 	}
 
 	if r.withMultiMatch {
-		r.multiMatch.valueIdentifier = fmt.Sprintf("[[%s.%s]]", r.multiMatchActiveTableAlias, cleanFieldName)
+		r.multiMatch.valueIdentifier = "[[" + r.multiMatchActiveTableAlias + "." + cleanFieldName + "]]"
 		result.MultiMatchSubQuery = r.multiMatch
 	}
 
@@ -774,6 +759,14 @@ func (r *runner) processLastProp(collection *Collection, prop string) (*search.R
 		result.Identifier = dbutils.JSONExtract(r.activeTableAlias+"."+cleanFieldName, "")
 		if r.withMultiMatch {
 			r.multiMatch.valueIdentifier = dbutils.JSONExtract(r.multiMatchActiveTableAlias+"."+cleanFieldName, "")
+		}
+	}
+
+	// account for the ":lower" modifier
+	if modifier == lowerModifier {
+		result.Identifier = "LOWER(" + result.Identifier + ")"
+		if r.withMultiMatch {
+			r.multiMatch.valueIdentifier = "LOWER(" + r.multiMatch.valueIdentifier + ")"
 		}
 	}
 

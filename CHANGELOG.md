@@ -2,6 +2,10 @@
 
 - Added `@yesterday` and `@tomorrow` date filter macros (@todo docs).
 
+- Added `:lower` filter modifier (e.g. `title:lower = "lorem"`).
+
+- Added `tests.NewTestAppWithConfig(config)` helper if you need more control over the test configurations like `IsDev`, the number of allowed connections, etc.
+
 
 ## v0.23.5 (WIP)
 
