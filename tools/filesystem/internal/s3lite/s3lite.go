@@ -375,7 +375,6 @@ func (w *writer) open(r io.Reader, closePipeOnError bool) {
 		if err != nil {
 			if closePipeOnError {
 				w.pr.CloseWithError(err)
-				w.pr = nil
 			}
 			w.err = err
 		}
