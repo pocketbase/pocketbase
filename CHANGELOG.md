@@ -1,3 +1,8 @@
+## v0.23.6 (WIP)
+
+- Fixed `$filesystem.fileFromURL` documentation and generated type ([#6058](https://github.com/pocketbase/pocketbase/issues/6058)).
+
+
 ## v0.23.5
 
 - Fixed UI logs search not properly accounting for the "Include requests by superusers" toggle when multiple search expressions are used.

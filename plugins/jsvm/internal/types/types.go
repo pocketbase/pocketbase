@@ -771,20 +771,20 @@ declare namespace $filesystem {
   let fileFromMultipart: filesystem.newFileFromMultipart
 
   /**
-   * fileFromUrl creates a new File from the provided url by
+   * fileFromURL creates a new File from the provided url by
    * downloading the resource and creating a BytesReader.
    *
    * Example:
    *
    * ` + "```" + `js
    * // with default max timeout of 120sec
-   * const file1 = $filesystem.fileFromUrl("https://...")
+   * const file1 = $filesystem.fileFromURL("https://...")
    *
    * // with custom timeout of 15sec
-   * const file2 = $filesystem.fileFromUrl("https://...", 15)
+   * const file2 = $filesystem.fileFromURL("https://...", 15)
    * ` + "```" + `
    */
-  export function fileFromUrl(url: string, secTimeout?: number): filesystem.File
+  export function fileFromURL(url: string, secTimeout?: number): filesystem.File
 }
 
 // -------------------------------------------------------------------
