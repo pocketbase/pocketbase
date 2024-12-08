@@ -2,6 +2,12 @@
 
 - Fixed UI logs search not properly accounting for the "Include requests by superusers" toggle when multiple search expressions are used.
 
+- Fixed `text` field max validation error message ([#6053](https://github.com/pocketbase/pocketbase/issues/6053)).
+
+- Other minor fixes (comment typos, JSVM types update).
+
+- Updated Go deps and the min Go releleaser GitHub action version to 1.23.4.
+
 
 ## v0.23.4
 
