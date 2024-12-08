@@ -1,4 +1,4 @@
-## v0.23.5 (WIP)
+## v0.23.5
 
 - Fixed UI logs search not properly accounting for the "Include requests by superusers" toggle when multiple search expressions are used.
 
