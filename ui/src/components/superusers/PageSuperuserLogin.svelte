@@ -1,4 +1,5 @@
 <script>
+    import { _ } from "svelte-i18n";
     import { link, replace, querystring } from "svelte-spa-router";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
@@ -153,7 +154,7 @@
 <FullPage>
     <div class="content txt-center m-b-base">
         <h4>
-            Superuser login
+            {$_("login.title")}
             {#if totalSteps > 1}
                 ({currentStep}/{totalSteps})
             {/if}

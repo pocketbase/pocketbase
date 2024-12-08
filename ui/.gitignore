@@ -5,3 +5,7 @@
 # exclude local env files
 .env.local
 .env.*.local
+
+/pb_*/
+*.exe
+/*.go
