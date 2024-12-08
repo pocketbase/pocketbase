@@ -17,7 +17,7 @@ func TestEventRequestRealIP(t *testing.T) {
 		"CF-Connecting-IP": {"1.2.3.4", "1.1.1.1"},
 		"Fly-Client-IP":    {"1.2.3.4", "1.1.1.2"},
 		"X-Real-IP":        {"1.2.3.4", "1.1.1.3,1.1.1.4"},
-		"X-Forward-For":    {"1.2.3.4", "invalid,1.1.1.5,1.1.1.6,invalid"},
+		"X-Forwarded-For":  {"1.2.3.4", "invalid,1.1.1.5,1.1.1.6,invalid"},
 	}
 
 	scenarios := []struct {
@@ -44,28 +44,28 @@ func TestEventRequestRealIP(t *testing.T) {
 		{
 			"trusted X-Real-IP (rightmost)",
 			headers,
-			[]string{"header1", "x-real-ip", "x-forward-for"},
+			[]string{"header1", "x-real-ip", "x-forwarded-for"},
 			false,
 			"1.1.1.4",
 		},
 		{
 			"trusted X-Real-IP (leftmost)",
 			headers,
-			[]string{"header1", "x-real-ip", "x-forward-for"},
+			[]string{"header1", "x-real-ip", "x-forwarded-for"},
 			true,
 			"1.1.1.3",
 		},
 		{
-			"trusted X-Forward-For (rightmost)",
+			"trusted X-Forwarded-For (rightmost)",
 			headers,
-			[]string{"header1", "x-forward-for"},
+			[]string{"header1", "x-forwarded-for"},
 			false,
 			"1.1.1.6",
 		},
 		{
-			"trusted X-Forward-For (leftmost)",
+			"trusted X-Forwarded-For (leftmost)",
 			headers,
-			[]string{"header1", "x-forward-for"},
+			[]string{"header1", "x-forwarded-for"},
 			true,
 			"1.1.1.5",
 		},

@@ -8,7 +8,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { scale } from "svelte/transition";
 
-    const commonProxyHeaders = ["X-Forward-For", "Fly-Client-IP", "CF-Connecting-IP"];
+    const commonProxyHeaders = ["X-Forwarded-For", "Fly-Client-IP", "CF-Connecting-IP"];
 
     export let formSettings;
     export let healthData;

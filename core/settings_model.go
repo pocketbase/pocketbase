@@ -530,7 +530,7 @@ type TrustedProxyConfig struct {
 
 	// UseLeftmostIP specifies to use the left-mostish IP from the trusted headers.
 	//
-	// Note that this could be insecure when used with X-Forward-For header
+	// Note that this could be insecure when used with X-Forwarded-For header
 	// because some proxies like AWS ELB allow users to prepend their own header value
 	// before appending the trusted ones.
 	UseLeftmostIP bool `form:"useLeftmostIP" json:"useLeftmostIP"`
