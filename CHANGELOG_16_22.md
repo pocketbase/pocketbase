@@ -1143,7 +1143,7 @@
 
 - Updated the schema fields Admin UI for "tidier" fields visualization.
 
-- Updated the logs "real" user IP to check for `Fly-Client-IP` header and changed the `X-Forward-For` header to use the first non-empty leftmost-ish IP as it the closest to the "real IP".
+- Updated the logs "real" user IP to check for `Fly-Client-IP` header and changed the `X-Forwarded-For` header to use the first non-empty leftmost-ish IP as it the closest to the "real IP".
 
 - Added new `tools/archive` helper subpackage for managing archives (_currently works only with zip_).
 
