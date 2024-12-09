@@ -232,7 +232,7 @@ func (f *TextField) ValidatePlainValue(value string) error {
 	}
 
 	if max > 0 && length > max {
-		return validation.NewError("validation_max_text_constraint", "Must be less than {{.max}} character(s)").
+		return validation.NewError("validation_max_text_constraint", "Must be no more than {{.max}} character(s)").
 			SetParams(map[string]any{"max": max})
 	}
 

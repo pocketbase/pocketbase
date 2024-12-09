@@ -63,7 +63,7 @@
             </div>
 
             <div class="col-sm-6">
-                <Field class="form-field" name="fields.{key}.pattern" let:uniqueId>
+                <Field class="form-field" name="fields.{key}.autogeneratePattern" let:uniqueId>
                     <label for={uniqueId}>
                         <span class="txt">Autogenerate pattern</span>
                         <i
