@@ -190,11 +190,13 @@ func (f *TextField) ValidateValue(ctx context.Context, app App, record *Record) 
 			// this technically shouldn't be necessarily but again to
 			// minimize misuse of the Pattern validator that could cause
 			// side-effects on some platforms check for duplicates in a case-insensitive manner
+			//
+			// (@todo eventually may get replaced in the future with a system unique constraint to avoid races or wrapping the request in a transaction)
 			var exists bool
 			err := app.DB().
 				Select("(1)").
 				From(record.TableName()).
-				Where(dbx.NewExp("LOWER(id) = {:id}", dbx.Params{"id": strings.ToLower(newVal)})).
+				Where(dbx.NewExp("id = {:id} COLLATE NOCASE", dbx.Params{"id": strings.ToLower(newVal)})).
 				Limit(1).
 				Row(&exists)
 			if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
