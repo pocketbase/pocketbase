@@ -794,6 +794,10 @@ func (m *Record) IgnoreEmailVisibility(state bool) *Record {
 //
 // This could be used if you want to save only the record fields that you've changed
 // without overwrite other untouched fields in case of concurrent update.
+//
+// Note that the fields change comparison is based on the current fields against m.Original()
+// (aka. if you have performed save on the same Record instance multiple times you may have to refetch it,
+// so that m.Original() could reflect the last saved change).
 func (m *Record) IgnoreUnchangedFields(state bool) *Record {
 	m.ignoreUnchangedFields = state
 	return m

@@ -205,7 +205,7 @@ func (form *RecordUpsert) checkOldPassword(value any) error {
 	return nil
 }
 
-// @todo consider removing and executing the Create API rule without dummy insert.
+// Deprecated: It was previously used as part of the record create action but it is not needed anymore and will be removed in the future.
 //
 // DrySubmit performs a temp form submit within a transaction and reverts it at the end.
 // For actual record persistence, check the [RecordUpsert.Submit()] method.

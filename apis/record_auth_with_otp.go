@@ -85,12 +85,7 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 			e.App.Logger().Error("Failed to delete used OTP", "error", err, "otpId", e.OTP.Id)
 		}
 
-		err = RecordAuthResponse(e.RequestEvent, e.Record, core.MFAMethodOTP, nil)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return RecordAuthResponse(e.RequestEvent, e.Record, core.MFAMethodOTP, nil)
 	})
 }
 

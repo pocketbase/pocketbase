@@ -628,7 +628,7 @@ func (e *manyVsManyExpr) Build(db *dbx.DB, params dbx.Params) string {
 			Identifier: "[[" + rAlias + ".multiMatchValue]]",
 			// note: the AfterBuild needs to be handled only once and it
 			// doesn't matter whether it is applied on the left or right subquery operand
-			AfterBuild: multiMatchAfterBuildFunc(e.op, lAlias, rAlias),
+			AfterBuild: dbx.Not, // inverse for the not-exist expression
 		},
 	)
 
@@ -650,7 +650,7 @@ func (e *manyVsManyExpr) Build(db *dbx.DB, params dbx.Params) string {
 
 var _ dbx.Expression = (*manyVsOneExpr)(nil)
 
-// manyVsManyExpr constructs a multi-match many<->one db where expression.
+// manyVsOneExpr constructs a multi-match many<->one db where expression.
 //
 // Expects subQuery to return a subquery with a single "multiMatchValue" column.
 //
@@ -676,7 +676,7 @@ func (e *manyVsOneExpr) Build(db *dbx.DB, params dbx.Params) string {
 	r1 := &ResolverResult{
 		NoCoalesce: e.noCoalesce,
 		Identifier: "[[" + alias + ".multiMatchValue]]",
-		AfterBuild: multiMatchAfterBuildFunc(e.op, alias),
+		AfterBuild: dbx.Not, // inverse for the not-exist expression
 	}
 
 	r2 := &ResolverResult{
@@ -703,32 +703,4 @@ func (e *manyVsOneExpr) Build(db *dbx.DB, params dbx.Params) string {
 		alias,
 		whereExpr.Build(db, params),
 	)
-}
-
-func multiMatchAfterBuildFunc(op fexpr.SignOp, multiMatchAliases ...string) func(dbx.Expression) dbx.Expression {
-	return func(expr dbx.Expression) dbx.Expression {
-		expr = dbx.Not(expr) // inverse for the not-exist expression
-
-		if op == fexpr.SignEq {
-			return expr
-		}
-
-		orExprs := make([]dbx.Expression, len(multiMatchAliases)+1)
-		orExprs[0] = expr
-
-		// Add an optional "IS NULL" condition(s) to handle the empty rows result.
-		//
-		// For example, let's assume that some "rel" field is [nonemptyRel1, nonemptyRel2, emptyRel3],
-		// The filter "rel.total > 0" ensures that the above will return true only if all relations
-		// are existing and match the condition.
-		//
-		// The "=" operator is excluded because it will never equal directly with NULL anyway
-		// and also because we want in case "rel.id = ''" is specified to allow
-		// matching the empty relations (they will match due to the applied COALESCE).
-		for i, mAlias := range multiMatchAliases {
-			orExprs[i+1] = dbx.NewExp("[[" + mAlias + ".multiMatchValue]] IS NULL")
-		}
-
-		return dbx.Enclose(dbx.Or(orExprs...))
-	}
 }

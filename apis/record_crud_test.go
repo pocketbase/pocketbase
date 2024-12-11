@@ -1747,11 +1747,16 @@ func TestRecordCrudCreate(t *testing.T) {
 				`"code":"validation_not_unique"`,
 			},
 			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-				// validate events are not fired because the unique check will fail during dry submit
-				// "OnModelValidate":  1,
-				// "OnRecordValidate": 1,
+				"*":                        0,
+				"OnRecordCreateRequest":    1,
+				"OnModelCreate":            1,
+				"OnModelCreateExecute":     1,
+				"OnModelAfterCreateError":  1,
+				"OnModelValidate":          1,
+				"OnRecordCreate":           1,
+				"OnRecordCreateExecute":    1,
+				"OnRecordAfterCreateError": 1,
+				"OnRecordValidate":         1,
 			},
 		},
 		{

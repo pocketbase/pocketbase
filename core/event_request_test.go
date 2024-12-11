@@ -17,7 +17,7 @@ func TestEventRequestRealIP(t *testing.T) {
 		"CF-Connecting-IP": {"1.2.3.4", "1.1.1.1"},
 		"Fly-Client-IP":    {"1.2.3.4", "1.1.1.2"},
 		"X-Real-IP":        {"1.2.3.4", "1.1.1.3,1.1.1.4"},
-		"X-Forwarded-For":    {"1.2.3.4", "invalid,1.1.1.5,1.1.1.6,invalid"},
+		"X-Forwarded-For":  {"1.2.3.4", "invalid,1.1.1.5,1.1.1.6,invalid"},
 	}
 
 	scenarios := []struct {

@@ -479,40 +479,6 @@ func autoResolveRecordsFlags(app core.App, records []*core.Record, requestInfo *
 	return nil
 }
 
-// hasAuthManageAccess checks whether the client is allowed to have
-// [forms.RecordUpsert] auth management permissions
-// (e.g. allowing to change system auth fields without oldPassword).
-func hasAuthManageAccess(app core.App, requestInfo *core.RequestInfo, record *core.Record) bool {
-	if !record.Collection().IsAuth() {
-		return false
-	}
-
-	manageRule := record.Collection().ManageRule
-
-	if manageRule == nil || *manageRule == "" {
-		return false // only for superusers (manageRule can't be empty)
-	}
-
-	if requestInfo == nil || requestInfo.Auth == nil {
-		return false // no auth record
-	}
-
-	ruleFunc := func(q *dbx.SelectQuery) error {
-		resolver := core.NewRecordFieldResolver(app, record.Collection(), requestInfo, true)
-		expr, err := search.FilterData(*manageRule).BuildExpr(resolver)
-		if err != nil {
-			return err
-		}
-		resolver.UpdateQuery(q)
-		q.AndWhere(expr)
-		return nil
-	}
-
-	_, findErr := app.FindRecordById(record.Collection().Id, record.Id, ruleFunc)
-
-	return findErr == nil
-}
-
 var ruleQueryParams = []string{search.FilterQueryParam, search.SortQueryParam}
 var superuserOnlyRuleFields = []string{"@collection.", "@request."}
 

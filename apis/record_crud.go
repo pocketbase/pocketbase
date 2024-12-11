@@ -13,9 +13,11 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/forms"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/router"
 	"github.com/pocketbase/pocketbase/tools/search"
+	"github.com/pocketbase/pocketbase/tools/security"
 )
 
 // bindRecordCrudApi registers the record crud api endpoints and
@@ -241,57 +243,73 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 
 			// temporary save the record and check it against the create and manage rules
 			if !hasSuperuserAuth && e.Collection.CreateRule != nil {
-				// temporary grant manager access level
-				form.GrantManagerAccess()
+				dummyRecord := e.Record.Clone()
 
-				// manually unset the verified field to prevent manage API rule misuse in case the rule relies on it
-				initialVerified := e.Record.Verified()
-				if initialVerified {
-					e.Record.SetVerified(false)
+				// set an id if it doesn't have already
+				// (the value doesn't matter; it is used only to minimize the breaking changes with earlier versions)
+				if dummyRecord.Id == "" {
+					dummyRecord.Id = "__pb_create__temp_id_" + security.PseudorandomString(5)
 				}
 
-				createRuleFunc := func(q *dbx.SelectQuery) error {
-					if *e.Collection.CreateRule == "" {
-						return nil // no create rule to resolve
-					}
+				// unset the verified field to prevent manage API rule misuse in case the rule relies on it
+				dummyRecord.SetVerified(false)
 
-					resolver := core.NewRecordFieldResolver(e.App, e.Collection, requestInfo, true)
-					expr, err := search.FilterData(*e.Collection.CreateRule).BuildExpr(resolver)
+				// export the dummy record data into db params
+				dummyExport, err := dummyRecord.DBExport(e.App)
+				if err != nil {
+					return e.BadRequestError("Failed to create record", fmt.Errorf("dummy DBExport error: %w", err))
+				}
+
+				dummyParams := make(dbx.Params, len(dummyExport))
+				selects := make([]string, 0, len(dummyExport))
+				var param string
+				for k, v := range dummyExport {
+					k = inflector.Columnify(k) // columnify is just as extra measure in case of custom fields
+					param = "__pb_create__" + k
+					dummyParams[param] = v
+					selects = append(selects, "{:"+param+"} AS [["+k+"]]")
+				}
+
+				// shallow clone the current collection
+				dummyRandomPart := "__pb_create__" + security.PseudorandomString(5)
+				dummyCollection := *e.Collection
+				dummyCollection.Id += dummyRandomPart
+				dummyCollection.Name += inflector.Columnify(dummyRandomPart)
+
+				withFrom := fmt.Sprintf("WITH {{%s}} as (SELECT %s)", dummyCollection.Name, strings.Join(selects, ","))
+
+				// check non-empty create rule
+				if *dummyCollection.CreateRule != "" {
+					ruleQuery := e.App.DB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
+
+					resolver := core.NewRecordFieldResolver(e.App, &dummyCollection, requestInfo, true)
+
+					expr, err := search.FilterData(*dummyCollection.CreateRule).BuildExpr(resolver)
 					if err != nil {
-						return err
+						return e.BadRequestError("Failed to create record", fmt.Errorf("create rule build expression failure: %w", err))
 					}
-					resolver.UpdateQuery(q)
-					q.AndWhere(expr)
+					ruleQuery.AndWhere(expr)
 
-					return nil
+					resolver.UpdateQuery(ruleQuery)
+
+					var exists bool
+					err = ruleQuery.Limit(1).Row(&exists)
+					if err != nil || !exists {
+						return e.BadRequestError("Failed to create record", fmt.Errorf("create rule failure: %w", err))
+					}
 				}
 
-				testErr := form.DrySubmit(func(txApp core.App, drySavedRecord *core.Record) error {
-					foundRecord, err := txApp.FindRecordById(drySavedRecord.Collection(), drySavedRecord.Id, createRuleFunc)
-					if err != nil {
-						return fmt.Errorf("DrySubmit create rule failure: %w", err)
-					}
-
-					// reset the form access level in case it satisfies the Manage API rule
-					if !hasAuthManageAccess(txApp, requestInfo, foundRecord) {
-						form.ResetAccess()
-					}
-
-					return nil
-				})
-				if testErr != nil {
-					return e.BadRequestError("Failed to create record.", testErr)
-				}
-
-				// restore initial verified state (it will be further validated on submit)
-				if initialVerified != e.Record.Verified() {
-					e.Record.SetVerified(initialVerified)
+				// check for manage rule access
+				manageRuleQuery := e.App.DB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
+				if !form.HasManageAccess() &&
+					hasAuthManageAccess(e.App, requestInfo, &dummyCollection, manageRuleQuery) {
+					form.GrantManagerAccess()
 				}
 			}
 
 			err := form.Submit()
 			if err != nil {
-				return firstApiError(err, e.BadRequestError("Failed to create record.", err))
+				return firstApiError(err, e.BadRequestError("Failed to create record", err))
 			}
 
 			err = EnrichRecord(e.RequestEvent, e.Record)
@@ -411,7 +429,12 @@ func recordUpdate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 		hookErr := e.App.OnRecordUpdateRequest().Trigger(event, func(e *core.RecordRequestEvent) error {
 			form.SetApp(e.App)
 			form.SetRecord(e.Record)
-			if !form.HasManageAccess() && hasAuthManageAccess(e.App, requestInfo, e.Record) {
+
+			manageRuleQuery := e.App.DB().Select("(1)").From(e.Collection.Name).AndWhere(dbx.HashExp{
+				e.Collection.Name + ".id": e.Record.Id,
+			})
+			if !form.HasManageAccess() &&
+				hasAuthManageAccess(e.App, requestInfo, e.Collection, manageRuleQuery) {
 				form.GrantManagerAccess()
 			}
 
@@ -643,4 +666,40 @@ func extractUploadedFiles(re *core.RequestEvent, collection *core.Collection, pr
 	}
 
 	return result, nil
+}
+
+// hasAuthManageAccess checks whether the client is allowed to have
+// [forms.RecordUpsert] auth management permissions
+// (e.g. allowing to change system auth fields without oldPassword).
+func hasAuthManageAccess(app core.App, requestInfo *core.RequestInfo, collection *core.Collection, query *dbx.SelectQuery) bool {
+	if !collection.IsAuth() {
+		return false
+	}
+
+	manageRule := collection.ManageRule
+
+	if manageRule == nil || *manageRule == "" {
+		return false // only for superusers (manageRule can't be empty)
+	}
+
+	if requestInfo == nil || requestInfo.Auth == nil {
+		return false // no auth record
+	}
+
+	resolver := core.NewRecordFieldResolver(app, collection, requestInfo, true)
+
+	expr, err := search.FilterData(*manageRule).BuildExpr(resolver)
+	if err != nil {
+		app.Logger().Error("Manage rule build expression error", "error", err, "collectionId", collection.Id)
+		return false
+	}
+	query.AndWhere(expr)
+
+	resolver.UpdateQuery(query)
+
+	var exists bool
+
+	err = query.Limit(1).Row(&exists)
+
+	return err == nil && exists
 }
