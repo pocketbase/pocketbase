@@ -28,6 +28,8 @@ const (
 
 const systemHookIdCollection = "__pbCollectionSystemHook__"
 
+const defaultLowercaseRecordIdPattern = "^[a-z0-9]+$"
+
 func (app *BaseApp) registerCollectionHooks() {
 	app.OnModelValidate().Bind(&hook.Handler[*ModelEvent]{
 		Id: systemHookIdCollection,
@@ -890,7 +892,7 @@ func (c *Collection) initIdField() {
 			Required:            true,
 			Min:                 15,
 			Max:                 15,
-			Pattern:             `^[a-z0-9]+$`,
+			Pattern:             defaultLowercaseRecordIdPattern,
 			AutogeneratePattern: `[a-z0-9]{15}`,
 		}
 
@@ -903,7 +905,7 @@ func (c *Collection) initIdField() {
 		field.PrimaryKey = true
 		field.Hidden = false
 		if field.Pattern == "" {
-			field.Pattern = `^[a-z0-9]+$`
+			field.Pattern = defaultLowercaseRecordIdPattern
 		}
 	}
 }
