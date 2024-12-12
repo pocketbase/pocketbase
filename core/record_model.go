@@ -1456,12 +1456,13 @@ func cascadeRecordDelete(app App, mainRecord *Record, refs map[*Collection][]Fie
 	for _, refCollection := range sortedRefKeys {
 		fields, ok := refs[refCollection]
 
-		if refCollection.IsView() || !ok {
+		if !ok || refCollection.IsView() {
 			continue // skip missing or view collections
 		}
 
+		recordTableName := inflector.Columnify(refCollection.Name)
+
 		for _, field := range fields {
-			recordTableName := inflector.Columnify(refCollection.Name)
 			prefixedFieldName := recordTableName + "." + inflector.Columnify(field.GetName())
 
 			query := app.RecordQuery(refCollection)
