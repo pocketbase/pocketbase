@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/pocketbase/dbx"
@@ -94,7 +95,7 @@ func (app *BaseApp) FindCollectionByNameOrId(nameOrId string) (*Collection, erro
 //   - If you are updating a Collection in a transaction and then call this method before commit,
 //     it'll return the cached Collection state and not the one from the uncommitted transaction.
 //   - The cache is automatically updated on collections db change (create/update/delete).
-//     To manually reload the cache you can call [App.ReloadCachedCollections()]
+//     To manually reload the cache you can call [App.ReloadCachedCollections()].
 func (app *BaseApp) FindCachedCollectionByNameOrId(nameOrId string) (*Collection, error) {
 	collections, _ := app.Store().Get(StoreKeyCachedCollections).([]*Collection)
 	if collections == nil {
@@ -109,30 +110,6 @@ func (app *BaseApp) FindCachedCollectionByNameOrId(nameOrId string) (*Collection
 	}
 
 	return nil, sql.ErrNoRows
-}
-
-// IsCollectionNameUnique checks that there is no existing collection
-// with the provided name (case insensitive!).
-//
-// Note: case insensitive check because the name is used also as
-// table name for the records.
-func (app *BaseApp) IsCollectionNameUnique(name string, excludeIds ...string) bool {
-	if name == "" {
-		return false
-	}
-
-	query := app.CollectionQuery().
-		Select("count(*)").
-		AndWhere(dbx.NewExp("LOWER([[name]])={:name}", dbx.Params{"name": strings.ToLower(name)})).
-		Limit(1)
-
-	if uniqueExcludeIds := list.NonzeroUniques(excludeIds); len(uniqueExcludeIds) > 0 {
-		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
-	}
-
-	var exists bool
-
-	return query.Row(&exists) == nil && !exists
 }
 
 // FindCollectionReferences returns information for all relation fields
@@ -166,6 +143,72 @@ func (app *BaseApp) FindCollectionReferences(collection *Collection, excludeIds 
 	}
 
 	return result, nil
+}
+
+// FindCachedCollectionReferences is similar to [App.FindCollectionReferences]
+// but retrieves the Collection from the app cache instead of making a db call.
+//
+// NB! This method is suitable for read-only Collection operations.
+//
+// If you plan making changes to the returned Collection model,
+// use [App.FindCollectionReferences] instead.
+//
+// Caveats:
+//
+//   - The returned Collection should be used only for read-only operations.
+//     Avoid directly modifying the returned cached Collection as it will affect
+//     the global cached value even if you don't persist the changes in the database!
+//   - If you are updating a Collection in a transaction and then call this method before commit,
+//     it'll return the cached Collection state and not the one from the uncommitted transaction.
+//   - The cache is automatically updated on collections db change (create/update/delete).
+//     To manually reload the cache you can call [App.ReloadCachedCollections()].
+func (app *BaseApp) FindCachedCollectionReferences(collection *Collection, excludeIds ...string) (map[*Collection][]Field, error) {
+	collections, _ := app.Store().Get(StoreKeyCachedCollections).([]*Collection)
+	if collections == nil {
+		// cache is not initialized yet (eg. run in a system migration)
+		return app.FindCollectionReferences(collection, excludeIds...)
+	}
+
+	result := map[*Collection][]Field{}
+
+	for _, c := range collections {
+		if slices.Contains(excludeIds, c.Id) {
+			continue
+		}
+
+		for _, rawField := range c.Fields {
+			f, ok := rawField.(*RelationField)
+			if ok && f.CollectionId == collection.Id {
+				result[c] = append(result[c], f)
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// IsCollectionNameUnique checks that there is no existing collection
+// with the provided name (case insensitive!).
+//
+// Note: case insensitive check because the name is used also as
+// table name for the records.
+func (app *BaseApp) IsCollectionNameUnique(name string, excludeIds ...string) bool {
+	if name == "" {
+		return false
+	}
+
+	query := app.CollectionQuery().
+		Select("count(*)").
+		AndWhere(dbx.NewExp("LOWER([[name]])={:name}", dbx.Params{"name": strings.ToLower(name)})).
+		Limit(1)
+
+	if uniqueExcludeIds := list.NonzeroUniques(excludeIds); len(uniqueExcludeIds) > 0 {
+		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
+	}
+
+	var exists bool
+
+	return query.Row(&exists) == nil && !exists
 }
 
 // TruncateCollection deletes all records associated with the provided collection.

@@ -208,34 +208,6 @@ func TestFindCachedCollectionByNameOrId(t *testing.T) {
 	run(false)
 }
 
-func TestIsCollectionNameUnique(t *testing.T) {
-	t.Parallel()
-
-	app, _ := tests.NewTestApp()
-	defer app.Cleanup()
-
-	scenarios := []struct {
-		name      string
-		excludeId string
-		expected  bool
-	}{
-		{"", "", false},
-		{"demo1", "", false},
-		{"Demo1", "", false},
-		{"new", "", true},
-		{"demo1", "wsmn24bux7wo113", true},
-	}
-
-	for i, s := range scenarios {
-		t.Run(fmt.Sprintf("%d_%s", i, s.name), func(t *testing.T) {
-			result := app.IsCollectionNameUnique(s.name, s.excludeId)
-			if result != s.expected {
-				t.Errorf("Expected %v, got %v", s.expected, result)
-			}
-		})
-	}
-}
-
 func TestFindCollectionReferences(t *testing.T) {
 	t.Parallel()
 
@@ -285,6 +257,115 @@ func TestFindCollectionReferences(t *testing.T) {
 				t.Fatalf("[%d] Didn't expect field %v", i, f)
 			}
 		}
+	}
+}
+
+func TestFindCachedCollectionReferences(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.FindCollectionByNameOrId("demo3")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	totalQueries := 0
+	app.DB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		totalQueries++
+	}
+
+	run := func(withCache bool) {
+		var expectedTotalQueries int
+
+		if withCache {
+			err := app.ReloadCachedCollections()
+			if err != nil {
+				t.Fatal(err)
+			}
+		} else {
+			app.Store().Reset(nil)
+			expectedTotalQueries = 1
+		}
+
+		totalQueries = 0
+
+		result, err := app.FindCachedCollectionReferences(
+			collection,
+			collection.Id,
+			// test whether "nonempty" exclude ids condition will be skipped
+			"",
+			"",
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(result) != 1 {
+			t.Fatalf("Expected 1 collection, got %d: %v", len(result), result)
+		}
+
+		expectedFields := []string{
+			"rel_one_no_cascade",
+			"rel_one_no_cascade_required",
+			"rel_one_cascade",
+			"rel_one_unique",
+			"rel_many_no_cascade",
+			"rel_many_no_cascade_required",
+			"rel_many_cascade",
+			"rel_many_unique",
+		}
+
+		for col, fields := range result {
+			if col.Name != "demo4" {
+				t.Fatalf("Expected collection demo4, got %s", col.Name)
+			}
+			if len(fields) != len(expectedFields) {
+				t.Fatalf("Expected fields %v, got %v", expectedFields, fields)
+			}
+			for i, f := range fields {
+				if !slices.Contains(expectedFields, f.GetName()) {
+					t.Fatalf("[%d] Didn't expect field %v", i, f)
+				}
+			}
+		}
+
+		if totalQueries != expectedTotalQueries {
+			t.Fatalf("Expected %d totalQueries, got %d", expectedTotalQueries, totalQueries)
+		}
+	}
+
+	run(true)
+
+	run(false)
+}
+
+func TestIsCollectionNameUnique(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	scenarios := []struct {
+		name      string
+		excludeId string
+		expected  bool
+	}{
+		{"", "", false},
+		{"demo1", "", false},
+		{"Demo1", "", false},
+		{"new", "", true},
+		{"demo1", "wsmn24bux7wo113", true},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%s", i, s.name), func(t *testing.T) {
+			result := app.IsCollectionNameUnique(s.name, s.excludeId)
+			if result != s.expected {
+				t.Errorf("Expected %v, got %v", s.expected, result)
+			}
+		})
 	}
 }
 

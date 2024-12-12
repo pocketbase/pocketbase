@@ -372,13 +372,6 @@ type App interface {
 	//     To manually reload the cache you can call [App.ReloadCachedCollections()]
 	FindCachedCollectionByNameOrId(nameOrId string) (*Collection, error)
 
-	// IsCollectionNameUnique checks that there is no existing collection
-	// with the provided name (case insensitive!).
-	//
-	// Note: case insensitive check because the name is used also as
-	// table name for the records.
-	IsCollectionNameUnique(name string, excludeIds ...string) bool
-
 	// FindCollectionReferences returns information for all relation
 	// fields referencing the provided collection.
 	//
@@ -386,6 +379,32 @@ type App interface {
 	// also included in the result. To exclude it, pass the collection id
 	// as the excludeIds argument.
 	FindCollectionReferences(collection *Collection, excludeIds ...string) (map[*Collection][]Field, error)
+
+	// FindCachedCollectionReferences is similar to [App.FindCollectionReferences]
+	// but retrieves the Collection from the app cache instead of making a db call.
+	//
+	// NB! This method is suitable for read-only Collection operations.
+	//
+	// If you plan making changes to the returned Collection model,
+	// use [App.FindCollectionReferences] instead.
+	//
+	// Caveats:
+	//
+	//   - The returned Collection should be used only for read-only operations.
+	//     Avoid directly modifying the returned cached Collection as it will affect
+	//     the global cached value even if you don't persist the changes in the database!
+	//   - If you are updating a Collection in a transaction and then call this method before commit,
+	//     it'll return the cached Collection state and not the one from the uncommitted transaction.
+	//   - The cache is automatically updated on collections db change (create/update/delete).
+	//     To manually reload the cache you can call [App.ReloadCachedCollections()].
+	FindCachedCollectionReferences(collection *Collection, excludeIds ...string) (map[*Collection][]Field, error)
+
+	// IsCollectionNameUnique checks that there is no existing collection
+	// with the provided name (case insensitive!).
+	//
+	// Note: case insensitive check because the name is used also as
+	// table name for the records.
+	IsCollectionNameUnique(name string, excludeIds ...string) bool
 
 	// TruncateCollection deletes all records associated with the provided collection.
 	//
