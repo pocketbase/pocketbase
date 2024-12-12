@@ -683,7 +683,8 @@
                     placeholder={!isLoading && !CommonHelper.isEmpty(idField?.autogeneratePattern)
                         ? "Leave empty to auto generate..."
                         : ""}
-                    minlength={idField?.min}
+                    minlength={idField?.min || null}
+                    maxlength={idField?.max || null}
                     readonly={!isNew}
                     bind:value={record.id}
                 />
