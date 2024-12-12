@@ -85,19 +85,7 @@
 <RuleField label="View rule" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
 {#if collection?.type !== "view"}
-    <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule}>
-        <svelte:fragment slot="afterLabel" let:isSuperuserOnly>
-            {#if !isSuperuserOnly}
-                <i
-                    class="ri-information-line link-hint"
-                    use:tooltip={{
-                        text: `The Create rule is executed after a "dry save" of the submitted data, giving you access to the main record fields as in every other rule.`,
-                        position: "top",
-                    }}
-                />
-            {/if}
-        </svelte:fragment>
-    </RuleField>
+    <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule} />
 
     <RuleField label="Update rule" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
 
