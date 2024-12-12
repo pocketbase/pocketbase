@@ -369,7 +369,7 @@ type App interface {
 	//   - If you are updating a Collection in a transaction and then call this method before commit,
 	//     it'll return the cached Collection state and not the one from the uncommitted transaction.
 	//   - The cache is automatically updated on collections db change (create/update/delete).
-	//     To manually reload the cache you can call [App.ReloadCachedCollections()]
+	//     To manually reload the cache you can call [App.ReloadCachedCollections]
 	FindCachedCollectionByNameOrId(nameOrId string) (*Collection, error)
 
 	// FindCollectionReferences returns information for all relation
@@ -396,7 +396,7 @@ type App interface {
 	//   - If you are updating a Collection in a transaction and then call this method before commit,
 	//     it'll return the cached Collection state and not the one from the uncommitted transaction.
 	//   - The cache is automatically updated on collections db change (create/update/delete).
-	//     To manually reload the cache you can call [App.ReloadCachedCollections()].
+	//     To manually reload the cache you can call [App.ReloadCachedCollections].
 	FindCachedCollectionReferences(collection *Collection, excludeIds ...string) (map[*Collection][]Field, error)
 
 	// IsCollectionNameUnique checks that there is no existing collection
