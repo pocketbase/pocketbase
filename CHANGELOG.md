@@ -8,6 +8,8 @@
 
 - Added `app.FindCachedCollectionReferences(collection, excludeIds)` to speedup records cascade delete almost twice for projects with many collections.
 
+- Added `mailer.Message.InlineAttachments` field for attaching inline files to an email (_aka. `cid` links_).
+
 - ⚠️ Removed the "dry submit" when executing the collections Create API rule
     (you can find more details why this change was introduced and how it could affect your app in https://github.com/pocketbase/pocketbase/discussions/6073).
     For most users it should be non-breaking change, BUT if you have Create API rules that uses self-references or view counters you may have to adjust them manually.

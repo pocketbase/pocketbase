@@ -114,9 +114,14 @@ func (c *SMTPClient) send(m *Message) error {
 		yak.Cc(addressesToStrings(m.Cc, true)...)
 	}
 
-	// add attachements (if any)
+	// add regular attachements (if any)
 	for name, data := range m.Attachments {
 		yak.Attach(name, data)
+	}
+
+	// add inline attachments (if any)
+	for name, data := range m.InlineAttachments {
+		yak.AttachInline(name, data)
 	}
 
 	// add custom headers (if any)
