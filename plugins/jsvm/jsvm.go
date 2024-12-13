@@ -326,21 +326,7 @@ func (p *plugin) normalizeServeExceptions(e *core.RequestEvent) error {
 		return err // no error or already committed
 	}
 
-	jsException, ok := err.(*goja.Exception)
-	if !ok {
-		return err // no exception
-	}
-
-	switch v := jsException.Value().Export().(type) {
-	case error:
-		err = v
-	case map[string]any: // goja.GoError
-		if vErr, ok := v["value"].(error); ok {
-			err = vErr
-		}
-	}
-
-	return err
+	return normalizeException(err)
 }
 
 // watchHooks initializes a hooks file watcher that will restart the

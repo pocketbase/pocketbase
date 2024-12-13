@@ -81,14 +81,14 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 					res, err := executor.RunProgram(pr)
 					executor.Set("__args", goja.Undefined())
 
-					// check for returned error value
+					// (legacy) check for returned Go error value
 					if res != nil {
 						if resErr, ok := res.Export().(error); ok {
 							return resErr
 						}
 					}
 
-					return err
+					return normalizeException(err)
 				})
 
 				return []reflect.Value{reflect.ValueOf(&err).Elem()}
@@ -197,14 +197,14 @@ func wrapHandlerFunc(executors *vmsPool, handler goja.Value) (func(*core.Request
 				res, err := executor.RunProgram(pr)
 				executor.Set("__args", goja.Undefined())
 
-				// check for returned error
+				// (legacy) check for returned Go error value
 				if res != nil {
 					if v, ok := res.Export().(error); ok {
 						return v
 					}
 				}
 
-				return err
+				return normalizeException(err)
 			})
 		}
 
@@ -215,9 +215,9 @@ func wrapHandlerFunc(executors *vmsPool, handler goja.Value) (func(*core.Request
 }
 
 type gojaHookHandler struct {
-	priority       int
 	id             string
 	serializedFunc string
+	priority       int
 }
 
 func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.Handler[*core.RequestEvent], error) {
@@ -254,14 +254,14 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 						res, err := executor.RunProgram(pr)
 						executor.Set("__args", goja.Undefined())
 
-						// check for returned error
+						// (legacy) check for returned Go error value
 						if res != nil {
 							if v, ok := res.Export().(error); ok {
 								return v
 							}
 						}
 
-						return err
+						return normalizeException(err)
 					})
 				},
 			}
@@ -276,14 +276,14 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 						res, err := executor.RunProgram(pr)
 						executor.Set("__args", goja.Undefined())
 
-						// check for returned error
+						// (legacy) check for returned Go error value
 						if res != nil {
 							if v, ok := res.Export().(error); ok {
 								return v
 							}
 						}
 
-						return err
+						return normalizeException(err)
 					})
 				},
 			}
@@ -1018,4 +1018,30 @@ func newDynamicModel(shape map[string]any) any {
 	}
 
 	return elem.Addr().Interface()
+}
+
+// normalizeException checks if the provided error is a goja.Exception
+// and attempts to return its underlying Go error.
+//
+// note: using just goja.Exception.Unwrap() is insufficient and may falsely result in nil.
+func normalizeException(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	jsException, ok := err.(*goja.Exception)
+	if !ok {
+		return err // no exception
+	}
+
+	switch v := jsException.Value().Export().(type) {
+	case error:
+		err = v
+	case map[string]any: // goja.GoError
+		if vErr, ok := v["value"].(error); ok {
+			err = vErr
+		}
+	}
+
+	return err
 }
