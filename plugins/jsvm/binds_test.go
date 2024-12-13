@@ -2,6 +2,7 @@ package jsvm
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -1453,6 +1454,47 @@ func TestHooksBinds(t *testing.T) {
 	`)
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestHooksExceptionUnwrapping(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	goErr := errors.New("test")
+
+	vmFactory := func() *goja.Runtime {
+		vm := goja.New()
+		baseBinds(vm)
+		vm.Set("$app", app)
+		vm.Set("goErr", goErr)
+		return vm
+	}
+
+	pool := newPool(1, vmFactory)
+
+	vm := vmFactory()
+	hooksBinds(app, vm, pool)
+
+	_, err := vm.RunString(`
+		onModelUpdate((e) => {
+			throw goErr
+		}, "demo1")
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record, err := app.FindFirstRecordByFilter("demo1", "1=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record.Set("text", "update")
+
+	err = app.Save(record)
+	if !errors.Is(err, goErr) {
+		t.Fatalf("Expected goError, got %v", err)
 	}
 }
 
