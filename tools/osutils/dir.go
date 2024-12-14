@@ -8,7 +8,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/list"
 )
 
-// MoveDirContent moves the src dir content, that is not listed in the exclide list,
+// MoveDirContent moves the src dir content, that is not listed in the exclude list,
 // to dest dir (it will be created if missing).
 //
 // The rootExclude argument is used to specify a list of src root entries to exclude.

@@ -142,6 +142,10 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 //
 // If a failure occure during the restore process the dir changes are reverted.
 // If for whatever reason the revert is not possible, it panics.
+//
+// Note that if your pb_data has custom network mounts as subdirectories, then
+// it is possible the restore to fail during the `os.Rename` operations
+// (see https://github.com/pocketbase/pocketbase/issues/4647).
 func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 	if app.Store().Has(StoreKeyActiveBackup) {
 		return errors.New("try again later - another backup/restore operation has already been started")
@@ -162,6 +166,13 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 			return errors.New("restore is not supported on Windows")
 		}
 
+		// make sure that the special temp directory exists
+		// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
+		localTempDir := filepath.Join(e.App.DataDir(), LocalTempDirName)
+		if err := os.MkdirAll(localTempDir, os.ModePerm); err != nil {
+			return fmt.Errorf("failed to create a temp dir: %w", err)
+		}
+
 		fsys, err := e.App.NewBackupsFilesystem()
 		if err != nil {
 			return err
@@ -170,57 +181,71 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 
 		fsys.SetContext(e.Context)
 
-		// fetch the backup file in a temp location
-		br, err := fsys.GetFile(name)
-		if err != nil {
-			return err
-		}
-		defer br.Close()
-
-		// make sure that the special temp directory exists
-		// note: it needs to be inside the current pb_data to avoid "cross-device link" errors
-		localTempDir := filepath.Join(e.App.DataDir(), LocalTempDirName)
-		if err := os.MkdirAll(localTempDir, os.ModePerm); err != nil {
-			return fmt.Errorf("failed to create a temp dir: %w", err)
+		if ok, _ := fsys.Exists(name); !ok {
+			return fmt.Errorf("missing or invalid backup file %q to restore", name)
 		}
 
-		// create a temp zip file from the blob.Reader and try to extract it
-		tempZip, err := os.CreateTemp(localTempDir, "pb_restore_zip")
-		if err != nil {
-			return err
-		}
-		defer os.Remove(tempZip.Name())
-
-		if _, err := io.Copy(tempZip, br); err != nil {
-			return err
-		}
-
-		extractedDataDir := filepath.Join(localTempDir, "pb_restore_"+security.PseudorandomString(4))
+		extractedDataDir := filepath.Join(localTempDir, "pb_restore_"+security.PseudorandomString(8))
 		defer os.RemoveAll(extractedDataDir)
-		if err := archive.Extract(tempZip.Name(), extractedDataDir); err != nil {
-			return err
+
+		// extract the zip
+		if e.App.Settings().Backups.S3.Enabled {
+			br, err := fsys.GetFile(name)
+			if err != nil {
+				return err
+			}
+			defer br.Close()
+
+			// create a temp zip file from the blob.Reader and try to extract it
+			tempZip, err := os.CreateTemp(localTempDir, "pb_restore_zip")
+			if err != nil {
+				return err
+			}
+			defer os.Remove(tempZip.Name())
+			defer tempZip.Close() // note: this technically shouldn't be necessary but it is here to workaround platforms discrepancies
+
+			_, err = io.Copy(tempZip, br)
+			if err != nil {
+				return err
+			}
+
+			err = archive.Extract(tempZip.Name(), extractedDataDir)
+			if err != nil {
+				return err
+			}
+
+			// remove the temp zip file since we no longer need it
+			// (this is in case the app restarts and the defer calls are not called)
+			_ = tempZip.Close()
+			err = os.Remove(tempZip.Name())
+			if err != nil {
+				e.App.Logger().Debug(
+					"[RestoreBackup] Failed to remove the temp zip backup file",
+					slog.String("file", tempZip.Name()),
+					slog.String("error", err.Error()),
+				)
+			}
+		} else {
+			// manually construct the local path to avoid creating a copy of the zip file
+			// since the blob reader currently doesn't implement ReaderAt
+			zipPath := filepath.Join(app.DataDir(), LocalBackupsDirName, filepath.Base(name))
+
+			err = archive.Extract(zipPath, extractedDataDir)
+			if err != nil {
+				return err
+			}
 		}
 
-		// ensure that a database file exists
+		// ensure that at least a database file exists
 		extractedDB := filepath.Join(extractedDataDir, "data.db")
 		if _, err := os.Stat(extractedDB); err != nil {
 			return fmt.Errorf("data.db file is missing or invalid: %w", err)
 		}
 
-		// remove the extracted zip file since we no longer need it
-		// (this is in case the app restarts and the defer calls are not called)
-		if err := os.Remove(tempZip.Name()); err != nil {
-			e.App.Logger().Debug(
-				"[RestoreBackup] Failed to remove the temp zip backup file",
-				slog.String("file", tempZip.Name()),
-				slog.String("error", err.Error()),
-			)
-		}
-
 		// move the current pb_data content to a special temp location
 		// that will hold the old data between dirs replace
 		// (the temp dir will be automatically removed on the next app start)
-		oldTempDataDir := filepath.Join(localTempDir, "old_pb_data_"+security.PseudorandomString(4))
+		oldTempDataDir := filepath.Join(localTempDir, "old_pb_data_"+security.PseudorandomString(8))
 		if err := osutils.MoveDirContent(e.App.DataDir(), oldTempDataDir, e.Exclude...); err != nil {
 			return fmt.Errorf("failed to move the current pb_data content to a temp location: %w", err)
 		}
