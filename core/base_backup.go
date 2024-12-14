@@ -219,7 +219,7 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 			_ = tempZip.Close()
 			err = os.Remove(tempZip.Name())
 			if err != nil {
-				e.App.Logger().Debug(
+				e.App.Logger().Warn(
 					"[RestoreBackup] Failed to remove the temp zip backup file",
 					slog.String("file", tempZip.Name()),
 					slog.String("error", err.Error()),
