@@ -1,0 +1,625 @@
+ :root {
+        --baseFontFamily: "Source Sans Pro", sans-serif, emoji;
+        --monospaceFontFamily: "Ubuntu Mono", monospace, emoji;
+        --iconFontFamily: "remixicon";
+        --txtPrimaryColor: #e2e8f0;
+        --txtHintColor: rgb(148 163 184);
+        --txtDisabledColor: rgb(148 163 184 / 60%);
+        --primaryColor: #2dd4bf;
+        --baseColor: #1e293b;
+        --bodyColor: #1e293b;
+        --baseAlt1Color: #334155;
+        --baseAlt2Color: #334155; /* #475569; */
+        --baseAlt3Color: #334155;
+        --baseAlt4Color: #475569;
+        --infoColor: #38bdf8;
+        --infoAltColor: #075985;
+        --successColor: #34d399;
+        --successAltColor: #065f46;
+        --dangerColor: #fca5a5;
+        --dangerAltColor: #991b1b;
+        --warningColor: #ac8d0f;
+        --warningAltColor: #854d0e;
+        --overlayColor: rgb(0 0 0 / 50%);
+        --tooltipColor: #475569;
+        --shadowColor: rgba(15, 23, 42, 0.5);
+
+        --baseRadius: 0.5rem;
+        --lgRadius: 1rem;
+        --btnRadius: 0.375rem;
+        accent-color: var(--primaryColor);
+
+        --dangerAlt2Color: #3f3443;
+    }
+
+    #app {
+        caret-color: var(--baseColor) !important;
+    }
+
+    button .txt-danger:hover {
+        background-color: var(--dangerAlt2Color) !important;
+    }
+
+    .input-wrapper .unlock-overlay {
+        background: rgba(51, 65, 85, 0.75) !important;
+    }
+    
+    .chart-canvas {
+        filter: invert(.75) hue-rotate(180deg);
+    }
+
+    .lock-toggle {
+        background-color: var(--baseAlt2Color) !important;
+    }
+
+
+    /* Labels and Alerts */
+
+    .alert.alert-danger,
+    .label.label-danger {
+        color: var(--dangerColor) !important;
+        background: var(--dangerAlt2Color) !important;
+    }
+
+    .alert.alert-info,
+    .label.label-info {
+        color: var(--infoColor) !important;
+        background: #2e455f !important;
+    }
+
+    .alert.alert-success,
+    .label.label-success {
+        color: var(--successColor) !important;
+        background: #2f4b4d !important;
+    }
+
+    .alert.alert-warning,
+    .label.label-warning {
+        color: var(--warningColor) !important;
+        background: #3b3d33 !important;
+    }
+
+    .label {
+        color: #9ca3af !important;
+        background: #323a4c !important;
+    }
+
+    /* Labels inside Alerts */
+
+    .alert.alert-danger .label.label-primary {
+        color: var(--dangerAlt2Color) !important;
+        background: var(--dangerColor) !important;
+    }
+
+    .alert.alert-success .label.label-primary {
+        color: #2f4b4d !important;
+        background: var(--successColor) !important;
+    }
+
+    .alert.alert-info .label.label-primary {
+        color: #2e455f !important;
+        background: var(--infoColor) !important;
+    }
+
+    .alert.alert-warning .label.label-primary {
+        color: #3b3d33 !important;
+        background: var(--warningColor) !important;
+    }
+
+
+
+    /*     :root {
+        --baseFontFamily: "Source Sans Pro", sans-serif, emoji;
+        --monospaceFontFamily: "Ubuntu Mono", monospace, emoji;
+        --iconFontFamily: "remixicon";
+        --txtPrimaryColor: #e4e4e7;
+        --txtHintColor: rgb(161 161 170);
+        --txtDisabledColor: rgb(161 161 170 / 60%);
+        --primaryColor: #00dc82;
+        --baseColor: rgb(12 12 13);
+        --bodyColor: rgb(12 12 13);
+        --baseAlt1Color: #1c1c1f;
+        --baseAlt2Color: #27272a;
+        --baseAlt3Color: #27272a;
+        --baseAlt4Color: #3e3e46;
+        --infoColor: #026baa;
+        --infoAltColor: #06293e;
+        --successColor: #00dc82;
+        --successAltColor: #044d2f;
+        --dangerColor: #d50156;
+        --dangerAltColor: #680b32;
+        --warningColor: #ac8d0f;
+        --warningAltColor: #463908;
+        --overlayColor: rgb(22 22 25 / 60%);
+        --tooltipColor: #1c1c1f;
+        --shadowColor: rgba(0, 0, 0, .8);
+
+        --baseRadius: 0.5rem;
+        --lgRadius: 1rem;
+        --btnRadius: 0.375rem;
+        accent-color: var(--primaryColor);
+    } */
+
+    hr {
+        background: var(--baseAlt2Color);
+    }
+
+    .page-header-wrapper {
+        /*      background-color: rgb(22 22 25); */
+        background-color: #1e293b;
+    }
+
+    .panel {
+        box-shadow: none;
+    }
+
+    .main-menu .menu-item.active,
+    .main-menu .menu-item.current-route {
+        color: var(--primaryColor);
+    }
+
+    .btn {
+        color: var(--baseColor);
+    }
+
+    .btn.btn-outline {
+        background-color: transparent;
+    }
+
+    .label.label-primary {
+        color: var(--baseColor) !important;
+        background: var(--txtPrimaryColor) !important;
+    }
+
+    .form-field.disabled label,
+    .form-field.disabled .tinymce-wrapper,
+    .form-field.disabled .code-editor,
+    .form-field.disabled .select .selected-container,
+    .select .form-field.disabled .selected-container,
+    .form-field.disabled input,
+    .form-field.disabled select,
+    .form-field.disabled textarea {
+        box-shadow: inset 0 0 0 var(--btnHeight) var(--overlayColor);
+    }
+
+    .form-field.form-field-toggle input[type="radio"]:checked ~ label:before,
+    .form-field.form-field-toggle
+        input[type="checkbox"]:checked
+        ~ label:before {
+        background: var(--primaryColor);
+    }
+
+    .thumb {
+        --tile-color: var(--baseAlt1Color);
+        --tile-size: 12px;
+
+        background-color: var(--baseAlt2Color);
+        background-image: linear-gradient(
+                45deg,
+                var(--tile-color) 25%,
+                transparent 25%,
+                transparent 75%,
+                var(--tile-color) 75%,
+                var(--tile-color)
+            ),
+            linear-gradient(
+                45deg,
+                var(--tile-color) 25%,
+                transparent 25%,
+                transparent 75%,
+                var(--tile-color) 75%,
+                var(--tile-color)
+            );
+        background-size: var(--tile-size) var(--tile-size);
+        background-position: 0 0,
+            calc(var(--tile-size) / 2) calc(var(--tile-size) / 2);
+    }
+
+    .overlay-panel .panel-header .overlay-close {
+        color: var(--bodyColor);
+        opacity: 1;
+    }
+
+    .sidebar-list-item.active {
+        box-shadow: inset 0 0 0 1px var(--baseAlt2Color);
+    }
+
+    .docs-sidebar .sidebar-item.active,
+    .page-sidebar .sidebar-list .list-item.active {
+        box-shadow: inset 0 0 0 1px var(--baseAlt2Color);
+        background-color: var(--baseAlt1Color);
+    }
+
+    .docs-sidebar .sidebar-item:focus-visible,
+    .docs-sidebar .sidebar-item:hover {
+        background-color: var(--baseAlt1Color);
+    }
+
+    .docs-sidebar .sidebar-item:active {
+        background-color: var(--baseAlt2Color);
+    }
+
+    .provider-card {
+        border-color: var(--baseAlt2Color);
+    }
+
+    .alert .icon {
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .alert code,
+    .alert hr {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* .tabs .tabs-header {
+        margin-bottom: -1px !important;
+        border-bottom: 2px solid var(--baseColor);
+    } */
+
+    /* .tabs .tabs-header .tab-item.active {
+        border: 1px solid var(--baseAlt2Color);
+        border-bottom: none;
+        z-index: 1;
+    } */
+
+    /* .tabs .code-wrapper, .tabs .code-wrapper > code {
+        border-top-left-radius: 0;
+    } */
+
+    .schema-field-options {
+        background-color: var(--baseColor);
+    }
+
+    .field-types-btn {
+        color: var(--primaryColor) !important;
+    }
+
+    /* code block */
+    .app-tooltip {
+        padding: 0.4em 0.8em;
+    }
+
+    .code-editor .cm-editor .cm-tooltip-autocomplete {
+        background-color: var(--tooltipColor);
+        border: 1px solid var(--baseAlt2Color);
+        border-radius: var(--baseRadius);
+    }
+
+    .code-editor .cm-editor .cm-tooltip-autocomplete ul li {
+        padding: 0.4em 0.8em;
+        border-radius: var(--btnRadius) !important;
+    }
+
+    .code-editor .cm-editor .cm-tooltip-autocomplete ul li[aria-selected] {
+        background: var(--primaryColor);
+        color: var(--bodyColor);
+    }
+
+    .code-wrapper {
+        border: 1px solid var(--baseAlt2Color);
+        border-radius: var(--baseRadius);
+    }
+
+    /* code highlighting */
+    .code-wrapper > code,
+    .ͼb {
+        /*     color: #E5C07B !important; */
+        color: #facc15 !important;
+    }
+
+    .prism-light .token.atrule .token.rule,
+    .prism-light .token.combinator,
+    .prism-light .token.keyword,
+    .prism-light .token.operator,
+    .prism-light .token.pseudo-class,
+    .prism-light .token.pseudo-element,
+    .prism-light .token.selector,
+    .prism-light .token.unit {
+        color: #5fb6ff;
+    }
+
+    .prism-light .token.attr-value,
+    .prism-light .token.color,
+    .prism-light .token.inserted,
+    .prism-light .token.selector .token.value,
+    .prism-light .token.string,
+    .prism-light .token.string .token.url-link,
+    .ͼe,
+    .ͼd {
+        /*     color: #98C379; */
+        color: #34d399;
+    }
+
+    .prism-light .token.punctuation,
+    .code-editor .cm-editor {
+        /*     color: #ABB2BF; */
+        color: #cbd5e1;
+    }
+
+    .prism-light .token.atrule .token.rule,
+    .prism-light .token.combinator,
+    .prism-light .token.keyword,
+    .prism-light .token.operator,
+    .prism-light .token.pseudo-class,
+    .prism-light .token.pseudo-element,
+    .prism-light .token.selector,
+    .prism-light .token.unit {
+        /*     color: #C678DD; */
+        color: #e879f9;
+    }
+
+    .prism-light .token.operator {
+        /*     color: #56B6C2; */
+        color: #06b6d4;
+    }
+
+    .prism-light .token.variable {
+        color: #e5c07b;
+    }
+
+    .prism-light .token.class-name,
+    .prism-light .token.key,
+    .prism-light .token.parameter,
+    .prism-light .token.property,
+    .prism-light .token.property-access {
+        /*     color: #E06C75; */
+        color: #f87171;
+    }
+
+    .prism-light .token.cdata,
+    .prism-light .token.comment,
+    .prism-light .token.doctype,
+    .prism-light .token.prolog {
+        /*     color: #7F848E; */
+        color: #64748b;
+    }
+
+    .prism-light .token.function,
+    .prism-light .token.selector .token.class,
+    .prism-light .token.selector .token.id {
+        /*     color: #61AFEF; */
+        color: #60a5fa;
+    }
+
+    .prism-light .token.attr-name,
+    .prism-light .token.boolean,
+    .prism-light .token.boolean.important,
+    .prism-light .token.constant,
+    .prism-light .token.number,
+    .prism-light .token.selector .token.attribute, .ͼc, .ͼd {
+        /*     color: #D19A66; */
+        color: #f59e0b;
+    }
+
+    /* wysiwyg editor */
+    .form-field label ~ .tinymce-wrapper:before {
+        background-color: var(--baseColor);
+    }
+
+    .tox {
+        color: var(--txtHintColor) !important;
+    }
+
+    .tox .tox-dialog {
+        background-color: var(--baseColor);
+        border-color: var(--baseAlt2Color);
+        box-shadow: 0 16px 16px -10px rgb(0 0 0 / 50%),
+            0 0 40px 1px rgb(0 0 0 / 40%);
+    }
+
+    .tox .tox-dialog-wrap__backdrop {
+        background: var(--overlayColor);
+    }
+
+    .tox .tox-dialog__header,
+    .tox .tox-dialog__footer {
+        background-color: var(--baseColor);
+        color: inherit;
+        border-color: var(--baseAlt2Color);
+    }
+
+    .tox .tox-dialog__body {
+        color: inherit;
+    }
+
+    .tox .tox-button {
+        background-color: var(--primaryColor);
+        color: var(--baseColor);
+    }
+
+    .tox .tox-button:hover:not(:disabled) {
+        background-color: var(--successAltColor);
+        color: var(--txtPrimaryColor);
+    }
+
+    .tox .tox-button--secondary {
+        background-color: transparent;
+        color: var(--txtPrimaryColor);
+        border: none;
+    }
+
+    .tox .tox-button--secondary:hover:not(:disabled) {
+        background-color: var(--baseAlt1Color);
+        color: var(--txtPrimaryColor);
+    }
+
+    .tox .tox-button--naked {
+        background-color: transparent;
+        color: inherit;
+        border-color: transparent;
+    }
+
+    .tox .tox-button--naked:hover:not(:disabled) {
+        background-color: var(--baseAlt1Color);
+        color: inherit;
+        border-color: transparent;
+    }
+
+    .tox .tox-button--naked.tox-button--icon:hover:not(:disabled) {
+        color: inherit;
+    }
+
+    .tox .tox-label,
+    .tox .tox-toolbar-label {
+        color: var(--txtDisabledColor);
+    }
+
+    .tox .tox-selectfield select {
+        background-color: transparent;
+        color: inherit;
+        border-color: var(--baseAlt2Color);
+        color-scheme: dark !important;
+    }
+
+    .tox .tox-selectfield select:focus {
+        background-color: transparent;
+        color: inherit;
+        border-color: var(--txtDisabledColor);
+    }
+
+    .tox .tox-selectfield select option {
+        color: inherit;
+        background-color: var(--tooltipColor);
+    }
+
+    .tox .tox-listboxfield .tox-listbox--select,
+    .tox .tox-textarea,
+    .tox .tox-textfield,
+    .tox .tox-toolbar-textfield {
+        background-color: transparent;
+        color: inherit;
+        border-color: var(--baseAlt2Color);
+    }
+
+    .tox .tox-listboxfield .tox-listbox--select:focus,
+    .tox .tox-textarea:focus,
+    .tox .tox-textfield:focus {
+        background-color: transparent;
+        border-color: var(--txtDisabledColor);
+    }
+
+    .tox .tox-toolbar-overlord {
+        background-color: var(--baseColor);
+    }
+
+    .tox .tox-toolbar,
+    .tox .tox-toolbar__overflow,
+    .tox .tox-toolbar__primary {
+        background-color: var(--baseColor);
+    }
+
+    .tox .tox-statusbar {
+        background-color: var(--baseColor);
+    }
+
+    .tox:not([dir="rtl"]) .tox-toolbar__group:not(:last-of-type) {
+        border-color: var(--baseAlt2Color);
+    }
+
+    .tox .tox-statusbar {
+        border-color: var(--baseAlt2Color);
+        color: inherit;
+    }
+
+    .tox .tox-statusbar a,
+    .tox .tox-statusbar__path-item,
+    .tox .tox-statusbar__wordcount {
+        color: inherit;
+    }
+
+    .tox .tox-split-button:focus {
+        background-color: transparent;
+        color: inherit;
+    }
+
+    .tox .tox-tbtn {
+        color: inherit;
+    }
+
+    .tox .tox-tbtn:hover {
+        background-color: var(--baseAlt2Color);
+        color: inherit;
+    }
+
+    .tox .tox-tbtn--enabled,
+    .tox .tox-tbtn--enabled:hover,
+    .tox .tox-tbtn:focus,
+    .tox .tox-tbtn:focus:not(.tox-tbtn--disabled),
+    .tox .tox-tbtn:active {
+        background-color: var(--baseAlt4Color);
+        color: inherit;
+    }
+
+    .tox :not(svg):not(rect) {
+        fill: currentColor;
+    }
+
+    .tox .tox-split-button:hover {
+        box-shadow: 0 0 0 1px var(--baseAlt2Color) inset;
+    }
+
+    .tox .tox-swatch {
+        color: transparent;
+    }
+
+    .tox .tox-swatch:focus,
+    .tox .tox-swatch:hover {
+        box-shadow: 0 0 0 1px var(--txtHintColor) inset;
+    }
+
+    .tox .tox-swatches__picker-btn {
+        background-color: var(--baseAlt4Color);
+        border-radius: 100vmax;
+    }
+
+    .tox .tox-menu {
+        background-color: var(--baseColor);
+        border-color: var(--baseAlt2Color);
+    }
+
+    .tox .tox-collection__item {
+        color: inherit;
+    }
+
+    .tox .tox-collection__item s {
+        text-decoration-color: inherit !important;
+    }
+
+    .tox .tox-collection__item code {
+        background-color: var(--baseAlt4Color) !important;
+    }
+
+    .tox
+        .tox-collection--list
+        .tox-collection__item--active:not(
+            .tox-collection__item--state-disabled
+        ) {
+        color: inherit;
+    }
+
+    .tox .tox-collection--list .tox-collection__item--active {
+        background-color: var(--baseAlt2Color);
+    }
+
+    .tox .tox-collection--list .tox-collection__item--enabled {
+        background-color: var(--baseAlt4Color);
+        color: inherit;
+    }
+
+    .tox .tox-collection--list .tox-collection__group {
+        border-color: var(--baseAlt2Color);
+    }
+
+    .tox .tox-insert-table-picker > div {
+        border-color: var(--baseAlt2Color);
+    }
+
+    .tox .tox-insert-table-picker .tox-insert-table-picker__selected {
+        background-color: var(--baseAlt2Color);
+        border-color: var(--txtDisabledColor);
+    }
+
+    .tox .tox-insert-table-picker__label {
+        color: inherit;
+    }

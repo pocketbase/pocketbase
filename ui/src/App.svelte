@@ -32,7 +32,7 @@
         if(savedTheme){
             const newThemeLink = document.createElement('link');
             newThemeLink.rel = 'stylesheet';
-            newThemeLink.href = './src/theme/' + savedTheme.toLowerCase() + '.css'; // Default theme
+            newThemeLink.href = import.meta.env.BASE_URL + 'themecss/' + savedTheme.toLowerCase() + '.css'; // Default theme
             document.head.appendChild(newThemeLink);
         }
     }

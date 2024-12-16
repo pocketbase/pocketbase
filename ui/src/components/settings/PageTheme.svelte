@@ -33,7 +33,8 @@
 
         // Set the href based on the selected theme
         if (name) {
-            newThemeLink.href = './src/theme/' + name.toLowerCase() + '.css';
+            newThemeLink.href = import.meta.env.BASE_URL + 'themecss/' + name.toLowerCase() + '.css';
+            alert(newThemeLink.href)
             currentTheme = name;
         }
 
@@ -76,7 +77,7 @@
     <div class='separator'/>
     <div class="theme_switch_container">
             <button on:click={() => toggle('default')} class={`apperacance_btn ${currentTheme == 'default' && "active_btn"}`}>
-        <img src='./src/theme/highlight/default.png'/>
+        <img src="{import.meta.env.BASE_URL}images/highlight/default.png"/>
          <div class='apperanace_innner_div'>
             <p>Default</p>
                        <i class={`${currentTheme == 'default' ? "ri-checkbox-circle-line" : 'ri-checkbox-blank-circle-line'}`}></i>
@@ -84,7 +85,7 @@
         </div>
     </button>
     <button on:click={() => toggle('oz')} class={`apperacance_btn ${currentTheme == 'oz' && "active_btn"}`}>
-        <img src='./src/theme/highlight/oz.png'/>
+        <img src="{import.meta.env.BASE_URL}images/highlight/oz.png"/>
         <div class='apperanace_innner_div'>
             <p>OZ</p>
             <i class={`${currentTheme == 'oz' ? "ri-checkbox-circle-line" : 'ri-checkbox-blank-circle-line'}`}></i>
@@ -92,7 +93,7 @@
         </div>
     </button>
     <button on:click={() => toggle('hardoz')} class={`apperacance_btn ${currentTheme == 'hardoz' && "active_btn"}`}>
-       <img src='./src/theme/highlight/hardoz.png'/>
+       <img src="{import.meta.env.BASE_URL}images/highlight/hardoz.png"/>
         <div class='apperanace_innner_div'>
             <p>HardOZ</p>
                         <i class={`${currentTheme == 'hardoz' ? "ri-checkbox-circle-line" : 'ri-checkbox-blank-circle-line'}`}></i>
@@ -100,7 +101,7 @@
         </div>
     </button>
     <button on:click={() => toggle('blueshi')} class={`apperacance_btn ${currentTheme == 'blueshi' && "active_btn"}`}>
-         <img src='./src/theme/highlight/blueshi.png'/>
+         <img src="{import.meta.env.BASE_URL}images/highlight/blueshi.png"/>
           <div class='apperanace_innner_div'>
             <p>Blueshi</p>
                        <i class={`${currentTheme == 'blueshi' ? "ri-checkbox-circle-line" : 'ri-checkbox-blank-circle-line'}`}></i>
@@ -128,6 +129,7 @@
         border-radius: 7px;
         cursor: pointer;
         width: 26em;
+        height: 9em;
         border: var(--baseAlt4Color) solid 2px;
         position: relative;
         color: var(--txtPrimaryColor);
