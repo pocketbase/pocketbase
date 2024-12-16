@@ -1,8 +1,10 @@
 package mails
 
 import (
+	"html"
 	"html/template"
 	"net/mail"
+	"slices"
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/mails/templates"
@@ -232,6 +234,13 @@ func SendRecordChangeEmail(app core.App, authRecord *core.Record, newEmail strin
 	})
 }
 
+var nonescapeTypes = []string{
+	core.FieldTypeAutodate,
+	core.FieldTypeDate,
+	core.FieldTypeBool,
+	core.FieldTypeNumber,
+}
+
 func resolveEmailTemplate(
 	app core.App,
 	authRecord *core.Record,
@@ -258,7 +267,15 @@ func resolveEmailTemplate(
 
 		fieldPlacehodler := "{RECORD:" + field.GetName() + "}"
 		if _, ok := placeholders[fieldPlacehodler]; !ok {
-			placeholders[fieldPlacehodler] = authRecord.Get(field.GetName())
+			val := authRecord.GetString(field.GetName())
+
+			// note: the escaping is not strictly necessary but for just in case
+			// the user decide to store and render the email as plain html
+			if !slices.Contains(nonescapeTypes, field.Type()) {
+				val = html.EscapeString(val)
+			}
+
+			placeholders[fieldPlacehodler] = val
 		}
 	}
 

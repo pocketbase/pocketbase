@@ -75,16 +75,16 @@ func (app *BaseApp) FindCollectionByNameOrId(nameOrId string) (*Collection, erro
 	return m, nil
 }
 
-// FindCachedCollectionByNameOrId is similar to [App.FindCollectionByNameOrId]
+// FindCachedCollectionByNameOrId is similar to [BaseApp.FindCollectionByNameOrId]
 // but retrieves the Collection from the app cache instead of making a db call.
 //
 // NB! This method is suitable for read-only Collection operations.
 //
 // Returns [sql.ErrNoRows] if no Collection is found for consistency
-// with the [App.FindCollectionByNameOrId] method.
+// with the [BaseApp.FindCollectionByNameOrId] method.
 //
 // If you plan making changes to the returned Collection model,
-// use [App.FindCollectionByNameOrId] instead.
+// use [BaseApp.FindCollectionByNameOrId] instead.
 //
 // Caveats:
 //
@@ -94,7 +94,7 @@ func (app *BaseApp) FindCollectionByNameOrId(nameOrId string) (*Collection, erro
 //   - If you are updating a Collection in a transaction and then call this method before commit,
 //     it'll return the cached Collection state and not the one from the uncommitted transaction.
 //   - The cache is automatically updated on collections db change (create/update/delete).
-//     To manually reload the cache you can call [App.ReloadCachedCollections()]
+//     To manually reload the cache you can call [BaseApp.ReloadCachedCollections]
 func (app *BaseApp) FindCachedCollectionByNameOrId(nameOrId string) (*Collection, error) {
 	collections, _ := app.Store().Get(StoreKeyCachedCollections).([]*Collection)
 	if collections == nil {

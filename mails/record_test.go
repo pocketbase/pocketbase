@@ -1,6 +1,7 @@
 package mails_test
 
 import (
+	"html"
 	"strings"
 	"testing"
 
@@ -16,6 +17,9 @@ func TestSendRecordAuthAlert(t *testing.T) {
 
 	user, _ := testApp.FindFirstRecordByData("users", "email", "test@example.com")
 
+	// to test that it is escaped
+	user.Set("name", "<p>"+user.GetString("name")+"</p>")
+
 	err := mails.SendRecordAuthAlert(testApp, user)
 	if err != nil {
 		t.Fatal(err)
@@ -26,7 +30,7 @@ func TestSendRecordAuthAlert(t *testing.T) {
 	}
 
 	expectedParts := []string{
-		user.GetString("name") + "{RECORD:tokenKey}", // public and private record placeholder checks
+		html.EscapeString(user.GetString("name")) + "{RECORD:tokenKey}", // public and private record placeholder checks
 		"login to your " + testApp.Settings().Meta.AppName + " account from a new location",
 		"If this was you",
 		"If this wasn't you",
@@ -46,6 +50,9 @@ func TestSendRecordPasswordReset(t *testing.T) {
 
 	user, _ := testApp.FindFirstRecordByData("users", "email", "test@example.com")
 
+	// to test that it is escaped
+	user.Set("name", "<p>"+user.GetString("name")+"</p>")
+
 	err := mails.SendRecordPasswordReset(testApp, user)
 	if err != nil {
 		t.Fatal(err)
@@ -56,7 +63,7 @@ func TestSendRecordPasswordReset(t *testing.T) {
 	}
 
 	expectedParts := []string{
-		user.GetString("name") + "{RECORD:tokenKey}", // the record name as {RECORD:name}
+		html.EscapeString(user.GetString("name")) + "{RECORD:tokenKey}", // the record name as {RECORD:name}
 		"http://localhost:8090/_/#/auth/confirm-password-reset/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.",
 	}
 	for _, part := range expectedParts {
@@ -74,6 +81,9 @@ func TestSendRecordVerification(t *testing.T) {
 
 	user, _ := testApp.FindFirstRecordByData("users", "email", "test@example.com")
 
+	// to test that it is escaped
+	user.Set("name", "<p>"+user.GetString("name")+"</p>")
+
 	err := mails.SendRecordVerification(testApp, user)
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +94,7 @@ func TestSendRecordVerification(t *testing.T) {
 	}
 
 	expectedParts := []string{
-		user.GetString("name") + "{RECORD:tokenKey}", // the record name as {RECORD:name}
+		html.EscapeString(user.GetString("name")) + "{RECORD:tokenKey}", // the record name as {RECORD:name}
 		"http://localhost:8090/_/#/auth/confirm-verification/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.",
 	}
 	for _, part := range expectedParts {
@@ -102,6 +112,9 @@ func TestSendRecordChangeEmail(t *testing.T) {
 
 	user, _ := testApp.FindFirstRecordByData("users", "email", "test@example.com")
 
+	// to test that it is escaped
+	user.Set("name", "<p>"+user.GetString("name")+"</p>")
+
 	err := mails.SendRecordChangeEmail(testApp, user, "new_test@example.com")
 	if err != nil {
 		t.Fatal(err)
@@ -112,7 +125,7 @@ func TestSendRecordChangeEmail(t *testing.T) {
 	}
 
 	expectedParts := []string{
-		user.GetString("name") + "{RECORD:tokenKey}", // the record name as {RECORD:name}
+		html.EscapeString(user.GetString("name")) + "{RECORD:tokenKey}", // the record name as {RECORD:name}
 		"http://localhost:8090/_/#/auth/confirm-email-change/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.",
 	}
 	for _, part := range expectedParts {
@@ -130,6 +143,9 @@ func TestSendRecordOTP(t *testing.T) {
 
 	user, _ := testApp.FindFirstRecordByData("users", "email", "test@example.com")
 
+	// to test that it is escaped
+	user.Set("name", "<p>"+user.GetString("name")+"</p>")
+
 	err := mails.SendRecordOTP(testApp, user, "test_otp_id", "test_otp_code")
 	if err != nil {
 		t.Fatal(err)
@@ -140,7 +156,7 @@ func TestSendRecordOTP(t *testing.T) {
 	}
 
 	expectedParts := []string{
-		user.GetString("name") + "{RECORD:tokenKey}", // the record name as {RECORD:name}
+		html.EscapeString(user.GetString("name")) + "{RECORD:tokenKey}", // the record name as {RECORD:name}
 		"one-time password",
 		"test_otp_code",
 	}

@@ -168,16 +168,28 @@ func TestTransactionHooksCallsOnSuccess(t *testing.T) {
 	})
 
 	app.OnModelAfterCreateSuccess().BindFunc(func(e *core.ModelEvent) error {
+		if e.App.IsTransactional() {
+			t.Fatal("Expected e.App to be non-transactional")
+		}
+
 		afterCreateHookCalls++
 		return e.Next()
 	})
 
 	app.OnModelAfterUpdateSuccess().BindFunc(func(e *core.ModelEvent) error {
+		if e.App.IsTransactional() {
+			t.Fatal("Expected e.App to be non-transactional")
+		}
+
 		afterUpdateHookCalls++
 		return e.Next()
 	})
 
 	app.OnModelAfterDeleteSuccess().BindFunc(func(e *core.ModelEvent) error {
+		if e.App.IsTransactional() {
+			t.Fatal("Expected e.App to be non-transactional")
+		}
+
 		afterDeleteHookCalls++
 		return e.Next()
 	})
@@ -231,5 +243,171 @@ func TestTransactionHooksCallsOnSuccess(t *testing.T) {
 	}
 	if afterDeleteHookCalls != 1 {
 		t.Errorf("Expected afterDeleteHookCalls to be called 1 time, got %d", afterDeleteHookCalls)
+	}
+}
+
+func TestTransactionFromInnerCreateHook(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	app.OnRecordCreateExecute("demo2").BindFunc(func(e *core.RecordEvent) error {
+		originalApp := e.App
+		return e.App.RunInTransaction(func(txApp core.App) error {
+			e.App = txApp
+			defer func() {
+				e.App = originalApp
+			}()
+
+			nextErr := e.Next()
+
+			return nextErr
+		})
+	})
+
+	app.OnRecordAfterCreateSuccess("demo2").BindFunc(func(e *core.RecordEvent) error {
+		if e.App.IsTransactional() {
+			t.Fatal("Expected e.App to be non-transactional")
+		}
+
+		// perform a db query with the app instance to ensure that it is still valid
+		_, err := e.App.FindFirstRecordByFilter("demo2", "1=1")
+		if err != nil {
+			t.Fatalf("Failed to perform a db query after tx success: %v", err)
+		}
+
+		return e.Next()
+	})
+
+	collection, err := app.FindCollectionByNameOrId("demo2")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	record := core.NewRecord(collection)
+
+	record.Set("title", "test_inner_tx")
+
+	if err = app.Save(record); err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	expectedHookCalls := map[string]int{
+		"OnRecordCreateExecute":      1,
+		"OnRecordAfterCreateSuccess": 1,
+	}
+	for k, total := range expectedHookCalls {
+		if found, ok := app.EventCalls[k]; !ok || total != found {
+			t.Fatalf("Expected %q %d calls, got %d", k, total, found)
+		}
+	}
+}
+
+func TestTransactionFromInnerUpdateHook(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	app.OnRecordUpdateExecute("demo2").BindFunc(func(e *core.RecordEvent) error {
+		originalApp := e.App
+		return e.App.RunInTransaction(func(txApp core.App) error {
+			e.App = txApp
+			defer func() {
+				e.App = originalApp
+			}()
+
+			nextErr := e.Next()
+
+			return nextErr
+		})
+	})
+
+	app.OnRecordAfterUpdateSuccess("demo2").BindFunc(func(e *core.RecordEvent) error {
+		if e.App.IsTransactional() {
+			t.Fatal("Expected e.App to be non-transactional")
+		}
+
+		// perform a db query with the app instance to ensure that it is still valid
+		_, err := e.App.FindFirstRecordByFilter("demo2", "1=1")
+		if err != nil {
+			t.Fatalf("Failed to perform a db query after tx success: %v", err)
+		}
+
+		return e.Next()
+	})
+
+	existingModel, err := app.FindFirstRecordByFilter("demo2", "1=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = app.Save(existingModel); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+
+	expectedHookCalls := map[string]int{
+		"OnRecordUpdateExecute":      1,
+		"OnRecordAfterUpdateSuccess": 1,
+	}
+	for k, total := range expectedHookCalls {
+		if found, ok := app.EventCalls[k]; !ok || total != found {
+			t.Fatalf("Expected %q %d calls, got %d", k, total, found)
+		}
+	}
+}
+
+func TestTransactionFromInnerDeleteHook(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	app.OnRecordDeleteExecute("demo2").BindFunc(func(e *core.RecordEvent) error {
+		originalApp := e.App
+		return e.App.RunInTransaction(func(txApp core.App) error {
+			e.App = txApp
+			defer func() {
+				e.App = originalApp
+			}()
+
+			nextErr := e.Next()
+
+			return nextErr
+		})
+	})
+
+	app.OnRecordAfterDeleteSuccess("demo2").BindFunc(func(e *core.RecordEvent) error {
+		if e.App.IsTransactional() {
+			t.Fatal("Expected e.App to be non-transactional")
+		}
+
+		// perform a db query with the app instance to ensure that it is still valid
+		_, err := e.App.FindFirstRecordByFilter("demo2", "1=1")
+		if err != nil {
+			t.Fatalf("Failed to perform a db query after tx success: %v", err)
+		}
+
+		return e.Next()
+	})
+
+	existingModel, err := app.FindFirstRecordByFilter("demo2", "1=1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err = app.Delete(existingModel); err != nil {
+		t.Fatalf("Delete failed: %v", err)
+	}
+
+	expectedHookCalls := map[string]int{
+		"OnRecordDeleteExecute":      1,
+		"OnRecordAfterDeleteSuccess": 1,
+	}
+	for k, total := range expectedHookCalls {
+		if found, ok := app.EventCalls[k]; !ok || total != found {
+			t.Fatalf("Expected %q %d calls, got %d", k, total, found)
+		}
 	}
 }
