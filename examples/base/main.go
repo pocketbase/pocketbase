@@ -12,17 +12,18 @@ import (
 
 )
 
+
 const (
-    token = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MzQyODE1NzUsImlkIjoiZGUzYTVkNGYtZDNlOS00MTc5LWE5ZjYtZWM4MzE5YTljNTk3In0.hoKahQLjmaEJmoVANfUQ3e9uouft_GsMHDKz2pnYJMcPXCq2heDc2gFWbLHGXcPD0oCfXN3RXm8QHhv0zEYQCQ"// replace with your actual token
-    databaseURL = "libsql://pb-1st-turso-db-naol-bm.turso.io" // replace with your actual database url
+    token = ""// replace with your actual token
+    databaseURL = "" // replace with your actual database url
 )
+var enableLibSQL = false
+
 
 
 func init() {
     dbx.BuilderFuncMap["libsql"] = dbx.BuilderFuncMap["sqlite3"]
 }
-
-var enableLibSQL = false
 
 func main() {
 	// config libsql
@@ -36,7 +37,7 @@ func main() {
             // optionally for the logs (aka. pb_data/auxiliary.db) use the default local filesystem driver
             return core.DefaultDBConnect(dbPath)
         },
-        DefaultDataDir: "pb_custom_dir_name",
+        // DefaultDataDir: "pb_custom_dir_name",
     })
 
 	if err := app.Start(); err != nil {
