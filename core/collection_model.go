@@ -35,10 +35,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionValidate().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionValidate().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -50,10 +53,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionCreate().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionCreate().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -65,10 +71,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionCreateExecute().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionCreateExecute().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -80,10 +89,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionAfterCreateSuccess().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionAfterCreateSuccess().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -95,10 +107,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelErrorEvent) error {
 			if ce, ok := newCollectionErrorEventFromModelErrorEvent(me); ok {
-				return me.App.OnCollectionAfterCreateError().Trigger(ce, func(ce *CollectionErrorEvent) error {
+				err := me.App.OnCollectionAfterCreateError().Trigger(ce, func(ce *CollectionErrorEvent) error {
 					syncModelErrorEventWithCollectionErrorEvent(me, ce)
+					defer syncCollectionErrorEventWithModelErrorEvent(ce, me)
 					return me.Next()
 				})
+				syncModelErrorEventWithCollectionErrorEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -110,10 +125,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionUpdate().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionUpdate().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -125,10 +143,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionUpdateExecute().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionUpdateExecute().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -140,10 +161,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionAfterUpdateSuccess().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionAfterUpdateSuccess().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -155,10 +179,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelErrorEvent) error {
 			if ce, ok := newCollectionErrorEventFromModelErrorEvent(me); ok {
-				return me.App.OnCollectionAfterUpdateError().Trigger(ce, func(ce *CollectionErrorEvent) error {
+				err := me.App.OnCollectionAfterUpdateError().Trigger(ce, func(ce *CollectionErrorEvent) error {
 					syncModelErrorEventWithCollectionErrorEvent(me, ce)
+					defer syncCollectionErrorEventWithModelErrorEvent(ce, me)
 					return me.Next()
 				})
+				syncModelErrorEventWithCollectionErrorEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -170,10 +197,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionDelete().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionDelete().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -185,10 +215,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionDeleteExecute().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionDeleteExecute().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -200,10 +233,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelEvent) error {
 			if ce, ok := newCollectionEventFromModelEvent(me); ok {
-				return me.App.OnCollectionAfterDeleteSuccess().Trigger(ce, func(ce *CollectionEvent) error {
+				err := me.App.OnCollectionAfterDeleteSuccess().Trigger(ce, func(ce *CollectionEvent) error {
 					syncModelEventWithCollectionEvent(me, ce)
+					defer syncCollectionEventWithModelEvent(ce, me)
 					return me.Next()
 				})
+				syncModelEventWithCollectionEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
@@ -215,10 +251,13 @@ func (app *BaseApp) registerCollectionHooks() {
 		Id: systemHookIdCollection,
 		Func: func(me *ModelErrorEvent) error {
 			if ce, ok := newCollectionErrorEventFromModelErrorEvent(me); ok {
-				return me.App.OnCollectionAfterDeleteError().Trigger(ce, func(ce *CollectionErrorEvent) error {
+				err := me.App.OnCollectionAfterDeleteError().Trigger(ce, func(ce *CollectionErrorEvent) error {
 					syncModelErrorEventWithCollectionErrorEvent(me, ce)
+					defer syncCollectionErrorEventWithModelErrorEvent(ce, me)
 					return me.Next()
 				})
+				syncModelErrorEventWithCollectionErrorEvent(me, ce)
+				return err
 			}
 
 			return me.Next()
