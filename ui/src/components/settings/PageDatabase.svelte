@@ -56,9 +56,9 @@
 
     function init(settings = {}) {
         formSettings = {
-            libsql: settings?.libsql || { 
-                url: 'libsql://pocketbase-default-db.turso.io',
-                token: 'ertyukjhgfertyukjhgfertyukjhgfertyukjhgfertyukjhgf' 
+            libsql: settings?.libsql || {
+                url: "libsql://pocketbase-default-db.turso.io",
+                token: "testtokenkeylookalike",
             }, // Initialize LibSQL settings with default values
         };
 
@@ -88,9 +88,11 @@
         <form class="panel" autocomplete="off" on:submit|preventDefault={() => save()}>
             <div class="content txt-xl m-b-base">
                 <p>Configure your LibSQL database connection settings.</p>
-                <p>By default we use Turso as a database origin but you can use any that can support libsql database.</p>
+                <p>
+                    By default we use Turso as a database origin but you can use any that can support libsql
+                    database.
+                </p>
             </div>
-
 
             {#if isLoading}
                 <div class="loader" />
@@ -99,12 +101,7 @@
                     <div class="col-lg-6">
                         <Field class="form-field required" name="libsql.url" let:uniqueId>
                             <label for={uniqueId}>Database Origin</label>
-                            <input
-                                type="text"
-                                id={uniqueId}
-                                required
-                                bind:value={formSettings.libsql.url}
-                            />
+                            <input type="text" id={uniqueId} required bind:value={formSettings.libsql.url} />
                         </Field>
                     </div>
 
@@ -114,14 +111,14 @@
                             <div class="input-group">
                                 {#if showToken}
                                     <input
-                                        type='text'
+                                        type="text"
                                         id={uniqueId}
                                         required
                                         bind:value={formSettings.libsql.token}
                                     />
                                 {:else}
                                     <input
-                                        type='password'
+                                        type="password"
                                         id={uniqueId}
                                         required
                                         bind:value={formSettings.libsql.token}
@@ -130,9 +127,10 @@
 
                                 <span class="input-group-addon flex gap_custome_1">
                                     {#if showToken}
-                                        <i class="ri-checkbox-line" on:click={toggleTokenVisibility}></i> 
+                                        <i class="ri-checkbox-line" on:click={toggleTokenVisibility}></i>
                                     {:else}
-                                        <i class="ri-checkbox-blank-line" on:click={toggleTokenVisibility}></i>
+                                        <i class="ri-checkbox-blank-line" on:click={toggleTokenVisibility}
+                                        ></i>
                                     {/if}
                                     <p>show token</p>
                                 </span>
@@ -150,7 +148,7 @@
                         disabled={isSaving}
                         on:click={() => reset()}
                     >
-                        <span class="txt ">Cancel</span>
+                        <span class="txt">Cancel</span>
                     </button>
                     <button
                         type="submit"
@@ -166,11 +164,9 @@
     </div>
 </PageWrapper>
 
-
 <style>
-    .gap_custome_1{
-     gap: 3px !important; 
-/*     margin-left: 15px;*/
- }
-
+    .gap_custome_1 {
+        gap: 3px !important;
+        /*     margin-left: 15px;*/
+    }
 </style>

@@ -11,14 +11,14 @@
 
     $pageTitle = "Theme";
 
-    let currentTheme = 'Default';
+    let currentTheme = "Default";
     let currentThemeLink;
     let isLoading = false;
 
     // Function to load the theme from localStorage
     function loadTheme() {
-        const savedTheme = localStorage.getItem('pbTheme');
-        currentTheme = savedTheme ?? "Default"
+        const savedTheme = localStorage.getItem("pbTheme");
+        currentTheme = savedTheme ?? "Default";
         if (savedTheme) {
             toggle(savedTheme);
         }
@@ -28,12 +28,12 @@
         isLoading = true; // Start loading
 
         // Create a new link element for the new theme
-        const newThemeLink = document.createElement('link');
-        newThemeLink.rel = 'stylesheet';
+        const newThemeLink = document.createElement("link");
+        newThemeLink.rel = "stylesheet";
 
         // Set the href based on the selected theme
         if (name) {
-            newThemeLink.href = import.meta.env.BASE_URL + 'themecss/' + name.toLowerCase() + '.css';
+            newThemeLink.href = import.meta.env.BASE_URL + "themecss/" + name.toLowerCase() + ".css";
             currentTheme = name;
         }
 
@@ -51,7 +51,7 @@
                 isLoading = false; // End loading
 
                 // Store the selected theme in localStorage
-                localStorage.setItem('pbTheme', currentTheme);
+                localStorage.setItem("pbTheme", currentTheme);
                 resolve();
             };
         });
@@ -71,57 +71,80 @@
         </nav>
     </header>
     <div class="wrapper">
-    <h1>Interface Theme</h1>
-    <h6>choose your workspace theme</h6>
-    <div class='separator'/>
-    <div class="theme_switch_container">
-            <button on:click={() => toggle('default')} class={`apperacance_btn ${currentTheme == 'default' && "active_btn"}`}>
-        <img src="{import.meta.env.BASE_URL}images/highlight/default.png"/>
-         <div class='apperanace_innner_div'>
-            <p>Default</p>
-                       <i class={`${currentTheme == 'default' ? "ri-checkbox-circle-line" : 'ri-checkbox-blank-circle-line'}`}></i>
-
+        <h1>Interface Theme</h1>
+        <h6>choose your workspace theme</h6>
+        <div class="separator" />
+        <div class="theme_switch_container">
+            <button
+                on:click={() => toggle("default")}
+                class={`apperacance_btn ${currentTheme == "default" && "active_btn"}`}
+            >
+                <img
+                    src="{import.meta.env.BASE_URL}images/highlight/default.png"
+                    alt="default_theme_highlight"
+                />
+                <div class="apperanace_innner_div">
+                    <p>Default</p>
+                    <i
+                        class={`${currentTheme == "default" ? "ri-checkbox-circle-line" : "ri-checkbox-blank-circle-line"}`}
+                    ></i>
+                </div>
+            </button>
+            <button
+                on:click={() => toggle("oz")}
+                class={`apperacance_btn ${currentTheme == "oz" && "active_btn"}`}
+            >
+                <img src="{import.meta.env.BASE_URL}images/highlight/oz.png" alt="default_theme_highlight" />
+                <div class="apperanace_innner_div">
+                    <p>OZ</p>
+                    <i
+                        class={`${currentTheme == "oz" ? "ri-checkbox-circle-line" : "ri-checkbox-blank-circle-line"}`}
+                    ></i>
+                </div>
+            </button>
+            <button
+                on:click={() => toggle("hardoz")}
+                class={`apperacance_btn ${currentTheme == "hardoz" && "active_btn"}`}
+            >
+                <img
+                    src="{import.meta.env.BASE_URL}images/highlight/hardoz.png"
+                    alt="default_theme_highlight"
+                />
+                <div class="apperanace_innner_div">
+                    <p>HardOZ</p>
+                    <i
+                        class={`${currentTheme == "hardoz" ? "ri-checkbox-circle-line" : "ri-checkbox-blank-circle-line"}`}
+                    ></i>
+                </div>
+            </button>
+            <button
+                on:click={() => toggle("blueshi")}
+                class={`apperacance_btn ${currentTheme == "blueshi" && "active_btn"}`}
+            >
+                <img
+                    src="{import.meta.env.BASE_URL}images/highlight/blueshi.png"
+                    alt="default_theme_highlight"
+                />
+                <div class="apperanace_innner_div">
+                    <p>Blueshi</p>
+                    <i
+                        class={`${currentTheme == "blueshi" ? "ri-checkbox-circle-line" : "ri-checkbox-blank-circle-line"}`}
+                    ></i>
+                </div>
+            </button>
         </div>
-    </button>
-    <button on:click={() => toggle('oz')} class={`apperacance_btn ${currentTheme == 'oz' && "active_btn"}`}>
-        <img src="{import.meta.env.BASE_URL}images/highlight/oz.png"/>
-        <div class='apperanace_innner_div'>
-            <p>OZ</p>
-            <i class={`${currentTheme == 'oz' ? "ri-checkbox-circle-line" : 'ri-checkbox-blank-circle-line'}`}></i>
-
-        </div>
-    </button>
-    <button on:click={() => toggle('hardoz')} class={`apperacance_btn ${currentTheme == 'hardoz' && "active_btn"}`}>
-       <img src="{import.meta.env.BASE_URL}images/highlight/hardoz.png"/>
-        <div class='apperanace_innner_div'>
-            <p>HardOZ</p>
-                        <i class={`${currentTheme == 'hardoz' ? "ri-checkbox-circle-line" : 'ri-checkbox-blank-circle-line'}`}></i>
-
-        </div>
-    </button>
-    <button on:click={() => toggle('blueshi')} class={`apperacance_btn ${currentTheme == 'blueshi' && "active_btn"}`}>
-         <img src="{import.meta.env.BASE_URL}images/highlight/blueshi.png"/>
-          <div class='apperanace_innner_div'>
-            <p>Blueshi</p>
-                       <i class={`${currentTheme == 'blueshi' ? "ri-checkbox-circle-line" : 'ri-checkbox-blank-circle-line'}`}></i>
-
-        </div>
-    </button>
-
-    </div>
-    
     </div>
 </PageWrapper>
 
 <style>
-    .theme_switch_container{
+    .theme_switch_container {
         display: flex;
         overflow-x: scroll;
         gap: 10px;
         margin: 20px 0px;
-/*        flex-wrap: wrap;*/
+        /*        flex-wrap: wrap;*/
     }
-    .apperacance_btn{
+    .apperacance_btn {
         background: var(--baseAlt1Color);
         overflow: hidden;
         padding: 17px 0px 0px 17px;
@@ -133,7 +156,7 @@
         position: relative;
         color: var(--txtPrimaryColor);
     }
-    .apperanace_innner_div{
+    .apperanace_innner_div {
         position: absolute;
         bottom: 0px;
         width: 100%;
@@ -146,11 +169,11 @@
         padding: 0px 10px;
         border-top: var(--baseAlt4Color) solid 2px;
     }
-    .active_btn{
+    .active_btn {
         border: var(--primaryColor) solid 2px;
         color: var(--primaryColor);
     }
-    .separator{
+    .separator {
         width: 100%;
         height: 1px;
         background: var(--baseAlt4Color);
