@@ -173,8 +173,8 @@ type ModelEvent struct {
 }
 
 type ModelErrorEvent struct {
-	ModelEvent
 	Error error
+	ModelEvent
 }
 
 // -------------------------------------------------------------------
@@ -196,8 +196,8 @@ type RecordEvent struct {
 }
 
 type RecordErrorEvent struct {
-	RecordEvent
 	Error error
+	RecordEvent
 }
 
 func syncModelEventWithRecordEvent(me *ModelEvent, re *RecordEvent) {
@@ -214,6 +214,12 @@ func syncModelEventWithRecordEvent(me *ModelEvent, re *RecordEvent) {
 	// } else if proxy, ok := me.Model.(RecordProxy); ok {
 	// 	proxy.SetProxyRecord(re.Record)
 	// }
+}
+
+func syncRecordEventWithModelEvent(re *RecordEvent, me *ModelEvent) {
+	re.App = me.App
+	re.Context = me.Context
+	re.Type = me.Type
 }
 
 func newRecordEventFromModelEvent(me *ModelEvent) (*RecordEvent, bool) {
@@ -253,6 +259,11 @@ func syncModelErrorEventWithRecordErrorEvent(me *ModelErrorEvent, re *RecordErro
 	me.Error = re.Error
 }
 
+func syncRecordErrorEventWithModelErrorEvent(re *RecordErrorEvent, me *ModelErrorEvent) {
+	syncRecordEventWithModelEvent(&re.RecordEvent, &me.ModelEvent)
+	me.Error = re.Error
+}
+
 // -------------------------------------------------------------------
 // Collection events data
 // -------------------------------------------------------------------
@@ -272,8 +283,8 @@ type CollectionEvent struct {
 }
 
 type CollectionErrorEvent struct {
-	CollectionEvent
 	Error error
+	CollectionEvent
 }
 
 func syncModelEventWithCollectionEvent(me *ModelEvent, ce *CollectionEvent) {
@@ -281,6 +292,15 @@ func syncModelEventWithCollectionEvent(me *ModelEvent, ce *CollectionEvent) {
 	me.Context = ce.Context
 	me.Type = ce.Type
 	me.Model = ce.Collection
+}
+
+func syncCollectionEventWithModelEvent(ce *CollectionEvent, me *ModelEvent) {
+	ce.App = me.App
+	ce.Context = me.Context
+	ce.Type = me.Type
+	if c, ok := me.Model.(*Collection); ok {
+		ce.Collection = c
+	}
 }
 
 func newCollectionEventFromModelEvent(me *ModelEvent) (*CollectionEvent, bool) {
@@ -313,6 +333,11 @@ func newCollectionErrorEventFromModelErrorEvent(me *ModelErrorEvent) (*Collectio
 
 func syncModelErrorEventWithCollectionErrorEvent(me *ModelErrorEvent, ce *CollectionErrorEvent) {
 	syncModelEventWithCollectionEvent(&me.ModelEvent, &ce.CollectionEvent)
+	me.Error = ce.Error
+}
+
+func syncCollectionErrorEventWithModelErrorEvent(ce *CollectionErrorEvent, me *ModelErrorEvent) {
+	syncCollectionEventWithModelEvent(&ce.CollectionEvent, &me.ModelEvent)
 	me.Error = ce.Error
 }
 

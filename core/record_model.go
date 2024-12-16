@@ -55,10 +55,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordValidate().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordValidate().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -70,10 +73,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordCreate().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordCreate().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -85,10 +91,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordCreateExecute().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordCreateExecute().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -100,10 +109,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordAfterCreateSuccess().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordAfterCreateSuccess().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -115,10 +127,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelErrorEvent) error {
 			if re, ok := newRecordErrorEventFromModelErrorEvent(me); ok {
-				return me.App.OnRecordAfterCreateError().Trigger(re, func(re *RecordErrorEvent) error {
+				err := me.App.OnRecordAfterCreateError().Trigger(re, func(re *RecordErrorEvent) error {
 					syncModelErrorEventWithRecordErrorEvent(me, re)
+					defer syncRecordErrorEventWithModelErrorEvent(re, me)
 					return me.Next()
 				})
+				syncModelErrorEventWithRecordErrorEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -130,10 +145,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordUpdate().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordUpdate().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -145,10 +163,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordUpdateExecute().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordUpdateExecute().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -160,10 +181,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordAfterUpdateSuccess().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordAfterUpdateSuccess().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -175,10 +199,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelErrorEvent) error {
 			if re, ok := newRecordErrorEventFromModelErrorEvent(me); ok {
-				return me.App.OnRecordAfterUpdateError().Trigger(re, func(re *RecordErrorEvent) error {
+				err := me.App.OnRecordAfterUpdateError().Trigger(re, func(re *RecordErrorEvent) error {
 					syncModelErrorEventWithRecordErrorEvent(me, re)
+					defer syncRecordErrorEventWithModelErrorEvent(re, me)
 					return me.Next()
 				})
+				syncModelErrorEventWithRecordErrorEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -190,10 +217,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordDelete().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordDelete().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -205,10 +235,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordDeleteExecute().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordDeleteExecute().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -220,10 +253,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelEvent) error {
 			if re, ok := newRecordEventFromModelEvent(me); ok {
-				return me.App.OnRecordAfterDeleteSuccess().Trigger(re, func(re *RecordEvent) error {
+				err := me.App.OnRecordAfterDeleteSuccess().Trigger(re, func(re *RecordEvent) error {
 					syncModelEventWithRecordEvent(me, re)
+					defer syncRecordEventWithModelEvent(re, me)
 					return me.Next()
 				})
+				syncModelEventWithRecordEvent(me, re)
+				return err
 			}
 
 			return me.Next()
@@ -235,10 +271,13 @@ func (app *BaseApp) registerRecordHooks() {
 		Id: systemHookIdRecord,
 		Func: func(me *ModelErrorEvent) error {
 			if re, ok := newRecordErrorEventFromModelErrorEvent(me); ok {
-				return me.App.OnRecordAfterDeleteError().Trigger(re, func(re *RecordErrorEvent) error {
+				err := me.App.OnRecordAfterDeleteError().Trigger(re, func(re *RecordErrorEvent) error {
 					syncModelErrorEventWithRecordErrorEvent(me, re)
+					defer syncRecordErrorEventWithModelErrorEvent(re, me)
 					return me.Next()
 				})
+				syncModelErrorEventWithRecordErrorEvent(me, re)
+				return err
 			}
 
 			return me.Next()
