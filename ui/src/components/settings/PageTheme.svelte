@@ -34,7 +34,6 @@
         // Set the href based on the selected theme
         if (name) {
             newThemeLink.href = import.meta.env.BASE_URL + 'themecss/' + name.toLowerCase() + '.css';
-            alert(newThemeLink.href)
             currentTheme = name;
         }
 
