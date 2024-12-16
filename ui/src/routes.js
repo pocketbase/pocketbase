@@ -7,6 +7,8 @@ import PageExportCollections from "@/components/settings/PageExportCollections.s
 import PageImportCollections from "@/components/settings/PageImportCollections.svelte";
 import PageMail from "@/components/settings/PageMail.svelte";
 import PageStorage from "@/components/settings/PageStorage.svelte";
+import PageDatabase from "@/components/settings/PageDatabase.svelte";
+import PageTheme from "@/components/settings/PageTheme.svelte";
 import PageSuperuserLogin from "@/components/superusers/PageSuperuserLogin.svelte";
 import ApiClient from "@/utils/ApiClient";
 import { isTokenExpired } from "pocketbase";
@@ -65,6 +67,16 @@ const routes = {
 
     "/settings/storage": wrap({
         component: PageStorage,
+        conditions: [(_) => ApiClient.authStore.isValid],
+        userData: { showAppSidebar: true },
+    }),
+    "/settings/database": wrap({
+        component: PageDatabase,
+        conditions: [(_) => ApiClient.authStore.isValid],
+        userData: { showAppSidebar: true },
+    }), 
+    "/settings/theme": wrap({
+        component: PageTheme,
         conditions: [(_) => ApiClient.authStore.isValid],
         userData: { showAppSidebar: true },
     }),

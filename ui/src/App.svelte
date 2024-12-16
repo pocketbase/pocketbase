@@ -15,6 +15,7 @@
     import Router, { link, replace } from "svelte-spa-router";
     import active from "svelte-spa-router/active";
     import routes from "./routes";
+    import { onMount } from 'svelte';
 
     let oldLocation = undefined;
 
@@ -25,6 +26,21 @@
     $: if ($superuser?.id) {
         loadSettings();
     }
+
+    function loadTheme() {
+        const savedTheme = localStorage.getItem('pbTheme');
+        if(savedTheme){
+            const newThemeLink = document.createElement('link');
+            newThemeLink.rel = 'stylesheet';
+            newThemeLink.href = './src/theme/' + savedTheme.toLowerCase() + '.css'; // Default theme
+            document.head.appendChild(newThemeLink);
+        }
+    }
+
+    onMount(() => {
+        loadTheme();
+    });
+
 
     function handleRouteLoading(e) {
         if (e?.detail?.location === oldLocation) {

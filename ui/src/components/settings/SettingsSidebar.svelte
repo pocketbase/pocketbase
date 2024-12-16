@@ -30,6 +30,25 @@
             <i class="ri-archive-drawer-line" aria-hidden="true" />
             <span class="txt">Files storage</span>
         </a>
+       <a
+            href="/settings/database"
+            class="sidebar-list-item"
+            use:active={{ path: "/settings/database/?.*" }}
+            use:link
+        >
+            <i class="ri-database-2-line" aria-hidden="true" />
+            <span class="txt">Database</span>
+        </a>
+        <a
+            href="/settings/theme"
+            class="sidebar-list-item"
+            use:active={{ path: "/settings/theme/?.*" }}
+            use:link
+        >
+            <i class="ri-palette-line" aria-hidden="true"></i>
+            <span class="txt">Theme</span>
+        </a>
+
         <a
             href="/settings/backups"
             class="sidebar-list-item"
