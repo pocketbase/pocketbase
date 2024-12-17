@@ -52,7 +52,6 @@ func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	extracted := struct {
-		Id      int `json:"id"`
 		Profile struct {
 			Nickname string `json:"nickname"`
 			ImageURL string `json:"profile_image"`
@@ -62,13 +61,14 @@ func (p *Kakao) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			IsEmailVerified bool   `json:"is_email_verified"`
 			IsEmailValid    bool   `json:"is_email_valid"`
 		} `json:"kakao_account"`
+		Id int64 `json:"id"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
 	}
 
 	user := &AuthUser{
-		Id:           strconv.Itoa(extracted.Id),
+		Id:           strconv.FormatInt(extracted.Id, 10),
 		Username:     extracted.Profile.Nickname,
 		AvatarURL:    extracted.Profile.ImageURL,
 		RawUser:      rawUser,

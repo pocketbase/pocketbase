@@ -11,11 +11,11 @@ import (
 // note: this migration will be deleted in future version
 
 func collectionIdChecksum(typ, name string) string {
-	return "pbc_" + strconv.Itoa(int(crc32.ChecksumIEEE([]byte(typ+name))))
+	return "pbc_" + strconv.FormatInt(int64(crc32.ChecksumIEEE([]byte(typ+name))), 10)
 }
 
 func fieldIdChecksum(typ, name string) string {
-	return typ + strconv.Itoa(int(crc32.ChecksumIEEE([]byte(name))))
+	return typ + strconv.FormatInt(int64(crc32.ChecksumIEEE([]byte(name))), 10)
 }
 
 // normalize system collection and field ids
