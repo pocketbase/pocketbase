@@ -47,12 +47,12 @@ func recordConfirmPasswordReset(e *core.RequestEvent) error {
 			}
 		}
 
-		err = form.app.Save(authRecord)
+		err = e.App.Save(authRecord)
 		if err != nil {
 			return firstApiError(err, e.BadRequestError("Failed to set new password.", err))
 		}
 
-		form.app.Store().Remove(getPasswordResetResendKey(authRecord))
+		e.App.Store().Remove(getPasswordResetResendKey(authRecord))
 
 		return e.NoContent(http.StatusNoContent)
 	})

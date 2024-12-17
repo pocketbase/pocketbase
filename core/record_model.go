@@ -1413,12 +1413,18 @@ func onRecordValidate(e *RecordEvent) error {
 
 func onRecordSaveExecute(e *RecordEvent) error {
 	if e.Record.Collection().IsAuth() {
-		// ensure that the token key is different on password change
-		old := e.Record.Original()
-		if !e.Record.IsNew() &&
-			old.TokenKey() == e.Record.TokenKey() &&
-			old.Get(FieldNamePassword) != e.Record.Get(FieldNamePassword) {
-			e.Record.RefreshTokenKey()
+		// ensure that the token key is regenerated on password change or email change
+		if !e.Record.IsNew() {
+			lastSavedRecord, err := e.App.FindRecordById(e.Record.Collection(), e.Record.Id)
+			if err != nil {
+				return err
+			}
+
+			if lastSavedRecord.TokenKey() == e.Record.TokenKey() &&
+				(lastSavedRecord.Get(FieldNamePassword) != e.Record.Get(FieldNamePassword) ||
+					lastSavedRecord.Email() != e.Record.Email()) {
+				e.Record.RefreshTokenKey()
+			}
 		}
 
 		// cross-check that the auth record id is unique across all auth collections.

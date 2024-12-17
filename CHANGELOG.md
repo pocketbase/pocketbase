@@ -10,6 +10,8 @@
 
 - Added `mailer.Message.InlineAttachments` field for attaching inline files to an email (_aka. `cid` links_).
 
+- Invalidate all record tokens when the auth record email is changed programmatically or by a superuser ([#5964](https://github.com/pocketbase/pocketbase/issues/5964)).
+
 - ⚠️ Removed the "dry submit" when executing the collections Create API rule
     (you can find more details why this change was introduced and how it could affect your app in https://github.com/pocketbase/pocketbase/discussions/6073).
     For most users it should be non-breaking change, BUT if you have Create API rules that uses self-references or view counters you may have to adjust them manually.

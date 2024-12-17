@@ -1822,44 +1822,59 @@ func TestRecordSaveIdUpdateNoValidation(t *testing.T) {
 	}
 }
 
-func TestRecordSaveWithChangedPassword(t *testing.T) {
+func TestRecordSaveWithAutoTokenKeyRefresh(t *testing.T) {
 	t.Parallel()
 
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	record, err := app.FindAuthRecordByEmail("nologin", "test@example.com")
-	if err != nil {
-		t.Fatal(err)
+	scenarios := []struct {
+		name           string
+		payload        map[string]any
+		expectedChange bool
+	}{
+		{
+			"no email or password change",
+			map[string]any{"name": "example"},
+			false,
+		},
+		{
+			"password change",
+			map[string]any{"password": "1234567890"},
+			true,
+		},
+		{
+			"email change",
+			map[string]any{"email": "test_update@example.com"},
+			true,
+		},
 	}
 
-	originalTokenKey := record.TokenKey()
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			record, err := app.FindFirstRecordByFilter("nologin", "1=1")
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	t.Run("no password change shouldn't change the tokenKey", func(t *testing.T) {
-		record.Set("name", "example")
+			originalTokenKey := record.TokenKey()
 
-		if err := app.Save(record); err != nil {
-			t.Fatal(err)
-		}
+			record.Load(s.payload)
 
-		tokenKey := record.TokenKey()
-		if tokenKey == "" || originalTokenKey != tokenKey {
-			t.Fatalf("Expected tokenKey to not change, got %q VS %q", originalTokenKey, tokenKey)
-		}
-	})
+			err = app.Save(record)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	t.Run("password change should change the tokenKey", func(t *testing.T) {
-		record.Set("password", "1234567890")
+			newTokenKey := record.TokenKey()
 
-		if err := app.Save(record); err != nil {
-			t.Fatal(err)
-		}
+			hasChange := originalTokenKey != newTokenKey
 
-		tokenKey := record.TokenKey()
-		if tokenKey == "" || originalTokenKey == tokenKey {
-			t.Fatalf("Expected tokenKey to change, got %q VS %q", originalTokenKey, tokenKey)
-		}
-	})
+			if hasChange != s.expectedChange {
+				t.Fatalf("Expected hasChange %v, got %v", s.expectedChange, hasChange)
+			}
+		})
+	}
 }
 
 func TestRecordDelete(t *testing.T) {

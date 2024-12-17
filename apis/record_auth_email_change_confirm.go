@@ -38,9 +38,8 @@ func recordConfirmEmailChange(e *core.RequestEvent) error {
 	event.NewEmail = newEmail
 
 	return e.App.OnRecordConfirmEmailChangeRequest().Trigger(event, func(e *core.RecordConfirmEmailChangeRequestEvent) error {
-		authRecord.Set(core.FieldNameEmail, e.NewEmail)
-		authRecord.Set(core.FieldNameVerified, true)
-		authRecord.RefreshTokenKey() // invalidate old tokens
+		e.Record.SetEmail(e.NewEmail)
+		e.Record.SetVerified(true)
 
 		if err := e.App.Save(e.Record); err != nil {
 			return firstApiError(err, e.BadRequestError("Failed to confirm email change.", err))

@@ -558,10 +558,19 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 					t.Fatalf("Expected password %q to be valid", "1234567890")
 				}
 
+				oldTokenKey := user.TokenKey()
+
 				// manually unset the user email
 				user.SetEmail("")
-				if err := app.Save(user); err != nil {
+				if err = app.Save(user); err != nil {
 					t.Fatal(err)
+				}
+
+				// resave with the old token key since the email change above
+				// would change it and will make the password token invalid
+				user.SetTokenKey(oldTokenKey)
+				if err = app.Save(user); err != nil {
+					t.Fatalf("Failed to restore original user tokenKey: %v", err)
 				}
 
 				// register the test provider

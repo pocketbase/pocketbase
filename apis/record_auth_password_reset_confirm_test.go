@@ -186,10 +186,19 @@ func TestRecordConfirmPasswordReset(t *testing.T) {
 					t.Fatal("Expected the user to be unverified")
 				}
 
+				oldTokenKey := user.TokenKey()
+
 				// manually change the email to check whether the verified state will be updated
 				user.SetEmail("test_update@example.com")
-				if err := app.Save(user); err != nil {
+				if err = app.Save(user); err != nil {
 					t.Fatalf("Failed to update user test email: %v", err)
+				}
+
+				// resave with the old token key since the email change above
+				// would change it and will make the password token invalid
+				user.SetTokenKey(oldTokenKey)
+				if err = app.Save(user); err != nil {
+					t.Fatalf("Failed to restore original user tokenKey: %v", err)
 				}
 			},
 			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
