@@ -601,6 +601,14 @@ func (app *BaseApp) NewMailClient() mailer.Mailer {
 							fmt.Fprintf(mailLog, "├─ Attachments: %v\n", attachmentKeys)
 						}
 
+						if len(ae.Message.InlineAttachments) > 0 {
+							attachmentKeys := make([]string, 0, len(ae.Message.InlineAttachments))
+							for k := range ae.Message.InlineAttachments {
+								attachmentKeys = append(attachmentKeys, k)
+							}
+							fmt.Fprintf(mailLog, "├─ InlineAttachments: %v\n", attachmentKeys)
+						}
+
 						const indentation = "        "
 						if ae.Message.Text != "" {
 							textParts := strings.Split(strings.TrimSpace(ae.Message.Text), "\n")
