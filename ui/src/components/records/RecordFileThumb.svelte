@@ -9,23 +9,20 @@
 
     let previewPopup;
     let thumbUrl = "";
-    let originalUrl = "";
     let token = "";
     let isLoadingToken = true;
 
-    loadFileToken();
+    loadThumbUrlToken();
 
     $: type = CommonHelper.getFileType(filename);
 
     $: hasPreview = ["image", "audio", "video"].includes(type) || filename.endsWith(".pdf");
 
-    $: originalUrl = !isLoadingToken ? ApiClient.files.getUrl(record, filename, { token }) : "";
-
     $: thumbUrl = !isLoadingToken
         ? ApiClient.files.getUrl(record, filename, { thumb: "100x100", token: token })
         : "";
 
-    async function loadFileToken() {
+    async function loadThumbUrlToken() {
         isLoadingToken = true;
 
         try {
@@ -45,17 +42,24 @@
 {#if isLoadingToken}
     <div class="thumb {size ? `thumb-${size}` : ''}" />
 {:else}
-    <a
+    <button
+        type="button"
         draggable={false}
-        class="thumb {size ? `thumb-${size}` : ''}"
-        href={originalUrl}
-        target="_blank"
-        rel="noreferrer"
+        class="handle thumb {size ? `thumb-${size}` : ''}"
         title={(hasPreview ? "Preview" : "Download") + " " + filename}
-        on:click|stopPropagation={(e) => {
-            if (hasPreview) {
-                e.preventDefault();
-                previewPopup?.show(originalUrl);
+        on:click|stopPropagation={async () => {
+            if (!hasPreview) {
+                return;
+            }
+
+            try {
+                // refetch the token because it could have expired
+                previewPopup?.show(async () => {
+                    token = await ApiClient.getAdminFileToken(record.collectionId);
+                    return ApiClient.files.getUrl(record, filename, { token });
+                });
+            } catch (err) {
+                console.warn("Preview file token failure:", err);
             }
         }}
     >
@@ -73,7 +77,7 @@
         {:else}
             <i class="ri-file-3-line" />
         {/if}
-    </a>
+    </button>
 {/if}
 
 {#if hasPreview}

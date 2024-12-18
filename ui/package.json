@@ -28,7 +28,7 @@
     "chart.js": "^4.0.0",
     "chartjs-adapter-luxon": "^1.2.0",
     "luxon": "^3.4.4",
-    "pocketbase": "^0.20.0",
+    "pocketbase": "<0.22.0",
     "sass": "^1.45.0",
     "svelte": "^4.0.0",
     "svelte-flatpickr": "^3.3.3",

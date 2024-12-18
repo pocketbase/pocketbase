@@ -1,3 +1,8 @@
+## v0.22.28 (WIP)
+
+- (_Backported from v0.23.10_) Renew the superuser file token cache when clicking on the thumb preview or download link ([#6137](https://github.com/pocketbase/pocketbase/discussions/6137)).
+
+
 ## v0.22.27
 
 - Instead of unregistering the realtime client(s), just unset their auth state on delete of their related auth record so that the client(s) can receive the `delete` event ([#5898](https://github.com/pocketbase/pocketbase/issues/5898)).
