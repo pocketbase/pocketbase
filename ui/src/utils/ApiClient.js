@@ -68,7 +68,6 @@ PocketBase.prototype.error = function (err, notify = true, defaultMsg = "") {
 PocketBase.prototype.getSuperuserFileToken = async function (collectionId = "") {
     let needToken = true;
 
-
     if (collectionId) {
         const protectedCollections = get(protectedFilesCollectionsCache);
         needToken = typeof protectedCollections[collectionId] !== "undefined"
