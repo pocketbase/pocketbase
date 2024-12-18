@@ -2,6 +2,14 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.28
+
+- (_Backported from v0.23.10_) Renew the superuser file token cache when clicking on the thumb preview or download link ([#6137](https://github.com/pocketbase/pocketbase/discussions/6137)).
+
+- (_Backported from v0.23.10_) Upgraded `modernc.org/sqlite` to 1.34.3 to fix "disk io" error on arm64 systems.
+  _If you are extending PocketBase with Go and upgrading with `go get -u` make sure to manually set in your go.mod the `modernc.org/libc` indirect dependency to v1.55.3, aka. the exact same version the driver is using._
+
+
 ## v0.22.27
 
 - Instead of unregistering the realtime clients, we now just unset their auth state on delete of the related auth record so that the clients can receive the `delete` event ([#5898](https://github.com/pocketbase/pocketbase/issues/5898)).
