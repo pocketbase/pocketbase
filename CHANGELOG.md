@@ -1,6 +1,9 @@
-## v0.23.10 (WIP)
+## v0.23.10
 
 - Renew the superuser file token cache when clicking on the thumb preview or download link ([#6137](https://github.com/pocketbase/pocketbase/discussions/6137)).
+
+- Upgraded `modernc.org/sqlite` to 1.34.3 to fix "disk io" error on arm64 systems.
+    _If you are extending PocketBase with Go and upgrading with `go get -u` make sure to manually set in your go.mod the `modernc.org/libc` indirect dependency to v1.55.3, aka. the exact same version the driver is using._
 
 
 ## v0.23.9
