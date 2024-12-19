@@ -31,6 +31,7 @@ func TestUnmarshalRequestData(t *testing.T) {
 			"000001",
 			"-000001",
 			"1.6E-35",
+			"-1.6E-35",
 			"10e100",
 			"1_000_000",
 			"1.000.000",
@@ -328,7 +329,7 @@ func TestUnmarshalRequestData(t *testing.T) {
 			name:   "*map[string]any",
 			data:   mapData,
 			dst:    pointer(map[string]any{}),
-			result: `{"bool1":true,"bool2":[true,false],"json_a":null,"json_b":123,"json_c":[1,2,3],"mixed":[true,123,"test"],"number1":1,"number2":[2,3],"number3":[2.1,-3.4],"number4":[0,-0,0.0001],"string0":"","string1":"a","string2":["b","c"],"string3":["0.0","-0.0","000.1","000001","-000001","1.6E-35","10e100","1_000_000","1.000.000"," 123 ","0b1","0xFF","1234A","Infinity","-Infinity","undefined","null"]}`,
+			result: `{"bool1":true,"bool2":[true,false],"json_a":null,"json_b":123,"json_c":[1,2,3],"mixed":[true,123,"test"],"number1":1,"number2":[2,3],"number3":[2.1,-3.4],"number4":[0,-0,0.0001],"string0":"","string1":"a","string2":["b","c"],"string3":["0.0","-0.0","000.1","000001","-000001","1.6E-35","-1.6E-35","10e100","1_000_000","1.000.000"," 123 ","0b1","0xFF","1234A","Infinity","-Infinity","undefined","null"]}`,
 		},
 		{
 			name:   "valid pointer struct (all fields)",

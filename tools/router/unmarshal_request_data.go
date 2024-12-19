@@ -325,7 +325,8 @@ func inferValue(raw string) any {
 		// try to convert to number
 		//
 		// note: expects the provided raw string to match exactly with the minimal string representation of the parsed float
-		if raw[0] == '-' || (raw[0] >= '0' && raw[0] <= '9') && inferNumberCharsRegex.Match([]byte(raw)) {
+		if (raw[0] == '-' || (raw[0] >= '0' && raw[0] <= '9')) &&
+			inferNumberCharsRegex.Match([]byte(raw)) {
 			v, err := strconv.ParseFloat(raw, 64)
 			if err == nil && strconv.FormatFloat(v, 'f', -1, 64) == raw {
 				return v
