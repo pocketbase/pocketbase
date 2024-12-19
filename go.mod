@@ -29,7 +29,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	gocloud.dev v0.40.0
 	golang.org/x/crypto v0.31.0
-	golang.org/x/net v0.32.0
+	golang.org/x/net v0.33.0
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/sync v0.10.0
 	modernc.org/sqlite v1.34.3
@@ -79,7 +79,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.213.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241216192217-9240e9c98484 // indirect
-	google.golang.org/grpc v1.69.0 // indirect
+	google.golang.org/grpc v1.69.2 // indirect
 	google.golang.org/protobuf v1.36.0 // indirect
 	modernc.org/gc/v3 v3.0.0-20241213165251-3bc300f6d0c9 // indirect
 	modernc.org/libc v1.55.3 // indirect
