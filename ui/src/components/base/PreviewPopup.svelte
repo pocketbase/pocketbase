@@ -4,28 +4,51 @@
 
     let panel;
     let url = "";
+    let urlOrFactory;
 
     $: queryParamsIndex = url.indexOf("?");
 
     $: filename = url.substring(
         url.lastIndexOf("/") + 1,
-        queryParamsIndex > 0 ? queryParamsIndex : undefined
+        queryParamsIndex > 0 ? queryParamsIndex : undefined,
     );
 
     $: type = CommonHelper.getFileType(filename);
 
-    export function show(newUrl) {
-        if (newUrl === "") {
+    export async function show(urlOrFactoryArg) {
+        urlOrFactory = urlOrFactoryArg;
+        if (!urlOrFactory) {
             return;
         }
 
-        url = newUrl;
+        url = await resolveUrlOrFactory();
 
         panel?.show();
     }
 
     export function hide() {
         return panel?.hide();
+    }
+
+    async function resolveUrlOrFactory() {
+        if (typeof urlOrFactory == "function") {
+            return await urlOrFactory();
+        }
+
+        // string or Promise
+        return await urlOrFactory;
+    }
+
+    async function openInNewTab() {
+        try {
+            // resolve again because it may have expired
+            url = await resolveUrlOrFactory();
+            window.open(url, "_blank", "noreferrer,noopener");
+        } catch (err) {
+            if (!err.isAbort) {
+                console.warn("openInNewTab file token failure:", err);
+            }
+        }
     }
 </script>
 
@@ -45,16 +68,16 @@
     {/if}
 
     <svelte:fragment slot="footer">
-        <a
-            href={url}
+        <button
+            type="button"
             title={filename}
-            target="_blank"
-            rel="noreferrer noopener"
             class="link-hint txt-ellipsis inline-flex"
+            on:auxclick={openInNewTab}
+            on:click={openInNewTab}
         >
             {filename}
             <i class="ri-external-link-line" />
-        </a>
+        </button>
         <div class="flex-fill" />
         <button type="button" class="btn btn-transparent" on:click={hide}>Close</button>
     </svelte:fragment>

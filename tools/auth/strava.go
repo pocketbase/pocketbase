@@ -53,7 +53,7 @@ func (p *Strava) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	extracted := struct {
-		Id              int    `json:"id"`
+		Id              int64  `json:"id"`
 		FirstName       string `json:"firstname"`
 		LastName        string `json:"lastname"`
 		Username        string `json:"username"`
@@ -78,7 +78,7 @@ func (p *Strava) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
 	if extracted.Id != 0 {
-		user.Id = strconv.Itoa(extracted.Id)
+		user.Id = strconv.FormatInt(extracted.Id, 10)
 	}
 
 	return user, nil

@@ -58,7 +58,7 @@ func (p *VK) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	extracted := struct {
 		Response []struct {
-			Id        int    `json:"id"`
+			Id        int64  `json:"id"`
 			FirstName string `json:"first_name"`
 			LastName  string `json:"last_name"`
 			Username  string `json:"screen_name"`
@@ -75,7 +75,7 @@ func (p *VK) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:           strconv.Itoa(extracted.Response[0].Id),
+		Id:           strconv.FormatInt(extracted.Response[0].Id, 10),
 		Name:         strings.TrimSpace(extracted.Response[0].FirstName + " " + extracted.Response[0].LastName),
 		Username:     extracted.Response[0].Username,
 		AvatarURL:    extracted.Response[0].AvatarURL,

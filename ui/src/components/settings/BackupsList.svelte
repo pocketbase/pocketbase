@@ -57,8 +57,7 @@
 
         try {
             const token = await ApiClient.getSuperuserFileToken();
-            const url = ApiClient.backups.getDownloadURL(token, name);
-            CommonHelper.download(url);
+            CommonHelper.download(ApiClient.backups.getDownloadURL(token, name));
         } catch (err) {
             if (!err.isAbort) {
                 ApiClient.error(err);

@@ -1,5 +1,4 @@
 <script>
-    import { onMount } from "svelte";
     import tooltip from "@/actions/tooltip";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
@@ -18,7 +17,6 @@
     let fileInput;
     let filesListElem;
     let isDragOver = false;
-    let fileToken = "";
 
     // normalize uploadedFiles type
     $: if (!Array.isArray(uploadedFiles)) {
@@ -97,9 +95,15 @@
         uploadedFiles = uploadedFiles;
     }
 
-    onMount(async () => {
-        fileToken = await ApiClient.getSuperuserFileToken(record.collectionId);
-    });
+    async function openInNewTab(filename) {
+        try {
+            let token = await ApiClient.getSuperuserFileToken(record.collectionId);
+            let url = ApiClient.files.getURL(record, filename, { token });
+            window.open(url, "_blank", "noreferrer, noopener");
+        } catch (err) {
+            console.warn("openInNewTab file token failure:", err);
+        }
+    }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -141,18 +145,18 @@
                         </div>
 
                         <div class="content">
-                            <a
+                            <button
+                                type="button"
                                 draggable={false}
-                                href={ApiClient.files.getURL(record, filename, { token: fileToken })}
                                 class="txt-ellipsis {isDeleted
-                                    ? 'txt-strikethrough txt-hint'
+                                    ? 'txt-strikethrough link-hint'
                                     : 'link-primary'}"
                                 title="Download"
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                on:auxclick={() => openInNewTab(filename)}
+                                on:click={() => openInNewTab(filename)}
                             >
                                 {filename}
-                            </a>
+                            </button>
                         </div>
 
                         <div class="actions">

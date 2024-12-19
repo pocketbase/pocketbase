@@ -59,7 +59,7 @@ func GenerateDefaultRandomId() string {
 
 // crc32Checksum generates a stringified crc32 checksum from the provided plain string.
 func crc32Checksum(str string) string {
-	return strconv.Itoa(int(crc32.ChecksumIEEE([]byte(str))))
+	return strconv.FormatInt(int64(crc32.ChecksumIEEE([]byte(str))), 10)
 }
 
 // ModelQuery creates a new preconfigured select app.DB() query with preset
