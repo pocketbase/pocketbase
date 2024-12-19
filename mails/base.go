@@ -1,4 +1,4 @@
-// Package mails implements various helper methods for sending user and admin
+// Package mails implements various helper methods for sending common
 // emails like forgotten password, verification, etc.
 package mails
 

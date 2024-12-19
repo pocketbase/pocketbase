@@ -82,7 +82,7 @@ func (e *RequestEvent) HasSuperuserAuth() bool {
 // RequestInfo parses the current request into RequestInfo instance.
 //
 // Note that the returned result is cached to avoid copying the request data multiple times
-// but the auth state and other common store items are always refreshed in case they were changed my another handler.
+// but the auth state and other common store items are always refreshed in case they were changed by another handler.
 func (e *RequestEvent) RequestInfo() (*RequestInfo, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
