@@ -1,3 +1,8 @@
+## v0.23.12 (WIP)
+
+- Added warning logs in case of mismatched `modernc.org/sqlite` and `modernc.org/libs` versions ([#6136](https://github.com/pocketbase/pocketbase/issues/6136#issuecomment-2556336962)).
+
+
 ## v0.23.11
 
 - Upgraded `golang.org/x/net` to 0.33.0 to fix [CVE-2024-45338](https://www.cve.org/CVERecord?id=CVE-2024-45338).
