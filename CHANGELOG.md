@@ -1,4 +1,4 @@
-## v0.23.12 (WIP)
+## v0.23.12
 
 - Skipped the default body size limit middleware for the backup upload endpooint ([#6152](https://github.com/pocketbase/pocketbase/issues/6152)).
 

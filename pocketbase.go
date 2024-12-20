@@ -148,9 +148,9 @@ func NewWithConfig(config Config) *PocketBase {
 			}
 
 			// run separately to avoid blocking
-			logger := be.App.Logger()
+			app := be.App
 			routine.FireAndForget(func() {
-				checkModerncDeps(logger)
+				checkModerncDeps(app)
 			})
 
 			return nil
