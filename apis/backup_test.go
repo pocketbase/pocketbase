@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 	"gocloud.dev/blob"
@@ -345,6 +346,19 @@ func TestBackupUpload(t *testing.T) {
 			},
 			ExpectedStatus: 204,
 			ExpectedEvents: map[string]int{"*": 0},
+		},
+		{
+			Name:   "ensure that the default body limit is skipped",
+			Method: http.MethodPost,
+			URL:    "/api/backups/upload",
+			Body:   bytes.NewBuffer(make([]byte, apis.DefaultMaxBodySize+100)),
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			ExpectedStatus:     400, // it doesn't matter as long as it is not 413
+			ExpectedContent:    []string{`"data":{`},
+			NotExpectedContent: []string{"entity too large"},
+			ExpectedEvents:     map[string]int{"*": 0},
 		},
 	}
 
