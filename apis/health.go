@@ -16,6 +16,13 @@ func bindHealthApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
 
 // healthCheck returns a 200 OK response if the server is healthy.
 func healthCheck(e *core.RequestEvent) error {
+	// disable the activity logger to avoid flooding with messages
+	//
+	// note: errors are still logged
+	if e.Get(requestEventKeySkipSuccessActivityLog) == nil {
+		e.Set(requestEventKeySkipSuccessActivityLog, true)
+	}
+
 	resp := struct {
 		Message string         `json:"message"`
 		Code    int            `json:"code"`
