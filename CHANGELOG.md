@@ -19,9 +19,9 @@
     (_or in other words, `@collection.example.someField != "test"` will result to `true` if `example` collection has no records because it satisfies the condition that all available "example" records mustn't have `someField` equal to "test"_).
 
 
-## v0.23.12 (WIP)
+## v0.23.12
 
-- Added warning logs in case of mismatched `modernc.org/sqlite` and `modernc.org/libs` versions ([#6136](https://github.com/pocketbase/pocketbase/issues/6136#issuecomment-2556336962)).
+- Added warning logs in case of mismatched `modernc.org/sqlite` and `modernc.org/libc` versions ([#6136](https://github.com/pocketbase/pocketbase/issues/6136#issuecomment-2556336962)).
 
 - Skipped the default body size limit middleware for the backup upload endpooint ([#6152](https://github.com/pocketbase/pocketbase/issues/6152)).
 
