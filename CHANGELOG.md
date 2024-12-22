@@ -1,4 +1,4 @@
-## v0.23.12 (WIP)
+## v0.23.12
 
 - Added warning logs in case of mismatched `modernc.org/sqlite` and `modernc.org/libs` versions ([#6136](https://github.com/pocketbase/pocketbase/issues/6136#issuecomment-2556336962)).
 
