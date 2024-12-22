@@ -11,21 +11,17 @@ package cron
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 )
-
-type job struct {
-	schedule *Schedule
-	run      func()
-}
 
 // Cron is a crontab-like struct for tasks/jobs scheduling.
 type Cron struct {
 	timezone   *time.Location
 	ticker     *time.Ticker
 	startTimer *time.Timer
-	jobs       map[string]*job
+	jobs       []*Job
 	tickerDone chan bool
 	interval   time.Duration
 	mux        sync.RWMutex
@@ -40,7 +36,7 @@ func New() *Cron {
 	return &Cron{
 		interval:   1 * time.Minute,
 		timezone:   time.UTC,
-		jobs:       map[string]*job{},
+		jobs:       []*Job{},
 		tickerDone: make(chan bool),
 	}
 }
@@ -82,23 +78,30 @@ func (c *Cron) MustAdd(jobId string, cronExpr string, run func()) {
 //
 // cronExpr is a regular cron expression, eg. "0 */3 * * *" (aka. at minute 0 past every 3rd hour).
 // Check cron.NewSchedule() for the supported tokens.
-func (c *Cron) Add(jobId string, cronExpr string, run func()) error {
-	if run == nil {
-		return errors.New("failed to add new cron job: run must be non-nil function")
+func (c *Cron) Add(jobId string, cronExpr string, fn func()) error {
+	if fn == nil {
+		return errors.New("failed to add new cron job: fn must be non-nil function")
 	}
-
-	c.mux.Lock()
-	defer c.mux.Unlock()
 
 	schedule, err := NewSchedule(cronExpr)
 	if err != nil {
 		return fmt.Errorf("failed to add new cron job: %w", err)
 	}
 
-	c.jobs[jobId] = &job{
+	c.mux.Lock()
+	defer c.mux.Unlock()
+
+	// remove previous (if any)
+	c.jobs = slices.DeleteFunc(c.jobs, func(j *Job) bool {
+		return j.Id() == jobId
+	})
+
+	// add new
+	c.jobs = append(c.jobs, &Job{
+		id:       jobId,
+		fn:       fn,
 		schedule: schedule,
-		run:      run,
-	}
+	})
 
 	return nil
 }
@@ -108,7 +111,13 @@ func (c *Cron) Remove(jobId string) {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	delete(c.jobs, jobId)
+	if c.jobs == nil {
+		return // nothing to remove
+	}
+
+	c.jobs = slices.DeleteFunc(c.jobs, func(j *Job) bool {
+		return j.Id() == jobId
+	})
 }
 
 // RemoveAll removes all registered cron jobs.
@@ -116,7 +125,7 @@ func (c *Cron) RemoveAll() {
 	c.mux.Lock()
 	defer c.mux.Unlock()
 
-	c.jobs = map[string]*job{}
+	c.jobs = []*Job{}
 }
 
 // Total returns the current total number of registered cron jobs.
@@ -125,6 +134,19 @@ func (c *Cron) Total() int {
 	defer c.mux.RUnlock()
 
 	return len(c.jobs)
+}
+
+// Jobs returns a shallow copy of the currently registered cron jobs.
+func (c *Cron) Jobs() []*Job {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	copy := make([]*Job, len(c.jobs))
+	for i, j := range c.jobs {
+		copy[i] = j
+	}
+
+	return copy
 }
 
 // Stop stops the current cron ticker (if not already).
@@ -200,7 +222,7 @@ func (c *Cron) runDue(t time.Time) {
 
 	for _, j := range c.jobs {
 		if j.schedule.IsDue(moment) {
-			go j.run()
+			go j.Run()
 		}
 	}
 }

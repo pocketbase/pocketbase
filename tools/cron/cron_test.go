@@ -2,6 +2,7 @@ package cron
 
 import (
 	"encoding/json"
+	"slices"
 	"testing"
 	"time"
 )
@@ -98,6 +99,11 @@ func TestCronAddAndRemove(t *testing.T) {
 	// try to remove non-existing (should be no-op)
 	c.Remove("missing")
 
+	indexedJobs := make(map[string]*Job, len(c.jobs))
+	for _, j := range c.jobs {
+		indexedJobs[j.Id()] = j
+	}
+
 	// check job keys
 	{
 		expectedKeys := []string{"test3", "test2", "test5"}
@@ -107,7 +113,7 @@ func TestCronAddAndRemove(t *testing.T) {
 		}
 
 		for _, k := range expectedKeys {
-			if c.jobs[k] == nil {
+			if indexedJobs[k] == nil {
 				t.Fatalf("Expected job with key %s, got nil", k)
 			}
 		}
@@ -121,7 +127,7 @@ func TestCronAddAndRemove(t *testing.T) {
 			"test5": `{"minutes":{"1":{}},"hours":{"2":{}},"days":{"3":{}},"months":{"4":{}},"daysOfWeek":{"5":{}}}`,
 		}
 		for k, v := range expectedSchedules {
-			raw, err := json.Marshal(c.jobs[k].schedule)
+			raw, err := json.Marshal(indexedJobs[k].schedule)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -148,7 +154,7 @@ func TestCronMustAdd(t *testing.T) {
 
 	c.MustAdd("test2", "* * * * *", func() {})
 
-	if _, ok := c.jobs["test2"]; !ok {
+	if !slices.ContainsFunc(c.jobs, func(j *Job) bool { return j.Id() == "test2" }) {
 		t.Fatal("Couldn't find job test2")
 	}
 }
@@ -205,6 +211,42 @@ func TestCronTotal(t *testing.T) {
 
 	if v := c.Total(); v != 2 {
 		t.Fatalf("Expected 2 jobs, got %v", v)
+	}
+}
+
+func TestCronJobs(t *testing.T) {
+	t.Parallel()
+
+	c := New()
+
+	calls := ""
+
+	if err := c.Add("a", "1 * * * *", func() { calls += "a" }); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := c.Add("b", "2 * * * *", func() { calls += "b" }); err != nil {
+		t.Fatal(err)
+	}
+
+	// overwrite
+	if err := c.Add("b", "3 * * * *", func() { calls += "b" }); err != nil {
+		t.Fatal(err)
+	}
+
+	jobs := c.Jobs()
+
+	if len(jobs) != 2 {
+		t.Fatalf("Expected 2 jobs, got %v", len(jobs))
+	}
+
+	for _, j := range jobs {
+		j.Run()
+	}
+
+	expectedCalls := "ab"
+	if calls != expectedCalls {
+		t.Fatalf("Expected %q calls, got %q", expectedCalls, calls)
 	}
 }
 

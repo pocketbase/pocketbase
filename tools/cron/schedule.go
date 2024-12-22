@@ -35,6 +35,8 @@ type Schedule struct {
 	Days       map[int]struct{} `json:"days"`
 	Months     map[int]struct{} `json:"months"`
 	DaysOfWeek map[int]struct{} `json:"daysOfWeek"`
+
+	rawExpr string
 }
 
 // IsDue checks whether the provided Moment satisfies the current Schedule.
@@ -130,6 +132,7 @@ func NewSchedule(cronExpr string) (*Schedule, error) {
 		Days:       days,
 		Months:     months,
 		DaysOfWeek: daysOfWeek,
+		rawExpr:    cronExpr,
 	}, nil
 }
 
