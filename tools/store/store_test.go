@@ -227,7 +227,7 @@ func TestValues(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
-	s := store.Store[int]{}
+	s := store.Store[string, int]{}
 
 	data := map[string]int{"test1": 0, "test2": 1, "test3": 3}
 
@@ -281,7 +281,7 @@ func TestGetOrSet(t *testing.T) {
 }
 
 func TestSetIfLessThanLimit(t *testing.T) {
-	s := store.Store[int]{}
+	s := store.Store[string, int]{}
 
 	limit := 2
 
@@ -316,7 +316,7 @@ func TestSetIfLessThanLimit(t *testing.T) {
 }
 
 func TestUnmarshalJSON(t *testing.T) {
-	s := store.Store[string]{}
+	s := store.Store[string, string]{}
 	s.Set("b", "old")   // should be overwritten
 	s.Set("c", "test3") // ensures that the old values are not removed
 
@@ -339,7 +339,7 @@ func TestUnmarshalJSON(t *testing.T) {
 }
 
 func TestMarshalJSON(t *testing.T) {
-	s := &store.Store[string]{}
+	s := &store.Store[string, string]{}
 	s.Set("a", "test1")
 	s.Set("b", "test2")
 
@@ -356,7 +356,7 @@ func TestMarshalJSON(t *testing.T) {
 }
 
 func TestShrink(t *testing.T) {
-	s := &store.Store[int]{}
+	s := &store.Store[string, int]{}
 
 	total := 1000
 

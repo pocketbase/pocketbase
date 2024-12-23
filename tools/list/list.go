@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-var cachedPatterns = store.New[*regexp.Regexp](nil)
+var cachedPatterns = store.New[string, *regexp.Regexp](nil)
 
 // SubtractSlice returns a new slice with only the "base" elements
 // that don't exist in "subtract".

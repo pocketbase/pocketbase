@@ -111,7 +111,7 @@ func checkCollectionRateLimit(e *core.RequestEvent, collection *core.Collection,
 //
 //nolint:unused
 func isClientRateLimited(e *core.RequestEvent, rtId string) bool {
-	rateLimiters, ok := e.App.Store().Get(rateLimitersStoreKey).(*store.Store[*rateLimiter])
+	rateLimiters, ok := e.App.Store().Get(rateLimitersStoreKey).(*store.Store[string, *rateLimiter])
 	if !ok || rateLimiters == nil {
 		return false
 	}
@@ -146,7 +146,7 @@ func checkRateLimit(e *core.RequestEvent, rtId string, rule core.RateLimitRule) 
 
 	rateLimiters := e.App.Store().GetOrSet(rateLimitersStoreKey, func() any {
 		return initRateLimitersStore(e.App)
-	}).(*store.Store[*rateLimiter])
+	}).(*store.Store[string, *rateLimiter])
 	if rateLimiters == nil {
 		e.App.Logger().Warn("Failed to retrieve app rate limiters store")
 		return nil
@@ -198,9 +198,9 @@ func destroyRateLimitersStore(app core.App) {
 	app.Store().Remove(rateLimitersStoreKey)
 }
 
-func initRateLimitersStore(app core.App) *store.Store[*rateLimiter] {
+func initRateLimitersStore(app core.App) *store.Store[string, *rateLimiter] {
 	app.Cron().Add(rateLimitersCronKey, "2 * * * *", func() { // offset a little since too many cleanup tasks execute at 00
-		limitersStore, ok := app.Store().Get(rateLimitersStoreKey).(*store.Store[*rateLimiter])
+		limitersStore, ok := app.Store().Get(rateLimitersStoreKey).(*store.Store[string, *rateLimiter])
 		if !ok {
 			return
 		}
@@ -225,7 +225,7 @@ func initRateLimitersStore(app core.App) *store.Store[*rateLimiter] {
 		},
 	})
 
-	return store.New[*rateLimiter](nil)
+	return store.New[string, *rateLimiter](nil)
 }
 
 func newRateLimiter(maxAllowed int, intervalInSec int64, minDeleteIntervalInSec int64) *rateLimiter {

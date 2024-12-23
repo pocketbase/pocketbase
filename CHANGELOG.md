@@ -18,6 +18,9 @@
     With this change the "multi-match" operators are also normalized in case the targetted colletion doesn't have any records
     (_or in other words, `@collection.example.someField != "test"` will result to `true` if `example` collection has no records because it satisfies the condition that all available "example" records mustn't have `someField` equal to "test"_).
 
+- ⚠️ Changed the type definition of `store.Store[T any]` to `store.Store[K comparable, T any]` to allow support for custom store key types.
+    For most users it should be non-breaking change, BUT if you are creating manually `store.New[any](nil)` instances you'll have to specify the key generic type, aka. `store.New[string, any](nil)`.
+
 
 ## v0.23.12
 

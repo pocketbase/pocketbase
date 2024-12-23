@@ -37,9 +37,9 @@ var (
 type Record struct {
 	collection       *Collection
 	originalData     map[string]any
-	customVisibility *store.Store[bool]
-	data             *store.Store[any]
-	expand           *store.Store[any]
+	customVisibility *store.Store[string, bool]
+	data             *store.Store[string, any]
+	expand           *store.Store[string, any]
 
 	BaseModel
 
@@ -537,8 +537,8 @@ func newRecordsFromNullStringMaps(collection *Collection, rows []dbx.NullStringM
 func NewRecord(collection *Collection) *Record {
 	record := &Record{
 		collection:       collection,
-		data:             store.New[any](nil),
-		customVisibility: store.New[bool](nil),
+		data:             store.New[string, any](nil),
+		customVisibility: store.New[string, bool](nil),
 		originalData:     make(map[string]any, len(collection.Fields)),
 	}
 
@@ -681,7 +681,7 @@ func (m *Record) Expand() map[string]any {
 // SetExpand replaces the current Record's expand with the provided expand arg data (shallow copied).
 func (m *Record) SetExpand(expand map[string]any) {
 	if m.expand == nil {
-		m.expand = store.New[any](nil)
+		m.expand = store.New[string, any](nil)
 	}
 
 	m.expand.Reset(expand)

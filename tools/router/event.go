@@ -34,7 +34,7 @@ type Event struct {
 
 	hook.Event
 
-	data store.Store[any]
+	data store.Store[string, any]
 }
 
 // RWUnwrapper specifies that an http.ResponseWriter could be "unwrapped"

@@ -9,13 +9,13 @@ import (
 
 // Broker defines a struct for managing subscriptions clients.
 type Broker struct {
-	store *store.Store[Client]
+	store *store.Store[string, Client]
 }
 
 // NewBroker initializes and returns a new Broker instance.
 func NewBroker() *Broker {
 	return &Broker{
-		store: store.New[Client](nil),
+		store: store.New[string, Client](nil),
 	}
 }
 

@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-var cachedColors = store.New[*color.Color](nil)
+var cachedColors = store.New[string, *color.Color](nil)
 
 // getColor returns [color.Color] object and cache it (if not already).
 func getColor(attrs ...color.Attribute) (c *color.Color) {
