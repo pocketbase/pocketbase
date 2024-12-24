@@ -1,6 +1,7 @@
 <script>
     import Field from "@/components/base/Field.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import { setErrors } from "@/stores/errors";
     import { addErrorToast, addSuccessToast } from "@/stores/toasts";
     import ApiClient from "@/utils/ApiClient";
@@ -27,15 +28,25 @@
     let template = templateOptions[0].value;
     let isSubmitting = false;
     let testTimeoutId = null;
+    let authCollections = [];
+    let isAuthCollectionsLoading = false;
+    let showAuthCollections = false;
 
-    $: canSubmit = !!email && !!template;
+    $: canSubmit = !!email && !!template && !!collectionIdOrName;
 
     export function show(collectionArg = "", emailArg = "", templateArg = "") {
-        collectionIdOrName = collectionArg || "_superusers";
-        email = emailArg || localStorage.getItem(emailStorageKey);
-        template = templateArg || templateOptions[0].value;
-
         setErrors({}); // reset any previous errors
+
+        showAuthCollections = false;
+
+        collectionIdOrName = collectionArg || "";
+        if (!collectionIdOrName) {
+            loadAuthCollections();
+        }
+
+        email = emailArg || localStorage.getItem(emailStorageKey);
+
+        template = templateArg || templateOptions[0].value;
 
         panel?.show();
     }
@@ -46,7 +57,7 @@
     }
 
     async function submit() {
-        if (!canSubmit || isSubmitting) {
+        if (!canSubmit || isSubmitting || !collectionIdOrName) {
             return;
         }
 
@@ -81,6 +92,26 @@
 
         clearTimeout(testTimeoutId);
     }
+
+    async function loadAuthCollections() {
+        showAuthCollections = true;
+        isAuthCollectionsLoading = true;
+
+        try {
+            authCollections = await ApiClient.collections.getFullList({
+                filter: "type='auth'",
+                sort: "+name",
+                requestKey: formId + "_collections_loading",
+            });
+
+            collectionIdOrName = authCollections[0]?.id || "";
+        } catch (err) {
+            if (!err.isAbort) {
+                isAuthCollectionsLoading = false;
+                ApiClient.error(err);
+            }
+        }
+    }
 </script>
 
 <OverlayPanel
@@ -112,6 +143,23 @@
                 </div>
             {/each}
         </Field>
+
+        {#if showAuthCollections}
+            <Field class="form-field required" name="collection" let:uniqueId>
+                <label for={uniqueId}>Auth collection</label>
+
+                <ObjectSelect
+                    id={uniqueId}
+                    selectPlaceholder={isAuthCollectionsLoading
+                        ? "Loading auth collections..."
+                        : "Select auth collection"}
+                    noOptionsText={"No auth collections found"}
+                    selectionKey="id"
+                    items={authCollections}
+                    bind:keyOfSelected={collectionIdOrName}
+                />
+            </Field>
+        {/if}
 
         <Field class="form-field required m-0" name="email" let:uniqueId>
             <label for={uniqueId}>To email address</label>
