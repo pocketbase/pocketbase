@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/mails"
 	"github.com/pocketbase/pocketbase/tools/router"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
@@ -569,8 +571,28 @@ func authAlert(e *core.RequestEvent, authRecord *core.Record) error {
 	}
 
 	// send email alert for the new origin auth (skip first login)
+	//
+	// Note: The "fake" timeout is a temp solution to avoid blocking
+	//       for too long when the SMTP server is not accessible, due
+	//       to the lack of context concellation support in the underlying
+	//       mailer and net/smtp package.
+	//       The goroutine technically "leaks" but we assume that the OS will
+	//       terminate the connection after some time (usually after 3-4 mins).
 	if !isFirstLogin && currentOrigin.IsNew() && authRecord.Email() != "" {
-		if err := mails.SendRecordAuthAlert(e.App, authRecord); err != nil {
+		mailSent := make(chan error, 1)
+
+		timer := time.AfterFunc(15*time.Second, func() {
+			mailSent <- errors.New("auth alert mail send wait timeout reached")
+		})
+
+		routine.FireAndForget(func() {
+			err := mails.SendRecordAuthAlert(e.App, authRecord)
+			timer.Stop()
+			mailSent <- err
+		})
+
+		err = <-mailSent
+		if err != nil {
 			return err
 		}
 	}
