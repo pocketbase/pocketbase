@@ -30,6 +30,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/mailer"
 	"github.com/pocketbase/pocketbase/tools/router"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/store"
 	"github.com/pocketbase/pocketbase/tools/subscriptions"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
@@ -295,6 +296,8 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 	return wrappedMiddlewares, nil
 }
 
+var cachedArrayOfTypes = store.New[reflect.Type, reflect.Type](nil)
+
 func baseBinds(vm *goja.Runtime) {
 	vm.SetFieldNameMapper(FieldMapper{})
 
@@ -348,10 +351,11 @@ func baseBinds(vm *goja.Runtime) {
 
 	vm.Set("arrayOf", func(model any) any {
 		mt := reflect.TypeOf(model)
-		st := reflect.SliceOf(mt)
-		elem := reflect.New(st).Elem()
+		st := cachedArrayOfTypes.GetOrSet(mt, func() reflect.Type {
+			return reflect.SliceOf(mt)
+		})
 
-		return elem.Addr().Interface()
+		return reflect.New(st).Elem().Addr().Interface()
 	})
 
 	vm.Set("unmarshal", func(data, dst any) error {
@@ -899,12 +903,42 @@ func httpClientBinds(vm *goja.Runtime) {
 
 // -------------------------------------------------------------------
 
+// normalizeException checks if the provided error is a goja.Exception
+// and attempts to return its underlying Go error.
+//
+// note: using just goja.Exception.Unwrap() is insufficient and may falsely result in nil.
+func normalizeException(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	jsException, ok := err.(*goja.Exception)
+	if !ok {
+		return err // no exception
+	}
+
+	switch v := jsException.Value().Export().(type) {
+	case error:
+		err = v
+	case map[string]any: // goja.GoError
+		if vErr, ok := v["value"].(error); ok {
+			err = vErr
+		}
+	}
+
+	return err
+}
+
+var cachedFactoryFuncTypes = store.New[string, reflect.Type](nil)
+
 // registerFactoryAsConstructor registers the factory function as native JS constructor.
 //
 // If there is missing or nil arguments, their type zero value is used.
 func registerFactoryAsConstructor(vm *goja.Runtime, constructorName string, factoryFunc any) {
 	rv := reflect.ValueOf(factoryFunc)
-	rt := reflect.TypeOf(factoryFunc)
+	rt := cachedFactoryFuncTypes.GetOrSet(constructorName, func() reflect.Type {
+		return reflect.TypeOf(factoryFunc)
+	})
 	totalArgs := rt.NumIn()
 
 	vm.Set(constructorName, func(call goja.ConstructorCall) *goja.Object {
@@ -970,6 +1004,8 @@ func structConstructorUnmarshal(vm *goja.Runtime, call goja.ConstructorCall, ins
 	return instanceValue
 }
 
+var cachedDynamicModels = store.New[string, *dynamicModelType](nil)
+
 // newDynamicModel creates a new dynamic struct with fields based
 // on the specified "shape".
 //
@@ -980,7 +1016,40 @@ func structConstructorUnmarshal(vm *goja.Runtime, call goja.ConstructorCall, ins
 //		"total": 0,
 //	})
 func newDynamicModel(shape map[string]any) any {
-	shapeValues := make([]reflect.Value, 0, len(shape))
+	var modelType *dynamicModelType
+
+	shapeRaw, err := json.Marshal(shape)
+	if err != nil {
+		modelType = getDynamicModelStruct(shape)
+	} else {
+		modelType = cachedDynamicModels.GetOrSet(string(shapeRaw), func() *dynamicModelType {
+			return getDynamicModelStruct(shape)
+		})
+	}
+
+	rvShapeValues := make([]reflect.Value, len(modelType.shapeValues))
+	for i, v := range modelType.shapeValues {
+		rvShapeValues[i] = reflect.ValueOf(v)
+	}
+
+	elem := reflect.New(modelType.structType).Elem()
+
+	for i, v := range rvShapeValues {
+		elem.Field(i).Set(v)
+	}
+
+	return elem.Addr().Interface()
+}
+
+type dynamicModelType struct {
+	structType  reflect.Type
+	shapeValues []any
+}
+
+func getDynamicModelStruct(shape map[string]any) *dynamicModelType {
+	result := new(dynamicModelType)
+	result.shapeValues = make([]any, 0, len(shape))
+
 	structFields := make([]reflect.StructField, 0, len(shape))
 
 	for k, v := range shape {
@@ -1001,7 +1070,7 @@ func newDynamicModel(shape map[string]any) any {
 			vt = reflect.TypeOf(newV)
 		}
 
-		shapeValues = append(shapeValues, reflect.ValueOf(v))
+		result.shapeValues = append(result.shapeValues, v)
 
 		structFields = append(structFields, reflect.StructField{
 			Name: inflector.UcFirst(k), // ensures that the field is exportable
@@ -1010,38 +1079,7 @@ func newDynamicModel(shape map[string]any) any {
 		})
 	}
 
-	st := reflect.StructOf(structFields)
-	elem := reflect.New(st).Elem()
+	result.structType = reflect.StructOf(structFields)
 
-	for i, v := range shapeValues {
-		elem.Field(i).Set(v)
-	}
-
-	return elem.Addr().Interface()
-}
-
-// normalizeException checks if the provided error is a goja.Exception
-// and attempts to return its underlying Go error.
-//
-// note: using just goja.Exception.Unwrap() is insufficient and may falsely result in nil.
-func normalizeException(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	jsException, ok := err.(*goja.Exception)
-	if !ok {
-		return err // no exception
-	}
-
-	switch v := jsException.Value().Export().(type) {
-	case error:
-		err = v
-	case map[string]any: // goja.GoError
-		if vErr, ok := v["value"].(error); ok {
-			err = vErr
-		}
-	}
-
-	return err
+	return result
 }
