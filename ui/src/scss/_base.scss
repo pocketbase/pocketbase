@@ -752,6 +752,14 @@ a.thumb:not(.thumb-active) {
         background-size: 200% 100%;
         animation: shine 1s linear infinite;
     }
+
+    // sizes
+    &.skeleton-loader-sm {
+        height: 8px;
+    }
+    &.skeleton-loader-lg {
+        height: 18px;
+    }
 }
 
 .placeholder-section {

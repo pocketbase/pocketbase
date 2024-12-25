@@ -119,7 +119,7 @@ func (app *BaseApp) registerOTPHooks() {
 	recordRefHooks[*OTP](app, CollectionNameOTPs, CollectionTypeAuth)
 
 	// run on every hour to cleanup expired otp sessions
-	app.Cron().Add("__otpsCleanup__", "0 * * * *", func() {
+	app.Cron().Add("__pbOTPCleanup__", "0 * * * *", func() {
 		if err := app.DeleteExpiredOTPs(); err != nil {
 			app.Logger().Warn("Failed to delete expired OTP sessions", "error", err)
 		}

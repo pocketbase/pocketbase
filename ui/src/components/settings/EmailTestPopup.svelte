@@ -105,6 +105,7 @@
             });
 
             collectionIdOrName = authCollections[0]?.id || "";
+            isAuthCollectionsLoading = false;
         } catch (err) {
             if (!err.isAbort) {
                 isAuthCollectionsLoading = false;
@@ -147,7 +148,6 @@
         {#if showAuthCollections}
             <Field class="form-field required" name="collection" let:uniqueId>
                 <label for={uniqueId}>Auth collection</label>
-
                 <ObjectSelect
                     id={uniqueId}
                     selectPlaceholder={isAuthCollectionsLoading

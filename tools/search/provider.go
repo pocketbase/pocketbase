@@ -97,7 +97,7 @@ func NewProvider(fieldResolver FieldResolver) *Provider {
 	}
 }
 
-// MaxFilterExpressions changes the default max allowed filter expressions.
+// MaxFilterExprLimit changes the default max allowed filter expressions.
 //
 // Note that currently the limit is applied individually for each separate filter.
 func (s *Provider) MaxFilterExprLimit(max int) *Provider {
@@ -105,7 +105,7 @@ func (s *Provider) MaxFilterExprLimit(max int) *Provider {
 	return s
 }
 
-// MaxSortExpressions changes the default max allowed sort expressions.
+// MaxSortExprLimit changes the default max allowed sort expressions.
 func (s *Provider) MaxSortExprLimit(max int) *Provider {
 	s.maxSortExprLimit = max
 	return s

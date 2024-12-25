@@ -3,6 +3,7 @@ import PageLogs from "@/components/logs/PageLogs.svelte";
 import PageRecords from "@/components/records/PageRecords.svelte";
 import PageApplication from "@/components/settings/PageApplication.svelte";
 import PageBackups from "@/components/settings/PageBackups.svelte";
+import PageCrons from "@/components/settings/PageCrons.svelte";
 import PageExportCollections from "@/components/settings/PageExportCollections.svelte";
 import PageImportCollections from "@/components/settings/PageImportCollections.svelte";
 import PageMail from "@/components/settings/PageMail.svelte";
@@ -83,6 +84,12 @@ const routes = {
 
     "/settings/backups": wrap({
         component: PageBackups,
+        conditions: [(_) => ApiClient.authStore.isValid],
+        userData: { showAppSidebar: true },
+    }),
+
+    "/settings/crons": wrap({
+        component: PageCrons,
         conditions: [(_) => ApiClient.authStore.isValid],
         userData: { showAppSidebar: true },
     }),

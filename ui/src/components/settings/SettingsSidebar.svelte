@@ -39,6 +39,15 @@
             <i class="ri-archive-line" aria-hidden="true" />
             <span class="txt">Backups</span>
         </a>
+        <a
+            href="/settings/crons"
+            class="sidebar-list-item"
+            use:active={{ path: "/settings/crons/?.*" }}
+            use:link
+        >
+            <i class="ri-time-line" aria-hidden="true"></i>
+            <span class="txt">Crons</span>
+        </a>
 
         {#if !$hideControls}
             <div class="sidebar-title">

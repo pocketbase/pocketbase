@@ -1,5 +1,7 @@
 package cron
 
+import "encoding/json"
+
 // Job defines a single registered cron job.
 type Job struct {
 	fn       func()
@@ -12,8 +14,8 @@ func (j *Job) Id() string {
 	return j.id
 }
 
-// Expr returns the plain cron job schedule expression.
-func (j *Job) Expr() string {
+// Expression returns the plain cron job schedule expression.
+func (j *Job) Expression() string {
 	return j.schedule.rawExpr
 }
 
@@ -22,4 +24,18 @@ func (j *Job) Run() {
 	if j.fn != nil {
 		j.fn()
 	}
+}
+
+// MarshalJSON implements [json.Marshaler] and export the current
+// jobs data into valid JSON.
+func (j Job) MarshalJSON() ([]byte, error) {
+	plain := struct {
+		Id         string `json:"id"`
+		Expression string `json:"expression"`
+	}{
+		Id:         j.Id(),
+		Expression: j.Expression(),
+	}
+
+	return json.Marshal(plain)
 }

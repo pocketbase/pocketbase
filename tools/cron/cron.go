@@ -21,8 +21,8 @@ type Cron struct {
 	timezone   *time.Location
 	ticker     *time.Ticker
 	startTimer *time.Timer
-	jobs       []*Job
 	tickerDone chan bool
+	jobs       []*Job
 	interval   time.Duration
 	mux        sync.RWMutex
 }
