@@ -14,6 +14,8 @@
     export let selectionKey = "value";
     export let keyOfSelected = multiple ? [] : undefined;
 
+    let oldKeyOfSelectedHash = JSON.stringify(keyOfSelected);
+
     $: if (items) {
         handleKeyOfSelectedChange(keyOfSelected);
     }
@@ -40,13 +42,17 @@
     }
 
     async function handleSelectedChange(newSelected) {
-        let extractedKeys = CommonHelper.toArray(newSelected, true).map((item) => item[selectionKey]);
-
         if (!items.length) {
             return; // options are still loading...
         }
 
-        keyOfSelected = multiple ? extractedKeys : extractedKeys[0];
+        let extractedKeys = CommonHelper.toArray(newSelected, true).map((item) => item[selectionKey]);
+        let newKeyOfSelected = multiple ? extractedKeys : extractedKeys[0];
+
+        if (JSON.stringify(newKeyOfSelected) != oldKeyOfSelectedHash) {
+            keyOfSelected = newKeyOfSelected;
+            oldKeyOfSelectedHash = JSON.stringify(keyOfSelected);
+        }
     }
 </script>
 

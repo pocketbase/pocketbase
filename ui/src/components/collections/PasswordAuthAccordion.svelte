@@ -10,6 +10,7 @@
     export let collection;
 
     let identityFieldsOptions = [];
+    let oldIndexes = "";
 
     $: isSuperusers = collection?.system && collection?.name === "_superusers";
 
@@ -22,12 +23,18 @@
 
     $: hasErrors = !CommonHelper.isEmpty($errors?.passwordAuth);
 
-    function extractUniqueFields(collection) {
+    $: if (collection && oldIndexes != collection.indexes.join("")) {
+        refreshIdentityFieldsOptions();
+    }
+
+    function refreshIdentityFieldsOptions() {
         // email is always available in auth collections
-        const result = [{ value: "email" }];
+        identityFieldsOptions = [{ value: "email" }];
 
         const fields = collection?.fields || [];
         const indexes = collection?.indexes || [];
+
+        oldIndexes = indexes.join("");
 
         for (let idx of indexes) {
             const parsed = CommonHelper.parseIndex(idx);
@@ -39,20 +46,13 @@
                 return !f.hidden && f.name.toLowerCase() == parsed.columns[0].name.toLowerCase();
             });
             if (field) {
-                result.push({ value: field.name });
+                identityFieldsOptions.push({ value: field.name });
             }
         }
-
-        return result;
     }
 </script>
 
-<Accordion
-    single
-    on:expand={() => {
-        identityFieldsOptions = extractUniqueFields(collection);
-    }}
->
+<Accordion single>
     <svelte:fragment slot="header">
         <div class="inline-flex">
             <i class="ri-lock-password-line"></i>
