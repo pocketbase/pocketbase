@@ -10,16 +10,18 @@
 
 - Added `mailer.Message.InlineAttachments` field for attaching inline files to an email (_aka. `cid` links_).
 
-- Invalidate all record tokens when the auth record email is changed programmatically or by a superuser ([#5964](https://github.com/pocketbase/pocketbase/issues/5964)).
-
 - Added cache for the JSVM `arrayOf(m)`, `DynamicModel`, etc. dynamic `reflect` created types.
-
-- Eagerly interrupt waiting for the email alert send in case it takes longer than 15s.
 
 - Added auth collection select for the settings "Send test email" popup ([#6166](https://github.com/pocketbase/pocketbase/issues/6166)).
 
 - Added `record.SetRandomPassword()` to simplify random password generation usually used in the OAuth2 or OTP record creation flows.
     _The generated ~30 chars random password is assigned directly as bcrypt hash and ignores the `password` field plain value validators like min/max length or regex pattern._
+
+- Added option to list and trigger the registered app level cron jobs via the Web API and UI.
+
+- Invalidate all record tokens when the auth record email is changed programmatically or by a superuser ([#5964](https://github.com/pocketbase/pocketbase/issues/5964)).
+
+- Eagerly interrupt waiting for the email alert send in case it takes longer than 15s.
 
 - ⚠️ Removed the "dry submit" when executing the collections Create API rule
     (you can find more details why this change was introduced and how it could affect your app in https://github.com/pocketbase/pocketbase/discussions/6073).
