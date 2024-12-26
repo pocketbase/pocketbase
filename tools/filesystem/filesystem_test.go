@@ -736,6 +736,61 @@ func TestFileSystemCreateThumb(t *testing.T) {
 	}
 }
 
+func TestNewS3WithSkipTLSVerify(t *testing.T) {
+	// Create a test server with self-signed cert
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	tests := []struct {
+		name          string
+		skipTLSVerify bool
+		expectError   bool
+	}{
+		{
+			name:          "with skip TLS verify",
+			skipTLSVerify: true,
+			expectError:   false,
+		},
+		{
+			name:          "without skip TLS verify",
+			skipTLSVerify: false,
+			expectError:   true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fs, err := filesystem.NewS3(
+				"test-bucket",
+				"us-east-1",
+				server.URL,
+				"test",
+				"test",
+				true,
+				tt.skipTLSVerify,
+			)
+
+			if tt.expectError {
+				if err == nil {
+					t.Error("expected error but got none")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				if fs == nil {
+					t.Error("expected filesystem but got nil")
+				}
+				if fs != nil {
+					fs.Close()
+				}
+			}
+		})
+	}
+}
+
 // ---
 
 func createTestDir(t *testing.T) string {

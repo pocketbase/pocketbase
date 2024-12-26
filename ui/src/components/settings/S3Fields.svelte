@@ -148,6 +148,21 @@
                 </label>
             </Field>
         </div>
+        <div class="col-lg-12">
+            <Field class="form-field" name="{configKey}.skipTLSVerify" let:uniqueId>
+                <input type="checkbox" id={uniqueId} bind:checked={config.skipTLSVerify} />
+                <label for={uniqueId}>
+                    <span class="txt">Skip TLS certificate verification</span>
+                    <i
+                        class="ri-information-line link-hint"
+                        use:tooltip={{
+                            text: 'Allows connections to S3 endpoints with self-signed or untrusted TLS certificates. Not recommended for production use.',
+                            position: "top",
+                        }}
+                    />
+                </label>
+            </Field>
+        </div>
         <!-- margin helper -->
         <div class="col-lg-12" />
     </div>

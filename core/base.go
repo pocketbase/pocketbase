@@ -644,6 +644,7 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 			app.settings.S3.AccessKey,
 			app.settings.S3.Secret,
 			app.settings.S3.ForcePathStyle,
+			app.settings.S3.SkipTLSVerify,
 		)
 	}
 
@@ -665,6 +666,7 @@ func (app *BaseApp) NewBackupsFilesystem() (*filesystem.System, error) {
 			app.settings.Backups.S3.AccessKey,
 			app.settings.Backups.S3.Secret,
 			app.settings.Backups.S3.ForcePathStyle,
+			app.settings.Backups.S3.SkipTLSVerify,
 		)
 	}
 

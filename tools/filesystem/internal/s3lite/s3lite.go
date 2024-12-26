@@ -70,6 +70,7 @@ package s3lite
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -251,6 +252,9 @@ type Options struct {
 	// Some S3-compatible services (like CEPH) do not currently support
 	// ListObjectsV2.
 	UseLegacyList bool
+
+	// SkipTLSVerify allows insecure TLS connections to the S3 endpoint
+	SkipTLSVerify bool
 }
 
 // openBucket returns an S3 Bucket.
@@ -264,6 +268,27 @@ func openBucket(ctx context.Context, useV2 bool, clientV2 *s3v2.Client, bucketNa
 	if clientV2 == nil {
 		return nil, errors.New("s3blob.OpenBucketV2: client is required")
 	}
+
+	// If SkipTLSVerify is true, create a custom HTTP client with InsecureSkipVerify
+	if opts.SkipTLSVerify {
+		customTransport := http.DefaultTransport.(*http.Transport).Clone()
+		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+		// Create a new HTTP client with our custom transport
+		httpClient := &http.Client{
+			Transport: customTransport,
+		}
+
+		// Update the client options with the custom HTTP client
+		clientV2 = s3v2.New(s3v2.Options{
+			HTTPClient:   httpClient,
+			Region:       clientV2.Options().Region,
+			Credentials:  clientV2.Options().Credentials,
+			BaseEndpoint: clientV2.Options().BaseEndpoint,
+			UsePathStyle: clientV2.Options().UsePathStyle,
+		})
+	}
+
 	return &bucket{
 		useV2:         useV2,
 		name:          bucketName,

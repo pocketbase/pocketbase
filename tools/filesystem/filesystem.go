@@ -46,6 +46,7 @@ func NewS3(
 	accessKey string,
 	secretKey string,
 	s3ForcePathStyle bool,
+	skipTLSVerify bool,
 ) (*System, error) {
 	ctx := context.Background() // default context
 
@@ -78,7 +79,9 @@ func NewS3(
 		}
 	})
 
-	bucket, err := s3lite.OpenBucketV2(ctx, client, bucketName, nil)
+	bucket, err := s3lite.OpenBucketV2(ctx, client, bucketName, &s3lite.Options{
+		SkipTLSVerify: skipTLSVerify,
+	})
 	if err != nil {
 		return nil, err
 	}

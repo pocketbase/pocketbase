@@ -402,6 +402,7 @@ type S3Config struct {
 	AccessKey      string `form:"accessKey" json:"accessKey"`
 	Secret         string `form:"secret" json:"secret,omitempty"`
 	ForcePathStyle bool   `form:"forcePathStyle" json:"forcePathStyle"`
+	SkipTLSVerify  bool   `form:"skipTLSVerify" json:"skipTLSVerify"`
 }
 
 // Validate makes S3Config validatable by implementing [validation.Validatable] interface.

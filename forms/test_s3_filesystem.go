@@ -64,6 +64,7 @@ func (form *TestS3Filesystem) Submit() error {
 		s3Config.AccessKey,
 		s3Config.Secret,
 		s3Config.ForcePathStyle,
+		s3Config.SkipTLSVerify,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to initialize the S3 filesystem: %w", err)
