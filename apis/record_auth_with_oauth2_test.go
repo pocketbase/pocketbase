@@ -958,6 +958,8 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				"createData": {
 					"email": "invalid",
 					"emailVisibility": true,
+					"password": "1234567890",
+					"passwordConfirm": "1234567890",
 					"name": "test_name",
 					"username": "test_username",
 					"rel": "0yxhwia2amd8gec"
@@ -1026,6 +1028,16 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				// ---
 				"OnModelValidate":  4,
 				"OnRecordValidate": 4,
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				user, err := app.FindFirstRecordByData("users", "username", "test_username")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				if !user.ValidatePassword("1234567890") {
+					t.Fatalf("Expected password %q to be valid", "1234567890")
+				}
 			},
 		},
 		{

@@ -1,9 +1,11 @@
 package core_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
@@ -115,5 +117,44 @@ func TestRecordPassword(t *testing.T) {
 				t.Fatal("[random] Expected password to be invalid")
 			}
 		})
+	}
+}
+
+func TestRecordSetRandomPassword(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	oldTokenKey := "old_tokenKey"
+	record := core.NewRecord(core.NewAuthCollection("test"))
+	record.SetTokenKey(oldTokenKey)
+
+	pass := record.SetRandomPassword()
+
+	if pass == "" {
+		t.Fatal("Expected non-empty generated random password")
+	}
+
+	if !record.ValidatePassword(pass) {
+		t.Fatal("Expected the generated random password to be valid")
+	}
+
+	if record.TokenKey() == oldTokenKey {
+		t.Fatal("Expected token key to change")
+	}
+
+	f, ok := record.Collection().Fields.GetByName(core.FieldNamePassword).(*core.PasswordField)
+	if !ok {
+		t.Fatal("Expected *core.PasswordField")
+	}
+
+	// ensure that the field validators will be ignored
+	f.Min = 1
+	f.Max = 2
+	f.Pattern = `\d+`
+
+	if err := f.ValidateValue(context.Background(), app, record); err != nil {
+		t.Fatalf("Expected password field plain value validators to be ignored, got %v", err)
 	}
 }

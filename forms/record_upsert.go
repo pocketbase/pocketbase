@@ -27,9 +27,9 @@ type RecordUpsert struct {
 	accessLevel int
 
 	// extra password fields
-	Password        string `form:"password" json:"password"`
-	PasswordConfirm string `form:"passwordConfirm" json:"passwordConfirm"`
-	OldPassword     string `form:"oldPassword" json:"oldPassword"`
+	password        string
+	passwordConfirm string
+	oldPassword     string
 }
 
 // NewRecordUpsert creates a new [RecordUpsert] form from the provided [core.App] and [core.Record] instances
@@ -93,13 +93,13 @@ func (form *RecordUpsert) Load(data map[string]any) {
 	// load the special auth form fields
 	if isAuth {
 		if v, ok := data["password"]; ok {
-			form.Password = cast.ToString(v)
+			form.password = cast.ToString(v)
 		}
 		if v, ok := data["passwordConfirm"]; ok {
-			form.PasswordConfirm = cast.ToString(v)
+			form.passwordConfirm = cast.ToString(v)
 		}
 		if v, ok := data["oldPassword"]; ok {
-			form.OldPassword = cast.ToString(v)
+			form.oldPassword = cast.ToString(v)
 		}
 
 		excludeFields = append(excludeFields, "passwordConfirm", "oldPassword") // skip non-schema password fields
@@ -137,9 +137,9 @@ func (form *RecordUpsert) validateFormFields() error {
 	validateData := map[string]any{
 		"email":           form.record.Email(),
 		"verified":        form.record.Verified(),
-		"password":        form.Password,
-		"passwordConfirm": form.PasswordConfirm,
-		"oldPassword":     form.OldPassword,
+		"password":        form.password,
+		"passwordConfirm": form.passwordConfirm,
+		"oldPassword":     form.oldPassword,
 	}
 
 	return validation.Validate(validateData,
@@ -165,17 +165,17 @@ func (form *RecordUpsert) validateFormFields() error {
 			validation.Key(
 				"password",
 				validation.When(
-					(isNew || form.PasswordConfirm != "" || form.OldPassword != ""),
+					(isNew || form.passwordConfirm != "" || form.oldPassword != ""),
 					validation.Required,
 				),
 			),
 			validation.Key(
 				"passwordConfirm",
 				validation.When(
-					(isNew || form.Password != "" || form.OldPassword != ""),
+					(isNew || form.password != "" || form.oldPassword != ""),
 					validation.Required,
 				),
-				validation.By(validators.Equal(form.Password)),
+				validation.By(validators.Equal(form.password)),
 			),
 			validation.Key(
 				"oldPassword",
@@ -183,7 +183,7 @@ func (form *RecordUpsert) validateFormFields() error {
 				// - form.HasManageAccess() is not satisfied
 				// - changing the existing password
 				validation.When(
-					!isNew && !form.HasManageAccess() && (form.Password != "" || form.PasswordConfirm != ""),
+					!isNew && !form.HasManageAccess() && (form.password != "" || form.passwordConfirm != ""),
 					validation.Required,
 					validation.By(form.checkOldPassword),
 				),

@@ -94,9 +94,9 @@ func recordsList(e *core.RequestEvent) error {
 
 		// Add a randomized throttle in case of too many empty search filter attempts.
 		//
-		// This is just for extra precaution since security researches raised concern regarding the possibity of eventual
+		// This is just for extra precaution since security researches raised concern regarding the possibility of eventual
 		// timing attacks because the List API rule acts also as filter and executes in a single run with the client-side filters.
-		// This is by design and it is an accepted tradeoff between performance, usability and correctness.
+		// This is by design and it is an accepted trade off between performance, usability and correctness.
 		//
 		// While technically the below doesn't fully guarantee protection against filter timing attacks, in practice combined with the network latency it makes them even less feasible.
 		// A properly configured rate limiter or individual fields Hidden checks are better suited if you are really concerned about eventual information disclosure by side-channel attacks.
@@ -220,6 +220,16 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 			return firstApiError(err, e.BadRequestError("Failed to read the submitted data.", err))
 		}
 
+		// set a random password for the OAuth2 ignoring its plain password validators
+		var skipPlainPasswordRecordValidators bool
+		if requestInfo.Context == core.RequestInfoContextOAuth2 {
+			if _, ok := data[core.FieldNamePassword]; !ok {
+				data[core.FieldNamePassword] = security.RandomString(30)
+				data[core.FieldNamePassword+"Confirm"] = data[core.FieldNamePassword]
+				skipPlainPasswordRecordValidators = true
+			}
+		}
+
 		// replace modifiers fields so that the resolved value is always
 		// available when accessing requestInfo.Body
 		requestInfo.Body = data
@@ -229,6 +239,13 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 			form.GrantSuperuserAccess()
 		}
 		form.Load(data)
+
+		if skipPlainPasswordRecordValidators {
+			// unset the plain value to skip the plain password field validators
+			if raw, ok := record.GetRaw(core.FieldNamePassword).(*core.PasswordFieldValue); ok {
+				raw.Plain = ""
+			}
+		}
 
 		var isOptFinalizerCalled bool
 

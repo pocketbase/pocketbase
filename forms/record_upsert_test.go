@@ -64,15 +64,15 @@ func TestRecordUpsertLoad(t *testing.T) {
 				`"text":"test_text"`,
 				`"number":456`,
 				`"select_many":["optionB","optionC"]`,
-				`"password":""`,
-				`"oldPassword":""`,
-				`"passwordConfirm":""`,
 				`"created":""`,
 				`"updated":""`,
 				`"json":null`,
 			},
 			notExpected: []string{
 				`"custom"`,
+				`"password"`,
+				`"oldPassword"`,
+				`"passwordConfirm"`,
 				`"select_many-"`,
 				`"select_many+"`,
 			},
@@ -89,9 +89,11 @@ func TestRecordUpsertLoad(t *testing.T) {
 			record: core.NewRecord(usersCol),
 			expected: []string{
 				`"email":"test@example.com"`,
-				`"oldPassword":"123"`,
 				`"password":"456"`,
-				`"passwordConfirm":"789"`,
+			},
+			notExpected: []string{
+				`"oldPassword"`,
+				`"passwordConfirm"`,
 			},
 		},
 		{
@@ -110,8 +112,10 @@ func TestRecordUpsertLoad(t *testing.T) {
 				`"email":"test@example.com"`,
 				`"tokenKey":""`,
 				`"password":"456"`,
-				`"oldPassword":"123"`,
-				`"passwordConfirm":"789"`,
+			},
+			notExpected: []string{
+				`"oldPassword"`,
+				`"passwordConfirm"`,
 			},
 		},
 		{
@@ -130,8 +134,10 @@ func TestRecordUpsertLoad(t *testing.T) {
 				`"email":"test@example.com"`,
 				`"tokenKey":"abc"`,
 				`"password":"456"`,
-				`"oldPassword":"123"`,
-				`"passwordConfirm":"789"`,
+			},
+			notExpected: []string{
+				`"oldPassword"`,
+				`"passwordConfirm"`,
 			},
 		},
 		{
@@ -168,11 +174,7 @@ func TestRecordUpsertLoad(t *testing.T) {
 
 			form.Load(s.data)
 
-			loaded := map[string]any{
-				"oldPassword":     form.OldPassword,
-				"password":        form.Password,
-				"passwordConfirm": form.PasswordConfirm,
-			}
+			loaded := map[string]any{}
 			maps.Copy(loaded, s.record.FieldsData())
 			maps.Copy(loaded, s.record.CustomData())
 

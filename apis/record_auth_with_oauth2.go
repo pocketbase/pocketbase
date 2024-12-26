@@ -16,7 +16,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
-	"github.com/pocketbase/pocketbase/tools/security"
 	"golang.org/x/oauth2"
 )
 
@@ -224,12 +223,6 @@ func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *cor
 
 			payload[core.FieldNameEmail] = e.OAuth2User.Email
 
-			// set a random password if none is set
-			if v, _ := payload[core.FieldNamePassword].(string); v == "" {
-				payload[core.FieldNamePassword] = security.RandomString(30)
-				payload[core.FieldNamePassword+"Confirm"] = payload[core.FieldNamePassword]
-			}
-
 			// map known fields (unless the field was explicitly submitted as part of CreateData)
 			if _, ok := payload[e.Collection.OAuth2.MappedFields.Id]; !ok && e.Collection.OAuth2.MappedFields.Id != "" {
 				payload[e.Collection.OAuth2.MappedFields.Id] = e.OAuth2User.Id
@@ -292,7 +285,7 @@ func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *cor
 			// set random password for users with unverified email
 			// (this is in case a malicious actor has registered previously with the user email)
 			if !isLoggedAuthRecord && e.Record.Email() != "" && !e.Record.Verified() {
-				e.Record.SetPassword(security.RandomString(30))
+				e.Record.SetRandomPassword()
 				needUpdate = true
 			}
 
