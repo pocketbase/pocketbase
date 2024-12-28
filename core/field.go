@@ -13,7 +13,7 @@ import (
 
 var fieldNameRegex = regexp.MustCompile(`^\w+$`)
 
-const maxSafeJSONInt = 1<<53 - 1
+const maxSafeJSONInt int64 = 1<<53 - 1
 
 // Commonly used field names.
 const (
