@@ -200,7 +200,7 @@ func TestJSONFieldValidateSettings(t *testing.T) {
 		expectErrors []string
 	}{
 		{
-			"< 0 MaxSize",
+			"MaxSize < 0",
 			func() *core.JSONField {
 				return &core.JSONField{
 					Id:      "test",
@@ -211,7 +211,7 @@ func TestJSONFieldValidateSettings(t *testing.T) {
 			[]string{"maxSize"},
 		},
 		{
-			"= 0 MaxSize",
+			"MaxSize = 0",
 			func() *core.JSONField {
 				return &core.JSONField{
 					Id:   "test",
@@ -221,7 +221,7 @@ func TestJSONFieldValidateSettings(t *testing.T) {
 			[]string{},
 		},
 		{
-			"> 0 MaxSize",
+			"MaxSize > 0",
 			func() *core.JSONField {
 				return &core.JSONField{
 					Id:      "test",
@@ -230,6 +230,17 @@ func TestJSONFieldValidateSettings(t *testing.T) {
 				}
 			},
 			[]string{},
+		},
+		{
+			"MaxSize > safe json int",
+			func() *core.JSONField {
+				return &core.JSONField{
+					Id:      "test",
+					Name:    "test",
+					MaxSize: 1 << 53,
+				}
+			},
+			[]string{"maxSize"},
 		},
 	}
 

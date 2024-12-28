@@ -539,6 +539,50 @@ func TestFileFieldValidateSettings(t *testing.T) {
 			},
 			[]string{},
 		},
+		{
+			"MaxSize > safe json int",
+			func() *core.FileField {
+				return &core.FileField{
+					Id:      "test",
+					Name:    "test",
+					MaxSize: 1 << 53,
+				}
+			},
+			[]string{"maxSize"},
+		},
+		{
+			"MaxSize < 0",
+			func() *core.FileField {
+				return &core.FileField{
+					Id:      "test",
+					Name:    "test",
+					MaxSize: -1,
+				}
+			},
+			[]string{"maxSize"},
+		},
+		{
+			"MaxSelect > safe json int",
+			func() *core.FileField {
+				return &core.FileField{
+					Id:        "test",
+					Name:      "test",
+					MaxSelect: 1 << 53,
+				}
+			},
+			[]string{"maxSelect"},
+		},
+		{
+			"MaxSelect < 0",
+			func() *core.FileField {
+				return &core.FileField{
+					Id:        "test",
+					Name:      "test",
+					MaxSelect: -1,
+				}
+			},
+			[]string{"maxSelect"},
+		},
 	}
 
 	for _, s := range scenarios {

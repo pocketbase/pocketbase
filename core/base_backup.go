@@ -282,7 +282,7 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 
 // registerAutobackupHooks registers the autobackup app serve hooks.
 func (app *BaseApp) registerAutobackupHooks() {
-	const jobId = "__auto_pb_backup__"
+	const jobId = "__pbAutoBackup__"
 
 	loadJob := func() {
 		rawSchedule := app.Settings().Backups.Cron

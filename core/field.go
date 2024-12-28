@@ -13,6 +13,8 @@ import (
 
 var fieldNameRegex = regexp.MustCompile(`^\w+$`)
 
+const maxSafeJSONInt = 1<<53 - 1
+
 // Commonly used field names.
 const (
 	FieldNameId              = "id"

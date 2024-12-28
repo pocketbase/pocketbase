@@ -19,6 +19,8 @@
 
 - Added option to list and trigger the registered app level cron jobs via the Web API and UI.
 
+- Added extra validators for the collection field `int64` options (e.g. `FileField.MaxSize`) restricting them to the max safe JSON number (2^53-1).
+
 - Invalidate all record tokens when the auth record email is changed programmatically or by a superuser ([#5964](https://github.com/pocketbase/pocketbase/issues/5964)).
 
 - Eagerly interrupt waiting for the email alert send in case it takes longer than 15s.
@@ -31,6 +33,8 @@
 
 - ⚠️ Changed the type definition of `store.Store[T any]` to `store.Store[K comparable, T any]` to allow support for custom store key types.
     For most users it should be non-breaking change, BUT if you are calling `store.New[any](nil)` instances you'll have to specify the store key type, aka. `store.New[string, any](nil)`.
+
+- Fixed "Unique identify fields" input not refreshing on unique indexes change ([#6184](https://github.com/pocketbase/pocketbase/issues/6184)).
 
 
 ## v0.23.12

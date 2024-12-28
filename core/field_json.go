@@ -51,7 +51,7 @@ type JSONField struct {
 
 	// ---
 
-	// MaxSize specifies the maximum size of the allowed field value (in bytes).
+	// MaxSize specifies the maximum size of the allowed field value (in bytes and up to 2^53-1).
 	//
 	// If zero, a default limit of 5MB is applied.
 	MaxSize int64 `form:"maxSize" json:"maxSize"`
@@ -181,7 +181,7 @@ func (f *JSONField) ValidateSettings(ctx context.Context, app App, collection *C
 	return validation.ValidateStruct(f,
 		validation.Field(&f.Id, validation.By(DefaultFieldIdValidationRule)),
 		validation.Field(&f.Name, validation.By(DefaultFieldNameValidationRule)),
-		validation.Field(&f.MaxSize, validation.Min(0)),
+		validation.Field(&f.MaxSize, validation.Min(0), validation.Max(maxSafeJSONInt)),
 	)
 }
 

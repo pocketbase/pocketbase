@@ -18,8 +18,9 @@
                 id={uniqueId}
                 step="1"
                 min="0"
+                max={Number.MAX_SAFE_INTEGER}
                 value={field.maxSize || ""}
-                on:input={(e) => (field.maxSize = e.target.value << 0)}
+                on:input={(e) => (field.maxSize = parseInt(e.target.value, 10))}
                 placeholder="Default to max ~5MB"
             />
         </Field>

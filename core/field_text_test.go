@@ -430,6 +430,50 @@ func TestTextFieldValidateSettings(t *testing.T) {
 			},
 			[]string{"autogeneratePattern"},
 		},
+		{
+			"Max > safe json int",
+			func() *core.TextField {
+				return &core.TextField{
+					Id:   "test",
+					Name: "test",
+					Max:  1 << 53,
+				}
+			},
+			[]string{"max"},
+		},
+		{
+			"Max < 0",
+			func() *core.TextField {
+				return &core.TextField{
+					Id:   "test",
+					Name: "test",
+					Max:  -1,
+				}
+			},
+			[]string{"max"},
+		},
+		{
+			"Min > safe json int",
+			func() *core.TextField {
+				return &core.TextField{
+					Id:   "test",
+					Name: "test",
+					Min:  1 << 53,
+				}
+			},
+			[]string{"min"},
+		},
+		{
+			"Min < 0",
+			func() *core.TextField {
+				return &core.TextField{
+					Id:   "test",
+					Name: "test",
+					Min:  -1,
+				}
+			},
+			[]string{"min"},
+		},
 	}
 
 	for _, s := range scenarios {

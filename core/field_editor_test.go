@@ -206,6 +206,17 @@ func TestEditorFieldValidateSettings(t *testing.T) {
 			},
 			[]string{},
 		},
+		{
+			"MaxSize > safe json int",
+			func() *core.EditorField {
+				return &core.EditorField{
+					Id:      "test",
+					Name:    "test",
+					MaxSize: 1 << 53,
+				}
+			},
+			[]string{"maxSize"},
+		},
 	}
 
 	for _, s := range scenarios {

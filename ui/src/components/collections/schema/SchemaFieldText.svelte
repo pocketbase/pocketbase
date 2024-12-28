@@ -24,9 +24,10 @@
                         id={uniqueId}
                         step="1"
                         min="0"
+                        max={Number.MAX_SAFE_INTEGER}
                         placeholder="No min limit"
                         value={field.min || ""}
-                        on:input={(e) => (field.min = e.target.value << 0)}
+                        on:input={(e) => (field.min = parseInt(e.target.value, 10))}
                     />
                 </Field>
             </div>
@@ -46,8 +47,9 @@
                         step="1"
                         placeholder="Default to max 5000 characters"
                         min={field.min || 0}
+                        max={Number.MAX_SAFE_INTEGER}
                         value={field.max || ""}
-                        on:input={(e) => (field.max = e.target.value << 0)}
+                        on:input={(e) => (field.max = parseInt(e.target.value, 10))}
                     />
                 </Field>
             </div>
