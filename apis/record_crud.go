@@ -59,23 +59,27 @@ func recordsList(e *core.RequestEvent) error {
 		return err
 	}
 
-	fieldsResolver := core.NewRecordFieldResolver(
-		e.App,
-		collection,
-		requestInfo,
-		// hidden fields are searchable only by superusers
-		requestInfo.HasSuperuserAuth(),
-	)
+	query := e.App.RecordQuery(collection)
 
-	searchProvider := search.NewProvider(fieldsResolver).
-		Query(e.App.RecordQuery(collection))
+	fieldsResolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
 
-	if !requestInfo.HasSuperuserAuth() && collection.ListRule != nil {
-		searchProvider.AddFilter(search.FilterData(*collection.ListRule))
+	if !requestInfo.HasSuperuserAuth() && collection.ListRule != nil && *collection.ListRule != "" {
+		expr, err := search.FilterData(*collection.ListRule).BuildExpr(fieldsResolver)
+		if err != nil {
+			return err
+		}
+		query.AndWhere(expr)
+
+		// will be applied by the search provider right before executing the query
+		// fieldsResolver.UpdateQuery(query)
 	}
 
-	records := []*core.Record{}
+	// hidden fields are searchable only by superusers
+	fieldsResolver.SetAllowHiddenFields(requestInfo.HasSuperuserAuth())
 
+	searchProvider := search.NewProvider(fieldsResolver).Query(query)
+
+	records := []*core.Record{}
 	result, err := searchProvider.ParseAndExec(e.Request.URL.Query().Encode(), &records)
 	if err != nil {
 		return firstApiError(err, e.BadRequestError("", err))
@@ -109,7 +113,7 @@ func recordsList(e *core.RequestEvent) error {
 			len(e.Records) == 0 &&
 			checkRateLimit(e.RequestEvent, "@pb_list_timing_check_"+collection.Id, listTimingRateLimitRule) != nil {
 			e.App.Logger().Debug("Randomized throttle because of too many failed searches", "collectionId", collection.Id)
-			randomizedThrottle(100)
+			randomizedThrottle(150)
 		}
 
 		return e.JSON(http.StatusOK, e.Result)

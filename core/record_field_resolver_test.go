@@ -3,6 +3,7 @@ package core_test
 import (
 	"encoding/json"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -12,7 +13,75 @@ import (
 	"github.com/pocketbase/pocketbase/tools/search"
 )
 
+func TestRecordFieldResolverAllowedFields(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := core.NewRecordFieldResolver(app, collection, nil, false)
+
+	fields := r.AllowedFields()
+	if len(fields) != 8 {
+		t.Fatalf("Expected %d original allowed fields, got %d", 8, len(fields))
+	}
+
+	// change the allowed fields
+	newFields := []string{"a", "b", "c"}
+	expected := slices.Clone(newFields)
+	r.SetAllowedFields(newFields)
+
+	// change the new fields to ensure that the slice was cloned
+	newFields[2] = "d"
+
+	fields = r.AllowedFields()
+	if len(fields) != len(expected) {
+		t.Fatalf("Expected %d changed allowed fields, got %d", len(expected), len(fields))
+	}
+
+	for i, v := range expected {
+		if fields[i] != v {
+			t.Errorf("[%d] Expected field %q", i, v)
+		}
+	}
+}
+
+func TestRecordFieldResolverAllowHiddenFields(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.FindCollectionByNameOrId("demo1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := core.NewRecordFieldResolver(app, collection, nil, false)
+
+	allowHiddenFields := r.AllowHiddenFields()
+	if allowHiddenFields {
+		t.Fatalf("Expected original allowHiddenFields %v, got %v", allowHiddenFields, !allowHiddenFields)
+	}
+
+	// change the flag
+	expected := !allowHiddenFields
+	r.SetAllowHiddenFields(expected)
+
+	allowHiddenFields = r.AllowHiddenFields()
+	if allowHiddenFields != expected {
+		t.Fatalf("Expected changed allowHiddenFields %v, got %v", expected, allowHiddenFields)
+	}
+}
+
 func TestRecordFieldResolverUpdateQuery(t *testing.T) {
+	t.Parallel()
+
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 

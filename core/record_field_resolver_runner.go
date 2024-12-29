@@ -415,6 +415,10 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 
 		field := collection.Fields.GetByName(prop)
 
+		if field != nil && field.GetHidden() && !r.allowHiddenFields {
+			return nil, fmt.Errorf("non-filterable field %q", prop)
+		}
+
 		// json field -> treat the rest of the props as json path
 		if field != nil && field.Type() == FieldTypeJSON {
 			var jsonPath strings.Builder
@@ -477,6 +481,10 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 			}
 			if backField.Type() != FieldTypeRelation {
 				return nil, fmt.Errorf("invalid back relation field %q", parts[2])
+			}
+
+			if backField.GetHidden() && !r.allowHiddenFields {
+				return nil, fmt.Errorf("non-filterable back relation field %q", backField.GetName())
 			}
 
 			backRelField, ok := backField.(*RelationField)

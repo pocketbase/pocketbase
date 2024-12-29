@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -46,6 +47,26 @@ type RecordFieldResolver struct {
 	allowedFields     []string
 	joins             []*join
 	allowHiddenFields bool
+}
+
+// AllowedFields returns a copy of the resolver's allowed fields.
+func (r *RecordFieldResolver) AllowedFields() []string {
+	return slices.Clone(r.allowedFields)
+}
+
+// SetAllowedFields replaces the resolver's allowed fields with the new ones.
+func (r *RecordFieldResolver) SetAllowedFields(newAllowedFields []string) {
+	r.allowedFields = slices.Clone(newAllowedFields)
+}
+
+// AllowHiddenFields returns whether the current resolver allows filtering hidden fields.
+func (r *RecordFieldResolver) AllowHiddenFields() bool {
+	return r.allowHiddenFields
+}
+
+// SetAllowHiddenFields enables or disables hidden fields filtering.
+func (r *RecordFieldResolver) SetAllowHiddenFields(allowHiddenFields bool) {
+	r.allowHiddenFields = allowHiddenFields
 }
 
 // NewRecordFieldResolver creates and initializes a new `RecordFieldResolver`.
