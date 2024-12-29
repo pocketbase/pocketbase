@@ -76,24 +76,28 @@ export async function loadCollections(activeIdOrName = null) {
     isCollectionsLoading.set(true);
 
     try {
-        let items = await ApiClient.collections.getFullList(200, {
+        const promises = [];
+        promises.push(ApiClient.collections.getScaffolds());
+        promises.push(ApiClient.collections.getFullList(200, {
             "sort": "+name",
-        })
+        }));
 
-        items = CommonHelper.sortCollections(items);
+        let [resultScaffolds, resultCollections] = await Promise.all(promises);
 
-        collections.set(items);
+        scaffolds.set(resultScaffolds);
 
-        const item = activeIdOrName && items.find((c) => c.id == activeIdOrName || c.name == activeIdOrName);
-        if (item) {
-            activeCollection.set(item);
-        } else if (items.length) {
-            activeCollection.set(items.find((c) => !c.system) || items[0]);
+        resultCollections = CommonHelper.sortCollections(resultCollections);
+
+        collections.set(resultCollections);
+
+        const found = activeIdOrName && resultCollections.find((c) => c.id == activeIdOrName || c.name == activeIdOrName);
+        if (found) {
+            activeCollection.set(found);
+        } else if (resultCollections.length) {
+            activeCollection.set(resultCollections.find((c) => !c.system) || resultCollections[0]);
         }
 
         refreshProtectedFilesCollectionsCache();
-
-        scaffolds.set(await ApiClient.collections.getScaffolds());
     } catch (err) {
         ApiClient.error(err);
     }
