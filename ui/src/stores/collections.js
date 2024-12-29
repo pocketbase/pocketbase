@@ -78,9 +78,7 @@ export async function loadCollections(activeIdOrName = null) {
     try {
         const promises = [];
         promises.push(ApiClient.collections.getScaffolds());
-        promises.push(ApiClient.collections.getFullList(200, {
-            "sort": "+name",
-        }));
+        promises.push(ApiClient.collections.getFullList());
 
         let [resultScaffolds, resultCollections] = await Promise.all(promises);
 
