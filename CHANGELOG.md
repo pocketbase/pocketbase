@@ -25,7 +25,7 @@
 
 - Eagerly interrupt waiting for the email alert send in case it takes longer than 15s.
 
-- Allowed targetting "Hidden" fields in the List API rule.
+- Normalized the hidden fields filter checks and allow targetting hidden fields in the List API rule.
 
 - ⚠️ Removed the "dry submit" when executing the collections Create API rule
     (you can find more details why this change was introduced and how it could affect your app in https://github.com/pocketbase/pocketbase/discussions/6073).
