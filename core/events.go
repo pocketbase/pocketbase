@@ -105,7 +105,7 @@ type ServeEvent struct {
 	CertManager *autocert.Manager
 
 	// InstallerFunc is the "installer" function that is called after
-	// successfull server tcp bind but only if there is no explicit
+	// successful server tcp bind but only if there is no explicit
 	// superuser record created yet.
 	//
 	// It runs in a separate goroutine and its default value is [apis.DefaultInstallerFunc].

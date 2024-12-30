@@ -574,7 +574,7 @@ func authAlert(e *core.RequestEvent, authRecord *core.Record) error {
 	//
 	// Note: The "fake" timeout is a temp solution to avoid blocking
 	//       for too long when the SMTP server is not accessible, due
-	//       to the lack of context concellation support in the underlying
+	//       to the lack of context cancellation support in the underlying
 	//       mailer and net/smtp package.
 	//       The goroutine technically "leaks" but we assume that the OS will
 	//       terminate the connection after some time (usually after 3-4 mins).
