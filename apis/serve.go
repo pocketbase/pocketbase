@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -17,6 +16,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/pocketbase/pocketbase/ui"
 	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
@@ -158,6 +158,7 @@ func Serve(app core.App, config ServeConfig) error {
 	serveEvent.Router = pbRouter
 	serveEvent.Server = server
 	serveEvent.CertManager = certManager
+	serveEvent.InstallerFunc = DefaultInstallerFunc
 
 	var listener net.Listener
 
@@ -204,6 +205,8 @@ func Serve(app core.App, config ServeConfig) error {
 	}()
 	// ---------------------------------------------------------------
 
+	var baseURL string
+
 	// trigger the OnServe hook and start the tcp listener
 	serveHookErr := app.OnServe().Trigger(serveEvent, func(e *core.ServeEvent) error {
 		handler, err := e.Router.BuildMux()
@@ -213,10 +216,20 @@ func Serve(app core.App, config ServeConfig) error {
 
 		e.Server.Handler = handler
 
-		addr := e.Server.Addr
+		if config.HttpsAddr == "" {
+			baseURL = "http://" + serverAddrToHost(serveEvent.Server.Addr)
+		} else {
+			baseURL = "https://"
+			if len(config.CertificateDomains) > 0 {
+				baseURL += config.CertificateDomains[0]
+			} else {
+				baseURL += serverAddrToHost(serveEvent.Server.Addr)
+			}
+		}
 
-		// fallback similar to the std Server.ListenAndServe/ListenAndServeTLS
+		addr := e.Server.Addr
 		if addr == "" {
+			// fallback similar to the std Server.ListenAndServe/ListenAndServeTLS
 			if config.HttpsAddr != "" {
 				addr = ":https"
 			} else {
@@ -224,11 +237,22 @@ func Serve(app core.App, config ServeConfig) error {
 			}
 		}
 
-		var lnErr error
+		listener, err = net.Listen("tcp", addr)
+		if err != nil {
+			return err
+		}
 
-		listener, lnErr = net.Listen("tcp", addr)
+		if e.InstallerFunc != nil {
+			app := e.App
+			installerFunc := e.InstallerFunc
+			routine.FireAndForget(func() {
+				if err := loadInstaller(app, baseURL, installerFunc); err != nil {
+					app.Logger().Warn("Failed to initialize installer", "error", err)
+				}
+			})
+		}
 
-		return lnErr
+		return nil
 	})
 	if serveHookErr != nil {
 		return serveHookErr
@@ -237,17 +261,6 @@ func Serve(app core.App, config ServeConfig) error {
 	if listener == nil {
 		return errors.New("The OnServe finalizer wasn't invoked. Did you forget to call the ServeEvent.Next() method?")
 	}
-
-	schema := "http"
-	addr := server.Addr
-	if config.HttpsAddr != "" {
-		schema = "https"
-		if len(config.CertificateDomains) > 0 {
-			addr = config.CertificateDomains[0]
-		}
-	}
-	baseURL := fmt.Sprintf("%s://%s", schema, addr)
-	dashboardURL := fmt.Sprintf("%s/_", baseURL)
 
 	if config.ShowStartBanner {
 		date := new(strings.Builder)
@@ -262,15 +275,8 @@ func Serve(app core.App, config ServeConfig) error {
 
 		regular := color.New()
 		regular.Printf("├─ REST API:  %s\n", color.CyanString("%s/api/", baseURL))
-		regular.Printf("└─ Dashboard: %s\n", color.CyanString("%s/", dashboardURL))
+		regular.Printf("└─ Dashboard: %s\n", color.CyanString("%s/_/", baseURL))
 	}
-
-	go func() {
-		installerErr := loadInstaller(app, dashboardURL)
-		if installerErr != nil {
-			app.Logger().Warn("Failed to initialize installer", "error", installerErr)
-		}
-	}()
 
 	var serveErr error
 	if config.HttpsAddr != "" {
@@ -280,16 +286,24 @@ func Serve(app core.App, config ServeConfig) error {
 		}
 
 		// start HTTPS server
-		serveErr = server.ServeTLS(listener, "", "")
+		serveErr = serveEvent.Server.ServeTLS(listener, "", "")
 	} else {
 		// OR start HTTP server
-		serveErr = server.Serve(listener)
+		serveErr = serveEvent.Server.Serve(listener)
 	}
 	if serveErr != nil && !errors.Is(serveErr, http.ErrServerClosed) {
 		return serveErr
 	}
 
 	return nil
+}
+
+// serverAddrToHost loosely converts http.Server.Addr string into a host to print.
+func serverAddrToHost(addr string) string {
+	if addr == "" || strings.HasSuffix(addr, ":http") || strings.HasSuffix(addr, ":https") {
+		return "127.0.0.1"
+	}
+	return addr
 }
 
 type serverErrorLogWriter struct {

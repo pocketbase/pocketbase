@@ -103,6 +103,22 @@ type ServeEvent struct {
 	Router      *router.Router[*RequestEvent]
 	Server      *http.Server
 	CertManager *autocert.Manager
+
+	// InstallerFunc is the "installer" function that is called after
+	// successfull server tcp bind but only if there is no explicit
+	// superuser record created yet.
+	//
+	// It runs in a separate goroutine and its default value is [apis.DefaultInstallerFunc].
+	//
+	// It receives a system superuser record as argument that you can use to generate
+	// a short-lived auth token (e.g. systemSuperuser.NewStaticAuthToken(30 * time.Minute))
+	// and concatenate it as query param for your installer page
+	// (if you are using the client-side SDKs, you can then load the
+	// token with pb.authStore.save(token) and perform any Web API request
+	// e.g. creating a new superuser).
+	//
+	// Set it to nil if you want to skip the installer.
+	InstallerFunc func(app App, systemSuperuser *Record, baseURL string) error
 }
 
 // -------------------------------------------------------------------

@@ -21,6 +21,8 @@
 
 - Added extra validators for the collection field `int64` options (e.g. `FileField.MaxSize`) restricting them to the max safe JSON number (2^53-1).
 
+- Added option to unset/overwrite the default PocketBase superuser installer using `ServeEvent.InstallerFunc`.
+
 - Invalidate all record tokens when the auth record email is changed programmatically or by a superuser ([#5964](https://github.com/pocketbase/pocketbase/issues/5964)).
 
 - Eagerly interrupt waiting for the email alert send in case it takes longer than 15s.
