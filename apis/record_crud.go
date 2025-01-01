@@ -266,10 +266,12 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 			if !hasSuperuserAuth && e.Collection.CreateRule != nil {
 				dummyRecord := e.Record.Clone()
 
+				dummyRandomPart := "__pb_create__" + security.PseudorandomString(6)
+
 				// set an id if it doesn't have already
 				// (the value doesn't matter; it is used only to minimize the breaking changes with earlier versions)
 				if dummyRecord.Id == "" {
-					dummyRecord.Id = "__pb_create__temp_id_" + security.PseudorandomString(5)
+					dummyRecord.Id = "__temp_id__" + dummyRandomPart
 				}
 
 				// unset the verified field to prevent manage API rule misuse in case the rule relies on it
@@ -292,7 +294,6 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 				}
 
 				// shallow clone the current collection
-				dummyRandomPart := "__pb_create__" + security.PseudorandomString(5)
 				dummyCollection := *e.Collection
 				dummyCollection.Id += dummyRandomPart
 				dummyCollection.Name += inflector.Columnify(dummyRandomPart)
