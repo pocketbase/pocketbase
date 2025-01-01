@@ -197,6 +197,10 @@ func (r *runner) processCollectionField() (*search.ResolverResult, error) {
 }
 
 func (r *runner) processRequestAuthField() (*search.ResolverResult, error) {
+	if r.resolver.requestInfo == nil || r.resolver.requestInfo.Auth == nil || r.resolver.requestInfo.Auth.Collection() == nil {
+		return &search.ResolverResult{Identifier: "NULL"}, nil
+	}
+
 	// plain auth field
 	// ---
 	if _, ok := plainRequestAuthFields[r.fieldName]; ok {
@@ -205,10 +209,6 @@ func (r *runner) processRequestAuthField() (*search.ResolverResult, error) {
 
 	// resolve the auth collection field
 	// ---
-	if r.resolver.requestInfo == nil || r.resolver.requestInfo.Auth == nil || r.resolver.requestInfo.Auth.Collection() == nil {
-		return &search.ResolverResult{Identifier: "NULL"}, nil
-	}
-
 	collection := r.resolver.requestInfo.Auth.Collection()
 
 	r.activeCollectionName = collection.Name

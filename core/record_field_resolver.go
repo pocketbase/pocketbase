@@ -215,7 +215,7 @@ func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (*search
 		resultVal = val
 	}
 
-	placeholder := "f" + security.PseudorandomString(6)
+	placeholder := "f" + security.PseudorandomString(8)
 
 	if modifier == lowerModifier {
 		return &search.ResolverResult{
