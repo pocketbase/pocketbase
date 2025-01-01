@@ -1,12 +1,8 @@
-## v0.24.0 (WIP)
+## v0.24.0
 
 - Added `@yesterday` and `@tomorrow` datetime filter macros.
 
 - Added `:lower` filter modifier (e.g. `title:lower = "lorem"`).
-
-- Added `tests.NewTestAppWithConfig(config)` helper if you need more control over the test configurations like `IsDev`, the number of allowed connections, etc.
-
-- Added `app.FindCachedCollectionReferences(collection, excludeIds)` to speedup records cascade delete almost twice for projects with many collections.
 
 - Added `mailer.Message.InlineAttachments` field for attaching inline files to an email (_aka. `cid` links_).
 
@@ -23,6 +19,10 @@
 
 - Added option to unset/overwrite the default PocketBase superuser installer using `ServeEvent.InstallerFunc`.
 
+- Added `app.FindCachedCollectionReferences(collection, excludeIds)` to speedup records cascade delete almost twice for projects with many collections.
+
+- Added `tests.NewTestAppWithConfig(config)` helper if you need more control over the test configurations like `IsDev`, the number of allowed connections, etc.
+
 - Invalidate all record tokens when the auth record email is changed programmatically or by a superuser ([#5964](https://github.com/pocketbase/pocketbase/issues/5964)).
 
 - Eagerly interrupt waiting for the email alert send in case it takes longer than 15s.
@@ -34,6 +34,7 @@
     For most users it should be non-breaking change, BUT if you have Create API rules that uses self-references or view counters you may have to adjust them manually.
     With this change the "multi-match" operators are also normalized in case the targetted colletion doesn't have any records
     (_or in other words, `@collection.example.someField != "test"` will result to `true` if `example` collection has no records because it satisfies the condition that all available "example" records mustn't have `someField` equal to "test"_).
+    As a side-effect of all of the above minor changes, the record create API performance has been also improved ~3x times in high concurrent scenarios (500 concurrent clients inserting 50k records - [old (58.409064001s)](https://github.com/pocketbase/benchmarks/blob/54140be5fb0102f90034e1370c7f168fbcf0ddf0/results/hetzner_cax41_cgo.md#creating-50000-posts100k-reqs50000-conc500-rule) vs [new (13.580098262s)](https://github.com/pocketbase/benchmarks/blob/7df0466ac9bd62fe0a1056270d20ef82012f0234/results/hetzner_cax41_cgo.md#creating-50000-posts100k-reqs50000-conc500-rulerequestauthid----requestbodypublicisset--true)).
 
 - ⚠️ Changed the type definition of `store.Store[T any]` to `store.Store[K comparable, T any]` to allow support for custom store key types.
     For most users it should be non-breaking change, BUT if you are calling `store.New[any](nil)` instances you'll have to specify the store key type, aka. `store.New[string, any](nil)`.
