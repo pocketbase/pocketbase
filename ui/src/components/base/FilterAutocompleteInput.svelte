@@ -266,6 +266,8 @@
             { label: "@day" },
             { label: "@month" },
             { label: "@weekday" },
+            { label: "@yesterday" },
+            { label: "@tomorrow" },
             { label: "@todayStart" },
             { label: "@todayEnd" },
             { label: "@monthStart" },
