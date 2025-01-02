@@ -1,6 +1,7 @@
 <script>
-    import CodeBlock from "@/components/base/CodeBlock.svelte";
     import CommonHelper from "@/utils/CommonHelper";
+    import CodeBlock from "@/components/base/CodeBlock.svelte";
+    import FieldsQueryParam from "@/components/collections/docs/FieldsQueryParam.svelte";
 
     export let collection;
 
@@ -80,6 +81,35 @@
             </td>
             <td>The one-time password.</td>
         </tr>
+    </tbody>
+</table>
+
+<div class="section-title">Query parameters</div>
+<table class="table-compact table-border m-b-base">
+    <thead>
+        <tr>
+            <th>Param</th>
+            <th>Type</th>
+            <th width="60%">Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>expand</td>
+            <td>
+                <span class="label">String</span>
+            </td>
+            <td>
+                Auto expand record relations. Ex.:
+                <CodeBlock content={`?expand=relField1,relField2.subRelField`} />
+                Supports up to 6-levels depth nested relations expansion. <br />
+                The expanded relations will be appended to the record under the
+                <code>expand</code> property (eg. <code>{`"expand": {"relField1": {...}, ...}`}</code>).
+                <br />
+                Only the relations to which the request user has permissions to <strong>view</strong> will be expanded.
+            </td>
+        </tr>
+        <FieldsQueryParam prefix="record." />
     </tbody>
 </table>
 
