@@ -44,7 +44,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 32, t)
+	testBindsCount(vm, "this", 33, t)
 }
 
 func TestBaseBindsSleep(t *testing.T) {
@@ -531,6 +531,31 @@ func TestBaseBindsMiddleware(t *testing.T) {
 
 		if (!m) {
 			throw new Error('Expected non-empty Middleware instance');
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBaseBindsTimezone(t *testing.T) {
+	vm := goja.New()
+	baseBinds(vm)
+
+	_, err := vm.RunString(`
+		const v0 = (new Timezone()).string();
+		if (v0 != "UTC") {
+			throw new Error("(v0) Expected UTC got " + v0)
+		}
+
+		const v1 = (new Timezone("invalid")).string();
+		if (v1 != "UTC") {
+			throw new Error("(v1) Expected UTC got " + v1)
+		}
+
+		const v2 = (new Timezone("EET")).string();
+		if (v2 != "EET") {
+			throw new Error("(v2) Expected EET got " + v2)
 		}
 	`)
 	if err != nil {

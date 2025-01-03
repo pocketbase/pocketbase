@@ -538,6 +538,21 @@ func baseBinds(vm *goja.Runtime) {
 		return instanceValue
 	})
 
+	// note: named Timezone to avoid conflicts with the JS Location interface.
+	vm.Set("Timezone", func(call goja.ConstructorCall) *goja.Object {
+		name, _ := call.Argument(0).Export().(string)
+
+		instance, err := time.LoadLocation(name)
+		if err != nil {
+			instance = time.UTC
+		}
+
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+
+		return instanceValue
+	})
+
 	vm.Set("DateTime", func(call goja.ConstructorCall) *goja.Object {
 		instance := types.NowDateTime()
 

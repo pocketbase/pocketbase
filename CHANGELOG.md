@@ -1,3 +1,8 @@
+## v0.25.0 (WIP)
+
+- Added JSVM `new Timezone(name)` binding for constructing `time.Location` value ([#6219](https://github.com/pocketbase/pocketbase/discussions/6219)).
+
+
 ## v0.24.1 (WIP)
 
 - Added missing time macros in the UI autocomplete.

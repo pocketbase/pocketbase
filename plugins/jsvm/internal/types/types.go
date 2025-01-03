@@ -579,6 +579,32 @@ declare class Middleware {
   )
 }
 
+interface Timezone extends time.Location{} // merge
+/**
+ * Timezone returns the timezone location with the given name.
+ *
+ * The name is expected to be a location name corresponding to a file
+ * in the IANA Time Zone database, such as "America/New_York".
+ *
+ * If the name is "Local", LoadLocation returns Local.
+ *
+ * If the name is "", invalid or "UTC", returns UTC.
+ *
+ * The constructor is equivalent to calling the Go ` + "`" + `time.LoadLocation(name)` + "`" + ` method.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * const zone = new Timezone("America/New_York")
+ * $app.cron().setTimezone(zone)
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare class Timezone implements time.Location {
+  constructor(name?: string)
+}
+
 interface DateTime extends types.DateTime{} // merge
 /**
  * DateTime defines a single DateTime type instance.
