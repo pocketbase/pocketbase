@@ -1,3 +1,10 @@
+## v0.24.1 (WIP)
+
+- Added missing time macros in the UI autocomplete.
+
+- Fixed JSVM types for structs and functions with multiple generic parameters.
+
+
 ## v0.24.0
 
 - ⚠️ Removed the "dry submit" when executing the collections Create API rule
