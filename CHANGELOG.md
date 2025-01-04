@@ -3,9 +3,11 @@
 - Added JSVM `new Timezone(name)` binding for constructing `time.Location` value ([#6219](https://github.com/pocketbase/pocketbase/discussions/6219)).
 
 
-## v0.24.1 (WIP)
+## v0.24.1
 
 - Added missing time macros in the UI autocomplete.
+
+- Fixed JSVM types for structs and functions with multiple generic parameters.
 
 
 ## v0.24.0
