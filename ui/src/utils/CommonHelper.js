@@ -1342,38 +1342,38 @@ export default class CommonHelper {
     }
 
     /**
-     * Returns a combined expand string with the presentable nested relation fields (e.g. `base.sub1.sub2`).
+     * Returns an expand list with the presentable nested relation fields (e.g. [base.sub1.sub11, base.sub2]).
      *
      * @param  {Object} baseRelField
      * @param  {Array} collections
      * @param  {Number} maxNestedLevel
-     * @return {String}
+     * @return {Array}
      */
-    static getExpandPresentableRelField(baseRelField, collections, maxNestedLevel = 2) {
-        for (const collection of collections) {
-            if (baseRelField.collectionId != collection.id) {
-                continue;
-            }
+    static getExpandPresentableRelFields(baseRelField, collections, maxNestedLevel = 2) {
+        let result = [];
 
-
-            let expandItem = baseRelField.name
-
-            for (const field of collection.fields) {
-                if (!field.presentable || field.type != "relation") {
-                    continue
-                }
-                if (maxNestedLevel > 0) {
-                    const nestedExpandItem = CommonHelper.getExpandPresentableRelField(field, collections, maxNestedLevel-1)
-                    if (nestedExpandItem) {
-                        expandItem += ("." + nestedExpandItem)
-                    }
-                }
-            }
-
-            return expandItem;
+        const collection = collections.find((c) => c.id == baseRelField.collectionId)
+        if (!collection) {
+            return result;
         }
 
-        return "";
+        for (const field of collection.fields) {
+            if (!field.presentable || field.type != "relation" || maxNestedLevel <= 0) {
+                continue
+            }
+
+            const nestedExpands = CommonHelper.getExpandPresentableRelFields(field, collections, maxNestedLevel-1)
+            for (const expand of nestedExpands) {
+                result.push(baseRelField.name + "." + expand);
+            }
+        }
+
+        // add the base field if not already
+        if (!result.length) {
+            result.push(baseRelField.name);
+        }
+
+        return result;
     }
 
     /**

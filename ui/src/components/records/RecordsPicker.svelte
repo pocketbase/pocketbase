@@ -61,22 +61,16 @@
     }
 
     function getExpand() {
-        let expand = "";
+        let expands = [];
 
         const presentableRelFields = collection?.fields?.filter(
             (f) => !f.hidden && f.presentable && f.type == "relation",
         );
         for (const field of presentableRelFields) {
-            const expandItem = CommonHelper.getExpandPresentableRelField(field, $collections, 2);
-            if (expandItem) {
-                if (expand != "") {
-                    expand += ",";
-                }
-                expand += expandItem;
-            }
+            expands = expands.concat(CommonHelper.getExpandPresentableRelFields(field, $collections, 2));
         }
 
-        return expand;
+        return expands.join(",");
     }
 
     async function loadSelected() {
@@ -259,6 +253,8 @@
         {#each list as record (record.id)}
             {@const selected = isSelected(record)}
 
+            <!-- svelte-ignore a11y-no-static-element-interactions -->
+            <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
             <div
                 tabindex="0"
                 class="list-item handle"
