@@ -153,12 +153,11 @@
             listFields.unshift("*");
         }
 
-        const expandFields = [];
+        let expandFields = [];
         for (const field of relFields) {
-            const expandItem = CommonHelper.getExpandPresentableRelField(field, $collections, 2);
-            if (expandItem) {
-                expandFields.push(expandItem);
-            }
+            expandFields = expandFields.concat(
+                CommonHelper.getExpandPresentableRelFields(field, $collections, 2),
+            );
         }
 
         return ApiClient.collection(collection.id)
