@@ -2,6 +2,8 @@
 
 - Added JSVM `new Timezone(name)` binding for constructing `time.Location` value ([#6219](https://github.com/pocketbase/pocketbase/discussions/6219)).
 
+- Upgraded to `golang-jwt/jwt/v5`.
+
 
 ## v0.24.1
 

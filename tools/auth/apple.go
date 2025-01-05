@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
@@ -138,17 +138,15 @@ func (p *Apple) parseAndVerifyIdToken(idToken string) (jwt.MapClaims, error) {
 
 	// validate common claims per https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api/verifying_a_user#3383769
 	// ---
-	err = claims.Valid() // exp, iat, etc.
+	jwtValidator := jwt.NewValidator(
+		jwt.WithExpirationRequired(),
+		jwt.WithIssuedAt(),
+		jwt.WithIssuer("https://appleid.apple.com"),
+		jwt.WithAudience(p.clientId),
+	)
+	err = jwtValidator.Validate(claims)
 	if err != nil {
 		return nil, err
-	}
-
-	if !claims.VerifyIssuer("https://appleid.apple.com", true) {
-		return nil, errors.New("iss must be https://appleid.apple.com")
-	}
-
-	if !claims.VerifyAudience(p.clientId, true) {
-		return nil, errors.New("aud must be the developer's client_id")
 	}
 
 	// validate id_token signature
