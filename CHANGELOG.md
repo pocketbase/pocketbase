@@ -14,6 +14,9 @@
 
 - Added JSVM `new Timezone(name)` binding for constructing `time.Location` value ([#6219](https://github.com/pocketbase/pocketbase/discussions/6219)).
 
+- Soft-deprecated `Record.GetUploadedFiles` in favour of `Record.GetUnsavedFiles` to minimize the ambiguities what the method do ([#6269](https://github.com/pocketbase/pocketbase/discussions/6269)).
+    (@todo update docs to reflect the `:unsaved` getter change)
+
 
 ## v0.24.2
 

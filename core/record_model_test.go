@@ -1013,7 +1013,7 @@ func TestRecordGetStringSlice(t *testing.T) {
 	}
 }
 
-func TestRecordGetUploadedFiles(t *testing.T) {
+func TestRecordGetUnsavedFiles(t *testing.T) {
 	t.Parallel()
 
 	app, _ := tests.NewTestApp()
@@ -1054,14 +1054,14 @@ func TestRecordGetUploadedFiles(t *testing.T) {
 			`[{"name":"f1","originalName":"f1","size":4},{"name":"f2","originalName":"f2","size":4}]`,
 		},
 		{
-			"files:uploaded",
+			"files:unsaved",
 			`[{"name":"f1","originalName":"f1","size":4},{"name":"f2","originalName":"f2","size":4}]`,
 		},
 	}
 
 	for i, s := range scenarios {
 		t.Run(fmt.Sprintf("%d_%#v", i, s.key), func(t *testing.T) {
-			v := record.GetUploadedFiles(s.key)
+			v := record.GetUnsavedFiles(s.key)
 
 			raw, err := json.Marshal(v)
 			if err != nil {

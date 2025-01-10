@@ -672,8 +672,8 @@ func TestFileFieldFindGetter(t *testing.T) {
 			`["300_UhLKX91HVb.png",{"name":"f1","originalName":"f1","size":4},{"name":"f2","originalName":"f2","size":4}]`,
 		},
 		{
-			"uploaded",
-			field.GetName() + ":uploaded",
+			"unsaved",
+			field.GetName() + ":unsaved",
 			true,
 			`[{"name":"f1","originalName":"f1","size":4},{"name":"f2","originalName":"f2","size":4}]`,
 		},

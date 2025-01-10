@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"maps"
 	"slices"
 	"sort"
@@ -973,25 +974,31 @@ func (m *Record) GetStringSlice(key string) []string {
 	return list.ToUniqueStringSlice(m.Get(key))
 }
 
-// GetUploadedFiles returns the uploaded files for the provided "file" field key,
+// GetUnsavedFiles returns the uploaded files for the provided "file" field key,
 // (aka. the current [*filesytem.File] values) so that you can apply further
 // validations or modifications (including changing the file name or content before persisting).
 //
 // Example:
 //
-//	files := record.GetUploadedFiles("documents")
+//	files := record.GetUnsavedFiles("documents")
 //	for _, f := range files {
 //	    f.Name = "doc_" + f.Name // add a prefix to each file name
 //	}
 //	app.Save(record) // the files are pointers so the applied changes will transparently reflect on the record value
-func (m *Record) GetUploadedFiles(key string) []*filesystem.File {
-	if !strings.HasSuffix(key, ":uploaded") {
-		key += ":uploaded"
+func (m *Record) GetUnsavedFiles(key string) []*filesystem.File {
+	if !strings.HasSuffix(key, ":unsaved") {
+		key += ":unsaved"
 	}
 
 	values, _ := m.Get(key).([]*filesystem.File)
 
 	return values
+}
+
+// Deprecated: replaced with GetUnsavedFiles.
+func (m *Record) GetUploadedFiles(key string) []*filesystem.File {
+	log.Println("Please replace GetUploadedFiles with GetUnsavedFiles")
+	return m.GetUnsavedFiles(key)
 }
 
 // Retrieves the "key" json field value and unmarshals it into "result".

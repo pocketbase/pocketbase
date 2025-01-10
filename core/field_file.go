@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -637,7 +638,13 @@ func (f *FileField) FindGetter(key string) GetterFunc {
 		return func(record *Record) any {
 			return record.GetRaw(f.Name)
 		}
+	case f.Name + ":unsaved":
+		return func(record *Record) any {
+			return f.extractUploadableFiles(f.toSliceValue(record.GetRaw(f.Name)))
+		}
 	case f.Name + ":uploaded":
+		// deprecated
+		log.Println("[file field getter] please replace :uploaded with :unsaved")
 		return func(record *Record) any {
 			return f.extractUploadableFiles(f.toSliceValue(record.GetRaw(f.Name)))
 		}
