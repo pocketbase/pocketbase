@@ -15,7 +15,7 @@
 - Added JSVM `new Timezone(name)` binding for constructing `time.Location` value ([#6219](https://github.com/pocketbase/pocketbase/discussions/6219)).
 
 
-## v0.24.2 (WIP)
+## v0.24.2
 
 - Fixed display fields extraction when there are multiple "Presentable" `relation` fields in a single related collection ([#6229](https://github.com/pocketbase/pocketbase/issues/6229)).
 

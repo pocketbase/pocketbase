@@ -27,6 +27,7 @@
     let lastItemsCount = 0;
     let isLoadingList = false;
     let isLoadingSelected = false;
+    let isReloadingRecord = {};
 
     $: maxSelect = field?.maxSelect || null;
 
@@ -180,6 +181,34 @@
         }
     }
 
+    async function reloadRecord(record) {
+        if (!record?.id) {
+            return;
+        }
+
+        isReloadingRecord[record.id] = true;
+
+        try {
+            const reloaded = await ApiClient.collection(collectionId).getOne(record.id, {
+                fields: "*:excerpt(200)",
+                expand: getExpand(),
+                requestKey: uniqueId + "reload" + record.id,
+            });
+
+            CommonHelper.pushOrReplaceByKey(selected, reloaded);
+            CommonHelper.pushOrReplaceByKey(list, reloaded);
+            selected = selected;
+            list = list;
+
+            isReloadingRecord[record.id] = false;
+        } catch (err) {
+            if (!err.isAbort) {
+                ApiClient.error(err);
+                isReloadingRecord[record.id] = false;
+            }
+        }
+    }
+
     $: isSelected = function (record) {
         return CommonHelper.findByKey(selected, "id", record.id);
     };
@@ -259,7 +288,8 @@
                 tabindex="0"
                 class="list-item handle"
                 class:selected
-                class:disabled={!selected && maxSelect > 1 && !canSelectMore}
+                class:disabled={isReloadingRecord[record.id] ||
+                    (!selected && maxSelect > 1 && !canSelectMore)}
                 on:click={() => toggle(record)}
                 on:keydown={(e) => {
                     if (e.code === "Enter" || e.code === "Space") {
@@ -275,7 +305,11 @@
                     <i class="ri-checkbox-blank-circle-line txt-disabled" />
                 {/if}
                 <div class="content">
-                    <RecordInfo {record} />
+                    {#if isReloadingRecord[record.id]}
+                        <span class="loader loader-xs active"></span>
+                    {:else}
+                        <RecordInfo {record} />
+                    {/if}
                 </div>
                 {#if !isView}
                     <div class="actions nonintrusive">
@@ -324,7 +358,11 @@
             {#each selected as record, i}
                 <Draggable bind:list={selected} index={i} let:dragging let:dragover>
                     <span class="label" class:label-danger={dragging} class:label-warning={dragover}>
-                        <RecordInfo {record} />
+                        {#if isReloadingRecord[record.id]}
+                            <span class="loader loader-xs active"></span>
+                        {:else}
+                            <RecordInfo {record} />
+                        {/if}
                         <button
                             type="button"
                             title="Remove"
@@ -360,6 +398,8 @@
         list = list;
 
         select(e.detail.record);
+
+        reloadRecord(e.detail.record);
     }}
     on:delete={(e) => {
         CommonHelper.removeByKey(list, "id", e.detail.id);
