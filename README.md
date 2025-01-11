@@ -25,10 +25,13 @@
 
 ## API SDK clients
 
-The easiest way to interact with the API is to use one of the official SDK clients:
+The easiest way to interact with the PocketBase Web APIs is to use one of the official SDK clients:
 
-- **JavaScript - [pocketbase/js-sdk](https://github.com/pocketbase/js-sdk)** (_browser and node_)
-- **Dart - [pocketbase/dart-sdk](https://github.com/pocketbase/dart-sdk)** (_web, mobile, desktop_)
+- **JavaScript - [pocketbase/js-sdk](https://github.com/pocketbase/js-sdk)** (_Browser, Node.js, React Native_)
+- **Dart - [pocketbase/dart-sdk](https://github.com/pocketbase/dart-sdk)** (_Web, Mobile, Desktop, CLI_)
+
+You could also check the recommendations in https://pocketbase.io/docs/how-to-use/.
+
 
 ## Overview
 
