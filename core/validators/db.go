@@ -64,8 +64,9 @@ func NormalizeUniqueIndexError(err error, tableOrAlias string, fieldNames []stri
 		normalizedErrs := validation.Errors{}
 
 		for _, name := range fieldNames {
-			// note: extra space to exclude other fields starting with the current field name
-			if strings.Contains(msg, strings.ToLower(tableOrAlias+"."+name+" ")) {
+			// note: extra spaces to exclude table name with suffix matching the current one
+			// 		 OR other fields starting with the current field name
+			if strings.Contains(msg, strings.ToLower(" "+tableOrAlias+"."+name+" ")) {
 				normalizedErrs[name] = validation.NewError("validation_not_unique", "Value must be unique")
 			}
 		}
