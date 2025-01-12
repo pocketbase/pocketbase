@@ -204,7 +204,7 @@ func TestFieldsListAdd(t *testing.T) {
 	}
 }
 
-func TestFieldsListAddMarshaledJSON(t *testing.T) {
+func TestFieldsListAddMarshalledJSON(t *testing.T) {
 	t.Parallel()
 
 	scenarios := []struct {
@@ -277,7 +277,7 @@ func TestFieldsListAddMarshaledJSON(t *testing.T) {
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
 			testList := core.NewFieldsList(&core.NumberField{Name: "abc", Id: "abc_id"})
-			err := testList.AddMarshaledJSON(s.raw)
+			err := testList.AddMarshalledJSON(s.raw)
 
 			hasErr := err != nil
 			if hasErr != s.expectError {
@@ -347,7 +347,7 @@ func TestFieldsListAddAt(t *testing.T) {
 	}
 }
 
-func TestFieldsListAddMarshaledJSONAt(t *testing.T) {
+func TestFieldsListAddMarshalledJSONAt(t *testing.T) {
 	scenarios := []struct {
 		position int
 		expected []string
@@ -369,7 +369,7 @@ func TestFieldsListAddMarshaledJSONAt(t *testing.T) {
 			f3 := &core.TextField{Id: "f3Id", Name: "test3"}
 			testFieldsList := core.NewFieldsList(f1, f2, f3)
 
-			err := testFieldsList.AddMarshaledJSONAt(s.position, []byte(`[
+			err := testFieldsList.AddMarshalledJSONAt(s.position, []byte(`[
 				{"id":"f2Id", "name":"test2_new", "type": "text"},
 				{"name": "test4", "type": "text"}
 			]`))

@@ -140,7 +140,7 @@ func (l *FieldsList) AddAt(pos int, fields ...Field) {
 	}
 }
 
-// AddMarshaledJSON parses the provided raw json data and adds the
+// AddMarshalledJSON parses the provided raw json data and adds the
 // found fields into the current list (following the same rule as the Add method).
 //
 // The rawJSON argument could be one of:
@@ -149,10 +149,10 @@ func (l *FieldsList) AddAt(pos int, fields ...Field) {
 //
 // Example:
 //
-//	l.AddMarshaledJSON([]byte{`{"type":"text", name: "test"}`})
-//	l.AddMarshaledJSON([]byte{`[{"type":"text", name: "test1"}, {"type":"text", name: "test2"}]`})
-func (l *FieldsList) AddMarshaledJSON(rawJSON []byte) error {
-	extractedFields, err := marshaledJSONtoFieldsList(rawJSON)
+//	l.AddMarshalledJSON([]byte{`{"type":"text", name: "test"}`})
+//	l.AddMarshalledJSON([]byte{`[{"type":"text", name: "test1"}, {"type":"text", name: "test2"}]`})
+func (l *FieldsList) AddMarshalledJSON(rawJSON []byte) error {
+	extractedFields, err := marshalledJSONtoFieldsList(rawJSON)
 	if err != nil {
 		return err
 	}
@@ -162,13 +162,13 @@ func (l *FieldsList) AddMarshaledJSON(rawJSON []byte) error {
 	return nil
 }
 
-// AddMarshaledJSONAt is the same as AddMarshaledJSON but insert/move the fields at the specific position.
+// AddMarshalledJSONAt is the same as AddMarshalledJSON but insert/move the fields at the specific position.
 //
-// If pos < 0, then this method acts the same as calling AddMarshaledJSON.
+// If pos < 0, then this method acts the same as calling AddMarshalledJSON.
 //
 // If pos > FieldsList total items, then the specified fields are inserted/moved at the end of the list.
-func (l *FieldsList) AddMarshaledJSONAt(pos int, rawJSON []byte) error {
-	extractedFields, err := marshaledJSONtoFieldsList(rawJSON)
+func (l *FieldsList) AddMarshalledJSONAt(pos int, rawJSON []byte) error {
+	extractedFields, err := marshalledJSONtoFieldsList(rawJSON)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func (l *FieldsList) AddMarshaledJSONAt(pos int, rawJSON []byte) error {
 	return nil
 }
 
-func marshaledJSONtoFieldsList(rawJSON []byte) (FieldsList, error) {
+func marshalledJSONtoFieldsList(rawJSON []byte) (FieldsList, error) {
 	extractedFields := FieldsList{}
 
 	// nothing to add

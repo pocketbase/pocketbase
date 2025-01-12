@@ -219,7 +219,7 @@ func TestImportCollections(t *testing.T) {
 	}
 }
 
-func TestImportCollectionsByMarshaledJSON(t *testing.T) {
+func TestImportCollectionsByMarshalledJSON(t *testing.T) {
 	t.Parallel()
 
 	testApp, _ := tests.NewTestApp()
@@ -296,7 +296,7 @@ func TestImportCollectionsByMarshaledJSON(t *testing.T) {
 			testApp, _ := tests.NewTestApp()
 			defer testApp.Cleanup()
 
-			err := testApp.ImportCollectionsByMarshaledJSON([]byte(s.data), s.deleteMissing)
+			err := testApp.ImportCollectionsByMarshalledJSON([]byte(s.data), s.deleteMissing)
 
 			hasErr := err != nil
 			if hasErr != s.expectError {

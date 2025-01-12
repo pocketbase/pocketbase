@@ -352,7 +352,7 @@ func init() {
 	m.Register(func(app core.App) error {
 		jsonData := ` + "`%s`" + `
 
-		return app.ImportCollectionsByMarshaledJSON([]byte(jsonData), false)
+		return app.ImportCollectionsByMarshalledJSON([]byte(jsonData), false)
 	}, func(app core.App) error {
 		return nil
 	})
@@ -550,7 +550,7 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 		upParts = append(upParts, fmt.Sprintf("%s.Fields.RemoveById(%q)\n", varName, oldField.GetId()))
 
 		downParts = append(downParts, "// add field")
-		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSONAt(%d, []byte(`%s`))", varName, i, escapeBacktick(string(rawOldField)))))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshalledJSONAt(%d, []byte(`%s`))", varName, i, escapeBacktick(string(rawOldField)))))
 	}
 
 	// created fields
@@ -565,7 +565,7 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 		}
 
 		upParts = append(upParts, "// add field")
-		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSONAt(%d, []byte(`%s`))", varName, i, escapeBacktick(string(rawNewField)))))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshalledJSONAt(%d, []byte(`%s`))", varName, i, escapeBacktick(string(rawNewField)))))
 
 		downParts = append(downParts, "// remove field")
 		downParts = append(downParts, fmt.Sprintf("%s.Fields.RemoveById(%q)\n", varName, newField.GetId()))
@@ -599,10 +599,10 @@ func (p *plugin) goDiffTemplate(new *core.Collection, old *core.Collection) (str
 		}
 
 		upParts = append(upParts, "// update field")
-		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSONAt(%d, []byte(`%s`))", varName, i, escapeBacktick(string(rawNewField)))))
+		upParts = append(upParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshalledJSONAt(%d, []byte(`%s`))", varName, i, escapeBacktick(string(rawNewField)))))
 
 		downParts = append(downParts, "// update field")
-		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshaledJSONAt(%d, []byte(`%s`))", varName, oldFieldIndex, escapeBacktick(string(rawOldField)))))
+		downParts = append(downParts, goErrIf(fmt.Sprintf("%s.Fields.AddMarshalledJSONAt(%d, []byte(`%s`))", varName, oldFieldIndex, escapeBacktick(string(rawOldField)))))
 	}
 
 	// ---------------------------------------------------------------

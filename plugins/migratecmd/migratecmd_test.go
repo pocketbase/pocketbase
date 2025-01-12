@@ -1052,7 +1052,7 @@ func init() {
 		collection.Fields.RemoveById("f3_id")
 
 		// add field
-		if err := collection.Fields.AddMarshaledJSONAt(8, []byte(` + "`" + `{
+		if err := collection.Fields.AddMarshalledJSONAt(8, []byte(` + "`" + `{
 			"autogeneratePattern": "",
 			"hidden": false,
 			"id": "f4_id",
@@ -1070,7 +1070,7 @@ func init() {
 		}
 
 		// update field
-		if err := collection.Fields.AddMarshaledJSONAt(7, []byte(` + "`" + `{
+		if err := collection.Fields.AddMarshalledJSONAt(7, []byte(` + "`" + `{
 			"hidden": false,
 			"id": "f2_id",
 			"max": null,
@@ -1115,7 +1115,7 @@ func init() {
 		}
 
 		// add field
-		if err := collection.Fields.AddMarshaledJSONAt(8, []byte(` + "`" + `{
+		if err := collection.Fields.AddMarshalledJSONAt(8, []byte(` + "`" + `{
 			"hidden": false,
 			"id": "f3_id",
 			"name": "f3_name",
@@ -1131,7 +1131,7 @@ func init() {
 		collection.Fields.RemoveById("f4_id")
 
 		// update field
-		if err := collection.Fields.AddMarshaledJSONAt(7, []byte(` + "`" + `{
+		if err := collection.Fields.AddMarshalledJSONAt(7, []byte(` + "`" + `{
 			"hidden": false,
 			"id": "f2_id",
 			"max": null,
