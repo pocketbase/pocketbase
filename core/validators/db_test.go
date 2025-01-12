@@ -92,6 +92,13 @@ func TestNormalizeUniqueIndexError(t *testing.T) {
 			[]string{"a", "b", "c"},
 			[]string{"a", "b"},
 		},
+		{
+			"unique index error with matching table name and field starting with the name of another non-unique field",
+			errors.New("UNIQUE constraint failed for fields test.a_2,test.c"),
+			"test",
+			[]string{"a", "a_2", "c"},
+			[]string{"a_2", "c"},
+		},
 	}
 
 	for _, s := range scenarios {
