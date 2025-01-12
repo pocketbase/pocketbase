@@ -50,7 +50,6 @@ func NormalizeUniqueIndexError(err error, tableOrAlias string, fieldNames []stri
 		return err
 	}
 
-	//
 	if _, ok := err.(validation.Errors); ok {
 		return err
 	}
@@ -59,12 +58,14 @@ func NormalizeUniqueIndexError(err error, tableOrAlias string, fieldNames []stri
 
 	// check for unique constraint failure
 	if strings.Contains(msg, "unique constraint failed") {
+		// note: extra space to unify multi-columns lookup
+		msg = strings.ReplaceAll(strings.TrimSpace(msg), ",", " ") + " "
+
 		normalizedErrs := validation.Errors{}
-		msg = strings.ReplaceAll(strings.TrimSpace(msg), ",", " ")
 
 		for _, name := range fieldNames {
-			// blank space to unify multi-columns lookup
-			if strings.Contains(msg+" ", strings.ToLower(tableOrAlias+"."+name)) {
+			// note: extra space to exclude other fields starting with the current field name
+			if strings.Contains(msg, strings.ToLower(tableOrAlias+"."+name+" ")) {
 				normalizedErrs[name] = validation.NewError("validation_not_unique", "Value must be unique")
 			}
 		}
