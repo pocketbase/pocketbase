@@ -269,7 +269,7 @@ func (r *MigrationsRunner) initMigrationsTable() error {
 func (r *MigrationsRunner) isMigrationApplied(txApp App, file string) bool {
 	var exists bool
 
-	err := txApp.DB().Select("count(*)").
+	err := txApp.DB().Select("(1)").
 		From(r.tableName).
 		Where(dbx.HashExp{"file": file}).
 		Limit(1).

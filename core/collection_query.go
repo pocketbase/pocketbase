@@ -206,9 +206,9 @@ func (app *BaseApp) IsCollectionNameUnique(name string, excludeIds ...string) bo
 		query.AndWhere(dbx.NotIn("id", list.ToInterfaceSlice(uniqueExcludeIds)...))
 	}
 
-	var exists bool
+	var total int
 
-	return query.Row(&exists) == nil && !exists
+	return query.Row(&total) == nil && total == 0
 }
 
 // TruncateCollection deletes all records associated with the provided collection.
