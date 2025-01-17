@@ -353,7 +353,10 @@ func bindRealtimeEvents(app core.App) {
 		Func: func(e *core.ModelEvent) error {
 			record := realtimeResolveRecord(e.App, e.Model, "")
 			if record != nil {
-				err := realtimeBroadcastRecord(e.App, "delete", record, true)
+				// note: use the outside scoped app instance for the access checks so that the API ruless
+				// are performed out of the delete transaction ensuring that they would still work even if
+				// a cascade-deleted record's API rule relies on an already deleted parent record
+				err := realtimeBroadcastRecord(e.App, "delete", record, true, app)
 				if err != nil {
 					app.Logger().Debug(
 						"Failed to dry cache record delete",
@@ -460,7 +463,11 @@ type recordData struct {
 	Action string `json:"action"`
 }
 
-func realtimeBroadcastRecord(app core.App, action string, record *core.Record, dryCache bool) error {
+// Note: the optAccessCheckApp is there in case you want the access check
+// to be performed against different db app context (e.g. out of a transaction).
+// If set, it is expected that optAccessCheckApp instance is used for read-only operations to avoid deadlocks.
+// If not set, it fallbacks to app.
+func realtimeBroadcastRecord(app core.App, action string, record *core.Record, dryCache bool, optAccessCheckApp ...core.App) error {
 	collection := record.Collection()
 	if collection == nil {
 		return errors.New("[broadcastRecord] Record collection not set")
@@ -486,6 +493,11 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 
 	group := new(errgroup.Group)
 
+	accessCheckApp := app
+	if len(optAccessCheckApp) > 0 {
+		accessCheckApp = optAccessCheckApp[0]
+	}
+
 	for _, chunk := range chunks {
 		group.Go(func() error {
 			var clientAuth *core.Record
@@ -502,10 +514,6 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 					clientAuth, _ = client.Get(RealtimeClientAuthKey).(*core.Record)
 
 					for sub, options := range subs {
-						// create a clean record copy without expand and unknown fields
-						// because we don't know yet which exact fields the client subscription has permissions to access
-						cleanRecord := record.Fresh()
-
 						// mock request data
 						requestInfo := &core.RequestInfo{
 							Context: core.RequestInfoContextRealtime,
@@ -515,9 +523,13 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 							Auth:    clientAuth,
 						}
 
-						if !realtimeCanAccessRecord(app, cleanRecord, requestInfo, rule) {
+						if !realtimeCanAccessRecord(accessCheckApp, record, requestInfo, rule) {
 							continue
 						}
+
+						// create a clean record copy without expand and unknown fields because we don't know yet
+						// which exact fields the client subscription requested or has permissions to access
+						cleanRecord := record.Fresh()
 
 						// trigger the enrich hooks
 						enrichErr := triggerRecordEnrichHooks(app, requestInfo, []*core.Record{cleanRecord}, func() error {
@@ -541,7 +553,7 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 							// for auth owner, superuser or manager
 							if collection.IsAuth() {
 								if isSameAuth(clientAuth, cleanRecord) ||
-									realtimeCanAccessRecord(app, cleanRecord, requestInfo, collection.ManageRule) {
+									realtimeCanAccessRecord(accessCheckApp, cleanRecord, requestInfo, collection.ManageRule) {
 									cleanRecord.IgnoreEmailVisibility(true)
 								}
 							}
