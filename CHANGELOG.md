@@ -1,3 +1,8 @@
+## v0.24.4
+
+- Fixed fields extraction for view query with milti-level comments ([#6309](https://github.com/pocketbase/pocketbase/discussions/6309)).
+
+
 ## v0.24.3
 
 - Fixed incorrectly reported unique validator error for fields starting with name of another field ([#6281](https://github.com/pocketbase/pocketbase/pull/6281); thanks @svobol13).
