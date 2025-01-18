@@ -2,6 +2,13 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.30
+
+- (_Backported from v0.24.4_) Fixed fields extraction for view queries with nested comments ([#6309](https://github.com/pocketbase/pocketbase/discussions/6309)).
+
+- Bumped GitHub action min Go version to 1.23.5 as it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.23.5).
+
+
 ## v0.22.29
 
 - (_Backported from v0.23.11_) Upgraded `golang.org/x/net` to 0.33.0 to fix [CVE-2024-45338](https://www.cve.org/CVERecord?id=CVE-2024-45338).

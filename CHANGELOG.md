@@ -18,6 +18,13 @@
     (@todo update docs to reflect the `:unsaved` getter change)
 
 
+## v0.24.4
+
+- Fixed fields extraction for view query with nested comments ([#6309](https://github.com/pocketbase/pocketbase/discussions/6309)).
+
+- Bumped GitHub action min Go version to 1.23.5 as it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.23.5).
+
+
 ## v0.24.3
 
 - Fixed incorrectly reported unique validator error for fields starting with name of another field ([#6281](https://github.com/pocketbase/pocketbase/pull/6281); thanks @svobol13).
