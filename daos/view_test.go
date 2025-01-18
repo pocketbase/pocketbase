@@ -248,11 +248,21 @@ func TestCreateViewSchema(t *testing.T) {
 			`
 				select
 				-- test single line
-				id,
-				text,
+				demo1.id,
+				demo1.text,
 				/* multi
 					line comment */
-				url, created, updated from demo1
+				demo1.url, demo1.created, demo2.updated from demo1
+				-- comment before join
+				join demo2 ON (
+					-- comment inside join
+					demo2.id = demo1.id
+				)
+				-- comment before where
+				where (
+					-- comment inside where
+					demo2.id = demo1.id
+				)
 			`,
 			false,
 			map[string]string{

@@ -1,3 +1,8 @@
+## v0.22.30
+
+- (_Backported from v0.24.4_) Fixed fields extraction for view queries with milti-level comments ([#6309](https://github.com/pocketbase/pocketbase/discussions/6309)).
+
+
 ## v0.22.29
 
 - (_Backported from v0.23.11_) Upgraded `golang.org/x/net` to 0.33.0 to fix [CVE-2024-45338](https://www.cve.org/CVERecord?id=CVE-2024-45338).
