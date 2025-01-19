@@ -249,8 +249,8 @@ func TestCreateViewFields(t *testing.T) {
 				demo1.id,
 				demo1.text,
 				/* multi
-					line comment */
-				demo1.url, demo1.created, demo2.updated from demo1
+				 * line comment block */
+				demo1.url, demo1.created, demo1.updated from/* inline comment block with no spaces between the identifiers */demo1
 				-- comment before join
 				join demo2 ON (
 					-- comment inside join

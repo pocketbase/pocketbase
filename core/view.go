@@ -440,7 +440,7 @@ func getQueryTableInfo(app App, selectQuery string) ([]*TableInfoRow, error) {
 var (
 	joinReplaceRegex     = regexp.MustCompile(`(?im)\s+(full\s+outer\s+join|left\s+outer\s+join|right\s+outer\s+join|full\s+join|cross\s+join|inner\s+join|outer\s+join|left\s+join|right\s+join|join)\s+?`)
 	discardReplaceRegex  = regexp.MustCompile(`(?im)\s+(where|group\s+by|having|order|limit|with)\s+?`)
-	commentsReplaceRegex = regexp.MustCompile(`(?m)(\/\*[\s\S]+\*\/)|(--.+$)`)
+	commentsReplaceRegex = regexp.MustCompile(`(?m)(\/\*[\s\S]*?\*\/)|(--.+$)`)
 )
 
 type identifier struct {
@@ -455,7 +455,7 @@ type identifiersParser struct {
 
 func (p *identifiersParser) parse(selectQuery string) error {
 	str := strings.Trim(strings.TrimSpace(selectQuery), ";")
-	str = commentsReplaceRegex.ReplaceAllString(str, "")
+	str = commentsReplaceRegex.ReplaceAllString(str, " ")
 	str = joinReplaceRegex.ReplaceAllString(str, " __pb_join__ ")
 	str = discardReplaceRegex.ReplaceAllString(str, " __pb_discard__ ")
 
