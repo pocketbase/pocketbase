@@ -762,9 +762,9 @@ func (c *Collection) updateGeneratedIdIfExists(app App) {
 
 	// add a number to the current id (if already exists)
 	for i := 2; i < 1000; i++ {
-		var exists bool
+		var exists int
 		_ = app.CollectionQuery().Select("(1)").AndWhere(dbx.HashExp{"id": newId}).Limit(1).Row(&exists)
-		if !exists {
+		if exists == 0 {
 			break
 		}
 		newId = c.idChecksum() + strconv.Itoa(i)

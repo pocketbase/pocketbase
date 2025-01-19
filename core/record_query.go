@@ -584,7 +584,7 @@ func (app *BaseApp) CanAccessRecord(record *Record, requestInfo *RequestInfo, ac
 		return true, nil
 	}
 
-	var exists bool
+	var exists int
 
 	query := app.RecordQuery(record.Collection()).
 		Select("(1)").
@@ -603,5 +603,5 @@ func (app *BaseApp) CanAccessRecord(record *Record, requestInfo *RequestInfo, ac
 		return false, err
 	}
 
-	return exists, nil
+	return exists > 0, nil
 }

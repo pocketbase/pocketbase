@@ -314,9 +314,9 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 
 					resolver.UpdateQuery(ruleQuery)
 
-					var exists bool
+					var exists int
 					err = ruleQuery.Limit(1).Row(&exists)
-					if err != nil || !exists {
+					if err != nil || exists == 0 {
 						return e.BadRequestError("Failed to create record", fmt.Errorf("create rule failure: %w", err))
 					}
 				}
@@ -719,9 +719,9 @@ func hasAuthManageAccess(app core.App, requestInfo *core.RequestInfo, collection
 
 	resolver.UpdateQuery(query)
 
-	var exists bool
+	var exists int
 
 	err = query.Limit(1).Row(&exists)
 
-	return err == nil && exists
+	return err == nil && exists > 0
 }

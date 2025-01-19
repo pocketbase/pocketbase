@@ -146,7 +146,7 @@ func wantsMFA(e *core.RequestEvent, record *core.Record) (bool, error) {
 		return true, err
 	}
 
-	var exists bool
+	var exists int
 
 	query := e.App.RecordQuery(record.Collection()).
 		Select("(1)").
@@ -165,7 +165,7 @@ func wantsMFA(e *core.RequestEvent, record *core.Record) (bool, error) {
 		return true, err
 	}
 
-	return exists, nil
+	return exists > 0, nil
 }
 
 // checkMFA handles any MFA auth checks that needs to be performed for the specified request event.

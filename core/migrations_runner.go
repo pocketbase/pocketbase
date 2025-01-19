@@ -267,7 +267,7 @@ func (r *MigrationsRunner) initMigrationsTable() error {
 }
 
 func (r *MigrationsRunner) isMigrationApplied(txApp App, file string) bool {
-	var exists bool
+	var exists int
 
 	err := txApp.DB().Select("count(*)").
 		From(r.tableName).
@@ -275,7 +275,7 @@ func (r *MigrationsRunner) isMigrationApplied(txApp App, file string) bool {
 		Limit(1).
 		Row(&exists)
 
-	return err == nil && exists
+	return err == nil && exists > 0
 }
 
 func (r *MigrationsRunner) saveAppliedMigration(txApp App, file string) error {
