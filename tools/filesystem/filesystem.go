@@ -36,6 +36,27 @@ type System struct {
 	bucket *blob.Bucket
 }
 
+// -------------------------------------------------------------------
+
+var requestChecksumCalculation = aws.RequestChecksumCalculationWhenRequired
+var responseChecksumValidation = aws.ResponseChecksumValidationWhenRequired
+
+// @todo consider removing after the other non-AWS vendors catched up with the new changes
+// (https://github.com/aws/aws-sdk-go-v2/discussions/2960)
+func init() {
+	reqEnv := os.Getenv("AWS_REQUEST_CHECKSUM_CALCULATION")
+	if reqEnv != "" && strings.EqualFold(reqEnv, "when_supported") {
+		requestChecksumCalculation = aws.RequestChecksumCalculationWhenSupported
+	}
+
+	resEnv := os.Getenv("AWS_RESPONSE_CHECKSUM_VALIDATION")
+	if resEnv != "" && strings.EqualFold(resEnv, "when_supported") {
+		responseChecksumValidation = aws.ResponseChecksumValidationWhenSupported
+	}
+}
+
+// -------------------------------------------------------------------
+
 // NewS3 initializes an S3 filesystem instance.
 //
 // NB! Make sure to call `Close()` after you are done working with it.
@@ -59,6 +80,9 @@ func NewS3(
 	if err != nil {
 		return nil, err
 	}
+
+	cfg.RequestChecksumCalculation = requestChecksumCalculation
+	cfg.ResponseChecksumValidation = responseChecksumValidation
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		// ensure that the endpoint has url scheme for
