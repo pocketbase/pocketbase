@@ -734,7 +734,7 @@ func realtimeCanAccessRecord(
 		return false
 	}
 
-	var exists bool
+	var exists int
 
 	q := app.DB().Select("(1)").
 		From(record.Collection().Name).
@@ -751,5 +751,5 @@ func realtimeCanAccessRecord(
 
 	err = q.Limit(1).Row(&exists)
 
-	return err == nil && exists
+	return err == nil && exists > 0
 }

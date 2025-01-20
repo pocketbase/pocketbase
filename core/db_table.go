@@ -108,7 +108,7 @@ func (app *BaseApp) AuxHasTable(tableName string) bool {
 }
 
 func (app *BaseApp) hasTable(db dbx.Builder, tableName string) bool {
-	var exists bool
+	var exists int
 
 	err := db.Select("(1)").
 		From("sqlite_schema").
@@ -117,7 +117,7 @@ func (app *BaseApp) hasTable(db dbx.Builder, tableName string) bool {
 		Limit(1).
 		Row(&exists)
 
-	return err == nil && exists
+	return err == nil && exists > 0
 }
 
 // Vacuum executes VACUUM on the current app.DB() instance

@@ -200,7 +200,7 @@ func TestMigrationsRunnerRemoveMissingAppliedMigrations(t *testing.T) {
 }
 
 func isMigrationApplied(app core.App, file string) bool {
-	var exists bool
+	var exists int
 
 	err := app.DB().Select("(1)").
 		From(core.DefaultMigrationsTable).
@@ -208,5 +208,5 @@ func isMigrationApplied(app core.App, file string) bool {
 		Limit(1).
 		Row(&exists)
 
-	return err == nil && exists
+	return err == nil && exists > 0
 }
