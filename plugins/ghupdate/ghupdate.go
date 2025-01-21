@@ -20,10 +20,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/archive"
+	"github.com/pocketbase/pocketbase/tools/osutils"
 	"github.com/spf13/cobra"
 )
 
@@ -121,11 +121,7 @@ func (p *plugin) updateCmd() *cobra.Command {
 			}
 
 			if needConfirm {
-				confirm := false
-				prompt := &survey.Confirm{
-					Message: "Do you want to proceed with the update?",
-				}
-				survey.AskOne(prompt, &confirm)
+				confirm := osutils.YesNoPrompt("Do you want to proceed with the update?", false)
 				if !confirm {
 					fmt.Println("The command has been cancelled.")
 					return nil
