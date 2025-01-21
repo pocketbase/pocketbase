@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/pocketbase/pocketbase/core"
+	"github.com/pocketbase/pocketbase/tools/cli"
 	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/spf13/cobra"
 )
@@ -156,11 +156,8 @@ func (p *plugin) migrateCreateHandler(template string, args []string, interactiv
 	resultFilePath := path.Join(dir, filename)
 
 	if interactive {
-		confirm := false
-		prompt := &survey.Confirm{
-			Message: fmt.Sprintf("Do you really want to create migration %q?", resultFilePath),
-		}
-		survey.AskOne(prompt, &confirm)
+		message := fmt.Sprintf("Do you really want to create migration %q?", resultFilePath)
+		confirm := cli.New().Confirm(message, false)
 		if !confirm {
 			fmt.Println("The command has been cancelled")
 			return "", nil

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/tools/cli"
 	"github.com/spf13/cast"
 )
 
@@ -80,15 +80,12 @@ func (r *MigrationsRunner) Run(args ...string) error {
 			return err
 		}
 
-		confirm := false
-		prompt := &survey.Confirm{
-			Message: fmt.Sprintf(
-				"\n%v\nDo you really want to revert the last %d applied migration(s)?",
-				strings.Join(names, "\n"),
-				toRevertCount,
-			),
-		}
-		survey.AskOne(prompt, &confirm)
+		message := fmt.Sprintf(
+			"\n%v\nDo you really want to revert the last %d applied migration(s)?",
+			strings.Join(names, "\n"),
+			toRevertCount,
+		)
+		confirm := cli.New().Confirm(message, false)
 		if !confirm {
 			fmt.Println("The command has been cancelled")
 			return nil
