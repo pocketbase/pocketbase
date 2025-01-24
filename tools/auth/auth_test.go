@@ -7,7 +7,7 @@ import (
 )
 
 func TestProvidersCount(t *testing.T) {
-	expected := 29
+	expected := 30
 
 	if total := len(auth.Providers); total != expected {
 		t.Fatalf("Expected %d providers, got %d", expected, total)
@@ -286,5 +286,14 @@ func TestNewProviderByName(t *testing.T) {
 	}
 	if _, ok := p.(*auth.Linear); !ok {
 		t.Error("Expected to be instance of *auth.Linear")
+	}
+
+	// orcid
+	p, err = auth.NewProviderByName(auth.NameORCID)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.ORCID); !ok {
+		t.Error("Expected to be instance of *auth.ORCID")
 	}
 }
