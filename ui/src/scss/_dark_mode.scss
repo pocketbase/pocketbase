@@ -1,0 +1,273 @@
+/* 
+    this section is explicitly for defining the prism colors 
+*/
+:root {
+    --prismRed: #c22f2e;
+    --prismKeyword: #a04900;
+    --prismBool: #755f00;
+    --prismString: #116b00;
+    --prismAqua: #006d6d;
+    --prismBlue1: #8da1b9;
+    --prismComment: #3c526d;
+    --prismClass: #005a8e;
+    --prismFunction: #7c00aa;
+    --prismPink: #af00af;
+
+    --prismBlack: #111b27;
+    --prismWhite: #e3eaf2;
+}
+
+[data-theme="dark"] {
+    --txtPrimaryColor:  #E3E3E2;
+    --txtHintColor:     #BBB2AB;
+    --txtDisabledColor: #7c6f64;
+
+    --primaryColor: #E3E3E2;
+
+    --bodyColor: #282828; 
+
+    --baseColor:	  #282828;
+    --baseAlt1Color:  #3c3836;
+	--baseAlt2Color:  #504945;
+	--baseAlt3Color:  #665c54;
+	--baseAlt4Color:  #7c6f64;
+
+    --infoColor:       #458588;
+    --infoAltColor:    #83a598;
+    --successColor:    #689d64;
+    --successAltColor: #8ec07c;
+    --dangerColor:     #cc241d;
+    --dangerAltColor:  #fb4934;
+    --warningColor:    #d65d0e;
+    --warningAltColor: #fe8019;
+
+    --overlayColor:   rgba(0, 0, 0, 0.28);
+    --tooltipColor:   rgba(0, 0, 0, 0.85);
+    --shadowColor:    rgba(0, 0, 0, 0.06);
+
+    --prismRed: #fb4934;
+    --prismKeyword: #fabd2f;
+    --prismBool: #fe8019;
+    --prismString: #b8bb26;
+    --prismAqua: #8ec07c;
+    --prismBlue1: #83a598;
+    --prismClass: #458588;
+    --prismFunction: #b16286;
+    --prismPink: #d95f5b;
+
+    --prismComment: #928374;
+    --prismBlack: #111b27;
+    --prismWhite: #fbf1c7;
+}
+
+.btn-expanded {
+    color: var(--bodyColor) !important;
+}
+
+.btn-outline {
+    background-color: var(--bodyColor) !important;
+}
+
+.dark-mode-toggle {
+    background-color: var(--baseAlt2Color);
+    color: var(--primaryColor);
+
+    width: 40px;
+    height: 40px;
+
+    margin: 0 auto;
+    text-align: center;
+
+    border: none;
+    border-radius: 100px;
+    color: var(--text-color);
+    cursor: pointer;
+    margin: 10px;
+
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+/*
+    extensively modified Prism.js 1.29 light theme 
+    i'm too lazy to figure out where the prism css is and just chose to modify it here.
+
+    apologies for the mess.
+*/
+
+code[class*=language-],pre[class*=language-] {
+    color: var(--prismBlack) !important; 
+}
+
+code[class*=language-] ::-moz-selection,code[class*=language-]::-moz-selection,pre[class*=language-] ::-moz-selection,pre[class*=language-]::-moz-selection {
+    background: var(--prismBlue1) !important;
+}
+
+code[class*=language-] ::selection,code[class*=language-]::selection,pre[class*=language-] ::selection,pre[class*=language-]::selection {
+    background: var(--prismBlue1) !important;
+}
+
+:not(pre)>code[class*=language-],pre[class*=language-] {
+    background: var(--prismWhite) !important;
+}
+
+.token.cdata,.token.comment,.token.doctype,.token.prolog {
+    color: var(--prismComment) !important; 
+}
+
+.token.punctuation {
+    color: var(--prismBlack) !important;
+}
+
+.token.delimiter.important,.token.selector .parent,.token.tag,.token.tag .token.punctuation {
+    color: var(--prismAqua) !important;
+}
+
+.token.attr-name,.token.boolean,.token.boolean.important,.token.constant,.token.number,.token.selector .token.attribute {
+    color: var(--prismBool) !important; 
+}
+
+.token.class-name,.token.key,.token.parameter,.token.property,.token.property-access,.token.variable {
+    color: var(--prismClass) !important;
+}
+
+.token.attr-value,.token.color,.token.inserted,.token.selector .token.value,.token.string,.token.string .token.url-link {
+    color: var(--prismString) !important;
+}
+
+.token.builtin,.token.keyword-array,.token.package,.token.regex {
+    color: var(--prismPink) !important;
+}
+
+.token.function,.token.selector .token.class,.token.selector .token.id {
+    color: var(--prismFunction) !important
+}
+
+.token.atrule .token.rule,.token.combinator,.token.keyword,.token.operator,.token.pseudo-class,.token.pseudo-element,.token.selector,.token.unit {
+    color: var(--prismKeyword) !important
+}
+
+.token.deleted,.token.important {
+    color: var(--prismRed) !important
+}
+
+.token.keyword-this,.token.this {
+    color: var(--prismClass) !important;
+}
+
+.language-markdown .token.title,.language-markdown .token.title .token.punctuation {
+    color: var(--prismClass) !important;    
+}
+
+.language-markdown .token.blockquote.punctuation {
+    color: var(--prismPink) !important
+}
+
+.language-markdown .token.code {
+    color: var(--prismAqua) !important;
+}
+
+.language-markdown .token.hr.punctuation {
+    color: var(--prismClass) !important;
+}
+
+.language-markdown .token.url>.token.content {
+    color: var(--prismString) !important
+}
+
+.language-markdown .token.url-link {
+    color: var(--prismBool) !important
+}
+
+.language-markdown .token.list.punctuation {
+    color: var(--prismPink) !important
+}
+
+.language-markdown .token.table-header {
+    color: var(--prismBlack) !important
+}
+
+.language-json .token.operator {
+    color: var(--prismBlack) !important
+}
+
+.language-scss .token.variable {
+    color: var(--prismAqua) !important;
+}
+
+.token.token.cr:before,.token.token.lf:before,.token.token.space:before,.token.token.tab:not(:empty):before {
+    color: var(--prismComment) !important
+}
+
+div.code-toolbar>.toolbar.toolbar>.toolbar-item>a,div.code-toolbar>.toolbar.toolbar>.toolbar-item>button {
+    color: var(--prismWhite) !important;
+    background: var(--prismClass) !important;
+}
+
+div.code-toolbar>.toolbar.toolbar>.toolbar-item>a:focus,div.code-toolbar>.toolbar.toolbar>.toolbar-item>a:hover,div.code-toolbar>.toolbar.toolbar>.toolbar-item>button:focus,div.code-toolbar>.toolbar.toolbar>.toolbar-item>button:hover {
+    color: var(--prismWhite) !important;
+    background: var(--prismClass) !important;
+}
+
+div.code-toolbar>.toolbar.toolbar>.toolbar-item>span,div.code-toolbar>.toolbar.toolbar>.toolbar-item>span:focus,div.code-toolbar>.toolbar.toolbar>.toolbar-item>span:hover {
+    color: var(--prismWhite) !important;
+    background: var(--prismComment) !important
+}
+
+.line-highlight.line-highlight {
+    background: var(--prismBlue1) !important;
+    background: linear-gradient(to right, var(--prismBlue1) 70%,#8da1b925)
+}
+
+.line-highlight.line-highlight:before,.line-highlight.line-highlight[data-end]:after {
+    background-color: var(--prismComment) !important;
+    color: var(--prismWhite) !important;
+    box-shadow: 0 1px var(--prismBlue1) !important
+}
+
+pre[id].linkable-line-numbers.linkable-line-numbers span.line-numbers-rows>span:hover:before {
+    background-color: var(--prismComment) !important;
+}
+
+.line-numbers.line-numbers .line-numbers-rows {
+    border-right: 1px solid var(--prismBlue1) !important;
+    background: var(--prismWhite) !important
+}
+
+.line-numbers .line-numbers-rows>span:before {
+    color: var(--prismComment) !important;
+}
+
+.rainbow-braces .token.token.punctuation.brace-level-1,.rainbow-braces .token.token.punctuation.brace-level-5,.rainbow-braces .token.token.punctuation.brace-level-9 {
+    color: var(--prismBool) !important
+}
+
+.rainbow-braces .token.token.punctuation.brace-level-10,.rainbow-braces .token.token.punctuation.brace-level-2,.rainbow-braces .token.token.punctuation.brace-level-6 {
+    color: var(--prismPink) !important
+}
+
+.rainbow-braces .token.token.punctuation.brace-level-11,.rainbow-braces .token.token.punctuation.brace-level-3,.rainbow-braces .token.token.punctuation.brace-level-7 {
+    color: var(--prismClass) !important;
+}
+
+.rainbow-braces .token.token.punctuation.brace-level-12,.rainbow-braces .token.token.punctuation.brace-level-4,.rainbow-braces .token.token.punctuation.brace-level-8 {
+    color: var(--prismFunction) !important
+}
+
+pre.diff-highlight>code .token.token.deleted:not(.prefix),pre>code.diff-highlight .token.token.deleted:not(.prefix) {
+    background-color: var(--prismRed) !important
+}
+
+pre.diff-highlight>code .token.token.inserted:not(.prefix),pre>code.diff-highlight .token.token.inserted:not(.prefix) {
+    background-color: var(--prismString) !important;
+}
+
+.command-line .command-line-prompt {
+    border-right: 1px solid var(--prismBlue1) !important;
+}
+
+.command-line .command-line-prompt>span:before {
+    color: var(--prismComment) !important;
+}
+

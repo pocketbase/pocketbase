@@ -14,7 +14,13 @@
     import CommonHelper from "@/utils/CommonHelper";
     import Router, { link, replace } from "svelte-spa-router";
     import active from "svelte-spa-router/active";
-    import routes from "./routes";
+	import routes from "./routes";
+	import { darkMode } from "@/stores/darkMode"
+	import { get } from 'svelte/store';
+
+    function toggleDarkMode() {
+        darkMode.set(!get(darkMode));
+    }
 
     let oldLocation = undefined;
 
@@ -125,6 +131,14 @@
                 </a>
             </nav>
 
+			<button on:click={toggleDarkMode} class="dark-mode-toggle">
+				{#if !$darkMode}
+					<i class="ri-sun-line" aria-hidden="true" />
+				{:else}
+					<i class="ri-moon-line" aria-hidden="true" />
+				{/if}
+			</button>
+
             <div
                 tabindex="0"
                 role="button"
@@ -133,7 +147,8 @@
                 title={$superuser.email}
             >
                 <span class="initials">{CommonHelper.getInitials($superuser.email)}</span>
-                <Toggler class="dropdown dropdown-nowrap dropdown-upside dropdown-left">
+				<Toggler class="dropdown dropdown-nowrap dropdown-upside dropdown-left">
+
                     <div class="txt-ellipsis current-superuser" title={$superuser.email}>
                         {$superuser.email}
                     </div>
