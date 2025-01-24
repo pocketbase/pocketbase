@@ -28,7 +28,7 @@ func NewTraktProvider() *Trakt {
 	return &Trakt{BaseProvider{
 		ctx:         context.Background(),
 		displayName: "Trakt",
-		pkce:        false,
+		pkce:        true,
 		authURL:     "https://trakt.tv/oauth/authorize",
 		tokenURL:    "https://api.trakt.tv/oauth/token",
 		userInfoURL: "https://api.trakt.tv/users/settings",
@@ -69,7 +69,8 @@ func (p *Trakt) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:           extracted.User.Username,
+		Id:           extracted.User.Ids.UUID,
+		Username:     extracted.User.Username,
 		Name:         extracted.User.Name,
 		AvatarURL:    extracted.User.Images.Avatar.Full,
 		RawUser:      rawUser,
