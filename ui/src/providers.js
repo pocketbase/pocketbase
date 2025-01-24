@@ -104,14 +104,14 @@ export default [
         logo: "vk.svg"
     },
     {
-        key:   "notion",
+        key: "notion",
         title: "Notion",
-        logo:  "notion.svg",
+        logo: "notion.svg",
     },
     {
-        key:   "monday",
+        key: "monday",
         title: "monday.com",
-        logo:  "monday.svg",
+        logo: "monday.svg",
     },
     {
         key: "spotify",
@@ -122,6 +122,11 @@ export default [
         key: "twitch",
         title: "Twitch",
         logo: "twitch.svg",
+    },
+    {
+        key: "trakt",
+        title: "Trakt",
+        logo: "trakt.svg",
     },
     {
         key: "patreon",
