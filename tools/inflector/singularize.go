@@ -56,7 +56,7 @@ var singularRules = []struct {
 	{"(?i)s$", ""},
 }
 
-// Singularize returns the singular version of the specified word.
+// Singularize converts the specified word into its singular version.
 //
 // For example:
 //

@@ -83,3 +83,30 @@ func Snakecase(str string) string {
 
 	return strings.ToLower(result.String())
 }
+
+// Camelize convers a string to its "CamelCased" version (non alphanumeric characters are removed).
+//
+// For example:
+//
+//	inflector.Camelize("send_email") // "SendEmail"
+func Camelize(str string) string {
+	var result strings.Builder
+
+	var isPrevSpecial bool
+
+	for _, c := range str {
+		if !unicode.IsLetter(c) && !unicode.IsNumber(c) {
+			isPrevSpecial = true
+			continue
+		}
+
+		if isPrevSpecial || result.Len() == 0 {
+			isPrevSpecial = false
+			result.WriteRune(unicode.ToUpper(c))
+		} else {
+			result.WriteRune(c)
+		}
+	}
+
+	return result.String()
+}

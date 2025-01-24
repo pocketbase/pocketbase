@@ -22,6 +22,8 @@
 
 - Replaced archived `github.com/AlecAivazis/survey` dependency with a simpler  `osutils.YesNoPrompt(message, fallback)` helper.
 
+- Added `inflector.Camelize(str)` and `inflector.Singularize(str)` helper methods.
+
 - Other minor improvements (_replaced all `bool` exists db scans with `int` for broader drivers compatibility, use the non-transactional app instance during realtime records delete access checks to ensure that cascade deleted records with API rules relying on the parent will be resolved, updated UI dependencies, etc._)
 
 
