@@ -13,7 +13,7 @@
     --prismFunction: #7c00aa;
     --prismPink: #af00af;
 
-    --prismBlack: #111b27;
+    --prismPunctuation: #111b27;
     --prismWhite: #e3eaf2;
 }
 
@@ -46,17 +46,16 @@
     --shadowColor:    rgba(0, 0, 0, 0.06);
 
     --prismRed: #fb4934;
-    --prismKeyword: #fabd2f;
-    --prismBool: #fe8019;
-    --prismString: #b8bb26;
-    --prismAqua: #8ec07c;
+    --prismKeyword: #d95f5b;
+    --prismBool: #b16286;
+    --prismString: #8ec07c ;
+    --prismAqua: #689d64;
     --prismBlue1: #83a598;
     --prismClass: #458588;
-    --prismFunction: #b16286;
-    --prismPink: #d95f5b;
-
+    --prismFunction:  #b8bb26;
+    --prismPink: #af00af;
     --prismComment: #928374;
-    --prismBlack: #111b27;
+    --prismPunctuation: #fe8019;
     --prismWhite: #fbf1c7;
 }
 
@@ -89,6 +88,15 @@
     }
 }
 
+/* ??????? */
+.ͼb {
+    color: var(--prismFunction) !important;
+}
+
+.ͼe {
+    color: var(--prismKeyword) !important;
+}
+
 /*
     extensively modified Prism.js 1.29 light theme 
     i'm too lazy to figure out where the prism css is and just chose to modify it here.
@@ -97,7 +105,7 @@
 */
 
 code[class*=language-],pre[class*=language-] {
-    color: var(--prismBlack) !important; 
+    color: var(--prismPunctuation) !important; 
 }
 
 code[class*=language-] ::-moz-selection,code[class*=language-]::-moz-selection,pre[class*=language-] ::-moz-selection,pre[class*=language-]::-moz-selection {
@@ -117,7 +125,7 @@ code[class*=language-] ::selection,code[class*=language-]::selection,pre[class*=
 }
 
 .token.punctuation {
-    color: var(--prismBlack) !important;
+    color: var(--prismPunctuation) !important;
 }
 
 .token.delimiter.important,.token.selector .parent,.token.tag,.token.tag .token.punctuation {
@@ -185,11 +193,11 @@ code[class*=language-] ::selection,code[class*=language-]::selection,pre[class*=
 }
 
 .language-markdown .token.table-header {
-    color: var(--prismBlack) !important
+    color: var(--prismPunctuation) !important
 }
 
 .language-json .token.operator {
-    color: var(--prismBlack) !important
+    color: var(--prismPunctuation) !important
 }
 
 .language-scss .token.variable {
