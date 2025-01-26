@@ -23,7 +23,7 @@
             code: 404,
             body: `
                 {
-                  "code": 404,
+                  "status": 404,
                   "message": "Missing collection context.",
                   "data": {}
                 }

@@ -1,4 +1,4 @@
-import{S as Ue,i as xe,s as Ke,V as Qe,W as Ne,X as K,h as s,z as k,j as p,c as Q,k as b,n as d,o,m as W,H as de,Y as Le,Z as We,E as Ge,_ as Ie,G as Xe,t as V,a as z,v as u,d as G,J as Oe,p as Ye,l as I,q as Ze}from"./index-BbbaBQB3.js";import{F as et}from"./FieldsQueryParam-mQ3mGH1j.js";function Ve(r,a,l){const n=r.slice();return n[5]=a[l],n}function ze(r,a,l){const n=r.slice();return n[5]=a[l],n}function je(r,a){let l,n=a[5].code+"",m,_,i,h;function g(){return a[4](a[5])}return{key:r,first:null,c(){l=s("button"),m=k(n),_=p(),b(l,"class","tab-item"),I(l,"active",a[1]===a[5].code),this.first=l},m(v,w){d(v,l,w),o(l,m),o(l,_),i||(h=Ze(l,"click",g),i=!0)},p(v,w){a=v,w&4&&n!==(n=a[5].code+"")&&de(m,n),w&6&&I(l,"active",a[1]===a[5].code)},d(v){v&&u(l),i=!1,h()}}}function Je(r,a){let l,n,m,_;return n=new Ne({props:{content:a[5].body}}),{key:r,first:null,c(){l=s("div"),Q(n.$$.fragment),m=p(),b(l,"class","tab-item"),I(l,"active",a[1]===a[5].code),this.first=l},m(i,h){d(i,l,h),W(n,l,null),o(l,m),_=!0},p(i,h){a=i;const g={};h&4&&(g.content=a[5].body),n.$set(g),(!_||h&6)&&I(l,"active",a[1]===a[5].code)},i(i){_||(V(n.$$.fragment,i),_=!0)},o(i){z(n.$$.fragment,i),_=!1},d(i){i&&u(l),G(n)}}}function tt(r){var De,Fe;let a,l,n=r[0].name+"",m,_,i,h,g,v,w,B,X,S,j,ue,J,M,pe,Y,N=r[0].name+"",Z,he,fe,U,ee,D,te,T,oe,be,F,C,ae,me,le,_e,f,ke,P,ge,ve,$e,se,ye,ne,Se,we,Te,re,Ce,Re,q,ie,H,ce,R,E,y=[],Pe=new Map,qe,L,$=[],Ae=new Map,A;v=new Qe({props:{js:`
+import{S as Ue,i as xe,s as Ke,V as Qe,W as Ne,X as K,h as s,z as k,j as p,c as Q,k as b,n as d,o,m as W,H as de,Y as Le,Z as We,E as Ge,_ as Ie,G as Xe,t as V,a as z,v as u,d as G,J as Oe,p as Ye,l as I,q as Ze}from"./index-Djf6ajOI.js";import{F as et}from"./FieldsQueryParam-0B4eiEke.js";function Ve(r,a,l){const n=r.slice();return n[5]=a[l],n}function ze(r,a,l){const n=r.slice();return n[5]=a[l],n}function je(r,a){let l,n=a[5].code+"",m,_,i,h;function g(){return a[4](a[5])}return{key:r,first:null,c(){l=s("button"),m=k(n),_=p(),b(l,"class","tab-item"),I(l,"active",a[1]===a[5].code),this.first=l},m(v,w){d(v,l,w),o(l,m),o(l,_),i||(h=Ze(l,"click",g),i=!0)},p(v,w){a=v,w&4&&n!==(n=a[5].code+"")&&de(m,n),w&6&&I(l,"active",a[1]===a[5].code)},d(v){v&&u(l),i=!1,h()}}}function Je(r,a){let l,n,m,_;return n=new Ne({props:{content:a[5].body}}),{key:r,first:null,c(){l=s("div"),Q(n.$$.fragment),m=p(),b(l,"class","tab-item"),I(l,"active",a[1]===a[5].code),this.first=l},m(i,h){d(i,l,h),W(n,l,null),o(l,m),_=!0},p(i,h){a=i;const g={};h&4&&(g.content=a[5].body),n.$set(g),(!_||h&6)&&I(l,"active",a[1]===a[5].code)},i(i){_||(V(n.$$.fragment,i),_=!0)},o(i){z(n.$$.fragment,i),_=!1},d(i){i&&u(l),G(n)}}}function tt(r){var De,Fe;let a,l,n=r[0].name+"",m,_,i,h,g,v,w,B,X,S,j,ue,J,M,pe,Y,N=r[0].name+"",Z,he,fe,U,ee,D,te,T,oe,be,F,C,ae,me,le,_e,f,ke,P,ge,ve,$e,se,ye,ne,Se,we,Te,re,Ce,Re,q,ie,H,ce,R,E,y=[],Pe=new Map,qe,L,$=[],Ae=new Map,A;v=new Qe({props:{js:`
         import PocketBase from 'pocketbase';
 
         const pb = new PocketBase('${r[3]}');
@@ -60,19 +60,19 @@ import{S as Ue,i as xe,s as Ke,V as Qe,W as Ne,X as K,h as s,z as k,j as p,c as 
         print(pb.authStore.record.id);
     `),v.$set(c),(!A||t&1)&&N!==(N=e[0].name+"")&&de(Z,N),t&6&&(x=K(e[2]),y=Le(y,t,Be,1,e,x,Pe,E,We,je,null,ze)),t&6&&(O=K(e[2]),Ge(),$=Le($,t,Me,1,e,O,Ae,L,Ie,Je,null,Ve),Xe())},i(e){if(!A){V(v.$$.fragment,e),V(P.$$.fragment,e),V(q.$$.fragment,e);for(let t=0;t<O.length;t+=1)V($[t]);A=!0}},o(e){z(v.$$.fragment,e),z(P.$$.fragment,e),z(q.$$.fragment,e);for(let t=0;t<$.length;t+=1)z($[t]);A=!1},d(e){e&&(u(a),u(i),u(h),u(g),u(w),u(B),u(X),u(S),u(ee),u(D),u(te),u(T),u(ie),u(H),u(ce),u(R)),G(v,e),G(P),G(q);for(let t=0;t<y.length;t+=1)y[t].d();for(let t=0;t<$.length;t+=1)$[t].d()}}}function ot(r,a,l){let n,{collection:m}=a,_=200,i=[];const h=g=>l(1,_=g.code);return r.$$set=g=>{"collection"in g&&l(0,m=g.collection)},r.$$.update=()=>{r.$$.dirty&1&&l(2,i=[{code:200,body:JSON.stringify({token:"JWT_TOKEN",record:Oe.dummyCollectionRecord(m)},null,2)},{code:401,body:`
                 {
-                  "code": 401,
+                  "status": 401,
                   "message": "The request requires valid record authorization token to be set.",
                   "data": {}
                 }
             `},{code:403,body:`
                 {
-                  "code": 403,
+                  "status": 403,
                   "message": "The authorized record model is not allowed to perform this action.",
                   "data": {}
                 }
             `},{code:404,body:`
                 {
-                  "code": 404,
+                  "status": 404,
                   "message": "Missing auth record context.",
                   "data": {}
                 }

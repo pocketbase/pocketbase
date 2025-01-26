@@ -26,7 +26,7 @@
 
 - Added `inflector.Camelize(str)` and `inflector.Singularize(str)` helper methods.
 
-- Other minor improvements (_replaced all `bool` exists db scans with `int` for broader drivers compatibility, use the non-transactional app instance during realtime records delete access checks to ensure that cascade deleted records with API rules relying on the parent will be resolved, updated UI dependencies, etc._)
+- Other minor improvements (_replaced all `bool` exists db scans with `int` for broader drivers compatibility, use the non-transactional app instance during realtime records delete access checks to ensure that cascade deleted records with API rules relying on the parent will be resolved, updated API Preview sample error responses, updated UI dependencies, etc._)
 
 
 ## v0.24.4

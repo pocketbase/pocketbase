@@ -39,7 +39,7 @@
             code: 400,
             body: `
                 {
-                  "code": 400,
+                  "status": 400,
                   "message": "Something went wrong while processing your request. Invalid filter.",
                   "data": {}
                 }
@@ -51,7 +51,7 @@
                 code: 403,
                 body: `
                     {
-                      "code": 403,
+                      "status": 403,
                       "message": "Only superusers can access this action.",
                       "data": {}
                     }

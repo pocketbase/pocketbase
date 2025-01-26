@@ -33,7 +33,7 @@
             code: 400,
             body: `
                 {
-                  "code": 400,
+                  "status": 400,
                   "message": "Failed to update record.",
                   "data": {
                     "${collection?.fields?.[0]?.name}": {
@@ -48,7 +48,7 @@
             code: 403,
             body: `
                 {
-                  "code": 403,
+                  "status": 403,
                   "message": "You are not allowed to perform this request.",
                   "data": {}
                 }
@@ -58,7 +58,7 @@
             code: 404,
             body: `
                 {
-                  "code": 404,
+                  "status": 404,
                   "message": "The requested resource wasn't found.",
                   "data": {}
                 }

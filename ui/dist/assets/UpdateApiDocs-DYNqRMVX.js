@@ -1,4 +1,4 @@
-import{S as Ot,i as St,s as Mt,V as $t,J as x,X as ie,W as Tt,h as i,z as h,j as f,c as ve,k,n as o,o as n,m as we,H as te,Y as Je,Z as bt,E as qt,_ as Rt,G as Ht,t as he,a as ye,v as r,d as Ce,p as Dt,l as Te,q as Lt,I as de}from"./index-BbbaBQB3.js";import{F as Pt}from"./FieldsQueryParam-mQ3mGH1j.js";function mt(d,e,t){const a=d.slice();return a[10]=e[t],a}function _t(d,e,t){const a=d.slice();return a[10]=e[t],a}function ht(d,e,t){const a=d.slice();return a[15]=e[t],a}function yt(d){let e;return{c(){e=i("p"),e.innerHTML=`<em>Note that in case of a password change all previously issued tokens for the current record
+import{S as Ot,i as St,s as Mt,V as $t,J as x,X as ie,W as Tt,h as i,z as h,j as f,c as ve,k,n as o,o as n,m as we,H as te,Y as Je,Z as bt,E as qt,_ as Rt,G as Ht,t as he,a as ye,v as r,d as Ce,p as Dt,l as Te,q as Lt,I as de}from"./index-Djf6ajOI.js";import{F as Pt}from"./FieldsQueryParam-0B4eiEke.js";function mt(d,e,t){const a=d.slice();return a[10]=e[t],a}function _t(d,e,t){const a=d.slice();return a[10]=e[t],a}function ht(d,e,t){const a=d.slice();return a[15]=e[t],a}function yt(d){let e;return{c(){e=i("p"),e.innerHTML=`<em>Note that in case of a password change all previously issued tokens for the current record
                 will be automatically invalidated and if you want your user to remain signed in you need to
                 reauthenticate manually after the update call.</em>`},m(t,a){o(t,e,a)},d(t){t&&r(e)}}}function kt(d){let e;return{c(){e=i("p"),e.innerHTML="Requires superuser <code>Authorization:TOKEN</code> header",k(e,"class","txt-hint txt-sm txt-right")},m(t,a){o(t,e,a)},d(t){t&&r(e)}}}function gt(d){let e,t,a,m,p,c,u,b,O,T,M,H,S,E,q,D,J,I,$,R,L,g,v,w;function z(_,C){var le,W,ne;return C&1&&(b=null),b==null&&(b=!!((ne=(W=(le=_[0])==null?void 0:le.fields)==null?void 0:W.find(Qt))!=null&&ne.required)),b?jt:Ft}let Q=z(d,-1),F=Q(d);return{c(){e=i("tr"),e.innerHTML='<td colspan="3" class="txt-hint txt-bold">Auth specific fields</td>',t=f(),a=i("tr"),a.innerHTML=`<td><div class="inline-flex"><span class="label label-warning">Optional</span> <span>email</span></div></td> <td><span class="label">String</span></td> <td>The auth record email address.
                     <br/>
@@ -66,7 +66,7 @@ final body = <String, dynamic>${JSON.stringify(Object.assign({},l[4],x.dummyColl
 final record = await pb.collection('${(ft=l[0])==null?void 0:ft.name}').update('RECORD_ID', body: body);
     `),R.$set(y),(!ee||s&1)&&W!==(W=l[0].name+"")&&te(ne,W),l[7]?A||(A=kt(),A.c(),A.m(w,null)):A&&(A.d(1),A=null),l[1]?P?P.p(l,s):(P=gt(l),P.c(),P.m(G,He)):P&&(P.d(1),P=null),s&64&&(ke=ie(l[6]),U=Je(U,s,dt,1,l,ke,ze,G,bt,vt,null,ht)),s&12&&(ge=ie(l[3]),V=Je(V,s,ot,1,l,ge,at,be,bt,wt,null,_t)),s&12&&(_e=ie(l[3]),qt(),B=Je(B,s,rt,1,l,_e,it,me,Rt,Ct,null,mt),Ht())},i(l){if(!ee){he(R.$$.fragment,l),he(ae.$$.fragment,l),he(se.$$.fragment,l);for(let s=0;s<_e.length;s+=1)he(B[s]);ee=!0}},o(l){ye(R.$$.fragment,l),ye(ae.$$.fragment,l),ye(se.$$.fragment,l);for(let s=0;s<B.length;s+=1)ye(B[s]);ee=!1},d(l){l&&(r(e),r(c),r(u),r($),r(L),r(g),r(v),r(w),r(Se),r(oe),r(Me),r(re),r($e),r(ce),r(qe),r(Y),r(De),r(ue),r(Le),r(K),r(Ee),r(fe),r(Ie),r(Z)),N&&N.d(),Ce(R,l),A&&A.d(),P&&P.d();for(let s=0;s<U.length;s+=1)U[s].d();Ce(ae),Ce(se);for(let s=0;s<V.length;s+=1)V[s].d();for(let s=0;s<B.length;s+=1)B[s].d()}}}const Qt=d=>d.name=="emailVisibility";function Wt(d,e,t){let a,m,p,c,u,{collection:b}=e,O=200,T=[],M={};const H=S=>t(2,O=S.code);return d.$$set=S=>{"collection"in S&&t(0,b=S.collection)},d.$$.update=()=>{var S,E,q;d.$$.dirty&1&&t(1,a=(b==null?void 0:b.type)==="auth"),d.$$.dirty&1&&t(7,m=(b==null?void 0:b.updateRule)===null),d.$$.dirty&2&&t(8,p=a?["id","password","verified","email","emailVisibility"]:["id"]),d.$$.dirty&257&&t(6,c=((S=b==null?void 0:b.fields)==null?void 0:S.filter(D=>!D.hidden&&D.type!="autodate"&&!p.includes(D.name)))||[]),d.$$.dirty&1&&t(3,T=[{code:200,body:JSON.stringify(x.dummyCollectionRecord(b),null,2)},{code:400,body:`
                 {
-                  "code": 400,
+                  "status": 400,
                   "message": "Failed to update record.",
                   "data": {
                     "${(q=(E=b==null?void 0:b.fields)==null?void 0:E[0])==null?void 0:q.name}": {
@@ -77,13 +77,13 @@ final record = await pb.collection('${(ft=l[0])==null?void 0:ft.name}').update('
                 }
             `},{code:403,body:`
                 {
-                  "code": 403,
+                  "status": 403,
                   "message": "You are not allowed to perform this request.",
                   "data": {}
                 }
             `},{code:404,body:`
                 {
-                  "code": 404,
+                  "status": 404,
                   "message": "The requested resource wasn't found.",
                   "data": {}
                 }

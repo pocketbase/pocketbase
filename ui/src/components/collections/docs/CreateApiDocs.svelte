@@ -33,7 +33,7 @@
             code: 400,
             body: `
                 {
-                  "code": 400,
+                  "status": 400,
                   "message": "Failed to create record.",
                   "data": {
                     "${collection?.fields?.[0]?.name}": {
@@ -48,7 +48,7 @@
             code: 403,
             body: `
                 {
-                  "code": 403,
+                  "status": 403,
                   "message": "You are not allowed to perform this request.",
                   "data": {}
                 }

@@ -38,7 +38,7 @@
             code: 400,
             body: `
                 {
-                  "code": 400,
+                  "status": 400,
                   "message": "An error occurred while submitting the form.",
                   "data": {
                     "provider": {
