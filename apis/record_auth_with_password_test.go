@@ -8,10 +8,37 @@ import (
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/dbutils"
 )
 
 func TestRecordAuthWithPassword(t *testing.T) {
 	t.Parallel()
+
+	updateIdentityIndex := func(collectionIdOrName string, fieldCollateMap map[string]string) func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+		return func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+			collection, err := app.FindCollectionByNameOrId("clients")
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for column, collate := range fieldCollateMap {
+				index, ok := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, column)
+				if !ok {
+					t.Fatalf("Missing unique identityField index for column %q", column)
+				}
+
+				index.Columns[0].Collate = collate
+
+				collection.RemoveIndex(index.IndexName)
+				collection.Indexes = append(collection.Indexes, index.Build())
+			}
+
+			err = app.Save(collection)
+			if err != nil {
+				t.Fatalf("Failed to update identityField index: %v", err)
+			}
+		}
+	}
 
 	scenarios := []tests.ApiScenario{
 		{
@@ -163,6 +190,22 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				"OnMailerSend":                1,
 				"OnMailerRecordAuthAlertSend": 1,
 			},
+		},
+		{
+			Name:   "unknown explicit identityField",
+			Method: http.MethodPost,
+			URL:    "/api/collections/clients/auth-with-password",
+			Body: strings.NewReader(`{
+				"identityField": "created",
+				"identity":"test@example.com",
+				"password":"1234567890"
+			}`),
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"identityField":{"code":"validation_in_invalid"`,
+			},
+			ExpectedEvents: map[string]int{"*": 0},
 		},
 		{
 			Name:   "valid identity field and valid password with mismatched explicit identityField",
@@ -437,6 +480,141 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				if v := len(mfas); v != 0 {
 					t.Fatalf("Expected no mfa records to be created, got %d", v)
 				}
+			},
+		},
+
+		// case sensitivity checks
+		// -----------------------------------------------------------
+		{
+			Name:   "with explicit identityField (case-sensitive)",
+			Method: http.MethodPost,
+			URL:    "/api/collections/clients/auth-with-password",
+			Body: strings.NewReader(`{
+				"identityField": "username",
+				"identity":"Clients57772",
+				"password":"1234567890"
+			}`),
+			BeforeTestFunc:  updateIdentityIndex("clients", map[string]string{"username": ""}),
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents: map[string]int{
+				"*":                               0,
+				"OnRecordAuthWithPasswordRequest": 1,
+			},
+		},
+		{
+			Name:   "with explicit identityField (case-insensitive)",
+			Method: http.MethodPost,
+			URL:    "/api/collections/clients/auth-with-password",
+			Body: strings.NewReader(`{
+				"identityField": "username",
+				"identity":"Clients57772",
+				"password":"1234567890"
+			}`),
+			BeforeTestFunc: updateIdentityIndex("clients", map[string]string{"username": "nocase"}),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"email":"test@example.com"`,
+				`"username":"clients57772"`,
+				`"token":`,
+			},
+			NotExpectedContent: []string{
+				// hidden fields
+				`"tokenKey"`,
+				`"password"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                               0,
+				"OnRecordAuthWithPasswordRequest": 1,
+				"OnRecordAuthRequest":             1,
+				"OnRecordEnrich":                  1,
+				// authOrigin track
+				"OnModelCreate":               1,
+				"OnModelCreateExecute":        1,
+				"OnModelAfterCreateSuccess":   1,
+				"OnModelValidate":             1,
+				"OnRecordCreate":              1,
+				"OnRecordCreateExecute":       1,
+				"OnRecordAfterCreateSuccess":  1,
+				"OnRecordValidate":            1,
+				"OnMailerSend":                1,
+				"OnMailerRecordAuthAlertSend": 1,
+			},
+		},
+		{
+			Name:   "without explicit identityField and non-email field (case-insensitive)",
+			Method: http.MethodPost,
+			URL:    "/api/collections/clients/auth-with-password",
+			Body: strings.NewReader(`{
+				"identity":"Clients57772",
+				"password":"1234567890"
+			}`),
+			BeforeTestFunc: updateIdentityIndex("clients", map[string]string{"username": "nocase"}),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"email":"test@example.com"`,
+				`"username":"clients57772"`,
+				`"token":`,
+			},
+			NotExpectedContent: []string{
+				// hidden fields
+				`"tokenKey"`,
+				`"password"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                               0,
+				"OnRecordAuthWithPasswordRequest": 1,
+				"OnRecordAuthRequest":             1,
+				"OnRecordEnrich":                  1,
+				// authOrigin track
+				"OnModelCreate":               1,
+				"OnModelCreateExecute":        1,
+				"OnModelAfterCreateSuccess":   1,
+				"OnModelValidate":             1,
+				"OnRecordCreate":              1,
+				"OnRecordCreateExecute":       1,
+				"OnRecordAfterCreateSuccess":  1,
+				"OnRecordValidate":            1,
+				"OnMailerSend":                1,
+				"OnMailerRecordAuthAlertSend": 1,
+			},
+		},
+		{
+			Name:   "without explicit identityField and email field (case-insensitive)",
+			Method: http.MethodPost,
+			URL:    "/api/collections/clients/auth-with-password",
+			Body: strings.NewReader(`{
+				"identity":"tESt@example.com",
+				"password":"1234567890"
+			}`),
+			BeforeTestFunc: updateIdentityIndex("clients", map[string]string{"email": "nocase"}),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"email":"test@example.com"`,
+				`"username":"clients57772"`,
+				`"token":`,
+			},
+			NotExpectedContent: []string{
+				// hidden fields
+				`"tokenKey"`,
+				`"password"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                               0,
+				"OnRecordAuthWithPasswordRequest": 1,
+				"OnRecordAuthRequest":             1,
+				"OnRecordEnrich":                  1,
+				// authOrigin track
+				"OnModelCreate":               1,
+				"OnModelCreateExecute":        1,
+				"OnModelAfterCreateSuccess":   1,
+				"OnModelValidate":             1,
+				"OnRecordCreate":              1,
+				"OnRecordCreateExecute":       1,
+				"OnRecordAfterCreateSuccess":  1,
+				"OnRecordValidate":            1,
+				"OnMailerSend":                1,
+				"OnMailerRecordAuthAlertSend": 1,
 			},
 		},
 

@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -966,23 +967,46 @@ func TestFindAuthRecordByToken(t *testing.T) {
 func TestFindAuthRecordByEmail(t *testing.T) {
 	t.Parallel()
 
-	app, _ := tests.NewTestApp()
-	defer app.Cleanup()
-
 	scenarios := []struct {
 		collectionIdOrName string
 		email              string
+		nocaseIndex        bool
 		expectError        bool
 	}{
-		{"missing", "test@example.com", true},
-		{"demo2", "test@example.com", true},
-		{"users", "missing@example.com", true},
-		{"users", "test@example.com", false},
-		{"clients", "test2@example.com", false},
+		{"missing", "test@example.com", false, true},
+		{"demo2", "test@example.com", false, true},
+		{"users", "missing@example.com", false, true},
+		{"users", "test@example.com", false, false},
+		{"clients", "test2@example.com", false, false},
+		// case-insensitive tests
+		{"clients", "TeSt2@example.com", false, true},
+		{"clients", "TeSt2@example.com", true, false},
 	}
 
 	for _, s := range scenarios {
 		t.Run(fmt.Sprintf("%s_%s", s.collectionIdOrName, s.email), func(t *testing.T) {
+			app, _ := tests.NewTestApp()
+			defer app.Cleanup()
+
+			collection, _ := app.FindCollectionByNameOrId(s.collectionIdOrName)
+			if collection != nil {
+				emailIndex, ok := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, core.FieldNameEmail)
+				if ok {
+					if s.nocaseIndex {
+						emailIndex.Columns[0].Collate = "nocase"
+					} else {
+						emailIndex.Columns[0].Collate = ""
+					}
+
+					collection.RemoveIndex(emailIndex.IndexName)
+					collection.Indexes = append(collection.Indexes, emailIndex.Build())
+					err := app.Save(collection)
+					if err != nil {
+						t.Fatalf("Failed to update email index: %v", err)
+					}
+				}
+			}
+
 			record, err := app.FindAuthRecordByEmail(s.collectionIdOrName, s.email)
 
 			hasErr := err != nil
@@ -994,7 +1018,7 @@ func TestFindAuthRecordByEmail(t *testing.T) {
 				return
 			}
 
-			if record.Email() != s.email {
+			if !strings.EqualFold(record.Email(), s.email) {
 				t.Fatalf("Expected record with email %s, got %s", s.email, record.Email())
 			}
 		})

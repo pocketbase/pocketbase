@@ -14,6 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/auth"
+	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"golang.org/x/oauth2"
 )
 
@@ -1210,7 +1211,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 			},
 		},
 		{
-			Name:   "creating user (with mapped OAuth2 fields and avatarURL->non-file field)",
+			Name:   "creating user (with mapped OAuth2 fields, case-sensitive username and avatarURL->non-file field)",
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/auth-with-oauth2",
 			Body: strings.NewReader(`{
@@ -1230,7 +1231,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 						AuthUser: &auth.AuthUser{
 							Id:        "oauth2_id",
 							Email:     "oauth2@example.com",
-							Username:  "oauth2_username",
+							Username:  "tESt2_username", // wouldn't match with existing because the related field index is case-sensitive
 							Name:      "oauth2_name",
 							AvatarURL: server.URL + "/oauth2_avatar.png",
 						},
@@ -1258,7 +1259,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 			ExpectedContent: []string{
 				`"email":"oauth2@example.com"`,
 				`"emailVisibility":false`,
-				`"username":"oauth2_username"`,
+				`"username":"tESt2_username"`,
 				`"name":"http://127.`,
 				`"verified":true`,
 				`"avatar":""`,
@@ -1294,7 +1295,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 			},
 		},
 		{
-			Name:   "creating user (with mapped OAuth2 fields and duplicated username)",
+			Name:   "creating user (with mapped OAuth2 fields and duplicated case-insensitive username)",
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/auth-with-oauth2",
 			Body: strings.NewReader(`{
@@ -1314,11 +1315,19 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 						AuthUser: &auth.AuthUser{
 							Id:       "oauth2_id",
 							Email:    "oauth2@example.com",
-							Username: "test2_username",
+							Username: "tESt2_username",
 							Name:     "oauth2_name",
 						},
 						Token: &oauth2.Token{AccessToken: "abc"},
 					}
+				}
+
+				// make the username index case-insensitive to ensure that case-insensitive match is used
+				index, ok := dbutils.FindSingleColumnUniqueIndex(usersCol.Indexes, "username")
+				if ok {
+					index.Columns[0].Collate = "nocase"
+					usersCol.RemoveIndex(index.IndexName)
+					usersCol.Indexes = append(usersCol.Indexes, index.Build())
 				}
 
 				// add the test provider in the collection

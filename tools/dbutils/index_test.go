@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/dbutils"
@@ -308,6 +309,96 @@ func TestHasSingleColumnUniqueIndex(t *testing.T) {
 			result := dbutils.HasSingleColumnUniqueIndex(s.column, s.indexes)
 			if result != s.expected {
 				t.Fatalf("Expected %v got %v", s.expected, result)
+			}
+		})
+	}
+}
+
+func TestFindSingleColumnUniqueIndex(t *testing.T) {
+	scenarios := []struct {
+		name     string
+		column   string
+		indexes  []string
+		expected bool
+	}{
+		{
+			"empty indexes",
+			"test",
+			nil,
+			false,
+		},
+		{
+			"empty column",
+			"",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test`)",
+			},
+			false,
+		},
+		{
+			"mismatched column",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test2`)",
+			},
+			false,
+		},
+		{
+			"non unique index",
+			"test",
+			[]string{
+				"CREATE INDEX `index1` ON `example` (`test`)",
+			},
+			false,
+		},
+		{
+			"matching columnd and unique index",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test`)",
+			},
+			true,
+		},
+		{
+			"multiple columns",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test`, `test2`)",
+			},
+			false,
+		},
+		{
+			"multiple indexes",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index1` ON `example` (`test`, `test2`)",
+				"CREATE UNIQUE INDEX `index2` ON `example` (`test`)",
+			},
+			true,
+		},
+		{
+			"partial unique index",
+			"test",
+			[]string{
+				"CREATE UNIQUE INDEX `index` ON `example` (`test`) where test != ''",
+			},
+			true,
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			index, exists := dbutils.FindSingleColumnUniqueIndex(s.indexes, s.column)
+			if exists != s.expected {
+				t.Fatalf("Expected exists %v got %v", s.expected, exists)
+			}
+
+			if !exists && len(index.Columns) > 0 {
+				t.Fatal("Expected index.Columns to be empty")
+			}
+
+			if exists && !strings.EqualFold(index.Columns[0].Name, s.column) {
+				t.Fatalf("Expected to find column %q in %v", s.column, index)
 			}
 		})
 	}

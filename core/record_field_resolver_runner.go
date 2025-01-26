@@ -505,7 +505,8 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 			isBackRelMultiple := backRelField.IsMultiple()
 			if !isBackRelMultiple {
 				// additionally check if the rel field has a single column unique index
-				isBackRelMultiple = !dbutils.HasSingleColumnUniqueIndex(backRelField.Name, backCollection.Indexes)
+				_, hasUniqueIndex := dbutils.FindSingleColumnUniqueIndex(backCollection.Indexes, backRelField.Name)
+				isBackRelMultiple = !hasUniqueIndex
 			}
 
 			if !isBackRelMultiple {

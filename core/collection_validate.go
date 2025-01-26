@@ -456,7 +456,7 @@ func (cv *collectionValidator) checkFieldsForUniqueIndex(value any) error {
 				SetParams(map[string]any{"fieldName": name})
 		}
 
-		if !dbutils.HasSingleColumnUniqueIndex(name, cv.new.Indexes) {
+		if _, ok := dbutils.FindSingleColumnUniqueIndex(cv.new.Indexes, name); !ok {
 			return validation.NewError("validation_missing_unique_constraint", "The field {{.fieldName}} doesn't have a UNIQUE constraint.").
 				SetParams(map[string]any{"fieldName": name})
 		}
@@ -666,7 +666,7 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 	if cv.new.IsAuth() {
 		requiredNames := []string{FieldNameTokenKey, FieldNameEmail}
 		for _, name := range requiredNames {
-			if !dbutils.HasSingleColumnUniqueIndex(name, indexes) {
+			if _, ok := dbutils.FindSingleColumnUniqueIndex(indexes, name); !ok {
 				return validation.NewError(
 					"validation_missing_required_unique_index",
 					`Missing required unique index for field "{{.fieldName}}".`,

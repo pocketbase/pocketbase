@@ -989,7 +989,7 @@ func (c *Collection) initTokenKeyField() {
 	}
 
 	// ensure that there is a unique index for the field
-	if !dbutils.HasSingleColumnUniqueIndex(FieldNameTokenKey, c.Indexes) {
+	if _, ok := dbutils.FindSingleColumnUniqueIndex(c.Indexes, FieldNameTokenKey); !ok {
 		c.Indexes = append(c.Indexes, fmt.Sprintf(
 			"CREATE UNIQUE INDEX `%s` ON `%s` (`%s`)",
 			c.fieldIndexName(FieldNameTokenKey),
@@ -1015,7 +1015,7 @@ func (c *Collection) initEmailField() {
 	}
 
 	// ensure that there is a unique index for the email field
-	if !dbutils.HasSingleColumnUniqueIndex(FieldNameEmail, c.Indexes) {
+	if _, ok := dbutils.FindSingleColumnUniqueIndex(c.Indexes, FieldNameEmail); !ok {
 		c.Indexes = append(c.Indexes, fmt.Sprintf(
 			"CREATE UNIQUE INDEX `%s` ON `%s` (`%s`) WHERE `%s` != ''",
 			c.fieldIndexName(FieldNameEmail),

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/search"
@@ -527,20 +528,34 @@ func (app *BaseApp) FindAuthRecordByToken(token string, validTypes ...string) (*
 
 // FindAuthRecordByEmail finds the auth record associated with the provided email.
 //
+// The email check would be case-insensitive if the related collection
+// email unique index has COLLATE NOCASE specified for the email column.
+//
 // Returns an error if it is not an auth collection or the record is not found.
 func (app *BaseApp) FindAuthRecordByEmail(collectionModelOrIdentifier any, email string) (*Record, error) {
 	collection, err := getCollectionByModelOrIdentifier(app, collectionModelOrIdentifier)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch auth collection: %w", err)
 	}
+
 	if !collection.IsAuth() {
 		return nil, fmt.Errorf("%q is not an auth collection", collection.Name)
 	}
 
 	record := &Record{}
 
+	var expr dbx.Expression
+
+	index, ok := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, FieldNameEmail)
+	if ok && strings.EqualFold(index.Columns[0].Collate, "nocase") {
+		// case-insensitive search
+		expr = dbx.NewExp("[["+FieldNameEmail+"]] = {:email} COLLATE NOCASE", dbx.Params{"email": email})
+	} else {
+		expr = dbx.HashExp{FieldNameEmail: email}
+	}
+
 	err = app.RecordQuery(collection).
-		AndWhere(dbx.HashExp{FieldNameEmail: email}).
+		AndWhere(expr).
 		Limit(1).
 		One(record)
 	if err != nil {
