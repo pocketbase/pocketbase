@@ -10,7 +10,7 @@
     - `/v2/auth` query parameters changes:
         if you are specifying custom `approval_prompt=force` query parameter in the `urlCallback`, you'll have to replace it with `prompt=consent`
 
-- Upgraded to `golang-jwt/jwt/v5`.
+- Added Trakt OAuth2 provider ([#6338](https://github.com/pocketbase/pocketbase/pull/6338); thanks @aidan-)
 
 - Added support for case-insensitive password auth based on the related UNIQUE index field collation ([#6337](https://github.com/pocketbase/pocketbase/discussions/6337)).
 
@@ -21,6 +21,8 @@
     _You can set the environment variables `AWS_REQUEST_CHECKSUM_CALCULATION` and `AWS_RESPONSE_CHECKSUM_VALIDATION` to `when_supported` if your S3 vendor supports the new [new default integrity protections](https://docs.aws.amazon.com/sdkref/latest/guide/feature-dataintegrity.html)._
 
 - Replaced archived `github.com/AlecAivazis/survey` dependency with a simpler  `osutils.YesNoPrompt(message, fallback)` helper.
+
+- Upgraded to `golang-jwt/jwt/v5`.
 
 - Added JSVM `new Timezone(name)` binding for constructing `time.Location` value ([#6219](https://github.com/pocketbase/pocketbase/discussions/6219)).
 
