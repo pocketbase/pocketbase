@@ -96,7 +96,11 @@ func (form *authWithPasswordForm) validate(collection *core.Collection) error {
 	return validation.ValidateStruct(form,
 		validation.Field(&form.Identity, validation.Required, validation.Length(1, 255)),
 		validation.Field(&form.Password, validation.Required, validation.Length(1, 255)),
-		validation.Field(&form.IdentityField, validation.In(list.ToInterfaceSlice(collection.PasswordAuth.IdentityFields)...)),
+		validation.Field(
+			&form.IdentityField,
+			validation.Length(1, 255),
+			validation.In(list.ToInterfaceSlice(collection.PasswordAuth.IdentityFields)...),
+		),
 	)
 }
 
