@@ -1,14 +1,14 @@
 ## v0.25.0 (WIP)
 
 - ⚠️ Upgraded Google OAuth2 auth, token and userinfo endpoints to their latest versions.
-    _For users that doesn't do anything custom with the Google account response or the `urlCallback`, this should be a non-breaking change. The exceptions that I could find are:_
+    _For users that don't do anything custom with the Google OAuth2 data or the `urlCallback`, this should be a non-breaking change. The exceptions that I could find are:_
     - `/v3/userinfo` auth response changes:
         ```
         meta.rawUser.id             => meta.rawUser.sub
         meta.rawUser.verified_email => meta.rawUser.email_verified
         ```
     - `/v2/auth` query parameters changes:
-        if you are specifying custom `approval_prompt=force` query parameter in the `urlCallback`, you'll have to replace it with `prompt=consent`
+        If you are specifying custom `approval_prompt=force` query parameter in the `urlCallback`, you'll have to replace it with **`prompt=consent`**.
 
 - Added Trakt OAuth2 provider ([#6338](https://github.com/pocketbase/pocketbase/pull/6338); thanks @aidan-)
 
@@ -28,7 +28,9 @@
 
 - Added `inflector.Camelize(str)` and `inflector.Singularize(str)` helper methods.
 
-- Other minor improvements (_replaced all `bool` exists db scans with `int` for broader drivers compatibility, use the non-transactional app instance during realtime records delete access checks to ensure that cascade deleted records with API rules relying on the parent will be resolved, updated API Preview sample error responses, updated UI dependencies, etc._)
+- Use the non-transactional app instance during the realtime records delete access checks to ensure that cascade deleted records with API rules relying on the parent will be resolved.
+
+- Other minor improvements (_replaced all `bool` exists db scans with `int` for broader drivers compatibility, updated API Preview sample error responses, updated UI dependencies, etc._)
 
 
 ## v0.24.4

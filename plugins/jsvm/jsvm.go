@@ -389,7 +389,7 @@ func (p *plugin) watchHooks() error {
 				debounceTimer = time.AfterFunc(50*time.Millisecond, func() {
 					// app restart is currently not supported on Windows
 					if runtime.GOOS == "windows" {
-						color.Yellow("File %s changed, please restart the app", event.Name)
+						color.Yellow("File %s changed, please restart the app manually", event.Name)
 					} else {
 						color.Yellow("File %s changed, restarting...", event.Name)
 						if err := p.app.Restart(); err != nil {
