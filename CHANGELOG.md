@@ -1,14 +1,14 @@
 ## v0.25.0
 
 - ⚠️ Upgraded Google OAuth2 auth, token and userinfo endpoints to their latest versions.
-    _For users that don't do anything custom with the Google OAuth2 data or the `urlCallback`, this should be a non-breaking change. The exceptions that I could find are:_
+    _For users that don't do anything custom with the Google OAuth2 data or the OAuthe auth URL, this should be a non-breaking change. The exceptions that I could find are:_
     - `/v3/userinfo` auth response changes:
         ```
         meta.rawUser.id             => meta.rawUser.sub
         meta.rawUser.verified_email => meta.rawUser.email_verified
         ```
     - `/v2/auth` query parameters changes:
-        If you are specifying custom `approval_prompt=force` query parameter in the `urlCallback`, you'll have to replace it with **`prompt=consent`**.
+        If you are specifying custom `approval_prompt=force` query parameter for the OAuth2 auth URL, you'll have to replace it with **`prompt=consent`**.
 
 - Added Trakt OAuth2 provider ([#6338](https://github.com/pocketbase/pocketbase/pull/6338); thanks @aidan-)
 
