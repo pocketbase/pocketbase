@@ -119,6 +119,11 @@ export default [
         logo: "spotify.svg",
     },
     {
+        key: "trakt",
+        title: "Trakt",
+        logo: "trakt.svg",
+    },
+    {
         key: "twitch",
         title: "Twitch",
         logo: "twitch.svg",

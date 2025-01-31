@@ -18,7 +18,7 @@ import (
 
 	"github.com/dop251/goja"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -531,6 +531,21 @@ func baseBinds(vm *goja.Runtime) {
 		instance.serializedFunc = call.Argument(0).String()
 		instance.priority = cast.ToInt(call.Argument(1).Export())
 		instance.id = cast.ToString(call.Argument(2).Export())
+
+		instanceValue := vm.ToValue(instance).(*goja.Object)
+		instanceValue.SetPrototype(call.This.Prototype())
+
+		return instanceValue
+	})
+
+	// note: named Timezone to avoid conflicts with the JS Location interface.
+	vm.Set("Timezone", func(call goja.ConstructorCall) *goja.Object {
+		name, _ := call.Argument(0).Export().(string)
+
+		instance, err := time.LoadLocation(name)
+		if err != nil {
+			instance = time.UTC
+		}
 
 		instanceValue := vm.ToValue(instance).(*goja.Object)
 		instanceValue.SetPrototype(call.This.Prototype())

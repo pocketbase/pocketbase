@@ -74,7 +74,7 @@ func UnmarshalRequestData(data map[string][]string, dst any, structTagKey string
 
 		for k, v := range data {
 			if k == JSONPayloadKey {
-				continue // unmarshalled separately
+				continue // unmarshaled separately
 			}
 
 			total := len(v)

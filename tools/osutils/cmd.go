@@ -1,8 +1,12 @@
 package osutils
 
 import (
+	"bufio"
+	"fmt"
+	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 )
@@ -27,5 +31,35 @@ func LaunchURL(url string) error {
 		return exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
 	default:
 		return exec.Command("xdg-open", url).Start()
+	}
+}
+
+// YesNoPrompt performs a console prompt that asks the user for Yes/No answer.
+//
+// If the user just press Enter (aka. doesn't type anything) it returns the fallback value.
+func YesNoPrompt(message string, fallback bool) bool {
+	options := "Y/n"
+	if !fallback {
+		options = "y/N"
+	}
+
+	r := bufio.NewReader(os.Stdin)
+
+	var s string
+	for {
+		fmt.Fprintf(os.Stderr, "%s (%s) ", message, options)
+
+		s, _ = r.ReadString('\n')
+
+		s = strings.ToLower(strings.TrimSpace(s))
+
+		switch s {
+		case "":
+			return fallback
+		case "y", "yes":
+			return true
+		case "n", "no":
+			return false
+		}
 	}
 }

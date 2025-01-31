@@ -79,6 +79,13 @@ func TestNormalizeUniqueIndexError(t *testing.T) {
 			nil,
 		},
 		{
+			"unique index error with table name suffix matching the specified one",
+			errors.New("UNIQUE constraint failed for fields test_suffix.a,test_suffix.b"),
+			"suffix",
+			[]string{"a", "b", "c"},
+			nil,
+		},
+		{
 			"unique index error but mismatched fields",
 			errors.New("UNIQUE constraint failed for fields test.a,test.b"),
 			"test",

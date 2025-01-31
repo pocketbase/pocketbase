@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
@@ -21,7 +21,7 @@ func TestParseUnverifiedJWT(t *testing.T) {
 	}
 
 	// properly formatted JWT with INVALID claims
-	// {"name": "test", "exp": 1516239022}
+	// {"name": "test", "exp":1516239022}
 	result2, err2 := security.ParseUnverifiedJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidGVzdCIsImV4cCI6MTUxNjIzOTAyMn0.xYHirwESfSEW3Cq2BL47CEASvD_p_ps3QCA54XtNktU")
 	if err2 == nil {
 		t.Error("Expected error got nil")
@@ -30,14 +30,24 @@ func TestParseUnverifiedJWT(t *testing.T) {
 		t.Errorf("Expected to have 2 claims, got %v", result2)
 	}
 
-	// properly formatted JWT with VALID claims
+	// properly formatted JWT with VALID claims (missing exp)
 	// {"name": "test"}
 	result3, err3 := security.ParseUnverifiedJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidGVzdCJ9.ml0QsTms3K9wMygTu41ZhKlTyjmW9zHQtoS8FUsCCjU")
 	if err3 != nil {
 		t.Error("Expected nil, got", err3)
 	}
 	if len(result3) != 1 || result3["name"] != "test" {
-		t.Errorf("Expected to have 2 claims, got %v", result3)
+		t.Errorf("Expected to have 1 claim, got %v", result3)
+	}
+
+	// properly formatted JWT with VALID claims (valid exp)
+	// {"name": "test", "exp": 2208985261}
+	result4, err4 := security.ParseUnverifiedJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidGVzdCIsImV4cCI6MjIwODk4NTI2MX0._0KQu60hYNx5wkBIpEaoX35shXRicb0X_0VdWKWb-3k")
+	if err4 != nil {
+		t.Error("Expected nil, got", err4)
+	}
+	if len(result4) != 2 || result4["name"] != "test" {
+		t.Errorf("Expected to have 2 claims, got %v", result4)
 	}
 }
 

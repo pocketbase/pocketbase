@@ -193,14 +193,14 @@ func (f *TextField) ValidateValue(ctx context.Context, app App, record *Record) 
 			//
 			// (@todo eventually may get replaced in the future with a system unique constraint to avoid races or wrapping the request in a transaction)
 			if f.Pattern != defaultLowercaseRecordIdPattern {
-				var exists bool
+				var exists int
 				err := app.DB().
 					Select("(1)").
 					From(record.TableName()).
-					Where(dbx.NewExp("id = {:id} COLLATE NOCASE", dbx.Params{"id": strings.ToLower(newVal)})).
+					Where(dbx.NewExp("id = {:id} COLLATE NOCASE", dbx.Params{"id": newVal})).
 					Limit(1).
 					Row(&exists)
-				if exists || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
+				if exists > 0 || (err != nil && !errors.Is(err, sql.ErrNoRows)) {
 					return validation.NewError("validation_pk_invalid", "The record primary key is invalid or already exists.")
 				}
 			}

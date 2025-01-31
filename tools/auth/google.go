@@ -32,9 +32,9 @@ func NewGoogleProvider() *Google {
 			"https://www.googleapis.com/auth/userinfo.profile",
 			"https://www.googleapis.com/auth/userinfo.email",
 		},
-		authURL:     "https://accounts.google.com/o/oauth2/auth",
-		tokenURL:    "https://accounts.google.com/o/oauth2/token",
-		userInfoURL: "https://www.googleapis.com/oauth2/v1/userinfo",
+		authURL:     "https://accounts.google.com/o/oauth2/v2/auth",
+		tokenURL:    "https://oauth2.googleapis.com/token",
+		userInfoURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 	}}
 }
 
@@ -51,11 +51,11 @@ func (p *Google) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	extracted := struct {
-		Id            string `json:"id"`
+		Id            string `json:"sub"`
 		Name          string `json:"name"`
-		Email         string `json:"email"`
 		Picture       string `json:"picture"`
-		VerifiedEmail bool   `json:"verified_email"`
+		Email         string `json:"email"`
+		EmailVerified bool   `json:"email_verified"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (p *Google) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
-	if extracted.VerifiedEmail {
+	if extracted.EmailVerified {
 		user.Email = extracted.Email
 	}
 

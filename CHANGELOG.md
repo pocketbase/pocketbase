@@ -1,3 +1,37 @@
+## v0.25.0
+
+- ⚠️ Upgraded Google OAuth2 auth, token and userinfo endpoints to their latest versions.
+    _For users that don't do anything custom with the Google OAuth2 data or the `urlCallback`, this should be a non-breaking change. The exceptions that I could find are:_
+    - `/v3/userinfo` auth response changes:
+        ```
+        meta.rawUser.id             => meta.rawUser.sub
+        meta.rawUser.verified_email => meta.rawUser.email_verified
+        ```
+    - `/v2/auth` query parameters changes:
+        If you are specifying custom `approval_prompt=force` query parameter in the `urlCallback`, you'll have to replace it with **`prompt=consent`**.
+
+- Added Trakt OAuth2 provider ([#6338](https://github.com/pocketbase/pocketbase/pull/6338); thanks @aidan-)
+
+- Added support for case-insensitive password auth based on the related UNIQUE index field collation ([#6337](https://github.com/pocketbase/pocketbase/discussions/6337)).
+
+- Enforced `when_required` for the new AWS SDK request and response checksum validations to allow other non-AWS vendors to catch up with new AWS SDK changes (see [#6313](https://github.com/pocketbase/pocketbase/discussions/6313) and [aws/aws-sdk-go-v2#2960](https://github.com/aws/aws-sdk-go-v2/discussions/2960)).
+    _You can set the environment variables `AWS_REQUEST_CHECKSUM_CALCULATION` and `AWS_RESPONSE_CHECKSUM_VALIDATION` to `when_supported` if your S3 vendor supports the new [new default integrity protections](https://docs.aws.amazon.com/sdkref/latest/guide/feature-dataintegrity.html)._
+
+- Soft-deprecated `Record.GetUploadedFiles` in favor of `Record.GetUnsavedFiles` to minimize the ambiguities what the method do ([#6269](https://github.com/pocketbase/pocketbase/discussions/6269)).
+
+- Replaced archived `github.com/AlecAivazis/survey` dependency with a simpler  `osutils.YesNoPrompt(message, fallback)` helper.
+
+- Upgraded to `golang-jwt/jwt/v5`.
+
+- Added JSVM `new Timezone(name)` binding for constructing `time.Location` value ([#6219](https://github.com/pocketbase/pocketbase/discussions/6219)).
+
+- Added `inflector.Camelize(str)` and `inflector.Singularize(str)` helper methods.
+
+- Use the non-transactional app instance during the realtime records delete access checks to ensure that cascade deleted records with API rules relying on the parent will be resolved.
+
+- Other minor improvements (_replaced all `bool` exists db scans with `int` for broader drivers compatibility, updated API Preview sample error responses, updated UI dependencies, etc._)
+
+
 ## v0.24.4
 
 - Fixed fields extraction for view query with nested comments ([#6309](https://github.com/pocketbase/pocketbase/discussions/6309)).

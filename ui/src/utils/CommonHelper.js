@@ -210,7 +210,7 @@ export default class CommonHelper {
     }
 
     /**
-     * Removes single element from array by loosely comparying values.
+     * Removes single element from array by loosely comparing values.
      *
      * @param {Array} arr
      * @param {Mixed} value

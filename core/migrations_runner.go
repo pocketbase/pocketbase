@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/tools/osutils"
 	"github.com/spf13/cast"
 )
 
@@ -80,15 +80,11 @@ func (r *MigrationsRunner) Run(args ...string) error {
 			return err
 		}
 
-		confirm := false
-		prompt := &survey.Confirm{
-			Message: fmt.Sprintf(
-				"\n%v\nDo you really want to revert the last %d applied migration(s)?",
-				strings.Join(names, "\n"),
-				toRevertCount,
-			),
-		}
-		survey.AskOne(prompt, &confirm)
+		confirm := osutils.YesNoPrompt(fmt.Sprintf(
+			"\n%v\nDo you really want to revert the last %d applied migration(s)?",
+			strings.Join(names, "\n"),
+			toRevertCount,
+		), false)
 		if !confirm {
 			fmt.Println("The command has been cancelled")
 			return nil
@@ -267,15 +263,15 @@ func (r *MigrationsRunner) initMigrationsTable() error {
 }
 
 func (r *MigrationsRunner) isMigrationApplied(txApp App, file string) bool {
-	var exists bool
+	var exists int
 
-	err := txApp.DB().Select("count(*)").
+	err := txApp.DB().Select("(1)").
 		From(r.tableName).
 		Where(dbx.HashExp{"file": file}).
 		Limit(1).
 		Row(&exists)
 
-	return err == nil && exists
+	return err == nil && exists > 0
 }
 
 func (r *MigrationsRunner) saveAppliedMigration(txApp App, file string) error {

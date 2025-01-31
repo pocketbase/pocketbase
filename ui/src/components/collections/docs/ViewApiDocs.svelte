@@ -25,7 +25,7 @@
                 code: 403,
                 body: `
                     {
-                      "code": 403,
+                      "status": 403,
                       "message": "Only superusers can access this action.",
                       "data": {}
                     }
@@ -37,7 +37,7 @@
             code: 404,
             body: `
                 {
-                  "code": 404,
+                  "status": 404,
                   "message": "The requested resource wasn't found.",
                   "data": {}
                 }

@@ -36,7 +36,7 @@ func main() {
 		&hooksWatch,
 		"hooksWatch",
 		true,
-		"auto restart the app on pb_hooks file change",
+		"auto restart the app on pb_hooks file change; it has no effect on Windows",
 	)
 
 	var hooksPool int
@@ -76,7 +76,7 @@ func main() {
 		&indexFallback,
 		"indexFallback",
 		true,
-		"fallback the request to index.html on missing static path (eg. when pretty urls are used with SPA)",
+		"fallback the request to index.html on missing static path, e.g. when pretty urls are used with SPA",
 	)
 
 	app.RootCmd.ParseFlags(os.Args[1:])

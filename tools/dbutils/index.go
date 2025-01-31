@@ -21,13 +21,13 @@ type IndexColumn struct {
 
 // Index represents a single parsed SQL CREATE INDEX expression.
 type Index struct {
-	Unique     bool          `json:"unique"`
-	Optional   bool          `json:"optional"`
 	SchemaName string        `json:"schemaName"`
 	IndexName  string        `json:"indexName"`
 	TableName  string        `json:"tableName"`
-	Columns    []IndexColumn `json:"columns"`
 	Where      string        `json:"where"`
+	Columns    []IndexColumn `json:"columns"`
+	Unique     bool          `json:"unique"`
+	Optional   bool          `json:"optional"`
 }
 
 // IsValid checks if the current Index contains the minimum required fields to be considered valid.
@@ -193,15 +193,25 @@ func ParseIndex(createIndexExpr string) Index {
 	return result
 }
 
-// HasColumnUniqueIndex loosely checks whether the specified column has
-// a single column unique index (WHERE statements are ignored).
-func HasSingleColumnUniqueIndex(column string, indexes []string) bool {
+// FindSingleColumnUniqueIndex returns the first matching single column unique index.
+func FindSingleColumnUniqueIndex(indexes []string, column string) (Index, bool) {
+	var index Index
+
 	for _, idx := range indexes {
-		parsed := ParseIndex(idx)
-		if parsed.Unique && len(parsed.Columns) == 1 && strings.EqualFold(parsed.Columns[0].Name, column) {
-			return true
+		index := ParseIndex(idx)
+		if index.Unique && len(index.Columns) == 1 && strings.EqualFold(index.Columns[0].Name, column) {
+			return index, true
 		}
 	}
 
-	return false
+	return index, false
+}
+
+// Deprecated: Use `_, ok := FindSingleColumnUniqueIndex(indexes, column)` instead.
+//
+// HasColumnUniqueIndex loosely checks whether the specified column has
+// a single column unique index (WHERE statements are ignored).
+func HasSingleColumnUniqueIndex(column string, indexes []string) bool {
+	_, ok := FindSingleColumnUniqueIndex(indexes, column)
+	return ok
 }

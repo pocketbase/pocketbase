@@ -762,9 +762,9 @@ func (c *Collection) updateGeneratedIdIfExists(app App) {
 
 	// add a number to the current id (if already exists)
 	for i := 2; i < 1000; i++ {
-		var exists bool
+		var exists int
 		_ = app.CollectionQuery().Select("(1)").AndWhere(dbx.HashExp{"id": newId}).Limit(1).Row(&exists)
-		if !exists {
+		if exists == 0 {
 			break
 		}
 		newId = c.idChecksum() + strconv.Itoa(i)
@@ -989,7 +989,7 @@ func (c *Collection) initTokenKeyField() {
 	}
 
 	// ensure that there is a unique index for the field
-	if !dbutils.HasSingleColumnUniqueIndex(FieldNameTokenKey, c.Indexes) {
+	if _, ok := dbutils.FindSingleColumnUniqueIndex(c.Indexes, FieldNameTokenKey); !ok {
 		c.Indexes = append(c.Indexes, fmt.Sprintf(
 			"CREATE UNIQUE INDEX `%s` ON `%s` (`%s`)",
 			c.fieldIndexName(FieldNameTokenKey),
@@ -1015,7 +1015,7 @@ func (c *Collection) initEmailField() {
 	}
 
 	// ensure that there is a unique index for the email field
-	if !dbutils.HasSingleColumnUniqueIndex(FieldNameEmail, c.Indexes) {
+	if _, ok := dbutils.FindSingleColumnUniqueIndex(c.Indexes, FieldNameEmail); !ok {
 		c.Indexes = append(c.Indexes, fmt.Sprintf(
 			"CREATE UNIQUE INDEX `%s` ON `%s` (`%s`) WHERE `%s` != ''",
 			c.fieldIndexName(FieldNameEmail),

@@ -200,38 +200,13 @@ func TestMigrationsRunnerRemoveMissingAppliedMigrations(t *testing.T) {
 }
 
 func isMigrationApplied(app core.App, file string) bool {
-	var exists bool
+	var exists int
 
-	err := app.DB().Select("count(*)").
+	err := app.DB().Select("(1)").
 		From(core.DefaultMigrationsTable).
 		Where(dbx.HashExp{"file": file}).
 		Limit(1).
 		Row(&exists)
 
-	return err == nil && exists
+	return err == nil && exists > 0
 }
-
-// // -------------------------------------------------------------------
-
-// type testDB struct {
-// 	*dbx.DB
-// 	CalledQueries []string
-// }
-
-// // NB! Don't forget to call `db.Close()` at the end of the test.
-// func createTestDB() (*testDB, error) {
-// 	sqlDB, err := sql.Open("sqlite", ":memory:")
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	db := testDB{DB: dbx.NewFromDB(sqlDB, "sqlite")}
-// 	db.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
-// 		db.CalledQueries = append(db.CalledQueries, sql)
-// 	}
-// 	db.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
-// 		db.CalledQueries = append(db.CalledQueries, sql)
-// 	}
-
-// 	return &db, nil
-// }

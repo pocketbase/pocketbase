@@ -4,8 +4,7 @@ import (
 	"errors"
 	"time"
 
-	// @todo update to v5
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // ParseUnverifiedJWT parses JWT and returns its claims
@@ -19,7 +18,7 @@ func ParseUnverifiedJWT(token string) (jwt.MapClaims, error) {
 	_, _, err := parser.ParseUnverified(token, claims)
 
 	if err == nil {
-		err = claims.Valid()
+		err = jwt.NewValidator(jwt.WithIssuedAt()).Validate(claims)
 	}
 
 	return claims, err

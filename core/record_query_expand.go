@@ -143,7 +143,7 @@ func (app *BaseApp) expandRecords(records []*Record, expandPath string, fetchFun
 			MaxSelect:    2147483647,
 			CollectionId: indirectRel.Id,
 		}
-		if dbutils.HasSingleColumnUniqueIndex(indirectRelField.GetName(), indirectRel.Indexes) {
+		if _, ok := dbutils.FindSingleColumnUniqueIndex(indirectRel.Indexes, indirectRelField.GetName()); ok {
 			relField.MaxSelect = 1
 		}
 		relCollection = indirectRel

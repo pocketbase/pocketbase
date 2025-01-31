@@ -314,9 +314,9 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 
 					resolver.UpdateQuery(ruleQuery)
 
-					var exists bool
+					var exists int
 					err = ruleQuery.Limit(1).Row(&exists)
-					if err != nil || !exists {
+					if err != nil || exists == 0 {
 						return e.BadRequestError("Failed to create record", fmt.Errorf("create rule failure: %w", err))
 					}
 				}
@@ -453,7 +453,8 @@ func recordUpdate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 			form.SetRecord(e.Record)
 
 			manageRuleQuery := e.App.DB().Select("(1)").From(e.Collection.Name).AndWhere(dbx.HashExp{
-				e.Collection.Name + ".id": e.Record.Id,
+				// note: use the original record id and not e.Record.Id because the record validations because may get overwritten
+				e.Collection.Name + ".id": e.Record.LastSavedPK(),
 			})
 			if !form.HasManageAccess() &&
 				hasAuthManageAccess(e.App, requestInfo, e.Collection, manageRuleQuery) {
@@ -719,9 +720,9 @@ func hasAuthManageAccess(app core.App, requestInfo *core.RequestInfo, collection
 
 	resolver.UpdateQuery(query)
 
-	var exists bool
+	var exists int
 
 	err = query.Limit(1).Row(&exists)
 
-	return err == nil && exists
+	return err == nil && exists > 0
 }

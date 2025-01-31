@@ -483,7 +483,7 @@ func validateRecordId(app App, collectionNameOrId string) validation.RuleFunc {
 			return validation.NewError("validation_invalid_collection", "Missing or invalid collection.")
 		}
 
-		var exists bool
+		var exists int
 
 		rowErr := app.DB().Select("(1)").
 			From(collection.Name).
@@ -491,7 +491,7 @@ func validateRecordId(app App, collectionNameOrId string) validation.RuleFunc {
 			Limit(1).
 			Row(&exists)
 
-		if rowErr != nil || !exists {
+		if rowErr != nil || exists == 0 {
 			return validation.NewError("validation_invalid_record", "Missing or invalid record.")
 		}
 

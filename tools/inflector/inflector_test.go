@@ -143,3 +143,33 @@ func TestSnakecase(t *testing.T) {
 		})
 	}
 }
+
+func TestCamelize(t *testing.T) {
+	scenarios := []struct {
+		val      string
+		expected string
+	}{
+		{"", ""},
+		{" ", ""},
+		{"Test", "Test"},
+		{"test", "Test"},
+		{"testTest2", "TestTest2"},
+		{"TestTest2", "TestTest2"},
+		{"test test2", "TestTest2"},
+		{"test-test2", "TestTest2"},
+		{"test'test2", "TestTest2"},
+		{"test1test2", "Test1test2"},
+		{"1test-test2", "1testTest2"},
+		{"123", "123"},
+		{"123a", "123a"},
+	}
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.val), func(t *testing.T) {
+			result := inflector.Camelize(s.val)
+			if result != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, result)
+			}
+		})
+	}
+}

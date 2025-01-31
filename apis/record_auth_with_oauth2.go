@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"maps"
 	"net/http"
+	"strings"
 	"time"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -194,10 +195,20 @@ func (form *recordOAuth2LoginForm) checkProviderName(value any) error {
 
 func oldCanAssignUsername(txApp core.App, collection *core.Collection, username string) bool {
 	// ensure that username is unique
-	checkUnique := dbutils.HasSingleColumnUniqueIndex(collection.OAuth2.MappedFields.Username, collection.Indexes)
-	if checkUnique {
-		if _, err := txApp.FindFirstRecordByData(collection, collection.OAuth2.MappedFields.Username, username); err == nil {
-			return false // already exist
+	index, hasUniqueue := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, collection.OAuth2.MappedFields.Username)
+	if hasUniqueue {
+		var expr dbx.Expression
+		if strings.EqualFold(index.Columns[0].Collate, "nocase") {
+			// case-insensitive search
+			expr = dbx.NewExp("username = {:username} COLLATE NOCASE", dbx.Params{"username": username})
+		} else {
+			expr = dbx.HashExp{"username": username}
+		}
+
+		var exists int
+		_ = txApp.RecordQuery(collection).Select("(1)").AndWhere(expr).Limit(1).Row(&exists)
+		if exists > 0 {
+			return false
 		}
 	}
 
