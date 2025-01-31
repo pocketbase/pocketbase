@@ -84,7 +84,8 @@ func Snakecase(str string) string {
 	return strings.ToLower(result.String())
 }
 
-// Camelize convers a string to its "CamelCased" version (non alphanumeric characters are removed).
+// Camelize converts the provided string to its "CamelCased" version
+// (non alphanumeric characters are removed).
 //
 // For example:
 //
