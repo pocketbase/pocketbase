@@ -18,7 +18,16 @@
         responses.push({
             code: 200,
             body: JSON.stringify(
-                [dummyRecord, Object.assign({}, dummyRecord, { id: dummyRecord + "2" })],
+                [
+                    {
+                        status: 200,
+                        body: dummyRecord,
+                    },
+                    {
+                        status: 200,
+                        body: Object.assign({}, dummyRecord, { id: dummyRecord.id + "2" }),
+                    },
+                ],
                 null,
                 2,
             ),
