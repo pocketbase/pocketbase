@@ -1,3 +1,8 @@
+## v0.26.0 (WIP)
+
+- ⚠️ Prioritized the user submitted non-empty `createData.email` (_it will be unverified_) when creating the PocketBase user during the first OAuth2 auth.
+
+
 ## v0.25.0
 
 - ⚠️ Upgraded Google OAuth2 auth, token and userinfo endpoints to their latest versions.

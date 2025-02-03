@@ -232,7 +232,11 @@ func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *cor
 				payload = map[string]any{}
 			}
 
-			payload[core.FieldNameEmail] = e.OAuth2User.Email
+			// assign the OAuth2 user email only if the user hasn't submitted one
+			// (ignore empty/invalid values for consistency with the OAuth2->existing user update flow)
+			if v, _ := payload[core.FieldNameEmail].(string); v == "" {
+				payload[core.FieldNameEmail] = e.OAuth2User.Email
+			}
 
 			// map known fields (unless the field was explicitly submitted as part of CreateData)
 			if _, ok := payload[e.Collection.OAuth2.MappedFields.Id]; !ok && e.Collection.OAuth2.MappedFields.Id != "" {
