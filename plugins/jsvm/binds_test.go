@@ -1614,5 +1614,5 @@ func TestOsBindsCount(t *testing.T) {
 	vm := goja.New()
 	osBinds(vm)
 
-	testBindsCount(vm, "$os", 17, t)
+	testBindsCount(vm, "$os", 18, t)
 }

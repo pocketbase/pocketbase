@@ -882,6 +882,7 @@ declare namespace $os {
   export let dirFS:     os.dirFS
   export let readFile:  os.readFile
   export let writeFile: os.writeFile
+  export let stat:      os.stat
   export let readDir:   os.readDir
   export let tempDir:   os.tempDir
   export let truncate:  os.truncate

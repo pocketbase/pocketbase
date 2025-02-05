@@ -715,6 +715,7 @@ func osBinds(vm *goja.Runtime) {
 	obj.Set("exit", os.Exit)
 	obj.Set("getenv", os.Getenv)
 	obj.Set("dirFS", os.DirFS)
+	obj.Set("stat", os.Stat)
 	obj.Set("readFile", os.ReadFile)
 	obj.Set("writeFile", os.WriteFile)
 	obj.Set("readDir", os.ReadDir)
