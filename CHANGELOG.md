@@ -1,3 +1,10 @@
+## v0.25.1
+
+- Fixed the batch API Preview success sample response.
+
+- Bumped GitHub action min Go version to 1.23.6 as it comes with a [minor security fix](https://github.com/golang/go/issues?q=milestone%3AGo1.23.6+label%3ACherryPickApproved) for the ppc64le build.
+
+
 ## v0.25.0
 
 - ⚠️ Upgraded Google OAuth2 auth, token and userinfo endpoints to their latest versions.
