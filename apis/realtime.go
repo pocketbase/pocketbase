@@ -418,7 +418,14 @@ func bindRealtimeEvents(app core.App) {
 // resolveRecord converts *if possible* the provided model interface to a Record.
 // This is usually helpful if the provided model is a custom Record model struct.
 func realtimeResolveRecord(app core.App, model core.Model, optCollectionType string) *core.Record {
-	record, _ := model.(*core.Record)
+	var record *core.Record
+	switch model := model.(type) {
+	case *core.Record:
+		record = model
+	case core.RecordProxy:
+		record = model.ProxyRecord()
+	}
+
 	if record != nil {
 		if optCollectionType == "" || record.Collection().Type == optCollectionType {
 			return record
