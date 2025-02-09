@@ -1,3 +1,8 @@
+## v0.25.2 (WIP)
+
+- Fixed realtime delete event not being fired for `RecordProxy`ies and other custom Record model structs ([#6433](https://github.com/pocketbase/pocketbase/issues/6433)).
+
+
 ## v0.25.1
 
 - Fixed the batch API Preview success sample response.

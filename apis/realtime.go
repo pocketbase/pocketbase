@@ -423,11 +423,11 @@ func bindRealtimeEvents(app core.App) {
 // This is usually helpful if the provided model is a custom Record model struct.
 func realtimeResolveRecord(app core.App, model core.Model, optCollectionType string) *core.Record {
 	var record *core.Record
-	switch v := model.(type) {
+	switch m := model.(type) {
 	case *core.Record:
-		record = v
+		record = m
 	case core.RecordProxy:
-		record = v.ProxyRecord()
+		record = m.ProxyRecord()
 	}
 
 	if record != nil {
@@ -651,7 +651,7 @@ func realtimeBroadcastRecord(app core.App, action string, record *core.Record, d
 	return group.Wait()
 }
 
-// realtimeBroadcastDryCacheKey broadcasts all cached key related messages.
+// realtimeBroadcastDryCacheKey broadcasts the dry cached key related messages.
 func realtimeBroadcastDryCacheKey(app core.App, key string) error {
 	chunks := app.SubscriptionsBroker().ChunkedClients(clientsChunkSize)
 	if len(chunks) == 0 {
@@ -686,7 +686,7 @@ func realtimeBroadcastDryCacheKey(app core.App, key string) error {
 	return group.Wait()
 }
 
-// realtimeUnsetDryCacheKey removes the dry cached record related messages.
+// realtimeUnsetDryCacheKey removes the dry cached key related messages.
 func realtimeUnsetDryCacheKey(app core.App, key string) error {
 	chunks := app.SubscriptionsBroker().ChunkedClients(clientsChunkSize)
 	if len(chunks) == 0 {
