@@ -116,8 +116,7 @@ func (app *BaseApp) delete(ctx context.Context, model Model, isForAuxDB bool) er
 
 	deleteErr := app.OnModelDelete().Trigger(event, func(e *ModelEvent) error {
 		pk := cast.ToString(e.Model.LastSavedPK())
-
-		if cast.ToString(pk) == "" {
+		if pk == "" {
 			return errors.New("the model can be deleted only if it is existing and has a non-empty primary key")
 		}
 
