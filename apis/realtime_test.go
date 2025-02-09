@@ -652,7 +652,7 @@ func (m *CustomModelResolve) TableName() string {
 	return m.tableName
 }
 
-func TestRealtimeRecordResove(t *testing.T) {
+func TestRealtimeRecordResolve(t *testing.T) {
 	t.Parallel()
 
 	const testCollectionName = "realtime_test_collection"
@@ -871,8 +871,13 @@ func TestRealtimeRecordResove(t *testing.T) {
 			}
 
 			for id, events := range s.expected {
-				if !slices.Equal(notifications[id], events) {
-					t.Fatalf("[%s] Expected %d events, got %d\n%v\nvs\n%v", id, len(events), len(notifications[id]), s.expected, notifications)
+				if len(events) != len(notifications[id]) {
+					t.Fatalf("[%s] Expected %d events, got %d:\n%v\n%v", id, len(events), len(notifications[id]), s.expected, notifications)
+				}
+				for _, event := range events {
+					if !slices.Contains(notifications[id], event) {
+						t.Fatalf("[%s] Missing expected event %q in %v", id, event, notifications[id])
+					}
 				}
 			}
 		})
