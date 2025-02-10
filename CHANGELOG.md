@@ -1,6 +1,6 @@
-## v0.25.2 (WIP)
+## v0.25.2
 
-- Fixed realtime delete event not being fired for `RecordProxy`ies and other custom Record model structs ([#6433](https://github.com/pocketbase/pocketbase/issues/6433)).
+- Fixed realtime delete event not being fired for `RecordProxy`-ies and added basic realtime record resolve automated tests ([#6433](https://github.com/pocketbase/pocketbase/issues/6433)).
 
 
 ## v0.25.1
