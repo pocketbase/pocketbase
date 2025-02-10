@@ -25,6 +25,8 @@ import (
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/fileblob"
 	"gocloud.dev/gcerrors"
+
+	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 var gcpIgnoreHeaders = []string{"Accept-Encoding"}
@@ -94,11 +96,25 @@ func NewS3(
 
 		o.UsePathStyle = s3ForcePathStyle
 
-		// Google Cloud Storage alters the Accept-Encoding header,
-		// which breaks the v2 request signature
-		// (https://github.com/aws/aws-sdk-go-v2/issues/1816)
 		if strings.Contains(endpoint, "storage.googleapis.com") {
+			// Google Cloud Storage alters the Accept-Encoding header,
+			// which breaks the v2 request signature
+			// (https://github.com/aws/aws-sdk-go-v2/issues/1816)
 			ignoreSigningHeaders(o, gcpIgnoreHeaders)
+		} else if strings.Contains(endpoint, "backblazeb2.com") {
+			// Backblaze currently doesn't support the new sdk's checksum headers
+			// (https://www.backblaze.com/docs/cloud-storage-s3-compatible-api#unsupported-features)
+			o.RequestChecksumCalculation = aws.RequestChecksumCalculationUnset
+			o.APIOptions = append(o.APIOptions,
+				smithyhttp.SetHeaderValue("x-amz-checksum-crc32", ""),
+				smithyhttp.SetHeaderValue("x-amz-checksum-crc32c", ""),
+				smithyhttp.SetHeaderValue("x-amz-checksum-crc64nvme", ""),
+				smithyhttp.SetHeaderValue("x-amz-checksum-sha1", ""),
+				smithyhttp.SetHeaderValue("x-amz-checksum-sha256", ""),
+				smithyhttp.SetHeaderValue("x-amz-checksum-mode", ""),
+				smithyhttp.SetHeaderValue("x-amz-checksum-algorithm", ""),
+				smithyhttp.SetHeaderValue("x-amz-sdk-checksum-algorithm", ""),
+			)
 		}
 	})
 
