@@ -154,8 +154,10 @@ const (
 	RequestInfoContextExpand        = "expand"
 	RequestInfoContextRealtime      = "realtime"
 	RequestInfoContextProtectedFile = "protectedFile"
-	RequestInfoContextOAuth2        = "oauth2"
 	RequestInfoContextBatch         = "batch"
+	RequestInfoContextOAuth2        = "oauth2"
+	RequestInfoContextOTP           = "otp"
+	RequestInfoContextPasswordAuth  = "password"
 )
 
 // RequestInfo defines a HTTP request data struct, usually used

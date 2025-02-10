@@ -35,6 +35,8 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 		fallbackAuthRecord = e.Auth
 	}
 
+	e.Set(core.RequestEventKeyInfoContext, core.RequestInfoContextOAuth2)
+
 	form := new(recordOAuth2LoginForm)
 	form.collection = collection
 	if err = e.BindBody(form); err != nil {

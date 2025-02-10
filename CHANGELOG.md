@@ -2,6 +2,11 @@
 
 - ⚠️ Prioritized the user submitted non-empty `createData.email` (_it will be unverified_) when creating the PocketBase user during the first OAuth2 auth.
 
+- Load the request info context during password/OAuth2/OTP authentication ([#6402](https://github.com/pocketbase/pocketbase/issues/6402)).
+    This could be helpful in case you want to target the auth method as part of the MFA and Auth API rules.
+    For example, to disable MFA for the OAuth2 auth could be expressed as `@request.context != "oauth2"` MFA rule.
+    (@todo docs)
+
 - Added `$os.stat(file)` JSVM helper ([#6407](https://github.com/pocketbase/pocketbase/discussions/6407)).
 
 

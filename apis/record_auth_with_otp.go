@@ -26,6 +26,8 @@ func recordAuthWithOTP(e *core.RequestEvent) error {
 		return firstApiError(err, e.BadRequestError("An error occurred while validating the submitted data.", err))
 	}
 
+	e.Set(core.RequestEventKeyInfoContext, core.RequestInfoContextOTP)
+
 	event := new(core.RecordAuthWithOTPRequestEvent)
 	event.RequestEvent = e
 	event.Collection = collection

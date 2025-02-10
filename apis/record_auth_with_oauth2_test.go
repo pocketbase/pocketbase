@@ -175,6 +175,20 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				if err := app.Save(ea); err != nil {
 					t.Fatal(err)
 				}
+
+				// test at least once that the correct request info context is properly loaded
+				app.OnRecordAuthRequest().BindFunc(func(e *core.RecordAuthRequestEvent) error {
+					info, err := e.RequestInfo()
+					if err != nil {
+						t.Fatal(err)
+					}
+
+					if info.Context != core.RequestInfoContextOAuth2 {
+						t.Fatalf("Expected request context %q, got %q", core.RequestInfoContextOAuth2, info.Context)
+					}
+
+					return e.Next()
+				})
 			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{

@@ -32,6 +32,8 @@ func recordAuthWithPassword(e *core.RequestEvent) error {
 		return firstApiError(err, e.BadRequestError("An error occurred while validating the submitted data.", err))
 	}
 
+	e.Set(core.RequestEventKeyInfoContext, core.RequestInfoContextPasswordAuth)
+
 	var foundRecord *core.Record
 	var foundErr error
 
