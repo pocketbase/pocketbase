@@ -323,10 +323,10 @@ type App interface {
 	// FindLogById finds a single Log entry by its id.
 	FindLogById(id string) (*Log, error)
 
-	// LogsStatsItem defines the total number of logs for a specific time period.
+	// LogsStatsItem returns hourly grouped logs statistics.
 	LogsStats(expr dbx.Expression) ([]*LogsStatsItem, error)
 
-	// DeleteOldLogs delete all requests that are created before createdBefore.
+	// DeleteOldLogs delete all logs that are created before createdBefore.
 	DeleteOldLogs(createdBefore time.Time) error
 
 	// ---------------------------------------------------------------

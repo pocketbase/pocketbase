@@ -34,7 +34,7 @@ type LogsStatsItem struct {
 	Total int            `db:"total" json:"total"`
 }
 
-// LogsStats returns hourly grouped requests logs statistics.
+// LogsStats returns hourly grouped logs statistics.
 func (app *BaseApp) LogsStats(expr dbx.Expression) ([]*LogsStatsItem, error) {
 	result := []*LogsStatsItem{}
 
@@ -51,7 +51,7 @@ func (app *BaseApp) LogsStats(expr dbx.Expression) ([]*LogsStatsItem, error) {
 	return result, err
 }
 
-// DeleteOldLogs delete all requests that are created before createdBefore.
+// DeleteOldLogs delete all logs that are created before createdBefore.
 //
 // For better performance the logs delete is executed as plain SQL statement,
 // aka. no delete model hook events will be fired.
