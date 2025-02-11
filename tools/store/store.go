@@ -136,7 +136,7 @@ func (s *Store[K, T]) Values() []T {
 	return values
 }
 
-// Set sets (or overwrite if already exist) a new value for key.
+// Set sets (or overwrite if already exists) a new value for key.
 func (s *Store[K, T]) Set(key K, value T) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -146,6 +146,29 @@ func (s *Store[K, T]) Set(key K, value T) {
 	}
 
 	s.data[key] = value
+}
+
+// SetFunc sets (or overwrite if already exists) a new value resolved
+// from the function callback for the provided key.
+//
+// The function callback receives as argument the old store element value (if exists).
+// If there is no old store element, the argument will be the T zero value.
+//
+// Example:
+//
+//	s := store.New[string, int](nil)
+//	s.SetFunc("count", func(old int) int {
+//	    return old + 1
+//	})
+func (s *Store[K, T]) SetFunc(key K, fn func(old T) T) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.data == nil {
+		s.data = make(map[K]T)
+	}
+
+	s.data[key] = fn(s.data[key])
 }
 
 // GetOrSet retrieves a single existing value for the provided key

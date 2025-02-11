@@ -249,6 +249,32 @@ func TestSet(t *testing.T) {
 	}
 }
 
+func TestSetFunc(t *testing.T) {
+	s := store.Store[string, int]{}
+
+	// non existing value
+	s.SetFunc("test", func(old int) int {
+		if old != 0 {
+			t.Fatalf("Expected old value %d, got %d", 0, old)
+		}
+		return old + 2
+	})
+	if v := s.Get("test"); v != 2 {
+		t.Fatalf("Expected the stored value to be %d, got %d", 2, v)
+	}
+
+	// increment existing value
+	s.SetFunc("test", func(old int) int {
+		if old != 2 {
+			t.Fatalf("Expected old value %d, got %d", 2, old)
+		}
+		return old + 1
+	})
+	if v := s.Get("test"); v != 3 {
+		t.Fatalf("Expected the stored value to be %d, got %d", 3, v)
+	}
+}
+
 func TestGetOrSet(t *testing.T) {
 	s := store.New(map[string]int{
 		"test1": 0,
