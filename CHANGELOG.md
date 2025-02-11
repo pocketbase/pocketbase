@@ -1,3 +1,26 @@
+## v0.25.4
+
+- Downgraded `aws-sdk-go-v2` to the version before the default data integrity checks because there have been reports for non-AWS S3 providers in addition to Backblaze (IDrive, R2) that no longer or partially work with the latest AWS SDK changes.
+
+    While we try to enforce `when_required` by default, it is not enough to disable the new AWS SDK integrity checks entirely and some providers will require additional manual adjustments to make them compatible with the latest AWS SDK (e.g. removing the `x-aws-checksum-*` headers, unsetting the checksums calculation or reinstantiating the old MD5 checksums for some of the required operations, etc.) which as a result leads to a configuration mess that I'm not sure it would be a good idea to introduce.
+
+    This unfornuatelly is not a PocketBase or Go specific issue and the official AWS SDKs for other languages are in the same situation (even the latest aws-cli).
+
+    For those of you that extend PocketBase with Go: if your S3 vendor doesn't support the [AWS Data integrity checks](https://docs.aws.amazon.com/sdkref/latest/guide/feature-dataintegrity.html) and you are updating with `go get -u`, then make sure that the `aws-sdk-go-v2` dependencies in your `go.mod` are the same as in the repo:
+    ```
+    // go.mod
+    github.com/aws/aws-sdk-go-v2 v1.36.1
+    github.com/aws/aws-sdk-go-v2/config v1.28.10
+    github.com/aws/aws-sdk-go-v2/credentials v1.17.51
+    github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.48
+    github.com/aws/aws-sdk-go-v2/service/s3 v1.72.2
+
+    // after that run
+    go clean -modcache && go mod tidy
+    ```
+    _The versions pinning is temporary until the non-AWS S3 vendors patch their implementation or until I manage to find time to remove/replace the `aws-sdk-go-v2` dependency (I'll consider prioritizing it for the v0.26 or v0.27 release)._
+
+
 ## v0.25.3
 
 - Added a temporary exception for Backblaze S3 endpoints to exclude the new `aws-sdk-go-v2` checksum headers ([#6440](https://github.com/pocketbase/pocketbase/discussions/6440)).

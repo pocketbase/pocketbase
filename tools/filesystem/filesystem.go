@@ -25,8 +25,6 @@ import (
 	"gocloud.dev/blob"
 	"gocloud.dev/blob/fileblob"
 	"gocloud.dev/gcerrors"
-
-	smithyhttp "github.com/aws/smithy-go/transport/http"
 )
 
 var gcpIgnoreHeaders = []string{"Accept-Encoding"}
@@ -40,20 +38,21 @@ type System struct {
 
 // -------------------------------------------------------------------
 
-var requestChecksumCalculation = aws.RequestChecksumCalculationWhenRequired
-var responseChecksumValidation = aws.ResponseChecksumValidationWhenRequired
-
-// @todo consider removing after the other non-AWS vendors catched up with the new changes
-// (https://github.com/aws/aws-sdk-go-v2/discussions/2960)
+// @todo delete after replacing the aws-sdk-go-v2 dependency
+//
+// enforce WHEN_REQUIRED by default in case the user has updated AWS SDK dependency
+// https://github.com/aws/aws-sdk-go-v2/discussions/2960
+// https://github.com/pocketbase/pocketbase/discussions/6440
+// https://github.com/pocketbase/pocketbase/discussions/6313
 func init() {
 	reqEnv := os.Getenv("AWS_REQUEST_CHECKSUM_CALCULATION")
-	if reqEnv != "" && strings.EqualFold(reqEnv, "when_supported") {
-		requestChecksumCalculation = aws.RequestChecksumCalculationWhenSupported
+	if reqEnv == "" {
+		os.Setenv("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
 	}
 
 	resEnv := os.Getenv("AWS_RESPONSE_CHECKSUM_VALIDATION")
-	if resEnv != "" && strings.EqualFold(resEnv, "when_supported") {
-		responseChecksumValidation = aws.ResponseChecksumValidationWhenSupported
+	if resEnv == "" {
+		os.Setenv("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED")
 	}
 }
 
@@ -83,9 +82,6 @@ func NewS3(
 		return nil, err
 	}
 
-	cfg.RequestChecksumCalculation = requestChecksumCalculation
-	cfg.ResponseChecksumValidation = responseChecksumValidation
-
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
 		// ensure that the endpoint has url scheme for
 		// backward compatibility with v1 of the aws sdk
@@ -96,25 +92,11 @@ func NewS3(
 
 		o.UsePathStyle = s3ForcePathStyle
 
+		// Google Cloud Storage alters the Accept-Encoding header,
+		// which breaks the v2 request signature
+		// (https://github.com/aws/aws-sdk-go-v2/issues/1816)
 		if strings.Contains(endpoint, "storage.googleapis.com") {
-			// Google Cloud Storage alters the Accept-Encoding header,
-			// which breaks the v2 request signature
-			// (https://github.com/aws/aws-sdk-go-v2/issues/1816)
 			ignoreSigningHeaders(o, gcpIgnoreHeaders)
-		} else if strings.Contains(endpoint, "backblazeb2.com") {
-			// Backblaze currently doesn't support the new sdk's checksum headers
-			// (https://www.backblaze.com/docs/cloud-storage-s3-compatible-api#unsupported-features)
-			o.RequestChecksumCalculation = aws.RequestChecksumCalculationUnset
-			o.APIOptions = append(o.APIOptions,
-				smithyhttp.SetHeaderValue("x-amz-checksum-crc32", ""),
-				smithyhttp.SetHeaderValue("x-amz-checksum-crc32c", ""),
-				smithyhttp.SetHeaderValue("x-amz-checksum-crc64nvme", ""),
-				smithyhttp.SetHeaderValue("x-amz-checksum-sha1", ""),
-				smithyhttp.SetHeaderValue("x-amz-checksum-sha256", ""),
-				smithyhttp.SetHeaderValue("x-amz-checksum-mode", ""),
-				smithyhttp.SetHeaderValue("x-amz-checksum-algorithm", ""),
-				smithyhttp.SetHeaderValue("x-amz-sdk-checksum-algorithm", ""),
-			)
 		}
 	})
 
