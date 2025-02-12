@@ -22,6 +22,41 @@
 
     let isTinyMCEPreloaded = false;
 
+    document.addEventListener("DOMContentLoaded", function () {
+        const themeIcon = document.getElementById("theme-icon");
+
+        // Load saved theme from localStorage
+        let theme = localStorage.getItem("theme") || "light";
+        if (theme === "dark") {
+            document.body.classList.add("dark-theme");
+            themeIcon.classList.replace("ri-moon-line", "ri-sun-line"); // Show Sun for Dark Mode
+        } else {
+            document.body.classList.remove("dark-theme");
+            themeIcon.classList.replace("ri-sun-line", "ri-moon-line"); // Show Moon for Light Mode
+        }
+    });
+
+    // Check for saved theme preference in localStorage
+    let theme = localStorage.getItem("theme") || "light";
+    if (theme === "dark") {
+        document.body.classList.add("dark-theme");
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const themeIcon = document.getElementById("theme-icon");
+
+        if (body.classList.contains("dark-theme")) {
+            body.classList.remove("dark-theme");
+            localStorage.setItem("theme", "light");
+            themeIcon.classList.replace("ri-sun-line", "ri-moon-line"); // Switch to moon icon for light mode
+        } else {
+            body.classList.add("dark-theme");
+            localStorage.setItem("theme", "dark");
+            themeIcon.classList.replace("ri-moon-line", "ri-sun-line"); // Switch to sun icon for dark mode
+        }
+    }
+
     $: if ($superuser?.id) {
         loadSettings();
     }
@@ -147,6 +182,11 @@
                         <i class="ri-shield-user-line" aria-hidden="true" />
                         <span class="txt">Manage superusers</span>
                     </a>
+                    <!-- Dark Mode Toggle Button -->
+                    <button type="button" id="theme-toggle" class="dropdown-item closable" role="menuitem" on:click={toggleTheme}>
+                        <i class="ri-moon-line" id="theme-icon" aria-hidden="true"></i>
+                        <span class="txt">Dark Mode</span>
+                    </button>
                     <button type="button" class="dropdown-item closable" role="menuitem" on:click={logout}>
                         <i class="ri-logout-circle-line" aria-hidden="true" />
                         <span class="txt">Logout</span>

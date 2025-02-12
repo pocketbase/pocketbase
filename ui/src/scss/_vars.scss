@@ -72,6 +72,37 @@
     accent-color: var(--primaryColor);
 }
 
+// Dark Theme Variables
+.dark-theme {
+    --txtPrimaryColor:  #e0e0e0;
+    --txtHintColor:     #a8b0b9;
+    --txtDisabledColor: #606b75;
+
+    --primaryColor: #4a90e2;
+
+    --bodyColor: #121212;
+    --baseColor:     #181818;
+    --baseAlt1Color: #222222;
+    --baseAlt2Color: #2a2a2a;
+    --baseAlt3Color: #333333;
+    --baseAlt4Color: #3c3c3c;
+
+    --infoColor:       #67aefb;
+    --infoAltColor:    #2c3e50;
+    --successColor:    #42be65;
+    --successAltColor: #1b5e20;
+    --dangerColor:     #ff5370;
+    --dangerAltColor:  #b00020;
+    --warningColor:    #ffb300;
+    --warningAltColor: #ff8f00;
+
+    --overlayColor:   rgba(0, 0, 0, 0.6);
+    --tooltipColor:   rgba(255, 255, 255, 0.85);
+    --shadowColor:    rgba(255, 255, 255, 0.06);
+
+    accent-color: var(--primaryColor);
+}
+
 
 // Maps
 // ----
