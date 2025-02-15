@@ -4,7 +4,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
-    import { removeAllToasts, addWarningToast, addSuccessToast } from "@/stores/toasts";
+    import { removeAllToasts, addSuccessToast } from "@/stores/toasts";
     import tooltip from "@/actions/tooltip";
     import PageWrapper from "@/components/base/PageWrapper.svelte";
     import SettingsSidebar from "@/components/settings/SettingsSidebar.svelte";
@@ -56,11 +56,7 @@
 
             removeAllToasts();
 
-            if (testError) {
-                addWarningToast("Successfully saved but failed to establish S3 connection.");
-            } else {
-                addSuccessToast("Successfully saved files storage settings.");
-            }
+            addSuccessToast("Successfully saved storage settings.");
         } catch (err) {
             ApiClient.error(err);
         }
