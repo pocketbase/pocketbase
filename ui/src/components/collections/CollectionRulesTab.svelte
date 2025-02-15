@@ -85,9 +85,33 @@
 <RuleField label="View rule" formKey="viewRule" {collection} bind:rule={collection.viewRule} />
 
 {#if collection?.type !== "view"}
-    <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule} />
+    <RuleField label="Create rule" formKey="createRule" {collection} bind:rule={collection.createRule}>
+        <svelte:fragment slot="afterLabel" let:isSuperuserOnly>
+            {#if !isSuperuserOnly}
+                <i
+                    class="ri-information-line link-hint"
+                    use:tooltip={{
+                        text: `The main record fields hold the values that are going to be inserted in the database.`,
+                        position: "top",
+                    }}
+                />
+            {/if}
+        </svelte:fragment>
+    </RuleField>
 
-    <RuleField label="Update rule" formKey="updateRule" {collection} bind:rule={collection.updateRule} />
+    <RuleField label="Update rule" formKey="updateRule" {collection} bind:rule={collection.updateRule}>
+        <svelte:fragment slot="afterLabel" let:isSuperuserOnly>
+            {#if !isSuperuserOnly}
+                <i
+                    class="ri-information-line link-hint"
+                    use:tooltip={{
+                        text: `The main record fields represent the old/existing record field values.\nTo target the newly submitted ones you can use @request.body.*`,
+                        position: "top",
+                    }}
+                />
+            {/if}
+        </svelte:fragment>
+    </RuleField>
 
     <RuleField label="Delete rule" formKey="deleteRule" {collection} bind:rule={collection.deleteRule} />
 {/if}
