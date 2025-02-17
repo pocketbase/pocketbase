@@ -182,6 +182,8 @@ const jsonFieldsParam = "fields"
 // JSON writes a JSON response.
 //
 // It also provides a generic response data fields picker if the "fields" query parameter is set.
+// For example, if you are requesting `?fields=a,b` for `e.JSON(200, map[string]int{ "a":1, "b":2, "c":3 })`,
+// it should result in a JSON response like: `{"a":1, "b": 2}`.
 func (e *Event) JSON(status int, data any) error {
 	e.setResponseHeaderIfEmpty(headerContentType, "application/json")
 	e.Response.WriteHeader(status)
