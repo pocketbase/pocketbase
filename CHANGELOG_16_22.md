@@ -2,6 +2,11 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.31
+
+- (_Backported from v0.25.5_) Set the current working directory as a default goja script path when executing inline JS strings to allow `require(m)` traversing parent `node_modules` directories.
+
+
 ## v0.22.30
 
 - (_Backported from v0.24.4_) Fixed fields extraction for view queries with nested comments ([#6309](https://github.com/pocketbase/pocketbase/discussions/6309)).
