@@ -11,7 +11,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { slide } from "svelte/transition";
 
-    $pageTitle = "AMA settings";
+    $pageTitle = "SMS settings";
 
     let testPopup;
     let originalFormSettings = {};
@@ -155,35 +155,23 @@
 
                 <div class="flex">
                     <div class="flex-fill" />
-
-                    {#if hasChanges}
-                        <button
-                            type="button"
-                            class="btn btn-transparent btn-hint"
-                            disabled={isSaving}
-                            on:click={() => reset()}
-                        >
-                            <span class="txt">Cancel</span>
-                        </button>
-                        <button
-                            type="submit"
-                            class="btn btn-expanded"
-                            class:btn-loading={isSaving}
-                            disabled={!hasChanges || isSaving}
-                            on:click={() => save()}
-                        >
-                            <span class="txt">Save changes</span>
-                        </button>
-                    {:else}
-                        <button
-                            type="button"
-                            class="btn btn-expanded btn-outline"
-                            on:click={() => testPopup?.show()}
-                        >
-                            <i class="ri-mail-check-line" />
-                            <span class="txt">Send test email</span>
-                        </button>
-                    {/if}
+                    <button
+                        type="button"
+                        class="btn btn-transparent btn-hint"
+                        disabled={isSaving}
+                        on:click={() => reset()}
+                    >
+                        <span class="txt">Cancel</span>
+                    </button>
+                    <button
+                        type="submit"
+                        class="btn btn-expanded"
+                        class:btn-loading={isSaving}
+                        disabled={!hasChanges || isSaving}
+                        on:click={() => save()}
+                    >
+                        <span class="txt">Save changes</span>
+                    </button>
                 </div>
             {/if}
         </form>
