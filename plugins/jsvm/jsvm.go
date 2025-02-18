@@ -35,9 +35,25 @@ import (
 	"github.com/pocketbase/pocketbase/tools/template"
 )
 
-const (
-	typesFileName = "types.d.ts"
-)
+const typesFileName = "types.d.ts"
+
+var defaultScriptPath = "pb.js"
+
+func init() {
+	// For backward compatibility and consistency with the Go exposed
+	// methods that accept relative paths (e.g. `$os.writeFile`),
+	// we define the "current JS module" as if it is a file in the current working directory
+	// (the filename itself doesn't really matter and in our case the hook handlers are executed as separate "programs").
+	//
+	// This is necessary for `require(module)` to properly traverse parents node_modules (goja_nodejs#95).
+	cwd, err := os.Getwd()
+	if err != nil {
+		// truly rare case, log just for debug purposes
+		color.Yellow("Failed to retrieve the current working directory: %v", err)
+	} else {
+		defaultScriptPath = filepath.Join(cwd, defaultScriptPath)
+	}
+}
 
 // Config defines the config options of the jsvm plugin.
 type Config struct {
@@ -187,7 +203,7 @@ func (p *plugin) registerMigrations() error {
 			p.config.OnInit(vm)
 		}
 
-		_, err := vm.RunString(string(content))
+		_, err := vm.RunScript(defaultScriptPath, string(content))
 		if err != nil {
 			return fmt.Errorf("failed to run migration %s: %w", file, err)
 		}
@@ -301,7 +317,7 @@ func (p *plugin) registerHooks() error {
 				}
 			}()
 
-			_, err := loader.RunString(string(content))
+			_, err := loader.RunScript(defaultScriptPath, string(content))
 			if err != nil {
 				panic(err)
 			}

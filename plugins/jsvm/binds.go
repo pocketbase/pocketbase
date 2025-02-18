@@ -61,7 +61,7 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 
 		// register the hook to the loader
 		loader.Set(jsName, func(callback string, tags ...string) {
-			pr := goja.MustCompile("", "{("+callback+").apply(undefined, __args)}", true)
+			pr := goja.MustCompile(defaultScriptPath, "{("+callback+").apply(undefined, __args)}", true)
 
 			tagsAsValues := make([]reflect.Value, len(tags))
 			for i, tag := range tags {
@@ -114,7 +114,7 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 	var wasServeTriggered bool
 
 	loader.Set("cronAdd", func(jobId, cronExpr, handler string) {
-		pr := goja.MustCompile("", "{("+handler+").apply(undefined)}", true)
+		pr := goja.MustCompile(defaultScriptPath, "{("+handler+").apply(undefined)}", true)
 
 		err := scheduler.Add(jobId, cronExpr, func() {
 			err := executors.run(func(executor *goja.Runtime) error {
@@ -215,7 +215,7 @@ func wrapHandler(executors *vmsPool, handler goja.Value) (echo.HandlerFunc, erro
 		// "native" handler - no need to wrap
 		return h, nil
 	case func(goja.FunctionCall) goja.Value, string:
-		pr := goja.MustCompile("", "{("+handler.String()+").apply(undefined, __args)}", true)
+		pr := goja.MustCompile(defaultScriptPath, "{("+handler.String()+").apply(undefined, __args)}", true)
 
 		wrappedHandler := func(c echo.Context) error {
 			return executors.run(func(executor *goja.Runtime) error {
@@ -253,7 +253,7 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]echo.M
 			// "native" middleware - no need to wrap
 			wrappedMiddlewares[i] = v
 		case func(goja.FunctionCall) goja.Value, string:
-			pr := goja.MustCompile("", "{(("+m.String()+").apply(undefined, __args)).apply(undefined, __args2)}", true)
+			pr := goja.MustCompile(defaultScriptPath, "{(("+m.String()+").apply(undefined, __args)).apply(undefined, __args2)}", true)
 
 			wrappedMiddlewares[i] = func(next echo.HandlerFunc) echo.HandlerFunc {
 				return func(c echo.Context) error {
