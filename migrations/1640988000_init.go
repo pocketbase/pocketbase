@@ -322,6 +322,14 @@ func createUsersCollection(txApp core.App) error {
 	users.UpdateRule = types.Pointer(ownerRule)
 	users.DeleteRule = types.Pointer(ownerRule)
 
+	//make non deletable system fields
+	users.Fields.Add(&core.TextField{
+		Name:    "phone_number",
+		Max:     12,
+		Pattern: `^\+[1-9]\d{1,14}$`, // E.164 format
+		System:  true,
+	})
+	//make normal non system fields
 	users.Fields.Add(&core.TextField{
 		Name: "name",
 		Max:  255,
