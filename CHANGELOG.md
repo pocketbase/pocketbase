@@ -1,3 +1,8 @@
+## v0.25.5 (WIP)
+
+- Specified a default goja script name when executing plain JS strings to allow traversing parent `node_modules` directories.
+
+
 ## v0.25.4
 
 - Downgraded `aws-sdk-go-v2` to the version before the default data integrity checks because there have been reports for non-AWS S3 providers in addition to Backblaze (IDrive, R2) that no longer or partially work with the latest AWS SDK changes.
