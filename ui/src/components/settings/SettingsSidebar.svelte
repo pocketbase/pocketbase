@@ -21,6 +21,10 @@
             <i class="ri-send-plane-2-line" aria-hidden="true" />
             <span class="txt">Mail settings</span>
         </a>
+        <a href="/settings/sms" class="sidebar-list-item" use:active={{ path: "/settings/sms/?.*" }} use:link>
+            <i class="ri-message-2-line" aria-hidden="true" />
+            <span class="txt">SMS settings</span>
+        </a>
         <a
             href="/settings/storage"
             class="sidebar-list-item"

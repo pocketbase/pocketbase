@@ -124,6 +124,7 @@ type settings struct {
 	Backups      BackupsConfig      `form:"backups" json:"backups"`
 	S3           S3Config           `form:"s3" json:"s3"`
 	Meta         MetaConfig         `form:"meta" json:"meta"`
+	SMS          SMSConfig          `form:"sms" json:"sms"`
 	RateLimits   RateLimitsConfig   `form:"rateLimits" json:"rateLimits"`
 	TrustedProxy TrustedProxyConfig `form:"trustedProxy" json:"trustedProxy"`
 	Batch        BatchConfig        `form:"batch" json:"batch"`
@@ -160,6 +161,12 @@ func newDefaultSettings() *Settings {
 				Username: "",
 				Password: "",
 				TLS:      false,
+			},
+			SMS: SMSConfig{
+				Enabled: false,
+				AccountSID: "",
+				AuthToken: "",
+				FromNumber: "",
 			},
 			Backups: BackupsConfig{
 				CronMaxKeep: 3,
@@ -366,6 +373,13 @@ type SMTPConfig struct {
 	//
 	// This is required only by some SMTP servers, such as Gmail SMTP-relay.
 	LocalName string `form:"localName" json:"localName"`
+}
+
+type SMSConfig struct {
+	Enabled bool   `form:"enabled" json:"enabled"`
+	AccountSID string `form:"accountSID" json:"accountSID"`
+	AuthToken string `form:"authToken" json:"authToken"`
+	FromNumber string `form:"fromNumber" json:"fromNumber"`
 }
 
 // Validate makes SMTPConfig validatable by implementing [validation.Validatable] interface.

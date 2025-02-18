@@ -7,6 +7,7 @@ import PageCrons from "@/components/settings/PageCrons.svelte";
 import PageExportCollections from "@/components/settings/PageExportCollections.svelte";
 import PageImportCollections from "@/components/settings/PageImportCollections.svelte";
 import PageMail from "@/components/settings/PageMail.svelte";
+import PageSMS from "@/components/settings/PageSMS.svelte";
 import PageStorage from "@/components/settings/PageStorage.svelte";
 import PageSuperuserLogin from "@/components/superusers/PageSuperuserLogin.svelte";
 import ApiClient from "@/utils/ApiClient";
@@ -60,6 +61,12 @@ const routes = {
 
     "/settings/mail": wrap({
         component: PageMail,
+        conditions: [(_) => ApiClient.authStore.isValid],
+        userData: { showAppSidebar: true },
+    }),
+
+    "/settings/sms": wrap({
+        component: PageSMS,
         conditions: [(_) => ApiClient.authStore.isValid],
         userData: { showAppSidebar: true },
     }),
