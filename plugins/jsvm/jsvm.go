@@ -39,7 +39,7 @@ var defaultScriptPath = "pb.js"
 
 func init() {
 	// For backward compatibility and consistency with the Go exposed
-	// methods that accepts relative paths (e.g. `$os.writeFile`),
+	// methods that operate with relative paths (e.g. `$os.writeFile`),
 	// we define the "current JS module" as if it is a file in the current working directory
 	// (the filename itself doesn't really matter and in our case the hook handlers are executed as separate "programs").
 	//

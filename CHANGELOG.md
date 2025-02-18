@@ -1,6 +1,8 @@
-## v0.25.5 (WIP)
+## v0.25.5
 
-- Specified a default goja script name when executing plain JS strings to allow traversing parent `node_modules` directories.
+- Set the current working directory as a default goja script path when executing inline JS strings to allow `require(m)` traversing parent `node_modules` directories.
+
+- Updated `modernc.org/sqlite` and `modernc.org/libc` dependencies.
 
 
 ## v0.25.4
