@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
 
@@ -300,6 +301,13 @@ func extractNestedVal(rawData any, keys ...string) (any, error) {
 		return mapVal(m, keys...)
 	case mapExtractor:
 		return mapVal(m.AsMap(), keys...)
+	case types.JSONRaw:
+		var raw any
+		err := json.Unmarshal(m, &raw)
+		if err != nil {
+			return nil, fmt.Errorf("failed to unmarshal raw JSON in order extract nested value from: %w", err)
+		}
+		return extractNestedVal(raw, keys...)
 
 	// slices
 	case []string:
@@ -337,6 +345,8 @@ func extractNestedVal(rawData any, keys ...string) (any, error) {
 		}
 		return arrVal(extracted, keys...)
 	case []any:
+		return arrVal(m, keys...)
+	case []types.JSONRaw:
 		return arrVal(m, keys...)
 	default:
 		return nil, fmt.Errorf("expected map or array, got %#v", rawData)

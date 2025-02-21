@@ -11,6 +11,7 @@ import (
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/list"
 	"github.com/pocketbase/pocketbase/tools/search"
+	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 func TestRecordFieldResolverAllowedFields(t *testing.T) {
@@ -681,10 +682,14 @@ func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 			"a": "123",
 		},
 		Body: map[string]any{
-			"number":         "10",
-			"number_unknown": "20",
-			"b":              456,
-			"c":              map[string]int{"sub": 1},
+			"number":          "10",
+			"number_unknown":  "20",
+			"raw_json_obj":    types.JSONRaw(`{"a":123}`),
+			"raw_json_arr1":   types.JSONRaw(`[123, 456]`),
+			"raw_json_arr2":   types.JSONRaw(`[{"a":123},{"b":456}]`),
+			"raw_json_simple": types.JSONRaw(`123`),
+			"b":               456,
+			"c":               map[string]int{"sub": 1},
 		},
 		Headers: map[string]string{
 			"d": "789",
@@ -726,6 +731,14 @@ func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 		{"@request.auth.emailVisibility", false, `false`},
 		{"@request.auth.email", false, `"test@example.com"`}, // should always be returned no matter of the emailVisibility state
 		{"@request.auth.missing", false, `NULL`},
+		{"@request.body.raw_json_simple", false, `"123"`},
+		{"@request.body.raw_json_simple.a", false, `NULL`},
+		{"@request.body.raw_json_obj.a", false, `123`},
+		{"@request.body.raw_json_obj.b", false, `NULL`},
+		{"@request.body.raw_json_arr1.1", false, `456`},
+		{"@request.body.raw_json_arr1.3", false, `NULL`},
+		{"@request.body.raw_json_arr2.0.a", false, `123`},
+		{"@request.body.raw_json_arr2.0.b", false, `NULL`},
 	}
 
 	for _, s := range scenarios {
