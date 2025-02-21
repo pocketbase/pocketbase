@@ -1,3 +1,10 @@
+## v0.25.6
+
+- Restore the missing `meta.isNew` field of the OAuth2 success response ([#6490](https://github.com/pocketbase/pocketbase/issues/6490)).
+
+- Updated npm dependencies.
+
+
 ## v0.25.5
 
 - Set the current working directory as a default goja script path when executing inline JS strings to allow `require(m)` traversing parent `node_modules` directories.

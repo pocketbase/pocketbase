@@ -3,6 +3,7 @@ package apis
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -14,7 +15,6 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
 	"golang.org/x/oauth2"
@@ -134,13 +134,17 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 			return firstApiError(err, e.BadRequestError("Failed to authenticate.", err))
 		}
 
-		meta := struct {
-			*auth.AuthUser
-			IsNew bool `json:"isNew"`
-		}{
-			AuthUser: e.OAuth2User,
-			IsNew:    e.IsNewRecord,
+		// @todo revert back to struct after removing the custom auth.AuthUser marshalization
+		meta := map[string]any{}
+		rawOAuth2User, err := json.Marshal(e.OAuth2User)
+		if err != nil {
+			return err
 		}
+		err = json.Unmarshal(rawOAuth2User, &meta)
+		if err != nil {
+			return err
+		}
+		meta["isNew"] = e.IsNewRecord
 
 		return RecordAuthResponse(e.RequestEvent, e.Record, core.MFAMethodOAuth2, meta)
 	})

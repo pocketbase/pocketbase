@@ -27,6 +27,8 @@
                         avatarURL: "https://example.com/avatar.png",
                         accessToken: "...",
                         refreshToken: "...",
+                        expiry: "2022-01-01 10:00:00.123Z",
+                        isNew: false,
                         rawUser: {},
                     },
                 },
