@@ -58,7 +58,7 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		loader.Set(jsName, func(callback string, tags ...string) {
 			// overwrite the global $app with the hook scoped instance
 			callback = `function(e) { $app = e.app; return (` + callback + `).call(undefined, e) }`
-			pr := goja.MustCompile("", "{("+callback+").apply(undefined, __args)}", true)
+			pr := goja.MustCompile(defaultScriptPath, "{("+callback+").apply(undefined, __args)}", true)
 
 			tagsAsValues := make([]reflect.Value, len(tags))
 			for i, tag := range tags {
@@ -103,7 +103,7 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 
 func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 	loader.Set("cronAdd", func(jobId, cronExpr, handler string) {
-		pr := goja.MustCompile("", "{("+handler+").apply(undefined)}", true)
+		pr := goja.MustCompile(defaultScriptPath, "{("+handler+").apply(undefined)}", true)
 
 		err := app.Cron().Add(jobId, cronExpr, func() {
 			err := executors.run(func(executor *goja.Runtime) error {
@@ -189,7 +189,7 @@ func wrapHandlerFunc(executors *vmsPool, handler goja.Value) (func(*core.Request
 		// "native" handler func - no need to wrap
 		return h, nil
 	case func(goja.FunctionCall) goja.Value, string:
-		pr := goja.MustCompile("", "{("+handler.String()+").apply(undefined, __args)}", true)
+		pr := goja.MustCompile(defaultScriptPath, "{("+handler.String()+").apply(undefined, __args)}", true)
 
 		wrappedHandler := func(e *core.RequestEvent) error {
 			return executors.run(func(executor *goja.Runtime) error {
@@ -243,7 +243,7 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 				return nil, errors.New("missing or invalid Middleware function")
 			}
 
-			pr := goja.MustCompile("", "{("+v.serializedFunc+").apply(undefined, __args)}", true)
+			pr := goja.MustCompile(defaultScriptPath, "{("+v.serializedFunc+").apply(undefined, __args)}", true)
 
 			wrappedMiddlewares[i] = &hook.Handler[*core.RequestEvent]{
 				Id:       v.id,
@@ -267,7 +267,7 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 				},
 			}
 		case func(goja.FunctionCall) goja.Value, string:
-			pr := goja.MustCompile("", "{("+m.String()+").apply(undefined, __args)}", true)
+			pr := goja.MustCompile(defaultScriptPath, "{("+m.String()+").apply(undefined, __args)}", true)
 
 			wrappedMiddlewares[i] = &hook.Handler[*core.RequestEvent]{
 				Func: func(e *core.RequestEvent) error {

@@ -12,6 +12,20 @@
 - Added `Store.SetFunc(key, func(old T) new T)` to set/update a store value with the return result of the callback in a concurrent safe manner.
 
 
+## v0.25.6
+
+- Restore the missing `meta.isNew` field of the OAuth2 success response ([#6490](https://github.com/pocketbase/pocketbase/issues/6490)).
+
+- Updated npm dependencies.
+
+
+## v0.25.5
+
+- Set the current working directory as a default goja script path when executing inline JS strings to allow `require(m)` traversing parent `node_modules` directories.
+
+- Updated `modernc.org/sqlite` and `modernc.org/libc` dependencies.
+
+
 ## v0.25.4
 
 - Downgraded `aws-sdk-go-v2` to the version before the default data integrity checks because there have been reports for non-AWS S3 providers in addition to Backblaze (IDrive, R2) that no longer or partially work with the latest AWS SDK changes.
