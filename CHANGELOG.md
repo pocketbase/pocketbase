@@ -9,7 +9,9 @@
 
 - Added `$os.stat(file)` JSVM helper ([#6407](https://github.com/pocketbase/pocketbase/discussions/6407)).
 
-- Added `Store.SetFunc(key, func(old T) new T)` to set/update a store value with the return result of the callback in a concurrent safe manner.
+- Added `store.Store.SetFunc(key, func(old T) new T)` to set/update a store value with the return result of the callback in a concurrent safe manner.
+
+- Added `subscription.Message.WriteSSE(w, id)` for writing an SSE formatted message into the provided writer interface (_usually used for unit testing_).
 
 
 ## v0.25.6

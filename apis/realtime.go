@@ -84,11 +84,10 @@ func realtimeConnect(e *core.RequestEvent) error {
 			Data: []byte(`{"clientId":"` + ce.Client.Id() + `"}`),
 		}
 		connectMsgErr := ce.App.OnRealtimeMessageSend().Trigger(connectMsgEvent, func(me *core.RealtimeMessageEvent) error {
-			me.Response.Write([]byte("id:" + me.Client.Id() + "\n"))
-			me.Response.Write([]byte("event:" + me.Message.Name + "\n"))
-			me.Response.Write([]byte("data:"))
-			me.Response.Write(me.Message.Data)
-			me.Response.Write([]byte("\n\n"))
+			err := me.Message.WriteSSE(me.Response, me.Client.Id())
+			if err != nil {
+				return err
+			}
 			return me.Flush()
 		})
 		if connectMsgErr != nil {
@@ -123,11 +122,10 @@ func realtimeConnect(e *core.RequestEvent) error {
 				msgEvent.Client = ce.Client
 				msgEvent.Message = &msg
 				msgErr := ce.App.OnRealtimeMessageSend().Trigger(msgEvent, func(me *core.RealtimeMessageEvent) error {
-					me.Response.Write([]byte("id:" + me.Client.Id() + "\n"))
-					me.Response.Write([]byte("event:" + me.Message.Name + "\n"))
-					me.Response.Write([]byte("data:"))
-					me.Response.Write(me.Message.Data)
-					me.Response.Write([]byte("\n\n"))
+					err := me.Message.WriteSSE(me.Response, me.Client.Id())
+					if err != nil {
+						return err
+					}
 					return me.Flush()
 				})
 				if msgErr != nil {

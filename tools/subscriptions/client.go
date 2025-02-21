@@ -13,12 +13,6 @@ import (
 
 const optionsParam = "options"
 
-// Message defines a client's channel data.
-type Message struct {
-	Name string `json:"name"`
-	Data []byte `json:"data"`
-}
-
 // SubscriptionOptions defines the request options (query params, headers, etc.)
 // for a single subscription topic.
 type SubscriptionOptions struct {
