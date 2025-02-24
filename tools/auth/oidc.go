@@ -10,7 +10,10 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pocketbase/pocketbase/tools/security"
@@ -19,10 +22,23 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// idTokenLeeway is the optional leeway for the id_token timestamp fields validation.
+//
+// It can be changed externally using the PB_ID_TOKEN_LEEWAY env variable
+// (the value must be in seconds, e.g. "PB_ID_TOKEN_LEEWAY=60" for 1 minute).
+var idTokenLeeway time.Duration = 5 * time.Minute
+
 func init() {
 	Providers[NameOIDC] = wrapFactory(NewOIDCProvider)
 	Providers[NameOIDC+"2"] = wrapFactory(NewOIDCProvider)
 	Providers[NameOIDC+"3"] = wrapFactory(NewOIDCProvider)
+
+	if leewayStr := os.Getenv("PB_ID_TOKEN_LEEWAY"); leewayStr != "" {
+		leeway, err := strconv.Atoi(leewayStr)
+		if err == nil {
+			idTokenLeeway = time.Duration(leeway) * time.Second
+		}
+	}
 }
 
 var _ Provider = (*OIDC)(nil)
@@ -132,6 +148,7 @@ func (p *OIDC) parseIdToken(token *oauth2.Token) (jwt.MapClaims, error) {
 	// validate common claims
 	jwtValidator := jwt.NewValidator(
 		jwt.WithIssuedAt(),
+		jwt.WithLeeway(idTokenLeeway),
 		jwt.WithAudience(p.clientId),
 	)
 	err = jwtValidator.Validate(claims)
