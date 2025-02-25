@@ -141,6 +141,7 @@ func (p *Apple) parseAndVerifyIdToken(idToken string) (jwt.MapClaims, error) {
 	jwtValidator := jwt.NewValidator(
 		jwt.WithExpirationRequired(),
 		jwt.WithIssuedAt(),
+		jwt.WithLeeway(idTokenLeeway),
 		jwt.WithIssuer("https://appleid.apple.com"),
 		jwt.WithAudience(p.clientId),
 	)

@@ -14,6 +14,17 @@
 - Added `subscription.Message.WriteSSE(w, id)` for writing an SSE formatted message into the provided writer interface (_usually used for unit testing_).
 
 
+## v0.25.8
+
+- Added a default leeway of 5 minutes for the Apple/OIDC `id_token` timestamp claims check to account for clock-skew ([#6529](https://github.com/pocketbase/pocketbase/issues/6529)).
+    It can be further customized if needed with the `PB_ID_TOKEN_LEEWAY` env variable (_the value must be in seconds, e.g. "PB_ID_TOKEN_LEEWAY=60" for 1 minute_).
+
+
+## v0.25.7
+
+- Fixed `@request.body.jsonObjOrArr.*` values extraction ([#6493](https://github.com/pocketbase/pocketbase/discussions/6493)).
+
+
 ## v0.25.6
 
 - Restore the missing `meta.isNew` field of the OAuth2 success response ([#6490](https://github.com/pocketbase/pocketbase/issues/6490)).
