@@ -14,49 +14,22 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/disintegration/imaging"
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3lite"
+	"github.com/pocketbase/pocketbase/tools/filesystem/blob"
+	"github.com/pocketbase/pocketbase/tools/filesystem/internal/fileblob"
+	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob"
+	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3"
 	"github.com/pocketbase/pocketbase/tools/list"
-	"gocloud.dev/blob"
-	"gocloud.dev/blob/fileblob"
-	"gocloud.dev/gcerrors"
 )
 
-var gcpIgnoreHeaders = []string{"Accept-Encoding"}
-
-var ErrNotFound = errors.New("blob not found")
+// note: the same as blob.ErrNotFound for backward compatibility with earlier versions
+var ErrNotFound = blob.ErrNotFound
 
 type System struct {
 	ctx    context.Context
 	bucket *blob.Bucket
 }
-
-// -------------------------------------------------------------------
-
-// @todo delete after replacing the aws-sdk-go-v2 dependency
-//
-// enforce WHEN_REQUIRED by default in case the user has updated AWS SDK dependency
-// https://github.com/aws/aws-sdk-go-v2/discussions/2960
-// https://github.com/pocketbase/pocketbase/discussions/6440
-// https://github.com/pocketbase/pocketbase/discussions/6313
-func init() {
-	reqEnv := os.Getenv("AWS_REQUEST_CHECKSUM_CALCULATION")
-	if reqEnv == "" {
-		os.Setenv("AWS_REQUEST_CHECKSUM_CALCULATION", "WHEN_REQUIRED")
-	}
-
-	resEnv := os.Getenv("AWS_RESPONSE_CHECKSUM_VALIDATION")
-	if resEnv == "" {
-		os.Setenv("AWS_RESPONSE_CHECKSUM_VALIDATION", "WHEN_REQUIRED")
-	}
-}
-
-// -------------------------------------------------------------------
 
 // NewS3 initializes an S3 filesystem instance.
 //
@@ -71,41 +44,21 @@ func NewS3(
 ) (*System, error) {
 	ctx := context.Background() // default context
 
-	cred := credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")
+	client := &s3.S3{
+		Bucket:       bucketName,
+		Region:       region,
+		Endpoint:     endpoint,
+		AccessKey:    accessKey,
+		SecretKey:    secretKey,
+		UsePathStyle: s3ForcePathStyle,
+	}
 
-	cfg, err := config.LoadDefaultConfig(
-		ctx,
-		config.WithCredentialsProvider(cred),
-		config.WithRegion(region),
-	)
+	drv, err := s3blob.New(client)
 	if err != nil {
 		return nil, err
 	}
 
-	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		// ensure that the endpoint has url scheme for
-		// backward compatibility with v1 of the aws sdk
-		if !strings.Contains(endpoint, "://") {
-			endpoint = "https://" + endpoint
-		}
-		o.BaseEndpoint = aws.String(endpoint)
-
-		o.UsePathStyle = s3ForcePathStyle
-
-		// Google Cloud Storage alters the Accept-Encoding header,
-		// which breaks the v2 request signature
-		// (https://github.com/aws/aws-sdk-go-v2/issues/1816)
-		if strings.Contains(endpoint, "storage.googleapis.com") {
-			ignoreSigningHeaders(o, gcpIgnoreHeaders)
-		}
-	})
-
-	bucket, err := s3lite.OpenBucketV2(ctx, client, bucketName, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return &System{ctx: ctx, bucket: bucket}, nil
+	return &System{ctx: ctx, bucket: blob.NewBucket(drv)}, nil
 }
 
 // NewLocal initializes a new local filesystem instance.
@@ -119,14 +72,14 @@ func NewLocal(dirPath string) (*System, error) {
 		return nil, err
 	}
 
-	bucket, err := fileblob.OpenBucket(dirPath, &fileblob.Options{
+	drv, err := fileblob.New(dirPath, &fileblob.Options{
 		NoTempDir: true,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &System{ctx: ctx, bucket: bucket}, nil
+	return &System{ctx: ctx, bucket: blob.NewBucket(drv)}, nil
 }
 
 // SetContext assigns the specified context to the current filesystem.
@@ -140,29 +93,15 @@ func (s *System) Close() error {
 }
 
 // Exists checks if file with fileKey path exists or not.
-//
-// If the file doesn't exist returns false and ErrNotFound.
 func (s *System) Exists(fileKey string) (bool, error) {
-	exists, err := s.bucket.Exists(s.ctx, fileKey)
-
-	if gcerrors.Code(err) == gcerrors.NotFound {
-		err = ErrNotFound
-	}
-
-	return exists, err
+	return s.bucket.Exists(s.ctx, fileKey)
 }
 
 // Attributes returns the attributes for the file with fileKey path.
 //
 // If the file doesn't exist it returns ErrNotFound.
 func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
-	attrs, err := s.bucket.Attributes(s.ctx, fileKey)
-
-	if gcerrors.Code(err) == gcerrors.NotFound {
-		err = ErrNotFound
-	}
-
-	return attrs, err
+	return s.bucket.Attributes(s.ctx, fileKey)
 }
 
 // GetFile returns a file content reader for the given fileKey.
@@ -171,13 +110,7 @@ func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
 //
 // If the file doesn't exist returns ErrNotFound.
 func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
-	br, err := s.bucket.NewReader(s.ctx, fileKey, nil)
-
-	if gcerrors.Code(err) == gcerrors.NotFound {
-		err = ErrNotFound
-	}
-
-	return br, err
+	return s.bucket.NewReader(s.ctx, fileKey)
 }
 
 // Copy copies the file stored at srcKey to dstKey.
@@ -186,13 +119,7 @@ func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
 //
 // If dstKey file already exists, it is overwritten.
 func (s *System) Copy(srcKey, dstKey string) error {
-	err := s.bucket.Copy(s.ctx, dstKey, srcKey, nil)
-
-	if gcerrors.Code(err) == gcerrors.NotFound {
-		err = ErrNotFound
-	}
-
-	return err
+	return s.bucket.Copy(s.ctx, dstKey, srcKey)
 }
 
 // List returns a flat list with info for all files under the specified prefix.
@@ -206,7 +133,7 @@ func (s *System) List(prefix string) ([]*blob.ListObject, error) {
 	for {
 		obj, err := iter.Next(s.ctx)
 		if err != nil {
-			if err != io.EOF {
+			if !errors.Is(err, io.EOF) {
 				return nil, err
 			}
 			break
@@ -323,13 +250,7 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 //
 // If the file doesn't exist returns ErrNotFound.
 func (s *System) Delete(fileKey string) error {
-	err := s.bucket.Delete(s.ctx, fileKey)
-
-	if gcerrors.Code(err) == gcerrors.NotFound {
-		return ErrNotFound
-	}
-
-	return err
+	return s.bucket.Delete(s.ctx, fileKey)
 }
 
 // DeletePrefix deletes everything starting with the specified prefix.
@@ -361,7 +282,7 @@ func (s *System) DeletePrefix(prefix string) []error {
 	for {
 		obj, err := iter.Next(s.ctx)
 		if err != nil {
-			if err != io.EOF {
+			if !errors.Is(err, io.EOF) {
 				failed = append(failed, err)
 			}
 			break
@@ -420,7 +341,7 @@ func (s *System) IsEmptyDir(dir string) bool {
 
 	_, err := iter.Next(s.ctx)
 
-	return err == io.EOF
+	return err != nil && errors.Is(err, io.EOF)
 }
 
 var inlineServeContentTypes = []string{

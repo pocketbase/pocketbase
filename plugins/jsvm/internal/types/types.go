@@ -1158,7 +1158,6 @@ func main() {
 			"pflag.*":      "any",
 			"flag.*":       "any",
 			"log.*":        "any",
-			"aws.*":        "any",
 			"http.Client":  "any",
 			"mail.Address": "{ address: string; name?: string; }", // prevents the LSP to complain in case no name is provided
 		},
