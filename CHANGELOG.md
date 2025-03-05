@@ -15,6 +15,8 @@
 
 - Added `subscription.Message.WriteSSE(w, id)` for writing an SSE formatted message into the provided writer interface (_usually used for unit testing_).
 
+- Updatated to `modernc.org/sqlite` 1.36.0 (SQLite 3.49.0).
+
 
 ## v0.25.8
 
