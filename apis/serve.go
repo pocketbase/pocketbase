@@ -143,9 +143,9 @@ func Serve(app core.App, config ServeConfig) error {
 			NextProtos:     []string{acme.ALPNProto},
 		},
 		// higher defaults to accommodate large file uploads/downloads
-		WriteTimeout:      3 * time.Minute,
-		ReadTimeout:       3 * time.Minute,
-		ReadHeaderTimeout: 30 * time.Second,
+		WriteTimeout:      5 * time.Minute,
+		ReadTimeout:       5 * time.Minute,
+		ReadHeaderTimeout: 1 * time.Minute,
 		Addr:              mainAddr,
 		BaseContext: func(l net.Listener) context.Context {
 			return baseCtx

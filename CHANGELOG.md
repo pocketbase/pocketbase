@@ -17,6 +17,9 @@
 
 - Updatated to `modernc.org/sqlite` 1.36.0 (SQLite 3.49.0).
 
+- Bumped the default request read and write timeouts to 5mins (_old 3mins_) to accommodate slower internet connections and larger file uploads/downloads.
+    _If you want to change them you can modify the `OnServe` hook's `ServeEvent.ReadTimeout/WriteTimeout` fields as shown in [#6550](https://github.com/pocketbase/pocketbase/discussions/6550#discussioncomment-12364515)._
+
 
 ## v0.25.9
 
