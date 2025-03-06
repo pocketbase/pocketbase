@@ -1020,8 +1020,6 @@ func structConstructorUnmarshal(vm *goja.Runtime, call goja.ConstructorCall, ins
 	return instanceValue
 }
 
-var cachedDynamicModels = store.New[string, *dynamicModelType](nil)
-
 // newDynamicModel creates a new dynamic struct with fields based
 // on the specified "shape".
 //
@@ -1032,16 +1030,7 @@ var cachedDynamicModels = store.New[string, *dynamicModelType](nil)
 //		"total": 0,
 //	})
 func newDynamicModel(shape map[string]any) any {
-	var modelType *dynamicModelType
-
-	shapeRaw, err := json.Marshal(shape)
-	if err != nil {
-		modelType = getDynamicModelStruct(shape)
-	} else {
-		modelType = cachedDynamicModels.GetOrSet(string(shapeRaw), func() *dynamicModelType {
-			return getDynamicModelStruct(shape)
-		})
-	}
+	modelType := getDynamicModelStruct(shape)
 
 	rvShapeValues := make([]reflect.Value, len(modelType.shapeValues))
 	for i, v := range modelType.shapeValues {

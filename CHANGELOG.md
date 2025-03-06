@@ -18,6 +18,11 @@
 - Updatated to `modernc.org/sqlite` 1.36.0 (SQLite 3.49.0).
 
 
+## v0.25.9
+
+- Fixed `DynamicModel` object/array props reflect type caching ([#6563](https://github.com/pocketbase/pocketbase/discussions/6563)).
+
+
 ## v0.25.8
 
 - Added a default leeway of 5 minutes for the Apple/OIDC `id_token` timestamp claims check to account for clock-skew ([#6529](https://github.com/pocketbase/pocketbase/issues/6529)).

@@ -1137,6 +1137,46 @@ func TestLoadingDynamicModel(t *testing.T) {
 	}
 }
 
+// @todo revert the reflect caching and check other types
+func TestDynamicModelMapFieldCaching(t *testing.T) {
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	vm := goja.New()
+	baseBinds(vm)
+	dbxBinds(vm)
+	vm.Set("$app", app)
+
+	_, err := vm.RunString(`
+		let m1 = new DynamicModel({
+			obj: {},
+		})
+
+		let m2 = new DynamicModel({
+			obj: {},
+		})
+
+		m1.obj.set("a", 1)
+
+		m2.obj.set("b", 1)
+
+		let m1Expected = '{"obj":{"a":1}}';
+		let m1Serialized = JSON.stringify(m1);
+		if (m1Serialized != m1Expected) {
+			throw new Error("Expected m1 \n" + m1Expected + "\ngot\n" + m1Serialized);
+		}
+
+		let m2Expected = '{"obj":{"b":1}}';
+		let m2Serialized = JSON.stringify(m2);
+		if (m2Serialized != m2Expected) {
+			throw new Error("Expected m2 \n" + m2Expected + "\ngot\n" + m2Serialized);
+		}
+	`)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestLoadingArrayOf(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
