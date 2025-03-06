@@ -1137,7 +1137,6 @@ func TestLoadingDynamicModel(t *testing.T) {
 	}
 }
 
-// @todo revert the reflect caching and check other types
 func TestDynamicModelMapFieldCaching(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
@@ -1149,24 +1148,44 @@ func TestDynamicModelMapFieldCaching(t *testing.T) {
 
 	_, err := vm.RunString(`
 		let m1 = new DynamicModel({
+			int: 0,
+			float: -0,
+			text: "",
+			bool: false,
 			obj: {},
+			arr: [],
 		})
 
 		let m2 = new DynamicModel({
+			int: 0,
+			float: -0,
+			text: "",
+			bool: false,
 			obj: {},
+			arr: [],
 		})
 
+		m1.int = 1
+		m1.float = 1.5
+		m1.text = "a"
+		m1.bool = true
 		m1.obj.set("a", 1)
+		m1.arr.push(1)
 
+		m2.int = 2
+		m2.float = 2.5
+		m2.text = "b"
+		m2.bool = false
 		m2.obj.set("b", 1)
+		m2.arr.push(2)
 
-		let m1Expected = '{"obj":{"a":1}}';
+		let m1Expected = '{"arr":[1],"bool":true,"float":1.5,"int":1,"obj":{"a":1},"text":"a"}';
 		let m1Serialized = JSON.stringify(m1);
 		if (m1Serialized != m1Expected) {
 			throw new Error("Expected m1 \n" + m1Expected + "\ngot\n" + m1Serialized);
 		}
 
-		let m2Expected = '{"obj":{"b":1}}';
+		let m2Expected = '{"arr":[2],"bool":false,"float":2.5,"int":2,"obj":{"b":1},"text":"b"}';
 		let m2Serialized = JSON.stringify(m2);
 		if (m2Serialized != m2Expected) {
 			throw new Error("Expected m2 \n" + m2Expected + "\ngot\n" + m2Serialized);

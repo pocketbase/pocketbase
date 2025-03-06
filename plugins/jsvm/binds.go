@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"slices"
+	"sort"
 	"strings"
 	"time"
 
@@ -1020,8 +1021,18 @@ func structConstructorUnmarshal(vm *goja.Runtime, call goja.ConstructorCall, ins
 	return instanceValue
 }
 
+var cachedDynamicModelStructs = store.New[string, reflect.Type](nil)
+
 // newDynamicModel creates a new dynamic struct with fields based
 // on the specified "shape".
+//
+// The "shape" values are used as defaults and could be of type:
+// - int (ex. 0)
+// - float (ex. -0)
+// - string (ex. "")
+// - bool (ex. false)
+// - slice (ex. [])
+// - map (ex. map[string]any{})
 //
 // Example:
 //
@@ -1030,37 +1041,21 @@ func structConstructorUnmarshal(vm *goja.Runtime, call goja.ConstructorCall, ins
 //		"total": 0,
 //	})
 func newDynamicModel(shape map[string]any) any {
-	modelType := getDynamicModelStruct(shape)
+	info := make([]*shapeFieldInfo, 0, len(shape))
 
-	rvShapeValues := make([]reflect.Value, len(modelType.shapeValues))
-	for i, v := range modelType.shapeValues {
-		rvShapeValues[i] = reflect.ValueOf(v)
+	var hash strings.Builder
+
+	sortedKeys := make([]string, 0, len(shape))
+	for k := range shape {
+		sortedKeys = append(sortedKeys, k)
 	}
+	sort.Strings(sortedKeys)
 
-	elem := reflect.New(modelType.structType).Elem()
-
-	for i, v := range rvShapeValues {
-		elem.Field(i).Set(v)
-	}
-
-	return elem.Addr().Interface()
-}
-
-type dynamicModelType struct {
-	structType  reflect.Type
-	shapeValues []any
-}
-
-func getDynamicModelStruct(shape map[string]any) *dynamicModelType {
-	result := new(dynamicModelType)
-	result.shapeValues = make([]any, 0, len(shape))
-
-	structFields := make([]reflect.StructField, 0, len(shape))
-
-	for k, v := range shape {
+	for _, k := range sortedKeys {
+		v := shape[k]
 		vt := reflect.TypeOf(v)
 
-		switch kind := vt.Kind(); kind {
+		switch vt.Kind() {
 		case reflect.Map:
 			raw, _ := json.Marshal(v)
 			newV := types.JSONMap[any]{}
@@ -1075,16 +1070,40 @@ func getDynamicModelStruct(shape map[string]any) *dynamicModelType {
 			vt = reflect.TypeOf(newV)
 		}
 
-		result.shapeValues = append(result.shapeValues, v)
+		hash.WriteString(k)
+		hash.WriteString(":")
+		hash.WriteString(vt.String()) // it doesn't guarantee to be unique across all types but it should be fine with the primitive types DynamicModel is used
+		hash.WriteString("|")
 
-		structFields = append(structFields, reflect.StructField{
-			Name: inflector.UcFirst(k), // ensures that the field is exportable
-			Type: vt,
-			Tag:  reflect.StructTag(`db:"` + k + `" json:"` + k + `" form:"` + k + `"`),
-		})
+		info = append(info, &shapeFieldInfo{key: k, value: v, valueType: vt})
 	}
 
-	result.structType = reflect.StructOf(structFields)
+	st := cachedDynamicModelStructs.GetOrSet(hash.String(), func() reflect.Type {
+		structFields := make([]reflect.StructField, len(info))
 
-	return result
+		for i, item := range info {
+			structFields[i] = reflect.StructField{
+				Name: inflector.UcFirst(item.key), // ensures that the field is exportable
+				Type: item.valueType,
+				Tag:  reflect.StructTag(`db:"` + item.key + `" json:"` + item.key + `" form:"` + item.key + `"`),
+			}
+		}
+
+		return reflect.StructOf(structFields)
+	})
+
+	elem := reflect.New(st).Elem()
+
+	// load default values into the new model
+	for i, item := range info {
+		elem.Field(i).Set(reflect.ValueOf(item.value))
+	}
+
+	return elem.Addr().Interface()
+}
+
+type shapeFieldInfo struct {
+	value     any
+	valueType reflect.Type
+	key       string
 }
