@@ -13,12 +13,12 @@
 
 - Added `store.Store.SetFunc(key, func(old T) new T)` to set/update a store value with the return result of the callback in a concurrent safe manner.
 
-- Added `subscription.Message.WriteSSE(w, id)` for writing an SSE formatted message into the provided writer interface (_usually used for unit testing_).
-
-- Updatated to `modernc.org/sqlite` 1.36.0 (SQLite 3.49.0).
+- Added `subscription.Message.WriteSSE(w, id)` for writing an SSE formatted message into the provided writer interface (_used mostly to assist with the unit testing_).
 
 - Bumped the default request read and write timeouts to 5mins (_old 3mins_) to accommodate slower internet connections and larger file uploads/downloads.
     _If you want to change them you can modify the `OnServe` hook's `ServeEvent.ReadTimeout/WriteTimeout` fields as shown in [#6550](https://github.com/pocketbase/pocketbase/discussions/6550#discussioncomment-12364515)._
+
+- Updatated `modernc.org/sqlite` to 1.36.0 (SQLite 3.49.0).
 
 
 ## v0.25.9

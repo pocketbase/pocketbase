@@ -1,3 +1,15 @@
+package fileblob
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
+
+// Largely copied from gocloud.dev/blob/fileblob to apply the same
+// retrieve and write side-car .attrs rules.
+//
+// -------------------------------------------------------------------
 // Copyright 2018 The Go Cloud Development Kit Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,14 +23,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-package fileblob
-
-import (
-	"encoding/json"
-	"fmt"
-	"os"
-)
+// -------------------------------------------------------------------
 
 const attrsExt = ".attrs"
 

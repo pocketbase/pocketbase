@@ -1,5 +1,10 @@
 package blob
 
+import (
+	"fmt"
+	"strconv"
+)
+
 // Copied from gocloud.dev/blob to avoid nuances around the specific
 // HEX escaping/unescaping rules.
 //
@@ -18,11 +23,6 @@ package blob
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // -------------------------------------------------------------------
-
-import (
-	"fmt"
-	"strconv"
-)
 
 // HexEscape returns s, with all runes for which shouldEscape returns true
 // escaped to "__0xXXX__", where XXX is the hex representation of the rune

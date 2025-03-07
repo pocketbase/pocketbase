@@ -24,7 +24,7 @@ const (
 	defaultMinPartSize    int = 6 << 20
 )
 
-// Uploader handles S3 object upload.
+// Uploader handles the upload of a single S3 object.
 //
 // If the Payload size is less than the configured MinPartSize it sends
 // a single (PutObject) request, otherwise performs chunked/multipart upload.

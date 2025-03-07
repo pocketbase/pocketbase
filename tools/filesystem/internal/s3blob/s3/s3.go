@@ -1,3 +1,23 @@
+// Package s3 implements a lightweight client for interacting with the
+// REST APIs of any S3 compatible service.
+//
+// It implements only the minimal functionality required by PocketBase
+// such as objects list, get, copy, delete and upload.
+//
+// For more details why we don't use the official aws-sdk-go-v2, you could check
+// https://github.com/pocketbase/pocketbase/discussions/6562.
+//
+// Example:
+//
+//	client := &s3.S3{
+//		Endpoint:     "example.com",
+//		Region:       "us-east-1",
+//		Bucket:       "test",
+//		AccessKey:    "...",
+//		SecretKey:    "...",
+//		UsePathStyle: true,
+//	}
+//	resp, err := client.GetObject(context.Background(), "abc.txt")
 package s3
 
 import (
@@ -27,7 +47,7 @@ type HTTPClient interface {
 }
 
 type S3 struct {
-	// Client specifies the HTTP client to send the request with.
+	// Client specifies a custom HTTP client to send the request with.
 	//
 	// If not explicitly set, fallbacks to http.DefaultClient.
 	Client HTTPClient
