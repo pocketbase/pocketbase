@@ -2,8 +2,6 @@ module github.com/pocketbase/pocketbase
 
 go 1.23.0
 
-toolchain go1.23.1
-
 require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.6.2
