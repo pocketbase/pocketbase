@@ -69,11 +69,17 @@ type driver struct {
 
 // Close implements [blob/Driver.Close].
 func (drv *driver) Close() error {
-	return nil
+	return nil // nothing to close
 }
 
 // NormalizeError implements [blob/Driver.NormalizeError].
 func (drv *driver) NormalizeError(err error) error {
+	// already normalized
+	if errors.Is(err, blob.ErrNotFound) {
+		return err
+	}
+
+	// normalize base on its S3 error code
 	var ae s3.ResponseError
 	if errors.As(err, &ae) {
 		switch ae.Code {
@@ -92,22 +98,20 @@ func (drv *driver) ListPaged(ctx context.Context, opts *blob.ListOptions) (*blob
 		pageSize = defaultPageSize
 	}
 
-	in := s3.ListParams{
+	listParams := s3.ListParams{
 		MaxKeys: pageSize,
 	}
 	if len(opts.PageToken) > 0 {
-		in.ContinuationToken = string(opts.PageToken)
+		listParams.ContinuationToken = string(opts.PageToken)
 	}
 	if opts.Prefix != "" {
-		in.Prefix = escapeKey(opts.Prefix)
+		listParams.Prefix = escapeKey(opts.Prefix)
 	}
 	if opts.Delimiter != "" {
-		in.Delimiter = escapeKey(opts.Delimiter)
+		listParams.Delimiter = escapeKey(opts.Delimiter)
 	}
 
-	var reqOptions []func(*http.Request)
-
-	resp, err := drv.s3.ListObjects(ctx, in, reqOptions...)
+	resp, err := drv.s3.ListObjects(ctx, listParams)
 	if err != nil {
 		return nil, err
 	}
@@ -157,8 +161,7 @@ func (drv *driver) Attributes(ctx context.Context, key string) (*blob.Attributes
 
 	md := make(map[string]string, len(resp.Metadata))
 	for k, v := range resp.Metadata {
-		// See the package comments for more details on escaping of metadata
-		// keys & values.
+		// See the package comments for more details on escaping of metadata keys & values.
 		md[blob.HexUnescape(urlUnescape(k))] = urlUnescape(v)
 	}
 
@@ -192,13 +195,11 @@ func (drv *driver) NewRangeReader(ctx context.Context, key string, offset, lengt
 		byteRange = fmt.Sprintf("bytes=%d-%d", offset, offset+length-1)
 	}
 
-	reqOptions := []func(*http.Request){
-		func(req *http.Request) {
-			req.Header.Set("Range", byteRange)
-		},
+	reqOpt := func(req *http.Request) {
+		req.Header.Set("Range", byteRange)
 	}
 
-	resp, err := drv.s3.GetObject(ctx, key, reqOptions...)
+	resp, err := drv.s3.GetObject(ctx, key, reqOpt)
 	if err != nil {
 		return nil, err
 	}

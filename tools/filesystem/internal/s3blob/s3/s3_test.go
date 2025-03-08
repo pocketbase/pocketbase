@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3"
+	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3/tests"
 )
 
 func TestS3URL(t *testing.T) {
@@ -111,12 +112,12 @@ func TestS3SignAndSend(t *testing.T) {
 				Endpoint:  "https://example.com/",
 				AccessKey: "123",
 				SecretKey: "abc",
-				Client: NewTestClient(&RequestStub{
+				Client: tests.NewClient(&tests.RequestStub{
 					Method:   http.MethodGet,
 					URL:      "https://test_bucket.example.com/test",
 					Response: testResponse(),
 					Match: func(req *http.Request) bool {
-						return checkHeaders(req.Header, map[string]string{
+						return tests.ExpectHeaders(req.Header, map[string]string{
 							"Authorization":        "AWS4-HMAC-SHA256 Credential=123/20250102/test_region/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=ea093662bc1deef08dfb4ac35453dfaad5ea89edf102e9dd3b7156c9a27e4c1f",
 							"Host":                 "test_bucket.example.com",
 							"X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
@@ -137,12 +138,12 @@ func TestS3SignAndSend(t *testing.T) {
 				Endpoint:  "https://example.com/",
 				AccessKey: "456",
 				SecretKey: "def",
-				Client: NewTestClient(&RequestStub{
+				Client: tests.NewClient(&tests.RequestStub{
 					Method:   http.MethodGet,
 					URL:      "https://test_bucket.example.com/test",
 					Response: testResponse(),
 					Match: func(req *http.Request) bool {
-						return checkHeaders(req.Header, map[string]string{
+						return tests.ExpectHeaders(req.Header, map[string]string{
 							"Authorization":        "AWS4-HMAC-SHA256 Credential=456/20250102/test_region/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=17510fa1f724403dd0a563b61c9b31d1d718f877fcbd75455620d17a8afce5fb",
 							"Host":                 "test_bucket.example.com",
 							"X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
@@ -168,12 +169,12 @@ func TestS3SignAndSend(t *testing.T) {
 				Endpoint:  "https://example.com/",
 				AccessKey: "123",
 				SecretKey: "abc",
-				Client: NewTestClient(&RequestStub{
+				Client: tests.NewClient(&tests.RequestStub{
 					Method:   http.MethodGet,
 					URL:      "https://test_bucket.example.com/test",
 					Response: testResponse(),
 					Match: func(req *http.Request) bool {
-						return checkHeaders(req.Header, map[string]string{
+						return tests.ExpectHeaders(req.Header, map[string]string{
 							"authorization":        "AWS4-HMAC-SHA256 Credential=123/20250102/test_region/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date;x-amz-example;x-amz-meta-a, Signature=86dccbcd012c33073dc99e9d0a9e0b717a4d8c11c37848cfa9a4a02716bc0db3",
 							"host":                 "test_bucket.example.com",
 							"x-amz-date":           "20250102T150405Z",
@@ -205,7 +206,7 @@ func TestS3SignAndSend(t *testing.T) {
 			}
 			defer resp.Body.Close()
 
-			err = s.s3Client.Client.(*TestClient).AssertNoRemaining()
+			err = s.s3Client.Client.(*tests.Client).AssertNoRemaining()
 			if err != nil {
 				t.Fatal(err)
 			}

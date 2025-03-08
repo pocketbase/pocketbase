@@ -92,12 +92,13 @@ type ListPage struct {
 	// including across pages. I.e., all objects returned from a ListPage request
 	// made using a PageToken from a previous ListPage request's NextPageToken
 	// should have Key >= the Key for all objects from the previous request.
-	Objects []*ListObject
+	Objects []*ListObject `json:"objects"`
+
 	// NextPageToken should be left empty unless there are more objects
 	// to return. The value may be returned as ListOptions.PageToken on a
 	// subsequent ListPaged call, to fetch the next page of results.
 	// It can be an arbitrary []byte; it need not be a valid key.
-	NextPageToken []byte
+	NextPageToken []byte `json:"nextPageToken"`
 }
 
 // ListIterator iterates over List results.
@@ -157,22 +158,22 @@ func (i *ListIterator) Next(ctx context.Context) (*ListObject, error) {
 // ListObject represents a single blob returned from List.
 type ListObject struct {
 	// Key is the key for this blob.
-	Key string
+	Key string `json:"key"`
 
 	// ModTime is the time the blob was last modified.
-	ModTime time.Time
+	ModTime time.Time `json:"modTime"`
 
 	// Size is the size of the blob's content in bytes.
-	Size int64
+	Size int64 `json:"size"`
 
 	// MD5 is an MD5 hash of the blob contents or nil if not available.
-	MD5 []byte
+	MD5 []byte `json:"md5"`
 
 	// IsDir indicates that this result represents a "directory" in the
 	// hierarchical namespace, ending in ListOptions.Delimiter. Key can be
 	// passed as ListOptions.Prefix to list items in the "directory".
 	// Fields other than Key and IsDir will not be set if IsDir is true.
-	IsDir bool
+	IsDir bool `json:"isDir"`
 }
 
 // List returns a ListIterator that can be used to iterate over blobs in a
@@ -296,38 +297,48 @@ type Attributes struct {
 	// CacheControl specifies caching attributes that services may use
 	// when serving the blob.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
-	CacheControl string
+	CacheControl string `json:"cacheControl"`
+
 	// ContentDisposition specifies whether the blob content is expected to be
 	// displayed inline or as an attachment.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
-	ContentDisposition string
+	ContentDisposition string `json:"contentDisposition"`
+
 	// ContentEncoding specifies the encoding used for the blob's content, if any.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding
-	ContentEncoding string
+	ContentEncoding string `json:"contentEncoding"`
+
 	// ContentLanguage specifies the language used in the blob's content, if any.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Language
-	ContentLanguage string
+	ContentLanguage string `json:"contentLanguage"`
+
 	// ContentType is the MIME type of the blob. It will not be empty.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
-	ContentType string
+	ContentType string `json:"contentType"`
+
 	// Metadata holds key/value pairs associated with the blob.
 	// Keys are guaranteed to be in lowercase, even if the backend service
 	// has case-sensitive keys (although note that Metadata written via
 	// this package will always be lowercased). If there are duplicate
 	// case-insensitive keys (e.g., "foo" and "FOO"), only one value
 	// will be kept, and it is undefined which one.
-	Metadata map[string]string
+	Metadata map[string]string `json:"metadata"`
+
 	// CreateTime is the time the blob was created, if available. If not available,
 	// CreateTime will be the zero time.
-	CreateTime time.Time
+	CreateTime time.Time `json:"createTime"`
+
 	// ModTime is the time the blob was last modified.
-	ModTime time.Time
+	ModTime time.Time `json:"modTime"`
+
 	// Size is the size of the blob's content in bytes.
-	Size int64
+	Size int64 `json:"size"`
+
 	// MD5 is an MD5 hash of the blob contents or nil if not available.
-	MD5 []byte
+	MD5 []byte `json:"md5"`
+
 	// ETag for the blob; see https://en.wikipedia.org/wiki/HTTP_ETag.
-	ETag string
+	ETag string `json:"etag"`
 }
 
 // Attributes returns attributes for the blob stored at key.

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3"
+	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3/tests"
 )
 
 func TestS3ListParamsEncode(t *testing.T) {
@@ -62,12 +63,12 @@ func TestS3ListObjects(t *testing.T) {
 		FetchOwner:        true,
 	}
 
-	httpClient := NewTestClient(
-		&RequestStub{
+	httpClient := tests.NewClient(
+		&tests.RequestStub{
 			Method: http.MethodGet,
 			URL:    "http://test_bucket.example.com/?" + listParams.Encode(),
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"test_header":   "test",
 					"Authorization": "^.+Credential=123/.+$",
 				})

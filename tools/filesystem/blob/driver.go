@@ -11,11 +11,13 @@ import (
 type ReaderAttributes struct {
 	// ContentType is the MIME type of the blob object. It must not be empty.
 	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
-	ContentType string
+	ContentType string `json:"contentType"`
+
 	// ModTime is the time the blob object was last modified.
-	ModTime time.Time
+	ModTime time.Time `json:"modTime"`
+
 	// Size is the size of the object in bytes.
-	Size int64
+	Size int64 `json:"size"`
 }
 
 // DriverReader reads an object from the blob.

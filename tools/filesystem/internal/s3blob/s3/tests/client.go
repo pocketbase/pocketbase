@@ -1,4 +1,6 @@
-package s3_test
+// Package tests contains various tests helpers and utilities to assist
+// with the S3 client testing.
+package tests
 
 import (
 	"errors"
@@ -11,26 +13,9 @@ import (
 	"sync"
 )
 
-func checkHeaders(headers http.Header, expectations map[string]string) bool {
-	for h, expected := range expectations {
-		v := headers.Get(h)
-
-		pattern := expected
-		if !strings.HasPrefix(pattern, "^") && !strings.HasSuffix(pattern, "$") {
-			pattern = "^" + regexp.QuoteMeta(pattern) + "$"
-		}
-
-		expectedRegex, err := regexp.Compile(pattern)
-		if err != nil {
-			return false
-		}
-
-		if !expectedRegex.MatchString(v) {
-			return false
-		}
-	}
-
-	return true
+// NewClient creates a new test Client loaded with the specified RequestStubs.
+func NewClient(stubs ...*RequestStub) *Client {
+	return &Client{stubs: stubs}
 }
 
 type RequestStub struct {
@@ -40,16 +25,13 @@ type RequestStub struct {
 	Response *http.Response
 }
 
-func NewTestClient(stubs ...*RequestStub) *TestClient {
-	return &TestClient{stubs: stubs}
-}
-
-type TestClient struct {
+type Client struct {
 	stubs []*RequestStub
 	mu    sync.Mutex
 }
 
-func (c *TestClient) AssertNoRemaining() error {
+// AssertNoRemaining asserts that current client has no unprocessed requests remaining.
+func (c *Client) AssertNoRemaining() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -66,7 +48,8 @@ func (c *TestClient) AssertNoRemaining() error {
 	return errors.New(strings.Join(msgParts, "\n"))
 }
 
-func (c *TestClient) Do(req *http.Request) (*http.Response, error) {
+// Do implements the [s3.HTTPClient] interface.
+func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 

@@ -9,17 +9,18 @@ import (
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3"
+	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3/tests"
 )
 
 func TestS3GetObject(t *testing.T) {
 	t.Parallel()
 
-	httpClient := NewTestClient(
-		&RequestStub{
+	httpClient := tests.NewClient(
+		&tests.RequestStub{
 			Method: http.MethodGet,
 			URL:    "http://test_bucket.example.com/test_key",
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"test_header":   "test",
 					"Authorization": "^.+Credential=123/.+$",
 				})

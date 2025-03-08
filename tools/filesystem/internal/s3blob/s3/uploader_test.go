@@ -8,13 +8,14 @@ import (
 	"testing"
 
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3"
+	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3/tests"
 )
 
 func TestUploaderRequiredFields(t *testing.T) {
 	t.Parallel()
 
 	s3Client := &s3.S3{
-		Client:    NewTestClient(&RequestStub{Method: "PUT", URL: `^.+$`}), // match every upload
+		Client:    tests.NewClient(&tests.RequestStub{Method: "PUT", URL: `^.+$`}), // match every upload
 		Region:    "test_region",
 		Bucket:    "test_bucket",
 		Endpoint:  "http://example.com",
@@ -71,8 +72,8 @@ func TestUploaderRequiredFields(t *testing.T) {
 func TestUploaderSingleUpload(t *testing.T) {
 	t.Parallel()
 
-	httpClient := NewTestClient(
-		&RequestStub{
+	httpClient := tests.NewClient(
+		&tests.RequestStub{
 			Method: http.MethodPut,
 			URL:    "http://test_bucket.example.com/test_key",
 			Match: func(req *http.Request) bool {
@@ -81,7 +82,7 @@ func TestUploaderSingleUpload(t *testing.T) {
 					return false
 				}
 
-				return string(body) == "abcdefg" && checkHeaders(req.Header, map[string]string{
+				return string(body) == "abcdefg" && tests.ExpectHeaders(req.Header, map[string]string{
 					"Content-Length": "7",
 					"x-amz-meta-a":   "123",
 					"x-amz-meta-b":   "456",
@@ -123,12 +124,12 @@ func TestUploaderSingleUpload(t *testing.T) {
 func TestUploaderMultipartUploadSuccess(t *testing.T) {
 	t.Parallel()
 
-	httpClient := NewTestClient(
-		&RequestStub{
+	httpClient := tests.NewClient(
+		&tests.RequestStub{
 			Method: http.MethodPost,
 			URL:    "http://test_bucket.example.com/test_key?uploads",
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"x-amz-meta-a":  "123",
 					"x-amz-meta-b":  "456",
 					"test_header":   "test",
@@ -146,7 +147,7 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 				`)),
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPut,
 			URL:    "http://test_bucket.example.com/test_key?partNumber=1&uploadId=test_id",
 			Match: func(req *http.Request) bool {
@@ -155,7 +156,7 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 					return false
 				}
 
-				return string(body) == "abc" && checkHeaders(req.Header, map[string]string{
+				return string(body) == "abc" && tests.ExpectHeaders(req.Header, map[string]string{
 					"Content-Length": "3",
 					"test_header":    "test",
 					"Authorization":  "^.+Credential=123/.+$",
@@ -165,7 +166,7 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 				Header: http.Header{"Etag": []string{"etag1"}},
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPut,
 			URL:    "http://test_bucket.example.com/test_key?partNumber=2&uploadId=test_id",
 			Match: func(req *http.Request) bool {
@@ -174,7 +175,7 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 					return false
 				}
 
-				return string(body) == "def" && checkHeaders(req.Header, map[string]string{
+				return string(body) == "def" && tests.ExpectHeaders(req.Header, map[string]string{
 					"Content-Length": "3",
 					"test_header":    "test",
 					"Authorization":  "^.+Credential=123/.+$",
@@ -184,7 +185,7 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 				Header: http.Header{"Etag": []string{"etag2"}},
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPut,
 			URL:    "http://test_bucket.example.com/test_key?partNumber=3&uploadId=test_id",
 			Match: func(req *http.Request) bool {
@@ -192,7 +193,7 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 				if err != nil {
 					return false
 				}
-				return string(body) == "g" && checkHeaders(req.Header, map[string]string{
+				return string(body) == "g" && tests.ExpectHeaders(req.Header, map[string]string{
 					"Content-Length": "1",
 					"test_header":    "test",
 					"Authorization":  "^.+Credential=123/.+$",
@@ -202,7 +203,7 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 				Header: http.Header{"Etag": []string{"etag3"}},
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPost,
 			URL:    "http://test_bucket.example.com/test_key?uploadId=test_id",
 			Match: func(req *http.Request) bool {
@@ -213,7 +214,7 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 
 				expected := `<CompleteMultipartUpload><Part><ETag>etag1</ETag><PartNumber>1</PartNumber></Part><Part><ETag>etag2</ETag><PartNumber>2</PartNumber></Part><Part><ETag>etag3</ETag><PartNumber>3</PartNumber></Part></CompleteMultipartUpload>`
 
-				return strings.Contains(string(body), expected) && checkHeaders(req.Header, map[string]string{
+				return strings.Contains(string(body), expected) && tests.ExpectHeaders(req.Header, map[string]string{
 					"test_header":   "test",
 					"Authorization": "^.+Credential=123/.+$",
 				})
@@ -252,12 +253,12 @@ func TestUploaderMultipartUploadSuccess(t *testing.T) {
 func TestUploaderMultipartUploadPartFailure(t *testing.T) {
 	t.Parallel()
 
-	httpClient := NewTestClient(
-		&RequestStub{
+	httpClient := tests.NewClient(
+		&tests.RequestStub{
 			Method: http.MethodPost,
 			URL:    "http://test_bucket.example.com/test_key?uploads",
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"x-amz-meta-a":  "123",
 					"x-amz-meta-b":  "456",
 					"test_header":   "test",
@@ -275,7 +276,7 @@ func TestUploaderMultipartUploadPartFailure(t *testing.T) {
 				`)),
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPut,
 			URL:    "http://test_bucket.example.com/test_key?partNumber=1&uploadId=test_id",
 			Match: func(req *http.Request) bool {
@@ -283,7 +284,7 @@ func TestUploaderMultipartUploadPartFailure(t *testing.T) {
 				if err != nil {
 					return false
 				}
-				return string(body) == "abc" && checkHeaders(req.Header, map[string]string{
+				return string(body) == "abc" && tests.ExpectHeaders(req.Header, map[string]string{
 					"Content-Length": "3",
 					"test_header":    "test",
 					"Authorization":  "^.+Credential=123/.+$",
@@ -293,11 +294,11 @@ func TestUploaderMultipartUploadPartFailure(t *testing.T) {
 				Header: http.Header{"Etag": []string{"etag1"}},
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPut,
 			URL:    "http://test_bucket.example.com/test_key?partNumber=2&uploadId=test_id",
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"test_header":   "test",
 					"Authorization": "^.+Credential=123/.+$",
 				})
@@ -306,11 +307,11 @@ func TestUploaderMultipartUploadPartFailure(t *testing.T) {
 				StatusCode: 400,
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodDelete,
 			URL:    "http://test_bucket.example.com/test_key?uploadId=test_id",
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"test_header":   "test",
 					"Authorization": "^.+Credential=123/.+$",
 				})
@@ -349,12 +350,12 @@ func TestUploaderMultipartUploadPartFailure(t *testing.T) {
 func TestUploaderMultipartUploadCompleteFailure(t *testing.T) {
 	t.Parallel()
 
-	httpClient := NewTestClient(
-		&RequestStub{
+	httpClient := tests.NewClient(
+		&tests.RequestStub{
 			Method: http.MethodPost,
 			URL:    "http://test_bucket.example.com/test_key?uploads",
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"x-amz-meta-a":  "123",
 					"x-amz-meta-b":  "456",
 					"test_header":   "test",
@@ -372,7 +373,7 @@ func TestUploaderMultipartUploadCompleteFailure(t *testing.T) {
 				`)),
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPut,
 			URL:    "http://test_bucket.example.com/test_key?partNumber=1&uploadId=test_id",
 			Match: func(req *http.Request) bool {
@@ -380,7 +381,7 @@ func TestUploaderMultipartUploadCompleteFailure(t *testing.T) {
 				if err != nil {
 					return false
 				}
-				return string(body) == "abc" && checkHeaders(req.Header, map[string]string{
+				return string(body) == "abc" && tests.ExpectHeaders(req.Header, map[string]string{
 					"Content-Length": "3",
 					"test_header":    "test",
 					"Authorization":  "^.+Credential=123/.+$",
@@ -390,7 +391,7 @@ func TestUploaderMultipartUploadCompleteFailure(t *testing.T) {
 				Header: http.Header{"Etag": []string{"etag1"}},
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPut,
 			URL:    "http://test_bucket.example.com/test_key?partNumber=2&uploadId=test_id",
 			Match: func(req *http.Request) bool {
@@ -398,7 +399,7 @@ func TestUploaderMultipartUploadCompleteFailure(t *testing.T) {
 				if err != nil {
 					return false
 				}
-				return string(body) == "def" && checkHeaders(req.Header, map[string]string{
+				return string(body) == "def" && tests.ExpectHeaders(req.Header, map[string]string{
 					"Content-Length": "3",
 					"test_header":    "test",
 					"Authorization":  "^.+Credential=123/.+$",
@@ -408,11 +409,11 @@ func TestUploaderMultipartUploadCompleteFailure(t *testing.T) {
 				Header: http.Header{"Etag": []string{"etag2"}},
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodPost,
 			URL:    "http://test_bucket.example.com/test_key?uploadId=test_id",
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"test_header":   "test",
 					"Authorization": "^.+Credential=123/.+$",
 				})
@@ -421,11 +422,11 @@ func TestUploaderMultipartUploadCompleteFailure(t *testing.T) {
 				StatusCode: 400,
 			},
 		},
-		&RequestStub{
+		&tests.RequestStub{
 			Method: http.MethodDelete,
 			URL:    "http://test_bucket.example.com/test_key?uploadId=test_id",
 			Match: func(req *http.Request) bool {
-				return checkHeaders(req.Header, map[string]string{
+				return tests.ExpectHeaders(req.Header, map[string]string{
 					"test_header":   "test",
 					"Authorization": "^.+Credential=123/.+$",
 				})
