@@ -516,3 +516,80 @@ func TestDriverNewRangeReader(t *testing.T) {
 		})
 	}
 }
+
+func TestDriverNewTypedWriter(t *testing.T) {
+	t.Parallel()
+
+	httpClient := tests.NewClient(
+		&tests.RequestStub{
+			Method: http.MethodPut,
+			URL:    "https://test_bucket.example.com/..__0x2f__abc/test/",
+			Match: func(req *http.Request) bool {
+				body, err := io.ReadAll(req.Body)
+				if err != nil {
+					return false
+				}
+
+				return string(body) == "test" && tests.ExpectHeaders(req.Header, map[string]string{
+					"cache-control":       "test_cache_control",
+					"content-disposition": "test_content_disposition",
+					"content-encoding":    "test_content_encoding",
+					"content-language":    "test_content_language",
+					"content-type":        "test_ct",
+					"content-md5":         "dGVzdA==",
+				})
+			},
+		},
+	)
+
+	drv, err := s3blob.New(&s3.S3{
+		Bucket:   "test_bucket",
+		Region:   "test_region",
+		Endpoint: "https://example.com",
+		Client:   httpClient,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	options := &blob.WriterOptions{
+		CacheControl:       "test_cache_control",
+		ContentDisposition: "test_content_disposition",
+		ContentEncoding:    "test_content_encoding",
+		ContentLanguage:    "test_content_language",
+		ContentType:        "test_content_type", // should be ignored
+		ContentMD5:         []byte("test"),
+		Metadata:           map[string]string{"@test_meta_a": "@test"},
+	}
+
+	w, err := drv.NewTypedWriter(context.Background(), "../abc/test/", "test_ct", options)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	n, err := w.Write(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 0 {
+		t.Fatalf("Expected nil write to result in %d written bytes, got %d", 0, n)
+	}
+
+	n, err = w.Write([]byte("test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 4 {
+		t.Fatalf("Expected nil write to result in %d written bytes, got %d", 4, n)
+	}
+
+	err = w.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = httpClient.AssertNoRemaining()
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -362,12 +362,10 @@ func (w *writer) open(r io.Reader, closePipeOnError bool) {
 			// AWS doesn't like a nil Body.
 			r = http.NoBody
 		}
-		var err error
 
 		w.uploader.Payload = r
 
-		err = w.uploader.Upload(w.ctx, w.reqOptions...)
-
+		err := w.uploader.Upload(w.ctx, w.reqOptions...)
 		if err != nil {
 			if closePipeOnError {
 				w.pr.CloseWithError(err)
