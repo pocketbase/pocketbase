@@ -83,7 +83,7 @@ func TestBaseBindsReaderToString(t *testing.T) {
 	}
 }
 
-func TestBaseBindsToString(t *testing.T) {
+func TestBaseBindsToStringAndToBytes(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 	vm.Set("scenarios", []struct {
@@ -1597,13 +1597,14 @@ func TestRouterBinds(t *testing.T) {
 	defer app.Cleanup()
 
 	result := &struct {
-		AddCount  int
-		WithCount int
+		RouteMiddlewareCalls  int
+		GlobalMiddlewareCalls int
 	}{}
 
 	vmFactory := func() *goja.Runtime {
 		vm := goja.New()
 		baseBinds(vm)
+		apisBinds(vm)
 		vm.Set("$app", app)
 		vm.Set("result", result)
 		return vm
@@ -1616,14 +1617,20 @@ func TestRouterBinds(t *testing.T) {
 
 	_, err := vm.RunString(`
 		routerAdd("GET", "/test", (e) => {
-			result.addCount++;
+			result.routeMiddlewareCalls++;
 		}, (e) => {
-			result.addCount++;
+			result.routeMiddlewareCalls++;
 			return e.next();
 		})
 
+		// Promise is not technically supported as return result
+		// but we try to resolve it at least for thrown errors
+		routerAdd("GET", "/error", async (e) => {
+			throw new ApiError(456, 'test', null)
+		})
+
 		routerUse((e) => {
-			result.withCount++;
+			result.globalMiddlewareCalls++;
 
 			return e.next();
 		})
@@ -1644,21 +1651,44 @@ func TestRouterBinds(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/test", nil)
-
 	mux, err := serveEvent.Router.BuildMux()
 	if err != nil {
 		t.Fatalf("Failed to build router mux: %v", err)
 	}
-	mux.ServeHTTP(rec, req)
 
-	if result.AddCount != 2 {
-		t.Fatalf("Expected AddCount %d, got %d", 2, result.AddCount)
+	scenarios := []struct {
+		method                        string
+		path                          string
+		expectedRouteMiddlewareCalls  int
+		expectedGlobalMiddlewareCalls int
+		expectedCode                  int
+	}{
+		{"GET", "/test", 2, 1, 200},
+		{"GET", "/error", 0, 1, 456},
 	}
 
-	if result.WithCount != 1 {
-		t.Fatalf("Expected WithCount %d, got %d", 1, result.WithCount)
+	for _, s := range scenarios {
+		t.Run(s.method+" "+s.path, func(t *testing.T) {
+			// reset
+			result.RouteMiddlewareCalls = 0
+			result.GlobalMiddlewareCalls = 0
+
+			rec := httptest.NewRecorder()
+			req := httptest.NewRequest(s.method, s.path, nil)
+			mux.ServeHTTP(rec, req)
+
+			if result.RouteMiddlewareCalls != s.expectedRouteMiddlewareCalls {
+				t.Fatalf("Expected RouteMiddlewareCalls %d, got %d", s.expectedRouteMiddlewareCalls, result.RouteMiddlewareCalls)
+			}
+
+			if result.GlobalMiddlewareCalls != s.expectedGlobalMiddlewareCalls {
+				t.Fatalf("Expected GlobalMiddlewareCalls %d, got %d", s.expectedGlobalMiddlewareCalls, result.GlobalMiddlewareCalls)
+			}
+
+			if rec.Code != s.expectedCode {
+				t.Fatalf("Expected status code %d, got %d", s.expectedCode, rec.Code)
+			}
+		})
 	}
 }
 

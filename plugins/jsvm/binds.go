@@ -83,11 +83,9 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 					res, err := executor.RunProgram(pr)
 					executor.Set("__args", goja.Undefined())
 
-					// (legacy) check for returned Go error value
-					if res != nil {
-						if resErr, ok := res.Export().(error); ok {
-							return resErr
-						}
+					// check for returned Go error value
+					if resErr := checkGojaValueForError(app, res); resErr != nil {
+						return resErr
 					}
 
 					return normalizeException(err)
@@ -199,11 +197,9 @@ func wrapHandlerFunc(executors *vmsPool, handler goja.Value) (func(*core.Request
 				res, err := executor.RunProgram(pr)
 				executor.Set("__args", goja.Undefined())
 
-				// (legacy) check for returned Go error value
-				if res != nil {
-					if v, ok := res.Export().(error); ok {
-						return v
-					}
+				// check for returned Go error value
+				if resErr := checkGojaValueForError(e.App, res); resErr != nil {
+					return resErr
 				}
 
 				return normalizeException(err)
@@ -256,11 +252,9 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 						res, err := executor.RunProgram(pr)
 						executor.Set("__args", goja.Undefined())
 
-						// (legacy) check for returned Go error value
-						if res != nil {
-							if v, ok := res.Export().(error); ok {
-								return v
-							}
+						// check for returned Go error value
+						if resErr := checkGojaValueForError(e.App, res); resErr != nil {
+							return resErr
 						}
 
 						return normalizeException(err)
@@ -278,11 +272,9 @@ func wrapMiddlewares(executors *vmsPool, rawMiddlewares ...goja.Value) ([]*hook.
 						res, err := executor.RunProgram(pr)
 						executor.Set("__args", goja.Undefined())
 
-						// (legacy) check for returned Go error value
-						if res != nil {
-							if v, ok := res.Export().(error); ok {
-								return v
-							}
+						// check for returned Go error value
+						if resErr := checkGojaValueForError(e.App, res); resErr != nil {
+							return resErr
 						}
 
 						return normalizeException(err)
@@ -919,6 +911,29 @@ func httpClientBinds(vm *goja.Runtime) {
 }
 
 // -------------------------------------------------------------------
+
+// checkGojaValueForError resolves the provided goja.Value and tries
+// to extract its underlying error value (if any).
+func checkGojaValueForError(app core.App, value goja.Value) error {
+	if value == nil {
+		return nil
+	}
+
+	exported := value.Export()
+	switch v := exported.(type) {
+	case error:
+		return v
+	case *goja.Promise:
+		// Promise as return result is not officially supported but try to
+		// resolve any thrown exception to avoid silently ignoring it
+		app.Logger().Warn("the handler must a non-async function and not return a Promise")
+		if promiseErr, ok := v.Result().Export().(error); ok {
+			return normalizeException(promiseErr)
+		}
+	}
+
+	return nil
+}
 
 // normalizeException checks if the provided error is a goja.Exception
 // and attempts to return its underlying Go error.
