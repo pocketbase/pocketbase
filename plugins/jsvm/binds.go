@@ -101,7 +101,7 @@ func hooksBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 }
 
 func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
-	loader.Set("cronAdd", func(jobId, cronExpr, handler string) {
+	cronAdd := func(jobId, cronExpr, handler string) {
 		pr := goja.MustCompile(defaultScriptPath, "{("+handler+").apply(undefined)}", true)
 
 		err := app.Cron().Add(jobId, cronExpr, func() {
@@ -121,28 +121,27 @@ func cronBinds(app core.App, loader *goja.Runtime, executors *vmsPool) {
 		if err != nil {
 			panic("[cronAdd] failed to register cron job " + jobId + ": " + err.Error())
 		}
-	})
+	}
+	loader.Set("cronAdd", cronAdd)
 
-	// note: it is not necessary needed but it is here for consistency
-	loader.Set("cronRemove", func(jobId string) {
+	cronRemove := func(jobId string) {
 		app.Cron().Remove(jobId)
-	})
+	}
+	loader.Set("cronRemove", cronRemove)
 
 	// register the removal helper also in the executors to allow removing cron jobs from everywhere
 	oldFactory := executors.factory
 	executors.factory = func() *goja.Runtime {
 		vm := oldFactory()
 
-		vm.Set("cronRemove", func(jobId string) {
-			app.Cron().Remove(jobId)
-		})
+		vm.Set("cronAdd", cronAdd)
+		vm.Set("cronRemove", cronRemove)
 
 		return vm
 	}
 	for _, item := range executors.items {
-		item.vm.Set("cronRemove", func(jobId string) {
-			app.Cron().Remove(jobId)
-		})
+		item.vm.Set("cronAdd", cronAdd)
+		item.vm.Set("cronRemove", cronRemove)
 	}
 }
 

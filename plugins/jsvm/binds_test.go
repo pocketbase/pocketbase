@@ -1438,7 +1438,7 @@ func TestCronBindsCount(t *testing.T) {
 	testBindsCount(vm, "this", 2, t)
 
 	pool.run(func(poolVM *goja.Runtime) error {
-		testBindsCount(poolVM, "this", 1, t)
+		testBindsCount(poolVM, "this", 2, t)
 		return nil
 	})
 }
