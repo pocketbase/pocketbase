@@ -24,7 +24,7 @@
 
 - Normalized the `@request.auth.*` and `@request.body.*` back relations resolver to always return `null` when the relation field is pointing to a different collection ([#6590](https://github.com/pocketbase/pocketbase/discussions/6590#discussioncomment-12496581)).
 
-- Updatated `modernc.org/sqlite` to 1.36.0 (SQLite 3.49.0).
+- Updatated `modernc.org/sqlite` to 1.36.1 (SQLite 3.49.1).
 
 
 ## v0.25.9
