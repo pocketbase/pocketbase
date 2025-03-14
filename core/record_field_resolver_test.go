@@ -601,7 +601,8 @@ func TestRecordFieldResolverResolveCollectionFields(t *testing.T) {
 		{"self_rel_many.self_rel_many.self_rel_many.self_rel_many.self_rel_many.self_rel_many.self_rel_many.id", true, ""},
 
 		// back relations
-		{"rel_one_cascade.demo4_via_title.id", true, ""}, // non-relation via field
+		{"rel_one_cascade.demo4_via_title.id", true, ""},        // not a relation field
+		{"rel_one_cascade.demo4_via_self_rel_one.id", true, ""}, // relation field but to a different collection
 		{"rel_one_cascade.demo4_via_rel_one_cascade.id", false, "[[demo4_rel_one_cascade_demo4_via_rel_one_cascade.id]]"},
 		{"rel_one_cascade.demo4_via_rel_one_cascade.rel_one_cascade.demo4_via_rel_one_cascade.id", false, "[[demo4_rel_one_cascade_demo4_via_rel_one_cascade_rel_one_cascade_demo4_via_rel_one_cascade.id]]"},
 
@@ -615,8 +616,11 @@ func TestRecordFieldResolverResolveCollectionFields(t *testing.T) {
 		// @request.auth relation join
 		{"@request.auth.rel", false, "[[__auth_users.rel]]"},
 		{"@request.auth.rel.title", false, "[[__auth_users_rel.title]]"},
+		{"@request.auth.demo1_via_rel_many.id", false, "[[__auth_users_demo1_via_rel_many.id]]"},
 		{"@request.auth.rel.missing", false, "NULL"},
 		{"@request.auth.missing_via_rel", false, "NULL"},
+		{"@request.auth.demo1_via_file_one.id", false, "NULL"}, // not a relation field
+		{"@request.auth.demo1_via_rel_one.id", false, "NULL"},  // relation field but to a different collection
 
 		// @collection fieds
 		{"@collect", true, ""},

@@ -479,7 +479,11 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 				}
 				return nil, fmt.Errorf("missing back relation field %q", parts[2])
 			}
+
 			if backField.Type() != FieldTypeRelation {
+				if r.nullifyMisingField {
+					return &search.ResolverResult{Identifier: "NULL"}, nil
+				}
 				return nil, fmt.Errorf("invalid back relation field %q", parts[2])
 			}
 
@@ -492,7 +496,11 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 				return nil, fmt.Errorf("failed to initialize back relation field %q", backField.GetName())
 			}
 			if backRelField.CollectionId != collection.Id {
-				return nil, fmt.Errorf("invalid back relation field %q collection reference", backField.GetName())
+				// https://github.com/pocketbase/pocketbase/discussions/6590#discussioncomment-12496581
+				if r.nullifyMisingField {
+					return &search.ResolverResult{Identifier: "NULL"}, nil
+				}
+				return nil, fmt.Errorf("invalid collection reference of a back relation field %q", backField.GetName())
 			}
 
 			// join the back relation to the main query
