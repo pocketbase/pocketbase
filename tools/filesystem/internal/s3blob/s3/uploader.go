@@ -235,7 +235,7 @@ func (u *Uploader) multipartAbort(ctx context.Context, optReqFuncs ...func(*http
 
 	query := url.Values{"uploadId": []string{u.uploadId}}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, u.S3.URL(u.Key+"?"+query.Encode()), nil)
+	req, err := http.NewRequestWithContext(abortCtx, http.MethodDelete, u.S3.URL(u.Key+"?"+query.Encode()), nil)
 	if err != nil {
 		return err
 	}

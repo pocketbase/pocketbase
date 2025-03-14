@@ -5,9 +5,9 @@
 // For compatibility with earlier PocketBase versions and to prevent
 // unnecessary breaking changes, this package is based and implemented
 // as a minimal, stripped down version of the previously used gocloud.dev/blob.
-// While there is no promise that it won't diverge in the future to accomodate
+// While there is no promise that it won't diverge in the future to accommodate
 // better some PocketBase specific use cases, currently it copies and
-// tries to follow as close as possible the same implementaitons,
+// tries to follow as close as possible the same implementations,
 // conventions and rules for the key escaping/unescaping, blob read/write
 // interfaces and struct options as gocloud.dev/blob, therefore the
 // credits goes to the original Go Cloud Development Kit Authors.
