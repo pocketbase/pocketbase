@@ -2,7 +2,7 @@
 
 - ⚠️ Replaced `aws-sdk-go-v2` and `gocloud.dev/blob` with custom lighter implementation ([#6562](https://github.com/pocketbase/pocketbase/discussions/6562)).
     As a side-effect of the dependency removal, the binary size has been reduced with ~10MB and builds ~30% faster.
-    _Although the change is expected to be backward-compatible, I'd recommend to test first locally the new version with your S3 provider to ensure that it is compatible with the new S3 client._
+    _Although the change is expected to be backward-compatible, I'd recommend to test first locally the new version with your S3 provider (if you use S3 for files storage and backups)._
 
 - ⚠️ Prioritized the user submitted non-empty `createData.email` (_it will be unverified_) when creating the PocketBase user during the first OAuth2 auth.
 
@@ -25,7 +25,7 @@
 
 - Normalized the `@request.auth.*` and `@request.body.*` back relations resolver to always return `null` when the relation field is pointing to a different collection ([#6590](https://github.com/pocketbase/pocketbase/discussions/6590#discussioncomment-12496581)).
 
-- Other minor improvements (_fixed query dev log nested parameters output, updated Go and npm deps, etc._)
+- Other minor improvements (_fixed query dev log nested parameters output, reintroduced `DynamicModel` object/array props reflect types caching, updated Go and npm deps, etc._)
 
 
 ## v0.25.9
