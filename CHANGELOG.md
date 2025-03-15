@@ -1,13 +1,14 @@
-## v0.26.0 (WIP)
+## v0.26.0
 
-- ⚠️ Replaced `aws-sdk-go-v2` and `gocloud.dev/blob` with custom lighter implementation (@todo docs and tests)
+- ⚠️ Replaced `aws-sdk-go-v2` and `gocloud.dev/blob` with custom lighter implementation ([#6562](https://github.com/pocketbase/pocketbase/discussions/6562)).
+    As a side-effect of the dependency removal, the binary size has been reduced with ~10MB and builds ~30% faster.
+    _Although the change is expected to be backward-compatible, I'd recommend to test first locally the new version with your S3 provider to ensure that it is compatible with the new S3 client._
 
 - ⚠️ Prioritized the user submitted non-empty `createData.email` (_it will be unverified_) when creating the PocketBase user during the first OAuth2 auth.
 
 - Load the request info context during password/OAuth2/OTP authentication ([#6402](https://github.com/pocketbase/pocketbase/issues/6402)).
     This could be useful in case you want to target the auth method as part of the MFA and Auth API rules.
     For example, to disable MFA for the OAuth2 auth could be expressed as `@request.context != "oauth2"` MFA rule.
-    (@todo docs)
 
 - Added `store.Store.SetFunc(key, func(old T) new T)` to set/update a store value with the return result of the callback in a concurrent safe manner.
 
@@ -25,6 +26,8 @@
 - Normalized the `@request.auth.*` and `@request.body.*` back relations resolver to always return `null` when the relation field is pointing to a different collection ([#6590](https://github.com/pocketbase/pocketbase/discussions/6590#discussioncomment-12496581)).
 
 - Updatated `modernc.org/sqlite` to 1.36.1 (SQLite 3.49.1).
+
+- Other minor improvements (_fixed query dev log nested parameters output, updated npm deps, etc._)
 
 
 ## v0.25.9
