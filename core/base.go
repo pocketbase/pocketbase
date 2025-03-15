@@ -1139,12 +1139,12 @@ func (app *BaseApp) initDataDB() error {
 	return nil
 }
 
-var sqlLogReplacements = map[string]string{
-	"{{":    "`",
-	"}}":    "`",
-	"[[":    "`",
-	"]]":    "`",
-	"<nil>": "NULL",
+var sqlLogReplacements = map[*regexp.Regexp]string{
+	regexp.MustCompile(`[^'"]\{\{`): "`",
+	regexp.MustCompile(`\}\}[^'"]`): "`",
+	regexp.MustCompile(`[^'"]\[\[`): "`",
+	regexp.MustCompile(`\]\][^'"]`): "`",
+	regexp.MustCompile(`<nil>`):     "NULL",
 }
 var sqlLogPrefixedTableIdentifierPattern = regexp.MustCompile(`\[\[([^\[\]\{\}\.]+)\.([^\[\]\{\}\.]+)\]\]`)
 var sqlLogPrefixedColumnIdentifierPattern = regexp.MustCompile(`\{\{([^\[\]\{\}\.]+)\.([^\[\]\{\}\.]+)\}\}`)
@@ -1157,8 +1157,8 @@ func normalizeSQLLog(sql string) string {
 
 	sql = sqlLogPrefixedColumnIdentifierPattern.ReplaceAllString(sql, "`$1`.`$2`")
 
-	for old, new := range sqlLogReplacements {
-		sql = strings.ReplaceAll(sql, old, new)
+	for pattern, replacement := range sqlLogReplacements {
+		sql = pattern.ReplaceAllString(sql, replacement)
 	}
 
 	return sql
