@@ -5,6 +5,7 @@ import (
 	"errors"
 	"image"
 	"image/png"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -364,7 +365,7 @@ func TestFileSystemServe(t *testing.T) {
 			map[string]string{
 				"Content-Disposition":     "attachment; filename=test_name.txt",
 				"Content-Type":            "application/octet-stream",
-				"Content-Length":          "0",
+				"Content-Length":          "4",
 				"Content-Security-Policy": csp,
 				"Cache-Control":           cacheControl,
 			},
@@ -437,7 +438,7 @@ func TestFileSystemServe(t *testing.T) {
 			map[string]string{
 				"Content-Disposition":     "1",
 				"Content-Type":            "2",
-				"Content-Length":          "3",
+				"Content-Length":          "1",
 				"Content-Security-Policy": "4",
 				"Cache-Control":           "5",
 				"X-Custom":                "6",
@@ -446,7 +447,7 @@ func TestFileSystemServe(t *testing.T) {
 			map[string]string{
 				"Content-Disposition":     "1",
 				"Content-Type":            "2",
-				"Content-Length":          "0", // overwriten by http.ServeContent
+				"Content-Length":          "4", // overwriten by http.ServeContent
 				"Content-Security-Policy": "4",
 				"Cache-Control":           "5",
 				"X-Custom":                "6",
@@ -504,29 +505,42 @@ func TestFileSystemGetFile(t *testing.T) {
 	defer fsys.Close()
 
 	scenarios := []struct {
-		file        string
-		expectError bool
+		file            string
+		expectError     bool
+		expectedContent string
 	}{
-		{"missing.png", true},
-		{"image.png", false},
+		{"test/missing.txt", true, ""},
+		{"test/sub1.txt", false, "sub1"},
 	}
 
 	for _, s := range scenarios {
 		t.Run(s.file, func(t *testing.T) {
 			f, err := fsys.GetFile(s.file)
+			defer func() {
+				if f != nil {
+					f.Close()
+				}
+			}()
 
 			hasErr := err != nil
-
-			if !hasErr {
-				defer f.Close()
-			}
-
 			if hasErr != s.expectError {
 				t.Fatalf("Expected hasErr %v, got %v", s.expectError, hasErr)
 			}
 
-			if hasErr && !errors.Is(err, filesystem.ErrNotFound) {
-				t.Fatalf("Expected ErrNotFound error, got %v", err)
+			if hasErr {
+				if !errors.Is(err, filesystem.ErrNotFound) {
+					t.Fatalf("Expected ErrNotFound error, got %v", err)
+				}
+				return
+			}
+
+			raw, err := io.ReadAll(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if str := string(raw); str != s.expectedContent {
+				t.Fatalf("Expected content\n%s\ngot\n%s", s.expectedContent, str)
 			}
 		})
 	}
@@ -744,25 +758,25 @@ func createTestDir(t *testing.T) string {
 		t.Fatal(err)
 	}
 
-	if err := os.MkdirAll(filepath.Join(dir, "empty"), os.ModePerm); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := os.MkdirAll(filepath.Join(dir, "test"), os.ModePerm); err != nil {
-		t.Fatal(err)
-	}
-
-	file1, err := os.OpenFile(filepath.Join(dir, "test/sub1.txt"), os.O_WRONLY|os.O_CREATE, 0644)
+	err = os.MkdirAll(filepath.Join(dir, "empty"), os.ModePerm)
 	if err != nil {
 		t.Fatal(err)
 	}
-	file1.Close()
 
-	file2, err := os.OpenFile(filepath.Join(dir, "test/sub2.txt"), os.O_WRONLY|os.O_CREATE, 0644)
+	err = os.MkdirAll(filepath.Join(dir, "test"), os.ModePerm)
 	if err != nil {
 		t.Fatal(err)
 	}
-	file2.Close()
+
+	err = os.WriteFile(filepath.Join(dir, "test/sub1.txt"), []byte("sub1"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = os.WriteFile(filepath.Join(dir, "test/sub2.txt"), []byte("sub2"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	file3, err := os.OpenFile(filepath.Join(dir, "image.png"), os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {

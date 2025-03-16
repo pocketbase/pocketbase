@@ -717,6 +717,13 @@ func wrapError(b Driver, err error, key string) error {
 		return nil
 	}
 
+	// don't wrap or normalize EOF errors since there are many places
+	// in the standard library (e.g. io.ReadAll) that rely on checks
+	// such as "err == io.EOF" and they will fail
+	if errors.Is(err, io.EOF) {
+		return err
+	}
+
 	err = b.NormalizeError(err)
 
 	if key != "" {
