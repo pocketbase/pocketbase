@@ -116,12 +116,20 @@ func (c *SMTPClient) send(m *Message) error {
 
 	// add regular attachements (if any)
 	for name, data := range m.Attachments {
-		yak.Attach(name, data)
+		r, mime, err := detectReaderMimeType(data)
+		if err != nil {
+			return err
+		}
+		yak.AttachWithMimeType(name, r, mime)
 	}
 
 	// add inline attachments (if any)
 	for name, data := range m.InlineAttachments {
-		yak.AttachInline(name, data)
+		r, mime, err := detectReaderMimeType(data)
+		if err != nil {
+			return err
+		}
+		yak.AttachInlineWithMimeType(name, r, mime)
 	}
 
 	// add custom headers (if any)

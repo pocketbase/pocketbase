@@ -1,9 +1,11 @@
 package mailer
 
 import (
+	"bytes"
 	"io"
 	"net/mail"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/pocketbase/pocketbase/tools/hook"
 )
 
@@ -53,4 +55,18 @@ func addressesToStrings(addresses []mail.Address, withName bool) []string {
 	}
 
 	return result
+}
+
+// detectReaderMimeType reads the first couple bytes of the reader to detect its MIME type.
+//
+// Returns a new combined reader from the partial read + the remaining of the original reader.
+func detectReaderMimeType(r io.Reader) (io.Reader, string, error) {
+	readCopy := new(bytes.Buffer)
+
+	mime, err := mimetype.DetectReader(io.TeeReader(r, readCopy))
+	if err != nil {
+		return nil, "", err
+	}
+
+	return io.MultiReader(readCopy, r), mime.String(), nil
 }
