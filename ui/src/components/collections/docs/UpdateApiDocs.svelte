@@ -9,7 +9,6 @@
 
     let responseTab = 200;
     let responses = [];
-    let baseData = {};
 
     $: isAuth = collection?.type === "auth";
 
@@ -66,14 +65,18 @@
         },
     ];
 
-    $: if (isAuth) {
-        baseData = {
-            password: "87654321",
-            passwordConfirm: "87654321",
-            oldPassword: "12345678",
-        };
-    } else {
-        baseData = {};
+    function getPayload(collection) {
+        let payload = CommonHelper.dummyCollectionSchemaData(collection, true);
+
+        if (isAuth) {
+            payload.oldPassword = "12345678";
+            payload.password = "87654321";
+            payload.passwordConfirm = "87654321";
+            delete payload.verified;
+            delete payload.email;
+        }
+
+        return payload;
     }
 </script>
 
@@ -113,7 +116,7 @@ const pb = new PocketBase('${backendAbsUrl}');
 ...
 
 // example update data
-const data = ${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection, true)), null, 4)};
+const data = ${JSON.stringify(getPayload(collection), null, 4)};
 
 const record = await pb.collection('${collection?.name}').update('RECORD_ID', data);
     `}
@@ -125,7 +128,7 @@ final pb = PocketBase('${backendAbsUrl}');
 ...
 
 // example update body
-final body = <String, dynamic>${JSON.stringify(Object.assign({}, baseData, CommonHelper.dummyCollectionSchemaData(collection, true)), null, 2)};
+final body = <String, dynamic>${JSON.stringify(getPayload(collection), null, 2)};
 
 final record = await pb.collection('${collection?.name}').update('RECORD_ID', body: body);
     `}
