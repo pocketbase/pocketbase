@@ -6,7 +6,7 @@
     export let id = null;
     export let items = [];
     export let disabled = false;
-    export let emptyPlaceholder = "Add choices...";
+    export let emptyPlaceholder = "Add items";
     export let newPlaceholder = "e.g. optionA";
 
     let newInput;
@@ -37,7 +37,7 @@
     }
 </script>
 
-<div>
+<div class="block">
     <input
         {id}
         readonly
@@ -71,7 +71,7 @@
                             <button
                                 type="button"
                                 class="btn btn-circle btn-transparent btn-hint btn-xs"
-                                title="Remove item"
+                                title="Remove"
                                 on:click|stopPropagation={() => remove(item)}
                             >
                                 <i class="ri-close-line" aria-hidden="true"></i>
@@ -102,7 +102,7 @@
                                 <button
                                     type="button"
                                     class="btn btn-transparent btn-xs btn-circle new-item-btn"
-                                    title="Add new item"
+                                    title="Add new"
                                     class:btn-disabled={!newInputVal.length}
                                     on:click={() => add(newInputVal)}
                                 >

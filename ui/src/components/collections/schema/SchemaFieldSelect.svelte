@@ -46,7 +46,11 @@
             name="fields.{key}.values"
             let:uniqueId
         >
-            <DynamicOptionsSelect id={uniqueId} bind:items={field.values} />
+            <DynamicOptionsSelect
+                id={uniqueId}
+                emptyPlaceholder={"Add choices *"}
+                bind:items={field.values}
+            />
         </Field>
 
         <div class="separator" />
