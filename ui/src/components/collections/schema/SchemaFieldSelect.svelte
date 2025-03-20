@@ -1,8 +1,7 @@
 <script>
-    import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
-    import MultipleValueInput from "@/components/base/MultipleValueInput.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
+    import DynamicOptionsSelect from "@/components/base/DynamicOptionsSelect.svelte";
     import SchemaField from "@/components/collections/schema/SchemaField.svelte";
 
     export let field;
@@ -47,15 +46,7 @@
             name="fields.{key}.values"
             let:uniqueId
         >
-            <div use:tooltip={{ text: "Choices (comma separated)", position: "top-left", delay: 700 }}>
-                <MultipleValueInput
-                    id={uniqueId}
-                    placeholder="Choices: eg. optionA, optionB"
-                    required
-                    readonly={!interactive}
-                    bind:value={field.values}
-                />
-            </div>
+            <DynamicOptionsSelect id={uniqueId} bind:items={field.values} />
         </Field>
 
         <div class="separator" />

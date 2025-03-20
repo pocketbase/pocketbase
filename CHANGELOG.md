@@ -2,6 +2,8 @@
 
 - Updated the mail attachments auto MIME type detection to use `gabriel-vasile/mimetype` for consistency and broader sniffing signatures support.
 
+- Updated the `select` field UI to accomodate better larger lists and RTL languages ([#4674](https://github.com/pocketbase/pocketbase/issues/4674)).
+
 
 ## v0.26.1
 

@@ -66,6 +66,10 @@
             transition-duration: var(--activeAnimationSpeed);
             background: var(--baseAlt2Color);
         }
+        &.plain {
+            background: none;
+            cursor: default;
+        }
         &.disabled {
             color: var(--txtDisabledColor);
             background: none;

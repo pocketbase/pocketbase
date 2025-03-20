@@ -493,6 +493,15 @@ select {
         padding-left: var(--hPadding);
         padding-right: var(--hPadding);
     }
+    .active:has(.dropdown) > %input {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    .toggler-container .dropdown {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        margin-top: 0;
+    }
     select {
         padding-left: 8px;
     }
