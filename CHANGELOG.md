@@ -1,3 +1,8 @@
+## v0.22.32
+
+- (_Backported from v0.26.2_) - Updated `golang-jwt/jwt` dependency because it comes with a [minor security fix](https://github.com/golang-jwt/jwt/security/advisories/GHSA-mh63-6h87-95cp).
+
+
 ## v0.22.31
 
 - (_Backported from v0.25.5_) - Set the current working directory as a default goja script path when executing inline JS strings to allow `require(m)` traversing parent `node_modules` directories.
