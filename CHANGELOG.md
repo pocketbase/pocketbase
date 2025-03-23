@@ -1,11 +1,16 @@
+## v0.22.33
+
+- (_Backported from v0.26.3_) Fixed and normalized logs error serialization across common types for more consistent logs error output ([#6631](https://github.com/pocketbase/pocketbase/issues/6631)).
+
+
 ## v0.22.32
 
-- (_Backported from v0.26.2_) - Updated `golang-jwt/jwt` dependency because it comes with a [minor security fix](https://github.com/golang-jwt/jwt/security/advisories/GHSA-mh63-6h87-95cp).
+- (_Backported from v0.26.2_) Updated `golang-jwt/jwt` dependency because it comes with a [minor security fix](https://github.com/golang-jwt/jwt/security/advisories/GHSA-mh63-6h87-95cp).
 
 
 ## v0.22.31
 
-- (_Backported from v0.25.5_) - Set the current working directory as a default goja script path when executing inline JS strings to allow `require(m)` traversing parent `node_modules` directories.
+- (_Backported from v0.25.5_) Set the current working directory as a default goja script path when executing inline JS strings to allow `require(m)` traversing parent `node_modules` directories.
 
 
 ## v0.22.30
