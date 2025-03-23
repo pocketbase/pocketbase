@@ -1,3 +1,8 @@
+## v0.26.3
+
+- Fixed and normalized errors serialization across common types for more consistent logs error output ([#6631](https://github.com/pocketbase/pocketbase/issues/6631)).
+
+
 ## v0.26.2
 
 - Updated `golang-jwt/jwt` dependency because it comes with a [minor security fix](https://github.com/golang-jwt/jwt/security/advisories/GHSA-mh63-6h87-95cp).

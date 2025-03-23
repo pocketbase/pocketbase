@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"sync"
@@ -252,26 +253,73 @@ func (h *BatchHandler) resolveAttr(data map[string]any, attr slog.Attr) error {
 			data[attr.Key] = groupData
 		}
 	default:
-		switch v := attr.Value.Any().(type) {
-		case validation.Errors:
-			data[attr.Key] = map[string]any{
-				"data": v,
-				"raw":  v.Error(),
-			}
-		case error:
-			var ve validation.Errors
-			if errors.As(v, &ve) {
-				data[attr.Key] = map[string]any{
-					"data": ve,
-					"raw":  v.Error(),
-				}
-			} else {
-				data[attr.Key] = v.Error()
-			}
-		default:
-			data[attr.Key] = v
-		}
+		data[attr.Key] = normalizeLogAttrValue(attr.Value.Any())
 	}
 
 	return nil
+}
+
+func normalizeLogAttrValue(rawAttrValue any) any {
+	switch attrV := rawAttrValue.(type) {
+	case validation.Errors:
+		out := make(map[string]any, len(attrV))
+		for k, v := range attrV {
+			out[k] = serializeLogError(v)
+		}
+		return out
+	case map[string]validation.Error:
+		out := make(map[string]any, len(attrV))
+		for k, v := range attrV {
+			out[k] = serializeLogError(v)
+		}
+		return out
+	case map[string]error:
+		out := make(map[string]any, len(attrV))
+		for k, v := range attrV {
+			out[k] = serializeLogError(v)
+		}
+		return out
+	case map[string]any:
+		out := make(map[string]any, len(attrV))
+		for k, v := range attrV {
+			switch vv := v.(type) {
+			case error:
+				out[k] = serializeLogError(vv)
+			default:
+				out[k] = normalizeLogAttrValue(vv)
+			}
+		}
+		return out
+	case error:
+		// check for wrapped validation.Errors
+		var ve validation.Errors
+		if errors.As(attrV, &ve) {
+			out := make(map[string]any, len(ve))
+			for k, v := range ve {
+				out[k] = serializeLogError(v)
+			}
+			return map[string]any{
+				"data": out,
+				"raw":  serializeLogError(attrV),
+			}
+		}
+		return serializeLogError(attrV)
+	default:
+		return attrV
+	}
+}
+
+func serializeLogError(err error) any {
+	if err == nil {
+		return nil
+	}
+
+	// prioritize a json structured format (e.g. validation.Errors)
+	jsonErr, ok := err.(json.Marshaler)
+	if ok {
+		return jsonErr
+	}
+
+	// fallback to its original string representation
+	return err.Error()
 }
