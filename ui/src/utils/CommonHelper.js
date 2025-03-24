@@ -847,19 +847,25 @@ export default class CommonHelper {
     }
 
     /**
-     * Copies text to the user clipboard.
+     * Serializes the provided data and copies the resulting text into the user clipboard.
      *
-     * @param  {String} text
+     * @param  {Mixed} data
      * @return {Promise}
      */
-    static async copyToClipboard(text) {
-        text = "" + text // ensure that text is string
+    static async copyToClipboard(data) {
+        if (typeof data === "object") {
+            try {
+                data = JSON.stringify(data, null, 2)
+            } catch {}
+        }
 
-        if (!text.length || !window?.navigator?.clipboard) {
+        data = "" + data // ensure that data is string
+
+        if (!data.length || !window?.navigator?.clipboard) {
             return;
         }
 
-        return window.navigator.clipboard.writeText(text).catch((err) => {
+        return window.navigator.clipboard.writeText(data).catch((err) => {
             console.warn("Failed to copy.", err);
         })
     }

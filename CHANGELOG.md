@@ -4,6 +4,8 @@
 
 - Updated the `select` field UI to accomodate better larger lists and RTL languages ([#4674](https://github.com/pocketbase/pocketbase/issues/4674)).
 
+- Minor UI fixes (_removed the superuser fields from the auth record create/update examples, fixed logs clipboard data copy, etc._).
+
 
 ## v0.26.3
 
