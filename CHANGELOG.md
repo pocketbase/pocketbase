@@ -1,6 +1,6 @@
 ## v0.26.3
 
-- Fixed and normalized errors serialization across common types for more consistent logs error output ([#6631](https://github.com/pocketbase/pocketbase/issues/6631)).
+- Fixed and normalized logs error serialization across common types for more consistent logs error output ([#6631](https://github.com/pocketbase/pocketbase/issues/6631)).
 
 
 ## v0.26.2
