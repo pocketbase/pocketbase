@@ -1,6 +1,6 @@
 ## v0.26.4 (WIP)
 
-- Fixed `RecordErrorEvent.Error` and `CollectionErrorEvent.Error` sync with `ModelErrorEvent.Error` sync with ([#6639](https://github.com/pocketbase/pocketbase/issues/6639)).
+- Fixed `RecordErrorEvent.Error` and `CollectionErrorEvent.Error` sync with `ModelErrorEvent.Error` ([#6639](https://github.com/pocketbase/pocketbase/issues/6639)).
 
 
 ## v0.26.3
