@@ -277,7 +277,7 @@ func syncModelErrorEventWithRecordErrorEvent(me *ModelErrorEvent, re *RecordErro
 
 func syncRecordErrorEventWithModelErrorEvent(re *RecordErrorEvent, me *ModelErrorEvent) {
 	syncRecordEventWithModelEvent(&re.RecordEvent, &me.ModelEvent)
-	me.Error = re.Error
+	re.Error = me.Error
 }
 
 // -------------------------------------------------------------------
@@ -354,7 +354,7 @@ func syncModelErrorEventWithCollectionErrorEvent(me *ModelErrorEvent, ce *Collec
 
 func syncCollectionErrorEventWithModelErrorEvent(ce *CollectionErrorEvent, me *ModelErrorEvent) {
 	syncCollectionEventWithModelEvent(&ce.CollectionEvent, &me.ModelEvent)
-	me.Error = ce.Error
+	ce.Error = me.Error
 }
 
 // -------------------------------------------------------------------

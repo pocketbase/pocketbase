@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	expectedDriverVersion = "v1.36.1"
+	expectedDriverVersion = "v1.36.2"
 	expectedLibcVersion   = "v1.61.13"
 
 	// ModerncDepsCheckHookId is the id of the hook that performs the modernc.org/* deps checks.
