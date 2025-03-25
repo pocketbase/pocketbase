@@ -5,9 +5,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +18,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 )
@@ -1616,6 +1619,285 @@ func TestRecordValidate(t *testing.T) {
 		record.Set("f2", 1)
 		tests.TestValidationErrors(t, app.Validate(record), nil)
 	})
+}
+
+func TestRecordModelEventSync(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	col, err := app.FindCollectionByNameOrId("demo3")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testRecords := make([]*core.Record, 4)
+	for i := 0; i < 4; i++ {
+		testRecords[i] = core.NewRecord(col)
+		testRecords[i].Set("title", "sync_test_"+strconv.Itoa(i))
+		if err := app.Save(testRecords[i]); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	createModelEvent := func() *core.ModelEvent {
+		event := new(core.ModelEvent)
+		event.App = app
+		event.Context = context.Background()
+		event.Type = "test_a"
+		event.Model = testRecords[0]
+		return event
+	}
+
+	createModelErrorEvent := func() *core.ModelErrorEvent {
+		event := new(core.ModelErrorEvent)
+		event.ModelEvent = *createModelEvent()
+		event.Error = errors.New("error_a")
+		return event
+	}
+
+	changeRecordEventBefore := func(e *core.RecordEvent) {
+		e.Type = "test_b"
+		e.Context = context.WithValue(context.Background(), "test", 123)
+		e.Record = testRecords[1]
+	}
+
+	modelEventFinalizerChange := func(e *core.ModelEvent) {
+		e.Type = "test_c"
+		e.Context = context.WithValue(context.Background(), "test", 456)
+		e.Model = testRecords[2]
+	}
+
+	changeRecordEventAfter := func(e *core.RecordEvent) {
+		e.Type = "test_d"
+		e.Context = context.WithValue(context.Background(), "test", 789)
+		e.Record = testRecords[3]
+	}
+
+	expectedBeforeModelEventHandlerChecks := func(t *testing.T, e *core.ModelEvent) {
+		if e.Type != "test_a" {
+			t.Fatalf("Expected type %q, got %q", "test_a", e.Type)
+		}
+
+		if v := e.Context.Value("test"); v != nil {
+			t.Fatalf("Expected context value %v, got %v", nil, v)
+		}
+
+		if e.Model.PK() != testRecords[0].Id {
+			t.Fatalf("Expected record with id %q, got %q (%d)", testRecords[0].Id, e.Model.PK(), 0)
+		}
+	}
+
+	expectedAfterModelEventHandlerChecks := func(t *testing.T, e *core.ModelEvent) {
+		if e.Type != "test_d" {
+			t.Fatalf("Expected type %q, got %q", "test_d", e.Type)
+		}
+
+		if v := e.Context.Value("test"); v != 789 {
+			t.Fatalf("Expected context value %v, got %v", 789, v)
+		}
+
+		// note: currently the Model and Record values are not synced due to performance consideration
+		if e.Model.PK() != testRecords[2].Id {
+			t.Fatalf("Expected record with id %q, got %q (%d)", testRecords[2].Id, e.Model.PK(), 2)
+		}
+	}
+
+	expectedBeforeRecordEventHandlerChecks := func(t *testing.T, e *core.RecordEvent) {
+		if e.Type != "test_a" {
+			t.Fatalf("Expected type %q, got %q", "test_a", e.Type)
+		}
+
+		if v := e.Context.Value("test"); v != nil {
+			t.Fatalf("Expected context value %v, got %v", nil, v)
+		}
+
+		if e.Record.Id != testRecords[0].Id {
+			t.Fatalf("Expected record with id %q, got %q (%d)", testRecords[0].Id, e.Record.Id, 2)
+		}
+	}
+
+	expectedAfterRecordEventHandlerChecks := func(t *testing.T, e *core.RecordEvent) {
+		if e.Type != "test_c" {
+			t.Fatalf("Expected type %q, got %q", "test_c", e.Type)
+		}
+
+		if v := e.Context.Value("test"); v != 456 {
+			t.Fatalf("Expected context value %v, got %v", 456, v)
+		}
+
+		// note: currently the Model and Record values are not synced due to performance consideration
+		if e.Record.Id != testRecords[1].Id {
+			t.Fatalf("Expected record with id %q, got %q (%d)", testRecords[1].Id, e.Record.Id, 1)
+		}
+	}
+
+	modelEventFinalizer := func(e *core.ModelEvent) error {
+		modelEventFinalizerChange(e)
+		return nil
+	}
+
+	modelErrorEventFinalizer := func(e *core.ModelErrorEvent) error {
+		modelEventFinalizerChange(&e.ModelEvent)
+		e.Error = errors.New("error_c")
+		return nil
+	}
+
+	modelEventHandler := &hook.Handler[*core.ModelEvent]{
+		Priority: -999,
+		Func: func(e *core.ModelEvent) error {
+			t.Run("before model", func(t *testing.T) {
+				expectedBeforeModelEventHandlerChecks(t, e)
+			})
+
+			_ = e.Next()
+
+			t.Run("after model", func(t *testing.T) {
+				expectedAfterModelEventHandlerChecks(t, e)
+			})
+
+			return nil
+		},
+	}
+
+	modelErrorEventHandler := &hook.Handler[*core.ModelErrorEvent]{
+		Priority: -999,
+		Func: func(e *core.ModelErrorEvent) error {
+			t.Run("before model error", func(t *testing.T) {
+				expectedBeforeModelEventHandlerChecks(t, &e.ModelEvent)
+				if v := e.Error.Error(); v != "error_a" {
+					t.Fatalf("Expected error %q, got %q", "error_a", v)
+				}
+			})
+
+			_ = e.Next()
+
+			t.Run("after model error", func(t *testing.T) {
+				expectedAfterModelEventHandlerChecks(t, &e.ModelEvent)
+				if v := e.Error.Error(); v != "error_d" {
+					t.Fatalf("Expected error %q, got %q", "error_d", v)
+				}
+			})
+
+			return nil
+		},
+	}
+
+	recordEventHandler := &hook.Handler[*core.RecordEvent]{
+		Priority: -999,
+		Func: func(e *core.RecordEvent) error {
+			t.Run("before record", func(t *testing.T) {
+				expectedBeforeRecordEventHandlerChecks(t, e)
+			})
+
+			changeRecordEventBefore(e)
+
+			_ = e.Next()
+
+			t.Run("after record", func(t *testing.T) {
+				expectedAfterRecordEventHandlerChecks(t, e)
+			})
+
+			changeRecordEventAfter(e)
+
+			return nil
+		},
+	}
+
+	recordErrorEventHandler := &hook.Handler[*core.RecordErrorEvent]{
+		Priority: -999,
+		Func: func(e *core.RecordErrorEvent) error {
+			t.Run("before record error", func(t *testing.T) {
+				expectedBeforeRecordEventHandlerChecks(t, &e.RecordEvent)
+				if v := e.Error.Error(); v != "error_a" {
+					t.Fatalf("Expected error %q, got %q", "error_c", v)
+				}
+			})
+
+			changeRecordEventBefore(&e.RecordEvent)
+			e.Error = errors.New("error_b")
+
+			_ = e.Next()
+
+			t.Run("after record error", func(t *testing.T) {
+				expectedAfterRecordEventHandlerChecks(t, &e.RecordEvent)
+				if v := e.Error.Error(); v != "error_c" {
+					t.Fatalf("Expected error %q, got %q", "error_c", v)
+				}
+			})
+
+			changeRecordEventAfter(&e.RecordEvent)
+			e.Error = errors.New("error_d")
+
+			return nil
+		},
+	}
+
+	// OnModelValidate
+	app.OnRecordValidate().Bind(recordEventHandler)
+	app.OnModelValidate().Bind(modelEventHandler)
+	app.OnModelValidate().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelCreate
+	app.OnRecordCreate().Bind(recordEventHandler)
+	app.OnModelCreate().Bind(modelEventHandler)
+	app.OnModelCreate().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelCreateExecute
+	app.OnRecordCreateExecute().Bind(recordEventHandler)
+	app.OnModelCreateExecute().Bind(modelEventHandler)
+	app.OnModelCreateExecute().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelAfterCreateSuccess
+	app.OnRecordAfterCreateSuccess().Bind(recordEventHandler)
+	app.OnModelAfterCreateSuccess().Bind(modelEventHandler)
+	app.OnModelAfterCreateSuccess().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelAfterCreateError
+	app.OnRecordAfterCreateError().Bind(recordErrorEventHandler)
+	app.OnModelAfterCreateError().Bind(modelErrorEventHandler)
+	app.OnModelAfterCreateError().Trigger(createModelErrorEvent(), modelErrorEventFinalizer)
+
+	// OnModelUpdate
+	app.OnRecordUpdate().Bind(recordEventHandler)
+	app.OnModelUpdate().Bind(modelEventHandler)
+	app.OnModelUpdate().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelUpdateExecute
+	app.OnRecordUpdateExecute().Bind(recordEventHandler)
+	app.OnModelUpdateExecute().Bind(modelEventHandler)
+	app.OnModelUpdateExecute().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelAfterUpdateSuccess
+	app.OnRecordAfterUpdateSuccess().Bind(recordEventHandler)
+	app.OnModelAfterUpdateSuccess().Bind(modelEventHandler)
+	app.OnModelAfterUpdateSuccess().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelAfterUpdateError
+	app.OnRecordAfterUpdateError().Bind(recordErrorEventHandler)
+	app.OnModelAfterUpdateError().Bind(modelErrorEventHandler)
+	app.OnModelAfterUpdateError().Trigger(createModelErrorEvent(), modelErrorEventFinalizer)
+
+	// OnModelDelete
+	app.OnRecordDelete().Bind(recordEventHandler)
+	app.OnModelDelete().Bind(modelEventHandler)
+	app.OnModelDelete().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelDeleteExecute
+	app.OnRecordDeleteExecute().Bind(recordEventHandler)
+	app.OnModelDeleteExecute().Bind(modelEventHandler)
+	app.OnModelDeleteExecute().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelAfterDeleteSuccess
+	app.OnRecordAfterDeleteSuccess().Bind(recordEventHandler)
+	app.OnModelAfterDeleteSuccess().Bind(modelEventHandler)
+	app.OnModelAfterDeleteSuccess().Trigger(createModelEvent(), modelEventFinalizer)
+
+	// OnModelAfterDeleteError
+	app.OnRecordAfterDeleteError().Bind(recordErrorEventHandler)
+	app.OnModelAfterDeleteError().Bind(modelErrorEventHandler)
+	app.OnModelAfterDeleteError().Trigger(createModelErrorEvent(), modelErrorEventFinalizer)
 }
 
 func TestRecordSave(t *testing.T) {

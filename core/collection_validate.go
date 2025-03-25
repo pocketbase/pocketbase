@@ -34,7 +34,11 @@ func onCollectionValidate(e *CollectionEvent) error {
 		original,
 	)
 
-	return validator.run()
+	if err := validator.run(); err != nil {
+		return err
+	}
+
+	return e.Next()
 }
 
 func newCollectionValidator(ctx context.Context, app App, new, original *Collection) *collectionValidator {
