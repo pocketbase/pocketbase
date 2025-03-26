@@ -94,8 +94,17 @@ func (p *OIDC) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Email         string `json:"email"`
 		EmailVerified bool   `json:"email_verified"`
 	}{}
+	// AWS Cognito and other OIDC providers may send this field as a string rather than a bool.
+	// https://forums.aws.amazon.com/thread.jspa?messageID=949441&#949441 and
+	// https://discuss.elastic.co/t/openid-error-after-authenticating-against-aws-cognito/206018/11
 	if err := json.Unmarshal(data, &extracted); err != nil {
-		return nil, err
+		strExtracted := struct {
+			EmailVerified string `json:"email_verified"`
+		}{}
+		if err := json.Unmarshal(data, &strExtracted); err != nil {
+			return nil, err
+		}
+		extracted.EmailVerified = strings.EqualFold(strExtracted.EmailVerified, "true")
 	}
 
 	user := &AuthUser{
