@@ -35,23 +35,72 @@ func TestNewRegistry(t *testing.T) {
 }
 
 func TestRegistryAddFuncs(t *testing.T) {
-	r := NewRegistry()
+	t.Run("simple func", func(t *testing.T) {
+		r := NewRegistry()
 
-	r.AddFuncs(map[string]any{
-		"test": func(a string) string { return a + "-TEST" },
+		r.AddFuncs(map[string]any{
+			"test": func(a string) string { return a + "-TEST" },
+		})
+
+		checkRegistryFuncs(t, r, "raw", "test")
+
+		result, err := r.LoadString(`{{.|test}}`).Render("example")
+		if err != nil {
+			t.Fatalf("Unexpected Render() error, got %v", err)
+		}
+
+		expected := "example-TEST"
+		if result != expected {
+			t.Fatalf("Expected Render() result %q, got %q", expected, result)
+		}
 	})
 
-	checkRegistryFuncs(t, r, "raw", "test")
+	t.Run("closure func + cache buste", func(t *testing.T) {
+		r := NewRegistry()
 
-	result, err := r.LoadString(`{{.|test}}`).Render("example")
-	if err != nil {
-		t.Fatalf("Unexpected Render() error, got %v", err)
-	}
+		r.AddFuncs(map[string]any{
+			"test": func(a string) string { return a + "-FOO" },
+		})
 
-	expected := "example-TEST"
-	if result != expected {
-		t.Fatalf("Expected Render() result %q, got %q", expected, result)
-	}
+		checkRegistryFuncs(t, r, "raw", "test")
+
+		result, err := r.LoadString(`{{.|test}}`).Render("example")
+		if err != nil {
+			t.Fatalf("Unexpected Render() error, got %v", err)
+		}
+
+		expected := "example-FOO"
+		if result != expected {
+			t.Fatalf("Expected Render() result %q, got %q", expected, result)
+		}
+
+		r.AddFuncs(map[string]any{
+			"test": func(a string) string { return a + "-BAR" },
+		})
+
+		result, err = r.LoadString(`{{.|test}}`).Render("example")
+		if err != nil {
+			t.Fatalf("Unexpected Render() error, got %v", err)
+		}
+
+		// Output will be the same despite overriding "test", because it is cached
+		expected = "example-FOO"
+		if result != expected {
+			t.Fatalf("Expected Render() result %q, got %q", expected, result)
+		}
+
+		// Buste the cache by "reloading"
+		result, err = r.ReloadString(`{{.|test}}`).Render("example")
+		if err != nil {
+			t.Fatalf("Unexpected Render() error, got %v", err)
+		}
+
+		// Now the new output from "test" should be seen
+		expected = "example-BAR"
+		if result != expected {
+			t.Fatalf("Expected Render() result %q, got %q", expected, result)
+		}
+	})
 }
 
 func TestRegistryLoadFiles(t *testing.T) {

@@ -112,6 +112,17 @@ func (r *Registry) LoadString(text string) *Renderer {
 	return found
 }
 
+// ReloadString caches the specified inline string as a single template and
+// returns a ready to use Renderer instance.
+func (r *Registry) ReloadString(text string) *Renderer {
+	// parse and cache (using the text as key)
+	tpl, err := template.New("").Funcs(r.funcs).Parse(text)
+	renderer := &Renderer{template: tpl, parseError: err}
+	r.cache.Set(text, renderer)
+
+	return renderer
+}
+
 // LoadFS caches (if not already) the specified fs and globPatterns
 // pair as single template and returns a ready to use Renderer instance.
 //
