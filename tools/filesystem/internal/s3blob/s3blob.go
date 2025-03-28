@@ -79,9 +79,13 @@ func (drv *driver) NormalizeError(err error) error {
 		return err
 	}
 
-	// normalize base on its S3 error code
-	var ae s3.ResponseError
+	// normalize base on its S3 error status or code
+	var ae *s3.ResponseError
 	if errors.As(err, &ae) {
+		if ae.Status == 404 {
+			return errors.Join(err, blob.ErrNotFound)
+		}
+
 		switch ae.Code {
 		case "NoSuchBucket", "NoSuchKey", "NotFound":
 			return errors.Join(err, blob.ErrNotFound)

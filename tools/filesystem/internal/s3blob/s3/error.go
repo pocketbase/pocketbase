@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+var _ error = (*ResponseError)(nil)
+
 // ResponseError defines a general S3 response error.
 //
 // https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
@@ -20,7 +22,7 @@ type ResponseError struct {
 }
 
 // Error implements the std error interface.
-func (err ResponseError) Error() string {
+func (err *ResponseError) Error() string {
 	var strBuilder strings.Builder
 
 	strBuilder.WriteString(strconv.Itoa(err.Status))
