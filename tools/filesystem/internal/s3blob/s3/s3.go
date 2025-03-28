@@ -29,6 +29,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 	"time"
@@ -61,7 +62,7 @@ type S3 struct {
 }
 
 // URL constructs an S3 request URL based on the current configuration.
-func (s3 *S3) URL(key string) string {
+func (s3 *S3) URL(path string) string {
 	scheme := "https"
 	endpoint := strings.TrimRight(s3.Endpoint, "/")
 	if after, ok := strings.CutPrefix(endpoint, "https://"); ok {
@@ -71,13 +72,13 @@ func (s3 *S3) URL(key string) string {
 		scheme = "http"
 	}
 
-	key = strings.TrimLeft(key, "/")
+	path = strings.TrimLeft(path, "/")
 
 	if s3.UsePathStyle {
-		return fmt.Sprintf("%s://%s/%s/%s", scheme, endpoint, s3.Bucket, key)
+		return fmt.Sprintf("%s://%s/%s/%s", scheme, endpoint, s3.Bucket, path)
 	}
 
-	return fmt.Sprintf("%s://%s.%s/%s", scheme, s3.Bucket, endpoint, key)
+	return fmt.Sprintf("%s://%s.%s/%s", scheme, s3.Bucket, endpoint, path)
 }
 
 // SignAndSend signs the provided request per AWS Signature v4 and sends it.
@@ -150,8 +151,8 @@ func (s3 *S3) sign(req *http.Request) {
 
 	canonicalParts := []string{
 		req.Method,
-		req.URL.EscapedPath(),
-		encodeQuery(req),
+		escapePath(req.URL.Path),
+		escapeQuery(req.URL.Query()),
 		canonicalHeaders,
 		signedHeaders,
 		req.Header.Get("x-amz-content-sha256"),
@@ -200,12 +201,6 @@ func (s3 *S3) sign(req *http.Request) {
 	)
 
 	req.Header.Set("authorization", authorization)
-}
-
-// encodeQuery encodes the request query parameters according to the AWS requirements
-// (see UriEncode description in https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-create-signed-request.html).
-func encodeQuery(req *http.Request) string {
-	return strings.ReplaceAll(req.URL.Query().Encode(), "+", "%20")
 }
 
 func sha256Hex(content []byte) string {
@@ -279,4 +274,97 @@ func extractMetadata(headers http.Header) map[string]string {
 	}
 
 	return result
+}
+
+// escapeQuery returns the URI encoded request query parameters according to the AWS S3 spec requirements
+// (it is similar to url.Values.Encode but instead of url.QueryEscape uses our own escape method).
+func escapeQuery(values url.Values) string {
+	if len(values) == 0 {
+		return ""
+	}
+
+	var buf strings.Builder
+
+	keys := make([]string, 0, len(values))
+	for k := range values {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+
+	for _, k := range keys {
+		vs := values[k]
+		keyEscaped := escape(k)
+		for _, values := range vs {
+			if buf.Len() > 0 {
+				buf.WriteByte('&')
+			}
+			buf.WriteString(keyEscaped)
+			buf.WriteByte('=')
+			buf.WriteString(escape(values))
+		}
+	}
+
+	return buf.String()
+}
+
+// escapePath returns the URI encoded request path according to the AWS S3 spec requirements.
+func escapePath(path string) string {
+	parts := strings.Split(path, "/")
+
+	for i, part := range parts {
+		parts[i] = escape(part)
+	}
+
+	return strings.Join(parts, "/")
+}
+
+const upperhex = "0123456789ABCDEF"
+
+// escape is similar to the std url.escape but implements the AWS [UriEncode requirements]:
+//   - URI encode every byte except the unreserved characters: 'A'-'Z', 'a'-'z', '0'-'9', '-', '.', '_', and '~'.
+//   - The space character is a reserved character and must be encoded as "%20" (and not as "+").
+//   - Each URI encoded byte is formed by a '%' and the two-digit hexadecimal value of the byte.
+//   - Letters in the hexadecimal value must be uppercase, for example "%1A".
+//
+// [UriEncode requirements]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-create-signed-request.html
+func escape(s string) string {
+	hexCount := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if shouldEscape(c) {
+			hexCount++
+		}
+	}
+
+	if hexCount == 0 {
+		return s
+	}
+
+	result := make([]byte, len(s)+2*hexCount)
+
+	j := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if shouldEscape(c) {
+			result[j] = '%'
+			result[j+1] = upperhex[c>>4]
+			result[j+2] = upperhex[c&15]
+			j += 3
+		} else {
+			result[j] = c
+			j++
+		}
+	}
+
+	return string(result)
+}
+
+// > "URI encode every byte except the unreserved characters: 'A'-'Z', 'a'-'z', '0'-'9', '-', '.', '_', and '~'."
+func shouldEscape(c byte) bool {
+	isUnreserved := (c >= 'A' && c <= 'Z') ||
+		(c >= 'a' && c <= 'z') ||
+		(c >= '0' && c <= '9') ||
+		c == '-' || c == '.' || c == '_' || c == '~'
+
+	return !isUnreserved
 }

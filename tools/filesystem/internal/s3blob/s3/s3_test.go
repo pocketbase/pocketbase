@@ -98,11 +98,13 @@ func TestS3SignAndSend(t *testing.T) {
 
 	scenarios := []struct {
 		name     string
+		path     string
 		reqFunc  func(req *http.Request)
 		s3Client *s3.S3
 	}{
 		{
 			"minimal",
+			"/test",
 			func(req *http.Request) {
 				req.Header.Set("x-amz-date", "20250102T150405Z")
 			},
@@ -129,6 +131,7 @@ func TestS3SignAndSend(t *testing.T) {
 		},
 		{
 			"minimal with different access and secret keys",
+			"/test",
 			func(req *http.Request) {
 				req.Header.Set("x-amz-date", "20250102T150405Z")
 			},
@@ -154,7 +157,35 @@ func TestS3SignAndSend(t *testing.T) {
 			},
 		},
 		{
+			"minimal with special characters",
+			"/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!@#$^&*()=/@sub?a=1&@b=@2",
+			func(req *http.Request) {
+				req.Header.Set("x-amz-date", "20250102T150405Z")
+			},
+			&s3.S3{
+				Region:    "test_region",
+				Bucket:    "test_bucket",
+				Endpoint:  "https://example.com/",
+				AccessKey: "456",
+				SecretKey: "def",
+				Client: tests.NewClient(&tests.RequestStub{
+					Method:   http.MethodGet,
+					URL:      "https://test_bucket.example.com/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~!@#$%5E&*()=/@sub?a=1&@b=@2",
+					Response: testResponse(),
+					Match: func(req *http.Request) bool {
+						return tests.ExpectHeaders(req.Header, map[string]string{
+							"Authorization":        "AWS4-HMAC-SHA256 Credential=456/20250102/test_region/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=e0001982deef1652704f74503203e77d83d4c88369421f9fca644d96f2a62a3c",
+							"Host":                 "test_bucket.example.com",
+							"X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
+							"X-Amz-Date":           "20250102T150405Z",
+						})
+					},
+				}),
+			},
+		},
+		{
 			"with extra headers",
+			"/test",
 			func(req *http.Request) {
 				req.Header.Set("x-amz-date", "20250102T150405Z")
 				req.Header.Set("x-amz-content-sha256", "test_sha256")
@@ -191,7 +222,7 @@ func TestS3SignAndSend(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodGet, s.s3Client.URL("/test"), strings.NewReader("test_request"))
+			req, err := http.NewRequest(http.MethodGet, s.s3Client.URL(s.path), strings.NewReader("test_request"))
 			if err != nil {
 				t.Fatal(err)
 			}

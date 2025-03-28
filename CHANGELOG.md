@@ -7,6 +7,11 @@
 - Minor UI fixes (_removed the superuser fields from the auth record create/update examples, etc._).
 
 
+## v0.26.5
+
+- Fixed canonical URI parts escaping when generating the S3 request signature ([#6654](https://github.com/pocketbase/pocketbase/issues/6654)).
+
+
 ## v0.26.4
 
 - Fixed `RecordErrorEvent.Error` and `CollectionErrorEvent.Error` sync with `ModelErrorEvent.Error` ([#6639](https://github.com/pocketbase/pocketbase/issues/6639)).

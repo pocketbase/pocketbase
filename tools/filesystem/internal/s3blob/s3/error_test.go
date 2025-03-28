@@ -19,7 +19,7 @@ func TestResponseErrorSerialization(t *testing.T) {
 		</Error>
 	`
 
-	respErr := s3.ResponseError{
+	respErr := &s3.ResponseError{
 		Status: 123,
 		Raw:    []byte("test"),
 	}
@@ -45,17 +45,17 @@ func TestResponseErrorSerialization(t *testing.T) {
 func TestResponseErrorErrorInterface(t *testing.T) {
 	scenarios := []struct {
 		name     string
-		err      s3.ResponseError
+		err      *s3.ResponseError
 		expected string
 	}{
 		{
 			"empty",
-			s3.ResponseError{},
+			&s3.ResponseError{},
 			"0 S3ResponseError",
 		},
 		{
 			"with code and message (nil raw)",
-			s3.ResponseError{
+			&s3.ResponseError{
 				Status:  123,
 				Code:    "test_code",
 				Message: "test_message",
@@ -64,7 +64,7 @@ func TestResponseErrorErrorInterface(t *testing.T) {
 		},
 		{
 			"with code and message (non-nil raw)",
-			s3.ResponseError{
+			&s3.ResponseError{
 				Status:  123,
 				Code:    "test_code",
 				Message: "test_message",
