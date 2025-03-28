@@ -1,6 +1,6 @@
 ## v0.26.5
 
-- Fixed S3 canonical parts escaping when generating the SigV4 request signature ([#6654](https://github.com/pocketbase/pocketbase/issues/6654)).
+- Fixed canonical URI parts escaping when generating the S3 request signature ([#6654](https://github.com/pocketbase/pocketbase/issues/6654)).
 
 
 ## v0.26.4
