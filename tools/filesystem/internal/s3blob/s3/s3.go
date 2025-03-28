@@ -307,7 +307,7 @@ func escapeQuery(values url.Values) string {
 	return buf.String()
 }
 
-// escapePath returns the URI encoded request path according to the AWS S3 spec requirments.
+// escapePath returns the URI encoded request path according to the AWS S3 spec requirements.
 func escapePath(path string) string {
 	parts := strings.Split(path, "/")
 
