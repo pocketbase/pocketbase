@@ -2,6 +2,8 @@
 
 - Allow OIDC `email_verified` to be int or boolean string since some OIDC providers like AWS Cognito has non-standard userinfo response ([#6657](https://github.com/pocketbase/pocketbase/pull/6657)).
 
+- Updated `modernc.org/sqlite` to 1.36.3.
+
 
 ## v0.26.5
 
