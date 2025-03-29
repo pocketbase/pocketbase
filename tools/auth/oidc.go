@@ -92,7 +92,7 @@ func (p *OIDC) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		Username      string `json:"preferred_username"`
 		Picture       string `json:"picture"`
 		Email         string `json:"email"`
-		EmailVerified bool   `json:"email_verified"`
+		EmailVerified any    `json:"email_verified"` // see #6657
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (p *OIDC) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	user.Expiry, _ = types.ParseDateTime(token.Expiry)
 
-	if extracted.EmailVerified {
+	if cast.ToBool(extracted.EmailVerified) {
 		user.Email = extracted.Email
 	}
 
