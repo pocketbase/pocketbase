@@ -1,3 +1,8 @@
+## v0.22.34
+
+- (_Backported from v0.26.6_) Allow OIDC `email_verified` to be int or boolean string since some OIDC providers like AWS Cognito has non-standard userinfo response ([#6657](https://github.com/pocketbase/pocketbase/pull/6657)).
+
+
 ## v0.22.33
 
 - (_Backported from v0.26.3_) Fixed and normalized logs error serialization across common types for more consistent logs error output ([#6631](https://github.com/pocketbase/pocketbase/issues/6631)).
