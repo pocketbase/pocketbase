@@ -5,6 +5,7 @@
     import TinyMCE from "@/components/base/TinyMCE.svelte";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
     import RecordInfo from "@/components/records/RecordInfo.svelte";
+    import GeoPointValue from "@/components/records/fields/GeoPointValue.svelte";
     import { superuser } from "@/stores/superuser";
     import CommonHelper from "@/utils/CommonHelper";
 
@@ -120,6 +121,8 @@
             ...
         {/if}
     </div>
+{:else if field.type === "geoPoint"}
+    <div class="label"><GeoPointValue value={rawValue} /></div>
 {:else if short}
     <span class="txt txt-ellipsis" title={CommonHelper.truncate(rawValue)}>
         {CommonHelper.truncate(rawValue)}

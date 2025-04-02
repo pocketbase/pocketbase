@@ -420,7 +420,8 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 		}
 
 		// json field -> treat the rest of the props as json path
-		if field != nil && field.Type() == FieldTypeJSON {
+		// @todo consider converting to "JSONExtractable" interface
+		if field != nil && (field.Type() == FieldTypeJSON || field.Type() == FieldTypeGeoPoint) {
 			var jsonPath strings.Builder
 			for j, p := range r.activeProps[i+1:] {
 				if _, err := strconv.Atoi(p); err == nil {

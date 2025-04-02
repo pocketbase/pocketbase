@@ -4,6 +4,8 @@
 
 - Updated the `select` field UI to accomodate better larger lists and RTL languages ([#4674](https://github.com/pocketbase/pocketbase/issues/4674)).
 
+- Added new `geoPoint` field for storing `{lon:x,lat:y}` record value (@todo docs).
+
 - Minor UI fixes (_removed the superuser fields from the auth record create/update examples, etc._).
 
 

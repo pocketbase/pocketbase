@@ -249,13 +249,55 @@ func buildResolversExpr(
 	return expr, nil
 }
 
+// @todo test and docs
+var filterFunctions = map[string]func(
+	argTokenResolverFunc func(fexpr.Token) (*ResolverResult, error),
+	args ...fexpr.Token,
+) (*ResolverResult, error){
+	// geoDistance(lonA, latA, lonB, latB) calculates the Haversine
+	// distance between 2 coordinates in metres
+	// (https://www.movable-type.co.uk/scripts/latlong.html).
+	"geoDistance": func(argTokenResolverFunc func(fexpr.Token) (*ResolverResult, error), args ...fexpr.Token) (*ResolverResult, error) {
+		if len(args) != 4 {
+			return nil, fmt.Errorf("[geoDistance] expected 4 arguments, got %d", len(args))
+		}
+
+		resolvedArgs := make([]*ResolverResult, 4)
+		for i, arg := range args {
+			if arg.Type != fexpr.TokenIdentifier && arg.Type != fexpr.TokenNumber && arg.Type != fexpr.TokenFunction {
+				return nil, fmt.Errorf("[geoDistance] argument %d must be an identifier, number or function", i)
+			}
+			resolved, err := argTokenResolverFunc(arg)
+			if err != nil {
+				return nil, fmt.Errorf("[geoDistance] failed to resolve argument %d: %w", i, err)
+			}
+			resolvedArgs[i] = resolved
+		}
+
+		lonA := resolvedArgs[0].Identifier
+		latA := resolvedArgs[1].Identifier
+		lonB := resolvedArgs[2].Identifier
+		latB := resolvedArgs[3].Identifier
+
+		return &ResolverResult{
+			NoCoalesce: true,
+			Identifier: `(6371 * acos(` +
+				`cos(radians(` + latA + `)) * cos(radians(` + latB + `)) * ` +
+				`cos(radians(` + lonB + `) - radians(` + lonA + `)) + ` +
+				`sin(radians(` + latA + `)) * sin(radians(` + latB + `))` +
+				`))`,
+			Params: mergeParams(resolvedArgs[0].Params, resolvedArgs[1].Params, resolvedArgs[2].Params, resolvedArgs[3].Params),
+		}, nil
+	},
+}
+
 func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResult, error) {
 	switch token.Type {
 	case fexpr.TokenIdentifier:
 		// check for macros
 		// ---
 		if macroFunc, ok := identifierMacros[token.Literal]; ok {
-			placeholder := "t" + security.PseudorandomString(5)
+			placeholder := "t" + security.PseudorandomString(8)
 
 			macroValue, err := macroFunc()
 			if err != nil {
@@ -272,6 +314,7 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 		// ---
 		result, err := fieldResolver.Resolve(token.Literal)
 
+		// @todo replace with strings.EqualFold
 		if err != nil || result.Identifier == "" {
 			m := map[string]string{
 				// if `null` field is missing, treat `null` identifier as NULL token
@@ -289,22 +332,32 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 
 		return result, err
 	case fexpr.TokenText:
-		placeholder := "t" + security.PseudorandomString(5)
+		placeholder := "t" + security.PseudorandomString(8)
 
 		return &ResolverResult{
 			Identifier: "{:" + placeholder + "}",
 			Params:     dbx.Params{placeholder: token.Literal},
 		}, nil
 	case fexpr.TokenNumber:
-		placeholder := "t" + security.PseudorandomString(5)
+		placeholder := "t" + security.PseudorandomString(8)
 
 		return &ResolverResult{
 			Identifier: "{:" + placeholder + "}",
 			Params:     dbx.Params{placeholder: cast.ToFloat64(token.Literal)},
 		}, nil
+	case fexpr.TokenFunction:
+		f, ok := filterFunctions[token.Literal]
+		if !ok {
+			return nil, fmt.Errorf("unknown function %q", token.Literal)
+		}
+
+		args, _ := token.Meta.([]fexpr.Token)
+		return f(func(argToken fexpr.Token) (*ResolverResult, error) {
+			return resolveToken(argToken, fieldResolver)
+		}, args...)
 	}
 
-	return nil, errors.New("unresolvable token type")
+	return nil, fmt.Errorf("unsupported token type %q", token.Type)
 }
 
 // Resolves = and != expressions in an attempt to minimize the COALESCE
@@ -614,8 +667,8 @@ func (e *manyVsManyExpr) Build(db *dbx.DB, params dbx.Params) string {
 		return "0=1"
 	}
 
-	lAlias := "__ml" + security.PseudorandomString(5)
-	rAlias := "__mr" + security.PseudorandomString(5)
+	lAlias := "__ml" + security.PseudorandomString(8)
+	rAlias := "__mr" + security.PseudorandomString(8)
 
 	whereExpr, buildErr := buildResolversExpr(
 		&ResolverResult{
@@ -671,7 +724,7 @@ func (e *manyVsOneExpr) Build(db *dbx.DB, params dbx.Params) string {
 		return "0=1"
 	}
 
-	alias := "__sm" + security.PseudorandomString(5)
+	alias := "__sm" + security.PseudorandomString(8)
 
 	r1 := &ResolverResult{
 		NoCoalesce: e.noCoalesce,

@@ -1,8 +1,9 @@
 <script>
+    import CommonHelper from "@/utils/CommonHelper";
     import RecordFileThumb from "@/components/records/RecordFileThumb.svelte";
     import RecordInfoContent from "@/components/records/RecordInfoContent.svelte";
+    import GeoPointValue from "@/components/records/fields/GeoPointValue.svelte";
     import { collections } from "@/stores/collections";
-    import CommonHelper from "@/utils/CommonHelper";
 
     export let record;
 
@@ -53,6 +54,8 @@
 
     {#if field.type == "relation" && record.expand?.[field.name]}
         <RecordInfoContent bind:record={record.expand[field.name]} />
+    {:else if field.type == "geoPoint"}
+        <GeoPointValue value={record[field.name]} />
     {:else}
         {CommonHelper.truncate(CommonHelper.displayValue(record, [field.name]), 70)}
     {/if}

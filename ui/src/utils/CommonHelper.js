@@ -1161,7 +1161,7 @@ export default class CommonHelper {
      * @return {String}
      */
     static getFieldTypeIcon(type) {
-        switch (type?.toLowerCase()) {
+        switch (type) {
             case "primary":
                 return "ri-key-line";
             case "text":
@@ -1190,6 +1190,8 @@ export default class CommonHelper {
                 return "ri-lock-password-line";
             case "autodate":
                 return "ri-calendar-check-line";
+            case "geoPoint":
+                return "ri-map-pin-2-line";
             default:
                 return "ri-star-s-line";
         }
@@ -1774,7 +1776,12 @@ export default class CommonHelper {
 
         const fields = collection.fields || [];
         for (const field of fields) {
-            CommonHelper.pushUnique(result, prefix + field.name);
+            if (field.type == "geoPoint") {
+                CommonHelper.pushUnique(result, prefix + field.name + ".lon");
+                CommonHelper.pushUnique(result, prefix + field.name + ".lat");
+            } else {
+                CommonHelper.pushUnique(result, prefix + field.name);
+            }
         }
 
         return result;

@@ -40,7 +40,7 @@
             icon: CommonHelper.getFieldTypeIcon("url"),
         },
         {
-            label: "DateTime",
+            label: "Datetime",
             value: "date",
             icon: CommonHelper.getFieldTypeIcon("date"),
         },
@@ -68,6 +68,11 @@
             label: "JSON",
             value: "json",
             icon: CommonHelper.getFieldTypeIcon("json"),
+        },
+        {
+            label: "Geo Point",
+            value: "geoPoint",
+            icon: CommonHelper.getFieldTypeIcon("geoPoint"),
         },
         // {
         //     label: "Password",

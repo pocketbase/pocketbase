@@ -969,6 +969,13 @@ func (m *Record) GetDateTime(key string) types.DateTime {
 	return d
 }
 
+// GetGeoPoint returns the data value for "key" as a GeoPoint instance.
+func (m *Record) GetGeoPoint(key string) types.GeoPoint {
+	point := types.GeoPoint{}
+	_ = point.Scan(m.Get(key))
+	return point
+}
+
 // GetStringSlice returns the data value for "key" as a slice of non-zero unique strings.
 func (m *Record) GetStringSlice(key string) []string {
 	return list.ToUniqueStringSlice(m.Get(key))

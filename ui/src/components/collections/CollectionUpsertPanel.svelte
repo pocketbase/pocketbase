@@ -1,4 +1,12 @@
 <script>
+    import { createEventDispatcher, tick } from "svelte";
+    import { scale } from "svelte/transition";
+    import ApiClient from "@/utils/ApiClient";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { confirm } from "@/stores/confirmation";
+    import { errors, removeError, setErrors } from "@/stores/errors";
+    import { addSuccessToast, removeAllToasts } from "@/stores/toasts";
+    import { addCollection, removeCollection, scaffolds, activeCollection } from "@/stores/collections";
     import tooltip from "@/actions/tooltip";
     import Field from "@/components/base/Field.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
@@ -8,14 +16,6 @@
     import CollectionQueryTab from "@/components/collections/CollectionQueryTab.svelte";
     import CollectionRulesTab from "@/components/collections/CollectionRulesTab.svelte";
     import CollectionUpdateConfirm from "@/components/collections/CollectionUpdateConfirm.svelte";
-    import { addCollection, removeCollection, scaffolds, activeCollection } from "@/stores/collections";
-    import { confirm } from "@/stores/confirmation";
-    import { errors, removeError, setErrors } from "@/stores/errors";
-    import { addSuccessToast, removeAllToasts } from "@/stores/toasts";
-    import ApiClient from "@/utils/ApiClient";
-    import CommonHelper from "@/utils/CommonHelper";
-    import { createEventDispatcher, tick } from "svelte";
-    import { scale } from "svelte/transition";
 
     const TAB_SCHEMA = "schema";
     const TAB_RULES = "api_rules";

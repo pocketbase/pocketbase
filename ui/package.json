@@ -28,6 +28,7 @@
     "chart.js": "^4.0.0",
     "chartjs-adapter-luxon": "^1.2.0",
     "chartjs-plugin-zoom": "^2.0.1",
+    "leaflet": "^1.9.4",
     "luxon": "^3.4.4",
     "pocketbase": "^0.25.1",
     "sass": "^1.45.0",

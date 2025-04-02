@@ -524,7 +524,7 @@ select {
         border-top-left-radius: var(--baseRadius);
         border-top-right-radius: var(--baseRadius);
         & ~ %input,
-        & ~ div %input {
+        & ~ div > %input {
             border-top: 0;
             padding-top: 2px;
             padding-bottom: 8px;
@@ -545,7 +545,7 @@ select {
                     background var(--baseAnimationSpeed),
                     box-shadow var(--baseAnimationSpeed);
     }
-    &:focus-within {
+    &:focus-within:not(.form-field-list) {
         %input, label {
             background: var(--baseAlt2Color);
         }
@@ -661,7 +661,7 @@ select {
             border: 0;
             margin: 0;
             outline: 0;
-            background: none;
+            background: none !important;
             display: inline-flex;
             vertical-align: top;
             align-items: center;
@@ -879,6 +879,33 @@ select {
     @for $i from 12 through 1 {
         .form-field.col-#{$i} {
             width: math.div(100%, math.div(12, $i));
+        }
+    }
+}
+
+.form-field-inline {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    > label {
+        height: auto;
+        width: auto;
+        margin: 0;
+        padding: 0 5px 0 10px;
+        padding-bottom: 0;
+        white-space: nowrap;
+        border-top-left-radius: var(--baseRadius);
+        border-top-right-radius: 0;
+        border-bottom-left-radius: var(--baseRadius);
+        border-bottom-right-radius: 0;
+        ~ input {
+            padding-left: 5px;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-top-left-radius: 0;
+            border-top-right-radius: var(--baseRadius);
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: var(--baseRadius);
         }
     }
 }
@@ -1155,7 +1182,7 @@ select {
 .form-field-list {
     border-radius: var(--baseRadius);
     transition: box-shadow var(--baseAnimationSpeed);
-    label {
+    > label {
         padding-bottom: 10px;
     }
     .list {
@@ -1196,8 +1223,11 @@ select {
         }
     }
     &:focus-within {
-        .list, label {
+        .list, %input:not(:focus), > label {
             background: var(--baseAlt1Color);
+        }
+        > label {
+            color: var(--txtPrimaryColor);
         }
     }
     &.dragover:not(:has(.dragging)) {
