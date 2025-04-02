@@ -170,7 +170,7 @@ func TestImportCollections(t *testing.T) {
 				expectedCollectionFields := map[string]int{
 					core.CollectionNameAuthOrigins: 6,
 					"nologin":                      10,
-					"demo1":                        18,
+					"demo1":                        19,
 					"demo2":                        5,
 					"demo3":                        5,
 					"demo4":                        16,
