@@ -453,7 +453,7 @@ func recordUpdate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 			form.SetRecord(e.Record)
 
 			manageRuleQuery := e.App.DB().Select("(1)").From(e.Collection.Name).AndWhere(dbx.HashExp{
-				// note: use the original record id and not e.Record.Id because the record validations because may get overwritten
+				// note: use the original record id and not e.Record.Id because it may get overwritten
 				e.Collection.Name + ".id": e.Record.LastSavedPK(),
 			})
 			if !form.HasManageAccess() &&

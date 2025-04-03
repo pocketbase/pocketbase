@@ -249,48 +249,6 @@ func buildResolversExpr(
 	return expr, nil
 }
 
-// @todo test and docs
-var filterFunctions = map[string]func(
-	argTokenResolverFunc func(fexpr.Token) (*ResolverResult, error),
-	args ...fexpr.Token,
-) (*ResolverResult, error){
-	// geoDistance(lonA, latA, lonB, latB) calculates the Haversine
-	// distance between 2 coordinates in metres
-	// (https://www.movable-type.co.uk/scripts/latlong.html).
-	"geoDistance": func(argTokenResolverFunc func(fexpr.Token) (*ResolverResult, error), args ...fexpr.Token) (*ResolverResult, error) {
-		if len(args) != 4 {
-			return nil, fmt.Errorf("[geoDistance] expected 4 arguments, got %d", len(args))
-		}
-
-		resolvedArgs := make([]*ResolverResult, 4)
-		for i, arg := range args {
-			if arg.Type != fexpr.TokenIdentifier && arg.Type != fexpr.TokenNumber && arg.Type != fexpr.TokenFunction {
-				return nil, fmt.Errorf("[geoDistance] argument %d must be an identifier, number or function", i)
-			}
-			resolved, err := argTokenResolverFunc(arg)
-			if err != nil {
-				return nil, fmt.Errorf("[geoDistance] failed to resolve argument %d: %w", i, err)
-			}
-			resolvedArgs[i] = resolved
-		}
-
-		lonA := resolvedArgs[0].Identifier
-		latA := resolvedArgs[1].Identifier
-		lonB := resolvedArgs[2].Identifier
-		latB := resolvedArgs[3].Identifier
-
-		return &ResolverResult{
-			NoCoalesce: true,
-			Identifier: `(6371 * acos(` +
-				`cos(radians(` + latA + `)) * cos(radians(` + latB + `)) * ` +
-				`cos(radians(` + lonB + `) - radians(` + lonA + `)) + ` +
-				`sin(radians(` + latA + `)) * sin(radians(` + latB + `))` +
-				`))`,
-			Params: mergeParams(resolvedArgs[0].Params, resolvedArgs[1].Params, resolvedArgs[2].Params, resolvedArgs[3].Params),
-		}, nil
-	},
-}
-
 var normalizedIdentifiers = map[string]string{
 	// if `null` field is missing, treat `null` identifier as NULL token
 	"null": "NULL",
@@ -347,7 +305,7 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 			Params:     dbx.Params{placeholder: cast.ToFloat64(token.Literal)},
 		}, nil
 	case fexpr.TokenFunction:
-		fn, ok := filterFunctions[token.Literal]
+		fn, ok := tokenFunctions[token.Literal]
 		if !ok {
 			return nil, fmt.Errorf("unknown function %q", token.Literal)
 		}
