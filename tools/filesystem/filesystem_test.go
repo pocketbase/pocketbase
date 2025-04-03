@@ -431,6 +431,36 @@ func TestFileSystemServe(t *testing.T) {
 			},
 		},
 		{
+			// js exception
+			"main.js",
+			"test_name.js",
+			nil,
+			nil,
+			false,
+			map[string]string{
+				"Content-Disposition":     "attachment; filename=test_name.js",
+				"Content-Type":            "text/javascript",
+				"Content-Length":          "0",
+				"Content-Security-Policy": csp,
+				"Cache-Control":           cacheControl,
+			},
+		},
+		{
+			// mjs exception
+			"main.mjs",
+			"test_name.mjs",
+			nil,
+			nil,
+			false,
+			map[string]string{
+				"Content-Disposition":     "attachment; filename=test_name.mjs",
+				"Content-Type":            "text/javascript",
+				"Content-Length":          "0",
+				"Content-Security-Policy": csp,
+				"Cache-Control":           cacheControl,
+			},
+		},
+		{
 			// custom header
 			"test/sub2.txt",
 			"test_name.txt",
@@ -600,6 +630,8 @@ func TestFileSystemList(t *testing.T) {
 				"image.svg",
 				"image_! noext",
 				"style.css",
+				"main.js",
+				"main.mjs",
 				"test/sub1.txt",
 				"test/sub2.txt",
 			},
@@ -802,12 +834,24 @@ func createTestDir(t *testing.T) string {
 	}
 	file5.Close()
 
-	file6, err := os.OpenFile(filepath.Join(dir, "image_! noext"), os.O_WRONLY|os.O_CREATE, 0644)
+	file6, err := os.OpenFile(filepath.Join(dir, "main.js"), os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
-	png.Encode(file6, image.Rect(0, 0, 1, 1)) // tiny 1x1 png
 	file6.Close()
+
+	file7, err := os.OpenFile(filepath.Join(dir, "main.mjs"), os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file7.Close()
+
+	file8, err := os.OpenFile(filepath.Join(dir, "image_! noext"), os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	png.Encode(file8, image.Rect(0, 0, 1, 1)) // tiny 1x1 png
+	file8.Close()
 
 	return dir
 }

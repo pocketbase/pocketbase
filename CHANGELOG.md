@@ -6,7 +6,9 @@
 
 - Added new `geoPoint` field for storing `{lon:x,lat:y}` record value (@todo docs).
 
-- Minor UI fixes (_removed the superuser fields from the auth record create/update examples, etc._).
+- Forced `text/javascript` Content-Type when serving `.js`/`.mjs` collection uploaded files ([#6597](https://github.com/pocketbase/pocketbase/issues/6597)).
+
+- Minor UI fixes (_removed the superuser fields from the auth record create/update body examples, etc._).
 
 
 ## v0.26.6
