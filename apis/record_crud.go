@@ -251,6 +251,73 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 			}
 		}
 
+		// check the request and record data against the create and manage rules
+		if !hasSuperuserAuth && collection.CreateRule != nil {
+			dummyRecord := record.Clone()
+
+			dummyRandomPart := "__pb_create__" + security.PseudorandomString(6)
+
+			// set an id if it doesn't have already
+			// (the value doesn't matter; it is used only to minimize the breaking changes with earlier versions)
+			if dummyRecord.Id == "" {
+				dummyRecord.Id = "__temp_id__" + dummyRandomPart
+			}
+
+			// unset the verified field to prevent manage API rule misuse in case the rule relies on it
+			dummyRecord.SetVerified(false)
+
+			// export the dummy record data into db params
+			dummyExport, err := dummyRecord.DBExport(e.App)
+			if err != nil {
+				return e.BadRequestError("Failed to create record", fmt.Errorf("dummy DBExport error: %w", err))
+			}
+
+			dummyParams := make(dbx.Params, len(dummyExport))
+			selects := make([]string, 0, len(dummyExport))
+			var param string
+			for k, v := range dummyExport {
+				k = inflector.Columnify(k) // columnify is just as extra measure in case of custom fields
+				param = "__pb_create__" + k
+				dummyParams[param] = v
+				selects = append(selects, "{:"+param+"} AS [["+k+"]]")
+			}
+
+			// shallow clone the current collection
+			dummyCollection := *collection
+			dummyCollection.Id += dummyRandomPart
+			dummyCollection.Name += inflector.Columnify(dummyRandomPart)
+
+			withFrom := fmt.Sprintf("WITH {{%s}} as (SELECT %s)", dummyCollection.Name, strings.Join(selects, ","))
+
+			// check non-empty create rule
+			if *dummyCollection.CreateRule != "" {
+				ruleQuery := e.App.DB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
+
+				resolver := core.NewRecordFieldResolver(e.App, &dummyCollection, requestInfo, true)
+
+				expr, err := search.FilterData(*dummyCollection.CreateRule).BuildExpr(resolver)
+				if err != nil {
+					return e.BadRequestError("Failed to create record", fmt.Errorf("create rule build expression failure: %w", err))
+				}
+				ruleQuery.AndWhere(expr)
+
+				resolver.UpdateQuery(ruleQuery)
+
+				var exists int
+				err = ruleQuery.Limit(1).Row(&exists)
+				if err != nil || exists == 0 {
+					return e.BadRequestError("Failed to create record", fmt.Errorf("create rule failure: %w", err))
+				}
+			}
+
+			// check for manage rule access
+			manageRuleQuery := e.App.DB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
+			if !form.HasManageAccess() &&
+				hasAuthManageAccess(e.App, requestInfo, &dummyCollection, manageRuleQuery) {
+				form.GrantManagerAccess()
+			}
+		}
+
 		var isOptFinalizerCalled bool
 
 		event := new(core.RecordRequestEvent)
@@ -261,73 +328,6 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 		hookErr := e.App.OnRecordCreateRequest().Trigger(event, func(e *core.RecordRequestEvent) error {
 			form.SetApp(e.App)
 			form.SetRecord(e.Record)
-
-			// temporary save the record and check it against the create and manage rules
-			if !hasSuperuserAuth && e.Collection.CreateRule != nil {
-				dummyRecord := e.Record.Clone()
-
-				dummyRandomPart := "__pb_create__" + security.PseudorandomString(6)
-
-				// set an id if it doesn't have already
-				// (the value doesn't matter; it is used only to minimize the breaking changes with earlier versions)
-				if dummyRecord.Id == "" {
-					dummyRecord.Id = "__temp_id__" + dummyRandomPart
-				}
-
-				// unset the verified field to prevent manage API rule misuse in case the rule relies on it
-				dummyRecord.SetVerified(false)
-
-				// export the dummy record data into db params
-				dummyExport, err := dummyRecord.DBExport(e.App)
-				if err != nil {
-					return e.BadRequestError("Failed to create record", fmt.Errorf("dummy DBExport error: %w", err))
-				}
-
-				dummyParams := make(dbx.Params, len(dummyExport))
-				selects := make([]string, 0, len(dummyExport))
-				var param string
-				for k, v := range dummyExport {
-					k = inflector.Columnify(k) // columnify is just as extra measure in case of custom fields
-					param = "__pb_create__" + k
-					dummyParams[param] = v
-					selects = append(selects, "{:"+param+"} AS [["+k+"]]")
-				}
-
-				// shallow clone the current collection
-				dummyCollection := *e.Collection
-				dummyCollection.Id += dummyRandomPart
-				dummyCollection.Name += inflector.Columnify(dummyRandomPart)
-
-				withFrom := fmt.Sprintf("WITH {{%s}} as (SELECT %s)", dummyCollection.Name, strings.Join(selects, ","))
-
-				// check non-empty create rule
-				if *dummyCollection.CreateRule != "" {
-					ruleQuery := e.App.DB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
-
-					resolver := core.NewRecordFieldResolver(e.App, &dummyCollection, requestInfo, true)
-
-					expr, err := search.FilterData(*dummyCollection.CreateRule).BuildExpr(resolver)
-					if err != nil {
-						return e.BadRequestError("Failed to create record", fmt.Errorf("create rule build expression failure: %w", err))
-					}
-					ruleQuery.AndWhere(expr)
-
-					resolver.UpdateQuery(ruleQuery)
-
-					var exists int
-					err = ruleQuery.Limit(1).Row(&exists)
-					if err != nil || exists == 0 {
-						return e.BadRequestError("Failed to create record", fmt.Errorf("create rule failure: %w", err))
-					}
-				}
-
-				// check for manage rule access
-				manageRuleQuery := e.App.DB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
-				if !form.HasManageAccess() &&
-					hasAuthManageAccess(e.App, requestInfo, &dummyCollection, manageRuleQuery) {
-					form.GrantManagerAccess()
-				}
-			}
 
 			err := form.Submit()
 			if err != nil {
@@ -441,6 +441,14 @@ func recordUpdate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 		}
 		form.Load(data)
 
+		manageRuleQuery := e.App.DB().Select("(1)").From(collection.Name).AndWhere(dbx.HashExp{
+			collection.Name + ".id": record.Id,
+		})
+		if !form.HasManageAccess() &&
+			hasAuthManageAccess(e.App, requestInfo, collection, manageRuleQuery) {
+			form.GrantManagerAccess()
+		}
+
 		var isOptFinalizerCalled bool
 
 		event := new(core.RecordRequestEvent)
@@ -451,15 +459,6 @@ func recordUpdate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 		hookErr := e.App.OnRecordUpdateRequest().Trigger(event, func(e *core.RecordRequestEvent) error {
 			form.SetApp(e.App)
 			form.SetRecord(e.Record)
-
-			manageRuleQuery := e.App.DB().Select("(1)").From(e.Collection.Name).AndWhere(dbx.HashExp{
-				// note: use the original record id and not e.Record.Id because it may get overwritten
-				e.Collection.Name + ".id": e.Record.LastSavedPK(),
-			})
-			if !form.HasManageAccess() &&
-				hasAuthManageAccess(e.App, requestInfo, e.Collection, manageRuleQuery) {
-				form.GrantManagerAccess()
-			}
 
 			err := form.Submit()
 			if err != nil {

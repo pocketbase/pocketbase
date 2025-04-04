@@ -1,14 +1,34 @@
 ## v0.27.0 (WIP)
 
+- ⚠️ Moved the Create and Manage API rule checks out of the `OnRecordCreateRequest` hook finalizer, **aka. now all API rules are checked BEFORE triggering their corresponding `*Request` hook.**.
+    This was done to minimize the confusion regarding the firing order of the request operations, making it more predictable and consistent with the other record List/View/Update/Delete request actions.
+    It could be a minor break change if you are relying on the old behavior or have a Go `tests.ApiScenario` that is testing a Create API rule failure and expect `OnRecordCreateRequest` to be fired. In that case for example you may have to update your test scenario like:
+    ```go
+    tests.ApiScenario{
+        Name:   "Example test that checks a Create API rule failure"
+        Method: http.MethodPost,
+        URL:    "/api/collections/example/records",
+        ...
+        // old:
+        ExpectedEvents:  map[string]int{
+            "*":                     0,
+            "OnRecordCreateRequest": 1,
+        },
+        // new:
+        ExpectedEvents:  map[string]int{"*": 0},
+    }
+    ```
+    If you are having difficulties adjusting your code, feel free to open a [Q&A discussion](https://github.com/pocketbase/pocketbase/discussions) with the failing/problematic code sample and I'll try to assist you migrating it.
+
+- Added new `geoPoint` field for storing `{lon:x,lat:y}` GPS coordinates (@todo docs and more info for the updated fexpr functions support, geoDistance, record.GetGeoPoint, etc.).
+
+- Updated the `select` field UI to accommodate better larger lists and RTL languages ([#4674](https://github.com/pocketbase/pocketbase/issues/4674)).
+
 - Updated the mail attachments auto MIME type detection to use `gabriel-vasile/mimetype` for consistency and broader sniffing signatures support.
-
-- Updated the `select` field UI to accomodate better larger lists and RTL languages ([#4674](https://github.com/pocketbase/pocketbase/issues/4674)).
-
-- Added new `geoPoint` field for storing `{lon:x,lat:y}` record value (@todo docs).
 
 - Forced `text/javascript` Content-Type when serving `.js`/`.mjs` collection uploaded files ([#6597](https://github.com/pocketbase/pocketbase/issues/6597)).
 
-- Soft-deprecated the `$http.send`'s `result.raw` field in favour of `result.body` that contains the response body as plain bytes slice to avoid the discrepencies between Go and the JSVM when casting binary data to string.
+- Soft-deprecated the `$http.send`'s `result.raw` field in favor of `result.body` that contains the response body as plain bytes slice to avoid the discrepancies between Go and the JSVM when casting binary data to string.
   (@todo update docs to use the new field)
 
 - Minor UI fixes (_removed the superuser fields from the auth record create/update body examples, etc._).

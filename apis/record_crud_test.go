@@ -1563,10 +1563,7 @@ func TestRecordCrudCreate(t *testing.T) {
 			Body:            strings.NewReader(`{"title":"test123"}`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "auth record submit in restricted collection (rule failure check)",
@@ -1579,10 +1576,7 @@ func TestRecordCrudCreate(t *testing.T) {
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "auth record submit in restricted collection (rule pass check) + expand relations",
@@ -1731,10 +1725,7 @@ func TestRecordCrudCreate(t *testing.T) {
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "submit via multipart form data with @jsonPayload key and satisfied @request.body rule",
@@ -1974,14 +1965,9 @@ func TestRecordCrudCreate(t *testing.T) {
 				"total+":4,
 				"total-":2
 			}`),
-			ExpectedStatus: 400,
-			ExpectedContent: []string{
-				`"data":{}`,
-			},
-			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "@request.body.field with compute modifers (rule pass check)",
