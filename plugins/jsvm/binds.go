@@ -774,11 +774,15 @@ func httpClientBinds(vm *goja.Runtime) {
 	})
 
 	type sendResult struct {
-		JSON       any                     `json:"json"`
-		Headers    map[string][]string     `json:"headers"`
-		Cookies    map[string]*http.Cookie `json:"cookies"`
-		Raw        string                  `json:"raw"`
-		StatusCode int                     `json:"statusCode"`
+		JSON    any                     `json:"json"`
+		Headers map[string][]string     `json:"headers"`
+		Cookies map[string]*http.Cookie `json:"cookies"`
+
+		// Deprecated: consider using Body instead
+		Raw string `json:"raw"`
+
+		Body       []byte `json:"body"`
+		StatusCode int    `json:"statusCode"`
 	}
 
 	type sendConfig struct {
@@ -883,6 +887,7 @@ func httpClientBinds(vm *goja.Runtime) {
 			Headers:    map[string][]string{},
 			Cookies:    map[string]*http.Cookie{},
 			Raw:        string(bodyRaw),
+			Body:       bodyRaw,
 		}
 
 		for k, v := range res.Header {
@@ -893,7 +898,7 @@ func httpClientBinds(vm *goja.Runtime) {
 			result.Cookies[v.Name] = v
 		}
 
-		if len(result.Raw) != 0 {
+		if len(result.Body) > 0 {
 			// try as map
 			result.JSON = map[string]any{}
 			if err := json.Unmarshal(bodyRaw, &result.JSON); err != nil {

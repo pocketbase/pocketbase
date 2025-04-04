@@ -1363,6 +1363,13 @@ func TestHttpClientBindsSend(t *testing.T) {
 			headers: {"content-type": "text/plain"}, // should be ignored
 		})
 
+		// raw body response field check
+		const test4 = $http.send({
+			method: "post",
+			url:    testURL,
+			body:   'test',
+		})
+
 		const scenarios = [
 			[test0, {
 				"statusCode": "400",
@@ -1395,6 +1402,13 @@ func TestHttpClientBindsSend(t *testing.T) {
 					"multipart/form-data; boundary="
 				],
 			}],
+			[test4, {
+				"statusCode":              "200",
+				"headers.X-Custom.0":      "custom_header",
+				"cookies.sessionId.value": "123456",
+				// {"body":"test","headers":{"accept_encoding":"gzip","content_length":"4","user_agent":"Go-http-client/1.1"},"method":"POST"}
+				"body": [123,34,98,111,100,121,34,58,34,116,101,115,116,34,44,34,104,101,97,100,101,114,115,34,58,123,34,97,99,99,101,112,116,95,101,110,99,111,100,105,110,103,34,58,34,103,122,105,112,34,44,34,99,111,110,116,101,110,116,95,108,101,110,103,116,104,34,58,34,52,34,44,34,117,115,101,114,95,97,103,101,110,116,34,58,34,71,111,45,104,116,116,112,45,99,108,105,101,110,116,47,49,46,49,34,125,44,34,109,101,116,104,111,100,34,58,34,80,79,83,84,34,125],
+			}],
 		]
 
 		for (let scenario of scenarios) {
@@ -1408,13 +1422,13 @@ func TestHttpClientBindsSend(t *testing.T) {
 					// check for partial match(es)
 					for (let exp of expectation) {
 						if (!value.includes(exp)) {
-							throw new Error('Expected ' + key + ' to contain ' + exp + ', got: ' + result.raw);
+							throw new Error('Expected ' + key + ' to contain ' + exp + ', got: ' + toString(result.body));
 						}
 					}
 				} else {
 					// check for direct match
 					if (value != expectation) {
-						throw new Error('Expected ' + key + ' ' + expectation + ', got: ' + result.raw);
+						throw new Error('Expected ' + key + ' ' + expectation + ', got: ' + toString(result.body));
 					}
 				}
 			}

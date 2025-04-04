@@ -1077,7 +1077,7 @@ declare namespace $http {
    * console.log(res.statusCode) // the response HTTP status code
    * console.log(res.headers)    // the response headers (eg. res.headers['X-Custom'][0])
    * console.log(res.cookies)    // the response cookies (eg. res.cookies.sessionId.value)
-   * console.log(res.raw)        // the response body as plain text
+   * console.log(res.body)       // the response body as raw bytes slice
    * console.log(res.json)       // the response body as parsed json array or map
    * ` + "```" + `
    */
@@ -1094,8 +1094,11 @@ declare namespace $http {
     statusCode: number,
     headers:    { [key:string]: Array<string> },
     cookies:    { [key:string]: http.Cookie },
-    raw:        string,
     json:       any,
+    body:       Array<number>,
+
+    // @deprecated please use toString(result.body) instead
+    raw: string,
   };
 }
 

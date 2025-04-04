@@ -8,6 +8,9 @@
 
 - Forced `text/javascript` Content-Type when serving `.js`/`.mjs` collection uploaded files ([#6597](https://github.com/pocketbase/pocketbase/issues/6597)).
 
+- Soft-deprecated the `$http.send`'s `result.raw` field in favour of `result.body` that contains the response body as plain bytes slice to avoid the discrepencies between Go and the JSVM when casting binary data to string.
+  (@todo update docs to use the new field)
+
 - Minor UI fixes (_removed the superuser fields from the auth record create/update body examples, etc._).
 
 
