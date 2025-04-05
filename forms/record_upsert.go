@@ -27,9 +27,10 @@ type RecordUpsert struct {
 	accessLevel int
 
 	// extra password fields
-	password        string
-	passwordConfirm string
-	oldPassword     string
+	disablePasswordValidations bool
+	password                   string
+	passwordConfirm            string
+	oldPassword                string
 }
 
 // NewRecordUpsert creates a new [RecordUpsert] form from the provided [core.App] and [core.Record] instances
@@ -130,6 +131,8 @@ func (form *RecordUpsert) validateFormFields() error {
 		return nil
 	}
 
+	form.syncPasswordFields()
+
 	isNew := form.record.IsNew()
 
 	original := form.record.Original()
@@ -165,17 +168,17 @@ func (form *RecordUpsert) validateFormFields() error {
 			validation.Key(
 				"password",
 				validation.When(
-					(isNew || form.passwordConfirm != "" || form.oldPassword != ""),
+					!form.disablePasswordValidations && (isNew || form.passwordConfirm != "" || form.oldPassword != ""),
 					validation.Required,
 				),
 			),
 			validation.Key(
 				"passwordConfirm",
 				validation.When(
-					(isNew || form.password != "" || form.oldPassword != ""),
+					!form.disablePasswordValidations && (isNew || form.password != "" || form.oldPassword != ""),
 					validation.Required,
 				),
-				validation.By(validators.Equal(form.password)),
+				validation.When(!form.disablePasswordValidations, validation.By(validators.Equal(form.password))),
 			),
 			validation.Key(
 				"oldPassword",
@@ -183,7 +186,7 @@ func (form *RecordUpsert) validateFormFields() error {
 				// - form.HasManageAccess() is not satisfied
 				// - changing the existing password
 				validation.When(
-					!isNew && !form.HasManageAccess() && (form.password != "" || form.passwordConfirm != ""),
+					!form.disablePasswordValidations && !isNew && !form.HasManageAccess() && (form.password != "" || form.passwordConfirm != ""),
 					validation.Required,
 					validation.By(form.checkOldPassword),
 				),
@@ -286,4 +289,28 @@ func (form *RecordUpsert) Submit() error {
 
 	// run record validations and persist in db
 	return form.app.SaveWithContext(form.ctx, form.record)
+}
+
+// syncPasswordFields syncs the form's auth password fields with their
+// corresponding record field values.
+//
+// This could be useful in case the password fields were programmatically set
+// directly by modifying the related record model.
+func (form *RecordUpsert) syncPasswordFields() {
+	if !form.record.Collection().IsAuth() {
+		return // not an auth collection
+	}
+
+	form.disablePasswordValidations = false
+
+	rawPassword := form.record.GetRaw(core.FieldNamePassword)
+	if v, ok := rawPassword.(*core.PasswordFieldValue); ok && v != nil {
+		if
+		// programmatically set custom plain password value
+		(v.Plain != "" && v.Plain != form.password) ||
+			// random generated password for new record
+			(v.Plain == "" && v.Hash != "" && form.record.IsNew()) {
+			form.disablePasswordValidations = true
+		}
+	}
 }

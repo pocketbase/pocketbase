@@ -31,7 +31,7 @@
 - Soft-deprecated the `$http.send`'s `result.raw` field in favor of `result.body` that contains the response body as plain bytes slice to avoid the discrepancies between Go and the JSVM when casting binary data to string.
   (@todo update docs to use the new field)
 
-- Minor UI fixes (_removed the superuser fields from the auth record create/update body examples, etc._).
+- Other minor improvements (_removed the superuser fields from the auth record create/update body examples, allowed programmatically updating the auth record password from the create/update hooks, etc._).
 
 
 ## v0.26.6
