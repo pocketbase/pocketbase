@@ -1,8 +1,8 @@
 ## v0.27.0 (WIP)
 
-- ⚠️ Moved the Create and Manage API rule checks out of the `OnRecordCreateRequest` hook finalizer, **aka. now all API rules are checked BEFORE triggering their corresponding `*Request` hook.**.
+- ⚠️ Moved the Create and Manage API rule checks out of the `OnRecordCreateRequest` hook finalizer, **aka. now all API rules are checked BEFORE triggering their corresponding `*Request` hook**.
     This was done to minimize the confusion regarding the firing order of the request operations, making it more predictable and consistent with the other record List/View/Update/Delete request actions.
-    It could be a minor break change if you are relying on the old behavior or have a Go `tests.ApiScenario` that is testing a Create API rule failure and expect `OnRecordCreateRequest` to be fired. In that case for example you may have to update your test scenario like:
+    It could be a minor breaking change if you are relying on the old behavior or have a Go `tests.ApiScenario` that is testing a Create API rule failure and expect `OnRecordCreateRequest` to be fired. In that case for example you may have to update your test scenario like:
     ```go
     tests.ApiScenario{
         Name:   "Example test that checks a Create API rule failure"
