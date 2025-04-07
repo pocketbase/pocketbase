@@ -11,7 +11,7 @@ var tokenFunctions = map[string]func(
 	args ...fexpr.Token,
 ) (*ResolverResult, error){
 	// geoDistance(lonA, latA, lonB, latB) calculates the Haversine
-	// distance between 2 coordinates in metres (https://www.movable-type.co.uk/scripts/latlong.html).
+	// distance between 2 coordinates in kilometres (https://www.movable-type.co.uk/scripts/latlong.html).
 	//
 	// The accepted arguments at the moment could be either a plain number or a column identifier (including NULL).
 	// If the column identifier cannot be resolved and converted to a numeric value, it resolves to NULL.
