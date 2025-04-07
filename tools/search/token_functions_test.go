@@ -164,6 +164,51 @@ func TestTokenFunctionsGeoDistance(t *testing.T) {
 	}
 }
 
+func TestTokenFunctionsGeoDistanceExec(t *testing.T) {
+	t.Parallel()
+
+	testDB, err := createTestDB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer testDB.Close()
+
+	fn, ok := tokenFunctions["geoDistance"]
+	if !ok {
+		t.Error("Expected geoDistance token function to be registered.")
+	}
+
+	result, err := fn(
+		func(t fexpr.Token) (*ResolverResult, error) {
+			placeholder := "t" + security.PseudorandomString(5)
+			return &ResolverResult{Identifier: "{:" + placeholder + "}", Params: map[string]any{placeholder: t.Literal}}, nil
+		},
+		fexpr.Token{Literal: "23.23033854945808", Type: fexpr.TokenNumber},
+		fexpr.Token{Literal: "42.713146090563384", Type: fexpr.TokenNumber},
+		fexpr.Token{Literal: "23.44920680886216", Type: fexpr.TokenNumber},
+		fexpr.Token{Literal: "42.7078484153991", Type: fexpr.TokenNumber},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	column := []float64{}
+	err = testDB.NewQuery("select " + result.Identifier).Bind(result.Params).Column(&column)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(column) != 1 {
+		t.Fatalf("Expected exactly 1 column value as result, got %v", column)
+	}
+
+	expected := "17.89"
+	distance := fmt.Sprintf("%.2f", column[0])
+	if distance != expected {
+		t.Fatalf("Expected distance value %s, got %s", expected, distance)
+	}
+}
+
 // -------------------------------------------------------------------
 
 func testCompareResults(t *testing.T, a, b *ResolverResult) {
