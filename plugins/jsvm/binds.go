@@ -548,9 +548,18 @@ func baseBinds(vm *goja.Runtime) {
 	vm.Set("DateTime", func(call goja.ConstructorCall) *goja.Object {
 		instance := types.NowDateTime()
 
-		val, _ := call.Argument(0).Export().(string)
-		if val != "" {
-			instance, _ = types.ParseDateTime(val)
+		rawDate, _ := call.Argument(0).Export().(string)
+		locName, _ := call.Argument(1).Export().(string)
+		if rawDate != "" && locName != "" {
+			loc, err := time.LoadLocation(locName)
+			if err != nil {
+				loc = time.UTC
+			}
+
+			instance, _ = types.ParseDateTime(cast.ToTimeInDefaultLocation(rawDate, loc))
+		} else if rawDate != "" {
+			// forward directly to ParseDateTime to preserve the original behavior
+			instance, _ = types.ParseDateTime(rawDate)
 		}
 
 		instanceValue := vm.ToValue(instance).(*goja.Object)

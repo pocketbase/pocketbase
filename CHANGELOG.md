@@ -1,6 +1,6 @@
 ## v0.27.0 (WIP)
 
-- ⚠️ Moved the Create and Manage API rule checks out of the `OnRecordCreateRequest` hook finalizer, **aka. now all API rules are checked BEFORE triggering their corresponding `*Request` hook**.
+- ⚠️ Moved the Create and Manage API rule checks out of the `OnRecordCreateRequest` hook finalizer, **aka. now all CRUD API rules are checked BEFORE triggering their corresponding `*Request` hook**.
     This was done to minimize the confusion regarding the firing order of the request operations, making it more predictable and consistent with the other record List/View/Update/Delete request actions.
     It could be a minor breaking change if you are relying on the old behavior or have a Go `tests.ApiScenario` that is testing a Create API rule failure and expect `OnRecordCreateRequest` to be fired. In that case for example you may have to update your test scenario like:
     ```go
@@ -27,6 +27,15 @@
 - Updated the mail attachments auto MIME type detection to use `gabriel-vasile/mimetype` for consistency and broader sniffing signatures support.
 
 - Forced `text/javascript` Content-Type when serving `.js`/`.mjs` collection uploaded files ([#6597](https://github.com/pocketbase/pocketbase/issues/6597)).
+
+- Added optional timezone argument to the JSVM `DateTime` constructor to parse the date string in the specified TZ identifier in order to better handle the daylight saving time nuances ([#6688](https://github.com/pocketbase/pocketbase/discussions/6688)):
+    ```
+    // the same as with CET offset: new DateTime("2025-10-26 03:00:00 +01:00")
+    new DateTime("2025-10-26 03:00:00", "Europe/Amsterdam") // 2025-10-26 02:00:00.000Z
+
+    // the same as with CEST offset: new DateTime("2025-10-26 01:00:00 +02:00")
+    new DateTime("2025-10-26 01:00:00", "Europe/Amsterdam") // 2025-10-25 23:00:00.000Z
+    ```
 
 - Soft-deprecated the `$http.send`'s `result.raw` field in favor of `result.body` that contains the response body as plain bytes slice to avoid the discrepancies between Go and the JSVM when casting binary data to string.
   (@todo update docs to use the new field)
