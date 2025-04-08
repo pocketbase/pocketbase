@@ -28,8 +28,8 @@
 
 - Forced `text/javascript` Content-Type when serving `.js`/`.mjs` collection uploaded files ([#6597](https://github.com/pocketbase/pocketbase/issues/6597)).
 
-- Added optional timezone argument to the JSVM `DateTime` constructor to parse the date string in the specified TZ identifier in order to better handle the daylight saving time nuances ([#6688](https://github.com/pocketbase/pocketbase/discussions/6688)):
-    ```
+- Added optional JSVM `DateTime` constructor argument for specifying a default timezone as TZ identifier when parsing the date string as alternative to fixed offset in order to better handle daylight saving time nuances ([#6688](https://github.com/pocketbase/pocketbase/discussions/6688)):
+    ```js
     // the same as with CET offset: new DateTime("2025-10-26 03:00:00 +01:00")
     new DateTime("2025-10-26 03:00:00", "Europe/Amsterdam") // 2025-10-26 02:00:00.000Z
 
