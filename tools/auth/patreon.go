@@ -6,6 +6,7 @@ import (
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/endpoints"
 )
 
 func init() {
@@ -29,8 +30,8 @@ func NewPatreonProvider() *Patreon {
 		displayName: "Patreon",
 		pkce:        true,
 		scopes:      []string{"identity", "identity[email]"},
-		authURL:     "https://www.patreon.com/oauth2/authorize",
-		tokenURL:    "https://www.patreon.com/api/oauth2/token",
+		authURL:     endpoints.Patreon.AuthURL,
+		tokenURL:    endpoints.Patreon.TokenURL,
 		userInfoURL: "https://www.patreon.com/api/oauth2/v2/identity?fields%5Buser%5D=full_name,email,vanity,image_url,is_email_verified",
 	}}
 }
