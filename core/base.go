@@ -659,7 +659,7 @@ func (app *BaseApp) NewFilesystem() (*filesystem.System, error) {
 	return filesystem.NewLocal(filepath.Join(app.DataDir(), LocalStorageDirName))
 }
 
-// NewFilesystem creates a new local or S3 filesystem instance
+// NewBackupsFilesystem creates a new local or S3 filesystem instance
 // for managing app backups based on the current app settings.
 //
 // NB! Make sure to call Close() on the returned result

@@ -91,7 +91,7 @@ type App interface {
 	// after you are done working with it.
 	NewFilesystem() (*filesystem.System, error)
 
-	// NewFilesystem creates a new local or S3 filesystem instance
+	// NewBackupsFilesystem creates a new local or S3 filesystem instance
 	// for managing app backups based on the current app settings.
 	//
 	// NB! Make sure to call Close() on the returned result
