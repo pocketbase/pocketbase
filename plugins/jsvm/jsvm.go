@@ -314,7 +314,7 @@ func (p *plugin) registerHooks() error {
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
-					fmtErr := fmt.Errorf("Failed to execute %s:\n - %v", file, err)
+					fmtErr := fmt.Errorf("failed to execute %s:\n - %v", file, err)
 
 					if p.config.HooksWatch {
 						color.Red("%v", fmtErr)

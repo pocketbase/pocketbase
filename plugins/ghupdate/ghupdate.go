@@ -204,13 +204,13 @@ func (p *plugin) update(withBackup bool) error {
 		// try again with an .exe extension
 		newExec = newExec + ".exe"
 		if _, fallbackErr := os.Stat(newExec); fallbackErr != nil {
-			return fmt.Errorf("The executable in the extracted path is missing or it is inaccessible: %v, %v", err, fallbackErr)
+			return fmt.Errorf("the executable in the extracted path is missing or it is inaccessible: %v, %v", err, fallbackErr)
 		}
 	}
 
 	// rename the current executable
 	if err := os.Rename(oldExec, renamedOldExec); err != nil {
-		return fmt.Errorf("Failed to rename the current executable: %w", err)
+		return fmt.Errorf("failed to rename the current executable: %w", err)
 	}
 
 	tryToRevertExecChanges := func() {
@@ -227,7 +227,7 @@ func (p *plugin) update(withBackup bool) error {
 	// replace with the extracted binary
 	if err := os.Rename(newExec, oldExec); err != nil {
 		tryToRevertExecChanges()
-		return fmt.Errorf("Failed replacing the executable: %w", err)
+		return fmt.Errorf("failed replacing the executable: %w", err)
 	}
 
 	if withBackup {

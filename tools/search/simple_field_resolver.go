@@ -76,7 +76,7 @@ func (r *SimpleFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 // Returns error if `field` is not in `r.allowedFields`.
 func (r *SimpleFieldResolver) Resolve(field string) (*ResolverResult, error) {
 	if !list.ExistInSliceWithRegex(field, r.allowedFields) {
-		return nil, fmt.Errorf("Failed to resolve field %q.", field)
+		return nil, fmt.Errorf("failed to resolve field %q", field)
 	}
 
 	parts := strings.Split(field, ".")

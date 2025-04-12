@@ -112,7 +112,7 @@ func (r *MigrationsRunner) Run(args ...string) error {
 		color.Green("The %s table was synced with the available migrations.", r.tableName)
 		return nil
 	default:
-		return fmt.Errorf("Unsupported command: %q\n", cmd)
+		return fmt.Errorf("unsupported command: %q", cmd)
 	}
 }
 
@@ -151,12 +151,12 @@ func (r *MigrationsRunner) Up() ([]string, error) {
 				// ignore empty Up action
 				if m.Up != nil {
 					if err := m.Up(txApp); err != nil {
-						return fmt.Errorf("Failed to apply migration %s: %w", m.File, err)
+						return fmt.Errorf("failed to apply migration %s: %w", m.File, err)
 					}
 				}
 
 				if err := r.saveAppliedMigration(txApp, m.File); err != nil {
-					return fmt.Errorf("Failed to save applied migration info for %s: %w", m.File, err)
+					return fmt.Errorf("failed to save applied migration info for %s: %w", m.File, err)
 				}
 
 				applied = append(applied, m.File)
@@ -204,12 +204,12 @@ func (r *MigrationsRunner) Down(toRevertCount int) ([]string, error) {
 					// ignore empty Down action
 					if m.Down != nil {
 						if err := m.Down(txApp); err != nil {
-							return fmt.Errorf("Failed to revert migration %s: %w", m.File, err)
+							return fmt.Errorf("failed to revert migration %s: %w", m.File, err)
 						}
 					}
 
 					if err := r.saveRevertedMigration(txApp, m.File); err != nil {
-						return fmt.Errorf("Failed to save reverted migration info for %s: %w", m.File, err)
+						return fmt.Errorf("failed to save reverted migration info for %s: %w", m.File, err)
 					}
 
 					reverted = append(reverted, m.File)

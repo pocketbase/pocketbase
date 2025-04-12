@@ -653,7 +653,7 @@ func (w *writer) Close() error {
 
 	// Always delete the temp file. On success, it will have been renamed so
 	// the Remove will fail.
-	tempname := w.File.Name()
+	tempname := w.Name()
 	defer os.Remove(tempname)
 
 	// Check if the write was cancelled.

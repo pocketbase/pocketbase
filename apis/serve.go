@@ -259,6 +259,7 @@ func Serve(app core.App, config ServeConfig) error {
 	}
 
 	if listener == nil {
+		//nolint:staticcheck
 		return errors.New("The OnServe finalizer wasn't invoked. Did you forget to call the ServeEvent.Next() method?")
 	}
 

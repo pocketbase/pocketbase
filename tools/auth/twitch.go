@@ -66,7 +66,7 @@ func (p *Twitch) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	if len(extracted.Data) == 0 {
-		return nil, errors.New("Failed to fetch AuthUser data")
+		return nil, errors.New("failed to fetch AuthUser data")
 	}
 
 	user := &AuthUser{

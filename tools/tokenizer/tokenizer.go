@@ -142,9 +142,10 @@ func (t *Tokenizer) readToken() (string, error) {
 			} else if !t.ignoreParenthesis && ch == ')' && parenthesis > 0 && quoteCh == eof {
 				parenthesis-- // closing parenthesis
 			} else if t.isQuoteRune(ch) {
-				if quoteCh == ch {
+				switch quoteCh {
+				case ch:
 					quoteCh = eof // closing quote
-				} else if quoteCh == eof {
+				case eof:
 					quoteCh = ch // opening quote
 				}
 			}

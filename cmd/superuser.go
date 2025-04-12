@@ -36,16 +36,16 @@ func superuserUpsertCommand(app core.App) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) != 2 {
-				return errors.New("Missing email and password arguments.")
+				return errors.New("missing email and password arguments")
 			}
 
 			if args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
-				return errors.New("Missing or invalid email address.")
+				return errors.New("missing or invalid email address")
 			}
 
 			superusersCol, err := app.FindCachedCollectionByNameOrId(core.CollectionNameSuperusers)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch %q collection: %w.", core.CollectionNameSuperusers, err)
+				return fmt.Errorf("failed to fetch %q collection: %w", core.CollectionNameSuperusers, err)
 			}
 
 			superuser, err := app.FindAuthRecordByEmail(superusersCol, args[0])
@@ -57,7 +57,7 @@ func superuserUpsertCommand(app core.App) *cobra.Command {
 			superuser.SetPassword(args[1])
 
 			if err := app.Save(superuser); err != nil {
-				return fmt.Errorf("Failed to upsert superuser account: %w.", err)
+				return fmt.Errorf("failed to upsert superuser account: %w", err)
 			}
 
 			color.Green("Successfully saved superuser %q!", superuser.Email())
@@ -76,16 +76,16 @@ func superuserCreateCommand(app core.App) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) != 2 {
-				return errors.New("Missing email and password arguments.")
+				return errors.New("missing email and password arguments")
 			}
 
 			if args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
-				return errors.New("Missing or invalid email address.")
+				return errors.New("missing or invalid email address")
 			}
 
 			superusersCol, err := app.FindCachedCollectionByNameOrId(core.CollectionNameSuperusers)
 			if err != nil {
-				return fmt.Errorf("Failed to fetch %q collection: %w.", core.CollectionNameSuperusers, err)
+				return fmt.Errorf("failed to fetch %q collection: %w", core.CollectionNameSuperusers, err)
 			}
 
 			superuser := core.NewRecord(superusersCol)
@@ -93,7 +93,7 @@ func superuserCreateCommand(app core.App) *cobra.Command {
 			superuser.SetPassword(args[1])
 
 			if err := app.Save(superuser); err != nil {
-				return fmt.Errorf("Failed to create new superuser account: %w.", err)
+				return fmt.Errorf("failed to create new superuser account: %w", err)
 			}
 
 			color.Green("Successfully created new superuser %q!", superuser.Email())
@@ -112,22 +112,22 @@ func superuserUpdateCommand(app core.App) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) != 2 {
-				return errors.New("Missing email and password arguments.")
+				return errors.New("missing email and password arguments")
 			}
 
 			if args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
-				return errors.New("Missing or invalid email address.")
+				return errors.New("missing or invalid email address")
 			}
 
 			superuser, err := app.FindAuthRecordByEmail(core.CollectionNameSuperusers, args[0])
 			if err != nil {
-				return fmt.Errorf("Superuser with email %q doesn't exist.", args[0])
+				return fmt.Errorf("superuser with email %q doesn't exist", args[0])
 			}
 
 			superuser.SetPassword(args[1])
 
 			if err := app.Save(superuser); err != nil {
-				return fmt.Errorf("Failed to change superuser %q password: %w.", superuser.Email(), err)
+				return fmt.Errorf("failed to change superuser %q password: %w", superuser.Email(), err)
 			}
 
 			color.Green("Successfully changed superuser %q password!", superuser.Email())
@@ -146,17 +146,17 @@ func superuserDeleteCommand(app core.App) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
-				return errors.New("Invalid or missing email address.")
+				return errors.New("invalid or missing email address")
 			}
 
 			superuser, err := app.FindAuthRecordByEmail(core.CollectionNameSuperusers, args[0])
 			if err != nil {
-				color.Yellow("Superuser %q is missing or already deleted.", args[0])
+				color.Yellow("superuser %q is missing or already deleted", args[0])
 				return nil
 			}
 
 			if err := app.Delete(superuser); err != nil {
-				return fmt.Errorf("Failed to delete superuser %q: %w.", superuser.Email(), err)
+				return fmt.Errorf("failed to delete superuser %q: %w", superuser.Email(), err)
 			}
 
 			color.Green("Successfully deleted superuser %q!", superuser.Email())
@@ -175,16 +175,16 @@ func superuserOTPCommand(app core.App) *cobra.Command {
 		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
 			if len(args) == 0 || args[0] == "" || is.EmailFormat.Validate(args[0]) != nil {
-				return errors.New("Invalid or missing email address.")
+				return errors.New("invalid or missing email address")
 			}
 
 			superuser, err := app.FindAuthRecordByEmail(core.CollectionNameSuperusers, args[0])
 			if err != nil {
-				return fmt.Errorf("Superuser with email %q doesn't exist.", args[0])
+				return fmt.Errorf("superuser with email %q doesn't exist", args[0])
 			}
 
 			if !superuser.Collection().OTP.Enabled {
-				return errors.New("OTP is not enabled for the _superusers collection.")
+				return errors.New("OTP auth is not enabled for the _superusers collection")
 			}
 
 			pass := security.RandomStringWithAlphabet(superuser.Collection().OTP.Length, "1234567890")
@@ -196,7 +196,7 @@ func superuserOTPCommand(app core.App) *cobra.Command {
 
 			err = app.Save(otp)
 			if err != nil {
-				return fmt.Errorf("Failed to create OTP: %w", err)
+				return fmt.Errorf("failed to create OTP: %w", err)
 			}
 
 			color.New(color.BgGreen, color.FgBlack).Printf("Successfully created OTP for superuser %q:", superuser.Email())

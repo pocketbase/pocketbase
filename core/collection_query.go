@@ -220,7 +220,7 @@ func (app *BaseApp) IsCollectionNameUnique(name string, excludeIds ...string) bo
 // cascade and file delete actions.
 func (app *BaseApp) TruncateCollection(collection *Collection) error {
 	if collection.IsView() {
-		return errors.New("view collections cannot be truncated since they don't store their own records.")
+		return errors.New("view collections cannot be truncated since they don't store their own records")
 	}
 
 	return app.RunInTransaction(func(txApp App) error {

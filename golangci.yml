@@ -1,28 +1,27 @@
+version: "2"
 run:
   go: 1.23
   concurrency: 4
   timeout: 10m
-
 linters:
-  disable-all: true
+  default: none
   enable:
     - asasalint
     - asciicheck
-    - gofmt
-    - goimports
     - gomodguard
     - goprintffuncname
-    - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
     - nolintlint
     - prealloc
-    - prealloc
     - reassign
     - staticcheck
-    - typecheck
     - unconvert
     - unused
     - whitespace
+formatters:
+  enable:
+    - gofmt
+    - goimports
