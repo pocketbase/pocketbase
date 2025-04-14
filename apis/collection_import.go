@@ -34,7 +34,7 @@ func collectionsImport(e *core.RequestEvent) error {
 
 		// validation failure
 		var validationErrors validation.Errors
-		if errors.As(err, &validationErrors) {
+		if errors.As(importErr, &validationErrors) {
 			return e.BadRequestError("Failed to import collections.", validationErrors)
 		}
 

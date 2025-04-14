@@ -54,6 +54,7 @@ func TestGeoPointScan(t *testing.T) {
 		{`{}`, false, `{"lon":1,"lat":2}`},
 		{`[]`, true, `{"lon":1,"lat":2}`},
 		{0, true, `{"lon":1,"lat":2}`},
+		{`{"lon":"1.23","lat":"4.56"}`, true, `{"lon":1,"lat":2}`},
 		{`{"lon":1.23,"lat":4.56}`, false, `{"lon":1.23,"lat":4.56}`},
 		{[]byte(`{"lon":1.23,"lat":4.56}`), false, `{"lon":1.23,"lat":4.56}`},
 		{types.JSONRaw(`{"lon":1.23,"lat":4.56}`), false, `{"lon":1.23,"lat":4.56}`},
