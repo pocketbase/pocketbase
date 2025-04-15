@@ -20,7 +20,7 @@ func TestTokenFunctionsGeoDistance(t *testing.T) {
 	}
 	defer testDB.Close()
 
-	fn, ok := tokenFunctions["geoDistance"]
+	fn, ok := TokenFunctions["geoDistance"]
 	if !ok {
 		t.Error("Expected geoDistance token function to be registered.")
 	}
@@ -173,7 +173,7 @@ func TestTokenFunctionsGeoDistanceExec(t *testing.T) {
 	}
 	defer testDB.Close()
 
-	fn, ok := tokenFunctions["geoDistance"]
+	fn, ok := TokenFunctions["geoDistance"]
 	if !ok {
 		t.Error("Expected geoDistance token function to be registered.")
 	}

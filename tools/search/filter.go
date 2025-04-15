@@ -305,7 +305,7 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 			Params:     dbx.Params{placeholder: cast.ToFloat64(token.Literal)},
 		}, nil
 	case fexpr.TokenFunction:
-		fn, ok := tokenFunctions[token.Literal]
+		fn, ok := TokenFunctions[token.Literal]
 		if !ok {
 			return nil, fmt.Errorf("unknown function %q", token.Literal)
 		}
