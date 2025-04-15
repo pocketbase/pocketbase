@@ -7,6 +7,40 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
+func TestGeoPointAsMap(t *testing.T) {
+	t.Parallel()
+
+	scenarios := []struct {
+		name     string
+		point    types.GeoPoint
+		expected map[string]any
+	}{
+		{"zero", types.GeoPoint{}, map[string]any{"lon": 0.0, "lat": 0.0}},
+		{"non-zero", types.GeoPoint{Lon: -10, Lat: 20.123}, map[string]any{"lon": -10.0, "lat": 20.123}},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			result := s.point.AsMap()
+
+			if len(result) != len(s.expected) {
+				t.Fatalf("Expected %d keys, got %d: %v", len(s.expected), len(result), result)
+			}
+
+			for k, v := range s.expected {
+				found, ok := result[k]
+				if !ok {
+					t.Fatalf("Missing expected %q key: %v", k, result)
+				}
+
+				if found != v {
+					t.Fatalf("Expected %q key value %v, got %v", k, v, found)
+				}
+			}
+		})
+	}
+}
+
 func TestGeoPointStringAndValue(t *testing.T) {
 	t.Parallel()
 

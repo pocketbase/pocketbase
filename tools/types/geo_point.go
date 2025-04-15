@@ -22,6 +22,15 @@ func (p GeoPoint) String() string {
 	return string(raw)
 }
 
+// AsMap implements [core.mapExtractor] and returns a value suitable
+// to be used in an API rule expression.
+func (p GeoPoint) AsMap() map[string]any {
+	return map[string]any{
+		"lon": p.Lon,
+		"lat": p.Lat,
+	}
+}
+
 // Value implements the [driver.Valuer] interface.
 func (p GeoPoint) Value() (driver.Value, error) {
 	data, err := json.Marshal(p)
