@@ -206,7 +206,7 @@
     }
     .map-search {
         position: absolute;
-        z-index: 9999;
+        z-index: 2;
         top: 10px;
         width: 70%;
         max-width: 400px;
