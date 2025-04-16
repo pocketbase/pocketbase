@@ -495,6 +495,10 @@ func baseBinds(vm *goja.Runtime) {
 		instance := &core.FileField{}
 		return structConstructorUnmarshal(vm, call, instance)
 	})
+	vm.Set("GeoPointField", func(call goja.ConstructorCall) *goja.Object {
+		instance := &core.GeoPointField{}
+		return structConstructorUnmarshal(vm, call, instance)
+	})
 	// ---
 
 	vm.Set("MailerMessage", func(call goja.ConstructorCall) *goja.Object {

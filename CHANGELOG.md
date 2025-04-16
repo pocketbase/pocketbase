@@ -1,3 +1,10 @@
+## v0.27.1 (WIP)
+
+- Updated API preview example `geoPoint` data.
+
+- Added JSVM `new GeoPointField({ ... })` constructor.
+
+
 ## v0.27.0
 
 - ⚠️ Moved the Create and Manage API rule checks out of the `OnRecordCreateRequest` hook finalizer, **aka. now all CRUD API rules are checked BEFORE triggering their corresponding `*Request` hook**.

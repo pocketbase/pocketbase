@@ -44,7 +44,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 33, t)
+	testBindsCount(vm, "this", 34, t)
 }
 
 func TestBaseBindsSleep(t *testing.T) {
@@ -398,6 +398,10 @@ func TestBaseBindsNamedFields(t *testing.T) {
 		{
 			"new FileField({name: 'test'})",
 			isType[*core.FileField],
+		},
+		{
+			"new GeoPointField({name: 'test'})",
+			isType[*core.GeoPointField],
 		},
 	}
 

@@ -482,6 +482,16 @@ declare class FileField implements core.FileField {
   constructor(data?: Partial<core.FileField>)
 }
 
+interface GeoPointField extends core.GeoPointField{} // merge
+/**
+ * {@inheritDoc core.GeoPointField}
+ *
+ * @group PocketBase
+ */
+declare class GeoPointField implements core.GeoPointField {
+  constructor(data?: Partial<core.GeoPointField>)
+}
+
 interface MailerMessage extends mailer.Message{} // merge
 /**
  * MailerMessage defines a single email message.
