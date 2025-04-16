@@ -1127,6 +1127,8 @@ export default class CommonHelper {
                 if (field?.maxSelect != 1) {
                     val = [val];
                 }
+            } else if (field.type == "geoPoint") {
+                val = {"lon": 0, "lat": 0};
             } else {
                 val = "test";
             }
