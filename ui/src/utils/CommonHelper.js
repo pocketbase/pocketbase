@@ -1237,6 +1237,10 @@ export default class CommonHelper {
             return "false";
         }
 
+        if (field?.type === "geoPoint") {
+            return '{"lon":0,"lat":0}';
+        }
+
         if (field?.type === "json") {
             return 'null, "", [], {}';
         }
