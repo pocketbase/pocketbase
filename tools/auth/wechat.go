@@ -103,8 +103,9 @@ func (p *Wechat) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 			return nil, err
 		}
 
-		// Set nickname to [AuthUser.Username] instead of [AuthUser.Name]
-		user.Username = extracted.Nickname
+		// Set nickname to [AuthUser.Name] instead of [AuthUser.Username] because
+		// the real username is not accessible via Wechat OAuth2 API.
+		user.Name = extracted.Nickname
 		user.AvatarURL = extracted.Headimgurl
 	}
 
