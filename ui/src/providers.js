@@ -24,6 +24,16 @@ export default [
         optionsComponent: AppleOptions,
     },
     {
+        key: "wechat_mobile",
+        title: "WeChat (mobile)",
+        logo: "wechat.svg",
+    },
+    {
+        key: "wechat_web",
+        title: "WeChat (web)",
+        logo: "wechat.svg",
+    },
+    {
         key: "google",
         title: "Google",
         logo: "google.svg",
@@ -101,17 +111,17 @@ export default [
     {
         key: "vk",
         title: "VK",
-        logo: "vk.svg"
+        logo: "vk.svg",
     },
     {
-        key:   "notion",
+        key: "notion",
         title: "Notion",
-        logo:  "notion.svg",
+        logo: "notion.svg",
     },
     {
-        key:   "monday",
+        key: "monday",
         title: "monday.com",
-        logo:  "monday.svg",
+        logo: "monday.svg",
     },
     {
         key: "spotify",
@@ -131,7 +141,7 @@ export default [
     {
         key: "patreon",
         title: "Patreon (v2)",
-        logo: "patreon.svg"
+        logo: "patreon.svg",
     },
     {
         key: "strava",

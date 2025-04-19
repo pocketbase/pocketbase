@@ -7,7 +7,7 @@ import (
 )
 
 func TestProvidersCount(t *testing.T) {
-	expected := 30
+	expected := 32
 
 	if total := len(auth.Providers); total != expected {
 		t.Fatalf("Expected %d providers, got %d", expected, total)
@@ -295,5 +295,23 @@ func TestNewProviderByName(t *testing.T) {
 	}
 	if _, ok := p.(*auth.Trakt); !ok {
 		t.Error("Expected to be instance of *auth.Trakt")
+	}
+
+	// wechat_web
+	p, err = auth.NewProviderByName(auth.NameWechatWeb)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Wechat); !ok {
+		t.Error("Expected to be instance of *auth.Wechat")
+	}
+
+	// wechat_mobile
+	p, err = auth.NewProviderByName(auth.NameWechatMobile)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Wechat); !ok {
+		t.Error("Expected to be instance of *auth.Wechat")
 	}
 }
