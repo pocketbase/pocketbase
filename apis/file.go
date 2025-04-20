@@ -19,7 +19,7 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
-var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg", "image/gif"}
+var imageContentTypes = []string{"image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp"}
 var defaultThumbSizes = []string{"100x100"}
 
 // bindFileApi registers the file api endpoints and the corresponding handlers.
