@@ -1,8 +1,12 @@
-## v0.27.1 (WIP)
+## v0.27.1
 
 - Updated example `geoPoint` API preview body data.
 
 - Added JSVM `new GeoPointField({ ... })` constructor.
+
+- Added _partial_ WebP thumbs generation (_the thumbs will be stored as PNG_; [#6744](https://github.com/pocketbase/pocketbase/pull/6744)).
+
+- Updated npm dev dependencies.
 
 
 ## v0.27.0

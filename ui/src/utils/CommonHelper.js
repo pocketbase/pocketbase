@@ -1207,20 +1207,22 @@ export default class CommonHelper {
      */
     static getFieldValueType(field) {
         switch (field?.type) {
-            case 'bool':
-                return 'Boolean';
-            case 'number':
-                return 'Number';
-            case 'file':
-                return 'File';
-            case 'select':
-            case 'relation':
+            case "bool":
+                return "Boolean";
+            case "number":
+                return "Number";
+            case "geoPoint":
+                return "Object";
+            case "file":
+                return "File";
+            case "select":
+            case "relation":
                 if (field?.maxSelect == 1) {
-                    return 'String';
+                    return "String";
                 }
-                return 'Array<String>';
+                return "Array<String>";
             default:
-                return 'String';
+                return "String";
         }
     }
 
