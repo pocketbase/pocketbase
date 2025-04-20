@@ -1,6 +1,6 @@
 ## v0.27.1 (WIP)
 
-- Updated API preview example `geoPoint` data.
+- Updated example `geoPoint` API preview body data.
 
 - Added JSVM `new GeoPointField({ ... })` constructor.
 
