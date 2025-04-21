@@ -256,6 +256,8 @@ await pb.collection('${collection?.name}').requestVerification('test@example.com
                         Email address.
                     {:else if field.type === "url"}
                         URL address.
+                    {:else if field.type === "geoPoint"}
+                        <code>{`{"lon":x,"lat":y}`}</code> object.
                     {:else if field.type === "file"}
                         File object.<br />
                         Set to empty value (<code>null</code>, <code>""</code> or <code>[]</code>) to delete

@@ -303,6 +303,8 @@ final record = await pb.collection('${collection?.name}').update('RECORD_ID', bo
                         Email address.
                     {:else if field.type === "url"}
                         URL address.
+                    {:else if field.type === "geoPoint"}
+                        <code>{`{"lon":x,"lat":y}`}</code> object.
                     {:else if field.type === "file"}
                         File object.<br />
                         Set to <code>null</code> to delete already uploaded file(s).
