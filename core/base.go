@@ -69,7 +69,7 @@ var _ App = (*BaseApp)(nil)
 // BaseApp implements core.App and defines the base PocketBase app structure.
 type BaseApp struct {
 	config              *BaseAppConfig
-	txInfo              *txAppInfo
+	txInfo              *TxAppInfo
 	store               *store.Store[string, any]
 	cron                *cron.Cron
 	settings            *Settings
@@ -360,9 +360,17 @@ func (app *BaseApp) Logger() *slog.Logger {
 	return app.logger
 }
 
+// TxInfo returns the transaction associated with the current app instance (if any).
+//
+// Could be used if you want to execute indirectly a function after
+// the related app transaction completes using `app.TxInfo().OnAfterFunc(callback)`.
+func (app *BaseApp) TxInfo() *TxAppInfo {
+	return app.txInfo
+}
+
 // IsTransactional checks if the current app instance is part of a transaction.
 func (app *BaseApp) IsTransactional() bool {
-	return app.txInfo != nil
+	return app.TxInfo() != nil
 }
 
 // IsBootstrapped checks if the application was initialized

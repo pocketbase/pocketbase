@@ -45,7 +45,9 @@ func recordConfirmEmailChange(e *core.RequestEvent) error {
 			return firstApiError(err, e.BadRequestError("Failed to confirm email change.", err))
 		}
 
-		return e.NoContent(http.StatusNoContent)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.NoContent(http.StatusNoContent)
+		})
 	})
 }
 

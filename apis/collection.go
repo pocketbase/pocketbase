@@ -45,7 +45,9 @@ func collectionsList(e *core.RequestEvent) error {
 	event.Result = result
 
 	return event.App.OnCollectionsListRequest().Trigger(event, func(e *core.CollectionsListRequestEvent) error {
-		return e.JSON(http.StatusOK, e.Result)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.JSON(http.StatusOK, e.Result)
+		})
 	})
 }
 
@@ -60,7 +62,9 @@ func collectionView(e *core.RequestEvent) error {
 	event.Collection = collection
 
 	return e.App.OnCollectionViewRequest().Trigger(event, func(e *core.CollectionRequestEvent) error {
-		return e.JSON(http.StatusOK, e.Collection)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.JSON(http.StatusOK, e.Collection)
+		})
 	})
 }
 
@@ -98,7 +102,9 @@ func collectionCreate(e *core.RequestEvent) error {
 			return e.BadRequestError("Failed to create collection. Raw error: \n"+err.Error(), nil)
 		}
 
-		return e.JSON(http.StatusOK, e.Collection)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.JSON(http.StatusOK, e.Collection)
+		})
 	})
 }
 
@@ -128,7 +134,9 @@ func collectionUpdate(e *core.RequestEvent) error {
 			return e.BadRequestError("Failed to update collection. Raw error: \n"+err.Error(), nil)
 		}
 
-		return e.JSON(http.StatusOK, e.Collection)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.JSON(http.StatusOK, e.Collection)
+		})
 	})
 }
 
@@ -159,7 +167,9 @@ func collectionDelete(e *core.RequestEvent) error {
 			return e.BadRequestError(msg, err)
 		}
 
-		return e.NoContent(http.StatusNoContent)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.NoContent(http.StatusNoContent)
+		})
 	})
 }
 

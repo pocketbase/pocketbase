@@ -75,8 +75,8 @@ func (api *fileApi) fileToken(e *core.RequestEvent) error {
 	event.Record = e.Auth
 
 	return e.App.OnFileTokenRequest().Trigger(event, func(e *core.FileTokenRequestEvent) error {
-		return e.JSON(http.StatusOK, map[string]string{
-			"token": e.Token,
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.JSON(http.StatusOK, map[string]string{"token": e.Token})
 		})
 	})
 }
@@ -192,7 +192,10 @@ func (api *fileApi) download(e *core.RequestEvent) error {
 	e.Response.Header().Del("X-Frame-Options")
 
 	return e.App.OnFileDownloadRequest().Trigger(event, func(e *core.FileDownloadRequestEvent) error {
-		if err := fsys.Serve(e.Response, e.Request, e.ServedPath, e.ServedName); err != nil {
+		err = execAfterSuccessTx(true, e.App, func() error {
+			return fsys.Serve(e.Response, e.Request, e.ServedPath, e.ServedName)
+		})
+		if err != nil {
 			return e.NotFoundError("", err)
 		}
 

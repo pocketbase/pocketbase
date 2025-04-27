@@ -128,7 +128,7 @@ func TestBaseAppBootstrap(t *testing.T) {
 	runNilChecks(nilChecksAfterReset)
 }
 
-func TestNewBaseAppIsTransactional(t *testing.T) {
+func TestNewBaseAppTx(t *testing.T) {
 	const testDataDir = "./pb_base_app_test_data_dir/"
 	defer os.RemoveAll(testDataDir)
 
@@ -141,17 +141,34 @@ func TestNewBaseAppIsTransactional(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if app.IsTransactional() {
-		t.Fatalf("Didn't expect the app to be transactional")
+	mustNotHaveTx := func(app core.App) {
+		if app.IsTransactional() {
+			t.Fatalf("Didn't expect the app to be transactional")
+		}
+
+		if app.TxInfo() != nil {
+			t.Fatalf("Didn't expect the app.txInfo to be loaded")
+		}
 	}
 
-	app.RunInTransaction(func(txApp core.App) error {
-		if !txApp.IsTransactional() {
+	mustHaveTx := func(app core.App) {
+		if !app.IsTransactional() {
 			t.Fatalf("Expected the app to be transactional")
 		}
 
+		if app.TxInfo() == nil {
+			t.Fatalf("Expected the app.txInfo to be loaded")
+		}
+	}
+
+	mustNotHaveTx(app)
+
+	app.RunInTransaction(func(txApp core.App) error {
+		mustHaveTx(txApp)
 		return nil
 	})
+
+	mustNotHaveTx(app)
 }
 
 func TestBaseAppNewMailClient(t *testing.T) {

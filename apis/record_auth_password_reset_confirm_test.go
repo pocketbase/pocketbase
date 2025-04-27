@@ -1,7 +1,6 @@
 package apis_test
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -282,7 +281,7 @@ func TestRecordConfirmPasswordReset(t *testing.T) {
 			},
 		},
 		{
-			Name:   "OnRecordAfterConfirmPasswordResetRequest error response",
+			Name:   "OnRecordConfirmPasswordResetRequest tx body write check",
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/confirm-password-reset",
 			Body: strings.NewReader(`{
@@ -292,15 +291,22 @@ func TestRecordConfirmPasswordReset(t *testing.T) {
 			}`),
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				app.OnRecordConfirmPasswordResetRequest().BindFunc(func(e *core.RecordConfirmPasswordResetRequestEvent) error {
-					return errors.New("error")
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
 				})
 			},
 			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                                   0,
-				"OnRecordConfirmPasswordResetRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"OnRecordConfirmPasswordResetRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
 		},
 
 		// rate limit checks

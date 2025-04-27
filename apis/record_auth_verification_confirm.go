@@ -42,19 +42,19 @@ func recordConfirmVerification(e *core.RequestEvent) error {
 	event.Record = record
 
 	return e.App.OnRecordConfirmVerificationRequest().Trigger(event, func(e *core.RecordConfirmVerificationRequestEvent) error {
-		if wasVerified {
-			return e.NoContent(http.StatusNoContent)
-		}
+		if !wasVerified {
+			e.Record.SetVerified(true)
 
-		e.Record.SetVerified(true)
-
-		if err := e.App.Save(e.Record); err != nil {
-			return firstApiError(err, e.BadRequestError("An error occurred while saving the verified state.", err))
+			if err := e.App.Save(e.Record); err != nil {
+				return firstApiError(err, e.BadRequestError("An error occurred while saving the verified state.", err))
+			}
 		}
 
 		e.App.Store().Remove(getVerificationResendKey(e.Record))
 
-		return e.NoContent(http.StatusNoContent)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.NoContent(http.StatusNoContent)
+		})
 	})
 }
 

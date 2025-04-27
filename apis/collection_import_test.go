@@ -316,6 +316,51 @@ func TestCollectionsImport(t *testing.T) {
 				}
 			},
 		},
+		{
+			Name:   "OnCollectionsImportRequest tx body write check",
+			Method: http.MethodPut,
+			URL:    "/api/collections/import",
+			Body: strings.NewReader(`{
+				"deleteMissing": true,
+				"collections":[
+					{"name": "test123"},
+					{
+						"id":"wsmn24bux7wo113",
+						"name":"demo1",
+						"fields":[
+							{
+								"id":"_2hlxbmp",
+								"name":"title",
+								"type":"text",
+								"required":true
+							}
+						],
+						"indexes": []
+					}
+				]
+			}`),
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnCollectionsImportRequest().BindFunc(func(e *core.CollectionsImportRequestEvent) error {
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedEvents:  map[string]int{"OnCollectionsImportRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
+		},
 	}
 
 	for _, scenario := range scenarios {

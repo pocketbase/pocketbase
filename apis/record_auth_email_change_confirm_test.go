@@ -1,7 +1,6 @@
 package apis_test
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -136,7 +135,7 @@ func TestRecordConfirmEmailChange(t *testing.T) {
 			ExpectedEvents: map[string]int{"*": 0},
 		},
 		{
-			Name:   "OnRecordAfterConfirmEmailChangeRequest error response",
+			Name:   "OnRecordConfirmEmailChangeRequest tx body write check",
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/confirm-email-change",
 			Body: strings.NewReader(`{
@@ -145,15 +144,22 @@ func TestRecordConfirmEmailChange(t *testing.T) {
 			}`),
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				app.OnRecordConfirmEmailChangeRequest().BindFunc(func(e *core.RecordConfirmEmailChangeRequestEvent) error {
-					return errors.New("error")
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
 				})
 			},
 			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                                 0,
-				"OnRecordConfirmEmailChangeRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"OnRecordConfirmEmailChangeRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
 		},
 
 		// rate limit checks

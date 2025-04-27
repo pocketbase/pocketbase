@@ -365,11 +365,25 @@ func logRequest(event *core.RequestEvent, err error) {
 
 	// parse the request error
 	if err != nil {
-		if apiErr, ok := err.(*router.ApiError); ok {
-			status = apiErr.Status
+		apiErr, isPlainApiError := err.(*router.ApiError)
+		if isPlainApiError || errors.As(err, &apiErr) {
+			// the status header wasn't written yet
+			if status == 0 {
+				status = apiErr.Status
+			}
+
+			var errMsg string
+			if isPlainApiError {
+				errMsg = apiErr.Message
+			} else {
+				// wrapped ApiError -> add the full serialized version
+				// of the original error since it could contain more information
+				errMsg = err.Error()
+			}
+
 			attrs = append(
 				attrs,
-				slog.String("error", apiErr.Message),
+				slog.String("error", errMsg),
 				slog.Any("details", apiErr.RawData()),
 			)
 		} else {

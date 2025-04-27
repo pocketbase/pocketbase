@@ -49,7 +49,7 @@ var ValidBatchActions = map[*regexp.Regexp]BatchActionHandlerFunc{
 				params["id"] = id // required for the path value
 				ir.Method = "PATCH"
 				ir.URL = "/api/collections/" + params["collection"] + "/records/" + id + params["query"]
-				return recordUpdate(next)
+				return recordUpdate(false, next)
 			}
 		}
 
@@ -57,16 +57,16 @@ var ValidBatchActions = map[*regexp.Regexp]BatchActionHandlerFunc{
 		// ---
 		ir.Method = "POST"
 		ir.URL = "/api/collections/" + params["collection"] + "/records" + params["query"]
-		return recordCreate(next)
+		return recordCreate(false, next)
 	},
 	regexp.MustCompile(`^POST /api/collections/(?P<collection>[^\/\?]+)/records(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func(any) error) HandleFunc {
-		return recordCreate(next)
+		return recordCreate(false, next)
 	},
 	regexp.MustCompile(`^PATCH /api/collections/(?P<collection>[^\/\?]+)/records/(?P<id>[^\/\?]+)(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func(any) error) HandleFunc {
-		return recordUpdate(next)
+		return recordUpdate(false, next)
 	},
 	regexp.MustCompile(`^DELETE /api/collections/(?P<collection>[^\/\?]+)/records/(?P<id>[^\/\?]+)(\?.*)?$`): func(app core.App, ir *core.InternalRequest, params map[string]string, next func(any) error) HandleFunc {
-		return recordDelete(next)
+		return recordDelete(false, next)
 	},
 }
 

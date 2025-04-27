@@ -60,7 +60,7 @@ func (app *BaseApp) createTxApp(tx *dbx.Tx, isForAuxDB bool) *BaseApp {
 		clone.nonconcurrentDB = tx
 	}
 
-	clone.txInfo = &txAppInfo{
+	clone.txInfo = &TxAppInfo{
 		parent:     app,
 		isForAuxDB: isForAuxDB,
 	}
@@ -68,22 +68,29 @@ func (app *BaseApp) createTxApp(tx *dbx.Tx, isForAuxDB bool) *BaseApp {
 	return &clone
 }
 
-type txAppInfo struct {
+// TxAppInfo represents an active transaction context associated to an existing app instance.
+type TxAppInfo struct {
 	parent     *BaseApp
 	afterFuncs []func(txErr error) error
 	mu         sync.Mutex
 	isForAuxDB bool
 }
 
-func (a *txAppInfo) onAfterFunc(fn func(txErr error) error) {
+// OnComplete registers the provided callback that will be invoked
+// once the related transaction ends (either completes successfully or rollbacked with an error).
+//
+// The callback receives the transaction error (if any) as its argument.
+// Any additional errors returned by the OnComplete callbacks will be
+// joined together with txErr when returning the final transaction result.
+func (a *TxAppInfo) OnComplete(fn func(txErr error) error) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	a.afterFuncs = append(a.afterFuncs, fn)
 }
 
-// note: can be called only once because txAppInfo is cleared
-func (a *txAppInfo) runAfterFuncs(txErr error) error {
+// note: can be called only once because TxAppInfo is cleared
+func (a *TxAppInfo) runAfterFuncs(txErr error) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 

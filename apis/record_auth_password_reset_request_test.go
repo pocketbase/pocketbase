@@ -101,6 +101,30 @@ func TestRecordRequestPasswordReset(t *testing.T) {
 				app.Store().Set(resendKey, struct{}{})
 			},
 		},
+		{
+			Name:   "OnRecordRequestPasswordResetRequest tx body write check",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/request-password-reset",
+			Body:   strings.NewReader(`{"email":"test@example.com"}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnRecordRequestPasswordResetRequest().BindFunc(func(e *core.RecordRequestPasswordResetRequestEvent) error {
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedEvents:  map[string]int{"OnRecordRequestPasswordResetRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
+		},
 
 		// rate limit checks
 		// -----------------------------------------------------------

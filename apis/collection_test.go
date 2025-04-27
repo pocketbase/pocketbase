@@ -1,7 +1,6 @@
 package apis_test
 
 import (
-	"errors"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -130,6 +129,32 @@ func TestCollectionsList(t *testing.T) {
 				"OnCollectionsListRequest": 1,
 			},
 		},
+		{
+			Name:   "OnCollectionsListRequest tx body write check",
+			Method: http.MethodGet,
+			URL:    "/api/collections",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnCollectionsListRequest().BindFunc(func(e *core.CollectionsListRequestEvent) error {
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedEvents:  map[string]int{"OnCollectionsListRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
+		},
 	}
 
 	for _, scenario := range scenarios {
@@ -204,6 +229,32 @@ func TestCollectionView(t *testing.T) {
 				"*":                       0,
 				"OnCollectionViewRequest": 1,
 			},
+		},
+		{
+			Name:   "OnCollectionViewRequest tx body write check",
+			Method: http.MethodGet,
+			URL:    "/api/collections/wsmn24bux7wo113",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnCollectionViewRequest().BindFunc(func(e *core.CollectionRequestEvent) error {
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedEvents:  map[string]int{"OnCollectionViewRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
 		},
 	}
 
@@ -361,7 +412,7 @@ func TestCollectionDelete(t *testing.T) {
 			},
 		},
 		{
-			Name:   "OnCollectionAfterDeleteSuccessRequest error response",
+			Name:   "OnCollectionDeleteRequest tx body write check",
 			Method: http.MethodDelete,
 			URL:    "/api/collections/view2",
 			Headers: map[string]string{
@@ -369,15 +420,22 @@ func TestCollectionDelete(t *testing.T) {
 			},
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				app.OnCollectionDeleteRequest().BindFunc(func(e *core.CollectionRequestEvent) error {
-					return errors.New("error")
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
 				})
 			},
 			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                         0,
-				"OnCollectionDeleteRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"OnCollectionDeleteRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
 		},
 	}
 
@@ -656,7 +714,7 @@ func TestCollectionCreate(t *testing.T) {
 			},
 		},
 		{
-			Name:   "OnCollectionCreateRequest error response",
+			Name:   "OnCollectionCreateRequest tx body write check",
 			Method: http.MethodPost,
 			URL:    "/api/collections",
 			Body:   strings.NewReader(`{"name":"new","type":"base"}`),
@@ -665,15 +723,22 @@ func TestCollectionCreate(t *testing.T) {
 			},
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				app.OnCollectionCreateRequest().BindFunc(func(e *core.CollectionRequestEvent) error {
-					return errors.New("error")
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
 				})
 			},
 			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                         0,
-				"OnCollectionCreateRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"OnCollectionCreateRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
 		},
 
 		// view
@@ -978,7 +1043,7 @@ func TestCollectionUpdate(t *testing.T) {
 			},
 		},
 		{
-			Name:   "OnCollectionAfterUpdateSuccessRequest error response",
+			Name:   "OnCollectionUpdateRequest tx body write check",
 			Method: http.MethodPatch,
 			URL:    "/api/collections/demo1",
 			Body:   strings.NewReader(`{}`),
@@ -987,15 +1052,22 @@ func TestCollectionUpdate(t *testing.T) {
 			},
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				app.OnCollectionUpdateRequest().BindFunc(func(e *core.CollectionRequestEvent) error {
-					return errors.New("error")
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
 				})
 			},
 			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                         0,
-				"OnCollectionUpdateRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"OnCollectionUpdateRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
 		},
 		{
 			Name:   "authorized as superuser + invalid data (eg. existing name)",

@@ -1,3 +1,8 @@
+## v0.28.0 (WIP)
+
+- Write the default response body of `*Request` hooks that are wrapped in a transaction after the related transaction completes to allow propagating errors ([#6462](https://github.com/pocketbase/pocketbase/discussions/6462#discussioncomment-12207818)).
+
+
 ## v0.27.1
 
 - Updated example `geoPoint` API preview body data.

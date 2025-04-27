@@ -26,10 +26,10 @@ func recordAuthImpersonate(e *core.RequestEvent) error {
 
 	form := &impersonateForm{}
 	if err = e.BindBody(form); err != nil {
-		return firstApiError(err, e.BadRequestError("An error occurred while loading the submitted data.", err))
+		return e.BadRequestError("An error occurred while loading the submitted data.", err)
 	}
 	if err = form.validate(); err != nil {
-		return firstApiError(err, e.BadRequestError("An error occurred while validating the submitted data.", err))
+		return e.BadRequestError("An error occurred while validating the submitted data.", err)
 	}
 
 	token, err := record.NewStaticAuthToken(time.Duration(form.Duration) * time.Second)

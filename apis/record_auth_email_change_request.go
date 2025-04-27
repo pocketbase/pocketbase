@@ -43,7 +43,9 @@ func recordRequestEmailChange(e *core.RequestEvent) error {
 			return firstApiError(err, e.BadRequestError("Failed to request email change.", err))
 		}
 
-		return e.NoContent(http.StatusNoContent)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.NoContent(http.StatusNoContent)
+		})
 	})
 }
 

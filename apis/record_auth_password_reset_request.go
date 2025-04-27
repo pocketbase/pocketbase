@@ -65,7 +65,9 @@ func recordRequestPasswordReset(e *core.RequestEvent) error {
 			})
 		})
 
-		return e.NoContent(http.StatusNoContent)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.NoContent(http.StatusNoContent)
+		})
 	})
 }
 

@@ -108,8 +108,8 @@ func recordRequestOTP(e *core.RequestEvent) error {
 			})
 		}
 
-		return e.JSON(http.StatusOK, map[string]string{
-			"otpId": otp.Id,
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.JSON(http.StatusOK, map[string]string{"otpId": otp.Id})
 		})
 	})
 }

@@ -1,7 +1,6 @@
 package apis_test
 
 import (
-	"errors"
 	"net/http"
 	"testing"
 
@@ -130,23 +129,30 @@ func TestRecordAuthRefresh(t *testing.T) {
 			},
 		},
 		{
-			Name:   "OnRecordAfterAuthRefreshRequest error response",
+			Name:   "OnRecordAuthRefreshRequest tx body write check",
 			Method: http.MethodPost,
-			URL:    "/api/collections/users/auth-refresh?expand=rel,missing",
+			URL:    "/api/collections/users/auth-refresh",
 			Headers: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				app.OnRecordAuthRefreshRequest().BindFunc(func(e *core.RecordAuthRefreshRequestEvent) error {
-					return errors.New("error")
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
 				})
 			},
 			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                          0,
-				"OnRecordAuthRefreshRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"OnRecordAuthRefreshRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
 		},
 
 		// rate limit checks

@@ -1577,6 +1577,69 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				"OnRecordValidate": 4,
 			},
 		},
+		{
+			Name:   "OnRecordAuthWithOAuth2Request tx body write check",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/auth-with-oauth2",
+			Body: strings.NewReader(`{
+				"provider": "test",
+				"code":"123",
+				"redirectURL": "https://example.com"
+			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				user, err := app.FindAuthRecordByEmail("users", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// register the test provider
+				auth.Providers["test"] = func() auth.Provider {
+					return &oauth2MockProvider{
+						AuthUser: &auth.AuthUser{Id: "test_id"},
+						Token:    &oauth2.Token{AccessToken: "abc"},
+					}
+				}
+
+				// add the test provider in the collection
+				user.Collection().MFA.Enabled = false
+				user.Collection().OAuth2.Enabled = true
+				user.Collection().OAuth2.Providers = []core.OAuth2ProviderConfig{{
+					Name:         "test",
+					ClientId:     "123",
+					ClientSecret: "456",
+				}}
+				if err := app.Save(user.Collection()); err != nil {
+					t.Fatal(err)
+				}
+
+				// stub linked provider
+				ea := core.NewExternalAuth(app)
+				ea.SetCollectionRef(user.Collection().Id)
+				ea.SetRecordRef(user.Id)
+				ea.SetProvider("test")
+				ea.SetProviderId("test_id")
+				if err := app.Save(ea); err != nil {
+					t.Fatal(err)
+				}
+
+				app.OnRecordAuthWithOAuth2Request().BindFunc(func(e *core.RecordAuthWithOAuth2RequestEvent) error {
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedEvents:  map[string]int{"OnRecordAuthWithOAuth2Request": 1},
+			ExpectedContent: []string{"TX_ERROR"},
+		},
 
 		// rate limit checks
 		// -----------------------------------------------------------

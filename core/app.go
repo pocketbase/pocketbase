@@ -45,6 +45,12 @@ type App interface {
 	// IsTransactional checks if the current app instance is part of a transaction.
 	IsTransactional() bool
 
+	// TxInfo returns the transaction associated with the current app instance (if any).
+	//
+	// Could be used if you want to execute indirectly a function after
+	// the related app transaction completes using `app.TxInfo().OnAfterFunc(callback)`.
+	TxInfo() *TxAppInfo
+
 	// Bootstrap initializes the application
 	// (aka. create data dir, open db connections, load settings, etc.).
 	//

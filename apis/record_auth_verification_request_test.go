@@ -118,6 +118,30 @@ func TestRecordRequestVerification(t *testing.T) {
 				}
 			},
 		},
+		{
+			Name:   "OnRecordRequestVerificationRequest tx body write check",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/request-verification",
+			Body:   strings.NewReader(`{"email":"test@example.com"}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnRecordRequestVerificationRequest().BindFunc(func(e *core.RecordRequestVerificationRequestEvent) error {
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedEvents:  map[string]int{"OnRecordRequestVerificationRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
+		},
 
 		// rate limit checks
 		// -----------------------------------------------------------

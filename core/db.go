@@ -151,7 +151,7 @@ func (app *BaseApp) delete(ctx context.Context, model Model, isForAuxDB bool) er
 
 	if app.txInfo != nil {
 		// execute later after the transaction has completed
-		app.txInfo.onAfterFunc(func(txErr error) error {
+		app.txInfo.OnComplete(func(txErr error) error {
 			if app.txInfo != nil && app.txInfo.parent != nil {
 				event.App = app.txInfo.parent
 			}
@@ -342,7 +342,7 @@ func (app *BaseApp) create(ctx context.Context, model Model, withValidations boo
 
 	if app.txInfo != nil {
 		// execute later after the transaction has completed
-		app.txInfo.onAfterFunc(func(txErr error) error {
+		app.txInfo.OnComplete(func(txErr error) error {
 			if app.txInfo != nil && app.txInfo.parent != nil {
 				event.App = app.txInfo.parent
 			}
@@ -426,7 +426,7 @@ func (app *BaseApp) update(ctx context.Context, model Model, withValidations boo
 
 	if app.txInfo != nil {
 		// execute later after the transaction has completed
-		app.txInfo.onAfterFunc(func(txErr error) error {
+		app.txInfo.OnComplete(func(txErr error) error {
 			if app.txInfo != nil && app.txInfo.parent != nil {
 				event.App = app.txInfo.parent
 			}

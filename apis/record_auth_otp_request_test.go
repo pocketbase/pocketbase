@@ -247,6 +247,31 @@ func TestRecordRequestOTP(t *testing.T) {
 				}
 			},
 		},
+		{
+			Name:   "OnRecordRequestOTPRequest tx body write check",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/request-otp",
+			Body:   strings.NewReader(`{"email":"test@example.com"}`),
+			Delay:  100 * time.Millisecond,
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnRecordRequestOTPRequest().BindFunc(func(e *core.RecordCreateOTPRequestEvent) error {
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
+				})
+			},
+			ExpectedStatus:  400,
+			ExpectedEvents:  map[string]int{"OnRecordRequestOTPRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
+		},
 
 		// rate limit checks
 		// -----------------------------------------------------------

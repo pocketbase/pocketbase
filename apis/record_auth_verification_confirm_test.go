@@ -1,7 +1,6 @@
 package apis_test
 
 import (
-	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -144,7 +143,7 @@ func TestRecordConfirmVerification(t *testing.T) {
 			},
 		},
 		{
-			Name:   "OnRecordAfterConfirmVerificationRequest error response",
+			Name:   "OnRecordConfirmVerificationRequest tx body write check",
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/confirm-verification",
 			Body: strings.NewReader(`{
@@ -152,15 +151,22 @@ func TestRecordConfirmVerification(t *testing.T) {
 			}`),
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
 				app.OnRecordConfirmVerificationRequest().BindFunc(func(e *core.RecordConfirmVerificationRequestEvent) error {
-					return errors.New("error")
+					original := e.App
+					return e.App.RunInTransaction(func(txApp core.App) error {
+						e.App = txApp
+						defer func() { e.App = original }()
+
+						if err := e.Next(); err != nil {
+							return err
+						}
+
+						return e.BadRequestError("TX_ERROR", nil)
+					})
 				})
 			},
 			ExpectedStatus:  400,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                                  0,
-				"OnRecordConfirmVerificationRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"OnRecordConfirmVerificationRequest": 1},
+			ExpectedContent: []string{"TX_ERROR"},
 		},
 
 		// rate limit checks

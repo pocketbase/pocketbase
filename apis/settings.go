@@ -30,7 +30,9 @@ func settingsList(e *core.RequestEvent) error {
 	event.Settings = clone
 
 	return e.App.OnSettingsListRequest().Trigger(event, func(e *core.SettingsListRequestEvent) error {
-		return e.JSON(http.StatusOK, e.Settings)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.JSON(http.StatusOK, e.Settings)
+		})
 	})
 }
 
@@ -65,7 +67,9 @@ func settingsSet(e *core.RequestEvent) error {
 			return e.InternalServerError("Failed to clone app settings.", err)
 		}
 
-		return e.JSON(http.StatusOK, appSettings)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.JSON(http.StatusOK, appSettings)
+		})
 	})
 }
 

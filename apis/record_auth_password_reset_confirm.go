@@ -54,7 +54,9 @@ func recordConfirmPasswordReset(e *core.RequestEvent) error {
 
 		e.App.Store().Remove(getPasswordResetResendKey(authRecord))
 
-		return e.NoContent(http.StatusNoContent)
+		return execAfterSuccessTx(true, e.App, func() error {
+			return e.NoContent(http.StatusNoContent)
+		})
 	})
 }
 
