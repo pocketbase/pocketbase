@@ -4,6 +4,8 @@
 
 - Updated the default `COUNT` list request query to use `rowid` when possible to minimize the need of having the `id` field in a covering index.
 
+- Updated the excerpt modifier to properly account for multibyte characters ([#6778](https://github.com/pocketbase/pocketbase/issues/6778)).
+
 
 ## v0.27.1
 

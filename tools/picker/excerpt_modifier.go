@@ -135,10 +135,14 @@ func (m *excerptModifier) Modify(value any) (any, error) {
 	result := strings.TrimSpace(builder.String())
 
 	if len(result) > m.max {
-		result = strings.TrimSpace(result[:m.max])
-
-		if m.withEllipsis {
-			result += "..."
+		// note: casted to []rune to properly account for multi-byte chars
+		runes := []rune(result)
+		if len(runes) > m.max {
+			result = string(runes[:m.max])
+			result = strings.TrimSpace(result)
+			if m.withEllipsis {
+				result += "..."
+			}
 		}
 	}
 
