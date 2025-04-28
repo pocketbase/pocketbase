@@ -1,3 +1,8 @@
+## v0.27.2 (WIP)
+
+- Updated the excerpt modifier to properly account for multibyte characters ([#6778](https://github.com/pocketbase/pocketbase/issues/6778)).
+
+
 ## v0.27.1
 
 - Updated example `geoPoint` API preview body data.

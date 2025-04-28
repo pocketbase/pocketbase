@@ -134,6 +134,20 @@ func TestExcerptModifierModify(t *testing.T) {
 			html,
 			plainText,
 		},
+
+		// multibyte chars
+		{
+			"mutibyte chars <= max",
+			[]string{"4", "t"},
+			"аб\nв ",
+			"аб в",
+		},
+		{
+			"mutibyte chars > max",
+			[]string{"3", "t"},
+			"аб\nв ",
+			"аб...",
+		},
 	}
 
 	for _, s := range scenarios {
