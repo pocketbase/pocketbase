@@ -1,6 +1,9 @@
 ## v0.27.2 (WIP)
 
+- Added workers pool when cascade deleting record files to minimize _"thread exhaustion"_ errors ([#6780](https://github.com/pocketbase/pocketbase/discussions/6780)).
+
 - Updated the excerpt modifier to properly account for multibyte characters ([#6778](https://github.com/pocketbase/pocketbase/issues/6778)).
+
 
 
 ## v0.27.1
