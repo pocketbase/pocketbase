@@ -146,7 +146,7 @@ func TestJSONFieldValidateValue(t *testing.T) {
 			&core.JSONField{Name: "test"},
 			func() *core.Record {
 				record := core.NewRecord(collection)
-				record.SetRaw("test", types.JSONRaw(`"`+strings.Repeat("a", (5<<20))+`"`))
+				record.SetRaw("test", types.JSONRaw(`"`+strings.Repeat("a", (1<<20))+`"`))
 				return record
 			},
 			true,

@@ -20,7 +20,7 @@ func init() {
 
 const FieldTypeJSON = "json"
 
-const DefaultJSONFieldMaxSize int64 = 5 << 20
+const DefaultJSONFieldMaxSize int64 = 1 << 20
 
 var (
 	_ Field                 = (*JSONField)(nil)
@@ -53,7 +53,7 @@ type JSONField struct {
 
 	// MaxSize specifies the maximum size of the allowed field value (in bytes and up to 2^53-1).
 	//
-	// If zero, a default limit of 5MB is applied.
+	// If zero, a default limit of 1MB is applied.
 	MaxSize int64 `form:"maxSize" json:"maxSize"`
 
 	// Required will require the field value to be non-empty JSON value

@@ -8,6 +8,9 @@
 - ⚠️ Soft-deprecated and replaced `fsys.GetFile(fileKey)` with `fsys.GetReader(fileKey)` to avoid the confusion with `filesystem.File`.
     _The old method will still continue to work for at least until v0.29.0 but you'll get a console warning to replace it with `GetReader`._
 
+- ⚠️ Changed the default `json` field max size to 1MB.
+    _Users still have the option to adjust the default limit from the collection field options but keep in mind that storing large strings/blobs in the database is known to cause performance issues and should be avoided when possible._
+
 
 ## v0.27.2
 

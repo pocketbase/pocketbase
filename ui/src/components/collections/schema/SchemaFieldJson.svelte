@@ -21,7 +21,7 @@
                 max={Number.MAX_SAFE_INTEGER}
                 value={field.maxSize || ""}
                 on:input={(e) => (field.maxSize = parseInt(e.target.value, 10))}
-                placeholder="Default to max ~5MB"
+                placeholder="Default to max ~1MB"
             />
         </Field>
 
