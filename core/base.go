@@ -1211,10 +1211,10 @@ var sqlLogReplacements = []struct {
 }{
 	{regexp.MustCompile(`\[\[([^\[\]\{\}\.]+)\.([^\[\]\{\}\.]+)\]\]`), "`$1`.`$2`"},
 	{regexp.MustCompile(`\{\{([^\[\]\{\}\.]+)\.([^\[\]\{\}\.]+)\}\}`), "`$1`.`$2`"},
-	{regexp.MustCompile(`([^'"])\{\{`), "$1`"},
-	{regexp.MustCompile(`\}\}([^'"])`), "`$1"},
-	{regexp.MustCompile(`([^'"])\[\[`), "$1`"},
-	{regexp.MustCompile(`\]\]([^'"])`), "`$1"},
+	{regexp.MustCompile(`([^'"])?\{\{`), "$1`"},
+	{regexp.MustCompile(`\}\}([^'"])?`), "`$1"},
+	{regexp.MustCompile(`([^'"])?\[\[`), "$1`"},
+	{regexp.MustCompile(`\]\]([^'"])?`), "`$1"},
 	{regexp.MustCompile(`<nil>`), "NULL"},
 }
 
