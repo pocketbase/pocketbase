@@ -112,6 +112,8 @@ func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
 // NB! Make sure to call Close() on the file after you are done working with it.
 //
 // If the file doesn't exist returns ErrNotFound.
+//
+// @todo consider renaming to GetFileReader to avoid the confusion with filesystem.File
 func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
 	return s.bucket.NewReader(s.ctx, fileKey)
 }
@@ -241,7 +243,8 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 		return err
 	}
 
-	if _, err := w.ReadFrom(f); err != nil {
+	_, err = w.ReadFrom(f)
+	if err != nil {
 		w.Close()
 		return err
 	}

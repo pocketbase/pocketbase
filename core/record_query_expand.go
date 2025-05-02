@@ -103,7 +103,7 @@ func (app *BaseApp) expandRecords(records []*Record, expandPath string, fetchFun
 		// add the related id(s) as a dynamic relation field value to
 		// allow further expand checks at later stage in a more unified manner
 		prepErr := func() error {
-			q := app.DB().Select("id").
+			q := app.ConcurrentDB().Select("id").
 				From(indirectRel.Name).
 				Limit(1000) // the limit is arbitrary chosen and may change in the future
 

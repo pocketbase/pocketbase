@@ -227,7 +227,7 @@ func (form *RecordUpsert) DrySubmit(callback func(txApp core.App, drySavedRecord
 
 	app := form.app.UnsafeWithoutHooks()
 
-	_, isTransactional := app.DB().(*dbx.Tx)
+	isTransactional := app.IsTransactional()
 	if !isTransactional {
 		return app.RunInTransaction(func(txApp core.App) error {
 			tx, ok := txApp.DB().(*dbx.Tx)

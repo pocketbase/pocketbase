@@ -202,10 +202,10 @@ func TestVacuum(t *testing.T) {
 	defer app.Cleanup()
 
 	calledQueries := []string{}
-	app.DB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+	app.NonconcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
-	app.DB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+	app.NonconcurrentDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
 
@@ -229,10 +229,10 @@ func TestAuxVacuum(t *testing.T) {
 	defer app.Cleanup()
 
 	calledQueries := []string{}
-	app.AuxDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+	app.AuxNonconcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
-	app.AuxDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+	app.AuxNonconcurrentDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
 

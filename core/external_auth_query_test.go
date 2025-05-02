@@ -155,7 +155,7 @@ func TestFindFirstExternalAuthByExpr(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		t.Run(fmt.Sprintf("%d_%v", i, s.expr.Build(app.DB().(*dbx.DB), dbx.Params{})), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d_%v", i, s.expr.Build(app.ConcurrentDB().(*dbx.DB), dbx.Params{})), func(t *testing.T) {
 			result, err := app.FindFirstExternalAuthByExpr(s.expr)
 
 			hasErr := err != nil

@@ -87,7 +87,7 @@ func (validator *collectionValidator) run() error {
 				validator.original.IsNew(),
 				validation.Length(1, 100),
 				validation.Match(DefaultIdRegex),
-				validation.By(validators.UniqueId(validator.app.DB(), validator.new.TableName())),
+				validation.By(validators.UniqueId(validator.app.ConcurrentDB(), validator.new.TableName())),
 			).Else(
 				validation.By(validators.Equal(validator.original.Id)),
 			),
@@ -558,7 +558,7 @@ func (cv *collectionValidator) checkIndexes(value any) error {
 
 		// ensure that the index name is not used in another collection
 		var usedTblName string
-		_ = cv.app.DB().Select("tbl_name").
+		_ = cv.app.ConcurrentDB().Select("tbl_name").
 			From("sqlite_master").
 			AndWhere(dbx.HashExp{"type": "index"}).
 			AndWhere(dbx.NewExp("LOWER([[tbl_name]])!=LOWER({:oldName})", dbx.Params{"oldName": cv.original.Name})).

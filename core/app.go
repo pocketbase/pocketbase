@@ -146,46 +146,82 @@ type App interface {
 	// DB methods
 	// ---------------------------------------------------------------
 
-	// DB returns the default app data db instance (pb_data/data.db).
+	// DB returns the default app data.db builder instance.
+	//
+	// To minimize SQLITE_BUSY errors, it automatically routes the
+	// SELECT queries to the underlying concurrent db pool and everything else
+	// to the nonconcurrent one.
+	//
+	// For more finer control over the used connections pools you can
+	// call directly ConcurrentDB() or NonconcurrentDB().
 	DB() dbx.Builder
 
-	// NonconcurrentDB returns the nonconcurrent app data db instance (pb_data/data.db).
+	// ConcurrentDB returns the concurrent app data.db builder instance.
+	//
+	// This method is used mainly internally for executing db read
+	// operations in a concurrent/non-blocking manner.
+	//
+	// Most users should use simply DB() as it will automatically
+	// route the query execution to ConcurrentDB() or NonconcurrentDB().
+	//
+	// In a transaction the ConcurrentDB() and NonconcurrentDB() refer to the same *dbx.TX instance.
+	ConcurrentDB() dbx.Builder
+
+	// NonconcurrentDB returns the nonconcurrent app data.db builder instance.
 	//
 	// The returned db instance is limited only to a single open connection,
-	// meaning that it can process only 1 db operation at a time (other operations will be queued up).
+	// meaning that it can process only 1 db operation at a time (other queries queue up).
 	//
 	// This method is used mainly internally and in the tests to execute write
 	// (save/delete) db operations as it helps with minimizing the SQLITE_BUSY errors.
 	//
-	// For the majority of cases you would want to use the regular DB() method
-	// since it allows concurrent db read operations.
+	// Most users should use simply DB() as it will automatically
+	// route the query execution to ConcurrentDB() or NonconcurrentDB().
 	//
 	// In a transaction the ConcurrentDB() and NonconcurrentDB() refer to the same *dbx.TX instance.
 	NonconcurrentDB() dbx.Builder
 
-	// AuxDB returns the default app auxiliary db instance (pb_data/auxiliary.db).
+	// AuxDB returns the app auxiliary.db builder instance.
+	//
+	// To minimize SQLITE_BUSY errors, it automatically routes the
+	// SELECT queries to the underlying concurrent db pool and everything else
+	// to the nonconcurrent one.
+	//
+	// For more finer control over the used connections pools you can
+	// call directly AuxConcurrentDB() or AuxNonconcurrentDB().
 	AuxDB() dbx.Builder
 
-	// AuxNonconcurrentDB returns the nonconcurrent app auxiliary db instance (pb_data/auxiliary.db)..
+	// AuxConcurrentDB returns the concurrent app auxiliary.db builder instance.
+	//
+	// This method is used mainly internally for executing db read
+	// operations in a concurrent/non-blocking manner.
+	//
+	// Most users should use simply AuxDB() as it will automatically
+	// route the query execution to AuxConcurrentDB() or AuxNonconcurrentDB().
+	//
+	// In a transaction the AuxConcurrentDB() and AuxNonconcurrentDB() refer to the same *dbx.TX instance.
+	AuxConcurrentDB() dbx.Builder
+
+	// AuxNonconcurrentDB returns the nonconcurrent app auxiliary.db builder instance.
 	//
 	// The returned db instance is limited only to a single open connection,
-	// meaning that it can process only 1 db operation at a time (other operations will be queued up).
+	// meaning that it can process only 1 db operation at a time (other queries queue up).
 	//
 	// This method is used mainly internally and in the tests to execute write
 	// (save/delete) db operations as it helps with minimizing the SQLITE_BUSY errors.
 	//
-	// For the majority of cases you would want to use the regular DB() method
-	// since it allows concurrent db read operations.
+	// Most users should use simply AuxDB() as it will automatically
+	// route the query execution to AuxConcurrentDB() or AuxNonconcurrentDB().
 	//
-	// In a transaction the AuxNonconcurrentDB() and AuxNonconcurrentDB() refer to the same *dbx.TX instance.
+	// In a transaction the AuxConcurrentDB() and AuxNonconcurrentDB() refer to the same *dbx.TX instance.
 	AuxNonconcurrentDB() dbx.Builder
 
 	// HasTable checks if a table (or view) with the provided name exists (case insensitive).
-	// in the current app.DB() instance.
+	// in the data.db.
 	HasTable(tableName string) bool
 
 	// AuxHasTable checks if a table (or view) with the provided name exists (case insensitive)
-	// in the current app.AuxDB() instance.
+	// in the auxiliary.db.
 	AuxHasTable(tableName string) bool
 
 	// TableColumns returns all column names of a single table by its name.
@@ -231,21 +267,19 @@ type App interface {
 	// FindRecordByViewFile returns the original Record of the provided view collection file.
 	FindRecordByViewFile(viewCollectionModelOrIdentifier any, fileFieldName string, filename string) (*Record, error)
 
-	// Vacuum executes VACUUM on the current app.DB() instance
-	// in order to reclaim unused data db disk space.
+	// Vacuum executes VACUUM on the data.db in order to reclaim unused data db disk space.
 	Vacuum() error
 
-	// AuxVacuum executes VACUUM on the current app.AuxDB() instance
-	// in order to reclaim unused auxiliary db disk space.
+	// AuxVacuum executes VACUUM on the auxiliary.db in order to reclaim unused auxiliary db disk space.
 	AuxVacuum() error
 
 	// ---------------------------------------------------------------
 
-	// ModelQuery creates a new preconfigured select app.DB() query with preset
+	// ModelQuery creates a new preconfigured select data.db query with preset
 	// SELECT, FROM and other common fields based on the provided model.
 	ModelQuery(model Model) *dbx.SelectQuery
 
-	// AuxModelQuery creates a new preconfigured select app.AuxDB() query with preset
+	// AuxModelQuery creates a new preconfigured select auxiliary.db query with preset
 	// SELECT, FROM and other common fields based on the provided model.
 	AuxModelQuery(model Model) *dbx.SelectQuery
 

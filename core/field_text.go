@@ -194,7 +194,7 @@ func (f *TextField) ValidateValue(ctx context.Context, app App, record *Record) 
 			// (@todo eventually may get replaced in the future with a system unique constraint to avoid races or wrapping the request in a transaction)
 			if f.Pattern != defaultLowercaseRecordIdPattern {
 				var exists int
-				err := app.DB().
+				err := app.ConcurrentDB().
 					Select("(1)").
 					From(record.TableName()).
 					Where(dbx.NewExp("id = {:id} COLLATE NOCASE", dbx.Params{"id": newVal})).

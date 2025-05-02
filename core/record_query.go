@@ -35,7 +35,7 @@ func (app *BaseApp) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuer
 		tableName = "@@__invalidCollectionModelOrIdentifier"
 	}
 
-	query := app.DB().Select(app.DB().QuoteSimpleColumnName(tableName) + ".*").From(tableName)
+	query := app.ConcurrentDB().Select(app.ConcurrentDB().QuoteSimpleColumnName(tableName) + ".*").From(tableName)
 
 	// in case of an error attach a new context and cancel it immediately with the error
 	if collectionErr != nil {

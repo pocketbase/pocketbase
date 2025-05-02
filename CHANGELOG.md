@@ -2,6 +2,9 @@
 
 - Write the default response body of `*Request` hooks that are wrapped in a transaction after the related transaction completes to allow propagating errors ([#6462](https://github.com/pocketbase/pocketbase/discussions/6462#discussioncomment-12207818)).
 
+- Updated `app.DB()` to automatically routes raw write SQL statements to the nonconcurrent db pool ([#6689](https://github.com/pocketbase/pocketbase/discussions/6689)).
+    _For the rare cases when it is needed users still have the option to explicitly target the specific pool they want using `app.ConcurrentDB()`/`app.NonconcurrentDB()`._
+
 
 ## v0.27.2
 

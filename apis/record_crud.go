@@ -300,7 +300,7 @@ func recordCreate(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 
 			// check non-empty create rule
 			if *dummyCollection.CreateRule != "" {
-				ruleQuery := e.App.DB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
+				ruleQuery := e.App.ConcurrentDB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
 
 				resolver := core.NewRecordFieldResolver(e.App, &dummyCollection, requestInfo, true)
 
@@ -320,7 +320,7 @@ func recordCreate(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 			}
 
 			// check for manage rule access
-			manageRuleQuery := e.App.DB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
+			manageRuleQuery := e.App.ConcurrentDB().Select("(1)").PreFragment(withFrom).From(dummyCollection.Name).AndBind(dummyParams)
 			if !form.HasManageAccess() &&
 				hasAuthManageAccess(e.App, requestInfo, &dummyCollection, manageRuleQuery) {
 				form.GrantManagerAccess()
@@ -452,7 +452,7 @@ func recordUpdate(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 		}
 		form.Load(data)
 
-		manageRuleQuery := e.App.DB().Select("(1)").From(collection.Name).AndWhere(dbx.HashExp{
+		manageRuleQuery := e.App.ConcurrentDB().Select("(1)").From(collection.Name).AndWhere(dbx.HashExp{
 			collection.Name + ".id": record.Id,
 		})
 		if !form.HasManageAccess() &&

@@ -1623,7 +1623,7 @@ func TestCollectionSaveViewWrapping(t *testing.T) {
 
 			var sql string
 
-			rowErr := app.DB().NewQuery("SELECT sql FROM sqlite_master WHERE type='view' AND name={:name}").
+			rowErr := app.ConcurrentDB().NewQuery("SELECT sql FROM sqlite_master WHERE type='view' AND name={:name}").
 				Bind(dbx.Params{"name": viewName}).
 				Row(&sql)
 			if rowErr != nil {

@@ -2254,13 +2254,13 @@ func TestRecordDelete(t *testing.T) {
 	app.NonconcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
-	app.DB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+	app.ConcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
 	app.NonconcurrentDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
-	app.DB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+	app.ConcurrentDB().(*dbx.DB).ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
 		calledQueries = append(calledQueries, sql)
 	}
 	rec3, _ := app.FindRecordById("users", "oap640cot4yru2s")

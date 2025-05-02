@@ -153,7 +153,7 @@ func TestFindCachedCollectionByNameOrId(t *testing.T) {
 	defer app.Cleanup()
 
 	totalQueries := 0
-	app.DB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+	app.ConcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 		totalQueries++
 	}
 
@@ -272,7 +272,7 @@ func TestFindCachedCollectionReferences(t *testing.T) {
 	}
 
 	totalQueries := 0
-	app.DB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+	app.ConcurrentDB().(*dbx.DB).QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
 		totalQueries++
 	}
 

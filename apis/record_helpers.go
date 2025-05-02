@@ -457,8 +457,8 @@ func autoResolveRecordsFlags(app core.App, records []*core.Record, requestInfo *
 	managedIds := []string{}
 
 	query := app.RecordQuery(collection).
-		Select(app.DB().QuoteSimpleColumnName(collection.Name) + ".id").
-		AndWhere(dbx.In(app.DB().QuoteSimpleColumnName(collection.Name)+".id", recordIds...))
+		Select(app.ConcurrentDB().QuoteSimpleColumnName(collection.Name) + ".id").
+		AndWhere(dbx.In(app.ConcurrentDB().QuoteSimpleColumnName(collection.Name)+".id", recordIds...))
 
 	resolver := core.NewRecordFieldResolver(app, collection, requestInfo, true)
 	expr, err := search.FilterData(*collection.ManageRule).BuildExpr(resolver)

@@ -62,16 +62,16 @@ func crc32Checksum(str string) string {
 	return strconv.FormatInt(int64(crc32.ChecksumIEEE([]byte(str))), 10)
 }
 
-// ModelQuery creates a new preconfigured select app.DB() query with preset
+// ModelQuery creates a new preconfigured select data.db query with preset
 // SELECT, FROM and other common fields based on the provided model.
 func (app *BaseApp) ModelQuery(m Model) *dbx.SelectQuery {
-	return app.modelQuery(app.DB(), m)
+	return app.modelQuery(app.ConcurrentDB(), m)
 }
 
-// AuxModelQuery creates a new preconfigured select app.AuxDB() query with preset
+// AuxModelQuery creates a new preconfigured select auxiliary.db query with preset
 // SELECT, FROM and other common fields based on the provided model.
 func (app *BaseApp) AuxModelQuery(m Model) *dbx.SelectQuery {
-	return app.modelQuery(app.AuxDB(), m)
+	return app.modelQuery(app.AuxConcurrentDB(), m)
 }
 
 func (app *BaseApp) modelQuery(db dbx.Builder, m Model) *dbx.SelectQuery {
@@ -484,7 +484,7 @@ func validateRecordId(app App, collectionNameOrId string) validation.RuleFunc {
 
 		var exists int
 
-		rowErr := app.DB().Select("(1)").
+		rowErr := app.ConcurrentDB().Select("(1)").
 			From(collection.Name).
 			AndWhere(dbx.HashExp{"id": id}).
 			Limit(1).

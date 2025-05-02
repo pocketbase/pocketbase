@@ -144,7 +144,7 @@ func (app *BaseApp) SyncRecordTableSchema(newCollection *Collection, oldCollecti
 
 	// run optimize per the SQLite recommendations
 	// (https://www.sqlite.org/pragma.html#pragma_optimize)
-	_, optimizeErr := app.DB().NewQuery("PRAGMA optimize").Execute()
+	_, optimizeErr := app.ConcurrentDB().NewQuery("PRAGMA optimize").Execute()
 	if optimizeErr != nil {
 		app.Logger().Warn("Failed to run PRAGMA optimize after record table sync", slog.String("error", optimizeErr.Error()))
 	}
@@ -310,7 +310,8 @@ func dropCollectionIndexes(app App, collection *Collection) error {
 				continue
 			}
 
-			if _, err := app.DB().NewQuery(fmt.Sprintf("DROP INDEX IF EXISTS [[%s]]", parsed.IndexName)).Execute(); err != nil {
+			_, err := txApp.DB().NewQuery(fmt.Sprintf("DROP INDEX IF EXISTS [[%s]]", parsed.IndexName)).Execute()
+			if err != nil {
 				return err
 			}
 		}

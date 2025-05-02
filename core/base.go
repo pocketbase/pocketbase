@@ -476,44 +476,100 @@ func (app *BaseApp) ResetBootstrapState() error {
 	return nil
 }
 
-// DB returns the default app data db instance (pb_data/data.db).
+// DB returns the default app data.db builder instance.
+//
+// To minimize SQLITE_BUSY errors, it automatically routes the
+// SELECT queries to the underlying concurrent db pool and everything
+// else to the nonconcurrent one.
+//
+// For more finer control over the used connections pools you can
+// call directly ConcurrentDB() or NonconcurrentDB().
 func (app *BaseApp) DB() dbx.Builder {
+	// transactional or both are nil
+	if app.concurrentDB == app.nonconcurrentDB {
+		return app.concurrentDB
+	}
+
+	return &dualDBBuilder{
+		concurrentDB:    app.concurrentDB,
+		nonconcurrentDB: app.nonconcurrentDB,
+	}
+}
+
+// ConcurrentDB returns the concurrent app data.db builder instance.
+//
+// This method is used mainly internally for executing db read
+// operations in a concurrent/non-blocking manner.
+//
+// Most users should use simply DB() as it will automatically
+// route the query execution to ConcurrentDB() or NonconcurrentDB().
+//
+// In a transaction the ConcurrentDB() and NonconcurrentDB() refer to the same *dbx.TX instance.
+func (app *BaseApp) ConcurrentDB() dbx.Builder {
 	return app.concurrentDB
 }
 
-// NonconcurrentDB returns the nonconcurrent app data db instance (pb_data/data.db).
+// NonconcurrentDB returns the nonconcurrent app data.db builder instance.
 //
 // The returned db instance is limited only to a single open connection,
-// meaning that it can process only 1 db operation at a time (other operations will be queued up).
+// meaning that it can process only 1 db operation at a time (other queries queue up).
 //
 // This method is used mainly internally and in the tests to execute write
 // (save/delete) db operations as it helps with minimizing the SQLITE_BUSY errors.
 //
-// For the majority of cases you would want to use the regular DB() method
-// since it allows concurrent db read operations.
+// Most users should use simply DB() as it will automatically
+// route the query execution to ConcurrentDB() or NonconcurrentDB().
 //
 // In a transaction the ConcurrentDB() and NonconcurrentDB() refer to the same *dbx.TX instance.
 func (app *BaseApp) NonconcurrentDB() dbx.Builder {
 	return app.nonconcurrentDB
 }
 
-// AuxDB returns the default app auxiliary db instance (pb_data/auxiliary.db).
+// AuxDB returns the app auxiliary.db builder instance.
+//
+// To minimize SQLITE_BUSY errors, it automatically routes the
+// SELECT queries to the underlying concurrent db pool and everything
+// else to the nonconcurrent one.
+//
+// For more finer control over the used connections pools you can
+// call directly AuxConcurrentDB() or AuxNonconcurrentDB().
 func (app *BaseApp) AuxDB() dbx.Builder {
+	// transactional or both are nil
+	if app.auxConcurrentDB == app.auxNonconcurrentDB {
+		return app.auxConcurrentDB
+	}
+
+	return &dualDBBuilder{
+		concurrentDB:    app.auxConcurrentDB,
+		nonconcurrentDB: app.auxNonconcurrentDB,
+	}
+}
+
+// AuxConcurrentDB returns the concurrent app auxiliary.db builder instance.
+//
+// This method is used mainly internally for executing db read
+// operations in a concurrent/non-blocking manner.
+//
+// Most users should use simply AuxDB() as it will automatically
+// route the query execution to AuxConcurrentDB() or AuxNonconcurrentDB().
+//
+// In a transaction the AuxConcurrentDB() and AuxNonconcurrentDB() refer to the same *dbx.TX instance.
+func (app *BaseApp) AuxConcurrentDB() dbx.Builder {
 	return app.auxConcurrentDB
 }
 
-// AuxNonconcurrentDB returns the nonconcurrent app auxiliary db instance (pb_data/auxiliary.db).
+// AuxNonconcurrentDB returns the nonconcurrent app auxiliary.db builder instance.
 //
 // The returned db instance is limited only to a single open connection,
-// meaning that it can process only 1 db operation at a time (other operations will be queued up).
+// meaning that it can process only 1 db operation at a time (other queries queue up).
 //
 // This method is used mainly internally and in the tests to execute write
 // (save/delete) db operations as it helps with minimizing the SQLITE_BUSY errors.
 //
-// For the majority of cases you would want to use the regular DB() method
-// since it allows concurrent db read operations.
+// Most users should use simply AuxDB() as it will automatically
+// route the query execution to AuxConcurrentDB() or AuxNonconcurrentDB().
 //
-// In a transaction the AuxNonconcurrentDB() and AuxNonconcurrentDB() refer to the same *dbx.TX instance.
+// In a transaction the AuxConcurrentDB() and AuxNonconcurrentDB() refer to the same *dbx.TX instance.
 func (app *BaseApp) AuxNonconcurrentDB() dbx.Builder {
 	return app.auxNonconcurrentDB
 }
@@ -1309,7 +1365,7 @@ func (app *BaseApp) registerBaseHooks() {
 			app.Logger().Warn("Failed to run periodic PRAGMA wal_checkpoint for the auxiliary DB", slog.String("error", execErr.Error()))
 		}
 
-		_, execErr = app.DB().NewQuery("PRAGMA optimize").Execute()
+		_, execErr = app.ConcurrentDB().NewQuery("PRAGMA optimize").Execute()
 		if execErr != nil {
 			app.Logger().Warn("Failed to run periodic PRAGMA optimize", slog.String("error", execErr.Error()))
 		}

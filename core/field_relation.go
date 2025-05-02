@@ -219,7 +219,7 @@ func (f *RelationField) ValidateValue(ctx context.Context, app App, record *Reco
 	}
 
 	var total int
-	_ = app.DB().
+	_ = app.ConcurrentDB().
 		Select("count(*)").
 		From(relCollection.Name).
 		AndWhere(dbx.In("id", list.ToInterfaceSlice(ids)...)).

@@ -38,12 +38,12 @@ func TestModelQuery(t *testing.T) {
 	modelsQuery := app.ModelQuery(&core.Collection{})
 	logsModelQuery := app.AuxModelQuery(&core.Collection{})
 
-	if app.DB() == modelsQuery.Info().Builder {
-		t.Fatalf("ModelQuery() is not using app.DB()")
+	if app.ConcurrentDB() == modelsQuery.Info().Builder {
+		t.Fatalf("ModelQuery() is not using app.ConcurrentDB()")
 	}
 
-	if app.AuxDB() == logsModelQuery.Info().Builder {
-		t.Fatalf("AuxModelQuery() is not using app.AuxDB()")
+	if app.AuxConcurrentDB() == logsModelQuery.Info().Builder {
+		t.Fatalf("AuxModelQuery() is not using app.AuxConcurrentDB()")
 	}
 
 	expectedSQL := "SELECT {{_collections}}.* FROM `_collections`"

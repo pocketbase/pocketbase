@@ -11,7 +11,7 @@ import (
 func (app *BaseApp) TableColumns(tableName string) ([]string, error) {
 	columns := []string{}
 
-	err := app.DB().NewQuery("SELECT name FROM PRAGMA_TABLE_INFO({:tableName})").
+	err := app.ConcurrentDB().NewQuery("SELECT name FROM PRAGMA_TABLE_INFO({:tableName})").
 		Bind(dbx.Params{"tableName": tableName}).
 		Column(&columns)
 
@@ -34,7 +34,7 @@ type TableInfoRow struct {
 func (app *BaseApp) TableInfo(tableName string) ([]*TableInfoRow, error) {
 	info := []*TableInfoRow{}
 
-	err := app.DB().NewQuery("SELECT * FROM PRAGMA_TABLE_INFO({:tableName})").
+	err := app.ConcurrentDB().NewQuery("SELECT * FROM PRAGMA_TABLE_INFO({:tableName})").
 		Bind(dbx.Params{"tableName": tableName}).
 		All(&info)
 	if err != nil {
@@ -59,7 +59,7 @@ func (app *BaseApp) TableIndexes(tableName string) (map[string]string, error) {
 		Sql  string
 	}{}
 
-	err := app.DB().Select("name", "sql").
+	err := app.ConcurrentDB().Select("name", "sql").
 		From("sqlite_master").
 		AndWhere(dbx.NewExp("sql is not null")).
 		AndWhere(dbx.HashExp{
@@ -87,7 +87,7 @@ func (app *BaseApp) TableIndexes(tableName string) (map[string]string, error) {
 // NB! Be aware that this method is vulnerable to SQL injection and the
 // "tableName" argument must come only from trusted input!
 func (app *BaseApp) DeleteTable(tableName string) error {
-	_, err := app.DB().NewQuery(fmt.Sprintf(
+	_, err := app.NonconcurrentDB().NewQuery(fmt.Sprintf(
 		"DROP TABLE IF EXISTS {{%s}}",
 		tableName,
 	)).Execute()
@@ -96,15 +96,15 @@ func (app *BaseApp) DeleteTable(tableName string) error {
 }
 
 // HasTable checks if a table (or view) with the provided name exists (case insensitive).
-// in the current app.DB() instance.
+// in the data.db.
 func (app *BaseApp) HasTable(tableName string) bool {
-	return app.hasTable(app.DB(), tableName)
+	return app.hasTable(app.ConcurrentDB(), tableName)
 }
 
 // AuxHasTable checks if a table (or view) with the provided name exists (case insensitive)
-// in the current app.AuxDB() instance.
+// in the auixiliary.db.
 func (app *BaseApp) AuxHasTable(tableName string) bool {
-	return app.hasTable(app.AuxDB(), tableName)
+	return app.hasTable(app.AuxConcurrentDB(), tableName)
 }
 
 func (app *BaseApp) hasTable(db dbx.Builder, tableName string) bool {
@@ -120,16 +120,14 @@ func (app *BaseApp) hasTable(db dbx.Builder, tableName string) bool {
 	return err == nil && exists > 0
 }
 
-// Vacuum executes VACUUM on the current app.DB() instance
-// in order to reclaim unused data db disk space.
+// Vacuum executes VACUUM on the data.db in order to reclaim unused data db disk space.
 func (app *BaseApp) Vacuum() error {
-	return app.vacuum(app.DB())
+	return app.vacuum(app.NonconcurrentDB())
 }
 
-// AuxVacuum executes VACUUM on the current app.AuxDB() instance
-// in order to reclaim unused auxiliary db disk space.
+// AuxVacuum executes VACUUM on the auxiliary.db in order to reclaim unused auxiliary db disk space.
 func (app *BaseApp) AuxVacuum() error {
-	return app.vacuum(app.AuxDB())
+	return app.vacuum(app.AuxNonconcurrentDB())
 }
 
 func (app *BaseApp) vacuum(db dbx.Builder) error {
