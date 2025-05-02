@@ -526,7 +526,7 @@ func TestFileSystemServe(t *testing.T) {
 	}
 }
 
-func TestFileSystemGetFile(t *testing.T) {
+func TestFileSystemGetReader(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)
 
@@ -547,7 +547,7 @@ func TestFileSystemGetFile(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.file, func(t *testing.T) {
-			f, err := fsys.GetFile(s.file)
+			f, err := fsys.GetReader(s.file)
 			defer func() {
 				if f != nil {
 					f.Close()
@@ -600,7 +600,7 @@ func TestFileSystemCopy(t *testing.T) {
 	if err := fsys.Copy(src, dst); err != nil {
 		t.Fatalf("Failed to copy %q to %q: %v", src, dst, err)
 	}
-	f, err := fsys.GetFile(dst)
+	f, err := fsys.GetReader(dst)
 	//nolint
 	defer f.Close()
 	if err != nil {
@@ -801,7 +801,7 @@ func TestFileSystemCreateThumb(t *testing.T) {
 				return
 			}
 
-			f, err := fsys.GetFile(s.thumb)
+			f, err := fsys.GetReader(s.thumb)
 			if err != nil {
 				t.Fatalf("Missing expected thumb %s (%v)", s.thumb, err)
 			}

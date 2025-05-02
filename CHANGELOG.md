@@ -5,6 +5,9 @@
 - Updated `app.DB()` to automatically routes raw write SQL statements to the nonconcurrent db pool ([#6689](https://github.com/pocketbase/pocketbase/discussions/6689)).
     _For the rare cases when it is needed users still have the option to explicitly target the specific pool they want using `app.ConcurrentDB()`/`app.NonconcurrentDB()`._
 
+- ⚠️ Soft-deprecated and replaced `fsys.GetFile(fileKey)` with `fsys.GetReader(fileKey)` to avoid the confusion with `filesystem.File`.
+    _The old method will still continue to work for at least until v0.29.0 but you'll get a console warning to replace it with `GetReader`._
+
 
 ## v0.27.2
 

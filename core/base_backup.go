@@ -190,7 +190,7 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 
 		// extract the zip
 		if e.App.Settings().Backups.S3.Enabled {
-			br, err := fsys.GetFile(name)
+			br, err := fsys.GetReader(name)
 			if err != nil {
 				return err
 			}

@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/disintegration/imaging"
+	"github.com/fatih/color"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/pocketbase/pocketbase/tools/filesystem/blob"
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/fileblob"
@@ -107,15 +108,19 @@ func (s *System) Attributes(fileKey string) (*blob.Attributes, error) {
 	return s.bucket.Attributes(s.ctx, fileKey)
 }
 
-// GetFile returns a file content reader for the given fileKey.
+// GetReader returns a file content reader for the given fileKey.
 //
 // NB! Make sure to call Close() on the file after you are done working with it.
 //
 // If the file doesn't exist returns ErrNotFound.
-//
-// @todo consider renaming to GetFileReader to avoid the confusion with filesystem.File
-func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
+func (s *System) GetReader(fileKey string) (*blob.Reader, error) {
 	return s.bucket.NewReader(s.ctx, fileKey)
+}
+
+// Deprecated: Please use GetReader(fileKey) instead.
+func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
+	color.Yellow("Deprecated: Please replace GetFile with GetReader.")
+	return s.GetReader(fileKey)
 }
 
 // Copy copies the file stored at srcKey to dstKey.
@@ -382,7 +387,7 @@ const forceAttachmentParam = "download"
 // Internally this method uses [http.ServeContent] so Range requests,
 // If-Match, If-Unmodified-Since, etc. headers are handled transparently.
 func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey string, name string) error {
-	br, readErr := s.GetFile(fileKey)
+	br, readErr := s.GetReader(fileKey)
 	if readErr != nil {
 		return readErr
 	}
@@ -454,7 +459,7 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 	}
 
 	// fetch the original
-	r, readErr := s.GetFile(originalKey)
+	r, readErr := s.GetReader(originalKey)
 	if readErr != nil {
 		return readErr
 	}
