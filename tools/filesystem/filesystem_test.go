@@ -578,6 +578,83 @@ func TestFileSystemGetReader(t *testing.T) {
 	}
 }
 
+func TestFileSystemGetReuploadableFile(t *testing.T) {
+	dir := createTestDir(t)
+	defer os.RemoveAll(dir)
+
+	fsys, err := filesystem.NewLocal(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fsys.Close()
+
+	t.Run("missing.txt", func(t *testing.T) {
+		_, err := fsys.GetReuploadableFile("missing.txt", false)
+		if err == nil {
+			t.Fatal("Expected error, got nil")
+		}
+	})
+
+	testReader := func(t *testing.T, f *filesystem.File, expectedContent string) {
+		r, err := f.Reader.Open()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		raw, err := io.ReadAll(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		rawStr := string(raw)
+
+		if rawStr != expectedContent {
+			t.Fatalf("Expected content %q, got %q", expectedContent, rawStr)
+		}
+	}
+
+	t.Run("existing (preserve name)", func(t *testing.T) {
+		file, err := fsys.GetReuploadableFile("test/sub1.txt", true)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if v := file.OriginalName; v != "sub1.txt" {
+			t.Fatalf("Expected originalName %q, got %q", "sub1.txt", v)
+		}
+
+		if v := file.Size; v != 4 {
+			t.Fatalf("Expected size %d, got %d", 4, v)
+		}
+
+		if v := file.Name; v != "sub1.txt" {
+			t.Fatalf("Expected name to be preserved, got %q", v)
+		}
+
+		testReader(t, file, "sub1")
+	})
+
+	t.Run("existing (new random suffix name)", func(t *testing.T) {
+		file, err := fsys.GetReuploadableFile("test/sub1.txt", false)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if v := file.OriginalName; v != "sub1.txt" {
+			t.Fatalf("Expected originalName %q, got %q", "sub1.txt", v)
+		}
+
+		if v := file.Size; v != 4 {
+			t.Fatalf("Expected size %d, got %d", 4, v)
+		}
+
+		if v := file.Name; v == "sub1.txt" || len(v) <= len("sub1.txt.png") {
+			t.Fatalf("Expected name to have new random suffix, got %q", v)
+		}
+
+		testReader(t, file, "sub1")
+	})
+}
+
 func TestFileSystemCopy(t *testing.T) {
 	dir := createTestDir(t)
 	defer os.RemoveAll(dir)

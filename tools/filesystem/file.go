@@ -176,6 +176,18 @@ func (r *bytesReadSeekCloser) Close() error {
 
 // -------------------------------------------------------------------
 
+var _ FileReader = (openFuncAsReader)(nil)
+
+// openFuncAsReader defines a FileReader from a bare Open function.
+type openFuncAsReader func() (io.ReadSeekCloser, error)
+
+// Open implements the [filesystem.FileReader] interface.
+func (r openFuncAsReader) Open() (io.ReadSeekCloser, error) {
+	return r()
+}
+
+// -------------------------------------------------------------------
+
 var extInvalidCharsRegex = regexp.MustCompile(`[^\w\.\*\-\+\=\#]+`)
 
 const randomAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789"

@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -29,6 +30,8 @@ import (
 
 // note: the same as blob.ErrNotFound for backward compatibility with earlier versions
 var ErrNotFound = blob.ErrNotFound
+
+const metadataOriginalName = "original-filename"
 
 type System struct {
 	ctx    context.Context
@@ -123,6 +126,45 @@ func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
 	return s.GetReader(fileKey)
 }
 
+// GetReaderAsFile constructs a new reuploadable File value from the
+// associated fileKey blob.Reader.
+//
+// If preserveName is false then the returned File.Name will have
+// a new randomly generated suffix, otherwise it will reuse the original one.
+//
+// This method could be useful in case you want to clone an existing
+// Record file and assign it to a new Record (e.g. in a Record duplicate action).
+//
+// If you simply want to copy an existing file to a new location you
+// could check the Copy(srcKey, dstKey) method.
+func (s *System) GetReuploadableFile(fileKey string, preserveName bool) (*File, error) {
+	attrs, err := s.Attributes(fileKey)
+	if err != nil {
+		return nil, err
+	}
+
+	name := path.Base(fileKey)
+	originalName := attrs.Metadata[metadataOriginalName]
+	if originalName == "" {
+		originalName = name
+	}
+
+	file := &File{}
+	file.Size = attrs.Size
+	file.OriginalName = originalName
+	file.Reader = openFuncAsReader(func() (io.ReadSeekCloser, error) {
+		return s.GetReader(fileKey)
+	})
+
+	if preserveName {
+		file.Name = name
+	} else {
+		file.Name = normalizeName(file.Reader, originalName)
+	}
+
+	return file, nil
+}
+
 // Copy copies the file stored at srcKey to dstKey.
 //
 // If srcKey file doesn't exist, it returns ErrNotFound.
@@ -197,7 +239,7 @@ func (s *System) UploadFile(file *File, fileKey string) error {
 	opts := &blob.WriterOptions{
 		ContentType: mt.String(),
 		Metadata: map[string]string{
-			"original-filename": originalName,
+			metadataOriginalName: originalName,
 		},
 	}
 
@@ -239,7 +281,7 @@ func (s *System) UploadMultipart(fh *multipart.FileHeader, fileKey string) error
 	opts := &blob.WriterOptions{
 		ContentType: mt.String(),
 		Metadata: map[string]string{
-			"original-filename": originalName,
+			metadataOriginalName: originalName,
 		},
 	}
 
