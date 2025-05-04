@@ -40,8 +40,7 @@ type Driver interface {
 	NormalizeError(err error) error
 
 	// Attributes returns attributes for the blob. If the specified object does
-	// not exist, Attributes must return an error for which ErrorCode returns
-	// gcerrors.NotFound.
+	// not exist, Attributes must return an error for which ErrorCode returns ErrNotFound.
 	// The portable type will not modify the returned Attributes.
 	Attributes(ctx context.Context, key string) (*Attributes, error)
 
@@ -57,8 +56,7 @@ type Driver interface {
 	// NewRangeReader returns a Reader that reads part of an object, reading at
 	// most length bytes starting at the given offset. If length is negative, it
 	// will read until the end of the object. If the specified object does not
-	// exist, NewRangeReader must return an error for which ErrorCode returns
-	// gcerrors.NotFound.
+	// exist, NewRangeReader must return an error for which ErrorCode returns ErrNotFound.
 	// opts is guaranteed to be non-nil.
 	//
 	// The returned Reader *may* also implement Downloader if the underlying
@@ -90,7 +88,7 @@ type Driver interface {
 	// Copy copies the object associated with srcKey to dstKey.
 	//
 	// If the source object does not exist, Copy must return an error for which
-	// ErrorCode returns gcerrors.NotFound.
+	// ErrorCode returns ErrNotFound.
 	//
 	// If the destination object already exists, it should be overwritten.
 	//
@@ -98,8 +96,7 @@ type Driver interface {
 	Copy(ctx context.Context, dstKey, srcKey string) error
 
 	// Delete deletes the object associated with key. If the specified object does
-	// not exist, Delete must return an error for which ErrorCode returns
-	// gcerrors.NotFound.
+	// not exist, Delete must return an error for which ErrorCode returns ErrNotFound.
 	Delete(ctx context.Context, key string) error
 
 	// Close cleans up any resources used by the Bucket. Once Close is called,

@@ -699,6 +699,8 @@ func (b *Bucket) Delete(ctx context.Context, key string) (err error) {
 }
 
 // Close releases any resources used for the bucket.
+//
+// @todo Consider removing it.
 func (b *Bucket) Close() error {
 	b.mu.Lock()
 	prev := b.closed
