@@ -37,7 +37,7 @@ func (app *BaseApp) ExpandRecords(records []*Record, expands []string, optFetchF
 	failed := map[string]error{}
 
 	for _, expand := range normalized {
-		if err := app.expandRecords(records, expand, optFetchFunc, 1); err != nil {
+		if err := app.expandRecords(records, expand, optFetchFunc, 6); err != nil {
 			failed[expand] = err
 		}
 	}
