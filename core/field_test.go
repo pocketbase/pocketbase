@@ -214,7 +214,11 @@ func testDefaultFieldNameValidation(t *testing.T, fieldType string) {
 			"system reserved - _rowid_",
 			func() core.Field {
 				f := core.Fields[fieldType]()
+				/* SQLite:
 				f.SetName("_rowid_")
+				*/
+				// PostgreSQL:
+				f.SetName("ctid")
 				return f
 			},
 			true,

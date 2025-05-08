@@ -37,7 +37,11 @@ func TestRelationFieldColumnType(t *testing.T) {
 		{
 			"multiple",
 			&core.RelationField{MaxSelect: 2},
+			/* SQLite:
 			"JSON DEFAULT '[]' NOT NULL",
+			*/
+			// PostgreSQL:
+			"JSONB DEFAULT '[]' NOT NULL",
 		},
 	}
 

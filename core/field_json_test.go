@@ -3,11 +3,13 @@ package core_test
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tests"
+	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
@@ -21,7 +23,11 @@ func TestJSONFieldColumnType(t *testing.T) {
 
 	f := &core.JSONField{}
 
+	/* SQLite:
 	expected := "JSON DEFAULT NULL"
+	*/
+	// PostgreSQL:
+	expected := "JSONB DEFAULT NULL"
 
 	if v := f.ColumnType(app); v != expected {
 		t.Fatalf("Expected\n%q\ngot\n%q", expected, v)
@@ -271,6 +277,90 @@ func TestJSONFieldCalculateMaxBodySize(t *testing.T) {
 
 			if result != s.expected {
 				t.Fatalf("Expected %d, got %d", s.expected, result)
+			}
+		})
+	}
+}
+
+func TestJsonFilter_TypeCasting(t *testing.T) {
+	testApp, _ := tests.NewTestApp()
+	defer testApp.Cleanup()
+
+	jsonField := &core.JSONField{Name: "json_col"}
+	boolField := &core.BoolField{Name: "bool_col"}
+	collection := core.NewBaseCollection("test")
+	collection.Fields.Add(jsonField, boolField)
+	resolver := core.NewRecordFieldResolver(testApp, collection, nil, false)
+
+	// Append 5 rows data to the db
+	sql := `
+		CREATE TABLE test (
+			id		 INTEGER,
+			text_col TEXT,
+			bool_col BOOLEAN,
+			json_col JSON
+		);
+		INSERT INTO test (id, text_col, bool_col, json_col) VALUES
+			(0, 'text a', true, '{"string_key": "value a", "int_key": 0, "bool_key": true}'),
+			(1, 'test b', false, '{"string_key": "value b", "int_key": 1, "bool_key": false}'),
+			(2, 'test c', true, '{"string_key": "value c", "int_key": 2, "bool_key": true}'),
+			(3, 'test d', false, '{"string_key": "value d", "int_key": 3, "bool_key": false}'),
+			(4, '123', true, '{"string_key": "value e", "int_key": 4, "bool_key": true}')
+	`
+	_, err := testApp.DB().NewQuery(sql).Execute()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scenarios := []struct {
+		name           string
+		filterData     search.FilterData
+		expectedRowIds []int
+	}{
+		{
+			name:           "bool filters",
+			filterData:     search.FilterData(`bool_col = true`),
+			expectedRowIds: []int{0, 2, 4},
+		},
+		{
+			name:           "json filter type cast to string",
+			filterData:     search.FilterData(`json_col.string_key = 'value a'`),
+			expectedRowIds: []int{0},
+		},
+		{
+			name:           "json filter type cast to number",
+			filterData:     search.FilterData(`json_col.int_key = 1`),
+			expectedRowIds: []int{1},
+		},
+		{
+			name:           "json filter type cast to boolean",
+			filterData:     search.FilterData(`json_col.bool_key = true`),
+			expectedRowIds: []int{0, 2, 4},
+		},
+	}
+
+	for _, scenario := range scenarios {
+		t.Run(scenario.name, func(t *testing.T) {
+			expr, err := scenario.filterData.BuildExpr(resolver)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var rows []struct {
+				ID int `db:"id"`
+			}
+			err = testApp.DB().Select("id").From("test").Where(expr).OrderBy("id").All(&rows)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			rowIds := make([]int, len(rows))
+			for i, row := range rows {
+				rowIds[i] = row.ID
+			}
+
+			if !reflect.DeepEqual(rowIds, scenario.expectedRowIds) {
+				t.Fatalf("Expected rows %v, got %v", scenario.expectedRowIds, rowIds)
 			}
 		})
 	}

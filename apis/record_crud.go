@@ -81,7 +81,11 @@ func recordsList(e *core.RequestEvent) error {
 
 	// use rowid when available to minimize the need of a covering index with the "id" field
 	if !collection.IsView() {
+		/* SQLite:
 		searchProvider.CountCol("_rowid_")
+		*/
+		// PostgreSQL:
+		searchProvider.CountCol("ctid");
 	}
 
 	records := []*core.Record{}
@@ -288,7 +292,22 @@ func recordCreate(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 				k = inflector.Columnify(k) // columnify is just as extra measure in case of custom fields
 				param = "__pb_create__" + k
 				dummyParams[param] = v
-				selects = append(selects, "{:"+param+"} AS [["+k+"]]")
+				// PostgreSQL only:
+				// Special case to handle PostgreSQL prepared statement strong type checking.
+				// If we don't explicity specify a type for a dynamic param in the prepared statement,
+				// It will be treated as text by PostgreSQL by default. And if we send a numeric value
+				// to a text-typed param, PostgreSQL will complain about a type mismatch. Eg:
+				// Related Issue:
+				// - https://github.com/jackc/pgx/issues/798,
+				// - https://github.com/jackc/pgx/issues/2307
+				typehint := ""
+				switch v.(type) {
+				case float64:
+					typehint = "::numeric"
+				case bool:
+					typehint = "::boolean"
+				}
+				selects = append(selects, "{:"+param+"}"+typehint+" AS [["+k+"]]")
 			}
 
 			// shallow clone the current collection

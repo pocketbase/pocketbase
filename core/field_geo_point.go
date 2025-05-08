@@ -103,7 +103,7 @@ func (f *GeoPointField) SetHidden(hidden bool) {
 
 // ColumnType implements [Field.ColumnType] interface method.
 func (f *GeoPointField) ColumnType(app App) string {
-	return `JSON DEFAULT '{"lon":0,"lat":0}' NOT NULL`
+	return `JSONB DEFAULT '{"lon":0,"lat":0}' NOT NULL`
 }
 
 // PrepareValue implements [Field.PrepareValue] interface method.

@@ -201,7 +201,11 @@ func TestIndexBuild(t *testing.T) {
 				TableName: "table",
 				Columns:   []dbutils.IndexColumn{{Name: "col"}},
 			},
+			/* SQLite:
 			"CREATE INDEX `index` ON `table` (`col`)",
+			*/
+			// PostgreSQL:
+			`CREATE INDEX "index" ON "table" ("col")`,
 		},
 		{
 			"all fields",
@@ -218,7 +222,11 @@ func TestIndexBuild(t *testing.T) {
 				},
 				Where: "test = 1 OR test = 2",
 			},
+			/* SQLite:
 			"CREATE UNIQUE INDEX IF NOT EXISTS `schema`.`index` ON `table` (\n  `col1` COLLATE NOCASE ASC,\n  `col2` DESC,\n  " + `json_extract("col3", "$.a")` + " COLLATE NOCASE\n) WHERE test = 1 OR test = 2",
+			*/
+			// PostgreSQL:
+			strings.ReplaceAll(`CREATE UNIQUE INDEX IF NOT EXISTS "schema"."index" ON "table" (\n  "col1" COLLATE NOCASE ASC,\n  "col2" DESC,\n  `+`json_extract("col3", "$.a")`+` COLLATE NOCASE\n) WHERE test = 1 OR test = 2`, `\n`, "\n"),
 		},
 	}
 

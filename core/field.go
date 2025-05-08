@@ -207,7 +207,10 @@ func DefaultFieldIdValidationRule(value any) error {
 
 // exclude special filter and system literals
 var excludeNames = append([]any{
+	/* SQLite:
 	"null", "true", "false", "_rowid_",
+	*/
+	"null", "true", "false", "ctid",
 }, list.ToInterfaceSlice(SystemDynamicFieldNames)...)
 
 // DefaultFieldIdValidationRule performs base validation on a field name value.

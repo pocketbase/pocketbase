@@ -2228,7 +2228,8 @@ func TestRecordDelete(t *testing.T) {
 
 	// delete existing record + external auths
 	// ---
-	rec1, _ := app.FindRecordById("users", "4q1xlclmfloku33")
+	rec1, err3 := app.FindRecordById("users", "4q1xlclmfloku33")
+	_ = err3
 	if err := app.Delete(rec1); err != nil {
 		t.Fatalf("(rec1) Expected nil, got error %v", err)
 	}
@@ -2280,11 +2281,19 @@ func TestRecordDelete(t *testing.T) {
 	}
 	// ensure that the json rel fields were prefixed
 	joinedQueries := strings.Join(calledQueries, " ")
+	/* SQLite:
 	expectedRelManyPart := "SELECT `demo1`.* FROM `demo1` WHERE EXISTS (SELECT 1 FROM json_each(CASE WHEN iif(json_valid([[demo1.rel_many]]), json_type([[demo1.rel_many]])='array', FALSE) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END) {{__je__}} WHERE [[__je__.value]]='"
+	*/
+	// PostgreSQL:
+	expectedRelManyPart := `SELECT "demo1".* FROM "demo1" WHERE [[demo1.rel_many]] ? `
 	if !strings.Contains(joinedQueries, expectedRelManyPart) {
 		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelManyPart, calledQueries)
 	}
+	/* SQLite:
 	expectedRelOnePart := "SELECT `demo1`.* FROM `demo1` WHERE (`demo1`.`rel_one`='"
+	*/
+	// PostgreSQL:
+	expectedRelOnePart := `SELECT "demo1".* FROM "demo1" WHERE ("demo1"."rel_one"='`
 	if !strings.Contains(joinedQueries, expectedRelOnePart) {
 		t.Fatalf("(rec3) Expected the cascade delete to call the query \n%v, got \n%v", expectedRelOnePart, calledQueries)
 	}

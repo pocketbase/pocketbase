@@ -46,7 +46,7 @@ func TestModelQuery(t *testing.T) {
 		t.Fatalf("AuxModelQuery() is not using app.AuxConcurrentDB()")
 	}
 
-	expectedSQL := "SELECT {{_collections}}.* FROM `_collections`"
+	expectedSQL := `SELECT {{_collections}}.* FROM "_collections"`
 	for i, q := range []*dbx.SelectQuery{modelsQuery, logsModelQuery} {
 		sql := q.Build().SQL()
 		if sql != expectedSQL {

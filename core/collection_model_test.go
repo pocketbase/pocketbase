@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"strconv"
 	"strings"
@@ -855,9 +856,15 @@ func TestCollectionIndexHelpers(t *testing.T) {
 	c.AddIndex("idx3", false, "colA", "")
 	c.AddIndex("idx3", false, "colB", "") // should overwrite the previous one
 
+	/* SQLite:
 	idx1 := "CREATE INDEX `idx1` ON `test` (colA,colB) WHERE colA != 1"
 	idx2 := "CREATE UNIQUE INDEX `idx2` ON `test` (colA)"
 	idx3 := "CREATE INDEX `idx3` ON `test` (colB)"
+	*/
+	// PostgreSQL:
+	idx1 := `CREATE INDEX "idx1" ON "test" (colA,colB) WHERE colA != 1`
+	idx2 := `CREATE UNIQUE INDEX "idx2" ON "test" (colA)`
+	idx3 := `CREATE INDEX "idx3" ON "test" (colB)`
 
 	checkIndexes(t, c.Indexes, []string{idx1, idx2, idx3})
 
@@ -1544,67 +1551,119 @@ func TestCollectionSaveViewWrapping(t *testing.T) {
 		{
 			"no wrapping - text field",
 			"select text as id, bool from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select text as id, bool from demo1)",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, bool FROM ( SELECT demo1.text AS id, demo1.bool FROM demo1) unnamed_subquery;`,
 		},
 		{
 			"no wrapping - id field",
 			"select text as id, bool from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select text as id, bool from demo1)",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, bool FROM ( SELECT demo1.text AS id, demo1.bool FROM demo1) unnamed_subquery;`,
 		},
 		{
 			"no wrapping - relation field",
 			"select rel_one as id, bool from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select rel_one as id, bool from demo1)",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, bool FROM ( SELECT demo1.rel_one AS id, demo1.bool FROM demo1) unnamed_subquery;`,
 		},
 		{
 			"no wrapping - select field",
 			"select select_many as id, bool from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select select_many as id, bool from demo1)",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, bool FROM ( SELECT demo1.select_many AS id, demo1.bool FROM demo1) unnamed_subquery;`,
 		},
 		{
 			"no wrapping - email field",
 			"select email as id, bool from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select email as id, bool from demo1)",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, bool FROM ( SELECT demo1.email AS id, demo1.bool FROM demo1) unnamed_subquery;`,
 		},
 		{
 			"no wrapping - datetime field",
 			"select datetime as id, bool from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select datetime as id, bool from demo1)",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, bool FROM ( SELECT demo1.datetime AS id, demo1.bool FROM demo1) unnamed_subquery;`,
 		},
 		{
 			"no wrapping - url field",
 			"select url as id, bool from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select url as id, bool from demo1)",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, bool FROM ( SELECT demo1.url AS id, demo1.bool FROM demo1) unnamed_subquery;`,
 		},
 		{
 			"wrapping - bool field",
 			"select bool as id, text as txt, url from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT CAST(`id` as TEXT) `id`,`txt`,`url` FROM (select bool as id, text as txt, url from demo1))",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, txt, url FROM ( SELECT (unnamed_subquery_1.id)::text AS id, unnamed_subquery_1.txt, unnamed_subquery_1.url FROM ( SELECT demo1.bool AS id, demo1.text AS txt, demo1.url FROM demo1) unnamed_subquery_1) unnamed_subquery;`,
 		},
 		{
 			"wrapping - bool field (different order)",
 			"select text as txt, url, bool as id from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT `txt`,`url`,CAST(`id` as TEXT) `id` FROM (select text as txt, url, bool as id from demo1))",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT txt, url, id FROM ( SELECT unnamed_subquery_1.txt, unnamed_subquery_1.url, (unnamed_subquery_1.id)::text AS id FROM ( SELECT demo1.text AS txt, demo1.url, demo1.bool AS id FROM demo1) unnamed_subquery_1) unnamed_subquery;`,
 		},
 		{
 			"wrapping - json field",
 			"select json as id, text, url from demo1",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT CAST(`id` as TEXT) `id`,`text`,`url` FROM (select json as id, text, url from demo1))",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id, text, url FROM ( SELECT (unnamed_subquery_1.id)::text AS id, unnamed_subquery_1.text, unnamed_subquery_1.url FROM ( SELECT demo1."json" AS id, demo1.text, demo1.url FROM demo1) unnamed_subquery_1) unnamed_subquery;`,
 		},
 		{
 			"wrapping - numeric id",
 			"select 1 as id",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT CAST(`id` as TEXT) `id` FROM (select 1 as id))",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id FROM ( SELECT (unnamed_subquery_1.id)::text AS id FROM ( SELECT 1 AS id) unnamed_subquery_1) unnamed_subquery;`,
 		},
 		{
 			"wrapping - expresion",
 			"select ('test') as id",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (SELECT CAST(`id` as TEXT) `id` FROM (select ('test') as id))",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id FROM ( SELECT 'test'::text AS id) unnamed_subquery;`,
 		},
 		{
 			"no wrapping - cast as text",
 			"select cast('test' as text) as id",
+			/* SQLite:
 			"CREATE VIEW `test_wrapping` AS SELECT * FROM (select cast('test' as text) as id)",
+			*/
+			// PostgreSQL:
+			`CREATE VIEW "test_wrapping" AS  SELECT id FROM ( SELECT 'test'::text AS id) unnamed_subquery;`,
 		},
 	}
 
@@ -1623,12 +1682,19 @@ func TestCollectionSaveViewWrapping(t *testing.T) {
 
 			var sql string
 
+			/* SQLite:
 			rowErr := app.ConcurrentDB().NewQuery("SELECT sql FROM sqlite_master WHERE type='view' AND name={:name}").
+				Bind(dbx.Params{"name": viewName}).
+				Row(&sql)
+			*/
+			// PostgreSQL:
+			rowErr := app.ConcurrentDB().NewQuery("SELECT definition AS sql FROM pg_views WHERE viewname={:name} and schemaname=current_schema()").
 				Bind(dbx.Params{"name": viewName}).
 				Row(&sql)
 			if rowErr != nil {
 				t.Fatalf("Failed to retrieve view sql: %v", rowErr)
 			}
+			sql = fmt.Sprintf(`CREATE VIEW "%s" AS %s`, viewName, regexp.MustCompile(`\s+`).ReplaceAllString(sql, " "))
 
 			if sql != s.expected {
 				t.Fatalf("Expected query \n%v, \ngot \n%v", s.expected, sql)

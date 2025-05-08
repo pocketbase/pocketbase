@@ -112,7 +112,11 @@ func TestTableInfo(t *testing.T) {
 		{"missing", "null"},
 		{
 			"_params",
+			/* SQLite:
 			`[{"PK":0,"Index":0,"Name":"created","Type":"TEXT","NotNull":true,"DefaultValue":{"String":"''","Valid":true}},{"PK":1,"Index":1,"Name":"id","Type":"TEXT","NotNull":true,"DefaultValue":{"String":"'r'||lower(hex(randomblob(7)))","Valid":true}},{"PK":0,"Index":2,"Name":"updated","Type":"TEXT","NotNull":true,"DefaultValue":{"String":"''","Valid":true}},{"PK":0,"Index":3,"Name":"value","Type":"JSON","NotNull":false,"DefaultValue":{"String":"NULL","Valid":true}}]`,
+			*/
+			// PostgreSQL:
+			`[{"PK":0,"Index":0,"Name":"created","Type":"text","NotNull":true,"DefaultValue":{"String":"''::text","Valid":true}},{"PK":1,"Index":1,"Name":"id","Type":"text","NotNull":true,"DefaultValue":{"String":"'''r''||lower(hex(randomblob(7)))'::text","Valid":true}},{"PK":0,"Index":2,"Name":"updated","Type":"text","NotNull":true,"DefaultValue":{"String":"''::text","Valid":true}},{"PK":0,"Index":3,"Name":"value","Type":"text","NotNull":false,"DefaultValue":{"String":"","Valid":false}}]`,
 		},
 	}
 

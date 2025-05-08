@@ -43,7 +43,11 @@ func TestFileFieldColumnType(t *testing.T) {
 		{
 			"multiple",
 			&core.FileField{MaxSelect: 2},
+			/* SQLite:
 			"JSON DEFAULT '[]' NOT NULL",
+			*/
+			// PostgreSQL:
+			"JSONB DEFAULT '[]' NOT NULL",
 		},
 	}
 

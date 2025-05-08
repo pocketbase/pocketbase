@@ -16,7 +16,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/filesystem/blob"
 )
 
-func TestBackupsList(t *testing.T) {
+func sqlite_TestBackupsList(t *testing.T) {
 	t.Parallel()
 
 	scenarios := []tests.ApiScenario{
@@ -87,7 +87,7 @@ func TestBackupsList(t *testing.T) {
 	}
 }
 
-func TestBackupsCreate(t *testing.T) {
+func sqlite_TestBackupsCreate(t *testing.T) {
 	t.Parallel()
 
 	scenarios := []tests.ApiScenario{
@@ -367,7 +367,7 @@ func TestBackupUpload(t *testing.T) {
 	}
 }
 
-func TestBackupsDownload(t *testing.T) {
+func sqlite_TestBackupsDownload(t *testing.T) {
 	t.Parallel()
 
 	scenarios := []tests.ApiScenario{
@@ -535,7 +535,7 @@ func TestBackupsDownload(t *testing.T) {
 	}
 }
 
-func TestBackupsDelete(t *testing.T) {
+func sqlite_TestBackupsDelete(t *testing.T) {
 	t.Parallel()
 
 	noTestBackupFilesChanges := func(t testing.TB, app *tests.TestApp) {
@@ -703,7 +703,7 @@ func TestBackupsDelete(t *testing.T) {
 	}
 }
 
-func TestBackupsRestore(t *testing.T) {
+func sqlite_TestBackupsRestore(t *testing.T) {
 	t.Parallel()
 
 	scenarios := []tests.ApiScenario{

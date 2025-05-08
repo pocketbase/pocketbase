@@ -645,7 +645,11 @@ type CustomModelResolve struct {
 	core.BaseModel
 	tableName string
 
+	/* SQLite:
 	Created string `db:"created"`
+	*/
+	// PostgreSQL:
+	Created time.Time `db:"created"`
 }
 
 func (m *CustomModelResolve) TableName() string {
@@ -767,7 +771,7 @@ func TestRealtimeRecordResolve(t *testing.T) {
 				}
 
 				// update
-				m.Created = "123"
+				m.Created = time.Now()
 				err = testApp.Save(m)
 				if err != nil {
 					return err

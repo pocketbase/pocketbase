@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"log/slog"
 	"strconv"
 	"strings"
 
@@ -142,12 +141,15 @@ func (app *BaseApp) SyncRecordTableSchema(newCollection *Collection, oldCollecti
 		return txErr
 	}
 
+	/* SQLite:
 	// run optimize per the SQLite recommendations
 	// (https://www.sqlite.org/pragma.html#pragma_optimize)
 	_, optimizeErr := app.ConcurrentDB().NewQuery("PRAGMA optimize").Execute()
 	if optimizeErr != nil {
 		app.Logger().Warn("Failed to run PRAGMA optimize after record table sync", slog.String("error", optimizeErr.Error()))
 	}
+	*/
+	// PostgreSQL: automatically handled by the database
 
 	return nil
 }
@@ -183,20 +185,21 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 
 			// temporary drop all views to prevent reference errors during the columns renaming
 			// (this is used as an "alternative" to the writable_schema PRAGMA)
-			views := []struct {
-				Name string `db:"name"`
-				SQL  string `db:"sql"`
-			}{}
+			/* SQLite:
+			views := []viewDef{}
 			err := txApp.DB().Select("name", "sql").
 				From("sqlite_master").
 				AndWhere(dbx.NewExp("sql is not null")).
 				AndWhere(dbx.HashExp{"type": "view"}).
 				All(&views)
+			*/
+			// PostgreSQL:
+			views, err := findAllViewsInDependencyOrder(txApp)
 			if err != nil {
 				return err
 			}
-			for _, view := range views {
-				err = txApp.DeleteView(view.Name)
+			for i := len(views) - 1; i >= 0; i-- {
+				err = txApp.DeleteView(views[i].Name)
 				if err != nil {
 					return err
 				}
@@ -222,6 +225,7 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 			if !isOldMultiple && isNewMultiple {
 				// single -> multiple (convert to array)
 				copyQuery = txApp.DB().NewQuery(fmt.Sprintf(
+					/* SQLite:
 					`UPDATE {{%s}} set [[%s]] = (
 							CASE
 								WHEN COALESCE([[%s]], '') = ''
@@ -233,6 +237,17 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 										ELSE json_array([[%s]])
 									END
 								)
+							END
+						)`
+					*/
+					// PostgreSQL:
+					`UPDATE {{%s}} set [[%s]] = (
+							CASE
+								WHEN COALESCE([[%s]]::text, '') = ''
+									THEN '[]'::jsonb
+								WHEN json_valid([[%s]]::text) AND jsonb_typeof([[%s]]::jsonb) = 'array'
+									THEN [[%s]]::jsonb
+								ELSE jsonb_build_array([[%s]])
 							END
 						)`,
 					newCollection.Name,
@@ -249,6 +264,7 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 				// note: for file fields the actual file objects are not
 				// deleted allowing additional custom handling via migration
 				copyQuery = txApp.DB().NewQuery(fmt.Sprintf(
+					/* SQLite:
 					`UPDATE {{%s}} set [[%s]] = (
 						CASE
 							WHEN COALESCE([[%s]], '[]') = '[]'
@@ -260,6 +276,17 @@ func normalizeSingleVsMultipleFieldChanges(app App, newCollection *Collection, o
 									ELSE [[%s]]
 								END
 							)
+						END
+					)`,
+					*/
+					// PostgreSQL:
+					`UPDATE {{%s}} set [[%s]] = (
+						CASE
+							WHEN COALESCE([[%s]]::text, '[]') = '[]'
+								THEN ''
+							WHEN jsonb_typeof([[%s]]::jsonb) = 'array'
+								THEN COALESCE([[%s]]::jsonb->>(jsonb_array_length([[%s]]::jsonb) - 1), '')
+							ELSE [[%s]]::text
 						END
 					)`,
 					newCollection.Name,
@@ -361,4 +388,9 @@ func createCollectionIndexes(app App, collection *Collection) error {
 
 		return nil
 	})
+}
+
+type viewDef struct {
+	Name string `db:"name"`
+	SQL  string `db:"sql"`
 }

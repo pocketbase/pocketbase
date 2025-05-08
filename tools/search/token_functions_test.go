@@ -14,12 +14,6 @@ import (
 func TestTokenFunctionsGeoDistance(t *testing.T) {
 	t.Parallel()
 
-	testDB, err := createTestDB()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer testDB.Close()
-
 	fn, ok := TokenFunctions["geoDistance"]
 	if !ok {
 		t.Error("Expected geoDistance token function to be registered.")
@@ -167,11 +161,8 @@ func TestTokenFunctionsGeoDistance(t *testing.T) {
 func TestTokenFunctionsGeoDistanceExec(t *testing.T) {
 	t.Parallel()
 
-	testDB, err := createTestDB()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer testDB.Close()
+	testDB, cleanup := createTestDB()
+	defer cleanup()
 
 	fn, ok := TokenFunctions["geoDistance"]
 	if !ok {
@@ -212,11 +203,8 @@ func TestTokenFunctionsGeoDistanceExec(t *testing.T) {
 // -------------------------------------------------------------------
 
 func testCompareResults(t *testing.T, a, b *ResolverResult) {
-	testDB, err := createTestDB()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer testDB.Close()
+	testDB, cleanup := createTestDB()
+	defer cleanup() // Updated to use cleanup instead of testDB.Close()
 
 	aIsNil := a == nil
 	bIsNil := b == nil

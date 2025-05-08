@@ -309,7 +309,11 @@ func (r *runner) processRequestInfoEachModifier(bodyField Field) (*search.Resolv
 
 	placeholder := "dataEach" + security.PseudorandomString(6)
 	cleanFieldName := inflector.Columnify(bodyField.GetName())
+	/* SQLite:
 	jeTable := fmt.Sprintf("json_each({:%s})", placeholder)
+	*/
+	// PostgreSQL:
+	jeTable := dbutils.JSONEachByPlaceholder(placeholder)
 	jeAlias := "__dataEach_" + cleanFieldName + "_je"
 	r.resolver.registerJoin(jeTable, jeAlias, nil)
 
@@ -324,7 +328,7 @@ func (r *runner) processRequestInfoEachModifier(bodyField Field) (*search.Resolv
 
 	if r.withMultiMatch {
 		placeholder2 := "mm" + placeholder
-		jeTable2 := fmt.Sprintf("json_each({:%s})", placeholder2)
+		jeTable2 := dbutils.JSONEachByPlaceholder(placeholder2)
 		jeAlias2 := "__mm" + jeAlias
 
 		r.multiMatch.joins = append(r.multiMatch.joins, &join{

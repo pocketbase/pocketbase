@@ -32,11 +32,14 @@ var Version = "(untracked)"
 type PocketBase struct {
 	core.App
 
-	devFlag           bool
-	dataDirFlag       string
-	encryptionEnvFlag string
-	queryTimeout      int
-	hideStartBanner   bool
+	devFlag            bool
+	dataDirFlag        string
+	postgresUrlFlag    string
+	postgresDataDBFlag string
+	postgresAuxDBFlag  string
+	encryptionEnvFlag  string
+	queryTimeout       int
+	hideStartBanner    bool
 
 	// RootCmd is the main console command
 	RootCmd *cobra.Command
@@ -48,10 +51,13 @@ type Config struct {
 	HideStartBanner bool
 
 	// optional default values for the console flags
-	DefaultDev           bool
-	DefaultDataDir       string // if not set, it will fallback to "./pb_data"
-	DefaultEncryptionEnv string
-	DefaultQueryTimeout  time.Duration // default to core.DefaultQueryTimeout (in seconds)
+	DefaultDev            bool
+	DefaultDataDir        string // if not set, it will fallback to "./pb_data"
+	DefaultPostgresURL    string // if not set, it will fallback to "postgres://user:pass@127.0.0.1:5432/postgres?sslmode=disable"
+	DefaultPostgresDataDb string // if not set, it will fallback to "pb-data"
+	DefaultPostgresAuxDb  string // if not set, it will fallback to "pb-auxiliary"
+	DefaultEncryptionEnv  string
+	DefaultQueryTimeout   time.Duration // default to core.DefaultQueryTimeout (in seconds)
 
 	// optional DB configurations
 	DataMaxOpenConns int                // default to core.DefaultDataMaxOpenConns
@@ -90,6 +96,21 @@ func NewWithConfig(config Config) *PocketBase {
 		baseDir, _ := inspectRuntime()
 		config.DefaultDataDir = filepath.Join(baseDir, "pb_data")
 	}
+	if config.DefaultPostgresURL == "" {
+		if config.DefaultPostgresURL = os.Getenv("POSTGRES_URL"); config.DefaultPostgresURL == "" {
+			config.DefaultPostgresURL = "postgres://user:pass@127.0.0.1:5432/postgres?sslmode=disable"
+		}
+	}
+	if config.DefaultPostgresDataDb == "" {
+		if config.DefaultPostgresDataDb = os.Getenv("POSTGRES_DATA_DB"); config.DefaultPostgresDataDb == "" {
+			config.DefaultPostgresDataDb = "pb-data"
+		}
+	}
+	if config.DefaultPostgresAuxDb == "" {
+		if config.DefaultPostgresAuxDb = os.Getenv("POSTGRES_AUX_DB"); config.DefaultPostgresAuxDb == "" {
+			config.DefaultPostgresAuxDb = "pb-auxiliary"
+		}
+	}
 
 	if config.DefaultQueryTimeout == 0 {
 		config.DefaultQueryTimeout = core.DefaultQueryTimeout
@@ -110,10 +131,13 @@ func NewWithConfig(config Config) *PocketBase {
 				DisableDefaultCmd: true,
 			},
 		},
-		devFlag:           config.DefaultDev,
-		dataDirFlag:       config.DefaultDataDir,
-		encryptionEnvFlag: config.DefaultEncryptionEnv,
-		hideStartBanner:   config.HideStartBanner,
+		devFlag:            config.DefaultDev,
+		dataDirFlag:        config.DefaultDataDir,
+		postgresUrlFlag:    config.DefaultPostgresURL,
+		postgresDataDBFlag: config.DefaultPostgresDataDb,
+		postgresAuxDBFlag:  config.DefaultPostgresAuxDb,
+		encryptionEnvFlag:  config.DefaultEncryptionEnv,
+		hideStartBanner:    config.HideStartBanner,
 	}
 
 	// replace with a colored stderr writer
@@ -127,6 +151,9 @@ func NewWithConfig(config Config) *PocketBase {
 	pb.App = core.NewBaseApp(core.BaseAppConfig{
 		IsDev:            pb.devFlag,
 		DataDir:          pb.dataDirFlag,
+		PostgresURL:      pb.postgresUrlFlag,
+		PostgresDataDB:   pb.postgresDataDBFlag,
+		PostgresAuxDB:    pb.postgresAuxDBFlag,
 		EncryptionEnv:    pb.encryptionEnvFlag,
 		QueryTimeout:     time.Duration(pb.queryTimeout) * time.Second,
 		DataMaxOpenConns: config.DataMaxOpenConns,
@@ -219,6 +246,27 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 		"dir",
 		config.DefaultDataDir,
 		"the PocketBase data directory",
+	)
+
+	pb.RootCmd.PersistentFlags().StringVar(
+		&pb.postgresUrlFlag,
+		"postgresUrl",
+		config.DefaultPostgresURL,
+		"the Postgres connection string (if not set, it will fallback to the POSTGRES_URL env variable)",
+	)
+
+	pb.RootCmd.PersistentFlags().StringVar(
+		&pb.postgresDataDBFlag,
+		"postgresDataDB",
+		config.DefaultPostgresDataDb,
+		"the PocketBase `data` database name (if not set, it will fallback to the POSTGRES_DATA_DB env variable)",
+	)
+
+	pb.RootCmd.PersistentFlags().StringVar(
+		&pb.postgresAuxDBFlag,
+		"postgresAuxDB",
+		config.DefaultPostgresAuxDb,
+		"the PocketBase `auxiliary` database name (if not set, it will fallback to the POSTGRES_AUX_DB env variable)",
 	)
 
 	pb.RootCmd.PersistentFlags().StringVar(

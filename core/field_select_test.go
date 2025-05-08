@@ -37,7 +37,11 @@ func TestSelectFieldColumnType(t *testing.T) {
 		{
 			"multiple",
 			&core.SelectField{MaxSelect: 2},
+			/* SQLite:
 			"JSON DEFAULT '[]' NOT NULL",
+			*/
+			// PostgreSQL:
+			"JSONB DEFAULT '[]' NOT NULL",
 		},
 	}
 

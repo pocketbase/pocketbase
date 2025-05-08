@@ -18,7 +18,10 @@ func TestFindLogById(t *testing.T) {
 	app, _ := tests.NewTestApp()
 	defer app.Cleanup()
 
-	tests.StubLogsData(app)
+	err := tests.StubLogsData(app)
+	if err != nil {
+		panic(err)
+	}
 
 	scenarios := []struct {
 		id          string
@@ -56,8 +59,8 @@ func TestLogsStats(t *testing.T) {
 
 	expected := `[{"date":"2022-05-01 10:00:00.000Z","total":1},{"date":"2022-05-02 10:00:00.000Z","total":1}]`
 
-	now := time.Now().UTC().Format(types.DefaultDateLayout)
-	exp := dbx.NewExp("[[created]] <= {:date}", dbx.Params{"date": now})
+	// now := time.Now().UTC().Format(types.DefaultDateLayout)
+	exp := dbx.NewExp("[[created]] <= {:date}", dbx.Params{"date": time.Now()})
 	result, err := app.LogsStats(exp)
 	if err != nil {
 		t.Fatal(err)

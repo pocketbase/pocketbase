@@ -44,11 +44,12 @@ func TestBaseAppLoggerLevelDevPrint(t *testing.T) {
 			const testDataDir = "./pb_base_app_test_data_dir/"
 			defer os.RemoveAll(testDataDir)
 
-			app := NewBaseApp(BaseAppConfig{
-				DataDir: testDataDir,
-				IsDev:   s.isDev,
+			app, cleanup := NewBaseAppForTest(BaseAppConfig{
+				DataDir:     testDataDir,
+				PostgresURL: "postgres://user:pass@localhost:5432/postgres?sslmode=disable",
+				IsDev:       s.isDev,
 			})
-			defer app.ResetBootstrapState()
+			defer cleanup()
 
 			if err := app.Bootstrap(); err != nil {
 				t.Fatal(err)

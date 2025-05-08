@@ -240,6 +240,13 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*Collec
 }
 
 func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, on dbx.Expression) {
+	// PostgreSQL only:
+	if on == nil {
+		// Note: SQLite allows join without `on` clause but PostgreSQL does not.
+		// Join without `on` clause is equivalent to `ON 1=1` clause.
+		on = dbx.NewExp("1=1")
+	}
+
 	join := &join{
 		tableName:  tableName,
 		tableAlias: tableAlias,

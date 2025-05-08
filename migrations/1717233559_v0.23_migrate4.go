@@ -7,7 +7,7 @@ import (
 // note: this migration will be deleted in future version
 
 // add new OTP sentTo text field (if not already)
-func init() {
+func init_disabled6() {
 	core.SystemMigrations.Register(func(txApp core.App) error {
 		otpCollection, err := txApp.FindCollectionByNameOrId(core.CollectionNameOTPs)
 		if err != nil {

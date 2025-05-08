@@ -19,7 +19,7 @@ func fieldIdChecksum(typ, name string) string {
 }
 
 // normalize system collection and field ids
-func init() {
+func init_disabled5() {
 	core.SystemMigrations.Register(func(txApp core.App) error {
 		collections := []*core.Collection{}
 		err := txApp.CollectionQuery().

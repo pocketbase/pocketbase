@@ -18,7 +18,7 @@ import (
 
 // note: this migration will be deleted in future version
 
-func init() {
+func init_disabled3() {
 	core.SystemMigrations.Register(func(txApp core.App) error {
 		// note: mfas and authOrigins tables are available only with v0.23
 		hasUpgraded := txApp.HasTable(core.CollectionNameMFAs) && txApp.HasTable(core.CollectionNameAuthOrigins)

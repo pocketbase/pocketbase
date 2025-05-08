@@ -6,7 +6,7 @@ import (
 
 // note: this migration will be deleted in future version
 
-func init() {
+func init_disabled4() {
 	core.SystemMigrations.Register(func(txApp core.App) error {
 		_, err := txApp.DB().NewQuery("CREATE INDEX IF NOT EXISTS idx__collections_type on {{_collections}} ([[type]]);").Execute()
 		if err != nil {

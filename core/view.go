@@ -1,16 +1,19 @@
 package core
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/sort"
 	"github.com/pocketbase/pocketbase/tools/tokenizer"
 )
 
@@ -33,8 +36,34 @@ func (app *BaseApp) DeleteView(name string) error {
 //
 // NB! Be aware that this method is vulnerable to SQL injection and the
 // "selectQuery" argument must come only from trusted input!
+//
+// Save view is called by:
+// 1. [onCollectionSaveExecute] -> app.SaveView()
+// 2. [getQueryTableInfo] -> app.SaveView()
+// 3. [onCollectionSaveExecute] -> [resaveViewsWithChangedFields] -> [saveViewCollection] -> app.SaveView()
+// 4. [onCollectionDeleteExecute] -> [resaveViewsWithChangedFields] -> [saveViewCollection] -> app.SaveView()
 func (app *BaseApp) SaveView(name string, selectQuery string) error {
 	return app.RunInTransaction(func(txApp App) error {
+		// PostgreSQL:
+		// Get dependent views before dropping the view and its dependencies.
+		// Note:
+		// 1. Calling `txApp.DeleteView()` will not only drop current view, but also all the dependent views.
+		// 2. Why do we need to drop all dependent views in PostgreSQL? Because we need to update the view,
+		//    although there is a `CREATE OR REPLACE VIEW` statement, but it forbids us to remove any column
+		//    from the view. So we need to drop the view. And we we drop the view, we also need to drop all
+		//    the dependent views otherwise PostgreSQL will throw an error.
+		// 3. By calling `findDependentViews()` before dropping the view, we can get all the dependent views
+		//    and recreate them after the current view is recreated.
+		dependentViews, err := findDependentViews(txApp, name)
+		if err != nil {
+			return err
+		}
+		for i := len(dependentViews) - 1; i >= 0; i-- {
+			if err := txApp.DeleteView(dependentViews[i].Name); err != nil {
+				return fmt.Errorf("failed to drop dependent view %q temporarily while saving view %q: %w", dependentViews[i].Name, name, err)
+			}
+		}
+
 		// delete old view (if exists)
 		if err := txApp.DeleteView(name); err != nil {
 			return err
@@ -66,6 +95,14 @@ func (app *BaseApp) SaveView(name string, selectQuery string) error {
 			txApp.DeleteView(name)
 
 			return err
+		}
+
+		// PostgreSQL:
+		// recreate the dependent views
+		for _, dependentView := range dependentViews {
+			if _, err := txApp.DB().NewQuery(dependentView.SQL).Execute(); err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -178,6 +215,7 @@ func (app *BaseApp) FindRecordByViewFile(viewCollectionModelOrIdentifier any, fi
 	if opt, ok := qf.original.(MultiValuer); !ok || !opt.IsMultiple() {
 		query.AndWhere(dbx.HashExp{cleanFieldName: filename})
 	} else {
+		// Tip: user inner join here is much faster than using subquery by test results in PostgreSQL.
 		query.InnerJoin(
 			fmt.Sprintf(`%s as {{_je_file}}`, dbutils.JSONEach(cleanFieldName)),
 			dbx.HashExp{"_je_file.value": filename},
@@ -215,7 +253,17 @@ func defaultViewField(name string) Field {
 	}
 }
 
+/* SQLite:
 var castRegex = regexp.MustCompile(`(?is)^cast\s*\(.*\s+as\s+(\w+)\s*\)$`)
+*/
+// PostgreSQL:
+// castRegex extracts casted type from an column expression.
+// It supports both the standard `CAST(...AS...)` and the PostgreSQL specific `::` syntax.
+// eg:
+// 1. (SELECT MAX(id)::TEXT FROM table)::INTEGER  -->  INTEGER
+// 2. CAST(123 AS TEXT) --> TEXT
+var castRegex = regexp.MustCompile(`(?is)^cast\s*\([\s\S]*\s+as\s+(\w+)\s*\)$`)
+var castRegex2 = regexp.MustCompile(`(?is)^[\s\S]*::(\w+)\s*$`)
 
 func parseQueryToFields(app App, selectQuery string) (map[string]*queryField, error) {
 	p := new(identifiersParser)
@@ -264,11 +312,19 @@ func parseQueryToFields(app App, selectQuery string) (map[string]*queryField, er
 		}
 
 		castMatch := castRegex.FindStringSubmatch(colLower)
+		if castMatch == nil {
+			castMatch = castRegex2.FindStringSubmatch(colLower)
+		}
 
 		// numeric casts
 		if len(castMatch) == 2 {
 			switch castMatch[1] {
+			/* SQLite:
 			case "real", "integer", "int", "decimal", "numeric":
+			*/
+			// PostgreSQL:
+			// Note: PostgreSQL's `double precision` is not supported here because it contains whitespace and won't be catched by the regex. Use `numeric` instead.
+			case "real", "integer", "int", "smallint", "bigint", "decimal", "numeric", "serial", "smallserial", "bigserial", "double":
 				result[col.alias] = &queryField{
 					field: &NumberField{
 						Name: col.alias,
@@ -408,6 +464,7 @@ func findCollectionsByIdentifiers(app App, tables []identifier) (map[string]*Col
 	return result, nil
 }
 
+// dry run the query and parse the standard column info.
 func getQueryTableInfo(app App, selectQuery string) ([]*TableInfoRow, error) {
 	tempView := "_temp_" + security.PseudorandomString(6)
 
@@ -572,7 +629,8 @@ func extractIdentifiers(rawExpression string) ([]identifier, error) {
 	return result, nil
 }
 
-func identifierFromParts(parts []string) (identifier, error) {
+// SQLite:
+func identifierFromParts_sqlite(parts []string) (identifier, error) {
 	var result identifier
 
 	switch len(parts) {
@@ -604,6 +662,30 @@ func identifierFromParts(parts []string) (identifier, error) {
 	return result, nil
 }
 
+// PostgreSQL:
+func identifierFromParts(parts []string) (identifier, error) {
+	if len(parts) == 1 {
+		// eg: `id`, `table_1.id`
+		subParts := strings.Split(parts[0], ".")
+		alias := subParts[len(subParts)-1]
+		return identifierFromParts([]string{parts[0], alias})
+	}
+
+	// eg:
+	// - `count(*) count`
+	// - `count(*) as count`
+	// - `ROW_NUMBER() OVER (PARTITION BY id ORDER BY created DESC) row_number`
+	// - `ROW_NUMBER() OVER (PARTITION BY id ORDER BY created DESC) as row_number`
+	var result identifier
+	result.alias = parts[len(parts)-1]
+	result.original = strings.TrimSuffix(strings.Join(parts[:len(parts)-1], " "), " as")
+
+	result.alias = trimRawIdentifier(result.alias)
+	result.original = trimRawIdentifier(result.original)
+
+	return result, nil
+}
+
 func trimRawIdentifier(rawIdentifier string, extraTrimChars ...string) string {
 	trimChars := "`\"[];"
 	if len(extraTrimChars) > 0 {
@@ -617,4 +699,131 @@ func trimRawIdentifier(rawIdentifier string, extraTrimChars ...string) string {
 	}
 
 	return strings.Join(parts, ".")
+}
+
+func findDependentViews(app App, tableOrViewName string) ([]viewDef, error) {
+	// Note: this is a PostgreSQL specific query to find all views that depend on the provided view.
+	// It uses the pg_views system catalog to get the view definition and then filters by the view name.
+	query := `
+		select
+			u.view_name,
+			u.table_name referenced_table_name,
+			v.view_definition
+		from information_schema.view_table_usage u
+		join information_schema.views v on u.view_schema = v.table_schema
+			and u.view_name = v.table_name
+		where u.table_schema = current_schema()
+		order by u.view_name;
+	`
+
+	var rows []struct {
+		ViewName            string `db:"view_name"`
+		ReferencedTableName string `db:"referenced_table_name"`
+		ViewDefinition      string `db:"view_definition"`
+	}
+	err := app.DB().NewQuery(query).All(&rows)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	// Topological sort this DAG graph
+	nodes := make(map[string]viewDef)
+	graph := make(map[string][]string)
+	for _, row := range rows {
+		if def, ok := nodes[row.ViewName]; !ok || def.SQL == "[TABLE]" {
+			nodes[row.ViewName] = viewDef{
+				Name: row.ViewName,
+				SQL:  fmt.Sprintf(`CREATE VIEW "%s" AS %s`, row.ViewName, row.ViewDefinition),
+			}
+		}
+		if !slices.Contains(graph[row.ReferencedTableName], row.ViewName) {
+			graph[row.ReferencedTableName] = append(graph[row.ReferencedTableName], row.ViewName)
+			if _, ok := nodes[row.ReferencedTableName]; !ok {
+				nodes[row.ReferencedTableName] = viewDef{
+					Name: row.ReferencedTableName,
+					SQL:  "[TABLE]",
+				}
+			}
+		}
+	}
+
+	// No one depends on the provided view
+	if _, ok := graph[tableOrViewName]; !ok {
+		return nil, nil
+	}
+
+	sorted, err := sort.TopologicalSortReachable(nodes, graph, tableOrViewName)
+	if err != nil {
+		return nil, err
+	}
+
+	// exclude self from the sorted result.
+	return sorted[1:], nil
+}
+
+func findAllViewsInDependencyOrder(app App) ([]viewDef, error) {
+	// Note: this is a PostgreSQL specific query to find all views that depend on the provided view.
+	// It uses the pg_views system catalog to get the view definition and then filters by the view name.
+	query := `
+		select
+			u.view_name,
+			u.table_name referenced_table_name,
+			v.view_definition
+		from information_schema.view_table_usage u
+		join information_schema.views v on u.view_schema = v.table_schema
+			and u.view_name = v.table_name
+		where u.table_schema = current_schema()
+		order by u.view_name;
+	`
+
+	var rows []struct {
+		ViewName            string `db:"view_name"`
+		ReferencedTableName string `db:"referenced_table_name"`
+		ViewDefinition      string `db:"view_definition"`
+	}
+	err := app.DB().NewQuery(query).All(&rows)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	// Topological sort this DAG graph
+	nodes := make(map[string]viewDef)
+	graph := make(map[string][]string)
+	for _, row := range rows {
+		if def, ok := nodes[row.ViewName]; !ok || def.SQL == "[TABLE]" {
+			nodes[row.ViewName] = viewDef{
+				Name: row.ViewName,
+				SQL:  fmt.Sprintf(`CREATE VIEW "%s" AS %s`, row.ViewName, row.ViewDefinition),
+			}
+		}
+		if !slices.Contains(graph[row.ReferencedTableName], row.ViewName) {
+			graph[row.ReferencedTableName] = append(graph[row.ReferencedTableName], row.ViewName)
+			if _, ok := nodes[row.ReferencedTableName]; !ok {
+				nodes[row.ReferencedTableName] = viewDef{
+					Name: row.ReferencedTableName,
+					SQL:  "[TABLE]",
+				}
+			}
+		}
+	}
+
+	sorted, err := sort.TopologicalSortAll(nodes, graph)
+	if err != nil {
+		return nil, err
+	}
+
+	// exclude tables from the sorted result.
+	var views []viewDef
+	for _, node := range sorted {
+		if node.SQL != "[TABLE]" {
+			views = append(views, node)
+		}
+	}
+	return views, nil
 }

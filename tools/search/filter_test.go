@@ -50,13 +50,17 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"simple expression",
 			"test1 > 1",
 			false,
+			/* SQLite:
 			"[[test1]] > {:TEST}",
+			*/
+			// PostgreSQL:
+			"[[test1]]::numeric > {:TEST}::numeric",
 		},
 		{
 			"empty string vs null",
 			"'' = null && null != ''",
 			false,
-			"('' = '' AND '' IS NOT '')",
+			"('' = '' AND '' != '')",
 		},
 		{
 			"like with 2 columns",
@@ -98,7 +102,12 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			"nested json no coalesce",
 			"test5.a = test5.b || test5.c != test5.d",
 			false,
+			/* SQLite:
 			"(JSON_EXTRACT([[test5]], '$.a') IS JSON_EXTRACT([[test5]], '$.b') OR JSON_EXTRACT([[test5]], '$.c') IS NOT JSON_EXTRACT([[test5]], '$.d'))",
+			,
+			*/
+			// PostgreSQL:
+			`((JSON_QUERY([[test5]]::jsonb, '$.a') #>> '{}')::text = (JSON_QUERY([[test5]]::jsonb, '$.b') #>> '{}')::text OR (JSON_QUERY([[test5]]::jsonb, '$.c') #>> '{}')::text != (JSON_QUERY([[test5]]::jsonb, '$.d') #>> '{}')::text)`,
 		},
 		{
 			"macros",
@@ -119,31 +128,51 @@ func TestFilterDataBuildExpr(t *testing.T) {
 				test4_14 > @yearEnd
 			`,
 			false,
+			/* SQLite:
 			"([[test4_1]] > {:TEST} AND [[test4_2]] > {:TEST} AND [[test4_3]] > {:TEST} AND [[test4_4]] > {:TEST} AND [[test4_5]] > {:TEST} AND [[test4_6]] > {:TEST} AND [[test4_7]] > {:TEST} AND [[test4_9]] > {:TEST} AND [[test4_9]] > {:TEST} AND [[test4_10]] > {:TEST} AND [[test4_11]] > {:TEST} AND [[test4_12]] > {:TEST} AND [[test4_13]] > {:TEST} AND [[test4_14]] > {:TEST})",
+			*/
+			// PostgreSQL:
+			`([[test4_1]]::numeric > {:TEST}::numeric AND [[test4_2]]::numeric > {:TEST}::numeric AND [[test4_3]]::numeric > {:TEST}::numeric AND [[test4_4]]::numeric > {:TEST}::numeric AND [[test4_5]]::numeric > {:TEST}::numeric AND [[test4_6]]::numeric > {:TEST}::numeric AND [[test4_7]]::numeric > {:TEST}::numeric AND [[test4_9]]::numeric > {:TEST}::numeric AND [[test4_9]]::numeric > {:TEST}::numeric AND [[test4_10]]::numeric > {:TEST}::numeric AND [[test4_11]]::numeric > {:TEST}::numeric AND [[test4_12]]::numeric > {:TEST}::numeric AND [[test4_13]]::numeric > {:TEST}::numeric AND [[test4_14]]::numeric > {:TEST}::numeric)`,
 		},
 		{
 			"complex expression",
 			"((test1 > 1) || (test2 != 2)) && test3 ~ '%%example' && test4_sub = null",
 			false,
+			/* SQLite:
 			"(([[test1]] > {:TEST} OR [[test2]] IS NOT {:TEST}) AND [[test3]] LIKE {:TEST} ESCAPE '\\' AND ([[test4_sub]] = '' OR [[test4_sub]] IS NULL))",
+			*/
+			// PostgreSQL:
+			`(([[test1]]::numeric > {:TEST}::numeric OR [[test2]]::numeric != {:TEST}::numeric) AND [[test3]] LIKE {:TEST} ESCAPE '\' AND ([[test4_sub]] IS NOT DISTINCT FROM '' OR [[test4_sub]] IS NULL))`,
 		},
 		{
 			"combination of special literals (null, true, false)",
 			"test1=true && test2 != false && null = test3 || null != test4_sub",
 			false,
+			/* SQLite:
 			"([[test1]] = 1 AND [[test2]] IS NOT 0 AND ('' = [[test3]] OR [[test3]] IS NULL) OR ('' IS NOT [[test4_sub]] AND [[test4_sub]] IS NOT NULL))",
+			*/
+			// PostgreSQL:
+			`([[test1]] = TRUE AND [[test2]] != FALSE AND ('' IS NOT DISTINCT FROM [[test3]] OR [[test3]] IS NULL) OR ('' IS DISTINCT FROM [[test4_sub]] AND [[test4_sub]] IS NOT NULL))`,
 		},
 		{
 			"all operators",
 			"(test1 = test2 || test2 != test3) && (test2 ~ 'example' || test2 !~ '%%abc') && 'switch1%%' ~ test1 && 'switch2' !~ test2 && test3 > 1 && test3 >= 0 && test3 <= 4 && 2 < 5",
 			false,
+			/* SQLite:
 			"((COALESCE([[test1]], '') = COALESCE([[test2]], '') OR COALESCE([[test2]], '') IS NOT COALESCE([[test3]], '')) AND ([[test2]] LIKE {:TEST} ESCAPE '\\' OR [[test2]] NOT LIKE {:TEST} ESCAPE '\\') AND {:TEST} LIKE ('%' || [[test1]] || '%') ESCAPE '\\' AND {:TEST} NOT LIKE ('%' || [[test2]] || '%') ESCAPE '\\' AND [[test3]] > {:TEST} AND [[test3]] >= {:TEST} AND [[test3]] <= {:TEST} AND {:TEST} < {:TEST})",
+			*/
+			// PostgreSQL:
+			`(([[test1]] IS NOT DISTINCT FROM [[test2]] OR [[test2]] IS DISTINCT FROM [[test3]]) AND ([[test2]] LIKE {:TEST} ESCAPE '\' OR [[test2]] NOT LIKE {:TEST} ESCAPE '\') AND {:TEST} LIKE ('%' || [[test1]] || '%') ESCAPE '\' AND {:TEST} NOT LIKE ('%' || [[test2]] || '%') ESCAPE '\' AND [[test3]]::numeric > {:TEST}::numeric AND [[test3]]::numeric >= {:TEST}::numeric AND [[test3]]::numeric <= {:TEST}::numeric AND {:TEST}::numeric < {:TEST}::numeric)`,
 		},
 		{
 			"geoDistance function",
 			"geoDistance(1,2,3,4) < 567",
 			false,
+			/* SQLite:
 			"(6371 * acos(cos(radians({:TEST})) * cos(radians({:TEST})) * cos(radians({:TEST}) - radians({:TEST})) + sin(radians({:TEST})) * sin(radians({:TEST})))) < {:TEST}",
+			*/
+			// PostgreSQL:
+			`(6371 * acos(cos(radians({:TEST}::numeric)) * cos(radians({:TEST}::numeric)) * cos(radians({:TEST}::numeric) - radians({:TEST}::numeric)) + sin(radians({:TEST}::numeric)) * sin(radians({:TEST}::numeric))))::numeric < {:TEST}::numeric`,
 		},
 	}
 
@@ -181,11 +210,16 @@ func TestFilterDataBuildExpr(t *testing.T) {
 
 func TestFilterDataBuildExprWithParams(t *testing.T) {
 	// create a dummy db
+	/* SQLite:
 	sqlDB, err := sql.Open("sqlite", "file::memory:?cache=shared")
 	if err != nil {
 		t.Fatal(err)
 	}
 	db := dbx.NewFromDB(sqlDB, "sqlite")
+	*/
+	// PostgreSQL:
+	db, cleanup := search.NewTestDBX()
+	defer cleanup()
 
 	calledQueries := []string{}
 	db.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
@@ -240,7 +274,11 @@ func TestFilterDataBuildExprWithParams(t *testing.T) {
 		t.Fatalf("Expected 1 query, got %d", len(calledQueries))
 	}
 
+	/* SQLite:
 	expectedQuery := `SELECT * WHERE ([[test1]] = 1 OR [[test2]] = 0 OR [[test3a]] = 123.456 OR [[test3b]] = 123.456 OR ([[test4]] = '' OR [[test4]] IS NULL) OR [[test5]] = '""' OR [[test6]] = 'simple' OR [[test7]] = '''single_quotes''' OR [[test8]] = '"double_quotes"' OR [[test9]] = 'escape\\"quote' OR [[test10]] = '2023-01-01 00:00:00 +0000 UTC' OR [[test11]] = '["a","b","\\"quote"]' OR [[test12]] = '{"a":123,"b":"quote\\""}')`
+	*/
+	// PostgreSQL:
+	expectedQuery := `SELECT * WHERE ([[test1]] = TRUE OR [[test2]] = FALSE OR [[test3a]]::numeric = 123.456::numeric OR [[test3b]]::numeric = 123.456::numeric OR ([[test4]] IS NOT DISTINCT FROM '' OR [[test4]] IS NULL) OR [[test5]] = '""' OR [[test6]] = 'simple' OR [[test7]] = '''single_quotes''' OR [[test8]] = '"double_quotes"' OR [[test9]] = 'escape\\"quote' OR [[test10]] = '2023-01-01 00:00:00 +0000 UTC' OR [[test11]] = '["a","b","\\"quote"]' OR [[test12]] = '{"a":123,"b":"quote\\""}')`
 	if expectedQuery != calledQueries[0] {
 		t.Fatalf("Expected query \n%s, \ngot \n%s", expectedQuery, calledQueries[0])
 	}
@@ -277,11 +315,16 @@ func TestFilterDataBuildExprWithLimit(t *testing.T) {
 
 func TestLikeParamsWrapping(t *testing.T) {
 	// create a dummy db
+	/* SQLite:
 	sqlDB, err := sql.Open("sqlite", "file::memory:?cache=shared")
 	if err != nil {
 		t.Fatal(err)
 	}
 	db := dbx.NewFromDB(sqlDB, "sqlite")
+	*/
+	// PostgreSQL:
+	db, cleanup := search.NewTestDBX()
+	defer cleanup()
 
 	calledQueries := []string{}
 	db.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {

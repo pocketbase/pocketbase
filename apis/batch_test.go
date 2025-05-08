@@ -498,6 +498,7 @@ func TestBatchRequest(t *testing.T) {
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
 			},
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().Batch.Enabled = true
 				app.Settings().Batch.Timeout = 1
 				app.OnRecordCreateRequest("demo2").BindFunc(func(e *core.RecordRequestEvent) error {
 					time.Sleep(600 * time.Millisecond) // < 1s so that the first request can succeed
@@ -677,6 +678,7 @@ func TestBatchRequest(t *testing.T) {
 				]
 			}`),
 			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().Batch.Enabled = true
 				app.Settings().Batch.MaxBodySize = 10
 			},
 			ExpectedStatus:  413,
@@ -686,6 +688,12 @@ func TestBatchRequest(t *testing.T) {
 	}
 
 	for _, scenario := range scenarios {
+		// Enable batch mode if not explicitly turned off
+		if scenario.BeforeTestFunc == nil {
+			scenario.BeforeTestFunc = func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.Settings().Batch.Enabled = true
+			}
+		}
 		scenario.Test(t)
 	}
 }

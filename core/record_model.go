@@ -1530,12 +1530,17 @@ func cascadeRecordDelete(app App, mainRecord *Record, refs map[*Collection][]Fie
 			if opt, ok := field.(MultiValuer); !ok || !opt.IsMultiple() {
 				query.AndWhere(dbx.HashExp{prefixedFieldName: mainRecord.Id})
 			} else {
+				/* SQLite:
 				query.AndWhere(dbx.Exists(dbx.NewExp(fmt.Sprintf(
-					`SELECT 1 FROM %s {{__je__}} WHERE [[__je__.value]]={:jevalue}`,
-					dbutils.JSONEach(prefixedFieldName),
+					`SELECT 1 FROM json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END) {{__je__}} WHERE [[__je__.value]]={:jevalue}`,
+					prefixedFieldName, prefixedFieldName, prefixedFieldName,
 				), dbx.Params{
 					"jevalue": mainRecord.Id,
 				})))
+				*/
+				// `SELECT 1 FROM %s {{__je__}} WHERE [[__je__.value]]::text={:jevalue}`,
+				// PostgreSQL:
+				query.AndWhere(dbutils.JsonArrayExistsStr(prefixedFieldName, mainRecord.Id))
 			}
 
 			if refCollection.Id == mainRecord.Collection().Id {

@@ -14,10 +14,19 @@ import (
 func ensureNoTempViews(app core.App, t *testing.T) {
 	var total int
 
+	/* SQLite:
 	err := app.DB().Select("count(*)").
 		From("sqlite_schema").
 		AndWhere(dbx.HashExp{"type": "view"}).
 		AndWhere(dbx.NewExp(`[[name]] LIKE '%\_temp\_%' ESCAPE '\'`)).
+		Limit(1).
+		Row(&total)
+	*/
+	// PostgreSQL:
+	err := app.DB().Select("count(*)").
+		From("information_schema.views").
+		AndWhere(dbx.HashExp{"table_schema": "current_schema()"}).
+		AndWhere(dbx.NewExp(`lower(table_name) LIKE lower('%\_temp\_%')`)).
 		Limit(1).
 		Row(&total)
 	if err != nil {
@@ -42,8 +51,14 @@ func TestDeleteView(t *testing.T) {
 		{"", true},
 		{"demo1", true},    // not a view table
 		{"missing", false}, // missing or already deleted
+		/* SQLite:
 		{"view1", false},   // existing
-		{"VieW1", false},   // view names are case insensitives
+		*/
+		// PostgreSQL:
+		{"view1", true},  // could not drop because view2 depends on view1
+		{"view2", false}, // existing
+		// PostgreSQL:
+		{"VieW1", false}, // view names are case insensitives
 	}
 
 	for i, s := range scenarios {
@@ -130,7 +145,7 @@ func TestSaveView(t *testing.T) {
 		{
 			"simple select query (+ trimmed semicolon)",
 			"123Test",
-			";select *, count(id) as c  from " + core.CollectionNameSuperusers + ";",
+			";select *, count(id) over () as c  from " + core.CollectionNameSuperusers + ";",
 			false,
 			[]string{
 				"id", "created", "updated",
@@ -273,6 +288,7 @@ func TestCreateViewFields(t *testing.T) {
 		},
 		{
 			"query with all fields and quoted identifiers",
+			/* SQLite:
 			`
 				select
 					"id",
@@ -292,6 +308,29 @@ func TestCreateViewFields(t *testing.T) {
 					"rel_one",
 					"rel_many",
 					'single_quoted_custom_literal' as 'single_quoted_column'
+				from demo1
+			`,
+			*/
+			// PostgreSQL:
+			`
+				select
+					"id",
+					"created",
+					"updated",
+					"text",
+					"bool",
+					"url",
+					"select_one",
+					"select_many",
+					"file_one",
+					"demo1"."file_many",
+					"demo1"."number" number_alias,
+					"email",
+					"datetime",
+					"json",
+					"rel_one",
+					"rel_many",
+					'single_quoted_custom_literal' as "single_quoted_column"
 				from demo1
 			`,
 			false,
@@ -317,7 +356,7 @@ func TestCreateViewFields(t *testing.T) {
 		},
 		{
 			"query with indirect relations fields",
-			"select a.id, b.id as bid, b.created from demo1 as a left join demo2 b",
+			"select a.id, b.id as bid, b.created from demo1 as a left join demo2 b on 1=1",
 			false,
 			map[string]string{
 				"id":      core.FieldTypeText,
@@ -327,6 +366,7 @@ func TestCreateViewFields(t *testing.T) {
 		},
 		{
 			"query with multiple froms, joins and style of aliasses",
+			/* SQLite:
 			`
 				select
 					a.id as id,
@@ -344,6 +384,24 @@ func TestCreateViewFields(t *testing.T) {
 				group by a.id
 				limit 10
 			`,
+			*/
+			// PostgreSQL:
+			`
+				select distinct on(a.id)
+					a.id as id,
+					b.id as bid,
+					lj.id cid,
+					ij.id as did,
+					a.bool,
+					` + core.CollectionNameSuperusers + `.id as eid,
+					` + core.CollectionNameSuperusers + `.email
+				from demo1 a, demo2 as b
+				left join demo3 lj on lj.id = '123'
+				inner join demo4 as ij on ij.id = '123'
+				join ` + core.CollectionNameSuperusers + ` on 1 = 1
+				where 1=1
+				limit 10
+			`,
 			false,
 			map[string]string{
 				"id":    core.FieldTypeText,
@@ -355,6 +413,7 @@ func TestCreateViewFields(t *testing.T) {
 				"email": core.FieldTypeEmail,
 			},
 		},
+		/* SQLite:
 		{
 			"query with casts",
 			`select
@@ -394,6 +453,70 @@ func TestCreateViewFields(t *testing.T) {
 				"max": core.FieldTypeJSON,
 			},
 		},
+		*/
+		// PostgreSQL:
+		{
+			"query with casts",
+			`select
+				a.id id,
+				count(a.id) over () count,
+				count(a.id) over() count2,
+				cast(count(a.id) over() as int) cast_int,
+				cast(count(a.id) over() as integer) cast_integer,
+				cast(count(a.id) over() as real) cast_real,
+				cast(count(a.id) over() as decimal) cast_decimal,
+				cast(count(a.id) over() as numeric) cast_numeric,
+				cast(a.id as text) cast_text,
+				cast((a.id != NULL) as bool) cast_bool,
+				cast((a.id != NULL) as boolean) cast_boolean,
+				avg(a.number) over() avg,
+				sum(a.number) over() sum,
+				min(a.number) over() min,
+				max(a.number) over() max,
+				(count(a.id) over())::int cast_int_2,
+				(count(a.id) over())::integer cast_integer_2,
+				(count(a.id) over())::real cast_real_2,
+				(count(a.id) over())::decimal cast_decimal_2,
+				(count(a.id) over())::numeric cast_numeric_2,
+				a.id::text cast_text_2,
+				(a.id != NULL)::bool cast_bool_2,
+				(a.id != NULL)::boolean cast_boolean_2,
+				(avg(a.number) over())::int avg_2,
+				(sum(a.number) over())::int sum_2,
+				(min(a.number) over())::int min_2,
+				(max(a.number) over())::int max_2
+			from demo1 a`,
+			false,
+			map[string]string{
+				"id":             core.FieldTypeText,
+				"count":          core.FieldTypeNumber,
+				"count2":         core.FieldTypeNumber,
+				"cast_int":       core.FieldTypeNumber,
+				"cast_integer":   core.FieldTypeNumber,
+				"cast_real":      core.FieldTypeNumber,
+				"cast_decimal":   core.FieldTypeNumber,
+				"cast_numeric":   core.FieldTypeNumber,
+				"cast_text":      core.FieldTypeText,
+				"cast_bool":      core.FieldTypeBool,
+				"cast_boolean":   core.FieldTypeBool,
+				"avg":            core.FieldTypeJSON,
+				"sum":            core.FieldTypeJSON,
+				"min":            core.FieldTypeJSON,
+				"max":            core.FieldTypeJSON,
+				"cast_int_2":     core.FieldTypeNumber,
+				"cast_integer_2": core.FieldTypeNumber,
+				"cast_real_2":    core.FieldTypeNumber,
+				"cast_decimal_2": core.FieldTypeNumber,
+				"cast_numeric_2": core.FieldTypeNumber,
+				"cast_text_2":    core.FieldTypeText,
+				"cast_bool_2":    core.FieldTypeBool,
+				"cast_boolean_2": core.FieldTypeBool,
+				"avg_2":          core.FieldTypeNumber,
+				"sum_2":          core.FieldTypeNumber,
+				"min_2":          core.FieldTypeNumber,
+				"max_2":          core.FieldTypeNumber,
+			},
+		},
 		{
 			"query with multiline cast",
 			`select
@@ -407,7 +530,8 @@ func TestCreateViewFields(t *testing.T) {
 						end
 					) as int
 				) as cast_int
-			from demo1 a`,
+			from demo1 a
+			group by 1`,
 			false,
 			map[string]string{
 				"id":       core.FieldTypeText,
@@ -428,6 +552,7 @@ func TestCreateViewFields(t *testing.T) {
 		},
 		{
 			"query with reserved auth collection fields",
+			/* SQLite:
 			`
 				select
 					a.id,
@@ -437,7 +562,20 @@ func TestCreateViewFields(t *testing.T) {
 					a.verified,
 					demo1.id relid
 				from users a
-				left join demo1
+				left join demo1 on 1 = 1
+			`,
+			*/
+			// PostgreSQL:
+			`
+			select
+				a.id,
+				a.username,
+				a.email,
+				a."emailVisibility",
+				a.verified,
+				demo1.id relid
+			from users a
+			left join demo1 on 1 = 1
 			`,
 			false,
 			map[string]string{
@@ -498,7 +636,7 @@ func TestCreateViewFields(t *testing.T) {
 				b.text as alias3,
 				b.text as alias4
 			from demo1 a
-			left join demo1 as b`,
+			left join demo1 as b on 1 = 1`,
 			false,
 			map[string]string{
 				"id":     core.FieldTypeText,

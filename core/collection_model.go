@@ -642,6 +642,7 @@ func (m *Collection) AddIndex(name string, unique bool, columnsExpr string, optW
 
 	var idx strings.Builder
 
+	/* SQLite:
 	idx.WriteString("CREATE ")
 	if unique {
 		idx.WriteString("UNIQUE ")
@@ -652,6 +653,25 @@ func (m *Collection) AddIndex(name string, unique bool, columnsExpr string, optW
 	idx.WriteString("ON `")
 	idx.WriteString(m.Name)
 	idx.WriteString("` (")
+	idx.WriteString(columnsExpr)
+	idx.WriteString(")")
+	if optWhereExpr != "" {
+		idx.WriteString(" WHERE ")
+		idx.WriteString(optWhereExpr)
+	}
+	*/
+
+	// PostgreSQL:
+	idx.WriteString("CREATE ")
+	if unique {
+		idx.WriteString("UNIQUE ")
+	}
+	idx.WriteString("INDEX \"")
+	idx.WriteString(name)
+	idx.WriteString("\" ")
+	idx.WriteString("ON \"")
+	idx.WriteString(m.Name)
+	idx.WriteString("\" (")
 	idx.WriteString(columnsExpr)
 	idx.WriteString(")")
 	if optWhereExpr != "" {
@@ -707,6 +727,30 @@ func onCollectionDeleteExecute(e *CollectionEvent) error {
 	txErr := e.App.RunInTransaction(func(txApp App) error {
 		e.App = txApp
 
+		// protect against deleting a collection that is depended on by other views
+		// Unlike SQLite, PostgreSQL doesn't allow deleting a table if there are any dependencies on it.
+		dependentViews, err := findDependentViews(txApp, e.Collection.Name)
+		if err != nil {
+			return err
+		}
+		if e.Collection.disableIntegrityChecks {
+			// drop the dependent views to bypass PostgreSQL's dependency check
+			// Note: In SQLite, we don't have to delete the dependent views because SQLite allows dangling views.
+			// These views will be created by [resaveViewsWithChangedFields] if the collection is recreated.
+			// Users can still manually edit the views through UI.
+			for i := len(dependentViews) - 1; i >= 0; i-- {
+				if err := txApp.DeleteView(dependentViews[i].Name); err != nil {
+					return err
+				}
+			}
+		} else if len(dependentViews) > 0 {
+			names := make([]string, 0, len(dependentViews))
+			for _, view := range dependentViews {
+				names = append(names, view.Name)
+			}
+			return fmt.Errorf("[%s] failed to delete due to existing view dependencies: %s. Try delete them first.", e.Collection.Name, strings.Join(names, ", "))
+		}
+
 		// delete the related view or records table
 		if e.Collection.IsView() {
 			if err := txApp.DeleteView(e.Collection.Name); err != nil {
@@ -718,6 +762,14 @@ func onCollectionDeleteExecute(e *CollectionEvent) error {
 			}
 		}
 
+		// PostgreSQL.
+		// The disable integrity checks is not possible in PostgreSQL.
+		// Because we can't delete a table if there are any dependencies on it.
+		// Instead, we use `findDependentViews()` to check for dependencies.
+		// This checks all view dependencies in the database, which is more
+		// strict than the original integrity check that only checks for PocketBase
+		// view collection dependencies.
+		// The `disableIntegrityChecks` seems unnecessary because we already
 		if !e.Collection.disableIntegrityChecks {
 			// trigger views resave to check for dependencies
 			if err := resaveViewsWithChangedFields(txApp, e.Collection.Id); err != nil {
@@ -854,9 +906,19 @@ func onCollectionSaveExecute(e *CollectionEvent) error {
 				return err
 			}
 
+			/* SQLite:
 			// delete old renamed view
 			if oldCollection != nil {
 				if err := e.App.DeleteView(oldCollection.Name); err != nil {
+					return err
+				}
+			}
+			*/
+			// PostgreSQL:
+			// Instead of deleting the old view, we must rename it to make all the dependent views get updated
+			// automatically.
+			if oldCollection != nil && oldCollection.Name != e.Collection.Name {
+				if _, err := txApp.DB().RenameTable(oldCollection.Name, e.Collection.Name).Execute(); err != nil {
 					return err
 				}
 			}
@@ -944,7 +1006,11 @@ func (c *Collection) initIdField() {
 		field.PrimaryKey = true
 		field.Hidden = false
 		if field.Pattern == "" {
-			field.Pattern = defaultLowercaseRecordIdPattern
+			if field.AutogeneratePattern == security.PredefinedAutoGeneratePattern_uuidv7 {
+				field.Pattern = security.PredefinedAutoGeneratePattern_uuidv7
+			} else {
+				field.Pattern = defaultLowercaseRecordIdPattern
+			}
 		}
 	}
 }
@@ -991,7 +1057,11 @@ func (c *Collection) initTokenKeyField() {
 	// ensure that there is a unique index for the field
 	if _, ok := dbutils.FindSingleColumnUniqueIndex(c.Indexes, FieldNameTokenKey); !ok {
 		c.Indexes = append(c.Indexes, fmt.Sprintf(
+			/* SQLite:
 			"CREATE UNIQUE INDEX `%s` ON `%s` (`%s`)",
+			*/
+			// PostgreSQL:
+			`CREATE UNIQUE INDEX "%s" ON "%s" ("%s")`,
 			c.fieldIndexName(FieldNameTokenKey),
 			c.Name,
 			FieldNameTokenKey,
@@ -1017,7 +1087,11 @@ func (c *Collection) initEmailField() {
 	// ensure that there is a unique index for the email field
 	if _, ok := dbutils.FindSingleColumnUniqueIndex(c.Indexes, FieldNameEmail); !ok {
 		c.Indexes = append(c.Indexes, fmt.Sprintf(
+			/* SQLite:
 			"CREATE UNIQUE INDEX `%s` ON `%s` (`%s`) WHERE `%s` != ''",
+			*/
+			// PostgreSQL:
+			`CREATE UNIQUE INDEX "%s" ON "%s" ("%s") WHERE "%s" != ''`,
 			c.fieldIndexName(FieldNameEmail),
 			c.Name,
 			FieldNameEmail,

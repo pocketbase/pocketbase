@@ -208,6 +208,9 @@ func TestImportCollections(t *testing.T) {
 			if err := testApp.CollectionQuery().All(&collections); err != nil {
 				t.Fatal(err)
 			}
+			for _, collection := range collections {
+				println(collection.Name, collection.Id)
+			}
 			if len(collections) != s.expectCollectionsCount {
 				t.Fatalf("Expected %d collections, got %d", s.expectCollectionsCount, len(collections))
 			}

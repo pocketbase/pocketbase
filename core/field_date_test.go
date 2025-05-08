@@ -21,7 +21,11 @@ func TestDateFieldColumnType(t *testing.T) {
 
 	f := &core.DateField{}
 
+	/* SQLite:
 	expected := "TEXT DEFAULT '' NOT NULL"
+	*/
+	// PostgreSQL:
+	expected := "TIMESTAMP"
 
 	if v := f.ColumnType(app); v != expected {
 		t.Fatalf("Expected\n%q\ngot\n%q", expected, v)

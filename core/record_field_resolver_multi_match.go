@@ -55,6 +55,11 @@ func (m *multiMatchSubquery) Build(db *dbx.DB, params dbx.Params) string {
 		if j.on != nil {
 			mergedJoins.WriteString(" ON ")
 			mergedJoins.WriteString(j.on.Build(db, params))
+		} else {
+			// PostgreSQL only:
+			// Note: SQLite allows join without `on` clause but PostgreSQL does not.
+			// Join without `on` is equivalent to `ON 1=1` clause.
+			mergedJoins.WriteString(" ON 1=1")
 		}
 	}
 

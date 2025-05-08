@@ -108,7 +108,7 @@ func (f *JSONField) SetHidden(hidden bool) {
 
 // ColumnType implements [Field.ColumnType] interface method.
 func (f *JSONField) ColumnType(app App) string {
-	return "JSON DEFAULT NULL"
+	return "JSONB DEFAULT NULL"
 }
 
 // PrepareValue implements [Field.PrepareValue] interface method.

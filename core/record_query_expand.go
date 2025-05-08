@@ -109,7 +109,12 @@ func (app *BaseApp) expandRecords(records []*Record, expandPath string, fetchFun
 
 			if indirectRelField.IsMultiple() {
 				q.AndWhere(dbx.Exists(dbx.NewExp(fmt.Sprintf(
+					/* SQLite:
 					"SELECT 1 FROM %s je WHERE je.value = {:id}",
+					*/
+					// PostgreSQL:
+					// Note: manual type casting JSONStringValue to String in PostgreSQL.
+					"SELECT 1 FROM %s je WHERE je.value = {:id}::text",
 					dbutils.JSONEach(indirectRelField.Name),
 				))))
 			} else {

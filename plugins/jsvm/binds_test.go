@@ -721,15 +721,23 @@ func TestDbxBinds(t *testing.T) {
 				b: null,
 				c: [1, 2, 3],
 			}).build(db, {})`,
+			/* SQLite:
 			"`a`={:p0} AND `b` IS NULL AND `c` IN ({:p1}, {:p2}, {:p3})",
+			*/
+			// PostgreSQL:
+			`"a"={:p0} AND "b" IS NULL AND "c" IN ({:p1}, {:p2}, {:p3})`,
 		},
 		{
 			`$dbx.not($dbx.exp("a = 1")).build(db, {})`,
-			"NOT (a = 1)",
+			`NOT (a = 1)`,
 		},
 		{
 			`$dbx.and($dbx.exp("a = 1"), $dbx.exp("b = 2")).build(db, {})`,
+			/* SQLite:
 			"(a = 1) AND (b = 2)",
+			*/
+			// PostgreSQL:
+			`(a = 1) AND (b = 2)`,
 		},
 		{
 			`$dbx.or($dbx.exp("a = 1"), $dbx.exp("b = 2")).build(db, {})`,
@@ -737,27 +745,51 @@ func TestDbxBinds(t *testing.T) {
 		},
 		{
 			`$dbx.in("a", 1, 2, 3).build(db, {})`,
+			/* SQLite:
 			"`a` IN ({:p0}, {:p1}, {:p2})",
+			*/
+			// PostgreSQL:
+			`"a" IN ({:p0}, {:p1}, {:p2})`,
 		},
 		{
 			`$dbx.notIn("a", 1, 2, 3).build(db, {})`,
+			/* SQLite:
 			"`a` NOT IN ({:p0}, {:p1}, {:p2})",
+			*/
+			// PostgreSQL:
+			`"a" NOT IN ({:p0}, {:p1}, {:p2})`,
 		},
 		{
 			`$dbx.like("a", "test1", "test2").match(true, false).build(db, {})`,
+			/* SQLite:
 			"`a` LIKE {:p0} AND `a` LIKE {:p1}",
+			*/
+			// PostgreSQL:
+			`"a" LIKE {:p0} AND "a" LIKE {:p1}`,
 		},
 		{
 			`$dbx.orLike("a", "test1", "test2").match(false, true).build(db, {})`,
+			/* SQLite:
 			"`a` LIKE {:p0} OR `a` LIKE {:p1}",
+			*/
+			// PostgreSQL:
+			`"a" LIKE {:p0} OR "a" LIKE {:p1}`,
 		},
 		{
 			`$dbx.notLike("a", "test1", "test2").match(true, false).build(db, {})`,
+			/* SQLite:
 			"`a` NOT LIKE {:p0} AND `a` NOT LIKE {:p1}",
+			*/
+			// PostgreSQL:
+			`"a" NOT LIKE {:p0} AND "a" NOT LIKE {:p1}`,
 		},
 		{
 			`$dbx.orNotLike("a", "test1", "test2").match(false, false).build(db, {})`,
+			/* SQLite:
 			"`a` NOT LIKE {:p0} OR `a` NOT LIKE {:p1}",
+			*/
+			// PostgreSQL:
+			`"a" NOT LIKE {:p0} OR "a" NOT LIKE {:p1}`,
 		},
 		{
 			`$dbx.exists($dbx.exp("a = 1")).build(db, {})`,
@@ -769,11 +801,19 @@ func TestDbxBinds(t *testing.T) {
 		},
 		{
 			`$dbx.between("a", 1, 2).build(db, {})`,
+			/* SQLite:
 			"`a` BETWEEN {:p0} AND {:p1}",
+			*/
+			// PostgreSQL:
+			`"a" BETWEEN {:p0} AND {:p1}`,
 		},
 		{
 			`$dbx.notBetween("a", 1, 2).build(db, {})`,
+			/* SQLite:
 			"`a` NOT BETWEEN {:p0} AND {:p1}",
+			*/
+			// PostgreSQL:
+			`"a" NOT BETWEEN {:p0} AND {:p1}`,
 		},
 	}
 

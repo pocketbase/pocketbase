@@ -3,9 +3,12 @@ package validators
 import (
 	"database/sql"
 	"errors"
+	"regexp"
+	"slices"
 	"strings"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pocketbase/dbx"
 )
 
@@ -38,6 +41,25 @@ func UniqueId(db dbx.Builder, tableName string) validation.RuleFunc {
 	}
 }
 
+var regexViolateUniqueConstraint = regexp.MustCompile(`^Key \((.+)\)=.+ already exists\.$`)
+
+// Input: Key (col1, "col 2", col3)=("value1", "value2", "value3") already exists.
+// Output: col1, "col 2", col3
+func extractColumnsFromPgErrorUniqueViolation(errorDetail string) []string {
+	matches := regexViolateUniqueConstraint.FindStringSubmatch(errorDetail)
+	if len(matches) < 2 {
+		return nil // no match
+	}
+
+	var res []string
+	columns := strings.Split(matches[1], ", ") // eg: col1, "col 2", col3
+	for _, col := range columns {
+		col = strings.Trim(col, `"`) // remove double quotes if any
+		res = append(res, col)
+	}
+	return res
+}
+
 // NormalizeUniqueIndexError attempts to convert a
 // "unique constraint failed" error into a validation.Errors.
 //
@@ -54,9 +76,9 @@ func NormalizeUniqueIndexError(err error, tableOrAlias string, fieldNames []stri
 		return err
 	}
 
-	msg := strings.ToLower(err.Error())
-
 	// check for unique constraint failure
+	/* SQLite:
+	msg := strings.ToLower(err.Error())
 	if strings.Contains(msg, "unique constraint failed") {
 		// note: extra space to unify multi-columns lookup
 		msg = strings.ReplaceAll(strings.TrimSpace(msg), ",", " ") + " "
@@ -73,6 +95,29 @@ func NormalizeUniqueIndexError(err error, tableOrAlias string, fieldNames []stri
 
 		if len(normalizedErrs) > 0 {
 			return normalizedErrs
+		}
+	}
+	*/
+
+	// check for unique constraint failure
+	// PostgreSQL:
+	if pgErr, ok := err.(*pgconn.PgError); ok {
+		// The PostgreSQL 23505 UNIQUE VIOLATION error occurs when a unique constraint is violated.
+		if pgErr.Code == "23505" {
+			normalizedErrs := validation.Errors{}
+
+			// extract the field name from pgError.Detail
+			columns := extractColumnsFromPgErrorUniqueViolation(pgErr.Detail)
+
+			for _, name := range fieldNames {
+				if slices.Contains(columns, name) {
+					normalizedErrs[name] = validation.NewError("validation_not_unique", "Value must be unique")
+				}
+			}
+
+			if len(normalizedErrs) > 0 {
+				return normalizedErrs
+			}
 		}
 	}
 

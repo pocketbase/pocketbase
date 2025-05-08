@@ -157,6 +157,19 @@ func (app *BaseApp) ImportCollections(toImport []map[string]any, deleteMissing b
 					continue // exist or system
 				}
 
+				// PostgreSQL Only:
+				// Note: since postgres won't allow dropping a table/view if they are referenced
+				// by another view, we need to drop the dependent views first.
+				dependentViews, err := findDependentViews(txApp, existing.Name)
+				if err != nil {
+					return err
+				}
+				for i := len(dependentViews) - 1; i >= 0; i-- {
+					if err := txApp.DeleteView(dependentViews[i].Name); err != nil {
+						return fmt.Errorf("failed to drop view %q: %w", dependentViews[i].Name, err)
+					}
+				}
+
 				// delete collection
 				if err := txApp.Delete(existing); err != nil {
 					return err

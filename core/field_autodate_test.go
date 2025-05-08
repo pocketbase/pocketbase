@@ -24,7 +24,11 @@ func TestAutodateFieldColumnType(t *testing.T) {
 
 	f := &core.AutodateField{}
 
+	/* SQLite:
 	expected := "TEXT DEFAULT '' NOT NULL"
+	*/
+	// PostgreSQL:
+	expected := "TIMESTAMP DEFAULT NOW() NOT NULL"
 
 	if v := f.ColumnType(app); v != expected {
 		t.Fatalf("Expected\n%q\ngot\n%q", expected, v)

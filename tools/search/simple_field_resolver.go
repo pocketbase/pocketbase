@@ -104,8 +104,19 @@ func (r *SimpleFieldResolver) Resolve(field string) (*ResolverResult, error) {
 
 	return &ResolverResult{
 		NoCoalesce: true,
+		/* SQLite:
 		Identifier: fmt.Sprintf(
 			"JSON_EXTRACT([[%s]], '%s')",
+			inflector.Columnify(parts[0]),
+			jsonPath.String(),
+		),
+		*/
+		// PostgreSQL:
+		// Note: we have to cast it to text because PostgreSQL always
+		// requires a determistic type for any expression. We will do
+		// more type casting while building the final db expression.
+		Identifier: fmt.Sprintf(
+			"(JSON_QUERY([[%s]]::jsonb, '%s') #>> '{}')::text",
 			inflector.Columnify(parts[0]),
 			jsonPath.String(),
 		),

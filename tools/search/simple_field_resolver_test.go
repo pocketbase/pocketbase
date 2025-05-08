@@ -59,7 +59,11 @@ func TestSimpleFieldResolverResolve(t *testing.T) {
 		{"test_regex", true, ""},
 		{"test_regex1", false, "[[test_regex1]]"},
 		{"Test columnify!", false, "[[Testcolumnify]]"},
+		/* SQLite:
 		{"data.test", false, "JSON_EXTRACT([[data]], '$.test')"},
+		*/
+		// PostgreSQL:
+		{"data.test", false, "(JSON_QUERY([[data]]::jsonb, '$.test') #>> '{}')::text"},
 	}
 
 	for i, s := range scenarios {

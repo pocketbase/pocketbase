@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -193,13 +194,29 @@ func buildResolversExpr(
 			expr = dbx.NewExp(fmt.Sprintf("%s NOT LIKE %s ESCAPE '\\'", left.Identifier, right.Identifier), mergeParams(left.Params, wrapLikeParams(right.Params)))
 		}
 	case fexpr.SignLt, fexpr.SignAnyLt:
+		/* SQLite:
 		expr = dbx.NewExp(fmt.Sprintf("%s < %s", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
+		*/
+		// PostgreSQL:
+		expr = dbx.NewExp(numericJoin(left.Identifier, "<", right.Identifier), mergeParams(left.Params, right.Params))
 	case fexpr.SignLte, fexpr.SignAnyLte:
+		/* SQLite:
 		expr = dbx.NewExp(fmt.Sprintf("%s <= %s", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
+		*/
+		// PostgreSQL:
+		expr = dbx.NewExp(numericJoin(left.Identifier, "<=", right.Identifier), mergeParams(left.Params, right.Params))
 	case fexpr.SignGt, fexpr.SignAnyGt:
+		/* SQLite:
 		expr = dbx.NewExp(fmt.Sprintf("%s > %s", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
+		*/
+		// PostgreSQL:
+		expr = dbx.NewExp(numericJoin(left.Identifier, ">", right.Identifier), mergeParams(left.Params, right.Params))
 	case fexpr.SignGte, fexpr.SignAnyGte:
+		/* SQLite:
 		expr = dbx.NewExp(fmt.Sprintf("%s >= %s", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
+		*/
+		// PostgreSQL:
+		expr = dbx.NewExp(numericJoin(left.Identifier, ">=", right.Identifier), mergeParams(left.Params, right.Params))
 	}
 
 	if expr == nil {
@@ -250,12 +267,18 @@ func buildResolversExpr(
 }
 
 var normalizedIdentifiers = map[string]string{
+	/* SQLite:
 	// if `null` field is missing, treat `null` identifier as NULL token
 	"null": "NULL",
 	// if `true` field is missing, treat `true` identifier as TRUE token
 	"true": "1",
 	// if `false` field is missing, treat `false` identifier as FALSE token
 	"false": "0",
+	*/
+	// PostgreSQL:
+	"null":  "NULL",
+	"true":  "TRUE",
+	"false": "FALSE",
 }
 
 func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResult, error) {
@@ -301,7 +324,22 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 		placeholder := "t" + security.PseudorandomString(8)
 
 		return &ResolverResult{
+			/* SQLite:
 			Identifier: "{:" + placeholder + "}",
+			*/
+			// PostgreSQL:
+			// handle a special case (where 1 = 1) where both left and right identifiers are numeric numbers.
+			// Eg: To prevent SQL injection, for query "1=1", dbx will generate "select xxx where $1 = $2" (prepared statement) with params [1, 1].
+			// because we didn't specify the type for both $1 and $2, so PostgreSQL will treat them as text, and expect all params to be text types.
+			// And it failed to cast numeric type `1` to text `"1"` and throws an error:
+			// Error: `failed to encode args[0]: unable to encode 1 into text format for text (OID 25): cannot find encode plan;`
+			// Related Issue:
+			// - https://github.com/jackc/pgx/issues/798,
+			// - https://github.com/jackc/pgx/issues/2307
+			// This is not caused by an issue of pgx, but by the strong type validation of PostgreSQL.
+			// To fix it, we have to manually specify the type of either left or right identifier explicitly.
+			// This is not an issue when the literal type is a string.
+			Identifier: "{:" + placeholder + "}::numeric",
 			Params:     dbx.Params{placeholder: cast.ToFloat64(token.Literal)},
 		}, nil
 	case fexpr.TokenFunction:
@@ -329,16 +367,29 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	isLeftEmpty := isEmptyIdentifier(left) || (len(left.Params) == 1 && hasEmptyParamValue(left))
 	isRightEmpty := isEmptyIdentifier(right) || (len(right.Params) == 1 && hasEmptyParamValue(right))
 
+	/* SQLite:
 	equalOp := "="
 	nullEqualOp := "IS"
+	*/
+	// PostgreSQL:
+	equalOp := "="
+	nullEqualOp := "IS NOT DISTINCT FROM"
 	concatOp := "OR"
 	nullExpr := "IS NULL"
 	if !equal {
+		/* SQLite:
 		// always use `IS NOT` instead of `!=` because direct non-equal comparisons
 		// to nullable column values that are actually NULL yields to NULL instead of TRUE, eg.:
 		// `'example' != nullableColumn` -> NULL even if nullableColumn row value is NULL
+		// Note: `select 'non-null-string' != NULL` returns NULL instead of True.
 		equalOp = "IS NOT"
 		nullEqualOp = equalOp
+		*/
+		// PostgreSQL:
+		// In PostgreSQL, `IS NOT` only works for NULL values, but not for empty strings.
+		// `IS DISTINCT FROM` works like SQLite's `IS NOT`.
+		equalOp = "!="
+		nullEqualOp = "IS DISTINCT FROM"
 		concatOp = "AND"
 		nullExpr = "IS NOT NULL"
 	}
@@ -348,7 +399,10 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	// a IS NOT b
 	if left.NoCoalesce || right.NoCoalesce {
 		return dbx.NewExp(
+			/* SQLite:
 			fmt.Sprintf("%s %s %s", left.Identifier, nullEqualOp, right.Identifier),
+			*/
+			typeAwareJoin(left, equalOp, right),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -361,6 +415,8 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	// direct compare since at least one of the operands is known to be non-empty
 	// eg. a = 'example'
 	if isKnownNonEmptyIdentifier(left) || isKnownNonEmptyIdentifier(right) {
+		/* SQLite:
+
 		leftIdentifier := left.Identifier
 		if isLeftEmpty {
 			leftIdentifier = "''"
@@ -369,8 +425,35 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 		if isRightEmpty {
 			rightIdentifier = "''"
 		}
+		// PostgreSQL only:
+		// handle a special case (where 1 = 1) where both left and right identifiers are numeric numbers.
+		// Eg: for query "1=1", we will generate "select xxx where $1 = $2" (prepared statement) with params [1, 1],
+		// because we didn't specify the type for both $1 and $2, so PostgreSQL will treat them as text.
+		// And it failed to cast numeric type `1` to text `"1"` and throws an error:
+		// Error: `failed to encode args[0]: unable to encode 1 into text format for text (OID 25): cannot find encode plan;`
+		// Related Issue:
+		// - https://github.com/jackc/pgx/issues/798,
+		// - https://github.com/jackc/pgx/issues/2307
+		// This is not caused by an issue of pgx, but by the strong type validation of PostgreSQL.
+		// To fix it, we have to manually specify the type of either left or right identifier explicitly.
+		if len(left.Params) == 1 && len(right.Params) == 1 {
+			if _, ok := maps.Values(left.Params)[0].(float64); ok {
+				if _, ok := maps.Values(right.Params)[0].(float64); ok {
+					if strings.HasPrefix(leftIdentifier, "{:") && strings.HasSuffix(leftIdentifier, "}") &&
+						strings.HasPrefix(rightIdentifier, "{:") && strings.HasSuffix(rightIdentifier, "}") {
+						// Only add left type is enough, the right type will be automatically inferred by PostgreSQL.
+						leftIdentifier += "::numeric"
+					}
+				}
+			}
+		}
+		*/
 		return dbx.NewExp(
+			/* SQLite:
 			fmt.Sprintf("%s %s %s", leftIdentifier, equalOp, rightIdentifier),
+			*/
+			// PostgreSQL:
+			typeAwareJoin(left, equalOp, right),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -379,7 +462,11 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	// "" IS NOT b AND b IS NOT NULL
 	if isLeftEmpty {
 		return dbx.NewExp(
+			/* SQLite:
 			fmt.Sprintf("('' %s %s %s %s %s)", equalOp, right.Identifier, concatOp, right.Identifier, nullExpr),
+			*/
+			// PostgreSQL:
+			fmt.Sprintf("('' %s %s %s %s %s)", nullEqualOp, right.Identifier, concatOp, right.Identifier, nullExpr),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -388,11 +475,16 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 	// a IS NOT "" AND a IS NOT NULL
 	if isRightEmpty {
 		return dbx.NewExp(
+			/* SQLite:
 			fmt.Sprintf("(%s %s '' %s %s %s)", left.Identifier, equalOp, concatOp, left.Identifier, nullExpr),
+			*/
+			// PostgreSQL:
+			fmt.Sprintf("(%s %s '' %s %s %s)", left.Identifier, nullEqualOp, concatOp, left.Identifier, nullExpr),
 			mergeParams(left.Params, right.Params),
 		)
 	}
 
+	/* SQLite:
 	// fallback to a COALESCE comparison
 	return dbx.NewExp(
 		fmt.Sprintf(
@@ -403,6 +495,67 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 		),
 		mergeParams(left.Params, right.Params),
 	)
+	*/
+	return dbx.NewExp(typeAwareJoin(left, nullEqualOp, right), mergeParams(left.Params, right.Params))
+}
+
+var regexRightMostTypeCast = regexp.MustCompile(`::(\w+)$`)
+
+// PostgreSQL only:
+// If either left or right identifier has a specific type cast, we need to add the same type cast to the other identifier.
+func typeAwareJoin(l *ResolverResult, op string, r *ResolverResult) string {
+	isLeftEmpty := isEmptyIdentifier(l) || (len(l.Params) == 1 && hasEmptyParamValue(l))
+	isRightEmpty := isEmptyIdentifier(r) || (len(r.Params) == 1 && hasEmptyParamValue(r))
+	left := strings.TrimRight(l.Identifier, " ")
+	right := strings.TrimRight(r.Identifier, " ")
+	if isLeftEmpty {
+		left = "''"
+	}
+	if isRightEmpty {
+		right = "''"
+	}
+
+	leftType := regexRightMostTypeCast.FindStringSubmatch(left)
+	rightType := regexRightMostTypeCast.FindStringSubmatch(right)
+	if len(leftType) > 0 && len(rightType) > 0 {
+		// If left and right identifiers have different type cast, force cast both identifiers to text type to bypass PostgreSQL's strict type validation error.
+		if leftType[0] != rightType[0] {
+			left = withType(left, "text")
+			right = withType(right, "text")
+		}
+		// If both identifiers have the same type cast, return it directly.
+		return fmt.Sprintf("%s %s %s", left, op, right)
+	}
+	// If none of the identifiers have type cast
+	if len(leftType) == 0 && len(rightType) == 0 {
+		return fmt.Sprintf("%s %s %s", left, op, right)
+	}
+	if len(leftType) > 0 {
+		// left identifier has type cast, so we need to add the same type cast to the right identifier.
+		return fmt.Sprintf("%s %s %s", left, op, withType(right, leftType[1]))
+	}
+	if len(rightType) > 0 {
+		return fmt.Sprintf("%s %s %s", withType(left, rightType[1]), op, right)
+	}
+	panic("should not reach here")
+}
+
+// PostgreSQL only:
+// Force cast both identifiers to numeric type.
+func numericJoin(left, op, right string) string {
+	return fmt.Sprintf("%s %s %s", withType(left, "numeric"), op, withType(right, "numeric"))
+}
+
+// PostgreSQL only:
+func withType(identifier string, typeName string) string {
+	// Note:
+	// DO NOT drop existing type cast before adding a new cast.
+	// Reason: `1::numeric::text` is valid but `1::text` is invalid.
+	suffix := "::" + typeName
+	if strings.HasSuffix(identifier, suffix) {
+		return identifier
+	}
+	return identifier + suffix
 }
 
 func hasEmptyParamValue(result *ResolverResult) bool {
@@ -649,7 +802,11 @@ func (e *manyVsManyExpr) Build(db *dbx.DB, params dbx.Params) string {
 	}
 
 	return fmt.Sprintf(
+		/* SQLite:
 		"NOT EXISTS (SELECT 1 FROM (%s) {{%s}} LEFT JOIN (%s) {{%s}} WHERE %s)",
+		*/
+		// PostgreSQL:
+		"NOT EXISTS (SELECT 1 FROM (%s) {{%s}} LEFT JOIN (%s) {{%s}} ON 1 = 1 WHERE %s)",
 		e.left.MultiMatchSubQuery.Build(db, params),
 		lAlias,
 		e.right.MultiMatchSubQuery.Build(db, params),
