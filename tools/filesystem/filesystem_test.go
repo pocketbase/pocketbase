@@ -926,7 +926,6 @@ func createTestDir(t *testing.T) string {
 
 	// png
 	{
-
 		file, err := os.OpenFile(filepath.Join(dir, "image.png"), os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			t.Fatal(err)

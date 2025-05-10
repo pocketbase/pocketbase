@@ -126,8 +126,8 @@ func (s *System) GetFile(fileKey string) (*blob.Reader, error) {
 	return s.GetReader(fileKey)
 }
 
-// GetReaderAsFile constructs a new reuploadable File value from the
-// associated fileKey blob.Reader.
+// GetReuploadableFile constructs a new reuploadable File value
+// from the associated fileKey blob.Reader.
 //
 // If preserveName is false then the returned File.Name will have
 // a new randomly generated suffix, otherwise it will reuse the original one.

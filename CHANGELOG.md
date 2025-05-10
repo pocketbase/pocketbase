@@ -1,6 +1,6 @@
-## v0.28.0 (WIP)
+## v0.28.0
 
-- Write the default response body of `*Request` hooks that are wrapped in a transaction after the related transaction completes to allow propagating errors ([#6462](https://github.com/pocketbase/pocketbase/discussions/6462#discussioncomment-12207818)).
+- Write the default response body of `*Request` hooks that are wrapped in a transaction after the related transaction completes to allow propagating the transaction error ([#6462](https://github.com/pocketbase/pocketbase/discussions/6462#discussioncomment-12207818)).
 
 - Updated `app.DB()` to automatically routes raw write SQL statements to the nonconcurrent db pool ([#6689](https://github.com/pocketbase/pocketbase/discussions/6689)).
     _For the rare cases when it is needed users still have the option to explicitly target the specific pool they want using `app.ConcurrentDB()`/`app.NonconcurrentDB()`._
@@ -13,6 +13,8 @@
 
 - Added new `filesystem.System.GetReuploadableFile(fileKey, preserveName)` method to return an existing blob as a `*filesystem.File` value ([#6792](https://github.com/pocketbase/pocketbase/discussions/6792)).
     _This method could be useful in case you want to clone an existing Record file and assign it to a new Record (e.g. in a Record duplicate action)._
+
+- Other minor improvements (updated the GitHub release min Go version to 1.23.9, updated npm and Go deps, etc.)
 
 
 ## v0.27.2
