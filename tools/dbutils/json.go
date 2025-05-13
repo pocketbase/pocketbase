@@ -8,9 +8,11 @@ import (
 // JSONEach returns JSON_EACH SQLite string expression with
 // some normalizations for non-json columns.
 func JSONEach(column string) string {
+	// note: we are not using the new and shorter "if(x,y)" syntax for
+	// compatability with custom drivers that use older SQLite version
 	return fmt.Sprintf(
-		`json_each(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE json_array([[%s]]) END)`,
-		column, column, column,
+		`json_each(CASE WHEN iif(json_valid([[%s]]), json_type([[%s]])='array', FALSE) THEN [[%s]] ELSE json_array([[%s]]) END)`,
+		column, column, column, column,
 	)
 }
 
@@ -21,9 +23,11 @@ func JSONEach(column string) string {
 //
 // Returns 0 for empty string or NULL column values.
 func JSONArrayLength(column string) string {
+	// note: we are not using the new and shorter "if(x,y)" syntax for
+	// compatability with custom drivers that use older SQLite version
 	return fmt.Sprintf(
-		`json_array_length(CASE WHEN json_valid([[%s]]) THEN [[%s]] ELSE (CASE WHEN [[%s]] = '' OR [[%s]] IS NULL THEN json_array() ELSE json_array([[%s]]) END) END)`,
-		column, column, column, column, column,
+		`json_array_length(CASE WHEN iif(json_valid([[%s]]), json_type([[%s]])='array', FALSE) THEN [[%s]] ELSE (CASE WHEN [[%s]] = '' OR [[%s]] IS NULL THEN json_array() ELSE json_array([[%s]]) END) END)`,
+		column, column, column, column, column, column,
 	)
 }
 
