@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"strconv"
 
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/gitea.svg
+var giteaLogo []byte
+
 func init() {
-	Providers[NameGitea] = wrapFactory(NewGiteaProvider)
+	Providers[NameGitea] = wrapFactory("Gitea", giteaLogo, NewGiteaProvider)
 }
 
 var _ Provider = (*Gitea)(nil)

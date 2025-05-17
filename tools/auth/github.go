@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"io"
 	"strconv"
@@ -11,8 +12,11 @@ import (
 	"golang.org/x/oauth2/github"
 )
 
+//go:embed logo/github.svg
+var githubLogo []byte
+
 func init() {
-	Providers[NameGithub] = wrapFactory(NewGithubProvider)
+	Providers[NameGithub] = wrapFactory("GitHub", githubLogo, NewGithubProvider)
 }
 
 var _ Provider = (*Github)(nil)

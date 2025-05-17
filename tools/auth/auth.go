@@ -16,7 +16,13 @@ type ProviderFactoryFunc func() Provider
 // Providers defines a map with all of the available OAuth2 providers.
 //
 // To register a new provider append a new entry in the map.
-var Providers = map[string]ProviderFactoryFunc{}
+var Providers = map[string]ProviderConfig{}
+
+type ProviderConfig struct {
+	Title       string
+	LogoBytes   []byte
+	FactoryFunc ProviderFactoryFunc
+}
 
 // NewProviderByName returns a new preconfigured provider instance by its name identifier.
 func NewProviderByName(name string) (Provider, error) {
@@ -25,7 +31,7 @@ func NewProviderByName(name string) (Provider, error) {
 		return nil, errors.New("missing provider " + name)
 	}
 
-	return factory(), nil
+	return factory.FactoryFunc(), nil
 }
 
 // Provider defines a common interface for an OAuth2 client.
@@ -120,9 +126,13 @@ type Provider interface {
 
 // wrapFactory is a helper that wraps a Provider specific factory
 // function and returns its result as Provider interface.
-func wrapFactory[T Provider](factory func() T) ProviderFactoryFunc {
-	return func() Provider {
-		return factory()
+func wrapFactory[T Provider](title string, logoBytes []byte, factory func() T) ProviderConfig {
+	return ProviderConfig{
+		Title:     title,
+		LogoBytes: logoBytes,
+		FactoryFunc: func() Provider {
+			return factory()
+		},
 	}
 }
 

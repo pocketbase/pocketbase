@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -11,8 +12,11 @@ import (
 	"golang.org/x/oauth2/twitch"
 )
 
+//go:embed logo/twitch.svg
+var twitchLogo []byte
+
 func init() {
-	Providers[NameTwitch] = wrapFactory(NewTwitchProvider)
+	Providers[NameTwitch] = wrapFactory("Twitch", twitchLogo, NewTwitchProvider)
 }
 
 var _ Provider = (*Twitch)(nil)

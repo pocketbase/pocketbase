@@ -2,14 +2,18 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/twitter.svg
+var twitterLogo []byte
+
 func init() {
-	Providers[NameTwitter] = wrapFactory(NewTwitterProvider)
+	Providers[NameTwitter] = wrapFactory("Twitter", twitterLogo, NewTwitterProvider)
 }
 
 var _ Provider = (*Twitter)(nil)

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"net/http"
 
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/notion.svg
+var notionLogo []byte
+
 func init() {
-	Providers[NameNotion] = wrapFactory(NewNotionProvider)
+	Providers[NameNotion] = wrapFactory("Notion", notionLogo, NewNotionProvider)
 }
 
 var _ Provider = (*Notion)(nil)

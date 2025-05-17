@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -11,8 +12,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/linear.svg
+var linearLogo []byte
+
 func init() {
-	Providers[NameLinear] = wrapFactory(NewLinearProvider)
+	Providers[NameLinear] = wrapFactory("Linear", linearLogo, NewLinearProvider)
 }
 
 var _ Provider = (*Linear)(nil)

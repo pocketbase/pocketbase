@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -11,8 +12,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/monday.svg
+var mondayLogo []byte
+
 func init() {
-	Providers[NameMonday] = wrapFactory(NewMondayProvider)
+	Providers[NameMonday] = wrapFactory("monday.com", mondayLogo, NewMondayProvider)
 }
 
 var _ Provider = (*Monday)(nil)

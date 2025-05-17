@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2/yandex"
 )
 
+//go:embed logo/yandex.svg
+var yandexLogo []byte
+
 func init() {
-	Providers[NameYandex] = wrapFactory(NewYandexProvider)
+	Providers[NameYandex] = wrapFactory("Yandex", yandexLogo, NewYandexProvider)
 }
 
 var _ Provider = (*Yandex)(nil)

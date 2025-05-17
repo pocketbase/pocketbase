@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"strconv"
 
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/strava.svg
+var stravaLogo []byte
+
 func init() {
-	Providers[NameStrava] = wrapFactory(NewStravaProvider)
+	Providers[NameStrava] = wrapFactory("Strava", stravaLogo, NewStravaProvider)
 }
 
 var _ Provider = (*Strava)(nil)

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,8 +14,11 @@ import (
 	"golang.org/x/oauth2/vk"
 )
 
+//go:embed logo/vk.svg
+var vkLogo []byte
+
 func init() {
-	Providers[NameVK] = wrapFactory(NewVKProvider)
+	Providers[NameVK] = wrapFactory("VK", vkLogo, NewVKProvider)
 }
 
 var _ Provider = (*VK)(nil)

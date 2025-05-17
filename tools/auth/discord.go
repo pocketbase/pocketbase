@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/discord.svg
+var discordLogo []byte
+
 func init() {
-	Providers[NameDiscord] = wrapFactory(NewDiscordProvider)
+	Providers[NameDiscord] = wrapFactory("Discord", discordLogo, NewDiscordProvider)
 }
 
 var _ Provider = (*Discord)(nil)

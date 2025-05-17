@@ -1,11 +1,14 @@
 package apis
 
 import (
+	"encoding/base64"
 	"net/http"
+	"sort"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/forms"
+	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/router"
 )
 
@@ -17,6 +20,7 @@ func bindSettingsApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
 	subGroup.POST("/test/s3", settingsTestS3)
 	subGroup.POST("/test/email", settingsTestEmail)
 	subGroup.POST("/apple/generate-client-secret", settingsGenerateAppleClientSecret)
+	subGroup.GET("/list-oauth2-providers", settingsListOAuthProviders)
 }
 
 func settingsList(e *core.RequestEvent) error {
@@ -139,5 +143,31 @@ func settingsGenerateAppleClientSecret(e *core.RequestEvent) error {
 
 	return e.JSON(http.StatusOK, map[string]string{
 		"secret": secret,
+	})
+}
+
+func settingsListOAuthProviders(e *core.RequestEvent) error {
+	type entry struct {
+		Key        string `json:"key"`
+		Title      string `json:"title"`
+		LogoBase64 string `json:"logoBase64"`
+	}
+
+	var result []*entry
+	for key, config := range auth.Providers {
+		result = append(result, &entry{
+			Key:        key,
+			Title:      config.Title,
+			LogoBase64: base64.StdEncoding.EncodeToString(config.LogoBytes),
+		})
+	}
+
+	// sort to return a stable order list
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Key < result[j].Key
+	})
+
+	return e.JSON(http.StatusOK, map[string]any{
+		"providers": result,
 	})
 }

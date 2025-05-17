@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"net/http"
 
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/trakt.svg
+var traktLogo []byte
+
 func init() {
-	Providers[NameTrakt] = wrapFactory(NewTraktProvider)
+	Providers[NameTrakt] = wrapFactory("Trakt", traktLogo, NewTraktProvider)
 }
 
 var _ Provider = (*Trakt)(nil)

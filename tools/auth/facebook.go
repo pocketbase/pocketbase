@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2/facebook"
 )
 
+//go:embed logo/facebook.svg
+var facebookLogo []byte
+
 func init() {
-	Providers[NameFacebook] = wrapFactory(NewFacebookProvider)
+	Providers[NameFacebook] = wrapFactory("Facebook", facebookLogo, NewFacebookProvider)
 }
 
 var _ Provider = (*Facebook)(nil)

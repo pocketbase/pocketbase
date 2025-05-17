@@ -3,7 +3,7 @@
 
     import Field from "@/components/base/Field.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
-    import providersList from "@/providers.js";
+    import { loadOAuth2Providers } from "@/providers.js";
     import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
@@ -12,9 +12,10 @@
 
     let panel;
     let searchTerm = "";
+    let providersList = [];
     let filteredProviders = [];
 
-    $: if (searchTerm !== -1 || disabled !== -1) {
+    $: if (searchTerm !== -1 || disabled !== -1 || providersList !== -1) {
         filteredProviders = filterProviders();
     }
 
@@ -47,6 +48,10 @@
     function clearSearch() {
         searchTerm = "";
     }
+
+    loadOAuth2Providers().then((providers) => {
+        providersList = providers;
+    });
 </script>
 
 <OverlayPanel bind:this={panel} on:show on:hide btnClose={false}>
@@ -76,9 +81,9 @@
             <div class="col-6">
                 <button type="button" class="provider-card handle" on:click={() => select(provider)}>
                     <figure class="provider-logo">
-                        {#if provider.logo}
+                        {#if provider.logoBase64}
                             <img
-                                src="{import.meta.env.BASE_URL}images/oauth2/{provider.logo}"
+                                src="data:image/svg+xml;base64,{provider.logoBase64}"
                                 alt="{provider.title} logo"
                             />
                         {/if}

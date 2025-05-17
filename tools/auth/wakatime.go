@@ -2,14 +2,18 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/wakatime.svg
+var wakatimeLogo []byte
+
 func init() {
-	Providers[NameWakatime] = wrapFactory(NewWakatimeProvider)
+	Providers[NameWakatime] = wrapFactory("Wakatime", wakatimeLogo, NewWakatimeProvider)
 }
 
 var _ Provider = (*Wakatime)(nil)

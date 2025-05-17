@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -10,8 +11,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/mailcow.svg
+var mailcowLogo []byte
+
 func init() {
-	Providers[NameMailcow] = wrapFactory(NewMailcowProvider)
+	Providers[NameMailcow] = wrapFactory("mailcow", mailcowLogo, NewMailcowProvider)
 }
 
 var _ Provider = (*Mailcow)(nil)

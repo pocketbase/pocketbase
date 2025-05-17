@@ -2,14 +2,18 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/google.svg
+var googleLogo []byte
+
 func init() {
-	Providers[NameGoogle] = wrapFactory(NewGoogleProvider)
+	Providers[NameGoogle] = wrapFactory("Google", googleLogo, NewGoogleProvider)
 }
 
 var _ Provider = (*Google)(nil)

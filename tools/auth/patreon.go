@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2/endpoints"
 )
 
+//go:embed logo/patreon.svg
+var patreonLogo []byte
+
 func init() {
-	Providers[NamePatreon] = wrapFactory(NewPatreonProvider)
+	Providers[NamePatreon] = wrapFactory("Patreon (v2)", patreonLogo, NewPatreonProvider)
 }
 
 var _ Provider = (*Patreon)(nil)

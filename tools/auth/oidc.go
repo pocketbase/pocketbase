@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"crypto/rsa"
+	_ "embed"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -28,10 +29,13 @@ import (
 // (the value must be in seconds, e.g. "PB_ID_TOKEN_LEEWAY=60" for 1 minute).
 var idTokenLeeway time.Duration = 5 * time.Minute
 
+//go:embed logo/oidc.svg
+var oidcLogo []byte
+
 func init() {
-	Providers[NameOIDC] = wrapFactory(NewOIDCProvider)
-	Providers[NameOIDC+"2"] = wrapFactory(NewOIDCProvider)
-	Providers[NameOIDC+"3"] = wrapFactory(NewOIDCProvider)
+	Providers[NameOIDC] = wrapFactory("OpenID Connect", oidcLogo, NewOIDCProvider)
+	Providers[NameOIDC+"2"] = wrapFactory("(2) OpenID Connect", oidcLogo, NewOIDCProvider)
+	Providers[NameOIDC+"3"] = wrapFactory("(3) OpenID Connect", oidcLogo, NewOIDCProvider)
 
 	if leewayStr := os.Getenv("PB_ID_TOKEN_LEEWAY"); leewayStr != "" {
 		leeway, err := strconv.Atoi(leewayStr)

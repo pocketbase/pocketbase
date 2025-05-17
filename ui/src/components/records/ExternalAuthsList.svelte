@@ -1,5 +1,5 @@
 <script>
-    import providersList from "@/providers.js";
+    import { loadOAuth2Providers } from "@/providers.js";
     import { confirm } from "@/stores/confirmation";
     import { addSuccessToast } from "@/stores/toasts";
     import ApiClient from "@/utils/ApiClient";
@@ -10,6 +10,7 @@
 
     export let record;
 
+    let providersList = [];
     let externalAuths = [];
     let isLoading = false;
 
@@ -37,6 +38,7 @@
                     recordId: record.id,
                 }),
             });
+            providersList = await loadOAuth2Providers();
         } catch (err) {
             ApiClient.error(err);
         }
@@ -81,7 +83,7 @@
             <div class="list-item">
                 <figure class="provider-logo">
                     <img
-                        src="{import.meta.env.BASE_URL}images/oauth2/{getProviderConfig(auth.provider)?.logo}"
+                        src="data:image/svg+xml;base64,{getProviderConfig(auth.provider)?.logoBase64}"
                         alt="Provider logo"
                     />
                 </figure>

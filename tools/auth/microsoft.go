@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2/microsoft"
 )
 
+//go:embed logo/microsoft.svg
+var microsoftLogo []byte
+
 func init() {
-	Providers[NameMicrosoft] = wrapFactory(NewMicrosoftProvider)
+	Providers[NameMicrosoft] = wrapFactory("Microsoft", microsoftLogo, NewMicrosoftProvider)
 }
 
 var _ Provider = (*Microsoft)(nil)

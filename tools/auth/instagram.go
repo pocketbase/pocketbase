@@ -2,14 +2,18 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/instagram.svg
+var instagramLogo []byte
+
 func init() {
-	Providers[NameInstagram] = wrapFactory(NewInstagramProvider)
+	Providers[NameInstagram] = wrapFactory("Instagram", instagramLogo, NewInstagramProvider)
 }
 
 var _ Provider = (*Instagram)(nil)

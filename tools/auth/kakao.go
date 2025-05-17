@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"strconv"
 
@@ -10,8 +11,11 @@ import (
 	"golang.org/x/oauth2/kakao"
 )
 
+//go:embed logo/kakao.svg
+var kakaoLogo []byte
+
 func init() {
-	Providers[NameKakao] = wrapFactory(NewKakaoProvider)
+	Providers[NameKakao] = wrapFactory("Kakao", kakaoLogo, NewKakaoProvider)
 }
 
 var _ Provider = (*Kakao)(nil)

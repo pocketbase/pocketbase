@@ -2,14 +2,18 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/livechat.svg
+var liveChatLogo []byte
+
 func init() {
-	Providers[NameLivechat] = wrapFactory(NewLivechatProvider)
+	Providers[NameLivechat] = wrapFactory("LiveChat", liveChatLogo, NewLivechatProvider)
 }
 
 var _ Provider = (*Livechat)(nil)

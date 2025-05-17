@@ -147,11 +147,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{Id: "test_id"},
-						Token:    &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{Id: "test_id"},
+							Token:    &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -273,11 +276,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{Id: "test_id"},
-						Token:    &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{Id: "test_id"},
+							Token:    &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -375,11 +381,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{Id: "test_id", Email: "test@example.com"},
-						Token:    &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{Id: "test_id", Email: "test@example.com"},
+							Token:    &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -478,14 +487,17 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:    "test_id",
-							Email: "test2@example.com", // different email -> should be ignored
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:    "test_id",
+								Email: "test2@example.com", // different email -> should be ignored
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -592,14 +604,17 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:    "test_id",
-							Email: "test_oauth2@example.com",
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:    "test_id",
+								Email: "test_oauth2@example.com",
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -698,14 +713,17 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:    "test_id",
-							Email: "test@example.com", // matching email -> should be marked as verified
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:    "test_id",
+								Email: "test@example.com", // matching email -> should be marked as verified
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -791,11 +809,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{Id: "test_id"},
-						Token:    &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{Id: "test_id"},
+							Token:    &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -872,11 +893,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{Id: "test_id"},
-						Token:    &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{Id: "test_id"},
+							Token:    &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -928,11 +952,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{Id: "test_id"},
-						Token:    &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{Id: "test_id"},
+							Token:    &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -991,11 +1018,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{Id: "test_id"},
-						Token:    &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{Id: "test_id"},
+							Token:    &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -1085,14 +1115,17 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:    "test_id",
-							Email: "oauth2@example.com", // should be ignored because of the explicit submitted email
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:    "test_id",
+								Email: "oauth2@example.com", // should be ignored because of the explicit submitted email
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -1170,16 +1203,19 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:        "oauth2_id",
-							Email:     "oauth2@example.com",
-							Username:  "oauth2_username",
-							AvatarURL: server.URL + "/oauth2_avatar.png",
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:        "oauth2_id",
+								Email:     "oauth2@example.com",
+								Username:  "oauth2_username",
+								AvatarURL: server.URL + "/oauth2_avatar.png",
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -1256,15 +1292,18 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:        "oauth2_id",
-							Email:     "oauth2@example.com",
-							AvatarURL: "",
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:        "oauth2_id",
+								Email:     "oauth2@example.com",
+								AvatarURL: "",
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -1336,17 +1375,20 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:        "oauth2_id",
-							Email:     "oauth2@example.com",
-							Username:  "tESt2_username", // wouldn't match with existing because the related field index is case-sensitive
-							Name:      "oauth2_name",
-							AvatarURL: server.URL + "/oauth2_avatar.png",
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:        "oauth2_id",
+								Email:     "oauth2@example.com",
+								Username:  "tESt2_username", // wouldn't match with existing because the related field index is case-sensitive
+								Name:      "oauth2_name",
+								AvatarURL: server.URL + "/oauth2_avatar.png",
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -1421,16 +1463,19 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:       "oauth2_id",
-							Email:    "oauth2@example.com",
-							Username: "tESt2_username",
-							Name:     "oauth2_name",
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:       "oauth2_id",
+								Email:    "oauth2@example.com",
+								Username: "tESt2_username",
+								Name:     "oauth2_name",
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// make the username index case-insensitive to ensure that case-insensitive match is used
@@ -1511,16 +1556,19 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{
-							Id:       "oauth2_id",
-							Email:    "oauth2@example.com",
-							Username: "!@invalid",
-							Name:     "oauth2_name",
-						},
-						Token: &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{
+								Id:       "oauth2_id",
+								Email:    "oauth2@example.com",
+								Username: "!@invalid",
+								Name:     "oauth2_name",
+							},
+							Token: &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection
@@ -1593,11 +1641,14 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers["test"] = func() auth.Provider {
-					return &oauth2MockProvider{
-						AuthUser: &auth.AuthUser{Id: "test_id"},
-						Token:    &oauth2.Token{AccessToken: "abc"},
-					}
+				auth.Providers["test"] = auth.ProviderConfig{
+					Title: "Test",
+					FactoryFunc: func() auth.Provider {
+						return &oauth2MockProvider{
+							AuthUser: &auth.AuthUser{Id: "test_id"},
+							Token:    &oauth2.Token{AccessToken: "abc"},
+						}
+					},
 				}
 
 				// add the test provider in the collection

@@ -5,7 +5,7 @@
     import Select from "@/components/base/Select.svelte";
     import OAuth2ProviderPanel from "@/components/collections/OAuth2ProviderPanel.svelte";
     import OAuth2ProvidersListPanel from "@/components/collections/OAuth2ProvidersListPanel.svelte";
-    import providersUIList from "@/providers.js";
+    import { loadOAuth2Providers } from "@/providers.js";
     import { errors } from "@/stores/errors";
     import CommonHelper from "@/utils/CommonHelper";
     import { scale, slide } from "svelte/transition";
@@ -21,6 +21,7 @@
     let showMappedFields = false;
     let regularFieldOptions = [];
     let regularAndFileFieldOptions = [];
+    let providersUIList = [];
 
     $: refreshFieldOptions(collection.fields);
 
@@ -59,6 +60,10 @@
         }
         return null;
     }
+
+    loadOAuth2Providers().then((providers) => {
+        providersUIList = providers;
+    });
 </script>
 
 <Accordion single>
@@ -105,9 +110,9 @@
                     class:error={!CommonHelper.isEmpty($errors?.oauth2?.providers?.[i])}
                 >
                     <figure class="provider-logo">
-                        {#if uiOptions?.logo}
+                        {#if uiOptions?.logoBase64}
                             <img
-                                src="{import.meta.env.BASE_URL}images/oauth2/{uiOptions.logo}"
+                                src="data:image/svg+xml;base64,{uiOptions.logoBase64}"
                                 alt="{uiOptions.title} logo"
                             />
                         {:else}

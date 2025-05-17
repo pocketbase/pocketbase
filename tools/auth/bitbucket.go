@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"io"
@@ -10,8 +11,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/bitbucket.svg
+var bitbucketLogo []byte
+
 func init() {
-	Providers[NameBitbucket] = wrapFactory(NewBitbucketProvider)
+	Providers[NameBitbucket] = wrapFactory("Bitbucket", bitbucketLogo, NewBitbucketProvider)
 }
 
 var _ Provider = (*Bitbucket)(nil)

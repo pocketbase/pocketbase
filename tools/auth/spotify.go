@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -9,8 +10,11 @@ import (
 	"golang.org/x/oauth2/spotify"
 )
 
+//go:embed logo/spotify.svg
+var spotifyLogo []byte
+
 func init() {
-	Providers[NameSpotify] = wrapFactory(NewSpotifyProvider)
+	Providers[NameSpotify] = wrapFactory("Spotify", spotifyLogo, NewSpotifyProvider)
 }
 
 var _ Provider = (*Spotify)(nil)

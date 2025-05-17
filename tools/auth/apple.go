@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"strings"
@@ -12,8 +13,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
+//go:embed logo/apple.svg
+var appleLogo []byte
+
 func init() {
-	Providers[NameApple] = wrapFactory(NewAppleProvider)
+	Providers[NameApple] = wrapFactory("Apple", appleLogo, NewAppleProvider)
 }
 
 var _ Provider = (*Apple)(nil)

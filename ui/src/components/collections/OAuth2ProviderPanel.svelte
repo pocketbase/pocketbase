@@ -1,12 +1,12 @@
 <script>
-    import { createEventDispatcher } from "svelte";
-    import CommonHelper from "@/utils/CommonHelper";
     import tooltip from "@/actions/tooltip";
-    import { confirm } from "@/stores/confirmation";
-    import { removeError } from "@/stores/errors";
     import Field from "@/components/base/Field.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
     import RedactedPasswordInput from "@/components/base/RedactedPasswordInput.svelte";
+    import { confirm } from "@/stores/confirmation";
+    import { removeError } from "@/stores/errors";
+    import CommonHelper from "@/utils/CommonHelper";
+    import { createEventDispatcher } from "svelte";
 
     const dispatch = createEventDispatcher();
 
@@ -59,9 +59,9 @@
 <OverlayPanel bind:this={panel} btnClose={false} on:show on:hide>
     <svelte:fragment slot="header">
         <figure class="provider-logo">
-            {#if uiOptions.logo}
+            {#if uiOptions.logoBase64}
                 <img
-                    src="{import.meta.env.BASE_URL}images/oauth2/{uiOptions.logo}"
+                    src="data:image/svg+xml;base64,{uiOptions.logoBase64}"
                     alt="{uiOptions.title} logo"
                 />
             {:else}
