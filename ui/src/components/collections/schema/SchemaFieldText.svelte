@@ -56,7 +56,15 @@
 
             <div class="col-sm-6">
                 <Field class="form-field" name="fields.{key}.pattern" let:uniqueId>
-                    <label for={uniqueId}>Validation pattern</label>
+                    <label for={uniqueId}>
+                        <span class="txt">Validation pattern</span>
+                        {#if field.primaryKey}
+                            <i
+                                class="ri-information-line link-hint"
+                                use:tooltip={"All record ids have unique case-insensitive (ASCII) validation applied in addition to the user defined validation pattern."}
+                            />
+                        {/if}
+                    </label>
                     <input type="text" id={uniqueId} bind:value={field.pattern} />
                     <div class="help-block">
                         <p>Ex. <code>{"^[a-z0-9]+$"}</code></p>
