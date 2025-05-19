@@ -395,18 +395,30 @@ func TestCreateViewFields(t *testing.T) {
 			},
 		},
 		{
-			"query with multiline casts",
+			"query with multiline cast",
 			`select
 				id,
-				CAST(
+				cast(
 					(
-						CASE
-							WHEN COUNT(a.id) = 1 THEN 21
-							WHEN COUNT(a.id) = 2 THEN 18
-							ELSE 0
-						END
-					) AS INT
+						case
+							when count(a.id) = 1 then 21
+							when count(a.id) = 2 then 18
+							else 0
+						end
+					) as int
 				) as cast_int
+			from demo1 a`,
+			false,
+			map[string]string{
+				"id":       core.FieldTypeText,
+				"cast_int": core.FieldTypeNumber,
+			},
+		},
+		{
+			"query with case-insensitive and extra-spaced cast",
+			`select
+				id,
+				CaSt( a.id  aS iNt ) as cast_int
 			from demo1 a`,
 			false,
 			map[string]string{
