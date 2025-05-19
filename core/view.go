@@ -215,7 +215,7 @@ func defaultViewField(name string) Field {
 	}
 }
 
-var castRegex = regexp.MustCompile(`(?i)^cast\s*\(.*\s+as\s+(\w+)\s*\)$`)
+var castRegex = regexp.MustCompile(`(?is)^cast\s*\(.*\s+as\s+(\w+)\s*\)$`)
 
 func parseQueryToFields(app App, selectQuery string) (map[string]*queryField, error) {
 	p := new(identifiersParser)

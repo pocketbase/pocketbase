@@ -395,6 +395,26 @@ func TestCreateViewFields(t *testing.T) {
 			},
 		},
 		{
+			"query with multiline casts",
+			`select
+				id,
+				CAST(
+					(
+						CASE
+							WHEN COUNT(a.id) = 1 THEN 21
+							WHEN COUNT(a.id) = 2 THEN 18
+							ELSE 0
+						END
+					) AS INT
+				) as cast_int
+			from demo1 a`,
+			false,
+			map[string]string{
+				"id":       core.FieldTypeText,
+				"cast_int": core.FieldTypeNumber,
+			},
+		},
+		{
 			"query with reserved auth collection fields",
 			`
 				select
