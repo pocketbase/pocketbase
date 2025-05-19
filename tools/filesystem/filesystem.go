@@ -15,17 +15,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/disintegration/imaging"
 	"github.com/fatih/color"
 	"github.com/gabriel-vasile/mimetype"
+	"github.com/gocmarek/imaging"
 	"github.com/pocketbase/pocketbase/tools/filesystem/blob"
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/fileblob"
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob"
 	"github.com/pocketbase/pocketbase/tools/filesystem/internal/s3blob/s3"
 	"github.com/pocketbase/pocketbase/tools/list"
-
-	// explicit webp decoder because disintegration/imaging does not support webp
-	_ "golang.org/x/image/webp"
 )
 
 // note: the same as blob.ErrNotFound for backward compatibility with earlier versions
