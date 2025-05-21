@@ -97,8 +97,10 @@ func New() *PocketBase {
 func NewWithConfig(config Config) *PocketBase {
 	// initialize a default data directory based on the executable baseDir
 	if config.DefaultDataDir == "" {
-		baseDir, _ := inspectRuntime()
-		config.DefaultDataDir = filepath.Join(baseDir, "pb_data")
+		if config.DefaultDataDir = os.Getenv("PB_DATA_DIR"); config.DefaultDataDir == "" {
+			baseDir, _ := inspectRuntime()
+			config.DefaultDataDir = filepath.Join(baseDir, "pb_data")
+		}
 	}
 	if config.DefaultPostgresURL == "" {
 		if config.DefaultPostgresURL = os.Getenv("POSTGRES_URL"); config.DefaultPostgresURL == "" {

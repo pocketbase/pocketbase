@@ -3,10 +3,28 @@ name: basebuild
 on:
   pull_request:
   push:
+    tags:        
+      - '*'
 
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # Docker Hub image
+        image: postgres
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       flags: ""
     steps:
@@ -19,6 +37,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install PostgreSQL client tools
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

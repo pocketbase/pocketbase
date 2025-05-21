@@ -27,7 +27,7 @@ func main() {
 	app.RootCmd.PersistentFlags().StringVar(
 		&hooksDir,
 		"hooksDir",
-		"",
+		os.Getenv("PB_HOOKS_DIR"),
 		"the directory with the JS app hooks",
 	)
 
@@ -123,6 +123,9 @@ func main() {
 
 // the default pb_public dir location is relative to the executable
 func defaultPublicDir() string {
+	if os.Getenv("PB_PUBLIC_DIR") != "" {
+		return os.Getenv("PB_PUBLIC_DIR")
+	}
 	if strings.HasPrefix(os.Args[0], os.TempDir()) {
 		// most likely ran with go run
 		return "./pb_public"
