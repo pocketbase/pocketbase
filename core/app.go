@@ -68,6 +68,11 @@ type App interface {
 	// (currently used primarily for optional settings encryption but this may change in the future).
 	EncryptionEnv() string
 
+	// IsRealtimeBridgeEnabled returns whether the app is in realtime bridge mode.
+	// If you need both realtime feature and horizontal scale support, you could
+	// enable it. We will use Postgres's LISTEN/NOTIFY feature to sync realtime events.
+	IsRealtimeBridgeEnabled() bool
+
 	// IsDev returns whether the app is in dev mode.
 	//
 	// When enabled logs, executed sql statements, etc. are printed to the stderr.

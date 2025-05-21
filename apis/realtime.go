@@ -35,6 +35,10 @@ func bindRealtimeApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
 	sub.POST("", realtimeSetSubscriptions)
 
 	bindRealtimeEvents(app)
+
+	if app.IsRealtimeBridgeEnabled() {
+		bindRealtimeBridge(app)
+	}
 }
 
 func realtimeConnect(e *core.RequestEvent) error {
@@ -63,7 +67,12 @@ func realtimeConnect(e *core.RequestEvent) error {
 
 	connectEvent := new(core.RealtimeConnectRequestEvent)
 	connectEvent.RequestEvent = e
-	connectEvent.Client = subscriptions.NewDefaultClient()
+	if realtimeBridge, ok := e.App.Store().Get(RealtimeBridgeInstanceKey).(IRealtimeBridge); ok {
+		connectEvent.Client = NewBridgedClient(realtimeBridge)
+	} else {
+		// fallback to pocketbase's default non-distributed client.
+		connectEvent.Client = subscriptions.NewDefaultClient()
+	}
 	connectEvent.IdleTimeout = 5 * time.Minute
 
 	return e.App.OnRealtimeConnectRequest().Trigger(connectEvent, func(ce *core.RealtimeConnectRequestEvent) error {
@@ -71,6 +80,9 @@ func realtimeConnect(e *core.RequestEvent) error {
 		ce.App.SubscriptionsBroker().Register(ce.Client)
 		defer func() {
 			e.App.SubscriptionsBroker().Unregister(ce.Client.Id())
+			if syncClient, ok := ce.Client.(IBridgedClient); ok {
+				syncClient.BroadcastGoOffline()
+			}
 		}()
 
 		ce.App.Logger().Debug("Realtime connection established.", slog.String("clientId", ce.Client.Id()))
@@ -207,6 +219,10 @@ func realtimeSetSubscriptions(e *core.RequestEvent) error {
 		// subscribe to the new subscriptions
 		e.Client.Subscribe(e.Subscriptions...)
 
+		if syncClient, ok := e.Client.(IBridgedClient); ok {
+			syncClient.BroadcastChanges()
+		}
+
 		e.App.Logger().Debug(
 			"Realtime subscriptions updated.",
 			slog.String("clientId", e.Client.Id()),
@@ -233,6 +249,9 @@ func realtimeUpdateClientsAuth(app core.App, newAuthRecord *core.Record) error {
 					clientAuth.Id == newAuthRecord.Id &&
 					clientAuth.Collection().Name == newAuthRecord.Collection().Name {
 					client.Set(RealtimeClientAuthKey, newAuthRecord)
+					if syncClient, ok := client.(IBridgedClient); ok {
+						syncClient.BroadcastChanges()
+					}
 				}
 			}
 
@@ -257,6 +276,9 @@ func realtimeUnsetClientsAuthState(app core.App, authModel core.Model) error {
 					clientAuth.Id == authModel.PK() &&
 					clientAuth.Collection().Name == authModel.TableName() {
 					client.Unset(RealtimeClientAuthKey)
+					if syncClient, ok := client.(IBridgedClient); ok {
+						syncClient.BroadcastChanges()
+					}
 				}
 			}
 

@@ -1,10 +1,12 @@
 package pocketbase
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -37,6 +39,7 @@ type PocketBase struct {
 	postgresUrlFlag    string
 	postgresDataDBFlag string
 	postgresAuxDBFlag  string
+	realtimeBridgeFlag bool
 	encryptionEnvFlag  string
 	queryTimeout       int
 	hideStartBanner    bool
@@ -56,6 +59,7 @@ type Config struct {
 	DefaultPostgresURL    string // if not set, it will fallback to "postgres://user:pass@127.0.0.1:5432/postgres?sslmode=disable"
 	DefaultPostgresDataDb string // if not set, it will fallback to "pb-data"
 	DefaultPostgresAuxDb  string // if not set, it will fallback to "pb-auxiliary"
+	DefaultRealtimeBridge *bool  // if not set, it will fallback to the `true`
 	DefaultEncryptionEnv  string
 	DefaultQueryTimeout   time.Duration // default to core.DefaultQueryTimeout (in seconds)
 
@@ -111,6 +115,14 @@ func NewWithConfig(config Config) *PocketBase {
 			config.DefaultPostgresAuxDb = "pb-auxiliary"
 		}
 	}
+	if config.DefaultRealtimeBridge == nil {
+		if enable, err := strconv.ParseBool(os.Getenv("PB_REALTIME_BRIDGE")); err == nil {
+			config.DefaultRealtimeBridge = &enable
+		} else {
+			enable = true
+			config.DefaultRealtimeBridge = &enable
+		}
+	}
 
 	if config.DefaultQueryTimeout == 0 {
 		config.DefaultQueryTimeout = core.DefaultQueryTimeout
@@ -136,6 +148,7 @@ func NewWithConfig(config Config) *PocketBase {
 		postgresUrlFlag:    config.DefaultPostgresURL,
 		postgresDataDBFlag: config.DefaultPostgresDataDb,
 		postgresAuxDBFlag:  config.DefaultPostgresAuxDb,
+		realtimeBridgeFlag: *config.DefaultRealtimeBridge,
 		encryptionEnvFlag:  config.DefaultEncryptionEnv,
 		hideStartBanner:    config.HideStartBanner,
 	}
@@ -154,6 +167,7 @@ func NewWithConfig(config Config) *PocketBase {
 		PostgresURL:      pb.postgresUrlFlag,
 		PostgresDataDB:   pb.postgresDataDBFlag,
 		PostgresAuxDB:    pb.postgresAuxDBFlag,
+		IsRealtimeBridge: pb.realtimeBridgeFlag,
 		EncryptionEnv:    pb.encryptionEnvFlag,
 		QueryTimeout:     time.Duration(pb.queryTimeout) * time.Second,
 		DataMaxOpenConns: config.DataMaxOpenConns,
@@ -288,6 +302,13 @@ func (pb *PocketBase) eagerParseFlags(config *Config) error {
 		"queryTimeout",
 		int(config.DefaultQueryTimeout.Seconds()),
 		"the default SELECT queries timeout in seconds",
+	)
+
+	pb.RootCmd.PersistentFlags().BoolVar(
+		&pb.realtimeBridgeFlag,
+		"realtimeBridge",
+		*config.DefaultRealtimeBridge,
+		fmt.Sprintf("enable/disable the realtime bridge (default %v). You must not disable this flag if you plan horizontally scale your app.", *config.DefaultRealtimeBridge),
 	)
 
 	return pb.RootCmd.ParseFlags(os.Args[1:])

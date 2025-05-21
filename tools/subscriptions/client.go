@@ -34,6 +34,9 @@ type Client interface {
 	// If no prefix is specified, returns all subscriptions.
 	Subscriptions(prefixes ...string) map[string]SubscriptionOptions
 
+	// RawSubscriptions returns a slice of all subscription strings that the client is subscribed to.
+	RawSubscriptions() []string
+
 	// Subscribe subscribes the client to the provided subscriptions list.
 	//
 	// Each subscription can also have "options" (json serialized SubscriptionOptions) as query parameter.
@@ -89,9 +92,16 @@ type DefaultClient struct {
 }
 
 // NewDefaultClient creates and returns a new DefaultClient instance.
-func NewDefaultClient() *DefaultClient {
+func NewDefaultClient(optionalClientId ...string) *DefaultClient {
+	var clientId string
+	if len(optionalClientId) > 0 && optionalClientId[0] != "" {
+		clientId = optionalClientId[0]
+	} else {
+		clientId = security.RandomString(40)
+	}
+
 	return &DefaultClient{
-		id:            security.RandomString(40),
+		id:            clientId,
 		store:         map[string]any{},
 		channel:       make(chan Message),
 		subscriptions: map[string]SubscriptionOptions{},
@@ -277,4 +287,16 @@ func (c *DefaultClient) Send(m Message) {
 	}
 
 	c.Channel() <- m
+}
+
+func (c *DefaultClient) RawSubscriptions() []string {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	subs := make([]string, 0, len(c.subscriptions))
+	for key := range c.subscriptions {
+		subs = append(subs, key)
+	}
+
+	return subs
 }

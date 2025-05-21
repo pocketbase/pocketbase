@@ -72,8 +72,9 @@ type BaseAppConfig struct {
 	AuxMaxOpenConns  int
 	AuxMaxIdleConns  int
 	PostgresURL      string // eg: "postgres://user:pass@localhost:5432?sslmode=disable"
-	PostgresDataDB   string // eg: "data"
-	PostgresAuxDB    string // eg: "auxiliary"
+	PostgresDataDB   string // eg: "pb-data"
+	PostgresAuxDB    string // eg: "pb-auxiliary"
+	IsRealtimeBridge bool
 	IsDev            bool
 }
 
@@ -511,6 +512,13 @@ func (app *BaseApp) ResetBootstrapState() error {
 	}
 
 	return nil
+}
+
+// IsRealtimeBridgeEnabled returns whether the app is in realtime bridge mode.
+// If you need both realtime feature and horizontal scale support, you could
+// enable it. We will use Postgres's LISTEN/NOTIFY feature to sync realtime events.
+func (app *BaseApp) IsRealtimeBridgeEnabled() bool {
+	return app.config.IsRealtimeBridge
 }
 
 // DB returns the default app data.db builder instance.
