@@ -133,8 +133,8 @@ table {
         }
     }
     td.col-type-json {
-        font-family: monospace;
-        font-size: var(--smFontSize);
+        font-family: var(--monospaceFontFamily);
+        font-size: var(--baseFontSize);
         line-height: var(--smLineHeight);
         max-width: 300px;
     }

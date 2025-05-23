@@ -27,7 +27,9 @@
 
     // styles
     &.code {
-        font-family: monospace;
+        font-family: var(--monospaceFontFamily);
+        font-size: var(--baseFontSize);
+        line-height: calc(var(--baseFontSize) + 3px);
         white-space: pre-wrap;
         text-align: left;
         min-width: 150px;

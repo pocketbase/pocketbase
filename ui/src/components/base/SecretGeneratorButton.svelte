@@ -62,7 +62,8 @@
 
 <style>
     .secret {
-        font-family: monospace;
+        font-family: var(--monospaceFontFamily);
+        font-size: var(--baseFontSize);
         font-weight: normal;
         user-select: all;
     }
