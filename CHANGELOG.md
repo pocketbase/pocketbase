@@ -1,3 +1,12 @@
+## v0.28.2
+
+- Loaded latin-ext charset for the default text font ([#6869](https://github.com/pocketbase/pocketbase/issues/6869)).
+
+- Updated view query CAST regex to properly recognize multiline expressions ([#6860](https://github.com/pocketbase/pocketbase/pull/6860); thanks @azat-ismagilov).
+
+- Updated Go and npm dependencies.
+
+
 ## v0.28.1
 
 - Fixed `json_each`/`json_array_length` normalizations to properly check for array values ([#6835](https://github.com/pocketbase/pocketbase/issues/6835)).
