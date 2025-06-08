@@ -199,8 +199,18 @@ func (drv *driver) NewRangeReader(ctx context.Context, key string, offset, lengt
 		byteRange = fmt.Sprintf("bytes=%d-%d", offset, offset+length-1)
 	}
 
-	reqOpt := func(req *http.Request) {
-		req.Header.Set("Range", byteRange)
+	var reqOpt func(*http.Request)
+
+	if byteRange != "" {
+		reqOpt = func(req *http.Request) {
+			req.Header.Set("Range", byteRange)
+		}
+	} else {
+		// Always set a range header, even for full reads
+		byteRange = "bytes=0-"
+		reqOpt = func(req *http.Request) {
+			req.Header.Set("Range", byteRange)
+		}
 	}
 
 	resp, err := drv.s3.GetObject(ctx, key, reqOpt)
