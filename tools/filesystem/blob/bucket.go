@@ -387,11 +387,10 @@ func (b *Bucket) Attributes(ctx context.Context, key string) (_ *Attributes, err
 	}, nil
 }
 
-// Exists returns true if a blob exists at key, false if it does not exist, or
-// an error.
+// Exists returns true if a blob exists at key, false if it does not exist, or an error.
 //
-// It is a shortcut for calling Attributes and checking if it returns an error
-// with code ErrNotFound.
+// It is a shortcut for calling Attributes and checking if it returns
+// an error with code ErrNotFound.
 func (b *Bucket) Exists(ctx context.Context, key string) (bool, error) {
 	_, err := b.Attributes(ctx, key)
 	if err == nil {
@@ -419,11 +418,8 @@ func (b *Bucket) NewReader(ctx context.Context, key string) (*Reader, error) {
 //
 // Note that ctx is used for all reads performed during the lifetime of the reader.
 //
-// If the blob does not exist, NewRangeReader returns an error for which
-// gcerrors.Code will return gcerrors.NotFound. Exists is a lighter-weight way
-// to check for existence.
-//
-// A nil ReaderOptions is treated the same as the zero value.
+// If the blob does not exist, NewRangeReader returns an ErrNotFound.
+// Exists is a lighter-weight wayto check for existence.
 //
 // The caller must call Close on the returned Reader when done reading.
 func (b *Bucket) NewRangeReader(ctx context.Context, key string, offset, length int64) (_ *Reader, err error) {
@@ -656,8 +652,7 @@ func (b *Bucket) NewWriter(ctx context.Context, key string, opts *WriterOptions)
 // Copy the blob stored at srcKey to dstKey.
 // A nil CopyOptions is treated the same as the zero value.
 //
-// If the source blob does not exist, Copy returns an error for which
-// gcerrors.Code will return gcerrors.NotFound.
+// If the source blob does not exist, Copy returns an ErrNotFound.
 //
 // If the destination blob already exists, it is overwritten.
 func (b *Bucket) Copy(ctx context.Context, dstKey, srcKey string) (err error) {

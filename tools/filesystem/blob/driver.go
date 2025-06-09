@@ -40,7 +40,7 @@ type Driver interface {
 	NormalizeError(err error) error
 
 	// Attributes returns attributes for the blob. If the specified object does
-	// not exist, Attributes must return an error for which ErrorCode returns ErrNotFound.
+	// not exist, Attributes must return an ErrNotFound.
 	// The portable type will not modify the returned Attributes.
 	Attributes(ctx context.Context, key string) (*Attributes, error)
 
@@ -50,19 +50,12 @@ type Driver interface {
 	// to recently written or deleted objects. That is to say, there is no
 	// guarantee that an object that's been written will immediately be returned
 	// from ListPaged.
-	// opts is guaranteed to be non-nil.
 	ListPaged(ctx context.Context, opts *ListOptions) (*ListPage, error)
 
 	// NewRangeReader returns a Reader that reads part of an object, reading at
 	// most length bytes starting at the given offset. If length is negative, it
 	// will read until the end of the object. If the specified object does not
-	// exist, NewRangeReader must return an error for which ErrorCode returns ErrNotFound.
-	// opts is guaranteed to be non-nil.
-	//
-	// The returned Reader *may* also implement Downloader if the underlying
-	// implementation can take advantage of that. The Download call is guaranteed
-	// to be the only call to the Reader. For such readers, offset will always
-	// be 0 and length will always be -1.
+	// exist, NewRangeReader must return an ErrNotFound.
 	NewRangeReader(ctx context.Context, key string, offset, length int64) (DriverReader, error)
 
 	// NewTypedWriter returns Writer that writes to an object associated with key.
@@ -87,16 +80,13 @@ type Driver interface {
 
 	// Copy copies the object associated with srcKey to dstKey.
 	//
-	// If the source object does not exist, Copy must return an error for which
-	// ErrorCode returns ErrNotFound.
+	// If the source object does not exist, Copy must return an ErrNotFound.
 	//
 	// If the destination object already exists, it should be overwritten.
-	//
-	// opts is guaranteed to be non-nil.
 	Copy(ctx context.Context, dstKey, srcKey string) error
 
 	// Delete deletes the object associated with key. If the specified object does
-	// not exist, Delete must return an error for which ErrorCode returns ErrNotFound.
+	// not exist, Delete must return an ErrNotFound.
 	Delete(ctx context.Context, key string) error
 
 	// Close cleans up any resources used by the Bucket. Once Close is called,
