@@ -200,7 +200,9 @@ func (drv *driver) NewRangeReader(ctx context.Context, key string, offset, lengt
 	}
 
 	reqOpt := func(req *http.Request) {
-		req.Header.Set("Range", byteRange)
+		if byteRange != "" {
+			req.Header.Set("Range", byteRange)
+		}
 	}
 
 	resp, err := drv.s3.GetObject(ctx, key, reqOpt)
