@@ -195,6 +195,32 @@ declare function readerToString(reader: any, maxBytes?: number): string;
 declare function toString(val: any, maxBytes?: number): string;
 
 /**
+ * toBytes converts the specified value into a bytes slice.
+ *
+ * Support optional second maxBytes argument to limit the max read bytes
+ * when the value is a io.Reader (default to 32MB).
+ *
+ * Types that don't have Go slice representation (bool, objects, etc.)
+ * are serialized to UTF8 string and its bytes slice is returned.
+ *
+ * Example:
+ *
+ * ` + "```" + `js
+ * // io.Reader
+ * const ex1 = toBytes(e.request.body)
+ *
+ * // string
+ * const ex2 = toBytes("hello") // [104 101 108 108 111]
+ *
+ * // object (the same as the string '{"test":1}')
+ * const ex2 = toBytes({"test":1}) // [123 34 116 101 115 116 34 58 49 125]
+ * ` + "```" + `
+ *
+ * @group PocketBase
+ */
+declare function toBytes(val: any, maxBytes?: number): Array<number>;
+
+/**
  * sleep pauses the current goroutine for at least the specified user duration (in ms).
  * A zero or negative duration returns immediately.
  *

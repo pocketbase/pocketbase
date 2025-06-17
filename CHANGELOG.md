@@ -1,3 +1,8 @@
+## v0.29.0 (WIP)
+
+- Added global JSVM `toBytes()` helper to return the bytes slice representation of a value such as io.Reader or string (_other types are first serialized to Go string_).
+
+
 ## v0.28.3
 
 - Skip sending empty `Range` header when fetching blobs from S3 ([#6914](https://github.com/pocketbase/pocketbase/pull/6914)).

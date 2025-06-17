@@ -309,6 +309,44 @@ func baseBinds(vm *goja.Runtime) {
 		return string(bodyBytes), nil
 	})
 
+	// note: throw only on reader error
+	vm.Set("toBytes", func(raw any, maxReaderBytes int) ([]byte, error) {
+		switch v := raw.(type) {
+		case nil:
+			return nil, nil
+		case string:
+			return []byte(v), nil
+		case []byte:
+			return v, nil
+		case types.JSONRaw:
+			return v, nil
+		case io.Reader:
+			if maxReaderBytes == 0 {
+				maxReaderBytes = router.DefaultMaxMemory
+			}
+
+			limitReader := io.LimitReader(v, int64(maxReaderBytes))
+
+			return io.ReadAll(limitReader)
+		default:
+			b, err := cast.ToUint8SliceE(v)
+			if err == nil {
+				return b, nil
+			}
+
+			str, err := cast.ToStringE(v)
+			if err == nil {
+				return []byte(str), nil
+			}
+
+			// as a last attempt try to json encode the value
+			rawBytes, _ := json.Marshal(raw)
+
+			return rawBytes, nil
+		}
+	})
+
+	// note: throw only on reader error
 	vm.Set("toString", func(raw any, maxReaderBytes int) (string, error) {
 		switch v := raw.(type) {
 		case io.Reader:
