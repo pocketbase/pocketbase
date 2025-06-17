@@ -186,8 +186,11 @@ declare function readerToString(reader: any, maxBytes?: number): string;
  * // io.Reader
  * const ex1 = toString(e.request.body)
  *
- * // slice of bytes ("hello")
- * const ex2 = toString([104 101 108 108 111])
+ * // slice of bytes
+ * const ex2 = toString([104 101 108 108 111]) // "hello"
+ *
+ * // null
+ * const ex3 = toString(null) // ""
  * ` + "```" + `
  *
  * @group PocketBase
@@ -213,7 +216,10 @@ declare function toString(val: any, maxBytes?: number): string;
  * const ex2 = toBytes("hello") // [104 101 108 108 111]
  *
  * // object (the same as the string '{"test":1}')
- * const ex2 = toBytes({"test":1}) // [123 34 116 101 115 116 34 58 49 125]
+ * const ex3 = toBytes({"test":1}) // [123 34 116 101 115 116 34 58 49 125]
+ *
+ * // null
+ * const ex4 = toBytes(null) // []
  * ` + "```" + `
  *
  * @group PocketBase

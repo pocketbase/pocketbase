@@ -313,7 +313,7 @@ func baseBinds(vm *goja.Runtime) {
 	vm.Set("toBytes", func(raw any, maxReaderBytes int) ([]byte, error) {
 		switch v := raw.(type) {
 		case nil:
-			return nil, nil
+			return []byte{}, nil
 		case string:
 			return []byte(v), nil
 		case []byte:

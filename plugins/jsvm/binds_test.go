@@ -128,7 +128,7 @@ func TestBaseBindsToBytes(t *testing.T) {
 		Value    any
 		Expected []byte
 	}{
-		{"null", nil, nil},
+		{"null", nil, []byte{}},
 		{"string", "test", []byte("test")},
 		{"number", -12.4, []byte("-12.4")},
 		{"bool", true, []byte("true")},
