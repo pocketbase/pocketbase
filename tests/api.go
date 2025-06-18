@@ -75,7 +75,7 @@ type ApiScenario struct {
 	//
 	//	map[string]int{ "*": 0 } // no hook events were fired
 	//	map[string]int{ "*": 0, "EventA": 2 } // no hook events, except EventA were fired
-	//	map[string]int{ EventA": 2, "EventB": 0 } // ensures that EventA was fired exactly 2 times and EventB exactly 0 times.
+	//	map[string]int{ "EventA": 2, "EventB": 0 } // ensures that EventA was fired exactly 2 times and EventB exactly 0 times.
 	ExpectedEvents map[string]int
 
 	// test hooks
