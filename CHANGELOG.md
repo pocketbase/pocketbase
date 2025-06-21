@@ -1,6 +1,10 @@
-## v0.29.0 (WIP)
+## v0.28.4
 
 - Added global JSVM `toBytes()` helper to return the bytes slice representation of a value such as io.Reader or string (_other types are first serialized to Go string_).
+
+- Fixed `security.RandomStringByRegex` random distribution ([#6947](https://github.com/pocketbase/pocketbase/pull/6947); thanks @yerTools).
+
+- Minor docs and typos fixes.
 
 
 ## v0.28.3
