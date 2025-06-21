@@ -45,7 +45,16 @@
     <div class="grid">
         <div class="col-lg-4">
             <Field class="form-field {isEnabled ? 'required' : ''}" name="batch.maxRequests" let:uniqueId>
-                <label for={uniqueId}>Max allowed batch requests</label>
+                <label for={uniqueId}>
+                    <span class="txt">Max requests in a batch</span>
+                    <i
+                        class="ri-information-line link-hint"
+                        use:tooltip={{
+                            text: "Rate limiting (if enabled) also applies for the batch create/update/upsert/delete requests.",
+                            position: "right",
+                        }}
+                    />
+                </label>
                 <input
                     type="number"
                     id={uniqueId}
