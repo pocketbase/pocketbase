@@ -2,6 +2,7 @@ package security
 
 import (
 	cryptoRand "crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
 	"regexp/syntax"
@@ -128,21 +129,47 @@ func repeatRandomStringByRegex(r *syntax.Regexp, sb *strings.Builder, min int, m
 }
 
 func randomRuneFromPairs(pairs []rune) (rune, error) {
-	idx, err := randomNumber(len(pairs) / 2)
-	if err != nil {
-		return 0, err
+	if len(pairs)%2 != 0 {
+		return 0, fmt.Errorf("invalid pairs slice: odd number of elements")
 	}
 
-	return randomRuneFromRange(pairs[idx*2], pairs[idx*2+1])
-}
-
-func randomRuneFromRange(min rune, max rune) (rune, error) {
-	offset, err := randomNumber(int(max - min + 1))
-	if err != nil {
-		return min, err
+	// Pre-calculate the cumulative size of all ranges to make the selection process more efficient.
+	cumulativeSizes := make([]int, len(pairs)/2)
+	totalRunes := 0
+	for i := 0; i < len(pairs); i += 2 {
+		start, end := pairs[i], pairs[i+1]
+		if start > end {
+			return 0, fmt.Errorf("invalid range: start '%c' > end '%c'", start, end)
+		}
+		totalRunes += int(end - start + 1)
+		cumulativeSizes[i/2] = totalRunes
 	}
 
-	return min + rune(offset), nil
+	if totalRunes == 0 {
+		return 0, errors.New("no runes to choose from")
+	}
+
+	// Select a random number in the range of total runes.
+	runeNumber, err := randomNumber(totalRunes)
+	if err != nil {
+		return 0, fmt.Errorf("failed to generate random number: %w", err)
+	}
+
+	// Find which range the selected number falls into using the pre-calculated cumulative sizes.
+	for i, size := range cumulativeSizes {
+		if runeNumber < size {
+			startRune := pairs[i*2]
+			previousSize := 0
+			if i > 0 {
+				previousSize = cumulativeSizes[i-1]
+			}
+			return startRune + rune(runeNumber-previousSize), nil
+		}
+	}
+
+	// This part should be unreachable if the logic is correct.
+	// It indicates a bug in this function or in randomNumber.
+	panic("unreachable: failed to find a rune")
 }
 
 func randomNumber(maxSoft int) (int, error) {
