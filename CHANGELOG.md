@@ -1,3 +1,8 @@
+## v0.29.0 (WIP)
+
+- Added the triggered rate rimit rule in the error log `details`.
+
+
 ## v0.28.4
 
 - Added global JSVM `toBytes()` helper to return the bytes slice representation of a value such as io.Reader or string (_other types are first serialized to Go string_).

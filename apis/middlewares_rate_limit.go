@@ -1,6 +1,7 @@
 package apis
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -167,7 +168,7 @@ func checkRateLimit(e *core.RequestEvent, rtId string, rule core.RateLimitRule) 
 	}
 
 	if !rt.isAllowed(key) {
-		return e.TooManyRequestsError("", nil)
+		return e.TooManyRequestsError("", errors.New("triggered rate limit rule: "+rule.String()))
 	}
 
 	return nil

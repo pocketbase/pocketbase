@@ -704,3 +704,13 @@ func (c RateLimitRule) Validate() error {
 func (c RateLimitRule) DurationTime() time.Duration {
 	return time.Duration(c.Duration) * time.Second
 }
+
+// String returns a string representation of the rule.
+func (c RateLimitRule) String() string {
+	raw, err := json.Marshal(c)
+	if err != nil {
+		return c.Label // extremely rare case
+	}
+
+	return string(raw)
+}
