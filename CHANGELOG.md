@@ -2,6 +2,8 @@
 
 - Added the triggered rate rimit rule in the error log `details`.
 
+- Other minor improvements (wrapped the backup restore in a transaction as an extra precaution, updated npm deps, regenerated JSVM docs with the recent tygoja changes, etc.).
+
 
 ## v0.28.4
 
