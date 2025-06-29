@@ -26,10 +26,9 @@ func TestRandomStringByRegex(t *testing.T) {
 		{`\d{1,10}`, nil, false},
 		{`\d{3}`, nil, false},
 		{`\d{0,}-abc`, nil, false},
-		{`[a-zA-Z]*`, nil, false},
+		{`[a-zA-Z_]*`, nil, false},
 		{`[^a-zA-Z]{5,30}`, nil, false},
 		{`\w+_abc`, nil, false},
-		{`[a-zA-Z_]*`, nil, false},
 		{`[2-9]{5}-\w+`, nil, false},
 		{`(a|b|c)`, nil, false},
 	}

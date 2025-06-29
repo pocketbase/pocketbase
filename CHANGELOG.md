@@ -3,7 +3,6 @@
 - Enabled calling the `/auth-refresh` endpoint with nonrenewable tokens.
     _When used with nonrenewable tokens (e.g. impersonate) the endpoint will simply return the same token with the up-to-date user data associated with it._
 
-
 - Added the triggered rate rimit rule in the error log `details`.
 
 - Other minor improvements (wrapped the backup restore in a transaction as an extra precaution, updated npm deps, regenerated JSVM docs with the recent tygoja changes, etc.).
