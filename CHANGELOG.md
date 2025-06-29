@@ -1,5 +1,9 @@
 ## v0.29.0 (WIP)
 
+- Enabled calling the `/auth-refresh` endpoint with nonrenewable tokens.
+    _When used with nonrenewable tokens (e.g. impersonate) the endpoint will simply return the same token with the up-to-date user data associated with it._
+
+
 - Added the triggered rate rimit rule in the error log `details`.
 
 - Other minor improvements (wrapped the backup restore in a transaction as an extra precaution, updated npm deps, regenerated JSVM docs with the recent tygoja changes, etc.).
@@ -502,7 +506,7 @@ There are a lot of changes but to highlight some of the most notable ones:
 - Admins are now system `_superusers` auth records.
 - Builtin rate limiter (_supports tags, wildcards and exact routes matching_).
 - Batch/transactional Web API endpoint.
-- Impersonate Web API endpoint (_it could be also used for generating fixed/non-refreshable superuser tokens, aka. "API keys"_).
+- Enabled Web API endpoint (_it could be also used for generating fixed/nonrenewable superuser tokens, aka. "API keys"_).
 - Support for custom user request activity log attributes.
 - One-Time Password (OTP) auth method (_via email code_).
 - Multi-Factor Authentication (MFA) support (_currently requires any 2 different auth methods to be used_).

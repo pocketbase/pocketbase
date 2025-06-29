@@ -12,18 +12,24 @@ func recordAuthRefresh(e *core.RequestEvent) error {
 		return e.NotFoundError("Missing auth record context.", nil)
 	}
 
-	currentToken := getAuthTokenFromRequest(e)
-	claims, _ := security.ParseUnverifiedJWT(currentToken)
-	if v, ok := claims[core.TokenClaimRefreshable]; !ok || !cast.ToBool(v) {
-		return e.ForbiddenError("The current auth token is not refreshable.", nil)
-	}
-
 	event := new(core.RecordAuthRefreshRequestEvent)
 	event.RequestEvent = e
 	event.Collection = record.Collection()
 	event.Record = record
 
 	return e.App.OnRecordAuthRefreshRequest().Trigger(event, func(e *core.RecordAuthRefreshRequestEvent) error {
-		return RecordAuthResponse(e.RequestEvent, e.Record, "", nil)
+		token := getAuthTokenFromRequest(e.RequestEvent)
+
+		// skip token renewal if the token's payload doesn't explicitly allow it (e.g. impersonate tokens)
+		claims, _ := security.ParseUnverifiedJWT(token) //
+		if v, ok := claims[core.TokenClaimRefreshable]; ok && cast.ToBool(v) {
+			var tokenErr error
+			token, tokenErr = e.Record.NewAuthToken()
+			if tokenErr != nil {
+				return e.InternalServerError("Failed to refresh auth token.", tokenErr)
+			}
+		}
+
+		return recordAuthResponse(e.RequestEvent, e.Record, token, "", nil)
 	})
 }
