@@ -757,10 +757,15 @@ export default class CommonHelper {
 
         for (let item of items) {
             item = typeof item === "string" ? item.trim() : "";
+
             if (CommonHelper.isEmpty(item)) {
                 continue;
             }
-            item = escapeSeparator ? item.replaceAll(trimmedSeparator, "\\" + trimmedSeparator) : item;
+
+            if (escapeSeparator) {
+                item = item.replaceAll(trimmedSeparator, "\\" + trimmedSeparator);
+            }
+
             result.push(item);
         }
 
