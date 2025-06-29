@@ -153,13 +153,6 @@ func Serve(app core.App, config ServeConfig) error {
 		ErrorLog: log.New(&serverErrorLogWriter{app: app}, "", 0),
 	}
 
-	serveEvent := new(core.ServeEvent)
-	serveEvent.App = app
-	serveEvent.Router = pbRouter
-	serveEvent.Server = server
-	serveEvent.CertManager = certManager
-	serveEvent.InstallerFunc = DefaultInstallerFunc
-
 	var listener net.Listener
 
 	// graceful shutdown
@@ -207,6 +200,13 @@ func Serve(app core.App, config ServeConfig) error {
 
 	var baseURL string
 
+	serveEvent := new(core.ServeEvent)
+	serveEvent.App = app
+	serveEvent.Router = pbRouter
+	serveEvent.Server = server
+	serveEvent.CertManager = certManager
+	serveEvent.InstallerFunc = DefaultInstallerFunc
+
 	// trigger the OnServe hook and start the tcp listener
 	serveHookErr := app.OnServe().Trigger(serveEvent, func(e *core.ServeEvent) error {
 		handler, err := e.Router.BuildMux()
@@ -237,9 +237,13 @@ func Serve(app core.App, config ServeConfig) error {
 			}
 		}
 
-		listener, err = net.Listen("tcp", addr)
-		if err != nil {
-			return err
+		if e.Listener == nil {
+			listener, err = net.Listen("tcp", addr)
+			if err != nil {
+				return err
+			}
+		} else {
+			listener = e.Listener
 		}
 
 		if e.InstallerFunc != nil {
@@ -260,7 +264,7 @@ func Serve(app core.App, config ServeConfig) error {
 
 	if listener == nil {
 		//nolint:staticcheck
-		return errors.New("The OnServe finalizer wasn't invoked. Did you forget to call the ServeEvent.Next() method?")
+		return errors.New("The OnServe listener was not initialized. Did you forget to call the ServeEvent.Next() method?")
 	}
 
 	if config.ShowStartBanner {
