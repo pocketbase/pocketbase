@@ -102,6 +102,10 @@ type Config struct {
 	// Note: Avoid using the same directory as the HooksDir when HooksWatch is enabled
 	// to prevent unnecessary app restarts when the types file is initially created.
 	TypesDir string
+
+	// LambdaFunctions specifies the lambda function plugin configuration.
+	// If nil, lambda functions will be disabled.
+	LambdaFunctions *LambdaFunctionPluginConfig
 }
 
 // MustRegister registers the jsvm plugin in the provided app instance
@@ -168,12 +172,18 @@ func Register(app core.App, config Config) error {
 		return fmt.Errorf("registerHooks: %w", err)
 	}
 
+	// Register lambda functions if configured
+	if err := p.registerLambdaFunctions(); err != nil {
+		return fmt.Errorf("registerLambdaFunctions: %w", err)
+	}
+
 	return nil
 }
 
 type plugin struct {
-	app    core.App
-	config Config
+	app                 core.App
+	config              Config
+	lambdaFunctionPlugin  *LambdaFunctionPlugin
 }
 
 // registerMigrations registers the JS migrations loader.
@@ -547,4 +557,28 @@ func filesContent(dirPath string, pattern string) (map[string][]byte, error) {
 	}
 
 	return result, nil
+}
+
+// registerLambdaFunctions registers the lambda function plugin if configured
+func (p *plugin) registerLambdaFunctions() error {
+	if p.config.LambdaFunctions == nil {
+		return nil // lambda functions disabled
+	}
+
+	// Set default configuration if not provided
+	lambdaConfig := *p.config.LambdaFunctions
+	if lambdaConfig.PoolSize == 0 {
+		lambdaConfig.PoolSize = 5
+	}
+
+	// Register the lambda function plugin
+	plugin, err := RegisterLambdaFunctionPlugin(p.app, lambdaConfig)
+	if err != nil {
+		return fmt.Errorf("failed to register lambda function plugin: %w", err)
+	}
+
+	// Store reference for potential future use
+	p.lambdaFunctionPlugin = plugin
+
+	return nil
 }

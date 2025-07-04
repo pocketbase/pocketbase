@@ -52,6 +52,12 @@ const routes = {
         userData: { showAppSidebar: true },
     }),
 
+    "/lambdas": wrap({
+        asyncComponent: () => import("@/components/lambdas/PageLambdaFunctions.svelte"),
+        conditions: [(_) => ApiClient.authStore.isValid],
+        userData: { showAppSidebar: true },
+    }),
+
     "/settings": wrap({
         component: PageApplication,
         conditions: [(_) => ApiClient.authStore.isValid],

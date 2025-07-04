@@ -114,6 +114,16 @@
                     <i class="ri-line-chart-line" />
                 </a>
                 <a
+                    href="/lambdas"
+                    class="menu-item"
+                    aria-label="Lambda Functions"
+                    use:link
+                    use:active={{ path: "/lambdas/?.*", className: "current-route" }}
+                    use:tooltip={{ text: "Lambda Functions", position: "right" }}
+                >
+                    <i class="ri-code-line" />
+                </a>
+                <a
                     href="/settings"
                     class="menu-item"
                     aria-label="Settings"

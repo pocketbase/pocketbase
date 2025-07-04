@@ -187,6 +187,20 @@ type BaseApp struct {
 	onCollectionsImportRequest *hook.Hook[*CollectionsImportRequestEvent]
 
 	onBatchRequest *hook.Hook[*BatchRequestEvent]
+
+	// lambda function hooks
+	onLambdaFunctionValidate           *hook.Hook[*LambdaFunctionEvent]
+	onLambdaFunctionCreate             *hook.Hook[*LambdaFunctionEvent]
+	onLambdaFunctionUpdate             *hook.Hook[*LambdaFunctionEvent]
+	onLambdaFunctionDelete             *hook.Hook[*LambdaFunctionEvent]
+	onLambdaFunctionAfterCreateSuccess *hook.Hook[*LambdaFunctionEvent]
+	onLambdaFunctionAfterUpdateSuccess *hook.Hook[*LambdaFunctionEvent]
+	onLambdaFunctionAfterDeleteSuccess *hook.Hook[*LambdaFunctionEvent]
+	onLambdaFunctionAfterCreateError   *hook.Hook[*LambdaFunctionErrorEvent]
+	onLambdaFunctionAfterUpdateError   *hook.Hook[*LambdaFunctionErrorEvent]
+	onLambdaFunctionAfterDeleteError   *hook.Hook[*LambdaFunctionErrorEvent]
+	onLambdaFunctionBeforeExecute      *hook.Hook[*LambdaFunctionExecuteEvent]
+	onLambdaFunctionAfterExecute       *hook.Hook[*LambdaFunctionExecuteEvent]
 }
 
 // NewBaseApp creates and returns a new BaseApp instance
@@ -335,6 +349,20 @@ func (app *BaseApp) initHooks() {
 	app.onCollectionsImportRequest = &hook.Hook[*CollectionsImportRequestEvent]{}
 
 	app.onBatchRequest = &hook.Hook[*BatchRequestEvent]{}
+
+	// lambda function hooks
+	app.onLambdaFunctionValidate = &hook.Hook[*LambdaFunctionEvent]{}
+	app.onLambdaFunctionCreate = &hook.Hook[*LambdaFunctionEvent]{}
+	app.onLambdaFunctionUpdate = &hook.Hook[*LambdaFunctionEvent]{}
+	app.onLambdaFunctionDelete = &hook.Hook[*LambdaFunctionEvent]{}
+	app.onLambdaFunctionAfterCreateSuccess = &hook.Hook[*LambdaFunctionEvent]{}
+	app.onLambdaFunctionAfterUpdateSuccess = &hook.Hook[*LambdaFunctionEvent]{}
+	app.onLambdaFunctionAfterDeleteSuccess = &hook.Hook[*LambdaFunctionEvent]{}
+	app.onLambdaFunctionAfterCreateError = &hook.Hook[*LambdaFunctionErrorEvent]{}
+	app.onLambdaFunctionAfterUpdateError = &hook.Hook[*LambdaFunctionErrorEvent]{}
+	app.onLambdaFunctionAfterDeleteError = &hook.Hook[*LambdaFunctionErrorEvent]{}
+	app.onLambdaFunctionBeforeExecute = &hook.Hook[*LambdaFunctionExecuteEvent]{}
+	app.onLambdaFunctionAfterExecute = &hook.Hook[*LambdaFunctionExecuteEvent]{}
 }
 
 // UnsafeWithoutHooks returns a shallow copy of the current app WITHOUT any registered hooks.
@@ -1380,6 +1408,7 @@ func (app *BaseApp) registerBaseHooks() {
 	app.registerMFAHooks()
 	app.registerOTPHooks()
 	app.registerAuthOriginHooks()
+	app.registerLambdaFunctionHooks()
 }
 
 // getLoggerMinLevel returns the logger min level based on the

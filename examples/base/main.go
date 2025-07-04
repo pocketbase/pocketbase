@@ -91,6 +91,9 @@ func main() {
 		HooksDir:      hooksDir,
 		HooksWatch:    hooksWatch,
 		HooksPoolSize: hooksPool,
+		LambdaFunctions: &jsvm.LambdaFunctionPluginConfig{
+			PoolSize: 5,
+		},
 	})
 
 	// migrate command (with js templates)

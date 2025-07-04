@@ -549,6 +549,36 @@ type App interface {
 	DeleteAllAuthOriginsByRecord(authRecord *Record) error
 
 	// ---------------------------------------------------------------
+	// Lambda Functions
+	// ---------------------------------------------------------------
+
+	// LambdaFunctionQuery returns a new LambdaFunction select query.
+	LambdaFunctionQuery() *dbx.SelectQuery
+
+	// FindLambdaFunctionById finds the first LambdaFunction by its id.
+	FindLambdaFunctionById(id string) (*LambdaFunction, error)
+
+	// FindLambdaFunctionByName finds the first LambdaFunction by its name (case insensitive).
+	FindLambdaFunctionByName(name string) (*LambdaFunction, error)
+
+	// FindAllLambdaFunctions finds all LambdaFunction models.
+	FindAllLambdaFunctions() ([]*LambdaFunction, error)
+
+	// FindEnabledLambdaFunctions finds all enabled LambdaFunction models.
+	FindEnabledLambdaFunctions() ([]*LambdaFunction, error)
+
+	// FindLambdaFunctionsByTriggerType finds all LambdaFunction models with a specific trigger type.
+	FindLambdaFunctionsByTriggerType(triggerType string) ([]*LambdaFunction, error)
+
+	// FindLambdaFunctionsByCollection finds all LambdaFunction models that have database triggers for a specific collection.
+	FindLambdaFunctionsByCollection(collectionName string) ([]*LambdaFunction, error)
+
+	// IsLambdaFunctionNameUnique checks if a lambda function name is unique.
+	// For new functions, oldNames should be empty.
+	// For existing functions, oldNames should contain the current name.
+	IsLambdaFunctionNameUnique(name string, oldNames ...string) bool
+
+	// ---------------------------------------------------------------
 
 	// RecordQuery returns a new Record select query from a collection model, id or name.
 	//
@@ -1535,4 +1565,44 @@ type App interface {
 	//
 	// Could be used to additionally validate or modify the submitted batch requests.
 	OnBatchRequest() *hook.Hook[*BatchRequestEvent]
+
+	// ---------------------------------------------------------------
+	// Lambda Function event hooks
+	// ---------------------------------------------------------------
+
+	// OnLambdaFunctionValidate is an LambdaFunction proxy model hook of [OnModelValidate].
+	OnLambdaFunctionValidate() *hook.Hook[*LambdaFunctionEvent]
+
+	// OnLambdaFunctionCreate is an LambdaFunction proxy model hook of [OnModelCreate].
+	OnLambdaFunctionCreate() *hook.Hook[*LambdaFunctionEvent]
+
+	// OnLambdaFunctionUpdate is an LambdaFunction proxy model hook of [OnModelUpdate].
+	OnLambdaFunctionUpdate() *hook.Hook[*LambdaFunctionEvent]
+
+	// OnLambdaFunctionDelete is an LambdaFunction proxy model hook of [OnModelDelete].
+	OnLambdaFunctionDelete() *hook.Hook[*LambdaFunctionEvent]
+
+	// OnLambdaFunctionAfterCreateSuccess is an LambdaFunction proxy model hook of [OnModelAfterCreateSuccess].
+	OnLambdaFunctionAfterCreateSuccess() *hook.Hook[*LambdaFunctionEvent]
+
+	// OnLambdaFunctionAfterUpdateSuccess is an LambdaFunction proxy model hook of [OnModelAfterUpdateSuccess].
+	OnLambdaFunctionAfterUpdateSuccess() *hook.Hook[*LambdaFunctionEvent]
+
+	// OnLambdaFunctionAfterDeleteSuccess is an LambdaFunction proxy model hook of [OnModelAfterDeleteSuccess].
+	OnLambdaFunctionAfterDeleteSuccess() *hook.Hook[*LambdaFunctionEvent]
+
+	// OnLambdaFunctionAfterCreateError is an LambdaFunction proxy model hook of [OnModelAfterCreateError].
+	OnLambdaFunctionAfterCreateError() *hook.Hook[*LambdaFunctionErrorEvent]
+
+	// OnLambdaFunctionAfterUpdateError is an LambdaFunction proxy model hook of [OnModelAfterUpdateError].
+	OnLambdaFunctionAfterUpdateError() *hook.Hook[*LambdaFunctionErrorEvent]
+
+	// OnLambdaFunctionAfterDeleteError is an LambdaFunction proxy model hook of [OnModelAfterDeleteError].
+	OnLambdaFunctionAfterDeleteError() *hook.Hook[*LambdaFunctionErrorEvent]
+
+	// OnLambdaFunctionBeforeExecute hook is triggered before each lambda function execution.
+	OnLambdaFunctionBeforeExecute() *hook.Hook[*LambdaFunctionExecuteEvent]
+
+	// OnLambdaFunctionAfterExecute hook is triggered after each lambda function execution.
+	OnLambdaFunctionAfterExecute() *hook.Hook[*LambdaFunctionExecuteEvent]
 }
