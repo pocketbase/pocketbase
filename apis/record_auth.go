@@ -28,42 +28,42 @@ func bindRecordAuthApi(app core.App, rg *router.RouterGroup[*core.RequestEvent])
 		RequireSameCollectionContextAuth(""),
 	)
 
-	sub.POST("/auth-with-password", recordAuthWithPassword).Bind(
-		collectionPathRateLimit("", "authWithPassword", "auth"),
-	)
+	// sub.POST("/auth-with-password", recordAuthWithPassword).Bind(
+	// 	collectionPathRateLimit("", "authWithPassword", "auth"),
+	// )
 
 	sub.POST("/auth-with-oauth2", recordAuthWithOAuth2).Bind(
 		collectionPathRateLimit("", "authWithOAuth2", "auth"),
 	)
 
-	sub.POST("/request-otp", recordRequestOTP).Bind(
-		collectionPathRateLimit("", "requestOTP"),
-	)
-	sub.POST("/auth-with-otp", recordAuthWithOTP).Bind(
-		collectionPathRateLimit("", "authWithOTP", "auth"),
-	)
+	// sub.POST("/request-otp", recordRequestOTP).Bind(
+	// 	collectionPathRateLimit("", "requestOTP"),
+	// )
+	// sub.POST("/auth-with-otp", recordAuthWithOTP).Bind(
+	// 	collectionPathRateLimit("", "authWithOTP", "auth"),
+	// )
 
-	sub.POST("/request-password-reset", recordRequestPasswordReset).Bind(
-		collectionPathRateLimit("", "requestPasswordReset"),
-	)
-	sub.POST("/confirm-password-reset", recordConfirmPasswordReset).Bind(
-		collectionPathRateLimit("", "confirmPasswordReset"),
-	)
+	// sub.POST("/request-password-reset", recordRequestPasswordReset).Bind(
+	// 	collectionPathRateLimit("", "requestPasswordReset"),
+	// )
+	// sub.POST("/confirm-password-reset", recordConfirmPasswordReset).Bind(
+	// 	collectionPathRateLimit("", "confirmPasswordReset"),
+	// )
 
-	sub.POST("/request-verification", recordRequestVerification).Bind(
-		collectionPathRateLimit("", "requestVerification"),
-	)
-	sub.POST("/confirm-verification", recordConfirmVerification).Bind(
-		collectionPathRateLimit("", "confirmVerification"),
-	)
+	// sub.POST("/request-verification", recordRequestVerification).Bind(
+	// 	collectionPathRateLimit("", "requestVerification"),
+	// )
+	// sub.POST("/confirm-verification", recordConfirmVerification).Bind(
+	// 	collectionPathRateLimit("", "confirmVerification"),
+	// )
 
-	sub.POST("/request-email-change", recordRequestEmailChange).Bind(
-		collectionPathRateLimit("", "requestEmailChange"),
-		RequireSameCollectionContextAuth(""),
-	)
-	sub.POST("/confirm-email-change", recordConfirmEmailChange).Bind(
-		collectionPathRateLimit("", "confirmEmailChange"),
-	)
+	// sub.POST("/request-email-change", recordRequestEmailChange).Bind(
+	// 	collectionPathRateLimit("", "requestEmailChange"),
+	// 	RequireSameCollectionContextAuth(""),
+	// )
+	// sub.POST("/confirm-email-change", recordConfirmEmailChange).Bind(
+	// 	collectionPathRateLimit("", "confirmEmailChange"),
+	// )
 
 	sub.POST("/impersonate/{id}", recordAuthImpersonate).Bind(RequireSuperuserAuth())
 }
