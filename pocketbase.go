@@ -167,7 +167,10 @@ func (pb *PocketBase) Start() error {
 	pb.RootCmd.AddCommand(cmd.NewSuperuserCommand(pb))
 	pb.RootCmd.AddCommand(cmd.NewServeCommand(pb, !pb.hideStartBanner))
 
-	return pb.Execute()
+	err := pb.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
 // Execute initializes the application (if not already) and executes
