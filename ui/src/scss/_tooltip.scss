@@ -1,3 +1,5 @@
+@use "mixins";
+
 .app-tooltip {
     position: fixed;
     z-index: 999999;
@@ -23,7 +25,7 @@
     backface-visibility: hidden;
     white-space: pre-line;
     word-break: break-word;
-    @include hide();
+    @include mixins.hide();
 
     // styles
     &.code {
@@ -39,6 +41,6 @@
     // states
     &.active {
         transform: scale(1);
-        @include show();
+        @include mixins.show();
     }
 }

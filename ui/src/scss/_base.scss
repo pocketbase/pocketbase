@@ -1,4 +1,7 @@
-@include scrollbar();
+@use "mixins";
+@use "vars";
+
+@include mixins.scrollbar();
 
 :focus-visible {
     outline-color: var(--primaryColor);
@@ -276,7 +279,7 @@ a {
 }
 
 // color helpers
-@each $name, $color in $colorsMap {
+@each $name, $color in vars.$colorsMap {
     .txt-#{$name} {
         color: $color !important;
     }
@@ -365,7 +368,7 @@ a,
     background: var(--baseColor);
     border-radius: var(--lgRadius);
     padding: calc(var(--baseSpacing) - 5px) var(--baseSpacing);
-    @include shadowize();
+    @include mixins.shadowize();
 }
 
 .sub-panel {
@@ -377,7 +380,7 @@ a,
 }
 
 .shadowize {
-    @include shadowize();
+    @include mixins.shadowize();
 }
 
 .clearfix {
@@ -424,7 +427,7 @@ a,
 }
 
 // flex gap helpers
-@each $sizeAlias, $size in $sizesMap {
+@each $sizeAlias, $size in vars.$sizesMap {
     .flex-gap-#{$sizeAlias} {
         gap: $size !important;
     }
@@ -437,14 +440,14 @@ a,
 }
 
 // spacing helpers
-@each $sizeAlias, $size in $sizesMap {
+@each $sizeAlias, $size in vars.$sizesMap {
     .m-#{$sizeAlias} { margin: $size !important; }
     .p-#{$sizeAlias} { padding: $size !important; }
 }
-@each $sideAlias, $side in $sidesMap {
+@each $sideAlias, $side in vars.$sidesMap {
     .m-#{$sideAlias}-auto { margin-#{$side}: auto !important; }
     .p-#{$sideAlias}-auto { padding-#{$side}: auto !important; }
-    @each $sizeAlias, $size in $sizesMap {
+    @each $sizeAlias, $size in vars.$sizesMap {
         .m-#{$sideAlias}-#{$sizeAlias} { margin-#{$side}: $size !important; }
         .p-#{$sideAlias}-#{$sizeAlias} { padding-#{$side}: $size !important; }
     }
@@ -453,7 +456,7 @@ a,
     $spacing: 5 * $i;
     .m-#{$spacing} { margin: $spacing * 1px !important; }
     .p-#{$spacing} { padding: $spacing * 1px !important; }
-    @each $sideAlias, $side in $sidesMap {
+    @each $sideAlias, $side in vars.$sidesMap {
         .m-#{$sideAlias}-#{$spacing} { margin-#{$side}: $spacing * 1px !important; }
         .p-#{$sideAlias}-#{$spacing} { padding-#{$side}: $spacing * 1px !important; }
     }
@@ -493,7 +496,7 @@ a,
     color: var(--txtPrimaryColor);
     outline-offset: -2px;
     outline: 2px solid transparent;
-    @include shadowize();
+    @include mixins.shadowize();
     i {
         font-size: inherit;
     }
@@ -528,7 +531,7 @@ a,
     }
 
     // styles
-    @each $name, $color in $colorsMap {
+    @each $name, $color in vars.$colorsMap {
         &.thumb-#{$name} {
             outline-color: $color;
         }
@@ -545,7 +548,7 @@ a.thumb:not(.thumb-active) {
     &:focus-visible,
     &:active {
         opacity: 0.8;
-        @include shadowize(0px 2px 4px 1px var(--shadowColor));
+        @include mixins.shadowize(0px 2px 4px 1px var(--shadowColor));
     }
     &:active {
         transition-duration: var(--activeAnimationSpeed);
@@ -716,7 +719,7 @@ a.thumb:not(.thumb-active) {
     }
 
     // styles
-    @each $name, $color in $colorsMap {
+    @each $name, $color in vars.$colorsMap {
         &.loader-#{$name} {
             color: $color;
         }

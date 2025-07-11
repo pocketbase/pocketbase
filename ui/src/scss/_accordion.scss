@@ -1,3 +1,6 @@
+@use "mixins";
+@use "_base";
+
 .accordion {
     $handlerSize: 25px;
     $spacing: 20px;
@@ -90,7 +93,7 @@
         }
     }
     &.active {
-        @include shadowize();
+        @include mixins.shadowize();
         .accordion-header {
             position: relative;
             top: 0;

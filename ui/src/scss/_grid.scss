@@ -1,3 +1,4 @@
+@use "sass:string";
 @use "sass:math";
 
 $gridSizesMap: (
@@ -42,7 +43,7 @@ $gridSizesMap: (
 
 @mixin colsWidthGenerator($prefix: '') {
     // normalize prefix
-    @if $prefix != '' and str-index($prefix, '-') != 1 {
+    @if $prefix != '' and string.index($prefix, '-') != 1 {
         $prefix: '-#{$prefix}';
     }
 

@@ -1,3 +1,6 @@
+@use "mixins";
+@use "_base";
+
 .overlay-panel {
     $padding: var(--baseSpacing);
     $compactPadding: calc(#{$padding} - 7px);
@@ -13,7 +16,7 @@
     width: 580px;
     max-width: 100%;
     word-wrap: break-word;
-    @include shadowize();
+    @include mixins.shadowize();
 
     .overlay-panel-section {
         position: relative;

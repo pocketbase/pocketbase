@@ -1,3 +1,6 @@
+@use "mixins";
+@use "_base";
+
 @use "sass:math";
 
 button {
@@ -410,7 +413,7 @@ button {
     }
     &:focus,
     &:focus-within {
-        @include scrollbar(
+        @include mixins.scrollbar(
             $thumbColor: var(--baseAlt3Color),
             $thumbActiveColor: var(--baseAlt4Color)
         );
@@ -808,7 +811,7 @@ select {
                     transition: left var(--activeAnimationSpeed),
                                 transform var(--activeAnimationSpeed),
                                 background var(--activeAnimationSpeed);
-                    @include shadowize();
+                    @include mixins.shadowize();
                 }
                 &:active:before {
                     transform: none;
@@ -1073,7 +1076,7 @@ select {
         border-top-left-radius: 0;
         border-top-right-radius: 0;
         margin-top: -2px;
-        @include shadowize(inset 0 0 0 2px var(--baseAlt2Color));
+        @include mixins.shadowize(inset 0 0 0 2px var(--baseAlt2Color));
         .input-group:focus-within {
             box-shadow: none;
         }
@@ -1135,7 +1138,7 @@ select {
         &.multiple .selected-container {
             .option {
                 width: 100%;
-                @include shadowize();
+                @include mixins.shadowize();
             }
         }
     }
@@ -1254,7 +1257,7 @@ select {
             padding-right: 0;
         }
         .cm-tooltip-autocomplete {
-            @include shadowize();
+            @include mixins.shadowize();
             border-radius: var(--baseRadius);
             background: var(--baseColor);
             border: 0;
@@ -1361,7 +1364,7 @@ body {
         font-size: var(--smFontSize);
     }
     .tox .tox-toolbar-overlord {
-        @include shadowize();
+        @include mixins.shadowize();
     }
     .tox .tox-listboxfield .tox-listbox--select,
     .tox .tox-textarea, .tox .tox-textfield,

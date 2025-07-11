@@ -1,4 +1,4 @@
-import { defineConfig }           from 'vite';
+import { defineConfig } from 'vite';
 import { svelte, vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 // see https://vitejs.dev/config
@@ -28,4 +28,11 @@ export default defineConfig({
             '@': __dirname + '/src',
         }
     },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                api: "modern-compiler"
+            }
+        }
+    }
 })

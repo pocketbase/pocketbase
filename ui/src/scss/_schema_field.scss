@@ -1,3 +1,6 @@
+@use "mixins";
+@use "_base";
+
 .schema-field-header {
     $minHeight: 42px;
     position: relative;
@@ -44,7 +47,7 @@
     .drag-handle {
         padding: 0 5px;
         transform: translateX(5px);
-        @include hide();
+        @include mixins.hide();
     }
     .form-field-single-multiple-select {
         width: 135px;
@@ -122,7 +125,7 @@
     &:not(.deleted):hover {
         .drag-handle {
             transform: translateX(0px);
-            @include show();
+            @include mixins.show();
         }
     }
     .dragover &,
@@ -130,7 +133,7 @@
         opacity: 0.5;
     }
     &.expanded {
-        @include shadowize();
+        @include mixins.shadowize();
         border-color: var(--baseAlt2Color);
         .draggable:first-child & {
             margin-top: 0;

@@ -1,49 +1,49 @@
-@import 'fonts';
+@use 'fonts';
 
-@import 'vars';
+@use 'vars';
 
-@import 'mixins';
+@use 'mixins';
 
-@import 'reset';
+@use 'reset';
 
-@import 'icons';
+@use 'icons';
 
-@import 'animations';
+@use 'animations';
 
-@import 'base';
+@use 'base';
 
-@import 'grid';
+@use 'grid';
 
-@import 'tooltip';
+@use 'tooltip';
 
-@import 'dropdown';
+@use 'dropdown';
 
-@import 'overlay_panel';
+@use 'overlay_panel';
 
-@import 'alert';
+@use 'alert';
 
-@import 'form';
+@use 'form';
 
-@import 'layout';
+@use 'layout';
 
-@import 'tabs';
+@use 'tabs';
 
-@import 'accordion';
+@use 'accordion';
 
-@import 'table';
+@use 'table';
 
-@import 'searchbar';
+@use 'searchbar';
 
-@import 'bulkbar';
+@use 'bulkbar';
 
-@import 'flatpickr';
+@use 'flatpickr';
 
-@import 'docs_panel';
+@use 'docs_panel';
 
-@import 'schema_field';
+@use 'schema_field';
 
-@import 'file_picker';
+@use 'file_picker';
 
-@import 'collections_export';
+@use 'collections_export';
 
-@import 'rate_limit';
+@use 'rate_limit';

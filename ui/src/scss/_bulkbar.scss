@@ -1,3 +1,5 @@
+@use "mixins";
+
 .bulkbar {
     position: absolute;
     bottom: var(--baseSpacing);
@@ -14,6 +16,6 @@
     border-radius: var(--btnHeight);
     background: var(--baseColor);
     border: 1px solid var(--baseAlt2Color);
-    @include shadowize();
+    @include mixins.shadowize();
     transform: translateX(-50%);
 }

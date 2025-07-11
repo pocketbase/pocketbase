@@ -1,3 +1,6 @@
+@use "mixins";
+@use "_base";
+
 .alert {
     $gap: 15px;
     $padding: 15px;
@@ -110,7 +113,7 @@
         pointer-events: auto;
         width: var(--smWrapperWidth);
         margin: var(--baseSpacing) auto;
-        @include shadowize();
+        @include mixins.shadowize();
     }
 }
 

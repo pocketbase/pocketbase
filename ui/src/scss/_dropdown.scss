@@ -1,3 +1,5 @@
+@use "mixins";
+
 .dropdown {
     $spacing: 5px;
     position: absolute;
@@ -19,7 +21,7 @@
     background: var(--baseColor);
     border-radius: var(--baseRadius);
     border: 1px solid var(--baseAlt2Color);
-    @include shadowize();
+    @include mixins.shadowize();
     hr {
         margin: $spacing 0;
     }
