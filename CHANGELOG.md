@@ -7,6 +7,12 @@
 
 - Added optional `ServeEvent.Listener` field to initialize a custom network listener (e.g. `unix`) instead of the default `tcp` ([#3233](https://github.com/pocketbase/pocketbase/discussions/3233)).
 
+- Added `toBytes` JSVM helper ([#6935](https://github.com/pocketbase/pocketbase/issues/6935)).
+
+- Fixed request data unmarshalization for the `DynamicModel` array/object fields ([#7022](https://github.com/pocketbase/pocketbase/discussions/7022)).
+
+- Fixed Dashboard page title `-` escaping ([#6982](https://github.com/pocketbase/pocketbase/issues/6982)).
+
 - Other minor improvements (wrapped the backup restore in a transaction as an extra precaution, updated npm deps, regenerated JSVM docs with the recent tygoja changes, etc.).
 
 
