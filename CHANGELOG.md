@@ -13,7 +13,7 @@
 
 - Fixed Dashboard page title `-` escaping ([#6982](https://github.com/pocketbase/pocketbase/issues/6982)).
 
-- Other minor improvements (wrapped the backup restore in a transaction as an extra precaution, updated npm deps, regenerated JSVM docs with the recent tygoja changes, etc.).
+- Other minor improvements (updated first superuser console text when running with `go run`, clarified trusted IP proxy header label, wrapped the backup restore in a transaction as an extra precaution, updated npm deps, etc.).
 
 
 ## v0.28.4

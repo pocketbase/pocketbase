@@ -144,7 +144,7 @@ func (app *BaseApp) SyncRecordTableSchema(newCollection *Collection, oldCollecti
 
 	// run optimize per the SQLite recommendations
 	// (https://www.sqlite.org/pragma.html#pragma_optimize)
-	_, optimizeErr := app.ConcurrentDB().NewQuery("PRAGMA optimize").Execute()
+	_, optimizeErr := app.NonconcurrentDB().NewQuery("PRAGMA optimize").Execute()
 	if optimizeErr != nil {
 		app.Logger().Warn("Failed to run PRAGMA optimize after record table sync", slog.String("error", optimizeErr.Error()))
 	}
