@@ -118,7 +118,7 @@
     <div class="grid grid-sm">
         <div class="col-lg-9">
             <Field class="form-field m-b-0" name="trustedProxy.headers" let:uniqueId>
-                <label for={uniqueId}>Trusted proxy headers</label>
+                <label for={uniqueId}>Trusted IP proxy headers</label>
                 <MultipleValueInput
                     id={uniqueId}
                     placeholder="Leave empty to disable"
