@@ -71,7 +71,7 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 
 		// archive pb_data in a temp directory, exluding the "backups" and the temp dirs
 		//
-		// Run in transaction to temporary block other writes (transactions uses the NonconcurrentDB connection).
+		// run in transaction to temporary block other writes (transactions uses the NonconcurrentDB connection)
 		// ---
 		tempPath := filepath.Join(localTempDir, "pb_backup_"+security.PseudorandomString(6))
 		createErr := e.App.RunInTransaction(func(txApp App) error {
