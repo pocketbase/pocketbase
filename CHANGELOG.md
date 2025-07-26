@@ -1,3 +1,12 @@
+## v0.29.1 (WIP)
+
+- Updated the X/Twitter provider to return the `confirmed_email` field and to use the `x.com` domain ([#7035](https://github.com/pocketbase/pocketbase/issues/7035)).
+
+- Updated `modernc.org/sqlite` to 1.38.1 (SQLite 3.50.3).
+
+- Fixed example List API response ([#7049](https://github.com/pocketbase/pocketbase/pull/7049); thanks @williamtguerra).
+
+
 ## v0.29.0
 
 - Enabled calling the `/auth-refresh` endpoint with nonrenewable tokens.
