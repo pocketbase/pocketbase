@@ -90,7 +90,7 @@ export default [
     },
     {
         key: "twitter",
-        title: "Twitter",
+        title: "X/Twitter",
         logo: "twitter.svg",
     },
     {
