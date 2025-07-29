@@ -109,6 +109,11 @@ export default [
         logo:  "notion.svg",
     },
     {
+        key:   "box",
+        title: "Box",
+        logo:  "box.svg",
+    },
+    {
         key:   "monday",
         title: "monday.com",
         logo:  "monday.svg",
