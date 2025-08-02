@@ -259,7 +259,9 @@ declare function arrayOf<T>(model: T): Array<T>;
 /**
  * DynamicModel creates a new dynamic model with fields from the provided data shape.
  *
- * Note that in order to use 0 as double/float initialization number you have to use negative zero (` + "`-0`" + `).
+ * Caveats:
+ * - In order to use 0 as double/float initialization number you have to negate it (` + "`-0`" + `).
+ * - You need to use lowerCamelCase when accessing the model fields (e.g. ` + "`model.roles`" + ` and not ` + "`model.Roles`" + `).
  *
  * Example:
  *
@@ -269,7 +271,7 @@ declare function arrayOf<T>(model: T): Array<T>;
  *     age:        0,  // int64
  *     totalSpent: -0, // float64
  *     active:     false,
- *     roles:      [],
+ *     Roles:      [], // maps to "Roles" in the DB/JSON but the prop would be accessible via "model.roles"
  *     meta:       {}
  * })
  * ` + "```" + `
