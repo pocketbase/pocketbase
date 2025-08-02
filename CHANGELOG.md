@@ -2,6 +2,8 @@
 
 - Updated the X/Twitter provider to return the `confirmed_email` field and to use the `x.com` domain ([#7035](https://github.com/pocketbase/pocketbase/issues/7035)).
 
+- Added Box.com OAuth2 provider ([#7056](https://github.com/pocketbase/pocketbase/pull/7056); thanks @blakepatteson).
+
 - Updated `modernc.org/sqlite` to 1.38.1 (SQLite 3.50.3).
 
 - Fixed example List API response ([#7049](https://github.com/pocketbase/pocketbase/pull/7049); thanks @williamtguerra).
