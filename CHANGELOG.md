@@ -4,7 +4,7 @@
 
 - Added Box.com OAuth2 provider ([#7056](https://github.com/pocketbase/pocketbase/pull/7056); thanks @blakepatteson).
 
-- Updated `modernc.org/sqlite` to 1.38.1 (SQLite 3.50.3).
+- Updated `modernc.org/sqlite` to 1.38.2 (SQLite 3.50.3).
 
 - Fixed example List API response ([#7049](https://github.com/pocketbase/pocketbase/pull/7049); thanks @williamtguerra).
 
