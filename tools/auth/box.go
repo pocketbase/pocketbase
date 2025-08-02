@@ -62,7 +62,7 @@ func (p *Box) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	if extracted.Status != "active" {
-		return nil, fmt.Errorf("Box user account is not active (status : %q)", extracted.Status)
+		return nil, fmt.Errorf("Box user account is not active (status: %q)", extracted.Status)
 	}
 
 	user := &AuthUser{
