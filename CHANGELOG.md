@@ -1,4 +1,4 @@
-## v0.29.1 (WIP)
+## v0.29.1
 
 - Updated the X/Twitter provider to return the `confirmed_email` field and to use the `x.com` domain ([#7035](https://github.com/pocketbase/pocketbase/issues/7035)).
 
