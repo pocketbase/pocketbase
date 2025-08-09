@@ -1,3 +1,8 @@
+## v0.29.2
+
+- Bumped min Go GitHub action version to 1.23.12 since it comes with some [minor fixes for the runtime and `database/sql` package](https://github.com/golang/go/issues?q=milestone%3AGo1.23.12+label%3ACherryPickApproved).
+
+
 ## v0.29.1
 
 - Updated the X/Twitter provider to return the `confirmed_email` field and to use the `x.com` domain ([#7035](https://github.com/pocketbase/pocketbase/issues/7035)).
