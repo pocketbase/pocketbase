@@ -1,3 +1,8 @@
+## v0.22.35
+
+- (_Backported from v0.29.2_) Bumped min Go GitHub action version to 1.23.12 since it comes with some minor fixes for the [runtime and `database/sql` package](https://github.com/golang/go/issues?q=milestone%3AGo1.23.12+label%3ACherryPickApproved).
+
+
 ## v0.22.34
 
 - (_Backported from v0.26.6_) Allow OIDC `email_verified` to be int or boolean string since some OIDC providers like AWS Cognito has non-standard userinfo response ([#6657](https://github.com/pocketbase/pocketbase/pull/6657)).
