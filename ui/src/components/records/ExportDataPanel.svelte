@@ -34,6 +34,12 @@
     
     $: totalSelectedFields = Object.keys(selectedFields).length;
     $: areAllSelected = allFields.length && totalSelectedFields === allFields.length;
+    
+    // Check if there are records available for export
+    $: hasRecordsToExport = previewRecords?.totalItems > 0;
+    
+    // Determine if export should be disabled
+    $: isExportDisabled = isExporting || totalSelectedFields === 0 || !hasRecordsToExport;
 
     // Update preview data when scope or filter changes (but not when fields change)
     $: if (collection?.id && (recordScope || filter !== undefined)) {
@@ -159,7 +165,7 @@
     }
 
     async function exportData() {
-        if (isExporting || !collection?.id || totalSelectedFields === 0) {
+        if (isExportDisabled || !collection?.id) {
             return;
         }
 
@@ -279,7 +285,7 @@
         <button 
             type="button" 
             class="btn btn-expanded" 
-            disabled={isExporting || totalSelectedFields === 0}
+            disabled={isExportDisabled}
             on:click={exportData}
         >
             {#if isExporting}
