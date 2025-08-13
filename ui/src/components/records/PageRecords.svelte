@@ -13,6 +13,7 @@
     import RecordUpsertPanel from "@/components/records/RecordUpsertPanel.svelte";
     import RecordsCount from "@/components/records/RecordsCount.svelte";
     import RecordsList from "@/components/records/RecordsList.svelte";
+    import ExportDataPanel from "@/components/records/ExportDataPanel.svelte";
     import { hideControls, pageTitle } from "@/stores/app";
     import {
         activeCollection,
@@ -30,6 +31,7 @@
     let recordPreviewPanel;
     let recordsList;
     let recordsCount;
+    let exportDataPanel;
     let filter = initialQueryParams.get("filter") || "";
     let sort = initialQueryParams.get("sort") || "-@rowid";
     let selectedCollectionIdOrName = initialQueryParams.get("collection") || $activeCollection?.id;
@@ -196,6 +198,16 @@
                         recordsCount?.reload();
                     }}
                 />
+
+                <button
+                    type="button"
+                    aria-label="Export data"
+                    class="btn btn-transparent btn-circle"
+                    use:tooltip={{ text: "Export data", position: "right" }}
+                    on:click={() => exportDataPanel?.show()}
+                >
+                    <i class="ri-download-2-line" />
+                </button>
             </div>
 
             <div class="btns-group">
@@ -302,3 +314,5 @@
         updateQueryParams({ recordId: null });
     }}
 />
+
+<ExportDataPanel bind:this={exportDataPanel} collection={$activeCollection} {filter} />
