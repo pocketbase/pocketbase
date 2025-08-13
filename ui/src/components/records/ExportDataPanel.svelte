@@ -295,8 +295,8 @@
                 <span class="loader loader-sm"></span>
                 <span class="txt">Exporting...</span>
             {:else}
-                <i class="ri-download-2-line" />
-                <span class="txt">Export Data</span>
+                <i class="ri-download-line" />
+                <span class="txt">Download as JSON</span>
             {/if}
         </button>
     </svelte:fragment>

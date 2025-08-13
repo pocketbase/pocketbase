@@ -206,7 +206,7 @@
                     use:tooltip={{ text: "Export data", position: "right" }}
                     on:click={() => exportDataPanel?.show()}
                 >
-                    <i class="ri-download-2-line" />
+                    <i class="ri-download-line" />
                 </button>
             </div>
 
