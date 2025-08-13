@@ -24,12 +24,15 @@
     $: fields = collection?.fields || [];
     
     // Create combined list of all available fields (system + collection fields)
-    // Filter out any collection fields that might have the same names as system fields
+    // Filter out hidden fields and any collection fields that might have the same names as system fields
     $: allFields = [
         'id', 
         'created', 
         'updated', 
-        ...fields.map(f => f.name).filter(name => !['id', 'created', 'updated'].includes(name))
+        ...fields
+            .filter(f => !f.hidden) // Exclude hidden fields
+            .map(f => f.name)
+            .filter(name => !['id', 'created', 'updated'].includes(name))
     ];
     
     $: totalSelectedFields = Object.keys(selectedFields).length;
