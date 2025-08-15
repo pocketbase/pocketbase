@@ -676,8 +676,8 @@ type RateLimitRule struct {
 
 	// Audience specifies the auth group the rule should apply for:
 	//   - ""      - both guests and authenticated users (default)
-	//   - "guest" - only for guests
-	//   - "auth"  - only for authenticated users
+	//   - "@guest" - only for guests
+	//   - "@auth"  - only for authenticated users
 	Audience string `form:"audience" json:"audience"`
 
 	// Duration specifies the interval (in seconds) per which to reset
