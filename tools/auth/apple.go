@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -23,7 +22,7 @@ const NameApple string = "apple"
 
 // Apple allows authentication via Apple OAuth2.
 //
-// [OIDC differences]: https://bitbucket.org/openid/connect/src/master/How-Sign-in-with-Apple-differs-from-OpenID-Connect.md
+// OIDC differences: https://bitbucket.org/openid/connect/src/master/How-Sign-in-with-Apple-differs-from-OpenID-Connect.md.
 type Apple struct {
 	BaseProvider
 
@@ -47,7 +46,7 @@ func NewAppleProvider() *Apple {
 
 // FetchAuthUser returns an AuthUser instance based on the provided token.
 //
-// API reference: https://developer.apple.com/documentation/sign_in_with_apple/tokenresponse.
+// API reference: https://developer.apple.com/documentation/signinwithapple/authenticating-users-with-sign-in-with-apple#Retrieve-the-users-information-from-Apple-ID-servers.
 func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	data, err := p.FetchRawUserInfo(token)
 	if err != nil {
@@ -60,16 +59,13 @@ func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	extracted := struct {
-		Id            string `json:"sub"`
-		Name          string `json:"name"`
-		Email         string `json:"email"`
 		EmailVerified any    `json:"email_verified"` // could be string or bool
-		User          struct {
-			Name struct {
-				FirstName string `json:"firstName"`
-				LastName  string `json:"lastName"`
-			} `json:"name"`
-		} `json:"user"`
+		Email         string `json:"email"`
+		Id            string `json:"sub"`
+
+		// not returned at the time of writing and it is usually
+		// manually populated in apis.recordAuthWithOAuth2
+		Name string `json:"name"`
 	}{}
 	if err := json.Unmarshal(data, &extracted); err != nil {
 		return nil, err
@@ -89,35 +85,19 @@ func (p *Apple) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 		user.Email = extracted.Email
 	}
 
-	if user.Name == "" {
-		user.Name = strings.TrimSpace(extracted.User.Name.FirstName + " " + extracted.User.Name.LastName)
-	}
-
 	return user, nil
 }
 
 // FetchRawUserInfo implements Provider.FetchRawUserInfo interface.
 //
-// Apple doesn't have a UserInfo endpoint and claims about users
-// are instead included in the "id_token" (https://openid.net/specs/openid-connect-core-1_0.html#id_tokenExample)
+// Note that Apple doesn't have a UserInfo endpoint and claims about
+// the users are included in the id_token (without the name - see #7090).
 func (p *Apple) FetchRawUserInfo(token *oauth2.Token) ([]byte, error) {
 	idToken, _ := token.Extra("id_token").(string)
 
 	claims, err := p.parseAndVerifyIdToken(idToken)
 	if err != nil {
 		return nil, err
-	}
-
-	// Apple only returns the user object the first time the user authorizes the app
-	// https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/configuring_your_webpage_for_sign_in_with_apple#3331292
-	rawUser, _ := token.Extra("user").(string)
-	if rawUser != "" {
-		user := map[string]any{}
-		err = json.Unmarshal([]byte(rawUser), &user)
-		if err != nil {
-			return nil, err
-		}
-		claims["user"] = user
 	}
 
 	return json.Marshal(claims)

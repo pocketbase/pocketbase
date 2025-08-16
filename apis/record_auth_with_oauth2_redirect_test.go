@@ -3,6 +3,7 @@ package apis_test
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -263,6 +264,41 @@ func TestRecordAuthWithOAuth2Redirect(t *testing.T) {
 
 				if clientStubs[7]["c3"].HasSubscription("@oauth2") {
 					t.Fatalf("Expected oauth2 subscription to be removed")
+				}
+			},
+		},
+		{
+			Name:   "(POST) Apple user's name json",
+			Method: http.MethodPost,
+			URL:    "/api/oauth2-redirect",
+			Body: strings.NewReader(url.Values{
+				"code":  []string{"123"},
+				"state": []string{clientStubs[8]["c3"].Id()},
+				"user": []string{
+					`{"name":{"firstName":"aaa","lastName":"` + strings.Repeat("b", 200) + `"}}`,
+				},
+			}.Encode()),
+			Headers: map[string]string{
+				"content-type": "application/x-www-form-urlencoded",
+			},
+			BeforeTestFunc: beforeTestFunc(clientStubs[8], map[string][]string{
+				"c3": {`"state":"` + clientStubs[8]["c3"].Id(), `"code":"123"`},
+			}),
+			ExpectedStatus: http.StatusSeeOther,
+			ExpectedEvents: map[string]int{"*": 0},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				app.Store().Get("cancelFunc").(context.CancelFunc)()
+
+				checkSuccessRedirect(t, app, res)
+
+				if clientStubs[8]["c3"].HasSubscription("@oauth2") {
+					t.Fatalf("Expected oauth2 subscription to be removed")
+				}
+
+				storedName, _ := app.Store().Get("@redirect_name_123").(string)
+				expectedName := "aaa " + strings.Repeat("b", 146)
+				if storedName != expectedName {
+					t.Fatalf("Expected stored name\n%q\ngot\n%q", expectedName, storedName)
 				}
 			},
 		},
