@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/fatih/color"
@@ -773,7 +772,7 @@ func (app *BaseApp) Restart() error {
 			}
 		}()
 
-		return syscall.Exec(execPath, os.Args, os.Environ())
+		return exec(execPath, os.Args, os.Environ())
 	})
 }
 
