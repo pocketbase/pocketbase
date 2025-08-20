@@ -99,6 +99,8 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 		if ok {
 			e.App.Store().Remove(nameKey)
 			authUser.Name = name
+		} else {
+			e.App.Logger().Debug("Missing or already removed Apple user's name")
 		}
 	}
 

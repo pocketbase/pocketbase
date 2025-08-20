@@ -2,6 +2,7 @@ package apis
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -58,7 +59,8 @@ func oauth2SubscriptionRedirect(e *core.RequestEvent) error {
 	}
 	defer client.Unsubscribe(oauth2SubscriptionTopic)
 
-	// see https://github.com/pocketbase/pocketbase/issues/7090
+	// temporary store the Apple user's name so that it can be later retrieved with the authWithOAuth2 call
+	// (see https://github.com/pocketbase/pocketbase/issues/7090)
 	if data.AppleUser != "" && data.Error == "" && data.Code != "" {
 		nameErr := parseAndStoreAppleRedirectName(
 			e.App,
@@ -108,6 +110,11 @@ func parseAndStoreAppleRedirectName(app core.App, nameKey string, serializedName
 		return nil
 	}
 
+	// just in case to prevent storing large strings in memory
+	if len(nameKey) > 1000 {
+		return errors.New("nameKey is too large")
+	}
+
 	// https://developer.apple.com/documentation/signinwithapple/incorporating-sign-in-with-apple-into-other-platforms#Handle-the-response
 	extracted := struct {
 		Name struct {
@@ -133,7 +140,7 @@ func parseAndStoreAppleRedirectName(app core.App, nameKey string, serializedName
 
 	// store (and remove)
 	app.Store().Set(nameKey, fullName)
-	time.AfterFunc(90*time.Second, func() {
+	time.AfterFunc(1*time.Minute, func() {
 		app.Store().Remove(nameKey)
 	})
 
