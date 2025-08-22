@@ -772,7 +772,7 @@ func (app *BaseApp) Restart() error {
 			}
 		}()
 
-		return exec(execPath, os.Args, os.Environ())
+		return execve(execPath, os.Args, os.Environ())
 	})
 }
 
