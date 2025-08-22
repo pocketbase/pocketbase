@@ -1,13 +1,15 @@
 ## v0.29.3
 
-- Regenerated JSVM types to include methods from structs with single generic parameter.
-
 - Fixed `RateLimitRule.Audience` code comment ([#7098](https://github.com/pocketbase/pocketbase/pull/7098); thanks @iustin05).
 
 - Try to forward Apple OAuth2 POST redirect user's name so that it can be returned (and eventually assigned) with the success response of the all-in-one auth call ([#7090](https://github.com/pocketbase/pocketbase/issues/7090)).
 
 - Mock `syscall.Exec` when building for WASM ([#7116](https://github.com/pocketbase/pocketbase/pull/7116)).
-    _Note that WASM is not officially supported PocketBase build target and should be used only for experiments._
+    _Note that WASM is not officially supported PocketBase build target and many things may not work as expected._
+
+- Regenerated JSVM types to include methods from structs with single generic parameter.
+
+- Updated Go dependencies.
 
 
 ## v0.29.2
