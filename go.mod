@@ -14,7 +14,7 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/pocketbase/dbx v1.11.0
-	github.com/pocketbase/tygoja v0.0.0-20250307184827-c2e6a77a9016
+	github.com/pocketbase/tygoja v0.0.0-20250812183945-97ffe055281f
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/crypto v0.41.0
