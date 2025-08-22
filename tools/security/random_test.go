@@ -1,6 +1,7 @@
 package security_test
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -36,29 +37,31 @@ func testRandomStringWithAlphabet(t *testing.T, randomFunc func(n int, alphabet 
 	}
 
 	for i, s := range scenarios {
-		generated := make([]string, 0, 1000)
-		length := 10
+		t.Run(fmt.Sprintf("%d_%q", i, s.alphabet), func(t *testing.T) {
+			generated := make([]string, 0, 1000)
+			length := 10
 
-		for j := 0; j < 1000; j++ {
-			result := randomFunc(length, s.alphabet)
+			for j := 0; j < 1000; j++ {
+				result := randomFunc(length, s.alphabet)
 
-			if len(result) != length {
-				t.Fatalf("(%d:%d) Expected the length of the string to be %d, got %d", i, j, length, len(result))
-			}
-
-			reg := regexp.MustCompile(s.expectPattern)
-			if match := reg.MatchString(result); !match {
-				t.Fatalf("(%d:%d) The generated string should have only %s characters, got %q", i, j, s.expectPattern, result)
-			}
-
-			for _, str := range generated {
-				if str == result {
-					t.Fatalf("(%d:%d) Repeating random string - found %q in %q", i, j, result, generated)
+				if len(result) != length {
+					t.Fatalf("(%d) Expected the length of the string to be %d, got %d", j, length, len(result))
 				}
-			}
 
-			generated = append(generated, result)
-		}
+				reg := regexp.MustCompile(s.expectPattern)
+				if match := reg.MatchString(result); !match {
+					t.Fatalf("(%d) The generated string should have only %s characters, got %q", j, s.expectPattern, result)
+				}
+
+				for _, str := range generated {
+					if str == result {
+						t.Fatalf("(%d) Repeating random string - found %q in %q", j, result, generated)
+					}
+				}
+
+				generated = append(generated, result)
+			}
+		})
 	}
 }
 
