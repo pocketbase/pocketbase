@@ -61,8 +61,6 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pocketbase/dbx v1.11.0 h1:LpZezioMfT3K4tLrqA55wWFw1EtH1pM4tzSVa7kgszU=
 github.com/pocketbase/dbx v1.11.0/go.mod h1:xXRCIAKTHMgUCyCKZm55pUOdvFziJjQfXaWKhu2vhMs=
-github.com/pocketbase/tygoja v0.0.0-20250307184827-c2e6a77a9016 h1:fEqeJAKvkHckSFFXzzVn6jb3z+zw3Y+f8bgSuV7OzjQ=
-github.com/pocketbase/tygoja v0.0.0-20250307184827-c2e6a77a9016/go.mod h1:hKJWPGFqavk3cdTa47Qvs8g37lnfI57OYdVVbIqW5aE=
 github.com/pocketbase/tygoja v0.0.0-20250812183945-97ffe055281f h1:ahrn66FNJYsFkO0EOTStYs+jdBKBop/anp9hoQSzZjI=
 github.com/pocketbase/tygoja v0.0.0-20250812183945-97ffe055281f/go.mod h1:hKJWPGFqavk3cdTa47Qvs8g37lnfI57OYdVVbIqW5aE=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94icq4NjY3clb7Lk8O1qJ8BdBEF8z0ibU0rE=
