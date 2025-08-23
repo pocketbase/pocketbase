@@ -184,6 +184,11 @@ func (p *plugin) registerMigrations() error {
 		return err
 	}
 
+	absHooksDir, err := filepath.Abs(p.config.HooksDir)
+	if err != nil {
+		return err
+	}
+
 	registry := new(require.Registry) // this can be shared by multiple runtimes
 	templateRegistry := template.NewRegistry()
 
@@ -206,6 +211,7 @@ func (p *plugin) registerMigrations() error {
 		mailsBinds(vm)
 
 		vm.Set("$template", templateRegistry)
+		vm.Set("__hooks", absHooksDir)
 
 		vm.Set("migrate", func(up, down func(txApp core.App) error) {
 			core.AppMigrations.Register(up, down, file)

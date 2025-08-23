@@ -113,8 +113,6 @@ declare function routerUse(...middlewares: Array<string|((e: core.RequestEvent) 
 /**
  * Global helper variable that contains the absolute path to the app pb_hooks directory.
  *
- * _Note that this variable is available only in pb_hooks context._
- *
  * @group PocketBase
  */
 declare var __hooks: string

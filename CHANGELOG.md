@@ -7,7 +7,7 @@
 - Mocked `syscall.Exec` when building for WASM ([#7116](https://github.com/pocketbase/pocketbase/pull/7116); thanks @joas8211).
     _Note that WASM is not officially supported PocketBase build target and many things may not work as expected._
 
-- Registered missing `$filesystem`, `$mails` and `$template` bindings in the JSVM migrations ([#7125](https://github.com/pocketbase/pocketbase/issues/7125)).
+- Registered missing `$filesystem`, `$mails`, `$template` and `__hooks` bindings in the JSVM migrations ([#7125](https://github.com/pocketbase/pocketbase/issues/7125)).
 
 - Regenerated JSVM types to include methods from structs with single generic parameter.
 
