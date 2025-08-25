@@ -28,7 +28,7 @@ func NewLarkProvider() *Lark {
 		ctx:         context.Background(),
 		displayName: "Lark",
 		pkce:        true,
-		scopes:      []string{"contact:user.employee_id:readonly", "contact:user.email:readonly"},
+		scopes:      []string{"offline_access", "contact:user.employee_id:readonly", "contact:user.email:readonly"},
 		// Lark has two domains with the same API: feishu.cn and larksuite.com.
 		// The former is used in China and the latter is used in the other regions.
 		// We choose feishu.cn as a default, matching the behavier of Lark's official SDK.
