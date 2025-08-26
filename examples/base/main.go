@@ -8,12 +8,10 @@ import (
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
-	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/ghupdate"
 	"github.com/pocketbase/pocketbase/plugins/jsvm"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
-	"github.com/pocketbase/pocketbase/tools/hook"
 )
 
 func main() {
@@ -105,15 +103,37 @@ func main() {
 
 	// static route to serves files from the provided public dir
 	// (if publicDir exists and the route path is not already defined)
-	app.OnServe().Bind(&hook.Handler[*core.ServeEvent]{
-		Func: func(e *core.ServeEvent) error {
-			if !e.Router.HasRoute(http.MethodGet, "/{path...}") {
-				e.Router.GET("/{path...}", apis.Static(os.DirFS(publicDir), indexFallback))
-			}
+	// app.OnServe().Bind(&hook.Handler[*core.ServeEvent]{
+	// 	Func: func(e *core.ServeEvent) error {
+	// 		if !e.Router.HasRoute(http.MethodGet, "/{path...}") {
+	// 			e.Router.GET("/{path...}", apis.Static(os.DirFS(publicDir), indexFallback))
+	// 		}
 
-			return e.Next()
-		},
-		Priority: 999, // execute as latest as possible to allow users to provide their own route
+	// 		return e.Next()
+	// 	},
+	// 	Priority: 999, // execute as latest as possible to allow users to provide their own route
+	// })
+
+	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
+		// register "GET /hello/{name}" route (allowed for everyone)
+		se.Router.GET("/hello/{name}", func(e *core.RequestEvent) error {
+			name := e.Request.PathValue("name")
+
+			return e.String(http.StatusOK, "Hello "+name)
+		})
+
+		// register "POST /api/myapp/settings" route (allowed only for authenticated users)
+		se.Router.POST("/quote", func(e *core.RequestEvent) error {
+
+			isGuest := e.Auth == nil
+			if isGuest {
+				return e.JSON(http.StatusUnauthorized, map[string]bool{"success": false})
+			} else {
+				return e.JSON(http.StatusOK, e.Auth)
+			}
+		}) // .Bind(apis.RequireAuth())
+
+		return se.Next()
 	})
 
 	if err := app.Start(); err != nil {
