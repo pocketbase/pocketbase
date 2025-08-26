@@ -16,7 +16,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 )
 
-var recordProxyType = reflect.TypeOf((*RecordProxy)(nil)).Elem()
+var recordProxyType = reflect.TypeFor[RecordProxy]()
 
 // RecordQuery returns a new Record select query from a collection model, id or name.
 //

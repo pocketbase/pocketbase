@@ -1251,7 +1251,7 @@ func hooksDeclarations() string {
 	var result strings.Builder
 
 	excluded := []string{"OnServe"}
-	appType := reflect.TypeOf(struct{ core.App }{})
+	appType := reflect.TypeFor[struct{ core.App }]()
 	totalMethods := appType.NumMethod()
 
 	for i := 0; i < totalMethods; i++ {

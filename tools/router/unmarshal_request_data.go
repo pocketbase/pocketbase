@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-var textUnmarshalerType = reflect.TypeOf((*encoding.TextUnmarshaler)(nil)).Elem()
+var textUnmarshalerType = reflect.TypeFor[encoding.TextUnmarshaler]()
 
 // JSONPayloadKey is the key for the special UnmarshalRequestData case
 // used for reading serialized json payload without normalization.
