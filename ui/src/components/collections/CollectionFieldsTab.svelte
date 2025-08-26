@@ -42,8 +42,8 @@
     };
 
     $: if (!collection.id && oldCollectionType != collection.type) {
+        onTypeCanged();
         oldCollectionType = collection.type;
-        onTypeCange();
     }
 
     $: if (typeof collection.fields === "undefined") {
@@ -115,7 +115,7 @@
     }
 
     function hasFieldWithName(name) {
-        return !!collection?.fields?.find((field) => field.name === name);
+        return !!collection?.fields?.find((field) => field.name.toLowerCase() === name.toLowerCase());
     }
 
     function getSchemaFieldIndex(field) {
@@ -138,14 +138,17 @@
         );
     }
 
-    function onTypeCange() {
+    function onTypeCanged() {
+        const newScaffold = structuredClone($scaffolds[collection.type]);
+
+        // merge fields
+        // -----------------------------------------------------------
         const oldFields = collection.fields || [];
         const nonSystemFields = oldFields.filter((f) => !f.system);
 
-        const blank = structuredClone($scaffolds[collection.type]);
-        collection.fields = blank.fields;
+        collection.fields = newScaffold.fields;
 
-        for (let oldField of oldFields) {
+        for (const oldField of oldFields) {
             if (!oldField.system) {
                 continue;
             }
@@ -159,9 +162,42 @@
             collection.fields[idx] = Object.assign(collection.fields[idx], oldField);
         }
 
-        for (let field of nonSystemFields) {
+        for (const field of nonSystemFields) {
             collection.fields.push(field);
         }
+
+        // merge indexes
+        // -----------------------------------------------------------
+        collection.indexes = collection.indexes || [];
+
+        if (collection.indexes.length) {
+            const oldScaffoldIndexes = $scaffolds[oldCollectionType]?.indexes || [];
+
+            indexesLoop: for (let i = collection.indexes.length - 1; i >= 0; i--) {
+                const parsed = CommonHelper.parseIndex(collection.indexes[i]);
+                const parsedName = parsed.indexName.toLowerCase();
+
+                // remove old scaffold indexes
+                for (const idx of oldScaffoldIndexes) {
+                    const oldScaffoldName = CommonHelper.parseIndex(idx).indexName.toLowerCase();
+                    if (parsedName == oldScaffoldName) {
+                        collection.indexes.splice(i, 1);
+                        continue indexesLoop;
+                    }
+                }
+
+                // remove indexes to nonexisting fields
+                for (const column of parsed.columns) {
+                    if (!hasFieldWithName(column.name)) {
+                        collection.indexes.splice(i, 1);
+                        continue indexesLoop;
+                    }
+                }
+            }
+        }
+
+        // merge new scaffold indexes
+        CommonHelper.mergeUnique(collection.indexes, newScaffold.indexes);
     }
 
     function replaceIdentityFields(oldName, newName) {

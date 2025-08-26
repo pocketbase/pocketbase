@@ -71,6 +71,10 @@ export function removeCollection(collection) {
     });
 }
 
+export async function refreshScaffolds() {
+    scaffolds.set(await ApiClient.collections.getScaffolds());
+}
+
 // load all collections
 export async function loadCollections(activeIdOrName = null) {
     isCollectionsLoading.set(true);
