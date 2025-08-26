@@ -145,6 +145,12 @@
         const blank = structuredClone($scaffolds[collection.type]);
         collection.fields = blank.fields;
 
+        // Merge existing indexes with the new type's scaffold defaults.
+        // Using a Set is a clean way to combine the arrays and prevent duplicates.
+        const oldIndexes = collection.indexes || [];
+        const newIndexes = blank.indexes || [];
+        collection.indexes = [...new Set([...oldIndexes, ...newIndexes])];
+
         for (let oldField of oldFields) {
             if (!oldField.system) {
                 continue;
