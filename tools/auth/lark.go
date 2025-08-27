@@ -28,7 +28,6 @@ func NewLarkProvider() *Lark {
 		ctx:         context.Background(),
 		displayName: "Lark",
 		pkce:        true,
-		scopes:      []string{"offline_access", "contact:user.employee_id:readonly"},
 		// Lark has two domains with the same API: feishu.cn and larksuite.com.
 		// The former is used in China and the latter is used in the other regions.
 		// We choose feishu.cn as a default, matching the behavier of Lark's official SDK.
@@ -56,9 +55,8 @@ func (p *Lark) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 
 	extracted := struct {
 		Data struct {
-			UserId    string `json:"user_id"`
+			UnionId   string `json:"union_id"`
 			Name      string `json:"name"`
-			Email     string `json:"email"`
 			AvatarURL string `json:"avatar_url"`
 		} `json:"data"`
 	}{}
@@ -67,7 +65,7 @@ func (p *Lark) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 	}
 
 	user := &AuthUser{
-		Id:           extracted.Data.UserId,
+		Id:           extracted.Data.UnionId,
 		Name:         extracted.Data.Name,
 		AvatarURL:    extracted.Data.AvatarURL,
 		RawUser:      rawUser,
