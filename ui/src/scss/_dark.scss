@@ -1,0 +1,395 @@
+// Dark mode color overrides
+
+:root[data-theme="dark"] {
+    --bodyColor: #1a1a24;
+    --baseColor: #2a2a34;
+    --baseAlt1Color: #3a3a44;
+    --baseAlt2Color: #4a4a54;
+    --baseAlt3Color: #5a5a64;
+    --baseAlt4Color: #6a6a74;
+    --txtPrimaryColor: #f8f9fa;
+    --txtHintColor: #a0a6ac;
+    --txtDisabledColor: #707070;
+    --primaryColor: #5499e8;
+
+    // Status colors for dark mode
+    --infoColor: #5499e8;
+    --infoAltColor: #1a3a5c;
+    --successColor: #32ad84;
+    --successAltColor: #0f3d2a;
+    --dangerColor: #e34562;
+    --dangerAltColor: #4a1a28;
+    --warningColor: #ff944d;
+    --warningAltColor: #5a3018;
+
+    --overlayColor: rgba(0, 0, 0, 0.6);
+    --tooltipColor: rgba(42, 42, 52, 0.95);
+    --shadowColor: rgba(0, 0, 0, 0.3);
+}
+
+// Dark mode button overrides
+:root[data-theme="dark"] {
+    .btn-secondary,
+    .btn-transparent,
+    .btn-outline {
+        &:before {
+            background: var(--baseAlt2Color);
+        }
+        &:hover,
+        &:focus-visible {
+            &:before {
+                background: var(--baseAlt3Color);
+            }
+        }
+        &:active,
+        &.active {
+            &:before {
+                background: var(--baseAlt4Color);
+            }
+        }
+    }
+
+    .btn-outline {
+        background: var(--baseColor);
+        border-color: var(--baseAlt3Color);
+        &:hover,
+        &:focus-visible {
+            border-color: var(--baseAlt4Color);
+        }
+    }
+
+    // Dark mode syntax highlighting for API preview
+    .prism-light {
+        code[class*="language-"],
+        pre[class*="language-"] {
+            color: #e6e6e6;
+            background: var(--baseAlt1Color);
+        }
+
+        :not(pre) > code[class*="language-"],
+        pre[class*="language-"] {
+            background: var(--baseAlt1Color);
+        }
+
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #7c7c7c;
+        }
+
+        .token.punctuation {
+            color: #c9c9c9;
+        }
+
+        .token.tag,
+        .token.tag .token.punctuation,
+        .token.delimiter.important,
+        .token.selector .parent {
+            color: #4dd0e1;
+        }
+
+        .token.attr-name,
+        .token.boolean,
+        .token.boolean.important,
+        .token.number,
+        .token.constant,
+        .token.selector .token.attribute {
+            color: #ffb74d;
+        }
+
+        .token.class-name,
+        .token.key,
+        .token.parameter,
+        .token.property,
+        .token.property-access,
+        .token.variable {
+            color: #81c784;
+        }
+
+        .token.attr-value,
+        .token.inserted,
+        .token.color,
+        .token.selector .token.value,
+        .token.string,
+        .token.string .token.url-link {
+            color: #a5d6a7;
+        }
+
+        .token.builtin,
+        .token.keyword-array,
+        .token.package,
+        .token.regex {
+            color: #ce93d8;
+        }
+
+        .token.function,
+        .token.selector .token.class,
+        .token.selector .token.id {
+            color: #f48fb1;
+        }
+
+        .token.atrule .token.rule,
+        .token.combinator,
+        .token.keyword,
+        .token.operator,
+        .token.pseudo-class,
+        .token.pseudo-element,
+        .token.selector,
+        .token.unit {
+            color: #ffcc02;
+        }
+
+        .token.deleted,
+        .token.important {
+            color: #f48fb1;
+        }
+
+        .token.keyword-this,
+        .token.this {
+            color: #81c784;
+        }
+    }
+
+    // Dark mode rule field improvements
+    .rule-field {
+        .txt-hint {
+            color: #c0c6cc !important;
+        }
+
+        .lock-toggle {
+            background: rgba(90, 90, 100, 0.15) !important;
+            color: var(--txtPrimaryColor);
+
+            &:hover,
+            &:focus-visible {
+                background: rgba(90, 90, 100, 0.25) !important;
+            }
+        }
+
+        .unlock-overlay {
+            border-color: var(--baseAlt2Color);
+            background: rgba(42, 42, 52, 0.85);
+
+            &:hover,
+            &:focus-visible {
+                border-color: var(--baseAlt3Color);
+            }
+        }
+    }
+
+    // Dark mode index modal improvements
+    .overlay-panel {
+        .label.link-primary {
+            color: var(--primaryColor) !important;
+
+            &.label-info {
+                background: var(--infoAltColor);
+                color: var(--txtPrimaryColor) !important;
+            }
+
+            &:hover,
+            &:focus-visible {
+                opacity: 0.9;
+            }
+        }
+
+        .txt-hint {
+            color: #b0b6bc;
+        }
+    }
+
+    // Code editor dark mode improvements
+    .code-editor {
+        background: var(--baseAlt1Color);
+
+        .cm-editor {
+            color: var(--txtPrimaryColor);
+
+            .cm-content {
+                color: var(--txtPrimaryColor);
+            }
+
+            .cm-placeholder {
+                color: var(--txtHintColor) !important;
+            }
+
+            .cm-focused {
+                outline: none;
+            }
+        }
+    }
+
+    // TinyMCE dark mode styling
+    .tinymce-wrapper {
+        .form-field label ~ & {
+            &:before {
+                background: var(--baseAlt1Color) !important;
+            }
+        }
+    }
+
+    // TinyMCE global dark mode overrides
+    .tox {
+        &.tox-tinymce {
+            background: var(--baseAlt1Color) !important;
+            border: 1px solid var(--baseAlt2Color) !important;
+        }
+
+        .tox-toolbar,
+        .tox-toolbar__primary,
+        .tox-toolbar__overflow {
+            background: var(--baseAlt2Color) !important;
+            border-bottom: 1px solid var(--baseAlt3Color) !important;
+        }
+
+        .tox-edit-area {
+            background: var(--baseAlt1Color) !important;
+        }
+
+        .tox-edit-area iframe {
+            background: var(--baseAlt1Color) !important;
+        }
+
+        .tox-tbtn {
+            color: var(--txtPrimaryColor) !important;
+
+            &:hover,
+            &:focus {
+                background: var(--baseAlt3Color) !important;
+                color: var(--txtPrimaryColor) !important;
+            }
+
+            &.tox-tbtn--enabled {
+                background: var(--baseAlt3Color) !important;
+                color: var(--txtPrimaryColor) !important;
+            }
+        }
+
+        .tox-button,
+        .tox-button--secondary {
+            background: var(--baseAlt2Color) !important;
+            color: var(--txtPrimaryColor) !important;
+            border: 1px solid var(--baseAlt3Color) !important;
+
+            &:hover,
+            &:focus {
+                background: var(--baseAlt3Color) !important;
+            }
+        }
+
+        .tox-dialog {
+            background: var(--baseColor) !important;
+            border: 1px solid var(--baseAlt2Color) !important;
+        }
+
+        .tox-dialog__header {
+            background: var(--baseAlt1Color) !important;
+            border-bottom: 1px solid var(--baseAlt2Color) !important;
+            color: var(--txtPrimaryColor) !important;
+        }
+
+        .tox-dialog__body {
+            background: var(--baseColor) !important;
+            color: var(--txtPrimaryColor) !important;
+        }
+
+        .tox-dialog__footer {
+            background: var(--baseAlt1Color) !important;
+            border-top: 1px solid var(--baseAlt2Color) !important;
+        }
+
+        .tox-textfield,
+        .tox-textarea,
+        .tox-listbox--select {
+            background: var(--baseAlt1Color) !important;
+            color: var(--txtPrimaryColor) !important;
+            border: 1px solid var(--baseAlt3Color) !important;
+
+            &:focus {
+                border-color: var(--primaryColor) !important;
+            }
+        }
+
+        .tox-menu,
+        .tox-collection {
+            background: var(--baseColor) !important;
+            border: 1px solid var(--baseAlt2Color) !important;
+        }
+
+        .tox-collection__item {
+            color: var(--txtPrimaryColor) !important;
+
+            &:hover,
+            &.tox-collection__item--active {
+                background: var(--baseAlt1Color) !important;
+            }
+        }
+
+        .tox-statusbar {
+            background: var(--baseAlt2Color) !important;
+            border-top: 1px solid var(--baseAlt3Color) !important;
+            color: var(--txtHintColor) !important;
+        }
+
+        // Content area styling (iframe content)
+        .tox-edit-area__iframe {
+            background: var(--baseAlt1Color) !important;
+        }
+    }
+
+    // TinyMCE iframe content styling (injected into iframe)
+    body.tox-content-body {
+        background: var(--baseAlt1Color) !important;
+        color: var(--txtPrimaryColor) !important;
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: var(--txtPrimaryColor) !important;
+        }
+
+        p,
+        div,
+        span {
+            color: var(--txtPrimaryColor) !important;
+        }
+
+        a {
+            color: var(--primaryColor) !important;
+        }
+
+        blockquote {
+            border-left-color: var(--baseAlt3Color) !important;
+            background: var(--baseAlt2Color) !important;
+        }
+
+        code {
+            background: var(--baseAlt2Color) !important;
+            color: var(--txtPrimaryColor) !important;
+        }
+
+        pre {
+            background: var(--baseAlt2Color) !important;
+            color: var(--txtPrimaryColor) !important;
+            border: 1px solid var(--baseAlt3Color) !important;
+        }
+
+        table {
+            border-color: var(--baseAlt3Color) !important;
+
+            th,
+            td {
+                border-color: var(--baseAlt3Color) !important;
+                color: var(--txtPrimaryColor) !important;
+            }
+
+            th {
+                background: var(--baseAlt2Color) !important;
+            }
+        }
+    }
+}

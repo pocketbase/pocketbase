@@ -3,11 +3,13 @@
 
     import tooltip from "@/actions/tooltip";
     import Confirmation from "@/components/base/Confirmation.svelte";
+    import DarkModeToggle from "@/components/base/DarkModeToggle.svelte";
     import TinyMCE from "@/components/base/TinyMCE.svelte";
     import Toasts from "@/components/base/Toasts.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
     import { appName, hideControls, pageTitle } from "@/stores/app";
     import { resetConfirmation } from "@/stores/confirmation";
+    import { darkMode } from "@/stores/darkMode";
     import { setErrors } from "@/stores/errors";
     import { superuser } from "@/stores/superuser";
     import ApiClient from "@/utils/ApiClient";
@@ -24,6 +26,11 @@
 
     $: if ($superuser?.id) {
         loadSettings();
+    }
+
+    // Initialize theme on app load
+    $: if (typeof window !== "undefined") {
+        document.documentElement.setAttribute("data-theme", $darkMode ? "dark" : "light");
     }
 
     function handleRouteLoading(e) {
@@ -125,6 +132,10 @@
                 </a>
             </nav>
 
+            <div class="sidebar-footer">
+                <DarkModeToggle />
+            </div>
+
             <div
                 tabindex="0"
                 role="button"
@@ -147,6 +158,10 @@
                         <i class="ri-shield-user-line" aria-hidden="true" />
                         <span class="txt">Manage superusers</span>
                     </a>
+                    <button type="button" class="dropdown-item closable" role="menuitem" on:click={darkMode.toggle}>
+                        <i class="{$darkMode ? 'ri-sun-line' : 'ri-moon-line'}" aria-hidden="true" />
+                        <span class="txt">{$darkMode ? 'Light mode' : 'Dark mode'}</span>
+                    </button>
                     <button type="button" class="dropdown-item closable" role="menuitem" on:click={logout}>
                         <i class="ri-logout-circle-line" aria-hidden="true" />
                         <span class="txt">Logout</span>
@@ -181,5 +196,12 @@
         padding: 10px;
         max-width: 200px;
         color: var(--txtHintColor);
+    }
+
+    .sidebar-footer {
+        margin-top: auto;
+        padding: 10px;
+        display: flex;
+        justify-content: center;
     }
 </style>
