@@ -1,4 +1,5 @@
 import AppleOptions from "@/components/collections/providers/AppleOptions.svelte";
+import LarkOptions from "@/components/collections/providers/LarkOptions.svelte";
 import MicrosoftOptions from "@/components/collections/providers/MicrosoftOptions.svelte";
 import OIDCOptions from "@/components/collections/providers/OIDCOptions.svelte";
 import SelfHostedOptions from "@/components/collections/providers/SelfHostedOptions.svelte";
@@ -112,6 +113,12 @@ export default [
         key:   "monday",
         title: "monday.com",
         logo:  "monday.svg",
+    },
+    {
+        key: "lark",
+        title: "Lark",
+        logo: "lark.svg",
+        optionsComponent: LarkOptions,
     },
     {
         key:   "box",
