@@ -61,11 +61,6 @@ func (p *Wechat) BuildAuthURL(state string, opts ...oauth2.AuthCodeOption) strin
 	opts = append(opts, oauth2.SetAuthURLParam("appid", p.clientId))
 	opts = append(opts, oauth2.SetAuthURLParam("lang", "cn")) // Optional, default is "cn"
 
-	// Replace the underlying http client to fix WeChat's weird OAuth2 API issue.
-	if p.Context().Value(oauth2.HTTPClient) == nil {
-		p.SetContext(context.WithValue(p.Context(), oauth2.HTTPClient, NewJsonHttpClient()))
-	}
-
 	return p.BaseProvider.BuildAuthURL(state, opts...)
 }
 
@@ -139,7 +134,8 @@ func (p *Wechat) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 // FetchToken implements Provider.FetchToken() interface method.
 //
 // Other than the traditinal "code" and "grant_type" parameters, Wechat requires
-// the "appid" and "secret" parameters to be passed in the request body.
+// the "appid" and "secret" parameters to be passed in the url params.
+// Note: Standard OAuth 2 use `client_id` and `client_secret` in the url params.
 // For example:
 //
 //	GET https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code
@@ -148,6 +144,11 @@ func (p *Wechat) FetchAuthUser(token *oauth2.Token) (*AuthUser, error) {
 func (p *Wechat) FetchToken(code string, opts ...oauth2.AuthCodeOption) (*oauth2.Token, error) {
 	opts = append(opts, oauth2.SetAuthURLParam("appid", p.clientId))
 	opts = append(opts, oauth2.SetAuthURLParam("secret", p.clientSecret))
+
+	// Replace the underlying http client to fix WeChat's weird OAuth2 API issue.
+	if p.Context().Value(oauth2.HTTPClient) == nil {
+		p.SetContext(context.WithValue(p.Context(), oauth2.HTTPClient, NewJsonHttpClient()))
+	}
 
 	return p.BaseProvider.FetchToken(code, opts...)
 }
