@@ -15,7 +15,7 @@
     export let filter = "";
     export let presets = "";
     export let zoom = {};
-    export let sort = "-@rowid";
+    export let sort = "-id";
 
     let logs = [];
     let currentPage = 1;
