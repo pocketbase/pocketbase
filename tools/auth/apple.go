@@ -20,6 +20,10 @@ func init() {
 	}
 	EquivalentProviders[NameAppleNative] = []string{NameAppleWeb}
 	EquivalentProviders[NameAppleWeb] = []string{NameAppleNative}
+	// Keep old "apple" provider for backward compatibility
+	Providers["apple"] = func() Provider {
+		return NewAppleProvider(NameAppleWeb)
+	}
 }
 
 var _ Provider = (*Apple)(nil)
