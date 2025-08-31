@@ -100,7 +100,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/auth-with-oauth2",
 			Body: strings.NewReader(`{
-				"provider": "apple"
+				"provider": "apple_web"
 			}`),
 			ExpectedStatus: 400,
 			ExpectedContent: []string{
@@ -1648,7 +1648,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 			Method: http.MethodPost,
 			URL:    "/api/collections/users/auth-with-oauth2",
 			Body: strings.NewReader(`{
-				"provider": "apple",
+				"provider": "apple_web",
 				"code":"test_code",
 				"redirectURL": "https://example.com"
 			}`),
