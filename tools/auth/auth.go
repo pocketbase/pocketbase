@@ -166,10 +166,14 @@ func (au AuthUser) MarshalJSON() ([]byte, error) {
 }
 
 // GetEquivalentProviders returns a list of equivalent provider names for a given provider (including self).
-func GetEquivalentProviders(name string) []string {
-	providers := []string{name}
+// Returns []interface{} because dbx.HashExp requires it for `in` syntax.
+func GetEquivalentProviders(name string) []interface{} {
+	var providers []interface{}
+	providers = append(providers, name)
 	if equivalents, ok := EquivalentProviders[name]; ok {
-		providers = append(providers, equivalents...)
+		for _, equiv := range equivalents {
+			providers = append(providers, equiv)
+		}
 	}
 	return providers
 }
