@@ -57,11 +57,8 @@ jobs:
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
       # If the artificats differs, a "dirty error" is thrown - https://goreleaser.com/errors/dirty/
-      #
-      # For fondoger/pocketbase:
-      # Ignore dist folder because it is always in dirty state (Since we never touches /ui folder)
       - name: Build Admin dashboard UI
-        run: npm --prefix=./ui ci && npm --prefix=./ui run build && git ls-files ui/dist -z | xargs -0 git update-index --assume-unchanged
+        run: npm --prefix=./ui ci && npm --prefix=./ui run build
 
       - name: Build and push Docker image
         id: push
