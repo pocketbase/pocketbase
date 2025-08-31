@@ -118,7 +118,7 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 		{"/rate/guest", 0, false, 429},
 
 		// "guest" rule with regular user (should fallback to the /rate/ rule)
-		{"/rate/guest", 1, true, 200},
+		{"/rate/guest", 1.1, true, 200},
 		{"/rate/guest", 0, true, 200},
 		{"/rate/guest", 0, true, 429},
 		{"/rate/guest", 0, true, 429},
