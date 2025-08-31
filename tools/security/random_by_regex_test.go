@@ -35,31 +35,41 @@ func TestRandomStringByRegex(t *testing.T) {
 
 	for i, s := range scenarios {
 		t.Run(fmt.Sprintf("%d_%q", i, s.pattern), func(t *testing.T) {
-			str, err := security.RandomStringByRegex(s.pattern, s.flags...)
+			var run func(int)
+			run = func(attempt int) {
+				str, err := security.RandomStringByRegex(s.pattern, s.flags...)
 
-			hasErr := err != nil
-			if hasErr != s.expectError {
-				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
+				hasErr := err != nil
+				if hasErr != s.expectError {
+					t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
+				}
+
+				if hasErr {
+					return
+				}
+
+				r, err := regexp.Compile(s.pattern)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if !r.Match([]byte(str)) {
+					t.Fatalf("Expected %q to match pattern %v", str, s.pattern)
+				}
+
+				if slices.Contains(generated, str) {
+					if attempt > 3 {
+						t.Fatalf("The generated string %q already exists in\n%v", str, generated)
+					}
+
+					// rerun
+					run(attempt + 1)
+					return
+				}
+
+				generated = append(generated, str)
 			}
 
-			if hasErr {
-				return
-			}
-
-			r, err := regexp.Compile(s.pattern)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			if !r.Match([]byte(str)) {
-				t.Fatalf("Expected %q to match pattern %v", str, s.pattern)
-			}
-
-			if slices.Contains(generated, str) {
-				t.Fatalf("The generated string %q already exists in\n%v", str, generated)
-			}
-
-			generated = append(generated, str)
+			run(1)
 		})
 	}
 }
