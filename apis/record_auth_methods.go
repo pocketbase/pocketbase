@@ -139,7 +139,7 @@ func recordAuthMethods(e *core.RequestEvent) error {
 
 		// custom providers url options
 		switch config.Name {
-		case auth.NameApple:
+		case auth.NameAppleWeb:
 			// see https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/incorporating_sign_in_with_apple_into_other_platforms#3332113
 			urlOpts = append(urlOpts, oauth2.SetAuthURLParam("response_mode", "form_post"))
 		}

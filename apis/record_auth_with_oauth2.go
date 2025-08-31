@@ -93,7 +93,7 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 
 	// Apple currently returns the user's name only as part of the first redirect data response
 	// so we try to assign the [apis.oauth2SubscriptionRedirect] forwarded name.
-	if form.Provider == auth.NameApple && authUser.Name == "" {
+	if form.Provider == auth.NameAppleWeb && authUser.Name == "" {
 		nameKey := oauth2RedirectAppleNameStoreKeyPrefix + form.Code
 		name, ok := e.App.Store().Get(nameKey).(string)
 		if ok {
@@ -109,7 +109,7 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 	// check for existing relation with the auth collection
 	externalAuthRel, err := e.App.FindFirstExternalAuthByExpr(dbx.HashExp{
 		"collectionRef": form.collection.Id,
-		"provider":      form.Provider,
+		"provider":      auth.GetEquivalentProviders(form.Provider),
 		"providerId":    authUser.Id,
 	})
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {

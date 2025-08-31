@@ -18,9 +18,27 @@ import SelfHostedOptions from "@/components/collections/providers/SelfHostedOpti
 // - any other prop from optionComponentProps
 export default [
     {
-        key: "apple",
-        title: "Apple",
+        key: "apple_native",
+        title: "Apple (Native)",
         logo: "apple.svg",
+        optionsComponent: AppleOptions,
+    },
+    {
+        key: "apple_web",
+        title: "Apple (Web/Android)",
+        logo: "apple.svg",
+        optionsComponent: AppleOptions,
+    },
+    {
+        key: "wechat_native",
+        title: "WeChat (Native)",
+        logo: "wechat.svg",
+        optionsComponent: AppleOptions,
+    },
+    {
+        key: "wechat_web",
+        title: "WeChat (Web)",
+        logo: "wechat.svg",
         optionsComponent: AppleOptions,
     },
     {
@@ -96,7 +114,7 @@ export default [
     {
         key: "vk",
         title: "VK",
-        logo: "vk.svg"
+        logo: "vk.svg",
     },
     {
         key: "linear",
@@ -104,19 +122,19 @@ export default [
         logo: "linear.svg",
     },
     {
-        key:   "notion",
+        key: "notion",
         title: "Notion",
-        logo:  "notion.svg",
+        logo: "notion.svg",
     },
     {
-        key:   "monday",
+        key: "monday",
         title: "monday.com",
-        logo:  "monday.svg",
+        logo: "monday.svg",
     },
     {
-        key:   "box",
+        key: "box",
         title: "Box",
-        logo:  "box.svg",
+        logo: "box.svg",
     },
     {
         key: "spotify",
@@ -136,7 +154,7 @@ export default [
     {
         key: "patreon",
         title: "Patreon (v2)",
-        logo: "patreon.svg"
+        logo: "patreon.svg",
     },
     {
         key: "strava",

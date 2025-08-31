@@ -18,6 +18,15 @@ type ProviderFactoryFunc func() Provider
 // To register a new provider append a new entry in the map.
 var Providers = map[string]ProviderFactoryFunc{}
 
+// Some platforms use two different ClientID/ClientSecret pairs for native sign-in and Web sign-in flows.
+// Known platforms are: Apple, Wechat
+// See: https://github.com/pocketbase/pocketbase/issues/6151
+//
+// Two providers are equivalent only if:
+// 1. They are from same platform (Such as Apple)
+// 2. The providerId (AuthUser.Id) are the same in different providers.
+var EquivalentProviders = map[string][]string{}
+
 // NewProviderByName returns a new preconfigured provider instance by its name identifier.
 func NewProviderByName(name string) (Provider, error) {
 	factory, ok := Providers[name]
@@ -154,4 +163,13 @@ func (au AuthUser) MarshalJSON() ([]byte, error) {
 	au2.AvatarUrl = au.AvatarURL // ensure that the legacy field is populated
 
 	return json.Marshal(au2)
+}
+
+// GetEquivalentProviders returns a list of equivalent provider names for a given provider (including self).
+func GetEquivalentProviders(name string) []string {
+	providers := []string{name}
+	if equivalents, ok := EquivalentProviders[name]; ok {
+		providers = append(providers, equivalents...)
+	}
+	return providers
 }

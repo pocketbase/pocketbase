@@ -1659,7 +1659,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				}
 
 				// register the test provider
-				auth.Providers[auth.NameApple] = func() auth.Provider {
+				auth.Providers[auth.NameAppleWeb] = func() auth.Provider {
 					return &oauth2MockProvider{
 						AuthUser: &auth.AuthUser{Id: "test_id"},
 						Token:    &oauth2.Token{AccessToken: "abc"},
@@ -1672,7 +1672,7 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 				users.MFA.Enabled = false
 				users.OAuth2.Enabled = true
 				users.OAuth2.Providers = []core.OAuth2ProviderConfig{{
-					Name:         auth.NameApple,
+					Name:         auth.NameAppleWeb,
 					ClientId:     "123",
 					ClientSecret: "456",
 				}}

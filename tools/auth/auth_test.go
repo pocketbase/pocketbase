@@ -181,7 +181,7 @@ func TestNewProviderByName(t *testing.T) {
 	}
 
 	// apple
-	p, err = auth.NewProviderByName(auth.NameApple)
+	p, err = auth.NewProviderByName(auth.NameAppleWeb)
 	if err != nil {
 		t.Errorf("Expected nil, got error %v", err)
 	}

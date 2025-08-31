@@ -12,13 +12,21 @@ import (
 )
 
 func init() {
-	Providers[NameApple] = wrapFactory(NewAppleProvider)
+	Providers[NameAppleNative] = func() Provider {
+		return NewAppleProvider(NameAppleNative)
+	}
+	Providers[NameAppleWeb] = func() Provider {
+		return NewAppleProvider(NameAppleWeb)
+	}
+	EquivalentProviders[NameAppleNative] = []string{NameAppleWeb}
+	EquivalentProviders[NameAppleWeb] = []string{NameAppleNative}
 }
 
 var _ Provider = (*Apple)(nil)
 
-// NameApple is the unique name of the Apple provider.
-const NameApple string = "apple"
+// NameAppleNative is the unique name of the Apple provider.
+const NameAppleNative string = "apple_native"
+const NameAppleWeb string = "apple_web"
 
 // Apple allows authentication via Apple OAuth2.
 //
@@ -30,11 +38,17 @@ type Apple struct {
 }
 
 // NewAppleProvider creates a new Apple provider instance with some defaults.
-func NewAppleProvider() *Apple {
+func NewAppleProvider(providerName string) *Apple {
+	var displayName string
+	if providerName == NameAppleNative {
+		displayName = "Apple (Native)"
+	} else {
+		displayName = "Apple (Web/Android)"
+	}
 	return &Apple{
 		BaseProvider: BaseProvider{
 			ctx:         context.Background(),
-			displayName: "Apple",
+			displayName: displayName,
 			pkce:        true,
 			scopes:      []string{"name", "email"},
 			authURL:     "https://appleid.apple.com/auth/authorize",
