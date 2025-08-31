@@ -18,6 +18,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/list"
 	"golang.org/x/oauth2"
 )
 
@@ -109,7 +110,7 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 	// check for existing relation with the auth collection
 	externalAuthRel, err := e.App.FindFirstExternalAuthByExpr(dbx.HashExp{
 		"collectionRef": form.collection.Id,
-		"provider":      auth.GetEquivalentProviders(form.Provider),
+		"provider":      form.Provider,
 		"providerId":    authUser.Id,
 	})
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -122,6 +123,25 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 		if err != nil {
 			return err
 		}
+	case len(auth.EquivalentProviders[form.Provider]) > 0:
+		// Special case for multiple ClientId/ClientSecret pairs for a same platform
+		// See [auth.EquivalentProviders]
+		equivalentExternalAuthRel, err := e.App.FindFirstExternalAuthByExpr(dbx.HashExp{
+			"collectionRef": form.collection.Id,
+			"provider":      list.ToInterfaceSlice(auth.EquivalentProviders[form.Provider]),
+			"providerId":    authUser.Id,
+		})
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return e.InternalServerError("Failed OAuth2 auth record check.", err)
+		}
+		if equivalentExternalAuthRel != nil {
+			authRecord, err = e.App.FindRecordById(form.collection, equivalentExternalAuthRel.RecordRef())
+			if err != nil {
+				return err
+			}
+			break // authRecord found
+		}
+		fallthrough // authRecord not found, try other methods.
 	case fallbackAuthRecord != nil && fallbackAuthRecord.Collection().Id == form.collection.Id:
 		// fallback to the logged auth record (if any)
 		authRecord = fallbackAuthRecord
