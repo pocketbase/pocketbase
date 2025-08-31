@@ -28,7 +28,7 @@
                     perPage: 30,
                     totalPages: 1,
                     totalItems: 2,
-                    items: [dummyRecord, Object.assign({}, dummyRecord, { id: dummyRecord + "2" })],
+                    items: [dummyRecord, Object.assign({}, dummyRecord, { id: dummyRecord.id + "2" })],
                 },
                 null,
                 2,

@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"time"
 
@@ -103,6 +104,11 @@ type ServeEvent struct {
 	Router      *router.Router[*RequestEvent]
 	Server      *http.Server
 	CertManager *autocert.Manager
+
+	// Listener allow specifying a custom network listener.
+	//
+	// Leave it nil to use the default net.Listen("tcp", e.Server.Addr).
+	Listener net.Listener
 
 	// InstallerFunc is the "installer" function that is called after
 	// successful server tcp bind but only if there is no explicit

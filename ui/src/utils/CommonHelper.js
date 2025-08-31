@@ -743,11 +743,12 @@ export default class CommonHelper {
     /**
      * Returns a concatenated `items` string.
      *
-     * @param  {String} items
-     * @param  {String} [separator]
+     * @param  {String}  items
+     * @param  {String}  [separator]
+     * @param  {Boolean} [escapeSeparator]
      * @return {Array}
      */
-    static joinNonEmpty(items, separator = ", ") {
+    static joinNonEmpty(items, separator = ", ", escapeSeparator = true) {
         items = items || [];
 
         const result = [];
@@ -756,9 +757,16 @@ export default class CommonHelper {
 
         for (let item of items) {
             item = typeof item === "string" ? item.trim() : "";
-            if (!CommonHelper.isEmpty(item)) {
-                result.push(item.replaceAll(trimmedSeparator, "\\" + trimmedSeparator));
+
+            if (CommonHelper.isEmpty(item)) {
+                continue;
             }
+
+            if (escapeSeparator) {
+                item = item.replaceAll(trimmedSeparator, "\\" + trimmedSeparator);
+            }
+
+            result.push(item);
         }
 
         return result.join(separator);

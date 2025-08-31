@@ -687,7 +687,7 @@ func TestRateLimitsFindRateLimitRule(t *testing.T) {
 func TestRateLimitRuleValidate(t *testing.T) {
 	scenarios := []struct {
 		name           string
-		config         core.RateLimitRule
+		rule           core.RateLimitRule
 		expectedErrors []string
 	}{
 		{
@@ -784,7 +784,7 @@ func TestRateLimitRuleValidate(t *testing.T) {
 
 	for _, s := range scenarios {
 		t.Run(s.name, func(t *testing.T) {
-			result := s.config.Validate()
+			result := s.rule.Validate()
 
 			tests.TestValidationErrors(t, result, s.expectedErrors)
 		})
@@ -793,7 +793,7 @@ func TestRateLimitRuleValidate(t *testing.T) {
 
 func TestRateLimitRuleDurationTime(t *testing.T) {
 	scenarios := []struct {
-		config   core.RateLimitRule
+		rule     core.RateLimitRule
 		expected time.Duration
 	}{
 		{core.RateLimitRule{}, 0 * time.Second},
@@ -801,11 +801,45 @@ func TestRateLimitRuleDurationTime(t *testing.T) {
 	}
 
 	for i, s := range scenarios {
-		t.Run(fmt.Sprintf("%d_%d", i, s.config.Duration), func(t *testing.T) {
-			result := s.config.DurationTime()
+		t.Run(fmt.Sprintf("%d_%d", i, s.rule.Duration), func(t *testing.T) {
+			result := s.rule.DurationTime()
 
 			if result != s.expected {
 				t.Fatalf("Expected duration %d, got %d", s.expected, result)
+			}
+		})
+	}
+}
+
+func TestRateLimitRuleString(t *testing.T) {
+	scenarios := []struct {
+		name     string
+		rule     core.RateLimitRule
+		expected string
+	}{
+		{
+			"empty",
+			core.RateLimitRule{},
+			`{"label":"","audience":"","duration":0,"maxRequests":0}`,
+		},
+		{
+			"all fields",
+			core.RateLimitRule{
+				Label:       "POST /a/b/",
+				Duration:    1,
+				MaxRequests: 2,
+				Audience:    core.RateLimitRuleAudienceAuth,
+			},
+			`{"label":"POST /a/b/","audience":"@auth","duration":1,"maxRequests":2}`,
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			result := s.rule.String()
+
+			if result != s.expected {
+				t.Fatalf("Expected string\n%s\ngot\n%s", s.expected, result)
 			}
 		})
 	}

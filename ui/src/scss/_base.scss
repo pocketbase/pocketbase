@@ -910,7 +910,6 @@ a.thumb:not(.thumb-active) {
 
 .provider-logo {
     $boxSize: 32px;
-    $imgSize: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -919,13 +918,14 @@ a.thumb:not(.thumb-active) {
     height: $boxSize;
     border-radius: var(--baseRadius);
     background: var(--bodyColor);
-    padding: 0;
+    padding: 5px;
     gap: 0;
     img {
-        max-width: $imgSize;
-        max-height: $imgSize;
-        height: auto;
         flex-shrink: 0;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
     }
 }
 .provider-card {

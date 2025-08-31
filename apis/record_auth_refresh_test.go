@@ -73,6 +73,8 @@ func TestRecordAuthRefresh(t *testing.T) {
 			},
 			NotExpectedContent: []string{
 				`"missing":`,
+				// should return a different token
+				"eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
 			},
 			ExpectedEvents: map[string]int{
 				"*":                          0,
@@ -88,9 +90,21 @@ func TestRecordAuthRefresh(t *testing.T) {
 			Headers: map[string]string{
 				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6ZmFsc2V9.4IsO6YMsR19crhwl_YWzvRH8pfq2Ri4Gv2dzGyneLak",
 			},
-			ExpectedStatus:  403,
-			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents:  map[string]int{"*": 0},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				// should return the same token
+				`"token":"eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6ZmFsc2V9.4IsO6YMsR19crhwl_YWzvRH8pfq2Ri4Gv2dzGyneLak"`,
+				`"record":`,
+				`"id":"4q1xlclmfloku33"`,
+				`"emailVisibility":false`,
+				`"email":"test@example.com"`, // the owner can always view their email address
+			},
+			ExpectedEvents: map[string]int{
+				"*":                          0,
+				"OnRecordAuthRefreshRequest": 1,
+				"OnRecordAuthRequest":        1,
+				"OnRecordEnrich":             1,
+			},
 		},
 		{
 			Name:   "unverified auth record in onlyVerified collection",

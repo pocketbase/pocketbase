@@ -296,6 +296,10 @@ func setRegularReflectedValue(rv reflect.Value, value string) error {
 		}
 
 		rv.SetFloat(v)
+	case reflect.Interface:
+		if rv.CanSet() {
+			rv.Set(reflect.ValueOf(inferValue(value)))
+		}
 	default:
 		return errors.New("unknown value type " + rv.Kind().String())
 	}

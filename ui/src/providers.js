@@ -79,18 +79,13 @@ export default [
         optionsComponentProps: { title: "Self-hosted endpoints (optional)" },
     },
     {
-        key: "linear",
-        title: "Linear",
-        logo: "linear.svg",
-    },
-    {
         key: "discord",
         title: "Discord",
         logo: "discord.svg",
     },
     {
         key: "twitter",
-        title: "Twitter",
+        title: "X/Twitter",
         logo: "twitter.svg",
     },
     {
@@ -104,6 +99,11 @@ export default [
         logo: "vk.svg"
     },
     {
+        key: "linear",
+        title: "Linear",
+        logo: "linear.svg",
+    },
+    {
         key:   "notion",
         title: "Notion",
         logo:  "notion.svg",
@@ -112,6 +112,11 @@ export default [
         key:   "monday",
         title: "monday.com",
         logo:  "monday.svg",
+    },
+    {
+        key:   "box",
+        title: "Box",
+        logo:  "box.svg",
     },
     {
         key: "spotify",

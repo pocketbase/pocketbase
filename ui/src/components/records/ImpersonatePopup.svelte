@@ -106,7 +106,7 @@
         <form id={formId} on:submit|preventDefault={submit}>
             <div class="content">
                 <p>
-                    Generate a non-refreshable auth token for
+                    Generate a nonrenewable auth token for
                     <strong>{CommonHelper.displayValue(record)}:</strong>
                 </p>
             </div>

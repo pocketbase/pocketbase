@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/fatih/color"
@@ -828,7 +827,7 @@ func (app *BaseApp) Restart() error {
 			}
 		}()
 
-		return syscall.Exec(execPath, os.Args, os.Environ())
+		return execve(execPath, os.Args, os.Environ())
 	})
 }
 
@@ -1449,7 +1448,7 @@ func (app *BaseApp) registerBaseHooks() {
 			app.Logger().Warn("Failed to run periodic PRAGMA wal_checkpoint for the auxiliary DB", slog.String("error", execErr.Error()))
 		}
 
-		_, execErr = app.ConcurrentDB().NewQuery("PRAGMA optimize").Execute()
+		_, execErr = app.NonconcurrentDB().NewQuery("PRAGMA optimize").Execute()
 		if execErr != nil {
 			app.Logger().Warn("Failed to run periodic PRAGMA optimize", slog.String("error", execErr.Error()))
 		}

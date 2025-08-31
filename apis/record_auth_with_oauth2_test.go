@@ -1641,6 +1641,104 @@ func TestRecordAuthWithOAuth2(t *testing.T) {
 			ExpectedContent: []string{"TX_ERROR"},
 		},
 
+		// Apple AuthUser.Name assign checks
+		// -----------------------------------------------------------
+		{
+			Name:   "store name with Apple provider",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/auth-with-oauth2",
+			Body: strings.NewReader(`{
+				"provider": "apple",
+				"code":"test_code",
+				"redirectURL": "https://example.com"
+			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				users, err := app.FindCollectionByNameOrId("users")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// register the test provider
+				auth.Providers[auth.NameApple] = func() auth.Provider {
+					return &oauth2MockProvider{
+						AuthUser: &auth.AuthUser{Id: "test_id"},
+						Token:    &oauth2.Token{AccessToken: "abc"},
+					}
+				}
+
+				app.Store().Set("@redirect_name_test_code", "test_store_name")
+
+				// add the test provider in the collection
+				users.MFA.Enabled = false
+				users.OAuth2.Enabled = true
+				users.OAuth2.Providers = []core.OAuth2ProviderConfig{{
+					Name:         auth.NameApple,
+					ClientId:     "123",
+					ClientSecret: "456",
+				}}
+				if err := app.Save(users); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"meta":{`,
+				`"name":"test_store_name"`,
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				if app.Store().Has("@redirect_name_test_code") {
+					t.Fatal("Expected @redirect_name_test_code store key to be removed")
+				}
+			},
+		},
+		{
+			Name:   "store name with non-Apple provider",
+			Method: http.MethodPost,
+			URL:    "/api/collections/users/auth-with-oauth2",
+			Body: strings.NewReader(`{
+				"provider": "test",
+				"code":"test_code",
+				"redirectURL": "https://example.com"
+			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				users, err := app.FindCollectionByNameOrId("users")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				// register the test provider
+				auth.Providers["test"] = func() auth.Provider {
+					return &oauth2MockProvider{
+						AuthUser: &auth.AuthUser{Id: "test_id"},
+						Token:    &oauth2.Token{AccessToken: "abc"},
+					}
+				}
+
+				app.Store().Set("@redirect_name_test_code", "test_store_name")
+
+				// add the test provider in the collection
+				users.MFA.Enabled = false
+				users.OAuth2.Enabled = true
+				users.OAuth2.Providers = []core.OAuth2ProviderConfig{{
+					Name:         "test",
+					ClientId:     "123",
+					ClientSecret: "456",
+				}}
+				if err := app.Save(users); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			NotExpectedContent: []string{
+				`"name":"test_store_name"`,
+			},
+			AfterTestFunc: func(t testing.TB, app *tests.TestApp, res *http.Response) {
+				if !app.Store().Has("@redirect_name_test_code") {
+					t.Fatal("Expected @redirect_name_test_code store key to NOT be deleted")
+				}
+			},
+		},
+
 		// rate limit checks
 		// -----------------------------------------------------------
 		{
