@@ -10,6 +10,18 @@
     <a href="https://pkg.go.dev/github.com/pocketbase/pocketbase" target="_blank" rel="noopener"><img src="https://godoc.org/github.com/pocketbase/pocketbase?status.svg" alt="Go package documentation" /></a>
 </p>
 
+## PocketBase <!-- omit in toc -->
+
+- [Quick start](#quick-start)
+- [API SDK clients](#api-sdk-clients)
+- [Overview](#overview)
+  - [Use as standalone app](#use-as-standalone-app)
+  - [Use as a Go framework/toolkit](#use-as-a-go-frameworktoolkit)
+  - [Building and running the repo main.go example](#building-and-running-the-repo-maingo-example)
+  - [Testing](#testing)
+- [Security](#security)
+- [Contributing](#contributing)
+
 [PocketBase](https://pocketbase.io) is an open source Go backend that includes:
 
 - embedded database (_SQLite_) with **realtime subscriptions**
@@ -23,6 +35,28 @@
 > Please keep in mind that PocketBase is still under active development
 > and therefore full backward compatibility is not guaranteed before reaching v1.0.0.
 
+## Quick start
+
+```bash
+# Download the latest prebuilt executable matching your platform
+curl -s https://api.github.com/repos/pocketbase/pocketbase/releases/latest \
+  | grep "browser_download_url.*$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')\.zip" \
+  | cut -d '"' -f 4 \
+  | xargs curl -L -o pocketbase.zip && \
+  unzip -q pocketbase.zip -d pocketbase_tmp && \
+  mv pocketbase_tmp/pocketbase ./pocketbase && \
+  chmod +x ./pocketbase && \
+  rm -rf pocketbase.zip pocketbase_tmp
+
+# Run the server
+./pocketbase serve
+
+## Optionally
+mkdir pocketbase_project
+mv pocketbase pocketbase_project/
+
+```
+
 ## API SDK clients
 
 The easiest way to interact with the PocketBase Web APIs is to use one of the official SDK clients:
@@ -32,6 +66,19 @@ The easiest way to interact with the PocketBase Web APIs is to use one of the of
 
 You could also check the recommendations in https://pocketbase.io/docs/how-to-use/.
 
+Install the SDKs:
+
+```sh
+# JavaScript / TypeScript
+npm i pocketbase
+# or
+yarn add pocketbase
+# or
+pnpm add pocketbase
+
+# Dart
+dart pub add pocketbase
+```
 
 ## Overview
 
@@ -39,8 +86,7 @@ You could also check the recommendations in https://pocketbase.io/docs/how-to-us
 
 You could download the prebuilt executable for your platform from the [Releases page](https://github.com/pocketbase/pocketbase/releases).
 Once downloaded, extract the archive and run `./pocketbase serve` in the extracted directory.
-
-The prebuilt executables are based on the [`examples/base/main.go` file](https://github.com/pocketbase/pocketbase/blob/master/examples/base/main.go) and comes with the JS VM plugin enabled by default which allows to extend PocketBase with JavaScript (_for more details please refer to [Extend with JavaScript](https://pocketbase.io/docs/js-overview/)_).
+The prebuilt executables are based on the [`examples/base/main.go` file](https://github.com/pocketbase/pocketbase/blob/master/examples/base/main.go) and come with the JS VM plugin enabled by default, which allows you to extend PocketBase with JavaScript (_for more details please refer to [Extend with JavaScript](https://pocketbase.io/docs/js-overview/)_).
 
 ### Use as a Go framework/toolkit
 
@@ -52,56 +98,81 @@ Here is a minimal example:
 0. [Install Go 1.23+](https://go.dev/doc/install) (_if you haven't already_)
 
 1. Create a new project directory with the following `main.go` file inside it:
-    ```go
-    package main
 
-    import (
-        "log"
+   ```go
+   package main
 
-        "github.com/pocketbase/pocketbase"
-        "github.com/pocketbase/pocketbase/core"
-    )
+   import (
+       "log"
 
-    func main() {
-        app := pocketbase.New()
+       "github.com/pocketbase/pocketbase"
+       "github.com/pocketbase/pocketbase/core"
+   )
 
-        app.OnServe().BindFunc(func(se *core.ServeEvent) error {
-            // registers new "GET /hello" route
-            se.Router.GET("/hello", func(re *core.RequestEvent) error {
-                return re.String(200, "Hello world!")
-            })
+   func main() {
+       app := pocketbase.New()
 
-            return se.Next()
-        })
+       app.OnServe().BindFunc(func(se *core.ServeEvent) error {
+           // registers new "GET /hello" route
+           se.Router.GET("/hello", func(re *core.RequestEvent) error {
+               return re.String(200, "Hello world!")
+           })
 
-        if err := app.Start(); err != nil {
-            log.Fatal(err)
-        }
-    }
-    ```
+           return se.Next()
+       })
 
-2. To init the dependencies, run `go mod init myapp && go mod tidy`.
+       if err := app.Start(); err != nil {
+           log.Fatal(err)
+       }
+   }
+   ```
 
-3. To start the application, run `go run main.go serve`.
+2. Init the dependencies:
 
-4. To build a statically linked executable, you can run `CGO_ENABLED=0 go build` and then start the created executable with `./myapp serve`.
+   ```sh
+   go mod init myapp
+   go mod tidy
+   ```
+
+3. Start the application:
+
+   ```sh
+   go run main.go serve
+   ```
+
+4. Build a statically linked executable and run it:
+
+   ```sh
+   CGO_ENABLED=0 go build
+   ./myapp serve
+   ```
 
 _For more details please refer to [Extend with Go](https://pocketbase.io/docs/go-overview/)._
 
 ### Building and running the repo main.go example
 
-To build the minimal standalone executable, like the prebuilt ones in the releases page, you can simply run `go build` inside the `examples/base` directory:
+To build the minimal standalone executable, like the prebuilt ones in the releases page, run `go build` inside the `examples/base` directory:
 
 0. [Install Go 1.23+](https://go.dev/doc/install) (_if you haven't already_)
 1. Clone/download the repo
 2. Navigate to `examples/base`
-3. Run `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`
+3. Build:
+
+   ```sh
+   GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
+   ```
+
    (_https://go.dev/doc/install/source#environment_)
-4. Start the created executable by running `./base serve`.
+
+4. Start the created executable:
+
+   ```sh
+   ./base serve
+   ```
 
 Note that the supported build targets by the pure Go SQLite driver at the moment are:
 
-```
+```bash
 darwin  amd64
 darwin  arm64
 freebsd amd64
@@ -119,7 +190,7 @@ windows arm64
 
 ### Testing
 
-PocketBase comes with mixed bag of unit and integration tests.
+PocketBase comes with a mix of unit and integration tests.
 To run them, use the standard `go test` command:
 
 ```sh
