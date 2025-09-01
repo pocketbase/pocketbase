@@ -2,6 +2,8 @@
 
 - Added Lark OAuth2 provider ([#7130](https://github.com/pocketbase/pocketbase/pull/7130); thanks @mashizora).
 
+- Other minor changes (bumped the min Go version to 1.24, updated collections indexes merge UI, increased test tokens `exp` claim to prevent problems with reproducible builds).
+
 
 ## v0.29.3
 
