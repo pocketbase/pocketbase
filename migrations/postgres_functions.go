@@ -79,6 +79,20 @@ func createSQLiteEquivalentFunctions(db dbx.Builder) error {
 		RETURN FALSE;
 	END;
 	$$ LANGUAGE plpgsql IMMUTABLE;
+
+	-- Create a json_query_or_null function that handles any types.
+	CREATE OR REPLACE FUNCTION json_query_or_null(p_input jsonb, p_query text) RETURNS jsonb AS $$
+		SELECT JSON_QUERY(p_input, p_query)
+	$$ LANGUAGE sql IMMUTABLE;
+
+	-- Create a json_query_or_null function that handles any types.
+	CREATE OR REPLACE FUNCTION json_query_or_null(p_input anyelement, p_query text) RETURNS jsonb AS $$
+	BEGIN
+		RETURN JSON_QUERY(p_input::text::jsonb, p_query);
+	EXCEPTION WHEN others THEN
+		RETURN NULL;
+	END;
+	$$ LANGUAGE plpgsql STABLE;
 	`
 	_, err := db.NewQuery(funcDef).Execute()
 	return err

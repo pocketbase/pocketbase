@@ -198,25 +198,25 @@ func buildResolversExpr(
 		expr = dbx.NewExp(fmt.Sprintf("%s < %s", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
 		*/
 		// PostgreSQL:
-		expr = dbx.NewExp(numericJoin(left.Identifier, "<", right.Identifier), mergeParams(left.Params, right.Params))
+		expr = dbx.NewExp(numericJoin(left, "<", right), mergeParams(left.Params, right.Params))
 	case fexpr.SignLte, fexpr.SignAnyLte:
 		/* SQLite:
 		expr = dbx.NewExp(fmt.Sprintf("%s <= %s", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
 		*/
 		// PostgreSQL:
-		expr = dbx.NewExp(numericJoin(left.Identifier, "<=", right.Identifier), mergeParams(left.Params, right.Params))
+		expr = dbx.NewExp(numericJoin(left, "<=", right), mergeParams(left.Params, right.Params))
 	case fexpr.SignGt, fexpr.SignAnyGt:
 		/* SQLite:
 		expr = dbx.NewExp(fmt.Sprintf("%s > %s", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
 		*/
 		// PostgreSQL:
-		expr = dbx.NewExp(numericJoin(left.Identifier, ">", right.Identifier), mergeParams(left.Params, right.Params))
+		expr = dbx.NewExp(numericJoin(left, ">", right), mergeParams(left.Params, right.Params))
 	case fexpr.SignGte, fexpr.SignAnyGte:
 		/* SQLite:
 		expr = dbx.NewExp(fmt.Sprintf("%s >= %s", left.Identifier, right.Identifier), mergeParams(left.Params, right.Params))
 		*/
 		// PostgreSQL:
-		expr = dbx.NewExp(numericJoin(left.Identifier, ">=", right.Identifier), mergeParams(left.Params, right.Params))
+		expr = dbx.NewExp(numericJoin(left, ">=", right), mergeParams(left.Params, right.Params))
 	}
 
 	if expr == nil {
@@ -314,6 +314,12 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 
 		return result, err
 	case fexpr.TokenText:
+		// PostgreSQL only:
+		// if we know it is a emty string, use the empty string directly.
+		if token.Literal == "" {
+			return &ResolverResult{Identifier: `''`}, nil
+		}
+
 		placeholder := "t" + security.PseudorandomString(8)
 
 		return &ResolverResult{
@@ -321,26 +327,33 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 			Params:     dbx.Params{placeholder: token.Literal},
 		}, nil
 	case fexpr.TokenNumber:
+		/* SQLite:
 		placeholder := "t" + security.PseudorandomString(8)
 
 		return &ResolverResult{
-			/* SQLite:
 			Identifier: "{:" + placeholder + "}",
-			*/
-			// PostgreSQL:
-			// handle a special case (where 1 = 1) where both left and right identifiers are numeric numbers.
-			// Eg: To prevent SQL injection, for query "1=1", dbx will generate "select xxx where $1 = $2" (prepared statement) with params [1, 1].
-			// because we didn't specify the type for both $1 and $2, so PostgreSQL will treat them as text, and expect all params to be text types.
-			// And it failed to cast numeric type `1` to text `"1"` and throws an error:
-			// Error: `failed to encode args[0]: unable to encode 1 into text format for text (OID 25): cannot find encode plan;`
-			// Related Issue:
-			// - https://github.com/jackc/pgx/issues/798,
-			// - https://github.com/jackc/pgx/issues/2307
-			// This is not caused by an issue of pgx, but by the strong type validation of PostgreSQL.
-			// To fix it, we have to manually specify the type of either left or right identifier explicitly.
-			// This is not an issue when the literal type is a string.
-			Identifier: "{:" + placeholder + "}::numeric",
 			Params:     dbx.Params{placeholder: cast.ToFloat64(token.Literal)},
+		}, nil
+		*/
+		// PostgreSQL:
+		// handle a special case (where 1 = 1) where both left and right identifiers are numeric numbers.
+		// Eg: To prevent SQL injection, for query "1=1", dbx will generate "select xxx where $1 = $2" (prepared statement) with params [1, 1].
+		// because we didn't specify the type for both $1 and $2, so PostgreSQL will treat them as text, and expect all params to be text types.
+		// And it failed to cast numeric type `1` to text `"1"` and throws an error:
+		// Error: `failed to encode args[0]: unable to encode 1 into text format for text (OID 25): cannot find encode plan;`
+		// Related Issue:
+		// - https://github.com/jackc/pgx/issues/798,
+		// - https://github.com/jackc/pgx/issues/2307
+		// This is not caused by an issue of pgx, but by the strong type validation of PostgreSQL.
+		//
+		// To fix it, we have two options:
+		// Option 1: add a explict type cast: "{:" + placeholder + "}::numeric",
+		// Option 2: use the number literal directly without a param placeholder.
+		// We have to convert user input to float64 to remove any harmful characters to avoid SQL injection.
+		safeNumberStr := strconv.FormatFloat(cast.ToFloat64(token.Literal), 'f', -1, 64)
+		return &ResolverResult{
+			Identifier: safeNumberStr,
+			Params:     dbx.Params{},
 		}, nil
 	case fexpr.TokenFunction:
 		fn, ok := TokenFunctions[token.Literal]
@@ -388,8 +401,8 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 		// PostgreSQL:
 		// In PostgreSQL, `IS NOT` only works for NULL values, but not for empty strings.
 		// `IS DISTINCT FROM` works like SQLite's `IS NOT`.
-		equalOp = "!="
-		nullEqualOp = "IS DISTINCT FROM"
+		equalOp = "IS DISTINCT FROM"
+		nullEqualOp = equalOp
 		concatOp = "AND"
 		nullExpr = "IS NOT NULL"
 	}
@@ -402,7 +415,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 			/* SQLite:
 			fmt.Sprintf("%s %s %s", left.Identifier, nullEqualOp, right.Identifier),
 			*/
-			typeAwareJoin(left, equalOp, right),
+			typeAwareJoinNoCoalesce(left, nullEqualOp, right),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -425,39 +438,32 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 		if isRightEmpty {
 			rightIdentifier = "''"
 		}
-		// PostgreSQL only:
-		// handle a special case (where 1 = 1) where both left and right identifiers are numeric numbers.
-		// Eg: for query "1=1", we will generate "select xxx where $1 = $2" (prepared statement) with params [1, 1],
-		// because we didn't specify the type for both $1 and $2, so PostgreSQL will treat them as text.
-		// And it failed to cast numeric type `1` to text `"1"` and throws an error:
-		// Error: `failed to encode args[0]: unable to encode 1 into text format for text (OID 25): cannot find encode plan;`
-		// Related Issue:
-		// - https://github.com/jackc/pgx/issues/798,
-		// - https://github.com/jackc/pgx/issues/2307
-		// This is not caused by an issue of pgx, but by the strong type validation of PostgreSQL.
-		// To fix it, we have to manually specify the type of either left or right identifier explicitly.
-		if len(left.Params) == 1 && len(right.Params) == 1 {
-			if _, ok := maps.Values(left.Params)[0].(float64); ok {
-				if _, ok := maps.Values(right.Params)[0].(float64); ok {
-					if strings.HasPrefix(leftIdentifier, "{:") && strings.HasSuffix(leftIdentifier, "}") &&
-						strings.HasPrefix(rightIdentifier, "{:") && strings.HasSuffix(rightIdentifier, "}") {
-						// Only add left type is enough, the right type will be automatically inferred by PostgreSQL.
-						leftIdentifier += "::numeric"
-					}
-				}
-			}
-		}
 		*/
+		// PostgreSQL:
+		// TODO：
+		// create a copy of ResolvedResult.
+		// If it is empty string, show a empty string.
+		// Remember to remove the params from the shadow copy if it is empty or null
+		// leftIdentifier := left.Identifier
+		// if isLeftEmpty {
+		// 	leftIdentifier = "''"
+		// }
+		// rightIdentifier := right.Identifier
+		// if isRightEmpty {
+		// 	rightIdentifier = "''"
+		// }
+
 		return dbx.NewExp(
 			/* SQLite:
 			fmt.Sprintf("%s %s %s", leftIdentifier, equalOp, rightIdentifier),
 			*/
 			// PostgreSQL:
-			typeAwareJoin(left, equalOp, right),
+			typeAwareJoinNoCoalesce(left, equalOp, right),
 			mergeParams(left.Params, right.Params),
 		)
 	}
 
+	// Hint: In PocketBase's world, NULL is treated the same as empty.
 	// "" = b OR b IS NULL
 	// "" IS NOT b AND b IS NOT NULL
 	if isLeftEmpty {
@@ -466,7 +472,7 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 			fmt.Sprintf("('' %s %s %s %s %s)", equalOp, right.Identifier, concatOp, right.Identifier, nullExpr),
 			*/
 			// PostgreSQL:
-			fmt.Sprintf("('' %s %s %s %s %s)", nullEqualOp, right.Identifier, concatOp, right.Identifier, nullExpr),
+			fmt.Sprintf("('' %s %s %s %s %s)", equalOp, withNonJsonbType(right.Identifier, "text"), concatOp, right.Identifier, nullExpr),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -479,7 +485,9 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 			fmt.Sprintf("(%s %s '' %s %s %s)", left.Identifier, equalOp, concatOp, left.Identifier, nullExpr),
 			*/
 			// PostgreSQL:
-			fmt.Sprintf("(%s %s '' %s %s %s)", left.Identifier, nullEqualOp, concatOp, left.Identifier, nullExpr),
+			// Note: pocketbase treats empty string the same as NULL.
+			// eg: WHERE col_int::text = '' OR col_int IS NULL
+			fmt.Sprintf("(%s %s '' %s %s %s)", withNonJsonbType(left.Identifier, "text"), equalOp, concatOp, left.Identifier, nullExpr),
 			mergeParams(left.Params, right.Params),
 		)
 	}
@@ -496,32 +504,124 @@ func resolveEqualExpr(equal bool, left, right *ResolverResult) dbx.Expression {
 		mergeParams(left.Params, right.Params),
 	)
 	*/
-	return dbx.NewExp(typeAwareJoin(left, nullEqualOp, right), mergeParams(left.Params, right.Params))
+	// PostgreSQL:
+	// 1. We can't use COALESCE() here, because we never know the type of the column to be compared.
+	//    Otherwise, PostgreSQL will throw a type mismatch error if we use default empty string.
+	// 2. to_jsonb() erase the type so that different types can be compared safely.
+	// 3. Use `nullEqualOp` instead of `equalOp` to safely compare null values, similar to COALESCE(),
+	//    because NULL::jsonb behaves same as NULL. If either part of the equal operation is NULL,
+	//    then it will produce a NULL output, and we need something like COALESCE() to avoid NULL output.
+	return dbx.NewExp(
+		fmt.Sprintf("%s %s %s", castToJsonb(left), nullEqualOp, castToJsonb(right)),
+		mergeParams(left.Params, right.Params),
+	)
+}
+
+// PostgreSQL only:
+// PostgreSQL lets us write '2024-09-03' and use it as a date, timestamp, text, etc., without explicit casts every time.
+// Normally, when we use `SELECT col_text = 'abc'`, the type of 'abc' can be automatically infered to `text`.
+// However, when used with `to_jsonb('abc')` function, the type of 'abc' is not determistic, because to_jsonb() can
+// handle many different types. So we need to add explicit type hints before using in to_jsonb().
+//
+// Currently, it only affects:
+// 1. NULL
+// 2. String Params in PreparedStatements.
+// 3. Numeric Params in PreparedStatements.
+//
+// Only used with `to_jsonb`
+func castToJsonb(identifier *ResolverResult) string {
+	if strings.ToLower(identifier.Identifier) == "null" {
+		return "to_jsonb(NULL::text)"
+	}
+	if tp := inferPolymorphicLiteral(identifier); tp != "" {
+		return fmt.Sprintf("to_jsonb(%s::%s)", identifier.Identifier, tp)
+	}
+	return fmt.Sprintf("to_jsonb(%s)", identifier.Identifier)
+}
+
+// There are some json types:
+// 1. null    -> Undetermine Polymorphic Type, can be any PostgreSQL types
+// 2. text    -> Undetermine Polymorphic Type, can be Date, TimeStamp, text, etc.
+// 3. numbers -> Deterministic type, always numeric, no type cast needed
+// 4. bool    -> Deterministic type, always boolean, no type cast needed
+func inferPolymorphicLiteral(result *ResolverResult) string {
+	// Note: result cannot be "NULL" identifier when called in [inferPolymorphicLiteral],
+	// because we already handled "NULL" seperately before calling this function.
+	// See [resolveEqualExpr] for details.
+	if strings.ToLower(result.Identifier) == "null" {
+		return "null"
+	}
+
+	if result.Identifier == `''` {
+		return "text"
+	}
+
+	if len(result.Params) == 1 {
+		for _, p := range result.Params {
+			switch p.(type) {
+			case nil:
+				panic("Unexpected nil type, nil is supposed to be parsed as NULL identifier")
+			case string:
+				return "text"
+			}
+		}
+	}
+	return ""
+}
+
+// There are some json types:
+// 1. null    -> Undetermine Polymorphic Type, can be any PostgreSQL types
+// 2. text    -> Undetermine Polymorphic Type, can be Date, TimeStamp, text, etc.
+// 3. numbers -> Deterministic type, always numeric, no type cast needed
+// 4. bool    -> Deterministic type, always boolean, no type cast needed
+func inferDeterministicType(result *ResolverResult) string {
+	// If there is a explict type cast suffix, then we can use it to determine the type.
+	match := regexRightMostTypeCast.FindStringSubmatch(strings.TrimRight(result.Identifier, " "))
+	if len(match) > 0 {
+		return match[1]
+	}
+
+	// If the type is boolean, we can use it directly.
+	if strings.ToLower(result.Identifier) == "true" || strings.ToLower(result.Identifier) == "false" {
+		return "boolean"
+	}
+
+	// If the type is numbers, we can use it directly.
+	if _, err := strconv.ParseFloat(result.Identifier, 64); err == nil {
+		return "numeric"
+	}
+	if strings.HasPrefix(result.Identifier, "{:") && len(result.Params) == 1 {
+		for _, p := range result.Params {
+			switch p.(type) {
+			case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, float32, float64:
+				return "numeric"
+			}
+		}
+	}
+
+	return ""
 }
 
 var regexRightMostTypeCast = regexp.MustCompile(`::(\w+)$`)
 
 // PostgreSQL only:
 // If either left or right identifier has a specific type cast, we need to add the same type cast to the other identifier.
-func typeAwareJoin(l *ResolverResult, op string, r *ResolverResult) string {
-	isLeftEmpty := isEmptyIdentifier(l) || (len(l.Params) == 1 && hasEmptyParamValue(l))
-	isRightEmpty := isEmptyIdentifier(r) || (len(r.Params) == 1 && hasEmptyParamValue(r))
+func typeAwareJoinNoCoalesce(l *ResolverResult, op string, r *ResolverResult) string {
 	left := strings.TrimRight(l.Identifier, " ")
 	right := strings.TrimRight(r.Identifier, " ")
-	if isLeftEmpty {
-		left = "''"
-	}
-	if isRightEmpty {
-		right = "''"
-	}
 
-	leftType := regexRightMostTypeCast.FindStringSubmatch(left)
-	rightType := regexRightMostTypeCast.FindStringSubmatch(right)
+	leftType := inferDeterministicType(l)
+	rightType := inferDeterministicType(r)
 	if len(leftType) > 0 && len(rightType) > 0 {
-		// If left and right identifiers have different type cast, force cast both identifiers to text type to bypass PostgreSQL's strict type validation error.
-		if leftType[0] != rightType[0] {
-			left = withType(left, "text")
-			right = withType(right, "text")
+		// If left and right identifiers have different type cast, force cast both identifiers
+		// to `jsonb`` type to bypass PostgreSQL's strict type validation error.
+		if leftType != rightType {
+			if leftType != "jsonb" {
+				left = castToJsonb(l)
+			}
+			if rightType != "jsonb" {
+				right = castToJsonb(r)
+			}
 		}
 		// If both identifiers have the same type cast, return it directly.
 		return fmt.Sprintf("%s %s %s", left, op, right)
@@ -531,27 +631,48 @@ func typeAwareJoin(l *ResolverResult, op string, r *ResolverResult) string {
 		return fmt.Sprintf("%s %s %s", left, op, right)
 	}
 	if len(leftType) > 0 {
-		// left identifier has type cast, so we need to add the same type cast to the right identifier.
-		return fmt.Sprintf("%s %s %s", left, op, withType(right, leftType[1]))
+		if leftType == "jsonb" {
+			// implict cast is not possible for jsonb type
+			right = castToJsonb(r)
+		}
+
+		// LeftType is Deterministic, RightType is Polymorphic, allow PostgreSQL to do auto implict cast.
+		return fmt.Sprintf("%s %s %s", left, op, right)
 	}
 	if len(rightType) > 0 {
-		return fmt.Sprintf("%s %s %s", withType(left, rightType[1]), op, right)
+		if rightType == "jsonb" {
+			left = castToJsonb(l)
+		}
+
+		return fmt.Sprintf("%s %s %s", left, op, right)
 	}
 	panic("should not reach here")
 }
 
 // PostgreSQL only:
 // Force cast both identifiers to numeric type.
-func numericJoin(left, op, right string) string {
-	return fmt.Sprintf("%s %s %s", withType(left, "numeric"), op, withType(right, "numeric"))
+func numericJoin(l *ResolverResult, op string, r *ResolverResult) string {
+	left := l.Identifier
+	right := r.Identifier
+
+	// Note: Polyphormic literal such as "2" can be automatic casted to numeric type by PostgreSQL.
+	// Eg: SELECT "2" > 1  -- works fine.
+	if inferDeterministicType(l) != "numeric" && inferPolymorphicLiteral(l) == "" {
+		left = withNonJsonbType(left, "numeric")
+	}
+	if inferDeterministicType(r) != "numeric" && inferPolymorphicLiteral(r) == "" {
+		right = withNonJsonbType(right, "numeric")
+	}
+
+	return fmt.Sprintf("%s %s %s", left, op, right)
 }
 
 // PostgreSQL only:
-func withType(identifier string, typeName string) string {
+func withNonJsonbType(identifier string, targetType string) string {
 	// Note:
 	// DO NOT drop existing type cast before adding a new cast.
 	// Reason: `1::numeric::text` is valid but `1::text` is invalid.
-	suffix := "::" + typeName
+	suffix := "::" + targetType
 	if strings.HasSuffix(identifier, suffix) {
 		return identifier
 	}
@@ -577,6 +698,12 @@ func isKnownNonEmptyIdentifier(result *ResolverResult) bool {
 	switch strings.ToLower(result.Identifier) {
 	case "1", "0", "false", `true`:
 		return true
+	}
+
+	if len(result.Params) == 0 {
+		if _, err := strconv.ParseFloat(result.Identifier, 64); err == nil {
+			return true
+		}
 	}
 
 	return len(result.Params) > 0 && !hasEmptyParamValue(result) && !isEmptyIdentifier(result)

@@ -63,7 +63,7 @@ func TestSimpleFieldResolverResolve(t *testing.T) {
 		{"data.test", false, "JSON_EXTRACT([[data]], '$.test')"},
 		*/
 		// PostgreSQL:
-		{"data.test", false, "(JSON_QUERY([[data]]::jsonb, '$.test') #>> '{}')::text"},
+		{"data.test", false, "JSON_QUERY([[data]]::jsonb, '$.test')::jsonb"},
 	}
 
 	for i, s := range scenarios {

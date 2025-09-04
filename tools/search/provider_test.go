@@ -366,8 +366,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 IS NOT '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT " + fmt.Sprint(MaxPerPage),
 				*/
 				// PostgreSQL:
-				`SELECT COUNT(DISTINCT [[test.id]]) FROM "test" WHERE ((NOT ("test1" IS NULL)) AND (((test2 IS DISTINCT FROM '' AND test2 IS NOT NULL)))) AND (test1::numeric >= 2::numeric)`,
-				`SELECT * FROM "test" WHERE ((NOT ("test1" IS NULL)) AND (((test2 IS DISTINCT FROM '' AND test2 IS NOT NULL)))) AND (test1::numeric >= 2::numeric) ORDER BY "test1" ASC, "test2" DESC LIMIT ` + fmt.Sprint(MaxPerPage),
+				`SELECT COUNT(DISTINCT [[test.id]]) FROM "test" WHERE ((NOT ("test1" IS NULL)) AND (((test2::text IS DISTINCT FROM '' AND test2 IS NOT NULL)))) AND (test1::numeric >= 2)`,
+				`SELECT * FROM "test" WHERE ((NOT ("test1" IS NULL)) AND (((test2::text IS DISTINCT FROM '' AND test2 IS NOT NULL)))) AND (test1::numeric >= 2) ORDER BY "test1" ASC, "test2" DESC LIMIT ` + fmt.Sprint(MaxPerPage),
 			},
 		},
 		{
@@ -384,7 +384,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 				"SELECT * FROM `test` WHERE ((NOT (`test1` IS NULL)) AND (((test2 IS NOT '' AND test2 IS NOT NULL)))) AND (test1 >= 2) ORDER BY `test1` ASC, `test2` DESC LIMIT " + fmt.Sprint(MaxPerPage),
 				*/
 				// PostgreSQL:
-				`SELECT * FROM "test" WHERE ((NOT ("test1" IS NULL)) AND (((test2 IS DISTINCT FROM '' AND test2 IS NOT NULL)))) AND (test1::numeric >= 2::numeric) ORDER BY "test1" ASC, "test2" DESC LIMIT ` + fmt.Sprint(MaxPerPage),
+				`SELECT * FROM "test" WHERE ((NOT ("test1" IS NULL)) AND (((test2::text IS DISTINCT FROM '' AND test2 IS NOT NULL)))) AND (test1::numeric >= 2) ORDER BY "test1" ASC, "test2" DESC LIMIT ` + fmt.Sprint(MaxPerPage),
 			},
 		},
 		{
@@ -402,8 +402,8 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 IS NOT '' AND test3 IS NOT NULL))) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
 				*/
 				// PostgreSQL:
-				`SELECT COUNT(DISTINCT [[test.id]]) FROM "test" WHERE (NOT ("test1" IS NULL)) AND (((test3 IS DISTINCT FROM '' AND test3 IS NOT NULL)))`,
-				`SELECT * FROM "test" WHERE (NOT ("test1" IS NULL)) AND (((test3 IS DISTINCT FROM '' AND test3 IS NOT NULL))) ORDER BY "test1" ASC, "test3" ASC LIMIT 10`,
+				`SELECT COUNT(DISTINCT [[test.id]]) FROM "test" WHERE (NOT ("test1" IS NULL)) AND (((test3::text IS DISTINCT FROM '' AND test3 IS NOT NULL)))`,
+				`SELECT * FROM "test" WHERE (NOT ("test1" IS NULL)) AND (((test3::text IS DISTINCT FROM '' AND test3 IS NOT NULL))) ORDER BY "test1" ASC, "test3" ASC LIMIT 10`,
 			},
 		},
 		{
@@ -420,7 +420,7 @@ func TestProviderExecNonEmptyQuery(t *testing.T) {
 				"SELECT * FROM `test` WHERE (NOT (`test1` IS NULL)) AND (((test3 IS NOT '' AND test3 IS NOT NULL))) ORDER BY `test1` ASC, `test3` ASC LIMIT 10",
 				*/
 				// PostgreSQL:
-				`SELECT * FROM "test" WHERE (NOT ("test1" IS NULL)) AND (((test3 IS DISTINCT FROM '' AND test3 IS NOT NULL))) ORDER BY "test1" ASC, "test3" ASC LIMIT 10`,
+				`SELECT * FROM "test" WHERE (NOT ("test1" IS NULL)) AND (((test3::text IS DISTINCT FROM '' AND test3 IS NOT NULL))) ORDER BY "test1" ASC, "test3" ASC LIMIT 10`,
 			},
 		},
 		{

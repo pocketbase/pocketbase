@@ -15,6 +15,10 @@
     export let filter = "";
     export let presets = "";
     export let zoom = {};
+    /*  SQLite:
+    export let sort = "-@rowid";
+    */
+    // Postgres:
     export let sort = "-id";
 
     let logs = [];

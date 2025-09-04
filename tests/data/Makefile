@@ -7,6 +7,26 @@ install-pgloader:
 run-docker:
 	docker run -d --rm --name postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=pass -p 5432:5432 postgres:alpine
 
+# Max performance for unit tests.
+run-docker-unit-test-only:
+	docker run -d --rm --name postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=pass \
+		--tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=2G \
+		-p 5432:5432 postgres:alpine \
+		-c fsync=off \
+		-c synchronous_commit=off \
+		-c full_page_writes=off \
+		-c wal_level=minimal \
+		-c max_wal_senders=0 \
+		-c archive_mode=off \
+		-c shared_buffers=256MB \
+		-c max_wal_size=512MB \
+		-c checkpoint_timeout=30min \
+		-c logging_collector=off \
+		-c log_statement=none \
+		-c jit=off \
+		-c track_counts=off \
+		-c autovacuum=off
+
 dump-db:
 # 1. Convert `data.db` to `data.sqlite-dump.sql` and `data.pg-dump.sql`
 	sqlite3 data.db .dump > data.sqlite-dump.sql

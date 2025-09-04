@@ -34,11 +34,16 @@ func JSONEach(column string) string {
 // We assume the parameter value is a marshalled JSON array.
 func JSONEachByPlaceholder(placeholder string) string {
 	return fmt.Sprintf(
-		`jsonb_array_elements_text({:%s}::jsonb)`,
+		`jsonb_array_elements({:%s}::jsonb)`,
 		placeholder,
 	)
 }
 
+// JsonArrayExistsStr is used to determine whether a JSON string array contains a string element.
+// Right now it only used to determine whether a JSON string ID array contains a specific ID.
+// Operation "?" definition: Does the string exist as a top-level key within the JSON value?
+// The type of the key is only supported to be string.
+// If we want to support other types, we may need to use `@>` operator instead.
 func JsonArrayExistsStr(column string, strValue string) dbx.Expression {
 	return dbx.NewExp(fmt.Sprintf("[[%s]] ? {:value}::text", column), dbx.Params{
 		"value": strValue,
@@ -89,11 +94,9 @@ func JSONExtract(column string, path string) string {
 
 	// PostgreSQL:
 	// Using `json_value::text` will get a string with double quotes. Using `json_value #>> '{}'` to get string content instead.
-	// Adding `::text` at the end as a hint to `typeAwareJoin` to convert the other value to text while comparing the data (only if the other type is not determined).
+	// Adding `::jsonb` at the end as a hint to `typeAwareJoin` to convert the other value to text while comparing the data (only if the other type is not determined).
 	return fmt.Sprintf(
-		`((CASE WHEN [[%s]] IS JSON OR json_valid([[%s]]::text) THEN JSON_QUERY([[%s]]::jsonb, '$%s') ELSE NULL END) #>> '{}')::text`,
-		column,
-		column,
+		`JSON_QUERY_OR_NULL([[%s]], '$%s')::jsonb`,
 		column,
 		path,
 	)

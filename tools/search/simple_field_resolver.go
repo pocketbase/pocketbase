@@ -116,7 +116,7 @@ func (r *SimpleFieldResolver) Resolve(field string) (*ResolverResult, error) {
 		// requires a determistic type for any expression. We will do
 		// more type casting while building the final db expression.
 		Identifier: fmt.Sprintf(
-			"(JSON_QUERY([[%s]]::jsonb, '%s') #>> '{}')::text",
+			"JSON_QUERY([[%s]]::jsonb, '%s')::jsonb",
 			inflector.Columnify(parts[0]),
 			jsonPath.String(),
 		),
