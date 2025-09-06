@@ -1,10 +1,16 @@
 ## v0.30.0 (WIP)
 
+- Eagerly escape the S3 request path following the same rules as in the S3 signing header ([#7153](https://github.com/pocketbase/pocketbase/issues/7153)).
+
 - Added Lark OAuth2 provider ([#7130](https://github.com/pocketbase/pocketbase/pull/7130); thanks @mashizora).
 
-- Eagerly escape the S3 request path with the same rules as in the S3 signinging header ([#7153](https://github.com/pocketbase/pocketbase/issues/7153)).
+- Increased test tokens `exp` claim to minimize eventual issues with reproducible builds ([#7123](https://github.com/pocketbase/pocketbase/issues/7123)).
 
-- Other minor changes (bumped the min Go version to 1.24, updated collections indexes merge UI, increased test tokens `exp` claim to prevent problems with reproducible builds).
+- Added `os.Root` bindings to the JSVM ([`$os.openRoot`](https://pocketbase.io/jsvm/functions/_os.openRoot.html), [`$os.openInRoot`](https://pocketbase.io/jsvm/functions/_os.openInRoot.html)).
+
+- Various minor UI improvements (updated collections indexes merge UI, enabled seconds in the datepicker, updated helper texts, etc.).
+
+- ⚠️ Updated the min package Go version to 1.24.0 and bumped Go dependencies.
 
 
 ## v0.29.3

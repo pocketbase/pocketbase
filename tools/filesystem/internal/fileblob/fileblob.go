@@ -377,6 +377,7 @@ func (drv *driver) NewRangeReader(ctx context.Context, key string, offset, lengt
 		return nil, err
 	}
 
+	// @todo consider replacing with os.Root
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err

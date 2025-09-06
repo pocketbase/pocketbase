@@ -770,6 +770,8 @@ func osBinds(vm *goja.Runtime) {
 	obj.Set("rename", os.Rename)
 	obj.Set("remove", os.Remove)
 	obj.Set("removeAll", os.RemoveAll)
+	obj.Set("openRoot", os.OpenRoot)
+	obj.Set("openInRoot", os.OpenInRoot)
 }
 
 func formsBinds(vm *goja.Runtime) {
