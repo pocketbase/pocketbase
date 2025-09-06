@@ -30,16 +30,6 @@ export default [
         optionsComponent: AppleOptions,
     },
     {
-        key: "wechat_native",
-        title: "WeChat (Native)",
-        logo: "wechat.svg",
-    },
-    {
-        key: "wechat_web",
-        title: "WeChat (Web)",
-        logo: "wechat.svg",
-    },
-    {
         key: "google",
         title: "Google",
         logo: "google.svg",

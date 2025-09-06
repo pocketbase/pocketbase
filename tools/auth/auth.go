@@ -19,13 +19,27 @@ type ProviderFactoryFunc func() Provider
 var Providers = map[string]ProviderFactoryFunc{}
 
 // Some platforms use two different ClientID/ClientSecret pairs for native sign-in and Web sign-in flows.
-// Known platforms are: Apple, Wechat
+// Known platforms are: Apple
 // See: https://github.com/pocketbase/pocketbase/issues/6151
 //
 // Two providers are equivalent only if:
 // 1. They are from same platform (Such as Apple)
 // 2. The providerId (AuthUser.Id) are the same in different providers.
 var EquivalentProviders = map[string][]string{}
+
+// ProgrammaticEnabledProviders allows developers add oauth2 providers via Golang SDK.
+// ```example.go
+//
+//	auth.Providers["provider_name"] = func() Provider {
+//		provider := &CustomProvider{}
+//		provider.SetClientId("client-id")   		// Optional
+//		provider.SetClientSecret("client-secret")	// Optional
+//		return provider
+//	}
+//	auth.ProgrammaticEnabledProviders["users"] = []string{"provider_name"}
+//
+// ```
+var ProgrammaticEnabledProviders = map[string][]string{}
 
 // NewProviderByName returns a new preconfigured provider instance by its name identifier.
 func NewProviderByName(name string) (Provider, error) {

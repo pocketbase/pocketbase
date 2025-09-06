@@ -114,6 +114,7 @@ func recordAuthMethods(e *core.RequestEvent) error {
 
 	result.OAuth2.Enabled = true
 
+	providers := make(map[string]auth.Provider)
 	for _, config := range collection.OAuth2.Providers {
 		provider, err := config.InitProvider()
 		if err != nil {
@@ -124,21 +125,36 @@ func recordAuthMethods(e *core.RequestEvent) error {
 			)
 			continue // skip provider
 		}
+		providers[config.Name] = provider
+	}
 
+	for _, providerName := range auth.ProgrammaticEnabledProviders[collection.Name] {
+		providerFunc, ok := auth.Providers[providerName]
+		if !ok {
+			e.App.Logger().Debug(
+				"Failed to find programmatic provider",
+				slog.String("name", providerName),
+			)
+			continue
+		}
+		providers[providerName] = providerFunc()
+	}
+
+	for providerName, provider := range providers {
 		info := providerInfo{
-			Name:        config.Name,
+			Name:        providerName,
 			DisplayName: provider.DisplayName(),
 			State:       security.RandomString(30),
 		}
 
 		if info.DisplayName == "" {
-			info.DisplayName = config.Name
+			info.DisplayName = providerName
 		}
 
 		urlOpts := []oauth2.AuthCodeOption{}
 
 		// custom providers url options
-		switch config.Name {
+		switch providerName {
 		case auth.NameAppleWeb:
 			// see https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_js/incorporating_sign_in_with_apple_into_other_platforms#3332113
 			urlOpts = append(urlOpts, oauth2.SetAuthURLParam("response_mode", "form_post"))

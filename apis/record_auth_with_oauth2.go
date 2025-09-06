@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"maps"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -58,14 +59,22 @@ func recordAuthWithOAuth2(e *core.RequestEvent) error {
 	// ---------------------------------------------------------------
 
 	// load provider configuration
-	providerConfig, ok := collection.OAuth2.GetProviderConfig(form.Provider)
-	if !ok {
-		return e.InternalServerError("Missing or invalid provider config.", nil)
-	}
+	var provider auth.Provider
+	if slices.Contains(auth.ProgrammaticEnabledProviders[collection.Name], form.Provider) {
+		provider, err = auth.NewProviderByName(form.Provider)
+		if err != nil {
+			return firstApiError(err, e.InternalServerError("Failed to init provider "+form.Provider, err))
+		}
+	} else {
+		providerConfig, ok := collection.OAuth2.GetProviderConfig(form.Provider)
+		if !ok {
+			return e.InternalServerError("Missing or invalid provider config.", nil)
+		}
 
-	provider, err := providerConfig.InitProvider()
-	if err != nil {
-		return firstApiError(err, e.InternalServerError("Failed to init provider "+form.Provider, err))
+		provider, err = providerConfig.InitProvider()
+		if err != nil {
+			return firstApiError(err, e.InternalServerError("Failed to init provider "+form.Provider, err))
+		}
 	}
 
 	ctx, cancel := context.WithTimeout(e.Request.Context(), 30*time.Second)
@@ -223,6 +232,10 @@ func (form *recordOAuth2LoginForm) validate() error {
 
 func (form *recordOAuth2LoginForm) checkProviderName(value any) error {
 	name, _ := value.(string)
+
+	if slices.Contains(auth.ProgrammaticEnabledProviders[form.collection.Name], name) {
+		return nil
+	}
 
 	_, ok := form.collection.OAuth2.GetProviderConfig(name)
 	if !ok {
