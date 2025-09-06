@@ -62,6 +62,13 @@ type S3 struct {
 }
 
 // URL constructs an S3 request URL based on the current configuration.
+//
+// Note that the path will be URL escaped based on the AWS [UriEncode rules]
+// for broader compatibility with some providers that expect the same
+// path format as the one in the canonical signed header
+// (see also https://github.com/pocketbase/pocketbase/issues/7153).
+//
+// [UriEncode rules]: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-create-signed-request.html
 func (s3 *S3) URL(path string) string {
 	scheme := "https"
 	endpoint := strings.TrimRight(s3.Endpoint, "/")
@@ -70,6 +77,23 @@ func (s3 *S3) URL(path string) string {
 	} else if after, ok := strings.CutPrefix(endpoint, "http://"); ok {
 		endpoint = after
 		scheme = "http"
+	}
+
+	// to prevent double escaping we first parse/unescape it
+	parsed, err := url.Parse(path)
+	if err != nil {
+		// truly rare case, keep the path as it is
+	} else {
+		path = escapePath(parsed.Path)
+
+		// the rest is usually not expected to be part of the S3 path but it is kept to avoid surprises
+		// (it will be further escaped if necessery by the Go HTTP client)
+		if parsed.RawQuery != "" {
+			path += "?" + parsed.RawQuery
+		}
+		if parsed.RawFragment != "" {
+			path += "#" + parsed.RawFragment
+		}
 	}
 
 	path = strings.TrimLeft(path, "/")

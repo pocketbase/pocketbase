@@ -17,7 +17,7 @@ func TestS3CopyObject(t *testing.T) {
 	httpClient := tests.NewClient(
 		&tests.RequestStub{
 			Method: http.MethodPut,
-			URL:    "http://test_bucket.example.com/@dst_test",
+			URL:    "http://test_bucket.example.com/%40dst_test",
 			Match: func(req *http.Request) bool {
 				return tests.ExpectHeaders(req.Header, map[string]string{
 					"test_header":       "test",
