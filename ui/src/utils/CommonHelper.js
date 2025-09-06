@@ -1422,6 +1422,7 @@ export default class CommonHelper {
             disableMobile: true,
             allowInput: true,
             enableTime: true,
+            enableSeconds: true,
             time_24hr: true,
             locale: {
                 firstDayOfWeek: 1,
