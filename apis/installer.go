@@ -88,8 +88,7 @@ func findOrCreateInstallerSuperuser(app core.App) (*core.Record, error) {
 }
 
 func executablePath() string {
-	// most likely ran with go run
-	if strings.HasPrefix(os.Args[0], os.TempDir()) {
+	if osutils.IsProbablyGoRun() {
 		return "go run ."
 	}
 

@@ -14,6 +14,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/list"
+	"github.com/pocketbase/pocketbase/tools/osutils"
 	"github.com/pocketbase/pocketbase/tools/routine"
 	"github.com/spf13/cobra"
 
@@ -293,7 +294,7 @@ func (pb *PocketBase) skipBootstrap() bool {
 // note: we are using os.Args[0] and not os.Executable() since it could
 // break existing aliased binaries (eg. the community maintained homebrew package)
 func inspectRuntime() (baseDir string, withGoRun bool) {
-	if strings.HasPrefix(os.Args[0], os.TempDir()) {
+	if osutils.IsProbablyGoRun() {
 		// probably ran with go run
 		withGoRun = true
 		baseDir, _ = os.Getwd()

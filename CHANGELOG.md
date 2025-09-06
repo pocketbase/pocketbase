@@ -8,9 +8,11 @@
 
 - Added `os.Root` bindings to the JSVM ([`$os.openRoot`](https://pocketbase.io/jsvm/functions/_os.openRoot.html), [`$os.openInRoot`](https://pocketbase.io/jsvm/functions/_os.openInRoot.html)).
 
-- Various minor UI improvements (updated collections indexes merge UI, enabled seconds in the datepicker, updated helper texts, etc.).
+- Added `osutils.IsProbablyGoRun()` helper to loosely check if the executable was started using `go run`.
 
-- ⚠️ Updated the min package Go version to 1.24.0 and bumped Go dependencies.
+- Various minor UI improvements (updated collections indexes UI, enabled seconds in the datepicker, updated helper texts, etc.).
+
+- ⚠️ Updated the minimum package Go version to 1.24.0 and bumped Go dependencies.
 
 
 ## v0.29.3
