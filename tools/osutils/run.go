@@ -7,8 +7,7 @@ import (
 
 var runDirs = []string{os.TempDir(), cacheDir()}
 
-// IsProbablyGoRun loosely checks if the current executable is running
-// as a result of "go run".
+// IsProbablyGoRun loosely checks if the current program was started with "go run".
 func IsProbablyGoRun() bool {
 	for _, dir := range runDirs {
 		if dir != "" && strings.HasPrefix(os.Args[0], dir) {

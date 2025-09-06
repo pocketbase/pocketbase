@@ -1,4 +1,4 @@
-## v0.30.0 (WIP)
+## v0.30.0
 
 - Eagerly escape the S3 request path following the same rules as in the S3 signing header ([#7153](https://github.com/pocketbase/pocketbase/issues/7153)).
 
@@ -8,7 +8,7 @@
 
 - Added `os.Root` bindings to the JSVM ([`$os.openRoot`](https://pocketbase.io/jsvm/functions/_os.openRoot.html), [`$os.openInRoot`](https://pocketbase.io/jsvm/functions/_os.openInRoot.html)).
 
-- Added `osutils.IsProbablyGoRun()` helper to loosely check if the executable was started using `go run`.
+- Added `osutils.IsProbablyGoRun()` helper to loosely check if the program was started using `go run`.
 
 - Various minor UI improvements (updated collections indexes UI, enabled seconds in the datepicker, updated helper texts, etc.).
 
