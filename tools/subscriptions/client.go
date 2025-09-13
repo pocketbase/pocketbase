@@ -84,7 +84,7 @@ type DefaultClient struct {
 	subscriptions map[string]SubscriptionOptions
 	channel       chan Message
 	id            string
-	mux           sync.RWMutex
+	mu            sync.RWMutex
 	isDiscarded   bool
 }
 
@@ -100,16 +100,16 @@ func NewDefaultClient() *DefaultClient {
 
 // Id implements the [Client.Id] interface method.
 func (c *DefaultClient) Id() string {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	return c.id
 }
 
 // Channel implements the [Client.Channel] interface method.
 func (c *DefaultClient) Channel() chan Message {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	return c.channel
 }
@@ -119,8 +119,8 @@ func (c *DefaultClient) Channel() chan Message {
 // It returns a shallow copy of the client subscriptions matching the prefixes.
 // If no prefix is specified, returns all subscriptions.
 func (c *DefaultClient) Subscriptions(prefixes ...string) map[string]SubscriptionOptions {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	// no prefix -> return copy of all subscriptions
 	if len(prefixes) == 0 {
@@ -152,8 +152,8 @@ func (c *DefaultClient) Subscriptions(prefixes ...string) map[string]Subscriptio
 //
 // Empty subscriptions (aka. "") are ignored.
 func (c *DefaultClient) Subscribe(subs ...string) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	for _, s := range subs {
 		if s == "" {
@@ -199,8 +199,8 @@ func (c *DefaultClient) Subscribe(subs ...string) {
 //
 // If subs is not set, this method removes all registered client's subscriptions.
 func (c *DefaultClient) Unsubscribe(subs ...string) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if len(subs) > 0 {
 		for _, s := range subs {
@@ -216,8 +216,8 @@ func (c *DefaultClient) Unsubscribe(subs ...string) {
 
 // HasSubscription implements the [Client.HasSubscription] interface method.
 func (c *DefaultClient) HasSubscription(sub string) bool {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	_, ok := c.subscriptions[sub]
 
@@ -226,32 +226,32 @@ func (c *DefaultClient) HasSubscription(sub string) bool {
 
 // Get implements the [Client.Get] interface method.
 func (c *DefaultClient) Get(key string) any {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	return c.store[key]
 }
 
 // Set implements the [Client.Set] interface method.
 func (c *DefaultClient) Set(key string, value any) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	c.store[key] = value
 }
 
 // Unset implements the [Client.Unset] interface method.
 func (c *DefaultClient) Unset(key string) {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	delete(c.store, key)
 }
 
 // Discard implements the [Client.Discard] interface method.
 func (c *DefaultClient) Discard() {
-	c.mux.Lock()
-	defer c.mux.Unlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	if c.isDiscarded {
 		return
@@ -264,17 +264,20 @@ func (c *DefaultClient) Discard() {
 
 // IsDiscarded implements the [Client.IsDiscarded] interface method.
 func (c *DefaultClient) IsDiscarded() bool {
-	c.mux.RLock()
-	defer c.mux.RUnlock()
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 
 	return c.isDiscarded
 }
 
 // Send sends the specified message to the client's channel (if not discarded).
 func (c *DefaultClient) Send(m Message) {
-	if c.IsDiscarded() {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.isDiscarded {
 		return
 	}
 
-	c.Channel() <- m
+	c.channel <- m
 }
