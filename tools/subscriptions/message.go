@@ -15,7 +15,7 @@ type Message struct {
 // For example, writing to a router.Event:
 //
 //	m := Message{Name: "users/create", Data: []byte{...}}
-//	m.Write(e.Response, "yourEventId")
+//	m.WriteSSE(e.Response, "yourEventId")
 //	e.Flush()
 func (m *Message) WriteSSE(w io.Writer, eventId string) error {
 	parts := [][]byte{
