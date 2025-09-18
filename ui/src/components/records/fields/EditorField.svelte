@@ -92,7 +92,7 @@
             false,
             `<video controls width="100%" style="max-width: 640px;">
                 <source src="${videoUrl}" type="video/${e.detail.name.split('.').pop()}">
-                Your browser does not support the video tag.
+                Video
             </video>`
         );
     }}
