@@ -1525,7 +1525,7 @@ export default class CommonHelper {
                 { text: 'Julia', value: 'julia' },
                 { text: 'Haskell', value: 'haskell' },
             ],
-            toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image_picker table codesample direction | code fullscreen",
+            toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image_picker video_picker table codesample direction | code fullscreen",
             paste_postprocess: (editor, args) => {
                 cleanupPastedNode(args.node);
             },
@@ -1629,6 +1629,32 @@ export default class CommonHelper {
                                 icon: "browse",
                                 onAction: () => {
                                     editor.execCommand("mceImage");
+                                }
+                            }
+                        ];
+
+                        callback(items);
+                    }
+                });
+
+                editor.ui.registry.addMenuButton("video_picker", {
+                    icon: "embed",
+                    fetch: (callback) => {
+                        const items = [
+                            {
+                                type: "menuitem",
+                                text: "From collection",
+                                icon: "gallery",
+                                onAction: () => {
+                                    editor.dispatch("collections_video_picker", {})
+                                }
+                            },
+                            {
+                                type: "menuitem",
+                                text: "Inline",
+                                icon: "browse",
+                                onAction: () => {
+                                    editor.execCommand("mceMedia");
                                 }
                             }
                         ];

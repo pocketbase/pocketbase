@@ -11,6 +11,7 @@
     export let value = "";
 
     let picker;
+    let videoPicker;
     let editor;
     let mounted = false;
     let mountedTimeoutId = null;
@@ -55,6 +56,9 @@
                 editor.on("collections_file_picker", () => {
                     picker?.show();
                 });
+                editor.on("collections_video_picker", () => {
+                    videoPicker?.show();
+                });
             }}
         />
     {:else}
@@ -73,6 +77,23 @@
             ApiClient.files.getURL(e.detail.record, e.detail.name, {
                 thumb: e.detail.size,
             }),
+        );
+    }}
+/>
+
+<RecordFilePicker
+    bind:this={videoPicker}
+    title="Select a video"
+    fileTypes={["video"]}
+    on:submit={(e) => {
+        const videoUrl = ApiClient.files.getURL(e.detail.record, e.detail.name);
+        editor?.execCommand(
+            "mceInsertContent",
+            false,
+            `<video controls width="100%" style="max-width: 640px;">
+                <source src="${videoUrl}" type="video/${e.detail.name.split('.').pop()}">
+                Your browser does not support the video tag.
+            </video>`
         );
     }}
 />

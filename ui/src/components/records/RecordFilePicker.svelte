@@ -33,19 +33,38 @@
     let selectedFile = {};
     let selectedSize = "";
 
-    // find all collections with at least one non-protected file field
+    // find all collections with at least one non-protected file field that matches the fileTypes
     $: fileCollections = $collections.filter((c) => {
         return (
             c.type !== "view" &&
             !!CommonHelper.toArray(c.fields).find((f) => {
-                return (
-                    // is file field
-                    f.type === "file" &&
-                    // is public (aka. doesn't require file token)
-                    !f.protected &&
-                    // allow any MIME type OR image/*
-                    (!f.mimeTypes?.length || !!f.mimeTypes?.find((t) => t.startsWith("image/")))
-                );
+                if (f.type !== "file" || f.protected) {
+                    return false;
+                }
+
+                // if no MIME types specified, allow all
+                if (!f.mimeTypes?.length) {
+                    return true;
+                }
+
+                // check if any of the field's MIME types match our desired file types
+                return f.mimeTypes.some(mimeType => {
+                    return fileTypes.some(fileType => {
+                        switch (fileType) {
+                            case "image":
+                                return mimeType.startsWith("image/");
+                            case "video":
+                                return mimeType.startsWith("video/");
+                            case "audio":
+                                return mimeType.startsWith("audio/");
+                            case "document":
+                                return mimeType.startsWith("application/") || mimeType.startsWith("text/");
+                            case "file":
+                            default:
+                                return true;
+                        }
+                    });
+                });
             })
         );
     });
