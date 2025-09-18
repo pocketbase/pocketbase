@@ -7,6 +7,8 @@ const imageExtensions = [
 
 const videoExtensions = [
     ".mp4", ".avi", ".mov", ".3gp", ".wmv",
+    ".webm", ".mkv", ".flv", ".m4v", ".ogv",
+    ".mpg", ".mpeg", ".m2v", ".asf",
 ];
 
 const audioExtensions = [
@@ -1525,16 +1527,24 @@ export default class CommonHelper {
                 { text: 'Julia', value: 'julia' },
                 { text: 'Haskell', value: 'haskell' },
             ],
-            toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image_picker table codesample direction | code fullscreen",
+            toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image_picker video_picker table codesample direction | code fullscreen",
             paste_postprocess: (editor, args) => {
                 cleanupPastedNode(args.node);
             },
-            file_picker_types: "image",
+            file_picker_types: "image media",
             // @see https://www.tiny.cloud/docs/tinymce/6/file-image-upload/#interactive-example
             file_picker_callback: (cb, value, meta) => {
                 const input = document.createElement("input");
                 input.setAttribute("type", "file");
-                input.setAttribute("accept", "image/*");
+
+                // Set accept attribute based on file type
+                if (meta.filetype === "image") {
+                    input.setAttribute("accept", "image/*");
+                } else if (meta.filetype === "media") {
+                    input.setAttribute("accept", "video/*");
+                } else {
+                    input.setAttribute("accept", "image/*,video/*");
+                }
 
                 input.addEventListener("change", (e) => {
                     const file = e.target.files[0];
@@ -1545,7 +1555,7 @@ export default class CommonHelper {
                             return;
                         }
 
-                        // We need to register the blob in TinyMCEs image blob registry.
+                        // We need to register the blob in TinyMCEs blob registry.
                         // In future TinyMCE version this part will be handled internally.
                         const id = "blobid" + new Date().getTime();
                         const blobCache = tinymce.activeEditor.editorUpload.blobCache;
@@ -1613,27 +1623,15 @@ export default class CommonHelper {
 
                 editor.ui.registry.addMenuButton("image_picker", {
                     icon: "image",
-                    fetch: (callback) => {
-                        const items = [
-                            {
-                                type: "menuitem",
-                                text: "From collection",
-                                icon: "gallery",
-                                onAction: () => {
-                                    editor.dispatch("collections_file_picker", {})
-                                }
-                            },
-                            {
-                                type: "menuitem",
-                                text: "Inline",
-                                icon: "browse",
-                                onAction: () => {
-                                    editor.execCommand("mceImage");
-                                }
-                            }
-                        ];
+                    onAction: () => {
+                        editor.dispatch("collections_file_picker", {})
+                    }
+                });
 
-                        callback(items);
+                editor.ui.registry.addMenuButton("video_picker", {
+                    icon: "embed",
+                    onAction: () => {
+                        editor.dispatch("collections_video_picker", {})
                     }
                 })
             },
