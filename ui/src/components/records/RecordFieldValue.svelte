@@ -15,6 +15,20 @@
 
     $: rawValue = record?.[field.name];
     $: maxTruncateLength = field.type === "text" && field.maxRenderLength > 0 ? field.maxRenderLength : 150;
+    $: shouldWrapText = field.type === "text" && field.maxRenderLength > 0;
+
+    // Debug: Log field info when it's a text field
+    $: if (field.type === "text") {
+        console.log("Text field debug:", {
+            fieldName: field.name,
+            fieldType: field.type,
+            maxRenderLength: field.maxRenderLength,
+            shouldWrapText: shouldWrapText,
+            maxTruncateLength: maxTruncateLength,
+            short: short,
+            rawValue: rawValue
+        });
+    }
 </script>
 
 {#if field.primaryKey}
@@ -124,6 +138,10 @@
     </div>
 {:else if field.type === "geoPoint"}
     <div class="label"><GeoPointValue value={rawValue} /></div>
+{:else if shouldWrapText}
+    <div class="block txt-break text-wrap-block">
+        {rawValue.length > maxTruncateLength ? rawValue.substring(0, maxTruncateLength) + "..." : rawValue}
+    </div>
 {:else if short}
     <span class="txt txt-ellipsis" title={CommonHelper.truncate(rawValue, maxTruncateLength)}>
         {CommonHelper.truncate(rawValue, maxTruncateLength)}
@@ -136,5 +154,12 @@
     .fallback-block {
         max-height: 100px;
         overflow: auto;
+    }
+
+    .text-wrap-block {
+        word-wrap: break-word;
+        word-break: break-word;
+        white-space: pre-wrap;
+        line-height: 1.5;
     }
 </style>

@@ -104,8 +104,7 @@
                         min="0"
                         max={Number.MAX_SAFE_INTEGER}
                         placeholder="Default to 150 characters"
-                        value={field.maxRenderLength || ""}
-                        on:input={(e) => (field.maxRenderLength = parseInt(e.target.value, 10))}
+                        bind:value={field.maxRenderLength}
                     />
                 </Field>
             </div>
