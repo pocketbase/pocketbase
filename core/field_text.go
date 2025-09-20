@@ -91,6 +91,11 @@ type TextField struct {
 	//
 	// A single collection can have only 1 field marked as primary key.
 	PrimaryKey bool `form:"primaryKey" json:"primaryKey"`
+
+	// MaxRenderLength specifies the maximum characters to display in the dashboard for string values.
+	//
+	// If zero value, defaults to 150 characters.
+	MaxRenderLength int `form:"maxRenderLength" json:"maxRenderLength"`
 }
 
 // Type implements [Field.Type] interface method.
@@ -265,6 +270,7 @@ func (f *TextField) ValidateSettings(ctx context.Context, app App, collection *C
 		validation.Field(&f.Hidden, validation.When(f.PrimaryKey, validation.Empty)),
 		validation.Field(&f.Required, validation.When(f.PrimaryKey, validation.Required)),
 		validation.Field(&f.AutogeneratePattern, validation.By(validators.IsRegex), validation.By(f.checkAutogeneratePattern)),
+		validation.Field(&f.MaxRenderLength, validation.Min(0), validation.Max(maxSafeJSONInt)),
 	)
 }
 

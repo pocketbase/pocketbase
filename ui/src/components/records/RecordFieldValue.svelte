@@ -14,6 +14,7 @@
     export let short = false;
 
     $: rawValue = record?.[field.name];
+    $: maxTruncateLength = field.type === "text" && field.maxRenderLength > 0 ? field.maxRenderLength : 150;
 </script>
 
 {#if field.primaryKey}
@@ -124,11 +125,11 @@
 {:else if field.type === "geoPoint"}
     <div class="label"><GeoPointValue value={rawValue} /></div>
 {:else if short}
-    <span class="txt txt-ellipsis" title={CommonHelper.truncate(rawValue)}>
-        {CommonHelper.truncate(rawValue)}
+    <span class="txt txt-ellipsis" title={CommonHelper.truncate(rawValue, maxTruncateLength)}>
+        {CommonHelper.truncate(rawValue, maxTruncateLength)}
     </span>
 {:else}
-    <div class="block txt-break fallback-block">{rawValue}</div>
+    <div class="block txt-break fallback-block">{CommonHelper.truncate(rawValue, maxTruncateLength, true)}</div>
 {/if}
 
 <style>

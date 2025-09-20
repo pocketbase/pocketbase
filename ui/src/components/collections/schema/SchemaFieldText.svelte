@@ -87,6 +87,28 @@
                     </div>
                 </Field>
             </div>
+
+            <div class="col-sm-6">
+                <Field class="form-field" name="fields.{key}.maxRenderLength" let:uniqueId>
+                    <label for={uniqueId}>
+                        <span class="txt">Max render characters</span>
+                        <i
+                            class="ri-information-line link-hint"
+                            use:tooltip={"Maximum characters to display in the dashboard table. Clear or set to 0 for default (150 characters)."}
+                        />
+                    </label>
+                    <input
+                        type="number"
+                        id={uniqueId}
+                        step="1"
+                        min="0"
+                        max={Number.MAX_SAFE_INTEGER}
+                        placeholder="Default to 150 characters"
+                        value={field.maxRenderLength || ""}
+                        on:input={(e) => (field.maxRenderLength = parseInt(e.target.value, 10))}
+                    />
+                </Field>
+            </div>
         </div>
     </svelte:fragment>
 </SchemaField>
