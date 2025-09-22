@@ -1,3 +1,8 @@
+## v0.30.1 (WIP)
+
+- Updated `modernc.org/sqlite` to 1.39.0.
+
+
 ## v0.30.0
 
 - Eagerly escape the S3 request path following the same rules as in the S3 signing header ([#7153](https://github.com/pocketbase/pocketbase/issues/7153)).
