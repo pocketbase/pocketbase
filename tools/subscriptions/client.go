@@ -272,12 +272,14 @@ func (c *DefaultClient) IsDiscarded() bool {
 
 // Send sends the specified message to the client's channel (if not discarded).
 func (c *DefaultClient) Send(m Message) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-
-	if c.isDiscarded {
+	if c.IsDiscarded() {
 		return
 	}
+
+	// gracefully handle panics since channel close is not blocking and could cause races
+	defer func() {
+		recover()
+	}()
 
 	c.channel <- m
 }
