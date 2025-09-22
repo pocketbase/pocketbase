@@ -121,6 +121,10 @@ func (d *DateTime) UnmarshalJSON(b []byte) error {
 
 // Value implements the [driver.Valuer] interface.
 func (d DateTime) Value() (driver.Value, error) {
+	if d.IsZero() { // PostgreSQL only
+		return nil, nil
+	}
+
 	return d.String(), nil
 }
 

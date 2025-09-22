@@ -1,8 +1,13 @@
 
-# Dependencies: pg-loader, 
+# Dependencies: pg-loader, postgres client tools
 
-install-pgloader:
+install-tools-macos:
 	brew install pgloader
+	brew install libpq
+
+install-tools-linux:
+	sudo apt install pgloader
+	sudo apt install postgresql-client
 
 run-docker:
 	docker run -d --rm --name postgres -e POSTGRES_USER=user -e POSTGRES_PASSWORD=pass -p 5432:5432 postgres:alpine
