@@ -1,6 +1,6 @@
 ## v0.30.1 (WIP)
 
-- ...
+- Updated Go dependencies.
 
 
 ## v0.30.0

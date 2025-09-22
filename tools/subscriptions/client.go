@@ -276,7 +276,7 @@ func (c *DefaultClient) Send(m Message) {
 		return
 	}
 
-	// gracefully handle panics since channel close is not blocking and could cause races
+	// "gracefully" handle panics since channel close is not blocking and could cause races
 	defer func() {
 		recover()
 	}()
