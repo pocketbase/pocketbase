@@ -1,6 +1,6 @@
 ## v0.30.1 (WIP)
 
-- Updated `modernc.org/sqlite` to 1.39.0.
+- ...
 
 
 ## v0.30.0
