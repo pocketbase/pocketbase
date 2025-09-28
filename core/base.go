@@ -40,6 +40,9 @@ const (
 	LocalBackupsDirName       string = "backups"
 	LocalTempDirName          string = ".pb_temp_to_delete" // temp pb_data sub directory that will be deleted on each app.Bootstrap()
 	LocalAutocertCacheDirName string = ".autocert_cache"
+
+	// @todo consider removing after backups refactoring
+	lostFoundDirName string = "lost+found"
 )
 
 // FilesManager defines an interface with common methods that files manager models should implement.

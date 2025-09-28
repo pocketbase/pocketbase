@@ -1,5 +1,8 @@
 ## v0.30.1 (WIP)
 
+- ⚠️ Excluded the `lost+found` directory from the backups ([#7208](https://github.com/pocketbase/pocketbase/pull/7208); thanks @lbndev).
+    _If for some reason you want to keep it, you can restore it by editing the `e.Exclude` list of the `OnBackupCreate` and `OnBackupRestore` hooks._
+
 - Updated Go dependencies.
 
 
