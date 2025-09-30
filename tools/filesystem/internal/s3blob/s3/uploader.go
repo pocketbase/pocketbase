@@ -353,6 +353,11 @@ func (u *Uploader) multipartUpload(ctx context.Context, initPart []byte, optReqF
 		})
 	}
 
+	// Ensure that the totalParallel is at least 1
+	if totalParallel < 1 {
+		totalParallel = 1
+	}
+
 	for i := 0; i < totalParallel; i++ {
 		g.Go(func() error {
 			for {
