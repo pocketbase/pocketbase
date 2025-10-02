@@ -334,10 +334,10 @@ func (u *Uploader) multipartUpload(ctx context.Context, initPart []byte, optReqF
 	var g errgroup.Group
 	g.SetLimit(u.MaxConcurrency)
 
-	totalParallel := u.MaxConcurrency
+	totalWorkers := u.MaxConcurrency
 
 	if len(initPart) != 0 {
-		totalParallel--
+		totalWorkers--
 		initPartNumber := u.lastPartNumber
 		g.Go(func() error {
 			mp, err := u.uploadPart(ctx, initPartNumber, initPart, optReqFuncs...)
@@ -353,7 +353,9 @@ func (u *Uploader) multipartUpload(ctx context.Context, initPart []byte, optReqF
 		})
 	}
 
-	for i := 0; i < totalParallel; i++ {
+	totalWorkers = max(totalWorkers, 1)
+
+	for i := 0; i < totalWorkers; i++ {
 		g.Go(func() error {
 			for {
 				part, num, err := u.nextPart()
