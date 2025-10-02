@@ -1,6 +1,5 @@
 version: "2"
 run:
-  go: 1.23
   concurrency: 4
   timeout: 10m
 linters:
