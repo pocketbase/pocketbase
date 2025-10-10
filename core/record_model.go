@@ -956,7 +956,7 @@ func (m *Record) GetString(key string) string {
 
 // GetInt returns the data value for "key" as an int.
 func (m *Record) GetInt(key string) int {
-	return cast.ToInt(m.Get(key))
+	return cast.ToInt(cast.ToString(m.Get(key)))
 }
 
 // GetFloat returns the data value for "key" as a float64.
