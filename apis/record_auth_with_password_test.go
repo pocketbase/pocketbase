@@ -213,6 +213,57 @@ func TestRecordAuthWithPassword(t *testing.T) {
 			},
 		},
 		{
+			// https://github.com/pocketbase/pocketbase/issues/7256
+			Name:   "valid non-email identity field with a value that is a properly formatted email",
+			Method: http.MethodPost,
+			URL:    "/api/collections/clients/auth-with-password",
+			Body: strings.NewReader(`{
+				"identity":"username_as_email@example.com",
+				"password":"1234567890"
+			}`),
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				record, err := app.FindAuthRecordByEmail("clients", "test@example.com")
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				record.Set("username", "username_as_email@example.com")
+
+				err = app.SaveNoValidate(record)
+				if err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"email":"test@example.com"`,
+				`"username":"username_as_email@example.com"`,
+				`"token":`,
+			},
+			NotExpectedContent: []string{
+				// hidden fields
+				`"tokenKey"`,
+				`"password"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                               0,
+				"OnRecordAuthWithPasswordRequest": 1,
+				"OnRecordAuthRequest":             1,
+				"OnRecordEnrich":                  1,
+				// authOrigin track
+				"OnModelCreate":               1,
+				"OnModelCreateExecute":        1,
+				"OnModelAfterCreateSuccess":   1,
+				"OnModelValidate":             1,
+				"OnRecordCreate":              1,
+				"OnRecordCreateExecute":       1,
+				"OnRecordAfterCreateSuccess":  1,
+				"OnRecordValidate":            1,
+				"OnMailerSend":                1,
+				"OnMailerRecordAuthAlertSend": 1,
+			},
+		},
+		{
 			Name:   "unknown explicit identityField",
 			Method: http.MethodPost,
 			URL:    "/api/collections/clients/auth-with-password",

@@ -40,23 +40,32 @@ func recordAuthWithPassword(e *core.RequestEvent) error {
 	if form.IdentityField != "" {
 		foundRecord, foundErr = findRecordByIdentityField(e.App, collection, form.IdentityField, form.Identity)
 	} else {
-		// prioritize email lookup
-		isEmail := is.EmailFormat.Validate(form.Identity) == nil
-		if isEmail && list.ExistInSlice(core.FieldNameEmail, collection.PasswordAuth.IdentityFields) {
-			foundRecord, foundErr = findRecordByIdentityField(e.App, collection, core.FieldNameEmail, form.Identity)
+		identityFields := collection.PasswordAuth.IdentityFields
+
+		// @todo consider removing with the stable release or moving it in the collection save
+		//
+		// prioritize email lookup to minimize breaking changes with earlier versions
+		if len(identityFields) > 1 && identityFields[0] != core.FieldNameEmail {
+			identityFields = slices.Clone(identityFields)
+			slices.SortStableFunc(identityFields, func(a, b string) int {
+				if a == "email" {
+					return -1
+				}
+				if b == "email" {
+					return 1
+				}
+				return 0
+			})
 		}
 
-		// search by the other identity fields
-		if !isEmail || foundErr != nil {
-			for _, name := range collection.PasswordAuth.IdentityFields {
-				if !isEmail && name == core.FieldNameEmail {
-					continue // no need to search by the email field if it is not an email
-				}
+		for _, name := range identityFields {
+			if name == core.FieldNameEmail && is.EmailFormat.Validate(form.Identity) != nil {
+				continue // no need to query the database if we know that the submitted value is not an email
+			}
 
-				foundRecord, foundErr = findRecordByIdentityField(e.App, collection, name, form.Identity)
-				if foundErr == nil {
-					break
-				}
+			foundRecord, foundErr = findRecordByIdentityField(e.App, collection, name, form.Identity)
+			if foundErr == nil {
+				break
 			}
 		}
 	}
