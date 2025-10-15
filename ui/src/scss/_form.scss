@@ -1241,6 +1241,7 @@ select {
     display: flex;
     flex-direction: column;
     width: 100%;
+    overflow: visible; // https://github.com/pocketbase/pocketbase/issues/7223
     .form-field label ~ & {
         padding-bottom: 6px;
         padding-top: 4px;
@@ -1279,6 +1280,7 @@ select {
         }
         .cm-scroller {
             flex-grow: 1;
+            overflow: auto;
             outline: 0 !important;
             font-family: var(--monospaceFontFamily);
             font-size: var(--baseFontSize);

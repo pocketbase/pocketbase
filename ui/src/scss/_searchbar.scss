@@ -39,6 +39,9 @@
         padding-top: 0;
         padding-bottom: 0;
     }
+    .cm-scroller {
+        max-height: 100px;
+    }
     .cm-editor {
         flex-grow: 0;
         margin-top: auto;

@@ -1,6 +1,10 @@
-## v0.30.3 (WIP)
+## v0.30.3
 
 - Fixed legacy identitity field priority check when a username is a valid email address ([#7256](https://github.com/pocketbase/pocketbase/issues/7256)).
+
+- Workaround autocomplete overflow issue with Firefox 144 ([#7223](https://github.com/pocketbase/pocketbase/issues/7223)).
+
+- Updated `modernc.org/sqlite` to 1.39.1 (SQLite 3.50.4).
 
 
 ## v0.30.2
