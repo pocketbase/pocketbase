@@ -215,12 +215,24 @@ func (drv *driver) NewRangeReader(ctx context.Context, key string, offset, lengt
 		body = http.NoBody
 	}
 
+	size := getSize(resp.ContentLength, resp.ContentRange)
+
+	// if it is a full object read (no range) and the size is 0,
+	// try to confirm the size with a HEAD request as a fallback for R2-like providers
+	// that may not send Content-Length with GET requests for non-image files.
+	if offset == 0 && length < 0 && size == 0 {
+		headResp, headErr := drv.s3.HeadObject(ctx, key)
+		if headErr == nil {
+			size = headResp.ContentLength
+		}
+	}
+
 	return &reader{
 		body: body,
 		attrs: &blob.ReaderAttributes{
 			ContentType: resp.ContentType,
 			ModTime:     resp.LastModified,
-			Size:        getSize(resp.ContentLength, resp.ContentRange),
+			Size:        size,
 		},
 	}, nil
 }
