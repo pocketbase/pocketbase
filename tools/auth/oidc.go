@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
@@ -203,26 +204,43 @@ func validateIdTokenSignature(ctx context.Context, idToken string, jwksURL strin
 		return err
 	}
 
-	// decode the key params per RFC 7518 (https://tools.ietf.org/html/rfc7518#section-6.3)
-	// and construct a valid publicKey from them
+	// decode the key params and construct a valid publicKey from them
 	// ---
-	exponent, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.E, "="))
-	if err != nil {
-		return err
+	var publicKey any
+	switch key.Kty {
+	case "RSA":
+		// RFC 7518 (https://tools.ietf.org/html/rfc7518#section-6.3)
+		exponent, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.E, "="))
+		if err != nil {
+			return err
+		}
+		modulus, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.N, "="))
+		if err != nil {
+			return err
+		}
+		publicKey = &rsa.PublicKey{
+			// https://tools.ietf.org/html/rfc7517#appendix-A.1
+			E: int(big.NewInt(0).SetBytes(exponent).Uint64()),
+			N: big.NewInt(0).SetBytes(modulus),
+		}
+	case "OKP":
+		// Ed25519 per RFC 8037
+		if key.Crv != "Ed25519" {
+			return fmt.Errorf("unsupported OKP curve: %s", key.Crv)
+		}
+		x, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.X, "="))
+		if err != nil {
+			return err
+		}
+		if l := len(x); l != ed25519.PublicKeySize {
+			return fmt.Errorf("invalid Ed25519 public key length: %d", l)
+		}
+		publicKey = ed25519.PublicKey(x)
+	default:
+		return fmt.Errorf("unsupported key type: %s", key.Kty)
 	}
 
-	modulus, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.N, "="))
-	if err != nil {
-		return err
-	}
-
-	publicKey := &rsa.PublicKey{
-		// https://tools.ietf.org/html/rfc7517#appendix-A.1
-		E: int(big.NewInt(0).SetBytes(exponent).Uint64()),
-		N: big.NewInt(0).SetBytes(modulus),
-	}
-
-	// verify the signiture
+	// verify the signature
 	// ---
 	parser := jwt.NewParser(jwt.WithValidMethods([]string{key.Alg}))
 
@@ -241,12 +259,16 @@ func validateIdTokenSignature(ctx context.Context, idToken string, jwksURL strin
 }
 
 type jwk struct {
-	Kty string
-	Kid string
-	Use string
-	Alg string
-	N   string
-	E   string
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	Use string `json:"use"`
+	Alg string `json:"alg"`
+	// RSA
+	N string `json:"n,omitempty"`
+	E string `json:"e,omitempty"`
+	// Ed25519 (OKP)
+	Crv string `json:"crv,omitempty"`
+	X   string `json:"x,omitempty"`
 }
 
 func fetchJWK(ctx context.Context, jwksURL string, kid string) (*jwk, error) {
