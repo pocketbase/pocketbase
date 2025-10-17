@@ -1,3 +1,8 @@
+## v0.30.5 (WIP)
+
+- Visualize presentable multiple `relation` fields ([#7260](https://github.com/pocketbase/pocketbase/issues/7260)).
+
+
 ## v0.30.4
 
 - Fixed `json` field CSS regression introduced with the overflow workaround in v0.30.3 ([#7259](https://github.com/pocketbase/pocketbase/issues/7259)).

@@ -959,6 +959,46 @@ a.thumb:not(.thumb-active) {
     }
 }
 
+.record-info-excerpt {
+    display: inline-block;
+    vertical-align: middle;
+    align-content: center;
+    max-width: 100%;
+    min-width: 0;
+    line-height: 18px;
+    padding-left: 1px; // for visual alignment with the new tab icon
+    text-align: left;
+    white-space: normal;
+    word-break: break-all;
+   .btn,
+   .thumb,
+   .link-hint {
+        margin: 0 2px;
+        vertical-align: middle;
+        &:first-child {
+            margin-left: 0;
+        }
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+    .txt {
+        display: inline-block;
+    }
+    .external-record-link {
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 3px;
+        line-height: 1;
+        i {
+            vertical-align: middle;
+            &:before {
+                margin: 0;
+            }
+        }
+    }
+}
+
 // sidebar menu
 .sidebar-menu {
     --sidebarListItemMargin: 10px;
