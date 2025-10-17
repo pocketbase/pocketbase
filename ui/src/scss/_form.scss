@@ -1248,6 +1248,7 @@ select {
     }
     .cm-editor {
         flex-grow: 1;
+        min-height: 0;
         border: 0 !important;
         outline: none !important;
         .cm-line {
