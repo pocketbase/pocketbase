@@ -960,9 +960,10 @@ a.thumb:not(.thumb-active) {
 }
 
 .record-info-excerpt {
-    display: inline-block;
-    vertical-align: middle;
-    align-content: center;
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;;
     max-width: 100%;
     min-width: 0;
     line-height: 18px;
@@ -970,32 +971,23 @@ a.thumb:not(.thumb-active) {
     text-align: left;
     white-space: normal;
     word-break: break-all;
-   .btn,
-   .thumb,
-   .link-hint {
-        margin: 0 2px;
-        vertical-align: middle;
-        &:first-child {
-            margin-left: 0;
-        }
-        &:last-child {
-            margin-right: 0;
-        }
+    .delimiter {
+        font-size: 0.8em;
+        color: var(--txtDisabledColor);
     }
-    .txt {
-        display: inline-block;
+    .expand-start,
+    .expand-end {
+        font-weight: bold;
+        color: var(--txtDisabledColor);
     }
-    .external-record-link {
-        display: inline-block;
-        vertical-align: middle;
-        margin-left: 3px;
-        line-height: 1;
-        i {
-            vertical-align: middle;
-            &:before {
-                margin: 0;
-            }
-        }
+    .expand-start {
+        margin-right: -2px;
+    }
+    .expand-end {
+        margin-left: -2px;
+    }
+    .record-link {
+        margin-left: 2px;
     }
 }
 

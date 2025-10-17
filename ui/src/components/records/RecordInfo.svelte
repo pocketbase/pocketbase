@@ -20,7 +20,7 @@
     <a
         href="#/collections?collection={record.collectionId}&recordId={record.id}"
         target="_blank"
-        class="external-record-link link-hint"
+        class="record-link link-hint"
         rel="noopener noreferrer"
         use:tooltip={{
             text:
