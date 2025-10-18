@@ -278,7 +278,11 @@
             if (isNew) {
                 result = await ApiClient.collection(collection.id).create(data);
             } else {
-                result = await ApiClient.collection(collection.id).update(record.id, data);
+                result = await ApiClient.collection(collection.id).update(record.id, data, {
+                    headers: {
+                        "If-Unmodified-Since": record.updated,
+                    },
+                });
             }
 
             addSuccessToast(isNew ? "Successfully created record." : "Successfully updated record.");
@@ -318,7 +322,11 @@
 
         confirm(`Do you really want to delete the selected record?`, () => {
             return ApiClient.collection(original.collectionId)
-                .delete(original.id)
+                .delete(original.id, {
+                    headers: {
+                        "If-Unmodified-Since": record.updated,
+                    },
+                })
                 .then(() => {
                     forceHide();
                     addSuccessToast("Successfully deleted record.");

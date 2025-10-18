@@ -116,9 +116,45 @@ func main() {
 		Priority: 999, // execute as latest as possible to allow users to provide their own route
 	})
 
+	app.OnRecordViewRequest().BindFunc(addLastModified)
+
+	app.OnRecordUpdateRequest().BindFunc(ifUnmodifiedSince)
+
+	app.OnRecordDeleteRequest().BindFunc(ifUnmodifiedSince)
+
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func addLastModified(e *core.RecordRequestEvent) error {
+	updated := e.Record.GetString("updated")
+
+	if updated != "" {
+		e.Response.Header().Add("Last-Modified", updated)
+	}
+
+	return e.Next()
+}
+
+func ifUnmodifiedSince(e *core.RecordRequestEvent) error {
+	updated := e.Record.GetString("updated")
+
+	if updated != "" {
+		header := e.Request.Header.Get("If-Unmodified-Since")
+
+		if header == "" || header != updated {
+			e.Response.Header().Add("Last-Modified", updated)
+
+			if header == "" {
+				return e.Error(http.StatusPreconditionRequired, "Header If-Unmodified-Since is required", nil)
+			} else if header != updated {
+				return e.Error(http.StatusPreconditionFailed, "Record was modified after retrieval", nil)
+			}
+		}
+	}
+
+	return e.Next()
 }
 
 // the default pb_public dir location is relative to the executable
