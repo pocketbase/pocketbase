@@ -2,20 +2,15 @@ package auth
 
 import (
 	"context"
-	"crypto/rsa"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"math/big"
-	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pocketbase/pocketbase/tools/auth/internal/jwk"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
@@ -198,28 +193,9 @@ func validateIdTokenSignature(ctx context.Context, idToken string, jwksURL strin
 		return errors.New("missing kid header value")
 	}
 
-	key, err := fetchJWK(ctx, jwksURL, kid)
+	key, err := jwk.Fetch(ctx, jwksURL, kid)
 	if err != nil {
 		return err
-	}
-
-	// decode the key params per RFC 7518 (https://tools.ietf.org/html/rfc7518#section-6.3)
-	// and construct a valid publicKey from them
-	// ---
-	exponent, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.E, "="))
-	if err != nil {
-		return err
-	}
-
-	modulus, err := base64.RawURLEncoding.DecodeString(strings.TrimRight(key.N, "="))
-	if err != nil {
-		return err
-	}
-
-	publicKey := &rsa.PublicKey{
-		// https://tools.ietf.org/html/rfc7517#appendix-A.1
-		E: int(big.NewInt(0).SetBytes(exponent).Uint64()),
-		N: big.NewInt(0).SetBytes(modulus),
 	}
 
 	// verify the signiture
@@ -227,7 +203,7 @@ func validateIdTokenSignature(ctx context.Context, idToken string, jwksURL strin
 	parser := jwt.NewParser(jwt.WithValidMethods([]string{key.Alg}))
 
 	parsedToken, err := parser.Parse(idToken, func(t *jwt.Token) (any, error) {
-		return publicKey, nil
+		return key.PublicKey()
 	})
 	if err != nil {
 		return err
@@ -238,55 +214,4 @@ func validateIdTokenSignature(ctx context.Context, idToken string, jwksURL strin
 	}
 
 	return nil
-}
-
-type jwk struct {
-	Kty string
-	Kid string
-	Use string
-	Alg string
-	N   string
-	E   string
-}
-
-func fetchJWK(ctx context.Context, jwksURL string, kid string) (*jwk, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", jwksURL, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	rawBody, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	// http.Client.Get doesn't treat non 2xx responses as error
-	if res.StatusCode >= 400 {
-		return nil, fmt.Errorf(
-			"failed to verify the provided id_token (%d):\n%s",
-			res.StatusCode,
-			string(rawBody),
-		)
-	}
-
-	jwks := struct {
-		Keys []*jwk
-	}{}
-	if err := json.Unmarshal(rawBody, &jwks); err != nil {
-		return nil, err
-	}
-
-	for _, key := range jwks.Keys {
-		if key.Kid == kid {
-			return key, nil
-		}
-	}
-
-	return nil, fmt.Errorf("jwk with kid %q was not found", kid)
 }
