@@ -55,12 +55,16 @@
     {/if}
     {#if field.type == "relation" && record.expand?.[field.name]}
         {@const isMultiple = Array.isArray(record.expand?.[field.name])}
-        {@const expands = CommonHelper.toArray(record.expand?.[field.name])}
+        {@const expanded = CommonHelper.toArray(record.expand?.[field.name])}
         {#if isMultiple}<span class="expand-start">{"["}</span>{/if}
-        {#each expands as expandRecord, j}
+        {#each expanded.slice(0, 2) as expandRecord, j}
             {#if j > 0}<span class="delimiter">|</span>{/if}
             <RecordInfoContent record={expandRecord} />
         {/each}
+        {#if expanded.length > 2}
+            <span class="delimiter">|</span>
+            <small class="txt-hint">({expanded.length - 2} more)</small>
+        {/if}
         {#if isMultiple}<span class="expand-end">{"]"}</span>{/if}
     {:else if field.type == "geoPoint"}
         <GeoPointValue value={record[field.name]} />
