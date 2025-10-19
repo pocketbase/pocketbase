@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/pocketbase/pocketbase/tools/auth/internal/jwk"
 	"github.com/pocketbase/pocketbase/tools/types"
 	"github.com/spf13/cast"
 	"golang.org/x/oauth2"
@@ -108,10 +110,10 @@ func (p *Apple) parseAndVerifyIdToken(idToken string) (jwt.MapClaims, error) {
 		return nil, errors.New("empty id_token")
 	}
 
-	// extract the token header params and claims
+	// extract the token claims
 	// ---
 	claims := jwt.MapClaims{}
-	t, _, err := jwt.NewParser().ParseUnverified(idToken, claims)
+	_, _, err := jwt.NewParser().ParseUnverified(idToken, claims)
 	if err != nil {
 		return nil, err
 	}
@@ -136,10 +138,9 @@ func (p *Apple) parseAndVerifyIdToken(idToken string) (jwt.MapClaims, error) {
 	// the token which is a result of direct TLS communication with the provider
 	// (see also https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation)
 	// ---
-	kid, _ := t.Header["kid"].(string)
-	err = validateIdTokenSignature(p.ctx, idToken, p.jwksURL, kid)
+	err = jwk.ValidateTokenSignature(p.ctx, idToken, p.jwksURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("id_token validation failed: %w", err)
 	}
 
 	return claims, nil

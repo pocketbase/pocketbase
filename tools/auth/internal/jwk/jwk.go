@@ -8,11 +8,14 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
 	"net/http"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWK struct {
@@ -94,7 +97,7 @@ func Fetch(ctx context.Context, jwksURL string, kid string) (*JWK, error) {
 	// http.Client.Get doesn't treat non 2xx responses as error
 	if res.StatusCode >= 400 {
 		return nil, fmt.Errorf(
-			"failed to JSON Web Key Set from %s (%d):\n%s",
+			"failed to fetch JSON Web Key Set from %s (%d):\n%s",
 			jwksURL,
 			res.StatusCode,
 			string(rawBody),
@@ -116,5 +119,45 @@ func Fetch(ctx context.Context, jwksURL string, kid string) (*JWK, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("jwk with kid %q was not found", kid)
+	return nil, fmt.Errorf("JWK with kid %q was not found", kid)
+}
+
+// ValidateTokenSignature validates the signature of a token with the
+// public key retrievied from a remote JWKS.
+func ValidateTokenSignature(ctx context.Context, token string, jwksURL string) error {
+	// extract the kid token header
+	// ---
+	t, _, err := jwt.NewParser().ParseUnverified(token, jwt.MapClaims{})
+	if err != nil {
+		return err
+	}
+
+	kid, _ := t.Header["kid"].(string)
+	if kid == "" {
+		return errors.New("missing kid header value")
+	}
+
+	// fetch the public key set
+	// ---
+	key, err := Fetch(ctx, jwksURL, kid)
+	if err != nil {
+		return err
+	}
+
+	// verify the signature
+	// ---
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{key.Alg}))
+
+	parsedToken, err := parser.Parse(token, func(t *jwt.Token) (any, error) {
+		return key.PublicKey()
+	})
+	if err != nil {
+		return err
+	}
+
+	if !parsedToken.Valid {
+		return errors.New("the parsed token is invalid")
+	}
+
+	return nil
 }

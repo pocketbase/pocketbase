@@ -15,6 +15,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/pocketbase/pocketbase/tools/auth/internal/jwk"
 )
 
@@ -27,7 +28,7 @@ func TestJWK_PublicKey(t *testing.T) {
 
 	rsaPrivate, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
-		t.Fatalf("failed to generate test RSA private key: %v", err)
+		t.Fatal(err)
 	}
 
 	scenarios := []struct {
@@ -205,6 +206,108 @@ func TestFetch(t *testing.T) {
 				if !strings.Contains(rawStr, substr) {
 					t.Fatalf("Missing expected substring\n%s\nin\n%s", substr, rawStr)
 				}
+			}
+		})
+	}
+}
+
+func TestValidateTokenSignature(t *testing.T) {
+	t.Parallel()
+
+	rsaPrivate, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ed25519Public, ed25519Private, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	nonmatchingKidToken := jwt.New(&jwt.SigningMethodEd25519{})
+	nonmatchingKidToken.Header["kid"] = "missing"
+	nonmatchingKidTokenStr, err := nonmatchingKidToken.SignedString(ed25519Private)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key1Token := jwt.New(&jwt.SigningMethodEd25519{})
+	key1Token.Header["kid"] = "key1"
+	key1TokenStr, err := key1Token.SignedString(ed25519Private)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	key2Token := jwt.New(jwt.SigningMethodRS256)
+	key2Token.Header["kid"] = "key2"
+	key2TokenStr, err := key2Token.SignedString(rsaPrivate)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		_ = json.NewEncoder(res).Encode(map[string]any{"keys": []*jwk.JWK{
+			{
+				Kid: "key1",
+				Kty: "OKP",
+				Alg: "EdDSA",
+				Crv: "Ed25519",
+				X:   base64.RawURLEncoding.EncodeToString(ed25519Public),
+			},
+			{
+				Kid: "key2",
+				Kty: "RSA",
+				Alg: "RS256",
+				E:   base64.RawURLEncoding.EncodeToString(big.NewInt(int64(rsaPrivate.E)).Bytes()),
+				N:   base64.RawURLEncoding.EncodeToString(rsaPrivate.N.Bytes()),
+			},
+		}})
+	}))
+	defer server.Close()
+
+	scenarios := []struct {
+		name        string
+		token       string
+		expectError bool
+	}{
+		{
+			"empty token",
+			"",
+			true,
+		},
+		{
+			"invlaid token",
+			"abc",
+			true,
+		},
+		{
+			"no matching kid",
+			nonmatchingKidTokenStr,
+			true,
+		},
+		{
+			"valid Ed25519 token",
+			key1TokenStr,
+			false,
+		},
+		{
+			"valid RSA token",
+			key2TokenStr,
+			false,
+		},
+	}
+
+	for _, s := range scenarios {
+		t.Run(s.name, func(t *testing.T) {
+			err := jwk.ValidateTokenSignature(
+				context.Background(),
+				s.token,
+				server.URL,
+			)
+
+			hasErr := err != nil
+			if hasErr != s.expectError {
+				t.Fatalf("Expected hasErr %v, got %v (%v)", s.expectError, hasErr, err)
 			}
 		})
 	}

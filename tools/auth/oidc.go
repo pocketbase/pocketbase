@@ -135,7 +135,7 @@ func (p *OIDC) parseIdToken(token *oauth2.Token) (jwt.MapClaims, error) {
 	}
 
 	claims := jwt.MapClaims{}
-	t, _, err := jwt.NewParser().ParseUnverified(idToken, claims)
+	_, _, err := jwt.NewParser().ParseUnverified(idToken, claims)
 	if err != nil {
 		return nil, err
 	}
@@ -176,42 +176,11 @@ func (p *OIDC) parseIdToken(token *oauth2.Token) (jwt.MapClaims, error) {
 	// (see also https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation)
 	jwksURL := cast.ToString(p.Extra()["jwksURL"])
 	if jwksURL != "" {
-		kid, _ := t.Header["kid"].(string)
-		err = validateIdTokenSignature(p.ctx, idToken, jwksURL, kid)
+		err = jwk.ValidateTokenSignature(p.ctx, idToken, jwksURL)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("id_token validation failed: %w", err)
 		}
 	}
 
 	return claims, nil
-}
-
-func validateIdTokenSignature(ctx context.Context, idToken string, jwksURL string, kid string) error {
-	// fetch the public key set
-	// ---
-	if kid == "" {
-		return errors.New("missing kid header value")
-	}
-
-	key, err := jwk.Fetch(ctx, jwksURL, kid)
-	if err != nil {
-		return err
-	}
-
-	// verify the signiture
-	// ---
-	parser := jwt.NewParser(jwt.WithValidMethods([]string{key.Alg}))
-
-	parsedToken, err := parser.Parse(idToken, func(t *jwt.Token) (any, error) {
-		return key.PublicKey()
-	})
-	if err != nil {
-		return err
-	}
-
-	if !parsedToken.Valid {
-		return errors.New("the parsed id_token is invalid")
-	}
-
-	return nil
 }
