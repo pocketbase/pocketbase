@@ -962,15 +962,30 @@ a.thumb:not(.thumb-active) {
 .record-info-excerpt {
     display: inline-flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: 5px;;
+    flex-wrap: nowrap;
+    gap: 5px;
     max-width: 100%;
-    min-width: 0;
-    line-height: 18px;
+    min-width: 40px;
+    line-height: 18px;;
     padding-left: 1px; // for visual alignment with the new tab icon
     text-align: left;
-    white-space: normal;
-    word-break: break-all;
+    .content {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 5px;;
+        width: auto;
+        min-width: 0;
+        text-align: left;
+        white-space: normal;
+        word-break: break-all;
+        .txt {
+            max-width: 140px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+    }
     .delimiter {
         font-size: 0.8em;
         color: var(--txtDisabledColor);

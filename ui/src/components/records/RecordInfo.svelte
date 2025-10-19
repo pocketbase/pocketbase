@@ -15,7 +15,9 @@
 </script>
 
 <div class="record-info-excerpt">
-    <RecordInfoContent {record} />
+    <div class="content">
+        <RecordInfoContent {record} />
+    </div>
 
     <a
         href="#/collections?collection={record.collectionId}&recordId={record.id}"

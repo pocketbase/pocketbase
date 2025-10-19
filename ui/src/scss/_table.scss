@@ -138,6 +138,9 @@ table {
         line-height: var(--smLineHeight);
         max-width: 300px;
     }
+    .col-type-relation {
+        min-width: 120px;
+    }
     .col-type-text {
         max-width: 300px;
     }
