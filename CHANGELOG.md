@@ -2,11 +2,16 @@
 
 - Visualize presentable multiple `relation` fields ([#7260](https://github.com/pocketbase/pocketbase/issues/7260)).
 
-- Support Ed25519 in the optional OIDC id_token signature validation ([#7252](https://github.com/pocketbase/pocketbase/issues/7252); thanks @shynome).
+- Support Ed25519 in the optional OIDC `id_token` signature validation ([#7252](https://github.com/pocketbase/pocketbase/issues/7252); thanks @shynome).
 
-- Added `ApiScenario.DisableTestAppCleanup` optional field to skip the auto test app cleanup and leave it up to the developers ([#7267](https://github.com/pocketbase/pocketbase/discussions/7267)).
+- Added `ApiScenario.DisableTestAppCleanup` optional field to skip the auto test app cleanup and leave it up to the developers to do the cleanup manually ([#7267](https://github.com/pocketbase/pocketbase/discussions/7267)).
 
-- Added `FileDownloadRequestEvent.ThumbError` field that will be populated in case of a thumb generation failure (e.g. unsupported format, timing out, etc.), allow developers to reject the fallback and/or supply their own custom thumb generation ([#7268](https://github.com/pocketbase/pocketbase/discussions/7268)).
+- Added `FileDownloadRequestEvent.ThumbError` field that is populated in case of a thumb generation failure (e.g. unsupported format, timing out, etc.), allowing developers to reject the thumb fallback and/or supply their own custom thumb generation ([#7268](https://github.com/pocketbase/pocketbase/discussions/7268)).
+
+- ⚠️ Disallow client-side filtering and sorting of relations where the collection of the last targeted field has superusers only List/Search API rule to further minimize the risk of eventual side-channel attack.
+    _Note that if you are really concerned about this, as mentioned in the "Security and performance" section of [#4417](https://github.com/pocketbase/pocketbase/discussions/4417) and [#5863](https://github.com/pocketbase/pocketbase/discussions/5863), the recommended solution to protect security sensitive fields (tokens, passwords, etc.) is to mark them as "Hidden" (aka. make them non-API filterable)._
+
+- Regenerated the JSVM types and updated goja.
 
 
 ## v0.30.4

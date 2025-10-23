@@ -118,7 +118,7 @@ func recordsList(e *core.RequestEvent) error {
 			len(e.Records) == 0 &&
 			checkRateLimit(e.RequestEvent, "@pb_list_timing_check_"+collection.Id, listTimingRateLimitRule) != nil {
 			e.App.Logger().Debug("Randomized throttle because of too many failed searches", "collectionId", collection.Id)
-			randomizedThrottle(150)
+			randomizedThrottle(500)
 		}
 
 		return execAfterSuccessTx(true, e.App, func() error {

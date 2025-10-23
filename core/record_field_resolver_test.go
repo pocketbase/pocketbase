@@ -330,11 +330,32 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 			"SELECT DISTINCT `demo4`.* FROM `demo4` LEFT JOIN `users` `__collection_users` WHERE ((([[__collection_users.email]] > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm__collection_users.email]] as [[multiMatchValue]] FROM `demo4` `__mm_demo4` LEFT JOIN `users` `__mm__collection_users` WHERE `__mm_demo4`.`id` = `demo4`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) OR {:TEST} > 1)",
 		},
 		{
+			"superusers List/Search only collection (root keys should be allowed)",
+			"demo1",
+			"email = true",
+			false,
+			"SELECT `demo1`.* FROM `demo1` WHERE [[demo1.email]] = 1",
+		},
+		{
+			"relation field with superusers List/Search only collection",
+			"demo1",
+			"rel_many.verified ?= true",
+			false,
+			"",
+		},
+		{
+			"relation field with superusers List/Search only collection but with allowed hidden fields",
+			"demo1",
+			"rel_many.verified ?= true",
+			true,
+			"SELECT DISTINCT `demo1`.* FROM `demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.rel_many]]), json_type([[demo1.rel_many]])='array', FALSE) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END) `demo1_rel_many_je` LEFT JOIN `users` `demo1_rel_many` ON [[demo1_rel_many.id]] = [[demo1_rel_many_je.value]] WHERE [[demo1_rel_many.verified]] = 1",
+		},
+		{
 			"hidden field (add emailVisibility)",
-			"users",
+			"nologin",
 			"id > true || email > true || email:lower > false",
 			false,
-			"SELECT `users`.* FROM `users` WHERE ([[users.id]] > 1 OR (([[users.email]] > 1) AND ([[users.emailVisibility]] = TRUE)) OR ((LOWER([[users.email]]) > 0) AND ([[users.emailVisibility]] = TRUE)))",
+			"SELECT `nologin`.* FROM `nologin` WHERE ([[nologin.id]] > 1 OR (([[nologin.email]] > 1) AND ([[nologin.emailVisibility]] = TRUE)) OR ((LOWER([[nologin.email]]) > 0) AND ([[nologin.emailVisibility]] = TRUE)))",
 		},
 		{
 			"hidden field (force ignore emailVisibility)",
@@ -378,7 +399,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 				"rel_many:lower > true ||" +
 				"rel_many.name:lower > true ||" +
 				"created:lower > true",
-			false,
+			true,
 			"SELECT DISTINCT `demo1`.* FROM `demo1` LEFT JOIN `users` `__data_users_rel_many` ON [[__data_users_rel_many.id]] IN ({:p0}, {:p1}) LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.rel_many]]), json_type([[demo1.rel_many]])='array', FALSE) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END) `demo1_rel_many_je` LEFT JOIN `users` `demo1_rel_many` ON [[demo1_rel_many.id]] = [[demo1_rel_many_je.value]] WHERE (LOWER({:infoLowerrel_oneTEST}) > 1 OR LOWER({:infoLowerrel_manyTEST}) > 1 OR ((LOWER([[__data_users_rel_many.email]]) > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT LOWER([[__data_mm_users_rel_many.email]]) as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN `users` `__data_mm_users_rel_many` ON [[__data_mm_users_rel_many.id]] IN ({:p4}, {:p5}) WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) OR LOWER([[demo1.text]]) > 1 OR LOWER([[demo1.bool]]) > 1 OR LOWER([[demo1.url]]) > 1 OR LOWER([[demo1.select_one]]) > 1 OR LOWER([[demo1.select_many]]) > 1 OR LOWER([[demo1.file_one]]) > 1 OR LOWER([[demo1.file_many]]) > 1 OR LOWER([[demo1.number]]) > 1 OR LOWER([[demo1.email]]) > 1 OR LOWER([[demo1.datetime]]) > 1 OR LOWER((CASE WHEN json_valid([[demo1.json]]) THEN JSON_EXTRACT([[demo1.json]], '$') ELSE JSON_EXTRACT(json_object('pb', [[demo1.json]]), '$.pb') END)) > 1 OR LOWER([[demo1.rel_one]]) > 1 OR LOWER([[demo1.rel_many]]) > 1 OR ((LOWER([[demo1_rel_many.name]]) > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT LOWER([[__mm_demo1_rel_many.name]]) as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) OR LOWER([[demo1.created]]) > 1)",
 		},
 		{
@@ -426,7 +447,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		},
 		{
 			"regular arrayble:each fields",
-			"demo1",
+			"view1", // demo1 is superuser restricted
 			"select_one:each > true &&" +
 				"select_one:each ?< true &&" +
 				"select_many:each > true &&" +
@@ -440,7 +461,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 				"rel_many:each > true &&" +
 				"rel_many:each ?< true",
 			false,
-			"SELECT DISTINCT `demo1`.* FROM `demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.select_one]]), json_type([[demo1.select_one]])='array', FALSE) THEN [[demo1.select_one]] ELSE json_array([[demo1.select_one]]) END) `demo1_select_one_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.select_many]]), json_type([[demo1.select_many]])='array', FALSE) THEN [[demo1.select_many]] ELSE json_array([[demo1.select_many]]) END) `demo1_select_many_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.file_one]]), json_type([[demo1.file_one]])='array', FALSE) THEN [[demo1.file_one]] ELSE json_array([[demo1.file_one]]) END) `demo1_file_one_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.file_many]]), json_type([[demo1.file_many]])='array', FALSE) THEN [[demo1.file_many]] ELSE json_array([[demo1.file_many]]) END) `demo1_file_many_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.rel_one]]), json_type([[demo1.rel_one]])='array', FALSE) THEN [[demo1.rel_one]] ELSE json_array([[demo1.rel_one]]) END) `demo1_rel_one_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.rel_many]]), json_type([[demo1.rel_many]])='array', FALSE) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END) `demo1_rel_many_je` WHERE ([[demo1_select_one_je.value]] > 1 AND [[demo1_select_one_je.value]] < 1 AND (([[demo1_select_many_je.value]] > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_select_many_je.value]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.select_many]]), json_type([[__mm_demo1.select_many]])='array', FALSE) THEN [[__mm_demo1.select_many]] ELSE json_array([[__mm_demo1.select_many]]) END) `__mm_demo1_select_many_je` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) AND [[demo1_select_many_je.value]] < 1 AND [[demo1_file_one_je.value]] > 1 AND [[demo1_file_one_je.value]] < 1 AND (([[demo1_file_many_je.value]] > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_file_many_je.value]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.file_many]]), json_type([[__mm_demo1.file_many]])='array', FALSE) THEN [[__mm_demo1.file_many]] ELSE json_array([[__mm_demo1.file_many]]) END) `__mm_demo1_file_many_je` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) AND [[demo1_file_many_je.value]] < 1 AND [[demo1_rel_one_je.value]] > 1 AND [[demo1_rel_one_je.value]] < 1 AND (([[demo1_rel_many_je.value]] > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_rel_many_je.value]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) AND [[demo1_rel_many_je.value]] < 1)",
+			"SELECT DISTINCT `view1`.* FROM `view1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[view1.select_one]]), json_type([[view1.select_one]])='array', FALSE) THEN [[view1.select_one]] ELSE json_array([[view1.select_one]]) END) `view1_select_one_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[view1.select_many]]), json_type([[view1.select_many]])='array', FALSE) THEN [[view1.select_many]] ELSE json_array([[view1.select_many]]) END) `view1_select_many_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[view1.file_one]]), json_type([[view1.file_one]])='array', FALSE) THEN [[view1.file_one]] ELSE json_array([[view1.file_one]]) END) `view1_file_one_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[view1.file_many]]), json_type([[view1.file_many]])='array', FALSE) THEN [[view1.file_many]] ELSE json_array([[view1.file_many]]) END) `view1_file_many_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[view1.rel_one]]), json_type([[view1.rel_one]])='array', FALSE) THEN [[view1.rel_one]] ELSE json_array([[view1.rel_one]]) END) `view1_rel_one_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[view1.rel_many]]), json_type([[view1.rel_many]])='array', FALSE) THEN [[view1.rel_many]] ELSE json_array([[view1.rel_many]]) END) `view1_rel_many_je` WHERE ([[view1_select_one_je.value]] > 1 AND [[view1_select_one_je.value]] < 1 AND (([[view1_select_many_je.value]] > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_view1_select_many_je.value]] as [[multiMatchValue]] FROM `view1` `__mm_view1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_view1.select_many]]), json_type([[__mm_view1.select_many]])='array', FALSE) THEN [[__mm_view1.select_many]] ELSE json_array([[__mm_view1.select_many]]) END) `__mm_view1_select_many_je` WHERE `__mm_view1`.`id` = `view1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) AND [[view1_select_many_je.value]] < 1 AND [[view1_file_one_je.value]] > 1 AND [[view1_file_one_je.value]] < 1 AND (([[view1_file_many_je.value]] > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_view1_file_many_je.value]] as [[multiMatchValue]] FROM `view1` `__mm_view1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_view1.file_many]]), json_type([[__mm_view1.file_many]])='array', FALSE) THEN [[__mm_view1.file_many]] ELSE json_array([[__mm_view1.file_many]]) END) `__mm_view1_file_many_je` WHERE `__mm_view1`.`id` = `view1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) AND [[view1_file_many_je.value]] < 1 AND [[view1_rel_one_je.value]] > 1 AND [[view1_rel_one_je.value]] < 1 AND (([[view1_rel_many_je.value]] > 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_view1_rel_many_je.value]] as [[multiMatchValue]] FROM `view1` `__mm_view1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_view1.rel_many]]), json_type([[__mm_view1.rel_many]])='array', FALSE) THEN [[__mm_view1.rel_many]] ELSE json_array([[__mm_view1.rel_many]]) END) `__mm_view1_rel_many_je` WHERE `__mm_view1`.`id` = `view1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > 1)))) AND [[view1_rel_many_je.value]] < 1)",
 		},
 		{
 			"arrayble:each vs arrayble:each",
@@ -449,7 +470,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 				"select_many:each > select_one:each &&" +
 				"select_many:each ?< select_one:each &&" +
 				"select_many:each = @request.body.select_many:each",
-			false,
+			true, // demo1 is superuser restricted
 			"SELECT DISTINCT `demo1`.* FROM `demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.select_one]]), json_type([[demo1.select_one]])='array', FALSE) THEN [[demo1.select_one]] ELSE json_array([[demo1.select_one]]) END) `demo1_select_one_je` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.select_many]]), json_type([[demo1.select_many]])='array', FALSE) THEN [[demo1.select_many]] ELSE json_array([[demo1.select_many]]) END) `demo1_select_many_je` LEFT JOIN json_each({:dataEachTEST}) `__dataEach_select_many_je` WHERE (((COALESCE([[demo1_select_one_je.value]], '') IS NOT COALESCE([[demo1_select_many_je.value]], '')) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_select_many_je.value]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.select_many]]), json_type([[__mm_demo1.select_many]])='array', FALSE) THEN [[__mm_demo1.select_many]] ELSE json_array([[__mm_demo1.select_many]]) END) `__mm_demo1_select_many_je` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT (COALESCE([[demo1_select_one_je.value]], '') IS NOT COALESCE([[__smTEST.multiMatchValue]], ''))))) AND (([[demo1_select_many_je.value]] > [[demo1_select_one_je.value]]) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_select_many_je.value]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.select_many]]), json_type([[__mm_demo1.select_many]])='array', FALSE) THEN [[__mm_demo1.select_many]] ELSE json_array([[__mm_demo1.select_many]]) END) `__mm_demo1_select_many_je` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] > [[demo1_select_one_je.value]])))) AND [[demo1_select_many_je.value]] < [[demo1_select_one_je.value]] AND (([[demo1_select_many_je.value]] = [[__dataEach_select_many_je.value]]) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_select_many_je.value]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.select_many]]), json_type([[__mm_demo1.select_many]])='array', FALSE) THEN [[__mm_demo1.select_many]] ELSE json_array([[__mm_demo1.select_many]]) END) `__mm_demo1_select_many_je` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mlTEST}} LEFT JOIN (SELECT [[__mm__dataEach_select_many_je.value]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each({:mmdataEachTEST}) `__mm__dataEach_select_many_je` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mrTEST}} WHERE NOT (COALESCE([[__mlTEST.multiMatchValue]], '') = COALESCE([[__mrTEST.multiMatchValue]], ''))))))",
 		},
 		{
@@ -460,9 +481,9 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 				"rel_many.rel.title ~ rel_one.email &&" +
 				"@collection.demo2.active = rel_many.rel.active &&" +
 				"@collection.demo2.active ?= rel_many.rel.active &&" +
-				"rel_many.email > @request.body.rel_many.email",
-			false,
-			"SELECT DISTINCT `demo1`.* FROM `demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.rel_many]]), json_type([[demo1.rel_many]])='array', FALSE) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END) `demo1_rel_many_je` LEFT JOIN `users` `demo1_rel_many` ON [[demo1_rel_many.id]] = [[demo1_rel_many_je.value]] LEFT JOIN `demo2` `demo1_rel_many_rel` ON [[demo1_rel_many_rel.id]] = [[demo1_rel_many.rel]] LEFT JOIN `demo1` `demo1_rel_one` ON [[demo1_rel_one.id]] = [[demo1.rel_one]] LEFT JOIN `demo2` `__collection_demo2` LEFT JOIN `users` `__data_users_rel_many` ON [[__data_users_rel_many.id]] IN ({:p0}, {:p1}) WHERE (((COALESCE([[demo1_rel_many_rel.active]], '') IS NOT COALESCE([[demo1_rel_many.name]], '')) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_rel_many_rel.active]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] LEFT JOIN `demo2` `__mm_demo1_rel_many_rel` ON [[__mm_demo1_rel_many_rel.id]] = [[__mm_demo1_rel_many.rel]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mlTEST}} LEFT JOIN (SELECT [[__mm_demo1_rel_many.name]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mrTEST}} WHERE NOT (COALESCE([[__mlTEST.multiMatchValue]], '') IS NOT COALESCE([[__mrTEST.multiMatchValue]], ''))))) AND COALESCE([[demo1_rel_many_rel.active]], '') = COALESCE([[demo1_rel_many.name]], '') AND (([[demo1_rel_many_rel.title]] LIKE ('%' || [[demo1_rel_one.email]] || '%') ESCAPE '\\') AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_rel_many_rel.title]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] LEFT JOIN `demo2` `__mm_demo1_rel_many_rel` ON [[__mm_demo1_rel_many_rel.id]] = [[__mm_demo1_rel_many.rel]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] LIKE ('%' || [[demo1_rel_one.email]] || '%') ESCAPE '\\')))) AND ((COALESCE([[__collection_demo2.active]], '') = COALESCE([[demo1_rel_many_rel.active]], '')) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm__collection_demo2.active]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN `demo2` `__mm__collection_demo2` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mlTEST}} LEFT JOIN (SELECT [[__mm_demo1_rel_many_rel.active]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] LEFT JOIN `demo2` `__mm_demo1_rel_many_rel` ON [[__mm_demo1_rel_many_rel.id]] = [[__mm_demo1_rel_many.rel]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mrTEST}} WHERE NOT (COALESCE([[__mlTEST.multiMatchValue]], '') = COALESCE([[__mrTEST.multiMatchValue]], ''))))) AND COALESCE([[__collection_demo2.active]], '') = COALESCE([[demo1_rel_many_rel.active]], '') AND (((([[demo1_rel_many.email]] > [[__data_users_rel_many.email]]) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_rel_many.email]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mlTEST}} LEFT JOIN (SELECT [[__data_mm_users_rel_many.email]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN `users` `__data_mm_users_rel_many` ON [[__data_mm_users_rel_many.id]] IN ({:p2}, {:p3}) WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mrTEST}} WHERE NOT ([[__mlTEST.multiMatchValue]] > [[__mrTEST.multiMatchValue]]))))) AND ([[demo1_rel_many.emailVisibility]] = TRUE)))",
+				"rel_many.verified > @request.body.rel_many.verified",
+			true, // demo1 and rel_many rel are superuser restricted
+			"SELECT DISTINCT `demo1`.* FROM `demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo1.rel_many]]), json_type([[demo1.rel_many]])='array', FALSE) THEN [[demo1.rel_many]] ELSE json_array([[demo1.rel_many]]) END) `demo1_rel_many_je` LEFT JOIN `users` `demo1_rel_many` ON [[demo1_rel_many.id]] = [[demo1_rel_many_je.value]] LEFT JOIN `demo2` `demo1_rel_many_rel` ON [[demo1_rel_many_rel.id]] = [[demo1_rel_many.rel]] LEFT JOIN `demo1` `demo1_rel_one` ON [[demo1_rel_one.id]] = [[demo1.rel_one]] LEFT JOIN `demo2` `__collection_demo2` LEFT JOIN `users` `__data_users_rel_many` ON [[__data_users_rel_many.id]] IN ({:p0}, {:p1}) WHERE (((COALESCE([[demo1_rel_many_rel.active]], '') IS NOT COALESCE([[demo1_rel_many.name]], '')) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_rel_many_rel.active]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] LEFT JOIN `demo2` `__mm_demo1_rel_many_rel` ON [[__mm_demo1_rel_many_rel.id]] = [[__mm_demo1_rel_many.rel]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mlTEST}} LEFT JOIN (SELECT [[__mm_demo1_rel_many.name]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mrTEST}} WHERE NOT (COALESCE([[__mlTEST.multiMatchValue]], '') IS NOT COALESCE([[__mrTEST.multiMatchValue]], ''))))) AND COALESCE([[demo1_rel_many_rel.active]], '') = COALESCE([[demo1_rel_many.name]], '') AND (([[demo1_rel_many_rel.title]] LIKE ('%' || [[demo1_rel_one.email]] || '%') ESCAPE '\\') AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_rel_many_rel.title]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] LEFT JOIN `demo2` `__mm_demo1_rel_many_rel` ON [[__mm_demo1_rel_many_rel.id]] = [[__mm_demo1_rel_many.rel]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] LIKE ('%' || [[demo1_rel_one.email]] || '%') ESCAPE '\\')))) AND ((COALESCE([[__collection_demo2.active]], '') = COALESCE([[demo1_rel_many_rel.active]], '')) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm__collection_demo2.active]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN `demo2` `__mm__collection_demo2` WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mlTEST}} LEFT JOIN (SELECT [[__mm_demo1_rel_many_rel.active]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] LEFT JOIN `demo2` `__mm_demo1_rel_many_rel` ON [[__mm_demo1_rel_many_rel.id]] = [[__mm_demo1_rel_many.rel]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mrTEST}} WHERE NOT (COALESCE([[__mlTEST.multiMatchValue]], '') = COALESCE([[__mrTEST.multiMatchValue]], ''))))) AND COALESCE([[__collection_demo2.active]], '') = COALESCE([[demo1_rel_many_rel.active]], '') AND (([[demo1_rel_many.verified]] > [[__data_users_rel_many.verified]]) AND (NOT EXISTS (SELECT 1 FROM (SELECT [[__mm_demo1_rel_many.verified]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo1.rel_many]]), json_type([[__mm_demo1.rel_many]])='array', FALSE) THEN [[__mm_demo1.rel_many]] ELSE json_array([[__mm_demo1.rel_many]]) END) `__mm_demo1_rel_many_je` LEFT JOIN `users` `__mm_demo1_rel_many` ON [[__mm_demo1_rel_many.id]] = [[__mm_demo1_rel_many_je.value]] WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mlTEST}} LEFT JOIN (SELECT [[__data_mm_users_rel_many.verified]] as [[multiMatchValue]] FROM `demo1` `__mm_demo1` LEFT JOIN `users` `__data_mm_users_rel_many` ON [[__data_mm_users_rel_many.id]] IN ({:p2}, {:p3}) WHERE `__mm_demo1`.`id` = `demo1`.`id`) {{__mrTEST}} WHERE NOT ([[__mlTEST.multiMatchValue]] > [[__mrTEST.multiMatchValue]])))))",
 		},
 		{
 			"@request.body.arrayable:length fields",
@@ -520,10 +541,10 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		},
 		{
 			"geoPoint props access",
-			"demo1",
+			"view1",
 			"point = '' || point.lat > 1 || point.lon < 2 || point.something > 3",
 			false,
-			"SELECT `demo1`.* FROM `demo1` WHERE (([[demo1.point]] = '' OR [[demo1.point]] IS NULL) OR (CASE WHEN json_valid([[demo1.point]]) THEN JSON_EXTRACT([[demo1.point]], '$.lat') ELSE JSON_EXTRACT(json_object('pb', [[demo1.point]]), '$.pb.lat') END) > {:TEST} OR (CASE WHEN json_valid([[demo1.point]]) THEN JSON_EXTRACT([[demo1.point]], '$.lon') ELSE JSON_EXTRACT(json_object('pb', [[demo1.point]]), '$.pb.lon') END) < {:TEST} OR (CASE WHEN json_valid([[demo1.point]]) THEN JSON_EXTRACT([[demo1.point]], '$.something') ELSE JSON_EXTRACT(json_object('pb', [[demo1.point]]), '$.pb.something') END) > {:TEST})",
+			"SELECT `view1`.* FROM `view1` WHERE (([[view1.point]] = '' OR [[view1.point]] IS NULL) OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.lat') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.lat') END) > {:TEST} OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.lon') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.lon') END) < {:TEST} OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.something') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.something') END) > {:TEST})",
 		},
 	}
 
@@ -531,20 +552,29 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 		t.Run(s.name, func(t *testing.T) {
 			collection, err := app.FindCollectionByNameOrId(s.collectionIdOrName)
 			if err != nil {
-				t.Fatalf("[%s] Failed to load collection %s: %v", s.name, s.collectionIdOrName, err)
+				t.Fatalf("Failed to load collection %s: %v", s.collectionIdOrName, err)
 			}
+
+			expectError := s.expectQuery == ""
 
 			query := app.RecordQuery(collection)
 
 			r := core.NewRecordFieldResolver(app, collection, requestInfo, s.allowHiddenFields)
 
 			expr, err := search.FilterData(s.rule).BuildExpr(r)
-			if err != nil {
-				t.Fatalf("[%s] BuildExpr failed with error %v", s.name, err)
+			hasErr := err != nil
+			if hasErr != expectError {
+				t.Fatalf("BuildExpr failed: expected hasErr %v, got %v (%v)", expectError, hasErr, err)
 			}
 
-			if err := r.UpdateQuery(query); err != nil {
-				t.Fatalf("[%s] UpdateQuery failed with error %v", s.name, err)
+			err = r.UpdateQuery(query)
+			hasErr = err != nil
+			if hasErr && expectError {
+				t.Fatalf("UpdateQuery failed: expected hasErr %v, got %v (%v)", expectError, hasErr, err)
+			}
+
+			if expectError {
+				return
 			}
 
 			rawQuery := query.AndWhere(expr).Build().SQL()
@@ -557,7 +587,7 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 			)
 
 			if !list.ExistInSliceWithRegex(rawQuery, []string{expectQuery}) {
-				t.Fatalf("[%s] Expected query\n %v \ngot:\n %v", s.name, expectQuery, rawQuery)
+				t.Fatalf("Expected query\n %v \ngot:\n %v", expectQuery, rawQuery)
 			}
 		})
 	}

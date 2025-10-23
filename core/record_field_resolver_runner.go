@@ -399,6 +399,7 @@ func (r *runner) processRequestInfoRelationField(bodyField Field) (*search.Resol
 
 var viaRegex = regexp.MustCompile(`^(\w+)_via_(\w+)$`)
 
+// @todo refactor and abstract lastProp processing with the support of field plugins
 func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 	totalProps := len(r.activeProps)
 
@@ -410,7 +411,7 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 
 		// last prop
 		if i == totalProps-1 {
-			return r.processLastProp(collection, prop)
+			return r.finalizeActivePropsProcessing(collection, prop, i)
 		}
 
 		field := collection.Fields.GetByName(prop)
@@ -419,9 +420,15 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 			return nil, fmt.Errorf("non-filterable field %q", prop)
 		}
 
+		// @todo consider moving to the finalizer and converting to "JSONExtractable" interface with optional extra validation for the remaining props?
 		// json or geoPoint field -> treat the rest of the props as json path
-		// @todo consider converting to "JSONExtractable" interface with optional extra validation for the remaining props?
 		if field != nil && (field.Type() == FieldTypeJSON || field.Type() == FieldTypeGeoPoint) {
+			// consider List/Search superusers-only collections as if all their fields are hidden
+			// (apply only for the last nested filter field for now to minimize breaking changes)
+			if i > 0 && collection.ListRule == nil && !r.allowHiddenFields {
+				return nil, fmt.Errorf("collection %q is not allowed to be filtered", collection.Name)
+			}
+
 			var jsonPath strings.Builder
 			for j, p := range r.activeProps[i+1:] {
 				if _, err := strconv.Atoi(p); err == nil {
@@ -607,7 +614,7 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 		if !relField.IsMultiple() &&
 			// the penultimate prop is "id"
 			i == totalProps-2 && r.activeProps[i+1] == FieldNameId {
-			return r.processLastProp(collection, relField.Name)
+			return r.finalizeActivePropsProcessing(collection, relField.Name, i)
 		}
 
 		cleanFieldName := inflector.Columnify(relField.Name)
@@ -676,7 +683,13 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 	return nil, fmt.Errorf("failed to resolve field %q", r.fieldName)
 }
 
-func (r *runner) processLastProp(collection *Collection, prop string) (*search.ResolverResult, error) {
+func (r *runner) finalizeActivePropsProcessing(collection *Collection, prop string, propDepth int) (*search.ResolverResult, error) {
+	// consider List/Search superusers-only collections as if all their fields are hidden
+	// (apply only for the last nested filter field for now to minimize breaking changes)
+	if propDepth > 0 && collection.ListRule == nil && !r.allowHiddenFields {
+		return nil, fmt.Errorf("collection %q is not allowed to be filtered", collection.Name)
+	}
+
 	name, modifier, err := splitModifier(prop)
 	if err != nil {
 		return nil, err
