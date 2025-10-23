@@ -136,4 +136,7 @@
         max-height: 100px;
         overflow: auto;
     }
+    .inline-flex {
+        max-width: 100%;
+    }
 </style>

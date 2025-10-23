@@ -15,7 +15,7 @@
 </script>
 
 <div class="record-info-excerpt">
-    <div class="content">
+    <div class="info-content">
         <RecordInfoContent {record} />
     </div>
 

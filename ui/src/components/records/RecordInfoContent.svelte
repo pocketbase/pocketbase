@@ -63,7 +63,7 @@
         {/each}
         {#if expanded.length > 2}
             <span class="delimiter">|</span>
-            <small class="txt-hint">({expanded.length - 2} more)</small>
+            <small class="delimiter txt-hint">({expanded.length - 2} more)</small>
         {/if}
         {#if isMultiple}<span class="expand-end">{"]"}</span>{/if}
     {:else if field.type == "geoPoint"}

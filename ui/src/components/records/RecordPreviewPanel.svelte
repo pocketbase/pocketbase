@@ -2,8 +2,6 @@
     import { addErrorToast } from "@/stores/toasts";
     import ApiClient from "@/utils/ApiClient";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
-    import CopyIcon from "@/components/base/CopyIcon.svelte";
-    import FormattedDate from "@/components/base/FormattedDate.svelte";
     import RecordFieldValue from "@/components/records/RecordFieldValue.svelte";
 
     export let collection;

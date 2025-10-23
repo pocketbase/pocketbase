@@ -969,25 +969,34 @@ a.thumb:not(.thumb-active) {
     line-height: 18px;;
     padding-left: 1px; // for visual alignment with the new tab icon
     text-align: left;
-    .content {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    .info-content {
         display: flex;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
         align-items: center;
-        gap: 5px;;
+        row-gap: 2px;
+        column-gap: 5px;
         width: auto;
         min-width: 0;
         text-align: left;
         white-space: normal;
         word-break: break-all;
         .txt {
-            max-width: 140px;
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
+            .col-type-relation & {
+                max-width: 200px;
+            }
         }
     }
     .delimiter {
+        min-width: 0;
+        flex-shrink: 0;
         font-size: 0.8em;
+        white-space: nowrap;
         color: var(--txtDisabledColor);
     }
     .expand-start,
