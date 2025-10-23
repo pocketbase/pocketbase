@@ -4,7 +4,9 @@
 
 - Support Ed25519 in the optional OIDC id_token signature validation ([#7252](https://github.com/pocketbase/pocketbase/issues/7252); thanks @shynome).
 
-- Added `tests.ApiScenario.DisableTestAppCleanup` optional field to skip the auto test app cleanup and leave it up to the developers ([#7267](https://github.com/pocketbase/pocketbase/discussions/7267)).
+- Added `ApiScenario.DisableTestAppCleanup` optional field to skip the auto test app cleanup and leave it up to the developers ([#7267](https://github.com/pocketbase/pocketbase/discussions/7267)).
+
+- Added `FileDownloadRequestEvent.ThumbError` field that will be populated in case of a thumb generation failure (e.g. unsupported format, timing out, etc.), allow developers to reject the fallback and/or supply their own custom thumb generation ([#7268](https://github.com/pocketbase/pocketbase/discussions/7268)).
 
 
 ## v0.30.4

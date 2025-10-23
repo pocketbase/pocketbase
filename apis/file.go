@@ -142,8 +142,14 @@ func (api *fileApi) download(e *core.RequestEvent) error {
 	defer fsys.Close()
 
 	originalPath := baseFilesPath + "/" + filename
-	servedPath := originalPath
-	servedName := filename
+
+	event := new(core.FileDownloadRequestEvent)
+	event.RequestEvent = e
+	event.Collection = collection
+	event.Record = record
+	event.FileField = fileField
+	event.ServedPath = originalPath
+	event.ServedName = filename
 
 	// check for valid thumb size param
 	thumbSize := e.Request.URL.Query().Get("thumb")
@@ -157,34 +163,31 @@ func (api *fileApi) download(e *core.RequestEvent) error {
 		// check if it is an image
 		if list.ExistInSlice(oAttrs.ContentType, imageContentTypes) {
 			// add thumb size as file suffix
-			servedName = thumbSize + "_" + filename
-			servedPath = baseFilesPath + "/thumbs_" + filename + "/" + servedName
+			event.ServedName = thumbSize + "_" + filename
+			event.ServedPath = baseFilesPath + "/thumbs_" + filename + "/" + event.ServedName
 
 			// create a new thumb if it doesn't exist
-			if exists, _ := fsys.Exists(servedPath); !exists {
-				if err := api.createThumb(e, fsys, originalPath, servedPath, thumbSize); err != nil {
+			if exists, _ := fsys.Exists(event.ServedPath); !exists {
+				if err := api.createThumb(e, fsys, originalPath, event.ServedPath, thumbSize); err != nil {
 					e.App.Logger().Warn(
-						"Fallback to original - failed to create thumb "+servedName,
+						"Fallback to original - failed to create thumb "+event.ServedName,
 						slog.Any("error", err),
 						slog.String("original", originalPath),
-						slog.String("thumb", servedPath),
+						slog.String("thumb", event.ServedPath),
 					)
 
 					// fallback to the original
-					servedName = filename
-					servedPath = originalPath
+					event.ThumbError = err
+					event.ServedName = filename
+					event.ServedPath = originalPath
 				}
 			}
 		}
 	}
 
-	event := new(core.FileDownloadRequestEvent)
-	event.RequestEvent = e
-	event.Collection = collection
-	event.Record = record
-	event.FileField = fileField
-	event.ServedPath = servedPath
-	event.ServedName = servedName
+	if thumbSize != "" && event.ThumbError == nil && event.ServedPath == originalPath {
+		event.ThumbError = fmt.Errorf("the thumb size %q is not supported", thumbSize)
+	}
 
 	// clickjacking shouldn't be a concern when serving uploaded files,
 	// so it safe to unset the global X-Frame-Options to allow files embedding

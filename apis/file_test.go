@@ -181,9 +181,17 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "existing image - missing thumb (should fallback to the original)",
-			Method:          http.MethodGet,
-			URL:             "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=999x999",
+			Name:   "existing image - missing thumb (should fallback to the original)",
+			Method: http.MethodGet,
+			URL:    "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=999x999",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnFileDownloadRequest().BindFunc(func(e *core.FileDownloadRequestEvent) error {
+					if e.ThumbError == nil {
+						t.Fatal("Expected thumb error, got nil")
+					}
+					return e.Next()
+				})
+			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{string(testImg)},
 			ExpectedEvents: map[string]int{
@@ -192,9 +200,17 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "existing image - existing thumb (crop center)",
-			Method:          http.MethodGet,
-			URL:             "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x50",
+			Name:   "existing image - existing thumb (crop center)",
+			Method: http.MethodGet,
+			URL:    "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x50",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnFileDownloadRequest().BindFunc(func(e *core.FileDownloadRequestEvent) error {
+					if e.ThumbError != nil {
+						t.Fatalf("Expected no thumb error, got %v", e.ThumbError)
+					}
+					return e.Next()
+				})
+			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{string(testThumbCropCenter)},
 			ExpectedEvents: map[string]int{
@@ -203,9 +219,17 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "existing image - existing thumb (crop top)",
-			Method:          http.MethodGet,
-			URL:             "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x50t",
+			Name:   "existing image - existing thumb (crop top)",
+			Method: http.MethodGet,
+			URL:    "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x50t",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnFileDownloadRequest().BindFunc(func(e *core.FileDownloadRequestEvent) error {
+					if e.ThumbError != nil {
+						t.Fatalf("Expected no thumb error, got %v", e.ThumbError)
+					}
+					return e.Next()
+				})
+			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{string(testThumbCropTop)},
 			ExpectedEvents: map[string]int{
@@ -214,9 +238,17 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "existing image - existing thumb (crop bottom)",
-			Method:          http.MethodGet,
-			URL:             "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x50b",
+			Name:   "existing image - existing thumb (crop bottom)",
+			Method: http.MethodGet,
+			URL:    "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x50b",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnFileDownloadRequest().BindFunc(func(e *core.FileDownloadRequestEvent) error {
+					if e.ThumbError != nil {
+						t.Fatalf("Expected no thumb error, got %v", e.ThumbError)
+					}
+					return e.Next()
+				})
+			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{string(testThumbCropBottom)},
 			ExpectedEvents: map[string]int{
@@ -225,9 +257,17 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "existing image - existing thumb (fit)",
-			Method:          http.MethodGet,
-			URL:             "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x50f",
+			Name:   "existing image - existing thumb (fit)",
+			Method: http.MethodGet,
+			URL:    "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x50f",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnFileDownloadRequest().BindFunc(func(e *core.FileDownloadRequestEvent) error {
+					if e.ThumbError != nil {
+						t.Fatalf("Expected no thumb error, got %v", e.ThumbError)
+					}
+					return e.Next()
+				})
+			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{string(testThumbFit)},
 			ExpectedEvents: map[string]int{
@@ -236,9 +276,17 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "existing image - existing thumb (zero width)",
-			Method:          http.MethodGet,
-			URL:             "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=0x50",
+			Name:   "existing image - existing thumb (zero width)",
+			Method: http.MethodGet,
+			URL:    "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=0x50",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnFileDownloadRequest().BindFunc(func(e *core.FileDownloadRequestEvent) error {
+					if e.ThumbError != nil {
+						t.Fatalf("Expected no thumb error, got %v", e.ThumbError)
+					}
+					return e.Next()
+				})
+			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{string(testThumbZeroWidth)},
 			ExpectedEvents: map[string]int{
@@ -247,9 +295,17 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "existing image - existing thumb (zero height)",
-			Method:          http.MethodGet,
-			URL:             "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x0",
+			Name:   "existing image - existing thumb (zero height)",
+			Method: http.MethodGet,
+			URL:    "/api/files/_pb_users_auth_/4q1xlclmfloku33/300_1SEi6Q6U72.png?thumb=70x0",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnFileDownloadRequest().BindFunc(func(e *core.FileDownloadRequestEvent) error {
+					if e.ThumbError != nil {
+						t.Fatalf("Expected no thumb error, got %v", e.ThumbError)
+					}
+					return e.Next()
+				})
+			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{string(testThumbZeroHeight)},
 			ExpectedEvents: map[string]int{
@@ -258,9 +314,17 @@ func TestFileDownload(t *testing.T) {
 			},
 		},
 		{
-			Name:            "existing non image file - thumb parameter should be ignored",
-			Method:          http.MethodGet,
-			URL:             "/api/files/_pb_users_auth_/oap640cot4yru2s/test_kfd2wYLxkz.txt?thumb=100x100",
+			Name:   "existing non image file - thumb parameter should be ignored",
+			Method: http.MethodGet,
+			URL:    "/api/files/_pb_users_auth_/oap640cot4yru2s/test_kfd2wYLxkz.txt?thumb=100x100",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				app.OnFileDownloadRequest().BindFunc(func(e *core.FileDownloadRequestEvent) error {
+					if e.ThumbError == nil {
+						t.Fatal("Expected thumb error, got nil")
+					}
+					return e.Next()
+				})
+			},
 			ExpectedStatus:  200,
 			ExpectedContent: []string{string(testFile)},
 			ExpectedEvents: map[string]int{
