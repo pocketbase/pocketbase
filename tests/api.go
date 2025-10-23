@@ -48,6 +48,14 @@ type ApiScenario struct {
 	// A zero or negative value means that there will be no timeout.
 	Timeout time.Duration
 
+	// DisableTestAppCleanup disables the builtin TestApp cleanup at
+	// the end of the ApiScenario execution.
+	//
+	// This option works only when explicit TestAppFactory is specified
+	// and means that the developer is responsible to do the necessary
+	// after test cleanup on their own (e.g. by manually calling testApp.Cleanup()).
+	DisableTestAppCleanup bool
+
 	// expectations
 	// ---------------------------------------------------------------
 
@@ -172,7 +180,11 @@ func (scenario *ApiScenario) test(t testing.TB) {
 			t.Fatalf("Failed to initialize the test app instance: %v", testAppErr)
 		}
 	}
-	defer testApp.Cleanup()
+
+	// https://github.com/pocketbase/pocketbase/discussions/7267
+	if scenario.TestAppFactory == nil || !scenario.DisableTestAppCleanup {
+		defer testApp.Cleanup()
+	}
 
 	baseRouter, err := apis.NewRouter(testApp)
 	if err != nil {

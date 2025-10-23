@@ -1,8 +1,10 @@
-## v0.30.5 (WIP)
+## v0.31.0 (WIP)
 
 - Visualize presentable multiple `relation` fields ([#7260](https://github.com/pocketbase/pocketbase/issues/7260)).
 
 - Support Ed25519 in the optional OIDC id_token signature validation ([#7252](https://github.com/pocketbase/pocketbase/issues/7252); thanks @shynome).
+
+- Added `tests.ApiScenario.DisableTestAppCleanup` optional field to skip the auto test app cleanup and leave it up to the developers ([#7267](https://github.com/pocketbase/pocketbase/discussions/7267)).
 
 
 ## v0.30.4
