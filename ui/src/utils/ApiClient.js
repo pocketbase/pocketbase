@@ -133,7 +133,7 @@ class AppAuthStore extends LocalAuthStore {
 const pb = new PocketBase(import.meta.env.PB_BACKEND_URL, new AppAuthStore());
 
 if (pb.authStore.isValid) {
-    pb.collection(pb.authStore.record.collectionName)
+    pb.collection(pb.authStore.record.collectionName || "_superusers")
         .authRefresh()
         .catch((err) => {
             console.warn("Failed to refresh the existing auth token:", err);
