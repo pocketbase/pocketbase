@@ -11,7 +11,7 @@
 - ⚠️ Disallow client-side filtering and sorting of relations where the collection of the last targeted field has superusers only List/Search API rule to further minimize the risk of eventual side-channel attack.
     _Note that if you are really concerned about this, as mentioned in the "Security and performance" section of [#4417](https://github.com/pocketbase/pocketbase/discussions/4417) and [#5863](https://github.com/pocketbase/pocketbase/discussions/5863), the recommended solution to protect security sensitive fields (tokens, passwords, etc.) is to mark them as "Hidden" (aka. make them non-API filterable)._
 
-- Regenerated the JSVM types and updated goja.
+- Regenerated JSVM types and updated npm and Go deps.
 
 
 ## v0.30.4
