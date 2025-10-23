@@ -186,7 +186,7 @@ func (api *fileApi) download(e *core.RequestEvent) error {
 	}
 
 	if thumbSize != "" && event.ThumbError == nil && event.ServedPath == originalPath {
-		event.ThumbError = fmt.Errorf("the thumb size %q is not supported", thumbSize)
+		event.ThumbError = fmt.Errorf("the thumb size %q or the original file format are not supported", thumbSize)
 	}
 
 	// clickjacking shouldn't be a concern when serving uploaded files,
