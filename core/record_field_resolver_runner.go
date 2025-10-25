@@ -423,12 +423,6 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 		// @todo consider moving to the finalizer and converting to "JSONExtractable" interface with optional extra validation for the remaining props?
 		// json or geoPoint field -> treat the rest of the props as json path
 		if field != nil && (field.Type() == FieldTypeJSON || field.Type() == FieldTypeGeoPoint) {
-			// consider List/Search superusers-only collections as if all their fields are hidden
-			// (apply only for the last nested filter field for now to minimize breaking changes)
-			if i > 0 && collection.ListRule == nil && !r.allowHiddenFields {
-				return nil, fmt.Errorf("collection %q is not allowed to be filtered", collection.Name)
-			}
-
 			var jsonPath strings.Builder
 			for j, p := range r.activeProps[i+1:] {
 				if _, err := strconv.Atoi(p); err == nil {
@@ -684,12 +678,6 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 }
 
 func (r *runner) finalizeActivePropsProcessing(collection *Collection, prop string, propDepth int) (*search.ResolverResult, error) {
-	// consider List/Search superusers-only collections as if all their fields are hidden
-	// (apply only for the last nested filter field for now to minimize breaking changes)
-	if propDepth > 0 && collection.ListRule == nil && !r.allowHiddenFields {
-		return nil, fmt.Errorf("collection %q is not allowed to be filtered", collection.Name)
-	}
-
 	name, modifier, err := splitModifier(prop)
 	if err != nil {
 		return nil, err

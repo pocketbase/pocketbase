@@ -240,22 +240,71 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*Collec
 }
 
 func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, on dbx.Expression) {
-	join := &join{
+	newJoin := &join{
 		tableName:  tableName,
 		tableAlias: tableAlias,
 		on:         on,
 	}
 
+	if !r.allowHiddenFields {
+		c, _ := r.loadCollection(tableName)
+		r.updateCollectionJoinWithListRuleSubquery(c, newJoin)
+	}
+
 	// replace existing join
 	for i, j := range r.joins {
-		if j.tableAlias == join.tableAlias {
-			r.joins[i] = join
+		if j.tableAlias == newJoin.tableAlias {
+			r.joins[i] = newJoin
 			return
 		}
 	}
 
 	// register new join
-	r.joins = append(r.joins, join)
+	r.joins = append(r.joins, newJoin)
+}
+
+// @todo
+//   - (NB!) carefully evaluate that the wrapping doesn't introduce security issues as a side-effect
+//     (especially around the allowHiddenFields check and join replacements)
+//   - evaluate the performance with at least 3 nested relations, each with its own 3 nested relation joins
+//   - ensure that the subquery bound params doesn't collide with the ones from the main query
+//   - update all existing tests
+//   - since this could be a breaking change (especially with locked junction collections),
+//     publish an anoncement and wait for ~1 week before merge in master
+func (r *RecordFieldResolver) updateCollectionJoinWithListRuleSubquery(c *Collection, j *join) {
+	if c == nil || (c.ListRule != nil && *c.ListRule == "") {
+		return
+	}
+
+	subquery := r.app.DB().Select().From(c.Name)
+
+	cloneR := *r
+	cloneR.joins = []*join{}
+	cloneR.baseCollection = c
+
+	// resolve to empty set for superusers only collections
+	// (treat all collection fields as "hidden")
+	if c.ListRule == nil {
+		if r.allowHiddenFields {
+			return
+		}
+
+		subquery.AndWhere(dbx.NewExp("1=2"))
+	} else {
+		expr, err := search.FilterData(*c.ListRule).BuildExpr(&cloneR)
+		if err != nil {
+			// just log for now and resolve to empty set to minimize breaking changes
+			r.app.Logger().Warn("Failed to update collection join with list rule subquery", "error", err)
+			subquery.AndWhere(dbx.NewExp("1=2"))
+		} else {
+			subquery.AndWhere(expr)
+		}
+	}
+
+	j.tableName = "(" + subquery.Build().SQL() + ")"
+
+	// attach the subquery params to the main one
+	j.on = dbx.And(j.on, dbx.NewExp("", subquery.Build().Params()))
 }
 
 type mapExtractor interface {
