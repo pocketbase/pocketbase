@@ -382,9 +382,31 @@ func TestRecordCrudList(t *testing.T) {
 			},
 		},
 		{
-			Name:           "multi-match - at least one of",
+			Name:           "multi-match - at least one of (guest - non-satisfied relation filter API rule)",
 			Method:         http.MethodGet,
 			URL:            "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length?=2"),
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"page":1`,
+				`"perPage":30`,
+				`"totalPages":0`,
+				`"totalItems":0`,
+				`"items":[]`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       0,
+			},
+		},
+		{
+			Name:   "multi-match - at least one of (clients)",
+			Method: http.MethodGet,
+			URL:    "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length?=2"),
+			Headers: map[string]string{
+				// clients, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.0ONnm_BsvPRZyDNT31GN1CKUB6uQRxvVvQ-Wc9AZfG0",
+			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,
@@ -401,9 +423,13 @@ func TestRecordCrudList(t *testing.T) {
 			},
 		},
 		{
-			Name:           "multi-match - all",
-			Method:         http.MethodGet,
-			URL:            "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length=2"),
+			Name:   "multi-match - all (clients)",
+			Method: http.MethodGet,
+			URL:    "/api/collections/demo4/records?filter=" + url.QueryEscape("rel_many_no_cascade_required.files:length=2"),
+			Headers: map[string]string{
+				// clients, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImdrMzkwcWVnczR5NDd3biIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoidjg1MXE0cjc5MHJoa25sIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.0ONnm_BsvPRZyDNT31GN1CKUB6uQRxvVvQ-Wc9AZfG0",
+			},
 			ExpectedStatus: 200,
 			ExpectedContent: []string{
 				`"page":1`,

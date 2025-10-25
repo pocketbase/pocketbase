@@ -115,6 +115,9 @@ func NewRecordFieldResolver(
 	return r
 }
 
+// @todo consider removing error return type OR update the existin calls to check the error
+// @todo think of a better a way how to call it automatically after BuildExpr
+//
 // UpdateQuery implements `search.FieldResolver` interface.
 //
 // Conditionally updates the provided search query based on the
@@ -240,22 +243,80 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*Collec
 }
 
 func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, on dbx.Expression) {
-	join := &join{
+	newJoin := &join{
 		tableName:  tableName,
 		tableAlias: tableAlias,
 		on:         on,
 	}
 
+	if !r.allowHiddenFields {
+		c, _ := r.loadCollection(tableName)
+		r.updateCollectionJoinWithListRuleSubquery(c, newJoin)
+	}
+
 	// replace existing join
 	for i, j := range r.joins {
-		if j.tableAlias == join.tableAlias {
-			r.joins[i] = join
+		if j.tableAlias == newJoin.tableAlias {
+			r.joins[i] = newJoin
 			return
 		}
 	}
 
 	// register new join
-	r.joins = append(r.joins, join)
+	r.joins = append(r.joins, newJoin)
+}
+
+func (r *RecordFieldResolver) updateCollectionJoinWithListRuleSubquery(c *Collection, j *join) {
+	if c == nil {
+		return
+	}
+
+	// resolve to empty set for superusers only collections
+	// (treat all collection fields as "hidden")
+	if c.ListRule == nil {
+		if !r.allowHiddenFields {
+			j.on = dbx.NewExp("1=2")
+		}
+		return
+	}
+
+	if *c.ListRule == "" {
+		return
+	}
+
+	primaryCol := "_rowid_"
+	if c.IsView() {
+		primaryCol = "id"
+	}
+
+	subquery := r.app.DB().Select("(1)").From(c.Name)
+	subquery.AndWhere(dbx.NewExp("[[" + j.tableAlias + "." + primaryCol + "]]=[[" + c.Name + "." + primaryCol + "]]"))
+
+	cloneR := *r
+	cloneR.joins = []*join{}
+	cloneR.baseCollection = c
+
+	expr, err := search.FilterData(*c.ListRule).BuildExpr(&cloneR)
+	if err != nil {
+		// just log for now and resolve to empty set to minimize breaking changes
+		r.app.Logger().Warn("Failed to buld collection join list rule subquery filter expression", "error", err)
+		j.on = dbx.NewExp("1=2")
+		return
+	}
+
+	subquery.AndWhere(expr)
+
+	err = cloneR.UpdateQuery(subquery)
+	if err != nil {
+		// just log for now and resolve to empty set to minimize breaking changes
+		r.app.Logger().Warn("Failed to update collection join with list rule subquery", "error", err)
+		j.on = dbx.NewExp("1=2")
+		return
+	}
+
+	sb := subquery.Build()
+
+	j.on = dbx.And(j.on, dbx.NewExp("EXISTS ("+sb.SQL()+")", sb.Params()))
 }
 
 type mapExtractor interface {

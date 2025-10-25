@@ -327,7 +327,6 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	if !s.skipTotal {
 		// execute the 2 queries concurrently
 		errg := new(errgroup.Group)
-		errg.SetLimit(2)
 		errg.Go(countExec)
 		errg.Go(modelsExec)
 		if err := errg.Wait(); err != nil {

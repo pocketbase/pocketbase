@@ -52,7 +52,6 @@ type runner struct {
 	activeProps                []string            // holds the active props that remains to be processed
 	activeCollectionName       string              // the last used collection name
 	activeTableAlias           string              // the last used table alias
-	allowHiddenFields          bool                // indicates whether hidden fields (eg. email) should be allowed without extra conditions
 	nullifyMisingField         bool                // indicating whether to return null on missing field or return an error
 	withMultiMatch             bool                // indicates whether to attach a multiMatchSubquery condition to the ResolverResult
 	multiMatchActiveTableAlias string              // the last used multi-match table alias
@@ -134,12 +133,6 @@ func (r *runner) prepare() {
 
 	r.activeCollectionName = r.resolver.baseCollection.Name
 	r.activeTableAlias = inflector.Columnify(r.activeCollectionName)
-
-	r.allowHiddenFields = r.resolver.allowHiddenFields
-	// always allow hidden fields since the @.* filter is a system one
-	if r.activeProps[0] == "@collection" || r.activeProps[0] == "@request" {
-		r.allowHiddenFields = true
-	}
 
 	// enable the ignore flag for missing @request.* fields for backward
 	// compatibility and consistency with all @request.* filter fields and types
@@ -416,19 +409,13 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 
 		field := collection.Fields.GetByName(prop)
 
-		if field != nil && field.GetHidden() && !r.allowHiddenFields {
+		if field != nil && field.GetHidden() && !r.resolver.allowHiddenFields {
 			return nil, fmt.Errorf("non-filterable field %q", prop)
 		}
 
 		// @todo consider moving to the finalizer and converting to "JSONExtractable" interface with optional extra validation for the remaining props?
 		// json or geoPoint field -> treat the rest of the props as json path
 		if field != nil && (field.Type() == FieldTypeJSON || field.Type() == FieldTypeGeoPoint) {
-			// consider List/Search superusers-only collections as if all their fields are hidden
-			// (apply only for the last nested filter field for now to minimize breaking changes)
-			if i > 0 && collection.ListRule == nil && !r.allowHiddenFields {
-				return nil, fmt.Errorf("collection %q is not allowed to be filtered", collection.Name)
-			}
-
 			var jsonPath strings.Builder
 			for j, p := range r.activeProps[i+1:] {
 				if _, err := strconv.Atoi(p); err == nil {
@@ -495,7 +482,7 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 				return nil, fmt.Errorf("invalid back relation field %q", parts[2])
 			}
 
-			if backField.GetHidden() && !r.allowHiddenFields {
+			if backField.GetHidden() && !r.resolver.allowHiddenFields {
 				return nil, fmt.Errorf("non-filterable back relation field %q", backField.GetName())
 			}
 
@@ -684,12 +671,6 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 }
 
 func (r *runner) finalizeActivePropsProcessing(collection *Collection, prop string, propDepth int) (*search.ResolverResult, error) {
-	// consider List/Search superusers-only collections as if all their fields are hidden
-	// (apply only for the last nested filter field for now to minimize breaking changes)
-	if propDepth > 0 && collection.ListRule == nil && !r.allowHiddenFields {
-		return nil, fmt.Errorf("collection %q is not allowed to be filtered", collection.Name)
-	}
-
 	name, modifier, err := splitModifier(prop)
 	if err != nil {
 		return nil, err
@@ -703,7 +684,7 @@ func (r *runner) finalizeActivePropsProcessing(collection *Collection, prop stri
 		return nil, fmt.Errorf("unknown field %q", name)
 	}
 
-	if field.GetHidden() && !r.allowHiddenFields {
+	if field.GetHidden() && !r.resolver.allowHiddenFields {
 		return nil, fmt.Errorf("non-filterable field %q", name)
 	}
 
@@ -772,7 +753,7 @@ func (r *runner) finalizeActivePropsProcessing(collection *Collection, prop stri
 	}
 
 	// allow querying only auth records with emails marked as public
-	if field.GetName() == FieldNameEmail && !r.allowHiddenFields && collection.IsAuth() {
+	if field.GetName() == FieldNameEmail && !r.resolver.allowHiddenFields && collection.IsAuth() {
 		result.AfterBuild = func(expr dbx.Expression) dbx.Expression {
 			return dbx.Enclose(dbx.And(expr, dbx.NewExp(fmt.Sprintf(
 				"[[%s.%s]] = TRUE",
