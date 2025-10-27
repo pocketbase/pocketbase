@@ -118,6 +118,12 @@
     });
 </script>
 
+{#if !isLoading && backups.length > 0}
+    <div class="total-backup-size">
+        Backup size: {CommonHelper.formattedFileSize(backups.reduce((sum, backup) => sum + (backup.size || 0), 0))}
+    </div>
+{/if}
+
 <div class="list list-compact">
     <div class="list-content">
         {#if isLoading}
@@ -207,6 +213,10 @@
 <BackupRestorePanel bind:this={restorePanel} />
 
 <style lang="scss">
+    .total-backup-size {
+        margin-bottom: 10px;
+        font-size: 1.063rem;
+    }
     .list-content {
         overflow: auto;
         max-height: 342px;
