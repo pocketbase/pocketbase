@@ -1,3 +1,8 @@
+## v0.32.0 (WIP)
+
+- Added extra subquery check List/Search API rule check for client-side relation filters.
+
+
 ## v0.31.0
 
 - Visualize presentable multiple `relation` fields ([#7260](https://github.com/pocketbase/pocketbase/issues/7260)).
