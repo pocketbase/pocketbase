@@ -2,6 +2,8 @@
 
 - Added extra subquery check List/Search API rule check for client-side relation filters.
 
+- Increased the default SQLite `PRAGMA cache_size` to ~64MB.
+
 
 ## v0.31.0
 
