@@ -267,16 +267,14 @@ func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, 
 }
 
 func (r *RecordFieldResolver) updateCollectionJoinWithListRuleSubquery(c *Collection, j *join) {
-	if c == nil {
+	if c == nil || r.allowHiddenFields {
 		return
 	}
 
 	// resolve to empty set for superusers only collections
 	// (treat all collection fields as "hidden")
 	if c.ListRule == nil {
-		if !r.allowHiddenFields {
-			j.on = dbx.NewExp("1=2")
-		}
+		j.on = dbx.NewExp("1=2")
 		return
 	}
 
@@ -295,6 +293,7 @@ func (r *RecordFieldResolver) updateCollectionJoinWithListRuleSubquery(c *Collec
 	cloneR := *r
 	cloneR.joins = []*join{}
 	cloneR.baseCollection = c
+	cloneR.allowHiddenFields = true
 
 	expr, err := search.FilterData(*c.ListRule).BuildExpr(&cloneR)
 	if err != nil {
