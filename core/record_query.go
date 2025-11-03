@@ -397,7 +397,10 @@ func (app *BaseApp) FindRecordsByFilter(
 		}
 	}
 
-	resolver.UpdateQuery(q) // attaches any adhoc joins and aliases
+	err = resolver.UpdateQuery(q) // attaches any adhoc joins and aliases
+	if err != nil {
+		return nil, err
+	}
 	// ---
 
 	if offset > 0 {
@@ -611,7 +614,11 @@ func (app *BaseApp) CanAccessRecord(record *Record, requestInfo *RequestInfo, ac
 	if err != nil {
 		return false, err
 	}
-	resolver.UpdateQuery(query)
+
+	err = resolver.UpdateQuery(query)
+	if err != nil {
+		return false, err
+	}
 
 	err = query.AndWhere(expr).Limit(1).Row(&exists)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {

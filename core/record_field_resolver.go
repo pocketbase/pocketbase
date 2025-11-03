@@ -48,6 +48,10 @@ type RecordFieldResolver struct {
 	allowedFields     []string
 	joins             []*join
 	allowHiddenFields bool
+	// ---
+	listRuleJoins       map[string]*Collection // tableAlias->collection
+	joinAliasSuffix     string                 // used for uniqueness in the flatten collection list rule join
+	baseCollectionAlias string
 }
 
 // AllowedFields returns a copy of the resolver's allowed fields.
@@ -115,7 +119,6 @@ func NewRecordFieldResolver(
 	return r
 }
 
-// @todo consider removing error return type OR update the existin calls to check the error
 // @todo think of a better a way how to call it automatically after BuildExpr
 //
 // UpdateQuery implements `search.FieldResolver` interface.
@@ -130,6 +133,49 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 			query.LeftJoin(
 				(join.tableName + " " + join.tableAlias),
 				join.on,
+			)
+		}
+	}
+
+	// note: for now the joins are not applied for multi-match conditions to avoid excessive checks
+	if len(r.listRuleJoins) > 0 {
+		for alias, c := range r.listRuleJoins {
+			err := r.updateQueryWithCollectionListRule(c, alias, query)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (r *RecordFieldResolver) updateQueryWithCollectionListRule(c *Collection, tableAlias string, query *dbx.SelectQuery) error {
+	if r.allowHiddenFields || c == nil || c.ListRule == nil || *c.ListRule == "" {
+		return nil
+	}
+
+	cloneR := *r
+	cloneR.joins = []*join{}
+	cloneR.baseCollection = c
+	cloneR.baseCollectionAlias = tableAlias
+	cloneR.allowHiddenFields = true
+	cloneR.joinAliasSuffix = security.PseudorandomString(6)
+
+	expr, err := search.FilterData(*c.ListRule).BuildExpr(&cloneR)
+	if err != nil {
+		return fmt.Errorf("to buld %q list rule join subquery filter expression: %w", c.Name, err)
+	}
+
+	query.AndWhere(expr)
+
+	if len(cloneR.joins) > 0 {
+		query.Distinct(true)
+
+		for _, j := range cloneR.joins {
+			query.LeftJoin(
+				(j.tableName + " " + j.tableAlias),
+				j.on,
 			)
 		}
 	}
@@ -242,80 +288,42 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*Collec
 	return getCollectionByModelOrIdentifier(r.app, collectionNameOrId)
 }
 
-func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, on dbx.Expression) {
+func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, on dbx.Expression) error {
 	newJoin := &join{
 		tableName:  tableName,
 		tableAlias: tableAlias,
 		on:         on,
 	}
 
+	// (see updateQueryWithCollectionListRule)
 	if !r.allowHiddenFields {
 		c, _ := r.loadCollection(tableName)
-		r.updateCollectionJoinWithListRuleSubquery(c, newJoin)
+
+		// ignore non-collections since the table name could be an expression (e.g. json) or some other subquery
+		if c != nil {
+			// treat all fields as if they are hidden
+			if c.ListRule == nil {
+				return fmt.Errorf("%q fields can be accessed only when allowHiddenFields is enabled or by superusers", c.Name)
+			}
+
+			if r.listRuleJoins == nil {
+				r.listRuleJoins = map[string]*Collection{}
+			}
+			r.listRuleJoins[newJoin.tableAlias] = c
+		}
 	}
 
 	// replace existing join
 	for i, j := range r.joins {
 		if j.tableAlias == newJoin.tableAlias {
 			r.joins[i] = newJoin
-			return
+			return nil
 		}
 	}
 
 	// register new join
 	r.joins = append(r.joins, newJoin)
-}
-
-func (r *RecordFieldResolver) updateCollectionJoinWithListRuleSubquery(c *Collection, j *join) {
-	if c == nil || r.allowHiddenFields {
-		return
-	}
-
-	// resolve to empty set for superusers only collections
-	// (treat all collection fields as "hidden")
-	if c.ListRule == nil {
-		j.on = dbx.NewExp("1=2")
-		return
-	}
-
-	if *c.ListRule == "" {
-		return
-	}
-
-	primaryCol := "_rowid_"
-	if c.IsView() {
-		primaryCol = "id"
-	}
-
-	subquery := r.app.DB().Select("(1)").From(c.Name)
-	subquery.AndWhere(dbx.NewExp("[[" + j.tableAlias + "." + primaryCol + "]]=[[" + c.Name + "." + primaryCol + "]]"))
-
-	cloneR := *r
-	cloneR.joins = []*join{}
-	cloneR.baseCollection = c
-	cloneR.allowHiddenFields = true
-
-	expr, err := search.FilterData(*c.ListRule).BuildExpr(&cloneR)
-	if err != nil {
-		// just log for now and resolve to empty set to minimize breaking changes
-		r.app.Logger().Warn("Failed to buld collection join list rule subquery filter expression", "error", err)
-		j.on = dbx.NewExp("1=2")
-		return
-	}
-
-	subquery.AndWhere(expr)
-
-	err = cloneR.UpdateQuery(subquery)
-	if err != nil {
-		// just log for now and resolve to empty set to minimize breaking changes
-		r.app.Logger().Warn("Failed to update collection join with list rule subquery", "error", err)
-		j.on = dbx.NewExp("1=2")
-		return
-	}
-
-	sb := subquery.Build()
-
-	j.on = dbx.And(j.on, dbx.NewExp("EXISTS ("+sb.SQL()+")", sb.Params()))
+	return nil
 }
 
 type mapExtractor interface {

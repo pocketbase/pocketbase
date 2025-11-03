@@ -169,12 +169,18 @@ func recordView(e *core.RequestEvent) error {
 	ruleFunc := func(q *dbx.SelectQuery) error {
 		if !requestInfo.HasSuperuserAuth() && collection.ViewRule != nil && *collection.ViewRule != "" {
 			resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
+
 			expr, err := search.FilterData(*collection.ViewRule).BuildExpr(resolver)
 			if err != nil {
 				return err
 			}
-			resolver.UpdateQuery(q)
+
 			q.AndWhere(expr)
+
+			err = resolver.UpdateQuery(q)
+			if err != nil {
+				return err
+			}
 		}
 		return nil
 	}
@@ -310,7 +316,10 @@ func recordCreate(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 				}
 				ruleQuery.AndWhere(expr)
 
-				resolver.UpdateQuery(ruleQuery)
+				err = resolver.UpdateQuery(ruleQuery)
+				if err != nil {
+					return e.BadRequestError("Failed to create record", fmt.Errorf("create rule update query failure: %w", err))
+				}
 
 				var exists int
 				err = ruleQuery.Limit(1).Row(&exists)
@@ -430,12 +439,18 @@ func recordUpdate(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 		ruleFunc := func(q *dbx.SelectQuery) error {
 			if !hasSuperuserAuth && collection.UpdateRule != nil && *collection.UpdateRule != "" {
 				resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
+
 				expr, err := search.FilterData(*collection.UpdateRule).BuildExpr(resolver)
 				if err != nil {
 					return err
 				}
-				resolver.UpdateQuery(q)
+
 				q.AndWhere(expr)
+
+				err = resolver.UpdateQuery(q)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		}
@@ -546,12 +561,18 @@ func recordDelete(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 		ruleFunc := func(q *dbx.SelectQuery) error {
 			if !requestInfo.HasSuperuserAuth() && collection.DeleteRule != nil && *collection.DeleteRule != "" {
 				resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
+
 				expr, err := search.FilterData(*collection.DeleteRule).BuildExpr(resolver)
 				if err != nil {
 					return err
 				}
-				resolver.UpdateQuery(q)
+
 				q.AndWhere(expr)
+
+				err = resolver.UpdateQuery(q)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		}
@@ -732,7 +753,10 @@ func hasAuthManageAccess(app core.App, requestInfo *core.RequestInfo, collection
 	}
 	query.AndWhere(expr)
 
-	resolver.UpdateQuery(query)
+	err = resolver.UpdateQuery(query)
+	if err != nil {
+		return false
+	}
 
 	var exists int
 

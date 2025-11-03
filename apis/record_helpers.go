@@ -160,7 +160,11 @@ func wantsMFA(e *core.RequestEvent, record *core.Record) (bool, error) {
 	if err != nil {
 		return true, err
 	}
-	resolver.UpdateQuery(query)
+
+	err = resolver.UpdateQuery(query)
+	if err != nil {
+		return true, err
+	}
 
 	err = query.AndWhere(expr).Limit(1).Row(&exists)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -379,12 +383,18 @@ func expandFetch(app core.App, originalRequestInfo *core.RequestInfo) core.Expan
 
 			if *relCollection.ViewRule != "" {
 				resolver := core.NewRecordFieldResolver(app, relCollection, requestInfoPtr, true)
+
 				expr, err := search.FilterData(*(relCollection.ViewRule)).BuildExpr(resolver)
 				if err != nil {
 					return err
 				}
-				resolver.UpdateQuery(q)
+
 				q.AndWhere(expr)
+
+				err = resolver.UpdateQuery(q)
+				if err != nil {
+					return err
+				}
 			}
 
 			return nil
@@ -465,10 +475,16 @@ func autoResolveRecordsFlags(app core.App, records []*core.Record, requestInfo *
 	if err != nil {
 		return err
 	}
-	resolver.UpdateQuery(query)
+
 	query.AndWhere(expr)
 
-	if err := query.Column(&managedIds); err != nil {
+	err = resolver.UpdateQuery(query)
+	if err != nil {
+		return err
+	}
+
+	err = query.Column(&managedIds)
+	if err != nil {
 		return err
 	}
 	// ---
