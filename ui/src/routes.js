@@ -52,6 +52,12 @@ const routes = {
         userData: { showAppSidebar: true },
     }),
 
+    "/sql-console": wrap({
+        asyncComponent: () => import("@/components/sql/PageSQLConsole.svelte"),
+        conditions: [(_) => ApiClient.authStore.isValid],
+        userData: { showAppSidebar: true },
+    }),
+
     "/settings": wrap({
         component: PageApplication,
         conditions: [(_) => ApiClient.authStore.isValid],

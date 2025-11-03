@@ -114,6 +114,16 @@
                     <i class="ri-line-chart-line" />
                 </a>
                 <a
+                    href="/sql-console"
+                    class="menu-item"
+                    aria-label="SQL Console"
+                    use:link
+                    use:active={{ path: "/sql-console/?.*", className: "current-route" }}
+                    use:tooltip={{ text: "SQL Console", position: "right" }}
+                >
+                    <i class="ri-terminal-box-line" />
+                </a>
+                <a
                     href="/settings"
                     class="menu-item"
                     aria-label="Settings"
