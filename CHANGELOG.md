@@ -2,7 +2,9 @@
 
 - Added extra subquery check List/Search API rule check for client-side relation filters.
 
-- Increased the default SQLite `PRAGMA cache_size` to ~64MB.
+- Increased the default SQLite `PRAGMA cache_size` to ~324MB.
+
+- Fixed code comments typos and regenerated JSVM types.
 
 
 ## v0.31.0
