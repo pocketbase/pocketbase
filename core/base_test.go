@@ -552,3 +552,19 @@ func TestBaseAppAuxDBDualBuilder(t *testing.T) {
 		}
 	}
 }
+
+func TestBaseAppTriggerOnTerminate(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	event := new(core.TerminateEvent)
+	event.App = app
+
+	// trigger OnTerminate multiple times to ensure that it doesn't deadlock
+	// https://github.com/pocketbase/pocketbase/pull/7305
+	app.OnTerminate().Trigger(event)
+	app.OnTerminate().Trigger(event)
+	app.OnTerminate().Trigger(event)
+}

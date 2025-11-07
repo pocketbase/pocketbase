@@ -1408,7 +1408,7 @@ func getLoggerMinLevel(app App) slog.Level {
 func (app *BaseApp) initLogger() error {
 	duration := 3 * time.Second
 	ticker := time.NewTicker(duration)
-	done := make(chan bool)
+	done := make(chan bool, 1)
 
 	handler := logger.NewBatchHandler(logger.BatchOptions{
 		Level:     getLoggerMinLevel(app),
@@ -1479,7 +1479,11 @@ func (app *BaseApp) initLogger() error {
 
 			ticker.Stop()
 
-			done <- true
+			// don't block in case OnTerminate is triggered more than once
+			select {
+			case done <- true:
+			default:
+			}
 
 			return e.Next()
 		},

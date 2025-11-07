@@ -205,6 +205,8 @@ func (pb *PocketBase) Execute() error {
 	<-done
 
 	// trigger cleanups
+	//
+	// @todo consider skipping and just call the finalizer in case OnTerminate was already invoked manually?
 	event := new(core.TerminateEvent)
 	event.App = pb
 	return pb.OnTerminate().Trigger(event, func(e *core.TerminateEvent) error {
