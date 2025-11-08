@@ -134,7 +134,7 @@
             const result = await ApiClient.collection(selectedCollection.id).getList(page, batchSize, {
                 filter: normalizedFilter,
                 sort: sort,
-                fields: "*:excerpt(100)",
+                fields: CommonHelper.getExcerptCollectionFieldsList(selectedCollection),
                 skipTotal: 1,
                 requestKey: uniqueId + "loadImagePicker",
             });

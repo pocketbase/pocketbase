@@ -98,7 +98,7 @@
                 ApiClient.collection(collectionId).getFullList({
                     batch: batchSize,
                     filter: filters.join("||"),
-                    fields: "*:excerpt(200)",
+                    fields: CommonHelper.getExcerptCollectionFieldsList(collection),
                     expand: getExpand(),
                     requestKey: null,
                 }),
@@ -162,7 +162,7 @@
             const result = await ApiClient.collection(collectionId).getList(page, batchSize, {
                 filter: CommonHelper.normalizeSearchFilter(filter, fallbackSearchFields),
                 sort: sort,
-                fields: "*:excerpt(200)",
+                fields: CommonHelper.getExcerptCollectionFieldsList(collection),
                 skipTotal: 1,
                 expand: getExpand(),
                 requestKey: uniqueId + "loadList",
@@ -190,7 +190,7 @@
 
         try {
             const reloaded = await ApiClient.collection(collectionId).getOne(record.id, {
-                fields: "*:excerpt(200)",
+                fields: CommonHelper.getExcerptCollectionFieldsList(collection),
                 expand: getExpand(),
                 requestKey: uniqueId + "reload" + record.id,
             });

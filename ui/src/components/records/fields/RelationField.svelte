@@ -64,10 +64,12 @@
 
         isLoading = true;
 
+        const fieldCollection = $collections.find((c) => c.id == field.collectionId);
+
         let expands = [];
-        const presentableRelFields = $collections
-            .find((c) => c.id == field.collectionId)
-            ?.fields?.filter((f) => !f.hidden && f.presentable && f.type == "relation");
+        const presentableRelFields = fieldCollection?.fields?.filter(
+            (f) => !f.hidden && f.presentable && f.type == "relation",
+        );
         for (const field of presentableRelFields) {
             expands = expands.concat(CommonHelper.getExpandPresentableRelFields(field, $collections, 2));
         }
@@ -84,7 +86,7 @@
             loadPromises.push(
                 ApiClient.collection(field.collectionId).getFullList(batchSize, {
                     filter: filters.join("||"),
-                    fields: "*:excerpt(200)",
+                    fields: CommonHelper.getExcerptCollectionFieldsList(fieldCollection),
                     expand: expands.join(","),
                     requestKey: null,
                 }),

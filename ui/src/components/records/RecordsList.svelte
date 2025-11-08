@@ -148,6 +148,7 @@
 
         const listFields = editorFields
             .map((f) => f.name + ":excerpt(200)")
+            // @todo exclude id and single rel fields from the excerpt list
             .concat(relFields.map((field) => "expand." + field.name + ".*:excerpt(200)"));
         if (listFields.length) {
             listFields.unshift("*");

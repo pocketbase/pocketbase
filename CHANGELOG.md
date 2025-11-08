@@ -1,3 +1,8 @@
+## v0.32.1 (WIP)
+
+- Fixed error in the UI when the `id` has leading or trailing spaces ([#7312](https://github.com/pocketbase/pocketbase/issues/7312)).
+
+
 ## v0.32.0
 
 - ⚠️ Added extra List/Search API rules checks for the client-side `filter`/`sort` relations.
