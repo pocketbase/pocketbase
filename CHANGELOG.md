@@ -22,6 +22,8 @@
 
 - Fixed some code comment typos, regenerated the JSVM types and updated npm dependencies.
 
+- Updated `modernc.org/sqlite` to 1.40.0.
+
 
 ## v0.31.0
 
