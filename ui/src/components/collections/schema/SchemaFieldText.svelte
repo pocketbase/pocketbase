@@ -54,7 +54,6 @@
                 </Field>
             </div>
 
-            <!-- @todo add warning mentioning that ids take part of the uploaded files path and there could be some filesystem compatibility issues with too loose pattern -->
             <div class="col-sm-6">
                 <Field class="form-field" name="fields.{key}.pattern" let:uniqueId>
                     <label for={uniqueId}>
@@ -62,7 +61,7 @@
                         {#if field.primaryKey}
                             <i
                                 class="ri-information-line link-hint"
-                                use:tooltip={"All record ids have unique case-insensitive (ASCII) validation applied in addition to the user defined validation pattern."}
+                                use:tooltip={"All record ids have forbidden characters and unique case-insensitive (ASCII) validations in addition to the user defined regex pattern."}
                             />
                         {/if}
                     </label>

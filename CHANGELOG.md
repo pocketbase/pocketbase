@@ -1,6 +1,8 @@
 ## v0.32.1 (WIP)
 
-- Fixed error in the UI when the `id` has leading or trailing spaces ([#7312](https://github.com/pocketbase/pocketbase/issues/7312)).
+- Added extra `id` characters validation in addition to the user specified regex pattern ([#7312](https://github.com/pocketbase/pocketbase/issues/7312)).
+    _The following special characters are always forbidden: `./\|"'``<>:?*%$\n\r\t\0 `. Common reserved Windows file names such as `aux`, `prn`, `con`, `nul`, `com1-9`, `lpt1-9` are also not allowed._
+    _The list is not exhaustive but it should help minimizing eventual filesystem compatability issues in case of wildcards or other loose regex patterns._
 
 
 ## v0.32.0
