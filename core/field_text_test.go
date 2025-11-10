@@ -165,6 +165,16 @@ func TestTextFieldValidateValue(t *testing.T) {
 			false,
 		},
 		{
+			"special forbidden character * (non-primaryKey)",
+			&core.TextField{Name: "test", PrimaryKey: false},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.SetRaw("test", "abc*")
+				return record
+			},
+			false,
+		},
+		{
 			"special forbidden character / (primaryKey)",
 			&core.TextField{Name: "test", PrimaryKey: true},
 			func() *core.Record {
@@ -200,6 +210,16 @@ func TestTextFieldValidateValue(t *testing.T) {
 			func() *core.Record {
 				record := core.NewRecord(collection)
 				record.SetRaw("test", "ab c")
+				return record
+			},
+			true,
+		},
+		{
+			"special forbidden character * (primaryKey; used in the realtime events too)",
+			&core.TextField{Name: "test", PrimaryKey: true},
+			func() *core.Record {
+				record := core.NewRecord(collection)
+				record.SetRaw("test", "abc*")
 				return record
 			},
 			true,
