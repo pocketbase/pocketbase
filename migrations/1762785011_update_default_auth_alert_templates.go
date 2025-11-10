@@ -5,12 +5,12 @@ import (
 )
 
 const oldAuthAlertTemplate = `<p>Hello,</p>
-<p>We noticed a login to your ` + core.EmailPlaceholderAppName + ` account from a new location.</p>
+<p>We noticed a login to your {APP_NAME} account from a new location.</p>
 <p>If this was you, you may disregard this email.</p>
-<p><strong>If this wasn't you, you should immediately change your ` + core.EmailPlaceholderAppName + ` account password to revoke access from all other locations.</strong></p>
+<p><strong>If this wasn't you, you should immediately change your {APP_NAME} account password to revoke access from all other locations.</strong></p>
 <p>
   Thanks,<br/>
-  ` + core.EmailPlaceholderAppName + ` team
+  {APP_NAME} team
 </p>`
 
 func init() {
