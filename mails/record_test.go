@@ -20,7 +20,7 @@ func TestSendRecordAuthAlert(t *testing.T) {
 	// to test that it is escaped
 	user.Set("name", "<p>"+user.GetString("name")+"</p>")
 
-	err := mails.SendRecordAuthAlert(testApp, user)
+	err := mails.SendRecordAuthAlert(testApp, user, "test_info")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,6 +34,7 @@ func TestSendRecordAuthAlert(t *testing.T) {
 		"login to your " + testApp.Settings().Meta.AppName + " account from a new location",
 		"If this was you",
 		"If this wasn't you",
+		"test_info",
 	}
 	for _, part := range expectedParts {
 		if !strings.Contains(testApp.TestMailer.LastMessage().HTML, part) {

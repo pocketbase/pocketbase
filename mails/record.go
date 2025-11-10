@@ -12,10 +12,12 @@ import (
 )
 
 // SendRecordAuthAlert sends a new device login alert to the specified auth record.
-func SendRecordAuthAlert(app core.App, authRecord *core.Record) error {
+func SendRecordAuthAlert(app core.App, authRecord *core.Record, info string) error {
 	mailClient := app.NewMailClient()
 
-	subject, body, err := resolveEmailTemplate(app, authRecord, authRecord.Collection().AuthAlert.EmailTemplate, nil)
+	subject, body, err := resolveEmailTemplate(app, authRecord, authRecord.Collection().AuthAlert.EmailTemplate, map[string]any{
+		core.EmailPlaceholderAlertInfo: info,
+	})
 	if err != nil {
 		return err
 	}

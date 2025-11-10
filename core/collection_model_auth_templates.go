@@ -2,11 +2,12 @@ package core
 
 // Common settings placeholder tokens
 const (
-	EmailPlaceholderAppName string = "{APP_NAME}"
-	EmailPlaceholderAppURL  string = "{APP_URL}"
-	EmailPlaceholderToken   string = "{TOKEN}"
-	EmailPlaceholderOTP     string = "{OTP}"
-	EmailPlaceholderOTPId   string = "{OTP_ID}"
+	EmailPlaceholderAppName   string = "{APP_NAME}"
+	EmailPlaceholderAppURL    string = "{APP_URL}"
+	EmailPlaceholderToken     string = "{TOKEN}"
+	EmailPlaceholderOTP       string = "{OTP}"
+	EmailPlaceholderOTPId     string = "{OTP_ID}"
+	EmailPlaceholderAlertInfo string = "{ALERT_INFO}"
 )
 
 var defaultVerificationTemplate = EmailTemplate{
@@ -65,9 +66,10 @@ var defaultOTPTemplate = EmailTemplate{
 var defaultAuthAlertTemplate = EmailTemplate{
 	Subject: "Login from a new location",
 	Body: `<p>Hello,</p>
-<p>We noticed a login to your ` + EmailPlaceholderAppName + ` account from a new location.</p>
-<p>If this was you, you may disregard this email.</p>
+<p>We noticed a login to your ` + EmailPlaceholderAppName + ` account from a new location:</p>
+<p><em>` + EmailPlaceholderAlertInfo + `</em></p>
 <p><strong>If this wasn't you, you should immediately change your ` + EmailPlaceholderAppName + ` account password to revoke access from all other locations.</strong></p>
+<p>If this was you, you may disregard this email.</p>
 <p>
   Thanks,<br/>
   ` + EmailPlaceholderAppName + ` team

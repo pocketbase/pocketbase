@@ -53,7 +53,7 @@
     $: authAlertTemplate = {
         key: "authAlert.emailTemplate",
         label: "Default Login alert email template",
-        placeholders: ["APP_NAME", "APP_URL", "RECORD:*"],
+        placeholders: ["APP_NAME", "APP_URL", "RECORD:*", "ALERT_INFO"],
         config: collection.authAlert.emailTemplate,
     };
     $: emailTemplatesList = isSuperusers
