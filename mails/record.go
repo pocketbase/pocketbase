@@ -16,7 +16,7 @@ func SendRecordAuthAlert(app core.App, authRecord *core.Record, info string) err
 	mailClient := app.NewMailClient()
 
 	subject, body, err := resolveEmailTemplate(app, authRecord, authRecord.Collection().AuthAlert.EmailTemplate, map[string]any{
-		core.EmailPlaceholderAlertInfo: info,
+		core.EmailPlaceholderAlertInfo: html.EscapeString(info),
 	})
 	if err != nil {
 		return err
