@@ -7,6 +7,8 @@
 - Added `{ALERT_INFO}` placeholder to the auth alert mail template ([#7314](https://github.com/pocketbase/pocketbase/issues/7314)).
     _⚠️ `mails.SendRecordAuthAlert(app, authRecord, info)` also now accepts a 3rd `info` string argument._
 
+- Updated Go deps.
+
 
 ## v0.32.0
 
