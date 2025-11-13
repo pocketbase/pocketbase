@@ -663,6 +663,7 @@ func mailsBinds(vm *goja.Runtime) {
 	obj.Set("sendRecordVerification", mails.SendRecordVerification)
 	obj.Set("sendRecordChangeEmail", mails.SendRecordChangeEmail)
 	obj.Set("sendRecordOTP", mails.SendRecordOTP)
+	obj.Set("sendRecordAuthAlert", mails.SendRecordAuthAlert)
 }
 
 func securityBinds(vm *goja.Runtime) {

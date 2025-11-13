@@ -795,7 +795,7 @@ func TestMailsBindsCount(t *testing.T) {
 	vm := goja.New()
 	mailsBinds(vm)
 
-	testBindsCount(vm, "$mails", 4, t)
+	testBindsCount(vm, "$mails", 5, t)
 }
 
 func TestMailsBinds(t *testing.T) {
@@ -831,6 +831,11 @@ func TestMailsBinds(t *testing.T) {
 
 		$mails.sendRecordOTP($app, record, "test_otp_id", "test_otp_pass");
 		if (!$app.testMailer.lastMessage().html.includes("test_otp_pass")) {
+			throw new Error("Expected record OTP email, got:" + JSON.stringify($app.testMailer.lastMessage()))
+		}
+
+		$mails.sendRecordAuthAlert($app, record, "test_alert_info");
+		if (!$app.testMailer.lastMessage().html.includes("test_alert_info")) {
 			throw new Error("Expected record OTP email, got:" + JSON.stringify($app.testMailer.lastMessage()))
 		}
 	`)

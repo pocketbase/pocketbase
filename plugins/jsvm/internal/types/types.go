@@ -788,6 +788,7 @@ declare namespace $mails {
   let sendRecordVerification:  mails.sendRecordVerification
   let sendRecordChangeEmail:   mails.sendRecordChangeEmail
   let sendRecordOTP:           mails.sendRecordOTP
+  let sendRecordAuthAlert:     mails.sendRecordAuthAlert
 }
 
 // -------------------------------------------------------------------
