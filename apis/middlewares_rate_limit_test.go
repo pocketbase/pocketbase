@@ -17,6 +17,11 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 	app.Settings().RateLimits.Enabled = true
 	app.Settings().RateLimits.Rules = []core.RateLimitRule{
 		{
+			Label:       "/polling/",
+			MaxRequests: 2,
+			Duration:    1,
+		},
+		{
 			Label:       "/rate/",
 			MaxRequests: 2,
 			Duration:    1,
@@ -49,6 +54,11 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	pbRouter.GET("/polling", func(e *core.RequestEvent) error {
+		return e.String(200, "polling")
+	}).BindFunc(func(e *core.RequestEvent) error {
+		return e.Next()
+	})
 	pbRouter.GET("/norate", func(e *core.RequestEvent) error {
 		return e.String(200, "norate")
 	}).BindFunc(func(e *core.RequestEvent) error {
@@ -78,6 +88,17 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 		authenticated  bool
 		expectedStatus int
 	}{
+		// reset
+		{"/polling", 0.0, false, 200},
+		{"/polling", 0.7, false, 200},
+		// reset
+		{"/polling", 0.4, false, 200},
+		{"/polling", 0.5, false, 200},
+		{"/polling", 0.1, false, 429},
+		{"/polling", 0.1, false, 429},
+		// reset
+		{"/polling", 0.6, false, 200},
+
 		{"/norate", 0, false, 200},
 		{"/norate", 0, false, 200},
 		{"/norate", 0, false, 200},
@@ -127,7 +148,7 @@ func TestDefaultRateLimitMiddleware(t *testing.T) {
 	for _, s := range scenarios {
 		t.Run(s.url, func(t *testing.T) {
 			if s.wait > 0 {
-				time.Sleep(time.Duration(s.wait) * time.Second)
+				time.Sleep(time.Duration(s.wait*1000) * time.Millisecond)
 			}
 
 			rec := httptest.NewRecorder()

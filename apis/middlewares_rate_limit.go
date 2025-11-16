@@ -127,7 +127,7 @@ func isClientRateLimited(e *core.RequestEvent, rtId string) bool {
 		return false
 	}
 
-	return client.available <= 0 && time.Now().Unix()-client.lastConsume < client.interval
+	return client.available <= 0 && time.Now().Unix()-client.windowStart < client.interval
 }
 
 // @todo consider exporting as helper?
@@ -319,7 +319,7 @@ type fixedWindow struct {
 	maxAllowed  int   // the max allowed tokens per interval
 	available   int   // the total available tokens
 	interval    int64 // in seconds
-	lastConsume int64 // the time of the last consume
+	windowStart int64 // the time when the current window started
 }
 
 // hasExpired checks whether it has been at least minElapsed seconds since the lastConsume time.
@@ -328,7 +328,7 @@ func (l *fixedWindow) hasExpired(relativeNow int64, minElapsed int64) bool {
 	l.Lock()
 	defer l.Unlock()
 
-	return relativeNow-l.lastConsume > minElapsed
+	return relativeNow-l.windowStart > minElapsed
 }
 
 // consume decrease the current window allowance with 1 (if not exhausted already).
@@ -342,13 +342,13 @@ func (l *fixedWindow) consume() bool {
 	nowUnix := time.Now().Unix()
 
 	// reset consumed counter
-	if nowUnix-l.lastConsume >= l.interval {
+	if nowUnix-l.windowStart >= l.interval {
 		l.available = l.maxAllowed
+		l.windowStart = nowUnix
 	}
 
 	if l.available > 0 {
 		l.available--
-		l.lastConsume = nowUnix
 
 		return true
 	}
