@@ -17,10 +17,11 @@ import (
 
 // filter modifiers
 const (
-	eachModifier   string = "each"
-	issetModifier  string = "isset"
-	lengthModifier string = "length"
-	lowerModifier  string = "lower"
+	eachModifier    string = "each"
+	issetModifier   string = "isset"
+	lengthModifier  string = "length"
+	lowerModifier   string = "lower"
+	changedModifier string = "changed"
 )
 
 // ensure that `search.FieldResolver` interface is implemented
@@ -235,7 +236,7 @@ func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (*search
 
 	switch v := resultVal.(type) {
 	case nil:
-		return &search.ResolverResult{Identifier: "NULL"}, nil
+		// no further processing is needed...
 	case string:
 		// check if it is a number field and explicitly try to cast to
 		// float in case of a numeric string value was used
@@ -265,8 +266,20 @@ func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (*search
 		resultVal = val
 	}
 
+	// unsupported modifier
+	// @todo consider deprecating with the introduction of filter functions
+	if modifier != "" && modifier != lowerModifier {
+		return nil, fmt.Errorf("invalid modifier sequence %s:%s", lastProp, modifier)
+	}
+
+	// no need to wrap as placeholder if we already know that it is null
+	if resultVal == nil {
+		return &search.ResolverResult{Identifier: "NULL"}, nil
+	}
+
 	placeholder := "f" + security.PseudorandomString(8)
 
+	// @todo consider deprecating with the introduction of filter functions
 	if modifier == lowerModifier {
 		return &search.ResolverResult{
 			Identifier: "LOWER({:" + placeholder + "})",
@@ -463,7 +476,8 @@ func splitModifier(combined string) (string, string, error) {
 	case issetModifier,
 		eachModifier,
 		lengthModifier,
-		lowerModifier:
+		lowerModifier,
+		changedModifier:
 		return parts[0], parts[1], nil
 	}
 

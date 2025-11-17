@@ -88,7 +88,9 @@ func (r *runner) run() (*search.ResolverResult, error) {
 			return r.processRequestAuthField()
 		}
 
-		if strings.HasPrefix(r.fieldName, "@request.body.") && len(r.activeProps) > 2 {
+		totalProps := len(r.activeProps)
+
+		if strings.HasPrefix(r.fieldName, "@request.body.") && totalProps > 2 {
 			name, modifier, err := splitModifier(r.activeProps[2])
 			if err != nil {
 				return nil, err
@@ -100,23 +102,21 @@ func (r *runner) run() (*search.ResolverResult, error) {
 			}
 
 			// check for body relation field
-			if bodyField.Type() == FieldTypeRelation && len(r.activeProps) > 3 {
-				return r.processRequestInfoRelationField(bodyField)
+			if bodyField.Type() == FieldTypeRelation && totalProps > 3 {
+				return r.processRequestBodyRelationField(bodyField)
 			}
 
-			// check for body arrayble fields ":each" modifier
-			if modifier == eachModifier && len(r.activeProps) == 3 {
-				return r.processRequestInfoEachModifier(bodyField)
-			}
-
-			// check for body arrayble fields ":length" modifier
-			if modifier == lengthModifier && len(r.activeProps) == 3 {
-				return r.processRequestInfoLengthModifier(bodyField)
-			}
-
-			// check for body arrayble fields ":lower" modifier
-			if modifier == lowerModifier && len(r.activeProps) == 3 {
-				return r.processRequestInfoLowerModifier(bodyField)
+			if totalProps == 3 { // aka. last prop
+				switch modifier {
+				case eachModifier:
+					return r.processRequestBodyEachModifier(bodyField)
+				case lengthModifier:
+					return r.processRequestBodyLengthModifier(bodyField)
+				case lowerModifier:
+					return r.processRequestBodyLowerModifier(bodyField)
+				case changedModifier:
+					return r.processRequestBodyChangedModifier(bodyField)
+				}
 			}
 		}
 
@@ -271,7 +271,34 @@ func toSlice(value any) []any {
 	return result
 }
 
-func (r *runner) processRequestInfoLowerModifier(bodyField Field) (*search.ResolverResult, error) {
+func (r *runner) processRequestBodyChangedModifier(bodyField Field) (*search.ResolverResult, error) {
+	name := bodyField.GetName()
+
+	alias := search.FilterData(fmt.Sprintf("@request.body.%s:isset = true && @request.body.%s != %s", name, name, name))
+
+	aliasExpr, err := alias.BuildExpr(r.resolver)
+	if err != nil {
+		return nil, err
+	}
+
+	placeholder := "@changed@" + name + security.PseudorandomString(6)
+
+	result := &search.ResolverResult{
+		Identifier: placeholder,
+		NoCoalesce: true,
+		AfterBuild: func(expr dbx.Expression) dbx.Expression {
+			return &replaceWithExpression{
+				placeholder: placeholder,
+				old:         expr,
+				new:         aliasExpr,
+			}
+		},
+	}
+
+	return result, nil
+}
+
+func (r *runner) processRequestBodyLowerModifier(bodyField Field) (*search.ResolverResult, error) {
 	rawValue := cast.ToString(r.resolver.requestInfo.Body[bodyField.GetName()])
 
 	placeholder := "infoLower" + bodyField.GetName() + security.PseudorandomString(6)
@@ -284,7 +311,7 @@ func (r *runner) processRequestInfoLowerModifier(bodyField Field) (*search.Resol
 	return result, nil
 }
 
-func (r *runner) processRequestInfoLengthModifier(bodyField Field) (*search.ResolverResult, error) {
+func (r *runner) processRequestBodyLengthModifier(bodyField Field) (*search.ResolverResult, error) {
 	if _, ok := bodyField.(MultiValuer); !ok {
 		return nil, fmt.Errorf("field %q doesn't support multivalue operations", bodyField.GetName())
 	}
@@ -298,7 +325,7 @@ func (r *runner) processRequestInfoLengthModifier(bodyField Field) (*search.Reso
 	return result, nil
 }
 
-func (r *runner) processRequestInfoEachModifier(bodyField Field) (*search.ResolverResult, error) {
+func (r *runner) processRequestBodyEachModifier(bodyField Field) (*search.ResolverResult, error) {
 	multiValuer, ok := bodyField.(MultiValuer)
 	if !ok {
 		return nil, fmt.Errorf("field %q doesn't support multivalue operations", bodyField.GetName())
@@ -347,7 +374,7 @@ func (r *runner) processRequestInfoEachModifier(bodyField Field) (*search.Resolv
 	return result, nil
 }
 
-func (r *runner) processRequestInfoRelationField(bodyField Field) (*search.ResolverResult, error) {
+func (r *runner) processRequestBodyRelationField(bodyField Field) (*search.ResolverResult, error) {
 	relField, ok := bodyField.(*RelationField)
 	if !ok {
 		return nil, fmt.Errorf("failed to initialize data relation field %q", bodyField.GetName())

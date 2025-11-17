@@ -1947,13 +1947,14 @@ export default class CommonHelper {
             for (const key of keys) {
                 result.push(key);
 
-                // add ":isset" modifier to non-base keys
+                // add ":isset"/":changed" modifier to non-base keys
                 const parts = key.split(".");
                 if (
                     parts.length === 3 &&
                     // doesn't contain another modifier
                     parts[2].indexOf(":") === -1
                 ) {
+                    result.push(key + ":changed");
                     result.push(key + ":isset");
                 }
             }

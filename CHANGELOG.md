@@ -1,3 +1,17 @@
+## v0.34.0-WIP
+
+- Added `@request.body.someField:changed` modifier (@todo update docs).
+    It could be used when you want to ensure that a body field either wasn't submitted or was submitted with the same value.
+    Or in other words, if you want to disallow a field change the below 2 expressions should be equivalent:
+    ```js
+    // (old)
+    (@request.body.someField:isset = false || @request.body.someField = someField)
+
+    // (new)
+    @request.body.someField:changed = false
+    ```
+
+
 ## v0.33.0
 
 - Added extra `id` characters validation in addition to the user specified regex pattern ([#7312](https://github.com/pocketbase/pocketbase/issues/7312)).
