@@ -2,7 +2,7 @@
 
 - Added `@request.body.someField:changed` modifier (@todo update docs).
     It could be used when you want to ensure that a body field either wasn't submitted or was submitted with the same value.
-    Or in other words, if you want to disallow a field change the below 2 expressions should be equivalent:
+    Or in other words, if you want to disallow a field change the below 2 expressions would be equivalent:
     ```js
     // (old)
     (@request.body.someField:isset = false || @request.body.someField = someField)
@@ -10,6 +10,8 @@
     // (new)
     @request.body.someField:changed = false
     ```
+
+- Updated `modernc.org/sqlite` to 1.40.1.
 
 
 ## v0.33.0
