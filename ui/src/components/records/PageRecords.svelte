@@ -137,6 +137,81 @@
 
         CommonHelper.replaceHashQueryParams(queryParams);
     }
+
+    // 导出记录为CSV文件
+    async function exportRecords() {
+        try {
+            // 发送导出请求，包含查询参数
+            const url = `/api/collections/${$activeCollection.id}/records/export`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'text/csv',
+                },
+            });
+
+            if (!response.ok) {
+                // 尝试获取服务器返回的具体错误信息
+                const errorText = await response.text().catch(() => 'Export failed');
+                throw new Error(errorText || 'Export failed');
+            }
+
+            // 处理下载文件
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.style.display = 'none';
+            link.href = downloadUrl;
+            link.download = `${$activeCollection.name}-records-${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            
+            // 清理资源
+            setTimeout(() => {
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(link);
+            }, 100);
+            
+        } catch (error) {
+            console.error('Export records error:', error);
+            // 显示更详细的错误信息
+            alert(`Failed to export records: ${error.message || 'Please try again.'}`);
+        }
+    }
+
+    // 导入记录从CSV文件
+    function importRecords() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.csv';
+        input.onchange = async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`/api/collections/${$activeCollection.id}/records/import`, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Import failed');
+                }
+
+                // 导入成功后刷新记录列表
+                recordsList?.load();
+                recordsCount?.reload();
+                alert('Records imported successfully!');
+            } catch (error) {
+                console.error('Import records error:', error);
+                alert('Failed to import records. Please check the CSV format and try again.');
+            }
+        };
+        input.click();
+    }
 </script>
 
 {#if $isCollectionsLoading && !$collections.length}
@@ -207,12 +282,21 @@
                     <i class="ri-code-s-slash-line" />
                     <span class="txt">API Preview</span>
                 </button>
-
+                <button type="button" class="btn btn-outline" on:click={exportRecords}>
+                    <i class="ri-download-2-line" />
+                    <span class="txt">Export records</span>
+                </button>
                 {#if $activeCollection.type !== "view"}
-                    <button type="button" class="btn btn-expanded" on:click={() => recordUpsertPanel?.show()}>
-                        <i class="ri-add-line" />
-                        <span class="txt">New record</span>
-                    </button>
+                    <div class="inline-flex gap-2">                        
+                        <button type="button" class="btn btn-outline" on:click={importRecords}>
+                            <i class="ri-upload-2-line" />
+                            <span class="txt">Import records</span>
+                        </button>
+                        <button type="button" class="btn btn-expanded" on:click={() => recordUpsertPanel?.show()}>
+                            <i class="ri-add-line" />
+                            <span class="txt">New record</span>
+                        </button>
+                    </div>
                 {/if}
             </div>
         </header>

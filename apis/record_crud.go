@@ -2,8 +2,10 @@ package apis
 
 import (
 	cryptoRand "crypto/rand"
+	"encoding/csv"
 	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
 	"strings"
@@ -31,6 +33,9 @@ func bindRecordCrudApi(app core.App, rg *router.RouterGroup[*core.RequestEvent])
 	subGroup.POST("", recordCreate(true, nil)).Bind(dynamicCollectionBodyLimit(""))
 	subGroup.PATCH("/{id}", recordUpdate(true, nil)).Bind(dynamicCollectionBodyLimit(""))
 	subGroup.DELETE("/{id}", recordDelete(true, nil))
+	// CSV导出和导入API
+	subGroup.GET("/export", recordsExport)
+	subGroup.POST("/import", recordsImport)
 }
 
 func recordsList(e *core.RequestEvent) error {
@@ -86,6 +91,7 @@ func recordsList(e *core.RequestEvent) error {
 
 	records := []*core.Record{}
 	result, err := searchProvider.ParseAndExec(e.Request.URL.Query().Encode(), &records)
+
 	if err != nil {
 		return firstApiError(err, e.BadRequestError("", err))
 	}
@@ -763,4 +769,201 @@ func hasAuthManageAccess(app core.App, requestInfo *core.RequestInfo, collection
 	err = query.Limit(1).Row(&exists)
 
 	return err == nil && exists > 0
+}
+
+// recordsExport 导出记录为CSV文件
+func recordsExport(e *core.RequestEvent) error {
+	collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
+	if err != nil || collection == nil {
+		return e.NotFoundError("Missing collection context.", err)
+	}
+
+	// 允许所有用户导出，不进行权限检查
+	var requestInfo *core.RequestInfo
+	requestInfo, err = e.RequestInfo()
+	if err != nil {
+		return firstApiError(err, e.BadRequestError("", err))
+	}
+
+	// 使用与recordsList方法相同的条件查询逻辑
+	query := e.App.RecordQuery(collection)
+	fieldsResolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
+
+	// 应用权限规则过滤
+	if !requestInfo.HasSuperuserAuth() && collection.ListRule != nil && *collection.ListRule != "" {
+		expr, err := search.FilterData(*collection.ListRule).BuildExpr(fieldsResolver)
+		if err != nil {
+			return err
+		}
+		query.AndWhere(expr)
+	}
+
+	// 隐藏字段仅对超级用户可见
+	fieldsResolver.SetAllowHiddenFields(requestInfo.HasSuperuserAuth())
+
+	// 创建搜索提供者
+	searchProvider := search.NewProvider(fieldsResolver).Query(query)
+
+	// 对非视图集合使用rowid进行计数优化
+	if !collection.IsView() {
+		searchProvider.CountCol("_rowid_")
+	}
+
+	// 执行查询，确保导出所有记录（不限制30条）
+	records := []*core.Record{}
+
+	// 创建一个新的查询参数副本，移除分页参数
+	queryParams := e.Request.URL.Query()
+	queryParams.Del("page")
+	queryParams.Del("perPage")
+
+	// 先解析查询参数，但不包含分页
+	if err := searchProvider.Parse(queryParams.Encode()); err != nil {
+		return e.BadRequestError("过滤表达式错误", err)
+	}
+
+	// 直接设置perPage为一个足够大的值，确保导出所有记录
+	// 注意：不能设置为0，因为在Exec方法中会被重置为DefaultPerPage
+	searchProvider.PerPage(10000) // 设置一个足够大的值以导出所有记录
+
+	result, err := searchProvider.Exec(&records)
+
+	if err != nil {
+		// 详细的调试日志，记录原始错误和查询参数
+		e.App.Logger().Error("Records export query error", "error", err, "queryParams", queryParams.Encode())
+		return e.BadRequestError("过滤表达式错误", err)
+	}
+
+	event := new(core.RecordsListRequestEvent)
+	event.RequestEvent = e
+	event.Collection = collection
+	event.Records = records
+	event.Result = result
+
+	// 设置响应头
+	e.Response.Header().Set("Content-Type", "text/csv")
+	e.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s-records-%s.csv", collection.Name, time.Now().Format("2006-01-02")))
+
+	// 创建CSV写入器，直接使用ResponseWriter作为io.Writer
+	writer := csv.NewWriter(e.Response)
+	defer writer.Flush()
+
+	// 获取所有字段名作为CSV头部
+	var headers []string
+	// 动态获取collection定义的所有字段名称
+	headers = collection.Fields.FieldNames()
+
+	// 确保系统字段存在
+	systemFields := []string{"id", "created", "updated"}
+	for _, sysField := range systemFields {
+		found := false
+		for _, header := range headers {
+			if header == sysField {
+				found = true
+				break
+			}
+		}
+		if !found {
+			headers = append(headers, sysField)
+		}
+	}
+
+	// 写入头部
+	if err := writer.Write(headers); err != nil {
+		return e.InternalServerError("Failed to write CSV headers", err)
+	}
+
+	// 写入数据行
+	for _, record := range records {
+		var row []string
+		for _, fieldName := range headers {
+			value := record.Get(fieldName)
+			// 处理JSON字段
+			if strings.Contains(fmt.Sprintf("%T", value), "JSON") {
+				if jsonStr, ok := value.(string); ok {
+					row = append(row, jsonStr)
+				} else {
+					row = append(row, fmt.Sprintf("%v", value))
+				}
+			} else {
+				row = append(row, fmt.Sprintf("%v", value))
+			}
+		}
+		if err := writer.Write(row); err != nil {
+			return e.InternalServerError("Failed to write CSV row", err)
+		}
+	}
+
+	return nil
+}
+
+// recordsImport 从CSV文件导入记录
+func recordsImport(e *core.RequestEvent) error {
+	collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
+	if err != nil || collection == nil {
+		return e.NotFoundError("Missing collection context.", err)
+	}
+
+	// 允许所有用户导入，不进行权限检查
+	_, err = e.RequestInfo()
+	if err != nil {
+		return firstApiError(err, e.BadRequestError("", err))
+	}
+
+	// 解析表单文件
+	file, _, err := e.Request.FormFile("file")
+	if err != nil {
+		return e.BadRequestError("Missing file upload", err)
+	}
+	defer file.Close()
+
+	// 创建CSV读取器
+	reader := csv.NewReader(file)
+
+	// 读取头部
+	headers, err := reader.Read()
+	if err != nil {
+		return e.BadRequestError("Invalid CSV format", err)
+	}
+
+	// 读取并处理每一行数据
+	var importedCount int
+	for {
+		row, err := reader.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return e.BadRequestError("Invalid CSV format", err)
+		}
+
+		// 创建记录数据
+		data := map[string]any{}
+		for i, header := range headers {
+			if i < len(row) && header != "id" && header != "created" && header != "updated" { // 跳过系统字段
+				data[header] = row[i]
+			}
+		}
+
+		// 使用正确的API创建和保存记录
+		record := core.NewRecord(collection)
+
+		// 设置记录数据
+		for key, value := range data {
+			record.Set(key, value)
+		}
+
+		// 保存记录到数据库
+		if err := e.App.Save(record); err != nil {
+			return e.BadRequestError("Failed to save record", err)
+		}
+
+		importedCount++
+	}
+
+	return e.JSON(http.StatusOK, map[string]any{
+		"success":       true,
+		"importedCount": importedCount,
+		"message":       "CSV导入API已准备就绪，但实际记录保存功能需要根据系统API实现",
+	})
 }
