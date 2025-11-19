@@ -771,14 +771,14 @@ func hasAuthManageAccess(app core.App, requestInfo *core.RequestInfo, collection
 	return err == nil && exists > 0
 }
 
-// recordsExport 导出记录为CSV文件
+// recordsExport exports records as CSV file
 func recordsExport(e *core.RequestEvent) error {
 	collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
 	if err != nil || collection == nil {
 		return e.NotFoundError("Missing collection context.", err)
 	}
 
-	// 允许所有用户导出，不进行权限检查
+	// Allow all users to export without permission check
 	var requestInfo *core.RequestInfo
 	requestInfo, err = e.RequestInfo()
 	if err != nil {
@@ -789,7 +789,7 @@ func recordsExport(e *core.RequestEvent) error {
 	query := e.App.RecordQuery(collection)
 	fieldsResolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
 
-	// 应用权限规则过滤
+	// Apply permission rules filter
 	if !requestInfo.HasSuperuserAuth() && collection.ListRule != nil && *collection.ListRule != "" {
 		expr, err := search.FilterData(*collection.ListRule).BuildExpr(fieldsResolver)
 		if err != nil {
@@ -798,40 +798,40 @@ func recordsExport(e *core.RequestEvent) error {
 		query.AndWhere(expr)
 	}
 
-	// 隐藏字段仅对超级用户可见
+	// Hidden fields are only visible to superusers
 	fieldsResolver.SetAllowHiddenFields(requestInfo.HasSuperuserAuth())
 
-	// 创建搜索提供者
+	// Create search provider
 	searchProvider := search.NewProvider(fieldsResolver).Query(query)
 
-	// 对非视图集合使用rowid进行计数优化
+	// Use rowid for counting optimization on non-view collections
 	if !collection.IsView() {
 		searchProvider.CountCol("_rowid_")
 	}
 
-	// 执行查询，确保导出所有记录（不限制30条）
+	// Execute query to export all records (without 30 records limit)
 	records := []*core.Record{}
 
-	// 创建一个新的查询参数副本，移除分页参数
+	// Create a new copy of query parameters and remove pagination parameters
 	queryParams := e.Request.URL.Query()
 	queryParams.Del("page")
 	queryParams.Del("perPage")
 
-	// 先解析查询参数，但不包含分页
+	// Parse query parameters first, excluding pagination
 	if err := searchProvider.Parse(queryParams.Encode()); err != nil {
-		return e.BadRequestError("过滤表达式错误", err)
+		return e.BadRequestError("Invalid filter expression", err)
 	}
 
-	// 直接设置perPage为一个足够大的值，确保导出所有记录
-	// 注意：不能设置为0，因为在Exec方法中会被重置为DefaultPerPage
-	searchProvider.PerPage(10000) // 设置一个足够大的值以导出所有记录
+	// Directly set perPage to a sufficiently large value to export all records
+	// Note: Cannot set to 0 as it will be reset to DefaultPerPage in Exec method
+	searchProvider.PerPage(10000) // Set a sufficiently large value to export all records
 
 	result, err := searchProvider.Exec(&records)
 
 	if err != nil {
-		// 详细的调试日志，记录原始错误和查询参数
+		// Detailed debug log to record original error and query parameters
 		e.App.Logger().Error("Records export query error", "error", err, "queryParams", queryParams.Encode())
-		return e.BadRequestError("过滤表达式错误", err)
+		return e.BadRequestError("Invalid filter expression", err)
 	}
 
 	event := new(core.RecordsListRequestEvent)
@@ -840,20 +840,20 @@ func recordsExport(e *core.RequestEvent) error {
 	event.Records = records
 	event.Result = result
 
-	// 设置响应头
+	// Set response headers
 	e.Response.Header().Set("Content-Type", "text/csv")
 	e.Response.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s-records-%s.csv", collection.Name, time.Now().Format("2006-01-02")))
 
-	// 创建CSV写入器，直接使用ResponseWriter作为io.Writer
+	// Create CSV writer, directly using ResponseWriter as io.Writer
 	writer := csv.NewWriter(e.Response)
 	defer writer.Flush()
 
-	// 获取所有字段名作为CSV头部
+	// Get all field names as CSV headers
 	var headers []string
-	// 动态获取collection定义的所有字段名称
+	// Dynamically get all field names defined in the collection
 	headers = collection.Fields.FieldNames()
 
-	// 确保系统字段存在
+	// Ensure system fields exist
 	systemFields := []string{"id", "created", "updated"}
 	for _, sysField := range systemFields {
 		found := false
@@ -868,17 +868,17 @@ func recordsExport(e *core.RequestEvent) error {
 		}
 	}
 
-	// 写入头部
+	// Write header
 	if err := writer.Write(headers); err != nil {
 		return e.InternalServerError("Failed to write CSV headers", err)
 	}
 
-	// 写入数据行
+	// Write data rows
 	for _, record := range records {
 		var row []string
 		for _, fieldName := range headers {
 			value := record.Get(fieldName)
-			// 处理JSON字段
+			// Handle JSON fields
 			if strings.Contains(fmt.Sprintf("%T", value), "JSON") {
 				if jsonStr, ok := value.(string); ok {
 					row = append(row, jsonStr)
@@ -897,36 +897,36 @@ func recordsExport(e *core.RequestEvent) error {
 	return nil
 }
 
-// recordsImport 从CSV文件导入记录
+// recordsImport imports records from CSV file
 func recordsImport(e *core.RequestEvent) error {
 	collection, err := e.App.FindCachedCollectionByNameOrId(e.Request.PathValue("collection"))
 	if err != nil || collection == nil {
 		return e.NotFoundError("Missing collection context.", err)
 	}
 
-	// 允许所有用户导入，不进行权限检查
+	// Allow all users to import without permission check
 	_, err = e.RequestInfo()
 	if err != nil {
 		return firstApiError(err, e.BadRequestError("", err))
 	}
 
-	// 解析表单文件
+	// Parse form file
 	file, _, err := e.Request.FormFile("file")
 	if err != nil {
 		return e.BadRequestError("Missing file upload", err)
 	}
 	defer file.Close()
 
-	// 创建CSV读取器
+	// Create CSV reader
 	reader := csv.NewReader(file)
 
-	// 读取头部
+	// Read headers
 	headers, err := reader.Read()
 	if err != nil {
 		return e.BadRequestError("Invalid CSV format", err)
 	}
 
-	// 读取并处理每一行数据
+	// Read and process each row of data
 	var importedCount int
 	for {
 		row, err := reader.Read()
@@ -937,23 +937,23 @@ func recordsImport(e *core.RequestEvent) error {
 			return e.BadRequestError("Invalid CSV format", err)
 		}
 
-		// 创建记录数据
+		// Create record data
 		data := map[string]any{}
 		for i, header := range headers {
-			if i < len(row) && header != "id" && header != "created" && header != "updated" { // 跳过系统字段
+			if i < len(row) && header != "id" && header != "created" && header != "updated" { // Skip system fields
 				data[header] = row[i]
 			}
 		}
 
-		// 使用正确的API创建和保存记录
+		// Use the correct API to create and save records
 		record := core.NewRecord(collection)
 
-		// 设置记录数据
+		// Set record data
 		for key, value := range data {
 			record.Set(key, value)
 		}
 
-		// 保存记录到数据库
+		// Save record to database
 		if err := e.App.Save(record); err != nil {
 			return e.BadRequestError("Failed to save record", err)
 		}
@@ -964,6 +964,6 @@ func recordsImport(e *core.RequestEvent) error {
 	return e.JSON(http.StatusOK, map[string]any{
 		"success":       true,
 		"importedCount": importedCount,
-		"message":       "CSV导入API已准备就绪，但实际记录保存功能需要根据系统API实现",
+		"message":       "CSV import API is ready, but the actual record saving functionality needs to be implemented according to the system API",
 	})
 }

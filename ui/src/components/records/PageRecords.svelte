@@ -138,10 +138,10 @@
         CommonHelper.replaceHashQueryParams(queryParams);
     }
 
-    // 导出记录为CSV文件
+    // Export records as CSV file
     async function exportRecords() {
         try {
-            // 发送导出请求，包含查询参数
+            // Send export request with query parameters
             const url = `/api/collections/${$activeCollection.id}/records/export`;
             const response = await fetch(url, {
                 method: 'GET',
@@ -151,12 +151,12 @@
             });
 
             if (!response.ok) {
-                // 尝试获取服务器返回的具体错误信息
+                // Try to get specific error message from server
                 const errorText = await response.text().catch(() => 'Export failed');
                 throw new Error(errorText || 'Export failed');
             }
 
-            // 处理下载文件
+            // Handle file download
             const blob = await response.blob();
             const downloadUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -166,7 +166,7 @@
             document.body.appendChild(link);
             link.click();
             
-            // 清理资源
+            // Clean up resources
             setTimeout(() => {
                 window.URL.revokeObjectURL(downloadUrl);
                 document.body.removeChild(link);
@@ -174,12 +174,12 @@
             
         } catch (error) {
             console.error('Export records error:', error);
-            // 显示更详细的错误信息
+            // Show more detailed error message
             alert(`Failed to export records: ${error.message || 'Please try again.'}`);
         }
     }
 
-    // 导入记录从CSV文件
+    // Import records from CSV file
     function importRecords() {
         const input = document.createElement('input');
         input.type = 'file';
@@ -201,7 +201,7 @@
                     throw new Error('Import failed');
                 }
 
-                // 导入成功后刷新记录列表
+                // Refresh records list after successful import
                 recordsList?.load();
                 recordsCount?.reload();
                 alert('Records imported successfully!');
