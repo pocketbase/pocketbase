@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"net"
+
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/go-ozzo/ozzo-validation/v4/is"
 	"github.com/pocketbase/pocketbase/core/validators"
@@ -22,6 +24,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
 )
+
 
 const (
 	paramsTable = "_params"
@@ -558,6 +561,7 @@ func (c TrustedProxyConfig) Validate() error {
 type RateLimitsConfig struct {
 	Rules   []RateLimitRule `form:"rules" json:"rules"`
 	Enabled bool            `form:"enabled" json:"enabled"`
+	ExcludedIPs []string `form:"excludedIPs" json:"excludedIPs"`
 }
 
 // FindRateLimitRule returns the first matching rule based on the provided labels.
@@ -614,7 +618,26 @@ func (c RateLimitsConfig) Validate() error {
 			validation.When(c.Enabled, validation.Required),
 			validation.By(checkUniqueRuleLabel),
 		),
+		validation.Field(&c.ExcludedIPs, validation.By(checkValidIPs)),
 	)
+}
+
+func checkValidIPs(value any) error {
+	ips, ok := value.([]string)
+	if !ok {
+		return validators.ErrUnsupportedValueType
+	}
+
+	for i, ip := range ips {
+		if net.ParseIP(ip) == nil {
+			return validation.Errors{
+				strconv.Itoa(i): validation.NewError("validation_invalid_ip", "Invalid IP address: {{.ip}}").
+					SetParams(map[string]any{"ip": ip}),
+			}
+		}
+	}
+
+	return nil
 }
 
 func checkUniqueRuleLabel(value any) error {
@@ -694,9 +717,7 @@ func (c RateLimitRule) Validate() error {
 		validation.Field(&c.Label, validation.Required, validation.Match(rateLimitRuleLabelRegex)),
 		validation.Field(&c.MaxRequests, validation.Required, validation.Min(1)),
 		validation.Field(&c.Duration, validation.Required, validation.Min(1)),
-		validation.Field(&c.Audience,
-			validation.In(RateLimitRuleAudienceAll, RateLimitRuleAudienceGuest, RateLimitRuleAudienceAuth),
-		),
+		validation.Field(&c.Audience,validation.In(RateLimitRuleAudienceAll, RateLimitRuleAudienceGuest, RateLimitRuleAudienceAuth),),
 	)
 }
 

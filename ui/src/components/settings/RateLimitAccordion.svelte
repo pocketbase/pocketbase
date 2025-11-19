@@ -7,6 +7,7 @@
     import AutocompleteInput from "@/components/base/AutocompleteInput.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
     import OverlayPanel from "@/components/base/OverlayPanel.svelte";
+    import MultipleValueInput from "@/components/base/MultipleValueInput.svelte";
     import { errors, setErrors, removeError } from "@/stores/errors";
     import { collections, loadCollections } from "@/stores/collections";
 
@@ -256,6 +257,16 @@
             <em>Learn more about the rate limit rules</em>
         </button>
     </div>
+
+    <Field class="form-field m-t-sm" name="rateLimits.excludedIPs" let:uniqueId>
+        <label for={uniqueId}>Excluded IPs</label>
+        <MultipleValueInput
+            id={uniqueId}
+            placeholder="e.g., 127.0.0.1, 192.168.1.1"
+            bind:value={formSettings.rateLimits.excludedIPs}
+        />
+        <div class="help-block">IP addresses that will bypass rate limiting (comma-separated)</div>
+    </Field>
 </Accordion>
 
 <OverlayPanel bind:this={formatInfoPanel}>

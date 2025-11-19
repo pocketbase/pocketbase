@@ -517,8 +517,9 @@ func TestRateLimitsConfigValidate(t *testing.T) {
 						MaxRequests: -1,
 					},
 				},
+				ExcludedIPs: []string{"12.1", "adas"},
 			},
-			[]string{"rules"},
+			[]string{"rules", "excludedIPs"},
 		},
 		{
 			"valid data",
@@ -536,6 +537,7 @@ func TestRateLimitsConfigValidate(t *testing.T) {
 						MaxRequests: 2,
 					},
 				},
+				ExcludedIPs: []string{"127.0.0.1", "192.168.1.1"},
 			},
 			[]string{},
 		},
