@@ -5,10 +5,13 @@ import (
 	"sync"
 	"time"
 
+	"slices"
+
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/store"
 )
+
 
 const (
 	DefaultRateLimitMiddlewareId       = "pbRateLimit"
@@ -175,7 +178,11 @@ func checkRateLimit(e *core.RequestEvent, rtId string, rule core.RateLimitRule) 
 }
 
 func skipRateLimit(e *core.RequestEvent) bool {
-	return !e.App.Settings().RateLimits.Enabled || e.HasSuperuserAuth()
+	return !e.App.Settings().RateLimits.Enabled || e.HasSuperuserAuth() || isExcludedIP(e)
+}
+
+func isExcludedIP(e *core.RequestEvent) bool {
+	return slices.Contains(e.App.Settings().RateLimits.ExcludedIPs, e.RealIP())
 }
 
 var defaultAuthAudience = []string{core.RateLimitRuleAudienceAll, core.RateLimitRuleAudienceAuth}
