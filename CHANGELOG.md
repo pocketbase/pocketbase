@@ -1,4 +1,4 @@
-## v0.34.0-WIP
+## v0.34.0
 
 - Added `@request.body.someField:changed` modifier (@todo update docs).
     It could be used when you want to ensure that a body field either wasn't submitted or was submitted with the same value.
@@ -11,7 +11,11 @@
     @request.body.someField:changed = false
     ```
 
-- Updated `modernc.org/sqlite` to 1.40.1.
+- Added `MailerRecordEvent.Meta["info"]` property for the `OnMailerRecordAuthAlertSend` hook.
+
+- Updated the backup restore popup with a short info about the performed restore steps.
+
+- Updated Go deps.
 
 
 ## v0.33.0
