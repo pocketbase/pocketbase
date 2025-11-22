@@ -1,6 +1,6 @@
 ## v0.34.0
 
-- Added `@request.body.someField:changed` modifier (@todo update docs).
+- Added `@request.body.someField:changed` modifier.
     It could be used when you want to ensure that a body field either wasn't submitted or was submitted with the same value.
     Or in other words, if you want to disallow a field change the below 2 expressions would be equivalent:
     ```js
