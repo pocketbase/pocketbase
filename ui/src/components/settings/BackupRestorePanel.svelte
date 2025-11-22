@@ -88,13 +88,20 @@
                 the backup and will restart the application process.
             </p>
             <p>
-                This means that on success all of your data (including app settings, users, superusers, etc.) will
-                be replaced with the ones from the backup.
+                This means that on success all of your data (including app settings, users, superusers, etc.)
+                will be replaced with the ones from the backup.
             </p>
             <p>
-                Nothing will happen if the backup is invalid or incompatible (ex. missing
+                Nothing will happen if the backup is invalid (ex. missing
                 <code>data.db</code> file).
             </p>
+            <p>Below is an oversimplified version of the restore flow:</p>
+            <ol>
+                <li>Replaces the current <code>pb_data</code> with the content from the backup</li>
+                <li>Triggers app restart</li>
+                <li>Applies all migrations that are missing in the restored <code>pb_data</code></li>
+                <li>Initializes the app server as usual</li>
+            </ol>
         </div>
     </div>
 
