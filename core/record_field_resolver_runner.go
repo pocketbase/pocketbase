@@ -80,6 +80,7 @@ func (r *runner) run() (*search.ResolverResult, error) {
 	}
 
 	if r.activeProps[0] == "@request" {
+		// @todo consider returning an error instead?
 		if r.resolver.requestInfo == nil {
 			return &search.ResolverResult{Identifier: "NULL"}, nil
 		}

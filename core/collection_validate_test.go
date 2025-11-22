@@ -319,8 +319,8 @@ func TestCollectionValidate(t *testing.T) {
 				c.ListRule = types.Pointer("!invalid")
 				c.ViewRule = types.Pointer("missing = 123")
 				c.CreateRule = types.Pointer("id = 123 && missing = 456")
-				c.UpdateRule = types.Pointer("(id = 123")
-				c.DeleteRule = types.Pointer("missing = 123")
+				c.UpdateRule = types.Pointer("@request.body.missing:changed = false")
+				c.DeleteRule = types.Pointer("(id=123")
 				return c, nil
 			},
 			expectedErrors: []string{"listRule", "viewRule", "createRule", "updateRule", "deleteRule"},
@@ -333,7 +333,7 @@ func TestCollectionValidate(t *testing.T) {
 				c.ListRule = types.Pointer("")
 				c.ViewRule = types.Pointer("f1 = 123")
 				c.CreateRule = types.Pointer("id = 123 && f1 = 456")
-				c.UpdateRule = types.Pointer("(id = 123)")
+				c.UpdateRule = types.Pointer("(id = 123 && @request.body.f1:changed = false)")
 				c.DeleteRule = types.Pointer("f1 = 123")
 				return c, nil
 			},
