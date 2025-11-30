@@ -29,6 +29,7 @@ The easiest way to interact with the PocketBase Web APIs is to use one of the of
 
 - **JavaScript - [pocketbase/js-sdk](https://github.com/pocketbase/js-sdk)** (_Browser, Node.js, React Native_)
 - **Dart - [pocketbase/dart-sdk](https://github.com/pocketbase/dart-sdk)** (_Web, Mobile, Desktop, CLI_)
+- **C#/Blazor** - [PocketBase.Blazor](https://github.com/celsojr/PocketBase.Blazor) (_Blazor WebAssembly, .NET 8_)
 
 You could also check the recommendations in https://pocketbase.io/docs/how-to-use/.
 
