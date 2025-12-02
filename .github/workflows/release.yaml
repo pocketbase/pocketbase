@@ -19,10 +19,9 @@ jobs:
           node-version: 20.11.0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: '>=1.24.11'
-          check-latest: true
+          go-version: '>=1.25.11'
 
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
