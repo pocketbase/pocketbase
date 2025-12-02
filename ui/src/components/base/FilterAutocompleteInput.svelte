@@ -244,7 +244,7 @@
 
     // Returns object with all the completions matching the context.
     function completions(context) {
-        let word = context.matchBefore(/[\'\"\@\w\.]*/);
+        let word = context.matchBefore(/[\'\"\@\w\.\:]*/);
         if (word && word.from == word.to && !context.explicit) {
             return null;
         }

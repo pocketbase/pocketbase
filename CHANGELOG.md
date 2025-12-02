@@ -1,3 +1,10 @@
+## v0.22.37
+
+- (_Backported from v0.34.1_) - Added missing `:` char to the autocomplete regex ([#7353](https://github.com/pocketbase/pocketbase/pull/7353)).
+
+- (_Backported from v0.34.1_) Bumped min Go GitHub action version to 1.24.11 since it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.24.11).
+
+
 ## v0.22.36
 
 - (_Backported from v0.30.2_) Bumped min Go GitHub action version to 1.24.8 since it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.24.8+label%3ACherryPickApproved).
