@@ -7,7 +7,9 @@
     import RecordInfo from "@/components/records/RecordInfo.svelte";
     import GeoPointValue from "@/components/records/fields/GeoPointValue.svelte";
     import { superuser } from "@/stores/superuser";
+    import { isDarkMode } from "@/stores/app";
     import CommonHelper from "@/utils/CommonHelper";
+
 
     export let record;
     export let field;
@@ -61,26 +63,53 @@
             {CommonHelper.truncate(CommonHelper.plainText(rawValue), 195)}
         </span>
     {:else}
-        <TinyMCE
-            cssClass="tinymce-preview"
-            conf={{
-                branding: false,
-                promotion: false,
-                menubar: false,
-                statusbar: false,
-                min_height: 30,
-                height: 59,
-                max_height: 500,
-                autoresize_bottom_margin: 5,
-                resize: false,
-                content_style: "body { font-size: 14px }",
-                toolbar: "",
-                plugins: ["autoresize"],
-                skin: "pocketbase",
-            }}
-            value={rawValue}
-            disabled
-        />
+        {#key $isDarkMode}
+            <TinyMCE
+                cssClass="tinymce-preview"
+                conf={{
+                    branding: false,
+                    promotion: false,
+                    menubar: false,
+                    statusbar: false,
+                    min_height: 30,
+                    height: 59,
+                    max_height: 500,
+                    autoresize_bottom_margin: 5,
+                    resize: false,
+                    content_style: `
+                        body {
+                            font-size: 14px;
+                            font-family: 'Source Sans 3', sans-serif, emoji;
+                            color: ${$isDarkMode ? "#dcdcdc" : "#1a1a24"};
+                            background: ${$isDarkMode ? "#1c1c21" : "#ffffff"};
+                        }
+                        a { color: #5499e8; }
+                        code {
+                            background-color: ${$isDarkMode ? "#303038" : "#e8e8e8"};
+                            color: inherit;
+                            border-radius: 3px;
+                            padding: 0.1rem 0.2rem;
+                        }
+                        blockquote {
+                            border-left: 2px solid ${$isDarkMode ? "#42424e" : "#ccc"};
+                            margin-left: 1.5rem;
+                            padding-left: 1rem;
+                        }
+                        table th, table td {
+                            border-color: ${$isDarkMode ? "#42424e" : "#ccc"};
+                        }
+                        hr {
+                            border-color: ${$isDarkMode ? "#42424e" : "#ccc"};
+                        }
+                    `,
+                    toolbar: "",
+                    plugins: ["autoresize"],
+                    skin: "pocketbase",
+                }}
+                value={rawValue}
+                disabled
+            />
+        {/key}
     {/if}
 {:else if field.type === "date" || field.type === "autodate"}
     <FormattedDate date={rawValue} />

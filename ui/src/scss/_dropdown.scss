@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 .dropdown {
     $spacing: 5px;
     position: absolute;

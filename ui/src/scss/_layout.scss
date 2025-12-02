@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 // sidebar
 // -------------------------------------------------------------------
 
@@ -271,7 +273,7 @@
     gap: 30px;
     color: var(--txtDisabledColor);
     .breadcrumb-item {
-        @extend h2;
+        @extend %h2;
         position: relative;
         margin: 0;
         line-height: 1;

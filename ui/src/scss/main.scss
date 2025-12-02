@@ -1,49 +1,28 @@
-@import 'fonts';
+@use 'fonts';
+@use 'vars';
+@use 'mixins';
+@use 'reset';
+@use 'icons';
+@use 'animations';
+@use 'base';
+@use 'grid';
+@use 'tooltip';
+@use 'dropdown';
+@use 'overlay_panel';
+@use 'alert';
+@use 'form';
+@use 'layout';
+@use 'tabs';
+@use 'accordion';
+@use 'table';
+@use 'searchbar';
+@use 'bulkbar';
+@use 'flatpickr';
+@use 'docs_panel';
+@use 'schema_field';
+@use 'file_picker';
+@use 'collections_export';
+@use 'rate_limit';
+@use 'prism';
+@use 'tinymce';
 
-@import 'vars';
-
-@import 'mixins';
-
-@import 'reset';
-
-@import 'icons';
-
-@import 'animations';
-
-@import 'base';
-
-@import 'grid';
-
-@import 'tooltip';
-
-@import 'dropdown';
-
-@import 'overlay_panel';
-
-@import 'alert';
-
-@import 'form';
-
-@import 'layout';
-
-@import 'tabs';
-
-@import 'accordion';
-
-@import 'table';
-
-@import 'searchbar';
-
-@import 'bulkbar';
-
-@import 'flatpickr';
-
-@import 'docs_panel';
-
-@import 'schema_field';
-
-@import 'file_picker';
-
-@import 'collections_export';
-
-@import 'rate_limit';

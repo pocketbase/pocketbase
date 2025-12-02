@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 .alert {
     $gap: 15px;
     $padding: 15px;
@@ -30,7 +32,7 @@
         font-size: 1.2em;
         padding-right: $gap;
         font-weight: normal;
-        border-right: 1px solid rgba(#000, 0.05);
+        border-right: 1px solid var(--alertBorderColor);
         color: var(--txtHintColor);
     }
     .close {
@@ -53,18 +55,18 @@
         &:hover,
         &:focus {
             opacity: 1;
-            background: rgba(#fff, 0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
         &:active {
             opacity: 1;
-            background: rgba(#fff, 0.3);
+            background: rgba(255, 255, 255, 0.3);
             transition-duration: var(--activeAnimationSpeed);
         }
     }
 
     code,
     hr {
-        background: rgba(#000, 0.1);
+        background: var(--alertCodeBgColor);
     }
 
     // styles

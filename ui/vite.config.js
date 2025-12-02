@@ -12,6 +12,13 @@ export default defineConfig({
         chunkSizeWarningLimit: 1000,
         reportCompressedSize: false,
     },
+    css: {
+        preprocessorOptions: {
+            scss: {
+                api: 'modern-compiler',
+            },
+        },
+    },
     plugins: [
         svelte({
             preprocess: [vitePreprocess()],

@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 // slightly modified version of https://npmcdn.com/flatpickr@4.6.9/dist/flatpickr.css
 .flatpickr-calendar {
   opacity: 0;
@@ -241,14 +243,14 @@
   line-height: 50%;
   opacity: 0;
   cursor: pointer;
-  border: 1px solid rgba(57,57,57,0.15);
+  border: 1px solid var(--baseAlt2Color);
   box-sizing: border-box;
 }
 .numInputWrapper span:hover {
-  background: rgba(0,0,0,0.1);
+  background: var(--flatpickrHoverColor);
 }
 .numInputWrapper span:active {
-  background: rgba(0,0,0,0.2);
+  background: var(--flatpickrHoverColor);
 }
 .numInputWrapper span:after {
   display: block;
@@ -262,7 +264,7 @@
 .numInputWrapper span.arrowUp:after {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-bottom: 4px solid rgba(57,57,57,0.6);
+  border-bottom: 4px solid var(--flatpickrArrowColor);
   top: 26%;
 }
 .numInputWrapper span.arrowDown {
@@ -271,7 +273,7 @@
 .numInputWrapper span.arrowDown:after {
   border-left: 4px solid transparent;
   border-right: 4px solid transparent;
-  border-top: 4px solid rgba(57,57,57,0.6);
+  border-top: 4px solid var(--flatpickrArrowColor);
   top: 40%;
 }
 .numInputWrapper span svg {
@@ -279,7 +281,7 @@
   height: auto;
 }
 .numInputWrapper span svg path {
-  fill: rgba(0,0,0,0.5);
+  fill: var(--flatpickrIconColor);
 }
 .numInputWrapper:hover {
   background: var(--baseAlt1Color);

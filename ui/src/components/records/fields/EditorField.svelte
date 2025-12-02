@@ -1,6 +1,8 @@
 <script>
     import { onMount } from "svelte";
+    import { isDarkMode } from "@/stores/app";
     import ApiClient from "@/utils/ApiClient";
+
     import CommonHelper from "@/utils/CommonHelper";
     import Field from "@/components/base/Field.svelte";
     import TinyMCE from "@/components/base/TinyMCE.svelte";
@@ -18,6 +20,32 @@
     $: conf = Object.assign(CommonHelper.defaultEditorOptions(), {
         convert_urls: field.convertURLs,
         relative_urls: false,
+        content_style: `
+            body {
+                font-size: 14px;
+                font-family: 'Source Sans 3', sans-serif, emoji;
+                color: ${$isDarkMode ? "#dcdcdc" : "#1a1a24"};
+                background: ${$isDarkMode ? "#1c1c21" : "#ffffff"};
+            }
+            a { color: #5499e8; }
+            code {
+                background-color: ${$isDarkMode ? "#303038" : "#e8e8e8"};
+                color: inherit;
+                border-radius: 3px;
+                padding: 0.1rem 0.2rem;
+            }
+            blockquote {
+                border-left: 2px solid ${$isDarkMode ? "#42424e" : "#ccc"};
+                margin-left: 1.5rem;
+                padding-left: 1rem;
+            }
+            table th, table td {
+                border-color: ${$isDarkMode ? "#42424e" : "#ccc"};
+            }
+            hr {
+                border-color: ${$isDarkMode ? "#42424e" : "#ccc"};
+            }
+        `,
     });
 
     // normalize value
@@ -46,17 +74,19 @@
     <FieldLabel {uniqueId} {field} />
 
     {#if mounted}
-        <TinyMCE
-            id={uniqueId}
-            {conf}
-            bind:value
-            on:init={(initEvent) => {
-                editor = initEvent.detail.editor;
-                editor.on("collections_file_picker", () => {
-                    picker?.show();
-                });
-            }}
-        />
+        {#key $isDarkMode}
+            <TinyMCE
+                id={uniqueId}
+                {conf}
+                bind:value
+                on:init={(initEvent) => {
+                    editor = initEvent.detail.editor;
+                    editor.on("collections_file_picker", () => {
+                        picker?.show();
+                    });
+                }}
+            />
+        {/key}
     {:else}
         <div class="tinymce-wrapper" />
     {/if}

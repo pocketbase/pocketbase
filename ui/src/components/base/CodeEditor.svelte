@@ -30,6 +30,7 @@
      * ```
      */
     import { onMount, createEventDispatcher } from "svelte";
+    import { isDarkMode } from "@/stores/app";
     // code mirror imports
     // ---
     import {
@@ -43,7 +44,13 @@
         placeholder as placeholderExt,
     } from "@codemirror/view";
     import { EditorState, Compartment } from "@codemirror/state";
-    import { defaultHighlightStyle, syntaxHighlighting, bracketMatching } from "@codemirror/language";
+    import {
+        defaultHighlightStyle,
+        syntaxHighlighting,
+        bracketMatching,
+        HighlightStyle,
+    } from "@codemirror/language";
+    import { tags } from "@lezer/highlight";
     import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
     import { searchKeymap, highlightSelectionMatches } from "@codemirror/search";
     import {
@@ -77,6 +84,18 @@
     let editableCompartment = new Compartment();
     let readOnlyCompartment = new Compartment();
     let placeholderCompartment = new Compartment();
+    let themeCompartment = new Compartment();
+
+    const darkHighlightStyle = HighlightStyle.define([
+        { tag: tags.comment, color: "#89949b", fontStyle: "italic" },
+        { tag: tags.keyword, color: "#5499e8" },
+        { tag: tags.operator, color: "#dcdcdc" },
+        { tag: tags.string, color: "#32ad84" },
+        { tag: tags.number, color: "#e34562" },
+        { tag: tags.atom, color: "#e34562" },
+        { tag: tags.punctuation, color: "#a0a6ac" },
+        { tag: tags.variableName, color: "#dcdcdc" },
+    ]);
 
     $: if (id) {
         addLabelListeners();
@@ -110,6 +129,18 @@
     $: if (editor && typeof placeholder !== "undefined") {
         editor.dispatch({
             effects: [placeholderCompartment.reconfigure(placeholderExt(placeholder))],
+        });
+    }
+
+    $: if (editor) {
+        editor.dispatch({
+            effects: [
+                themeCompartment.reconfigure(
+                    $isDarkMode
+                        ? syntaxHighlighting(darkHighlightStyle, { fallback: true })
+                        : syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+                ),
+            ],
         });
     }
 
@@ -227,7 +258,11 @@
                     drawSelection(),
                     dropCursor(),
                     EditorState.allowMultipleSelections.of(true),
-                    syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+                    themeCompartment.of(
+                        $isDarkMode
+                            ? syntaxHighlighting(darkHighlightStyle, { fallback: true })
+                            : syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
+                    ),
                     bracketMatching(),
                     closeBrackets(),
                     rectangularSelection(),

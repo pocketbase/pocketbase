@@ -1,0 +1,132 @@
+.tox-tinymce {
+    border-color: var(--baseAlt2Color) !important;
+}
+
+.tox {
+    color: var(--txtPrimaryColor) !important;
+
+    &:not([dir=rtl]) .tox-toolbar__group:not(:last-of-type) {
+        border-right-color: var(--baseAlt2Color) !important;
+    }
+
+    .tox-toolbar,
+    .tox-toolbar__primary,
+    .tox-toolbar__overflow {
+        background: var(--baseColor) !important;
+        background-image: none !important;
+    }
+
+    .tox-tbtn {
+        color: var(--txtPrimaryColor) !important;
+        svg {
+            fill: var(--txtPrimaryColor) !important;
+        }
+        &:hover {
+            background: var(--baseAlt1Color) !important;
+        }
+        &--enabled, &--enabled:hover {
+            background: var(--baseAlt2Color) !important;
+        }
+    }
+
+    .tox-edit-area__iframe {
+        background: var(--baseColor) !important;
+    }
+
+    .tox-statusbar {
+        background: var(--baseColor) !important;
+        border-top-color: var(--baseAlt2Color) !important;
+        color: var(--txtHintColor) !important;
+
+        a,
+        &__path-item,
+        &__wordcount {
+            color: var(--txtHintColor) !important;
+        }
+
+        &__resize-handle svg {
+            fill: var(--txtHintColor) !important;
+        }
+    }
+
+    // Dialogs
+    .tox-dialog {
+        background: var(--baseColor) !important;
+        border-color: var(--baseAlt2Color) !important;
+        box-shadow: 0 16px 16px -10px rgba(0, 0, 0, 0.15), 0 0 40px 1px rgba(0, 0, 0, 0.15) !important;
+
+        &__header {
+            background: var(--baseColor) !important;
+            color: var(--txtPrimaryColor) !important;
+            border-bottom-color: var(--baseAlt2Color) !important;
+            
+            .tox-button {
+                background: transparent !important;
+                border-color: transparent !important;
+                color: var(--txtPrimaryColor) !important;
+            }
+        }
+
+        &__body {
+            color: var(--txtPrimaryColor) !important;
+        }
+
+        &__footer {
+            background: var(--baseColor) !important;
+            border-top-color: var(--baseAlt2Color) !important;
+        }
+    }
+
+    .tox-button {
+        background: var(--primaryColor) !important;
+        border-color: var(--primaryColor) !important;
+        color: var(--baseColor) !important;
+
+        &--secondary {
+            background: var(--baseAlt1Color) !important;
+            border-color: var(--baseAlt1Color) !important;
+            color: var(--txtPrimaryColor) !important;
+        }
+        
+        &--icon {
+             color: var(--txtPrimaryColor) !important;
+        }
+    }
+
+    .tox-textfield,
+    .tox-listboxfield .tox-listbox--select,
+    .tox-textarea {
+        background: var(--baseAlt1Color) !important;
+        border-color: var(--baseAlt2Color) !important;
+        color: var(--txtPrimaryColor) !important;
+
+        &:focus {
+            border-color: var(--primaryColor) !important;
+        }
+    }
+
+    .tox-collection__item {
+        color: var(--txtPrimaryColor) !important;
+
+        &--active {
+            background: var(--baseAlt1Color) !important;
+        }
+        
+        &-accessory {
+             color: var(--txtHintColor) !important;
+        }
+    }
+
+    .tox-menu {
+        background: var(--baseColor) !important;
+        border-color: var(--baseAlt2Color) !important;
+    }
+    
+    .tox-pop {
+        &__dialog {
+             background: var(--baseColor) !important;
+             border-color: var(--baseAlt2Color) !important;
+             box-shadow: 0 0 5px rgba(0,0,0,0.2) !important;
+        }
+    }
+}

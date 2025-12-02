@@ -6,6 +6,7 @@
     --txtPrimaryColor:  #1a1a24;
     --txtHintColor:     #617079;
     --txtDisabledColor: #a0a6ac;
+    --txtInverseColor:  #ffffff;
 
     --primaryColor: #1a1a24;
 
@@ -28,7 +29,14 @@
 
     --overlayColor:   rgba(53, 71, 104, 0.28);
     --tooltipColor:   rgba(0, 0, 0, 0.85);
+    --tooltipTxtColor: #ffffff;
     --shadowColor:    rgba(0, 0, 0, 0.06);
+    --alertBorderColor: rgba(0, 0, 0, 0.05);
+    --alertCodeBgColor: rgba(0, 0, 0, 0.1);
+    --disabledOverlayColor: rgba(255, 255, 255, 0.45);
+    --flatpickrArrowColor: rgba(57, 57, 57, 0.6);
+    --flatpickrIconColor: rgba(0, 0, 0, 0.5);
+    --flatpickrHoverColor: rgba(0, 0, 0, 0.1);
 
     --baseFontSize: 14.5px;
     --xsFontSize:   12px;
@@ -70,6 +78,43 @@
 
     // https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color
     accent-color: var(--primaryColor);
+}
+
+:root.theme-dark {
+    --txtPrimaryColor:  #dcdcdc;
+    --txtHintColor:     #89949b;
+    --txtDisabledColor: #586069;
+    --txtInverseColor:  #1a1a24;
+
+    --primaryColor: #dcdcdc;
+
+    --bodyColor: #16161a;
+
+    --baseColor:     #1c1c21;
+    --baseAlt1Color: #232329;
+    --baseAlt2Color: #292930;
+    --baseAlt3Color: #303038;
+    --baseAlt4Color: #42424e;
+
+    --infoColor:       #5499e8;
+    --infoAltColor:    #2a3d52;
+    --successColor:    #32ad84;
+    --successAltColor: #224238;
+    --dangerColor:     #e34562;
+    --dangerAltColor:  #4f2a33;
+    --warningColor:    #ff944d;
+    --warningAltColor: #523a2a;
+
+    --overlayColor:   rgba(0, 0, 0, 0.5);
+    --tooltipColor:   rgba(255, 255, 255, 0.9);
+    --tooltipTxtColor: #1a1a24;
+    --shadowColor:    rgba(0, 0, 0, 0.2);
+    --alertBorderColor: rgba(255, 255, 255, 0.1);
+    --alertCodeBgColor: rgba(255, 255, 255, 0.1);
+    --disabledOverlayColor: rgba(0, 0, 0, 0.2);
+    --flatpickrArrowColor: rgba(255, 255, 255, 0.6);
+    --flatpickrIconColor: rgba(255, 255, 255, 0.5);
+    --flatpickrHoverColor: rgba(255, 255, 255, 0.1);
 }
 
 

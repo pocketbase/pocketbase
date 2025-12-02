@@ -64,3 +64,30 @@
         }
     }
 }
+
+%block {
+    display: block;
+    width: 100%;
+}
+
+// headings
+%h {
+    margin: 0;
+    font-weight: normal;
+}
+
+%h2 {
+    font-size: 20px;
+    line-height: 26px;
+}
+
+%content {
+    @extend %block;
+    min-width: 0;
+    & > :first-child {
+        margin-top: 0;
+    }
+    & > :last-child {
+        margin-bottom: 0;
+    }
+}

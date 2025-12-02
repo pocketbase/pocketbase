@@ -1,3 +1,6 @@
+@use 'vars' as *;
+@use 'mixins' as *;
+
 @include scrollbar();
 
 :focus-visible {
@@ -21,16 +24,6 @@ body {
     height: 100vh;
 }
 
-%block {
-    display: block;
-    width: 100%;
-}
-
-// headings
-%h {
-    margin: 0;
-    font-weight: normal;
-}
 h1, h2, h3, h4, h5, h6 {
     @extend %h;
 }
@@ -39,8 +32,7 @@ h1 {
     line-height: 28px;
 }
 h2 {
-    font-size: 20px;
-    line-height: 26px;
+    @extend %h2;
 }
 h3 {
     font-size: 19px;
@@ -350,14 +342,7 @@ a,
 }
 
 .content {
-    @extend %block;
-    min-width: 0;
-    & > :first-child {
-        margin-top: 0;
-    }
-    & > :last-child {
-        margin-bottom: 0;
-    }
+    @extend %content;
 }
 
 .panel {

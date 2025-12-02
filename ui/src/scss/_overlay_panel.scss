@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 .overlay-panel {
     $padding: var(--baseSpacing);
     $compactPadding: calc(#{$padding} - 7px);
@@ -79,7 +81,7 @@
             border-bottom-left-radius: 50%;
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
-            color: #fff;
+            color: var(--txtInverseColor);
             background: var(--primaryColor);
             opacity: 0.5;
             transition: opacity var(--baseAnimationSpeed);
@@ -107,7 +109,7 @@
 
     // content
     .panel-content {
-        @extend .content;
+        @extend %content;
         z-index: auto; // not fixed to allow overlapping
         flex-grow: 1;
         overflow-x: hidden;
@@ -136,10 +138,10 @@
     // scroll markers
     &.scrollable {
         .panel-header {
-            box-shadow: 0px 4px 5px 0px rgba(#000, 0.05);
+            box-shadow: 0px 4px 5px 0px var(--shadowColor);
         }
         .panel-footer {
-            box-shadow: 0px -4px 5px 0px rgba(#000, 0.05);
+            box-shadow: 0px -4px 5px 0px var(--shadowColor);
         }
         &.scroll-top-reached .panel-header {
             box-shadow: none;

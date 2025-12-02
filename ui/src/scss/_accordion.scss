@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 .accordion {
     $handlerSize: 25px;
     $spacing: 20px;

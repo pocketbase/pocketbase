@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 .bulkbar {
     position: absolute;
     bottom: var(--baseSpacing);

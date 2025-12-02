@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 .schema-field-header {
     $minHeight: 42px;
     position: relative;
@@ -30,7 +32,7 @@
         flex-shrink: 0;
         width: 1px;
         align-self: stretch;
-        background: rgba(#000, 0.05);
+        background: rgba(0, 0, 0, 0.05);
     }
     .drag-handle-wrapper {
         position: absolute;

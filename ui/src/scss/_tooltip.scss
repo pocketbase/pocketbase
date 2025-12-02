@@ -1,3 +1,5 @@
+@use 'mixins' as *;
+
 .app-tooltip {
     position: fixed;
     z-index: 999999;
@@ -7,7 +9,7 @@
     vertical-align: top;
     max-width: 275px;
     padding: 3px 5px;
-    color: #fff;
+    color: var(--tooltipTxtColor);
     text-align: center;
     font-family: var(--baseFontFamily);
     font-size: var(--smFontSize);

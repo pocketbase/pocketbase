@@ -1,4 +1,5 @@
 @use "sass:math";
+@use 'mixins' as *;
 
 button {
     outline: 0;
@@ -32,7 +33,7 @@ button {
     text-decoration: none;
     line-height: 1;
     font-weight: 600;
-    color: #fff;
+    color: var(--txtInverseColor);
     font-size: var(--baseFontSize);
     font-family: var(--baseFontFamily);
     border-radius: var(--btnRadius);
@@ -114,7 +115,7 @@ button {
     // secondary/bordered styles
     &.btn-outline {
         border: 2px solid currentColor;
-        background: #fff;
+        background: var(--baseColor);
     }
 
     @mixin btnOpacity($base: 1, $hover: 1, $active: 1) {
@@ -369,7 +370,7 @@ button {
         gap: 0;
         > .btn {
             border-radius: 0;
-            box-shadow: -1px 0px 0px 0px rgba(#fff, 0.1);
+            box-shadow: -1px 0px 0px 0px rgba(255, 255, 255, 0.1);
         }
         > .btn:not(.btn-expanded, .btn-expanded-lg, .btn-expanded-sm) {
             min-width: 0;
@@ -584,7 +585,7 @@ select {
 
     // hints
     .help-block {
-        @extend .content;
+        @extend %content;
         position: relative;
         margin-top: 8px;
         font-size: var(--smFontSize);
@@ -633,7 +634,7 @@ select {
     }
     &.disabled {
         label, %input {
-            box-shadow: inset 0 0 0 var(--btnHeight) rgba(#fff, 0.45);
+            box-shadow: inset 0 0 0 var(--btnHeight) var(--disabledOverlayColor);
         }
         > label {
             color: var(--txtDisabledColor);
@@ -1339,7 +1340,7 @@ select {
             left: 2px;
             right: 2px;
             bottom: 2px;
-            background: #fff;
+            background: var(--baseColor);
             border-radius: var(--baseRadius);
         }
     }

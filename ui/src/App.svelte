@@ -6,7 +6,7 @@
     import TinyMCE from "@/components/base/TinyMCE.svelte";
     import Toasts from "@/components/base/Toasts.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
-    import { appName, hideControls, pageTitle } from "@/stores/app";
+    import { appName, hideControls, pageTitle, isDarkMode } from "@/stores/app";
     import { resetConfirmation } from "@/stores/confirmation";
     import { setErrors } from "@/stores/errors";
     import { superuser } from "@/stores/superuser";
@@ -147,6 +147,20 @@
                         <i class="ri-shield-user-line" aria-hidden="true" />
                         <span class="txt">Manage superusers</span>
                     </a>
+                    <button
+                        type="button"
+                        class="dropdown-item closable"
+                        role="menuitem"
+                        on:click={() => ($isDarkMode = !$isDarkMode)}
+                    >
+                        {#if $isDarkMode}
+                            <i class="ri-sun-line" aria-hidden="true" />
+                            <span class="txt">Light mode</span>
+                        {:else}
+                            <i class="ri-moon-line" aria-hidden="true" />
+                            <span class="txt">Dark mode</span>
+                        {/if}
+                    </button>
                     <button type="button" class="dropdown-item closable" role="menuitem" on:click={logout}>
                         <i class="ri-logout-circle-line" aria-hidden="true" />
                         <span class="txt">Logout</span>

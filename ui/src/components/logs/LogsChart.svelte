@@ -3,6 +3,7 @@
     import { scale } from "svelte/transition";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
+    import { isDarkMode } from "@/stores/app";
     import {
         Chart,
         LineElement,
@@ -33,6 +34,31 @@
 
     $: if (typeof chartData !== "undefined" && chartInst) {
         chartInst.data.datasets[0].data = chartData;
+        chartInst.update();
+    }
+
+    $: if (chartInst) {
+        updateChartTheme($isDarkMode);
+    }
+
+    function updateChartTheme(darkMode) {
+        const gridColor = darkMode ? "#26282e" : "#edf0f3";
+        const borderColor = darkMode ? "#323842" : "#e4e9ec";
+        const tickColor = darkMode ? "#89949b" : "#666f75";
+        const majorTickColor = darkMode ? "#dcdcdc" : "#16161a";
+
+        if (chartInst.options.scales.y) {
+            chartInst.options.scales.y.grid.color = gridColor;
+            chartInst.options.scales.y.border.color = borderColor;
+            chartInst.options.scales.y.ticks.color = tickColor;
+        }
+
+        if (chartInst.options.scales.x) {
+            chartInst.options.scales.x.grid.color = (c) => (c.tick?.major ? gridColor : "");
+            chartInst.options.scales.x.ticks.color = (c) => (c.tick?.major ? majorTickColor : tickColor);
+            // chartInst.options.scales.x.color = borderColor; // legacy?
+        }
+
         chartInst.update();
     }
 
