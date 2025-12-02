@@ -4,6 +4,10 @@
 
 - Added "Copy raw JSON" collection dropdown option ([#7357](https://github.com/pocketbase/pocketbase/issues/7357)).
 
+- Updated Go deps and JS SDK.
+
+- Bumped min Go GitHub action version to 1.24.11 since it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.24.11).
+
 
 ## v0.34.0
 
