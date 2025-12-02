@@ -5,7 +5,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { confirm } from "@/stores/confirmation";
     import { errors, removeError, setErrors } from "@/stores/errors";
-    import { addSuccessToast, removeAllToasts } from "@/stores/toasts";
+    import { addInfoToast, addSuccessToast, removeAllToasts } from "@/stores/toasts";
     import {
         addCollection,
         removeCollection,
@@ -346,6 +346,11 @@
 
         return false;
     }
+
+    function copyJSON() {
+        CommonHelper.copyToClipboard(JSON.stringify(original, null, 2));
+        addInfoToast("The collection JSON was copied to your clipboard!", 3000);
+    }
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
@@ -382,7 +387,16 @@
                 class="btn btn-sm btn-circle btn-transparent flex-gap-0"
             >
                 <i class="ri-more-line" aria-hidden="true" />
-                <Toggler class="dropdown dropdown-right m-t-5">
+                <Toggler class="dropdown dropdown-right dropdown-nowrap">
+                    <button
+                        type="button"
+                        class="dropdown-item closable"
+                        role="menuitem"
+                        on:click={() => copyJSON()}
+                    >
+                        <i class="ri-braces-line" aria-hidden="true" />
+                        <span class="txt">Copy raw JSON</span>
+                    </button>
                     {#if !collection.system}
                         <button
                             type="button"

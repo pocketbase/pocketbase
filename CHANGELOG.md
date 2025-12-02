@@ -2,6 +2,8 @@
 
 - Added missing `:` char to the autocomplete regex ([#7353](https://github.com/pocketbase/pocketbase/pull/7353); thanks @ouvreboite).
 
+- Added "Copy raw JSON" collection dropdown option ([#7357](https://github.com/pocketbase/pocketbase/issues/7357)).
+
 
 ## v0.34.0
 
