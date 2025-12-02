@@ -1,4 +1,4 @@
-## v0.34.1 (WIP)
+## v0.34.1
 
 - Added missing `:` char to the autocomplete regex ([#7353](https://github.com/pocketbase/pocketbase/pull/7353); thanks @ouvreboite).
 
