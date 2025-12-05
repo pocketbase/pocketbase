@@ -462,6 +462,15 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 	// that are made in the last day while revalidating the res in the background)
 	setHeaderIfMissing(res, "Cache-Control", "max-age=2592000, stale-while-revalidate=86400")
 
+	// fallback to io.Copy if the size is unknown/empty (eg. due to transparent gzip decompression)
+	if br.Size() <= 0 {
+		if !br.ModTime().IsZero() {
+			res.Header().Set("Last-Modified", br.ModTime().UTC().Format(http.TimeFormat))
+		}
+		_, err := io.Copy(res, br)
+		return err
+	}
+
 	http.ServeContent(res, req, name, br.ModTime(), br)
 
 	return nil
