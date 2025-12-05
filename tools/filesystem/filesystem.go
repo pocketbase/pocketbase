@@ -462,7 +462,19 @@ func (s *System) Serve(res http.ResponseWriter, req *http.Request, fileKey strin
 	// that are made in the last day while revalidating the res in the background)
 	setHeaderIfMissing(res, "Cache-Control", "max-age=2592000, stale-while-revalidate=86400")
 
-	http.ServeContent(res, req, name, br.ModTime(), br)
+	// fix for S3 0-byte download issue
+	var content io.ReadSeeker = br
+	if br.Size() <= 0 {
+		attrs, err := s.Attributes(fileKey)
+		if err == nil && attrs.Size > 0 {
+			content = &sizedReader{
+				Reader: br,
+				size:   attrs.Size,
+			}
+		}
+	}
+
+	http.ServeContent(res, req, name, br.ModTime(), content)
 
 	return nil
 }
@@ -561,4 +573,13 @@ func (s *System) CreateThumb(originalKey string, thumbKey, thumbSize string) err
 
 	// check for close errors to ensure that the thumb was really saved
 	return w.Close()
+}
+
+type sizedReader struct {
+	*blob.Reader
+	size int64
+}
+
+func (r *sizedReader) Size() int64 {
+	return r.size
 }
