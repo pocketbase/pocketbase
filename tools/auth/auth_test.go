@@ -7,7 +7,7 @@ import (
 )
 
 func TestProvidersCount(t *testing.T) {
-	expected := 32
+	expected := 33
 
 	if total := len(auth.Providers); total != expected {
 		t.Fatalf("Expected %d providers, got %d", expected, total)
@@ -313,5 +313,14 @@ func TestNewProviderByName(t *testing.T) {
 	}
 	if _, ok := p.(*auth.Lark); !ok {
 		t.Error("Expected to be instance of *auth.Lark")
+	}
+
+	// dropbox
+	p, err = auth.NewProviderByName(auth.NameDropbox)
+	if err != nil {
+		t.Errorf("Expected nil, got error %v", err)
+	}
+	if _, ok := p.(*auth.Dropbox); !ok {
+		t.Error("Expected to be instance of *auth.Dropbox")
 	}
 }
