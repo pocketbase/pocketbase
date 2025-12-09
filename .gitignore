@@ -1,20 +1,46 @@
-/.vscode/
-.idea
+# Binaries
+pbsync
+pbsync-*
+dist/
 
+# PocketBase data directories
+pb_data/
+pb_local/
+pb_server/
+pb_data_*/
+instance*/
+test*/
+
+# NATS data
+nats_data/
+
+# Go build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
 
-# goreleaser builds folder
-/.builds/
+# Logs
+*.log
 
-# tests coverage
-coverage.out
+# Temporary files
+tmp/
+temp/
 
-# plaintask todo files
-*.todo
-
-# generated markdown previews
-README.html
-CHANGELOG.html
-CHANGELOG_16_22.html
-CHANGELOG_8_15.html
-LICENSE.html

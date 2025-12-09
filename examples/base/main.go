@@ -12,6 +12,7 @@ import (
 	"github.com/pocketbase/pocketbase/plugins/ghupdate"
 	"github.com/pocketbase/pocketbase/plugins/jsvm"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
+	"github.com/pocketbase/pocketbase/plugins/sync"
 	"github.com/pocketbase/pocketbase/tools/hook"
 	"github.com/pocketbase/pocketbase/tools/osutils"
 )
@@ -102,6 +103,9 @@ func main() {
 
 	// GitHub selfupdate
 	ghupdate.MustRegister(app, app.RootCmd, ghupdate.Config{})
+
+	// Sync plugin (horizontal scaling)
+	sync.MustRegister(app, sync.Config{})
 
 	// static route to serves files from the provided public dir
 	// (if publicDir exists and the route path is not already defined)
