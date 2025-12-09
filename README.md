@@ -1,155 +1,45 @@
-<p align="center">
-    <a href="https://pocketbase.io" target="_blank" rel="noopener">
-        <img src="https://i.imgur.com/5qimnm5.png" alt="PocketBase - open source backend in 1 file" />
-    </a>
-</p>
+# pocketbase-sync
+Video Demo: https://youtu.be/91_0x8StFl0
+# Warning
+Well, several warnings.
+1. Aside from this readme document this entire project was nearly all vibe coded. Accept that however you wish.
+2. I'm a pre-junior developer who is fascinated by system architecture and infrastructure such as this, but I built this in my spare time and may not be the best FOSS lead for a project. Do with that what you will.
+3. All of my personal applications are too small to need horizontal scaling... I built this because it was fun, and I'm fascinated by the tech. So if you choose to use this, walk into it knowing that I'm basically a chef who doesn't eat his own food.
+4. Backup your stuff! While I've done some testing and have had good results, I would certainly not call this production ready. If my program eats your data and you're without a backup, you are to blame.
+5. NATS Jetstream, used here, is NOT encrypted. You will need to come up with your own security scheme so that your sync endpoints aren't exposed to the public internet. Tailscale and ZeroTier are both excellent choices, but there are others out there. (I think K8s & K3s have some sort of provision for this, which reminds me, Fly.io should have something you can use also)
+6. Normal record syncing has been tested to some extent, but I haven't had a chance to build and test any kind of realtime application for the realtime websocket syncing.
+7. I might have built this whole thing just to solve another one of the internet's great non-problems, you know, like bitcoin did for finance. Basically, this whole project may be useful to a total of 0.000 of people out there. Shucks.
 
-<p align="center">
-    <a href="https://github.com/pocketbase/pocketbase/actions/workflows/release.yaml" target="_blank" rel="noopener"><img src="https://github.com/pocketbase/pocketbase/actions/workflows/release.yaml/badge.svg" alt="build" /></a>
-    <a href="https://github.com/pocketbase/pocketbase/releases" target="_blank" rel="noopener"><img src="https://img.shields.io/github/release/pocketbase/pocketbase.svg" alt="Latest releases" /></a>
-    <a href="https://pkg.go.dev/github.com/pocketbase/pocketbase" target="_blank" rel="noopener"><img src="https://godoc.org/github.com/pocketbase/pocketbase?status.svg" alt="Go package documentation" /></a>
-</p>
+Now that the warnings are out of the way....
+# What's going on here?
 
-[PocketBase](https://pocketbase.io) is an open source Go backend that includes:
+pocketbase-sync is Pocketbase (amazing) but with horizontal sync capabilities.
+ - I'm using NATS Jetstream for the pub/sub architecture
+ - This is Event driven, so it won't eat up your system resources like polling solutions such as the very-cool project marmot which syncs sqlite databases (I'm grateful to marmot for inspiring this project!)
+ - Leaderless - there is no single central node that all other nodes must talk to. Once a sync chain has nodes talking on it, you can destroy and start any node you wish.
+ - Eventually Consistent (usually syncs in miliseconds, but we aren't strongly consistent)
+ - Realtime database connections are handled by websocket routing, so that no matter what instance an end-user originates from... if a realtime connection is open to a resource, all other users will connect to that same resource. Whoever initiated the realtime connection is the winner, and will hold the lease until the instance dies or until there are no realtime subscribers. This has not been tested!!!
+ - Snapshots of your database are configured for the NATS Jetstream so that when a new instance joins, it can initialize using a recent snapshot of your database, followed by all database changes since the snapshot. It wouldn't be reasonable for a new instance to have to ingest every change since the beginning of time when it joins. So it grabs and applies the snapshot first, then catches up to current and begins syncing itself.
 
-- embedded database (_SQLite_) with **realtime subscriptions**
-- built-in **files and users management**
-- convenient **Admin dashboard UI**
-- and simple **REST-ish API**
+# Usage
+Well, the command line side of things is unchanged. It's just Pocketbase all the way down. I added `plugins/sync` and made some minor UI tweaks to support it.
 
-**For documentation and examples, please visit https://pocketbase.io/docs.**
+In the Pocketbase Admin UI, navigate to Settings => Application => Sync.
 
-> [!WARNING]
-> Please keep in mind that PocketBase is still under active development
-> and therefore full backward compatibility is not guaranteed before reaching v1.0.0.
+For the first instance, check the button that says "Initial Node" and fill in the local address that you want NATS to listen on, as well as an instance ID so you can know which one this is.
 
-## API SDK clients
+For all other following instances that you want to sync, I strongly recommend starting with a brand new empty instance of Pocketbase-sync, and in the Sync settings use "Add To Sync Chain" and similarly, fill out the local instance ID and NATS URL, but also fill in the Remote credentials of another instance you have on the sync chain.
 
-The easiest way to interact with the PocketBase Web APIs is to use one of the official SDK clients:
+Since this is leaderless, it doesn't matter what instance you point a new one at. It should catch up with all changes.
 
-- **JavaScript - [pocketbase/js-sdk](https://github.com/pocketbase/js-sdk)** (_Browser, Node.js, React Native_)
-- **Dart - [pocketbase/dart-sdk](https://github.com/pocketbase/dart-sdk)** (_Web, Mobile, Desktop, CLI_)
-
-You could also check the recommendations in https://pocketbase.io/docs/how-to-use/.
+<img src="https://f004.backblazeb2.com/file/mattzab-dropbox/2025-12-08_17-56.png">
 
 
-## Overview
 
-### Use as standalone app
+# Contributions
+ - It would be nice to have a realtime app I can use to test the realtime websocket routing. If anyone has something they want to volunteer, I'm open to that.
+ - If anyone wants to look over the codebase (almost everything new is in plugins/sync) and make sure there's some sanity going on in there, that would be nice of you.
 
-You could download the prebuilt executable for your platform from the [Releases page](https://github.com/pocketbase/pocketbase/releases).
-Once downloaded, extract the archive and run `./pocketbase serve` in the extracted directory.
 
-The prebuilt executables are based on the [`examples/base/main.go` file](https://github.com/pocketbase/pocketbase/blob/master/examples/base/main.go) and comes with the JS VM plugin enabled by default which allows to extend PocketBase with JavaScript (_for more details please refer to [Extend with JavaScript](https://pocketbase.io/docs/js-overview/)_).
+What else should I put in this readme file? I wrote this myself, sans-LLM. So that's why it reads a bit rough. But hey, I write like I talk. This is what you get.
 
-### Use as a Go framework/toolkit
-
-PocketBase is distributed as a regular Go library package which allows you to build
-your own custom app specific business logic and still have a single portable executable at the end.
-
-Here is a minimal example:
-
-0. [Install Go 1.23+](https://go.dev/doc/install) (_if you haven't already_)
-
-1. Create a new project directory with the following `main.go` file inside it:
-    ```go
-    package main
-
-    import (
-        "log"
-
-        "github.com/pocketbase/pocketbase"
-        "github.com/pocketbase/pocketbase/core"
-    )
-
-    func main() {
-        app := pocketbase.New()
-
-        app.OnServe().BindFunc(func(se *core.ServeEvent) error {
-            // registers new "GET /hello" route
-            se.Router.GET("/hello", func(re *core.RequestEvent) error {
-                return re.String(200, "Hello world!")
-            })
-
-            return se.Next()
-        })
-
-        if err := app.Start(); err != nil {
-            log.Fatal(err)
-        }
-    }
-    ```
-
-2. To init the dependencies, run `go mod init myapp && go mod tidy`.
-
-3. To start the application, run `go run main.go serve`.
-
-4. To build a statically linked executable, you can run `CGO_ENABLED=0 go build` and then start the created executable with `./myapp serve`.
-
-_For more details please refer to [Extend with Go](https://pocketbase.io/docs/go-overview/)._
-
-### Building and running the repo main.go example
-
-To build the minimal standalone executable, like the prebuilt ones in the releases page, you can simply run `go build` inside the `examples/base` directory:
-
-0. [Install Go 1.23+](https://go.dev/doc/install) (_if you haven't already_)
-1. Clone/download the repo
-2. Navigate to `examples/base`
-3. Run `GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build`
-   (_https://go.dev/doc/install/source#environment_)
-4. Start the created executable by running `./base serve`.
-
-Note that the supported build targets by the pure Go SQLite driver at the moment are:
-
-```
-darwin  amd64
-darwin  arm64
-freebsd amd64
-freebsd arm64
-linux   386
-linux   amd64
-linux   arm
-linux   arm64
-linux   loong64
-linux   ppc64le
-linux   riscv64
-linux   s390x
-windows 386
-windows amd64
-windows arm64
-```
-
-### Testing
-
-PocketBase comes with mixed bag of unit and integration tests.
-To run them, use the standard `go test` command:
-
-```sh
-go test ./...
-```
-
-Check also the [Testing guide](http://pocketbase.io/docs/testing) to learn how to write your own custom application tests.
-
-## Security
-
-If you discover a security vulnerability within PocketBase, please send an e-mail to **support at pocketbase.io**.
-
-All reports will be promptly addressed and you'll be credited in the fix release notes.
-
-## Contributing
-
-PocketBase is free and open source project licensed under the [MIT License](LICENSE.md).
-You are free to do whatever you want with it, even offering it as a paid service.
-
-You could help continuing its development by:
-
-- [Contribute to the source code](CONTRIBUTING.md)
-- [Suggest new features and report issues](https://github.com/pocketbase/pocketbase/issues)
-
-PRs for new OAuth2 providers, bug fixes, code optimizations and documentation improvements are more than welcome.
-
-But please refrain creating PRs for _new features_ without previously discussing the implementation details.
-PocketBase has a [roadmap](https://github.com/orgs/pocketbase/projects/2) and I try to work on issues in specific order and such PRs often come in out of nowhere and skew all initial planning with tedious back-and-forth communication.
-
-Don't get upset if I close your PR, even if it is well executed and tested. This doesn't mean that it will never be merged.
-Later we can always refer to it and/or take pieces of your implementation when the time comes to work on the issue (don't worry you'll be credited in the release notes).
