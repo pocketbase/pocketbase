@@ -52,8 +52,8 @@ func TestNewFileFromPath(t *testing.T) {
 	}
 
 	// existing file
-	originalName := "image_! noext"
-	normalizedNamePattern := regexp.QuoteMeta("image_noext_") + `\w{10}` + regexp.QuoteMeta(".png")
+	originalName := "image_!@ special"
+	normalizedNamePattern := regexp.QuoteMeta("image_special_") + `\w{10}` + regexp.QuoteMeta(".png")
 	f, err := filesystem.NewFileFromPath(filepath.Join(testDir, originalName))
 	if err != nil {
 		t.Fatalf("Expected nil error, got %v", err)
@@ -83,8 +83,8 @@ func TestNewFileFromBytes(t *testing.T) {
 		t.Fatal("Expected error, got nil")
 	}
 
-	originalName := "image_! noext"
-	normalizedNamePattern := regexp.QuoteMeta("image_noext_") + `\w{10}` + regexp.QuoteMeta(".txt")
+	originalName := "image_!@ special"
+	normalizedNamePattern := regexp.QuoteMeta("image_special_") + `\w{10}` + regexp.QuoteMeta(".txt")
 	f, err := filesystem.NewFileFromBytes([]byte("text\n"), originalName)
 	if err != nil {
 		t.Fatal(err)
@@ -175,8 +175,8 @@ func TestNewFileFromURLTimeout(t *testing.T) {
 
 	// valid response
 	{
-		originalName := "image_! noext"
-		normalizedNamePattern := regexp.QuoteMeta("image_noext_") + `\w{10}` + regexp.QuoteMeta(".txt")
+		originalName := "image_!@ special"
+		normalizedNamePattern := regexp.QuoteMeta("image_special_") + `\w{10}` + regexp.QuoteMeta(".txt")
 
 		f, err := filesystem.NewFileFromURL(context.Background(), srv.URL+"/"+originalName)
 		if err != nil {

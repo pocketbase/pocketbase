@@ -1,3 +1,8 @@
+## v0.34.3 (WIP)
+
+- Store the correct `image/png` as attrs content type when generating a thumb fallback _(e.g. for `webp`)_.
+
+
 ## v0.34.2
 
 - Bumped JS SDK to v0.26.5 to fix Safari AbortError detection introduced with the previous release ([#7369](https://github.com/pocketbase/pocketbase/issues/7369)).

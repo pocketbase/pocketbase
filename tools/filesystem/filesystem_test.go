@@ -709,7 +709,8 @@ func TestFileSystemList(t *testing.T) {
 				"image.jpg",
 				"image.svg",
 				"image.webp",
-				"image_! noext",
+				"image_!@ special",
+				"image_noext",
 				"style.css",
 				"main.js",
 				"main.mjs",
@@ -861,6 +862,8 @@ func TestFileSystemCreateThumb(t *testing.T) {
 		{"image.jpg", "thumb.jpg", "100x100", "image/jpeg"},
 		// webp (should produce png)
 		{"image.webp", "thumb.webp", "100x100", "image/png"},
+		// without extension (should extract the mimetype from its stored ContentType)
+		{"image_noext", "image_noext.jpeg", "100x100", "image/jpeg"},
 	}
 
 	for _, s := range scenarios {
@@ -884,13 +887,20 @@ func TestFileSystemCreateThumb(t *testing.T) {
 			}
 			defer f.Close()
 
+			attrsMimeType := f.ContentType()
+
 			mt, err := mimetype.DetectReader(f)
 			if err != nil {
 				t.Fatalf("Failed to detect thumb %s mimetype (%v)", s.thumb, err)
 			}
+			fileMimeType := mt.String()
 
-			if mtStr := mt.String(); mtStr != s.expectedMimeType {
-				t.Fatalf("Expected thumb %s MimeType %q, got %q", s.thumb, s.expectedMimeType, mtStr)
+			if fileMimeType != s.expectedMimeType {
+				t.Fatalf("Expected thumb file %s MimeType %q, got %q", s.thumb, s.expectedMimeType, fileMimeType)
+			}
+
+			if attrsMimeType != s.expectedMimeType {
+				t.Fatalf("Expected thumb attrs %s MimeType %q, got %q", s.thumb, s.expectedMimeType, attrsMimeType)
 			}
 		})
 	}
@@ -975,14 +985,31 @@ func createTestDir(t *testing.T) string {
 		}
 	}
 
-	// no extension and invalid characters
+	// invalid/special characters
 	{
-		file, err := os.OpenFile(filepath.Join(dir, "image_! noext"), os.O_WRONLY|os.O_CREATE, 0644)
+		file, err := os.OpenFile(filepath.Join(dir, "image_!@ special"), os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			t.Fatal(err)
 		}
-		_ = png.Encode(file, image.Rect(0, 0, 1, 1)) // tiny 1x1 png
+		imgRect := image.Rect(0, 0, 1, 1) // tiny 1x1 png
+		_ = png.Encode(file, imgRect)
 		file.Close()
+	}
+
+	// no extension
+	{
+		fullPath := filepath.Join(dir, "image_noext")
+		file, err := os.OpenFile(fullPath, os.O_WRONLY|os.O_CREATE, 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
+		imgRect := image.Rect(0, 0, 1, 1) // tiny 1x1 jpg
+		_ = jpeg.Encode(file, imgRect, nil)
+		file.Close()
+		err = os.WriteFile(fullPath+".attrs", []byte(`{"user.cache_control":"","user.content_disposition":"","user.content_encoding":"","user.content_language":"","user.content_type":"image/jpeg","user.metadata":null}`), 0644)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	// css
