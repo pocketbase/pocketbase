@@ -1,0 +1,9 @@
+services:
+  pocketbase:
+    build: .
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pb_data:/app/pb_data
+      - ./pb_public:/app/pb_public
+      - ./pb_hooks:/app/pb_hooks

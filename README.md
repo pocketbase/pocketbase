@@ -119,6 +119,15 @@ windows amd64
 windows arm64
 ```
 
+### run the repo main.go example via docker
+
+To run and build the dockerize version, you can simply run `docker compose up -d`
+
+0. [Install Docker](https://docs.docker.com/engine/install/) (_if you haven't already_)
+1. Clone/download the repo
+2. Build it with `docker build -it pocketbase:latest .`
+3. Run it with `docker run -p 8090:8090 -it pocketbase:latest`
+
 ### Testing
 
 PocketBase comes with mixed bag of unit and integration tests.
