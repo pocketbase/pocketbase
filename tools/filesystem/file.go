@@ -208,7 +208,7 @@ func normalizeName(fr FileReader, name string) string {
 
 	// name
 	// ---
-	cleanName := inflector.Snakecase(strings.TrimSuffix(strings.TrimSuffix(name, originalExt), "."))
+	cleanName := inflector.Snakecase(strings.Trim(strings.TrimSuffix(name, originalExt), "."))
 	if length := len(cleanName); length < 3 {
 		// the name is too short so we concatenate an additional random part
 		cleanName += security.RandomStringWithAlphabet(10, randomAlphabet)
