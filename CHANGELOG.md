@@ -2,6 +2,8 @@
 
 - Store the correct `image/png` as attrs content type when generating a thumb fallback _(e.g. for `webp`)_.
 
+- Trimmed the normalized file extension to ensure that there is only one beginning `.` character.
+
 
 ## v0.34.2
 

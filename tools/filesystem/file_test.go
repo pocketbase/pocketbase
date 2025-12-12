@@ -211,6 +211,8 @@ func TestFileNameNormalizations(t *testing.T) {
 		{".png", `^\w{10}_\w{10}\.png$`},
 		{".tar.gz", `^\w{10}_\w{10}\.tar\.gz$`},
 		{"a.tar.gz", `^a\w{10}_\w{10}\.tar\.gz$`},
+		{"....abc", `^\w{10}_\w{10}\.abc$`},
+		{"a.b.c.?.?.?.2", `^a_b_c_\w{10}\.2$`},
 		{"a.b.c.d.tar.gz", `^a_b_c_d_\w{10}\.tar\.gz$`},
 		{"abcd", `^abcd_\w{10}\.txt$`},
 		{"a  b! c d  . 456", `^a_b_c_d_\w{10}\.456$`},                                        // normalize spaces

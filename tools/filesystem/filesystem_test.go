@@ -600,6 +600,7 @@ func TestFileSystemGetReuploadableFile(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		defer r.Close()
 
 		raw, err := io.ReadAll(r)
 		if err != nil {
@@ -677,12 +678,13 @@ func TestFileSystemCopy(t *testing.T) {
 	if err := fsys.Copy(src, dst); err != nil {
 		t.Fatalf("Failed to copy %q to %q: %v", src, dst, err)
 	}
+
 	f, err := fsys.GetReader(dst)
-	//nolint
-	defer f.Close()
 	if err != nil {
 		t.Fatalf("Missing copied file %q: %v", dst, err)
 	}
+	defer f.Close()
+
 	if f.Size() != 73 {
 		t.Fatalf("Expected file size %d, got %d", 73, f.Size())
 	}

@@ -196,19 +196,19 @@ func normalizeName(fr FileReader, name string) string {
 	// extension
 	// ---
 	originalExt := extractExtension(name)
-	cleanExt := extInvalidCharsRegex.ReplaceAllString(originalExt, "")
-	if cleanExt == "" {
+	cleanExt := "." + strings.Trim(extInvalidCharsRegex.ReplaceAllString(originalExt, ""), ".")
+	if cleanExt == "." {
 		// try to detect the extension from the file content
 		cleanExt, _ = detectExtension(fr)
 	}
 	if extLength := len(cleanExt); extLength > 20 {
 		// keep only the last 20 characters (it is multibyte safe after the regex replace)
-		cleanExt = "." + cleanExt[extLength-20:]
+		cleanExt = "." + strings.Trim(cleanExt[extLength-20:], ".")
 	}
 
 	// name
 	// ---
-	cleanName := inflector.Snakecase(strings.TrimSuffix(name, originalExt))
+	cleanName := inflector.Snakecase(strings.TrimSuffix(strings.TrimSuffix(name, originalExt), "."))
 	if length := len(cleanName); length < 3 {
 		// the name is too short so we concatenate an additional random part
 		cleanName += security.RandomStringWithAlphabet(10, randomAlphabet)
