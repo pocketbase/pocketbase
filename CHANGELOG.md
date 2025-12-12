@@ -4,6 +4,8 @@
 
 - Trimmed the normalized file extension to ensure that there is only one beginning `.` character.
 
+- Updated Go deps.
+
 
 ## v0.34.2
 
