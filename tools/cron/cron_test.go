@@ -258,7 +258,7 @@ func TestCronStartStop(t *testing.T) {
 
 	c := New()
 
-	c.SetInterval(500 * time.Millisecond)
+	c.SetInterval(250 * time.Millisecond)
 
 	c.Add("test1", "* * * * *", func() {
 		test1++
@@ -274,7 +274,7 @@ func TestCronStartStop(t *testing.T) {
 	c.Start()
 	c.Start()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(505 * time.Millisecond) // slightly larger to minimize flakiness
 
 	// call twice Stop to ensure that the second stop is no-op
 	c.Stop()
@@ -287,10 +287,10 @@ func TestCronStartStop(t *testing.T) {
 		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
 	}
 
-	// resume for 2 seconds
+	// resume for 1 seconds
 	c.Start()
 
-	time.Sleep(2 * time.Second)
+	time.Sleep(1005 * time.Millisecond) // slightly larger to minimize flakiness
 
 	c.Stop()
 
