@@ -5,8 +5,8 @@ go 1.24.0
 require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.6.2
-	github.com/dop251/goja v0.0.0-20251103141225-af2ceb9156d7
-	github.com/dop251/goja_nodejs v0.0.0-20250409162600-f7acab6894b0
+	github.com/dop251/goja v0.0.0-20251201205617-2bb4c724c0f9
+	github.com/dop251/goja_nodejs v0.0.0-20251015164255-5e94316bedaf
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gabriel-vasile/mimetype v1.4.11
