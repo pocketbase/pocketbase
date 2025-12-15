@@ -220,6 +220,7 @@
         <Searchbar
             value={filter}
             autocompleteCollection={$activeCollection}
+            collectionId={$activeCollection?.id}
             on:submit={(e) => (filter = e.detail)}
         />
 

@@ -2,6 +2,7 @@
     import CommonHelper from "@/utils/CommonHelper";
     import { createEventDispatcher, onMount } from "svelte";
     import { fly } from "svelte/transition";
+    import SavedFiltersDropdown from "@/components/base/SavedFiltersDropdown.svelte";
 
     const dispatch = createEventDispatcher();
     const uniqueId = "search_" + CommonHelper.randomString(7);
@@ -12,6 +13,9 @@
     // autocomplete filter component fields
     export let autocompleteCollection = null;
     export let extraAutocompleteKeys = [];
+
+    // saved filters
+    export let collectionId = "";
 
     let filterComponent;
     let isFilterComponentLoading = false;
@@ -34,6 +38,11 @@
     function submit() {
         value = tempValue;
         dispatch("submit", value);
+    }
+
+    function applyFilter(filterValue) {
+        tempValue = filterValue;
+        submit();
     }
 
     async function loadFilterComponent() {
@@ -105,5 +114,13 @@
         >
             <span class="txt">Clear</span>
         </button>
+    {/if}
+
+    {#if collectionId}
+        <SavedFiltersDropdown
+            {collectionId}
+            currentFilter={value}
+            on:select={(e) => applyFilter(e.detail)}
+        />
     {/if}
 </form>
