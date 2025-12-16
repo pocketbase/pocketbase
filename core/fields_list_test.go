@@ -473,13 +473,13 @@ func TestFieldsListScan(t *testing.T) {
 			"only the minimum field options",
 			`[{"id":"123","name":"test1","type":"text","required":true},{"id":"456","name":"test2","type":"bool"}]`,
 			false,
-			`[{"autogeneratePattern":"","hidden":false,"id":"123","max":0,"min":0,"name":"test1","pattern":"","presentable":false,"primaryKey":false,"required":true,"system":false,"type":"text"},{"hidden":false,"id":"456","name":"test2","presentable":false,"required":false,"system":false,"type":"bool"}]`,
+			`[{"name":"test1","id":"123","system":false,"hidden":false,"presentable":false,"min":0,"max":0,"pattern":"","autogeneratePattern":"","required":true,"primaryKey":false,"type":"text"},{"name":"test2","id":"456","system":false,"hidden":false,"presentable":false,"required":false,"type":"bool"}]`,
 		},
 		{
 			"all field options",
 			`[{"autogeneratePattern":"","hidden":true,"id":"123","max":12,"min":0,"name":"test1","pattern":"","presentable":true,"primaryKey":false,"required":true,"system":false,"type":"text"},{"hidden":false,"id":"456","name":"test2","presentable":false,"required":false,"system":true,"type":"bool"}]`,
 			false,
-			`[{"autogeneratePattern":"","hidden":true,"id":"123","max":12,"min":0,"name":"test1","pattern":"","presentable":true,"primaryKey":false,"required":true,"system":false,"type":"text"},{"hidden":false,"id":"456","name":"test2","presentable":false,"required":false,"system":true,"type":"bool"}]`,
+			`[{"name":"test1","id":"123","system":false,"hidden":true,"presentable":true,"min":0,"max":12,"pattern":"","autogeneratePattern":"","required":true,"primaryKey":false,"type":"text"},{"name":"test2","id":"456","system":true,"hidden":false,"presentable":false,"required":false,"type":"bool"}]`,
 		},
 	}
 
@@ -523,13 +523,13 @@ func TestFieldsListJSON(t *testing.T) {
 			"only the minimum field options",
 			`[{"id":"123","name":"test1","type":"text","required":true},{"id":"456","name":"test2","type":"bool"}]`,
 			false,
-			`[{"autogeneratePattern":"","hidden":false,"id":"123","max":0,"min":0,"name":"test1","pattern":"","presentable":false,"primaryKey":false,"required":true,"system":false,"type":"text"},{"hidden":false,"id":"456","name":"test2","presentable":false,"required":false,"system":false,"type":"bool"}]`,
+			`[{"name":"test1","id":"123","system":false,"hidden":false,"presentable":false,"min":0,"max":0,"pattern":"","autogeneratePattern":"","required":true,"primaryKey":false,"type":"text"},{"name":"test2","id":"456","system":false,"hidden":false,"presentable":false,"required":false,"type":"bool"}]`,
 		},
 		{
 			"all field options",
 			`[{"autogeneratePattern":"","hidden":true,"id":"123","max":12,"min":0,"name":"test1","pattern":"","presentable":true,"primaryKey":false,"required":true,"system":false,"type":"text"},{"hidden":false,"id":"456","name":"test2","presentable":false,"required":false,"system":true,"type":"bool"}]`,
 			false,
-			`[{"autogeneratePattern":"","hidden":true,"id":"123","max":12,"min":0,"name":"test1","pattern":"","presentable":true,"primaryKey":false,"required":true,"system":false,"type":"text"},{"hidden":false,"id":"456","name":"test2","presentable":false,"required":false,"system":true,"type":"bool"}]`,
+			`[{"name":"test1","id":"123","system":false,"hidden":true,"presentable":true,"min":0,"max":12,"pattern":"","autogeneratePattern":"","required":true,"primaryKey":false,"type":"text"},{"name":"test2","id":"456","system":true,"hidden":false,"presentable":false,"required":false,"type":"bool"}]`,
 		},
 	}
 

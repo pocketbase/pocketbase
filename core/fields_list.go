@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
@@ -333,29 +334,40 @@ func (l *FieldsList) UnmarshalJSON(data []byte) error {
 
 // MarshalJSON implements the [json.Marshaler] interface.
 func (l FieldsList) MarshalJSON() ([]byte, error) {
-	if l == nil {
-		l = []Field{} // always init to ensure that it is serialized as empty array
+	if len(l) == 0 {
+		return []byte("[]"), nil
 	}
 
-	wrapper := make([]map[string]any, 0, len(l))
+	var buf bytes.Buffer
+	buf.WriteByte('[')
 
-	for _, f := range l {
-		// precompute the json into a map so that we can append the type to a flatten object
+	for i, f := range l {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+
 		raw, err := json.Marshal(f)
 		if err != nil {
 			return nil, err
 		}
 
-		data := map[string]any{}
-		if err := json.Unmarshal(raw, &data); err != nil {
-			return nil, err
+		// Insert "type" field into the JSON object by splicing before the closing }
+		// This avoids the overhead of unmarshaling back to map[string]any
+		if n := len(raw); n > 1 && raw[n-1] == '}' {
+			buf.Write(raw[:n-1])
+			if n > 2 { // has content beyond just "{}"
+				buf.WriteByte(',')
+			}
+			buf.WriteString(`"type":"`)
+			buf.WriteString(f.Type())
+			buf.WriteString(`"}`)
+		} else {
+			buf.Write(raw)
 		}
-		data["type"] = f.Type()
-
-		wrapper = append(wrapper, data)
 	}
 
-	return json.Marshal(wrapper)
+	buf.WriteByte(']')
+	return buf.Bytes(), nil
 }
 
 // Value implements the [driver.Valuer] interface.
