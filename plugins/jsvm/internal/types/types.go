@@ -259,26 +259,77 @@ declare function arrayOf<T>(model: T): Array<T>;
  *
  * Caveats:
  * - In order to use 0 as double/float initialization number you have to negate it (` + "`-0`" + `).
- * - You need to use lowerCamelCase when accessing the model fields (e.g. ` + "`model.roles`" + ` and not ` + "`model.Roles`" + `).
+ * - You need to use lowerCamelCase when accessing the model fields (e.g. ` + "`model.roles`" + ` and not ` + "`model.Roles`" + ` even if in the model shape and in the DB table the column is capitalized).
+ * - Objects are loaded into types.JSONMap, meaning that they need to be accessed with ` + "`get(key)`" + ` (e.g. ` + "`model.meta.get('something')`" + `).
+ * - For describing nullable types you can use the ` + "`null*()`" + ` helpers - ` + "`nullString()`" + `, ` + "`nullInt()`" + `, ` + "`nullFloat()`" + `, ` + "`nullBool()`" + `, ` + "`nullArray()`" + `, ` + "`nullObject()`" + `.
  *
  * Example:
  *
  * ` + "```" + `js
  * const model = new DynamicModel({
- *     name:       ""
- *     age:        0,  // int64
- *     totalSpent: -0, // float64
- *     active:     false,
- *     Roles:      [], // maps to "Roles" in the DB/JSON but the prop would be accessible via "model.roles"
- *     meta:       {}
+ *     name:       ""     // or nullString() if nullable
+ *     age:        0,     // or nullInt() if nullable
+ *     totalSpent: -0,    // or nullFloat() if nullable
+ *     active:     false, // or nullBool() if nullable
+ *     Roles:      [],    // or nullArray() if nullable; maps to "Roles" in the DB/JSON but the prop would be accessible via "model.roles"
+ *     meta:       {},    // or nullObject() if nullable
  * })
  * ` + "```" + `
  *
  * @group PocketBase
  */
 declare class DynamicModel {
+  [key: string]: any;
   constructor(shape?: { [key:string]: any })
 }
+
+/**
+ * nullString creates an empty Go string pointer usually used for
+ * describing a **nullable** ` + "`DynamicModel`" + ` string value.
+ *
+ * @group PocketBase
+ */
+declare function nullString(): string;
+
+/**
+ * nullInt creates an empty Go int64 pointer usually used for
+ * describing a **nullable** ` + "`DynamicModel`" + ` int value.
+ *
+ * @group PocketBase
+ */
+declare function nullInt(): number;
+
+/**
+ * nullFloat creates an empty Go float64 pointer usually used for
+ * describing a **nullable** ` + "`DynamicModel`" + ` float value.
+ *
+ * @group PocketBase
+ */
+declare function nullFloat(): number;
+
+/**
+ * nullBool creates an empty Go bool pointer usually used for
+ * describing a **nullable** ` + "`DynamicModel`" + ` bool value.
+ *
+ * @group PocketBase
+ */
+declare function nullBool(): boolean;
+
+/**
+ * nullArray creates an empty Go types.JSONArray pointer usually used for
+ * describing a **nullable** ` + "`DynamicModel`" + ` JSON array value.
+ *
+ * @group PocketBase
+ */
+declare function nullArray(): Array<any>;
+
+/**
+ * nullObject creates an empty Go types.JSONMap pointer usually used for
+ * describing a **nullable** ` + "`DynamicModel`" + ` JSON object value.
+ *
+ * @group PocketBase
+ */
+declare function nullObject(): { get(key:string):any; set(key:string,value:any):void };
 
 interface Context extends context.Context{} // merge
 /**

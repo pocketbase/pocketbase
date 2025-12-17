@@ -46,7 +46,7 @@ func TestBaseBindsCount(t *testing.T) {
 	vm := goja.New()
 	baseBinds(vm)
 
-	testBindsCount(vm, "this", 35, t)
+	testBindsCount(vm, "this", 41, t)
 }
 
 func TestBaseBindsSleep(t *testing.T) {
@@ -1162,44 +1162,89 @@ func TestLoadingDynamicModel(t *testing.T) {
 
 	_, err := vm.RunString(`
 		let result = new DynamicModel({
-			text:        "",
-			bool:        false,
-			number:      0,
-			select_many: [],
-			json:        [],
-			// custom map-like field
-			obj: {},
+			string:          "",
+			nullString:      nullString(),
+			nullStringEmpty: nullString(),
+
+			bool:            false,
+			nullBool:        nullBool(),
+			nullBoolEmpty:   nullBool(),
+
+			int:             0,
+			nullInt:         nullInt(),
+			nullIntEmpty:    nullInt(),
+
+			float:           -0,
+			nullFloat:       nullFloat(),
+			nullFloatEmpty:  nullFloat(),
+
+			array:           [],
+			nullArray:       nullArray(),
+			nullArrayEmpty:  nullArray(),
+
+			object:          {},
+			nullObject:      nullObject(),
+			nullObjectEmpty: nullObject(),
 		})
 
+		const expectations = {
+			"string":          "a",
+			"nullString":      "b",
+			"nullStringEmpty": null,
+
+			"bool":          false,
+			"nullBool":      true,
+			"nullBoolEmpty": null,
+
+			"int":          1,
+			"nullInt":      2,
+			"nullIntEmpty": null,
+
+			"float":          1.1,
+			"nullFloat":      1.2,
+			"nullFloatEmpty": null,
+
+			"array":          [1,2],
+			"nullArray":      [3,4],
+			"nullArrayEmpty": null,
+
+			"object":          {a:1},
+			"nullObject":      {a:2},
+			"nullObjectEmpty": null,
+		};
+
+		// constuct dummy SELECT column value literals based on the expectations
+		const selectColumns = [];
+		for (const col in expectations) {
+			const val = expectations[col]
+
+			if (val === null) {
+				selectColumns.push("null as [[" + col + "]]")
+			} else if (typeof val === "string") {
+				selectColumns.push("'" + val + "' as [[" + col + "]]")
+			} else if (typeof val === "object") {
+				selectColumns.push("'" + JSON.stringify(val) + "' as [[" + col + "]]")
+			} else {
+				selectColumns.push(val + " as [[" + col + "]]")
+			}
+		}
+
 		$app.db()
-			.select("text", "bool", "number", "select_many", "json", "('{\"test\": 1}') as obj")
-			.from("demo1")
-			.where($dbx.hashExp({"id": "84nmscqy84lsi1t"}))
-			.limit(1)
+			.newQuery("SELECT " + selectColumns.join(", "))
 			.one(result)
 
-		if (result.text != "test") {
-			throw new Error('Expected text "test", got ' + result.text);
-		}
+		for (const col in expectations) {
+			let expVal = expectations[col];
+			let resVal = result[col];
 
-		if (result.bool != true) {
-			throw new Error('Expected bool true, got ' + result.bool);
-		}
+			if (expVal !== null && typeof expVal === "object") {
+				expVal = JSON.stringify(expVal)
+				resVal = JSON.stringify(resVal)
+			}
 
-		if (result.number != 123456) {
-			throw new Error('Expected number 123456, got ' + result.number);
-		}
-
-		if (result.select_many.length != 2 || result.select_many[0] != "optionB" || result.select_many[1] != "optionC") {
-			throw new Error('Expected select_many ["optionB", "optionC"], got ' + result.select_many);
-		}
-
-		if (result.json.length != 3 || result.json[0] != 1 || result.json[1] != 2 || result.json[2] != 3) {
-			throw new Error('Expected json [1, 2, 3], got ' + result.json);
-		}
-
-		if (result.obj.get("test") != 1) {
-			throw new Error('Expected obj.get("test") 1, got ' + JSON.stringify(result.obj));
+			if (expVal != resVal) {
+				throw new Error("Expected '" + col + "' value " + expVal + ", got " + resVal);
+			}
 		}
 	`)
 	if err != nil {

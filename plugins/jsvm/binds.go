@@ -431,6 +431,32 @@ func baseBinds(vm *goja.Runtime) {
 		return instanceValue
 	})
 
+	// nullable helpers usually used as DynamicModel shape values
+	vm.Set("nullString", func() *string {
+		var v string
+		return &v
+	})
+	vm.Set("nullFloat", func() *float64 {
+		var v float64
+		return &v
+	})
+	vm.Set("nullInt", func() *int64 {
+		var v int64
+		return &v
+	})
+	vm.Set("nullBool", func() *bool {
+		var v bool
+		return &v
+	})
+	vm.Set("nullArray", func() *types.JSONArray[any] {
+		var v types.JSONArray[any]
+		return &v
+	})
+	vm.Set("nullObject", func() *types.JSONMap[any] {
+		var v types.JSONMap[any]
+		return &v
+	})
+
 	vm.Set("Record", func(call goja.ConstructorCall) *goja.Object {
 		var instance *core.Record
 
@@ -1100,12 +1126,19 @@ var cachedDynamicModelStructs = store.New[string, reflect.Type](nil)
 // on the specified "shape".
 //
 // The "shape" values are used as defaults and could be of type:
-// - int (ex. 0)
-// - float (ex. -0)
-// - string (ex. "")
-// - bool (ex. false)
-// - slice (ex. [])
-// - map (ex. map[string]any{})
+//
+//   - int64      (ex.: 0)
+//   - *int64     (ex.: nullInt())
+//   - float64    (ex.: -0)
+//   - *float64   (ex.: nullFloat())
+//   - string     (ex.: "")
+//   - *string    (ex.: nullString())
+//   - bool       (ex.: false)
+//   - *bool      (ex.: nullBool())
+//   - slice/arr  (ex.: [])
+//   - *slice/arr (ex.: nullArray())
+//   - map        (ex.: {})
+//   - *map       (ex.: nullObject())
 //
 // Example:
 //
@@ -1141,6 +1174,9 @@ func newDynamicModel(shape map[string]any) any {
 			newV.Scan(raw)
 			v = newV
 			vt = reflect.TypeOf(newV)
+		case reflect.Pointer:
+			// for pointers always fallback to nil as their default value
+			v = nil
 		}
 
 		hash.WriteString(k)
@@ -1169,6 +1205,9 @@ func newDynamicModel(shape map[string]any) any {
 
 	// load default values into the new model
 	for i, item := range info {
+		if item.value == nil {
+			continue
+		}
 		elem.Field(i).Set(reflect.ValueOf(item.value))
 	}
 
