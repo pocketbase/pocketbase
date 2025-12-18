@@ -27,10 +27,10 @@ import (
 	"github.com/dop251/goja_nodejs/process"
 	"github.com/dop251/goja_nodejs/require"
 	"github.com/fatih/color"
-	"github.com/fsnotify/fsnotify"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/jsvm/internal/types/generated"
 	"github.com/pocketbase/pocketbase/tools/template"
+	"github.com/syncthing/notify"
 )
 
 const typesFileName = "types.d.ts"
@@ -377,11 +377,18 @@ func (p *plugin) watchHooks() error {
 	if hooksDirInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 		watchDir, err = filepath.EvalSymlinks(p.config.HooksDir)
 		if err != nil {
-			return fmt.Errorf("failed to resolve hooksDir symink: %w", err)
+			return fmt.Errorf("failed to resolve hooksDir symlink: %w", err)
 		}
 	}
 
-	watcher, err := fsnotify.NewWatcher()
+	watcher := make(chan notify.EventInfo, 1)
+	err = notify.WatchWithFilter(fmt.Sprintf("%s/...", watchDir), watcher, func(entry string) bool {
+		file, err := os.Stat(entry)
+		if err != nil || !file.IsDir() || strings.Contains(entry, "node_modules") || strings.HasPrefix(entry, ".") {
+			return false
+		}
+		return true
+	}, notify.All)
 	if err != nil {
 		return err
 	}
@@ -396,7 +403,7 @@ func (p *plugin) watchHooks() error {
 	}
 
 	p.app.OnTerminate().BindFunc(func(e *core.TerminateEvent) error {
-		watcher.Close()
+		close(watcher)
 
 		stopDebounceTimer()
 
@@ -408,50 +415,27 @@ func (p *plugin) watchHooks() error {
 		defer stopDebounceTimer()
 
 		for {
-			select {
-			case event, ok := <-watcher.Events:
-				if !ok {
-					return
-				}
-
-				stopDebounceTimer()
-
-				debounceTimer = time.AfterFunc(50*time.Millisecond, func() {
-					// app restart is currently not supported on Windows
-					if runtime.GOOS == "windows" {
-						color.Yellow("File %s changed, please restart the app manually", event.Name)
-					} else {
-						color.Yellow("File %s changed, restarting...", event.Name)
-						if err := p.app.Restart(); err != nil {
-							color.Red("Failed to restart the app:", err)
-						}
-					}
-				})
-			case err, ok := <-watcher.Errors:
-				if !ok {
-					return
-				}
-				color.Red("Watch error:", err)
+			event, ok := <-watcher
+			if !ok {
+				return
 			}
+
+			stopDebounceTimer()
+
+			debounceTimer = time.AfterFunc(50*time.Millisecond, func() {
+				// app restart is currently not supported on Windows
+				if runtime.GOOS == "windows" {
+					color.Yellow("File %s changed, please restart the app manually", event.Path())
+				} else {
+					color.Yellow("File %s changed, restarting...", event.Path())
+					if err := p.app.Restart(); err != nil {
+						color.Red("Failed to restart the app:", err)
+					}
+				}
+			})
 		}
 	}()
-
-	// add directories to watch
-	//
-	// @todo replace once recursive watcher is added (https://github.com/fsnotify/fsnotify/issues/18)
-	dirsErr := filepath.WalkDir(watchDir, func(path string, entry fs.DirEntry, err error) error {
-		// ignore hidden directories, node_modules, symlinks, sockets, etc.
-		if !entry.IsDir() || entry.Name() == "node_modules" || strings.HasPrefix(entry.Name(), ".") {
-			return nil
-		}
-
-		return watcher.Add(path)
-	})
-	if dirsErr != nil {
-		watcher.Close()
-	}
-
-	return dirsErr
+	return err
 }
 
 // fullTypesPathReturns returns the full path to the generated TS file.
