@@ -81,7 +81,6 @@
 
         try {
             await ApiClient.backups.delete(name);
-            CommonHelper.removeByKey(backups, "name", name);
             loadBackups();
             addSuccessToast(`Successfully deleted ${name}.`);
         } catch (err) {
