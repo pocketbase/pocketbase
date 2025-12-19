@@ -377,7 +377,7 @@ func (p *plugin) watchHooks() error {
 	if hooksDirInfo.Mode()&os.ModeSymlink == os.ModeSymlink {
 		watchDir, err = filepath.EvalSymlinks(p.config.HooksDir)
 		if err != nil {
-			return fmt.Errorf("failed to resolve hooksDir symink: %w", err)
+			return fmt.Errorf("failed to resolve hooksDir symlink: %w", err)
 		}
 	}
 
