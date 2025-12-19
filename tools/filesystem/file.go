@@ -207,6 +207,9 @@ func normalizeName(fr FileReader, name string) string {
 	}
 
 	// name
+	//
+	// note: leading dot is trimmed to prevent various subtle issues with files
+	// sync programs as they sometimes have special handling for "invisible" files
 	// ---
 	cleanName := inflector.Snakecase(strings.Trim(strings.TrimSuffix(name, originalExt), "."))
 	if length := len(cleanName); length < 3 {

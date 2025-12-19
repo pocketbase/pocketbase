@@ -1,11 +1,12 @@
-## v0.35 (WIP)
+## v0.35.0
 
 - Added `nullString()`, `nullInt()`, `nullFloat()`, `nullBool`, `nullArray()`, `nullObject()` JSVM helpers for scanning nullable columns ([#7396](https://github.com/pocketbase/pocketbase/issues/7396)).
     (@todo update the landing docs)
 
 - Store the correct `image/png` as attrs content type when generating a thumb fallback _(e.g. for `webp`)_.
 
-- Trimmed the normalized file extension from leftover `.` characters after cleanup.
+- Trimmed the uploaded file name and extension from leftover `.` characters after normalization.
+    _This was done to prevent issues with external files sync programs that may have special handling for "invisible" files._
 
 - Updated Go deps.
 
