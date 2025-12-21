@@ -1,7 +1,6 @@
 ## v0.35.0
 
 - Added `nullString()`, `nullInt()`, `nullFloat()`, `nullBool`, `nullArray()`, `nullObject()` JSVM helpers for scanning nullable columns ([#7396](https://github.com/pocketbase/pocketbase/issues/7396)).
-    (@todo update the landing docs)
 
 - Store the correct `image/png` as attrs content type when generating a thumb fallback _(e.g. for `webp`)_.
 
