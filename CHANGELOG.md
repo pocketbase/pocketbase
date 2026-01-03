@@ -1,3 +1,8 @@
+## v0.35.1 (WIP)
+
+- Updated `modernc.org/sqlite` to v1.42.2 _(SQLite 3.51.1 and query cancellation race fix)_.
+
+
 ## v0.35.0
 
 - Added `nullString()`, `nullInt()`, `nullFloat()`, `nullBool`, `nullArray()`, `nullObject()` JSVM helpers for scanning nullable columns ([#7396](https://github.com/pocketbase/pocketbase/issues/7396)).
