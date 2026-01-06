@@ -34,7 +34,7 @@
             if (!old) {
                 return false;
             }
-            return old.maxSelect != 1 && field.maxSelect == 1;
+            return old.maxSelect > 1 && field.maxSelect <= 1;
         }) || [];
 
     $: showChanges = !isNewCollectionView || isCollectionRenamed || changedRules.length;
