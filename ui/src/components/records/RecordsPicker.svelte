@@ -29,7 +29,7 @@
     let isLoadingSelected = false;
     let isReloadingRecord = {};
 
-    $: maxSelect = field?.maxSelect || null;
+    $: maxSelect = field?.maxSelect || 1;
 
     $: collectionId = field?.collectionId;
 
@@ -45,7 +45,7 @@
 
     $: canLoadMore = lastItemsCount == batchSize;
 
-    $: canSelectMore = maxSelect <= 0 || maxSelect > selected.length;
+    $: canSelectMore = maxSelect > selected.length;
 
     export function show() {
         filter = "";
