@@ -1,6 +1,6 @@
-## v0.35.1 (WIP)
+## v0.35.1
 
-- Updated `modernc.org/sqlite` to v1.42.2 _(SQLite 3.51.1 and query cancellation race fix)_.
+- Updated `modernc.org/sqlite` to v1.43.0 _(SQLite 3.51.1 and query cancellation race fix)_.
 
 - Other minor UI fixes (normalized relations picker selection and confirmation message when `maxSelect=0/1`, updated node deps).
 
