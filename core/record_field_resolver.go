@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"github.com/pocketbase/pocketbase/tools/search"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -191,6 +192,7 @@ func (r *RecordFieldResolver) updateQueryWithDeduplicateConstraint(query *dbx.Se
 		return
 	}
 
+	// already has the group by registered
 	var groupByCol = r.baseCollection.Name
 	if r.baseCollectionAlias != "" {
 		groupByCol = r.baseCollectionAlias
@@ -203,14 +205,50 @@ func (r *RecordFieldResolver) updateQueryWithDeduplicateConstraint(query *dbx.Se
 	// when deemed safe (GROUP BY could have different execution order compared to DISTINCT),
 	// prefer GROUP BY to deduplicate only on the id field instead of all columns
 	// so that the size of a single row wouldn't matter that much
-	if len(info.GroupBy) == 0 &&
-		info.Having == nil &&
-		(len(info.Selects) == 0 ||
-			(len(info.Selects) == 1 && strings.HasSuffix(info.Selects[0], ".*"))) {
+	if preferGroupBy(info, groupByCol) {
 		query.GroupBy(groupByCol)
 	} else {
 		query.Distinct(true)
 	}
+}
+
+func preferGroupBy(info *dbx.QueryInfo, fullUnquotedGroupByCol string) bool {
+	if len(info.GroupBy) != 0 {
+		return false
+	}
+
+	if info.Having != nil {
+		return false
+	}
+
+	// dbx fallbacks to * if not set
+	if len(info.Selects) == 0 {
+		return true
+	}
+
+	if len(info.Selects) != 1 {
+		return false
+	}
+
+	identifier := info.Selects[0]
+
+	if identifier == "*" || identifier == fullUnquotedGroupByCol {
+		return true
+	}
+
+	// try again as direct col match in an unquoted column format
+	identifier = inflector.Columnify(identifier)
+	if identifier == fullUnquotedGroupByCol {
+		return true
+	}
+
+	// remains table.* to check
+	// (aliased columns for now are ignored as they could be represented by expressions)
+	if !strings.HasSuffix(identifier, ".*") {
+		return false
+	}
+
+	return strings.HasPrefix(fullUnquotedGroupByCol, strings.TrimSuffix(identifier, "*"))
 }
 
 // Resolve implements `search.FieldResolver` interface.

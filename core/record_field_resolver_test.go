@@ -934,3 +934,185 @@ func TestRecordFieldResolverResolveStaticRequestInfoFields(t *testing.T) {
 		t.Fatalf("Expected the original authRecord email to not be exported, got %q", v)
 	}
 }
+
+func TestRecordFieldResolverDeduplicateUpdateRules(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	collection, err := app.FindCollectionByNameOrId("demo4")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	r := core.NewRecordFieldResolver(app, collection, nil, false)
+
+	// register a dummy relation join
+	_, err = r.Resolve("self_rel_one.created")
+	if err != nil {
+		t.Fatalf("failed to register a dummy relation join: %v", err)
+	}
+
+	t.Run("with existing DISTINCT", func(t *testing.T) {
+		query := app.DB().Select().Distinct(true)
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if !info.Distinct {
+			t.Fatal("Expected DISTINCT to be preserved, got false")
+		}
+
+		if len(info.GroupBy) != 0 {
+			t.Fatalf("Expected no GROUP BY, got %v", info.GroupBy)
+		}
+	})
+
+	t.Run("without existing DISTINCT", func(t *testing.T) {
+		query := app.DB().Select()
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if info.Distinct {
+			t.Fatal("Unexpected DISTINCT")
+		}
+
+		if len(info.GroupBy) != 1 || info.GroupBy[0] != "demo4.id" {
+			t.Fatalf("Missing expected GROUP BY %s, got %v", "demo4.id", info.GroupBy)
+		}
+	})
+
+	t.Run("with existing deduplicate GROUP BY", func(t *testing.T) {
+		query := app.DB().Select().GroupBy("demo4.id")
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if info.Distinct {
+			t.Fatal("Unexpected DISTINCT")
+		}
+
+		if len(info.GroupBy) != 1 || info.GroupBy[0] != "demo4.id" {
+			t.Fatalf("Missing expected GROUP BY %s, got %v", "demo4.id", info.GroupBy)
+		}
+	})
+
+	t.Run("with custom GROUP BY expression", func(t *testing.T) {
+		query := app.DB().Select().GroupBy("rowid")
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if !info.Distinct {
+			t.Fatal("Missing expected DISTINCT")
+		}
+
+		if len(info.GroupBy) != 1 || info.GroupBy[0] != "rowid" {
+			t.Fatalf("Missing expected GROUP BY %s, got %v", "rowid", info.GroupBy)
+		}
+	})
+
+	t.Run("with no prefixed wildcard SELECT column", func(t *testing.T) {
+		query := app.DB().Select("*")
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if info.Distinct {
+			t.Fatal("Unexpected DISTINCT")
+		}
+
+		if len(info.GroupBy) != 1 || info.GroupBy[0] != "demo4.id" {
+			t.Fatalf("Missing expected GROUP BY %s, got %v", "demo4.id", info.GroupBy)
+		}
+	})
+
+	t.Run("with matching prefixed wildcard SELECT column", func(t *testing.T) {
+		query := app.DB().Select("demo4.*")
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if info.Distinct {
+			t.Fatal("Unexpected DISTINCT")
+		}
+
+		if len(info.GroupBy) != 1 || info.GroupBy[0] != "demo4.id" {
+			t.Fatalf("Missing expected GROUP BY %s, got %v", "demo4.id", info.GroupBy)
+		}
+	})
+
+	t.Run("with custom table prefixed wildcard SELECT column", func(t *testing.T) {
+		query := app.DB().Select("abc.*")
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if !info.Distinct {
+			t.Fatal("Missing expected DISTINCT")
+		}
+
+		if len(info.GroupBy) != 0 {
+			t.Fatalf("Expected no GROUP BY, got %v", info.GroupBy)
+		}
+	})
+
+	t.Run("with exact SELECT column", func(t *testing.T) {
+		query := app.DB().Select("`demo4`.id")
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if info.Distinct {
+			t.Fatal("Unexpected DISTINCT")
+		}
+
+		if len(info.GroupBy) != 1 || info.GroupBy[0] != "demo4.id" {
+			t.Fatalf("Missing expected GROUP BY %s, got %v", "demo4.id", info.GroupBy)
+		}
+	})
+
+	t.Run("with > 1 SELECT columns", func(t *testing.T) {
+		query := app.DB().Select("`demo4`.id", "demo4.created")
+
+		if err := r.UpdateQuery(query); err != nil {
+			t.Fatalf("UpdateQuery failed: %v", err)
+		}
+
+		info := query.Info()
+
+		if !info.Distinct {
+			t.Fatal("Missing expected DISTINCT")
+		}
+
+		if len(info.GroupBy) != 0 {
+			t.Fatalf("Expected no GROUP BY, got %v", info.GroupBy)
+		}
+	})
+}
