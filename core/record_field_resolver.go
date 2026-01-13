@@ -128,7 +128,7 @@ func NewRecordFieldResolver(
 // resolved fields (eg. dynamically joining relations).
 func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 	if len(r.joins) > 0 {
-		query.Distinct(true)
+		r.updateQueryWithDeduplicateConstraint(query)
 
 		for _, join := range r.joins {
 			query.LeftJoin(
@@ -171,7 +171,7 @@ func (r *RecordFieldResolver) updateQueryWithCollectionListRule(c *Collection, t
 	query.AndWhere(expr)
 
 	if len(cloneR.joins) > 0 {
-		query.Distinct(true)
+		r.updateQueryWithDeduplicateConstraint(query)
 
 		for _, j := range cloneR.joins {
 			query.LeftJoin(
@@ -182,6 +182,35 @@ func (r *RecordFieldResolver) updateQueryWithCollectionListRule(c *Collection, t
 	}
 
 	return nil
+}
+
+func (r *RecordFieldResolver) updateQueryWithDeduplicateConstraint(query *dbx.SelectQuery) {
+	info := query.Info()
+
+	if info.Distinct {
+		return
+	}
+
+	var groupByCol = r.baseCollection.Name
+	if r.baseCollectionAlias != "" {
+		groupByCol = r.baseCollectionAlias
+	}
+	groupByCol += ".id"
+	if len(info.GroupBy) > 0 && info.GroupBy[0] == groupByCol {
+		return
+	}
+
+	// when deemed safe (GROUP BY could have different execution order compared to DISTINCT),
+	// prefer GROUP BY to deduplicate only on the id field instead of all columns
+	// so that the size of a single row wouldn't matter that much
+	if len(info.GroupBy) == 0 &&
+		info.Having == nil &&
+		(len(info.Selects) == 0 ||
+			(len(info.Selects) == 1 && strings.HasSuffix(info.Selects[0], ".*"))) {
+		query.GroupBy(groupByCol)
+	} else {
+		query.Distinct(true)
+	}
 }
 
 // Resolve implements `search.FieldResolver` interface.

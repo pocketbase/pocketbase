@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/inflector"
 	"golang.org/x/sync/errgroup"
 )
@@ -298,13 +299,21 @@ func (s *Provider) Exec(items any) (*Result, error) {
 	countExec := func() error {
 		queryInfo := countQuery.Info()
 		countCol := s.countCol
+
 		if len(queryInfo.From) > 0 {
-			countCol = queryInfo.From[0] + "." + countCol
+			firstFrom := dbutils.AliasOrIdentifier(queryInfo.From[0])
+			countCol = firstFrom + "." + countCol
 		}
+
+		// @todo while currently there is no such use case, evaluate if
+		// wrapping as a subquery would be more suitable for the cases
+		// when there is "Group By" different from the default deduplication one
+		// added by RecordFieldResolver.UpdateQuery
 
 		// note: countQuery is shallow cloned and slice/map in-place modifications should be avoided
 		err := countQuery.Distinct(false).
 			Select("COUNT(DISTINCT [[" + countCol + "]])").
+			GroupBy( /* reset */ ).
 			OrderBy( /* reset */ ).
 			Row(&totalCount)
 		if err != nil {
