@@ -547,15 +547,11 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 			// ---
 			cleanProp := inflector.Columnify(prop)
 			cleanBackFieldName := inflector.Columnify(backRelField.Name)
+
 			newTableAlias := r.activeTableAlias + "_" + cleanProp + r.resolver.joinAliasSuffix
 			newCollectionName := inflector.Columnify(backCollection.Name)
 
 			isBackRelMultiple := backRelField.IsMultiple()
-			if !isBackRelMultiple {
-				// additionally check if the rel field has a single column unique index
-				_, hasUniqueIndex := dbutils.FindSingleColumnUniqueIndex(backCollection.Indexes, backRelField.Name)
-				isBackRelMultiple = !hasUniqueIndex
-			}
 
 			if !isBackRelMultiple {
 				err := r.resolver.registerJoin(
@@ -592,6 +588,11 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 			// ---
 			if isBackRelMultiple {
 				r.withMultiMatch = true // enable multimatch if not already
+			} else if !r.withMultiMatch {
+				// additionally check if the rel field has a single column unique index;
+				// if not - apply a multi-match check
+				_, hasUniqueIndex := dbutils.FindSingleColumnUniqueIndex(backCollection.Indexes, backRelField.Name)
+				r.withMultiMatch = !hasUniqueIndex
 			}
 
 			newTableAlias2 := r.multiMatchActiveTableAlias + "_" + cleanProp + r.resolver.joinAliasSuffix
