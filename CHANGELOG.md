@@ -2,8 +2,8 @@
 
 - Minor list query and API rules optimizations:
     - Removed unnecessery correlated subquery expression when using back-relations via single `relation` field.
-    - Replaced `DISTINCT` with `GROUP BY id` when rows deduplication is needed.
-        _This should help with having a more stable and predictable performance even if the table rows are on the larger side._
+    - Replaced `DISTINCT` with `GROUP BY id` when rows deduplication is needed and when deemed safe.
+        _This should help with having a more stable and predictable performance even if the collection records are on the larger side._
 
 
 ## v0.35.1
