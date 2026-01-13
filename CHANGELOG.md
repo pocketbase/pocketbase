@@ -1,3 +1,11 @@
+## v0.36.0-rc.1
+
+- Minor list query and API rules optimizations:
+    - Removed unnecessery correlated subquery expression when using back-relations via single `relation` field.
+    - Replaced `DISTINCT` with `GROUP BY id` when rows deduplication is needed.
+        _This should help with having a more stable and predictable performance even if the table rows are on the larger side._
+
+
 ## v0.35.1
 
 - Updated `modernc.org/sqlite` to v1.43.0 _(SQLite 3.51.1 and query cancellation race fix)_.
