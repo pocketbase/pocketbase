@@ -644,6 +644,27 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 			false,
 			"SELECT `view1`.* FROM `view1` WHERE (([[view1.point]] = '' OR [[view1.point]] IS NULL) OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.lat') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.lat') END) > {:TEST} OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.lon') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.lon') END) < {:TEST} OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.something') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.something') END) > {:TEST})",
 		},
+		{
+			"strftime with fixed string as time-value",
+			"demo5",
+			"strftime('%Y-%m', '2026-01-01') = true",
+			false,
+			"SELECT `demo5`.* FROM `demo5` WHERE strftime({:TEST},{:TEST}) = 1",
+		},
+		{
+			"strftime without multi-match",
+			"demo5",
+			"strftime('%Y-%m', rel_one.created) = true",
+			false,
+			"SELECT `demo5`.* FROM `demo5` LEFT JOIN `demo4` `demo5_rel_one` ON [[demo5_rel_one.id]] = [[demo5.rel_one]] WHERE strftime({:TEST},[[demo5_rel_one.created]]) = 1 GROUP BY `demo5`.`id`",
+		},
+		{
+			"strftime with multi-match",
+			"demo5",
+			"strftime('%Y-%m', rel_many.created) = true",
+			false,
+			"SELECT `demo5`.* FROM `demo5` LEFT JOIN json_each(CASE WHEN iif(json_valid([[demo5.rel_many]]), json_type([[demo5.rel_many]])='array', FALSE) THEN [[demo5.rel_many]] ELSE json_array([[demo5.rel_many]]) END) `__je_demo5_rel_many` LEFT JOIN `demo4` `demo5_rel_many` ON [[demo5_rel_many.id]] = [[__je_demo5_rel_many.value]] WHERE (((strftime({:TEST},[[demo5_rel_many.created]]) = 1) AND (NOT EXISTS (SELECT 1 FROM (SELECT strftime({:TEST},[[__mm_demo5_rel_many.created]]) as [[multiMatchValue]] FROM `demo5` `__mm_demo5` LEFT JOIN json_each(CASE WHEN iif(json_valid([[__mm_demo5.rel_many]]), json_type([[__mm_demo5.rel_many]])='array', FALSE) THEN [[__mm_demo5.rel_many]] ELSE json_array([[__mm_demo5.rel_many]]) END) `__mm_demo5_rel_many_je` LEFT JOIN `demo4` `__mm_demo5_rel_many` ON [[__mm_demo5_rel_many.id]] = [[__mm_demo5_rel_many_je.value]] WHERE `__mm_demo5`.`id` = `demo5`.`id`) {{__smTEST}} WHERE NOT ([[__smTEST.multiMatchValue]] = 1))))) GROUP BY `demo5`.`id`",
+		},
 	}
 
 	for _, s := range scenarios {

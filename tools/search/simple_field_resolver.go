@@ -26,7 +26,7 @@ type ResolverResult struct {
 
 	// MultiMatchSubQuery is an optional sub query expression that will be added
 	// in addition to the combined ResolverResult expression during build.
-	MultiMatchSubQuery dbx.Expression
+	MultiMatchSubQuery *MultiMatchSubquery
 
 	// AfterBuild is an optional function that will be called after building
 	// and combining the result of both resolved operands/sides in a single expression.

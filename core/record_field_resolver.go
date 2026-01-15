@@ -48,7 +48,7 @@ type RecordFieldResolver struct {
 	requestInfo       *RequestInfo
 	staticRequestInfo map[string]any
 	allowedFields     []string
-	joins             []*join
+	joins             []*search.Join
 	allowHiddenFields bool
 	// ---
 	listRuleJoins       map[string]*Collection // tableAlias->collection
@@ -88,7 +88,7 @@ func NewRecordFieldResolver(
 		baseCollection:    baseCollection,
 		requestInfo:       requestInfo,
 		allowHiddenFields: allowHiddenFields, // note: it is not based only on the requestInfo.auth since it could be used by a non-request internal method
-		joins:             []*join{},
+		joins:             []*search.Join{},
 		allowedFields: []string{
 			`^\w+[\w\.\:]*$`,
 			`^\@request\.context$`,
@@ -133,8 +133,8 @@ func (r *RecordFieldResolver) UpdateQuery(query *dbx.SelectQuery) error {
 
 		for _, join := range r.joins {
 			query.LeftJoin(
-				(join.tableName + " " + join.tableAlias),
-				join.on,
+				(join.TableName + " " + join.TableAlias),
+				join.On,
 			)
 		}
 	}
@@ -158,11 +158,11 @@ func (r *RecordFieldResolver) updateQueryWithCollectionListRule(c *Collection, t
 	}
 
 	cloneR := *r
-	cloneR.joins = []*join{}
+	cloneR.joins = []*search.Join{}
 	cloneR.baseCollection = c
 	cloneR.baseCollectionAlias = tableAlias
 	cloneR.allowHiddenFields = true
-	cloneR.joinAliasSuffix = security.PseudorandomString(6)
+	cloneR.joinAliasSuffix = security.PseudorandomString(8)
 
 	expr, err := search.FilterData(*c.ListRule).BuildExpr(&cloneR)
 	if err != nil {
@@ -176,8 +176,8 @@ func (r *RecordFieldResolver) updateQueryWithCollectionListRule(c *Collection, t
 
 		for _, j := range cloneR.joins {
 			query.LeftJoin(
-				(j.tableName + " " + j.tableAlias),
-				j.on,
+				(j.TableName + " " + j.TableAlias),
+				j.On,
 			)
 		}
 	}
@@ -344,7 +344,7 @@ func (r *RecordFieldResolver) resolveStaticRequestField(path ...string) (*search
 		return &search.ResolverResult{Identifier: "NULL"}, nil
 	}
 
-	placeholder := "f" + security.PseudorandomString(8)
+	placeholder := "f" + security.PseudorandomString(10)
 
 	// @todo consider deprecating with the introduction of filter functions
 	if modifier == lowerModifier {
@@ -369,10 +369,10 @@ func (r *RecordFieldResolver) loadCollection(collectionNameOrId string) (*Collec
 }
 
 func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, on dbx.Expression) error {
-	newJoin := &join{
-		tableName:  tableName,
-		tableAlias: tableAlias,
-		on:         on,
+	newJoin := &search.Join{
+		TableName:  tableName,
+		TableAlias: tableAlias,
+		On:         on,
 	}
 
 	// (see updateQueryWithCollectionListRule)
@@ -389,13 +389,13 @@ func (r *RecordFieldResolver) registerJoin(tableName string, tableAlias string, 
 			if r.listRuleJoins == nil {
 				r.listRuleJoins = map[string]*Collection{}
 			}
-			r.listRuleJoins[newJoin.tableAlias] = c
+			r.listRuleJoins[newJoin.TableAlias] = c
 		}
 	}
 
 	// replace existing join
 	for i, j := range r.joins {
-		if j.tableAlias == newJoin.tableAlias {
+		if j.TableAlias == newJoin.TableAlias {
 			r.joins[i] = newJoin
 			return nil
 		}
