@@ -22,10 +22,15 @@
     strftime('%Y-%m', multiRel.created) = "2026-01"
     ```
 
+- Updated `modernc.org/sqlite` to v1.44.0 _(SQLite 3.51.1)_.
+
+- @todo Updated Go deps and bumped min Go GitHub action version to 1.25.6 because it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.25.6).
+
+
 
 ## v0.35.1
 
-- Updated `modernc.org/sqlite` to v1.43.0 _(SQLite 3.51.1 and query cancellation race fix)_.
+- Updated `modernc.org/sqlite` to v1.43.0 _(query cancellation race fix)_.
 
 - Other minor UI fixes (normalized relations picker selection and confirmation message when `maxSelect=0/1`, updated node deps).
 
