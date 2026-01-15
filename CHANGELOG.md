@@ -1,12 +1,14 @@
 ## v0.36.0 (WIP)
 
 - Minor list query and API rules optimizations:
-    - Removed unnecessery correlated subquery expression when using back-relations via single `relation` field.
+    - Removed unnecessary correlated subquery expression when using back-relations via single `relation` field.
     - Replaced `DISTINCT` with `GROUP BY id` when rows deduplication is needed and when deemed safe.
         _This should help with having a more stable and predictable performance even if the collection records are on the larger side._
 
     For some queries and data sets the above 2 optimizations have shown significant improvements but if you notice a performance degradation after upgrading,
     please open a Q&A discussion with export of your collections structure and the problematic request so that it can be analyzed.
+
+- ⚠️ Replaced the expression interface of `search.ResolverResult.MultiMatchSubQuery` with the concrete struct type `search.MultiMatchSubquery` to avoid excessive type assertions and allow direct mutations of the field.
 
 - Added [`strftime(format, [timevalue, modifiers...])`](@todo link to docs) date formatting filter and API rules function.
     It operates similarly to the equivalent [SQLite `strftime` builtin function](https://sqlite.org/lang_datefunc.html)
