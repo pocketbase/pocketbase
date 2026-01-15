@@ -116,8 +116,8 @@ func TestTokenFunctionsGeoDistance(t *testing.T) {
 			},
 			baseTokenResolver,
 			&ResolverResult{
-				NoCoalesce: true,
-				Identifier: `(6371 * acos(cos(radians({:latA})) * cos(radians({:latB})) * cos(radians({:lonB}) - radians({:lonA})) + sin(radians({:latA})) * sin(radians({:latB}))))`,
+				NullFallback: NullFallbackDisabled,
+				Identifier:   `(6371 * acos(cos(radians({:latA})) * cos(radians({:latB})) * cos(radians({:lonB}) - radians({:lonA})) + sin(radians({:latA})) * sin(radians({:latB}))))`,
 				Params: map[string]any{
 					"lonA": 1,
 					"latA": 2,
@@ -137,8 +137,8 @@ func TestTokenFunctionsGeoDistance(t *testing.T) {
 			},
 			baseTokenResolver,
 			&ResolverResult{
-				NoCoalesce: true,
-				Identifier: `(6371 * acos(cos(radians({:latA})) * cos(radians({:latB})) * cos(radians({:lonB}) - radians({:lonA})) + sin(radians({:latA})) * sin(radians({:latB}))))`,
+				NullFallback: NullFallbackDisabled,
+				Identifier:   `(6371 * acos(cos(radians({:latA})) * cos(radians({:latB})) * cos(radians({:lonB}) - radians({:lonA})) + sin(radians({:latA})) * sin(radians({:latB}))))`,
 				Params: map[string]any{
 					"lonA": "null",
 					"latA": 2,
@@ -288,8 +288,9 @@ func TestTokenFunctionsStrftime(t *testing.T) {
 			},
 			baseTokenResolver,
 			&ResolverResult{
-				Identifier: `strftime({:format})`,
-				Params:     map[string]any{"format": "abc"},
+				NullFallback: NullFallbackEnforced,
+				Identifier:   `strftime({:format})`,
+				Params:       map[string]any{"format": "abc"},
 			},
 			false,
 		},
@@ -324,8 +325,9 @@ func TestTokenFunctionsStrftime(t *testing.T) {
 			},
 			baseTokenResolver,
 			&ResolverResult{
-				Identifier: `strftime({:format},{:time})`,
-				Params:     map[string]any{"format": "1", "time": "2"},
+				NullFallback: NullFallbackEnforced,
+				Identifier:   `strftime({:format},{:time})`,
+				Params:       map[string]any{"format": "1", "time": "2"},
 			},
 			false,
 		},
@@ -337,8 +339,9 @@ func TestTokenFunctionsStrftime(t *testing.T) {
 			},
 			baseTokenResolver,
 			&ResolverResult{
-				Identifier: `strftime({:format},{:time})`,
-				Params:     map[string]any{"format": "1", "time": "2"},
+				NullFallback: NullFallbackEnforced,
+				Identifier:   `strftime({:format},{:time})`,
+				Params:       map[string]any{"format": "1", "time": "2"},
 			},
 			false,
 		},
@@ -350,8 +353,9 @@ func TestTokenFunctionsStrftime(t *testing.T) {
 			},
 			baseTokenResolver,
 			&ResolverResult{
-				Identifier: `strftime({:format},{:time})`,
-				Params:     map[string]any{"format": "1", "time": "2"},
+				NullFallback: NullFallbackEnforced,
+				Identifier:   `strftime({:format},{:time})`,
+				Params:       map[string]any{"format": "1", "time": "2"},
 			},
 			false,
 		},
@@ -416,8 +420,9 @@ func TestTokenFunctionsStrftime(t *testing.T) {
 			},
 			baseTokenResolver,
 			&ResolverResult{
-				Identifier: `strftime({:format},{:time},{:m1},{:m2})`,
-				Params:     map[string]any{"format": "1", "time": "2", "m1": "3", "m2": "4"},
+				NullFallback: NullFallbackEnforced,
+				Identifier:   `strftime({:format},{:time},{:m1},{:m2})`,
+				Params:       map[string]any{"format": "1", "time": "2", "m1": "3", "m2": "4"},
 			},
 			false,
 		},
@@ -440,7 +445,8 @@ func TestTokenFunctionsStrftime(t *testing.T) {
 			},
 			baseTokenResolver,
 			&ResolverResult{
-				Identifier: `strftime({:format},{:time},{:m1},{:m2},{:m3},{:m4},{:m5},{:m6},{:m7},{:m8})`,
+				NullFallback: NullFallbackEnforced,
+				Identifier:   `strftime({:format},{:time},{:m1},{:m2},{:m3},{:m4},{:m5},{:m6},{:m7},{:m8})`,
 				Params: map[string]any{
 					"format": "1",
 					"time":   "2",
@@ -597,8 +603,8 @@ func testCompareResults(t *testing.T, a, b *ResolverResult) {
 		t.Fatalf("Expected bMultiMatchSubQuery and bMultiMatchSubQuery to be the same, got\n%s\nvs\n%s", aMultiMatchSubQuery, bMultiMatchSubQuery)
 	}
 
-	if a.NoCoalesce != b.NoCoalesce {
-		t.Fatalf("Expected NoCoalesce to match, got %v vs %v", a.NoCoalesce, b.NoCoalesce)
+	if a.NullFallback != b.NullFallback {
+		t.Fatalf("Expected NullFallback to match, got %v vs %v", a.NullFallback, b.NullFallback)
 	}
 
 	if len(a.Params) != len(b.Params) {

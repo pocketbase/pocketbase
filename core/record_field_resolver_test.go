@@ -645,11 +645,11 @@ func TestRecordFieldResolverUpdateQuery(t *testing.T) {
 			"SELECT `view1`.* FROM `view1` WHERE (([[view1.point]] = '' OR [[view1.point]] IS NULL) OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.lat') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.lat') END) > {:TEST} OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.lon') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.lon') END) < {:TEST} OR (CASE WHEN json_valid([[view1.point]]) THEN JSON_EXTRACT([[view1.point]], '$.something') ELSE JSON_EXTRACT(json_object('pb', [[view1.point]]), '$.pb.something') END) > {:TEST})",
 		},
 		{
-			"strftime with fixed string as time-value",
+			"strftime with fixed string as time-value against known empty value (null normalizations)",
 			"demo5",
-			"strftime('%Y-%m', '2026-01-01') = true",
+			"strftime('%Y-%m', '2026-01-01') = ''",
 			false,
-			"SELECT `demo5`.* FROM `demo5` WHERE strftime({:TEST},{:TEST}) = 1",
+			"SELECT `demo5`.* FROM `demo5` WHERE ((strftime({:TEST},{:TEST}) = '' OR strftime({:TEST},{:TEST}) IS NULL))",
 		},
 		{
 			"strftime without multi-match",

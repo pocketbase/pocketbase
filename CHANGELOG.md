@@ -8,17 +8,19 @@
     For some queries and data sets the above 2 optimizations have shown significant improvements but if you notice a performance degradation after upgrading,
     please open a Q&A discussion with export of your collections structure and the problematic request so that it can be analyzed.
 
-- ⚠️ Replaced the expression interface of `search.ResolverResult.MultiMatchSubQuery` with the concrete struct type `search.MultiMatchSubquery` to avoid excessive type assertions and allow direct mutations of the field.
+- ⚠️ `search.ResolverResult` struct changes _(mostly used internally)_:
+    - Replaced `NoCoalesce` field with the more explicit `NullFallback` _(`NullFallbackDisabled` is the same as `NoCoalesce:true`)_.
+    - Replaced the expression interface of the `MultiMatchSubQuery` field with the concrete struct type `search.MultiMatchSubquery` to avoid excessive type assertions and allow direct mutations of the field.
 
 - Added [`strftime(format, [timevalue, modifiers...])`](@todo link to docs) date formatting filter and API rules function.
     It operates similarly to the equivalent [SQLite `strftime` builtin function](https://sqlite.org/lang_datefunc.html)
     with the exception that for some operators the result will be coalesced for consistency with the non-nullable behavior of the default PocketBase fields.
     Multi-match expressions are also supported and works the same as if the collection field is referenced, for example:
     ```js
-    // requires any/at-least-one-of multiRel records to have created date matching the formatted string "2026-01"
+    // requires ANY/AT-LEAST-ONE-OF multiRel records to have "created" date matching the formatted string "2026-01"
     strftime('%Y-%m', multiRel.created) ?= "2026-01"
 
-    // requires ALL multiRel records to have created date matching the formatted string "2026-01"
+    // requires ALL multiRel records to have "created" date matching the formatted string "2026-01"
     strftime('%Y-%m', multiRel.created) = "2026-01"
     ```
 

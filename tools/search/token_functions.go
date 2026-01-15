@@ -48,7 +48,7 @@ var TokenFunctions = map[string]func(
 		latB := resolvedArgs[3].Identifier
 
 		return &ResolverResult{
-			NoCoalesce: true,
+			NullFallback: NullFallbackDisabled,
 			Identifier: `(6371 * acos(` +
 				`cos(radians(` + latA + `)) * cos(radians(` + latB + `)) * ` +
 				`cos(radians(` + lonB + `) - radians(` + lonA + `)) + ` +
@@ -61,21 +61,20 @@ var TokenFunctions = map[string]func(
 	// strftime(format, [timeValue, modifier1, modifier2, ...]) returns
 	// a date string formatted according to the specified format argument.
 	//
-	// It is similar to the builtin SQLite strftime function (https://sqlite.org/lang_datefunc.html).
+	// It is similar to the builtin SQLite strftime function (https://sqlite.org/lang_datefunc.html)
+	// with the main difference that NULL results will be normalized for
+	// consistency with the non-nullable PocketBase "text" and "date" fields.
 	//
-	// It accepts 1, 2 or 3+ arguments.
+	// The function accepts 1, 2 or 3+ arguments.
 	//
 	// (1) The first (format) argument must be always a formatting string
-	// with valid substitutions listed in https://sqlite.org/lang_datefunc.html.
+	// with valid substitutions as listed in https://sqlite.org/lang_datefunc.html.
 	//
 	// (2) The second (time-value) argument is optional and must be either a date string, number or collection field identifier
 	// that matches one of the formats listed in https://sqlite.org/lang_datefunc.html#time_values.
 	//
 	// (3+) The remaining (modifiers) optional arguments are expected to be
 	// string literals matching the listed modifiers in https://sqlite.org/lang_datefunc.html#modifiers.
-	//
-	// Note that an invalid format, time-value, or modifier could result in COALESCE(strftime(...), null)
-	// for consistency with the non-null nature of the default PocketBase fields.
 	//
 	// A multi-match constraint will be also applied in case the time-value
 	// is an identifier as a result of a multi-value relation field.
@@ -104,6 +103,7 @@ var TokenFunctions = map[string]func(
 
 		// no further arguments
 		if totalArgs == 1 {
+			formatArgResult.NullFallback = NullFallbackEnforced
 			formatArgResult.Identifier = "strftime(" + formatArgResult.Identifier + ")"
 			return formatArgResult, nil
 		}
@@ -138,7 +138,10 @@ var TokenFunctions = map[string]func(
 
 		// generating new ResolverResult
 		// -----------------------------------------------------------
-		result := &ResolverResult{Params: dbx.Params{}}
+		result := &ResolverResult{
+			NullFallback: NullFallbackEnforced,
+			Params:       dbx.Params{},
+		}
 
 		identifiers := make([]string, 0, totalArgs)
 

@@ -285,8 +285,8 @@ func (r *runner) processRequestBodyChangedModifier(bodyField Field) (*search.Res
 	placeholder := "@changed@" + name + security.PseudorandomString(8)
 
 	result := &search.ResolverResult{
-		Identifier: placeholder,
-		NoCoalesce: true,
+		Identifier:   placeholder,
+		NullFallback: search.NullFallbackDisabled,
 		AfterBuild: func(expr dbx.Expression) dbx.Expression {
 			return &replaceWithExpression{
 				placeholder: placeholder,
@@ -477,8 +477,8 @@ func (r *runner) processActiveProps() (*search.ResolverResult, error) {
 			jsonPathStr := jsonPath.String()
 
 			result := &search.ResolverResult{
-				NoCoalesce: true,
-				Identifier: dbutils.JSONExtract(r.activeTableAlias+"."+inflector.Columnify(prop), jsonPathStr),
+				NullFallback: search.NullFallbackDisabled,
+				Identifier:   dbutils.JSONExtract(r.activeTableAlias+"."+inflector.Columnify(prop), jsonPathStr),
 			}
 
 			if r.withMultiMatch {
@@ -834,7 +834,7 @@ func (r *runner) finalizeActivePropsProcessing(collection *Collection, prop stri
 	// stored as json work correctly when compared to their SQL equivalent
 	// (https://github.com/pocketbase/pocketbase/issues/4068)
 	if field.Type() == FieldTypeJSON {
-		result.NoCoalesce = true
+		result.NullFallback = search.NullFallbackDisabled
 		result.Identifier = dbutils.JSONExtract(r.activeTableAlias+"."+cleanFieldName, "")
 		if r.withMultiMatch {
 			r.multiMatch.ValueIdentifier = dbutils.JSONExtract(r.multiMatchActiveTableAlias+"."+cleanFieldName, "")
