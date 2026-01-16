@@ -24,7 +24,7 @@
     - Replaced `NoCoalesce` field with the more explicit `NullFallback` _(`NullFallbackDisabled` is the same as `NoCoalesce:true`)_.
     - Replaced the expression interface of the `MultiMatchSubQuery` field with the concrete struct type `search.MultiMatchSubquery` to avoid excessive type assertions and allow direct mutations of the field.
 
-- Updated `modernc.org/sqlite` to v1.44.0 _(SQLite 3.51.1)_.
+- Updated `modernc.org/sqlite` to v1.44.1 _(SQLite 3.51.1)_.
 
 - Bumped min Go GitHub action version to 1.25.6 because it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.25.6).
 
