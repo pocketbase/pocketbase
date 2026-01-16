@@ -8,7 +8,7 @@
     For some queries and data sets the above 2 optimizations have shown significant improvements but if you notice a performance degradation after upgrading,
     please open a Q&A discussion with export of your collections structure and the problematic request so that it can be analyzed.
 
-- Added [`strftime(format, timevalue, modifiers...)`](http://localhost:5173/docs/api-rules-and-filters/#strftimeformat-time-value-modifiers-) date formatting filter and API rules function.
+- Added [`strftime(format, timevalue, modifiers...)`](https://pocketbase.io/docs/api-rules-and-filters/#strftimeformat-time-value-modifiers-) date formatting filter and API rules function.
     It works similarly to the [SQLite `strftime` builtin function](https://sqlite.org/lang_datefunc.html)
     with the main difference that NULL results will be normalized for consistency with the non-nullable PocketBase `text` and `date` fields.
     Multi-match expressions are also supported and works the same as if the collection field is referenced, for example:
