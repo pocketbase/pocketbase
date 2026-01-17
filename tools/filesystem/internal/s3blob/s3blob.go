@@ -46,7 +46,7 @@ import (
 
 const defaultPageSize = 1000
 
-// New creates a new instance of the S3 driver backed by the the internal S3 client.
+// New creates a new instance of the S3 driver backed by the internal S3 client.
 func New(s3Client *s3.S3) (blob.Driver, error) {
 	if s3Client.Bucket == "" {
 		return nil, errors.New("s3blob.New: missing bucket name")

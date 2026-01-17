@@ -423,7 +423,7 @@ type BatchConfig struct {
 	// MaxRequests is the maximum allowed batch request to execute.
 	MaxRequests int `form:"maxRequests" json:"maxRequests"`
 
-	// Timeout is the the max duration in seconds to wait before cancelling the batch transaction.
+	// Timeout is the max duration in seconds to wait before cancelling the batch transaction.
 	Timeout int64 `form:"timeout" json:"timeout"`
 
 	// MaxBodySize is the maximum allowed batch request body size in bytes.
@@ -449,7 +449,7 @@ type BackupsConfig struct {
 	// Leave it empty to disable the auto backups functionality.
 	Cron string `form:"cron" json:"cron"`
 
-	// CronMaxKeep is the the max number of cron generated backups to
+	// CronMaxKeep is the max number of cron generated backups to
 	// keep before removing older entries.
 	//
 	// This field works only when the cron config has valid cron expression.
