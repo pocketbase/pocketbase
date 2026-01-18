@@ -48,6 +48,7 @@ func init() {
 				[[updateRule]] TEXT DEFAULT NULL,
 				[[deleteRule]] TEXT DEFAULT NULL,
 				[[options]]    JSON DEFAULT "{}" NOT NULL,
+				[[softDelete]] BOOLEAN DEFAULT FALSE NOT NULL,
 				[[created]]    TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL,
 				[[updated]]    TEXT DEFAULT (strftime('%Y-%m-%d %H:%M:%fZ')) NOT NULL
 			);

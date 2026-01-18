@@ -375,6 +375,10 @@ type baseCollection struct {
 	// System prevents the collection rename, deletion and rules change.
 	// It is used primarily for internal purposes for collections like "_superusers", "_externalAuths", etc.
 	System bool `db:"system" json:"system" form:"system"`
+
+	// SoftDelete enables soft delete for records in this collection.
+	// When enabled, deleted records will have their deletedAt field set instead of being permanently removed.
+	SoftDelete bool `db:"softDelete" json:"softDelete" form:"softDelete"`
 }
 
 // Collection defines the table, fields and various options related to a set of records.
@@ -600,6 +604,7 @@ func (m *Collection) DBExport(app App) (map[string]any, error) {
 		"fields":     m.Fields,
 		"indexes":    m.Indexes,
 		"system":     m.System,
+		"softDelete": m.SoftDelete,
 		"created":    m.Created,
 		"updated":    m.Updated,
 		"options":    `{}`,
