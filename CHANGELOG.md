@@ -4,6 +4,8 @@
 and the minor performance boost that you may get when used on large records is not enough to justify the more common use ([#7461](https://github.com/pocketbase/pocketbase/discussions/7461)).
     _A better generic deduplication optimization for large records (aka. records with large `text`/`json` fields or many small ones) will be researched but there are no ETAs._
 
+- Updated `modernc.org/sqlite` to v1.44.2 _(SQLite 3.51.2)_.
+
 - Fixed code comment typos.
 
 
