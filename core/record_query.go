@@ -37,6 +37,11 @@ func (app *BaseApp) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuer
 
 	query := app.ConcurrentDB().Select(app.ConcurrentDB().QuoteSimpleColumnName(tableName) + ".*").From(tableName)
 
+	// Filter out soft-deleted records by default
+	if collection != nil && collection.SoftDelete {
+		query.AndWhere(dbx.NewExp("[[" + tableName + "." + FieldNameDeleted + "]] = ''"))
+	}
+
 	// in case of an error attach a new context and cancel it immediately with the error
 	if collectionErr != nil {
 		ctx, cancelFunc := context.WithCancelCause(context.Background())

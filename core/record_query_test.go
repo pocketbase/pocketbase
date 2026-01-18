@@ -1195,3 +1195,44 @@ func TestCanAccessRecord(t *testing.T) {
 		})
 	}
 }
+
+func TestRecordQueryFiltersSoftDeleted(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	// Create collection with soft delete
+	c := core.NewBaseCollection("query_filter_test")
+	c.SoftDelete = true
+	c.Fields.Add(&core.TextField{Name: "title"})
+	if err := app.Save(c); err != nil {
+		t.Fatalf("Failed to save collection: %v", err)
+	}
+
+	// Create 2 records
+	r1 := core.NewRecord(c)
+	r1.Set("title", "active")
+	app.Save(r1)
+
+	r2 := core.NewRecord(c)
+	r2.Set("title", "to_delete")
+	app.Save(r2)
+
+	// Soft delete one
+	app.Delete(r2)
+
+	// Query should only return active record
+	records, err := app.FindAllRecords("query_filter_test")
+	if err != nil {
+		t.Fatalf("Query failed: %v", err)
+	}
+
+	if len(records) != 1 {
+		t.Fatalf("Expected 1 record, got %d", len(records))
+	}
+
+	if records[0].GetString("title") != "active" {
+		t.Fatalf("Expected 'active' record, got %q", records[0].GetString("title"))
+	}
+}
