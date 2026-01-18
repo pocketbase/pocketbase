@@ -59,7 +59,18 @@ func recordsList(e *core.RequestEvent) error {
 		return err
 	}
 
-	query := e.App.RecordQuery(collection)
+	// Check if showDeleted param is set (superuser only)
+	showDeleted := e.Request.URL.Query().Get("showDeleted") == "true"
+	if showDeleted && !requestInfo.HasSuperuserAuth() {
+		return e.ForbiddenError("Only superusers can use the showDeleted parameter.", nil)
+	}
+
+	var query *dbx.SelectQuery
+	if showDeleted {
+		query = e.App.RecordQueryIncludeDeleted(collection)
+	} else {
+		query = e.App.RecordQuery(collection)
+	}
 
 	fieldsResolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
 

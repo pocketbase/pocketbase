@@ -23,7 +23,21 @@ var recordProxyType = reflect.TypeOf((*RecordProxy)(nil)).Elem()
 // In case a collection id or name is provided and that collection doesn't
 // actually exists, the generated query will be created with a cancelled context
 // and will fail once an executor (Row(), One(), All(), etc.) is called.
+//
+// Note: For collections with SoftDelete enabled, deleted records are excluded by default.
+// Use RecordQueryIncludeDeleted to include soft-deleted records.
 func (app *BaseApp) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuery {
+	return app.recordQuery(collectionModelOrIdentifier, false)
+}
+
+// RecordQueryIncludeDeleted is like RecordQuery but includes soft-deleted records.
+// This is useful for API endpoints that need to optionally show deleted records.
+func (app *BaseApp) RecordQueryIncludeDeleted(collectionModelOrIdentifier any) *dbx.SelectQuery {
+	return app.recordQuery(collectionModelOrIdentifier, true)
+}
+
+// recordQuery is the internal implementation shared by RecordQuery and RecordQueryIncludeDeleted.
+func (app *BaseApp) recordQuery(collectionModelOrIdentifier any, includeDeleted bool) *dbx.SelectQuery {
 	var tableName string
 
 	collection, collectionErr := getCollectionByModelOrIdentifier(app, collectionModelOrIdentifier)
@@ -37,8 +51,8 @@ func (app *BaseApp) RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuer
 
 	query := app.ConcurrentDB().Select(app.ConcurrentDB().QuoteSimpleColumnName(tableName) + ".*").From(tableName)
 
-	// Filter out soft-deleted records by default
-	if collection != nil && collection.SoftDelete {
+	// Filter out soft-deleted records by default (unless includeDeleted is true)
+	if !includeDeleted && collection != nil && collection.SoftDelete {
 		query.AndWhere(dbx.NewExp("[[" + tableName + "." + FieldNameDeleted + "]] = ''"))
 	}
 

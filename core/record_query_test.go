@@ -1236,3 +1236,50 @@ func TestRecordQueryFiltersSoftDeleted(t *testing.T) {
 		t.Fatalf("Expected 'active' record, got %q", records[0].GetString("title"))
 	}
 }
+
+func TestRecordQueryIncludeDeleted(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	// Create collection with soft delete
+	c := core.NewBaseCollection("query_include_deleted_test")
+	c.SoftDelete = true
+	c.Fields.Add(&core.TextField{Name: "title"})
+	if err := app.Save(c); err != nil {
+		t.Fatalf("Failed to save collection: %v", err)
+	}
+
+	// Create 2 records
+	r1 := core.NewRecord(c)
+	r1.Set("title", "active")
+	app.Save(r1)
+
+	r2 := core.NewRecord(c)
+	r2.Set("title", "to_delete")
+	app.Save(r2)
+
+	// Soft delete one
+	app.Delete(r2)
+
+	// RecordQuery should only return active record
+	var recordsFiltered []*core.Record
+	err := app.RecordQuery("query_include_deleted_test").All(&recordsFiltered)
+	if err != nil {
+		t.Fatalf("RecordQuery failed: %v", err)
+	}
+	if len(recordsFiltered) != 1 {
+		t.Fatalf("Expected 1 record with RecordQuery, got %d", len(recordsFiltered))
+	}
+
+	// RecordQueryIncludeDeleted should return both records
+	var recordsAll []*core.Record
+	err = app.RecordQueryIncludeDeleted("query_include_deleted_test").All(&recordsAll)
+	if err != nil {
+		t.Fatalf("RecordQueryIncludeDeleted failed: %v", err)
+	}
+	if len(recordsAll) != 2 {
+		t.Fatalf("Expected 2 records with RecordQueryIncludeDeleted, got %d", len(recordsAll))
+	}
+}

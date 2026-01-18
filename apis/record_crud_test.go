@@ -759,6 +759,135 @@ func TestRecordCrudList(t *testing.T) {
 			ExpectedContent: []string{`"data":{}`},
 			ExpectedEvents:  map[string]int{"*": 0},
 		},
+		{
+			Name:   "showDeleted param without superuser auth",
+			Method: http.MethodGet,
+			URL:    "/api/collections/demo2/records?showDeleted=true",
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				col, err := app.FindCollectionByNameOrId("demo2")
+				if err != nil {
+					t.Fatal(err)
+				}
+				col.SoftDelete = true
+				if err = app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus:  403,
+			ExpectedContent: []string{`"message":"Only superusers can use the showDeleted parameter."`},
+			ExpectedEvents:  map[string]int{"*": 0},
+		},
+		{
+			Name:   "showDeleted param with superuser auth - soft delete disabled collection",
+			Method: http.MethodGet,
+			URL:    "/api/collections/demo2/records?showDeleted=true",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"totalItems":3`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       3,
+			},
+		},
+		{
+			Name:   "showDeleted=true includes soft-deleted records",
+			Method: http.MethodGet,
+			URL:    "/api/collections/soft_delete_test/records?showDeleted=true",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				// Create collection with soft delete
+				col := core.NewBaseCollection("soft_delete_test")
+				col.SoftDelete = true
+				col.ListRule = types.Pointer("")
+				col.Fields.Add(&core.TextField{Name: "title"})
+				if err := app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+
+				// Create active record
+				r1 := core.NewRecord(col)
+				r1.Set("title", "active")
+				if err := app.Save(r1); err != nil {
+					t.Fatal(err)
+				}
+
+				// Create and soft-delete a record
+				r2 := core.NewRecord(col)
+				r2.Set("title", "deleted_one")
+				if err := app.Save(r2); err != nil {
+					t.Fatal(err)
+				}
+				if err := app.Delete(r2); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"totalItems":2`,
+				`"title":"active"`,
+				`"title":"deleted_one"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       2,
+			},
+		},
+		{
+			Name:   "showDeleted=false (default) excludes soft-deleted records",
+			Method: http.MethodGet,
+			URL:    "/api/collections/soft_delete_test2/records",
+			Headers: map[string]string{
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6InN5d2JoZWNuaDQ2cmhtMCIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoicGJjXzMxNDI2MzU4MjMiLCJleHAiOjI1MjQ2MDQ0NjEsInJlZnJlc2hhYmxlIjp0cnVlfQ.UXgO3j-0BumcugrFjbd7j0M4MQvbrLggLlcu_YNGjoY",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				// Create collection with soft delete
+				col := core.NewBaseCollection("soft_delete_test2")
+				col.SoftDelete = true
+				col.ListRule = types.Pointer("")
+				col.Fields.Add(&core.TextField{Name: "title"})
+				if err := app.Save(col); err != nil {
+					t.Fatal(err)
+				}
+
+				// Create active record
+				r1 := core.NewRecord(col)
+				r1.Set("title", "active")
+				if err := app.Save(r1); err != nil {
+					t.Fatal(err)
+				}
+
+				// Create and soft-delete a record
+				r2 := core.NewRecord(col)
+				r2.Set("title", "deleted_one")
+				if err := app.Save(r2); err != nil {
+					t.Fatal(err)
+				}
+				if err := app.Delete(r2); err != nil {
+					t.Fatal(err)
+				}
+			},
+			ExpectedStatus: 200,
+			ExpectedContent: []string{
+				`"totalItems":1`,
+				`"title":"active"`,
+			},
+			NotExpectedContent: []string{
+				`"title":"deleted_one"`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                    0,
+				"OnRecordsListRequest": 1,
+				"OnRecordEnrich":       1,
+			},
+		},
 	}
 
 	for _, scenario := range scenarios {

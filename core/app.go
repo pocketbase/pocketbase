@@ -555,7 +555,14 @@ type App interface {
 	// In case a collection id or name is provided and that collection doesn't
 	// actually exists, the generated query will be created with a cancelled context
 	// and will fail once an executor (Row(), One(), All(), etc.) is called.
+	//
+	// Note: For collections with SoftDelete enabled, deleted records are excluded by default.
+	// Use RecordQueryIncludeDeleted to include soft-deleted records.
 	RecordQuery(collectionModelOrIdentifier any) *dbx.SelectQuery
+
+	// RecordQueryIncludeDeleted is like RecordQuery but includes soft-deleted records.
+	// This is useful for API endpoints that need to optionally show deleted records.
+	RecordQueryIncludeDeleted(collectionModelOrIdentifier any) *dbx.SelectQuery
 
 	// FindRecordById finds the Record model by its id.
 	FindRecordById(collectionModelOrIdentifier any, recordId string, optFilters ...func(q *dbx.SelectQuery) error) (*Record, error)
