@@ -2458,3 +2458,58 @@ func (f *mockField) FindSetter(key string) core.SetterFunc {
 		return nil
 	}
 }
+
+func TestRecordSoftDelete(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	// Create collection with soft delete enabled
+	c := core.NewBaseCollection("soft_delete_records")
+	c.SoftDelete = true
+	c.Fields.Add(&core.TextField{Name: "title"})
+	if err := app.Save(c); err != nil {
+		t.Fatalf("Failed to save collection: %v", err)
+	}
+
+	// Create a record
+	record := core.NewRecord(c)
+	record.Set("title", "test")
+	if err := app.Save(record); err != nil {
+		t.Fatalf("Failed to save record: %v", err)
+	}
+
+	recordId := record.Id
+
+	// Delete the record (should soft delete)
+	if err := app.Delete(record); err != nil {
+		t.Fatalf("Failed to delete record: %v", err)
+	}
+
+	// Record should still exist in DB with deleted timestamp
+	var count int
+	err := app.DB().NewQuery("SELECT COUNT(*) FROM soft_delete_records WHERE id = {:id}").
+		Bind(dbx.Params{"id": recordId}).
+		Row(&count)
+	if err != nil {
+		t.Fatalf("Query failed: %v", err)
+	}
+
+	if count != 1 {
+		t.Fatalf("Expected record to still exist in DB, got count %d", count)
+	}
+
+	// Deleted field should be set
+	var deleted string
+	err = app.DB().NewQuery("SELECT deleted FROM soft_delete_records WHERE id = {:id}").
+		Bind(dbx.Params{"id": recordId}).
+		Row(&deleted)
+	if err != nil {
+		t.Fatalf("Query failed: %v", err)
+	}
+
+	if deleted == "" {
+		t.Fatal("Expected deleted field to be set")
+	}
+}

@@ -1473,6 +1473,13 @@ func onRecordSaveExecute(e *RecordEvent) error {
 }
 
 func onRecordDeleteExecute(e *RecordEvent) error {
+	// Soft delete: UPDATE instead of DELETE
+	if e.Record.Collection().SoftDelete {
+		e.Record.Set(FieldNameDeleted, types.NowDateTime())
+		return e.App.SaveNoValidate(e.Record)
+	}
+
+	// Hard delete (existing logic unchanged)
 	// fetch rel references (if any)
 	//
 	// note: the select is outside of the transaction to minimize
