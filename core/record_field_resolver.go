@@ -186,30 +186,37 @@ func (r *RecordFieldResolver) updateQueryWithCollectionListRule(c *Collection, t
 }
 
 func (r *RecordFieldResolver) updateQueryWithDeduplicateConstraint(query *dbx.SelectQuery) {
-	info := query.Info()
+	query.Distinct(true)
 
-	if info.Distinct {
-		return
-	}
+	// @todo Reasearch better options for generic rows deduplication.
+	//
+	// Disable the GROUP BY conditional checks for now since it prevents
+	// proper utilization of ORDER BY indexes (and maybe others)
+	// (https://github.com/pocketbase/pocketbase/discussions/7461)
 
-	// already has the group by registered
-	var groupByCol = r.baseCollection.Name
-	if r.baseCollectionAlias != "" {
-		groupByCol = r.baseCollectionAlias
-	}
-	groupByCol += ".id"
-	if len(info.GroupBy) > 0 && info.GroupBy[0] == groupByCol {
-		return
-	}
+	// info := query.Info()
+	// if info.Distinct {
+	// 	return
+	// }
 
-	// when deemed safe (GROUP BY could have different execution order compared to DISTINCT),
-	// prefer GROUP BY to deduplicate only on the id field instead of all columns
-	// so that the size of a single row wouldn't matter that much
-	if preferGroupBy(info, groupByCol) {
-		query.GroupBy(groupByCol)
-	} else {
-		query.Distinct(true)
-	}
+	// // already has the group by registered
+	// var groupByCol = r.baseCollection.Name
+	// if r.baseCollectionAlias != "" {
+	// 	groupByCol = r.baseCollectionAlias
+	// }
+	// groupByCol += ".id"
+	// if len(info.GroupBy) > 0 && info.GroupBy[0] == groupByCol {
+	// 	return
+	// }
+
+	// // when deemed safe (GROUP BY could have different execution order compared to DISTINCT),
+	// // prefer GROUP BY to deduplicate only on the id field instead of all columns
+	// // so that the size of a single row wouldn't matter that much
+	// if preferGroupBy(info, groupByCol) {
+	// 	query.GroupBy(groupByCol)
+	// } else {
+	// 	query.Distinct(true)
+	// }
 }
 
 func preferGroupBy(info *dbx.QueryInfo, fullUnquotedGroupByCol string) bool {
