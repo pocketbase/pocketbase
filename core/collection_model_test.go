@@ -1652,3 +1652,33 @@ func TestCollectionSoftDelete(t *testing.T) {
 		t.Fatal("Expected SoftDelete to be true after setting")
 	}
 }
+
+func TestCollectionSoftDeleteInitializesDeletedField(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	c := core.NewBaseCollection("soft_delete_test")
+	c.SoftDelete = true
+
+	// Save triggers initDefaultFields
+	if err := app.Save(c); err != nil {
+		t.Fatalf("Failed to save collection: %v", err)
+	}
+
+	// Reload to verify
+	loaded, err := app.FindCollectionByNameOrId("soft_delete_test")
+	if err != nil {
+		t.Fatalf("Failed to find collection: %v", err)
+	}
+
+	deletedField := loaded.Fields.GetByName("deleted")
+	if deletedField == nil {
+		t.Fatal("Expected 'deleted' field to be auto-created when SoftDelete is true")
+	}
+
+	if !deletedField.GetSystem() {
+		t.Fatal("Expected 'deleted' field to be a system field")
+	}
+}

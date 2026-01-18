@@ -18,6 +18,7 @@ const maxSafeJSONInt int64 = 1<<53 - 1
 // Commonly used field names.
 const (
 	FieldNameId              = "id"
+	FieldNameDeleted         = "deleted"
 	FieldNameCollectionId    = "collectionId"
 	FieldNameCollectionName  = "collectionName"
 	FieldNameExpand          = "expand"

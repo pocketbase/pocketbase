@@ -913,8 +913,10 @@ func (c *Collection) initDefaultFields() {
 	switch c.Type {
 	case CollectionTypeBase:
 		c.initIdField()
+		c.initDeletedField()
 	case CollectionTypeAuth:
 		c.initIdField()
+		c.initDeletedField()
 		c.initPasswordField()
 		c.initTokenKeyField()
 		c.initEmailField()
@@ -1055,6 +1057,22 @@ func (c *Collection) initVerifiedField() {
 		})
 	} else {
 		// enforce system defaults
+		field.System = true
+	}
+}
+
+func (c *Collection) initDeletedField() {
+	if !c.SoftDelete {
+		return
+	}
+
+	field, _ := c.Fields.GetByName(FieldNameDeleted).(*DateField)
+	if field == nil {
+		c.Fields.Add(&DateField{
+			Name:   FieldNameDeleted,
+			System: true,
+		})
+	} else {
 		field.System = true
 	}
 }
