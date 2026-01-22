@@ -45,9 +45,9 @@
     <button
         type="button"
         draggable={false}
-        class="handle thumb {size ? `thumb-${size}` : ''}"
-        title={(hasPreview ? "Preview" : "Download") + " " + filename}
-        on:click|stopPropagation={async () => {
+        class="thumb {size ? `thumb-${size}` : ''} {hasPreview ? "handle" : ""}"
+        title={(hasPreview ? "Preview " : "") + filename}
+        on:click|stopPropagation={async (e) => {
             if (!hasPreview) {
                 return;
             }
