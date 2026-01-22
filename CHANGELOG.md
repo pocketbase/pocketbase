@@ -1,3 +1,10 @@
+## v0.36.2 (WIP)
+
+- Updated `modernc.org/sqlite` to v1.44.3 _(race check fix)_.
+
+- Other minor UI fixes (updated label for non-previewable thumbs).
+
+
 ## v0.36.1
 
 - Reverted the `DISTINCT` with `GROUP BY` replacement optimization from v0.36.0 as it was reported to negatively impact the indexes utilization for some queries
