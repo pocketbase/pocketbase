@@ -1,6 +1,6 @@
 ## v0.36.2 (WIP)
 
-- Updated `modernc.org/sqlite` to v1.44.3 _(race check fix)_.
+- Updated `modernc.org/sqlite` to v1.44.3 _(race check fix)_ and `goja` _(circular references fix)_.
 
 - Other minor UI fixes (updated label for non-previewable thumbs).
 
