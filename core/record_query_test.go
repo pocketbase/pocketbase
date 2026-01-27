@@ -527,6 +527,13 @@ func TestFindFirstRecordByData(t *testing.T) {
 		},
 		{
 			"demo2",
+			"invalid_or_missing",
+			"llvuca81nly1qls",
+			"",
+			true,
+		},
+		{
+			"demo2",
 			"id",
 			"invalid",
 			"",
