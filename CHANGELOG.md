@@ -2,7 +2,7 @@
 
 - Updated `modernc.org/sqlite` to v1.44.3 _(race check fix)_ and `goja` _(circular references fix)_.
 
-- Other minor UI fixes (updated label for non-previewable thumbs).
+- Other minor fixes (updated tests to silence some of the race detector errors, updated `FindFirstRecordByData` with more clear error message when missing or invalid key is used, etc.).
 
 
 ## v0.36.1
