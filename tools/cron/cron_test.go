@@ -3,6 +3,7 @@ package cron
 import (
 	"encoding/json"
 	"slices"
+	"sync"
 	"testing"
 	"time"
 )
@@ -253,6 +254,8 @@ func TestCronJobs(t *testing.T) {
 func TestCronStartStop(t *testing.T) {
 	t.Parallel()
 
+	var mu sync.Mutex
+
 	test1 := 0
 	test2 := 0
 
@@ -261,14 +264,16 @@ func TestCronStartStop(t *testing.T) {
 	c.SetInterval(250 * time.Millisecond)
 
 	c.Add("test1", "* * * * *", func() {
+		mu.Lock()
+		defer mu.Unlock()
 		test1++
 	})
 
 	c.Add("test2", "* * * * *", func() {
+		mu.Lock()
+		defer mu.Unlock()
 		test2++
 	})
-
-	expectedCalls := 2
 
 	// call twice Start to check if the previous ticker will be reseted
 	c.Start()
@@ -280,12 +285,16 @@ func TestCronStartStop(t *testing.T) {
 	c.Stop()
 	c.Stop()
 
+	expectedCalls := 2
+
+	mu.Lock()
 	if test1 != expectedCalls {
 		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
 	}
 	if test2 != expectedCalls {
 		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
 	}
+	mu.Unlock()
 
 	// resume for 1 seconds
 	c.Start()
@@ -296,10 +305,12 @@ func TestCronStartStop(t *testing.T) {
 
 	expectedCalls += 4
 
+	mu.Lock()
 	if test1 != expectedCalls {
 		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
 	}
 	if test2 != expectedCalls {
 		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
 	}
+	mu.Unlock()
 }
