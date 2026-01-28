@@ -3,6 +3,7 @@ package cron
 import (
 	"encoding/json"
 	"slices"
+	"sync"
 	"testing"
 	"time"
 )
@@ -253,6 +254,7 @@ func TestCronJobs(t *testing.T) {
 func TestCronStartStop(t *testing.T) {
 	t.Parallel()
 
+	var m sync.Mutex
 	test1 := 0
 	test2 := 0
 
@@ -261,10 +263,14 @@ func TestCronStartStop(t *testing.T) {
 	c.SetInterval(250 * time.Millisecond)
 
 	c.Add("test1", "* * * * *", func() {
+		m.Lock()
+		defer m.Unlock()
 		test1++
 	})
 
 	c.Add("test2", "* * * * *", func() {
+		m.Lock()
+		defer m.Unlock()
 		test2++
 	})
 
@@ -280,12 +286,14 @@ func TestCronStartStop(t *testing.T) {
 	c.Stop()
 	c.Stop()
 
+	m.Lock()
 	if test1 != expectedCalls {
 		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
 	}
 	if test2 != expectedCalls {
 		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
 	}
+	m.Unlock()
 
 	// resume for 1 seconds
 	c.Start()
@@ -296,10 +304,12 @@ func TestCronStartStop(t *testing.T) {
 
 	expectedCalls += 4
 
+	m.Lock()
 	if test1 != expectedCalls {
 		t.Fatalf("Expected %d test1, got %d", expectedCalls, test1)
 	}
 	if test2 != expectedCalls {
 		t.Fatalf("Expected %d test2, got %d", expectedCalls, test2)
 	}
+	m.Unlock()
 }

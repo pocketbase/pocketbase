@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -741,6 +742,7 @@ type testTableStruct struct {
 
 type testDB struct {
 	*dbx.DB
+	m             sync.Mutex
 	CalledQueries []string
 }
 
@@ -765,6 +767,8 @@ func createTestDB() (*testDB, error) {
 	db.Insert("test", dbx.Params{"id": 1, "test1": 1, "test2": "test2.1"}).Execute()
 	db.Insert("test", dbx.Params{"id": 2, "test1": 2, "test2": "test2.2"}).Execute()
 	db.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		db.m.Lock()
+		defer db.m.Unlock()
 		db.CalledQueries = append(db.CalledQueries, sql)
 	}
 
