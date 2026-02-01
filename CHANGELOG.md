@@ -1,8 +1,8 @@
-## v0.36.2 (WIP)
+## v0.36.2
 
-- Updated `modernc.org/sqlite` to v1.44.3 _(race check fix)_ and `goja` _(circular references fix)_.
+- Updated `modernc.org/sqlite` to v1.44.3 _(race check fix)_, `goja` _(circular references fix)_ and other go deps.
 
-- Other minor fixes (updated tests to silence some of the race detector errors, updated `FindFirstRecordByData` with more clear error message when missing or invalid key is used, etc.).
+- Other minor fixes _(updated tests to silence some of the race detector errors, updated `FindFirstRecordByData` with more clear error message when missing or invalid key is used, etc.)_.
 
 
 ## v0.36.1
