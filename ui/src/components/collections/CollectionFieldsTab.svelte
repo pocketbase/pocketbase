@@ -16,6 +16,7 @@
     import SchemaFieldText from "@/components/collections/schema/SchemaFieldText.svelte";
     import SchemaFieldUrl from "@/components/collections/schema/SchemaFieldUrl.svelte";
     import SchemaFieldGeoPoint from "@/components/collections/schema/SchemaFieldGeoPoint.svelte";
+    import SchemaFieldColor from "@/components/collections/schema/SchemaFieldColor.svelte";
     import { scaffolds } from "@/stores/collections";
     import { setErrors } from "@/stores/errors";
     import CommonHelper from "@/utils/CommonHelper";
@@ -39,6 +40,7 @@
         password: SchemaFieldPassword,
         autodate: SchemaFieldAutodate,
         geoPoint: SchemaFieldGeoPoint,
+        color: SchemaFieldColor,
     };
 
     $: if (!collection.id && oldCollectionType != collection.type) {

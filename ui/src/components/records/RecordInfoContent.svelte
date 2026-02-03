@@ -68,9 +68,22 @@
         {#if isMultiple}<span class="expand-end">{"]"}</span>{/if}
     {:else if field.type == "geoPoint"}
         <GeoPointValue value={record[field.name]} />
+    {:else if field.type == "color"}
+        <span class="color-swatch" style="background-color: {record[field.name]}" title={record[field.name]}></span>
     {:else}
         <span class="txt">{CommonHelper.truncate(CommonHelper.displayValue(record, [field.name]), 70)}</span>
     {/if}
 {:else}
     <span class="txt">{CommonHelper.truncate(CommonHelper.displayValue(record, []), 70)}</span>
 {/each}
+
+<style>
+    .color-swatch {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border-radius: var(--baseRadius);
+        border: 1px solid var(--baseAlt2Color);
+        vertical-align: middle;
+    }
+</style>

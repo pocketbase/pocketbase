@@ -12,6 +12,7 @@
     import ExternalAuthsList from "@/components/records/ExternalAuthsList.svelte";
     import AuthFields from "@/components/records/fields/AuthFields.svelte";
     import BoolField from "@/components/records/fields/BoolField.svelte";
+    import ColorField from "@/components/records/fields/ColorField.svelte";
     import DateField from "@/components/records/fields/DateField.svelte";
     import EditorField from "@/components/records/fields/EditorField.svelte";
     import EmailField from "@/components/records/fields/EmailField.svelte";
@@ -733,6 +734,8 @@
                     <PasswordField {field} {original} {record} bind:value={record[field.name]} />
                 {:else if field.type === "geoPoint"}
                     <GeoPointField {field} {original} {record} bind:value={record[field.name]} />
+                {:else if field.type === "color"}
+                    <ColorField {field} {original} {record} bind:value={record[field.name]} />
                 {/if}
             {/each}
         </form>

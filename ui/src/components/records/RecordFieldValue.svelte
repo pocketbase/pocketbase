@@ -123,6 +123,11 @@
     </div>
 {:else if field.type === "geoPoint"}
     <div class="label"><GeoPointValue value={rawValue} /></div>
+{:else if field.type === "color"}
+    <div class="color-value">
+        <span class="color-swatch" style="background-color: {rawValue}" title={rawValue}></span>
+        <span class="txt">{rawValue}</span>
+    </div>
 {:else if short}
     <span class="txt txt-ellipsis" title={CommonHelper.truncate(rawValue)}>
         {CommonHelper.truncate(rawValue)}
@@ -138,5 +143,19 @@
     }
     .inline-flex {
         max-width: 100%;
+    }
+    .color-value {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        vertical-align: middle;
+    }
+    .color-swatch {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: var(--baseRadius);
+        border: 1px solid var(--baseAlt2Color);
+        vertical-align: middle;
     }
 </style>

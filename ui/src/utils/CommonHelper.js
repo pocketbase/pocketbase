@@ -1,28 +1,28 @@
 import { DateTime } from "luxon";
 
-const imageExtensions = [
-    ".jpg", ".jpeg", ".png", ".svg",
-    ".gif", ".jfif", ".webp", ".avif",
-];
+const imageExtensions = [".jpg", ".jpeg", ".png", ".svg", ".gif", ".jfif", ".webp", ".avif"];
 
-const videoExtensions = [
-    ".mp4", ".avi", ".mov", ".3gp", ".wmv",
-];
+const videoExtensions = [".mp4", ".avi", ".mov", ".3gp", ".wmv"];
 
-const audioExtensions = [
-    ".aa", ".aac", ".m4v", ".mp3",
-    ".ogg", ".oga", ".mogg", ".amr",
-];
+const audioExtensions = [".aa", ".aac", ".m4v", ".mp3", ".ogg", ".oga", ".mogg", ".amr"];
 
 const documentExtensions = [
-    ".pdf", ".doc", ".docx", ".xls",
-    ".xlsx", ".ppt", ".pptx", ".odp",
-    ".odt", ".ods", ".txt",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
+    ".odp",
+    ".odt",
+    ".ods",
+    ".txt",
 ];
 
-const arraybleFields = ["relation", "file", "select"]
+const arraybleFields = ["relation", "file", "select"];
 
-const stringFields = ["text", "email", "url", "editor"]
+const stringFields = ["text", "email", "url", "editor"];
 
 export const logLevels = [
     // {
@@ -70,7 +70,9 @@ export default class CommonHelper {
      * @return {Mixed}
      */
     static clone(value) {
-        return typeof structuredClone !== "undefined" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+        return typeof structuredClone !== "undefined"
+            ? structuredClone(value)
+            : JSON.parse(JSON.stringify(value));
     }
 
     /**
@@ -116,9 +118,9 @@ export default class CommonHelper {
      */
     static isEmpty(value) {
         return (
-            (value === "") ||
-            (value === null) ||
-            (typeof value === "undefined") ||
+            value === "" ||
+            value === null ||
+            typeof value === "undefined" ||
             (Array.isArray(value) && value.length === 0) ||
             (CommonHelper.isObject(value) && Object.keys(value).length === 0)
         );
@@ -138,7 +140,7 @@ export default class CommonHelper {
             tagName === "select" ||
             tagName === "textarea" ||
             element?.isContentEditable
-        )
+        );
     }
 
     /**
@@ -246,7 +248,7 @@ export default class CommonHelper {
      */
     static mergeUnique(targetArr, valuesArr) {
         for (let v of valuesArr) {
-            CommonHelper.pushUnique(targetArr, v)
+            CommonHelper.pushUnique(targetArr, v);
         }
 
         return targetArr;
@@ -343,7 +345,7 @@ export default class CommonHelper {
             uniqueMap[item[key]] = item;
         }
 
-        return Object.values(uniqueMap)
+        return Object.values(uniqueMap);
     }
 
     /**
@@ -358,7 +360,7 @@ export default class CommonHelper {
 
         for (let prop in result) {
             if (typeof result[prop] === "object" && result[prop] !== null) {
-                result[prop] = CommonHelper.filterRedactedProps(result[prop], mask)
+                result[prop] = CommonHelper.filterRedactedProps(result[prop], mask);
             } else if (result[prop] === mask) {
                 delete result[prop];
             }
@@ -417,7 +419,7 @@ export default class CommonHelper {
     static setByPath(data, path, newValue, delimiter = ".") {
         if (data === null || typeof data !== "object") {
             console.warn("setByPath: data not an object or array.");
-            return
+            return;
         }
 
         let result = data;
@@ -471,20 +473,16 @@ export default class CommonHelper {
         if (Array.isArray(result)) {
             result.splice(lastPart, 1);
         } else if (CommonHelper.isObject(result)) {
-            delete (result[lastPart]);
+            delete result[lastPart];
         }
 
         // cleanup the parents chain
         if (
             parts.length > 0 &&
-            (
-                (Array.isArray(result) && !result.length) ||
-                (CommonHelper.isObject(result) && !Object.keys(result).length)
-            ) &&
-            (
-                (Array.isArray(data) && data.length > 0) ||
-                (CommonHelper.isObject(data) && Object.keys(data).length > 0)
-            )
+            ((Array.isArray(result) && !result.length) ||
+                (CommonHelper.isObject(result) && !Object.keys(result).length)) &&
+            ((Array.isArray(data) && data.length > 0) ||
+                (CommonHelper.isObject(data) && Object.keys(data).length > 0))
         ) {
             CommonHelper.deleteByPath(data, parts.join(delimiter), delimiter);
         }
@@ -516,7 +514,7 @@ export default class CommonHelper {
      */
     static randomSecret(length = 15) {
         if (typeof crypto === "undefined") {
-            return CommonHelper.randomString(length)
+            return CommonHelper.randomString(length);
         }
 
         const arr = new Uint8Array(length);
@@ -559,7 +557,7 @@ export default class CommonHelper {
             }
         }
 
-        return str
+        return str;
     }
 
     /**
@@ -580,7 +578,7 @@ export default class CommonHelper {
             return val.slice(1, -1);
         }
 
-        return val
+        return val;
     }
 
     /**
@@ -608,7 +606,7 @@ export default class CommonHelper {
      * @return {String}
      */
     static truncate(str, length = 150, dots = true) {
-        str = ("" + str);
+        str = "" + str;
 
         if (str.length <= length) {
             return str;
@@ -654,40 +652,40 @@ export default class CommonHelper {
 
         // special characters
         const specialCharsMap = {
-            "a": /а|à|á|å|â/gi,
-            "b": /б/gi,
-            "c": /ц|ç/gi,
-            "d": /д/gi,
-            "e": /е|è|é|ê|ẽ|ë/gi,
-            "f": /ф/gi,
-            "g": /г/gi,
-            "h": /х/gi,
-            "i": /й|и|ì|í|î/gi,
-            "j": /ж/gi,
-            "k": /к/gi,
-            "l": /л/gi,
-            "m": /м/gi,
-            "n": /н|ñ/gi,
-            "o": /о|ò|ó|ô|ø/gi,
-            "p": /п/gi,
-            "q": /я/gi,
-            "r": /р/gi,
-            "s": /с/gi,
-            "t": /т/gi,
-            "u": /ю|ù|ú|ů|û/gi,
-            "v": /в/gi,
-            "w": /в/gi,
-            "x": /ь/gi,
-            "y": /ъ/gi,
-            "z": /з/gi,
-            "ae": /ä|æ/gi,
-            "oe": /ö/gi,
-            "ue": /ü/gi,
-            "Ae": /Ä/gi,
-            "Ue": /Ü/gi,
-            "Oe": /Ö/gi,
-            "ss": /ß/gi,
-            "and": /&/gi
+            a: /а|à|á|å|â/gi,
+            b: /б/gi,
+            c: /ц|ç/gi,
+            d: /д/gi,
+            e: /е|è|é|ê|ẽ|ë/gi,
+            f: /ф/gi,
+            g: /г/gi,
+            h: /х/gi,
+            i: /й|и|ì|í|î/gi,
+            j: /ж/gi,
+            k: /к/gi,
+            l: /л/gi,
+            m: /м/gi,
+            n: /н|ñ/gi,
+            o: /о|ò|ó|ô|ø/gi,
+            p: /п/gi,
+            q: /я/gi,
+            r: /р/gi,
+            s: /с/gi,
+            t: /т/gi,
+            u: /ю|ù|ú|ů|û/gi,
+            v: /в/gi,
+            w: /в/gi,
+            x: /ь/gi,
+            y: /ъ/gi,
+            z: /з/gi,
+            ae: /ä|æ/gi,
+            oe: /ö/gi,
+            ue: /ü/gi,
+            Ae: /Ä/gi,
+            Ue: /Ü/gi,
+            Oe: /Ö/gi,
+            ss: /ß/gi,
+            and: /&/gi,
         };
 
         // replace special characters
@@ -696,9 +694,9 @@ export default class CommonHelper {
         }
 
         return str
-            .replace(new RegExp('[' + preserved.join("") + ']', 'g'), ' ') // replace preserved characters with spaces
-            .replace(/[^\w\ ]/gi, "")                                      // replaces all non-alphanumeric with empty string
-            .replace(/\s+/g, delimiter);                                   // collapse whitespaces and replace with `delimiter`
+            .replace(new RegExp("[" + preserved.join("") + "]", "g"), " ") // replace preserved characters with spaces
+            .replace(/[^\w\ ]/gi, "") // replaces all non-alphanumeric with empty string
+            .replace(/\s+/g, delimiter); // collapse whitespaces and replace with `delimiter`
     }
 
     /**
@@ -710,7 +708,7 @@ export default class CommonHelper {
      * @return {String}
      */
     static escapeRegExp(str) {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+        return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
     }
 
     /**
@@ -820,7 +818,7 @@ export default class CommonHelper {
                 23: "yyyy-MM-dd HH:mm:ss.SSS",
                 20: "yyyy-MM-dd HH:mm:ss'Z'",
                 24: "yyyy-MM-dd HH:mm:ss.SSS'Z'",
-            }
+            };
             const format = formats[date.length] || formats[19];
             return DateTime.fromFormat(date, format, { zone: "UTC" });
         }
@@ -863,11 +861,11 @@ export default class CommonHelper {
     static async copyToClipboard(data) {
         if (typeof data === "object") {
             try {
-                data = JSON.stringify(data, null, 2)
+                data = JSON.stringify(data, null, 2);
             } catch {}
         }
 
-        data = "" + data // ensure that data is string
+        data = "" + data; // ensure that data is string
 
         if (!data.length || !window?.navigator?.clipboard) {
             return;
@@ -875,7 +873,7 @@ export default class CommonHelper {
 
         return window.navigator.clipboard.writeText(data).catch((err) => {
             console.warn("Failed to copy.", err);
-        })
+        });
     }
 
     /**
@@ -900,15 +898,15 @@ export default class CommonHelper {
      * @param {String} name The result file name.
      */
     static downloadJson(obj, name) {
-        name = name.endsWith(".json") ? name : (name + ".json");
+        name = name.endsWith(".json") ? name : name + ".json";
 
         const blob = new Blob([JSON.stringify(obj, null, 2)], {
-            type: "application/json"
+            type: "application/json",
         });
 
         const url = window.URL.createObjectURL(blob);
 
-        CommonHelper.download(url, name)
+        CommonHelper.download(url, name);
     }
 
     /**
@@ -1026,14 +1024,14 @@ export default class CommonHelper {
                         0,
                         0,
                         width,
-                        height
+                        height,
                     );
 
                     return resolve(canvas.toDataURL(file.type));
                 };
 
                 img.src = e.target.result;
-            }
+            };
 
             reader.readAsDataURL(file);
         });
@@ -1075,10 +1073,13 @@ export default class CommonHelper {
      * @return {Object}
      */
     static dummyCollectionRecord(collection) {
-        return Object.assign({
-            "collectionId": collection?.id,
-            "collectionName": collection?.name,
-        }, CommonHelper.dummyCollectionSchemaData(collection));
+        return Object.assign(
+            {
+                collectionId: collection?.id,
+                collectionName: collection?.name,
+            },
+            CommonHelper.dummyCollectionSchemaData(collection),
+        );
     }
 
     /**
@@ -1098,7 +1099,7 @@ export default class CommonHelper {
                 (forSubmit && field.primaryKey && field.autogeneratePattern) ||
                 (forSubmit && field.type === "autodate")
             ) {
-                continue
+                continue;
             }
 
             let val = null;
@@ -1114,13 +1115,13 @@ export default class CommonHelper {
             } else if (field.type == "url") {
                 val = "https://example.com";
             } else if (field.type == "json") {
-                val = 'JSON';
+                val = "JSON";
             } else if (field.type == "file") {
                 if (forSubmit) {
                     // @todo add a File obj example after the refactoring
-                    continue
+                    continue;
                 } else {
-                    val = "filename.jpg"
+                    val = "filename.jpg";
                     if (field.maxSelect != 1) {
                         val = [val];
                     }
@@ -1131,12 +1132,12 @@ export default class CommonHelper {
                     val = [val];
                 }
             } else if (field.type == "relation") {
-                val = 'RELATION_RECORD_ID';
+                val = "RELATION_RECORD_ID";
                 if (field?.maxSelect != 1) {
                     val = [val];
                 }
             } else if (field.type == "geoPoint") {
-                val = {"lon": 0, "lat": 0};
+                val = { lon: 0, lat: 0 };
             } else {
                 val = "test";
             }
@@ -1202,6 +1203,8 @@ export default class CommonHelper {
                 return "ri-calendar-check-line";
             case "geoPoint":
                 return "ri-map-pin-2-line";
+            case "color":
+                return "ri-palette-line";
             default:
                 return "ri-star-s-line";
         }
@@ -1272,11 +1275,11 @@ export default class CommonHelper {
      * @return {String}
      */
     static getApiExampleUrl(fallback) {
-        let url = window.location.href.substring(0, window.location.href.indexOf("/_")) || fallback || '/';
+        let url = window.location.href.substring(0, window.location.href.indexOf("/_")) || fallback || "/";
 
         // for broader compatibility replace localhost with 127.0.0.1
         // (see https://github.com/pocketbase/js-sdk/issues/21)
-        return url.replace('//localhost', '//127.0.0.1');
+        return url.replace("//localhost", "//127.0.0.1");
     }
 
     /**
@@ -1296,7 +1299,10 @@ export default class CommonHelper {
         }
 
         for (let prop in oldCollection) {
-            if (prop !== 'fields' && JSON.stringify(oldCollection[prop]) !== JSON.stringify(newCollection[prop])) {
+            if (
+                prop !== "fields" &&
+                JSON.stringify(oldCollection[prop]) !== JSON.stringify(newCollection[prop])
+            ) {
                 return true;
             }
         }
@@ -1310,7 +1316,8 @@ export default class CommonHelper {
             return newField?.id && !CommonHelper.findByKey(oldFields, "id", newField.id);
         });
         const changedFields = newFields.filter((newField) => {
-            const oldField = CommonHelper.isObject(newField) && CommonHelper.findByKey(oldFields, "id", newField.id);
+            const oldField =
+                CommonHelper.isObject(newField) && CommonHelper.findByKey(oldFields, "id", newField.id);
             if (!oldField) {
                 return false;
             }
@@ -1324,11 +1331,7 @@ export default class CommonHelper {
             return false;
         });
 
-        return !!(
-            addedFields.length ||
-            changedFields.length ||
-            (withDeleteMissing && removedFields.length)
-        );
+        return !!(addedFields.length || changedFields.length || (withDeleteMissing && removedFields.length));
     }
 
     /**
@@ -1343,9 +1346,9 @@ export default class CommonHelper {
         const view = [];
 
         for (const collection of collections) {
-            if (collection.type === 'auth') {
+            if (collection.type === "auth") {
                 auth.push(collection);
-            } else if (collection.type === 'base') {
+            } else if (collection.type === "base") {
                 base.push(collection);
             } else {
                 view.push(collection);
@@ -1354,10 +1357,10 @@ export default class CommonHelper {
 
         function sortNames(a, b) {
             if (a.name > b.name) {
-                return 1
+                return 1;
             }
             if (a.name < b.name) {
-                return -1
+                return -1;
             }
             return 0;
         }
@@ -1376,17 +1379,21 @@ export default class CommonHelper {
     static getExpandPresentableRelFields(baseRelField, collections, maxNestedLevel = 2) {
         let result = [];
 
-        const collection = collections.find((c) => c.id == baseRelField.collectionId)
+        const collection = collections.find((c) => c.id == baseRelField.collectionId);
         if (!collection) {
             return result;
         }
 
         for (const field of collection.fields) {
             if (!field.presentable || field.type != "relation" || maxNestedLevel <= 0) {
-                continue
+                continue;
             }
 
-            const nestedExpands = CommonHelper.getExpandPresentableRelFields(field, collections, maxNestedLevel-1)
+            const nestedExpands = CommonHelper.getExpandPresentableRelFields(
+                field,
+                collections,
+                maxNestedLevel - 1,
+            );
             for (const expand of nestedExpands) {
                 result.push(baseRelField.name + "." + expand);
             }
@@ -1427,7 +1434,7 @@ export default class CommonHelper {
             locale: {
                 firstDayOfWeek: 1,
             },
-        }
+        };
     }
 
     /**
@@ -1437,11 +1444,36 @@ export default class CommonHelper {
      */
     static defaultEditorOptions() {
         const allowedPasteNodes = [
-            "DIV", "P", "A", "EM", "B", "STRONG",
-            "H1", "H2", "H3", "H4", "H5", "H6",
-            "TABLE", "TR", "TD", "TH", "TBODY", "THEAD", "TFOOT",
-            "BR", "HR", "Q", "SUP", "SUB", "DEL",
-            "IMG", "OL", "UL", "LI", "CODE",
+            "DIV",
+            "P",
+            "A",
+            "EM",
+            "B",
+            "STRONG",
+            "H1",
+            "H2",
+            "H3",
+            "H4",
+            "H5",
+            "H6",
+            "TABLE",
+            "TR",
+            "TD",
+            "TH",
+            "TBODY",
+            "THEAD",
+            "TFOOT",
+            "BR",
+            "HR",
+            "Q",
+            "SUP",
+            "SUB",
+            "DEL",
+            "IMG",
+            "OL",
+            "UL",
+            "LI",
+            "CODE",
         ];
 
         function unwrap(node) {
@@ -1500,32 +1532,33 @@ export default class CommonHelper {
             ],
             codesample_global_prismjs: true,
             codesample_languages: [
-                { text: 'HTML/XML', value: 'markup' },
-                { text: 'CSS', value: 'css' },
-                { text: 'SQL', value: 'sql' },
-                { text: 'JavaScript', value: 'javascript' },
-                { text: 'Go', value: 'go' },
-                { text: 'Dart', value: 'dart' },
-                { text: 'Zig', value: 'zig' },
-                { text: 'Rust', value: 'rust' },
-                { text: 'Lua', value: 'lua' },
-                { text: 'PHP', value: 'php' },
-                { text: 'Ruby', value: 'ruby' },
-                { text: 'Python', value: 'python' },
-                { text: 'Java', value: 'java' },
-                { text: 'C', value: 'c' },
-                { text: 'C#', value: 'csharp' },
-                { text: 'C++', value: 'cpp' },
+                { text: "HTML/XML", value: "markup" },
+                { text: "CSS", value: "css" },
+                { text: "SQL", value: "sql" },
+                { text: "JavaScript", value: "javascript" },
+                { text: "Go", value: "go" },
+                { text: "Dart", value: "dart" },
+                { text: "Zig", value: "zig" },
+                { text: "Rust", value: "rust" },
+                { text: "Lua", value: "lua" },
+                { text: "PHP", value: "php" },
+                { text: "Ruby", value: "ruby" },
+                { text: "Python", value: "python" },
+                { text: "Java", value: "java" },
+                { text: "C", value: "c" },
+                { text: "C#", value: "csharp" },
+                { text: "C++", value: "cpp" },
                 // other non-highlighted languages
-                { text: 'Markdown', value: 'markdown' },
-                { text: 'Swift', value: 'swift' },
-                { text: 'Kotlin', value: 'kotlin' },
-                { text: 'Elixir', value: 'elixir' },
-                { text: 'Scala', value: 'scala' },
-                { text: 'Julia', value: 'julia' },
-                { text: 'Haskell', value: 'haskell' },
+                { text: "Markdown", value: "markdown" },
+                { text: "Swift", value: "swift" },
+                { text: "Kotlin", value: "kotlin" },
+                { text: "Elixir", value: "elixir" },
+                { text: "Scala", value: "scala" },
+                { text: "Julia", value: "julia" },
+                { text: "Haskell", value: "haskell" },
             ],
-            toolbar: "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image_picker table codesample direction | code fullscreen",
+            toolbar:
+                "styles | alignleft aligncenter alignright | bold italic forecolor backcolor | bullist numlist | link image_picker table codesample direction | code fullscreen",
             paste_postprocess: (editor, args) => {
                 cleanupPastedNode(args.node);
             },
@@ -1563,7 +1596,7 @@ export default class CommonHelper {
                 input.click();
             },
             setup: (editor) => {
-                editor.on('keydown', (e) => {
+                editor.on("keydown", (e) => {
                     // propagate save shortcut to the parent
                     if ((e.ctrlKey || e.metaKey) && e.code == "KeyS" && editor.formElement) {
                         e.preventDefault();
@@ -1575,7 +1608,7 @@ export default class CommonHelper {
                 const lastDirectionKey = "tinymce_last_direction";
 
                 // load last used text direction for blank editors
-                editor.on('init', () => {
+                editor.on("init", () => {
                     const lastDirection = window?.localStorage?.getItem(lastDirectionKey);
                     if (!editor.isDirty() && editor.getContent() == "" && lastDirection == "rtl") {
                         editor.execCommand("mceDirectionRTL");
@@ -1594,7 +1627,7 @@ export default class CommonHelper {
                                 onAction: () => {
                                     window?.localStorage?.setItem(lastDirectionKey, "ltr");
                                     editor.execCommand("mceDirectionLTR");
-                                }
+                                },
                             },
                             {
                                 type: "menuitem",
@@ -1603,12 +1636,12 @@ export default class CommonHelper {
                                 onAction: () => {
                                     window?.localStorage?.setItem(lastDirectionKey, "rtl");
                                     editor.execCommand("mceDirectionRTL");
-                                }
-                            }
+                                },
+                            },
                         ];
 
                         callback(items);
-                    }
+                    },
                 });
 
                 editor.ui.registry.addMenuButton("image_picker", {
@@ -1620,8 +1653,8 @@ export default class CommonHelper {
                                 text: "From collection",
                                 icon: "gallery",
                                 onAction: () => {
-                                    editor.dispatch("collections_file_picker", {})
-                                }
+                                    editor.dispatch("collections_file_picker", {});
+                                },
                             },
                             {
                                 type: "menuitem",
@@ -1629,13 +1662,13 @@ export default class CommonHelper {
                                 icon: "browse",
                                 onAction: () => {
                                     editor.execCommand("mceImage");
-                                }
-                            }
+                                },
+                            },
                         ];
 
                         callback(items);
-                    }
-                })
+                    },
+                });
             },
         };
     }
@@ -1658,10 +1691,10 @@ export default class CommonHelper {
             let val = model[prop];
 
             if (typeof val === "undefined") {
-                continue
+                continue;
             }
 
-            val = CommonHelper.stringifyValue(val, missingValue)
+            val = CommonHelper.stringifyValue(val, missingValue);
 
             result.push(val);
         }
@@ -1749,11 +1782,11 @@ export default class CommonHelper {
     static extractColumnsFromQuery(selectQuery) {
         const groupReplacement = "__GROUP__";
 
-        selectQuery = (selectQuery || "").
+        selectQuery = (selectQuery || "")
             // replace parenthesis/group expessions
-            replace(/\([\s\S]+?\)/gm, groupReplacement).
+            .replace(/\([\s\S]+?\)/gm, groupReplacement)
             // replace multi-whitespace characters with single space
-            replace(/[\t\r\n]|(?:\s\s)+/g, " ");
+            .replace(/[\t\r\n]|(?:\s\s)+/g, " ");
 
         const match = selectQuery.match(/select\s+([\s\S]+)\s+from/);
 
@@ -1818,7 +1851,7 @@ export default class CommonHelper {
         const fields = collection?.fields || [];
         for (const field of fields) {
             if (field.primaryKey || field.type == "relation") {
-                continue
+                continue;
             }
 
             result.push(`${field.name}:excerpt(${maxExcerpt})`);
@@ -1826,7 +1859,6 @@ export default class CommonHelper {
 
         return result.join(",");
     }
-
 
     /**
      * Generates recursively a list with all the autocomplete field keys
@@ -1839,7 +1871,9 @@ export default class CommonHelper {
      * @return {Array}
      */
     static getCollectionAutocompleteKeys(collections, collectionNameOrId, prefix = "", level = 0) {
-        let collection = collections.find((item) => item.name == collectionNameOrId || item.id == collectionNameOrId);
+        let collection = collections.find(
+            (item) => item.name == collectionNameOrId || item.id == collectionNameOrId,
+        );
         if (!collection || level >= 4) {
             return [];
         }
@@ -1852,7 +1886,12 @@ export default class CommonHelper {
 
             // add relation fields
             if (field.type == "relation" && field.collectionId) {
-                const subKeys = CommonHelper.getCollectionAutocompleteKeys(collections, field.collectionId, key + ".", level + 1);
+                const subKeys = CommonHelper.getCollectionAutocompleteKeys(
+                    collections,
+                    field.collectionId,
+                    key + ".",
+                    level + 1,
+                );
                 if (subKeys.length) {
                     result = result.concat(subKeys);
                 }
@@ -1874,7 +1913,12 @@ export default class CommonHelper {
             for (const field of ref.fields) {
                 if (field.type == "relation" && field.collectionId == collection.id) {
                     const key = prefix + ref.name + "_via_" + field.name;
-                    const subKeys = CommonHelper.getCollectionAutocompleteKeys(collections, ref.id, key + ".", level + 2); // +2 to reduce the recursive results
+                    const subKeys = CommonHelper.getCollectionAutocompleteKeys(
+                        collections,
+                        ref.id,
+                        key + ".",
+                        level + 2,
+                    ); // +2 to reduce the recursive results
                     if (subKeys.length) {
                         result = result.concat(subKeys);
                     }
@@ -1898,7 +1942,7 @@ export default class CommonHelper {
 
         for (const collection of collections) {
             if (collection.system) {
-                continue // skip system collections for now
+                continue; // skip system collections for now
             }
 
             prefix = "@collection." + collection.name + ".";
@@ -1933,9 +1977,13 @@ export default class CommonHelper {
         const authCollections = collections.filter((collection) => collection.type === "auth");
         for (const collection of authCollections) {
             if (collection.system) {
-                continue // skip system collections for now
+                continue; // skip system collections for now
             }
-            const authKeys = CommonHelper.getCollectionAutocompleteKeys(collections, collection.id, "@request.auth.");
+            const authKeys = CommonHelper.getCollectionAutocompleteKeys(
+                collections,
+                collection.id,
+                "@request.auth.",
+            );
             for (const k of authKeys) {
                 CommonHelper.pushUnique(result, k);
             }
@@ -1943,7 +1991,11 @@ export default class CommonHelper {
 
         // load base collection fields into @request.body.*
         if (baseCollectionName) {
-            const keys = CommonHelper.getCollectionAutocompleteKeys(collections, baseCollectionName, "@request.body.");
+            const keys = CommonHelper.getCollectionAutocompleteKeys(
+                collections,
+                baseCollectionName,
+                "@request.body.",
+            );
             for (const key of keys) {
                 result.push(key);
 
@@ -1996,14 +2048,15 @@ export default class CommonHelper {
             where: "",
         };
 
-        const indexRegex = /create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?(\S*)\s+on\s+(\S*)\s*\(([\s\S]*)\)(?:\s*where\s+([\s\S]*))?/gmi;
-        const matches = indexRegex.exec((idx || "").trim())
+        const indexRegex =
+            /create\s+(unique\s+)?\s*index\s*(if\s+not\s+exists\s+)?(\S*)\s+on\s+(\S*)\s*\(([\s\S]*)\)(?:\s*where\s+([\s\S]*))?/gim;
+        const matches = indexRegex.exec((idx || "").trim());
 
         if (matches?.length != 7) {
             return result;
         }
 
-        const sqlQuoteRegex = /^[\"\'\`\[\{}]|[\"\'\`\]\}]$/gm
+        const sqlQuoteRegex = /^[\"\'\`\[\{}]|[\"\'\`\]\}]$/gm;
 
         // unique
         result.unique = matches[1]?.trim().toLowerCase() === "unique";
@@ -2026,16 +2079,16 @@ export default class CommonHelper {
 
         // columns
         const rawColumns = (matches[5] || "")
-            .replace(/,(?=[^\(]*\))/gmi, "{PB_TEMP}") // temporary replace comma within expressions for easier splitting
-            .split(",");                              // split columns
+            .replace(/,(?=[^\(]*\))/gim, "{PB_TEMP}") // temporary replace comma within expressions for easier splitting
+            .split(","); // split columns
 
         for (let col of rawColumns) {
-            col = col.trim().replaceAll("{PB_TEMP}", ",") // revert temp replacement
+            col = col.trim().replaceAll("{PB_TEMP}", ","); // revert temp replacement
 
-            const colRegex = /^([\s\S]+?)(?:\s+collate\s+([\w]+))?(?:\s+(asc|desc))?$/gmi
+            const colRegex = /^([\s\S]+?)(?:\s+collate\s+([\w]+))?(?:\s+(asc|desc))?$/gim;
             const colMatches = colRegex.exec(col);
             if (colMatches?.length != 4) {
-                continue
+                continue;
             }
 
             const colOrExpr = colMatches[1]?.trim()?.replace(sqlQuoteRegex, "");
@@ -2088,27 +2141,28 @@ export default class CommonHelper {
             result += "\n  ";
         }
 
-        result += nonEmptyCols.map((col) => {
-            let item = "";
+        result += nonEmptyCols
+            .map((col) => {
+                let item = "";
 
-            if (col.name.includes("(") || col.name.includes(" ")) {
-                // most likely an expression
-                item += col.name;
-            } else {
-                // regular identifier
-                item += ("`" + col.name + "`");
-            }
+                if (col.name.includes("(") || col.name.includes(" ")) {
+                    // most likely an expression
+                    item += col.name;
+                } else {
+                    // regular identifier
+                    item += "`" + col.name + "`";
+                }
 
-            if (col.collate) {
-                item += (" COLLATE " + col.collate);
-            }
+                if (col.collate) {
+                    item += " COLLATE " + col.collate;
+                }
 
-            if (col.sort) {
-                item += (" " + col.sort.toUpperCase());
-            }
+                if (col.sort) {
+                    item += " " + col.sort.toUpperCase();
+                }
 
-            return item;
-        })
+                return item;
+            })
             .join(",\n  ");
 
         if (nonEmptyCols.length > 1) {
@@ -2190,9 +2244,10 @@ export default class CommonHelper {
             }
         }
 
-        searchTerm = isNaN(searchTerm) && searchTerm != "true" && searchTerm != "false"
-            ? `"${searchTerm.replace(/^[\"\'\`]|[\"\'\`]$/gm, "")}"`
-            : searchTerm;
+        searchTerm =
+            isNaN(searchTerm) && searchTerm != "true" && searchTerm != "false"
+                ? `"${searchTerm.replace(/^[\"\'\`]|[\"\'\`]$/gm, "")}"`
+                : searchTerm;
 
         return fallbackFields.map((f) => `${f}~${searchTerm}`).join("||");
     }
@@ -2205,7 +2260,10 @@ export default class CommonHelper {
      * @return {String}
      */
     static normalizeLogsFilter(searchTerm, extraFallbackFields = []) {
-        return CommonHelper.normalizeSearchFilter(searchTerm, ["level", "message", "data"].concat(extraFallbackFields));
+        return CommonHelper.normalizeSearchFilter(
+            searchTerm,
+            ["level", "message", "data"].concat(extraFallbackFields),
+        );
     }
 
     /**
@@ -2215,21 +2273,24 @@ export default class CommonHelper {
      * @return {Object}
      */
     static initSchemaField(data) {
-        return Object.assign({
-            id: '',
-            name: '',
-            type: 'text',
-            system: false,
-            hidden: false,
-            required: false,
-        }, data);
+        return Object.assign(
+            {
+                id: "",
+                name: "",
+                type: "text",
+                system: false,
+                hidden: false,
+                required: false,
+            },
+            data,
+        );
     }
 
     /**
      * Triggers a window resize event.
      */
     static triggerResize() {
-        window.dispatchEvent(new Event("resize"))
+        window.dispatchEvent(new Event("resize"));
     }
 
     /**
@@ -2246,7 +2307,7 @@ export default class CommonHelper {
             query = window.location.hash.substring(queryStart + 1);
         }
 
-        return Object.fromEntries(new URLSearchParams(query))
+        return Object.fromEntries(new URLSearchParams(query));
     }
 
     /**
@@ -2260,7 +2321,7 @@ export default class CommonHelper {
 
         let query = "";
 
-        let hash = window.location.hash
+        let hash = window.location.hash;
 
         const queryStart = hash.indexOf("?");
         if (queryStart > -1) {
@@ -2268,7 +2329,7 @@ export default class CommonHelper {
             hash = hash.substring(0, queryStart);
         }
 
-        const parsed = new URLSearchParams(query)
+        const parsed = new URLSearchParams(query);
 
         for (let key in params) {
             const val = params[key];
@@ -2282,7 +2343,7 @@ export default class CommonHelper {
 
         query = parsed.toString();
         if (query != "") {
-            hash += ("?" + query);
+            hash += "?" + query;
         }
 
         // replace the hash/fragment part with the updated one
