@@ -4,16 +4,75 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/ganigeorgiev/fexpr"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/tools/security"
 )
 
 var TokenFunctions = map[string]func(
 	argTokenResolverFunc func(fexpr.Token) (*ResolverResult, error),
 	args ...fexpr.Token,
 ) (*ResolverResult, error){
+	// array(val1, val2, ...) returns a list of values for use with ?= or ?!= operators.
+	// Shorthand for: field ?= "a" || field ?= "b" || field ?= "c"
+	// Example: @request.auth.role ?= array("isSecretary", "isAccountant")
+	"array": func(argTokenResolverFunc func(fexpr.Token) (*ResolverResult, error), args ...fexpr.Token) (*ResolverResult, error) {
+		fmt.Println("Entered TokenFunctions with args ", args)
+		if len(args) == 0 {
+			return nil, fmt.Errorf("[array] expected at least 1 argument, got %d", len(args))
+		}
+
+		// limit the number of arguments to prevent abuse
+		if len(args) > 50 {
+			return nil, fmt.Errorf("[array] too many arguments (max allowed 50, got %d)", len(args))
+		}
+
+		// allowed types for array elements: text and number literals only (constant values)
+		allowedTypes := []fexpr.TokenType{fexpr.TokenText, fexpr.TokenNumber}
+		placeholders := make([]string, 0, len(args))
+		params := dbx.Params{}
+		// use unique prefix to avoid param key collisions when multiple array() calls exist in same filter
+		prefix := "arr_" + security.PseudorandomString(6) + "_"
+
+		for i, arg := range args {
+			if !slices.Contains(allowedTypes, arg.Type) {
+				return nil, fmt.Errorf("[array] argument %d must be a quoted string or number literal", i+1)
+			}
+
+			resolved, err := argTokenResolverFunc(arg)
+			if err != nil {
+				return nil, fmt.Errorf("[array] failed to resolve argument %d: %w", i+1, err)
+			}
+
+			// each array element gets its own unique placeholder
+			placeholder := prefix + strconv.Itoa(i)
+			placeholders = append(placeholders, "{:"+placeholder+"}")
+
+			// extract the value for the param (from Params or Identifier for null)
+			var value any
+			if len(resolved.Params) > 0 {
+				for _, v := range resolved.Params {
+					value = v
+					break
+				}
+			} else if strings.EqualFold(resolved.Identifier, "NULL") {
+				value = nil
+			} else {
+				value = resolved.Identifier
+			}
+			params[placeholder] = value
+		}
+
+		return &ResolverResult{
+			IsInList:   true,
+			Identifier: "(" + strings.Join(placeholders, ",") + ")",
+			Params:     params,
+		}, nil
+	},
+
 	// geoDistance(lonA, latA, lonB, latB) calculates the Haversine
 	// distance between 2 points in kilometres (https://www.movable-type.co.uk/scripts/latlong.html).
 	//

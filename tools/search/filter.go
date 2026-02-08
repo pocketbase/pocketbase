@@ -175,9 +175,19 @@ func buildResolversExpr(
 
 	switch op {
 	case fexpr.SignEq, fexpr.SignAnyEq:
-		expr = resolveEqualExpr(true, left, right)
+		// when right operand is an array (from array() function), use IN instead of =
+		if right.IsInList {
+			expr = resolveInExpr(true, left, right)
+		} else {
+			expr = resolveEqualExpr(true, left, right)
+		}
 	case fexpr.SignNeq, fexpr.SignAnyNeq:
-		expr = resolveEqualExpr(false, left, right)
+		// when right operand is an array (from array() function), use NOT IN instead of !=
+		if right.IsInList {
+			expr = resolveInExpr(false, left, right)
+		} else {
+			expr = resolveEqualExpr(false, left, right)
+		}
 	case fexpr.SignLike, fexpr.SignAnyLike:
 		// the right side is a column and therefor wrap it with "%" for contains like behavior
 		if len(right.Params) == 0 {
@@ -317,6 +327,28 @@ func resolveToken(token fexpr.Token, fieldResolver FieldResolver) (*ResolverResu
 	}
 
 	return nil, fmt.Errorf("unsupported token type %q", token.Type)
+}
+
+// resolveInExpr builds SQL IN or NOT IN expression when the right operand
+// is an array from the array() function. Handles null/empty consistently
+// with resolveEqualExpr for the left operand.
+func resolveInExpr(inList bool, left, right *ResolverResult) dbx.Expression {
+	op := "IN"
+	if !inList {
+		op = "NOT IN"
+	}
+
+	// use COALESCE for left operand when null fallback is enabled (consistent with =)
+	leftIdentifier := left.Identifier
+	if left.NullFallback != NullFallbackDisabled &&
+		!isKnownNonEmptyIdentifier(left) && !isEmptyIdentifier(left) {
+		leftIdentifier = "COALESCE(" + left.Identifier + ", '')"
+	}
+
+	return dbx.NewExp(
+		fmt.Sprintf("%s %s %s", leftIdentifier, op, right.Identifier),
+		mergeParams(left.Params, right.Params),
+	)
 }
 
 // Resolves = and != expressions in an attempt to minimize the COALESCE

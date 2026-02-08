@@ -127,6 +127,13 @@
         To group and combine several expressions you could use brackets
         <code>(...)</code>, <code>&&</code> (AND) and <code>||</code> (OR) tokens.
     </p>
+    <p>
+        The <code>array(val1, val2, ...)</code> function creates a constant list for use with
+        <code class="filter-op">{"?="}</code> or <code class="filter-op">{"?!="}</code> operators.
+        Shorthand for checking if a field matches any value in a list, e.g.
+        <code>@request.auth.role ?= array("isSecretary", "isAccountant")</code> instead of
+        <code>@request.auth.role ?= "isSecretary" || @request.auth.role ?= "isAccountant"</code>.
+    </p>
 {/if}
 
 <style>

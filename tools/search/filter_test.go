@@ -145,6 +145,18 @@ func TestFilterDataBuildExpr(t *testing.T) {
 			false,
 			"(6371 * acos(cos(radians({:TEST})) * cos(radians({:TEST})) * cos(radians({:TEST}) - radians({:TEST})) + sin(radians({:TEST})) * sin(radians({:TEST})))) < {:TEST}",
 		},
+		{
+			"array function with ?= (IN)",
+			"test1 ?= array('a', 'b')",
+			false,
+			"COALESCE([[test1]], '') IN ({:TEST},{:TEST})",
+		},
+		{
+			"array function with ?!= (NOT IN)",
+			"test2 ?!= array('x', 'y')",
+			false,
+			"COALESCE([[test2]], '') NOT IN ({:TEST},{:TEST})",
+		},
 	}
 
 	for _, s := range scenarios {

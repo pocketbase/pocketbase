@@ -42,6 +42,11 @@ type ResolverResult struct {
 	// AfterBuild is an optional function that will be called after building
 	// and combining the result of both resolved operands/sides in a single expression.
 	AfterBuild func(expr dbx.Expression) dbx.Expression
+
+	// IsInList when true indicates this operand represents a list of values for IN/NOT IN
+	// comparison (e.g. from the array() function). When used with = or != operators,
+	// the expression becomes "left IN (values)" or "left NOT IN (values)".
+	IsInList bool
 }
 
 // FieldResolver defines an interface for managing search fields.

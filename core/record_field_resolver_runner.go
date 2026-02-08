@@ -777,7 +777,8 @@ func (r *runner) finalizeActivePropsProcessing(collection *Collection, prop stri
 	// -------------------------------------------------------
 	if modifier == eachModifier && isMultivaluer {
 		jePair := r.activeTableAlias + "." + cleanFieldName
-		jeAlias := "__je_" + r.activeTableAlias + "_" + cleanFieldName + r.resolver.joinAliasSuffix
+		jeAlias := "__je_" + r.activeTableAlias + "_" + cleanFieldName + r.resolver.
+			joinAliasSuffix
 
 		err := r.resolver.registerJoin(dbutils.JSONEach(jePair), jeAlias, nil)
 		if err != nil {
@@ -812,6 +813,37 @@ func (r *runner) finalizeActivePropsProcessing(collection *Collection, prop stri
 	// -------------------------------------------------------
 	result := &search.ResolverResult{
 		Identifier: "[[" + r.activeTableAlias + "." + cleanFieldName + "]]",
+	}
+
+	// auto explode multi-value fields
+	// (similar to the :each modifier but without the need of explicit modifier)
+	if multiValuer, ok := field.(MultiValuer); ok && multiValuer.IsMultiple() {
+		jePair := r.activeTableAlias + "." + cleanFieldName
+		jeAlias := "__je_" + r.activeTableAlias + "_" + cleanFieldName + r.resolver.joinAliasSuffix
+
+		err := r.resolver.registerJoin(dbutils.JSONEach(jePair), jeAlias, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		result.Identifier = fmt.Sprintf("[[%s.value]]", jeAlias)
+
+		r.withMultiMatch = true
+
+		if r.withMultiMatch {
+			jePair2 := r.multiMatchActiveTableAlias + "." + cleanFieldName
+			jeAlias2 := "__je_" + r.multiMatchActiveTableAlias + "_" + cleanFieldName + r.resolver.joinAliasSuffix
+
+			r.multiMatch.Joins = append(r.multiMatch.Joins, &search.Join{
+				TableName:  dbutils.JSONEach(jePair2),
+				TableAlias: jeAlias2,
+			})
+			r.multiMatch.ValueIdentifier = fmt.Sprintf("[[%s.value]]", jeAlias2)
+
+			result.MultiMatchSubQuery = r.multiMatch
+		}
+
+		return result, nil
 	}
 
 	if r.withMultiMatch {
