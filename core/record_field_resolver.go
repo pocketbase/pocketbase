@@ -188,7 +188,7 @@ func (r *RecordFieldResolver) updateQueryWithCollectionListRule(c *Collection, t
 func (r *RecordFieldResolver) updateQueryWithDeduplicateConstraint(query *dbx.SelectQuery) {
 	query.Distinct(true)
 
-	// @todo Reasearch better options for generic rows deduplication.
+	// @todo Research better options for generic rows deduplication.
 	//
 	// Disable the GROUP BY conditional checks for now since it prevents
 	// proper utilization of ORDER BY indexes (and maybe others)
