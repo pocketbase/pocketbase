@@ -19,11 +19,11 @@ import (
 // This method is a no-op if a view with the provided name doesn't exist.
 //
 // NB! Be aware that this method is vulnerable to SQL injection and the
-// "name" argument must come only from trusted input!
-func (app *BaseApp) DeleteView(name string) error {
+// "dangerousViewName" argument must come only from trusted input!
+func (app *BaseApp) DeleteView(dangerousViewName string) error {
 	_, err := app.DB().NewQuery(fmt.Sprintf(
 		"DROP VIEW IF EXISTS {{%s}}",
-		name,
+		dangerousViewName,
 	)).Execute()
 
 	return err
@@ -31,19 +31,19 @@ func (app *BaseApp) DeleteView(name string) error {
 
 // SaveView creates (or updates already existing) persistent SQL view.
 //
-// NB! Be aware that this method is vulnerable to SQL injection and the
-// "selectQuery" argument must come only from trusted input!
-func (app *BaseApp) SaveView(name string, selectQuery string) error {
+// NB! Be aware that this method is vulnerable to SQL injection and
+// its arguments must come only from trusted input!
+func (app *BaseApp) SaveView(dangerousViewName string, dangerousSelectQuery string) error {
 	return app.RunInTransaction(func(txApp App) error {
 		// delete old view (if exists)
-		if err := txApp.DeleteView(name); err != nil {
+		if err := txApp.DeleteView(dangerousViewName); err != nil {
 			return err
 		}
 
-		selectQuery = strings.Trim(strings.TrimSpace(selectQuery), ";")
+		dangerousSelectQuery = strings.Trim(strings.TrimSpace(dangerousSelectQuery), ";")
 
 		// try to loosely detect multiple inline statements
-		tk := tokenizer.NewFromString(selectQuery)
+		tk := tokenizer.NewFromString(dangerousSelectQuery)
 		tk.Separators(';')
 		if queryParts, _ := tk.ScanAll(); len(queryParts) > 1 {
 			return errors.New("multiple statements are not supported")
@@ -53,17 +53,17 @@ func (app *BaseApp) SaveView(name string, selectQuery string) error {
 		//
 		// note: the query is wrapped in a secondary SELECT as a rudimentary
 		// measure to discourage multiple inline sql statements execution
-		viewQuery := fmt.Sprintf("CREATE VIEW {{%s}} AS SELECT * FROM (%s)", name, selectQuery)
+		viewQuery := fmt.Sprintf("CREATE VIEW {{%s}} AS SELECT * FROM (%s)", dangerousViewName, dangerousSelectQuery)
 		if _, err := txApp.DB().NewQuery(viewQuery).Execute(); err != nil {
 			return err
 		}
 
 		// fetch the view table info to ensure that the view was created
 		// because missing tables or columns won't return an error
-		if _, err := txApp.TableInfo(name); err != nil {
+		if _, err := txApp.TableInfo(dangerousViewName); err != nil {
 			// manually cleanup previously created view in case the func
 			// is called in a nested transaction and the error is discarded
-			txApp.DeleteView(name)
+			txApp.DeleteView(dangerousViewName)
 
 			return err
 		}
@@ -77,18 +77,21 @@ func (app *BaseApp) SaveView(name string, selectQuery string) error {
 // There are some caveats:
 // - The select query must have an "id" column.
 // - Wildcard ("*") columns are not supported to avoid accidentally leaking sensitive data.
-func (app *BaseApp) CreateViewFields(selectQuery string) (FieldsList, error) {
+//
+// NB! Be aware that this method is vulnerable to SQL injection and the
+// "dangerousSelectQuery" argument must come only from trusted input!
+func (app *BaseApp) CreateViewFields(dangerousSelectQuery string) (FieldsList, error) {
 	result := NewFieldsList()
 
-	suggestedFields, err := parseQueryToFields(app, selectQuery)
+	suggestedFields, err := parseQueryToFields(app, dangerousSelectQuery)
 	if err != nil {
 		return result, err
 	}
 
-	// note wrap in a transaction in case the selectQuery contains
+	// note wrap in a transaction in case the dangerousSelectQuery contains
 	// multiple statements allowing us to rollback on any error
 	txErr := app.RunInTransaction(func(txApp App) error {
-		info, err := getQueryTableInfo(txApp, selectQuery)
+		info, err := getQueryTableInfo(txApp, dangerousSelectQuery)
 		if err != nil {
 			return err
 		}
