@@ -1,6 +1,6 @@
 ## v0.36.3
 
-- Added `Content-Encoding: identity` to the S3 requests per the suggestion in [#7523](https://github.com/pocketbase/pocketbase/issues/7523).
+- Added `Accept-Encoding: identity` to the S3 requests per the suggestion in [#7523](https://github.com/pocketbase/pocketbase/issues/7523).
     _This should help fixing the 0-bytes file response when S3 API compression is enabled._
 
 - Bumped min Go GitHub action version to 1.26.0 _(it comes with minor [GC performance improvements](https://go.dev/doc/go1.26#runtime))_.
