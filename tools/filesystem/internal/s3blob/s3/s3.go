@@ -150,6 +150,12 @@ func (s3 *S3) SignAndSend(req *http.Request) (*http.Response, error) {
 
 // https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-create-signed-request.html#create-signed-request-steps
 func (s3 *S3) sign(req *http.Request) {
+	// explicitly set Accept-Encoding to avoid transparent decompression
+	// and Content-Length zeroing (https://github.com/pocketbase/pocketbase/issues/7523)
+	if req.Header.Get("Accept-Encoding") == "" {
+		req.Header.Set("Accept-Encoding", "identity")
+	}
+
 	// fallback to the Unsigned payload option
 	// (data integrity checks could be still applied via the content-md5 or x-amz-checksum-* headers)
 	if req.Header.Get("x-amz-content-sha256") == "" {

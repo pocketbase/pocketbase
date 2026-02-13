@@ -128,6 +128,7 @@ func TestS3SignAndSend(t *testing.T) {
 						return tests.ExpectHeaders(req.Header, map[string]string{
 							"Authorization":        "AWS4-HMAC-SHA256 Credential=123/20250102/test_region/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=ea093662bc1deef08dfb4ac35453dfaad5ea89edf102e9dd3b7156c9a27e4c1f",
 							"Host":                 "test_bucket.example.com",
+							"Accept-Encoding":      "identity",
 							"X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
 							"X-Amz-Date":           "20250102T150405Z",
 						})
@@ -155,6 +156,7 @@ func TestS3SignAndSend(t *testing.T) {
 						return tests.ExpectHeaders(req.Header, map[string]string{
 							"Authorization":        "AWS4-HMAC-SHA256 Credential=456/20250102/test_region/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=17510fa1f724403dd0a563b61c9b31d1d718f877fcbd75455620d17a8afce5fb",
 							"Host":                 "test_bucket.example.com",
+							"Accept-Encoding":      "identity",
 							"X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
 							"X-Amz-Date":           "20250102T150405Z",
 						})
@@ -182,6 +184,7 @@ func TestS3SignAndSend(t *testing.T) {
 						return tests.ExpectHeaders(req.Header, map[string]string{
 							"Authorization":        "AWS4-HMAC-SHA256 Credential=456/20250102/test_region/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=9458a033554f52913801b3de16f54409b36ed25c6da3aed14e64439500e2c5e1",
 							"Host":                 "test_bucket.example.com",
+							"Accept-Encoding":      "identity",
 							"X-Amz-Content-Sha256": "UNSIGNED-PAYLOAD",
 							"X-Amz-Date":           "20250102T150405Z",
 						})
@@ -198,6 +201,7 @@ func TestS3SignAndSend(t *testing.T) {
 				req.Header.Set("x-amz-example", "123")
 				req.Header.Set("x-amz-meta-a", "456")
 				req.Header.Set("content-type", "image/png")
+				req.Header.Set("accept-encoding", "custom")
 				req.Header.Set("x-test", "789") // shouldn't be included in the signing headers
 			},
 			&s3.S3{
@@ -214,6 +218,7 @@ func TestS3SignAndSend(t *testing.T) {
 						return tests.ExpectHeaders(req.Header, map[string]string{
 							"authorization":        "AWS4-HMAC-SHA256 Credential=123/20250102/test_region/s3/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date;x-amz-example;x-amz-meta-a, Signature=86dccbcd012c33073dc99e9d0a9e0b717a4d8c11c37848cfa9a4a02716bc0db3",
 							"host":                 "test_bucket.example.com",
+							"accept-encoding":      "custom",
 							"x-amz-date":           "20250102T150405Z",
 							"x-amz-content-sha256": "test_sha256",
 							"x-amz-example":        "123",
