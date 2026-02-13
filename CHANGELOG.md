@@ -5,7 +5,7 @@
 
 - Bumped min Go GitHub action version to 1.26.0 _(it comes with minor [GC performance improvements](https://go.dev/doc/go1.26#runtime))_.
 
-- Other minor fixes _(updated `modernc.org/sqlite` to v1.45.0, updated the arguments of `app.DeleteTable()`, `app.DeleteView()` and other similar methods to make it more clear that they are dangerous and shouldn't be used with untrusted input, etc.)_.
+- Other minor fixes _(updated `modernc.org/sqlite` to v1.45.0, updated `goja_nodejs` adding `Buffer.concat`, updated the arguments of `app.DeleteTable(...)`, `app.DeleteView(...)` and other similar methods to make it more clear that they are dangerous and shouldn't be used with untrusted input, etc.)_.
 
 
 ## v0.36.2
