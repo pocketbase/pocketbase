@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -1008,8 +1009,15 @@ func TestFilesystemBinds(t *testing.T) {
 	}))
 	defer srv.Close()
 
+	tmpDir, err := os.MkdirTemp("", "jsvm")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
 	vm := goja.New()
 	vm.Set("mh", &multipart.FileHeader{Filename: "test"})
+	vm.Set("tmpDir", tmpDir)
 	vm.Set("testFile", filepath.Join(app.DataDir(), "data.db"))
 	vm.Set("baseURL", srv.URL)
 	baseBinds(vm)
@@ -1032,7 +1040,7 @@ func TestFilesystemBinds(t *testing.T) {
 
 	// local
 	{
-		v, err := vm.RunString(`$filesystem.local("test")`)
+		v, err := vm.RunString(`$filesystem.local(tmpDir)`)
 		if err != nil {
 			t.Fatal(err)
 		}
