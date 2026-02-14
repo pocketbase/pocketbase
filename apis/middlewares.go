@@ -210,9 +210,20 @@ func getAuthTokenFromRequest(e *core.RequestEvent) string {
 	if token != "" {
 		// the schema prefix is not required and it is only for
 		// compatibility with the defaults of some HTTP clients
-		token = strings.TrimPrefix(token, "Bearer ")
+		token = trimPrefixCI(strings.TrimSpace(token), "Bearer ")
 	}
 	return token
+}
+
+// trimPrefixCI is a case-insensitive version of strings.TrimPrefix.
+func trimPrefixCI(s string, prefix string) string {
+	if len(s) < len(prefix) {
+		return s
+	}
+	if strings.EqualFold(s[:len(prefix)], prefix) {
+		return s[len(prefix):]
+	}
+	return s
 }
 
 // wwwRedirect performs www->non-www redirect(s) if the request host

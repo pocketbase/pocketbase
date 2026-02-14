@@ -192,6 +192,51 @@ func TestRequireAuth(t *testing.T) {
 			ExpectedContent: []string{"test123"},
 		},
 		{
+			Name:   "valid record auth token (prefixed)",
+			Method: http.MethodGet,
+			URL:    "/my/test",
+			Headers: map[string]string{
+				"Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				e.Router.GET("/my/test", func(e *core.RequestEvent) error {
+					return e.String(200, "test123")
+				}).Bind(apis.RequireAuth())
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "valid record auth token (prefixed/case-insensitive)",
+			Method: http.MethodGet,
+			URL:    "/my/test",
+			Headers: map[string]string{
+				"Authorization": "bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				e.Router.GET("/my/test", func(e *core.RequestEvent) error {
+					return e.String(200, "test123")
+				}).Bind(apis.RequireAuth())
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
+			Name:   "valid record auth token (prefixed/whitespace)",
+			Method: http.MethodGet,
+			URL:    "/my/test",
+			Headers: map[string]string{
+				"Authorization": "   Bearer eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				e.Router.GET("/my/test", func(e *core.RequestEvent) error {
+					return e.String(200, "test123")
+				}).Bind(apis.RequireAuth())
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
+		{
 			Name:   "valid record auth token with collection not in the restricted list",
 			Method: http.MethodGet,
 			URL:    "/my/test",
