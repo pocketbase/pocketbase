@@ -894,6 +894,8 @@ declare namespace $security {
  * @group PocketBase
  */
 declare namespace $filesystem {
+  let s3:                filesystem.newS3
+  let local:             filesystem.newLocal
   let fileFromPath:      filesystem.newFileFromPath
   let fileFromBytes:     filesystem.newFileFromBytes
   let fileFromMultipart: filesystem.newFileFromMultipart

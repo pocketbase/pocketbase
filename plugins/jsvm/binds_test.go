@@ -1015,7 +1015,33 @@ func TestFilesystemBinds(t *testing.T) {
 	baseBinds(vm)
 	filesystemBinds(vm)
 
-	testBindsCount(vm, "$filesystem", 4, t)
+	testBindsCount(vm, "$filesystem", 6, t)
+
+	// s3
+	{
+		v, err := vm.RunString(`$filesystem.s3("bucketName", "region", "endpoint", "accessKey", "secretKey", true)`)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fsys, ok := v.Export().(*filesystem.System)
+		if !ok {
+			t.Fatalf("[s3] Expected System instance got %v", fsys)
+		}
+	}
+
+	// local
+	{
+		v, err := vm.RunString(`$filesystem.local("test")`)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		fsys, ok := v.Export().(*filesystem.System)
+		if !ok {
+			t.Fatalf("[s3] Expected System instance got %v", fsys)
+		}
+	}
 
 	// fileFromPath
 	{

@@ -739,6 +739,8 @@ func filesystemBinds(vm *goja.Runtime) {
 	obj := vm.NewObject()
 	vm.Set("$filesystem", obj)
 
+	obj.Set("s3", filesystem.NewS3)
+	obj.Set("local", filesystem.NewLocal)
 	obj.Set("fileFromPath", filesystem.NewFileFromPath)
 	obj.Set("fileFromBytes", filesystem.NewFileFromBytes)
 	obj.Set("fileFromMultipart", filesystem.NewFileFromMultipart)
