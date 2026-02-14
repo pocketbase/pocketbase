@@ -232,7 +232,8 @@ func (scenario *ApiScenario) test(t testing.TB) {
 
 		// set scenario headers
 		for k, v := range scenario.Headers {
-			req.Header.Set(k, v)
+			// trim whitespaces for consistency with the net/http request parsing
+			req.Header.Set(k, strings.TrimSpace(v))
 		}
 
 		// execute request

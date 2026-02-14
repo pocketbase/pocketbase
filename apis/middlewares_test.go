@@ -224,6 +224,22 @@ func TestRequireAuth(t *testing.T) {
 			ExpectedStatus:  200,
 			ExpectedContent: []string{"test123"},
 		},
+		{
+			Name:   "valid record auth token with Bearer case-insensitive prefix",
+			Method: http.MethodGet,
+			URL:    "/my/test",
+			Headers: map[string]string{
+				// regular user
+				"Authorization": "BeArEr eyJhbGciOiJIUzI1NiJ9.eyJpZCI6IjRxMXhsY2xtZmxva3UzMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoiX3BiX3VzZXJzX2F1dGhfIiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.ZT3F0Z3iM-xbGgSG3LEKiEzHrPHr8t8IuHLZGGNuxLo",
+			},
+			BeforeTestFunc: func(t testing.TB, app *tests.TestApp, e *core.ServeEvent) {
+				e.Router.GET("/my/test", func(e *core.RequestEvent) error {
+					return e.String(200, "test123")
+				}).Bind(apis.RequireAuth())
+			},
+			ExpectedStatus:  200,
+			ExpectedContent: []string{"test123"},
+		},
 	}
 
 	for _, scenario := range scenarios {
