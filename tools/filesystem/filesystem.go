@@ -38,7 +38,7 @@ type System struct {
 	bucket *blob.Bucket
 }
 
-// NewS3 initializes an S3 filesystem instance.
+// NewS3 initializes a new S3 filesystem instance.
 //
 // NB! Make sure to call `Close()` after you are done working with it.
 func NewS3(

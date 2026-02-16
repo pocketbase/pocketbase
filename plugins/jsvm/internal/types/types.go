@@ -870,17 +870,17 @@ declare namespace $security {
   /**
    * {@inheritDoc security.newJWT}
    */
-  export function createJWT(payload: { [key:string]: any }, signingKey: string, secDuration: number): string
+  function createJWT(payload: { [key:string]: any }, signingKey: string, secDuration: number): string
 
   /**
    * {@inheritDoc security.parseUnverifiedJWT}
    */
-  export function parseUnverifiedJWT(token: string): _TygojaDict
+  function parseUnverifiedJWT(token: string): _TygojaDict
 
   /**
    * {@inheritDoc security.parseJWT}
    */
-  export function parseJWT(token: string, verificationKey: string): _TygojaDict
+  function parseJWT(token: string, verificationKey: string): _TygojaDict
 }
 
 // -------------------------------------------------------------------
@@ -894,11 +894,27 @@ declare namespace $security {
  * @group PocketBase
  */
 declare namespace $filesystem {
-  let s3:                filesystem.newS3
-  let local:             filesystem.newLocal
   let fileFromPath:      filesystem.newFileFromPath
   let fileFromBytes:     filesystem.newFileFromBytes
   let fileFromMultipart: filesystem.newFileFromMultipart
+
+  /**
+   * Initializes a new S3-only filesystem instance
+   * (make sure to call ` + "`" + `close()` + "`" + ` after you are done working with it).
+   *
+   * Most users should prefer ` + "`" + `$app.newFilesystem()` + "`" + ` which will
+   * construct a local or S3 filesystem based on the configured application settings.
+   */
+  let s3: filesystem.newS3
+
+  /**
+   * Initializes a new local-only filesystem instance
+   * (make sure to call ` + "`" + `close()` + "`" + ` after you are done working with it).
+   *
+   * Most users should prefer ` + "`" + `$app.newFilesystem()` + "`" + ` which will
+   * construct a local or S3 filesystem based on the configured application settings.
+   */
+  let local: filesystem.newLocal
 
   /**
    * fileFromURL creates a new File from the provided url by
@@ -914,7 +930,7 @@ declare namespace $filesystem {
    * const file2 = $filesystem.fileFromURL("https://...", 15)
    * ` + "```" + `
    */
-  export function fileFromURL(url: string, secTimeout?: number): filesystem.File
+  function fileFromURL(url: string, secTimeout?: number): filesystem.File
 }
 
 // -------------------------------------------------------------------
@@ -928,21 +944,21 @@ declare namespace $filesystem {
  * @group PocketBase
  */
 declare namespace $filepath {
-  export let base:      filepath.base
-  export let clean:     filepath.clean
-  export let dir:       filepath.dir
-  export let ext:       filepath.ext
-  export let fromSlash: filepath.fromSlash
-  export let glob:      filepath.glob
-  export let isAbs:     filepath.isAbs
-  export let join:      filepath.join
-  export let match:     filepath.match
-  export let rel:       filepath.rel
-  export let split:     filepath.split
-  export let splitList: filepath.splitList
-  export let toSlash:   filepath.toSlash
-  export let walk:      filepath.walk
-  export let walkDir:   filepath.walkDir
+  let base:      filepath.base
+  let clean:     filepath.clean
+  let dir:       filepath.dir
+  let ext:       filepath.ext
+  let fromSlash: filepath.fromSlash
+  let glob:      filepath.glob
+  let isAbs:     filepath.isAbs
+  let join:      filepath.join
+  let match:     filepath.match
+  let rel:       filepath.rel
+  let split:     filepath.split
+  let splitList: filepath.splitList
+  let toSlash:   filepath.toSlash
+  let walk:      filepath.walk
+  let walkDir:   filepath.walkDir
 }
 
 // -------------------------------------------------------------------
@@ -959,7 +975,7 @@ declare namespace $os {
   /**
    * Legacy alias for $os.cmd().
    */
-  export let exec: exec.command
+  let exec: exec.command
 
   /**
    * Prepares an external OS command.
@@ -974,30 +990,30 @@ declare namespace $os {
    * const output = toString(cmd.output());
    * ` + "```" + `
    */
-  export let cmd: exec.command
+  let cmd: exec.command
 
   /**
    * Args hold the command-line arguments, starting with the program name.
    */
-  export let args: Array<string>
+  let args: Array<string>
 
-  export let exit:       os.exit
-  export let getenv:     os.getenv
-  export let dirFS:      os.dirFS
-  export let readFile:   os.readFile
-  export let writeFile:  os.writeFile
-  export let stat:       os.stat
-  export let readDir:    os.readDir
-  export let tempDir:    os.tempDir
-  export let truncate:   os.truncate
-  export let getwd:      os.getwd
-  export let mkdir:      os.mkdir
-  export let mkdirAll:   os.mkdirAll
-  export let rename:     os.rename
-  export let remove:     os.remove
-  export let removeAll:  os.removeAll
-  export let openRoot:   os.openRoot
-  export let openInRoot: os.openInRoot
+  let exit:       os.exit
+  let getenv:     os.getenv
+  let dirFS:      os.dirFS
+  let readFile:   os.readFile
+  let writeFile:  os.writeFile
+  let stat:       os.stat
+  let readDir:    os.readDir
+  let tempDir:    os.tempDir
+  let truncate:   os.truncate
+  let getwd:      os.getwd
+  let mkdir:      os.mkdir
+  let mkdirAll:   os.mkdirAll
+  let rename:     os.rename
+  let remove:     os.remove
+  let removeAll:  os.removeAll
+  let openRoot:   os.openRoot
+  let openInRoot: os.openInRoot
 }
 
 // -------------------------------------------------------------------
@@ -1126,7 +1142,7 @@ declare namespace $apis {
    * If a file resource is missing and indexFallback is set, the request
    * will be forwarded to the base index.html (useful for SPA).
    */
-  export function static(dir: string, indexFallback: boolean): (e: core.RequestEvent) => void
+  function static(dir: string, indexFallback: boolean): (e: core.RequestEvent) => void
 
   let requireGuestOnly:              apis.requireGuestOnly
   let requireAuth:                   apis.requireAuth
@@ -1148,7 +1164,7 @@ declare namespace $apis {
    * Set authMethod to empty string if you want to ignore the MFA checks and the login alerts
    * (can be also adjusted additionally via the onRecordAuthRequest hook).
    */
-  export function recordAuthResponse(e: core.RequestEvent, authRecord: core.Record, authMethod: string, meta?: any): void
+  function recordAuthResponse(e: core.RequestEvent, authRecord: core.Record, authMethod: string, meta?: any): void
 }
 
 // -------------------------------------------------------------------
