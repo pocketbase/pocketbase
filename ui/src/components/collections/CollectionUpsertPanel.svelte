@@ -455,6 +455,14 @@
                     autofocus={!collection.id}
                     placeholder={isAuth ? `eg. "users"` : `eg. "posts"`}
                     value={collection.name}
+                    on:compositionend={(e) => {
+                        if (!e.data) {
+                            return
+                        }
+
+                        collection.name = CommonHelper.slugify(e.target.value);
+                        e.target.value = collection.name;
+                    }}
                     on:input={(e) => {
                         if (e.isComposing) {
                             return

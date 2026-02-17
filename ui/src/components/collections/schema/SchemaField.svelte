@@ -70,6 +70,18 @@
         }
     }
 
+    function onFieldRename(input) {
+        if (!input) {
+            return
+        }
+
+        const oldName = field.name;
+        field.name = CommonHelper.slugify(input.value);
+        input.value = field.name;
+
+        dispatch("rename", { oldName: oldName, newName: field.name });
+    }
+
     function restore() {
         field._toDelete = false;
 
@@ -173,15 +185,19 @@
                 spellcheck="false"
                 placeholder="Field name"
                 value={field.name}
+                on:compositionend={(e) => {
+                    if (!e.data) {
+                        return
+                    }
+
+                    onFieldRename(e.target)
+                }}
                 on:input={(e) => {
                     if (e.isComposing) {
                         return
                     }
 
-                    const oldName = field.name;
-                    field.name = CommonHelper.slugify(e.target.value);
-                    e.target.value = field.name;
-                    dispatch("rename", { oldName: oldName, newName: field.name });
+                    onFieldRename(e.target)
                 }}
             />
         </Field>
