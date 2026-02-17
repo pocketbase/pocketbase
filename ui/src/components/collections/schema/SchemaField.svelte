@@ -84,10 +84,6 @@
         }
     }
 
-    function normalizeFieldName(name) {
-        return CommonHelper.slugify(name);
-    }
-
     function expand() {
         showOptions = true;
         collapseSiblings();
@@ -177,12 +173,14 @@
                 spellcheck="false"
                 placeholder="Field name"
                 value={field.name}
-                title="System field"
                 on:input={(e) => {
-                    const oldName = field.name;
-                    field.name = normalizeFieldName(e.target.value);
-                    e.target.value = field.name;
+                    if (e.isComposing) {
+                        return
+                    }
 
+                    const oldName = field.name;
+                    field.name = CommonHelper.slugify(e.target.value);
+                    e.target.value = field.name;
                     dispatch("rename", { oldName: oldName, newName: field.name });
                 }}
             />

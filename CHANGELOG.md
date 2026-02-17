@@ -1,3 +1,8 @@
+## v0.36.5 (WIP)
+
+- Pause collection and fields name normalization while in IME mode ([#7532](https://github.com/pocketbase/pocketbase/pull/7532); thanks @miaopan607).
+
+
 ## v0.36.4
 
 - Made the optional `Bearer` token prefix case-insensitive ([#7525](https://github.com/pocketbase/pocketbase/pull/7525); thanks @benjamesfleming).

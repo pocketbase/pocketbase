@@ -456,6 +456,10 @@
                     placeholder={isAuth ? `eg. "users"` : `eg. "posts"`}
                     value={collection.name}
                     on:input={(e) => {
+                        if (e.isComposing) {
+                            return
+                        }
+
                         collection.name = CommonHelper.slugify(e.target.value);
                         e.target.value = collection.name;
                     }}
