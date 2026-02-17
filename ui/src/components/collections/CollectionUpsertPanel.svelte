@@ -49,6 +49,7 @@
     let initialFormHash = calculateFormHash(collection);
     let fieldsTabError = "";
     let baseCollectionKeys = [];
+    let isComposing = false; // track IME composition state
 
     $: baseCollectionKeys = Object.keys($scaffolds["base"] || {});
 
@@ -455,7 +456,14 @@
                     autofocus={!collection.id}
                     placeholder={isAuth ? `eg. "users"` : `eg. "posts"`}
                     value={collection.name}
+                    on:compositionstart={() => isComposing = true}
+                    on:compositionend={(e) => {
+                        isComposing = false;
+                        collection.name = CommonHelper.slugify(e.target.value);
+                        e.target.value = collection.name;
+                    }}
                     on:input={(e) => {
+                        if (isComposing) return;
                         collection.name = CommonHelper.slugify(e.target.value);
                         e.target.value = collection.name;
                     }}

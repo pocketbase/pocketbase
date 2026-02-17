@@ -33,6 +33,7 @@
 
     let nameInput;
     let showOptions = false;
+    let isComposing = false; // track IME composition state
 
     $: isAuthCollection = collection?.type == "auth";
 
@@ -178,7 +179,16 @@
                 placeholder="Field name"
                 value={field.name}
                 title="System field"
+                on:compositionstart={() => isComposing = true}
+                on:compositionend={(e) => {
+                    isComposing = false;
+                    const oldName = field.name;
+                    field.name = normalizeFieldName(e.target.value);
+                    e.target.value = field.name;
+                    dispatch("rename", { oldName: oldName, newName: field.name });
+                }}
                 on:input={(e) => {
+                    if (isComposing) return;
                     const oldName = field.name;
                     field.name = normalizeFieldName(e.target.value);
                     e.target.value = field.name;
