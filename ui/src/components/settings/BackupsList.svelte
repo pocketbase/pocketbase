@@ -214,7 +214,6 @@
         }
     }
     .backup-name {
-        max-width: 300px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
