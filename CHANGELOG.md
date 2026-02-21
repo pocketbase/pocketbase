@@ -1,6 +1,6 @@
-## v0.36.5 (WIP)
+## v0.36.5
 
-- Pause collection and fields name normalization while in IME mode ([#7532](https://github.com/pocketbase/pocketbase/pull/7532); thanks @miaopan607).
+- Disabled collection and fields name normalization while in IME mode ([#7532](https://github.com/pocketbase/pocketbase/pull/7532); thanks @miaopan607).
 
 - Updated `modernc.org/sqlite` to v1.46.1 _(resets connection state on Tx.Commit failure)_.
 
