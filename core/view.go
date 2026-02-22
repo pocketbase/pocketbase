@@ -257,7 +257,16 @@ func parseQueryToFields(app App, selectQuery string) (map[string]*queryField, er
 		}
 
 		// numeric aggregations
-		if strings.HasPrefix(colLower, "count(") || strings.HasPrefix(colLower, "total(") {
+		if strings.HasPrefix(colLower, "count(") {
+			result[col.alias] = &queryField{
+				field: &NumberField{
+					Name:    col.alias,
+					OnlyInt: true,
+				},
+			}
+			continue
+		}
+		if strings.HasPrefix(colLower, "total(") {
 			result[col.alias] = &queryField{
 				field: &NumberField{
 					Name: col.alias,
@@ -268,13 +277,21 @@ func parseQueryToFields(app App, selectQuery string) (map[string]*queryField, er
 
 		castMatch := castRegex.FindStringSubmatch(colLower)
 
-		// numeric casts
+		// casts
 		if len(castMatch) == 2 {
 			switch castMatch[1] {
-			case "real", "integer", "int", "decimal", "numeric":
+			case "real", "decimal", "numeric":
 				result[col.alias] = &queryField{
 					field: &NumberField{
 						Name: col.alias,
+					},
+				}
+				continue
+			case "int", "integer":
+				result[col.alias] = &queryField{
+					field: &NumberField{
+						Name:    col.alias,
+						OnlyInt: true,
 					},
 				}
 				continue

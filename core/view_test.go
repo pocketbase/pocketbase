@@ -545,6 +545,61 @@ func TestCreateViewFields(t *testing.T) {
 	ensureNoTempViews(app, t)
 }
 
+func TestCreateViewFieldsWithNumberOnlyInt(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	sql := `select
+		a.id,
+		count(a.id) count,
+		total(a.id) total,
+		cast(a.id as int) cast_int,
+		cast(a.id as integer) cast_integer,
+		cast(a.id as real) cast_real,
+		cast(a.id as decimal) cast_decimal,
+		cast(a.id as numeric) cast_numeric
+	from demo1 a`
+
+	result, err := app.CreateViewFields(sql)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	onlyInts := map[string]bool{
+		"count":        true,
+		"total":        false,
+		"cast_int":     true,
+		"cast_integer": true,
+		"cast_real":    false,
+		"cast_decimal": false,
+		"cast_numeric": false,
+	}
+
+	totalExpected := len(onlyInts) + 1
+	if total := len(result); total != totalExpected {
+		t.Fatalf("Expected %d, got %d", totalExpected, total)
+	}
+
+	for _, f := range result {
+		if f.GetName() == "id" {
+			continue
+		}
+
+		t.Run(f.GetName(), func(t *testing.T) {
+			nf, ok := f.(*core.NumberField)
+			if !ok {
+				t.Fatalf("Expected *core.NumberField, got %v", f)
+			}
+
+			if nf.OnlyInt != onlyInts[nf.Name] {
+				t.Fatalf("Expected OnlyInt %v, got %v", onlyInts[nf.Name], nf.OnlyInt)
+			}
+		})
+	}
+}
+
 func TestFindRecordByViewFile(t *testing.T) {
 	t.Parallel()
 
