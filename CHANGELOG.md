@@ -4,6 +4,8 @@
 
 - Documented the `unmarshal` JSVM helper ([#7543](https://github.com/pocketbase/pocketbase/issues/7543)).
 
+- Check again for data existence after the `Store.GetOrSet` write lock to ensure that the read value would be prioritized.
+
 
 ## v0.36.5
 
