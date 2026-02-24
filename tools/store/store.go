@@ -178,15 +178,22 @@ func (s *Store[K, T]) GetOrSet(key K, setFunc func() T) T {
 	s.mu.RLock()
 	v, ok := s.data[key]
 	s.mu.RUnlock()
+	if ok {
+		return v
+	}
 
+	// lock again for write
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// check again in case it was set between the 2 locks
+	v, ok = s.data[key]
 	if !ok {
-		s.mu.Lock()
 		v = setFunc()
 		if s.data == nil {
 			s.data = make(map[K]T)
 		}
 		s.data[key] = v
-		s.mu.Unlock()
 	}
 
 	return v
