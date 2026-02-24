@@ -265,7 +265,7 @@ declare function arrayOf<T>(model: T): Array<T>;
  * ` + "`" + `json.Marshal/Unmarshal` + "`" + ` methods under the hood.
  *
  * The data argument could be anything serializable, usually a plain object (map).
- * The dst argument culd be any pointer value, usually a model instance.
+ * The dst argument could be any pointer value, usually a model instance.
  *
  * Example:
  *
