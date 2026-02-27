@@ -14,9 +14,9 @@ In case the vulnerability is confirmed, within another couple days I'll try to s
 
 - DO NOT reserve and publish MITRE CVE number on your own _(I prefer to do it through the GitHub Security advisory)_ and try to communicate first privately the details to better understand how the code is being used and whether the supposed vulnerability can be actually exploited in any real practical scenarios. Otherwise you are risking needlessly causing scaremongering and annoyance for users that rely on security scanners as part of their CI/CD pipeline.
 
-- Wait before publicly disclosing and sharing details about the found vulnerability, **ideally at least 5 days after the fix**, to make it harder to exploit and give enough time for users to patch their instances _(you are free to provide a PoC and as much details as you want in your own blog post/gist/etc.)_.
+- Wait before publicly disclosing and sharing details about the found vulnerability, **ideally at least 5 days after the fix**, to make it harder to exploit and give enough time for users to patch their instances _(you are free to provide a PoC and as much details as you want in your own blog/gist/etc.)_.
 
-### Below is a common list of vulnerabilities that were previously reported but are not considered a security issue:
+### Below is a list of common vulnerabilities that were previously reported but are NOT considered a security issue:
 
 <details>
 <summary><strong>Stored XSS</strong></summary>
@@ -25,7 +25,7 @@ This was discussed several times, both privately and [publicly](https://github.c
 
 Modern browsers recently introduced a basic [`Sanitizer` interface](https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer) that could help filtering HTML strings without external libraries.
 
-Having also a default [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) either as meta tag or response header is a good idea to minimize the risk of XSS.
+Having also a default [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) either as meta tag or response header is always a good idea to minimize the risk of XSS.
 </details>
 
 <details>
@@ -44,7 +44,7 @@ This means that operations like record update don't wrap out of the box for exam
 
 This is an accepted tradeoff and for the majority of cases it has no security implications.
 
-This also apply for the read and delete of MFA and OTP records but for those cases, since they operate in a security sensitive context, they have a short-lived duration that is configurable from the collection settings _(there are also system cron jobs that takes care for deleting forgotten/expired entries to prevent accumulation of invalid records)_.
+This also apply for the read and delete of MFA and OTP records but for those cases, since they operate in a security sensitive context, they have an extra short-lived duration that is configurable from the collection settings _(there are also system cron jobs that takes care for deleting forgotten/expired entries to prevent accumulation of invalid records)_.
 
 For the cases where transactions are really needed, users can utilize the [Batch Web API](https://pocketbase.io/docs/api-records/#batch-createupdateupsertdelete-records) or [create a transaction programmatically](https://pocketbase.io/docs/go-records/#transaction) _(it is also possible to wrap an entire hook chain in a single transaction)_.
 </details>
@@ -52,11 +52,11 @@ For the cases where transactions are really needed, users can utilize the [Batch
 <details>
 <summary><strong>List/Search side-channel attacks</strong></summary>
 
-Over the years we've implemented several extra checks to minimize the risk of List/Search side-channel attacks (see especially [v0.32.0](https://github.com/pocketbase/pocketbase/blob/master/CHANGELOG.md#v0320)) but users need to be aware that technically all client-side filtered fields are technically subject to timing attacks _(whether they are practical or not is a different topic)_.
+Over the years we've implemented several extra checks to minimize the risk of List/Search side-channel attacks (see especially [v0.32.0](https://github.com/pocketbase/pocketbase/blob/master/CHANGELOG.md#v0320)) but users need to be aware that all client-side filtered fields are technically subject to timing attacks _(whether they are practical or not is a different topic)_.
 
 This is by design and it is accepted tradeoff between performance, security and usability.
 
-If you are concerned about timing attacks and have security sensitive collection data such as `secret`, `code`, `token`, etc. then the general recommendation is to mark their related fields as "Hidden" in order to disallow their usage in client-side filters.
+If you are concerned about timing attacks and have security sensitive collection data such as `secret`, `code`, `token`, etc. then the general recommendation is to mark their related fields as "Hidden" in order to disallow use in client-side filters.
 </details>
 
 <details>
