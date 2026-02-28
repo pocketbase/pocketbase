@@ -21,7 +21,7 @@ In case the vulnerability is confirmed, within another couple days I'll try to s
 <details>
 <summary><strong>Stored XSS</strong></summary>
 
-This was discussed several times, both privately and [publicly](https://github.com/pocketbase/pocketbase/discussions/6694), but I remain on the opinion that this should be handled primarily on the client-side.
+This was discussed several times, both privately and [publicly](https://github.com/pocketbase/pocketbase/discussions/6694), but I remain on the opinion that it should be handled primarily on the client-side.
 
 Modern browsers recently introduced a basic [`Sanitizer` interface](https://developer.mozilla.org/en-US/docs/Web/API/Sanitizer) that could help filtering HTML strings without external libraries.
 
@@ -46,7 +46,7 @@ This is an accepted tradeoff and for the majority of cases it has no security im
 
 This also apply for the read and delete of MFA and OTP records but for those cases, since they operate in a security sensitive context, they have an extra short-lived duration that is configurable from the collection settings _(there are also system cron jobs that takes care for deleting forgotten/expired entries to prevent accumulation of invalid records)_.
 
-For the cases where transactions are really needed, users can utilize the [Batch Web API](https://pocketbase.io/docs/api-records/#batch-createupdateupsertdelete-records) or [create a transaction programmatically](https://pocketbase.io/docs/go-records/#transaction) _(it is also possible to wrap an entire hook chain in a single transaction)_.
+For the cases where transactions are really needed, users can utilize the [Batch Web API](https://pocketbase.io/docs/api-records/#batch-createupdateupsertdelete-records) or [create a transaction programmatically](https://pocketbase.io/docs/go-records/#transaction) _(with PocketBase v0.23+ it is also possible to wrap an entire hook chain in a single transaction)_.
 </details>
 
 <details>
@@ -79,7 +79,7 @@ Just for the past month, due to some corporate security scanners 5 different peo
 
 [`disintegration/imaging`](https://github.com/disintegration/imaging) is a direct PocketBase dependency responsible for the thumbs generation.
 
-First, a panic (similar to exception in other languages) is NOT a security issue and Go programs usually have to be written with that in mind. In PocketBase specifically all routes have auto panic-recover handling, no matter what the source of the panic is, so the worst case scenario would be an HTTP error response when attempting to access the thumb.
+First, a panic (similar to exception in other languages) is NOT a security issue and Go programs usually have to be written defensively with that in mind. In PocketBase specifically all routes have auto panic-recover handling, no matter what the source of the panic is, so the worst case scenario would be an HTTP error response when attempting to access the thumb.
 
 Second, the related issue that the CVE describes is probably caused by a bug in an outdated `golang.org/x/image` dependency listed in the `go.mod` of that package but PocketBase uses a newer patched version of it that is expected to take precedence.
 
