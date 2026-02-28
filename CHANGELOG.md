@@ -6,6 +6,8 @@
 
 - Added extra existence check after the `Store.GetOrSet` write lock to prevent races overwriting an already existing value.
 
+- Added empty check for the additional client-side relation filter ListRule constraint to properly resolve OR like statements ([presentator#206](https://github.com/presentator/presentator/issues/206)).
+
 - (@todo) Bumped min Go GitHub action version to 1.26.1 because it comes with some [security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
 
 
