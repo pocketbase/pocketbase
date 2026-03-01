@@ -2,7 +2,7 @@ package routine
 
 import (
 	"log"
-	"runtime/debug"
+	"runtime"
 	"sync"
 )
 
@@ -22,8 +22,11 @@ func FireAndForget(f func(), wg ...*sync.WaitGroup) {
 
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("RECOVERED FROM PANIC (safe to ignore): %v", err)
-				log.Println(string(debug.Stack()))
+				log.Println("RECOVERED FROM PANIC (safe to ignore):", err)
+
+				stack := make([]byte, 2<<10) // 2 KB
+				length := runtime.Stack(stack, false)
+				log.Println(string(stack[:length]))
 			}
 		}()
 

@@ -4,9 +4,11 @@
 
 - Documented the `unmarshal` JSVM helper ([#7543](https://github.com/pocketbase/pocketbase/issues/7543)).
 
-- Added extra existence check after the `Store.GetOrSet` write lock to prevent races overwriting an already existing value.
+- Added extra read check after the `Store.GetOrSet` write lock to prevent races overwriting an already existing value.
 
-- Added empty check for the additional client-side relation filter ListRule constraint to properly resolve OR like statements ([presentator#206](https://github.com/presentator/presentator/issues/206)).
+- Added empty records check for the additional client-side filter's ListRule constraint that was introduced in v0.32.0 ([presentator#206](https://github.com/presentator/presentator/issues/206)).
+
+- Set a fixed `routine.FireAndForget()` debug stack trace limit to 2KB.
 
 - (@todo) Bumped min Go GitHub action version to 1.26.1 because it comes with some [security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
 
