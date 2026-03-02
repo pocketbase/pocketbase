@@ -375,10 +375,7 @@ func compareVersions(a, b string) int {
 	bSplit := strings.Split(b, ".")
 	bTotal := len(bSplit)
 
-	limit := aTotal
-	if bTotal > aTotal {
-		limit = bTotal
-	}
+	limit := max(bTotal, aTotal)
 
 	for i := 0; i < limit; i++ {
 		var x, y int
