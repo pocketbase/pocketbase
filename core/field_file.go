@@ -47,7 +47,7 @@ var (
 // FileField defines "file" type field for managing record file(s).
 //
 // Only the file name is stored as part of the record value.
-// New files (aka. files to upload) are expected to be of *filesytem.File.
+// New files (aka. files to upload) are expected to be of *filesystem.File.
 //
 // If MaxSelect is not set or <= 1, then the field value is expected to be a single record id.
 //

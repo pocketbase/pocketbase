@@ -242,7 +242,7 @@
             <div class="schema-field-options-footer">
                 <!-- @todo move to each field after the refactoring -->
                 {#if !field.primaryKey && field.type != "autodate" && (!isAuthCollection || !authHideNonemptyToggle.includes(field.name))}
-                    <Field class="form-field form-field-toggle" name="requried" let:uniqueId>
+                    <Field class="form-field form-field-toggle" name="required" let:uniqueId>
                         <input type="checkbox" id={uniqueId} bind:checked={field.required} />
                         <label for={uniqueId}>
                             <span class="txt">{requiredLabel}</span>

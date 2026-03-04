@@ -778,7 +778,7 @@ func TestRecordFieldResolverResolveCollectionFields(t *testing.T) {
 		{"@request.auth.demo1_via_file_one.id", false, "NULL"}, // not a relation field
 		{"@request.auth.demo1_via_rel_one.id", false, "NULL"},  // relation field but to a different collection
 
-		// @collection fieds
+		// @collection fields
 		{"@collect", true, ""},
 		{"collection.demo4.title", true, ""},
 		{"@collection", true, ""},

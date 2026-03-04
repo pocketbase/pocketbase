@@ -336,7 +336,7 @@ func TestEventSetAllGetAll(t *testing.T) {
 	event := router.Event{}
 	event.SetAll(data)
 
-	// modify the data to ensure that the map was shallow coppied
+	// modify the data to ensure that the map was shallow copied
 	data["c"] = 789
 
 	result := event.GetAll()

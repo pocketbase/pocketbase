@@ -1247,7 +1247,7 @@ func TestLoadingDynamicModel(t *testing.T) {
 			"nullObjectEmpty": null,
 		};
 
-		// constuct dummy SELECT column value literals based on the expectations
+		// construct dummy SELECT column value literals based on the expectations
 		const selectColumns = [];
 		for (const col in expectations) {
 			const val = expectations[col]

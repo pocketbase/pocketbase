@@ -201,7 +201,7 @@
                 <p>
                     <strong>NB!</strong> When the batch request is send as
                     <code>multipart/form-data</code>, the regular batch action fields are expected to be
-                    submitted as serailized json under the <code>@jsonPayload</code> field and file keys need
+                    submitted as serialized json under the <code>@jsonPayload</code> field and file keys need
                     to follow the pattern <code>requests.N.fileField</code> or
                     <code>requests[N].fileField</code>
                     <em>

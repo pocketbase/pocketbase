@@ -69,7 +69,7 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 			return fmt.Errorf("failed to create a temp dir: %w", err)
 		}
 
-		// archive pb_data in a temp directory, exluding the "backups" and the temp dirs
+		// archive pb_data in a temp directory, excluding the "backups" and the temp dirs
 		//
 		// run in transaction to temporary block other writes (transactions uses the NonconcurrentDB connection)
 		// ---
@@ -138,9 +138,9 @@ func (app *BaseApp) CreateBackup(ctx context.Context, name string) error {
 //
 //  4. Move the extracted dir content to the app "pb_data".
 //
-//  5. Restart the app (on successful app bootstap it will also remove the old pb_data).
+//  5. Restart the app (on successful app bootstrap it will also remove the old pb_data).
 //
-// If a failure occure during the restore process the dir changes are reverted.
+// If a failure occur during the restore process the dir changes are reverted.
 // If for whatever reason the revert is not possible, it panics.
 //
 // Note that if your pb_data has custom network mounts as subdirectories, then

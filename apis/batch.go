@@ -88,7 +88,7 @@ func (brs batchRequestsForm) validate() error {
 }
 
 // NB! When the request is submitted as multipart/form-data,
-// the regular fields data is expected to be submitted as serailized
+// the regular fields data is expected to be submitted as serialized
 // json under the @jsonPayload field and file keys need to follow the
 // pattern "requests.N.fileField" or  requests[N].fileField.
 func batchTransaction(e *core.RequestEvent) error {

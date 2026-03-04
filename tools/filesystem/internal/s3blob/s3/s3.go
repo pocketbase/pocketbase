@@ -87,7 +87,7 @@ func (s3 *S3) URL(path string) string {
 		path = escapePath(parsed.Path)
 
 		// the rest is usually not expected to be part of the S3 path but it is kept to avoid surprises
-		// (it will be further escaped if necessery by the Go HTTP client)
+		// (it will be further escaped if necessary by the Go HTTP client)
 		if parsed.RawQuery != "" {
 			path += "?" + parsed.RawQuery
 		}

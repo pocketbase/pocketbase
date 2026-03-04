@@ -186,7 +186,7 @@ func marshaledJSONtoFieldsList(rawJSON []byte) (FieldsList, error) {
 		return extractedFields, nil
 	}
 
-	// try to unmarshal first into a new fieds list
+	// try to unmarshal first into a new fields list
 	// (assuming that rawJSON is array of objects)
 	err := json.Unmarshal(rawJSON, &extractedFields)
 	if err != nil {

@@ -16,7 +16,7 @@ func TestS3URL(t *testing.T) {
 	path := "/test_key/a/b c@d?a=@1&b=!2#@a b c"
 
 	// note: query params and fragments are kept as it is
-	// since they are later escaped if necessery by the Go HTTP client
+	// since they are later escaped if necessary by the Go HTTP client
 	expectedPath := "/test_key/a/b%20c%40d?a=@1&b=!2#@a b c"
 
 	scenarios := []struct {

@@ -123,7 +123,7 @@ func Fetch(ctx context.Context, jwksURL string, kid string) (*JWK, error) {
 }
 
 // ValidateTokenSignature validates the signature of a token with the
-// public key retrievied from a remote JWKS.
+// public key retrieved from a remote JWKS.
 func ValidateTokenSignature(ctx context.Context, token string, jwksURL string) error {
 	// extract the kid token header
 	// ---

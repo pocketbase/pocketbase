@@ -545,7 +545,7 @@ func (m *Collection) UnmarshalJSON(b []byte) error {
 // MarshalJSON implements the [json.Marshaler] interface.
 //
 // Note that non-type related fields are ignored from the serialization
-// (ex. for "view" colections the "auth" fields are skipped).
+// (ex. for "view" collections the "auth" fields are skipped).
 func (m Collection) MarshalJSON() ([]byte, error) {
 	switch m.Type {
 	case CollectionTypeView:

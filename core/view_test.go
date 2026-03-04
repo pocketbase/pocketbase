@@ -326,7 +326,7 @@ func TestCreateViewFields(t *testing.T) {
 			},
 		},
 		{
-			"query with multiple froms, joins and style of aliasses",
+			"query with multiple froms, joins and style of aliases",
 			`
 				select
 					a.id as id,

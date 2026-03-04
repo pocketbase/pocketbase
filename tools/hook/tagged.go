@@ -36,7 +36,7 @@ type TaggedHook[T Tagger] struct {
 // CanTriggerOn checks if the current TaggedHook can be triggered with
 // the provided event data tags.
 //
-// It returns always true if the hook doens't have any tags.
+// It returns always true if the hook doesn't have any tags.
 func (h *TaggedHook[T]) CanTriggerOn(tagsToCheck []string) bool {
 	if len(h.tags) == 0 {
 		return true // match all

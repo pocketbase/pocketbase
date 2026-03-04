@@ -534,7 +534,7 @@ func TestRecordUpsertSubmitValidations(t *testing.T) {
 			expectedErrors: []string{"password", "passwordConfirm"},
 		},
 		{
-			name:   "new auth collection record with invalid record and invalid form data (without manager acess)",
+			name:   "new auth collection record with invalid record and invalid form data (without manager access)",
 			record: core.NewRecord(usersCol),
 			data: map[string]any{
 				"verified":        true,
@@ -552,7 +552,7 @@ func TestRecordUpsertSubmitValidations(t *testing.T) {
 			expectedErrors: []string{"verified", "passwordConfirm"},
 		},
 		{
-			name:   "new auth collection record with invalid record and valid form data (without manager acess)",
+			name:   "new auth collection record with invalid record and valid form data (without manager access)",
 			record: core.NewRecord(usersCol),
 			data: map[string]any{
 				"verified":        false,
@@ -570,7 +570,7 @@ func TestRecordUpsertSubmitValidations(t *testing.T) {
 			expectedErrors: []string{"password", "username"},
 		},
 		{
-			name:          "new auth collection record with invalid record and invalid form data (with manager acess)",
+			name:          "new auth collection record with invalid record and invalid form data (with manager access)",
 			record:        core.NewRecord(usersCol),
 			managerAccess: true,
 			data: map[string]any{
@@ -589,7 +589,7 @@ func TestRecordUpsertSubmitValidations(t *testing.T) {
 			expectedErrors: []string{"passwordConfirm"},
 		},
 		{
-			name:          "new auth collection record with invalid record and valid form data (with manager acess)",
+			name:          "new auth collection record with invalid record and valid form data (with manager access)",
 			record:        core.NewRecord(usersCol),
 			managerAccess: true,
 			data: map[string]any{

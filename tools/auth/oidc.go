@@ -48,7 +48,7 @@ const NameOIDC string = "oidc"
 //
 // The provider support the following Extra config options:
 //   - "jwksURL" - url to the keys to validate the id_token signature (optional and used only when reading the user data from the id_token)
-//   - "issuers" - list of valid issuers for the iss id_token claim (optioanl and used only when reading the user data from the id_token)
+//   - "issuers" - list of valid issuers for the iss id_token claim (optional and used only when reading the user data from the id_token)
 type OIDC struct {
 	BaseProvider
 }

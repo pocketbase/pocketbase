@@ -79,9 +79,13 @@
     async function detectConflictingOIDCs() {
         conflictingOIDCs = [];
 
+        if (!isNewCollectionAuth) {
+            return
+        }
+
         for (let name of oidcProviders) {
-            let oldProvider = oldCollection?.oauth2?.providers?.find((p) => p.name == name);
-            let newProvider = newCollection?.oauth2?.providers?.find((p) => p.name == name);
+            let oldProvider = oldCollection?.oauth2?.providers?.find?.((p) => p.name == name);
+            let newProvider = newCollection?.oauth2?.providers?.find?.((p) => p.name == name);
 
             if (!oldProvider || !newProvider) {
                 continue;

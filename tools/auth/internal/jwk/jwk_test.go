@@ -276,7 +276,7 @@ func TestValidateTokenSignature(t *testing.T) {
 			true,
 		},
 		{
-			"invlaid token",
+			"invalid token",
 			"abc",
 			true,
 		},

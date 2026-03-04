@@ -1220,7 +1220,7 @@ var sqlLogReplacements = []struct {
 	{regexp.MustCompile(`<nil>`), "NULL"},
 }
 
-// normalizeSQLLog replaces common query builder charactes with their plain SQL version for easier debugging.
+// normalizeSQLLog replaces common query builder characters with their plain SQL version for easier debugging.
 // The query is still not suitable for execution and should be used only for log and debug purposes
 // (the normalization is done here to avoid breaking changes in dbx).
 func normalizeSQLLog(sql string) string {
