@@ -28,6 +28,9 @@ const (
 // ensure that `search.FieldResolver` interface is implemented
 var _ search.FieldResolver = (*RecordFieldResolver)(nil)
 
+// ensure that `search.StaticResolver` interface is implemented
+var _ search.StaticResolver = (*RecordFieldResolver)(nil)
+
 // RecordFieldResolver defines a custom search resolver struct for
 // managing Record model search fields.
 //
@@ -74,6 +77,14 @@ func (r *RecordFieldResolver) AllowHiddenFields() bool {
 // SetAllowHiddenFields enables or disables hidden fields filtering.
 func (r *RecordFieldResolver) SetAllowHiddenFields(allowHiddenFields bool) {
 	r.allowHiddenFields = allowHiddenFields
+}
+
+// StaticRequestData implements `search.StaticResolver` interface.
+//
+// Returns the pre-built static request info map containing auth, body,
+// query, headers, method and context data.
+func (r *RecordFieldResolver) StaticRequestData() map[string]any {
+	return r.staticRequestInfo
 }
 
 // NewRecordFieldResolver creates and initializes a new `RecordFieldResolver`.

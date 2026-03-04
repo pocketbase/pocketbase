@@ -18,6 +18,17 @@ const (
 	NullFallbackEnforced NullFallbackPreference = 2
 )
 
+// StaticResolver is an optional interface that FieldResolvers can implement
+// to enable short-circuit evaluation of top-level OR branches that only
+// reference static request data (e.g., @request.auth.* fields).
+//
+// When implemented, BuildExpr will attempt to evaluate cheap OR branches
+// in Go before compiling to SQL, avoiding expensive LEFT JOINs when a
+// cheap branch already matches.
+type StaticResolver interface {
+	StaticRequestData() map[string]any
+}
+
 // ResolverResult defines a single FieldResolver.Resolve() successfully parsed result.
 type ResolverResult struct {
 	// Identifier is the plain SQL identifier/column that will be used

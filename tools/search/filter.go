@@ -81,25 +81,34 @@ func (f FilterData) BuildExprWithLimit(
 
 	cacheKey := raw + "/" + strconv.Itoa(maxExpressions)
 
-	if data, ok := parsedFilterData.GetOk(cacheKey); ok {
-		return buildParsedFilterExpr(data, fieldResolver, &maxExpressions)
+	var data []fexpr.ExprGroup
+
+	if cached, ok := parsedFilterData.GetOk(cacheKey); ok {
+		data = cached
+	} else {
+		var err error
+		data, err = fexpr.Parse(raw)
+		if err != nil {
+			return nil, err
+		}
+
+		// store in cache
+		// (the limit size is arbitrary and it is there to prevent the cache growing too big)
+		parsedFilterData.SetIfLessThanLimit(cacheKey, data, 500)
 	}
 
-	data, err := fexpr.Parse(raw)
-	if err != nil {
-		// depending on the users demand we may allow empty expressions
-		// (aka. expressions consisting only of whitespaces or comments)
-		// but for now disallow them as it seems unnecessary
-		// if errors.Is(err, fexpr.ErrEmpty) {
-		// return dbx.NewExp("1=1"), nil
-		// }
-
-		return nil, err
+	// short-circuit top-level OR branches that only reference @request.* fields
+	if sr, ok := fieldResolver.(StaticResolver); ok {
+		result := tryShortCircuitOr(data, sr.StaticRequestData())
+		switch {
+		case result.passed:
+			return dbx.NewExp("1=1"), nil
+		case result.remaining != nil && len(result.remaining) == 0:
+			return dbx.NewExp("0=1"), nil // all cheap branches, none matched
+		case result.remaining != nil:
+			data = result.remaining
+		}
 	}
-
-	// store in cache
-	// (the limit size is arbitrary and it is there to prevent the cache growing too big)
-	parsedFilterData.SetIfLessThanLimit(cacheKey, data, 500)
 
 	return buildParsedFilterExpr(data, fieldResolver, &maxExpressions)
 }
