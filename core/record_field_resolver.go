@@ -184,6 +184,13 @@ func (r *RecordFieldResolver) updateQueryWithCollectionListRule(c *Collection, t
 		return fmt.Errorf("failed to build %q ListRule join subquery filter expression: %w", c.Name, err)
 	}
 
+	// Bind the extra rule expression at the top query level for performance and security reasons
+	// (it is more strict and minimizes the risk of data disclosure from a side-channel attack).
+	//
+	// @todo Investigate with the refactoring if there is a way to group it
+	// together with the client-side constraint that invoked it and benchmark
+	// it with many (tag.name="1"||...) like statements to evaluate the impact of applying the check many times.
+	// If not feasible - document it as caveat and maybe add --dev log.
 	query.AndWhere(expr)
 
 	if len(cloneR.joins) > 0 {
