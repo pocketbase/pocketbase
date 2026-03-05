@@ -18,7 +18,7 @@ const (
 	ModerncDepsCheckHookId = "pbModerncDepsCheck"
 )
 
-// checkModerncDeps checks whether the current binary was buit with the
+// checkModerncDeps checks whether the current binary was built with the
 // expected and tested modernc driver dependencies.
 //
 // This is needed because modernc.org/libc doesn't follow semantic versioning
