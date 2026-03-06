@@ -1,4 +1,4 @@
-## v0.36.6 (WIP)
+## v0.36.6
 
 - Set `NumberField.OnlyInt:true` for the generated View collection schema fields when a view column expression is known to return int-only values ([#7538](https://github.com/pocketbase/pocketbase/issues/7538)).
 
@@ -10,7 +10,7 @@
 
 - Set a fixed `routine.FireAndForget()` debug stack trace limit to 2KB.
 
-- (@todo) Bumped min Go GitHub action version to 1.26.1 because it comes with some [security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
+- Bumped min Go GitHub action version to 1.26.1 because it comes with some minor [bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
 
 - Typos and other minor doc fixes.
 
