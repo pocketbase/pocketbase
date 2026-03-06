@@ -12,6 +12,8 @@
     let crons = [];
     let isLoading = false;
     let isRunning = {};
+    let isPausing = {};
+    let isResuming = {};
 
     loadCrons();
 
@@ -42,6 +44,46 @@
                 isRunning[jobId] = false;
             }
         }
+    }
+
+    async function cronPause(jobId) {
+        isPausing[jobId] = true;
+
+        try {
+            await ApiClient.send(`/api/crons/${encodeURIComponent(jobId)}/pause`, {
+                method: "PUT"
+            });
+            addSuccessToast(`Successfully paused ${jobId}.`);
+            await loadCrons(); // Reload to get updated state
+            isPausing[jobId] = false;
+        } catch (err) {
+            if (!err.isAbort) {
+                ApiClient.error(err);
+                isPausing[jobId] = false;
+            }
+        }
+    }
+
+    async function cronResume(jobId) {
+        isResuming[jobId] = true;
+
+        try {
+            await ApiClient.send(`/api/crons/${encodeURIComponent(jobId)}/resume`, {
+                method: "PUT"
+            });
+            addSuccessToast(`Successfully resumed ${jobId}.`);
+            await loadCrons(); // Reload to get updated state
+            isResuming[jobId] = false;
+        } catch (err) {
+            if (!err.isAbort) {
+                ApiClient.error(err);
+                isResuming[jobId] = false;
+            }
+        }
+    }
+
+    function isSystemJob(jobId) {
+        return jobId.startsWith("__pb");
     }
 </script>
 
@@ -79,15 +121,31 @@
                         </div>
                     {:else}
                         {#each crons as cron (cron.id)}
-                            <div class="list-item">
+                            <div class="list-item" class:txt-disabled={cron.paused}>
                                 <!-- <i class="ri-time-line"></i> -->
                                 <div class="content">
                                     <span class="txt">{cron.id}</span>
+                                    {#if cron.paused}
+                                        <span class="label label-warning txt-xs m-l-5">Paused</span>
+                                    {/if}
                                 </div>
                                 <span class="txt-hint txt-nowrap txt-mono cron-expr m-r-xs">
                                     {cron.expression}
                                 </span>
                                 <div class="actions">
+                                    {#if !isSystemJob(cron.id)}
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-circle btn-hint btn-transparent"
+                                            class:btn-loading={isPausing[cron.id] || isResuming[cron.id]}
+                                            disabled={isPausing[cron.id] || isResuming[cron.id]}
+                                            aria-label={cron.paused ? "Resume" : "Pause"}
+                                            use:tooltip={cron.paused ? "Resume" : "Pause"}
+                                            on:click|preventDefault={() => cron.paused ? cronResume(cron.id) : cronPause(cron.id)}
+                                        >
+                                            <i class={cron.paused ? "ri-play-circle-line" : "ri-pause-circle-line"}></i>
+                                        </button>
+                                    {/if}
                                     <button
                                         type="button"
                                         class="btn btn-sm btn-circle btn-hint btn-transparent"

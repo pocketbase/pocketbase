@@ -64,7 +64,7 @@ func TestJobMarshalJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	expected := `{"id":"test_id","expression":"1 2 3 4 5"}`
+	expected := `{"id":"test_id","expression":"1 2 3 4 5","paused":false}`
 	if str := string(raw); str != expected {
 		t.Fatalf("Expected\n%s\ngot\n%s", expected, str)
 	}

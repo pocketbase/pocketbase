@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 )
@@ -149,6 +150,52 @@ func (c *Cron) Jobs() []*Job {
 	return copy
 }
 
+// GetJob returns a job by its id, or nil if not found.
+func (c *Cron) GetJob(jobId string) *Job {
+	c.mux.RLock()
+	defer c.mux.RUnlock()
+
+	for _, j := range c.jobs {
+		if j.Id() == jobId {
+			return j
+		}
+	}
+
+	return nil
+}
+
+// PauseJob pauses a cron job by its id.
+// Returns an error if the job is not found or if it's a system job.
+func (c *Cron) PauseJob(jobId string) error {
+	if isSystemJob(jobId) {
+		return errors.New("system jobs cannot be paused")
+	}
+
+	job := c.GetJob(jobId)
+	if job == nil {
+		return errors.New("job not found")
+	}
+
+	job.Pause()
+	return nil
+}
+
+// ResumeJob resumes a cron job by its id.
+// Returns an error if the job is not found or if it's a system job.
+func (c *Cron) ResumeJob(jobId string) error {
+	if isSystemJob(jobId) {
+		return errors.New("system jobs cannot be resumed")
+	}
+
+	job := c.GetJob(jobId)
+	if job == nil {
+		return errors.New("job not found")
+	}
+
+	job.Resume()
+	return nil
+}
+
 // Stop stops the current cron ticker (if not already).
 //
 // You can resume the ticker by calling Start().
@@ -221,8 +268,13 @@ func (c *Cron) runDue(t time.Time) {
 	moment := NewMoment(t.In(c.timezone))
 
 	for _, j := range c.jobs {
-		if j.schedule.IsDue(moment) {
+		if !j.IsPaused() && j.schedule.IsDue(moment) {
 			go j.Run()
 		}
 	}
+}
+
+// isSystemJob returns true if the job id is a system job.
+func isSystemJob(jobId string) bool {
+	return strings.HasPrefix(jobId, "__pb")
 }

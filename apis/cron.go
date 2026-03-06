@@ -16,6 +16,8 @@ func bindCronApi(app core.App, rg *router.RouterGroup[*core.RequestEvent]) {
 	subGroup := rg.Group("/crons").Bind(RequireSuperuserAuth())
 	subGroup.GET("", cronsList)
 	subGroup.POST("/{id}", cronRun)
+	subGroup.PUT("/{id}/pause", cronPause)
+	subGroup.PUT("/{id}/resume", cronResume)
 }
 
 func cronsList(e *core.RequestEvent) error {
@@ -54,6 +56,40 @@ func cronRun(e *core.RequestEvent) error {
 	routine.FireAndForget(func() {
 		foundJob.Run()
 	})
+
+	return e.NoContent(http.StatusNoContent)
+}
+
+func cronPause(e *core.RequestEvent) error {
+	cronId := e.Request.PathValue("id")
+
+	err := e.App.Cron().PauseJob(cronId)
+	if err != nil {
+		if strings.Contains(err.Error(), "system jobs cannot be paused") {
+			return e.BadRequestError("System jobs cannot be paused", err)
+		}
+		if strings.Contains(err.Error(), "job not found") {
+			return e.NotFoundError("Missing or invalid cron job", err)
+		}
+		return e.InternalServerError("Failed to pause cron job", err)
+	}
+
+	return e.NoContent(http.StatusNoContent)
+}
+
+func cronResume(e *core.RequestEvent) error {
+	cronId := e.Request.PathValue("id")
+
+	err := e.App.Cron().ResumeJob(cronId)
+	if err != nil {
+		if strings.Contains(err.Error(), "system jobs cannot be resumed") {
+			return e.BadRequestError("System jobs cannot be resumed", err)
+		}
+		if strings.Contains(err.Error(), "job not found") {
+			return e.NotFoundError("Missing or invalid cron job", err)
+		}
+		return e.InternalServerError("Failed to resume cron job", err)
+	}
 
 	return e.NoContent(http.StatusNoContent)
 }
