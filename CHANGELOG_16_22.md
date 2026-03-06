@@ -2,6 +2,11 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.39
+
+- (_Backported from v0.36.6_) Bumped min Go GitHub action version to 1.26.1 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
+
+
 ## v0.22.38
 
 - (_Backported from v0.36.0_) Bumped min Go GitHub action version to 1.25.6 because it comes with some [minor security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.25.6).

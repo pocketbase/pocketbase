@@ -10,7 +10,7 @@
 
 - Set a fixed `routine.FireAndForget()` debug stack trace limit to 2KB.
 
-- Bumped min Go GitHub action version to 1.26.1 because it comes with some minor [bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
+- Bumped min Go GitHub action version to 1.26.1 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
 
 - Typos and other minor doc fixes.
 
