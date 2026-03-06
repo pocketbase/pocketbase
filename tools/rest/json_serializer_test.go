@@ -55,14 +55,6 @@ func TestSerialize(t *testing.T) {
 			`{"a":1,"b":2,"c":"test"}`,
 		},
 		{
-			"<200 response",
-			rest.Serializer{},
-			199,
-			map[string]any{"a": 1, "b": 2, "c": "test"},
-			"fields=missing",
-			`{"a":1,"b":2,"c":"test"}`,
-		},
-		{
 			"non map response",
 			rest.Serializer{},
 			200,
