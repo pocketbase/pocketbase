@@ -197,7 +197,6 @@ func (p *batchProcessor) Process(batch []*core.InternalRequest, timeout time.Dur
 
 		go func() {
 			err := p.process(txApp, batch, 0)
-
 			if err != nil {
 				err = validation.Errors{
 					"requests": validation.Errors{
@@ -261,7 +260,6 @@ func (p *batchProcessor) process(activeApp core.App, batch []*core.InternalReque
 				return err
 			},
 		)
-
 		if err != nil {
 			return err
 		}
@@ -364,6 +362,7 @@ func processInternalRequest(
 	// assign request
 	event.Request = r
 	event.Request.Body = &router.RereadableReadCloser{ReadCloser: r.Body} // enables multiple reads
+	defer event.Request.Body.Close()
 
 	// assign response
 	rec := httptest.NewRecorder()
