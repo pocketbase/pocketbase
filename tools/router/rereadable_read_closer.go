@@ -34,7 +34,7 @@ type RereadableReadCloser struct {
 
 // Read implements the standard [io.Reader] interface.
 //
-// It reads up to len(p) bytes into p and and at the same time copies
+// It reads up to len(p) bytes into p and at the same time copies
 // the read data into an internal buffer (memory + temp file).
 //
 // On EOF r is "rewinded" to allow reading multiple times.
