@@ -364,6 +364,7 @@ func processInternalRequest(
 	// assign request
 	event.Request = r
 	event.Request.Body = &router.RereadableReadCloser{ReadCloser: r.Body} // enables multiple reads
+	defer event.Request.Body.Close()
 
 	// assign response
 	rec := httptest.NewRecorder()

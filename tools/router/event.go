@@ -322,7 +322,7 @@ func (e *Event) InternalServerError(message string, errData any) *ApiError {
 // Binders
 // -------------------------------------------------------------------
 
-const DefaultMaxMemory = 32 << 20 // 32mb
+const DefaultMaxMemory = 16 << 20 // 16mb
 
 // BindBody unmarshal the request body into the provided dst.
 //

@@ -132,7 +132,10 @@ func (r *Router[T]) loadMux(mux *http.ServeMux, group *RouterGroup[T], parents [
 				resp = &ResponseWriter{ResponseWriter: resp}
 
 				// wrap the request body to allow multiple reads
-				req.Body = &RereadableReadCloser{ReadCloser: req.Body}
+				body := &RereadableReadCloser{ReadCloser: req.Body}
+				defer body.Close()
+
+				req.Body = body
 
 				event, cleanupFunc := r.eventFactory(resp, req)
 

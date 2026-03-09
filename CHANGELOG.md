@@ -1,3 +1,11 @@
+## v0.36.7 (WIP)
+
+- Fixes high memory usage with large file uploads ([#7572](https://github.com/pocketbase/pocketbase/discussions/7572)).
+
+- (@todo) Updated `modernc.org/sqlite` to v1.47.0 (SQLite v3.52.0).
+    _It fixes a [database corruption bug](https://sqlite.org/wal.html#walresetbug) that it is very difficult to trigger but still it is advised to upgrade._
+
+
 ## v0.36.6
 
 - Set `NumberField.OnlyInt:true` for the generated View collection schema fields when a view column expression is known to return int-only values ([#7538](https://github.com/pocketbase/pocketbase/issues/7538)).

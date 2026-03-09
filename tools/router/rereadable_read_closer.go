@@ -1,13 +1,13 @@
 package router
 
 import (
-	"bytes"
+	"errors"
 	"io"
 )
 
 var (
-	_ io.ReadCloser = (*RereadableReadCloser)(nil)
 	_ Rereader      = (*RereadableReadCloser)(nil)
+	_ io.ReadCloser = (*RereadableReadCloser)(nil)
 )
 
 // Rereader defines an interface for rewindable readers.
@@ -15,30 +15,44 @@ type Rereader interface {
 	Reread()
 }
 
-// RereadableReadCloser defines a wrapper around a io.ReadCloser reader
+// RereadableReadCloser defines a wrapper around a [io.ReadCloser] reader
 // allowing to read the original reader multiple times.
+//
+// NB! Make sure to call Close after done working with the reader.
 type RereadableReadCloser struct {
 	io.ReadCloser
 
-	copy   *bytes.Buffer
-	active io.Reader
+	copy        io.ReadWriteCloser
+	closeErrors []error
+
+	// MaxMemory specifies the max size of the in memory copy buffer
+	// before switching to read/write from temp disk file.
+	//
+	// If negative or zero, defaults to [DefaultMaxMemory].
+	MaxMemory int64
 }
 
-// Read implements the standard io.Reader interface.
+// Read implements the standard [io.Reader] interface.
 //
-// It reads up to len(b) bytes into b and at at the same time writes
-// the read data into an internal bytes buffer.
+// It reads up to len(p) bytes into p and and at the same time copies
+// the read data into an internal buffer (memory + temp file).
 //
-// On EOF the r is "rewinded" to allow reading from r multiple times.
-func (r *RereadableReadCloser) Read(b []byte) (int, error) {
-	if r.active == nil {
+// On EOF r is "rewinded" to allow reading multiple times.
+func (r *RereadableReadCloser) Read(p []byte) (int, error) {
+	n, err := r.ReadCloser.Read(p)
+
+	// copy the read bytes into the internal buffer
+	if n > 0 {
 		if r.copy == nil {
-			r.copy = &bytes.Buffer{}
+			r.copy = newBufferWithFile(r.MaxMemory)
 		}
-		r.active = io.TeeReader(r.ReadCloser, r.copy)
+
+		if n, err := r.copy.Write(p[:n]); err != nil {
+			return n, err
+		}
 	}
 
-	n, err := r.active.Read(b)
+	// end reached -> reset for the next read
 	if err == io.EOF {
 		r.Reread()
 	}
@@ -50,11 +64,33 @@ func (r *RereadableReadCloser) Read(b []byte) (int, error) {
 //
 // note: not named Reset to avoid conflicts with other reader interfaces.
 func (r *RereadableReadCloser) Reread() {
-	if r.copy == nil || r.copy.Len() == 0 {
-		return // nothing to reset or it has been already reset
+	if r.copy == nil {
+		return // nothing to reset
 	}
 
-	oldCopy := r.copy
-	r.copy = &bytes.Buffer{}
-	r.active = io.TeeReader(oldCopy, r.copy)
+	// eagerly close the old reader to prevent accumulating too much memory or temp files
+	if err := r.ReadCloser.Close(); err != nil {
+		r.closeErrors = append(r.closeErrors, err)
+	}
+
+	r.ReadCloser = r.copy
+	r.copy = nil
+}
+
+// Close implements the standard [io.Closer] interface by cleaning up related resources.
+//
+// It is safe to call Close multiple times.
+// Once Close is invoked the reader no longer can be used and should be discarded.
+func (r *RereadableReadCloser) Close() error {
+	if r.copy != nil {
+		if err := r.copy.Close(); err != nil {
+			r.closeErrors = append(r.closeErrors, err)
+		}
+	}
+
+	if err := r.ReadCloser.Close(); err != nil {
+		r.closeErrors = append(r.closeErrors, err)
+	}
+
+	return errors.Join(r.closeErrors...)
 }
