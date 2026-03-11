@@ -46,7 +46,7 @@ func ParseJWT(token string, verificationKey string) (jwt.MapClaims, error) {
 func NewJWT(payload jwt.MapClaims, signingKey string, duration time.Duration) (string, error) {
 	claims := jwt.MapClaims{
 		// @todo consider with the refactoring to either remove the
-		// duration argument or make it always take precedent?
+		// duration argument or make it always take precedence?
 		"exp": time.Now().Add(duration).Unix(),
 	}
 
