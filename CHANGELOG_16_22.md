@@ -2,6 +2,15 @@
 > For the most recent versions, please refer to [CHANGELOG.md](./CHANGELOG.md)
 ---
 
+## v0.22.40
+
+- (_Backported from v0.36.7_) Updated `modernc.org/sqlite` to v1.46.2 and SQLite 3.51.3.
+    _⚠️ SQLite 3.51.3 fixed a [database corruption bug](https://sqlite.org/wal.html#walresetbug) that is very unlikely to happen (with PocketBase even more so because we queue on app level all writes and explicit transactions through a single db connection), but still it is advised to upgrade._
+
+- (_Backported from v0.36.7_) Updated other minor Go and npm deps.
+    _The min Go version in the go.mod of the package was also bumped to Go 1.25.0 because some of the newer dep versions require it._
+
+
 ## v0.22.39
 
 - (_Backported from v0.36.6_) Bumped min Go GitHub action version to 1.26.1 because it comes with some [minor bug and security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
