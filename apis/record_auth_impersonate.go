@@ -34,7 +34,7 @@ func recordAuthImpersonate(e *core.RequestEvent) error {
 
 	token, err := record.NewStaticAuthToken(time.Duration(form.Duration) * time.Second)
 	if err != nil {
-		e.InternalServerError("Failed to generate static auth token", err)
+		return e.InternalServerError("Failed to generate static auth token", err)
 	}
 
 	return recordAuthResponse(e, record, token, "", nil)

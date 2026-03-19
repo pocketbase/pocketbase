@@ -93,7 +93,7 @@ type Provider interface {
 	SetUserInfoURL(url string)
 
 	// Extra returns a shallow copy of any custom config data
-	// that the provider may be need.
+	// that the provider may need.
 	Extra() map[string]any
 
 	// SetExtra updates the provider's custom config data.
