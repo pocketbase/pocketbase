@@ -1,6 +1,9 @@
 /.vscode/
 .idea
 
+# Local Docker Compose / machine-specific branding (do not commit)
+/.env
+
 .DS_Store
 
 # goreleaser builds folder

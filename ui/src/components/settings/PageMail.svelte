@@ -9,6 +9,7 @@
     import { pageTitle } from "@/stores/app";
     import { setErrors } from "@/stores/errors";
     import { addSuccessToast } from "@/stores/toasts";
+    import { productName } from "@/branding";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import { slide } from "svelte/transition";
@@ -143,7 +144,7 @@
                         <i
                             class="ri-information-line link-hint"
                             use:tooltip={{
-                                text: 'By default PocketBase uses the unix "sendmail" command for sending emails. For better emails deliverability it is recommended to use a SMTP mail server.',
+                                text: `By default ${productName} uses the unix "sendmail" command for sending emails. For better emails deliverability it is recommended to use a SMTP mail server.`,
                                 position: "top",
                             }}
                         />

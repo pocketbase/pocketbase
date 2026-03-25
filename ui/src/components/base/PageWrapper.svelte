@@ -1,4 +1,5 @@
 <script>
+    import { productName } from "@/branding";
     import { superuser } from "@/stores/superuser";
 
     export let center = false;
@@ -22,7 +23,7 @@
             </a>
             <span class="delimiter">|</span>
             <a href={import.meta.env.PB_RELEASES} target="_blank" rel="noopener noreferrer" title="Releases">
-                <span class="txt">PocketBase {import.meta.env.PB_VERSION}</span>
+                <span class="txt">{productName} {import.meta.env.PB_VERSION}</span>
             </a>
         {/if}
     </footer>

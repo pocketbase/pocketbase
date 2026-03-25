@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -21,6 +22,21 @@ import (
 	"golang.org/x/crypto/acme"
 	"golang.org/x/crypto/acme/autocert"
 )
+
+// adminContentSecurityPolicy returns the CSP for the embedded admin UI (/_/...).
+// img-src includes "https:" so whitelabel logos may load from any HTTPS URL (PB_LOGO_URL) without
+// per-customer CSP config. Images cannot execute script; risk is mainly tracking pixels (admin-only UI).
+// Optional PB_CSP_IMG_SRC_EXTRA: space-separated extra sources (e.g. "http://legacy.cdn" for non-HTTPS logos).
+func adminContentSecurityPolicy() string {
+	imgSrc := "'self' http://127.0.0.1:* https://tile.openstreetmap.org https: data: blob:"
+	if extra := strings.TrimSpace(os.Getenv("PB_CSP_IMG_SRC_EXTRA")); extra != "" {
+		for _, part := range strings.Fields(extra) {
+			imgSrc += " " + part
+		}
+	}
+	return "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src " + imgSrc +
+		"; connect-src 'self' http://127.0.0.1:* https://nominatim.openstreetmap.org; script-src 'self' 'sha256-GRUzBA7PzKYug7pqxv5rJaec5bwDCw1Vo6/IXwvD3Tc='"
+}
 
 // ServeConfig defines a configuration struct for apis.Serve().
 type ServeConfig struct {
@@ -86,7 +102,7 @@ func Serve(app core.App, config ServeConfig) error {
 
 			// add a default CSP
 			if e.Response.Header().Get("Content-Security-Policy") == "" {
-				e.Response.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' http://127.0.0.1:* https://tile.openstreetmap.org data: blob:; connect-src 'self' http://127.0.0.1:* https://nominatim.openstreetmap.org; script-src 'self' 'sha256-GRUzBA7PzKYug7pqxv5rJaec5bwDCw1Vo6/IXwvD3Tc='")
+				e.Response.Header().Set("Content-Security-Policy", adminContentSecurityPolicy())
 			}
 
 			return e.Next()

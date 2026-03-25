@@ -1,0 +1,5 @@
+.git
+**/node_modules
+pb_data
+*.exe
+.DS_Store

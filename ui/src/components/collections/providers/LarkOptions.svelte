@@ -1,4 +1,5 @@
 <script>
+    import { productName } from "@/branding";
     import Field from "@/components/base/Field.svelte";
     import ObjectSelect from "@/components/base/ObjectSelect.svelte";
 
@@ -36,7 +37,7 @@
     </div>
     <div class="content">
         Note that the Lark user's <strong>Union ID</strong> will be used for the association with the
-        PocketBase user (see
+        {productName} user (see
         <a
             href="https://open.feishu.cn/document/platform-overveiw/basic-concepts/user-identity-introduction/introduction#3f2d4b63"
             target="_blank"

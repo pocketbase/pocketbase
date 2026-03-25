@@ -1,5 +1,6 @@
 <script>
     import { slide } from "svelte/transition";
+    import { productName } from "@/branding";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
@@ -109,7 +110,7 @@
     <div class="wrapper">
         <div class="panel" autocomplete="off" on:submit|preventDefault={save}>
             <div class="flex m-b-sm flex-gap-10">
-                <span class="txt-xl">Backup and restore your PocketBase data</span>
+                <span class="txt-xl">Backup and restore your {productName} data</span>
                 <RefreshButton class="btn-sm" tooltip={"Refresh"} on:refresh={refreshList} />
                 <BackupUploadButton class="btn-sm" on:success={refreshList} />
             </div>

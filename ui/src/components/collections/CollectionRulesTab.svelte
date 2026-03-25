@@ -1,6 +1,7 @@
 <script>
     import tooltip from "@/actions/tooltip";
     import RuleField from "@/components/collections/RuleField.svelte";
+    import { productName } from "@/branding";
     import CommonHelper from "@/utils/CommonHelper";
     import { slide } from "svelte/transition";
 
@@ -20,7 +21,7 @@
         <p>
             All rules follow the
             <a href={import.meta.env.PB_RULES_SYNTAX_DOCS} target="_blank" rel="noopener noreferrer">
-                PocketBase filter syntax and operators
+                {productName} filter syntax and operators
             </a>.
         </p>
         <button

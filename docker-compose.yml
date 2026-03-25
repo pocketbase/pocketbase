@@ -1,0 +1,22 @@
+# Test (proje kokunde):
+#   1) Istege bagli: .env dosyasi olustur -> PB_PRODUCT_NAME, PB_LOGO_URL (https)
+#   2) docker compose build
+#   3) docker compose up
+# Tarayici: http://localhost:8090/_/
+
+services:
+  pocketbase:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PB_PRODUCT_NAME: ${PB_PRODUCT_NAME:-PocketBase}
+        PB_LOGO_URL: ${PB_LOGO_URL:-}
+    ports:
+      - "8090:8090"
+    volumes:
+      - pb_data:/pb_data
+    command: ["serve", "--http=0.0.0.0:8090", "--dir=/pb_data"]
+
+volumes:
+  pb_data:

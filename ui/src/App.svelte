@@ -6,6 +6,7 @@
     import TinyMCE from "@/components/base/TinyMCE.svelte";
     import Toasts from "@/components/base/Toasts.svelte";
     import Toggler from "@/components/base/Toggler.svelte";
+    import { logoUrl, productName } from "@/branding";
     import { appName, hideControls, pageTitle } from "@/stores/app";
     import { resetConfirmation } from "@/stores/confirmation";
     import { setErrors } from "@/stores/errors";
@@ -69,7 +70,7 @@
 </script>
 
 <svelte:head>
-    <title>{CommonHelper.joinNonEmpty([$pageTitle, $appName, "PocketBase"], " - ", false)}</title>
+    <title>{CommonHelper.joinNonEmpty([$pageTitle, $appName, productName], " - ", false)}</title>
 
     {#if window.location.protocol == "https:"}
         <link
@@ -85,8 +86,8 @@
         <aside class="app-sidebar">
             <a href="/" class="logo logo-sm" use:link>
                 <img
-                    src="{import.meta.env.BASE_URL}images/logo.svg"
-                    alt="PocketBase logo"
+                    src={logoUrl}
+                    alt="{productName} logo"
                     width="40"
                     height="40"
                 />

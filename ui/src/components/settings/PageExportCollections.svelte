@@ -1,4 +1,5 @@
 <script>
+    import { productName } from "@/branding";
     import ApiClient from "@/utils/ApiClient";
     import CommonHelper from "@/utils/CommonHelper";
     import { pageTitle } from "@/stores/app";
@@ -110,7 +111,7 @@
                 <div class="content txt-xl m-b-base">
                     <p>
                         Below you'll find your current collections configuration that you could import in
-                        another PocketBase environment.
+                        another {productName} environment.
                     </p>
                 </div>
 
