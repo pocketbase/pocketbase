@@ -1,3 +1,8 @@
+## v0.36.8
+
+- Fixed OAuth2 client secret reset when marshalizing a cached collection model.
+
+
 ## v0.36.7
 
 - Fixed high memory usage with large file uploads ([#7572](https://github.com/pocketbase/pocketbase/discussions/7572)).

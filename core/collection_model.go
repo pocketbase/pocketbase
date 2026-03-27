@@ -559,19 +559,26 @@ func (m Collection) MarshalJSON() ([]byte, error) {
 			collectionAuthOptions
 		}{m.baseCollection, m.collectionAuthOptions}
 
-		// ensure that it is always returned as array
-		if alias.OAuth2.Providers == nil {
-			alias.OAuth2.Providers = []OAuth2ProviderConfig{}
-		}
-
+		// @todo to avoid the below changes consider omitting the field values from the individual structs json tags
+		//
 		// hide secret keys from the serialization
 		alias.AuthToken.Secret = ""
 		alias.FileToken.Secret = ""
 		alias.PasswordResetToken.Secret = ""
 		alias.EmailChangeToken.Secret = ""
 		alias.VerificationToken.Secret = ""
-		for i := range alias.OAuth2.Providers {
-			alias.OAuth2.Providers[i].ClientSecret = ""
+
+		if alias.OAuth2.Providers == nil {
+			// ensure that it is always returned as array
+			alias.OAuth2.Providers = []OAuth2ProviderConfig{}
+		} else {
+			// create a deep copy of the slice to avoid modifying the cached model state
+			redactedProviders := make([]OAuth2ProviderConfig, len(alias.OAuth2.Providers))
+			copy(redactedProviders, alias.OAuth2.Providers)
+			for i := range redactedProviders {
+				redactedProviders[i].ClientSecret = ""
+			}
+			alias.OAuth2.Providers = redactedProviders
 		}
 
 		return json.Marshal(alias)

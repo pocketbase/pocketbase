@@ -760,6 +760,46 @@ func TestCollectionSerialize(t *testing.T) {
 	}
 }
 
+func TestCollectionSerializeNotModifyingCache(t *testing.T) {
+	t.Parallel()
+
+	app, _ := tests.NewTestApp()
+	defer app.Cleanup()
+
+	c, err := app.FindCachedCollectionByNameOrId("users")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = json.Marshal(c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	redactedFields := map[string]string{
+		"AuthToken.Secret":          c.AuthToken.Secret,
+		"FileToken.Secret":          c.FileToken.Secret,
+		"PasswordResetToken.Secret": c.PasswordResetToken.Secret,
+		"EmailChangeToken.Secret":   c.EmailChangeToken.Secret,
+		"VerificationToken.Secret":  c.VerificationToken.Secret,
+	}
+
+	if len(c.OAuth2.Providers) == 0 {
+		t.Fatal("Expected at least one users OAuth2 provider, got 0")
+	}
+	for _, p := range c.OAuth2.Providers {
+		redactedFields[p.Name+".ClientSecret"] = p.ClientSecret
+	}
+
+	for k, v := range redactedFields {
+		t.Run(k, func(t *testing.T) {
+			if v == "" {
+				t.Fatalf("Expected the redacted field %q to remain unmodified after serialization, got empty value", k)
+			}
+		})
+	}
+}
+
 func TestCollectionDBExport(t *testing.T) {
 	t.Parallel()
 
